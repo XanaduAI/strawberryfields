@@ -32,7 +32,7 @@ Installation
 Installation of Strawberry Fields, as well as all required Python packages mentioned above, can be installed via ``pip``:
 ::
 
-   	pip install http://strawberry-fields.s3-website-us-east-1.amazonaws.com/master.zip
+   	python -m pip install strawberryfields
 
 
 Make sure you are using the Python 3 version of pip.

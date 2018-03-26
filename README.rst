@@ -13,8 +13,8 @@ Strawberry Fields
     :alt: Codacy grade
     :target: https://app.codacy.com/app/XanaduAI/strawberryfields?utm_source=github.com&utm_medium=referral&utm_content=XanaduAI/strawberryfields&utm_campaign=badger
 
-.. image:: https://img.shields.io/readthedocs/pip.svg?style=for-the-badge
-	:alt: Read the Docs
+.. image:: https://img.shields.io/readthedocs/strawberryfields.svg?style=for-the-badge
+    :alt: Read the Docs
     :target: https://strawberryfields.readthedocs.io
 
 Strawberry Fields is a full-stack Python library for designing,
@@ -41,12 +41,9 @@ Features
 Dependencies
 ============
 
-Before installing Strawberry Fields, the following dependencies need to be installed:
+Strawberry Fields depends on the following Python packages:
 
 * `Python <http://python.org/>`_ >=3.5
-
-as well as the following Python packages:
-
 * `NumPy <http://numpy.org/>`_  >=1.13.3
 * `SciPy <http://scipy.org/>`_  >=1.0.0
 * `NetworkX <http://networkx.github.io/>`_ >=2.0
@@ -59,11 +56,10 @@ Installation
 ============
 .. highlight:: console
 
-Installation of Strawberry Fields, as well as all required Python packages mentioned above, can be done by navigating to the source code folder and using pip:
+Installation of Strawberry Fields, as well as all required Python packages mentioned above, can be done using pip:
 ::
 
-    $ cd strawberryfields
-    $ pip3 install . --user
+    $ python -m pip install strawberryfields
 
 
 Software tests
@@ -90,7 +86,9 @@ Individual test modules are run using
 Documentation
 =============
 
-To build the documentation, the following additional packages are required:
+The Strawberry Fields documentation is built automatically and hosted at `Read the Docs <https://strawberryfields.readthedocs.io>`_.
+
+To build the documentation locally, the following additional packages are required:
 
 * `Sphinx <http://sphinx-doc.org/>`_ >=1.5
 * `graphviz <http://graphviz.org/>`_ >=2.38
@@ -99,9 +97,9 @@ To build the documentation, the following additional packages are required:
 If using Ubuntu, they can be installed via a combination of ``apt`` and ``pip``:
 ::
 
-	$ sudo apt install graphviz
-	$ pip3 install sphinx --user
-	$ pip3 install sphinxcontrib-bibtex --user
+    $ sudo apt install graphviz
+    $ pip3 install sphinx --user
+    $ pip3 install sphinxcontrib-bibtex --user
 
 To build the HTML documentation, go to the top-level directory and run the command
 ::
