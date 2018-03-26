@@ -299,7 +299,7 @@ html_theme_options = {
     # "disqus_comments_shortname": "strawberryfields-1",
 
     # Set you GA account ID to enable tracking
-    # "google_analytics_account": "UA-112607589-1",
+    "google_analytics_account": "UA-116279123-2",
 
     # Path to a touch icon
     "touch_icon": "logo_new.png",
