@@ -1,0 +1,12 @@
+bleach
+decorator
+enum34
+html5lib
+Markdown
+networkx>=2.0
+numpy>=1.13.3
+scipy>=1.0.0
+six
+tensorflow>=1.3.0,<1.7
+tensorflow-tensorboard>=0.1.8
+Werkzeug

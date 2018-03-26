@@ -1,0 +1,45 @@
+# .coveragerc to control coverage.py
+[run]
+source = strawberryfields
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain about missing debug-only code:
+    def __repr__
+    def __eq__
+    if self\.debug
+
+    # print statements
+    def __str__
+    def _print_list
+
+    # Don't complain if tests don't hit defensive assertion code:
+    raise AssertionError
+    raise NotImplementedError
+    raise NotApplicableError
+    raise Exception
+    raise ValueError
+    raise ZeroDivisionError
+    raise TypeError
+    raise RuntimeError
+    raise IndexError
+    raise FileNotFoundError
+    raise NotADirectoryError
+    return __version__ 
+    if len(lst) != self._num_modes: 
+    elif max(lst) >= self._trunc: 
+    except NotImplementedError as err
+
+    # Don't complain if non-runnable code isn't run:
+    if 0:
+    pass
+    if __name__ == .__main__.:
+
+ignore_errors = True
+
+[html]
+directory = coverage_html_report

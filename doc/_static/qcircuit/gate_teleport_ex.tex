@@ -1,0 +1,5 @@
+\Qcircuit @C=1.5em @R=2em {
+     \lstick{q_0:~\ket{\psi}~~} & \ctrl{1}  & \qw & \gate{F^\dagger} & \meter & \rstick{\hspace{-0.5cm}\ket{x}\bra{x}=m_1}\\
+     \lstick{q_1:P\ket{0}_P} & \ctrl{0}  & \ctrl{1}& \gate{F^\dagger} & \meter & \rstick{\hspace{-0.5cm}\ket{x}\bra{x}=m_2}\\
+     \lstick{q_2:~\ket{0}_P~} & \qw & \ctrl{0} &\qw & \qw &\qw &\rstick{\hspace{-0.5cm}X(m_2)FPX(m_1)F\ket{\psi}}
+}

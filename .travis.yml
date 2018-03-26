@@ -1,0 +1,31 @@
+language: python
+cache: pip
+python:
+  - "3.5"
+env:
+  global:
+    - COVERALLS_PARALLEL=true
+    - MIXED=0
+    - BATCHED=0
+  matrix:
+    - BACKEND=gaussian
+    - BACKEND=gaussian MIXED=1
+    - BACKEND=fock
+    - BACKEND=fock MIXED=1
+    - BACKEND=tf
+    - BACKEND=tf MIXED=1
+    - BACKEND=tf BATCHED=1
+    - BACKEND=tf MIXED=1 BATCHED=1
+# command to install dependencies
+install:
+  - pip install -r requirements.txt
+  - pip install wheel codecov
+  - python3 setup.py bdist_wheel
+  - pip install dist/StrawberryFields*.whl
+# command to run tests
+script:
+  - coverage3 run -m unittest discover tests
+after_success:
+  - codecov -F $BACKEND,m$MIXED,b$BATCHED
+notifications:
+  slack: xanaduhq:IjuNiD7j36slp7NqRdWuQq1O
