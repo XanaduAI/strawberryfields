@@ -17,6 +17,18 @@ Strawberry Fields
     :alt: Read the Docs
     :target: https://strawberryfields.readthedocs.io
 
+.. image:: https://img.shields.io/pypi/v/StrawberryFields.svg?style=for-the-badge
+    :alt: PyPI
+    :target: https://pypi.org/project/StrawberryFields
+
+.. image:: https://img.shields.io/pypi/l/StrawberryFields.svg?style=for-the-badge
+    :alt: PyPI - License
+    :target: https://www.apache.org/licenses/LICENSE-2.0
+
+.. image:: https://img.shields.io/pypi/pyversions/StrawberryFields.svg?style=for-the-badge
+    :alt: PyPI - Python Version
+    :target: https://pypi.org/project/StrawberryFields
+
 Strawberry Fields is a full-stack Python library for designing,
 simulating, and optimizing continuous variable (CV) quantum
 optical circuits.
@@ -25,8 +37,8 @@ Features
 ========
 
 .. image:: doc/_static/sfcomponents.svg
-  :align: right
-  :width: 60%
+    :align: center
+    :width: 70%
 
 * An open-source software architecture for **photonic quantum computing**
 
@@ -54,7 +66,6 @@ These can be installed using pip, or, if on linux, using your package manager (i
 
 Installation
 ============
-.. highlight:: console
 
 Installation of Strawberry Fields, as well as all required Python packages mentioned above, can be done using pip:
 ::
