@@ -119,6 +119,14 @@ To build the HTML documentation, go to the top-level directory and run the comma
 
 The documentation can then be found in the ``doc/_build/html/`` directory.
 
+Authors
+=======
+
+Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook.
+
+We welcome contributions - simply fork the Strawberry Fields repository, and then make a
+`pull request <https://help.github.com/articles/about-pull-requests/>`_ containing your contribution.
+
 
 Support
 =======
