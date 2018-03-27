@@ -17,7 +17,8 @@ from collections import OrderedDict
 from itertools import tee
 
 import numpy as np
-from scipy.linalg import sqrtm
+import scipy as sp
+from scipy.linalg import sqrtm, qr
 from scipy.special import binom, factorial
 
 
@@ -362,3 +363,16 @@ def fock_prob(s2, ocp, tol=1.0e-13):
         return (pref*sqd*ssum).real/np.prod(factorial(ocp))
     else:
         return (pref*sqd).real/np.prod(factorial(ocp))
+
+
+def haar_measure(n):
+    '''A Random matrix distributed with Haar measure
+    Recipe taken from F. Mezzadri, "How to generate random matrices from the classical compact groups",
+    Notices of the AMS 54, 592 (2007). arXiv.org:math-ph/0609050
+    '''
+    z = (sp.randn(n, n) + 1j*sp.randn(n, n))/np.sqrt(2.0)
+    q, r = qr(z)
+    d = sp.diagonal(r)
+    ph = d/np.abs(d)
+    q = np.multiply(q, ph, q)
+    return q
