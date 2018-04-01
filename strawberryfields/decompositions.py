@@ -114,13 +114,14 @@ def nullT(n, m, U):
     phir = np.angle(r)
     return [n-1, n, thetar, phir, nmax]
 
-def clements(V):
+def clements(V, tol=11):
     r"""Performs the Clements decomposition of a Unitary complex matrix.
 
     See Clements et al. Optica 3, 1460 (2016) [10.1364/OPTICA.3.001460] for more details.
 
     Args:
         V (array): Unitary matrix of size n_size
+        tol (int): the number of decimal places to use when determining if the matrix is symmetric
 
     Returns:
         tuple[array]: returns a tuple of the form ``(tilist,tlist,np.diag(localV))``
@@ -132,6 +133,10 @@ def clements(V):
     """
     localV = V
     (nsize, _) = localV.shape
+
+    diffn = np.linalg.norm(V @ V.conj().T - np.identity(nsize))
+    if np.round(diffn, tol) != 0.0:
+        raise ValueError("The input matrix is not unitary")
 
     tilist = []
     tlist = []
@@ -148,7 +153,7 @@ def clements(V):
     return tilist, tlist, np.diag(localV)
 
 
-def williamson(V, tol=11):
+def williamson(V, tol=11, hbar=2):
     r"""Performs the Williamson decomposition of positive definite (real) symmetric matrix.
 
     Note that it is assumed that the symplectic form is
@@ -162,6 +167,7 @@ def williamson(V, tol=11):
     Args:
         V (array): A positive definite symmetric (real) matrix V
         tol (int): the number of decimal places to use when determining if the matrix is symmetric
+        hbar (float): the convention used in the definition of :math:`\x` and :math:`\p`
 
     Returns:
         tuple(array,array): Returns a tuple ``(Db, S)`` where ``Db`` is a diagonal matrix
@@ -178,7 +184,7 @@ def williamson(V, tol=11):
         raise ValueError("The input matrix must have an even number of rows/columns")
 
     n = n//2
-    omega = sympmat(n)
+    omega = sympmat(n)*hbar/2
     rotmat = changebasis(n)
     vals = np.linalg.eigvalsh(V)
 
@@ -214,7 +220,7 @@ def williamson(V, tol=11):
     return Db, np.linalg.inv(S)
 
 
-def bloch_messiah(S, tol=10):
+def bloch_messiah(S, tol=10, hbar=2):
     r""" Performs the Bloch-Messiah decomposition of a symplectic matrix in terms of
     two symplectic unitaries and squeezing transformation.
 
@@ -232,6 +238,7 @@ def bloch_messiah(S, tol=10):
     Args:
         S (array): A symplectic matrix S
         tol (int): the number of decimal places to use when determining if the matrix is symplectic
+        hbar (float): the convention used in the definition of :math:`\x` and :math:`\p`
 
     Returns:
         tuple[array]: Returns the tuple ``(ut1, st1, v1)``. ``ut1`` and ``vt1`` are symplectic unitaries,
@@ -246,7 +253,7 @@ def bloch_messiah(S, tol=10):
         raise ValueError("The input matrix must have an even number of rows/columns")
 
     n = n//2
-    omega = sympmat(n)
+    omega = sympmat(n)*hbar/2
     if np.round(np.linalg.norm(np.transpose(S) @ omega @ S -omega), tol) != 0.0:
         raise ValueError("The input matrix is not symplectic")
 
@@ -314,10 +321,10 @@ def covmat_to_hamil(V, tol=10):
 
     W = 1j*V @ omega
     l, v = np.linalg.eig(W)
+    print(1/l.real)
     H = (1j * omega @ (v @ np.diag(np.arctanh(1.0/l.real)) @ np.linalg.inv(v))).real
 
     return H
-
 
 
 def hamil_to_covmat(H, tol=10):

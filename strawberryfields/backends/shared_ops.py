@@ -274,17 +274,20 @@ def rotation_matrix(phi):
 
 
 @functools.lru_cache()
-def sympmat(n):
+def sympmat(n, hbar=2):
     r""" Returns the symplectic matrix of order n
 
     Args:
         n (int): order
+        hbar (float): the value of hbar used in the definition
+            of the quadrature operators
     Returns:
         array: symplectic matrix
     """
     idm = np.identity(n)
-    return np.concatenate((np.concatenate((0*idm, idm), axis=1),
-                           np.concatenate((-idm, 0*idm), axis=1)), axis=0)
+    omega = np.concatenate((np.concatenate((0*idm, idm), axis=1),
+                            np.concatenate((-idm, 0*idm), axis=1)), axis=0)
+    return omega #hbar*omega/2
 
 
 @functools.lru_cache()

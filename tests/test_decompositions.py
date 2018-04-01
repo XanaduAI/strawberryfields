@@ -1,5 +1,5 @@
 """
-Unit tests for utilities in :class:`strawberryfields.utils`.
+Unit tests for decompositions in :class:`strawberryfields.backends.decompositions`.
 """
 
 import os
@@ -11,7 +11,7 @@ import unittest
 import numpy as np
 from scipy.linalg import qr
 
-import strawberryfields.backends.decompositions as dec
+import strawberryfields.decompositions as dec
 from defaults import BaseTest
 
 from strawberryfields.backends.gaussianbackend import ops
