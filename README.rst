@@ -86,12 +86,12 @@ Note that this runs *all* of the tests, using *all* available backends, so can b
 
   make test-[backend]
 
-where ``[backend]`` should be replaced with the backend you would like to test (``fock``, ``tf``, or ``guassian``).
+where ``[backend]`` should be replaced with the backend you would like to test (``fock``, ``tf``, or ``gaussian``).
 
 Individual test modules are run using
 ::
 
-  python3 tests/test_gate.py --backend=[backend]
+  python tests/test_gate.py --backend=[backend]
 
 
 Documentation
