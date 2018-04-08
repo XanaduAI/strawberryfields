@@ -215,6 +215,15 @@ Channels
     LossChannel
 
 
+Decompositions
+--------------
+
+.. autosummary::
+    Interferometer
+    GaussianTransform
+    CovarianceState
+
+
 Single-mode gates
 -----------------
 
@@ -260,12 +269,17 @@ Code details
 
 from collections.abc import Sequence
 import copy
-from numpy import pi, cos, sin, exp, sqrt, arctan, arccosh, sign, arctan2, arcsinh, cosh, tanh, ndarray, all, arange
+
+import numpy as np
+from numpy import pi, cos, sin, exp, sqrt, arctan, arccosh, sign, arctan2, arcsinh, cosh, tanh, ndarray, all, arange, log, matmul
 from scipy.special import factorial as fac
 from tensorflow import Tensor, Variable
-from tensorflow import cos as tfcos, sin as tfsin, exp as tfexp, sqrt as tfsqrt, atan as tfatan, acosh as tfacosh, sign as tfsign, atan2 as tfatan2, asinh as tfasinh, cosh as tfcosh, tanh as tftanh
+from tensorflow import cos as tfcos, sin as tfsin, exp as tfexp, sqrt as tfsqrt, atan as tfatan, acosh as tfacosh, sign as tfsign, \
+    atan2 as tfatan2, asinh as tfasinh, cosh as tfcosh, tanh as tftanh, log as tflog, matmul as tfmatmul
+
 from .backends.tfbackend.ops import TensorWrapper, _wrap_tensors
 from .engine import Engine as _Engine, Command, RegRef, RegRefTransform
+from .decompositions import clements, bloch_messiah, williamson
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
@@ -281,7 +295,9 @@ tf_math_fns = {"sin": tfsin,
                "arctan2": tfatan2,
                "arcsinh": tfasinh,
                "cosh": tfcosh,
-               "tanh": tftanh}
+               "tanh": tftanh,
+               "log": tflog,
+               "matmul": tfmatmul}
 np_math_fns = {"sin": sin,
                "cos": cos,
                "exp": exp,
@@ -292,7 +308,9 @@ np_math_fns = {"sin": sin,
                "arctan2": arctan2,
                "arcsinh": arcsinh,
                "cosh": cosh,
-               "tanh": tanh}
+               "tanh": tanh,
+               "log": log,
+               "matmul": matmul}
 
 def check_type(math_fn):
     "Wrapper function which checks the type of the incoming object and calls the appropriate tf/np function"
@@ -1316,6 +1334,214 @@ class All(Operation):
         _Engine._current_context._test_regrefs(reg)
         for r in reg:
             _Engine._current_context.append(self.op, [r])
+
+
+#====================================================================
+# Decompositions
+#====================================================================
+
+
+class Decomposition(Operation):
+    """Abstract base class for decompositions.
+
+    This class provides the base behaviour for decomposing various objects
+    into a sequence of gate and state preparations.
+    """
+    def __init__(self, par):
+        super().__init__()
+        self.p = list(par)
+
+    def merge(self, other):
+        # can be merged if they are the same decomposition
+        if isinstance(other, self.__class__):
+            # at the moment, we will assume all state decompositions only
+            # take one argument. The only exception currently are state
+            # decompositions, which cannot be merged.
+            U1 = self.p[0]
+            U2 = other.p[0]
+            U = matmul(U2, U1)
+            new_decomp = self.__class__(U)
+            return new_decomp
+        else:
+            raise TypeError('Not the same decomposition type.')
+
+
+class Interferometer(Decomposition):
+    r"""Apply a linear interferometer to the specified qumodes.
+
+    This operation uses the Clements decomposition to decompose
+    a linear interferometer into a sequence of beamsplitters and
+    rotation gates.
+
+    Args:
+        U (array): an :math:`N\times N` complex unitary matrix.
+    """
+    ns = None
+    def __init__(self, U):
+        super().__init__([U])
+
+        if np.all(np.abs(U - 1j*np.identity(len(U))) < 1e-13):
+            self.identity = True
+        elif np.all(np.abs(U - np.identity(len(U))) < 1e-13):
+            self.identity = True
+        else:
+            self.identity = False
+            self.BS1, self.BS2, self.R = clements(U, tol=11)
+            self.ns = U.shape[0]
+
+    def decompose(self, reg):
+        cmds = []
+
+        if not self.identity:
+            for n, m, theta, phi, N in self.BS1:
+                if np.round(phi, 13) != 0:
+                    cmds.append(Command(Rgate(phi), reg[n], decomp=True))
+                if np.round(theta, 13) != 0:
+                    cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m]), decomp=True))
+
+            for n, expphi in enumerate(self.R):
+                if np.abs(np.round(expphi, 13)) != 1.0:
+                    q = log(expphi).imag
+                    cmds.append(Command(Rgate(q), reg[n], decomp=True))
+
+            for n, m, theta, phi, N in reversed(self.BS2):
+                if np.round(theta, 13) != 0:
+                    cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m]), decomp=True))
+                if np.round(phi, 13) != 0:
+                    cmds.append(Command(Rgate(-phi), reg[n], decomp=True))
+
+        return cmds
+
+
+class GaussianTransform(Decomposition):
+    r"""Apply a Gaussian symplectic transformation to the specified qumodes.
+
+    This operation uses the Bloch-Messiah decomposition to decompose a symplectic
+    matrix :math:`S`:
+
+    .. math:: S = O_1 R O_2
+
+    where :math:`O_1` and :math:`O_2` are two orthogonal symplectic matrices, and :math:`R`
+    is a squeezing transformation in the phase space (:math:`R=\text{diag}(e^{-z},e^z)`).
+
+    The symplectic matrix describing the Gaussian transformation on :math:`N` modes must satisfy
+
+    .. math:: S\Omega S^T = \Omega, ~~\Omega = \begin{bmatrix}0&I\\-I&0\end{bmatrix}
+
+    where :math:`I` is the :math:`N\times N` identity matrix, and :math:`0` is the zero matrix.
+
+    The two orthogonal symplectic unitaries describing the interferometers are then further
+    decomposed via the :class:`~.Interferometer` operator and the Clements decomposition:
+
+    .. math:: U_i = i(X_i + iY_i)
+
+    where
+
+    .. math:: O_i = \begin{bmatrix}X&-Y\\Y&X\end{bmatrix}
+
+    Args:
+        S (array): a :math:`2N\times 2N` symplectic matrix describing the Gaussian transformation.
+    """
+    ns = None
+    def __init__(self, S, hbar=None, vacuum=False):
+        super().__init__([S])
+
+        if hbar is None:
+            self.hbar = _Engine._current_context.hbar
+        else:
+            self.hbar = hbar
+
+        O1, smat, O2 = bloch_messiah(S, tol=10)
+        N = S.shape[0]//2
+
+        X1 = O1[:N, :N]
+        P1 = O1[N:, :N]
+        X2 = O2[:N, :N]
+        P2 = O2[N:, :N]
+
+        self.U1 = 1j*(X1+1j*P1)
+        self.U2 = 1j*(X2+1j*P2)
+        self.Sq = np.diagonal(smat)[:N]
+        self.ns = N
+        self.vacuum = vacuum
+
+    def decompose(self, reg):
+        cmds = []
+        if not self.vacuum:
+            cmds = [Command(Interferometer(self.U2), reg, decomp=True)]
+
+        for n, expr in enumerate(self.Sq):
+            if np.abs(np.round(expr, 13)) != 1.0:
+                r = abs(log(expr))
+                phi = np.angle(log(expr))
+                cmds.append(Command(Sgate(r,phi), reg[n], decomp=True))
+
+        cmds.append(Command(Interferometer(self.U1), reg, decomp=True))
+
+        return cmds
+
+
+class CovarianceState(Decomposition):
+    r"""Prepare the specified modes in a Gaussian state.
+
+    This operation uses the Williamson decomposition to prepare
+    quantum modes into a given Gaussian state, specified by a
+    vector of means and a covariance matrix.
+
+    The Williamson decomposition decomposes the Gaussian state into a Gaussian
+    transformation (represented by a symplectic matrix) acting on :class:`~.Thermal`
+    states. The Gaussian transformation is then further decomposed into an array
+    of beamsplitters and local squeezing and rotation gates, by way of the
+    :class:`~.GaussianTransform` and :class:`~.Interferometer` decompositions.
+
+    Args:
+        V (array): the :math:`2N\times 2N` (real and positive definite) covariance matrix
+        r (array): a length :math:`2N` vector of means, of the
+            form :math:`(\x_0,\dots,\x_{N-1},\p_0,\dots,\p_{N-1})`
+    """
+    ns = None
+    def __init__(self, V, r=0):
+        super().__init__([V, r])
+
+        self.hbar = _Engine._current_context.hbar
+        th, self.S = williamson(V, tol=11)
+
+        self.ns = V.shape[0]//2
+        self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < 1e-6
+
+        self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
+
+        if r == 0:
+            self.x_disp = [0]*self.ns
+            self.p_disp = [0]*self.ns
+        else:
+            if len(r) != V.shape[0]:
+                raise ValueError('Vector of means must have the same length as the covariance matrix.')
+            self.x_disp = r[:self.ns]
+            self.p_disp = r[self.ns:]
+
+    def merge(self, other):
+        # sequential preparation, only the last one matters
+        if isinstance(other, [Preparation, CovarianceState]):
+            return other
+        else:
+            raise TypeError('For now, preparations cannot be merged with anything else.')
+
+    def decompose(self, reg):
+        cmds = []
+        if not self.pure:
+            for n, nbar in enumerate(self.nbar):
+                if np.round(nbar, 13) != 0:
+                    cmds.append(Command(Thermal(nbar), reg[n], decomp=True))
+            cmds.append(Command(GaussianTransform(self.S, hbar=self.hbar), reg, decomp=True))
+        else:
+            cmds.append(Command(GaussianTransform(self.S, hbar=self.hbar, vacuum=True), reg, decomp=True))
+
+        cmds += [Command(Xgate(u), reg[n], decomp=True) for n, u in enumerate(self.x_disp) if u != 0]
+        cmds += [Command(Zgate(u), reg[n], decomp=True) for n, u in enumerate(self.p_disp) if u != 0]
+
+        return cmds
+
 
 
 #====================================================================

@@ -18,11 +18,11 @@ from itertools import groupby
 import numpy as np
 from scipy.linalg import block_diag, sqrtm, polar, schur
 
-from .shared_ops import sympmat, changebasis
+from .backends.shared_ops import sympmat, changebasis
 
 
 def takagi(N, tol=13):
-    r"""Computes the Autonne-Takagi decomposition of a complex symmetric (not hermitian!) matrix.
+    r"""Computes the Autonne-Takagi decomposition of a complex symmetric (not Hermitian!) matrix.
 
     Note that singular values of N are considered equal if they are equal after np.round(values, tol).
 
@@ -92,26 +92,36 @@ def Ti(m, n, theta, phi, nmax):
 
 def nullTi(m, n, U):
     r"""Nullifies element m,n of U using Ti"""
-    r = U[m, n]/U[m, n+1]
     (nmax, mmax) = U.shape
 
     if nmax != mmax:
         raise ValueError("nmax and mmax must be equal")
 
-    thetar = np.arctan(np.abs(r))
-    phir = np.angle(r)
+    if U[m, n+1] == 0:
+        thetar = np.pi/2
+        phir = 0
+    else:
+        r = U[m, n] / U[m, n+1]
+        thetar = np.arctan(np.abs(r))
+        phir = np.angle(r)
+
     return [n, n+1, thetar, phir, nmax]
 
 def nullT(n, m, U):
     r"""Nullifies element n,m of U using T"""
-    r = -U[n, m]/U[n-1, m]
     (nmax, mmax) = U.shape
 
     if nmax != mmax:
         raise ValueError("nmax and mmax must be equal")
 
-    thetar = np.arctan(np.abs(r))
-    phir = np.angle(r)
+    if U[n-1, m] == 0:
+        thetar = np.pi/2
+        phir = 0
+    else:
+        r = -U[n, m] / U[n-1, m]
+        thetar = np.arctan(np.abs(r))
+        phir = np.angle(r)
+
     return [n-1, n, thetar, phir, nmax]
 
 def clements(V, tol=11):
@@ -153,7 +163,7 @@ def clements(V, tol=11):
     return tilist, tlist, np.diag(localV)
 
 
-def williamson(V, tol=11, hbar=2):
+def williamson(V, tol=11):
     r"""Performs the Williamson decomposition of positive definite (real) symmetric matrix.
 
     Note that it is assumed that the symplectic form is
@@ -167,7 +177,6 @@ def williamson(V, tol=11, hbar=2):
     Args:
         V (array): A positive definite symmetric (real) matrix V
         tol (int): the number of decimal places to use when determining if the matrix is symmetric
-        hbar (float): the convention used in the definition of :math:`\x` and :math:`\p`
 
     Returns:
         tuple(array,array): Returns a tuple ``(Db, S)`` where ``Db`` is a diagonal matrix
@@ -184,7 +193,7 @@ def williamson(V, tol=11, hbar=2):
         raise ValueError("The input matrix must have an even number of rows/columns")
 
     n = n//2
-    omega = sympmat(n)*hbar/2
+    omega = sympmat(n)
     rotmat = changebasis(n)
     vals = np.linalg.eigvalsh(V)
 
@@ -212,15 +221,15 @@ def williamson(V, tol=11, hbar=2):
 
     p = block_diag(*seq)
     Kt = K @ p
-    s1t = p@ s1 @ p
+    s1t = p @ s1 @ p
     dd = np.transpose(rotmat) @ s1t @rotmat
     Ktt = Kt @ rotmat
     Db = np.diag([1/dd[i, i+n] for i in range(n)] + [1/dd[i, i+n] for i in range(n)])
     S = Mm12 @ Ktt @ sqrtm(Db)
-    return Db, np.linalg.inv(S)
+    return Db, np.linalg.inv(S).T
 
 
-def bloch_messiah(S, tol=10, hbar=2):
+def bloch_messiah(S, tol=10):
     r""" Performs the Bloch-Messiah decomposition of a symplectic matrix in terms of
     two symplectic unitaries and squeezing transformation.
 
@@ -238,10 +247,9 @@ def bloch_messiah(S, tol=10, hbar=2):
     Args:
         S (array): A symplectic matrix S
         tol (int): the number of decimal places to use when determining if the matrix is symplectic
-        hbar (float): the convention used in the definition of :math:`\x` and :math:`\p`
 
     Returns:
-        tuple[array]: Returns the tuple ``(ut1, st1, v1)``. ``ut1`` and ``vt1`` are symplectic unitaries,
+        tuple[array]: Returns the tuple ``(ut1, st1, vt1)``. ``ut1`` and ``vt1`` are symplectic unitaries,
             and ``st1`` is diagonal and of the form :math:`= \text{diag}(s1,\dots,s_n, 1/s_1,\dots,1/s_n)`
             such that :math:`S = ut1  st1  v1`
     """
@@ -253,8 +261,8 @@ def bloch_messiah(S, tol=10, hbar=2):
         raise ValueError("The input matrix must have an even number of rows/columns")
 
     n = n//2
-    omega = sympmat(n)*hbar/2
-    if np.round(np.linalg.norm(np.transpose(S) @ omega @ S -omega), tol) != 0.0:
+    omega = sympmat(n)
+    if np.round(np.linalg.norm(np.transpose(S) @ omega @ S - omega), tol) != 0.0:
         raise ValueError("The input matrix is not symplectic")
 
     u, sigma = polar(S, side='left')
@@ -269,7 +277,7 @@ def bloch_messiah(S, tol=10, hbar=2):
 
     ## Apply a second permutation matrix to permute s
     ## (and their corresonding inverses) to get the canonical symplectic form
-    qomega = np.transpose(ut) @ omega @ ut
+    qomega = np.transpose(ut) @ (omega) @ ut
     perm1 = list(range(2*n))
 
     for i in range(n):
@@ -321,7 +329,6 @@ def covmat_to_hamil(V, tol=10):
 
     W = 1j*V @ omega
     l, v = np.linalg.eig(W)
-    print(1/l.real)
     H = (1j * omega @ (v @ np.diag(np.arctanh(1.0/l.real)) @ np.linalg.inv(v))).real
 
     return H

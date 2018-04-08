@@ -274,7 +274,7 @@ def rotation_matrix(phi):
 
 
 @functools.lru_cache()
-def sympmat(n, hbar=2):
+def sympmat(n):
     r""" Returns the symplectic matrix of order n
 
     Args:
@@ -287,7 +287,7 @@ def sympmat(n, hbar=2):
     idm = np.identity(n)
     omega = np.concatenate((np.concatenate((0*idm, idm), axis=1),
                             np.concatenate((-idm, 0*idm), axis=1)), axis=0)
-    return omega #hbar*omega/2
+    return omega
 
 
 @functools.lru_cache()
