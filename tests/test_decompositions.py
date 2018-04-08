@@ -86,8 +86,8 @@ class TestWilliamsonAndBlochMessiah(BaseTest):
             D, S = dec.williamson(V)
             omega = dec.sympmat(n)
 
-            self.assertAlmostEqual(np.linalg.norm(np.transpose(S) @ omega @ S -omega),0)
-            self.assertAlmostEqual(np.linalg.norm(np.transpose(S) @ D @ S -V),0)
+            self.assertAlmostEqual(np.linalg.norm(S @ omega @ S.T -omega),0)
+            self.assertAlmostEqual(np.linalg.norm(S @ D @ S.T -V),0)
 
 
 
@@ -117,8 +117,8 @@ class TestWilliamsonAndBlochMessiahPure(BaseTest):
             D, S = dec.williamson(V)
             omega = dec.sympmat(n)
 
-            self.assertAlmostEqual(np.linalg.norm(np.transpose(S) @ omega @ S -omega),0)
-            self.assertAlmostEqual(np.linalg.norm(np.transpose(S) @ D @ S -V),0)
+            self.assertAlmostEqual(np.linalg.norm(S @ omega @ S.T -omega),0)
+            self.assertAlmostEqual(np.linalg.norm(S @ D @ S.T -V),0)
 
 
 
