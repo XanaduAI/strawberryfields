@@ -272,12 +272,16 @@ import copy
 
 import numpy as np
 from numpy import pi, cos, sin, exp, sqrt, arctan, arccosh, sign, arctan2, arcsinh, cosh, tanh, ndarray, all, arange, log, matmul
+
+import scipy as sp
 from scipy.special import factorial as fac
+
 from tensorflow import Tensor, Variable
 from tensorflow import cos as tfcos, sin as tfsin, exp as tfexp, sqrt as tfsqrt, atan as tfatan, acosh as tfacosh, sign as tfsign, \
     atan2 as tfatan2, asinh as tfasinh, cosh as tfcosh, tanh as tftanh, log as tflog, matmul as tfmatmul
 
 from .backends.tfbackend.ops import TensorWrapper, _wrap_tensors
+from .backends.shared_ops import changebasis
 from .engine import Engine as _Engine, Command, RegRef, RegRefTransform
 from .decompositions import clements, bloch_messiah, williamson
 
@@ -1380,9 +1384,7 @@ class Interferometer(Decomposition):
     def __init__(self, U):
         super().__init__([U])
 
-        if np.all(np.abs(U - 1j*np.identity(len(U))) < 1e-13):
-            self.identity = True
-        elif np.all(np.abs(U - np.identity(len(U))) < 1e-13):
+        if np.all(np.abs(U - np.identity(len(U))) < 1e-13):
             self.identity = True
         else:
             self.identity = False
@@ -1433,7 +1435,7 @@ class GaussianTransform(Decomposition):
     The two orthogonal symplectic unitaries describing the interferometers are then further
     decomposed via the :class:`~.Interferometer` operator and the Clements decomposition:
 
-    .. math:: U_i = i(X_i + iY_i)
+    .. math:: U_i = X_i + iY_i
 
     where
 
@@ -1459,8 +1461,8 @@ class GaussianTransform(Decomposition):
         X2 = O2[:N, :N]
         P2 = O2[N:, :N]
 
-        self.U1 = 1j*(X1+1j*P1)
-        self.U2 = 1j*(X2+1j*P2)
+        self.U1 = X1+1j*P1
+        self.U2 = X2+1j*P2
         self.Sq = np.diagonal(smat)[:N]
         self.ns = N
         self.vacuum = vacuum
@@ -1474,7 +1476,7 @@ class GaussianTransform(Decomposition):
             if np.abs(np.round(expr, 13)) != 1.0:
                 r = abs(log(expr))
                 phi = np.angle(log(expr))
-                cmds.append(Command(Sgate(r,phi), reg[n], decomp=True))
+                cmds.append(Command(Sgate(-r, phi), reg[n], decomp=True))
 
         cmds.append(Command(Interferometer(self.U1), reg, decomp=True))
 
@@ -1529,13 +1531,45 @@ class CovarianceState(Decomposition):
 
     def decompose(self, reg):
         cmds = []
-        if not self.pure:
-            for n, nbar in enumerate(self.nbar):
+
+        D = np.diag(self.p[0])
+        is_diag = np.all(self.p[0] == np.diag(D))
+
+        BD = changebasis(self.ns) @ self.p[0] @ changebasis(self.ns).T
+        BD_modes = [BD[i*2:(i+1)*2, i*2:(i+1)*2] for i in range(BD.shape[0]//2)]
+        is_block_diag = (not is_diag) and np.all(BD == sp.linalg.block_diag(*BD_modes))
+
+        if self.pure and is_diag:
+            # covariance matrix consists of x/p quadrature squeezed state
+            for n, expr in enumerate(D[:self.ns]*2/self.hbar):
+                if np.abs(np.round(expr, 13)) != 1.0:
+                    r = abs(log(expr)/2)
+                    cmds.append(Command(Sgate(r, 0), reg[n], decomp=True))
+
+        elif self.pure and is_block_diag:
+            # covariance matrix consists of rotated squeezed states
+            for n, v in enumerate(BD_modes):
+                if not np.all(v - np.identity(2)*self.hbar/2 < 1e-10):
+                    r = np.abs(arccosh(np.sum(np.diag(v/self.hbar)))/2)
+                    phi = arctan(2*v[0,1] / np.sum(np.diag(v)*[1,-1]))
+                    cmds.append(Command(Sgate(r, phi), reg[n], decomp=True))
+
+        elif not self.pure and is_diag and np.all(D[:self.ns] == D[self.ns:]):
+            # covariance matrix consists of thermal states
+            for n, nbar in enumerate(D[:self.ns]/self.hbar - 0.5):
                 if np.round(nbar, 13) != 0:
                     cmds.append(Command(Thermal(nbar), reg[n], decomp=True))
-            cmds.append(Command(GaussianTransform(self.S, hbar=self.hbar), reg, decomp=True))
+
         else:
-            cmds.append(Command(GaussianTransform(self.S, hbar=self.hbar, vacuum=True), reg, decomp=True))
+            if not self.pure:
+                # mixed state, must initialise thermal states
+                for n, nbar in enumerate(self.nbar):
+                    if np.round(nbar, 13) != 0:
+                        cmds.append(Command(Thermal(nbar), reg[n], decomp=True))
+
+            cmds.append(
+                Command(GaussianTransform(self.S, hbar=self.hbar, vacuum=self.pure), reg, decomp=True)
+            )
 
         cmds += [Command(Xgate(u), reg[n], decomp=True) for n, u in enumerate(self.x_disp) if u != 0]
         cmds += [Command(Zgate(u), reg[n], decomp=True) for n, u in enumerate(self.p_disp) if u != 0]

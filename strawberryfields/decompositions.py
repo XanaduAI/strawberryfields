@@ -293,7 +293,7 @@ def bloch_messiah(S, tol=10):
     return ut1, st1, v1
 
 
-def covmat_to_hamil(V, tol=10):
+def covmat_to_hamil(V, tol=10): # pragma: no cover
     r"""Converts a covariance matrix to a Hamiltonian.
 
     Given a covariance matrix V of a Gaussian state :math:`\rho` in the xp ordering,
@@ -322,7 +322,7 @@ def covmat_to_hamil(V, tol=10):
     n = n//2
     omega = sympmat(n)
 
-    vals = np.linalg.eigvalsh(V+1j*omega)
+    vals = np.linalg.eigvalsh(V)
     for val in vals:
         if val <= 0:
             raise ValueError("Input matrix is not positive definite")
@@ -334,7 +334,7 @@ def covmat_to_hamil(V, tol=10):
     return H
 
 
-def hamil_to_covmat(H, tol=10):
+def hamil_to_covmat(H, tol=10): # pragma: no cover
     r"""Converts a Hamiltonian matrix to a covariance matrix.
 
     Given a Hamiltonian matrix of a Gaussian state H, finds the equivalent covariance matrix
