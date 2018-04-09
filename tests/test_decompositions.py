@@ -47,6 +47,19 @@ class TestTakagi(BaseTest):
 
 class TestClements(BaseTest):
     num_subsystems = 1
+    def test_identity(self):
+        n=20
+        U=np.identity(n)
+        (tilist,tlist, diags)=dec.clements(U)
+        qrec=np.identity(n)
+        for i in tilist:
+            qrec=dec.T(*i)@qrec
+        qrec=np.diag(diags) @ qrec
+        for i in reversed(tlist):
+            qrec=dec.Ti(*i) @qrec
+
+        self.assertAllAlmostEqual(U, qrec, delta=self.tol)
+
     def test_random_unitary(self):
         error=np.empty(nsamples)
         for k in range(nsamples):

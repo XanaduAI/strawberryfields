@@ -44,8 +44,9 @@ class GaussianDecompositions(GaussianBaseTest):
         state.apply_u(U2)
         self.V_mixed = state.scovmatxp()*self.hbar/2
         th, self.S = williamson(self.V_mixed)
-        self.o, r, p = bloch_messiah(self.S)
+        self.o, r, self.p = bloch_messiah(self.S)
         self.u1 = (self.o[:3, :3] + 1j*self.o[3:, :3])
+        self.u2 = (self.p[:3, :3] + 1j*self.p[3:, :3])
 
         state = gaussiancircuit.GaussianModes(3, hbar=self.hbar)
         state.apply_u(U1)
@@ -53,6 +54,25 @@ class GaussianDecompositions(GaussianBaseTest):
             state.squeeze(np.log(i+1+2), 0, i)
         state.apply_u(U2)
         self.V_pure = state.scovmatxp()*self.hbar/2
+
+    def test_merge_interferometer(self):
+        I1 = Interferometer(self.u1)
+        I1inv = Interferometer(self.u1.conj().T)
+        I2 = Interferometer(self.u2)
+
+        # unitary merged with its conjugate transpose is unitary
+        self.assertAllAlmostEqual(I1.merge(I1inv).p[0], np.identity(3), delta=self.tol)
+        # two merged unitaries are the same as their product
+        self.assertAllAlmostEqual(I1.merge(I2).p[0], self.u2@self.u1, delta=self.tol)
+
+    def test_merge_covariance(self):
+        V1 = CovarianceState(self.V_mixed, hbar=self.hbar)
+        V2 = CovarianceState(self.V_pure, hbar=self.hbar)
+
+        # only the second applied covariance state is kept
+        self.assertEqual(V1.merge(V2), V2)
+        # the same is true of state operations
+        self.assertEqual(Squeezed(2).merge(V2), V2)
 
     def test_covariance_random_state_mixed(self):
         self.eng.reset()
@@ -135,6 +155,18 @@ class GaussianCovarianceInitialStates(GaussianBaseTest):
         state = self.eng.run(backend=self.backend_name, cutoff_dim=self.D)
         self.assertAllAlmostEqual(state.cov(), cov, delta=self.tol)
         self.assertAllEqual(len(self.eng.cmd_applied), 3)
+
+    def test_covariance_displaced_squeezed(self):
+        self.eng.reset()
+        q = self.eng.register
+        cov = (self.hbar/2)*np.diag([np.exp(-0.1)]*3 + [np.exp(0.1)]*3)
+
+        with self.eng:
+            CovarianceState(cov, r=[0, 0.1, 0.2, -0.1, 0.3, 0]) | q
+
+        state = self.eng.run(backend=self.backend_name, cutoff_dim=self.D)
+        self.assertAllAlmostEqual(state.cov(), cov, delta=self.tol)
+        self.assertAllEqual(len(self.eng.cmd_applied), 7)
 
     def test_covariance_thermal(self):
         self.eng.reset()

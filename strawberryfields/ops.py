@@ -273,7 +273,7 @@ import copy
 import numpy as np
 from numpy import pi, cos, sin, exp, sqrt, arctan, arccosh, sign, arctan2, arcsinh, cosh, tanh, ndarray, all, arange, log, matmul
 
-import scipy as sp
+from scipy.linalg import block_diag
 from scipy.special import factorial as fac
 
 from tensorflow import Tensor, Variable
@@ -427,7 +427,7 @@ class Preparation(Operation):
     """Abstract base class for subsystem preparation."""
     def merge(self, other):
         # sequential preparation, only the last one matters
-        if isinstance(other, Preparation):
+        if isinstance(other, (Preparation, CovarianceState)):
             return other
         else:
             raise TypeError('For now, preparations cannot be merged with anything else.')
@@ -1395,7 +1395,7 @@ class Interferometer(Decomposition):
         cmds = []
 
         if not self.identity:
-            for n, m, theta, phi, N in self.BS1:
+            for n, m, theta, phi, N in self.BS1: # pylint: disable=unused-variable
                 if np.round(phi, 13) != 0:
                     cmds.append(Command(Rgate(phi), reg[n], decomp=True))
                 if np.round(theta, 13) != 0:
@@ -1406,7 +1406,7 @@ class Interferometer(Decomposition):
                     q = log(expphi).imag
                     cmds.append(Command(Rgate(q), reg[n], decomp=True))
 
-            for n, m, theta, phi, N in reversed(self.BS2):
+            for n, m, theta, phi, N in reversed(self.BS2):  # pylint: disable=unused-variable
                 if np.round(theta, 13) != 0:
                     cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m]), decomp=True))
                 if np.round(phi, 13) != 0:
@@ -1423,7 +1423,8 @@ class GaussianTransform(Decomposition):
 
     .. math:: S = O_1 R O_2
 
-    where :math:`O_1` and :math:`O_2` are two orthogonal symplectic matrices, and :math:`R`
+    where :math:`O_1` and :math:`O_2` are two orthogonal symplectic matrices (and thus passive
+    Gaussian transformations), and :math:`R`
     is a squeezing transformation in the phase space (:math:`R=\text{diag}(e^{-z},e^z)`).
 
     The symplectic matrix describing the Gaussian transformation on :math:`N` modes must satisfy
@@ -1443,15 +1444,24 @@ class GaussianTransform(Decomposition):
 
     Args:
         S (array): a :math:`2N\times 2N` symplectic matrix describing the Gaussian transformation.
+        hbar (float): the value of :math:`\hbar` used in the definition of the :math:`\x`
+            and :math:`\p` quadrature operators. Note that if used inside of an engine
+            context, the hbar value of the engine will override this keyword argument.
+        vacuum (bool): set to True if acting on a vacuum state. In this case, :math:`O_2 V O_2^T = I`,
+            and the unitary associated with orthogonal symplectic :math:`O_2` will be ignored.
     """
     ns = None
     def __init__(self, S, hbar=None, vacuum=False):
         super().__init__([S])
 
-        if hbar is None:
+        try:
             self.hbar = _Engine._current_context.hbar
-        else:
-            self.hbar = hbar
+        except AttributeError:
+            if hbar is None:
+                raise ValueError("Either specify the hbar keyword argument, "
+                                 "or use this operator inside an engine context.")
+            else:
+                self.hbar = hbar
 
         O1, smat, O2 = bloch_messiah(S, tol=10)
         N = S.shape[0]//2
@@ -1500,12 +1510,23 @@ class CovarianceState(Decomposition):
         V (array): the :math:`2N\times 2N` (real and positive definite) covariance matrix
         r (array): a length :math:`2N` vector of means, of the
             form :math:`(\x_0,\dots,\x_{N-1},\p_0,\dots,\p_{N-1})`
+        hbar (float): the value of :math:`\hbar` used in the definition of the :math:`\x`
+            and :math:`\p` quadrature operators. Note that if used inside of an engine
+            context, the hbar value of the engine will override this keyword argument.
     """
     ns = None
-    def __init__(self, V, r=0):
+    def __init__(self, V, r=0, hbar=None):
         super().__init__([V, r])
 
-        self.hbar = _Engine._current_context.hbar
+        try:
+            self.hbar = _Engine._current_context.hbar
+        except AttributeError:
+            if hbar is None:
+                raise ValueError("Either specify the hbar keyword argument, "
+                                 "or use this operator inside an engine context.")
+            else:
+                self.hbar = hbar
+
         th, self.S = williamson(V, tol=11)
 
         self.ns = V.shape[0]//2
@@ -1524,12 +1545,13 @@ class CovarianceState(Decomposition):
 
     def merge(self, other):
         # sequential preparation, only the last one matters
-        if isinstance(other, [Preparation, CovarianceState]):
+        if isinstance(other, CovarianceState):
             return other
         else:
             raise TypeError('For now, preparations cannot be merged with anything else.')
 
     def decompose(self, reg):
+        # pylint: disable=too-many-branches
         cmds = []
 
         D = np.diag(self.p[0])
@@ -1537,7 +1559,7 @@ class CovarianceState(Decomposition):
 
         BD = changebasis(self.ns) @ self.p[0] @ changebasis(self.ns).T
         BD_modes = [BD[i*2:(i+1)*2, i*2:(i+1)*2] for i in range(BD.shape[0]//2)]
-        is_block_diag = (not is_diag) and np.all(BD == sp.linalg.block_diag(*BD_modes))
+        is_block_diag = (not is_diag) and np.all(BD == block_diag(*BD_modes))
 
         if self.pure and is_diag:
             # covariance matrix consists of x/p quadrature squeezed state
@@ -1551,7 +1573,7 @@ class CovarianceState(Decomposition):
             for n, v in enumerate(BD_modes):
                 if not np.all(v - np.identity(2)*self.hbar/2 < 1e-10):
                     r = np.abs(arccosh(np.sum(np.diag(v/self.hbar)))/2)
-                    phi = arctan(2*v[0,1] / np.sum(np.diag(v)*[1,-1]))
+                    phi = arctan(2*v[0, 1] / np.sum(np.diag(v)*[1, -1]))
                     cmds.append(Command(Sgate(r, phi), reg[n], decomp=True))
 
         elif not self.pure and is_diag and np.all(D[:self.ns] == D[self.ns:]):
