@@ -54,7 +54,7 @@ class FockStateTF(BaseFockState):
         Args:
             t: Tensor (or iterable of Tensors) to (potentially) numerically evaluate.
             **kwargs: can be used to pass a session or a feed_dict. Otherwise a temporary session
-                                and no feed_dict will be used.
+                and no feed_dict will be used.
 
         Returns:
             The numerical evaluation of the Tensor t. Type is the same as the dtype of t
@@ -78,13 +78,13 @@ class FockStateTF(BaseFockState):
             **kwargs: Optional keyword arguments.
 
                 * If this contains the key
-                    ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
-                    When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
+                  ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
+                  When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
-                    which is specified at initialization.
+                  which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                    These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
-                    If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
+                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
             float/Tensor: the numerical value, or an unevaluated Tensor object, for the trace.
@@ -116,13 +116,13 @@ class FockStateTF(BaseFockState):
             **kwargs: Optional keyword arguments.
 
                 * If this contains the key
-                    ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
-                    When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
+                  ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
+                  When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
-                    which is specified at initialization.
+                  which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                    These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
-                    If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
+                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
         Returns:
             float/Tensor: the numerical values, or an unevaluated Tensor object, for the Fock-state probabilities.
         """
@@ -174,14 +174,13 @@ class FockStateTF(BaseFockState):
         Args:
             **kwargs: Optional keyword arguments.
 
-                * If this contains the key
-                    ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
-                    When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
+                * If this contains the key ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
+                  When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
-                    which is specified at initialization.
+                  which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                    These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
-                    If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
+                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
         Returns:
             array/Tensor: the numerical values, or an unevaluated Tensor object, for the Fock-basis probabilities.
         """
@@ -219,13 +218,13 @@ class FockStateTF(BaseFockState):
             **kwargs: Optional keyword arguments.
 
                 * If this contains the key
-                    ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
-                    When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
+                  ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
+                  When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
-                    which is specified at initialization.
+                  which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                    These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
-                    If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
+                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
         Returns:
             float/Tensor: the numerical value, or an unevaluated Tensor object, for the fidelity.
         """
@@ -261,13 +260,13 @@ class FockStateTF(BaseFockState):
             **kwargs: Optional keyword arguments.
 
                 * If this contains the key
-                    ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
-                    When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
+                  ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
+                  When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
-                    which is specified at initialization.
+                  which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                    These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
-                    If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
+                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
         Returns:
             float/Tensor: the numerical value, or an unevaluated Tensor object, for the fidelity :math:`\bra{\vec{\alpha}}\rho\ket{\vec{\alpha}}`.
         """
@@ -319,13 +318,13 @@ class FockStateTF(BaseFockState):
             **kwargs: Optional keyword arguments.
 
                 * If this contains the key
-                    ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
-                    When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
+                  ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
+                  When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
-                    which is specified at initialization.
+                  which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                    These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
-                    If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
+                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
             float/Tensor: the numerical value, or an unevaluated Tensor object, for the fidelity :math:`\bra{\vec{0}}\rho\ket{\vec{0}}`.
@@ -352,13 +351,13 @@ class FockStateTF(BaseFockState):
             **kwargs: Optional keyword arguments.
 
                 * If this contains the key
-                    ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
-                    When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
+                  ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
+                  When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
-                    which is specified at initialization.
+                  which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                    These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
-                    If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
+                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
             bool/Tensor: the boolean value, or an unevaluated Tensor object, for whether the state is in vacuum.
@@ -379,13 +378,13 @@ class FockStateTF(BaseFockState):
             **kwargs: Optional keyword arguments.
 
                 * If this contains the key
-                    ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
-                    When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
+                  ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
+                  When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
-                    which is specified at initialization.
+                  which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                    These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
-                    If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
+                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
             array/Tensor: the numerical value, or an unevaluated Tensor object, for the density matrix.
@@ -421,13 +420,13 @@ class FockStateTF(BaseFockState):
             **kwargs: Optional keyword arguments.
 
                 * If this contains the key
-                    ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
-                    When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
+                  ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
+                  When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
-                    which is specified at initialization.
+                  which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                    These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
-                    If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
+                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
                 float/Tensor: the numerical value, or an unevaluated Tensor object, for the expectation value
@@ -480,13 +479,13 @@ class FockStateTF(BaseFockState):
             **kwargs: Optional keyword arguments.
 
                 * If this contains the key
-                    ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
-                    When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
+                  ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
+                  When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
-                    which is specified at initialization.
+                  which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                    These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
-                    If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
+                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
         Returns:
             float/Tensor: the numerical value, or an unevaluated Tensor object, for the mean photon number.
         """
@@ -519,13 +518,13 @@ class FockStateTF(BaseFockState):
             **kwargs: Optional keyword arguments.
 
                 * If this contains the key
-                    ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
-                    When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
+                  ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
+                  When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
-                    which is specified at initialization.
+                  which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                    These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
-                    If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
+                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
             array/Tensor: the numerical value, or an unevaluated Tensor object, for the ket.
@@ -546,13 +545,13 @@ class FockStateTF(BaseFockState):
             **kwargs: Optional keyword arguments.
 
                 * If this contains the key
-                    ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
-                    When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
+                  ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
+                  When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
-                    which is specified at initialization.
+                  which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                    These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
-                    If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
+                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
             array/Tensor: the numerical value, or an unevaluated Tensor object, for the density matrix.

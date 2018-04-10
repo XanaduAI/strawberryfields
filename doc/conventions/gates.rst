@@ -110,7 +110,7 @@ Squeezing
 
 The squeeze gate affects the position and momentum operators as
 
-.. math:: S^\dagger(z) \x S(z) = e^{-r}\x, ~~~ S^\dagger(z) \p S(z) = e^{r}\p
+.. math:: S^\dagger(z) \x_{\phi} S(z) = e^{-r}\x_{\phi}, ~~~ S^\dagger(z) \p_{\phi} S(z) = e^{r}\p_{\phi}
 
 The Fock basis decomposition of displacement and squeezing operations was analysed by Krall :cite:`kral1990`, and the following quantity was calculated,
 

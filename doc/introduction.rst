@@ -73,8 +73,8 @@ operators**
 .. math::
 
    \begin{aligned}
-    \hat{x} := \sqrt{\frac{1}{\hbar}}(\a + \ad), \\
-    \hat{p} := -i\sqrt{\frac{2}{\hbar}}(\a - \ad),\end{aligned}
+    \hat{x} := \sqrt{\frac{\hbar}{2}}(\a + \ad), \\
+    \hat{p} := -i\sqrt{\frac{\hbar}{2}}(\a - \ad),\end{aligned}
 
 with :math:`[\x,\p]=i \hbar`. These self-adjoint
 operators are proportional to the hermitian and antihermitian parts of

@@ -29,6 +29,10 @@ Features
 
 .. 
 
+* Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows anyone to run a quantum computing simulation via drag and drop.
+
+.. 
+
 * Includes a suite of CV **quantum computer simulators** implemented using **NumPy** and **Tensorflow** - these built-in quantum compiler tools convert and optimize Blackbird code for classical simulation
 
 .. * Includes a **quantum machine learning toolbox**, built on top of the Tensorflow backend
@@ -38,6 +42,8 @@ Features
 
 Getting started
 ===============
+
+To see Strawberry Fields in action immediately, try out our `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web application. Prepare your initial states, drag and drop gates, and watch your simulation run in real time right in your web browser.
 
 To get Strawberry Fields installed and running on your system, begin at the :ref:`download and installation guide <installation>`. Then, familiarize yourself with the framework of :ref:`continuous-variable quantum computation <introduction>`, the :ref:`conventions <conventions>` used by Strawberry Fields, and check out some important and interesting continuous-variable :ref:`quantum algorithms <algorithms>`.
 
@@ -51,7 +57,7 @@ Support
 - **Source Code:** https://github.com/XanaduAI/strawberryfields
 - **Issue Tracker:** https://github.com/XanaduAI/strawberryfields/issues
 
-If you are having issues, please let us know by posting the issue on our Github issue tracker.
+If you are having issues, please let us know by posting the issue on our Github issue tracker, or by joining our `Strawberry Fields Slack channel <https://join.slack.com/t/sf-xanadu/shared_invite/enQtMzQ0NzA0NTczNTkxLTJhOWM0MzY4N2U1ODc5NWZmY2JlN2FmOTY3OTE3ZmVjMWFhZjMwZWY0ODRkZDFmMTA5NjA1YjgyYzA3NDg3NGM>`_.
 
 .. We have a mailing list located at: support@xanadu.ai
 
