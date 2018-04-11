@@ -86,12 +86,12 @@ Note that this runs *all* of the tests, using *all* available backends, so can b
 
   make test-[backend]
 
-where ``[backend]`` should be replaced with the backend you would like to test (``fock``, ``tf``, or ``guassian``).
+where ``[backend]`` should be replaced with the backend you would like to test (``fock``, ``tf``, or ``gaussian``).
 
 Individual test modules are run using
 ::
 
-  python3 tests/test_gate.py --backend=[backend]
+  python tests/test_gate.py --backend=[backend]
 
 
 Documentation
@@ -126,6 +126,10 @@ Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and 
 
 We welcome contributions - simply fork the Strawberry Fields repository, and then make a
 `pull request <https://help.github.com/articles/about-pull-requests/>`_ containing your contribution.
+
+If you are doing research using Strawberry Fields, please cite `our whitepaper <https://arxiv.org/abs/1804.03159>`_:
+
+  Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook. Strawberry Fields: A Software Platform for Photonic Quantum Computing. *arXiv*, 2018. arXiv:1804.03159
 
 
 Support
