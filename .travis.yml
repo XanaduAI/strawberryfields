@@ -10,14 +10,22 @@ env:
     - BATCHED=0
   matrix:
     include:
-      - env: BACKEND=gaussian
-      - env: BACKEND=gaussian MIXED=1
-      - env: BACKEND=fock
-      - env: BACKEND=fock MIXED=1
-      - env: BACKEND=tf
-      - env: BACKEND=tf MIXED=1
-      - env: BACKEND=tf BATCHED=1
-      - env: BACKEND=tf MIXED=1 BATCHED=1
+      - python: 3.5
+        env: BACKEND=gaussian
+      - python: 3.5
+        env: BACKEND=gaussian MIXED=1
+      - python: 3.5
+        env: BACKEND=fock
+      - python: 3.5
+        env: BACKEND=fock MIXED=1
+      - python: 3.5
+        env: BACKEND=tf
+      - python: 3.5
+        env: BACKEND=tf MIXED=1
+      - python: 3.5
+        env: BACKEND=tf BATCHED=1
+      - python: 3.5
+        env: BACKEND=tf MIXED=1 BATCHED=1
         sudo: required
 # command to install dependencies
 install:
