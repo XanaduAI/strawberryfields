@@ -321,7 +321,7 @@ def check_type(math_fn):
     fn_name = math_fn.__name__
     def wrapper(*args, **kwargs):
         """wrapper function"""
-        if sum([isinstance(x, (Variable, Tensor)) for x in args]):
+        if any([isinstance(x, (Variable, Tensor)) for x in args]):
             # if anything is a tf object, use the tensorflow version of the function
             math_fn = tf_math_fns[fn_name]
         else:

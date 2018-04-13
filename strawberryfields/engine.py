@@ -262,8 +262,7 @@ class RegRefTransform:
               for plain numeric variables, thus producing the expected behavior in both cases.
         """
         temp = [r.val for r in self.regrefs]
-        any_nones = sum([v is None for v in temp])
-        if any_nones:
+        if any([v is None for v in temp]):
             raise SFProgramError('Trying to use a nonexistent measurement result (e.g. before it can be measured).')
         return self.func(*temp)
 
