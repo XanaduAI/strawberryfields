@@ -1,3 +1,4 @@
+sudo: false
 language: python
 cache: pip
 python:
@@ -8,16 +9,15 @@ env:
     - MIXED=0
     - BATCHED=0
   matrix:
-    - BACKEND=gaussian
-    - BACKEND=gaussian MIXED=1
-    - BACKEND=fock
-    - BACKEND=fock MIXED=1
-    - BACKEND=tf
-    - BACKEND=tf MIXED=1
-    - BACKEND=tf BATCHED=1
     include:
-      - python: 3.5
-        env: BACKEND=tf MIXED=1 BATCHED=1
+      - env: BACKEND=gaussian
+      - env: BACKEND=gaussian MIXED=1
+      - env: BACKEND=fock
+      - env: BACKEND=fock MIXED=1
+      - env: BACKEND=tf
+      - env: BACKEND=tf MIXED=1
+      - env: BACKEND=tf BATCHED=1
+      - env: BACKEND=tf MIXED=1 BATCHED=1
         sudo: required
 # command to install dependencies
 install:
