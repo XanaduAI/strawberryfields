@@ -27,7 +27,7 @@ requirements = [
     "numpy>=1.13",
     "scipy>=1.0.0",
     "networkx>=2.0",
-    "tensorflow==1.3.0"
+    "tensorflow>=1.3.0,<1.7"
 ]
 
 info = {
@@ -45,7 +45,7 @@ info = {
                     'strawberryfields.backends.fockbackend',
                     'strawberryfields.backends.gaussianbackend'
                 ],
-    'package_data': {'strawberryfields': 'backends/data'},
+    'package_data': {'strawberryfields': ['backends/data/*']},
     'include_package_data': True,
     'description': 'Open source library for continuous-variable quantum computation',
     'long_description': open('README.rst').read(),
