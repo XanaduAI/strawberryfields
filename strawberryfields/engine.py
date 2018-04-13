@@ -104,7 +104,7 @@ from functools import wraps
 import networkx as nx
 
 from .backends import load_backend
-from .backends.base import NotApplicableError
+from .backends.base import SFNotApplicableError
 
 
 def _print_list(i, q):
@@ -467,7 +467,7 @@ class Engine:
                     # try to apply it to the backend
                     cmd.op.apply(cmd.reg, self.backend, hbar=self.hbar, **kwargs)
                     self.cmd_applied.append(cmd)
-                except NotApplicableError:
+                except SFNotApplicableError:
                     # command is not applicable to the current backend type
                     raise TypeError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
                 except NotImplementedError:

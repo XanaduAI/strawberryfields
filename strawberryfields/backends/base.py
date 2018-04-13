@@ -114,7 +114,7 @@ Code details
 # pylint: disable=no-self-use
 
 
-class NotApplicableError(TypeError):
+class SFNotApplicableError(TypeError):
     """Exception raised by the backend when the user attempts an unsupported operation.
     E.g. :meth:`~.BaseBackend.measure_fock` on a Gaussian backend, :meth:`~.BaseBackend.measure_heterodyne` on a Fock backend.
     Conceptually different from NotImplementedError (not implemented, but at some point may be).
@@ -571,24 +571,24 @@ class BaseGaussian(BaseBackend):
 
     def get_cutoff_dim(self):
         # pylint: disable=unused-argument,missing-docstring
-        raise NotApplicableError
+        raise SFNotApplicableError
 
     def prepare_fock_state(self, n, mode):
         # pylint: disable=unused-argument,missing-docstring
-        raise NotApplicableError
+        raise SFNotApplicableError
 
     def prepare_ket_state(self, state, mode):
         # pylint: disable=unused-argument,missing-docstring
-        raise NotApplicableError
+        raise SFNotApplicableError
 
     def cubic_phase(self, gamma, mode):
         # pylint: disable=unused-argument,missing-docstring
-        raise NotApplicableError
+        raise SFNotApplicableError
 
     def kerr_interaction(self, kappa, mode):
         # pylint: disable=unused-argument,missing-docstring
-        raise NotApplicableError
+        raise SFNotApplicableError
 
     def measure_fock(self, modes, select=None):
         # pylint: disable=unused-argument,missing-docstring
-        raise NotApplicableError
+        raise SFNotApplicableError
