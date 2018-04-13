@@ -59,7 +59,7 @@ Strawberry Fields depends on the following Python packages:
 * `NumPy <http://numpy.org/>`_  >=1.13.3
 * `SciPy <http://scipy.org/>`_  >=1.0.0
 * `NetworkX <http://networkx.github.io/>`_ >=2.0
-* `Tensorflow <https://www.tensorflow.org/>`_ >=1.3
+* `Tensorflow <https://www.tensorflow.org/>`_ >=1.3,<1.7
 
 These can be installed using pip, or, if on linux, using your package manager (i.e. ``apt`` if on a Debian-based system.)
 

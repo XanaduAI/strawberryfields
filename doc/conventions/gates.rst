@@ -100,7 +100,7 @@ Squeezing
    .. math::
       & S(z) = \exp\left(\frac{1}{2}\left(z^* \a^2-z {\ad}^{2} \right) \right) = \exp\left(\frac{r}{2}\left(e^{-i\phi}\a^2 -e^{i\phi}{\ad}^{2} \right) \right)\\
       & S^\dagger(z) \a S(z) = \a \cosh(r) -\ad e^{i \phi} \sinh r\\
-      & S^\dagger(z) \ad S(z) = \ad \cosh(r) -\ad e^{-i \phi} \sinh(r)
+      & S^\dagger(z) \ad S(z) = \ad \cosh(r) -\a e^{-i \phi} \sinh(r)
 
    where :math:`z=r e^{i \phi}` with :math:`r \geq 0` and :math:`\phi \in [0,2 \pi)`.
 
@@ -264,7 +264,7 @@ A 50% or **50-50 beamsplitter** has :math:`\theta=\pi/4` and :math:`\phi=0` or :
 and
 
 .. math::
-	& B(\pi/4,\pi)\xket{x_1}\xket{x_2} = \xket{\frac{1}{\sqrt{2}}(x_1+x_2)}\xket{\frac{1}{\sqrt{2}}(x_2+x_1)}\\
+	& B(\pi/4,\pi)\xket{x_1}\xket{x_2} = \xket{\frac{1}{\sqrt{2}}(x_1+x_2)}\xket{\frac{1}{\sqrt{2}}(x_2-x_1)}\\
 	& B(\pi/4,\pi)\ket{p_1}_p\ket{p_2}_p = \xket{\frac{1}{\sqrt{2}}(p_1+p_2)}\xket{\frac{1}{\sqrt{2}}(p_2-p_1)}
 
 Alternatively, **symmetric beamsplitter** (one that does not distinguish between :math:`\a_1` and :math:`\a_2`) is obtained by setting :math:`\phi=\pi/2`.
