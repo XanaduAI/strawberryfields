@@ -15,7 +15,10 @@ env:
     - BACKEND=tf
     - BACKEND=tf MIXED=1
     - BACKEND=tf BATCHED=1
-    - BACKEND=tf MIXED=1 BATCHED=1
+    include:
+      - python: 3.5
+        env: BACKEND=tf MIXED=1 BATCHED=1
+        sudo: required
 # command to install dependencies
 install:
   - pip install -r requirements.txt
