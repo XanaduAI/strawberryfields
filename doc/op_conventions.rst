@@ -30,10 +30,11 @@ In this section, we provide the definitions of various quantum operations used b
    conventions/gates
    conventions/states
    conventions/measurements
+   conventions/decompositions
    conventions/others
 
 
-.. note:: In the Strawberry Fields we use the convention :math:`\hbar=2` by default, but other conventions can also be chosen on engine :func:`initialization <strawberryfields.Engine>`. In this document we keep :math:`\hbar` explicit.
+.. note:: In Strawberry Fields we use the convention :math:`\hbar=2` by default, but other conventions can also be chosen on engine :func:`initialization <strawberryfields.Engine>`. In this document we keep :math:`\hbar` explicit.
 
 
 .. note::
