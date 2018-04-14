@@ -1,31 +1,33 @@
+sudo: false
 language: python
 cache: pip
 python:
-  - "3.5"
+  - 3.5
 env:
   global:
     - COVERALLS_PARALLEL=true
     - MIXED=0
     - BATCHED=0
-  matrix:
-    - BACKEND=gaussian
-    - BACKEND=gaussian MIXED=1
-    - BACKEND=fock
-    - BACKEND=fock MIXED=1
-    - BACKEND=tf
-    - BACKEND=tf MIXED=1
-    - BACKEND=tf BATCHED=1
-    - BACKEND=tf MIXED=1 BATCHED=1
-# command to install dependencies
+matrix:
+  include:
+    - env: BACKEND=gaussian
+    - env: BACKEND=gaussian MIXED=1
+    - env: BACKEND=fock
+    - env: BACKEND=fock MIXED=1
+    - env: BACKEND=tf
+    - env: BACKEND=tf MIXED=1
+    - env: BACKEND=tf BATCHED=1
+    - env: BACKEND=tf MIXED=1 BATCHED=1
+      sudo: required
 install:
   - pip install -r requirements.txt
   - pip install wheel codecov
   - python3 setup.py bdist_wheel
   - pip install dist/StrawberryFields*.whl
-# command to run tests
 script:
   - coverage3 run -m unittest discover tests
 after_success:
   - codecov -F $BACKEND,m$MIXED,b$BATCHED
 notifications:
-  slack: xanaduhq:IjuNiD7j36slp7NqRdWuQq1O
+  slack:
+    secure: FfvzFoLEPy+O1hkz+co7W/P2DAeGTqUYRTh7cA90wkhZNN+qHBXdhKzNOAZs4V462/AHHi13K95ltBCuW9nE6eJveZGQkPlLr9ojZtVKzIzNP2TgpnYRdAhogW1cmRdquPcPUXNBfs71DOPFTI2J8Kr1U3uZNkJ0HSURPlF05M11ESXPMzeMSNMjCAanFD+62+hsV8Jsx7vmLtiTCpMbatTgKYB/IE3nV2khILWMGcokxX5cSJ1/RRittLWMqLrmUPZnZ3f5G6YbkeV40Z//1/DK2/Mgw4ryZzZzCe3L4HQMxry5YeCJucnfGJmqJzRzB+JxNn0gRT4RX4SCJJBAa6BISwVvP89HFN5tkXGl8RYsKBJ0sdzbwQ0MFnS4rVoQP1IEAkx+TZ3fUzPZ68KDhspSxght6H+oRQCcaNFoHjh6xJSvAJQem6BQVyGErcjrmoxcPWmdNfiLs8lENcBSbN8fiZia8leCo5jzyl7dvBtlkRgvtx9pLSkevDLbPDMPVQokmXuVIG3psKCPZuAGAUTOP/FRYlZXCmXALsNAe7nuetXUSKL6P0YlA5PNPzstDEKe0LX50eiQV2olPPuLYed/Z6v7/VVIV4jgUXYVbnhbjY+g4pL1ikg58kbBY6afxXW4AGpvYoFEgdVmlBTvldlIXl84n3lH5hBHIVQiLiY=
