@@ -330,9 +330,10 @@ def fock_prob(s2, ocp, tol=1.0e-13):
     beta = np.concatenate((s2.mean, np.conjugate(s2.mean)))
     nmodes = s2.nlen
     sq = s2.qmat()
-    pref = np.exp(-0.5*np.dot(np.dot(beta, np.linalg.inv(sq)), np.conjugate(beta)))
+    sqinv = np.linalg.inv(sq)
+    pref = np.exp(-0.5*np.dot(np.dot(beta, sqinv), np.conjugate(beta)))
     sqd = np.sqrt(1/np.linalg.det(s2.qmat()).real)
-    gamma = np.dot(np.dot(xmat(nmodes), np.conjugate(np.linalg.inv(sq))), beta)
+    gamma = np.dot(np.dot(xmat(nmodes), np.conjugate(sqinv)), beta)
     if sum(ocp) != 0:
         ind = gen_indices(ocp)
         ina = tuple(np.concatenate((ind, ind+nmodes)))
@@ -352,7 +353,6 @@ def fock_prob(s2, ocp, tol=1.0e-13):
 
             for j in i:
                 if len(j) == 1:
-
                     pp = pp*gamma[j]
                 if len(j) == 2:
                     pp = pp*A[j]
