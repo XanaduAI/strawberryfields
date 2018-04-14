@@ -34,7 +34,7 @@ class GaussianBackend(BaseGaussian):
         self._short_name = "gaussian"
 
     def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=None, **kwargs):
-        r"""
+        """
         Create a quantum circuit (initialized in vacuum state) with number of modes
         equal to num_subsystems.
 
