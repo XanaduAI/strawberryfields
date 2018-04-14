@@ -337,9 +337,9 @@ def fock_prob(s2, ocp, tol=1.0e-13):
     if sum(ocp) != 0:
         ind = gen_indices(ocp)
         ina = tuple(np.concatenate((ind, ind+nmodes)))
-        A = np.round(s2.Amat(), 14)
+        A = np.round(s2.Amat(), 14) #Shouldn't this depend on toL?
         doubles = True
-        if np.linalg.norm(beta) < tol:
+        if np.linalg.norm(s2.mean)*np.sqrt(2) < tol: #This is equivalent to np.linalg.norm(beta) < tol but twice as fast. Is the sqrt(2) really needed?
             singles = False
         else:
             singles = True
