@@ -332,7 +332,7 @@ def fock_prob(s2, ocp, tol=1.0e-13):
     sqinv = np.linalg.inv(s2.qmat())
     pref = np.exp(-0.5*np.dot(np.dot(beta, sqinv), np.conjugate(beta)))
     sqd = np.sqrt(1/np.linalg.det(s2.qmat()).real)
-    if sum(ocp) != 0:
+    if not all(p==0 for p in ocp):
         gamma = np.dot(np.dot(xmat(nmodes), np.conjugate(sqinv)), beta)
         ind = gen_indices(ocp)
         ina = tuple(np.concatenate((ind, ind+nmodes)))
