@@ -329,15 +329,14 @@ def fock_prob(s2, ocp, tol=1.0e-13):
     occupation pattern ocp"""
     beta = np.concatenate((s2.mean, np.conjugate(s2.mean)))
     nmodes = s2.nlen
-    sq = s2.qmat()
-    sqinv = np.linalg.inv(sq)
+    sqinv = np.linalg.inv(s2.qmat())
     pref = np.exp(-0.5*np.dot(np.dot(beta, sqinv), np.conjugate(beta)))
     sqd = np.sqrt(1/np.linalg.det(s2.qmat()).real)
-    gamma = np.dot(np.dot(xmat(nmodes), np.conjugate(sqinv)), beta)
     if sum(ocp) != 0:
+        gamma = np.dot(np.dot(xmat(nmodes), np.conjugate(sqinv)), beta)
         ind = gen_indices(ocp)
         ina = tuple(np.concatenate((ind, ind+nmodes)))
-        A = np.round(s2.Amat(), 14) #Shouldn't this depend on toL?
+        A = s2.Amat() # I don't see why you would want to round here and if, then shouldn't this depend on toL?
         doubles = True
         if np.linalg.norm(s2.mean)*np.sqrt(2) < tol: #This is equivalent to np.linalg.norm(beta) < tol but twice as fast. Is the sqrt(2) really needed?
             singles = False
