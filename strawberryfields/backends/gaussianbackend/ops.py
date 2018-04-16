@@ -352,11 +352,11 @@ def fock_prob(s2, ocp, tol=1.0e-13):
 
             for j in i:
                 if len(j) == 1:
-                    pp = pp*gamma[j]
+                    pp *= gamma[j]
                 if len(j) == 2:
-                    pp = pp*A[j]
+                    pp *= A[j]
 
-            ssum = ssum+pp
+            ssum += pp
 
         return (pref*sqd*ssum).real/np.prod(factorial(ocp))
     else:
