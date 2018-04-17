@@ -29,30 +29,11 @@ class GaussianDecompositions(GaussianBaseTest):
     def setUp(self):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems, hbar=self.hbar)
-
-        U1 = haar_measure(3)
-        U2 = haar_measure(3)
-
-        state = gaussiancircuit.GaussianModes(3, hbar=self.hbar)
-        ns = np.abs(np.random.random(3))
-        for i in range(3):
-            state.init_thermal(ns[i], i)
-        state.apply_u(U1)
-        for i in range(3):
-            state.squeeze(np.log(i+1+2), 0, i)
-        state.apply_u(U2)
-        self.V_mixed = state.scovmatxp()*self.hbar/2
-        th, self.S = williamson(self.V_mixed)
-        self.o, r, self.p = bloch_messiah(self.S)
-        self.u1 = (self.o[:3, :3] + 1j*self.o[3:, :3])
-        self.u2 = (self.p[:3, :3] + 1j*self.p[3:, :3])
-
-        state = gaussiancircuit.GaussianModes(3, hbar=self.hbar)
-        state.apply_u(U1)
-        for i in range(3):
-            state.squeeze(np.log(i+1+2), 0, i)
-        state.apply_u(U2)
-        self.V_pure = state.scovmatxp()*self.hbar/2
+        self.u1 = random_interferometer(self.num_subsystems)
+        self.u2 = random_interferometer(self.num_subsystems)
+        self.S = random_symplectic(self.num_subsystems)
+        self.V_mixed = random_covariance(self.num_subsystems, hbar=self.hbar, pure=False)
+        self.V_pure = random_covariance(self.num_subsystems, hbar=self.hbar, pure=True)
 
     def test_merge_interferometer(self):
         I1 = Interferometer(self.u1)
@@ -113,7 +94,9 @@ class GaussianDecompositions(GaussianBaseTest):
             Interferometer(self.u1) | q
 
         state = self.eng.run(backend=self.backend_name, cutoff_dim=self.D)
-        self.assertAllAlmostEqual(state.cov(), self.o@init.cov()@self.o.T, delta=self.tol)
+        O = np.vstack([np.hstack([self.u1.real, -self.u1.imag]),
+                       np.hstack([self.u1.imag, self.u1.real])])
+        self.assertAllAlmostEqual(state.cov(), O @ init.cov() @ O.T, delta=self.tol)
 
     def test_identity_interferometer(self):
         self.eng.reset()
@@ -212,7 +195,7 @@ class FockCovarianceInitialStates(FockBaseTest):
         with self.eng:
             CovarianceState(np.identity(6)*self.hbar/2) | q
 
-        state = self.eng.run(backend=self.backend_name, cutoff_dim=self.D)
+        state = self.eng.run(backend=self.backend_name, **self.kwargs)
         self.assertAllAlmostEqual(self.eng.cmd_applied, [], delta=self.tol)
         self.assertAllAlmostEqual(state.fidelity_vacuum(), 1, delta=self.tol)
 
@@ -227,7 +210,7 @@ class FockCovarianceInitialStates(FockBaseTest):
         with self.eng:
             CovarianceState(cov) | q
 
-        state = self.eng.run(backend=self.backend_name, cutoff_dim=self.D)
+        state = self.eng.run(backend=self.backend_name, **self.kwargs)
         self.assertAllEqual(len(self.eng.cmd_applied), 3)
 
         for n in range(3):
@@ -248,7 +231,7 @@ class FockCovarianceInitialStates(FockBaseTest):
         with self.eng:
             CovarianceState(cov) | q
 
-        state = self.eng.run(backend=self.backend_name, cutoff_dim=self.D)
+        state = self.eng.run(backend=self.backend_name, **self.kwargs)
         self.assertAllEqual(len(self.eng.cmd_applied), 3)
         for n in range(3):
             self.assertAllAlmostEqual(state.fidelity(in_state, n), 1, delta=self.tol)
