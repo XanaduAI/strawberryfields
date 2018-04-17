@@ -14,7 +14,7 @@ from scipy.linalg import qr
 import strawberryfields.decompositions as dec
 from defaults import BaseTest
 
-from strawberryfields.backends.gaussianbackend import ops
+from strawberryfields.backends.shared_ops import haar_measure
 from strawberryfields.backends.gaussianbackend import gaussiancircuit
 
 nsamples=10
@@ -25,7 +25,7 @@ def random_degenerate_symmetric():
     vv=[[i]*iis[i] for i in range(len(iis))]
     dd=np.array(sum(vv, []))
     n=len(dd)
-    U=ops.haar_measure(n)
+    U=haar_measure(n)
     symmat=U @ np.diag(dd) @ np.transpose(U)
     return symmat
 
@@ -64,7 +64,7 @@ class TestClements(BaseTest):
         error=np.empty(nsamples)
         for k in range(nsamples):
             n=20
-            V=ops.haar_measure(n)
+            V=haar_measure(n)
             (tilist,tlist, diags)=dec.clements(V)
             qrec=np.identity(n)
             for i in tilist:
@@ -82,8 +82,8 @@ class TestWilliamsonAndBlochMessiah(BaseTest):
     def test_random_circuit(self):
         for k in range(nsamples):
             n=3
-            U1=ops.haar_measure(n)
-            U2=ops.haar_measure(n)
+            U1=haar_measure(n)
+            U2=haar_measure(n)
             state=gaussiancircuit.GaussianModes(n,hbar=2)
             ns=[0.1*i+0.1 for i in range(n)]
 
@@ -119,7 +119,7 @@ class TestWilliamsonAndBlochMessiahPure(BaseTest):
     def test_random_circuit(self):
         for k in range(nsamples):
             n=3
-            U2=ops.haar_measure(n)
+            U2=haar_measure(n)
             state=gaussiancircuit.GaussianModes(n,hbar=2)
             for i in range(n):
                 state.squeeze(np.log(0.2*i+2),0,i)

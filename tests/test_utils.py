@@ -14,6 +14,7 @@ from numpy import pi
 import strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.utils import *
+from strawberryfields.backends.shared_ops import sympmat
 from defaults import BaseTest, FockBaseTest, GaussianBaseTest
 
 a = 0.32+0.1j
@@ -238,12 +239,70 @@ class ConvertFunctions(BaseTest):
         self.assertEqual(rrt.func(x), x**a)
 
 
+class RandomStates(BaseTest):
+    num_subsystems = 1
+    M = 3
+    Om = sympmat(3)
+
+    def test_random_covariance_pure(self):
+        V = random_covariance(self.M, hbar=self.hbar, pure=True)
+        det = np.linalg.det(V) - (self.hbar/2)**(2*self.M)
+        eigs = np.linalg.eigvalsh(V)
+
+        # check square and even number of rows/columns
+        self.assertAllEqual(V.shape, np.array([2*self.M]*2))
+        # check symmetric
+        self.assertAllAlmostEqual(V, V.T, delta=self.tol)
+        # check positive definite
+        self.assertTrue(np.all(eigs > 0))
+        # check pure
+        self.assertAlmostEqual(det, 0, delta=self.tol)
+
+    def test_random_covariance_mixed(self):
+        V = random_covariance(self.M, hbar=self.hbar, pure=False)
+        det = np.linalg.det(V) - (self.hbar/2)**(2*self.M)
+        eigs = np.linalg.eigvalsh(V)
+
+        # check square and even number of rows/columns
+        self.assertAllEqual(V.shape, np.array([2*self.M]*2))
+        # check symmetric
+        self.assertAllAlmostEqual(V, V.T, delta=self.tol)
+        # check positive definite
+        self.assertTrue(np.all(eigs > 0))
+        # check not pure
+        self.assertNotAlmostEqual(det, 0, delta=self.tol)
+
+    def test_random_symplectic_passive(self):
+        S = random_symplectic(self.M, passive=True)
+        # check square and even number of rows/columns
+        self.assertAllEqual(S.shape, np.array([2*self.M]*2))
+        # check symplectic
+        self.assertAllAlmostEqual(S @ self.Om @ S.T, self.Om, delta=self.tol)
+        # check orthogonal
+        self.assertAllAlmostEqual(S @ S.T, np.identity(2*self.M), delta=self.tol)
+
+    def test_random_symplectic_active(self):
+        S = random_symplectic(self.M, passive=False)
+        # check square and even number of rows/columns
+        self.assertAllEqual(S.shape, np.array([2*self.M]*2))
+        # check symplectic
+        self.assertAllAlmostEqual(S @ self.Om @ S.T, self.Om, delta=self.tol)
+        # check not orthogonal
+        self.assertTrue(np.all(S @ S.T != np.identity(2*self.M)))
+
+    def test_random_interferometer(self):
+        U = random_interferometer(self.M)
+        # check unitary
+        self.assertAllAlmostEqual(U @ U.conj().T, np.identity(self.M), delta=self.tol)
+
+
+
 if __name__ == '__main__':
     print('Testing Strawberry Fields version ' + sf.version() + ', Utils.')
 
     # run the tests in this file
     suite = unittest.TestSuite()
-    tests = [InitialStates, FockInitialStates, ConvertFunctions]
+    tests = [InitialStates, FockInitialStates, ConvertFunctions, RandomStates]
     for t in tests:
         ttt = unittest.TestLoader().loadTestsFromTestCase(t)
         suite.addTests(ttt)

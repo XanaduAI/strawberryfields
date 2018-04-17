@@ -17,9 +17,8 @@ from strawberryfields.ops import *
 from strawberryfields.utils import *
 from strawberryfields.decompositions import clements, bloch_messiah, williamson
 
-from strawberryfields.backends.gaussianbackend import ops
 from strawberryfields.backends.gaussianbackend import gaussiancircuit
-from strawberryfields.backends.shared_ops import rotation_matrix as rot
+from strawberryfields.backends.shared_ops import haar_measure, changebasis, rotation_matrix as rot
 
 from defaults import BaseTest, FockBaseTest, GaussianBaseTest
 
@@ -31,8 +30,8 @@ class GaussianDecompositions(GaussianBaseTest):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems, hbar=self.hbar)
 
-        U1 = ops.haar_measure(3)
-        U2 = ops.haar_measure(3)
+        U1 = haar_measure(3)
+        U2 = haar_measure(3)
 
         state = gaussiancircuit.GaussianModes(3, hbar=self.hbar)
         ns = np.abs(np.random.random(3))
@@ -187,7 +186,7 @@ class GaussianCovarianceInitialStates(GaussianBaseTest):
         r = 0.1
         phi = 0.2312
         v1 = (self.hbar/2)*np.diag([np.exp(-r),np.exp(r)])
-        A = ops.changebasis(3)
+        A = changebasis(3)
         cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T]*3) @ A
 
         with self.eng:
@@ -243,7 +242,7 @@ class FockCovarianceInitialStates(FockBaseTest):
         in_state = squeezed_state(r, phi, basis='fock', fock_dim=self.D)
 
         v1 = (self.hbar/2)*np.diag([np.exp(-2*r),np.exp(2*r)])
-        A = ops.changebasis(3)
+        A = changebasis(3)
         cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T]*3) @ A
 
         with self.eng:

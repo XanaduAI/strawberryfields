@@ -24,10 +24,15 @@ import numpy as np
 import scipy as sp
 from scipy.special import binom
 from scipy.special import gammaln as lg
+from scipy.linalg import qr
 
 DATA_PATH = pkg_resources.resource_filename('strawberryfields', 'backends/data')
 def_type = np.complex128
 
+
+#================================+
+#   Fock space shared operations |
+#================================+
 
 @functools.lru_cache()
 def find_dim_files(regex, D, directory=None, name=""):
@@ -260,6 +265,10 @@ def load_squeeze_factors(D, directory=None):
     return np.reshape(prefac.toarray(), [load_dim]*3)
 
 
+#================================+
+# Phase space shared operations  |
+#================================+
+
 @functools.lru_cache()
 def rotation_matrix(phi):
     r"""Rotation matrix.
@@ -307,3 +316,21 @@ def changebasis(n):
         m[2*i, i] = 1
         m[2*i+1, i+n] = 1
     return m
+
+
+def haar_measure(n):
+    """A Random matrix distributed with the Haar measure.
+
+    For more details, see :cite:`mezzadri2006`.
+
+    Args:
+        n (int): matrix size
+    Returns:
+        array: an nxn random matrix
+    """
+    z = (sp.randn(n, n) + 1j*sp.randn(n, n))/np.sqrt(2.0)
+    q, r = qr(z)
+    d = sp.diagonal(r)
+    ph = d/np.abs(d)
+    q = np.multiply(q, ph, q)
+    return q

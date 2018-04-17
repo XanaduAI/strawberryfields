@@ -14,7 +14,9 @@
 """Gaussian circuit operations"""
 # pylint: disable=duplicate-code
 import numpy as np
+
 from . import ops
+from ..shared_ops import changebasis
 
 
 class GaussianModes:
@@ -224,7 +226,7 @@ class GaussianModes:
     def scovmat(self):
         """Constructs and returns the symmetric ordered covariance matrix as defined in [1]
         """
-        rotmat = ops.changebasis(self.nlen)
+        rotmat = changebasis(self.nlen)
         return np.dot(np.dot(rotmat, self.scovmatxp()), np.transpose(rotmat))
 
     def smean(self):
@@ -245,7 +247,7 @@ class GaussianModes:
         if n != self.nlen:
             raise ValueError("Covariance matrix is the incorrect size, does not match means vector")
 
-        rotmat = ops.changebasis(self.nlen)
+        rotmat = changebasis(self.nlen)
         VV = np.dot(np.dot(np.transpose(rotmat), V), rotmat)
         A = VV[0:n, 0:n]
         B = VV[0:n, n:2*n]
