@@ -1353,6 +1353,10 @@ class Decomposition(Operation):
     """
     def __init__(self, par):
         super().__init__()
+        # check if any of the decomposition inputs are tensor objects
+        if sum([isinstance(x, (Variable, Tensor)) for x in par]):
+            raise NotImplementedError("Decompositions currently do not support "
+                                      "Tensorflow objects as arguments")
         self.p = list(par)
 
     def merge(self, other):
