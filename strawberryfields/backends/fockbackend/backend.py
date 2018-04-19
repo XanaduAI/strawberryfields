@@ -176,7 +176,7 @@ class FockBackend(BaseFock):
         Note: this may convert the state representation to mixed.
 
         Args:
-            nbar (int): thermal population of the mode
+            nbar (float): mean thermal population of the mode
             mode (int): which mode to prepare the thermal state in
         """
         self.qreg.prepare_mode_thermal(nbar, self._remap_modes(mode))

@@ -30,7 +30,7 @@ Quantum operations
 
 This module defines and implements the Python-embedded quantum programming language
 for continuous-variable (CV) quantum systems.
-Currently the syntax is modeled after ProjectQ :cite:`projectq2016`.
+The syntax is modeled after ProjectQ :cite:`projectq2016`.
 
 Quantum operations (state preparation, unitary gates, measurements) act on register objects using the following syntax::
 
@@ -229,9 +229,9 @@ Single-mode gates
 
 .. autosummary::
    Dgate
-   Sgate
    Xgate
    Zgate
+   Sgate
    Rgate
    Pgate
    Vgate
@@ -792,7 +792,7 @@ class Thermal(Preparation):
     As a result the state will be described using a density matrix.
 
     Args:
-      nbar (int): thermal population of the mode
+      n (float): mean thermal population of the mode
     """
     def __init__(self, n=0):
         super().__init__()

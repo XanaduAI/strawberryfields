@@ -234,7 +234,7 @@ class TFBackend(BaseFock):
         Note: this may convert the state representation to mixed.
 
         Args:
-            nbar: mean photon number of the thermal state
+            nbar (float): mean photon number of the thermal state
             mode (int): index of mode where state is prepared
 
         """

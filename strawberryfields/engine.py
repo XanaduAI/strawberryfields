@@ -89,6 +89,16 @@ gate family and sharing the same set of subsystems, and canceling pairs of a gat
 
 .. currentmodule:: strawberryfields.engine
 
+
+
+Exceptions
+----------
+
+.. autosummary::
+   SFProgramError
+   ~strawberryfields.backends.base.SFNotApplicableError
+
+
 Code details
 ~~~~~~~~~~~~
 
@@ -262,7 +272,7 @@ class RegRefTransform:
               for plain numeric variables, thus producing the expected behavior in both cases.
         """
         temp = [r.val for r in self.regrefs]
-        if any([v is None for v in temp]):
+        if None in temp:
             raise SFProgramError('Trying to use a nonexistent measurement result (e.g. before it can be measured).')
         return self.func(*temp)
 
@@ -275,23 +285,24 @@ class Engine:
 
     Args:
         num_subsystems (int): Number of subsystems in the quantum register.
+    Keyword Args:
         hbar (float): The value of :math:`\hbar` to initialise the engine with, depending on the
             conventions followed. By default, :math:`\hbar=2`. See
             :ref:`conventions` for more details.
     """
     _current_context = None
 
-    def __init__(self, num_subsystems, hbar):
-        self.num_subsystems = 0     #: int: number of subsystems in the quantum register
+    def __init__(self, num_subsystems, *, hbar=2):
+        self.num_subsystems = 0   #: int: current number of subsystems in the quantum register
         self.cmd_queue = []       #: list[Command]: command queue
-        self.cmd_applied = []         #: list[Command]: commands that have been run
+        self.cmd_applied = []     #: list[Command]: commands that have been run
         self.reg_refs = {}        #: dict[int->RegRef]: mapping from subsystem indices to corresponding RegRef objects
         self.unused_indices = set()  #: set[int]: created subsystem indices that have not been used (operated on) yet
+        self.backend = None       #: BaseBackend: backend for executing the quantum program
+        self.hbar = hbar          #: float: Numerical value of hbar in the (implicit) units of position and momentum. Currently only affects the definitions of the parameters of certain gates.
+        self.init_num_subsystems = num_subsystems  #: int: initial number of subsystems
         # create mode references
         self.add_subsystems(num_subsystems)
-        self.backend = None
-        self.init_modes = num_subsystems
-        self.hbar = hbar
 
     def __str__(self):
         """String representation."""
@@ -389,7 +400,7 @@ class Engine:
         Resets the backend, and the simulation status of the circuit.
         All modes are returned to the vacuum state. Note that this
         *does not* clear the program queue."""
-        if self.backend:
+        if self.backend is not None:
             self.backend.reset()
             self.cmd_applied = []
 

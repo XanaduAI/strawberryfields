@@ -117,7 +117,7 @@ Code details
 class SFNotApplicableError(TypeError):
     """Exception raised by the backend when the user attempts an unsupported operation.
     E.g. :meth:`~.BaseBackend.measure_fock` on a Gaussian backend, :meth:`~.BaseBackend.measure_heterodyne` on a Fock backend.
-    Conceptually different from NotImplementedError (not implemented, but at some point may be).
+    Conceptually different from NotImplementedError (which means "not implemented, but at some point may be").
     """
     pass
 
@@ -357,7 +357,7 @@ class BaseBackend:
         As a result the state will be described using a density matrix.
 
         Args:
-            nbar (int): thermal population of the mode
+            nbar (float): mean thermal population of the mode
             mode (int): which mode to prepare the thermal state in
         """
         raise NotImplementedError
