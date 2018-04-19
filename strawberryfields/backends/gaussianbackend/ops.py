@@ -185,8 +185,6 @@ def reassemble(A, idtodelete):
     dim(A)+len(idtodelete)
     The empty space are filled with zeros (offdiagonal) and ones (diagonals)
     """
-
-
     ntot = len(A)+len(idtodelete)
     ind = set(np.arange(ntot))-set(idtodelete)
     newmat = np.zeros((ntot, ntot))
@@ -222,15 +220,6 @@ def xmat(n):
     idm = np.identity(n)
     return np.concatenate((np.concatenate((0*idm, idm), axis=1),
                            np.concatenate((idm, 0*idm), axis=1)), axis=0).real
-
-
-def changebasis(n):
-    """ The matrix necessary to change covariances matrices written in the (x_1,...,x_n,p_1,...,p_n)ordering to the (x_1,p_1,...,x_n,p_n ordering"""
-    m = np.zeros((2*n, 2*n))
-    for i in range(n):
-        m[2*i, i] = 1
-        m[2*i+1, i+n] = 1
-    return m
 
 
 class LimitedSizeDict(OrderedDict):

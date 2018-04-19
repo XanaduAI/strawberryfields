@@ -71,11 +71,17 @@ These are useful for generating states for use in calculating the fidelity of si
    cat_state
 
 
-Miscellaneous functions
+Random functions
 ------------------------
+
+These functions generate random numbers and matrices corresponding to various
+quantum states and operations.
 
 .. autosummary::
    randnc
+   random_covariance
+   random_symplectic
+   random_interferometer
 
 Code details
 ~~~~~~~~~~~~
@@ -84,6 +90,8 @@ Code details
 import numpy as np
 from numpy.random import randn
 from numpy.polynomial.hermite import hermval as H
+
+import scipy as sp
 from scipy.special import factorial as fac
 
 from .engine import _convert
@@ -459,9 +467,85 @@ def cat_state(a, p=0, fock_dim=5):
     return ket
 
 
-# Misc
+#------------------------------------------------------------------------
+# Random numbers and matrices                                           |
+#------------------------------------------------------------------------
 
 
 def randnc(*arg):
-    "Normally distributed array of random complex numbers."
+    """Normally distributed array of random complex numbers."""
     return randn(*arg) + 1j*randn(*arg)
+
+
+def random_covariance(N, hbar=2, pure=False):
+    r"""Returns a random covariance matrix.
+
+    Args:
+        N (int): number of modes
+        hbar (float): the value of :math:`\hbar` to use in the definition
+            of the quadrature operators :math:`\x` and :math:`\p`
+        pure (bool): if True, a random covariance matrix corresponding
+            to a pure state is returned
+    Returns:
+        array: random :math:`2N\times 2N` covariance matrix
+    """
+    S = random_symplectic(N)
+
+    if pure:
+        return (hbar/2) * S @ S.T
+
+    nbar = np.abs(np.random.random(N))
+    Vth = (hbar/2) * np.diag(np.concatenate([nbar, nbar]))
+
+    return S @ Vth @ S.T
+
+
+def random_symplectic(N, passive=False):
+    r"""Returns a random symplectic matrix representing a Gaussian transformation.
+
+    The squeezing parameters :math:`r` for active transformations are randomly
+    sampled from the standard normal distribution, while passive transformations
+    are randomly sampled from the Haar measure.
+
+    Args:
+        N (int): number of modes
+        passive (bool): if True, returns a passive Gaussian transformation (i.e.,
+            one that preserves photon number). If False (default), returns an active
+            transformation.
+    Returns:
+        array: random :math:`2N\times 2N` symplectic matrix
+    """
+    U = random_interferometer(N)
+    O = np.vstack([np.hstack([U.real, -U.imag]), np.hstack([U.imag, U.real])])
+
+    if passive:
+        return O
+
+    U = random_interferometer(N)
+    P = np.vstack([np.hstack([U.real, -U.imag]), np.hstack([U.imag, U.real])])
+
+    r = np.abs(randnc(N))
+    Sq = np.diag(np.concatenate([np.exp(-r), np.exp(r)]))
+
+    return O @ Sq @ P
+
+
+def random_interferometer(N):
+    r"""Returns a random unitary matrix representing an interferometer.
+
+    For more details, see :cite:`mezzadri2006`.
+
+    Args:
+        N (int): number of modes
+        passive (bool): if True, returns a passive Gaussian transformation (i.e.,
+            one that preserves photon number). If False (default), returns an active
+            transformation.
+    Returns:
+        array: random :math:`N\times N` unitary distributed with the Haar measure
+    """
+    z = randnc(N, N)/np.sqrt(2.0)
+    q, r = sp.linalg.qr(z)
+    d = sp.diagonal(r)
+    ph = d/np.abs(d)
+    U = np.multiply(q, ph, q)
+    return U

@@ -59,6 +59,8 @@ mock_fns = {"sin": mock_math_fn,
                "arcsinh": mock_math_fn,
                "cosh": mock_math_fn,
                "tanh": mock_math_fn,
+               "log": mock_math_fn,
+               "matmul": mock_math_fn,
                "Tensor": list,
                "Variable": list,
                "ndarray": list}

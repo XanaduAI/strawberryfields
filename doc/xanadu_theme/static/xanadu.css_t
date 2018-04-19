@@ -1221,6 +1221,10 @@ dt:target, .highlight {
   background: none !important;
 }
 
+dt:target {
+    background-color: #fff176 !important;
+}
+
 dt:target code {
     background-color: #fff176 !important;
 }

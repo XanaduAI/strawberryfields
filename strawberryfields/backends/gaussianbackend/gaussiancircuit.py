@@ -14,7 +14,9 @@
 """Gaussian circuit operations"""
 # pylint: disable=duplicate-code
 import numpy as np
+
 from . import ops
+from ..shared_ops import changebasis
 
 
 class GaussianModes:
@@ -208,7 +210,7 @@ class GaussianModes:
         self.mmat[:, l] = self.mmat[l]
 
     def scovmatxp(self):
-        r"""Constructs and returns the symmetric ordered covariance matrix as defined in
+        r"""Constructs and returns the symmetric ordered covariance matrix in the xp ordering.
         The ordered for the canonical operators is $ q_1,..,q_n, p_1,...,p_n$.
         This differes from the ordering used in [1] which is $q_1,p_1,q_2,p_2,...,q_n,p_n$
         Note that one ordering can be obtained from the other by using a permutation matrix.
@@ -224,7 +226,7 @@ class GaussianModes:
     def scovmat(self):
         """Constructs and returns the symmetric ordered covariance matrix as defined in [1]
         """
-        rotmat = ops.changebasis(self.nlen)
+        rotmat = changebasis(self.nlen)
         return np.dot(np.dot(rotmat, self.scovmatxp()), np.transpose(rotmat))
 
     def smean(self):
@@ -245,7 +247,7 @@ class GaussianModes:
         if n != self.nlen:
             raise ValueError("Covariance matrix is the incorrect size, does not match means vector")
 
-        rotmat = ops.changebasis(self.nlen)
+        rotmat = changebasis(self.nlen)
         VV = np.dot(np.dot(np.transpose(rotmat), V), rotmat)
         A = VV[0:n, 0:n]
         B = VV[0:n, n:2*n]
@@ -401,3 +403,9 @@ class GaussianModes:
         va = ops.reassemble_vector(va, expind)
         self.__fromsmean(va)
         return alpha_val
+
+    def apply_u(self, U):
+        """ Transforms the state according to the linear optical unitary that maps a[i] \to U[i, j]^*a[j]"""
+        self.mean = np.dot(np.conj(U), self.mean)
+        self.nmat = np.dot(np.dot(U, self.nmat), np.conj(np.transpose(U)))
+        self.mmat = np.dot(np.dot(np.conj(U), self.mmat), np.conj(np.transpose(U)))

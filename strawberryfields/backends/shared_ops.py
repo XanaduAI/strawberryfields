@@ -24,10 +24,15 @@ import numpy as np
 import scipy as sp
 from scipy.special import binom
 from scipy.special import gammaln as lg
+from scipy.linalg import qr
 
 DATA_PATH = pkg_resources.resource_filename('strawberryfields', 'backends/data')
 def_type = np.complex128
 
+
+#================================+
+#   Fock space shared operations |
+#================================+
 
 @functools.lru_cache()
 def find_dim_files(regex, D, directory=None, name=""):
@@ -259,7 +264,73 @@ def load_squeeze_factors(D, directory=None):
 
     return np.reshape(prefac.toarray(), [load_dim]*3)
 
+
+#================================+
+# Phase space shared operations  |
+#================================+
+
+@functools.lru_cache()
 def rotation_matrix(phi):
-    r"""Rotation matrix"""
+    r"""Rotation matrix.
+
+    Args:
+        phi (float): rotation angle
+    Returns:
+        array: :math:`2\times 2` rotation matrix
+    """
     return np.array([[np.cos(phi), -np.sin(phi)],
                      [np.sin(phi), np.cos(phi)]])
+
+
+@functools.lru_cache()
+def sympmat(n):
+    r""" Returns the symplectic matrix of order n
+
+    Args:
+        n (int): order
+        hbar (float): the value of hbar used in the definition
+            of the quadrature operators
+    Returns:
+        array: symplectic matrix
+    """
+    idm = np.identity(n)
+    omega = np.concatenate((np.concatenate((0*idm, idm), axis=1),
+                            np.concatenate((-idm, 0*idm), axis=1)), axis=0)
+    return omega
+
+
+@functools.lru_cache()
+def changebasis(n):
+    r"""Change of basis matrix between the two Gaussian representation orderings.
+
+    This is the matrix necessary to transform covariances matrices written
+    in the (x_1,...,x_n,p_1,...,p_n) to the (x_1,p_1,...,x_n,p_n) ordering
+
+    Args:
+        n (int): number of modes
+    Returns:
+        array: :math:`2n\times 2n` matrix
+    """
+    m = np.zeros((2*n, 2*n))
+    for i in range(n):
+        m[2*i, i] = 1
+        m[2*i+1, i+n] = 1
+    return m
+
+
+def haar_measure(n):
+    """A Random matrix distributed with the Haar measure.
+
+    For more details, see :cite:`mezzadri2006`.
+
+    Args:
+        n (int): matrix size
+    Returns:
+        array: an nxn random matrix
+    """
+    z = (sp.randn(n, n) + 1j*sp.randn(n, n))/np.sqrt(2.0)
+    q, r = qr(z)
+    d = sp.diagonal(r)
+    ph = d/np.abs(d)
+    q = np.multiply(q, ph, q)
+    return q
