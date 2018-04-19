@@ -109,6 +109,7 @@ Code details
 #pylint: disable=too-many-instance-attributes
 
 from collections.abc import Sequence
+import numbers
 from functools import wraps
 
 import networkx as nx
@@ -406,13 +407,22 @@ class Engine:
 
 
     def _test_regrefs(self, reg):
-        "Make sure reg is a valid selection of subsystems, convert them to RegRefs."
+        """Make sure reg is a valid selection of subsystems, convert them to RegRefs.
+
+        Args:
+          reg (Iterable[int, RegRef]): subsystem references
+        Returns:
+          list[Regref]: converted subsystem references
+        """
         temp = []
         for rr in reg:
-            if isinstance(rr, int):
+            if isinstance(rr, numbers.Integral):
                 rr = self.reg_refs[rr]
-            elif rr not in self.reg_refs.values():
-                raise IndexError('Trying to act on a nonexistent subsystem.')
+            elif isinstance(rr, RegRef):
+                if rr not in self.reg_refs.values():
+                    raise IndexError('Trying to act on a nonexistent subsystem.')
+            else:
+                raise IndexError('Subsystems can only be indexed using integers and RegRefs.')
             if rr in temp:
                 raise IndexError('Trying to act on the same subsystem more than once.')
             temp.append(rr)
