@@ -119,17 +119,25 @@ To build the HTML documentation, go to the top-level directory and run the comma
 
 The documentation can then be found in the ``doc/_build/html/`` directory.
 
+
 Authors
 =======
 
 Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook.
 
-We welcome contributions - simply fork the Strawberry Fields repository, and then make a
-`pull request <https://help.github.com/articles/about-pull-requests/>`_ containing your contribution.
-
 If you are doing research using Strawberry Fields, please cite `our whitepaper <https://arxiv.org/abs/1804.03159>`_:
 
   Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook. Strawberry Fields: A Software Platform for Photonic Quantum Computing. *arXiv*, 2018. arXiv:1804.03159
+
+
+Contributing to Strawberry Fields
+=================================
+
+We welcome contributions - simply fork the Strawberry Fields repository, and then make a
+`pull request <https://help.github.com/articles/about-pull-requests/>`_ containing your contribution.
+
+See `Contributing to Strawberry Fields <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CONTRIBUTING.md>`_
+for more details on contributing to Strawberry Fields.
 
 
 Support
@@ -139,6 +147,9 @@ Support
 - **Issue Tracker:** https://github.com/XanaduAI/strawberryfields/issues
 
 If you are having issues, please let us know by posting the issue on our Github issue tracker.
+
+We also have a `Strawberry Fields Slack channel <https://u.strawberryfields.ai/slack>`_ -
+come join the discussion and chat with our Strawberry Fields team.
 
 
 License
