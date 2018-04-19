@@ -1,5 +1,6 @@
-Strawberry Fields
-#################
+.. image:: doc/_static/strawberry-fields-text.png
+    :alt: Strawberry Fields
+##################################################
 
 .. image:: https://img.shields.io/travis/XanaduAI/strawberryfields.svg?style=for-the-badge
     :alt: Travis
@@ -21,24 +22,16 @@ Strawberry Fields
     :alt: PyPI
     :target: https://pypi.org/project/StrawberryFields
 
-.. image:: https://img.shields.io/pypi/l/StrawberryFields.svg?style=for-the-badge
-    :alt: PyPI - License
-    :target: https://www.apache.org/licenses/LICENSE-2.0
-
 .. image:: https://img.shields.io/pypi/pyversions/StrawberryFields.svg?style=for-the-badge
     :alt: PyPI - Python Version
     :target: https://pypi.org/project/StrawberryFields
 
 Strawberry Fields is a full-stack Python library for designing,
-simulating, and optimizing continuous variable (CV) quantum
+simulating, and optimizing continuous variable quantum
 optical circuits.
 
 Features
 ========
-
-.. image:: doc/_static/sfcomponents.svg
-    :align: center
-    :width: 70%
 
 * An open-source software architecture for **photonic quantum computing**
 
@@ -49,6 +42,11 @@ Features
 * Includes a suite of CV **quantum computer simulators** implemented using **NumPy** and **Tensorflow** - these built-in quantum compiler tools convert and optimize Blackbird code for classical simulation
 
 * Future releases will aim to target experimental backends, including **photonic quantum computing chips**
+
+
+.. image:: doc/_static/sfcomponents.svg
+    :align: center
+    :width: 85%
 
 Dependencies
 ============
@@ -137,7 +135,7 @@ We welcome contributions - simply fork the Strawberry Fields repository, and the
 `pull request <https://help.github.com/articles/about-pull-requests/>`_ containing your contribution.
 
 See `Contributing to Strawberry Fields <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CONTRIBUTING.md>`_
-for more details on contributing to Strawberry Fields.
+for more details.
 
 
 Support

@@ -6,7 +6,7 @@ Thank you for taking the time to contribute to Strawberry Fields!
 Strawberry Fields is a collaborative effort with the quantum photonics and quantum computation
 community - while we will continue working on adding new and exciting features to Strawberry Fields,
 we invite you to join us and suggest improvements, research ideas, or even just to discuss how
-Strawberry Fields fits into our workflow.
+Strawberry Fields fits into your workflow.
 
 ## How can I get involved in the community?
 
@@ -149,6 +149,6 @@ Before submitting a pull request, please make sure the following is done:
   Based on these reports, we may ask you to make small changes to your branch before merging the pull request into the master branch. Alternatively, you can also
   [grant us permission to make changes to your pull request branch](https://help.github.com/articles/allowing-changes-to-a-pull-request-branch-created-from-a-fork/).
 
-:strawberry: Thank you for joining the Strawberry Fields contribution effort! :strawberry:
+:strawberry: Thank you for contributing to Strawberry Fields! :strawberry:
 
 \- The Strawberry Fields team
