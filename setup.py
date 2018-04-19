@@ -30,6 +30,11 @@ requirements = [
     "tensorflow>=1.3.0,<1.7"
 ]
 
+# extra_requirements = [
+#     "tf": ["tensorflow>=1.3.0,<1.7"],
+#     "tf_gpu": ["tensorflow-gpu>=1.3.0,<1.7"]
+# ]
+
 info = {
     'name': 'StrawberryFields',
     'version': version,
@@ -51,6 +56,7 @@ info = {
     'long_description': open('README.rst').read(),
     'provides': ["strawberryfields"],
     'install_requires': requirements,
+    # 'extras_require': extra_requirements,
     'command_options': {
         'build_sphinx': {
             'version': ('setup.py', version),

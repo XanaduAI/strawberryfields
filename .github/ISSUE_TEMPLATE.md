@@ -1,23 +1,21 @@
-If posting a Strawberry Fields issue, please delete the section above the dashed line, and fill in the template below.
+#### Before posting an issue
 
-If making a feature request, ignore the following template and describe, in detail, the feature and why it is needed.
+Search existing GitHub issues to make sure the issue does not already exist:
+  https://github.com/xanaduai/strawberryfields/issues
 
-For additional support:
+If posting a Strawberry Fields issue, delete everything above the dashed line, and fill in the template.
+
+If making a feature request, delete the following template and describe, in detail, the feature and why it is needed.
+
+For general technical questions and support:
 * Check out our documentation: https://strawberryfields.readthedocs.io
-* Join us on our Slack channel: https://join.slack.com/t/sf-xanadu/shared_invite/enQtMzQ0NzA0NTczNTkxLTJhOWM0MzY4N2U1ODc5NWZmY2JlN2FmOTY3OTE3ZmVjMWFhZjMwZWY0ODRkZDFmMTA5NjA1YjgyYzA3NDg3NGM
+* Join us on our Slack channel: http://u.strawberryfields.ai/slack
 
 -----------------------------------------------------------------------------------------------------------------------
 
 #### Issue description
 
-Description of the issue - include code snippets and screenshots if relevant
-
-
-#### Steps to reproduce
-
-1. [First Step]
-2. [Second Step]
-3. [and so on...]
+Description of the issue - include code snippets and screenshots here if relevant.
 
 * *Expected behavior:* (What you expect to happen)
 
@@ -28,35 +26,29 @@ Description of the issue - include code snippets and screenshots if relevant
 
 #### System information
 
-* *Operating system:*
+* **Operating system:**
   Include the operating system version if you can, e.g. Ubuntu Linux 16.04
 
 
-* *Strawberry Fields version:*
+* **Strawberry Fields version:**
   This can be found by running
-  ```
   python -c "import strawberryfields as sf; print(sf.version())"
-  ```
 
-* *Python version:*
-  This can be found by running `python --version`
- 
+* **Python version:**
+  This can be found by running: python --version
 
-* *NumPy, SciPy, and Tensorflow versions:*
+
+* **NumPy, SciPy, and Tensorflow versions:**
   These can be found by running
-  ```
   python -c "import numpy as np; import scipy as sp; import tensorflow as tf; print(np.__version__,sp.__version__,tf.__version__)"
-  ```
 
-* *Installation method:*
+* **Installation method:**
 
   Did you install Strawberry Fields via pip, or directly from the GitHub repository source code?
-  
+
   If installed via GitHub, what branch/commit did you use? You can get this information by opening a terminal in the
-  Strawberry Fields source code directory, and pasting the output of
-  ```
+  Strawberry Fields source code directory, and pasting the output of:
   git log -n 1 --pretty=format:"%H%n%an%n%ad%n%s"
-  ```
 
 
 #### Source code and tracebacks
