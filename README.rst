@@ -136,8 +136,8 @@ Contributing to Strawberry Fields
 We welcome contributions - simply fork the Strawberry Fields repository, and then make a
 `pull request <https://help.github.com/articles/about-pull-requests/>`_ containing your contribution.
 
-For more details on contributing to Strawberry Fields, see
-`Contributing to Strawberry Fields <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CONTRIBUTING.md>`_.
+See `Contributing to Strawberry Fields <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CONTRIBUTING.md>`_
+for more details on contributing to Strawberry Fields.
 
 
 Support

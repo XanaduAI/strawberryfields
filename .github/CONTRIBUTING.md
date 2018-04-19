@@ -136,6 +136,19 @@ Before submitting a pull request, please make sure the following is done:
 * When describing the pull request, please include as much detail as possible regarding the changes made/new features
   added/performance improvements. If including any bug fixes, mention the issue numbers associated with the bugs.
 
+* Once you have submitted the pull request, three things will automatically occur:
+
+  - The **test suite** will automatically run on [Travis CI](https://travis-ci.org/XanaduAI/strawberryfields)
+    to ensure that the all tests continue to pass.
+  - Once the test suite is finished, a **code coverage report** will be generated on
+    [Codecov](https://codecov.io/gh/XanaduAI/strawberryfields). This will calculate the percentage of Strawberry Fields
+    covered by the test suite, to ensure that all new code additions are adequately tested.
+  - Finally, the **code quality** is calculated by [Codacy](https://app.codacy.com/app/XanaduAI/strawberryfields/dashboard),
+    to ensure all new code additions adhere to our code quality standards.
+
+  Based on these reports, we may ask you to make small changes to your branch before merging the pull request into the master branch. Alternatively, you can also
+  [grant us permission to make changes to your pull request branch](https://help.github.com/articles/allowing-changes-to-a-pull-request-branch-created-from-a-fork/).
+
 :strawberry: Thank you for joining the Strawberry Fields contribution effort! :strawberry:
 
 \- The Strawberry Fields team
