@@ -18,14 +18,14 @@ import strawberryfields as sf
 from strawberryfields.engine import Engine
 from strawberryfields.utils import *
 from strawberryfields.ops import *
-from defaults import BaseTest, FockBaseTest
+from strawberryfields.parameters import Parameter
+from defaults import BaseTest
 
 
 class GateTests(BaseTest):
     def setUp(self):
         self.tol = 1e-6
         self.hbar = 2
-        # engine without backend
         self.eng = Engine(num_subsystems=3, hbar=self.hbar)
 
 
@@ -98,9 +98,12 @@ class GateTests(BaseTest):
             a, b = randn(2)
             G = f(a)
             temp = G.merge(f(b))
-            self.assertAlmostEqual(temp.p[0], a+b, delta=self.tol)
+            # not identity, p[0]s add up
+            self.assertTrue(temp is not None)
+            self.assertAlmostEqual(temp.p[0].evaluate(), a+b, delta=self.tol)
             temp = G.merge(f(b).H)
-            self.assertAlmostEqual(temp.p[0], a-b, delta=self.tol)
+            self.assertTrue(temp is not None)
+            self.assertAlmostEqual(temp.p[0].evaluate(), a-b, delta=self.tol)
 
         for G in one_args_gates+two_args_gates:
             merge_gates(G)
@@ -168,11 +171,50 @@ class GateTests(BaseTest):
         self.assertEqual(len(temp), self.eng.num_subsystems +c[None])
 
 
+class ParameterTests(BaseTest):
+    def setUp(self):
+        self.eng = Engine(num_subsystems=2)
+
+    def test_init(self):
+        "Parameter initialization"
+        from tensorflow import (Tensor, Variable)
+
+        @sf.convert
+        def func(x):
+            return 2*x**2 -3*x +1
+
+        r = self.eng.register
+
+        # ints, floats and complex numbers
+        # numpy arrays
+        # TensorFlow objects
+        # RegRefs and RegRefTransforms
+        inputs = [3, 0.14, -4.2+0.5j,
+                  randn(2,3),
+                  Variable(0.8+0j)]  # tensorflow does not allow arithmetic between real and complex dtypes without a cast if it would result in extending the domain
+        # at the moment RR-inputs cannot be arithmetically combined with the others
+        rr_inputs = [r[0], RR(r[0], lambda x: x**2), RR(r, lambda x,y: x*y), func(r[1])]
+        pars = [Parameter(k) for k in inputs]
+
+        for p in pars:
+            self.assertTrue(isinstance(p +1.1, Parameter))
+            self.assertTrue(isinstance(1.1 +p, Parameter))
+            self.assertTrue(isinstance(p -0.2, Parameter))
+            self.assertTrue(isinstance(0.2 -p, Parameter))
+            self.assertTrue(isinstance(p*2.4, Parameter))
+            self.assertTrue(isinstance(2.4*p, Parameter))
+            for q in pars:
+                self.assertTrue(isinstance(p+q, Parameter))
+                self.assertTrue(isinstance(p-q, Parameter))
+                self.assertTrue(isinstance(p*q, Parameter))
+
+
+
 if __name__ == '__main__':
     print('Testing Strawberry Fields version ' + sf.version() + ', gates module.')
     # run the tests in this file
     suite = unittest.TestSuite()
-    for t in (GateTests,):
+    for t in (GateTests, ParameterTests):
         ttt = unittest.TestLoader().loadTestsFromTestCase(t)
         suite.addTests(ttt)
 

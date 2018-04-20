@@ -234,7 +234,7 @@ class BaseBackend:
         """
         return self._supported[name] if name in self._supported else False
 
-    def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=True, **kwargs):
+    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, hbar=2, pure=True, **kwargs):
         r"""Instantiate a quantum circuit.
 
         Instantiates a circuit with num_subsystems modes to track and update a quantum optical state.

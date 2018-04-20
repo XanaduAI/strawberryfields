@@ -266,11 +266,11 @@ class RegRefTransform:
         "Not equal to anything."
         return False
 
-    def __pos__(self):
-        """Unary plus, used to evaluate the numeric value of the function once all the measurement values are available.
+    def evaluate(self):
+        """Evaluates the numeric value of the function if all the measurement values are available.
 
-        .. note:: Hack: we use the unary plus for RegRefTransform evaluation because it also happens to be a NOP
-              for plain numeric variables, thus producing the expected behavior in both cases.
+        Returns:
+          Number: function value
         """
         temp = [r.val for r in self.regrefs]
         if None in temp:
@@ -479,6 +479,8 @@ class Engine:
         Args:
           clist (list[Command]): command list to run
         """
+        kwargs.setdefault('hbar', self.hbar)  # caller can override the default value
+
         for cmd in clist:
             if cmd.op is None:
                 # None represents an identity gate
@@ -486,7 +488,7 @@ class Engine:
             else:
                 try:
                     # try to apply it to the backend
-                    cmd.op.apply(cmd.reg, self.backend, hbar=self.hbar, **kwargs)
+                    cmd.op.apply(cmd.reg, self.backend, **kwargs)
                     self.cmd_applied.append(cmd)
                 except SFNotApplicableError:
                     # command is not applicable to the current backend type
@@ -499,7 +501,7 @@ class Engine:
                     except NotImplementedError as err:
                         raise err from None
 
-    def run(self, backend=None, reset_backend=True, return_state=True, modes=None, *args, **kwargs):
+    def run(self, backend=None, reset_backend=True, return_state=True, modes=None, **kwargs):
         """Execute the program in the command queue by sending it to the backend, does not empty the queue.
 
         Args:
@@ -514,6 +516,8 @@ class Engine:
             modes (Sequence[int]): a sequence of integers denoting the modes to be returned
                 in the state object. If set to ``None``, all modes will be returned by default.
         """
+        kwargs.setdefault('hbar', self.hbar)  # caller can override the default value
+
         if reset_backend:
             self.reset_backend()
 
@@ -526,7 +530,7 @@ class Engine:
                 # initialize a backend
                 if isinstance(backend, str):
                     backend = load_backend(backend)
-                    backend.begin_circuit(num_subsystems=self.init_modes, hbar=self.hbar, *args, **kwargs)
+                    backend.begin_circuit(num_subsystems=self.init_modes, **kwargs)
 
                 self.backend = backend    #: BaseBackend: backend instance for executing the commands
 
