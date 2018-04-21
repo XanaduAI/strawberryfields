@@ -2,7 +2,7 @@
     :alt: Strawberry Fields
 ##################################################
 
-.. image:: https://img.shields.io/travis/XanaduAI/strawberryfields.svg?style=for-the-badge
+.. image:: https://img.shields.io/travis/XanaduAI/strawberryfields/master.svg?style=for-the-badge
     :alt: Travis
     :target: https://travis-ci.org/XanaduAI/strawberryfields
 
