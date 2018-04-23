@@ -128,9 +128,8 @@ def _print_list(i, q):
     print()
 
 
-def _convert(custom_function):
-    r"""Decorator for converting user defined functions
-    to a :class:`~.RegRefTransform`.
+def _convert(func):
+    r"""Decorator for converting user defined functions to a :class:`~.RegRefTransform` factories.
 
     Example usage:
 
@@ -146,19 +145,12 @@ def _convert(custom_function):
             Dgate(F(q[0])) | q[1]
 
     Args:
-        custom_function (function): the user defined function
-            to be converted to a :class:`~.RegRefTransform`.
+        func (function): function to be converted to a :class:`~.RegRefTransform` factory.
     """
-    @wraps(custom_function)
-    def wrapper(*args, **kwargs):
-        # pylint: disable=missing-docstring,unused-argument
-        register = args[0]
-        rr = RegRefTransform(
-            register,
-            func=custom_function,
-            func_str=custom_function.__name__
-        )
-        return rr
+    @wraps(func)
+    def wrapper(*args):
+        "Unused docstring."
+        return RegRefTransform(args, func)
     return wrapper
 
 
@@ -175,7 +167,7 @@ class Command:
 
     Args:
       op (Operation): quantum operation to apply
-      reg (Sequence[RegRef]): subsystems to which the operation is applied
+      reg (Sequence[RegRef]): Subsystems to which the operation is applied. Note that the order matters here.
     """
     # pylint: disable=too-few-public-methods
     def __init__(self, op, reg, decomp=False):
@@ -187,20 +179,24 @@ class Command:
         self.decomp = decomp
 
     def __str__(self):
-        return '{}, \t({})'.format(self.op, ", ".join([str(rr) for rr in self.reg]))
+        """Prints the command using proper Blackbird syntax."""
+        temp = str(self.op)
+        if temp[-1] == ' ':  # HACK, trailing space means do not print anything more.
+            return temp
+        return '{} | \t({})'.format(temp, ", ".join([str(rr) for rr in self.reg]))
 
     def get_dependencies(self):
         """Subsystems the command depends on.
 
         Combination of ``self.reg`` and ``self.op.extra_deps``.
 
-        .. note:: ``extra_deps`` are used to ensure that the measurement happens before the result is used, but this is a bit too strict: two gates depending on the same measurement result but otherwise acting on different subsystems commute.
+        .. note:: ``extra_deps`` are used to ensure that the measurement happens before the result is used, but this is a bit too strict:
+           two gates depending on the same measurement result but otherwise acting on different subsystems commute.
 
         Returns:
-          list[RegRef]: list of subsystems the command depends on
+          set[RegRef]: set of subsystems the command depends on
         """
-        deps = list(self.reg)
-        deps.extend(self.op.extra_deps)
+        deps = self.op.extra_deps | set(self.reg)
         return deps
 
 
@@ -234,30 +230,28 @@ class RegRefTransform:
 
     Args:
       r (Sequence[RegRef]): register references that act as parameters for the function
-      func (function): scalar function that takes the values of the register references in r as parameters
+      func (None, function): Scalar function that takes the values of the register references in r as parameters.
+        None is equivalent to the identity transformation lambda x: x.
     """
     # pylint: disable=too-few-public-methods
-    def __init__(self, r, func=lambda x: x, func_str=None):
+    def __init__(self, r, func=None):
         # into a list of regrefs
         if isinstance(r, RegRef):
             r = [r]
         self.regrefs = r   #: list[RegRef]: register references that act as parameters for the function
-        self.func = func   #: function: the transformation itself, returns a scalar
-        self.func_str = func_str
+        self.func = func   #: None, function: the transformation itself, returns a scalar
+        if func is None and len(r) > 1:
+            raise ValueError('Identity transformation only takes one parameter.')
 
     def __str__(self):
-        # pylint: disable=no-else-return
+        """Prints the RegRefTransform using Blackbird syntax."""
         temp = [str(r) for r in self.regrefs]
-        if self.func_str is None:
-            if len(temp) == 1:
-                return 'RR({})'.format(', '.join(temp))
-            else:
-                return 'RR([{}])'.format(', '.join(temp))
-        else:
-            if len(temp) == 1:
-                return 'RR({}, {})'.format(', '.join(temp), self.func_str)
-            else:
-                return 'RR([{}], {})'.format(', '.join(temp), self.func_str)
+        rr = ', '.join(temp)
+        if len(temp) > 1:
+            rr = '[' +rr +']'
+        if self.func is None:
+            return 'RR({})'.format(rr)
+        return 'RR({}, {})'.format(rr, self.func.__name__)
 
     def __format__(self, format_spec):
         return self.__str__() # pragma: no cover
@@ -275,6 +269,8 @@ class RegRefTransform:
         temp = [r.val for r in self.regrefs]
         if None in temp:
             raise SFProgramError('Trying to use a nonexistent measurement result (e.g. before it can be measured).')
+        if self.func is None:
+            return temp[0]
         return self.func(*temp)
 
 

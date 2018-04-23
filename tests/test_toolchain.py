@@ -181,13 +181,42 @@ class BasicTests(BaseTest):
             Del      | bob
             D.H      | charlie
             MeasureX | charlie
-        #self.eng.print_program()
+        #self.eng.print_queue()
         self.eng.optimize()
         state = self.eng.run(backend=self.backend)
         # print('measurement result: a: {}, b: {}, c: {}'.format(alice.val, bob.val, charlie.val))
         # state norm must be invariant
         if isinstance(self.eng.backend, BaseFock):
             self.assertAllAlmostEqual(state.trace(), 1, delta=self.tol)
+
+
+    def test_parameters(self):
+        """Test using different types of Parameter instances in the toolchain."""
+        @sf.convert
+        def func1(x):
+            return 2*x**2 -3*x +1
+
+        @sf.convert
+        def func2(x,y):
+            return 2*x*y -y**2 +3
+
+        r = self.eng.register
+        # RegRefTransforms
+        rr_inputs = [r[0], RR(r[0], lambda x: x**2), func1(r[0]), func2(*r)]
+        # other types of parameters
+        par_inputs = [3, 0.14, -4.2+0.5j,
+              randn(2,3),
+              Variable(0.8+0j)]  # tensorflow does not allow arithmetic between real and complex dtypes without a cast if it would result in extending the domain
+
+        for p in (Parameter(k) for k in rr_inputs+par_inputs):
+            self.eng.reset_queue()
+            with self.eng:
+                Measure  | r
+                Rgate(p) | r[0]
+            self.eng.print_queue()
+            self.eng.optimize()
+            state = self.eng.run(backend=self.backend)
+
 
 
 class FockBasisTests(FockBaseTest):

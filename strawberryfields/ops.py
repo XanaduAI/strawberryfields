@@ -309,7 +309,7 @@ class Operation:
         pass
 
     def __str__(self):
-        """String representation."""
+        """String representation for the Operation."""
         # defaults to the class name
         return self.__class__.__name__
 
@@ -447,7 +447,7 @@ class Preparation(Operation):
         # sequential preparation, only the last one matters
         if isinstance(other, (Preparation, CovarianceState)):
             # give a warning, since this is pointless and probably a user error
-            warnings.warn('Two subsequent preparations, first one has no effect.')
+            warnings.warn('Two subsequent state preparations, first one has no effect.')
             return other
         else:
             raise TypeError('For now, Preparations cannot be merged with anything else.')
@@ -486,9 +486,10 @@ class Measurement(ParOperation):
         self.select = select  #: None, Sequence[Number]: postselection values, one for each measured subsystem
 
     def __str__(self):
+        # class name, parameter values, and possibly the select parameter
         temp = super().__str__()
         if self.select is not None:
-            temp = temp[0:-1] +', select={})'.format(self.select)
+            temp = temp[:-1] +', select={})'.format(self.select)
         return temp
 
     def merge(self, other):
@@ -527,11 +528,10 @@ class Gate(ParOperation):
     def __str__(self):
         """String representation for the gate."""
         # add a dagger symbol to the class name if needed
+        temp = super().__str__()
         if self.dagger:
-            d = r"^\dagger"
-        else:
-            d = ""
-        return super().__str__() + d
+            temp += ".H"
+        return temp
 
     @property
     def H(self):
@@ -646,14 +646,6 @@ class Coherent(ParPreparation):
         z = self.p[0] * exp(1j * self.p[1])
         backend.prepare_coherent_state(z, *reg)
 
-    def __str__(self):
-        cmd_str = super().__str__()
-        if self.p == 0:
-            cmd_str += '({:.4g})'.format(self.a)
-        else:
-            cmd_str += '({:.4g},{:.4g})'.format(self.a, self.p)
-        return cmd_str
-
 
 class Squeezed(ParPreparation):
     r"""Prepare a mode in a :ref:`squeezed vacuum state <squeezed_state>`.
@@ -667,9 +659,6 @@ class Squeezed(ParPreparation):
 
     def _apply(self, reg, backend, **kwargs):
         backend.prepare_squeezed_state(self.p[0], self.p[1], *reg)
-
-    def __str__(self):
-        return super().__str__()+'({:.4g},{:.4g})'.format(self.r, self.p)
 
 
 class DisplacedSqueezed(ParPreparation):
@@ -698,9 +687,6 @@ class DisplacedSqueezed(ParPreparation):
         # displace the state by alpha
         backend.displacement(self.p[0], *reg)
 
-    def __str__(self):
-        return super().__str__()+'({:.4g},{:.4g},{:.4g})'.format(self.alpha, self.r, self.p)
-
 
 class Fock(ParPreparation):
     r"""Prepare a mode in a :ref:`fock_basis` state.
@@ -716,9 +702,6 @@ class Fock(ParPreparation):
 
     def _apply(self, reg, backend, **kwargs):
         backend.prepare_fock_state(self.p[0], *reg)
-
-    def __str__(self):
-        return super().__str__()+'({:.4g})'.format(self.n)
 
 
 class Catstate(ParPreparation):
@@ -764,9 +747,6 @@ class Catstate(ParPreparation):
         ket = (c1 + exp(1j*phi) * c2) * N
         backend.prepare_ket_state(ket, *reg)
 
-    def __str__(self):
-        return super().__str__()+'({:.4g},{:.4g})'.format(self.alpha, self.p)
-
 
 class Ket(ParPreparation):
     r"""Prepare a mode using the given ket vector in the :ref:`fock_basis`.
@@ -798,9 +778,6 @@ class Thermal(ParPreparation):
 
     def _apply(self, reg, backend, **kwargs):
         backend.prepare_thermal_state(self.p[0], *reg)
-
-    def __str__(self):
-        return super().__str__()+'({:.4g})'.format(self.n)
 
 
 #====================================================================
@@ -854,15 +831,10 @@ class MeasureHomodyne(Measurement):
     def __str__(self):
         if self.select is None:
             if self.p[0] == 0:
-                cmd_str = 'MeasureX'
+                return 'MeasureX'
             elif self.p[0] == pi/2:
-                cmd_str = 'MeasureP'
-            else:
-                cmd_str = super().__str__()+'({:.4g})'.format(self.p[0])
-        else:
-            cmd_str = super().__str__()+'({:.4g}, select={})'.format(self.p[0], self.select)
-
-        return cmd_str
+                return 'MeasureP'
+        return super().__str__()
 
 
 class MeasureHeterodyne(Measurement):
@@ -883,7 +855,6 @@ class MeasureHeterodyne(Measurement):
     def __str__(self):
         if self.select is None:
             return 'MeasureHD'
-
         return 'MeasureHeterodyne(select={})'.format(self.select)
 
 
@@ -907,6 +878,10 @@ class Delete(Operation):
     def _apply(self, reg, backend, **kwargs):
         backend.del_mode(reg)
 
+    def __str__(self):
+        # the shorthand object
+        return 'Del'
+
 
 class New_modes(Operation):
     """Used for adding new modes to the system.
@@ -922,6 +897,7 @@ class New_modes(Operation):
 
         Dispatches the command to the command queue.
         """
+        self.n = n  # int: store the number of new modes for the __str__ method
         # create RegRef placeholders for the new modes
         refs = _Engine._current_context.add_subsystems(n)
         # send the actual creation command to the engine
@@ -931,6 +907,10 @@ class New_modes(Operation):
     def _apply(self, reg, backend, **kwargs):
         # pylint: disable=unused-variable
         inds = backend.add_mode(len(reg))
+
+    def __str__(self):
+        # HACK, trailing space means do not print anything more.
+        return 'New({}) '.format(self.n)
 
 
 #====================================================================
@@ -997,17 +977,6 @@ class Dgate(Gate):
     def _apply(self, reg, backend, **kwargs):
         z = self.p[0] * exp(1j * self.p[1])
         backend.displacement(z, *reg)
-
-    def __str__(self):
-        # pylint: disable=bad-super-call
-        cmd_str = super().__str__()
-        if self.p[1] == 0:
-            cmd_str += '({:.4g})'.format(self.p[0])
-        else:
-            cmd_str += '({:.4g},{:.4g})'.format(self.p[0], self.p[1])
-
-        d = r"^\dagger" if self.dagger else ""
-        return cmd_str + d
 
 
 class Xgate(Gate):
@@ -1266,11 +1235,10 @@ class Fouriergate(Gate):
 
     def __str__(self):
         """String representation for the gate."""
+        temp = 'Fourier'
         if self.dagger:
-            d = r"^\dagger"
-        else:
-            d = ""
-        return "Fourier" + d
+            temp += '.H'
+        return temp
 
 
 #====================================================================
@@ -1291,7 +1259,7 @@ class All(Operation):
         self.op = op  #: Operation: one-subsystem operation to apply
 
     def __str__(self):
-        return super().__str__() + '[{}]'.format(str(self.op))
+        return super().__str__() +'({})'.format(str(self.op))
 
     def __or__(self, reg):
         # into a list of subsystems

@@ -175,7 +175,7 @@ class GateTests(BaseTest):
             edward, grace = New(2)
             Del | (charlie, grace)
 
-        #self.eng.print_program()
+        #self.eng.print_queue()
         temp = self.eng.reg_refs
         c = Counter(temp.values())
         #print(c)
@@ -207,23 +207,6 @@ class ParameterTests(BaseTest):
                 self.assertTrue(isinstance(p+q, Parameter))
                 self.assertTrue(isinstance(p-q, Parameter))
                 self.assertTrue(isinstance(p*q, Parameter))
-
-    def test_toolchain(self):
-        "Passing Parameters through the toolchain."
-        r = self.eng.register
-
-        @sf.convert
-        def func(x):
-            return 2*x**2 -3*x +1
-        rr_inputs = [r[0], RR(r[0], lambda x: x**2), RR(r, lambda x,y: x*y), func(r[1])]
-
-        for p in (Parameter(k) for k in par_inputs+rr_inputs):
-            print(p)
-            with self.eng:
-                Measure  | r
-                Rgate(p) | r[0]
-            self.eng.optimize()
-            state = self.eng.run(backend='fock', cutoff_dim=4)
 
 
 
