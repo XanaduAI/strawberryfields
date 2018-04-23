@@ -62,67 +62,20 @@ Code details
 """
 
 import numbers
+
 import numpy as np
 #from numpy import ndarray
-from numpy import cos, sin, exp, sqrt, arctan, arccosh, sign, arctan2, arcsinh, cosh, tanh, log, matmul
+from numpy import abs, cos, sin, exp, sqrt, arctan, arccosh, sign, arctan2, arcsinh, cosh, tanh, log, matmul
 
 from tensorflow import (Tensor, Variable)
-from tensorflow import cos as tfcos, sin as tfsin, exp as tfexp, sqrt as tfsqrt, atan as tfatan, acosh as tfacosh, sign as tfsign, \
+from tensorflow import abs as tfabs, cos as tfcos, sin as tfsin, exp as tfexp, sqrt as tfsqrt, atan as tfatan, acosh as tfacosh, sign as tfsign, \
     atan2 as tfatan2, asinh as tfasinh, cosh as tfcosh, tanh as tftanh, log as tflog, matmul as tfmatmul
-
 
 from .engine import (RegRef, RegRefTransform)
 
 
+
 tf_objs = (Tensor, Variable)
-
-
-# wrap math functions so they call the correct underlying function for the input type
-tf_math_fns = {"sin": tfsin,
-               "cos": tfcos,
-               "exp": tfexp,
-               "sqrt": tfsqrt,
-               "arctan": tfatan,
-               "arccosh": tfacosh,
-               "sign": tfsign,
-               "arctan2": tfatan2,
-               "arcsinh": tfasinh,
-               "cosh": tfcosh,
-               "tanh": tftanh,
-               "log": tflog,
-               "matmul": tfmatmul}
-np_math_fns = {"sin": sin,
-               "cos": cos,
-               "exp": exp,
-               "sqrt": sqrt,
-               "arctan": arctan,
-               "arccosh": arccosh,
-               "sign": sign,
-               "arctan2": arctan2,
-               "arcsinh": arcsinh,
-               "cosh": cosh,
-               "tanh": tanh,
-               "log": log,
-               "matmul": matmul}
-
-def check_type(math_fn):
-    "Wrapper function which checks the type of the incoming object and calls the appropriate tf/np function"
-    fn_name = math_fn.__name__
-    def wrapper(*args, **kwargs):
-        """wrapper function"""
-        if any([isinstance(x, (Variable, Tensor)) for x in args]):
-            # if anything is a tf object, use the tensorflow version of the function
-            math_fn = tf_math_fns[fn_name]
-        else:
-            # otherwise, default to numpy version
-            math_fn = np_math_fns[fn_name]
-        return math_fn(*args, **kwargs)
-    return wrapper
-
-
-# HACK, edit the global namespace to have single dispatch overloading for the standard math functions
-for k, mfn in np_math_fns.items():
-    globals()[k] = check_type(mfn)
 
 
 
@@ -130,10 +83,13 @@ class Parameter():
     """Represents a parameter passed to a :class:`strawberryfields.ops.Operation` subclass constructor.
 
     The supported parameter types are Python and NumPy numeric types, NumPy arrays, :class:`RegRef` instances,
-    :class:`RegRefTransform` instances, and certain TensorFlow objects.
+    :class:`RegRefTransform` instances, and certain TensorFlow objects. RegRef instances are internally represented as
+    trivial RegRefTransforms.
 
-    All but the RegRef and TensorFlow objects are guaranteed to have an immediate numeric value that can be evaluated
-    and will not change.
+    All but the RR and TensorFlow parameters can be evaluated whenever, into an immediate numeric value that
+    will not change. RR parameters can only be evaluated after the corresponding register
+    subsystems have been measured. TF parameters can be evaluated whenever, but they yield TF objects that
+    still need to be evaluated using :func:`tf.Session().run()`.
 
     The class supports various arithmetic operations which may change the internal representation of the result.
     If a TensorFlow object is involved, the result will always be a TensorFlow object.
@@ -254,14 +210,53 @@ class Parameter():
         return self.x == other
 
     # Do all NumPy one-parameter ufuncs magically call parameter.functionname() if no native implementation exists??
-    def abs(self):
-        return Parameter(abs(self.x))  # TODO tf.abs for Tensorflow objs?!?
+    #def abs(self):
+    #    return Parameter(abs(self.x))
 
-    def sqrt(self):
-        return Parameter(sqrt(self.x))
 
-#    def cos(self):
-#        return tf.cos(self.x)
 
-#    def sin(self):
-#        return tf.sin(self.x)
+# corresponding numpy and tensorflow functions
+np_math_fns = {"abs": (abs, tfabs),
+               "sin": (sin, tfsin),
+               "cos": (cos, tfcos),
+               "exp": (exp, tfexp),
+               "sqrt": (sqrt, tfsqrt),
+               "arctan": (arctan, tfatan),
+               "arccosh": (arccosh, tfacosh),
+               "sign": (sign, tfsign),
+               "arctan2": (arctan2, tfatan2),
+               "arcsinh": (arcsinh, tfasinh),
+               "cosh": (cosh, tfcosh),
+               "tanh": (tanh, tftanh),
+               "log": (log, tflog),
+                "matmul": (matmul, tfmatmul)
+}
+
+def math_fn_wrap(np_fn, tf_fn):
+    """Wrapper function for the standard math functions.
+
+    It checks the type of the incoming object and calls the appropriate NumPy or TensorFlow function.
+    """
+    def wrapper(*args, **kwargs):
+        """wrapper function"""
+        if any([isinstance(a, (Variable, Tensor)) for a in args]):
+            # if anything is a tf object, use the tensorflow version of the function
+            print('---------- tf:')
+            return tf_fn(*args, **kwargs)
+        elif any([isinstance(a, Parameter) for a in args]):
+            # for Parameters, call the function on the data and construct a new instance
+            print('---------- par:')
+            temp = (a.x if isinstance(a, Parameter) else a for a in args)
+            return Parameter(wrapper(*temp))
+        # otherwise, default to numpy version
+        print('---------- np:')
+        return np_fn(*args, **kwargs)
+
+    # FIXME unittest.mock raises an exception on the following line
+    #wrapper.__name__ = np_fn.__name__
+    wrapper.__doc__  = math_fn_wrap.__doc__
+    return wrapper
+
+# HACK, edit the global namespace to have sort-of single dispatch overloading for the standard math functions
+for name, fn in np_math_fns.items():
+    globals()[name] = math_fn_wrap(*fn)
