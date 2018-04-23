@@ -173,11 +173,11 @@ The abstract base class hierarchy exists to provide the correct semantics for th
 
 .. autosummary::
    Operation
+   ParOperation
    Preparation
+   ParPreparation
    Measurement
-   Transformation
    Gate
-   Channel
 
 
 State preparation
@@ -269,70 +269,24 @@ Code details
 
 from collections.abc import Sequence
 import copy
+import warnings
 
 import numpy as np
-from numpy import pi, cos, sin, exp, sqrt, arctan, arccosh, sign, arctan2, arcsinh, cosh, tanh, ndarray, all, arange, log, matmul
+from numpy import pi
 
 from scipy.linalg import block_diag
 from scipy.special import factorial as fac
 
 from tensorflow import Tensor, Variable
-from tensorflow import cos as tfcos, sin as tfsin, exp as tfexp, sqrt as tfsqrt, atan as tfatan, acosh as tfacosh, sign as tfsign, \
-    atan2 as tfatan2, asinh as tfasinh, cosh as tfcosh, tanh as tftanh, log as tflog, matmul as tfmatmul
 
-from .backends.tfbackend.ops import TensorWrapper, _wrap_tensors
 from .backends.shared_ops import changebasis
 from .engine import Engine as _Engine, Command, RegRef, RegRefTransform
+from .parameters import Parameter, sqrt, exp, sin, cos, cosh, tanh, arctan, arctan2, arcsinh, arccosh, sign
 from .decompositions import clements, bloch_messiah, williamson
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
 
-# wrap math functions so they call the correct underlying function for the input type
-tf_math_fns = {"sin": tfsin,
-               "cos": tfcos,
-               "exp": tfexp,
-               "sqrt": tfsqrt,
-               "arctan": tfatan,
-               "arccosh": tfacosh,
-               "sign": tfsign,
-               "arctan2": tfatan2,
-               "arcsinh": tfasinh,
-               "cosh": tfcosh,
-               "tanh": tftanh,
-               "log": tflog,
-               "matmul": tfmatmul}
-np_math_fns = {"sin": sin,
-               "cos": cos,
-               "exp": exp,
-               "sqrt": sqrt,
-               "arctan": arctan,
-               "arccosh": arccosh,
-               "sign": sign,
-               "arctan2": arctan2,
-               "arcsinh": arcsinh,
-               "cosh": cosh,
-               "tanh": tanh,
-               "log": log,
-               "matmul": matmul}
-
-def check_type(math_fn):
-    "Wrapper function which checks the type of the incoming object and calls the appropriate tf/np function"
-    fn_name = math_fn.__name__
-    def wrapper(*args, **kwargs):
-        """wrapper function"""
-        if any([isinstance(x, (Variable, Tensor)) for x in args]):
-            # if anything is a tf object, use the tensorflow version of the function
-            math_fn = tf_math_fns[fn_name]
-        else:
-            # otherwise, default to numpy version
-            math_fn = np_math_fns[fn_name]
-        return math_fn(*args, **kwargs)
-    return wrapper
-
-
-for k, mfn in np_math_fns.items():
-    globals()[k] = check_type(mfn)
 
 
 def _seq_to_list(s):
@@ -352,12 +306,21 @@ class Operation:
     # default: one-subsystem operation
     ns = 1  #: int: number of subsystems the operation acts on, or None if any number of subsystems > 0 is okay
     def __init__(self):
-        self.extra_deps = set()  #: set[RegRef]: extra dependencies due to deferred measurements, used during optimization
+        pass
 
     def __str__(self):
         """String representation."""
         # defaults to the class name
         return self.__class__.__name__
+
+    @property
+    def extra_deps(self):
+        """Extra dependencies due to parameters that depend on deferred measurements.
+
+        Returns:
+          set[RegRef]: dependencies
+        """
+        return set()  # basic operations have no extra dependencies
 
     def __or__(self, reg):
         """Apply the operation to a part of a quantum register.
@@ -378,11 +341,20 @@ class Operation:
     def merge(self, other):
         """Merge the operation with another (acting on the exact same set of subsystems).
 
+        .. note:: For subclass overrides: merge may return a newly created object, or self, or other, but it must never modify self or other
+           because the same Operation objects may be also used elsewhere.
+
         Args:
           other (Operation): operation to merge this one with
 
         Returns:
           Operation, None: other * self. The return value None represents the identity gate (doing nothing).
+
+        Raises:
+          TypeError: if the two operations cannot be merged
+
+        .. todo:: Using the return value None to denote the identity is a bit dangerous, since a function with no explicit return statement also returns None,
+           which can lead to puzzling bugs. Maybe return a special singleton Identity object instead?
         """
         raise NotImplementedError
 
@@ -408,108 +380,138 @@ class Operation:
         """
         raise NotImplementedError('Missing direct implementation: {}'.format(self))
 
-    def apply(self, reg, backend, hbar, **kwargs):
+    def apply(self, reg, backend, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
 
-        Takes care of any pending formal transformations (like dagger) and then calls _apply.
+        Takes care of parameter evaluations and any pending formal transformations (like dagger) and then calls _apply.
 
         Args:
           reg (Sequence[RegRef]): subsystem(s) the operation is acting on
           backend (BaseBackend): backend to execute the operation
+        Returns:
+          : whatever _apply returns
         """
         # convert RegRefs back to indices for the backend API
         temp = [rr.ind for rr in reg]
-        self.hbar = hbar # pylint: disable=attribute-defined-outside-init
-        self._apply(temp, backend, **kwargs)
+        # call the child class specialized _apply method
+        return self._apply(temp, backend, **kwargs)
+
+
+
+class ParOperation(Operation):
+    """Abstract base class for quantum operations with parameters.
+
+    Args:
+      par (Sequence[...]): parameters. len(par) >= 1.
+    """
+    def __init__(self, par):
+        super().__init__()
+        self._extra_deps = set()  #: set[RegRef]: extra dependencies due to deferred measurements, used during optimization
+        self.p = []  #: list[Parameter]: parameters (at least one)
+        # convert each parameter into a Parameter instance, keep track of dependenciens
+        for q in par:
+            if not isinstance(q, Parameter):
+                q = Parameter(q)
+            self.p.append(q)
+            self._extra_deps.update(q.deps)
+
+    def __str__(self):
+        # class name and parameter values
+        temp = [str(i) for i in self.p]
+        return super().__str__()+'('+', '.join(temp)+')'
+
+    @property
+    def extra_deps(self):
+        return self._extra_deps
+
+    def apply(self, reg, backend, **kwargs):
+        """Ask a backend to execute the operation on the current register state right away.
+
+        Like :func:`Operation.apply`, but evaluates the parameters before calling _apply.
+        """
+        # NOTE: We cannot just replace all RegRefTransform parameters with their numerical values here.
+        # If we re-initialize a measured mode and re-measure it, the RegRefTransform value should change accordingly when it is used again after the new measurement.
+        # Likewise with TensorFlow objects.
+        # evaluate the Parameters, restore the originals later
+        temp = self.p  # store the originals
+        self.p = [x.evaluate() for x in self.p]
+        result = super().apply(reg, backend, **kwargs)
+        self.p = temp  # restore original unevaluated Parameter instances
+        return result
+
 
 
 class Preparation(Operation):
-    """Abstract base class for subsystem preparation."""
+    """Abstract base class for operations that demolish the previous state entirely."""
     def merge(self, other):
         # sequential preparation, only the last one matters
         if isinstance(other, (Preparation, CovarianceState)):
+            # give a warning, since this is pointless and probably a user error
+            warnings.warn('Two subsequent preparations, first one has no effect.')
             return other
         else:
-            raise TypeError('For now, preparations cannot be merged with anything else.')
+            raise TypeError('For now, Preparations cannot be merged with anything else.')
 
 
-class Measurement(Operation):
+
+class ParPreparation(Preparation, ParOperation):
+    """Abstract base class for parametrized subsystem preparation."""
+    pass
+
+
+
+class Measurement(ParOperation):
     """Abstract base class for projective subsystem measurements.
 
     The measurement is deferred: its result is available only after the backend has executed it.
-    The value of the measurement can be accessed in the program through the symbolic subsystem reference.
+    The value of the measurement can be accessed in the program through the symbolic subsystem reference to the measured subsystem.
 
     When the measurement happens, the state of the circuit is updated to the conditional state corresponding to the measurement result.
+    Measurements also support postselection, see below.
+
+    Args:
+      select (None, Sequence[Number]): Desired values of the measurement results, one for each subsystem the measurement acts on.
+        Allows the post-selection of specific measurement results instead of randomly sampling. None means no postselection.
+
+    .. todo:: self.select could support :class:`~strawberryfields.parameters.Parameter` instances.
+
+    .. todo:: Currently MeasureFock objects can be applied to any number of subsystems. This can cause problems with postselection,
+       since self.select has a fixed length.
     """
+    ns = None
+    def __init__(self, par, select=None):
+        super().__init__(par)
+        if select is not None and not isinstance(select, Sequence):
+            select = [select]
+        self.select = select  #: None, Sequence[Number]: postselection values, one for each measured subsystem
+
+    def __str__(self):
+        temp = super().__str__()
+        if self.select is not None:
+            temp = temp[0:-1] +', select={})'.format(self.select)
+        return temp
+
     def merge(self, other):
         raise TypeError('For now, measurements cannot be merged with anything else.')
 
-    def apply(self, reg, backend, hbar, **kwargs):
-        # measurement acts on multiple modes
-        # convert RegRefs back to indices for the backend API
-        temp = [rr.ind for rr in reg]
+    def apply(self, reg, backend, **kwargs):
+        """Ask a backend to execute the operation on the current register state right away.
 
-        self.hbar = hbar # pylint: disable=attribute-defined-outside-init
-
-        # call the child class specialized _apply method
-        values = self._apply(temp, backend, **kwargs)
-
+        Like :func:`ParOperation.apply`, but also stores the measurement result in the RegRefs.
+        """
+        values = super().apply(reg, backend, **kwargs)
+        # measurement can act on multiple modes
         if self.ns == 1:
             values = [values]
-
         # store the results in the register reference objects
         for v, r in zip(values, reg):
             r.val = v
 
-class Transformation(Operation):
-    """Abstract base class for quantum transformations.
 
-    Args:
-      par (Sequence[float, complex]): parameters. len(par) >= 1.
-    """
-    def __init__(self, par):
-        super().__init__()
-        for idx, q in enumerate(par):
-            # wrap RegRefs in the identity RegRefTransform
-            # (simplifies syntax of commands)
-            if isinstance(q, RegRef):
-                q = RegRefTransform(q)
-                par[idx] = q
-            # wrap tensorflow objects and numpy arrays in a TensorWrapper
-            if isinstance(q, (Tensor, Variable, ndarray)):
-                q = TensorWrapper(q)
-                par[idx] = q
-            # add extra dependencies
-            if isinstance(q, RegRefTransform):
-                self.extra_deps.update(q.regrefs)
-        self.p = list(par)  #: list[float, complex]: parameters (at least one)
-
-    def __str__(self):
-        # class name and parameter value
-        temp = ['{:.4g}'.format(i) if not isinstance(i, TensorWrapper) else '{}'.format(i) for i in self.p]
-        return super().__str__()+'('+', '.join(temp)+')'
-
-
-class Channel(Transformation):
-    """Abstract base class for channels."""
-
-    def apply(self, reg, backend, hbar, **kwargs):
-        # NOTE: We cannot just replace all RegRefTransform parameters with their numerical values here.
-        # If we re-initialize a measured mode and re-measure it, the RegRefTransform value should change accordingly when it is used again after the new measurement.
-        z = +self.p[0] # pylint: disable=unused-variable
-        # evaluate the RegRefTransforms, restore the originals later
-        temp = self.p  # store the originals
-        self.p = [+x for x in self.p]  # replace any possible RegRefTransform instances with evaluated versions
-        self.p = [_wrap_tensors(x) for x in self.p] # wrap any tensors with TensorWrappers
-        super().apply(reg, backend, hbar, **kwargs)
-        self.p = temp  # restore original parameters
-
-
-class Gate(Transformation):
+class Gate(ParOperation):
     """Abstract base class for unitary quantum gates.
 
-
-    Note that the first parameter p[0] of the Gate class is special:
+    The first parameter p[0] of the Gate class is special:
 
     * The value p[0] = 0 corresponds to the identity gate.
     * The inverse gate is obtained by negating p[0].
@@ -545,27 +547,34 @@ class Gate(Transformation):
         s.dagger = not s.dagger
         return s
 
-    def apply(self, reg, backend, hbar, **kwargs):
-        # NOTE: We cannot just replace all RegRefTransform parameters with their numerical values here.
-        # If we re-initialize a measured mode and re-measure it, the RegRefTransform value should change accordingly when it is used again after the new measurement.
-        z = +self.p[0]
-        if all(z == 0):
-            # identity, no need to apply
+    def apply(self, reg, backend, **kwargs):
+        """Ask a backend to execute the operation on the current register state right away.
+
+        Like :func:`ParOperation.apply`, but takes into account the special nature of p[0] and applies self.dagger.
+        """
+        z = self.p[0].evaluate()
+        if isinstance(z, np.ndarray):
             # if z represents a batch of parameters, then all of these must be zero to skip calling backend
+            temp = np.all(z == 0)
+        else:
+            temp = (z == 0)
+        if temp:
+            # identity, no need to apply
             return
-        # evaluate the RegRefTransforms, restore the originals later
+        # evaluate the Parameters, restore the originals later
         temp = self.p  # store the originals
-        self.p = [+x for x in self.p]  # replace any possible RegRefTransform instances with evaluated versions
-        self.p = [_wrap_tensors(x) for x in self.p] # wrap any tensors with TensorWrappers
+        self.p = [x.evaluate() for x in self.p]
         if self.dagger:
             self.p[0] = -self.p[0]
-        super().apply(reg, backend, hbar, **kwargs)
-        self.p = temp  # restore original parameters
+        # calling the grandparent class, skipping ParOperation.apply to avoid another evaluation of self.p
+        super(ParOperation, self).apply(reg, backend, **kwargs)
+        self.p = temp  # restore original unevaluated Parameter instances
+        # NOTE gates don't return anything, return value is None
 
     def merge(self, other):
         # can be merged if they are the same class and share all the other parameters
         if isinstance(other, self.__class__) and self.p[1:] == other.p[1:] \
-           and len(self.extra_deps)+len(other.extra_deps) == 0:  # no extra dependencies <=> no RegRefTransform parameters
+           and len(self._extra_deps)+len(other._extra_deps) == 0:  # no extra dependencies <=> no RegRefTransform parameters
             # make sure the gates have the same dagger flag, if not, invert the second p[0]
             if self.dagger == other.dagger:
                 temp = other.p[0]
@@ -576,13 +585,15 @@ class Gate(Transformation):
             if p0 == 0:
                 return None  # identity gate
             else:
+                # return a copy
                 # HACK: some of the subclass constructors only take a single parameter, some take two, none take three
                 if len(self.p) == 1:
                     temp = self.__class__(p0)
                 else:
                     temp = self.__class__(p0, *self.p[1:])
-                # TODO: this would be nicer, but it does not apply the modulo in AngleGate constructor
-                #temp = deepcopy(self)
+                # NOTE deepcopy would make copies of RegRefs inside a possible RegRefTransformation parameter, RegRefs must not be copied.
+                # OTOH copy results in temp having the same p list as self, which we would modify below.
+                #temp = copy.copy(self)
                 #temp.p[0] = p0
                 temp.dagger = self.dagger
                 return temp
@@ -603,6 +614,7 @@ class Gate(Transformation):
 # State preparation operations
 #====================================================================
 
+
 class Vacuum(Preparation):
     """Prepare a mode in the :ref:`vacuum state <vacuum_state>`.
 
@@ -617,7 +629,7 @@ class Vacuum(Preparation):
         return 'Vac'
 
 
-class Coherent(Preparation):
+class Coherent(ParPreparation):
     r"""Prepare a mode in a :ref:`coherent state <coherent_state>`.
 
     The gate is parameterized so that a user can specify a single complex number :math:`a=\alpha`
@@ -627,14 +639,11 @@ class Coherent(Preparation):
       a (complex): displacement parameter :math:`\alpha`
       p (float): phase angle :math:`\phi`
     """
-
     def __init__(self, a=0., p=0.):
-        super().__init__()
-        self.a = a
-        self.p = p
+        super().__init__([a, p])
 
     def _apply(self, reg, backend, **kwargs):
-        z = _wrap_tensors(self.a) * exp(1j * _wrap_tensors(self.p))  # _wrap_tensors needed to assist proper casting for tfbackend
+        z = self.p[0] * exp(1j * self.p[1])
         backend.prepare_coherent_state(z, *reg)
 
     def __str__(self):
@@ -643,11 +652,10 @@ class Coherent(Preparation):
             cmd_str += '({:.4g})'.format(self.a)
         else:
             cmd_str += '({:.4g},{:.4g})'.format(self.a, self.p)
-
         return cmd_str
 
 
-class Squeezed(Preparation):
+class Squeezed(ParPreparation):
     r"""Prepare a mode in a :ref:`squeezed vacuum state <squeezed_state>`.
 
     Args:
@@ -655,18 +663,16 @@ class Squeezed(Preparation):
       p (float): squeezing angle :math:`\phi`
     """
     def __init__(self, r=0., p=0.):
-        super().__init__()
-        self.r = r
-        self.p = p
+        super().__init__([r, p])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.prepare_squeezed_state(self.r, self.p, *reg)
+        backend.prepare_squeezed_state(self.p[0], self.p[1], *reg)
 
     def __str__(self):
         return super().__str__()+'({:.4g},{:.4g})'.format(self.r, self.p)
 
 
-class DisplacedSqueezed(Preparation):
+class DisplacedSqueezed(ParPreparation):
     r"""Prepare a mode in a :ref:`displaced squeezed state <displaced_squeezed_state>`.
 
     A displaced squeezed state is prepared by squeezing a vacuum state, and
@@ -684,22 +690,19 @@ class DisplacedSqueezed(Preparation):
       p       (float): squeezing angle :math:`\phi`
     """
     def __init__(self, alpha=0., r=0., p=0.):
-        super().__init__()
-        self.alpha = alpha
-        self.r = r
-        self.p = p
+        super().__init__([alpha, r, p])
 
     def _apply(self, reg, backend, **kwargs):
         # prepare the squeezed state
-        backend.prepare_squeezed_state(self.r, self.p, *reg)
+        backend.prepare_squeezed_state(self.p[1], self.p[2], *reg)
         # displace the state by alpha
-        backend.displacement(self.alpha, *reg)
+        backend.displacement(self.p[0], *reg)
 
     def __str__(self):
         return super().__str__()+'({:.4g},{:.4g},{:.4g})'.format(self.alpha, self.r, self.p)
 
 
-class Fock(Preparation):
+class Fock(ParPreparation):
     r"""Prepare a mode in a :ref:`fock_basis` state.
 
     The prepared mode is traced out and replaced with the Fock state :math:`\ket{n}`.
@@ -709,17 +712,16 @@ class Fock(Preparation):
       n (int): Fock state to prepare
     """
     def __init__(self, n=0):
-        super().__init__()
-        self.n = n
+        super().__init__([n])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.prepare_fock_state(self.n, *reg)
+        backend.prepare_fock_state(self.p[0], *reg)
 
     def __str__(self):
         return super().__str__()+'({:.4g})'.format(self.n)
 
 
-class Catstate(Preparation):
+class Catstate(ParPreparation):
     r"""Initialize a mode to a cat state.
 
     A cat state is the coherent superposition of two coherent states,
@@ -744,22 +746,20 @@ class Catstate(Preparation):
     """
 
     def __init__(self, alpha=0, p=0):
-        super().__init__()
-        self.alpha = alpha
-        self.p = p
+        super().__init__([alpha, p])
 
     def _apply(self, reg, backend, **kwargs):
-
-        phi = pi*self.p
+        alpha = self.p[0]
+        phi   = pi*self.p[1]
         # normalization constant
-        temp = exp(-0.5 * abs(self.alpha)**2)
+        temp = exp(-0.5 * abs(alpha)**2)
         N = temp / sqrt(2*(1 + cos(phi) * temp**4))
 
         # coherent states
         D = backend.get_cutoff_dim()
-        l = arange(D)
-        c1 = (self.alpha ** l) / sqrt(fac(l))
-        c2 = ((-self.alpha) ** l) / sqrt(fac(l))
+        l = np.arange(D)
+        c1 = (alpha ** l) / sqrt(fac(l))
+        c2 = ((-alpha) ** l) / sqrt(fac(l))
         # add them up with a relative phase
         ket = (c1 + exp(1j*phi) * c2) * N
         backend.prepare_ket_state(ket, *reg)
@@ -768,7 +768,7 @@ class Catstate(Preparation):
         return super().__str__()+'({:.4g},{:.4g})'.format(self.alpha, self.p)
 
 
-class Ket(Preparation):
+class Ket(ParPreparation):
     r"""Prepare a mode using the given ket vector in the :ref:`fock_basis`.
 
     The prepared mode is traced out and replaced with the given ket state (in the Fock basis).
@@ -778,14 +778,13 @@ class Ket(Preparation):
       state (array): state vector in the Fock basis
     """
     def __init__(self, state):
-        super().__init__()
-        self.state = state
+        super().__init__([state])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.prepare_ket_state(self.state, *reg)
+        backend.prepare_ket_state(self.p[0], *reg)
 
 
-class Thermal(Preparation):
+class Thermal(ParPreparation):
     r"""Prepare a mode in a :ref:`thermal state <thermal_state>`.
 
     The requested mode is traced out and replaced with the thermal state :math:`\rho(\bar{n})`.
@@ -795,18 +794,19 @@ class Thermal(Preparation):
       n (float): mean thermal population of the mode
     """
     def __init__(self, n=0):
-        super().__init__()
-        self.n = n
+        super().__init__([n])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.prepare_thermal_state(self.n, *reg)
+        backend.prepare_thermal_state(self.p[0], *reg)
 
     def __str__(self):
         return super().__str__()+'({:.4g})'.format(self.n)
 
+
 #====================================================================
 # Measurements
 #====================================================================
+
 
 class MeasureFock(Measurement):
     """:ref:`photon_counting`: measures a set of modes in the Fock basis.
@@ -814,41 +814,22 @@ class MeasureFock(Measurement):
     Also accessible via the shortcut variable ``Measure``.
 
     The modes are projected to the Fock state corresponding to the result of the measurement.
-
-    Args:
-      select (int): (Optional) desired value of measurement result.
-        Allows the post-selection of specific measurement results instead of randomly sampling.
     """
     ns = None
     def __init__(self, select=None):
-        super().__init__()
-        if isinstance(select, int):
-            self.select = [select]
-        else:
-            self.select = select
+        super().__init__([], select)
 
     def _apply(self, reg, backend, **kwargs):
-        if 'select' in kwargs:
-            # parse any select keyword arguments sent via engine.run
-            # these REPLACE the initialised postselections.
-            self.select = [kwargs['select'][i] for i in reg]
-
-            if self.select == [None]:
-                self.select = None
-
-            kwargs.pop('select')
-
         return backend.measure_fock(reg, select=self.select, **kwargs)
 
     def __str__(self):
         if self.select is None:
             return 'Measure'
-
         return 'MeasureFock(select={})'.format(self.select)
 
 
 class MeasureHomodyne(Measurement):
-    r"""Performs a :ref:`homodyne`; measures one quadrature of a mode.
+    r"""Performs a :ref:`homodyne measurement <homodyne>`, measures one quadrature of a mode.
 
     * Position basis measurement: :math:`\phi = 0`
       (also accessible via the shortcut variable ``MeasureX``).
@@ -865,31 +846,21 @@ class MeasureHomodyne(Measurement):
     """
     ns = 1
     def __init__(self, phi, select=None):
-        super().__init__()
-        self.p = phi
-        self.select = select
+        super().__init__([phi], select)
 
     def _apply(self, reg, backend, **kwargs):
-        if 'select' in kwargs:
-            # parse any select keyword arguments sent via engine.run
-            # these REPLACE the initialised postselections.
-            self.select = kwargs['select'][reg[0]]
-            kwargs.pop('select')
-
-        result = backend.measure_homodyne(self.p, *reg, select=self.select, **kwargs)
-
-        return result
+        return backend.measure_homodyne(self.p[0], *reg, select=self.select, **kwargs)
 
     def __str__(self):
         if self.select is None:
-            if self.p == 0:
+            if self.p[0] == 0:
                 cmd_str = 'MeasureX'
-            elif self.p == pi/2:
+            elif self.p[0] == pi/2:
                 cmd_str = 'MeasureP'
             else:
-                cmd_str = super().__str__()+'({:.4g})'.format(self.p)
+                cmd_str = super().__str__()+'({:.4g})'.format(self.p[0])
         else:
-            cmd_str = super().__str__()+'({:.4g}, select={})'.format(self.p, self.select)
+            cmd_str = super().__str__()+'({:.4g}, select={})'.format(self.p[0], self.select)
 
         return cmd_str
 
@@ -904,16 +875,9 @@ class MeasureHeterodyne(Measurement):
     """
     ns = 1
     def __init__(self, select=None):
-        super().__init__()
-        self.select = select
+        super().__init__([], select)
 
     def _apply(self, reg, backend, **kwargs):
-        if 'select' in kwargs:
-            # parse any select keyword arguments sent via engine.run
-            # these REPLACE the initialised postselections.
-            self.select = kwargs['select'][reg[0]]
-            kwargs.pop('select')
-
         return backend.measure_heterodyne(*reg, select=self.select, **kwargs)
 
     def __str__(self):
@@ -926,6 +890,7 @@ class MeasureHeterodyne(Measurement):
 #====================================================================
 # Subsystem creation and deletion
 #====================================================================
+
 
 class Delete(Operation):
     """Deletes one or more existing modes.
@@ -973,7 +938,7 @@ class New_modes(Operation):
 #====================================================================
 
 
-class LossChannel(Channel):
+class LossChannel(ParOperation):
     r"""Perform a :ref:`loss channel <loss>` operation on the specified mode.
 
     This channel couples mode :math:`a` to another bosonic mode :math:`b`
@@ -995,17 +960,15 @@ class LossChannel(Channel):
         # check that other is also a LossChannel, and that
         # no extra dependencies <=> no RegRefTransform parameters
         if isinstance(other, self.__class__) \
-        and len(self.extra_deps)+len(other.extra_deps) == 0:
-
+        and len(self._extra_deps)+len(other._extra_deps) == 0:
             # determine the new loss parameter
-            temp = other.p[0]
-            T = sqrt(self.p[0] * temp)
-
+            T = sqrt(self.p[0] * other.p[0])
             # if one, replace with the identity
             if T == 1:
                 return None
-
             return self.__class__(T)
+        else:
+            raise TypeError('Not the same operation family.')
 
 
 #====================================================================
@@ -1032,12 +995,12 @@ class Dgate(Gate):
         super().__init__([a, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        z = _wrap_tensors(self.p[0]) * exp(1j * self.p[1]) #_wrap_tensors needed to assist proper casting for tfbackend
+        z = self.p[0] * exp(1j * self.p[1])
         backend.displacement(z, *reg)
 
     def __str__(self):
         # pylint: disable=bad-super-call
-        cmd_str = super(Transformation, self).__str__()
+        cmd_str = super().__str__()
         if self.p[1] == 0:
             cmd_str += '({:.4g})'.format(self.p[0])
         else:
@@ -1045,6 +1008,40 @@ class Dgate(Gate):
 
         d = r"^\dagger" if self.dagger else ""
         return cmd_str + d
+
+
+class Xgate(Gate):
+    r"""Position :ref:`displacement <displacement>` gate.
+
+    .. math::
+       X(x) = e^{-i x \hat{p}/\hbar}
+
+    Args:
+      x (float): position displacement
+    """
+    def __init__(self, x):
+        super().__init__([x])
+
+    def _apply(self, reg, backend, **kwargs):
+        z = self.p[0] / sqrt(2 * kwargs['hbar'])
+        backend.displacement(z, *reg)
+
+
+class Zgate(Gate):
+    r"""Momentum :ref:`displacement <displacement>` gate.
+
+    .. math::
+       Z(p) = e^{i p \hat{x}/\hbar}
+
+    Args:
+      p (float): momentum displacement
+    """
+    def __init__(self, p):
+        super().__init__([p])
+
+    def _apply(self, reg, backend, **kwargs):
+        z = self.p[0] * 1j/sqrt(2 * kwargs['hbar'])
+        backend.displacement(z, *reg)
 
 
 class Sgate(Gate):
@@ -1063,42 +1060,8 @@ class Sgate(Gate):
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        z = _wrap_tensors(self.p[0]) * exp(1j * self.p[1]) #_wrap_tensors needed to assist proper casting for tfbackend
+        z = self.p[0] * exp(1j * self.p[1])
         backend.squeeze(z, *reg)
-
-
-class Xgate(Gate):
-    r"""Position :ref:`displacement <displacement>` gate.
-
-    .. math::
-       X(x) = e^{-i x \hat{p}/\hbar}
-
-    Args:
-      x (float): position displacement
-    """
-    def __init__(self, x):
-        super().__init__([x])
-
-    def _apply(self, reg, backend, **kwargs):
-        z = self.p[0] / sqrt(2*self.hbar)
-        backend.displacement(z, *reg)
-
-
-class Zgate(Gate):
-    r"""Momentum :ref:`displacement <displacement>` gate.
-
-    .. math::
-       Z(p) = e^{i p \hat{x}/\hbar}
-
-    Args:
-      p (float): momentum displacement
-    """
-    def __init__(self, p):
-        super().__init__([p])
-
-    def _apply(self, reg, backend, **kwargs):
-        z = self.p[0] * 1j/sqrt(2*self.hbar)
-        backend.displacement(z, *reg)
 
 
 class Pgate(Gate):
@@ -1158,6 +1121,7 @@ class Kgate(Gate):
     def _apply(self, reg, backend, **kwargs):
         backend.kerr_interaction(self.p[0], *reg)
 
+
 class Rgate(Gate):
     r""":ref:`Rotation <rotation>` gate.
 
@@ -1195,9 +1159,7 @@ class BSgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         t = cos(self.p[0])
-        #_wrap_tensors needed to assist proper casting for tfbackend
-        r = _wrap_tensors(sin(self.p[0])) * exp(1j * _wrap_tensors(self.p[1]))
-
+        r = sin(self.p[0]) * exp(1j * self.p[1])
         backend.beamsplitter(t, r, *reg)
 
 
@@ -1345,19 +1307,17 @@ class All(Operation):
 #====================================================================
 
 
-class Decomposition(Operation):
-    """Abstract base class for decompositions.
+class Decomposition(ParOperation):
+    """Abstract base class for decompositions.  TODO matrix decomposition?
 
     This class provides the base behaviour for decomposing various objects
     into a sequence of gate and state preparations.
     """
     def __init__(self, par):
-        super().__init__()
         # check if any of the decomposition inputs are tensor objects
-        if sum([isinstance(x, (Variable, Tensor)) for x in par]):
-            raise NotImplementedError("Decompositions currently do not support "
-                                      "Tensorflow objects as arguments")
-        self.p = list(par)
+        if any([isinstance(x, (Variable, Tensor)) for x in par]):
+            raise NotImplementedError("Decompositions currently do not support Tensorflow objects as arguments.")
+        super().__init__(par)
 
     def merge(self, other):
         # can be merged if they are the same decomposition

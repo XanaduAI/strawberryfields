@@ -9,6 +9,8 @@ from collections import Counter
 from numpy.random import randn, random
 from numpy import sqrt
 
+from tensorflow import (Tensor, Variable)
+
 # HACK to import the module in this source distribution, not the installed one!
 import os
 import sys
@@ -20,6 +22,16 @@ from strawberryfields.utils import *
 from strawberryfields.ops import *
 from strawberryfields.parameters import Parameter
 from defaults import BaseTest
+
+
+# Parameter class inputs:
+# ints, floats and complex numbers
+# numpy arrays
+# TensorFlow objects
+# RegRefs and RegRefTransforms
+par_inputs = [3, 0.14, -4.2+0.5j,
+              randn(2,3),
+              Variable(0.8+0j)]  # tensorflow does not allow arithmetic between real and complex dtypes without a cast if it would result in extending the domain
 
 
 class GateTests(BaseTest):
@@ -176,37 +188,42 @@ class ParameterTests(BaseTest):
         self.eng = Engine(num_subsystems=2)
 
     def test_init(self):
-        "Parameter initialization"
-        from tensorflow import (Tensor, Variable)
-
-        @sf.convert
-        def func(x):
-            return 2*x**2 -3*x +1
-
-        r = self.eng.register
-
-        # ints, floats and complex numbers
-        # numpy arrays
-        # TensorFlow objects
-        # RegRefs and RegRefTransforms
-        inputs = [3, 0.14, -4.2+0.5j,
-                  randn(2,3),
-                  Variable(0.8+0j)]  # tensorflow does not allow arithmetic between real and complex dtypes without a cast if it would result in extending the domain
+        "Parameter initialization and arithmetic."
         # at the moment RR-inputs cannot be arithmetically combined with the others
-        rr_inputs = [r[0], RR(r[0], lambda x: x**2), RR(r, lambda x,y: x*y), func(r[1])]
-        pars = [Parameter(k) for k in inputs]
-
+        pars = (Parameter(k) for k in par_inputs)
         for p in pars:
+            self.assertTrue(isinstance(-p, Parameter))
             self.assertTrue(isinstance(p +1.1, Parameter))
             self.assertTrue(isinstance(1.1 +p, Parameter))
             self.assertTrue(isinstance(p -0.2, Parameter))
             self.assertTrue(isinstance(0.2 -p, Parameter))
             self.assertTrue(isinstance(p*2.4, Parameter))
             self.assertTrue(isinstance(2.4*p, Parameter))
+            self.assertTrue(isinstance(p/0.6, Parameter))
+            self.assertTrue(isinstance(0.6/p, Parameter))
+            self.assertTrue(isinstance(1.4**p, Parameter))
+            self.assertTrue(isinstance(p**1.4, Parameter))
             for q in pars:
                 self.assertTrue(isinstance(p+q, Parameter))
                 self.assertTrue(isinstance(p-q, Parameter))
                 self.assertTrue(isinstance(p*q, Parameter))
+
+    def test_toolchain(self):
+        "Passing Parameters through the toolchain."
+        r = self.eng.register
+
+        @sf.convert
+        def func(x):
+            return 2*x**2 -3*x +1
+        rr_inputs = [r[0], RR(r[0], lambda x: x**2), RR(r, lambda x,y: x*y), func(r[1])]
+
+        for p in (Parameter(k) for k in par_inputs+rr_inputs):
+            print(p)
+            with self.eng:
+                Measure  | r
+                Rgate(p) | r[0]
+            self.eng.optimize()
+            state = self.eng.run(backend='fock', cutoff_dim=4)
 
 
 

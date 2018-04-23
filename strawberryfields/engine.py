@@ -530,7 +530,7 @@ class Engine:
                 # initialize a backend
                 if isinstance(backend, str):
                     backend = load_backend(backend)
-                    backend.begin_circuit(num_subsystems=self.init_modes, **kwargs)
+                    backend.begin_circuit(num_subsystems=self.init_num_subsystems, **kwargs)
 
                 self.backend = backend    #: BaseBackend: backend instance for executing the commands
 

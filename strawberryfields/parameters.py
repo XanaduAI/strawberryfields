@@ -139,26 +139,27 @@ class Parameter():
     If a TensorFlow object is involved, the result will always be a TensorFlow object.
 
     Args:
-      x (): parameter value
+      x (Number, array, Tensor, Variable, RegRef, RegRefTransform): parameter value
     """
     def __init__(self, x):
         if isinstance(x, Parameter):
-            raise ValueError('sdfsdfsf')
+            raise TypeError('Tried initializing a Parameter using a Parameter.')
 
-        self.deps = set() #: set[RegRef]: parameter value depends on these RegRefs, it can only be evaluated after the corresponding subsystems have been measured
+        self.deps = set()  #: set[RegRef]: parameter value depends on these RegRefs (if any), it can only be evaluated after the corresponding subsystems have been measured
 
         # wrap RegRefs in the identity RegRefTransform
         if isinstance(x, RegRef):
             x = RegRefTransform(x)
-        elif isinstance(x, tf_objs):
-            pass
-        elif isinstance(x, np.ndarray):
-            pass
+        # FIXME MagicMock causes ops module import failure when compiling sphinx docs
+        #elif isinstance(x, (numbers.Number, np.ndarray, tf_objs, RegRefTransform)):
+        #    pass
+        #else:
+        #    raise TypeError('Unsupported base object type: ' +x.__class__.__name__)
 
         # add extra dependencies due to RegRefs
         if isinstance(x, RegRefTransform):
             self.deps.update(x.regrefs)
-        self.x = x     #: parameter value, or reference
+        self.x = x  #: parameter value, or reference
 
     def __str__(self):
         if isinstance(self.x, numbers.Number):
@@ -175,12 +176,10 @@ class Parameter():
         Returns:
           Number, array, Tensor:
         """
-        if isinstance(self.x, (numbers.Number, np.ndarray)):
+        if isinstance(self.x, (numbers.Number, np.ndarray, tf_objs)):
             return self.x
         elif isinstance(self.x, RegRefTransform):
             return self.x.evaluate()
-        elif isinstance(self.x, tf_objs):
-            return self.x
 
     def _maybe_cast(self, other):
         if isinstance(other, complex):
@@ -200,7 +199,7 @@ class Parameter():
     def _wrap(x):
         """Wraps x inside a Parameter instance, unless x is a Parameter instance itself.
 
-        Needed because of the way the reverse arithmetic methods work.
+        Needed because of the way the reverse binary arithmetic methods work.
         """
         if isinstance(x, Parameter):
             return x
@@ -247,10 +246,11 @@ class Parameter():
         .. note:: This method may be too permissive, maybe it should return False if either parameter is not a numbers.Number or a np.ndarray?
 
         Returns:
-          bool: True iff both self and other have an immediate value and the values are equal, otherwise False.
+          bool: True iff both self and other have immediate, equal values, or identical dependence on measurements, otherwise False.
         """
         if isinstance(other, Parameter):
             other = other.x
+        # see RegRefTransform.__eq__
         return self.x == other
 
     # Do all NumPy one-parameter ufuncs magically call parameter.functionname() if no native implementation exists??
