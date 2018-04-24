@@ -178,7 +178,7 @@ The abstract base class hierarchy exists to provide the correct semantics for th
    ParPreparation
    Measurement
    Gate
-
+   Decomposition
 
 State preparation
 -----------------
@@ -281,7 +281,7 @@ from tensorflow import Tensor, Variable
 
 from .backends.shared_ops import changebasis
 from .engine import Engine as _Engine, Command, RegRef, RegRefTransform
-from .parameters import Parameter, sqrt, exp, sin, cos, cosh, tanh, arctan, arctan2, arcsinh, arccosh, sign
+from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt, sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2)
 from .decompositions import clements, bloch_messiah, williamson
 
 # pylint: disable=abstract-method
@@ -362,6 +362,8 @@ class Operation:
         """Decompose the operation into elementary operations supported by the backend API.
 
         See :mod:`strawberryfields.backends.base`.
+
+        .. todo:: For now decompose() works on unevaluated Parameters, which messes things up if a RR is used.
 
         Args:
           reg (Sequence[RegRef]): subsystems the operation is acting on
@@ -445,7 +447,7 @@ class Preparation(Operation):
     """Abstract base class for operations that demolish the previous state entirely."""
     def merge(self, other):
         # sequential preparation, only the last one matters
-        if isinstance(other, (Preparation, CovarianceState)):
+        if isinstance(other, Preparation):
             # give a warning, since this is pointless and probably a user error
             warnings.warn('Two subsequent state preparations, first one has no effect.')
             return other
@@ -551,14 +553,13 @@ class Gate(ParOperation):
         """Ask a backend to execute the operation on the current register state right away.
 
         Like :func:`ParOperation.apply`, but takes into account the special nature of p[0] and applies self.dagger.
+
+        Returns:
+          None: Gates do not return anything, return value is None
         """
         z = self.p[0].evaluate()
-        if isinstance(z, np.ndarray):
-            # if z represents a batch of parameters, then all of these must be zero to skip calling backend
-            temp = np.all(z == 0)
-        else:
-            temp = (z == 0)
-        if temp:
+        # if z represents a batch of parameters, then all of these must be zero to skip calling backend
+        if np.all(z == 0):
             # identity, no need to apply
             return
         # evaluate the Parameters, restore the originals later
@@ -566,15 +567,15 @@ class Gate(ParOperation):
         self.p = [x.evaluate() for x in self.p]
         if self.dagger:
             self.p[0] = -self.p[0]
-        # calling the grandparent class, skipping ParOperation.apply to avoid another evaluation of self.p
+        # calling the grandparent class, skipping ParOperation.apply to avoid another evaluation of self.p (which wouldn't hurt but is unnecessary)
         super(ParOperation, self).apply(reg, backend, **kwargs)
         self.p = temp  # restore original unevaluated Parameter instances
-        # NOTE gates don't return anything, return value is None
 
     def merge(self, other):
         # can be merged if they are the same class and share all the other parameters
         if isinstance(other, self.__class__) and self.p[1:] == other.p[1:] \
-           and len(self._extra_deps)+len(other._extra_deps) == 0:  # no extra dependencies <=> no RegRefTransform parameters
+           and len(self._extra_deps)+len(other._extra_deps) == 0:
+            # no extra dependencies <=> no RegRefTransform parameters, with which we cannot do arithmetic at the moment
             # make sure the gates have the same dagger flag, if not, invert the second p[0]
             if self.dagger == other.dagger:
                 temp = other.p[0]
@@ -608,6 +609,36 @@ class Gate(ParOperation):
                 raise ValueError("Don't know how to merge these gates.")
         else:
             raise TypeError('Not the same gate family.')
+
+
+
+class Decomposition(ParOperation):
+    """Abstract base class for matrix decompositions.
+
+    This class provides the base behaviour for decomposing various objects
+    into a sequence of gate and state preparations.
+    """
+    def __init__(self, par):
+        # check if any of the decomposition inputs are tensor objects
+        if any([isinstance(x, (Variable, Tensor)) for x in par]):
+            raise NotImplementedError("Decompositions currently do not support Tensorflow objects as arguments.")
+        super().__init__(par)
+
+    def merge(self, other):
+        # can be merged if they are the same class
+        if isinstance(other, self.__class__):
+            # at the moment, we will assume all state decompositions only
+            # take one argument. The only exception currently are state
+            # decompositions, which cannot be merged.
+            U1 = self.p[0]
+            U2 = other.p[0]
+            U = matmul(U2, U1)
+            new_decomp = self.__class__(U)
+            return new_decomp
+        else:
+            raise TypeError('Not the same decomposition type.')
+
+
 
 
 #====================================================================
@@ -644,7 +675,7 @@ class Coherent(ParPreparation):
 
     def _apply(self, reg, backend, **kwargs):
         z = self.p[0] * exp(1j * self.p[1])
-        backend.prepare_coherent_state(z, *reg)
+        backend.prepare_coherent_state(z.x, *reg)
 
 
 class Squeezed(ParPreparation):
@@ -658,7 +689,8 @@ class Squeezed(ParPreparation):
         super().__init__([r, p])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.prepare_squeezed_state(self.p[0], self.p[1], *reg)
+        p = _unwrap(self.p)
+        backend.prepare_squeezed_state(p[0], p[1], *reg)
 
 
 class DisplacedSqueezed(ParPreparation):
@@ -682,10 +714,11 @@ class DisplacedSqueezed(ParPreparation):
         super().__init__([alpha, r, p])
 
     def _apply(self, reg, backend, **kwargs):
+        p = _unwrap(self.p)
         # prepare the squeezed state
-        backend.prepare_squeezed_state(self.p[1], self.p[2], *reg)
+        backend.prepare_squeezed_state(p[1], p[2], *reg)
         # displace the state by alpha
-        backend.displacement(self.p[0], *reg)
+        backend.displacement(p[0], *reg)
 
 
 class Fock(ParPreparation):
@@ -701,7 +734,8 @@ class Fock(ParPreparation):
         super().__init__([n])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.prepare_fock_state(self.p[0], *reg)
+        p = _unwrap(self.p)
+        backend.prepare_fock_state(p[0], *reg)
 
 
 class Catstate(ParPreparation):
@@ -745,7 +779,7 @@ class Catstate(ParPreparation):
         c2 = ((-alpha) ** l) / sqrt(fac(l))
         # add them up with a relative phase
         ket = (c1 + exp(1j*phi) * c2) * N
-        backend.prepare_ket_state(ket, *reg)
+        backend.prepare_ket_state(ket.x, *reg)
 
 
 class Ket(ParPreparation):
@@ -761,7 +795,8 @@ class Ket(ParPreparation):
         super().__init__([state])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.prepare_ket_state(self.p[0], *reg)
+        p = _unwrap(self.p)
+        backend.prepare_ket_state(p[0], *reg)
 
 
 class Thermal(ParPreparation):
@@ -777,7 +812,8 @@ class Thermal(ParPreparation):
         super().__init__([n])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.prepare_thermal_state(self.p[0], *reg)
+        p = _unwrap(self.p)
+        backend.prepare_thermal_state(p[0], *reg)
 
 
 #====================================================================
@@ -826,7 +862,8 @@ class MeasureHomodyne(Measurement):
         super().__init__([phi], select)
 
     def _apply(self, reg, backend, **kwargs):
-        return backend.measure_homodyne(self.p[0], *reg, select=self.select, **kwargs)
+        p = _unwrap(self.p)
+        return backend.measure_homodyne(p[0], *reg, select=self.select, **kwargs)
 
     def __str__(self):
         if self.select is None:
@@ -934,7 +971,8 @@ class LossChannel(ParOperation):
         super().__init__([T])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.loss(self.p[0], *reg)
+        p = _unwrap(self.p)
+        backend.loss(p[0], *reg)
 
     def merge(self, other):
         # check that other is also a LossChannel, and that
@@ -976,7 +1014,7 @@ class Dgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         z = self.p[0] * exp(1j * self.p[1])
-        backend.displacement(z, *reg)
+        backend.displacement(z.x, *reg)
 
 
 class Xgate(Gate):
@@ -993,7 +1031,7 @@ class Xgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         z = self.p[0] / sqrt(2 * kwargs['hbar'])
-        backend.displacement(z, *reg)
+        backend.displacement(z.x, *reg)
 
 
 class Zgate(Gate):
@@ -1010,7 +1048,7 @@ class Zgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         z = self.p[0] * 1j/sqrt(2 * kwargs['hbar'])
-        backend.displacement(z, *reg)
+        backend.displacement(z.x, *reg)
 
 
 class Sgate(Gate):
@@ -1030,7 +1068,7 @@ class Sgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         z = self.p[0] * exp(1j * self.p[1])
-        backend.squeeze(z, *reg)
+        backend.squeeze(z.x, *reg)
 
 
 class Pgate(Gate):
@@ -1072,7 +1110,8 @@ class Vgate(Gate):
         super().__init__([gamma])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.cubic_phase(self.p[0], *reg)
+        p = _unwrap(self.p)
+        backend.cubic_phase(p[0], *reg)
 
 
 class Kgate(Gate):
@@ -1088,7 +1127,8 @@ class Kgate(Gate):
         super().__init__([kappa])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.kerr_interaction(self.p[0], *reg)
+        p = _unwrap(self.p)
+        backend.kerr_interaction(p[0], *reg)
 
 
 class Rgate(Gate):
@@ -1105,7 +1145,8 @@ class Rgate(Gate):
         super().__init__([theta])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.rotation(self.p[0], *reg)
+        p = _unwrap(self.p)
+        backend.rotation(p[0], *reg)
 
 
 class BSgate(Gate):
@@ -1129,7 +1170,7 @@ class BSgate(Gate):
     def _apply(self, reg, backend, **kwargs):
         t = cos(self.p[0])
         r = sin(self.p[0]) * exp(1j * self.p[1])
-        backend.beamsplitter(t, r, *reg)
+        backend.beamsplitter(t.x, r.x, *reg)
 
 
 class S2gate(Gate):
@@ -1231,7 +1272,8 @@ class Fouriergate(Gate):
         super().__init__([pi/2])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.rotation(self.p[0], *reg)
+        p = _unwrap(self.p)
+        backend.rotation(p[0], *reg)
 
     def __str__(self):
         """String representation for the gate."""
@@ -1273,33 +1315,6 @@ class All(Operation):
 #====================================================================
 # Decompositions
 #====================================================================
-
-
-class Decomposition(ParOperation):
-    """Abstract base class for decompositions.  TODO matrix decomposition?
-
-    This class provides the base behaviour for decomposing various objects
-    into a sequence of gate and state preparations.
-    """
-    def __init__(self, par):
-        # check if any of the decomposition inputs are tensor objects
-        if any([isinstance(x, (Variable, Tensor)) for x in par]):
-            raise NotImplementedError("Decompositions currently do not support Tensorflow objects as arguments.")
-        super().__init__(par)
-
-    def merge(self, other):
-        # can be merged if they are the same decomposition
-        if isinstance(other, self.__class__):
-            # at the moment, we will assume all state decompositions only
-            # take one argument. The only exception currently are state
-            # decompositions, which cannot be merged.
-            U1 = self.p[0]
-            U2 = other.p[0]
-            U = matmul(U2, U1)
-            new_decomp = self.__class__(U)
-            return new_decomp
-        else:
-            raise TypeError('Not the same decomposition type.')
 
 
 class Interferometer(Decomposition):
@@ -1425,7 +1440,7 @@ class GaussianTransform(Decomposition):
         return cmds
 
 
-class CovarianceState(Decomposition):
+class CovarianceState(Preparation, Decomposition):  # NOTE: inheritance order matters!
     r"""Prepare the specified modes in a Gaussian state.
 
     This operation uses the Williamson decomposition to prepare
@@ -1474,13 +1489,6 @@ class CovarianceState(Decomposition):
                 raise ValueError('Vector of means must have the same length as the covariance matrix.')
             self.x_disp = r[:self.ns]
             self.p_disp = r[self.ns:]
-
-    def merge(self, other):
-        # sequential preparation, only the last one matters
-        if isinstance(other, CovarianceState):
-            return other
-        else:
-            raise TypeError('For now, preparations cannot be merged with anything else.')
 
     def decompose(self, reg):
         # pylint: disable=too-many-branches
@@ -1554,10 +1562,9 @@ RR = RegRefTransform
 zero_args_gates = (Fourier,)  # all these are pre-constructed objects, not classes
 one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate, CXgate, CZgate)
 two_args_gates = (Dgate, Sgate, BSgate, S2gate)
-
-two_mode_gates = (BSgate, S2gate, CXgate, CZgate)
-channels = (LossChannel,)
-
 gates = zero_args_gates + one_args_gates + two_args_gates
 
+channels = (LossChannel,)
+
 state_preparations = (Vacuum, Coherent, Squeezed, DisplacedSqueezed, Fock, Thermal, Catstate)
+

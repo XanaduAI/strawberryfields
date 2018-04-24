@@ -504,36 +504,37 @@ class Engine:
             backend (str, BaseBackend, None): Backend for executing the commands.
                 Either a backend name ("gaussian", "fock", or "tf"), in which case it is loaded and initialized,
                 or a BaseBackend instance, or None if a backend is not required.
-            reset_backend (bool): if set to True (default), the backend is reset before the engine is run.
+            reset_backend (bool): If True, the backend is reset before the engine is run.
                 To avoid this behaviour, for instance if you would like to loop over
                 engine to run to successively apply the same gates in the command queue, simply
                 set ``reset=False``.
-            return_state (bool): determines if the state is returned by the engine run (by default set to True)
-            modes (Sequence[int]): a sequence of integers denoting the modes to be returned
-                in the state object. If set to ``None``, all modes will be returned by default.
+            return_state (bool): If True, returns the state of the circuit after the program has been run.
+            modes (Sequence[int]): Modes to be returned in the state object. If set to ``None``, all modes will be returned.
         """
         kwargs.setdefault('hbar', self.hbar)  # caller can override the default value
 
-        if reset_backend:
-            self.reset_backend()
-
-        if backend:
+        if backend is None:
+            #FIXME should None keep the existing backend?
+            pass
+        elif isinstance(backend, str):
             # if backend is specified via a string and the engine already has that type of backend
             # loaded, then we should just use the existing backend
-            if isinstance(backend, str) and self.backend is not None and self.backend._short_name == backend:
+            if self.backend is not None and self.backend._short_name == backend:
                 pass
             else:
                 # initialize a backend
-                if isinstance(backend, str):
-                    backend = load_backend(backend)
-                    backend.begin_circuit(num_subsystems=self.init_num_subsystems, **kwargs)
+                self.backend = load_backend(backend)
+                self.backend.begin_circuit(num_subsystems=self.init_num_subsystems, **kwargs)
+        else:
+            self.backend = backend
 
-                self.backend = backend    #: BaseBackend: backend instance for executing the commands
-
+        if reset_backend:
+            self.reset_backend()
         self.run_command_list(self.cmd_queue, **kwargs)
 
         if return_state:
             return self.return_state(modes=modes, **kwargs)
+
 
 
 # The :class:`Command` instances in the program form a

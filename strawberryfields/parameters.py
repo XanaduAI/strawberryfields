@@ -7,42 +7,50 @@ Gate parameters
 .. currentmodule:: strawberryfields.parameters
 
 The :class:`Parameter` class is an abstraction of a parameter passed to the
-quantum circuit operations represented by :class:`~strawberryfields.ops.Operation`.
-The parameter objects can represent a number, a NumPy array, a value measured from the quantum register,
+quantum circuit operations represented by :class:`~strawberryfields.ops.ParOperation`.
+The parameter objects can represent a number, a NumPy array, a value measured from the quantum register
+(:class:`~strawberryfields.engine.RegRefTransform`),
 or a TensorFlow object.
 
+.. currentmodule:: strawberryfields
 
-The normal lifecycle of a :class:`~strawberryfields.ops.ParametrizedOperation` object is as follows:
+The normal lifecycle of a ParOperation object and its associated Parameter instances is as follows:
 
-* A ParametrizedOperation instance is created, and given some parameters as input.
-* The initializer converts the inputs into :class:`Parameter` instances.
-  Plain :class:`~strawberryfields.engine.RegRef` instances are wrapped in a trivial
-  :class:`~strawberryfields.engine.RegRefTransform`.
+* A ParOperation instance is created, and given some parameters as input.
+* The initializer converts the inputs into Parameter instances.
+  Plain :class:`~engine.RegRef` instances are wrapped in a trivial
+  :class:`~engine.RegRefTransform`.
   RegRefTransforms add their RegRef dependencies to the Parameter and consequently to the Operation.
-* The Operation instance is applied using its :func:`~strawberryfields.ops.Operation.__or__`
-  method inside an :class:`~strawberryfields.engine.Engine` context.
-  This creates a :class:`~strawberryfields.engine.Command` instance that wraps
+* The Operation instance is applied using its :func:`~ops.Operation.__or__`
+  method inside an :class:`~engine.Engine` context.
+  This creates a :class:`~engine.Command` instance that wraps
   the Operation and the RegRefs it acts on, which is appended to the Engine command queue.
 * Once the entire program is inputted, the Engine optimizes it. This involves merging and commuting Commands
   inside the circuit graph, the building of which requires knowledge of their dependencies, both direct and Parameter-based.
-* Merging two :class:`~strawberryfields.ops.Gate` instances of the same subclass involves
+* Merging two :class:`~ops.Gate` instances of the same subclass involves
   adding their first parameters after equality-comparing the others. This is easily done if
   all the parameters have an immediate value. RegRefTransforms and TensorFlow objects are more complicated,
   but could in principle be handled. TODO for now we simply don't do the merge if they're involved.
-* The optimized command queue is run by the Engine, which calls the :func:`~strawberryfields.ops.Operation.apply` method
-  of each Operation in turn (and tries :func:`~strawberryfields.ops.Operation.decompose`
+* The optimized command queue is run by the Engine, which calls the :func:`~ops.Operation.apply` method
+  of each Operation in turn (and tries :func:`~ops.Operation.decompose`
   if a :py:exc:`NotImplementedError` exception is raised).
-* :func:`~strawberryfields.ops.ParametrizedOperation.apply` evaluates the numeric value of any
+* :func:`~ops.ParOperation.apply` evaluates the numeric value of any
   RegRefTransform-based Parameters using :func:`Parameter.evaluate` (other types of Parameters are simply passed through).
-  The parameter values and the subsystem indices are finally passed to :func:`~strawberryfields.ops.Operation._apply`
-  which calls the appropriate backend API method. It is up to the backend to either accept
-  NumPy arrays and Tensorflow objects as parameters, or not.
+  The parameter values and the subsystem indices are passed to :func:`~ops.Operation._apply`.
+* :func:`~ops.Operation._apply` "unwraps" the Parameter instances. There are three different cases:
+
+  1. we still need to do arithmetic, do not unwrap until the end, using p.x
+  2. no arithmetic, use :func:`_unwrap`
+  3. no parameters are used, do nothing
+
+  Finally, _apply calls the appropriate backend API method using the unwrapped parameters.
+  It is up to the backend to either accept NumPy arrays and Tensorflow objects as parameters, or not.
 
 
 What we cannot do at the moment:
 
 * Use anything except integers and RegRefs (or Sequences thereof) as the subsystem parameter
-  for the :func:`~strawberryfields.ops.Operation.__or__` method.
+  for the :func:`~ops.Operation.__or__` method.
   Technically we could allow any Parameters or valid Parameter initializers that evaluate into an integer.
 * Do arithmetic with RegRefTransforms.
 
@@ -65,7 +73,7 @@ import numbers
 
 import numpy as np
 #from numpy import ndarray
-from numpy import abs, cos, sin, exp, sqrt, arctan, arccosh, sign, arctan2, arcsinh, cosh, tanh, log, matmul
+from numpy import (matmul, sign, abs, exp, log, sqrt, sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2)
 
 from tensorflow import (Tensor, Variable)
 from tensorflow import abs as tfabs, cos as tfcos, sin as tfsin, exp as tfexp, sqrt as tfsqrt, atan as tfatan, acosh as tfacosh, sign as tfsign, \
@@ -78,6 +86,17 @@ from .engine import (RegRef, RegRefTransform)
 tf_objs = (Tensor, Variable)
 
 
+def _unwrap(params):
+    """Unwrap a parameter sequence.
+
+    Args:
+      params (Sequence[Parameter]): parameters to unwrap
+
+    Returns:
+      tuple[Number, array, Tensor, Variable]: unwrapped Parameters
+    """
+    return tuple(p.x for p in params)
+
 
 class Parameter():
     """Represents a parameter passed to a :class:`strawberryfields.ops.Operation` subclass constructor.
@@ -86,10 +105,10 @@ class Parameter():
     :class:`RegRefTransform` instances, and certain TensorFlow objects. RegRef instances are internally represented as
     trivial RegRefTransforms.
 
-    All but the RR and TensorFlow parameters can be evaluated whenever, into an immediate numeric value that
+    All but the RR and TensorFlow parameters represent an immediate numeric value that
     will not change. RR parameters can only be evaluated after the corresponding register
-    subsystems have been measured. TF parameters can be evaluated whenever, but they yield TF objects that
-    still need to be evaluated using :func:`tf.Session().run()`.
+    subsystems have been measured. TF parameters can be evaluated whenever, but they depend on TF objects that
+    are evaluated using :func:`tf.Session().run()`.
 
     The class supports various arithmetic operations which may change the internal representation of the result.
     If a TensorFlow object is involved, the result will always be a TensorFlow object.
@@ -97,6 +116,10 @@ class Parameter():
     Args:
       x (Number, array, Tensor, Variable, RegRef, RegRefTransform): parameter value
     """
+    # turn off the NumPy ufunc dispatching mechanism which is incompatible with our approach (see https://docs.scipy.org/doc/numpy-1.14.0/neps/ufunc-overrides.html)
+    # NOTE: Another possible approach would be to use https://docs.scipy.org/doc/numpy-1.14.0/reference/generated/numpy.lib.mixins.NDArrayOperatorsMixin.html
+    __array_ufunc__ = None
+
     def __init__(self, x):
         if isinstance(x, Parameter):
             raise TypeError('Tried initializing a Parameter using a Parameter.')
@@ -106,11 +129,10 @@ class Parameter():
         # wrap RegRefs in the identity RegRefTransform
         if isinstance(x, RegRef):
             x = RegRefTransform(x)
-        # FIXME MagicMock causes ops module import failure when compiling sphinx docs
-        #elif isinstance(x, (numbers.Number, np.ndarray, tf_objs, RegRefTransform)):
-        #    pass
-        #else:
-        #    raise TypeError('Unsupported base object type: ' +x.__class__.__name__)
+        elif isinstance(x, (numbers.Number, np.ndarray, tf_objs, RegRefTransform)):
+            pass
+        else:
+            raise TypeError('Unsupported base object type: ' +x.__class__.__name__)
 
         # add extra dependencies due to RegRefs
         if isinstance(x, RegRefTransform):
@@ -127,15 +149,14 @@ class Parameter():
         return self.x.__format__(format_spec)
 
     def evaluate(self):
-        """Evaluate the numerical value of the parameter.
+        """Evaluate the numerical value of a RegRef-based parameter.
 
         Returns:
-          Number, array, Tensor:
+          Parameter: self, unless self.x is a RegRefTransform in which case it is evaluated and a new Parameter instance is constructed on the result and returned
         """
-        if isinstance(self.x, (numbers.Number, np.ndarray, tf_objs)):
-            return self.x
-        elif isinstance(self.x, RegRefTransform):
-            return self.x.evaluate()
+        if isinstance(self.x, RegRefTransform):
+            return Parameter(self.x.evaluate())
+        return self
 
     def _maybe_cast(self, other):
         if isinstance(other, complex):
@@ -166,7 +187,7 @@ class Parameter():
         return self._wrap(self.x +other)
 
     def __radd__(self, other):
-        return self.__add__(other)  # addition commutes
+        return self._wrap(other +self.x)
 
     def __sub__(self, other):
         return self._wrap(self.x -other)
@@ -178,7 +199,7 @@ class Parameter():
         return self._wrap(self.x * other)
 
     def __rmul__(self, other):
-        return self.__mul__(other)  # multiplication commutes
+        return self._wrap(other * self.x)
 
     def __truediv__(self, other):
         return self._wrap(self.x / other)
@@ -209,10 +230,6 @@ class Parameter():
         # see RegRefTransform.__eq__
         return self.x == other
 
-    # Do all NumPy one-parameter ufuncs magically call parameter.functionname() if no native implementation exists??
-    #def abs(self):
-    #    return Parameter(abs(self.x))
-
 
 
 # corresponding numpy and tensorflow functions
@@ -241,19 +258,15 @@ def math_fn_wrap(np_fn, tf_fn):
         """wrapper function"""
         if any([isinstance(a, (Variable, Tensor)) for a in args]):
             # if anything is a tf object, use the tensorflow version of the function
-            print('---------- tf:')
             return tf_fn(*args, **kwargs)
         elif any([isinstance(a, Parameter) for a in args]):
             # for Parameters, call the function on the data and construct a new instance
-            print('---------- par:')
             temp = (a.x if isinstance(a, Parameter) else a for a in args)
             return Parameter(wrapper(*temp))
         # otherwise, default to numpy version
-        print('---------- np:')
         return np_fn(*args, **kwargs)
 
-    # FIXME unittest.mock raises an exception on the following line
-    #wrapper.__name__ = np_fn.__name__
+    wrapper.__name__ = np_fn.__name__
     wrapper.__doc__  = math_fn_wrap.__doc__
     return wrapper
 

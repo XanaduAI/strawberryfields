@@ -191,7 +191,7 @@ class BasicTests(BaseTest):
 
 
     def test_parameters(self):
-        """Test using different types of Parameter instances in the toolchain."""
+        """Test using different types of Parameter with different classes of ParOperations."""
         @sf.convert
         def func1(x):
             return 2*x**2 -3*x +1
@@ -204,18 +204,43 @@ class BasicTests(BaseTest):
         # RegRefTransforms
         rr_inputs = [r[0], RR(r[0], lambda x: x**2), func1(r[0]), func2(*r)]
         # other types of parameters
-        par_inputs = [3, 0.14, -4.2+0.5j,
-              randn(2,3),
-              Variable(0.8+0j)]  # tensorflow does not allow arithmetic between real and complex dtypes without a cast if it would result in extending the domain
+        par_inputs = [3, 0.14, #-4.2+0.5j,
+                      randn(2,3),
+                      Variable(0.8)]
+                     #Variable(0.8+0j)]  # tensorflow does not allow arithmetic between real and complex dtypes without a cast if it would result in extending the domain
 
-        for p in (Parameter(k) for k in rr_inputs+par_inputs):
+        def check(G, p, measure=False):
+            "Check a ParOperation/Parameter combination"
+            # construct the op (uses default values for other args)
+            G = G(p)
             self.eng.reset_queue()
             with self.eng:
-                Measure  | r
-                Rgate(p) | r[0]
+                if measure:
+                    Measure  | r  # RR parameters require this
+                if G.ns == 1:
+                    G | r[0]
+                else:
+                    G | (r[0], r[1])
             self.eng.print_queue()
             self.eng.optimize()
             state = self.eng.run(backend=self.backend)
+
+        scalar_arg_preparations = (Coherent, Squeezed, DisplacedSqueezed, Thermal, Catstate)  # Fock requires an integer parameter
+        testset = one_args_gates +two_args_gates +channels +scalar_arg_preparations
+
+        # RR parameter types
+        for p in (Parameter(k) for k in rr_inputs):
+            for G in testset:
+                check(G, p, measure=True)
+
+        # non-RR parameter types
+        for p in (Parameter(k) for k in par_inputs):
+            for G in testset:
+                check(G, p, measure=False)
+
+
+
+
 
 
 

@@ -80,6 +80,10 @@ class GateTests(BaseTest):
             else:
                 self.assertRaises(ValueError, G.__or__, 0)
 
+            # multimode gates: can't repeat the same index
+            if G.ns == 2:
+                self.assertRaises(IndexError, G.__or__, (0,0))
+
         with self.eng:
             for G in two_args_gates:
                 # construct a random gate
@@ -95,10 +99,6 @@ class GateTests(BaseTest):
                 # preconstructed singleton instances
                 test_gate(G)
 
-            for G in two_mode_gates:
-                G = G(*randn(1))
-                # can't repeat the same index
-                self.assertRaises(IndexError, G.__or__, (0,0))
             self.assertRaises(IndexError, All(Q).__or__, (0,0))
 
 
