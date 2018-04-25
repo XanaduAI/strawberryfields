@@ -24,16 +24,6 @@ from strawberryfields.parameters import Parameter
 from defaults import BaseTest
 
 
-# Parameter class inputs:
-# ints, floats and complex numbers
-# numpy arrays
-# TensorFlow objects
-# RegRefs and RegRefTransforms
-par_inputs = [3, 0.14, -4.2+0.5j,
-              randn(2,3),
-              Variable(0.8+0j)]  # tensorflow does not allow arithmetic between real and complex dtypes without a cast if it would result in extending the domain
-
-
 class GateTests(BaseTest):
     def setUp(self):
         self.tol = 1e-6
@@ -190,6 +180,16 @@ class ParameterTests(BaseTest):
     def test_init(self):
         "Parameter initialization and arithmetic."
         # at the moment RR-inputs cannot be arithmetically combined with the others
+
+        # Parameter class inputs:
+        # ints, floats and complex numbers
+        # numpy arrays
+        # TensorFlow objects
+        # RegRefs and RegRefTransforms
+        par_inputs = [3, 0.14, -4.2+0.5j,
+                      randn(3),
+                      Variable(0.8+0j)]
+
         pars = (Parameter(k) for k in par_inputs)
         for p in pars:
             self.assertTrue(isinstance(-p, Parameter))

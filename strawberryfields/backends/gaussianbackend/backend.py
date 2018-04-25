@@ -29,7 +29,6 @@ class GaussianBackend(BaseGaussian):
         Instantiate a GaussianBackend object.
         """
         super().__init__()
-        self._supported["gaussian"] = True
         self._supported["mixed_states"] = True
         self._short_name = "gaussian"
 
@@ -233,7 +232,7 @@ class GaussianBackend(BaseGaussian):
 
         return qs * sqrt(2*self.circuit.hbar)/2
 
-    def measure_heterodyne(self, mode, select=None):
+    def measure_heterodyne(self, mode, select=None, **kwargs):
         """
         Perform a heterodyne measurement on the specified modes.
 

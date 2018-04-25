@@ -89,7 +89,7 @@ class BasicTests(BaseTest):
             test_gate(G)
 
         for G in one_args_gates:
-            if G in (Vgate,) and not self.args.fock_support:
+            if G in (Vgate, Kgate) and not self.args.fock_support:
                 continue  # the V gate cannot be used on Gaussian backends
             # construct a random gate
             G = G(uniform(high=0.25))
@@ -194,20 +194,21 @@ class BasicTests(BaseTest):
         """Test using different types of Parameter with different classes of ParOperations."""
         @sf.convert
         def func1(x):
-            return 2*x**2 -3*x +1
+            return abs(2*x**2 -3*x +1)
 
         @sf.convert
         def func2(x,y):
-            return 2*x*y -y**2 +3
+            return abs(2*x*y -y**2 +3)
 
         r = self.eng.register
-        # RegRefTransforms
-        rr_inputs = [r[0], RR(r[0], lambda x: x**2), func1(r[0]), func2(*r)]
+        # RegRefTransforms (note that some operations expect nonnegative parameter values)
+        rr_inputs = [RR(r[0], lambda x: x**2), func1(r[0]), func2(*r)]
+
         # other types of parameters
-        par_inputs = [3, 0.14, #-4.2+0.5j,
-                      randn(2,3),
-                      Variable(0.8)]
-                     #Variable(0.8+0j)]  # tensorflow does not allow arithmetic between real and complex dtypes without a cast if it would result in extending the domain
+        par_inputs = [0.14]  # -4.2+0.5j
+        if isinstance(self.backend, sf.backends.TFBackend):
+            # add some TensorFlow-specific parameter types
+            par_inputs += [uniform(size=(3,)), Variable(0.8)]
 
         def check(G, p, measure=False):
             "Check a ParOperation/Parameter combination"
@@ -216,14 +217,22 @@ class BasicTests(BaseTest):
             self.eng.reset_queue()
             with self.eng:
                 if measure:
-                    Measure  | r  # RR parameters require this
+                    # RR parameters require measurements, postselection is much faster
+                    MeasureHomodyne(0, select=0.1)     | r[0]
+                    MeasureHomodyne(pi/2, select=0.2)  | r[1]
+                    #MeasureX  | r[0]
+                    #MeasureP  | r[1]
                 if G.ns == 1:
                     G | r[0]
                 else:
                     G | (r[0], r[1])
-            self.eng.print_queue()
+            print(G)
             self.eng.optimize()
-            state = self.eng.run(backend=self.backend)
+            try:
+                state = self.eng.run(backend=self.backend)
+            except SFNotApplicableError as err:
+                # catch unapplicable op/backend combinations here
+                print(err)
 
         scalar_arg_preparations = (Coherent, Squeezed, DisplacedSqueezed, Thermal, Catstate)  # Fock requires an integer parameter
         testset = one_args_gates +two_args_gates +channels +scalar_arg_preparations
@@ -237,9 +246,6 @@ class BasicTests(BaseTest):
         for p in (Parameter(k) for k in par_inputs):
             for G in testset:
                 check(G, p, measure=False)
-
-
-
 
 
 

@@ -483,8 +483,8 @@ class Measurement(ParOperation):
     ns = None
     def __init__(self, par, select=None):
         super().__init__(par)
-        if select is not None and not isinstance(select, Sequence):
-            select = [select]
+        #if select is not None and not isinstance(select, Sequence):
+        #    select = [select]
         self.select = select  #: None, Sequence[Number]: postselection values, one for each measured subsystem
 
     def __str__(self):
@@ -1560,7 +1560,7 @@ RR = RegRefTransform
 # here we list different classes of operations for unit testing purposes
 
 zero_args_gates = (Fourier,)  # all these are pre-constructed objects, not classes
-one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate, CXgate, CZgate)
+one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate, Kgate, CXgate, CZgate)
 two_args_gates = (Dgate, Sgate, BSgate, S2gate)
 gates = zero_args_gates + one_args_gates + two_args_gates
 

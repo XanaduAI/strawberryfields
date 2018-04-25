@@ -488,7 +488,7 @@ class Engine:
                     self.cmd_applied.append(cmd)
                 except SFNotApplicableError:
                     # command is not applicable to the current backend type
-                    raise TypeError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
+                    raise SFNotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
                 except NotImplementedError:
                     # command not directly supported by backend API, try a decomposition instead
                     try:
