@@ -288,6 +288,10 @@ from .decompositions import clements, bloch_messiah, williamson
 # pylint: disable=protected-access
 
 
+# numerical tolerances
+# TODO there are still some magic numbers in the code, they should be named and defined here
+_decomposition_merge_tol = 1e-13
+
 
 def _seq_to_list(s):
     "Converts a Sequence or a single object into a list."
@@ -615,8 +619,14 @@ class Gate(ParOperation):
 class Decomposition(ParOperation):
     """Abstract base class for matrix decompositions.
 
-    This class provides the base behaviour for decomposing various objects
+    This class provides the base behaviour for decomposing various matrices
     into a sequence of gate and state preparations.
+
+    .. todo:: Define how a given matrix is translated into a unitary on the state space.
+
+    .. todo:: We could specialize apply() here to do nothing if p[0] is identity and bypass _apply() and decompose() entirely, see Gate.apply.
+
+    An identity matrix corresponds to an identity operation (NOP).
     """
     def __init__(self, par):
         # check if any of the decomposition inputs are tensor objects
@@ -632,7 +642,12 @@ class Decomposition(ParOperation):
             # decompositions, which cannot be merged.
             U1 = self.p[0]
             U2 = other.p[0]
-            U = matmul(U2, U1)
+            U = matmul(U2, U1).x
+            # TODO above we strip the Parameter wrapper to make the following check easier to perform. The constructor restores it.
+            # Another option would be to add the required methods to Parameter class.
+            # check if the matrices cancel
+            if np.all(np.abs(U -np.identity(len(U))) < _decomposition_merge_tol):
+                return None
             new_decomp = self.__class__(U)
             return new_decomp
         else:
@@ -1331,7 +1346,7 @@ class Interferometer(Decomposition):
     def __init__(self, U):
         super().__init__([U])
 
-        if np.all(np.abs(U - np.identity(len(U))) < 1e-13):
+        if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
             self.identity = True
         else:
             self.identity = False
@@ -1462,9 +1477,7 @@ class CovarianceState(Preparation, Decomposition):  # NOTE: inheritance order ma
             context, the hbar value of the engine will override this keyword argument.
     """
     ns = None
-    def __init__(self, V, r=0, hbar=None):
-        super().__init__([V, r])
-
+    def __init__(self, V, r=None, hbar=None):
         try:
             self.hbar = _Engine._current_context.hbar
         except AttributeError:
@@ -1478,26 +1491,30 @@ class CovarianceState(Preparation, Decomposition):  # NOTE: inheritance order ma
 
         self.ns = V.shape[0]//2
         self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < 1e-6
-
         self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
 
-        if r == 0:
-            self.x_disp = [0]*self.ns
-            self.p_disp = [0]*self.ns
-        else:
-            if len(r) != V.shape[0]:
-                raise ValueError('Vector of means must have the same length as the covariance matrix.')
-            self.x_disp = r[:self.ns]
-            self.p_disp = r[self.ns:]
+        if r is None:
+            # all zeroes
+            r = [0] * (2*self.ns)
+        r = np.asarray(r)
+
+        if len(r) != V.shape[0]:
+            raise ValueError('Vector of means must have the same length as the covariance matrix.')
+        self.x_disp = r[:self.ns]
+        self.p_disp = r[self.ns:]
+
+        super().__init__([V, r])
+
 
     def decompose(self, reg):
         # pylint: disable=too-many-branches
         cmds = []
 
-        D = np.diag(self.p[0])
-        is_diag = np.all(self.p[0] == np.diag(D))
+        V = self.p[0].x
+        D = np.diag(V)
+        is_diag = np.all(V == np.diag(D))
 
-        BD = changebasis(self.ns) @ self.p[0] @ changebasis(self.ns).T
+        BD = changebasis(self.ns) @ V @ changebasis(self.ns).T
         BD_modes = [BD[i*2:(i+1)*2, i*2:(i+1)*2] for i in range(BD.shape[0]//2)]
         is_block_diag = (not is_diag) and np.all(BD == block_diag(*BD_modes))
 

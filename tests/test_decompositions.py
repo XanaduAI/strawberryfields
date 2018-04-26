@@ -3,25 +3,21 @@ Unit tests for decompositions in :class:`strawberryfields.backends.decomposition
 as well as the frontend decompositions in :class:`strawberryfields.ops`.
 """
 
-import os
-import sys
-import signal
-
 import unittest
 
 import numpy as np
 from numpy import pi
 from scipy.linalg import qr, block_diag
 
-import strawberryfields as sf
+# NOTE: strawberryfields must be imported from defaults
+from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.utils import *
-import strawberryfields.decompositions as dec
-
+from strawberryfields import decompositions as dec
 from strawberryfields.backends.gaussianbackend import gaussiancircuit
 from strawberryfields.backends.shared_ops import haar_measure, changebasis, rotation_matrix as rot
 
-from defaults import BaseTest, FockBaseTest, GaussianBaseTest
+
 
 nsamples=10
 
@@ -158,10 +154,10 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
         I1inv = Interferometer(self.u1.conj().T)
         I2 = Interferometer(self.u2)
 
-        # unitary merged with its conjugate transpose is unitary
-        self.assertAllAlmostEqual(I1.merge(I1inv).p[0], np.identity(3), delta=self.tol)
+        # unitary merged with its conjugate transpose is identity
+        self.assertTrue(I1.merge(I1inv) is None)
         # two merged unitaries are the same as their product
-        self.assertAllAlmostEqual(I1.merge(I2).p[0], self.u2@self.u1, delta=self.tol)
+        self.assertAllAlmostEqual(I1.merge(I2).p[0].x, self.u2@self.u1, delta=self.tol)
 
     def test_merge_covariance(self):
         V1 = CovarianceState(self.V_mixed, hbar=self.hbar)
