@@ -95,6 +95,7 @@ Exceptions
 ----------
 
 .. autosummary::
+   SFMergeFailure
    SFProgramError
    ~strawberryfields.backends.base.SFNotApplicableError
 
@@ -129,7 +130,7 @@ def _print_list(i, q):
 
 
 def _convert(func):
-    r"""Decorator for converting user defined functions to a :class:`~.RegRefTransform` factories.
+    r"""Decorator for converting user defined functions to a :class:`RegRefTransform` factories.
 
     Example usage:
 
@@ -145,7 +146,7 @@ def _convert(func):
             Dgate(F(q[0])) | q[1]
 
     Args:
-        func (function): function to be converted to a :class:`~.RegRefTransform` factory.
+        func (function): function to be converted to a :class:`RegRefTransform` factory.
     """
     @wraps(func)
     def wrapper(*args):
@@ -158,6 +159,14 @@ class SFProgramError(RuntimeError):
     """Exception raised by :class:`Engine` when it encounters an illegal operation in the quantum program.
 
     E.g. trying to use a measurement result before it is available.
+    """
+    pass
+
+
+class SFMergeFailure(RuntimeError):
+    """Exception raised by :func:`~strawberryfields.ops.Operation.merge` when an attempted merge fails.
+
+    E.g. trying to merge two gates of different families.
     """
     pass
 
@@ -659,7 +668,7 @@ class Engine:
                             i -= 1
                         _print_list(i, q)
                         continue
-                except (TypeError, ValueError):
+                except SFMergeFailure:
                     pass
                 i += 1  # failed at merging the ops, move forward
 

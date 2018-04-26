@@ -430,8 +430,8 @@ class BaseBackend:
         and experimentally the photons are destroyed in a homodyne measurement.
 
         Args:
-            phi (float): phase angle of the quadrature to measure (x: :math:`\phi=0`, p: :math:`\phi=\pi/2`)
-            mode (Sequence[int]): which mode to measure
+            phi    (float): phase angle of the quadrature to measure (x: :math:`\phi=0`, p: :math:`\phi=\pi/2`)
+            mode     (int): which mode to measure
             select (float): (Optional) desired values of measurement results. Allows user to post-select on specific measurement results instead of randomly sampling.
             **kwargs: can be used to pass user-specified numerical parameters to the backend. Options for such arguments will be documented in the respective subclasses.
 
@@ -448,7 +448,7 @@ class BaseBackend:
         .. todo:: At the moment only the Gaussian backend implements this method.
 
         Args:
-            modes (Sequence[int]): which modes to measure
+            mode       (int): which mode to measure
             select (complex): (Optional) desired values of measurement result.
                 Allows user to post-select on specific measurement results instead of randomly sampling.
 
@@ -546,7 +546,7 @@ class BaseBackend:
         Updates the current state of the circuit to the conditional state of this measurement result.
 
         Args:
-            modes (Sequence[int]): which modes to measure
+            modes  (Sequence[int]): which modes to measure
             select (Sequence[int]): (Optional) desired values of measurement results. Allows user to post-select on specific measurement results instead of randomly sampling.
 
         Returns:

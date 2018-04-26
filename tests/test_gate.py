@@ -17,7 +17,7 @@ import sys
 sys.path.insert(0, os.path.abspath('.'))
 
 import strawberryfields as sf
-from strawberryfields.engine import Engine
+from strawberryfields.engine import Engine, SFMergeFailure
 from strawberryfields.utils import *
 from strawberryfields.ops import *
 from strawberryfields.parameters import Parameter
@@ -62,8 +62,8 @@ class GateTests(BaseTest):
             self.assertAllTrue(G.merge(G.H) == None)
             # gates cannot be merged with a different type of gate
             if not isinstance(G, Q.__class__):
-                self.assertRaises(TypeError, Q.merge, G)
-                self.assertRaises(TypeError, G.merge, Q)
+                self.assertRaises(SFMergeFailure, Q.merge, G)
+                self.assertRaises(SFMergeFailure, G.merge, Q)
             # wrong number of subsystems
             if G.ns == 1:
                 self.assertRaises(ValueError, G.__or__, (0,1))

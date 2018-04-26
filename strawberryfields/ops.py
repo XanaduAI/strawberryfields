@@ -280,7 +280,7 @@ from scipy.special import factorial as fac
 from tensorflow import Tensor, Variable
 
 from .backends.shared_ops import changebasis
-from .engine import Engine as _Engine, Command, RegRef, RegRefTransform
+from .engine import Engine as _Engine, Command, RegRef, RegRefTransform, SFMergeFailure
 from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt, sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2)
 from .decompositions import clements, bloch_messiah, williamson
 
@@ -351,7 +351,7 @@ class Operation:
           Operation, None: other * self. The return value None represents the identity gate (doing nothing).
 
         Raises:
-          TypeError: if the two operations cannot be merged
+          ~strawberryfields.engine.SFMergeFailure: if the two operations cannot be merged
 
         .. todo:: Using the return value None to denote the identity is a bit dangerous, since a function with no explicit return statement also returns None,
            which can lead to puzzling bugs. Maybe return a special singleton Identity object instead?
@@ -452,7 +452,7 @@ class Preparation(Operation):
             warnings.warn('Two subsequent state preparations, first one has no effect.')
             return other
         else:
-            raise TypeError('For now, Preparations cannot be merged with anything else.')
+            raise SFMergeFailure('For now, Preparations cannot be merged with anything else.')
 
 
 
@@ -495,7 +495,7 @@ class Measurement(ParOperation):
         return temp
 
     def merge(self, other):
-        raise TypeError('For now, measurements cannot be merged with anything else.')
+        raise SFMergeFailure('For now, measurements cannot be merged with anything else.')
 
     def apply(self, reg, backend, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
@@ -599,16 +599,16 @@ class Gate(ParOperation):
                 temp.dagger = self.dagger
                 return temp
         else:
-            raise TypeError('Not the same gate family.')
+            raise SFMergeFailure('Not the same gate family.')
 
         if isinstance(other, self.__class__):
             # without knowing anything more specific about the gates, we can only merge them if they are each others' inverses
             if self.dagger != other.dagger:
                 return None
             else:
-                raise ValueError("Don't know how to merge these gates.")
+                raise SFMergeFailure("Don't know how to merge these gates.")
         else:
-            raise TypeError('Not the same gate family.')
+            raise SFMergeFailure('Not the same gate family.')
 
 
 
@@ -636,7 +636,7 @@ class Decomposition(ParOperation):
             new_decomp = self.__class__(U)
             return new_decomp
         else:
-            raise TypeError('Not the same decomposition type.')
+            raise SFMergeFailure('Not the same decomposition type.')
 
 
 
@@ -986,7 +986,7 @@ class LossChannel(ParOperation):
                 return None
             return self.__class__(T)
         else:
-            raise TypeError('Not the same operation family.')
+            raise SFMergeFailure('Not the same operation family.')
 
 
 #====================================================================
