@@ -1254,7 +1254,7 @@ class CZgate(Gate):
        \text{CZ}(s) =  \iint dx dy \: e^{i sxy/\hbar} \ket{x,y}\bra{x,y} = e^{i s \: \hat{x} \otimes \hat{x}/\hbar}
 
     In the position basis it maps
-    :math:`\ket{x_1, x_2} = e^{i s x_1 x_2/\hbar} \ket{x_1, x_2}`.
+    :math:`\ket{x_1, x_2} \mapsto e^{i s x_1 x_2/\hbar} \ket{x_1, x_2}`.
 
     Args:
       s (float): phase shift multiplier
