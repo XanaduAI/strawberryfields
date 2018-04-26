@@ -2,17 +2,14 @@
 Unit tests for utilities in :class:`strawberryfields.utils`.
 """
 
-import os
-import sys
-import signal
-
 import unittest
 
 import numpy as np
 from numpy import pi
 
+from defaults import FockBaseTest, strawberryfields
 import strawberryfields.backends.shared_ops as so
-from defaults import FockBaseTest
+
 
 bs_4_val = np.array([ 1.00000000+0.j,  1.00000000+0.j,  1.00000000+0.j,  1.00000000+0.j,
         1.00000000+0.j,  1.41421356+0.j,  1.73205081+0.j,  1.00000000+0.j,

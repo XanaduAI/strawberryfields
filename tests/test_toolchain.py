@@ -3,19 +3,15 @@ Unit tests for the :mod:`strawberryfields` full toolchain.
 """
 
 import unittest
-# HACK to import the module in this source distribution, not the installed one!
-import os
-import sys
-sys.path.insert(0, os.path.abspath('.'))
 
 from numpy.random import (randn, uniform, randint)
 from numpy import array
 from numpy import pi
 
-import strawberryfields as sf
+# NOTE: strawberryfields must be imported from defaults
+from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.engine import *
 from strawberryfields.ops import *
-from defaults import BaseTest, FockBaseTest, GaussianBaseTest
 from strawberryfields.backends import BaseFock
 
 

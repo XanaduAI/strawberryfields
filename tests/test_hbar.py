@@ -5,13 +5,11 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
+
 import numpy as np
 from scipy.special import factorial
-from defaults import BaseTest, FockBaseTest, GaussianBaseTest
 
-import strawberryfields as sf
+from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.engine import Engine
 from strawberryfields.ops import *
 

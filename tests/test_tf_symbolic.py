@@ -6,14 +6,13 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
+
 import numpy as np
 from scipy.special import factorial
-import strawberryfields as sf
-from strawberryfields.ops import *
 import tensorflow as tf
-from defaults import SymbolicBaseTest
+
+from defaults import SymbolicBaseTest, strawberryfields as sf
+from strawberryfields.ops import *
 
 
 ###################################################################

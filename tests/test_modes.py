@@ -5,10 +5,10 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
-import numpy as np
 from itertools import combinations
+
+import numpy as np
+
 from defaults import BaseTest, FockBaseTest
 
 

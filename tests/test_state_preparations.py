@@ -5,11 +5,12 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
+
 import numpy as np
 from scipy.special import factorial
+
 from defaults import BaseTest, FockBaseTest
+
 
 mag_alphas = np.linspace(0, .8, 4)
 phase_alphas = np.linspace(0, 2 * np.pi, 7, endpoint=False)

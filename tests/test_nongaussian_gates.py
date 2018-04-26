@@ -5,10 +5,11 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
+
 import numpy as np
+
 from defaults import BaseTest, FockBaseTest
+
 
 kappas = np.linspace(0, 2 * np.pi, 7)
 

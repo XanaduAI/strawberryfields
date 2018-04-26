@@ -8,12 +8,13 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
+
 import numpy as np
 from scipy.special import factorial, erfinv
 from scipy.special import gammaln as lg
+
 from defaults import BaseTest, FockBaseTest
+
 
 # sqz_r = np.linspace(0.0, 0.1, 5)
 sqz_theta = np.linspace(0, 2 * np.pi, 3, endpoint=False)

@@ -3,18 +3,13 @@ Unit tests for the :mod:`strawberryfields` circuit optimizer.
 """
 
 import unittest
-# HACK to import the module in this source distribution, not the installed one!
-import os
-import sys
-sys.path.insert(0, os.path.abspath('.'))
 
 from numpy.random import rand, randn, permutation
 from numpy import round
 
-import strawberryfields as sf
+from defaults import BaseTest, strawberryfields as sf
 from strawberryfields.engine import *
 from strawberryfields.ops import *
-from defaults import BaseTest
 
 
 # all single-mode gates with at least one parameter

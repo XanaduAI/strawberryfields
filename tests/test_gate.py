@@ -6,22 +6,19 @@ The tests in this module do not require the quantum program to be run, and thus 
 
 import unittest
 from collections import Counter
+
 from numpy.random import randn, random
 from numpy import sqrt
 
 from tensorflow import (Tensor, Variable)
 
-# HACK to import the module in this source distribution, not the installed one!
-import os
-import sys
-sys.path.insert(0, os.path.abspath('.'))
-
-import strawberryfields as sf
+# NOTE: strawberryfields must be imported from defaults
+from defaults import BaseTest, strawberryfields as sf
 from strawberryfields.engine import Engine, SFMergeFailure
 from strawberryfields.utils import *
 from strawberryfields.ops import *
 from strawberryfields.parameters import Parameter
-from defaults import BaseTest
+
 
 
 class GateTests(BaseTest):

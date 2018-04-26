@@ -5,10 +5,9 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
 import numpy as np
 from scipy.special import factorial
+
 from defaults import GaussianBaseTest
 
 

@@ -10,12 +10,11 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
+
 import numpy as np
 from scipy.special import factorial
-from defaults import BaseTest, FockBaseTest
 
+from defaults import BaseTest, FockBaseTest
 
 phase_alphas = np.linspace(0, 2 * np.pi, 3, endpoint=False) + np.pi / 13
 t_values = np.linspace(0., 1., 3)

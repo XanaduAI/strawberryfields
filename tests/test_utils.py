@@ -2,20 +2,16 @@
 Unit tests for utilities in :class:`strawberryfields.utils`.
 """
 
-import os
-import sys
-import signal
-
 import unittest
 
 import numpy as np
 from numpy import pi
 
-import strawberryfields as sf
+from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.utils import *
 from strawberryfields.backends.shared_ops import sympmat
-from defaults import BaseTest, FockBaseTest, GaussianBaseTest
+
 
 a = 0.32+0.1j
 r = 0.212

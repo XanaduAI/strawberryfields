@@ -2,20 +2,15 @@
 Unit tests for the :mod:`strawberryfields` provided algorithms.
 """
 
-import os
-import sys
-import signal
-
-import re
 import unittest
 
 import numpy as np
 from numpy import pi
 
-import strawberryfields as sf
+from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.utils import scale
-from defaults import BaseTest, FockBaseTest, GaussianBaseTest
+
 
 float_regex = r'(-)?(\d+\.\d+)'
 

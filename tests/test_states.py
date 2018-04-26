@@ -2,10 +2,6 @@
 Unit tests for :class:`strawberryfields.backends.states`.
 """
 
-import os
-import sys
-import signal
-
 import unittest
 
 import numpy as np
@@ -13,13 +9,12 @@ from numpy import pi
 from scipy.special import factorial
 from scipy.stats import multivariate_normal
 
-import strawberryfields as sf
+from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.utils import *
-
 from strawberryfields import backends
-from defaults import BaseTest, FockBaseTest, GaussianBaseTest
 from strawberryfields.backends.shared_ops import rotation_matrix as R
+
 
 a = 0.3+0.1j
 r = 0.23

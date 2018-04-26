@@ -6,13 +6,14 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
-import numpy as np
 from itertools import combinations
-from defaults import BaseTest, FockBaseTest
-from strawberryfields import backends
 from math import factorial
+
+import numpy as np
+
+from defaults import BaseTest, FockBaseTest, strawberryfields as sf
+from strawberryfields import backends
+
 
 num_repeats = 50
 
