@@ -622,7 +622,7 @@ class QReg(object):
 
             if select is not None:
                 meas_result = self._maybe_batch(select)
-                meas_result = tf.cast(meas_result, tf.float64, name="Meas_result")
+                homodyne_sample = tf.cast(meas_result, tf.float64, name="Meas_result")
             else:
                 # create reduced state on mode to be measured
                 reduced_state = ops.reduced_density_matrix(self._state, mode, self._state_is_pure, self._batched)
@@ -683,12 +683,12 @@ class QReg(object):
                 homodyne_sample = tf.gather(q_tensor, samples_idx)
                 homodyne_sample = tf.squeeze(homodyne_sample)
 
-                if evaluate_results:
-                    meas_result = homodyne_sample.eval(feed_dict, session)
-                    if close_session:
-                        session.close()
-                else:
-                    meas_result = tf.identity(homodyne_sample, name="Meas_result")
+            if evaluate_results:
+                meas_result = homodyne_sample.eval(feed_dict, session)
+                if close_session:
+                    session.close()
+            else:
+                meas_result = tf.identity(homodyne_sample, name="Meas_result")
 
             # project remaining modes into conditional state
             if self._num_modes == 1:
