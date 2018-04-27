@@ -25,13 +25,16 @@ The normal lifecycle of a ParOperation object and its associated Parameter insta
   method inside an :class:`~engine.Engine` context.
   This creates a :class:`~engine.Command` instance that wraps
   the Operation and the RegRefs it acts on, which is appended to the Engine command queue.
-* Once the entire program is inputted, the Engine optimizes it. This involves merging and commuting Commands
+* Once the entire program is inputted, Engine optimizes it. This involves merging and commuting Commands
   inside the circuit graph, the building of which requires knowledge of their dependencies, both direct and Parameter-based.
 * Merging two :class:`~ops.Gate` instances of the same subclass involves
   adding their first parameters after equality-comparing the others. This is easily done if
   all the parameters have an immediate value. RegRefTransforms and TensorFlow objects are more complicated,
-  but could in principle be handled. TODO for now we simply don't do the merge if they're involved.
-* The optimized command queue is run by the Engine, which calls the :func:`~ops.Operation.apply` method
+  but could in principle be handled.
+
+  .. todo:: For now we simply don't do the merge if RegRefTransforms or TensorFlow objects are involved.
+
+* The optimized command queue is run by Engine, which calls the :func:`~ops.Operation.apply` method
   of each Operation in turn (and tries :func:`~ops.Operation.decompose`
   if a :py:exc:`NotImplementedError` exception is raised).
 * :func:`~ops.ParOperation.apply` evaluates the numeric value of any
@@ -39,9 +42,9 @@ The normal lifecycle of a ParOperation object and its associated Parameter insta
   The parameter values and the subsystem indices are passed to :func:`~ops.Operation._apply`.
 * :func:`~ops.Operation._apply` "unwraps" the Parameter instances. There are three different cases:
 
-  1. we still need to do arithmetic, do not unwrap until the end, using p.x
-  2. no arithmetic, use :func:`_unwrap`
-  3. no parameters are used, do nothing
+  1. We still need to do some arithmetic, unwrap after it is done using p.x.
+  2. No arithmetic required, use :func:`~parameters._unwrap`.
+  3. No parameters are used, do nothing.
 
   Finally, _apply calls the appropriate backend API method using the unwrapped parameters.
   It is up to the backend to either accept NumPy arrays and Tensorflow objects as parameters, or not.
@@ -149,7 +152,7 @@ class Parameter():
         return self.x.__format__(format_spec)
 
     def evaluate(self):
-        """Evaluate the numerical value of a RegRef-based parameter.
+        """Evaluate the numerical value of a RegRefTransform-based parameter.
 
         Returns:
           Parameter: self, unless self.x is a RegRefTransform in which case it is evaluated and a new Parameter instance is constructed on the result and returned
@@ -177,6 +180,9 @@ class Parameter():
         """Wraps x inside a Parameter instance, unless x is a Parameter instance itself.
 
         Needed because of the way the reverse binary arithmetic methods work.
+
+        Returns:
+          Parameter: x as a Parameter instance
         """
         if isinstance(x, Parameter):
             return x
