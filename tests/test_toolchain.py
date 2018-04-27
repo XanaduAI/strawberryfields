@@ -225,7 +225,7 @@ class BasicTests(BaseTest):
             print(G)
             self.eng.optimize()
             try:
-                state = self.eng.run(backend=self.backend)
+                self.eng.run(backend=self.backend)
             except SFNotApplicableError as err:
                 # catch unapplicable op/backend combinations here
                 print(err)

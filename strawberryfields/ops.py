@@ -487,8 +487,6 @@ class Measurement(ParOperation):
     ns = None
     def __init__(self, par, select=None):
         super().__init__(par)
-        #if select is not None and not isinstance(select, Sequence):
-        #    select = [select]
         self.select = select  #: None, Sequence[Number]: postselection values, one for each measured subsystem
 
     def __str__(self):
@@ -845,6 +843,8 @@ class MeasureFock(Measurement):
     """
     ns = None
     def __init__(self, select=None):
+        if select is not None and not isinstance(select, Sequence):
+            select = [select]
         super().__init__([], select)
 
     def _apply(self, reg, backend, **kwargs):
@@ -869,7 +869,7 @@ class MeasureHomodyne(Measurement):
 
     Args:
       phi (float): measurement angle :math:`\phi`
-      select (float): (Optional) desired values of measurement result.
+      select (None, float): (Optional) desired values of measurement result.
         Allows the post-selection of specific measurement results instead of randomly sampling.
     """
     ns = 1
@@ -896,6 +896,10 @@ class MeasureHeterodyne(Measurement):
 
     Samples the joint Husimi distribution :math:`Q(\vec{\alpha}) = \frac{1}{\pi}\bra{\vec{\alpha}}\rho\ket{\vec{\alpha}}`.
     The measured mode is reset to the vacuum state.
+
+    Args:
+      select (None, complex): (Optional) desired values of measurement result.
+        Allows the post-selection of specific measurement results instead of randomly sampling.
     """
     ns = 1
     def __init__(self, select=None):

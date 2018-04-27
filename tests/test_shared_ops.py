@@ -2,6 +2,7 @@
 Unit tests for utilities in :class:`strawberryfields.utils`.
 """
 
+import os
 import unittest
 
 import numpy as np

@@ -96,21 +96,21 @@ class FockFrontendPostselection(FockBaseTest):
     self.eng.reset()
     for n in range(self.D - 1):
       q = self.eng.register
-
+      self.eng.reset_queue()
       with self.eng:
         S2gate(1) | (q[0], q[1])
         MeasureFock(select=n) | q[0]
         MeasureFock() | q[1]
 
-      self.eng.run(backend=self.backend, reset_backend=True)
+      self.eng.run(backend=self.backend)
       self.assertAllEqual(q[1].val, n)
 
 
-  def test_convervation_of_photon_number_in_beamsplitter(self):
+  def test_conservation_of_photon_number_in_beamsplitter(self):
     self.eng.reset()
     for n in range(self.D - 1):
       q = self.eng.register
-
+      self.eng.reset_queue()
       with self.eng:
         Fock(n) | q[0]
         Fock(self.D - 1 - n) | q[1]
@@ -118,7 +118,7 @@ class FockFrontendPostselection(FockBaseTest):
         MeasureFock(select = self.D // 2) | q[0]
         MeasureFock() | q[1]
 
-      self.eng.run(backend=self.backend, reset_backend=True)
+      self.eng.run(backend=self.backend)
       photons_out = sum([i.val for i in q])
       self.assertAllEqual(photons_out, self.D - 1)
 
