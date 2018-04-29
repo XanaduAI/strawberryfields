@@ -38,7 +38,7 @@ Quantum operations (state preparation, unitary gates, measurements) act on regis
     G(params) | q
     F(params) | (q[1], q[6], q[2])
 
-Here :samp:`engine` is an instance of :class:`strawberryfields.engine.Engine` and defines the context in which
+Here :samp:`eng` is an instance of :class:`strawberryfields.engine.Engine` and defines the context in which
 the commands are executed.
 Within each command, the part on the left is an :class:`Operation` instance,
 quite typically a constructor call for the requested operation class with the relevant parameters.
@@ -57,12 +57,14 @@ There are four kinds of :class:`Operation` objects:
 
 * :class:`Preparation` operations only manipulate the register state::
 
+    eng, q = sf.Engine(3)
     with eng:
-      Vac | q0
-      All(Coherent(0.4, 0.2)) | (q[1], q[3])
+      Vac | q[0]
+      All(Coherent(0.4, 0.2)) | (q[1], q[2])
 
 * :class:`Gate` operations only manipulate the register state::
 
+    eng, q = sf.Engine(2)
     with eng:
       Dgate(0.3)   | q[0]
       BSgate(-0.5) | q[0:2]
@@ -70,10 +72,11 @@ There are four kinds of :class:`Operation` objects:
 * :class:`Measurement` operations manipulate the register state and produce classical information.
   The information is directly available only after the simulation has been run up to the point of measurement::
 
+    eng, q = sf.Engine(2)
     with eng:
       Measure       | q[0]
       eng.run()
-      Dgate(q0.val) | q[1]
+      Dgate(q[0].val) | q[1]
 
   Alternatively one may use a symbolic reference to the register containing the measurement result
   by supplying registers as the argument to an :class:`Operation`, in which case the measurement may be deferred,
@@ -96,7 +99,7 @@ There are four kinds of :class:`Operation` objects:
     eng, q = sf.Engine(2)
     with eng:
       Measure           | q[0]
-      Dgate(square(q0)) | q[1]
+      Dgate(square(q[0])) | q[1]
     eng.run()
 
   Finally, the lower-level :class:`strawberryfields.engine.RegRefTransform` (RR) and
@@ -112,7 +115,7 @@ There are four kinds of :class:`Operation` objects:
 * :class:`Delete` and :class:`New_modes` Operations delete and create modes during program execution.
   In practice the user only deals with the pre-constructed instances :py:data:`Del` and :py:data:`New`::
 
-    eng, (alice,) = sf.Engine(3)
+    eng, (alice,) = sf.Engine(1)
     with eng:
       Sgate(1)    | alice
       bob, charlie = New(2)
@@ -748,7 +751,7 @@ class Fock(Preparation):
 
 
 class Catstate(Preparation):
-    r"""Initialize a mode to a cat state.
+    r"""Prepare a mode in a :ref:`cat state <cat_state>`.
 
     A cat state is the coherent superposition of two coherent states,
 

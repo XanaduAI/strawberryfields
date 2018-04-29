@@ -303,6 +303,7 @@ Thermal state
 
    *Implemented in Strawberry Fields as a state preparation operator by* :class:`strawberryfields.ops.Thermal`
 
+.. _cat_state:
 
 Cat state
 -------------
