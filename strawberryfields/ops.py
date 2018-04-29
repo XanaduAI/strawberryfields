@@ -175,7 +175,6 @@ The abstract base class hierarchy exists to provide the correct semantics for th
    Operation
    ParOperation
    Preparation
-   ParPreparation
    Measurement
    Gate
    Decomposition
@@ -447,8 +446,8 @@ class ParOperation(Operation):
 
 
 
-class Preparation(Operation):
-    """Abstract base class for operations that demolish the previous state entirely."""
+class Preparation(ParOperation):
+    """Abstract base class for operations that demolish the previous state of the subsystem entirely."""
     def merge(self, other):
         # sequential preparation, only the last one matters
         if isinstance(other, Preparation):
@@ -457,12 +456,6 @@ class Preparation(Operation):
             return other
         else:
             raise SFMergeFailure('For now, Preparations cannot be merged with anything else.')
-
-
-
-class ParPreparation(Preparation, ParOperation):
-    """Abstract base class for parametrized subsystem preparation."""
-    pass
 
 
 
@@ -664,6 +657,9 @@ class Vacuum(Preparation):
 
     Can be accessed via the shortcut variable ``Vac``.
     """
+    def __init__(self):
+        super().__init__([])
+
     def _apply(self, reg, backend, **kwargs):
         backend.prepare_vacuum_state(*reg)
 
@@ -673,7 +669,7 @@ class Vacuum(Preparation):
         return 'Vac'
 
 
-class Coherent(ParPreparation):
+class Coherent(Preparation):
     r"""Prepare a mode in a :ref:`coherent state <coherent_state>`.
 
     The gate is parameterized so that a user can specify a single complex number :math:`a=\alpha`
@@ -691,7 +687,7 @@ class Coherent(ParPreparation):
         backend.prepare_coherent_state(z.x, *reg)
 
 
-class Squeezed(ParPreparation):
+class Squeezed(Preparation):
     r"""Prepare a mode in a :ref:`squeezed vacuum state <squeezed_state>`.
 
     Args:
@@ -706,7 +702,7 @@ class Squeezed(ParPreparation):
         backend.prepare_squeezed_state(p[0], p[1], *reg)
 
 
-class DisplacedSqueezed(ParPreparation):
+class DisplacedSqueezed(Preparation):
     r"""Prepare a mode in a :ref:`displaced squeezed state <displaced_squeezed_state>`.
 
     A displaced squeezed state is prepared by squeezing a vacuum state, and
@@ -734,7 +730,7 @@ class DisplacedSqueezed(ParPreparation):
         backend.displacement(p[0], *reg)
 
 
-class Fock(ParPreparation):
+class Fock(Preparation):
     r"""Prepare a mode in a :ref:`fock_basis` state.
 
     The prepared mode is traced out and replaced with the Fock state :math:`\ket{n}`.
@@ -751,7 +747,7 @@ class Fock(ParPreparation):
         backend.prepare_fock_state(p[0], *reg)
 
 
-class Catstate(ParPreparation):
+class Catstate(Preparation):
     r"""Initialize a mode to a cat state.
 
     A cat state is the coherent superposition of two coherent states,
@@ -795,7 +791,7 @@ class Catstate(ParPreparation):
         backend.prepare_ket_state(ket.x, *reg)
 
 
-class Ket(ParPreparation):
+class Ket(Preparation):
     r"""Prepare a mode using the given ket vector in the :ref:`fock_basis`.
 
     The prepared mode is traced out and replaced with the given ket state (in the Fock basis).
@@ -812,7 +808,7 @@ class Ket(ParPreparation):
         backend.prepare_ket_state(p[0], *reg)
 
 
-class Thermal(ParPreparation):
+class Thermal(Preparation):
     r"""Prepare a mode in a :ref:`thermal state <thermal_state>`.
 
     The requested mode is traced out and replaced with the thermal state :math:`\rho(\bar{n})`.
