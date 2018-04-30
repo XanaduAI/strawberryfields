@@ -200,6 +200,7 @@ class QReg(object):
             if graph != self._graph:
                 del self._graph  # get rid of the old graph from memory
                 self._graph = graph
+                ops.get_prefac_tensor.cache_clear() # clear any cached tensors that may live on old graph
             self._make_vac_states()
             self._state_history = []
             self._cache = {}
