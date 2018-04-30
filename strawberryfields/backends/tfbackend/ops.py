@@ -90,6 +90,9 @@ def unravel_index(ind, tensor_shape):
 
 @lru_cache()
 def get_prefac_tensor(D, directory, save):
+    """Equivalent to the functionality of shared_ops the bs_factors functions from shared_ops,
+    but caches the return value as a tensor. This allows us to re-use the same prefactors and save
+    space on the computational graph."""
     try:
         prefac = load_bs_factors(D, directory)
     except FileNotFoundError:
