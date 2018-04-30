@@ -29,11 +29,11 @@ Contents
 # pylint: disable=too-many-arguments
 
 from string import ascii_lowercase as indices
+from functools import lru_cache
 
 import tensorflow as tf
 import numpy as np
 from scipy.special import binom, factorial
-from functools import lru_cache
 
 from ..shared_ops import generate_bs_factors, load_bs_factors, save_bs_factors, squeeze_parity
 
