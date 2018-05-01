@@ -8,6 +8,9 @@ community - while we will continue working on adding new and exciting features t
 we invite you to join us and suggest improvements, research ideas, or even just to discuss how
 Strawberry Fields fits into your workflow.
 
+If your contribution becomes part of Strawberry Fields, or is highlighted in our Gallery, we will
+send you some exclusive Xanadu Swag™ - including t-shirts, stickers, and more.
+
 ## How can I get involved in the community?
 
 If you want to contribute but don't know where to start, start by checking out our
@@ -36,7 +39,7 @@ It's up to you!
   provide exciting updates of the projects/experiments you are investigating with Strawberry Fields
 
   You can even write your own Strawberry Fields tutorials, or blog about your simulation results.
-  Send us the link, and we may even add it as an external resource in our documentation!
+  Send us the link, and we may even add it to our Gallery or our documentation as an external resource!
 
 * **Test the cutting-edge Strawberry Fields releases** - clone our GitHub repository, and keep up to
   date with the latest features. If you run into any bugs, make a bug report on our
@@ -51,12 +54,15 @@ It's up to you!
 
 * **Contribute to our documentation, or to Strawberry Fields directly** - we are hoping for our documentation
   to become an online, open-source resource for all things continuous-variable. If you would like to add
-  to it, or suggest improvements/changes, let us know - or even submit a pull request directly.
+  to it, or suggest improvements/changes, let us know - or even submit a pull request directly. All authors
+  who have contributed to the Strawberry Fields codebase will be listed alongside the latest release.
 
 * **Build an application on top of Strawberry Fields** - have an idea for an application, and Strawberry Fields
   provides the perfect computational backbone? Consider making a fully separate app that builds upon Strawberry Fields
-  as a base. Ask us if you have any questions, and send us a link to your application so we can highlight it in
+  as a base. Ask us if you have any questions, and send a link to your application to support@xanadu.ai so we can highlight it in
   our documentation!
+
+For some inspiration, you can also check out some preprepared [contribution challenges](.github/CHALLENGES.md).
 
 Appetite whetted? Keep reading below for all the nitty-gritty on reporting bugs, contributing to the documentation,
 and submitting pull requests.
@@ -148,6 +154,19 @@ Before submitting a pull request, please make sure the following is done:
 
   Based on these reports, we may ask you to make small changes to your branch before merging the pull request into the master branch. Alternatively, you can also
   [grant us permission to make changes to your pull request branch](https://help.github.com/articles/allowing-changes-to-a-pull-request-branch-created-from-a-fork/).
+
+## I've made a contribution! Now how do I claim my Xanadu Swag?
+
+* If you've contributed code to Strawberry Fields, we'll contact you shortly after merging your pull
+  request to organise delivery of your Xanadu Swag™.
+
+* If you've created a Strawberry Fields application, produced content using Strawberry Fields, or simply
+  written an awesome Strawberry Fields tutorial, and we have linked it to our Gallery, you are eligible for some
+  Xanadu Swag™. We will contact you to organise delivery of your swag.
+
+If you haven't heard back from us, don't panic! Here at Xanadu we are working on projects on the cutting edge of
+quantum technology, and sometimes get a little sidetracked. Simply send a reminder email to support@xanadu.ai regarding your
+swag, and we'll get back to you ASAP.
 
 :strawberry: Thank you for contributing to Strawberry Fields! :strawberry:
 
