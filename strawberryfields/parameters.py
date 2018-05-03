@@ -75,18 +75,17 @@ Code details
 import numbers
 
 import numpy as np
-#from numpy import ndarray
-from numpy import (matmul, sign, abs, exp, log, sqrt, sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2)
-
-from tensorflow import (Tensor, Variable)
-from tensorflow import abs as tfabs, cos as tfcos, sin as tfsin, exp as tfexp, sqrt as tfsqrt, atan as tfatan, acosh as tfacosh, sign as tfsign, \
-    atan2 as tfatan2, asinh as tfasinh, cosh as tfcosh, tanh as tftanh, log as tflog, matmul as tfmatmul
+import tensorflow as tf
 
 from .engine import (RegRef, RegRefTransform)
 
 
 
-tf_objs = (Tensor, Variable)
+# supported TF classes
+_tf_classes = (tf.Tensor, tf.Variable)
+
+# default TF data type
+_def_type = tf.complex64
 
 
 def _unwrap(params):
@@ -132,7 +131,7 @@ class Parameter():
         # wrap RegRefs in the identity RegRefTransform
         if isinstance(x, RegRef):
             x = RegRefTransform(x)
-        elif isinstance(x, (numbers.Number, np.ndarray, tf_objs, RegRefTransform)):
+        elif isinstance(x, (numbers.Number, np.ndarray, _tf_classes, RegRefTransform)):
             pass
         else:
             raise TypeError('Unsupported base object type: ' +x.__class__.__name__)
@@ -162,17 +161,21 @@ class Parameter():
         return self
 
     def _maybe_cast(self, other):
+        """Cast TensorFlow-type parameters to other dtypes during arithmetic.
+
+        Unused for now.
+        """
         if isinstance(other, complex):
-            t = tf.cast(self.tensor, def_type)
+            t = tf.cast(self.x, _def_type)
         elif isinstance(other, float):
-            if self.tensor.dtype.is_integer:
-                t = tf.cast(self.tensor, tf.float64) # cast ints to float
+            if self.x.dtype.is_integer:
+                t = tf.cast(self.x, tf.float64) # cast ints to float
             else:
-                t = self.tensor # but dont cast other dtypes (i.e., complex) to float
-        elif isinstance(other, (tf.Tensor, tf.Variable)) and other.dtype.is_complex:
-            t = tf.cast(self.tensor, def_type)
+                t = self.x  # but dont cast other dtypes (i.e., complex) to float
+        elif isinstance(other, _tf_classes) and other.dtype.is_complex:
+            t = tf.cast(self.x, _def_type)
         else:
-            t = self.tensor
+            t = self.x
         return t
 
     @staticmethod
@@ -239,20 +242,20 @@ class Parameter():
 
 
 # corresponding numpy and tensorflow functions
-np_math_fns = {"abs": (abs, tfabs),
-               "sin": (sin, tfsin),
-               "cos": (cos, tfcos),
-               "exp": (exp, tfexp),
-               "sqrt": (sqrt, tfsqrt),
-               "arctan": (arctan, tfatan),
-               "arccosh": (arccosh, tfacosh),
-               "sign": (sign, tfsign),
-               "arctan2": (arctan2, tfatan2),
-               "arcsinh": (arcsinh, tfasinh),
-               "cosh": (cosh, tfcosh),
-               "tanh": (tanh, tftanh),
-               "log": (log, tflog),
-                "matmul": (matmul, tfmatmul)
+np_math_fns = {"abs": (np.abs, tf.abs),
+               "sign": (np.sign, tf.sign),
+               "sin": (np.sin, tf.sin),
+               "cos": (np.cos, tf.cos),
+               "cosh": (np.cosh, tf.cosh),
+               "tanh": (np.tanh, tf.tanh),
+               "exp": (np.exp, tf.exp),
+               "log": (np.log, tf.log),
+               "sqrt": (np.sqrt, tf.sqrt),
+               "arctan": (np.arctan, tf.atan),
+               "arctan2": (np.arctan2, tf.atan2),
+               "arcsinh": (np.arcsinh, tf.asinh),
+               "arccosh": (np.arccosh, tf.acosh),
+               "matmul": (np.matmul, tf.matmul)
 }
 
 def math_fn_wrap(np_fn, tf_fn):
@@ -262,7 +265,7 @@ def math_fn_wrap(np_fn, tf_fn):
     """
     def wrapper(*args, **kwargs):
         """wrapper function"""
-        if any([isinstance(a, (Variable, Tensor)) for a in args]):
+        if any([isinstance(a, _tf_classes) for a in args]):
             # if anything is a tf object, use the tensorflow version of the function
             return tf_fn(*args, **kwargs)
         elif any([isinstance(a, Parameter) for a in args]):

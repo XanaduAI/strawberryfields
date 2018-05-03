@@ -3,6 +3,8 @@ Unit tests for the :mod:`strawberryfields` full toolchain.
 """
 
 import unittest
+import inspect
+import itertools
 
 from numpy.random import (randn, uniform, randint)
 from numpy import array
@@ -187,7 +189,7 @@ class BasicTests(BaseTest):
 
 
     def test_parameters(self):
-        """Test using different types of Parameter with different classes of ParOperations."""
+        """Test using different types of Parameters with different classes of ParOperations."""
         @sf.convert
         def func1(x):
             return abs(2*x**2 -3*x +1)
@@ -197,19 +199,22 @@ class BasicTests(BaseTest):
             return abs(2*x*y -y**2 +3)
 
         r = self.eng.register
+
         # RegRefTransforms (note that some operations expect nonnegative parameter values)
         rr_inputs = [RR(r[0], lambda x: x**2), func1(r[0]), func2(*r)]
+        rr_pars = tuple(Parameter(k) for k in rr_inputs)
 
         # other types of parameters
-        par_inputs = [0.14]  # -4.2+0.5j
+        other_inputs = [0.14]  # -4.2+0.5j
         if isinstance(self.backend, sf.backends.TFBackend):
             # add some TensorFlow-specific parameter types
-            par_inputs += [uniform(size=(3,)), Variable(0.8)]
+            other_inputs += [uniform(size=(3,)), Variable(0.8)]
+        other_pars = tuple(Parameter(k) for k in other_inputs)
 
-        def check(G, p, measure=False):
-            "Check a ParOperation/Parameter combination"
-            # construct the op (uses default values for other args)
-            G = G(p)
+        def check(G, par, measure=False):
+            "Check a ParOperation/Parameters combination"
+            # construct the op using the given tuple of Parameters as args
+            G = G(*par)
             self.eng.reset_queue()
             with self.eng:
                 if measure:
@@ -233,16 +238,16 @@ class BasicTests(BaseTest):
         scalar_arg_preparations = (Coherent, Squeezed, DisplacedSqueezed, Thermal, Catstate)  # Fock requires an integer parameter
         testset = one_args_gates +two_args_gates +channels +scalar_arg_preparations
 
-        # RR parameter types
-        for p in (Parameter(k) for k in rr_inputs):
-            for G in testset:
+        for G in testset:
+            sig = inspect.signature(G.__init__)
+            n_args = len(sig.parameters) -1  # number of parameters __init__ takes, minus self
+            if n_args < 1:
+                print('Unexpected number of args ({}) for {}, check the testset.'.format(n_args, G))
+
+            #n_args = min(n_args, 2)   # shortcut, only test cartesian products up to two parameter types
+            # check all combinations of Parameter types
+            for p in itertools.product(rr_pars+other_pars, repeat=n_args):
                 check(G, p, measure=True)
-
-        # non-RR parameter types
-        for p in (Parameter(k) for k in par_inputs):
-            for G in testset:
-                check(G, p, measure=False)
-
 
 
 
