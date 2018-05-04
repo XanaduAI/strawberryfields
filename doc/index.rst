@@ -66,6 +66,9 @@ Support
 
 If you are having issues, please let us know by posting the issue on our Github issue tracker, or by joining our `Strawberry Fields Slack channel <https://join.slack.com/t/sf-xanadu/shared_invite/enQtMzQ0NzA0NTczNTkxLTJhOWM0MzY4N2U1ODc5NWZmY2JlN2FmOTY3OTE3ZmVjMWFhZjMwZWY0ODRkZDFmMTA5NjA1YjgyYzA3NDg3NGM>`_.
 
+For more details on contributing or performing research with Strawberry Fields, please see
+:ref:`research`.
+
 .. We have a mailing list located at: support@xanadu.ai
 
 License
