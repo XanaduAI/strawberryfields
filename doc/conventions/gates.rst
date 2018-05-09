@@ -157,7 +157,7 @@ Rotation
    We write the phase space rotation operator as
 
    .. math::
-      R(\phi) = \exp\left(i \phi \ad \a\right)=\exp\left(i \frac{\phi}{2} \left(\frac{\x^2+  \p^2}{\hbar}-\frac{1}{2}\right)\right), \quad R^\dagger(\phi) \a R(\phi) = \a e^{i \phi}
+      R(\phi) = \exp\left(i \phi \ad \a\right)=\exp\left(i \frac{\phi}{2} \left(\frac{\x^2+  \p^2}{\hbar}-\I\right)\right), \quad R^\dagger(\phi) \a R(\phi) = \a e^{i \phi}
 
 .. tip::
 
