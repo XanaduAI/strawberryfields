@@ -39,6 +39,13 @@ as well as a few methods which apply only to the Gaussian backend.
     available. For more details on available keyword arguments, please
     consult the backends directly.
 
+.. todo::
+    Once we move to Sphinx 1.7, the docstrings of the methods in the derived classes FockBackend,
+    TFBackend and GaussianBackend that are declared in BaseBackend should be removed entirely.
+    This way they are inherited directly from the parent class BaseBackend and thus kept automatically up-to-date.
+    The derived classes should provide a docstring for these methods only if they change their behavior for some reason.
+
+
 Hierarchy for backends
 ------------------------
 
@@ -74,7 +81,6 @@ Base Backend
     beamsplitter
     loss
     measure_homodyne
-    measure_heterodyne
     state
     is_vacuum
 
@@ -103,13 +109,14 @@ Gaussian Backends
 
 .. currentmodule:: strawberryfields.backends.base
 
-Likewise, some :class:`BaseBackend` methods are only implemented in subclasses of :class:`BaseGaussian`,
+Likewise, currently some :class:`BaseBackend` methods are only implemented in subclasses of :class:`BaseGaussian`,
 which is the base class for simulators using a Gaussian symplectic representation
 for quantum optical circuits.
 
 .. currentmodule:: strawberryfields.backends.base.BaseBackend
 
 .. autosummary::
+    measure_heterodyne
 
 
 Code details
@@ -122,7 +129,8 @@ Code details
 
 class SFNotApplicableError(TypeError):
     """Exception raised by the backend when the user attempts an unsupported operation.
-    E.g. :meth:`measure_fock` on a Gaussian backend, :meth:`measure_heterodyne` on a Fock backend.
+
+    E.g. :meth:`measure_fock` on a Gaussian backend.
     Conceptually different from NotImplementedError (which means "not implemented, but at some point may be").
     """
     pass
@@ -282,6 +290,8 @@ class BaseBackend:
 
         The indices of the deleted modes become invalid for the lifetime of the circuit object.
         They will never be reassigned to other modes.
+        TODO check if this is still true after the backend.reset() change.
+
         Deleting a mode that has already been deleted raises an IndexError exception.
 
         Args:
@@ -298,7 +308,10 @@ class BaseBackend:
         raise NotImplementedError
 
     def reset(self, pure=True, **kwargs):
-        """Reset the circuit so that all the modes are in the vacuum state.
+        """Reset the circuit back into the initial state.
+
+        After the reset the circuit is in the same state as it was after the last :meth:`begin_circuit` call.
+        It will have the original number of modes, all initialized in the vacuum state.
 
         Args:
             pure (bool): if True, initialize the circuit in a pure state (will use a mixed state if pure is False)
@@ -413,7 +426,7 @@ class BaseBackend:
         """Perform a loss channel operation on the specified mode.
 
         Args:
-            T: loss parameter
+            T (float): loss parameter, :math:`0\leq T\leq 1`.
             mode (int): index of mode where operation is carried out
         """
         raise NotImplementedError

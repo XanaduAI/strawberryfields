@@ -5,7 +5,6 @@ The tests in this module do not require the quantum program to be run, and thus 
 """
 
 import unittest
-from collections import Counter
 
 from numpy.random import randn, random
 from numpy import sqrt
@@ -14,7 +13,7 @@ from tensorflow import (Tensor, Variable)
 
 # NOTE: strawberryfields must be imported from defaults
 from defaults import BaseTest, strawberryfields as sf
-from strawberryfields.engine import Engine, SFMergeFailure
+from strawberryfields.engine import Engine, SFMergeFailure, SFRegRefError
 from strawberryfields.utils import *
 from strawberryfields.ops import *
 from strawberryfields.parameters import Parameter
@@ -40,7 +39,7 @@ class GateTests(BaseTest):
             # all inits act on a single mode
             self.assertRaises(ValueError, G.__or__, (0,1))
             # can't repeat the same index
-            self.assertRaises(IndexError, All(G).__or__, (0,0))
+            self.assertRaises(SFRegRefError, All(G).__or__, (0,0))
 
         with self.eng:
             for G in state_preparations:
@@ -69,7 +68,7 @@ class GateTests(BaseTest):
 
             # multimode gates: can't repeat the same index
             if G.ns == 2:
-                self.assertRaises(IndexError, G.__or__, (0,0))
+                self.assertRaises(SFRegRefError, G.__or__, (0,0))
 
         with self.eng:
             for G in two_args_gates:
@@ -86,7 +85,8 @@ class GateTests(BaseTest):
                 # preconstructed singleton instances
                 test_gate(G)
 
-            self.assertRaises(IndexError, All(Q).__or__, (0,0))
+            # All: can't repeat the same index
+            self.assertRaises(SFRegRefError, All(Q).__or__, (0,0))
 
 
     def test_gate_merging(self):
@@ -115,7 +115,7 @@ class GateTests(BaseTest):
         a, b = random(2)
         G = LossChannel(a)
         temp = G.merge(LossChannel(b))
-        self.assertAlmostEqual(temp.p[0], sqrt(a*b), delta=self.tol)
+        self.assertAlmostEqual(temp.p[0], a*b, delta=self.tol)
 
 
     def test_dispatch(self):
@@ -152,22 +152,31 @@ class GateTests(BaseTest):
             self.assertRaises(ValueError, New.__call__, 1.5)
 
             # deleting nonexistent modes
-            self.assertRaises(KeyError, Del.__or__, 100)
+            self.assertRaises(SFRegRefError, Del.__or__, 100)
 
+            # deleting
+            self.assertTrue(alice.active)
             Del | alice
-            diana = New(1)
-            # deleting already deleted modes
-            self.assertRaises(IndexError, Del.__or__, alice)
+            self.assertTrue(not alice.active)
 
-            edward, grace = New(2)
+            # creating
+            diana, = New(1)
+            self.assertTrue(diana.active)
+
+            # deleting already deleted modes
+            self.assertRaises(SFRegRefError, Del.__or__, alice)
+
+            # creating and deleting several modes
+            edward, frank, grace = New(3)
             Del | (charlie, grace)
 
         #self.eng.print_queue()
-        temp = self.eng.reg_refs
-        c = Counter(temp.values())
-        #print(c)
-        # reference map has entries for both existing and deleted subsystems
-        self.assertEqual(len(temp), self.eng.num_subsystems +c[None])
+        # register should only return the active subsystems
+        temp = self.eng.register
+        self.assertEqual(len(temp), self.eng.num_subsystems)
+        self.assertEqual(len(temp), 4)
+        # Engine.reg_refs contains all the regrefs, active and inactive
+        self.assertEqual(len(self.eng.reg_refs), 7)
 
 
 class ParameterTests(BaseTest):

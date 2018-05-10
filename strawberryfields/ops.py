@@ -124,50 +124,13 @@ There are four kinds of :class:`Operation` objects:
       Del         | alice
       S2gate(0.4) | (charlie, bob)
 
+
 Hierarchy for operations
 ------------------------
 
 .. inheritance-diagram:: strawberryfields.ops
    :parts: 1
 
-
-Operations shortcuts
----------------------
-
-Several of the operations described below have variables defined that point to their operation class;
-this is to provide shorthands for operations that accept either optional, common combinations, or no arguments.
-
-.. raw:: html
-
-   <style>
-      .widetable {
-         width:100%;
-      }
-   </style>
-
-.. rst-class:: longtable widetable
-
-+----------------------+------------------------------------------------------------------------------------+
-|**Shorthand variable**|     **Operation**                                                                  |
-+----------------------+------------------------------------------------------------------------------------+
-| ``New``              | :class:`~.New_modes`                                                               |
-+----------------------+------------------------------------------------------------------------------------+
-| ``Del``              | :class:`~.Delete`                                                                  |
-+----------------------+------------------------------------------------------------------------------------+
-| ``RR``               | :class:`~.RegRefTransform`                                                         |
-+----------------------+------------------------------------------------------------------------------------+
-| ``Vac``              | :class:`~.Vacuum`                                                                  |
-+----------------------+------------------------------------------------------------------------------------+
-| ``Fourier``          | :class:`~.Fouriergate`                                                             |
-+----------------------+------------------------------------------------------------------------------------+
-| ``Measure``          | :class:`~.MeasureFock`                                                             |
-+----------------------+------------------------------------------------------------------------------------+
-| ``MeasureX``         | :class:`~.MeasureHomodyne` (with ``p=0``, i.e., :math:`x` quadrature measurement)  |
-+----------------------+------------------------------------------------------------------------------------+
-| ``MeasureP``         | :class:`~.MeasureHomodyne` (with ``p=1/4``, i.e., :math:`p` quadrature measurement)|
-+----------------------+------------------------------------------------------------------------------------+
-| ``MeasureHD``        | :class:`~.MeasureHeterodyne`                                                       |
-+----------------------+------------------------------------------------------------------------------------+
 
 Base classes
 ------------
@@ -181,6 +144,25 @@ The abstract base class hierarchy exists to provide the correct semantics for th
    Measurement
    Gate
    Decomposition
+
+
+Operation class
+---------------
+
+All Operations have the following methods.
+
+.. currentmodule:: strawberryfields.ops.Operation
+
+.. autosummary::
+   __str__
+   __or__
+   merge
+   decompose
+   apply
+   _apply
+
+.. currentmodule:: strawberryfields.ops
+
 
 State preparation
 -----------------
@@ -254,15 +236,36 @@ Metagates
 .. autosummary::
    All
 
-Optimization
-------------
 
-The gates have several methods that are called by the engine during circuit optimization.
+Operations shortcuts
+---------------------
 
-.. autosummary::
-   Operation.merge
-   Operation.decompose
-   Operation.apply
+Several of the operation classes described below come with variables that point to pre-constructed instances;
+this is to provide shorthands for operations that accept no arguments, as well as for common variants of operations that do.
+
+.. raw:: html
+
+   <style>
+      .widetable {
+         width:100%;
+      }
+   </style>
+
+.. rst-class:: longtable widetable
+
+======================   =================================================================================
+**Shorthand variable**   **Operation**
+``New``                  :class:`~.New_modes`
+``Del``                  :class:`~.Delete`
+``Vac``                  :class:`~.Vacuum`
+``Fourier``              :class:`~.Fouriergate`
+``Measure``              :class:`~.MeasureFock`
+``MeasureX``             :class:`~.MeasureHomodyne` (:math:`\phi=0`), :math:`x` quadrature measurement
+``MeasureP``             :class:`~.MeasureHomodyne` (:math:`\phi=\pi/2`), :math:`p` quadrature measurement
+``MeasureHD``            :class:`~.MeasureHeterodyne`
+``RR``                   Alias for :class:`~.RegRefTransform`
+======================   =================================================================================
+
 
 Code details
 ~~~~~~~~~~~~
@@ -315,7 +318,11 @@ class Operation:
         pass
 
     def __str__(self):
-        """String representation for the Operation."""
+        """String representation for the Operation using Blackbird syntax.
+
+        Returns:
+          str: string representation
+        """
         # defaults to the class name
         return self.__class__.__name__
 
@@ -331,17 +338,20 @@ class Operation:
     def __or__(self, reg):
         """Apply the operation to a part of a quantum register.
 
-        Dispatches the op to a command queue for later execution.
+        Dispatches the Operation to the :class:`~strawberryfields.engine.Engine` command queue for later execution.
 
         Args:
           reg (RegRef, Sequence[RegRef]): subsystem(s) the operation is acting on
+
+        Returns:
+          list[RegRef]: subsystem list as RegRefs
         """
         # into a list of subsystems
         reg = _seq_to_list(reg)
         if len(reg) == 0 or (self.ns != None and self.ns != len(reg)):
             raise ValueError("Wrong number of subsystems.")
         # send it to the engine
-        _Engine._current_context.append(self, reg)
+        reg = _Engine._current_context.append(self, reg)
         return reg
 
     def merge(self, other):
@@ -369,7 +379,8 @@ class Operation:
 
         See :mod:`strawberryfields.backends.base`.
 
-        .. todo:: For now decompose() works on unevaluated Parameters, which messes things up if a RR is used.
+        .. todo:: For now decompose() works on unevaluated Parameters. This causes an error if a :class:`.RegRefTransform`-based Parameter is used, and
+          decompose() tries to do arithmetic on it.
 
         Args:
           reg (Sequence[RegRef]): subsystems the operation is acting on
@@ -408,6 +419,8 @@ class Operation:
 
 class ParOperation(Operation):
     """Abstract base class for quantum operations with parameters.
+
+    See the :class:`~strawberryfields.parameters.Parameter` class.
 
     Args:
       par (Sequence[...]): parameters. len(par) >= 1.
@@ -920,7 +933,7 @@ class MeasureHeterodyne(Measurement):
 
 class Delete(Operation):
     """Deletes one or more existing modes.
-    Also accessible via the shortcut variable ``Delete``.
+    Also accessible via the shortcut variable ``Del``.
 
     The deleted modes are traced out.
     After the deletion the state of the remaining subsystems may have to be described using a density operator.
@@ -928,7 +941,7 @@ class Delete(Operation):
     ns = None
     def __or__(self, reg):
         reg = super().__or__(reg)
-        _Engine._current_context.delete_subsystems(reg)
+        _Engine._current_context._delete_subsystems(reg)
 
     def _apply(self, reg, backend, **kwargs):
         backend.del_mode(reg)
@@ -944,7 +957,8 @@ class New_modes(Operation):
 
     The new modes are prepapred in the vacuum state.
 
-    This class cannot be used with the __or__ syntax since it would be misleading, instead we use __call__ on a single instance to dispatch the command to the engine.
+    This class cannot be used with the :meth:`__or__` syntax since it would be misleading,
+    instead we use :meth:`__call__` on a single instance to dispatch the command to the engine.
     """
     ns = 0
     def __call__(self, n=1):
@@ -954,7 +968,7 @@ class New_modes(Operation):
         """
         self.n = n  # int: store the number of new modes for the __str__ method
         # create RegRef placeholders for the new modes
-        refs = _Engine._current_context.add_subsystems(n)
+        refs = _Engine._current_context._add_subsystems(n)
         # send the actual creation command to the engine
         _Engine._current_context.append(self, refs)
         return refs
@@ -962,9 +976,10 @@ class New_modes(Operation):
     def _apply(self, reg, backend, **kwargs):
         # pylint: disable=unused-variable
         inds = backend.add_mode(len(reg))
+        #FIXME test the inds? in apply(), updating the regref activity status? same in delete
 
     def __str__(self):
-        # HACK, trailing space means do not print anything more.
+        # HACK, trailing space signals "do not print anything more" to Command.__str__.
         return 'New({}) '.format(self.n)
 
 
@@ -980,7 +995,7 @@ class LossChannel(ParOperation):
     prepared in the vacuum state using the following transformation:
 
     .. math::
-       a \to \sqrt{T} a+\sqrt{1-T} b
+       a \mapsto \sqrt{T} a+\sqrt{1-T} b
 
     Args:
       T (float): the loss parameter :math:`0\leq T\leq 1`.
@@ -998,7 +1013,7 @@ class LossChannel(ParOperation):
         if isinstance(other, self.__class__) \
         and len(self._extra_deps)+len(other._extra_deps) == 0:
             # determine the new loss parameter
-            T = sqrt(self.p[0] * other.p[0])
+            T = self.p[0] * other.p[0]
             # if one, replace with the identity
             if T == 1:
                 return None
@@ -1325,7 +1340,7 @@ class All(Operation):
         # into a list of subsystems
         reg = _seq_to_list(reg)
         # convert into commands
-        _Engine._current_context._test_regrefs(reg)
+        _Engine._current_context._test_regrefs(reg)  # make sure reg does not contain duplicates (we feed them to Engine.append() one by one)
         for r in reg:
             _Engine._current_context.append(self.op, [r])
 
@@ -1587,4 +1602,3 @@ gates = zero_args_gates + one_args_gates + two_args_gates
 channels = (LossChannel,)
 
 state_preparations = (Vacuum, Coherent, Squeezed, DisplacedSqueezed, Fock, Thermal, Catstate)
-

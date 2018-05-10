@@ -25,6 +25,8 @@ class BasicTests(BaseTest):
         super().setUp()
         # construct a compiler engine
         self.eng = Engine(num_subsystems=self.num_subsystems, hbar=self.hbar)
+        # attach the backend (NOTE: self.backend is shared between the tests, make sure it is reset)
+        self.eng.backend = self.backend
 
 
     def test_engine(self):
@@ -34,10 +36,10 @@ class BasicTests(BaseTest):
         self.assertAllTrue(self.backend.is_vacuum(self.tol))
 
         D = Dgate(0.5)
-        D = Sgate(0.543)
+        #D = Sgate(0.543)
         with self.eng:
             # trying to act on a nonexistent mode
-            self.assertRaises(KeyError, D.__or__, self.eng.num_subsystems)
+            self.assertRaises(SFRegRefError, D.__or__, self.eng.num_subsystems)
 
         # successful gate application
         with self.eng:
@@ -47,15 +49,21 @@ class BasicTests(BaseTest):
         # print the queue contents
         self.eng.print_queue()
 
+        # run engine
+        self.eng.run()
+
+        # see what the state looks like
+        temp = self.backend.state()
+
+        # command queue is still there
+        self.assertEqual(len(self.eng.cmd_queue), 1)
+
         # clear the command queue
         self.eng.reset_queue()
         self.assertEqual(len(self.eng.cmd_queue), 0)
 
-        # run engine
-        self.eng.run(backend=self.backend)
-
-        # clear the command queue and reset the backend state to vacuum
-        self.eng.reset()
+        # reset the backend state to vacuum
+        self.eng.reset_backend()
         self.assertAllTrue(self.backend.is_vacuum(self.tol))
 
 
@@ -72,7 +80,7 @@ class BasicTests(BaseTest):
                 else:
                     G   | (q[0],q[1])
                     G.H | (q[0],q[1])
-            state = self.eng.run(backend=self.backend)
+            state = self.eng.run()
             # state norm must be invariant
             if isinstance(self.eng.backend, BaseFock):
                 self.assertAllAlmostEqual(state.trace(), 1, delta=self.tol,
@@ -99,18 +107,18 @@ class BasicTests(BaseTest):
         q = self.eng.register
         # using a measurement result before it exists
         with self.eng:
-            Dgate(RR(q[0])) | q[1]
+            Dgate(q[0]) | q[1]
         self.assertRaises(SFProgramError, self.eng.run)
 
         self.eng.reset()
         # proper use
         with self.eng:
             MeasureX | q[0]
-            Sgate(RR(q[0]))   | q[1]
-            Dgate(RR(q[0])).H | q[1]  # symbolic hermitian conjugate together with register reference
+            Sgate(q[0])   | q[1]
+            Dgate(q[0]).H | q[1]  # symbolic hermitian conjugate together with register reference
             Sgate(RR(q[0], lambda x: x**2)) | q[1]
             Dgate(RR(q[0], lambda x: -x)).H | q[1]
-        self.eng.run(backend=self.backend)
+        self.eng.run()
 
 
     def test_homodyne_measurement(self):
@@ -121,13 +129,15 @@ class BasicTests(BaseTest):
             Coherent(*randn(2)) | q[1]
             MeasureX | q[0]
             MeasureP | q[1]
-        self.eng.run(backend=self.backend)
+        self.eng.run()
         # homodyne measurements leave the mode in vacuum state
         self.assertAllTrue(self.backend.is_vacuum(self.tol))
+
+        self.eng.reset_queue()
         with self.eng:
             Coherent(*randn(2)) | q[0]
             MeasureHomodyne(*randn(1)) | q[0]
-        self.eng.run(backend=self.backend)
+        self.eng.run()
         self.assertAllTrue(self.backend.is_vacuum(self.tol))
 
 
@@ -135,8 +145,8 @@ class BasicTests(BaseTest):
         """Simple quantum program with a subroutine and references."""
         # define some gates
         D = Dgate(0.5)
-        BS = BSgate(2*pi, pi/2)
-        R = Rgate(pi)
+        BS = BSgate(0.7*pi, pi/2)
+        R = Rgate(pi/3)
         # get register references
         alice, bob = self.eng.register
 
@@ -154,20 +164,39 @@ class BasicTests(BaseTest):
             BS  | (alice, bob)
             subroutine(bob, alice)
 
-        state = self.eng.run(backend=self.backend)
+        state = self.eng.run()
         # state norm must be invariant
         if isinstance(self.eng.backend, BaseFock):
             self.assertAllAlmostEqual(state.trace(), 1, delta=self.tol)
 
 
+    def _check_reg(self, expected_n=None):
+        """Compare Engine.register with the mode list returned by the backend.
+
+        They should always be in agreement after Engine.run(), Engine.reset_queue() and Engine.reset_backend().
+        """
+        rr = self.eng.register
+        modes = self.eng.backend.get_modes()
+        # number of elements
+        self.assertEqual(len(rr), len(modes))
+        if expected_n is not None:
+            self.assertEqual(len(rr), expected_n)
+        # indices match
+        self.assertAllEqual([r.ind for r in rr], modes)
+        # activity
+        self.assertAllTrue([r.active for r in rr])
+
+
     def test_create_delete(self):
-        """Creating and deleting new modes."""
+        """Creating and deleting modes."""
         # define some gates
         D = Dgate(0.5)
         BS = BSgate(2*pi, pi/2)
         R = Rgate(pi)
+
         # get register references
-        alice, bob = self.eng.register
+        reg = self.eng.register
+        alice, bob = reg
         with self.eng:
             D        | alice
             BS       | (alice, bob)
@@ -179,13 +208,103 @@ class BasicTests(BaseTest):
             Del      | bob
             D.H      | charlie
             MeasureX | charlie
+            # trying to act on a deleted mode
+            self.assertRaises(SFRegRefError, D.__or__, alice)
+            self.assertRaises(SFRegRefError, D.__or__, bob)
+
         #self.eng.print_queue()
         self.eng.optimize()
-        state = self.eng.run(backend=self.backend)
-        # print('measurement result: a: {}, b: {}, c: {}'.format(alice.val, bob.val, charlie.val))
+        state = self.eng.run()
+
         # state norm must be invariant
         if isinstance(self.eng.backend, BaseFock):
             self.assertAllAlmostEqual(state.trace(), 1, delta=self.tol)
+
+        # check that reset_queue restores the latest RegRef checkpoint (created by eng.run() above)
+        self.assertTrue(charlie.active)
+        self.eng.reset_queue()
+        self.assertTrue(charlie.active)
+        with self.eng:
+            Del | charlie
+        self.assertTrue(not charlie.active)
+        self.eng.reset_queue()
+        self.assertTrue(charlie.active)
+
+        ## check that reset_backend() works
+        self._check_reg(1)
+        self.eng.reset_backend()
+        new_reg = self.eng.register
+        # original number of modes
+        self.assertEqual(len(new_reg), len(reg))
+        # the regrefs are reset as well
+        self.assertAllTrue([r.val is None for r in new_reg])
+        self._check_reg(2)
+
+
+    def test_create_delete_reset(self):
+        """Creating and deleting modes, together with backend resets."""
+
+        # define some gates
+        X = Xgate(0.5)
+
+        def prog1(q):
+            X        | q
+            MeasureX | q
+
+        def prog2(q):
+            X        | q
+            MeasureX | q
+            Del      | q
+
+        reg = self.eng.register
+        alice, bob = reg
+
+        ## case 1: run the same (or extended) program fragment again on the evolved state (the initial program must not change subsystem number)
+        with self.eng:
+            prog1(alice)
+        self.eng.run()
+        # alice was measured, bob wasn't
+        self.assertTrue(alice.val is not None)
+        self.assertTrue(bob.val is None)
+        # we can extend the program here
+        with self.eng:
+            prog1(bob)
+        self.eng.run(reset_backend=False)
+        # both have now been measured
+        self.assertTrue(alice.val is not None)
+        self.assertTrue(bob.val is not None)
+
+        self.eng.reset()
+        ## case 2: continue with the evolved state, but with an entirely new program
+        with self.eng:
+            prog2(alice)
+        self.eng.run()
+        # alice was deleted, bob wasn't
+        self.assertTrue(not alice.active)
+        self.assertTrue(bob.active)
+        self.eng.reset_queue()
+        with self.eng:
+            prog1(bob)
+        self.eng.run(reset_backend=False)
+
+        self.eng.reset()
+        ## case 3: run the same program again, starting from vacuum
+        with self.eng:
+            prog2(alice)
+        self.eng.run()
+        # you could possibly extend the program here
+        self.eng.run()
+
+        self.eng.reset()
+        ## case 4: new program, start from vacuum
+        with self.eng:
+            prog2(alice)
+        self.eng.run()
+        self.eng.reset_queue()
+        with self.eng:
+            prog2(bob)
+        self.eng.run()
+
 
 
     def test_parameters(self):
@@ -200,7 +319,7 @@ class BasicTests(BaseTest):
 
         r = self.eng.register
 
-        # RegRefTransforms (note that some operations expect nonnegative parameter values)
+        # RegRefTransforms for deferred measurements (note that some operations expect nonnegative parameter values)
         rr_inputs = [RR(r[0], lambda x: x**2), func1(r[0]), func2(*r)]
         rr_pars = tuple(Parameter(k) for k in rr_inputs)
 
@@ -208,7 +327,10 @@ class BasicTests(BaseTest):
         other_inputs = [0.14]  # -4.2+0.5j
         if isinstance(self.backend, sf.backends.TFBackend):
             # add some TensorFlow-specific parameter types
-            other_inputs += [uniform(size=(3,)), Variable(0.8)]
+            other_inputs.append(Variable(0.8))
+            if self.bsize > 1:
+                # test batched input
+                other_inputs.append(uniform(size=(self.bsize,)))
         other_pars = tuple(Parameter(k) for k in other_inputs)
 
         def check(G, par, measure=False):
@@ -230,7 +352,7 @@ class BasicTests(BaseTest):
             print(G)
             self.eng.optimize()
             try:
-                self.eng.run(backend=self.backend)
+                self.eng.run()
             except SFNotApplicableError as err:
                 # catch unapplicable op/backend combinations here
                 print(err)
@@ -258,6 +380,9 @@ class FockBasisTests(FockBaseTest):
         super().setUp()
         # construct a compiler engine
         self.eng = Engine(num_subsystems=self.num_subsystems, hbar=self.hbar)
+        # attach the backend (NOTE: self.backend is shared between the tests, make sure it is reset)
+        self.eng.backend = self.backend
+
 
     def test_fock_measurement(self):
         """Fock measurements."""
@@ -267,50 +392,12 @@ class FockBasisTests(FockBaseTest):
             Fock(s[0]) | q[0]
             Fock(s[1]) | q[1]
             Measure | q
-        self.eng.run(backend=self.backend)
+        self.eng.run()
         # measurement result must be equal to preparation
         for a,b in zip(q, s):
             self.assertAllEqual(a.val, b)
         # Fock measurements put the modes into vacuum state
         self.assertAllTrue(self.backend.is_vacuum(self.tol))
-
-
-    def test_coinflip(self):
-        "Coin flip program."
-        D = Dgate(1)
-        reg = self.eng.register
-        with self.eng:
-            All(Vacuum()) | reg
-            D   | reg[0]
-            Measure | reg[0]
-
-        state = self.eng.run(backend=self.backend)
-        #print('Coin flip result: {}'.format(reg[0].val))
-        # state norm must be invariant
-        self.assertAllAlmostEqual(state.trace(), 1, delta=self.tol)
-
-
-    def test_deferred_measurement(self):
-        """Deferred measurements using subsystem references."""
-        # define some gates
-        D = Dgate(0.5)
-        BS = BSgate(2*pi, pi/2)
-        q = self.eng.register
-        with self.eng:
-            D   | q[0]
-            #BS  | q[::-1]
-            Measure | q[0]
-            Dgate(RR(q[0], lambda x: 1 +1.3 * x**2)) | q[1]
-            Measure | q[1]
-
-        self.eng.optimize()
-        state = self.eng.run(backend=self.backend)
-        # print('measurement result: a: {}, b: {}'.format(q[0].val, q[1].val))
-        # state norm must be invariant
-        self.assertAllAlmostEqual(state.trace(), 1, delta=self.tol)
-        # see what the ket looks like
-        temp = self.backend.state()
-        #print(temp)
 
 
 
@@ -321,6 +408,9 @@ class GaussianTests(GaussianBaseTest):
         super().setUp()
         # construct a compiler engine
         self.eng = Engine(num_subsystems=self.num_subsystems, hbar=self.hbar)
+        # attach the backend (NOTE: self.backend is shared between the tests, make sure it is reset)
+        self.eng.backend = self.backend
+
 
     def test_gaussian_measurement(self):
         """Gaussian-only measurements."""
@@ -330,7 +420,7 @@ class GaussianTests(GaussianBaseTest):
             Coherent(*randn(2)) | q[1]
             MeasureHD | q[0]
             MeasureHD | q[1]
-        self.eng.run(backend=self.backend)
+        self.eng.run()
         # heterodyne measurements leave the mode in vacuum state
         self.assertAllTrue(self.backend.is_vacuum(self.tol))
 

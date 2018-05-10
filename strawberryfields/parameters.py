@@ -17,7 +17,7 @@ or a TensorFlow object.
 The normal lifecycle of a ParOperation object and its associated Parameter instances is as follows:
 
 * A ParOperation instance is created, and given some parameters as input.
-* The initializer converts the inputs into Parameter instances.
+* :meth:`ParOperation.__init__` converts the inputs into Parameter instances.
   Plain :class:`~engine.RegRef` instances are wrapped in a trivial
   :class:`~engine.RegRefTransform`.
   RegRefTransforms add their RegRef dependencies to the Parameter and consequently to the Operation.
