@@ -127,7 +127,12 @@ class ModeMap:
     Simple internal class for maintaining a map of existing modes.
     """
     def __init__(self, num_subsystems):
+        self._init = num_subsystems
         self._map = [k for k in range(num_subsystems)]
+
+    def reset(self):
+        """reset the modemap to the initial state"""
+        self._map = [k for k in range(self._init)]
 
     def _single_mode_valid(self, mode):
         if mode is None:

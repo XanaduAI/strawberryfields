@@ -451,7 +451,7 @@ class BaseFockState(BaseState):
         # pylint: disable=unused-argument
         if self._pure:
             s = np.ravel(self.ket()) # into 1D array
-            return (s * s.conj()).real
+            return np.reshape((s * s.conj()).real, [self._cutoff]*self._modes)
 
         s = self.dm()
         num_axes = len(s.shape)

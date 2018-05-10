@@ -127,14 +127,19 @@ class QReg():
             self._state = sum(states)
 
 
-    def reset(self, pure=None):
+    def reset(self, pure=None, num_subsystems=None):
         """Resets the simulation state.
 
         Args:
-            pure (bool, optional): Sets the purity setting. Default is unchanged
+            pure (bool, optional): Sets the purity setting. Default is unchanged.
+            num_subsystems (int, optional): Sets the number of modes in the reset
+                circuit. Default is unchanged.
         """
         if pure is not None:
             self._pure = pure
+
+        if num_subsystems is not None:
+            self._num_modes = num_subsystems
 
         if self._pure:
             self._state = ops.vacuumState(self._num_modes, self._trunc)
