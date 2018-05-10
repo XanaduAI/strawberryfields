@@ -185,13 +185,15 @@ class QReg(object):
         self._update_state(new_state)
         self._num_modes += num_modes
 
-    def reset(self, pure=True, graph=None):
+    def reset(self, pure=True, graph=None, num_subsystems=None):
         """
         Resets the state of the circuit to have all modes in vacuum.
         Args:
             pure (bool): If True, the reset circuit will represent its state as a pure state. If False, the representation will be mixed.
             graph: If this is an instance of tf.Graph, then the underlying graph (and any associated attributes) is replaced with this supplied graph. Otherwise, the same underlying
             graph (and all its defined operations) will be kept.
+            num_subsystems (int, optional): Sets the number of modes in the reset
+                circuit. Default is unchanged.
 
         Returns:
             None
@@ -204,6 +206,10 @@ class QReg(object):
             self._make_vac_states()
             self._state_history = []
             self._cache = {}
+
+        if num_subsystems is not None:
+            self._num_modes = num_subsystems
+
         with self._graph.as_default():
             single_mode_vac = self._single_mode_pure_vac if pure else self._single_mode_mixed_vac
             if self._num_modes == 1:
