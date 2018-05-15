@@ -43,6 +43,7 @@ class GaussianBackend(BaseGaussian):
                 By default, :math:`\hbar=2`. See :ref:`conventions` for more details.
         """
         # pylint: disable=attribute-defined-outside-init
+        self._init_modes = num_subsystems
         self.circuit = GaussianModes(num_subsystems, hbar)
 
     def add_mode(self, n=1):
@@ -83,10 +84,7 @@ class GaussianBackend(BaseGaussian):
         """
         Resets the circuit state back to an all-vacuum state.
         """
-
-        num_modes = self.circuit.get_modes()
-        for mode in num_modes:
-            self.circuit.loss(0.0, mode)
+        self.circuit.reset(self._init_modes)
 
     def prepare_thermal_state(self, nbar, mode):
         """

@@ -50,12 +50,8 @@ class GaussianModes:
         if not isinstance(num_subsystems, int):
             raise ValueError("Number of modes must be an integer")
 
-        self.nmat = np.zeros((num_subsystems, num_subsystems), dtype=complex)
-        self.mmat = np.zeros((num_subsystems, num_subsystems), dtype=complex)
-        self.mean = np.zeros(num_subsystems, dtype=complex)
-        self.nlen = num_subsystems
-        self.active = list(np.arange(num_subsystems, dtype=int))
         self.hbar = hbar
+        self.reset(num_subsystems)
 
     def add_mode(self, n=1):
         """add mode to the circuit"""
@@ -90,6 +86,20 @@ class GaussianModes:
             self.loss(0.0, mode)
             self.active[mode] = None
 
+    def reset(self, num_subsystems=None):
+        """Resets the simulation state.
+
+        Args:
+            num_subsystems (int, optional): Sets the number of modes in the reset
+                circuit. Default is unchanged.
+        """
+        if num_subsystems is not None:
+            self.nlen = num_subsystems
+
+        self.nmat = np.zeros((self.nlen, self.nlen), dtype=complex)
+        self.mmat = np.zeros((self.nlen, self.nlen), dtype=complex)
+        self.mean = np.zeros(self.nlen, dtype=complex)
+        self.active = list(np.arange(self.nlen, dtype=int))
 
     def get_modes(self):
         """return the modes currently active"""

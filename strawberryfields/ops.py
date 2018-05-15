@@ -1443,32 +1443,52 @@ class GaussianTransform(Decomposition):
             else:
                 self.hbar = hbar
 
-        O1, smat, O2 = bloch_messiah(S, tol=10)
         N = S.shape[0]//2
 
-        X1 = O1[:N, :N]
-        P1 = O1[N:, :N]
-        X2 = O2[:N, :N]
-        P2 = O2[N:, :N]
+        # check if input symplectic is passive (orthogonal)
+        diffn = np.linalg.norm(S @ S.T - np.identity(2*N))
 
-        self.U1 = X1+1j*P1
-        self.U2 = X2+1j*P2
-        self.Sq = np.diagonal(smat)[:N]
+        if np.round(diffn, 11) == 0.0:
+            # The transformation is passive, do Clements
+            self.active = False
+            X1 = S[:N, :N]
+            P1 = S[N:, :N]
+            self.U1 = X1+1j*P1
+        else:
+            # transformation is active, do Bloch-Messiah
+            self.active = True
+            O1, smat, O2 = bloch_messiah(S, tol=10)
+            N = S.shape[0]//2
+
+            X1 = O1[:N, :N]
+            P1 = O1[N:, :N]
+            X2 = O2[:N, :N]
+            P2 = O2[N:, :N]
+
+            self.U1 = X1+1j*P1
+            self.U2 = X2+1j*P2
+            self.Sq = np.diagonal(smat)[:N]
+
         self.ns = N
         self.vacuum = vacuum
 
     def decompose(self, reg):
         cmds = []
-        if not self.vacuum:
-            cmds = [Command(Interferometer(self.U2), reg, decomp=True)]
 
-        for n, expr in enumerate(self.Sq):
-            if np.abs(np.round(expr, 13)) != 1.0:
-                r = abs(log(expr))
-                phi = np.angle(log(expr))
-                cmds.append(Command(Sgate(-r, phi), reg[n], decomp=True))
+        if self.active:
+            if not self.vacuum:
+                cmds = [Command(Interferometer(self.U2), reg, decomp=True)]
 
-        cmds.append(Command(Interferometer(self.U1), reg, decomp=True))
+            for n, expr in enumerate(self.Sq):
+                if np.abs(np.round(expr, 13)) != 1.0:
+                    r = abs(log(expr))
+                    phi = np.angle(log(expr))
+                    cmds.append(Command(Sgate(-r, phi), reg[n], decomp=True))
+
+            cmds.append(Command(Interferometer(self.U1), reg, decomp=True))
+        else:
+            if not self.vacuum:
+                cmds = [Command(Interferometer(self.U1), reg, decomp=True)]
 
         return cmds
 

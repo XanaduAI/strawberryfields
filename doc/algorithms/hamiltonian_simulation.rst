@@ -38,7 +38,7 @@ The `Bose-Hubbard Hamiltonian <https://en.wikipedia.org/wiki/Bose%E2%80%93Hubbar
 
 .. math:: H = J\sum_{i}\sum_j A_{ij} \ad_i\a_j + \frac{1}{2}U\sum_i \hat{n}_i(\hat{n}_i-1)= J(\ad_1 \a_2 + \ad_2\a_1) + \frac{1}{2}U (  \hat{n}_1^2 - \hat{n}_1 + \hat{n}_2^2 - \hat{n}_2)
 
-where :math:`J` represents the transfer integral or hopping term of the boson between nodes, and :math:`U` is the on-site interaction potential. Here, :math:`\ad_1 \a_2` represents a boson transitioning from node 1 to node 2, while :math:`\ad_2\a_1` represents a boson transitioning from node 2 to node 1, and :math:`\hat{n}_i=\ad\a` is the number operator applied to mode :math:`i`. Applying the Lie-product formula, we find that
+where :math:`J` represents the transfer integral or hopping term of the boson between nodes, and :math:`U` is the on-site interaction potential. Here, :math:`\ad_1 \a_2` represents a boson transitioning from node 1 to node 2, while :math:`\ad_2\a_1` represents a boson transitioning from node 2 to node 1, and :math:`\hat{n}_i=\ad_i\a_i` is the number operator applied to mode :math:`i`. Applying the Lie-product formula, we find that
 
 .. math:: e^{-iHt} = \left[\exp\left({-i\frac{ J t}{k}(\ad_1 \a_2 + \ad_2\a_1)}\right)\exp\left(-i\frac{Ut}{2k}\hat{n}_1^2\right)\exp\left(-i\frac{Ut}{2k}\hat{n}_2^2\right)\exp\left(i\frac{Ut}{2k}\hat{n}_1\right)\exp\left(i\frac{Ut}{2k}\hat{n}_2\right)\right]^k+\mathcal{O}\left(t^2/k\right),
 

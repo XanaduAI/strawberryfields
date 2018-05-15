@@ -97,6 +97,7 @@ class TFBackend(BaseFock):
                 self._modemap = ModeMap(num_subsystems)
                 circuit = QReg(self._graph, num_subsystems, cutoff_dim, hbar, pure, batch_size)
 
+        self._init_modes = num_subsystems
         self.circuit = circuit
 
     def reset(self, pure=True, **kwargs):
@@ -118,7 +119,8 @@ class TFBackend(BaseFock):
             self._graph = tf.get_default_graph()
 
         with tf.name_scope('Reset'):
-            self.circuit.reset(pure, graph=self._graph)
+            self._modemap.reset()
+            self.circuit.reset(pure, graph=self._graph, num_subsystems=self._init_modes)
 
     def get_cutoff_dim(self):
         """Returns the Hilbert space cutoff dimension used.

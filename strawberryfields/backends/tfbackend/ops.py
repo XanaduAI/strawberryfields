@@ -29,6 +29,7 @@ Contents
 # pylint: disable=too-many-arguments
 
 from string import ascii_lowercase as indices
+from functools import lru_cache
 
 import tensorflow as tf
 import numpy as np
@@ -86,6 +87,20 @@ def unravel_index(ind, tensor_shape):
     strides_shifted = tf.cumprod(tensor_shape, exclusive=True, reverse=True)
     unraveled_coords = (ind % strides) // strides_shifted
     return tf.transpose(unraveled_coords)
+
+@lru_cache()
+def get_prefac_tensor(D, directory, save):
+    """Equivalent to the functionality of shared_ops the bs_factors functions from shared_ops,
+    but caches the return value as a tensor. This allows us to re-use the same prefactors and save
+    space on the computational graph."""
+    try:
+        prefac = load_bs_factors(D, directory)
+    except FileNotFoundError:
+        prefac = generate_bs_factors(D)
+        if save:
+            save_bs_factors(prefac, directory)
+    prefac = tf.expand_dims(tf.cast(prefac[:D, :D, :D, :D, :D], def_type), 0)
+    return prefac
 
 ###################################################################
 
@@ -283,13 +298,7 @@ def beamsplitter_matrix(t, r, D, batched=False, save=False, directory=None):
     M_minus_n_plus_k = tf.where(tf.greater(M_minus_n_plus_k, 0), M_minus_n_plus_k, tf.zeros_like(M_minus_n_plus_k))
 
     # load parameter-independent prefactors
-    try:
-        prefac = load_bs_factors(D, directory)
-    except FileNotFoundError:
-        prefac = generate_bs_factors(D)
-        if save:
-            save_bs_factors(prefac, directory)
-    prefac = tf.expand_dims(tf.cast(prefac[:D, :D, :D, :D, :D], def_type), 0)
+    prefac = get_prefac_tensor(D, directory, save)
 
     powers = tf.cast(tf.pow(mag_t, k) * tf.pow(mag_r, n_minus_k) * tf.pow(mag_r, N_minus_k) * tf.pow(mag_t, M_minus_n_plus_k), def_type)
     phase = tf.exp(1j * tf.cast(phase_r * (n - N), def_type))

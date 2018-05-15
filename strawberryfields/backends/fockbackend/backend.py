@@ -79,6 +79,7 @@ class FockBackend(BaseFock):
         elif not isinstance(pure, bool):
             raise ValueError("Argument 'pure' must be either True or False")
 
+        self._init_modes = num_subsystems
         self.qreg = QReg(num_subsystems, cutoff_dim, hbar, pure)
         self._modeMap = ModeMap(num_subsystems)
 
@@ -122,7 +123,8 @@ class FockBackend(BaseFock):
         Args:
             pure (bool): whether to use a pure state representation upon reset
         """
-        self.qreg.reset(pure)
+        self._modeMap.reset()
+        self.qreg.reset(pure, num_subsystems=self._init_modes)
 
     def prepare_vacuum_state(self, mode):
         """Prepare the vacuum state on the specified mode.

@@ -2,7 +2,7 @@
     :alt: Strawberry Fields
 ##################################################
 
-.. image:: https://img.shields.io/travis/XanaduAI/strawberryfields.svg?style=for-the-badge
+.. image:: https://img.shields.io/travis/XanaduAI/strawberryfields/master.svg?style=for-the-badge
     :alt: Travis
     :target: https://travis-ci.org/XanaduAI/strawberryfields
 
@@ -118,6 +118,23 @@ To build the HTML documentation, go to the top-level directory and run the comma
 The documentation can then be found in the ``doc/_build/html/`` directory.
 
 
+Contributing to Strawberry Fields
+=================================
+
+We welcome contributions - simply fork the Strawberry Fields repository, and then make a
+`pull request <https://help.github.com/articles/about-pull-requests/>`_ containing your contribution.  All contributers to Strawberry Fields will be listed as authors on the releases.
+
+We also encourage bug reports, suggestions for new features and enhancements, and even links to cool projects or applications built on Strawberry Fields. If your contribution becomes part of Strawberry Fields, or is highlighted in our Gallery, we will send you some exclusive Xanadu Swag™ - including t-shirts, stickers, and more.
+
+.. raw:: html
+
+    <img src="https://github.com/XanaduAI/strawberryfields/blob/master/doc/_images/shirt.jpg" width="300px"  align="left"> <img src="https://github.com/XanaduAI/strawberryfields/blob/master/doc/_images/sticker_crop.jpg" width="300px"  align="left">
+
+See `Contributing to Strawberry Fields <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CONTRIBUTING.md>`_
+for more details, and then check out some of the Strawberry Fields `challenges <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CHALLENGES.md>`_ for some inspiration.
+
+|
+
 Authors
 =======
 
@@ -126,16 +143,6 @@ Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and 
 If you are doing research using Strawberry Fields, please cite `our whitepaper <https://arxiv.org/abs/1804.03159>`_:
 
   Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook. Strawberry Fields: A Software Platform for Photonic Quantum Computing. *arXiv*, 2018. arXiv:1804.03159
-
-
-Contributing to Strawberry Fields
-=================================
-
-We welcome contributions - simply fork the Strawberry Fields repository, and then make a
-`pull request <https://help.github.com/articles/about-pull-requests/>`_ containing your contribution.
-
-See `Contributing to Strawberry Fields <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CONTRIBUTING.md>`_
-for more details.
 
 
 Support
