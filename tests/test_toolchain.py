@@ -25,8 +25,9 @@ class BasicTests(BaseTest):
         super().setUp()
         # construct a compiler engine
         self.eng = Engine(num_subsystems=self.num_subsystems, hbar=self.hbar)
-        # attach the backend (NOTE: self.backend is shared between the tests, make sure it is reset)
+        # attach the backend (NOTE: self.backend is shared between the tests, make sure it is reset before use!)
         self.eng.backend = self.backend
+        self.backend.reset()
 
 
     def test_engine(self):
@@ -49,21 +50,24 @@ class BasicTests(BaseTest):
         # print the queue contents
         self.eng.print_queue()
 
-        # run engine
-        self.eng.run()
-
-        # see what the state looks like
-        temp = self.backend.state()
-
-        # command queue is still there
-        self.assertEqual(len(self.eng.cmd_queue), 1)
-
         # clear the command queue
         self.eng.reset_queue()
         self.assertEqual(len(self.eng.cmd_queue), 0)
 
+        # fill it again
+        with self.eng:
+            D | 0
+
+        # run engine
+        self.eng.run()
+        self.assertEqual(len(self.eng.cmd_queue), 0)
+        self.assertEqual(len(self.eng.cmd_applied), 1)
+
+        # see what the state looks like
+        temp = self.backend.state()
+
         # reset the backend state to vacuum
-        self.eng.reset_backend()
+        self.eng.reset()
         self.assertAllTrue(self.backend.is_vacuum(self.tol))
 
 
@@ -133,7 +137,6 @@ class BasicTests(BaseTest):
         # homodyne measurements leave the mode in vacuum state
         self.assertAllTrue(self.backend.is_vacuum(self.tol))
 
-        self.eng.reset_queue()
         with self.eng:
             Coherent(*randn(2)) | q[0]
             MeasureHomodyne(*randn(1)) | q[0]
@@ -173,7 +176,7 @@ class BasicTests(BaseTest):
     def _check_reg(self, expected_n=None):
         """Compare Engine.register with the mode list returned by the backend.
 
-        They should always be in agreement after Engine.run(), Engine.reset_queue() and Engine.reset_backend().
+        They should always be in agreement after Engine.run(), Engine.reset_queue() and Engine.reset().
         """
         rr = self.eng.register
         modes = self.eng.backend.get_modes()
@@ -220,19 +223,24 @@ class BasicTests(BaseTest):
         if isinstance(self.eng.backend, BaseFock):
             self.assertAllAlmostEqual(state.trace(), 1, delta=self.tol)
 
-        # check that reset_queue restores the latest RegRef checkpoint (created by eng.run() above)
+        ## check that reset_queue() restores the latest RegRef checkpoint (created by eng.run() above)
+        self.assertTrue(not alice.active)
         self.assertTrue(charlie.active)
         self.eng.reset_queue()
+        self.assertTrue(not alice.active)
         self.assertTrue(charlie.active)
         with self.eng:
+            diana, = New(1)
             Del | charlie
         self.assertTrue(not charlie.active)
+        self.assertTrue(diana.active)
         self.eng.reset_queue()
         self.assertTrue(charlie.active)
+        self.assertTrue(not diana.active)
 
-        ## check that reset_backend() works
+        ## check that reset() works
         self._check_reg(1)
-        self.eng.reset_backend()
+        self.eng.reset()
         new_reg = self.eng.register
         # original number of modes
         self.assertEqual(len(new_reg), len(reg))
@@ -242,7 +250,7 @@ class BasicTests(BaseTest):
 
 
     def test_create_delete_reset(self):
-        """Creating and deleting modes, together with backend resets."""
+        """Test various use cases creating and deleting modes, together with backend resets."""
 
         # define some gates
         X = Xgate(0.5)
@@ -258,53 +266,88 @@ class BasicTests(BaseTest):
 
         reg = self.eng.register
         alice, bob = reg
+        eng = self.eng
 
-        ## case 1: run the same (or extended) program fragment again on the evolved state (the initial program must not change subsystem number)
-        with self.eng:
+        ## (1) run several independent programs, resetting everything in between
+        with eng:
             prog1(alice)
-        self.eng.run()
-        # alice was measured, bob wasn't
+        self.assertTrue(alice.active)
+        self.assertTrue(bob.active)
+        eng.run()
         self.assertTrue(alice.val is not None)
         self.assertTrue(bob.val is None)
-        # we can extend the program here
-        with self.eng:
+        eng.reset()
+        with eng:
+            prog2(bob)
+        self.assertTrue(alice.active)
+        self.assertTrue(not bob.active)
+        eng.run()
+        self.assertTrue(alice.val is None)
+        self.assertTrue(bob.val is not None)
+        eng.reset()
+
+        ## (2) interactive state evolution in multiple runs
+        with eng:
+            prog2(alice)
+        eng.run()
+        with eng:
             prog1(bob)
-        self.eng.run(reset_backend=False)
+        self.assertTrue(not alice.active)
+        self.assertTrue(bob.active)
+        eng.run()
+        self.assertTrue(alice.val is not None)
+        self.assertTrue(bob.val is not None)
+        eng.reset()
+
+        ## (3) repeat a (possibly extended) program fragment (the fragment must not create/delete subsystems!)
+        with eng:
+            prog1(alice)
+        eng.run()
+        self.assertTrue(alice.val is not None)
+        self.assertTrue(bob.val is None)
+        #eng.input_from_cmd_applied(-1)  TODO
+        with eng:
+            prog1(bob)
+        eng.run()
         # both have now been measured
         self.assertTrue(alice.val is not None)
         self.assertTrue(bob.val is not None)
+        eng.reset()
 
-        self.eng.reset()
-        ## case 2: continue with the evolved state, but with an entirely new program
-        with self.eng:
-            prog2(alice)
-        self.eng.run()
-        # alice was deleted, bob wasn't
-        self.assertTrue(not alice.active)
-        self.assertTrue(bob.active)
-        self.eng.reset_queue()
-        with self.eng:
-            prog1(bob)
-        self.eng.run(reset_backend=False)
-
-        self.eng.reset()
-        ## case 3: run the same program again, starting from vacuum
-        with self.eng:
-            prog2(alice)
-        self.eng.run()
-        # you could possibly extend the program here
-        self.eng.run()
-
-        self.eng.reset()
-        ## case 4: new program, start from vacuum
-        with self.eng:
-            prog2(alice)
-        self.eng.run()
-        self.eng.reset_queue()
-        with self.eng:
+        ## (4) interactive use, "changed my mind"
+        with eng:
+            prog1(alice)
+        eng.run()
+        with eng:
             prog2(bob)
-        self.eng.run()
+        self.assertTrue(alice.active)
+        self.assertTrue(not bob.active)
+        eng.reset_queue()  # scratch that, back to last checkpoint
+        self.assertTrue(alice.active)
+        self.assertTrue(bob.active)
+        self.assertTrue(alice.val is not None)
+        self.assertTrue(bob.val is None)
+        with eng:
+            prog1(bob)
+        self.assertTrue(alice.active)
+        self.assertTrue(bob.active)
+        eng.run()
+        self.assertTrue(alice.val is not None)
+        self.assertTrue(bob.val is not None)
+        eng.reset()
 
+        ## (5) reset the state, run the same program again to get new measurement samples
+        with eng:
+            prog2(alice)
+        eng.run()
+        with eng:
+            prog2(bob)
+        eng.reset(keep_prog=True)
+        self.assertTrue(not alice.active)
+        self.assertTrue(not bob.active)
+        eng.run()
+        self.assertTrue(not alice.active)
+        self.assertTrue(not bob.active)
 
 
     def test_parameters(self):
@@ -337,7 +380,6 @@ class BasicTests(BaseTest):
             "Check a ParOperation/Parameters combination"
             # construct the op using the given tuple of Parameters as args
             G = G(*par)
-            self.eng.reset_queue()
             with self.eng:
                 if measure:
                     # RR parameters require measurements, postselection is much faster
@@ -382,7 +424,7 @@ class FockBasisTests(FockBaseTest):
         self.eng = Engine(num_subsystems=self.num_subsystems, hbar=self.hbar)
         # attach the backend (NOTE: self.backend is shared between the tests, make sure it is reset)
         self.eng.backend = self.backend
-
+        self.backend.reset()
 
     def test_fock_measurement(self):
         """Fock measurements."""
@@ -410,7 +452,7 @@ class GaussianTests(GaussianBaseTest):
         self.eng = Engine(num_subsystems=self.num_subsystems, hbar=self.hbar)
         # attach the backend (NOTE: self.backend is shared between the tests, make sure it is reset)
         self.eng.backend = self.backend
-
+        self.backend.reset()
 
     def test_gaussian_measurement(self):
         """Gaussian-only measurements."""

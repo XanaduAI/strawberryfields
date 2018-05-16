@@ -976,7 +976,6 @@ class New_modes(Operation):
     def _apply(self, reg, backend, **kwargs):
         # pylint: disable=unused-variable
         inds = backend.add_mode(len(reg))
-        #FIXME test the inds? in apply(), updating the regref activity status? same in delete
 
     def __str__(self):
         # HACK, trailing space signals "do not print anything more" to Command.__str__.

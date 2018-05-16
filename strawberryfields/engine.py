@@ -456,30 +456,36 @@ class Engine:
         # NOTE: deleted indices are *not* removed from self.unused_indices
 
 
-    def reset(self, *, keep_prog=False, reset_circuit=True):
+    def reset(self, *, keep_prog=False, reset_circuit=True, **kwargs):
         """Re-initialize the backend state to vacuum.
 
         Resets the state of the quantum circuit represented by the backend.
 
-        * All modes are returned to the vacuum state.
         * The original number of modes is restored.
-        * All existing RegRefs are cleared of measured values.
+        * All modes are reset to the vacuum state.
+        * All known RegRefs are cleared of measured values.
         * A checkpoint is made of the initial register state.
         * If keep_prog is False:
+
           * The command queue and the list of commands that have been run are cleared.
           * Any RegRefs for subsystems that were created after the init are rendered inactive and deleted.
+
         * If keep_prog is True:
+
           * The command queue is prepended by the list of commands that have been run.
             The latter is then cleared. The purpose of this is to keep the program valid in the cases where
-            previously run program segments have created or deleted subsystems.
-          * RegRef activity state is unchanged, so that references to active RegRefs remain valid.
+            previously run program segments have created or deleted subsystems, or made measurement on which
+            the program in the command queue depends.
+          * RegRef activity state is unchanged, active RegRefs remain valid.
+
+        The keyword args are passed on to backend.reset().
 
         Args:
           keep_prog (bool): should we keep the current program in the command queue?
           reset_circuit (bool): does the backend state actually need to be reset?
         """
         if self.backend is not None and reset_circuit:
-            self.backend.reset()
+            self.backend.reset(**kwargs)
 
         # reset any measurement values stored in the RegRefs
         for r in self.reg_refs.values():

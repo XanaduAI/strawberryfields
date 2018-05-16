@@ -295,7 +295,6 @@ class BaseBackend:
 
         The indices of the deleted modes become invalid for the lifetime of the circuit object.
         They will never be reassigned to other modes.
-        TODO check if this is still true after the backend.reset() change.
 
         Deleting a mode that has already been deleted raises an IndexError exception.
 
