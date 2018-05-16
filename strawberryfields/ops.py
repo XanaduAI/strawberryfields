@@ -282,7 +282,7 @@ from numpy import pi
 from scipy.linalg import block_diag
 from scipy.special import factorial as fac
 
-from tensorflow import Tensor, Variable
+import tensorflow as tf
 
 from .backends.shared_ops import changebasis
 from .engine import Engine as _Engine, Command, RegRef, RegRefTransform, SFMergeFailure
@@ -637,7 +637,7 @@ class Decomposition(ParOperation):
     """
     def __init__(self, par):
         # check if any of the decomposition inputs are tensor objects
-        if any([isinstance(x, (Variable, Tensor)) for x in par]):
+        if any([isinstance(x, (tf.Variable, tf.Tensor)) for x in par]):
             raise NotImplementedError("Decompositions currently do not support Tensorflow objects as arguments.")
         super().__init__(par)
 

@@ -68,6 +68,7 @@ The following are internal Engine methods. In most cases the user should not cal
    _index_to_regref
    _test_regrefs
    _run_command_list
+   _cmd_applied_all
    _list_to_grid
    _grid_to_DAG
    _DAG_to_list
@@ -123,6 +124,7 @@ Code details
 from collections.abc import Sequence
 import numbers
 from functools import wraps
+from itertools import chain
 
 import networkx as nx
 
@@ -337,7 +339,7 @@ class Engine:
     def __init__(self, num_subsystems, *, hbar=2):
         self.init_num_subsystems = num_subsystems  #: int: initial number of subsystems in the quantum register
         self.cmd_queue = []       #: list[Command]: command queue
-        self.cmd_applied = []     #: list[Command]: commands that have been run
+        self.cmd_applied = []     #: list[list[Command]]: list of lists of commands that have been run (one list per run)
         self.backend = None       #: BaseBackend: backend for executing the quantum program
         self.hbar = hbar          #: float: Numerical value of hbar in the (implicit) units of position and momentum. Currently only affects the definitions of the parameters of certain gates.
         # create mode references
@@ -382,6 +384,14 @@ class Engine:
           int: number of currently valid register subsystems
         """
         return len(self.register)
+
+    def _cmd_applied_all(self):
+        """Return all applied commands in a single list.
+
+        Returns:
+          list[Command]: concatenation of all applied command lists
+        """
+        return list(chain.from_iterable(self.cmd_applied))
 
     def _set_checkpoint(self):
         """Make a RegRef checkpoint.
@@ -498,11 +508,10 @@ class Engine:
 
         # command queues and register state
         if keep_prog:
-            # insert cmd_applied in the front of the current program to make it valid to run on the current state
-            self.cmd_queue[:0] = self.cmd_applied
+            # insert all previously applied Commands in the front of the current program to make it valid to run on the current state
+            self.cmd_queue[:0] = self._cmd_applied_all()
         else:
             self.reset_queue()
-
         self.cmd_applied.clear()
 
 
@@ -603,8 +612,10 @@ class Engine:
         This will be blank until the first call to :meth:`run`. The output may
         differ compared to :meth:`print_queue`, due to command decompositions
         and optimizations supported by the backend."""
-        for k in self.cmd_applied:
-            print(k)
+        for k, r in enumerate(self.cmd_applied):
+            print('Run {}:'.format(k))
+            for c in r:
+                print(c)
 
     def return_state(self, modes=None, **kwargs):
         """Return the backend state object.
@@ -625,9 +636,12 @@ class Engine:
 
         Args:
           clist (list[Command]): command list to run
+
+        Returns:
+          list[Command]: commands that were applied to the backend
         """
         kwargs.setdefault('hbar', self.hbar)  # caller can override the default value
-
+        applied = []
         for cmd in clist:
             if cmd.op is None:
                 # None represents an identity gate
@@ -636,7 +650,7 @@ class Engine:
                 try:
                     # try to apply it to the backend
                     cmd.op.apply(cmd.reg, self.backend, **kwargs)
-                    self.cmd_applied.append(cmd)
+                    applied.append(cmd)
                 except SFNotApplicableError:
                     # command is not applicable to the current backend type
                     raise SFNotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
@@ -644,15 +658,19 @@ class Engine:
                     # command not directly supported by backend API, try a decomposition instead
                     try:
                         temp = cmd.op.decompose(cmd.reg)
-                        self._run_command_list(temp)
+                        # run the decomposition
+                        foo = self._run_command_list(temp)
+                        applied.extend(foo)
                     except NotImplementedError as err:
                         raise err from None
+        return applied
+
 
     def run(self, backend=None, *, return_state=True, modes=None, **kwargs):
         """Execute the program in the command queue by sending it to the backend.
 
         The backend state is updated, and a new RegRef checkpoint is created.
-        The program queue is emptied, and its contents are appended to self.cmd_applied.
+        The program queue is emptied, and its contents (possibly decomposed) are appended to self.cmd_applied.
 
         Args:
             backend (str, BaseBackend, None): Backend for executing the commands.
@@ -682,7 +700,10 @@ class Engine:
         else:
             self.backend = backend
 
-        self._run_command_list(self.cmd_queue, **kwargs)
+        temp = self._run_command_list(self.cmd_queue, **kwargs)
+        # TODO unsuccessful run due to exceptions should result in keeping the command queue as is but bringing the backend back to the last checkpoint...
+        # also restoring self.cmd_applied to checkpoint...
+        self.cmd_applied.append(temp)
         self.cmd_queue.clear()
         self._set_checkpoint()
 

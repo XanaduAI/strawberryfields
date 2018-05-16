@@ -260,7 +260,8 @@ class GaussianCloning(GaussianBaseTest):
         a = np.empty([self.shots], dtype=np.complex128)
 
         for i in range(self.shots):
-            state = self.eng.run(backend=self.backend, reset_backend=True, modes=[0])
+            self.eng.reset(keep_prog=True)
+            state = self.eng.run(modes=[0])
             f[i] = state.fidelity_coherent([0.7+1.2j])
             a[i] = state.displacement()
 

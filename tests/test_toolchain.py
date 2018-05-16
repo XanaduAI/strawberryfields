@@ -10,6 +10,8 @@ from numpy.random import (randn, uniform, randint)
 from numpy import array
 from numpy import pi
 
+import tensorflow as tf
+
 # NOTE: strawberryfields must be imported from defaults
 from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.engine import *
@@ -62,6 +64,7 @@ class BasicTests(BaseTest):
         self.eng.run()
         self.assertEqual(len(self.eng.cmd_queue), 0)
         self.assertEqual(len(self.eng.cmd_applied), 1)
+        self.assertEqual(len(self.eng.cmd_applied[0]), 1)
 
         # see what the state looks like
         temp = self.backend.state()
@@ -305,7 +308,7 @@ class BasicTests(BaseTest):
         eng.run()
         self.assertTrue(alice.val is not None)
         self.assertTrue(bob.val is None)
-        #eng.input_from_cmd_applied(-1)  TODO
+        eng.cmd_queue.extend(eng.cmd_applied[-1])
         with eng:
             prog1(bob)
         eng.run()
@@ -338,15 +341,15 @@ class BasicTests(BaseTest):
 
         ## (5) reset the state, run the same program again to get new measurement samples
         with eng:
-            prog2(alice)
+            prog1(alice)
         eng.run()
         with eng:
             prog2(bob)
         eng.reset(keep_prog=True)
-        self.assertTrue(not alice.active)
+        self.assertTrue(alice.active)
         self.assertTrue(not bob.active)
         eng.run()
-        self.assertTrue(not alice.active)
+        self.assertTrue(alice.active)
         self.assertTrue(not bob.active)
 
 
@@ -370,7 +373,7 @@ class BasicTests(BaseTest):
         other_inputs = [0.14]  # -4.2+0.5j
         if isinstance(self.backend, sf.backends.TFBackend):
             # add some TensorFlow-specific parameter types
-            other_inputs.append(Variable(0.8))
+            other_inputs.append(tf.Variable(0.8))
             if self.bsize > 1:
                 # test batched input
                 other_inputs.append(uniform(size=(self.bsize,)))
@@ -398,6 +401,7 @@ class BasicTests(BaseTest):
             except SFNotApplicableError as err:
                 # catch unapplicable op/backend combinations here
                 print(err)
+                self.eng.reset_queue()  # unsuccessful run means the queue was not emptied.
 
         scalar_arg_preparations = (Coherent, Squeezed, DisplacedSqueezed, Thermal, Catstate)  # Fock requires an integer parameter
         testset = one_args_gates +two_args_gates +channels +scalar_arg_preparations

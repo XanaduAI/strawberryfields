@@ -75,16 +75,17 @@ class FrontendStateCreation(BaseTest):
     def setUp(self):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems, hbar=self.hbar)
+        self.eng.backend = self.backend
+        self.eng.reset()
 
     def test_full_state_creation(self):
-        self.eng.reset()
         q = self.eng.register
 
         with self.eng:
             Coherent(a) | q[0]
             Squeezed(r, phi) | q[1]
 
-        state = self.eng.run(backend=self.backend_name, cutoff_dim=self.D)
+        state = self.eng.run()
         self.assertEqual(state.num_modes, 3)
         self.assertEqual(state.hbar, self.hbar)
         self.assertEqual(state.mode_names, {0: 'q[0]', 1: 'q[1]', 2: 'q[2]'})
