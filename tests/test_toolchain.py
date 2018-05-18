@@ -381,6 +381,7 @@ class BasicTests(BaseTest):
 
         def check(G, par, measure=False):
             "Check a ParOperation/Parameters combination"
+            kwargs = {}
             # construct the op using the given tuple of Parameters as args
             G = G(*par)
             with self.eng:
@@ -394,10 +395,15 @@ class BasicTests(BaseTest):
                     G | r[0]
                 else:
                     G | (r[0], r[1])
+            if isinstance(self.backend, sf.backends.TFBackend):
+                # initialize any TensorFlow variables
+                session = tf.Session()
+                kwargs.update({"session": session})
+                session.run(tf.global_variables_initializer())
             print(G)
             self.eng.optimize()
             try:
-                self.eng.run()
+                self.eng.run(**kwargs)
             except SFNotApplicableError as err:
                 # catch unapplicable op/backend combinations here
                 print(err)
