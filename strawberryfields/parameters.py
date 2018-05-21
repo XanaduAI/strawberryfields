@@ -84,9 +84,6 @@ from .engine import (RegRef, RegRefTransform)
 # supported TF classes
 _tf_classes = (tf.Tensor, tf.Variable)
 
-# default TF data type
-_def_type = tf.complex64
-
 
 def _unwrap(params):
     """Unwrap a parameter sequence.
@@ -160,23 +157,44 @@ class Parameter():
             return Parameter(self.x.evaluate())
         return self
 
-    def _maybe_cast(self, other):
-        """Cast TensorFlow-type parameters to other dtypes during arithmetic.
+    def _unwrap_and_cast(self, other):
+        """Unwrap Parameters and cast TensorFlow-type parameters to other dtypes during arithmetic.
 
-        Unused for now.
+        Args:
+          other: the other input of a binary arithmetic operation
+        Returns:
+          (self, other) unwrapped, cast into compatible dtypes
         """
-        if isinstance(other, complex):
-            t = tf.cast(self.x, _def_type)
-        elif isinstance(other, float):
-            if self.x.dtype.is_integer:
-                t = tf.cast(self.x, tf.float64) # cast ints to float
+        t = self.x
+        if isinstance(other, Parameter):
+            other = other.x
+        swap = False
+        if not isinstance(t, _tf_classes):
+            if isinstance(other, _tf_classes):
+                t, other = other, t  # make sure other is the non-tf type for simplicity
+                swap = True
             else:
-                t = self.x  # but dont cast other dtypes (i.e., complex) to float
-        elif isinstance(other, _tf_classes) and other.dtype.is_complex:
-            t = tf.cast(self.x, _def_type)
+                # only TensorFlow types are cast
+                return t, other
+
+        if t.dtype.is_complex:
+            if (isinstance(other, _tf_classes) and not other.dtype.is_complex):
+                other = tf.cast(other, tf.complex128)
         else:
-            t = self.x
-        return t
+            if (isinstance(other, complex) or
+                (isinstance(other, _tf_classes) and other.dtype.is_complex)):
+                t = tf.cast(t, tf.complex128)
+            elif t.dtype.is_integer:
+                if (isinstance(other, float) or
+                    (isinstance(other, _tf_classes) and other.dtype.is_floating)):
+                    t = tf.cast(t, tf.float32)
+            elif t.dtype.is_floating:
+                if isinstance(other, _tf_classes) and other.dtype.is_integer:
+                    other = tf.cast(other, tf.float32)
+
+        if swap:
+            return other, t
+        return t, other
 
     @staticmethod
     def _wrap(x):
@@ -191,36 +209,46 @@ class Parameter():
             return x
         return Parameter(x)
 
-    # the arithmetic methods below basically are just responsible for exposing self.x to the arithmetic ops of the supported parameter types
+    # the arithmetic methods below basically are just responsible for calling _unwrap_and_cast which exposes self.x, then the arithmetic ops of the supported parameter types take over
     def __add__(self, other):
-        return self._wrap(self.x +other)
+        temp, other = self._unwrap_and_cast(other)
+        return self._wrap(temp +other)
 
     def __radd__(self, other):
-        return self._wrap(other +self.x)
+        temp, other = self._unwrap_and_cast(other)
+        return self._wrap(other +temp)
 
     def __sub__(self, other):
-        return self._wrap(self.x -other)
+        temp, other = self._unwrap_and_cast(other)
+        return self._wrap(temp -other)
 
     def __rsub__(self, other):
-        return self._wrap(other -self.x)
+        temp, other = self._unwrap_and_cast(other)
+        return self._wrap(other -temp)
 
     def __mul__(self, other):
-        return self._wrap(self.x * other)
+        temp, other = self._unwrap_and_cast(other)
+        return self._wrap(temp * other)
 
     def __rmul__(self, other):
-        return self._wrap(other * self.x)
+        temp, other = self._unwrap_and_cast(other)
+        return self._wrap(other * temp)
 
     def __truediv__(self, other):
-        return self._wrap(self.x / other)
+        temp, other = self._unwrap_and_cast(other)
+        return self._wrap(temp / other)
 
     def __rtruediv__(self, other):
-        return self._wrap(other / self.x)
+        temp, other = self._unwrap_and_cast(other)
+        return self._wrap(other / temp)
 
     def __pow__(self, other):
-        return self._wrap(self.x ** other)
+        temp, other = self._unwrap_and_cast(other)
+        return self._wrap(temp ** other)
 
     def __rpow__(self, other):
-        return self._wrap(other ** self.x)
+        temp, other = self._unwrap_and_cast(other)
+        return self._wrap(other ** temp)
 
     def __neg__(self):
         return Parameter(-self.x)

@@ -5,11 +5,12 @@ The tests in this module do not require the quantum program to be run, and thus 
 """
 
 import unittest
+import itertools
 
 from numpy.random import randn, random
 from numpy import sqrt
 
-from tensorflow import (Tensor, Variable)
+import tensorflow as tf
 
 # NOTE: strawberryfields must be imported from defaults
 from defaults import BaseTest, strawberryfields as sf
@@ -181,39 +182,44 @@ class GateTests(BaseTest):
 
 class ParameterTests(BaseTest):
     def setUp(self):
-        self.eng = Engine(num_subsystems=2)
+        pass
 
     def test_init(self):
         "Parameter initialization and arithmetic."
         # at the moment RR-inputs cannot be arithmetically combined with the others
 
-        # Parameter class inputs:
+        # immediate Parameter class inputs:
         # ints, floats and complex numbers
         # numpy arrays
-        # TensorFlow objects
-        # RegRefs and RegRefTransforms
-        par_inputs = [3, 0.14, -4.2+0.5j,
+        # TensorFlow objects of various types
+        par_inputs = [3, 0.14, 4.2+0.5j,
                       randn(3),
-                      Variable(0.8+0j)]
+                      tf.Variable(2), tf.Variable(0.4), tf.Variable(0.8+1.1j)]
+        pars = [Parameter(k) for k in par_inputs]  # wrapped versions
 
-        pars = (Parameter(k) for k in par_inputs)
+        def check(p, q):
+            "Check all arithmetic operations on a two-Parameter combination."
+            print(p, q)
+            self.assertTrue(isinstance(p+q, Parameter))
+            self.assertTrue(isinstance(p-q, Parameter))
+            self.assertTrue(isinstance(p*q, Parameter))
+            self.assertTrue(isinstance(p/q, Parameter))
+            self.assertTrue(isinstance(p**q, Parameter))
+
+        ## binary methods
+        # all combinations of two Parameter types
+        for p in itertools.product(pars, repeat=2):
+            check(*p)
+        print('--------------------')
+        # all combinations a Parameter and an unwrapped input
+        for p in itertools.product(pars, par_inputs):
+            check(*p)
+        for p in itertools.product(par_inputs, pars):
+            check(*p)
+
+        ## unary methods
         for p in pars:
             self.assertTrue(isinstance(-p, Parameter))
-            self.assertTrue(isinstance(p +1.1, Parameter))
-            self.assertTrue(isinstance(1.1 +p, Parameter))
-            self.assertTrue(isinstance(p -0.2, Parameter))
-            self.assertTrue(isinstance(0.2 -p, Parameter))
-            self.assertTrue(isinstance(p*2.4, Parameter))
-            self.assertTrue(isinstance(2.4*p, Parameter))
-            self.assertTrue(isinstance(p/0.6, Parameter))
-            self.assertTrue(isinstance(0.6/p, Parameter))
-            self.assertTrue(isinstance(1.4**p, Parameter))
-            self.assertTrue(isinstance(p**1.4, Parameter))
-            for q in pars:
-                self.assertTrue(isinstance(p+q, Parameter))
-                self.assertTrue(isinstance(p-q, Parameter))
-                self.assertTrue(isinstance(p*q, Parameter))
-
 
 
 if __name__ == '__main__':

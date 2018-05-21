@@ -363,6 +363,7 @@ class BasicTests(BaseTest):
         def func2(x,y):
             return abs(2*x*y -y**2 +3)
 
+        kwargs = {}
         r = self.eng.register
 
         # RegRefTransforms for deferred measurements (note that some operations expect nonnegative parameter values)
@@ -370,18 +371,22 @@ class BasicTests(BaseTest):
         rr_pars = tuple(Parameter(k) for k in rr_inputs)
 
         # other types of parameters
-        other_inputs = [0.14]  # -4.2+0.5j
+        other_inputs = [0.14]
         if isinstance(self.backend, sf.backends.TFBackend):
             # add some TensorFlow-specific parameter types
             other_inputs.append(tf.Variable(0.8))
             if self.bsize > 1:
                 # test batched input
                 other_inputs.append(uniform(size=(self.bsize,)))
+            # initialize any TensorFlow variables
+            session = tf.Session()
+            kwargs.update({"session": session})
+            session.run(tf.global_variables_initializer())
+
         other_pars = tuple(Parameter(k) for k in other_inputs)
 
         def check(G, par, measure=False):
             "Check a ParOperation/Parameters combination"
-            kwargs = {}
             # construct the op using the given tuple of Parameters as args
             G = G(*par)
             with self.eng:
@@ -395,11 +400,6 @@ class BasicTests(BaseTest):
                     G | r[0]
                 else:
                     G | (r[0], r[1])
-            if isinstance(self.backend, sf.backends.TFBackend):
-                # initialize any TensorFlow variables
-                session = tf.Session()
-                kwargs.update({"session": session})
-                session.run(tf.global_variables_initializer())
             print(G)
             self.eng.optimize()
             try:
