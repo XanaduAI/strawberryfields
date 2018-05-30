@@ -348,7 +348,7 @@ def displaced_squeezed_state(a, r, phi, basis='fock', fock_dim=5, hbar=2.):
 
     .. math::
 
-        |\alpha,z\rangle = e^{-\frac{1}{2}|\alpha|^2-\frac{1}{2}\alpha^*2e^{i\phi}}\tanh{(r)}
+        |\alpha,z\rangle = e^{-\frac{1}{2}|\alpha|^2-\frac{1}{2}{\alpha^*}^2 e^{i\phi}\tanh{(r)}}
         \sum_{n=0}^\infty\frac{\left[\frac{1}{2}e^{i\phi}\tanh(r)\right]^{n/2}}{\sqrt{n!\cosh(r)}}
         H_n\left[ \frac{\alpha\cosh(r)+\alpha^*e^{i\phi}\sinh(r)}{\sqrt{e^{i\phi}\sinh(2r)}} \right]|n\rangle
 
