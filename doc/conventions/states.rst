@@ -274,7 +274,8 @@ Displaced squeezed state
 
 In the Fock basis, it has the decomposition
 
-.. math:: |\alpha,z\rangle = e^{-\frac{1}{2}|\alpha|^2-\frac{1}{2}\alpha^*2e^{i\phi}}\tanh{(r)} \sum_{n=0}^\infty\frac{\left[\frac{1}{2}e^{i\phi}\tanh(r)\right]^{n/2}}{\sqrt{n!\cosh(r)}} H_n\left[ \frac{\alpha\cosh(r)+\alpha^*e^{i\phi}\sinh(r)}{\sqrt{e^{i\phi}\sinh(2r)}} \right]|n\rangle
+.. math:: |\alpha,z\rangle = e^{-\frac{1}{2}|\alpha|^2-\frac{1}{2}{\alpha^*}^2 e^{i\phi}\tanh{(r)}} \sum_{n=0}^\infty\frac{\left[\frac{1}{2}e^{i\phi}\tanh(r)\right]^{n/2}}{\sqrt{n!\cosh(r)}} H_n\left[ \frac{\alpha\cosh(r)+\alpha^*e^{i\phi}\sinh(r)}{\sqrt{e^{i\phi}\sinh(2r)}} \right]|n\rangle
+
 
 where :math:`H_n(x)` are the Hermite polynomials defined by :math:`H_n(x)=(-1)^n e^{x^2}\frac{d}{dx}e^{-x^2}`. Alternatively, in the Gaussian formulation, :math:`\bar{\mathbf{r}} = 2 \sqrt{\frac{\hbar}{2}}(\text{Re}(\alpha),\text{Im}(\alpha))` and :math:`\mathbf{V} = R(\phi/2)\begin{bmatrix}e^{-2r} & 0 \\0 & e^{2r} \\\end{bmatrix}R(\phi/2)^T`
 

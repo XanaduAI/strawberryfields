@@ -1381,7 +1381,7 @@ class Interferometer(Decomposition):
                     cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m]), decomp=True))
 
             for n, expphi in enumerate(self.R):
-                if np.abs(np.round(expphi, 13)) != 1.0:
+                if np.round(expphi, 13) != 1.0:
                     q = log(expphi).imag
                     cmds.append(Command(Rgate(q), reg[n], decomp=True))
 

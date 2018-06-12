@@ -20,7 +20,7 @@ as well as the following Python packages:
 * `NumPy <http://numpy.org/>`_  >=1.13.3
 * `SciPy <http://scipy.org/>`_  >=1.0.0
 * `NetworkX <http://networkx.github.io/>`_ >=2.0
-* `Tensorflow <https://www.tensorflow.org/>`_ ==1.3
+* `Tensorflow <https://www.tensorflow.org/>`_ >=1.3,<1.7
 
 
 If you currently do not have Python 3 installed, we recommend `Anaconda for Python 3 <https://www.anaconda.com/download/>`_, a distributed version of Python packaged for scientific computation.

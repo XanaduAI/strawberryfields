@@ -26,9 +26,10 @@
     :alt: PyPI - Python Version
     :target: https://pypi.org/project/StrawberryFields
 
-Strawberry Fields is a full-stack Python library for designing,
+`Strawberry Fields <https://strawberryfields.readthedocs.io>`_ is a full-stack Python library for designing,
 simulating, and optimizing continuous variable quantum
 optical circuits.
+
 
 Features
 ========
@@ -44,78 +45,25 @@ Features
 * Future releases will aim to target experimental backends, including **photonic quantum computing chips**
 
 
-.. image:: doc/_static/sfcomponents.svg
-    :align: center
-    :width: 85%
-
-Dependencies
-============
-
-Strawberry Fields depends on the following Python packages:
-
-* `Python <http://python.org/>`_ >=3.5
-* `NumPy <http://numpy.org/>`_  >=1.13.3
-* `SciPy <http://scipy.org/>`_  >=1.0.0
-* `NetworkX <http://networkx.github.io/>`_ >=2.0
-* `Tensorflow <https://www.tensorflow.org/>`_ >=1.3,<1.7
-
-These can be installed using pip, or, if on linux, using your package manager (i.e. ``apt`` if on a Debian-based system.)
-
-
 Installation
 ============
 
-Installation of Strawberry Fields, as well as all required Python packages mentioned above, can be done using pip:
+Strawberry Fields requires Python version 3.5 and above. Installation of Strawberry Fields, as well as all dependencies, can be done using pip:
 ::
 
     $ python -m pip install strawberryfields
 
 
-Software tests
-==============
+Getting started
+===============
 
-To ensure that Strawberry Fields is working correctly after installation, the test suite can be run by navigating to the source code folder and running
-::
+To see Strawberry Fields in action immediately, try out our `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web application. Prepare your initial states, drag and drop gates, and watch your simulation run in real time right in your web browser.
 
-  make test
+For getting started with writing your own Strawberry Fields code, check out our `quantum teleportation <https://strawberryfields.readthedocs.io/en/latest/tutorials/tutorial_teleportation.html>`_, `boson sampling <https://strawberryfields.readthedocs.io/en/latest/tutorials/tutorial_boson_sampling.html>`_, and `machine learning <https://strawberryfields.readthedocs.io/en/latest/tutorials/tutorial_machine_learning.html>`_ tutorials.
 
-Note that this runs *all* of the tests, using *all* available backends, so can be quite slow (it should take around 40 minutes to complete). Alternatively, you can run the full test suite for a particular backend by running
-::
+Our documentation is also a great starting point to familiarize yourself with the framework of `continuous-variable quantum computation <https://strawberryfields.readthedocs.io/en/latest/introduction.html>`_, and check out some important and interesting continuous-variable `quantum algorithms <https://strawberryfields.readthedocs.io/en/latest/quantum_algorithms.html>`_.
 
-  make test-[backend]
-
-where ``[backend]`` should be replaced with the backend you would like to test (``fock``, ``tf``, or ``gaussian``).
-
-Individual test modules are run using
-::
-
-  python tests/test_gate.py --backend=[backend]
-
-
-Documentation
-=============
-
-The Strawberry Fields documentation is built automatically and hosted at `Read the Docs <https://strawberryfields.readthedocs.io>`_.
-
-To build the documentation locally, the following additional packages are required:
-
-* `Sphinx <http://sphinx-doc.org/>`_ >=1.5
-* `graphviz <http://graphviz.org/>`_ >=2.38
-* `sphinxcontrib-bibtex <https://sphinxcontrib-bibtex.readthedocs.io/en/latest/>`_ >=0.3.6
-
-If using Ubuntu, they can be installed via a combination of ``apt`` and ``pip``:
-::
-
-    $ sudo apt install graphviz
-    $ pip3 install sphinx --user
-    $ pip3 install sphinxcontrib-bibtex --user
-
-To build the HTML documentation, go to the top-level directory and run the command
-::
-
-  $ make docs
-
-The documentation can then be found in the ``doc/_build/html/`` directory.
+Finally, detailed documentation on the `Strawberry fields API <https://strawberryfields.readthedocs.io/en/latest/code/code.html>`_ is provided, for full details on available quantum operations, arguments, and backends.
 
 
 Contributing to Strawberry Fields
