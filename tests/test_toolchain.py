@@ -6,8 +6,8 @@ import unittest
 import inspect
 import itertools
 
+import numpy as np
 from numpy.random import (randn, uniform, randint)
-from numpy import array
 from numpy import pi
 
 import tensorflow as tf
@@ -258,6 +258,11 @@ class BasicTests(BaseTest):
         # define some gates
         X = Xgate(0.5)
 
+        reg = self.eng.register
+        alice, bob = reg
+        eng = self.eng
+        state = np.full((len(reg), 2), True)  # states of the subsystems: active, not_measured
+
         def prog1(q):
             X        | q
             MeasureX | q
@@ -266,91 +271,74 @@ class BasicTests(BaseTest):
             X        | q
             MeasureX | q
             Del      | q
+            state[q.ind, 0] = False  # no longer active
 
-        reg = self.eng.register
-        alice, bob = reg
-        eng = self.eng
+        def reset():
+            eng.reset()
+            state[:] = True
 
+        def check():
+            """Check the activity and measurement state of subsystems.
+
+            Activity state is changed right away when a Del command is applied to Engine,
+            but a measurement result only becomes available during Engine.run().
+            """
+            for r, (a, nm) in zip(reg, state):
+                self.assertTrue(r.active == a)
+                self.assertTrue((r.val is None) == nm)
+
+        def input(p, reg):
+            with eng:
+                p(reg)
+            check()
+
+        def input_and_run(p, reg):
+            with eng:
+                p(reg)
+            check()
+            eng.run()
+            state[reg.ind, 1] = False  # now measured (assumes p will always measure reg!)
+            check()
+
+        reset()
         ## (1) run several independent programs, resetting everything in between
-        with eng:
-            prog1(alice)
-        self.assertTrue(alice.active)
-        self.assertTrue(bob.active)
-        eng.run()
-        self.assertTrue(alice.val is not None)
-        self.assertTrue(bob.val is None)
-        eng.reset()
-        with eng:
-            prog2(bob)
-        self.assertTrue(alice.active)
-        self.assertTrue(not bob.active)
-        eng.run()
-        self.assertTrue(alice.val is None)
-        self.assertTrue(bob.val is not None)
-        eng.reset()
+        input_and_run(prog1, alice)
+        reset()
+        input_and_run(prog2, bob)
+        reset()
 
         ## (2) interactive state evolution in multiple runs
-        with eng:
-            prog2(alice)
-        eng.run()
-        with eng:
-            prog1(bob)
-        self.assertTrue(not alice.active)
-        self.assertTrue(bob.active)
-        eng.run()
-        self.assertTrue(alice.val is not None)
-        self.assertTrue(bob.val is not None)
-        eng.reset()
+        input_and_run(prog2, alice)
+        input_and_run(prog1, bob)
+        reset()
 
         ## (3) repeat a (possibly extended) program fragment (the fragment must not create/delete subsystems!)
-        with eng:
-            prog1(alice)
-        eng.run()
-        self.assertTrue(alice.val is not None)
-        self.assertTrue(bob.val is None)
+        input_and_run(prog1, alice)
         eng.cmd_queue.extend(eng.cmd_applied[-1])
-        with eng:
-            prog1(bob)
-        eng.run()
-        # both have now been measured
-        self.assertTrue(alice.val is not None)
-        self.assertTrue(bob.val is not None)
-        eng.reset()
+        check()
+        input_and_run(prog1, bob)
+        reset()
 
         ## (4) interactive use, "changed my mind"
-        with eng:
-            prog1(alice)
-        eng.run()
-        with eng:
-            prog2(bob)
-        self.assertTrue(alice.active)
-        self.assertTrue(not bob.active)
+        input_and_run(prog1, alice)
+        input(prog2, bob)
         eng.reset_queue()  # scratch that, back to last checkpoint
-        self.assertTrue(alice.active)
-        self.assertTrue(bob.active)
-        self.assertTrue(alice.val is not None)
-        self.assertTrue(bob.val is None)
-        with eng:
-            prog1(bob)
-        self.assertTrue(alice.active)
-        self.assertTrue(bob.active)
-        eng.run()
-        self.assertTrue(alice.val is not None)
-        self.assertTrue(bob.val is not None)
-        eng.reset()
+        state[bob.ind, 0] = True  # bob should be active again
+        check()
+        input_and_run(prog1, bob)
+        reset()
 
         ## (5) reset the state, run the same program again to get new measurement samples
-        with eng:
-            prog1(alice)
-        eng.run()
-        with eng:
-            prog2(bob)
+        input_and_run(prog1, alice)
+        input(prog2, bob)
         eng.reset(keep_prog=True)
-        self.assertTrue(alice.active)
-        self.assertTrue(not bob.active)
+        state[alice.ind, 1] = True  # measurement result was erased, activity did not change
+        state[bob.ind, 1] = True
+        check()
         eng.run()
-        self.assertTrue(alice.active)
-        self.assertTrue(not bob.active)
+        state[alice.ind, 1] = False
+        state[bob.ind, 1] = False
+        check()
 
 
     def test_parameters(self):

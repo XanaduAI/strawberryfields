@@ -160,6 +160,8 @@ class Parameter():
     def _unwrap_and_cast(self, other):
         """Unwrap Parameters and cast TensorFlow-type parameters to other dtypes during arithmetic.
 
+        .. todo:: Decide whether to cast to single or double precision by default (both float and complex).
+
         Args:
           other: the other input of a binary arithmetic operation
         Returns:

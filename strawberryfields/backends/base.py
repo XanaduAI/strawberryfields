@@ -245,13 +245,15 @@ class BaseBackend:
         * "mixed_states": for representations where the quantum state is mixed
         * "batched": allows for a multiple circuits to be simulated in parallel
 
+        .. todo:: The above information is outdated and needs to be updated.
+
         Args:
             name (str): name of the operating mode which we are checking support for
 
         Returns:
             bool: True if this backend supports that operating mode.
         """
-        return self._supported[name] if name in self._supported else False
+        return self._supported.get(name, False)
 
     def begin_circuit(self, num_subsystems, *, cutoff_dim=None, hbar=2, pure=True, **kwargs):
         r"""Instantiate a quantum circuit.
@@ -319,6 +321,9 @@ class BaseBackend:
 
         Args:
             pure (bool): if True, initialize the circuit in a pure state (will use a mixed state if pure is False)
+
+        Keyword Args:
+            cutoff_dim (int): new Hilbert space truncation dimension (for Fock basis backends only)
         """
         raise NotImplementedError
 

@@ -627,7 +627,7 @@ class Decomposition(ParOperation):
     """Abstract base class for matrix decompositions.
 
     This class provides the base behaviour for decomposing various matrices
-    into a sequence of gate and state preparations.
+    into a sequence of gates and state preparations.
 
     .. todo:: Define how a given matrix is translated into a unitary on the state space.
 

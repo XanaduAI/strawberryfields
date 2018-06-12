@@ -26,15 +26,16 @@ class InitialStates(BaseTest):
     def setUp(self):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems, hbar=self.hbar)
+        self.eng.backend = self.backend
+        self.backend.reset(cutoff_dim=cutoff)
 
     def test_vacuum_state(self):
-        self.eng.reset()
         q = self.eng.register
 
         with self.eng:
             Vac | q[0]
 
-        state = self.eng.run(backend=self.backend_name, cutoff_dim=cutoff)
+        state = self.eng.run()
 
         if self.backend_name == 'gaussian':
             psi = state.reduced_gaussian(0)
@@ -46,13 +47,12 @@ class InitialStates(BaseTest):
         self.assertAllAlmostEqual(psi, psi_exact, delta=self.tol)
 
     def test_coherent_state(self):
-        self.eng.reset()
         q = self.eng.register
 
         with self.eng:
             Dgate(a) | q[0]
 
-        state = self.eng.run(backend=self.backend_name, cutoff_dim=cutoff)
+        state = self.eng.run()
 
         if self.backend_name == 'gaussian':
             psi = state.reduced_gaussian(0)
@@ -64,13 +64,12 @@ class InitialStates(BaseTest):
         self.assertAllAlmostEqual(psi, psi_exact, delta=self.tol)
 
     def test_coherent_state(self):
-        self.eng.reset()
         q = self.eng.register
 
         with self.eng:
             Dgate(a) | q[0]
 
-        state = self.eng.run(backend=self.backend_name, cutoff_dim=cutoff)
+        state = self.eng.run()
 
         if self.backend_name == 'gaussian':
             psi = state.reduced_gaussian(0)
@@ -82,13 +81,12 @@ class InitialStates(BaseTest):
         self.assertAllAlmostEqual(psi, psi_exact, delta=self.tol)
 
     def test_squeezed_state(self):
-        self.eng.reset()
         q = self.eng.register
 
         with self.eng:
             Sgate(r, phi) | q[0]
 
-        state = self.eng.run(backend=self.backend_name, cutoff_dim=cutoff)
+        state = self.eng.run()
 
         if self.backend_name == 'gaussian':
             psi = state.reduced_gaussian(0)
@@ -100,14 +98,13 @@ class InitialStates(BaseTest):
         self.assertAllAlmostEqual(psi, psi_exact, delta=self.tol)
 
     def test_displaced_squeezed_state(self):
-        self.eng.reset()
         q = self.eng.register
 
         with self.eng:
             Sgate(r, phi) | q[0]
             Dgate(a) | q[0]
 
-        state = self.eng.run(backend=self.backend_name, cutoff_dim=cutoff)
+        state = self.eng.run()
 
         if self.backend_name == 'gaussian':
             psi = state.reduced_gaussian(0)
@@ -125,15 +122,16 @@ class FockInitialStates(FockBaseTest):
     def setUp(self):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems, hbar=self.hbar)
+        self.eng.backend = self.backend
+        self.backend.reset(cutoff_dim=cutoff)
 
     def test_fock_state(self):
-        self.eng.reset()
         q = self.eng.register
 
         with self.eng:
             Fock(n) | q[0]
 
-        state = self.eng.run(backend=self.backend_name, cutoff_dim=cutoff)
+        state = self.eng.run()
 
         psi = state.ket().real
         psi_exact = fock_state(n, fock_dim=cutoff)
@@ -141,13 +139,12 @@ class FockInitialStates(FockBaseTest):
         self.assertAllAlmostEqual(psi, psi_exact, delta=self.tol)
 
     def test_cat_state(self):
-        self.eng.reset()
         q = self.eng.register
 
         with self.eng:
             Catstate(a, 0) | q[0]
 
-        state = self.eng.run(backend=self.backend_name, cutoff_dim=cutoff)
+        state = self.eng.run()
 
         psi = state.ket()
         psi_exact = cat_state(a, 0, fock_dim=cutoff)

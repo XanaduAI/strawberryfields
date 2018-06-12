@@ -124,7 +124,8 @@ class FockBackend(BaseFock):
             pure (bool): whether to use a pure state representation upon reset
         """
         self._modeMap.reset()
-        self.qreg.reset(pure, num_subsystems=self._init_modes)
+        kwargs['num_subsystems'] = self._init_modes  # do not allow changing the number of modes during a reset, at least for now
+        self.qreg.reset(pure, **kwargs)
 
     def prepare_vacuum_state(self, mode):
         """Prepare the vacuum state on the specified mode.

@@ -127,19 +127,23 @@ class QReg():
             self._state = sum(states)
 
 
-    def reset(self, pure=None, num_subsystems=None):
+    def reset(self, pure=None, *, num_subsystems=None, cutoff_dim=None):
         """Resets the simulation state.
 
         Args:
-            pure (bool, optional): Sets the purity setting. Default is unchanged.
-            num_subsystems (int, optional): Sets the number of modes in the reset
-                circuit. Default is unchanged.
+            pure (bool): Sets the purity setting. None means unchanged.
+            num_subsystems (int): Sets the number of modes in the reset
+                circuit. None means unchanged.
+            cutoff_dim (int): New Hilbert space truncation dimension. None means unchanged.
         """
         if pure is not None:
             self._pure = pure
 
         if num_subsystems is not None:
             self._num_modes = num_subsystems
+
+        if cutoff_dim is not None:
+            self._trunc = cutoff_dim
 
         if self._pure:
             self._state = ops.vacuumState(self._num_modes, self._trunc)
@@ -432,14 +436,8 @@ class QReg():
 
             # Create pdf. Same as tf implementation, but using
             # the recursive relation H_0(x) = 1, H_1(x) = 2x, H_{n+1}(x) = 2xH_n(x) - 2nH_{n-1}(x)
-            if "max" in kwargs:
-                q_mag = kwargs["max"]
-            else:
-                q_mag = 10
-            if "num_bins" in kwargs:
-                num_bins = kwargs["num_bins"]
-            else:
-                num_bins = 100000
+            q_mag    = kwargs.get('max', 10)
+            num_bins = kwargs.get('num_bins', 100000)
 
             q_tensor, Hvals = ops.hermiteVals(q_mag, num_bins, m_omega_over_hbar, self._trunc)
             H_matrix = np.zeros((self._trunc, self._trunc, num_bins))
