@@ -18,7 +18,6 @@ r = 0.212
 phi = 0.123
 n = 2
 
-cutoff = 10
 
 class InitialStates(BaseTest):
     num_subsystems = 1
@@ -27,7 +26,7 @@ class InitialStates(BaseTest):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems, hbar=self.hbar)
         self.eng.backend = self.backend
-        self.backend.reset(cutoff_dim=cutoff)
+        self.backend.reset(cutoff_dim=self.D)
 
     def test_vacuum_state(self):
         q = self.eng.register
@@ -42,7 +41,7 @@ class InitialStates(BaseTest):
             psi_exact = vacuum_state(basis='gaussian', hbar=self.hbar)
         else:
             psi = state.ket()
-            psi_exact = vacuum_state(basis='fock', fock_dim=cutoff, hbar=self.hbar)
+            psi_exact = vacuum_state(basis='fock', fock_dim=self.D, hbar=self.hbar)
 
         self.assertAllAlmostEqual(psi, psi_exact, delta=self.tol)
 
@@ -59,24 +58,7 @@ class InitialStates(BaseTest):
             psi_exact = coherent_state(a, basis='gaussian', hbar=self.hbar)
         else:
             psi = state.ket()
-            psi_exact = coherent_state(a, basis='fock', fock_dim=cutoff, hbar=self.hbar)
-
-        self.assertAllAlmostEqual(psi, psi_exact, delta=self.tol)
-
-    def test_coherent_state(self):
-        q = self.eng.register
-
-        with self.eng:
-            Dgate(a) | q[0]
-
-        state = self.eng.run()
-
-        if self.backend_name == 'gaussian':
-            psi = state.reduced_gaussian(0)
-            psi_exact = coherent_state(a, basis='gaussian', hbar=self.hbar)
-        else:
-            psi = state.ket()
-            psi_exact = coherent_state(a, basis='fock', fock_dim=cutoff, hbar=self.hbar)
+            psi_exact = coherent_state(a, basis='fock', fock_dim=self.D, hbar=self.hbar)
 
         self.assertAllAlmostEqual(psi, psi_exact, delta=self.tol)
 
@@ -93,7 +75,7 @@ class InitialStates(BaseTest):
             psi_exact = squeezed_state(r, phi, basis='gaussian', hbar=self.hbar)
         else:
             psi = state.ket()
-            psi_exact = squeezed_state(r, phi, basis='fock', fock_dim=cutoff, hbar=self.hbar)
+            psi_exact = squeezed_state(r, phi, basis='fock', fock_dim=self.D, hbar=self.hbar)
 
         self.assertAllAlmostEqual(psi, psi_exact, delta=self.tol)
 
@@ -111,7 +93,7 @@ class InitialStates(BaseTest):
             psi_exact = displaced_squeezed_state(a, r, phi, basis='gaussian', hbar=self.hbar)
         else:
             psi = state.ket()
-            psi_exact = displaced_squeezed_state(a, r, phi, basis='fock', fock_dim=cutoff, hbar=self.hbar)
+            psi_exact = displaced_squeezed_state(a, r, phi, basis='fock', fock_dim=self.D, hbar=self.hbar)
 
         self.assertAllAlmostEqual(psi, psi_exact, delta=self.tol)
 
@@ -123,7 +105,7 @@ class FockInitialStates(FockBaseTest):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems, hbar=self.hbar)
         self.eng.backend = self.backend
-        self.backend.reset(cutoff_dim=cutoff)
+        self.backend.reset(cutoff_dim=self.D)
 
     def test_fock_state(self):
         q = self.eng.register
@@ -134,7 +116,7 @@ class FockInitialStates(FockBaseTest):
         state = self.eng.run()
 
         psi = state.ket().real
-        psi_exact = fock_state(n, fock_dim=cutoff)
+        psi_exact = fock_state(n, fock_dim=self.D)
 
         self.assertAllAlmostEqual(psi, psi_exact, delta=self.tol)
 
@@ -147,7 +129,7 @@ class FockInitialStates(FockBaseTest):
         state = self.eng.run()
 
         psi = state.ket()
-        psi_exact = cat_state(a, 0, fock_dim=cutoff)
+        psi_exact = cat_state(a, 0, fock_dim=self.D)
 
         self.assertAllAlmostEqual(psi, psi_exact, delta=self.tol)
 
