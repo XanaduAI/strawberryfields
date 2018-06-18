@@ -216,6 +216,7 @@ class QReg(object):
                 vac = single_mode_vac
             else:
                 vac = ops.combine_single_modes([single_mode_vac] * self._num_modes, self._batch_size)
+            vac = tf.identity(vac, name="Vacuum")
             self._update_state(vac)
             self._state_is_pure = pure
 

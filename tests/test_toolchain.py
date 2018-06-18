@@ -111,6 +111,7 @@ class BasicTests(BaseTest):
 
     def test_regrefs(self):
         """Testing register references."""
+        self.eng.backend.reset()
         q = self.eng.register
         # using a measurement result before it exists
         with self.eng:
@@ -130,6 +131,7 @@ class BasicTests(BaseTest):
 
     def test_homodyne_measurement(self):
         """Homodyne measurements."""
+        self.eng.backend.reset()
         q = self.eng.register
         with self.eng:
             Coherent(*randn(2)) | q[0]
@@ -149,6 +151,8 @@ class BasicTests(BaseTest):
 
     def test_program_subroutine(self):
         """Simple quantum program with a subroutine and references."""
+        self.eng.backend.reset()
+
         # define some gates
         D = Dgate(0.5)
         BS = BSgate(0.7*pi, pi/2)
@@ -195,6 +199,8 @@ class BasicTests(BaseTest):
 
     def test_create_delete(self):
         """Creating and deleting modes."""
+        self.eng.backend.reset()
+
         # define some gates
         D = Dgate(0.5)
         BS = BSgate(2*pi, pi/2)
@@ -254,6 +260,7 @@ class BasicTests(BaseTest):
 
     def test_create_delete_reset(self):
         """Test various use cases creating and deleting modes, together with backend resets."""
+        self.eng.backend.reset()
 
         # define some gates
         X = Xgate(0.5)
@@ -353,6 +360,7 @@ class BasicTests(BaseTest):
 
         kwargs = {}
         r = self.eng.register
+        self.eng.backend.reset()
 
         # RegRefTransforms for deferred measurements (note that some operations expect nonnegative parameter values)
         rr_inputs = [RR(r[0], lambda x: x**2), func1(r[0]), func2(*r)]
@@ -366,10 +374,6 @@ class BasicTests(BaseTest):
             if self.bsize > 1:
                 # test batched input
                 other_inputs.append(uniform(size=(self.bsize,)))
-            # initialize any TensorFlow variables
-            session = tf.Session()
-            kwargs.update({"session": session})
-            session.run(tf.global_variables_initializer())
 
         other_pars = tuple(Parameter(k) for k in other_inputs)
 
@@ -409,7 +413,22 @@ class BasicTests(BaseTest):
             #n_args = min(n_args, 2)   # shortcut, only test cartesian products up to two parameter types
             # check all combinations of Parameter types
             for p in itertools.product(rr_pars+other_pars, repeat=n_args):
+                # re-declare tensorflow Variables here (otherwise they will be on a different graph when we do backend.reset)
+                if isinstance(self.backend, sf.backends.TFBackend):
+                    tmp = []
+                    for param in p:
+                        if isinstance(param.x, tf.Variable):
+                            new_param = tf.Variable(0.8)
+                        else:
+                            new_param = param
+                        tmp.append(new_param)
+                    p = tuple(tmp)
+                    # create new Session and initialize variables
+                    session = tf.Session()
+                    kwargs.update({"session": session})
+                    session.run(tf.global_variables_initializer())
                 check(G, p, measure=True)
+                self.eng.backend.reset()
 
 
 
@@ -426,6 +445,7 @@ class FockBasisTests(FockBaseTest):
 
     def test_fock_measurement(self):
         """Fock measurements."""
+        self.eng.backend.reset()
         q = self.eng.register
         s = randint(0, self.D, (2,))
         with self.eng:
@@ -454,6 +474,7 @@ class GaussianTests(GaussianBaseTest):
 
     def test_gaussian_measurement(self):
         """Gaussian-only measurements."""
+        self.eng.backend.reset()
         q = self.eng.register
         with self.eng:
             Coherent(*randn(2)) | q[0]
