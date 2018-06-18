@@ -14,7 +14,7 @@ from strawberryfields.backends.shared_ops import sympmat
 
 
 a = 0.32+0.1j
-r = 0.212
+r = 0.112
 phi = 0.123
 n = 2
 
