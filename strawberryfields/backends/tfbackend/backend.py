@@ -112,15 +112,17 @@ class TFBackend(BaseFock):
                   If hard reset is specified, then resets the underlying tensor graph as well.
                   If False, then the circuit is reset to its initial state, but ops that
                   have already been declared are still accessible.
+                * **cutoff_dim** (*int*): new cutoff dimension for the simulated circuit.
         """
         hard = kwargs.get('hard', True)
+        cutoff_dim = kwargs.get('cutoff_dim', None)
         if hard:
             tf.reset_default_graph()
             self._graph = tf.get_default_graph()
 
         with tf.name_scope('Reset'):
             self._modemap.reset()
-            self.circuit.reset(pure, graph=self._graph, num_subsystems=self._init_modes)
+            self.circuit.reset(pure, graph=self._graph, num_subsystems=self._init_modes, cutoff_dim=cutoff_dim)
 
     def get_cutoff_dim(self):
         """Returns the Hilbert space cutoff dimension used.

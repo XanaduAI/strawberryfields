@@ -58,14 +58,14 @@ class QReg(object):
             self._state_is_pure = pure
             self._state_history = []
             self._cache = {}
-            self._make_vac_states()
+            self._make_vac_states(cutoff_dim)
             self.reset(pure)
 
-    def _make_vac_states(self):
+    def _make_vac_states(self, cutoff_dim):
         """Make vacuum state tensors for the underlying graph"""
         with self._graph.as_default():
             one = tf.cast([1.0], ops.def_type)
-            v = tf.scatter_nd([[0]], one, [self._cutoff_dim])
+            v = tf.scatter_nd([[0]], one, [cutoff_dim])
             self._single_mode_pure_vac = v
             self._single_mode_mixed_vac = tf.einsum('i,j->ij', v, v)
             if self._batched:
@@ -185,7 +185,7 @@ class QReg(object):
         self._update_state(new_state)
         self._num_modes += num_modes
 
-    def reset(self, pure=True, graph=None, num_subsystems=None):
+    def reset(self, pure=True, graph=None, num_subsystems=None, cutoff_dim=None):
         """
         Resets the state of the circuit to have all modes in vacuum.
         Args:
@@ -194,16 +194,19 @@ class QReg(object):
             graph (and all its defined operations) will be kept.
             num_subsystems (int, optional): Sets the number of modes in the reset
                 circuit. Default is unchanged.
+            cutoff_dim (int, optional): New Fock space cutoff dimension to use.
 
         Returns:
             None
         """
+        if not cutoff_dim:
+            cutoff_dim = self._cutoff_dim
         if isinstance(graph, tf.Graph):
             if graph != self._graph:
                 del self._graph  # get rid of the old graph from memory
                 self._graph = graph
                 ops.get_prefac_tensor.cache_clear() # clear any cached tensors that may live on old graph
-            self._make_vac_states()
+            self._make_vac_states(cutoff_dim)
             self._state_history = []
             self._cache = {}
 
