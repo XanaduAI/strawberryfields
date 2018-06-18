@@ -374,10 +374,6 @@ class BasicTests(BaseTest):
             if self.bsize > 1:
                 # test batched input
                 other_inputs.append(uniform(size=(self.bsize,)))
-            # initialize any TensorFlow variables
-            session = tf.Session()
-            kwargs.update({"session": session})
-            session.run(tf.global_variables_initializer())
 
         other_pars = tuple(Parameter(k) for k in other_inputs)
 
@@ -417,7 +413,22 @@ class BasicTests(BaseTest):
             #n_args = min(n_args, 2)   # shortcut, only test cartesian products up to two parameter types
             # check all combinations of Parameter types
             for p in itertools.product(rr_pars+other_pars, repeat=n_args):
+                # re-declare tensorflow Variables here (otherwise they will be on a different graph when we do backend.reset)
+                if isinstance(self.backend, sf.backends.TFBackend):
+                    tmp = []
+                    for param in p:
+                        if isinstance(param.x, tf.Variable):
+                            new_param = tf.Variable(0.8)
+                        else:
+                            new_param = param
+                        tmp.append(new_param)
+                    p = tuple(tmp)
+                    # create new Session and initialize variables
+                    session = tf.Session()
+                    kwargs.update({"session": session})
+                    session.run(tf.global_variables_initializer())
                 check(G, p, measure=True)
+                self.eng.backend.reset()
 
 
 
