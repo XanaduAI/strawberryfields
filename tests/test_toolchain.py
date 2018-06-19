@@ -111,7 +111,6 @@ class BasicTests(BaseTest):
 
     def test_regrefs(self):
         """Testing register references."""
-        self.eng.backend.reset()
         q = self.eng.register
         # using a measurement result before it exists
         with self.eng:
@@ -131,7 +130,6 @@ class BasicTests(BaseTest):
 
     def test_homodyne_measurement(self):
         """Homodyne measurements."""
-        self.eng.backend.reset()
         q = self.eng.register
         with self.eng:
             Coherent(*randn(2)) | q[0]
@@ -151,8 +149,6 @@ class BasicTests(BaseTest):
 
     def test_program_subroutine(self):
         """Simple quantum program with a subroutine and references."""
-        self.eng.backend.reset()
-
         # define some gates
         D = Dgate(0.5)
         BS = BSgate(0.7*pi, pi/2)
@@ -199,8 +195,6 @@ class BasicTests(BaseTest):
 
     def test_create_delete(self):
         """Creating and deleting modes."""
-        self.eng.backend.reset()
-
         # define some gates
         D = Dgate(0.5)
         BS = BSgate(2*pi, pi/2)
@@ -260,8 +254,6 @@ class BasicTests(BaseTest):
 
     def test_create_delete_reset(self):
         """Test various use cases creating and deleting modes, together with backend resets."""
-        self.eng.backend.reset()
-
         # define some gates
         X = Xgate(0.5)
 
@@ -360,7 +352,6 @@ class BasicTests(BaseTest):
 
         kwargs = {}
         r = self.eng.register
-        self.eng.backend.reset()
 
         # RegRefTransforms for deferred measurements (note that some operations expect nonnegative parameter values)
         rr_inputs = [RR(r[0], lambda x: x**2), func1(r[0]), func2(*r)]
@@ -383,11 +374,15 @@ class BasicTests(BaseTest):
             G = G(*par)
             with self.eng:
                 if measure:
-                    # RR parameters require measurements, postselection is much faster
-                    MeasureHomodyne(0, select=0.1)     | r[0]
-                    MeasureHomodyne(pi/2, select=0.2)  | r[1]
+                    # RR parameters require measurements
                     #MeasureX  | r[0]
                     #MeasureP  | r[1]
+                    # postselection is much faster
+                    #MeasureHomodyne(0, select=0.1)     | r[0]
+                    #MeasureHomodyne(pi/2, select=0.2)  | r[1]
+                    # faking the measurements entirely is faster still
+                    r[0].val = 0.1
+                    r[1].val = 0.2
                 if G.ns == 1:
                     G | r[0]
                 else:
@@ -445,7 +440,6 @@ class FockBasisTests(FockBaseTest):
 
     def test_fock_measurement(self):
         """Fock measurements."""
-        self.eng.backend.reset()
         q = self.eng.register
         s = randint(0, self.D, (2,))
         with self.eng:
@@ -474,7 +468,6 @@ class GaussianTests(GaussianBaseTest):
 
     def test_gaussian_measurement(self):
         """Gaussian-only measurements."""
-        self.eng.backend.reset()
         q = self.eng.register
         with self.eng:
             Coherent(*randn(2)) | q[0]
