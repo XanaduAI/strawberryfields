@@ -201,6 +201,7 @@ class QReg(object):
         """
         if not cutoff_dim:
             cutoff_dim = self._cutoff_dim
+        self._cutoff_dim = cutoff_dim
         if isinstance(graph, tf.Graph):
             if graph != self._graph:
                 del self._graph  # get rid of the old graph from memory
