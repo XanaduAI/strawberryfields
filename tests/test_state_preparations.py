@@ -78,9 +78,22 @@ class FockBasisTests(FockBaseTest):
             state = self.circuit.state()
             self.assertAllAlmostEqual(state.fidelity(random_ket, 0), 1, delta=self.tol)
 
+    # TODO: Implement a meaningful test for batched state preparations.
+    #
+    # def test_prepare_batched_ket_state(self):
+    #     """Tests if a batch of ket states with arbitrary parameters is correctly prepared."""
+    #     random_kets = np.array([ (lambda ket: ket / np.linalg.norm(ket))(np.random.uniform(-1, 1, self.D) + 1j*np.random.uniform(-1, 1, self.D)) for _ in range(self.D+1)])
+    #     random_kets_mixture = sum(np.outer(np.conj(ket),ket) for ket in random_kets)
+
+    #     self.circuit.reset(pure=self.kwargs['pure'])
+    #     self.circuit.prepare_ket_state(random_kets, 0)
+    #     state = self.circuit.state()
+
+    #     self.assertAllAlmostEqual(state.fidelity(random_kets_mixture, 0), 1, delta=self.tol)
+
     def test_prepare_dm_state(self):
         """Tests if rank two dm states with arbitrary parameters are correctly prepared."""
-        # first we test some rank tow states
+        # first we test some rank two states
         for _ in range(10):
             random_ket1 = np.random.uniform(-1, 1, self.D) + 1j*np.random.uniform(-1, 1, self.D)
             random_ket1 = random_ket1 / np.linalg.norm(random_ket1)

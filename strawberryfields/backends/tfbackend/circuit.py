@@ -277,7 +277,7 @@ class QReg(object):
                 displaced_squeezed = ops.displaced_squeezed(alpha, r, phi, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched)
                 self._replace_and_update(displaced_squeezed, mode, self._state)
 
-    def prepare_state(self, state, mode, input_is_batched=False):
+    def prepare_state(self, state, mode, input_state_is_pure):
         """
              Traces out the state in 'mode' and replaces it with the state numerically defined by 'state'.
         """
@@ -286,6 +286,10 @@ class QReg(object):
                 state = tf.cast(tf.convert_to_tensor(state), ops.def_type)
                 # check whether state is a single (unbatched) vector
                 # or a batch of vectors
+                if input_state_is_pure:
+                    input_is_batched = state.shape.ndims == 2
+                else:
+                    input_is_batched = state.shape.ndims % 2 == 1
                 if self._batched and not input_is_batched:
                     state = tf.stack([state] * self._batch_size)
                 self._replace_and_update(state, mode, self._state)
