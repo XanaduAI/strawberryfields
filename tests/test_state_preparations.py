@@ -71,12 +71,44 @@ class FockBasisTests(FockBaseTest):
   def test_prepare_ket_state(self):
     """Tests if a ket state with arbitrary parameters is correctly prepared."""
     for _ in range(10):
-      random_ket = np.random.uniform(-1,1,self.D)
+      random_ket = np.random.uniform(-1,1,self.D) + 1j*np.random.uniform(-1,1,self.D)
       random_ket = random_ket / np.linalg.norm(random_ket)
       self.circuit.reset(pure=self.kwargs['pure'])
       self.circuit.prepare_ket_state(random_ket, 0)
       state = self.circuit.state()
       self.assertAllAlmostEqual(state.fidelity(random_ket, 0), 1, delta=self.tol)
+
+  def test_prepare_dm_state(self):
+    """Tests if a dm state with arbitrary parameters is correctly prepared."""
+    for _ in range(10):
+      random_ket1 = np.random.uniform(-1,1,self.D) + 1j*np.random.uniform(-1,1,self.D)
+      random_ket1 = random_ket1 / np.linalg.norm(random_ket1)
+      random_ket2 = np.random.uniform(-1,1,self.D) + 1j*np.random.uniform(-1,1,self.D)
+      random_ket2 = random_ket2 / np.linalg.norm(random_ket2)
+
+      self.circuit.reset(pure=self.kwargs['pure'])
+      self.circuit.prepare_ket_state(random_ket1, 0)
+      state = self.circuit.state()
+      ket_probs1 = np.array([state.fock_prob([n]) for n in range(self.D)])
+
+      self.circuit.reset(pure=self.kwargs['pure'])
+      self.circuit.prepare_ket_state(random_ket2, 0)
+      state = self.circuit.state()
+      ket_probs2 = np.array([state.fock_prob([n]) for n in range(self.D)])
+
+      ket_probs = 0.5*ket_probs1 + 0.5*ket_probs2
+
+      random_rho = 0.5*np.kron(np.conj(random_ket1),random_ket1) + 0.5*np.kron(np.conj(random_ket2),random_ket2)
+
+      self.circuit.reset(pure=self.kwargs['pure'])
+      self.circuit.prepare_dm_state(random_rho, 0)
+      state = self.circuit.state()
+      rho_probs = np.array([state.fock_prob([n]) for n in range(self.D)])
+
+      tr = state.trace()
+      self.assertAllAlmostEqual(tr, 1, delta=self.tol)
+
+      self.assertAllAlmostEqual(rho_probs, ket_probs, delta=self.tol)
 
 if __name__=="__main__":
   # run the tests in this file
