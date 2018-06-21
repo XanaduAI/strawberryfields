@@ -225,7 +225,7 @@ class TFBackend(BaseFock):
             mode (int): index of mode where state is prepared
 
         """
-        self._prepare_state(state, mode)
+        self._prepare_state(state, mode, len(state.shape) == 2)
 
     def prepare_dm_state(self, state, mode):
         """
@@ -237,9 +237,9 @@ class TFBackend(BaseFock):
             mode (int): index of mode where state is prepared
 
         """
-        self._prepare_state(state, mode)
+        self._prepare_state(state, mode, len(state.shape) % 2 == 1)
 
-    def _prepare_state(self, state, mode):
+    def _prepare_state(self, state, mode, input_is_batched):
         """
         Prepare an arbitrary pure or mixed state on the specified mode.
         Note: this may convert the state representation to mixed.
@@ -252,7 +252,7 @@ class TFBackend(BaseFock):
         with tf.name_scope('Prepare_state'):
             state = _maybe_unwrap(state)
             remapped_mode = self._remap_modes(mode)
-            self.circuit.prepare_state(state, remapped_mode)
+            self.circuit.prepare_state(state, remapped_mode, input_is_batched)
 
     def prepare_thermal_state(self, nbar, mode):
         """
