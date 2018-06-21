@@ -80,6 +80,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_prepare_dm_state(self):
     """Tests if rank two dm states with arbitrary parameters are correctly prepared."""
+    # first we test some rank tow states
     for _ in range(10):
       random_ket1 = np.random.uniform(-1,1,self.D) + 1j*np.random.uniform(-1,1,self.D)
       random_ket1 = random_ket1 / np.linalg.norm(random_ket1)
@@ -105,9 +106,24 @@ class FockBasisTests(FockBaseTest):
       state = self.circuit.state()
       rho_probs = np.array([state.fock_prob([n]) for n in range(self.D)])
 
-      tr = state.trace()
-      self.assertAllAlmostEqual(tr, 1, delta=self.tol)
+      self.assertAllAlmostEqual(state.trace(), 1, delta=self.tol)
       self.assertAllAlmostEqual(rho_probs, ket_probs, delta=self.tol)
+
+    # now lets test the preparation of an arbitrary Haar random state
+    random_rho = np.random.normal(size=[self.D,self.D]) + 1j*np.random.normal(size=[self.D,self.D])
+    random_rho = np.dot(random_rho.conj().T,random_rho)
+    random_rho = random_rho/random_rho.trace()
+    self.circuit.reset(pure=self.kwargs['pure'])
+    self.circuit.prepare_dm_state(random_rho, 0)
+    rho_probs = np.array([state.fock_prob([n]) for n in range(self.D)])
+    es, vs = np.linalg.eig(random_rho)
+    ket_probs = np.zeros([len(es)], dtype=complex)
+    for e,v in zip(es,vs):
+      self.circuit.reset(pure=self.kwargs['pure'])
+      self.circuit.prepare_ket_state(v, 0)
+      ket_probs += e*np.array([state.fock_prob([n]) for n in range(self.D)])
+
+    self.assertAllAlmostEqual(rho_probs, ket_probs, delta=self.tol)
 
 if __name__=="__main__":
   # run the tests in this file
