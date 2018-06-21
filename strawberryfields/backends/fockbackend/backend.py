@@ -386,7 +386,7 @@ class FockBackend(BaseFock):
             mode (int): index of mode where state is prepared
 
         """
-        raise NotImplementedError
+        self.qreg.prepare(state, self._remap_modes(mode))
 
     def prepare_multimode_ket_state(self, state, modes):
         """Prepare an arbitrary pure state on the specified modes.

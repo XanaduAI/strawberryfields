@@ -586,6 +586,10 @@ class BaseGaussian(BaseBackend):
         # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
+    def prepare_dm_state(self, state, mode):
+        # pylint: disable=unused-argument,missing-docstring
+        raise NotApplicableError
+
     def cubic_phase(self, gamma, mode):
         # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError

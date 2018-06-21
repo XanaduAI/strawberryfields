@@ -79,7 +79,7 @@ class FockBasisTests(FockBaseTest):
       self.assertAllAlmostEqual(state.fidelity(random_ket, 0), 1, delta=self.tol)
 
   def test_prepare_dm_state(self):
-    """Tests if a dm state with arbitrary parameters is correctly prepared."""
+    """Tests if rank two dm states with arbitrary parameters are correctly prepared."""
     for _ in range(10):
       random_ket1 = np.random.uniform(-1,1,self.D) + 1j*np.random.uniform(-1,1,self.D)
       random_ket1 = random_ket1 / np.linalg.norm(random_ket1)
@@ -98,7 +98,7 @@ class FockBasisTests(FockBaseTest):
 
       ket_probs = 0.5*ket_probs1 + 0.5*ket_probs2
 
-      random_rho = 0.5*np.kron(np.conj(random_ket1),random_ket1) + 0.5*np.kron(np.conj(random_ket2),random_ket2)
+      random_rho = 0.5*np.outer(np.conj(random_ket1),random_ket1) + 0.5*np.outer(np.conj(random_ket2),random_ket2)
 
       self.circuit.reset(pure=self.kwargs['pure'])
       self.circuit.prepare_dm_state(random_rho, 0)
@@ -107,7 +107,6 @@ class FockBasisTests(FockBaseTest):
 
       tr = state.trace()
       self.assertAllAlmostEqual(tr, 1, delta=self.tol)
-
       self.assertAllAlmostEqual(rho_probs, ket_probs, delta=self.tol)
 
 if __name__=="__main__":
