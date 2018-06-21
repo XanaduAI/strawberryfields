@@ -375,9 +375,20 @@ class FockBackend(BaseFock):
             mode (int): index of mode where state is prepared
 
         """
-        self.qreg.prepare(state, self._remap_modes(mode))
+        self._prepare_state(state, mode)
 
     def prepare_dm_state(self, state, mode):
+        """Prepare an arbitrary mixed state on the specified mode.
+        Note: this will convert the state representation to mixed.
+
+        Args:
+            state (array): density matrix representation of state to prepare
+            mode (int): index of mode where state is prepared
+
+        """
+        self._prepare_state(state, mode)
+
+    def _prepare_state(self, state, mode):
         """Prepare an arbitrary mixed state on the specified mode.
         Note: this will convert the state representation to mixed.
 
