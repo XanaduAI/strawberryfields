@@ -90,6 +90,7 @@ for quantum optical circuits.
     get_cutoff_dim
     prepare_fock_state
     prepare_ket_state
+    prepare_dm_state
     cubic_phase
     kerr_interaction
     measure_fock
@@ -504,6 +505,19 @@ class BaseFock(BaseBackend):
             mode (int): which mode to prepare the state in
         """
         raise NotImplementedError
+
+    def prepare_dm_state(self, state, mode):
+        r"""Prepare the given mixed state (in the Fock basis) in the specified mode.
+
+        The requested mode is traced out and replaced with the given mixed state (in the Fock basis).
+        As a result the state will have to be described using a density matrix.
+
+        Args:
+            state (array): density matrix in the Fock basis
+            mode (int): which mode to prepare the state in
+        """
+        raise NotImplementedError
+
 
     def cubic_phase(self, gamma, mode):
         r"""Apply the cubic phase operation to the specified mode.
