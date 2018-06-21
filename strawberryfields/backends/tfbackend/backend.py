@@ -225,10 +225,34 @@ class TFBackend(BaseFock):
             mode (int): index of mode where state is prepared
 
         """
-        with tf.name_scope('Prepare_ket'):
+        self._prepare_state(state, mode)
+
+    def prepare_dm_state(self, state, mode):
+        """
+        Prepare an arbitrary mixed state on the specified mode.
+        Note: this does convert the state representation to mixed.
+
+        Args:
+            state (array): matrix representation of the state to prepare
+            mode (int): index of mode where state is prepared
+
+        """
+        self._prepare_state(state, mode)
+
+    def _prepare_state(self, state, mode):
+        """
+        Prepare an arbitrary pure or mixed state on the specified mode.
+        Note: this may convert the state representation to mixed.
+
+        Args:
+            state (array): matrix representation of the state to prepare
+            mode (int): index of mode where state is prepared
+
+        """
+        with tf.name_scope('Prepare_state'):
             state = _maybe_unwrap(state)
             remapped_mode = self._remap_modes(mode)
-            self.circuit.prepare_pure_state(state, remapped_mode)
+            self.circuit.prepare_state(state, remapped_mode)
 
     def prepare_thermal_state(self, nbar, mode):
         """

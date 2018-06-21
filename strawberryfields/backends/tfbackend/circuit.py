@@ -281,12 +281,18 @@ class QReg(object):
         """
              Traces out the state in 'mode' and replaces it with the state numerically defined by 'state'.
         """
+        self.prepare_state(state, mode)
+
+    def prepare_state(self, state, mode):
+        """
+             Traces out the state in 'mode' and replaces it with the state numerically defined by 'state'.
+        """
         if self._valid_modes(mode):
             with self._graph.as_default():
                 state = tf.cast(tf.convert_to_tensor(state), ops.def_type)
                 # check whether state is a single (unbatched) vector
                 # or a batch of vectors
-                if self._batched and state.shape.ndims != 2:
+                if self._batched:
                     state = tf.stack([state] * self._batch_size)
                 self._replace_and_update(state, mode, self._state)
 
