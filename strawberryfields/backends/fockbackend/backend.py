@@ -55,7 +55,7 @@ class FockBackend(BaseFock):
             remapped_modes = remapped_modes[0]
         return remapped_modes
 
-    def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=True, **kwargs):
+    def begin_circuit(self, num_subsystems, cutoff_dim, hbar=2, pure=True, **kwargs):
         r"""
         Create a quantum circuit (initialized in vacuum state) with the number of modes
         equal to num_subsystems and a Fock-space cutoff dimension of cutoff_dim.
@@ -70,13 +70,11 @@ class FockBackend(BaseFock):
             pure (bool): whether to begin the circuit in a pure state representation
         """
         # pylint: disable=attribute-defined-outside-init
-        if cutoff_dim is None:
-            raise ValueError("Argument 'cutoff_dim' must be passed to the Fock backend")
-        elif not isinstance(cutoff_dim, int):
-            raise ValueError("Argument 'cutoff_dim' must be a positive integer")
-        elif not isinstance(num_subsystems, int):
+        if not isinstance(num_subsystems, int):
             raise ValueError("Argument 'num_subsystems' must be a positive integer")
-        elif not isinstance(pure, bool):
+        if not isinstance(cutoff_dim, int):
+            raise ValueError("Argument 'cutoff_dim' must be a positive integer")
+        if not isinstance(pure, bool):
             raise ValueError("Argument 'pure' must be either True or False")
 
         self._init_modes = num_subsystems

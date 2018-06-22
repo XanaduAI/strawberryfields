@@ -270,7 +270,7 @@ class BaseBackend:
             num_subsystems (int): number of modes in the circuit
             cutoff_dim (int): numerical Hilbert space cutoff dimension (used for circuits operating in Fock basis)
             hbar (float): The value of :math:`\hbar` to initialise the circuit with, depending on the conventions followed.
-                By default, :math:`\hbar=2`. See :ref:`conventions` for more details.
+                See :ref:`conventions` for more details.
             pure (bool): whether to initialize the circuit in a pure state (will use a mixed state if pure is False)
         """
         pass  # BaseBackend can be instantiated for testing purposes, even though it does not do anything.
@@ -318,12 +318,14 @@ class BaseBackend:
 
         After the reset the circuit is in the same state as it was after the last :meth:`begin_circuit` call.
         It will have the original number of modes, all initialized in the vacuum state.
+        Some circuit parameters may be changed during the reset, see the keyword args below.
 
         Args:
             pure (bool): if True, initialize the circuit in a pure state (will use a mixed state if pure is False)
 
         Keyword Args:
             cutoff_dim (int): new Hilbert space truncation dimension (for Fock basis backends only)
+            hbar (float): new :math:`\hbar` value. See :ref:`conventions` for more details.
         """
         raise NotImplementedError
 

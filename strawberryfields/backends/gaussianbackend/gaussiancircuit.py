@@ -13,6 +13,7 @@
 # limitations under the License.
 """Gaussian circuit operations"""
 # pylint: disable=duplicate-code
+import numbers
 import numpy as np
 
 from . import ops
@@ -46,12 +47,7 @@ class GaussianModes:
         For vacuum one has $N_{i,j}=M_{i,j}=alpha_i =0$,
         The quantities $N,M,\alpha$ are stored in the variable nmat, mmat, mean respectively
         """
-        # Check validity
-        if not isinstance(num_subsystems, int):
-            raise ValueError("Number of modes must be an integer")
-
-        self.hbar = hbar
-        self.reset(num_subsystems)
+        self.reset(num_subsystems, hbar)
 
     def add_mode(self, n=1):
         """add mode to the circuit"""
@@ -86,15 +82,22 @@ class GaussianModes:
             self.loss(0.0, mode)
             self.active[mode] = None
 
-    def reset(self, num_subsystems=None):
+    def reset(self, num_subsystems=None, hbar=None):
         """Resets the simulation state.
 
         Args:
-            num_subsystems (int, optional): Sets the number of modes in the reset
-                circuit. Default is unchanged.
+            num_subsystems (int): Sets the number of modes in the reset circuit. None means unchanged.
+            hbar (float): :math:`\hbar` value. None means unchanged. See :ref:`conventions` for more details.
         """
         if num_subsystems is not None:
+            if not isinstance(num_subsystems, int):
+                raise ValueError("Number of modes must be an integer")
             self.nlen = num_subsystems
+
+        if hbar is not None:
+            if not isinstance(hbar, numbers.Real) or hbar <= 0:
+                raise ValueError("Argument 'hbar' must be a positive number")
+            self.hbar = hbar
 
         self.nmat = np.zeros((self.nlen, self.nlen), dtype=complex)
         self.mmat = np.zeros((self.nlen, self.nlen), dtype=complex)

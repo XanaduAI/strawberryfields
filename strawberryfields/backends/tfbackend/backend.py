@@ -62,7 +62,7 @@ class TFBackend(BaseFock):
             remapped_modes = remapped_modes[0]
         return remapped_modes
 
-    def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=True, **kwargs):
+    def begin_circuit(self, num_subsystems, cutoff_dim, hbar=2, pure=True, **kwargs):
         r"""
         Create a quantum circuit (initialized in vacuum state) with the number of modes
         equal to num_subsystems and a Fock-space cutoff dimension of cutoff_dim.
@@ -73,7 +73,7 @@ class TFBackend(BaseFock):
                 ``cutoff_dim=D`` represents the Fock states :math:`|0\rangle,\dots,|D-1\rangle`.
                 This argument is **required** for the Tensorflow backend.
             hbar (float): The value of :math:`\hbar` to initialise the circuit with, depending on the conventions followed.
-                By default, :math:`\hbar=2`. See :ref:`conventions` for more details.
+                See :ref:`conventions` for more details.
             pure (bool): whether to begin the circuit in a pure state representation
             **kwargs: optional keyword arguments which will be passed to the underlying circuit class
 
@@ -83,9 +83,7 @@ class TFBackend(BaseFock):
         with tf.name_scope('Begin_circuit'):
             batch_size = kwargs.get('batch_size', None)
 
-            if cutoff_dim is None:
-                raise ValueError("Argument 'cutoff_dim' must be passed to the Tensorflow backend")
-            elif not isinstance(num_subsystems, int):
+            if not isinstance(num_subsystems, int):
                 raise ValueError("Argument 'num_subsystems' must be a positive integer")
             elif not isinstance(cutoff_dim, int):
                 raise ValueError("Argument 'cutoff_dim' must be a positive integer")
@@ -105,24 +103,24 @@ class TFBackend(BaseFock):
         Resets the circuit state tensor back to an all-vacuum state.
 
         Args:
-            pure (bool): whether to use a pure state representation upon reset
-            **kwargs:
+          pure (bool): whether to use a pure state representation upon reset
 
-                * **hard** (*bool*): whether to reset the underlying tensorflow graph.
+        Keyword Args:
+          hard (bool): whether to reset the underlying tensorflow graph.
                   If hard reset is specified, then resets the underlying tensor graph as well.
                   If False, then the circuit is reset to its initial state, but ops that
                   have already been declared are still accessible.
-                * **cutoff_dim** (*int*): new cutoff dimension for the simulated circuit.
+          cutoff_dim (int): new cutoff dimension for the simulated circuit.
+          hbar (float): New :math:`\hbar` value. See :ref:`conventions` for more details.
         """
         hard = kwargs.get('hard', True)
-        cutoff_dim = kwargs.get('cutoff_dim', None)
         if hard:
             tf.reset_default_graph()
             self._graph = tf.get_default_graph()
 
         with tf.name_scope('Reset'):
             self._modemap.reset()
-            self.circuit.reset(pure, graph=self._graph, num_subsystems=self._init_modes, cutoff_dim=cutoff_dim)
+            self.circuit.reset(pure, graph=self._graph, num_subsystems=self._init_modes, **kwargs)
 
     def get_cutoff_dim(self):
         """Returns the Hilbert space cutoff dimension used.
