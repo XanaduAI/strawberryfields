@@ -1,5 +1,6 @@
 .. image:: doc/_static/strawberry-fields-text.png
     :alt: Strawberry Fields
+
 ##################################################
 
 .. image:: https://img.shields.io/travis/XanaduAI/strawberryfields/master.svg?style=for-the-badge
