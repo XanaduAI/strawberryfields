@@ -50,11 +50,9 @@ class QReg:
     # pylint: disable=too-many-instance-attributes,too-many-public-methods
     def __init__(self, graph, num_modes, cutoff_dim, hbar=2., pure=True, batch_size=None):
         self._graph = None
-        with graph.as_default():  # FIXME is this necessary? see self.reset()
-            self._batch_size = batch_size
-            self._batched = False if batch_size is None else True
-            self.reset(pure, graph, num_subsystems=num_modes, cutoff_dim=cutoff_dim, hbar=hbar)
-
+        self._batch_size = batch_size
+        self._batched = False if batch_size is None else True
+        self.reset(pure, graph, num_subsystems=num_modes, cutoff_dim=cutoff_dim, hbar=hbar)
 
     def _make_vac_states(self, cutoff_dim):
         """Make vacuum state tensors for the underlying graph"""
@@ -217,14 +215,13 @@ class QReg:
             if not isinstance(graph, tf.Graph):
                 raise ValueError("Argument 'graph' must be a tf.Graph")
             if graph != self._graph:
-                del self._graph  # get rid of the old graph from memory FIXME is this necessary? del should just remove the reference to the old graph, which is done anyway on the next line?
                 self._graph = graph
                 ops.get_prefac_tensor.cache_clear() # clear any cached tensors that may live on old graph
-            self._make_vac_states(self._cutoff_dim)
             self._state_history = []
             self._cache = {}
 
         with self._graph.as_default():
+            self._make_vac_states(self._cutoff_dim)
             single_mode_vac = self._single_mode_pure_vac if pure else self._single_mode_mixed_vac
             if self._num_modes == 1:
                 vac = single_mode_vac
