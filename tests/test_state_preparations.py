@@ -79,25 +79,31 @@ class FockBasisTests(FockBaseTest):
             self.assertAllAlmostEqual(state.fidelity(random_ket, 0), 1, delta=self.tol)
 
     def test_prepare_batched_ket_state(self):
-        """Tests if a batch of ket states with arbitrary parameters is correctly prepared."""
+        """Tests if a batch of ket states with arbitrary parameters is correctly prepared by comparing the fock probabilities of the batched case with individual runs with non batched input states."""
 
         if not self.args.batched:
             return
 
-        random_kets = np.array([(lambda ket: ket / np.linalg.norm(ket))(np.random.uniform(-1, 1, self.D) + 1j*np.random.uniform(-1, 1, self.D)) for _ in range(self.D+1)])
-        random_kets_mixture = sum(np.outer(np.conj(ket), ket) for ket in random_kets)
+        random_kets = np.array([(lambda ket: ket / np.linalg.norm(ket))(np.random.uniform(-1, 1, self.D) + 1j*np.random.uniform(-1, 1, self.D)) for _ in range(self.bsize)])
 
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_ket_state(random_kets, 0)
         state = self.circuit.state()
         batched_probs = np.array([state.fock_prob([n]) for n in range(self.D)])
+        print(batched_probs)
 
-        self.circuit.reset(pure=self.kwargs['pure'])
-        self.circuit.prepare_ket_state(random_kets_mixture, 0)
-        state = self.circuit.state()
-        mixed_probs = np.array([state.fock_prob([n]) for n in range(self.D)])
+        individual_probs = []
+        for random_ket in random_kets:
+            self.circuit.reset(pure=self.kwargs['pure'])
+            self.circuit.prepare_ket_state(random_ket, 0)
+            state = self.circuit.state()
+            probs_for_this_ket = [state.fock_prob([n])[0] for n in range(self.D)]
+            print(probs_for_this_ket)
+            individual_probs.append(probs_for_this_ket)
 
-        self.assertAllAlmostEqual(batched_probs, mixed_probs, delta=self.tol)
+        individual_probs = np.array(individual_probs).T
+
+        self.assertAllAlmostEqual(batched_probs, individual_probs, delta=self.tol)
 
     def test_prepare_rank_two_dm_state(self):
         """Tests if rank two dm states with arbitrary parameters are correctly prepared."""
