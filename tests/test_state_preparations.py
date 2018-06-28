@@ -78,22 +78,29 @@ class FockBasisTests(FockBaseTest):
             state = self.circuit.state()
             self.assertAllAlmostEqual(state.fidelity(random_ket, 0), 1, delta=self.tol)
 
-    # TODO: Implement a meaningful test for batched state preparations.
-    #
-    # def test_prepare_batched_ket_state(self):
-    #     """Tests if a batch of ket states with arbitrary parameters is correctly prepared."""
-    #     random_kets = np.array([ (lambda ket: ket / np.linalg.norm(ket))(np.random.uniform(-1, 1, self.D) + 1j*np.random.uniform(-1, 1, self.D)) for _ in range(self.D+1)])
-    #     random_kets_mixture = sum(np.outer(np.conj(ket),ket) for ket in random_kets)
+    def test_prepare_batched_ket_state(self):
+        """Tests if a batch of ket states with arbitrary parameters is correctly prepared."""
 
-    #     self.circuit.reset(pure=self.kwargs['pure'])
-    #     self.circuit.prepare_ket_state(random_kets, 0)
-    #     state = self.circuit.state()
+        if not self.args.batched:
+            return
 
-    #     self.assertAllAlmostEqual(state.fidelity(random_kets_mixture, 0), 1, delta=self.tol)
+        random_kets = np.array([(lambda ket: ket / np.linalg.norm(ket))(np.random.uniform(-1, 1, self.D) + 1j*np.random.uniform(-1, 1, self.D)) for _ in range(self.D+1)])
+        random_kets_mixture = sum(np.outer(np.conj(ket), ket) for ket in random_kets)
 
-    def test_prepare_dm_state(self):
+        self.circuit.reset(pure=self.kwargs['pure'])
+        self.circuit.prepare_ket_state(random_kets, 0)
+        state = self.circuit.state()
+        batched_probs = np.array([state.fock_prob([n]) for n in range(self.D)])
+
+        self.circuit.reset(pure=self.kwargs['pure'])
+        self.circuit.prepare_ket_state(random_kets_mixture, 0)
+        state = self.circuit.state()
+        mixed_probs = np.array([state.fock_prob([n]) for n in range(self.D)])
+
+        self.assertAllAlmostEqual(batched_probs, mixed_probs, delta=self.tol)
+
+    def test_prepare_rank_two_dm_state(self):
         """Tests if rank two dm states with arbitrary parameters are correctly prepared."""
-        # first we test some rank two states
         for _ in range(10):
             random_ket1 = np.random.uniform(-1, 1, self.D) + 1j*np.random.uniform(-1, 1, self.D)
             random_ket1 = random_ket1 / np.linalg.norm(random_ket1)
@@ -110,9 +117,9 @@ class FockBasisTests(FockBaseTest):
             state = self.circuit.state()
             ket_probs2 = np.array([state.fock_prob([n]) for n in range(self.D)])
 
-            ket_probs = 0.5*ket_probs1 + 0.5*ket_probs2
+            ket_probs = 0.2*ket_probs1 + 0.8*ket_probs2
 
-            random_rho = 0.5*np.outer(np.conj(random_ket1), random_ket1) + 0.5*np.outer(np.conj(random_ket2), random_ket2)
+            random_rho = 0.2*np.outer(np.conj(random_ket1), random_ket1) + 0.8*np.outer(np.conj(random_ket2), random_ket2)
 
             self.circuit.reset(pure=self.kwargs['pure'])
             self.circuit.prepare_dm_state(random_rho, 0)
@@ -122,21 +129,27 @@ class FockBasisTests(FockBaseTest):
             self.assertAllAlmostEqual(state.trace(), 1, delta=self.tol)
             self.assertAllAlmostEqual(rho_probs, ket_probs, delta=self.tol)
 
-        # now lets test the preparation of an arbitrary Haar random state
+    def test_prepare_random_dm_state(self):
+        """Tests if a random dm state is correctly prepared."""
         random_rho = np.random.normal(size=[self.D, self.D]) + 1j*np.random.normal(size=[self.D, self.D])
         random_rho = np.dot(random_rho.conj().T, random_rho)
         random_rho = random_rho/random_rho.trace()
+
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_dm_state(random_rho, 0)
+        state = self.circuit.state()
         rho_probs = np.array([state.fock_prob([n]) for n in range(self.D)])
+
         es, vs = np.linalg.eig(random_rho)
-        ket_probs = np.zeros([len(es)], dtype=complex)
-        for e, v in zip(es, vs):
+        kets_mixed_probs = np.zeros([len(es)], dtype=complex)
+        for e, v in zip(es, vs.T.conj()):
             self.circuit.reset(pure=self.kwargs['pure'])
             self.circuit.prepare_ket_state(v, 0)
-            ket_probs += e*np.array([state.fock_prob([n]) for n in range(self.D)])
+            state = self.circuit.state()
+            probs_for_this_v = np.array([state.fock_prob([n]) for n in range(self.D)])
+            kets_mixed_probs += e*probs_for_this_v
 
-        self.assertAllAlmostEqual(rho_probs, ket_probs, delta=self.tol)
+        self.assertAllAlmostEqual(rho_probs, kets_mixed_probs, delta=self.tol)
 
 if __name__=="__main__":
     # run the tests in this file
