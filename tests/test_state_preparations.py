@@ -90,7 +90,6 @@ class FockBasisTests(FockBaseTest):
         self.circuit.prepare_ket_state(random_kets, 0)
         state = self.circuit.state()
         batched_probs = np.array([state.fock_prob([n]) for n in range(self.D)])
-        print(batched_probs)
 
         individual_probs = []
         for random_ket in random_kets:
@@ -98,7 +97,6 @@ class FockBasisTests(FockBaseTest):
             self.circuit.prepare_ket_state(random_ket, 0)
             state = self.circuit.state()
             probs_for_this_ket = [state.fock_prob([n])[0] for n in range(self.D)]
-            print(probs_for_this_ket)
             individual_probs.append(probs_for_this_ket)
 
         individual_probs = np.array(individual_probs).T
@@ -147,7 +145,10 @@ class FockBasisTests(FockBaseTest):
         rho_probs = np.array([state.fock_prob([n]) for n in range(self.D)])
 
         es, vs = np.linalg.eig(random_rho)
-        kets_mixed_probs = np.zeros([len(es)], dtype=complex)
+        if self.args.batched:
+            kets_mixed_probs = np.zeros([len(es), self.bsize], dtype=complex)
+        else:
+            kets_mixed_probs = np.zeros([len(es)], dtype=complex)
         for e, v in zip(es, vs.T.conj()):
             self.circuit.reset(pure=self.kwargs['pure'])
             self.circuit.prepare_ket_state(v, 0)
