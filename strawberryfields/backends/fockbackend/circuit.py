@@ -228,7 +228,8 @@ class QReg():
             # Insert state (ops.tensor() can role axis but this is unsuitable here, so we pass pos=None)
             self._state = ops.tensor(reduced_state, state, self._num_modes-n_modes, self._pure, pos=None)
 
-            mode_permutation = [x for x in range(10) if x not in modes] + modes
+        if sorted(modes) != modes or self._num_modes != n_modes:
+            mode_permutation = [x for x in range(self._num_modes) if x not in modes] + modes
             if self._pure:
                 index_permutation = mode_permutation
             else:
