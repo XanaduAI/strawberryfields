@@ -142,18 +142,18 @@ class FockBasisTests(FockBaseTest):
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_dm_state(random_rho, 0)
         state = self.circuit.state()
-        rho_probs = np.array([state.fock_prob([n]) for n in range(self.D)])
+        rho_probs = np.array(state.all_fock_probs())
 
         es, vs = np.linalg.eig(random_rho)
         if self.args.batched:
-            kets_mixed_probs = np.zeros([len(es), self.bsize], dtype=complex)
+            kets_mixed_probs = np.zeros([self.bsize, len(es)], dtype=complex)
         else:
             kets_mixed_probs = np.zeros([len(es)], dtype=complex)
         for e, v in zip(es, vs.T.conj()):
             self.circuit.reset(pure=self.kwargs['pure'])
             self.circuit.prepare_ket_state(v, 0)
             state = self.circuit.state()
-            probs_for_this_v = np.array([state.fock_prob([n]) for n in range(self.D)])
+            probs_for_this_v = np.array(state.all_fock_probs())
             kets_mixed_probs += e*probs_for_this_v
 
         self.assertAllAlmostEqual(rho_probs, kets_mixed_probs, delta=self.tol)
