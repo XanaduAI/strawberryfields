@@ -89,17 +89,17 @@ class FockBasisTests(FockBaseTest):
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_ket_state(random_kets, 0)
         state = self.circuit.state()
-        batched_probs = np.array([state.fock_prob([n]) for n in range(self.D)])
+        batched_probs = np.array(state.all_fock_probs())
 
         individual_probs = []
         for random_ket in random_kets:
             self.circuit.reset(pure=self.kwargs['pure'])
             self.circuit.prepare_ket_state(random_ket, 0)
             state = self.circuit.state()
-            probs_for_this_ket = [state.fock_prob([n])[0] for n in range(self.D)]
-            individual_probs.append(probs_for_this_ket)
+            probs_for_this_ket = np.array(state.all_fock_probs())
+            individual_probs.append(probs_for_this_ket[0])
 
-        individual_probs = np.array(individual_probs).T
+        individual_probs = np.array(individual_probs)
 
         self.assertAllAlmostEqual(batched_probs, individual_probs, delta=self.tol)
 
