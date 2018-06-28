@@ -405,10 +405,10 @@ class FockBackend(BaseFock):
 
         Args:
             state (array): vector representation of ket state to prepare
-            modes (list[int]): indices of modes where state is prepared
+            modes (list[int] or non-negative int): indices of modes where state is prepared
 
         """
-        raise NotImplementedError
+        self._prepare_state_multimode(state, modes)
 
     def prepare_multimode_dm_state(self, state, modes):
         """Prepare an arbitrary mixed state on the specified modes.
@@ -416,10 +416,21 @@ class FockBackend(BaseFock):
 
         Args:
             state (array): density matrix representation of state to prepare
-            mode (list[int]): indices of modes where state is prepared
+            mode (list[int] or non-negative int): indices of modes where state is prepared
 
         """
-        raise NotImplementedError
+        self._prepare_multimode_state(state, modes)
+
+    def _prepare_multimode_state(self, state, modes):
+        """Prepare an arbitrary mixed state on the specified mode.
+        Note: this will convert the state representation to mixed.
+
+        Args:
+            state (array): density matrix representation of state to prepare
+            mode (int): index of mode where state is prepared
+
+        """
+        self.qreg.prepare_multimode(state, self._remap_modes(modes))
 
     def measure_fock(self, modes, select=None, **kwargs):
         """Perform a Fock measurement on the specified modes.

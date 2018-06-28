@@ -172,6 +172,70 @@ class QReg():
         self._state = ops.partial_trace(self._state, self._num_modes, modes)
         self._num_modes = self._num_modes - len(modes)
 
+    def prepare_multimode(self, state, modes):
+        r"""
+        Prepares a given mode or list of modes in a given state.
+
+        TODO: Fix this misleading docstring here and also in prepare()
+        TODO: Fix checks also in prepare()
+
+        After the preparation the system is in a mixed prodcut state,
+        with the specified modes replaced by state.
+        The state is assumed to be given in a tensor index odering
+        corresponding to the order given in modes, i.e., if modes is
+        [3,1], and state is a two mode state, then first sub-system
+        of state will end up in mode 3 and the second subsystem will
+        end up in mode 1.
+
+        Assumes the state of the entire system is of the form
+        :math:`\ket{0}\otimes\ket{\psi}`, up to mode permutations.
+        In particular, the mode may retain any previous phase shift.
+
+        Args:
+            state (array or matrix): vector or matrix representation of ket state or dm state in the fock basis to prepare
+            modes (list[int] or non-negative int): The mode(s) to be overwritten
+        """
+        if isinstance(modes, int):
+            modes = [modes]
+            was_int = True
+        else:
+            was_int = False
+
+        n_modes = len(modes)
+        pure_shape = (self._trunc**n_modes,)
+        mixed_shape = (self._trunc**n_modes, self._trunc**n_modes)
+
+        # Do consistency checks
+        if self._checks:
+            if state.shape != pure_shape and state.shape != mixed_shape:
+                raise ValueError("Incorrect shape for state preparation")
+
+        if self._num_modes == n_modes:
+            # Hack for marginally faster state preparation
+            self._state = state.astype(ops.def_type)
+            self._pure = bool(state.shape == pure_shape)
+        else:
+            if self._pure:
+                self._state = ops.mix(self._state, self._num_modes)
+                self._pure = False
+
+            if state.shape == pure_shape:
+                state = np.outer(state, state.conj())
+
+            # Take the partial trace
+            reduced_state = ops.partial_trace(self._state, self._num_modes, modes)
+
+            # Insert state (ops.tensor() can role axis but this is unsuitable here, so we pass pos=None)
+            self._state = ops.tensor(reduced_state, state, self._num_modes-n_modes, self._pure, pos=None)
+
+            mode_permutation = [x for x in range(10) if x not in modes] + modes
+            if self._pure:
+                index_permutation = mode_permutation
+            else:
+                index_permutation = [x for x in mode_permutation for _ in (0, 1)] #duplicate indices if we have pure states
+            self._state = np.transpose(self._state, index_permutation)
+
+
     def prepare(self, state, mode):
         r"""
         Prepares a given mode in a given state.
@@ -185,14 +249,16 @@ class QReg():
             mode (non-negative int): The overwritten mode
         """
 
-        # Do consistency checks
         pure_shape = (self._trunc,)
-        # mixed_shape = (self._trunc, self._trunc)
+        mixed_shape = (self._trunc, self._trunc)
 
+        # Do consistency checks
         if self._checks:
-            if (self._pure and state.shape != (self._trunc,)) or \
-                 (not (self._pure) and state.shape != (self._trunc, self._trunc)):
+            if (self._pure and state.shape != pure_shape) or \
+                 (not (self._pure) and state.shape != mixed_shape):
                 raise ValueError("Incorrect shape for state preparation")
+            if not isinstance(mode, int):
+                raise ValueError("Given mode must be of type int")
 
         if self._num_modes == 1:
             # Hack for marginally faster state preparation
@@ -203,7 +269,7 @@ class QReg():
                 self._state = ops.mix(self._state, self._num_modes)
                 self._pure = False
 
-            if state.shape != (self._trunc, self._trunc):
+            if state.shape == pure_shape:
                 state = np.outer(state, state.conj())
 
             # Take the partial trace
