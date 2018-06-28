@@ -193,13 +193,13 @@ class ParameterTests(BaseTest):
         # numpy arrays
         # TensorFlow objects of various types
         par_inputs = [3, 0.14, 4.2+0.5j,
-                      randn(3),
+                      random(3),
                       tf.Variable(2), tf.Variable(0.4), tf.Variable(0.8+1.1j)]
         pars = [Parameter(k) for k in par_inputs]  # wrapped versions
 
         def check(p, q):
             "Check all arithmetic operations on a two-Parameter combination."
-            print(p, q)
+            #print(p, q)
             self.assertTrue(isinstance(p+q, Parameter))
             self.assertTrue(isinstance(p-q, Parameter))
             self.assertTrue(isinstance(p*q, Parameter))
@@ -210,7 +210,6 @@ class ParameterTests(BaseTest):
         # all combinations of two Parameter types
         for p in itertools.product(pars, repeat=2):
             check(*p)
-        print('--------------------')
         # all combinations a Parameter and an unwrapped input
         for p in itertools.product(pars, par_inputs):
             check(*p)

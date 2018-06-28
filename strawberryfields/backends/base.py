@@ -142,7 +142,7 @@ class ModeMap:
     """
     def __init__(self, num_subsystems):
         self._init = num_subsystems
-        self._map = [k for k in range(num_subsystems)]
+        self._map = [k for k in range(num_subsystems)]  #: list[int]: _map[k] is the internal index used by the backend for computational mode k, or None if the mode has been deleted
 
     def reset(self):
         """reset the modemap to the initial state"""

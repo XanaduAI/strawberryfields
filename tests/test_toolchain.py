@@ -25,11 +25,10 @@ class BasicTests(BaseTest):
     num_subsystems = 2
     def setUp(self):
         super().setUp()
-        # construct a compiler engine
+        # construct a fresh compiler engine
         self.eng = Engine(num_subsystems=self.num_subsystems, hbar=self.hbar)
-        # attach the backend (NOTE: self.backend is shared between the tests, make sure it is reset before use!)
+        # attach the backend (NOTE: self.backend is shared between the tests, but the parent class re-initializes it in its setUp() method)
         self.eng.backend = self.backend
-        self.backend.reset()
 
 
     def test_engine(self):
@@ -253,7 +252,7 @@ class BasicTests(BaseTest):
 
 
     def test_create_delete_reset(self):
-        """Test various use cases creating and deleting modes, together with backend resets."""
+        """Test various use cases creating and deleting modes, together with engine and backend resets."""
         # define some gates
         X = Xgate(0.5)
 
@@ -340,6 +339,30 @@ class BasicTests(BaseTest):
         check()
 
 
+    def test_eng_reset(self):
+        """Test the Engine.reset() features."""
+
+        # change the hbar value
+        state = self.eng.run()
+        self.assertEqual(self.hbar, state._hbar)
+        new_hbar = 1.723
+        self.eng.reset(hbar=new_hbar)
+        state = self.eng.run()
+        self.assertEqual(state._hbar, new_hbar)
+
+        if self.args.fock_support:
+            # change the cutoff dimension
+            old_cutoff = self.eng.backend.get_cutoff_dim()
+            self.assertEqual(state._cutoff, old_cutoff)
+            self.assertEqual(self.D, old_cutoff)
+            new_cutoff = old_cutoff+1
+            self.eng.reset(cutoff_dim=new_cutoff)
+            state = self.eng.run()
+            temp = self.eng.backend.get_cutoff_dim()
+            self.assertEqual(temp, new_cutoff)
+            self.assertEqual(state._cutoff, new_cutoff)
+
+
     def test_parameters(self):
         """Test using different types of Parameters with different classes of ParOperations."""
         @sf.convert
@@ -360,8 +383,8 @@ class BasicTests(BaseTest):
         # other types of parameters
         other_inputs = [0.14]
         if isinstance(self.backend, sf.backends.TFBackend):
-            # add some TensorFlow-specific parameter types
-            other_inputs.append(tf.Variable(0.8))
+            # HACK: add placeholders for tf.Variables
+            other_inputs.append(np.inf)
             if self.bsize > 1:
                 # test batched input
                 other_inputs.append(uniform(size=(self.bsize,)))
@@ -408,21 +431,25 @@ class BasicTests(BaseTest):
             #n_args = min(n_args, 2)   # shortcut, only test cartesian products up to two parameter types
             # check all combinations of Parameter types
             for p in itertools.product(rr_pars+other_pars, repeat=n_args):
-                # re-declare tensorflow Variables here (otherwise they will be on a different graph when we do backend.reset)
                 if isinstance(self.backend, sf.backends.TFBackend):
-                    tmp = []
-                    for param in p:
-                        if isinstance(param.x, tf.Variable):
-                            new_param = tf.Variable(0.8)
-                        else:
-                            new_param = param
-                        tmp.append(new_param)
-                    p = tuple(tmp)
-                    # create new Session and initialize variables
+                    # declare tensorflow Variables here (otherwise they will be on a different graph when we do backend.reset below)
+                    # replace placeholders with tf.Variable instances
+                    def f(q):
+                        if np.any(q.x == np.inf):  # detect the HACK
+                            if f.v is None:  # only construct one instance, only when needed
+                                f.v = Parameter(tf.Variable(0.8, name='sf_parameter'))
+                            return f.v
+                        return q
+                    f.v = None  # kind of like a static variable in a function in C
+                    p = tuple(map(f, p))
+                    # create new tf.Session (which will be associated with the default graph) and initialize variables
                     session = tf.Session()
-                    kwargs.update({"session": session})
+                    kwargs['session'] = session
                     session.run(tf.global_variables_initializer())
-                check(G, p, measure=True)
+                    check(G, p, measure=True)
+                    session.close()
+                else:
+                    check(G, p, measure=True)
                 self.eng.backend.reset()
 
 

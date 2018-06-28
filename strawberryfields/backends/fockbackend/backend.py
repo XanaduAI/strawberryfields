@@ -296,10 +296,10 @@ class FockBackend(BaseFock):
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
         Args:
-                modes (int or Sequence[int]): specifies the mode or modes to restrict the return state to.
-                        This argument is optional; the default value ``modes=None`` returns the state containing all modes.
+          modes (int, Sequence[int], None): specifies the mode or modes to restrict the return state to.
+            None returns the state containing all modes.
         Returns:
-                An instance of the Strawberry Fields FockState class.
+          BaseFockState: requested state
         """
         s, pure = self.qreg.get_state()
 

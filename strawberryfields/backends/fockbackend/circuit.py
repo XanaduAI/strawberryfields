@@ -193,7 +193,7 @@ class QReg():
             state (array or matrix): The new state in the fock basis
             mode (non-negative int): The overwritten mode
         """
-
+        state = np.squeeze(state)  # in case we are given a column vector
         # Do consistency checks
         pure_shape = (self._trunc,)
         # mixed_shape = (self._trunc, self._trunc)

@@ -269,7 +269,7 @@ class RegRefTransform:
         if isinstance(refs, RegRef):
             refs = [refs]
         if any([not r.active for r in refs]):
-            raise ValueError('Trying to use inactive RegRefs.')
+            raise ValueError('Trying to use inactive RegRefs.')  # TODO allow this if the regref already has a measurement result in it. Maybe we want to delete a mode after measurement to save comp effort.
 
         self.regrefs = refs   #: list[RegRef]: register references that act as parameters for the function
         self.func    = func   #: None, function: the transformation itself, returns a scalar
@@ -300,7 +300,7 @@ class RegRefTransform:
           Number: function value
         """
         temp = [r.val for r in self.regrefs]
-        if None in temp:
+        if any(v is None for v in temp):  # NOTE: "if None in temp" causes an error if temp contains arrays, since it uses the == comparison in addition to "is"
             raise SFProgramError('Trying to use a nonexistent measurement result (e.g. before it can be measured).')
         if self.func is None:
             return temp[0]
@@ -488,7 +488,7 @@ class Engine:
             the program in the command queue depends.
           * RegRef activity state is unchanged, active RegRefs remain valid.
 
-        The keyword args are passed on to backend.reset().
+        The keyword args are passed on to :meth:`strawberryfields.backends.base.BaseBackend.reset`.
 
         Args:
           keep_prog (bool): should we keep the current program in the command queue?
@@ -660,8 +660,10 @@ class Engine:
                         temp = cmd.op.decompose(cmd.reg)
                         # run the decomposition
                         foo = self._run_command_list(temp)
+                        # TODO should we store the decomposition or the original Command? if we change backends and re-run the program, the decomposition may not be valid or useful.
                         applied.extend(foo)
                     except NotImplementedError as err:
+                        # simplify the error message by suppressing the previous exception
                         raise err from None
         return applied
 
@@ -676,12 +678,8 @@ class Engine:
             backend (str, BaseBackend, None): Backend for executing the commands.
                 Either a backend name ("gaussian", "fock", or "tf"), in which case it is loaded and initialized,
                 or a BaseBackend instance, or None to keep the current backend.
-            reset_backend (bool): If True, the backend is reset before the engine is run.
-                To avoid this behaviour, for instance if you would like to loop over
-                engine to run to successively apply the same gates in the command queue, simply
-                set ``reset=False``.
-            return_state (bool): If True, returns the state of the circuit after the program has been run.
-            modes (Sequence[int]): Modes to be returned in the state object. If set to ``None``, all modes will be returned.
+            return_state (bool): If True, returns the state of the circuit after the program has been run like :meth:`return_state` was called.
+            modes (Sequence[int]): Modes to be returned in the state object. If None, returns all modes.
         """
         kwargs.setdefault('hbar', self.hbar)  # caller can override the default value
 
@@ -701,8 +699,7 @@ class Engine:
             self.backend = backend
 
         temp = self._run_command_list(self.cmd_queue, **kwargs)
-        # TODO unsuccessful run due to exceptions should result in keeping the command queue as is but bringing the backend back to the last checkpoint...
-        # also restoring self.cmd_applied to checkpoint...
+        # TODO unsuccessful run due to exceptions should ideally result in keeping the command queue as is but bringing the backend back to the last checkpoint...
         self.cmd_applied.append(temp)
         self.cmd_queue.clear()
         self._set_checkpoint()

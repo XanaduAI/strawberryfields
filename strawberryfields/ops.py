@@ -573,11 +573,11 @@ class Gate(ParOperation):
         if np.all(z == 0):
             # identity, no need to apply
             return
-        # evaluate the Parameters, restore the originals later
-        temp = self.p  # store the originals
-        self.p = [x.evaluate() for x in self.p]
         if self.dagger:
-            self.p[0] = -self.p[0]
+            z = -z
+        temp = self.p  # store the original Parameters
+        # evaluate the rest of the Parameters, restore the originals later
+        self.p = [z] +[x.evaluate() for x in self.p[1:]]
         # calling the grandparent class, skipping ParOperation.apply to avoid another evaluation of self.p (which wouldn't hurt but is unnecessary)
         super(ParOperation, self).apply(reg, backend, **kwargs)
         self.p = temp  # restore original unevaluated Parameter instances
@@ -799,7 +799,7 @@ class Catstate(Preparation):
 
         # coherent states
         D = backend.get_cutoff_dim()
-        l = np.arange(D)
+        l = np.arange(D)[:,np.newaxis]  # column vector, in case alpha or phi are batched (1d row vectors)
         c1 = (alpha ** l) / sqrt(fac(l))
         c2 = ((-alpha) ** l) / sqrt(fac(l))
         # add them up with a relative phase

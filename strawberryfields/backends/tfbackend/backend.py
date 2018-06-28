@@ -215,9 +215,8 @@ class TFBackend(BaseFock):
         Note: this may convert the state representation to mixed.
 
         Args:
-            state (array): vector representation of ket state to prepare
+            state (array): vector representation of ket state(s) to prepare, shape==(cutoff_dim,) or (cutoff_dim, len(batch)) with batching
             mode (int): index of mode where state is prepared
-
         """
         with tf.name_scope('Prepare_ket'):
             remapped_mode = self._remap_modes(mode)

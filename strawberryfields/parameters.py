@@ -107,7 +107,7 @@ class Parameter():
     All but the RR and TensorFlow parameters represent an immediate numeric value that
     will not change. RR parameters can only be evaluated after the corresponding register
     subsystems have been measured. TF parameters can be evaluated whenever, but they depend on TF objects that
-    are evaluated using :func:`tf.Session().run()`.
+    are evaluated using :meth:`tf.Session.run`.
 
     The class supports various arithmetic operations which may change the internal representation of the result.
     If a TensorFlow object is involved, the result will always be a TensorFlow object.
@@ -160,6 +160,8 @@ class Parameter():
     def _unwrap_and_cast(self, other):
         """Unwrap Parameters and cast TensorFlow-type parameters to other dtypes during arithmetic.
 
+        The main reason we need this is that TensorFlow does not automatically promote int to float or float to complex but requires an explicit cast.
+
         .. todo:: Decide whether to cast to single or double precision by default (both float and complex).
 
         Args:
@@ -180,14 +182,15 @@ class Parameter():
                 return t, other
 
         if t.dtype.is_complex:
-            if (isinstance(other, _tf_classes) and not other.dtype.is_complex):
+            if isinstance(other, _tf_classes) and not other.dtype.is_complex:
                 other = tf.cast(other, tf.complex128)
         else:
-            if (isinstance(other, complex) or
+            if (np.iscomplexobj(other) or
                 (isinstance(other, _tf_classes) and other.dtype.is_complex)):
                 t = tf.cast(t, tf.complex128)
             elif t.dtype.is_integer:
                 if (isinstance(other, float) or
+                    (isinstance(other, np.ndarray) and np.issubdtype(other.dtype, np.floating)) or
                     (isinstance(other, _tf_classes) and other.dtype.is_floating)):
                     t = tf.cast(t, tf.float32)
             elif t.dtype.is_floating:
