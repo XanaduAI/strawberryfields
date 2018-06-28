@@ -177,7 +177,6 @@ class QReg():
         Prepares a given mode or list of modes in a given state.
 
         TODO: Fix this misleading docstring here and also in prepare()
-        TODO: Fix checks also in prepare()
 
         After the preparation the system is in a mixed prodcut state,
         with the specified modes replaced by state.
@@ -226,16 +225,20 @@ class QReg():
             reduced_state = ops.partial_trace(self._state, self._num_modes, modes)
 
             # Insert state (ops.tensor() can role axis but this is unsuitable here, so we pass pos=None)
-            self._state = ops.tensor(reduced_state, state, self._num_modes-n_modes, self._pure, pos=None)
+            #self._state = ops.tensor(reduced_state, state, self._num_modes-n_modes, self._pure, pos=None)
+            self._state = np.tensordot(reduced_state, state, axes=0)
 
         if sorted(modes) != modes or self._num_modes != n_modes:
             mode_permutation = [x for x in range(self._num_modes) if x not in modes] + modes
             if self._pure:
+                scale=1
                 index_permutation = mode_permutation
             else:
-                index_permutation = [x for x in mode_permutation for _ in (0, 1)] #duplicate indices if we have pure states
+                scale=2
+                index_permutation = [scale*x+i for x in mode_permutation for i in (0, 1)] #two indices per mode if we have pure states
+            self._state = self._state.reshape([self._trunc]*scale*self._num_modes)
             self._state = np.transpose(self._state, index_permutation)
-
+#x            self._state = self._state.reshape([self._trunc**self._num_modes]*scale)
 
     def prepare(self, state, mode):
         r"""
@@ -255,8 +258,7 @@ class QReg():
 
         # Do consistency checks
         if self._checks:
-            if (self._pure and state.shape != pure_shape) or \
-                 (not (self._pure) and state.shape != mixed_shape):
+            if state.shape != pure_shape and state.shape != mixed_shape:
                 raise ValueError("Incorrect shape for state preparation")
             if not isinstance(mode, int):
                 raise ValueError("Given mode must be of type int")
