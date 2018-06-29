@@ -118,7 +118,7 @@ Code details
 
 """
 
-# todo: Avoid issues with contexts and threading, cf. _pydecimal.py in the python standard distribution.
+# todo: Avoid issues with Engine contexts and threading, cf. _pydecimal.py in the python standard distribution.
 #pylint: disable=too-many-instance-attributes
 
 from collections.abc import Sequence
@@ -466,7 +466,7 @@ class Engine:
         # NOTE: deleted indices are *not* removed from self.unused_indices
 
 
-    def reset(self, *, keep_prog=False, reset_circuit=True, **kwargs):
+    def reset(self, *, keep_prog=False, **kwargs):
         """Re-initialize the backend state to vacuum.
 
         Resets the state of the quantum circuit represented by the backend.
@@ -492,9 +492,12 @@ class Engine:
 
         Args:
           keep_prog (bool): should we keep the current program in the command queue?
-          reset_circuit (bool): does the backend state actually need to be reset?
+        Keyword Args:
+          hbar (float): new :math:`\hbar` value. See :ref:`conventions` for more details.
         """
-        if self.backend is not None and reset_circuit:
+        self.hbar = kwargs.get('hbar', self.hbar)  # update hbar if present in kwargs
+
+        if self.backend is not None:
             self.backend.reset(**kwargs)
 
         # reset any measurement values stored in the RegRefs

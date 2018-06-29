@@ -343,10 +343,12 @@ class BasicTests(BaseTest):
         """Test the Engine.reset() features."""
 
         # change the hbar value
+        self.assertEqual(self.eng.hbar, self.hbar)
         state = self.eng.run()
-        self.assertEqual(self.hbar, state._hbar)
+        self.assertEqual(state._hbar, self.hbar)
         new_hbar = 1.723
         self.eng.reset(hbar=new_hbar)
+        self.assertEqual(self.eng.hbar, new_hbar)
         state = self.eng.run()
         self.assertEqual(state._hbar, new_hbar)
 
