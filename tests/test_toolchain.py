@@ -2,6 +2,9 @@
 Unit tests for the :mod:`strawberryfields` full toolchain.
 """
 
+import logging
+logging.getLogger()
+
 import unittest
 import inspect
 import itertools
@@ -33,6 +36,7 @@ class BasicTests(BaseTest):
 
     def test_engine(self):
         "Basic engine tests."
+        self.logTestName()
 
         # backed is initialized to vacuum state
         self.assertAllTrue(self.backend.is_vacuum(self.tol))
@@ -75,6 +79,7 @@ class BasicTests(BaseTest):
 
     def test_gate_dagger(self):
         "Dagger functionality of the gates."
+        self.logTestName()
 
         def test_gate(G):
             self.eng.reset()
@@ -110,6 +115,7 @@ class BasicTests(BaseTest):
 
     def test_regrefs(self):
         """Testing register references."""
+        self.logTestName()
         q = self.eng.register
         # using a measurement result before it exists
         with self.eng:
@@ -129,6 +135,7 @@ class BasicTests(BaseTest):
 
     def test_homodyne_measurement(self):
         """Homodyne measurements."""
+        self.logTestName()
         q = self.eng.register
         with self.eng:
             Coherent(*randn(2)) | q[0]
@@ -148,6 +155,7 @@ class BasicTests(BaseTest):
 
     def test_program_subroutine(self):
         """Simple quantum program with a subroutine and references."""
+        self.logTestName()
         # define some gates
         D = Dgate(0.5)
         BS = BSgate(0.7*pi, pi/2)
@@ -194,6 +202,7 @@ class BasicTests(BaseTest):
 
     def test_create_delete(self):
         """Creating and deleting modes."""
+        self.logTestName()
         # define some gates
         D = Dgate(0.5)
         BS = BSgate(2*pi, pi/2)
@@ -253,6 +262,7 @@ class BasicTests(BaseTest):
 
     def test_create_delete_reset(self):
         """Test various use cases creating and deleting modes, together with engine and backend resets."""
+        self.logTestName()
         # define some gates
         X = Xgate(0.5)
 
@@ -341,6 +351,7 @@ class BasicTests(BaseTest):
 
     def test_eng_reset(self):
         """Test the Engine.reset() features."""
+        self.logTestName()
 
         # change the hbar value
         self.assertEqual(self.eng.hbar, self.hbar)
@@ -367,6 +378,7 @@ class BasicTests(BaseTest):
 
     def test_parameters(self):
         """Test using different types of Parameters with different classes of ParOperations."""
+        self.logTestName()
         @sf.convert
         def func1(x):
             return abs(2*x**2 -3*x +1)
@@ -412,13 +424,13 @@ class BasicTests(BaseTest):
                     G | r[0]
                 else:
                     G | (r[0], r[1])
-            print(G)
+            logging.debug(G)
             self.eng.optimize()
             try:
                 self.eng.run(**kwargs)
             except SFNotApplicableError as err:
                 # catch unapplicable op/backend combinations here
-                print(err)
+                logging.debug(err)
                 self.eng.reset_queue()  # unsuccessful run means the queue was not emptied.
 
         scalar_arg_preparations = (Coherent, Squeezed, DisplacedSqueezed, Thermal, Catstate)  # Fock requires an integer parameter
@@ -428,7 +440,7 @@ class BasicTests(BaseTest):
             sig = inspect.signature(G.__init__)
             n_args = len(sig.parameters) -1  # number of parameters __init__ takes, minus self
             if n_args < 1:
-                print('Unexpected number of args ({}) for {}, check the testset.'.format(n_args, G))
+                logging.debug('Unexpected number of args ({}) for {}, check the testset.'.format(n_args, G))
 
             #n_args = min(n_args, 2)   # shortcut, only test cartesian products up to two parameter types
             # check all combinations of Parameter types
@@ -469,6 +481,7 @@ class FockBasisTests(FockBaseTest):
 
     def test_fock_measurement(self):
         """Fock measurements."""
+        self.logTestName()
         q = self.eng.register
         s = randint(0, self.D, (2,))
         with self.eng:
@@ -497,6 +510,7 @@ class GaussianTests(GaussianBaseTest):
 
     def test_gaussian_measurement(self):
         """Gaussian-only measurements."""
+        self.logTestName()
         q = self.eng.register
         with self.eng:
             Coherent(*randn(2)) | q[0]

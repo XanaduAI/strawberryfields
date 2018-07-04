@@ -39,6 +39,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_returns_tensor(self):
     """Tests whether the eval=False option to the `eng.run` command
     successfully returns an unevaluated Tensor."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(0.5) | q
@@ -49,6 +50,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_measurements_are_tensors(self):
     """Tests whether the eval=False option to the `eng.run` command
     successfully returns a unevaluated Tensors for measurment results."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(0.5) | q
@@ -60,6 +62,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_with_session_and_feed_dict(self):
     """Tests whether passing a tf Session and feed_dict
     through `eng.run` leads to proper numerical simulation."""
+    self.logTestName()
     a = tf.Variable(0.5)
     sess = tf.Session()
     sess.run(tf.global_variables_initializer())
@@ -84,6 +87,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_state_ket(self):
     """Tests whether the ket of the returned state is an unevaluated
     Tensor object when eval=False is passed to `eng.run`."""
+    self.logTestName()
     if self.args.mixed:
       return
     else:
@@ -97,6 +101,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_false_state_ket(self):
     """Tests whether the ket of the returned state is an unevaluated
     Tensor object when eval=False is passed to the ket method of a state."""
+    self.logTestName()
     if self.args.mixed:
       return
     else:
@@ -110,6 +115,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_true_state_ket(self):
     """Tests whether the ket of the returned state is equal to the
     correct value when eval=True is passed to the ket method of a state."""
+    self.logTestName()
     if self.args.mixed:
       return
     else:
@@ -124,6 +130,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_state_dm(self):
     """Tests whether the density matrix of the returned state is an
     unevaluated Tensor object when eval=False is passed to `eng.run`."""
+    self.logTestName()
     if self.args.mixed:
       return
     else:
@@ -137,6 +144,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_false_state_dm(self):
     """Tests whether the density matrix of the returned state is an
     unevaluated Tensor object when eval=False is passed to the ket method of a state."""
+    self.logTestName()
     if self.args.mixed:
       return
     else:
@@ -150,6 +158,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_true_state_dm(self):
     """Tests whether the density matrix of the returned state is equal
     to the correct value when eval=True is passed to the ket method of a state."""
+    self.logTestName()
     if self.args.mixed:
       return
     else:
@@ -164,6 +173,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_state_trace(self):
     """Tests whether the trace of the returned state is an
     unevaluated Tensor object when eval=False is passed to `eng.run`."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(0.5) | q
@@ -174,6 +184,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_false_state_trace(self):
     """Tests whether the trace of the returned state is an
     unevaluated Tensor object when eval=False is passed to the trace method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(0.5) | q
@@ -184,6 +195,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_true_state_trace(self):
     """Tests whether the trace of the returned state is equal
     to the correct value when eval=True is passed to the trace method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(0.5) | q
@@ -197,6 +209,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_state_reduced_dm(self):
     """Tests whether the reduced_density matrix of the returned state
     is an unevaluated Tensor object when eval=False is passed to `eng.run`."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(0.5) | q
@@ -207,6 +220,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_false_state_reduced_dm(self):
     """Tests whether the reduced density matrix of the returned state is an
     unevaluated Tensor object when eval=False is passed to the reduced_dm method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(0.5) | q
@@ -217,6 +231,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_true_state_reduced_dm(self):
     """Tests whether the reduced density matrix of the returned state is
     equal to the correct value when eval=True is passed to the reduced_dm method of a state."""
+    self.logTestName()
     q = self.eng.register
     state = self.eng.run()
     rho = state.reduced_dm([0], eval=True)
@@ -228,6 +243,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_state_fidelity_vacuum(self):
     """Tests whether the fidelity_vacuum method of the state returns an
     unevaluated Tensor object when eval=False is passed to `eng.run`."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(0.5) | q
@@ -238,6 +254,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_false_state_fidelity_vacuum(self):
     """Tests whether the vacuum fidelity of the returned state is an
     unevaluated Tensor object when eval=False is passed to the fidelity_vacuum method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(0.5) | q
@@ -248,6 +265,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_true_state_fidelity_vacuum(self):
     """Tests whether the vacuum fidelity of the returned state is equal
     to the correct value when eval=True is passed to the fidelity_vacuum method of a state."""
+    self.logTestName()
     q = self.eng.register
     state = self.eng.run()
     fidel_vac = state.fidelity_vacuum(eval=True)
@@ -259,6 +277,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_state_is_vacuum(self):
     """Tests whether the is_vacuum method of the state returns an
     unevaluated Tensor object when eval=False is passed to `eng.run`."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(0.5) | q
@@ -269,6 +288,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_false_state_is_vacuum(self):
     """Tests whether the is_vacuum method of the state returns an
     unevaluated Tensor object when eval=False is passed to the is_vacuum method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(0.5) | q
@@ -279,6 +299,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_true_state_is_vacuum(self):
     """Tests whether the is_vacuum method of the state returns
     the correct value when eval=True is passed to the is_vacuum method of a state."""
+    self.logTestName()
     q = self.eng.register
     state = self.eng.run()
     is_vac = state.is_vacuum(eval=True)
@@ -290,6 +311,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_state_fidelity_coherent(self):
     """Tests whether the fidelity of the state with respect to coherent states is
     an unevaluated Tensor object when eval=False is passed to `eng.run`."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q
@@ -300,6 +322,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_false_state_fidelity_coherent(self):
     """Tests whether the fidelity of the state with respect to coherent states
     is an unevaluated Tensor object when eval=False is passed to the fidelity_coherent method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q
@@ -310,6 +333,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_true_state_fidelity_coherent(self):
     """Tests whether the fidelity of the state with respect to coherent states returns
     the correct value when eval=True is passed to the fidelity_coherent method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q
@@ -323,6 +347,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_state_fidelity(self):
     """Tests whether the fidelity of the state with respect to a local state is an
     unevaluated Tensor object when eval=False is passed to `eng.run`."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q
@@ -333,6 +358,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_false_state_fidelity(self):
     """Tests whether the fidelity of the state with respect to a local state is
     an unevaluated Tensor object when eval=False is passed to the fidelity method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q
@@ -343,6 +369,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_true_state_fidelity(self):
     """Tests whether the fidelity of the state with respect to a local state
     returns the correct value when eval=True is passed to the fidelity method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q
@@ -356,6 +383,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_state_quad_expectation(self):
     """Tests whether the local quadrature expectation of the state is
     unevaluated Tensor object when eval=False is passed to `eng.run`."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q
@@ -367,6 +395,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_false_state_quad_expectation(self):
     """Tests whether the local quadrature expectation value of the state is
     an unevaluated Tensor object when eval=False is passed to the quad_expectation method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q
@@ -378,6 +407,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_true_state_quad_expectation(self):
     """Tests whether the local quadrature expectation value of the state returns
     the correct value when eval=True is passed to the quad_expectation method of a state."""
+    self.logTestName()
     hbar = 2.
     q = self.eng.register
     with self.eng:
@@ -395,6 +425,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_state_mean_photon(self):
     """Tests whether the local mean photon number of the state is
     unevaluated Tensor object when eval=False is passed to `eng.run`."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q
@@ -405,6 +436,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_false_state_mean_photon(self):
     """Tests whether the local mean photon number of the state is
     an unevaluated Tensor object when eval=False is passed to the mean_photon_number method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q
@@ -415,6 +447,7 @@ class OneModeSymbolicTests(SymbolicBaseTest):
   def test_eval_true_state_mean_photon(self):
     """Tests whether the local mean photon number of the state returns
     the correct value when eval=True is passed to the mean_photon method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q
@@ -446,6 +479,7 @@ class TwoModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_state_all_fock_probs(self):
     """Tests whether the Fock-basis probabilities of the state are an
     unevaluated Tensor object when eval=False is passed to `eng.run`."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q[0]
@@ -457,6 +491,7 @@ class TwoModeSymbolicTests(SymbolicBaseTest):
   def test_eval_false_state_all_fock_probs(self):
     """Tests whether the Fock-basis probabilities of the state are an
     unevaluated Tensor object when eval=False is passed to the all_fock_probs method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q[0]
@@ -468,6 +503,7 @@ class TwoModeSymbolicTests(SymbolicBaseTest):
   def test_eval_true_state_all_fock_probs(self):
     """Tests whether the Fock-basis probabilities of the state return
     the correct value when eval=True is passed to the all_fock_probs method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q[0]
@@ -483,6 +519,7 @@ class TwoModeSymbolicTests(SymbolicBaseTest):
   def test_eng_run_eval_false_state_fock_prob(self):
     """Tests whether the probability of a Fock measurement outcome on the state is an
     unevaluated Tensor object when eval=False is passed to `eng.run`."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q[0]
@@ -494,6 +531,7 @@ class TwoModeSymbolicTests(SymbolicBaseTest):
   def test_eval_false_state_fock_prob(self):
     """Tests whether the probability of a Fock measurement outcome on the state is an
     unevaluated Tensor object when eval=False is passed to the fock_prob method of a state."""
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       Dgate(self.alpha) | q[0]
@@ -505,6 +543,7 @@ class TwoModeSymbolicTests(SymbolicBaseTest):
   def test_eval_false_state_fock_prob(self):
     """Tests whether the probability of a Fock measurement outcome on the state returns
      the correct value when eval=True is passed to the fock_prob method of a state."""
+    self.logTestName()
     n1 = self.D // 2
     n2 = self.D // 3
     q = self.eng.register

@@ -27,6 +27,7 @@ class BasicTests(BaseTest):
 
   def test_no_squeezing(self):
     """Tests squeezing operation in some limiting cases where the result should be a vacuum state."""
+    self.logTestName()
     self.circuit.prepare_vacuum_state(0)
     for theta in sqz_theta:
       self.circuit.reset(pure=self.kwargs['pure'])
@@ -50,6 +51,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_normalized_squeezed_state(self):
     """Tests if a range of squeezed vacuum states are normalized."""
+    self.logTestName()
     for r in self.sqz_r:
       for theta in sqz_theta:
         z = r * np.exp(1j * theta)
@@ -62,6 +64,7 @@ class FockBasisTests(FockBaseTest):
   def test_no_odd_fock(self):
     """Tests if a range of squeezed vacuum states have
     only nonzero entries for even Fock states."""
+    self.logTestName()
     for r in self.sqz_r:
         for theta in sqz_theta:
           z = r * np.exp(1j * theta)
@@ -80,6 +83,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_reference_squeezed_vacuum(self):
     """Tests if a range of squeezed vacuum states are equal to the form of Eq. (5.5.6) in Loudon."""
+    self.logTestName()
     def sech(x):
       return 1 / np.cosh(x)
 
@@ -111,6 +115,7 @@ class FockBasisTests(FockBaseTest):
     """Tests if a range of squeezed fock states are equal to the form of Eq. (20)
     in 'On the Squeezed Number States and their Phase Space Representations'
     (https://arxiv.org/abs/quant-ph/0108024)."""
+    self.logTestName()
     def matrix_elem(n,r,m):
         eps = 1e-10
         if n % 2 != m % 2:

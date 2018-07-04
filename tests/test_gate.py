@@ -30,6 +30,7 @@ class GateTests(BaseTest):
 
     def test_init_basics(self):
         "Basic properties of initializers."
+        self.logTestName()
 
         # initializer to test against
         V = Vacuum()
@@ -51,6 +52,7 @@ class GateTests(BaseTest):
 
     def test_gate_basics(self):
         "Basic properties of gates."
+        self.logTestName()
 
         # test gate
         Q = Xgate(0.5)
@@ -92,6 +94,7 @@ class GateTests(BaseTest):
 
     def test_gate_merging(self):
         "Nontrivial merging of gates."
+        self.logTestName()
 
         def merge_gates(f):
             # test the merging of two gates (with default values for optional parameters)
@@ -111,6 +114,7 @@ class GateTests(BaseTest):
 
     def test_loss_merging(self):
         "Nontrivial merging of loss."
+        self.logTestName()
 
         # test the merging of two gates (with default values for optional parameters)
         a, b = random(2)
@@ -121,6 +125,7 @@ class GateTests(BaseTest):
 
     def test_dispatch(self):
         "Dispatching of gates to the engine."
+        self.logTestName()
 
         with self.eng:
             for G in one_args_gates+two_args_gates:
@@ -141,6 +146,7 @@ class GateTests(BaseTest):
 
     def test_create_delete(self):
         """Creating and deleting new modes."""
+        self.logTestName()
 
         # New must not be called via its __or__ method
         self.assertRaises(ValueError, New.__or__, 0)
@@ -186,6 +192,7 @@ class ParameterTests(BaseTest):
 
     def test_init(self):
         "Parameter initialization and arithmetic."
+        self.logTestName()
         # at the moment RR-inputs cannot be arithmetically combined with the others
 
         # immediate Parameter class inputs:

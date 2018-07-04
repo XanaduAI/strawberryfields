@@ -24,11 +24,13 @@ class BasicTests(BaseTest):
 
   def test_prepare_vac(self):
     """Tests the ability to prepare vacuum states."""
+    self.logTestName()
     self.circuit.prepare_vacuum_state(0)
     self.assertAllTrue(self.circuit.is_vacuum(self.tol))
 
   def test_fidelity_coherent(self):
     """Tests if a range of coherent states have the correct fidelity."""
+    self.logTestName()
     for mag_alpha in mag_alphas:
       for phase_alpha in phase_alphas:
         self.circuit.reset(pure=self.kwargs['pure'])
@@ -38,6 +40,7 @@ class BasicTests(BaseTest):
         self.assertAllAlmostEqual(state.fidelity_coherent([alpha]), 1, delta=self.tol)
 
   def test_prepare_thermal_state(self):
+    self.logTestName()
     for nbar in nbars:
       self.circuit.reset(pure=self.kwargs['pure'])
       self.circuit.prepare_thermal_state(nbar, 0)
@@ -52,6 +55,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_normalized_prepare_vac(self):
     """Tests the ability to prepare vacuum states."""
+    self.logTestName()
     self.circuit.prepare_vacuum_state(0)
     state = self.circuit.state()
     tr = state.trace()
@@ -59,6 +63,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_normalized_coherent_state(self):
     """Tests if a range of coherent states are normalized."""
+    self.logTestName()
     for mag_alpha in mag_alphas:
       for phase_alpha in phase_alphas:
         alpha = mag_alpha * np.exp(1j * phase_alpha)
@@ -71,6 +76,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_prepare_ket_state(self):
     """Tests if a ket state with arbitrary parameters is correctly prepared."""
+    self.logTestName()
     for _ in range(10):
       random_ket = np.random.uniform(-1,1,self.D)
       random_ket = random_ket / np.linalg.norm(random_ket)

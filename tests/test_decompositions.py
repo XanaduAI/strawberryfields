@@ -36,6 +36,7 @@ class DecompositionsModule(BaseTest):
     num_subsystems = 1
 
     def test_takagi_random_symm(self):
+        self.logTestName()
         error=np.empty(nsamples)
         for i in range(nsamples):
             X=random_degenerate_symmetric()
@@ -48,6 +49,7 @@ class DecompositionsModule(BaseTest):
         self.assertAlmostEqual(error.mean() , 0)
 
     def test_clements_identity(self):
+        self.logTestName()
         n=20
         U=np.identity(n)
         (tilist,tlist, diags)=dec.clements(U)
@@ -61,6 +63,7 @@ class DecompositionsModule(BaseTest):
         self.assertAllAlmostEqual(U, qrec, delta=self.tol)
 
     def test_clements_random_unitary(self):
+        self.logTestName()
         error=np.empty(nsamples)
         for k in range(nsamples):
             n=20
@@ -77,6 +80,7 @@ class DecompositionsModule(BaseTest):
         self.assertAlmostEqual(error.mean() , 0)
 
     def test_williamson_BM_random_circuit(self):
+        self.logTestName()
         for k in range(nsamples):
             n=3
             U1=haar_measure(n)
@@ -109,6 +113,7 @@ class DecompositionsModule(BaseTest):
             self.assertAlmostEqual(np.linalg.norm(O @ s @Oo -S),0)
 
     def test_williamson_BM_random_circuit_pure(self):
+        self.logTestName()
         for k in range(nsamples):
             n=3
             U2=haar_measure(n)
@@ -151,6 +156,7 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
         self.V_pure = random_covariance(self.num_subsystems, hbar=self.hbar, pure=True)
 
     def test_merge_interferometer(self):
+        self.logTestName()
         I1 = Interferometer(self.u1)
         I1inv = Interferometer(self.u1.conj().T)
         I2 = Interferometer(self.u2)
@@ -161,6 +167,7 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
         self.assertAllAlmostEqual(I1.merge(I2).p[0].x, self.u2@self.u1, delta=self.tol)
 
     def test_merge_covariance(self):
+        self.logTestName()
         V1 = CovarianceState(self.V_mixed, hbar=self.hbar)
         V2 = CovarianceState(self.V_pure, hbar=self.hbar)
 
@@ -170,6 +177,7 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
         self.assertEqual(Squeezed(2).merge(V2), V2)
 
     def test_covariance_random_state_mixed(self):
+        self.logTestName()
         self.eng.reset()
         q = self.eng.register
 
@@ -180,6 +188,7 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
         self.assertAllAlmostEqual(state.cov(), self.V_mixed, delta=self.tol)
 
     def test_covariance_random_state_pure(self):
+        self.logTestName()
         self.eng.reset()
         q = self.eng.register
 
@@ -190,6 +199,7 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
         self.assertAllAlmostEqual(state.cov(), self.V_pure, delta=self.tol)
 
     def test_gaussian_transform(self):
+        self.logTestName()
         self.eng.reset()
         q = self.eng.register
 
@@ -200,6 +210,7 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
         self.assertAllAlmostEqual(state.cov(), self.S@self.S.T*self.hbar/2, delta=self.tol)
 
     def test_interferometer(self):
+        self.logTestName()
         self.eng.reset()
         q = self.eng.register
 
@@ -214,6 +225,7 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
         self.assertAllAlmostEqual(state.cov(), O @ init.cov() @ O.T, delta=self.tol)
 
     def test_identity_interferometer(self):
+        self.logTestName()
         self.eng.reset()
         q = self.eng.register
 
@@ -234,6 +246,7 @@ class FrontendGaussianCovarianceStates(GaussianBaseTest):
         self.eng.reset()
 
     def test_covariance_vacuum(self):
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
@@ -243,6 +256,7 @@ class FrontendGaussianCovarianceStates(GaussianBaseTest):
         self.assertEqual(len(self.eng.cmd_applied[0]), 0)
 
     def test_covariance_squeezed(self):
+        self.logTestName()
         q = self.eng.register
         cov = (self.hbar/2)*np.diag([np.exp(-0.1)]*3 + [np.exp(0.1)]*3)
 
@@ -254,6 +268,7 @@ class FrontendGaussianCovarianceStates(GaussianBaseTest):
         self.assertAllEqual(len(self.eng.cmd_applied[0]), 3)
 
     def test_covariance_displaced_squeezed(self):
+        self.logTestName()
         q = self.eng.register
         cov = (self.hbar/2)*np.diag([np.exp(-0.1)]*3 + [np.exp(0.1)]*3)
 
@@ -265,6 +280,7 @@ class FrontendGaussianCovarianceStates(GaussianBaseTest):
         self.assertAllEqual(len(self.eng.cmd_applied[0]), 7)
 
     def test_covariance_thermal(self):
+        self.logTestName()
         q = self.eng.register
         cov = np.diag(self.hbar*(np.array([0.3,0.4,0.2]*2)+0.5))
 
@@ -276,6 +292,7 @@ class FrontendGaussianCovarianceStates(GaussianBaseTest):
         self.assertAllEqual(len(self.eng.cmd_applied[0]), 3)
 
     def test_covariance_rotated_squeezed(self):
+        self.logTestName()
         q = self.eng.register
 
         r = 0.1
@@ -303,6 +320,7 @@ class FrontendFockCovarianceStates(FockBaseTest):
         self.eng.reset()
 
     def test_covariance_vacuum(self):
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
@@ -313,6 +331,7 @@ class FrontendFockCovarianceStates(FockBaseTest):
         self.assertAllAlmostEqual(state.fidelity_vacuum(), 1, delta=self.tol)
 
     def test_covariance_squeezed(self):
+        self.logTestName()
         q = self.eng.register
         r = 0.05
         phi = 0
@@ -329,6 +348,7 @@ class FrontendFockCovarianceStates(FockBaseTest):
             self.assertAllAlmostEqual(state.fidelity(in_state, n), 1, delta=self.tol)
 
     def test_covariance_rotated_squeezed(self):
+        self.logTestName()
         q = self.eng.register
 
         r = 0.1

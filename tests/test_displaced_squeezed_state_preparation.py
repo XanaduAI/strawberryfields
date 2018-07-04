@@ -26,6 +26,7 @@ class BasicTests(BaseTest):
 
   def test_no_squeezing_no_displacement(self):
     """Tests squeezing operation in the limiting case where the result should be a vacuum state."""
+    self.logTestName()
     alpha = 0
     r = 0
     for phi in sqz_phi:
@@ -35,6 +36,7 @@ class BasicTests(BaseTest):
 
   def test_displaced_squeezed_with_no_squeezing(self):
     """Tests if a squeezed coherent state with no squeezing is equal to a coherent state."""
+    self.logTestName()
     r = phi = 0
     for mag_alpha in mag_alphas:
       for phase_alpha in phase_alphas:
@@ -51,6 +53,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_normalized_displaced_squeezed_state(self):
     """Tests if a range of squeezed vacuum states are normalized."""
+    self.logTestName()
     for mag_alpha in mag_alphas:
       for phase_alpha in phase_alphas:
         for r in sqz_r:
@@ -64,6 +67,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_displaced_squeezed_with_no_displacement(self):
     """Tests if a squeezed coherent state with no displacement is equal to a squeezed state (Eq. (5.5.6) in Loudon)."""
+    self.logTestName()
     def sech(x):
       return 1 / np.cosh(x)
     alpha = 0

@@ -28,6 +28,7 @@ class Teleportation(BaseTest):
         self.backend.reset(cutoff_dim=self.cutoff)
 
     def test_teleportation_fidelity(self):
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
@@ -58,6 +59,7 @@ class GateTeleportation(GaussianBaseTest):
         self.backend.reset()
 
     def test_gaussian_states_match(self):
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
@@ -105,6 +107,7 @@ class GaussianBosonSampling(BaseTest):
         self.backend.reset(cutoff_dim=self.cutoff)
 
     def test_fock_probs(self):
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
@@ -130,8 +133,7 @@ class GaussianBosonSampling(BaseTest):
             BSgate(0.4348, 0.0798)  | (q[0], q[1])
             BSgate(0.4368, 0.6157)  | (q[2], q[3])
 
-        self.eng.run()
-        state = self.eng.backend.state()
+        state = self.eng.run()
         probs = [state.fock_prob(i) for i in self.measure_states]
         probs = np.array(probs).T.flatten()
         res = np.tile(self.results, self.bsize).flatten()
@@ -151,6 +153,7 @@ class BosonSampling(FockBaseTest):
         self.backend.reset(cutoff_dim=self.cutoff)
 
     def test_fock_probs(self):
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
@@ -175,8 +178,7 @@ class BosonSampling(FockBaseTest):
             BSgate(0.4348, 0.0798)  | (q[0], q[1])
             BSgate(0.4368, 0.6157)  | (q[2], q[3])
 
-        self.eng.run()
-        state = self.eng.backend.state()
+        state = self.eng.run()
         probs = [state.fock_prob(i) for i in self.measure_states]
         probs = np.array(probs).T.flatten()
         res = np.tile(self.results, self.bsize).flatten()
@@ -203,6 +205,7 @@ class HamiltonianSimulation(FockBaseTest):
         self.backend.reset(cutoff_dim=self.cutoff)
 
     def test_fock_probs(self):
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
@@ -218,8 +221,7 @@ class HamiltonianSimulation(FockBaseTest):
                 Kgate(self.r)  | q[1]
                 Rgate(-self.r) | q[1]
 
-        self.eng.run()
-        state = self.eng.backend.state()
+        state = self.eng.run()
         probs = [state.fock_prob(i) for i in self.measure_states]
         probs = np.array(probs).T.flatten()
         res = np.tile(self.results, self.bsize).flatten()
@@ -237,6 +239,7 @@ class GaussianCloning(GaussianBaseTest):
         self.backend.reset()
 
     def test_average_fidelity(self):
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:

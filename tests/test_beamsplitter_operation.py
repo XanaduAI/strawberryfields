@@ -33,6 +33,7 @@ class BasicTests(BaseTest):
   def test_vacuum_beamsplitter(self):
     """Tests beamsplitter operation in some limiting cases where the output
     should be the vacuum in both modes."""
+    self.logTestName()
     for t in t_values:
       for r_phi in phase_r:
         r = np.exp(1j * r_phi) * np.sqrt(1. - np.abs(t) ** 2)
@@ -41,11 +42,12 @@ class BasicTests(BaseTest):
         self.assertAllTrue(self.circuit.is_vacuum(self.tol),msg="Test failed for t={}, r_phi={}.".format(t, r))
 
   def test_coherent_vacuum_interfered(self):
-    """Tests if a range of beamsplitter output states (formed from a coherent state interfering with vacuum)
+    r"""Tests if a range of beamsplitter output states (formed from a coherent state interfering with vacuum)
        have the correct fidelity with the expected coherent states outputs.
        |\psi_in> = |\alpha>|0> --> |t \alpha>|r \alpha> = |\psi_out>
        and for each output mode,
        |\gamma> = exp(-0.5 |\gamma|^2) \sum_n \gamma^n / \sqrt{n!} |n>"""
+    self.logTestName()
     phase_alpha = np.pi / 5
     for mag_alpha in self.mag_alphas[1:]:
         alpha = mag_alpha * np.exp(1j * phase_alpha)
@@ -71,6 +73,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_normalized_beamsplitter_output(self):
     """Tests if a range of beamsplitter outputs states are normalized."""
+    self.logTestName()
     alpha = self.args.alpha * np.exp(1j * np.pi / 3)
     for t in t_values:
       for r_phi in phase_r:
@@ -83,11 +86,12 @@ class FockBasisTests(FockBaseTest):
         self.assertAllAlmostEqual(tr, 1, delta=self.tol, msg="Test failed for t={}, r_phi={}.".format(t, r))
 
   def test_coherent_vacuum_interfered_fock_elements(self):
-    """Tests if a range of beamsplitter output states (formed from a coherent state interfering with vacuum)
+    r"""Tests if a range of beamsplitter output states (formed from a coherent state interfering with vacuum)
        have the correct Fock basis elements.
        |\psi_in> = |\alpha>|0> --> |t \alpha>|r \alpha> = |\psi_out>
        and for each output mode,
        |\gamma> = exp(-0.5 |\gamma|^2) \sum_n \gamma^n / \sqrt{n!} |n>"""
+    self.logTestName()
     phase_alpha = np.pi / 5
     for mag_alpha in self.mag_alphas[1:]:
         alpha = mag_alpha * np.exp(1j * phase_alpha)

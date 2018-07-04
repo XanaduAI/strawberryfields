@@ -26,12 +26,14 @@ class BasicTests(BaseTest):
   """Basic implementation-independent tests."""
   num_subsystems = 1
   def test_mode_reset_vacuum(self):
+    self.logTestName()
     self.circuit.squeeze(squeeze_val,0)
     self.circuit.displacement(mag_alphas[-1],0)
     self.circuit.measure_homodyne(0,0)
     self.assertAllTrue(self.circuit.is_vacuum(self.tol))
     
   def test_mean_and_std_vacuum(self):
+    self.logTestName()
     x = np.empty(0)
     for i in range(n_meas):
       self.circuit.reset(pure=self.kwargs['pure'])
@@ -41,6 +43,7 @@ class BasicTests(BaseTest):
     self.assertAllAlmostEqual(x.std(), 1., delta = std_10 + self.tol)
 
   def test_mean_coherent(self):
+    self.logTestName()
     x = np.empty(0)
     for i in range(n_meas):
       self.circuit.reset(pure=self.kwargs['pure'])

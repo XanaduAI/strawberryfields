@@ -34,6 +34,7 @@ class GaussianFrontendPostselection(GaussianBaseTest):
     self.backend.reset()
 
   def test_homodyne_on_two_mode_squeezed_state(self):
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       S2gate(5) | (q[0], q[1])
@@ -44,6 +45,7 @@ class GaussianFrontendPostselection(GaussianBaseTest):
     self.assertAllAlmostEqual(x_mean, 0.2, delta = self.tol)
 
   def test_heterodyne(self):
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       S2gate(5) | (q[0], q[1])
@@ -55,6 +57,7 @@ class GaussianFrontendPostselection(GaussianBaseTest):
 
 
   def test_heterodyne_return(self):
+    self.logTestName()
     q = self.eng.register
     alpha=10*(np.random.rand()+1j*np.random.rand())
     with self.eng:
@@ -78,6 +81,7 @@ class FockFrontendPostselection(FockBaseTest):
     self.backend.reset()
 
   def test_homodyne_on_two_mode_squeezed_state(self):
+    self.logTestName()
     q = self.eng.register
     with self.eng:
       S2gate(1) | (q[0], q[1])
@@ -93,6 +97,7 @@ class FockFrontendPostselection(FockBaseTest):
     self.assertAllAlmostEqual(x.mean(), 0.2, delta = std_10 + self.tol)
 
   def onhold_test_fock_elements_on_two_mode_squeezed_state(self):
+    self.logTestName()
     q = self.eng.register
     for n in range(self.D - 1):
       with self.eng:
@@ -105,6 +110,7 @@ class FockFrontendPostselection(FockBaseTest):
       self.eng.reset()
 
   def test_conservation_of_photon_number_in_beamsplitter(self):
+    self.logTestName()
     q = self.eng.register
     for n in range(self.D - 1):
       with self.eng:

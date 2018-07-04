@@ -26,6 +26,7 @@ class BasicTests(BaseTest):
 
     def test_merge_dagger(self):
         "Optimizer merging single-mode gates with their daggered versions."
+        self.logTestName()
         for G in single_mode_gates:
             G = G(*randn(1))
             with self.eng:
@@ -37,6 +38,7 @@ class BasicTests(BaseTest):
 
     def test_merge_negated(self):
         "Optimizer merging single-mode gates with their negated versions."
+        self.logTestName()
         for G in single_mode_gates:
             temp = randn(1)[0]
             g1 = G(temp)
@@ -50,6 +52,7 @@ class BasicTests(BaseTest):
 
     def test_merge_chain(self):
         "Optimizer merging chains of single-mode gates."
+        self.logTestName()
 
         # construct one instance of each gate type with a random parameter
         params = randn(len(single_mode_gates))
@@ -89,6 +92,7 @@ class BasicTests(BaseTest):
 
     def test_merge_incompatible(self):
         "Merging incompatible gates."
+        self.logTestName()
         with self.eng:
             Xgate(0.6) | 0
             Zgate(0.2) | 0

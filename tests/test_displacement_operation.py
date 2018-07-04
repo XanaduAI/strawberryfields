@@ -26,6 +26,7 @@ class BasicTests(BaseTest):
 
   def test_no_displacement(self):
     """Tests displacement operation in some limiting cases where the result should be a vacuum state."""
+    self.logTestName()
     mag_alpha = 0.
     for phase_alpha in phase_alphas:
       alpha = mag_alpha * np.exp(1j * phase_alpha)
@@ -35,6 +36,7 @@ class BasicTests(BaseTest):
         
   def test_fidelity_coherent(self):
     """Tests if a range of alpha-displaced states have the correct fidelity with the corresponding coherent state."""
+    self.logTestName()
     for mag_alpha in mag_alphas:
       for phase_alpha in phase_alphas:
         self.circuit.reset(pure=self.kwargs['pure'])
@@ -51,6 +53,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_normalized_displaced_state(self):
     """Tests if a range of displaced states are normalized."""
+    self.logTestName()
     for mag_alpha in mag_alphas:
       for phase_alpha in phase_alphas:
         alpha = mag_alpha * np.exp(1j * phase_alpha)
@@ -62,8 +65,9 @@ class FockBasisTests(FockBaseTest):
         if alpha==0.: break
 
   def test_coherent_state_fock_elements(self):
-    """Tests if a range of alpha-displaced states have the correct Fock basis elements
+    r"""Tests if a range of alpha-displaced states have the correct Fock basis elements
        |\alpha> = exp(-0.5 |\alpha|^2) \sum_n \alpha^n / \sqrt{n!} |n>"""
+    self.logTestName()
     for mag_alpha in mag_alphas:
         for phase_alpha in phase_alphas:
           alpha = mag_alpha * np.exp(1j * phase_alpha)

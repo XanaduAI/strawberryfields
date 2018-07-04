@@ -26,6 +26,7 @@ class BasicTests(BaseTest):
 
   def test_loss_channel_on_vacuum(self):
     """Tests loss channels on vacuum (result should be vacuum)."""
+    self.logTestName()
     for T in loss_Ts:
       self.circuit.reset(pure=self.kwargs['pure'])
       self.circuit.loss(T, 0)
@@ -33,6 +34,7 @@ class BasicTests(BaseTest):
 
   def test_full_loss_channel_on_coherent_states(self):
     """Tests the full-loss channel on various states (result should be vacuum)."""
+    self.logTestName()
     T = 0.0
     for mag_alpha in mag_alphas:
       for phase_alpha in phase_alphas:
@@ -49,6 +51,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_normalized_after_loss_channel_on_coherent_state(self):
     """Tests if a range of loss states are normalized."""
+    self.logTestName()
     for T in loss_Ts:
       for mag_alpha in mag_alphas:
         for phase_alpha in phase_alphas:
@@ -62,6 +65,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_normalized_after_loss_channel_on_fock_state(self):
     """Tests if a range of loss states are normalized."""
+    self.logTestName()
     for T in loss_Ts:
       for n in range(self.D):
         self.circuit.reset(pure=self.kwargs['pure'])
@@ -73,6 +77,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_full_loss_channel_on_fock_states(self):
     """Tests the full-loss channel on various states (result should be vacuum)."""
+    self.logTestName()
     T = 0.0
     for n in range(self.D):
       self.circuit.reset(pure=self.kwargs['pure'])
@@ -82,6 +87,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_loss_channel_on_coherent_states(self):
     """Tests various loss channels on coherent states (result should be coherent state with amplitude weighted by \sqrt(T)."""
+    self.logTestName()
     for T in loss_Ts:
       for mag_alpha in mag_alphas:
         for phase_alpha in phase_alphas:

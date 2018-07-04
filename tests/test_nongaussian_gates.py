@@ -21,6 +21,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_kerr_interaction(self):
     """Tests if the Kerr interaction has the right effect on states in the Fock basis"""
+    self.logTestName()
     for kappa in kappas:
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_ket_state(np.array([1.0 for n in range(self.D)]) / self.D, 0)

@@ -25,6 +25,7 @@ class BasicTests(BaseTest):
 
   def test_rotated_vacuum(self):
     """Tests phase shift operation in some limiting cases where the result should be a vacuum state."""
+    self.logTestName()
     for theta in shift_thetas:
       self.circuit.reset(pure=self.kwargs['pure'])
       self.circuit.rotation(theta, 0)
@@ -36,6 +37,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_normalized_rotated_coherent_states(self):
     """Tests if a range of phase-shifted coherent states are normalized."""
+    self.logTestName()
     alpha = 1.
     self.circuit.reset(pure=self.kwargs['pure'])
     self.circuit.prepare_coherent_state(alpha, 0)
@@ -48,6 +50,7 @@ class FockBasisTests(FockBaseTest):
   def test_rotated_fock_states(self):
     """Tests if a range of phase-shifted fock states |n> are equal to the form of
     exp(i * theta * n)|n>"""
+    self.logTestName()
     for theta in shift_thetas:
         for n in range(self.D):
           self.circuit.reset(pure=self.kwargs['pure'])
@@ -64,8 +67,9 @@ class FockBasisTests(FockBaseTest):
           self.assertAllAlmostEqual(numer_state, ref_state, delta=self.tol)
 
   def test_rotated_superposition_states(self):
-    """Tests if a range of phase-shifted superposition states are equal to the form of
+    r"""Tests if a range of phase-shifted superposition states are equal to the form of
     \sum_n exp(i * theta * n)|n>"""
+    self.logTestName()
     for theta in shift_thetas:
         for n in range(self.D):
           self.circuit.reset(pure=self.kwargs['pure'])

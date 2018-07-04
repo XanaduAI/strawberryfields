@@ -20,6 +20,7 @@ class FockStateProbabilitiesTest(BaseTest):
   num_subsystems = 1
   def test_prob_fock_state_gaussian(self):
     """Tests that probabilities of particular Fock states |n> are correct for a gaussian state."""
+    self.logTestName()
     for mag_alpha in mag_alphas:
       for phase_alpha in phase_alphas:
         self.circuit.reset(pure=self.kwargs['pure'])
@@ -38,6 +39,7 @@ class AllFockStateProbabilitiesTestPure(FockBaseTest):
 
   def test_all_fock_probs_pure(self):
     """Tests that the numeric probabilities in the full Fock basis are correct for a one-mode pure state."""
+    self.logTestName()
     for mag_alpha in mag_alphas:
       for phase_alpha in phase_alphas:
         self.circuit.reset(pure=True)
@@ -57,6 +59,7 @@ class AllFockProbabilitiesTests(FockBaseTest):
 
   def test_prob_fock_state_nongaussian(self):
     """Tests that probabilities of particular Fock states |n> are correct for a nongaussian state."""
+    self.logTestName()
     for mag_alpha in mag_alphas:
       for phase_alpha in phase_alphas:
         self.circuit.reset(pure=self.kwargs['pure'])
@@ -72,6 +75,7 @@ class AllFockProbabilitiesTests(FockBaseTest):
 
   def test_all_fock_state_probs(self):
     """Tests that the numeric probabilities in the full Fock basis are correct for a two-mode gaussian state."""
+    self.logTestName()
     for mag_alpha in mag_alphas:
       for phase_alpha in phase_alphas:
         self.circuit.reset(pure=self.kwargs['pure'])

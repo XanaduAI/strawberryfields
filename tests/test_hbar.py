@@ -32,6 +32,7 @@ class BaseFrontendHbar(BaseTest):
     super().setUp()
 
   def test_squeeze_variance(self):
+    self.logTestName()
     for h in hbar:
       self.eng = Engine(num_subsystems=self.num_subsystems, hbar=h)
       self.eng.backend = self.backend
@@ -58,6 +59,7 @@ class GaussianFrontendHbar(GaussianBaseTest):
     super().setUp()
 
   def test_x_displacement(self):
+    self.logTestName()
     for h in hbar:
       self.eng = Engine(num_subsystems=self.num_subsystems, hbar=h)
       #self.eng.backend = self.backend
@@ -71,6 +73,7 @@ class GaussianFrontendHbar(GaussianBaseTest):
       self.assertAllAlmostEqual(mu_x, x, delta = self.tol)
 
   def test_p_displacement(self):
+    self.logTestName()
     for h in hbar:
       self.eng = Engine(num_subsystems=self.num_subsystems, hbar=h)
       #self.eng.backend = self.backend
