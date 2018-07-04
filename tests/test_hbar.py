@@ -33,6 +33,9 @@ class BaseFrontendHbar(BaseTest):
 
   def test_squeeze_variance(self):
     self.logTestName()
+    if self.batched:
+      raise unittest.SkipTest('Test is only relevant for non-batched mode.')
+
     for h in hbar:
       self.eng = Engine(num_subsystems=self.num_subsystems, hbar=h)
       self.eng.backend = self.backend
