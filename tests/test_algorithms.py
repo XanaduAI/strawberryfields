@@ -88,7 +88,7 @@ class GateTeleportation(GaussianBaseTest):
 
 class GaussianBosonSampling(BaseTest):
     num_subsystems = 4
-    cutoff = 7
+    cutoff = 6
     measure_states = [[0,0,0,0], [1,1,0,0], [0,1,0,1], [1,1,1,1], [2,0,0,0]]
     results = [
             0.176378447614135,
@@ -140,7 +140,7 @@ class GaussianBosonSampling(BaseTest):
 
 class BosonSampling(FockBaseTest):
     num_subsystems = 4
-    cutoff = 7
+    cutoff = 6
     measure_states = [[1,1,0,1], [2,0,0,1]]
     results = [0.174689160486, 0.106441927246]
 
