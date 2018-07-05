@@ -424,7 +424,7 @@ class FockBackend(BaseFock):
 
         Args:
             state (array): density matrix representation of state to prepare
-            mode (list[int] or non-negative int): indices of modes where state is prepared
+            modes (list[int] or non-negative int): indices of modes where state is prepared
 
         """
         self._prepare_multimode_state(state, modes)
@@ -435,7 +435,7 @@ class FockBackend(BaseFock):
 
         Args:
             state (array): density matrix representation of state to prepare
-            mode (int): index of mode where state is prepared
+            modes (int or list([int])): index of mode where state is prepared
 
         """
         if modes is None:
