@@ -239,20 +239,47 @@ class TFBackend(BaseFock):
         """
         self._prepare_state(state, mode, False)
 
-    def _prepare_state(self, state, mode, input_state_is_pure):
+    def _prepare_state(self, state, modes=None, input_state_is_pure):
         """
         Prepare an arbitrary pure or mixed state on the specified mode.
         Note: this may convert the state representation to mixed.
 
         Args:
-            state (array): matrix representation of the state to prepare
-            mode (int): index of mode where state is prepared
+            state (array): vector, matrix, or tensor representation of the state to prepare
+            modes (int or list([int])): index or indices of mode(s) where state is to be prepared
+            input_state_is_pure (boolean): whether the state is to be considered as pure.
 
         """
+        if modes == None:
+            modes = list(range(len(self._modemap.show())))
+        elif isinstance(modes, int):
+            modes = [modes]
+
         with tf.name_scope('Prepare_state'):
             state = _maybe_unwrap(state)
-            remapped_mode = self._remap_modes(mode)
-            self.circuit.prepare_state(state, remapped_mode, input_state_is_pure)
+            self.circuit.prepare_state(state, self._remap_modes(modes), input_state_is_pure)
+
+    def prepare_multimode_ket_state(self, state, modes=None):
+        """Prepare an arbitrary pure state on the specified modes.
+        Note: this may convert the state representation to mixed.
+
+        Args:
+            state (array): vector representation of ket state to prepare
+            modes (list[int] or non-negative int): indices of modes where state is prepared
+
+        """
+        self._prepare_state(state, True, modes)
+
+    def prepare_multimode_dm_state(self, state, modes=None):
+        """Prepare an arbitrary mixed state on the specified modes.
+        Note: this will convert the state representation to mixed.
+
+        Args:
+            state (array): density matrix representation of state to prepare
+            mode (list[int] or non-negative int): indices of modes where state is prepared
+
+        """
+        self._prepare_state(state, False, modes)
 
     def prepare_thermal_state(self, nbar, mode):
         """
