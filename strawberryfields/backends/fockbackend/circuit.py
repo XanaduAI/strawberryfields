@@ -172,11 +172,12 @@ class QReg():
         self._state = ops.partial_trace(self._state, self._num_modes, modes)
         self._num_modes = self._num_modes - len(modes)
 
-    def prepare_multimode(self, state, modes):
+    def prepare_multimode(self, state, modes=None):
         r"""
         Prepares a given mode or list of modes in a given state.
 
         TODO: Fix this misleading docstring here and also in prepare()
+        TODO: Fix the preparation on
 
         After the preparation the system is in a mixed prodcut state,
         with the specified modes replaced by state.
@@ -194,6 +195,9 @@ class QReg():
             state (array or matrix): vector or matrix representation of ket state or dm state in the fock basis to prepare
             modes (list[int] or non-negative int): The mode(s) to be overwritten
         """
+        if modes == None:
+            modes = list(range(self._num_modes))
+
         if isinstance(modes, int):
             modes = [modes]
             was_int = True
@@ -201,15 +205,25 @@ class QReg():
             was_int = False
 
         n_modes = len(modes)
-        pure_shape = (self._trunc**n_modes,)
-        mixed_shape = (self._trunc**n_modes, self._trunc**n_modes)
+        pure_shape = tuple([self._trunc]*n_modes)
+        mixed_shape = tuple([self._trunc]*(2*n_modes))
+        pure_shape_as_vector = tuple([self._trunc**n_modes])
+        mixed_shape_as_matrix = tuple([self._trunc**n_modes]*2)
 
         # Do consistency checks
         if self._checks:
-            if state.shape != pure_shape and state.shape != mixed_shape:
+            if state.shape != pure_shape and state.shape != mixed_shape \
+               and \
+               state.shape != pure_shape_as_vector and state.shape != mixed_shape_as_matrix:
                 raise ValueError("Incorrect shape for state preparation")
             if len(modes) != len(set(modes)):
                 raise ValueError("The specified modes cannot be duplicated.")
+
+        # reshape to support input both as tensor and vector/matrix
+        if state.shape == pure_shape_as_vector:
+            state = state.reshape(pure_shape)
+        elif state.shape == mixed_shape_as_matrix:
+            state = state.reshape(mixed_shape)
 
         if self._num_modes == n_modes:
             # Hack for marginally faster state preparation
@@ -226,11 +240,11 @@ class QReg():
             # Take the partial trace
             reduced_state = ops.partial_trace(self._state, self._num_modes, modes)
 
-            # Insert state (ops.tensor() can role axis but this is unsuitable here, so we pass pos=None)
-            #self._state = ops.tensor(reduced_state, state, self._num_modes-n_modes, self._pure, pos=None)
+            # Insert state at the end
             self._state = np.tensordot(reduced_state, state, axes=0)
 
-        if sorted(modes) != modes or self._num_modes != n_modes:
+            # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
+        if modes != list(range(self._num_modes-len(modes), self._num_modes)):
             mode_permutation = [x for x in range(self._num_modes) if x not in modes] + modes
             if self._pure:
                 scale=1
@@ -238,9 +252,13 @@ class QReg():
             else:
                 scale=2
                 index_permutation = [scale*x+i for x in mode_permutation for i in (0, 1)] #two indices per mode if we have pure states
-            self._state = self._state.reshape([self._trunc]*scale*self._num_modes)
+
+            print("modes: "+str(modes)+" scale: "+str(scale))
+            print("mode_permutation: "+str(mode_permutation))
+            print("index_permutation: "+str(index_permutation)+" len="+str(len(index_permutation)))
+            print("shape: "+str(self._state.shape)+" len="+str(len(self._state.shape)))
+
             self._state = np.transpose(self._state, index_permutation)
-#x            self._state = self._state.reshape([self._trunc**self._num_modes]*scale)
 
     def prepare(self, state, mode):
         r"""

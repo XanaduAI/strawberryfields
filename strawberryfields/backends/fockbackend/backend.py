@@ -399,7 +399,7 @@ class FockBackend(BaseFock):
         """
         self.qreg.prepare(state, self._remap_modes(mode))
 
-    def prepare_multimode_ket_state(self, state, modes):
+    def prepare_multimode_ket_state(self, state, modes=None):
         """Prepare an arbitrary pure state on the specified modes.
         Note: this may convert the state representation to mixed.
 
@@ -410,7 +410,7 @@ class FockBackend(BaseFock):
         """
         self._prepare_state_multimode(state, modes)
 
-    def prepare_multimode_dm_state(self, state, modes):
+    def prepare_multimode_dm_state(self, state, modes=None):
         """Prepare an arbitrary mixed state on the specified modes.
         Note: this will convert the state representation to mixed.
 
@@ -421,7 +421,7 @@ class FockBackend(BaseFock):
         """
         self._prepare_multimode_state(state, modes)
 
-    def _prepare_multimode_state(self, state, modes):
+    def _prepare_multimode_state(self, state, modes=None):
         """Prepare an arbitrary mixed state on the specified mode.
         Note: this will convert the state representation to mixed.
 
@@ -430,6 +430,8 @@ class FockBackend(BaseFock):
             mode (int): index of mode where state is prepared
 
         """
+        if modes==None:
+            modes = list(range(len(self._modeMap.show())))
         self.qreg.prepare_multimode(state, self._remap_modes(modes))
 
     def measure_fock(self, modes, select=None, **kwargs):
