@@ -78,7 +78,7 @@ class QReg(object):
         self._state_history.append(new_state)
         self._state = new_state
 
-    def _valid_modes(self, modes):
+    def _valid_modes(self, modes): #TODO: this method should probably be moved into BaseBackend and then maybe overridden and expended in the subclasses. Currently checking for valid modes in the fock backend, for example is a mess.
         if isinstance(modes, int):
             modes = [modes]
 
@@ -87,6 +87,9 @@ class QReg(object):
                 raise ValueError("Specified mode number(s) cannot be negative.")
             elif mode >= self._num_modes:
                 raise ValueError("Specified mode number(s) are not compatible with number of modes.")
+
+        if len(modes) != len(set(modes)):
+            raise ValueError("The specified modes cannot appear multiple times.")
 
         return True
 
@@ -277,22 +280,24 @@ class QReg(object):
                 displaced_squeezed = ops.displaced_squeezed(alpha, r, phi, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched)
                 self._replace_and_update(displaced_squeezed, mode, self._state)
 
-    def prepare_state(self, state, mode, input_state_is_pure):
+    def prepare_state(self, state, modes, input_state_is_pure):
         """
-             Traces out the state in 'mode' and replaces it with the state numerically defined by 'state'.
+             Traces out the state in 'modes' and replaces them with the state numerically defined by 'state'.
         """
-        if self._valid_modes(mode):
-            with self._graph.as_default():
-                state = tf.cast(tf.convert_to_tensor(state), ops.def_type)
-                # check whether state is a single (unbatched) vector
-                # or a batch of vectors
-                if input_state_is_pure:
-                    input_is_batched = state.shape.ndims == 2
-                else:
-                    input_is_batched = state.shape.ndims % 2 == 1
-                if self._batched and not input_is_batched:
-                    state = tf.stack([state] * self._batch_size)
-                self._replace_and_update(state, mode, self._state)
+        if not self._valid_modes(modes):
+            return
+
+        with self._graph.as_default():
+            state = tf.cast(tf.convert_to_tensor(state), ops.def_type)
+            # check whether state is a single (unbatched) vector
+            # or a batch of vectors
+            if input_state_is_pure:
+                input_is_batched = state.shape.ndims == 2
+            else:
+                input_is_batched = state.shape.ndims % 2 == 1
+            if self._batched and not input_is_batched:
+                state = tf.stack([state] * self._batch_size)
+            self._replace_and_update(state, modes, self._state)
 
     def prepare_thermal_state(self, nbar, mode):
         """
