@@ -658,7 +658,7 @@ def combine_single_modes(modes_list, batched=False):
     combined_modes = tf.einsum(eqn, *einsum_inputs)
     return combined_modes
 
-def replace_mode(replacement, mode, system, state_is_pure, batched=False):
+def replace_mode(replacement, mode, system, state_is_pure, batched=False):#TODO: Once testing is done this method will become obsolete and superseeded by preplace_modes()
     """Replace the subsystem 'mode' of 'system' with new state 'replacement'. Argument 'state_is_pure' indicates whether
     'system' is represented by a pure state or a density matrix.
     Note: Does not check if this replacement is physically valid (i.e., if 'replacement' is a valid state)
@@ -690,6 +690,39 @@ def replace_mode(replacement, mode, system, state_is_pure, batched=False):
         revised_modes = insert_state(replacement, reduced_state, False, mode, batched)
 
     return revised_modes
+
+
+def replace_modes(replacement, modes, system, state_is_pure, batched=False):
+    """Replace the subsystem 'mode' of 'system' with new state 'replacement'. Argument 'state_is_pure' indicates whether
+    'system' is represented by a pure state or a density matrix.
+    Note: Does not check if this replacement is physically valid (i.e., if 'replacement' is a valid state)
+    """
+    if isinstance(modes, int):
+        modes = [modes]
+
+    if batched:
+        batch_offset = 1
+    else:
+        batch_offset = 0
+    if state_is_pure:
+        num_modes = len(system.shape) - batch_offset
+    else:
+        num_modes = (len(system.shape) - batch_offset) // 2
+
+    if state_is_pure:
+        system = mixed(system, batched)
+    if len(replacement.shape) - batch_offset == 1:
+        replacement = mixed(replacement, batched)
+    elif len(replacement.shape) - batch_offset < 1 or len(replacement.shape) - batch_offset > 2:
+        raise ValueError("replacement can only have dim={} or dim={}".format(1 + batch_offset, 2 + batch_offset))
+
+    # partial trace out modes
+    reduced_state = partial_trace(system, mode, False, batched)
+    # append mode and insert state
+    revised_modes = insert_state(replacement, reduced_state, False, mode, batched)
+
+    return revised_modes
+
 
 def insert_state(state, system, state_is_pure, mode=None, batched=False):
     """

@@ -93,9 +93,20 @@ class QReg(object):
 
         return True
 
-    def _replace_and_update(self, replacement, mode, global_state):
-        # Helper function for replacing a mode, updating the state history, and possibly setting circuit's state_is_pure variable to a new value
-        if self._num_modes == 1:
+    def _replace_and_update(self, replacement, modes):
+        """
+        Helper function for replacing a mode, updating the state history,
+        and possibly setting circuit's state_is_pure variable to a new value.
+
+        Expects replacement to be batched if self._batched.
+        """
+        if isinstance(modes, int):
+            modes = [modes]
+
+        if modes != sorted(modes):
+            raise NotImplementedError("So far only sorted mode lists are supported but got modes="+str(modes)+".") #TODO: In the this backend it seems more elegant to do the sorting of the modes in replacement already here and the pass on the sorted replacement and a sorted mode.
+
+        if list(range(self._num_modes) == modes:
             self._update_state(replacement)
             # update purity
             if self._batched:
@@ -111,7 +122,7 @@ class QReg(object):
                 if len(replacement.shape) == batch_offset + 1:
                     self._state_is_pure = True
         else:
-            new_state = ops.replace_mode(replacement, mode, global_state, self._state_is_pure, self._batched)
+            new_state = ops.replace_modes(replacement, modes, self._state, self._state_is_pure, self._batched)
             self._update_state(new_state)
             self._state_is_pure = False
 
@@ -232,7 +243,7 @@ class QReg(object):
                     state = self._single_mode_pure_vac
                 else:
                     state = self._single_mode_mixed_vac
-                self._replace_and_update(state, mode, self._state)
+                self._replace_and_update(state, mode)
 
     def prepare_fock_state(self, n, mode):
         """
@@ -242,7 +253,7 @@ class QReg(object):
             with self._graph.as_default():
                 n = self._maybe_batch(n, convert_to_tensor=False)
                 fock_state = ops.fock_state(n, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched)
-                self._replace_and_update(fock_state, mode, self._state)
+                self._replace_and_update(fock_state, mode)
 
     def prepare_coherent_state(self, alpha, mode):
         """
@@ -253,7 +264,7 @@ class QReg(object):
                 alpha = tf.cast(alpha, ops.def_type)
                 alpha = self._maybe_batch(alpha)
                 coherent_state = ops.coherent_state(alpha, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched)
-                self._replace_and_update(coherent_state, mode, self._state)
+                self._replace_and_update(coherent_state, mode)
 
     def prepare_squeezed_state(self, r, theta, mode):
         """
@@ -265,7 +276,7 @@ class QReg(object):
                 theta = self._maybe_batch(theta)
                 self._check_incompatible_batches(r, theta)
                 squeezed_state = ops.squeezed_vacuum(r, theta, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched)
-                self._replace_and_update(squeezed_state, mode, self._state)
+                self._replace_and_update(squeezed_state, mode)
 
     def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
         """
@@ -278,7 +289,7 @@ class QReg(object):
                 phi = self._maybe_batch(phi)
                 self._check_incompatible_batches(alpha, r, phi)
                 displaced_squeezed = ops.displaced_squeezed(alpha, r, phi, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched)
-                self._replace_and_update(displaced_squeezed, mode, self._state)
+                self._replace_and_update(displaced_squeezed, mode)
 
     def prepare_state(self, state, modes, input_state_is_pure):
         """
@@ -297,7 +308,7 @@ class QReg(object):
                 input_is_batched = state.shape.ndims % 2 == 1
             if self._batched and not input_is_batched:
                 state = tf.stack([state] * self._batch_size)
-            self._replace_and_update(state, modes, self._state)
+            self._replace_and_update(state, modes)
 
     def prepare_thermal_state(self, nbar, mode):
         """
@@ -307,7 +318,7 @@ class QReg(object):
             with self._graph.as_default():
                 nbar = self._maybe_batch(nbar)
                 thermal = ops.thermal_state(nbar, D=self._cutoff_dim)
-                self._replace_and_update(thermal, mode, self._state)
+                self._replace_and_update(thermal, mode)
 
     def phase_shift(self, theta, mode):
         """
