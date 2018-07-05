@@ -114,13 +114,13 @@ def genOfRange(size):
         yield i
 
 
-def genOfTuple(t):
+def genOfTuple(tuple):
     """
     Converts a tuple into a generator
     """
 
-    for i in range(len(t)):
-        yield t[i]
+    for t in tuple:
+        yield t
 
 
 def indexRange(lst, trunc):

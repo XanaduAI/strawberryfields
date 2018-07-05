@@ -438,7 +438,7 @@ class FockBackend(BaseFock):
             mode (int): index of mode where state is prepared
 
         """
-        if modes==None:
+        if modes is None:
             modes = list(range(len(self._modemap.show())))
         self.qreg.prepare_multimode(state, self._remap_modes(modes))
 

@@ -191,14 +191,11 @@ class QReg():
             state (array): vector, matrix, or tensor representation of the ket state or dm state in the fock basis to prepare
             modes (list[int] or non-negative int): The mode(s) into which state is to be prepared. Needs not be ordered.
         """
-        if modes == None:
+        if modes is None:
             modes = list(range(self._num_modes))
 
         if isinstance(modes, int):
             modes = [modes]
-            was_int = True
-        else:
-            was_int = False
 
         n_modes = len(modes)
         pure_shape = tuple([self._trunc]*n_modes)
@@ -243,10 +240,10 @@ class QReg():
         if modes != list(range(self._num_modes-len(modes), self._num_modes)):
             mode_permutation = [x for x in range(self._num_modes) if x not in modes] + modes
             if self._pure:
-                scale=1
+                scale = 1
                 index_permutation = mode_permutation
             else:
-                scale=2
+                scale = 2
                 index_permutation = [scale*x+i for x in mode_permutation for i in (0, 1)] #two indices per mode if we have pure states
 
             self._state = np.transpose(self._state, np.argsort(index_permutation))
