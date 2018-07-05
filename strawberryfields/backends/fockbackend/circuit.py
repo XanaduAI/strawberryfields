@@ -231,9 +231,10 @@ class QReg():
                 state = np.outer(state, state.conj())
 
             # Take the partial trace
+            #TODO: For performance the partial trace could be done directly from the pure state. This would of course require a better partial trace function...
             reduced_state = ops.partial_trace(self._state, self._num_modes, modes)
 
-            # Insert state at the end
+            # Insert state at the end (I know there is also tensor() from ops but it has extra aguments wich only confuse here)
             self._state = np.tensordot(reduced_state, state, axes=0)
 
             # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
@@ -245,8 +246,9 @@ class QReg():
             else:
                 scale = 2
                 index_permutation = [scale*x+i for x in mode_permutation for i in (0, 1)] #two indices per mode if we have pure states
+            index_permutation = np.argsort(index_permutation)
 
-            self._state = np.transpose(self._state, np.argsort(index_permutation))
+            self._state = np.transpose(self._state, index_permutation)
 
     def prepare(self, state, mode):
         r"""

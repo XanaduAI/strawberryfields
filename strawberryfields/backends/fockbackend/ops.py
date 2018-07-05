@@ -228,6 +228,8 @@ def trace(state, n):
 def partial_trace(state, n, modes):
     """
     Computes the partial trace of a state over the modes in `modes`.
+
+    Expects state to be in mixed state form.
     """
     left_str = [indices[2*i] + indices[2*i] if i in modes else indices[2*i:2*i+2] for i in range(n)]
     out_str = ['' if i in modes else indices[2*i:2*i+2] for i in range(n)]

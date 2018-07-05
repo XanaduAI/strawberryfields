@@ -106,7 +106,7 @@ class QReg(object):
         if modes != sorted(modes):
             raise NotImplementedError("So far only sorted mode lists are supported but got modes="+str(modes)+".") #TODO: In the this backend it seems more elegant to do the sorting of the modes in replacement already here and the pass on the sorted replacement and a sorted mode.
 
-        if list(range(self._num_modes) == modes:
+        if list(range(self._num_modes)) == modes:
             self._update_state(replacement)
             # update purity
             if self._batched:

@@ -239,7 +239,7 @@ class TFBackend(BaseFock):
         """
         self._prepare_state(state, mode, False)
 
-    def _prepare_state(self, state, modes=None, input_state_is_pure):
+    def _prepare_state(self, state, modes=None, input_state_is_pure=False):
         """
         Prepare an arbitrary pure or mixed state on the specified mode.
         Note: this may convert the state representation to mixed.
