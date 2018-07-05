@@ -23,6 +23,7 @@ class FockBasisMultimodeTests(FockBaseTest):
     num_subsystems = 4
 
     def test_compare_single_mode_and_multimode_preparation(self):
+        """Compare the results of a successive single mode preparations and a multi mode preparation of a product state."""
         random_rho0 = np.random.normal(size=[self.D]*2) + 1j*np.random.normal(size=[self.D]*2)
         random_rho0 = np.dot(random_rho0.conj().T, random_rho0)
         random_rho0 = random_rho0/random_rho0.trace()
@@ -38,15 +39,26 @@ class FockBasisMultimodeTests(FockBaseTest):
         self.circuit.prepare_dm_state(random_rho1, 1)
         single_mode_preparation_dm = self.circuit.state([0, 1]).dm()
 
-        #first we do a preparation from random_dm, with shape [self.D]*4
+        # first we do a preparation from random_dm, with shape [self.D]*4
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_multimode_dm_state(random_dm, [0, 1])
         multi_mode_preparation_dm = self.circuit.state(modes=[0, 1]).dm()
 
-        #second we do a preparation from the corresponding matrix with shape [self.D**2]*2
+        # second we do a preparation from the corresponding matrix with shape [self.D**2]*2
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_multimode_dm_state(random_dm.reshape([self.D**2]*2), [0, 1])
         multi_mode_preparation_from_matrix_dm = self.circuit.state(modes=[0, 1]).dm()
+
+        # third we do a preparation from random_dm on modes 3 and 1 (in that order!) and test if the states end up in the correct modes
+        self.circuit.reset(pure=self.kwargs['pure'])
+        self.circuit.prepare_multimode_dm_state(random_dm, [3, 1])
+        multi_mode_preparation_32_mode_0 = self.circuit.state(modes=[0]).dm()
+        multi_mode_preparation_32_mode_1 = self.circuit.state(modes=[1]).dm()
+        multi_mode_preparation_32_mode_2 = self.circuit.state(modes=[2]).dm()
+        multi_mode_preparation_32_mode_3 = self.circuit.state(modes=[3]).dm()
+
+        single_mode_vac = np.zeros(multi_mode_preparation_32_mode_0.shape, dtype=np.complex128)
+        single_mode_vac.itemset(0, 1.0 + 0.0j)
 
         self.assertAllEqual(random_dm.shape, single_mode_preparation_dm.shape)
         self.assertAllEqual(random_dm.shape, multi_mode_preparation_dm.shape)
@@ -55,17 +67,32 @@ class FockBasisMultimodeTests(FockBaseTest):
         self.assertAllAlmostEqual(multi_mode_preparation_dm, single_mode_preparation_dm, delta=self.tol)
         self.assertAllAlmostEqual(multi_mode_preparation_from_matrix_dm, single_mode_preparation_dm, delta=self.tol)
 
+        self.assertAllAlmostEqual(multi_mode_preparation_32_mode_0, single_mode_vac, delta=self.tol)
+        # self.assertAllAlmostEqual(multi_mode_preparation_32_mode_1, random_rho1, delta=self.tol)
+        self.assertAllAlmostEqual(multi_mode_preparation_32_mode_2, single_mode_vac, delta=self.tol)
+        # self.assertAllAlmostEqual(multi_mode_preparation_32_mode_3, random_rho0, delta=self.tol)
 
-#     def test_prepare_multimode_random_product_dm_state_on_different_modes(self):
-#         """Tests if a random multi mode dm state is correctly prepared on differnt modes."""
-#         random_rho = np.random.normal(size=[self.D**2]*2) + 1j*np.random.normal(size=[self.D**2]*2)
-#         random_rho = np.dot(random_rho.conj().T, random_rho)
-#         random_rho = random_rho/random_rho.trace()
-#         self.circuit.reset(pure=self.kwargs['pure'])
-#         self.circuit.prepare_multimode_dm_state(random_rho, [0, 1])
-#         reference_dm = self.circuit.state([0, 1]).dm()
+    def test_prepare_multimode_random_product_dm_state_on_different_modes(self):
+        """Tests if a random multi mode dm state is correctly prepared on differnt modes."""
+        random_rho = np.random.normal(size=[self.D**2]*2) + 1j*np.random.normal(size=[self.D**2]*2) # two mode random state
+        random_rho = np.dot(random_rho.conj().T, random_rho)
+        random_rho = random_rho/random_rho.trace()
+        random_rho = random_rho.reshape([self.D]*4) #reshape for easier comparison later
 
-#         for subsystems in list(it.permutations(range(self.num_subsystems), 2)):
+        # test the state preparation on the first two modes
+        self.circuit.reset(pure=self.kwargs['pure'])
+        self.circuit.prepare_multimode_dm_state(random_rho, [0, 1])
+        multi_mode_preparation_with_modes_ordered = self.circuit.state([0, 1]).dm()
+        self.assertAllAlmostEqual(multi_mode_preparation_with_modes_ordered, random_rho, delta=self.tol)
+
+        # test the state preparation on two other modes that are not in order
+        self.circuit.reset(pure=self.kwargs['pure'])
+        self.circuit.prepare_multimode_dm_state(random_rho, [1, 2])
+        multi_mode_preparation_with_modes_inverted = self.circuit.state([1, 2]).dm()
+        #self.assertAllAlmostEqual(multi_mode_preparation_with_modes_inverted, random_rho, delta=self.tol)
+
+
+    #     for subsystems in list(it.permutations(range(self.num_subsystems), 2)):
 #             print(subsystems)
 #             self.circuit.reset(pure=self.kwargs['pure'])
 #             self.circuit.prepare_multimode_dm_state(random_rho, subsystems)

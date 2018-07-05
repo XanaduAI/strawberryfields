@@ -325,7 +325,7 @@ class FockBackend(BaseFock):
             if isinstance(modes, int):
                 modes = [modes]
 
-            if modes != sorted(modes):
+            if len(modes) != len(set(modes)):
                 raise ValueError("The specified modes cannot be duplicated.")
 
             num_modes = len(rho.shape) // 2

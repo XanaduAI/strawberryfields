@@ -208,6 +208,8 @@ class QReg():
         if self._checks:
             if state.shape != pure_shape and state.shape != mixed_shape:
                 raise ValueError("Incorrect shape for state preparation")
+            if len(modes) != len(set(modes)):
+                raise ValueError("The specified modes cannot be duplicated.")
 
         if self._num_modes == n_modes:
             # Hack for marginally faster state preparation
