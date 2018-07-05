@@ -345,6 +345,7 @@ class FockBackend(BaseFock):
             indStr = ''.join(ind) + '->' + keep_indices
             red_state = np.einsum(indStr, rho)
 
+            # permute indices of returned state to reflect the ordering of modes (we know and hence can assume that red_state is a mixed state)
         if modes != sorted(modes):
             mode_permutation = np.argsort(modes)
             index_permutation = [2*x+i for x in mode_permutation for i in (0, 1)]
@@ -402,7 +403,9 @@ class FockBackend(BaseFock):
             mode (int): index of mode where state is prepared
 
         """
-        self.qreg.prepare(state, self._remap_modes(mode))
+        if isinstance(mode, int):
+            mode = [mode]
+        self._prepare_multimode_state(state, mode)
 
     def prepare_multimode_ket_state(self, state, modes=None):
         """Prepare an arbitrary pure state on the specified modes.
@@ -413,7 +416,7 @@ class FockBackend(BaseFock):
             modes (list[int] or non-negative int): indices of modes where state is prepared
 
         """
-        self._prepare_state_multimode(state, modes)
+        self._prepare_multimode_state(state, modes)
 
     def prepare_multimode_dm_state(self, state, modes=None):
         """Prepare an arbitrary mixed state on the specified modes.

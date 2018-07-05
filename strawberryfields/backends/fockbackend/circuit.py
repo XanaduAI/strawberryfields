@@ -174,26 +174,22 @@ class QReg():
 
     def prepare_multimode(self, state, modes=None):
         r"""
-        Prepares a given mode or list of modes in a given state.
+        Prepares a given mode or list of modes in the given state.
 
-        TODO: Fix this misleading docstring here and also in prepare()
-        TODO: Fix the preparation on
-
-        After the preparation the system is in a mixed prodcut state,
+        After the preparation the system is in a mixed product state,
         with the specified modes replaced by state.
-        The state is assumed to be given in a tensor index odering
-        corresponding to the order given in modes, i.e., if modes is
-        [3,1], and state is a two mode state, then first sub-system
-        of state will end up in mode 3 and the second subsystem will
-        end up in mode 1.
-
-        Assumes the state of the entire system is of the form
-        :math:`\ket{0}\otimes\ket{\psi}`, up to mode permutations.
-        In particular, the mode may retain any previous phase shift.
+        The given state can be either in tensor form or in matrix/vector form.
+        If modes is not ordered, the subsystems of the input are
+        reordered to reflect that, i.e., if modes=[3,1], then the first mode
+        of state ends up in mode 3 and the second mode of state ends up in
+        mode 1 of the output state.
+        The reduced state on all modes not in modes remains unchainged and
+        the final state is product with respect to the partition into
+        the modes in modes and the complement.
 
         Args:
-            state (array or matrix): vector or matrix representation of ket state or dm state in the fock basis to prepare
-            modes (list[int] or non-negative int): The mode(s) to be overwritten
+            state (array): vector, matrix, or tensor representation of the ket state or dm state in the fock basis to prepare
+            modes (list[int] or non-negative int): The mode(s) into which state is to be prepared. Needs not be ordered.
         """
         if modes == None:
             modes = list(range(self._num_modes))
@@ -253,53 +249,51 @@ class QReg():
                 scale=2
                 index_permutation = [scale*x+i for x in mode_permutation for i in (0, 1)] #two indices per mode if we have pure states
 
-            # print("target modes: "+str(modes)+" scale: "+str(scale))
-            # print("mode_permutation: "+str(mode_permutation))
-            # print("index_permutation: "+str(index_permutation)+" len="+str(len(index_permutation)))
-            # print("shape: "+str(self._state.shape)+" len="+str(len(self._state.shape)))
-
             self._state = np.transpose(self._state, np.argsort(index_permutation))
 
     def prepare(self, state, mode):
         r"""
         Prepares a given mode in a given state.
 
-        Assumes the state of the entire system is of the form
-        :math:`\ket{0}\otimes\ket{\psi}`, up to mode permutations.
-        In particular, the mode may retain any previous phase shift.
+        This is a simple wrappter for prepare_multimode(), see there for more details.
 
         Args:
             state (array or matrix): The new state in the fock basis
             mode (non-negative int): The overwritten mode
         """
+        if isinstance(mode, int):
+            mode = [mode]
+        self.prepare_multimode(state, mode)
 
-        pure_shape = (self._trunc,)
-        mixed_shape = (self._trunc, self._trunc)
+        # raise DeprecationWarning("This method has been superseeded by prepare_multimode().")
 
-        # Do consistency checks
-        if self._checks:
-            if state.shape != pure_shape and state.shape != mixed_shape:
-                raise ValueError("Incorrect shape for state preparation")
-            if not isinstance(mode, int):
-                raise ValueError("Given mode must be of type int")
+        # pure_shape = (self._trunc,)
+        # mixed_shape = (self._trunc, self._trunc)
 
-        if self._num_modes == 1:
-            # Hack for marginally faster state preparation
-            self._state = state.astype(ops.def_type)
-            self._pure = bool(state.shape == pure_shape)
-        else:
-            if self._pure:
-                self._state = ops.mix(self._state, self._num_modes)
-                self._pure = False
+        # # Do consistency checks
+        # if self._checks:
+        #     if state.shape != pure_shape and state.shape != mixed_shape:
+        #         raise ValueError("Incorrect shape for state preparation")
+        #     if not isinstance(mode, int):
+        #         raise ValueError("Given mode must be of type int")
 
-            if state.shape == pure_shape:
-                state = np.outer(state, state.conj())
+        # if self._num_modes == 1:
+        #     # Hack for marginally faster state preparation
+        #     self._state = state.astype(ops.def_type)
+        #     self._pure = bool(state.shape == pure_shape)
+        # else:
+        #     if self._pure:
+        #         self._state = ops.mix(self._state, self._num_modes)
+        #         self._pure = False
 
-            # Take the partial trace
-            reduced_state = ops.partial_trace(self._state, self._num_modes, [mode])
+        #     if state.shape == pure_shape:
+        #         state = np.outer(state, state.conj())
 
-            # Insert state
-            self._state = ops.tensor(reduced_state, state, self._num_modes-1, self._pure, pos=mode)
+        #     # Take the partial trace
+        #     reduced_state = ops.partial_trace(self._state, self._num_modes, [mode])
+
+        #     # Insert state
+        #     self._state = ops.tensor(reduced_state, state, self._num_modes-1, self._pure, pos=mode)
 
     def prepare_mode_fock(self, n, mode):
         """
