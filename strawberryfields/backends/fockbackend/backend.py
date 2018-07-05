@@ -45,12 +45,12 @@ class FockBackend(BaseFock):
             was_int = True
         else:
             was_int = False
-        map_ = self._modeMap.show()
+        map_ = self._modemap.show()
         submap = [map_[m] for m in modes]
-        if not self._modeMap.valid(modes) or None in submap:
+        if not self._modemap.valid(modes) or None in submap:
             raise ValueError('The specified modes are not valid.')
         else:
-            remapped_modes = self._modeMap.remap(modes)
+            remapped_modes = self._modemap.remap(modes)
         if was_int:
             remapped_modes = remapped_modes[0]
         return remapped_modes
@@ -81,7 +81,7 @@ class FockBackend(BaseFock):
 
         self._init_modes = num_subsystems
         self.qreg = QReg(num_subsystems, cutoff_dim, hbar, pure)
-        self._modeMap = ModeMap(num_subsystems)
+        self._modemap = ModeMap(num_subsystems)
 
     def add_mode(self, n=1):
         """Add num_modes new modes to the underlying circuit state. Indices for new modes
@@ -92,7 +92,7 @@ class FockBackend(BaseFock):
             n (int): the number of modes to be added to the circuit
         """
         self.qreg.alloc(n)
-        self._modeMap.add(n)
+        self._modemap.add(n)
 
     def del_mode(self, modes):
         """Trace out the specified modes from the underlying circuit state.
@@ -107,7 +107,7 @@ class FockBackend(BaseFock):
         if isinstance(remapped_modes, int):
             remapped_modes = [remapped_modes]
         self.qreg.dealloc(remapped_modes)
-        self._modeMap.delete(modes)
+        self._modemap.delete(modes)
 
     def get_modes(self):
         """Return a list of the active mode indices for the circuit.
@@ -115,7 +115,7 @@ class FockBackend(BaseFock):
         Returns:
             list[int]: sorted list of active (assigned, not invalid) mode indices
         """
-        return [i for i, j in enumerate(self._modeMap._map) if j is not None]
+        return [i for i, j in enumerate(self._modemap._map) if j is not None]
 
     def reset(self, pure=True, **kwargs):
         """Resets the circuit state back to an all-vacuum state.
@@ -123,7 +123,7 @@ class FockBackend(BaseFock):
         Args:
             pure (bool): whether to use a pure state representation upon reset
         """
-        self._modeMap.reset()
+        self._modemap.reset()
         self.qreg.reset(pure, num_subsystems=self._init_modes)
 
     def prepare_vacuum_state(self, mode):
@@ -439,7 +439,7 @@ class FockBackend(BaseFock):
 
         """
         if modes==None:
-            modes = list(range(len(self._modeMap.show())))
+            modes = list(range(len(self._modemap.show())))
         self.qreg.prepare_multimode(state, self._remap_modes(modes))
 
     def measure_fock(self, modes, select=None, **kwargs):
