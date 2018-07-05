@@ -210,7 +210,7 @@ class QReg():
                state.shape != pure_shape_as_vector and state.shape != mixed_shape_as_matrix:
                 raise ValueError("Incorrect shape for state preparation")
             if len(modes) != len(set(modes)):
-                raise ValueError("The specified modes cannot be duplicated.")
+                raise ValueError("The specified modes cannot appear multiple times.")
 
         # reshape to support input both as tensor and vector/matrix
         if state.shape == pure_shape_as_vector:
