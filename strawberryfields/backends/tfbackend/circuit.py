@@ -296,11 +296,6 @@ class QReg:
         if self._valid_modes(mode):
             with self._graph.as_default():
                 state = tf.cast(tf.convert_to_tensor(state), ops.def_type)
-                # check whether state is a single (unbatched) vector or a batch of vectors
-                if state.shape.ndims == 2:
-                    # NOTE we do a transpose here, the outgoing state has the shape==(len(batch), cutoff_dim) or just (cutoff_dim,) if batching is not on.
-                    state = tf.squeeze(tf.transpose(state))
-                # just a single vector? make duplicates to create a batch
                 if self._batched and state.shape.ndims == 1:
                     state = tf.stack([state] * self._batch_size)
                 self._replace_and_update(state, mode, self._state)
