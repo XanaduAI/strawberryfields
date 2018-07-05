@@ -253,12 +253,12 @@ class QReg():
                 scale=2
                 index_permutation = [scale*x+i for x in mode_permutation for i in (0, 1)] #two indices per mode if we have pure states
 
-            print("modes: "+str(modes)+" scale: "+str(scale))
-            print("mode_permutation: "+str(mode_permutation))
-            print("index_permutation: "+str(index_permutation)+" len="+str(len(index_permutation)))
-            print("shape: "+str(self._state.shape)+" len="+str(len(self._state.shape)))
+            # print("target modes: "+str(modes)+" scale: "+str(scale))
+            # print("mode_permutation: "+str(mode_permutation))
+            # print("index_permutation: "+str(index_permutation)+" len="+str(len(index_permutation)))
+            # print("shape: "+str(self._state.shape)+" len="+str(len(self._state.shape)))
 
-            self._state = np.transpose(self._state, index_permutation)
+            self._state = np.transpose(self._state, np.argsort(index_permutation))
 
     def prepare(self, state, mode):
         r"""

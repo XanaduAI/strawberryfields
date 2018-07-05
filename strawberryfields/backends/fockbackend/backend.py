@@ -345,6 +345,11 @@ class FockBackend(BaseFock):
             indStr = ''.join(ind) + '->' + keep_indices
             red_state = np.einsum(indStr, rho)
 
+        if modes != sorted(modes):
+            mode_permutation = np.argsort(modes)
+            index_permutation = [2*x+i for x in mode_permutation for i in (0, 1)]
+            red_state = np.transpose(red_state, np.argsort(index_permutation))
+
         hbar = self.qreg._hbar
         cutoff = self.qreg._trunc # pylint: disable=protected-access
         mode_names = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
