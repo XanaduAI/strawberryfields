@@ -385,7 +385,7 @@ class BasicTests(BaseTest):
 
         @sf.convert
         def func2(x,y):
-            return abs(2*x*y -y**2 +3)
+            return abs(2*x*y -y**2 +0.5)
 
         kwargs = {}
         r = self.eng.register
