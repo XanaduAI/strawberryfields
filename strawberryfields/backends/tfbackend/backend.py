@@ -23,7 +23,7 @@ import tensorflow as tf
 
 from strawberryfields.backends import BaseFock, ModeMap
 from .circuit import QReg
-from .ops import _maybe_unwrap, _check_for_eval, mixed, partial_trace
+from .ops import _maybe_unwrap, _check_for_eval, mixed, partial_trace, reorder_modes
 from .states import FockStateTF
 
 class TFBackend(BaseFock):
@@ -418,8 +418,8 @@ class TFBackend(BaseFock):
             # reduce rho down to specified subsystems
             if modes is None:
                 # reduced state is full state
-                red_state = s
-                modes = [m for m in range(num_modes)]
+                reduced_state = s
+                modes = list(range(num_modes))
             else:
                 if isinstance(modes, int):
                     modes = [modes]
@@ -430,25 +430,35 @@ class TFBackend(BaseFock):
 
                 if pure:
                     # convert to mixed state representation
-                    red_state = mixed(s, batched)
+                    reduced_state = mixed(s, batched)
                     pure = False
                 else:
-                    red_state = s
-                # would prefer simple einsum formula, but tensorflow does not support partial trace
-                num_removed = 0
-                for m in range(num_modes):
-                    if m not in modes:
-                        mode_to_remove = m - num_removed
-                        red_state = partial_trace(red_state, mode_to_remove, pure, batched)
-                        num_removed += 1
+                    reduced_state = s
+
+                # # would prefer simple einsum formula, but tensorflow does not support partial trace
+                # # It does!
+                # num_removed = 0
+                # for m in range(num_modes):
+                #     if m not in modes:
+                #         mode_to_remove = m - num_removed
+                #         reduced_state = partial_trace(reduced_state, mode_to_remove, pure, batched)
+                #         num_removed += 1
+                for mode in sorted(modes, reverse=True):
+                    reduced_state = partial_trace(reduced_state, mode, False, batched)
+                reduced_state_pure = False
+
+                # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
+                if modes != sorted(modes):
+                    mode_permutation = np.argsort(modes)
+                    reduced_state = reorder_modes(reduced_state, mode_permutation, reduced_state_pure, batched)
 
             evaluate_results, session, feed_dict, close_session = _check_for_eval(kwargs)
             if evaluate_results:
-                s = session.run(red_state, feed_dict=feed_dict)
+                s = session.run(reduced_state, feed_dict=feed_dict)
                 if close_session:
                     session.close()
             else:
-                s = red_state
+                s = reduced_state
 
             modenames = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
             state_ = FockStateTF(s, len(modes), pure, self.circuit.cutoff_dim,

@@ -744,22 +744,40 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
     # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
     if modes != list(range(num_modes-len(modes), num_modes)):
         mode_permutation = [x for x in range(num_modes) if x not in modes] + modes
-        if revised_modes_pure:
-            scale = 1
-            index_permutation = mode_permutation
-        else:
-            scale = 2
-            index_permutation = [scale*x+i for x in mode_permutation for i in (0, 1)] #two indices per mode if we have pure states
+        # if revised_modes_pure:
+        #     scale = 1
+        #     index_permutation = mode_permutation
+        # else:
+        #     scale = 2
+        #     index_permutation = [scale*x+i for x in mode_permutation for i in (0, 1)] #two indices per mode if we have pure states
 
-        if batched:
-            index_permutation = [0] + [i+1 for i in index_permutation]
+        # if batched:
+        #     index_permutation = [0] + [i+1 for i in index_permutation]
 
-        index_permutation = np.argsort(index_permutation)
+        # index_permutation = np.argsort(index_permutation)
 
-        revised_modes = tf.transpose(revised_modes, index_permutation)
+        # revised_modes = tf.transpose(revised_modes, index_permutation)
+        revised_modes = reorder_modes(revised_modes, mode_permutation, revised_modes_pure, batched)
 
     return revised_modes
 
+def reorder_modes(state, mode_permutation, pure, batched):
+    """ """
+    if pure:
+        scale = 1
+        index_permutation = mode_permutation
+    else:
+        scale = 2
+        index_permutation = [scale*x+i for x in mode_permutation for i in (0, 1)] #two indices per mode if we have pure states
+
+    if batched:
+        index_permutation = [0] + [i+1 for i in index_permutation]
+
+    index_permutation = np.argsort(index_permutation)
+
+    revised_modes = tf.transpose(state, index_permutation)
+
+    return revised_modes
 
 def insert_state(state, system, state_is_pure, mode=None, batched=False):
     """
