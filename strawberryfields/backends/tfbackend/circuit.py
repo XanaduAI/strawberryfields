@@ -103,16 +103,20 @@ class QReg(object):
         if isinstance(modes, int):
             modes = [modes]
 
-        if modes != sorted(modes):
-            raise NotImplementedError("So far only sorted mode lists are supported but got modes="+str(modes)+".") #TODO: In the this backend it seems more elegant to do the sorting of the modes in replacement already here and the pass on the sorted replacement and a sorted mode.
+        if self._batched:
+            batch_offset = 1
+        else:
+            batch_offset = 0
 
-        if list(range(self._num_modes)) == modes:
-            self._update_state(replacement)
-            # update purity
-            if self._batched:
-                batch_offset = 1
-            else:
-                batch_offset = 0
+        num_modes = len(self._state.shape) - batch_offset
+        if not self._state_is_pure:
+            num_modes = int(num_modes/2)
+
+        new_state = ops.replace_modes(replacement, modes, self._state, self._state_is_pure, self._batched)
+        self._update_state(new_state)
+
+        # update purity depending on whether we have replaced all modes or a subset
+        if len(modes) == num_modes:
             if self._state_is_pure:
                 # maybe change pure to mixed
                 if len(replacement.shape) == batch_offset + 2:
@@ -122,8 +126,6 @@ class QReg(object):
                 if len(replacement.shape) == batch_offset + 1:
                     self._state_is_pure = True
         else:
-            new_state = ops.replace_modes(replacement, modes, self._state, self._state_is_pure, self._batched)
-            self._update_state(new_state)
             self._state_is_pure = False
 
     def _maybe_batch(self, param, convert_to_tensor=True):

@@ -696,6 +696,8 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
     """Replace the subsystem 'mode' of 'system' with new state 'replacement'. Argument 'system_is_pure' indicates whether
     'system' is represented by a pure state or a density matrix.
     Note: Does not check if this replacement is physically valid (i.e., if 'replacement' is a valid state)
+    Note: expects the shape of both replacement and system to match the batched parameter
+    Note: modes does not need to be ordered.
     """ #TODO: write a better docstring
     if isinstance(modes, int):
         modes = [modes]
@@ -709,34 +711,35 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
     if not system_is_pure:
         num_modes = int(num_modes/2)
 
+    if len(replacement.shape) - batch_offset == len(modes):
+        replacement_is_pure = True
+    else:
+        replacement_is_pure = False
+
+        # we take care of sorting modes below
+    if len(modes) == num_modes:
+        # we are replacing all the modes
+        revised_modes = replacement
+        revised_modes_pure = replacement_is_pure
+    else:
+        # we are replaxing a subset, so have to trace
         #make both system and replacement mixed
         #TODO: For performance the partial trace could be done directly from the pure state. This would of course require a better partial trace function...
-    if system_is_pure:
-        system = mixed(system, batched)
+        if system_is_pure:
+            system = mixed(system, batched)
 
-        #mix the replacement if it is pure
-    if len(replacement.shape) - batch_offset == len(modes):
-        replacement = mixed(replacement, batched)
+            #mix the replacement if it is pure
+        if replacement_is_pure:
+            replacement = mixed(replacement, batched)
 
-    # partial trace out modes
-    #TODO: We are tracing out the modes one by one in decending order (to not screw up things). This is terribly inefficient!
-    reduced_state = system
-    for mode in sorted(modes, reverse=True):
-        reduced_state = partial_trace(reduced_state, mode, False, batched)
-    # append mode and insert state (I know there is also insert_state(), but that does a lot of stuff internally which we do not need here)
-    revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
-    revised_modes_pure = False
-
-    print("")
-    print("revised_modes.shape: "+str(revised_modes.shape))
-    print("reduced_state.shape: "+str(reduced_state.shape))
-    print("replacement.shape: "+str(replacement.shape))
-
-    print("num indices: "+str(len(system.shape)))
-    print("num indices reduced: "+str(len(reduced_state.shape)))
-    print("modes: "+str(modes))
-    print("last modes: "+str(list(range(num_modes-len(modes), num_modes))))
-    print("batched: "+str(batched))
+        # partial trace out modes
+        #TODO: We are tracing out the modes one by one in decending order (to not screw up things). This is terribly inefficient!
+        reduced_state = system
+        for mode in sorted(modes, reverse=True):
+            reduced_state = partial_trace(reduced_state, mode, False, batched)
+        # append mode and insert state (I know there is also insert_state(), but that does a lot of stuff internally which we do not need here)
+        revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
+        revised_modes_pure = False
 
     # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
     if modes != list(range(num_modes-len(modes), num_modes)):
@@ -751,12 +754,8 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
         if batched:
             index_permutation = [0] + [i+1 for i in index_permutation]
 
-        print("index_permutation: "+str(index_permutation))
-
         index_permutation = np.argsort(index_permutation)
 
-        print("revised_modes.shape: "+str(revised_modes.shape))
-        print("index_permutation: "+str(index_permutation))
         revised_modes = tf.transpose(revised_modes, index_permutation)
 
     return revised_modes
