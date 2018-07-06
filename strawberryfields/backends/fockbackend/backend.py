@@ -55,7 +55,7 @@ class FockBackend(BaseFock):
             remapped_modes = remapped_modes[0]
         return remapped_modes
 
-    def begin_circuit(self, num_subsystems, cutoff_dim, hbar=2, pure=True, **kwargs):
+    def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=True, **kwargs):
         r"""
         Create a quantum circuit (initialized in vacuum state) with the number of modes
         equal to num_subsystems and a Fock-space cutoff dimension of cutoff_dim.
@@ -70,11 +70,13 @@ class FockBackend(BaseFock):
             pure (bool): whether to begin the circuit in a pure state representation
         """
         # pylint: disable=attribute-defined-outside-init
-        if not isinstance(num_subsystems, int):
-            raise ValueError("Argument 'num_subsystems' must be a positive integer")
-        if not isinstance(cutoff_dim, int):
+        if cutoff_dim is None:
+            raise ValueError("Argument 'cutoff_dim' must be passed to the Fock backend")
+        elif not isinstance(cutoff_dim, int):
             raise ValueError("Argument 'cutoff_dim' must be a positive integer")
-        if not isinstance(pure, bool):
+        elif not isinstance(num_subsystems, int):
+            raise ValueError("Argument 'num_subsystems' must be a positive integer")
+        elif not isinstance(pure, bool):
             raise ValueError("Argument 'pure' must be either True or False")
 
         self._init_modes = num_subsystems
@@ -122,8 +124,7 @@ class FockBackend(BaseFock):
             pure (bool): whether to use a pure state representation upon reset
         """
         self._modeMap.reset()
-        kwargs['num_subsystems'] = self._init_modes  # do not allow changing the number of modes during a reset, at least for now
-        self.qreg.reset(pure, **kwargs)
+        self.qreg.reset(pure, num_subsystems=self._init_modes)
 
     def prepare_vacuum_state(self, mode):
         """Prepare the vacuum state on the specified mode.
@@ -177,7 +178,7 @@ class FockBackend(BaseFock):
         Note: this may convert the state representation to mixed.
 
         Args:
-            nbar (float): mean thermal population of the mode
+            nbar (int): thermal population of the mode
             mode (int): which mode to prepare the thermal state in
         """
         self.qreg.prepare_mode_thermal(nbar, self._remap_modes(mode))
@@ -296,10 +297,10 @@ class FockBackend(BaseFock):
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
         Args:
-          modes (int, Sequence[int], None): specifies the mode or modes to restrict the return state to.
-            None returns the state containing all modes.
+                modes (int or Sequence[int]): specifies the mode or modes to restrict the return state to.
+                        This argument is optional; the default value ``modes=None`` returns the state containing all modes.
         Returns:
-          BaseFockState: requested state
+                An instance of the Strawberry Fields FockState class.
         """
         s, pure = self.qreg.get_state()
 

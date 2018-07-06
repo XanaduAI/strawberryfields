@@ -58,21 +58,29 @@ class QReg():
 
         Args:
             num (non-negative int): Number of modes in the register.
-            trunc (positive int): Truncation parameter. Fock states up to |trunc-1> are representable.
+            trunc (positive int): Truncation parameter. Modes with up to trunc-1 modes
+                                                        are representable
             hbar (int): The value of :math:`\hbar` to initialise the circuit with, depending on the conventions followed.
                 By default, :math:`\hbar=2`. See :ref:`conventions` for more details.
             pure (bool, optional): Whether states are pure (True) or mixed (False)
             do_checks (bool, optional): Whether arguments are to be checked first
         """
+
+        # Check validity
         if num < 0:
             raise ValueError("Number of modes must be non-negative -- got {}".format(num))
         elif num > MAX_MODES:
             raise ValueError("Fock simulator has a maximum of {} modes".format(MAX_MODES))
+        elif trunc <= 0:
+            raise ValueError("Truncation must be positive -- got {}".format(trunc))
 
         self._num_modes = num
+        self._trunc = trunc
+        self._hbar = hbar
         self._checks = do_checks
+        self._pure = pure
         self._mode = mode
-        self.reset(pure, cutoff_dim=trunc, hbar=hbar)
+        self.reset(None)
 
     def _apply_gate(self, mat, modes):
         """Master gate application function. Selects between implementations based
@@ -119,36 +127,19 @@ class QReg():
             self._state = sum(states)
 
 
-    def reset(self, pure=None, *, num_subsystems=None, cutoff_dim=None, hbar=None):
+    def reset(self, pure=None, num_subsystems=None):
         """Resets the simulation state.
 
-        For all the parameters, None means unchanged.
-
         Args:
-            pure (bool): Sets the purity setting.
-            num_subsystems (int): Sets the number of modes in the reset circuit.
-            cutoff_dim (int): New Hilbert space truncation dimension.
-            hbar (float): New :math:`\hbar` value. See :ref:`conventions` for more details.
+            pure (bool, optional): Sets the purity setting. Default is unchanged.
+            num_subsystems (int, optional): Sets the number of modes in the reset
+                circuit. Default is unchanged.
         """
         if pure is not None:
-            if not isinstance(pure, bool):
-                raise ValueError("Argument 'pure' must be either True or False")
             self._pure = pure
 
         if num_subsystems is not None:
-            if not isinstance(num_subsystems, int):
-                raise ValueError("Argument 'num_subsystems' must be a positive integer")
             self._num_modes = num_subsystems
-
-        if cutoff_dim is not None:
-            if not isinstance(cutoff_dim, int) or cutoff_dim < 1:
-                raise ValueError("Argument 'cutoff_dim' must be a positive integer")
-            self._trunc = cutoff_dim
-
-        if hbar is not None:
-            if not isinstance(hbar, numbers.Real) or hbar <= 0:
-                raise ValueError("Argument 'hbar' must be a positive number")
-            self._hbar = hbar
 
         if self._pure:
             self._state = ops.vacuumState(self._num_modes, self._trunc)
@@ -193,7 +184,7 @@ class QReg():
             state (array or matrix): The new state in the fock basis
             mode (non-negative int): The overwritten mode
         """
-        state = np.squeeze(state)  # in case we are given a column vector
+
         # Do consistency checks
         pure_shape = (self._trunc,)
         # mixed_shape = (self._trunc, self._trunc)
@@ -441,8 +432,14 @@ class QReg():
 
             # Create pdf. Same as tf implementation, but using
             # the recursive relation H_0(x) = 1, H_1(x) = 2x, H_{n+1}(x) = 2xH_n(x) - 2nH_{n-1}(x)
-            q_mag    = kwargs.get('max', 10)
-            num_bins = kwargs.get('num_bins', 100000)
+            if "max" in kwargs:
+                q_mag = kwargs["max"]
+            else:
+                q_mag = 10
+            if "num_bins" in kwargs:
+                num_bins = kwargs["num_bins"]
+            else:
+                num_bins = 100000
 
             q_tensor, Hvals = ops.hermiteVals(q_mag, num_bins, m_omega_over_hbar, self._trunc)
             H_matrix = np.zeros((self._trunc, self._trunc, num_bins))

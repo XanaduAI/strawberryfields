@@ -29,6 +29,7 @@ class GaussianBackend(BaseGaussian):
         Instantiate a GaussianBackend object.
         """
         super().__init__()
+        self._supported["gaussian"] = True
         self._supported["mixed_states"] = True
         self._short_name = "gaussian"
 
@@ -55,6 +56,7 @@ class GaussianBackend(BaseGaussian):
 
         Args:
             n (int): the number of modes to be added to the circuit.
+
         """
         self.circuit.add_mode(n)
 
@@ -67,6 +69,7 @@ class GaussianBackend(BaseGaussian):
         Args:
             modes (list[int]): the modes to be removed from the circuit.
         """
+
         self.circuit.del_mode(modes)
 
     def get_modes(self):
@@ -78,11 +81,11 @@ class GaussianBackend(BaseGaussian):
         """
         return self.circuit.get_modes()
 
-    def reset(self, pure=True, *, hbar=None, **kwargs):
+    def reset(self, pure=True, **kwargs):
         """
         Resets the circuit state back to an all-vacuum state.
         """
-        self.circuit.reset(self._init_modes, hbar)
+        self.circuit.reset(self._init_modes)
 
     def prepare_thermal_state(self, nbar, mode):
         """
@@ -105,6 +108,7 @@ class GaussianBackend(BaseGaussian):
         Args:
             mode (int): index of mode where state is prepared
         """
+
         self.circuit.loss(0.0, mode)
 
     def prepare_coherent_state(self, alpha, mode):
@@ -115,6 +119,7 @@ class GaussianBackend(BaseGaussian):
             alpha (complex): coherent state displacement parameter
             mode (int): index of mode where state is prepared
         """
+
         self.circuit.loss(0.0, mode)
         self.circuit.displace(alpha, mode)
 
@@ -226,7 +231,7 @@ class GaussianBackend(BaseGaussian):
 
         return qs * sqrt(2*self.circuit.hbar)/2
 
-    def measure_heterodyne(self, mode, select=None, **kwargs):
+    def measure_heterodyne(self, mode, select=None):
         """
         Perform a heterodyne measurement on the specified modes.
 

@@ -31,7 +31,7 @@ This module implements the backend API. It contains the classes
 as well as a few methods which apply only to the Gaussian backend.
 
 .. note:: The Strawberry Fields backends by default assume :math:`\hbar=2`, however
-    different conventions may be chosen when calling :meth:`~BaseBackend.begin_circuit`
+    different conventions may be chosen when calling :meth:`~.BaseBackend.begin_circuit`
 
 .. note::
     Keyword arguments are denoted ``**kwargs``, and allow additional
@@ -39,22 +39,13 @@ as well as a few methods which apply only to the Gaussian backend.
     available. For more details on available keyword arguments, please
     consult the backends directly.
 
-.. todo::
-    Once we move to Sphinx 1.7, the docstrings of the methods in the derived classes FockBackend,
-    TFBackend and GaussianBackend that are declared in BaseBackend should be removed entirely.
-    This way they are inherited directly from the parent class BaseBackend and thus kept automatically up-to-date.
-    The derived classes should provide a docstring for these methods only if they change their behavior for some reason.
-
-
 Hierarchy for backends
 ------------------------
 
-.. currentmodule:: strawberryfields.backends
-
-.. inheritance-diagram:: base.BaseBackend
-    fockbackend.backend.FockBackend
-    gaussianbackend.backend.GaussianBackend
-    tfbackend.backend.TFBackend
+.. inheritance-diagram:: strawberryfields.backends.base.BaseBackend
+    strawberryfields.backends.fockbackend.backend.FockBackend
+    strawberryfields.backends.gaussianbackend.backend.GaussianBackend
+    strawberryfields.backends.tfbackend.backend.TFBackend
     :parts: 1
 
 
@@ -84,17 +75,16 @@ Base Backend
     state
     is_vacuum
 
-
-Fock Backends
-~~~~~~~~~~~~~
-
 .. currentmodule:: strawberryfields.backends.base
 
-Some :class:`BaseBackend` methods are only implemented in subclasses of :class:`BaseFock`,
+Base Fock Backend
+------------------
+
+Some commands are only implemented in the subclass :class:`FockBackend`,
 which is the base class for simulators using a Fock-state representation
 for quantum optical circuits.
 
-.. currentmodule:: strawberryfields.backends.base.BaseBackend
+.. currentmodule:: strawberryfields.backends.base.BaseFock
 
 .. autosummary::
     get_cutoff_dim
@@ -104,20 +94,17 @@ for quantum optical circuits.
     kerr_interaction
     measure_fock
 
-Gaussian Backends
-~~~~~~~~~~~~~~~~~
+Base Gaussian Backend
+---------------------
 
-.. currentmodule:: strawberryfields.backends.base
-
-Likewise, currently some :class:`BaseBackend` methods are only implemented in subclasses of :class:`BaseGaussian`,
+Likewise, some commands are only implemented in subclass :class:`BaseGaussian`,
 which is the base class for simulators using a Gaussian symplectic representation
 for quantum optical circuits.
 
-.. currentmodule:: strawberryfields.backends.base.BaseBackend
+.. currentmodule:: strawberryfields.backends.base.BaseGaussian
 
 .. autosummary::
     measure_heterodyne
-
 
 Code details
 ~~~~~~~~~~~~
@@ -127,11 +114,10 @@ Code details
 # pylint: disable=no-self-use
 
 
-class SFNotApplicableError(TypeError):
+class NotApplicableError(TypeError):
     """Exception raised by the backend when the user attempts an unsupported operation.
-
-    E.g. :meth:`measure_fock` on a Gaussian backend.
-    Conceptually different from NotImplementedError (which means "not implemented, but at some point may be").
+    E.g. :meth:`~.BaseBackend.measure_fock` on a Gaussian backend, :meth:`~.BaseBackend.measure_heterodyne` on a Fock backend.
+    Conceptually different from NotImplementedError (not implemented, but at some point may be).
     """
     pass
 
@@ -142,7 +128,7 @@ class ModeMap:
     """
     def __init__(self, num_subsystems):
         self._init = num_subsystems
-        self._map = [k for k in range(num_subsystems)]  #: list[int]: _map[k] is the internal index used by the backend for computational mode k, or None if the mode has been deleted
+        self._map = [k for k in range(num_subsystems)]
 
     def reset(self):
         """reset the modemap to the initial state"""
@@ -224,7 +210,7 @@ class ModeMap:
 
 
 class BaseBackend:
-    """Abstract base class for backends."""
+    """Abstract base class for backends with a minimal API."""
     # pylint: disable=too-many-public-methods
 
     def __init__(self):
@@ -245,17 +231,15 @@ class BaseBackend:
         * "mixed_states": for representations where the quantum state is mixed
         * "batched": allows for a multiple circuits to be simulated in parallel
 
-        .. todo:: The above information is outdated and needs to be updated.
-
         Args:
             name (str): name of the operating mode which we are checking support for
 
         Returns:
             bool: True if this backend supports that operating mode.
         """
-        return self._supported.get(name, False)
+        return self._supported[name] if name in self._supported else False
 
-    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, hbar=2, pure=True, **kwargs):
+    def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=True, **kwargs):
         r"""Instantiate a quantum circuit.
 
         Instantiates a circuit with num_subsystems modes to track and update a quantum optical state.
@@ -270,7 +254,7 @@ class BaseBackend:
             num_subsystems (int): number of modes in the circuit
             cutoff_dim (int): numerical Hilbert space cutoff dimension (used for circuits operating in Fock basis)
             hbar (float): The value of :math:`\hbar` to initialise the circuit with, depending on the conventions followed.
-                See :ref:`conventions` for more details.
+                By default, :math:`\hbar=2`. See :ref:`conventions` for more details.
             pure (bool): whether to initialize the circuit in a pure state (will use a mixed state if pure is False)
         """
         pass  # BaseBackend can be instantiated for testing purposes, even though it does not do anything.
@@ -297,7 +281,6 @@ class BaseBackend:
 
         The indices of the deleted modes become invalid for the lifetime of the circuit object.
         They will never be reassigned to other modes.
-
         Deleting a mode that has already been deleted raises an IndexError exception.
 
         Args:
@@ -314,18 +297,10 @@ class BaseBackend:
         raise NotImplementedError
 
     def reset(self, pure=True, **kwargs):
-        """Reset the circuit back into the initial state.
-
-        After the reset the circuit is in the same state as it was after the last :meth:`begin_circuit` call.
-        It will have the original number of modes, all initialized in the vacuum state.
-        Some circuit parameters may be changed during the reset, see the keyword args below.
+        """Reset the circuit so that all the modes are in the vacuum state.
 
         Args:
             pure (bool): if True, initialize the circuit in a pure state (will use a mixed state if pure is False)
-
-        Keyword Args:
-            cutoff_dim (int): new Hilbert space truncation dimension (for Fock basis backends only)
-            hbar (float): new :math:`\hbar` value. See :ref:`conventions` for more details.
         """
         raise NotImplementedError
 
@@ -387,7 +362,7 @@ class BaseBackend:
         As a result the state will be described using a density matrix.
 
         Args:
-            nbar (float): mean thermal population of the mode
+            nbar (int): thermal population of the mode
             mode (int): which mode to prepare the thermal state in
         """
         raise NotImplementedError
@@ -437,13 +412,13 @@ class BaseBackend:
         """Perform a loss channel operation on the specified mode.
 
         Args:
-            T (float): loss parameter, :math:`0\leq T\leq 1`.
+            T: loss parameter
             mode (int): index of mode where operation is carried out
         """
         raise NotImplementedError
 
     def measure_homodyne(self, phi, mode, select=None, **kwargs):
-        r"""Measure a :ref:`phase space quadrature <homodyne>` of the given modes.
+        r"""Measure a phase space quadrature of the given mode.
 
         For the measured mode, samples the probability distribution
         :math:`f(q) = \bra{q}_x R^\dagger(\phi) \rho R(\phi) \ket{q}_x`
@@ -454,30 +429,13 @@ class BaseBackend:
         and experimentally the photons are destroyed in a homodyne measurement.
 
         Args:
-            phi    (float): phase angle of the quadrature to measure (x: :math:`\phi=0`, p: :math:`\phi=\pi/2`)
-            mode     (int): which mode to measure
+            phi (float): phase angle of the quadrature to measure (x: :math:`\phi=0`, p: :math:`\phi=\pi/2`)
+            mode (Sequence[int]): which mode to measure
             select (float): (Optional) desired values of measurement results. Allows user to post-select on specific measurement results instead of randomly sampling.
             **kwargs: can be used to pass user-specified numerical parameters to the backend. Options for such arguments will be documented in the respective subclasses.
 
         Returns:
             float: measured value
-        """
-        raise NotImplementedError
-
-    def measure_heterodyne(self, mode, select=None, **kwargs):
-        r"""Perform a :ref:`heterodyne measurement <heterodyne>` on the given modes.
-
-        Updates the current state of the circuit such that the measured mode is reset to the vacuum state.
-
-        .. todo:: At the moment only the Gaussian backend implements this method.
-
-        Args:
-            mode       (int): which mode to measure
-            select (complex): (Optional) desired values of measurement result.
-                Allows user to post-select on specific measurement results instead of randomly sampling.
-
-        Returns:
-            complex: measured values
         """
         raise NotImplementedError
 
@@ -495,20 +453,25 @@ class BaseBackend:
     def state(self, modes=None, **kwargs):
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
-        .. currentmodule:: strawberryfields.backends
-
         Args:
-            modes (None, int, Sequence[int]): specifies the mode or modes to restrict the return state to.
-                ``None`` returns the state containing all modes.
+            modes (int or Sequence[int]): specifies the mode or modes to restrict the return state to.
+                This argument is optional; the default value ``modes=None`` returns the state containing all modes.
         Returns:
-            ~states.BaseState: An instance of a BaseState subclass, suited to the particular backend.
+            An instance of the Strawberry Fields State class, suited to the particular backend.
         """
         raise NotImplementedError
 
 
-    #================================================
-    #  Methods specific to Fock backends
-    #================================================
+#=============================
+# Fock-basis backends
+#=============================
+
+class BaseFock(BaseBackend):
+    """Abstract base class for backends capable of Fock state manipulation."""
+
+    def __init__(self):
+        super().__init__()
+        self._supported["fock_basis"] = True
 
     def get_cutoff_dim(self):
         """Returns the Hilbert space cutoff dimension used.
@@ -565,12 +528,12 @@ class BaseBackend:
         raise NotImplementedError
 
     def measure_fock(self, modes, select=None, **kwargs):
-        """Measure the given modes in the :ref:`Fock basis <photon_counting>`.
+        """Measure the given modes in the Fock basis.
 
         Updates the current state of the circuit to the conditional state of this measurement result.
 
         Args:
-            modes  (Sequence[int]): which modes to measure
+            modes (Sequence[int]): which modes to measure
             select (Sequence[int]): (Optional) desired values of measurement results. Allows user to post-select on specific measurement results instead of randomly sampling.
 
         Returns:
@@ -578,19 +541,16 @@ class BaseBackend:
         """
         raise NotImplementedError
 
+    def state(self, modes=None, **kwargs):
+        r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
-
-#=============================
-# Fock-basis backends
-#=============================
-
-class BaseFock(BaseBackend):
-    """Abstract base class for backends capable of Fock state manipulation."""
-
-    def __init__(self):
-        super().__init__()
-        self._supported["fock_basis"] = True
-
+        Args:
+            modes (int or Sequence[int]): specifies the mode or modes to restrict the return state to.
+                This argument is optional; the default value ``modes=None`` returns the state containing all modes.
+        Returns:
+            An instance of the Strawberry Fields FockState class.
+        """
+        raise NotImplementedError
 
 #==============================
 # Gaussian-formulation backends
@@ -599,30 +559,41 @@ class BaseFock(BaseBackend):
 class BaseGaussian(BaseBackend):
     """Abstract base class for backends that are only capable of Gaussian state manipulation."""
 
-    def __init__(self):
-        super().__init__()
-        self._supported["gaussian"] = True
+    def measure_heterodyne(self, mode, select=None):
+        r"""Perform a heterodyne measurement on the given mode.
+
+        Updates the current state of the circuit such that the measured mode is reset to the vacuum state.
+
+        Args:
+            modes (Sequence[int]): which modes to measure
+            select (complex): (Optional) desired values of measurement result.
+                Allows user to post-select on specific measurement results instead of randomly sampling.
+
+        Returns:
+            complex: measured values
+        """
+        raise NotImplementedError
 
     def get_cutoff_dim(self):
         # pylint: disable=unused-argument,missing-docstring
-        raise SFNotApplicableError
+        raise NotApplicableError
 
     def prepare_fock_state(self, n, mode):
         # pylint: disable=unused-argument,missing-docstring
-        raise SFNotApplicableError
+        raise NotApplicableError
 
     def prepare_ket_state(self, state, mode):
         # pylint: disable=unused-argument,missing-docstring
-        raise SFNotApplicableError
+        raise NotApplicableError
 
     def cubic_phase(self, gamma, mode):
         # pylint: disable=unused-argument,missing-docstring
-        raise SFNotApplicableError
+        raise NotApplicableError
 
     def kerr_interaction(self, kappa, mode):
         # pylint: disable=unused-argument,missing-docstring
-        raise SFNotApplicableError
+        raise NotApplicableError
 
-    def measure_fock(self, modes, select=None, **kwargs):
+    def measure_fock(self, modes, select=None):
         # pylint: disable=unused-argument,missing-docstring
-        raise SFNotApplicableError
+        raise NotApplicableError
