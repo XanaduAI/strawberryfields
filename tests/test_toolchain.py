@@ -353,16 +353,6 @@ class BasicTests(BaseTest):
         """Test the Engine.reset() features."""
         self.logTestName()
 
-        # change the hbar value
-        self.assertEqual(self.eng.hbar, self.hbar)
-        state = self.eng.run()
-        self.assertEqual(state._hbar, self.hbar)
-        new_hbar = 1.723
-        self.eng.reset(hbar=new_hbar)
-        self.assertEqual(self.eng.hbar, new_hbar)
-        state = self.eng.run()
-        self.assertEqual(state._hbar, new_hbar)
-
         if self.args.fock_support:
             # change the cutoff dimension
             old_cutoff = self.eng.backend.get_cutoff_dim()
