@@ -258,6 +258,14 @@ class Parameter():
     def __neg__(self):
         return Parameter(-self.x)
 
+    # other properties
+    @property
+    def shape(self):
+        try:
+            return self.x.shape
+        except:
+            return None
+
     # comparisons
     def __eq__(self, other):
         """Equality comparison.
@@ -271,8 +279,6 @@ class Parameter():
             other = other.x
         # see RegRefTransform.__eq__
         return self.x == other
-
-
 
 # corresponding numpy and tensorflow functions
 np_math_fns = {"abs": (np.abs, tf.abs),
@@ -288,7 +294,10 @@ np_math_fns = {"abs": (np.abs, tf.abs),
                "arctan2": (np.arctan2, tf.atan2),
                "arcsinh": (np.arcsinh, tf.asinh),
                "arccosh": (np.arccosh, tf.acosh),
-               "matmul": (np.matmul, tf.matmul)
+               "matmul": (np.matmul, tf.matmul),
+               "expand_dims": (np.expand_dims, tf.expand_dims),
+               "squeeze": (np.squeeze, tf.squeeze),
+               "transpose": (np.transpose, tf.transpose)
 }
 
 def math_fn_wrap(np_fn, tf_fn):

@@ -286,7 +286,7 @@ import tensorflow as tf
 
 from .backends.shared_ops import changebasis
 from .engine import Engine as _Engine, Command, RegRef, RegRefTransform, SFMergeFailure
-from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt, sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2)
+from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt, sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2, transpose, expand_dims, squeeze)
 from .decompositions import clements, bloch_messiah, williamson
 
 # pylint: disable=abstract-method
@@ -794,17 +794,25 @@ class Catstate(Preparation):
     def _apply(self, reg, backend, **kwargs):
         alpha = self.p[0]
         phi   = pi*self.p[1]
+        D = backend.get_cutoff_dim()
+        l = np.arange(D)[:,np.newaxis]
+
         # normalization constant
         temp = exp(-0.5 * abs(alpha)**2)
         N = temp / sqrt(2*(1 + cos(phi) * temp**4))
 
         # coherent states
-        D = backend.get_cutoff_dim()
-        l = np.arange(D)[:,np.newaxis]  # column vector, in case alpha or phi are batched (1d row vectors)
         c1 = (alpha ** l) / sqrt(fac(l))
         c2 = ((-alpha) ** l) / sqrt(fac(l))
         # add them up with a relative phase
         ket = (c1 + exp(1j*phi) * c2) * N
+
+        # in order to support broadcasting, the batch axis has been located at last axis, but backend expects it up as first axis
+        ket = transpose(ket)
+
+        # drop dummy batch axis if it is not necessary
+        ket = squeeze(ket)
+
         backend.prepare_ket_state(ket.x, *reg)
 
 
