@@ -713,7 +713,9 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
         #TODO: For performance the partial trace could be done directly from the pure state. This would of course require a better partial trace function...
     if system_is_pure:
         system = mixed(system, batched)
-    if (len(replacement.shape) - batch_offset) % 2 == 1:
+
+        #mix the replacement if it is pure
+    if len(replacement.shape) - batch_offset == len(modes):
         replacement = mixed(replacement, batched)
 
     # partial trace out modes
@@ -724,6 +726,11 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
     # append mode and insert state (I know there is also insert_state(), but that does a lot of stuff internally which we do not need here)
     revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
     revised_modes_pure = False
+
+    print("")
+    print("revised_modes.shape: "+str(revised_modes.shape))
+    print("reduced_state.shape: "+str(reduced_state.shape))
+    print("replacement.shape: "+str(replacement.shape))
 
     print("num indices: "+str(len(system.shape)))
     print("num indices reduced: "+str(len(reduced_state.shape)))
@@ -748,6 +755,8 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
 
         index_permutation = np.argsort(index_permutation)
 
+        print("revised_modes.shape: "+str(revised_modes.shape))
+        print("index_permutation: "+str(index_permutation))
         revised_modes = tf.transpose(revised_modes, index_permutation)
 
     return revised_modes

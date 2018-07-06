@@ -250,6 +250,7 @@ class TFBackend(BaseFock):
             input_state_is_pure (boolean): whether the state is to be considered as pure.
 
         """
+        print("modes in backend.py _prepare_state(): "+str(modes))
         if modes == None:
             modes = list(range(len(self._modemap.show())))
         elif isinstance(modes, int):
@@ -268,7 +269,7 @@ class TFBackend(BaseFock):
             modes (list[int] or non-negative int): indices of modes where state is prepared
 
         """
-        self._prepare_state(state, True, modes)
+        self._prepare_state(state, modes, True)
 
     def prepare_multimode_dm_state(self, state, modes=None):
         """Prepare an arbitrary mixed state on the specified modes.
@@ -279,7 +280,8 @@ class TFBackend(BaseFock):
             mode (list[int] or non-negative int): indices of modes where state is prepared
 
         """
-        self._prepare_state(state, False, modes)
+        print("modes in backend.py prepare_multimode_dm_state(): "+str(modes))
+        self._prepare_state(state, modes, False)
 
     def prepare_thermal_state(self, nbar, mode):
         """

@@ -295,6 +295,7 @@ class QReg(object):
         """
              Traces out the state in 'modes' and replaces them with the state numerically defined by 'state'.
         """
+        print("modes in circuit.py prepare_state(): "+str(modes))
         if not self._valid_modes(modes):
             return
 
