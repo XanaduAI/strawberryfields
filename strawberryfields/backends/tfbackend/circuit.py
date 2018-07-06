@@ -51,7 +51,7 @@ class QReg(object):
         self._graph = graph
         with self._graph.as_default():
             self._num_modes = num_modes
-            self._cutoff_dim = cutoff_dim
+            self._cutoff_dim = cutoff_dim #TODO: this is called _trunc in the fockbackend -> unify notation
             self._hbar = hbar
             self._batch_size = batch_size
             self._batched = False if batch_size is None else True
@@ -297,18 +297,35 @@ class QReg(object):
         """
              Traces out the state in 'modes' and replaces them with the state numerically defined by 'state'.
         """
-        print("modes in circuit.py prepare_state(): "+str(modes))
         if not self._valid_modes(modes):
             return
+
+        if input_state_is_pure:
+            input_is_batched = len(state.shape) == 2
+        else:
+            input_is_batched = len(state.shape) % 2 == 1
+
+        n_modes = len(modes)
+        pure_shape = tuple([self._cutoff_dim]*n_modes)
+        mixed_shape = tuple([self._cutoff_dim]*(2*n_modes))
+        pure_shape_as_vector = tuple([self._cutoff_dim**n_modes])
+        mixed_shape_as_matrix = tuple([self._cutoff_dim**n_modes]*2)
+        if input_is_batched:
+            pure_shape = (self._batch_size,) + pure_shape
+            mixed_shape = (self._batch_size,) + mixed_shape
+            pure_shape_as_vector = (self._batch_size,) + pure_shape_as_vector
+            mixed_shape_as_matrix = (self._batch_size,) + mixed_shape_as_matrix
+
+        # reshape to support input both as tensor and vector/matrix
+        if state.shape == pure_shape_as_vector:
+            state = state.reshape(pure_shape)
+        elif state.shape == mixed_shape_as_matrix:
+            state = state.reshape(mixed_shape)
 
         with self._graph.as_default():
             state = tf.cast(tf.convert_to_tensor(state), ops.def_type)
             # check whether state is a single (unbatched) vector
             # or a batch of vectors
-            if input_state_is_pure:
-                input_is_batched = state.shape.ndims == 2
-            else:
-                input_is_batched = state.shape.ndims % 2 == 1
             if self._batched and not input_is_batched:
                 state = tf.stack([state] * self._batch_size)
             self._replace_and_update(state, modes)

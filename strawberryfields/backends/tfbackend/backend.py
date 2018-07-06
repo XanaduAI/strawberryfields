@@ -423,7 +423,7 @@ class TFBackend(BaseFock):
             else:
                 if isinstance(modes, int):
                     modes = [modes]
-                if modes != sorted(modes):
+                if len(modes) != len(set(modes)):
                     raise ValueError("The specified modes cannot be duplicated.")
                 if len(modes) > num_modes:
                     raise ValueError("The number of specified modes cannot be larger than the number of subsystems.")

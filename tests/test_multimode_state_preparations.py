@@ -95,11 +95,12 @@ class FockBasisMultimodeTests(FockBaseTest):
         multi_mode_preparation_with_modes_inverted = self.circuit.state([1, 2]).dm()
         self.assertAllAlmostEqual(multi_mode_preparation_with_modes_inverted, random_rho, delta=self.tol)
 
-        # test various subsets of subsystems in various orders (without resettig the state in between)
+        # test various subsets of subsystems in various orders
         for subsystems in list(it.permutations(range(self.num_subsystems), 2)):
             subsystems = list(subsystems)
             self.circuit.reset(pure=self.kwargs['pure'])
             self.circuit.prepare_multimode_dm_state(random_rho, subsystems)
+            print("subsystems: "+str(subsystems))
             dm = self.circuit.state(modes=subsystems).dm()
             self.assertAllEqual(random_rho.shape, dm.shape)
             self.assertAllAlmostEqual(random_rho, dm, delta=self.tol)
