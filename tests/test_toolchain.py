@@ -349,9 +349,19 @@ class BasicTests(BaseTest):
         check()
 
 
-    def test_eng_reset(self):
+    def __test_eng_reset(self):
+        # TODO: revisit this test when we've finalized the eng.reset behaviour
         """Test the Engine.reset() features."""
         self.logTestName()
+
+        # change the hbar value
+        self.assertEqual(self.eng.hbar, self.hbar)
+        state = self.eng.run()
+        self.assertEqual(state._hbar, self.hbar)
+        new_hbar = 1.723
+        self.eng.reset(hbar=new_hbar)
+        self.assertEqual(self.eng.hbar, new_hbar)
+        state = self.eng.run()
 
         if self.args.fock_support:
             # change the cutoff dimension
