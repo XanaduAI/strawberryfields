@@ -428,7 +428,7 @@ class BasicTests(BaseTest):
             self.eng.optimize()
             try:
                 self.eng.run(**kwargs)
-            except SFNotApplicableError as err:
+            except NotApplicableError as err:
                 # catch unapplicable op/backend combinations here
                 logging.debug(err)
                 self.eng.reset_queue()  # unsuccessful run means the queue was not emptied.

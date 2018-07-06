@@ -116,8 +116,8 @@ Code details
 
 class NotApplicableError(TypeError):
     """Exception raised by the backend when the user attempts an unsupported operation.
-    E.g. :meth:`~.BaseBackend.measure_fock` on a Gaussian backend, :meth:`~.BaseBackend.measure_heterodyne` on a Fock backend.
-    Conceptually different from NotImplementedError (not implemented, but at some point may be).
+    E.g. :meth:`measure_fock` on a Gaussian backend.
+    Conceptually different from NotImplementedError (which means "not implemented, but at some point may be").
     """
     pass
 

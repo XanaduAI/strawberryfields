@@ -399,7 +399,7 @@ class Operation:
         """
         raise NotImplementedError('Missing direct implementation: {}'.format(self))
 
-    def apply(self, reg, backend, **kwargs):
+    def apply(self, reg, backend, hbar, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
 
         Takes care of parameter evaluations and any pending formal transformations (like dagger) and then calls _apply.
@@ -412,6 +412,7 @@ class Operation:
         """
         # convert RegRefs back to indices for the backend API
         temp = [rr.ind for rr in reg]
+        self.hbar = hbar  # pylint: disable=attribute-defined-outside-init
         # call the child class specialized _apply method
         return self._apply(temp, backend, **kwargs)
 
@@ -560,7 +561,7 @@ class Gate(ParOperation):
         s.dagger = not s.dagger
         return s
 
-    def apply(self, reg, backend, **kwargs):
+    def apply(self, reg, backend, hbar, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
 
         Like :func:`ParOperation.apply`, but takes into account the special nature of p[0] and applies self.dagger.
@@ -579,7 +580,7 @@ class Gate(ParOperation):
         # evaluate the rest of the Parameters, restore the originals later
         self.p = [z] +[x.evaluate() for x in self.p[1:]]
         # calling the grandparent class, skipping ParOperation.apply to avoid another evaluation of self.p (which wouldn't hurt but is unnecessary)
-        super(ParOperation, self).apply(reg, backend, **kwargs)
+        super(ParOperation, self).apply(reg, backend, hbar, **kwargs)
         self.p = temp  # restore original unevaluated Parameter instances
 
     def merge(self, other):
@@ -1062,7 +1063,7 @@ class Xgate(Gate):
         super().__init__([x])
 
     def _apply(self, reg, backend, **kwargs):
-        z = self.p[0] / sqrt(2 * kwargs['hbar'])
+        z = self.p[0] / sqrt(2 * self.hbar)
         backend.displacement(z.x, *reg)
 
 
@@ -1079,7 +1080,7 @@ class Zgate(Gate):
         super().__init__([p])
 
     def _apply(self, reg, backend, **kwargs):
-        z = self.p[0] * 1j/sqrt(2 * kwargs['hbar'])
+        z = self.p[0] * 1j/sqrt(2 * self.hbar)
         backend.displacement(z.x, *reg)
 
 

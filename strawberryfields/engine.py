@@ -110,7 +110,7 @@ Exceptions
    SFMergeFailure
    SFProgramError
    SFRegRefError
-   ~strawberryfields.backends.base.SFNotApplicableError
+   ~strawberryfields.backends.base.NotApplicableError
 
 
 Code details
@@ -129,7 +129,7 @@ from itertools import chain
 import networkx as nx
 
 from .backends import load_backend
-from .backends.base import SFNotApplicableError
+from .backends.base import NotApplicableError
 
 
 def _print_list(i, q):
@@ -643,7 +643,6 @@ class Engine:
         Returns:
           list[Command]: commands that were applied to the backend
         """
-        kwargs.setdefault('hbar', self.hbar)  # caller can override the default value
         applied = []
         for cmd in clist:
             if cmd.op is None:
@@ -652,11 +651,11 @@ class Engine:
             else:
                 try:
                     # try to apply it to the backend
-                    cmd.op.apply(cmd.reg, self.backend, **kwargs)
+                    cmd.op.apply(cmd.reg, self.backend, hbar=self.hbar, **kwargs)
                     applied.append(cmd)
-                except SFNotApplicableError:
+                except NotApplicableError:
                     # command is not applicable to the current backend type
-                    raise SFNotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
+                    raise NotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
                 except NotImplementedError:
                     # command not directly supported by backend API, try a decomposition instead
                     try:
@@ -684,7 +683,6 @@ class Engine:
             return_state (bool): If True, returns the state of the circuit after the program has been run like :meth:`return_state` was called.
             modes (Sequence[int]): Modes to be returned in the state object. If None, returns all modes.
         """
-        kwargs.setdefault('hbar', self.hbar)  # caller can override the default value
 
         if backend is None:
             # keep the current one
@@ -697,7 +695,7 @@ class Engine:
             else:
                 # initialize a backend
                 self.backend = load_backend(backend)
-                self.backend.begin_circuit(num_subsystems=self.init_num_subsystems, **kwargs)
+                self.backend.begin_circuit(num_subsystems=self.init_num_subsystems, hbar=self.hbar, **kwargs)
         else:
             self.backend = backend
 
