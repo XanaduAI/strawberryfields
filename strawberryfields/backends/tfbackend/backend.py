@@ -272,7 +272,7 @@ class TFBackend(BaseFock):
             input_state_is_pure (boolean): whether the state is to be considered as pure.
 
         """
-        if modes == None:
+        if modes is None:
             modes = list(range(len(self._modemap.show())))
         elif isinstance(modes, int):
             modes = [modes]

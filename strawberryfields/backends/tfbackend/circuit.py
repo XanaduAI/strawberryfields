@@ -78,7 +78,7 @@ class QReg(object):
         self._state_history.append(new_state)
         self._state = new_state
 
-    def _valid_modes(self, modes): #TODO: this method should probably be moved into BaseBackend and then maybe overridden and expended in the subclasses. Currently checking for valid modes in the fock backend, for example is a mess.
+    def _valid_modes(self, modes): #TODO: this method should probably be moved into BaseBackend and then maybe overridden and expended in the subclasses to avoid code duplication and missing out on conditions.
         if isinstance(modes, int):
             modes = [modes]
 
@@ -113,18 +113,13 @@ class QReg(object):
             num_modes = int(num_modes/2)
 
         new_state = ops.replace_modes(replacement, modes, self._state, self._state_is_pure, self._batched)
+        print("new_state has shape: "+str(new_state.shape))
         self._update_state(new_state)
 
         # update purity depending on whether we have replaced all modes or a subset
         if len(modes) == num_modes:
-            if self._state_is_pure:
-                # maybe change pure to mixed
-                if len(replacement.shape) == batch_offset + 2:
-                    self._state_is_pure = False
-            else:
-                # maybe change mixed to pure
-                if len(replacement.shape) == batch_offset + 1:
-                    self._state_is_pure = True
+            replacement_is_pure = bool(len(replacement.shape) - batch_offset == len(modes))
+            self._state_is_pure = replacement_is_pure
         else:
             self._state_is_pure = False
 
@@ -294,11 +289,31 @@ class QReg(object):
                 self._replace_and_update(displaced_squeezed, mode)
 
     def prepare_multimode(self, state, modes=None, input_state_is_pure=False):
+        r"""
+        Prepares a given mode or list of modes in the given state.
+
+        After the preparation the system is in a mixed product state,
+        with the specified modes replaced by state.
+        The given state can be either in tensor form or in matrix/vector form and can be a batch of states or a single state. This method needs to know whether
+        input_state_is_pure to distinguish between a batch of pure states and a mixed state.
+        If modes is not ordered, the subsystems of the input are
+        reordered to reflect that, i.e., if modes=[3,1], then the first mode
+        of state ends up in mode 3 and the second mode of state ends up in
+        mode 1 of the output state.
+        If modes is None, it is attempted to prepare state in all modes.
+        The reduced state on all other modes remains unchainged and
+        the final state is product with respect to the partition into
+        the modes in modes and the complement.
+
+        Args:
+            state (array): vector, matrix, or tensor representation of the ket state or dm state (or a batch of such states) in the fock basis to prepare
+            modes (list[int] or non-negative int or None): The mode(s) into which state is to be prepared. Needs not be ordered.
         """
-             Traces out the state in 'modes' and replaces them with the state numerically defined by 'state'.
-        """
+        print("modes is: "+str(modes))
         if modes is None:
             modes = list(range(self._num_modes))
+        print("mod modes is: "+str(modes))
+        print("modes valid?: "+str(self._valid_modes(modes)))
 
         if not self._valid_modes(modes):
             return
@@ -340,8 +355,8 @@ class QReg(object):
         This is a simple wrappter for prepare_multimode(), see there for more details.
 
         Args:
-            state (array or matrix): The new state in the fock basis
-            mode (non-negative int): The overwritten mode
+            state (array): vector, matrix, or tensor representation of the ket state or dm state in the fock basis to prepare
+            modes (list[int] or non-negative int or None): The mode(s) into which state is to be prepared. Needs not be ordered.
         """
         if isinstance(mode, int):
             mode = [mode]

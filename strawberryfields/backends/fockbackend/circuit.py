@@ -183,13 +183,14 @@ class QReg():
         reordered to reflect that, i.e., if modes=[3,1], then the first mode
         of state ends up in mode 3 and the second mode of state ends up in
         mode 1 of the output state.
-        The reduced state on all modes not in modes remains unchainged and
+        If modes is None, it is attempted to prepare state in all modes.
+        The reduced state on all other modes remains unchainged and
         the final state is product with respect to the partition into
         the modes in modes and the complement.
 
         Args:
             state (array): vector, matrix, or tensor representation of the ket state or dm state in the fock basis to prepare
-            modes (list[int] or non-negative int): The mode(s) into which state is to be prepared. Needs not be ordered.
+            modes (list[int] or non-negative int or None): The mode(s) into which state is to be prepared. Needs not be ordered.
         """
         if modes is None:
             modes = list(range(self._num_modes))
@@ -257,8 +258,8 @@ class QReg():
         This is a simple wrappter for prepare_multimode(), see there for more details.
 
         Args:
-            state (array or matrix): The new state in the fock basis
-            mode (non-negative int): The overwritten mode
+            state (array): vector, matrix, or tensor representation of the ket state or dm state in the fock basis to prepare
+            modes (list[int] or non-negative int or None): The mode(s) into which state is to be prepared. Needs not be ordered.
         """
         if isinstance(mode, int):
             mode = [mode]

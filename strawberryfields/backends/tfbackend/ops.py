@@ -658,39 +658,42 @@ def combine_single_modes(modes_list, batched=False):
     combined_modes = tf.einsum(eqn, *einsum_inputs)
     return combined_modes
 
-def replace_mode(replacement, mode, system, state_is_pure, batched=False):#TODO: Once testing is done this method will become obsolete and superseeded by preplace_modes()
+def replace_mode(replacement, mode, system, state_is_pure, batched=False):#TODO: This method has become obsolete and is superseeded by preplace_modes()
     """Replace the subsystem 'mode' of 'system' with new state 'replacement'. Argument 'state_is_pure' indicates whether
-    'system' is represented by a pure state or a density matrix.
-    Note: Does not check if this replacement is physically valid (i.e., if 'replacement' is a valid state)
+
+    This is just a simple wrapper for replace_modes()
     """
-    if batched:
-        batch_offset = 1
-    else:
-        batch_offset = 0
-    if state_is_pure:
-        num_modes = len(system.shape) - batch_offset
-    else:
-        num_modes = (len(system.shape) - batch_offset) // 2
+    if isinstance(mode, int):
+        mode = [mode]
+    replace_modes(replacement, mode, system, state_is_pure, batched)
 
-    if num_modes == 1 and len(replacement.shape) == 1:
-        # in this special case, we can just directly replace
-        revised_modes = replacement
-    else:
-        # Otherwise, everything must become mixed since we do not know if mode is entangled with others.
-        if state_is_pure:
-            system = mixed(system, batched)
-        if len(replacement.shape) - batch_offset == 1:
-            replacement = mixed(replacement, batched)
-        elif len(replacement.shape) - batch_offset < 1 or len(replacement.shape) - batch_offset > 2:
-            raise ValueError("replacement can only have dim={} or dim={}".format(1 + batch_offset, 2 + batch_offset))
+    # if batched:
+    #     batch_offset = 1
+    # else:
+    #     batch_offset = 0
+    # if state_is_pure:
+    #     num_modes = len(system.shape) - batch_offset
+    # else:
+    #     num_modes = (len(system.shape) - batch_offset) // 2
 
-        # partial trace out modes
-        reduced_state = partial_trace(system, mode, False, batched)
-        # append mode and insert state
-        revised_modes = insert_state(replacement, reduced_state, False, mode, batched)
+    # if num_modes == 1 and len(replacement.shape) == 1:
+    #     # in this special case, we can just directly replace
+    #     revised_modes = replacement
+    # else:
+    #     # Otherwise, everything must become mixed since we do not know if mode is entangled with others.
+    #     if state_is_pure:
+    #         system = mixed(system, batched)
+    #     if len(replacement.shape) - batch_offset == 1:
+    #         replacement = mixed(replacement, batched)
+    #     elif len(replacement.shape) - batch_offset < 1 or len(replacement.shape) - batch_offset > 2:
+    #         raise ValueError("replacement can only have dim={} or dim={}".format(1 + batch_offset, 2 + batch_offset))
 
-    return revised_modes
+    #     # partial trace out modes
+    #     reduced_state = partial_trace(system, mode, False, batched)
+    #     # append mode and insert state
+    #     revised_modes = insert_state(replacement, reduced_state, False, mode, batched)
 
+    # return revised_modes
 
 def replace_modes(replacement, modes, system, system_is_pure, batched=False):
     """Replace the subsystem 'mode' of 'system' with new state 'replacement'. Argument 'system_is_pure' indicates whether
@@ -711,14 +714,15 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
     if not system_is_pure:
         num_modes = int(num_modes/2)
 
-    if len(replacement.shape) - batch_offset == len(modes):
-        replacement_is_pure = True
-    else:
-        replacement_is_pure = False
+    replacement_is_pure = bool(len(replacement.shape) - batch_offset == len(modes))
+
+    print("modes in replace_modes(): "+str(modes))
+    print("modes lens in replace_modes(): "+str(len(modes))+" "+str(num_modes))
 
         # we take care of sorting modes below
     if len(modes) == num_modes:
         # we are replacing all the modes
+        print("doing a plane replacement with shape "+str(replacement.shape)+" and purity "+str(replacement_is_pure))
         revised_modes = replacement
         revised_modes_pure = replacement_is_pure
     else:
@@ -733,7 +737,7 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
             replacement = mixed(replacement, batched)
 
         # partial trace out modes
-        #TODO: We are tracing out the modes one by one in decending order (to not screw up things). This is terribly inefficient!
+        #TODO: We are tracing out the modes one by one in decending order (to not screw up things). This is quite inefficient.
         reduced_state = system
         for mode in sorted(modes, reverse=True):
             reduced_state = partial_trace(reduced_state, mode, False, batched)
@@ -743,6 +747,7 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
 
     # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
     if modes != list(range(num_modes-len(modes), num_modes)):
+        print("swapping indices")
         mode_permutation = [x for x in range(num_modes) if x not in modes] + modes
         # if revised_modes_pure:
         #     scale = 1
@@ -759,6 +764,7 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
         # revised_modes = tf.transpose(revised_modes, index_permutation)
         revised_modes = reorder_modes(revised_modes, mode_permutation, revised_modes_pure, batched)
 
+    print("returning with shape "+str(revised_modes.shape))
     return revised_modes
 
 def reorder_modes(state, mode_permutation, pure, batched):

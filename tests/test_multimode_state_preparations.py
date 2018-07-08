@@ -111,7 +111,9 @@ class FockBasisMultimodeTests(FockBaseTest):
 
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_multimode_dm_state(random_ket)
-        all_mode_preparation_ket = self.circuit.state().ket()
+        all_mode_preparation_ket = self.circuit.state().ket() # Returns None if the state if mixed
+
+        print("state(): "+str(self.circuit.state()))
 
         self.assertAllEqual(all_mode_preparation_ket.shape, random_ket.shape)
         self.assertAllAlmostEqual(all_mode_preparation_ket, random_ket, delta=self.tol)
