@@ -113,7 +113,6 @@ class QReg(object):
             num_modes = int(num_modes/2)
 
         new_state = ops.replace_modes(replacement, modes, self._state, self._state_is_pure, self._batched)
-        print("new_state has shape: "+str(new_state.shape))
         self._update_state(new_state)
 
         # update purity depending on whether we have replaced all modes or a subset
@@ -309,11 +308,8 @@ class QReg(object):
             state (array): vector, matrix, or tensor representation of the ket state or dm state (or a batch of such states) in the fock basis to prepare
             modes (list[int] or non-negative int or None): The mode(s) into which state is to be prepared. Needs not be ordered.
         """
-        print("modes is: "+str(modes))
         if modes is None:
             modes = list(range(self._num_modes))
-        print("mod modes is: "+str(modes))
-        print("modes valid?: "+str(self._valid_modes(modes)))
 
         if not self._valid_modes(modes):
             return

@@ -716,13 +716,9 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
 
     replacement_is_pure = bool(len(replacement.shape) - batch_offset == len(modes))
 
-    print("modes in replace_modes(): "+str(modes))
-    print("modes lens in replace_modes(): "+str(len(modes))+" "+str(num_modes))
-
         # we take care of sorting modes below
     if len(modes) == num_modes:
         # we are replacing all the modes
-        print("doing a plane replacement with shape "+str(replacement.shape)+" and purity "+str(replacement_is_pure))
         revised_modes = replacement
         revised_modes_pure = replacement_is_pure
     else:
@@ -752,7 +748,6 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
 
     # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
     if modes != list(range(num_modes-len(modes), num_modes)):
-        print("swapping indices")
         mode_permutation = [x for x in range(num_modes) if x not in modes] + modes
         # if revised_modes_pure:
         #     scale = 1
@@ -769,7 +764,6 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
         # revised_modes = tf.transpose(revised_modes, index_permutation)
         revised_modes = reorder_modes(revised_modes, mode_permutation, revised_modes_pure, batched)
 
-    print("returning with shape "+str(revised_modes.shape))
     return revised_modes
 
 def reorder_modes(state, mode_permutation, pure, batched):
