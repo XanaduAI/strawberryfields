@@ -435,22 +435,16 @@ class TFBackend(BaseFock):
                 else:
                     reduced_state = s
 
-                # # would prefer simple einsum formula, but tensorflow does not support partial trace
-                # # It does!
-                # num_removed = 0
-                # for m in range(num_modes):
-                #     if m not in modes:
-                #         mode_to_remove = m - num_removed
-                #         reduced_state = partial_trace(reduced_state, mode_to_remove, pure, batched)
-                #         num_removed += 1
-                for mode in sorted(modes, reverse=True):
+                    # trace our all modes not in modes
+                    #TODO: Doing this one by one is very inefficient. The partial trace function should be improved.
+                for mode in sorted([m for m in range(num_modes) if m not in modes], reverse=True):
                     reduced_state = partial_trace(reduced_state, mode, False, batched)
                 reduced_state_pure = False
 
-                # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
-                if modes != sorted(modes):
-                    mode_permutation = np.argsort(modes)
-                    reduced_state = reorder_modes(reduced_state, mode_permutation, reduced_state_pure, batched)
+            # unless the modes were requested in order, we need to swap indices around
+            if modes != sorted(modes):
+                mode_permutation = np.argsort(np.argsort(modes))
+                reduced_state = reorder_modes(reduced_state, mode_permutation, reduced_state_pure, batched)
 
             evaluate_results, session, feed_dict, close_session = _check_for_eval(kwargs)
             if evaluate_results:

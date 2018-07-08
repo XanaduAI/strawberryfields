@@ -67,7 +67,7 @@ class FockBasisMultimodeTests(FockBaseTest):
         self.assertAllEqual(random_dm.shape, single_mode_preparation_dm.shape)
         self.assertAllEqual(random_dm.shape, multi_mode_preparation_dm.shape)
         self.assertAllEqual(random_dm.shape, multi_mode_preparation_from_matrix_dm.shape)
-        self.assertAllAlmostEqual(multi_mode_preparation_dm, random_dm, delta=self.tol)
+        self.assertAllAlmostEqual(random_dm, single_mode_preparation_dm, delta=self.tol)
         self.assertAllAlmostEqual(multi_mode_preparation_dm, single_mode_preparation_dm, delta=self.tol)
         self.assertAllAlmostEqual(multi_mode_preparation_from_matrix_dm, single_mode_preparation_dm, delta=self.tol)
 
@@ -100,7 +100,6 @@ class FockBasisMultimodeTests(FockBaseTest):
             subsystems = list(subsystems)
             self.circuit.reset(pure=self.kwargs['pure'])
             self.circuit.prepare_multimode_dm_state(random_rho, subsystems)
-            print("subsystems: "+str(subsystems))
             dm = self.circuit.state(modes=subsystems).dm()
             self.assertAllEqual(random_rho.shape, dm.shape)
             self.assertAllAlmostEqual(random_rho, dm, delta=self.tol)

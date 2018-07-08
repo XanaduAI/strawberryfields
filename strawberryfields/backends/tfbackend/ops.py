@@ -722,7 +722,7 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
         revised_modes = replacement
         revised_modes_pure = replacement_is_pure
     else:
-        # we are replaxing a subset, so have to trace
+        # we are replacing a subset, so have to trace
         #make both system and replacement mixed
         #TODO: For performance the partial trace could be done directly from the pure state. This would of course require a better partial trace function...
         if system_is_pure:
@@ -737,7 +737,7 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
         reduced_state = system
         for mode in sorted(modes, reverse=True):
             reduced_state = partial_trace(reduced_state, mode, False, batched)
-        # append mode and insert state (I know there is also insert_state(), but that does a lot of stuff internally which we do not need here)
+        # append mode and insert state (There is also insert_state(), but that does a lot of stuff internally which we do not need here)
         revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
         revised_modes_pure = False
 
@@ -775,9 +775,9 @@ def reorder_modes(state, mode_permutation, pure, batched):
 
     index_permutation = np.argsort(index_permutation)
 
-    revised_modes = tf.transpose(state, index_permutation)
+    reordered_modes = tf.transpose(state, index_permutation)
 
-    return revised_modes
+    return reordered_modes
 
 def insert_state(state, system, state_is_pure, mode=None, batched=False):
     """
