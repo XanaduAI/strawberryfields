@@ -239,26 +239,6 @@ class TFBackend(BaseFock):
         """
         self._prepare_state(state, mode, False)
 
-    def _prepare_state(self, state, modes=None, input_state_is_pure=False):
-        """
-        Prepare an arbitrary pure or mixed state on the specified mode.
-        Note: this may convert the state representation to mixed.
-
-        Args:
-            state (array): vector, matrix, or tensor representation of the state to prepare
-            modes (int or list([int])): index or indices of mode(s) where state is to be prepared
-            input_state_is_pure (boolean): whether the state is to be considered as pure.
-
-        """
-        if modes == None:
-            modes = list(range(len(self._modemap.show())))
-        elif isinstance(modes, int):
-            modes = [modes]
-
-        with tf.name_scope('Prepare_state'):
-            state = _maybe_unwrap(state)
-            self.circuit.prepare_state(state, self._remap_modes(modes), input_state_is_pure)
-
     def prepare_multimode_ket_state(self, state, modes=None):
         """Prepare an arbitrary pure state on the specified modes.
         Note: this may convert the state representation to mixed.
@@ -280,6 +260,26 @@ class TFBackend(BaseFock):
 
         """
         self._prepare_state(state, modes, False)
+
+    def _prepare_state(self, state, modes=None, input_state_is_pure=False):
+        """
+        Prepare an arbitrary pure or mixed state on the specified mode.
+        Note: this may convert the state representation to mixed.
+
+        Args:
+            state (array): vector, matrix, or tensor representation of the state to prepare
+            modes (int or list([int])): index or indices of mode(s) where state is to be prepared
+            input_state_is_pure (boolean): whether the state is to be considered as pure.
+
+        """
+        if modes == None:
+            modes = list(range(len(self._modemap.show())))
+        elif isinstance(modes, int):
+            modes = [modes]
+
+        with tf.name_scope('Prepare_state'):
+            state = _maybe_unwrap(state)
+            self.circuit.prepare_multimode(state, self._remap_modes(modes), input_state_is_pure)
 
     def prepare_thermal_state(self, nbar, mode):
         """

@@ -293,10 +293,13 @@ class QReg(object):
                 displaced_squeezed = ops.displaced_squeezed(alpha, r, phi, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched)
                 self._replace_and_update(displaced_squeezed, mode)
 
-    def prepare_state(self, state, modes, input_state_is_pure):
+    def prepare_multimode(self, state, modes=None, input_state_is_pure=False):
         """
              Traces out the state in 'modes' and replaces them with the state numerically defined by 'state'.
         """
+        if modes is None:
+            modes = list(range(self._num_modes))
+
         if not self._valid_modes(modes):
             return
 
@@ -330,9 +333,23 @@ class QReg(object):
                 state = tf.stack([state] * self._batch_size)
             self._replace_and_update(state, modes)
 
+    def prepare(self, state, mode):
+        r"""
+        Prepares a given mode in a given state.
+
+        This is a simple wrappter for prepare_multimode(), see there for more details.
+
+        Args:
+            state (array or matrix): The new state in the fock basis
+            mode (non-negative int): The overwritten mode
+        """
+        if isinstance(mode, int):
+            mode = [mode]
+            self.prepare_multimode(state, mode)
+
     def prepare_thermal_state(self, nbar, mode):
         """
-             Prepares the thermal state with mean photon nbar in the specified mode.
+        Prepares the thermal state with mean photon nbar in the specified mode.
         """
         if self._valid_modes(mode):
             with self._graph.as_default():
