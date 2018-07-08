@@ -741,8 +741,13 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
         reduced_state = system
         for mode in sorted(modes, reverse=True):
             reduced_state = partial_trace(reduced_state, mode, False, batched)
-        # append mode and insert state (There is also insert_state(), but that does a lot of stuff internally which we do not need here)
-        revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
+        # append mode and insert state (There is also insert_state(), but it seemed easier unnecesarily complicated to try to generalize this function, which does a lot manual list comprehension, to the multi mode case than to write the two liner below)
+        #TODO: insert_state() could be rewritten to take full advantage of the high level functions of tf. Before doing that different implementatinos should be benchmarked to compare speed and memory requirements, as in practice these methods will be perfomance critical.
+        if not batched:
+            revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
+        else:
+            batch_size = reduced_state.shape[0].value
+            revised_modes = tf.stack([ tf.tensordot(reduced_state[b], replacement[b], axes=0) for b in range(batch_size)])
         revised_modes_pure = False
 
     # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
