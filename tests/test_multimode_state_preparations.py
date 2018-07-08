@@ -41,16 +41,22 @@ class FockBasisMultimodeTests(FockBaseTest):
         self.circuit.prepare_dm_state(random_rho0, 0)
         self.circuit.prepare_dm_state(random_rho1, 1)
         single_mode_preparation_dm = self.circuit.state([0, 1]).dm()
+        if self.batched:
+            single_mode_preparation_dm = single_mode_preparation_dm[0]
 
         # first we do a preparation from random_dm, with shape [self.D]*4
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_multimode_dm_state(random_dm, [0, 1])
         multi_mode_preparation_dm = self.circuit.state(modes=[0, 1]).dm()
+        if self.batched:
+            multi_mode_preparation_dm = multi_mode_preparation_dm[0]
 
         # second we do a preparation from the corresponding matrix with shape [self.D**2]*2
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_multimode_dm_state(random_dm.reshape([self.D**2]*2), [0, 1])
         multi_mode_preparation_from_matrix_dm = self.circuit.state(modes=[0, 1]).dm()
+        if self.batched:
+            multi_mode_preparation_from_matrix_dm = multi_mode_preparation_from_matrix_dm[0]
 
         # third we do a preparation from random_dm on modes 3 and 1 (in that order!) and test if the states end up in the correct modes
         self.circuit.reset(pure=self.kwargs['pure'])
@@ -60,6 +66,11 @@ class FockBasisMultimodeTests(FockBaseTest):
         multi_mode_preparation_31_mode_1 = self.circuit.state(modes=1).dm()
         multi_mode_preparation_31_mode_2 = self.circuit.state(modes=2).dm()
         multi_mode_preparation_31_mode_3 = self.circuit.state(modes=3).dm()
+        if self.batched:
+            multi_mode_preparation_31_mode_0 = multi_mode_preparation_31_mode_0[0]
+            multi_mode_preparation_31_mode_1 = multi_mode_preparation_31_mode_1[0]
+            multi_mode_preparation_31_mode_2 = multi_mode_preparation_31_mode_2[0]
+            multi_mode_preparation_31_mode_3 = multi_mode_preparation_31_mode_3[0]
 
         single_mode_vac = np.zeros(multi_mode_preparation_31_mode_0.shape, dtype=np.complex128)
         single_mode_vac.itemset(0, 1.0 + 0.0j)
@@ -101,6 +112,9 @@ class FockBasisMultimodeTests(FockBaseTest):
             self.circuit.reset(pure=self.kwargs['pure'])
             self.circuit.prepare_multimode_dm_state(random_rho, subsystems)
             dm = self.circuit.state(modes=subsystems).dm()
+            if self.batched:
+                dm = dm[0]
+
             self.assertAllEqual(random_rho.shape, dm.shape)
             self.assertAllAlmostEqual(random_rho, dm, delta=self.tol)
 
@@ -108,10 +122,13 @@ class FockBasisMultimodeTests(FockBaseTest):
         """Tests if a random multi mode ket state is correctly prepared with the shortcut method on all modes."""
         random_ket = np.random.normal(size=[self.D]*self.num_subsystems) + 1j*np.random.normal(size=[self.D]*self.num_subsystems)
         random_ket = random_ket / np.linalg.norm(random_ket)
+        expected_shape = random_ket.shape
 
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_multimode_dm_state(random_ket)
         all_mode_preparation_ket = self.circuit.state().ket() # Returns None if the state if mixed
+        if self.batched:
+            all_mode_preparation_ket = all_mode_preparation_ket[0]
 
         print("state(): "+str(self.circuit.state()))
 
