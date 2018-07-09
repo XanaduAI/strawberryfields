@@ -559,6 +559,10 @@ class BaseFock(BaseBackend):
 class BaseGaussian(BaseBackend):
     """Abstract base class for backends that are only capable of Gaussian state manipulation."""
 
+    def __init__(self):
+        super().__init__()
+        self._supported["gaussian"] = True
+
     def measure_heterodyne(self, mode, select=None):
         r"""Perform a heterodyne measurement on the given mode.
 
