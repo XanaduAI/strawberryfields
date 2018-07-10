@@ -282,11 +282,11 @@ from numpy import pi
 from scipy.linalg import block_diag
 from scipy.special import factorial as fac
 
-import tensorflow as tf
-
 from .backends.shared_ops import changebasis
-from .engine import Engine as _Engine, Command, RegRef, RegRefTransform, SFMergeFailure
-from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt, sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2, transpose, expand_dims, squeeze)
+from .engine import Engine as _Engine, Command, RegRefTransform, SFMergeFailure
+from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
+                         sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2,
+                         transpose, squeeze)
 from .decompositions import clements, bloch_messiah, williamson
 
 # pylint: disable=abstract-method
@@ -376,7 +376,7 @@ class Operation:
         """
         # into a list of subsystems
         reg = _seq_to_list(reg)
-        if len(reg) == 0 or (self.ns != None and self.ns != len(reg)):
+        if (not reg) or (self.ns != None and self.ns != len(reg)):
             raise ValueError("Wrong number of subsystems.")
         # send it to the engine
         reg = _Engine._current_context.append(self, reg)
@@ -537,12 +537,12 @@ class Measurement(Operation):
     def merge(self, other):
         raise SFMergeFailure('For now, measurements cannot be merged with anything else.')
 
-    def apply(self, reg, backend, **kwargs):
+    def apply(self, reg, backend, hbar, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
 
         Like :func:`Operation.apply`, but also stores the measurement result in the RegRefs.
         """
-        values = super().apply(reg, backend, **kwargs)
+        values = super().apply(reg, backend, hbar, **kwargs)
         # measurement can act on multiple modes
         if self.ns == 1:
             values = [values]
@@ -591,6 +591,11 @@ class Decomposition(Operation):
 
 
 class Transformation(Operation):
+    """Abstract base class for transformations.
+
+    This class provides the base behaviour for operations which
+    act on existing states.
+    """
     # NOTE: At the moment this is an empty class, and only
     # exists for a nicer inheritence diagram. One option is
     # to remove, and make Channel and Gate top-level derived classes.
@@ -605,6 +610,11 @@ class Transformation(Operation):
 
 
 class Channel(Transformation):
+    """Abstract base class for channels.
+
+    This class provides the base behaviour for non-unitary
+    maps and transformations.
+    """
     # NOTE: At the moment this is an empty class, and only
     # exists for a nicer inheritence diagram.
     # This class will likely get filled in when we add more channels.
@@ -620,7 +630,6 @@ class Gate(Transformation):
     * The inverse gate is obtained by negating p[0].
     * Two gates of this class can be merged by adding the
       first parameters together, assuming all the other parameters match.
-
     """
     def __init__(self, par):
         super().__init__(par)
@@ -644,7 +653,7 @@ class Gate(Transformation):
         Returns:
             Gate: formal inverse of this gate
         """
-        #HACK Semantically a bad use of @property since this method is not a getter.
+        # HACK Semantically a bad use of @property since this method is not a getter.
         # NOTE deepcopy would make copies of RegRefs inside a possible
         # RegRefTransformation parameter, RegRefs must not be copied.
         s = copy.copy(self)
@@ -849,9 +858,9 @@ class Catstate(Preparation):
 
     def _apply(self, reg, backend, **kwargs):
         alpha = self.p[0]
-        phi   = pi*self.p[1]
+        phi = pi*self.p[1]
         D = backend.get_cutoff_dim()
-        l = np.arange(D)[:,np.newaxis]
+        l = np.arange(D)[:, np.newaxis]
 
         # normalization constant
         temp = exp(-0.5 * abs(alpha)**2)
@@ -1037,6 +1046,7 @@ class New_modes(Operation):
 
         Dispatches the command to the command queue.
         """
+        # pylint: disable=attribute-defined-outside-init
         self.n = n  # int: store the number of new modes for the __str__ method
         # create RegRef placeholders for the new modes
         refs = _Engine._current_context._add_subsystems(n)
