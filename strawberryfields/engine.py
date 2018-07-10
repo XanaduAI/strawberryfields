@@ -132,14 +132,14 @@ from .backends import load_backend
 from .backends.base import NotApplicableError
 
 
-def _print_list(i, q):
+def _print_list(i, q, print_fn=print):
     "For debugging."
     # pylint: disable=unreachable
     return
-    print('i: {},  len: {}   '.format(i, len(q)), end='')
+    print_fn('i: {},  len: {}   '.format(i, len(q)), end='')
     for x in q:
-        print(x.op, ', ', end='')
-    print()
+        print_fn(x.op, ', ', end='')
+    print_fn()
 
 
 def _convert(func):
@@ -602,23 +602,31 @@ class Engine:
         self.cmd_queue.append(Command(op, reg))
         return reg
 
-    def print_queue(self):
+    def print_queue(self, print_fn=print):
         """Print the command queue.
 
-        This contains the gates that will be applied on the next call to :meth:`run`."""
-        for k in self.cmd_queue:
-            print(k)
+        This contains the gates that will be applied on the next call to :meth:`run`.
 
-    def print_applied(self):
+        Args:
+            print_fn (function): optional custom function to use for string printing.
+        """
+        for k in self.cmd_queue:
+            print_fn(k)
+
+    def print_applied(self, print_fn=print):
         """Print all commands applied to the qumodes since the backend was first initialized.
 
         This will be blank until the first call to :meth:`run`. The output may
         differ compared to :meth:`print_queue`, due to command decompositions
-        and optimizations supported by the backend."""
+        and optimizations supported by the backend.
+
+        Args:
+            print_fn (function): optional custom function to use for string printing.
+        """
         for k, r in enumerate(self.cmd_applied):
-            print('Run {}:'.format(k))
+            print_fn('Run {}:'.format(k))
             for c in r:
-                print(c)
+                print_fn(c)
 
     def return_state(self, modes=None, **kwargs):
         """Return the backend state object.

@@ -22,7 +22,6 @@ from strawberryfields.ops import *
 from strawberryfields.backends import BaseFock
 
 
-
 class BasicTests(BaseTest):
     """Implementation-independent tests."""
     num_subsystems = 2
@@ -53,7 +52,7 @@ class BasicTests(BaseTest):
         self.assertEqual(len(self.eng.cmd_queue), 1)
 
         # print the queue contents
-        self.eng.print_queue()
+        self.eng.print_queue(print_fn=logging.debug)
 
         # clear the command queue
         self.eng.reset_queue()

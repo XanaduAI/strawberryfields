@@ -32,7 +32,8 @@ This module defines and implements the Python-embedded quantum programming langu
 for continuous-variable (CV) quantum systems.
 The syntax is modeled after ProjectQ :cite:`projectq2016`.
 
-Quantum operations (state preparation, unitary gates, measurements) act on register objects using the following syntax::
+Quantum operations (state preparation, unitary gates, measurements, channels) act on
+register objects using the following syntax::
 
   with eng:
     G(params) | q
@@ -53,7 +54,7 @@ It is of course also possible to construct gates separately and reuse them sever
     R.H | q
 
 
-There are four kinds of :class:`Operation` objects:
+There are six kinds of :class:`Operation` objects:
 
 * :class:`Preparation` operations only manipulate the register state::
 
@@ -62,7 +63,7 @@ There are four kinds of :class:`Operation` objects:
       Vac | q[0]
       All(Coherent(0.4, 0.2)) | (q[1], q[2])
 
-* :class:`Gate` operations only manipulate the register state::
+* Transformations such as :class:`Gate` and :class:`Channel` operations only manipulate the register state::
 
     eng, q = sf.Engine(2)
     with eng:
@@ -112,8 +113,11 @@ There are four kinds of :class:`Operation` objects:
       Dgate(RR(q[0], lambda q: q ** 2)) | q[2]
     eng.run()
 
-* :class:`Delete` and :class:`New_modes` Operations delete and create modes during program execution.
-  In practice the user only deals with the pre-constructed instances :py:data:`Del` and :py:data:`New`::
+
+* Meta-operations such as :class:`Delete` and :class:`New_modes` Operations delete
+  and create modes during program execution.
+  In practice the user only deals with the pre-constructed
+  instances :py:data:`Del` and :py:data:`New`::
 
     eng, (alice,) = sf.Engine(1)
     with eng:
@@ -124,6 +128,13 @@ There are four kinds of :class:`Operation` objects:
       Del         | alice
       S2gate(0.4) | (charlie, bob)
 
+
+* Finally, :class:`Decomposition` operations are a special case, and can act as
+  either transformations *or* state preparation, depending on the decomposition used.
+  Decompositions calculate the required elementary :class:`Gate` and/or :class:`Preparation`
+  objects and parameters in order to decompose specific transformations or states.
+  Examples of objects that are supported by decompositions include covariance matrices,
+  interferometers, and symplectic transformations.
 
 Hierarchy for operations
 ------------------------
@@ -142,8 +153,10 @@ The abstract base class hierarchy exists to provide the correct semantics for th
    Preparation
    Transformation
    Gate
+   Channel
    Measurement
    Decomposition
+   MetaOperation
 
 
 Operation class
@@ -185,12 +198,6 @@ Measurements
    MeasureHomodyne
    MeasureHeterodyne
 
-Subsystem creation and deletion
--------------------------------
-
-.. autosummary::
-   New_modes
-   Delete
 
 Channels
 -----------
@@ -230,11 +237,13 @@ Two-mode gates
    CXgate
    CZgate
 
-Metagates
----------
+Meta-operations
+---------------
 
 .. autosummary::
    All
+   New_modes
+   Delete
 
 
 Operations shortcuts
@@ -291,11 +300,21 @@ from .decompositions import clements, bloch_messiah, williamson
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
+# pylint: disable=too-many-arguments
 
 
 # numerical tolerances
 # TODO there are still some magic numbers in the code, they should be named and defined here
 _decomposition_merge_tol = 1e-13
+
+
+def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
+    """User warning formatter"""
+    # pylint: disable=unused-argument
+    return '{}:{}: {}: {}\n'.format(filename, lineno, category.__name__, message)
+
+
+warnings.formatwarning = warning_on_one_line
 
 
 def _seq_to_list(s):
@@ -1001,69 +1020,6 @@ class MeasureHeterodyne(Measurement):
 
 
 #====================================================================
-# Subsystem creation and deletion
-#====================================================================
-
-
-class Delete(Operation):
-    """Deletes one or more existing modes.
-    Also accessible via the shortcut variable ``Del``.
-
-    The deleted modes are traced out.
-    After the deletion the state of the remaining subsystems may have to be described using a density operator.
-    """
-    ns = None
-    def __init__(self):
-        super().__init__(par=[])
-
-    def __or__(self, reg):
-        reg = super().__or__(reg)
-        _Engine._current_context._delete_subsystems(reg)
-
-    def _apply(self, reg, backend, **kwargs):
-        backend.del_mode(reg)
-
-    def __str__(self):
-        # the shorthand object
-        return 'Del'
-
-
-class New_modes(Operation):
-    """Used for adding new modes to the system.
-    Also accessible via the shortcut variable ``New``.
-
-    The new modes are prepapred in the vacuum state.
-
-    This class cannot be used with the :meth:`__or__` syntax since it would be misleading,
-    instead we use :meth:`__call__` on a single instance to dispatch the command to the engine.
-    """
-    ns = 0
-    def __init__(self):
-        super().__init__(par=[])
-
-    def __call__(self, n=1):
-        """Adds one or more new modes to the system in a deferred way.
-
-        Dispatches the command to the command queue.
-        """
-        # pylint: disable=attribute-defined-outside-init
-        self.n = n  # int: store the number of new modes for the __str__ method
-        # create RegRef placeholders for the new modes
-        refs = _Engine._current_context._add_subsystems(n)
-        # send the actual creation command to the engine
-        _Engine._current_context.append(self, refs)
-        return refs
-
-    def _apply(self, reg, backend, **kwargs):
-        # pylint: disable=unused-variable
-        inds = backend.add_mode(len(reg))
-
-    def __str__(self):
-        # HACK, trailing space signals "do not print anything more" to Command.__str__.
-        return 'New({}) '.format(self.n)
-
-
-#====================================================================
 # Channels
 #====================================================================
 
@@ -1401,7 +1357,75 @@ class Fouriergate(Gate):
 #====================================================================
 
 
-class All(Operation):
+#====================================================================
+# Subsystem creation and deletion
+#====================================================================
+
+
+class MetaOperation(Operation):
+    """Abstract base class for metaoperations.
+
+    This includes subsystem creation and deletion.
+    """
+    def __init__(self):
+        super().__init__(par=[])
+
+
+class Delete(MetaOperation):
+    """Deletes one or more existing modes.
+    Also accessible via the shortcut variable ``Del``.
+
+    The deleted modes are traced out.
+    After the deletion the state of the remaining subsystems may have to be described using a density operator.
+    """
+    ns = None
+
+    def __or__(self, reg):
+        reg = super().__or__(reg)
+        _Engine._current_context._delete_subsystems(reg)
+
+    def _apply(self, reg, backend, **kwargs):
+        backend.del_mode(reg)
+
+    def __str__(self):
+        # the shorthand object
+        return 'Del'
+
+
+class New_modes(MetaOperation):
+    """Used for adding new modes to the system.
+    Also accessible via the shortcut variable ``New``.
+
+    The new modes are prepapred in the vacuum state.
+
+    This class cannot be used with the :meth:`__or__` syntax since it would be misleading,
+    instead we use :meth:`__call__` on a single instance to dispatch the command to the engine.
+    """
+    ns = 0
+
+    def __call__(self, n=1):
+        """Adds one or more new modes to the system in a deferred way.
+
+        Dispatches the command to the command queue.
+        """
+        # pylint: disable=attribute-defined-outside-init
+        self.n = n  # int: store the number of new modes for the __str__ method
+        # create RegRef placeholders for the new modes
+        refs = _Engine._current_context._add_subsystems(n)
+        # send the actual creation command to the engine
+        _Engine._current_context.append(self, refs)
+        return refs
+
+    def _apply(self, reg, backend, **kwargs):
+        # pylint: disable=unused-variable
+        inds = backend.add_mode(len(reg))
+
+    def __str__(self):
+        # HACK, trailing space signals "do not print anything more" to Command.__str__.
+        return 'New({}) '.format(self.n)
+
+
+class All(MetaOperation):
     """Metaoperation for applying a single-mode operation to every mode in the register.
 
     Args:
@@ -1410,7 +1434,7 @@ class All(Operation):
     def __init__(self, op):
         if op.ns != 1:
             raise ValueError("Not a one-subsystem operation.")
-        super().__init__(par=[])
+        super().__init__()
         self.op = op  #: Operation: one-subsystem operation to apply
 
     def __str__(self):

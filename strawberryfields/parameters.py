@@ -141,8 +141,7 @@ class Parameter():
     def __str__(self):
         if isinstance(self.x, numbers.Number):
             return '{:.4g}'.format(self.x)
-        else:
-            return self.x.__str__()
+        return self.x.__str__()
 
     def __format__(self, format_spec):
         return self.x.__format__(format_spec)
@@ -186,12 +185,12 @@ class Parameter():
                 other = tf.cast(other, tf.complex128)
         else:
             if (np.iscomplexobj(other) or
-                (isinstance(other, _tf_classes) and other.dtype.is_complex)):
+                    (isinstance(other, _tf_classes) and other.dtype.is_complex)):
                 t = tf.cast(t, tf.complex128)
             elif t.dtype.is_integer:
                 if (isinstance(other, float) or
-                    (isinstance(other, np.ndarray) and np.issubdtype(other.dtype, np.floating)) or
-                    (isinstance(other, _tf_classes) and other.dtype.is_floating)):
+                        (isinstance(other, np.ndarray) and np.issubdtype(other.dtype, np.floating)) or
+                        (isinstance(other, _tf_classes) and other.dtype.is_floating)):
                     t = tf.cast(t, tf.float32)
             elif t.dtype.is_floating:
                 if isinstance(other, _tf_classes) and other.dtype.is_integer:
@@ -256,14 +255,16 @@ class Parameter():
         return self._wrap(other ** temp)
 
     def __neg__(self):
+        # pylint: disable=invalid-unary-operand-type
         return Parameter(-self.x)
 
     # other properties
     @property
     def shape(self):
+        """Returns the shape of array parameters."""
         try:
             return self.x.shape
-        except:
+        except AttributeError:
             return None
 
     # comparisons
@@ -298,7 +299,7 @@ np_math_fns = {"abs": (np.abs, tf.abs),
                "expand_dims": (np.expand_dims, tf.expand_dims),
                "squeeze": (np.squeeze, tf.squeeze),
                "transpose": (np.transpose, tf.transpose)
-}
+              }
 
 def math_fn_wrap(np_fn, tf_fn):
     """Wrapper function for the standard math functions.
@@ -318,7 +319,7 @@ def math_fn_wrap(np_fn, tf_fn):
         return np_fn(*args, **kwargs)
 
     wrapper.__name__ = np_fn.__name__
-    wrapper.__doc__  = math_fn_wrap.__doc__
+    wrapper.__doc__ = math_fn_wrap.__doc__
     return wrapper
 
 # HACK, edit the global namespace to have sort-of single dispatch overloading for the standard math functions

@@ -51,7 +51,7 @@ else:
     numeric_level = 100
 
 logging.basicConfig(level=numeric_level, format='\n%(asctime)s %(levelname)s %(message)s', datefmt='%H:%M:%S')
-
+logging.captureWarnings(True)
 
 def get_commandline_args():
     """Parse the commandline arguments for the unit tests.
@@ -190,7 +190,7 @@ class SymbolicBaseTest(BaseTest):
 
 
 class FockBackendTest(FockBaseTest):
-    """ABC for Fock backend dependent tests."""
+    """ABC for Fock-basis dependent tests."""
     def setUp(self):
         super().setUp()
         if not isinstance(self.backend, backends.FockBackend):
@@ -198,7 +198,7 @@ class FockBackendTest(FockBaseTest):
 
 
 class TFBackendTest(FockBaseTest):
-    """ABC for tensorflow backend dependent tests."""
+    """ABC for Fock-basis dependent tests."""
     def setUp(self):
         super().setUp()
         if not isinstance(self.backend, backends.TFBackend):
