@@ -139,10 +139,10 @@ The abstract base class hierarchy exists to provide the correct semantics for th
 
 .. autosummary::
    Operation
-   ParOperation
    Preparation
-   Measurement
+   Transformation
    Gate
+   Measurement
    Decomposition
 
 
@@ -308,43 +308,71 @@ def _seq_to_list(s):
 class Operation:
     """Abstract base class for quantum operations acting on one or more subsystems.
 
-    The extra_deps instance variable is a set containing the :class:`.RegRef` the :class:`Operation` depends on.
-    In the quantum diagram notation it corresponds to the vertical double lines of classical information
+    The extra_deps instance variable is a set containing the :class:`.RegRef`
+    the :class:`Operation` depends on. In the quantum diagram notation it
+    corresponds to the vertical double lines of classical information
     entering the :class:`Operation` that originate in a measurement of a subsystem.
+
+    This abstract base class may be initialised with parameters; see the
+    :class:`~strawberryfields.parameters.Parameter` class for more details.
+
+    Args:
+        par (Sequence[...]): parameters. len(par) >= 1. Alternatively,
+            set to [] or None to allow initialisation with no parameters.
     """
     # default: one-subsystem operation
-    ns = 1  #: int: number of subsystems the operation acts on, or None if any number of subsystems > 0 is okay
-    def __init__(self):
-        pass
+    #: int: number of subsystems the operation acts on,
+    # or None if any number of subsystems > 0 is okay
+    ns = 1
+
+    def __init__(self, par):
+        #: set[RegRef]: extra dependencies due to deferred measurements, used during optimization
+        self._extra_deps = set()
+        #: list[Parameter]
+        self.p = []
+
+        if par:
+            # convert each parameter into a Parameter instance, keep track of dependenciens
+            for q in par:
+                if not isinstance(q, Parameter):
+                    q = Parameter(q)
+                self.p.append(q)
+                self._extra_deps.update(q.deps)
 
     def __str__(self):
         """String representation for the Operation using Blackbird syntax.
 
         Returns:
-          str: string representation
+            str: string representation
         """
         # defaults to the class name
-        return self.__class__.__name__
+        if self.p is None:
+            return self.__class__.__name__
+
+        # class name and parameter values
+        temp = [str(i) for i in self.p]
+        return super().__str__()+'('+', '.join(temp)+')'
 
     @property
     def extra_deps(self):
         """Extra dependencies due to parameters that depend on deferred measurements.
 
         Returns:
-          set[RegRef]: dependencies
+            set[RegRef]: dependencies
         """
-        return set()  # basic operations have no extra dependencies
+        return self._extra_deps
 
     def __or__(self, reg):
         """Apply the operation to a part of a quantum register.
 
-        Dispatches the Operation to the :class:`~strawberryfields.engine.Engine` command queue for later execution.
+        Dispatches the Operation to the :class:`~strawberryfields.engine.Engine`
+        command queue for later execution.
 
         Args:
-          reg (RegRef, Sequence[RegRef]): subsystem(s) the operation is acting on
+            reg (RegRef, Sequence[RegRef]): subsystem(s) the operation is acting on
 
         Returns:
-          list[RegRef]: subsystem list as RegRefs
+            list[RegRef]: subsystem list as RegRefs
         """
         # into a list of subsystems
         reg = _seq_to_list(reg)
@@ -357,20 +385,25 @@ class Operation:
     def merge(self, other):
         """Merge the operation with another (acting on the exact same set of subsystems).
 
-        .. note:: For subclass overrides: merge may return a newly created object, or self, or other, but it must never modify self or other
+        .. note:: For subclass overrides: merge may return a newly created object,
+           or self, or other, but it must never modify self or other
            because the same Operation objects may be also used elsewhere.
 
         Args:
-          other (Operation): operation to merge this one with
+            other (Operation): operation to merge this one with
 
         Returns:
-          Operation, None: other * self. The return value None represents the identity gate (doing nothing).
+            Operation, None: other * self. The return value None represents
+                the identity gate (doing nothing).
 
         Raises:
-          ~strawberryfields.engine.SFMergeFailure: if the two operations cannot be merged
+            ~strawberryfields.engine.SFMergeFailure: if the two
+                operations cannot be merged
 
-        .. todo:: Using the return value None to denote the identity is a bit dangerous, since a function with no explicit return statement also returns None,
-           which can lead to puzzling bugs. Maybe return a special singleton Identity object instead?
+        .. todo:: Using the return value None to denote the identity is a
+            bit dangerous, since a function with no explicit return statement
+            also returns None, which can lead to puzzling bugs. Maybe return
+            a special singleton Identity object instead?
         """
         raise NotImplementedError
 
@@ -379,14 +412,15 @@ class Operation:
 
         See :mod:`strawberryfields.backends.base`.
 
-        .. todo:: For now decompose() works on unevaluated Parameters. This causes an error if a :class:`.RegRefTransform`-based Parameter is used, and
-          decompose() tries to do arithmetic on it.
+        .. todo:: For now decompose() works on unevaluated Parameters.
+            This causes an error if a :class:`.RegRefTransform`-based Parameter is used, and
+            decompose() tries to do arithmetic on it.
 
         Args:
-          reg (Sequence[RegRef]): subsystems the operation is acting on
+            reg (Sequence[RegRef]): subsystems the operation is acting on
 
         Returns:
-          list[Command]: decomposition as a list of operations acting on specific subsystems
+            list[Command]: decomposition as a list of operations acting on specific subsystems
         """
         raise NotImplementedError('No decomposition available: {}'.format(self))
 
@@ -394,77 +428,64 @@ class Operation:
         """Internal apply method. Uses numeric subsystem referencing.
 
         Args:
-          reg (Sequence[int]): subsystem indices the operation is acting on (this is how the backend API wants them)
-          backend (BaseBackend): backend to execute the operation
+            reg (Sequence[int]): subsystem indices the operation is
+                acting on (this is how the backend API wants them)
+            backend (BaseBackend): backend to execute the operation
         """
         raise NotImplementedError('Missing direct implementation: {}'.format(self))
 
     def apply(self, reg, backend, hbar, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
 
-        Takes care of parameter evaluations and any pending formal transformations (like dagger) and then calls _apply.
+        Takes care of parameter evaluations and any pending formal
+        transformations (like dagger) and then calls _apply.
 
         Args:
-          reg (Sequence[RegRef]): subsystem(s) the operation is acting on
-          backend (BaseBackend): backend to execute the operation
+            reg (Sequence[RegRef]): subsystem(s) the operation is acting on
+            backend (BaseBackend): backend to execute the operation
+
+        Keyword Args:
+            eval_params (bool): set this to False to explicitly turn off the
+                evaluation of parameters in the Operation.apply method. This is
+                useful if the parameters are pre-evaluated prior to calling this method.
+
         Returns:
-          : whatever _apply returns
+            : The result of self._apply
         """
+        eval_params = kwargs.get('eval_params', True)
+        original_p = self.p  # store the original parameters
+
+        if eval_params and original_p:
+            # NOTE: We cannot just replace all RegRefTransform parameters with their
+            # numerical values here. If we re-initialize a measured mode and
+            # re-measure it, the RegRefTransform value should change accordingly
+            # when it is used again after the new measurement.
+
+            # Evaluate the Parameters, restore the originals later:
+            self.p = [x.evaluate() for x in self.p]
+
         # convert RegRefs back to indices for the backend API
         temp = [rr.ind for rr in reg]
         self.hbar = hbar  # pylint: disable=attribute-defined-outside-init
         # call the child class specialized _apply method
-        return self._apply(temp, backend, **kwargs)
+        result = self._apply(temp, backend, **kwargs)
 
+        if eval_params and original_p:
+            # restore original unevaluated Parameter instances
+            self.p = original_p
 
-
-class ParOperation(Operation):
-    """Abstract base class for quantum operations with parameters.
-
-    See the :class:`~strawberryfields.parameters.Parameter` class.
-
-    Args:
-      par (Sequence[...]): parameters. len(par) >= 1.
-    """
-    def __init__(self, par):
-        super().__init__()
-        self._extra_deps = set()  #: set[RegRef]: extra dependencies due to deferred measurements, used during optimization
-        self.p = []  #: list[Parameter]: parameters (at least one)
-        # convert each parameter into a Parameter instance, keep track of dependenciens
-        for q in par:
-            if not isinstance(q, Parameter):
-                q = Parameter(q)
-            self.p.append(q)
-            self._extra_deps.update(q.deps)
-
-    def __str__(self):
-        # class name and parameter values
-        temp = [str(i) for i in self.p]
-        return super().__str__()+'('+', '.join(temp)+')'
-
-    @property
-    def extra_deps(self):
-        return self._extra_deps
-
-    def apply(self, reg, backend, **kwargs):
-        """Ask a backend to execute the operation on the current register state right away.
-
-        Like :func:`Operation.apply`, but evaluates the parameters before calling _apply.
-        """
-        # NOTE: We cannot just replace all RegRefTransform parameters with their numerical values here.
-        # If we re-initialize a measured mode and re-measure it, the RegRefTransform value should change accordingly when it is used again after the new measurement.
-        # Likewise with TensorFlow objects.
-        # evaluate the Parameters, restore the originals later
-        temp = self.p  # store the originals
-        self.p = [x.evaluate() for x in self.p]
-        result = super().apply(reg, backend, **kwargs)
-        self.p = temp  # restore original unevaluated Parameter instances
         return result
 
 
+#====================================================================
+# Derived operation classes
+#====================================================================
 
-class Preparation(ParOperation):
-    """Abstract base class for operations that demolish the previous state of the subsystem entirely."""
+
+class Preparation(Operation):
+    """Abstract base class for operations that demolish
+    the previous state of the subsystem entirely.
+    """
     def merge(self, other):
         # sequential preparation, only the last one matters
         if isinstance(other, Preparation):
@@ -475,24 +496,31 @@ class Preparation(ParOperation):
             raise SFMergeFailure('For now, Preparations cannot be merged with anything else.')
 
 
-
-class Measurement(ParOperation):
+class Measurement(Operation):
     """Abstract base class for projective subsystem measurements.
 
-    The measurement is deferred: its result is available only after the backend has executed it.
-    The value of the measurement can be accessed in the program through the symbolic subsystem reference to the measured subsystem.
+    The measurement is deferred: its result is available only
+    after the backend has executed it. The value of the measurement can
+    be accessed in the program through the symbolic subsystem reference
+    to the measured subsystem.
 
-    When the measurement happens, the state of the circuit is updated to the conditional state corresponding to the measurement result.
+    When the measurement happens, the state of the circuit is updated
+    to the conditional state corresponding to the measurement result.
     Measurements also support postselection, see below.
 
     Args:
-      select (None, Sequence[Number]): Desired values of the measurement results, one for each subsystem the measurement acts on.
-        Allows the post-selection of specific measurement results instead of randomly sampling. None means no postselection.
+        select (None, Sequence[Number]): Desired values of the measurement
+            results, one for each subsystem the measurement acts on.
+            Allows the post-selection of specific measurement results
+            instead of randomly sampling. None means no postselection.
 
-    .. todo:: self.select could support :class:`~strawberryfields.parameters.Parameter` instances.
+    .. todo::
+        self.select could support :class:`~strawberryfields.parameters.Parameter` instances.
 
-    .. todo:: Currently MeasureFock objects can be applied to any number of subsystems. This can cause problems with postselection,
-       since self.select has a fixed length.
+    .. todo::
+        Currently MeasureFock objects can be applied to any number of
+        subsystems. This can cause problems with postselection,
+        since self.select has a fixed length.
     """
     ns = None
     def __init__(self, par, select=None):
@@ -512,7 +540,7 @@ class Measurement(ParOperation):
     def apply(self, reg, backend, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
 
-        Like :func:`ParOperation.apply`, but also stores the measurement result in the RegRefs.
+        Like :func:`Operation.apply`, but also stores the measurement result in the RegRefs.
         """
         values = super().apply(reg, backend, **kwargs)
         # measurement can act on multiple modes
@@ -523,15 +551,75 @@ class Measurement(ParOperation):
             r.val = v
 
 
-class Gate(ParOperation):
+class Decomposition(Operation):
+    """Abstract base class for matrix decompositions.
+
+    This class provides the base behaviour for decomposing various matrices
+    into a sequence of gates and state preparations.
+
+    .. todo:: Define how a given matrix is translated into a unitary on the state space.
+
+    .. todo::
+        We could specialize apply() here to do nothing if p[0] is identity and
+        bypass _apply() and decompose() entirely, see Gate.apply.
+
+        I think I prefer using the ``decomposition`` method for decompositions,
+        as this allows us (and the user) to distinguish gates applied manually,
+        and gates that were decomposed.
+
+    An identity matrix corresponds to an identity operation (NOP).
+    """
+    def merge(self, other):
+        # can be merged if they are the same class
+        if isinstance(other, self.__class__):
+            # at the moment, we will assume all state decompositions only
+            # take one argument. The only exception currently are state
+            # decompositions, which cannot be merged.
+            U1 = self.p[0]
+            U2 = other.p[0]
+            U = matmul(U2, U1).x
+            # TODO above we strip the Parameter wrapper to make the following check
+            # easier to perform. The constructor restores it.
+            # Another option would be to add the required methods to Parameter class.
+            # check if the matrices cancel
+            if np.all(np.abs(U -np.identity(len(U))) < _decomposition_merge_tol):
+                return None
+            new_decomp = self.__class__(U)
+            return new_decomp
+        else:
+            raise SFMergeFailure('Not the same decomposition type.')
+
+
+class Transformation(Operation):
+    # NOTE: At the moment this is an empty class, and only
+    # exists for a nicer inheritence diagram. One option is
+    # to remove, and make Channel and Gate top-level derived classes.
+    #
+    # Are there any useful operations/properties shared by Gate/Channel?
+    pass
+
+
+#====================================================================
+# Derived transformation classes
+#====================================================================
+
+
+class Channel(Transformation):
+    # NOTE: At the moment this is an empty class, and only
+    # exists for a nicer inheritence diagram.
+    # This class will likely get filled in when we add more channels.
+    pass
+
+
+class Gate(Transformation):
     """Abstract base class for unitary quantum gates.
 
     The first parameter p[0] of the Gate class is special:
 
     * The value p[0] = 0 corresponds to the identity gate.
     * The inverse gate is obtained by negating p[0].
-    * Two gates of this class can be merged by adding the first parameters together,
-      assuming all the other parameters match.
+    * Two gates of this class can be merged by adding the
+      first parameters together, assuming all the other parameters match.
 
     """
     def __init__(self, par):
@@ -554,23 +642,27 @@ class Gate(ParOperation):
         H stands for hermitian conjugate.
 
         Returns:
-          Gate: formal inverse of this gate
+            Gate: formal inverse of this gate
         """
         #HACK Semantically a bad use of @property since this method is not a getter.
-        s = copy.copy(self)  # NOTE deepcopy would make copies of RegRefs inside a possible RegRefTransformation parameter, RegRefs must not be copied.
+        # NOTE deepcopy would make copies of RegRefs inside a possible
+        # RegRefTransformation parameter, RegRefs must not be copied.
+        s = copy.copy(self)
         s.dagger = not s.dagger
         return s
 
     def apply(self, reg, backend, hbar, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
 
-        Like :func:`ParOperation.apply`, but takes into account the special nature of p[0] and applies self.dagger.
+        Like :func:`Operation.apply`, but takes into account the special nature of
+        p[0] and applies self.dagger.
 
         Returns:
-          None: Gates do not return anything, return value is None
+            None: Gates do not return anything, return value is None
         """
         z = self.p[0].evaluate()
-        # if z represents a batch of parameters, then all of these must be zero to skip calling backend
+        # if z represents a batch of parameters, then all of these
+        #must be zero to skip calling backend
         if np.all(z == 0):
             # identity, no need to apply
             return
@@ -579,15 +671,17 @@ class Gate(ParOperation):
         temp = self.p  # store the original Parameters
         # evaluate the rest of the Parameters, restore the originals later
         self.p = [z] +[x.evaluate() for x in self.p[1:]]
-        # calling the grandparent class, skipping ParOperation.apply to avoid another evaluation of self.p (which wouldn't hurt but is unnecessary)
-        super(ParOperation, self).apply(reg, backend, hbar, **kwargs)
+        # calling the parent apply, skipping re-evaluation of self.p
+        #(which wouldn't hurt but is unnecessary)
+        super().apply(reg, backend, hbar, eval_params=False, **kwargs)
         self.p = temp  # restore original unevaluated Parameter instances
 
     def merge(self, other):
         # can be merged if they are the same class and share all the other parameters
         if isinstance(other, self.__class__) and self.p[1:] == other.p[1:] \
            and len(self._extra_deps)+len(other._extra_deps) == 0:
-            # no extra dependencies <=> no RegRefTransform parameters, with which we cannot do arithmetic at the moment
+            # no extra dependencies <=> no RegRefTransform parameters,
+            # with which we cannot do arithmetic at the moment
             # make sure the gates have the same dagger flag, if not, invert the second p[0]
             if self.dagger == other.dagger:
                 temp = other.p[0]
@@ -599,13 +693,16 @@ class Gate(ParOperation):
                 return None  # identity gate
             else:
                 # return a copy
-                # HACK: some of the subclass constructors only take a single parameter, some take two, none take three
+                # HACK: some of the subclass constructors only take a single parameter,
+                #some take two, none take three
                 if len(self.p) == 1:
                     temp = self.__class__(p0)
                 else:
                     temp = self.__class__(p0, *self.p[1:])
-                # NOTE deepcopy would make copies of RegRefs inside a possible RegRefTransformation parameter, RegRefs must not be copied.
-                # OTOH copy results in temp having the same p list as self, which we would modify below.
+                # NOTE deepcopy would make copies of RegRefs inside a possible
+                # RegRefTransformation parameter, RegRefs must not be copied.
+                # OTOH copy results in temp having the same p list as self,
+                # which we would modify below.
                 #temp = copy.copy(self)
                 #temp.p[0] = p0
                 temp.dagger = self.dagger
@@ -614,54 +711,14 @@ class Gate(ParOperation):
             raise SFMergeFailure('Not the same gate family.')
 
         if isinstance(other, self.__class__):
-            # without knowing anything more specific about the gates, we can only merge them if they are each others' inverses
+            # without knowing anything more specific about the gates, we
+            # can only merge them if they are each others' inverses
             if self.dagger != other.dagger:
                 return None
             else:
                 raise SFMergeFailure("Don't know how to merge these gates.")
         else:
             raise SFMergeFailure('Not the same gate family.')
-
-
-
-class Decomposition(ParOperation):
-    """Abstract base class for matrix decompositions.
-
-    This class provides the base behaviour for decomposing various matrices
-    into a sequence of gates and state preparations.
-
-    .. todo:: Define how a given matrix is translated into a unitary on the state space.
-
-    .. todo:: We could specialize apply() here to do nothing if p[0] is identity and bypass _apply() and decompose() entirely, see Gate.apply.
-
-    An identity matrix corresponds to an identity operation (NOP).
-    """
-    def __init__(self, par):
-        # check if any of the decomposition inputs are tensor objects
-        if any([isinstance(x, (tf.Variable, tf.Tensor)) for x in par]):
-            raise NotImplementedError("Decompositions currently do not support Tensorflow objects as arguments.")
-        super().__init__(par)
-
-    def merge(self, other):
-        # can be merged if they are the same class
-        if isinstance(other, self.__class__):
-            # at the moment, we will assume all state decompositions only
-            # take one argument. The only exception currently are state
-            # decompositions, which cannot be merged.
-            U1 = self.p[0]
-            U2 = other.p[0]
-            U = matmul(U2, U1).x
-            # TODO above we strip the Parameter wrapper to make the following check easier to perform. The constructor restores it.
-            # Another option would be to add the required methods to Parameter class.
-            # check if the matrices cancel
-            if np.all(np.abs(U -np.identity(len(U))) < _decomposition_merge_tol):
-                return None
-            new_decomp = self.__class__(U)
-            return new_decomp
-        else:
-            raise SFMergeFailure('Not the same decomposition type.')
-
-
 
 
 #====================================================================
@@ -693,8 +750,8 @@ class Coherent(Preparation):
     or use the polar form :math:`a = r, p=\phi` and still get the same result.
 
     Args:
-      a (complex): displacement parameter :math:`\alpha`
-      p (float): phase angle :math:`\phi`
+        a (complex): displacement parameter :math:`\alpha`
+        p (float): phase angle :math:`\phi`
     """
     def __init__(self, a=0., p=0.):
         super().__init__([a, p])
@@ -708,8 +765,8 @@ class Squeezed(Preparation):
     r"""Prepare a mode in a :ref:`squeezed vacuum state <squeezed_state>`.
 
     Args:
-      r (float): squeezing magnitude
-      p (float): squeezing angle :math:`\phi`
+        r (float): squeezing magnitude
+        p (float): squeezing angle :math:`\phi`
     """
     def __init__(self, r=0., p=0.):
         super().__init__([r, p])
@@ -730,11 +787,10 @@ class DisplacedSqueezed(Preparation):
 
     where the squeezing parameter :math:`z=re^{i\phi}`.
 
-
     Args:
-      alpha (complex): displacement parameter
-      r       (float): squeezing magnitude
-      p       (float): squeezing angle :math:`\phi`
+        alpha (complex): displacement parameter
+        r (float): squeezing magnitude
+        p (float): squeezing angle :math:`\phi`
     """
     def __init__(self, alpha=0., r=0., p=0.):
         super().__init__([alpha, r, p])
@@ -754,7 +810,7 @@ class Fock(Preparation):
     As a result the state of the other subsystems may have to be described using a density matrix.
 
     Args:
-      n (int): Fock state to prepare
+        n (int): Fock state to prepare
     """
     def __init__(self, n=0):
         super().__init__([n])
@@ -783,9 +839,9 @@ class Catstate(Preparation):
             Catstate(1, 0.2) | q[0]
 
     Args:
-      alpha (complex): displacement parameter
-      p       (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
-        cat state, and ``p=1`` an odd cat state.
+        alpha (complex): displacement parameter
+        p (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
+            cat state, and ``p=1`` an odd cat state.
     """
 
     def __init__(self, alpha=0, p=0):
@@ -823,7 +879,7 @@ class Ket(Preparation):
     As a result the state of the other subsystems may have to be described using a density matrix.
 
     Args:
-      state (array): state vector in the Fock basis
+        state (array): state vector in the Fock basis
     """
     def __init__(self, state):
         super().__init__([state])
@@ -840,7 +896,7 @@ class Thermal(Preparation):
     As a result the state will be described using a density matrix.
 
     Args:
-      n (float): mean thermal population of the mode
+        n (float): mean thermal population of the mode
     """
     def __init__(self, n=0):
         super().__init__([n])
@@ -889,9 +945,9 @@ class MeasureHomodyne(Measurement):
     The measured mode is reset to the vacuum state.
 
     Args:
-      phi (float): measurement angle :math:`\phi`
-      select (None, float): (Optional) desired values of measurement result.
-        Allows the post-selection of specific measurement results instead of randomly sampling.
+        phi (float): measurement angle :math:`\phi`
+        select (None, float): (Optional) desired values of measurement result.
+            Allows the post-selection of specific measurement results instead of randomly sampling.
     """
     ns = 1
     def __init__(self, phi, select=None):
@@ -919,8 +975,8 @@ class MeasureHeterodyne(Measurement):
     The measured mode is reset to the vacuum state.
 
     Args:
-      select (None, complex): (Optional) desired values of measurement result.
-        Allows the post-selection of specific measurement results instead of randomly sampling.
+        select (None, complex): (Optional) desired values of measurement result.
+            Allows the post-selection of specific measurement results instead of randomly sampling.
     """
     ns = 1
     def __init__(self, select=None):
@@ -948,6 +1004,9 @@ class Delete(Operation):
     After the deletion the state of the remaining subsystems may have to be described using a density operator.
     """
     ns = None
+    def __init__(self):
+        super().__init__(par=[])
+
     def __or__(self, reg):
         reg = super().__or__(reg)
         _Engine._current_context._delete_subsystems(reg)
@@ -970,6 +1029,9 @@ class New_modes(Operation):
     instead we use :meth:`__call__` on a single instance to dispatch the command to the engine.
     """
     ns = 0
+    def __init__(self):
+        super().__init__(par=[])
+
     def __call__(self, n=1):
         """Adds one or more new modes to the system in a deferred way.
 
@@ -996,7 +1058,7 @@ class New_modes(Operation):
 #====================================================================
 
 
-class LossChannel(ParOperation):
+class LossChannel(Channel):
     r"""Perform a :ref:`loss channel <loss>` operation on the specified mode.
 
     This channel couples mode :math:`a` to another bosonic mode :math:`b`
@@ -1006,7 +1068,7 @@ class LossChannel(ParOperation):
        a \mapsto \sqrt{T} a+\sqrt{1-T} b
 
     Args:
-      T (float): the loss parameter :math:`0\leq T\leq 1`.
+        T (float): the loss parameter :math:`0\leq T\leq 1`.
     """
     def __init__(self, T):
         super().__init__([T])
@@ -1047,8 +1109,8 @@ class Dgate(Gate):
     or use the polar form :math:`a = r, \phi` and still get the same result.
 
     Args:
-      a (complex): displacement parameter :math:`\alpha`
-      phi (float): extra (optional) phase angle :math:`\phi`
+        a (complex): displacement parameter :math:`\alpha`
+        phi (float): extra (optional) phase angle :math:`\phi`
     """
     def __init__(self, a, phi=0.):
         super().__init__([a, phi])
@@ -1065,7 +1127,7 @@ class Xgate(Gate):
        X(x) = e^{-i x \hat{p}/\hbar}
 
     Args:
-      x (float): position displacement
+        x (float): position displacement
     """
     def __init__(self, x):
         super().__init__([x])
@@ -1082,7 +1144,7 @@ class Zgate(Gate):
        Z(p) = e^{i p \hat{x}/\hbar}
 
     Args:
-      p (float): momentum displacement
+        p (float): momentum displacement
     """
     def __init__(self, p):
         super().__init__([p])
@@ -1101,8 +1163,8 @@ class Sgate(Gate):
     where :math:`z = r e^{i\phi}`.
 
     Args:
-      r (float): squeezing amount
-      phi (float): squeezing phase angle :math:`\phi`
+        r (float): squeezing amount
+        phi (float): squeezing phase angle :math:`\phi`
     """
     def __init__(self, r, phi=0.):
         super().__init__([r, phi])
@@ -1119,7 +1181,7 @@ class Pgate(Gate):
        P(s) = e^{i \frac{s}{2} \hat{x}^2/\hbar}
 
     Args:
-      s (float): parameter
+        s (float): parameter
     """
     def __init__(self, s):
         super().__init__([s])
@@ -1145,7 +1207,7 @@ class Vgate(Gate):
     .. warning:: The cubic phase gate has lower accuracy than the Kerr gate at the same cutoff dimension.
 
     Args:
-      gamma (float): parameter
+        gamma (float): parameter
     """
     def __init__(self, gamma):
         super().__init__([gamma])
@@ -1162,7 +1224,7 @@ class Kgate(Gate):
        K(\kappa) = e^{i \kappa \hat{n}^2}
 
     Args:
-      kappa (float): parameter
+        kappa (float): parameter
     """
     def __init__(self, kappa):
         super().__init__([kappa])
@@ -1198,10 +1260,10 @@ class BSgate(Gate):
        B(\theta,\phi) = \exp\left(\theta (e^{i \phi} a^\dagger b -e^{-i \phi}a b^\dagger) \right)
 
     Args:
-      theta (float): Transmittivity angle :math:`\theta`. The transmission amplitude of the beamsplitter is :math:`t = \cos(\theta)`.
-        The value :math:`\theta=\pi/4` gives the 50-50 beamsplitter (default).
-      phi (float): Phase angle :math:`\phi`. The reflection amplitude of the beamsplitter is :math:`r = e^{i\phi}\sin(\theta)`.
-        The value :math:`\phi = \pi/2` gives the symmetric beamsplitter.
+        theta (float): Transmittivity angle :math:`\theta`. The transmission amplitude of the beamsplitter is :math:`t = \cos(\theta)`.
+            The value :math:`\theta=\pi/4` gives the 50-50 beamsplitter (default).
+        phi (float): Phase angle :math:`\phi`. The reflection amplitude of the beamsplitter is :math:`r = e^{i\phi}\sin(\theta)`.
+            The value :math:`\phi = \pi/2` gives the symmetric beamsplitter.
     """
     ns = 2
     def __init__(self, theta=pi/4, phi=0.):
@@ -1223,8 +1285,8 @@ class S2gate(Gate):
     where :math:`z = r e^{i\phi}`.
 
     Args:
-      r (float): squeezing amount
-      phi (float): squeezing phase angle :math:`\phi`
+        r (float): squeezing amount
+        phi (float): squeezing phase angle :math:`\phi`
     """
     ns = 2
     def __init__(self, r, phi=0.):
@@ -1252,7 +1314,7 @@ class CXgate(Gate):
     :math:`\ket{x_1, x_2} \mapsto \ket{x_1, s x_1 +x_2}`.
 
     Args:
-      s (float): addition multiplier
+        s (float): addition multiplier
     """
     ns = 2
     def __init__(self, s=1):
@@ -1283,7 +1345,7 @@ class CZgate(Gate):
     :math:`\ket{x_1, x_2} \mapsto e^{i s x_1 x_2/\hbar} \ket{x_1, x_2}`.
 
     Args:
-      s (float): phase shift multiplier
+        s (float): phase shift multiplier
     """
     ns = 2
     def __init__(self, s=1):
@@ -1333,12 +1395,12 @@ class All(Operation):
     """Metaoperation for applying a single-mode operation to every mode in the register.
 
     Args:
-      op (Operation): single-mode operation to apply
+        op (Operation): single-mode operation to apply
     """
     def __init__(self, op):
         if op.ns != 1:
             raise ValueError("Not a one-subsystem operation.")
-        super().__init__()
+        super().__init__(par=[])
         self.op = op  #: Operation: one-subsystem operation to apply
 
     def __str__(self):

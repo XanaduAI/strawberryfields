@@ -190,7 +190,7 @@ class SymbolicBaseTest(BaseTest):
 
 
 class FockBackendTest(FockBaseTest):
-    """ABC for Fock-basis dependent tests."""
+    """ABC for Fock backend dependent tests."""
     def setUp(self):
         super().setUp()
         if not isinstance(self.backend, backends.FockBackend):
@@ -198,7 +198,7 @@ class FockBackendTest(FockBaseTest):
 
 
 class TFBackendTest(FockBaseTest):
-    """ABC for Fock-basis dependent tests."""
+    """ABC for tensorflow backend dependent tests."""
     def setUp(self):
         super().setUp()
         if not isinstance(self.backend, backends.TFBackend):
