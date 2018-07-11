@@ -302,7 +302,7 @@ class GaussianBackend(BaseGaussian):
         N = qmat.shape[0]//2
 
         # work out if qmat and Amat need to be reduced
-        if 0 < len(modes) < N:
+        if 1 <= len(modes) < N:
             # reduce qmat
             ind = concatenate([array(modes), N+array(modes)])
             rows = ind.reshape((-1, 1))

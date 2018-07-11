@@ -29,7 +29,7 @@ Contents
      QReg
 
 """
-# pylint: disable=too-many-arguments,too-many-statements,too-many-branches,protected-access
+# pylint: disable=too-many-arguments,too-many-statements,too-many-branches,protected-access,attribute-defined-outside-init
 
 import numbers
 from itertools import product
@@ -179,7 +179,7 @@ class QReg:
         self._num_modes += num_modes
 
     def reset(self, pure=True, graph=None, num_subsystems=None, cutoff_dim=None, hbar=None):
-        """
+        r"""
         Resets the state of the circuit to have all modes in vacuum.
         For all the parameters, None means unchanged.
 

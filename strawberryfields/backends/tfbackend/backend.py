@@ -99,7 +99,7 @@ class TFBackend(BaseFock):
         self.circuit = circuit
 
     def reset(self, pure=True, **kwargs):
-        """
+        r"""
         Resets the circuit state tensor back to an all-vacuum state.
 
         Args:

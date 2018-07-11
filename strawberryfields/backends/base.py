@@ -422,7 +422,7 @@ class BaseBackend:
         raise NotImplementedError
 
     def loss(self, T, mode):
-        """Perform a loss channel operation on the specified mode.
+        r"""Perform a loss channel operation on the specified mode.
 
         Args:
             T (float): loss parameter, :math:`0\leq T\leq 1`.

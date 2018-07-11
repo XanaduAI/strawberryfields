@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Gaussian circuit operations"""
-# pylint: disable=duplicate-code
+# pylint: disable=duplicate-code,attribute-defined-outside-init
 import numpy as np
 
 from . import ops
