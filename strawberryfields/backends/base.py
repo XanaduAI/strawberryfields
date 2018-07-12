@@ -455,8 +455,11 @@ class BaseBackend:
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
         Args:
-            modes (int or Sequence[int]): specifies the mode or modes to restrict the return state to.
+            modes (int or Sequence[int]): specifies the mode(s) to restrict the return state to
                 This argument is optional; the default value ``modes=None`` returns the state containing all modes.
+                If modes is not ordered, the returned state contains the requested modes in the given order, i.e.,
+                requesting the modes=[3,1] results in a two mode state being returned with the first mode being
+                subsystem 3 and the second mode being subsystem 1 of simulator.
         Returns:
             An instance of the Strawberry Fields State class, suited to the particular backend.
         """
@@ -494,27 +497,33 @@ class BaseFock(BaseBackend):
         """
         raise NotImplementedError
 
-    def prepare_ket_state(self, state, mode):
-        r"""Prepare the given ket state (in the Fock basis) in the specified mode.
+    def prepare_ket_state(self, state, modes):
+        r"""Prepare the given ket state (in the Fock basis) in the specified modes.
 
-        The requested mode is traced out and replaced with the given ket state (in the Fock basis).
+        The requested mode(s) is/are traced out and replaced with the given ket state (in the Fock basis).
         As a result the state may have to be described using a density matrix.
 
         Args:
-            state (array): state vector in the Fock basis
-            mode (int): which mode to prepare the state in
+            state (array): state in the Fock basis
+                The state can be given in either vector form, with one index, or tensor form, with one index per mode.
+                For backends supporting batched mode, state can be a batch of such vectors or tensors.
+            modes (int or Sequence[int]): which mode to prepare the state in
+                If modes is not ordered this is take into account when preparing the state, i.e., when a two mode state is prepared in modes=[3,1], then the first mode of state goes into mode 3 and the second mode goes into mode 1 of the simulator.
         """
         raise NotImplementedError
 
-    def prepare_dm_state(self, state, mode):
-        r"""Prepare the given mixed state (in the Fock basis) in the specified mode.
+    def prepare_dm_state(self, state, modes):
+        r"""Prepare the given dm state (in the Fock basis) in the specified modes.
 
-        The requested mode is traced out and replaced with the given mixed state (in the Fock basis).
-        As a result the state will have to be described using a density matrix.
+        The requested mode(s) is/are traced out and replaced with the given dm state (in the Fock basis).
+        As a result the state will be described using a density matrix.
 
         Args:
-            state (array): density matrix in the Fock basis
-            mode (int): which mode to prepare the state in
+            state (array): state in the Fock basis
+                The state can be given in either matrix form, with two indices, or tensor form, with two indices per mode.
+                For backends supporting batched mode, state can be a batch of such matrices or tensors.
+            modes (int or Sequence[int]): which mode to prepare the state in
+                If modes is not ordered this is take into account when preparing the state, i.e., when a two mode state is prepared in modes=[3,1], then the first mode of state goes into mode 3 and the second mode goes into mode 1 of the simulator.
         """
         raise NotImplementedError
 

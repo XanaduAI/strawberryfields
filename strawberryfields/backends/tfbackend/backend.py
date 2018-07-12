@@ -215,7 +215,7 @@ class TFBackend(BaseFock):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_fock_state(n, remapped_mode)
 
-    def prepare_ket_state(self, state, mode):
+    def prepare_ket_state(self, state, modes):
         """
         Prepare an arbitrary pure state on the specified mode.
         Note: this may convert the state representation to mixed.
@@ -225,9 +225,9 @@ class TFBackend(BaseFock):
             mode (int): index of mode where state is prepared
 
         """
-        self._prepare_state(state, mode, True)
+        self._prepare_state(state, modes, True)
 
-    def prepare_dm_state(self, state, mode):
+    def prepare_dm_state(self, state, modes):
         """
         Prepare an arbitrary mixed state on the specified mode.
         Note: this does convert the state representation to mixed.
@@ -235,28 +235,6 @@ class TFBackend(BaseFock):
         Args:
             state (array): matrix representation of the state to prepare
             mode (int): index of mode where state is prepared
-
-        """
-        self._prepare_state(state, mode, False)
-
-    def prepare_multimode_ket_state(self, state, modes=None):
-        """Prepare an arbitrary pure state on the specified modes.
-        Note: this may convert the state representation to mixed.
-
-        Args:
-            state (array): vector representation of ket state to prepare
-            modes (list[int] or non-negative int): indices of modes where state is prepared
-
-        """
-        self._prepare_state(state, modes, True)
-
-    def prepare_multimode_dm_state(self, state, modes=None):
-        """Prepare an arbitrary mixed state on the specified modes.
-        Note: this will convert the state representation to mixed.
-
-        Args:
-            state (array): density matrix representation of state to prepare
-            mode (list[int] or non-negative int): indices of modes where state is prepared
 
         """
         self._prepare_state(state, modes, False)
