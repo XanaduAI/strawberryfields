@@ -53,6 +53,7 @@ def _numer_safe_power(base, exponent):
 
 def mixed(pure_state, batched=False):
     """Converts the state from pure to mixed"""
+    #todo: In the fock backend mixing is done by ops.mix(), maybe the functions should be named identially?
     if not batched:
         pure_state = tf.expand_dims(pure_state, 0) # add in fake batch dimension
     batch_offset = 1
@@ -743,31 +744,18 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
             revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
         else:
             batch_size = reduced_state.shape[0].value
-            revised_modes = tf.stack([ tf.tensordot(reduced_state[b], replacement[b], axes=0) for b in range(batch_size)])
+            revised_modes = tf.stack([tf.tensordot(reduced_state[b], replacement[b], axes=0) for b in range(batch_size)])
         revised_modes_pure = False
 
     # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
     if modes != list(range(num_modes-len(modes), num_modes)):
         mode_permutation = [x for x in range(num_modes) if x not in modes] + modes
-        # if revised_modes_pure:
-        #     scale = 1
-        #     index_permutation = mode_permutation
-        # else:
-        #     scale = 2
-        #     index_permutation = [scale*x+i for x in mode_permutation for i in (0, 1)] #two indices per mode if we have pure states
-
-        # if batched:
-        #     index_permutation = [0] + [i+1 for i in index_permutation]
-
-        # index_permutation = np.argsort(index_permutation)
-
-        # revised_modes = tf.transpose(revised_modes, index_permutation)
         revised_modes = reorder_modes(revised_modes, mode_permutation, revised_modes_pure, batched)
 
     return revised_modes
 
 def reorder_modes(state, mode_permutation, pure, batched):
-    """ """
+    """Reorder the indices of states according to the given mode_permutation, needs to know whether the state is pure and/or batched."""
     if pure:
         scale = 1
         index_permutation = mode_permutation

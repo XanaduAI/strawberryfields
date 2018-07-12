@@ -315,7 +315,7 @@ class QReg(object):
             return
 
         if input_state_is_pure:
-            input_is_batched = len(state.shape) == 2
+            input_is_batched = len(state.shape) > len(modes)
         else:
             input_is_batched = len(state.shape) % 2 == 1
 
@@ -338,8 +338,7 @@ class QReg(object):
 
         with self._graph.as_default():
             state = tf.cast(tf.convert_to_tensor(state), ops.def_type)
-            # check whether state is a single (unbatched) vector
-            # or a batch of vectors
+            # batch state now if not already batched and self._batched
             if self._batched and not input_is_batched:
                 state = tf.stack([state] * self._batch_size)
             self._replace_and_update(state, modes)
