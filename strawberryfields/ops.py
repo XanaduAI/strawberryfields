@@ -292,7 +292,7 @@ from scipy.linalg import block_diag
 from scipy.special import factorial as fac
 
 from .backends.shared_ops import changebasis
-from .engine import Engine as _Engine, Command, RegRefTransform, SFMergeFailure
+from .engine import Engine as _Engine, Command, RegRefTransform, MergeFailure
 from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
                          sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2,
                          transpose, squeeze)
@@ -416,7 +416,7 @@ class Operation:
                 the identity gate (doing nothing).
 
         Raises:
-            ~strawberryfields.engine.SFMergeFailure: if the two
+            ~strawberryfields.engine.MergeFailure: if the two
                 operations cannot be merged
 
         .. todo:: Using the return value None to denote the identity is a
@@ -512,7 +512,7 @@ class Preparation(Operation):
             warnings.warn('Two subsequent state preparations, first one has no effect.')
             return other
         else:
-            raise SFMergeFailure('For now, Preparations cannot be merged with anything else.')
+            raise MergeFailure('For now, Preparations cannot be merged with anything else.')
 
 
 class Measurement(Operation):
@@ -554,7 +554,7 @@ class Measurement(Operation):
         return temp
 
     def merge(self, other):
-        raise SFMergeFailure('For now, measurements cannot be merged with anything else.')
+        raise MergeFailure('For now, measurements cannot be merged with anything else.')
 
     def apply(self, reg, backend, hbar, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
@@ -606,7 +606,7 @@ class Decomposition(Operation):
             new_decomp = self.__class__(U)
             return new_decomp
         else:
-            raise SFMergeFailure('Not the same decomposition type.')
+            raise MergeFailure('Not the same decomposition type.')
 
 
 class Transformation(Operation):
@@ -736,7 +736,7 @@ class Gate(Transformation):
                 temp.dagger = self.dagger
                 return temp
         else:
-            raise SFMergeFailure('Not the same gate family.')
+            raise MergeFailure('Not the same gate family.')
 
         if isinstance(other, self.__class__):
             # without knowing anything more specific about the gates, we
@@ -744,9 +744,9 @@ class Gate(Transformation):
             if self.dagger != other.dagger:
                 return None
             else:
-                raise SFMergeFailure("Don't know how to merge these gates.")
+                raise MergeFailure("Don't know how to merge these gates.")
         else:
-            raise SFMergeFailure('Not the same gate family.')
+            raise MergeFailure('Not the same gate family.')
 
 
 #====================================================================
@@ -1055,7 +1055,7 @@ class LossChannel(Channel):
                 return None
             return self.__class__(T)
         else:
-            raise SFMergeFailure('Not the same operation family.')
+            raise MergeFailure('Not the same operation family.')
 
 
 #====================================================================

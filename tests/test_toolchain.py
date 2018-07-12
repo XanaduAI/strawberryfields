@@ -44,7 +44,7 @@ class BasicTests(BaseTest):
         #D = Sgate(0.543)
         with self.eng:
             # trying to act on a nonexistent mode
-            self.assertRaises(SFRegRefError, D.__or__, self.eng.num_subsystems)
+            self.assertRaises(RegRefError, D.__or__, self.eng.num_subsystems)
 
         # successful gate application
         with self.eng:
@@ -119,7 +119,7 @@ class BasicTests(BaseTest):
         # using a measurement result before it exists
         with self.eng:
             Dgate(q[0]) | q[1]
-        self.assertRaises(SFProgramError, self.eng.run)
+        self.assertRaises(ProgramError, self.eng.run)
 
         self.eng.reset()
         # proper use
@@ -222,8 +222,8 @@ class BasicTests(BaseTest):
             D.H      | charlie
             MeasureX | charlie
             # trying to act on a deleted mode
-            self.assertRaises(SFRegRefError, D.__or__, alice)
-            self.assertRaises(SFRegRefError, D.__or__, bob)
+            self.assertRaises(RegRefError, D.__or__, alice)
+            self.assertRaises(RegRefError, D.__or__, bob)
 
         #self.eng.print_queue()
         self.eng.optimize()

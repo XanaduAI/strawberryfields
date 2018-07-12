@@ -14,7 +14,7 @@ import tensorflow as tf
 
 # NOTE: strawberryfields must be imported from defaults
 from defaults import BaseTest, strawberryfields as sf
-from strawberryfields.engine import Engine, SFMergeFailure, SFRegRefError
+from strawberryfields.engine import Engine, MergeFailure, RegRefError
 from strawberryfields.utils import *
 from strawberryfields.ops import *
 from strawberryfields.parameters import Parameter
@@ -41,7 +41,7 @@ class GateTests(BaseTest):
             # all inits act on a single mode
             self.assertRaises(ValueError, G.__or__, (0,1))
             # can't repeat the same index
-            self.assertRaises(SFRegRefError, All(G).__or__, (0,0))
+            self.assertRaises(RegRefError, All(G).__or__, (0,0))
 
         with self.eng:
             for G in state_preparations:
@@ -61,8 +61,8 @@ class GateTests(BaseTest):
             self.assertAllTrue(G.merge(G.H) == None)
             # gates cannot be merged with a different type of gate
             if not isinstance(G, Q.__class__):
-                self.assertRaises(SFMergeFailure, Q.merge, G)
-                self.assertRaises(SFMergeFailure, G.merge, Q)
+                self.assertRaises(MergeFailure, Q.merge, G)
+                self.assertRaises(MergeFailure, G.merge, Q)
             # wrong number of subsystems
             if G.ns == 1:
                 self.assertRaises(ValueError, G.__or__, (0,1))
@@ -71,7 +71,7 @@ class GateTests(BaseTest):
 
             # multimode gates: can't repeat the same index
             if G.ns == 2:
-                self.assertRaises(SFRegRefError, G.__or__, (0,0))
+                self.assertRaises(RegRefError, G.__or__, (0,0))
 
         with self.eng:
             for G in two_args_gates:
@@ -89,7 +89,7 @@ class GateTests(BaseTest):
                 test_gate(G)
 
             # All: can't repeat the same index
-            self.assertRaises(SFRegRefError, All(Q).__or__, (0,0))
+            self.assertRaises(RegRefError, All(Q).__or__, (0,0))
 
 
     def test_gate_merging(self):
@@ -159,7 +159,7 @@ class GateTests(BaseTest):
             self.assertRaises(ValueError, New.__call__, 1.5)
 
             # deleting nonexistent modes
-            self.assertRaises(SFRegRefError, Del.__or__, 100)
+            self.assertRaises(RegRefError, Del.__or__, 100)
 
             # deleting
             self.assertTrue(alice.active)
@@ -171,7 +171,7 @@ class GateTests(BaseTest):
             self.assertTrue(diana.active)
 
             # deleting already deleted modes
-            self.assertRaises(SFRegRefError, Del.__or__, alice)
+            self.assertRaises(RegRefError, Del.__or__, alice)
 
             # creating and deleting several modes
             edward, frank, grace = New(3)

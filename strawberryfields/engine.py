@@ -58,7 +58,8 @@ Engine methods
    return_state
    optimize
 
-The following are internal Engine methods. In most cases the user should not call these directly.
+The following are internal Engine methods. In most cases the user should not
+call these directly.
 
 .. autosummary::
    __enter__
@@ -88,16 +89,17 @@ Optimizer
 ---------
 
 The purpose of the optimizer part of the compiler engine is to simplify the program
-to make it cheaper and faster to execute. Different backends might require different types of optimization,
-but in general the fewer operations a program has, the faster it should run.
-The optimizer thus should convert the program into a simpler but otherwise equivalent version of itself,
-preserving the probability distributions of the measurement results.
-The optimization utilizes the abstract algebraic properties of the gates, and in no point should require a
+to make it cheaper and faster to execute. Different backends might require
+different types of optimization, but in general the fewer operations a program has,
+the faster it should run. The optimizer thus should convert the program into a
+simpler but otherwise equivalent version of itself, preserving the probability
+distributions of the measurement results. The optimization utilizes the abstract
+algebraic properties of the gates, and in no point should require a
 matrix representation.
-Currently the optimization is somewhat simple, being able to merge neighboring gates belonging to the same
-gate family and sharing the same set of subsystems, and canceling pairs of a gate and its inverse.
 
-.. todo:: In the future we may wish to commute gates past each other using an extendable set of commutation rules/patterns.
+Currently the optimization is somewhat simple, being able to merge neighboring
+gates belonging to the same gate family and sharing the same set of subsystems,
+and canceling pairs of a gate and its inverse.
 
 .. currentmodule:: strawberryfields.engine
 
@@ -107,9 +109,9 @@ Exceptions
 ----------
 
 .. autosummary::
-   SFMergeFailure
-   SFProgramError
-   SFRegRefError
+   MergeFailure
+   ProgramError
+   RegRefError
    ~strawberryfields.backends.base.NotApplicableError
 
 
@@ -117,9 +119,10 @@ Code details
 ~~~~~~~~~~~~
 
 """
+#pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
-# todo: Avoid issues with Engine contexts and threading, cf. _pydecimal.py in the python standard distribution.
-#pylint: disable=too-many-instance-attributes
+# todo: Avoid issues with Engine contexts and threading,
+# cf. _pydecimal.py in the python standard distribution.
 
 from collections.abc import Sequence
 import numbers
@@ -143,7 +146,9 @@ def _print_list(i, q, print_fn=print):
 
 
 def _convert(func):
-    r"""Decorator for converting user defined functions to :class:`RegRefTransform` factories.
+    r"""Decorator for converting user defined functions to a :class:`RegRefTransform`.
+
+    This allows classical processing of measured qumodes values.
 
     Example usage:
 
@@ -159,7 +164,7 @@ def _convert(func):
             Dgate(F(q[0])) | q[1]
 
     Args:
-        func (function): function to be converted to a :class:`RegRefTransform` factory.
+        func (function): function to be converted to a :class:`RegRefTransform`.
     """
     @wraps(func)
     def wrapper(*args):
@@ -168,22 +173,24 @@ def _convert(func):
     return wrapper
 
 
-class SFProgramError(RuntimeError):
-    """Exception raised by :class:`Engine` when it encounters an illegal operation in the quantum program.
+class ProgramError(RuntimeError):
+    """Exception raised by :class:`Engine` when it encounters an illegal
+    operation in the quantum circuit.
 
     E.g. trying to use a measurement result before it is available.
     """
     pass
 
-class SFRegRefError(IndexError):
+class RegRefError(IndexError):
     """Exception raised by :class:`Engine` when it encounters an invalid register reference.
 
     E.g. trying to apply a gate to a nonexistent or deleted subsystem.
     """
     pass
 
-class SFMergeFailure(RuntimeError):
-    """Exception raised by :func:`~strawberryfields.ops.Operation.merge` when an attempted merge fails.
+class MergeFailure(RuntimeError):
+    """Exception raised by :func:`~strawberryfields.ops.Operation.merge` when an
+    attempted merge fails.
 
     E.g. trying to merge two gates of different families.
     """
@@ -194,14 +201,16 @@ class Command:
     """Represents a quantum operation applied on specific subsystems of the register.
 
     Args:
-      op (Operation): quantum operation to apply
-      reg (Sequence[RegRef]): Subsystems to which the operation is applied. Note that the order matters here.
+        op (Operation): quantum operation to apply
+        reg (Sequence[RegRef]): Subsystems to which the operation is applied.
+            Note that the order matters here.
     """
     # pylint: disable=too-few-public-methods
     def __init__(self, op, reg, decomp=False):
         # accept a single RegRef in addition to a Sequence
         if not isinstance(reg, Sequence):
             reg = [reg]
+
         self.op = op   #: Operation: quantum operation to apply
         self.reg = reg  #: Sequence[RegRef]: subsystems to which the operation is applied
         self.decomp = decomp  #: bool: is this Command a part of a decomposition?
@@ -209,7 +218,8 @@ class Command:
     def __str__(self):
         """Prints the command using proper Blackbird syntax."""
         temp = str(self.op)
-        if temp[-1] == ' ':  # HACK, trailing space means do not print anything more.
+        if temp[-1] == ' ':
+            # HACK, trailing space means do not print anything more.
             return temp
         return '{} | \t({})'.format(temp, ", ".join([str(rr) for rr in self.reg]))
 
@@ -218,11 +228,13 @@ class Command:
 
         Combination of ``self.reg`` and ``self.op.extra_deps``.
 
-        .. note:: ``extra_deps`` are used to ensure that the measurement happens before the result is used, but this is a bit too strict:
-           two gates depending on the same measurement result but otherwise acting on different subsystems commute.
+        .. note:: ``extra_deps`` are used to ensure that the measurement
+            happens before the result is used, but this is a bit too strict:
+            two gates depending on the same measurement result but otherwise
+            acting on different subsystems commute.
 
         Returns:
-          set[RegRef]: set of subsystems the command depends on
+            set[RegRef]: set of subsystems the command depends on
         """
         deps = self.op.extra_deps | set(self.reg)
         return deps
@@ -231,21 +243,26 @@ class Command:
 class RegRef:
     """Quantum register reference.
 
-    The objects of this class refer to a specific subsystem (mode) of a quantum register.
-    Only one RegRef instance should exist per subsystem: :class:`Engine` keeps the authoritative mapping of subsystem indices to RegRef instances.
-    Subsystem measurement results are stored in the "official" RegRef object. If other RegRefs objects referring to the same subsystem exist, they will not be updated.
-    Once a RegRef is assigned a subsystem index it will never change, not even if the subsystem is deleted.
+    The objects of this class refer to a specific subsystem (mode) of
+    a quantum register.
+
+    Only one RegRef instance should exist per subsystem: :class:`Engine`
+    keeps the authoritative mapping of subsystem indices to RegRef instances.
+    Subsystem measurement results are stored in the "official" RegRef object.
+    If other RegRefs objects referring to the same subsystem exist, they will
+    not be updated. Once a RegRef is assigned a subsystem index it will never
+    change, not even if the subsystem is deleted.
 
     The RegRefs are constructed in :func:`Engine._add_subsystems`.
 
     Args:
-      ind (int): index of the register subsystem referred to
+        ind (int): index of the register subsystem referred to
     """
     # pylint: disable=too-few-public-methods
     def __init__(self, ind):
         self.ind = ind   #: int: subsystem index
-        self.val = None  #: Real: measured eigenvalue, or None if the subsystem has not been measured yet
-        self.active = True  #: bool: True at construction, set to False when the corresponding subsystem is deleted
+        self.val = None  #: Real: measured eigenvalue. None if the subsystem has not been measured yet
+        self.active = True  #: bool: True at construction, False when the subsystem is deleted
 
     def __str__(self):
         return 'reg[{}]'.format(self.ind)
@@ -254,25 +271,39 @@ class RegRef:
 class RegRefTransform:
     """Represents a scalar function of one or more register references.
 
-    A RegRefTransform instance, given as a parameter to a :class:`~strawberryfields.ops.Operation` constructor, represents
-    a dependence of the Operation on classical information obtained by measuring one or more subsystems.
-    Used for deferred measurements, i.e., using a measurement's value symbolically in defining a gate before the numeric value of that measurement is available.
+    A RegRefTransform instance, given as a parameter to a
+    :class:`~strawberryfields.ops.Operation` constructor, represents
+    a dependence of the Operation on classical information obtained by
+    measuring one or more subsystems.
+
+    Used for deferred measurements, i.e., using a measurement's value
+    symbolically in defining a gate before the numeric value of that
+    measurement is available.
 
     Args:
-      r (Sequence[RegRef]): register references that act as parameters for the function
-      func (None, function): Scalar function that takes the values of the register references in r as parameters.
-        None is equivalent to the identity transformation lambda x: x.
+        r (Sequence[RegRef]): register references that act as parameters for the function
+        func (None, function): Scalar function that takes the values of the
+            register references in r as parameters. None is equivalent to the identity
+            transformation lambda x: x.
+        func_str (str): an optional argument containing the string representation of the function.
+            This is useful if a lambda function is passed to the RegRefTransform, which would otherwise
+            it show in the engine queue as ``RegRefTransform(q[0], <lambda>)``.
     """
     # pylint: disable=too-few-public-methods
-    def __init__(self, refs, func=None):
+    def __init__(self, refs, func=None, func_str=None):
         # into a list of regrefs
         if isinstance(refs, RegRef):
             refs = [refs]
+
         if any([not r.active for r in refs]):
-            raise ValueError('Trying to use inactive RegRefs.')  # TODO allow this if the regref already has a measurement result in it. Maybe we want to delete a mode after measurement to save comp effort.
+            # TODO allow this if the regref already has a measurement result in it.
+            # Maybe we want to delete a mode after measurement to save comp effort.
+            raise ValueError('Trying to use inactive RegRefs.')
 
         self.regrefs = refs   #: list[RegRef]: register references that act as parameters for the function
-        self.func    = func   #: None, function: the transformation itself, returns a scalar
+        self.func = func   #: None, function: the transformation itself, returns a scalar
+        self.func_str = func_str
+
         if func is None and len(refs) > 1:
             raise ValueError('Identity transformation only takes one parameter.')
 
@@ -280,11 +311,17 @@ class RegRefTransform:
         """Prints the RegRefTransform using Blackbird syntax."""
         temp = [str(r) for r in self.regrefs]
         rr = ', '.join(temp)
+
         if len(temp) > 1:
             rr = '[' +rr +']'
+
         if self.func is None:
             return 'RR({})'.format(rr)
-        return 'RR({}, {})'.format(rr, self.func.__name__)
+
+        if self.func_str is None:
+            return 'RR({}, {})'.format(rr, self.func.__name__)
+
+        return 'RR({}, {})'.format(rr, self.func_str)
 
     def __format__(self, format_spec):
         return self.__str__() # pragma: no cover
@@ -297,11 +334,14 @@ class RegRefTransform:
         """Evaluates the numeric value of the function if all the measurement values are available.
 
         Returns:
-          Number: function value
+            Number: function value
         """
         temp = [r.val for r in self.regrefs]
-        if any(v is None for v in temp):  # NOTE: "if None in temp" causes an error if temp contains arrays, since it uses the == comparison in addition to "is"
-            raise SFProgramError('Trying to use a nonexistent measurement result (e.g. before it can be measured).')
+        if any(v is None for v in temp):
+            # NOTE: "if None in temp" causes an error if temp contains arrays,
+            # since it uses the == comparison in addition to "is"
+            raise ProgramError("Trying to use a nonexistent measurement result "
+                               "(e.g. before it can be measured).")
         if self.func is None:
             return temp[0]
         return self.func(*temp)
@@ -315,17 +355,21 @@ class Engine:
 
     .. currentmodule:: strawberryfields.engine.Engine
 
-    The quantum program is inputted by using the :meth:`~strawberryfields.ops.Operation.__or__` methods of the quantum operations,
-    which call the :meth:`append` method of the Engine.
-    :meth:`append` checks that the register references are valid and then adds a new :class:`.Command` instance to the Engine command queue.
+    The quantum program is inputted by using the :meth:`~strawberryfields.ops.Operation.__or__`
+    methods of the quantum operations, which call the :meth:`append` method of the Engine.
+    :meth:`append` checks that the register references are valid and then
+    adds a new :class:`.Command` instance to the Engine command queue.
 
-    :meth:`run` executes the command queue on the chosen backend, and makes measurement results available via the :class:`.RegRef` instances.
+    :meth:`run` executes the command queue on the chosen backend, and makes
+    measurement results available via the :class:`.RegRef` instances.
 
-    The ``New`` and ``Del`` operations modify the quantum register itself by adding and deleting subsystems.
-    The Engine keeps track of these changes as they enter the command queue in order to be able to report
-    register reference errors as soon as they happen.
-    The backend, however, only becomes aware of subsystem changes when the program is run.
-    See :meth:`reset_queue` and :meth:`reset`.
+    The ``New`` and ``Del`` operations modify the quantum register itself by adding
+    and deleting subsystems. The Engine keeps track of these changes as
+    they enter the command queue in order to be able to report register
+    reference errors as soon as they happen.
+
+    The backend, however, only becomes aware of subsystem changes when
+    the program is run. See :meth:`reset_queue` and :meth:`reset`.
 
     Args:
         num_subsystems (int): Number of subsystems in the quantum register.
@@ -336,12 +380,12 @@ class Engine:
     """
     _current_context = None
 
-    def __init__(self, num_subsystems, *, hbar=2):
-        self.init_num_subsystems = num_subsystems  #: int: initial number of subsystems in the quantum register
+    def __init__(self, num_subsystems, hbar=2):
+        self.init_num_subsystems = num_subsystems  #: int: initial number of subsystems
         self.cmd_queue = []       #: list[Command]: command queue
         self.cmd_applied = []     #: list[list[Command]]: list of lists of commands that have been run (one list per run)
         self.backend = None       #: BaseBackend: backend for executing the quantum program
-        self.hbar = hbar          #: float: Numerical value of hbar in the (implicit) units of position and momentum. Currently only affects the definitions of the parameters of certain gates.
+        self.hbar = hbar          #: float: Numerical value of hbar in the (implicit) units of position and momentum.
         # create mode references
         self.reg_refs = {}        #: dict[int->RegRef]: mapping from subsystem indices to corresponding RegRef objects
         self.unused_indices = set()  #: set[int]: created subsystem indices that have not been used (operated on) yet
@@ -372,7 +416,7 @@ class Engine:
         """Return symbolic references to all the currently valid register subsystems.
 
         Returns:
-          tuple[RegRef]: valid subsystem references
+            tuple[RegRef]: valid subsystem references
         """
         return tuple(r for r in self.reg_refs.values() if r.active)
 
@@ -381,7 +425,7 @@ class Engine:
         """Return the current number of valid register subsystems.
 
         Returns:
-          int: number of currently valid register subsystems
+            int: number of currently valid register subsystems
         """
         return len(self.register)
 
@@ -389,15 +433,15 @@ class Engine:
         """Return all applied commands in a single list.
 
         Returns:
-          list[Command]: concatenation of all applied command lists
+            list[Command]: concatenation of all applied command lists
         """
         return list(chain.from_iterable(self.cmd_applied))
 
     def _set_checkpoint(self):
         """Make a RegRef checkpoint.
 
-        Stores the activity state of the RegRefs in self.reg_refs, as well as self.unused_indices
-        so that they can be restored in reset_queue().
+        Stores the activity state of the RegRefs in self.reg_refs, as well
+        as self.unused_indices so that they can be restored in reset_queue().
 
         A RegRef checkpoint is made after (1) :meth:`__init__`, (2) :meth:`run`, (3) :meth:`reset`.
         """
@@ -408,7 +452,8 @@ class Engine:
         """Restore a RegRef checkpoint.
 
         Called after command queue reset.
-        Any RegRefs created after the checkpoint are made inactive and deleted from self.reg_refs.
+        Any RegRefs created after the checkpoint are made inactive and
+        deleted from self.reg_refs.
         """
         for k, r in list(self.reg_refs.items()):  # convert to a list since we modify the dictionary during iteration
             if k in self._reg_refs_checkpoint:
@@ -425,15 +470,16 @@ class Engine:
 
         Does *not* ask the backend to create the new modes.
         To avoid discrepancies with the backend this method must not be called directly,
-        but rather indirectly by using :class:`~strawberryfields.ops.New_modes` instances in the Engine context.
+        but rather indirectly by using :class:`~strawberryfields.ops.New_modes`
+        instances in the Engine context.
 
         .. note:: This is the only place where RegRef instances are constructed.
 
         Args:
-          n (int): number of subsystems to add
+            n (int): number of subsystems to add
 
         Returns:
-          tuple[RegRef]: tuple of the newly added subsystem references
+            tuple[RegRef]: tuple of the newly added subsystem references
         """
         if not isinstance(n, numbers.Integral) or n < 1:
             raise ValueError('{} is not a nonnegative integer.'.format(n))
@@ -452,8 +498,10 @@ class Engine:
 
         Does *not* ask the backend to delete the modes right away. This only happens later
         when the corresponding Command is applied/executed.
+
         To avoid discrepancies with the backend this method must not be called directly,
-        but rather indirectly by using :class:`~strawberryfields.ops.Delete` instances in the Engine context.
+        but rather indirectly by using :class:`~strawberryfields.ops.Delete` instances
+        in the Engine context.
 
         Args:
           refs (Sequence[RegRef]): subsystems to delete
@@ -467,7 +515,7 @@ class Engine:
 
 
     def reset(self, *, keep_prog=False, **kwargs):
-        """Re-initialize the backend state to vacuum.
+        r"""Re-initialize the backend state to vacuum.
 
         Resets the state of the quantum circuit represented by the backend.
 
@@ -478,24 +526,22 @@ class Engine:
         * If keep_prog is False:
 
           * The command queue and the list of commands that have been run are cleared.
-          * Any RegRefs for subsystems that were created after the init are rendered inactive and deleted.
+          * Any RegRefs for subsystems that were created after the init are rendered
+            inactive and deleted.
 
         * If keep_prog is True:
 
           * The command queue is prepended by the list of commands that have been run.
-            The latter is then cleared. The purpose of this is to keep the program valid in the cases where
-            previously run program segments have created or deleted subsystems, or made measurement on which
-            the program in the command queue depends.
+            The latter is then cleared. The purpose of this is to keep the program valid
+            in the cases where previously run program segments have created or deleted
+            subsystems, or made measurement on which the program in the command queue depends.
           * RegRef activity state is unchanged, active RegRefs remain valid.
 
         The keyword args are passed on to :meth:`strawberryfields.backends.base.BaseBackend.reset`.
 
         Args:
-          keep_prog (bool): should we keep the current program in the command queue?
-        Keyword Args:
-          hbar (float): new :math:`\hbar` value. See :ref:`conventions` for more details.
+            keep_prog (bool): should we keep the current program in the command queue?
         """
-        self.hbar = kwargs.get('hbar', self.hbar)  # update hbar if present in kwargs
 
         if self.backend is not None:
             self.backend.reset(**kwargs)
@@ -511,7 +557,8 @@ class Engine:
 
         # command queues and register state
         if keep_prog:
-            # insert all previously applied Commands in the front of the current program to make it valid to run on the current state
+            # insert all previously applied Commands in the front of the current
+            # program to make it valid to run on the current state
             self.cmd_queue[:0] = self._cmd_applied_all()
         else:
             self.reset_queue()
@@ -535,51 +582,53 @@ class Engine:
         """Try to find a RegRef corresponding to a given subsystem index.
 
         Args:
-          ind (int): subsystem index
+            ind (int): subsystem index
         Returns:
-          RegRef: corresponding register reference
+            RegRef: corresponding register reference
         Raises:
-          .SFRegRefError: if the subsystem cannot be found, or is invalid
+            .RegRefError: if the subsystem cannot be found, or is invalid
         """
         # index must be found in the dict
         if ind not in self.reg_refs:
-            raise SFRegRefError('Subsystem {} does not exist.'.format(ind))
+            raise RegRefError('Subsystem {} does not exist.'.format(ind))
         rr = self.reg_refs[ind]
         if not rr.active:
-            raise SFRegRefError('Subsystem {} has already been deleted.'.format(ind))
+            raise RegRefError('Subsystem {} has already been deleted.'.format(ind))
         return rr
 
     def _test_regrefs(self, reg):
         """Make sure reg is a valid selection of subsystems, convert them to RegRefs.
 
-        A register reference is valid if it is properly recorded in self.reg_refs and has not been deleted.
-        The selection is valid if it contains only valid RegRefs and no subsystem is repeated.
+        A register reference is valid if it is properly recorded in self.reg_refs
+        and has not been deleted. The selection is valid if it contains only
+        valid RegRefs and no subsystem is repeated.
 
         Args:
-          reg (Iterable[int, RegRef]): subsystem references
+            reg (Iterable[int, RegRef]): subsystem references
         Returns:
-          list[RegRef]: converted subsystem references
+            list[RegRef]: converted subsystem references
         Raises:
-          .SFRegRefError: if an invalid subsystem reference is found
+            .RegRefError: if an invalid subsystem reference is found
         """
         temp = []
         for rr in reg:
             # either an integer or a RegRef
             if isinstance(rr, RegRef):
-                # regref must be found in the dict values (the RegRefs are compared using __eq__, which, since we do not define it, defaults to "is")
+                # regref must be found in the dict values (the RegRefs are
+                # compared using __eq__, which, since we do not define it, defaults to "is")
                 if rr not in self.reg_refs.values():
-                    raise SFRegRefError('Unknown RegRef.')
+                    raise RegRefError('Unknown RegRef.')
                 if not rr.active:
-                    raise SFRegRefError('Subsystem {} has already been deleted.'.format(rr.ind))
+                    raise RegRefError('Subsystem {} has already been deleted.'.format(rr.ind))
                 if self.reg_refs[rr.ind] is not rr:
-                    raise SFRegRefError('Should never happen!')
+                    raise RegRefError('Should never happen!')
             elif isinstance(rr, numbers.Integral):
                 rr = self._index_to_regref(rr)
             else:
-                raise SFRegRefError('Subsystems can only be indexed using integers and RegRefs.')
+                raise RegRefError('Subsystems can only be indexed using integers and RegRefs.')
 
             if rr in temp:
-                raise SFRegRefError('Trying to act on the same subsystem more than once.')
+                raise RegRefError('Trying to act on the same subsystem more than once.')
             temp.append(rr)
         return temp
 
@@ -587,10 +636,10 @@ class Engine:
         """Append a quantum program command to the engine command queue.
 
         Args:
-          op (Operation): quantum operation
-          reg (list[int, RegRef]): register subsystem(s) to apply it to
+            op (Operation): quantum operation
+            reg (list[int, RegRef]): register subsystem(s) to apply it to
         Returns:
-          list[RegRef]: subsystem list as RegRefs
+            list[RegRef]: subsystem list as RegRefs
         """
         # test that the target subsystem references are ok
         reg = self._test_regrefs(reg)
@@ -632,10 +681,10 @@ class Engine:
         """Return the backend state object.
 
         Args:
-          modes (Sequence[int]): integers containing the modes to be returned.
-            If none, all modes are returned.
+            modes (Sequence[int]): integers containing the modes to be returned.
+                If none, all modes are returned.
         Returns:
-          BaseState: object containing details and methods for manipulation of the returned circuit state
+            BaseState: object containing details and methods for manipulation of the returned circuit state
         """
         return self.backend.state(modes=modes, **kwargs)
 
@@ -646,10 +695,10 @@ class Engine:
         since it bypasses the program queue and the associated RegRef bookkeeping.
 
         Args:
-          clist (list[Command]): command list to run
+            clist (list[Command]): command list to run
 
         Returns:
-          list[Command]: commands that were applied to the backend
+            list[Command]: commands that were applied to the backend
         """
         applied = []
         for cmd in clist:
@@ -663,15 +712,18 @@ class Engine:
                     applied.append(cmd)
                 except NotApplicableError:
                     # command is not applicable to the current backend type
-                    raise NotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
+                    raise NotApplicableError('The operation {} cannot be used with {}.'.format(
+                        cmd.op, self.backend)) from None
                 except NotImplementedError:
                     # command not directly supported by backend API, try a decomposition instead
                     try:
                         temp = cmd.op.decompose(cmd.reg)
                         # run the decomposition
-                        foo = self._run_command_list(temp)
-                        # TODO should we store the decomposition or the original Command? if we change backends and re-run the program, the decomposition may not be valid or useful.
-                        applied.extend(foo)
+                        applied_cmds = self._run_command_list(temp)
+                        # TODO should we store the decomposition or the original Command?
+                        # if we change backends and re-run the program, the decomposition
+                        # may not be valid or useful.
+                        applied.extend(applied_cmds)
                     except NotImplementedError as err:
                         # simplify the error message by suppressing the previous exception
                         raise err from None
@@ -682,22 +734,28 @@ class Engine:
         """Execute the program in the command queue by sending it to the backend.
 
         The backend state is updated, and a new RegRef checkpoint is created.
-        The program queue is emptied, and its contents (possibly decomposed) are appended to self.cmd_applied.
+        The program queue is emptied, and its contents (possibly decomposed) are
+        appended to self.cmd_applied.
 
         Args:
             backend (str, BaseBackend, None): Backend for executing the commands.
-                Either a backend name ("gaussian", "fock", or "tf"), in which case it is loaded and initialized,
-                or a BaseBackend instance, or None to keep the current backend.
-            return_state (bool): If True, returns the state of the circuit after the program has been run like :meth:`return_state` was called.
+                Either a backend name ("gaussian", "fock", or "tf"), in which case it
+                is loaded and initialized, or a BaseBackend instance, or None to keep
+                the current backend.
+            return_state (bool): If True, returns the state of the circuit after the
+                program has been run like :meth:`return_state` was called.
             modes (Sequence[int]): Modes to be returned in the state object. If None, returns all modes.
         """
 
         if backend is None:
-            # keep the current one
-            pass
+            # keep the current backend
+            if self.backend is None:
+                # if backend does not exist, raise error
+                raise ProgramError("Please provide a simulation backend.") from None
         elif isinstance(backend, str):
             # if backend is specified via a string and the engine already has that type of backend
             # loaded, then we should just use the existing backend
+            # pylint: disable=protected-access
             if self.backend is not None and self.backend._short_name == backend:
                 pass
             else:
@@ -705,21 +763,31 @@ class Engine:
                 self.backend = load_backend(backend)
                 self.backend.begin_circuit(num_subsystems=self.init_num_subsystems, hbar=self.hbar, **kwargs)
         else:
+            # should we check if isinstance(backend, BaseBackend) here?
             self.backend = backend
 
-        temp = self._run_command_list(self.cmd_queue, **kwargs)
-        # TODO unsuccessful run due to exceptions should ideally result in keeping the command queue as is but bringing the backend back to the last checkpoint...
-        self.cmd_applied.append(temp)
-        self.cmd_queue.clear()
-        self._set_checkpoint()
+        # TODO unsuccessful run due to exceptions should ideally result in keeping
+        # the command queue as is but bringing the backend back to the last checkpoint
+        try:
+            temp = self._run_command_list(self.cmd_queue, **kwargs)
+        except Exception as e:
+            # TODO: reset the backend to the last checkpoint here
+            raise e
+        else:
+            # command execution was successful, reset the queue
+            self.cmd_applied.append(temp)
+            self.cmd_queue.clear()
+            self._set_checkpoint()
 
         if return_state:
             return self.return_state(modes=modes, **kwargs)
 
+        return None
 
 
 # The :class:`Command` instances in the program form a
-# `strict partially ordered set <http://en.wikipedia.org/wiki/Partially_ordered_set#Strict_and_non-strict_partial_orders>`_
+# `strict partially ordered set
+# <http://en.wikipedia.org/wiki/Partially_ordered_set#Strict_and_non-strict_partial_orders>`_
 # in the sense that the order in which they have to be executed is usually not completely fixed.
 # Specifically, operations acting on different subsystems always commute with each other.
 # We denote :math:`a < b` if :math:`a` has to be executed before :math:`b`.
@@ -728,12 +796,15 @@ class Engine:
 # and the transitive closure of any DAG is a strict partial order.
 # During the optimization three different (but equivalent) representations of the program are used.
 
-# * Initially, the program is represented as a Command queue (list), listing the Commands in the temporal order they are applied.
+# * Initially, the program is represented as a Command queue (list), listing the Commands in
+#   the temporal order they are applied.
 # * The second representation, grid, essentially mimics a quantum circuit diagram.
-#   It is a mapping from subsystem indices to lists of Commands touching that subsystem, where each list is temporally ordered.
+#   It is a mapping from subsystem indices to lists of Commands touching that subsystem,
+#   where each list is temporally ordered.
 # * Finally, the quantum circuit can be represented using a DAG by making each Command a node,
 #   and drawing an edge from each Command to all its immediate followers along each wire it touches.
-#   It can be converted back into a command queue by popping a maximal element until the graph is empty, that is, consuming it in a topological order.
+#   It can be converted back into a command queue by popping a maximal element until the graph
+#   is empty, that is, consuming it in a topological order.
 #   Note that a topological order is not always unique, there may be several equivalent topological orders.
 
 # .. currentmodule:: strawberryfields.engine.Engine
@@ -749,9 +820,9 @@ class Engine:
         The same Command will appear in each list that corresponds to one of its subsystems.
 
         Args:
-          ls (list[Command]): program to be transformed
+            ls (list[Command]): program to be transformed
         Returns:
-          Grid[Command]: transformed program
+            Grid[Command]: transformed program
         """
         grid = {}
         # enter every operation in the list to its proper position in the grid
@@ -770,18 +841,20 @@ class Engine:
         In the DAG each node is a Command, and edges point from Commands to their dependents/followers.
 
         Args:
-          grid (Grid[Command]): program to be transformed
+            grid (Grid[Command]): program to be transformed
         Returns:
-          DAG[Command]: transformed program
+            DAG[Command]: transformed program
         """
         DAG = nx.DiGraph()
         for key in grid:
             q = grid[key]
             _print_list(0, q)
-            if len(q) > 0:
-                DAG.add_node(q[0])  # add the first operation on the wire that does not depend on anything
+            if q:
+                # add the first operation on the wire that does not depend on anything
+                DAG.add_node(q[0])
             for i in range(1, len(q)):
-                DAG.add_edge(q[i-1], q[i]) # add the edge between the operations, and the operation nodes themselves
+                # add the edge between the operations, and the operation nodes themselves
+                DAG.add_edge(q[i-1], q[i])
         return DAG
 
     @staticmethod
@@ -791,11 +864,12 @@ class Engine:
         The list contains the Commands in (one possible) topological (executable) order.
 
         Args:
-          dag (DAG[Command]): program to be transformed
+            dag (DAG[Command]): program to be transformed
         Returns:
-          list[Command]: transformed program
+            list[Command]: transformed program
         """
-        # sort the operation graph into topological order (dependants following the operations they depend on)
+        # sort the operation graph into topological order
+        # (dependants following the operations they depend on)
         temp = nx.algorithms.dag.topological_sort(dag)
         return list(temp)
 
@@ -812,7 +886,8 @@ class Engine:
         #    print('mode {}, len {}'.format(k, len(grid[k])))
 
         # try merging neighboring operations on each wire
-        # todo the merging could also be done using the circuit DAG, which might be smarter (ns>1 would be easy)
+        # todo the merging could also be done using the circuit DAG, which
+        # might be smarter (ns>1 would be easy)
         for k in grid:
             q = grid[k]
             #print('\nqumode {}:\n'.format(k))
@@ -823,9 +898,11 @@ class Engine:
                 try:
                     a = q[i]
                     b = q[i+1]
-                    if a.op.ns == b.op.ns and a.reg == b.reg:  # the ops must have equal size and act on the same wires
+                    # the ops must have equal size and act on the same wires
+                    if a.op.ns == b.op.ns and a.reg == b.reg:
                         if a.op.ns != 1:
-                            # ns > 1 is tougher. on no wire must there be anything between them, also deleting is more complicated
+                            # ns > 1 is tougher. on no wire must there be anything
+                            # between them, also deleting is more complicated
                             # todo treat it as a failed merge for now
                             i += 1
                             continue
@@ -840,7 +917,7 @@ class Engine:
                             i -= 1
                         _print_list(i, q)
                         continue
-                except SFMergeFailure:
+                except MergeFailure:
                     pass
                 i += 1  # failed at merging the ops, move forward
 
