@@ -229,7 +229,7 @@ class QReg():
                 self._pure = False
 
             if state.shape == pure_shape:
-                state = np.outer(state, state.conj())
+                state = ops.mix(state, len(modes))
 
             # Take the partial trace
             #TODO: For performance the partial trace could be done directly from the pure state. This would of course require a better partial trace function...
