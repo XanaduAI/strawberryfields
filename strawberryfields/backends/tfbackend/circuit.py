@@ -314,12 +314,13 @@ class QReg(object):
         if not self._valid_modes(modes):
             return
 
+        n_modes = len(modes)
         if input_state_is_pure:
-            input_is_batched = len(state.shape) > len(modes)
+            input_is_batched = ( len(state.shape) > n_modes or (len(state.shape) == 2 and state.shape[1] == self._cutoff_dim**n_modes ))
         else:
             input_is_batched = len(state.shape) % 2 == 1
 
-        n_modes = len(modes)
+
         pure_shape = tuple([self._cutoff_dim]*n_modes)
         mixed_shape = tuple([self._cutoff_dim]*(2*n_modes))
         pure_shape_as_vector = tuple([self._cutoff_dim**n_modes])
