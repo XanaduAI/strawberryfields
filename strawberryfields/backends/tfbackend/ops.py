@@ -741,10 +741,14 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
         # append mode and insert state (There is also insert_state(), but it seemed easier unnecesarily complicated to try to generalize this function, which does a lot manual list comprehension, to the multi mode case than to write the two liner below)
         #TODO: insert_state() could be rewritten to take full advantage of the high level functions of tf. Before doing that different implementatinos should be benchmarked to compare speed and memory requirements, as in practice these methods will be perfomance critical.
         if not batched:
-            revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
+            #todo: remove the hack in the line below and enabled the line with axes=0 instead, as soon as tensorflow>=1.6 has become a dependency of SF
+            #revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
+            revised_modes = tf.tensordot(tf.expand_dims(reduced_state, 0), tf.expand_dims(replacement, 0), axes=[[0],[0]])
         else:
             batch_size = reduced_state.shape[0].value
-            revised_modes = tf.stack([tf.tensordot(reduced_state[b], replacement[b], axes=0) for b in range(batch_size)])
+            #todo: remove the hack in the line below and enabled the line with axes=0 instead, as soon as tensorflow>=1.6 has become a dependency of SF
+            #revised_modes = tf.stack([tf.tensordot(reduced_state[b], replacement[b], axes=0) for b in range(batch_size)])
+            revised_modes = tf.stack([tf.tensordot(tf.expand_dims(reduced_state[b], 0), tf.expand_dims(replacement[b], 0), axes=[[0],[0]]) for b in range(batch_size)])
         revised_modes_pure = False
 
     # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
