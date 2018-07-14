@@ -304,7 +304,6 @@ from .decompositions import clements, bloch_messiah, williamson
 
 
 # numerical tolerances
-# TODO there are still some magic numbers in the code, they should be named and defined here
 _decomposition_merge_tol = 1e-13
 
 
@@ -597,7 +596,7 @@ class Decomposition(Operation):
             U1 = self.p[0]
             U2 = other.p[0]
             U = matmul(U2, U1).x
-            # TODO above we strip the Parameter wrapper to make the following check
+            # todo above we strip the Parameter wrapper to make the following check
             # easier to perform. The constructor restores it.
             # Another option would be to add the required methods to Parameter class.
             # check if the matrices cancel

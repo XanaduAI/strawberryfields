@@ -297,7 +297,7 @@ class RegRefTransform:
             refs = [refs]
 
         if any([not r.active for r in refs]):
-            # TODO allow this if the regref already has a measurement result in it.
+            # todo allow this if the regref already has a measurement result in it.
             # Maybe we want to delete a mode after measurement to save comp effort.
             raise ValueError('Trying to use inactive RegRefs.')
 
@@ -726,7 +726,7 @@ class Engine:
                         temp = cmd.op.decompose(cmd.reg)
                         # run the decomposition
                         applied_cmds = self._run_command_list(temp)
-                        # TODO should we store the decomposition or the original Command?
+                        # todo should we store the decomposition or the original Command?
                         # if we change backends and re-run the circuit, the decomposition
                         # may not be valid or useful.
                         applied.extend(applied_cmds)
@@ -782,12 +782,12 @@ class Engine:
             else:
                 raise ValueError("Please provide a valid Strawberry Fields backend.") from None
 
-        # TODO unsuccessful run due to exceptions should ideally result in keeping
+        # todo unsuccessful run due to exceptions should ideally result in keeping
         # the command queue as is but bringing the backend back to the last checkpoint
         try:
             temp = self._run_command_list(self.cmd_queue, **kwargs)
         except Exception as e:
-            # TODO: reset the backend to the last checkpoint here
+            # todo: reset the backend to the last checkpoint here
             raise e
         else:
             # command execution was successful, reset the queue

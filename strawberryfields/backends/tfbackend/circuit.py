@@ -221,7 +221,7 @@ class QReg:
             self._cache = {}
 
         with self._graph.as_default():
-            # TODO vac states only need to be remade if graph or cutoff_dim changes?!
+            # todo vac states only need to be remade if graph or cutoff_dim changes?
             self._make_vac_states(self._cutoff_dim)
             single_mode_vac = self._single_mode_pure_vac if pure else self._single_mode_mixed_vac
             if self._num_modes == 1:

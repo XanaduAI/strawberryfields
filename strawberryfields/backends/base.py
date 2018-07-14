@@ -114,7 +114,7 @@ Code details
 
 """
 
-# TODO: If we move to Sphinx 1.7, the docstrings of the methods in the derived classes FockBackend,
+# todo If we move to Sphinx 1.7, the docstrings of the methods in the derived classes FockBackend,
 # TFBackend and GaussianBackend that are declared in BaseBackend should be removed entirely.
 # This way they are inherited directly from the parent class BaseBackend and thus kept automatically up-to-date.
 # The derived classes should provide a docstring for these methods only if they change their behavior for some reason.
