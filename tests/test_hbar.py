@@ -47,7 +47,7 @@ class BaseFrontendHbar(BaseTest):
 
       res = np.empty(0)
       for i in range(n_meas):
-        self.eng.reset(keep_prog=True)
+        self.eng.reset(keep_history=True)
         self.eng.run()
         res = np.append(res, q[0].val)
 

@@ -370,7 +370,7 @@ class Operation:
 
         # class name and parameter values
         temp = [str(i) for i in self.p]
-        return super().__str__()+'('+', '.join(temp)+')'
+        return self.__class__.__name__+'('+', '.join(temp)+')'
 
     @property
     def extra_deps(self):

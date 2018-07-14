@@ -123,8 +123,9 @@ class FockBackend(BaseFock):
         Args:
             pure (bool): whether to use a pure state representation upon reset
         """
+        cutoff = kwargs.get('cutoff_dim', self.qreg._trunc)
         self._modeMap.reset()
-        self.qreg.reset(pure, num_subsystems=self._init_modes)
+        self.qreg.reset(pure, num_subsystems=self._init_modes, cutoff_dim=cutoff)
 
     def prepare_vacuum_state(self, mode):
         """Prepare the vacuum state on the specified mode.

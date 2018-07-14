@@ -22,10 +22,10 @@ Quantum compiler engine
 
 This module implements the quantum compiler engine.
 The :class:`Engine` class provides the toolchain that
-starts with the user inputting a quantum program and ends with a backend that
+starts with the user inputting a quantum circuit and ends with a backend that
 could be e.g. a simulator, a hardware quantum processor, or a circuit drawer.
 
-Syntactically, the compiler engine acts as the context for the quantum program.
+Syntactically, the compiler engine acts as the context for the quantum circuit.
 A typical use looks like
 ::
 
@@ -70,6 +70,7 @@ call these directly.
    _test_regrefs
    _run_command_list
    _cmd_applied_all
+   _retain_queue
    _list_to_grid
    _grid_to_DAG
    _DAG_to_list
@@ -88,10 +89,10 @@ Helper classes
 Optimizer
 ---------
 
-The purpose of the optimizer part of the compiler engine is to simplify the program
+The purpose of the optimizer part of the compiler engine is to simplify the circuit
 to make it cheaper and faster to execute. Different backends might require
-different types of optimization, but in general the fewer operations a program has,
-the faster it should run. The optimizer thus should convert the program into a
+different types of optimization, but in general the fewer operations a circuit has,
+the faster it should run. The optimizer thus should convert the circuit into a
 simpler but otherwise equivalent version of itself, preserving the probability
 distributions of the measurement results. The optimization utilizes the abstract
 algebraic properties of the gates, and in no point should require a
@@ -110,7 +111,7 @@ Exceptions
 
 .. autosummary::
    MergeFailure
-   ProgramError
+   CircuitError
    RegRefError
    ~strawberryfields.backends.base.NotApplicableError
 
@@ -132,7 +133,7 @@ from itertools import chain
 import networkx as nx
 
 from .backends import load_backend
-from .backends.base import NotApplicableError
+from .backends.base import NotApplicableError, BaseBackend
 
 
 def _print_list(i, q, print_fn=print):
@@ -173,7 +174,7 @@ def _convert(func):
     return wrapper
 
 
-class ProgramError(RuntimeError):
+class CircuitError(RuntimeError):
     """Exception raised by :class:`Engine` when it encounters an illegal
     operation in the quantum circuit.
 
@@ -221,7 +222,7 @@ class Command:
         if temp[-1] == ' ':
             # HACK, trailing space means do not print anything more.
             return temp
-        return '{} | \t({})'.format(temp, ", ".join([str(rr) for rr in self.reg]))
+        return '{} | ({})'.format(temp, ", ".join([str(rr) for rr in self.reg]))
 
     def get_dependencies(self):
         """Subsystems the command depends on.
@@ -265,7 +266,7 @@ class RegRef:
         self.active = True  #: bool: True at construction, False when the subsystem is deleted
 
     def __str__(self):
-        return 'reg[{}]'.format(self.ind)
+        return 'q[{}]'.format(self.ind)
 
 
 class RegRefTransform:
@@ -340,7 +341,7 @@ class RegRefTransform:
         if any(v is None for v in temp):
             # NOTE: "if None in temp" causes an error if temp contains arrays,
             # since it uses the == comparison in addition to "is"
-            raise ProgramError("Trying to use a nonexistent measurement result "
+            raise CircuitError("Trying to use a nonexistent measurement result "
                                "(e.g. before it can be measured).")
         if self.func is None:
             return temp[0]
@@ -350,12 +351,12 @@ class RegRefTransform:
 class Engine:
     r"""Quantum compiler engine.
 
-    Acts as a context manager (and the context itself) for quantum programs.
+    Acts as a context manager (and the context itself) for quantum circuits.
     The contexts may not be nested.
 
     .. currentmodule:: strawberryfields.engine.Engine
 
-    The quantum program is inputted by using the :meth:`~strawberryfields.ops.Operation.__or__`
+    The quantum circuit is inputted by using the :meth:`~strawberryfields.ops.Operation.__or__`
     methods of the quantum operations, which call the :meth:`append` method of the Engine.
     :meth:`append` checks that the register references are valid and then
     adds a new :class:`.Command` instance to the Engine command queue.
@@ -369,7 +370,7 @@ class Engine:
     reference errors as soon as they happen.
 
     The backend, however, only becomes aware of subsystem changes when
-    the program is run. See :meth:`reset_queue` and :meth:`reset`.
+    the circuit is run. See :meth:`reset_queue` and :meth:`reset`.
 
     Args:
         num_subsystems (int): Number of subsystems in the quantum register.
@@ -384,7 +385,7 @@ class Engine:
         self.init_num_subsystems = num_subsystems  #: int: initial number of subsystems
         self.cmd_queue = []       #: list[Command]: command queue
         self.cmd_applied = []     #: list[list[Command]]: list of lists of commands that have been run (one list per run)
-        self.backend = None       #: BaseBackend: backend for executing the quantum program
+        self.backend = None       #: BaseBackend: backend for executing the quantum circuit
         self.hbar = hbar          #: float: Numerical value of hbar in the (implicit) units of position and momentum.
         # create mode references
         self.reg_refs = {}        #: dict[int->RegRef]: mapping from subsystem indices to corresponding RegRef objects
@@ -397,7 +398,7 @@ class Engine:
         return self.__class__.__name__ + '({} subsystems, {})'.format(self.num_subsystems, self.backend.__class__.__name__)
 
     def __enter__(self):
-        """Enter the quantum program context for this engine."""
+        """Enter the quantum circuit context for this engine."""
         if Engine._current_context is None:
             Engine._current_context = self
         else:
@@ -405,7 +406,7 @@ class Engine:
         return self
 
     def __exit__(self, ex_type, ex_value, ex_tb):
-        """Exit the quantum program context."""
+        """Exit the quantum circuit context."""
         Engine._current_context = None
 
     #=================================================
@@ -514,7 +515,7 @@ class Engine:
         # NOTE: deleted indices are *not* removed from self.unused_indices
 
 
-    def reset(self, *, keep_prog=False, **kwargs):
+    def reset(self, keep_history=False, **kwargs):
         r"""Re-initialize the backend state to vacuum.
 
         Resets the state of the quantum circuit represented by the backend.
@@ -523,16 +524,16 @@ class Engine:
         * All modes are reset to the vacuum state.
         * All known RegRefs are cleared of measured values.
         * A checkpoint is made of the initial register state.
-        * If keep_prog is False:
+        * If ``keep_history`` is False:
 
           * The command queue and the list of commands that have been run are cleared.
           * Any RegRefs for subsystems that were created after the init are rendered
             inactive and deleted.
 
-        * If keep_prog is True:
+        * If ``keep_history`` is True:
 
           * The command queue is prepended by the list of commands that have been run.
-            The latter is then cleared. The purpose of this is to keep the program valid
+            The latter is then cleared. The purpose of this is to keep the circuit valid
             in the cases where previously run program segments have created or deleted
             subsystems, or made measurement on which the program in the command queue depends.
           * RegRef activity state is unchanged, active RegRefs remain valid.
@@ -540,7 +541,8 @@ class Engine:
         The keyword args are passed on to :meth:`strawberryfields.backends.base.BaseBackend.reset`.
 
         Args:
-            keep_prog (bool): should we keep the current program in the command queue?
+            keep_history (bool): allows the backend to be reset to the vacuum state while
+                retaining the circuit history to be applied on the next call to :meth:`~.Engine.run`.
         """
 
         if self.backend is not None:
@@ -556,19 +558,23 @@ class Engine:
         self._unused_indices_checkpoint = set(temp)
 
         # command queues and register state
-        if keep_prog:
+        if keep_history:
             # insert all previously applied Commands in the front of the current
-            # program to make it valid to run on the current state
-            self.cmd_queue[:0] = self._cmd_applied_all()
+            # circuit to make it valid to run on the current state
+            self._retain_queue()
         else:
             self.reset_queue()
         self.cmd_applied.clear()
 
 
+    def _retain_queue(self):
+        self.cmd_queue[:0] = self._cmd_applied_all()
+
+
     def reset_queue(self):
         """Clear the command queue.
 
-        Resets the currently queued program.
+        Resets the currently queued circuit.
 
         * Clears all queued Commands, but does not reset the current state of the circuit.
         * self.reg_refs and self.unused_indices are restored to how they were at the last checkpoint.
@@ -633,7 +639,7 @@ class Engine:
         return temp
 
     def append(self, op, reg):
-        """Append a quantum program command to the engine command queue.
+        """Append a quantum circuit command to the engine command queue.
 
         Args:
             op (Operation): quantum operation
@@ -692,7 +698,7 @@ class Engine:
         """Execute the commands in the list.
 
         To avoid discrepancies with the backend this method must not be called directly,
-        since it bypasses the program queue and the associated RegRef bookkeeping.
+        since it bypasses the circuit queue and the associated RegRef bookkeeping.
 
         Args:
             clist (list[Command]): command list to run
@@ -721,7 +727,7 @@ class Engine:
                         # run the decomposition
                         applied_cmds = self._run_command_list(temp)
                         # TODO should we store the decomposition or the original Command?
-                        # if we change backends and re-run the program, the decomposition
+                        # if we change backends and re-run the circuit, the decomposition
                         # may not be valid or useful.
                         applied.extend(applied_cmds)
                     except NotImplementedError as err:
@@ -730,11 +736,11 @@ class Engine:
         return applied
 
 
-    def run(self, backend=None, *, return_state=True, modes=None, **kwargs):
-        """Execute the program in the command queue by sending it to the backend.
+    def run(self, backend=None, return_state=True, modes=None, apply_history=False, **kwargs):
+        """Execute the circuit in the command queue by sending it to the backend.
 
         The backend state is updated, and a new RegRef checkpoint is created.
-        The program queue is emptied, and its contents (possibly decomposed) are
+        The circuit queue is emptied, and its contents (possibly decomposed) are
         appended to self.cmd_applied.
 
         Args:
@@ -743,15 +749,21 @@ class Engine:
                 is loaded and initialized, or a BaseBackend instance, or None to keep
                 the current backend.
             return_state (bool): If True, returns the state of the circuit after the
-                program has been run like :meth:`return_state` was called.
+                circuit has been run like :meth:`return_state` was called.
             modes (Sequence[int]): Modes to be returned in the state object. If None, returns all modes.
+            apply_history (bool): If True, all applied operations from the previous calls to
+                eng.run are reapplied to the backend state, before applying recently
+                queued quantum operations.
         """
+        if apply_history:
+            self._retain_queue()
+            self.cmd_applied.clear()
 
         if backend is None:
             # keep the current backend
             if self.backend is None:
                 # if backend does not exist, raise error
-                raise ProgramError("Please provide a simulation backend.") from None
+                raise ValueError("Please provide a simulation backend.") from None
         elif isinstance(backend, str):
             # if backend is specified via a string and the engine already has that type of backend
             # loaded, then we should just use the existing backend
@@ -760,11 +772,15 @@ class Engine:
                 pass
             else:
                 # initialize a backend
+                self.cmd_applied.clear()
                 self.backend = load_backend(backend)
                 self.backend.begin_circuit(num_subsystems=self.init_num_subsystems, hbar=self.hbar, **kwargs)
         else:
-            # should we check if isinstance(backend, BaseBackend) here?
-            self.backend = backend
+            if isinstance(backend, BaseBackend):
+                self.cmd_applied.clear()
+                self.backend = backend
+            else:
+                raise ValueError("Please provide a valid Strawberry Fields backend.") from None
 
         # TODO unsuccessful run due to exceptions should ideally result in keeping
         # the command queue as is but bringing the backend back to the last checkpoint
@@ -785,7 +801,7 @@ class Engine:
         return None
 
 
-# The :class:`Command` instances in the program form a
+# The :class:`Command` instances in the circuit form a
 # `strict partially ordered set
 # <http://en.wikipedia.org/wiki/Partially_ordered_set#Strict_and_non-strict_partial_orders>`_
 # in the sense that the order in which they have to be executed is usually not completely fixed.
@@ -794,9 +810,9 @@ class Engine:
 # Each strict partial order corresponds to a
 # `directed acyclic graph <http://en.wikipedia.org/wiki/Directed_acyclic_graph>`_ (DAG),
 # and the transitive closure of any DAG is a strict partial order.
-# During the optimization three different (but equivalent) representations of the program are used.
+# During the optimization three different (but equivalent) representations of the circuit are used.
 
-# * Initially, the program is represented as a Command queue (list), listing the Commands in
+# * Initially, the circuit is represented as a Command queue (list), listing the Commands in
 #   the temporal order they are applied.
 # * The second representation, grid, essentially mimics a quantum circuit diagram.
 #   It is a mapping from subsystem indices to lists of Commands touching that subsystem,
@@ -820,9 +836,9 @@ class Engine:
         The same Command will appear in each list that corresponds to one of its subsystems.
 
         Args:
-            ls (list[Command]): program to be transformed
+            ls (list[Command]): circuit to be transformed
         Returns:
-            Grid[Command]: transformed program
+            Grid[Command]: transformed circuit
         """
         grid = {}
         # enter every operation in the list to its proper position in the grid
@@ -841,9 +857,9 @@ class Engine:
         In the DAG each node is a Command, and edges point from Commands to their dependents/followers.
 
         Args:
-            grid (Grid[Command]): program to be transformed
+            grid (Grid[Command]): circuit to be transformed
         Returns:
-            DAG[Command]: transformed program
+            DAG[Command]: transformed circuit
         """
         DAG = nx.DiGraph()
         for key in grid:
@@ -864,9 +880,9 @@ class Engine:
         The list contains the Commands in (one possible) topological (executable) order.
 
         Args:
-            dag (DAG[Command]): program to be transformed
+            dag (DAG[Command]): circuit to be transformed
         Returns:
-            list[Command]: transformed program
+            list[Command]: transformed circuit
         """
         # sort the operation graph into topological order
         # (dependants following the operations they depend on)
@@ -874,7 +890,7 @@ class Engine:
         return list(temp)
 
     def optimize(self):
-        """Try to simplify and optimize the program in the command queue.
+        """Try to simplify and optimize the circuit in the command queue.
 
         The simplifications are based on the algebraic properties of the gates,
         e.g., combining two consecutive gates of the same gate family.
@@ -921,7 +937,7 @@ class Engine:
                     pass
                 i += 1  # failed at merging the ops, move forward
 
-        # convert the program back into a list (via a DAG)
+        # convert the circuit back into a list (via a DAG)
         DAG = self._grid_to_DAG(grid)
         del grid
         self.cmd_queue = self._DAG_to_list(DAG)

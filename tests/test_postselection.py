@@ -92,7 +92,7 @@ class FockFrontendPostselection(FockBaseTest):
     for i in range(n_meas):
       self.eng.run()
       x = np.append(x, q[1].val)
-      self.eng.reset(keep_prog=True)
+      self.eng.reset(keep_history=True)
 
     self.assertAllAlmostEqual(x.mean(), 0.2, delta = std_10 + self.tol)
 

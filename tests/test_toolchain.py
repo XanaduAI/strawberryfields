@@ -32,10 +32,20 @@ class BasicTests(BaseTest):
         # attach the backend (NOTE: self.backend is shared between the tests, but the parent class re-initializes it in its setUp() method)
         self.eng.backend = self.backend
 
+    def test_identity_command(self):
+        """Tests that the None command acts as the identity"""
+        q = self.eng.register
+        Identity = Command(None, q[0])
+        self.eng.cmd_queue = [Identity]
+        self.eng.run()
+        res = self.eng._cmd_applied_all()
+        self.assertEqual(res, [])
 
     def test_engine(self):
         "Basic engine tests."
         self.logTestName()
+
+        q = self.eng.register
 
         # backed is initialized to vacuum state
         self.assertAllTrue(self.backend.is_vacuum(self.tol))
@@ -44,8 +54,22 @@ class BasicTests(BaseTest):
         #D = Sgate(0.543)
         with self.eng:
             # trying to act on a nonexistent mode
-            self.assertRaises(RegRefError, D.__or__, self.eng.num_subsystems)
+            with self.assertRaisesRegex(RegRefError, "does not exist"):
+                D | self.eng.num_subsystems
 
+            Del | q[0]
+            # trying to act on a deleted mode
+            with self.assertRaisesRegex(RegRefError, "been deleted"):
+                D | 0
+
+        self.eng.reset()
+        qNew = RegRef(3)
+        with self.eng:
+            # trying to act on RegRef that is not part of the engine
+            with self.assertRaisesRegex(RegRefError, "Unknown RegRef."):
+                D | qNew
+
+        self.eng.reset()
         # successful gate application
         with self.eng:
             D | 0
@@ -75,6 +99,11 @@ class BasicTests(BaseTest):
         self.eng.reset()
         self.assertAllTrue(self.backend.is_vacuum(self.tol))
 
+        # Should never happen!
+        q[0].ind = 1
+        with self.eng:
+            with self.assertRaisesRegex(RegRefError, "Should never happen!"):
+                D | q[0]
 
     def test_gate_dagger(self):
         "Dagger functionality of the gates."
@@ -119,9 +148,19 @@ class BasicTests(BaseTest):
         # using a measurement result before it exists
         with self.eng:
             Dgate(q[0]) | q[1]
-        self.assertRaises(ProgramError, self.eng.run)
+
+        with self.assertRaisesRegex(CircuitError, "Trying to use a nonexistent measurement result"):
+            self.eng.run()
 
         self.eng.reset()
+
+        # referring to a register with a non-integral or RegRef object
+        with self.eng:
+            with self.assertRaisesRegex(RegRefError, "using integers and RegRefs"):
+                Dgate(0) | 1.2
+
+        self.eng.reset()
+
         # proper use
         with self.eng:
             MeasureX | q[0]
@@ -222,8 +261,10 @@ class BasicTests(BaseTest):
             D.H      | charlie
             MeasureX | charlie
             # trying to act on a deleted mode
-            self.assertRaises(RegRefError, D.__or__, alice)
-            self.assertRaises(RegRefError, D.__or__, bob)
+            with self.assertRaisesRegex(RegRefError, "been deleted"):
+                D | alice
+            with self.assertRaisesRegex(RegRefError, "been deleted"):
+                D | bob
 
         #self.eng.print_queue()
         self.eng.optimize()
@@ -338,7 +379,7 @@ class BasicTests(BaseTest):
         ## (5) reset the state, run the same program again to get new measurement samples
         input_and_run(prog1, alice)
         input(prog2, bob)
-        eng.reset(keep_prog=True)
+        eng.reset(keep_history=True)
         state[alice.ind, 1] = True  # measurement result was erased, activity did not change
         state[bob.ind, 1] = True
         check()
@@ -348,20 +389,11 @@ class BasicTests(BaseTest):
         check()
 
 
-    def __test_eng_reset(self):
-        # TODO: revisit this test when we've finalized the eng.reset behaviour
+    def test_eng_reset(self):
         """Test the Engine.reset() features."""
         self.logTestName()
 
-        # change the hbar value
-        self.assertEqual(self.eng.hbar, self.hbar)
         state = self.eng.run()
-        self.assertEqual(state._hbar, self.hbar)
-        new_hbar = 1.723
-        self.eng.reset(hbar=new_hbar)
-        self.assertEqual(self.eng.hbar, new_hbar)
-        state = self.eng.run()
-
         if self.args.fock_support:
             # change the cutoff dimension
             old_cutoff = self.eng.backend.get_cutoff_dim()
@@ -465,6 +497,123 @@ class BasicTests(BaseTest):
                     check(G, p, measure=True)
                 self.eng.backend.reset()
 
+    def test_print_commands(self):
+        """Test print_queue and print_applied returns correct strings."""
+        self.logTestName()
+        # define some gates
+        D = Dgate(0.5)
+        BS = BSgate(2*pi, pi/2)
+        R = Rgate(pi)
+
+        # get register references
+        reg = self.eng.register
+        alice, bob = reg
+        with self.eng:
+            D        | alice
+            BS       | (alice, bob)
+            Del      | alice
+            R        | bob
+            charlie, = New(1)
+            BS       | (bob, charlie)
+            MeasureX | bob
+            Dgate(bob).H      | charlie
+            Del      | bob
+            MeasureX | charlie
+
+        res = []
+        print_fn = lambda x: res.append(x.__str__())
+        self.eng.print_queue(print_fn)
+
+        expected = ['Dgate(0.5, 0) | (q[0])',
+                    'BSgate(6.283, 1.571) | (q[0], q[1])',
+                    'Del | (q[0])',
+                    'Rgate(3.142) | (q[1])',
+                    'New(1) ',
+                    'BSgate(6.283, 1.571) | (q[1], q[2])',
+                    'MeasureX | (q[1])',
+                    'Dgate(RR(q[1]), 0).H | (q[2])',
+                    'Del | (q[1])',
+                    'MeasureX | (q[2])']
+
+        self.assertEqual(res, expected)
+        state = self.eng.run()
+
+        # queue should now be empty
+        res = []
+        print_fn = lambda x: res.append(x.__str__())
+        self.eng.print_queue(print_fn)
+        self.assertEqual(res, [])
+
+        # print_applied should now not be empty
+        res = []
+        print_fn = lambda x: res.append(x.__str__())
+        self.eng.print_applied(print_fn)
+        self.assertEqual(res, ['Run 0:'] + expected)
+
+    def test_no_return_state(self):
+        """Tests that engine returns None when no state is requested"""
+        self.logTestName()
+
+        q = self.eng.register
+        with self.eng:
+            Dgate(0.34) | q[0]
+        res = self.eng.run(return_state=False)
+        self.assertEqual(res, None)
+
+    def test_apply_history(self):
+        """Tests the reapply history argument"""
+        self.logTestName()
+
+        a = 0.23
+        r = 0.1
+
+        def inspect():
+            res = []
+            print_fn = lambda x: res.append(x.__str__())
+            self.eng.print_applied(print_fn)
+            return res
+
+        q = self.eng.register
+        with self.eng:
+            Dgate(a) | q[0]
+            Sgate(r) | q[1]
+
+        state1 = self.eng.run()
+        expected = ['Run 0:',
+                    'Dgate({}, 0) | (q[0])'.format(a),
+                    'Sgate({}, 0) | (q[1])'.format(r)]
+        self.assertEqual(inspect(), expected)
+
+        # reset backend, but reapply history
+        self.backend.reset()
+        state2 = self.eng.run(backend=self.backend, apply_history=True)
+        self.assertEqual(inspect(), expected)
+        self.assertEqual(state1, state2)
+
+        # append more commands to the same backend
+        with self.eng:
+            Rgate(r) | q[0]
+
+        state3 = self.eng.run()
+        expected = ['Run 0:',
+                     'Dgate({}, 0) | (q[0])'.format(a),
+                     'Sgate({}, 0) | (q[1])'.format(r),
+                     'Run 1:',
+                     'Rgate({}) | (q[0])'.format(r),
+                    ]
+        self.assertEqual(inspect(), expected)
+        self.assertNotEqual(state2, state3)
+
+        # reset backend, but reapply history
+        self.backend.reset()
+        state4 = self.eng.run(backend=self.backend, apply_history=True)
+        expected = ['Run 0:',
+                     'Dgate({}, 0) | (q[0])'.format(a),
+                     'Sgate({}, 0) | (q[1])'.format(r),
+                     'Rgate({}) | (q[0])'.format(r),
+                    ]
+        self.assertEqual(inspect(), expected)
+        self.assertEqual(state3, state4)
 
 
 class FockBasisTests(FockBaseTest):
