@@ -49,6 +49,34 @@ class GateTests(BaseTest):
             # ket initializer requires a parameter
             test_init(Ket(randnc(10,1)))
 
+    def test_parameter_wrapping(self):
+        """Tests that ensure wrapping occurs as expected"""
+        self.logTestName()
+        var = 5
+        res = Parameter._wrap(var)
+        self.assertTrue(isinstance(res, Parameter))
+        self.assertEqual(res.x, var)
+
+        var = Parameter(var)
+        res = Parameter._wrap(var)
+        self.assertTrue(isinstance(res, Parameter))
+        self.assertEqual(res.x, var)
+
+    def test_parameter_shape(self):
+        """Tests that ensure wrapping occurs as expected"""
+        self.logTestName()
+        var = Parameter(5)
+        res = var.shape
+        self.assertTrue(res is None)
+
+        var = np.array([[1, 2, 3], [4, 5, 6]])
+        p = Parameter(var)
+        res = p.shape
+        self.assertEqual(res, (2, 3))
+
+        p = Parameter(tf.convert_to_tensor(var))
+        res = p.shape
+        self.assertEqual(res, (2, 3))
 
     def test_gate_basics(self):
         "Basic properties of gates."

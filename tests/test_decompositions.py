@@ -209,6 +209,32 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
         state = self.eng.run()
         self.assertAllAlmostEqual(state.cov(), self.S@self.S.T*self.hbar/2, delta=self.tol)
 
+    def test_passive_gaussian_transform(self):
+        self.logTestName()
+        self.eng.reset()
+        q = self.eng.register
+        O = np.vstack([np.hstack([self.u1.real, -self.u1.imag]),
+                       np.hstack([self.u1.imag, self.u1.real])])
+
+        with self.eng:
+            All(Squeezed(0.5)) | q
+            init = self.eng.run()
+            GaussianTransform(O) | q
+
+        state = self.eng.run()
+        self.assertAllAlmostEqual(state.cov(), O @ init.cov() @ O.T, delta=self.tol)
+
+    def test_active_gaussian_transform_on_vacuum(self):
+        self.logTestName()
+        self.eng.reset()
+        q = self.eng.register
+
+        with self.eng:
+            GaussianTransform(self.S, vacuum=True) | q
+
+        state = self.eng.run()
+        self.assertAllAlmostEqual(state.cov(), self.S@self.S.T*self.hbar/2, delta=self.tol)
+
     def test_interferometer(self):
         self.logTestName()
         self.eng.reset()

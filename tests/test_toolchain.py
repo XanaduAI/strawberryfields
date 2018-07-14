@@ -406,7 +406,6 @@ class BasicTests(BaseTest):
             self.assertEqual(temp, new_cutoff)
             self.assertEqual(state._cutoff, new_cutoff)
 
-
     def test_parameters(self):
         """Test using different types of Parameters with different classes of ParOperations."""
         self.logTestName()

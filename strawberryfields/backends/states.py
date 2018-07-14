@@ -127,8 +127,9 @@ from .shared_ops import rotation_matrix as _R
 indices = string.ascii_lowercase
 
 class BaseState(abc.ABC):
-    EQ_TOLERANCE = 1e-10
     r"""Abstract base class for the representation of quantum states."""
+    EQ_TOLERANCE = 1e-10
+
     def __init__(self, num_modes, hbar=2, mode_names=None):
         self._modes = num_modes
         self._hbar = hbar
@@ -716,14 +717,14 @@ class BaseGaussianState(BaseState):
             self.num_modes, self._pure, self._hbar)
 
     def __eq__(self, other):
-        """Equality operator for BaseFockState.
+        """Equality operator for BaseGaussianState.
 
-        Returns True if other BaseFockState is close to self.
-        This is done by comparing the data attribute - if within
-        the EQ_TOLERANCE, True is returned.
+        Returns True if other BaseGaussianState is close to self.
+        This is done by comparing the means vector and cov matrix.
+        If both are within the EQ_TOLERANCE, True is returned.
 
         Args:
-            other (BaseFockState): BaseFockState to compare against.
+            other (BaseGaussianState): BaseGaussianState to compare against.
         """
         #pylint: disable=protected-access
         if not isinstance(other, type(self)):
