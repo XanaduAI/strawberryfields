@@ -585,7 +585,7 @@ class BasicTests(BaseTest):
         self.assertEqual(inspect(), expected)
 
         # reset backend, but reapply history
-        self.backend.reset()
+        self.backend.reset(pure=self.kwargs["pure"])
         state2 = self.eng.run(backend=self.backend, apply_history=True)
         self.assertEqual(inspect(), expected)
         self.assertEqual(state1, state2)
@@ -605,7 +605,7 @@ class BasicTests(BaseTest):
         self.assertNotEqual(state2, state3)
 
         # reset backend, but reapply history
-        self.backend.reset()
+        self.backend.reset(pure=self.kwargs["pure"])
         state4 = self.eng.run(backend=self.backend, apply_history=True)
         expected = ['Run 0:',
                      'Dgate({}, 0) | (q[0])'.format(a),
