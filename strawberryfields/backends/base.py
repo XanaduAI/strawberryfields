@@ -684,6 +684,10 @@ class BaseGaussian(BaseBackend):
         # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
+    def cross_kerr_interaction(self, kappa, mode1, mode2):
+        # pylint: disable=unused-argument,missing-docstring
+        raise NotApplicableError
+
     def measure_fock(self, modes, select=None):
         # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
