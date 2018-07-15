@@ -1782,7 +1782,7 @@ RR = RegRefTransform
 # here we list different classes of operations for unit testing purposes
 
 zero_args_gates = (Fourier,)  # all these are pre-constructed objects, not classes
-one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate, Kgate, CXgate, CZgate)
+one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate, Kgate, CXgate, CZgate, CKgate)
 two_args_gates = (Dgate, Sgate, BSgate, S2gate)
 gates = zero_args_gates + one_args_gates + two_args_gates
 
