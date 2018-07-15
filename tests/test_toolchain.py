@@ -134,7 +134,7 @@ class BasicTests(BaseTest):
             test_gate(G)
 
         for G in one_args_gates:
-            if G in (Vgate, Kgate) and not self.args.fock_support:
+            if G in (Vgate, Kgate, CKgate) and not self.args.fock_support:
                 continue  # the V gate cannot be used on Gaussian backends
             # construct a random gate
             G = G(uniform(high=0.25))
