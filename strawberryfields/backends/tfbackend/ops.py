@@ -183,6 +183,18 @@ def kerr_interaction_matrix(kappa, D, batched=False):
     output = tf.matrix_diag(coeffs)
     return output
 
+def cross_kerr_interaction_matrix(kappa, D, batched=False):
+    """creates the two mode cross-Kerr interaction matrix"""
+    coeffs = [tf.exp(1j * kappa * n1 * n2) for n1 in range(D) for n2 in range(D)]
+    if batched:
+        coeffs = tf.stack(coeffs, axis=1)
+    output = tf.matrix_diag(coeffs)
+    if batched:
+        output = tf.transpose(tf.reshape(output, [-1] + [D]*4), [0, 1, 3, 2, 4])
+    else:
+        output = tf.transpose(tf.reshape(output, [D]*4), [0, 2, 1, 3])
+    return output
+
 def cubic_phase_matrix(gamma, D, hbar, batched=False, method="self_adjoint_eig"):
     """creates the single mode cubic phase matrix"""
     a, ad = ladder_ops(D)
@@ -581,6 +593,12 @@ def kerr_interaction(kappa, mode, in_modes, D, pure=True, batched=False):
     """returns Kerr unitary matrix on specified input modes"""
     matrix = kerr_interaction_matrix(kappa, D, batched)
     output = single_mode_gate(matrix, mode, in_modes, pure, batched)
+    return output
+
+def cross_kerr_interaction(kappa, mode1, mode2, in_modes, D, pure=True, batched=False):
+    """returns cross-Kerr unitary matrix on specified input modes"""
+    matrix = cross_kerr_interaction_matrix(kappa, D, batched)
+    output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
     return output
 
 def cubic_phase(gamma, mode, in_modes, D, hbar=2, pure=True, batched=False, method="self_adjoint_eig"):

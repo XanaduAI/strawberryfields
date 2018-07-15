@@ -345,6 +345,18 @@ class TFBackend(BaseFock):
             remapped_mode = self._remap_modes(mode)
             self.circuit.kerr_interaction(kappa, remapped_mode)
 
+    def cross_kerr_interaction(self, kappa, mode1, mode2):
+        r"""Apply the two mode cross-Kerr interaction :math:`exp{(i\kappa \hat{n}_1\hat{n}_2)}` to the specified modes.
+
+        Args:
+            kappa (float): strength of the interaction
+            mode1 (int): first mode that cross-Kerr interaction acts on
+            mode2 (int): second mode that cross-Kerr interaction acts on
+        """
+        with tf.name_scope('Cross-Kerr_interaction'):
+            remapped_modes = self._remap_modes([mode1, mode2])
+            self.circuit.cross_kerr_interaction(kappa, remapped_modes[0], remapped_modes[1])
+
     def state(self, modes=None, **kwargs):
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 

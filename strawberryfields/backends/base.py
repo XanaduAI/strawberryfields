@@ -581,6 +581,16 @@ class BaseFock(BaseBackend):
         """
         raise NotImplementedError
 
+    def cross_kerr_interaction(self, kappa, mode1, mode2):
+        r"""Apply the two mode cross-Kerr interaction :math:`exp{(i\kappa \hat{n}_1\hat{n}_2)}` to the specified modes.
+
+        Args:
+            kappa (float): strength of the interaction
+            mode1 (int): first mode that cross-Kerr interaction acts on
+            mode2 (int): second mode that cross-Kerr interaction acts on
+        """
+        raise NotImplementedError
+
     def measure_fock(self, modes, select=None, **kwargs):
         """Measure the given modes in the Fock basis.
 
