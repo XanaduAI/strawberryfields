@@ -73,12 +73,14 @@ vectors, they must have the same dimension as the declared batch size of the und
    prepare_displaced_squeezed_state
    prepare_fock_state
    prepare_ket_state
+   prepare_dm_state
    rotation
    displacement
    squeeze
    beamsplitter
    cubic_phase
    kerr_interaction
+   cross_kerr_interaction
    loss
    measure_fock
    measure_homodyne

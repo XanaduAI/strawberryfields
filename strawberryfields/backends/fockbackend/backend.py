@@ -226,7 +226,7 @@ class FockBackend(BaseFock):
         self.qreg.beamsplitter(t, abs(r), phase(r), self._remap_modes(mode1), self._remap_modes(mode2))
 
     def kerr_interaction(self, kappa, mode):
-        r"""Apply the Kerr interaction :math:`exp{(i\kappa \hat{n}^2)}` to the specified mode.
+        r"""Apply the Kerr interaction :math:`\exp{(i\kappa \hat{n}^2)}` to the specified mode.
 
         Args:
             kappa (float): strength of the interaction
@@ -235,7 +235,7 @@ class FockBackend(BaseFock):
         self.qreg.kerr_interaction(kappa, self._remap_modes(mode))
 
     def cross_kerr_interaction(self, kappa, mode1, mode2):
-        r"""Apply the two mode cross-Kerr interaction :math:`exp{(i\kappa \hat{n}_1\hat{n}_2)}` to the specified modes.
+        r"""Apply the two mode cross-Kerr interaction :math:`\exp{(i\kappa \hat{n}_1\hat{n}_2)}` to the specified modes.
 
         Args:
             kappa (float): strength of the interaction

@@ -335,7 +335,7 @@ class TFBackend(BaseFock):
             self.circuit.cubic_phase(gamma, remapped_mode)
 
     def kerr_interaction(self, kappa, mode):
-        r"""Apply the Kerr interaction :math:`exp{(i\kappa \hat{n}^2)}` to the specified mode.
+        r"""Apply the Kerr interaction :math:`\exp{(i\kappa \hat{n}^2)}` to the specified mode.
 
         Args:
             kappa (float): strength of the interaction
@@ -346,7 +346,7 @@ class TFBackend(BaseFock):
             self.circuit.kerr_interaction(kappa, remapped_mode)
 
     def cross_kerr_interaction(self, kappa, mode1, mode2):
-        r"""Apply the two mode cross-Kerr interaction :math:`exp{(i\kappa \hat{n}_1\hat{n}_2)}` to the specified modes.
+        r"""Apply the two mode cross-Kerr interaction :math:`\exp{(i\kappa \hat{n}_1\hat{n}_2)}` to the specified modes.
 
         Args:
             kappa (float): strength of the interaction

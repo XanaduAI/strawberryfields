@@ -185,10 +185,12 @@ State preparation
    Coherent
    Squeezed
    DisplacedSqueezed
-   Fock
-   Ket
    Thermal
+   Fock
    Catstate
+   Ket
+   DensityMatrix
+   CovarianceState
 
 Measurements
 ------------
@@ -236,6 +238,7 @@ Two-mode gates
    S2gate
    CXgate
    CZgate
+   CKgate
 
 Meta-operations
 ---------------
@@ -413,7 +416,7 @@ class Operation:
 
         Returns:
             Operation, None: other * self. The return value None represents
-                the identity gate (doing nothing).
+            the identity gate (doing nothing).
 
         Raises:
             ~strawberryfields.engine.MergeFailure: if the two
@@ -905,6 +908,7 @@ class Ket(Preparation):
     Args:
         state (array or BaseFockState): state vector in the Fock basis.
             This can be provided as either:
+
             * a single ket vector, for single mode state preparation
             * a multimode ket, with one array dimension per mode
             * a :class:`BaseFockState` state object.
@@ -926,7 +930,7 @@ class Ket(Preparation):
 
 
 class DensityMatrix(Preparation):
-    r"""Prepare modes using the given density matrices in the Fock basis.
+    r"""Prepare mode(s) using the given density matrix in the Fock basis.
 
     The prepared modes are traced out and replaced with the given state
     (in the Fock basis). As a result, the overall state of system
@@ -938,6 +942,7 @@ class DensityMatrix(Preparation):
     Args:
         state (array or BaseFockState): density matrix in the Fock basis.
             This can be provided as either:
+
             * a single mode two-dimensional matrix :math:`\rho_{ij}`,
             * a multimode tensor :math:`\rho_{ij,kl,\dots,mn}`, with two indices per mode,
             * a :class:`BaseFockState` state object.
@@ -1364,6 +1369,25 @@ class CZgate(Gate):
             Command(CX, reg, decomp=True),
             Command(Rgate(pi/2), reg[1], decomp=True)
         ]
+
+
+class CKgate(Gate):
+    r""":ref:`Cross-Kerr <cross_kerr>` gate.
+
+    .. math::
+       CK(\kappa) = e^{i \kappa \hat{n}_1\hat{n}_2}
+
+    Args:
+        kappa (float): parameter
+    """
+    ns = 2
+
+    def __init__(self, kappa):
+        super().__init__([kappa])
+
+    def _apply(self, reg, backend, **kwargs):
+        p = _unwrap(self.p)
+        backend.cross_kerr_interaction(p[0], *reg)
 
 
 class Fouriergate(Gate):

@@ -61,11 +61,13 @@ Basic quantum simulator methods
    prepare_displaced_squeezed_state
    prepare_fock_state
    prepare_ket_state
+   prepare_dm_state
    rotation
    displacement
    squeeze
    beamsplitter
    kerr_interaction
+   cross_kerr_interaction
    cubic_phase
    loss
    measure_fock
