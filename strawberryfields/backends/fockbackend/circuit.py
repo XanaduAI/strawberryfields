@@ -239,7 +239,7 @@ class QReg():
                 state = ops.mix(state, len(modes))
 
             # Take the partial trace
-            #TODO: For performance the partial trace could be done directly from the pure state. This would of course require a better partial trace function...
+            # todo: For performance the partial trace could be done directly from the pure state. This would of course require a better partial trace function...
             reduced_state = ops.partial_trace(self._state, self._num_modes, modes)
 
             # Insert state at the end (I know there is also tensor() from ops but it has extra aguments wich only confuse here)

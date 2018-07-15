@@ -291,6 +291,7 @@ from numpy import pi
 from scipy.linalg import block_diag
 from scipy.special import factorial as fac
 
+from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
 from .engine import Engine as _Engine, Command, RegRefTransform, MergeFailure
 from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
@@ -892,20 +893,67 @@ class Catstate(Preparation):
 
 
 class Ket(Preparation):
-    r"""Prepare a mode using the given ket vector in the :ref:`fock_basis`.
+    r"""Prepare mode(s) using the given ket vector(s) in the Fock basis.
 
-    The prepared mode is traced out and replaced with the given ket state (in the Fock basis).
-    As a result the state of the other subsystems may have to be described using a density matrix.
+    The prepared modes are traced out and replaced with the given ket state
+    (in the Fock basis). As a result the state of the other subsystems may have
+    to be described using a density matrix.
+
+    The provided kets must be each be of length ``cutoff_dim``, matching
+    the cutoff dimension used in calls to :meth:`eng.run <~.Engine.run>`.
 
     Args:
-        state (array): state vector in the Fock basis
+        state (array or BaseFockState): state vector in the Fock basis.
+            This can be provided as either:
+            * a single ket vector, for single mode state preparation
+            * a multimode ket, with one array dimension per mode
+            * a :class:`BaseFockState` state object.
     """
+    ns = None
     def __init__(self, state):
-        super().__init__([state])
+        if isinstance(state, BaseFockState):
+            if not state.is_pure:
+                raise ValueError("Provided Fock state is not pure.")
+            super().__init__([state.ket()])
+        elif isinstance(state, BaseGaussianState):
+            raise ValueError("Gaussian states are not supported for the Ket operation.")
+        else:
+            super().__init__([state])
 
     def _apply(self, reg, backend, **kwargs):
         p = _unwrap(self.p)
-        backend.prepare_ket_state(p[0], *reg)
+        backend.prepare_ket_state(p[0], reg)
+
+
+class DensityMatrix(Preparation):
+    r"""Prepare modes using the given density matrices in the Fock basis.
+
+    The prepared modes are traced out and replaced with the given state
+    (in the Fock basis). As a result, the overall state of system
+    will also have to be described using a density matrix.
+
+    The provided density matrices must be of size ``[cutoff_dim, cutoff_dim]``,
+    matching the cutoff dimension used in calls to :meth:`eng.run <~.Engine.run>`.
+
+    Args:
+        state (array or BaseFockState): density matrix in the Fock basis.
+            This can be provided as either:
+            * a single mode two-dimensional matrix :math:`\rho_{ij}`,
+            * a multimode tensor :math:`\rho_{ij,kl,\dots,mn}`, with two indices per mode,
+            * a :class:`BaseFockState` state object.
+    """
+    ns = None
+    def __init__(self, state):
+        if isinstance(state, BaseFockState):
+            super().__init__([state.dm()])
+        elif isinstance(state, BaseGaussianState):
+            raise ValueError("Gaussian states are not supported for the Ket operation.")
+        else:
+            super().__init__([state])
+
+    def _apply(self, reg, backend, **kwargs):
+        p = _unwrap(self.p)
+        backend.prepare_dm_state(p[0], reg)
 
 
 class Thermal(Preparation):
@@ -1588,7 +1636,7 @@ class GaussianTransform(Decomposition):
         return cmds
 
 
-class CovarianceState(Preparation, Decomposition):  # NOTE: inheritance order matters!
+class CovarianceState(Preparation, Decomposition):
     r"""Prepare the specified modes in a Gaussian state.
 
     This operation uses the Williamson decomposition to prepare
@@ -1600,6 +1648,9 @@ class CovarianceState(Preparation, Decomposition):  # NOTE: inheritance order ma
     states. The Gaussian transformation is then further decomposed into an array
     of beamsplitters and local squeezing and rotation gates, by way of the
     :class:`~.GaussianTransform` and :class:`~.Interferometer` decompositions.
+
+    Alternatively, the decomposition can be turned off, and the circuit can be
+    prepared in the specified Gaussian state directly.
 
     Args:
         V (array): the :math:`2N\times 2N` (real and positive definite) covariance matrix

@@ -71,7 +71,10 @@ class QReg:
         self._state_history.append(new_state)
         self._state = new_state
 
-    def _valid_modes(self, modes): #TODO: this method should probably be moved into BaseBackend and then maybe overridden and expended in the subclasses to avoid code duplication and missing out on conditions.
+    def _valid_modes(self, modes):
+        # todo: this method should probably be moved into BaseBackend and then maybe
+        # overridden and expended in the subclasses to avoid code duplication and
+        # missing out on conditions.
         if isinstance(modes, int):
             modes = [modes]
 
@@ -333,10 +336,9 @@ class QReg:
 
         n_modes = len(modes)
         if input_state_is_pure:
-            input_is_batched = ( len(state.shape) > n_modes or (len(state.shape) == 2 and state.shape[1] == self._cutoff_dim**n_modes ))
+            input_is_batched = (len(state.shape) > n_modes or (len(state.shape) == 2 and state.shape[1] == self._cutoff_dim**n_modes))
         else:
             input_is_batched = len(state.shape) % 2 == 1
-
 
         pure_shape = tuple([self._cutoff_dim]*n_modes)
         mixed_shape = tuple([self._cutoff_dim]*(2*n_modes))

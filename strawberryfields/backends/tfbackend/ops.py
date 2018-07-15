@@ -659,11 +659,12 @@ def combine_single_modes(modes_list, batched=False):
     combined_modes = tf.einsum(eqn, *einsum_inputs)
     return combined_modes
 
-def replace_mode(replacement, mode, system, state_is_pure, batched=False):#TODO: This method has become obsolete and is superseeded by preplace_modes()
+def replace_mode(replacement, mode, system, state_is_pure, batched=False):
     """Replace the subsystem 'mode' of 'system' with new state 'replacement'. Argument 'state_is_pure' indicates whether
 
     This is just a simple wrapper for replace_modes()
     """
+    # deprecated: This method has become obsolete and is superseeded by replace_modes()
     if isinstance(mode, int):
         mode = [mode]
     replace_modes(replacement, mode, system, state_is_pure, batched)
@@ -702,7 +703,8 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
     Note: Does not check if this replacement is physically valid (i.e., if 'replacement' is a valid state)
     Note: expects the shape of both replacement and system to match the batched parameter
     Note: modes does not need to be ordered.
-    """ #TODO: write a better docstring
+    """
+    #todo: write a better docstring
     if isinstance(modes, int):
         modes = [modes]
 
@@ -725,7 +727,7 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
     else:
         # we are replacing a subset, so have to trace
         #make both system and replacement mixed
-        #TODO: For performance the partial trace could be done directly from the pure state. This would of course require a better partial trace function...
+        # todo: For performance the partial trace could be done directly from the pure state. This would of course require a better partial trace function...
         if system_is_pure:
             system = mixed(system, batched)
 
@@ -734,21 +736,21 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
             replacement = mixed(replacement, batched)
 
         # partial trace out modes
-        #TODO: We are tracing out the modes one by one in decending order (to not screw up things). This is quite inefficient.
+        # todo: We are tracing out the modes one by one in decending order (to not screw up things). This is quite inefficient.
         reduced_state = system
         for mode in sorted(modes, reverse=True):
             reduced_state = partial_trace(reduced_state, mode, False, batched)
         # append mode and insert state (There is also insert_state(), but it seemed easier unnecesarily complicated to try to generalize this function, which does a lot manual list comprehension, to the multi mode case than to write the two liner below)
-        #TODO: insert_state() could be rewritten to take full advantage of the high level functions of tf. Before doing that different implementatinos should be benchmarked to compare speed and memory requirements, as in practice these methods will be perfomance critical.
+        # todo: insert_state() could be rewritten to take full advantage of the high level functions of tf. Before doing that different implementatinos should be benchmarked to compare speed and memory requirements, as in practice these methods will be perfomance critical.
         if not batched:
             #todo: remove the hack in the line below and enabled the line with axes=0 instead, as soon as tensorflow>=1.6 has become a dependency of SF
             #revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
-            revised_modes = tf.tensordot(tf.expand_dims(reduced_state, 0), tf.expand_dims(replacement, 0), axes=[[0],[0]])
+            revised_modes = tf.tensordot(tf.expand_dims(reduced_state, 0), tf.expand_dims(replacement, 0), axes=[[0], [0]])
         else:
             batch_size = reduced_state.shape[0].value
             #todo: remove the hack in the line below and enabled the line with axes=0 instead, as soon as tensorflow>=1.6 has become a dependency of SF
             #revised_modes = tf.stack([tf.tensordot(reduced_state[b], replacement[b], axes=0) for b in range(batch_size)])
-            revised_modes = tf.stack([tf.tensordot(tf.expand_dims(reduced_state[b], 0), tf.expand_dims(replacement[b], 0), axes=[[0],[0]]) for b in range(batch_size)])
+            revised_modes = tf.stack([tf.tensordot(tf.expand_dims(reduced_state[b], 0), tf.expand_dims(replacement[b], 0), axes=[[0], [0]]) for b in range(batch_size)])
         revised_modes_pure = False
 
     # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around

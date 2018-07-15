@@ -62,9 +62,8 @@ class TFBackend(BaseFock):
             remapped_modes = remapped_modes[0]
         return remapped_modes
 
-    def begin_circuit(self, num_subsystems, cutoff_dim, hbar=2, pure=True, **kwargs):
-        r"""
-        Create a quantum circuit (initialized in vacuum state) with the number of modes
+    def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=True, **kwargs):
+        r"""Create a quantum circuit (initialized in vacuum state) with the number of modes
         equal to num_subsystems and a Fock-space cutoff dimension of cutoff_dim.
 
         Args:
@@ -82,6 +81,9 @@ class TFBackend(BaseFock):
         # pylint: disable=too-many-arguments,attribute-defined-outside-init
         with tf.name_scope('Begin_circuit'):
             batch_size = kwargs.get('batch_size', None)
+
+            if cutoff_dim is None:
+                raise ValueError("Argument 'cutoff_dim' must be passed to the Tensorflow backend")
 
             if not isinstance(num_subsystems, int):
                 raise ValueError("Argument 'num_subsystems' must be a positive integer")
@@ -399,7 +401,7 @@ class TFBackend(BaseFock):
                     reduced_state = s
 
                     # trace our all modes not in modes
-                    #TODO: Doing this one by one is very inefficient. The partial trace function should be improved.
+                    # todo: Doing this one by one is very inefficient. The partial trace function should be improved.
                 for mode in sorted([m for m in range(num_modes) if m not in modes], reverse=True):
                     reduced_state = partial_trace(reduced_state, mode, False, batched)
                 reduced_state_pure = False

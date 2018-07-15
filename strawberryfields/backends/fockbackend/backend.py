@@ -380,9 +380,8 @@ class FockBackend(BaseFock):
         Args:
             state (array): vector representation of ket state to prepare
             mode (int): index of mode where state is prepared
-
         """
-        self._prepare_state(state, modes)
+        self.qreg.prepare_multimode(state, self._remap_modes(modes))
 
     def prepare_dm_state(self, state, modes):
         """Prepare an arbitrary mixed state on the specified mode.
@@ -391,34 +390,7 @@ class FockBackend(BaseFock):
         Args:
             state (array): density matrix representation of state to prepare
             mode (int): index of mode where state is prepared
-
         """
-        self._prepare_state(state, modes)
-
-    def _prepare_state(self, state, modes=None):
-        r"""
-        Prepares a given mode or list of modes in the given state.
-
-        After the preparation the system is in a mixed product state,
-        with the specified modes replaced by state.
-        The given state can be either in tensor form or in matrix/vector form.
-        If modes is not ordered, the subsystems of the input are
-        reordered to reflect that, i.e., if modes=[3,1], then the first mode
-        of state ends up in mode 3 and the second mode of state ends up in
-        mode 1 of the output state.
-        If modes is None, it is attempted to prepare state in all modes.
-        The reduced state on all other modes remains unchainged and
-        the final state is product with respect to the partition into
-        the modes in modes and the complement.
-
-        Args:
-            state (array): vector, matrix, or tensor representation of the ket state or dm state in the fock basis to prepare
-            modes (list[int] or non-negative int or None): The mode(s) into which state is to be prepared. Needs not be ordered.
-        """
-        if modes is None:
-            modes = list(range(len(self._modemap.show())))
-        elif isinstance(modes, int):
-            modes = [modes]
         self.qreg.prepare_multimode(state, self._remap_modes(modes))
 
     def measure_fock(self, modes, select=None, **kwargs):
