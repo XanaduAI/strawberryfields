@@ -23,7 +23,7 @@ import tensorflow as tf
 
 from strawberryfields.backends import BaseFock, ModeMap
 from .circuit import QReg
-from .ops import _check_for_eval, mixed, partial_trace
+from .ops import _check_for_eval, mixed, partial_trace, reorder_modes
 from .states import FockStateTF
 
 class TFBackend(BaseFock):
@@ -62,9 +62,8 @@ class TFBackend(BaseFock):
             remapped_modes = remapped_modes[0]
         return remapped_modes
 
-    def begin_circuit(self, num_subsystems, cutoff_dim, hbar=2, pure=True, **kwargs):
-        r"""
-        Create a quantum circuit (initialized in vacuum state) with the number of modes
+    def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=True, **kwargs):
+        r"""Create a quantum circuit (initialized in vacuum state) with the number of modes
         equal to num_subsystems and a Fock-space cutoff dimension of cutoff_dim.
 
         Args:
@@ -82,6 +81,9 @@ class TFBackend(BaseFock):
         # pylint: disable=too-many-arguments,attribute-defined-outside-init
         with tf.name_scope('Begin_circuit'):
             batch_size = kwargs.get('batch_size', None)
+
+            if cutoff_dim is None:
+                raise ValueError("Argument 'cutoff_dim' must be passed to the Tensorflow backend")
 
             if not isinstance(num_subsystems, int):
                 raise ValueError("Argument 'num_subsystems' must be a positive integer")
@@ -210,7 +212,7 @@ class TFBackend(BaseFock):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_fock_state(n, remapped_mode)
 
-    def prepare_ket_state(self, state, mode):
+    def prepare_ket_state(self, state, modes):
         """
         Prepare an arbitrary pure state on the specified mode.
         Note: this may convert the state representation to mixed.
@@ -220,9 +222,21 @@ class TFBackend(BaseFock):
             mode (int): index of mode where state is prepared
 
         """
-        with tf.name_scope('Prepare_ket'):
-            remapped_mode = self._remap_modes(mode)
-            self.circuit.prepare_pure_state(state, remapped_mode)
+        with tf.name_scope('Prepare_state'):
+            self.circuit.prepare_multimode(state, self._remap_modes(modes), True)
+
+    def prepare_dm_state(self, state, modes):
+        """
+        Prepare an arbitrary mixed state on the specified mode.
+        Note: this does convert the state representation to mixed.
+
+        Args:
+            state (array): matrix representation of the state to prepare
+            mode (int): index of mode where state is prepared
+
+        """
+        with tf.name_scope('Prepare_state'):
+            self.circuit.prepare_multimode(state, self._remap_modes(modes), False)
 
     def prepare_thermal_state(self, nbar, mode):
         """
@@ -237,7 +251,6 @@ class TFBackend(BaseFock):
         with tf.name_scope('Prepare_thermal'):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_thermal_state(nbar, remapped_mode)
-
 
     def rotation(self, phi, mode):
         """
@@ -352,37 +365,41 @@ class TFBackend(BaseFock):
             # reduce rho down to specified subsystems
             if modes is None:
                 # reduced state is full state
-                red_state = s
-                modes = [m for m in range(num_modes)]
+                reduced_state = s
+                modes = list(range(num_modes))
             else:
                 if isinstance(modes, int):
                     modes = [modes]
-                if modes != sorted(modes):
+                if len(modes) != len(set(modes)):
                     raise ValueError("The specified modes cannot be duplicated.")
                 if len(modes) > num_modes:
                     raise ValueError("The number of specified modes cannot be larger than the number of subsystems.")
 
                 if pure:
                     # convert to mixed state representation
-                    red_state = mixed(s, batched)
+                    reduced_state = mixed(s, batched)
                     pure = False
                 else:
-                    red_state = s
-                # would prefer simple einsum formula, but tensorflow does not support partial trace
-                num_removed = 0
-                for m in range(num_modes):
-                    if m not in modes:
-                        mode_to_remove = m - num_removed
-                        red_state = partial_trace(red_state, mode_to_remove, pure, batched)
-                        num_removed += 1
+                    reduced_state = s
+
+                    # trace our all modes not in modes
+                    # todo: Doing this one by one is very inefficient. The partial trace function should be improved.
+                for mode in sorted([m for m in range(num_modes) if m not in modes], reverse=True):
+                    reduced_state = partial_trace(reduced_state, mode, False, batched)
+                reduced_state_pure = False
+
+            # unless the modes were requested in order, we need to swap indices around
+            if modes != sorted(modes):
+                mode_permutation = np.argsort(np.argsort(modes))
+                reduced_state = reorder_modes(reduced_state, mode_permutation, reduced_state_pure, batched)
 
             evaluate_results, session, feed_dict, close_session = _check_for_eval(kwargs)
             if evaluate_results:
-                s = session.run(red_state, feed_dict=feed_dict)
+                s = session.run(reduced_state, feed_dict=feed_dict)
                 if close_session:
                     session.close()
             else:
-                s = red_state
+                s = reduced_state
 
             modenames = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
             state_ = FockStateTF(s, len(modes), pure, self.circuit.cutoff_dim,

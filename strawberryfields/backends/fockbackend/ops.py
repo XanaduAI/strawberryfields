@@ -86,6 +86,7 @@ Channels
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals
 
+
 import functools
 import string
 from itertools import product
@@ -149,7 +150,7 @@ def indexRange(lst, trunc):
 
     for vals in product(*([range(trunc) for x in lst if x is None])):
         gen = genOfTuple(vals)
-        yield [next(gen) if v is None else v for v in lst]
+        yield [next(gen) if v is None else v for v in lst] #pylint: disable=stop-iteration-return
 
 
 def index(lst, trunc):
@@ -225,6 +226,8 @@ def trace(state, n):
 def partial_trace(state, n, modes):
     """
     Computes the partial trace of a state over the modes in `modes`.
+
+    Expects state to be in mixed state form.
     """
     left_str = [indices[2*i] + indices[2*i] if i in modes else indices[2*i:2*i+2] for i in range(n)]
     out_str = ['' if i in modes else indices[2*i:2*i+2] for i in range(n)]

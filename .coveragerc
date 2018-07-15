@@ -12,6 +12,7 @@ exclude_lines =
     def __repr__
     def __eq__
     if self\.debug
+    elif self._mode == 'einsum':
 
     # print statements
     def __str__

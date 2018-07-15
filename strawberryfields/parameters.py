@@ -17,29 +17,35 @@ or a TensorFlow object.
 The normal lifecycle of a ParOperation object and its associated Parameter instances is as follows:
 
 * A ParOperation instance is created, and given some parameters as input.
+
 * :meth:`ParOperation.__init__` converts the inputs into Parameter instances.
   Plain :class:`~engine.RegRef` instances are wrapped in a trivial
   :class:`~engine.RegRefTransform`.
   RegRefTransforms add their RegRef dependencies to the Parameter and consequently to the Operation.
+
 * The Operation instance is applied using its :func:`~ops.Operation.__or__`
   method inside an :class:`~engine.Engine` context.
   This creates a :class:`~engine.Command` instance that wraps
   the Operation and the RegRefs it acts on, which is appended to the Engine command queue.
+
 * Once the entire program is inputted, Engine optimizes it. This involves merging and commuting Commands
   inside the circuit graph, the building of which requires knowledge of their dependencies, both direct and Parameter-based.
+
 * Merging two :class:`~ops.Gate` instances of the same subclass involves
   adding their first parameters after equality-comparing the others. This is easily done if
   all the parameters have an immediate value. RegRefTransforms and TensorFlow objects are more complicated,
   but could in principle be handled.
 
-  .. todo:: For now we simply don't do the merge if RegRefTransforms or TensorFlow objects are involved.
+For now, we simply don't do the merge if RegRefTransforms or TensorFlow objects are involved.
 
 * The optimized command queue is run by Engine, which calls the :func:`~ops.Operation.apply` method
   of each Operation in turn (and tries :func:`~ops.Operation.decompose`
   if a :py:exc:`NotImplementedError` exception is raised).
+
 * :func:`~ops.ParOperation.apply` evaluates the numeric value of any
   RegRefTransform-based Parameters using :func:`Parameter.evaluate` (other types of Parameters are simply passed through).
   The parameter values and the subsystem indices are passed to :func:`~ops.Operation._apply`.
+
 * :func:`~ops.Operation._apply` "unwraps" the Parameter instances. There are three different cases:
 
   1. We still need to do some arithmetic, unwrap after it is done using p.x.
@@ -49,14 +55,12 @@ The normal lifecycle of a ParOperation object and its associated Parameter insta
   Finally, _apply calls the appropriate backend API method using the unwrapped parameters.
   It is up to the backend to either accept NumPy arrays and Tensorflow objects as parameters, or not.
 
-
 What we cannot do at the moment:
 
 * Use anything except integers and RegRefs (or Sequences thereof) as the subsystem parameter
   for the :func:`~ops.Operation.__or__` method.
   Technically we could allow any Parameters or valid Parameter initializers that evaluate into an integer.
 * Do arithmetic with RegRefTransforms.
-
 
 Parameter methods
 -----------------
@@ -161,13 +165,12 @@ class Parameter():
 
         The main reason we need this is that TensorFlow does not automatically promote int to float or float to complex but requires an explicit cast.
 
-        .. todo:: Decide whether to cast to single or double precision by default (both float and complex).
-
         Args:
           other: the other input of a binary arithmetic operation
         Returns:
           (self, other) unwrapped, cast into compatible dtypes
         """
+        # todo: Decide whether to cast to single or double precision by default (both float and complex).
         t = self.x
         if isinstance(other, Parameter):
             other = other.x
@@ -298,7 +301,8 @@ np_math_fns = {"abs": (np.abs, tf.abs),
                "matmul": (np.matmul, tf.matmul),
                "expand_dims": (np.expand_dims, tf.expand_dims),
                "squeeze": (np.squeeze, tf.squeeze),
-               "transpose": (np.transpose, tf.transpose)
+               "transpose": (np.transpose, tf.transpose),
+               "reshape": (np.reshape, tf.reshape)
               }
 
 def math_fn_wrap(np_fn, tf_fn):

@@ -4,6 +4,9 @@ Unit tests for :mod:`strawberryfields.ops`
 The tests in this module do not require the quantum program to be run, and thus do not use a backend.
 """
 
+import logging
+logging.getLogger()
+
 import unittest
 import itertools
 
@@ -46,8 +49,6 @@ class GateTests(BaseTest):
         with self.eng:
             for G in state_preparations:
                 test_init(G())
-            # ket initializer requires a parameter
-            test_init(Ket(randnc(10,1)))
 
     def test_parameter_wrapping(self):
         """Tests that ensure wrapping occurs as expected"""

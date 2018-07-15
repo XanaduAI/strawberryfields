@@ -72,6 +72,9 @@ class QReg:
         self._state = new_state
 
     def _valid_modes(self, modes):
+        # todo: this method should probably be moved into BaseBackend and then maybe
+        # overridden and expended in the subclasses to avoid code duplication and
+        # missing out on conditions.
         if isinstance(modes, int):
             modes = [modes]
 
@@ -81,28 +84,38 @@ class QReg:
             elif mode >= self._num_modes:
                 raise ValueError("Specified mode number(s) are not compatible with number of modes.")
 
+        if len(modes) != len(set(modes)):
+            raise ValueError("The specified modes cannot appear multiple times.")
+
         return True
 
-    def _replace_and_update(self, replacement, mode, global_state):
-        # Helper function for replacing a mode, updating the state history, and possibly setting circuit's state_is_pure variable to a new value
-        if self._num_modes == 1:
-            self._update_state(replacement)
-            # update purity
-            if self._batched:
-                batch_offset = 1
-            else:
-                batch_offset = 0
-            if self._state_is_pure:
-                # maybe change pure to mixed
-                if len(replacement.shape) == batch_offset + 2:
-                    self._state_is_pure = False
-            else:
-                # maybe change mixed to pure
-                if len(replacement.shape) == batch_offset + 1:
-                    self._state_is_pure = True
+    def _replace_and_update(self, replacement, modes):
+        """
+        Helper function for replacing a mode, updating the state history,
+        and possibly setting circuit's state_is_pure variable to a new value.
+
+        Expects replacement to be batched if self._batched.
+        """
+        if isinstance(modes, int):
+            modes = [modes]
+
+        if self._batched:
+            batch_offset = 1
         else:
-            new_state = ops.replace_mode(replacement, mode, global_state, self._state_is_pure, self._batched)
-            self._update_state(new_state)
+            batch_offset = 0
+
+        num_modes = len(self._state.shape) - batch_offset
+        if not self._state_is_pure:
+            num_modes = int(num_modes/2)
+
+        new_state = ops.replace_modes(replacement, modes, self._state, self._state_is_pure, self._batched)
+        self._update_state(new_state)
+
+        # update purity depending on whether we have replaced all modes or a subset
+        if len(modes) == num_modes:
+            replacement_is_pure = bool(len(replacement.shape) - batch_offset == len(modes))
+            self._state_is_pure = replacement_is_pure
+        else:
             self._state_is_pure = False
 
     def _maybe_batch(self, param, convert_to_tensor=True):
@@ -241,7 +254,7 @@ class QReg:
                     state = self._single_mode_pure_vac
                 else:
                     state = self._single_mode_mixed_vac
-                self._replace_and_update(state, mode, self._state)
+                self._replace_and_update(state, mode)
 
     def prepare_fock_state(self, n, mode):
         """
@@ -251,7 +264,7 @@ class QReg:
             with self._graph.as_default():
                 n = self._maybe_batch(n, convert_to_tensor=False)
                 fock_state = ops.fock_state(n, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched)
-                self._replace_and_update(fock_state, mode, self._state)
+                self._replace_and_update(fock_state, mode)
 
     def prepare_coherent_state(self, alpha, mode):
         """
@@ -262,7 +275,7 @@ class QReg:
                 alpha = tf.cast(alpha, ops.def_type)
                 alpha = self._maybe_batch(alpha)
                 coherent_state = ops.coherent_state(alpha, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched)
-                self._replace_and_update(coherent_state, mode, self._state)
+                self._replace_and_update(coherent_state, mode)
 
     def prepare_squeezed_state(self, r, theta, mode):
         """
@@ -274,7 +287,7 @@ class QReg:
                 theta = self._maybe_batch(theta)
                 self._check_incompatible_batches(r, theta)
                 squeezed_state = ops.squeezed_vacuum(r, theta, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched)
-                self._replace_and_update(squeezed_state, mode, self._state)
+                self._replace_and_update(squeezed_state, mode)
 
     def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
         """
@@ -287,29 +300,76 @@ class QReg:
                 phi = self._maybe_batch(phi)
                 self._check_incompatible_batches(alpha, r, phi)
                 displaced_squeezed = ops.displaced_squeezed(alpha, r, phi, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched)
-                self._replace_and_update(displaced_squeezed, mode, self._state)
+                self._replace_and_update(displaced_squeezed, mode)
 
-    def prepare_pure_state(self, state, mode):
+    def prepare_multimode(self, state, modes, input_state_is_pure=False):
+        r"""Prepares a given mode or list of modes in the given state.
+
+        After the preparation the system is in a mixed product state,
+        with the specified modes replaced by state.
+
+        The given state can be either in tensor form or in matrix/vector form and
+        can be a batch of states or a single state. This method needs to know whether
+        input_state_is_pure to distinguish between a batch of pure states and a mixed state.
+
+        If modes is not ordered, the subsystems of the input are
+        reordered to reflect that, i.e., if modes=[3,1], then the first mode
+        of state ends up in mode 3 and the second mode of state ends up in
+        mode 1 of the output state.
+
+        If modes is None, it is attempted to prepare state in all modes.
+        The reduced state on all other modes remains unchainged and
+        the final state is product with respect to the partition into
+        the modes in modes and the complement.
+
+        Args:
+            state (array): vector, matrix, or tensor representation of the ket state or
+                density matrix state (or a batch of such states) in the fock basis to prepare
+            modes (list[int] or non-negative int): The mode(s) into which state is
+                to be prepared. Needs not be ordered.
         """
-             Traces out the state in 'mode' and replaces it with the state numerically defined by 'state'.
-        """
-        if self._valid_modes(mode):
+        if self._valid_modes(modes):
+            if isinstance(modes, int):
+                modes = [modes]
+
+            n_modes = len(modes)
+            if input_state_is_pure:
+                input_is_batched = (len(state.shape) > n_modes or (len(state.shape) == 2 and state.shape[1] == self._cutoff_dim**n_modes))
+            else:
+                input_is_batched = len(state.shape) % 2 == 1
+
+            pure_shape = tuple([self._cutoff_dim]*n_modes)
+            mixed_shape = tuple([self._cutoff_dim]*(2*n_modes))
+            pure_shape_as_vector = tuple([self._cutoff_dim**n_modes])
+            mixed_shape_as_matrix = tuple([self._cutoff_dim**n_modes]*2)
+            if input_is_batched:
+                pure_shape = (self._batch_size,) + pure_shape
+                mixed_shape = (self._batch_size,) + mixed_shape
+                pure_shape_as_vector = (self._batch_size,) + pure_shape_as_vector
+                mixed_shape_as_matrix = (self._batch_size,) + mixed_shape_as_matrix
+
+            # reshape to support input both as tensor and vector/matrix
+            if state.shape == pure_shape_as_vector:
+                state = tf.reshape(state, pure_shape)
+            elif state.shape == mixed_shape_as_matrix:
+                state = tf.reshape(state, mixed_shape)
+
             with self._graph.as_default():
                 state = tf.cast(tf.convert_to_tensor(state), ops.def_type)
-                # check whether state is a single (unbatched) vector; if so, broadcast
-                if self._batched and state.shape.ndims == 1:
+                # batch state now if not already batched and self._batched
+                if self._batched and not input_is_batched:
                     state = tf.stack([state] * self._batch_size)
-                self._replace_and_update(state, mode, self._state)
+                self._replace_and_update(state, modes)
 
     def prepare_thermal_state(self, nbar, mode):
         """
-             Prepares the thermal state with mean photon nbar in the specified mode.
+        Prepares the thermal state with mean photon nbar in the specified mode.
         """
         if self._valid_modes(mode):
             with self._graph.as_default():
                 nbar = self._maybe_batch(nbar)
                 thermal = ops.thermal_state(nbar, D=self._cutoff_dim)
-                self._replace_and_update(thermal, mode, self._state)
+                self._replace_and_update(thermal, mode)
 
     def phase_shift(self, theta, mode):
         """
