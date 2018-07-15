@@ -5,13 +5,11 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
+
 import numpy as np
 from scipy.special import factorial
-from defaults import BaseTest, FockBaseTest, GaussianBaseTest
 
-import strawberryfields as sf
+from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.engine import Engine
 from strawberryfields.ops import *
 
@@ -34,8 +32,13 @@ class BaseFrontendHbar(BaseTest):
     super().setUp()
 
   def test_squeeze_variance(self):
+    self.logTestName()
+    if self.batched:
+      raise unittest.SkipTest('Test is only relevant for non-batched mode.')
+
     for h in hbar:
       self.eng = Engine(num_subsystems=self.num_subsystems, hbar=h)
+      self.eng.backend = self.backend
       q = self.eng.register
 
       with self.eng:
@@ -44,7 +47,8 @@ class BaseFrontendHbar(BaseTest):
 
       res = np.empty(0)
       for i in range(n_meas):
-        self.eng.run(self.backend_name, cutoff_dim=self.D, reset_backend=True)
+        self.eng.reset(keep_history=True)
+        self.eng.run()
         res = np.append(res, q[0].val)
 
       self.assertAllAlmostEqual(np.var(res), np.exp(-2*r)*h/2, delta = std_10 + self.tol)
@@ -58,26 +62,30 @@ class GaussianFrontendHbar(GaussianBaseTest):
     super().setUp()
 
   def test_x_displacement(self):
+    self.logTestName()
     for h in hbar:
       self.eng = Engine(num_subsystems=self.num_subsystems, hbar=h)
+      #self.eng.backend = self.backend
       q = self.eng.register
 
       with self.eng:
         Xgate(x) | q[0]
 
-      state = self.eng.run(backend='gaussian', reset_backend=True)
+      state = self.eng.run(backend='gaussian')
       mu_x = state.means()[0]
       self.assertAllAlmostEqual(mu_x, x, delta = self.tol)
 
   def test_p_displacement(self):
+    self.logTestName()
     for h in hbar:
       self.eng = Engine(num_subsystems=self.num_subsystems, hbar=h)
+      #self.eng.backend = self.backend
       q = self.eng.register
 
       with self.eng:
         Zgate(p) | q[0]
 
-      state = self.eng.run(backend='gaussian', reset_backend=True)
+      state = self.eng.run(backend='gaussian')
       mu_p = state.means()[1]
       self.assertAllAlmostEqual(mu_p, p, delta = self.tol)
 

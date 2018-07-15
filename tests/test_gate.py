@@ -5,32 +5,32 @@ The tests in this module do not require the quantum program to be run, and thus 
 """
 
 import unittest
-from collections import Counter
+import itertools
+
 from numpy.random import randn, random
 from numpy import sqrt
 
-# HACK to import the module in this source distribution, not the installed one!
-import os
-import sys
-sys.path.insert(0, os.path.abspath('.'))
+import tensorflow as tf
 
-import strawberryfields as sf
-from strawberryfields.engine import Engine
+# NOTE: strawberryfields must be imported from defaults
+from defaults import BaseTest, strawberryfields as sf
+from strawberryfields.engine import Engine, MergeFailure, RegRefError
 from strawberryfields.utils import *
 from strawberryfields.ops import *
-from defaults import BaseTest, FockBaseTest
+from strawberryfields.parameters import Parameter
+
 
 
 class GateTests(BaseTest):
     def setUp(self):
         self.tol = 1e-6
         self.hbar = 2
-        # engine without backend
         self.eng = Engine(num_subsystems=3, hbar=self.hbar)
 
 
     def test_init_basics(self):
         "Basic properties of initializers."
+        self.logTestName()
 
         # initializer to test against
         V = Vacuum()
@@ -41,7 +41,7 @@ class GateTests(BaseTest):
             # all inits act on a single mode
             self.assertRaises(ValueError, G.__or__, (0,1))
             # can't repeat the same index
-            self.assertRaises(IndexError, All(G).__or__, (0,0))
+            self.assertRaises(RegRefError, All(G).__or__, (0,0))
 
         with self.eng:
             for G in state_preparations:
@@ -49,9 +49,38 @@ class GateTests(BaseTest):
             # ket initializer requires a parameter
             test_init(Ket(randnc(10,1)))
 
+    def test_parameter_wrapping(self):
+        """Tests that ensure wrapping occurs as expected"""
+        self.logTestName()
+        var = 5
+        res = Parameter._wrap(var)
+        self.assertTrue(isinstance(res, Parameter))
+        self.assertEqual(res.x, var)
+
+        var = Parameter(var)
+        res = Parameter._wrap(var)
+        self.assertTrue(isinstance(res, Parameter))
+        self.assertEqual(res.x, var)
+
+    def test_parameter_shape(self):
+        """Tests that ensure wrapping occurs as expected"""
+        self.logTestName()
+        var = Parameter(5)
+        res = var.shape
+        self.assertTrue(res is None)
+
+        var = np.array([[1, 2, 3], [4, 5, 6]])
+        p = Parameter(var)
+        res = p.shape
+        self.assertEqual(res, (2, 3))
+
+        p = Parameter(tf.convert_to_tensor(var))
+        res = p.shape
+        self.assertEqual(res, (2, 3))
 
     def test_gate_basics(self):
         "Basic properties of gates."
+        self.logTestName()
 
         # test gate
         Q = Xgate(0.5)
@@ -60,13 +89,17 @@ class GateTests(BaseTest):
             self.assertAllTrue(G.merge(G.H) == None)
             # gates cannot be merged with a different type of gate
             if not isinstance(G, Q.__class__):
-                self.assertRaises(TypeError, Q.merge, G)
-                self.assertRaises(TypeError, G.merge, Q)
+                self.assertRaises(MergeFailure, Q.merge, G)
+                self.assertRaises(MergeFailure, G.merge, Q)
             # wrong number of subsystems
             if G.ns == 1:
                 self.assertRaises(ValueError, G.__or__, (0,1))
             else:
                 self.assertRaises(ValueError, G.__or__, 0)
+
+            # multimode gates: can't repeat the same index
+            if G.ns == 2:
+                self.assertRaises(RegRefError, G.__or__, (0,0))
 
         with self.eng:
             for G in two_args_gates:
@@ -83,24 +116,25 @@ class GateTests(BaseTest):
                 # preconstructed singleton instances
                 test_gate(G)
 
-            for G in two_mode_gates:
-                G = G(*randn(1))
-                # can't repeat the same index
-                self.assertRaises(IndexError, G.__or__, (0,0))
-            self.assertRaises(IndexError, All(Q).__or__, (0,0))
+            # All: can't repeat the same index
+            self.assertRaises(RegRefError, All(Q).__or__, (0,0))
 
 
     def test_gate_merging(self):
         "Nontrivial merging of gates."
+        self.logTestName()
 
         def merge_gates(f):
             # test the merging of two gates (with default values for optional parameters)
             a, b = randn(2)
             G = f(a)
             temp = G.merge(f(b))
-            self.assertAlmostEqual(temp.p[0], a+b, delta=self.tol)
+            # not identity, p[0]s add up
+            self.assertTrue(temp is not None)
+            self.assertAlmostEqual(temp.p[0].evaluate(), a+b, delta=self.tol)
             temp = G.merge(f(b).H)
-            self.assertAlmostEqual(temp.p[0], a-b, delta=self.tol)
+            self.assertTrue(temp is not None)
+            self.assertAlmostEqual(temp.p[0].evaluate(), a-b, delta=self.tol)
 
         for G in one_args_gates+two_args_gates:
             merge_gates(G)
@@ -108,16 +142,18 @@ class GateTests(BaseTest):
 
     def test_loss_merging(self):
         "Nontrivial merging of loss."
+        self.logTestName()
 
         # test the merging of two gates (with default values for optional parameters)
         a, b = random(2)
         G = LossChannel(a)
         temp = G.merge(LossChannel(b))
-        self.assertAlmostEqual(temp.p[0], sqrt(a*b), delta=self.tol)
+        self.assertAlmostEqual(temp.p[0], a*b, delta=self.tol)
 
 
     def test_dispatch(self):
         "Dispatching of gates to the engine."
+        self.logTestName()
 
         with self.eng:
             for G in one_args_gates+two_args_gates:
@@ -138,6 +174,7 @@ class GateTests(BaseTest):
 
     def test_create_delete(self):
         """Creating and deleting new modes."""
+        self.logTestName()
 
         # New must not be called via its __or__ method
         self.assertRaises(ValueError, New.__or__, 0)
@@ -150,29 +187,80 @@ class GateTests(BaseTest):
             self.assertRaises(ValueError, New.__call__, 1.5)
 
             # deleting nonexistent modes
-            self.assertRaises(KeyError, Del.__or__, 100)
+            self.assertRaises(RegRefError, Del.__or__, 100)
 
+            # deleting
+            self.assertTrue(alice.active)
             Del | alice
-            diana = New(1)
-            # deleting already deleted modes
-            self.assertRaises(IndexError, Del.__or__, alice)
+            self.assertTrue(not alice.active)
 
-            edward, grace = New(2)
+            # creating
+            diana, = New(1)
+            self.assertTrue(diana.active)
+
+            # deleting already deleted modes
+            self.assertRaises(RegRefError, Del.__or__, alice)
+
+            # creating and deleting several modes
+            edward, frank, grace = New(3)
             Del | (charlie, grace)
 
-        #self.eng.print_program()
-        temp = self.eng.reg_refs
-        c = Counter(temp.values())
-        #print(c)
-        # reference map has entries for both existing and deleted subsystems
-        self.assertEqual(len(temp), self.eng.num_subsystems +c[None])
+        #self.eng.print_queue()
+        # register should only return the active subsystems
+        temp = self.eng.register
+        self.assertEqual(len(temp), self.eng.num_subsystems)
+        self.assertEqual(len(temp), 4)
+        # Engine.reg_refs contains all the regrefs, active and inactive
+        self.assertEqual(len(self.eng.reg_refs), 7)
+
+
+class ParameterTests(BaseTest):
+    def setUp(self):
+        pass
+
+    def test_init(self):
+        "Parameter initialization and arithmetic."
+        self.logTestName()
+        # at the moment RR-inputs cannot be arithmetically combined with the others
+
+        # immediate Parameter class inputs:
+        # ints, floats and complex numbers
+        # numpy arrays
+        # TensorFlow objects of various types
+        par_inputs = [3, 0.14, 4.2+0.5j,
+                      random(3),
+                      tf.Variable(2), tf.Variable(0.4), tf.Variable(0.8+1.1j)]
+        pars = [Parameter(k) for k in par_inputs]  # wrapped versions
+
+        def check(p, q):
+            "Check all arithmetic operations on a two-Parameter combination."
+            #print(p, q)
+            self.assertTrue(isinstance(p+q, Parameter))
+            self.assertTrue(isinstance(p-q, Parameter))
+            self.assertTrue(isinstance(p*q, Parameter))
+            self.assertTrue(isinstance(p/q, Parameter))
+            self.assertTrue(isinstance(p**q, Parameter))
+
+        ## binary methods
+        # all combinations of two Parameter types
+        for p in itertools.product(pars, repeat=2):
+            check(*p)
+        # all combinations a Parameter and an unwrapped input
+        for p in itertools.product(pars, par_inputs):
+            check(*p)
+        for p in itertools.product(par_inputs, pars):
+            check(*p)
+
+        ## unary methods
+        for p in pars:
+            self.assertTrue(isinstance(-p, Parameter))
 
 
 if __name__ == '__main__':
     print('Testing Strawberry Fields version ' + sf.version() + ', gates module.')
     # run the tests in this file
     suite = unittest.TestSuite()
-    for t in (GateTests,):
+    for t in (GateTests, ParameterTests):
         ttt = unittest.TestLoader().loadTestsFromTestCase(t)
         suite.addTests(ttt)
 

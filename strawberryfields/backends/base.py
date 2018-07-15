@@ -42,14 +42,16 @@ as well as a few methods which apply only to the Gaussian backend.
 Hierarchy for backends
 ------------------------
 
-.. inheritance-diagram:: strawberryfields.backends.base.BaseBackend
-    strawberryfields.backends.fockbackend.backend.FockBackend
-    strawberryfields.backends.gaussianbackend.backend.GaussianBackend
-    strawberryfields.backends.tfbackend.backend.TFBackend
+.. currentmodule:: strawberryfields.backends
+
+.. inheritance-diagram:: base.BaseBackend
+    fockbackend.backend.FockBackend
+    gaussianbackend.backend.GaussianBackend
+    tfbackend.backend.TFBackend
     :parts: 1
 
 
-Base Backend
+Base backend
 -----------------------------------
 
 .. currentmodule:: strawberryfields.backends.base.BaseBackend
@@ -75,12 +77,13 @@ Base Backend
     state
     is_vacuum
 
-.. currentmodule:: strawberryfields.backends.base
-
-Base Fock Backend
+Fock backends
 ------------------
 
-Some commands are only implemented in the subclass :class:`FockBackend`,
+.. currentmodule:: strawberryfields.backends.base
+
+
+Some methods are only implemented in the subclass :class:`FockBackend`,
 which is the base class for simulators using a Fock-state representation
 for quantum optical circuits.
 
@@ -95,10 +98,10 @@ for quantum optical circuits.
     kerr_interaction
     measure_fock
 
-Base Gaussian Backend
+Gaussian backends
 ---------------------
 
-Likewise, some commands are only implemented in subclass :class:`BaseGaussian`,
+Likewise, some methods are only implemented in subclass :class:`BaseGaussian`,
 which is the base class for simulators using a Gaussian symplectic representation
 for quantum optical circuits.
 
@@ -112,13 +115,18 @@ Code details
 
 """
 
+# todo If we move to Sphinx 1.7, the docstrings of the methods in the derived classes FockBackend,
+# TFBackend and GaussianBackend that are declared in BaseBackend should be removed entirely.
+# This way they are inherited directly from the parent class BaseBackend and thus kept automatically up-to-date.
+# The derived classes should provide a docstring for these methods only if they change their behavior for some reason.
+
 # pylint: disable=no-self-use
 
 
 class NotApplicableError(TypeError):
     """Exception raised by the backend when the user attempts an unsupported operation.
-    E.g. :meth:`~.BaseBackend.measure_fock` on a Gaussian backend, :meth:`~.BaseBackend.measure_heterodyne` on a Fock backend.
-    Conceptually different from NotImplementedError (not implemented, but at some point may be).
+    E.g. :meth:`measure_fock` on a Gaussian backend.
+    Conceptually different from NotImplementedError (which means "not implemented, but at some point may be").
     """
     pass
 
@@ -129,6 +137,8 @@ class ModeMap:
     """
     def __init__(self, num_subsystems):
         self._init = num_subsystems
+        #: list[int]: _map[k] is the internal index used by the backend for
+        # computational mode k, or None if the mode has been deleted
         self._map = [k for k in range(num_subsystems)]
 
     def reset(self):
@@ -211,7 +221,7 @@ class ModeMap:
 
 
 class BaseBackend:
-    """Abstract base class for backends with a minimal API."""
+    """Abstract base class for backends."""
     # pylint: disable=too-many-public-methods
 
     def __init__(self):
@@ -227,7 +237,8 @@ class BaseBackend:
 
         Currently supported operating modes are:
 
-        * "gaussian": for manipulations in the Gaussian representation using the displacements and covariance matrices
+        * "gaussian": for manipulations in the Gaussian representation using the
+          displacements and covariance matrices
         * "fock_basis": for manipulations in the Fock representation
         * "mixed_states": for representations where the quantum state is mixed
         * "batched": allows for a multiple circuits to be simulated in parallel
@@ -238,7 +249,7 @@ class BaseBackend:
         Returns:
             bool: True if this backend supports that operating mode.
         """
-        return self._supported[name] if name in self._supported else False
+        return self._supported.get(name, False)
 
     def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=True, **kwargs):
         r"""Instantiate a quantum circuit.
@@ -300,8 +311,16 @@ class BaseBackend:
     def reset(self, pure=True, **kwargs):
         """Reset the circuit so that all the modes are in the vacuum state.
 
+        After the reset the circuit is in the same state as it was after
+        the last :meth:`begin_circuit` call. It will have the original number
+        of modes, all initialized in the vacuum state. Some circuit parameters
+        may be changed during the reset, see the keyword args below.
+
         Args:
             pure (bool): if True, initialize the circuit in a pure state (will use a mixed state if pure is False)
+
+        Keyword Args:
+            cutoff_dim (int): new Hilbert space truncation dimension (for Fock basis backends only)
         """
         raise NotImplementedError
 
@@ -345,7 +364,8 @@ class BaseBackend:
     def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
         r"""Prepare a displaced squeezed state in the specified mode.
 
-        The requested mode is traced out and replaced with the displaced squeezed state state :math:`\ket{\alpha, z}`, where :math:`z=re^{i\phi}`.
+        The requested mode is traced out and replaced with the displaced squeezed
+        state state :math:`\ket{\alpha, z}`, where :math:`z=re^{i\phi}`.
         As a result the state may have to be described using a density matrix.
 
         Args:
@@ -363,7 +383,7 @@ class BaseBackend:
         As a result the state will be described using a density matrix.
 
         Args:
-            nbar (int): thermal population of the mode
+            nbar (float): thermal population of the mode
             mode (int): which mode to prepare the thermal state in
         """
         raise NotImplementedError
@@ -389,9 +409,6 @@ class BaseBackend:
     def squeeze(self, z, mode):
         """Apply the squeezing operation to the specified mode.
 
-        .. todo:: This could be rewritten to also use the polar
-            representation of z, i.e., (r,p).
-
         Args:
             z (complex): squeezing parameter
             mode (int): which mode to apply the squeeze to
@@ -410,30 +427,33 @@ class BaseBackend:
         raise NotImplementedError
 
     def loss(self, T, mode):
-        """Perform a loss channel operation on the specified mode.
+        r"""Perform a loss channel operation on the specified mode.
 
         Args:
-            T: loss parameter
+            T (float): loss parameter, :math:`0\leq T\leq 1`.
             mode (int): index of mode where operation is carried out
         """
         raise NotImplementedError
 
     def measure_homodyne(self, phi, mode, select=None, **kwargs):
-        r"""Measure a phase space quadrature of the given mode.
+        r"""Measure a :ref:`phase space quadrature <homodyne>` of the given mode.
 
         For the measured mode, samples the probability distribution
         :math:`f(q) = \bra{q}_x R^\dagger(\phi) \rho R(\phi) \ket{q}_x`
         and returns the sampled value.
 
-        Updates the current state of the circuit such that the measured mode is reset to the vacuum state.
-        This is because we cannot represent exact position or momentum eigenstates in any of the backends,
-        and experimentally the photons are destroyed in a homodyne measurement.
+        Updates the current state of the circuit such that the measured mode is reset
+        to the vacuum state. This is because we cannot represent exact position or
+        momentum eigenstates in any of the backends, and experimentally the photons
+        are destroyed in a homodyne measurement.
 
         Args:
             phi (float): phase angle of the quadrature to measure (x: :math:`\phi=0`, p: :math:`\phi=\pi/2`)
-            mode (Sequence[int]): which mode to measure
-            select (float): (Optional) desired values of measurement results. Allows user to post-select on specific measurement results instead of randomly sampling.
-            **kwargs: can be used to pass user-specified numerical parameters to the backend. Options for such arguments will be documented in the respective subclasses.
+            mode (int): which mode to measure
+            select (float): (Optional) desired values of measurement results.
+                Allows user to post-select on specific measurement results instead of randomly sampling.
+            **kwargs: can be used to pass user-specified numerical parameters to the backend.
+                Options for such arguments will be documented in the respective subclasses.
 
         Returns:
             float: measured value
@@ -500,15 +520,19 @@ class BaseFock(BaseBackend):
     def prepare_ket_state(self, state, modes):
         r"""Prepare the given ket state (in the Fock basis) in the specified modes.
 
-        The requested mode(s) is/are traced out and replaced with the given ket state (in the Fock basis).
-        As a result the state may have to be described using a density matrix.
+        The requested mode(s) is/are traced out and replaced with the given ket state
+        (in the Fock basis). As a result the state may have to be described using a
+        density matrix.
 
         Args:
             state (array): state in the Fock basis
-                The state can be given in either vector form, with one index, or tensor form, with one index per mode.
-                For backends supporting batched mode, state can be a batch of such vectors or tensors.
+                The state can be given in either vector form, with one index,
+                or tensor form, with one index per mode. For backends supporting batched
+                mode, state can be a batch of such vectors or tensors.
             modes (int or Sequence[int]): which mode to prepare the state in
-                If modes is not ordered this is take into account when preparing the state, i.e., when a two mode state is prepared in modes=[3,1], then the first mode of state goes into mode 3 and the second mode goes into mode 1 of the simulator.
+                If modes is not ordered this is take into account when preparing the state,
+                i.e., when a two mode state is prepared in modes=[3,1], then the first
+                mode of state goes into mode 3 and the second mode goes into mode 1 of the simulator.
         """
         raise NotImplementedError
 
@@ -520,10 +544,14 @@ class BaseFock(BaseBackend):
 
         Args:
             state (array): state in the Fock basis
-                The state can be given in either matrix form, with two indices, or tensor form, with two indices per mode.
-                For backends supporting batched mode, state can be a batch of such matrices or tensors.
+                The state can be given in either matrix form, with two indices, or tensor
+                form, with two indices per mode. For backends supporting batched mode,
+                state can be a batch of such matrices or tensors.
             modes (int or Sequence[int]): which mode to prepare the state in
-                If modes is not ordered this is take into account when preparing the state, i.e., when a two mode state is prepared in modes=[3,1], then the first mode of state goes into mode 3 and the second mode goes into mode 1 of the simulator.
+                If modes is not ordered this is take into account when preparing the
+                state, i.e., when a two mode state is prepared in modes=[3,1], then
+                the first mode of state goes into mode 3 and the second mode goes
+                into mode 1 of the simulator.
         """
         raise NotImplementedError
 
@@ -531,9 +559,12 @@ class BaseFock(BaseBackend):
     def cubic_phase(self, gamma, mode):
         r"""Apply the cubic phase operation to the specified mode.
 
-        .. warning:: The cubic phase gate can suffer heavily from numerical inaccuracies due to finite-dimensional cutoffs in the Fock basis.
-                     The gate implementation in Strawberry Fields is unitary, but it does not implement an exact cubic phase gate.
-                     The Kerr gate provides an alternative non-Gaussian gate.
+        .. warning::
+            The cubic phase gate can suffer heavily from numerical inaccuracies
+            due to finite-dimensional cutoffs in the Fock basis. The gate
+            implementation in Strawberry Fields is unitary, but it
+            does not implement an exact cubic phase gate. The Kerr gate
+            provides an alternative non-Gaussian gate.
 
         Args:
             gamma (float): cubic phase shift
@@ -557,7 +588,8 @@ class BaseFock(BaseBackend):
 
         Args:
             modes (Sequence[int]): which modes to measure
-            select (Sequence[int]): (Optional) desired values of measurement results. Allows user to post-select on specific measurement results instead of randomly sampling.
+            select (Sequence[int]): (Optional) desired values of measurement results.
+                Allows user to post-select on specific measurement results instead of randomly sampling.
 
         Returns:
             tuple[int]: corresponding measurement results
@@ -581,6 +613,10 @@ class BaseFock(BaseBackend):
 
 class BaseGaussian(BaseBackend):
     """Abstract base class for backends that are only capable of Gaussian state manipulation."""
+
+    def __init__(self):
+        super().__init__()
+        self._supported["gaussian"] = True
 
     def measure_heterodyne(self, mode, select=None):
         r"""Perform a heterodyne measurement on the given mode.

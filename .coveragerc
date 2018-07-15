@@ -15,6 +15,7 @@ exclude_lines =
 
     # print statements
     def __str__
+    def __format__
     def _print_list
 
     # Don't complain if tests don't hit defensive assertion code:
@@ -29,6 +30,7 @@ exclude_lines =
     raise IndexError
     raise FileNotFoundError
     raise NotADirectoryError
+    raise MergeFailure
     return __version__ 
     if len(lst) != self._num_modes: 
     elif max(lst) >= self._trunc: 

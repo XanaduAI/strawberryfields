@@ -5,10 +5,9 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
 import numpy as np
 from scipy.special import factorial
+
 from defaults import GaussianBaseTest
 
 
@@ -32,6 +31,7 @@ class BasicTests(GaussianBaseTest):
     self.assertAllTrue(self.circuit.is_vacuum(self.tol))
 
   def test_mean_vacuum(self):
+    self.logTestName()
     x = np.empty(0)
     for i in range(n_meas):
       self.circuit.reset(pure=self.kwargs['pure'])
@@ -42,6 +42,7 @@ class BasicTests(GaussianBaseTest):
     
 
   def test_mean_coherent(self):
+    self.logTestName()
     x = np.empty(0)
     for i in range(n_meas):
       self.circuit.reset(pure=self.kwargs['pure'])
@@ -51,6 +52,7 @@ class BasicTests(GaussianBaseTest):
     self.assertAllAlmostEqual(x.mean(), disp_val, delta = std_10 + self.tol)
 
   def test_std_vacuum(self):
+    self.logTestName()
     x = np.empty(0)
     for i in range(n_meas):
       self.circuit.reset(pure=self.kwargs['pure'])

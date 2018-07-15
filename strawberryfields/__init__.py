@@ -60,30 +60,28 @@ __all__ = ['Engine', 'convert', 'version']
 
 def version():
     r"""
-    Get version number of strawberryfields
+    Version number of Strawberry Fields.
 
     Returns:
-      str: The package version number
+      str: package version number
     """
     return __version__
 
 
-def Engine(num_subsystems, *args, **kwargs):
+def Engine(num_subsystems, **kwargs):
     r"""
     Helper function for creating an engine and associated quantum register.
 
     Args:
-      num_subsystems (int): Number of subsystems in the quantum register.
+      num_subsystems (int): number of subsystems in the quantum register
+    Keyword Args:
       hbar (float): The value of :math:`\hbar` to initialise the engine with, depending on the
         conventions followed. By default, :math:`\hbar=2`. See
         :ref:`conventions` for more details.
-      *args: Optional arguments to pass to the backend.
-      **kwargs: Optional keyword arguments to pass to the backend.
 
     Returns:
         (strawberryFields.engine.Engine, tuple[RegRef]): tuple containing (i) a Strawberry Fields Engine object, and (ii) a tuple of quantum register references
 
     """
-    hbar = kwargs.pop('hbar', 2)
-    eng = _Engine(num_subsystems, hbar, *args, **kwargs)
+    eng = _Engine(num_subsystems, **kwargs)
     return eng, eng.register

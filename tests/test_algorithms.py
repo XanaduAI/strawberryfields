@@ -2,20 +2,15 @@
 Unit tests for the :mod:`strawberryfields` provided algorithms.
 """
 
-import os
-import sys
-import signal
-
-import re
 import unittest
 
 import numpy as np
 from numpy import pi
 
-import strawberryfields as sf
+from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.utils import scale
-from defaults import BaseTest, FockBaseTest, GaussianBaseTest
+
 
 float_regex = r'(-)?(\d+\.\d+)'
 
@@ -28,9 +23,12 @@ class Teleportation(BaseTest):
     def setUp(self):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems)
+        # attach the backend (NOTE: self.backend is shared between the tests, make sure it is reset before use!)
+        self.eng.backend = self.backend
+        self.backend.reset(cutoff_dim=self.cutoff)
 
     def test_teleportation_fidelity(self):
-        self.eng.reset()
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
@@ -45,7 +43,7 @@ class Teleportation(BaseTest):
             MeasureHomodyne(0, select=0) | q[0]
             MeasureHomodyne(pi/2, select=0) | q[1]
 
-        state = self.eng.run(backend=self.backend, cutoff_dim=self.cutoff)
+        state = self.eng.run()
         fidelity = state.fidelity_coherent([0,0,0.5+0.2j])
         self.assertAllAlmostEqual(fidelity, 1, delta=self.delta)
 
@@ -57,9 +55,11 @@ class GateTeleportation(GaussianBaseTest):
     def setUp(self):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems)
+        self.eng.backend = self.backend
+        self.backend.reset()
 
     def test_gaussian_states_match(self):
-        self.eng.reset()
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
@@ -82,7 +82,7 @@ class GateTeleportation(GaussianBaseTest):
             Pgate(0.5)    | q[3]
             Fourier       | q[3]
 
-        self.eng.run(backend=self.backend)
+        self.eng.run()
         cov1 = self.eng.backend.state([2]).cov()
         cov2 = self.eng.backend.state([3]).cov()
         self.assertAllAlmostEqual(cov1, cov2, delta=self.delta)
@@ -90,7 +90,7 @@ class GateTeleportation(GaussianBaseTest):
 
 class GaussianBosonSampling(BaseTest):
     num_subsystems = 4
-    cutoff = 7
+    cutoff = 6
     measure_states = [[0,0,0,0], [1,1,0,0], [0,1,0,1], [1,1,1,1], [2,0,0,0]]
     results = [
             0.176378447614135,
@@ -103,9 +103,11 @@ class GaussianBosonSampling(BaseTest):
     def setUp(self):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems)
+        self.eng.backend = self.backend
+        self.backend.reset(cutoff_dim=self.cutoff)
 
     def test_fock_probs(self):
-        self.eng.reset()
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
@@ -131,8 +133,7 @@ class GaussianBosonSampling(BaseTest):
             BSgate(0.4348, 0.0798)  | (q[0], q[1])
             BSgate(0.4368, 0.6157)  | (q[2], q[3])
 
-        self.eng.run(backend=self.backend, cutoff_dim=self.cutoff)
-        state = self.eng.backend.state()
+        state = self.eng.run()
         probs = [state.fock_prob(i) for i in self.measure_states]
         probs = np.array(probs).T.flatten()
         res = np.tile(self.results, self.bsize).flatten()
@@ -141,16 +142,18 @@ class GaussianBosonSampling(BaseTest):
 
 class BosonSampling(FockBaseTest):
     num_subsystems = 4
-    cutoff = 7
+    cutoff = 6
     measure_states = [[1,1,0,1], [2,0,0,1]]
     results = [0.174689160486, 0.106441927246]
 
     def setUp(self):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems)
+        self.eng.backend = self.backend
+        self.backend.reset(cutoff_dim=self.cutoff)
 
     def test_fock_probs(self):
-        self.eng.reset()
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
@@ -175,8 +178,7 @@ class BosonSampling(FockBaseTest):
             BSgate(0.4348, 0.0798)  | (q[0], q[1])
             BSgate(0.4368, 0.6157)  | (q[2], q[3])
 
-        self.eng.run(backend=self.backend, cutoff_dim=self.cutoff)
-        state = self.eng.backend.state()
+        state = self.eng.run()
         probs = [state.fock_prob(i) for i in self.measure_states]
         probs = np.array(probs).T.flatten()
         res = np.tile(self.results, self.bsize).flatten()
@@ -199,9 +201,11 @@ class HamiltonianSimulation(FockBaseTest):
     def setUp(self):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems)
+        self.eng.backend = self.backend
+        self.backend.reset(cutoff_dim=self.cutoff)
 
     def test_fock_probs(self):
-        self.eng.reset()
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
@@ -217,8 +221,7 @@ class HamiltonianSimulation(FockBaseTest):
                 Kgate(self.r)  | q[1]
                 Rgate(-self.r) | q[1]
 
-        self.eng.run(backend=self.backend, cutoff_dim=self.cutoff)
-        state = self.eng.backend.state()
+        state = self.eng.run()
         probs = [state.fock_prob(i) for i in self.measure_states]
         probs = np.array(probs).T.flatten()
         res = np.tile(self.results, self.bsize).flatten()
@@ -232,9 +235,11 @@ class GaussianCloning(GaussianBaseTest):
     def setUp(self):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems)
+        self.eng.backend = self.backend
+        self.backend.reset()
 
     def test_average_fidelity(self):
-        self.eng.reset()
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
@@ -248,7 +253,7 @@ class GaussianCloning(GaussianBaseTest):
             BSgate() | (q[0], q[3])
 
         # check outputs are identical clones
-        state = self.eng.run(backend=self.backend, modes=[0,3])
+        state = self.eng.run(modes=[0,3])
         coh = np.array([state.is_coherent(i) for i in range(2)])
         disp = state.displacement()
         self.assertAllTrue(coh)
@@ -258,7 +263,8 @@ class GaussianCloning(GaussianBaseTest):
         a = np.empty([self.shots], dtype=np.complex128)
 
         for i in range(self.shots):
-            state = self.eng.run(backend=self.backend, reset_backend=True, modes=[0])
+            self.eng.reset(keep_history=True)
+            state = self.eng.run(modes=[0])
             f[i] = state.fidelity_coherent([0.7+1.2j])
             a[i] = state.displacement()
 

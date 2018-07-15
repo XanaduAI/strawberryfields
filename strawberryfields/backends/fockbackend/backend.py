@@ -72,11 +72,11 @@ class FockBackend(BaseFock):
         # pylint: disable=attribute-defined-outside-init
         if cutoff_dim is None:
             raise ValueError("Argument 'cutoff_dim' must be passed to the Fock backend")
-        elif not isinstance(cutoff_dim, int):
+        if not isinstance(cutoff_dim, int):
             raise ValueError("Argument 'cutoff_dim' must be a positive integer")
-        elif not isinstance(num_subsystems, int):
+        if not isinstance(num_subsystems, int):
             raise ValueError("Argument 'num_subsystems' must be a positive integer")
-        elif not isinstance(pure, bool):
+        if not isinstance(pure, bool):
             raise ValueError("Argument 'pure' must be either True or False")
 
         self._init_modes = num_subsystems
@@ -123,8 +123,9 @@ class FockBackend(BaseFock):
         Args:
             pure (bool): whether to use a pure state representation upon reset
         """
+        cutoff = kwargs.get('cutoff_dim', self.qreg._trunc)
         self._modemap.reset()
-        self.qreg.reset(pure, num_subsystems=self._init_modes)
+        self.qreg.reset(pure, num_subsystems=self._init_modes, cutoff_dim=cutoff)
 
     def prepare_vacuum_state(self, mode):
         """Prepare the vacuum state on the specified mode.
@@ -178,7 +179,7 @@ class FockBackend(BaseFock):
         Note: this may convert the state representation to mixed.
 
         Args:
-            nbar (int): thermal population of the mode
+            nbar (float): mean thermal population of the mode
             mode (int): which mode to prepare the thermal state in
         """
         self.qreg.prepare_mode_thermal(nbar, self._remap_modes(mode))
@@ -297,10 +298,10 @@ class FockBackend(BaseFock):
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
         Args:
-                modes (int or Sequence[int]): specifies the mode or modes to restrict the return state to.
-                        This argument is optional; the default value ``modes=None`` returns the state containing all modes.
+            modes (int, Sequence[int], None): specifies the mode or modes to restrict the return state to.
+                If none returns the state containing all modes.
         Returns:
-                An instance of the Strawberry Fields FockState class.
+            BaseFockState: an instance of the Strawberry Fields FockState class.
         """
         s, pure = self.qreg.get_state()
 

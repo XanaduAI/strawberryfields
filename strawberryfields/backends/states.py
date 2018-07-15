@@ -126,9 +126,10 @@ from .shared_ops import rotation_matrix as _R
 
 indices = string.ascii_lowercase
 
-
 class BaseState(abc.ABC):
     r"""Abstract base class for the representation of quantum states."""
+    EQ_TOLERANCE = 1e-10
+
     def __init__(self, num_modes, hbar=2, mode_names=None):
         self._modes = num_modes
         self._hbar = hbar
@@ -139,6 +140,15 @@ class BaseState(abc.ABC):
             self._modemap = {i:"mode {}".format(i) for i in range(num_modes)}
         else:
             self._modemap = {i:'{}'.format(j) for i, j in zip(range(num_modes), mode_names)}
+
+        self._str = "<BaseState: num_modes={}, pure={}, hbar={}>".format(
+            self.num_modes, self._pure, self._hbar)
+
+    def __str__(self):
+        return self._str
+
+    def __repr__(self):
+        return self._str
 
     @property
     def data(self):
@@ -367,11 +377,28 @@ class BaseFockState(BaseState):
         self._str = "<FockState: num_modes={}, cutoff={}, pure={}, hbar={}>".format(
             self.num_modes, self._cutoff, self._pure, self._hbar)
 
-    def __str__(self):
-        return self._str
+    def __eq__(self, other):
+        """Equality operator for BaseFockState.
 
-    def __repr__(self):
-        return self._str
+        Returns True if other BaseFockState is close to self.
+        This is done by comparing the dm attribute - if within
+        the EQ_TOLERANCE, True is returned.
+
+        Args:
+            other (BaseFockState): BaseFockState to compare against.
+        """
+        if not isinstance(other, type(self)):
+            return False
+
+        if self.num_modes != other.num_modes:
+            return False
+
+        if self.data.shape != other.data.shape:
+            return False
+
+        if np.all(np.abs(self.dm() - other.dm()) <= self.EQ_TOLERANCE):
+            return True
+        return False
 
     @property
     def cutoff_dim(self):
@@ -683,17 +710,33 @@ class BaseGaussianState(BaseState):
         self._alpha = self._mu[:self._modes] + 1j*self._mu[self._modes:]
         self._alpha /= np.sqrt(2*self._hbar)
 
-        self._pure = np.abs(np.linalg.det(self._cov) - (self._hbar/2)**(2*self._modes)) < 1e-10
+        self._pure = np.abs(np.linalg.det(self._cov) - (self._hbar/2)**(2*self._modes)) < self.EQ_TOLERANCE
 
         self._basis = 'gaussian'
         self._str = "<GaussianState: num_modes={}, pure={}, hbar={}>".format(
             self.num_modes, self._pure, self._hbar)
 
-    def __str__(self):
-        return self._str
+    def __eq__(self, other):
+        """Equality operator for BaseGaussianState.
 
-    def __repr__(self):
-        return self._str
+        Returns True if other BaseGaussianState is close to self.
+        This is done by comparing the means vector and cov matrix.
+        If both are within the EQ_TOLERANCE, True is returned.
+
+        Args:
+            other (BaseGaussianState): BaseGaussianState to compare against.
+        """
+        #pylint: disable=protected-access
+        if not isinstance(other, type(self)):
+            return False
+
+        if self.num_modes != other.num_modes:
+            return False
+
+        if np.all(np.abs(self._mu - other._mu) <= self.EQ_TOLERANCE) and \
+                np.all(np.abs(self._cov - other._cov) <= self.EQ_TOLERANCE):
+            return True
+        return False
 
     def means(self):
         r"""The vector of means describing the Gaussian state.

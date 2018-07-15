@@ -5,11 +5,12 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
+
 import numpy as np
 from scipy.special import factorial
+
 from defaults import BaseTest, FockBaseTest
+
 
 mag_alphas = np.linspace(0, .8, 4)
 phase_alphas = np.linspace(0, 2 * np.pi, 7, endpoint=False)
@@ -23,11 +24,13 @@ class BasicTests(BaseTest):
 
     def test_prepare_vac(self):
         """Tests the ability to prepare vacuum states."""
+        self.logTestName()
         self.circuit.prepare_vacuum_state(0)
         self.assertAllTrue(self.circuit.is_vacuum(self.tol))
 
     def test_fidelity_coherent(self):
         """Tests if a range of coherent states have the correct fidelity."""
+        self.logTestName()
         for mag_alpha in mag_alphas:
             for phase_alpha in phase_alphas:
                 self.circuit.reset(pure=self.kwargs['pure'])
@@ -37,6 +40,7 @@ class BasicTests(BaseTest):
                 self.assertAllAlmostEqual(state.fidelity_coherent([alpha]), 1, delta=self.tol)
 
     def test_prepare_thermal_state(self):
+        self.logTestName()
         for nbar in nbars:
             self.circuit.reset(pure=self.kwargs['pure'])
             self.circuit.prepare_thermal_state(nbar, 0)
@@ -51,6 +55,7 @@ class FockBasisTests(FockBaseTest):
 
     def test_normalized_prepare_vac(self):
         """Tests the ability to prepare vacuum states."""
+        self.logTestName()
         self.circuit.prepare_vacuum_state(0)
         state = self.circuit.state()
         tr = state.trace()
@@ -58,6 +63,7 @@ class FockBasisTests(FockBaseTest):
 
     def test_normalized_coherent_state(self):
         """Tests if a range of coherent states are normalized."""
+        self.logTestName()
         for mag_alpha in mag_alphas:
             for phase_alpha in phase_alphas:
                 alpha = mag_alpha * np.exp(1j * phase_alpha)
@@ -70,6 +76,7 @@ class FockBasisTests(FockBaseTest):
 
     def test_prepare_ket_state(self):
         """Tests if a ket state with arbitrary parameters is correctly prepared."""
+        self.logTestName()
         for _ in range(10):
             random_ket = np.random.uniform(-1, 1, self.D) + 1j*np.random.uniform(-1, 1, self.D)
             random_ket = random_ket / np.linalg.norm(random_ket)
@@ -79,7 +86,10 @@ class FockBasisTests(FockBaseTest):
             self.assertAllAlmostEqual(state.fidelity(random_ket, 0), 1, delta=self.tol)
 
     def test_prepare_batched_ket_state(self):
-        """Tests if a batch of ket states with arbitrary parameters is correctly prepared by comparing the fock probabilities of the batched case with individual runs with non batched input states."""
+        """Tests if a batch of ket states with arbitrary parameters is correctly
+        prepared by comparing the fock probabilities of the batched case with
+        individual runs with non batched input states."""
+        self.logTestName()
 
         if not self.args.batched:
             return
@@ -105,6 +115,7 @@ class FockBasisTests(FockBaseTest):
 
     def test_prepare_rank_two_dm_state(self):
         """Tests if rank two dm states with arbitrary parameters are correctly prepared."""
+        self.logTestName()
         for _ in range(10):
             random_ket1 = np.random.uniform(-1, 1, self.D) + 1j*np.random.uniform(-1, 1, self.D)
             random_ket1 = random_ket1 / np.linalg.norm(random_ket1)
@@ -135,6 +146,7 @@ class FockBasisTests(FockBaseTest):
 
     def test_prepare_random_dm_state(self):
         """Tests if a random dm state is correctly prepared."""
+        self.logTestName()
         random_rho = np.random.normal(size=[self.D, self.D]) + 1j*np.random.normal(size=[self.D, self.D])
         random_rho = np.dot(random_rho.conj().T, random_rho)
         random_rho = random_rho/random_rho.trace()
@@ -157,6 +169,7 @@ class FockBasisTests(FockBaseTest):
             kets_mixed_probs += e*probs_for_this_v
 
         self.assertAllAlmostEqual(rho_probs, kets_mixed_probs, delta=self.tol)
+
 
 if __name__=="__main__":
     # run the tests in this file

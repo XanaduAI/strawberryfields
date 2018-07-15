@@ -435,7 +435,7 @@ class FockStateTF(BaseFockState):
             rho = self.reduced_dm([mode]) # don't pass kwargs yet
 
             phi = tf.convert_to_tensor(phi)
-            if self.batched and len(phi.shape) == 0:
+            if self.batched and len(phi.shape) == 0: #pylint: disable=len-as-condition
                 phi = tf.expand_dims(phi, 0)
             larger_cutoff = self.cutoff_dim + 1 # start one dimension higher to avoid truncation errors
             R = phase_shifter_matrix(phi, larger_cutoff, batched=self.batched)

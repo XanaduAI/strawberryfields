@@ -14,7 +14,7 @@
 # serve to show the default.
 
 import sys, os, re
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -44,26 +44,32 @@ MOCK_MODULES = [
     'scipy.stats',
     'scipy.linalg',
     'tensorflow',
-    'networkx'
+    'networkx',
+    'numbers'
     ]
 
 mock_math_fn = Mock(__name__='foo')
-mock_fns = {"sin": mock_math_fn,
-               "cos": mock_math_fn,
-               "exp": mock_math_fn,
-               "sqrt": mock_math_fn,
-               "arctan": mock_math_fn,
-               "arccosh": mock_math_fn,
-               "sign": mock_math_fn,
-               "arctan2": mock_math_fn,
-               "arcsinh": mock_math_fn,
-               "cosh": mock_math_fn,
-               "tanh": mock_math_fn,
-               "log": mock_math_fn,
-               "matmul": mock_math_fn,
-               "Tensor": list,
-               "Variable": list,
-               "ndarray": list}
+mock_fns = {"abs": mock_math_fn,
+            "sin": mock_math_fn,
+            "cos": mock_math_fn,
+            "exp": mock_math_fn,
+            "sqrt": mock_math_fn,
+            "arctan": mock_math_fn,
+            "arccosh": mock_math_fn,
+            "sign": mock_math_fn,
+            "arctan2": mock_math_fn,
+            "arcsinh": mock_math_fn,
+            "cosh": mock_math_fn,
+            "tanh": mock_math_fn,
+            "log": mock_math_fn,
+            "matmul": mock_math_fn,
+            "squeeze": mock_math_fn,
+            "expand_dims": mock_math_fn,
+            "transpose": mock_math_fn,
+            "Number": int,
+            "Tensor": list,
+            "Variable": list,
+            "ndarray": MagicMock}
 
 mock = Mock(**mock_fns)
 for mod_name in MOCK_MODULES:

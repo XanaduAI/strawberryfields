@@ -5,10 +5,17 @@ Default parameters, commandline arguments and common routines for the unit tests
 import argparse
 import unittest
 import os
+import sys
+
+import logging
+
 import numpy as np
 
+# Make sure strawberryfields is always imported from the same source distribution where the tests reside, not e.g. from site-packages.
+# See https://docs.python-guide.org/en/latest/writing/structure/#test-suite
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import strawberryfields
 from strawberryfields import backends
-from strawberryfields.backends import load_backend
 
 
 BACKEND = "fock"
@@ -20,17 +27,31 @@ HBAR = 2
 BATCHED = False
 MIXED = False
 
+
 if "BACKEND" in os.environ:
     BACKEND = os.environ["BACKEND"]
     print('Backend:', BACKEND)
+
 
 if "BATCHED" in os.environ:
     BATCHED = bool(int(os.environ["BATCHED"]))
     print('Batched:', BATCHED)
 
+
 if "MIXED" in os.environ:
     MIXED = bool(int(os.environ["MIXED"]))
     print('Mixed:', MIXED)
+
+
+if "LOGGING" in os.environ:
+    logLevel = os.environ["LOGGING"]
+    print('Logging:', logLevel)
+    numeric_level = getattr(logging, logLevel.upper(), 10)
+else:
+    numeric_level = 100
+
+logging.basicConfig(level=numeric_level, format='\n%(asctime)s %(levelname)s %(message)s', datefmt='%H:%M:%S')
+logging.captureWarnings(True)
 
 def get_commandline_args():
     """Parse the commandline arguments for the unit tests.
@@ -66,7 +87,7 @@ def setup_backend(args):
     """Loads the chosen backend, checks that it supports the requested properties.
     """
     args.backend_name = args.backend
-    backend = load_backend(args.backend)
+    backend = backends.load_backend(args.backend)
     args.backend = backend
 
     args.fock_support     = backend.supports("fock_basis")
@@ -109,6 +130,8 @@ class BaseTest(unittest.TestCase):
 
         self.backend.begin_circuit(num_subsystems=self.num_subsystems, hbar=self.hbar, **self.kwargs)
 
+    def logTestName(self):
+        logging.info('{}'.format(self.id()))
 
     def assertAllAlmostEqual(self, first, second, delta, msg=None):
         """
@@ -129,7 +152,6 @@ class BaseTest(unittest.TestCase):
         msg = self._formatMessage(msg, standardMsg)
         raise self.failureException(msg)
 
-
     def assertAllEqual(self, first, second, msg=None):
         """
         Like assertEqual, but works with arrays. All the corresponding elements have to be equal.
@@ -141,7 +163,6 @@ class BaseTest(unittest.TestCase):
         Like assertTrue, but works with arrays. All the corresponding elements have to be True.
         """
         return self.assertTrue(np.all(value))
-
 
 
 class FockBaseTest(BaseTest):

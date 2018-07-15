@@ -29,8 +29,9 @@ Contents
      QReg
 
 """
-# pylint: disable=too-many-arguments,too-many-statements,too-many-branches,protected-access
+# pylint: disable=too-many-arguments,too-many-statements,too-many-branches,protected-access,attribute-defined-outside-init
 
+import numbers
 from itertools import product
 from string import ascii_lowercase as indices
 
@@ -40,7 +41,7 @@ import tensorflow as tf
 
 from . import ops
 
-class QReg(object):
+class QReg:
     """Base class for representing and operating on a collection of
          CV quantum optics modes in the Fock basis.
          The modes are initialized in the (multimode) vacuum state,
@@ -48,24 +49,16 @@ class QReg(object):
          The state of the modes is manipulated by calling the various methods."""
     # pylint: disable=too-many-instance-attributes,too-many-public-methods
     def __init__(self, graph, num_modes, cutoff_dim, hbar=2., pure=True, batch_size=None):
-        self._graph = graph
-        with self._graph.as_default():
-            self._num_modes = num_modes
-            self._cutoff_dim = cutoff_dim #TODO: this is called _trunc in the fockbackend -> unify notation
-            self._hbar = hbar
-            self._batch_size = batch_size
-            self._batched = False if batch_size is None else True
-            self._state_is_pure = pure
-            self._state_history = []
-            self._cache = {}
-            self._make_vac_states()
-            self.reset(pure)
+        self._graph = None # will be set when reset is called below, but reset needs something to compare to
+        self._batch_size = batch_size
+        self._batched = False if batch_size is None else True
+        self.reset(pure, graph, num_subsystems=num_modes, cutoff_dim=cutoff_dim, hbar=hbar)
 
-    def _make_vac_states(self):
+    def _make_vac_states(self, cutoff_dim):
         """Make vacuum state tensors for the underlying graph"""
         with self._graph.as_default():
             one = tf.cast([1.0], ops.def_type)
-            v = tf.scatter_nd([[0]], one, [self._cutoff_dim])
+            v = tf.scatter_nd([[0]], one, [cutoff_dim])
             self._single_mode_pure_vac = v
             self._single_mode_mixed_vac = tf.einsum('i,j->ij', v, v)
             if self._batched:
@@ -195,39 +188,58 @@ class QReg(object):
         self._update_state(new_state)
         self._num_modes += num_modes
 
-    def reset(self, pure=True, graph=None, num_subsystems=None):
-        """
+    def reset(self, pure=True, graph=None, num_subsystems=None, cutoff_dim=None, hbar=None):
+        r"""
         Resets the state of the circuit to have all modes in vacuum.
-        Args:
-            pure (bool): If True, the reset circuit will represent its state as a pure state. If False, the representation will be mixed.
-            graph: If this is an instance of tf.Graph, then the underlying graph (and any associated attributes) is replaced with this supplied graph. Otherwise, the same underlying
-            graph (and all its defined operations) will be kept.
-            num_subsystems (int, optional): Sets the number of modes in the reset
-                circuit. Default is unchanged.
+        For all the parameters, None means unchanged.
 
-        Returns:
-            None
+        Args:
+            pure (bool): if True, the reset circuit will represent its state as a pure state. If False, the representation will be mixed.
+            graph (tf.Graph): the underlying graph (and any associated attributes) is replaced with this supplied graph. If None, the same underlying
+              graph (and all its defined operations) will be kept.
+            num_subsystems (int): sets the number of modes in the reset circuit.
+            cutoff_dim (int): new Fock space cutoff dimension to use.
+            hbar (float): new :math:`\hbar` value. See :ref:`conventions` for more details.
         """
-        if isinstance(graph, tf.Graph):
+        if pure is not None:
+            if not isinstance(pure, bool):
+                raise ValueError("Argument 'pure' must be either True or False")
+            self._state_is_pure = pure
+
+        if num_subsystems is not None:
+            if not isinstance(num_subsystems, int):
+                raise ValueError("Argument 'num_subsystems' must be a positive integer")
+            self._num_modes = num_subsystems
+
+        if cutoff_dim is not None:
+            if not isinstance(cutoff_dim, int) or cutoff_dim < 1:
+                raise ValueError("Argument 'cutoff_dim' must be a positive integer")
+            self._cutoff_dim = cutoff_dim
+
+        if hbar is not None:
+            if not isinstance(hbar, numbers.Real) or hbar <= 0:
+                raise ValueError("Argument 'hbar' must be a positive number")
+            self._hbar = hbar
+
+        if graph is not None:
+            if not isinstance(graph, tf.Graph):
+                raise ValueError("Argument 'graph' must be a tf.Graph")
             if graph != self._graph:
-                del self._graph  # get rid of the old graph from memory
                 self._graph = graph
                 ops.get_prefac_tensor.cache_clear() # clear any cached tensors that may live on old graph
-            self._make_vac_states()
             self._state_history = []
             self._cache = {}
 
-        if num_subsystems is not None:
-            self._num_modes = num_subsystems
-
         with self._graph.as_default():
+            # todo vac states only need to be remade if graph or cutoff_dim changes?
+            self._make_vac_states(self._cutoff_dim)
             single_mode_vac = self._single_mode_pure_vac if pure else self._single_mode_mixed_vac
             if self._num_modes == 1:
                 vac = single_mode_vac
             else:
                 vac = ops.combine_single_modes([single_mode_vac] * self._num_modes, self._batch_size)
+            vac = tf.identity(vac, name="Vacuum")
             self._update_state(vac)
-            self._state_is_pure = pure
 
     def prepare_vacuum_state(self, mode):
         """
@@ -288,25 +300,30 @@ class QReg(object):
                 self._replace_and_update(displaced_squeezed, mode)
 
     def prepare_multimode(self, state, modes=None, input_state_is_pure=False):
-        r"""
-        Prepares a given mode or list of modes in the given state.
+        r"""Prepares a given mode or list of modes in the given state.
 
         After the preparation the system is in a mixed product state,
         with the specified modes replaced by state.
-        The given state can be either in tensor form or in matrix/vector form and can be a batch of states or a single state. This method needs to know whether
+
+        The given state can be either in tensor form or in matrix/vector form and
+        can be a batch of states or a single state. This method needs to know whether
         input_state_is_pure to distinguish between a batch of pure states and a mixed state.
+
         If modes is not ordered, the subsystems of the input are
         reordered to reflect that, i.e., if modes=[3,1], then the first mode
         of state ends up in mode 3 and the second mode of state ends up in
         mode 1 of the output state.
+
         If modes is None, it is attempted to prepare state in all modes.
         The reduced state on all other modes remains unchainged and
         the final state is product with respect to the partition into
         the modes in modes and the complement.
 
         Args:
-            state (array): vector, matrix, or tensor representation of the ket state or dm state (or a batch of such states) in the fock basis to prepare
-            modes (list[int] or non-negative int or None): The mode(s) into which state is to be prepared. Needs not be ordered.
+            state (array): vector, matrix, or tensor representation of the ket state or
+                density matrix state (or a batch of such states) in the fock basis to prepare
+            modes (list[int] or non-negative int or None): The mode(s) into which state is
+                to be prepared. Needs not be ordered.
         """
         if modes is None:
             modes = list(range(self._num_modes))
@@ -333,9 +350,9 @@ class QReg(object):
 
         # reshape to support input both as tensor and vector/matrix
         if state.shape == pure_shape_as_vector:
-            state = state.reshape(pure_shape)
+            state = tf.reshape(state, pure_shape)
         elif state.shape == mixed_shape_as_matrix:
-            state = state.reshape(mixed_shape)
+            state = tf.reshape(state, mixed_shape)
 
         with self._graph.as_default():
             state = tf.cast(tf.convert_to_tensor(state), ops.def_type)
@@ -697,7 +714,7 @@ class QReg(object):
 
             if select is not None:
                 meas_result = self._maybe_batch(select)
-                meas_result = tf.cast(meas_result, tf.float64, name="Meas_result")
+                homodyne_sample = tf.cast(meas_result, tf.float64, name="Meas_result")
             else:
                 # create reduced state on mode to be measured
                 reduced_state = ops.reduced_density_matrix(self._state, mode, self._state_is_pure, self._batched)
@@ -758,12 +775,12 @@ class QReg(object):
                 homodyne_sample = tf.gather(q_tensor, samples_idx)
                 homodyne_sample = tf.squeeze(homodyne_sample)
 
-                if evaluate_results:
-                    meas_result = homodyne_sample.eval(feed_dict, session)
-                    if close_session:
-                        session.close()
-                else:
-                    meas_result = tf.identity(homodyne_sample, name="Meas_result")
+            if evaluate_results:
+                meas_result = homodyne_sample.eval(feed_dict, session)
+                if close_session:
+                    session.close()
+            else:
+                meas_result = tf.identity(homodyne_sample, name="Meas_result")
 
             # project remaining modes into conditional state
             if self._num_modes == 1:
