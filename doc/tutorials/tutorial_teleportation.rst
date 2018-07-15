@@ -125,25 +125,29 @@ Running the engine
 
 Once the circuit is constructed, you can run the engine via the :func:`strawberryfields.engine.Engine.run` method:
 
-``eng.run(backend, reset_backend=True, *args, **kwargs)``
+``eng.run(backend=None, return_state=True, modes=None, apply_history=False, **kwargs)``
 
 The :meth:`eng.run <.Engine.run>` method accepts the arguments
 
-* ``backend``: a string representing the Strawberry Fields backend we wish to use; we have the choice of two Fock backends [#]_, the NumPy based (``'fock'``) and Tensorflow (``'tf'``), and one Gaussian backend [#]_ (``'gaussian'``).
+* ``backend``: a string or :class:`~.BaseBackend` object representing the Strawberry Fields backend we wish to use; we have the choice of two Fock backends [#]_, the NumPy based (``'fock'``) and Tensorflow (``'tf'``), and one Gaussian backend [#]_ (``'gaussian'``).
 
   This is *required* the first time running the engine, but optional for subsequent runs - if not provided, the previously used backend will continue to be used.
 
+  Note that if the backend string is altered in a later call to :meth:`eng.run <.Engine.run>`, for example by switching from ``'fock'`` to ``'gaussian'``, this is treated as a new backend, initialised in the vacuum state.
+
 .. 
 
-* ``reset_backend``: a boolean that instructs the engine to begin the simulation with all modes reset to the vacuum state.
-
-  If ``reset_backend=False``, then this is skipped, and the engine will be run using the output simulation state from any previous engine runs.
-
-and returns
-
-* ``state``: an object representing the quantum state after the circuit simulation.
+* ``return_state``: if true, returns an object representing the quantum state after the circuit simulation.
 
   Depending on backend used, the state returned might be a :class:`~.BaseFockState`, which represents the state using the Fock/number basis, or might be a :class:`~.BaseGaussianState`, which represents the state using Gaussian representation, as a vector of means and a covariance matrix. Many methods are provided for state manipulation, see :ref:`state_class` for more details.
+
+.. 
+
+* ``modes``: a list of integers, that specifies which modes we wish to return in the state object. If the state is a mixed state represented by a density matrix, then the engine will automatically perform a partial trace to return only the modes specified. Note that this only affects the returned state object - all modes remain in the backend circuit.
+
+.. 
+
+* ``apply_history``: a boolean that instructs the engine to begin the simulation by reapplying all previously applied circuit operations, before applying any newly queued operations. This is useful if you are changing or resetting the backend, and want to quickly bring the new circuit back to the same state, without re-queueing the same operations.
 
 For more details on the technical differences between the backends, see :ref:`backends`.
 
@@ -170,10 +174,16 @@ Note that :meth:`eng.run <strawberryfields.engine.Engine.run>` can either go ins
 Other useful engine methods that can be called at any time include:
 
 * :func:`eng.print_queue() <strawberryfields.engine.Engine.print_queue>`: print the command queue (the operations to be applied on the next call to :meth:`eng.run <strawberryfields.engine.Engine.run>`)
-* :func:`eng.print_applied() <strawberryfields.engine.Engine.print_applied>`: prints all commands applied on all prior calls to :meth:`eng.run <strawberryfields.engine.Engine.run>` since the backend was last reset.
-* :func:`eng.reset_queue() <strawberryfields.engine.Engine.reset_queue>`: clear all operations from the command queue.
-* :func:`eng.reset_backend() <strawberryfields.engine.Engine.reset_queue>`: retains the command queue, but resets all modes to the vacuum state.
-* :func:`eng.reset()  <strawberryfields.engine.Engine.reset>`: clear all operations from the command queue, *and* resets all modes to the vacuum state.
+
+* :func:`eng.print_applied() <strawberryfields.engine.Engine.print_applied>`: prints all commands applied using :meth:`eng.run <strawberryfields.engine.Engine.run>` since the last backend reset/initialisation.
+
+  - Unlike ``print_queue()``, this shows all applied gate decompositions, which may differ depending on the backend.
+
+* :func:`eng.reset() <strawberryfields.engine.Engine.reset>`: clear all operations from the command queue, and resets the backend circuit to the vacuum state.
+
+  - Optionally, if the keyword argument ``keep_history=True`` is provided, the entire circuit history up to that point, as well as the current command queue, are retained and will be applied on the next call to ``eng.run()``.
+
+* :func:`eng.reset_queue() <strawberryfields.engine.Engine.reset_queue>`: clear all operations from the command queue, leaving the backend circuit unchanged.
 
 Results and visualization
 ==========================

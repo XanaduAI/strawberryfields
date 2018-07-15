@@ -3,15 +3,13 @@ Unit tests for the :mod:`strawberryfields` example programs.
 """
 
 import os
-import sys
-import signal
-
 import re
 import unittest
 from subprocess import Popen, PIPE, check_call, CalledProcessError
-import strawberryfields as sf
+
+from defaults import TFBackendTest, FockBackendTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields import backends
-from defaults import TFBackendTest, FockBackendTest, GaussianBaseTest
+
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 examples_folder = os.path.join(current_dir, os.pardir, 'examples/')

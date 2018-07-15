@@ -2,10 +2,6 @@
 Unit tests for :class:`strawberryfields.backends.states`.
 """
 
-import os
-import sys
-import signal
-
 import unittest
 
 import numpy as np
@@ -13,13 +9,12 @@ from numpy import pi
 from scipy.special import factorial
 from scipy.stats import multivariate_normal
 
-import strawberryfields as sf
+from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.utils import *
-
 from strawberryfields import backends
-from defaults import BaseTest, FockBaseTest, GaussianBaseTest
 from strawberryfields.backends.shared_ops import rotation_matrix as R
+
 
 a = 0.3+0.1j
 r = 0.23
@@ -35,6 +30,7 @@ class BackendStateCreation(BaseTest):
     num_subsystems = 3
 
     def test_full_state_creation(self):
+        self.logTestName()
         state = self.circuit.state(modes=None)
         self.assertEqual(state.num_modes, 3)
         self.assertEqual(state.hbar, self.hbar)
@@ -46,12 +42,14 @@ class BackendStateCreation(BaseTest):
             self.assertEqual(state.cutoff_dim, self.D)
 
     def test_reduced_state_creation(self):
+        self.logTestName()
         state = self.circuit.state(modes=[0, 2])
         self.assertEqual(state.num_modes, 2)
         self.assertEqual(state.mode_names, {0: 'q[0]', 1: 'q[2]'})
         self.assertEqual(state.mode_indices, {'q[0]': 0, 'q[2]': 1})
 
     def test_reduced_state_fidelity(self):
+        self.logTestName()
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_coherent_state(a, 0)
         self.circuit.prepare_squeezed_state(r, phi, 1)
@@ -61,6 +59,7 @@ class BackendStateCreation(BaseTest):
         self.assertAllAlmostEqual(f, 1, delta=self.tol)
 
     def test_reduced_state_fock_probs(self):
+        self.logTestName()
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_coherent_state(a, 0)
         self.circuit.prepare_squeezed_state(r, phi, 1)
@@ -80,16 +79,18 @@ class FrontendStateCreation(BaseTest):
     def setUp(self):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems, hbar=self.hbar)
+        self.eng.backend = self.backend
+        self.eng.reset()
 
     def test_full_state_creation(self):
-        self.eng.reset()
+        self.logTestName()
         q = self.eng.register
 
         with self.eng:
             Coherent(a) | q[0]
             Squeezed(r, phi) | q[1]
 
-        state = self.eng.run(backend=self.backend_name, cutoff_dim=self.D)
+        state = self.eng.run()
         self.assertEqual(state.num_modes, 3)
         self.assertEqual(state.hbar, self.hbar)
         self.assertEqual(state.mode_names, {0: 'q[0]', 1: 'q[1]', 2: 'q[2]'})
@@ -100,6 +101,7 @@ class BaseStateMethods(BaseTest):
     num_subsystems = 2
 
     def test_mean_photon(self):
+        self.logTestName()
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_coherent_state(a, 0)
         state = self.circuit.state()
@@ -107,6 +109,7 @@ class BaseStateMethods(BaseTest):
         self.assertAllAlmostEqual(mean_photon, np.abs(a)**2, delta=self.tol)
 
     def test_rdm(self):
+        self.logTestName()
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_coherent_state(a, 0)
         self.circuit.prepare_coherent_state(0.1, 1)
@@ -127,6 +130,7 @@ class BaseFockStateMethods(FockBaseTest):
     num_subsystems = 2
 
     def test_ket(self):
+        self.logTestName()
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.displacement(a, 0)
 
@@ -155,6 +159,7 @@ class BaseGaussianStateMethods(GaussianBaseTest):
     phi = -0.5
 
     def test_coherent_methods(self):
+        self.logTestName()
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_coherent_state(self.a, 0)
         self.circuit.prepare_squeezed_state(self.r, self.phi, 1)
@@ -171,6 +176,7 @@ class BaseGaussianStateMethods(GaussianBaseTest):
         self.assertAllAlmostEqual(alpha_list, [self.a,  0.], delta=self.tol)
 
     def test_squeezing_methods(self):
+        self.logTestName()
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_coherent_state(self.a, 0)
         self.circuit.prepare_squeezed_state(self.r, self.phi, 1)
@@ -191,12 +197,14 @@ class QuadExpectation(BaseTest):
     num_subsystems = 1
 
     def test_vacuum(self):
+        self.logTestName()
         state = self.circuit.state()
         res = np.array(state.quad_expectation(0, phi=pi/4)).T
         res_exact = np.tile(np.array([0, self.hbar/2.]), self.bsize)
         self.assertAllAlmostEqual(res.flatten(), res_exact.flatten(), delta=self.tol)
 
     def test_squeezed_coherent(self):
+        self.logTestName()
         qphi = 0.78
 
         self.circuit.reset(pure=self.kwargs['pure'])
@@ -229,6 +237,7 @@ class WignerSingleMode(BaseTest):
     grid[:, :, 1] = P
 
     def test_vacuum(self):
+        self.logTestName()
         if self.batched:
             return
 
@@ -243,6 +252,7 @@ class WignerSingleMode(BaseTest):
         self.assertAllAlmostEqual(W, Wexact, delta=self.tol)
 
     def test_squeezed_coherent(self):
+        self.logTestName()
         if self.batched:
             return
 
@@ -279,6 +289,7 @@ class WignerTwoMode(BaseTest):
     grid[:, :, 1] = P
 
     def test_two_mode_squeezed(self):
+        self.logTestName()
         if self.batched:
             return
 
@@ -307,10 +318,12 @@ class InitialStateFidelityTests(BaseTest):
     num_subsystems = 2
 
     def test_vacuum(self):
+        self.logTestName()
         state = self.circuit.state()
         self.assertAllAlmostEqual(state.fidelity_vacuum(), 1, delta=self.tol)
 
     def test_coherent_fidelity(self):
+        self.logTestName()
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_coherent_state(a, 0)
         self.circuit.displacement(a, 1)
@@ -326,6 +339,7 @@ class InitialStateFidelityTests(BaseTest):
         self.assertAllAlmostEqual(state.fidelity_coherent([a,a]), 1, delta=self.tol)
 
     def test_squeezed_fidelity(self):
+        self.logTestName()
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_squeezed_state(r, phi, 0)
         self.circuit.squeeze(r*np.exp(1j*phi), 1)
@@ -340,6 +354,7 @@ class InitialStateFidelityTests(BaseTest):
         self.assertAllAlmostEqual(state.fidelity(in_state, 1), 1, delta=self.tol)
 
     def test_squeezed_coherent_fidelity(self):
+        self.logTestName()
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_displaced_squeezed_state(a, r, phi, 0)
         self.circuit.squeeze(r*np.exp(1j*phi), 1)
@@ -362,6 +377,7 @@ phase_alphas = np.linspace(0, 2 * np.pi, 7, endpoint=False)
 class FockProbabilities(BaseTest):
     num_subsystems = 1
     def test_prob_fock_gaussian(self):
+        self.logTestName()
         """Tests that probabilities of particular Fock states |n> are correct for a gaussian state."""
         for mag_alpha in mag_alphas:
             for phase_alpha in phase_alphas:
@@ -383,6 +399,7 @@ class AllFockProbsSingleMode(FockBaseTest):
     num_subsystems = 1
 
     def test_all_fock_probs_pure(self):
+        self.logTestName()
         """Tests that the numeric probabilities in the full Fock basis are correct for a one-mode pure state."""
         for mag_alpha in mag_alphas:
             for phase_alpha in phase_alphas:
@@ -404,6 +421,7 @@ class AllFockProbsTwoMode(FockBaseTest):
     num_subsystems = 2
 
     def test_prob_fock_state_nongaussian(self):
+        self.logTestName()
         """Tests that probabilities of particular Fock states |n> are correct for a nongaussian state."""
         for mag_alpha in mag_alphas:
             for phase_alpha in phase_alphas:
@@ -422,6 +440,7 @@ class AllFockProbsTwoMode(FockBaseTest):
                     self.assertAllAlmostEqual(prob_n, ref_probs[n], delta=self.tol)
 
     def test_all_fock_state_probs(self):
+        self.logTestName()
         """Tests that the numeric probabilities in the full Fock basis are correct for a two-mode gaussian state."""
         for mag_alpha in mag_alphas:
             for phase_alpha in phase_alphas:

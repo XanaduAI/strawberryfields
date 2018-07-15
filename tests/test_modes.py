@@ -5,10 +5,10 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
-import numpy as np
 from itertools import combinations
+
+import numpy as np
+
 from defaults import BaseTest, FockBaseTest
 
 
@@ -22,6 +22,7 @@ class BasicTests(BaseTest):
 
   def test_add_mode_vacuum(self):
     """Tests if added modes are initialized to the vacuum state."""
+    self.logTestName()
     self.circuit.begin_circuit(1, **self.kwargs)
     for n in range(4):
       self.circuit.add_mode(1)
@@ -29,6 +30,7 @@ class BasicTests(BaseTest):
 
   def test_del_mode_vacuum(self):
     """Tests if reduced density matrix is in vacuum after deleting some modes."""
+    self.logTestName()
     self.circuit.begin_circuit(4, **self.kwargs)
     for n in range(4):
       self.circuit.del_mode([n])
@@ -36,6 +38,7 @@ class BasicTests(BaseTest):
 
   def test_get_modes(self):
     """Tests that get modes returns the correct result after deleting modes from the circuit"""
+    self.logTestName()
     self.circuit.begin_circuit(4, **self.kwargs)
     self.circuit.squeeze(0.1, 0)
     self.circuit.del_mode([0,2])
@@ -49,6 +52,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_normalized_add_mode(self):
     """Tests if a state is normalized after adding modes."""
+    self.logTestName()
     self.circuit.begin_circuit(1, **self.kwargs)
     for num_subsystems in range(3):
       self.circuit.add_mode(num_subsystems)
@@ -58,6 +62,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_normalized_del_mode(self):
     """Tests if a state is normalized after deleting modes."""
+    self.logTestName()
     self.circuit.begin_circuit(4, **self.kwargs)
     for n in range(4):
       self.circuit.del_mode(n)
@@ -67,6 +72,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_fock_measurements_after_add_mode(self):
     """Tests Fock measurements on a system after adding vacuum modes."""
+    self.logTestName()
     for m in range(3):
       meas_results = []
       for _ in range(num_repeats):
@@ -79,6 +85,7 @@ class FockBasisTests(FockBaseTest):
 
   def test_fock_measurements_after_del_mode(self):
     """Tests Fock measurements on a system after tracing out an unentagled mode."""
+    self.logTestName()
     for m in range(1,4):
       meas_results = []
       for _ in range(num_repeats):

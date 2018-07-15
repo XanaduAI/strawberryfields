@@ -30,15 +30,16 @@ Quantum operations
 
 This module defines and implements the Python-embedded quantum programming language
 for continuous-variable (CV) quantum systems.
-Currently the syntax is modeled after ProjectQ :cite:`projectq2016`.
+The syntax is modeled after ProjectQ :cite:`projectq2016`.
 
-Quantum operations (state preparation, unitary gates, measurements) act on register objects using the following syntax::
+Quantum operations (state preparation, unitary gates, measurements, channels) act on
+register objects using the following syntax::
 
   with eng:
     G(params) | q
     F(params) | (q[1], q[6], q[2])
 
-Here :samp:`engine` is an instance of :class:`strawberryfields.engine.Engine` and defines the context in which
+Here :samp:`eng` is an instance of :class:`strawberryfields.engine.Engine` and defines the context in which
 the commands are executed.
 Within each command, the part on the left is an :class:`Operation` instance,
 quite typically a constructor call for the requested operation class with the relevant parameters.
@@ -53,16 +54,18 @@ It is of course also possible to construct gates separately and reuse them sever
     R.H | q
 
 
-There are four kinds of :class:`Operation` objects:
+There are six kinds of :class:`Operation` objects:
 
 * :class:`Preparation` operations only manipulate the register state::
 
+    eng, q = sf.Engine(3)
     with eng:
-      Vac | q0
-      All(Coherent(0.4, 0.2)) | (q[1], q[3])
+      Vac | q[0]
+      All(Coherent(0.4, 0.2)) | (q[1], q[2])
 
-* :class:`Gate` operations only manipulate the register state::
+* Transformations such as :class:`Gate` and :class:`Channel` operations only manipulate the register state::
 
+    eng, q = sf.Engine(2)
     with eng:
       Dgate(0.3)   | q[0]
       BSgate(-0.5) | q[0:2]
@@ -70,10 +73,11 @@ There are four kinds of :class:`Operation` objects:
 * :class:`Measurement` operations manipulate the register state and produce classical information.
   The information is directly available only after the simulation has been run up to the point of measurement::
 
+    eng, q = sf.Engine(2)
     with eng:
       Measure       | q[0]
       eng.run()
-      Dgate(q0.val) | q[1]
+      Dgate(q[0].val) | q[1]
 
   Alternatively one may use a symbolic reference to the register containing the measurement result
   by supplying registers as the argument to an :class:`Operation`, in which case the measurement may be deferred,
@@ -96,7 +100,7 @@ There are four kinds of :class:`Operation` objects:
     eng, q = sf.Engine(2)
     with eng:
       Measure           | q[0]
-      Dgate(square(q0)) | q[1]
+      Dgate(square(q[0])) | q[1]
     eng.run()
 
   Finally, the lower-level :class:`strawberryfields.engine.RegRefTransform` (RR) and
@@ -109,10 +113,13 @@ There are four kinds of :class:`Operation` objects:
       Dgate(RR(q[0], lambda q: q ** 2)) | q[2]
     eng.run()
 
-* :class:`Delete` and :class:`New_modes` Operations delete and create modes during program execution.
-  In practice the user only deals with the pre-constructed instances :py:data:`Del` and :py:data:`New`::
 
-    eng, (alice,) = sf.Engine(3)
+* Meta-operations such as :class:`Delete` and :class:`New_modes` Operations delete
+  and create modes during program execution.
+  In practice the user only deals with the pre-constructed
+  instances :py:data:`Del` and :py:data:`New`::
+
+    eng, (alice,) = sf.Engine(1)
     with eng:
       Sgate(1)    | alice
       bob, charlie = New(2)
@@ -121,50 +128,20 @@ There are four kinds of :class:`Operation` objects:
       Del         | alice
       S2gate(0.4) | (charlie, bob)
 
+
+* Finally, :class:`Decomposition` operations are a special case, and can act as
+  either transformations *or* state preparation, depending on the decomposition used.
+  Decompositions calculate the required elementary :class:`Gate` and/or :class:`Preparation`
+  objects and parameters in order to decompose specific transformations or states.
+  Examples of objects that are supported by decompositions include covariance matrices,
+  interferometers, and symplectic transformations.
+
 Hierarchy for operations
 ------------------------
 
 .. inheritance-diagram:: strawberryfields.ops
    :parts: 1
 
-
-Operations shortcuts
----------------------
-
-Several of the operations described below have variables defined that point to their operation class;
-this is to provide shorthands for operations that accept either optional, common combinations, or no arguments.
-
-.. raw:: html
-
-   <style>
-      .widetable {
-         width:100%;
-      }
-   </style>
-
-.. rst-class:: longtable widetable
-
-+----------------------+------------------------------------------------------------------------------------+
-|**Shorthand variable**|     **Operation**                                                                  |
-+----------------------+------------------------------------------------------------------------------------+
-| ``New``              | :class:`~.New_modes`                                                               |
-+----------------------+------------------------------------------------------------------------------------+
-| ``Del``              | :class:`~.Delete`                                                                  |
-+----------------------+------------------------------------------------------------------------------------+
-| ``RR``               | :class:`~.RegRefTransform`                                                         |
-+----------------------+------------------------------------------------------------------------------------+
-| ``Vac``              | :class:`~.Vacuum`                                                                  |
-+----------------------+------------------------------------------------------------------------------------+
-| ``Fourier``          | :class:`~.Fouriergate`                                                             |
-+----------------------+------------------------------------------------------------------------------------+
-| ``Measure``          | :class:`~.MeasureFock`                                                             |
-+----------------------+------------------------------------------------------------------------------------+
-| ``MeasureX``         | :class:`~.MeasureHomodyne` (with ``p=0``, i.e., :math:`x` quadrature measurement)  |
-+----------------------+------------------------------------------------------------------------------------+
-| ``MeasureP``         | :class:`~.MeasureHomodyne` (with ``p=1/4``, i.e., :math:`p` quadrature measurement)|
-+----------------------+------------------------------------------------------------------------------------+
-| ``MeasureHD``        | :class:`~.MeasureHeterodyne`                                                       |
-+----------------------+------------------------------------------------------------------------------------+
 
 Base classes
 ------------
@@ -174,10 +151,30 @@ The abstract base class hierarchy exists to provide the correct semantics for th
 .. autosummary::
    Operation
    Preparation
-   Measurement
    Transformation
    Gate
    Channel
+   Measurement
+   Decomposition
+   MetaOperation
+
+
+Operation class
+---------------
+
+All Operations have the following methods.
+
+.. currentmodule:: strawberryfields.ops.Operation
+
+.. autosummary::
+   __str__
+   __or__
+   merge
+   decompose
+   apply
+   _apply
+
+.. currentmodule:: strawberryfields.ops
 
 
 State preparation
@@ -201,12 +198,6 @@ Measurements
    MeasureHomodyne
    MeasureHeterodyne
 
-Subsystem creation and deletion
--------------------------------
-
-.. autosummary::
-   New_modes
-   Delete
 
 Channels
 -----------
@@ -229,9 +220,9 @@ Single-mode gates
 
 .. autosummary::
    Dgate
-   Sgate
    Xgate
    Zgate
+   Sgate
    Rgate
    Pgate
    Vgate
@@ -246,21 +237,44 @@ Two-mode gates
    CXgate
    CZgate
 
-Metagates
----------
+Meta-operations
+---------------
 
 .. autosummary::
    All
+   New_modes
+   Delete
 
-Optimization
-------------
 
-The gates have several methods that are called by the engine during circuit optimization.
+Operations shortcuts
+---------------------
 
-.. autosummary::
-   Operation.merge
-   Operation.decompose
-   Operation.apply
+Several of the operation classes described below come with variables that point to pre-constructed instances;
+this is to provide shorthands for operations that accept no arguments, as well as for common variants of operations that do.
+
+.. raw:: html
+
+   <style>
+      .widetable {
+         width:100%;
+      }
+   </style>
+
+.. rst-class:: longtable widetable
+
+======================   =================================================================================
+**Shorthand variable**   **Operation**
+``New``                  :class:`~.New_modes`
+``Del``                  :class:`~.Delete`
+``Vac``                  :class:`~.Vacuum`
+``Fourier``              :class:`~.Fouriergate`
+``Measure``              :class:`~.MeasureFock`
+``MeasureX``             :class:`~.MeasureHomodyne` (:math:`\phi=0`), :math:`x` quadrature measurement
+``MeasureP``             :class:`~.MeasureHomodyne` (:math:`\phi=\pi/2`), :math:`p` quadrature measurement
+``MeasureHD``            :class:`~.MeasureHeterodyne`
+``RR``                   Alias for :class:`~.RegRefTransform`
+======================   =================================================================================
+
 
 Code details
 ~~~~~~~~~~~~
@@ -269,70 +283,37 @@ Code details
 
 from collections.abc import Sequence
 import copy
+import warnings
 
 import numpy as np
-from numpy import pi, cos, sin, exp, sqrt, arctan, arccosh, sign, arctan2, arcsinh, cosh, tanh, ndarray, all, arange, log, matmul
+from numpy import pi
 
 from scipy.linalg import block_diag
 from scipy.special import factorial as fac
 
-from tensorflow import Tensor, Variable
-from tensorflow import cos as tfcos, sin as tfsin, exp as tfexp, sqrt as tfsqrt, atan as tfatan, acosh as tfacosh, sign as tfsign, \
-    atan2 as tfatan2, asinh as tfasinh, cosh as tfcosh, tanh as tftanh, log as tflog, matmul as tfmatmul
-
-from .backends.tfbackend.ops import TensorWrapper, _wrap_tensors
 from .backends.shared_ops import changebasis
-from .engine import Engine as _Engine, Command, RegRef, RegRefTransform
+from .engine import Engine as _Engine, Command, RegRefTransform, MergeFailure
+from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
+                         sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2,
+                         transpose, squeeze)
 from .decompositions import clements, bloch_messiah, williamson
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
-
-# wrap math functions so they call the correct underlying function for the input type
-tf_math_fns = {"sin": tfsin,
-               "cos": tfcos,
-               "exp": tfexp,
-               "sqrt": tfsqrt,
-               "arctan": tfatan,
-               "arccosh": tfacosh,
-               "sign": tfsign,
-               "arctan2": tfatan2,
-               "arcsinh": tfasinh,
-               "cosh": tfcosh,
-               "tanh": tftanh,
-               "log": tflog,
-               "matmul": tfmatmul}
-np_math_fns = {"sin": sin,
-               "cos": cos,
-               "exp": exp,
-               "sqrt": sqrt,
-               "arctan": arctan,
-               "arccosh": arccosh,
-               "sign": sign,
-               "arctan2": arctan2,
-               "arcsinh": arcsinh,
-               "cosh": cosh,
-               "tanh": tanh,
-               "log": log,
-               "matmul": matmul}
-
-def check_type(math_fn):
-    "Wrapper function which checks the type of the incoming object and calls the appropriate tf/np function"
-    fn_name = math_fn.__name__
-    def wrapper(*args, **kwargs):
-        """wrapper function"""
-        if sum([isinstance(x, (Variable, Tensor)) for x in args]):
-            # if anything is a tf object, use the tensorflow version of the function
-            math_fn = tf_math_fns[fn_name]
-        else:
-            # otherwise, default to numpy version
-            math_fn = np_math_fns[fn_name]
-        return math_fn(*args, **kwargs)
-    return wrapper
+# pylint: disable=too-many-arguments
 
 
-for k, mfn in np_math_fns.items():
-    globals()[k] = check_type(mfn)
+# numerical tolerances
+_decomposition_merge_tol = 1e-13
+
+
+def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
+    """User warning formatter"""
+    # pylint: disable=unused-argument
+    return '{}:{}: {}: {}\n'.format(filename, lineno, category.__name__, message)
+
+
+warnings.formatwarning = warning_on_one_line
 
 
 def _seq_to_list(s):
@@ -345,44 +326,102 @@ def _seq_to_list(s):
 class Operation:
     """Abstract base class for quantum operations acting on one or more subsystems.
 
-    The extra_deps instance variable is a set containing the :class:`.RegRef` the :class:`Operation` depends on.
-    In the quantum diagram notation it corresponds to the vertical double lines of classical information
+    The extra_deps instance variable is a set containing the :class:`.RegRef`
+    the :class:`Operation` depends on. In the quantum diagram notation it
+    corresponds to the vertical double lines of classical information
     entering the :class:`Operation` that originate in a measurement of a subsystem.
+
+    This abstract base class may be initialised with parameters; see the
+    :class:`~strawberryfields.parameters.Parameter` class for more details.
+
+    Args:
+        par (Sequence[...]): parameters. len(par) >= 1. Alternatively,
+            set to [] or None to allow initialisation with no parameters.
     """
     # default: one-subsystem operation
-    ns = 1  #: int: number of subsystems the operation acts on, or None if any number of subsystems > 0 is okay
-    def __init__(self):
-        self.extra_deps = set()  #: set[RegRef]: extra dependencies due to deferred measurements, used during optimization
+    #: int: number of subsystems the operation acts on,
+    # or None if any number of subsystems > 0 is okay
+    ns = 1
+
+    def __init__(self, par):
+        #: set[RegRef]: extra dependencies due to deferred measurements, used during optimization
+        self._extra_deps = set()
+        #: list[Parameter]
+        self.p = []
+
+        if par:
+            # convert each parameter into a Parameter instance, keep track of dependenciens
+            for q in par:
+                if not isinstance(q, Parameter):
+                    q = Parameter(q)
+                self.p.append(q)
+                self._extra_deps.update(q.deps)
 
     def __str__(self):
-        """String representation."""
+        """String representation for the Operation using Blackbird syntax.
+
+        Returns:
+            str: string representation
+        """
         # defaults to the class name
-        return self.__class__.__name__
+        if self.p is None:
+            return self.__class__.__name__
+
+        # class name and parameter values
+        temp = [str(i) for i in self.p]
+        return self.__class__.__name__+'('+', '.join(temp)+')'
+
+    @property
+    def extra_deps(self):
+        """Extra dependencies due to parameters that depend on deferred measurements.
+
+        Returns:
+            set[RegRef]: dependencies
+        """
+        return self._extra_deps
 
     def __or__(self, reg):
         """Apply the operation to a part of a quantum register.
 
-        Dispatches the op to a command queue for later execution.
+        Dispatches the Operation to the :class:`~strawberryfields.engine.Engine`
+        command queue for later execution.
 
         Args:
-          reg (RegRef, Sequence[RegRef]): subsystem(s) the operation is acting on
+            reg (RegRef, Sequence[RegRef]): subsystem(s) the operation is acting on
+
+        Returns:
+            list[RegRef]: subsystem list as RegRefs
         """
         # into a list of subsystems
         reg = _seq_to_list(reg)
-        if len(reg) == 0 or (self.ns != None and self.ns != len(reg)):
+        if (not reg) or (self.ns != None and self.ns != len(reg)):
             raise ValueError("Wrong number of subsystems.")
         # send it to the engine
-        _Engine._current_context.append(self, reg)
+        reg = _Engine._current_context.append(self, reg)
         return reg
 
     def merge(self, other):
         """Merge the operation with another (acting on the exact same set of subsystems).
 
+        .. note:: For subclass overrides: merge may return a newly created object,
+           or self, or other, but it must never modify self or other
+           because the same Operation objects may be also used elsewhere.
+
         Args:
-          other (Operation): operation to merge this one with
+            other (Operation): operation to merge this one with
 
         Returns:
-          Operation, None: other * self. The return value None represents the identity gate (doing nothing).
+            Operation, None: other * self. The return value None represents
+                the identity gate (doing nothing).
+
+        Raises:
+            ~strawberryfields.engine.MergeFailure: if the two
+                operations cannot be merged
+
+        .. todo:: Using the return value None to denote the identity is a
+            bit dangerous, since a function with no explicit return statement
+            also returns None, which can lead to puzzling bugs. Maybe return
+            a special singleton Identity object instead?
         """
         raise NotImplementedError
 
@@ -391,11 +430,15 @@ class Operation:
 
         See :mod:`strawberryfields.backends.base`.
 
+        .. todo:: For now decompose() works on unevaluated Parameters.
+            This causes an error if a :class:`.RegRefTransform`-based Parameter is used, and
+            decompose() tries to do arithmetic on it.
+
         Args:
-          reg (Sequence[RegRef]): subsystems the operation is acting on
+            reg (Sequence[RegRef]): subsystems the operation is acting on
 
         Returns:
-          list[Command]: decomposition as a list of operations acting on specific subsystems
+            list[Command]: decomposition as a list of operations acting on specific subsystems
         """
         raise NotImplementedError('No decomposition available: {}'.format(self))
 
@@ -403,119 +446,208 @@ class Operation:
         """Internal apply method. Uses numeric subsystem referencing.
 
         Args:
-          reg (Sequence[int]): subsystem indices the operation is acting on (this is how the backend API wants them)
-          backend (BaseBackend): backend to execute the operation
+            reg (Sequence[int]): subsystem indices the operation is
+                acting on (this is how the backend API wants them)
+            backend (BaseBackend): backend to execute the operation
         """
         raise NotImplementedError('Missing direct implementation: {}'.format(self))
 
     def apply(self, reg, backend, hbar, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
 
-        Takes care of any pending formal transformations (like dagger) and then calls _apply.
+        Takes care of parameter evaluations and any pending formal
+        transformations (like dagger) and then calls _apply.
 
         Args:
-          reg (Sequence[RegRef]): subsystem(s) the operation is acting on
-          backend (BaseBackend): backend to execute the operation
+            reg (Sequence[RegRef]): subsystem(s) the operation is acting on
+            backend (BaseBackend): backend to execute the operation
+
+        Keyword Args:
+            eval_params (bool): set this to False to explicitly turn off the
+                evaluation of parameters in the Operation.apply method. This is
+                useful if the parameters are pre-evaluated prior to calling this method.
+
+        Returns:
+            : The result of self._apply
         """
+        eval_params = kwargs.get('eval_params', True)
+        original_p = self.p  # store the original parameters
+
+        if eval_params and original_p:
+            # NOTE: We cannot just replace all RegRefTransform parameters with their
+            # numerical values here. If we re-initialize a measured mode and
+            # re-measure it, the RegRefTransform value should change accordingly
+            # when it is used again after the new measurement.
+
+            # Evaluate the Parameters, restore the originals later:
+            self.p = [x.evaluate() for x in self.p]
+
         # convert RegRefs back to indices for the backend API
         temp = [rr.ind for rr in reg]
-        self.hbar = hbar # pylint: disable=attribute-defined-outside-init
-        self._apply(temp, backend, **kwargs)
+        self.hbar = hbar  # pylint: disable=attribute-defined-outside-init
+        # call the child class specialized _apply method
+        result = self._apply(temp, backend, **kwargs)
+
+        if eval_params and original_p:
+            # restore original unevaluated Parameter instances
+            self.p = original_p
+
+        return result
+
+
+#====================================================================
+# Derived operation classes
+#====================================================================
 
 
 class Preparation(Operation):
-    """Abstract base class for subsystem preparation."""
+    """Abstract base class for operations that demolish
+    the previous state of the subsystem entirely.
+    """
     def merge(self, other):
         # sequential preparation, only the last one matters
-        if isinstance(other, (Preparation, CovarianceState)):
+        if isinstance(other, Preparation):
+            # give a warning, since this is pointless and probably a user error
+            warnings.warn('Two subsequent state preparations, first one has no effect.')
             return other
         else:
-            raise TypeError('For now, preparations cannot be merged with anything else.')
+            raise MergeFailure('For now, Preparations cannot be merged with anything else.')
 
 
 class Measurement(Operation):
     """Abstract base class for projective subsystem measurements.
 
-    The measurement is deferred: its result is available only after the backend has executed it.
-    The value of the measurement can be accessed in the program through the symbolic subsystem reference.
+    The measurement is deferred: its result is available only
+    after the backend has executed it. The value of the measurement can
+    be accessed in the program through the symbolic subsystem reference
+    to the measured subsystem.
 
-    When the measurement happens, the state of the circuit is updated to the conditional state corresponding to the measurement result.
+    When the measurement happens, the state of the circuit is updated
+    to the conditional state corresponding to the measurement result.
+    Measurements also support postselection, see below.
+
+    Args:
+        select (None, Sequence[Number]): Desired values of the measurement
+            results, one for each subsystem the measurement acts on.
+            Allows the post-selection of specific measurement results
+            instead of randomly sampling. None means no postselection.
+
+    .. todo::
+        self.select could support :class:`~strawberryfields.parameters.Parameter` instances.
+
+    .. todo::
+        Currently MeasureFock objects can be applied to any number of
+        subsystems. This can cause problems with postselection,
+        since self.select has a fixed length.
     """
+    ns = None
+    def __init__(self, par, select=None):
+        super().__init__(par)
+        self.select = select  #: None, Sequence[Number]: postselection values, one for each measured subsystem
+
+    def __str__(self):
+        # class name, parameter values, and possibly the select parameter
+        temp = super().__str__()
+        if self.select is not None:
+            temp = temp[:-1] +', select={})'.format(self.select)
+        return temp
+
     def merge(self, other):
-        raise TypeError('For now, measurements cannot be merged with anything else.')
+        raise MergeFailure('For now, measurements cannot be merged with anything else.')
 
     def apply(self, reg, backend, hbar, **kwargs):
-        # measurement acts on multiple modes
-        # convert RegRefs back to indices for the backend API
-        temp = [rr.ind for rr in reg]
+        """Ask a backend to execute the operation on the current register state right away.
 
-        self.hbar = hbar # pylint: disable=attribute-defined-outside-init
-
-        # call the child class specialized _apply method
-        values = self._apply(temp, backend, **kwargs)
-
+        Like :func:`Operation.apply`, but also stores the measurement result in the RegRefs.
+        """
+        values = super().apply(reg, backend, hbar, **kwargs)
+        # measurement can act on multiple modes
         if self.ns == 1:
             values = [values]
-
         # store the results in the register reference objects
         for v, r in zip(values, reg):
             r.val = v
 
-class Transformation(Operation):
-    """Abstract base class for quantum transformations.
 
-    Args:
-      par (Sequence[float, complex]): parameters. len(par) >= 1.
+class Decomposition(Operation):
+    """Abstract base class for matrix decompositions.
+
+    This class provides the base behaviour for decomposing various matrices
+    into a sequence of gates and state preparations.
+
+    .. todo:: Define how a given matrix is translated into a unitary on the state space.
+
+    .. todo::
+        We could specialize apply() here to do nothing if p[0] is identity and
+        bypass _apply() and decompose() entirely, see Gate.apply.
+
+        I think I prefer using the ``decomposition`` method for decompositions,
+        as this allows us (and the user) to distinguish gates applied manually,
+        and gates that were decomposed.
+
+    An identity matrix corresponds to an identity operation (NOP).
     """
-    def __init__(self, par):
-        super().__init__()
-        for idx, q in enumerate(par):
-            # wrap RegRefs in the identity RegRefTransform
-            # (simplifies syntax of commands)
-            if isinstance(q, RegRef):
-                q = RegRefTransform(q)
-                par[idx] = q
-            # wrap tensorflow objects and numpy arrays in a TensorWrapper
-            if isinstance(q, (Tensor, Variable, ndarray)):
-                q = TensorWrapper(q)
-                par[idx] = q
-            # add extra dependencies
-            if isinstance(q, RegRefTransform):
-                self.extra_deps.update(q.regrefs)
-        self.p = list(par)  #: list[float, complex]: parameters (at least one)
+    def merge(self, other):
+        # can be merged if they are the same class
+        if isinstance(other, self.__class__):
+            # at the moment, we will assume all state decompositions only
+            # take one argument. The only exception currently are state
+            # decompositions, which cannot be merged.
+            U1 = self.p[0]
+            U2 = other.p[0]
+            U = matmul(U2, U1).x
+            # todo above we strip the Parameter wrapper to make the following check
+            # easier to perform. The constructor restores it.
+            # Another option would be to add the required methods to Parameter class.
+            # check if the matrices cancel
+            if np.all(np.abs(U -np.identity(len(U))) < _decomposition_merge_tol):
+                return None
+            new_decomp = self.__class__(U)
+            return new_decomp
+        else:
+            raise MergeFailure('Not the same decomposition type.')
 
-    def __str__(self):
-        # class name and parameter value
-        temp = ['{:.4g}'.format(i) if not isinstance(i, TensorWrapper) else '{}'.format(i) for i in self.p]
-        return super().__str__()+'('+', '.join(temp)+')'
+
+class Transformation(Operation):
+    """Abstract base class for transformations.
+
+    This class provides the base behaviour for operations which
+    act on existing states.
+    """
+    # NOTE: At the moment this is an empty class, and only
+    # exists for a nicer inheritence diagram. One option is
+    # to remove, and make Channel and Gate top-level derived classes.
+    #
+    # Are there any useful operations/properties shared by Gate/Channel?
+    pass
+
+
+#====================================================================
+# Derived transformation classes
+#====================================================================
 
 
 class Channel(Transformation):
-    """Abstract base class for channels."""
+    """Abstract base class for channels.
 
-    def apply(self, reg, backend, hbar, **kwargs):
-        # NOTE: We cannot just replace all RegRefTransform parameters with their numerical values here.
-        # If we re-initialize a measured mode and re-measure it, the RegRefTransform value should change accordingly when it is used again after the new measurement.
-        z = +self.p[0] # pylint: disable=unused-variable
-        # evaluate the RegRefTransforms, restore the originals later
-        temp = self.p  # store the originals
-        self.p = [+x for x in self.p]  # replace any possible RegRefTransform instances with evaluated versions
-        self.p = [_wrap_tensors(x) for x in self.p] # wrap any tensors with TensorWrappers
-        super().apply(reg, backend, hbar, **kwargs)
-        self.p = temp  # restore original parameters
+    This class provides the base behaviour for non-unitary
+    maps and transformations.
+    """
+    # NOTE: At the moment this is an empty class, and only
+    # exists for a nicer inheritence diagram.
+    # This class will likely get filled in when we add more channels.
+    pass
 
 
 class Gate(Transformation):
     """Abstract base class for unitary quantum gates.
 
-
-    Note that the first parameter p[0] of the Gate class is special:
+    The first parameter p[0] of the Gate class is special:
 
     * The value p[0] = 0 corresponds to the identity gate.
     * The inverse gate is obtained by negating p[0].
-    * Two gates of this class can be merged by adding the first parameters together,
-      assuming all the other parameters match.
-
+    * Two gates of this class can be merged by adding the
+      first parameters together, assuming all the other parameters match.
     """
     def __init__(self, par):
         super().__init__(par)
@@ -525,11 +657,10 @@ class Gate(Transformation):
     def __str__(self):
         """String representation for the gate."""
         # add a dagger symbol to the class name if needed
+        temp = super().__str__()
         if self.dagger:
-            d = r"^\dagger"
-        else:
-            d = ""
-        return super().__str__() + d
+            temp += ".H"
+        return temp
 
     @property
     def H(self):
@@ -538,34 +669,46 @@ class Gate(Transformation):
         H stands for hermitian conjugate.
 
         Returns:
-          Gate: formal inverse of this gate
+            Gate: formal inverse of this gate
         """
-        #HACK Semantically a bad use of @property since this method is not a getter.
-        s = copy.copy(self)  # NOTE deepcopy would make copies of RegRefs inside a possible RegRefTransformation parameter, RegRefs must not be copied.
+        # HACK Semantically a bad use of @property since this method is not a getter.
+        # NOTE deepcopy would make copies of RegRefs inside a possible
+        # RegRefTransformation parameter, RegRefs must not be copied.
+        s = copy.copy(self)
         s.dagger = not s.dagger
         return s
 
     def apply(self, reg, backend, hbar, **kwargs):
-        # NOTE: We cannot just replace all RegRefTransform parameters with their numerical values here.
-        # If we re-initialize a measured mode and re-measure it, the RegRefTransform value should change accordingly when it is used again after the new measurement.
-        z = +self.p[0]
-        if all(z == 0):
+        """Ask a backend to execute the operation on the current register state right away.
+
+        Like :func:`Operation.apply`, but takes into account the special nature of
+        p[0] and applies self.dagger.
+
+        Returns:
+            None: Gates do not return anything, return value is None
+        """
+        z = self.p[0].evaluate()
+        # if z represents a batch of parameters, then all of these
+        #must be zero to skip calling backend
+        if np.all(z == 0):
             # identity, no need to apply
-            # if z represents a batch of parameters, then all of these must be zero to skip calling backend
             return
-        # evaluate the RegRefTransforms, restore the originals later
-        temp = self.p  # store the originals
-        self.p = [+x for x in self.p]  # replace any possible RegRefTransform instances with evaluated versions
-        self.p = [_wrap_tensors(x) for x in self.p] # wrap any tensors with TensorWrappers
         if self.dagger:
-            self.p[0] = -self.p[0]
-        super().apply(reg, backend, hbar, **kwargs)
-        self.p = temp  # restore original parameters
+            z = -z
+        temp = self.p  # store the original Parameters
+        # evaluate the rest of the Parameters, restore the originals later
+        self.p = [z] +[x.evaluate() for x in self.p[1:]]
+        # calling the parent apply, skipping re-evaluation of self.p
+        #(which wouldn't hurt but is unnecessary)
+        super().apply(reg, backend, hbar, eval_params=False, **kwargs)
+        self.p = temp  # restore original unevaluated Parameter instances
 
     def merge(self, other):
         # can be merged if they are the same class and share all the other parameters
         if isinstance(other, self.__class__) and self.p[1:] == other.p[1:] \
-           and len(self.extra_deps)+len(other.extra_deps) == 0:  # no extra dependencies <=> no RegRefTransform parameters
+           and len(self._extra_deps)+len(other._extra_deps) == 0:
+            # no extra dependencies <=> no RegRefTransform parameters,
+            # with which we cannot do arithmetic at the moment
             # make sure the gates have the same dagger flag, if not, invert the second p[0]
             if self.dagger == other.dagger:
                 temp = other.p[0]
@@ -576,38 +719,48 @@ class Gate(Transformation):
             if p0 == 0:
                 return None  # identity gate
             else:
-                # HACK: some of the subclass constructors only take a single parameter, some take two, none take three
+                # return a copy
+                # HACK: some of the subclass constructors only take a single parameter,
+                #some take two, none take three
                 if len(self.p) == 1:
                     temp = self.__class__(p0)
                 else:
                     temp = self.__class__(p0, *self.p[1:])
-                # TODO: this would be nicer, but it does not apply the modulo in AngleGate constructor
-                #temp = deepcopy(self)
+                # NOTE deepcopy would make copies of RegRefs inside a possible
+                # RegRefTransformation parameter, RegRefs must not be copied.
+                # OTOH copy results in temp having the same p list as self,
+                # which we would modify below.
+                #temp = copy.copy(self)
                 #temp.p[0] = p0
                 temp.dagger = self.dagger
                 return temp
         else:
-            raise TypeError('Not the same gate family.')
+            raise MergeFailure('Not the same gate family.')
 
         if isinstance(other, self.__class__):
-            # without knowing anything more specific about the gates, we can only merge them if they are each others' inverses
+            # without knowing anything more specific about the gates, we
+            # can only merge them if they are each others' inverses
             if self.dagger != other.dagger:
                 return None
             else:
-                raise ValueError("Don't know how to merge these gates.")
+                raise MergeFailure("Don't know how to merge these gates.")
         else:
-            raise TypeError('Not the same gate family.')
+            raise MergeFailure('Not the same gate family.')
 
 
 #====================================================================
 # State preparation operations
 #====================================================================
 
+
 class Vacuum(Preparation):
     """Prepare a mode in the :ref:`vacuum state <vacuum_state>`.
 
     Can be accessed via the shortcut variable ``Vac``.
     """
+    def __init__(self):
+        super().__init__([])
+
     def _apply(self, reg, backend, **kwargs):
         backend.prepare_vacuum_state(*reg)
 
@@ -624,46 +777,30 @@ class Coherent(Preparation):
     or use the polar form :math:`a = r, p=\phi` and still get the same result.
 
     Args:
-      a (complex): displacement parameter :math:`\alpha`
-      p (float): phase angle :math:`\phi`
+        a (complex): displacement parameter :math:`\alpha`
+        p (float): phase angle :math:`\phi`
     """
-
     def __init__(self, a=0., p=0.):
-        super().__init__()
-        self.a = a
-        self.p = p
+        super().__init__([a, p])
 
     def _apply(self, reg, backend, **kwargs):
-        z = _wrap_tensors(self.a) * exp(1j * _wrap_tensors(self.p))  # _wrap_tensors needed to assist proper casting for tfbackend
-        backend.prepare_coherent_state(z, *reg)
-
-    def __str__(self):
-        cmd_str = super().__str__()
-        if self.p == 0:
-            cmd_str += '({:.4g})'.format(self.a)
-        else:
-            cmd_str += '({:.4g},{:.4g})'.format(self.a, self.p)
-
-        return cmd_str
+        z = self.p[0] * exp(1j * self.p[1])
+        backend.prepare_coherent_state(z.x, *reg)
 
 
 class Squeezed(Preparation):
     r"""Prepare a mode in a :ref:`squeezed vacuum state <squeezed_state>`.
 
     Args:
-      r (float): squeezing magnitude
-      p (float): squeezing angle :math:`\phi`
+        r (float): squeezing magnitude
+        p (float): squeezing angle :math:`\phi`
     """
     def __init__(self, r=0., p=0.):
-        super().__init__()
-        self.r = r
-        self.p = p
+        super().__init__([r, p])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.prepare_squeezed_state(self.r, self.p, *reg)
-
-    def __str__(self):
-        return super().__str__()+'({:.4g},{:.4g})'.format(self.r, self.p)
+        p = _unwrap(self.p)
+        backend.prepare_squeezed_state(p[0], p[1], *reg)
 
 
 class DisplacedSqueezed(Preparation):
@@ -677,26 +814,20 @@ class DisplacedSqueezed(Preparation):
 
     where the squeezing parameter :math:`z=re^{i\phi}`.
 
-
     Args:
-      alpha (complex): displacement parameter
-      r       (float): squeezing magnitude
-      p       (float): squeezing angle :math:`\phi`
+        alpha (complex): displacement parameter
+        r (float): squeezing magnitude
+        p (float): squeezing angle :math:`\phi`
     """
     def __init__(self, alpha=0., r=0., p=0.):
-        super().__init__()
-        self.alpha = alpha
-        self.r = r
-        self.p = p
+        super().__init__([alpha, r, p])
 
     def _apply(self, reg, backend, **kwargs):
+        p = _unwrap(self.p)
         # prepare the squeezed state
-        backend.prepare_squeezed_state(self.r, self.p, *reg)
+        backend.prepare_squeezed_state(p[1], p[2], *reg)
         # displace the state by alpha
-        backend.displacement(self.alpha, *reg)
-
-    def __str__(self):
-        return super().__str__()+'({:.4g},{:.4g},{:.4g})'.format(self.alpha, self.r, self.p)
+        backend.displacement(p[0], *reg)
 
 
 class Fock(Preparation):
@@ -706,21 +837,18 @@ class Fock(Preparation):
     As a result the state of the other subsystems may have to be described using a density matrix.
 
     Args:
-      n (int): Fock state to prepare
+        n (int): Fock state to prepare
     """
     def __init__(self, n=0):
-        super().__init__()
-        self.n = n
+        super().__init__([n])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.prepare_fock_state(self.n, *reg)
-
-    def __str__(self):
-        return super().__str__()+'({:.4g})'.format(self.n)
+        p = _unwrap(self.p)
+        backend.prepare_fock_state(p[0], *reg)
 
 
 class Catstate(Preparation):
-    r"""Initialize a mode to a cat state.
+    r"""Prepare a mode in a :ref:`cat state <cat_state>`.
 
     A cat state is the coherent superposition of two coherent states,
 
@@ -738,34 +866,37 @@ class Catstate(Preparation):
             Catstate(1, 0.2) | q[0]
 
     Args:
-      alpha (complex): displacement parameter
-      p       (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
-        cat state, and ``p=1`` an odd cat state.
+        alpha (complex): displacement parameter
+        p (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
+            cat state, and ``p=1`` an odd cat state.
     """
 
     def __init__(self, alpha=0, p=0):
-        super().__init__()
-        self.alpha = alpha
-        self.p = p
+        super().__init__([alpha, p])
 
     def _apply(self, reg, backend, **kwargs):
+        alpha = self.p[0]
+        phi = pi*self.p[1]
+        D = backend.get_cutoff_dim()
+        l = np.arange(D)[:, np.newaxis]
 
-        phi = pi*self.p
         # normalization constant
-        temp = exp(-0.5 * abs(self.alpha)**2)
+        temp = exp(-0.5 * abs(alpha)**2)
         N = temp / sqrt(2*(1 + cos(phi) * temp**4))
 
         # coherent states
-        D = backend.get_cutoff_dim()
-        l = arange(D)
-        c1 = (self.alpha ** l) / sqrt(fac(l))
-        c2 = ((-self.alpha) ** l) / sqrt(fac(l))
+        c1 = (alpha ** l) / sqrt(fac(l))
+        c2 = ((-alpha) ** l) / sqrt(fac(l))
         # add them up with a relative phase
         ket = (c1 + exp(1j*phi) * c2) * N
-        backend.prepare_ket_state(ket, *reg)
 
-    def __str__(self):
-        return super().__str__()+'({:.4g},{:.4g})'.format(self.alpha, self.p)
+        # in order to support broadcasting, the batch axis has been located at last axis, but backend expects it up as first axis
+        ket = transpose(ket)
+
+        # drop dummy batch axis if it is not necessary
+        ket = squeeze(ket)
+
+        backend.prepare_ket_state(ket.x, *reg)
 
 
 class Ket(Preparation):
@@ -775,14 +906,14 @@ class Ket(Preparation):
     As a result the state of the other subsystems may have to be described using a density matrix.
 
     Args:
-      state (array): state vector in the Fock basis
+        state (array): state vector in the Fock basis
     """
     def __init__(self, state):
-        super().__init__()
-        self.state = state
+        super().__init__([state])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.prepare_ket_state(self.state, *reg)
+        p = _unwrap(self.p)
+        backend.prepare_ket_state(p[0], *reg)
 
 
 class Thermal(Preparation):
@@ -792,21 +923,20 @@ class Thermal(Preparation):
     As a result the state will be described using a density matrix.
 
     Args:
-      nbar (int): thermal population of the mode
+        n (float): mean thermal population of the mode
     """
     def __init__(self, n=0):
-        super().__init__()
-        self.n = n
+        super().__init__([n])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.prepare_thermal_state(self.n, *reg)
+        p = _unwrap(self.p)
+        backend.prepare_thermal_state(p[0], *reg)
 
-    def __str__(self):
-        return super().__str__()+'({:.4g})'.format(self.n)
 
 #====================================================================
 # Measurements
 #====================================================================
+
 
 class MeasureFock(Measurement):
     """:ref:`photon_counting`: measures a set of modes in the Fock basis.
@@ -814,41 +944,24 @@ class MeasureFock(Measurement):
     Also accessible via the shortcut variable ``Measure``.
 
     The modes are projected to the Fock state corresponding to the result of the measurement.
-
-    Args:
-      select (int): (Optional) desired value of measurement result.
-        Allows the post-selection of specific measurement results instead of randomly sampling.
     """
     ns = None
     def __init__(self, select=None):
-        super().__init__()
-        if isinstance(select, int):
-            self.select = [select]
-        else:
-            self.select = select
+        if select is not None and not isinstance(select, Sequence):
+            select = [select]
+        super().__init__([], select)
 
     def _apply(self, reg, backend, **kwargs):
-        if 'select' in kwargs:
-            # parse any select keyword arguments sent via engine.run
-            # these REPLACE the initialised postselections.
-            self.select = [kwargs['select'][i] for i in reg]
-
-            if self.select == [None]:
-                self.select = None
-
-            kwargs.pop('select')
-
         return backend.measure_fock(reg, select=self.select, **kwargs)
 
     def __str__(self):
         if self.select is None:
             return 'Measure'
-
         return 'MeasureFock(select={})'.format(self.select)
 
 
 class MeasureHomodyne(Measurement):
-    r"""Performs a :ref:`homodyne`; measures one quadrature of a mode.
+    r"""Performs a :ref:`homodyne measurement <homodyne>`, measures one quadrature of a mode.
 
     * Position basis measurement: :math:`\phi = 0`
       (also accessible via the shortcut variable ``MeasureX``).
@@ -859,39 +972,25 @@ class MeasureHomodyne(Measurement):
     The measured mode is reset to the vacuum state.
 
     Args:
-      phi (float): measurement angle :math:`\phi`
-      select (float): (Optional) desired values of measurement result.
-        Allows the post-selection of specific measurement results instead of randomly sampling.
+        phi (float): measurement angle :math:`\phi`
+        select (None, float): (Optional) desired values of measurement result.
+            Allows the post-selection of specific measurement results instead of randomly sampling.
     """
     ns = 1
     def __init__(self, phi, select=None):
-        super().__init__()
-        self.p = phi
-        self.select = select
+        super().__init__([phi], select)
 
     def _apply(self, reg, backend, **kwargs):
-        if 'select' in kwargs:
-            # parse any select keyword arguments sent via engine.run
-            # these REPLACE the initialised postselections.
-            self.select = kwargs['select'][reg[0]]
-            kwargs.pop('select')
-
-        result = backend.measure_homodyne(self.p, *reg, select=self.select, **kwargs)
-
-        return result
+        p = _unwrap(self.p)
+        return backend.measure_homodyne(p[0], *reg, select=self.select, **kwargs)
 
     def __str__(self):
         if self.select is None:
-            if self.p == 0:
-                cmd_str = 'MeasureX'
-            elif self.p == pi/2:
-                cmd_str = 'MeasureP'
-            else:
-                cmd_str = super().__str__()+'({:.4g})'.format(self.p)
-        else:
-            cmd_str = super().__str__()+'({:.4g}, select={})'.format(self.p, self.select)
-
-        return cmd_str
+            if self.p[0] == 0:
+                return 'MeasureX'
+            elif self.p[0] == pi/2:
+                return 'MeasureP'
+        return super().__str__()
 
 
 class MeasureHeterodyne(Measurement):
@@ -901,71 +1000,22 @@ class MeasureHeterodyne(Measurement):
 
     Samples the joint Husimi distribution :math:`Q(\vec{\alpha}) = \frac{1}{\pi}\bra{\vec{\alpha}}\rho\ket{\vec{\alpha}}`.
     The measured mode is reset to the vacuum state.
+
+    Args:
+        select (None, complex): (Optional) desired values of measurement result.
+            Allows the post-selection of specific measurement results instead of randomly sampling.
     """
     ns = 1
     def __init__(self, select=None):
-        super().__init__()
-        self.select = select
+        super().__init__([], select)
 
     def _apply(self, reg, backend, **kwargs):
-        if 'select' in kwargs:
-            # parse any select keyword arguments sent via engine.run
-            # these REPLACE the initialised postselections.
-            self.select = kwargs['select'][reg[0]]
-            kwargs.pop('select')
-
         return backend.measure_heterodyne(*reg, select=self.select, **kwargs)
 
     def __str__(self):
         if self.select is None:
             return 'MeasureHD'
-
         return 'MeasureHeterodyne(select={})'.format(self.select)
-
-
-#====================================================================
-# Subsystem creation and deletion
-#====================================================================
-
-class Delete(Operation):
-    """Deletes one or more existing modes.
-    Also accessible via the shortcut variable ``Delete``.
-
-    The deleted modes are traced out.
-    After the deletion the state of the remaining subsystems may have to be described using a density operator.
-    """
-    ns = None
-    def __or__(self, reg):
-        reg = super().__or__(reg)
-        _Engine._current_context.delete_subsystems(reg)
-
-    def _apply(self, reg, backend, **kwargs):
-        backend.del_mode(reg)
-
-
-class New_modes(Operation):
-    """Used for adding new modes to the system.
-    Also accessible via the shortcut variable ``New``.
-
-    The new modes are prepapred in the vacuum state.
-
-    This class cannot be used with the __or__ syntax since it would be misleading, instead we use __call__ on a single instance to dispatch the command to the engine.
-    """
-    ns = 0
-    def __call__(self, n=1):
-        """Adds one or more new modes to the system in a deferred way.
-
-        Dispatches the command to the command queue.
-        """
-        # create RegRef placeholders for the new modes
-        refs = _Engine._current_context.add_subsystems(n)
-        # send the actual creation command to the engine
-        _Engine._current_context.append(self, refs)
-        return refs
-
-    def _apply(self, reg, backend, **kwargs):
-        # pylint: disable=unused-variable
-        inds = backend.add_mode(len(reg))
 
 
 #====================================================================
@@ -980,32 +1030,31 @@ class LossChannel(Channel):
     prepared in the vacuum state using the following transformation:
 
     .. math::
-       a \to \sqrt{T} a+\sqrt{1-T} b
+       a \mapsto \sqrt{T} a+\sqrt{1-T} b
 
     Args:
-      T (float): the loss parameter :math:`0\leq T\leq 1`.
+        T (float): the loss parameter :math:`0\leq T\leq 1`.
     """
     def __init__(self, T):
         super().__init__([T])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.loss(self.p[0], *reg)
+        p = _unwrap(self.p)
+        backend.loss(p[0], *reg)
 
     def merge(self, other):
         # check that other is also a LossChannel, and that
         # no extra dependencies <=> no RegRefTransform parameters
         if isinstance(other, self.__class__) \
-        and len(self.extra_deps)+len(other.extra_deps) == 0:
-
+        and len(self._extra_deps)+len(other._extra_deps) == 0:
             # determine the new loss parameter
-            temp = other.p[0]
-            T = sqrt(self.p[0] * temp)
-
+            T = self.p[0] * other.p[0]
             # if one, replace with the identity
             if T == 1:
                 return None
-
             return self.__class__(T)
+        else:
+            raise MergeFailure('Not the same operation family.')
 
 
 #====================================================================
@@ -1025,26 +1074,49 @@ class Dgate(Gate):
     or use the polar form :math:`a = r, \phi` and still get the same result.
 
     Args:
-      a (complex): displacement parameter :math:`\alpha`
-      phi (float): extra (optional) phase angle :math:`\phi`
+        a (complex): displacement parameter :math:`\alpha`
+        phi (float): extra (optional) phase angle :math:`\phi`
     """
     def __init__(self, a, phi=0.):
         super().__init__([a, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        z = _wrap_tensors(self.p[0]) * exp(1j * self.p[1]) #_wrap_tensors needed to assist proper casting for tfbackend
-        backend.displacement(z, *reg)
+        z = self.p[0] * exp(1j * self.p[1])
+        backend.displacement(z.x, *reg)
 
-    def __str__(self):
-        # pylint: disable=bad-super-call
-        cmd_str = super(Transformation, self).__str__()
-        if self.p[1] == 0:
-            cmd_str += '({:.4g})'.format(self.p[0])
-        else:
-            cmd_str += '({:.4g},{:.4g})'.format(self.p[0], self.p[1])
 
-        d = r"^\dagger" if self.dagger else ""
-        return cmd_str + d
+class Xgate(Gate):
+    r"""Position :ref:`displacement <displacement>` gate.
+
+    .. math::
+       X(x) = e^{-i x \hat{p}/\hbar}
+
+    Args:
+        x (float): position displacement
+    """
+    def __init__(self, x):
+        super().__init__([x])
+
+    def _apply(self, reg, backend, **kwargs):
+        z = self.p[0] / sqrt(2 * self.hbar)
+        backend.displacement(z.x, *reg)
+
+
+class Zgate(Gate):
+    r"""Momentum :ref:`displacement <displacement>` gate.
+
+    .. math::
+       Z(p) = e^{i p \hat{x}/\hbar}
+
+    Args:
+        p (float): momentum displacement
+    """
+    def __init__(self, p):
+        super().__init__([p])
+
+    def _apply(self, reg, backend, **kwargs):
+        z = self.p[0] * 1j/sqrt(2 * self.hbar)
+        backend.displacement(z.x, *reg)
 
 
 class Sgate(Gate):
@@ -1056,49 +1128,15 @@ class Sgate(Gate):
     where :math:`z = r e^{i\phi}`.
 
     Args:
-      r (float): squeezing amount
-      phi (float): squeezing phase angle :math:`\phi`
+        r (float): squeezing amount
+        phi (float): squeezing phase angle :math:`\phi`
     """
     def __init__(self, r, phi=0.):
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        z = _wrap_tensors(self.p[0]) * exp(1j * self.p[1]) #_wrap_tensors needed to assist proper casting for tfbackend
-        backend.squeeze(z, *reg)
-
-
-class Xgate(Gate):
-    r"""Position :ref:`displacement <displacement>` gate.
-
-    .. math::
-       X(x) = e^{-i x \hat{p}/\hbar}
-
-    Args:
-      x (float): position displacement
-    """
-    def __init__(self, x):
-        super().__init__([x])
-
-    def _apply(self, reg, backend, **kwargs):
-        z = self.p[0] / sqrt(2*self.hbar)
-        backend.displacement(z, *reg)
-
-
-class Zgate(Gate):
-    r"""Momentum :ref:`displacement <displacement>` gate.
-
-    .. math::
-       Z(p) = e^{i p \hat{x}/\hbar}
-
-    Args:
-      p (float): momentum displacement
-    """
-    def __init__(self, p):
-        super().__init__([p])
-
-    def _apply(self, reg, backend, **kwargs):
-        z = self.p[0] * 1j/sqrt(2*self.hbar)
-        backend.displacement(z, *reg)
+        z = self.p[0] * exp(1j * self.p[1])
+        backend.squeeze(z.x, *reg)
 
 
 class Pgate(Gate):
@@ -1108,7 +1146,7 @@ class Pgate(Gate):
        P(s) = e^{i \frac{s}{2} \hat{x}^2/\hbar}
 
     Args:
-      s (float): parameter
+        s (float): parameter
     """
     def __init__(self, s):
         super().__init__([s])
@@ -1134,13 +1172,14 @@ class Vgate(Gate):
     .. warning:: The cubic phase gate has lower accuracy than the Kerr gate at the same cutoff dimension.
 
     Args:
-      gamma (float): parameter
+        gamma (float): parameter
     """
     def __init__(self, gamma):
         super().__init__([gamma])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.cubic_phase(self.p[0], *reg)
+        p = _unwrap(self.p)
+        backend.cubic_phase(p[0], *reg)
 
 
 class Kgate(Gate):
@@ -1150,13 +1189,15 @@ class Kgate(Gate):
        K(\kappa) = e^{i \kappa \hat{n}^2}
 
     Args:
-      kappa (float): parameter
+        kappa (float): parameter
     """
     def __init__(self, kappa):
         super().__init__([kappa])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.kerr_interaction(self.p[0], *reg)
+        p = _unwrap(self.p)
+        backend.kerr_interaction(p[0], *reg)
+
 
 class Rgate(Gate):
     r""":ref:`Rotation <rotation>` gate.
@@ -1172,7 +1213,8 @@ class Rgate(Gate):
         super().__init__([theta])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.rotation(self.p[0], *reg)
+        p = _unwrap(self.p)
+        backend.rotation(p[0], *reg)
 
 
 class BSgate(Gate):
@@ -1183,10 +1225,10 @@ class BSgate(Gate):
        B(\theta,\phi) = \exp\left(\theta (e^{i \phi} a^\dagger b -e^{-i \phi}a b^\dagger) \right)
 
     Args:
-      theta (float): Transmittivity angle :math:`\theta`. The transmission amplitude of the beamsplitter is :math:`t = \cos(\theta)`.
-        The value :math:`\theta=\pi/4` gives the 50-50 beamsplitter (default).
-      phi (float): Phase angle :math:`\phi`. The reflection amplitude of the beamsplitter is :math:`r = e^{i\phi}\sin(\theta)`.
-        The value :math:`\phi = \pi/2` gives the symmetric beamsplitter.
+        theta (float): Transmittivity angle :math:`\theta`. The transmission amplitude of the beamsplitter is :math:`t = \cos(\theta)`.
+            The value :math:`\theta=\pi/4` gives the 50-50 beamsplitter (default).
+        phi (float): Phase angle :math:`\phi`. The reflection amplitude of the beamsplitter is :math:`r = e^{i\phi}\sin(\theta)`.
+            The value :math:`\phi = \pi/2` gives the symmetric beamsplitter.
     """
     ns = 2
     def __init__(self, theta=pi/4, phi=0.):
@@ -1195,10 +1237,8 @@ class BSgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         t = cos(self.p[0])
-        #_wrap_tensors needed to assist proper casting for tfbackend
-        r = _wrap_tensors(sin(self.p[0])) * exp(1j * _wrap_tensors(self.p[1]))
-
-        backend.beamsplitter(t, r, *reg)
+        r = sin(self.p[0]) * exp(1j * self.p[1])
+        backend.beamsplitter(t.x, r.x, *reg)
 
 
 class S2gate(Gate):
@@ -1210,8 +1250,8 @@ class S2gate(Gate):
     where :math:`z = r e^{i\phi}`.
 
     Args:
-      r (float): squeezing amount
-      phi (float): squeezing phase angle :math:`\phi`
+        r (float): squeezing amount
+        phi (float): squeezing phase angle :math:`\phi`
     """
     ns = 2
     def __init__(self, r, phi=0.):
@@ -1239,7 +1279,7 @@ class CXgate(Gate):
     :math:`\ket{x_1, x_2} \mapsto \ket{x_1, s x_1 +x_2}`.
 
     Args:
-      s (float): addition multiplier
+        s (float): addition multiplier
     """
     ns = 2
     def __init__(self, s=1):
@@ -1267,10 +1307,10 @@ class CZgate(Gate):
        \text{CZ}(s) =  \iint dx dy \: e^{i sxy/\hbar} \ket{x,y}\bra{x,y} = e^{i s \: \hat{x} \otimes \hat{x}/\hbar}
 
     In the position basis it maps
-    :math:`\ket{x_1, x_2} = e^{i s x_1 x_2/\hbar} \ket{x_1, x_2}`.
+    :math:`\ket{x_1, x_2} \mapsto e^{i s x_1 x_2/\hbar} \ket{x_1, x_2}`.
 
     Args:
-      s (float): phase shift multiplier
+        s (float): phase shift multiplier
     """
     ns = 2
     def __init__(self, s=1):
@@ -1300,15 +1340,15 @@ class Fouriergate(Gate):
         super().__init__([pi/2])
 
     def _apply(self, reg, backend, **kwargs):
-        backend.rotation(self.p[0], *reg)
+        p = _unwrap(self.p)
+        backend.rotation(p[0], *reg)
 
     def __str__(self):
         """String representation for the gate."""
+        temp = 'Fourier'
         if self.dagger:
-            d = r"^\dagger"
-        else:
-            d = ""
-        return "Fourier" + d
+            temp += '.H'
+        return temp
 
 
 #====================================================================
@@ -1316,11 +1356,79 @@ class Fouriergate(Gate):
 #====================================================================
 
 
-class All(Operation):
+#====================================================================
+# Subsystem creation and deletion
+#====================================================================
+
+
+class MetaOperation(Operation):
+    """Abstract base class for metaoperations.
+
+    This includes subsystem creation and deletion.
+    """
+    def __init__(self):
+        super().__init__(par=[])
+
+
+class Delete(MetaOperation):
+    """Deletes one or more existing modes.
+    Also accessible via the shortcut variable ``Del``.
+
+    The deleted modes are traced out.
+    After the deletion the state of the remaining subsystems may have to be described using a density operator.
+    """
+    ns = None
+
+    def __or__(self, reg):
+        reg = super().__or__(reg)
+        _Engine._current_context._delete_subsystems(reg)
+
+    def _apply(self, reg, backend, **kwargs):
+        backend.del_mode(reg)
+
+    def __str__(self):
+        # the shorthand object
+        return 'Del'
+
+
+class New_modes(MetaOperation):
+    """Used for adding new modes to the system.
+    Also accessible via the shortcut variable ``New``.
+
+    The new modes are prepapred in the vacuum state.
+
+    This class cannot be used with the :meth:`__or__` syntax since it would be misleading,
+    instead we use :meth:`__call__` on a single instance to dispatch the command to the engine.
+    """
+    ns = 0
+
+    def __call__(self, n=1):
+        """Adds one or more new modes to the system in a deferred way.
+
+        Dispatches the command to the command queue.
+        """
+        # pylint: disable=attribute-defined-outside-init
+        self.n = n  # int: store the number of new modes for the __str__ method
+        # create RegRef placeholders for the new modes
+        refs = _Engine._current_context._add_subsystems(n)
+        # send the actual creation command to the engine
+        _Engine._current_context.append(self, refs)
+        return refs
+
+    def _apply(self, reg, backend, **kwargs):
+        # pylint: disable=unused-variable
+        inds = backend.add_mode(len(reg))
+
+    def __str__(self):
+        # HACK, trailing space signals "do not print anything more" to Command.__str__.
+        return 'New({}) '.format(self.n)
+
+
+class All(MetaOperation):
     """Metaoperation for applying a single-mode operation to every mode in the register.
 
     Args:
-      op (Operation): single-mode operation to apply
+        op (Operation): single-mode operation to apply
     """
     def __init__(self, op):
         if op.ns != 1:
@@ -1329,13 +1437,13 @@ class All(Operation):
         self.op = op  #: Operation: one-subsystem operation to apply
 
     def __str__(self):
-        return super().__str__() + '[{}]'.format(str(self.op))
+        return super().__str__() +'({})'.format(str(self.op))
 
     def __or__(self, reg):
         # into a list of subsystems
         reg = _seq_to_list(reg)
         # convert into commands
-        _Engine._current_context._test_regrefs(reg)
+        _Engine._current_context._test_regrefs(reg)  # make sure reg does not contain duplicates (we feed them to Engine.append() one by one)
         for r in reg:
             _Engine._current_context.append(self.op, [r])
 
@@ -1343,35 +1451,6 @@ class All(Operation):
 #====================================================================
 # Decompositions
 #====================================================================
-
-
-class Decomposition(Operation):
-    """Abstract base class for decompositions.
-
-    This class provides the base behaviour for decomposing various objects
-    into a sequence of gate and state preparations.
-    """
-    def __init__(self, par):
-        super().__init__()
-        # check if any of the decomposition inputs are tensor objects
-        if sum([isinstance(x, (Variable, Tensor)) for x in par]):
-            raise NotImplementedError("Decompositions currently do not support "
-                                      "Tensorflow objects as arguments")
-        self.p = list(par)
-
-    def merge(self, other):
-        # can be merged if they are the same decomposition
-        if isinstance(other, self.__class__):
-            # at the moment, we will assume all state decompositions only
-            # take one argument. The only exception currently are state
-            # decompositions, which cannot be merged.
-            U1 = self.p[0]
-            U2 = other.p[0]
-            U = matmul(U2, U1)
-            new_decomp = self.__class__(U)
-            return new_decomp
-        else:
-            raise TypeError('Not the same decomposition type.')
 
 
 class Interferometer(Decomposition):
@@ -1388,7 +1467,7 @@ class Interferometer(Decomposition):
     def __init__(self, U):
         super().__init__([U])
 
-        if np.all(np.abs(U - np.identity(len(U))) < 1e-13):
+        if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
             self.identity = True
         else:
             self.identity = False
@@ -1517,7 +1596,7 @@ class GaussianTransform(Decomposition):
         return cmds
 
 
-class CovarianceState(Decomposition):
+class CovarianceState(Preparation, Decomposition):  # NOTE: inheritance order matters!
     r"""Prepare the specified modes in a Gaussian state.
 
     This operation uses the Williamson decomposition to prepare
@@ -1539,9 +1618,7 @@ class CovarianceState(Decomposition):
             context, the hbar value of the engine will override this keyword argument.
     """
     ns = None
-    def __init__(self, V, r=0, hbar=None):
-        super().__init__([V, r])
-
+    def __init__(self, V, r=None, hbar=None):
         try:
             self.hbar = _Engine._current_context.hbar
         except AttributeError:
@@ -1555,33 +1632,30 @@ class CovarianceState(Decomposition):
 
         self.ns = V.shape[0]//2
         self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < 1e-6
-
         self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
 
-        if r == 0:
-            self.x_disp = [0]*self.ns
-            self.p_disp = [0]*self.ns
-        else:
-            if len(r) != V.shape[0]:
-                raise ValueError('Vector of means must have the same length as the covariance matrix.')
-            self.x_disp = r[:self.ns]
-            self.p_disp = r[self.ns:]
+        if r is None:
+            # all zeroes
+            r = [0] * (2*self.ns)
+        r = np.asarray(r)
 
-    def merge(self, other):
-        # sequential preparation, only the last one matters
-        if isinstance(other, CovarianceState):
-            return other
-        else:
-            raise TypeError('For now, preparations cannot be merged with anything else.')
+        if len(r) != V.shape[0]:
+            raise ValueError('Vector of means must have the same length as the covariance matrix.')
+        self.x_disp = r[:self.ns]
+        self.p_disp = r[self.ns:]
+
+        super().__init__([V, r])
+
 
     def decompose(self, reg):
         # pylint: disable=too-many-branches
         cmds = []
 
-        D = np.diag(self.p[0])
-        is_diag = np.all(self.p[0] == np.diag(D))
+        V = self.p[0].x
+        D = np.diag(V)
+        is_diag = np.all(V == np.diag(D))
 
-        BD = changebasis(self.ns) @ self.p[0] @ changebasis(self.ns).T
+        BD = changebasis(self.ns) @ V @ changebasis(self.ns).T
         BD_modes = [BD[i*2:(i+1)*2, i*2:(i+1)*2] for i in range(BD.shape[0]//2)]
         is_block_diag = (not is_diag) and np.all(BD == block_diag(*BD_modes))
 
@@ -1644,12 +1718,10 @@ RR = RegRefTransform
 # here we list different classes of operations for unit testing purposes
 
 zero_args_gates = (Fourier,)  # all these are pre-constructed objects, not classes
-one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate, CXgate, CZgate)
+one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate, Kgate, CXgate, CZgate)
 two_args_gates = (Dgate, Sgate, BSgate, S2gate)
-
-two_mode_gates = (BSgate, S2gate, CXgate, CZgate)
-channels = (LossChannel,)
-
 gates = zero_args_gates + one_args_gates + two_args_gates
+
+channels = (LossChannel,)
 
 state_preparations = (Vacuum, Coherent, Squeezed, DisplacedSqueezed, Fock, Thermal, Catstate)

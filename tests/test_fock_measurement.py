@@ -5,10 +5,10 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
-import numpy as np
 from itertools import combinations
+
+import numpy as np
+
 from defaults import BaseTest, FockBaseTest
 
 
@@ -22,6 +22,7 @@ class FockMeasurementTests(FockBaseTest):
 
   def test_vacuum_measurements(self):
     """Tests Fock measurement on the vacuum state."""
+    self.logTestName()
     for _ in range(num_repeats):
       self.circuit.reset(pure=self.kwargs['pure'])
       meas = self.circuit.measure_fock([0,1,2])[0]
@@ -29,6 +30,7 @@ class FockMeasurementTests(FockBaseTest):
 
   def test_normalized_conditional_states(self):
     """Tests if the conditional states resulting from Fock measurements in a subset of modes are normalized."""
+    self.logTestName()
     state_preps = [n for n in range(self.D)] + [self.D - n for n in range(self.D)]
     for idx in range(num_repeats):
       self.circuit.reset(pure=self.kwargs['pure'])
@@ -41,6 +43,7 @@ class FockMeasurementTests(FockBaseTest):
 
   def test_fock_measurements(self):
     """Tests if Fock measurements results on a variety of multi-mode Fock states are correct."""
+    self.logTestName()
     state_preps = [n for n in range(self.D)] + [self.D - n for n in range(self.D)]
     mode_choices = [p for p in combinations(range(3), 1)] + \
                    [p for p in combinations(range(3), 2)] + \

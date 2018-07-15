@@ -108,7 +108,6 @@ def genOfRange(size):
     """
     Converts a range into a generator.
     """
-
     for i in range(size):
         yield i
 
@@ -117,9 +116,8 @@ def genOfTuple(t):
     """
     Converts a tuple into a generator
     """
-
-    for i in range(len(t)):
-        yield t[i]
+    for val in t:
+        yield val
 
 
 def indexRange(lst, trunc):

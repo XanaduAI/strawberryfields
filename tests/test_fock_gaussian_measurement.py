@@ -6,13 +6,14 @@
 ##############################################################################
 
 import unittest
-import os, sys
-sys.path.append(os.getcwd())
-import numpy as np
 from itertools import combinations
-from defaults import BaseTest, FockBaseTest
-from strawberryfields import backends
 from math import factorial
+
+import numpy as np
+
+from defaults import BaseTest, FockBaseTest, strawberryfields as sf
+from strawberryfields import backends
+
 
 num_repeats = 50
 
@@ -31,6 +32,7 @@ class FockGaussianMeasurementTests(BaseTest):
 
   def test_coherent_state(self):
     """Tests Fock probabilities on a coherent state."""
+    self.logTestName()
     alpha=1
     nmax=self.D - 1
     self.circuit.prepare_coherent_state(alpha,0)
@@ -63,6 +65,7 @@ class FockGaussianMeasurementTests(BaseTest):
 
   def test_squeezed_state(self):
     """Tests Fock probabilities on a squeezed state."""
+    self.logTestName()
     r=1.0
     nmax = self.D - 1
     self.circuit.prepare_squeezed_state(1.0,0,0)
@@ -94,6 +97,7 @@ class FockGaussianMeasurementTests(BaseTest):
 
   def test_displaced_squeezed_state(self):
     """Tests Fock probabilities on a state that is squeezed then displaced."""
+    self.logTestName()
     r=1.0
     alpha=3+4*1j
     nmax = self.D - 1
@@ -124,9 +128,7 @@ class FockGaussianMeasurementTests(BaseTest):
 class FockGaussianMeasurementTestsMulti(BaseTest):
   num_subsystems = 2
   def test_two_mode_squeezed(self):
-	  
-    
-   
+    self.logTestName()
     r = np.arcsinh(np.sqrt(1))
     nmax = 3
     self.circuit.prepare_squeezed_state(r,0,0)
@@ -149,6 +151,7 @@ class FockGaussianMeasurementTestsMulti(BaseTest):
 class FockGaussianMeasurementTestsMultiComplex(BaseTest):
   num_subsystems = 2
   def test_two_mode_squeezed(self):
+    self.logTestName()
     r=np.arcsinh(np.sqrt(1))
     nmax=3
     self.circuit.prepare_squeezed_state(r,0,0)

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Gaussian circuit operations"""
-# pylint: disable=duplicate-code
+# pylint: disable=duplicate-code,attribute-defined-outside-init
 import numpy as np
 
 from . import ops
@@ -91,9 +91,11 @@ class GaussianModes:
 
         Args:
             num_subsystems (int, optional): Sets the number of modes in the reset
-                circuit. Default is unchanged.
+                circuit. None means unchanged.
         """
         if num_subsystems is not None:
+            if not isinstance(num_subsystems, int):
+                raise ValueError("Number of modes must be an integer")
             self.nlen = num_subsystems
 
         self.nmat = np.zeros((self.nlen, self.nlen), dtype=complex)

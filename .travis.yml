@@ -8,6 +8,7 @@ env:
     - COVERALLS_PARALLEL=true
     - MIXED=0
     - BATCHED=0
+    - LOGGING=info
 matrix:
   include:
     - env: BACKEND=gaussian

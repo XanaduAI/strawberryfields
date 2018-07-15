@@ -3,16 +3,14 @@ Unit tests for utilities in :class:`strawberryfields.utils`.
 """
 
 import os
-import sys
-import signal
-
 import unittest
 
 import numpy as np
 from numpy import pi
 
+from defaults import FockBaseTest, strawberryfields
 import strawberryfields.backends.shared_ops as so
-from defaults import FockBaseTest
+
 
 bs_4_val = np.array([ 1.00000000+0.j,  1.00000000+0.j,  1.00000000+0.j,  1.00000000+0.j,
         1.00000000+0.j,  1.41421356+0.j,  1.73205081+0.j,  1.00000000+0.j,
@@ -91,6 +89,7 @@ class BeamsplitterFactors(FockBaseTest):
     num_subsystems = 1
 
     def test_generate_bs_factors(self):
+        self.logTestName()
         factors = so.generate_bs_factors(4)
         factors_val = factors[factors!=0.]
         factors_idx = np.array(np.nonzero(factors))
@@ -99,6 +98,7 @@ class BeamsplitterFactors(FockBaseTest):
         self.assertAllAlmostEqual(factors_idx, bs_4_idx, delta=self.tol)
 
     def test_save_load_bs_factors(self):
+        self.logTestName()
         factors = so.generate_bs_factors(4)
         so.save_bs_factors(factors, directory="./")
 
@@ -110,6 +110,7 @@ class BeamsplitterFactors(FockBaseTest):
         self.assertAllAlmostEqual(factors_idx, bs_4_idx, delta=self.tol)
 
     def tearDown(self):
+        self.logTestName()
         try:
             os.remove("fock_beamsplitter_factors_4.npz")
         except OSError:
@@ -120,14 +121,17 @@ class SqueezingFactors(FockBaseTest):
     num_subsystems = 1
 
     def test_squeeze_parity(self):
+        self.logTestName()
         parity = so.squeeze_parity(8)
         self.assertAllAlmostEqual(parity, squeeze_parity_8, delta=self.tol)
 
     def test_generate_squeeze_factors(self):
+        self.logTestName()
         factors = so.generate_squeeze_factors(4)
         self.assertAllAlmostEqual(factors, squeeze_factor_4, delta=self.tol)
 
     def test_save_load_squeeze_factors(self):
+        self.logTestName()
         factors_in = so.generate_squeeze_factors(4)
         so.save_squeeze_factors(factors_in, directory="./")
         factors_out = so.load_squeeze_factors(4, directory="./")
@@ -135,6 +139,7 @@ class SqueezingFactors(FockBaseTest):
         self.assertAllAlmostEqual(factors_out, squeeze_factor_4, delta=self.tol)
 
     def tearDown(self):
+        self.logTestName()
         try:
             os.remove("fock_squeeze_factors_4.npz")
         except OSError:
