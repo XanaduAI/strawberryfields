@@ -179,7 +179,7 @@ class QReg():
         self._state = ops.partial_trace(self._state, self._num_modes, modes)
         self._num_modes = self._num_modes - len(modes)
 
-    def prepare_multimode(self, state, modes=None):
+    def prepare_multimode(self, state, modes):
         r"""
         Prepares a given mode or list of modes in the given state.
 
@@ -197,11 +197,8 @@ class QReg():
 
         Args:
             state (array): vector, matrix, or tensor representation of the ket state or dm state in the fock basis to prepare
-            modes (list[int] or non-negative int or None): The mode(s) into which state is to be prepared. Needs not be ordered.
+            modes (list[int] or non-negative int): The mode(s) into which state is to be prepared. Needs not be ordered.
         """
-        if modes is None:
-            modes = list(range(self._num_modes))
-
         if isinstance(modes, int):
             modes = [modes]
 

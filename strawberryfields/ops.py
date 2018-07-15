@@ -1649,9 +1649,6 @@ class CovarianceState(Preparation, Decomposition):
     of beamsplitters and local squeezing and rotation gates, by way of the
     :class:`~.GaussianTransform` and :class:`~.Interferometer` decompositions.
 
-    Alternatively, the decomposition can be turned off, and the circuit can be
-    prepared in the specified Gaussian state directly.
-
     Args:
         V (array): the :math:`2N\times 2N` (real and positive definite) covariance matrix
         r (array): a length :math:`2N` vector of means, of the

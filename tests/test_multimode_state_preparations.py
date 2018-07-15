@@ -28,6 +28,27 @@ class FockBasisMultimodeTests(FockBaseTest):
     """Tests for simulators that use Fock basis."""
     num_subsystems = 4
 
+    def test_multimode_ket_mode_permutations(self):
+        """Test multimode ket preparation when modes are permuted"""
+        self.logTestName()
+        random_ket0 = np.random.uniform(-1, 1, self.D) + 1j*np.random.uniform(-1, 1, self.D)
+        random_ket0 = random_ket0 / np.linalg.norm(random_ket0)
+
+        random_ket1 = np.random.uniform(-1, 1, self.D) + 1j*np.random.uniform(-1, 1, self.D)
+        random_ket1 = random_ket1 / np.linalg.norm(random_ket1)
+
+        random_ket = np.outer(random_ket0, random_ket1)
+        rho = np.einsum('ij,kl->ikjl', random_ket, random_ket.conj())
+
+        self.circuit.reset(pure=self.kwargs['pure'])
+        self.circuit.prepare_ket_state(random_ket, modes=[3, 1])
+        state = self.circuit.state([3, 1])
+        multi_mode_preparation_dm = state.dm()
+        if self.batched:
+            multi_mode_preparation_dm = multi_mode_preparation_dm[0]
+
+        self.assertAllAlmostEqual(multi_mode_preparation_dm, rho, delta=self.tol)
+
     def test_compare_single_mode_and_multimode_ket_preparation(self):
         """Test single and multimode ket preparation"""
         self.logTestName()

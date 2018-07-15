@@ -302,7 +302,7 @@ class QReg:
                 displaced_squeezed = ops.displaced_squeezed(alpha, r, phi, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched)
                 self._replace_and_update(displaced_squeezed, mode)
 
-    def prepare_multimode(self, state, modes=None, input_state_is_pure=False):
+    def prepare_multimode(self, state, modes, input_state_is_pure=False):
         r"""Prepares a given mode or list of modes in the given state.
 
         After the preparation the system is in a mixed product state,
@@ -325,57 +325,41 @@ class QReg:
         Args:
             state (array): vector, matrix, or tensor representation of the ket state or
                 density matrix state (or a batch of such states) in the fock basis to prepare
-            modes (list[int] or non-negative int or None): The mode(s) into which state is
+            modes (list[int] or non-negative int): The mode(s) into which state is
                 to be prepared. Needs not be ordered.
         """
-        if modes is None:
-            modes = list(range(self._num_modes))
+        if self._valid_modes(modes):
+            if isinstance(modes, int):
+                modes = [modes]
 
-        if not self._valid_modes(modes):
-            return
+            n_modes = len(modes)
+            if input_state_is_pure:
+                input_is_batched = (len(state.shape) > n_modes or (len(state.shape) == 2 and state.shape[1] == self._cutoff_dim**n_modes))
+            else:
+                input_is_batched = len(state.shape) % 2 == 1
 
-        n_modes = len(modes)
-        if input_state_is_pure:
-            input_is_batched = (len(state.shape) > n_modes or (len(state.shape) == 2 and state.shape[1] == self._cutoff_dim**n_modes))
-        else:
-            input_is_batched = len(state.shape) % 2 == 1
+            pure_shape = tuple([self._cutoff_dim]*n_modes)
+            mixed_shape = tuple([self._cutoff_dim]*(2*n_modes))
+            pure_shape_as_vector = tuple([self._cutoff_dim**n_modes])
+            mixed_shape_as_matrix = tuple([self._cutoff_dim**n_modes]*2)
+            if input_is_batched:
+                pure_shape = (self._batch_size,) + pure_shape
+                mixed_shape = (self._batch_size,) + mixed_shape
+                pure_shape_as_vector = (self._batch_size,) + pure_shape_as_vector
+                mixed_shape_as_matrix = (self._batch_size,) + mixed_shape_as_matrix
 
-        pure_shape = tuple([self._cutoff_dim]*n_modes)
-        mixed_shape = tuple([self._cutoff_dim]*(2*n_modes))
-        pure_shape_as_vector = tuple([self._cutoff_dim**n_modes])
-        mixed_shape_as_matrix = tuple([self._cutoff_dim**n_modes]*2)
-        if input_is_batched:
-            pure_shape = (self._batch_size,) + pure_shape
-            mixed_shape = (self._batch_size,) + mixed_shape
-            pure_shape_as_vector = (self._batch_size,) + pure_shape_as_vector
-            mixed_shape_as_matrix = (self._batch_size,) + mixed_shape_as_matrix
+            # reshape to support input both as tensor and vector/matrix
+            if state.shape == pure_shape_as_vector:
+                state = tf.reshape(state, pure_shape)
+            elif state.shape == mixed_shape_as_matrix:
+                state = tf.reshape(state, mixed_shape)
 
-        # reshape to support input both as tensor and vector/matrix
-        if state.shape == pure_shape_as_vector:
-            state = tf.reshape(state, pure_shape)
-        elif state.shape == mixed_shape_as_matrix:
-            state = tf.reshape(state, mixed_shape)
-
-        with self._graph.as_default():
-            state = tf.cast(tf.convert_to_tensor(state), ops.def_type)
-            # batch state now if not already batched and self._batched
-            if self._batched and not input_is_batched:
-                state = tf.stack([state] * self._batch_size)
-            self._replace_and_update(state, modes)
-
-    def prepare(self, state, mode):
-        r"""
-        Prepares a given mode in a given state.
-
-        This is a simple wrappter for prepare_multimode(), see there for more details.
-
-        Args:
-            state (array): vector, matrix, or tensor representation of the ket state or dm state in the fock basis to prepare
-            modes (list[int] or non-negative int or None): The mode(s) into which state is to be prepared. Needs not be ordered.
-        """
-        if isinstance(mode, int):
-            mode = [mode]
-            self.prepare_multimode(state, mode)
+            with self._graph.as_default():
+                state = tf.cast(tf.convert_to_tensor(state), ops.def_type)
+                # batch state now if not already batched and self._batched
+                if self._batched and not input_is_batched:
+                    state = tf.stack([state] * self._batch_size)
+                self._replace_and_update(state, modes)
 
     def prepare_thermal_state(self, nbar, mode):
         """

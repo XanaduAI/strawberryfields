@@ -222,7 +222,8 @@ class TFBackend(BaseFock):
             mode (int): index of mode where state is prepared
 
         """
-        self._prepare_state(state, modes, True)
+        with tf.name_scope('Prepare_state'):
+            self.circuit.prepare_multimode(state, self._remap_modes(modes), True)
 
     def prepare_dm_state(self, state, modes):
         """
@@ -234,26 +235,8 @@ class TFBackend(BaseFock):
             mode (int): index of mode where state is prepared
 
         """
-        self._prepare_state(state, modes, False)
-
-    def _prepare_state(self, state, modes=None, input_state_is_pure=False):
-        """
-        Prepare an arbitrary pure or mixed state on the specified mode.
-        Note: this may convert the state representation to mixed.
-
-        Args:
-            state (array): vector, matrix, or tensor representation of the state to prepare
-            modes (int or list([int])): index or indices of mode(s) where state is to be prepared
-            input_state_is_pure (boolean): whether the state is to be considered as pure.
-
-        """
-        if modes is None:
-            modes = list(range(len(self._modemap.show())))
-        elif isinstance(modes, int):
-            modes = [modes]
-
         with tf.name_scope('Prepare_state'):
-            self.circuit.prepare_multimode(state, self._remap_modes(modes), input_state_is_pure)
+            self.circuit.prepare_multimode(state, self._remap_modes(modes), False)
 
     def prepare_thermal_state(self, nbar, mode):
         """
@@ -268,7 +251,6 @@ class TFBackend(BaseFock):
         with tf.name_scope('Prepare_thermal'):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_thermal_state(nbar, remapped_mode)
-
 
     def rotation(self, phi, mode):
         """
