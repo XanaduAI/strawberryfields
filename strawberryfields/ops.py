@@ -1666,10 +1666,9 @@ class Gaussian(Preparation, Decomposition):
 
     Args:
         V (array): the :math:`2N\times 2N` (real and positive definite) covariance matrix.
-            If None, then it is assumed that :math:`V=I`.
         r (array): a length :math:`2N` vector of means, of the
-            form :math:`(\x_0,\dots,\x_{N-1},\p_0,\dots,\p_{N-1})`. If None, it is
-            assumed that :math:`r=0`.
+            form :math:`(\x_0,\dots,\x_{N-1},\p_0,\dots,\p_{N-1})`.
+            If None, it is assumed that :math:`r=0`.
         decomp (bool): if False, no decomposition is applied, and the specified modes
             are explicity prepared in the provided Gaussian state.
         hbar (float): the value of :math:`\hbar` used in the definition of the :math:`\x`

@@ -295,15 +295,15 @@ class GaussianMultimodeTests(GaussianBaseTest):
         self.assertAllAlmostEqual(state.means(), means, delta=self.tol)
         self.assertAllAlmostEqual(state.cov(), cov, delta=self.tol)
 
-    def test_multimode_gaussian_state_entangled(self):
-        """Test multimode Gaussian state preparation on an entangled state"""
+    def test_multimode_gaussian_random_state(self):
+        """Test multimode Gaussian state preparation on a random state"""
         self.logTestName()
         means = 2*np.random.random(size=[2*self.num_subsystems])-1
         cov = random_covariance(self.num_subsystems, pure=self.kwargs['pure'])
 
         self.circuit.reset(pure=self.kwargs['pure'])
 
-        # circuit is initially in a random entangled state
+        # circuit is initially in a random state
         self.circuit.prepare_gaussian_state(means, cov, modes=range(self.num_subsystems))
 
         # test Gaussian state is correct
@@ -319,8 +319,11 @@ class GaussianMultimodeTests(GaussianBaseTest):
         # test resulting Gaussian state is correct
         state = self.circuit.state()
 
-        ex_means = np.array([means[0], means2[1], means2[0], means[3],
-                             means[4], means2[3], means2[2], means[7]])
+        # in the new means vector, the modes 0 and 3 remain unchanged
+        # Modes 1 and 2, however, now have values given from elements
+        # means2[1] and means2[0].
+        ex_means = np.array([means[0], means2[1], means2[0], means[3],  # position
+                             means[4], means2[3], means2[2], means[7]]) # momentum
 
         ex_cov = np.zeros([8, 8])
 

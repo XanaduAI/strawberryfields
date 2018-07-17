@@ -264,7 +264,7 @@ class GaussianModes:
             self.mean[mode] = 0.5*(r[2*idx]+1j*r[2*idx+1])
 
     def fromscovmat(self, V, modes=None):
-        r"""Instantiates an object when a standard covariance matrix is provided
+        r"""Updates the circuit's state when a standard covariance matrix is provided.
 
         Args:
             V (array): covariance matrix in symmetric ordering
