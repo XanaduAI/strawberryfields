@@ -1,6 +1,6 @@
 ##############################################################################
 #
-# Unit tests for various multi mode state preparation operations
+# Tests for various multi mode state preparation operations
 #
 ##############################################################################
 
@@ -44,8 +44,6 @@ class FockBasisMultimodeTests(FockBaseTest):
         self.circuit.prepare_ket_state(random_ket, modes=[3, 1])
         state = self.circuit.state([3, 1])
         multi_mode_preparation_dm = state.dm()
-        if self.batched:
-            multi_mode_preparation_dm = multi_mode_preparation_dm[0]
 
         self.assertAllAlmostEqual(multi_mode_preparation_dm, rho, delta=self.tol)
 
@@ -66,22 +64,19 @@ class FockBasisMultimodeTests(FockBaseTest):
         state = self.circuit.state([0, 1])
         single_mode_preparation_dm = state.dm()
         single_mode_preparation_probs = np.array(state.all_fock_probs())
-        if self.batched:
-            single_mode_preparation_dm = single_mode_preparation_dm[0]
-            single_mode_preparation_probs = single_mode_preparation_probs[0]
 
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_ket_state(random_ket, [0, 1])
         state = self.circuit.state([0, 1])
         multi_mode_preparation_dm = state.dm()
         multi_mode_preparation_probs = np.array(state.all_fock_probs())
-        if self.batched:
-            multi_mode_preparation_dm = multi_mode_preparation_dm[0]
-            multi_mode_preparation_probs = multi_mode_preparation_probs[0]
 
-        self.assertAllEqual(single_mode_preparation_dm.shape, multi_mode_preparation_dm.shape)
         self.assertAllAlmostEqual(single_mode_preparation_dm, multi_mode_preparation_dm, delta=self.tol)
         self.assertAllAlmostEqual(single_mode_preparation_probs, multi_mode_preparation_probs, delta=self.tol)
+        if self.batched:
+            single_mode_preparation_dm = single_mode_preparation_dm[0]
+            multi_mode_preparation_dm = multi_mode_preparation_dm[0]
+        self.assertAllEqual(single_mode_preparation_dm.shape, multi_mode_preparation_dm.shape)
 
 
     def test_compare_single_mode_and_multimode_dm_preparation(self):
@@ -104,9 +99,6 @@ class FockBasisMultimodeTests(FockBaseTest):
         state = self.circuit.state([0, 1])
         single_mode_preparation_dm = state.dm()
         single_mode_preparation_probs = np.array(state.all_fock_probs())
-        if self.batched:
-            single_mode_preparation_dm = single_mode_preparation_dm[0]
-            single_mode_preparation_probs = single_mode_preparation_probs[0]
 
         # first we do a preparation from random_dm, with shape [self.D]*4
         self.circuit.reset(pure=self.kwargs['pure'])
@@ -114,9 +106,6 @@ class FockBasisMultimodeTests(FockBaseTest):
         state = self.circuit.state(modes=[0, 1])
         multi_mode_preparation_dm = state.dm()
         multi_mode_preparation_probs = np.array(state.all_fock_probs())
-        if self.batched:
-            multi_mode_preparation_dm = multi_mode_preparation_dm[0]
-            multi_mode_preparation_probs = multi_mode_preparation_probs[0]
 
         # second we do a preparation from the corresponding matrix with shape [self.D**2]*2
         self.circuit.reset(pure=self.kwargs['pure'])
@@ -124,9 +113,6 @@ class FockBasisMultimodeTests(FockBaseTest):
         state = self.circuit.state(modes=[0, 1])
         multi_mode_preparation_from_matrix_dm = state.dm()
         multi_mode_preparation_from_matrix_probs = np.array(state.all_fock_probs())
-        if self.batched:
-            multi_mode_preparation_from_matrix_dm = multi_mode_preparation_from_matrix_dm[0]
-            multi_mode_preparation_from_matrix_probs = multi_mode_preparation_from_matrix_probs[0]
 
         # third we do a preparation from random_dm on modes 3 and 1 (in that order!) and test if the states end up in the correct modes
         self.circuit.reset(pure=self.kwargs['pure'])
@@ -137,19 +123,10 @@ class FockBasisMultimodeTests(FockBaseTest):
         multi_mode_preparation_31_mode_2 = self.circuit.state(modes=2).dm()
         multi_mode_preparation_31_mode_3 = self.circuit.state(modes=3).dm()
         multi_mode_preparation_31_probs = np.array(self.circuit.state(modes=[3,1]).all_fock_probs())
-        if self.batched:
-            multi_mode_preparation_31_mode_0 = multi_mode_preparation_31_mode_0[0]
-            multi_mode_preparation_31_mode_1 = multi_mode_preparation_31_mode_1[0]
-            multi_mode_preparation_31_mode_2 = multi_mode_preparation_31_mode_2[0]
-            multi_mode_preparation_31_mode_3 = multi_mode_preparation_31_mode_3[0]
-            multi_mode_preparation_31_probs = multi_mode_preparation_31_probs[0]
 
-        single_mode_vac = np.zeros(multi_mode_preparation_31_mode_0.shape, dtype=np.complex128)
+        single_mode_vac = np.zeros((self.D, self.D), dtype=np.complex128)
         single_mode_vac.itemset(0, 1.0 + 0.0j)
 
-        self.assertAllEqual(random_dm.shape, single_mode_preparation_dm.shape)
-        self.assertAllEqual(random_dm.shape, multi_mode_preparation_dm.shape)
-        self.assertAllEqual(random_dm.shape, multi_mode_preparation_from_matrix_dm.shape)
         self.assertAllAlmostEqual(random_dm, single_mode_preparation_dm, delta=self.tol)
         self.assertAllAlmostEqual(multi_mode_preparation_dm, single_mode_preparation_dm, delta=self.tol)
         self.assertAllAlmostEqual(multi_mode_preparation_from_matrix_dm, single_mode_preparation_dm, delta=self.tol)
@@ -163,6 +140,15 @@ class FockBasisMultimodeTests(FockBaseTest):
         self.assertAllAlmostEqual(single_mode_preparation_probs, multi_mode_preparation_probs, delta=self.tol)
         self.assertAllAlmostEqual(single_mode_preparation_probs, multi_mode_preparation_from_matrix_probs, delta=self.tol)
         self.assertAllAlmostEqual(single_mode_preparation_probs, multi_mode_preparation_31_probs, delta=self.tol)
+
+        if self.batched:
+            single_mode_preparation_dm = single_mode_preparation_dm[0]
+            multi_mode_preparation_dm = multi_mode_preparation_dm[0]
+            multi_mode_preparation_from_matrix_dm = multi_mode_preparation_from_matrix_dm[0]
+        self.assertAllEqual(random_dm.shape, single_mode_preparation_dm.shape)
+        self.assertAllEqual(random_dm.shape, multi_mode_preparation_dm.shape)
+        self.assertAllEqual(random_dm.shape, multi_mode_preparation_from_matrix_dm.shape)
+
 
     def test_prepare_multimode_random_product_dm_state_on_different_modes(self):
         """Tests if a random multi mode dm state is correctly prepared on different modes."""
@@ -190,11 +176,11 @@ class FockBasisMultimodeTests(FockBaseTest):
             self.circuit.reset(pure=self.kwargs['pure'])
             self.circuit.prepare_dm_state(random_rho, subsystems)
             dm = self.circuit.state(modes=subsystems).dm()
+
+            self.assertAllAlmostEqual(random_rho, dm, delta=self.tol)
             if self.batched:
                 dm = dm[0]
-
             self.assertAllEqual(random_rho.shape, dm.shape)
-            self.assertAllAlmostEqual(random_rho, dm, delta=self.tol)
 
     def test_fast_state_prep_on_all_modes(self):
         """Tests if a random multi mode ket state is correctly prepared with
@@ -206,11 +192,11 @@ class FockBasisMultimodeTests(FockBaseTest):
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.prepare_dm_state(random_ket, modes=range(self.num_subsystems))
         all_mode_preparation_ket = self.circuit.state().ket() # Returns None if the state if mixed
+
+        self.assertAllAlmostEqual(all_mode_preparation_ket, random_ket, delta=self.tol)
         if self.batched:
             all_mode_preparation_ket = all_mode_preparation_ket[0]
-
         self.assertAllEqual(all_mode_preparation_ket.shape, random_ket.shape)
-        self.assertAllAlmostEqual(all_mode_preparation_ket, random_ket, delta=self.tol)
 
 
 class FrontendFockTests(FockBaseTest):
