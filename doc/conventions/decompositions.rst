@@ -74,7 +74,7 @@ Williamson decomposition
 
 .. tip::
 
-   *Implemented in Strawberry Fields as a state preparation decomposition by* :class:`strawberryfields.ops.CovarianceState`
+   *Implemented in Strawberry Fields as a state preparation decomposition by* :class:`strawberryfields.ops.Gaussian`
 
 
 The Williamson decomposition allows an arbitrary Gaussian covariance matrix to be decomposed into a symplectic transformation acting on the state described by the diagonal matrix :math:`D`.

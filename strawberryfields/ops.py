@@ -190,7 +190,7 @@ State preparation
    Catstate
    Ket
    DensityMatrix
-   CovarianceState
+   Gaussian
 
 Measurements
 ------------
@@ -214,7 +214,7 @@ Decompositions
 .. autosummary::
     Interferometer
     GaussianTransform
-    CovarianceState
+    Gaussian
 
 
 Single-mode gates
@@ -535,10 +535,6 @@ class Measurement(Operation):
             instead of randomly sampling. None means no postselection.
     """
     # todo: self.select could support :class:`~strawberryfields.parameters.Parameter` instances.
-
-    # todo: Currently MeasureFock objects can be applied to any number of
-    # subsystems. This can cause problems with postselection,
-    # since self.select has a fixed length.
     ns = None
     def __init__(self, par, select=None):
         super().__init__(par)
@@ -569,20 +565,11 @@ class Measurement(Operation):
 
 
 class Decomposition(Operation):
-    """Abstract base class for matrix decompositions.
+    """Abstract base class for decompositions.
 
-    This class provides the base behaviour for decomposing various matrices
+    This class provides the base behaviour for decomposing various objects
     into a sequence of gates and state preparations.
-
-    An identity matrix corresponds to an identity operation (NOP).
     """
-    # todo: Define how a given matrix is translated into a unitary on the state space.
-
-    # Ville: We could specialize apply() here to do nothing if p[0] is identity and
-    # bypass _apply() and decompose() entirely, see Gate.apply.
-    # Josh: I think I prefer using the ``decomposition`` method for decompositions,
-    # as this allows us (and the user) to distinguish gates applied manually,
-    # and gates that were decomposed.
     def merge(self, other):
         # can be merged if they are the same class
         if isinstance(other, self.__class__):
@@ -592,7 +579,7 @@ class Decomposition(Operation):
             U1 = self.p[0]
             U2 = other.p[0]
             U = matmul(U2, U1).x
-            # todo above we strip the Parameter wrapper to make the following check
+            # Note: above we strip the Parameter wrapper to make the following check
             # easier to perform. The constructor restores it.
             # Another option would be to add the required methods to Parameter class.
             # check if the matrices cancel
@@ -919,7 +906,7 @@ class Ket(Preparation):
             if not state.is_pure:
                 raise ValueError("Provided Fock state is not pure.")
             super().__init__([state.ket()])
-        elif isinstance(state, BaseGaussianState):
+        elif isinstance(state, BaseGaussian):
             raise ValueError("Gaussian states are not supported for the Ket operation.")
         else:
             super().__init__([state])
@@ -951,7 +938,7 @@ class DensityMatrix(Preparation):
     def __init__(self, state):
         if isinstance(state, BaseFockState):
             super().__init__([state.dm()])
-        elif isinstance(state, BaseGaussianState):
+        elif isinstance(state, BaseGaussian):
             raise ValueError("Gaussian states are not supported for the Ket operation.")
         else:
             super().__init__([state])
@@ -1660,7 +1647,7 @@ class GaussianTransform(Decomposition):
         return cmds
 
 
-class CovarianceState(Preparation, Decomposition):
+class Gaussian(Preparation, Decomposition):
     r"""Prepare the specified modes in a Gaussian state.
 
     This operation uses the Williamson decomposition to prepare
@@ -1673,16 +1660,25 @@ class CovarianceState(Preparation, Decomposition):
     of beamsplitters and local squeezing and rotation gates, by way of the
     :class:`~.GaussianTransform` and :class:`~.Interferometer` decompositions.
 
+    Alternatively, the decomposition can be explicitly turned off, and the
+    backend can be explicitly prepared in the Gaussian state provided. This is
+    **only** supported by backends using the Gaussian representation.
+
     Args:
-        V (array): the :math:`2N\times 2N` (real and positive definite) covariance matrix
+        V (array): the :math:`2N\times 2N` (real and positive definite) covariance matrix.
+            If None, then it is assumed that :math:`V=I`.
         r (array): a length :math:`2N` vector of means, of the
-            form :math:`(\x_0,\dots,\x_{N-1},\p_0,\dots,\p_{N-1})`
+            form :math:`(\x_0,\dots,\x_{N-1},\p_0,\dots,\p_{N-1})`. If None, it is
+            assumed that :math:`r=0`.
+        decomp (bool): if False, no decomposition is applied, and the specified modes
+            are explicity prepared in the provided Gaussian state.
         hbar (float): the value of :math:`\hbar` used in the definition of the :math:`\x`
             and :math:`\p` quadrature operators. Note that if used inside of an engine
             context, the hbar value of the engine will override this keyword argument.
     """
+    # pylint: disable=too-many-instance-attributes
     ns = None
-    def __init__(self, V, r=None, hbar=None):
+    def __init__(self, V, r=None, decomp=True, hbar=None):
         try:
             self.hbar = _Engine._current_context.hbar
         except AttributeError:
@@ -1692,11 +1688,7 @@ class CovarianceState(Preparation, Decomposition):
             else:
                 self.hbar = hbar
 
-        th, self.S = williamson(V, tol=11)
-
         self.ns = V.shape[0]//2
-        self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < 1e-6
-        self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
 
         if r is None:
             # all zeroes
@@ -1705,11 +1697,27 @@ class CovarianceState(Preparation, Decomposition):
 
         if len(r) != V.shape[0]:
             raise ValueError('Vector of means must have the same length as the covariance matrix.')
+
         self.x_disp = r[:self.ns]
         self.p_disp = r[self.ns:]
 
+        self.decomp = False
+        if decomp:
+            self.decomp = True
+            th, self.S = williamson(V, tol=11)
+            self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < 1e-6
+            self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
+
         super().__init__([V, r])
 
+    def _apply(self, reg, backend, **kwargs):
+        if self.decomp:
+            # explicity raise a NotImplementedError,
+            # so that the engine knows to perform a decomposition.
+            raise NotImplementedError
+
+        p = _unwrap(self.p)
+        backend.prepare_gaussian_state(p[1], p[0], reg)
 
     def decompose(self, reg):
         # pylint: disable=too-many-branches
