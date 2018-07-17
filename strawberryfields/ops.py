@@ -906,7 +906,7 @@ class Ket(Preparation):
             if not state.is_pure:
                 raise ValueError("Provided Fock state is not pure.")
             super().__init__([state.ket()])
-        elif isinstance(state, BaseGaussian):
+        elif isinstance(state, BaseGaussianState):
             raise ValueError("Gaussian states are not supported for the Ket operation.")
         else:
             super().__init__([state])
@@ -938,7 +938,7 @@ class DensityMatrix(Preparation):
     def __init__(self, state):
         if isinstance(state, BaseFockState):
             super().__init__([state.dm()])
-        elif isinstance(state, BaseGaussian):
+        elif isinstance(state, BaseGaussianState):
             raise ValueError("Gaussian states are not supported for the Ket operation.")
         else:
             super().__init__([state])
