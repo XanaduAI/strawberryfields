@@ -58,22 +58,22 @@ Engine methods
    return_state
    optimize
 
-The following are internal Engine methods. In most cases the user should not
-call these directly.
-
-.. autosummary::
-   __enter__
-   __exit__
-   _add_subsystems
-   _delete_subsystems
-   _index_to_regref
-   _test_regrefs
-   _run_command_list
-   _cmd_applied_all
-   _retain_queue
-   _list_to_grid
-   _grid_to_DAG
-   _DAG_to_list
+..
+    The following are internal Engine methods. In most cases the user should not
+    call these directly.
+    .. autosummary::
+       __enter__
+       __exit__
+       _add_subsystems
+       _delete_subsystems
+       _index_to_regref
+       _test_regrefs
+       _run_command_list
+       _cmd_applied_all
+       _retain_queue
+       _list_to_grid
+       _grid_to_DAG
+       _DAG_to_list
 
 Helper classes
 --------------
@@ -568,6 +568,7 @@ class Engine:
 
 
     def _retain_queue(self):
+        """Prepends the queue with previously applied commands"""
         self.cmd_queue[:0] = self._cmd_applied_all()
 
 
