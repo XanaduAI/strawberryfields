@@ -17,7 +17,7 @@ Key mathematical operations used for tensorflow backend
 ======================
 
 Contains the basic linear algebraic utilities needed by the tensorflow simulator backend
-Hyperlinks: :class:`QReg`
+Hyperlinks: :class:`Circuit`
 
 .. currentmodule:: strawberryfields.backends.tfbackend.ops
 

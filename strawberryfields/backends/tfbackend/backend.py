@@ -22,7 +22,7 @@ import numpy as np
 import tensorflow as tf
 
 from strawberryfields.backends import BaseFock, ModeMap
-from .circuit import QReg
+from .circuit import Circuit
 from .ops import _check_for_eval, mixed, partial_trace, reorder_modes
 from .states import FockStateTF
 
@@ -95,7 +95,7 @@ class TFBackend(BaseFock):
                 raise ValueError("batch_size of 1 not supported, please use different batch_size or set batch_size=None")
             else:
                 self._modemap = ModeMap(num_subsystems)
-                circuit = QReg(self._graph, num_subsystems, cutoff_dim, hbar, pure, batch_size)
+                circuit = Circuit(self._graph, num_subsystems, cutoff_dim, hbar, pure, batch_size)
 
         self._init_modes = num_subsystems
         self.circuit = circuit

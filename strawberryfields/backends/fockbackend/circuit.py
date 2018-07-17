@@ -19,14 +19,14 @@ Fock backend proper
 Contains most of the code for managing the simulator state and offloading
 operations to the utilities in ops.
 
-Hyperlinks: :class:`QReg`
+Hyperlinks: :class:`Circuit`
 
 .. currentmodule:: strawberryfields.backends.fockbackend.circuit
 
 Contents
 ----------------------
 .. autosummary::
-     QReg
+     Circuit
 
 """
 # pylint: disable=too-many-arguments,len-as-condition,attribute-defined-outside-init
@@ -46,7 +46,7 @@ from . import ops
 indices = string.ascii_lowercase
 MAX_MODES = len(indices) - 3
 
-class QReg():
+class Circuit():
     """
     Class implementing a basic simulator for a collection of modes
     in the fock basis.

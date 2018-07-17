@@ -24,12 +24,12 @@ Tensorflow simulator backend
 
 The :class:`TFBackend` object implements a simulation of quantum optical circuits using
 `Tensorflow <http://www.Tensorflow.org/>`_. The primary component of the TFBackend is a
-:class:`QReg` object which is used to simulate a multi-mode quantum optical system. The
+:class:`Circuit` object which is used to simulate a multi-mode quantum optical system. The
 :class:`TFBackend` provides the basic API-compatible interface to the simulator, while the
-:class:`QReg` object actually carries out the mathematical simulation.
+:class:`Circuit` object actually carries out the mathematical simulation.
 
 
-The :class:`QReg` simulator maintains an internal tensor representation of the quantum state of a multi-mode quantum optical system
+The :class:`Circuit` simulator maintains an internal tensor representation of the quantum state of a multi-mode quantum optical system
 using a (truncated) Fock basis representation. As its various state manipulation methods are called, the quantum state is updated
 to reflect these changes. The simulator will try to keep the internal state in a pure (vector) representation
 for as long as possible. Unitary gates will not change the type of representation, while state preparations and measurements will.

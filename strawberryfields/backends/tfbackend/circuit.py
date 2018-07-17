@@ -19,14 +19,14 @@ Tensorflow backend proper
 Contains most of the code for managing the simulator state and offloading
 operations to the utilities in ops.
 
-Hyperlinks: :class:`QReg`
+Hyperlinks: :class:`Circuit`
 
 .. currentmodule:: strawberryfields.backends.tfbackend.circuit
 
 Contents
 ----------------------
 .. autosummary::
-     QReg
+     Circuit
 
 """
 # pylint: disable=too-many-arguments,too-many-statements,too-many-branches,protected-access,attribute-defined-outside-init
@@ -41,7 +41,7 @@ import tensorflow as tf
 
 from . import ops
 
-class QReg:
+class Circuit:
     """Base class for representing and operating on a collection of
          CV quantum optics modes in the Fock basis.
          The modes are initialized in the (multimode) vacuum state,
