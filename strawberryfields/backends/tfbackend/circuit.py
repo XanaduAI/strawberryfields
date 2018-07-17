@@ -426,6 +426,16 @@ class QReg:
             new_state = ops.kerr_interaction(k, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched)
             self._update_state(new_state)
 
+    def cross_kerr_interaction(self, kappa, mode1, mode2):
+        """
+        Apply the cross-Kerr interaction operator to the specified mode.
+        """
+        with self._graph.as_default():
+            k = tf.cast(kappa, ops.def_type)
+            k = self._maybe_batch(k)
+            new_state = ops.cross_kerr_interaction(k, mode1, mode2, self._state, self._cutoff_dim, self._state_is_pure, self._batched)
+            self._update_state(new_state)
+
     def cubic_phase(self, gamma, mode):
         """
         Apply the cubic phase operator to the specified mode.

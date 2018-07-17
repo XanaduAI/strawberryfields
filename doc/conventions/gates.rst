@@ -411,3 +411,28 @@ We can therefore define the Kerr gate, with parameter :math:`\kappa` as
 
 .. math::
    K(\kappa) = \exp{(i\kappa\hat{n}^2)}.
+
+
+.. _cross_kerr:
+
+Cross-Kerr interaction
+---------------------------------------------
+
+.. warning:: The cross-Kerr gate is **non-Gaussian**, and thus can only be used in the Fock backends, *not* the Gaussian backend.
+
+.. admonition:: Definition
+   :class: defn
+
+   The cross-Kerr interaction is given by the Hamiltonian
+
+   .. math::
+      H = \hat{n}_1\hat{n_2}
+
+   which is non-Gaussian and diagonal in the Fock basis.
+
+.. tip:: *Implemented in Strawberry Fields as a quantum gate by* :class:`strawberryfields.ops.CKgate`
+
+We can therefore define the cross-Kerr gate, with parameter :math:`\kappa` as
+
+.. math::
+   CK(\kappa) = \exp{(i\kappa\hat{n}_1\hat{n_2})}.

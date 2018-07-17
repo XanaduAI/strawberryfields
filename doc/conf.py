@@ -48,28 +48,15 @@ MOCK_MODULES = [
     'numbers'
     ]
 
+from strawberryfields.parameters import np_math_fns
+
 mock_math_fn = Mock(__name__='foo')
-mock_fns = {"abs": mock_math_fn,
-            "sin": mock_math_fn,
-            "cos": mock_math_fn,
-            "exp": mock_math_fn,
-            "sqrt": mock_math_fn,
-            "arctan": mock_math_fn,
-            "arccosh": mock_math_fn,
-            "sign": mock_math_fn,
-            "arctan2": mock_math_fn,
-            "arcsinh": mock_math_fn,
-            "cosh": mock_math_fn,
-            "tanh": mock_math_fn,
-            "log": mock_math_fn,
-            "matmul": mock_math_fn,
-            "squeeze": mock_math_fn,
-            "expand_dims": mock_math_fn,
-            "transpose": mock_math_fn,
-            "Number": int,
-            "Tensor": list,
-            "Variable": list,
-            "ndarray": MagicMock}
+mock_fns = {i : mock_math_fn for i in np_math_fns.keys()}
+mock_fns.update({"pi": 3.0,
+                 "Number": int,
+                 "Tensor": list,
+                 "Variable": list,
+                 "ndarray": MagicMock})
 
 mock = Mock(**mock_fns)
 for mod_name in MOCK_MODULES:

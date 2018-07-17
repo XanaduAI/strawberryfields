@@ -347,6 +347,12 @@ class QReg():
         """
         self._apply_gate(ops.kerr(kappa, self._trunc), [mode])
 
+    def cross_kerr_interaction(self, kappa, mode1, mode2):
+        """
+        Applies a cross-Kerr interaction gate.
+        """
+        self._apply_gate(ops.cross_kerr(kappa, self._trunc), [mode1, mode2])
+
     def cubic_phase_shift(self, gamma, mode):
         """
         Applies a cubic phase shift gate.

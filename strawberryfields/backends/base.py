@@ -96,6 +96,7 @@ for quantum optical circuits.
     prepare_dm_state
     cubic_phase
     kerr_interaction
+    cross_kerr_interaction
     measure_fock
 
 Gaussian backends
@@ -573,11 +574,21 @@ class BaseFock(BaseBackend):
         raise NotImplementedError
 
     def kerr_interaction(self, kappa, mode):
-        r"""Apply the Kerr interaction :math:`exp{(i\kappa \hat{n}^2)}` to the specified mode.
+        r"""Apply the Kerr interaction :math:`\exp{(i\kappa \hat{n}^2)}` to the specified mode.
 
         Args:
             kappa (float): strength of the interaction
             mode (int): which mode to apply it to
+        """
+        raise NotImplementedError
+
+    def cross_kerr_interaction(self, kappa, mode1, mode2):
+        r"""Apply the two mode cross-Kerr interaction :math:`\exp{(i\kappa \hat{n}_1\hat{n}_2)}` to the specified modes.
+
+        Args:
+            kappa (float): strength of the interaction
+            mode1 (int): first mode that cross-Kerr interaction acts on
+            mode2 (int): second mode that cross-Kerr interaction acts on
         """
         raise NotImplementedError
 
@@ -670,6 +681,10 @@ class BaseGaussian(BaseBackend):
         raise NotApplicableError
 
     def kerr_interaction(self, kappa, mode):
+        # pylint: disable=unused-argument,missing-docstring
+        raise NotApplicableError
+
+    def cross_kerr_interaction(self, kappa, mode1, mode2):
         # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 

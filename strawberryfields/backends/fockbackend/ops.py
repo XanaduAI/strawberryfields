@@ -491,7 +491,20 @@ def kerr(kappa, trunc):
     r"""
     The Kerr interaction :math:`K(\kappa)`.
     """
-    ret = np.diag([np.exp(1j * kappa * n ** 2) for n in range(trunc)])
+    n = np.arange(trunc)
+    ret = np.diag(np.exp(1j*kappa*n**2))
+    return ret
+
+
+@functools.lru_cache()
+def cross_kerr(kappa, trunc):
+    r"""
+    The cross-Kerr interaction :math:`CK(\kappa)`.
+    """
+    n1 = np.arange(trunc)[None, :]
+    n2 = np.arange(trunc)[:, None]
+    n1n2 = np.ravel(n1*n2)
+    ret = np.diag(np.exp(1j*kappa*n1n2)).reshape([trunc]*4).swapaxes(1, 2)
     return ret
 
 
