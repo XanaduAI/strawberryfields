@@ -10,8 +10,6 @@ Boson sampling tutorial
 
 .. highlight:: pycon
 
-.. note:: This tutorial is also available in the form of an interactive Jupter Notebook :download:`BosonSampling.ipynb <../../examples/BosonSampling.ipynb>`
-
 In this short tutorial, we will walk through the application of the boson sampling Blackbird example provided in the :ref:`boson_sampling` section of the :ref:`algorithms` page. Be sure to read through that section to familiarize yourself with the concepts behind boson sampling, as well as the introductory :ref:`teleportation tutorial <tutorial>`, before attempting this tutorial.
 
 Circuit construction and simulation

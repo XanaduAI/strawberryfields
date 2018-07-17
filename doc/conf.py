@@ -70,7 +70,7 @@ np_math_fns = ['abs',
 
 mock_math_fn = Mock(__name__='foo')
 mock_fns = {i : mock_math_fn for i in np_math_fns}
-mock_fns.update({"pi": 3.0,
+mock_fns.update({"pi": MagicMock(),
                  "Number": int,
                  "Tensor": list,
                  "Variable": list,

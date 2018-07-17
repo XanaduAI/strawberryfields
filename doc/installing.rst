@@ -46,9 +46,9 @@ Alternatively, you can install Strawberry Fields from the source code by navigat
 Notebook downloads
 ===================
 
-Two of the tutorials provided in the documentation, boson sampling and Gaussian boson sampling, are also provided in the form of interactive Jupyter notebooks:
+Two of the tutorials provided in the documentation, quantum teleporation and Gaussian boson sampling, are also provided in the form of interactive Jupyter notebooks:
 
-1. :download:`BosonSampling.ipynb <../examples/BosonSampling.ipynb>`
+1. :download:`QuantumTeleportation.ipynb <../examples/QuantumTeleportation.ipynb>`
 
 2. :download:`GaussianBosonSampling.ipynb <../examples/GaussianBosonSampling.ipynb>`
 
