@@ -17,6 +17,7 @@ from scipy.special import factorial
 from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.backends.gaussianbackend.states import GaussianState
+from strawberryfields.utils import random_covariance, displaced_squeezed_state
 
 mag_alphas = np.linspace(0, .8, 4)
 phase_alphas = np.linspace(0, 2 * np.pi, 7, endpoint=False)
@@ -213,6 +214,73 @@ class FockBasisMultimodeTests(FockBaseTest):
         self.assertAllAlmostEqual(all_mode_preparation_ket, random_ket, delta=self.tol)
 
 
+class GaussianMultimodeTests(GaussianBaseTest):
+    """Tests for simulators that use the Gaussian representation."""
+    num_subsystems = 4
+
+    def test_singlemode_gaussian_state(self):
+        """Test single mode Gaussian state preparation"""
+        self.logTestName()
+        means = 2*np.random.random(size=[2])-1
+        cov = random_covariance(1, pure=self.kwargs['pure'])
+
+        a = 0.2+0.4j
+        r = 1
+        phi = 0
+
+        self.circuit.reset(pure=self.kwargs['pure'])
+
+        # circuit is initially in displaced squeezed state
+        for i in range(self.num_subsystems):
+            self.circuit.prepare_displaced_squeezed_state(a, r, phi, mode=i)
+
+        # prepare Gaussian state in mode 1
+        self.circuit.prepare_gaussian_state(means, cov, modes=1)
+
+        # test Gaussian state is correct
+        state = self.circuit.state([1])
+        self.assertAllAlmostEqual(state.means(), means, delta=self.tol)
+        self.assertAllAlmostEqual(state.cov(), cov, delta=self.tol)
+
+        # test that displaced squeezed states are unchanged
+        ex_means, ex_V = displaced_squeezed_state(a, r, phi, basis='gaussian')
+        for i in [0, 2, 3]:
+            state = self.circuit.state([i])
+            self.assertAllAlmostEqual(state.means(), ex_means, delta=self.tol)
+            self.assertAllAlmostEqual(state.cov(), ex_V, delta=self.tol)
+
+    def test_multimode_gaussian_state(self):
+        """Test multimode Gaussian state preparation"""
+        self.logTestName()
+        means = 2*np.random.random(size=[4])-1
+        cov = random_covariance(2, pure=self.kwargs['pure'])
+
+        a = 0.2+0.4j
+        r = 1
+        phi = 0
+
+        self.circuit.reset(pure=self.kwargs['pure'])
+
+        # circuit is initially in displaced squeezed state
+        for i in range(self.num_subsystems):
+            self.circuit.prepare_displaced_squeezed_state(a, r, phi, mode=i)
+
+        # prepare Gaussian state in mode 1 and 3
+        self.circuit.prepare_gaussian_state(means, cov, modes=[1, 3])
+
+        # test Gaussian state is correct
+        state = self.circuit.state([1, 3])
+        self.assertAllAlmostEqual(state.means(), means, delta=self.tol)
+        self.assertAllAlmostEqual(state.cov(), cov, delta=self.tol)
+
+        # test that displaced squeezed states are unchanged
+        ex_means, ex_V = displaced_squeezed_state(a, r, phi, basis='gaussian')
+        for i in [0, 2]:
+            state = self.circuit.state([i])
+            self.assertAllAlmostEqual(state.means(), ex_means, delta=self.tol)
+            self.assertAllAlmostEqual(state.cov(), ex_V, delta=self.tol)
+
+
 class FrontendFockTests(FockBaseTest):
     """Tests for the frontend Fock state preparations"""
     num_subsystems = 2
@@ -348,7 +416,7 @@ class FrontendFockTests(FockBaseTest):
 if __name__=="__main__":
     # run the tests in this file
     suite = unittest.TestSuite()
-    for t in (FockBasisMultimodeTests, FrontendFockTests):
+    for t in (FockBasisMultimodeTests, GaussianMultimodeTests, FrontendFockTests):
         ttt = unittest.TestLoader().loadTestsFromTestCase(t)
         suite.addTests(ttt)
 
