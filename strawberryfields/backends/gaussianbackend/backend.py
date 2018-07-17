@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Gaussian backend"""
-from numpy import empty, concatenate, array, identity, arctan2, angle, sqrt, dot
+from numpy import empty, concatenate, array, identity, arctan2, angle, sqrt, dot, vstack
 from numpy.linalg import inv
 
 from strawberryfields.backends import BaseGaussian
+from strawberryfields.backends.shared_ops import changebasis
 
 from .ops import xmat
 from .gaussiancircuit import GaussianModes
@@ -245,6 +246,38 @@ class GaussianBackend(BaseGaussian):
         self.circuit.post_select_heterodyne(mode, select)
 
         return res
+
+    def prepare_gaussian_state(self, r, V, modes):
+        r"""Prepare the given Gaussian state (via the provided vector of
+        means and the covariance matrix) in the specified modes.
+
+        The requested mode(s) is/are traced out and replaced with the given Gaussian state.
+
+        Args:
+            r (array): the vector of means in xp ordering.
+            V (array): the covariance matrix in xp ordering.
+            modes (int or Sequence[int]): which mode to prepare the state in
+                If the modes are not sorted, this is take into account when preparing the state.
+                i.e., when a two mode state is prepared in modes=[3,1], then the first
+                mode of state goes into mode 3 and the second mode goes into mode 1 of the simulator.
+        """
+        if isinstance(modes, int):
+            modes = [modes]
+
+        # make sure number of modes matches shape of r and V
+        N = len(modes)
+        if len(r) != 2*N:
+            raise ValueError("Length of means vector must be twice the number of modes.")
+        if V.shape != (2*N, 2*N):
+            raise ValueError("Shape of covariance matrix must be [2N, 2N], where N is the number of modes.")
+
+        # convert xp-ordering to symmetric ordering
+        means = vstack([r[:N], r[N:]]).reshape(-1, order='F')
+        C = changebasis(N)
+        cov = C @ V @ C.T
+
+        self.circuit.fromscovmat(cov, modes)
+        self.circuit.fromsmean(means, modes)
 
     def is_vacuum(self, tol=0.0, **kwargs):
         """

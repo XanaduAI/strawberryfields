@@ -644,21 +644,21 @@ class BaseGaussian(BaseBackend):
         """
         raise NotImplementedError
 
-    # def prepare_gaussian_state(self, r, V, modes):
-    #     r"""Prepare the given Gaussian state (via the provided vector of
-    #     means and the covariance matrix) in the specified modes.
+    def prepare_gaussian_state(self, r, V, modes):
+        r"""Prepare the given Gaussian state (via the provided vector of
+        means and the covariance matrix) in the specified modes.
 
-    #     The requested mode(s) is/are traced out and replaced with the given Gaussian state.
+        The requested mode(s) is/are traced out and replaced with the given Gaussian state.
 
-    #     Args:
-    #         r (array): the vector of means in xp ordering.
-    #         V (array): the covariance matrix in xp ordering.
-    #         modes (int or Sequence[int]): which mode to prepare the state in
-    #             If the modes are not sorted, this is take into account when preparing the state.
-    #             i.e., when a two mode state is prepared in modes=[3,1], then the first
-    #             mode of state goes into mode 3 and the second mode goes into mode 1 of the simulator.
-    #     """
-    #     raise NotImplementedError
+        Args:
+            r (array): the vector of means in xp ordering.
+            V (array): the covariance matrix in xp ordering.
+            modes (int or Sequence[int]): which mode to prepare the state in
+                If the modes are not sorted, this is take into account when preparing the state.
+                i.e., when a two mode state is prepared in modes=[3,1], then the first
+                mode of state goes into mode 3 and the second mode goes into mode 1 of the simulator.
+        """
+        raise NotImplementedError
 
     def get_cutoff_dim(self):
         # pylint: disable=unused-argument,missing-docstring

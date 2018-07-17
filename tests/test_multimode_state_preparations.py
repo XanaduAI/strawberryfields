@@ -17,6 +17,7 @@ from scipy.special import factorial
 from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.backends.gaussianbackend.states import GaussianState
+from strawberryfields.utils import random_covariance, displaced_squeezed_state
 
 mag_alphas = np.linspace(0, .8, 4)
 phase_alphas = np.linspace(0, 2 * np.pi, 7, endpoint=False)
@@ -199,6 +200,141 @@ class FockBasisMultimodeTests(FockBaseTest):
         self.assertAllEqual(all_mode_preparation_ket.shape, random_ket.shape)
 
 
+class GaussianMultimodeTests(GaussianBaseTest):
+    """Tests for simulators that use the Gaussian representation."""
+    num_subsystems = 4
+
+    def test_singlemode_gaussian_state(self):
+        """Test single mode Gaussian state preparation"""
+        self.logTestName()
+        means = 2*np.random.random(size=[2])-1
+        cov = random_covariance(1, pure=self.kwargs['pure'])
+
+        a = 0.2+0.4j
+        r = 1
+        phi = 0
+
+        self.circuit.reset(pure=self.kwargs['pure'])
+
+        # circuit is initially in displaced squeezed state
+        for i in range(self.num_subsystems):
+            self.circuit.prepare_displaced_squeezed_state(a, r, phi, mode=i)
+
+        # prepare Gaussian state in mode 1
+        self.circuit.prepare_gaussian_state(means, cov, modes=1)
+
+        # test Gaussian state is correct
+        state = self.circuit.state([1])
+        self.assertAllAlmostEqual(state.means(), means, delta=self.tol)
+        self.assertAllAlmostEqual(state.cov(), cov, delta=self.tol)
+
+        # test that displaced squeezed states are unchanged
+        ex_means, ex_V = displaced_squeezed_state(a, r, phi, basis='gaussian')
+        for i in [0, 2, 3]:
+            state = self.circuit.state([i])
+            self.assertAllAlmostEqual(state.means(), ex_means, delta=self.tol)
+            self.assertAllAlmostEqual(state.cov(), ex_V, delta=self.tol)
+
+    def test_multimode_gaussian_state(self):
+        """Test multimode Gaussian state preparation"""
+        self.logTestName()
+        cov = np.diag(np.exp(2*np.array([-1, -1, 1, 1])))
+        means = np.zeros([4])
+
+        self.circuit.reset(pure=self.kwargs['pure'])
+
+        # prepare displaced squeezed states in all modes
+        a = 0.2+0.4j
+        r = 0.5
+        phi = 0.12
+        for i in range(self.num_subsystems):
+            self.circuit.prepare_displaced_squeezed_state(a, r, phi, i)
+
+        # prepare new squeezed displaced state in mode 1 and 3
+        self.circuit.prepare_gaussian_state(means, cov, modes=[1, 3])
+        state = self.circuit.state([1, 3])
+
+        # test Gaussian state is correct
+        state = self.circuit.state([1, 3])
+        self.assertAllAlmostEqual(state.means(), means, delta=self.tol)
+        self.assertAllAlmostEqual(state.cov(), cov, delta=self.tol)
+
+        # test that displaced squeezed states are unchanged
+        ex_means, ex_V = displaced_squeezed_state(a, r, phi, basis='gaussian')
+        for i in [0, 2]:
+            state = self.circuit.state([i])
+            self.assertAllAlmostEqual(state.means(), ex_means, delta=self.tol)
+            self.assertAllAlmostEqual(state.cov(), ex_V, delta=self.tol)
+
+    def test_full_mode_squeezed_state(self):
+        """Test full register Gaussian state preparation"""
+        self.logTestName()
+        cov = np.diag(np.exp(2*np.array([-1, -1, -1, -1, 1, 1, 1, 1])))
+        means = np.zeros([8])
+
+        self.circuit.reset(pure=self.kwargs['pure'])
+        self.circuit.prepare_gaussian_state(means, cov, modes=range(self.num_subsystems))
+        state = self.circuit.state()
+
+        # test Gaussian state is correct
+        state = self.circuit.state()
+        self.assertAllAlmostEqual(state.means(), means, delta=self.tol)
+        self.assertAllAlmostEqual(state.cov(), cov, delta=self.tol)
+
+    def test_multimode_gaussian_random_state(self):
+        """Test multimode Gaussian state preparation on a random state"""
+        self.logTestName()
+        means = 2*np.random.random(size=[2*self.num_subsystems])-1
+        cov = random_covariance(self.num_subsystems, pure=self.kwargs['pure'])
+
+        self.circuit.reset(pure=self.kwargs['pure'])
+
+        # circuit is initially in a random state
+        self.circuit.prepare_gaussian_state(means, cov, modes=range(self.num_subsystems))
+
+        # test Gaussian state is correct
+        state = self.circuit.state()
+        self.assertAllAlmostEqual(state.means(), means, delta=self.tol)
+        self.assertAllAlmostEqual(state.cov(), cov, delta=self.tol)
+
+        # prepare Gaussian state in mode 2 and 1
+        means2 = 2*np.random.random(size=[4])-1
+        cov2 = random_covariance(2, pure=self.kwargs['pure'])
+        self.circuit.prepare_gaussian_state(means2, cov2, modes=[2, 1])
+
+        # test resulting Gaussian state is correct
+        state = self.circuit.state()
+
+        # in the new means vector, the modes 0 and 3 remain unchanged
+        # Modes 1 and 2, however, now have values given from elements
+        # means2[1] and means2[0].
+        ex_means = np.array([means[0], means2[1], means2[0], means[3],  # position
+                             means[4], means2[3], means2[2], means[7]]) # momentum
+
+        ex_cov = np.zeros([8, 8])
+
+        # in the new covariance matrix, modes 0 and 3 remain unchanged
+        idx = np.array([0, 3, 4, 7])
+        rows = idx.reshape(-1, 1)
+        cols = idx.reshape(1, -1)
+        ex_cov[rows, cols] = cov[rows, cols]
+
+        # in the new covariance matrix, modes 1 and 2 have values given by
+        # rows 1 and 0 respectively from cov2
+        idx = np.array([1, 2, 5, 6])
+        rows = idx.reshape(-1, 1)
+        cols = idx.reshape(1, -1)
+
+        idx = np.array([1, 0, 3, 2])
+        rows2 = idx.reshape(-1, 1)
+        cols2 = idx.reshape(1, -1)
+
+        ex_cov[rows, cols] = cov2[rows2, cols2]
+
+        self.assertAllAlmostEqual(state.means(), ex_means, delta=self.tol)
+        self.assertAllAlmostEqual(state.cov(), ex_cov, delta=self.tol)
+
+
 class FrontendFockTests(FockBaseTest):
     """Tests for the frontend Fock state preparations"""
     num_subsystems = 2
@@ -334,7 +470,7 @@ class FrontendFockTests(FockBaseTest):
 if __name__=="__main__":
     # run the tests in this file
     suite = unittest.TestSuite()
-    for t in (FockBasisMultimodeTests, FrontendFockTests):
+    for t in (FockBasisMultimodeTests, GaussianMultimodeTests, FrontendFockTests):
         ttt = unittest.TestLoader().loadTestsFromTestCase(t)
         suite.addTests(ttt)
 

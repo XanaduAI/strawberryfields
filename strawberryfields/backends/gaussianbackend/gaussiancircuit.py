@@ -249,24 +249,57 @@ class GaussianModes:
             r[2*i+1] = 2*self.mean[i].imag
         return r
 
-    def __fromsmean(self, r):
-        for i in range(self.nlen):
-            self.mean[i] = 0.5*(r[2*i]+1j*r[2*i+1])
+    def fromsmean(self, r, modes=None):
+        r"""Populates the means from a provided vector of means with hbar=2 assumed.
 
-    def __fromscovmat(self, V):
-        """Instantiates an object when a standard covariance matrix is provided"""
-        n = int(len(V)/2)
-        if n != self.nlen:
-            raise ValueError("Covariance matrix is the incorrect size, does not match means vector")
+        Args:
+            r (array): vector of means in :math:`(x_1,p_1,x_2,p_2,\dots)` ordering
+            modes (Sequence): sequence of modes corresponding to the vector of means
+        """
+        mode_list = modes
+        if modes is None:
+            mode_list = range(self.nlen)
 
-        rotmat = changebasis(self.nlen)
+        for idx, mode in enumerate(mode_list):
+            self.mean[mode] = 0.5*(r[2*idx]+1j*r[2*idx+1])
+
+    def fromscovmat(self, V, modes=None):
+        r"""Updates the circuit's state when a standard covariance matrix is provided.
+
+        Args:
+            V (array): covariance matrix in symmetric ordering
+            modes (Sequence): sequence of modes corresponding to the covariance matrix
+        """
+        if modes is None:
+            n = len(V)//2
+            modes = np.arange(self.nlen)
+
+            if n != self.nlen:
+                raise ValueError("Covariance matrix is the incorrect size, does not match means vector.")
+        else:
+            n = len(modes)
+            modes = np.array(modes)
+            if n > self.nlen:
+                raise ValueError("Covariance matrix is larger than the number of subsystems.")
+
+        # convert to xp ordering
+        rotmat = changebasis(n)
         VV = np.dot(np.dot(np.transpose(rotmat), V), rotmat)
+
         A = VV[0:n, 0:n]
         B = VV[0:n, n:2*n]
         C = VV[n:2*n, n:2*n]
         Bt = np.transpose(B)
-        self.nmat = 0.25*(A+C+1j*(B-Bt)-2*np.identity(n))
-        self.mmat = 0.25*(A-C+1j*(B+Bt))
+
+        if n < self.nlen:
+            # reset modes to be prepared back to the vacuum state
+            for mode in modes:
+                self.loss(0.0, mode)
+
+        rows = modes.reshape(-1, 1)
+        cols = modes.reshape(1, -1)
+        self.nmat[rows, cols] = 0.25*(A+C+1j*(B-Bt)-2*np.identity(n))
+        self.mmat[rows, cols] = 0.25*(A-C+1j*(B+Bt))
 
     def qmat(self, modes=None):
         """ Construct the covariance matrix for the Q function"""
@@ -353,7 +386,7 @@ class GaussianModes:
         (A, B, C) = ops.chop_in_blocks(mp, expind)
         V = A-np.dot(np.dot(B, np.linalg.inv(C+covmat)), np.transpose(B))
         V1 = ops.reassemble(V, expind)
-        self.__fromscovmat(V1)
+        self.fromscovmat(V1)
 
         r = self.smean()
         (va, vc) = ops.chop_in_blocks_vector(r, expind)
@@ -361,7 +394,7 @@ class GaussianModes:
 
         va = va+np.dot(np.dot(B, np.linalg.inv(C+covmat)), vm-vc)
         va = ops.reassemble_vector(va, expind)
-        self.__fromsmean(va)
+        self.fromsmean(va)
         return vm
 
     def homodyne(self, n, eps=0.0002):
@@ -383,7 +416,7 @@ class GaussianModes:
         (A, B, C) = ops.chop_in_blocks(mp, expind)
         V = A-np.dot(np.dot(B, np.linalg.inv(C+covmat)), np.transpose(B))
         V1 = ops.reassemble(V, expind)
-        self.__fromscovmat(V1)
+        self.fromscovmat(V1)
 
         r = self.smean()
         (va, vc) = ops.chop_in_blocks_vector(r, expind)
@@ -391,7 +424,7 @@ class GaussianModes:
         vm = np.array([val, vm1])
         va = va+np.dot(np.dot(B, np.linalg.inv(C+covmat)), vm-vc)
         va = ops.reassemble_vector(va, expind)
-        self.__fromsmean(va)
+        self.fromsmean(va)
         return val
 
     def post_select_heterodyne(self, n, alpha_val):
@@ -406,14 +439,14 @@ class GaussianModes:
         (A, B, C) = ops.chop_in_blocks(mp, expind)
         V = A-np.dot(np.dot(B, np.linalg.inv(C+covmat)), np.transpose(B))
         V1 = ops.reassemble(V, expind)
-        self.__fromscovmat(V1)
+        self.fromscovmat(V1)
 
         r = self.smean()
         (va, vc) = ops.chop_in_blocks_vector(r, expind)
         vm = 2.0*np.array([np.real(alpha_val), np.imag(alpha_val)])
         va = va+np.dot(np.dot(B, np.linalg.inv(C+covmat)), vm-vc)
         va = ops.reassemble_vector(va, expind)
-        self.__fromsmean(va)
+        self.fromsmean(va)
         return alpha_val
 
     def apply_u(self, U):
