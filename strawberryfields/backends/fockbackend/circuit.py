@@ -191,7 +191,7 @@ class QReg():
         of state ends up in mode 3 and the second mode of state ends up in
         mode 1 of the output state.
         If modes is None, it is attempted to prepare state in all modes.
-        The reduced state on all other modes remains unchainged and
+        The reduced state on all other modes remains unchanged and
         the final state is product with respect to the partition into
         the modes in modes and the complement.
 
@@ -259,7 +259,7 @@ class QReg():
         r"""
         Prepares a given mode in a given state.
 
-        This is a simple wrappter for prepare_multimode(), see there for more details.
+        This is a simple wrapper for prepare_multimode(), see there for more details.
 
         Args:
             state (array): vector, matrix, or tensor representation of the ket state or dm state in the fock basis to prepare
@@ -268,36 +268,6 @@ class QReg():
         if isinstance(mode, int):
             mode = [mode]
         self.prepare_multimode(state, mode)
-
-        # raise DeprecationWarning("This method has been superseeded by prepare_multimode().")
-
-        # pure_shape = (self._trunc,)
-        # mixed_shape = (self._trunc, self._trunc)
-
-        # # Do consistency checks
-        # if self._checks:
-        #     if state.shape != pure_shape and state.shape != mixed_shape:
-        #         raise ValueError("Incorrect shape for state preparation")
-        #     if not isinstance(mode, int):
-        #         raise ValueError("Given mode must be of type int")
-
-        # if self._num_modes == 1:
-        #     # Hack for marginally faster state preparation
-        #     self._state = state.astype(ops.def_type)
-        #     self._pure = bool(state.shape == pure_shape)
-        # else:
-        #     if self._pure:
-        #         self._state = ops.mix(self._state, self._num_modes)
-        #         self._pure = False
-
-        #     if state.shape == pure_shape:
-        #         state = np.outer(state, state.conj())
-
-        #     # Take the partial trace
-        #     reduced_state = ops.partial_trace(self._state, self._num_modes, [mode])
-
-        #     # Insert state
-        #     self._state = ops.tensor(reduced_state, state, self._num_modes-1, self._pure, pos=mode)
 
     def prepare_mode_fock(self, n, mode):
         """

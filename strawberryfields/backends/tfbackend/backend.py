@@ -228,7 +228,7 @@ class TFBackend(BaseFock):
     def prepare_dm_state(self, state, modes):
         """
         Prepare an arbitrary mixed state on the specified mode.
-        Note: this does convert the state representation to mixed.
+        Note: this converts the state representation to mixed.
 
         Args:
             state (array): matrix representation of the state to prepare

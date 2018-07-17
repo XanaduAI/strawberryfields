@@ -530,7 +530,7 @@ class BaseFock(BaseBackend):
                 or tensor form, with one index per mode. For backends supporting batched
                 mode, state can be a batch of such vectors or tensors.
             modes (int or Sequence[int]): which mode to prepare the state in
-                If modes is not ordered this is take into account when preparing the state,
+                If modes is not ordered this is taken into account when preparing the state,
                 i.e., when a two mode state is prepared in modes=[3,1], then the first
                 mode of state goes into mode 3 and the second mode goes into mode 1 of the simulator.
         """

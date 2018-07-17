@@ -53,7 +53,7 @@ def _numer_safe_power(base, exponent):
 
 def mixed(pure_state, batched=False):
     """Converts the state from pure to mixed"""
-    #todo: In the fock backend mixing is done by ops.mix(), maybe the functions should be named identially?
+    #todo: In the fock backend mixing is done by ops.mix(), maybe the functions should be named identically?
     if not batched:
         pure_state = tf.expand_dims(pure_state, 0) # add in fake batch dimension
     batch_offset = 1
@@ -669,34 +669,6 @@ def replace_mode(replacement, mode, system, state_is_pure, batched=False):
         mode = [mode]
     replace_modes(replacement, mode, system, state_is_pure, batched)
 
-    # if batched:
-    #     batch_offset = 1
-    # else:
-    #     batch_offset = 0
-    # if state_is_pure:
-    #     num_modes = len(system.shape) - batch_offset
-    # else:
-    #     num_modes = (len(system.shape) - batch_offset) // 2
-
-    # if num_modes == 1 and len(replacement.shape) == 1:
-    #     # in this special case, we can just directly replace
-    #     revised_modes = replacement
-    # else:
-    #     # Otherwise, everything must become mixed since we do not know if mode is entangled with others.
-    #     if state_is_pure:
-    #         system = mixed(system, batched)
-    #     if len(replacement.shape) - batch_offset == 1:
-    #         replacement = mixed(replacement, batched)
-    #     elif len(replacement.shape) - batch_offset < 1 or len(replacement.shape) - batch_offset > 2:
-    #         raise ValueError("replacement can only have dim={} or dim={}".format(1 + batch_offset, 2 + batch_offset))
-
-    #     # partial trace out modes
-    #     reduced_state = partial_trace(system, mode, False, batched)
-    #     # append mode and insert state
-    #     revised_modes = insert_state(replacement, reduced_state, False, mode, batched)
-
-    # return revised_modes
-
 def replace_modes(replacement, modes, system, system_is_pure, batched=False):
     """Replace the subsystem 'mode' of 'system' with new state 'replacement'. Argument 'system_is_pure' indicates whether
     'system' is represented by a pure state or a density matrix.
@@ -719,36 +691,36 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
 
     replacement_is_pure = bool(len(replacement.shape) - batch_offset == len(modes))
 
-        # we take care of sorting modes below
+    # we take care of sorting modes below
     if len(modes) == num_modes:
         # we are replacing all the modes
         revised_modes = replacement
         revised_modes_pure = replacement_is_pure
     else:
         # we are replacing a subset, so have to trace
-        #make both system and replacement mixed
+        # make both system and replacement mixed
         # todo: For performance the partial trace could be done directly from the pure state. This would of course require a better partial trace function...
         if system_is_pure:
             system = mixed(system, batched)
 
-            #mix the replacement if it is pure
+        #mix the replacement if it is pure
         if replacement_is_pure:
             replacement = mixed(replacement, batched)
 
         # partial trace out modes
-        # todo: We are tracing out the modes one by one in decending order (to not screw up things). This is quite inefficient.
+        # todo: We are tracing out the modes one by one in descending order (to not screw up things). This is quite inefficient.
         reduced_state = system
         for mode in sorted(modes, reverse=True):
             reduced_state = partial_trace(reduced_state, mode, False, batched)
-        # append mode and insert state (There is also insert_state(), but it seemed easier unnecesarily complicated to try to generalize this function, which does a lot manual list comprehension, to the multi mode case than to write the two liner below)
+        # append mode and insert state (There is also insert_state(), but it seemed unnecessarily complicated to try to generalize this function, which does a lot of manual list comprehension, to the multi mode case than to write the two liner below)
         # todo: insert_state() could be rewritten to take full advantage of the high level functions of tf. Before doing that different implementatinos should be benchmarked to compare speed and memory requirements, as in practice these methods will be perfomance critical.
         if not batched:
-            #todo: remove the hack in the line below and enabled the line with axes=0 instead, as soon as tensorflow>=1.6 has become a dependency of SF
+            #todo: remove the hack in the line below and enable the line with axes=0 instead, if ever we change the dependency of SF to tensorflow>=1.6
             #revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
             revised_modes = tf.tensordot(tf.expand_dims(reduced_state, 0), tf.expand_dims(replacement, 0), axes=[[0], [0]])
         else:
             batch_size = reduced_state.shape[0].value
-            #todo: remove the hack in the line below and enabled the line with axes=0 instead, as soon as tensorflow>=1.6 has become a dependency of SF
+            #todo: remove the hack in the line below and enabled the line with axes=0 instead, if ever we change the dependency of SF to tensorflow>=1.6
             #revised_modes = tf.stack([tf.tensordot(reduced_state[b], replacement[b], axes=0) for b in range(batch_size)])
             revised_modes = tf.stack([tf.tensordot(tf.expand_dims(reduced_state[b], 0), tf.expand_dims(replacement[b], 0), axes=[[0], [0]]) for b in range(batch_size)])
         revised_modes_pure = False

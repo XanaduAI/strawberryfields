@@ -318,7 +318,7 @@ class QReg:
         mode 1 of the output state.
 
         If modes is None, it is attempted to prepare state in all modes.
-        The reduced state on all other modes remains unchainged and
+        The reduced state on all other modes remains unchanged and
         the final state is product with respect to the partition into
         the modes in modes and the complement.
 
