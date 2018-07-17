@@ -274,7 +274,7 @@ class GaussianBackend(BaseGaussian):
         # convert xp-ordering to symmetric ordering
         means = vstack([r[:N], r[N:]]).reshape(-1, order='F')
         C = changebasis(N)
-        cov = C.T @ V @ C
+        cov = C @ V @ C.T
 
         self.circuit.fromscovmat(cov, modes)
         self.circuit.fromsmean(means, modes)

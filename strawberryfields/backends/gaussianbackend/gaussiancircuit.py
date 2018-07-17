@@ -267,7 +267,7 @@ class GaussianModes:
         r"""Instantiates an object when a standard covariance matrix is provided
 
         Args:
-            V (array): covariance matrix in xp-ordering
+            V (array): covariance matrix in symmetric ordering
             modes (Sequence): sequence of modes corresponding to the covariance matrix
         """
         if modes is None:
@@ -282,7 +282,7 @@ class GaussianModes:
             if n > self.nlen:
                 raise ValueError("Covariance matrix is larger than the number of subsystems.")
 
-        # convert to symmetric ordering
+        # convert to xp ordering
         rotmat = changebasis(n)
         VV = np.dot(np.dot(np.transpose(rotmat), V), rotmat)
 
@@ -291,7 +291,7 @@ class GaussianModes:
         C = VV[n:2*n, n:2*n]
         Bt = np.transpose(B)
 
-        if len(modes) < self.nlen:
+        if n < self.nlen:
             # reset modes to be prepared back to the vacuum state
             for mode in modes:
                 self.loss(0.0, mode)
