@@ -1,8 +1,9 @@
-sudo: false
+sudo: true    # Required for Python 3.7
+dist: xenial  # Required for Python 3.7
 language: python
 cache: pip
 python:
-  - 3.5
+  - 3.7
 env:
   global:
     - COVERALLS_PARALLEL=true
