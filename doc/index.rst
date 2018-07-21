@@ -77,11 +77,12 @@ License
 Strawberry Fields is **free** and **open source**, released under the Apache License, Version 2.0.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Getting started
    :hidden:
 
    installing
+   gallery/gallery
    research
 
 

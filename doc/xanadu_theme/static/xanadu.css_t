@@ -1129,6 +1129,44 @@ div.admonition p.last {
 }
 
 
+/* Gallery tables -------------------------- */
+
+.gallery-table {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 1rem;
+  border: 1px solid #fff;
+}
+
+.gallery-table a {
+  color: #119a68;
+  font-size: 13pt;
+}
+
+.gallery-table a:hover {
+  color: #119a68;
+}
+.gallery-table img {
+  padding-bottom: 20px;
+}
+
+.gallery-table .gallery-table {
+  background-color: #fff;
+}
+
+.gallery-table p.first {
+  margin-bottom: 0 !important;
+}
+
+.gallery-table tr th,
+.gallery-table tr td{
+  padding: 0.75rem;
+  vertical-align: top;
+  border-top: 1px solid #fff;
+  border-right: 1px solid #fff;
+  text-align: center;
+  vertical-align: middle;
+}
 /* -- other body styles ----------------------------------------------------- */
 
 ol.arabic {

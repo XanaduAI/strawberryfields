@@ -99,8 +99,18 @@ extensions = [
     'sphinx.ext.inheritance_diagram',
     'sphinx.ext.viewcode',
     'sphinxcontrib.bibtex',
-    'edit_on_github'
+    'edit_on_github',
+    'nbsphinx'
 ]
+
+
+# nbsphinx settings
+
+exclude_patterns = ['_build', '**.ipynb_checkpoints']
+nbsphinx_execute = 'never'
+nbsphinx_epilog = """
+.. note:: :download:`Click here <../../{{env.docname}}.ipynb>` to download this gallery page as an interactive Jupyter notebook.
+"""
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates', 'xanadu_theme']
