@@ -26,9 +26,9 @@ Check out some cool applications of Strawberry Fields in the gallery below. Note
    :align: middle
    :target: minimizing_correlations/minimizing_correlations.html
 
-.. rst-class:: gallery-table
-
 .. Add your thumbnail to the table in the Gallery!
+
+.. rst-class:: gallery-table
 
 +----------------------------+------------------------------+------------------------------+
 | |mc|                       |                              |                              |
