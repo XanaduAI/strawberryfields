@@ -293,7 +293,7 @@ def beamsplitter_matrix(t, r, D, batched=False, save=False, directory=None):
         r = tf.expand_dims(r, -1)
     t = tf.cast(tf.reshape(t, [-1, 1, 1, 1, 1, 1]), def_type)
     r = tf.cast(tf.reshape(r, [-1, 1, 1, 1, 1, 1]), def_type)
-    mag_t = tf.abs(t)
+    mag_t = tf.cast(t, tf.float32)
     mag_r = tf.abs(r)
     phase_r = tf.atan2(tf.imag(r), tf.real(r))
 

@@ -187,11 +187,13 @@ class GaussianBackend(BaseGaussian):
         It is assumed that :math:`|r|^2+|t|^2 = t^2+|r|^2=1`, i.e that t is real.
 
         Args:
-            t (complex): transmittivity parameter
+            t (float): transmittivity parameter
             r (complex): reflectivity parameter
             mode1 (int): index of first mode where operation is carried out
             mode2 (int): index of second mode where operation is carried out
         """
+        if isinstance(t, complex):
+            raise ValueError("Beamsplitter transmittivity t must be a float.")
         theta = arctan2(abs(r), t)
         phi = angle(r)
         self.circuit.beamsplitter(-theta, -phi, mode1, mode2)
