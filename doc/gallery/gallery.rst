@@ -57,19 +57,19 @@ In addition to the notebooks in the gallery, below are some external web resourc
 
 .. Add your external blog post/application/GitHub page below!
 
-* `Verifying continuous-variable Bell correlations <https://peterwittek.com/verifying-cv-bell-correlations.html>`_ by Peter Wittek
+* `Verifying continuous-variable Bell correlations <https://peterwittek.com/verifying-cv-bell-correlations.html>`_ - Peter Wittek
 
-  Explore how Strawberry Fields can be used to understand core concepts in quantum physics, such as the violation of the Bell inequalities.
-
-
-* `Getting Started with Quantum Programming <https://hackernoon.com/an-interactive-tutorial-on-quantum-programming-327da388f859>`_ by Tanisha Bassan
-
-  The timeless game of battleships has been updated for the 21st century; Quantum Battleships, powered by Strawberry Fields.
+  *Explore how Strawberry Fields can be used to understand core concepts in quantum physics, such as the violation of the Bell inequalities.*
 
 
-* `The World of Photonic Quantum Computing <https://medium.com/@briannagopaul/the-world-of-photonic-quantum-computing-4787a2b12649>`_ by Brianna Gopaul
+* `Getting Started with Quantum Programming <https://hackernoon.com/an-interactive-tutorial-on-quantum-programming-327da388f859>`_ - Tanisha Bassan
 
-  See how Strawberry Fields can be used to visualize how the elementary CV gate set transforms the vacuum state.
+  *The timeless game of battleships has been updated for the 21st century; Quantum Battleships, powered by Strawberry Fields.*
+
+
+* `The World of Photonic Quantum Computing <https://medium.com/@briannagopaul/the-world-of-photonic-quantum-computing-4787a2b12649>`_ - Brianna Gopaul
+
+  *See how Strawberry Fields can be used to visualize how the elementary CV gate set transforms the vacuum state.*
 
 
 
