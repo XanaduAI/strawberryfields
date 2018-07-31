@@ -60,10 +60,6 @@ Check out some cool applications of Strawberry Fields in the gallery below. Note
 |                            |                              |                              |
 | `Minimizing correlations`_ | `Quantum state learning`_    |   `Gate synthesis`_          |
 +----------------------------+------------------------------+------------------------------+
-| |fc|                       |                              |                              |
-|                            |                              |                              |
-| `Fibonacci classifier`_    |                              |                              |
-+----------------------------+------------------------------+------------------------------+
 
 Applications and plugins
 ------------------------
@@ -112,6 +108,8 @@ Research papers
 Finally, some links to studies and research papers that utilize Strawberry Fields.
 
 #. D\. Su, K. K. Sabapathy, C. R. Myers, H. Qi, C. Weedbrook, and K. Brádler. *Implementing quantum algorithms on temporal photonic cluster states.* arXiv, 2018. `arXiv:1805.02645 <https://arxiv.org/abs/1805.02645>`_.
+
+#. N\. Quesada, and A. M. Brańczyk. *Gaussian functions are optimal for waveguided nonlinear-quantum-optical processes.* arXiv, 2018. `arXiv:1805.06868 <https://arxiv.org/abs/1805.06868>`_
 
 #. N\. Killoran, T. R. Bromley, J. M. Arrazola, M. Schuld, N. Quesada, and S. Lloyd. *Continuous-variable quantum neural networks.* arXiv, 2018. `arXiv:1806.06871 <https://arxiv.org/abs/1806.06871>`_.
 
