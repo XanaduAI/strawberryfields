@@ -17,6 +17,13 @@
 Overview
 ==================
 
+.. image:: ../_static/sfcomponents.svg
+    :align: center
+    :width: 90%
+    :target: javascript:void(0);
+
+|
+
 The Strawberry Fields codebase includes a number of complementary components.
 These can be separated into frontend components (:file:`engine.py`, :file:`ops.py`,
 and :file:`utils.py`) and backend components (all found within the :file:`strawberryfields.backends` submodule).

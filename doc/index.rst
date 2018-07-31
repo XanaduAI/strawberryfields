@@ -1,6 +1,26 @@
 Strawberry Fields
 #################
 
+.. |circuit| image:: _static/gate_teleport_ex.svg
+    :align: middle
+    :width: 100%
+    :target: javascript:void(0);
+
+.. |photon| image:: gallery/state_learner/thumbnail.gif
+    :align: middle
+    :width: 250px
+    :target: javascript:void(0);
+
+.. |NOON| image:: _static/NOON.png
+    :align: middle
+    :width: 250px
+    :target: javascript:void(0);
+
+.. |SFI| image:: _static/laptop.png
+    :align: middle
+    :width: 300px
+    :target: javascript:void(0);
+
 :Release: |release|
 :Date: |today|
 
@@ -8,32 +28,39 @@ Strawberry Fields is a full-stack Python library for designing,
 simulating, and optimizing continuous variable (CV) quantum
 optical circuits.
 
-Features
-========
-.. image:: _static/sfcomponents.svg
-    :align: center
-    :width: 90%
-    :target: javascript:void(0);
+.. rst-class:: gallery-table
 
-|
++-----------------+-----------+-----------------+
+| |photon|        |  |SFI|    |  |NOON|         |
++-----------------+-----------+-----------------+
+
+
+.. raw:: html
+
+    <h2 style="margin-top:0px;">Features</h2>
+
+.. image:: _static/code.png
+    :align: left
+    :width: 320px
+    :target: javascript:void(0);
 
 * An open-source software architecture for **photonic quantum computing**
 
-.. 
+..
 
 * A **full-stack** quantum software platform, implemented in Python specifically targeted to the CV model
 
-.. 
+..
 
 * Quantum circuits are written using the easy-to-use and intuitive **Blackbird quantum programming language**
 
-.. 
+..
 
-* Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows anyone to run a quantum computing simulation via drag and drop.
+* Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows anyone to run a quantum computing simulation via **drag and drop**
 
-.. 
+..
 
-* Includes a suite of CV **quantum computer simulators** implemented using **NumPy** and **Tensorflow** - these built-in quantum compiler tools convert and optimize Blackbird code for classical simulation
+* Includes **quantum computer simulators** implemented using **NumPy** and **Tensorflow** - these built-in quantum compiler tools convert and optimize Blackbird code for classical simulation
 
 .. * Includes a **quantum machine learning toolbox**, built on top of the Tensorflow backend
 
@@ -43,7 +70,7 @@ Features
 Getting started
 ===============
 
-To see Strawberry Fields in action immediately, try out our `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web application. Prepare your initial states, drag and drop gates, and watch your simulation run in real time right in your web browser.
+To see Strawberry Fields in action immediately, try out our `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web application. Prepare your initial states, drag and drop gates, and watch your simulation run in real time right in your web browser. Then, check out our :ref:`gallery <gallery>` to see how Strawberry Fields is being used to explore interesting problems and cutting edge research in photonics and quantum computing.
 
 To get Strawberry Fields installed and running on your system, begin at the :ref:`download and installation guide <installation>`. Then, familiarize yourself with the framework of :ref:`continuous-variable quantum computation <introduction>`, the :ref:`conventions <conventions>` used by Strawberry Fields, and check out some important and interesting continuous-variable :ref:`quantum algorithms <algorithms>`.
 

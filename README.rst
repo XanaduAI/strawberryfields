@@ -50,7 +50,8 @@ Installation
 ============
 
 Strawberry Fields requires Python version 3.5 and above. Installation of Strawberry Fields, as well as all dependencies, can be done using pip:
-::
+
+.. code-block:: bash
 
     $ python -m pip install strawberryfields
 
@@ -77,9 +78,9 @@ We also encourage bug reports, suggestions for new features and enhancements, an
 
 .. raw:: html
 
-    <img src="https://github.com/XanaduAI/strawberryfields/blob/master/doc/_images/shirt.jpg" width="300px"  align="left"> <img src="https://github.com/XanaduAI/strawberryfields/blob/master/doc/_images/sticker_crop.jpg" width="300px"  align="left">
+    <img src="https://i.imgur.com/xSFMt3g.jpg" width="300px"  align="left"> <img src="https://i.imgur.com/dC0U1xG.jpg" width="300px"  align="left">
 
-See `Contributing to Strawberry Fields <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CONTRIBUTING.md>`_
+See our `contributions page <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CONTRIBUTING.md>`_
 for more details, and then check out some of the Strawberry Fields `challenges <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CHALLENGES.md>`_ for some inspiration.
 
 |
