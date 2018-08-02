@@ -32,7 +32,13 @@ Installation
 Installation of Strawberry Fields, as well as all required Python packages mentioned above, can be installed via ``pip``:
 ::
 
-   	python -m pip install strawberryfields
+   	$ python -m pip install strawberryfields
+
+
+If you are using the ``tensorflow-gpu`` module for TensorFlow GPU support, you can install the following package for GPU support in Strawberry Fields:
+::
+
+    $ python -m pip install strawberryfields-gpu
 
 
 Make sure you are using the Python 3 version of pip.
@@ -40,7 +46,7 @@ Make sure you are using the Python 3 version of pip.
 Alternatively, you can install Strawberry Fields from the source code by navigating to the top directory and running
 ::
 
-	python setup.py install
+	$ python setup.py install
 
 
 Notebook downloads
@@ -67,12 +73,12 @@ Software tests
 To ensure that Strawberry Fields is working correctly after installation, the test suite can be run by navigating to the source code folder and running
 ::
 
-	make test
+	$ make test
 
 Note that this runs *all* of the tests, using *all* available backends, so can be quite slow (it should take around 40 minutes to complete). Alternatively, you can run the full test suite for a particular backend by running
 ::
 
-	make test-[backend]
+	$ make test-[backend]
 
 where ``[backend]`` should be replaced with the :ref:`backend <backends>` you would like to test (``fock``, ``tf``, or ``gaussian``).
 
@@ -80,7 +86,7 @@ Individual test modules are run using
 
 ::
 
-	python tests/test_gate.py --backend=[backend]
+	$ python tests/test_gate.py --backend=[backend]
 
 
 Documentation
@@ -95,13 +101,13 @@ To build the documentation, the following additional packages are required:
 If using Ubuntu, they can be installed via a combination of ``apt`` and ``pip``:
 ::
 
-	sudo apt install graphviz
-	pip install sphinx --user
-	pip install sphinxcontrib-bibtex --user
+	$ sudo apt install graphviz
+	$ pip install sphinx --user
+	$ pip install sphinxcontrib-bibtex --user
 
 To build the HTML documentation, go to the top-level directory and run
 ::
 
-  make docs
+  $ make docs
 
 The documentation can then be found in the :file:`doc/_build/html/` directory.

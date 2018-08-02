@@ -41,7 +41,7 @@ Features
 
 * Quantum circuits are written using the easy-to-use and intuitive **Blackbird quantum programming language**
 
-* Includes a suite of CV **quantum computer simulators** implemented using **NumPy** and **Tensorflow** - these built-in quantum compiler tools convert and optimize Blackbird code for classical simulation
+* Includes a suite of CV **quantum computer simulators** implemented using **NumPy** and **TensorFlow** - these built-in quantum compiler tools convert and optimize Blackbird code for classical simulation
 
 * Future releases will aim to target experimental backends, including **photonic quantum computing chips**
 
@@ -54,6 +54,13 @@ Strawberry Fields requires Python version 3.5 and above. Installation of Strawbe
 .. code-block:: bash
 
     $ python -m pip install strawberryfields
+
+
+If you are using the ``tensorflow-gpu`` module for TensorFlow GPU support, you can install the following package for GPU support in Strawberry Fields:
+
+.. code-block:: bash
+
+    $ python -m pip install strawberryfields-gpu
 
 
 Getting started
