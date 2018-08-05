@@ -19,6 +19,7 @@ Check out some cool applications of Strawberry Fields in the gallery below. Note
    state_learner/StateLearning.ipynb
    gate_synthesis/GateSynthesis.ipynb
    fibonacci_classifier/fibonacci_classifier.ipynb
+   scattershot-boson-sampling/scattershot-bs.ipynb
 
 
 .. Copy the template below in order to create a link to your notebook, and a thumbnail.
@@ -50,16 +51,26 @@ Check out some cool applications of Strawberry Fields in the gallery below. Note
    :align: middle
    :target: gate_synthesis/GateSynthesis.html
 
+.. _Scattershot boson sampling: scattershot-boson-sampling/scattershot-bs.html
+.. |sbs| image:: scattershot-boson-sampling/thumbnail.gif
+   :width: 260px
+   :align: middle
+   :target: scattershot-boson-sampling/scattershot-bs.html
+
 
 .. Add your thumbnail to the table in the Gallery!
 
 .. rst-class:: gallery-table
 
-+----------------------------+------------------------------+------------------------------+
-| |mc|                       | |sl|                         |   |gs|                       |
-|                            |                              |                              |
-| `Minimizing correlations`_ | `Quantum state learning`_    |   `Gate synthesis`_          |
-+----------------------------+------------------------------+------------------------------+
++-------------------------------+------------------------------+------------------------------+
+| |mc|                          | |sl|                         |   |gs|                       |
+|                               |                              |                              |
+| `Minimizing correlations`_    | `Quantum state learning`_    |   `Gate synthesis`_          |
++-------------------------------+------------------------------+------------------------------+
+| |sbs|                         |                              |                              |
+|                               |                              |                              |
+| `Scattershot boson sampling`_ |                              |                              |
++-------------------------------+------------------------------+------------------------------+
 
 Applications and plugins
 ------------------------
