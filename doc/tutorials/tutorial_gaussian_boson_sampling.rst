@@ -64,7 +64,7 @@ A couple of things to note in this particular example:
 
    .. math:: \text{prob}(1,2,0,1) = \left|\braketD{1,2,0,1}{\psi'}\right|^2
 
-   The Fock state method :meth:`~.BaseFockState.all_fock_probs`, used previously to return *all* Fock state probabilities as an array, is **not supported** by Gaussian states.
+   The Fock state method :meth:`~.BaseFockState.all_fock_probs`, used previously to return *all* Fock state probabilities as an array, is **not supported** by Gaussian states. This is because computing the Fock probabilities of states in the Gaussian representation has exponential scaling - while this is fine for computing particular Fock basis probabilities, it becomes computationally demanding to return *all* Fock state probabilities using the Gaussian backend.
 
 
 The simulation can be run by executing the file from the command line, resulting in the following output:
