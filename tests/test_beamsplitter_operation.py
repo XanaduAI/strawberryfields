@@ -17,7 +17,7 @@ from scipy.special import factorial
 from defaults import BaseTest, FockBaseTest
 
 phase_alphas = np.linspace(0, 2 * np.pi, 3, endpoint=False) + np.pi / 13
-t_values = np.linspace(0., 1., 3)
+t_values = np.linspace(-0.2, 1., 3)
 phase_r = np.linspace(0, 2 * np.pi, 3, endpoint=False)
 
 ###################################################################
@@ -29,6 +29,15 @@ class BasicTests(BaseTest):
   def setUp(self):
     super().setUp()
     self.mag_alphas = np.linspace(0., self.args.alpha, 3)
+
+  def test_complex_t(self):
+    """Test exception raised if t is complex"""
+    self.logTestName()
+    t = 0.1 + 0.5j
+    r = np.exp(1j * 0.2) * np.sqrt(1. - np.abs(t) ** 2)
+    with self.assertRaisesRegex(ValueError, "must be a float"):
+      self.circuit.reset(pure=self.kwargs['pure'])
+      self.circuit.beamsplitter(t, r, 0, 1)
 
   def test_vacuum_beamsplitter(self):
     """Tests beamsplitter operation in some limiting cases where the output

@@ -236,6 +236,15 @@ class BaseState(abc.ABC):
         Computes the probability :math:`|\braket{\vec{n}|\psi}|^2` of measuring
         the given multi-mode Fock state based on the state :math:`\ket{\psi}`.
 
+        .. warning::
+
+            Computing the Fock probabilities of states has exponential scaling
+            in the Gaussian representation (for example states output by a
+            Gaussian backend as a :class:`~.BaseGaussianState`).
+            This shouldn't affect small-scale problems, where only a few Fock
+            basis state probabilities need to be calculated, but will become
+            evident in larger scale problems.
+
         Args:
             n (Sequence[int]): the Fock state :math:`\ket{\vec{n}}` that we want to measure the probability of
             **kwargs:

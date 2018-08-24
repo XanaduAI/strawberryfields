@@ -217,12 +217,14 @@ class FockBackend(BaseFock):
         """Perform a beamsplitter operation on the specified modes.
 
         Args:
-            t (complex): transmittivity parameter
+            t (float): transmittivity parameter
             r (complex): reflectivity parameter
             mode1 (int): index of first mode where operation is carried out
             mode2 (int): index of second mode where operation is carried out
 
         """
+        if isinstance(t, complex):
+            raise ValueError("Beamsplitter transmittivity t must be a float.")
         self.circuit.beamsplitter(t, abs(r), phase(r), self._remap_modes(mode1), self._remap_modes(mode2))
 
     def kerr_interaction(self, kappa, mode):

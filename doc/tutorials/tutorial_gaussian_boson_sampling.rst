@@ -39,41 +39,32 @@ To begin, create a new text file with the name :file:`gaussian_boson_sampling.py
 A couple of things to note in this particular example:
 
 
-.. 
+..
 
-1. To prepare the input single mode squeezed vacuum state :math:`\ket{z} = 1`, we apply a squeezing operator to each modes (initially in the vacuum state). This is done via the :class:`~.Sgate` operator.
+#. To prepare the input single mode squeezed vacuum state :math:`\ket{z} = 1`, we apply a squeezing operator to each modes (initially in the vacuum state). This is done via the :class:`~.Sgate` operator.
 
-.. 
+..
 
-2. Next we apply the rotation gates, :class:`~.Rgate`, to each mode. The resulting rotation in the phase space occurs in the anticlockwise direction, with angle :math:`\phi`.
-    
-.. 
+#. Next we apply the linear interferometer to all four modes, using the decomposition operator :class:`~.Interferometer`, and the unitary matrix ``U``. This operator decomposes the unitary matrix representing the linear interferometer into single mode rotation gates :class:`~.Rgate`, and two-mode beamsplitters :class:`~.BSgate`. After applying the interferometer, we will denote the output state by :math:`\ket{\psi'}`.
 
-3. Finally, we apply the array of beamsplitters, using the :class:`~.BSgate` operator, with arguments ``(theta,phi)``.
+   .. note:: You can view the decomposed beamsplitters and rotation gates which correspond to the linear interferometer ``U`` by calling :meth:`eng.print_applied() <strawberryfields.engine.Engine.print_applied>` after running the engine.
 
-   * The transmission amplitude is then given by :math:`t=\cos\theta`
-   * The reflection amplitude is given by :math:`r=e^{i\phi}\sin{\theta}`
+   .. note:: The interferometer applied here is **identical** to that from the :ref:`boson sampling tutorial <boson_tutorial>`. As a result, the decomposed beamsplitter and rotation gate parameters will also be identical.
 
-.. 
-
-4. The rotation and beamsplitter parameters have been chosen at random, leading to an arbitrary unitary :math:`U` acting on the input modes annihilation and creation operators. After applying the beamsplitter array, we will denote the output state by :math:`\ket{\psi'}`.
-
-   .. note:: The beamsplitter and rotation gate parameters are **identical** to those from the :ref:`boson sampling tutorial <boson_tutorial>`.
-
-.. 
+..
 
 
-5. Unlike the :ref:`boson sampling tutorial <boson_tutorial>`, the lack of Fock states means we can now use the :ref:`gaussian_backend`, indicated with the argument ``'gaussian'``, along with a 4 mode register. The Gaussian backend is perfectly suited for simulation of Gaussian boson sampling, as all initial states are Gaussian, and all the required operators transform Gaussian states to other Gaussian states.
+#. Unlike the :ref:`boson sampling tutorial <boson_tutorial>`, the lack of Fock states means we can now use the :ref:`gaussian_backend`, indicated with the argument ``'gaussian'``, along with a 4 mode register. The Gaussian backend is perfectly suited for simulation of Gaussian boson sampling, as all initial states are Gaussian, and all the required operators transform Gaussian states to other Gaussian states.
 
-.. 
+..
 
-6. We are **not** performing Fock measurements at the output; this is to ensure the state is preserved, so we can extract the joint Fock state probabilities after the beamsplitter array.
+#. We are **not** performing Fock measurements at the output; this is to ensure the state is preserved, so we can extract the joint Fock state probabilities after the beamsplitter array.
 
    The state method :meth:`~.BaseState.fock_prob` accepts a list or a tuple containing the Fock state to be measured and returns the probability of that measurement. For example, ``[1,2,0,1]`` represents the measurement resulting in the detection of 1 photon at mode ``q[0]`` and mode ``q[3]``, and 2 photons at mode ``q[1]``, and would return the value
-   
+
    .. math:: \text{prob}(1,2,0,1) = \left|\braketD{1,2,0,1}{\psi'}\right|^2
 
-   The Fock state method :meth:`~.BaseFockState.all_fock_probs`, used previously to return *all* Fock state probabilities as an array, is **not supported** by Gaussian states.
+   The Fock state method :meth:`~.BaseFockState.all_fock_probs`, used previously to return *all* Fock state probabilities as an array, is **not supported** by Gaussian states. This is because computing the Fock probabilities of states in the Gaussian representation has exponential scaling - while this is fine for computing particular Fock basis probabilities, it becomes computationally demanding to return *all* Fock state probabilities using the Gaussian backend.
 
 
 The simulation can be run by executing the file from the command line, resulting in the following output:
@@ -99,7 +90,7 @@ where :math:`U` is the rotation/beamsplitter unitary transformation on the input
 
 However, in this particular example, we are using **the same** squeezing parameter, :math:`z=r`, for all input states - this allows us to simplify this equation. To start with, the hafnian expression simply becomes :math:`\text{Haf}[(UU^T\tanh(r))]_{st}`, removing the need for the tensor sum.
 
-Thus, we have 
+Thus, we have
 
 .. math:: \left|\left\langle{n_1,n_2,\dots,n_N}\middle|{\psi'}\right\rangle\right|^2 = \frac{\left|\text{Haf}[(UU^T\tanh(r))]_{st}\right|^2}{n_1!n_2!\cdots n_N!\cosh^N(r)}.
 
@@ -115,9 +106,9 @@ First, import some useful libraries, such as NumPy, as well as the ``multi_dot``
 >>> from numpy.linalg import multi_dot
 >>> from scipy.linalg import block_diag
 
-As we are using the same beamsplitter and rotation gate parameters as in the :ref:`boson_tutorial`, we do not have to recalculate the unitary, we can use the same :math:`U` computed there,
+As we are using the interferometer as in the :ref:`boson_tutorial`, we do not have to recalculate the unitary, we can use the same :math:`U` computed there, or copy the ``U`` defined in the file :file:`gaussian_boson_sampling.py`:
 
-.. math:: 
+.. math::
     U = \left[\begin{matrix}
         0.2195-0.2565i & 0.6111+0.5242i & -0.1027+0.4745i & -0.0273+0.0373i\\
         0.4513+0.6026i & 0.4570+0.0123i & 0.1316-0.4504i & 0.0353-0.0532i\\
@@ -130,7 +121,7 @@ Now that we have the interferometer unitary transformation :math:`U`, as well as
 Calculating the hafnian
 ------------------------
 
-Before we can calculate the right hand side of the Gaussian boson sampling equation, we need a method of calculating the hafnian. Since the hafnian is classically hard to compute, it is not provided in either NumPy *or* SciPy, so we will use the following custom function: 
+Before we can calculate the right hand side of the Gaussian boson sampling equation, we need a method of calculating the hafnian. Since the hafnian is classically hard to compute, it is not provided in either NumPy *or* SciPy, so we will use the following custom function:
 
 >>> from itertools import permutations
 >>> from scipy.special import factorial
@@ -170,7 +161,7 @@ Comparing to Strawberry Fields
 Now that we have a method for calculating the hafnian, let's compare the output to that provided by Strawberry Fields.
 
 
-* **Measuring** :math:`\ket{0,0,0,0}` **at the output** 
+* **Measuring** :math:`\ket{0,0,0,0}` **at the output**
 
   This corresponds to the hafnian of an *empty* matrix, which is simply 1:
 
@@ -180,8 +171,8 @@ Now that we have a method for calculating the hafnian, let's compare the output 
   Compare this to the Strawberry Fields result ``0.176378447614135``
 
 
-* **Measuring** :math:`\ket{1,1,0,0}` **at the output** 
-  
+* **Measuring** :math:`\ket{1,1,0,0}` **at the output**
+
   >>> B = (np.dot(U,U.T) * np.tanh(1))[:, [0,1]][[0,1]]
   >>> np.abs(Haf(B))**2 / np.cosh(1)**4
   0.068559563712223492
@@ -189,8 +180,8 @@ Now that we have a method for calculating the hafnian, let's compare the output 
   Compare this to the Strawberry Fields result ``0.0685595637122246``
 
 
-* **Measuring** :math:`\ket{0,1,0,1}` **at the output** 
-  
+* **Measuring** :math:`\ket{0,1,0,1}` **at the output**
+
   >>> B = (np.dot(U,U.T) * np.tanh(1))[:, [1,3]][[1,3]]
   >>> np.abs(Haf(B))**2 / np.cosh(1)**4
   0.0020560972589773979
@@ -198,10 +189,10 @@ Now that we have a method for calculating the hafnian, let's compare the output 
   Compare this to the Strawberry Fields result ``0.002056097258977398``
 
 
-* **Measuring** :math:`\ket{1,1,1,1}` **at the output** 
+* **Measuring** :math:`\ket{1,1,1,1}` **at the output**
 
   This corresponds to the hafnian of the full matrix :math:`B=UU^T\tanh(r)`:
-  
+
   >>> B = (np.dot(U,U.T) * np.tanh(1))
   >>> np.abs(Haf(B))**2 / np.cosh(1)**4
   0.0083429463998674833
@@ -209,7 +200,7 @@ Now that we have a method for calculating the hafnian, let's compare the output 
   Compare this to the Strawberry Fields result ``0.00834294639986785``
 
 
-* **Measuring** :math:`\ket{2,0,0,0}` **at the output** 
+* **Measuring** :math:`\ket{2,0,0,0}` **at the output**
 
   Since we have two photons in mode ``q[0]``, we take two copies of the
   first row and first column, making sure to divide by :math:`2!`:
@@ -226,8 +217,8 @@ They Strawberry Field simulation results agree (with almost negligible numerical
 .. admonition:: Exercises
     :class: warning
 
-    Repeat this tutorial with 
-    
+    Repeat this tutorial with
+
     1. A Fock backend such as :ref:`numpy_backend`, instead of the Gaussian backend.
     2. Different beamsplitter and rotation parameters.
     3. Input states with *differing* squeezed values :math:`r_i`. You will need to modify the code to take into account the fact that the output covariance matrix determinant must now be calculated.
