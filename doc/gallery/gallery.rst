@@ -20,6 +20,7 @@ Check out some cool applications of Strawberry Fields in the gallery below. Note
    gate_synthesis/GateSynthesis.ipynb
    fibonacci_classifier/fibonacci_classifier.ipynb
    scattershot-boson-sampling/scattershot-bs.ipynb
+   gate_visualisation/GateVisualisation.ipynb
 
 
 .. Copy the template below in order to create a link to your notebook, and a thumbnail.
@@ -57,20 +58,25 @@ Check out some cool applications of Strawberry Fields in the gallery below. Note
    :align: middle
    :target: scattershot-boson-sampling/scattershot-bs.html
 
+.. _Gate visualization: gate_visualisation/GateVisualisation.html
+.. |gv| image:: gate_visualisation/thumbnail.gif
+   :width: 260px
+   :align: middle
+   :target: gate_visualisation/GateVisualisation.html
 
 .. Add your thumbnail to the table in the Gallery!
 
 .. rst-class:: gallery-table
 
-+-------------------------------+------------------------------+------------------------------+
-| |mc|                          | |sl|                         |   |gs|                       |
-|                               |                              |                              |
-| `Minimizing correlations`_    | `Quantum state learning`_    |   `Gate synthesis`_          |
-+-------------------------------+------------------------------+------------------------------+
-| |sbs|                         |                              |                              |
-|                               |                              |                              |
-| `Scattershot boson sampling`_ |                              |                              |
-+-------------------------------+------------------------------+------------------------------+
++-------------------------------+-------------------------------+------------------------------+
+| |mc|                          | |sl|                          |   |gs|                       |
+|                               |                               |                              |
+| `Minimizing correlations`_    | `Quantum state learning`_     |   `Gate synthesis`_          |
++-------------------------------+-------------------------------+------------------------------+
+| |gv|                          | |sbs|                         |                              |
+|                               |                               |                              |
+| `Gate visualization`_         | `Scattershot boson sampling`_ |                              |
++-------------------------------+-------------------------------+------------------------------+
 
 Applications and plugins
 ------------------------
