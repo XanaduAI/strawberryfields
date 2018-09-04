@@ -3,27 +3,27 @@
 
 ##################################################
 
-.. image:: https://img.shields.io/travis/XanaduAI/strawberryfields/master.svg?style=for-the-badge
+.. image:: https://img.shields.io/travis/XanaduAI/strawberryfields/master.svg?style=popout
     :alt: Travis
     :target: https://travis-ci.org/XanaduAI/strawberryfields
 
-.. image:: https://img.shields.io/codecov/c/github/xanaduai/strawberryfields/master.svg?style=for-the-badge
+.. image:: https://img.shields.io/codecov/c/github/xanaduai/strawberryfields/master.svg?style=popout
     :alt: Codecov coverage
     :target: https://codecov.io/gh/XanaduAI/strawberryfields
 
-.. image:: https://img.shields.io/codacy/grade/bd14437d17494f16ada064d8026498dd.svg?style=for-the-badge
+.. image:: https://api.codacy.com/project/badge/Grade/bd14437d17494f16ada064d8026498dd
     :alt: Codacy grade
     :target: https://app.codacy.com/app/XanaduAI/strawberryfields?utm_source=github.com&utm_medium=referral&utm_content=XanaduAI/strawberryfields&utm_campaign=badger
 
-.. image:: https://img.shields.io/readthedocs/strawberryfields.svg?style=for-the-badge
+.. image:: https://img.shields.io/readthedocs/strawberryfields.svg?style=popout
     :alt: Read the Docs
     :target: https://strawberryfields.readthedocs.io
 
-.. image:: https://img.shields.io/pypi/v/StrawberryFields.svg?style=for-the-badge
+.. image:: https://img.shields.io/pypi/v/StrawberryFields.svg?style=popout
     :alt: PyPI
     :target: https://pypi.org/project/StrawberryFields
 
-.. image:: https://img.shields.io/pypi/pyversions/StrawberryFields.svg?style=for-the-badge
+.. image:: https://img.shields.io/pypi/pyversions/StrawberryFields.svg?style=popout
     :alt: PyPI - Python Version
     :target: https://pypi.org/project/StrawberryFields
 
