@@ -131,3 +131,5 @@ Finally, some links to studies and research papers that utilize Strawberry Field
 #. N\. Killoran, T. R. Bromley, J. M. Arrazola, M. Schuld, N. Quesada, and S. Lloyd. *Continuous-variable quantum neural networks.* arXiv, 2018. `arXiv:1806.06871 <https://arxiv.org/abs/1806.06871>`_.
 
 #. J\. M\. Arrazola, T. R. Bromley, J. Izaac, C. R. Myers, K. Brádler, and N. Killoran. *Machine learning method for state preparation and gate synthesis on photonic quantum computers.* arXiv, 2018. `arXiv:1807.10781 <https://arxiv.org/abs/1807.10781>`_.
+
+#. K\. K\. Sabapathy, H. Qi, J. Izaac, and C. Weedbrook. *Near-deterministic production of universal quantum photonic gates enhanced by machine learning.* arXiv, 2018. `arXiv:1809.04680 <https://arxiv.org/abs/1809.04680>`_.
