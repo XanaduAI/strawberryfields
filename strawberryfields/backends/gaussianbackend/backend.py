@@ -302,6 +302,18 @@ class GaussianBackend(BaseGaussian):
         """
         self.circuit.loss(T, mode)
 
+
+    def thermal_loss(self, T, nth, mode):
+        """
+        Perform a thermal loss channel operation on the specified mode.
+
+        Args:
+            T: loss parameter
+            mode (int): index of mode where operation is carried out
+
+        """
+        self.circuit.thermal_loss(T, nth, mode)
+
     def state(self, modes=None, **kwargs):
         """ Returns the vector of means and the covariance matrix of the specified modes.
 

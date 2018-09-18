@@ -357,6 +357,16 @@ class GaussianModes:
         self.mmat[:, k] = self.mmat[k]
         self.mean[k] = sqrtT*self.mean[k]
 
+    def thermal_loss(self, T, nth, k):
+        r""" Implements the thermal loss channel in mode k by amplitude loss amount \sqrt{T}
+        unlike the loss channel, here the ancilliary mode that goes into the second arm of the
+        beam splitter is prepared in a thermal state with mean photon number nth """
+        if self.active[k] is None:
+            raise ValueError("Cannot apply loss channel, mode does not exist")
+        
+        self.loss(T,k)
+        self.nmat += (1-T)*nth
+
     def init_thermal(self, population, mode):
         """ Initializes a state of mode in a thermal state with the given population"""
         self.loss(0.0, mode)
