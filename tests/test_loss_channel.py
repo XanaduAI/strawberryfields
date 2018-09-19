@@ -53,29 +53,47 @@ class GaussianBasisTests(GaussianBaseTest):
     supported by the Gaussian backend"""
     num_subsystems = 1
 
-    def test_thermal_loss_channel_on_vacuum(self):
-        """Tests loss channels on vacuum (result should be thermal state?)."""
+    def test_thermal_loss_channel_with_vacuum(self):
+        """Tests thermal loss channel with nbar=0 (should be same as loss channel)."""
         self.logTestName()
-        nbar = 1.
+        z = 0.432*np.exp(1j*0.534)
+        alpha = 0.654 + 1j*0.239
+        nbar = 0.
         for T in loss_Ts:
             self.circuit.reset(pure=self.kwargs['pure'])
-            self.circuit.thermal_loss(T, nbar, 0)
-            self.assertAllTrue(self.circuit.is_vacuum(self.tol))
+            self.circuit.squeeze(z, 0)
+            self.circuit.displacement(alpha, 0)
+            self.circuit.loss(T, 0)
+            state1 = self.circuit.state()
 
-    def test_full_thermal_loss_channel_on_coherent_states(self):
-        """Tests the full thermal loss channel on various states (result should be thermal state?)."""
+            self.circuit.reset(pure=self.kwargs['pure'])
+            self.circuit.squeeze(z, 0)
+            self.circuit.displacement(alpha, 0)
+            self.circuit.thermal_loss(T, nbar, 0)
+            state2 = self.circuit.state()
+
+            self.assertAllAlmostEqual(state1.means(), state2.means(), delta=self.tol)
+            self.assertAllAlmostEqual(state1.cov(), state2.cov(), delta=self.tol)
+
+    def test_full_thermal_loss_channel(self):
+        """Tests thermal loss channel with T=0 (should produce a thermal state)."""
         self.logTestName()
-        T = 0.0
-        nbar = 1.
-        for mag_alpha in mag_alphas:
-            for phase_alpha in phase_alphas:
-                alpha = mag_alpha * np.exp(1j * phase_alpha)
-                self.circuit.reset(pure=self.kwargs['pure'])
-                self.circuit.displacement(alpha, 0)
-                self.circuit.thermal_loss(T, nbar, 0)
-                self.assertAllTrue(self.circuit.is_vacuum(self.tol))
-                if alpha == 0.:
-                    break
+        z = 0.432*np.exp(1j*0.534)
+        alpha = 0.654 + 1j*0.239
+        T = 0
+        for nbar in mag_alphas:
+            self.circuit.reset(pure=self.kwargs['pure'])
+            self.circuit.prepare_thermal_state(nbar, 0)
+            state1 = self.circuit.state()
+
+            self.circuit.reset(pure=self.kwargs['pure'])
+            self.circuit.squeeze(z, 0)
+            self.circuit.displacement(alpha, 0)
+            self.circuit.thermal_loss(T, nbar, 0)
+            state2 = self.circuit.state()
+
+            self.assertAllAlmostEqual(state1.means(), state2.means(), delta=self.tol)
+            self.assertAllAlmostEqual(state1.cov(), state2.cov(), delta=self.tol)
 
 
 class FockBasisTests(FockBaseTest):

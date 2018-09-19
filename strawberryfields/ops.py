@@ -1820,6 +1820,6 @@ one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate, Kgate, CXgate, CZgate, CKga
 two_args_gates = (Dgate, Sgate, BSgate, S2gate)
 gates = zero_args_gates + one_args_gates + two_args_gates
 
-channels = (LossChannel,)
+channels = (LossChannel, ThermalLossChannel)
 
 state_preparations = (Vacuum, Coherent, Squeezed, DisplacedSqueezed, Fock, Thermal, Catstate)
