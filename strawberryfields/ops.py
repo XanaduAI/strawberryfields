@@ -206,6 +206,7 @@ Channels
 
 .. autosummary::
     LossChannel
+    ThermalLossChannel
 
 
 Decompositions
@@ -616,10 +617,28 @@ class Channel(Transformation):
     This class provides the base behaviour for non-unitary
     maps and transformations.
     """
-    # NOTE: At the moment this is an empty class, and only
-    # exists for a nicer inheritence diagram.
-    # This class will likely get filled in when we add more channels.
-    pass
+    def merge(self, other):
+        # check that other an identical channel, and that
+        # no extra dependencies <=> no RegRefTransform parameters
+        if isinstance(other, self.__class__) \
+        and len(self._extra_deps)+len(other._extra_deps) == 0:
+            # check that all other parameters are identical
+            if np.all(self.p[1:] != other.p[1:]):
+                raise MergeFailure('Other parameters differ.')
+
+            # determine the new loss parameter
+            T = self.p[0] * other.p[0]
+
+            # if one, replace with the identity
+            if T == 1:
+                return None
+
+            if len(self.p) == 1:
+                return self.__class__(T)
+            else:
+                return self.__class__(T, *self.p[1:])
+        else:
+            raise MergeFailure('Not the same operation family.')
 
 
 class Gate(Transformation):
@@ -1074,19 +1093,27 @@ class LossChannel(Channel):
         p = _unwrap(self.p)
         backend.loss(p[0], *reg)
 
-    def merge(self, other):
-        # check that other is also a LossChannel, and that
-        # no extra dependencies <=> no RegRefTransform parameters
-        if isinstance(other, self.__class__) \
-        and len(self._extra_deps)+len(other._extra_deps) == 0:
-            # determine the new loss parameter
-            T = self.p[0] * other.p[0]
-            # if one, replace with the identity
-            if T == 1:
-                return None
-            return self.__class__(T)
-        else:
-            raise MergeFailure('Not the same operation family.')
+
+class ThermalLossChannel(Channel):
+    r"""Perform a thermal loss channel operation on the specified mode.
+
+    This channel couples mode :math:`a` to another bosonic mode :math:`b`
+    prepared in a thermal state with mean photon number :math:`\bar{n}`,
+    using the following transformation:
+
+    .. math::
+       a \mapsto \sqrt{T} a+\sqrt{1-T} b
+
+    Args:
+        T (float): the loss parameter :math:`0\leq T\leq 1`.
+        nbar (float): mean photon number of the environment thermal state
+    """
+    def __init__(self, T, nbar):
+        super().__init__([T, nbar])
+
+    def _apply(self, reg, backend, **kwargs):
+        p = _unwrap(self.p)
+        backend.thermal_loss(p[0], p[1], *reg)
 
 
 #====================================================================
