@@ -95,6 +95,23 @@ class GaussianBasisTests(GaussianBaseTest):
             self.assertAllAlmostEqual(state1.means(), state2.means(), delta=self.tol)
             self.assertAllAlmostEqual(state1.cov(), state2.cov(), delta=self.tol)
 
+    def test_thermal_loss_channel_on_squeezed_state(self):
+        """Tests thermal loss channel on a squeezed state"""
+        self.logTestName()
+        r = 0.432
+        for T in loss_Ts:
+            for nbar in mag_alphas:
+                self.circuit.reset(pure=self.kwargs['pure'])
+                self.circuit.squeeze(r, 0)
+                self.circuit.thermal_loss(T, nbar, 0)
+                state = self.circuit.state()
+
+                res = state.cov()
+                exp = np.diag([T*np.exp(-2*r) + (1-T)*(2*nbar+1),
+                               T*np.exp(2*r) + (1-T)*(2*nbar+1)])
+
+                self.assertAllAlmostEqual(res, exp, delta=self.tol)
+
 
 class FockBasisTests(FockBaseTest):
     """Tests for simulators that use Fock basis."""

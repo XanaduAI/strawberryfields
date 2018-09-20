@@ -635,8 +635,8 @@ class Channel(Transformation):
 
             if len(self.p) == 1:
                 return self.__class__(T)
-            else:
-                return self.__class__(T, *self.p[1:])
+
+            return self.__class__(T, *self.p[1:])
         else:
             raise MergeFailure('Not the same operation family.')
 
@@ -1095,7 +1095,7 @@ class LossChannel(Channel):
 
 
 class ThermalLossChannel(Channel):
-    r"""Perform a thermal loss channel operation on the specified mode.
+    r"""Perform a :ref:`thermal loss channel <thermal_loss>` operation on the specified mode.
 
     This channel couples mode :math:`a` to another bosonic mode :math:`b`
     prepared in a thermal state with mean photon number :math:`\bar{n}`,

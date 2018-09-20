@@ -48,10 +48,10 @@ Loss is implemented by a CPTP map whose Kraus representation is
 .. admonition:: Definition
     :class: defn
 
-    Loss is implemented by coupling mode :math:`\a` to another bosonic mode prepared in the vacuum state, by using the following transformation
+    Loss is implemented by coupling mode :math:`\a` to another bosonic mode :math:`\hat{b}` prepared in the vacuum state, by using the following transformation
 
     .. math::
-       \a \to \sqrt{T} \a+\sqrt{1-T} c
+       \a \to \sqrt{T} \a+\sqrt{1-T} \hat{b}
 
     and then tracing it out. Here, :math:`T` is the *energy* transmissivity. For :math:`T = 0` the state is mapped to the vacuum state, and for :math:`T=1` one has the identity map.
 
@@ -67,6 +67,28 @@ One useful identity is
 
 In particular :math:`\mathcal{N}(T)\left\{\ket{0}\bra{0} \right\} =  \pr{0}`.
 
+
+.. _thermal_loss:
+
+Thermal loss channel
+---------------------------------------------
+
+.. admonition:: Definition
+    :class: defn
+
+    Thermal loss is implemented by coupling mode :math:`\a` to another bosonic mode :math:`\hat{b}` prepared in the thermal state :math:`\ket{\bar{n}}`, by using the following transformation
+
+    .. math::
+       \a \to \sqrt{T} \a+\sqrt{1-T} \hat{b}
+
+    and then tracing it out. Here, :math:`T` is the *energy* transmissivity. For :math:`T = 0` the state is mapped to the thermal state :math:`\ket{\bar{n}}`, and for :math:`T=1` one has the identity map.
+
+.. tip::
+
+   *Implemented in Strawberry Fields as a quantum channel by* :class:`strawberryfields.ops.ThermalLossChannel`
+
+
+Note that if :math:`\bar{n}=0`, the thermal loss channel is equivalent to the :ref:`loss channel <loss>`.
 
 
 Commutation relations
