@@ -618,7 +618,7 @@ class Channel(Transformation):
     maps and transformations.
     """
     def merge(self, other):
-        # check that other an identical channel, and that
+        # check that other is an identical channel, and that there are
         # no extra dependencies <=> no RegRefTransform parameters
         if isinstance(other, self.__class__) \
         and len(self._extra_deps)+len(other._extra_deps) == 0:
@@ -1077,11 +1077,11 @@ class MeasureHeterodyne(Measurement):
 class LossChannel(Channel):
     r"""Perform a :ref:`loss channel <loss>` operation on the specified mode.
 
-    This channel couples mode :math:`a` to another bosonic mode :math:`b`
+    This channel couples mode :math:`\a` to another bosonic mode :math:`\hat{b}`
     prepared in the vacuum state using the following transformation:
 
     .. math::
-       a \mapsto \sqrt{T} a+\sqrt{1-T} b
+       \a \mapsto \sqrt{T} a+\sqrt{1-T} \hat{b}
 
     Args:
         T (float): the loss parameter :math:`0\leq T\leq 1`.
@@ -1097,12 +1097,12 @@ class LossChannel(Channel):
 class ThermalLossChannel(Channel):
     r"""Perform a :ref:`thermal loss channel <thermal_loss>` operation on the specified mode.
 
-    This channel couples mode :math:`a` to another bosonic mode :math:`b`
+    This channel couples mode :math:`\a` to another bosonic mode :math:`\hat{b}`
     prepared in a thermal state with mean photon number :math:`\bar{n}`,
     using the following transformation:
 
     .. math::
-       a \mapsto \sqrt{T} a+\sqrt{1-T} b
+       \a \mapsto \sqrt{T} a+\sqrt{1-T} \hat{b}
 
     Args:
         T (float): the loss parameter :math:`0\leq T\leq 1`.

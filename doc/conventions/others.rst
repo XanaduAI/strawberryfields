@@ -81,7 +81,7 @@ Thermal loss channel
     .. math::
        \a \to \sqrt{T} \a+\sqrt{1-T} \hat{b}
 
-    and then tracing it out. Here, :math:`T` is the *energy* transmissivity. For :math:`T = 0` the state is mapped to the thermal state :math:`\ket{\bar{n}}`, and for :math:`T=1` one has the identity map.
+    and then tracing it out. Here, :math:`T` is the *energy* transmissivity. For :math:`T = 0` the state is mapped to the thermal state :math:`\ket{\bar{n}}` with mean photon number :math:`\bar{n}`, and for :math:`T=1` one has the identity map.
 
 .. tip::
 
