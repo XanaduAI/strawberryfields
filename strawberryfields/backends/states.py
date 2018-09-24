@@ -119,10 +119,12 @@ from itertools import chain
 from copy import copy
 
 import numpy as np
+from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
 
 from .shared_ops import rotation_matrix as _R
+from .shared_ops import changebasis
 
 indices = string.ascii_lowercase
 
@@ -353,6 +355,56 @@ class BaseState(abc.ABC):
 
                 * :math:`\phi=0` corresponds to the :math:`x` expectation and variance (default)
                 * :math:`\phi=\pi/2` corresponds to the :math:`p` expectation and variance
+
+        Returns:
+            tuple (float, float): expectation value and variance
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
+        r"""The multi-mode expectation values and variance of arbitrary 2nd order polynomials
+        of quadrature operators.
+
+        An arbitrary 2nd order polynomial of quadrature operators over $N$ modes can always
+        be written in the following form:
+
+        .. math:: P(\mathbf{r}) = \frac{1}{2}\mathbf{r}^T A\mathbf{r} + \mathbf{r}^T \mathbf{d} + k I
+
+        where:
+
+        * :math:`A\in\mathbb{R}^{2N\times 2N}` is a symmetric matrix
+          representing the quadratic coefficients,
+        * :math:`\mathbf{d}\in\mathbb{R}^{2N}` is a real vector representing
+          the linear coefficients,
+        * :math:`k\in\mathbb{R}` represents the constant term, and
+        * :math:`\mathbf{r} = (\x_1,\dots,\x_N,\p_1,\dots,\p_N)` is the vector
+          of quadrature operators in :math:`xp`-ordering.
+
+        This method returns the expectation value of this second-order polynomial,
+
+        .. math:: \langle P(\mathbf{r})\rangle,
+
+        as well as the variance
+
+        .. math:: \Delta P(\mathbf{r})^2 = \langle P(\mathbf{r})^2\rangle - \braket{P(\mathbf{r})}^2
+
+        Args:
+            A (array): a real symmetric 2Nx2N NumPy array, representing the quadratic
+                coefficients of the second order quadrature polynomial.
+            d (array): a real symmetric length-2N NumPy array, representing the linear
+                coefficients of the second order quadrature polynomial. Default the zero vector.
+            k (float): the constant term. Default 0.
+            phi (float): quadrature angle, clockwise from the positive :math:`x` axis. If provided,
+                the vectori of quadrature operators :math:`\mathbf{r}` is first rotated
+                by angle :math:`\phi` in the phase space.
+
+        Keyword args:
+            worksize (int): For Fock backends, the additional Fock basis truncation used to
+                perform the calculation. The calculation will take place within a Fock basis
+                dimension of cutoff_dim+worksize. Increasing the worksize will result in
+                increased numerical accuracy, at the expense of a longer computational time.
+                By default, worksize is set to 5.
 
         Returns:
             tuple (float, float): expectation value and variance
@@ -689,6 +741,110 @@ class BaseFockState(BaseState):
 
         return mean, var
 
+    def poly_quad_expectation(self, A, d=None, k=0, phi=0, worksize=5, **kwargs):
+        if A.shape != (2*self._modes, 2*self._modes):
+            raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
+
+        if d is None:
+            d = np.zeros([2*self._modes])
+
+        # d[self._modes:] = -d[self._modes:]
+
+        if d.shape != (2*self._modes,):
+            raise ValueError("Vector of linear coefficients d must be of length 2N.")
+
+        # expand the cutoff dimension in approximating the x and p
+        # operators in the Fock basis, to reduce numerical inaccuracy.
+        worksize = kwargs.get('worksize', 5)
+        dim = self._cutoff + worksize
+
+        # construct the x and p operators
+        a = np.diag(np.sqrt(np.arange(1, dim)), 1)
+        x = np.sqrt(self._hbar/2) * (a + a.T)
+        p = -1j * np.sqrt(self._hbar/2) * (a - a.T)
+
+        if phi != 0:
+            # rotate the quadrature operators
+            xold, pold = x, p
+            x = np.cos(phi)*xold + np.sin(phi)*pold
+            p = -np.sin(phi)*xold + np.cos(phi)*pold
+
+        def expand_dims(op, n, modes):
+            """Expand quadrature operator to act on nth mode"""
+            I = np.identity(dim)
+            allowed_indices = zip(indices[:2*modes:2], indices[1:2*modes:2])
+            ind = ','.join(a+b for a, b in allowed_indices)
+            ops = [I]*n + [op] + [I]*(modes-n-1)
+            # the einsum 'ij,kl,mn->ijklmn' (for 3 modes)
+            return np.einsum(ind, *ops)
+
+        # determine modes with quadratic expectation values
+        nonzero = np.concatenate([np.mod(A.nonzero()[0], self._modes), np.mod(d.nonzero()[0], self._modes)])
+        ex_modes = list(set(nonzero))
+        num_modes = len(ex_modes)
+
+        if not ex_modes:
+            # only a constant term was provided
+            return k, 0.
+
+        # There are non-zero elements of A and/or d
+        # therefore there are quadratic and/or linear terms.
+        # find the reduced density matrix
+        rho = self.reduced_dm(modes=ex_modes)
+
+        # generate vector of quadrature operators
+        # this array will have shape [2*num_modes] + [dim]*(2*num_modes)
+        r = np.empty([2*num_modes] + [dim]*(2*num_modes), dtype=np.complex128)
+        for n in range(num_modes):
+            r[n] = expand_dims(x, n, num_modes)
+            r[num_modes+n] = expand_dims(-p, n, num_modes)
+
+        # reduce the size of A so that we only consider modes
+        # which we need to calculate the expectation value for
+        rows = ex_modes + [i+self._modes for i in ex_modes]
+        A = A[:, rows][rows]/2
+
+        # compute the polynomial
+        # For 3 modes, this gives the einsum (with brackets denoting modes):
+        # 'a(bc)(de)(fg),a(ch)(ei)(gj)->(bh)(di)(fj)' applied to r, A@r
+        ind1 = indices[:2*num_modes+1]
+        ind2 = ind1[0] + ''.join([str(i)+str(j) for i, j in zip(ind1[2::2], indices[2*num_modes+1:3*num_modes+1])])
+        ind3 = ''.join([str(i)+str(j) for i, j in zip(ind1[1::2], ind2[2::2])])
+        ind = "{},{}->{}".format(ind1, ind2, ind3)
+
+        # Einsum above applied to to r,Ar
+        # This einsum sums over all quadrature operators, and also applies matrix
+        # multiplication between the same mode of each operator
+        poly_op = np.einsum(ind, r, np.tensordot(A, r, axes=1))
+
+        # add linear term
+        poly_op += r.T @ d[rows]
+
+        # add constant term
+        if k != 0:
+            poly_op += k*expand_dims(np.eye(dim), 0, num_modes)
+
+        # truncate down
+        sl = [slice(0, self._cutoff)]*(2*num_modes)
+        poly_op = poly_op[sl]
+
+        # calculate Op^2
+        ind = "{},{}->{}".format(ind1[1:], ind2[1:], ind3)
+        poly_op_sq = np.einsum(ind, poly_op, poly_op)[sl]
+
+        ind1 = ind1[:-1]
+        ind2 = ''.join([str(j)+str(i) for i, j in zip(ind1[::2], ind1[1::2])])
+        ind = "{},{}".format(ind1, ind2)
+
+        # calculate expectation value, Tr(Op @ rho)
+        # For 3 modes, this gives the einsum '(ab)(cd)(ef),(ba)(dc)(fe)->'
+        mean = np.einsum(ind, poly_op, rho).real
+
+        # calculate variance Tr(Op^2 @ rho) - Tr(Op @ rho)^2
+        var = np.einsum(ind, poly_op_sq, rho).real - mean**2
+
+        return mean, var
+
 
 class BaseGaussianState(BaseState):
     r"""Class for the representation of quantum states using the Gaussian formalism.
@@ -917,9 +1073,45 @@ class BaseGaussianState(BaseState):
         mu, cov = self.reduced_gaussian([mode])
         rot = _R(phi)
 
-        muphi = np.dot(rot.T, mu)
-        covphi = np.dot(rot.T, np.dot(cov, rot))
+        muphi = rot.T @ mu
+        covphi = rot.T @ cov @ rot
         return (muphi[0], covphi[0, 0])
+
+
+    def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
+        if A.shape != (2*self._modes, 2*self._modes):
+            raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
+
+        mu = self._mu
+        cov = self._cov
+
+        if phi != 0:
+            # rotate all modes of the covariance matrix and vector of means
+            R = _R(phi)
+            C = changebasis(self._modes)
+            rot = C.T @ block_diag(*([R]*self._modes)) @ C
+
+            mu = rot.T @ mu
+            cov = rot.T @ cov @ rot
+
+        A = A/2
+
+        # expectation value
+        quad_mean = np.trace(A @ cov) + mu.T @ A @ mu
+
+        if d is not None:
+            if d.shape != (2*self._modes,):
+                raise ValueError("Vector of linear coefficients d must be of length 2N.")
+
+            linear_mean = mu.T @ d
+
+        # quadratic variance
+        var = 2*np.trace(A @ cov @ A @ cov) + 4*mu.T @ A @ cov @ A @ mu
+
+        if d is not None:
+            var += d.T @ cov @ d # FIXME: add 2*Cov(rT.d, rT.A.r) term
+
+        return quad_mean+linear_mean+k, var
 
     @abc.abstractmethod
     def reduced_dm(self, modes, **kwargs):
