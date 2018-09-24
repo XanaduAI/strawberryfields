@@ -833,7 +833,7 @@ class BaseFockState(BaseState):
             poly_op += k*expand_dims(np.eye(dim), 0, num_modes)
 
         # truncate down
-        sl = [slice(0, self._cutoff)]*(2*num_modes)
+        sl = tuple([slice(0, self._cutoff)]*(2*num_modes))
         poly_op = poly_op[sl]
 
         # calculate Op^2
