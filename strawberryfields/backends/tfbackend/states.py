@@ -487,7 +487,7 @@ class FockStateTF(BaseFockState):
                   These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
         Returns:
-            float/Tensor: the numerical value, or an unevaluated Tensor object, for the mean photon number.
+            tuple(float/Tensor): tuple containing the numerical value, or an unevaluated Tensor object, for the mean photon number and variance.
         """
         with self.graph.as_default():
             rho = self.reduced_dm([mode]) # don't pass kwargs yet
@@ -501,14 +501,20 @@ class FockStateTF(BaseFockState):
             flat_rho = tf.reshape(rho, [-1, self.cutoff_dim ** 2])
 
             nbar = tf.real(tf.reduce_sum(flat_rho * flat_n, axis=1)) # implements a batched tr(rho * n)
+            nbarSq = tf.real(tf.reduce_sum(flat_rho * flat_n**2, axis=1)) # implements a batched tr(rho * n)
+            var = nbarSq - nbar**2
 
             if not self.batched:
                 nbar = tf.squeeze(nbar, 0) # drop fake batch dimension
+                var = tf.squeeze(var, 0) # drop fake batch dimension
 
             nbar = tf.identity(nbar, name="mean_photon")
-            nbar = self._run(nbar, **kwargs)
+            var = tf.identity(var, name="mean_photon_variance")
 
-            return nbar
+            nbar = self._run(nbar, **kwargs)
+            var = self._run(var, **kwargs)
+
+            return nbar, var
 
     def ket(self, **kwargs):
         r"""

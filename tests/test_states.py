@@ -101,13 +101,39 @@ class FrontendStateCreation(BaseTest):
 class BaseStateMethods(BaseTest):
     num_subsystems = 2
 
-    def test_mean_photon(self):
+    def test_mean_photon_coherent(self):
         self.logTestName()
         self.circuit.reset(pure=self.kwargs['pure'])
-        self.circuit.prepare_coherent_state(a, 0)
+        self.circuit.displacement(a, 0)
         state = self.circuit.state()
-        mean_photon = state.mean_photon(0)
+        mean_photon, var = state.mean_photon(0)
         self.assertAllAlmostEqual(mean_photon, np.abs(a)**2, delta=self.tol)
+        self.assertAllAlmostEqual(var, np.abs(a)**2, delta=self.tol)
+
+    def test_mean_photon_squeezed(self):
+        self.logTestName()
+
+        r = 0.1
+        a = 0.3+0.1j
+
+        self.circuit.reset(pure=self.kwargs['pure'])
+        self.circuit.squeeze(r*np.exp(1j*phi), 0)
+        state = self.circuit.state()
+        mean_photon, var = state.mean_photon(0)
+        self.assertAllAlmostEqual(mean_photon, np.sinh(r)**2, delta=self.tol)
+        self.assertAllAlmostEqual(var, 2*(np.sinh(r)**2+np.sinh(r)**4), delta=self.tol)
+
+    def test_mean_photon_displaced_squeezed(self):
+        self.logTestName()
+
+        self.circuit.reset(pure=self.kwargs['pure'])
+        self.circuit.squeeze(r*np.exp(1j*phi), 0)
+        self.circuit.displacement(a, 0)
+        state = self.circuit.state()
+        mean_photon, var = state.mean_photon(0)
+
+        mean_ex = np.abs(a)**2 + np.sinh(r)**2
+        self.assertAllAlmostEqual(mean_photon, mean_ex, delta=self.tol)
 
     def test_rdm(self):
         self.logTestName()

@@ -85,10 +85,17 @@ class GaussianState(BaseGaussianState):
         return fock_prob(self._gmode, ocp)
 
     def mean_photon(self, mode, **kwargs):
-        cutoff = kwargs.get('cutoff', 10)
-        n = np.arange(cutoff)
-        probs = np.diagonal(self.reduced_dm(mode, cutoff=cutoff))
-        return np.sum(n*probs).real
+        alpha = self._alpha[mode]
+        mag_a = np.abs(alpha)
+        phi_a = np.angle(alpha)
+
+        r = self.squeezing(mode)[0][0]
+        phi = self.squeezing(mode)[0][1]
+
+        mean = mag_a**2 + np.sinh(r)**2
+        var = mag_a**2*(np.exp(2*r)*np.cos(phi_a - phi/2)**2 + np.exp(-2*r)*np.sin(phi_a-phi/2)**2) \
+            + 2*np.sinh(r)**2*np.cosh(r)**2
+        return mean, var
 
     def fidelity(self, other_state, mode, **kwargs):
         mu1 = other_state[0] * 2/np.sqrt(2*self._hbar)

@@ -276,7 +276,7 @@ class BaseState(abc.ABC):
                     states represented in the Fock basis will use their own internal cutoff dimension.
 
         Returns:
-            float: the mean photon number
+            tuple: the mean photon number and variance
         """
         raise NotImplementedError
 
@@ -602,7 +602,9 @@ class BaseFockState(BaseState):
         # pylint: disable=unused-argument
         n = np.arange(self._cutoff)
         probs = np.diagonal(self.reduced_dm(mode))
-        return np.sum(n*probs).real
+        mean = np.sum(n*probs).real
+        var = np.sum(n**2*probs).real - mean**2
+        return mean, var
 
     def fidelity(self, other_state, mode, **kwargs):
         # pylint: disable=unused-argument
