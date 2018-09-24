@@ -741,7 +741,7 @@ class BaseFockState(BaseState):
 
         return mean, var
 
-    def poly_quad_expectation(self, A, d=None, k=0, phi=0, worksize=5, **kwargs):
+    def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
         if A.shape != (2*self._modes, 2*self._modes):
             raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
 
@@ -808,21 +808,24 @@ class BaseFockState(BaseState):
         # which we need to calculate the expectation value for
         rows = ex_modes + [i+self._modes for i in ex_modes]
         quad_coeffs = A[:, rows][rows]/2
-
         # compute the polynomial
         # For 3 modes, this gives the einsum (with brackets denoting modes):
         # 'a(bc)(de)(fg),a(ch)(ei)(gj)->(bh)(di)(fj)' applied to r, A@r
         ind1 = indices[:2*num_modes+1]
-        inlinear_coeff = ind1[0] + ''.join([str(i)+str(j) for i, j in zip(ind1[2::2], indices[2*num_modes+1:3*num_modes+1])])
-        ind3 = ''.join([str(i)+str(j) for i, j in zip(ind1[1::2], inlinear_coeff[2::2])])
-        ind = "{},{}->{}".format(ind1, inlinear_coeff, ind3)
+        ind2 = ind1[0] + ''.join([str(i)+str(j) for i, j in zip(ind1[2::2], indices[2*num_modes+1:3*num_modes+1])])
+        ind3 = ''.join([str(i)+str(j) for i, j in zip(ind1[1::2], ind2[2::2])])
+        ind = "{},{}->{}".format(ind1, ind2, ind3)
 
-        # Einsum above applied to to r,Ar
-        # This einsum sums over all quadrature operators, and also applies matrix
-        # multiplication between the same mode of each operator
-        poly_op = np.einsum(ind, r, np.tensordot(quad_coeffs, r, axes=1))
+        if np.all(quad_coeffs == 0.):
+            poly_op = np.zeros([dim]*(2*num_modes), dtype=np.complex128)
+        else:
+            # Einsum above applied to to r,Ar
+            # This einsum sums over all quadrature operators, and also applies matrix
+            # multiplication between the same mode of each operator
+            poly_op = np.einsum(ind, r, np.tensordot(quad_coeffs, r, axes=1))
 
         # add linear term
+        rows = np.flip(np.array(rows).reshape([2, -1]), axis=1).flatten()
         poly_op += r.T @ linear_coeff[rows]
 
         # add constant term
@@ -834,12 +837,12 @@ class BaseFockState(BaseState):
         poly_op = poly_op[sl]
 
         # calculate Op^2
-        ind = "{},{}->{}".format(ind1[1:], inlinear_coeff[1:], ind3)
+        ind = "{},{}->{}".format(ind1[1:], ind2[1:], ind3)
         poly_op_sq = np.einsum(ind, poly_op, poly_op)[sl]
 
         ind1 = ind1[:-1]
-        inlinear_coeff = ''.join([str(j)+str(i) for i, j in zip(ind1[::2], ind1[1::2])])
-        ind = "{},{}".format(ind1, inlinear_coeff)
+        ind2 = ''.join([str(j)+str(i) for i, j in zip(ind1[::2], ind1[1::2])])
+        ind = "{},{}".format(ind1, ind2)
 
         # calculate expectation value, Tr(Op @ rho)
         # For 3 modes, this gives the einsum '(ab)(cd)(ef),(ba)(dc)(fe)->'

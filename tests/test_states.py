@@ -267,6 +267,9 @@ class PolyQuadExpectationSingleMode(BaseTest):
         self.eng.backend = self.backend
         self.backend.reset(cutoff_dim=self.cutoff)
 
+        if isinstance(self.backend, backends.TFBackend):
+            raise unittest.SkipTest('The poly_quad_expectation method is not yet supported on the TF backend.')
+
     def test_no_expectation(self):
         """Test the case E(0), var(0)"""
         self.logTestName()
@@ -345,11 +348,11 @@ class PolyQuadExpectationSingleMode(BaseTest):
         self.assertAlmostEqual(var, self.cov[1, 1], delta=self.tol)
 
     def test_linear_combination(self):
-        """Test that the correct result is returned for E(2x+p)"""
+        """Test that the correct result is returned for E(ax+bp)"""
         self.logTestName()
 
         A = np.zeros([6, 6])
-        d = np.array([2, 0, 0, 1, 0, 0])
+        d = np.array([0.4234, 0, 0, 0.1543, 0, 0])
         k = 0
 
         # prepare a squeezed displaced state
@@ -441,7 +444,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
         c0 = 1/np.sqrt(2)
         c1 = 3
         c2 = 0.53
-        c3 = 2
+        c3 = 1/3.
         c4 = -1
 
         # define the arbitrary quadratic
@@ -476,10 +479,14 @@ class PolyQuadExpectationMultiMode(BaseTest):
     hbar = 2
     qphi = 0.
 
+    # testing parameters
+    linear_modes = 2
+
     # define circuit parameters
-    a_list = [0.344, 0.432+0.123j]
-    r_list = [0.1065, 0.32]
-    phi_list = [0.897, 0.31]
+    a_list = [0.344+0.123j, 0.432+0.123j, 0.1231-0.543j][:linear_modes]
+    r_list = [0.1065, 0.32, 0.4123][:linear_modes]
+    phi_list = [0.897, 0.31, 0.9643][:linear_modes]
+
 
     def setUp(self):
         """Set up."""
@@ -488,8 +495,11 @@ class PolyQuadExpectationMultiMode(BaseTest):
         self.eng.backend = self.backend
         self.backend.reset(cutoff_dim=self.cutoff)
 
-        mu = np.zeros([4])
-        cov = np.zeros([4, 4])
+        if isinstance(self.backend, backends.TFBackend):
+            raise unittest.SkipTest('The poly_quad_expectation method is not yet supported on the TF backend.')
+
+        mu = np.zeros([6])
+        cov = np.zeros([6, 6])
 
         # construct the vector of means and covariance matrix for each mode
         # note that we use (x0,p0,x1,p1,...) ordering here.
@@ -504,16 +514,33 @@ class PolyQuadExpectationMultiMode(BaseTest):
                        [ t,  0,  t,  0],
                        [ 0,  t,  0,  t]])
 
-        self.mu = BS @ mu
-        self.cov = BS @ block_diag(cov) @ BS.T
+        S1 = block_diag(BS, np.identity(2))
+
+        if self.linear_modes == 3:
+            S2 = block_diag(np.identity(2), BS)
+        elif self.linear_modes == 2:
+            S2 = np.identity(6)
+
+        self.mu = S2 @ S1 @ mu
+        self.cov = S2 @ S1 @ cov @ S1.T @ S2.T
 
     def test_multi_mode_linear_combination(self):
         """Test that the correct result is returned for E(2x0 + x1 - p0)"""
         self.logTestName()
 
+        x0 = 0.123
+        x1 = 2.2342
+        x2 = 1.
+        p0 = -5/np.sqrt(2)
+
         # define the linear combination
         A = np.zeros([6, 6])
-        d = np.array([2, 1, 0, -1, 0, 0])
+
+        if self.linear_modes == 3:
+            d = np.array([x0, x1, x2, p0, 0, 0])
+        elif self.linear_modes == 2:
+            d = np.array([x0, x1, 0, p0, 0, 0])
+
         k = 0
 
         self.circuit.reset(pure=self.kwargs['pure'])
@@ -525,16 +552,21 @@ class PolyQuadExpectationMultiMode(BaseTest):
         # apply a beamsplitter to the modes
         self.circuit.beamsplitter(1/np.sqrt(2), 1/np.sqrt(2), 0, 1)
 
+        if self.linear_modes == 3:
+            self.circuit.beamsplitter(1/np.sqrt(2), 1/np.sqrt(2), 1, 2)
+
         state = self.circuit.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=self.qphi)
 
         # E(2x0 + x1 - p0) = 2E(x0) + E(x1) - E(p0)
-        mean_expected = d[0]*self.mu[0] + d[1]*self.mu[2] + d[3]*self.mu[1]
+        mean_expected = np.array([x0, p0, x1, 0, x2, 0]) @ self.mu
         self.assertAlmostEqual(mean, mean_expected, delta=self.tol)
 
-        # var(2x0 + x1 - p0) = 4var(x0)+var(x1)+var(p0)-4cov(x0,p0) + 4cov(x0, x1) - 2*cov(x1, p0)
-        var_expected = 4*self.cov[0, 0] + self.cov[2, 2] + self.cov[1, 1] \
-            - 4*self.cov[0, 1] + 4*self.cov[0, 2] - 2*self.cov[1, 2]
+        # var(x0 + x1 + p0) = 4var(x0)+var(x1)+var(p0)-4cov(x0,p0) + 4cov(x0, x1) - 2*cov(x1, p0)
+        var_expected = self.cov[0, 0]*x0**2 + self.cov[1, 1]*p0**2 + self.cov[2, 2]*x1**2 \
+            + self.cov[4, 4]*x2**2 + 2*self.cov[0, 1]*x0*p0 + 2*self.cov[0, 2]*x0*x1 \
+            + 2*self.cov[0, 4]*x0*x2 + 2*self.cov[1, 2]*p0*x1 + 2*self.cov[1, 4]*p0*x2 \
+            + 2*self.cov[2, 4]*x1*x2
         self.assertAlmostEqual(var, var_expected, delta=self.tol)
 
     def test_multi_mode_quadratic_combination(self):
@@ -558,6 +590,8 @@ class PolyQuadExpectationMultiMode(BaseTest):
 
         # apply a beamsplitter to the modes
         self.circuit.beamsplitter(1/np.sqrt(2), 1/np.sqrt(2), 0, 1)
+        if self.linear_modes == 3:
+            self.circuit.beamsplitter(1/np.sqrt(2), 1/np.sqrt(2), 1, 2)
 
         state = self.circuit.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=self.qphi)
@@ -565,10 +599,6 @@ class PolyQuadExpectationMultiMode(BaseTest):
         # E(x0x1+x0p1) = cov(x0,x1)+E(x0)E(X1) + cov(x0,p1) +E(x0)E(p1)
         mean_expected = self.cov[0, 2] + self.mu[0]*self.mu[2] + self.cov[0, 3] + self.mu[0]*self.mu[3]
         self.assertAlmostEqual(mean, mean_expected, delta=self.tol)
-
-        # var(2x0 + x1 - p0) = 4var(x0)+var(x1)+var(p0)-4cov(x,p)
-        # var_expected = 4*cov[0, 0, 0] + cov[1, 0, 0] + cov[0, 1, 1] - 4*cov[0, 0, 1]
-        # self.assertAlmostEqual(var, var_expected, delta=self.tol)
 
 
 class WignerSingleMode(BaseTest):
