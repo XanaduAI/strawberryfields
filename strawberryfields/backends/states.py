@@ -61,6 +61,7 @@ inheriting classes.
     fidelity_coherent
     wigner
     quad_expectation
+    poly_quad_expectation
 
 
 Base Gaussian state

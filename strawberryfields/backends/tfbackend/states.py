@@ -608,6 +608,64 @@ class FockStateTF(BaseFockState):
         raise NotImplementedError("Calculation of the Wigner function is currently "
                                   "only supported when eval=True and batched=False")
 
+    def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
+        r"""The multi-mode expectation values and variance of arbitrary 2nd order polynomials
+        of quadrature operators.
+
+        .. warning::
+
+            Calculation of multi-mode quadratic expectation values is currently only supported if
+            ``eval=True`` and ``batched=False``.
+
+        An arbitrary 2nd order polynomial of quadrature operators over $N$ modes can always
+        be written in the following form:
+
+        .. math:: P(\mathbf{r}) = \frac{1}{2}\mathbf{r}^T A\mathbf{r} + \mathbf{r}^T \mathbf{d} + k I
+
+        where:
+
+        * :math:`A\in\mathbb{R}^{2N\times 2N}` is a symmetric matrix
+          representing the quadratic coefficients,
+        * :math:`\mathbf{d}\in\mathbb{R}^{2N}` is a real vector representing
+          the linear coefficients,
+        * :math:`k\in\mathbb{R}` represents the constant term, and
+        * :math:`\mathbf{r} = (\x_1,\dots,\x_N,\p_1,\dots,\p_N)` is the vector
+          of quadrature operators in :math:`xp`-ordering.
+
+        This method returns the expectation value of this second-order polynomial,
+
+        .. math:: \langle P(\mathbf{r})\rangle,
+
+        as well as the variance
+
+        .. math:: \Delta P(\mathbf{r})^2 = \langle P(\mathbf{r})^2\rangle - \braket{P(\mathbf{r})}^2
+
+        Args:
+            A (array): a real symmetric 2Nx2N NumPy array, representing the quadratic
+                coefficients of the second order quadrature polynomial.
+            d (array): a real symmetric length-2N NumPy array, representing the linear
+                coefficients of the second order quadrature polynomial. Default the zero vector.
+            k (float): the constant term. Default 0.
+            phi (float): quadrature angle, clockwise from the positive :math:`x` axis. If provided,
+                the vectori of quadrature operators :math:`\mathbf{r}` is first rotated
+                by angle :math:`\phi` in the phase space.
+
+        Keyword args:
+            worksize (int): For Fock backends, the additional Fock basis truncation used to
+                perform the calculation. The calculation will take place within a Fock basis
+                dimension of cutoff_dim+worksize. Increasing the worksize will result in
+                increased numerical accuracy, at the expense of a longer computational time.
+                By default, worksize is set to 5.
+
+        Returns:
+            tuple (float, float): expectation value and variance
+        """
+        if self._eval and not self.batched:
+            return super().poly_quad_expectation(A, d, k, phi, **kwargs)
+
+        raise NotImplementedError("Calculation of multi-mode quadratic expectation values is currently "
+                                  "only supported when eval=True and batched=False")
+
     @property
     def batched(self):
         """The number of batches."""
