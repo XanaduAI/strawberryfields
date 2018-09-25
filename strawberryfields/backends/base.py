@@ -73,6 +73,7 @@ Base backend
     squeeze
     beamsplitter
     loss
+    thermal_loss
     measure_homodyne
     state
     is_vacuum
@@ -432,6 +433,16 @@ class BaseBackend:
 
         Args:
             T (float): loss parameter, :math:`0\leq T\leq 1`.
+            mode (int): index of mode where operation is carried out
+        """
+        raise NotImplementedError
+
+    def thermal_loss(self, T, nbar, mode):
+        r"""Perform a thermal loss channel operation on the specified mode.
+
+        Args:
+            T (float): loss parameter, :math:`0\leq T\leq 1`.
+            nbar (float): mean photon number of the environment thermal state
             mode (int): index of mode where operation is carried out
         """
         raise NotImplementedError

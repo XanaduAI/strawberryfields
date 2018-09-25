@@ -293,27 +293,23 @@ class GaussianBackend(BaseGaussian):
         return self.circuit.is_vacuum(tol)
 
     def loss(self, T, mode):
-        """
-        Perform a loss channel operation on the specified mode.
+        """Perform a loss channel operation on the specified mode.
 
         Args:
-            T: loss parameter
+            T (float): loss parameter
             mode (int): index of mode where operation is carried out
-
         """
         self.circuit.loss(T, mode)
 
-
-    def thermal_loss(self, T, nth, mode):
-        """
-        Perform a thermal loss channel operation on the specified mode.
+    def thermal_loss(self, T, nbar, mode):
+        """Perform a thermal loss channel operation on the specified mode.
 
         Args:
-            T: loss parameter
+            T (float): loss parameter
+            nbar (float): mean photon number of the environment thermal state
             mode (int): index of mode where operation is carried out
-
         """
-        self.circuit.thermal_loss(T, nth, mode)
+        self.circuit.thermal_loss(T, nbar, mode)
 
     def state(self, modes=None, **kwargs):
         """ Returns the vector of means and the covariance matrix of the specified modes.
