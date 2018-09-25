@@ -15,7 +15,7 @@ from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields 
 from strawberryfields.ops import *
 from strawberryfields.utils import *
 from strawberryfields import backends
-from strawberryfields.backends.shared_ops import rotation_matrix as R
+from strawberryfields.backends.shared_ops import rotation_matrix as R, changebasis
 
 
 a = 0.3+0.1j
@@ -253,7 +253,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
     hbar = 2
 
     # qudrature rotation
-    qphi = 0#.432
+    qphi = 0.78
 
     # construct the expected vector of means and covariance matrix
     mu = R(qphi).T @ np.array([a.real, a.imag]) * np.sqrt(2*hbar)
@@ -334,8 +334,8 @@ class PolyQuadExpectationSingleMode(BaseTest):
         k = 0
 
         mean, var = state.poly_quad_expectation(A, d, k, phi=self.qphi)
-        self.assertEqual(mean, 0)
-        self.assertEqual(var, len(d)*self.hbar/4)
+        self.assertAlmostEqual(mean, 0, delta=self.tol)
+        self.assertAlmostEqual(var, len(d)*self.hbar/4, delta=self.tol)
 
     def test_x_squeezed_coherent(self):
         """Test that the correct E(x) is returned for the squeezed coherent state."""
@@ -503,7 +503,7 @@ class PolyQuadExpectationMultiMode(BaseTest):
     num_subsystems = 3
     cutoff = 12
     hbar = 2
-    qphi = 0.
+    qphi = 0.78
 
     # testing parameters
     linear_modes = 2
@@ -622,9 +622,16 @@ class PolyQuadExpectationMultiMode(BaseTest):
         state = self.circuit.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=self.qphi)
 
+        C = changebasis(3)
+        mu = C @ self.mu
+        cov = C @ self.cov @ C.T
+
         # E(x0x1+x0p1) = cov(x0,x1)+E(x0)E(X1) + cov(x0,p1) +E(x0)E(p1)
         mean_expected = self.cov[0, 2] + self.mu[0]*self.mu[2] + self.cov[0, 3] + self.mu[0]*self.mu[3]
         self.assertAlmostEqual(mean, mean_expected, delta=self.tol)
+
+        var_expected = 2*np.trace((A/2) @ cov @ (A/2) @ cov) + 4*mu.T @ (A/2) @ cov @ (A/2) @ mu
+        self.assertAlmostEqual(var, var_expected, delta=self.tol)
 
 
 class WignerSingleMode(BaseTest):

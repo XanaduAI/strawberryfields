@@ -363,8 +363,8 @@ class GaussianModes:
         beam splitter is prepared in a thermal state with mean photon number nth """
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
-        
-        self.loss(T,k)
+
+        self.loss(T, k)
         self.nmat += (1-T)*nth
 
     def init_thermal(self, population, mode):

@@ -748,7 +748,7 @@ class BaseFockState(BaseState):
         if A.shape != (2*self._modes, 2*self._modes):
             raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
 
-        if np.all(A.T != A):
+        if np.any(A.T != A):
             raise ValueError("Matrix of quadratic coefficients A must be symmetric.")
 
         if d is None:
@@ -774,8 +774,8 @@ class BaseFockState(BaseState):
             # rotate the quadrature operators
             xold = x.copy()
             pold = p.copy()
-            x = np.cos(phi)*xold + np.sin(phi)*pold
-            p = -np.sin(phi)*xold + np.cos(phi)*pold
+            x = np.cos(phi)*xold - np.sin(phi)*pold
+            p = np.sin(phi)*xold + np.cos(phi)*pold
 
         def expand_dims(op, n, modes):
             """Expand quadrature operator to act on nth mode"""
@@ -811,6 +811,9 @@ class BaseFockState(BaseState):
         # which we need to calculate the expectation value for
         rows = ex_modes + [i+self._modes for i in ex_modes]
         quad_coeffs = A[:, rows][rows]/2
+        quad_coeffs[num_modes:, :num_modes] = -quad_coeffs[num_modes:, :num_modes]
+        quad_coeffs[:num_modes, num_modes:] = -quad_coeffs[:num_modes, num_modes:]
+
         # compute the polynomial
         # For 3 modes, this gives the einsum (with brackets denoting modes):
         # 'a(bc)(de)(fg),a(ch)(ei)(gj)->(bh)(di)(fj)' applied to r, A@r
@@ -825,7 +828,7 @@ class BaseFockState(BaseState):
             # Einsum above applied to to r,Ar
             # This einsum sums over all quadrature operators, and also applies matrix
             # multiplication between the same mode of each operator
-            poly_op = np.einsum(ind, r, np.tensordot(quad_coeffs, r, axes=1))
+            poly_op = np.einsum(ind, r, np.tensordot(quad_coeffs, r, axes=1)).conj()
 
         # add linear term
         rows = np.flip(np.array(rows).reshape([2, -1]), axis=1).flatten()
@@ -1093,6 +1096,15 @@ class BaseGaussianState(BaseState):
         if A.shape != (2*self._modes, 2*self._modes):
             raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
 
+        if np.any(A.T != A):
+            raise ValueError("Matrix of quadratic coefficients A must be symmetric.")
+
+        if d is not None:
+            if d.shape != (2*self._modes,):
+                raise ValueError("Vector of linear coefficients d must be of length 2N.")
+        else:
+            d = np.zeros([2*self._modes])
+
         mu = self._mu
         cov = self._cov
 
@@ -1105,24 +1117,21 @@ class BaseGaussianState(BaseState):
             mu = rot.T @ mu
             cov = rot.T @ cov @ rot
 
-        A = A/2
+        H = A/2
 
-        # expectation value
-        quad_mean = np.trace(A @ cov) + mu.T @ A @ mu
+        # transform to the expectation of a quadratic on a normal distribution with zero mean
+        # E[P(r)]_(mu,cov) = E(Q(r+mu)]_(0,cov)
+        #                  = E[rT.A.r + rT.(2A.mu+d) + (muT.A.mu+muT.d+cI)]_(0,cov)
+        #                  = E[rT.A.r + rT.d' + k']_(0,cov)
+        d2 = 2*H @ mu + d
+        k2 = mu.T @ H @ mu + mu.T @ d + k
 
-        linear_mean = 0
-        if d is not None:
-            if d.shape != (2*self._modes,):
-                raise ValueError("Vector of linear coefficients d must be of length 2N.")
-            linear_mean = mu.T @ d
+        # expectation value E[P(r)] = tr(A.cov) + muT.A.mu + muT.d + k
+        mean = np.trace(H @ cov) + k2
+        # variance Var[P(r)] = 2tr(A.cov.A.cov) + 4*muT.A.cov.A.mu + dT.cov.d
+        var = 2*np.trace(H @ cov @ H @ cov) + d2.T @ cov @ d2
 
-        # quadratic variance
-        var = 2*np.trace(A @ cov @ A @ cov) + 4*mu.T @ A @ cov @ A @ mu
-
-        if d is not None:
-            var += d.T @ cov @ d # FIXME: add 2*Cov(rT.d, rT.A.r) term
-
-        return quad_mean+linear_mean+k, var
+        return mean, var
 
     @abc.abstractmethod
     def reduced_dm(self, modes, **kwargs):
