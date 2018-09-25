@@ -462,6 +462,10 @@ class BasicTests(BaseTest):
                 # catch unapplicable op/backend combinations here
                 logging.debug(err)
                 self.eng.reset_queue()  # unsuccessful run means the queue was not emptied.
+            except NotImplementedError as err:
+                # catch not yet implemented op/backend combinations here
+                logging.debug(err)
+                self.eng.reset_queue()  # unsuccessful run means the queue was not emptied.
 
         scalar_arg_preparations = (Coherent, Squeezed, DisplacedSqueezed, Thermal, Catstate)  # Fock requires an integer parameter
         testset = one_args_gates +two_args_gates +channels +scalar_arg_preparations

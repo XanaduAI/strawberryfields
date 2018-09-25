@@ -141,16 +141,33 @@ class GateTests(BaseTest):
             merge_gates(G)
 
 
-    def test_loss_merging(self):
-        "Nontrivial merging of loss."
+    def test_channel_merging(self):
+        "Nontrivial merging of channels."
         self.logTestName()
 
-        # test the merging of two gates (with default values for optional parameters)
+        # test the merging of two Loss channels (with default values for optional parameters)
         a, b = random(2)
         G = LossChannel(a)
         temp = G.merge(LossChannel(b))
         self.assertAlmostEqual(temp.p[0], a*b, delta=self.tol)
 
+        # test the merging of two thermal Loss channels with same nbar
+        a, b = random(2)
+        G = ThermalLossChannel(a, 0.54)
+        temp = G.merge(ThermalLossChannel(b, 0.54))
+        self.assertAlmostEqual(temp.p[0], a*b, delta=self.tol)
+
+        # test the merging of two thermal Loss channels with different nbar
+        a, b = random(2)
+        G = ThermalLossChannel(a, 0.54)
+        with self.assertRaises(MergeFailure):
+            temp = G.merge(ThermalLossChannel(b, 1.))
+
+        # test the merging of thermal Loss and loss channels
+        a, b = random(2)
+        G = ThermalLossChannel(a, 0.54)
+        with self.assertRaises(MergeFailure):
+            temp = G.merge(LossChannel(b))
 
     def test_dispatch(self):
         "Dispatching of gates to the engine."
