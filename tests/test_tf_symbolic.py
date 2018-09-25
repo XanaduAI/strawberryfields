@@ -430,8 +430,9 @@ class OneModeSymbolicTests(SymbolicBaseTest):
     with self.eng:
       Dgate(self.alpha) | q
     state = self.eng.run(eval=False)
-    nbar = state.mean_photon(0)
+    nbar, var = state.mean_photon(0)
     self.assertTrue(isinstance(nbar, tf.Tensor))
+    self.assertTrue(isinstance(var, tf.Tensor))
 
   def test_eval_false_state_mean_photon(self):
     """Tests whether the local mean photon number of the state is
@@ -441,8 +442,9 @@ class OneModeSymbolicTests(SymbolicBaseTest):
     with self.eng:
       Dgate(self.alpha) | q
     state = self.eng.run()
-    nbar = state.mean_photon(0, eval=False)
+    nbar, var = state.mean_photon(0, eval=False)
     self.assertTrue(isinstance(nbar, tf.Tensor))
+    self.assertTrue(isinstance(var, tf.Tensor))
 
   def test_eval_true_state_mean_photon(self):
     """Tests whether the local mean photon number of the state returns
@@ -452,9 +454,11 @@ class OneModeSymbolicTests(SymbolicBaseTest):
     with self.eng:
       Dgate(self.alpha) | q
     state = self.eng.run()
-    nbar = state.mean_photon(0, eval=True)
+    nbar, var = state.mean_photon(0, eval=True)
     ref_nbar = np.abs(self.alpha) ** 2
+    ref_var = np.abs(self.alpha) ** 2
     self.assertAllAlmostEqual(nbar, ref_nbar, delta=self.tol)
+    self.assertAllAlmostEqual(var, ref_var, delta=self.tol)
 
   #########################################
 
