@@ -600,10 +600,10 @@ class PolyQuadExpectationMultiMode(BaseTest):
         self.logTestName()
 
         A = np.zeros([6, 6])
-        A[0, 1] = 1
-        A[1, 0] = 1
-        A[0, 4] = 1
-        A[4, 0] = 1
+        A[0, 1] = 1/np.sqrt(2)
+        A[0, 4] = np.pi
+
+        A = (A + A.T)/2
 
         d = None
         k = 0
@@ -623,11 +623,12 @@ class PolyQuadExpectationMultiMode(BaseTest):
         mean, var = state.poly_quad_expectation(A, d, k, phi=self.qphi)
 
         C = changebasis(3)
-        mu = C @ self.mu
-        cov = C @ self.cov @ C.T
+        mu = C.T @ self.mu
+        cov = C.T @ self.cov @ C
 
-        # E(x0x1+x0p1) = cov(x0,x1)+E(x0)E(X1) + cov(x0,p1) +E(x0)E(p1)
-        mean_expected = self.cov[0, 2] + self.mu[0]*self.mu[2] + self.cov[0, 3] + self.mu[0]*self.mu[3]
+        # E(a*x0x1 + b*x0p1) = a*cov(x0,x1)+a*E(x0)E(X1) + b*cov(x0,p1) +b*E(x0)E(p1)
+        mean_expected = A[0, 1]*self.cov[0, 2] + A[0, 1]*self.mu[0]*self.mu[2] \
+            + A[0, 4]*self.cov[0, 3] + A[0, 4]*self.mu[0]*self.mu[3]
         self.assertAlmostEqual(mean, mean_expected, delta=self.tol)
 
         var_expected = 2*np.trace((A/2) @ cov @ (A/2) @ cov) + 4*mu.T @ (A/2) @ cov @ (A/2) @ mu
