@@ -403,7 +403,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
         A = np.zeros([6, 6])
         A[0, 0] = 2
 
-        d = np.zeros([6])
+        d = None
         k = 0
 
         # prepare a squeezed displaced state
@@ -425,7 +425,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
         A = np.zeros([6, 6])
         A[3, 3] = 2
 
-        d = np.zeros([6])
+        d = None
         k = 0
 
         # prepare a squeezed displaced state
@@ -448,7 +448,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
         A = np.zeros([6, 6])
         A[3, 0] = A[0, 3] = 1
 
-        d = np.zeros([6])
+        d = None
         k = 0
 
         # prepare a squeezed displaced state
@@ -605,7 +605,7 @@ class PolyQuadExpectationMultiMode(BaseTest):
         A[0, 4] = 1
         A[4, 0] = 1
 
-        d = np.zeros([6])
+        d = None
         k = 0
 
         self.circuit.reset(pure=self.kwargs['pure'])

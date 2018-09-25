@@ -1110,10 +1110,10 @@ class BaseGaussianState(BaseState):
         # expectation value
         quad_mean = np.trace(A @ cov) + mu.T @ A @ mu
 
+        linear_mean = 0
         if d is not None:
             if d.shape != (2*self._modes,):
                 raise ValueError("Vector of linear coefficients d must be of length 2N.")
-
             linear_mean = mu.T @ d
 
         # quadratic variance
