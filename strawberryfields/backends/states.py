@@ -745,6 +745,9 @@ class BaseFockState(BaseState):
         return mean, var
 
     def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
+        if A is None:
+            A = np.zeros([2*self._modes, 2*self._modes])
+
         if A.shape != (2*self._modes, 2*self._modes):
             raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
 
@@ -1093,6 +1096,9 @@ class BaseGaussianState(BaseState):
 
 
     def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
+        if A is None:
+            A = np.zeros([2*self._modes, 2*self._modes])
+
         if A.shape != (2*self._modes, 2*self._modes):
             raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
 

@@ -341,7 +341,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
         """Test that the correct E(x) is returned for the squeezed coherent state."""
         self.logTestName()
 
-        A = np.zeros([6, 6])
+        A = None
         d = np.array([1, 0, 0, 0, 0, 0])
         k = 0
 
@@ -359,7 +359,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
         """Test that the correct E(p) is returned for the squeezed coherent state."""
         self.logTestName()
 
-        A = np.zeros([6, 6])
+        A = None
         d = np.array([0, 0, 0, 1, 0, 0])
         k = 0
 
@@ -377,7 +377,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
         """Test that the correct result is returned for E(ax+bp)"""
         self.logTestName()
 
-        A = np.zeros([6, 6])
+        A = None
         d = np.array([0.4234, 0, 0, 0.1543, 0, 0])
         k = 0
 
