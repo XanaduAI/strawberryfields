@@ -649,11 +649,11 @@ class FockStateTF(BaseFockState):
         Args:
             A (array): a real symmetric 2Nx2N NumPy array, representing the quadratic
                 coefficients of the second order quadrature polynomial.
-            d (array): a real symmetric length-2N NumPy array, representing the linear
-                coefficients of the second order quadrature polynomial. Default the zero vector.
+            d (array): a symmetric length-2N NumPy array, representing the linear
+                coefficients of the second order quadrature polynomial. Defaults to the zero vector.
             k (float): the constant term. Default 0.
             phi (float): quadrature angle, clockwise from the positive :math:`x` axis. If provided,
-                the vectori of quadrature operators :math:`\mathbf{r}` is first rotated
+                the vector of quadrature operators :math:`\mathbf{r}` is first rotated
                 by angle :math:`\phi` in the phase space.
 
         Keyword args:

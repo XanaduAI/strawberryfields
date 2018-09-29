@@ -388,13 +388,13 @@ class BaseState(abc.ABC):
 
         as well as the variance
 
-        .. math:: \Delta P(\mathbf{r})^2 = \langle P(\mathbf{r})^2\rangle - \braket{P(\mathbf{r})}^2
+        .. math:: \Delta P(\mathbf{r})^2 = \braket{P(\mathbf{r})^2} - \braket{P(\mathbf{r})}^2
 
         Args:
             A (array): a real symmetric 2Nx2N NumPy array, representing the quadratic
                 coefficients of the second order quadrature polynomial.
-            d (array): a real symmetric length-2N NumPy array, representing the linear
-                coefficients of the second order quadrature polynomial. Default the zero vector.
+            d (array): a real length-2N NumPy array, representing the linear
+                coefficients of the second order quadrature polynomial. Defaults to the zero vector.
             k (float): the constant term. Default 0.
             phi (float): quadrature angle, clockwise from the positive :math:`x` axis. If provided,
                 the vectori of quadrature operators :math:`\mathbf{r}` is first rotated
@@ -751,7 +751,7 @@ class BaseFockState(BaseState):
         if A.shape != (2*self._modes, 2*self._modes):
             raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
 
-        if np.any(A.T != A):
+        if not np.allclose(A.T, A):
             raise ValueError("Matrix of quadratic coefficients A must be symmetric.")
 
         if d is None:
@@ -825,7 +825,7 @@ class BaseFockState(BaseState):
         ind3 = ''.join([str(i)+str(j) for i, j in zip(ind1[1::2], ind2[2::2])])
         ind = "{},{}->{}".format(ind1, ind2, ind3)
 
-        if np.all(quad_coeffs == 0.):
+        if np.allclose(quad_coeffs, 0.):
             poly_op = np.zeros([dim]*(2*num_modes), dtype=np.complex128)
         else:
             # Einsum above applied to to r,Ar
@@ -1102,7 +1102,7 @@ class BaseGaussianState(BaseState):
         if A.shape != (2*self._modes, 2*self._modes):
             raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
 
-        if np.any(A.T != A):
+        if not np.allclose(A.T, A):
             raise ValueError("Matrix of quadratic coefficients A must be symmetric.")
 
         if d is not None:
