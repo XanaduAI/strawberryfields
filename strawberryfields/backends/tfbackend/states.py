@@ -83,7 +83,7 @@ class FockStateTF(BaseFockState):
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
                   which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If a Session is supplied, then `eval` is overriden and the numerical evaluation takes place in the provided Session.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
@@ -121,7 +121,7 @@ class FockStateTF(BaseFockState):
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
                   which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If a Session is supplied, then `eval` is overriden and the numerical evaluation takes place in the provided Session.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
         Returns:
             float/Tensor: the numerical values, or an unevaluated Tensor object, for the Fock-state probabilities.
@@ -179,7 +179,7 @@ class FockStateTF(BaseFockState):
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
                   which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If a Session is supplied, then `eval` is overriden and the numerical evaluation takes place in the provided Session.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
         Returns:
             array/Tensor: the numerical values, or an unevaluated Tensor object, for the Fock-basis probabilities.
@@ -223,7 +223,7 @@ class FockStateTF(BaseFockState):
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
                   which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If a Session is supplied, then `eval` is overriden and the numerical evaluation takes place in the provided Session.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
         Returns:
             float/Tensor: the numerical value, or an unevaluated Tensor object, for the fidelity.
@@ -265,7 +265,7 @@ class FockStateTF(BaseFockState):
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
                   which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If a Session is supplied, then `eval` is overriden and the numerical evaluation takes place in the provided Session.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
         Returns:
             float/Tensor: the numerical value, or an unevaluated Tensor object, for the fidelity :math:`\bra{\vec{\alpha}}\rho\ket{\vec{\alpha}}`.
@@ -323,7 +323,7 @@ class FockStateTF(BaseFockState):
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
                   which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If a Session is supplied, then `eval` is overriden and the numerical evaluation takes place in the provided Session.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
@@ -356,7 +356,7 @@ class FockStateTF(BaseFockState):
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
                   which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If a Session is supplied, then `eval` is overriden and the numerical evaluation takes place in the provided Session.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
@@ -383,7 +383,7 @@ class FockStateTF(BaseFockState):
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
                   which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If a Session is supplied, then `eval` is overriden and the numerical evaluation takes place in the provided Session.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
@@ -425,7 +425,7 @@ class FockStateTF(BaseFockState):
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
                   which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If a Session is supplied, then `eval` is overriden and the numerical evaluation takes place in the provided Session.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
@@ -484,7 +484,7 @@ class FockStateTF(BaseFockState):
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
                   which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If a Session is supplied, then `eval` is overriden and the numerical evaluation takes place in the provided Session.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
         Returns:
             tuple(float/Tensor): tuple containing the numerical value, or an unevaluated Tensor object, for the mean photon number and variance.
@@ -529,7 +529,7 @@ class FockStateTF(BaseFockState):
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
                   which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If a Session is supplied, then `eval` is overriden and the numerical evaluation takes place in the provided Session.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
@@ -556,7 +556,7 @@ class FockStateTF(BaseFockState):
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
                   which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                  These are ignored when ``eval=False``; when ``eval=True``, they are used when numerically evaluating the underlying quantity.
+                  If a Session is supplied, then `eval` is overriden and the numerical evaluation takes place in the provided Session.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
@@ -666,11 +666,19 @@ class FockStateTF(BaseFockState):
         Returns:
             tuple (float, float): expectation value and variance
         """
-        if self._eval and not self.batched:
-            return super().poly_quad_expectation(A, d, k, phi, **kwargs)
+        with self._graph.as_default():
+            if "eval" not in kwargs:
+                kwargs["eval"] = self._eval # when the caller did not specify, use the default behaviour of this instance
+            evaluate, session, feed_dict, close_session = _check_for_eval(kwargs)
 
-        raise NotImplementedError("Calculation of multi-mode quadratic expectation values is currently "
-                                  "only supported when eval=True and batched=False")
+            if evaluate and not self.batched:
+                self._data = session.run(self._data, feed_dict=feed_dict)
+                if close_session:
+                    session.close()
+                return super().poly_quad_expectation(A, d, k, phi, **kwargs)
+            else:
+                raise NotImplementedError("Calculation of multi-mode quadratic expectation values is currently "
+                                      "only supported when batched=False and when evaluating numerically.")
 
     @property
     def batched(self):
