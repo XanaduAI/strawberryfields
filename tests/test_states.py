@@ -102,6 +102,7 @@ class BaseStateMethods(BaseTest):
     num_subsystems = 2
 
     def test_mean_photon_coherent(self):
+        """Test that E(n) = |a|^2 and var(n) = |a|^2 for a coherent state"""
         self.logTestName()
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.displacement(a, 0)
@@ -111,6 +112,7 @@ class BaseStateMethods(BaseTest):
         self.assertAllAlmostEqual(var, np.abs(a)**2, delta=self.tol)
 
     def test_mean_photon_squeezed(self):
+        """Test that E(n)=sinh^2(r) and var(n)=2(sinh^2(r)+sinh^4(r)) for a squeezed state"""
         self.logTestName()
 
         r = 0.1
@@ -124,7 +126,12 @@ class BaseStateMethods(BaseTest):
         self.assertAllAlmostEqual(var, 2*(np.sinh(r)**2+np.sinh(r)**4), delta=self.tol)
 
     def test_mean_photon_displaced_squeezed(self):
+        """Test that E(n) = sinh^2(r)+|a|^2 for a displaced squeezed state"""
         self.logTestName()
+
+        nbar = 0.123
+        a = 0.12-0.05j
+        r = 0.195
 
         self.circuit.reset(pure=self.kwargs['pure'])
         self.circuit.squeeze(r*np.exp(1j*phi), 0)
@@ -132,8 +139,28 @@ class BaseStateMethods(BaseTest):
         state = self.circuit.state()
         mean_photon, var = state.mean_photon(0)
 
+        mag_a = np.abs(a)
+        phi_a = np.angle(a)
+
         mean_ex = np.abs(a)**2 + np.sinh(r)**2
         self.assertAllAlmostEqual(mean_photon, mean_ex, delta=self.tol)
+
+    def test_mean_photon_displaced_thermal(self):
+        """Test that E(n)=|a|^2+nbar and var(n)=var_th+|a|^2(1+2nbar)"""
+        self.logTestName()
+
+        nbar = 0.123
+
+        self.circuit.reset(pure=self.kwargs['pure'])
+        self.circuit.prepare_thermal_state(nbar, 0)
+        self.circuit.displacement(a, 0)
+        state = self.circuit.state()
+        mean_photon, var = state.mean_photon(0)
+
+        mean_ex = np.abs(a)**2 + nbar
+        var_ex = nbar**2 + nbar + np.abs(a)**2*(1+2*nbar)
+        self.assertAllAlmostEqual(mean_photon, mean_ex, delta=self.tol)
+        self.assertAllAlmostEqual(var, var_ex, delta=self.tol)
 
     def test_rdm(self):
         self.logTestName()
@@ -282,7 +309,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
         Ex = simps(simps(poly * PDF, P[0]), X.T[0])
         ExSq = simps(simps(poly**2 * PDF, P[0]), X.T[0])
 
-        var = ExSq - Ex**2
+        var = ExSq - Ex**2 + func(0, 0, 0)/2
 
         return Ex, var
 
@@ -306,8 +333,8 @@ class PolyQuadExpectationSingleMode(BaseTest):
         k = 0
 
         mean, var = state.poly_quad_expectation(A, d, k)
-        self.assertEqual(mean, 0)
-        self.assertEqual(var, 0)
+        self.assertAlmostEqual(mean, 0, delta=self.tol)
+        self.assertAlmostEqual(var, 0, delta=self.tol)
 
     def test_constant(self):
         """Test the case E(k), var(k)"""
@@ -319,8 +346,8 @@ class PolyQuadExpectationSingleMode(BaseTest):
         k = 0.543
 
         mean, var = state.poly_quad_expectation(A, d, k)
-        self.assertEqual(mean, k)
-        self.assertEqual(var, 0)
+        self.assertAlmostEqual(mean, k, delta=self.tol)
+        self.assertAlmostEqual(var, 0, delta=self.tol)
 
     def test_linear_vacuum(self):
         """Test that the correct results are returned for the vacuum state."""
@@ -388,20 +415,40 @@ class PolyQuadExpectationSingleMode(BaseTest):
         state = self.circuit.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=self.qphi)
 
-        # E(2x+p) = 2E(x) + E(p)
+        # E(ax+bp) = aE(x) + bE(p)
         mean_expected = d[0]*self.mu[0] + d[3]*self.mu[1]
         self.assertAlmostEqual(mean, mean_expected, delta=self.tol)
 
-        # var(2x+p) = 4var(x)+var(p)+4cov(x,p)
+        # var(ax+bp) = a**2 var(x)+b**2 var(p)+2ab cov(x,p)
         var_expected = self.cov[0, 0]*d[0]**2 + self.cov[1, 1]*d[3]**2 + 2*d[0]*d[3]*self.cov[0, 1]
         self.assertAlmostEqual(var, var_expected, delta=self.tol)
+
+    def test_n(self):
+        """Test expectation and variance of the number operator on a thermal state"""
+        self.logTestName()
+
+        nbar = 0.423
+
+        self.circuit.reset(pure=self.kwargs['pure'])
+        self.circuit.prepare_thermal_state(nbar, 0)
+        state = self.circuit.state()
+
+        # n = a^\dagger a = (X^2 +P^2)/2\hbar - I/2
+        A = np.zeros([6, 6])
+        A[0, 0] = 1/(2*self.hbar)
+        A[3, 3] = 1/(2*self.hbar)
+        k = -0.5
+
+        mean, var = state.poly_quad_expectation(A, d=None, k=k, phi=0)
+        self.assertAlmostEqual(mean, nbar, delta=self.tol)
+        self.assertAlmostEqual(var, nbar*(nbar+1), delta=self.tol)
 
     def test_x_squared(self):
         """Test that the correct result is returned for E(x^2)"""
         self.logTestName()
 
         A = np.zeros([6, 6])
-        A[0, 0] = 2
+        A[0, 0] = 1
 
         d = None
         k = 0
@@ -414,7 +461,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
         mean, var = state.poly_quad_expectation(A, d, k, phi=self.qphi)
 
         mean_ex, var_ex = self.sample_one_mode_normal_expectations(
-            self.mu, self.cov, lambda X, P, XP: A[0, 0]*X**2/2)
+            self.mu, self.cov, lambda X, P, XP: A[0, 0]*X**2)
         self.assertAlmostEqual(mean, mean_ex, delta=self.tol)
         self.assertAlmostEqual(var, var_ex, delta=self.tol)
 
@@ -423,7 +470,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
         self.logTestName()
 
         A = np.zeros([6, 6])
-        A[3, 3] = 2
+        A[3, 3] = 1
 
         d = None
         k = 0
@@ -436,7 +483,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
         mean, var = state.poly_quad_expectation(A, d, k, phi=self.qphi)
 
         mean_ex, var_ex = self.sample_one_mode_normal_expectations(
-            self.mu, self.cov, lambda X, P, XP: A[3, 3]*P**2/2)
+            self.mu, self.cov, lambda X, P, XP: P**2)
         self.assertAlmostEqual(mean, mean_ex, delta=self.tol)
         self.assertAlmostEqual(var, var_ex, delta=self.tol)
 
@@ -446,7 +493,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
 
         # set quadratic coefficient
         A = np.zeros([6, 6])
-        A[3, 0] = A[0, 3] = 1
+        A[3, 0] = A[0, 3] = 0.5
 
         d = None
         k = 0
@@ -459,7 +506,7 @@ class PolyQuadExpectationSingleMode(BaseTest):
         mean, var = state.poly_quad_expectation(A, d, k, phi=self.qphi)
 
         mean_ex, var_ex = self.sample_one_mode_normal_expectations(
-            self.mu, self.cov, lambda X, P, XP: A[3, 0]*XP)
+            self.mu, self.cov, lambda X, P, XP: XP)
         self.assertAlmostEqual(mean, mean_ex, delta=self.tol)
         self.assertAlmostEqual(var, var_ex, delta=self.tol)
 
@@ -475,11 +522,11 @@ class PolyQuadExpectationSingleMode(BaseTest):
 
         # define the arbitrary quadratic
         A = np.zeros([6, 6])
-        A[0, 0] = 2*c0
-        A[3, 3] = 2*c1
+        A[0, 0] = c0
+        A[3, 3] = c1
 
-        A[3, 0] = c2
-        A[0, 3] = c2
+        A[3, 0] = c2/2
+        A[0, 3] = c2/2
 
         # define the linear combination and constant term
         d = np.array([c3, 0, 0, c4, 0, 0])
@@ -529,9 +576,9 @@ class PolyQuadExpectationMultiMode(BaseTest):
 
         # construct the vector of means and covariance matrix for each mode
         # note that we use (x0,p0,x1,p1,...) ordering here.
-        for i, (x, y, z) in enumerate(zip(self.a_list, self.r_list, self.phi_list)):
-            mu[2*i:2*i+2] = R(self.qphi).T @ np.array([x.real, x.imag]) * np.sqrt(2*self.hbar)
-            cov[2*i:2*i+2, 2*i:2*i+2] = R(self.qphi).T @ squeezed_cov(y, z, hbar=self.hbar) @ R(self.qphi)
+        for i, (a_, r_, phi_) in enumerate(zip(self.a_list, self.r_list, self.phi_list)):
+            mu[2*i:2*i+2] = R(self.qphi).T @ np.array([a_.real, a_.imag]) * np.sqrt(2*self.hbar)
+            cov[2*i:2*i+2, 2*i:2*i+2] = R(self.qphi).T @ squeezed_cov(r_, phi_, hbar=self.hbar) @ R(self.qphi)
 
         # apply a beamsplitter to vector of means and covariance matrices
         t = 1/np.sqrt(2)
@@ -551,7 +598,7 @@ class PolyQuadExpectationMultiMode(BaseTest):
         self.cov = S2 @ S1 @ cov @ S1.T @ S2.T
 
     def test_multi_mode_linear_combination(self):
-        """Test that the correct result is returned for E(2x0 + x1 - p0)"""
+        """Test that the correct result is returned for E(a x0 + b x1 + c x2 + d p0)"""
         self.logTestName()
 
         x0 = 0.123
@@ -572,8 +619,8 @@ class PolyQuadExpectationMultiMode(BaseTest):
         self.circuit.reset(pure=self.kwargs['pure'])
 
         # squeeze and displace each mode
-        for i, (x, y, z) in enumerate(zip(self.a_list, self.r_list, self.phi_list)):
-            self.circuit.prepare_displaced_squeezed_state(x, y, z, i)
+        for i, (a_, r_, phi_) in enumerate(zip(self.a_list, self.r_list, self.phi_list)):
+            self.circuit.prepare_displaced_squeezed_state(a_, r_, phi_, i)
 
         # apply a beamsplitter to the modes
         self.circuit.beamsplitter(1/np.sqrt(2), 1/np.sqrt(2), 0, 1)
@@ -584,11 +631,11 @@ class PolyQuadExpectationMultiMode(BaseTest):
         state = self.circuit.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=self.qphi)
 
-        # E(2x0 + x1 - p0) = 2E(x0) + E(x1) - E(p0)
+        # E(a x0 + b x1 + c x2 + d p0)
         mean_expected = np.array([x0, p0, x1, 0, x2, 0]) @ self.mu
         self.assertAlmostEqual(mean, mean_expected, delta=self.tol)
 
-        # var(x0 + x1 + p0) = 4var(x0)+var(x1)+var(p0)-4cov(x0,p0) + 4cov(x0, x1) - 2*cov(x1, p0)
+        # var(a x0 + b x1 + c x2 + d p0)
         var_expected = self.cov[0, 0]*x0**2 + self.cov[1, 1]*p0**2 + self.cov[2, 2]*x1**2 \
             + self.cov[4, 4]*x2**2 + 2*self.cov[0, 1]*x0*p0 + 2*self.cov[0, 2]*x0*x1 \
             + 2*self.cov[0, 4]*x0*x2 + 2*self.cov[1, 2]*p0*x1 + 2*self.cov[1, 4]*p0*x2 \
@@ -600,8 +647,8 @@ class PolyQuadExpectationMultiMode(BaseTest):
         self.logTestName()
 
         A = np.zeros([6, 6])
-        A[0, 1] = 1/np.sqrt(2)
-        A[0, 4] = np.pi
+        A[0, 1] = 1/(2*np.sqrt(2))
+        A[0, 4] = np.pi/2
 
         A = (A + A.T)/2
 
@@ -611,8 +658,8 @@ class PolyQuadExpectationMultiMode(BaseTest):
         self.circuit.reset(pure=self.kwargs['pure'])
 
         # squeeze and displace each mode
-        for i, (x, y, z) in enumerate(zip(self.a_list, self.r_list, self.phi_list)):
-            self.circuit.prepare_displaced_squeezed_state(x, y, z, i)
+        for i, (a_, r_, phi_) in enumerate(zip(self.a_list, self.r_list, self.phi_list)):
+            self.circuit.prepare_displaced_squeezed_state(a_, r_, phi_, i)
 
         # apply a beamsplitter to the modes
         self.circuit.beamsplitter(1/np.sqrt(2), 1/np.sqrt(2), 0, 1)
@@ -627,11 +674,11 @@ class PolyQuadExpectationMultiMode(BaseTest):
         cov = C.T @ self.cov @ C
 
         # E(a*x0x1 + b*x0p1) = a*cov(x0,x1)+a*E(x0)E(X1) + b*cov(x0,p1) +b*E(x0)E(p1)
-        mean_expected = A[0, 1]*self.cov[0, 2] + A[0, 1]*self.mu[0]*self.mu[2] \
-            + A[0, 4]*self.cov[0, 3] + A[0, 4]*self.mu[0]*self.mu[3]
+        mean_expected = 2*(A[0, 1]*self.cov[0, 2] + A[0, 1]*self.mu[0]*self.mu[2] \
+            + A[0, 4]*self.cov[0, 3] + A[0, 4]*self.mu[0]*self.mu[3])
         self.assertAlmostEqual(mean, mean_expected, delta=self.tol)
 
-        var_expected = 2*np.trace((A/2) @ cov @ (A/2) @ cov) + 4*mu.T @ (A/2) @ cov @ (A/2) @ mu
+        var_expected = 2*np.trace(A @ cov @ A @ cov) + 4*mu.T @ A @ cov @ A @ mu
         self.assertAlmostEqual(var, var_expected, delta=self.tol)
 
 

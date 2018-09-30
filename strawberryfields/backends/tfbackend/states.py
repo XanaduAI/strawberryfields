@@ -626,7 +626,7 @@ class FockStateTF(BaseFockState):
         An arbitrary 2nd order polynomial of quadrature operators over $N$ modes can always
         be written in the following form:
 
-        .. math:: P(\mathbf{r}) = \frac{1}{2}\mathbf{r}^T A\mathbf{r} + \mathbf{r}^T \mathbf{d} + k I
+        .. math:: P(\mathbf{r}) = \mathbf{r}^T A\mathbf{r} + \mathbf{r}^T \mathbf{d} + k I
 
         where:
 
@@ -678,7 +678,7 @@ class FockStateTF(BaseFockState):
                 return super().poly_quad_expectation(A, d, k, phi, **kwargs)
             else:
                 raise NotImplementedError("Calculation of multi-mode quadratic expectation values is currently "
-                                      "only supported when batched=False and when evaluating numerically.")
+                                          "only supported when batched=False and when evaluating numerically.")
 
     @property
     def batched(self):

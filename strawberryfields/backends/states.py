@@ -370,7 +370,7 @@ class BaseState(abc.ABC):
         An arbitrary 2nd order polynomial of quadrature operators over $N$ modes can always
         be written in the following form:
 
-        .. math:: P(\mathbf{r}) = \frac{1}{2}\mathbf{r}^T A\mathbf{r} + \mathbf{r}^T \mathbf{d} + k I
+        .. math:: P(\mathbf{r}) = \mathbf{r}^T A\mathbf{r} + \mathbf{r}^T \mathbf{d} + k I
 
         where:
 
@@ -745,6 +745,8 @@ class BaseFockState(BaseState):
         return mean, var
 
     def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
+        # pylint: disable=too-many-branches
+
         if A is None:
             A = np.zeros([2*self._modes, 2*self._modes])
 
@@ -770,15 +772,16 @@ class BaseFockState(BaseState):
 
         # construct the x and p operators
         a = np.diag(np.sqrt(np.arange(1, dim)), 1)
-        x = np.sqrt(self._hbar/2) * (a + a.T)
-        p = -1j * np.sqrt(self._hbar/2) * (a - a.T)
+        x_ = np.sqrt(self._hbar/2) * (a + a.T)
+        p_ = -1j * np.sqrt(self._hbar/2) * (a - a.T)
 
         if phi != 0:
             # rotate the quadrature operators
-            xold = x.copy()
-            pold = p.copy()
-            x = np.cos(phi)*xold - np.sin(phi)*pold
-            p = np.sin(phi)*xold + np.cos(phi)*pold
+            x = np.cos(phi)*x_ - np.sin(phi)*p_
+            p = np.sin(phi)*x_ + np.cos(phi)*p_
+        else:
+            x = x_
+            p = p_
 
         def expand_dims(op, n, modes):
             """Expand quadrature operator to act on nth mode"""
@@ -813,13 +816,22 @@ class BaseFockState(BaseState):
         # reduce the size of A so that we only consider modes
         # which we need to calculate the expectation value for
         rows = ex_modes + [i+self._modes for i in ex_modes]
-        quad_coeffs = A[:, rows][rows]/2
+        quad_coeffs = A[:, rows][rows]
         quad_coeffs[num_modes:, :num_modes] = -quad_coeffs[num_modes:, :num_modes]
         quad_coeffs[:num_modes, num_modes:] = -quad_coeffs[:num_modes, num_modes:]
 
-        # compute the polynomial
+        # Compute the polynomial
+        #
         # For 3 modes, this gives the einsum (with brackets denoting modes):
         # 'a(bc)(de)(fg),a(ch)(ei)(gj)->(bh)(di)(fj)' applied to r, A@r
+        #
+        # a corresponds to the index in the vector of quadrature operators
+        # r = (x_1,...,x_n,p_1,...,p_n), and the remaining indices ijklmn
+        # are the elements of the operator acting on a 3 mode density matrix.
+        #
+        # So, in effect, matrix of quadratic coefficients A acts only on index a,
+        # this index is then summed, and then each mode of r, A@r undergoes
+        # matrix multiplication
         ind1 = indices[:2*num_modes+1]
         ind2 = ind1[0] + ''.join([str(i)+str(j) for i, j in zip(ind1[2::2], indices[2*num_modes+1:3*num_modes+1])])
         ind3 = ''.join([str(i)+str(j) for i, j in zip(ind1[1::2], ind2[2::2])])
@@ -839,15 +851,17 @@ class BaseFockState(BaseState):
 
         # add constant term
         if k != 0:
-            poly_op += k*expand_dims(np.eye(dim), 0, num_modes)
+            for n in range(num_modes):
+                poly_op += k*expand_dims(np.eye(dim), n, num_modes)
+
+        # calculate Op^2
+        ind = "{},{}->{}".format(ind1[1:], ind2[1:], ind3)
+        poly_op_sq = np.einsum(ind, poly_op, poly_op)
 
         # truncate down
         sl = tuple([slice(0, self._cutoff)]*(2*num_modes))
         poly_op = poly_op[sl]
-
-        # calculate Op^2
-        ind = "{},{}->{}".format(ind1[1:], ind2[1:], ind3)
-        poly_op_sq = np.einsum(ind, poly_op, poly_op)[sl]
+        poly_op_sq = poly_op_sq[sl]
 
         ind1 = ind1[:-1]
         ind2 = ''.join([str(j)+str(i) for i, j in zip(ind1[::2], ind1[1::2])])
@@ -857,8 +871,8 @@ class BaseFockState(BaseState):
         # For 3 modes, this gives the einsum '(ab)(cd)(ef),(ba)(dc)(fe)->'
         mean = np.einsum(ind, poly_op, rho).real
 
-        # calculate variance Tr(Op^2 @ rho) - Tr(Op @ rho)^2 + |A|
-        var = np.einsum(ind, poly_op_sq, rho).real - mean**2 + np.linalg.det(2*quad_coeffs)
+        # calculate variance Tr(Op^2 @ rho) - Tr(Op @ rho)^2 + |A| + 2k/hbar^2
+        var = np.einsum(ind, poly_op_sq, rho).real - mean**2 + np.linalg.det(2*quad_coeffs) + 2*k/(self._hbar**2)
 
         return mean, var
 
@@ -1111,6 +1125,14 @@ class BaseGaussianState(BaseState):
         else:
             d = np.zeros([2*self._modes])
 
+        # determine modes with quadratic expectation values
+        nonzero = np.concatenate([np.mod(A.nonzero()[0], self._modes), np.mod(d.nonzero()[0], self._modes)])
+        ex_modes = list(set(nonzero))
+
+        if not ex_modes:
+            # only a constant term was provided
+            return k, 0.
+
         mu = self._mu
         cov = self._cov
 
@@ -1123,19 +1145,19 @@ class BaseGaussianState(BaseState):
             mu = rot.T @ mu
             cov = rot.T @ cov @ rot
 
-        H = A/2
-
         # transform to the expectation of a quadratic on a normal distribution with zero mean
         # E[P(r)]_(mu,cov) = E(Q(r+mu)]_(0,cov)
         #                  = E[rT.A.r + rT.(2A.mu+d) + (muT.A.mu+muT.d+cI)]_(0,cov)
         #                  = E[rT.A.r + rT.d' + k']_(0,cov)
-        d2 = 2*H @ mu + d
-        k2 = mu.T @ H @ mu + mu.T @ d + k
+        d2 = 2*A @ mu + d
+        k2 = mu.T @ A @ mu + mu.T @ d + k
 
-        # expectation value E[P(r)] = tr(A.cov) + muT.A.mu + muT.d + k
-        mean = np.trace(H @ cov) + k2
-        # variance Var[P(r)] = 2tr(A.cov.A.cov) + 4*muT.A.cov.A.mu + dT.cov.d
-        var = 2*np.trace(H @ cov @ H @ cov) + d2.T @ cov @ d2
+        # expectation value E[P(r)]_{mu=0} = tr(A.cov) + muT.A.mu + muT.d + k|_{mu=0}
+        #                                  = tr(A.cov) + k
+        mean = np.trace(A @ cov) + k2
+        # variance Var[P(r)]_{mu=0} = 2tr(A.cov.A.cov) + 4*muT.A.cov.A.mu + dT.cov.d|_{mu=0}
+        #                           = 2tr(A.cov.A.cov) + dT.cov.d
+        var = 2*np.trace(A @ cov @ A @ cov) + d2.T @ cov @ d2 + k/2
 
         return mean, var
 
