@@ -501,7 +501,7 @@ class FockStateTF(BaseFockState):
             flat_rho = tf.reshape(rho, [-1, self.cutoff_dim ** 2])
 
             nbar = tf.real(tf.reduce_sum(flat_rho * flat_n, axis=1)) # implements a batched tr(rho * n)
-            nbarSq = tf.real(tf.reduce_sum(flat_rho * flat_n**2, axis=1)) # implements a batched tr(rho * n)
+            nbarSq = tf.real(tf.reduce_sum(flat_rho * flat_n**2, axis=1)) # implements a batched tr(rho * n^2)
             var = nbarSq - nbar**2
 
             if not self.batched:
@@ -556,7 +556,7 @@ class FockStateTF(BaseFockState):
                 * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
                   which is specified at initialization.
                 * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
-                  If a Session is supplied, then `eval` is overriden and the numerical evaluation takes place in the provided Session.
+                  If a Session is supplied, then ``eval`` is overriden and the numerical evaluation takes place in the provided Session.
                   If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
 
         Returns:
@@ -614,7 +614,7 @@ class FockStateTF(BaseFockState):
         raise NotImplementedError("Calculation of the Wigner function is currently "
                                   "only supported when eval=True and batched=False")
 
-    def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
+    def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs): # pragma: no cover
         r"""The multi-mode expectation values and variance of arbitrary 2nd order polynomials
         of quadrature operators.
 
