@@ -685,8 +685,8 @@ class PolyQuadExpectationMultiMode(BaseTest):
 
         self.circuit.reset(pure=self.kwargs['pure'])
 
-        a_list = [0.344+0.123j, 0.432+0.123j, -0.12+0.04j]
-        r_list = [0.1065, 0.32, -0.123]
+        a_list = [0.044+0.023j, 0.0432+0.123j, -0.12+0.04j]
+        r_list = [0.1065, 0.032, -0.123]
         phi_list = [0.897, 0.31, 0.432]
 
         mu = np.zeros([6])
@@ -726,8 +726,8 @@ class PolyQuadExpectationMultiMode(BaseTest):
             + 2*mu.T @ A.T @ cov @ d + 2*d.T @ cov @ A @ mu \
             - np.sum([np.linalg.det(self.hbar*A[:, m][n]) for m in modes for n in modes])
 
-        self.assertAlmostEqual(mean, mean_ex, delta=0.01)
-        self.assertAlmostEqual(var, var_ex, delta=0.01)
+        self.assertAlmostEqual(mean, mean_ex, delta=self.tol)
+        self.assertAlmostEqual(var, var_ex, delta=self.tol)
 
 
 class WignerSingleMode(BaseTest):

@@ -1163,8 +1163,8 @@ class BaseGaussianState(BaseState):
         #                           = 2tr(A.cov.A.cov) + dT.cov.d
         var = 2*np.trace(A @ cov @ A @ cov) + d2.T @ cov @ d2
 
-        # correction term to account for incorrect symmetric ordering in the variance
-        # this occurs because Var[S(P(r))] = Var[P(r)] - Σ_{m1, m2} |hbar*A_{(m1, m1+N),(m2, m2+N)}|
+        # Correction term to account for incorrect symmetric ordering in the variance.
+        # This occurs because Var[S(P(r))] = Var[P(r)] - Σ_{m1, m2} |hbar*A_{(m1, m1+N),(m2, m2+N)}|,
         # where m1, m2 are all possible mode numbers, and N is the total number of modes.
         # Therefore, the correction term is the sum of the determinants of 2x2 submatrices of A.
         modes = np.arange(2*num_modes).reshape(2, -1).T
