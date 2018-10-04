@@ -229,15 +229,15 @@ Beamsplitter
    For the annihilation and creation operators of two modes, denoted :math:`\a_1` and :math:`\a_2`, the beamsplitter is defined by
 
    .. math::
-      B(\theta,\phi) = \exp\left(\theta (e^{i \phi} \ad_1 \a_2 -e^{-i \phi}\a_1 \ad_2) \right)
+      B(\theta,\phi) = \exp\left(\theta (e^{-i \phi} \ad_1 \a_2 -e^{i \phi}\a_1 \ad_2) \right)
 
 .. tip:: *Implemented in Strawberry Fields as a quantum gate by* :class:`strawberryfields.ops.BSgate`
 
 They will transform the operators according to
 
 .. math::
-   B^\dagger(\theta,\phi) \a_1  B(\theta,\phi) &= \a_1\cos \theta -\a_2 e^{-i \phi} \sin \theta  = t \a_1 -r^* \a_2,\\
-   B^\dagger(\theta,\phi) \a_2  B(\theta,\phi) &= \a_2\cos \theta + \a_1  e^{i \phi} \sin \theta= t \a_2 +r \a_1.
+   B^\dagger(\theta,\phi) \a_1  B(\theta,\phi) &= \a_1\cos \theta -\a_2 e^{-i \phi} \sin \theta  = t \a_1 +r^* \a_2,\\
+   B^\dagger(\theta,\phi) \a_2  B(\theta,\phi) &= \a_2\cos \theta + \a_1  e^{i \phi} \sin \theta= t \a_2 -r \a_1.
 
 where :math:`t = \cos \theta` and :math:`r = e^{i\phi} \sin \theta` are the transmittivity and reflectivity amplitudes of the beamsplitter respectively.
 
