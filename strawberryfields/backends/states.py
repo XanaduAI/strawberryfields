@@ -405,7 +405,7 @@ class BaseState(abc.ABC):
                 perform the calculation. The calculation will take place within a Fock basis
                 dimension of cutoff_dim+worksize. Increasing the worksize will result in
                 increased numerical accuracy, at the expense of a longer computational time.
-                By default, worksize is set to 5.
+                By default, worksize is set to 1.
 
         Returns:
             tuple (float, float): expectation value and variance
@@ -767,7 +767,7 @@ class BaseFockState(BaseState):
 
         # expand the cutoff dimension in approximating the x and p
         # operators in the Fock basis, to reduce numerical inaccuracy.
-        worksize = kwargs.get('worksize', 5)
+        worksize = kwargs.get('worksize', 1)
         dim = self._cutoff + worksize
 
         # construct the x and p operators
@@ -851,8 +851,7 @@ class BaseFockState(BaseState):
 
         # add constant term
         if k != 0:
-            for n in range(num_modes):
-                poly_op += k*expand_dims(np.eye(dim), n, num_modes)
+            poly_op += k*expand_dims(np.eye(dim), 0, num_modes)
 
         # calculate Op^2
         ind = "{},{}->{}".format(ind1[1:], ind2[1:], ind3)
@@ -871,8 +870,8 @@ class BaseFockState(BaseState):
         # For 3 modes, this gives the einsum '(ab)(cd)(ef),(ba)(dc)(fe)->'
         mean = np.einsum(ind, poly_op, rho).real
 
-        # calculate variance Tr(Op^2 @ rho) - Tr(Op @ rho)^2 + |A| + 2k/hbar^2
-        var = np.einsum(ind, poly_op_sq, rho).real - mean**2 + np.linalg.det(2*quad_coeffs) + 2*k/(self._hbar**2)
+        # calculate variance Tr(Op^2 @ rho) - Tr(Op @ rho)^2
+        var = np.einsum(ind, poly_op_sq, rho).real - mean**2
 
         return mean, var
 
@@ -1108,7 +1107,6 @@ class BaseGaussianState(BaseState):
         covphi = rot.T @ cov @ rot
         return (muphi[0], covphi[0, 0])
 
-
     def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
         if A is None:
             A = np.zeros([2*self._modes, 2*self._modes])
@@ -1128,6 +1126,12 @@ class BaseGaussianState(BaseState):
         # determine modes with quadratic expectation values
         nonzero = np.concatenate([np.mod(A.nonzero()[0], self._modes), np.mod(d.nonzero()[0], self._modes)])
         ex_modes = list(set(nonzero))
+
+        # reduce the size of A so that we only consider modes
+        # which we need to calculate the expectation value for
+        rows = ex_modes + [i+self._modes for i in ex_modes]
+        num_modes = len(ex_modes)
+        quad_coeffs = A[:, rows][rows]
 
         if not ex_modes:
             # only a constant term was provided
@@ -1157,7 +1161,14 @@ class BaseGaussianState(BaseState):
         mean = np.trace(A @ cov) + k2
         # variance Var[P(r)]_{mu=0} = 2tr(A.cov.A.cov) + 4*muT.A.cov.A.mu + dT.cov.d|_{mu=0}
         #                           = 2tr(A.cov.A.cov) + dT.cov.d
-        var = 2*np.trace(A @ cov @ A @ cov) + d2.T @ cov @ d2 + k/2
+        var = 2*np.trace(A @ cov @ A @ cov) + d2.T @ cov @ d2
+
+        # correction term to account for incorrect symmetric ordering in the variance
+        # this occurs because Var[S(P(r))] = Var[P(r)] - Σ_{m1, m2} |hbar*A_{(m1, m1+N),(m2, m2+N)}|
+        # where m1, m2 are all possible mode numbers, and N is the total number of modes.
+        # Therefore, the correction term is the sum of the determinants of 2x2 submatrices of A.
+        modes = np.arange(2*num_modes).reshape(2, -1).T
+        var -= np.sum([np.linalg.det(self._hbar*quad_coeffs[:, m][n]) for m in modes for n in modes])
 
         return mean, var
 
