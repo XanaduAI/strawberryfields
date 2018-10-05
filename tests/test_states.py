@@ -633,6 +633,13 @@ class PolyQuadExpectationSingleMode(BaseTest):
 class PolyQuadExpectationFockTests(FockBaseTest):
     num_subsystems = 1
 
+    def setUp(self):
+        """Set up."""
+        super().setUp()
+
+        if isinstance(self.backend, backends.TFBackend):
+            raise unittest.SkipTest('The poly_quad_expectation method is not yet supported on the TF backend.')
+
     def test_n_fock_state(self):
         """Test that the correct E(n) and var(n) returned for Fock state |4>"""
         self.logTestName()
