@@ -340,9 +340,9 @@ We can also write the action of the addition gate on the canonical operators:
    \text{CX}(s)^\dagger \hat{a}_2 \text{CX}(s) &= \a_2+  \frac{s}{2} (\ad_1 +  \a_1)\\
 
 The addition gate can be decomposed in terms of single mode squeezers and beamsplitter as follows
-:math:`\text{CX}(s) = B(\phi,0) \left(S(r,0) \otimes S(-r,0) \right) B(\frac{\pi}{2}+\phi,0)`
+:math:`\text{CX}(s) = B(\theta,0) \left(S(r,0) \otimes S(-r,0) \right) B(\frac{\pi}{2}+\theta,0)`
 where
-:math:`\sin(2 \phi) = \frac{-1}{\cosh r}, \ \cos(2 \phi)=-\tanh(r), \ \sinh(r) = \frac{ s}{2}`
+:math:`\sin(2 \theta) = \frac{-1}{\cosh r}, \ \cos(2 \theta)=-\tanh(r), \ \sinh(r) = -\frac{ s}{2}`
 
 .. _CZ:
 
