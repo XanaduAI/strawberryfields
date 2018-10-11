@@ -83,10 +83,20 @@ quantum states and operations.
    random_symplectic
    random_interferometer
 
+Decorator
+------------------------
+
+These decorators allow altering or extending functions
+
+.. autosummary::
+   operator
+
 Code details
 ~~~~~~~~~~~~
 
 """
+from inspect import signature
+
 import numpy as np
 from numpy.random import randn
 from numpy.polynomial.hermite import hermval as H
@@ -549,3 +559,61 @@ def random_interferometer(N):
     ph = d/np.abs(d)
     U = np.multiply(q, ph, q)
     return U
+
+
+# ------------------------------------------------------------------------
+# Decorators                                                            |
+# ------------------------------------------------------------------------
+
+class operator:
+    """ Groups a sequence of gates into a single operator
+
+    Args:
+        ns (int): number of registers required by the operator
+    """
+
+    def __init__(self, ns):
+        self.ns = ns
+        self.func = None
+        self.args = None
+
+    def __or__(self, reg):
+        """Apply the operator to a part of a quantum register.
+
+        Redirects the execution flow to the wrapped function
+
+        Args:
+            reg (RegRef, Sequence[RegRef]): subsystem(s) the operation is acting on
+
+        Returns:
+            list[RegRef]: subsystem list as RegRefs
+        """
+
+        if (not reg) or (not self.ns) or len(reg) != self.ns:
+            raise ValueError("Wrong number of subsystems")
+
+        func_sig = signature(self.func)
+        num_params = len(func_sig.parameters)
+
+        if num_params == 0:
+            raise ValueError("operator should at least receive subsystems")
+
+        if num_params != len(self.args) + 1:
+            raise ValueError("mismatch in the number of arguments")
+
+        # pass parameters and subsystems to the function
+        if num_params == 1:
+            self.func(reg)
+        else:
+            self.func(*self.args, reg)
+
+        return reg
+
+    def __call__(self, func):
+        self.func = func
+
+        def f_proxy(*args):
+            self.args = args
+            return self
+
+        return f_proxy
