@@ -54,6 +54,26 @@ class TeleportationOperator(BaseTest):
         fidelity = state.fidelity_coherent([0,0,0.5+0.2j])
         self.assertAllAlmostEqual(fidelity, 1, delta=self.delta)
 
+    def test_validate_argument(self):
+        self.logTestName()
+
+        with self.assertRaises(ValueError):
+            self.prepare_state(1, 2, 3) | (1, 2)
+
+        with self.assertRaises(ValueError):
+            self.prepare_state(1) | (1, 2)
+
+        with self.assertRaises(ValueError):
+            self.prepare_state(1) | ()
+
+        with self.assertRaises(ValueError):
+            self.entangle_states() | (1, 2, 3)
+
+        with self.assertRaises(ValueError):
+            self.entangle_states() | (1)
+
+        with self.assertRaises(ValueError):
+            self.entangle_states() | 1
 
 if __name__ == '__main__':
     print('Testing Strawberry Fields version ' + sf.version() + ', examples.')
