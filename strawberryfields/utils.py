@@ -95,6 +95,7 @@ Code details
 ~~~~~~~~~~~~
 
 """
+import collections
 from inspect import signature
 
 import numpy as np
@@ -588,8 +589,14 @@ class operator:
         Returns:
             list[RegRef]: subsystem list as RegRefs
         """
+        if (not reg) or (not self.ns):
+            raise ValueError("Wrong number of subsystems")
 
-        if (not reg) or (not self.ns) or len(reg) != self.ns:
+        reg_len = 1
+        if isinstance(reg, collections.Sized):
+            reg_len = len(reg)
+
+        if reg_len != self.ns:
             raise ValueError("Wrong number of subsystems")
 
         return self._call_function(reg)
