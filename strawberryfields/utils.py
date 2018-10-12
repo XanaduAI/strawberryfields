@@ -83,10 +83,11 @@ quantum states and operations.
    random_symplectic
    random_interferometer
 
-Decorator
-------------------------
+Decorators
+----------
 
-These decorators allow altering or extending functions
+The :class:`~.strawberryfields.utils.operator` decorator allows functions containing quantum operations
+acting on a qumode to be used as an operator itself within an engine context.
 
 .. autosummary::
    operator
@@ -567,7 +568,38 @@ def random_interferometer(N):
 # ------------------------------------------------------------------------
 
 class operator:
-    """ Groups a sequence of gates into a single operator
+    """Groups a sequence of gates into a single operator to be used
+    within an engine context.
+
+    For example:
+
+    .. code-block:: python
+
+        @sf.operator(3)
+        def custom_operation(v1, v2, q):
+            CZgate(v1) | (q[0], q[1])
+            Vgate(v2) | q[2]
+
+    Here, the ``operator`` decorator must recieve an argument
+    detailing the number of subsystems the resulting custom
+    operator acts on.
+
+    The function it acts on can contain arbitrary
+    Python and blackbird code that may normally be placed within an
+    engine context. Note that it must always accept the qumode register
+    ``q`` it acts on as the *last* argument of the function.
+
+    Once defined, it can be used like any other quantum operation:
+
+    .. code-block:: python
+
+        eng, q = sf.Engine(3)
+        with eng:
+            custom_operation(0.5719, 2.0603) | (q[0], q[1], q[3])
+
+    Note that here, we do not pass the qumode register ``q`` directly
+    to the function - instead, it is defined on the right hand side
+    of the ``|`` operator, like all other blackbird code.
 
     Args:
         ns (int): number of registers required by the operator
@@ -581,7 +613,7 @@ class operator:
     def __or__(self, reg):
         """Apply the operator to a part of a quantum register.
 
-        Redirects the execution flow to the wrapped function
+        Redirects the execution flow to the wrapped function.
 
         Args:
             reg (RegRef, Sequence[RegRef]): subsystem(s) the operation is acting on
@@ -602,8 +634,7 @@ class operator:
         return self._call_function(reg)
 
     def _call_function(self, reg):
-        """
-        Executes wrapped function and passes the quantum registers
+        """Executes the wrapped function and passes the quantum registers.
 
         Args:
             reg (RegRef, Sequence[RegRef]): subsystem(s) the operation is acting on
@@ -615,10 +646,10 @@ class operator:
         num_params = len(func_sig.parameters)
 
         if num_params == 0:
-            raise ValueError("operator should at least receive subsystems")
+            raise ValueError("Operator must receive the qumode register as an argument.")
 
         if num_params != len(self.args) + 1:
-            raise ValueError("mismatch in the number of arguments")
+            raise ValueError("Mismatch in the number of arguments")
 
         # pass parameters and subsystems to the function
         if num_params == 1:

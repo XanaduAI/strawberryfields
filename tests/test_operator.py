@@ -11,6 +11,18 @@ from strawberryfields.utils import operator
 float_regex = r'(-)?(\d+\.\d+)'
 
 
+@operator(1)
+def prepare_state(v1, q):
+    Coherent(v1) | q
+
+
+@operator(2)
+def entangle_states(q):
+    Squeezed(-2) | q[0]
+    Squeezed(2) | q[1]
+    BSgate(pi / 4, 0) | (q[0], q[1])
+
+
 class TeleportationOperator(BaseTest):
     """
     Run a teleportation algorithm but split the circuit into operators.
@@ -27,24 +39,14 @@ class TeleportationOperator(BaseTest):
         self.eng.backend = self.backend
         self.backend.reset(cutoff_dim=self.cutoff)
 
-    @operator(1)
-    def prepare_state(self, v1, q):
-        Coherent(v1) | q
-
-    @operator(2)
-    def entangle_states(self, q):
-        Squeezed(-2) | q[0]
-        Squeezed(2) | q[1]
-        BSgate(pi / 4, 0) | (q[0], q[1])
-
     def test_teleportation_fidelity(self):
         self.logTestName()
         q = self.eng.register
 
         with self.eng:
-            self.prepare_state(0.5+0.2j) | q[0]
+            prepare_state(0.5+0.2j) | q[0]
 
-            self.entangle_states() | (q[1], q[2])
+            entangle_states() | (q[1], q[2])
 
             BSgate(pi / 4, 0) | (q[0], q[1])
             MeasureHomodyne(0, select=0) | q[0]
@@ -58,22 +60,22 @@ class TeleportationOperator(BaseTest):
         self.logTestName()
 
         with self.assertRaises(ValueError):
-            self.prepare_state(1, 2, 3) | (1, 2)
+            prepare_state(1, 2, 3) | (1, 2)
 
         with self.assertRaises(ValueError):
-            self.prepare_state(1) | (1, 2)
+            prepare_state(1) | (1, 2)
 
         with self.assertRaises(ValueError):
-            self.prepare_state(1) | ()
+            prepare_state(1) | ()
 
         with self.assertRaises(ValueError):
-            self.entangle_states() | (1, 2, 3)
+            entangle_states() | (1, 2, 3)
 
         with self.assertRaises(ValueError):
-            self.entangle_states() | (1)
+            entangle_states() | (1)
 
         with self.assertRaises(ValueError):
-            self.entangle_states() | 1
+            entangle_states() | 1
 
 if __name__ == '__main__':
     print('Testing Strawberry Fields version ' + sf.version() + ', examples.')

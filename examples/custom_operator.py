@@ -15,10 +15,13 @@ from strawberryfields.ops import *
 from strawberryfields.utils import operator
 
 
-@operator(ns=4)
-def prepare_op(q):
-    """
-    :param q: This operator is applied to 4 registers
+@operator(4)
+def prepare_squeezing(q):
+    """This operator prepares modes 0 to 4
+    as squeezed states with r = -1.
+
+    Args:
+        q (register): the qumode register.
     """
     S = Sgate(-1)
     S | q[0]
@@ -27,13 +30,14 @@ def prepare_op(q):
     S | q[3]
 
 
-@operator(ns=3)
+@operator(3)
 def circuit_op(v1, v2, q):
-    """
-    Some gates that are groups into a custom operator
-    :param v1: parameter for CZgate
-    :param v2: parameter for Vgate
-    :param q: it requires three registers to be passed
+    """Some gates that are groups into a custom operator.
+
+    Args:
+        v1 (float): parameter for CZgate
+        v2 (float): parameter for the cubic phase gate
+        q (register): the qumode register.
     """
     CZgate(v1) | (q[0], q[1])
     Vgate(v2) | q[2]
@@ -43,11 +47,11 @@ def circuit_op(v1, v2, q):
 eng, q = sf.Engine(4)
 
 with eng:
-    # operator without arguments
-    prepare_op() | q
+    # The following operator takes no arguments
+    prepare_squeezing() | q
 
     # another operator with 2 parameters that operates on three registers: 0, 1, 3
     circuit_op(0.5719, 2.0603) | (q[0], q[1], q[3])
 
 # run the engine
-eng.run("fock", cutoff_dim=5)
+state = eng.run("fock", cutoff_dim=5)
