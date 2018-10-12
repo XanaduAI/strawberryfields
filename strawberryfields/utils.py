@@ -592,6 +592,18 @@ class operator:
         if (not reg) or (not self.ns) or len(reg) != self.ns:
             raise ValueError("Wrong number of subsystems")
 
+        return self._call_function(reg)
+
+    def _call_function(self, reg):
+        """
+        Executes wrapped function and passes the quantum registers
+
+        Args:
+            reg (RegRef, Sequence[RegRef]): subsystem(s) the operation is acting on
+
+        Returns:
+            list[RegRef]: subsystem list as RegRefs
+        """
         func_sig = signature(self.func)
         num_params = len(func_sig.parameters)
 
@@ -613,6 +625,9 @@ class operator:
         self.func = func
 
         def f_proxy(*args):
+            """
+            Proxy for function execution. Function will actually execute in __or__
+            """
             self.args = args
             return self
 
