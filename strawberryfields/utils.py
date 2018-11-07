@@ -447,7 +447,7 @@ def cat_state(a, p=0, fock_dim=5):
 
     .. math::
 
-        |cat\rangle = \frac{e^{-|\alpha|^2/2}}{\sqrt{2(1+e^{-2|\alpha|^2}\cos(\phi))}}
+        |cat\rangle = \frac{1}{\sqrt{2(1+e^{-2|\alpha|^2}\cos(\phi))}}
         \left(|\alpha\rangle +e^{i\phi}|-\alpha\rangle\right)
 
     with the even cat state given for :math:`\phi=0`, and the odd
