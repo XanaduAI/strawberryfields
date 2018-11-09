@@ -767,7 +767,7 @@ class BaseFockState(BaseState):
 
         # expand the cutoff dimension in approximating the x and p
         # operators in the Fock basis, to reduce numerical inaccuracy.
-        worksize = kwargs.get('worksize', 1)
+        worksize = 1
         dim = self._cutoff + worksize
 
         # construct the x and p operators

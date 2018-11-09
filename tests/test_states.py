@@ -3,6 +3,7 @@ Unit tests for :class:`strawberryfields.backends.states`.
 """
 
 import unittest
+import logging
 
 import numpy as np
 from numpy import pi
@@ -22,13 +23,15 @@ a = 0.3+0.1j
 r = 0.23
 phi = 0.123
 
+mag_alphas = np.linspace(0, .8, 4)
+phase_alphas = np.linspace(0, 2 * np.pi, 7, endpoint=False)
 
 def wigner(grid, mu, cov):
     mvn = multivariate_normal(mu, cov, allow_singular=True)
     return mvn.pdf(grid)
 
 
-class BackendStateCreation(BaseTest):
+class BackendStateCreationTests(BaseTest):
     num_subsystems = 3
 
     def test_full_state_creation(self):
@@ -74,7 +77,7 @@ class BackendStateCreation(BaseTest):
         self.assertAllAlmostEqual(probs.flatten(), ref_probs.flatten(), delta=self.tol)
 
 
-class FrontendStateCreation(BaseTest):
+class FrontendStateCreationTests(BaseTest):
     num_subsystems = 3
 
     def setUp(self):
@@ -98,7 +101,7 @@ class FrontendStateCreation(BaseTest):
         self.assertEqual(state.mode_indices, {'q[0]': 0, 'q[1]': 1, 'q[2]': 2})
 
 
-class BaseStateMethods(BaseTest):
+class BaseStateMethodsTests(BaseTest):
     num_subsystems = 2
 
     def test_mean_photon_coherent(self):
@@ -180,7 +183,7 @@ class BaseStateMethods(BaseTest):
         self.assertAllAlmostEqual(rdm, rdm_exact, delta=self.tol)
 
 
-class BaseFockStateMethods(FockBaseTest):
+class BaseFockStateMethodsTests(FockBaseTest):
     num_subsystems = 2
 
     def test_ket(self):
@@ -205,7 +208,7 @@ class BaseFockStateMethods(FockBaseTest):
         self.assertAllAlmostEqual(ket0, ket0exact, delta=self.tol)
 
 
-class BaseGaussianStateMethods(GaussianBaseTest):
+class BaseGaussianStateMethodsTests(GaussianBaseTest):
     num_subsystems = 2
     # can push values higher in Gaussian backend
     a = 1+0.5j
@@ -247,7 +250,7 @@ class BaseGaussianStateMethods(GaussianBaseTest):
         self.assertAllAlmostEqual(z_list, [[0.,0.],  [self.r, self.phi]], delta=self.tol)
 
 
-class QuadExpectation(BaseTest):
+class QuadExpectationTests(BaseTest):
     num_subsystems = 1
 
     def test_vacuum(self):
@@ -274,9 +277,8 @@ class QuadExpectation(BaseTest):
         self.assertAllAlmostEqual(res.flatten(), res_exact.flatten(), delta=self.tol)
 
 
-class PolyQuadExpectationSingleMode(BaseTest):
+class PolyQuadExpectationSingleModeTests(BaseTest):
     num_subsystems = 3
-    cutoff = 12
     hbar = 2
 
     # qudrature rotation
@@ -318,7 +320,14 @@ class PolyQuadExpectationSingleMode(BaseTest):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems, hbar=self.hbar)
         self.eng.backend = self.backend
-        self.backend.reset(cutoff_dim=self.cutoff)
+
+        cutoff = 12
+        if self.D < cutoff:
+            logging.warning("Provided cutoff value is too small for "
+                            "tests in `PolyQuadExpectationSingleModeTests`. "
+                            "Cutoff has been increased internally.")
+            self.D = cutoff
+        self.backend.reset(cutoff_dim=self.D)
 
         if isinstance(self.backend, backends.TFBackend):
             raise unittest.SkipTest('The poly_quad_expectation method is not yet supported on the TF backend.')
@@ -660,9 +669,8 @@ class PolyQuadExpectationFockTests(FockBaseTest):
         self.assertAlmostEqual(var, 0, delta=self.tol)
 
 
-class PolyQuadExpectationMultiMode(BaseTest):
+class PolyQuadExpectationMultiModeTests(BaseTest):
     num_subsystems = 3
-    cutoff = 7
     hbar = 2
     qphi = 0.78
 
@@ -671,7 +679,14 @@ class PolyQuadExpectationMultiMode(BaseTest):
         super().setUp()
         self.eng, q = sf.Engine(self.num_subsystems, hbar=self.hbar)
         self.eng.backend = self.backend
-        self.backend.reset(cutoff_dim=self.cutoff)
+
+        cutoff = 7
+        if self.D < cutoff:
+            logging.warning("Provided cutoff value is too small for "
+                            "tests in `PolyQuadExpectationMultiModeTests`. "
+                            "Cutoff has been increased internally.")
+            self.D = cutoff
+        self.backend.reset(cutoff_dim=self.D)
 
         if isinstance(self.backend, backends.TFBackend):
             raise unittest.SkipTest('The poly_quad_expectation method is not yet supported on the TF backend.')
@@ -737,7 +752,7 @@ class PolyQuadExpectationMultiMode(BaseTest):
         self.assertAlmostEqual(var, var_ex, delta=self.tol)
 
 
-class WignerSingleMode(BaseTest):
+class WignerSingleModeTests(BaseTest):
     num_subsystems = 1
     batched = False
     bsize = 1
@@ -791,7 +806,7 @@ class WignerSingleMode(BaseTest):
         self.assertAllAlmostEqual(W, Wexact, delta=self.tol)
 
 
-class WignerTwoMode(BaseTest):
+class WignerTwoModeTests(BaseTest):
     num_subsystems = 2
 
     # wigner parameters
@@ -887,11 +902,7 @@ class InitialStateFidelityTests(BaseTest):
         self.assertAllAlmostEqual(state.fidelity(in_state, 1), 1, delta=self.tol)
 
 
-mag_alphas = np.linspace(0, .8, 4)
-phase_alphas = np.linspace(0, 2 * np.pi, 7, endpoint=False)
-
-
-class FockProbabilities(BaseTest):
+class FockProbabilitiesTests(BaseTest):
     num_subsystems = 1
     def test_prob_fock_gaussian(self):
         self.logTestName()
@@ -912,7 +923,7 @@ class FockProbabilities(BaseTest):
                   self.assertAllAlmostEqual(prob_n, ref_probs[n], delta=self.tol)
 
 
-class AllFockProbsSingleMode(FockBaseTest):
+class AllFockProbsSingleModeTests(FockBaseTest):
     num_subsystems = 1
 
     def test_all_fock_probs_pure(self):
@@ -934,7 +945,7 @@ class AllFockProbsSingleMode(FockBaseTest):
                 self.assertAllAlmostEqual(probs, ref_probs, delta=self.tol)
 
 
-class AllFockProbsTwoMode(FockBaseTest):
+class AllFockProbsTwoModeTests(FockBaseTest):
     num_subsystems = 2
 
     def test_prob_fock_state_nongaussian(self):
@@ -987,21 +998,21 @@ if __name__ == '__main__':
     # run the tests in this file
     suite = unittest.TestSuite()
     tests = [
-        BackendStateCreation,
-        FrontendStateCreation,
-        BaseStateMethods,
-        BaseFockStateMethods,
-        BaseGaussianStateMethods,
-        QuadExpectation,
-        PolyQuadExpectationSingleMode,
+        BackendStateCreationTests,
+        FrontendStateCreationTests,
+        BaseStateMethodsTests,
+        BaseFockStateMethodsTests,
+        BaseGaussianStateMethodsTests,
+        QuadExpectationTests,
+        PolyQuadExpectationSingleModeTests,
         PolyQuadExpectationFockTests,
-        PolyQuadExpectationMultiMode,
-        WignerSingleMode,
-        WignerTwoMode,
+        PolyQuadExpectationMultiModeTests,
+        WignerSingleModeTests,
+        WignerTwoModeTests,
         InitialStateFidelityTests,
-        FockProbabilities,
-        AllFockProbsSingleMode,
-        AllFockProbsTwoMode
+        FockProbabilitiesTests,
+        AllFockProbsSingleModeTests,
+        AllFockProbsTwoModeTests
     ]
     for t in tests:
         ttt = unittest.TestLoader().loadTestsFromTestCase(t)

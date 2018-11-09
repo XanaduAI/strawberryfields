@@ -656,12 +656,17 @@ class FockStateTF(BaseFockState):
                 the vector of quadrature operators :math:`\mathbf{r}` is first rotated
                 by angle :math:`\phi` in the phase space.
 
-        Keyword args:
-            worksize (int): For Fock backends, the additional Fock basis truncation used to
-                perform the calculation. The calculation will take place within a Fock basis
-                dimension of cutoff_dim+worksize. Increasing the worksize will result in
-                increased numerical accuracy, at the expense of a longer computational time.
-                By default, worksize is set to 5.
+            **kwargs: Optional keyword arguments.
+
+                * If this contains the key
+                  ``eval``, then the corresponding argument will be used to determine the return behaviour of this function.
+                  When ``eval=True``, the return value is numerical; when ``eval=False``, it is symbolic.
+                * If eval is not present in kwargs, then state falls back to the an internal evaluation behaviour,
+                  which is specified at initialization.
+                * A Tensorflow Session or feed_dict may also be passed via the keys ``session`` or ``feed_dict``, respectively.
+                  If a Session is supplied, then ``eval`` is overriden and the numerical evaluation takes place in the provided Session.
+                  If session and/or feed_dict are not given, then a temporary session and/or empty feed_dict will be used.
+
 
         Returns:
             tuple (float, float): expectation value and variance
