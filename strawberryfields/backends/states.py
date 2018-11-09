@@ -400,12 +400,6 @@ class BaseState(abc.ABC):
                 the vectori of quadrature operators :math:`\mathbf{r}` is first rotated
                 by angle :math:`\phi` in the phase space.
 
-        Keyword args:
-            worksize (int): For Fock backends, the additional Fock basis truncation used to
-                perform the calculation. The calculation will take place within a Fock basis
-                dimension of cutoff_dim+worksize. Increasing the worksize will result in
-                increased numerical accuracy, at the expense of a longer computational time.
-                By default, worksize is set to 1.
 
         Returns:
             tuple (float, float): expectation value and variance
