@@ -1,32 +1,32 @@
 """
-Unit tests for the :mod:`strawberryfields` operator decorator.
+Unit tests for the :mod:`strawberryfields` operation decorator.
 """
 
 import unittest
 
 from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
-from strawberryfields.utils import operator
+from strawberryfields.utils import operation
 
 float_regex = r'(-)?(\d+\.\d+)'
 
 
-@operator(1)
+@operation(1)
 def prepare_state(v1, q):
     Coherent(v1) | q
 
 
-@operator(2)
+@operation(2)
 def entangle_states(q):
     Squeezed(-2) | q[0]
     Squeezed(2) | q[1]
     BSgate(pi / 4, 0) | (q[0], q[1])
 
 
-class TeleportationOperator(BaseTest):
+class TeleportationOperationTest(BaseTest):
     """
-    Run a teleportation algorithm but split the circuit into operators.
-    Operators can be also methods of a class
+    Run a teleportation algorithm but split the circuit into operations.
+    Operations can be also methods of a class
     """
     num_subsystems = 3
     delta = 0.1
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     # run the tests in this file
     suite = unittest.TestSuite()
     tests = [
-        TeleportationOperator,
+        TeleportationOperationTest,
     ]
     for t in tests:
         ttt = unittest.TestLoader().loadTestsFromTestCase(t)

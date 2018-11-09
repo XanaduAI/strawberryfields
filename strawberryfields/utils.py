@@ -86,11 +86,11 @@ quantum states and operations.
 Decorators
 ----------
 
-The :class:`~.strawberryfields.utils.operator` decorator allows functions containing quantum operations
-acting on a qumode to be used as an operator itself within an engine context.
+The :class:`~.strawberryfields.utils.operation` decorator allows functions containing quantum operations
+acting on a qumode to be used as an operation itself within an engine context.
 
 .. autosummary::
-   operator
+   operation
 
 Code details
 ~~~~~~~~~~~~
@@ -567,22 +567,22 @@ def random_interferometer(N):
 # Decorators                                                            |
 # ------------------------------------------------------------------------
 
-class operator:
-    """Groups a sequence of gates into a single operator to be used
+class operation:
+    """Groups a sequence of gates into a single operation to be used
     within an engine context.
 
     For example:
 
     .. code-block:: python
 
-        @sf.operator(3)
+        @sf.operation(3)
         def custom_operation(v1, v2, q):
             CZgate(v1) | (q[0], q[1])
             Vgate(v2) | q[2]
 
-    Here, the ``operator`` decorator must recieve an argument
+    Here, the ``operation`` decorator must recieve an argument
     detailing the number of subsystems the resulting custom
-    operator acts on.
+    operation acts on.
 
     The function it acts on can contain arbitrary
     Python and blackbird code that may normally be placed within an
@@ -599,10 +599,10 @@ class operator:
 
     Note that here, we do not pass the qumode register ``q`` directly
     to the function - instead, it is defined on the right hand side
-    of the ``|`` operator, like all other blackbird code.
+    of the ``|`` operation, like all other blackbird code.
 
     Args:
-        ns (int): number of registers required by the operator
+        ns (int): number of registers required by the operation
     """
 
     def __init__(self, ns):
@@ -611,7 +611,7 @@ class operator:
         self.args = None
 
     def __or__(self, reg):
-        """Apply the operator to a part of a quantum register.
+        """Apply the operation to a part of a quantum register.
 
         Redirects the execution flow to the wrapped function.
 
@@ -646,7 +646,7 @@ class operator:
         num_params = len(func_sig.parameters)
 
         if num_params == 0:
-            raise ValueError("Operator must receive the qumode register as an argument.")
+            raise ValueError("Operation must receive the qumode register as an argument.")
 
         if num_params != len(self.args) + 1:
             raise ValueError("Mismatch in the number of arguments")
