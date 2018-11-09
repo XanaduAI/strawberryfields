@@ -78,7 +78,7 @@ class TeleportationOperationTest(BaseTest):
             entangle_states() | 1
 
 if __name__ == '__main__':
-    print('Testing Strawberry Fields version ' + sf.version() + ', examples.')
+    print('Testing Strawberry Fields version ' + sf.version() + ', operations decorator.')
 
     # run the tests in this file
     suite = unittest.TestSuite()
