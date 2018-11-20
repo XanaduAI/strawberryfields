@@ -88,7 +88,7 @@ Pure states
 
 In the case where :math:`V` represents a pure state (:math:`|V|-(\hbar/2)^{2N}=0`), the Williamson decomposition outputs :math:`D=\frac{1}{2}\hbar I_{2N}`; that is, a symplectic transformation :math:`S` acting on the vacuum. It follows that the original covariance matrix can therefore be recovered simply via :math:`V=\frac{\hbar}{2}SS^T`.
 
-.. note:: :math:`V` must be a valid quantum state satisfying :math:`V+i\frac{1}{2}\hbar\Omega\geq 0`, or equivalently, :math:`V>0`, for the Williamson decomposition.
+.. note:: :math:`V` must be a valid quantum state satisfying the uncertainty principle: :math:`V+\frac{1}{2}i\hbar\Omega\geq 0`. If this is not the case, the Williamson decomposition will return non-physical thermal states with :math:`\bar{n}_i<0`.
 
 
 Bloch-Messiah (or Euler) decomposition
