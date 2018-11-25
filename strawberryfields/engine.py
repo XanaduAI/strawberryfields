@@ -54,6 +54,7 @@ Engine methods
    append
    print_queue
    print_applied
+   draw_circuit
    run
    return_state
    optimize
@@ -135,6 +136,8 @@ import networkx as nx
 from .backends import load_backend
 from .backends.base import NotApplicableError, BaseBackend
 
+from .circuitdrawer import Circuit
+
 
 def _print_list(i, q, print_fn=print):
     "For debugging."
@@ -182,12 +185,14 @@ class CircuitError(RuntimeError):
     """
     pass
 
+
 class RegRefError(IndexError):
     """Exception raised by :class:`Engine` when it encounters an invalid register reference.
 
     E.g. trying to apply a gate to a nonexistent or deleted subsystem.
     """
     pass
+
 
 class MergeFailure(RuntimeError):
     """Exception raised by :func:`~strawberryfields.ops.Operation.merge` when an
@@ -514,7 +519,6 @@ class Engine:
             #self.reg_refs[r.ind].active = False
         # NOTE: deleted indices are *not* removed from self.unused_indices
 
-
     def reset(self, keep_history=False, **kwargs):
         r"""Re-initialize the backend state to vacuum.
 
@@ -566,11 +570,9 @@ class Engine:
             self.reset_queue()
         self.cmd_applied.clear()
 
-
     def _retain_queue(self):
         """Prepends the queue with previously applied commands"""
         self.cmd_queue[:0] = self._cmd_applied_all()
-
 
     def reset_queue(self):
         """Clear the command queue.
@@ -583,7 +585,6 @@ class Engine:
         """
         self.cmd_queue.clear()
         self._restore_checkpoint()
-
 
     def _index_to_regref(self, ind):
         """Try to find a RegRef corresponding to a given subsystem index.
@@ -684,6 +685,17 @@ class Engine:
             for c in r:
                 print_fn(c)
 
+    def draw_circuit(self, print_queued_ops=True):
+        circuit = Circuit(wires=self.init_num_subsystems)
+
+        if print_queued_ops:
+            self.print_queue(circuit.parse_op)
+        else:
+            self.print_applied(circuit.parse_op)
+
+        circuit.dump_to_document()
+        return circuit.compile_document()
+
     def return_state(self, modes=None, **kwargs):
         """Return the backend state object.
 
@@ -735,7 +747,6 @@ class Engine:
                         # simplify the error message by suppressing the previous exception
                         raise err from None
         return applied
-
 
     def run(self, backend=None, return_state=True, modes=None, apply_history=False, **kwargs):
         """Execute the circuit in the command queue by sending it to the backend.
