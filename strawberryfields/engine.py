@@ -685,7 +685,7 @@ class Engine:
             for c in r:
                 print_fn(c)
 
-    def draw_circuit(self, print_queued_ops=True):
+    def draw_circuit(self, print_queued_ops=True, compile_pdf=False):
         circuit = Circuit(wires=self.init_num_subsystems)
 
         if print_queued_ops:
@@ -693,8 +693,12 @@ class Engine:
         else:
             self.print_applied(circuit.parse_op)
 
-        circuit.dump_to_document()
-        return circuit.compile_document()
+        tex = circuit.dump_to_document()
+
+        if not compile_pdf:
+            return tex
+        else:
+            return circuit.compile_document()
 
     def return_state(self, modes=None, **kwargs):
         """Return the backend state object.

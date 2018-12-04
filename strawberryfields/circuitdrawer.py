@@ -7,29 +7,66 @@ using the Qcircuit package (https://ctan.org/pkg/qcircuit).
 The following features of Qcircuit are currently supported:
 
 Loading Q-circuit
-        \input{Qcircuit}
+-----------------
+\input{Qcircuit}
+
 Making Circuits
-        \Qcircuit
+-----------------
+\Qcircuit
+
 Spacing
-        @C=#1
-        @R=#1
+-----------------
+@C=#1
+@R=#1
+
 Wires
-        \qw[#1]
+-----------------
+\qw[#1]
+
 Gates
-        \gate {#1}
-        \targ
-        \qswap
+-----------------
+\gate {#1}
+\targ
+\qswap
+
 Control
-        \ctrl{#1}
+-----------------
+\ctrl{#1}
+
+The drawing of the following Xanadu supported operations will be implemented:
+
+single-mode gates
+-----------------
+Dgate
+Xgate
+Zgate
+Sgate
+Rgate
+Pgate
+Vgate
+Fouriergate
+
+Two-mode gates
+--------------
+BSgate
+S2gate
+CXgate
+CZgate
+CKgate
 """
 
 from .qcircuit_strings import HADAMARD_COMP, QUANTUM_WIRE, PAULI_X_COMP, PAULI_Y_COMP, PAULI_Z_COMP, CONTROL, \
     TARGET, SWAP, COLUMN_SPACING, ROW_SPACING, DOCUMENT_END, WIRE_OPERATION, WIRE_TERMINATOR, CIRCUIT_BODY_TERMINATOR, \
-    CIRCUIT_BODY_START, INIT_DOCUMENT
+    CIRCUIT_BODY_START, INIT_DOCUMENT, PIPE
 import numpy as np
 import datetime
 import subprocess
 
+class ModeMismatchException(Exception):
+    pass
+
+class UnsupportedGateException(Exception):
+    pass
 
 class Circuit:
 
@@ -41,14 +78,55 @@ class Circuit:
         self._column_spacing = None
         self._row_spacing = None
 
+        self.single_mode_gates = {
+            'Xgate': self.x,
+            'Zgate': self.z,
+            # 'Dgate': self.d,   coming soon!
+            # 'Sgate': self.s,
+            # 'Rgate': self.r,
+            # 'Pgate': self.p,
+            # 'Vgate': self.v,
+            # 'FourierGate': self.fourier
+        }
+
+        self.two_mode_gates = {
+             'CXgate': self.cnot,
+             'CZgate': self.cz,
+             # 'CKgate': self.ck,   coming soon!
+             # 'BSgate': self.bs,
+             # 'S2gate': self.s2
+        }
+
     # operations
 
+    def gate_from_operator(self, op):
+        operator = str(op).split(PIPE)[0]
+        method = None
+        mode = None
+
+        for single_mode_gate in self.single_mode_gates.keys():
+            if single_mode_gate in operator:
+                method = self.single_mode_gates[single_mode_gate]
+                mode = 1
+
+        if method is None:
+            for two_mode_gate in self.two_mode_gates.keys():
+                if two_mode_gate in operator:
+                    method = self.two_mode_gates[two_mode_gate]
+                    mode = 2
+
+        return method, mode
+
     def parse_op(self, op):
-        r"""
-        will be responsible for mapping operations of form
-        BSgate(pi / 4, 0) | (q[0], q[1]) to drawable gates
-        """
-        pass
+        method, mode = self.gate_from_operator(op)
+        wires = list(map(lambda register: register.ind, op.reg))
+
+        if method is None:
+            raise UnsupportedGateException(f'Unsupported operation {str(op)} not printable by circuit builder!')
+        elif mode == len(wires):
+            method(*wires)
+        elif mode != len(wires):
+            raise ModeMismatchException(f'{mode} qubit gate applied to {len(wires)} wires!')
 
     def h(self, wire):
         self.single_qubit_gate(wire, HADAMARD_COMP)
@@ -161,6 +239,8 @@ class Circuit:
 
         self.end_circuit()
         self.end_document()
+
+        return self._document
 
     def compile_document(self, tex_dir='circuit_tex', pdf_dir='circuit_pdfs'):
         file_name = "output_{0}".format(datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p"))

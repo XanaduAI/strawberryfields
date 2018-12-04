@@ -11,20 +11,50 @@ import unittest
 
 from defaults import BaseTest, strawberryfields as sf
 from strawberryfields.ops import *
-from strawberryfields.utils import operation
 
+x_test_0 = r"""\documentclass{article}
+\usepackage{qcircuit}
+\Qcircuit {
+ & \gate{X} \\
+ & \qw[{0}] \\
+ & \qw[{0}] \\
 
-@operation(1)
-def prepare_state(v1, q):
-    Coherent(v1) | q
+}
+\end{document}
+"""
 
+x_test_1 = r"""\documentclass{article}
+\usepackage{qcircuit}
+\Qcircuit {
+ & \gate{X} \\
+ & \qw[{0}] \\
+ & \qw[{0}] \\
 
-@operation(2)
-def entangle_states(q):
-    Squeezed(-2) | q[0]
-    Squeezed(2) | q[1]
-    BSgate(pi / 4, 0) | (q[0], q[1])
+}
+\end{document}
+"""
 
+x_test_0_output = r"""\documentclass{article}
+\usepackage{qcircuit}
+\Qcircuit {
+ & \gate{X} \\
+ & \qw[{0}] \\
+ & \qw[{0}] \\
+
+}
+\end{document}
+"""
+
+x_z_test_0_output = r"""\documentclass{article}
+\usepackage{qcircuit}
+\Qcircuit {
+ & \gate{X} \\
+ & \qw[{0}] \\
+ & \qw[{0}] \\
+
+}
+\end{document}
+"""
 
 class CircuitDrawerTests(BaseTest):
 
@@ -37,17 +67,15 @@ class CircuitDrawerTests(BaseTest):
         self.eng.backend = self.backend
         self.backend.reset(cutoff_dim=self.cutoff)
 
-    def test_queue_draw(self):
+    def test_x_0(self):
         self.logTestName()
         q = self.eng.register
 
         with self.eng:
-            prepare_state(0.5+0.2j) | q[0]
-            entangle_states() | (q[1], q[2])
-            BSgate(pi / 4, 0) | (q[0], q[1])
+            Xgate(1) | (q[0])
 
-        result = self.eng.draw_circuit(print_queued_ops=True)
-        self.assertTrue(result != -1)
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == x_test_0_output)
 
 
 if __name__ == '__main__':
