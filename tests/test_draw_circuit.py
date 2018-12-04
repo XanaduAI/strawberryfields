@@ -130,6 +130,46 @@ class CircuitDrawerTests(BaseTest):
         result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
         self.assertTrue(result == cz_test_output, failure_message(result, cz_test_output))
 
+    def test_s_0(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Sgate(1) | (q[0])
+
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == s_test_0_output, failure_message(result, s_test_0_output))
+
+    def test_s_1(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Sgate(1) | (q[1])
+
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == s_test_1_output, failure_message(result, s_test_1_output))
+
+    def test_d_0(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Dgate(1) | (q[0])
+
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == d_test_0_output, failure_message(result, d_test_0_output))
+
+    def test_d_1(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Dgate(1) | (q[1])
+
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == d_test_1_output, failure_message(result, d_test_1_output))
+
 
 if __name__ == '__main__':
     print('Testing Strawberry Fields version ' + sf.version() + ', circuit drawer module.')

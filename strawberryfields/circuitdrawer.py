@@ -55,10 +55,9 @@ CZgate
 CKgate
 """
 
-from .qcircuit_strings import HADAMARD_COMP, QUANTUM_WIRE, PAULI_X_COMP, PAULI_Y_COMP, PAULI_Z_COMP, CONTROL, \
-    TARGET, SWAP, COLUMN_SPACING, ROW_SPACING, DOCUMENT_END, WIRE_OPERATION, WIRE_TERMINATOR, CIRCUIT_BODY_TERMINATOR, \
-    CIRCUIT_BODY_START, INIT_DOCUMENT, PIPE
-import numpy as np
+from .qcircuit_strings import QUANTUM_WIRE, PAULI_X_COMP, PAULI_Z_COMP, CONTROL, \
+    TARGET, COLUMN_SPACING, ROW_SPACING, DOCUMENT_END, WIRE_OPERATION, WIRE_TERMINATOR, CIRCUIT_BODY_TERMINATOR, \
+    CIRCUIT_BODY_START, INIT_DOCUMENT, PIPE, S_COMP, D_COMP
 import datetime
 import subprocess
 
@@ -88,9 +87,9 @@ class Circuit:
         self.single_mode_gates = {
             'Xgate': self.x,
             'Zgate': self.z,
-            # 'Dgate': self.d,   coming soon!
-            # 'Sgate': self.s,
-            # 'Rgate': self.r,
+            'Dgate': self.d,
+            'Sgate': self.s,
+            # 'Rgate': self.r,   coming soon!
             # 'Pgate': self.p,
             # 'Vgate': self.v,
             # 'FourierGate': self.fourier
@@ -140,6 +139,12 @@ class Circuit:
 
     def z(self, wire):
         self.single_qubit_gate(wire, PAULI_Z_COMP)
+
+    def s(self, wire):
+        self.single_qubit_gate(wire, S_COMP)
+
+    def d(self, wire):
+        self.single_qubit_gate(wire, D_COMP)
 
     def cx(self, source_wire, target_wire):
         self.controlled_qubit_gate(source_wire, target_wire, TARGET)

@@ -102,6 +102,46 @@ cz_test_output = r"""\documentclass{article}
 }
 \end{document}"""
 
+s_test_0_output = r"""\documentclass{article}
+\usepackage{qcircuit}
+\Qcircuit {
+ & \gate{S} \\
+ & \qw[1] \\
+ & \qw[1] \\
+
+}
+\end{document}"""
+
+s_test_1_output = r"""\documentclass{article}
+\usepackage{qcircuit}
+\Qcircuit {
+ & \qw[1] \\
+ & \gate{S} \\
+ & \qw[1] \\
+
+}
+\end{document}"""
+
+d_test_0_output = r"""\documentclass{article}
+\usepackage{qcircuit}
+\Qcircuit {
+ & \gate{D} \\
+ & \qw[1] \\
+ & \qw[1] \\
+
+}
+\end{document}"""
+
+d_test_1_output = r"""\documentclass{article}
+\usepackage{qcircuit}
+\Qcircuit {
+ & \qw[1] \\
+ & \gate{D} \\
+ & \qw[1] \\
+
+}
+\end{document}"""
+
 def failure_message(result, expected):
     return f'Discrepancies in circuit builder tex output: \
     {LINE_RETURN + LINE_RETURN.join(difflib.ndiff([result], [expected]))}'
