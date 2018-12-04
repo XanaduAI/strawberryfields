@@ -12,49 +12,8 @@ import unittest
 from defaults import BaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 
-x_test_0 = r"""\documentclass{article}
-\usepackage{qcircuit}
-\Qcircuit {
- & \gate{X} \\
- & \qw[{0}] \\
- & \qw[{0}] \\
+from draw_circuit_test_utils import *
 
-}
-\end{document}
-"""
-
-x_test_1 = r"""\documentclass{article}
-\usepackage{qcircuit}
-\Qcircuit {
- & \gate{X} \\
- & \qw[{0}] \\
- & \qw[{0}] \\
-
-}
-\end{document}
-"""
-
-x_test_0_output = r"""\documentclass{article}
-\usepackage{qcircuit}
-\Qcircuit {
- & \gate{X} \\
- & \qw[{0}] \\
- & \qw[{0}] \\
-
-}
-\end{document}
-"""
-
-x_z_test_0_output = r"""\documentclass{article}
-\usepackage{qcircuit}
-\Qcircuit {
- & \gate{X} \\
- & \qw[{0}] \\
- & \qw[{0}] \\
-
-}
-\end{document}
-"""
 
 class CircuitDrawerTests(BaseTest):
 
@@ -75,7 +34,101 @@ class CircuitDrawerTests(BaseTest):
             Xgate(1) | (q[0])
 
         result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
-        self.assertTrue(result == x_test_0_output)
+        self.assertTrue(result == x_test_0_output, failure_message(result, x_test_0_output))
+
+    def test_x_1(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Xgate(1) | (q[1])
+
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == x_test_1_output, failure_message(result, x_test_1_output))
+
+    def test_xx_1(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Xgate(1) | (q[1])
+            Xgate(1) | (q[1])
+
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == xx_test_1_output, failure_message(result, xx_test_1_output))
+
+    def test_x_z_0(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Xgate(1) | (q[0])
+            Zgate(1) | (q[0])
+
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == x_z_test_0_output, failure_message(result, x_z_test_0_output))
+
+    def test_x_0_z_1(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Xgate(1) | (q[0])
+            Zgate(1) | (q[1])
+
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == x_0_z_1_test_output, failure_message(result, x_0_z_1_test_output))
+
+    def test_z_0(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Zgate(1) | (q[0])
+
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == z_test_0_output, failure_message(result, z_test_0_output))
+
+    def test_z_1(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Zgate(1) | (q[1])
+
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == z_test_1_output, failure_message(result, z_test_1_output))
+
+    def test_zz_1(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Zgate(1) | (q[1])
+            Zgate(1) | (q[1])
+
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == zz_test_1_output, failure_message(result, zz_test_1_output))
+
+    def test_cx(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            CXgate(1) | (q[0], q[1])
+
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == cx_test_output, failure_message(result, cx_test_output))
+
+    def test_cz(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            CZgate(1) | (q[0], q[1])
+
+        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        self.assertTrue(result == cz_test_output, failure_message(result, cz_test_output))
 
 
 if __name__ == '__main__':

@@ -62,11 +62,18 @@ import numpy as np
 import datetime
 import subprocess
 
+
 class ModeMismatchException(Exception):
     pass
 
+
 class UnsupportedGateException(Exception):
     pass
+
+
+class LatexConfigException(Exception):
+    pass
+
 
 class Circuit:
 
@@ -74,7 +81,7 @@ class Circuit:
 
     def __init__(self, wires):
         self._document = ''
-        self._circuit_matrix = np.array([[QUANTUM_WIRE] for wire in range(wires)])
+        self._circuit_matrix = [[QUANTUM_WIRE.format(1)] for wire in range(wires)]
         self._column_spacing = None
         self._row_spacing = None
 
@@ -90,7 +97,7 @@ class Circuit:
         }
 
         self.two_mode_gates = {
-             'CXgate': self.cnot,
+             'CXgate': self.cx,
              'CZgate': self.cz,
              # 'CKgate': self.ck,   coming soon!
              # 'BSgate': self.bs,
@@ -104,16 +111,16 @@ class Circuit:
         method = None
         mode = None
 
-        for single_mode_gate in self.single_mode_gates.keys():
-            if single_mode_gate in operator:
-                method = self.single_mode_gates[single_mode_gate]
-                mode = 1
+        for two_mode_gate in self.two_mode_gates.keys():
+            if two_mode_gate in operator:
+                method = self.two_mode_gates[two_mode_gate]
+                mode = 2
 
         if method is None:
-            for two_mode_gate in self.two_mode_gates.keys():
-                if two_mode_gate in operator:
-                    method = self.two_mode_gates[two_mode_gate]
-                    mode = 2
+            for single_mode_gate in self.single_mode_gates.keys():
+                if single_mode_gate in operator:
+                    method = self.single_mode_gates[single_mode_gate]
+                    mode = 1
 
         return method, mode
 
@@ -128,26 +135,17 @@ class Circuit:
         elif mode != len(wires):
             raise ModeMismatchException(f'{mode} qubit gate applied to {len(wires)} wires!')
 
-    def h(self, wire):
-        self.single_qubit_gate(wire, HADAMARD_COMP)
-
     def x(self, wire):
         self.single_qubit_gate(wire, PAULI_X_COMP)
-
-    def y(self, wire):
-        self.single_qubit_gate(wire, PAULI_Y_COMP)
 
     def z(self, wire):
         self.single_qubit_gate(wire, PAULI_Z_COMP)
 
-    def cnot(self, source_wire, target_wire):
+    def cx(self, source_wire, target_wire):
         self.controlled_qubit_gate(source_wire, target_wire, TARGET)
 
     def cz(self, source_wire, target_wire):
         self.controlled_qubit_gate(source_wire, target_wire, PAULI_Z_COMP)
-
-    def swap(self, source_wire, target_wire):
-        self.multi_qubit_gate(SWAP, [source_wire, target_wire])
 
     # operation types
 
@@ -160,9 +158,9 @@ class Circuit:
         else:
             wire_ops.append(circuit_op)
             for prev_wire in matrix[:wire]:
-                prev_wire.append(QUANTUM_WIRE)
+                prev_wire.append(QUANTUM_WIRE.format(1))
             for post_wire in matrix[wire + 1:]:
-                post_wire.append(QUANTUM_WIRE)
+                post_wire.append(QUANTUM_WIRE.format(1))
 
     def multi_qubit_gate(self, circuit_op, wires):
         matrix = self._circuit_matrix
@@ -190,7 +188,7 @@ class Circuit:
                 elif wire == target_wire:
                     matrix[wire].append(circuit_op)
                 else:
-                    matrix[wire].append(QUANTUM_WIRE)
+                    matrix[wire].append(QUANTUM_WIRE.format(1))
 
     # helpers
 
@@ -207,11 +205,11 @@ class Circuit:
         return empty_column
 
     def add_column(self):
-        self._circuit_matrix = [wire.append(QUANTUM_WIRE) for wire in self._circuit_matrix]
+        self._circuit_matrix = [wire.append(QUANTUM_WIRE.format(1)) for wire in self._circuit_matrix]
 
     @staticmethod
     def is_empty(op):
-        return op == QUANTUM_WIRE
+        return op == QUANTUM_WIRE.format(1)
 
     # cosmetic
 
@@ -250,8 +248,7 @@ class Circuit:
             subprocess.call([f'pdflatex -output-directory {pdf_dir} {tex_dir}/{file_name}.tex'])
             return f'{pdf_dir}/{file_name}.pdf'
         except OSError:
-            print('pdflatex not configured!')
-            return -1
+            raise LatexConfigException('pdflatex not configured!')
 
     def init_document(self):
         self._document = INIT_DOCUMENT
