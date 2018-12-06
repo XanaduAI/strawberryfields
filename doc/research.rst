@@ -48,8 +48,8 @@ We also encourage bug reports, suggestions for new features and enhancements, an
 to $1000 on offer. Submissions close 30th August 2019 — so no excuse not to submit your Strawberry Fields
 contribution, whether its an informative Jupyter notebook, new hardware backend, or a cool research result.
 
-See the [competition website](https://strawberryfields.ai/competition/) or our
-[blog post](https://medium.com/xanaduai/announcing-the-xanadu-quantum-software-competition-bdcd3d6d53a9) for more.
+See the `competition website <https://strawberryfields.ai/competition/>`_ or our
+`blog post <https://medium.com/xanaduai/announcing-the-xanadu-quantum-software-competition-bdcd3d6d53a9>`_ for more.
 
 See our detailed `contributing guidelines <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CONTRIBUTING.md>`_ on GitHub
 for more details, and then check out some of the Strawberry Fields `challenges <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CHALLENGES.md>`_ for some inspiration.
