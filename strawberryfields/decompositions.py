@@ -131,7 +131,7 @@ def clements(V, tol=11):
 
     Args:
         V (array): Unitary matrix of size n_size
-        tol (int): the number of decimal places to use when determining if the matrix is symmetric
+        tol (int): the number of decimal places to use when determining whether the matrix is unitary
 
     Returns:
         tuple[array]: returns a tuple of the form ``(tilist,tlist,np.diag(localV))``
