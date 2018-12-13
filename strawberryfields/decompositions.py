@@ -95,7 +95,7 @@ def nullTi(m, n, U):
     (nmax, mmax) = U.shape
 
     if nmax != mmax:
-        raise ValueError("nmax and mmax must be equal")
+        raise ValueError("U must be a square matrix")
 
     if U[m, n+1] == 0:
         thetar = np.pi/2
@@ -112,7 +112,7 @@ def nullT(n, m, U):
     (nmax, mmax) = U.shape
 
     if nmax != mmax:
-        raise ValueError("nmax and mmax must be equal")
+        raise ValueError("U must be a square matrix")
 
     if U[n-1, m] == 0:
         thetar = np.pi/2
