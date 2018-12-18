@@ -1549,17 +1549,13 @@ class Interferometer(Decomposition):
             self.identity = True
         else:
             self.identity = False
-            self.BS1 = self.BS2 = self.R = None #we do clements lazily during decompose() to save memory and computational time
+            self.BS1, self.BS2, self.R = clements(U, tol=11)
             self.ns = U.shape[0]
 
     def decompose(self, reg):
         cmds = []
 
         if not self.identity:
-            if self.BS1 is None or self.BS2 is None or self.R is None:
-                U = self.p[0].x
-                self.BS1, self.BS2, self.R = clements(U, tol=11)
-
             for n, m, theta, phi, _ in self.BS1:
                 if np.round(phi, 13) != 0:
                     cmds.append(Command(Rgate(phi), reg[n], decomp=True))
