@@ -23,6 +23,7 @@ nsamples=10
 
 
 def random_degenerate_symmetric():
+    np.random.seed(42) #fix seed to make test deterministic
     iis=[1+np.random.randint(2),1+np.random.randint(3),1+np.random.randint(3),1]
     vv=[[i]*iis[i] for i in range(len(iis))]
     dd=np.array(sum(vv, []))

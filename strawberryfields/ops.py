@@ -1556,7 +1556,7 @@ class Interferometer(Decomposition):
         cmds = []
 
         if not self.identity:
-            for n, m, theta, phi, N in self.BS1: # pylint: disable=unused-variable
+            for n, m, theta, phi, _ in self.BS1:
                 if np.round(phi, 13) != 0:
                     cmds.append(Command(Rgate(phi), reg[n], decomp=True))
                 if np.round(theta, 13) != 0:
@@ -1567,7 +1567,7 @@ class Interferometer(Decomposition):
                     q = log(expphi).imag
                     cmds.append(Command(Rgate(q), reg[n], decomp=True))
 
-            for n, m, theta, phi, N in reversed(self.BS2):  # pylint: disable=unused-variable
+            for n, m, theta, phi, _ in reversed(self.BS2):
                 if np.round(theta, 13) != 0:
                     cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m]), decomp=True))
                 if np.round(phi, 13) != 0:

@@ -95,7 +95,7 @@ def nullTi(m, n, U):
     (nmax, mmax) = U.shape
 
     if nmax != mmax:
-        raise ValueError("nmax and mmax must be equal")
+        raise ValueError("U must be a square matrix")
 
     if U[m, n+1] == 0:
         thetar = np.pi/2
@@ -112,7 +112,7 @@ def nullT(n, m, U):
     (nmax, mmax) = U.shape
 
     if nmax != mmax:
-        raise ValueError("nmax and mmax must be equal")
+        raise ValueError("U must be a square matrix")
 
     if U[n-1, m] == 0:
         thetar = np.pi/2
@@ -131,7 +131,7 @@ def clements(V, tol=11):
 
     Args:
         V (array): Unitary matrix of size n_size
-        tol (int): the number of decimal places to use when determining if the matrix is symmetric
+        tol (int): the number of decimal places to use when determining whether the matrix is unitary
 
     Returns:
         tuple[array]: returns a tuple of the form ``(tilist,tlist,np.diag(localV))``
