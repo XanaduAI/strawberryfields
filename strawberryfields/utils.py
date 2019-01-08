@@ -549,9 +549,7 @@ def random_interferometer(N):
 
     Args:
         N (int): number of modes
-        passive (bool): if True, returns a passive Gaussian transformation (i.e.,
-            one that preserves photon number). If False (default), returns an active
-            transformation.
+
     Returns:
         array: random :math:`N\times N` unitary distributed with the Haar measure
     """
