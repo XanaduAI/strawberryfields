@@ -44,6 +44,7 @@ Sgate
 Rgate
 Pgate
 Vgate
+Kgate
 Fouriergate
 
 Two-mode gates
@@ -57,7 +58,8 @@ CKgate
 
 from .qcircuit_strings import QUANTUM_WIRE, PAULI_X_COMP, PAULI_Z_COMP, CONTROL, \
     TARGET, COLUMN_SPACING, ROW_SPACING, DOCUMENT_END, WIRE_OPERATION, WIRE_TERMINATOR, CIRCUIT_BODY_TERMINATOR, \
-    CIRCUIT_BODY_START, INIT_DOCUMENT, PIPE, S_COMP, D_COMP
+    CIRCUIT_BODY_START, INIT_DOCUMENT, PIPE, S_COMP, D_COMP, R_COMP, P_COMP, V_COMP, FOURIER_COMP, BS_COMP, S_COMP, \
+    K_COMP
 import datetime
 import subprocess
 
@@ -89,18 +91,19 @@ class Circuit:
             'Zgate': self.z,
             'Dgate': self.d,
             'Sgate': self.s,
-            # 'Rgate': self.r,   coming soon!
-            # 'Pgate': self.p,
-            # 'Vgate': self.v,
-            # 'FourierGate': self.fourier
+            'Rgate': self.r,
+            'Pgate': self.p,
+            'Vgate': self.v,
+            'Kgate': self.k,
+            'FourierGate': self.fourier
         }
 
         self.two_mode_gates = {
              'CXgate': self.cx,
              'CZgate': self.cz,
-             # 'CKgate': self.ck,   coming soon!
-             # 'BSgate': self.bs,
-             # 'S2gate': self.s2
+             'CKgate': self.ck,
+             'BSgate': self.bs,
+             'S2gate': self.s2
         }
 
     # operations
@@ -146,11 +149,35 @@ class Circuit:
     def d(self, wire):
         self.single_qubit_gate(wire, D_COMP)
 
+    def r(self, wire):
+        self.single_qubit_gate(wire, R_COMP)
+
+    def p(self, wire):
+        self.single_qubit_gate(wire, P_COMP)
+
+    def v(self, wire):
+        self.single_qubit_gate(wire, V_COMP)
+
+    def k(self, wire):
+        self.single_qubit_gate(wire, K_COMP)
+
+    def fourier(self, wire):
+        self.single_qubit_gate(wire, FOURIER_COMP)
+
     def cx(self, source_wire, target_wire):
         self.controlled_qubit_gate(source_wire, target_wire, TARGET)
 
     def cz(self, source_wire, target_wire):
         self.controlled_qubit_gate(source_wire, target_wire, PAULI_Z_COMP)
+
+    def ck(self, source_wire, target_wire):
+        self.controlled_qubit_gate(source_wire, target_wire, K_COMP)
+
+    def bs(self, source_wire, target_wire):
+        self.controlled_qubit_gate(source_wire, target_wire, BS_COMP)
+
+    def s2(self, source_wire, target_wire):
+        self.controlled_qubit_gate(source_wire, target_wire, S_COMP)
 
     # operation types
 
