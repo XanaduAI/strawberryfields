@@ -135,53 +135,53 @@ class Circuit:
         elif mode == len(wires):
             method(*wires)
         elif mode != len(wires):
-            raise ModeMismatchException(f'{mode} qubit gate applied to {len(wires)} wires!')
+            raise ModeMismatchException(f'{mode} mode gate applied to {len(wires)} wires!')
 
     def x(self, wire):
-        self.single_qubit_gate(wire, PAULI_X_COMP)
+        self.single_mode_gate(wire, PAULI_X_COMP)
 
     def z(self, wire):
-        self.single_qubit_gate(wire, PAULI_Z_COMP)
+        self.single_mode_gate(wire, PAULI_Z_COMP)
 
     def s(self, wire):
-        self.single_qubit_gate(wire, S_COMP)
+        self.single_mode_gate(wire, S_COMP)
 
     def d(self, wire):
-        self.single_qubit_gate(wire, D_COMP)
+        self.single_mode_gate(wire, D_COMP)
 
     def r(self, wire):
-        self.single_qubit_gate(wire, R_COMP)
+        self.single_mode_gate(wire, R_COMP)
 
     def p(self, wire):
-        self.single_qubit_gate(wire, P_COMP)
+        self.single_mode_gate(wire, P_COMP)
 
     def v(self, wire):
-        self.single_qubit_gate(wire, V_COMP)
+        self.single_mode_gate(wire, V_COMP)
 
     def k(self, wire):
-        self.single_qubit_gate(wire, K_COMP)
+        self.single_mode_gate(wire, K_COMP)
 
     def fourier(self, wire):
-        self.single_qubit_gate(wire, FOURIER_COMP)
+        self.single_mode_gate(wire, FOURIER_COMP)
 
     def cx(self, source_wire, target_wire):
-        self.controlled_qubit_gate(source_wire, target_wire, TARGET)
+        self.controlled_mode_gate(source_wire, target_wire, TARGET)
 
     def cz(self, source_wire, target_wire):
-        self.controlled_qubit_gate(source_wire, target_wire, PAULI_Z_COMP)
+        self.controlled_mode_gate(source_wire, target_wire, PAULI_Z_COMP)
 
     def ck(self, source_wire, target_wire):
-        self.controlled_qubit_gate(source_wire, target_wire, K_COMP)
+        self.controlled_mode_gate(source_wire, target_wire, K_COMP)
 
     def bs(self, source_wire, target_wire):
-        self.controlled_qubit_gate(source_wire, target_wire, BS_COMP)
+        self.controlled_mode_gate(source_wire, target_wire, BS_COMP)
 
     def s2(self, source_wire, target_wire):
-        self.controlled_qubit_gate(source_wire, target_wire, S_COMP)
+        self.controlled_mode_gate(source_wire, target_wire, S_COMP)
 
     # operation types
 
-    def single_qubit_gate(self, wire, circuit_op):
+    def single_mode_gate(self, wire, circuit_op):
         matrix = self._circuit_matrix
         wire_ops = matrix[wire]
 
@@ -194,7 +194,7 @@ class Circuit:
             for post_wire in matrix[wire + 1:]:
                 post_wire.append(QUANTUM_WIRE.format(1))
 
-    def multi_qubit_gate(self, circuit_op, wires):
+    def multi_mode_gate(self, circuit_op, wires):
         matrix = self._circuit_matrix
 
         if self.on_empty_column():
@@ -204,7 +204,7 @@ class Circuit:
             wire_ops = matrix[wire]
             wire_ops[-1] = circuit_op
 
-    def controlled_qubit_gate(self, source_wire, target_wire, circuit_op):
+    def controlled_mode_gate(self, source_wire, target_wire, circuit_op):
         matrix = self._circuit_matrix
         source_ops = matrix[source_wire]
         target_ops = matrix[target_wire]
