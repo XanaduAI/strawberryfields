@@ -131,11 +131,11 @@ class Circuit:
         wires = list(map(lambda register: register.ind, op.reg))
 
         if method is None:
-            raise UnsupportedGateException(f'Unsupported operation {str(op)} not printable by circuit builder!')
+            raise UnsupportedGateException('Unsupported operation {0} not printable by circuit builder!'.format(str(op)))
         elif mode == len(wires):
             method(*wires)
         elif mode != len(wires):
-            raise ModeMismatchException(f'{mode} mode gate applied to {len(wires)} wires!')
+            raise ModeMismatchException('{0} mode gate applied to {1} wires!'.format(mode, len(wires)))
 
     def x(self, wire):
         self.single_mode_gate(wire, PAULI_X_COMP)
@@ -274,11 +274,11 @@ class Circuit:
 
     def compile_document(self, tex_dir='circuit_tex', pdf_dir='circuit_pdfs'):
         file_name = "output_{0}".format(datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p"))
-        output_file = open(f'{tex_dir}/{file_name}.tex', "w")
+        output_file = open('{0}/{1}.tex'.format(tex_dir, file_name), "w")
         output_file.write(self._document)
         try:
-            subprocess.call([f'pdflatex -output-directory {pdf_dir} {tex_dir}/{file_name}.tex'])
-            return f'{pdf_dir}/{file_name}.pdf'
+            subprocess.call(['pdflatex -output-directory {0} {1}/{2}.tex'.format(pdf_dir, tex_dir, file_name)])
+            return '{0}/{1}.pdf'.format(pdf_dir, file_name)
         except OSError:
             raise LatexConfigException('pdflatex not configured!')
 

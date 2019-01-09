@@ -252,6 +252,7 @@ d_test_1_output = r"""\documentclass{article}
 }
 \end{document}"""
 
+
 def failure_message(result, expected):
-    return f'Discrepancies in circuit builder tex output: \
-    {LINE_RETURN + LINE_RETURN.join(difflib.ndiff([result], [expected]))}'
+    return 'Discrepancies in circuit builder tex output: \
+    {0}'.format(LINE_RETURN + LINE_RETURN.join(difflib.ndiff([result], [expected])))
