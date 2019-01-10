@@ -173,11 +173,11 @@ class Circuit:
     def ck(self, source_wire, target_wire):
         self.controlled_mode_gate(source_wire, target_wire, K_COMP)
 
-    def bs(self, source_wire, target_wire):
-        self.controlled_mode_gate(source_wire, target_wire, BS_COMP)
+    def bs(self, first_wire, second_wire):
+        self.multi_mode_gate(BS_COMP, [first_wire, second_wire])
 
-    def s2(self, source_wire, target_wire):
-        self.controlled_mode_gate(source_wire, target_wire, S_COMP)
+    def s2(self, first_wire, second_wire):
+        self.multi_mode_gate(S_COMP, [first_wire, second_wire])
 
     # operation types
 
@@ -197,12 +197,15 @@ class Circuit:
     def multi_mode_gate(self, circuit_op, wires):
         matrix = self._circuit_matrix
 
-        if self.on_empty_column():
+        if not self.on_empty_column():
             self.add_column()
 
         for wire in wires:
             wire_ops = matrix[wire]
             wire_ops[-1] = circuit_op
+            matrix[wire] = wire_ops
+
+        self._circuit_matrix = matrix
 
     def controlled_mode_gate(self, source_wire, target_wire, circuit_op):
         matrix = self._circuit_matrix
@@ -228,7 +231,7 @@ class Circuit:
         matrix = self._circuit_matrix
 
         empty_column = True
-        for wire in matrix:
+        for wire in range(len(matrix)):
             wire_ops = matrix[wire]
             if not Circuit.is_empty(wire_ops[-1]):
                 empty_column = False

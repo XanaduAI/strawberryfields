@@ -185,7 +185,7 @@ cz_test_output = r"""\documentclass{article}
 bs_test_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \Qcircuit {
- & \ctrl{1} \\
+ & \gate{BS} \\
  & \gate{BS} \\
  & \qw[1] \\
 
@@ -195,7 +195,7 @@ bs_test_output = r"""\documentclass{article}
 s2_test_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \Qcircuit {
- & \ctrl{1} \\
+ & \gate{S} \\
  & \gate{S} \\
  & \qw[1] \\
 
