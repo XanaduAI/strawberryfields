@@ -132,7 +132,7 @@ The Clements decomposition allows any passive Gaussian transformation to be deco
 
     .. math:: O=\begin{bmatrix}X&-Y\\ Y&X\end{bmatrix}\in\mathbb{R}^{2N\times 2N},
 
-    the corresponding unitary matrix :math:`U=X+iY\in\mathbb{R}^{N\times N}` representing a multiport interferometer can be decomposed into a set of :math:`N(N-1)/2` beamsplitters and single mode rotations with circuit depth of :math:`N`.
+    the corresponding unitary matrix :math:`U=X+iY\in\mathbb{C}^{N\times N}` representing a multiport interferometer can be decomposed into a set of :math:`N(N-1)/2` beamsplitters and single mode rotations with circuit depth of :math:`N`.
 
     For more details, see :cite:`clements2016`.
 
