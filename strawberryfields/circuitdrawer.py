@@ -1,8 +1,23 @@
-"""
-Python Qcircuit Builder
-====================
-A Python module that provides an object-oriented interface for building Latex quantum circuit representations
-using the Qcircuit package (https://ctan.org/pkg/qcircuit).
+# Copyright 2019 Xanadu Quantum Technologies Inc.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+r"""
+Circuit drawer
+==============
+
+A Strawberry Fields module that provides an object-oriented interface for building
+quantum circuit representations of continuous-variable circuits using the
+:math:`\LaTeX` `Qcircuit package <https://ctan.org/pkg/qcircuit>`_.
 
 The following features of Qcircuit are currently supported:
 
@@ -11,26 +26,26 @@ Loading Q-circuit
 \input{Qcircuit}
 
 Making Circuits
------------------
+---------------
 \Qcircuit
 
 Spacing
------------------
+-------
 @C=#1
 @R=#1
 
 Wires
------------------
+-----
 \qw[#1]
 
 Gates
------------------
+-----
 \gate {#1}
 \targ
 \qswap
 
 Control
------------------
+-------
 \ctrl{#1}
 
 The drawing of the following Xanadu supported operations will be implemented:

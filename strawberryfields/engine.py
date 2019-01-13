@@ -686,6 +686,20 @@ class Engine:
                 print_fn(c)
 
     def draw_circuit(self, print_queued_ops=True, compile_pdf=False):
+        """Draw the circuit using the Qcircuit latex package.
+
+        This will generate the tex code required to display the queued or applied
+        quantum operations as a quantum circuit. Optionally, if a TeX distribution
+        is installed, the generated latex code can be automatically compiled to a
+        pdf.
+
+        Args:
+            print_queued_ops (bool): by default, the quantum circuit representing
+                the queued quantum operations is drawn. Set this to ``False`` to
+                instead draw the circuit of the previously applied quantum operations.
+            compile_pdf (bool): whether to automatically compile the generated tex
+                code to a PDF.
+        """
         circuit = Circuit(wires=self.init_num_subsystems)
 
         if print_queued_ops:
