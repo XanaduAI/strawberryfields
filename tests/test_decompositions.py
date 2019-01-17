@@ -49,6 +49,18 @@ class DecompositionsModule(BaseTest):
 
         self.assertAlmostEqual(error.mean() , 0)
 
+    def test_graph_embed_random_symm(self):
+        self.logTestName()
+        error=np.empty(nsamples)
+        max_mean_photon = 2
+        for i in range(nsamples):
+            X=random_degenerate_symmetric()
+            sc, U = dec.graph_embed(X, max_mean_photon=max_mean_photon)
+            error[i] = np.sinh(np.max(np.abs(sc)))**2 - max_mean_photon
+            
+        self.assertAlmostEqual(error.mean() , 0)
+
+        
     def test_clements_identity(self):
         self.logTestName()
         n=20

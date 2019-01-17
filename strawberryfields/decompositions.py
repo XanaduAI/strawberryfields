@@ -77,6 +77,38 @@ def takagi(N, tol=13):
     return rl, U
 
 
+def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=6):
+    r""" Given an symmetric adjacency matrix (that can be complex in general),
+    it returns the squeezing parameter and interferometer necessary for
+    implementing it in GBS.
+    Args:
+        mat (array): square symmetric complex (or real or integer) array
+        max_mean_photon (float): therhold value. I guarantees that the mode with
+            the largest squeezing has max_men_photon as mean photon number.
+            i.e. sinh(r_max)^2 == max_mean_photon
+        make_tracelss (boolean): removes the trace of the input matrix.
+        tol (int): the number of decimal places to check the input matrix is symmetric
+    Returns:
+        vals: Squeeazing parameters of the input state to the interferometer
+        U: Unitary matrix representing the interferometer
+    """
+    (m, n) = mat.shape
+    
+    if m != n:
+        raise ValueError("The Matrix is not square")
+    
+    if np.round(np.linalg.norm(mat-np.transpose(mat)), tol) != 0:
+        raise ValueError("The input matrix is not symmetric")
+    
+    if make_traceless == True:
+        A = mat - np.trace(mat)*np.identity(n)/n
+
+    s, U = takagi(A)
+    sc = np.sqrt(1.0+1.0/max_mean_photon)
+    vals = -np.arctanh(s/(s[0]*sc))
+    return vals, U
+
+
 def T(m, n, theta, phi, nmax):
     r"""The Clements T matrix"""
     mat = np.identity(nmax, dtype=np.complex128)
@@ -367,3 +399,5 @@ def hamil_to_covmat(H, tol=10): # pragma: no cover
     l, v = np.linalg.eig(Wi)
     V = (1j * (v @ np.diag(1.0/np.tanh(l.real)) @ np.linalg.inv(v)) @ omega).real
     return V
+
+
