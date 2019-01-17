@@ -214,6 +214,7 @@ Decompositions
 
 .. autosummary::
     Interferometer
+    GraphEmbed
     GaussianTransform
     Gaussian
 
@@ -301,7 +302,7 @@ from .engine import Engine as _Engine, Command, RegRefTransform, MergeFailure
 from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
                          sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2,
                          transpose, squeeze)
-from .decompositions import clements, bloch_messiah, williamson
+from .decompositions import clements, bloch_messiah, williamson, graph_embed
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
@@ -1572,6 +1573,41 @@ class Interferometer(Decomposition):
                     cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m]), decomp=True))
                 if np.round(phi, 13) != 0:
                     cmds.append(Command(Rgate(-phi), reg[n], decomp=True))
+
+        return cmds
+
+
+class GraphEmbed(Decomposition):
+    r"""Embed a graph into an interferometer set up.
+
+    This operation uses the Takagi decomposition to decompose
+    a adjacency matrix into a sequence of squeezers and beamsplitters and
+    rotation gates.
+
+    Args:
+        A (array): an :math:`N\times N` complex symmetric matrix.
+    """
+    ns = None
+    def __init__(self, A, max_mean_photon=1.0, make_traceless=True, tol=6):
+        super().__init__([A])
+
+        if np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol):
+            self.identity = True
+        else:
+            self.identity = False
+            self.sq, self.U = graph_embed(mat, max_mean_photon=max_mean_photon, make_traceless=make_traceless, tol=tol)
+            self.ns = U.shape[0]
+
+    def decompose(self, reg):
+        cmds = []
+
+        if not self.identity:
+            for n, s in enumerate(self.sq):
+                if np.round(s, 13) != 0:
+                    cmds.append(Command(Sgate(s), reg[n], decomp=True))
+                    
+            if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
+				cmd.append(Command(Interferometer(U), reg[n], decomp=True)
 
         return cmds
 
