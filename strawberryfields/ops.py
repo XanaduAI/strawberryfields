@@ -1585,7 +1585,7 @@ class GraphEmbed(Decomposition):
     rotation gates.
 
     Args:
-        A (array): an :math:`N\times N` complex symmetric matrix.
+        A (array): an :math:`N\times N` complex or real symmetric matrix.
     """
     ns = None
     def __init__(self, A, max_mean_photon=1.0, make_traceless=True, tol=6):
@@ -1595,8 +1595,8 @@ class GraphEmbed(Decomposition):
             self.identity = True
         else:
             self.identity = False
-            self.sq, self.U = graph_embed(mat, max_mean_photon=max_mean_photon, make_traceless=make_traceless, tol=tol)
-            self.ns = U.shape[0]
+            self.sq, self.U = graph_embed(A, max_mean_photon=max_mean_photon, make_traceless=make_traceless, tol=tol)
+            self.ns = self.U.shape[0]
 
     def decompose(self, reg):
         cmds = []
@@ -1605,9 +1605,9 @@ class GraphEmbed(Decomposition):
             for n, s in enumerate(self.sq):
                 if np.round(s, 13) != 0:
                     cmds.append(Command(Sgate(s), reg[n], decomp=True))
-                    
-            if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
-				cmd.append(Command(Interferometer(U), reg[n], decomp=True)
+
+            if np.all(np.abs(self.U - np.identity(len(self.U))) >= _decomposition_merge_tol):
+                cmds.append(Command(Interferometer(self.U), reg, decomp=True))
 
         return cmds
 
