@@ -8,11 +8,14 @@ import logging
 logging.getLogger()
 
 import unittest
+import datetime
+from pathlib import Path
 
 from defaults import BaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 
 from draw_circuit_test_utils import *
+from strawberryfields.circuitdrawer import LatexConfigException
 
 
 class CircuitDrawerTests(BaseTest):
@@ -280,6 +283,26 @@ class CircuitDrawerTests(BaseTest):
         result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
         self.assertTrue(result == d_test_1_output, failure_message(result, d_test_1_output))
 
+    def test_compile_pdf(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Dgate(1) | (q[1])
+            Rgate(1) | (q[1])
+            S2gate(1) | (q[0], q[1])
+
+        try:
+            result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=True)
+
+            file_name = "output_{0}".format(datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p"))
+            self.assertTrue('./circuit_pdfs' + file_name == result)
+
+            output_file = Path(result)
+            self.assertTrue(output_file.is_file())
+
+        except LatexConfigException:
+            logging.debug('pdflatex not installed on test system... skipping pdf compile test.')
 
 if __name__ == '__main__':
     print('Testing Strawberry Fields version ' + sf.version() + ', circuit drawer module.')

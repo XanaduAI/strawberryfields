@@ -77,6 +77,7 @@ from .qcircuit_strings import QUANTUM_WIRE, PAULI_X_COMP, PAULI_Z_COMP, CONTROL,
     K_COMP
 import datetime
 import subprocess
+from pathlib import Path
 
 
 class ModeMismatchException(Exception):
@@ -290,9 +291,11 @@ class Circuit:
 
         return self._document
 
-    def compile_document(self, tex_dir='circuit_tex', pdf_dir='circuit_pdfs'):
+    def compile_document(self, tex_dir='/circuit_tex', pdf_dir='/circuit_pdfs'):
+        tex_dir = str(Path.cwd()) + tex_dir
+        pdf_dir = str(Path.cwd()) + pdf_dir
         file_name = "output_{0}".format(datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p"))
-        output_file = open('{0}/{1}.tex'.format(tex_dir, file_name), "w")
+        output_file = open('{0}/{1}.tex'.format(tex_dir, file_name), "w+")
         output_file.write(self._document)
         try:
             subprocess.call(['pdflatex -output-directory {0} {1}/{2}.tex'.format(pdf_dir, tex_dir, file_name)])
