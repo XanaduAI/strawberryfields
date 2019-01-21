@@ -278,16 +278,30 @@ def bloch_messiah(S, tol=10):
     ## Apply a second permutation matrix to permute s
     ## (and their corresonding inverses) to get the canonical symplectic form
     qomega = np.transpose(ut) @ (omega) @ ut
-    perm1 = list(range(2*n))
+    st = pmat @ np.diag(ss) @ pmat
 
-    for i in range(n):
-        if qomega[i, i+n] < 0:
-            perm1[i] = i+n
-            perm1[i+n] = i
+    # Identifying degenrate subspaces
+    result = []
+    for _k, g in groupby(np.diag(st)[:n]):
+        result.append(list(g))
 
-    perm1 = np.array(perm1)
-    pmat1 = np.identity(2*n)[perm1, :]
-    st1 = pmat1 @ pmat @ np.diag(ss) @ pmat @ pmat1
+    stop_is = list(np.cumsum([len(res) for res in result]))
+    start_is = [0] + stop_is[:-1]
+
+    # Rotation matrices (not permutations) based on svd.
+    # See Appending B2 of Serafini's book for more details.
+    u_list, v_list = [], []
+
+    for start_i, stop_i in zip(start_is, stop_is):
+        x = qomega[start_i: stop_i, n + start_i: n + stop_i]
+        print(start_i, stop_i, x)
+        u_svd, _s_svd, v_svd = np.linalg.svd(x)
+        u_list = u_list + [u_svd]
+        v_list = v_list + [v_svd.T]
+
+    pmat1 = block_diag(*(u_list + v_list))
+
+    st1 = pmat1.T @ pmat @ np.diag(ss) @ pmat @ pmat1
     ut1 = uss @ pmat @ pmat1
     v1 = np.transpose(ut1) @ u
     return ut1, st1, v1
