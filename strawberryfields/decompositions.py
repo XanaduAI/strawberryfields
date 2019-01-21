@@ -293,7 +293,7 @@ def bloch_messiah(S, tol=10):
     u_list, v_list = [], []
 
     for start_i, stop_i in zip(start_is, stop_is):
-        x = qomega[start_i: stop_i, n + start_i: n + stop_i]
+        x = qomega[start_i: stop_i, n + start_i: n + stop_i].real
         u_svd, _s_svd, v_svd = np.linalg.svd(x)
         u_list = u_list + [u_svd]
         v_list = v_list + [v_svd.T]
