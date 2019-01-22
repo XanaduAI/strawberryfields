@@ -229,7 +229,7 @@ def williamson(V, tol=11):
     return Db, np.linalg.inv(S).T
 
 
-def bloch_messiah(S, tol=10):
+def bloch_messiah(S, tol=10, rounding = 9):
     r""" Performs the Bloch-Messiah decomposition of a symplectic matrix in terms of
     two symplectic unitaries and squeezing transformation.
 
@@ -240,6 +240,9 @@ def bloch_messiah(S, tol=10):
     ..math:: \Omega = \begin{bmatrix}0&I\\-I&0\end{bmatrix}
 
     where :math:`I` is the identity matrix and :math:`0` is the zero matrix.
+
+    As in the Takagi decomposition, the singular values of N are considered
+    equal if they are equal after np.round(values, rounding).
 
     For more info see:
     https://math.stackexchange.com/questions/1886038/finding-euler-decomposition-of-a-symplectic-matrix
@@ -282,7 +285,7 @@ def bloch_messiah(S, tol=10):
 
     # Identifying degenrate subspaces
     result = []
-    for _k, g in groupby(np.diag(st)[:n]):
+    for _k, g in groupby(np.round(np.diag(st), rounding)[:n]):
         result.append(list(g))
 
     stop_is = list(np.cumsum([len(res) for res in result]))

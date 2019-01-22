@@ -32,6 +32,42 @@ def random_degenerate_symmetric():
     symmat=U @ np.diag(dd) @ np.transpose(U)
     return symmat
 
+def random_degen_symplectic(N, passive=False):
+    r"""Returns a random symplectic matrix with degenerate symplectic values
+
+    The squeezing parameters :math:`r` for active transformations are randomly
+    sampled from the standard normal distribution and repeated uniform-randomly
+    many times, while passive transformations are randomly sampled from the Haar
+    measure.
+
+    Args:
+        N (int): number of modes
+        passive (bool): if True, returns a passive Gaussian transformation (i.e.,
+            one that preserves photon number). If False (default), returns an active
+            transformation.
+    Returns:
+        array: random :math:`2N\times 2N` symplectic matrix
+    """
+    U = random_interferometer(N)
+    O = np.vstack([np.hstack([U.real, -U.imag]), np.hstack([U.imag, U.real])])
+
+    if passive:
+        return O
+
+    U = random_interferometer(N)
+    P = np.vstack([np.hstack([U.real, -U.imag]), np.hstack([U.imag, U.real])])
+
+    # Generate list of normal random numbers repeated randomly-many times.
+    # Then take the first N values of this list.
+    rep_list = []
+    for _ in range(N):
+        rep_list.append(np.random.randint(1,N))
+    r = np.hstack([np.repeat(np.random.randn(1),rep) for rep in rep_list])[:N]
+
+    Sq = np.diag(np.concatenate([np.exp(-r), np.exp(r)]))
+
+    return O @ Sq @ P
+
 
 class DecompositionsModule(BaseTest):
     num_subsystems = 1
@@ -113,6 +149,24 @@ class DecompositionsModule(BaseTest):
             self.assertAlmostEqual(np.linalg.norm(np.transpose(s) @ omega @ s -omega),0)
             self.assertAlmostEqual(np.linalg.norm(O @ s @Oo -S),0)
 
+    def test_BM_random_degen_symplectic(self):
+        self.logTestName()
+        for k in range(nsamples):
+            n=20
+            S = random_degen_symplectic(n)
+            O, s, Oo = dec.bloch_messiah(S)
+            omega = dec.sympmat(n)
+
+            self.assertAlmostEqual(np.linalg.norm(S @ omega @ S.T -omega),0)
+    
+            self.assertAlmostEqual(np.linalg.norm(np.transpose(O) @ omega @ O -omega),0)
+            self.assertAlmostEqual(np.linalg.norm(np.transpose(O) @ O -np.identity(2*n)),0)
+
+            self.assertAlmostEqual(np.linalg.norm(np.transpose(Oo) @ omega @ Oo -omega),0)
+            self.assertAlmostEqual(np.linalg.norm(np.transpose(Oo) @ Oo -np.identity(2*n)),0)
+            self.assertAlmostEqual(np.linalg.norm(np.transpose(s) @ omega @ s -omega),0)
+            self.assertAlmostEqual(np.linalg.norm(O @ s @Oo -S),0)
+
     def test_williamson_BM_random_circuit_pure(self):
         self.logTestName()
         for k in range(nsamples):
@@ -130,8 +184,6 @@ class DecompositionsModule(BaseTest):
 
             self.assertAlmostEqual(np.linalg.norm(S @ omega @ S.T -omega),0)
             self.assertAlmostEqual(np.linalg.norm(S @ D @ S.T -V),0)
-
-
 
             O, s, Oo = dec.bloch_messiah(S)
             self.assertAlmostEqual(np.linalg.norm(np.transpose(O) @ omega @ O -omega),0)
