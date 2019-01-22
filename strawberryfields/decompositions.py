@@ -86,7 +86,7 @@ def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=6):
         mat (array): square symmetric complex (or real or integer) array
         max_mean_photon (float): threshold value. It guarantees that the mode with
             the largest squeezing has ``max_mean_photon`` as the mean photon number
-            i.e. :math:`sinh(r_{max})^2 == max_mean_photon`
+            i.e., :math:`sinh(r_{max})^2 == max_mean_photon`
         make_traceless (boolean): removes the trace of the input matrix.
         tol (int): the number of decimal places to check the input matrix is symmetric
 
