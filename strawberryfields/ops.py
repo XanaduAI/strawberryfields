@@ -1541,16 +1541,18 @@ class Interferometer(Decomposition):
 
     Args:
         U (array): an :math:`N\times N` complex unitary matrix.
+        tol (float): the tolerance used when checking if the matrix is unitary:
+            :math:`|UU^\dagger-I| \leq tol`
     """
     ns = None
-    def __init__(self, U):
+    def __init__(self, U, tol=1e-11):
         super().__init__([U])
 
         if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
             self.identity = True
         else:
             self.identity = False
-            self.BS1, self.BS2, self.R = clements(U, tol=11)
+            self.BS1, self.BS2, self.R = clements(U, tol=tol)
             self.ns = U.shape[0]
 
     def decompose(self, reg):
@@ -1558,20 +1560,20 @@ class Interferometer(Decomposition):
 
         if not self.identity:
             for n, m, theta, phi, _ in self.BS1:
-                if np.round(phi, 13) != 0:
+                if np.abs(phi) >= _decomposition_merge_tol:
                     cmds.append(Command(Rgate(phi), reg[n], decomp=True))
-                if np.round(theta, 13) != 0:
+                if np.abs(theta) >= _decomposition_merge_tol:
                     cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m]), decomp=True))
 
             for n, expphi in enumerate(self.R):
-                if np.round(expphi, 13) != 1.0:
+                if np.abs(expphi - 1) >= _decomposition_merge_tol:
                     q = log(expphi).imag
                     cmds.append(Command(Rgate(q), reg[n], decomp=True))
 
             for n, m, theta, phi, _ in reversed(self.BS2):
-                if np.round(theta, 13) != 0:
+                if np.abs(theta) >= _decomposition_merge_tol:
                     cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m]), decomp=True))
-                if np.round(phi, 13) != 0:
+                if np.abs(phi) >= _decomposition_merge_tol:
                     cmds.append(Command(Rgate(-phi), reg[n], decomp=True))
 
         return cmds
@@ -1586,9 +1588,15 @@ class GraphEmbed(Decomposition):
 
     Args:
         A (array): an :math:`N\times N` complex or real symmetric matrix
+        max_mean_photon (float): threshold value. It guarantees that the mode with
+            the largest squeezing has ``max_mean_photon`` as the mean photon number
+            i.e., :math:`sinh(r_{max})^2 == max_mean_photon`
+        make_traceless (boolean): removes the trace of the input matrix
+        tol (float): the tolerance used when checking if the input matrix is symmetric:
+            :math:`|A-A^T| < tol`
     """
     ns = None
-    def __init__(self, A, max_mean_photon=1.0, make_traceless=True, tol=6):
+    def __init__(self, A, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
         super().__init__([A])
 
         if np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol):
@@ -1603,7 +1611,7 @@ class GraphEmbed(Decomposition):
 
         if not self.identity:
             for n, s in enumerate(self.sq):
-                if np.round(s, 13) != 0:
+                if np.abs(s) >= _decomposition_merge_tol:
                     cmds.append(Command(Sgate(s), reg[n], decomp=True))
 
             if np.all(np.abs(self.U - np.identity(len(self.U))) >= _decomposition_merge_tol):
@@ -1646,9 +1654,11 @@ class GaussianTransform(Decomposition):
             context, the hbar value of the engine will override this keyword argument.
         vacuum (bool): set to True if acting on a vacuum state. In this case, :math:`O_2 V O_2^T = I`,
             and the unitary associated with orthogonal symplectic :math:`O_2` will be ignored.
+        tol (float): the tolerance used when checking if the matrix is symplectic:
+            :math:`|S^T\Omega S-\Omega| \leq tol`
     """
     ns = None
-    def __init__(self, S, hbar=None, vacuum=False):
+    def __init__(self, S, hbar=None, vacuum=False, tol=1e-10):
         super().__init__([S])
 
         try:
@@ -1665,7 +1675,7 @@ class GaussianTransform(Decomposition):
         # check if input symplectic is passive (orthogonal)
         diffn = np.linalg.norm(S @ S.T - np.identity(2*N))
 
-        if np.round(diffn, 11) == 0.0:
+        if np.abs(diffn) <= _decomposition_merge_tol:
             # The transformation is passive, do Clements
             self.active = False
             X1 = S[:N, :N]
@@ -1674,7 +1684,7 @@ class GaussianTransform(Decomposition):
         else:
             # transformation is active, do Bloch-Messiah
             self.active = True
-            O1, smat, O2 = bloch_messiah(S, tol=10)
+            O1, smat, O2 = bloch_messiah(S, tol=tol)
             N = S.shape[0]//2
 
             X1 = O1[:N, :N]
@@ -1697,7 +1707,7 @@ class GaussianTransform(Decomposition):
                 cmds = [Command(Interferometer(self.U2), reg, decomp=True)]
 
             for n, expr in enumerate(self.Sq):
-                if np.abs(np.round(expr, 13)) != 1.0:
+                if np.abs(expr - 1) >= _decomposition_merge_tol:
                     r = abs(log(expr))
                     phi = np.angle(log(expr))
                     cmds.append(Command(Sgate(-r, phi), reg[n], decomp=True))
@@ -1737,10 +1747,11 @@ class Gaussian(Preparation, Decomposition):
         hbar (float): the value of :math:`\hbar` used in the definition of the :math:`\x`
             and :math:`\p` quadrature operators. Note that if used inside of an engine
             context, the hbar value of the engine will override this keyword argument.
+        tol (float): the tolerance used when checking if the matrix is symmetric: :math:`|V-V^T| \leq tol`
     """
     # pylint: disable=too-many-instance-attributes
     ns = None
-    def __init__(self, V, r=None, decomp=True, hbar=None):
+    def __init__(self, V, r=None, decomp=True, hbar=None, tol=1e-6):
         try:
             self.hbar = _Engine._current_context.hbar
         except AttributeError:
@@ -1766,8 +1777,8 @@ class Gaussian(Preparation, Decomposition):
         self.decomp = False
         if decomp:
             self.decomp = True
-            th, self.S = williamson(V, tol=11)
-            self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < 1e-6
+            th, self.S = williamson(V, tol=tol)
+            self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < tol
             self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
 
         super().__init__([V, r])
@@ -1796,7 +1807,7 @@ class Gaussian(Preparation, Decomposition):
         if self.pure and is_diag:
             # covariance matrix consists of x/p quadrature squeezed state
             for n, expr in enumerate(D[:self.ns]*2/self.hbar):
-                if np.abs(np.round(expr, 13)) != 1.0:
+                if np.abs(expr - 1) >= _decomposition_merge_tol:
                     r = abs(log(expr)/2)
                     cmds.append(Command(Sgate(r, 0), reg[n], decomp=True))
 
@@ -1811,14 +1822,14 @@ class Gaussian(Preparation, Decomposition):
         elif not self.pure and is_diag and np.all(D[:self.ns] == D[self.ns:]):
             # covariance matrix consists of thermal states
             for n, nbar in enumerate(D[:self.ns]/self.hbar - 0.5):
-                if np.round(nbar, 13) != 0:
+                if nbar >= _decomposition_merge_tol:
                     cmds.append(Command(Thermal(nbar), reg[n], decomp=True))
 
         else:
             if not self.pure:
                 # mixed state, must initialise thermal states
                 for n, nbar in enumerate(self.nbar):
-                    if np.round(nbar, 13) != 0:
+                    if np.abs(nbar) >= _decomposition_merge_tol:
                         cmds.append(Command(Thermal(nbar), reg[n], decomp=True))
 
             cmds.append(

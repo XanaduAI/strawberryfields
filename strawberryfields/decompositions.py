@@ -77,7 +77,7 @@ def takagi(N, tol=13):
     return rl, U
 
 
-def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=6):
+def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
     r""" Given an symmetric adjacency matrix (that can be complex in general),
     it returns the squeezing parameters and interferometer necessary for
     implementing it in GBS.
@@ -88,7 +88,7 @@ def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=6):
             the largest squeezing has ``max_mean_photon`` as the mean photon number
             i.e., :math:`sinh(r_{max})^2 == max_mean_photon`
         make_traceless (boolean): removes the trace of the input matrix.
-        tol (int): the number of decimal places used to verify that the input matrix is symmetric
+        tol (float): the tolerance used when checking if the input matrix is symmetric: :math:`|mat-mat^T| < tol`
 
     Returns:
         tuple(array, array): tuple containing the squeezing parameters of the input
@@ -99,7 +99,7 @@ def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=6):
     if m != n:
         raise ValueError("The Matrix is not square")
 
-    if np.round(np.linalg.norm(mat-np.transpose(mat)), tol) != 0:
+    if np.linalg.norm(mat-np.transpose(mat)) >= tol:
         raise ValueError("The input matrix is not symmetric")
 
     if make_traceless:
@@ -158,14 +158,15 @@ def nullT(n, m, U):
 
     return [n-1, n, thetar, phir, nmax]
 
-def clements(V, tol=11):
+def clements(V, tol=1e-11):
     r"""Performs the Clements decomposition of a Unitary complex matrix.
 
     See Clements et al. Optica 3, 1460 (2016) [10.1364/OPTICA.3.001460] for more details.
 
     Args:
         V (array): Unitary matrix of size n_size
-        tol (int): the number of decimal places to use when determining whether the matrix is unitary
+        tol (float): the tolerance used when checking if the matrix is unitary:
+            :math:`|VV^\dagger-I| \leq tol`
 
     Returns:
         tuple[array]: returns a tuple of the form ``(tilist,tlist,np.diag(localV))``
@@ -179,7 +180,7 @@ def clements(V, tol=11):
     (nsize, _) = localV.shape
 
     diffn = np.linalg.norm(V @ V.conj().T - np.identity(nsize))
-    if np.round(diffn, tol) != 0.0:
+    if diffn >= tol:
         raise ValueError("The input matrix is not unitary")
 
     tilist = []
@@ -197,7 +198,7 @@ def clements(V, tol=11):
     return tilist, tlist, np.diag(localV)
 
 
-def williamson(V, tol=11):
+def williamson(V, tol=1e-11):
     r"""Performs the Williamson decomposition of positive definite (real) symmetric matrix.
 
     Note that it is assumed that the symplectic form is
@@ -210,7 +211,7 @@ def williamson(V, tol=11):
 
     Args:
         V (array): A positive definite symmetric (real) matrix V
-        tol (int): the number of decimal places to use when determining if the matrix is symmetric
+        tol (float): the tolerance used when checking if the matrix is symmetric: :math:`|V-V^T| \leq tol`
 
     Returns:
         tuple(array,array): Returns a tuple ``(Db, S)`` where ``Db`` is a diagonal matrix
@@ -219,7 +220,7 @@ def williamson(V, tol=11):
     (n, m) = V.shape
     diffn = np.linalg.norm(V-np.transpose(V))
 
-    if np.round(diffn, tol) != 0.0:
+    if diffn >= tol:
         raise ValueError("The input matrix is not symmetric")
     if n != m:
         raise ValueError("The input matrix is not square")
@@ -263,7 +264,7 @@ def williamson(V, tol=11):
     return Db, np.linalg.inv(S).T
 
 
-def bloch_messiah(S, tol=10):
+def bloch_messiah(S, tol=1e-10):
     r""" Performs the Bloch-Messiah decomposition of a symplectic matrix in terms of
     two symplectic unitaries and squeezing transformation.
 
@@ -280,7 +281,8 @@ def bloch_messiah(S, tol=10):
 
     Args:
         S (array): A symplectic matrix S
-        tol (int): the number of decimal places to use when determining if the matrix is symplectic
+        tol (float): the tolerance used when checking if the matrix is symplectic:
+            :math:`|S^T\Omega S-\Omega| \leq tol`
 
     Returns:
         tuple[array]: Returns the tuple ``(ut1, st1, vt1)``. ``ut1`` and ``vt1`` are symplectic unitaries,
@@ -296,7 +298,7 @@ def bloch_messiah(S, tol=10):
 
     n = n//2
     omega = sympmat(n)
-    if np.round(np.linalg.norm(np.transpose(S) @ omega @ S - omega), tol) != 0.0:
+    if np.linalg.norm(np.transpose(S) @ omega @ S - omega) >= tol:
         raise ValueError("The input matrix is not symplectic")
 
     u, sigma = polar(S, side='left')

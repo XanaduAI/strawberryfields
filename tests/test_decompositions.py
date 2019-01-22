@@ -240,9 +240,17 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
 
         state = self.eng.run()
         Amat = self.eng.backend.circuit.Amat()
+        N = self.num_subsystems
 
-        ratio = np.real_if_close(Amat[self.num_subsystems:, self.num_subsystems:]/self.A)
-        self.assertAllAlmostEqual(ratio, np.ones([self.num_subsystems, self.num_subsystems])*ratio[0, 0], delta=self.tol)
+        # check that the matrix Amat is constructed to be of the form
+        # Amat = [[B^, 0], [0, B]]
+        self.assertAllAlmostEqual(Amat[:N, :N], Amat[N:, N:].conj().T, delta=self.tol)
+        self.assertAllAlmostEqual(Amat[:N, N:], np.zeros([N, N]), delta=self.tol)
+        self.assertAllAlmostEqual(Amat[N:, :N], np.zeros([N, N]), delta=self.tol)
+
+        ratio = np.real_if_close(Amat[N:, N:]/self.A)
+        ratio /= ratio[0, 0]
+        self.assertAllAlmostEqual(ratio, np.ones([N, N]), delta=self.tol)
 
     def test_graph_embed_identity(self):
         """Test that nothing is done if the adjacency matrix is the identity"""
