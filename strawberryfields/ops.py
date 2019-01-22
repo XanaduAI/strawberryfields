@@ -1578,14 +1578,14 @@ class Interferometer(Decomposition):
 
 
 class GraphEmbed(Decomposition):
-    r"""Embed a graph into an interferometer set up.
+    r"""Embed a graph into an interferometer setup.
 
     This operation uses the Takagi decomposition to decompose
-    a adjacency matrix into a sequence of squeezers and beamsplitters and
+    an adjacency matrix into a sequence of squeezers and beamsplitters and
     rotation gates.
 
     Args:
-        A (array): an :math:`N\times N` complex or real symmetric matrix.
+        A (array): an :math:`N\times N` complex or real symmetric matrix
     """
     ns = None
     def __init__(self, A, max_mean_photon=1.0, make_traceless=True, tol=6):

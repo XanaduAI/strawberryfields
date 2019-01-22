@@ -88,10 +88,10 @@ def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=6):
             the largest squeezing has ``max_mean_photon`` as the mean photon number
             i.e., :math:`sinh(r_{max})^2 == max_mean_photon`
         make_traceless (boolean): removes the trace of the input matrix.
-        tol (int): the number of decimal places to check the input matrix is symmetric
+        tol (int): the number of decimal places used to verify that the input matrix is symmetric
 
     Returns:
-        tuple(array, array): Tuple containing the squeezing parameters of the input
+        tuple(array, array): tuple containing the squeezing parameters of the input
         state to the interferometer, and the unitary matrix representing the interferometer
     """
     (m, n) = mat.shape

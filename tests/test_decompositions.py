@@ -229,7 +229,7 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
 
     def test_graph_embed(self):
         """Test that embedding a traceless adjacency matrix A
-        reults in the property Amat/A = c J, where c is a real constant,
+        results in the property Amat/A = c J, where c is a real constant,
         and J is the all ones matrix"""
         self.logTestName()
         self.eng.reset()
