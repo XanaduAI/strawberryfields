@@ -243,7 +243,7 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
         N = self.num_subsystems
 
         # check that the matrix Amat is constructed to be of the form
-        # Amat = [[B^, 0], [0, B]]
+        # Amat = [[B^\dagger, 0], [0, B]]
         self.assertAllAlmostEqual(Amat[:N, :N], Amat[N:, N:].conj().T, delta=self.tol)
         self.assertAllAlmostEqual(Amat[:N, N:], np.zeros([N, N]), delta=self.tol)
         self.assertAllAlmostEqual(Amat[N:, :N], np.zeros([N, N]), delta=self.tol)
