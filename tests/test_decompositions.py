@@ -50,6 +50,7 @@ class DecompositionsModule(BaseTest):
         self.assertAlmostEqual(error.mean() , 0)
 
     def test_takagi_fixed_random_symm(self):
+        """This test verifies that the maximum amount of squeezing used to encode the graph is indeed capped by the parameter max_mean_photon"""
         self.logTestName()
         error=np.empty(nsamples)
         max_mean_photon = 2
