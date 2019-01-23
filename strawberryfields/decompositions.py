@@ -80,7 +80,7 @@ def takagi(N, tol=13):
 def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
     r""" Given an symmetric adjacency matrix (that can be complex in general),
     it returns the squeezing parameters and interferometer necessary for
-    implementing it in GBS.
+    creating the Gaussian state whose off-diagonal parts are proportional to that matrix.
 
     Args:
         mat (array): square symmetric complex (or real or integer) array representing a (weighted) adjacency matrix of a graph
