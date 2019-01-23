@@ -59,7 +59,7 @@ class DecompositionsModule(BaseTest):
             sc, U = dec.graph_embed(X, max_mean_photon=max_mean_photon)
             error[i] = np.sinh(np.max(np.abs(sc)))**2 - max_mean_photon
 
-        self.assertAlmostEqual(error.mean() , 0)
+        self.assertAlmostEqual(error.mean(), 0, delta=self.tol)
 
 
     def test_clements_identity(self):
