@@ -21,7 +21,7 @@ from scipy.linalg import block_diag, sqrtm, polar, schur
 from .backends.shared_ops import sympmat, changebasis
 
 
-def takagi(N, tol=13):
+def takagi(N, tol=1e-13):
     r"""Computes the Autonne-Takagi decomposition of a complex symmetric (not Hermitian!) matrix.
 
     Note that singular values of N are considered equal if they are equal after np.round(values, tol).
@@ -39,7 +39,7 @@ def takagi(N, tol=13):
     (n, m) = N.shape
     if n != m:
         raise ValueError("The input matrix must be square")
-    if np.round(np.linalg.norm(N-np.transpose(N)), tol) != 0:
+    if np.linalg.norm(N-np.transpose(N)) >= tol:
         raise ValueError("The input matrix is not symmetric")
 
     v, l, ws = np.linalg.svd(N)
@@ -78,7 +78,8 @@ def takagi(N, tol=13):
 
 
 def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
-    r""" Given an symmetric adjacency matrix (that can be complex in general),
+    r""" Given an symmetric adjacency matrix (in general, with arbitrary complex off-diagonal and
+    real diagonal entries),
     it returns the squeezing parameters and interferometer necessary for
     creating the Gaussian state whose off-diagonal parts are proportional to that matrix.
 
@@ -331,7 +332,7 @@ def bloch_messiah(S, tol=1e-10):
     return ut1, st1, v1
 
 
-def covmat_to_hamil(V, tol=10): # pragma: no cover
+def covmat_to_hamil(V, tol=1e-10): # pragma: no cover
     r"""Converts a covariance matrix to a Hamiltonian.
 
     Given a covariance matrix V of a Gaussian state :math:`\rho` in the xp ordering,
@@ -354,8 +355,8 @@ def covmat_to_hamil(V, tol=10): # pragma: no cover
     (n, m) = V.shape
     if n != m:
         raise ValueError("Input matrix must be square")
-    if np.round(np.linalg.norm(V-V.T), tol) != 0:
-        raise ValueError("Input matrix must be symmetric")
+    if np.linalg.norm(V-np.transpose(V)) >= tol:
+        raise ValueError("The input matrix is not symmetric")
 
     n = n//2
     omega = sympmat(n)
@@ -372,7 +373,7 @@ def covmat_to_hamil(V, tol=10): # pragma: no cover
     return H
 
 
-def hamil_to_covmat(H, tol=10): # pragma: no cover
+def hamil_to_covmat(H, tol=1e-10): # pragma: no cover
     r"""Converts a Hamiltonian matrix to a covariance matrix.
 
     Given a Hamiltonian matrix of a Gaussian state H, finds the equivalent covariance matrix
@@ -390,8 +391,8 @@ def hamil_to_covmat(H, tol=10): # pragma: no cover
     (n, m) = H.shape
     if n != m:
         raise ValueError("Input matrix must be square")
-    if np.round(np.linalg.norm(H-H.T), tol) != 0:
-        raise ValueError("Input matrix must be symmetric")
+    if np.linalg.norm(H-np.transpose(H)) >= tol:
+        raise ValueError("The input matrix is not symmetric")
 
     vals = np.linalg.eigvalsh(H)
     for val in vals:
