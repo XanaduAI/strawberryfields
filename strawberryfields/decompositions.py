@@ -83,11 +83,13 @@ def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
     implementing it in GBS.
 
     Args:
-        mat (array): square symmetric complex (or real or integer) array
+        mat (array): square symmetric complex (or real or integer) array representing a (weighted) adjacency matrix of a graph
         max_mean_photon (float): threshold value. It guarantees that the mode with
             the largest squeezing has ``max_mean_photon`` as the mean photon number
             i.e., :math:`sinh(r_{max})^2 == max_mean_photon`
-        make_traceless (boolean): removes the trace of the input matrix.
+        make_traceless (boolean): removes the trace of the input matrix, by performing the transformation
+            :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
+            the graph.
         tol (float): the tolerance used when checking if the input matrix is symmetric: :math:`|mat-mat^T| < tol`
 
     Returns:
