@@ -21,7 +21,7 @@ from scipy.linalg import block_diag, sqrtm, polar, schur
 from .backends.shared_ops import sympmat, changebasis
 
 
-def takagi(N, tol=1e-13):
+def takagi(N, tol=1e-13, rounding=13):
     r"""Computes the Autonne-Takagi decomposition of a complex symmetric (not Hermitian!) matrix.
 
     Note that singular values of N are considered equal if they are equal after np.round(values, tol).
@@ -31,7 +31,9 @@ def takagi(N, tol=1e-13):
 
     Args:
         N (array): square, symmetric complex numpy array N
-        tol (int): the number of decimal places to use when rounding the singular values of N
+        rounding (int): the number of decimal places to use when rounding the singular values of N
+        tol (float): the tolerance used when checking if the input matrix is symmetric: :math:`|N-N^T| < tol`
+
     Returns:
         tuple(array,array): Returns the tuple (rl, U), where rl are the
             (rounded) singular values, and U is the Takagi unitary ``N = U @ np.diag(l) @ np.transpose(U)``
@@ -44,7 +46,7 @@ def takagi(N, tol=1e-13):
 
     v, l, ws = np.linalg.svd(N)
     w = np.transpose(np.conjugate(ws))
-    rl = np.round(l, tol)
+    rl = np.round(l, rounding)
 
     ## Generate list with degenerancies
     result = []
@@ -108,7 +110,7 @@ def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
     if make_traceless:
         A = mat - np.trace(mat)*np.identity(n)/n
 
-    s, U = takagi(A)
+    s, U = takagi(A, tol=tol)
     sc = np.sqrt(1.0+1.0/max_mean_photon)
     vals = -np.arctanh(s/(s[0]*sc))
     return vals, U
@@ -305,7 +307,7 @@ def bloch_messiah(S, tol=1e-10):
         raise ValueError("The input matrix is not symplectic")
 
     u, sigma = polar(S, side='left')
-    ss, uss = takagi(sigma)
+    ss, uss = takagi(sigma, tol=tol)
 
     ## Apply a permutation matrix so that the squeezers appear in the order
     ## s_1,...,s_n, 1/s_1,...1/s_n
