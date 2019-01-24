@@ -21,7 +21,7 @@ from scipy.linalg import block_diag, sqrtm, polar, schur
 from .backends.shared_ops import sympmat, changebasis
 
 
-def takagi(N, tol=13):
+def takagi(N, tol=1e-13, rounding=13):
     r"""Computes the Autonne-Takagi decomposition of a complex symmetric (not Hermitian!) matrix.
 
     Note that singular values of N are considered equal if they are equal after np.round(values, tol).
@@ -31,7 +31,9 @@ def takagi(N, tol=13):
 
     Args:
         N (array): square, symmetric complex numpy array N
-        tol (int): the number of decimal places to use when rounding the singular values of N
+        rounding (int): the number of decimal places to use when rounding the singular values of N
+        tol (float): the tolerance used when checking if the input matrix is symmetric: :math:`|N-N^T| < tol`
+
     Returns:
         tuple(array,array): Returns the tuple (rl, U), where rl are the
             (rounded) singular values, and U is the Takagi unitary ``N = U @ np.diag(l) @ np.transpose(U)``
@@ -39,12 +41,12 @@ def takagi(N, tol=13):
     (n, m) = N.shape
     if n != m:
         raise ValueError("The input matrix must be square")
-    if np.round(np.linalg.norm(N-np.transpose(N)), tol) != 0:
+    if np.linalg.norm(N-np.transpose(N)) >= tol:
         raise ValueError("The input matrix is not symmetric")
 
     v, l, ws = np.linalg.svd(N)
     w = np.transpose(np.conjugate(ws))
-    rl = np.round(l, tol)
+    rl = np.round(l, rounding)
 
     ## Generate list with degenerancies
     result = []
@@ -75,6 +77,43 @@ def takagi(N, tol=13):
 
     U = v @ np.conj(qb)
     return rl, U
+
+
+def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
+    r""" Given an symmetric adjacency matrix (in general, with arbitrary complex off-diagonal and
+    real diagonal entries),
+    it returns the squeezing parameters and interferometer necessary for
+    creating the Gaussian state whose off-diagonal parts are proportional to that matrix.
+
+    Args:
+        mat (array): square symmetric complex (or real or integer) array representing a (weighted) adjacency matrix of a graph
+        max_mean_photon (float): threshold value. It guarantees that the mode with
+            the largest squeezing has ``max_mean_photon`` as the mean photon number
+            i.e., :math:`sinh(r_{max})^2 == max_mean_photon`
+        make_traceless (boolean): removes the trace of the input matrix, by performing the transformation
+            :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
+            the graph.
+        tol (float): the tolerance used when checking if the input matrix is symmetric: :math:`|mat-mat^T| < tol`
+
+    Returns:
+        tuple(array, array): tuple containing the squeezing parameters of the input
+        state to the interferometer, and the unitary matrix representing the interferometer
+    """
+    (m, n) = mat.shape
+
+    if m != n:
+        raise ValueError("The Matrix is not square")
+
+    if np.linalg.norm(mat-np.transpose(mat)) >= tol:
+        raise ValueError("The input matrix is not symmetric")
+
+    if make_traceless:
+        A = mat - np.trace(mat)*np.identity(n)/n
+
+    s, U = takagi(A, tol=tol)
+    sc = np.sqrt(1.0+1.0/max_mean_photon)
+    vals = -np.arctanh(s/(s[0]*sc))
+    return vals, U
 
 
 def T(m, n, theta, phi, nmax):
@@ -124,14 +163,15 @@ def nullT(n, m, U):
 
     return [n-1, n, thetar, phir, nmax]
 
-def clements(V, tol=11):
+def clements(V, tol=1e-11):
     r"""Performs the Clements decomposition of a Unitary complex matrix.
 
     See Clements et al. Optica 3, 1460 (2016) [10.1364/OPTICA.3.001460] for more details.
 
     Args:
         V (array): Unitary matrix of size n_size
-        tol (int): the number of decimal places to use when determining whether the matrix is unitary
+        tol (float): the tolerance used when checking if the matrix is unitary:
+            :math:`|VV^\dagger-I| \leq tol`
 
     Returns:
         tuple[array]: returns a tuple of the form ``(tilist,tlist,np.diag(localV))``
@@ -145,7 +185,7 @@ def clements(V, tol=11):
     (nsize, _) = localV.shape
 
     diffn = np.linalg.norm(V @ V.conj().T - np.identity(nsize))
-    if np.round(diffn, tol) != 0.0:
+    if diffn >= tol:
         raise ValueError("The input matrix is not unitary")
 
     tilist = []
@@ -163,7 +203,7 @@ def clements(V, tol=11):
     return tilist, tlist, np.diag(localV)
 
 
-def williamson(V, tol=11):
+def williamson(V, tol=1e-11):
     r"""Performs the Williamson decomposition of positive definite (real) symmetric matrix.
 
     Note that it is assumed that the symplectic form is
@@ -176,7 +216,7 @@ def williamson(V, tol=11):
 
     Args:
         V (array): A positive definite symmetric (real) matrix V
-        tol (int): the number of decimal places to use when determining if the matrix is symmetric
+        tol (float): the tolerance used when checking if the matrix is symmetric: :math:`|V-V^T| \leq tol`
 
     Returns:
         tuple(array,array): Returns a tuple ``(Db, S)`` where ``Db`` is a diagonal matrix
@@ -185,7 +225,7 @@ def williamson(V, tol=11):
     (n, m) = V.shape
     diffn = np.linalg.norm(V-np.transpose(V))
 
-    if np.round(diffn, tol) != 0.0:
+    if diffn >= tol:
         raise ValueError("The input matrix is not symmetric")
     if n != m:
         raise ValueError("The input matrix is not square")
@@ -229,7 +269,7 @@ def williamson(V, tol=11):
     return Db, np.linalg.inv(S).T
 
 
-def bloch_messiah(S, tol=10, rounding=9):
+def bloch_messiah(S, tol=1e-10, rounding=9):
     r""" Performs the Bloch-Messiah decomposition of a symplectic matrix in terms of
     two symplectic unitaries and squeezing transformation.
 
@@ -249,7 +289,9 @@ def bloch_messiah(S, tol=10, rounding=9):
 
     Args:
         S (array): A symplectic matrix S
-        tol (int): the number of decimal places to use when determining if the matrix is symplectic
+        tol (float): the tolerance used when checking if the matrix is symplectic:
+            :math:`|S^T\Omega S-\Omega| \leq tol`
+        rounding (int): the number of decimal places to use when rounding the singular values
 
     Returns:
         tuple[array]: Returns the tuple ``(ut1, st1, vt1)``. ``ut1`` and ``vt1`` are symplectic unitaries,
@@ -265,11 +307,11 @@ def bloch_messiah(S, tol=10, rounding=9):
 
     n = n//2
     omega = sympmat(n)
-    if np.round(np.linalg.norm(np.transpose(S) @ omega @ S - omega), tol) != 0.0:
+    if np.linalg.norm(np.transpose(S) @ omega @ S - omega) >= tol:
         raise ValueError("The input matrix is not symplectic")
 
     u, sigma = polar(S, side='left')
-    ss, uss = takagi(sigma)
+    ss, uss = takagi(sigma, tol=tol, rounding=rounding)
 
     ## Apply a permutation matrix so that the squeezers appear in the order
     ## s_1,...,s_n, 1/s_1,...1/s_n
@@ -309,7 +351,7 @@ def bloch_messiah(S, tol=10, rounding=9):
     return ut1, st1, v1
 
 
-def covmat_to_hamil(V, tol=10): # pragma: no cover
+def covmat_to_hamil(V, tol=1e-10): # pragma: no cover
     r"""Converts a covariance matrix to a Hamiltonian.
 
     Given a covariance matrix V of a Gaussian state :math:`\rho` in the xp ordering,
@@ -332,8 +374,8 @@ def covmat_to_hamil(V, tol=10): # pragma: no cover
     (n, m) = V.shape
     if n != m:
         raise ValueError("Input matrix must be square")
-    if np.round(np.linalg.norm(V-V.T), tol) != 0:
-        raise ValueError("Input matrix must be symmetric")
+    if np.linalg.norm(V-np.transpose(V)) >= tol:
+        raise ValueError("The input matrix is not symmetric")
 
     n = n//2
     omega = sympmat(n)
@@ -350,7 +392,7 @@ def covmat_to_hamil(V, tol=10): # pragma: no cover
     return H
 
 
-def hamil_to_covmat(H, tol=10): # pragma: no cover
+def hamil_to_covmat(H, tol=1e-10): # pragma: no cover
     r"""Converts a Hamiltonian matrix to a covariance matrix.
 
     Given a Hamiltonian matrix of a Gaussian state H, finds the equivalent covariance matrix
@@ -368,8 +410,8 @@ def hamil_to_covmat(H, tol=10): # pragma: no cover
     (n, m) = H.shape
     if n != m:
         raise ValueError("Input matrix must be square")
-    if np.round(np.linalg.norm(H-H.T), tol) != 0:
-        raise ValueError("Input matrix must be symmetric")
+    if np.linalg.norm(H-np.transpose(H)) >= tol:
+        raise ValueError("The input matrix is not symmetric")
 
     vals = np.linalg.eigvalsh(H)
     for val in vals:
