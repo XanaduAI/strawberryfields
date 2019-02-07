@@ -153,13 +153,13 @@ class Circuit:
         method = None
         mode = None
 
-        for two_mode_gate in self.two_mode_gates.keys():
+        for two_mode_gate in self.two_mode_gates:
             if two_mode_gate in operator:
                 method = self.two_mode_gates[two_mode_gate]
                 mode = 2
 
         if method is None:
-            for single_mode_gate in self.single_mode_gates.keys():
+            for single_mode_gate in self.single_mode_gates:
                 if single_mode_gate in operator:
                     method = self.single_mode_gates[single_mode_gate]
                     mode = 1
