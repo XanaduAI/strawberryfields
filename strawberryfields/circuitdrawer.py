@@ -72,7 +72,7 @@ CKgate
 """
 import datetime
 import subprocess
-from pathlib import Path
+import os
 from .qcircuit_strings import QUANTUM_WIRE, PAULI_X_COMP, PAULI_Z_COMP, CONTROL, \
     TARGET, COLUMN_SPACING, ROW_SPACING, DOCUMENT_END, WIRE_OPERATION, WIRE_TERMINATOR, CIRCUIT_BODY_TERMINATOR, \
     CIRCUIT_BODY_START, INIT_DOCUMENT, PIPE, D_COMP, R_COMP, P_COMP, V_COMP, FOURIER_COMP, BS_COMP, S_COMP, \
@@ -466,8 +466,8 @@ class Circuit:
         Raises:
             LatexConfigException: if pdflatex is not configured.
         """
-        tex_dir = str(Path.cwd()) + tex_dir
-        pdf_dir = str(Path.cwd()) + pdf_dir
+        tex_dir = os.path.join(os.path.dirname(__file__), tex_dir)
+        pdf_dir = os.path.join(os.path.dirname(__file__), tex_dir)
         file_name = "output_{0}".format(datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p"))
         output_file = open('{0}/{1}.tex'.format(tex_dir, file_name), "w+")
         output_file.write(self._document)
