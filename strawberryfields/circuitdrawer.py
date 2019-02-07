@@ -456,7 +456,7 @@ class Circuit:
 
         return self._document
 
-    def compile_document(self, tex_dir='/circuit_tex', pdf_dir='/circuit_pdfs'):
+    def compile_document(self, tex_dir='./circuit_tex', pdf_dir='./circuit_pdfs'):
         """Compiles latex and .pdf documents.
 
         Args:
@@ -466,8 +466,8 @@ class Circuit:
         Raises:
             LatexConfigException: if pdflatex is not configured.
         """
-        tex_dir = os.path.join(os.path.dirname(__file__), tex_dir)
-        pdf_dir = os.path.join(os.path.dirname(__file__), tex_dir)
+        tex_dir = os.path.abspath(tex_dir)
+        pdf_dir = os.path.abspath(pdf_dir)
         file_name = "output_{0}".format(datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p"))
         output_file = open('{0}/{1}.tex'.format(tex_dir, file_name), "w+")
         output_file.write(self._document)
