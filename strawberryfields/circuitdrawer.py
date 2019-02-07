@@ -361,7 +361,7 @@ class Circuit:
             source_ops[-1] = CONTROL.format(distance)
             target_ops[-1] = circuit_op
         else:
-            for wire in enumerate(matrix):
+            for wire, op in enumerate(matrix):
                 if wire == source_wire:
                     matrix[wire].append(CONTROL.format(distance))
                 elif wire == target_wire:
@@ -380,7 +380,7 @@ class Circuit:
         matrix = self._circuit_matrix
 
         empty_column = True
-        for wire in enumerate(matrix):
+        for wire, op in enumerate(matrix):
             wire_ops = matrix[wire]
             if not Circuit._is_empty(wire_ops[-1]):
                 empty_column = False
@@ -446,7 +446,7 @@ class Circuit:
         self._apply_spacing()
         self._begin_circuit()
 
-        for wire in enumerate(self._circuit_matrix):
+        for wire, op in enumerate(self._circuit_matrix):
             for wire_op in self._circuit_matrix[wire]:
                 self._write_operation_to_document(wire_op)
             self._end_wire()
