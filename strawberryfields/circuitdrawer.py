@@ -467,7 +467,11 @@ class Circuit:
             LatexConfigException: if pdflatex is not configured.
         """
         tex_dir = os.path.abspath(tex_dir)
+        if not os.path.isdir(tex_dir):
+            os.mkdir(tex_dir)
         pdf_dir = os.path.abspath(pdf_dir)
+        if not os.path.isdir(pdf_dir):
+            os.mkdir(pdf_dir)
         file_name = "output_{0}".format(datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p"))
         output_file = open('{0}/{1}.tex'.format(tex_dir, file_name), "w+")
         output_file.write(self._document)
