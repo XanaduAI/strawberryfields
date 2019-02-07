@@ -304,6 +304,7 @@ class CircuitDrawerTests(BaseTest):
         except LatexConfigException:
             logging.debug('pdflatex not installed on test system... skipping pdf compile test.')
 
+
 if __name__ == '__main__':
     print('Testing Strawberry Fields version ' + sf.version() + ', circuit drawer module.')
     # run the tests in this file

@@ -711,8 +711,8 @@ class Engine:
 
         if not compile_pdf:
             return tex
-        else:
-            return circuit.compile_document()
+
+        return circuit.compile_document()
 
     def return_state(self, modes=None, **kwargs):
         """Return the backend state object.

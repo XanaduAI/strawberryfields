@@ -130,11 +130,11 @@ class Circuit:
         }
 
         self.two_mode_gates = {
-             'CXgate': self._cx,
-             'CZgate': self._cz,
-             'CKgate': self._ck,
-             'BSgate': self._bs,
-             'S2gate': self._s2
+            'CXgate': self._cx,
+            'CZgate': self._cz,
+            'CKgate': self._ck,
+            'BSgate': self._bs,
+            'S2gate': self._s2
         }
 
     # operations
@@ -361,13 +361,13 @@ class Circuit:
             source_ops[-1] = CONTROL.format(distance)
             target_ops[-1] = circuit_op
         else:
-            for wire in enumerate(matrix):
-                if wire == source_wire:
-                    matrix[wire].append(CONTROL.format(distance))
-                elif wire == target_wire:
-                    matrix[wire].append(circuit_op)
+            for index, wire_ops in enumerate(matrix):
+                if index == source_wire:
+                    wire_ops.append(CONTROL.format(distance))
+                elif index == target_wire:
+                    wire_ops.append(circuit_op)
                 else:
-                    matrix[wire].append(QUANTUM_WIRE.format(1))
+                    wire_ops.append(QUANTUM_WIRE.format(1))
 
     # helpers
 
@@ -381,7 +381,7 @@ class Circuit:
 
         empty_column = True
         for wire in enumerate(matrix):
-            wire_ops = matrix[wire]
+            wire_ops = wire[1]
             if not Circuit._is_empty(wire_ops[-1]):
                 empty_column = False
                 break
@@ -446,8 +446,8 @@ class Circuit:
         self._apply_spacing()
         self._begin_circuit()
 
-        for wire in enumerate(self._circuit_matrix):
-            for wire_op in self._circuit_matrix[wire]:
+        for wire_ops in enumerate(self._circuit_matrix):
+            for wire_op in wire_ops[1]:
                 self._write_operation_to_document(wire_op)
             self._end_wire()
 
