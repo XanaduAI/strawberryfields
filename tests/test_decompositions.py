@@ -32,6 +32,42 @@ def random_degenerate_symmetric():
     symmat=U @ np.diag(dd) @ np.transpose(U)
     return symmat
 
+def random_degen_symplectic(N, passive=False):
+    r"""Returns a random symplectic matrix with degenerate symplectic values
+
+    The squeezing parameters :math:`r` for active transformations are randomly
+    sampled from the standard normal distribution and repeated uniform-randomly
+    many times, while passive transformations are randomly sampled from the Haar
+    measure.
+
+    Args:
+        N (int): number of modes
+        passive (bool): if True, returns a passive Gaussian transformation (i.e.,
+            one that preserves photon number). If False (default), returns an active
+            transformation.
+    Returns:
+        array: random :math:`2N\times 2N` symplectic matrix
+    """
+    U = random_interferometer(N)
+    O = np.vstack([np.hstack([U.real, -U.imag]), np.hstack([U.imag, U.real])])
+
+    if passive:
+        return O
+
+    U = random_interferometer(N)
+    P = np.vstack([np.hstack([U.real, -U.imag]), np.hstack([U.imag, U.real])])
+
+    # Generate list of normal random numbers repeated randomly-many times.
+    # Then take the first N values of this list.
+    rep_list = []
+    for _ in range(N):
+        rep_list.append(np.random.randint(1,N))
+    r = np.hstack([np.repeat(np.random.randn(1),rep) for rep in rep_list])[:N]
+
+    Sq = np.diag(np.concatenate([np.exp(-r), np.exp(r)]))
+
+    return O @ Sq @ P
+
 
 class DecompositionsModule(BaseTest):
     num_subsystems = 1
@@ -48,6 +84,19 @@ class DecompositionsModule(BaseTest):
             error[i]=diff
 
         self.assertAlmostEqual(error.mean() , 0)
+
+    def test_takagi_fixed_random_symm(self):
+        """This test verifies that the maximum amount of squeezing used to encode the graph is indeed capped by the parameter max_mean_photon"""
+        self.logTestName()
+        error=np.empty(nsamples)
+        max_mean_photon = 2
+        for i in range(nsamples):
+            X = random_degenerate_symmetric()
+            sc, U = dec.graph_embed(X, max_mean_photon=max_mean_photon)
+            error[i] = np.sinh(np.max(np.abs(sc)))**2 - max_mean_photon
+
+        self.assertAlmostEqual(error.mean(), 0, delta=self.tol)
+
 
     def test_clements_identity(self):
         self.logTestName()
@@ -113,6 +162,24 @@ class DecompositionsModule(BaseTest):
             self.assertAlmostEqual(np.linalg.norm(np.transpose(s) @ omega @ s -omega),0)
             self.assertAlmostEqual(np.linalg.norm(O @ s @Oo -S),0)
 
+    def test_BM_random_degen_symplectic(self):
+        self.logTestName()
+        for k in range(nsamples):
+            n=20
+            S = random_degen_symplectic(n)
+            O, s, Oo = dec.bloch_messiah(S)
+            omega = dec.sympmat(n)
+
+            self.assertAlmostEqual(np.linalg.norm(S @ omega @ S.T -omega),0)
+    
+            self.assertAlmostEqual(np.linalg.norm(np.transpose(O) @ omega @ O -omega),0)
+            self.assertAlmostEqual(np.linalg.norm(np.transpose(O) @ O -np.identity(2*n)),0)
+
+            self.assertAlmostEqual(np.linalg.norm(np.transpose(Oo) @ omega @ Oo -omega),0)
+            self.assertAlmostEqual(np.linalg.norm(np.transpose(Oo) @ Oo -np.identity(2*n)),0)
+            self.assertAlmostEqual(np.linalg.norm(np.transpose(s) @ omega @ s -omega),0)
+            self.assertAlmostEqual(np.linalg.norm(O @ s @Oo -S),0)
+
     def test_williamson_BM_random_circuit_pure(self):
         self.logTestName()
         for k in range(nsamples):
@@ -130,8 +197,6 @@ class DecompositionsModule(BaseTest):
 
             self.assertAlmostEqual(np.linalg.norm(S @ omega @ S.T -omega),0)
             self.assertAlmostEqual(np.linalg.norm(S @ D @ S.T -V),0)
-
-
 
             O, s, Oo = dec.bloch_messiah(S)
             self.assertAlmostEqual(np.linalg.norm(np.transpose(O) @ omega @ O -omega),0)
@@ -155,6 +220,11 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
         self.S = random_symplectic(self.num_subsystems)
         self.V_mixed = random_covariance(self.num_subsystems, hbar=self.hbar, pure=False)
         self.V_pure = random_covariance(self.num_subsystems, hbar=self.hbar, pure=True)
+        self.A = np.array([[1.28931633+0.75228801j, 1.45557375+0.96825143j, 1.53672608+1.465635j],
+                           [1.45557375+0.96825143j, 0.37611686+0.84964159j, 1.25122856+1.28071385j],
+                           [1.53672608+1.465635j, 1.25122856+1.28071385j, 1.88217983+1.70869293j]])
+
+        self.A -= np.trace(self.A)*np.identity(3)/3
 
     def test_merge_interferometer(self):
         self.logTestName()
@@ -209,6 +279,43 @@ class FrontendGaussianDecompositions(GaussianBaseTest):
 
         state = self.eng.run()
         self.assertAllAlmostEqual(state.cov(), self.S@self.S.T*self.hbar/2, delta=self.tol)
+
+    def test_graph_embed(self):
+        """Test that embedding a traceless adjacency matrix A
+        results in the property Amat/A = c J, where c is a real constant,
+        and J is the all ones matrix"""
+        self.logTestName()
+        self.eng.reset()
+        q = self.eng.register
+
+        with self.eng:
+            GraphEmbed(self.A) | q
+
+        state = self.eng.run()
+        Amat = self.eng.backend.circuit.Amat()
+        N = self.num_subsystems
+
+        # check that the matrix Amat is constructed to be of the form
+        # Amat = [[B^\dagger, 0], [0, B]]
+        self.assertAllAlmostEqual(Amat[:N, :N], Amat[N:, N:].conj().T, delta=self.tol)
+        self.assertAllAlmostEqual(Amat[:N, N:], np.zeros([N, N]), delta=self.tol)
+        self.assertAllAlmostEqual(Amat[N:, :N], np.zeros([N, N]), delta=self.tol)
+
+        ratio = np.real_if_close(Amat[N:, N:]/self.A)
+        ratio /= ratio[0, 0]
+        self.assertAllAlmostEqual(ratio, np.ones([N, N]), delta=self.tol)
+
+    def test_graph_embed_identity(self):
+        """Test that nothing is done if the adjacency matrix is the identity"""
+        self.logTestName()
+        self.eng.reset()
+        q = self.eng.register
+
+        with self.eng:
+            GraphEmbed(np.identity(6)) | q
+
+        state = self.eng.run()
+        self.assertEqual(len(self.eng.cmd_applied[0]), 0)
 
     def test_passive_gaussian_transform(self):
         self.logTestName()
@@ -469,7 +576,7 @@ if __name__ == '__main__':
     tests = [
         DecompositionsModule,
         FrontendGaussianDecompositions,
-        FrontendGaussianGaussians,
+        FrontendGaussians,
         FrontendFockGaussians
     ]
     for t in tests:

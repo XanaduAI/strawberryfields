@@ -75,8 +75,9 @@ import subprocess
 from pathlib import Path
 from .qcircuit_strings import QUANTUM_WIRE, PAULI_X_COMP, PAULI_Z_COMP, CONTROL, \
     TARGET, COLUMN_SPACING, ROW_SPACING, DOCUMENT_END, WIRE_OPERATION, WIRE_TERMINATOR, CIRCUIT_BODY_TERMINATOR, \
-    CIRCUIT_BODY_START, INIT_DOCUMENT, PIPE, S_COMP, D_COMP, R_COMP, P_COMP, V_COMP, FOURIER_COMP, BS_COMP, S_COMP, \
+    CIRCUIT_BODY_START, INIT_DOCUMENT, PIPE, D_COMP, R_COMP, P_COMP, V_COMP, FOURIER_COMP, BS_COMP, S_COMP, \
     K_COMP
+
 
 class ModeMismatchException(Exception):
     """Exception raised by :func:`~strawberryfields.circuitdrawer.Circuit.parse_op` when an operator is interpreted
@@ -117,28 +118,28 @@ class Circuit:
         self._row_spacing = None
 
         self.single_mode_gates = {
-            'Xgate': self.x,
-            'Zgate': self.z,
-            'Dgate': self.d,
-            'Sgate': self.s,
-            'Rgate': self.r,
-            'Pgate': self.p,
-            'Vgate': self.v,
-            'Kgate': self.k,
-            'FourierGate': self.fourier
+            'Xgate': self._x,
+            'Zgate': self._z,
+            'Dgate': self._d,
+            'Sgate': self._s,
+            'Rgate': self._r,
+            'Pgate': self._p,
+            'Vgate': self._v,
+            'Kgate': self._k,
+            'FourierGate': self._fourier
         }
 
         self.two_mode_gates = {
-             'CXgate': self.cx,
-             'CZgate': self.cz,
-             'CKgate': self.ck,
-             'BSgate': self.bs,
-             'S2gate': self.s2
+             'CXgate': self._cx,
+             'CZgate': self._cz,
+             'CKgate': self._ck,
+             'BSgate': self._bs,
+             'S2gate': self._s2
         }
 
     # operations
 
-    def gate_from_operator(self, op):
+    def _gate_from_operator(self, op):
         """Infers the number of modes and callable Circuit class method that correspond with a Strawberry Fields operator object.
 
         Args:
@@ -176,7 +177,7 @@ class Circuit:
             ModeMismatchException: if the operator is interpreted as an n-mode gate but is applied to a number of modes != n.
 
         """
-        method, mode = self.gate_from_operator(op)
+        method, mode = self._gate_from_operator(op)
         wires = list(map(lambda register: register.ind, op.reg))
 
         if method is None:
@@ -186,126 +187,126 @@ class Circuit:
         elif mode != len(wires):
             raise ModeMismatchException('{0} mode gate applied to {1} wires!'.format(mode, len(wires)))
 
-    def x(self, wire):
+    def _x(self, wire):
         """Adds a position displacement operator to the circuit.
 
         Args:
             wire (int): the subsystem wire to apply the operator to.
         """
-        self.single_mode_gate(wire, PAULI_X_COMP)
+        self._single_mode_gate(wire, PAULI_X_COMP)
 
-    def z(self, wire):
+    def _z(self, wire):
         """Adds a momentum displacement operator to the circuit.
 
         Args:
             wire (int): the subsystem wire to apply the operator to.
         """
-        self.single_mode_gate(wire, PAULI_Z_COMP)
+        self._single_mode_gate(wire, PAULI_Z_COMP)
 
-    def s(self, wire):
+    def _s(self, wire):
         """Adds a squeezing operator to the circuit.
 
         Args:
             wire (int): the subsystem wire to apply the operator to.
         """
-        self.single_mode_gate(wire, S_COMP)
+        self._single_mode_gate(wire, S_COMP)
 
-    def d(self, wire):
+    def _d(self, wire):
         """Adds a displacement operator to the circuit.
 
         Args:
             wire (int): the subsystem wire to apply the operator to.
         """
-        self.single_mode_gate(wire, D_COMP)
+        self._single_mode_gate(wire, D_COMP)
 
-    def r(self, wire):
+    def _r(self, wire):
         """Adds a rotation operator to the circuit.
 
         Args:
             wire (int): the subsystem wire to apply the operator to.
         """
-        self.single_mode_gate(wire, R_COMP)
+        self._single_mode_gate(wire, R_COMP)
 
-    def p(self, wire):
+    def _p(self, wire):
         """Adds a quadratic phase shift operator to the circuit.
 
         Args:
             wire (int): the subsystem wire to apply the operator to.
         """
-        self.single_mode_gate(wire, P_COMP)
+        self._single_mode_gate(wire, P_COMP)
 
-    def v(self, wire):
+    def _v(self, wire):
         """Adds a cubic phase shift operator to the circuit.
 
         Args:
             wire (int): the subsystem wire to apply the operator to.
         """
-        self.single_mode_gate(wire, V_COMP)
+        self._single_mode_gate(wire, V_COMP)
 
-    def k(self, wire):
+    def _k(self, wire):
         """Adds a Kerr operator to the circuit.
 
         Args:
             wire (int): the subsystem wire to apply the operator to.
         """
-        self.single_mode_gate(wire, K_COMP)
+        self._single_mode_gate(wire, K_COMP)
 
-    def fourier(self, wire):
+    def _fourier(self, wire):
         """Adds a Fourier transform operator to the circuit.
 
         Args:
             wire (int): the subsystem wire to apply the operator to.
         """
-        self.single_mode_gate(wire, FOURIER_COMP)
+        self._single_mode_gate(wire, FOURIER_COMP)
 
-    def cx(self, source_wire, target_wire):
+    def _cx(self, source_wire, target_wire):
         """Adds a controlled position displacement operator to the circuit.
 
         Args:
             source_wire (int): the controlling subsystem wire.
             target_wire (int): the controlled subsystem wire.
         """
-        self.controlled_mode_gate(source_wire, target_wire, TARGET)
+        self._controlled_mode_gate(source_wire, target_wire, TARGET)
 
-    def cz(self, source_wire, target_wire):
+    def _cz(self, source_wire, target_wire):
         """Adds a controlled phase operator to the circuit.
 
         Args:
             source_wire (int): the controlling subsystem wire.
             target_wire (int): the controlled subsystem wire.
         """
-        self.controlled_mode_gate(source_wire, target_wire, PAULI_Z_COMP)
+        self._controlled_mode_gate(source_wire, target_wire, PAULI_Z_COMP)
 
-    def ck(self, source_wire, target_wire):
+    def _ck(self, source_wire, target_wire):
         """Adds a controlled Kerr operator to the circuit.
 
         Args:
             source_wire (int): the controlling subsystem wire.
             target_wire (int): the controlled subsystem wire.
         """
-        self.controlled_mode_gate(source_wire, target_wire, K_COMP)
+        self._controlled_mode_gate(source_wire, target_wire, K_COMP)
 
-    def bs(self, first_wire, second_wire):
+    def _bs(self, first_wire, second_wire):
         """Adds a beams plitter operator to the circuit.
 
         Args:
             first_wire (int): the first subsystem wire to apply the operator to.
             second_wire (int): the second subsystem wire to apply the operator to.
         """
-        self.multi_mode_gate(BS_COMP, [first_wire, second_wire])
+        self._multi_mode_gate(BS_COMP, [first_wire, second_wire])
 
-    def s2(self, first_wire, second_wire):
+    def _s2(self, first_wire, second_wire):
         """Adds an two mode squeezing operator to the circuit.
 
         Args:
             first_wire (int): the first subsystem wire to apply the operator to.
             second_wire (int): the second subsystem wire to apply the operator to.
         """
-        self.multi_mode_gate(S_COMP, [first_wire, second_wire])
+        self._multi_mode_gate(S_COMP, [first_wire, second_wire])
 
     # operation types
 
-    def single_mode_gate(self, wire, circuit_op):
+    def _single_mode_gate(self, wire, circuit_op):
         """Adds a single-mode operator gate to the circuit.
 
         Args:
@@ -315,7 +316,7 @@ class Circuit:
         matrix = self._circuit_matrix
         wire_ops = matrix[wire]
 
-        if Circuit.is_empty(wire_ops[-1]):
+        if Circuit._is_empty(wire_ops[-1]):
             wire_ops[-1] = circuit_op
         else:
             wire_ops.append(circuit_op)
@@ -324,7 +325,7 @@ class Circuit:
             for post_wire in matrix[wire + 1:]:
                 post_wire.append(QUANTUM_WIRE.format(1))
 
-    def multi_mode_gate(self, circuit_op, wires):
+    def _multi_mode_gate(self, circuit_op, wires):
         """Adds a multi-mode operator gate to the circuit.
 
         Args:
@@ -333,8 +334,8 @@ class Circuit:
         """
         matrix = self._circuit_matrix
 
-        if not self.on_empty_column():
-            self.add_column()
+        if not self._on_empty_column():
+            self._add_column()
 
         for wire in wires:
             wire_ops = matrix[wire]
@@ -343,7 +344,7 @@ class Circuit:
 
         self._circuit_matrix = matrix
 
-    def controlled_mode_gate(self, source_wire, target_wire, circuit_op):
+    def _controlled_mode_gate(self, source_wire, target_wire, circuit_op):
         """Adds a controlled operator gate to the circuit.
 
         Args:
@@ -356,11 +357,11 @@ class Circuit:
         target_ops = matrix[target_wire]
         distance = target_wire - source_wire
 
-        if Circuit.is_empty(source_ops[-1]) and Circuit.is_empty(target_ops[-1]):
+        if Circuit._is_empty(source_ops[-1]) and Circuit._is_empty(target_ops[-1]):
             source_ops[-1] = CONTROL.format(distance)
             target_ops[-1] = circuit_op
         else:
-            for wire in range(len(matrix)):
+            for wire in enumerate(matrix):
                 if wire == source_wire:
                     matrix[wire].append(CONTROL.format(distance))
                 elif wire == target_wire:
@@ -370,7 +371,7 @@ class Circuit:
 
     # helpers
 
-    def on_empty_column(self):
+    def _on_empty_column(self):
         """Checks if the right-most wires for each subsystem in the circuit are all empty
 
         Returns:
@@ -379,20 +380,20 @@ class Circuit:
         matrix = self._circuit_matrix
 
         empty_column = True
-        for wire in range(len(matrix)):
+        for wire in enumerate(matrix):
             wire_ops = matrix[wire]
-            if not Circuit.is_empty(wire_ops[-1]):
+            if not Circuit._is_empty(wire_ops[-1]):
                 empty_column = False
                 break
 
         return empty_column
 
-    def add_column(self):
+    def _add_column(self):
         """Adds a unit of quantum wire to each subsystem in the circuit."""
         self._circuit_matrix = [wire.append(QUANTUM_WIRE.format(1)) for wire in self._circuit_matrix]
 
     @staticmethod
-    def is_empty(op):
+    def _is_empty(op):
         """Checks for a NOP, a quantum wire location without an operator.
 
         Args:
@@ -405,7 +406,7 @@ class Circuit:
 
     # cosmetic
 
-    def set_column_spacing(self, spacing):
+    def _set_column_spacing(self, spacing):
         """Sets visual spacing between operators in quantum circuit.
 
         Args:
@@ -413,7 +414,7 @@ class Circuit:
         """
         self._column_spacing = spacing
 
-    def set_row_spacing(self, spacing):
+    def _set_row_spacing(self, spacing):
         """Sets visual spacing of wires in quantum circuit.
 
         Args:
@@ -422,7 +423,7 @@ class Circuit:
         self._row_spacing = spacing
 
     @staticmethod
-    def pad_with_spaces(string):
+    def _pad_with_spaces(string):
         """Pads string with spaces.
 
         Args:
@@ -441,17 +442,17 @@ class Circuit:
         Returns:
             str: latex document string.
         """
-        self.init_document()
-        self.apply_spacing()
-        self.begin_circuit()
+        self._init_document()
+        self._apply_spacing()
+        self._begin_circuit()
 
-        for wire in range(len(self._circuit_matrix)):
+        for wire in enumerate(self._circuit_matrix):
             for wire_op in self._circuit_matrix[wire]:
-                self.write_operation_to_document(wire_op)
-            self.end_wire()
+                self._write_operation_to_document(wire_op)
+            self._end_wire()
 
-        self.end_circuit()
-        self.end_document()
+        self._end_circuit()
+        self._end_document()
 
         return self._document
 
@@ -476,40 +477,40 @@ class Circuit:
         except OSError:
             raise LatexConfigException('pdflatex not configured!')
 
-    def init_document(self):
+    def _init_document(self):
         """Adds the required latex headers to the document."""
         self._document = INIT_DOCUMENT
 
-    def end_document(self):
+    def _end_document(self):
         """Appends latex EOD code to the document."""
         self._document += DOCUMENT_END
 
-    def begin_circuit(self):
+    def _begin_circuit(self):
         """Prepares document for latex circuit content."""
         self._document += CIRCUIT_BODY_START
 
-    def end_circuit(self):
+    def _end_circuit(self):
         """Ends the latex circuit content."""
         self._document += CIRCUIT_BODY_TERMINATOR
 
-    def end_wire(self):
+    def _end_wire(self):
         """Ends a wire within the latex circuit."""
         self._document += WIRE_TERMINATOR
 
-    def apply_spacing(self):
+    def _apply_spacing(self):
         """Applies wire and operator visual spacing."""
         if self._column_spacing is not None:
-            self._document += Circuit.pad_with_spaces(COLUMN_SPACING.format(self._column_spacing))
+            self._document += Circuit._pad_with_spaces(COLUMN_SPACING.format(self._column_spacing))
         if self._row_spacing is not None:
-            self._document += Circuit.pad_with_spaces(ROW_SPACING.format(self._row_spacing))
+            self._document += Circuit._pad_with_spaces(ROW_SPACING.format(self._row_spacing))
 
-    def write_operation_to_document(self, operation):
+    def _write_operation_to_document(self, operation):
         """Appends operation latex code to circuit in latex document.
 
         Args:
             operation (str): the latex code for the quantum operation to be applied.
         """
-        self._document += Circuit.pad_with_spaces(WIRE_OPERATION.format(operation))
+        self._document += Circuit._pad_with_spaces(WIRE_OPERATION.format(operation))
 
     def __str__(self):
         """String representation of the Circuit class."""
