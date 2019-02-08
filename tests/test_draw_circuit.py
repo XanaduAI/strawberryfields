@@ -15,7 +15,6 @@ from defaults import BaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 
 from draw_circuit_test_utils import *
-from strawberryfields.circuitdrawer import LatexConfigException
 
 
 class CircuitDrawerTests(BaseTest):
@@ -36,7 +35,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Xgate(1) | (q[0])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == x_test_0_output, failure_message(result, x_test_0_output))
 
     def test_x_1(self):
@@ -46,7 +45,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Xgate(1) | (q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == x_test_1_output, failure_message(result, x_test_1_output))
 
     def test_xx_1(self):
@@ -57,7 +56,7 @@ class CircuitDrawerTests(BaseTest):
             Xgate(1) | (q[1])
             Xgate(1) | (q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == xx_test_1_output, failure_message(result, xx_test_1_output))
 
     def test_x_z_0(self):
@@ -68,7 +67,7 @@ class CircuitDrawerTests(BaseTest):
             Xgate(1) | (q[0])
             Zgate(1) | (q[0])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == x_z_test_0_output, failure_message(result, x_z_test_0_output))
 
     def test_x_0_z_1(self):
@@ -79,7 +78,7 @@ class CircuitDrawerTests(BaseTest):
             Xgate(1) | (q[0])
             Zgate(1) | (q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == x_0_z_1_test_output, failure_message(result, x_0_z_1_test_output))
 
     def test_z_0(self):
@@ -89,7 +88,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Zgate(1) | (q[0])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == z_test_0_output, failure_message(result, z_test_0_output))
 
     def test_z_1(self):
@@ -99,7 +98,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Zgate(1) | (q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == z_test_1_output, failure_message(result, z_test_1_output))
 
     def test_zz_1(self):
@@ -110,7 +109,7 @@ class CircuitDrawerTests(BaseTest):
             Zgate(1) | (q[1])
             Zgate(1) | (q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == zz_test_1_output, failure_message(result, zz_test_1_output))
 
     def test_cx(self):
@@ -120,7 +119,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             CXgate(1) | (q[0], q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == cx_test_output, failure_message(result, cx_test_output))
 
     def test_cz(self):
@@ -130,7 +129,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             CZgate(1) | (q[0], q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == cz_test_output, failure_message(result, cz_test_output))
 
     def test_bs(self):
@@ -140,7 +139,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             BSgate(1) | (q[0], q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == bs_test_output, failure_message(result, bs_test_output))
 
     def test_s2(self):
@@ -150,7 +149,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             S2gate(1) | (q[0], q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == s2_test_output, failure_message(result, s2_test_output))
 
     def test_ck(self):
@@ -160,7 +159,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             CKgate(1) | (q[0], q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == ck_test_output, failure_message(result, ck_test_output))
         
     def test_k_0(self):
@@ -170,7 +169,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Kgate(1) | (q[0])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == k_test_0_output, failure_message(result, k_test_0_output))
 
     def test_k_1(self):
@@ -180,7 +179,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Kgate(1) | (q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == k_test_1_output, failure_message(result, k_test_1_output))
         
     def test_v_0(self):
@@ -190,7 +189,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Vgate(1) | (q[0])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == v_test_0_output, failure_message(result, v_test_0_output))
 
     def test_v_1(self):
@@ -200,7 +199,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Vgate(1) | (q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == v_test_1_output, failure_message(result, v_test_1_output))
         
     def test_p_0(self):
@@ -210,7 +209,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Pgate(1) | (q[0])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == p_test_0_output, failure_message(result, p_test_0_output))
 
     def test_p_1(self):
@@ -220,7 +219,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Pgate(1) | (q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == p_test_1_output, failure_message(result, p_test_1_output))
         
     def test_r_0(self):
@@ -230,7 +229,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Rgate(1) | (q[0])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == r_test_0_output, failure_message(result, r_test_0_output))
 
     def test_r_1(self):
@@ -240,7 +239,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Rgate(1) | (q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == r_test_1_output, failure_message(result, r_test_1_output))
 
     def test_s_0(self):
@@ -250,7 +249,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Sgate(1) | (q[0])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == s_test_0_output, failure_message(result, s_test_0_output))
 
     def test_s_1(self):
@@ -260,7 +259,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Sgate(1) | (q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == s_test_1_output, failure_message(result, s_test_1_output))
 
     def test_d_0(self):
@@ -270,7 +269,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Dgate(1) | (q[0])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == d_test_0_output, failure_message(result, d_test_0_output))
 
     def test_d_1(self):
@@ -280,7 +279,7 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             Dgate(1) | (q[1])
 
-        result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=False)
+        result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == d_test_1_output, failure_message(result, d_test_1_output))
 
     def test_compile_pdf(self):
@@ -292,17 +291,13 @@ class CircuitDrawerTests(BaseTest):
             Rgate(1) | (q[1])
             S2gate(1) | (q[0], q[1])
 
-        try:
-            result = self.eng.draw_circuit(print_queued_ops=True, compile_pdf=True)
+        document = self.eng.draw_circuit(print_queued_ops=True)[0]
 
-            file_name = "output_{0}".format(datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p"))
-            self.assertTrue('./circuit_pdfs' + file_name == result)
+        file_name = "output_{0}.tex".format(datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p"))
+        self.assertTrue(document.split('/')[-1] == file_name)
 
-            output_file = Path(result)
-            self.assertTrue(output_file.is_file())
-
-        except LatexConfigException:
-            logging.debug('pdflatex not installed on test system... skipping pdf compile test.')
+        output_file = Path(document)
+        self.assertTrue(output_file.is_file())
 
 
 if __name__ == '__main__':

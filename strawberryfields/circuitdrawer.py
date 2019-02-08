@@ -71,7 +71,6 @@ CZgate
 CKgate
 """
 import datetime
-import subprocess
 import os
 from .qcircuit_strings import QUANTUM_WIRE, PAULI_X_COMP, PAULI_Z_COMP, CONTROL, \
     TARGET, COLUMN_SPACING, ROW_SPACING, DOCUMENT_END, WIRE_OPERATION, WIRE_TERMINATOR, CIRCUIT_BODY_TERMINATOR, \
@@ -97,17 +96,8 @@ class UnsupportedGateException(Exception):
     pass
 
 
-class LatexConfigException(Exception):
-    """Exception raised by :func:`~strawberryfields.circuitdrawer.Circuit.compile_document` when pdflatex is not
-    configured.
-
-    E.g. pdflatex is not installed.
-    """
-    pass
-
-
 class Circuit:
-    """Represents a quantum circuit that can be compiled to .tex or .pdf format."""
+    """Represents a quantum circuit that can be compiled to .tex format."""
 
     _circuit_matrix = []
 
@@ -456,30 +446,21 @@ class Circuit:
 
         return self._document
 
-    def compile_document(self, tex_dir='./circuit_tex', pdf_dir='./circuit_pdfs'):
-        """Compiles latex and .pdf documents.
+    def compile_document(self, tex_dir='./circuit_tex'):
+        """Compiles latex documents.
 
         Args:
             tex_dir (Str): relative directory for latex document output.
-            pdf_dir (Str): relative directory for pdf document output.
-
-        Raises:
-            LatexConfigException: if pdflatex is not configured.
         """
         tex_dir = os.path.abspath(tex_dir)
         if not os.path.isdir(tex_dir):
             os.mkdir(tex_dir)
-        pdf_dir = os.path.abspath(pdf_dir)
-        if not os.path.isdir(pdf_dir):
-            os.mkdir(pdf_dir)
         file_name = "output_{0}".format(datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p"))
-        output_file = open('{0}/{1}.tex'.format(tex_dir, file_name), "w+")
+        file_path = '{0}/{1}.tex'.format(tex_dir, file_name)
+        output_file = open(file_path, "w+")
         output_file.write(self._document)
-        try:
-            subprocess.call(['pdflatex -output-directory {0} {1}/{2}.tex'.format(pdf_dir, tex_dir, file_name)])
-            return '{0}/{1}.pdf'.format(pdf_dir, file_name)
-        except OSError:
-            raise LatexConfigException('pdflatex not configured!')
+
+        return file_path
 
     def _init_document(self):
         """Adds the required latex headers to the document."""
