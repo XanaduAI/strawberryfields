@@ -380,7 +380,8 @@ class Circuit:
 
     def _add_column(self):
         """Adds a unit of quantum wire to each subsystem in the circuit."""
-        self._circuit_matrix = [wire.append(QUANTUM_WIRE.format(1)) for wire in self._circuit_matrix]
+        for wire in self._circuit_matrix:
+            wire.append(QUANTUM_WIRE.format(1))
 
     @staticmethod
     def _is_empty(op):

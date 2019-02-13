@@ -21,6 +21,51 @@ import difflib
 
 LINE_RETURN = '\n'
 
+expected_circuit_matrix = [
+    ['\\gate{X}',
+     '\\gate{Z}',
+     '\\ctrl{1}',
+     '\\ctrl{1}',
+     '\\gate{BS}',
+     '\\gate{S}',
+     '\\ctrl{1}',
+     '\\gate{K}',
+     '\\gate{V}',
+     '\\gate{P}',
+     '\\gate{R}',
+     '\\gate{S}',
+     '\\gate{D}'
+     ],
+    ['\\qw[1]',
+     '\\qw[1]',
+     '\\targ',
+     '\\gate{Z}',
+     '\\gate{BS}',
+     '\\gate{S}',
+     '\\gate{K}',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]'
+     ],
+    ['\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]',
+     '\\qw[1]'
+     ]
+]
+
 x_test_0_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \Qcircuit {

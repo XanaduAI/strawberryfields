@@ -13,6 +13,7 @@ from pathlib import Path
 
 from defaults import BaseTest, strawberryfields as sf
 from strawberryfields.ops import *
+from strawberryfields.circuitdrawer import Circuit as CircuitDrawer
 
 from draw_circuit_test_utils import *
 
@@ -27,6 +28,89 @@ class CircuitDrawerTests(BaseTest):
         self.eng, q = sf.Engine(self.num_subsystems)
         self.eng.backend = self.backend
         self.backend.reset(cutoff_dim=self.cutoff)
+        self.drawer = CircuitDrawer(CircuitDrawerTests.num_subsystems)
+
+    def test_one_mode_gates_from_operators(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Xgate(1) | (q[0])
+            Zgate(1) | (q[0])
+            Kgate(1) | (q[0])
+            Vgate(1) | (q[0])
+            Pgate(1) | (q[0])
+            Rgate(1) | (q[0])
+            Sgate(1) | (q[0])
+            Dgate(1) | (q[0])
+
+        for op in self.eng.cmd_queue:
+            method, mode = self.drawer._gate_from_operator(op)
+            self.assertTrue((callable(method) and hasattr(self.drawer, method.__name__)))
+            self.assertTrue(mode == 1)
+
+    def test_two_mode_gates_from_operators(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            CXgate(1) | (q[0], q[1])
+            CZgate(1) | (q[0], q[1])
+            BSgate(1) | (q[0], q[1])
+            S2gate(1) | (q[0], q[1])
+            CKgate(1) | (q[0], q[1])
+
+        for op in self.eng.cmd_queue:
+            method, mode = self.drawer._gate_from_operator(op)
+            self.assertTrue((callable(method) and hasattr(self.drawer, method.__name__)))
+            self.assertTrue(mode == 2)
+
+    def test_op_applications(self):
+        self.drawer._x(0)
+        self.drawer._z(0)
+        self.drawer._cx(0, 1)
+        self.drawer._cz(0, 1)
+        self.drawer._bs(0, 1)
+        self.drawer._s2(0, 1)
+        self.drawer._ck(0, 1)
+        self.drawer._k(0)
+        self.drawer._v(0)
+        self.drawer._p(0)
+        self.drawer._r(0)
+        self.drawer._s(0)
+        self.drawer._d(0)
+
+        self.assertTrue(self.drawer._circuit_matrix == expected_circuit_matrix)
+
+    def test_parse_op(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Xgate(1) | (q[0])
+            Zgate(1) | (q[0])
+            CXgate(1) | (q[0], q[1])
+            CZgate(1) | (q[0], q[1])
+            BSgate(1) | (q[0], q[1])
+            S2gate(1) | (q[0], q[1])
+            CKgate(1) | (q[0], q[1])
+            Kgate(1) | (q[0])
+            Vgate(1) | (q[0])
+            Pgate(1) | (q[0])
+            Rgate(1) | (q[0])
+            Sgate(1) | (q[0])
+            Dgate(1) | (q[0])
+
+        for op in self.eng.cmd_queue:
+            self.drawer.parse_op(op)
+
+        self.assertTrue(self.drawer._circuit_matrix == expected_circuit_matrix)
+
+    def test_on_empty_column(self):
+        self.logTestName()
+
+        self.drawer._add_column()
+        self.assertTrue(self.drawer._on_empty_column())
 
     def test_x_0(self):
         self.logTestName()
@@ -282,7 +366,7 @@ class CircuitDrawerTests(BaseTest):
         result = self.eng.draw_circuit(print_queued_ops=True)[1]
         self.assertTrue(result == d_test_1_output, failure_message(result, d_test_1_output))
 
-    def test_compile_pdf(self):
+    def test_compile(self):
         self.logTestName()
         q = self.eng.register
 
