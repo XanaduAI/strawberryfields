@@ -84,7 +84,6 @@ import tensorflow as tf
 from .engine import (RegRef, RegRefTransform)
 
 
-
 # supported TF classes
 _tf_classes = (tf.Tensor, tf.Variable)
 
@@ -125,9 +124,11 @@ class Parameter():
 
     def __init__(self, x):
         if isinstance(x, Parameter):
-            raise TypeError('Tried initializing a Parameter using a Parameter.')
+            raise TypeError(
+                'Tried initializing a Parameter using a Parameter.')
 
-        self.deps = set()  #: set[RegRef]: parameter value depends on these RegRefs (if any), it can only be evaluated after the corresponding subsystems have been measured
+        #: set[RegRef]: parameter value depends on these RegRefs (if any), it can only be evaluated after the corresponding subsystems have been measured
+        self.deps = set()
 
         # wrap RegRefs in the identity RegRefTransform
         if isinstance(x, RegRef):
@@ -135,7 +136,8 @@ class Parameter():
         elif isinstance(x, (numbers.Number, np.ndarray, _tf_classes, RegRefTransform)):
             pass
         else:
-            raise TypeError('Unsupported base object type: ' +x.__class__.__name__)
+            raise TypeError('Unsupported base object type: ' +
+                            x.__class__.__name__)
 
         # add extra dependencies due to RegRefs
         if isinstance(x, RegRefTransform):
@@ -219,19 +221,19 @@ class Parameter():
     # the arithmetic methods below basically are just responsible for calling _unwrap_and_cast which exposes self.x, then the arithmetic ops of the supported parameter types take over
     def __add__(self, other):
         temp, other = self._unwrap_and_cast(other)
-        return self._wrap(temp +other)
+        return self._wrap(temp + other)
 
     def __radd__(self, other):
         temp, other = self._unwrap_and_cast(other)
-        return self._wrap(other +temp)
+        return self._wrap(other + temp)
 
     def __sub__(self, other):
         temp, other = self._unwrap_and_cast(other)
-        return self._wrap(temp -other)
+        return self._wrap(temp - other)
 
     def __rsub__(self, other):
         temp, other = self._unwrap_and_cast(other)
-        return self._wrap(other -temp)
+        return self._wrap(other - temp)
 
     def __mul__(self, other):
         temp, other = self._unwrap_and_cast(other)
@@ -284,6 +286,7 @@ class Parameter():
         # see RegRefTransform.__eq__
         return self.x == other
 
+
 # corresponding numpy and tensorflow functions
 np_math_fns = {"abs": (np.abs, tf.abs),
                "sign": (np.sign, tf.sign),
@@ -303,7 +306,8 @@ np_math_fns = {"abs": (np.abs, tf.abs),
                "squeeze": (np.squeeze, tf.squeeze),
                "transpose": (np.transpose, tf.transpose),
                "reshape": (np.reshape, tf.reshape)
-              }
+               }
+
 
 def math_fn_wrap(np_fn, tf_fn):
     """Wrapper function for the standard math functions.
@@ -325,6 +329,7 @@ def math_fn_wrap(np_fn, tf_fn):
     wrapper.__name__ = np_fn.__name__
     wrapper.__doc__ = math_fn_wrap.__doc__
     return wrapper
+
 
 # HACK, edit the global namespace to have sort-of single dispatch overloading for the standard math functions
 for name, fn in np_math_fns.items():
