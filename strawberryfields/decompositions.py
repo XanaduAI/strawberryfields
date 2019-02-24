@@ -49,31 +49,31 @@ def takagi(N, tol=1e-13, rounding=13):
     w = np.transpose(np.conjugate(ws))
     rl = np.round(l, rounding)
 
-    ## Generate list with degenerancies
+    # Generate list with degenerancies
     result = []
     for k, g in groupby(rl):
         result.append(list(g))
 
-    ## Generate lists containing the columns that correspond to degenerancies
+    # Generate lists containing the columns that correspond to degenerancies
     kk = 0
     for k in result:
-        for ind, j in enumerate(k): # pylint: disable=unused-variable
+        for ind, j in enumerate(k):  # pylint: disable=unused-variable
             k[ind] = kk
             kk = kk+1
 
-    ## Generate the lists with the degenerate column subspaces
+    # Generate the lists with the degenerate column subspaces
     vas = []
     was = []
     for i in result:
         vas.append(v[:, i])
         was.append(w[:, i])
 
-    ## Generate the matrices qs of the degenerate subspaces
+    # Generate the matrices qs of the degenerate subspaces
     qs = []
     for i in range(len(result)):
         qs.append(sqrtm(np.transpose(vas[i]) @ was[i]))
 
-    ## Construct the Takagi unitary
+    # Construct the Takagi unitary
     qb = block_diag(*qs)
 
     U = v @ np.conj(qb)
@@ -126,9 +126,11 @@ def T(m, n, theta, phi, nmax):
     mat[n, n] = np.cos(theta)
     return mat
 
+
 def Ti(m, n, theta, phi, nmax):
     r"""The inverse Clements T matrix"""
     return np.transpose(T(m, n, theta, -phi, nmax))
+
 
 def nullTi(m, n, U):
     r"""Nullifies element m,n of U using Ti"""
@@ -147,6 +149,7 @@ def nullTi(m, n, U):
 
     return [n, n+1, thetar, phir, nmax]
 
+
 def nullT(n, m, U):
     r"""Nullifies element n,m of U using T"""
     (nmax, mmax) = U.shape
@@ -164,8 +167,14 @@ def nullT(n, m, U):
 
     return [n-1, n, thetar, phir, nmax]
 
+<<<<<<< HEAD
 def clements(V, tol=11):
     r"""Clements decomposition with phases in the middle of interferomter
+=======
+
+def clements(V, tol=1e-11):
+    r"""Performs the Clements decomposition of a Unitary complex matrix.
+>>>>>>> d880ba5173e94b18e2f2e73ab51f38669ee001fe
 
     See Clements et al. Optica 3, 1460 (2016) [10.1364/OPTICA.3.001460]
     for more details.
@@ -201,7 +210,7 @@ def clements(V, tol=11):
     tilist = []
     tlist = []
     for k, i in enumerate(range(nsize-2, -1, -1)):
-        if k%2 == 0:
+        if k % 2 == 0:
             for j in reversed(range(nsize-1-i)):
                 tilist.append(nullTi(i+j+1, j, localV))
                 localV = localV @ Ti(*tilist[-1])
@@ -280,8 +289,9 @@ def williamson(V, tol=1e-11):
         raise ValueError("The input matrix is not symmetric")
     if n != m:
         raise ValueError("The input matrix is not square")
-    if n%2 != 0:
-        raise ValueError("The input matrix must have an even number of rows/columns")
+    if n % 2 != 0:
+        raise ValueError(
+            "The input matrix must have an even number of rows/columns")
 
     n = n//2
     omega = sympmat(n)
@@ -299,10 +309,10 @@ def williamson(V, tol=1e-11):
     I = np.identity(2)
     seq = []
 
-    ## In what follows I construct a permutation matrix p  so that the Schur matrix has
-    ## only positive elements above the diagonal
-    ## Also the Schur matrix uses the x_1,p_1, ..., x_n,p_n  ordering thus I use rotmat to
-    ## go to the ordering x_1, ..., x_n, p_1, ... , p_n
+    # In what follows I construct a permutation matrix p  so that the Schur matrix has
+    # only positive elements above the diagonal
+    # Also the Schur matrix uses the x_1,p_1, ..., x_n,p_n  ordering thus I use rotmat to
+    # go to the ordering x_1, ..., x_n, p_1, ... , p_n
 
     for i in range(n):
         if s1[2*i, 2*i+1] > 0:
@@ -315,7 +325,8 @@ def williamson(V, tol=1e-11):
     s1t = p @ s1 @ p
     dd = np.transpose(rotmat) @ s1t @rotmat
     Ktt = Kt @ rotmat
-    Db = np.diag([1/dd[i, i+n] for i in range(n)] + [1/dd[i, i+n] for i in range(n)])
+    Db = np.diag([1/dd[i, i+n] for i in range(n)] + [1/dd[i, i+n]
+                                                     for i in range(n)])
     S = Mm12 @ Ktt @ sqrtm(Db)
     return Db, np.linalg.inv(S).T
 
@@ -353,8 +364,9 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
 
     if n != m:
         raise ValueError("The input matrix is not square")
-    if n%2 != 0:
-        raise ValueError("The input matrix must have an even number of rows/columns")
+    if n % 2 != 0:
+        raise ValueError(
+            "The input matrix must have an even number of rows/columns")
 
     n = n//2
     omega = sympmat(n)
@@ -364,15 +376,15 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
     u, sigma = polar(S, side='left')
     ss, uss = takagi(sigma, tol=tol, rounding=rounding)
 
-    ## Apply a permutation matrix so that the squeezers appear in the order
-    ## s_1,...,s_n, 1/s_1,...1/s_n
+    # Apply a permutation matrix so that the squeezers appear in the order
+    # s_1,...,s_n, 1/s_1,...1/s_n
     perm = np.array(list(range(0, n)) + list(reversed(range(n, 2*n))))
 
     pmat = np.identity(2*n)[perm, :]
     ut = uss @ pmat
 
-    ## Apply a second permutation matrix to permute s
-    ## (and their corresonding inverses) to get the canonical symplectic form
+    # Apply a second permutation matrix to permute s
+    # (and their corresonding inverses) to get the canonical symplectic form
     qomega = np.transpose(ut) @ (omega) @ ut
     st = pmat @ np.diag(ss) @ pmat
 
@@ -402,7 +414,7 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
     return ut1, st1, v1
 
 
-def covmat_to_hamil(V, tol=1e-10): # pragma: no cover
+def covmat_to_hamil(V, tol=1e-10):  # pragma: no cover
     r"""Converts a covariance matrix to a Hamiltonian.
 
     Given a covariance matrix V of a Gaussian state :math:`\rho` in the xp ordering,
@@ -443,7 +455,7 @@ def covmat_to_hamil(V, tol=1e-10): # pragma: no cover
     return H
 
 
-def hamil_to_covmat(H, tol=1e-10): # pragma: no cover
+def hamil_to_covmat(H, tol=1e-10):  # pragma: no cover
     r"""Converts a Hamiltonian matrix to a covariance matrix.
 
     Given a Hamiltonian matrix of a Gaussian state H, finds the equivalent covariance matrix
