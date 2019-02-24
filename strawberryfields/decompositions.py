@@ -15,7 +15,6 @@
 
 from itertools import groupby
 
-import math as mt
 import numpy as np
 from scipy.linalg import block_diag, sqrtm, polar, schur
 
@@ -216,7 +215,7 @@ def clements(V, tol=1e-11):
 
     return tilist, tlist, np.diag(localV)
 
-def clements_eq5(V, tol=11):
+def clements_phase_end(V, tol=1e-11):
     r"""Clements decomposition of unitary matrix
 
     See Clements et al. Optica 3, 1460 (2016) [10.1364/OPTICA.3.001460]
@@ -247,7 +246,7 @@ def clements_eq5(V, tol=11):
 
         # The new parameters required for D',T' st. T^(-1)D = D'T'
         new_theta = theta
-        new_phi = mt.fmod((alpha - beta + np.pi), 2*np.pi)
+        new_phi = np.fmod((alpha - beta + np.pi), 2*np.pi)
         new_alpha = beta - phi + np.pi
         new_beta = beta
 

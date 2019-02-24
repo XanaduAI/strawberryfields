@@ -130,14 +130,14 @@ class DecompositionsModule(BaseTest):
         self.assertAlmostEqual(error.mean() , 0)
 
 
-    def test_clements_eq5_random_unitary(self):
+    def test_clements_phase_end_random_unitary(self):
         self.logTestName()
         error=np.empty(nsamples)
         for k in range(nsamples):
             n=20
             U=haar_measure(n)
 
-            new_tlist, new_diags = dec.clements_eq5(U)
+            new_tlist, new_diags = dec.clements_phase_end(U)
 
             U_rec=np.identity(n)
             for i in new_tlist:
