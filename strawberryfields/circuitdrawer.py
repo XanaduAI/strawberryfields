@@ -19,56 +19,68 @@ A Strawberry Fields module that provides an object-oriented interface for buildi
 quantum circuit representations of continuous-variable circuits using the
 :math:`\LaTeX` `Qcircuit package <https://ctan.org/pkg/qcircuit>`_.
 
-The following features of Qcircuit are currently supported:
+The following features of Qcircuit are currently used:
 
-Loading Q-circuit
------------------
-\input{Qcircuit}
+* Loading Q-circuit: ``\input{Qcircuit}``
+* Making Circuits: ``\Qcircuit``
+* Spacing: ``@C=#1`` and ``@R=#1``
+* Wires: ``\qw[#1]``
+* Gates: ``\gate {#1}``, ``\targ``, and ``\qswap``
+* Control: ``\ctrl{#1}``
 
-Making Circuits
----------------
-\Qcircuit
+The drawing of the following Xanadu supported operations are currently supported:
 
-Spacing
+.. rst-class:: docstable
+
++-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|     Gate type     |                                                                            Supported gates                                                                             |
++===================+========================================================================================================================================================================+
+| Single mode gates | :class:`~.Dgate`, :class:`~.Xgate`, :class:`~.Zgate`, :class:`~.Sgate`, :class:`~.Rgate`, :class:`~.Pgate`, :class:`~.Vgate`, :class:`~.Kgate`, :class:`~.Fouriergate` |
++-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Two mode gates    | :class:`~.BSgate`, :class:`~.S2gate`, :class:`~.CXgate`, :class:`~.CZgate`, :class:`~.CKgate`                                                                          |
++-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+.. note:: Measurement operations :class:`~.MeasureHomodyne`, :class:`~.MeasureHeterodyne`, and :class:`~.MeasureFock` are not currently supported.
+
+
+Example
 -------
-@C=#1
-@R=#1
 
-Wires
------
-\qw[#1]
 
-Gates
------
-\gate {#1}
-\targ
-\qswap
 
-Control
--------
-\ctrl{#1}
 
-The drawing of the following Xanadu supported operations will be implemented:
+Circuit drawer methods
+----------------------
 
-single-mode gates
------------------
-Dgate
-Xgate
-Zgate
-Sgate
-Rgate
-Pgate
-Vgate
-Kgate
-Fouriergate
+.. currentmodule:: strawberryfields.circuitdrawer.Circuit
 
-Two-mode gates
---------------
-BSgate
-S2gate
-CXgate
-CZgate
-CKgate
+.. autosummary::
+   _gate_from_operator
+   parse_op
+   _single_mode_gate
+   _multi_mode_gate
+   _controlled_mode_gate
+   _on_empty_column
+   _add_column
+   _is_empty
+   _set_column_spacing
+   _set_row_spacing
+   _pad_with_spaces
+   dump_to_document
+   compile_document
+   _init_document
+   _end_document
+   _begin_circuit
+   _end_circuit
+   _end_wire
+   _apply_spacing
+    _write_operation_to_document
+
+.. currentmodule:: strawberryfields.circuitdrawer
+
+
+Code details
+^^^^^^^^^^^^
 """
 import datetime
 import os
@@ -79,26 +91,30 @@ from .qcircuit_strings import QUANTUM_WIRE, PAULI_X_COMP, PAULI_Z_COMP, CONTROL,
 
 
 class ModeMismatchException(Exception):
-    """Exception raised by :func:`~strawberryfields.circuitdrawer.Circuit.parse_op` when an operator is interpreted
-    as an n-mode gate but is applied to a number of modes != n.
+    """Exception raised when parsing a Gate object
 
-    E.g. an error is made when parsing a Gate object
+    This class corresponds to the exception raised by :meth:`~.parse_op`
+    when an operator is interpreted as an n-mode gate but is applied to a number of modes != n.
     """
     pass
 
 
 class UnsupportedGateException(Exception):
-    """Exception raised by :func:`~strawberryfields.circuitdrawer.Circuit.parse_op` when it is attempted to add an
-    unsupported operator to the circuit.
+    """Exception raised when attempting to add an unsupported operator.
 
-    E.g. it is attempted to add an operator other than those listed in the supported gates.
+    This class corresponds to the exception raised by :meth:`~.parse_op` when it is attempted to add an
+    unsupported operator to the circuit.
     """
     pass
 
 
 class Circuit:
-    """Represents a quantum circuit that can be compiled to .tex format."""
+    """Represents a quantum circuit that can be compiled to tex format.
 
+    Args:
+        wires (int): the number of quantum wires or subsystems to use in the
+            circuit diagram.
+    """
     _circuit_matrix = []
 
     def __init__(self, wires):
@@ -127,13 +143,11 @@ class Circuit:
             'S2gate': self._s2
         }
 
-    # operations
-
     def _gate_from_operator(self, op):
         """Infers the number of modes and callable Circuit class method that correspond with a Strawberry Fields operator object.
 
         Args:
-            op (Gate): the Strawberry Fields operator object.
+            op (strawberryfields.ops.Gate): the Strawberry Fields operator object.
 
         Returns:
             method (function): callable method that adds the given operator to the latex circuit.
@@ -160,7 +174,7 @@ class Circuit:
         """Transforms a Strawberry Fields operator object to a latex qcircuit gate.
 
         Args:
-            op (Gate): the Strawberry Fields operator object.
+            op (strawberryfields.ops.Gate): the Strawberry Fields operator object.
 
         Raises:
             UnsupportedGateException: if the operator is not supported by the circuit drawer module.
