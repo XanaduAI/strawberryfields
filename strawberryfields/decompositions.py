@@ -214,7 +214,8 @@ def clements(V, tol=11):
     return tilist, tlist, np.diag(localV)
 
 def clements_eq5(V, tol=11):
-    r"""Clements decomposition of unitary matrix
+    r"""Performs the Clements decomposition of a Unitary complex matrix, with local
+    phase shifts applied after the interferometer.
 
     See Clements et al. Optica 3, 1460 (2016) [10.1364/OPTICA.3.001460]
     for more details.
