@@ -143,7 +143,7 @@ class DecompositionsModule(BaseTest):
             for i in new_tlist:
                 U_rec=dec.T(*i) @ U_rec
             U_rec = np.diag(new_diags) @ U_rec
-            self.assertAlmostEqual(np.linalg.norm(U_rec-U), 0)
+            self.assertAlmostEqual(np.linalg.norm(U_rec-U), 0, delta=self.tol)
 
 
     def test_williamson_BM_random_circuit(self):

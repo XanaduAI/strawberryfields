@@ -167,14 +167,9 @@ def nullT(n, m, U):
 
     return [n-1, n, thetar, phir, nmax]
 
-<<<<<<< HEAD
-def clements(V, tol=11):
-    r"""Clements decomposition with phases in the middle of interferomter
-=======
 
 def clements(V, tol=1e-11):
     r"""Performs the Clements decomposition of a Unitary complex matrix.
->>>>>>> d880ba5173e94b18e2f2e73ab51f38669ee001fe
 
     See Clements et al. Optica 3, 1460 (2016) [10.1364/OPTICA.3.001460]
     for more details.
