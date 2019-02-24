@@ -121,7 +121,7 @@ Code details
 ~~~~~~~~~~~~
 
 """
-#pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
+# pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
 # todo: Avoid issues with Engine contexts and threading,
 # cf. _pydecimal.py in the python standard distribution.
@@ -212,13 +212,15 @@ class Command:
             Note that the order matters here.
     """
     # pylint: disable=too-few-public-methods
+
     def __init__(self, op, reg, decomp=False):
         # accept a single RegRef in addition to a Sequence
         if not isinstance(reg, Sequence):
             reg = [reg]
 
         self.op = op   #: Operation: quantum operation to apply
-        self.reg = reg  #: Sequence[RegRef]: subsystems to which the operation is applied
+        #: Sequence[RegRef]: subsystems to which the operation is applied
+        self.reg = reg
         self.decomp = decomp  #: bool: is this Command a part of a decomposition?
 
     def __str__(self):
@@ -265,6 +267,7 @@ class RegRef:
         ind (int): index of the register subsystem referred to
     """
     # pylint: disable=too-few-public-methods
+
     def __init__(self, ind):
         self.ind = ind   #: int: subsystem index
         self.val = None  #: Real: measured eigenvalue. None if the subsystem has not been measured yet
@@ -296,6 +299,7 @@ class RegRefTransform:
             it show in the engine queue as ``RegRefTransform(q[0], <lambda>)``.
     """
     # pylint: disable=too-few-public-methods
+
     def __init__(self, refs, func=None, func_str=None):
         # into a list of regrefs
         if isinstance(refs, RegRef):
@@ -306,12 +310,14 @@ class RegRefTransform:
             # Maybe we want to delete a mode after measurement to save comp effort.
             raise ValueError('Trying to use inactive RegRefs.')
 
-        self.regrefs = refs   #: list[RegRef]: register references that act as parameters for the function
+        #: list[RegRef]: register references that act as parameters for the function
+        self.regrefs = refs
         self.func = func   #: None, function: the transformation itself, returns a scalar
         self.func_str = func_str
 
         if func is None and len(refs) > 1:
-            raise ValueError('Identity transformation only takes one parameter.')
+            raise ValueError(
+                'Identity transformation only takes one parameter.')
 
     def __str__(self):
         """Prints the RegRefTransform using Blackbird syntax."""
@@ -319,7 +325,7 @@ class RegRefTransform:
         rr = ', '.join(temp)
 
         if len(temp) > 1:
-            rr = '[' +rr +']'
+            rr = '[' + rr + ']'
 
         if self.func is None:
             return 'RR({})'.format(rr)
@@ -330,7 +336,7 @@ class RegRefTransform:
         return 'RR({}, {})'.format(rr, self.func_str)
 
     def __format__(self, format_spec):
-        return self.__str__() # pragma: no cover
+        return self.__str__()  # pragma: no cover
 
     def __eq__(self, other):
         "Not equal to anything."
@@ -389,12 +395,16 @@ class Engine:
     def __init__(self, num_subsystems, hbar=2):
         self.init_num_subsystems = num_subsystems  #: int: initial number of subsystems
         self.cmd_queue = []       #: list[Command]: command queue
-        self.cmd_applied = []     #: list[list[Command]]: list of lists of commands that have been run (one list per run)
+        #: list[list[Command]]: list of lists of commands that have been run (one list per run)
+        self.cmd_applied = []
         self.backend = None       #: BaseBackend: backend for executing the quantum circuit
-        self.hbar = hbar          #: float: Numerical value of hbar in the (implicit) units of position and momentum.
+        #: float: Numerical value of hbar in the (implicit) units of position and momentum.
+        self.hbar = hbar
         # create mode references
-        self.reg_refs = {}        #: dict[int->RegRef]: mapping from subsystem indices to corresponding RegRef objects
-        self.unused_indices = set()  #: set[int]: created subsystem indices that have not been used (operated on) yet
+        #: dict[int->RegRef]: mapping from subsystem indices to corresponding RegRef objects
+        self.reg_refs = {}
+        #: set[int]: created subsystem indices that have not been used (operated on) yet
+        self.unused_indices = set()
         self._add_subsystems(num_subsystems)
         self._set_checkpoint()
 
@@ -414,9 +424,9 @@ class Engine:
         """Exit the quantum circuit context."""
         Engine._current_context = None
 
-    #=================================================
+    # =================================================
     #  RegRef accounting
-    #=================================================
+    # =================================================
     @property
     def register(self):
         """Return symbolic references to all the currently valid register subsystems.
@@ -451,8 +461,10 @@ class Engine:
 
         A RegRef checkpoint is made after (1) :meth:`__init__`, (2) :meth:`run`, (3) :meth:`reset`.
         """
-        self._reg_refs_checkpoint = {k: r.active for k, r in self.reg_refs.items()}  #: dict[int->bool]: activity state of the current RegRefs
-        self._unused_indices_checkpoint = self.unused_indices.copy()  #: set[int]: like unused_indices
+        self._reg_refs_checkpoint = {k: r.active for k, r in self.reg_refs.items(
+        )}  #: dict[int->bool]: activity state of the current RegRefs
+        #: set[int]: like unused_indices
+        self._unused_indices_checkpoint = self.unused_indices.copy()
 
     def _restore_checkpoint(self):
         """Restore a RegRef checkpoint.
@@ -496,7 +508,8 @@ class Engine:
         # add them to the index map
         for r in refs:
             self.reg_refs[r.ind] = r
-        self.unused_indices.update(inds)  # all the newly reserved indices are unused for now
+        # all the newly reserved indices are unused for now
+        self.unused_indices.update(inds)
         return refs
 
     def _delete_subsystems(self, refs):
@@ -601,7 +614,8 @@ class Engine:
             raise RegRefError('Subsystem {} does not exist.'.format(ind))
         rr = self.reg_refs[ind]
         if not rr.active:
-            raise RegRefError('Subsystem {} has already been deleted.'.format(ind))
+            raise RegRefError(
+                'Subsystem {} has already been deleted.'.format(ind))
         return rr
 
     def _test_regrefs(self, reg):
@@ -627,16 +641,19 @@ class Engine:
                 if rr not in self.reg_refs.values():
                     raise RegRefError('Unknown RegRef.')
                 if not rr.active:
-                    raise RegRefError('Subsystem {} has already been deleted.'.format(rr.ind))
+                    raise RegRefError(
+                        'Subsystem {} has already been deleted.'.format(rr.ind))
                 if self.reg_refs[rr.ind] is not rr:
                     raise RegRefError('Should never happen!')
             elif isinstance(rr, numbers.Integral):
                 rr = self._index_to_regref(rr)
             else:
-                raise RegRefError('Subsystems can only be indexed using integers and RegRefs.')
+                raise RegRefError(
+                    'Subsystems can only be indexed using integers and RegRefs.')
 
             if rr in temp:
-                raise RegRefError('Trying to act on the same subsystem more than once.')
+                raise RegRefError(
+                    'Trying to act on the same subsystem more than once.')
             temp.append(rr)
         return temp
 
@@ -742,7 +759,8 @@ class Engine:
             else:
                 try:
                     # try to apply it to the backend
-                    cmd.op.apply(cmd.reg, self.backend, hbar=self.hbar, **kwargs)
+                    cmd.op.apply(cmd.reg, self.backend,
+                                 hbar=self.hbar, **kwargs)
                     applied.append(cmd)
                 except NotApplicableError:
                     # command is not applicable to the current backend type
@@ -790,7 +808,8 @@ class Engine:
             # keep the current backend
             if self.backend is None:
                 # if backend does not exist, raise error
-                raise ValueError("Please provide a simulation backend.") from None
+                raise ValueError(
+                    "Please provide a simulation backend.") from None
         elif isinstance(backend, str):
             # if backend is specified via a string and the engine already has that type of backend
             # loaded, then we should just use the existing backend
@@ -801,13 +820,15 @@ class Engine:
                 # initialize a backend
                 self.cmd_applied.clear()
                 self.backend = load_backend(backend)
-                self.backend.begin_circuit(num_subsystems=self.init_num_subsystems, hbar=self.hbar, **kwargs)
+                self.backend.begin_circuit(
+                    num_subsystems=self.init_num_subsystems, hbar=self.hbar, **kwargs)
         else:
             if isinstance(backend, BaseBackend):
                 self.cmd_applied.clear()
                 self.backend = backend
             else:
-                raise ValueError("Please provide a valid Strawberry Fields backend.") from None
+                raise ValueError(
+                    "Please provide a valid Strawberry Fields backend.") from None
 
         # todo unsuccessful run due to exceptions should ideally result in keeping
         # the command queue as is but bringing the backend back to the last checkpoint
@@ -925,7 +946,7 @@ class Engine:
         # print('\n\nOptimizing...\nUnused inds: ', self.unused_indices)
 
         grid = self._list_to_grid(self.cmd_queue)
-        #for k in grid:
+        # for k in grid:
         #    print('mode {}, len {}'.format(k, len(grid[k])))
 
         # try merging neighboring operations on each wire
