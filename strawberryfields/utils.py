@@ -100,6 +100,7 @@ import collections
 from inspect import signature
 
 import numpy as np
+import tensorflow as tf
 from numpy.random import randn
 from numpy.polynomial.hermite import hermval as H
 
@@ -107,13 +108,14 @@ import scipy as sp
 from scipy.special import factorial as fac
 
 from .engine import _convert
+from .backends import load_backend
+from .ops import Command, Gate, Channel, Ket
 
 # pylint: disable=abstract-method,ungrouped-imports,
 
-# ------------------------------------------------------------------------
+#------------------------------------------------------------------------
 # RegRef convert functions                                              |
-# ------------------------------------------------------------------------
-
+#------------------------------------------------------------------------
 
 @_convert
 def neg(x):
@@ -209,10 +211,9 @@ def power(x, a):
         return np.power(x, tmp)
     return rrt(x)
 
-# ------------------------------------------------------------------------
+#------------------------------------------------------------------------
 # State functions - Fock basis and Gaussian basis                |
-# ------------------------------------------------------------------------
-
+#------------------------------------------------------------------------
 
 def squeezed_cov(r, phi, hbar=2):
     r"""Returns the squeezed covariance matrix of a squeezed state
@@ -342,7 +343,7 @@ def squeezed_state(r, p, basis='fock', fock_dim=5, hbar=2.):
     phi = p
 
     if basis == 'fock':
-        def ket(n): return (np.sqrt(fac(2*n))/(2**n*fac(n))) * \
+        ket = lambda n: (np.sqrt(fac(2*n))/(2**n*fac(n))) * \
                         (-np.exp(1j*phi)*np.tanh(r))**n
         state = np.array([ket(n//2) if n %
                           2 == 0 else 0. for n in range(fock_dim)])
@@ -411,14 +412,12 @@ def displaced_squeezed_state(a, r, phi, basis='fock', fock_dim=5, hbar=2.):
                  for n in range(fock_dim)]
             )
 
-            vec = [H(gamma/np.sqrt(phase_factor*np.sinh(2*r)), row)
-                   for row in coeff]
+            vec = [H(gamma/np.sqrt(phase_factor*np.sinh(2*r)), row) for row in coeff]
 
             state = N*np.array(vec)
 
         else:
-            state = coherent_state(
-                a, basis='fock', fock_dim=fock_dim)  # pragma: no cover
+            state = coherent_state(a, basis='fock', fock_dim=fock_dim) # pragma: no cover
 
     elif basis == 'gaussian':
         means = np.array([a.real, a.imag]) * np.sqrt(2*hbar)
@@ -427,9 +426,9 @@ def displaced_squeezed_state(a, r, phi, basis='fock', fock_dim=5, hbar=2.):
     return state
 
 
-# ------------------------------------------------------------------------
+#------------------------------------------------------------------------
 # State functions - Fock basis only                              |
-# ------------------------------------------------------------------------
+#------------------------------------------------------------------------
 
 
 def fock_state(n, fock_dim=5):
@@ -483,9 +482,9 @@ def cat_state(a, p=0, fock_dim=5):
     return ket
 
 
-# ------------------------------------------------------------------------
+#------------------------------------------------------------------------
 # Random numbers and matrices                                           |
-# ------------------------------------------------------------------------
+#------------------------------------------------------------------------
 
 
 def randnc(*arg):
@@ -648,8 +647,7 @@ class operation:
         num_params = len(func_sig.parameters)
 
         if num_params == 0:
-            raise ValueError(
-                "Operation must receive the qumode register as an argument.")
+            raise ValueError("Operation must receive the qumode register as an argument.")
 
         if num_params != len(self.args) + 1:
             raise ValueError("Mismatch in the number of arguments")
@@ -673,3 +671,240 @@ class operation:
             return self
 
         return f_proxy
+
+
+
+#=================================================
+# extract_xxx methods
+#=================================================
+
+
+def is_unitary(engine):
+    "Returns true if every command in the queue is of type Gate"
+    return all(isinstance(cmd.op, Gate) for cmd in engine.cmd_queue)
+
+def is_channel(engine):
+    "Returns true if every command in the queue is either of type Gate or type Channel"
+    return all(isinstance(cmd.op, (Channel, Gate)) for cmd in engine.cmd_queue)
+
+def vectorize_dm(tensor):
+    """Given a tensor with 4N indices each of dimension D each,
+    it returns the vectorized tensor with 4 indices of dimension D^N each.
+    
+    Args:
+        tensor (array): a tensor with 4N indices of dimension D each
+    Returns:
+        array: a tensor with 4 indices of dimension D^N each
+    Raises:
+        ValueError: if the input tensor's dimensions are not all equal or if the number
+            of its indices is not a multiple of 4.
+
+    Example:
+    For N=2
+         ____
+    0 --|    |-- 1
+    2 --|    |-- 3
+    4 --|    |-- 5
+    6 --|____|-- 7
+
+    goes to:
+             ____
+    (0,2) --|    |-- (1,3)
+    (4,6) --|____|-- (5,7)
+
+    """
+    dims = tensor.ndim
+    if dims % 4 != 0:
+        raise ValueError(f'tensor must have a number of indices that is a multiple of 4, but it has {dims} indices')
+    shape = tensor.shape
+    if len(set(shape)) != 1:
+        raise ValueError(f'tensor indices must have all the same dimension, but tensor has shape {shape}')
+
+    transposed = np.einsum(tensor, [int(n) for n in np.arange(dims).reshape((2, dims//2)).T.reshape([-1])])
+    vectorized = np.reshape(transposed, [shape[0]**(dims//4)]*4)
+    transposed_back = np.einsum('abcd -> acbd', vectorized)
+
+    return transposed_back
+
+def unvectorize_dm(tensor, num_subsystems):
+    """Given a tensor with 4 indices, each of dimension D^N,
+    return the unvectorized tensor with 4N indices of dimension D each.
+    (inverse of the procedure given by vectorize_dm)
+    """
+    dims = tensor.ndim
+    if dims != 4:
+        raise ValueError(f'tensor must have 4 indices, but it has {dims} indices')
+    shape = tensor.shape
+    if len(set(shape)) != 1:
+        raise ValueError(f'tensor indices must have all the same dimension, but tensor has shape {shape}')
+
+    transposed = np.einsum('abcd -> acbd', tensor)
+    unvectorized = np.reshape(transposed, [int(shape[0]**(1/num_subsystems))]*(4*num_subsystems))
+    transposed_back = np.einsum(unvectorized, [int(n) for n in np.arange(4*num_subsystems).reshape((2*num_subsystems, 2)).T.reshape([-1])])
+
+    return transposed_back
+
+def _interleaved_identities(num_subsystems: int, cutoff_dim: int):
+    """Returns the tensor product of `num_subsystems` copies of the identity matrix,
+    with the indices interleaved.
+    Example for num_subsystems = 3: make the tensor product of three identity matrices I_ijklmn
+    where ij, kl and mn are the three sets of indices, and return I_ikmjln.
+    """
+    I = np.identity(cutoff_dim)
+    for _ in range(1, num_subsystems):
+        I = np.tensordot(I, np.identity(cutoff_dim), axes=0)
+    return np.einsum(I, [int(n) for n in np.arange(2*num_subsystems).reshape((2, num_subsystems)).T.reshape([-1])])
+
+def _engine_with_CJ_cmd_queue(engine, cutoff_dim: int):
+    """Doubles the number of modes of an engine objects and prepends to its command queue
+    the operation that creates the interleaved identities ket. CJ is from Choi-Jamiolkowski, as 
+    under the hood we are expliting the CJ isomorphism.
+    """
+    engine._add_subsystems(engine.init_num_subsystems)
+    I = _interleaved_identities(num_subsystems=engine.init_num_subsystems, cutoff_dim=cutoff_dim)
+    engine.cmd_queue = [Command(Ket(I), list(engine.reg_refs.values()))] + engine.cmd_queue
+    return engine
+
+def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, backend: str = 'fock'):
+    """Returns the array representation of a unitary circuit as an ndarray ('fock' backend)
+    or as a TensorFlow Tensor ('tf' backend).
+
+    The circuit must only include operations of the Gate class.
+    If `vectorize_modes` = True, it returns a matrix.
+    If `vectorize_modes` = False, it returns an operator with 2N indices,
+    where N is the number of modes that the engine is created with. Adjacent
+    indices correspond to output-input pairs of the same mode.
+
+    Args:
+        engine (Engine): the engine containing the circuit
+        cutoff_dim (int): dimension of each index.
+        vectorize_modes (bool): if true, reshape input and output modes in order to return a matrix.
+        backend (str): the backend to build the unitary. 'fock' (default) and 'tf' are supported.
+    Returns:
+        array: the numerical array of the unitary circuit
+    Raises:
+        TypeError: if the operations used to construct the circuit are not all unitary.
+    """
+    if not is_unitary(engine):
+        raise TypeError(f"The circuit definition contains elements that are not of type Gate")
+    if backend not in ('fock', 'tf'):
+        raise ValueError("Only 'fock' and 'tf' backends are supported")
+
+    from copy import deepcopy
+    _engine = _engine_with_CJ_cmd_queue(deepcopy(engine), cutoff_dim=cutoff_dim)
+
+    _backend = load_backend(backend) # (!) _backend is the object, backend is just its name
+    _backend.begin_circuit(num_subsystems=_engine.num_subsystems, cutoff_dim=cutoff_dim, hbar=_engine.hbar, pure=True)
+    result = _engine.run(_backend, cutoff_dim=cutoff_dim).ket()
+
+    if vectorize_modes:
+        if backend == 'fock':
+            return np.reshape(result, [cutoff_dim**_engine.init_num_subsystems, cutoff_dim**_engine.init_num_subsystems])
+        else:
+            return tf.reshape(result, [cutoff_dim**_engine.init_num_subsystems, cutoff_dim**_engine.init_num_subsystems])
+    else:
+        if backend == 'fock':
+            return np.transpose(result, [int(n) for n in np.arange(2*_engine.init_num_subsystems).reshape((2, _engine.init_num_subsystems)).T.reshape([-1])])
+        else:
+            return tf.transpose(result, [int(n) for n in np.arange(2*_engine.init_num_subsystems).reshape((2, _engine.init_num_subsystems)).T.reshape([-1])])
+
+def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vectorize_modes: bool = False):
+    """Returns a numerical array representation of a channel.
+       The choices are among the Choi state representation, the Liouville representation and
+       the Kraus representation.
+
+    # Tensor shapes
+    If `vectorize_modes=True`, `representation='choi'` and `representation='liouville'` return an array
+    with 4 indices, while `representation='kraus'` returns an array of Kraus operators in matrix form.
+    If `vectorize_modes=False`, `representation='choi'` and `representation='liouville'` return an array
+    with 4N indices, while `representation='kraus'` returns an array of Kraus operators with 2N indices each,
+    where N is the number of modes that the engine is created with.
+    The Kraus representation automatically returns only the non-zero Kraus operators. One can reduce the number
+    of operators by discarding Kraus operators with small norm (thus approximating the channel).
+    
+    # Choi representation
+    The indices of the non-vectorized Choi operator match exactly those of the state, so that the action
+    of the channel can be computed as (e.g. for one mode or for `vectorize_modes = True`):
+    `rho_out = np.einsum('ab,abcd', rho_in, choi)`
+    or for two modes:
+    `rho_out = np.einsum('abcd,abcdefgh', rho_in, choi)`
+    Combining consecutive channels (in the order 1,2,3,...) is also straightforward with the Choi operator:
+    `choi_combined = np.einsum('abcd,cdef,efgh', choi_1, choi_2, choi_3)`
+
+    # Liouville operator
+    The Liouville operator is a partial transpose of the Choi operator, such that the first half of
+    consecutive index pairs are the output-input right modes (i.e. acting on the "bra" part of the state)
+    and the second half are the output-input left modes (i.e. acting on the "ket" part of the state).
+    Therefore, the action of the Liouville operator (e.g. for one mode or for `vectorize_modes = True`) is
+    `rho_out = np.einsum('abcd,bd->ca', liouville, rho_in)`
+    notice that the state contracts with the second index of each pair and that we output the ket
+    on the left (`c`) and the bra on the right (`a`).
+    For two modes we have:
+    `rho_out = np.einsum('abcdefgh,fbhd->eagc', liouville, rho_in)`
+    The Liouville representation has the property that if the channel is unitary, the operator is separable.
+    Whereas even if the channel were the identity, the Choi operator would correspond to a maximally entangled state.
+
+    The choi and liouville operators in _matrix_ form (i.e. with two indices) can be found as follows, where
+    D is the dimension of each vectorized index (i.e. for N modes D=cutoff_dim**N):
+    `choi_matrix = liouville.reshape(D**2, D**2).T`
+    `liouville_matrix = choi.reshape(D**2, D**2).T`
+
+    # Kraus representation
+    Adjacent indices of each Kraus operator correspond to output-input pairs of the same mode, so the action
+    of the channel can be written as (here for one mode or for vectorize_modes = True):
+    `rho_out = np.einsum('abc,cd,aed->be', kraus, rho_in, np.conj(kraus))`
+    Notice the transpose on the third index string (`aed` rather than `ade`), as the last operator should be the
+    conjugate transpose of the first, and we cannot just do `np.conj(kraus).T` because kraus has 3 indices and we 
+    just need to transpose the last two.
+
+    Args:
+        engine (Engine): the engine containing the circuit
+        cutoff_dim (int): dimension of each index
+        representation (str): choice between 'choi', 'liouville' or 'kraus'
+        vectorize_modes (bool): if True, reshapes the result into rank-4 tensor,
+            otherwise it returns a rank-4N tensor, where N is the number of modes.
+    Returns:
+        The numerical array of the channel, according to the specified representation
+        and vectorization options.
+    Raises:
+        TypeError: if the gates used to construct the circuit are not all unitary or channels.
+
+    """
+    if is_unitary(engine):
+        #raise Warning(f"This circuit is unitary and you could use extract_unitary for a more compact representation")
+        pass
+
+    if not is_channel(engine):
+        raise TypeError("The circuit definition contains elements that are neither of type Gate nor of type Channel")
+
+    from copy import deepcopy
+    _engine = _engine_with_CJ_cmd_queue(deepcopy(engine), cutoff_dim=cutoff_dim)
+    N = _engine.init_num_subsystems
+
+    backend = load_backend('fock')
+    backend.begin_circuit(num_subsystems=_engine.num_subsystems, cutoff_dim=cutoff_dim, hbar=_engine.hbar, pure=True)
+    choi = _engine.run(backend, cutoff_dim=cutoff_dim).dm()
+    choi = np.einsum('abcd->cdab',vectorize_dm(choi))
+
+    if representation.lower() == 'choi':
+        result = choi
+        if vectorize_modes == False:
+            result = unvectorize_dm(result, N)
+
+    elif representation.lower() == 'liouville':
+        result = np.einsum('abcd -> dbca', choi)
+        if vectorize_modes == False:
+            result = unvectorize_dm(result, N)
+            pass
+
+    elif representation.lower() == 'kraus':
+        eigvals, eigvecs = np.linalg.eig(np.einsum('abcd -> cadb', choi).reshape([cutoff_dim**(2*N), cutoff_dim**(2*N)]))
+        eigvecs = eigvecs[:, ~np.isclose(abs(eigvals), 0)]
+        eigvals = eigvals[~np.isclose(abs(eigvals), 0)]
+        result = np.einsum('abc->cab', np.einsum('b,ab->ab', np.sqrt(eigvals), eigvecs).reshape([cutoff_dim**N, cutoff_dim**N, -1]))
+        if vectorize_modes == False:
+            result = np.einsum(np.reshape(result, [-1]+[cutoff_dim]*(2*N)), range(1+2*N), [0]+[2*n+1 for n in range(N)]+[2*n+2 for n in range(N)])
+    else:
+        raise ValueError(f'representation {representation} not supported')
+
+    return result

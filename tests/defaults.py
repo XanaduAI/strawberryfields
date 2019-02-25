@@ -203,3 +203,8 @@ class TFBackendTest(FockBaseTest):
         super().setUp()
         if not isinstance(self.backend, backends.TFBackend):
             raise unittest.SkipTest('Test is only relevant for the Tensorflow backend.')
+
+class ExtractChannelTest(BaseTest):
+    """ABC for ExtractChannel dependent tests."""
+    def setUp(self):
+        super().setUp()
