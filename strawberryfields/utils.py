@@ -110,12 +110,12 @@ from scipy.special import factorial as fac
 from .engine import _convert
 from .backends import load_backend
 from .ops import Command, Gate, Channel, Ket
-
 # pylint: disable=abstract-method,ungrouped-imports,
 
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # RegRef convert functions                                              |
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
+
 
 @_convert
 def neg(x):
@@ -211,9 +211,10 @@ def power(x, a):
         return np.power(x, tmp)
     return rrt(x)
 
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # State functions - Fock basis and Gaussian basis                |
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
+
 
 def squeezed_cov(r, phi, hbar=2):
     r"""Returns the squeezed covariance matrix of a squeezed state
@@ -343,7 +344,7 @@ def squeezed_state(r, p, basis='fock', fock_dim=5, hbar=2.):
     phi = p
 
     if basis == 'fock':
-        ket = lambda n: (np.sqrt(fac(2*n))/(2**n*fac(n))) * \
+        def ket(n): return (np.sqrt(fac(2*n))/(2**n*fac(n))) * \
                         (-np.exp(1j*phi)*np.tanh(r))**n
         state = np.array([ket(n//2) if n %
                           2 == 0 else 0. for n in range(fock_dim)])
@@ -412,12 +413,14 @@ def displaced_squeezed_state(a, r, phi, basis='fock', fock_dim=5, hbar=2.):
                  for n in range(fock_dim)]
             )
 
-            vec = [H(gamma/np.sqrt(phase_factor*np.sinh(2*r)), row) for row in coeff]
+            vec = [H(gamma/np.sqrt(phase_factor*np.sinh(2*r)), row)
+                   for row in coeff]
 
             state = N*np.array(vec)
 
         else:
-            state = coherent_state(a, basis='fock', fock_dim=fock_dim) # pragma: no cover
+            state = coherent_state(
+                a, basis='fock', fock_dim=fock_dim)  # pragma: no cover
 
     elif basis == 'gaussian':
         means = np.array([a.real, a.imag]) * np.sqrt(2*hbar)
@@ -426,9 +429,9 @@ def displaced_squeezed_state(a, r, phi, basis='fock', fock_dim=5, hbar=2.):
     return state
 
 
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # State functions - Fock basis only                              |
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 
 
 def fock_state(n, fock_dim=5):
@@ -482,9 +485,9 @@ def cat_state(a, p=0, fock_dim=5):
     return ket
 
 
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Random numbers and matrices                                           |
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 
 
 def randnc(*arg):
@@ -647,7 +650,8 @@ class operation:
         num_params = len(func_sig.parameters)
 
         if num_params == 0:
-            raise ValueError("Operation must receive the qumode register as an argument.")
+            raise ValueError(
+                "Operation must receive the qumode register as an argument.")
 
         if num_params != len(self.args) + 1:
             raise ValueError("Mismatch in the number of arguments")
@@ -671,7 +675,6 @@ class operation:
             return self
 
         return f_proxy
-
 
 
 #=================================================
