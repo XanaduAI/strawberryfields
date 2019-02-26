@@ -718,10 +718,10 @@ def vectorize_dm(tensor):
     """
     dims = tensor.ndim
     if dims % 4 != 0:
-        raise ValueError(f'tensor must have a number of indices that is a multiple of 4, but it has {dims} indices')
+        raise ValueError('Tensor must have a number of indices that is a multiple of 4, but it has {dims} indices'.format(dims=dims))
     shape = tensor.shape
     if len(set(shape)) != 1:
-        raise ValueError(f'tensor indices must have all the same dimension, but tensor has shape {shape}')
+        raise ValueError('Tensor indices must have all the same dimension, but tensor has shape {shape}'.format(shape=shape))
 
     transposed = np.einsum(tensor, [int(n) for n in np.arange(dims).reshape((2, dims//2)).T.reshape([-1])])
     vectorized = np.reshape(transposed, [shape[0]**(dims//4)]*4)
@@ -736,10 +736,10 @@ def unvectorize_dm(tensor, num_subsystems):
     """
     dims = tensor.ndim
     if dims != 4:
-        raise ValueError(f'tensor must have 4 indices, but it has {dims} indices')
+        raise ValueError('tensor must have 4 indices, but it has {dims} indices'.format(dims=dims))
     shape = tensor.shape
     if len(set(shape)) != 1:
-        raise ValueError(f'tensor indices must have all the same dimension, but tensor has shape {shape}')
+        raise ValueError('tensor indices must have all the same dimension, but tensor has shape {shape}'.format(shape=shape))
 
     transposed = np.einsum('abcd -> acbd', tensor)
     unvectorized = np.reshape(transposed, [int(shape[0]**(1/num_subsystems))]*(4*num_subsystems))
@@ -789,7 +789,7 @@ def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, back
         TypeError: if the operations used to construct the circuit are not all unitary.
     """
     if not is_unitary(engine):
-        raise TypeError(f"The circuit definition contains elements that are not of type Gate")
+        raise TypeError("The circuit definition contains elements that are not of type Gate")
     if backend not in ('fock', 'tf'):
         raise ValueError("Only 'fock' and 'tf' backends are supported")
 
@@ -873,9 +873,9 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
         TypeError: if the gates used to construct the circuit are not all unitary or channels.
 
     """
-    if is_unitary(engine):
-        #raise Warning(f"This circuit is unitary and you could use extract_unitary for a more compact representation")
-        pass
+    # if is_unitary(engine):
+    #     #raise Warning(f"This circuit is unitary and you could use extract_unitary for a more compact representation")
+    #     pass
 
     if not is_channel(engine):
         raise TypeError("The circuit definition contains elements that are neither of type Gate nor of type Channel")
@@ -908,6 +908,6 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
         if vectorize_modes == False:
             result = np.einsum(np.reshape(result, [-1]+[cutoff_dim]*(2*N)), range(1+2*N), [0]+[2*n+1 for n in range(N)]+[2*n+2 for n in range(N)])
     else:
-        raise ValueError(f'representation {representation} not supported')
+        raise ValueError('representation {} not supported'.format(representation))
 
     return result
