@@ -803,13 +803,10 @@ def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, back
     if vectorize_modes:
         if backend == 'fock':
             return np.reshape(result, [cutoff_dim**_engine.init_num_subsystems, cutoff_dim**_engine.init_num_subsystems])
-        else:
-            return tf.reshape(result, [cutoff_dim**_engine.init_num_subsystems, cutoff_dim**_engine.init_num_subsystems])
-    else:
-        if backend == 'fock':
-            return np.transpose(result, [int(n) for n in np.arange(2*_engine.init_num_subsystems).reshape((2, _engine.init_num_subsystems)).T.reshape([-1])])
-        else:
-            return tf.transpose(result, [int(n) for n in np.arange(2*_engine.init_num_subsystems).reshape((2, _engine.init_num_subsystems)).T.reshape([-1])])
+        return tf.reshape(result, [cutoff_dim**_engine.init_num_subsystems, cutoff_dim**_engine.init_num_subsystems])
+    if backend == 'fock':
+        return np.transpose(result, [int(n) for n in np.arange(2*_engine.init_num_subsystems).reshape((2, _engine.init_num_subsystems)).T.reshape([-1])])
+    return tf.transpose(result, [int(n) for n in np.arange(2*_engine.init_num_subsystems).reshape((2, _engine.init_num_subsystems)).T.reshape([-1])])
 
 def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vectorize_modes: bool = False):
     """Returns a numerical array representation of a channel.
