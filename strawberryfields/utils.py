@@ -99,8 +99,8 @@ Code details
 import collections
 from inspect import signature
 
-import numpy as np
 import tensorflow as tf
+import numpy as np
 from numpy.random import randn
 from numpy.polynomial.hermite import hermval as H
 
@@ -693,7 +693,7 @@ def is_channel(engine):
 def vectorize_dm(tensor):
     """Given a tensor with 4N indices each of dimension D each,
     it returns the vectorized tensor with 4 indices of dimension D^N each.
-    
+
     Args:
         tensor (array): a tensor with 4N indices of dimension D each
     Returns:
@@ -760,7 +760,7 @@ def _interleaved_identities(num_subsystems: int, cutoff_dim: int):
 
 def _engine_with_CJ_cmd_queue(engine, cutoff_dim: int):
     """Doubles the number of modes of an engine objects and prepends to its command queue
-    the operation that creates the interleaved identities ket. CJ is from Choi-Jamiolkowski, as 
+    the operation that creates the interleaved identities ket. CJ is from Choi-Jamiolkowski, as
     under the hood we are expliting the CJ isomorphism.
     """
     engine._add_subsystems(engine.init_num_subsystems)
@@ -824,7 +824,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
     where N is the number of modes that the engine is created with.
     The Kraus representation automatically returns only the non-zero Kraus operators. One can reduce the number
     of operators by discarding Kraus operators with small norm (thus approximating the channel).
-    
+
     # Choi representation
     The indices of the non-vectorized Choi operator match exactly those of the state, so that the action
     of the channel can be computed as (e.g. for one mode or for `vectorize_modes = True`):
@@ -857,7 +857,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
     of the channel can be written as (here for one mode or for vectorize_modes = True):
     `rho_out = np.einsum('abc,cd,aed->be', kraus, rho_in, np.conj(kraus))`
     Notice the transpose on the third index string (`aed` rather than `ade`), as the last operator should be the
-    conjugate transpose of the first, and we cannot just do `np.conj(kraus).T` because kraus has 3 indices and we 
+    conjugate transpose of the first, and we cannot just do `np.conj(kraus).T` because kraus has 3 indices and we
     just need to transpose the last two.
 
     Args:
@@ -887,25 +887,24 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
     backend = load_backend('fock')
     backend.begin_circuit(num_subsystems=_engine.num_subsystems, cutoff_dim=cutoff_dim, hbar=_engine.hbar, pure=True)
     choi = _engine.run(backend, cutoff_dim=cutoff_dim).dm()
-    choi = np.einsum('abcd->cdab',vectorize_dm(choi))
+    choi = np.einsum('abcd->cdab', vectorize_dm(choi))
 
     if representation.lower() == 'choi':
         result = choi
-        if vectorize_modes == False:
+        if not vectorize_modes:
             result = unvectorize_dm(result, N)
 
     elif representation.lower() == 'liouville':
         result = np.einsum('abcd -> dbca', choi)
-        if vectorize_modes == False:
+        if not vectorize_modes:
             result = unvectorize_dm(result, N)
-            pass
 
     elif representation.lower() == 'kraus':
         eigvals, eigvecs = np.linalg.eig(np.einsum('abcd -> cadb', choi).reshape([cutoff_dim**(2*N), cutoff_dim**(2*N)]))
         eigvecs = eigvecs[:, ~np.isclose(abs(eigvals), 0)]
         eigvals = eigvals[~np.isclose(abs(eigvals), 0)]
         result = np.einsum('abc->cab', np.einsum('b,ab->ab', np.sqrt(eigvals), eigvecs).reshape([cutoff_dim**N, cutoff_dim**N, -1]))
-        if vectorize_modes == False:
+        if not vectorize_modes:
             result = np.einsum(np.reshape(result, [-1]+[cutoff_dim]*(2*N)), range(1+2*N), [0]+[2*n+1 for n in range(N)]+[2*n+2 for n in range(N)])
     else:
         raise ValueError('representation {} not supported'.format(representation))
