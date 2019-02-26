@@ -690,9 +690,9 @@ def is_channel(engine):
     "Returns true if every command in the queue is either of type Gate or type Channel"
     return all(isinstance(cmd.op, (Channel, Gate)) for cmd in engine.cmd_queue)
 
-def vectorize_dm(tensor):
-    """Given a tensor with 4N indices each of dimension D each,
-    it returns the vectorized tensor with 4 indices of dimension D^N each.
+def _vectorize_dm(tensor):
+    """Given a tensor with 4N indices of dimension D each, it returns the vectorized
+    tensor with 4 indices of dimension D^N each.
 
     Args:
         tensor (array): a tensor with 4N indices of dimension D each
@@ -729,10 +729,10 @@ def vectorize_dm(tensor):
 
     return transposed_back
 
-def unvectorize_dm(tensor, num_subsystems):
+def _unvectorize_dm(tensor, num_subsystems):
     """Given a tensor with 4 indices, each of dimension D^N,
     return the unvectorized tensor with 4N indices of dimension D each.
-    (inverse of the procedure given by vectorize_dm)
+    (inverse of the procedure given by _vectorize_dm)
     """
     dims = tensor.ndim
     if dims != 4:
@@ -884,17 +884,17 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
     backend = load_backend('fock')
     backend.begin_circuit(num_subsystems=_engine.num_subsystems, cutoff_dim=cutoff_dim, hbar=_engine.hbar, pure=True)
     choi = _engine.run(backend, cutoff_dim=cutoff_dim).dm()
-    choi = np.einsum('abcd->cdab', vectorize_dm(choi))
+    choi = np.einsum('abcd->cdab', _vectorize_dm(choi))
 
     if representation.lower() == 'choi':
         result = choi
         if not vectorize_modes:
-            result = unvectorize_dm(result, N)
+            result = _unvectorize_dm(result, N)
 
     elif representation.lower() == 'liouville':
         result = np.einsum('abcd -> dbca', choi)
         if not vectorize_modes:
-            result = unvectorize_dm(result, N)
+            result = _unvectorize_dm(result, N)
 
     elif representation.lower() == 'kraus':
         eigvals, eigvecs = np.linalg.eig(np.einsum('abcd -> cadb', choi).reshape([cutoff_dim**(2*N), cutoff_dim**(2*N)]))

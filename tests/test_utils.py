@@ -11,6 +11,7 @@ import defaults
 from defaults import BaseTest, FockBaseTest, ExtractChannelTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.utils import *
+from strawberryfields.utils import _interleaved_identities, _vectorize_dm, _unvectorize_dm
 from strawberryfields.backends.shared_ops import sympmat
 
 
@@ -481,10 +482,15 @@ class ExtractChannel(ExtractChannelTest):
         cutoff_dim = 4
         dm = np.random.rand(*[cutoff_dim]*8) + 1j*np.random.rand(*[cutoff_dim]*8) # 4^8 -> (4^2)^4 -> 4^8
         dm2 = np.random.rand(*[cutoff_dim]*4) + 1j*np.random.rand(*[cutoff_dim]*4) # (2^2)^4 -> 2^8 -> (2^2)^4
-        self.assertAllAlmostEqual(dm, unvectorize_dm(vectorize_dm(dm), 2), delta=defaults.TOLERANCE)
-        self.assertAllAlmostEqual(dm2, vectorize_dm(unvectorize_dm(dm2, 2)), delta=defaults.TOLERANCE)
+        self.assertAllAlmostEqual(dm, _unvectorize_dm(_vectorize_dm(dm), 2), delta=defaults.TOLERANCE)
+        self.assertAllAlmostEqual(dm2, _vectorize_dm(_unvectorize_dm(dm2, 2)), delta=defaults.TOLERANCE)
 
+    def test_interleaved_identities(self):
+        II = _interleaved_identities(num_subsystems=2, cutoff_dim=3)
+        self.assertAllAlmostEqual(np.einsum('abab', II), 3**2, delta=defaults.TOLERANCE)
 
+        III = _interleaved_identities(num_subsystems=3, cutoff_dim=5)
+        self.assertAllAlmostEqual(np.einsum('abcabc', III), 5**3, delta=defaults.TOLERANCE)
 
 
 
