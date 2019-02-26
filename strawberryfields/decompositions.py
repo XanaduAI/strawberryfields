@@ -168,7 +168,8 @@ def nullT(n, m, U):
 
 
 def clements(V, tol=1e-11):
-    r"""Performs the Clements decomposition of a Unitary complex matrix.
+    r"""Performs the Clements decomposition of a unitary complex matrix, with local
+    phase shifts applied between two interferometers.
 
     See Clements et al. Optica 3, 1460 (2016) [10.1364/OPTICA.3.001460]
     for more details.
