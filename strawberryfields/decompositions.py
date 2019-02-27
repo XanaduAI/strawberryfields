@@ -117,7 +117,7 @@ def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
 
 
 def T(m, n, theta, phi, nmax):
-    r"""The Clements T matrix"""
+    r"""The Clements T matrix from Eq. 1 of the paper"""
     mat = np.identity(nmax, dtype=np.complex128)
     mat[m, m] = np.exp(1j*phi)*np.cos(theta)
     mat[m, n] = -np.sin(theta)
@@ -168,9 +168,19 @@ def nullT(n, m, U):
 
 
 def clements(V, tol=1e-11):
-    r"""Performs the Clements decomposition of a Unitary complex matrix.
+    r"""Performs the Clements decomposition of a unitary complex matrix, with local
+    phase shifts applied between two interferometers.
 
-    See Clements et al. Optica 3, 1460 (2016) [10.1364/OPTICA.3.001460] for more details.
+    See Clements et al. Optica 3, 1460 (2016) [10.1364/OPTICA.3.001460]
+    for more details.
+
+    This function returns a circuit corresponding to an intermediate step in
+    Clements decomposition as described in Eq. 4 of the article. In this form,
+    the circuit comprises some T matrices (as in Eq. 1), then phases on all modes,
+    and more T matrices.
+
+    The procedure to construct these matrices is detailed in the supplementary
+    material of the article.
 
     Args:
         V (array): Unitary matrix of size n_size
@@ -206,6 +216,47 @@ def clements(V, tol=1e-11):
 
     return tilist, tlist, np.diag(localV)
 
+def clements_phase_end(V, tol=1e-11):
+    r"""Clements decomposition of unitary matrix
+
+    See Clements et al. Optica 3, 1460 (2016) [10.1364/OPTICA.3.001460]
+    for more details.
+
+    Final step in the decomposition of a given discrete unitary matrix.
+    The output is of the form given in Eq. 5.
+
+    Args:
+        V (array): Unitary matrix of size n_size
+        tol (int): the number of decimal places to use when determining whether the matrix is unitary
+
+    Returns:
+        tuple[array]: returns a tuple of the form ``(tlist,np.diag(localV))``
+            where:
+
+            * ``tlist``: list containing ``[n,m,theta,phi,n_size]`` of the T unitaries needed
+            * ``localV``: Diagonal unitary matrix to be applied at the end of circuit
+    """
+    tilist, tlist, diags = clements(V, tol)
+    new_tlist, new_diags = tilist.copy(), diags.copy()
+
+    # Push each beamsplitter through the diagonal unitary
+    for i in reversed(tlist):
+        em, en = int(i[0]), int(i[1])
+        alpha, beta = np.angle(new_diags[em]), np.angle(new_diags[en])
+        theta, phi = i[2], i[3]
+
+        # The new parameters required for D',T' st. T^(-1)D = D'T'
+        new_theta = theta
+        new_phi = np.fmod((alpha - beta + np.pi), 2*np.pi)
+        new_alpha = beta - phi + np.pi
+        new_beta = beta
+
+        new_i = [i[0], i[1], new_theta, new_phi, i[4]]
+        new_diags[em], new_diags[en] = np.exp(1j*new_alpha), np.exp(1j*new_beta)
+
+        new_tlist = new_tlist + [new_i]
+
+    return (new_tlist, new_diags)
 
 def williamson(V, tol=1e-11):
     r"""Performs the Williamson decomposition of positive definite (real) symmetric matrix.

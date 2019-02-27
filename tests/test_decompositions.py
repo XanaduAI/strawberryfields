@@ -102,7 +102,7 @@ class DecompositionsModule(BaseTest):
         self.logTestName()
         n=20
         U=np.identity(n)
-        (tilist,tlist, diags)=dec.clements(U)
+        (tilist, tlist, diags)=dec.clements(U)
         qrec=np.identity(n)
         for i in tilist:
             qrec=dec.T(*i)@qrec
@@ -118,7 +118,7 @@ class DecompositionsModule(BaseTest):
         for k in range(nsamples):
             n=20
             V=haar_measure(n)
-            (tilist,tlist, diags)=dec.clements(V)
+            (tilist, tlist, diags)=dec.clements(V)
             qrec=np.identity(n)
             for i in tilist:
                 qrec=dec.T(*i)@qrec
@@ -128,6 +128,23 @@ class DecompositionsModule(BaseTest):
 
             error[k]=np.linalg.norm(V-qrec)
         self.assertAlmostEqual(error.mean() , 0)
+
+
+    def test_clements_phase_end_random_unitary(self):
+        self.logTestName()
+        error=np.empty(nsamples)
+        for k in range(nsamples):
+            n=20
+            U=haar_measure(n)
+
+            new_tlist, new_diags = dec.clements_phase_end(U)
+
+            U_rec=np.identity(n)
+            for i in new_tlist:
+                U_rec=dec.T(*i) @ U_rec
+            U_rec = np.diag(new_diags) @ U_rec
+            self.assertAlmostEqual(np.linalg.norm(U_rec-U), 0, delta=self.tol)
+
 
     def test_williamson_BM_random_circuit(self):
         self.logTestName()
