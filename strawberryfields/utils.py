@@ -1011,10 +1011,18 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
             result = _unvectorize_dm(result, N)
 
     elif representation.lower() == 'kraus':
-        eigvals, eigvecs = np.linalg.eig(np.einsum('abcd -> cadb', choi).reshape([cutoff_dim**(2*N), cutoff_dim**(2*N)]))
+        # the liouville operator is the sum of a bipartite product of kraus matrices, so if we vectorize them we obtain
+        # a matrix whose eigenvectors are proportional to the vectorized kraus operators
+        vectorized_liouville = np.einsum('abcd -> cadb', choi).reshape([cutoff_dim**(2*N), cutoff_dim**(2*N)])
+        eigvals, eigvecs = np.linalg.eig(vectorized_liouville)
+        # we keep only those eigenvectors and correspond to non-zero eigenvalues
         eigvecs = eigvecs[:, ~np.isclose(abs(eigvals), 0)]
         eigvals = eigvals[~np.isclose(abs(eigvals), 0)]
-        result = np.einsum('abc->cab', np.einsum('b,ab->ab', np.sqrt(eigvals), eigvecs).reshape([cutoff_dim**N, cutoff_dim**N, -1]))
+        # we rescale the eigenvectors with the sqrt of the eigenvalues (the other sqrt would rescale the right eigenvectors)
+        rescaled_eigenvectors = np.einsum('b,ab->ab', np.sqrt(eigvals), eigvecs)
+        # finally we reshape the eigenvectors to form matrices, i.e. the Kraus operators and we make the first index 
+        # be the one that indexes the list of Kraus operators.
+        result = np.einsum('abc->cab', rescaled_eigenvectors.reshape([cutoff_dim**N, cutoff_dim**N, -1]))
 
         if not vectorize_modes:
             result = np.einsum(np.reshape(result, [-1]+[cutoff_dim]*(2*N)), range(1+2*N), [0]+[2*n+1 for n in range(N)]+[2*n+2 for n in range(N)])
