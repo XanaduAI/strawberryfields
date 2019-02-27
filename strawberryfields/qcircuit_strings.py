@@ -21,6 +21,7 @@ Fields operators to latex code.
 
 DOCUMENT_CLASS = r'\documentclass{article}'
 QCIRCUIT_PACKAGE = r'\usepackage{qcircuit}'
+BEGIN_DOCUMENT = r'\begin{document}'
 DOCUMENT_END = r'\end{document}'
 CIRCUIT_START = r'\Qcircuit'
 COLUMN_SPACING = '@C={0}' #spacing i.e. "1em"
@@ -76,7 +77,7 @@ WIRE_OPERATION = '& {0}'
 WIRE_TERMINATOR = r'\\' + '\n'
 CIRCUIT_BODY_TERMINATOR = '\n}\n'
 CIRCUIT_BODY_START = ' {' + '\n'
-INIT_DOCUMENT = DOCUMENT_CLASS + '\n' + QCIRCUIT_PACKAGE + '\n' + CIRCUIT_START
+INIT_DOCUMENT = DOCUMENT_CLASS + '\n' + QCIRCUIT_PACKAGE + '\n' + BEGIN_DOCUMENT + '\n' + CIRCUIT_START
 
 PIPE = '|'
 LINE_RETURN = "\n"
