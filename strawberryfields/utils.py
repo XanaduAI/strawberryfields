@@ -725,7 +725,9 @@ def is_channel(engine):
 
 def _vectorize_dm(tensor):
     """Given a tensor with 4N indices of dimension :math:`D` each, it returns the vectorized
-    tensor with 4 indices of dimension :math:`D^N` each.
+    tensor with 4 indices of dimension :math:`D^N` each. This is the inverse of the procedure
+    given by :func:`_unvectorize_dm`.
+    Caution: this private method is intended to be used only for Choi and Liouville operators.
 
     For example, :math:`N=2`,
     ::
@@ -768,9 +770,9 @@ def _vectorize_dm(tensor):
 
 def _unvectorize_dm(tensor, num_subsystems):
     """Given a tensor with 4 indices, each of dimension :math:`D^N`, return the unvectorized
-    tensor with 4N indices of dimension D each.
-
-    This is the inverse of the procedure given by :func:`_vectorize_dm`.
+    tensor with 4N indices of dimension D each. This is the inverse of the procedure
+    given by :func:`_vectorize_dm`.
+    Caution: this private method is intended to be used only for Choi and Liouville operators.
 
     Args:
         tensor (array): a tensor with :math:`4` indices of dimension :math:`D^N`
@@ -817,6 +819,11 @@ def _interleaved_identities(num_subsystems: int, cutoff_dim: int):
     for _ in range(1, num_subsystems):
         I = np.tensordot(I, np.identity(cutoff_dim), axes=0)
 
+    # This is just some index gymnastics, the listcomp creates a sequence that advances by alternating steps like so:
+    # for num_subsystems=3 it's [0, 3, 1, 4, 2, 5]
+    # for num_subsystems=4 it's [0, 4, 1, 5, 2, 6, 3, 7]
+    # for num_subsystems=5 it's [0, 5, 1, 6, 2, 7, 3, 8, 4, 9]
+    # and so on...
     return np.einsum(I, [int(n) for n in np.arange(2*num_subsystems).reshape((2, num_subsystems)).T.reshape([-1])])
 
 
@@ -864,7 +871,19 @@ def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, back
 
     Raises:
         TypeError: if the operations used to construct the circuit are not all unitary.
+
+    Example:
+        This shows the Hong-Ou-Mandel effect by extracting the unitary of a 50/50 beam splitter and then
+        computing the output given by one photon at each input (notice the order of the indices: out1, in1, out2, in2, ...).
+        The result tells us that the two photons always emerge together from a random output port and never one per port.
+
+    >>> engine, (A, B) = sf.Engine(num_subsystems=2)
+    >>> with engine:
+    >>>    BSgate(np.pi/4) | (A, B)
+    >>> U = extract_unitary(engine, cutoff_dim=3)
+    >>> print(abs(U[:,1,:,1])**2)
     """
+
     if not is_unitary(engine):
         raise TypeError("The circuit definition contains elements that are not of type Gate")
 
@@ -872,9 +891,13 @@ def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, back
         raise ValueError("Only 'fock' and 'tf' backends are supported")
 
     from copy import deepcopy
+    # This is an independent copy of the engine object, with an additional Command at the beginning
+    # of the cmd_queue which creates a ket made of identities.
+    # The core idea is that when we apply the unitary to the "identity" ket
+    # we obtain the unitary itself as the result.
     _engine = _engine_with_CJ_cmd_queue(deepcopy(engine), cutoff_dim=cutoff_dim)
 
-    _backend = load_backend(backend) # (!) _backend is the object, backend is just its name
+    _backend = load_backend(backend) # (!) _backend is the object, backend is just 'fock' or 'tf'
     _backend.begin_circuit(num_subsystems=_engine.num_subsystems, cutoff_dim=cutoff_dim, hbar=_engine.hbar, pure=True)
     result = _engine.run(_backend, cutoff_dim=cutoff_dim).ket()
 
@@ -886,6 +909,7 @@ def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, back
 
         return tf.reshape(result, [cutoff_dim**N, cutoff_dim**N])
 
+    # here we rearrange the indices to go back to the order [in1, out1, in2, out2, etc...]
     if backend == 'fock':
         return np.transpose(result, [int(n) for n in np.arange(2*N).reshape((2, N)).T.reshape([-1])])
 
@@ -982,6 +1006,14 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
 
     Raises:
         TypeError: if the gates used to construct the circuit are not all unitary or channels.
+
+    Example:
+        Here we show that the Choi operator of the identity channel is proportional to
+        a maximally entangled Bell phi-plus state:
+
+    >>> engine, A = sf.Engine(num_subsystems=1)
+    >>> C = extract_channel(engine, cutoff_dim=2, representation='choi')
+    >>> print(abs(C))
     """
     # if is_unitary(engine):
     #     #raise Warning(f"This circuit is unitary and you could use extract_unitary for a more compact representation")
