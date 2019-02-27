@@ -292,8 +292,6 @@ class RandomStates(BaseTest):
         self.assertAllAlmostEqual(U @ U.conj().T, np.identity(self.M), delta=self.tol)
 
 
-
-
 class ExtractChannel(ExtractChannelTest):
     num_subsystems = 3
 
@@ -491,12 +489,6 @@ class ExtractChannel(ExtractChannelTest):
 
         III = _interleaved_identities(num_subsystems=3, cutoff_dim=5)
         self.assertAllAlmostEqual(np.einsum('abcabc', III), 5**3, delta=defaults.TOLERANCE)
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
