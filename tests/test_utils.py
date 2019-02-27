@@ -8,11 +8,15 @@ import numpy as np
 from numpy import pi
 
 import defaults
-from defaults import BaseTest, FockBaseTest, ExtractChannelTest, GaussianBaseTest, strawberryfields as sf
+from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.utils import *
 from strawberryfields.utils import _interleaved_identities, _vectorize_dm, _unvectorize_dm
 from strawberryfields.backends.shared_ops import sympmat
+
+from strawberryfields.backends.fockbackend.ops import squeezing as sq_U
+from strawberryfields.backends.fockbackend.ops import displacement as disp_U
+from strawberryfields.backends.fockbackend.ops import beamsplitter as bs_U
 
 
 a = 0.32+0.1j
@@ -292,69 +296,217 @@ class RandomStates(BaseTest):
         self.assertAllAlmostEqual(U @ U.conj().T, np.identity(self.M), delta=self.tol)
 
 
-class ExtractChannel(ExtractChannelTest):
-    num_subsystems = 3
+class ExtractOneMode(FockBaseTest):
+    """Test the channel and unitary extraction functions on a single mode circuit"""
+    num_subsystems = 1
 
     def setUp(self):
         super().setUp()
+        self.eng_sf, self.q_sf = sf.Engine(self.num_subsystems, hbar=self.hbar)
+        self.eng_sf.backend = self.backend
+        self.backend.reset(cutoff_dim=self.D)
 
-    def test_extract_unitary_1_mode(self):
-        num_subsystems = 1
+    def test_extract_kerr(self):
+        """test that kerr gate is correctly extracted"""
+        self.logTestName()
 
-        eng_sf, q_sf = sf.Engine(num_subsystems=num_subsystems)
-        eng_extract, q_extract = sf.Engine(num_subsystems=num_subsystems)
+        kappa = 0.432
 
-        cutoff_dim = 10
+        with self.eng_sf:
+            Kgate(kappa) | self.q_sf
+
+        U = extract_unitary(self.eng_sf, cutoff_dim=self.D)
+        expected = np.diag(np.exp(1j*kappa*np.arange(self.D)**2))
+
+        self.assertAllAlmostEqual(U, expected, delta=self.tol)
+
+    def test_extract_squeezing(self):
+        """test that squeezing gate is correctly extracted"""
+        self.logTestName()
+
+        r = 0.432
+        phi = -0.96543
+
+        with self.eng_sf:
+            Sgate(r, phi) | self.q_sf
+
+        U = extract_unitary(self.eng_sf, cutoff_dim=self.D)
+        expected = sq_U(r, phi, self.D)
+
+        self.assertAllAlmostEqual(U, expected, delta=self.tol)
+
+    def test_extract_displacement(self):
+        """test that displacement gate is correctly extracted"""
+        self.logTestName()
+
+        alpha = 0.432-0.8543j
+
+        with self.eng_sf:
+            Dgate(alpha) | self.q_sf
+
+        U = extract_unitary(self.eng_sf, cutoff_dim=self.D)
+        expected = disp_U(alpha, self.D)
+
+        self.assertAllAlmostEqual(U, expected, delta=self.tol)
+
+    def test_extract_unitary_1_mode_fock(self):
+        """Test that unitary extraction works for 1 mode using the fock backend"""
+        self.logTestName()
+        eng_extract, q_extract = sf.Engine(num_subsystems=1)
 
         S = sf.ops.Sgate(0.4, -1.2)
         D = sf.ops.Dgate(2, 0.9)
         K = sf.ops.Kgate(-1.5)
 
-        initial_state = np.random.rand(cutoff_dim) + 1j*np.random.rand(cutoff_dim) # not a state but it doesn't matter
+        initial_state = np.random.rand(self.D) + 1j*np.random.rand(self.D) # not a state but it doesn't matter
 
-        with eng_sf:
-            sf.ops.Ket(initial_state) | q_sf
-            S | q_sf
-            D | q_sf
-            K | q_sf
+        with self.eng_sf:
+            sf.ops.Ket(initial_state) | self.q_sf
+            S | self.q_sf
+            D | self.q_sf
+            K | self.q_sf
 
         with eng_extract:
             S | q_extract
             D | q_extract
             K | q_extract
 
-        matrix_extract = extract_unitary(eng_extract, cutoff_dim=cutoff_dim)
-        matrix_extract_tf_backend = extract_unitary(eng_extract, cutoff_dim=cutoff_dim, backend='tf')
+        matrix_extract = extract_unitary(eng_extract, cutoff_dim=self.D)
+        final_state_extract = matrix_extract.dot(initial_state)
+        final_state_sf = self.eng_sf.run().ket()
+
+        self.assertAllAlmostEqual(final_state_extract, final_state_sf, delta=self.tol)
+
+    def test_extract_unitary_1_mode_tf(self):
+        """Test that unitary extraction works for 1 mode using the tf backend"""
+        self.logTestName()
+        eng_extract, q_extract = sf.Engine(num_subsystems=1)
+
+        S = sf.ops.Sgate(0.4, -1.2)
+        D = sf.ops.Dgate(2, 0.9)
+        K = sf.ops.Kgate(-1.5)
+
+        initial_state = np.random.rand(self.D) + 1j*np.random.rand(self.D) # not a state but it doesn't matter
+
+        with self.eng_sf:
+            sf.ops.Ket(initial_state) | self.q_sf
+            S | self.q_sf
+            D | self.q_sf
+            K | self.q_sf
+
+        with eng_extract:
+            S | q_extract
+            D | q_extract
+            K | q_extract
+
+        matrix_extract_tf_backend = extract_unitary(eng_extract, cutoff_dim=self.D, backend='tf')
+
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             in_state = tf.constant(initial_state.reshape([-1]), dtype=tf.complex64)
             final_state_tf_backend = sess.run(tf.einsum('ab,b', matrix_extract_tf_backend, in_state))
-        final_state_sf = eng_sf.run("fock", cutoff_dim=cutoff_dim).ket().reshape([-1])
-        final_state_extract = matrix_extract.dot(initial_state)
-        final_state_sf = eng_sf.run("fock", cutoff_dim=cutoff_dim).ket()
 
-        self.assertAllAlmostEqual(final_state_extract, final_state_sf, delta=defaults.TOLERANCE)
-        self.assertAllAlmostEqual(final_state_tf_backend, final_state_sf, delta=defaults.TOLERANCE)
+        final_state_sf = self.eng_sf.run().ket()
 
-    def test_extract_unitary_2_modes(self):
-        num_subsystems = 2
+        self.assertAllAlmostEqual(final_state_tf_backend, final_state_sf, delta=self.tol)
 
-        eng_sf, q_sf = sf.Engine(num_subsystems=num_subsystems)
-        eng_extract, q_extract = sf.Engine(num_subsystems=num_subsystems)
+    def test_extract_channel_1_mode(self):
+        """Test that channel extraction works for 1 mode"""
+        self.logTestName()
+        eng_extract, q_extract = sf.Engine(num_subsystems=1)
 
-        cutoff_dim = 4
+        S = sf.ops.Sgate(1.1, -1.4)
+        L = sf.ops.LossChannel(0.45)
+
+        initial_state = np.random.rand(self.D, self.D)
+
+        with self.eng_sf:
+            sf.ops.DensityMatrix(initial_state) | self.q_sf
+            S | self.q_sf
+            L | self.q_sf
+
+        with eng_extract:
+            S | q_extract
+            L | q_extract
+
+        choi = extract_channel(eng_extract, cutoff_dim=self.D, vectorize_modes=True, representation='choi')
+        liouville = extract_channel(eng_extract, cutoff_dim=self.D, vectorize_modes=True, representation='liouville')
+        kraus = extract_channel(eng_extract, cutoff_dim=self.D, vectorize_modes=True, representation='kraus')
+
+        final_rho_sf = self.eng_sf.run().dm()
+
+        final_rho_choi = np.einsum('abcd,ab -> cd', choi, initial_state)
+        final_rho_liouville = np.einsum('abcd,db -> ca', liouville, initial_state)
+        final_rho_kraus = np.einsum('abc,cd,aed -> be', kraus, initial_state, np.conj(kraus))
+
+        self.assertAllAlmostEqual(final_rho_choi, final_rho_sf, delta=self.tol)
+        self.assertAllAlmostEqual(final_rho_liouville, final_rho_sf, delta=self.tol)
+        self.assertAllAlmostEqual(final_rho_kraus, final_rho_sf, delta=self.tol)
+
+    def test_vectorize_unvectorize(self):
+        """Test vectorize utility function"""
+        self.logTestName()
+
+        cutoff = 4
+
+        dm = np.random.rand(*[cutoff]*8) + 1j*np.random.rand(*[cutoff]*8) # 4^8 -> (4^2)^4 -> 4^8
+        dm2 = np.random.rand(*[cutoff]*4) + 1j*np.random.rand(*[cutoff]*4) # (2^2)^4 -> 2^8 -> (2^2)^4
+        self.assertAllAlmostEqual(dm, _unvectorize_dm(_vectorize_dm(dm), 2), delta=self.tol)
+        self.assertAllAlmostEqual(dm2, _vectorize_dm(_unvectorize_dm(dm2, 2)), delta=self.tol)
+
+    def test_interleaved_identities(self):
+        """Test interleaved utility function"""
+        self.logTestName()
+
+        II = _interleaved_identities(num_subsystems=2, cutoff_dim=3)
+        self.assertAllAlmostEqual(np.einsum('abab', II), 3**2, delta=self.tol)
+
+        III = _interleaved_identities(num_subsystems=3, cutoff_dim=5)
+        self.assertAllAlmostEqual(np.einsum('abcabc', III), 5**3, delta=self.tol)
+
+
+class ExtractTwoModes(FockBaseTest):
+    """Test the channel and unitary extraction functions on a two mode circuit"""
+    num_subsystems = 2
+
+    def setUp(self):
+        super().setUp()
+        self.eng_sf, self.q_sf = sf.Engine(self.num_subsystems, hbar=self.hbar)
+        self.eng_sf.backend = self.backend
+        self.backend.reset(cutoff_dim=self.D)
+
+    def test_extract_beamsplitter(self):
+        """test that BSgate is correctly extracted"""
+        self.logTestName()
+
+        theta = 0.432
+        phi = 0.765
+
+        with self.eng_sf:
+            BSgate(theta, phi) | self.q_sf
+
+        U = extract_unitary(self.eng_sf, cutoff_dim=self.D)
+        expected = bs_U(np.cos(theta), np.sin(theta), phi, self.D)
+
+        self.assertAllAlmostEqual(U, expected, delta=self.tol)
+
+    def test_extract_unitary_2_modes_fock(self):
+        """Test that unitary extraction works for 2 modes using the fock backend"""
+        self.logTestName()
+
+        eng_extract, q_extract = sf.Engine(num_subsystems=2)
 
         S = sf.ops.Sgate(2)
         B = sf.ops.BSgate(2.234, -1.165)
 
-        initial_state = np.complex64(np.random.rand(cutoff_dim, cutoff_dim) + 1j*np.random.rand(cutoff_dim, cutoff_dim))
+        initial_state = np.complex64(np.random.rand(self.D, self.D) + 1j*np.random.rand(self.D, self.D))
 
-        with eng_sf:
-            sf.ops.Ket(initial_state) | (q_sf[0], q_sf[1])
-            S | q_sf[0]
-            B | q_sf
-            S | q_sf[1]
-            B | q_sf
+        with self.eng_sf:
+            sf.ops.Ket(initial_state) | (self.q_sf[0], self.q_sf[1])
+            S | self.q_sf[0]
+            B | self.q_sf
+            S | self.q_sf[1]
+            B | self.q_sf
 
         with eng_extract:
             S | q_extract[0]
@@ -363,78 +515,70 @@ class ExtractChannel(ExtractChannelTest):
             B | q_extract
 
         # calculate final states for vectorize_mode= True
-        matrix_extract = extract_unitary(eng_extract, cutoff_dim=cutoff_dim, vectorize_modes=True)
-        matrix_extract_tf_backend = extract_unitary(eng_extract, cutoff_dim=cutoff_dim, vectorize_modes=True, backend='tf')
+        matrix_extract = extract_unitary(eng_extract, cutoff_dim=self.D, vectorize_modes=True)
         final_state_extract = matrix_extract.dot(initial_state.reshape([-1]))
-        with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
-            final_state_tf_backend = sess.run(tf.einsum('ab,b', matrix_extract_tf_backend, tf.constant(initial_state.reshape([-1]))))
-        final_state_sf = eng_sf.run("fock", cutoff_dim=cutoff_dim).ket().reshape([-1])
+        final_state_sf = self.eng_sf.run().ket().reshape([-1])
 
-        # calculate final states for vectorize_mode= False
-        array_extract = extract_unitary(eng_extract, cutoff_dim=cutoff_dim, vectorize_modes=False)
+        # calculate final states for vectorize_mode=False
+        array_extract = extract_unitary(eng_extract, cutoff_dim=self.D, vectorize_modes=False)
         final_array_extract = np.einsum("abcd,bd->ac", array_extract, initial_state)
-        final_array_sf = eng_sf.run("fock", cutoff_dim=cutoff_dim).ket()
+        final_array_sf = self.eng_sf.run().ket()
 
-        self.assertAllAlmostEqual(final_state_extract, final_state_sf, delta=defaults.TOLERANCE)
-        self.assertAllAlmostEqual(final_state_tf_backend, final_state_sf, delta=defaults.TOLERANCE)
-        self.assertAllAlmostEqual(final_array_extract, final_array_sf, delta=defaults.TOLERANCE)
+        self.assertAllAlmostEqual(final_state_extract, final_state_sf, delta=self.tol)
+        self.assertAllAlmostEqual(final_array_extract, final_array_sf, delta=self.tol)
 
-    def test_extract_channel_1_mode(self):
-        num_subsystems = 1
-        eng_sf, q_sf = sf.Engine(num_subsystems=num_subsystems)
-        eng_extract, q_extract = sf.Engine(num_subsystems=num_subsystems)
+    def test_extract_unitary_2_modes_tf(self):
+        """Test that unitary extraction works for 2 modes using the tf backend"""
+        self.logTestName()
 
-        cutoff_dim = 3
-
-        S = sf.ops.Sgate(1.1, -1.4)
-        L = sf.ops.LossChannel(0.45)
-
-        initial_state = np.random.rand(cutoff_dim, cutoff_dim)
-
-        with eng_sf:
-            sf.ops.DensityMatrix(initial_state) | q_sf
-            S | q_sf
-            L | q_sf
-
-        with eng_extract:
-            S | q_extract
-            L | q_extract
-
-        choi = extract_channel(eng_extract, cutoff_dim=cutoff_dim, vectorize_modes=True, representation='choi')
-        liouville = extract_channel(eng_extract, cutoff_dim=cutoff_dim, vectorize_modes=True, representation='liouville')
-        kraus = extract_channel(eng_extract, cutoff_dim=cutoff_dim, vectorize_modes=True, representation='kraus')
-
-        final_rho_sf = eng_sf.run("fock", cutoff_dim=cutoff_dim).dm()
-
-        final_rho_choi = np.einsum('abcd,ab -> cd', choi, initial_state)
-        final_rho_liouville = np.einsum('abcd,db -> ca', liouville, initial_state)
-        final_rho_kraus = np.einsum('abc,cd,aed -> be', kraus, initial_state, np.conj(kraus))
-
-        self.assertAllAlmostEqual(final_rho_choi, final_rho_sf, delta=defaults.TOLERANCE)
-        self.assertAllAlmostEqual(final_rho_liouville, final_rho_sf, delta=defaults.TOLERANCE)
-        self.assertAllAlmostEqual(final_rho_kraus, final_rho_sf, delta=defaults.TOLERANCE)
-
-    def test_extract_channel_2_modes(self):
-        num_subsystems = 2
-
-        eng_sf, q_sf = sf.Engine(num_subsystems=num_subsystems)
-        eng_extract, q_extract = sf.Engine(num_subsystems=num_subsystems)
-
-        cutoff_dim = 2
+        eng_extract, q_extract = sf.Engine(num_subsystems=2)
 
         S = sf.ops.Sgate(2)
         B = sf.ops.BSgate(2.234, -1.165)
 
-        initial_state = np.random.rand(cutoff_dim, cutoff_dim, cutoff_dim, cutoff_dim) + 1j*np.random.rand(cutoff_dim, cutoff_dim, cutoff_dim, cutoff_dim)
+        initial_state = np.complex64(np.random.rand(self.D, self.D) + 1j*np.random.rand(self.D, self.D))
 
+        with self.eng_sf:
+            sf.ops.Ket(initial_state) | (self.q_sf[0], self.q_sf[1])
+            S | self.q_sf[0]
+            B | self.q_sf
+            S | self.q_sf[1]
+            B | self.q_sf
 
-        with eng_sf:
-            sf.ops.DensityMatrix(initial_state) | (q_sf[0], q_sf[1])
-            S | q_sf[0]
-            B | q_sf
-            S | q_sf[1]
-            B | q_sf
+        with eng_extract:
+            S | q_extract[0]
+            B | q_extract
+            S | q_extract[1]
+            B | q_extract
+
+        # calculate final states for vectorize_mode= True
+        matrix_extract_tf_backend = extract_unitary(eng_extract, cutoff_dim=self.D, vectorize_modes=True, backend='tf')
+
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            final_state_tf_backend = sess.run(tf.einsum('ab,b', matrix_extract_tf_backend, tf.constant(initial_state.reshape([-1]))))
+
+        final_state_sf = self.eng_sf.run().ket().reshape([-1])
+
+        self.assertAllAlmostEqual(final_state_tf_backend, final_state_sf, delta=self.tol)
+
+    def test_extract_channel_2_modes(self):
+        """Test that channel extraction works for 2 modes"""
+        self.logTestName()
+
+        eng_extract, q_extract = sf.Engine(num_subsystems=2)
+
+        S = sf.ops.Sgate(2)
+        B = sf.ops.BSgate(2.234, -1.165)
+
+        initial_state = np.random.rand(self.D, self.D, self.D, self.D) + 1j*np.random.rand(self.D, self.D, self.D, self.D)
+
+        with self.eng_sf:
+            sf.ops.DensityMatrix(initial_state) | (self.q_sf[0], self.q_sf[1])
+            S | self.q_sf[0]
+            B | self.q_sf
+            S | self.q_sf[1]
+            B | self.q_sf
 
         with eng_extract:
             S | q_extract[0]
@@ -443,52 +587,62 @@ class ExtractChannel(ExtractChannelTest):
             B | q_extract
 
         #vectorize = false
-        choi = extract_channel(eng_extract, cutoff_dim=cutoff_dim, vectorize_modes=False, representation='choi')
-        liouville = extract_channel(eng_extract, cutoff_dim=cutoff_dim, vectorize_modes=False, representation='liouville')
-        kraus = extract_channel(eng_extract, cutoff_dim=cutoff_dim, vectorize_modes=False, representation='kraus')
+        choi = extract_channel(eng_extract, cutoff_dim=self.D, vectorize_modes=False, representation='choi')
+        liouville = extract_channel(eng_extract, cutoff_dim=self.D, vectorize_modes=False, representation='liouville')
+        kraus = extract_channel(eng_extract, cutoff_dim=self.D, vectorize_modes=False, representation='kraus')
 
-        final_rho_sf = eng_sf.run("fock", cutoff_dim=cutoff_dim).dm()
+        final_rho_sf = self.eng_sf.run().dm()
 
         final_rho_choi = np.einsum('abcdefgh,abcd -> efgh', choi, initial_state)
         final_rho_liouville = np.einsum('abcdefgh,fbhd -> eagc', liouville, initial_state)
         final_rho_kraus = np.einsum('abcde,cfeg,ahfig -> bhdi', kraus, initial_state, np.conj(kraus))
 
 
-        self.assertAllAlmostEqual(final_rho_choi, final_rho_sf, delta=defaults.TOLERANCE)
-        self.assertAllAlmostEqual(final_rho_liouville, final_rho_sf, delta=defaults.TOLERANCE)
-        self.assertAllAlmostEqual(final_rho_kraus, final_rho_sf, delta=defaults.TOLERANCE)
+        self.assertAllAlmostEqual(final_rho_choi, final_rho_sf, delta=self.tol)
+        self.assertAllAlmostEqual(final_rho_liouville, final_rho_sf, delta=self.tol)
+        self.assertAllAlmostEqual(final_rho_kraus, final_rho_sf, delta=self.tol)
 
+    def test_extract_channel_2_modes_vectorize(self):
+        """Test that channel extraction works for 2 modes vectorized"""
+        self.logTestName()
+
+        eng_extract, q_extract = sf.Engine(num_subsystems=2)
+
+        S = sf.ops.Sgate(2)
+        B = sf.ops.BSgate(2.234, -1.165)
+
+        initial_state = np.random.rand(self.D, self.D, self.D, self.D) + 1j*np.random.rand(self.D, self.D, self.D, self.D)
+
+        with self.eng_sf:
+            sf.ops.DensityMatrix(initial_state) | (self.q_sf[0], self.q_sf[1])
+            S | self.q_sf[0]
+            B | self.q_sf
+            S | self.q_sf[1]
+            B | self.q_sf
+
+        with eng_extract:
+            S | q_extract[0]
+            B | q_extract
+            S | q_extract[1]
+            B | q_extract
 
         #vectorize = true
-        choi = extract_channel(eng_extract, cutoff_dim=cutoff_dim, vectorize_modes=True, representation='choi')
-        liouville = extract_channel(eng_extract, cutoff_dim=cutoff_dim, vectorize_modes=True, representation='liouville')
-        kraus = extract_channel(eng_extract, cutoff_dim=cutoff_dim, vectorize_modes=True, representation='kraus')
 
-        final_rho_sf = np.einsum('abcd->acbd', final_rho_sf).reshape(cutoff_dim**2, cutoff_dim**2)
-        initial_state = np.einsum('abcd->acbd', initial_state).reshape(cutoff_dim**2, cutoff_dim**2)
+        choi = extract_channel(eng_extract, cutoff_dim=self.D, vectorize_modes=True, representation='choi')
+        liouville = extract_channel(eng_extract, cutoff_dim=self.D, vectorize_modes=True, representation='liouville')
+        kraus = extract_channel(eng_extract, cutoff_dim=self.D, vectorize_modes=True, representation='kraus')
+
+        final_rho_sf = self.eng_sf.run().dm()
+        final_rho_sf = np.einsum('abcd->acbd', final_rho_sf).reshape(self.D**2, self.D**2)
+        initial_state = np.einsum('abcd->acbd', initial_state).reshape(self.D**2, self.D**2)
 
         final_rho_choi = np.einsum('abcd,ab -> cd', choi, initial_state)
         final_rho_liouville = np.einsum('abcd,db -> ca', liouville, initial_state)
         final_rho_kraus = np.einsum('abc,cd,aed -> be', kraus, initial_state, np.conj(kraus))
 
-        self.assertAllAlmostEqual(final_rho_choi, final_rho_sf, delta=defaults.TOLERANCE)
-        self.assertAllAlmostEqual(final_rho_liouville, final_rho_sf, delta=defaults.TOLERANCE)
-        self.assertAllAlmostEqual(final_rho_kraus, final_rho_sf, delta=defaults.TOLERANCE)
-
-
-    def test_vectorize_unvectorize(self):
-        cutoff_dim = 4
-        dm = np.random.rand(*[cutoff_dim]*8) + 1j*np.random.rand(*[cutoff_dim]*8) # 4^8 -> (4^2)^4 -> 4^8
-        dm2 = np.random.rand(*[cutoff_dim]*4) + 1j*np.random.rand(*[cutoff_dim]*4) # (2^2)^4 -> 2^8 -> (2^2)^4
-        self.assertAllAlmostEqual(dm, _unvectorize_dm(_vectorize_dm(dm), 2), delta=defaults.TOLERANCE)
-        self.assertAllAlmostEqual(dm2, _vectorize_dm(_unvectorize_dm(dm2, 2)), delta=defaults.TOLERANCE)
-
-    def test_interleaved_identities(self):
-        II = _interleaved_identities(num_subsystems=2, cutoff_dim=3)
-        self.assertAllAlmostEqual(np.einsum('abab', II), 3**2, delta=defaults.TOLERANCE)
-
-        III = _interleaved_identities(num_subsystems=3, cutoff_dim=5)
-        self.assertAllAlmostEqual(np.einsum('abcabc', III), 5**3, delta=defaults.TOLERANCE)
+        self.assertAllAlmostEqual(final_rho_choi, final_rho_sf, delta=self.tol)
+        self.assertAllAlmostEqual(final_rho_liouville, final_rho_sf, delta=self.tol)
+        self.assertAllAlmostEqual(final_rho_kraus, final_rho_sf, delta=self.tol)
 
 
 if __name__ == '__main__':
@@ -496,7 +650,7 @@ if __name__ == '__main__':
 
     # run the tests in this file
     suite = unittest.TestSuite()
-    tests = [ExtractChannel, InitialStates, FockInitialStates, ConvertFunctions, RandomStates]
+    tests = [ExtractOneMode, ExtractTwoModes, InitialStates, FockInitialStates, ConvertFunctions, RandomStates]
     for t in tests:
         ttt = unittest.TestLoader().loadTestsFromTestCase(t)
         suite.addTests(ttt)

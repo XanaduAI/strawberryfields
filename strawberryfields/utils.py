@@ -100,11 +100,32 @@ Engine functions
 These functions act on instances of a compiler :class:`~.strawberryfields.engine.Engine`, returning
 or extracting information from the queued engine operations.
 
+For example, these might be used directly on the engine object as follows:
+
+.. code-block:: python
+
+    eng, q = sf.Engine(2)
+
+    with eng:
+        BSgate(0.543, 0.123) | (q[0], q[1])
+
+    U = extract_unitary(eng, cutoff_dim=10)
+
+In this example, ``U`` is an array representing the unitary operation in the
+Fock basis of the queued engine operations (here, a single beamsplitter).
+
+
 .. autosummary::
     is_unitary
     is_channel
     extract_unitary
     extract_channel
+
+.. note::
+
+    These functions act on an engine with *queued* operations. If the engine has already
+    been run via ``eng.run()``, then the queue will be empty and these functions will
+    simply be acting on an empty circuit (i.e., the identity).
 
 
 Code details
@@ -850,7 +871,7 @@ def _engine_with_CJ_cmd_queue(engine, cutoff_dim: int):
 
 
 def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, backend: str = 'fock'):
-    """Returns the array representation of an queued unitary circuit
+    r"""Returns the array representation of an queued unitary circuit
     as an NumPy ndarray (``'fock'`` backend) or as a TensorFlow Tensor (``'tf'`` backend).
 
     Note that the circuit must only include operations of the :class:`strawberryfields.ops.Gate` class.
@@ -859,6 +880,21 @@ def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, back
     * If ``vectorize_modes=False``, it returns an operator with :math:`2N` indices,
       where N is the number of modes that the engine is created with. Adjacent
       indices correspond to output-input pairs of the same mode.
+
+
+    Example:
+        This shows the Hong-Ou-Mandel effect by extracting the unitary of a 50/50 beamsplitter, and then
+        computing the output given by one photon at each input (notice the order of the indices: :math:`[out_1, in_1, out_2, in_2,\dots]`).
+        The result tells us that the two photons always emerge together from a random output port and never one per port.
+
+    >>> engine, (A, B) = sf.Engine(num_subsystems=2)
+    >>> with engine:
+    >>>     BSgate(np.pi/4) | (A, B)
+    >>> U = extract_unitary(engine, cutoff_dim=3)
+    >>> print(abs(U[:,1,:,1])**2)
+    [[0.  0.  0.5]
+     [0.  0.  0. ]
+     [0.5 0.  0. ]])
 
     Args:
         engine (Engine): the engine containing the circuit
@@ -871,20 +907,6 @@ def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, back
 
     Raises:
         TypeError: if the operations used to construct the circuit are not all unitary.
-
-    Example:
-        This shows the Hong-Ou-Mandel effect by extracting the unitary of a 50/50 beam splitter and then
-        computing the output given by one photon at each input (notice the order of the indices: out1, in1, out2, in2, ...).
-        The result tells us that the two photons always emerge together from a random output port and never one per port.
-
-    >>> engine, (A, B) = sf.Engine(num_subsystems=2)
-    >>> with engine:
-    >>>    BSgate(np.pi/4) | (A, B)
-    >>> U = extract_unitary(engine, cutoff_dim=3)
-    >>> print(abs(U[:,1,:,1])**2)
-        [[0.  0.  0.5]
-         [0.  0.  0. ]
-         [0.5 0.  0. ]])
     """
 
     if not is_unitary(engine):
@@ -894,6 +916,7 @@ def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, back
         raise ValueError("Only 'fock' and 'tf' backends are supported")
 
     from copy import deepcopy
+
     # This is an independent copy of the engine object, with an additional Command at the beginning
     # of the cmd_queue which creates a ket made of identities.
     # The core idea is that when we apply the unitary to the "identity" ket
@@ -1024,6 +1047,19 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
     conjugate transpose of the first, and we cannot just do ``np.conj(kraus).T`` because ``kraus`` has 3 indices and we
     just need to transpose the last two.
 
+
+    Example:
+        Here we show that the Choi operator of the identity channel is proportional to
+        a maximally entangled Bell :math:`\ket{\phi^+}` state:
+
+    >>> engine, A = sf.Engine(num_subsystems=1)
+    >>> C = extract_channel(engine, cutoff_dim=2, representation='choi')
+    >>> print(abs(C).reshape((4,4)))
+    [[1. 0. 0. 1.]
+     [0. 0. 0. 0.]
+     [0. 0. 0. 0.]
+     [1. 0. 0. 1.]]
+
     Args:
         engine (Engine): the engine containing the circuit
         cutoff_dim (int): dimension of each index
@@ -1037,18 +1073,6 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
 
     Raises:
         TypeError: if the gates used to construct the circuit are not all unitary or channels.
-
-    Example:
-        Here we show that the Choi operator of the identity channel is proportional to
-        a maximally entangled Bell phi-plus state:
-
-    >>> engine, A = sf.Engine(num_subsystems=1)
-    >>> C = extract_channel(engine, cutoff_dim=2, representation='choi')
-    >>> print(abs(C).reshape((4,4)))
-        [[1. 0. 0. 1.]
-         [0. 0. 0. 0.]
-         [0. 0. 0. 0.]
-         [1. 0. 0. 1.]]
     """
     # if is_unitary(engine):
     #     #raise Warning(f"This circuit is unitary and you could use extract_unitary for a more compact representation")
@@ -1082,11 +1106,14 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
         # a matrix whose eigenvectors are proportional to the vectorized kraus operators
         vectorized_liouville = np.einsum('abcd -> cadb', choi).reshape([cutoff_dim**(2*N), cutoff_dim**(2*N)])
         eigvals, eigvecs = np.linalg.eig(vectorized_liouville)
+
         # We keep only those eigenvectors that correspond to non-zero eigenvalues
         eigvecs = eigvecs[:, ~np.isclose(abs(eigvals), 0)]
         eigvals = eigvals[~np.isclose(abs(eigvals), 0)]
+
         # We rescale the eigenvectors with the sqrt of the eigenvalues (the other sqrt would rescale the right eigenvectors)
         rescaled_eigenvectors = np.einsum('b,ab->ab', np.sqrt(eigvals), eigvecs)
+
         # Finally we reshape the eigenvectors to form matrices, i.e. the Kraus operators and we make the first index
         # be the one that indexes the list of Kraus operators.
         result = np.einsum('abc->cab', rescaled_eigenvectors.reshape([cutoff_dim**N, cutoff_dim**N, -1]))
