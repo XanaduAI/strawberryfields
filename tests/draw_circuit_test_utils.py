@@ -20,6 +20,13 @@ String constants and utility function(s) used by tests of the :class:`~strawberr
 import difflib
 
 LINE_RETURN = '\n'
+WIRE_TERMINATOR = r'\\' + '\n'
+CIRCUIT_BODY_TERMINATOR = '\n}\n'
+CIRCUIT_BODY_START = ' {' + '\n'
+DOCUMENT_CLASS = r'\documentclass{article}'
+QCIRCUIT_PACKAGE = r'\usepackage{qcircuit}'
+CIRCUIT_START = r'\Qcircuit'
+INIT_DOCUMENT = DOCUMENT_CLASS + '\n' + QCIRCUIT_PACKAGE + '\n' + CIRCUIT_START
 
 expected_circuit_matrix = [
     ['\\gate{X}',

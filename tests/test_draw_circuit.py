@@ -30,6 +30,26 @@ class CircuitDrawerTests(BaseTest):
         self.backend.reset(cutoff_dim=self.cutoff)
         self.drawer = CircuitDrawer(CircuitDrawerTests.num_subsystems)
 
+    def test_end_wire(self):
+        self.logTestName()
+        self.drawer._end_wire()
+        self.assertTrue(self.drawer._document.endswith(WIRE_TERMINATOR))
+
+    def test_end_circuit(self):
+        self.logTestName()
+        self.drawer._end_circuit()
+        self.assertTrue(self.drawer._document.endswith(CIRCUIT_BODY_TERMINATOR))
+
+    def test_begin_circuit(self):
+        self.logTestName()
+        self.drawer._begin_circuit()
+        self.assertTrue(self.drawer._document.endswith(CIRCUIT_BODY_START))\
+
+    def test_init_document(self):
+        self.logTestName()
+        self.drawer._init_document()
+        self.assertTrue(self.drawer._document.endswith(INIT_DOCUMENT))
+
     def test_one_mode_gates_from_operators(self):
         self.logTestName()
         q = self.eng.register
