@@ -882,6 +882,9 @@ def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, back
     >>>    BSgate(np.pi/4) | (A, B)
     >>> U = extract_unitary(engine, cutoff_dim=3)
     >>> print(abs(U[:,1,:,1])**2)
+        [[0.  0.  0.5]
+         [0.  0.  0. ]
+         [0.5 0.  0. ]])
     """
 
     if not is_unitary(engine):
@@ -943,12 +946,22 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
 
     **Choi representation**
 
+    Mathematically, the Choi representation of a channel is a bipartite state :math:`\Lambda_{AB}`
+    which contains a complete description of the channel. The way we use it to compute the action
+    of the channel :math:`\mathcal{C}` on an input state :math:`\mathcal{\rho}` is as follows:
+
+    .. math::
+
+            \mathcal{C}(\rho) = \mathrm{Tr}[(\rho_A^T\otimes\mathbb{1}_B)\Lambda_{AB}]
+
     The indices of the non-vectorized Choi operator match exactly those of the state, so that the action
     of the channel can be computed as (e.g. for one mode or for ``vectorize_modes=True``):
 
     >>> rho_out = np.einsum('ab,abcd', rho_in, choi)
 
-    or for two modes:
+    notice that this respects the transpose operation.
+
+    For two modes:
 
     >>> rho_out = np.einsum('abcd,abcdefgh', rho_in, choi)
 
@@ -964,10 +977,18 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
 
     Therefore, the action of the Liouville operator (e.g. for one mode or for ``vectorize_modes=True``) is
 
+    .. math::
+
+            \mathcal{C}(\rho) = \mathrm{unvec}[\mathcal{L}\mathrm{vec}(\rho)]
+
+    where vec() and unvec() are the operations that stack the columns of a matrix to form
+    a vector and vice versa.
+    In code:
+
     >>> rho_out = np.einsum('abcd,bd->ca', liouville, rho_in)
 
     Notice that the state contracts with the second index of each pair and that we output the ket
-    on the left (`c`) and the bra on the right (`a`).
+    on the left (``c``) and the bra on the right (``a``).
 
     For two modes we have:
 
@@ -976,13 +997,23 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
     The Liouville representation has the property that if the channel is unitary, the operator is separable.
     Whereas even if the channel were the identity, the Choi operator would correspond to a maximally entangled state.
 
-    The choi and liouville operators in _matrix_ form (i.e. with two indices) can be found as follows, where
+    The choi and liouville operators in matrix form (i.e. with two indices) can be found as follows, where
     ``D`` is the dimension of each vectorized index (i.e. for :math:`N` modes, ``D=cutoff_dim**N``):
 
     >>> choi_matrix = liouville.reshape(D**2, D**2).T
     >>> liouville_matrix = choi.reshape(D**2, D**2).T
 
     **Kraus representation**
+
+    The Kraus representation is perhaps the most well known:
+
+    .. math::
+
+            \mathcal{C}(\rho) = \sum_k A_k\rho A_k^\dagger
+
+    So to define a channel in the Kraus representation one needs to supply a list of Kraus operators :math:`\{A_k\}`.
+    In fact, the result of ``extract_channel`` in the Kraus representation is a rank-3 tensor, where the first
+    index is the one indexing the list of operators.
 
     Adjacent indices of each Kraus operator correspond to output-input pairs of the same mode, so the action
     of the channel can be written as (here for one mode or for ``vectorize_modes=True``):
@@ -1013,7 +1044,11 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
 
     >>> engine, A = sf.Engine(num_subsystems=1)
     >>> C = extract_channel(engine, cutoff_dim=2, representation='choi')
-    >>> print(abs(C))
+    >>> print(abs(C).reshape((4,4)))
+        [[1. 0. 0. 1.]
+         [0. 0. 0. 0.]
+         [0. 0. 0. 0.]
+         [1. 0. 0. 1.]]
     """
     # if is_unitary(engine):
     #     #raise Warning(f"This circuit is unitary and you could use extract_unitary for a more compact representation")
