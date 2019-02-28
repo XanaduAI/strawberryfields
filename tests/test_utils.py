@@ -535,7 +535,7 @@ class ExtractTwoModes(FockBaseTest):
 
         # calculate final states for vectorize_mode= True
         matrix_extract = extract_unitary(eng_extract, cutoff_dim=self.D, vectorize_modes=True)
-        final_state_extract = matrix_extract.dot(initial_state.reshape([-1]))
+        final_state_extract = np.tile(matrix_extract.dot(initial_state.reshape([-1])), self.bsize)
         final_state_sf = self.eng_sf.run().ket().reshape([-1])
 
         # calculate final states for vectorize_mode=False
@@ -577,6 +577,7 @@ class ExtractTwoModes(FockBaseTest):
             sess.run(tf.global_variables_initializer())
             final_state_tf_backend = sess.run(tf.einsum('ab,b', matrix_extract_tf_backend, tf.constant(initial_state.reshape([-1]))))
 
+        final_state_tf_backend = np.tile(final_state_tf_backend, self.bsize)
         final_state_sf = self.eng_sf.run().ket().reshape([-1])
 
         self.assertAllAlmostEqual(final_state_tf_backend, final_state_sf, delta=self.tol)
@@ -616,7 +617,6 @@ class ExtractTwoModes(FockBaseTest):
         final_rho_liouville = np.einsum('abcdefgh,fbhd -> eagc', liouville, initial_state)
         final_rho_kraus = np.einsum('abcde,cfeg,ahfig -> bhdi', kraus, initial_state, np.conj(kraus))
 
-
         self.assertAllAlmostEqual(final_rho_choi, final_rho_sf, delta=self.tol)
         self.assertAllAlmostEqual(final_rho_liouville, final_rho_sf, delta=self.tol)
         self.assertAllAlmostEqual(final_rho_kraus, final_rho_sf, delta=self.tol)
@@ -652,6 +652,10 @@ class ExtractTwoModes(FockBaseTest):
         kraus = extract_channel(eng_extract, cutoff_dim=self.D, vectorize_modes=True, representation='kraus')
 
         final_rho_sf = self.eng_sf.run().dm()
+
+        if self.batched:
+            final_rho_sf = final_rho_sf[0]
+
         final_rho_sf = np.einsum('abcd->acbd', final_rho_sf).reshape(self.D**2, self.D**2)
         initial_state = np.einsum('abcd->acbd', initial_state).reshape(self.D**2, self.D**2)
 
