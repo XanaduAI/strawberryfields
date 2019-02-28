@@ -381,6 +381,7 @@ def squeezed_state(r, p, basis='fock', fock_dim=5, hbar=2.):
 
     if basis == 'fock':
         def ket(n):
+            """Squeezed state kets"""
             return (np.sqrt(fac(2*n))/(2**n*fac(n))) * (-np.exp(1j*phi)*np.tanh(r))**n
 
         state = np.array([ket(n//2) if n %

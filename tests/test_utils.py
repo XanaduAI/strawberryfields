@@ -7,6 +7,8 @@ import unittest
 import numpy as np
 from numpy import pi
 
+import tensorflow as tf
+
 import defaults
 from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
@@ -14,6 +16,7 @@ from strawberryfields.utils import *
 from strawberryfields.utils import _interleaved_identities, _vectorize_dm, _unvectorize_dm
 from strawberryfields.backends.shared_ops import sympmat
 
+from strawberryfields import backends
 from strawberryfields.backends.fockbackend.ops import squeezing as sq_U
 from strawberryfields.backends.fockbackend.ops import displacement as disp_U
 from strawberryfields.backends.fockbackend.ops import beamsplitter as bs_U
@@ -309,20 +312,25 @@ class ExtractOneMode(FockBaseTest):
     def test_extract_kerr(self):
         """test that kerr gate is correctly extracted"""
         self.logTestName()
+        self.eng_sf.backend = None
 
         kappa = 0.432
 
         with self.eng_sf:
             Kgate(kappa) | self.q_sf
 
-        U = extract_unitary(self.eng_sf, cutoff_dim=self.D)
+        U = extract_unitary(self.eng_sf, cutoff_dim=self.D, backend=self.backend_name)
         expected = np.diag(np.exp(1j*kappa*np.arange(self.D)**2))
+
+        if isinstance(U, tf.Tensor):
+            U = tf.Session().run(U)
 
         self.assertAllAlmostEqual(U, expected, delta=self.tol)
 
     def test_extract_squeezing(self):
         """test that squeezing gate is correctly extracted"""
         self.logTestName()
+        self.eng_sf.backend = None
 
         r = 0.432
         phi = -0.96543
@@ -330,22 +338,29 @@ class ExtractOneMode(FockBaseTest):
         with self.eng_sf:
             Sgate(r, phi) | self.q_sf
 
-        U = extract_unitary(self.eng_sf, cutoff_dim=self.D)
+        U = extract_unitary(self.eng_sf, cutoff_dim=self.D, backend=self.backend_name)
         expected = sq_U(r, phi, self.D)
+
+        if isinstance(U, tf.Tensor):
+            U = tf.Session().run(U)
 
         self.assertAllAlmostEqual(U, expected, delta=self.tol)
 
     def test_extract_displacement(self):
         """test that displacement gate is correctly extracted"""
         self.logTestName()
+        self.eng_sf.backend = None
 
         alpha = 0.432-0.8543j
 
         with self.eng_sf:
             Dgate(alpha) | self.q_sf
 
-        U = extract_unitary(self.eng_sf, cutoff_dim=self.D)
+        U = extract_unitary(self.eng_sf, cutoff_dim=self.D, backend=self.backend_name)
         expected = disp_U(alpha, self.D)
+
+        if isinstance(U, tf.Tensor):
+            U = tf.Session().run(U)
 
         self.assertAllAlmostEqual(U, expected, delta=self.tol)
 
@@ -478,6 +493,7 @@ class ExtractTwoModes(FockBaseTest):
     def test_extract_beamsplitter(self):
         """test that BSgate is correctly extracted"""
         self.logTestName()
+        self.eng_sf.backend = None
 
         theta = 0.432
         phi = 0.765
@@ -485,8 +501,11 @@ class ExtractTwoModes(FockBaseTest):
         with self.eng_sf:
             BSgate(theta, phi) | self.q_sf
 
-        U = extract_unitary(self.eng_sf, cutoff_dim=self.D)
+        U = extract_unitary(self.eng_sf, cutoff_dim=self.D, backend=self.backend_name)
         expected = bs_U(np.cos(theta), np.sin(theta), phi, self.D)
+
+        if isinstance(U, tf.Tensor):
+            U = tf.Session().run(U)
 
         self.assertAllAlmostEqual(U, expected, delta=self.tol)
 
