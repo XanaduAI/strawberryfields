@@ -23,10 +23,11 @@ LINE_RETURN = '\n'
 WIRE_TERMINATOR = r'\\' + '\n'
 CIRCUIT_BODY_TERMINATOR = '\n}\n'
 CIRCUIT_BODY_START = ' {' + '\n'
+BEGIN_DOCUMENT = r'\begin{document}'
 DOCUMENT_CLASS = r'\documentclass{article}'
 QCIRCUIT_PACKAGE = r'\usepackage{qcircuit}'
 CIRCUIT_START = r'\Qcircuit'
-INIT_DOCUMENT = DOCUMENT_CLASS + '\n' + QCIRCUIT_PACKAGE + '\n' + CIRCUIT_START
+INIT_DOCUMENT = DOCUMENT_CLASS + '\n' + QCIRCUIT_PACKAGE + '\n' + BEGIN_DOCUMENT + '\n' + CIRCUIT_START
 
 expected_circuit_matrix = [
     ['\\gate{X}',
