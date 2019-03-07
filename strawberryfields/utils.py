@@ -1070,7 +1070,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
 
     Returns:
         The numerical array of the channel, according to the specified representation
-        and vectorization options.
+        and vectorization options
 
     Raises:
         TypeError: if the gates used to construct the circuit are not all unitary or channels
