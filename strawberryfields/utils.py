@@ -1073,7 +1073,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
         and vectorization options.
 
     Raises:
-        TypeError: if the gates used to construct the circuit are not all unitary or channels.
+        TypeError: if the gates used to construct the circuit are not all unitary or channels
     """
     # if is_unitary(engine):
     #     #raise Warning(f"This circuit is unitary and you could use extract_unitary for a more compact representation")
