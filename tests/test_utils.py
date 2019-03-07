@@ -6,6 +6,7 @@ import unittest
 
 import numpy as np
 from numpy import pi
+np.random.seed(42)
 
 import tensorflow as tf
 
