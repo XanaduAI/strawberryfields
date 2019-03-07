@@ -804,7 +804,7 @@ def _unvectorize_dm(tensor, num_subsystems):
 
     Raises:
         ValueError: if the input tensor's dimensions are not all equal or if the number
-            of its indices is not 4.
+            of its indices is not 4
     """
     dims = tensor.ndim
 
