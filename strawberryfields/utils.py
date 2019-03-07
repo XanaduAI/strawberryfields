@@ -963,7 +963,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
       - ``representation='choi'`` and ``representation='liouville'`` return an array
         with :math:`4N` indices
       - ``representation='kraus'`` returns an array of Kraus operators with :math:`2N` indices each,
-        where :math:`N` is the number of modes that the engine is created with.
+        where :math:`N` is the number of modes that the engine is created with
 
     Note that the Kraus representation automatically returns only the non-zero Kraus operators.
     One can reduce the number of operators by discarding Kraus operators with small norm (thus approximating the channel).
