@@ -979,7 +979,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
             \mathcal{C}(\rho) = \mathrm{Tr}[(\rho_A^T\otimes\mathbb{1}_B)\Lambda_{AB}]
 
     The indices of the non-vectorized Choi operator match exactly those of the state, so that the action
-    of the channel can be computed as (e.g. for one mode or for ``vectorize_modes=True``):
+    of the channel can be computed as (e.g., for one mode or for ``vectorize_modes=True``):
 
     >>> rho_out = np.einsum('ab,abcd', rho_in, choi)
 
