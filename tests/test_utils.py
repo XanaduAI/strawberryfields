@@ -13,7 +13,7 @@ import defaults
 from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.utils import *
-from strawberryfields.utils import _interleaved_identities, _vectorize_dm, _unvectorize_dm
+from strawberryfields.utils import _interleaved_identities, _vectorize, _unvectorize
 from strawberryfields.backends.shared_ops import sympmat
 
 from strawberryfields import backends
@@ -466,8 +466,8 @@ class ExtractOneMode(FockBaseTest):
 
         dm = np.random.rand(*[cutoff]*8) + 1j*np.random.rand(*[cutoff]*8) # 4^8 -> (4^2)^4 -> 4^8
         dm2 = np.random.rand(*[cutoff]*4) + 1j*np.random.rand(*[cutoff]*4) # (2^2)^4 -> 2^8 -> (2^2)^4
-        self.assertAllAlmostEqual(dm, _unvectorize_dm(_vectorize_dm(dm), 2), delta=self.tol)
-        self.assertAllAlmostEqual(dm2, _vectorize_dm(_unvectorize_dm(dm2, 2)), delta=self.tol)
+        self.assertAllAlmostEqual(dm, _unvectorize(_vectorize(dm), 2), delta=self.tol)
+        self.assertAllAlmostEqual(dm2, _vectorize(_unvectorize(dm2, 2)), delta=self.tol)
 
     def test_interleaved_identities(self):
         """Test interleaved utility function"""

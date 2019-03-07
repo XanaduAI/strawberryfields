@@ -745,10 +745,10 @@ def is_channel(engine):
     return all(isinstance(cmd.op, (Channel, Gate)) for cmd in engine.cmd_queue)
 
 
-def _vectorize_dm(tensor):
+def _vectorize(tensor):
     """Given a tensor with 4N indices of dimension :math:`D` each, it returns the vectorized
     tensor with 4 indices of dimension :math:`D^N` each. This is the inverse of the procedure
-    given by :func:`_unvectorize_dm`.
+    given by :func:`_unvectorize`.
     Caution: this private method is intended to be used only for Choi and Liouville operators.
 
     For example, :math:`N=2`,
@@ -790,10 +790,10 @@ def _vectorize_dm(tensor):
     return transposed_back
 
 
-def _unvectorize_dm(tensor, num_subsystems):
+def _unvectorize(tensor, num_subsystems):
     """Given a tensor with 4 indices, each of dimension :math:`D^N`, return the unvectorized
     tensor with 4N indices of dimension D each. This is the inverse of the procedure
-    given by :func:`_vectorize_dm`.
+    given by :func:`_vectorize`.
     Caution: this private method is intended to be used only for Choi and Liouville operators.
 
     Args:
@@ -1090,17 +1090,17 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
     backend = load_backend('fock')
     backend.begin_circuit(num_subsystems=_engine.num_subsystems, cutoff_dim=cutoff_dim, hbar=_engine.hbar, pure=True)
     choi = _engine.run(backend, cutoff_dim=cutoff_dim).dm()
-    choi = np.einsum('abcd->cdab', _vectorize_dm(choi))
+    choi = np.einsum('abcd->cdab', _vectorize(choi))
 
     if representation.lower() == 'choi':
         result = choi
         if not vectorize_modes:
-            result = _unvectorize_dm(result, N)
+            result = _unvectorize(result, N)
 
     elif representation.lower() == 'liouville':
         result = np.einsum('abcd -> dbca', choi)
         if not vectorize_modes:
-            result = _unvectorize_dm(result, N)
+            result = _unvectorize(result, N)
 
     elif representation.lower() == 'kraus':
         # The liouville operator is the sum of a bipartite product of kraus matrices, so if we vectorize them we obtain
