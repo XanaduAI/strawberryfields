@@ -1022,7 +1022,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
     On the other hand, even if the channel were the identity, the Choi operator would correspond to a maximally entangled state.
 
     The choi and liouville operators in matrix form (i.e., with two indices) can be found as follows, where
-    ``D`` is the dimension of each vectorized index (i.e. for :math:`N` modes, ``D=cutoff_dim**N``):
+    ``D`` is the dimension of each vectorized index (i.e., for :math:`N` modes, ``D=cutoff_dim**N``):
 
     >>> choi_matrix = liouville.reshape(D**2, D**2).T
     >>> liouville_matrix = choi.reshape(D**2, D**2).T
