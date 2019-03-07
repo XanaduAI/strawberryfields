@@ -850,7 +850,7 @@ def _interleaved_identities(num_subsystems: int, cutoff_dim: int):
 
 
 def _engine_with_CJ_cmd_queue(engine, cutoff_dim: int):
-    """Doubles the number of modes of an engine objects and prepends to its command queue
+    """Doubles the number of modes of an engine object and prepends to its command queue
     the operation that creates the interleaved identities ket.
 
     Here, CJ is from Choi-Jamiolkowski, as under the hood we are expliting the CJ isomorphism.
