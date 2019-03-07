@@ -1115,7 +1115,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
         # We rescale the eigenvectors with the sqrt of the eigenvalues (the other sqrt would rescale the right eigenvectors)
         rescaled_eigenvectors = np.einsum('b,ab->ab', np.sqrt(eigvals), eigvecs)
 
-        # Finally we reshape the eigenvectors to form matrices, i.e. the Kraus operators and we make the first index
+        # Finally we reshape the eigenvectors to form matrices, i.e., the Kraus operators and we make the first index
         # be the one that indexes the list of Kraus operators.
         result = np.einsum('abc->cab', rescaled_eigenvectors.reshape([cutoff_dim**N, cutoff_dim**N, -1]))
 
