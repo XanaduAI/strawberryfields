@@ -983,7 +983,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
 
     >>> rho_out = np.einsum('ab,abcd', rho_in, choi)
 
-    notice that this respects the transpose operation.
+    Notice that this respects the transpose operation.
 
     For two modes:
 
