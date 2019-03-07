@@ -12,7 +12,7 @@
 
 - Linting improvements
 
-- Made corrections to the Clements decomposition documentation and docstring, and fixed the Clements unit tests to ensure they are deterministic
+- Made corrections to the Clements decomposition documentation and docstring, and fixed the Clements unit tests to ensure they are deterministic.
 
 ## Bug fixes
 
