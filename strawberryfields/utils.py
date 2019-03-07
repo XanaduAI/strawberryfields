@@ -872,7 +872,7 @@ def _engine_with_CJ_cmd_queue(engine, cutoff_dim: int):
 
 
 def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, backend: str = 'fock'):
-    r"""Returns the array representation of an queued unitary circuit
+    r"""Returns the array representation of a queued unitary circuit
     as an NumPy ndarray (``'fock'`` backend) or as a TensorFlow Tensor (``'tf'`` backend).
 
     Note that the circuit must only include operations of the :class:`strawberryfields.ops.Gate` class.
