@@ -953,7 +953,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
 
     * If ``vectorize_modes=True``:
 
-      - ``representation='choi'`` and ``representation='liouville'`` returns an array
+      - ``representation='choi'`` and ``representation='liouville'`` return an array
         with 4 indices
       - ``representation='kraus'`` returns an array of Kraus operators in matrix form
 
