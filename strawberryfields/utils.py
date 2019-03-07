@@ -960,7 +960,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
 
     * If ``vectorize_modes=False``:
 
-      - ``representation='choi'`` and ``representation='liouville'`` returns an array
+      - ``representation='choi'`` and ``representation='liouville'`` return an array
         with :math:`4N` indices
       - ``representation='kraus'`` returns an array of Kraus operators with :math:`2N` indices each,
         where :math:`N` is the number of modes that the engine is created with.
