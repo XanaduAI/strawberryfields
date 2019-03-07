@@ -1066,7 +1066,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
         cutoff_dim (int): dimension of each index
         representation (str): choice between ``'choi'``, ``'liouville'`` or ``'kraus'``
         vectorize_modes (bool): if True, reshapes the result into rank-4 tensor,
-            otherwise it returns a rank-4N tensor, where N is the number of modes.
+            otherwise it returns a rank-4N tensor, where N is the number of modes
 
     Returns:
         The numerical array of the channel, according to the specified representation
