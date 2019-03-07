@@ -1069,7 +1069,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
             otherwise it returns a rank-4N tensor, where N is the number of modes
 
     Returns:
-        The numerical array of the channel, according to the specified representation
+        the numerical array of the channel, according to the specified representation
         and vectorization options
 
     Raises:
