@@ -899,7 +899,7 @@ def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, back
 
     Args:
         engine (Engine): the engine containing a queued circuit
-        cutoff_dim (int): dimension of each index.
+        cutoff_dim (int): dimension of each index
         vectorize_modes (bool): if True, reshape input and output modes in order to return a matrix.
         backend (str): the backend to build the unitary. ``'fock'`` (default) and ``'tf'`` are supported.
 
