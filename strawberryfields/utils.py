@@ -996,7 +996,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
     **Liouville operator**
 
     The Liouville operator is a partial transpose of the Choi operator, such that the first half of
-    consecutive index pairs are the output-input right modes (i.e. acting on the "bra" part of the state)
+    consecutive index pairs are the output-input right modes (i.e., acting on the "bra" part of the state)
     and the second half are the output-input left modes (i.e. acting on the "ket" part of the state).
 
     Therefore, the action of the Liouville operator (e.g. for one mode or for ``vectorize_modes=True``) is
