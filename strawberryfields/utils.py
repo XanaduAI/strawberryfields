@@ -907,7 +907,7 @@ def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, back
         array: the numerical array of the unitary circuit
 
     Raises:
-        TypeError: if the operations used to construct the circuit are not all unitary.
+        TypeError: if the operations used to construct the circuit are not all unitary
     """
 
     if not is_unitary(engine):
