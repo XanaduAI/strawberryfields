@@ -771,7 +771,7 @@ def _vectorize_dm(tensor):
 
     Raises:
         ValueError: if the input tensor's dimensions are not all equal or if the number
-            of its indices is not a multiple of 4.
+            of its indices is not a multiple of 4
     """
     dims = tensor.ndim
 
