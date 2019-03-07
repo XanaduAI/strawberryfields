@@ -1019,7 +1019,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
     >>> rho_out = np.einsum('abcdefgh,fbhd->eagc', liouville, rho_in)
 
     The Liouville representation has the property that if the channel is unitary, the operator is separable.
-    Whereas even if the channel were the identity, the Choi operator would correspond to a maximally entangled state.
+    On the other hand, even if the channel were the identity, the Choi operator would correspond to a maximally entangled state.
 
     The choi and liouville operators in matrix form (i.e. with two indices) can be found as follows, where
     ``D`` is the dimension of each vectorized index (i.e. for :math:`N` modes, ``D=cutoff_dim**N``):
