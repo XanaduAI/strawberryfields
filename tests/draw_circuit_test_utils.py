@@ -27,6 +27,9 @@ BEGIN_DOCUMENT = r'\begin{document}'
 DOCUMENT_CLASS = r'\documentclass{article}'
 QCIRCUIT_PACKAGE = r'\usepackage{qcircuit}'
 CIRCUIT_START = r'\Qcircuit'
+COLUMN_SPACING = '@C={0}'
+ROW_SPACING = '@R={0}'
+QUANTUM_WIRE = r'\qw[{0}]'
 INIT_DOCUMENT = DOCUMENT_CLASS + '\n' + QCIRCUIT_PACKAGE + '\n' + BEGIN_DOCUMENT + '\n' + CIRCUIT_START
 
 expected_circuit_matrix = [

@@ -50,6 +50,24 @@ class CircuitDrawerTests(BaseTest):
         self.drawer._init_document()
         self.assertTrue(self.drawer._document.endswith(INIT_DOCUMENT))
 
+    def test_set_row_spacing(self):
+        self.logTestName()
+        self.drawer._set_row_spacing('1em')
+        self.assertTrue(self.drawer._row_spacing == '1em')
+
+    def test_set_column_spacing(self):
+        self.logTestName()
+        self.drawer._set_column_spacing('2em')
+        self.assertTrue(self.drawer._column_spacing == '2em')
+
+    def test_apply_spacing(self):
+        self.logTestName()
+        self.drawer._set_row_spacing('1em')
+        self.drawer._set_column_spacing('2em')
+        self.drawer._apply_spacing()
+        self.assertTrue(self.drawer._pad_with_spaces(COLUMN_SPACING.format('2em')) in self.drawer._document)
+        self.assertTrue(self.drawer._pad_with_spaces(ROW_SPACING.format('1em')) in self.drawer._document)
+
     def test_one_mode_gates_from_operators(self):
         self.logTestName()
         q = self.eng.register
@@ -125,6 +143,11 @@ class CircuitDrawerTests(BaseTest):
             self.drawer.parse_op(op)
 
         self.assertTrue(self.drawer._circuit_matrix == expected_circuit_matrix)
+
+    def test_add_column(self):
+        self.drawer._add_column()
+        for wire in self.drawer._circuit_matrix:
+            self.assertTrue(wire[-1] == QUANTUM_WIRE.format(1))
 
     def test_on_empty_column(self):
         self.logTestName()

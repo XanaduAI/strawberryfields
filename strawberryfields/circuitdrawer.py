@@ -330,11 +330,11 @@ class Circuit:
                 post_wire.append(QUANTUM_WIRE.format(1))
 
     def _multi_mode_gate(self, circuit_op, wires):
-        """Adds a multi-mode operator gate to the circuit.
+        """Adds multiple of the same single-mode operator to the circuit.
 
         Args:
             circuit_op (str): the latex code for the operator.
-            wires (list[int]): a list of the indeces of subsystem wires to apply the multi-mode gate to.
+            wires (list[int]): a list of the indeces of subsystem wires to apply the gate to.
         """
         matrix = self._circuit_matrix
 
