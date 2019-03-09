@@ -1,3 +1,57 @@
+# Release 0.10.0.dev0 (development)
+
+### New features
+
+- Added two new utility functions to extract a numerical representation of a circuit from an Engine object: `extract_unitary` and `extract_channel`.
+
+- Added support for an alternative form of Clements decomposition, where the local phases occur at the end rather than in the middle of the beamsplitter array. This decomposition is more symmetric than the intermediate one, which could make it more robust. This form also makes it easier to implement a tensor-network simulation of linear optics.
+
+- Adds the `GraphEmbed` quantum operation/decomposition to the Strawberry Fields frontend. This allows the embedding of an arbitrary (complex-valued) weighted adjacency matrix into a Gaussian boson sampler.
+
+### Improvements
+
+- Linting improvements
+
+- Made corrections to the Clements decomposition documentation and docstring, and fixed the Clements unit tests to ensure they are deterministic.
+
+## Bug fixes
+
+- Fixed Bloch-Messiah bug arising when singular values were degenerate. Previously, the Bloch-Messiah decomposition did not return matrices in the canonical symplectic form if one or more of the Bloch-Messiah singular values were degenerate.
+
+### Contributors
+
+This release contains contributions from:
+
+Filippo Miatto, Ish Dhand, Nicolás Quesada, Josh Izaac, Christian Gogolin, Shahnawaz Ahmed, and Nathan Killoran.
+
+
+# Release 0.9
+
+## Summary of changes from 0.8
+
+### New features
+
+- Updated the [Strawberry Fields gallery](https://strawberryfields.readthedocs.io/en/latest/gallery/gallery.html), featuring community-submitted content (tutorials, notebooks, repositories, blog posts, research papers, etc.) using Strawberry Fields
+
+- Added the `@operation` decorator, which allows commonly-used algorithms and subroutines to be declared in blackbird code as one-liner operations
+
+- Added a `ThermalLossChannel` to the Strawberry Fields API (currently supported by the Gaussian backend)
+
+- Added a `poly_quad_expectation` method to the `state` objects for Gaussian and Fock backends
+
+### Improvements
+
+- New and improved tests
+
+- Fixed typos in code/documentation
+
+### Contributors
+
+This release contains contributions from:
+
+Juan Leni, Arthur Pesah, Brianna Gopaul, Nicolás Quesada, Josh Izaac, and Nathan Killoran.
+
+
 # Release 0.8
 
 ## Summary of changes from 0.7
