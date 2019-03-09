@@ -949,6 +949,8 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
     The representation choices include the Choi state representation, the Liouville representation, and
     the Kraus representation.
 
+    .. note:: Channel extraction can currently only be performed using the ``'fock'`` backend.
+
     **Tensor shapes**
 
     * If ``vectorize_modes=True``:
