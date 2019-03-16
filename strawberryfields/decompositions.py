@@ -287,8 +287,8 @@ def triangular_decomposition(V, tol=1e-11):
     tlist = []
     for i in range(nsize-2, -1, -1):
         for j in range(i+1):
-            tlist.append(dec.nullT(nsize-j-1, nsize-i-2, localV))
-            localV = dec.T(*tlist[-1]) @ localV
+            tlist.append(nullT(nsize-j-1, nsize-i-2, localV))
+            localV = T(*tlist[-1]) @ localV
 
     return list(reversed(tlist)), np.diag(localV)
 
