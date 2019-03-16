@@ -145,6 +145,21 @@ class DecompositionsModule(BaseTest):
             U_rec = np.diag(new_diags) @ U_rec
             self.assertAlmostEqual(np.linalg.norm(U_rec-U), 0, delta=self.tol)
 
+    def test_triangular_decomposition_random_unitary(self):
+        self.logTestName()
+        error=np.empty(nsamples)
+        for k in range(nsamples):
+            n=20
+            U=haar_measure(n)
+
+            tlist, diags = triangular_decomposition(U)
+
+            U_passive_try = np.diag(diags)
+            for i in tlist:
+                U_passive_try= dec.Ti(*i) @ U_passive_try
+
+            self.assertAlmostEqual(np.linalg.norm(U_passive_try-U), 0, delta=self.tol)
+
 
     def test_williamson_BM_random_circuit(self):
         self.logTestName()
@@ -188,7 +203,7 @@ class DecompositionsModule(BaseTest):
             omega = dec.sympmat(n)
 
             self.assertAlmostEqual(np.linalg.norm(S @ omega @ S.T -omega),0)
-    
+
             self.assertAlmostEqual(np.linalg.norm(np.transpose(O) @ omega @ O -omega),0)
             self.assertAlmostEqual(np.linalg.norm(np.transpose(O) @ O -np.identity(2*n)),0)
 
