@@ -152,7 +152,7 @@ class DecompositionsModule(BaseTest):
             n=20
             U=haar_measure(n)
 
-            tlist, diags = triangular_decomposition(U)
+            tlist, diags = dec.triangular_decomposition(U)
 
             U_passive_try = np.diag(diags)
             for i in tlist:
