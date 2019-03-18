@@ -99,6 +99,12 @@ class DecompositionsModule(BaseTest):
 
 
     def test_clements_identity(self):
+        """This test checks the rectangular decomposition for an identity unitary.
+
+        An identity unitary is decomposed via the rectangular decomposition of
+        Clements et al. and the resulting beamsplitters are multiplied together.
+        Test passes if the product matches identity.
+        """
         self.logTestName()
         n=20
         U=np.identity(n)
@@ -113,6 +119,13 @@ class DecompositionsModule(BaseTest):
         self.assertAllAlmostEqual(U, qrec, delta=self.tol)
 
     def test_clements_random_unitary(self):
+        """This test checks the rectangular decomposition for a random unitary.
+
+        A random unitary is drawn from the Haar measure, then is decomposed via
+        the rectangular decomposition of Clements et al., and the resulting
+        beamsplitters are multiplied together. Test passes if the product
+        matches the drawn unitary.
+        """
         self.logTestName()
         error=np.empty(nsamples)
         for k in range(nsamples):
@@ -131,6 +144,14 @@ class DecompositionsModule(BaseTest):
 
 
     def test_clements_phase_end_random_unitary(self):
+        """This test checks the rectangular decomposition with phases at the end.
+
+        A random unitary is drawn from the Haar measure, then is decomposed
+        using Eq. 5 of the rectangular decomposition procedure of Clements et al
+        , i.e., moving all the phases to the end of the interferometer. The
+        resulting beamsplitters are multiplied together. Test passes if the
+        product matches the drawn unitary.
+        """
         self.logTestName()
         error=np.empty(nsamples)
         for k in range(nsamples):
@@ -146,6 +167,12 @@ class DecompositionsModule(BaseTest):
             self.assertAlmostEqual(np.linalg.norm(U_rec-U), 0, delta=self.tol)
 
     def test_triangular_decomposition_random_unitary(self):
+        """This test checks the triangular decomposition for a random unitary.
+
+        A random unitary is drawn from the Haar measure, then is decomposed
+        using the triangular decomposition of Reck et al. and the resulting beamsplitters are multiplied together. Test passes if the product
+        matches the drawn unitary.
+        """
         self.logTestName()
         error=np.empty(nsamples)
         for k in range(nsamples):
