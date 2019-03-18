@@ -266,7 +266,7 @@ def triangular_decomposition(V, tol=1e-11):
     on notation.
 
     Args:
-        V (array): Unitary matrix of size n_size
+        V (array): Unitary matrix of size ``n_size``
         tol (int): the number of decimal places to use when determining
             whether the matrix is unitary
 
