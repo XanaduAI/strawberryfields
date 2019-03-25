@@ -8,6 +8,8 @@
 
 - Adds the `GraphEmbed` quantum operation/decomposition to the Strawberry Fields frontend. This allows the embedding of an arbitrary (complex-valued) weighted adjacency matrix into a Gaussian boson sampler.
 
+- Adds support for the Reck decomposition
+
 ### Improvements
 
 - Linting improvements
