@@ -25,7 +25,7 @@ import numpy as np
 
 from strawberryfields.backends import BaseFock, ModeMap
 from .circuit import Circuit
-from ..states import BaseFockState
+from strawberryfields.backends.states import BaseFockState
 
 indices = string.ascii_lowercase
 
