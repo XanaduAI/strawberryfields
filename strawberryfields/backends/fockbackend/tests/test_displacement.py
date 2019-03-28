@@ -17,6 +17,7 @@ Convention: The displacement unitary is fixed to be
 U(\alpha) = \exp(alpha \hat{a}^\dagger - \alpha^* \hat{a})
 where \hat{a}^\dagger is the photon creation operator.
 """
+#pylint: disable=too-many-arguments
 import pytest
 
 import numpy as np
@@ -52,7 +53,7 @@ def test_fidelity_coherent(begin_circuit, r, p, tol):
 
 @pytest.mark.parametrize("r", MAG_ALPHAS)
 @pytest.mark.parametrize("p", PHASE_ALPHAS)
-def test_normalized_displaced_state(begin_circuit, r, p, cutoff, pure, tol):
+def test_normalized_displaced_state(begin_circuit, r, p, tol):
     """Tests if a range of displaced states are normalized."""
     alpha = r*np.exp(1j*p)
 

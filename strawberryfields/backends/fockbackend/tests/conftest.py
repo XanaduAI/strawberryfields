@@ -31,37 +31,45 @@ BATCHED = False
 
 @pytest.fixture
 def tol():
+    """Numerical tolerance for equality tests."""
     return os.environ.get("TOL", TOL)
 
 
 @pytest.fixture
 def cutoff():
+    """Fock state cutoff"""
     return os.environ.get("CUTOFF", CUTOFF)
 
 
 @pytest.fixture
 def alpha():
+    """Maximum magnitude of coherent states used in tests"""
     return os.environ.get("ALPHA", ALPHA)
 
 
 @pytest.fixture
 def hbar():
+    """The value of hbar"""
     return os.environ.get("HBAR", HBAR)
 
 
 @pytest.fixture
 def pure():
+    """Whether to run the backend in pure or mixed state mode"""
     return os.environ.get("PURE", PURE)
 
 
 @pytest.fixture
 def batched():
+    """Whether to run the backend in batched mode"""
     return os.environ.get("BATCHED", BATCHED)
 
 
 @pytest.fixture
-def begin_circuit(cutoff, hbar, pure):
+def begin_circuit(cutoff, hbar, pure): #pylint: disable=redefined-outer-name
+    """Parameterized fixture, used to automatically create a backend of certain number of modes"""
     def create_backend(num_subsystems):
+        """Factory function"""
         backend = FockBackend()
         backend.begin_circuit(num_subsystems=num_subsystems, cutoff_dim=cutoff, hbar=hbar, pure=pure)
         return backend
