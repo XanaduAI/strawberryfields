@@ -11,6 +11,9 @@ env:
     - LOGGING=info
 matrix:
   include:
+    - before_script: pip install pytest pytest-cov --upgrade
+      script: cd strawberryfields/backends && pytest fockbackend/tests --cov=fockbackend
+      after_success: true
     - env: BACKEND=gaussian
     - env: BACKEND=gaussian MIXED=1
     - env: BACKEND=fock
@@ -23,8 +26,6 @@ matrix:
       sudo: required
     - env: BACKEND=tf MIXED=1 BATCHED=1
       sudo: required
-    - script: cd strawberryfields/backends && pytest fockbackend/tests --cov=fockbackend
-      after_success: true
 install:
   - pip install -r requirements.txt
   - pip install wheel codecov
