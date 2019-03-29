@@ -23,13 +23,19 @@ matrix:
       sudo: required
     - env: BACKEND=tf MIXED=1 BATCHED=1
       sudo: required
+    - env: PYTEST=1
 install:
   - pip install -r requirements.txt
   - pip install wheel codecov
   - python3 setup.py bdist_wheel
   - pip install dist/StrawberryFields*.whl
 script:
-  - coverage3 run -m unittest discover tests
+  - |
+    if [ $PYTEST == 1 ]; then
+      cd strawberryfields/backends && pytest fockbackend/tests --cov=fockbackend
+    else
+      coverage3 run -m unittest discover tests
+    fi
 after_success:
   - codecov -F $BACKEND,m$MIXED,b$BATCHED
 notifications:
