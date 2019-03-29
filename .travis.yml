@@ -11,6 +11,9 @@ env:
     - LOGGING=info
 matrix:
   include:
+    - before_script: pip install pytest pytest-cov --upgrade
+      script: cd strawberryfields/backends && python3 -m pytest fockbackend/tests --cov=fockbackend
+      after_success: true
     - env: BACKEND=gaussian
     - env: BACKEND=gaussian MIXED=1
     - env: BACKEND=fock

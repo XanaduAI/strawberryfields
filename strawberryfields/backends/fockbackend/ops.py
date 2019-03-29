@@ -98,7 +98,7 @@ from numpy.polynomial.hermite import hermval as H
 from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
-from .. import shared_ops as so
+from strawberryfields.backends import shared_ops as so
 
 
 def_type = np.complex128

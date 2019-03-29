@@ -24,8 +24,9 @@ from cmath import phase
 import numpy as np
 
 from strawberryfields.backends import BaseFock, ModeMap
+from strawberryfields.backends.states import BaseFockState
+
 from .circuit import Circuit
-from ..states import BaseFockState
 
 indices = string.ascii_lowercase
 
