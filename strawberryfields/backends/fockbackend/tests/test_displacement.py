@@ -48,7 +48,7 @@ def test_fidelity_coherent(begin_circuit, r, p, tol):
     state = backend.state()
 
     fid = state.fidelity_coherent([alpha])
-    assert np.abs(fid - 1) < tol
+    assert np.allclose(fid, 1, atol=tol, rtol=0)
 
 
 @pytest.mark.parametrize("r", MAG_ALPHAS)
