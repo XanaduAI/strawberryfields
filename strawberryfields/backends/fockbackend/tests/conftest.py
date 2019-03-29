@@ -32,37 +32,37 @@ BATCHED = False
 @pytest.fixture
 def tol():
     """Numerical tolerance for equality tests."""
-    return os.environ.get("TOL", TOL)
+    return float(os.environ.get("TOL", TOL))
 
 
 @pytest.fixture
 def cutoff():
     """Fock state cutoff"""
-    return os.environ.get("CUTOFF", CUTOFF)
+    return int(os.environ.get("CUTOFF", CUTOFF))
 
 
 @pytest.fixture
 def alpha():
     """Maximum magnitude of coherent states used in tests"""
-    return os.environ.get("ALPHA", ALPHA)
+    return float(os.environ.get("ALPHA", ALPHA))
 
 
 @pytest.fixture
 def hbar():
     """The value of hbar"""
-    return os.environ.get("HBAR", HBAR)
+    return float(os.environ.get("HBAR", HBAR))
 
 
 @pytest.fixture
 def pure():
     """Whether to run the backend in pure or mixed state mode"""
-    return os.environ.get("PURE", PURE)
+    return bool(int(os.environ.get("PURE", PURE)))
 
 
 @pytest.fixture
 def batched():
     """Whether to run the backend in batched mode"""
-    return os.environ.get("BATCHED", BATCHED)
+    return bool(int(os.environ.get("BATCHED", BATCHED)))
 
 
 @pytest.fixture
