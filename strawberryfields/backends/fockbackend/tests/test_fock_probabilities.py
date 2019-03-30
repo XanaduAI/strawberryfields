@@ -83,7 +83,7 @@ class TestFockRepresentation:
         """Tests that the numeric probabilities in the full Fock basis are correct for a two-mode product coherent state."""
 
         if mag_alpha == 0.:
-          pass
+            pass
         else:
             backend = setup_backend(2)
 

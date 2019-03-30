@@ -14,9 +14,6 @@
 
 r"""Unit tests for add_mode and del_mode functions"""
 
-import pytest
-from itertools import combinations
-
 import numpy as np
 
 NUM_REPEATS = 10
@@ -29,7 +26,7 @@ class TestRepresentationIndependent:
 
         backend = setup_backend(1)
 
-        for n in range(4):
+        for _n in range(4):
             backend.add_mode(1)
             assert np.all(backend.is_vacuum(tol))
 
@@ -42,15 +39,15 @@ class TestRepresentationIndependent:
             backend.del_mode([n])
             assert np.all(backend.is_vacuum(tol))
 
-    def test_get_modes(self, setup_backend, tol):
+    def test_get_modes(self, setup_backend):
         """Tests that get modes returns the correct result after deleting modes from the circuit"""
 
         backend = setup_backend(4)
 
         backend.squeeze(0.1, 0)
-        backend.del_mode([0,2])
+        backend.del_mode([0, 2])
         res = backend.get_modes()
-        assert np.all(res==[1,3])
+        assert np.all(res == [1, 3])
 
 
 class TestFockRepresentation:
@@ -92,7 +89,7 @@ class TestFockRepresentation:
     def test_fock_measurements_after_del_mode(self, setup_backend, cutoff):
         """Tests Fock measurements on a system after tracing out an unentagled mode."""
 
-        for m in range(1,4):
+        for m in range(1, 4):
             meas_results = []
             for _ in range(NUM_REPEATS):
                 backend = setup_backend(4)

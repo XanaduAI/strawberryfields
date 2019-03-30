@@ -78,7 +78,7 @@ class TestFockRepresentation:
         r"""Tests if a range of phase-shifted superposition states are equal to the form of
         \sum_n exp(i * theta * n)|n>"""
 
-        for n in range(cutoff):
+        for _n in range(cutoff):
             backend = setup_backend(1)
 
             ref_state = np.array([np.exp(1j * theta * k) for k in range(cutoff)]) / np.sqrt(cutoff)

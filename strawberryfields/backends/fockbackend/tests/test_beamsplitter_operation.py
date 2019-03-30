@@ -121,7 +121,7 @@ class TestFockRepresentation:
         alpha_outB = r * alpha
         ref_stateA = np.array([np.exp(-0.5 * np.abs(alpha_outA) ** 2) * alpha_outA ** n / np.sqrt(factorial(n)) for n in range(cutoff)])
         ref_stateB = np.array([np.exp(-0.5 * np.abs(alpha_outB) ** 2) * alpha_outB ** n / np.sqrt(factorial(n)) for n in range(cutoff)])
-        ref_state = np.einsum('i,j->ij',ref_stateA, ref_stateB)
+        ref_state = np.einsum('i,j->ij', ref_stateA, ref_stateB)
         if not pure:
             ref_state = np.einsum('i,j,k,l->ijkl', ref_stateA, np.conj(ref_stateA), ref_stateB, np.conj(ref_stateB))
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0)

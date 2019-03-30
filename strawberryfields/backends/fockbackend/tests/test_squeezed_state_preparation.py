@@ -23,9 +23,10 @@ import numpy as np
 from scipy.special import factorial
 
 SQZ_R = np.linspace(0.0, 0.1, 5)
-SQZ_THETA = np.linspace(0,2 * np.pi, 3, endpoint=False)
+SQZ_THETA = np.linspace(0, 2 * np.pi, 3, endpoint=False)
 
 def sech(x):
+    """Hyberbolic secant"""
     return 1 / np.cosh(x)
 
 
@@ -58,7 +59,7 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("r", SQZ_R)
     @pytest.mark.parametrize("theta", SQZ_THETA)
-    def test_no_odd_fock(self, setup_backend, r, theta, batched, tol):
+    def test_no_odd_fock(self, setup_backend, r, theta, batched):
         """Tests if a range of squeezed vacuum states have
         only nonzero entries for even Fock states."""
 
@@ -71,7 +72,7 @@ class TestFockRepresentation:
         else:
             num_state = s.dm()
         if batched:
-            odd_entries = num_state[:,1::2]
+            odd_entries = num_state[:, 1::2]
         else:
             odd_entries = num_state[1::2]
         assert np.all(odd_entries == 0)
@@ -92,14 +93,14 @@ class TestFockRepresentation:
         even_refs = np.array([np.sqrt(sech(r)) * np.sqrt(factorial(k)) / factorial(k / 2) * (-0.5 * np.exp(1j * theta) * np.tanh(r)) ** (k / 2) for k in range(0, cutoff, 2)])
         if batched:
             if pure:
-                even_entries = num_state[:,::2]
+                even_entries = num_state[:, ::2]
             else:
-                even_entries = num_state[:,::2,::2]
+                even_entries = num_state[:, ::2, ::2]
                 even_refs = np.outer(even_refs, np.conj(even_refs))
         else:
             if pure:
                 even_entries = num_state[::2]
             else:
-                even_entries = num_state[::2,::2]
+                even_entries = num_state[::2, ::2]
                 even_refs = np.outer(even_refs, np.conj(even_refs))
         assert np.allclose(even_entries, even_refs, atol=tol, rtol=0.)
