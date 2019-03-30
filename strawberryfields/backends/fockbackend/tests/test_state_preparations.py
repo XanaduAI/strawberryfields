@@ -17,7 +17,6 @@ r"""Unit tests for various state preparation operations"""
 import pytest
 
 import numpy as np
-from scipy.special import factorial
 
 
 MAG_ALPHAS = np.linspace(0, .8, 4)
@@ -50,6 +49,8 @@ class TestRepresentationIndependent:
 
     @pytest.mark.parametrize("nbar", NBARS)
     def test_prepare_thermal_state(self, setup_backend, nbar, cutoff, tol):
+        """Tests if thermal states with different nbar values
+        give the correct fock probabilities"""
 
         backend = setup_backend(1)
 
@@ -135,7 +136,7 @@ class TestFockRepresentation:
             assert np.allclose(state.trace(), 1., atol=tol, rtol=0.)
             assert np.allclose(rho_probs, ket_probs, atol=tol, rtol=0.)
 
-    def test_prepare_random_dm_state(self, setup_backend, cutoff, batched, tol):
+    def test_prepare_random_dm_state(self, setup_backend, cutoff, tol):
         """Tests if a random dm state is correctly prepared."""
 
         np.random.seed(SEED)
@@ -149,10 +150,7 @@ class TestFockRepresentation:
         rho_probs = np.array(state.all_fock_probs())
 
         es, vs = np.linalg.eig(random_rho)
-        if batched:
-            kets_mixed_probs = np.zeros([self.bsize, len(es)], dtype=complex)
-        else:
-            kets_mixed_probs = np.zeros([len(es)], dtype=complex)
+        kets_mixed_probs = np.zeros([len(es)], dtype=complex)
         for e, v in zip(es, vs.T.conj()):
             backend = setup_backend(1)
             backend.prepare_ket_state(v, 0)
