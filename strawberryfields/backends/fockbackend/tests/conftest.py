@@ -66,11 +66,11 @@ def batched():
 
 
 @pytest.fixture
-def begin_circuit(cutoff, hbar, pure): #pylint: disable=redefined-outer-name
+def setup_backend(cutoff, hbar, pure): #pylint: disable=redefined-outer-name
     """Parameterized fixture, used to automatically create a backend of certain number of modes"""
-    def create_backend(num_subsystems):
+    def _setup_backend(num_subsystems):
         """Factory function"""
         backend = FockBackend()
         backend.begin_circuit(num_subsystems=num_subsystems, cutoff_dim=cutoff, hbar=hbar, pure=pure)
         return backend
-    return create_backend
+    return _setup_backend
