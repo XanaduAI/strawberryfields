@@ -52,7 +52,7 @@ class TestRepresentationIndependent:
         alpha = mag_alpha * np.exp(1j * phase_alpha)
 
         if alpha == 0.:
-            pass
+            pytest.skip("Skipping due to zero displacement")
         else:
             backend = setup_backend(1)
             backend.displacement(alpha, 0)
@@ -109,7 +109,7 @@ class TestFockRepresentation:
         alpha = mag_alpha * np.exp(1j * phase_alpha)
 
         if alpha == 0.:
-            pass
+            pytest.skip("Skipping due to zero displacement")
         else:
             rootT_alpha = np.sqrt(T) * alpha
 

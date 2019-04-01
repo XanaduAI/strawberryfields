@@ -81,7 +81,7 @@ class TestFockRepresentation:
 
         alpha = mag_alpha * np.exp(1j * phase_alpha)
         if alpha == 0.:
-            pass
+            pytest.skip("Zero displacement, test skipped")
         else:
             backend = setup_backend(1)
 
