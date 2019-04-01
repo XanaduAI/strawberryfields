@@ -25,7 +25,7 @@ DISP_VAL = 1.0+1j*1.0
 NUM_STDS = 10.
 std_10 = NUM_STDS / np.sqrt(N_MEAS)
 
-###################################################################
+
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
 

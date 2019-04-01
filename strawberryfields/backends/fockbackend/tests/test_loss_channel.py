@@ -28,8 +28,6 @@ MAG_ALPHAS = np.linspace(0, .75, 3)
 PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 3, endpoint=False)
 MAX_FOCK = 5
 
-###################################################################
-
 
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
@@ -55,6 +53,7 @@ class TestRepresentationIndependent:
         backend.displacement(alpha, 0)
         backend.loss(T, 0)
         assert np.all(backend.is_vacuum(tol))
+
 
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""

@@ -16,7 +16,9 @@ r"""Unit tests for measurements in the Fock basis"""
 
 import numpy as np
 
+
 NUM_REPEATS = 50
+
 
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""

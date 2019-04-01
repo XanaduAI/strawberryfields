@@ -56,6 +56,7 @@ class TestRepresentationIndependent:
         fidel = state.fidelity_coherent([alpha])
         assert np.allclose(fidel, 1, atol=tol, rtol=0)
 
+
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
 

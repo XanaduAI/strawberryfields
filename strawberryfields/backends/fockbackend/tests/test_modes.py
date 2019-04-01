@@ -18,6 +18,7 @@ import numpy as np
 
 NUM_REPEATS = 10
 
+
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
 

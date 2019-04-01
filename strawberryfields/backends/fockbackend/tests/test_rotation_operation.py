@@ -24,7 +24,6 @@ import numpy as np
 
 SHIFT_THETAS = np.linspace(0, 2 * np.pi, 7, endpoint=False)
 
-###################################################################
 
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
@@ -36,6 +35,7 @@ class TestRepresentationIndependent:
         backend = setup_backend(1)
         backend.rotation(theta, 0)
         assert np.all(backend.is_vacuum(tol))
+
 
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
@@ -64,30 +64,15 @@ class TestFockRepresentation:
             backend.prepare_fock_state(n, 0)
             backend.rotation(theta, 0)
             s = backend.state()
+
             if s.is_pure:
                 numer_state = s.ket()
             else:
                 numer_state = s.dm()
+
             ref_state = np.array([np.exp(1j * theta * k) if k == n else 0.0 for k in range(cutoff)])
+
             if not pure:
                 ref_state = np.outer(ref_state, np.conj(ref_state))
-            assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.)
 
-    @pytest.mark.parametrize("theta", SHIFT_THETAS)
-    def test_rotated_superposition_states(self, setup_backend, theta, pure, cutoff, tol):
-        r"""Tests if a range of phase-shifted superposition states are equal to the form of
-        \sum_n exp(i * theta * n)|n>"""
-
-        for _n in range(cutoff):
-            backend = setup_backend(1)
-
-            ref_state = np.array([np.exp(1j * theta * k) for k in range(cutoff)]) / np.sqrt(cutoff)
-            if not pure:
-                ref_state = np.outer(ref_state, np.conj(ref_state))
-            backend.prepare_ket_state(ref_state, 0)
-            s = backend.state()
-            if s.is_pure:
-                numer_state = s.ket()
-            else:
-                numer_state = s.dm()
             assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.)

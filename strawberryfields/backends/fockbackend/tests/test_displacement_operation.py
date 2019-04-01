@@ -28,6 +28,7 @@ from scipy.special import factorial as fac
 MAG_ALPHAS = np.linspace(0, .8, 4)
 PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 7, endpoint=False)
 
+
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
 
@@ -36,7 +37,6 @@ class TestRepresentationIndependent:
         backend = setup_backend(1)
         backend.displacement(0, 0)
         assert np.all(backend.is_vacuum(tol))
-
 
     @pytest.mark.parametrize("r", MAG_ALPHAS)
     @pytest.mark.parametrize("p", PHASE_ALPHAS)
@@ -53,6 +53,7 @@ class TestRepresentationIndependent:
         fid = state.fidelity_coherent([alpha])
         assert np.allclose(fid, 1, atol=tol, rtol=0)
 
+
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
 
@@ -67,7 +68,6 @@ class TestFockRepresentation:
         state = backend.state()
 
         assert np.allclose(state.trace(), 1, atol=tol, rtol=0)
-
 
     @pytest.mark.parametrize("r", MAG_ALPHAS)
     @pytest.mark.parametrize("p", PHASE_ALPHAS)

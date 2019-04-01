@@ -22,8 +22,10 @@ import pytest
 import numpy as np
 from scipy.special import factorial
 
+
 SQZ_R = np.linspace(0.0, 0.1, 5)
 SQZ_THETA = np.linspace(0, 2 * np.pi, 3, endpoint=False)
+
 
 def sech(x):
     """Hyberbolic secant"""
@@ -41,6 +43,7 @@ class TestRepresentationIndependent:
 
         backend.prepare_squeezed_state(0, theta, 0)
         assert np.all(backend.is_vacuum(tol))
+
 
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""

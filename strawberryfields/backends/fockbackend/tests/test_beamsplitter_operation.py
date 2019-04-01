@@ -26,21 +26,22 @@ import pytest
 import numpy as np
 from scipy.special import factorial
 
+
 T_VALUES = np.linspace(-0.2, 1., 3)
 PHASE_R = np.linspace(0, 2 * np.pi, 3, endpoint=False)
 ALPHA = 0.1
 MAG_ALPHAS = np.linspace(0., ALPHA, 3)
 
+
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
-
 
     def test_complex_t(self, setup_backend):
         """Test exception raised if t is complex"""
         t = 0.1 + 0.5j
         r = np.exp(1j * 0.2) * np.sqrt(1. - np.abs(t) ** 2)
         backend = setup_backend(2)
-        
+
         with pytest.raises(ValueError, match="must be a float"):
             backend.beamsplitter(t, r, 0, 1)
 
@@ -114,16 +115,22 @@ class TestFockRepresentation:
         backend.displacement(alpha, 0)
         backend.beamsplitter(t, r, 0, 1)
         state = backend.state()
+
         if state.is_pure:
             numer_state = state.ket()
         else:
             numer_state = state.dm()
+
         alpha_outA = t * alpha
         alpha_outB = r * alpha
+
         n = np.arange(cutoff)
         ref_stateA = np.exp(-0.5*np.abs(alpha_outA)**2)*alpha_outA**n/np.sqrt(factorial(n))
         ref_stateB = np.exp(-0.5*np.abs(alpha_outB)**2)*alpha_outB**n/np.sqrt(factorial(n))
+
         ref_state = np.einsum('i,j->ij', ref_stateA, ref_stateB)
+
         if not pure:
             ref_state = np.einsum('i,j,k,l->ijkl', ref_stateA, np.conj(ref_stateA), ref_stateB, np.conj(ref_stateB))
+
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0)

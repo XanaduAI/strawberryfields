@@ -154,3 +154,25 @@ class TestFockRepresentation:
             kets_mixed_probs += e*probs_for_this_v
 
         assert np.allclose(rho_probs, kets_mixed_probs, atol=tol, rtol=0.)
+
+    @pytest.mark.parametrize("theta", PHASE_ALPHAS)
+    def test_rotated_superposition_states(self, setup_backend, theta, pure, cutoff, tol):
+        r"""Tests if a range of phase-shifted superposition states are equal to the form of
+        \sum_n exp(i * theta * n)|n>"""
+
+        backend = setup_backend(1)
+
+        ref_state = np.array([np.exp(1j * theta * k) for k in range(cutoff)]) / np.sqrt(cutoff)
+
+        if not pure:
+            ref_state = np.outer(ref_state, np.conj(ref_state))
+
+        backend.prepare_ket_state(ref_state, 0)
+        s = backend.state()
+
+        if s.is_pure:
+            numer_state = s.ket()
+        else:
+            numer_state = s.dm()
+
+        assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.)

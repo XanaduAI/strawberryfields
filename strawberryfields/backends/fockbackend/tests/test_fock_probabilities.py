@@ -19,10 +19,10 @@ import pytest
 import numpy as np
 from scipy.special import factorial
 
+
 MAG_ALPHAS = np.linspace(0, .8, 4)
 PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 7, endpoint=False)
 
-###################################################################
 
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
@@ -35,12 +35,14 @@ class TestRepresentationIndependent:
         backend = setup_backend(1)
 
         alpha = mag_alpha * np.exp(1j * phase_alpha)
-        ref_state = np.array([np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(factorial(n)) for n in range(cutoff)])
+        n = np.arange(cutoff)
+        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(factorial(n))
         ref_probs = np.abs(ref_state) ** 2
         backend.prepare_coherent_state(alpha, 0)
         state = backend.state()
         prob_n = [state.fock_prob([n]) for n in range(cutoff)]
         assert np.allclose(prob_n, ref_probs, atol=tol, rtol=0)
+
 
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""

@@ -20,7 +20,6 @@ import numpy as np
 
 KAPPAS = np.linspace(0, 2 * np.pi, 7)
 
-###################################################################
 
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
@@ -31,14 +30,14 @@ class TestFockRepresentation:
 
         backend = setup_backend(1)
 
-        backend.prepare_ket_state(np.array([1.0 for n in range(cutoff)]) / cutoff, 0)
+        backend.prepare_ket_state(np.ones([cutoff]) / cutoff, 0)
         backend.kerr_interaction(kappa, 0)
         s = backend.state()
         if s.is_pure:
             numer_state = s.ket()
         else:
             numer_state = s.dm()
-        ref_state = np.array([np.exp(1j * kappa * n ** 2) for n in range(cutoff)]) / cutoff
+        ref_state = np.exp(1j * kappa * np.arange(cutoff) ** 2) / cutoff
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.)
 
     @pytest.mark.parametrize("kappa", KAPPAS)
@@ -60,6 +59,8 @@ class TestFockRepresentation:
         else:
             numer_state = s.dm()
 
-        ref_state = np.array([np.exp(1j*kappa*n1*n2) for n1 in range(cutoff) for n2 in range(cutoff)])/cutoff
+        n1 = np.arange(cutoff).reshape(-1, 1)
+        n2 = np.arange(cutoff).reshape(1, -1)
+        ref_state = np.exp(1j*kappa*n1*n2).flatten()/cutoff
         ref_state = np.reshape(ref_state, [cutoff]*2)
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.)

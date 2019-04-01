@@ -46,6 +46,7 @@ def matrix_elem(n, r, m):
         )
     return res
 
+
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
 
@@ -54,6 +55,7 @@ class TestRepresentationIndependent:
         backend = setup_backend(1)
         backend.squeeze(0, 0)
         assert np.all(backend.is_vacuum(tol))
+
 
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
