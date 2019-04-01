@@ -51,13 +51,10 @@ class TestRepresentationIndependent:
         T = 0.0
         alpha = mag_alpha * np.exp(1j * phase_alpha)
 
-        if alpha == 0.:
-            pytest.skip("Skipping due to zero displacement")
-        else:
-            backend = setup_backend(1)
-            backend.displacement(alpha, 0)
-            backend.loss(T, 0)
-            assert np.all(backend.is_vacuum(tol))
+        backend = setup_backend(1)
+        backend.displacement(alpha, 0)
+        backend.loss(T, 0)
+        assert np.all(backend.is_vacuum(tol))
 
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
@@ -108,20 +105,18 @@ class TestFockRepresentation:
 
         alpha = mag_alpha * np.exp(1j * phase_alpha)
 
-        if alpha == 0.:
-            pytest.skip("Skipping due to zero displacement")
+        rootT_alpha = np.sqrt(T) * alpha
+
+        backend = setup_backend(1)
+
+        backend.prepare_coherent_state(alpha, 0)
+        backend.loss(T, 0)
+        s = backend.state()
+        if s.is_pure:
+            numer_state = s.ket()
         else:
-            rootT_alpha = np.sqrt(T) * alpha
-
-            backend = setup_backend(1)
-
-            backend.prepare_coherent_state(alpha, 0)
-            backend.loss(T, 0)
-            s = backend.state()
-            if s.is_pure:
-                numer_state = s.ket()
-            else:
-                numer_state = s.dm()
-            ref_state = np.array([np.exp(-0.5 * np.abs(rootT_alpha) ** 2) * rootT_alpha ** n / np.sqrt(factorial(n)) for n in range(cutoff)])
-            ref_state = np.outer(ref_state, np.conj(ref_state))
-            assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.)
+            numer_state = s.dm()
+        n = np.arange(cutoff)
+        ref_state = np.exp(-0.5 * np.abs(rootT_alpha) ** 2) * rootT_alpha ** n / np.sqrt(factorial(n))
+        ref_state = np.outer(ref_state, np.conj(ref_state))
+        assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.)

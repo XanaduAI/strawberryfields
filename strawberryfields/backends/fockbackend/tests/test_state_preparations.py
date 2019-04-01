@@ -80,61 +80,56 @@ class TestFockRepresentation:
         """Tests if a range of coherent states are normalized."""
 
         alpha = mag_alpha * np.exp(1j * phase_alpha)
-        if alpha == 0.:
-            pytest.skip("Zero displacement, test skipped")
-        else:
-            backend = setup_backend(1)
+        backend = setup_backend(1)
 
-            backend.prepare_coherent_state(alpha, 0)
-            state = backend.state()
-            tr = state.trace()
-            assert np.allclose(tr, 1., atol=tol, rtol=0.)
+        backend.prepare_coherent_state(alpha, 0)
+        state = backend.state()
+        tr = state.trace()
+        assert np.allclose(tr, 1., atol=tol, rtol=0.)
 
 
     def test_prepare_ket_state(self, setup_backend, cutoff, tol):
         """Tests if a ket state with arbitrary parameters is correctly prepared."""
         np.random.seed(SEED)
-        for _ in range(10):
-            random_ket = np.random.uniform(-1, 1, cutoff) + 1j*np.random.uniform(-1, 1, cutoff)
-            random_ket = random_ket / np.linalg.norm(random_ket)
-            backend = setup_backend(1)
+        random_ket = np.random.uniform(-1, 1, cutoff) + 1j*np.random.uniform(-1, 1, cutoff)
+        random_ket = random_ket / np.linalg.norm(random_ket)
+        backend = setup_backend(1)
 
-            backend.prepare_ket_state(random_ket, 0)
-            state = backend.state()
-            assert np.allclose(state.fidelity(random_ket, 0), 1., atol=tol, rtol=0.)
+        backend.prepare_ket_state(random_ket, 0)
+        state = backend.state()
+        assert np.allclose(state.fidelity(random_ket, 0), 1., atol=tol, rtol=0.)
 
 
     def test_prepare_rank_two_dm_state(self, setup_backend, cutoff, tol):
         """Tests if rank two dm states with arbitrary parameters are correctly prepared."""
 
         np.random.seed(SEED)
-        for _ in range(10):
-            random_ket1 = np.random.uniform(-1, 1, cutoff) + 1j*np.random.uniform(-1, 1, cutoff)
-            random_ket1 = random_ket1 / np.linalg.norm(random_ket1)
-            random_ket2 = np.random.uniform(-1, 1, cutoff) + 1j*np.random.uniform(-1, 1, cutoff)
-            random_ket2 = random_ket2 / np.linalg.norm(random_ket2)
+        random_ket1 = np.random.uniform(-1, 1, cutoff) + 1j*np.random.uniform(-1, 1, cutoff)
+        random_ket1 = random_ket1 / np.linalg.norm(random_ket1)
+        random_ket2 = np.random.uniform(-1, 1, cutoff) + 1j*np.random.uniform(-1, 1, cutoff)
+        random_ket2 = random_ket2 / np.linalg.norm(random_ket2)
 
-            backend = setup_backend(1)
-            backend.prepare_ket_state(random_ket1, 0)
-            state = backend.state()
-            ket_probs1 = np.array([state.fock_prob([n]) for n in range(cutoff)])
+        backend = setup_backend(1)
+        backend.prepare_ket_state(random_ket1, 0)
+        state = backend.state()
+        ket_probs1 = np.array([state.fock_prob([n]) for n in range(cutoff)])
 
-            backend = setup_backend(1)
-            backend.prepare_ket_state(random_ket2, 0)
-            state = backend.state()
-            ket_probs2 = np.array([state.fock_prob([n]) for n in range(cutoff)])
+        backend = setup_backend(1)
+        backend.prepare_ket_state(random_ket2, 0)
+        state = backend.state()
+        ket_probs2 = np.array([state.fock_prob([n]) for n in range(cutoff)])
 
-            ket_probs = 0.2*ket_probs1 + 0.8*ket_probs2
+        ket_probs = 0.2*ket_probs1 + 0.8*ket_probs2
 
-            random_rho = 0.2*np.outer(np.conj(random_ket1), random_ket1) + 0.8*np.outer(np.conj(random_ket2), random_ket2)
+        random_rho = 0.2*np.outer(np.conj(random_ket1), random_ket1) + 0.8*np.outer(np.conj(random_ket2), random_ket2)
 
-            backend = setup_backend(1)
-            backend.prepare_dm_state(random_rho, 0)
-            state = backend.state()
-            rho_probs = np.array([state.fock_prob([n]) for n in range(cutoff)])
+        backend = setup_backend(1)
+        backend.prepare_dm_state(random_rho, 0)
+        state = backend.state()
+        rho_probs = np.array([state.fock_prob([n]) for n in range(cutoff)])
 
-            assert np.allclose(state.trace(), 1., atol=tol, rtol=0.)
-            assert np.allclose(rho_probs, ket_probs, atol=tol, rtol=0.)
+        assert np.allclose(state.trace(), 1., atol=tol, rtol=0.)
+        assert np.allclose(rho_probs, ket_probs, atol=tol, rtol=0.)
 
     def test_prepare_random_dm_state(self, setup_backend, cutoff, tol):
         """Tests if a random dm state is correctly prepared."""

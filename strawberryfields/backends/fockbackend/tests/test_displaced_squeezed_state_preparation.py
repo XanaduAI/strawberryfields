@@ -88,8 +88,8 @@ class TestFockRepresentation:
             num_state = state.ket()
         else:
             num_state = state.dm()
-        even_refs = np.array([np.sqrt(sech(r)) * np.sqrt(factorial(k)) / factorial(k / 2) *
-                              (-0.5 * np.exp(1j * phi) * np.tanh(r)) ** (k / 2) for k in range(0, cutoff, 2)])
+        n = np.arange(0, cutoff, 2)
+        even_refs = np.sqrt(sech(r)) * np.sqrt(factorial(n)) / factorial(n / 2) * (-0.5 * np.exp(1j * phi) * np.tanh(r)) ** (n / 2)
         if batched:
             if pure:
                 even_entries = num_state[:, ::2]

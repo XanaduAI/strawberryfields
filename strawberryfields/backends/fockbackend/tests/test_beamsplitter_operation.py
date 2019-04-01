@@ -39,8 +39,9 @@ class TestRepresentationIndependent:
         """Test exception raised if t is complex"""
         t = 0.1 + 0.5j
         r = np.exp(1j * 0.2) * np.sqrt(1. - np.abs(t) ** 2)
+        backend = setup_backend(2)
+        
         with pytest.raises(ValueError, match="must be a float"):
-            backend = setup_backend(2)
             backend.beamsplitter(t, r, 0, 1)
 
     @pytest.mark.parametrize("t", T_VALUES)

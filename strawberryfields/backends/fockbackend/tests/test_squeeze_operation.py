@@ -153,5 +153,4 @@ class TestFockRepresentation:
             if not pure:
                 ref_state = np.outer(ref_state, ref_state.conj())
 
-
             assert np.allclose(num_state, ref_state, atol=tol, rtol=0)

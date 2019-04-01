@@ -14,7 +14,6 @@
 
 r"""Unit tests for measurements in the Fock basis"""
 
-from itertools import combinations
 import numpy as np
 
 NUM_REPEATS = 50
@@ -34,30 +33,37 @@ class TestFockRepresentation:
     def test_normalized_conditional_states(self, setup_backend, cutoff, tol):
         """Tests if the conditional states resulting from Fock measurements in a subset of modes are normalized."""
 
-        state_preps = [n for n in range(cutoff)] + [cutoff - n for n in range(cutoff)]
+        state_preps = [n for n in range(cutoff)] + [cutoff - n for n in range(cutoff)] # [0, 1, 2, ..., cutoff-1, cutoff, cutoff-1, ..., 2, 1]
         for idx in range(NUM_REPEATS):
             backend = setup_backend(3)
 
+            # cycles through consecutive triples in `state_preps`
             backend.prepare_fock_state(state_preps[idx % cutoff], 0)
             backend.prepare_fock_state(state_preps[(idx + 1) % cutoff], 1)
             backend.prepare_fock_state(state_preps[(idx + 2) % cutoff], 2)
-            state = backend.state()
-            tr = state.trace()
-            assert np.allclose(tr, 1, atol=tol, rtol=0)
+
+            for mode in range(3):
+                backend.measure_fock([mode])
+                state = backend.state()
+                tr = state.trace()
+                assert np.allclose(tr, 1, atol=tol, rtol=0)
 
     def test_fock_measurements(self, setup_backend, cutoff):
         """Tests if Fock measurements results on a variety of multi-mode Fock states are correct."""
 
-        state_preps = [n for n in range(cutoff)] + [cutoff - n for n in range(cutoff)]
-        mode_choices = [p for p in combinations(range(3), 1)] + \
-                       [p for p in combinations(range(3), 2)] + \
-                       [p for p in combinations(range(3), 3)]
+        state_preps = [n for n in range(cutoff)] + [cutoff - n for n in range(cutoff)] # [0, 1, 2, ..., cutoff-1, cutoff, cutoff-1, ..., 2, 1]
+
+        singletons = [(0,), (1,), (2,)]
+        pairs = [(0, 1), (0, 2), (1, 2)]
+        triples = [(0, 1, 2)]
+        mode_choices = singletons + pairs + triples
+
         for idx in range(NUM_REPEATS):
             n = [state_preps[idx % cutoff],
                  state_preps[(idx + 1) % cutoff],
                  state_preps[(idx + 2) % cutoff]]
             n = np.array(n)
-            meas_modes = np.array(mode_choices[idx % len(mode_choices)])
+            meas_modes = np.array(mode_choices[idx % len(mode_choices)]) # cycle through mode choices
             backend = setup_backend(3)
 
             backend.prepare_fock_state(n[0], 0)
