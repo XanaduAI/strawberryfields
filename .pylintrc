@@ -28,4 +28,4 @@ ignored-classes=numpy,tensorflow,scipy,networkx,strawberryfields
 # can either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
-disable=line-too-long,invalid-name,too-many-lines,redefined-builtin,too-many-locals,duplicate-code
+disable=line-too-long,invalid-name,too-many-lines,redefined-builtin,too-many-locals,duplicate-code,too-many-arguments,too-few-public-methods
