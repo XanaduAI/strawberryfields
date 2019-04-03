@@ -18,6 +18,7 @@ Default parameters, commandline arguments and common routines for the TensorFlow
 import os
 import pytest
 
+from strawberryfields import Engine
 from tfbackend import TFBackend
 
 
@@ -28,6 +29,7 @@ ALPHA = 0.1
 HBAR = 2
 PURE = True
 BATCHED = False
+BATCHSIZE = 2
 
 
 @pytest.fixture
@@ -59,19 +61,39 @@ def pure():
     """Whether to run the backend in pure or mixed state mode"""
     return bool(int(os.environ.get("PURE", PURE)))
 
-
 @pytest.fixture
-def batched():
+def batched_and_size():
     """Whether to run the backend in batched mode"""
-    return bool(int(os.environ.get("BATCHED", BATCHED)))
+    if "BATCHSIZE" in os.environ:
+        batched = True
+        batch_size =  int(os.environ.get("BATCHSIZE", BATCHSIZE)) # user-specified batch_size
+    else:
+        batched = bool(int(os.environ.get("BATCHED", BATCHED)))
+        if batched:
+            batch_size = BATCHSIZE # use default
+        else:
+            batch_size = None # no batching
+    return batched, batch_size
 
 
 @pytest.fixture
-def setup_backend(cutoff, hbar, pure, batched): #pylint: disable=redefined-outer-name
+def setup_backend(cutoff, hbar, pure, batched_and_size): #pylint: disable=redefined-outer-name
     """Parameterized fixture, used to automatically create a backend of certain number of modes"""
+    batched, batch_size = batched_and_size
     def _setup_backend(num_subsystems):
         """Factory function"""
         backend = TFBackend()
-        backend.begin_circuit(num_subsystems=num_subsystems, cutoff_dim=cutoff, hbar=hbar, pure=pure, batched=True)
+        backend.begin_circuit(num_subsystems=num_subsystems, cutoff_dim=cutoff, hbar=hbar, pure=pure, batch_size=batch_size)
         return backend
     return _setup_backend
+
+
+@pytest.fixture
+def setup_eng(setup_backend): #pylint: disable=redefined-outer-name
+    """Parameterized fixture, used to automatically create an engine with certain number of modes"""
+    def _setup_eng(num_subsystems):
+        """Factory function"""
+        eng, q = Engine(num_subsystems)
+        eng.backend = setup_backend(num_subsystems)
+        return eng, q
+    return _setup_eng
