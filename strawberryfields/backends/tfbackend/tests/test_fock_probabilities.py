@@ -29,7 +29,7 @@ class TestRepresentationIndependent:
 
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS)
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
-    def test_prob_fock_of_coherent_state(self, setup_backend, mag_alpha, phase_alpha, cutoff, tol):
+    def test_prob_fock_of_coherent_state(self, setup_backend, mag_alpha, batch_size, phase_alpha, cutoff, tol):
         """Tests that probabilities of particular Fock states |n> are correct for a coherent state."""
         backend = setup_backend(1)
 
@@ -37,9 +37,15 @@ class TestRepresentationIndependent:
         n = np.arange(cutoff)
         ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(factorial(n))
         ref_probs = np.abs(ref_state) ** 2
+
+        if batch_size is not None:
+            # note that we 'vertically stack' the reference probabilities,
+            # to match the output of state.fock_prob during batching
+            ref_probs = np.tile(ref_probs, (batch_size, 1)).T
+
         backend.prepare_coherent_state(alpha, 0)
         state = backend.state()
-        prob_n = [state.fock_prob([n]) for n in range(cutoff)]
+        prob_n = np.array([state.fock_prob([n]) for n in range(cutoff)])
         assert np.allclose(prob_n, ref_probs, atol=tol, rtol=0)
 
 
@@ -48,7 +54,7 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS)
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
-    def test_all_fock_probs_of_coherent_state(self, setup_backend, mag_alpha, phase_alpha, cutoff, tol):
+    def test_all_fock_probs_of_coherent_state(self, setup_backend, mag_alpha, phase_alpha, batch_size, cutoff, tol):
         """Tests that the numeric probabilities in the full Fock basis are correct for a coherent state."""
         backend = setup_backend(1)
 
@@ -56,6 +62,9 @@ class TestFockRepresentation:
         n = np.arange(cutoff)
         ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(factorial(n))
         ref_probs = np.abs(ref_state) ** 2
+
+        if batch_size is not None:
+            ref_probs = np.tile(ref_probs, batch_size)
 
         backend.prepare_coherent_state(alpha, 0)
 
@@ -65,7 +74,7 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS)
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
-    def test_prob_fock_of_nongaussian_state(self, setup_backend, mag_alpha, phase_alpha, cutoff, tol):
+    def test_prob_fock_of_nongaussian_state(self, setup_backend, mag_alpha, phase_alpha, batch_size, cutoff, tol):
         """Tests that Fock probabilities are correct for a specific family of nongaussian states
         (tensor product of coherent state and fock state)."""
         backend = setup_backend(2)
@@ -74,6 +83,11 @@ class TestFockRepresentation:
         n = np.arange(cutoff)
         ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(factorial(n))
         ref_probs = np.abs(ref_state) ** 2
+
+        if batch_size is not None:
+            # note that we 'vstack' the reference probabilities,
+            # to match the output of state.fock_prob during batching
+            ref_probs = np.tile(ref_probs, (batch_size, 1)).T
 
         backend.prepare_coherent_state(alpha, 0)
         backend.prepare_fock_state(cutoff // 2, 1)
@@ -84,7 +98,7 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS)
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
-    def test_all_fock_state_probs_of_product_coherent_state(self, setup_backend, mag_alpha, phase_alpha, cutoff, tol):
+    def test_all_fock_state_probs_of_product_coherent_state(self, setup_backend, mag_alpha, phase_alpha, cutoff, batch_size, tol):
         """Tests that the numeric probabilities in the full Fock basis are correct for a two-mode product coherent state."""
         backend = setup_backend(2)
 
@@ -94,6 +108,9 @@ class TestFockRepresentation:
         ref_state2 = np.exp(-0.5 * np.abs(-alpha) ** 2) * (-alpha) ** n / np.sqrt(factorial(n))
         ref_state = np.outer(ref_state1, ref_state2)
         ref_probs = np.abs(np.reshape(ref_state ** 2, -1))
+
+        if batch_size is not None:
+            ref_probs = np.tile(ref_probs, batch_size)
 
         backend.prepare_coherent_state(alpha, 0)
         backend.prepare_coherent_state(-alpha, 1)

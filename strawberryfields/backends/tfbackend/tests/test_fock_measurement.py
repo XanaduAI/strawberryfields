@@ -52,7 +52,7 @@ class TestFockRepresentation:
                 tr = state.trace()
                 assert np.allclose(tr, 1, atol=tol, rtol=0)
 
-    def test_fock_measurements(self, setup_backend, cutoff, pure):
+    def test_fock_measurements(self, setup_backend, cutoff, batch_size, pure, tol):
         """Tests if Fock measurements results on a variety of multi-mode Fock states are correct."""
         state_preps = [n for n in range(cutoff)] + [cutoff - n for n in range(cutoff)] # [0, 1, 2, ..., cutoff-1, cutoff, cutoff-1, ..., 2, 1]
 
@@ -75,6 +75,11 @@ class TestFockRepresentation:
             backend.prepare_fock_state(n[0], 0)
             backend.prepare_fock_state(n[1], 1)
             backend.prepare_fock_state(n[2], 2)
+
             meas_result = backend.measure_fock(meas_modes)
             ref_result = n[meas_modes]
-            assert np.all(meas_result == ref_result)
+
+            if batch_size is not None:
+                ref_result = tuple(np.array([i]*batch_size) for i in ref_result)
+
+            assert np.allclose(meas_result, ref_result, atol=tol, rtol=0)
