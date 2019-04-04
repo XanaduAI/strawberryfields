@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 r"""
 Tests for the various Tensorflow-specific symbolic options of the frontend/backend.
 """
+ #pylint: disable=expression-not-assigned,too-many-public-methods,pointless-statement
 
 import pytest
 
@@ -23,7 +23,6 @@ from scipy.special import factorial
 import tensorflow as tf
 
 from strawberryfields.ops import Dgate, MeasureX
-from strawberryfields.engine import Engine
 
 ALPHA = 0.5
 
@@ -141,7 +140,7 @@ class TestOneModeSymbolic:
         if not pure:
             pytest.skip("Tested only for pure states")
 
-        eng, q = setup_eng(1)
+        eng, _ = setup_eng(1)
         state = eng.run()
         ket = state.ket(eval=True)
         vac = _vac_ket(cutoff)
@@ -186,7 +185,7 @@ class TestOneModeSymbolic:
         if not pure:
             pytest.skip("Tested only for pure states")
 
-        eng, q = setup_eng(1)
+        eng, _ = setup_eng(1)
         state = eng.run()
         dm = state.dm(eval=True)
         vac_dm = _vac_dm(cutoff)
@@ -261,7 +260,7 @@ class TestOneModeSymbolic:
     def test_eval_true_state_reduced_dm(self, setup_eng, cutoff, tol):
         """Tests whether the reduced density matrix of the returned state is
         equal to the correct value when eval=True is passed to the reduced_dm method of a state."""
-        eng, q = setup_eng(1)
+        eng, _ = setup_eng(1)
         state = eng.run()
         rho = state.reduced_dm([0], eval=True)
         vac_dm = _vac_dm(cutoff)
@@ -297,7 +296,7 @@ class TestOneModeSymbolic:
     def test_eval_true_state_fidelity_vacuum(self, setup_eng, tol):
         """Tests whether the vacuum fidelity of the returned state is equal
         to the correct value when eval=True is passed to the fidelity_vacuum method of a state."""
-        eng, q = setup_eng(1)
+        eng, _ = setup_eng(1)
         state = eng.run()
         fidel_vac = state.fidelity_vacuum(eval=True)
         assert np.allclose(fidel_vac, 1., atol=tol, rtol=0.)
@@ -332,7 +331,7 @@ class TestOneModeSymbolic:
     def test_eval_true_state_is_vacuum(self, setup_eng):
         """Tests whether the is_vacuum method of the state returns
         the correct value when eval=True is passed to the is_vacuum method of a state."""
-        eng, q = setup_eng(1)
+        eng, _ = setup_eng(1)
         state = eng.run()
         is_vac = state.is_vacuum(eval=True)
         assert np.all(is_vac)
@@ -584,7 +583,7 @@ class TestTwoModeSymbolic:
         prob = state.fock_prob([cutoff // 2, cutoff // 2], eval=False)
         assert isinstance(prob, tf.Tensor)
 
-    def test_eval_false_state_fock_prob(self, setup_eng, cutoff, tol):
+    def test_eval_true_state_fock_prob(self, setup_eng, cutoff, tol):
         """Tests whether the probability of a Fock measurement outcome on the state returns
          the correct value when eval=True is passed to the fock_prob method of a state."""
         n1 = cutoff // 2

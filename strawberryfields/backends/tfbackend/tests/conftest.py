@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Default parameters, commandline arguments and common routines for the TensorFlow backend unit tests.
 """
+# pylint: disable=redefined-outer-name
 import os
 import pytest
 

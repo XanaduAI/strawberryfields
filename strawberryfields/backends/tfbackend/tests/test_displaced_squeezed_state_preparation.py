@@ -34,7 +34,7 @@ class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
 
     @pytest.mark.parametrize("phi", SQZ_PHI)
-    def test_no_squeezing_no_displacement(self, print_fixtures, setup_backend, phi, tol):
+    def test_no_squeezing_no_displacement(self, setup_backend, phi, tol):
         """Tests squeezing operation in the limiting case where the result should be a vacuum state."""
         alpha = 0
         r = 0

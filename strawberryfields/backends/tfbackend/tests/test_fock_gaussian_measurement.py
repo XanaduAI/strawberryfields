@@ -35,18 +35,17 @@ def squeezed_matelem(r, n):
 
 
 def test_coherent_state(setup_backend, cutoff, pure, batch_size, tol):
-    """Tests Fock probabilities on a coherent state."""
+    """Tests Fock probabilities on a coherent state agree with fock_prob and the state vector"""
     alpha = 1
-    nmax = cutoff - 1
 
     backend = setup_backend(1)
     backend.prepare_coherent_state(alpha, 0)
     state = backend.state()
 
     if state.is_pure:
-          bsd = state.ket()
+        bsd = state.ket()
     else:
-          bsd = state.dm()
+        bsd = state.dm()
 
     if pure:
         if batch_size is not None:
@@ -62,7 +61,7 @@ def test_coherent_state(setup_backend, cutoff, pure, batch_size, tol):
         gbs = np.empty((1, cutoff))
 
     for i in range(cutoff):
-      gbs[:,i] = state.fock_prob([i])
+        gbs[:, i] = state.fock_prob([i])
 
     n = np.arange(cutoff)
     exact = np.exp(-np.abs(alpha)**2)*(np.abs(alpha)**2**n)/fac(n)
@@ -75,18 +74,17 @@ def test_coherent_state(setup_backend, cutoff, pure, batch_size, tol):
 
 
 def test_squeezed_state(setup_backend, cutoff, pure, batch_size, tol):
-    """Tests Fock probabilities on a squeezed state."""
+    """Tests Fock probabilities on a squeezed state agree with  fock_prob and the state vector."""
     r = 1.0
-    nmax = cutoff - 1
 
     backend = setup_backend(1)
     backend.prepare_squeezed_state(r, 0, 0)
     state = backend.state()
 
     if state.is_pure:
-          bsd = state.ket()
+        bsd = state.ket()
     else:
-          bsd = state.dm()
+        bsd = state.dm()
 
     if pure:
         if batch_size is not None:
@@ -102,7 +100,7 @@ def test_squeezed_state(setup_backend, cutoff, pure, batch_size, tol):
         gbs = np.empty((1, cutoff))
 
     for i in range(cutoff):
-      gbs[:,i] = state.fock_prob([i])
+        gbs[:, i] = state.fock_prob([i])
 
     n = np.arange(cutoff)
     exact = np.where(n%2 == 0, (1/np.cosh(r))*(np.tanh(r)**(n))*fac(n)/(2**(n/2)*fac(n/2))**2, 0)
@@ -115,10 +113,9 @@ def test_squeezed_state(setup_backend, cutoff, pure, batch_size, tol):
 
 
 def test_displaced_squeezed_state(setup_backend, cutoff, pure, batch_size, tol):
-    """Tests Fock probabilities on a displaced state."""
+    """Tests Fock probabilities on a dispalced squeezed state agree with  fock_prob and the state vector."""
     r = 1.0
     alpha = 3+4*1j
-    nmax = cutoff - 1
 
     backend = setup_backend(1)
     backend.prepare_squeezed_state(r, 0, 0)
@@ -126,9 +123,9 @@ def test_displaced_squeezed_state(setup_backend, cutoff, pure, batch_size, tol):
     state = backend.state()
 
     if state.is_pure:
-          bsd = state.ket()
+        bsd = state.ket()
     else:
-          bsd = state.dm()
+        bsd = state.dm()
 
     if pure:
         if batch_size is not None:
@@ -144,13 +141,14 @@ def test_displaced_squeezed_state(setup_backend, cutoff, pure, batch_size, tol):
         gbs = np.empty((1, cutoff))
 
     for i in range(cutoff):
-      gbs[:,i] = state.fock_prob([i])
+        gbs[:, i] = state.fock_prob([i])
 
     assert np.allclose(gbs.flatten(), bsd_diag.real.flatten(), atol=tol, rtol=0)
 
 
 def test_two_mode_squeezed(setup_backend, batch_size, tol):
-    r = np.arcsinh(np.sqrt(1))
+    """Tests Fock probabilities on a two mode squeezed state agree with  fock_prob and the state vector."""
+    r = np.arcsinh(np.sqrt(1)) #pylint: disable=assignment-from-no-return
     nmax = 3
     theta = np.sqrt(0.5)
     phi = np.sqrt(0.5)
@@ -181,7 +179,9 @@ def test_two_mode_squeezed(setup_backend, batch_size, tol):
 
 
 def test_two_mode_squeezed_complex_phase(setup_backend, batch_size, tol):
-    r = np.arcsinh(np.sqrt(1))
+    """Tests Fock probabilities on a two mode squeezed state with complex phase
+    agree with fock_prob and the state vector."""
+    r = np.arcsinh(np.sqrt(1)) #pylint: disable=assignment-from-no-return
     nmax = 3
     theta = np.sqrt(0.5)
     phi = np.sqrt(0.5)*1j
