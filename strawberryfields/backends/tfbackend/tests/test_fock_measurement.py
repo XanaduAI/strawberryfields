@@ -26,8 +26,10 @@ class TestFockRepresentation:
     def test_vacuum_measurements(self, setup_backend):
         """Tests Fock measurement on the vacuum state."""
 
+        backend = setup_backend(3)
+
         for _ in range(NUM_REPEATS):
-            backend = setup_backend(3)
+            backend.reset()
 
             meas = backend.measure_fock([0, 1, 2])[0]
             assert np.all(np.array(meas) == 0)
@@ -36,8 +38,10 @@ class TestFockRepresentation:
         """Tests if the conditional states resulting from Fock measurements in a subset of modes are normalized."""
 
         state_preps = [n for n in range(cutoff)] + [cutoff - n for n in range(cutoff)] # [0, 1, 2, ..., cutoff-1, cutoff, cutoff-1, ..., 2, 1]
+        backend = setup_backend(3)
+
         for idx in range(NUM_REPEATS):
-            backend = setup_backend(3)
+            backend.reset()
 
             # cycles through consecutive triples in `state_preps`
             backend.prepare_fock_state(state_preps[idx % cutoff], 0)
@@ -60,13 +64,16 @@ class TestFockRepresentation:
         triples = [(0, 1, 2)]
         mode_choices = singletons + pairs + triples
 
+        backend = setup_backend(3)
+
         for idx in range(NUM_REPEATS):
+            backend.reset()
+
             n = [state_preps[idx % cutoff],
                  state_preps[(idx + 1) % cutoff],
                  state_preps[(idx + 2) % cutoff]]
             n = np.array(n)
             meas_modes = np.array(mode_choices[idx % len(mode_choices)]) # cycle through mode choices
-            backend = setup_backend(3)
 
             backend.prepare_fock_state(n[0], 0)
             backend.prepare_fock_state(n[1], 1)
