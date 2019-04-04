@@ -61,6 +61,8 @@ def pure():
     """Whether to run the backend in pure or mixed state mode"""
     return bool(int(os.environ.get("PURE", PURE)))
 
+
+# if BATCHSIZE is specified, then batching is assumed (even if BATCHED=0)
 @pytest.fixture
 def batched_and_size():
     """Whether to run the backend in batched mode"""

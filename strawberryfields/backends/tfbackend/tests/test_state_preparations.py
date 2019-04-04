@@ -21,8 +21,7 @@ import numpy as np
 
 MAG_ALPHAS = np.linspace(0, .8, 4)
 PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 7, endpoint=False)
-NBARS = np.linspace(0, 5)
-BATCH_SIZE = 5
+NBARS = np.linspace(0, 5, 7)
 SEED = 143
 
 class TestRepresentationIndependent:
@@ -57,7 +56,7 @@ class TestRepresentationIndependent:
         backend.prepare_thermal_state(nbar, 0)
         ref_probs = np.array([nbar ** n / (nbar + 1) ** (n + 1) for n in range(cutoff)])
         state = backend.state()
-        state_probs = np.array([state.fock_prob([n]) for n in range(cutoff)]).T # transpose needed for array broadcasting to work in batch mode
+        state_probs = np.array([state.fock_prob([n]) for n in range(cutoff)]).T # transpose needed for array broadcasting to work in batch mode (data is unaffected in non-batched mode)
         assert np.allclose(ref_probs, state_probs, atol=tol, rtol=0.)
 
 
@@ -100,6 +99,35 @@ class TestFockRepresentation:
         assert np.allclose(state.fidelity(random_ket, 0), 1., atol=tol, rtol=0.)
 
 
+    def test_prepare_batched_ket_state(self, setup_backend, pure, batched_and_size, cutoff, tol):
+        """Tests if a batch of ket states with arbitrary parameters is correctly
+        prepared by comparing the fock probabilities of the batched case with
+        individual runs with non batched input states."""
+
+        batched, batch_size = batched_and_size
+        if not batched:
+            return
+
+        np.random.seed(SEED)
+        random_kets = np.array([(lambda ket: ket / np.linalg.norm(ket))(np.random.uniform(-1, 1, cutoff) + 1j*np.random.uniform(-1, 1, cutoff)) for _ in range(batch_size)])
+        backend = setup_backend(1)
+
+        backend.prepare_ket_state(random_kets, 0)
+        state = backend.state()
+        batched_probs = np.array(state.all_fock_probs())
+
+        individual_probs = []
+        for random_ket in random_kets:
+            backend.reset(pure=pure)
+            backend.prepare_ket_state(random_ket, 0)
+            state = backend.state()
+            probs_for_this_ket = np.array(state.all_fock_probs())
+            individual_probs.append(probs_for_this_ket[0])
+
+        individual_probs = np.array(individual_probs)
+        assert np.allclose(batched_probs, individual_probs, atol=tol, rtol=0.)
+
+
     def test_prepare_rank_two_dm_state(self, setup_backend, cutoff, tol):
         """Tests if rank two dm states with arbitrary parameters are correctly prepared."""
 
@@ -131,8 +159,10 @@ class TestFockRepresentation:
         assert np.allclose(state.trace(), 1., atol=tol, rtol=0.)
         assert np.allclose(rho_probs, ket_probs, atol=tol, rtol=0.)
 
-    def test_prepare_random_dm_state(self, setup_backend, cutoff, tol):
+    def test_prepare_random_dm_state(self, setup_backend, batched_and_size, pure, cutoff, tol):
         """Tests if a random dm state is correctly prepared."""
+
+        batched, batch_size = batched_and_size
 
         np.random.seed(SEED)
         random_rho = np.random.normal(size=[cutoff, cutoff]) + 1j*np.random.normal(size=[cutoff, cutoff])
@@ -145,9 +175,14 @@ class TestFockRepresentation:
         rho_probs = np.array(state.all_fock_probs())
 
         es, vs = np.linalg.eig(random_rho)
-        kets_mixed_probs = np.zeros([len(es)], dtype=complex)
+
+        if batched:
+            kets_mixed_probs = np.zeros([batch_size, len(es)], dtype=complex)
+        else:
+            kets_mixed_probs = np.zeros([len(es)], dtype=complex)
+
         for e, v in zip(es, vs.T.conj()):
-            backend = setup_backend(1)
+            backend.reset(pure=pure)
             backend.prepare_ket_state(v, 0)
             state = backend.state()
             probs_for_this_v = np.array(state.all_fock_probs())
