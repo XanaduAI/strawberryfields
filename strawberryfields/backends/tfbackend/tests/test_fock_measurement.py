@@ -25,7 +25,6 @@ class TestFockRepresentation:
 
     def test_vacuum_measurements(self, setup_backend, pure):
         """Tests Fock measurement on the vacuum state."""
-
         backend = setup_backend(3)
 
         for _ in range(NUM_REPEATS):
@@ -36,7 +35,6 @@ class TestFockRepresentation:
 
     def test_normalized_conditional_states(self, setup_backend, cutoff, pure, tol):
         """Tests if the conditional states resulting from Fock measurements in a subset of modes are normalized."""
-
         state_preps = [n for n in range(cutoff)] + [cutoff - n for n in range(cutoff)] # [0, 1, 2, ..., cutoff-1, cutoff, cutoff-1, ..., 2, 1]
         backend = setup_backend(3)
 
@@ -56,7 +54,6 @@ class TestFockRepresentation:
 
     def test_fock_measurements(self, setup_backend, cutoff, pure):
         """Tests if Fock measurements results on a variety of multi-mode Fock states are correct."""
-
         state_preps = [n for n in range(cutoff)] + [cutoff - n for n in range(cutoff)] # [0, 1, 2, ..., cutoff-1, cutoff, cutoff-1, ..., 2, 1]
 
         singletons = [(0,), (1,), (2,)]
