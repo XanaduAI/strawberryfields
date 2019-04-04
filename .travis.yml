@@ -12,18 +12,18 @@ env:
 matrix:
   include:
     - before_script: pip install pytest pytest-cov --upgrade
-      script: cd strawberryfields/backends && python3 -m pytest tfbackend/tests --cov=tfbackend
+      script: cd strawberryfields/backends && python3 -m pytest tfbackend/tests --cov=tfbackend --disable-warnings
       after_success: true
     - before_script: pip install pytest pytest-cov --upgrade
-      script: cd strawberryfields/backends && python3 -m pytest tfbackend/tests --cov=tfbackend
+      script: cd strawberryfields/backends && python3 -m pytest tfbackend/tests --cov=tfbackend --disable-warnings
       after_success: true
       env: BATCHSIZE=2
     - before_script: pip install pytest pytest-cov --upgrade
-      script: cd strawberryfields/backends && python3 -m pytest tfbackend/tests --cov=tfbackend
+      script: cd strawberryfields/backends && python3 -m pytest tfbackend/tests --cov=tfbackend --disable-warnings
       after_success: true
       env: PURE=0
     - before_script: pip install pytest pytest-cov --upgrade
-      script: cd strawberryfields/backends && python3 -m pytest tfbackend/tests --cov=tfbackend
+      script: cd strawberryfields/backends && python3 -m pytest tfbackend/tests --cov=tfbackend --disable-warnings
       after_success: true
       env: PURE=0 BATCHSIZE=2
 install:
