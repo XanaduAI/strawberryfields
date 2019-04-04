@@ -31,7 +31,6 @@ class TestRepresentationIndependent:
     @pytest.mark.parametrize("theta", SHIFT_THETAS)
     def test_rotated_vacuum(self, setup_backend, theta, tol):
         """Tests phase shift operation in some limiting cases where the result should be a vacuum state."""
-
         backend = setup_backend(1)
         backend.rotation(theta, 0)
         assert np.all(backend.is_vacuum(tol))
@@ -43,12 +42,12 @@ class TestFockRepresentation:
     @pytest.mark.parametrize("theta", SHIFT_THETAS)
     def test_normalized_rotated_coherent_states(self, setup_backend, theta, tol):
         """Tests if a range of phase-shifted coherent states are normalized."""
-
         alpha = 1.
         backend = setup_backend(1)
 
         backend.prepare_coherent_state(alpha, 0)
         backend.rotation(theta, 0)
+
         state = backend.state()
         tr = state.trace()
         assert np.allclose(tr, 1., atol=tol, rtol=0.)
@@ -57,9 +56,10 @@ class TestFockRepresentation:
     def test_rotated_fock_states(self, setup_backend, theta, pure, cutoff, tol):
         """Tests if a range of phase-shifted fock states |n> are equal to the form of
         exp(i * theta * n)|n>"""
+        backend = setup_backend(1)
 
         for n in range(cutoff):
-            backend = setup_backend(1)
+            backend.reset(pure=pure)
 
             backend.prepare_fock_state(n, 0)
             backend.rotation(theta, 0)

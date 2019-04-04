@@ -13,15 +13,10 @@
 # limitations under the License.
 
 r"""Unit tests for homodyne measurements."""
-
 import numpy as np
 
 
-MAG_ALPHAS = np.linspace(0, .8, 4)
-PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 7, endpoint=False)
-SQUEEZE_VAL = np.arcsinh(1.0)
-N_MEAS = 300
-DISP_VAL = 1.0+1j*1.0
+N_MEAS = 300   # number of homodyne measurements to perform
 NUM_STDS = 10.
 std_10 = NUM_STDS / np.sqrt(N_MEAS)
 
@@ -31,37 +26,48 @@ class TestRepresentationIndependent:
 
     def test_mode_reset_vacuum(self, setup_backend, tol):
         """Tests that modes get reset to the vacuum after measurement."""
-
         backend = setup_backend(1)
 
-        backend.squeeze(SQUEEZE_VAL, 0)
-        backend.displacement(MAG_ALPHAS[-1], 0)
+        r = np.arcsinh(1.0)
+        alpha = 0.8
+
+        backend.squeeze(r, 0)
+        backend.displacement(alpha, 0)
         backend.measure_homodyne(0, 0)
+
         assert np.all(backend.is_vacuum(tol))
 
-    def test_mean_and_std_vacuum(self, setup_backend, tol):
+    def test_mean_and_std_vacuum(self, setup_backend, pure, tol):
         """Tests that the mean and standard deviation estimates of many homodyne
         measurements are in agreement with the expected values for the
         vacuum state"""
-
         x = np.empty(0)
+
+        backend = setup_backend(1)
+
         for _ in range(N_MEAS):
-            backend = setup_backend(1)
+            backend.reset(pure=pure)
             meas_result = backend.measure_homodyne(0, 0)
             x = np.append(x, meas_result)
+
         assert np.allclose(x.mean(), 0., atol=std_10 + tol, rtol=0)
         assert np.allclose(x.std(), 1., atol=std_10 + tol, rtol=0)
 
 
-    def test_mean_coherent(self, setup_backend, tol):
+    def test_mean_coherent(self, setup_backend, pure, tol):
         """Tests that the mean and standard deviation estimates of many homodyne
         measurements are in agreement with the expected values for a
         coherent state"""
-
+        alpha = 1.+1.j
         x = np.empty(0)
+
+        backend = setup_backend(1)
+
         for _ in range(N_MEAS):
-            backend = setup_backend(1)
-            backend.prepare_coherent_state(DISP_VAL, 0)
+            backend.reset(pure=pure)
+            backend.prepare_coherent_state(alpha, 0)
+
             meas_result = backend.measure_homodyne(0, 0)
             x = np.append(x, meas_result)
-        assert np.allclose(x.mean(), 2 * DISP_VAL.real, atol=std_10 + tol)
+
+        assert np.allclose(x.mean(), 2 * alpha.real, atol=std_10 + tol)

@@ -24,7 +24,6 @@ class TestRepresentationIndependent:
 
     def test_add_mode_vacuum(self, setup_backend, tol):
         """Tests if added modes are initialized to the vacuum state."""
-
         backend = setup_backend(1)
 
         for _n in range(4):
@@ -33,7 +32,6 @@ class TestRepresentationIndependent:
 
     def test_del_mode_vacuum(self, setup_backend, tol):
         """Tests if reduced density matrix is in vacuum after deleting some modes."""
-
         backend = setup_backend(4)
 
         for n in range(4):
@@ -42,11 +40,11 @@ class TestRepresentationIndependent:
 
     def test_get_modes(self, setup_backend):
         """Tests that get modes returns the correct result after deleting modes from the circuit"""
-
         backend = setup_backend(4)
 
         backend.squeeze(0.1, 0)
         backend.del_mode([0, 2])
+
         res = backend.get_modes()
         assert np.all(res == [1, 3])
 
@@ -56,8 +54,8 @@ class TestFockRepresentation:
 
     def test_normalized_add_mode(self, setup_backend, tol):
         """Tests if a state is normalized after adding modes."""
-
         backend = setup_backend(1)
+
         for num_subsystems in range(3):
             backend.add_mode(num_subsystems)
             state = backend.state()
@@ -66,36 +64,44 @@ class TestFockRepresentation:
 
     def test_normalized_del_mode(self, setup_backend, tol):
         """Tests if a state is normalized after deleting modes."""
-
         backend = setup_backend(4)
+
         for n in range(4):
             backend.del_mode(n)
             state = backend.state()
             tr = state.trace()
             assert np.allclose(tr, 1., atol=tol, rtol=0.)
 
-    def test_fock_measurements_after_add_mode(self, setup_backend, cutoff):
+    def test_fock_measurements_after_add_mode(self, setup_backend, pure, cutoff):
         """Tests Fock measurements on a system after adding vacuum modes."""
+        backend = setup_backend(1)
 
         for m in range(3):
             meas_results = []
+
             for _ in range(NUM_REPEATS):
-                backend = setup_backend(1)
+                backend.reset(pure=pure)
                 backend.prepare_fock_state(cutoff - 1, 0)
                 backend.add_mode(m)
+
                 meas_result = backend.measure_fock([0])
                 meas_results.append(meas_result)
+
             assert np.all(np.array(meas_results) == cutoff - 1)
 
-    def test_fock_measurements_after_del_mode(self, setup_backend, cutoff):
+    def test_fock_measurements_after_del_mode(self, setup_backend, pure, cutoff):
         """Tests Fock measurements on a system after tracing out an unentagled mode."""
+        backend = setup_backend(4)
 
         for m in range(1, 4):
             meas_results = []
+
             for _ in range(NUM_REPEATS):
-                backend = setup_backend(4)
+                backend.reset(pure=pure)
                 backend.prepare_fock_state(cutoff - 1, 0)
                 backend.del_mode(m)
+
                 meas_result = backend.measure_fock([0])
                 meas_results.append(meas_result)
+
             assert np.all(np.array(meas_results) == cutoff - 1)
