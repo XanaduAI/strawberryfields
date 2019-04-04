@@ -22,7 +22,6 @@ import numpy as np
 MAG_ALPHAS = np.linspace(0, .8, 4)
 PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 7, endpoint=False)
 NBARS = np.linspace(0, 5)
-BATCH_SIZE = 5
 SEED = 143
 
 class TestRepresentationIndependent:

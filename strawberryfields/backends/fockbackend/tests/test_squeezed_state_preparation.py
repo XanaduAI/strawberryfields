@@ -62,7 +62,7 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("r", SQZ_R)
     @pytest.mark.parametrize("theta", SQZ_THETA)
-    def test_no_odd_fock(self, setup_backend, r, theta, batched):
+    def test_no_odd_fock(self, setup_backend, r, theta):
         """Tests if a range of squeezed vacuum states have
         only nonzero entries for even Fock states."""
 
@@ -74,15 +74,12 @@ class TestFockRepresentation:
             num_state = s.ket()
         else:
             num_state = s.dm()
-        if batched:
-            odd_entries = num_state[:, 1::2]
-        else:
-            odd_entries = num_state[1::2]
+        odd_entries = num_state[1::2]
         assert np.all(odd_entries == 0)
 
     @pytest.mark.parametrize("r", SQZ_R)
     @pytest.mark.parametrize("theta", SQZ_THETA)
-    def test_reference_squeezed_states(self, setup_backend, r, theta, batched, pure, cutoff, tol):
+    def test_reference_squeezed_states(self, setup_backend, r, theta, pure, cutoff, tol):
         """Tests if a range of squeezed vacuum states are equal to the form of Eq. (5.5.6) in Loudon."""
 
         backend = setup_backend(1)
@@ -95,16 +92,9 @@ class TestFockRepresentation:
             num_state = s.dm()
         n = np.arange(0, cutoff, 2)
         even_refs = np.sqrt(sech(r)) * np.sqrt(factorial(n)) / factorial(n / 2) * (-0.5 * np.exp(1j * theta) * np.tanh(r)) ** (n / 2)
-        if batched:
-            if pure:
-                even_entries = num_state[:, ::2]
-            else:
-                even_entries = num_state[:, ::2, ::2]
-                even_refs = np.outer(even_refs, np.conj(even_refs))
+        if pure:
+            even_entries = num_state[::2]
         else:
-            if pure:
-                even_entries = num_state[::2]
-            else:
-                even_entries = num_state[::2, ::2]
-                even_refs = np.outer(even_refs, np.conj(even_refs))
+            even_entries = num_state[::2, ::2]
+            even_refs = np.outer(even_refs, np.conj(even_refs))
         assert np.allclose(even_entries, even_refs, atol=tol, rtol=0.)

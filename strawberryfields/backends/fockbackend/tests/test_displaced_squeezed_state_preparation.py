@@ -77,7 +77,7 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("r", SQZ_R)
     @pytest.mark.parametrize("phi", SQZ_PHI)
-    def test_displaced_squeezed_with_no_displacement(self, setup_backend, r, phi, cutoff, batched, pure, tol):
+    def test_displaced_squeezed_with_no_displacement(self, setup_backend, r, phi, cutoff, pure, tol):
         """Tests if a squeezed coherent state with no displacement is equal to a squeezed state (Eq. (5.5.6) in Loudon)."""
 
         alpha = 0
@@ -91,16 +91,9 @@ class TestFockRepresentation:
             num_state = state.dm()
         n = np.arange(0, cutoff, 2)
         even_refs = np.sqrt(sech(r)) * np.sqrt(factorial(n)) / factorial(n / 2) * (-0.5 * np.exp(1j * phi) * np.tanh(r)) ** (n / 2)
-        if batched:
-            if pure:
-                even_entries = num_state[:, ::2]
-            else:
-                even_entries = num_state[:, ::2, ::2]
-                even_refs = np.outer(even_refs, np.conj(even_refs))
+        if pure:
+            even_entries = num_state[::2]
         else:
-            if pure:
-                even_entries = num_state[::2]
-            else:
-                even_entries = num_state[::2, ::2]
-                even_refs = np.outer(even_refs, np.conj(even_refs))
+            even_entries = num_state[::2, ::2]
+            even_refs = np.outer(even_refs, np.conj(even_refs))
         assert np.allclose(even_entries, even_refs, atol=tol, rtol=0)
