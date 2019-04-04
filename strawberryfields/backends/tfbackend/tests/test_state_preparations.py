@@ -24,13 +24,13 @@ PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 7, endpoint=False)
 NBARS = np.linspace(0, 5, 7)
 SEED = 143
 
+
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
 
     def test_prepare_vac(self, setup_backend, tol):
         """Tests the ability to prepare vacuum states."""
         backend = setup_backend(1)
-
         backend.prepare_vacuum_state(0)
         assert np.all(backend.is_vacuum(tol))
 
@@ -86,7 +86,6 @@ class TestFockRepresentation:
         tr = state.trace()
         assert np.allclose(tr, 1., atol=tol, rtol=0.)
 
-
     def test_prepare_ket_state(self, setup_backend, cutoff, tol):
         """Tests if a ket state with arbitrary parameters is correctly prepared."""
         np.random.seed(SEED)
@@ -98,15 +97,13 @@ class TestFockRepresentation:
         state = backend.state()
         assert np.allclose(state.fidelity(random_ket, 0), 1., atol=tol, rtol=0.)
 
-
-    def test_prepare_batched_ket_state(self, setup_backend, pure, batched_and_size, cutoff, tol):
+    def test_prepare_batched_ket_state(self, setup_backend, pure, batch_size, cutoff, tol):
         """Tests if a batch of ket states with arbitrary parameters is correctly
         prepared by comparing the fock probabilities of the batched case with
         individual runs with non batched input states."""
 
-        batched, batch_size = batched_and_size
-        if not batched:
-            return
+        if batch_size is None:
+            pytest.skip('Test skipped if no batching')
 
         np.random.seed(SEED)
         random_kets = np.array([(lambda ket: ket / np.linalg.norm(ket))(np.random.uniform(-1, 1, cutoff) + 1j*np.random.uniform(-1, 1, cutoff)) for _ in range(batch_size)])
@@ -126,7 +123,6 @@ class TestFockRepresentation:
 
         individual_probs = np.array(individual_probs)
         assert np.allclose(batched_probs, individual_probs, atol=tol, rtol=0.)
-
 
     def test_prepare_rank_two_dm_state(self, setup_backend, cutoff, tol):
         """Tests if rank two dm states with arbitrary parameters are correctly prepared."""
@@ -159,10 +155,8 @@ class TestFockRepresentation:
         assert np.allclose(state.trace(), 1., atol=tol, rtol=0.)
         assert np.allclose(rho_probs, ket_probs, atol=tol, rtol=0.)
 
-    def test_prepare_random_dm_state(self, setup_backend, batched_and_size, pure, cutoff, tol):
+    def test_prepare_random_dm_state(self, setup_backend, batch_size, pure, cutoff, tol):
         """Tests if a random dm state is correctly prepared."""
-
-        batched, batch_size = batched_and_size
 
         np.random.seed(SEED)
         random_rho = np.random.normal(size=[cutoff, cutoff]) + 1j*np.random.normal(size=[cutoff, cutoff])
@@ -176,7 +170,7 @@ class TestFockRepresentation:
 
         es, vs = np.linalg.eig(random_rho)
 
-        if batched:
+        if batch_size is not None:
             kets_mixed_probs = np.zeros([batch_size, len(es)], dtype=complex)
         else:
             kets_mixed_probs = np.zeros([len(es)], dtype=complex)

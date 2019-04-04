@@ -32,56 +32,64 @@ BATCHED = False
 BATCHSIZE = 2
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def tol():
     """Numerical tolerance for equality tests."""
     return float(os.environ.get("TOL", TOL))
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def cutoff():
     """Fock state cutoff"""
     return int(os.environ.get("CUTOFF", CUTOFF))
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def alpha():
     """Maximum magnitude of coherent states used in tests"""
     return float(os.environ.get("ALPHA", ALPHA))
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def hbar():
     """The value of hbar"""
     return float(os.environ.get("HBAR", HBAR))
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def pure():
     """Whether to run the backend in pure or mixed state mode"""
     return bool(int(os.environ.get("PURE", PURE)))
 
 
-# if BATCHSIZE is specified, then batching is assumed (even if BATCHED=0)
-@pytest.fixture
-def batched_and_size():
+@pytest.fixture(scope='session')
+def batch_size():
     """Whether to run the backend in batched mode"""
     if "BATCHSIZE" in os.environ:
-        batched = True
-        batch_size =  int(os.environ.get("BATCHSIZE", BATCHSIZE)) # user-specified batch_size
-    else:
-        batched = bool(int(os.environ.get("BATCHED", BATCHED)))
-        if batched:
-            batch_size = BATCHSIZE # use default
-        else:
-            batch_size = None # no batching
-    return batched, batch_size
+        # if user-specified BATCHSIZE provided, then batching is assumed (even if BATCHED=0)
+        return  int(os.environ["BATCHSIZE"])
+
+    # check if batching is turned on
+    batched = bool(int(os.environ.get("BATCHED", BATCHED)))
+
+    if batched:
+        # use the default batch size
+        return BATCHSIZE
+
+    return None # no batching
+
+
+@pytest.fixture(scope='session')
+def print_fixtures(cutoff, hbar, pure, batch_size):
+    """Print the test configuration at the beginning of the session"""
+    print("\n**************************************************************")
+    print("FIXTURES: cutoff = {}, hbar = {}, pure = {}, batch_size = {}".format(cutoff, hbar, pure, batch_size))
+    print("**************************************************************\n")
 
 
 @pytest.fixture
-def setup_backend(cutoff, hbar, pure, batched_and_size): #pylint: disable=redefined-outer-name
+def setup_backend(print_fixtures, cutoff, hbar, pure, batch_size): #pylint: disable=redefined-outer-name
     """Parameterized fixture, used to automatically create a backend of certain number of modes"""
-    batched, batch_size = batched_and_size
     def _setup_backend(num_subsystems):
         """Factory function"""
         backend = TFBackend()

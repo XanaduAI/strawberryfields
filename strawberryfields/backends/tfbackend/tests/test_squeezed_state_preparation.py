@@ -38,9 +38,7 @@ class TestRepresentationIndependent:
     @pytest.mark.parametrize("theta", SQZ_THETA)
     def test_no_squeezing(self, setup_backend, theta, tol):
         """Tests squeezing operation in some limiting cases where the result should be a vacuum state."""
-
         backend = setup_backend(1)
-
         backend.prepare_squeezed_state(0, theta, 0)
         assert np.all(backend.is_vacuum(tol))
 
@@ -52,7 +50,6 @@ class TestFockRepresentation:
     @pytest.mark.parametrize("theta", SQZ_THETA)
     def test_normalized_squeezed_state(self, setup_backend, r, theta, tol):
         """Tests if a range of squeezed vacuum states are normalized."""
-
         backend = setup_backend(1)
 
         backend.prepare_squeezed_state(r, theta, 0)
@@ -62,40 +59,44 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("r", SQZ_R)
     @pytest.mark.parametrize("theta", SQZ_THETA)
-    def test_no_odd_fock(self, setup_backend, r, theta, batched):
+    def test_no_odd_fock(self, setup_backend, r, theta, batch_size):
         """Tests if a range of squeezed vacuum states have
         only nonzero entries for even Fock states."""
-
         backend = setup_backend(1)
 
         backend.prepare_squeezed_state(r, theta, 0)
         s = backend.state()
+
         if s.is_pure:
             num_state = s.ket()
         else:
             num_state = s.dm()
-        if batched:
+
+        if batch_size is not None:
             odd_entries = num_state[:, 1::2]
         else:
             odd_entries = num_state[1::2]
+
         assert np.all(odd_entries == 0)
 
     @pytest.mark.parametrize("r", SQZ_R)
     @pytest.mark.parametrize("theta", SQZ_THETA)
-    def test_reference_squeezed_states(self, setup_backend, r, theta, batched, pure, cutoff, tol):
+    def test_reference_squeezed_states(self, setup_backend, r, theta, batch_size, pure, cutoff, tol):
         """Tests if a range of squeezed vacuum states are equal to the form of Eq. (5.5.6) in Loudon."""
-
         backend = setup_backend(1)
 
         backend.prepare_squeezed_state(r, theta, 0)
         s = backend.state()
+
         if s.is_pure:
             num_state = s.ket()
         else:
             num_state = s.dm()
+
         n = np.arange(0, cutoff, 2)
         even_refs = np.sqrt(sech(r)) * np.sqrt(factorial(n)) / factorial(n / 2) * (-0.5 * np.exp(1j * theta) * np.tanh(r)) ** (n / 2)
-        if batched:
+
+        if batch_size is not None:
             if pure:
                 even_entries = num_state[:, ::2]
             else:
@@ -107,4 +108,5 @@ class TestFockRepresentation:
             else:
                 even_entries = num_state[::2, ::2]
                 even_refs = np.outer(even_refs, np.conj(even_refs))
+
         assert np.allclose(even_entries, even_refs, atol=tol, rtol=0.)

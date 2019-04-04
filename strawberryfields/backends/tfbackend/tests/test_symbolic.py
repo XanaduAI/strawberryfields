@@ -27,16 +27,19 @@ from strawberryfields.engine import Engine
 
 ALPHA = 0.5
 
+
 def coherent_state(alpha, cutoff):
     """Returns the Fock representation of the coherent state |alpha> up to dimension given by cutoff"""
     n = np.arange(cutoff)
     return np.exp(- 0.5 * np.abs(ALPHA) ** 2) * ALPHA ** n / np.sqrt(factorial(n))
+
 
 def _vac_ket(cutoff):
     """Returns the ket of the vacuum state up to dimension given by cutoff"""
     vac = np.zeros(cutoff)
     vac[0] = 1
     return vac
+
 
 def _vac_dm(cutoff):
     """Returns the density matrix of the vacuum state up to dimension given by cutoff"""
@@ -48,16 +51,16 @@ class TestOneModeSymbolic:
     """Tests for symbolic workflows on one mode."""
 
     #########################################
-    # tests basic eval behaviour of eng.run and states class
+    # tests basic eval behaviour of eng.run and states class.
 
     def test_eng_run_eval_false_returns_tensor(self, setup_eng):
         """Tests whether the eval=False option to the `eng.run` command
         successfully returns an unevaluated Tensor."""
-
         eng, q = setup_eng(1)
 
         with eng:
             Dgate(0.5) | q
+
         state = eng.run(eval=False)
         state_data = state.data
 
@@ -66,38 +69,39 @@ class TestOneModeSymbolic:
     def test_eng_run_eval_false_measurements_are_tensors(self, setup_eng):
         """Tests whether the eval=False option to the `eng.run` command
         successfully returns a unevaluated Tensors for measurment results."""
-
         eng, q = setup_eng(1)
 
         with eng:
             Dgate(0.5) | q
             MeasureX   | q
+
         eng.run(eval=False)
         val = q[0].val
         assert isinstance(val, tf.Tensor)
 
-    def test_eng_run_with_session_and_feed_dict(self, setup_eng, batched_and_size, cutoff, tol):
+    def test_eng_run_with_session_and_feed_dict(self, setup_eng, batch_size, cutoff, tol):
         """Tests whether passing a tf Session and feed_dict
         through `eng.run` leads to proper numerical simulation."""
-
         a = tf.Variable(0.5)
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
         eng, q = setup_eng(1)
-        
+
         with eng:
             Dgate(a) | q
+
         state = eng.run(session=sess, feed_dict={a: 0.0})
 
         if state.is_pure:
             k = state.ket()
-            batched, _ = batched_and_size
-            if batched:
+
+            if batch_size is not None:
                 dm = np.einsum('bi,bj->bij', k, np.conj(k))
             else:
                 dm = np.outer(k, np.conj(k))
         else:
             dm = state.dm()
+
         vac_dm = _vac_dm(cutoff)
         assert np.allclose(dm, vac_dm, atol=tol, rtol=0.)
 
@@ -107,43 +111,41 @@ class TestOneModeSymbolic:
     def test_eng_run_eval_false_state_ket(self, setup_eng, pure):
         """Tests whether the ket of the returned state is an unevaluated
         Tensor object when eval=False is passed to `eng.run`."""
-
         if not pure:
-            return
-        else:
-            eng, q = setup_eng(1)
-            with eng:
-                Dgate(0.5) | q
-            state = eng.run(eval=False)
-            ket = state.ket()
-            assert isinstance(ket, tf.Tensor)
+            pytest.skip("Tested only for pure states")
+
+        eng, q = setup_eng(1)
+        with eng:
+            Dgate(0.5) | q
+
+        state = eng.run(eval=False)
+        ket = state.ket()
+        assert isinstance(ket, tf.Tensor)
 
     def test_eval_false_state_ket(self, setup_eng, pure):
         """Tests whether the ket of the returned state is an unevaluated
         Tensor object when eval=False is passed to the ket method of a state."""
-
         if not pure:
-            return
-        else:
-            eng, q = setup_eng(1)
-            with eng:
-                Dgate(0.5) | q
-            state = eng.run()
-            ket = state.ket(eval=False)
-            assert isinstance(ket, tf.Tensor)
+            pytest.skip("Tested only for pure states")
+
+        eng, q = setup_eng(1)
+        with eng:
+            Dgate(0.5) | q
+        state = eng.run()
+        ket = state.ket(eval=False)
+        assert isinstance(ket, tf.Tensor)
 
     def test_eval_true_state_ket(self, setup_eng, pure, cutoff, tol):
         """Tests whether the ket of the returned state is equal to the
         correct value when eval=True is passed to the ket method of a state."""
-
         if not pure:
-            return
-        else:
-            eng, q = setup_eng(1)
-            state = eng.run()
-            ket = state.ket(eval=True)
-            vac = _vac_ket(cutoff)
-            assert np.allclose(ket, vac, atol=tol, rtol=0.)
+            pytest.skip("Tested only for pure states")
+
+        eng, q = setup_eng(1)
+        state = eng.run()
+        ket = state.ket(eval=True)
+        vac = _vac_ket(cutoff)
+        assert np.allclose(ket, vac, atol=tol, rtol=0.)
 
     #########################################
     # tests of eval behaviour of dm method
@@ -151,54 +153,56 @@ class TestOneModeSymbolic:
     def test_eng_run_eval_false_state_dm(self, pure, setup_eng):
         """Tests whether the density matrix of the returned state is an
         unevaluated Tensor object when eval=False is passed to `eng.run`."""
-
         if not pure:
-            return
-        else:
-            eng, q = setup_eng(1)
-            with eng:
-                Dgate(0.5) | q
-            state = eng.run(eval=False)
-            dm = state.dm()
-            assert isinstance(dm, tf.Tensor)
+            pytest.skip("Tested only for pure states")
+
+        eng, q = setup_eng(1)
+
+        with eng:
+            Dgate(0.5) | q
+
+        state = eng.run(eval=False)
+        dm = state.dm()
+        assert isinstance(dm, tf.Tensor)
 
     def test_eval_false_state_dm(self, pure, setup_eng):
         """Tests whether the density matrix of the returned state is an
         unevaluated Tensor object when eval=False is passed to the ket method of a state."""
-
         if not pure:
-            return
-        else:
-            eng, q = setup_eng(1)
-            with eng:
-                Dgate(0.5) | q
-            state = eng.run()
-            dm = state.dm(eval=False)
-            assert isinstance(dm, tf.Tensor)
+            pytest.skip("Tested only for pure states")
+
+        eng, q = setup_eng(1)
+
+        with eng:
+            Dgate(0.5) | q
+
+        state = eng.run()
+        dm = state.dm(eval=False)
+        assert isinstance(dm, tf.Tensor)
 
     def test_eval_true_state_dm(self, setup_eng, pure, cutoff, tol):
         """Tests whether the density matrix of the returned state is equal
         to the correct value when eval=True is passed to the ket method of a state."""
-
         if not pure:
-            return
-        else:
-            eng, q = setup_eng(1)
-            state = eng.run()
-            dm = state.dm(eval=True)
-            vac_dm = _vac_dm(cutoff)
-            assert np.allclose(dm, vac_dm, atol=tol, rtol=0.)
+            pytest.skip("Tested only for pure states")
+
+        eng, q = setup_eng(1)
+        state = eng.run()
+        dm = state.dm(eval=True)
+        vac_dm = _vac_dm(cutoff)
+        assert np.allclose(dm, vac_dm, atol=tol, rtol=0.)
 
     #########################################
     # tests of eval behaviour of trace method
 
     def test_eng_run_eval_false_state_trace(self, setup_eng):
         """Tests whether the trace of the returned state is an
-      	unevaluated Tensor object when eval=False is passed to `eng.run`."""
-
+        unevaluated Tensor object when eval=False is passed to `eng.run`."""
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(0.5) | q
+
         state = eng.run(eval=False)
         tr = state.trace()
         assert isinstance(tr, tf.Tensor)
@@ -206,10 +210,11 @@ class TestOneModeSymbolic:
     def test_eval_false_state_trace(self, setup_eng):
         """Tests whether the trace of the returned state is an
         unevaluated Tensor object when eval=False is passed to the trace method of a state."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(0.5) | q
+
         state = eng.run()
         tr = state.trace(eval=False)
         assert isinstance(tr, tf.Tensor)
@@ -217,24 +222,26 @@ class TestOneModeSymbolic:
     def test_eval_true_state_trace(self, setup_eng, tol):
         """Tests whether the trace of the returned state is equal
         to the correct value when eval=True is passed to the trace method of a state."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(0.5) | q
         state = eng.run()
+
         tr = state.trace(eval=True)
         assert np.allclose(tr, 1, atol=tol, rtol=0.)
 
-	#########################################
-	# tests of eval behaviour of reduced_dm method
+    #########################################
+    # tests of eval behaviour of reduced_dm method
 
     def test_eng_run_eval_false_state_reduced_dm(self, setup_eng):
         """Tests whether the reduced_density matrix of the returned state
-	    is an unevaluated Tensor object when eval=False is passed to `eng.run`."""
-
+        is an unevaluated Tensor object when eval=False is passed to `eng.run`."""
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(0.5) | q
+
         state = eng.run(eval=False)
         rho = state.reduced_dm([0])
         assert isinstance(rho, tf.Tensor)
@@ -242,10 +249,11 @@ class TestOneModeSymbolic:
     def test_eval_false_state_reduced_dm(self, setup_eng):
         """Tests whether the reduced density matrix of the returned state is an
         unevaluated Tensor object when eval=False is passed to the reduced_dm method of a state."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(0.5) | q
+
         state = eng.run()
         rho = state.reduced_dm([0], eval=False)
         assert isinstance(rho, tf.Tensor)
@@ -253,7 +261,6 @@ class TestOneModeSymbolic:
     def test_eval_true_state_reduced_dm(self, setup_eng, cutoff, tol):
         """Tests whether the reduced density matrix of the returned state is
         equal to the correct value when eval=True is passed to the reduced_dm method of a state."""
-
         eng, q = setup_eng(1)
         state = eng.run()
         rho = state.reduced_dm([0], eval=True)
@@ -266,10 +273,11 @@ class TestOneModeSymbolic:
     def test_eng_run_eval_false_state_fidelity_vacuum(self, setup_eng):
         """Tests whether the fidelity_vacuum method of the state returns an
         unevaluated Tensor object when eval=False is passed to `eng.run`."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(0.5) | q
+
         state = eng.run(eval=False)
         fidel_vac = state.fidelity_vacuum()
         assert isinstance(fidel_vac, tf.Tensor)
@@ -277,10 +285,11 @@ class TestOneModeSymbolic:
     def test_eval_false_state_fidelity_vacuum(self, setup_eng):
         """Tests whether the vacuum fidelity of the returned state is an
         unevaluated Tensor object when eval=False is passed to the fidelity_vacuum method of a state."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(0.5) | q
+
         state = eng.run()
         fidel_vac = state.fidelity_vacuum(eval=False)
         assert isinstance(fidel_vac, tf.Tensor)
@@ -288,7 +297,6 @@ class TestOneModeSymbolic:
     def test_eval_true_state_fidelity_vacuum(self, setup_eng, tol):
         """Tests whether the vacuum fidelity of the returned state is equal
         to the correct value when eval=True is passed to the fidelity_vacuum method of a state."""
-
         eng, q = setup_eng(1)
         state = eng.run()
         fidel_vac = state.fidelity_vacuum(eval=True)
@@ -300,10 +308,11 @@ class TestOneModeSymbolic:
     def test_eng_run_eval_false_state_is_vacuum(self, setup_eng):
         """Tests whether the is_vacuum method of the state returns an
         unevaluated Tensor object when eval=False is passed to `eng.run`."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(0.5) | q
+
         state = eng.run(eval=False)
         is_vac = state.is_vacuum()
         assert isinstance(is_vac, tf.Tensor)
@@ -311,10 +320,11 @@ class TestOneModeSymbolic:
     def test_eval_false_state_is_vacuum(self, setup_eng):
         """Tests whether the is_vacuum method of the state returns an
         unevaluated Tensor object when eval=False is passed to the is_vacuum method of a state."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(0.5) | q
+
         state = eng.run()
         is_vac = state.is_vacuum(eval=False)
         assert isinstance(is_vac, tf.Tensor)
@@ -322,7 +332,6 @@ class TestOneModeSymbolic:
     def test_eval_true_state_is_vacuum(self, setup_eng):
         """Tests whether the is_vacuum method of the state returns
         the correct value when eval=True is passed to the is_vacuum method of a state."""
-
         eng, q = setup_eng(1)
         state = eng.run()
         is_vac = state.is_vacuum(eval=True)
@@ -334,10 +343,11 @@ class TestOneModeSymbolic:
     def test_eng_run_eval_false_state_fidelity_coherent(self, setup_eng):
         """Tests whether the fidelity of the state with respect to coherent states is
         an unevaluated Tensor object when eval=False is passed to `eng.run`."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(ALPHA) | q
+
         state = eng.run(eval=False)
         fidel_coh = state.fidelity_coherent([ALPHA])
         assert isinstance(fidel_coh, tf.Tensor)
@@ -345,10 +355,11 @@ class TestOneModeSymbolic:
     def test_eval_false_state_fidelity_coherent(self, setup_eng):
         """Tests whether the fidelity of the state with respect to coherent states
         is an unevaluated Tensor object when eval=False is passed to the fidelity_coherent method of a state."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(ALPHA) | q
+
         state = eng.run()
         fidel_coh = state.fidelity_coherent([ALPHA], eval=False)
         assert isinstance(fidel_coh, tf.Tensor)
@@ -356,10 +367,11 @@ class TestOneModeSymbolic:
     def test_eval_true_state_fidelity_coherent(self, setup_eng, tol):
         """Tests whether the fidelity of the state with respect to coherent states returns
         the correct value when eval=True is passed to the fidelity_coherent method of a state."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(ALPHA) | q
+
         state = eng.run()
         fidel_coh = state.fidelity_coherent([ALPHA], eval=True)
         assert np.allclose(fidel_coh, 1, atol=tol, rtol=0.)
@@ -370,10 +382,11 @@ class TestOneModeSymbolic:
     def test_eng_run_eval_false_state_fidelity(self, setup_eng, cutoff):
         """Tests whether the fidelity of the state with respect to a local state is an
         unevaluated Tensor object when eval=False is passed to `eng.run`."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(ALPHA) | q
+
         state = eng.run(eval=False)
         fidel = state.fidelity(coherent_state(ALPHA, cutoff), 0)
         assert isinstance(fidel, tf.Tensor)
@@ -381,10 +394,11 @@ class TestOneModeSymbolic:
     def test_eval_false_state_fidelity(self, setup_eng, cutoff):
         """Tests whether the fidelity of the state with respect to a local state is
         an unevaluated Tensor object when eval=False is passed to the fidelity method of a state."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(ALPHA) | q
+
         state = eng.run()
         fidel = state.fidelity(coherent_state(ALPHA, cutoff), 0, eval=False)
         assert isinstance(fidel, tf.Tensor)
@@ -392,10 +406,11 @@ class TestOneModeSymbolic:
     def test_eval_true_state_fidelity(self, setup_eng, cutoff, tol):
         """Tests whether the fidelity of the state with respect to a local state
         returns the correct value when eval=True is passed to the fidelity method of a state."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(ALPHA) | q
+
         state = eng.run()
         fidel_coh = state.fidelity(coherent_state(ALPHA, cutoff), 0, eval=True)
         assert np.allclose(fidel_coh, 1, atol=tol, rtol=0.)
@@ -406,10 +421,11 @@ class TestOneModeSymbolic:
     def test_eng_run_eval_false_state_quad_expectation(self, setup_eng):
         """Tests whether the local quadrature expectation of the state is
         unevaluated Tensor object when eval=False is passed to `eng.run`."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(ALPHA) | q
+
         state = eng.run(eval=False)
         e, v = state.quad_expectation(0, 0)
         assert isinstance(e, tf.Tensor)
@@ -418,11 +434,12 @@ class TestOneModeSymbolic:
     def test_eval_false_state_quad_expectation(self, setup_eng):
         """Tests whether the local quadrature expectation value of the state is
         an unevaluated Tensor object when eval=False is passed to the quad_expectation method of a state."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(ALPHA) | q
         state = eng.run()
+
         e, v = state.quad_expectation(0, 0, eval=False)
         assert isinstance(e, tf.Tensor)
         assert isinstance(v, tf.Tensor)
@@ -430,11 +447,12 @@ class TestOneModeSymbolic:
     def test_eval_true_state_quad_expectation(self, setup_eng, tol):
         """Tests whether the local quadrature expectation value of the state returns
         the correct value when eval=True is passed to the quad_expectation method of a state."""
-
         hbar = 2.
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(ALPHA) | q
+
         state = eng.run()
         e, v = state.quad_expectation(0, 0, eval=True)
         true_exp = np.sqrt(hbar / 2.) * (ALPHA + np.conj(ALPHA))
@@ -448,10 +466,11 @@ class TestOneModeSymbolic:
     def test_eng_run_eval_false_state_mean_photon(self, setup_eng):
         """Tests whether the local mean photon number of the state is
         unevaluated Tensor object when eval=False is passed to `eng.run`."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(ALPHA) | q
+
         state = eng.run(eval=False)
         nbar, var = state.mean_photon(0)
         assert isinstance(nbar, tf.Tensor)
@@ -460,10 +479,11 @@ class TestOneModeSymbolic:
     def test_eval_false_state_mean_photon(self, setup_eng):
         """Tests whether the local mean photon number of the state is
         an unevaluated Tensor object when eval=False is passed to the mean_photon_number method of a state."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(ALPHA) | q
+
         state = eng.run()
         nbar, var = state.mean_photon(0, eval=False)
         assert isinstance(nbar, tf.Tensor)
@@ -472,10 +492,11 @@ class TestOneModeSymbolic:
     def test_eval_true_state_mean_photon(self, setup_eng, tol):
         """Tests whether the local mean photon number of the state returns
         the correct value when eval=True is passed to the mean_photon method of a state."""
-
         eng, q = setup_eng(1)
+
         with eng:
             Dgate(ALPHA) | q
+
         state = eng.run()
         nbar, var = state.mean_photon(0, eval=True)
         ref_nbar = np.abs(ALPHA) ** 2
@@ -493,11 +514,12 @@ class TestTwoModeSymbolic:
     def test_eng_run_eval_false_state_all_fock_probs(self, setup_eng):
         """Tests whether the Fock-basis probabilities of the state are an
         unevaluated Tensor object when eval=False is passed to `eng.run`."""
-
         eng, q = setup_eng(2)
+
         with eng:
             Dgate(ALPHA) | q[0]
             Dgate(-ALPHA) | q[1]
+
         state = eng.run(eval=False)
         probs = state.all_fock_probs()
         assert isinstance(probs, tf.Tensor)
@@ -505,29 +527,32 @@ class TestTwoModeSymbolic:
     def test_eval_false_state_all_fock_probs(self, setup_eng):
         """Tests whether the Fock-basis probabilities of the state are an
         unevaluated Tensor object when eval=False is passed to the all_fock_probs method of a state."""
-
         eng, q = setup_eng(2)
+
         with eng:
             Dgate(ALPHA) | q[0]
             Dgate(-ALPHA) | q[1]
+
         state = eng.run()
         probs = state.all_fock_probs(eval=False)
         assert isinstance(probs, tf.Tensor)
 
-    def test_eval_true_state_all_fock_probs(self, setup_eng, cutoff, batched_and_size, tol):
+    def test_eval_true_state_all_fock_probs(self, setup_eng, cutoff, batch_size, tol):
         """Tests whether the Fock-basis probabilities of the state return
         the correct value when eval=True is passed to the all_fock_probs method of a state."""
-
         eng, q = setup_eng(2)
+
         with eng:
             Dgate(ALPHA) | q[0]
             Dgate(-ALPHA) | q[1]
+
         state = eng.run()
         probs = state.all_fock_probs(eval=True).flatten()
-        batched, batch_size = batched_and_size
         ref_probs = np.abs(np.outer(coherent_state(ALPHA, cutoff), coherent_state(-ALPHA, cutoff))).flatten() ** 2
-        if batched:
+
+        if batch_size is not None:
             ref_probs = np.tile(ref_probs, batch_size)
+
         assert np.allclose(probs, ref_probs, atol=tol, rtol=0.)
 
     #########################################
@@ -536,11 +561,12 @@ class TestTwoModeSymbolic:
     def test_eng_run_eval_false_state_fock_prob(self, setup_eng, cutoff):
         """Tests whether the probability of a Fock measurement outcome on the state is an
         unevaluated Tensor object when eval=False is passed to `eng.run`."""
-
         eng, q = setup_eng(2)
+
         with eng:
             Dgate(ALPHA) | q[0]
             Dgate(-ALPHA) | q[1]
+
         state = eng.run(eval=False)
         prob = state.fock_prob([cutoff // 2, cutoff // 2])
         assert isinstance(prob, tf.Tensor)
@@ -548,11 +574,12 @@ class TestTwoModeSymbolic:
     def test_eval_false_state_fock_prob(self, setup_eng, cutoff):
         """Tests whether the probability of a Fock measurement outcome on the state is an
         unevaluated Tensor object when eval=False is passed to the fock_prob method of a state."""
-
         eng, q = setup_eng(2)
+
         with eng:
             Dgate(ALPHA) | q[0]
             Dgate(-ALPHA) | q[1]
+
         state = eng.run()
         prob = state.fock_prob([cutoff // 2, cutoff // 2], eval=False)
         assert isinstance(prob, tf.Tensor)
@@ -560,13 +587,15 @@ class TestTwoModeSymbolic:
     def test_eval_false_state_fock_prob(self, setup_eng, cutoff, tol):
         """Tests whether the probability of a Fock measurement outcome on the state returns
          the correct value when eval=True is passed to the fock_prob method of a state."""
-
         n1 = cutoff // 2
         n2 = cutoff // 3
+
         eng, q = setup_eng(2)
+
         with eng:
             Dgate(ALPHA) | q[0]
             Dgate(-ALPHA) | q[1]
+
         state = eng.run()
         prob = state.fock_prob([n1, n2], eval=True)
         ref_prob = np.abs(np.outer(coherent_state(ALPHA, cutoff), coherent_state(-ALPHA, cutoff)) ** 2)[n1, n2]

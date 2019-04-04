@@ -31,7 +31,6 @@ class TestRepresentationIndependent:
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
     def test_prob_fock_of_coherent_state(self, setup_backend, mag_alpha, phase_alpha, cutoff, tol):
         """Tests that probabilities of particular Fock states |n> are correct for a coherent state."""
-
         backend = setup_backend(1)
 
         alpha = mag_alpha * np.exp(1j * phase_alpha)
@@ -51,14 +50,15 @@ class TestFockRepresentation:
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
     def test_all_fock_probs_of_coherent_state(self, setup_backend, mag_alpha, phase_alpha, cutoff, tol):
         """Tests that the numeric probabilities in the full Fock basis are correct for a coherent state."""
-
         backend = setup_backend(1)
 
         alpha = mag_alpha * np.exp(1j * phase_alpha)
         n = np.arange(cutoff)
         ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(factorial(n))
         ref_probs = np.abs(ref_state) ** 2
+
         backend.prepare_coherent_state(alpha, 0)
+
         state = backend.state()
         probs = state.all_fock_probs().flatten()
         assert np.allclose(probs, ref_probs, atol=tol, rtol=0)
@@ -68,15 +68,16 @@ class TestFockRepresentation:
     def test_prob_fock_of_nongaussian_state(self, setup_backend, mag_alpha, phase_alpha, cutoff, tol):
         """Tests that Fock probabilities are correct for a specific family of nongaussian states
         (tensor product of coherent state and fock state)."""
-
         backend = setup_backend(2)
 
         alpha = mag_alpha * np.exp(1j * phase_alpha)
         n = np.arange(cutoff)
         ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(factorial(n))
         ref_probs = np.abs(ref_state) ** 2
+
         backend.prepare_coherent_state(alpha, 0)
         backend.prepare_fock_state(cutoff // 2, 1)
+
         state = backend.state()
         prob_n = [state.fock_prob([n, cutoff // 2]) for n in range(cutoff)]
         assert np.allclose(prob_n, ref_probs, atol=tol, rtol=0)
@@ -85,7 +86,6 @@ class TestFockRepresentation:
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
     def test_all_fock_state_probs_of_product_coherent_state(self, setup_backend, mag_alpha, phase_alpha, cutoff, tol):
         """Tests that the numeric probabilities in the full Fock basis are correct for a two-mode product coherent state."""
-
         backend = setup_backend(2)
 
         alpha = mag_alpha * np.exp(1j * phase_alpha)
@@ -94,8 +94,10 @@ class TestFockRepresentation:
         ref_state2 = np.exp(-0.5 * np.abs(-alpha) ** 2) * (-alpha) ** n / np.sqrt(factorial(n))
         ref_state = np.outer(ref_state1, ref_state2)
         ref_probs = np.abs(np.reshape(ref_state ** 2, -1))
+
         backend.prepare_coherent_state(alpha, 0)
         backend.prepare_coherent_state(-alpha, 1)
+
         state = backend.state()
         probs = state.all_fock_probs().flatten()
         assert np.allclose(probs, ref_probs, atol=tol, rtol=0)
