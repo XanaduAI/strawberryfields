@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 r"""Unit tests for probabilities of Fock outcomes of Gaussian states"""
 import numpy as np
 from scipy.special import factorial as fac
