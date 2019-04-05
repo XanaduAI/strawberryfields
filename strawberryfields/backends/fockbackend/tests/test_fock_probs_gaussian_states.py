@@ -117,12 +117,12 @@ def test_two_mode_squeezed(setup_backend, tol):
     backend.prepare_squeezed_state(-r, 0, 1)
     backend.beamsplitter(theta, phi, 0, 1)
 
-    gbs = np.empty((bsize, nmax, nmax))
+    gbs = np.empty((nmax, nmax))
     state = backend.state()
 
     for i in range(nmax):
         for j in range(nmax):
-            gbs[:, i, j] = state.fock_prob(np.array([i, j]))
+            gbs[i, j] = state.fock_prob(np.array([i, j]))
 
     n = np.arange(nmax)
     exact = np.diag((1/np.cosh(r)**2) * np.tanh(r)**(2*n))
@@ -144,12 +144,12 @@ def test_two_mode_squeezed_complex_phase(setup_backend, tol):
     backend.prepare_squeezed_state(r, 0, 1)
     backend.beamsplitter(theta, phi, 0, 1)
 
-    gbs = np.empty((bsize, nmax, nmax))
+    gbs = np.empty((nmax, nmax))
     state = backend.state()
 
     for i in range(nmax):
         for j in range(nmax):
-            gbs[:, i, j] = state.fock_prob(np.array([i, j]))
+            gbs[i, j] = state.fock_prob(np.array([i, j]))
 
     n = np.arange(nmax)
     exact = np.diag((1/np.cosh(r)**2) * np.tanh(r)**(2*n))
