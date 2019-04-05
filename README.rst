@@ -49,7 +49,7 @@ Features
 Installation
 ============
 
-Strawberry Fields requires Python version 3.5 and above. Installation of Strawberry Fields, as well as all dependencies, can be done using pip:
+Strawberry Fields requires Python version 3.5 and 3.6 (we are unable to support 3.7 until TensorFlow also supports 3.7). Installation of Strawberry Fields, as well as all dependencies, can be done using pip:
 
 .. code-block:: bash
 

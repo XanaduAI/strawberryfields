@@ -13,7 +13,7 @@ Dependencies
 
 Strawberry Fields requires the following libraries be installed:
 
-* `Python <http://python.org/>`_ >=3.5
+* `Python <http://python.org/>`_ >=3.5,<3.7
 
 as well as the following Python packages:
 
@@ -24,6 +24,11 @@ as well as the following Python packages:
 
 
 If you currently do not have Python 3 installed, we recommend `Anaconda for Python 3 <https://www.anaconda.com/download/>`_, a distributed version of Python packaged for scientific computation.
+
+.. note::
+
+	As Tensorflow does not currently support Python 3.7 and above, we are unable to
+	also support Strawberry Fields on Python 3.7.
 
 
 Installation
