@@ -66,7 +66,6 @@ class TestFockRepresentation:
     @pytest.mark.parametrize("phi", SQZ_PHI)
     def test_normalized_displaced_squeezed_state(self, setup_backend, mag_alpha, phase_alpha, r, phi, tol):
         """Tests if a range of squeezed vacuum states are normalized."""
-
         alpha = mag_alpha * np.exp(1j * phase_alpha)
         backend = setup_backend(1)
 
@@ -77,23 +76,33 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("r", SQZ_R)
     @pytest.mark.parametrize("phi", SQZ_PHI)
-    def test_displaced_squeezed_with_no_displacement(self, setup_backend, r, phi, cutoff, pure, tol):
+    def test_displaced_squeezed_with_no_displacement(self, setup_backend, r, phi, cutoff, batch_size, pure, tol):
         """Tests if a squeezed coherent state with no displacement is equal to a squeezed state (Eq. (5.5.6) in Loudon)."""
-
         alpha = 0
         backend = setup_backend(1)
 
         backend.prepare_displaced_squeezed_state(alpha, r, phi, 0)
         state = backend.state()
+
         if state.is_pure:
             num_state = state.ket()
         else:
             num_state = state.dm()
+
         n = np.arange(0, cutoff, 2)
         even_refs = np.sqrt(sech(r)) * np.sqrt(factorial(n)) / factorial(n / 2) * (-0.5 * np.exp(1j * phi) * np.tanh(r)) ** (n / 2)
-        if pure:
-            even_entries = num_state[::2]
+
+        if batch_size is not None:
+            if pure:
+                even_entries = num_state[:, ::2]
+            else:
+                even_entries = num_state[:, ::2, ::2]
+                even_refs = np.outer(even_refs, np.conj(even_refs))
         else:
-            even_entries = num_state[::2, ::2]
-            even_refs = np.outer(even_refs, np.conj(even_refs))
+            if pure:
+                even_entries = num_state[::2]
+            else:
+                even_entries = num_state[::2, ::2]
+                even_refs = np.outer(even_refs, np.conj(even_refs))
+
         assert np.allclose(even_entries, even_refs, atol=tol, rtol=0)

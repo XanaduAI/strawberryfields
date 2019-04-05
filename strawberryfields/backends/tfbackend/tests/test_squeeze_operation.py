@@ -76,7 +76,7 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("r", MAG)
     @pytest.mark.parametrize("p", PHASE)
-    def test_no_odd_fock(self, setup_backend, r, p):
+    def test_no_odd_fock(self, setup_backend, r, p, batch_size):
         """Tests if a range of squeezed vacuum states have
         only nonzero entries for even Fock states."""
         z = r * np.exp(1j * p)
@@ -90,14 +90,17 @@ class TestFockRepresentation:
         else:
             num_state = state.dm()
 
-        odd_entries = num_state[1::2]
+        if batch_size is not None:
+            odd_entries = num_state[:, 1::2]
+        else:
+            odd_entries = num_state[1::2]
 
         assert np.all(odd_entries == 0)
 
 
     @pytest.mark.parametrize("r", MAG)
     @pytest.mark.parametrize("p", PHASE)
-    def test_reference_squeezed_vacuum(self, setup_backend, r, p, cutoff, pure, tol):
+    def test_reference_squeezed_vacuum(self, setup_backend, r, p, cutoff, batch_size, pure, tol):
         """Tests if a range of squeezed vacuum states are equal to the form of Eq. (5.5.6) in Loudon."""
         z = r * np.exp(1j * p)
 
@@ -114,10 +117,16 @@ class TestFockRepresentation:
         even_refs = np.sqrt(1/np.cosh(r))*np.sqrt(fac(k))/fac(k / 2)*(-0.5*np.exp(1j*p)*np.tanh(r))**(k/2)
 
         if pure:
-            even_entries = num_state[::2]
+            if batch_size is not None:
+                even_entries = num_state[:, ::2]
+            else:
+                even_entries = num_state[::2]
         else:
             even_refs = np.outer(even_refs, even_refs.conj())
-            even_entries = num_state[::2, ::2]
+            if batch_size is not None:
+                even_entries = num_state[:, ::2, ::2]
+            else:
+                even_entries = num_state[::2, ::2]
 
         assert np.allclose(even_entries, even_refs, atol=tol, rtol=0)
 

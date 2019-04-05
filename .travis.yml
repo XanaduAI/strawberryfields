@@ -12,6 +12,10 @@ env:
 matrix:
   include:
     - before_script: pip install pytest pytest-cov --upgrade
+      script: cd strawberryfields/backends && python3 -m pytest tfbackend/tests --cov=tfbackend --disable-warnings
+      after_success: true
+      env: PURE=0 BATCHSIZE=2
+    - before_script: pip install pytest pytest-cov --upgrade
       script: cd strawberryfields/backends && python3 -m pytest fockbackend/tests --cov=fockbackend
       after_success: true
     - env: BACKEND=gaussian

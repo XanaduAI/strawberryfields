@@ -28,7 +28,7 @@ class TestRepresentationIndependent:
         """Tests that modes get reset to the vacuum after measurement."""
         backend = setup_backend(1)
 
-        r = np.arcsinh(1.0)
+        r = np.arcsinh(1.0)  #pylint: disable=assignment-from-no-return
         alpha = 0.8
 
         backend.squeeze(r, 0)

@@ -26,7 +26,6 @@ CUTOFF = 6
 ALPHA = 0.1
 HBAR = 2
 PURE = True
-BATCHED = False
 
 
 @pytest.fixture
@@ -57,12 +56,6 @@ def hbar():
 def pure():
     """Whether to run the backend in pure or mixed state mode"""
     return bool(int(os.environ.get("PURE", PURE)))
-
-
-@pytest.fixture
-def batched():
-    """Whether to run the backend in batched mode"""
-    return bool(int(os.environ.get("BATCHED", BATCHED)))
 
 
 @pytest.fixture
