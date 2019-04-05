@@ -29,7 +29,7 @@ matrix:
     - env: BACKEND=tf BATCHED=1
       sudo: required
     - env: BACKEND=tf MIXED=1 BATCHED=1
-sudo: required
+      sudo: required
 install:
   - pip install -r requirements.txt
   - pip install wheel codecov
