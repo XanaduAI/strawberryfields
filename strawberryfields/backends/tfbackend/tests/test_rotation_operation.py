@@ -70,7 +70,8 @@ class TestFockRepresentation:
             else:
                 numer_state = s.dm()
 
-            ref_state = np.array([np.exp(1j * theta * k) if k == n else 0.0 for k in range(cutoff)])
+            k = np.arange(cutoff)
+            ref_state = np.where(k == n, np.exp(1j*theta*k), 0)
 
             if not pure:
                 ref_state = np.outer(ref_state, np.conj(ref_state))
