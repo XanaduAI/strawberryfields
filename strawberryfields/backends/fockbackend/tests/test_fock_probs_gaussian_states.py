@@ -19,22 +19,6 @@ from scipy.special import factorial as fac
 NUM_REPEATS = 50
 
 
-def squeezed_matelem(r, n):
-    r"""Calculate a squeezed state vector element.
-
-    Args:
-        r (complex): squeezing parameter
-        n (int): Fock state
-
-    Returns:
-        complex: the element :math:`\langle n \mid S(r) \mid 0\rangle`
-    """
-    if n%2 == 0:
-        return (1/np.cosh(r))*(np.tanh(r)**(n))*fac(n)/(2**(n/2)*fac(n/2))**2
-
-    return 0.0
-
-
 def test_coherent_state(setup_backend, cutoff, pure, tol):
     """Tests Fock probabilities on a coherent state."""
     alpha = 1

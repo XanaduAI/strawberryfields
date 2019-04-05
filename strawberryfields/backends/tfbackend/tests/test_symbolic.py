@@ -30,7 +30,7 @@ ALPHA = 0.5
 def coherent_state(alpha, cutoff):
     """Returns the Fock representation of the coherent state |alpha> up to dimension given by cutoff"""
     n = np.arange(cutoff)
-    return np.exp(- 0.5 * np.abs(ALPHA) ** 2) * ALPHA ** n / np.sqrt(factorial(n))
+    return np.exp(- 0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(factorial(n))
 
 
 def _vac_ket(cutoff):
