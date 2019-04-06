@@ -2,9 +2,9 @@ PYTHON3 := $(shell which python3 2>/dev/null)
 COVERAGE3 := $(shell which coverage3 2>/dev/null)
 
 PYTHON := python3
-COVERAGE := coverage3
 COPTS := run --append
-TESTRUNNER := -m unittest discover tests
+COVERAGE := --cov=strawberryfields --cov-report term-missing --cov-report=html:coverage_html_report
+TESTRUNNER := -m pytest pytest -p no:warnings
 
 .PHONY: help
 help:
@@ -56,11 +56,11 @@ test: test-gaussian test-fock test-tf batch-test-tf
 
 test-%:
 	@echo "Testing $(subst test-,,$@) backend..."
-	export BACKEND=$(subst test-,,$@) && $(PYTHON) $(TESTRUNNER)
+	$(PYTHON) $(TESTRUNNER) -k $(subst test-,,$@)
 
 batch-test-%:
 	@echo "Testing $(subst batch-test-,,$@) backend in batch mode..."
-	export BACKEND=$(subst batch-test-,,$@) && export BATCHED=1 && $(PYTHON) $(TESTRUNNER)
+	export BATCHED=1 && $(PYTHON) $(TESTRUNNER) -k $(subst batch-test-,,$@)
 
 coverage: coverage-gaussian coverage-fock coverage-tf #batch-coverage-tf
 	$(COVERAGE) report
@@ -68,8 +68,8 @@ coverage: coverage-gaussian coverage-fock coverage-tf #batch-coverage-tf
 
 coverage-%:
 	@echo "Generating coverage report for $(subst coverage-,,$@) backend..."
-	export BACKEND=$(subst coverage-,,$@) && $(COVERAGE) $(COPTS) $(TESTRUNNER)
+	$(COVERAGE) $(COPTS) $(TESTRUNNER) -k $(subst coverage-,,$@)
 
 batch-coverage-%:
 	@echo "Generating coverage report for $(subst batch-coverage-,,$@) backend in batch mode..."
-	export BACKEND=$(subst batch-coverage-,,$@) && export BATCHED=1 && $(COVERAGE) $(COPTS) $(TESTRUNNER)
+	export BATCHED=1 && $(COVERAGE) $(COPTS) $(TESTRUNNER) -k $(subst batch-coverage-,,$@)
