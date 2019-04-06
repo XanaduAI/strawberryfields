@@ -12,3 +12,4 @@ coverage_html_report/*
 notebooks/*
 examples/.ipynb_checkpoints/*
 .pytest_cache/*
+pytest/.pytest_cache/
