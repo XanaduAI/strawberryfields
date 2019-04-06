@@ -11,8 +11,8 @@ env:
     - LOGGING=info
 matrix:
   include:
-    - env: PURE=1 BACKEND="fock and gaussian"
-    - env: PURE=0 BACKEND="fock and gaussian"
+    - env: PURE=1 BACKEND="fock or gaussian"
+    - env: PURE=0 BACKEND="fock or gaussian"
     - env: PURE=1 BACKEND=tf
       sudo: required
     - env: PURE=0 BACKEND=tf
