@@ -96,6 +96,8 @@ def setup_backend(request, print_fixtures, cutoff, hbar, pure, batch_size): #pyl
     def _setup_backend(num_subsystems):
         """Factory function"""
         backend = request.param()
+        #print backend name on failure
+        print("Backend = {}".format(backend._short_name))
         backend.begin_circuit(num_subsystems=num_subsystems, cutoff_dim=cutoff, hbar=hbar, pure=pure, batch_size=batch_size)
         return backend
     return _setup_backend
