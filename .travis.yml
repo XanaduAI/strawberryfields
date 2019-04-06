@@ -11,10 +11,8 @@ env:
     - LOGGING=info
 matrix:
   include:
-    - env: PURE=1 BACKEND=gaussian
-    - env: PURE=0 BACKEND=gaussian
-    - env: PURE=1 BACKEND=fock
-    - env: PURE=0 BACKEND=fock
+    - env: PURE=1 BACKEND="not tf"
+    - env: PURE=0 BACKEND="not tf"
     - env: PURE=1 BACKEND=tf
       sudo: required
     - env: PURE=0 BACKEND=tf

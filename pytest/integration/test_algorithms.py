@@ -166,7 +166,7 @@ def test_boson_sampling(setup_eng, batch_size, tol):
     if batch_size is not None:
         results = np.tile(results, batch_size).flatten()
 
-    assert np.allclose(probs, results, atol=tol, rtol=0)
+    assert np.allclose(probs, results*2, atol=tol, rtol=0)
 
 
 @pytest.mark.backends('tf', 'fock')
@@ -206,7 +206,7 @@ def test_hamiltonian_simulation(setup_eng, pure, batch_size, tol):
     probs = np.array(probs).T.flatten()
 
     if batch_size is not None:
-        res = np.tile(results, bsize).flatten()
+        results = np.tile(results, batch_size).flatten()
 
     assert np.allclose(probs, results, atol=tol, rtol=0)
 
