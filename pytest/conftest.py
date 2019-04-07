@@ -90,14 +90,21 @@ def print_fixtures(cutoff, hbar, pure, batch_size):
 @pytest.fixture(params=[
     pytest.param(FockBackend, marks=pytest.mark.fock),
     pytest.param(GaussianBackend, marks=pytest.mark.gaussian),
-    pytest.param(TFBackend, marks=pytest.mark.tf)])
+    pytest.param(TFBackend, marks=pytest.mark.tf)]
+    )
 def setup_backend(request, print_fixtures, cutoff, hbar, pure, batch_size): #pylint: disable=redefined-outer-name
-    """Parameterized fixture, used to automatically create a backend of certain number of modes"""
+    """Parameterized fixture, used to automatically create a backend of certain number of modes.
+
+    Every test that uses this fixture, or a fixture that depends on it (such as ``setup_eng``)
+    will be run three times, one for each backend.
+
+    To explicitly mark a test to only work on certain backends, you may
+    use the ``@pytest.mark.backends()`` fixture. For example, for a test that
+    only works on the TF and Fock backends, ``@pytest.mark.backends('tf', 'fock').
+    """
     def _setup_backend(num_subsystems):
         """Factory function"""
         backend = request.param()
-        #print backend name on failure
-        print("Backend = {}".format(backend._short_name))
         backend.begin_circuit(num_subsystems=num_subsystems, cutoff_dim=cutoff, hbar=hbar, pure=pure, batch_size=batch_size)
         return backend
     return _setup_backend
@@ -116,12 +123,20 @@ def setup_eng(setup_backend): #pylint: disable=redefined-outer-name
 
 def pytest_runtest_setup(item):
     """Automatically skip tests if they are marked for only certain backends"""
-    marks = {mark.name for mark in item.iter_markers()} - {'backends'}
+    allowed_backends = {'gaussian', 'tf', 'fock'}
+
+    # load the marker specifying what the backend is
+    marks = {mark.name for mark in item.iter_markers() if mark.name in allowed_backends}
+
+    # load a marker specifying whether the test only works with certain backends
     test_backends = [mark.args for mark in item.iter_markers(name='backends')]
 
     if not test_backends:
-        test_backends = {'gaussian', 'tf', 'fock'}
+        # if the test hasn't specified that it runs on particular backends,
+        # assume it will work with all backends
+        test_backends = allowed_backends
     else:
+        # otherwise, extract the set of backend strings the test works with
         test_backends = test_backends[0]
 
     for b in marks:

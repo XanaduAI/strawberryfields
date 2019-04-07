@@ -46,7 +46,7 @@ def test_teleportation_fidelity(setup_eng, pure):
 
 
 @pytest.mark.backends('gaussian')
-def test_gate_teleportation(setup_eng, pure):
+def test_gaussian_gate_teleportation(setup_eng, pure):
     """Test that gaussian states match after gate teleportation"""
     eng, q = setup_eng(4)
 
@@ -78,7 +78,7 @@ def test_gate_teleportation(setup_eng, pure):
     assert np.allclose(cov1, cov2, atol=0.05, rtol=0)
 
 
-def test_gaussian_boson_sampling(setup_eng, batch_size, tol):
+def test_gaussian_boson_sampling_fock_probs(setup_eng, batch_size, tol):
     """Test that GBS returns expected Fock probabilities"""
     eng, q = setup_eng(4)
 
@@ -128,7 +128,7 @@ def test_gaussian_boson_sampling(setup_eng, batch_size, tol):
 
 
 @pytest.mark.backends('tf', 'fock')
-def test_boson_sampling(setup_eng, batch_size, tol):
+def test_boson_sampling_fock_probs(setup_eng, batch_size, tol):
     """Test that boson sampling returns expected Fock probabilities"""
     eng, q = setup_eng(4)
 
@@ -170,7 +170,7 @@ def test_boson_sampling(setup_eng, batch_size, tol):
 
 
 @pytest.mark.backends('tf', 'fock')
-def test_hamiltonian_simulation(setup_eng, pure, batch_size, tol):
+def test_hamiltonian_simulation_fock_probs(setup_eng, pure, batch_size, tol):
     """Test that Hamiltonian simulation returns expected Fock probabilities"""
     eng, q = setup_eng(2)
     eng.reset(cutoff_dim=4, pure=pure) #override default cutoff fixture
@@ -212,15 +212,13 @@ def test_hamiltonian_simulation(setup_eng, pure, batch_size, tol):
 
 
 @pytest.mark.backends('gaussian')
-def test_gaussian_cloning(setup_eng, tol):
-    """Test that gaussian cloning clones a Gaussian state with average fidelity 2/3"""
-    shots = 500
-    a = 0.7+1.2j
+class TestGaussianCloning:
+    """Tests specific to Gaussian cloning"""
 
-    eng, q = setup_eng(4)
-
-    with eng:
-        Coherent(a) | q[0]
+    @staticmethod
+    def gaussian_cloning_circuit(q):
+        # TODO: at some point, use the blackbird parser to
+        # read in the following directly from the examples folder
         BSgate() | (q[0], q[1])
         BSgate()  | (q[1], q[2])
         MeasureX | q[1]
@@ -229,25 +227,45 @@ def test_gaussian_cloning(setup_eng, tol):
         Zgate(scale(q[2], sqrt(2))) | q[0]
         BSgate() | (q[0], q[3])
 
-    state = eng.run(modes=[0,3])
-    coh = np.array([state.is_coherent(i) for i in range(2)])
-    disp = state.displacement()
+    def test_identical_output(self, setup_eng, tol):
+        """Test that all outputs are identical clones"""
+        a = 0.7+1.2j
 
-    # check all outputs are coherent states
-    assert np.all(coh)
+        eng, q = setup_eng(4)
 
-    # check outputs are identical clones
-    assert np.allclose(*disp, atol=tol, rtol=0)
+        with eng:
+            Coherent(a) | q[0]
+            self.gaussian_cloning_circuit(q)
 
-    f_list = np.empty([shots])
-    a_list = np.empty([shots], dtype=np.complex128)
+        state = eng.run(modes=[0,3])
+        coh = np.array([state.is_coherent(i) for i in range(2)])
+        disp = state.displacement()
 
-    for i in range(shots):
-        eng.reset(keep_history=True)
-        state = eng.run(modes=[0])
-        f_list[i] = state.fidelity_coherent([0.7+1.2j])
-        a_list[i] = state.displacement()
+        # check all outputs are coherent states
+        assert np.all(coh)
+        # check outputs are identical clones
+        assert np.allclose(*disp, atol=tol, rtol=0)
 
-    assert np.allclose(np.mean(f_list), 2./3., atol=0.1, rtol=0)
-    assert np.allclose(np.mean(a_list), a, atol=0.1, rtol=0)
-    assert np.allclose(np.cov([a_list.real, a_list.imag]), 0.25*np.identity(2), atol=0.1, rtol=0)
+    def test_average_fidelity(self, setup_eng):
+        """Test that gaussian cloning clones a Gaussian state with average fidelity 2/3"""
+        shots = 500
+        a = 0.7+1.2j
+
+        eng, q = setup_eng(4)
+
+        with eng:
+            Coherent(a) | q[0]
+            self.gaussian_cloning_circuit(q)
+
+        f_list = np.empty([shots])
+        a_list = np.empty([shots], dtype=np.complex128)
+
+        for i in range(shots):
+            eng.reset(keep_history=True)
+            state = eng.run(modes=[0])
+            f_list[i] = state.fidelity_coherent([0.7+1.2j])
+            a_list[i] = state.displacement()
+
+        assert np.allclose(np.mean(f_list), 2./3., atol=0.1, rtol=0)
+        assert np.allclose(np.mean(a_list), a, atol=0.1, rtol=0)
+        assert np.allclose(np.cov([a_list.real, a_list.imag]), 0.25*np.identity(2), atol=0.1, rtol=0)

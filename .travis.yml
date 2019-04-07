@@ -27,7 +27,7 @@ install:
   - python3 setup.py bdist_wheel
   - pip install dist/StrawberryFields*.whl
 script:
-  - python3 -m pytest pytest --cov=strawberryfields -p no:warnings -k "$BACKEND"
+  - python3 -m pytest pytest --cov=strawberryfields -p no:warnings --tb=native -m "$BACKEND"
 after_success:
   - codecov -F $BACKEND,m$((1-$PURE)),b$BATCHED
 notifications:
