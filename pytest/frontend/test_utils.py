@@ -13,6 +13,7 @@
 # limitations under the License.
 r"""Unit tests for the Strawberry Fields example algorithms"""
 import pytest
+pytestmark = pytest.mark.frontend
 
 import numpy as np
 from numpy.polynomial.hermite import hermval as H
@@ -287,7 +288,7 @@ class TestInitialStates:
 class TestRandomMatrices:
     """Unit tests for random matrices"""
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture
     def modes(self):
         """Number of modes to use when creating matrices"""
         return 3
@@ -317,13 +318,13 @@ class TestRandomMatrices:
         eigs[np.abs(eigs) < tol] = 0
         assert np.all(eigs >= 0)
 
-    def test_random_covariance_purity(self, modes, hbar, tol):
+    def test_random_covariance_pure(self, modes, hbar, tol):
         """Test that a pure random covariance matrix has correct purity"""
         V = utils.random_covariance(modes, hbar=hbar, pure=True)
         det = np.linalg.det(V) - (hbar/2)**(2*modes)
         assert np.allclose(det, 0, atol=tol, rtol=0)
 
-    def test_random_covariance_purity(self, modes, hbar, tol):
+    def test_random_covariance_mixed(self, modes, hbar, tol):
         """Test that a mixed random covariance matrix has correct purity"""
         V = utils.random_covariance(modes, hbar=hbar, pure=False)
         det = np.linalg.det(V) - (hbar/2)**(2*modes)
@@ -356,7 +357,7 @@ class TestRandomMatrices:
         S = utils.random_symplectic(modes, passive=False)
         assert not np.allclose(S @ S.T, np.identity(2*modes), atol=tol, rtol=0)
 
-    def test_random_inteferometer_is_unitary(self, modes):
+    def test_random_inteferometer_is_square(self, modes):
         """Test that a random interferometer is square"""
         U = utils.random_interferometer(modes)
         assert np.all(U.shape == np.array([modes, modes]))
@@ -601,16 +602,16 @@ class TestEngineUtilityFunctions:
         dm = np.random.rand(*[cutoff]*8) + 1j*np.random.rand(*[cutoff]*8) # 4^8 -> (4^2)^4 -> 4^8
         dm2 = np.random.rand(*[cutoff]*4) + 1j*np.random.rand(*[cutoff]*4) # (2^2)^4 -> 2^8 -> (2^2)^4
 
-        assert np.allclose(dm, _unvectorize(_vectorize(dm), 2), atol=tol, rtol=0)
-        assert np.allclose(dm2, _vectorize(_unvectorize(dm2, 2)), atol=tol, rtol=0)
+        assert np.allclose(dm, utils._unvectorize(utils._vectorize(dm), 2), atol=tol, rtol=0)
+        assert np.allclose(dm2, utils._vectorize(utils._unvectorize(dm2, 2)), atol=tol, rtol=0)
 
     def test_interleaved_identities(self, tol):
         """Test interleaved utility function"""
 
-        II = _interleaved_identities(num_subsystems=2, cutoff_dim=3)
+        II = utils._interleaved_identities(num_subsystems=2, cutoff_dim=3)
         assert np.allclose(np.einsum('abab', II), 3**2, atol=tol, rtol=0)
 
-        III = _interleaved_identities(num_subsystems=3, cutoff_dim=5)
+        III = utils._interleaved_identities(num_subsystems=3, cutoff_dim=5)
         assert np.allclose(np.einsum('abcabc', III), 5**3, atol=tol, rtol=0)
 
 # TODO: add unit tests for _engine_with_CJ_cmd_queue
