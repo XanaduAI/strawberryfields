@@ -19,9 +19,18 @@ from scipy.linalg import qr, block_diag
 
 import strawberryfields as sf
 from strawberryfields import decompositions as dec
-from strawberryfields.utils import random_interferometer, random_symplectic, random_covariance, squeezed_state
+from strawberryfields.utils import (
+    random_interferometer,
+    random_symplectic,
+    random_covariance,
+    squeezed_state,
+)
 from strawberryfields import ops
-from strawberryfields.backends.shared_ops import haar_measure, changebasis, rotation_matrix as rot
+from strawberryfields.backends.shared_ops import (
+    haar_measure,
+    changebasis,
+    rotation_matrix as rot,
+)
 
 
 # make the test file deterministic
@@ -43,14 +52,18 @@ def V_pure(hbar):
     return random_covariance(3, hbar=hbar, pure=True)
 
 
-A = np.array([[1.28931633+0.75228801j, 1.45557375+0.96825143j, 1.53672608+1.465635j],
-                   [1.45557375+0.96825143j, 0.37611686+0.84964159j, 1.25122856+1.28071385j],
-                   [1.53672608+1.465635j, 1.25122856+1.28071385j, 1.88217983+1.70869293j]])
+A = np.array(
+    [
+        [1.28931633 + 0.75228801j, 1.45557375 + 0.96825143j, 1.53672608 + 1.465635j],
+        [1.45557375 + 0.96825143j, 0.37611686 + 0.84964159j, 1.25122856 + 1.28071385j],
+        [1.53672608 + 1.465635j, 1.25122856 + 1.28071385j, 1.88217983 + 1.70869293j],
+    ]
+)
 
-A -= np.trace(A)*np.identity(3)/3
+A -= np.trace(A) * np.identity(3) / 3
 
 
-@pytest.mark.backends('gaussian')
+@pytest.mark.backends("gaussian")
 class TestGaussianBackendDecompositions:
     """Test that the frontend decompositions work on the Gaussian backend"""
 
@@ -82,7 +95,7 @@ class TestGaussianBackendDecompositions:
             ops.GaussianTransform(S) | q
 
         state = eng.run()
-        assert np.allclose(state.cov(), S@S.T*hbar/2, atol=tol)
+        assert np.allclose(state.cov(), S @ S.T * hbar / 2, atol=tol)
 
     def test_graph_embed(self, setup_eng, tol):
         """Test that embedding a traceless adjacency matrix A
@@ -103,7 +116,7 @@ class TestGaussianBackendDecompositions:
         assert np.allclose(Amat[:N, N:], np.zeros([N, N]), atol=tol)
         assert np.allclose(Amat[N:, :N], np.zeros([N, N]), atol=tol)
 
-        ratio = np.real_if_close(Amat[N:, N:]/A)
+        ratio = np.real_if_close(Amat[N:, N:] / A)
         ratio /= ratio[0, 0]
         assert np.allclose(ratio, np.ones([N, N]), atol=tol)
 
@@ -121,8 +134,7 @@ class TestGaussianBackendDecompositions:
         """Test applying a passive Gaussian symplectic transform,
         which is simply an interferometer"""
         eng, q = setup_eng(3)
-        O = np.vstack([np.hstack([u1.real, -u1.imag]),
-                       np.hstack([u1.imag, u1.real])])
+        O = np.vstack([np.hstack([u1.real, -u1.imag]), np.hstack([u1.imag, u1.real])])
 
         with eng:
             ops.All(ops.Squeezed(0.5)) | q
@@ -141,7 +153,7 @@ class TestGaussianBackendDecompositions:
             ops.GaussianTransform(S, vacuum=True) | q
 
         state = eng.run()
-        assert np.allclose(state.cov(), S@S.T*hbar/2, atol=tol)
+        assert np.allclose(state.cov(), S @ S.T * hbar / 2, atol=tol)
 
     def test_interferometer(self, setup_eng, tol):
         """Test applying an interferometer"""
@@ -153,8 +165,7 @@ class TestGaussianBackendDecompositions:
             ops.Interferometer(u1) | q
 
         state = eng.run()
-        O = np.vstack([np.hstack([u1.real, -u1.imag]),
-                       np.hstack([u1.imag, u1.real])])
+        O = np.vstack([np.hstack([u1.real, -u1.imag]), np.hstack([u1.imag, u1.real])])
         assert np.allclose(state.cov(), O @ init.cov() @ O.T, atol=tol)
 
     def test_identity_interferometer(self, setup_eng, tol):
@@ -168,7 +179,7 @@ class TestGaussianBackendDecompositions:
         assert len(eng.cmd_applied[0]) == 0
 
 
-@pytest.mark.backends('gaussian')
+@pytest.mark.backends("gaussian")
 class TestGaussianBackendPrepareState:
     """Test passing several Gaussian states directly to the Gaussian backend.
     This is allowed for backends that implement the prepare_gaussian_state method."""
@@ -178,7 +189,7 @@ class TestGaussianBackendPrepareState:
         eng, q = setup_eng(3)
 
         with eng:
-            ops.Gaussian(np.identity(6)*hbar/2, decomp=False) | q
+            ops.Gaussian(np.identity(6) * hbar / 2, decomp=False) | q
 
         state = eng.run()
         cov = state.cov()
@@ -189,7 +200,7 @@ class TestGaussianBackendPrepareState:
     def test_squeezed(self, setup_eng, hbar, tol):
         """Testing a squeezed state"""
         eng, q = setup_eng(3)
-        cov = (hbar/2)*np.diag([np.exp(-0.1)]*3 + [np.exp(0.1)]*3)
+        cov = (hbar / 2) * np.diag([np.exp(-0.1)] * 3 + [np.exp(0.1)] * 3)
 
         with eng:
             ops.Gaussian(cov, decomp=False) | q
@@ -200,7 +211,7 @@ class TestGaussianBackendPrepareState:
     def test_displaced_squeezed(self, setup_eng, hbar, tol):
         """Testing a displaced squeezed state"""
         eng, q = setup_eng(3)
-        cov = (hbar/2)*np.diag([np.exp(-0.1)]*3 + [np.exp(0.1)]*3)
+        cov = (hbar / 2) * np.diag([np.exp(-0.1)] * 3 + [np.exp(0.1)] * 3)
 
         with eng:
             ops.Gaussian(cov, r=[0, 0.1, 0.2, -0.1, 0.3, 0], decomp=False) | q
@@ -211,7 +222,7 @@ class TestGaussianBackendPrepareState:
     def test_thermal(self, setup_eng, hbar, tol):
         """Testing a thermal state"""
         eng, q = setup_eng(3)
-        cov = np.diag(hbar*(np.array([0.3,0.4,0.2]*2)+0.5))
+        cov = np.diag(hbar * (np.array([0.3, 0.4, 0.2] * 2) + 0.5))
 
         with eng:
             ops.Gaussian(cov, decomp=False) | q
@@ -225,9 +236,9 @@ class TestGaussianBackendPrepareState:
 
         r = 0.1
         phi = 0.2312
-        v1 = (hbar/2)*np.diag([np.exp(-r),np.exp(r)])
+        v1 = (hbar / 2) * np.diag([np.exp(-r), np.exp(r)])
         A = changebasis(3)
-        cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T]*3) @ A
+        cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3) @ A
 
         with eng:
             ops.Gaussian(cov, decomp=False) | q
@@ -236,7 +247,7 @@ class TestGaussianBackendPrepareState:
         assert np.allclose(state.cov(), cov, atol=tol)
 
 
-@pytest.mark.backends('gaussian')
+@pytest.mark.backends("gaussian")
 class TestGaussianBackendDecomposeState:
     """Test decomposing several Gaussian states for the Gaussian backend."""
 
@@ -245,7 +256,7 @@ class TestGaussianBackendDecomposeState:
         eng, q = setup_eng(3)
 
         with eng:
-            ops.Gaussian(np.identity(6)*hbar/2) | q
+            ops.Gaussian(np.identity(6) * hbar / 2) | q
 
         state = eng.run()
         cov = state.cov()
@@ -257,7 +268,7 @@ class TestGaussianBackendDecomposeState:
     def test_squeezed(self, setup_eng, hbar, tol):
         """Testing decomposed squeezed state"""
         eng, q = setup_eng(3)
-        cov = (hbar/2)*np.diag([np.exp(-0.1)]*3 + [np.exp(0.1)]*3)
+        cov = (hbar / 2) * np.diag([np.exp(-0.1)] * 3 + [np.exp(0.1)] * 3)
 
         with eng:
             ops.Gaussian(cov) | q
@@ -269,7 +280,7 @@ class TestGaussianBackendDecomposeState:
     def test_displaced_squeezed(self, setup_eng, hbar, tol):
         """Testing decomposed displaced squeezed state"""
         eng, q = setup_eng(3)
-        cov = (hbar/2)*np.diag([np.exp(-0.1)]*3 + [np.exp(0.1)]*3)
+        cov = (hbar / 2) * np.diag([np.exp(-0.1)] * 3 + [np.exp(0.1)] * 3)
 
         with eng:
             ops.Gaussian(cov, r=[0, 0.1, 0.2, -0.1, 0.3, 0]) | q
@@ -281,7 +292,7 @@ class TestGaussianBackendDecomposeState:
     def test_thermal(self, setup_eng, hbar, tol):
         """Testing decomposed thermal state"""
         eng, q = setup_eng(3)
-        cov = np.diag(hbar*(np.array([0.3,0.4,0.2]*2)+0.5))
+        cov = np.diag(hbar * (np.array([0.3, 0.4, 0.2] * 2) + 0.5))
 
         with eng:
             ops.Gaussian(cov) | q
@@ -296,9 +307,9 @@ class TestGaussianBackendDecomposeState:
 
         r = 0.1
         phi = 0.2312
-        v1 = (hbar/2)*np.diag([np.exp(-r),np.exp(r)])
+        v1 = (hbar / 2) * np.diag([np.exp(-r), np.exp(r)])
         A = changebasis(3)
-        cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T]*3) @ A
+        cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3) @ A
 
         with eng:
             ops.Gaussian(cov) | q
@@ -308,7 +319,7 @@ class TestGaussianBackendDecomposeState:
         assert np.all(len(eng.cmd_applied[0]) == 3)
 
 
-@pytest.mark.backends('tf', 'fock')
+@pytest.mark.backends("tf", "fock")
 class TestFockBackendDecomposeState:
     """Test decomposing several Gaussian states for the Fock backends,
     by measuring the fidelities."""
@@ -317,7 +328,7 @@ class TestFockBackendDecomposeState:
         eng, q = setup_eng(3)
 
         with eng:
-            ops.Gaussian(np.identity(6)*hbar/2) | q
+            ops.Gaussian(np.identity(6) * hbar / 2) | q
 
         state = eng.run()
         assert len(eng.cmd_applied[0]) == 0
@@ -327,8 +338,8 @@ class TestFockBackendDecomposeState:
         eng, q = setup_eng(3)
         r = 0.05
         phi = 0
-        cov = (hbar/2)*np.diag([np.exp(-2*r)]*3 + [np.exp(2*r)]*3)
-        in_state = squeezed_state(r, phi, basis='fock', fock_dim=cutoff)
+        cov = (hbar / 2) * np.diag([np.exp(-2 * r)] * 3 + [np.exp(2 * r)] * 3)
+        in_state = squeezed_state(r, phi, basis="fock", fock_dim=cutoff)
 
         with eng:
             ops.Gaussian(cov) | q
@@ -344,11 +355,11 @@ class TestFockBackendDecomposeState:
 
         r = 0.1
         phi = 0.2312
-        in_state = squeezed_state(r, phi, basis='fock', fock_dim=cutoff)
+        in_state = squeezed_state(r, phi, basis="fock", fock_dim=cutoff)
 
-        v1 = (hbar/2)*np.diag([np.exp(-2*r),np.exp(2*r)])
+        v1 = (hbar / 2) * np.diag([np.exp(-2 * r), np.exp(2 * r)])
         A = changebasis(3)
-        cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T]*3) @ A
+        cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3) @ A
 
         with eng:
             ops.Gaussian(cov) | q

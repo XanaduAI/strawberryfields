@@ -25,7 +25,7 @@ from strawberryfields.backends.fockbackend.ops import squeezing as sq_U
 from strawberryfields.backends.fockbackend.ops import displacement as disp_U
 from strawberryfields.backends.fockbackend.ops import beamsplitter as bs_U
 
-ALPHA = np.linspace(-0.15, 0.2, 4) + np.linspace(-0.2, 0.1, 4)*1j
+ALPHA = np.linspace(-0.15, 0.2, 4) + np.linspace(-0.2, 0.1, 4) * 1j
 R = np.linspace(0, 0.21, 4)
 PHI = np.linspace(0, 1.43, 4)
 np.random.seed(42)
@@ -36,7 +36,7 @@ np.random.seed(42)
 # ===================================================================================
 
 
-@pytest.mark.backends('gaussian')
+@pytest.mark.backends("gaussian")
 class TestInitialStatesAgreeGaussian:
     """Test that the initial state functions in utils match
     the result returned by the Gaussian backends."""
@@ -50,12 +50,12 @@ class TestInitialStatesAgreeGaussian:
 
         state = eng.run()
 
-        mu, cov = utils.vacuum_state(basis='gaussian', hbar=hbar)
+        mu, cov = utils.vacuum_state(basis="gaussian", hbar=hbar)
         mu_exp, cov_exp = state.reduced_gaussian(0)
         assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
         assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize('a', ALPHA)
+    @pytest.mark.parametrize("a", ALPHA)
     def test_coherent(self, a, setup_eng, hbar, tol):
         """Test coherent function matches Gaussian backends"""
         eng, q = setup_eng(1)
@@ -65,12 +65,12 @@ class TestInitialStatesAgreeGaussian:
 
         state = eng.run()
 
-        mu, cov = utils.coherent_state(a, basis='gaussian', hbar=hbar)
+        mu, cov = utils.coherent_state(a, basis="gaussian", hbar=hbar)
         mu_exp, cov_exp = state.reduced_gaussian(0)
         assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
         assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize('r, phi', zip(R, PHI))
+    @pytest.mark.parametrize("r, phi", zip(R, PHI))
     def test_squeezed(self, r, phi, setup_eng, hbar, tol):
         """Test squeezed function matches Gaussian backends"""
         eng, q = setup_eng(1)
@@ -80,12 +80,12 @@ class TestInitialStatesAgreeGaussian:
 
         state = eng.run()
 
-        mu, cov = utils.squeezed_state(r, phi, basis='gaussian', hbar=hbar)
+        mu, cov = utils.squeezed_state(r, phi, basis="gaussian", hbar=hbar)
         mu_exp, cov_exp = state.reduced_gaussian(0)
         assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
         assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize('a, r, phi', zip(ALPHA, R, PHI))
+    @pytest.mark.parametrize("a, r, phi", zip(ALPHA, R, PHI))
     def test_displaced_squeezed(self, a, r, phi, setup_eng, hbar, tol):
         """Test displaced squeezed function matches Gaussian backends"""
         eng, q = setup_eng(1)
@@ -96,7 +96,7 @@ class TestInitialStatesAgreeGaussian:
 
         state = eng.run()
 
-        mu, cov = utils.displaced_squeezed_state(a, r, phi, basis='gaussian', hbar=hbar)
+        mu, cov = utils.displaced_squeezed_state(a, r, phi, basis="gaussian", hbar=hbar)
         mu_exp, cov_exp = state.reduced_gaussian(0)
         assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
         assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
@@ -107,7 +107,7 @@ def bsize(batch_size):
     return 1 if batch_size is None else batch_size
 
 
-@pytest.mark.backends('fock', 'tf')
+@pytest.mark.backends("fock", "tf")
 class TestInitialStatesAgreeFock:
     """Test that the initial state functions in utils match
     the result returned by the Fock backends."""
@@ -121,7 +121,7 @@ class TestInitialStatesAgreeFock:
 
         state = eng.run()
 
-        ket = utils.vacuum_state(basis='fock', fock_dim=cutoff, hbar=hbar)
+        ket = utils.vacuum_state(basis="fock", fock_dim=cutoff, hbar=hbar)
 
         if not pure:
             expected = state.dm()
@@ -135,7 +135,7 @@ class TestInitialStatesAgreeFock:
     def test_coherent(self, setup_eng, hbar, cutoff, bsize, pure, tol):
         """Test coherent function matches Fock backends"""
         eng, q = setup_eng(1)
-        a = 0.32+0.1j
+        a = 0.32 + 0.1j
         r = 0.112
         phi = 0.123
 
@@ -143,7 +143,7 @@ class TestInitialStatesAgreeFock:
             ops.Dgate(a) | q[0]
 
         state = eng.run()
-        ket = utils.coherent_state(a, basis='fock', fock_dim=cutoff, hbar=hbar)
+        ket = utils.coherent_state(a, basis="fock", fock_dim=cutoff, hbar=hbar)
 
         if not pure:
             expected = state.dm()
@@ -164,7 +164,7 @@ class TestInitialStatesAgreeFock:
             ops.Sgate(r, phi) | q[0]
 
         state = eng.run()
-        ket = utils.squeezed_state(r, phi, basis='fock', fock_dim=cutoff, hbar=hbar)
+        ket = utils.squeezed_state(r, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
 
         if not pure:
             expected = state.dm()
@@ -178,7 +178,7 @@ class TestInitialStatesAgreeFock:
     def test_displaced_squeezed(self, setup_eng, hbar, cutoff, bsize, pure, tol):
         """Test displaced squeezed function matches Fock backends"""
         eng, q = setup_eng(1)
-        a = 0.32+0.1j
+        a = 0.32 + 0.1j
         r = 0.112
         phi = 0.123
 
@@ -187,7 +187,9 @@ class TestInitialStatesAgreeFock:
             ops.Dgate(a) | q[0]
 
         state = eng.run()
-        ket = utils.displaced_squeezed_state(a, r, phi, basis='fock', fock_dim=cutoff, hbar=hbar)
+        ket = utils.displaced_squeezed_state(
+            a, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
+        )
 
         if not pure:
             expected = state.dm()
@@ -220,7 +222,7 @@ class TestInitialStatesAgreeFock:
     def test_cat_state(self, setup_eng, hbar, cutoff, bsize, pure, tol):
         """Test cat state function matches Fock backends"""
         eng, q = setup_eng(1)
-        a = 0.32+0.1j
+        a = 0.32 + 0.1j
         p = 0.43
 
         with eng:
@@ -266,17 +268,17 @@ class TestTeleportationOperationTest:
         tol = 0.1
         cutoff = 10
 
-        eng.reset(pure=pure, cutoff_dim=cutoff) # overwrite default cutoff
+        eng.reset(pure=pure, cutoff_dim=cutoff)  # overwrite default cutoff
 
         with eng:
-            prepare_state(0.5+0.2j) | q[0]
+            prepare_state(0.5 + 0.2j) | q[0]
             entangle_states() | (q[1], q[2])
-            ops.BSgate(np.pi/4, 0) | (q[0], q[1])
+            ops.BSgate(np.pi / 4, 0) | (q[0], q[1])
             ops.MeasureHomodyne(0, select=0) | q[0]
-            ops.MeasureHomodyne(np.pi/2, select=0) | q[1]
+            ops.MeasureHomodyne(np.pi / 2, select=0) | q[1]
 
         state = eng.run()
-        fidelity = state.fidelity_coherent([0, 0, 0.5+0.2j])
+        fidelity = state.fidelity_coherent([0, 0, 0.5 + 0.2j])
         assert np.allclose(fidelity, 1, atol=0.1, rtol=0)
 
     def test_validate_argument(self):
@@ -301,12 +303,12 @@ class TestTeleportationOperationTest:
             entangle_states() | 1
 
 
-
 # ===================================================================================
 # Engine unitary and channel extraction tests
 # ===================================================================================
 
-@pytest.mark.backends('fock', 'tf')
+
+@pytest.mark.backends("fock", "tf")
 class TestExtractUnitary:
     """Test extraction of unitaries"""
 
@@ -321,7 +323,7 @@ class TestExtractUnitary:
             ops.Kgate(kappa) | q
 
         U = utils.extract_unitary(eng, cutoff_dim=cutoff, backend=backend._short_name)
-        expected = np.diag(np.exp(1j*kappa*np.arange(cutoff)**2))
+        expected = np.diag(np.exp(1j * kappa * np.arange(cutoff) ** 2))
 
         if isinstance(U, tf.Tensor):
             U = tf.Session().run(U)
@@ -352,7 +354,7 @@ class TestExtractUnitary:
         backend = setup_backend(1)
         eng, q = sf.Engine(1)
 
-        alpha = 0.432-0.8543j
+        alpha = 0.432 - 0.8543j
 
         with eng:
             ops.Dgate(alpha) | q
@@ -391,7 +393,7 @@ class TestExtractUnitary:
         K = ops.Kgate(-1.5)
 
         # not a state but it doesn't matter
-        initial_state = np.random.rand(cutoff) + 1j*np.random.rand(cutoff)
+        initial_state = np.random.rand(cutoff) + 1j * np.random.rand(cutoff)
 
         eng_ref, q = setup_eng(1)
 
@@ -408,20 +410,24 @@ class TestExtractUnitary:
             D | q
             K | q
 
-        U = utils.extract_unitary(eng, cutoff_dim=cutoff, backend=eng_ref.backend._short_name)
+        U = utils.extract_unitary(
+            eng, cutoff_dim=cutoff, backend=eng_ref.backend._short_name
+        )
 
         if isinstance(U, tf.Tensor):
             with tf.Session() as sess:
                 sess.run(tf.global_variables_initializer())
                 in_state = tf.constant(initial_state.reshape([-1]), dtype=tf.complex64)
-                final_state = sess.run(tf.einsum('ab,b', U, in_state))
+                final_state = sess.run(tf.einsum("ab,b", U, in_state))
         else:
             final_state = U @ initial_state
 
         expected_state = eng_ref.run().ket()
         assert np.allclose(final_state, expected_state, atol=tol, rtol=0)
 
-    def test_extract_arbitrary_unitary_two_modes_vectorized(self, setup_eng, cutoff, batch_size, tol):
+    def test_extract_arbitrary_unitary_two_modes_vectorized(
+        self, setup_eng, cutoff, batch_size, tol
+    ):
         """Test that arbitrary unitary extraction works for 2 mode when vectorized"""
         bsize = 1
         if batch_size is not None:
@@ -431,7 +437,9 @@ class TestExtractUnitary:
         B = ops.BSgate(2.234, -1.165)
 
         # not a state but it doesn't matter
-        initial_state = np.complex64(np.random.rand(cutoff, cutoff) + 1j*np.random.rand(cutoff, cutoff))
+        initial_state = np.complex64(
+            np.random.rand(cutoff, cutoff) + 1j * np.random.rand(cutoff, cutoff)
+        )
 
         eng_ref, q = setup_eng(2)
 
@@ -450,10 +458,17 @@ class TestExtractUnitary:
             S | q[1]
             B | q
 
-        U = utils.extract_unitary(eng, cutoff_dim=cutoff, vectorize_modes=True, backend=eng_ref.backend._short_name)
+        U = utils.extract_unitary(
+            eng,
+            cutoff_dim=cutoff,
+            vectorize_modes=True,
+            backend=eng_ref.backend._short_name,
+        )
 
         if isinstance(U, tf.Tensor):
-            final_state = tf.Session().run(tf.einsum('ab,b', U, tf.constant(initial_state.reshape([-1]))))
+            final_state = tf.Session().run(
+                tf.einsum("ab,b", U, tf.constant(initial_state.reshape([-1])))
+            )
             final_state = np.tile(final_state, bsize)
         else:
             final_state = U @ initial_state.reshape([-1])
@@ -461,16 +476,20 @@ class TestExtractUnitary:
         expected_state = eng_ref.run().ket().reshape([-1])
         assert np.allclose(final_state, expected_state, atol=tol, rtol=0)
 
-    def test_extract_arbitrary_unitary_two_modes_not_vectorized(self, setup_eng, cutoff, tol):
+    def test_extract_arbitrary_unitary_two_modes_not_vectorized(
+        self, setup_eng, cutoff, tol
+    ):
         """Test that arbitrary unitary extraction works for 2 mode"""
         S = ops.Sgate(0.4, -1.2)
         B = ops.BSgate(2.234, -1.165)
 
         # not a state but it doesn't matter
-        initial_state = np.complex64(np.random.rand(cutoff, cutoff) + 1j*np.random.rand(cutoff, cutoff))
+        initial_state = np.complex64(
+            np.random.rand(cutoff, cutoff) + 1j * np.random.rand(cutoff, cutoff)
+        )
 
         eng_ref, q = setup_eng(2)
-        if eng_ref.backend._short_name == 'tf':
+        if eng_ref.backend._short_name == "tf":
             pytest.skip("Un vectorized mode only supports Fock backend for now")
 
         with eng_ref:
@@ -488,14 +507,19 @@ class TestExtractUnitary:
             S | q[1]
             B | q
 
-        U = utils.extract_unitary(eng, cutoff_dim=cutoff, vectorize_modes=False, backend=eng_ref.backend._short_name)
+        U = utils.extract_unitary(
+            eng,
+            cutoff_dim=cutoff,
+            vectorize_modes=False,
+            backend=eng_ref.backend._short_name,
+        )
         final_state = np.einsum("abcd,bd->ac", U, initial_state)
         expected_state = eng_ref.run().ket()
 
         assert np.allclose(final_state, expected_state, atol=tol, rtol=0)
 
 
-@pytest.mark.backends('fock')
+@pytest.mark.backends("fock")
 class TestExtractChannelOneMode:
     """Test extraction of unitaries"""
 
@@ -527,8 +551,8 @@ class TestExtractChannelOneMode:
         """Test that Choi channel extraction works for 1 mode"""
         eng, rho, initial_state = setup_one_mode_circuit
 
-        choi = utils.extract_channel(eng, cutoff_dim=cutoff, representation='choi')
-        final_rho = np.einsum('abcd,ab -> cd', choi, initial_state)
+        choi = utils.extract_channel(eng, cutoff_dim=cutoff, representation="choi")
+        final_rho = np.einsum("abcd,ab -> cd", choi, initial_state)
 
         assert np.allclose(final_rho, rho, atol=tol, rtol=0)
 
@@ -536,8 +560,10 @@ class TestExtractChannelOneMode:
         """Test that Liouville channel extraction works for 1 mode"""
         eng, rho, initial_state = setup_one_mode_circuit
 
-        liouville = utils.extract_channel(eng, cutoff_dim=cutoff, representation='liouville')
-        final_rho = np.einsum('abcd,db -> ca', liouville, initial_state)
+        liouville = utils.extract_channel(
+            eng, cutoff_dim=cutoff, representation="liouville"
+        )
+        final_rho = np.einsum("abcd,db -> ca", liouville, initial_state)
 
         assert np.allclose(final_rho, rho, atol=tol, rtol=0)
 
@@ -545,13 +571,13 @@ class TestExtractChannelOneMode:
         """Test that Kraus channel extraction works for 1 mode"""
         eng, rho, initial_state = setup_one_mode_circuit
 
-        kraus = utils.extract_channel(eng, cutoff_dim=cutoff, representation='kraus')
-        final_rho = np.einsum('abc,cd,aed -> be', kraus, initial_state, np.conj(kraus))
+        kraus = utils.extract_channel(eng, cutoff_dim=cutoff, representation="kraus")
+        final_rho = np.einsum("abc,cd,aed -> be", kraus, initial_state, np.conj(kraus))
 
         assert np.allclose(final_rho, rho, atol=tol, rtol=0)
 
 
-@pytest.mark.backends('fock')
+@pytest.mark.backends("fock")
 class TestExtractChannelTwoMode:
     """Test extraction of unitaries"""
 
@@ -563,7 +589,9 @@ class TestExtractChannelTwoMode:
         S = ops.Sgate(2)
         B = ops.BSgate(2.234, -1.165)
 
-        initial_state = np.complex64(np.random.rand(*[cutoff]*4) + 1j*np.random.rand(*[cutoff]*4))
+        initial_state = np.complex64(
+            np.random.rand(*[cutoff] * 4) + 1j * np.random.rand(*[cutoff] * 4)
+        )
 
         with eng_ref:
             ops.DensityMatrix(initial_state) | q
@@ -587,8 +615,10 @@ class TestExtractChannelTwoMode:
         """Test that Choi channel extraction works for 2 mode"""
         eng, rho, initial_state = setup_two_mode_circuit
 
-        choi = utils.extract_channel(eng, cutoff_dim=cutoff, vectorize_modes=False, representation='choi')
-        final_rho = np.einsum('abcdefgh,abcd -> efgh', choi, initial_state)
+        choi = utils.extract_channel(
+            eng, cutoff_dim=cutoff, vectorize_modes=False, representation="choi"
+        )
+        final_rho = np.einsum("abcdefgh,abcd -> efgh", choi, initial_state)
 
         assert np.allclose(final_rho, rho, atol=tol, rtol=0)
 
@@ -596,8 +626,10 @@ class TestExtractChannelTwoMode:
         """Test that Liouville channel extraction works for 2 mode"""
         eng, rho, initial_state = setup_two_mode_circuit
 
-        liouville = utils.extract_channel(eng, cutoff_dim=cutoff, vectorize_modes=False, representation='liouville')
-        final_rho = np.einsum('abcdefgh,fbhd -> eagc', liouville, initial_state)
+        liouville = utils.extract_channel(
+            eng, cutoff_dim=cutoff, vectorize_modes=False, representation="liouville"
+        )
+        final_rho = np.einsum("abcdefgh,fbhd -> eagc", liouville, initial_state)
 
         assert np.allclose(final_rho, rho, atol=tol, rtol=0)
 
@@ -605,40 +637,58 @@ class TestExtractChannelTwoMode:
         """Test that Kraus channel extraction works for 2 mode"""
         eng, rho, initial_state = setup_two_mode_circuit
 
-        kraus = utils.extract_channel(eng, cutoff_dim=cutoff, vectorize_modes=False, representation='kraus')
-        final_rho = np.einsum('abcde,cfeg,ahfig -> bhdi', kraus, initial_state, np.conj(kraus))
+        kraus = utils.extract_channel(
+            eng, cutoff_dim=cutoff, vectorize_modes=False, representation="kraus"
+        )
+        final_rho = np.einsum(
+            "abcde,cfeg,ahfig -> bhdi", kraus, initial_state, np.conj(kraus)
+        )
 
         assert np.allclose(final_rho, rho, atol=tol, rtol=0)
 
     def test_extract_choi_channel_vectorize(self, setup_two_mode_circuit, cutoff, tol):
         """Test that Choi channel extraction works for 2 mode vectorized"""
         eng, rho, initial_state = setup_two_mode_circuit
-        rho = np.einsum('abcd->acbd', rho).reshape(cutoff**2, cutoff**2)
-        initial_state = np.einsum('abcd->acbd', initial_state).reshape(cutoff**2, cutoff**2)
+        rho = np.einsum("abcd->acbd", rho).reshape(cutoff ** 2, cutoff ** 2)
+        initial_state = np.einsum("abcd->acbd", initial_state).reshape(
+            cutoff ** 2, cutoff ** 2
+        )
 
-        choi = utils.extract_channel(eng, cutoff_dim=cutoff, vectorize_modes=True, representation='choi')
-        final_rho = np.einsum('abcd,ab -> cd', choi, initial_state)
+        choi = utils.extract_channel(
+            eng, cutoff_dim=cutoff, vectorize_modes=True, representation="choi"
+        )
+        final_rho = np.einsum("abcd,ab -> cd", choi, initial_state)
 
         assert np.allclose(final_rho, rho, atol=tol, rtol=0)
 
-    def test_extract_liouville_channel_vectorize(self, setup_two_mode_circuit, cutoff, tol):
+    def test_extract_liouville_channel_vectorize(
+        self, setup_two_mode_circuit, cutoff, tol
+    ):
         """Test that Liouville channel extraction works for 2 mode vectorized"""
         eng, rho, initial_state = setup_two_mode_circuit
-        rho = np.einsum('abcd->acbd', rho).reshape(cutoff**2, cutoff**2)
-        initial_state = np.einsum('abcd->acbd', initial_state).reshape(cutoff**2, cutoff**2)
+        rho = np.einsum("abcd->acbd", rho).reshape(cutoff ** 2, cutoff ** 2)
+        initial_state = np.einsum("abcd->acbd", initial_state).reshape(
+            cutoff ** 2, cutoff ** 2
+        )
 
-        liouville = utils.extract_channel(eng, cutoff_dim=cutoff, vectorize_modes=True, representation='liouville')
-        final_rho = np.einsum('abcd,db -> ca', liouville, initial_state)
+        liouville = utils.extract_channel(
+            eng, cutoff_dim=cutoff, vectorize_modes=True, representation="liouville"
+        )
+        final_rho = np.einsum("abcd,db -> ca", liouville, initial_state)
 
         assert np.allclose(final_rho, rho, atol=tol, rtol=0)
 
     def test_extract_kraus_channel_vectorize(self, setup_two_mode_circuit, cutoff, tol):
         """Test that Kraus channel extraction works for 2 mode vectorized"""
         eng, rho, initial_state = setup_two_mode_circuit
-        rho = np.einsum('abcd->acbd', rho).reshape(cutoff**2, cutoff**2)
-        initial_state = np.einsum('abcd->acbd', initial_state).reshape(cutoff**2, cutoff**2)
+        rho = np.einsum("abcd->acbd", rho).reshape(cutoff ** 2, cutoff ** 2)
+        initial_state = np.einsum("abcd->acbd", initial_state).reshape(
+            cutoff ** 2, cutoff ** 2
+        )
 
-        kraus = utils.extract_channel(eng, cutoff_dim=cutoff, vectorize_modes=True, representation='kraus')
-        final_rho = np.einsum('abc,cd,aed -> be', kraus, initial_state, np.conj(kraus))
+        kraus = utils.extract_channel(
+            eng, cutoff_dim=cutoff, vectorize_modes=True, representation="kraus"
+        )
+        final_rho = np.einsum("abc,cd,aed -> be", kraus, initial_state, np.conj(kraus))
 
         assert np.allclose(final_rho, rho, atol=tol, rtol=0)

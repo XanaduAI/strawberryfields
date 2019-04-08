@@ -13,6 +13,7 @@
 # limitations under the License.
 r"""Unit tests for the Strawberry Fields example algorithms"""
 import pytest
+
 pytestmark = pytest.mark.frontend
 
 import numpy as np
@@ -24,7 +25,7 @@ from strawberryfields.ops import Sgate, BSgate, LossChannel, MeasureX, Squeezed
 import strawberryfields.utils as utils
 
 
-ALPHA = np.linspace(-0.15, 0.2, 4) + np.linspace(-0.2, 0.1, 4)*1j
+ALPHA = np.linspace(-0.15, 0.2, 4) + np.linspace(-0.2, 0.1, 4) * 1j
 R = np.linspace(0, 0.21, 4)
 PHI = np.linspace(0, 1.43, 4)
 
@@ -55,7 +56,7 @@ class TestConvertFunctions:
         rrt = utils.mag(q[0])
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
-        assert rrt.func(x+1j*y) == np.abs(x+1j*y)
+        assert rrt.func(x + 1j * y) == np.abs(x + 1j * y)
 
     def test_phase(self):
         """Test that the neg function creates a regref transform that negates"""
@@ -65,7 +66,7 @@ class TestConvertFunctions:
         rrt = utils.phase(q[0])
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
-        assert rrt.func(x+1j*y) == np.angle(x+1j*y)
+        assert rrt.func(x + 1j * y) == np.angle(x + 1j * y)
 
     def test_scale(self):
         """Test that the neg function creates a regref transform that negates"""
@@ -75,7 +76,7 @@ class TestConvertFunctions:
         rrt = utils.scale(q[0], a)
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
-        assert rrt.func(x) == a*x
+        assert rrt.func(x) == a * x
 
     def test_shift(self):
         """Test that the neg function creates a regref transform that negates"""
@@ -85,7 +86,7 @@ class TestConvertFunctions:
         rrt = utils.shift(q[0], a)
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
-        assert rrt.func(x) == a+x
+        assert rrt.func(x) == a + x
 
     def test_scale_shift(self):
         """Test that the neg function creates a regref transform that negates"""
@@ -96,7 +97,7 @@ class TestConvertFunctions:
         rrt = utils.scale_shift(q[0], a, b)
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
-        assert rrt.func(x) == a*x+b
+        assert rrt.func(x) == a * x + b
 
     def test_power_positive_frac(self):
         """Test that the neg function creates a regref transform that negates"""
@@ -106,7 +107,7 @@ class TestConvertFunctions:
         rrt = utils.power(q[0], a)
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
-        assert rrt.func(x) == x**a
+        assert rrt.func(x) == x ** a
 
     def test_power_negative_int(self):
         """Test that the neg function creates a regref transform that negates"""
@@ -116,7 +117,7 @@ class TestConvertFunctions:
         rrt = utils.power(q[0], a)
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
-        assert rrt.func(x) == x**a
+        assert rrt.func(x) == x ** a
 
 
 # ===================================================================================
@@ -127,118 +128,160 @@ class TestConvertFunctions:
 class TestInitialStates:
     """unit tests for the initial state function utilities"""
 
-    @pytest.mark.parametrize('r, phi', zip(R, PHI))
+    @pytest.mark.parametrize("r, phi", zip(R, PHI))
     def test_squeezed_cov(self, hbar, r, phi, tol):
         """test squeezed covariance utility function returns correct covariance"""
         cov = utils.squeezed_cov(r, phi, hbar=hbar)
 
-        expected = (hbar/2)*np.array([
-            [np.cosh(2*r)-np.cos(phi)*np.sinh(2*r), -2*np.cosh(r)*np.sin(phi)*np.sinh(r)],
-            [-2*np.cosh(r)*np.sin(phi)*np.sinh(r),  np.cosh(2*r)+np.cos(phi)*np.sinh(2*r)]
-            ])
+        expected = (hbar / 2) * np.array(
+            [
+                [
+                    np.cosh(2 * r) - np.cos(phi) * np.sinh(2 * r),
+                    -2 * np.cosh(r) * np.sin(phi) * np.sinh(r),
+                ],
+                [
+                    -2 * np.cosh(r) * np.sin(phi) * np.sinh(r),
+                    np.cosh(2 * r) + np.cos(phi) * np.sinh(2 * r),
+                ],
+            ]
+        )
 
         assert np.allclose(cov, expected, atol=tol, rtol=0)
 
     def test_vacuum_state_gaussian(self, hbar):
         """test vacuum state returns correct means and covariance"""
-        means, cov = utils.vacuum_state(basis='gaussian', hbar=hbar)
+        means, cov = utils.vacuum_state(basis="gaussian", hbar=hbar)
         assert np.all(means == np.zeros(2))
-        assert np.all(cov == np.identity(2)*hbar/2)
+        assert np.all(cov == np.identity(2) * hbar / 2)
 
     def test_vacuum_state_fock(self, cutoff, hbar):
         """test vacuum state returns correct state vector"""
-        state = utils.vacuum_state(basis='fock', hbar=hbar, fock_dim=cutoff)
+        state = utils.vacuum_state(basis="fock", hbar=hbar, fock_dim=cutoff)
         assert np.all(state == np.eye(1, cutoff, 0))
 
-    @pytest.mark.parametrize('alpha', ALPHA)
+    @pytest.mark.parametrize("alpha", ALPHA)
     def test_coherent_state_gaussian(self, alpha, hbar):
         """test coherent state returns correct means and covariance"""
-        means, cov = utils.coherent_state(alpha, basis='gaussian', hbar=hbar)
-        means_expected = np.array([alpha.real, alpha.imag])*np.sqrt(2*hbar)
+        means, cov = utils.coherent_state(alpha, basis="gaussian", hbar=hbar)
+        means_expected = np.array([alpha.real, alpha.imag]) * np.sqrt(2 * hbar)
         assert np.all(means == means_expected)
-        assert np.all(cov == np.identity(2)*hbar/2)
+        assert np.all(cov == np.identity(2) * hbar / 2)
 
-    @pytest.mark.parametrize('alpha', ALPHA)
+    @pytest.mark.parametrize("alpha", ALPHA)
     def test_coherent_state_fock(self, alpha, cutoff, hbar, tol):
         """test coherent state returns correct Fock basis state vector"""
-        state = utils.coherent_state(alpha, basis='fock', fock_dim=cutoff, hbar=hbar)
+        state = utils.coherent_state(alpha, basis="fock", fock_dim=cutoff, hbar=hbar)
         n = np.arange(cutoff)
-        expected = np.exp(-0.5*np.abs(alpha)**2)*alpha**n/np.sqrt(fac(n))
+        expected = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
         assert np.allclose(state, expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize('r, phi', zip(R, PHI))
+    @pytest.mark.parametrize("r, phi", zip(R, PHI))
     def test_squeezed_state_gaussian(self, r, phi, hbar, tol):
         """test squeezed state returns correct means and covariance"""
-        means, cov = utils.squeezed_state(r, phi, basis='gaussian', hbar=hbar)
+        means, cov = utils.squeezed_state(r, phi, basis="gaussian", hbar=hbar)
 
-        cov_expected = (hbar/2)*np.array([
-            [np.cosh(2*r)-np.cos(phi)*np.sinh(2*r), -2*np.cosh(r)*np.sin(phi)*np.sinh(r)],
-            [-2*np.cosh(r)*np.sin(phi)*np.sinh(r),  np.cosh(2*r)+np.cos(phi)*np.sinh(2*r)]
-            ])
+        cov_expected = (hbar / 2) * np.array(
+            [
+                [
+                    np.cosh(2 * r) - np.cos(phi) * np.sinh(2 * r),
+                    -2 * np.cosh(r) * np.sin(phi) * np.sinh(r),
+                ],
+                [
+                    -2 * np.cosh(r) * np.sin(phi) * np.sinh(r),
+                    np.cosh(2 * r) + np.cos(phi) * np.sinh(2 * r),
+                ],
+            ]
+        )
 
         assert np.all(means == np.zeros([2]))
         assert np.allclose(cov, cov_expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize('r, phi', zip(R, PHI))
+    @pytest.mark.parametrize("r, phi", zip(R, PHI))
     def test_squeezed_state_fock(self, r, phi, cutoff, hbar, tol):
         """test squeezed state returns correct Fock basis state vector"""
-        state = utils.squeezed_state(r, phi, basis='fock', fock_dim=cutoff, hbar=hbar)
+        state = utils.squeezed_state(r, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
 
         n = np.arange(cutoff)
-        kets = (np.sqrt(fac(2*(n//2)))/(2**(n//2)*fac(n//2)))*(-np.exp(1j*phi)*np.tanh(r))**(n//2)
-        expected = np.where(n%2 == 0, np.sqrt(1/np.cosh(r))*kets, 0)
+        kets = (np.sqrt(fac(2 * (n // 2))) / (2 ** (n // 2) * fac(n // 2))) * (
+            -np.exp(1j * phi) * np.tanh(r)
+        ) ** (n // 2)
+        expected = np.where(n % 2 == 0, np.sqrt(1 / np.cosh(r)) * kets, 0)
 
         assert np.allclose(state, expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize('a, r, phi', zip(ALPHA, R, PHI))
+    @pytest.mark.parametrize("a, r, phi", zip(ALPHA, R, PHI))
     def test_displaced_squeezed_state_gaussian(self, a, r, phi, hbar, tol):
         """test displaced squeezed state returns correct means and covariance"""
-        means, cov = utils.displaced_squeezed_state(a, r, phi, basis='gaussian', hbar=hbar)
+        means, cov = utils.displaced_squeezed_state(
+            a, r, phi, basis="gaussian", hbar=hbar
+        )
 
-        means_expected = np.array([[a.real, a.imag]])*np.sqrt(2*hbar)
-        cov_expected = (hbar/2)*np.array([
-            [np.cosh(2*r)-np.cos(phi)*np.sinh(2*r), -2*np.cosh(r)*np.sin(phi)*np.sinh(r)],
-            [-2*np.cosh(r)*np.sin(phi)*np.sinh(r),  np.cosh(2*r)+np.cos(phi)*np.sinh(2*r)]
-            ])
+        means_expected = np.array([[a.real, a.imag]]) * np.sqrt(2 * hbar)
+        cov_expected = (hbar / 2) * np.array(
+            [
+                [
+                    np.cosh(2 * r) - np.cos(phi) * np.sinh(2 * r),
+                    -2 * np.cosh(r) * np.sin(phi) * np.sinh(r),
+                ],
+                [
+                    -2 * np.cosh(r) * np.sin(phi) * np.sinh(r),
+                    np.cosh(2 * r) + np.cos(phi) * np.sinh(2 * r),
+                ],
+            ]
+        )
 
         assert np.allclose(means, means_expected, atol=tol, rtol=0)
         assert np.allclose(cov, cov_expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize('a, r, phi', zip(ALPHA, R, PHI))
+    @pytest.mark.parametrize("a, r, phi", zip(ALPHA, R, PHI))
     def test_displaced_squeezed_state_fock(self, a, r, phi, hbar, cutoff, tol):
         """test displaced squeezed state returns correct Fock basis state vector"""
-        state = utils.displaced_squeezed_state(a, r, phi, basis='fock', fock_dim=cutoff, hbar=hbar)
+        state = utils.displaced_squeezed_state(
+            a, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
+        )
 
         if r == 0:
-            pytest.skip('test only non-zero squeezing')
+            pytest.skip("test only non-zero squeezing")
 
         n = np.arange(cutoff)
-        gamma = a*np.cosh(r) + np.conj(a)*np.exp(1j*phi)*np.sinh(r)
-        coeff = np.diag((0.5*np.exp(1j*phi)*np.tanh(r))**(n/2)/np.sqrt(fac(n)*np.cosh(r)))
+        gamma = a * np.cosh(r) + np.conj(a) * np.exp(1j * phi) * np.sinh(r)
+        coeff = np.diag(
+            (0.5 * np.exp(1j * phi) * np.tanh(r)) ** (n / 2)
+            / np.sqrt(fac(n) * np.cosh(r))
+        )
 
-        expected = H(gamma/np.sqrt(np.exp(1j*phi)*np.sinh(2*r)), coeff)
-        expected *= np.exp(-0.5*np.abs(a)**2-0.5*np.conj(a)**2*np.exp(1j*phi)*np.tanh(r))
+        expected = H(gamma / np.sqrt(np.exp(1j * phi) * np.sinh(2 * r)), coeff)
+        expected *= np.exp(
+            -0.5 * np.abs(a) ** 2
+            - 0.5 * np.conj(a) ** 2 * np.exp(1j * phi) * np.tanh(r)
+        )
 
         assert np.allclose(state, expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize('a, phi', zip(ALPHA, PHI))
+    @pytest.mark.parametrize("a, phi", zip(ALPHA, PHI))
     def test_displaced_squeezed_fock_no_squeezing(self, a, phi, hbar, cutoff, tol):
         """test displaced squeezed state returns coherent state when there is no squeezing"""
-        state = utils.displaced_squeezed_state(a, 0, phi, basis='fock', fock_dim=cutoff, hbar=hbar)
+        state = utils.displaced_squeezed_state(
+            a, 0, phi, basis="fock", fock_dim=cutoff, hbar=hbar
+        )
 
         n = np.arange(cutoff)
-        expected = np.exp(-0.5*np.abs(a)**2)*a**n/np.sqrt(fac(n))
+        expected = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n))
 
         assert np.allclose(state, expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize('r, phi', zip(R, PHI))
+    @pytest.mark.parametrize("r, phi", zip(R, PHI))
     def test_displaced_squeezed_fock_no_displacement(self, r, phi, hbar, cutoff, tol):
         """test displaced squeezed state returns squeezed state when there is no displacement"""
-        state = utils.displaced_squeezed_state(0, r, phi, basis='fock', fock_dim=cutoff, hbar=hbar)
+        state = utils.displaced_squeezed_state(
+            0, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
+        )
 
         n = np.arange(cutoff)
-        kets = (np.sqrt(fac(2*(n//2)))/(2**(n//2)*fac(n//2)))*(-np.exp(1j*phi)*np.tanh(r))**(n//2)
-        expected = np.where(n%2 == 0, np.sqrt(1/np.cosh(r))*kets, 0)
+        kets = (np.sqrt(fac(2 * (n // 2))) / (2 ** (n // 2) * fac(n // 2))) * (
+            -np.exp(1j * phi) * np.tanh(r)
+        ) ** (n // 2)
+        expected = np.where(n % 2 == 0, np.sqrt(1 / np.cosh(r)) * kets, 0)
 
         assert np.allclose(state, expected, atol=tol, rtol=0)
 
@@ -258,8 +301,9 @@ class TestInitialStates:
         state = utils.cat_state(a, p, fock_dim=cutoff)
 
         n = np.arange(cutoff)
-        expected = np.exp(-0.5*np.abs(a)**2)*a**n/np.sqrt(fac(n)) \
-                    + np.exp(-0.5*np.abs(-a)**2)*(-a)**n/np.sqrt(fac(n))
+        expected = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n)) + np.exp(
+            -0.5 * np.abs(-a) ** 2
+        ) * (-a) ** n / np.sqrt(fac(n))
         expected /= np.linalg.norm(expected)
 
         assert np.allclose(state, expected, atol=tol, rtol=0)
@@ -273,8 +317,9 @@ class TestInitialStates:
         state = utils.cat_state(a, p, fock_dim=cutoff)
 
         n = np.arange(cutoff)
-        expected = np.exp(-0.5*np.abs(a)**2)*a**n/np.sqrt(fac(n)) \
-                    - np.exp(-0.5*np.abs(-a)**2)*(-a)**n/np.sqrt(fac(n))
+        expected = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n)) - np.exp(
+            -0.5 * np.abs(-a) ** 2
+        ) * (-a) ** n / np.sqrt(fac(n))
         expected /= np.linalg.norm(expected)
 
         assert np.allclose(state, expected, atol=tol, rtol=0)
@@ -293,69 +338,79 @@ class TestRandomMatrices:
         """Number of modes to use when creating matrices"""
         return 3
 
-    @pytest.mark.parametrize('pure_state', [True, False])
+    @pytest.mark.parametrize("pure_state", [True, False])
     def test_random_covariance_square(self, modes, hbar, pure_state):
         """Test that a random covariance matrix is the right shape"""
         V = utils.random_covariance(modes, hbar=hbar, pure=pure_state)
-        assert np.all(V.shape == np.array([2*modes, 2*modes]))
+        assert np.all(V.shape == np.array([2 * modes, 2 * modes]))
 
-    @pytest.mark.parametrize('pure_state', [True, False])
+    @pytest.mark.parametrize("pure_state", [True, False])
     def test_random_covariance_symmetric(self, modes, hbar, pure_state, tol):
         """Test that a random covariance matrix is symmetric"""
         V = utils.random_covariance(modes, hbar=hbar, pure=pure_state)
         assert np.allclose(V.T, V, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize('pure_state', [True, False])
+    @pytest.mark.parametrize("pure_state", [True, False])
     def test_random_covariance_valid(self, modes, hbar, pure_state, tol):
         """Test that a random covariance matrix satisfies the uncertainty principle V+i hbar O/2 >=0"""
         V = utils.random_covariance(modes, hbar=hbar, pure=pure_state)
 
         idm = np.identity(modes)
-        omega = np.concatenate((np.concatenate((0*idm, idm), axis=1),
-                                np.concatenate((-idm, 0*idm), axis=1)), axis=0)
+        omega = np.concatenate(
+            (
+                np.concatenate((0 * idm, idm), axis=1),
+                np.concatenate((-idm, 0 * idm), axis=1),
+            ),
+            axis=0,
+        )
 
-        eigs = np.linalg.eigvalsh(V+1j*(hbar/2)*omega)
+        eigs = np.linalg.eigvalsh(V + 1j * (hbar / 2) * omega)
         eigs[np.abs(eigs) < tol] = 0
         assert np.all(eigs >= 0)
 
     def test_random_covariance_pure(self, modes, hbar, tol):
         """Test that a pure random covariance matrix has correct purity"""
         V = utils.random_covariance(modes, hbar=hbar, pure=True)
-        det = np.linalg.det(V) - (hbar/2)**(2*modes)
+        det = np.linalg.det(V) - (hbar / 2) ** (2 * modes)
         assert np.allclose(det, 0, atol=tol, rtol=0)
 
     def test_random_covariance_mixed(self, modes, hbar, tol):
         """Test that a mixed random covariance matrix has correct purity"""
         V = utils.random_covariance(modes, hbar=hbar, pure=False)
-        det = np.linalg.det(V) - (hbar/2)**(2*modes)
+        det = np.linalg.det(V) - (hbar / 2) ** (2 * modes)
         assert not np.allclose(det, 0, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize('passive', [True, False])
+    @pytest.mark.parametrize("passive", [True, False])
     def test_random_symplectic_square(self, modes, hbar, passive):
         """Test that a random symplectic matrix on is the right shape"""
         S = utils.random_symplectic(modes, passive=passive)
-        assert np.all(S.shape == np.array([2*modes, 2*modes]))
+        assert np.all(S.shape == np.array([2 * modes, 2 * modes]))
 
-    @pytest.mark.parametrize('passive', [True, False])
+    @pytest.mark.parametrize("passive", [True, False])
     def test_random_symplectic_symplectic(self, modes, hbar, passive, tol):
         """Test that a random symplectic matrix is symplectic"""
         S = utils.random_symplectic(modes, passive=passive)
 
         idm = np.identity(modes)
-        omega = np.concatenate((np.concatenate((0*idm, idm), axis=1),
-                                np.concatenate((-idm, 0*idm), axis=1)), axis=0)
+        omega = np.concatenate(
+            (
+                np.concatenate((0 * idm, idm), axis=1),
+                np.concatenate((-idm, 0 * idm), axis=1),
+            ),
+            axis=0,
+        )
 
         assert np.allclose(S @ omega @ S.T, omega, atol=tol, rtol=0)
 
     def test_random_symplectic_passive_orthogonal(self, modes, hbar, tol):
         """Test that a passive random symplectic matrix is orthogonal"""
         S = utils.random_symplectic(modes, passive=True)
-        assert np.allclose(S @ S.T, np.identity(2*modes), atol=tol, rtol=0)
+        assert np.allclose(S @ S.T, np.identity(2 * modes), atol=tol, rtol=0)
 
     def test_random_symplectic_active_not_orthogonal(self, modes, hbar, tol):
         """Test that an active random symplectic matrix is not orthogonal"""
         S = utils.random_symplectic(modes, passive=False)
-        assert not np.allclose(S @ S.T, np.identity(2*modes), atol=tol, rtol=0)
+        assert not np.allclose(S @ S.T, np.identity(2 * modes), atol=tol, rtol=0)
 
     def test_random_inteferometer_is_square(self, modes):
         """Test that a random interferometer is square"""
@@ -378,8 +433,9 @@ class TestOperation:
 
     def test_applying_decorator(self):
         """Test the __call__ method of the operation class"""
+
         def f(x):
-            return x**2
+            return x ** 2
 
         op = utils.operation(ns=1)
         op(f)(0, 6, 3)
@@ -389,6 +445,7 @@ class TestOperation:
 
     def test_no_arg_call_function(self):
         """Test exception raised if the wrapped function doesn't accept a register"""
+
         def dummy_func():
             Sgate(r) | q[0]
             BSgate() | (q[0], q[1])
@@ -403,6 +460,7 @@ class TestOperation:
 
     def test_incorrect_arg_num_call_function(self):
         """Test exception raised if the wrapped function is called with wrong number of args"""
+
         def dummy_func(r, q):
             Sgate(r) | q[0]
             BSgate() | (q[0], q[1])
@@ -528,6 +586,7 @@ class TestOperation:
 # Engine utility tests
 # ===================================================================================
 
+
 class TestEngineUtilityFunctions:
     """Tests for some engine auxiliary functions"""
 
@@ -599,20 +658,29 @@ class TestEngineUtilityFunctions:
         """Test vectorize and unvectorize utility function"""
         cutoff = 4
 
-        dm = np.random.rand(*[cutoff]*8) + 1j*np.random.rand(*[cutoff]*8) # 4^8 -> (4^2)^4 -> 4^8
-        dm2 = np.random.rand(*[cutoff]*4) + 1j*np.random.rand(*[cutoff]*4) # (2^2)^4 -> 2^8 -> (2^2)^4
+        dm = np.random.rand(*[cutoff] * 8) + 1j * np.random.rand(
+            *[cutoff] * 8
+        )  # 4^8 -> (4^2)^4 -> 4^8
+        dm2 = np.random.rand(*[cutoff] * 4) + 1j * np.random.rand(
+            *[cutoff] * 4
+        )  # (2^2)^4 -> 2^8 -> (2^2)^4
 
-        assert np.allclose(dm, utils._unvectorize(utils._vectorize(dm), 2), atol=tol, rtol=0)
-        assert np.allclose(dm2, utils._vectorize(utils._unvectorize(dm2, 2)), atol=tol, rtol=0)
+        assert np.allclose(
+            dm, utils._unvectorize(utils._vectorize(dm), 2), atol=tol, rtol=0
+        )
+        assert np.allclose(
+            dm2, utils._vectorize(utils._unvectorize(dm2, 2)), atol=tol, rtol=0
+        )
 
     def test_interleaved_identities(self, tol):
         """Test interleaved utility function"""
 
         II = utils._interleaved_identities(num_subsystems=2, cutoff_dim=3)
-        assert np.allclose(np.einsum('abab', II), 3**2, atol=tol, rtol=0)
+        assert np.allclose(np.einsum("abab", II), 3 ** 2, atol=tol, rtol=0)
 
         III = utils._interleaved_identities(num_subsystems=3, cutoff_dim=5)
-        assert np.allclose(np.einsum('abcabc', III), 5**3, atol=tol, rtol=0)
+        assert np.allclose(np.einsum("abcabc", III), 5 ** 3, atol=tol, rtol=0)
+
 
 # TODO: add unit tests for _engine_with_CJ_cmd_queue
 # extract_unitary, extract_channel

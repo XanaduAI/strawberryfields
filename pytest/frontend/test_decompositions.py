@@ -13,6 +13,7 @@
 # limitations under the License.
 r"""Unit tests for the Strawberry Fields decompositions module"""
 import pytest
+
 pytestmark = pytest.mark.frontend
 
 import numpy as np
@@ -33,8 +34,13 @@ np.random.seed(42)
 def omega(n):
     """Returns the symplectic matrix for n modes"""
     idm = np.identity(n)
-    omega = np.concatenate((np.concatenate((0*idm, idm), axis=1),
-                            np.concatenate((-idm, 0*idm), axis=1)), axis=0)
+    omega = np.concatenate(
+        (
+            np.concatenate((0 * idm, idm), axis=1),
+            np.concatenate((-idm, 0 * idm), axis=1),
+        ),
+        axis=0,
+    )
     return omega
 
 
@@ -48,10 +54,10 @@ def haar_measure(n):
     Returns:
         array: an nxn random matrix
     """
-    z = (sp.randn(n, n) + 1j*sp.randn(n, n))/np.sqrt(2.0)
+    z = (sp.randn(n, n) + 1j * sp.randn(n, n)) / np.sqrt(2.0)
     q, r = qr(z)
     d = sp.diagonal(r)
-    ph = d/np.abs(d)
+    ph = d / np.abs(d)
     q = np.multiply(q, ph, q)
     return q
 
@@ -61,20 +67,20 @@ class TestTakagi:
 
     def test_square_validation(self):
         """Test that the takagi decomposition raises exception if not square"""
-        A = np.random.random([4, 5]) + 1j*np.random.random([4, 5])
+        A = np.random.random([4, 5]) + 1j * np.random.random([4, 5])
         with pytest.raises(ValueError, match="matrix must be square"):
             dec.takagi(A)
 
     def test_symmetric_validation(self):
         """Test that the takagi decomposition raises exception if not symmetric"""
-        A = np.random.random([5, 5]) + 1j*np.random.random([5, 5])
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         with pytest.raises(ValueError, match="matrix is not symmetric"):
             dec.takagi(A)
 
     def test_random_symm(self, tol):
         """Verify that the Takagi decomposition, applied to a random symmetric
         matrix, produced a decomposition that can be used to reconstruct the matrix."""
-        A = np.random.random([6, 6]) + 1j*np.random.random([6, 6])
+        A = np.random.random([6, 6]) + 1j * np.random.random([6, 6])
         A += A.T
         rl, U = dec.takagi(A)
         res = U @ np.diag(rl) @ U.T
@@ -86,13 +92,13 @@ class TestGraphEmbed:
 
     def test_square_validation(self):
         """Test that the graph_embed decomposition raises exception if not square"""
-        A = np.random.random([4, 5]) + 1j*np.random.random([4, 5])
+        A = np.random.random([4, 5]) + 1j * np.random.random([4, 5])
         with pytest.raises(ValueError, match="Matrix is not square"):
             dec.graph_embed(A)
 
     def test_symmetric_validation(self):
         """Test that the graph_embed decomposition raises exception if not symmetric"""
-        A = np.random.random([5, 5]) + 1j*np.random.random([5, 5])
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         with pytest.raises(ValueError, match="matrix is not symmetric"):
             dec.graph_embed(A)
 
@@ -100,16 +106,16 @@ class TestGraphEmbed:
         """This test verifies that the maximum amount of squeezing used to encode
         the graph is indeed capped by the parameter max_mean_photon"""
         max_mean_photon = 2
-        A = np.random.random([6, 6]) + 1j*np.random.random([6, 6])
+        A = np.random.random([6, 6]) + 1j * np.random.random([6, 6])
         A += A.T
         sc, U = dec.graph_embed(A, max_mean_photon=max_mean_photon)
-        res_mean_photon = np.sinh(np.max(np.abs(sc)))**2
+        res_mean_photon = np.sinh(np.max(np.abs(sc))) ** 2
 
         assert np.allclose(res_mean_photon, max_mean_photon, atol=tol, rtol=0)
 
     def test_make_traceless(self, monkeypatch, tol):
         """Test that A is properly made traceless"""
-        A = np.random.random([6, 6]) + 1j*np.random.random([6, 6])
+        A = np.random.random([6, 6]) + 1j * np.random.random([6, 6])
         A += A.T
 
         assert not np.allclose(np.trace(A), 0, atol=tol, rtol=0)
@@ -117,7 +123,7 @@ class TestGraphEmbed:
         with monkeypatch.context() as m:
             # monkeypatch the takagi function to simply return A,
             # so that we can inspect it and make sure it is now traceless
-            m.setattr(dec, 'takagi', lambda A, tol: (np.ones([6]), A))
+            m.setattr(dec, "takagi", lambda A, tol: (np.ones([6]), A))
             _, A_out = dec.graph_embed(A, make_traceless=True)
 
         assert np.allclose(np.trace(A_out), 0, atol=tol, rtol=0)
@@ -128,7 +134,7 @@ class TestRectangularDecomposition:
 
     def test_unitary_validation(self):
         """Test that an exception is raised if not unitary"""
-        A = np.random.random([5, 5]) + 1j*np.random.random([5, 5])
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         with pytest.raises(ValueError, match="matrix is not unitary"):
             dec.clements(A)
 
@@ -214,7 +220,7 @@ class TestTriangularDecomposition:
 
     def test_unitary_validation(self):
         """Test that an exception is raised if not unitary"""
-        A = np.random.random([5, 5]) + 1j*np.random.random([5, 5])
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         with pytest.raises(ValueError, match="matrix is not unitary"):
             dec.triangular_decomposition(A)
 
@@ -282,19 +288,23 @@ class TestWilliamsonDecomposition:
             O = omega(n)
 
             # initial vacuum state
-            cov = np.diag(2*np.tile(nbar, 2)+1)*hbar/2
+            cov = np.diag(2 * np.tile(nbar, 2) + 1) * hbar / 2
 
             # interferometer 1
             U1 = haar_measure(n)
-            S1 = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
+            S1 = np.vstack(
+                [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
+            )
 
             # squeezing
-            r = np.log(0.2*np.arange(n)+2)
+            r = np.log(0.2 * np.arange(n) + 2)
             Sq = block_diag(np.diag(np.exp(-r)), np.diag(np.exp(r)))
 
             # interferometer 2
             U2 = haar_measure(n)
-            S2 = np.vstack([np.hstack([U2.real, -U2.imag]), np.hstack([U2.imag, U2.real])])
+            S2 = np.vstack(
+                [np.hstack([U2.real, -U2.imag]), np.hstack([U2.imag, U2.real])]
+            )
 
             # final symplectic
             S_final = S2 @ Sq @ S1
@@ -306,37 +316,40 @@ class TestWilliamsonDecomposition:
             assert np.allclose(S_final.T @ O @ S_final, O)
 
             # check valid state
-            eigs = np.linalg.eigvalsh(cov_final+1j*(hbar/2)*O)
+            eigs = np.linalg.eigvalsh(cov_final + 1j * (hbar / 2) * O)
             eigs[np.abs(eigs) < tol] = 0
             assert np.all(eigs >= 0)
 
             if np.allclose(nbar, 0):
                 # check pure
-                assert np.allclose(np.linalg.det(cov_final), (hbar/2)**(2*n))
+                assert np.allclose(np.linalg.det(cov_final), (hbar / 2) ** (2 * n))
             else:
                 # check not pure
-                assert not np.allclose(np.linalg.det(cov_final), (hbar/2)**(2*n))
+                assert not np.allclose(np.linalg.det(cov_final), (hbar / 2) ** (2 * n))
 
             return cov_final, S_final
+
         return _create_cov
 
     def test_square_validation(self):
         """Test that the graph_embed decomposition raises exception if not square"""
-        A = np.random.random([4, 5]) + 1j*np.random.random([4, 5])
+        A = np.random.random([4, 5]) + 1j * np.random.random([4, 5])
         with pytest.raises(ValueError, match="matrix is not square"):
             dec.williamson(A)
 
     def test_symmetric_validation(self):
         """Test that the graph_embed decomposition raises exception if not symmetric"""
-        A = np.random.random([5, 5]) + 1j*np.random.random([5, 5])
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         with pytest.raises(ValueError, match="matrix is not symmetric"):
             dec.williamson(A)
 
     def test_even_validation(self):
         """Test that the graph_embed decomposition raises exception if not even number of rows"""
-        A = np.random.random([5, 5]) + 1j*np.random.random([5, 5])
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         A += A.T
-        with pytest.raises(ValueError, match="must have an even number of rows/columns"):
+        with pytest.raises(
+            ValueError, match="must have an even number of rows/columns"
+        ):
             dec.williamson(A)
 
     def test_positive_definite_validation(self):
@@ -347,7 +360,7 @@ class TestWilliamsonDecomposition:
 
     def test_vacuum_state(self, tol, hbar):
         """Test vacuum state"""
-        V = np.identity(4)*hbar/2
+        V = np.identity(4) * hbar / 2
         Db, S = dec.williamson(V)
         assert np.allclose(Db, np.identity(4), atol=tol, rtol=0)
         assert np.allclose(S, np.identity(4), atol=tol, rtol=0)
@@ -360,7 +373,7 @@ class TestWilliamsonDecomposition:
         cov, _ = create_cov(np.zeros([n]))
 
         Db, S = dec.williamson(cov)
-        nbar = np.diag(Db)/hbar - 0.5
+        nbar = np.diag(Db) / hbar - 0.5
 
         # check decomposition is correct
         assert np.allclose(S @ Db @ S.T, cov, atol=tol, rtol=0)
@@ -378,7 +391,7 @@ class TestWilliamsonDecomposition:
         cov, _ = create_cov(nbar_in)
 
         Db, S = dec.williamson(cov)
-        nbar = np.diag(Db)/hbar - 0.5
+        nbar = np.diag(Db) / hbar - 0.5
 
         # check decomposition is correct
         assert np.allclose(S @ Db @ S.T, cov, atol=tol, rtol=0)
@@ -409,17 +422,21 @@ class TestBlochMessiahDecomposition:
 
             # interferometer 1
             U1 = haar_measure(n)
-            S1 = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
+            S1 = np.vstack(
+                [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
+            )
 
-            Sq = np.identity(2*n)
+            Sq = np.identity(2 * n)
             if not passive:
                 # squeezing
-                r = np.log(0.2*np.arange(n)+2)
+                r = np.log(0.2 * np.arange(n) + 2)
                 Sq = block_diag(np.diag(np.exp(-r)), np.diag(np.exp(r)))
 
             # interferometer 2
             U2 = haar_measure(n)
-            S2 = np.vstack([np.hstack([U2.real, -U2.imag]), np.hstack([U2.imag, U2.real])])
+            S2 = np.vstack(
+                [np.hstack([U2.real, -U2.imag]), np.hstack([U2.imag, U2.real])]
+            )
 
             # final symplectic
             S_final = S2 @ Sq @ S1
@@ -427,36 +444,39 @@ class TestBlochMessiahDecomposition:
             # check valid symplectic transform
             assert np.allclose(S_final.T @ O @ S_final, O)
             return S_final
+
         return _create_transform
 
     def test_square_validation(self):
         """Test raises exception if not square"""
-        A = np.random.random([4, 5]) + 1j*np.random.random([4, 5])
+        A = np.random.random([4, 5]) + 1j * np.random.random([4, 5])
         with pytest.raises(ValueError, match="matrix is not square"):
             dec.bloch_messiah(A)
 
     def test_symmplectic(self):
         """Test raises exception if not symmetric"""
-        A = np.random.random([6, 6]) + 1j*np.random.random([6, 6])
+        A = np.random.random([6, 6]) + 1j * np.random.random([6, 6])
         A += A.T
         with pytest.raises(ValueError, match="matrix is not symplectic"):
             dec.bloch_messiah(A)
 
     def test_even_validation(self):
         """Test raises exception if not even number of rows"""
-        A = np.random.random([5, 5]) + 1j*np.random.random([5, 5])
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         A += A.T
-        with pytest.raises(ValueError, match="must have an even number of rows/columns"):
+        with pytest.raises(
+            ValueError, match="must have an even number of rows/columns"
+        ):
             dec.bloch_messiah(A)
 
     def test_identity(self, tol):
         """Test identity"""
         n = 2
-        S_in = np.identity(2*n)
+        S_in = np.identity(2 * n)
         O1, S, O2 = dec.bloch_messiah(S_in)
 
-        assert np.allclose(O1 @ O2, np.identity(2*n), atol=tol, rtol=0)
-        assert np.allclose(S, np.identity(2*n), atol=tol, rtol=0)
+        assert np.allclose(O1 @ O2, np.identity(2 * n), atol=tol, rtol=0)
+        assert np.allclose(S, np.identity(2 * n), atol=tol, rtol=0)
 
         # test orthogonality
         assert np.allclose(O1.T, O1, atol=tol, rtol=0)
@@ -479,11 +499,11 @@ class TestBlochMessiahDecomposition:
 
         # test no squeezing
         assert np.allclose(O1 @ O2, S_in, atol=tol, rtol=0)
-        assert np.allclose(S, np.identity(2*n), atol=tol, rtol=0)
+        assert np.allclose(S, np.identity(2 * n), atol=tol, rtol=0)
 
         # test orthogonality
-        assert np.allclose(O1.T @ O1, np.identity(2*n), atol=tol, rtol=0)
-        assert np.allclose(O2.T @ O2, np.identity(2*n), atol=tol, rtol=0)
+        assert np.allclose(O1.T @ O1, np.identity(2 * n), atol=tol, rtol=0)
+        assert np.allclose(O2.T @ O2, np.identity(2 * n), atol=tol, rtol=0)
 
         # test symplectic
         O = omega(n)
@@ -502,8 +522,8 @@ class TestBlochMessiahDecomposition:
         assert np.allclose(O1 @ S @ O2, S_in, atol=tol, rtol=0)
 
         # test orthogonality
-        assert np.allclose(O1.T @ O1, np.identity(2*n), atol=tol, rtol=0)
-        assert np.allclose(O2.T @ O2, np.identity(2*n), atol=tol, rtol=0)
+        assert np.allclose(O1.T @ O1, np.identity(2 * n), atol=tol, rtol=0)
+        assert np.allclose(O2.T @ O2, np.identity(2 * n), atol=tol, rtol=0)
 
         # test symplectic
         O = omega(n)
