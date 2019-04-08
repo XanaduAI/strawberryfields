@@ -596,8 +596,11 @@ class Decomposition(Operation):
             # check if the matrices cancel
             if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
                 return None
-            new_decomp = self.__class__(U)
-            return new_decomp
+
+            if hasattr(self, 'hbar'):
+                return self.__class__(U, hbar=self.hbar)
+
+            return self.__class__(U)
         else:
             raise MergeFailure('Not the same decomposition type.')
 
