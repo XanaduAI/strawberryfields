@@ -25,15 +25,17 @@ from strawberryfields.parameters import Parameter
 # make test deterministic
 np.random.random(32)
 
-test_parameters = [
-    Parameter(3),
-    Parameter(0.14),
-    Parameter(4.2 + 0.5j),
-    Parameter(np.random.random(3)),
-    Parameter(tf.Variable(2)),
-    Parameter(tf.Variable(0.4)),
-    Parameter(tf.Variable(0.8 + 1.1j)),
+test_values = [
+    3,
+    0.14,
+    4.2 + 0.5j,
+    np.random.random(3),
+    tf.Variable(2),
+    tf.Variable(0.4),
+    tf.Variable(0.8 + 1.1j),
 ]
+
+test_parameters = [Parameter(i) for i in test_values]
 
 
 def test_parameter_wrapping_integer():
@@ -79,6 +81,30 @@ def test_parameter_shape_tf():
 @pytest.mark.parametrize("p", test_parameters)
 @pytest.mark.parametrize("q", test_parameters)
 def test_parameter_arithmetic(p, q):
+    """Test parameter addition works as expected"""
+    # TODO: make sure values are actually adding/etc together!
+    assert isinstance(p + q, Parameter)
+    assert isinstance(p - q, Parameter)
+    assert isinstance(p * q, Parameter)
+    assert isinstance(p / q, Parameter)
+    assert isinstance(p ** q, Parameter)
+
+
+@pytest.mark.parametrize("p", test_values)
+@pytest.mark.parametrize("q", test_parameters)
+def test_parameter_left_literal_arithmetic(p, q):
+    """Test parameter addition works as expected"""
+    # TODO: make sure values are actually adding/etc together!
+    assert isinstance(p + q, Parameter)
+    assert isinstance(p - q, Parameter)
+    assert isinstance(p * q, Parameter)
+    assert isinstance(p / q, Parameter)
+    assert isinstance(p ** q, Parameter)
+
+
+@pytest.mark.parametrize("p", test_parameters)
+@pytest.mark.parametrize("q", test_values)
+def test_parameter_right_literal_arithmetic(p, q):
     """Test parameter addition works as expected"""
     # TODO: make sure values are actually adding/etc together!
     assert isinstance(p + q, Parameter)
