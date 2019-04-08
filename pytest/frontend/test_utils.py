@@ -37,82 +37,82 @@ PHI = np.linspace(0, 1.43, 4)
 class TestConvertFunctions:
     """Unit tests for convert utility functions"""
 
-    def test_neg(self, setup_eng):
+    def test_neg(self):
         """Test that the neg function creates a regref transform that negates"""
         a = 0.4532
 
-        eng, q = setup_eng(1)
+        eng, q = sf.Engine(1)
         rrt = utils.neg(q[0])
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
         assert rrt.func(a) == -a
 
-    def test_mag(self, setup_eng):
+    def test_mag(self):
         """Test that the neg function creates a regref transform that negates"""
         x = 0.574
         y = -0.6543
-        eng, q = setup_eng(1)
+        eng, q = sf.Engine(1)
         rrt = utils.mag(q[0])
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
         assert rrt.func(x+1j*y) == np.abs(x+1j*y)
 
-    def test_phase(self, setup_eng):
+    def test_phase(self):
         """Test that the neg function creates a regref transform that negates"""
         x = 0.574
         y = -0.6543
-        eng, q = setup_eng(1)
+        eng, q = sf.Engine(1)
         rrt = utils.phase(q[0])
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
         assert rrt.func(x+1j*y) == np.angle(x+1j*y)
 
-    def test_scale(self, setup_eng):
+    def test_scale(self):
         """Test that the neg function creates a regref transform that negates"""
         a = 0.574
         x = -0.6543
-        eng, q = setup_eng(1)
+        eng, q = sf.Engine(1)
         rrt = utils.scale(q[0], a)
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
         assert rrt.func(x) == a*x
 
-    def test_shift(self, setup_eng):
+    def test_shift(self):
         """Test that the neg function creates a regref transform that negates"""
         a = 0.574
         x = -0.6543
-        eng, q = setup_eng(1)
+        eng, q = sf.Engine(1)
         rrt = utils.shift(q[0], a)
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
         assert rrt.func(x) == a+x
 
-    def test_scale_shift(self, setup_eng):
+    def test_scale_shift(self):
         """Test that the neg function creates a regref transform that negates"""
         a = 0.574
         b = -0.6543
         x = 0.4321
-        eng, q = setup_eng(1)
+        eng, q = sf.Engine(1)
         rrt = utils.scale_shift(q[0], a, b)
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
         assert rrt.func(x) == a*x+b
 
-    def test_power_positive_frac(self, setup_eng):
+    def test_power_positive_frac(self):
         """Test that the neg function creates a regref transform that negates"""
         a = 0.574
         x = 0.6543
-        eng, q = setup_eng(1)
+        eng, q = sf.Engine(1)
         rrt = utils.power(q[0], a)
 
         assert isinstance(rrt, sf.engine.RegRefTransform)
         assert rrt.func(x) == x**a
 
-    def test_power_negative_int(self, setup_eng):
+    def test_power_negative_int(self):
         """Test that the neg function creates a regref transform that negates"""
         a = -3
         x = 0.6543
-        eng, q = setup_eng(1)
+        eng, q = sf.Engine(1)
         rrt = utils.power(q[0], a)
 
         assert isinstance(rrt, sf.engine.RegRefTransform)

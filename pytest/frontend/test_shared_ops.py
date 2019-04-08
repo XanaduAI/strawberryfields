@@ -98,6 +98,9 @@ squeeze_factor_4 = np.array(
     )
 
 
+# TODO: write unit tests for find_dim_files function
+
+
 class TestBeamsplitterFactors:
     """Tests for the beamsplitter prefactors"""
 
