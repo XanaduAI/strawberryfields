@@ -113,9 +113,9 @@ class TestBeamsplitterFactors:
     def test_save_load(self, tmpdir, tol):
         """test saving and loading of beamsplitter factors"""
         factors = so.generate_bs_factors(4)
-        so.save_bs_factors(factors, directory=tmpdir)
+        so.save_bs_factors(factors, directory=str(tmpdir))
 
-        factors = so.load_bs_factors(4, directory=tmpdir)
+        factors = so.load_bs_factors(4, directory=str(tmpdir))
         factors_val = factors[factors!=0.]
         factors_idx = np.array(np.nonzero(factors))
 
@@ -139,8 +139,8 @@ class TestSqueezingFactors:
     def test_save_load(self, tmpdir, tol):
         """test saving and loading of squeezoing factors"""
         factors_in = so.generate_squeeze_factors(4)
-        so.save_squeeze_factors(factors_in, directory=tmpdir)
-        factors_out = so.load_squeeze_factors(4, directory=tmpdir)
+        so.save_squeeze_factors(factors_in, directory=str(tmpdir))
+        factors_out = so.load_squeeze_factors(4, directory=str(tmpdir))
 
         assert np.allclose(factors_out, squeeze_factor_4, atol=tol, rtol=0)
 
