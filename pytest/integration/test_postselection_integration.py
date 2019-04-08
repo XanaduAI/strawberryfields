@@ -53,14 +53,15 @@ def test_heterodyne(setup_eng, tol):
 
 
 @pytest.mark.backends("fock", "tf")
-def test_measure_fock(setup_eng, cutoff):
+def test_measure_fock(setup_eng, cutoff, batch_size):
     """Test that Fock post-selection on Fock states
     exiting one arm of a beamsplitter results in conservation
     of photon number in the other. """
     eng, q = setup_eng(2)
-    total_photons = cutoff-1
 
     for n in range(cutoff - 1):
+        total_photons = cutoff-1
+
         with eng:
             ops.Fock(n) | q[0]
             ops.Fock(total_photons-n) | q[1]
@@ -70,4 +71,8 @@ def test_measure_fock(setup_eng, cutoff):
 
         eng.run()
         photons_out = sum([i.val for i in q])
-        assert photons_out == total_photons
+
+        if batch_size is not None:
+            total_photons = np.tile(total_photons, batch_size)
+
+        assert np.all(photons_out == total_photons)
