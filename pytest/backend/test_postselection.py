@@ -56,7 +56,7 @@ def test_measure_fock(setup_backend, cutoff, batch_size):
     backend = setup_backend(2)
 
     for n in range(cutoff - 1):
-        total_photons = cutoff-1
+        total_photons = cutoff - 1
 
         backend.prepare_fock_state(n, 0)
         backend.prepare_fock_state(total_photons - n, 1)

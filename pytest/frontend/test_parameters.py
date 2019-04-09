@@ -20,6 +20,7 @@ import numpy as np
 import tensorflow as tf
 
 import strawberryfields as sf
+from strawberryfields import ops
 from strawberryfields.parameters import Parameter
 
 # make test deterministic
@@ -118,3 +119,7 @@ def test_parameter_right_literal_arithmetic(p, q):
 def test_parameter_unary_negation(p):
     """Test unary negation addition works as expected"""
     assert isinstance(-p, Parameter)
+
+
+# TODO: This barely scratches the surface of the parameters.py module,
+# a lot more unit tests are needed.

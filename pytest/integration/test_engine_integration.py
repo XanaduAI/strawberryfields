@@ -48,7 +48,7 @@ class TestEngineReset:
         eng.reset(pure=pure)
         assert np.all(eng.backend.is_vacuum(tol))
 
-    @pytest.mark.backends('fock')
+    @pytest.mark.backends("fock")
     def test_eng_reset(self, setup_eng, cutoff):
         """Test the Engine.reset() features."""
         eng, _ = setup_eng(2)
@@ -60,7 +60,7 @@ class TestEngineReset:
         assert state._cutoff == old_cutoff
         assert cutoff == old_cutoff
 
-        new_cutoff = old_cutoff+1
+        new_cutoff = old_cutoff + 1
         eng.reset(cutoff_dim=new_cutoff)
 
         state = eng.run()
@@ -90,7 +90,9 @@ class TestGateApplication:
         """Test applying gate inverses after the gate cancels out"""
         eng, q = setup_eng(2)
 
-        if isinstance(G, (ops.Vgate, ops.Kgate, ops.CKgate)) and isinstance(eng.backend, BaseGaussian):
+        if isinstance(G, (ops.Vgate, ops.Kgate, ops.CKgate)) and isinstance(
+            eng.backend, BaseGaussian
+        ):
             pytest.skip("Non-Gaussian gates cannot be applied to the Gaussian backend")
 
         with eng:
@@ -109,6 +111,7 @@ class TestGateApplication:
 class TestProperExecution:
     """Test that various frontend circuits execute through
     the backend with no error"""
+
     # TODO: Some of these tests should probably check *something* after execution
 
     def test_regref_transform(self, setup_eng):
@@ -117,10 +120,10 @@ class TestProperExecution:
 
         with eng:
             ops.MeasureX | q[0]
-            ops.Sgate(q[0])   | q[1]
+            ops.Sgate(q[0]) | q[1]
             # symbolic hermitian conjugate together with register reference
             ops.Dgate(q[0]).H | q[1]
-            ops.Sgate(ops.RR(q[0], lambda x: x**2)) | q[1]
+            ops.Sgate(ops.RR(q[0], lambda x: x ** 2)) | q[1]
             ops.Dgate(ops.RR(q[0], lambda x: -x)).H | q[1]
 
         eng.run()
@@ -155,23 +158,23 @@ class TestProperExecution:
 
         # define some gates
         D = ops.Dgate(0.5)
-        BS = ops.BSgate(0.7*np.pi, np.pi/2)
-        R = ops.Rgate(np.pi/3)
+        BS = ops.BSgate(0.7 * np.pi, np.pi / 2)
+        R = ops.Rgate(np.pi / 3)
         # get register references
         alice, bob = q
 
         def subroutine(a, b):
             """Subroutine for the quantum program"""
-            R   | a
-            BS  | (a,b)
+            R | a
+            BS | (a, b)
             R.H | a
 
         # main program
         with eng:
             ops.All(ops.Vacuum()) | (alice, bob)
-            D   | alice
+            D | alice
             subroutine(alice, bob)
-            BS  | (alice, bob)
+            BS | (alice, bob)
             subroutine(bob, alice)
 
         state = eng.run()
@@ -187,19 +190,19 @@ class TestProperExecution:
 
         # define some gates
         D = ops.Dgate(0.5)
-        BS = ops.BSgate(2*np.pi, np.pi/2)
+        BS = ops.BSgate(2 * np.pi, np.pi / 2)
         R = ops.Rgate(np.pi)
 
         with eng:
-            D        | alice
-            BS       | (alice, bob)
-            ops.Del      | alice
-            R        | bob
+            D | alice
+            BS | (alice, bob)
+            ops.Del | alice
+            R | bob
             charlie, = ops.New(1)
-            BS       | (bob, charlie)
+            BS | (bob, charlie)
             ops.MeasureX | bob
-            ops.Del      | bob
-            D.H      | charlie
+            ops.Del | bob
+            D.H | charlie
             ops.MeasureX | charlie
 
         eng.optimize()
@@ -257,9 +260,11 @@ class TestProperExecution:
             ops.Sgate(r) | q[1]
 
         state1 = eng.run()
-        expected = ['Run 0:',
-                    'Dgate({}, 0) | (q[0])'.format(a),
-                    'Sgate({}, 0) | (q[1])'.format(r)]
+        expected = [
+            "Run 0:",
+            "Dgate({}, 0) | (q[0])".format(a),
+            "Sgate({}, 0) | (q[1])".format(r),
+        ]
 
         assert inspect() == expected
 
@@ -274,12 +279,13 @@ class TestProperExecution:
             ops.Rgate(r) | q[0]
 
         state3 = eng.run()
-        expected = ['Run 0:',
-                     'Dgate({}, 0) | (q[0])'.format(a),
-                     'Sgate({}, 0) | (q[1])'.format(r),
-                     'Run 1:',
-                     'Rgate({}) | (q[0])'.format(r),
-                    ]
+        expected = [
+            "Run 0:",
+            "Dgate({}, 0) | (q[0])".format(a),
+            "Sgate({}, 0) | (q[1])".format(r),
+            "Run 1:",
+            "Rgate({}) | (q[0])".format(r),
+        ]
 
         assert inspect() == expected
         assert not state2 == state3
@@ -287,11 +293,12 @@ class TestProperExecution:
         # reset backend, but reapply history
         eng.backend.reset(pure=pure)
         state4 = eng.run(apply_history=True)
-        expected = ['Run 0:',
-                     'Dgate({}, 0) | (q[0])'.format(a),
-                     'Sgate({}, 0) | (q[1])'.format(r),
-                     'Rgate({}) | (q[0])'.format(r),
-                    ]
+        expected = [
+            "Run 0:",
+            "Dgate({}, 0) | (q[0])".format(a),
+            "Sgate({}, 0) | (q[1])".format(r),
+            "Rgate({}) | (q[0])".format(r),
+        ]
 
         assert inspect() == expected
         assert state3 == state4

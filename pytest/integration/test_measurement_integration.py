@@ -22,7 +22,7 @@ from strawberryfields import ops
 class TestMeasurement:
     """Test that measurements work correctly from the frontend"""
 
-    @pytest.mark.backends('fock', 'tf')
+    @pytest.mark.backends("fock", "tf")
     def test_fock_measurement(self, setup_eng, tol):
         """Test Fock measurements return expected results"""
         eng, q = setup_eng(2)
@@ -40,11 +40,11 @@ class TestMeasurement:
         # Fock measurements put the modes into vacuum state
         assert np.all(eng.backend.is_vacuum(tol))
 
-    @pytest.mark.backends('gaussian')
+    @pytest.mark.backends("gaussian")
     def test_heterodyne(self, setup_eng, tol):
         """Test Fock measurements return expected results"""
         eng, q = setup_eng(2)
-        a = [0.43-0.12j, 0.02+0.2j]
+        a = [0.43 - 0.12j, 0.02 + 0.2j]
 
         with eng:
             ops.Coherent(a[0]) | q[0]
@@ -76,7 +76,6 @@ class TestPostselection:
         eng.run()
         assert np.allclose(q[0].val, x, atol=tol, rtol=0)
 
-
     @pytest.mark.backends("gaussian")
     def test_heterodyne(self, setup_eng, tol):
         """Test that heterodyne detection on a TMS state
@@ -93,7 +92,6 @@ class TestPostselection:
         eng.run()
         assert np.allclose(q[0].val, alpha, atol=tol, rtol=0)
 
-
     @pytest.mark.backends("fock", "tf")
     def test_measure_fock(self, setup_eng, cutoff, batch_size):
         """Test that Fock post-selection on Fock states
@@ -102,13 +100,13 @@ class TestPostselection:
         eng, q = setup_eng(2)
 
         for n in range(cutoff - 1):
-            total_photons = cutoff-1
+            total_photons = cutoff - 1
 
             with eng:
                 ops.Fock(n) | q[0]
-                ops.Fock(total_photons-n) | q[1]
+                ops.Fock(total_photons - n) | q[1]
                 ops.BSgate() | q
-                ops.MeasureFock(select=cutoff//2) | q[0]
+                ops.MeasureFock(select=cutoff // 2) | q[0]
                 ops.MeasureFock() | q[1]
 
             eng.run()

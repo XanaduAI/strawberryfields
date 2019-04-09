@@ -20,9 +20,7 @@ import numpy as np
 import scipy as sp
 from scipy.linalg import qr, block_diag
 
-import strawberryfields as sf
 from strawberryfields import decompositions as dec
-
 
 N_SAMPLES = 10
 
@@ -34,14 +32,14 @@ np.random.seed(42)
 def omega(n):
     """Returns the symplectic matrix for n modes"""
     idm = np.identity(n)
-    omega = np.concatenate(
+    O = np.concatenate(
         (
             np.concatenate((0 * idm, idm), axis=1),
             np.concatenate((-idm, 0 * idm), axis=1),
         ),
         axis=0,
     )
-    return omega
+    return O
 
 
 def haar_measure(n):
@@ -108,7 +106,7 @@ class TestGraphEmbed:
         max_mean_photon = 2
         A = np.random.random([6, 6]) + 1j * np.random.random([6, 6])
         A += A.T
-        sc, U = dec.graph_embed(A, max_mean_photon=max_mean_photon)
+        sc, _ = dec.graph_embed(A, max_mean_photon=max_mean_photon)
         res_mean_photon = np.sinh(np.max(np.abs(sc))) ** 2
 
         assert np.allclose(res_mean_photon, max_mean_photon, atol=tol, rtol=0)
@@ -405,7 +403,7 @@ class TestBlochMessiahDecomposition:
     """Tests for the Bloch-Messiah decomposition"""
 
     @pytest.fixture
-    def create_transform(self, tol):
+    def create_transform(self):
         """create a symplectic transform for use in testing.
 
         Args:

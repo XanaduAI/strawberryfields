@@ -138,7 +138,7 @@ class TestGateBasics:
             self.res = [x.evaluate() for x in self.p]
 
         with monkeypatch.context() as m:
-            m.setattr(ops.Operation, 'apply', dummy_apply)
+            m.setattr(ops.Operation, "apply", dummy_apply)
             G2.apply(None, None, None)
 
         orig_params = [x.evaluate() for x in G2.p]

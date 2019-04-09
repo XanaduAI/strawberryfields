@@ -21,7 +21,6 @@ import numpy as np
 import strawberryfields as sf
 
 from strawberryfields import ops
-from strawberryfields import engine
 
 # make test deterministic
 np.random.random(42)
@@ -56,7 +55,7 @@ def test_merge_dagger(G):
         G.H | 0
 
     eng.optimize()
-    assert len(eng.cmd_queue) == 0
+    assert not eng.cmd_queue
 
 
 @pytest.mark.parametrize("G", single_mode_gates)
@@ -71,7 +70,7 @@ def test_merge_negated(G):
         G2 | 0
 
     eng.optimize()
-    assert len(eng.cmd_queue) == 0
+    assert not eng.cmd_queue
 
 
 def test_merge_palindronic_cancelling(permute_gates):
@@ -85,7 +84,7 @@ def test_merge_palindronic_cancelling(permute_gates):
             G.H | 0
 
     eng.optimize()
-    assert len(eng.cmd_queue) == 0
+    assert not eng.cmd_queue
 
 
 def test_merge_pairwise_cancelling(permute_gates):
@@ -98,7 +97,7 @@ def test_merge_pairwise_cancelling(permute_gates):
             G.H | 0
 
     eng.optimize()
-    assert len(eng.cmd_queue) == 0
+    assert not eng.cmd_queue
 
 
 def test_merge_interleaved_chains_two_modes(permute_gates):
@@ -117,7 +116,7 @@ def test_merge_interleaved_chains_two_modes(permute_gates):
             G.H | m
 
     eng.optimize()
-    assert len(eng.cmd_queue) == 0
+    assert not eng.cmd_queue
 
 
 def test_merge_incompatible():

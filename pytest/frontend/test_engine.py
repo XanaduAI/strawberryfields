@@ -13,6 +13,7 @@
 # limitations under the License.
 r"""Unit tests for Gate classes in ops.py"""
 import logging
+
 logging.getLogger()
 
 import pytest
@@ -25,24 +26,6 @@ import strawberryfields as sf
 from strawberryfields import engine
 from strawberryfields import ops
 from strawberryfields.backends.base import BaseBackend
-
-
-@pytest.fixture
-def backend(monkeypatch):
-    """Create a mocked out backend fixture"""
-    dummy_backend = BaseBackend()
-    with monkeypatch.context() as m:
-        # mock out the base backend
-        m.setattr(dummy_backend, 'add_mode', lambda n: None)
-        m.setattr(dummy_backend, 'del_mode', lambda n: None)
-        m.setattr(dummy_backend, 'displacement', lambda alpha, modes: None)
-        m.setattr(dummy_backend, 'squeeze', lambda r, modes: None)
-        m.setattr(dummy_backend, 'rotation', lambda r, modes: None)
-        m.setattr(dummy_backend, 'beamsplitter', lambda t, r, m1, m2: None)
-        m.setattr(dummy_backend, 'measure_homodyne', lambda phi, modes, select: 5)
-        m.setattr(dummy_backend, 'state', lambda modes: None)
-        m.setattr(dummy_backend, 'reset', lambda: None)
-        yield dummy_backend
 
 
 def test_no_return_state(backend):
@@ -73,7 +56,7 @@ class TestQueue:
 
     def test_apply_gate(self):
         """Test successful gate application"""
-        eng, q = sf.Engine(2)
+        eng, _ = sf.Engine(2)
 
         with eng:
             ops.Dgate(0.5) | 0
@@ -82,7 +65,7 @@ class TestQueue:
 
     def test_clear_queue(self):
         """Test clearing queue is successfull"""
-        eng, q = sf.Engine(2)
+        eng, _ = sf.Engine(2)
 
         with eng:
             ops.Dgate(0.5) | 0
@@ -91,11 +74,11 @@ class TestQueue:
         assert len(eng.cmd_queue) == 1
 
         eng.reset_queue()
-        assert len(eng.cmd_queue) == 0
+        assert not eng.cmd_queue
 
     def test_applied_queue(self, backend):
         """Tests that the None command acts as the identity"""
-        eng, q = sf.Engine(2)
+        eng, _ = sf.Engine(2)
 
         with eng:
             ops.Dgate(0.5) | 0
@@ -114,39 +97,40 @@ class TestQueue:
 
         # define some gates
         D = ops.Dgate(0.5)
-        BS = ops.BSgate(2*np.pi, np.pi/2)
+        BS = ops.BSgate(2 * np.pi, np.pi / 2)
         R = ops.Rgate(np.pi)
 
         # get register references
-        reg = eng.register
-        alice, bob = reg
+        alice, bob = q
 
         with eng:
-            D        | alice
-            BS       | (alice, bob)
-            ops.Del      | alice
-            R        | bob
+            D | alice
+            BS | (alice, bob)
+            ops.Del | alice
+            R | bob
             charlie, = ops.New(1)
-            BS       | (bob, charlie)
+            BS | (bob, charlie)
             ops.MeasureX | bob
-            ops.Dgate(bob).H      | charlie
-            ops.Del      | bob
+            ops.Dgate(bob).H | charlie
+            ops.Del | bob
             ops.MeasureX | charlie
 
         res = []
         print_fn = lambda x: res.append(x.__str__())
         eng.print_queue(print_fn)
 
-        expected = ['Dgate(0.5, 0) | (q[0])',
-                    'BSgate(6.283, 1.571) | (q[0], q[1])',
-                    'Del | (q[0])',
-                    'Rgate(3.142) | (q[1])',
-                    'New(1) ',
-                    'BSgate(6.283, 1.571) | (q[1], q[2])',
-                    'MeasureX | (q[1])',
-                    'Dgate(RR(q[1]), 0).H | (q[2])',
-                    'Del | (q[1])',
-                    'MeasureX | (q[2])']
+        expected = [
+            "Dgate(0.5, 0) | (q[0])",
+            "BSgate(6.283, 1.571) | (q[0], q[1])",
+            "Del | (q[0])",
+            "Rgate(3.142) | (q[1])",
+            "New(1) ",
+            "BSgate(6.283, 1.571) | (q[1], q[2])",
+            "MeasureX | (q[1])",
+            "Dgate(RR(q[1]), 0).H | (q[2])",
+            "Del | (q[1])",
+            "MeasureX | (q[2])",
+        ]
 
         assert res == expected
         state = eng.run(backend)
@@ -159,7 +143,7 @@ class TestQueue:
         # print_applied should now not be empty
         res = []
         eng.print_applied(print_fn)
-        assert res == ['Run 0:'] + expected
+        assert res == ["Run 0:"] + expected
 
 
 class TestRegRefs:
@@ -176,7 +160,7 @@ class TestRegRefs:
 
     def test_nonexistent(self):
         """Test that acting on a non-existent mode raises an error"""
-        eng, q = sf.Engine(2)
+        eng, _ = sf.Engine(2)
 
         with eng:
             with pytest.raises(engine.RegRefError, match="does not exist"):
@@ -193,7 +177,7 @@ class TestRegRefs:
 
     def test_wrong_engine(self):
         """Test that acting on a mode not belonging to the engine raises error"""
-        eng, q = sf.Engine(2)
+        eng, _ = sf.Engine(2)
         q_new = engine.RegRef(3)
 
         with eng:
@@ -212,7 +196,7 @@ class TestRegRefs:
 
     def test_invalid(self):
         """cannot referring to a register with a non-integral or RegRef object"""
-        eng, q = sf.Engine(2)
+        eng, _ = sf.Engine(2)
 
         with eng:
             with pytest.raises(engine.RegRefError, match="using integers and RegRefs"):
@@ -229,19 +213,19 @@ class TestQueueHistory:
 
         # define some gates
         D = ops.Dgate(0.5)
-        BS = ops.BSgate(2*np.pi, np.pi/2)
+        BS = ops.BSgate(2 * np.pi, np.pi / 2)
         R = ops.Rgate(np.pi)
 
         with eng:
-            D        | alice
-            BS       | (alice, bob)
-            ops.Del      | alice
-            R        | bob
+            D | alice
+            BS | (alice, bob)
+            ops.Del | alice
+            R | bob
             charlie, = ops.New(1)
-            BS       | (bob, charlie)
+            BS | (bob, charlie)
             ops.MeasureX | bob
-            ops.Del      | bob
-            D.H      | charlie
+            ops.Del | bob
+            D.H | charlie
             ops.MeasureX | charlie
 
         eng.optimize()
@@ -290,14 +274,14 @@ class TestQueueHistory:
 
         def prog1(q):
             """program 1"""
-            X        | q
+            X | q
             ops.MeasureX | q
 
         def prog2(q):
             """program 2"""
-            X        | q
+            X | q
             ops.MeasureX | q
-            ops.Del      | q
+            ops.Del | q
             state[q.ind, 0] = False  # no longer active
 
         def reset():
@@ -367,7 +351,9 @@ class TestQueueHistory:
         input(prog2, bob)
         eng.reset(keep_history=True)
 
-        state[alice.ind, 1] = True  # measurement result was erased, activity did not change
+        state[
+            alice.ind, 1
+        ] = True  # measurement result was erased, activity did not change
         state[bob.ind, 1] = True
         check()
         eng.run(backend)
@@ -392,10 +378,12 @@ class TestQueueHistory:
             ops.Dgate(a) | q[0]
             ops.Sgate(r) | q[1]
 
-        state1 = eng.run(backend)
-        expected = ['Run 0:',
-                    'Dgate({}, 0) | (q[0])'.format(a),
-                    'Sgate({}, 0) | (q[1])'.format(r)]
+        eng.run(backend)
+        expected = [
+            "Run 0:",
+            "Dgate({}, 0) | (q[0])".format(a),
+            "Sgate({}, 0) | (q[1])".format(r),
+        ]
 
         assert inspect() == expected
 
@@ -407,22 +395,24 @@ class TestQueueHistory:
         with eng:
             ops.Rgate(r) | q[0]
 
-        state3 = eng.run()
-        expected = ['Run 0:',
-                     'Dgate({}, 0) | (q[0])'.format(a),
-                     'Sgate({}, 0) | (q[1])'.format(r),
-                     'Run 1:',
-                     'Rgate({}) | (q[0])'.format(r),
-                    ]
+        eng.run()
+        expected = [
+            "Run 0:",
+            "Dgate({}, 0) | (q[0])".format(a),
+            "Sgate({}, 0) | (q[1])".format(r),
+            "Run 1:",
+            "Rgate({}) | (q[0])".format(r),
+        ]
 
         assert inspect() == expected
 
         # reapply history
-        state4 = eng.run(apply_history=True)
-        expected = ['Run 0:',
-                     'Dgate({}, 0) | (q[0])'.format(a),
-                     'Sgate({}, 0) | (q[1])'.format(r),
-                     'Rgate({}) | (q[0])'.format(r),
-                    ]
+        eng.run(apply_history=True)
+        expected = [
+            "Run 0:",
+            "Dgate({}, 0) | (q[0])".format(a),
+            "Sgate({}, 0) | (q[1])".format(r),
+            "Rgate({}) | (q[0])".format(r),
+        ]
 
         assert inspect() == expected
