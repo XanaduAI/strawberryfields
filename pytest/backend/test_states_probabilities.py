@@ -21,8 +21,8 @@ from strawberryfields import backends
 from strawberryfields import utils
 
 
-mag_alphas = np.linspace(0, 0.8, 4)
-phase_alphas = np.linspace(0, 2 * np.pi, 7, endpoint=False)
+mag_alphas = np.linspace(0, 0.8, 3)
+phase_alphas = np.linspace(0, 2 * np.pi, 3, endpoint=False)
 
 
 @pytest.mark.parametrize("a", mag_alphas)
