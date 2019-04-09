@@ -64,7 +64,7 @@ def test_parameters_with_operations(batch_size, setup_eng):
         other_inputs.append(np.inf)
         if batch_size is not None:
             # test batched input
-            other_inputs.append(uniform(size=(batch_size,)))
+            other_inputs.append(np.random.uniform(size=(batch_size,)))
 
     other_pars = tuple(Parameter(k) for k in other_inputs)
 
