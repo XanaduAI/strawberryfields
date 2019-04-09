@@ -118,7 +118,7 @@ def print_fixtures(cutoff, hbar, pure, batch_size):
     ]
 )
 def setup_backend(
-    request, print_fixtures, cutoff, hbar, pure, batch_size
+    request, cutoff, hbar, pure, batch_size
 ):  # pylint: disable=redefined-outer-name
     """Parameterized fixture, used to automatically create a backend of certain number of modes.
 
