@@ -42,6 +42,10 @@ clean:
 	rm -rf strawberryfields/backends/tfbackend/__pycache__
 	rm -rf strawberryfields/backends/gaussianbackend/__pycache__
 	rm -rf tests/__pycache__
+	rm -rf pytest/__pycache__
+	rm -rf pytest/backend/__pycache__
+	rm -rf pytest/frontend/__pycache__
+	rm -rf pytest/integration/__pycache__
 	rm -rf dist
 	rm -rf build
 

@@ -126,3 +126,22 @@ class TestGateBasics:
 
         # first parameters should be subtracted
         assert merged.p[0] == G.p[0] - H.p[0]
+
+    def test_gate_dagger(self, G, monkeypatch):
+        """Test the dagger functionality of the gates"""
+        G2 = G.H
+        assert not G.dagger
+        assert G2.dagger
+
+        def dummy_apply(self, reg, backend, hbar, eval_params=False):
+            """Dummy apply function, used to store the evaluated params"""
+            self.res = [x.evaluate() for x in self.p]
+
+        with monkeypatch.context() as m:
+            m.setattr(ops.Operation, 'apply', dummy_apply)
+            G2.apply(None, None, None)
+
+        orig_params = [x.evaluate() for x in G2.p]
+        applied_params = G2.res
+        # dagger should negate the first param
+        assert applied_params == [-orig_params[0]] + orig_params[1:]
