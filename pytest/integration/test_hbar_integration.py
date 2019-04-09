@@ -27,7 +27,7 @@ STD_10 = NUM_STDS / np.sqrt(N_MEAS)
 R = 0.3
 X = 0.2
 P = 0.1
-HBAR = [0.5, 1, 2]
+HBAR = [0.5, 1]
 
 
 @pytest.mark.parametrize("hbar", HBAR, indirect=True)

@@ -30,7 +30,6 @@ TOL = 1e-3
 CUTOFF = 6
 ALPHA = 0.1
 HBAR = 2
-PURE = True
 BATCHED = False
 BATCHSIZE = 2
 
@@ -59,10 +58,15 @@ def hbar():
     return float(os.environ.get("HBAR", HBAR))
 
 
-@pytest.fixture(scope="session")
-def pure():
+@pytest.fixture(
+    params=[
+        pytest.param(True, marks=pytest.mark.pure),
+        pytest.param(False, marks=pytest.mark.mixed),
+    ]
+)
+def pure(request):
     """Whether to run the backend in pure or mixed state mode"""
-    return bool(int(os.environ.get("PURE", PURE)))
+    return request.param  # bool(int(os.environ.get("PURE", PURE)))
 
 
 @pytest.fixture(scope="session")
@@ -101,10 +105,10 @@ def backend(monkeypatch):
 
 
 @pytest.fixture(scope="session")
-def print_fixtures(cutoff, hbar, pure, batch_size):
+def print_fixtures(cutoff, hbar, batch_size):
     """Print the test configuration at the beginning of the session"""
     print(
-        "FIXTURES: cutoff = {}, hbar = {}, pure = {}, batch_size = {}".format(
+        "FIXTURES: cutoff = {}, hbar = {}, batch_size = {}".format(
             cutoff, hbar, pure, batch_size
         )
     )

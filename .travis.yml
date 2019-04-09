@@ -11,15 +11,14 @@ env:
     - LOGGING=info
 matrix:
   include:
-    - env: PURE=1 BACKEND="frontend or fock or gaussian"
-    - env: PURE=0 BACKEND="fock or gaussian"
-    - env: PURE=1 BACKEND=tf
+    - env: OPTIONS="frontend or fock or gaussian"
+    - env: OPTIONS="tf and pure"
       sudo: required
-    - env: PURE=0 BACKEND=tf
+    - env: OPTIONS="tf and mixed"
       sudo: required
-    - env: PURE=1 BATCHED=1 BACKEND=tf
+    - env: BATCHED=1 OPTIONS="tf and pure"
       sudo: required
-    - env: PURE=0 BATCHED=1 BACKEND=tf
+    - env: BATCHED=1 OPTIONS="tf and mixed"
       sudo: required
 install:
   - pip install -r requirements.txt
@@ -27,9 +26,9 @@ install:
   - python3 setup.py bdist_wheel
   - pip install dist/StrawberryFields*.whl
 script:
-  - python3 -m pytest pytest --cov=strawberryfields -p no:warnings --tb=native -m "$BACKEND"
+  - python3 -m pytest pytest --cov=strawberryfields -p no:warnings --tb=native -m "$OPTIONS"
 after_success:
-  - codecov -F $BACKEND,mixed$((1-$PURE)),batched$BATCHED
+  - codecov
 notifications:
   slack:
     secure: FfvzFoLEPy+O1hkz+co7W/P2DAeGTqUYRTh7cA90wkhZNN+qHBXdhKzNOAZs4V462/AHHi13K95ltBCuW9nE6eJveZGQkPlLr9ojZtVKzIzNP2TgpnYRdAhogW1cmRdquPcPUXNBfs71DOPFTI2J8Kr1U3uZNkJ0HSURPlF05M11ESXPMzeMSNMjCAanFD+62+hsV8Jsx7vmLtiTCpMbatTgKYB/IE3nV2khILWMGcokxX5cSJ1/RRittLWMqLrmUPZnZ3f5G6YbkeV40Z//1/DK2/Mgw4ryZzZzCe3L4HQMxry5YeCJucnfGJmqJzRzB+JxNn0gRT4RX4SCJJBAa6BISwVvP89HFN5tkXGl8RYsKBJ0sdzbwQ0MFnS4rVoQP1IEAkx+TZ3fUzPZ68KDhspSxght6H+oRQCcaNFoHjh6xJSvAJQem6BQVyGErcjrmoxcPWmdNfiLs8lENcBSbN8fiZia8leCo5jzyl7dvBtlkRgvtx9pLSkevDLbPDMPVQokmXuVIG3psKCPZuAGAUTOP/FRYlZXCmXALsNAe7nuetXUSKL6P0YlA5PNPzstDEKe0LX50eiQV2olPPuLYed/Z6v7/VVIV4jgUXYVbnhbjY+g4pL1ikg58kbBY6afxXW4AGpvYoFEgdVmlBTvldlIXl84n3lH5hBHIVQiLiY=
