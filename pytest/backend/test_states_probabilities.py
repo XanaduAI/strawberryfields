@@ -35,7 +35,7 @@ class TestFockProbabilities:
         |n> are correct for a gaussian state."""
         backend = setup_backend(1)
 
-        alpha = a * np.exp(1j * r)
+        alpha = a * np.exp(1j * phi)
         n = np.arange(cutoff)
         ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
         ref_probs = np.abs(ref_state) ** 2
