@@ -23,6 +23,7 @@ Here we will discuss several continuous-variable (CV) quantum algorithm examples
    algorithms/gaussian_boson_sampling.rst
    algorithms/hamiltonian_simulation.rst
    algorithms/iqp.rst
+   algorithms/quantum_neural_network.rst
 
 
 
@@ -51,9 +52,13 @@ Here we will discuss several continuous-variable (CV) quantum algorithm examples
    :align: top
    :target: algorithms/hamiltonian_simulation.html
 .. |iqp| image::  _static/IQP.svg    
-   :scale: 50%
+   :scale: 70%
    :align: top
    :target: algorithms/iqp.html
+.. |qnn| image::  _static/layer.svg    
+   :scale: 45%
+   :align: top
+   :target: algorithms/quantum_neural_network.html
 
 .. raw:: html
 
@@ -84,8 +89,8 @@ Here we will discuss several continuous-variable (CV) quantum algorithm examples
 | |gbs|                      | |hs|                      |
 | :ref:`gaussian_algorithm`  | :ref:`ham_sim`            |
 +----------------------------+---------------------------+
-| |iqp|                      |                           |
-| :ref:`iqp`                 |                           |
+| |iqp|                      | |qnn|                     |
+| :ref:`iqp`                 | :ref:`qnn`                |
 +----------------------------+---------------------------+
 
 
