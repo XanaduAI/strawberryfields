@@ -10,8 +10,7 @@ from numpy import pi
 from scipy.linalg import qr, block_diag
 
 # NOTE: strawberryfields must be imported from defaults
-# from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
-import strawberryfields as sf
+from defaults import BaseTest, FockBaseTest, GaussianBaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.utils import *
 from strawberryfields import decompositions as dec
