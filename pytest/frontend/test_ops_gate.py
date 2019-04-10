@@ -145,3 +145,16 @@ class TestGateBasics:
         applied_params = G2.res
         # dagger should negate the first param
         assert applied_params == [-orig_params[0]] + orig_params[1:]
+
+
+def test_merge_regrefs():
+    """Test merging two gates with regref parameters, that are
+    the inverse of each other."""
+    eng, q = sf.Engine(2)
+
+    with eng:
+        ops.MeasureX | q[0]
+        D = ops.Dgate(q[0])
+
+    merged = D.merge(D.H)
+    assert merged is None

@@ -17,7 +17,8 @@ import pytest
 import numpy as np
 
 from strawberryfields import ops
-from strawberryfields.backends.base import BaseGaussian, BaseFock
+from strawberryfields.backends import BaseGaussian, BaseFock
+from strawberryfields.backends import TFBackend, GaussianBackend, FockBackend
 
 
 # make test deterministic
@@ -25,6 +26,23 @@ np.random.random(42)
 a = 0.1234
 b = -0.543
 c = 0.312
+
+
+@pytest.mark.parametrize(
+    "name,expected",
+    [("tf", TFBackend), ("gaussian", GaussianBackend), ("fock", FockBackend)],
+)
+def test_load_backend(name, expected, cutoff):
+    """Test backends can be correctly loaded via strings"""
+    eng, q = sf.Engine(1)
+    eng.run(name, cutoff_dim=cutoff)
+
+    assert isinstance(eng.backend, expected)
+
+    # running the engine again should not change the backend instance
+    b = eng.backend
+    eng.run(name, cutoff_dim=cutoff)
+    assert eng.backend is b
 
 
 class TestEngineReset:
@@ -68,44 +86,6 @@ class TestEngineReset:
 
         assert temp == new_cutoff
         assert state._cutoff == new_cutoff
-
-
-@pytest.mark.parametrize("gate", ops.gates)
-class TestGateApplication:
-    """Engine tests that involve gate application"""
-
-    @pytest.fixture
-    def G(self, gate):
-        """Initialize each gate"""
-        if gate in ops.zero_args_gates:
-            return gate
-
-        if gate in ops.one_args_gates:
-            return gate(a)
-
-        if gate in ops.two_args_gates:
-            return gate(a, b)
-
-    def test_gate_dagger_vacuum(self, G, setup_eng, tol):
-        """Test applying gate inverses after the gate cancels out"""
-        eng, q = setup_eng(2)
-
-        if isinstance(G, (ops.Vgate, ops.Kgate, ops.CKgate)) and isinstance(
-            eng.backend, BaseGaussian
-        ):
-            pytest.skip("Non-Gaussian gates cannot be applied to the Gaussian backend")
-
-        with eng:
-            if G.ns == 1:
-                G | q[0]
-                G.H | q[0]
-            elif G.ns == 2:
-                G | (q[0], q[1])
-                G.H | (q[0], q[1])
-
-        state = eng.run()
-        # we must end up back in vacuum since G and G.H cancel each other
-        assert np.all(eng.backend.is_vacuum(tol))
 
 
 class TestProperExecution:

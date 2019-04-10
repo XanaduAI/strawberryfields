@@ -28,6 +28,21 @@ from strawberryfields import ops
 from strawberryfields.backends.base import BaseBackend
 
 
+def test_load_backend(monkeypatch):
+    """Test backend can be correctly loaded via strings"""
+    eng, q = sf.Engine(1)
+    eng.run("base", return_state=False)
+
+    assert isinstance(eng.backend, BaseBackend)
+
+    # running the engine again should not change the backend instance
+    b = eng.backend
+    b._short_name = "base"
+    eng.run("base", return_state=False)
+
+    assert eng.backend is b
+
+
 def test_no_return_state(backend):
     """Tests that engine returns None when no state is requested"""
     eng, q = sf.Engine(2)
@@ -160,9 +175,12 @@ class TestRegRefs:
 
     def test_nonexistent(self):
         """Test that acting on a non-existent mode raises an error"""
-        eng, _ = sf.Engine(2)
+        eng, q = sf.Engine(2)
 
         with eng:
+            with pytest.raises(IndexError):
+                ops.Dgate(0.5) | q[3]
+
             with pytest.raises(engine.RegRefError, match="does not exist"):
                 ops.Dgate(0.5) | 3
 
@@ -174,6 +192,9 @@ class TestRegRefs:
             ops.Del | q[0]
             with pytest.raises(engine.RegRefError, match="been deleted"):
                 ops.Dgate(0.5) | 0
+
+            with pytest.raises(engine.RegRefError, match="been deleted"):
+                ops.Dgate(0.5) | q[0]
 
     def test_wrong_engine(self):
         """Test that acting on a mode not belonging to the engine raises error"""

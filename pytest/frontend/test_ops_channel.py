@@ -42,6 +42,13 @@ class TestChannelBasics:
         merged = G.merge(ops.LossChannel(b))
         assert np.allclose(merged.p[0].x, a * b, atol=tol, rtol=0)
 
+    def test_loss_merging_identity(self, tol):
+        """test the merging of two Loss channels such that
+        the resulting loss channel is simply the identity"""
+        G = ops.LossChannel(a)
+        merged = G.merge(ops.LossChannel(1.0 / a))
+        assert merged is None
+
     def test_thermalloss_merging_same_nbar(self, tol):
         """test the merging of two Loss channels with same nbar"""
         G = ops.ThermalLossChannel(a, c)
