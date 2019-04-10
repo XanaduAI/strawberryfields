@@ -23,6 +23,8 @@ from strawberryfields import backends
 from strawberryfields import utils
 from strawberryfields.backends.shared_ops import rotation_matrix as R, changebasis
 
+# some tests require a higher cutoff for accuracy
+CUTOFF = 12
 
 a = 0.3 + 0.1j
 r = 0.23
@@ -127,13 +129,13 @@ class TestSingleModePolyQuadratureExpectations:
     def test_x_squeezed(self, setup_backend, tol, pure):
         """Test that the correct E(x) is returned for the squeezed state."""
         backend = setup_backend(3)
-        backend.reset(cutoff_dim=12, pure=pure)
+        backend.reset(cutoff_dim=CUTOFF, pure=pure)
 
         A = None
         d = np.array([1, 0, 0, 0, 0, 0])
         k = 0
 
-        # prepare a squeezed displaced state
+        # prepare a displaced squeezed state
         backend.squeeze(r, 0)
 
         state = backend.state()
@@ -143,14 +145,14 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(var, np.exp(-2 * r), atol=tol, rtol=0)
 
     def test_x_displaced(self, setup_backend, tol, hbar):
-        """Test that the correct E(x) is returned for the squeezed coherent state."""
+        """Test that the correct E(x) is returned for a displaced state."""
         backend = setup_backend(3)
 
         A = None
         d = np.array([1, 0, 0, 0, 0, 0])
         k = 0
 
-        # prepare a squeezed displaced state
+        # prepare a displaced squeezed state
         backend.displacement(a, 0)
 
         state = backend.state()
@@ -159,8 +161,8 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(mean, a.real * np.sqrt(2 * hbar), atol=tol, rtol=0)
         assert np.allclose(var, hbar / 2, atol=tol, rtol=0)
 
-    def test_x_squeezed_coherent(self, setup_backend, tol, gaussian_state):
-        """Test that the correct E(x) is returned for the squeezed coherent state."""
+    def test_x_displaced_squeezed(self, setup_backend, tol, gaussian_state):
+        """Test that the correct E(x) is returned for the displaced squeezed state."""
         backend = setup_backend(3)
         mu, cov = gaussian_state
 
@@ -168,7 +170,7 @@ class TestSingleModePolyQuadratureExpectations:
         d = np.array([1, 0, 0, 0, 0, 0])
         k = 0
 
-        # prepare a squeezed displaced state
+        # prepare a displaced squeezed state
         backend.prepare_displaced_squeezed_state(a, r, phi, 0)
 
         state = backend.state()
@@ -177,8 +179,8 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(mean, mu[0], atol=tol, rtol=0)
         assert np.allclose(var, cov[0, 0], atol=tol, rtol=0)
 
-    def test_p_squeezed_coherent(self, setup_backend, tol, gaussian_state):
-        """Test that the correct E(p) is returned for the squeezed coherent state."""
+    def test_p_displaced_squeezed(self, setup_backend, tol, gaussian_state):
+        """Test that the correct E(p) is returned for the displaced squeezed state."""
         backend = setup_backend(3)
         mu, cov = gaussian_state
 
@@ -186,7 +188,7 @@ class TestSingleModePolyQuadratureExpectations:
         d = np.array([0, 0, 0, 1, 0, 0])
         k = 0
 
-        # prepare a squeezed displaced state
+        # prepare a displaced squeezed state
         backend.prepare_displaced_squeezed_state(a, r, phi, 0)
 
         state = backend.state()
@@ -204,7 +206,7 @@ class TestSingleModePolyQuadratureExpectations:
         d = np.array([0.4234, 0, 0, 0.1543, 0, 0])
         k = 0
 
-        # prepare a squeezed displaced state
+        # prepare a displaced squeezed state
         backend.prepare_displaced_squeezed_state(a, r, phi, 0)
 
         state = backend.state()
@@ -223,7 +225,7 @@ class TestSingleModePolyQuadratureExpectations:
     def test_n_thermal(self, setup_backend, tol, hbar, pure):
         """Test expectation and variance of the number operator on a thermal state"""
         backend = setup_backend(3)
-        backend.reset(cutoff_dim=12, pure=pure)
+        backend.reset(cutoff_dim=CUTOFF, pure=pure)
 
         nbar = 0.423
 
@@ -243,7 +245,7 @@ class TestSingleModePolyQuadratureExpectations:
     def test_n_squeeze(self, setup_backend, tol, hbar, pure):
         """Test expectation and variance of the number operator on a squeezed state"""
         backend = setup_backend(3)
-        backend.reset(cutoff_dim=12, pure=pure)
+        backend.reset(cutoff_dim=CUTOFF, pure=pure)
 
         backend.prepare_squeezed_state(r, phi, 0)
         state = backend.state()
@@ -265,7 +267,7 @@ class TestSingleModePolyQuadratureExpectations:
     def test_x_squared(self, setup_backend, tol, pure, sample_normal_expectations):
         """Test that the correct result is returned for E(x^2)"""
         backend = setup_backend(3)
-        backend.reset(cutoff_dim=12, pure=pure)
+        backend.reset(cutoff_dim=CUTOFF, pure=pure)
 
         A = np.zeros([6, 6])
         A[0, 0] = 1
@@ -273,7 +275,7 @@ class TestSingleModePolyQuadratureExpectations:
         d = None
         k = 0
 
-        # prepare a squeezed displaced state
+        # prepare a displaced squeezed state
         backend.prepare_displaced_squeezed_state(a, r, phi, 0)
 
         state = backend.state()
@@ -286,7 +288,7 @@ class TestSingleModePolyQuadratureExpectations:
     def test_p_squared(self, setup_backend, tol, pure, sample_normal_expectations):
         """Test that the correct result is returned for E(p^2)"""
         backend = setup_backend(3)
-        backend.reset(cutoff_dim=12, pure=pure)
+        backend.reset(cutoff_dim=CUTOFF, pure=pure)
 
         A = np.zeros([6, 6])
         A[3, 3] = 1
@@ -294,7 +296,7 @@ class TestSingleModePolyQuadratureExpectations:
         d = None
         k = 0
 
-        # prepare a squeezed displaced state
+        # prepare a displaced squeezed state
         backend.prepare_displaced_squeezed_state(a, r, phi, 0)
 
         state = backend.state()
@@ -328,10 +330,12 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(mean, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
-    def test_xp_displaced_squeezed(self, setup_backend, tol, pure, sample_normal_expectations):
+    def test_xp_displaced_squeezed(
+        self, setup_backend, tol, pure, sample_normal_expectations
+    ):
         """Test that the correct result is returned for E(xp) on a displaced squeezed state"""
         backend = setup_backend(3)
-        backend.reset(cutoff_dim=12, pure=pure)
+        backend.reset(cutoff_dim=CUTOFF, pure=pure)
 
         # set quadratic coefficient
         A = np.zeros([6, 6])
@@ -340,7 +344,7 @@ class TestSingleModePolyQuadratureExpectations:
         d = None
         k = 0
 
-        # prepare a squeezed displaced state
+        # prepare a displaced squeezed state
         backend.prepare_displaced_squeezed_state(a, r, phi, 0)
 
         state = backend.state()
@@ -357,7 +361,7 @@ class TestSingleModePolyQuadratureExpectations:
     ):
         """Test that the correct result is returned for E(c0 x^2 + c1 p^2 + c2 xp + c3 x + c4 p + k) on a displaced squeezed state"""
         backend = setup_backend(3)
-        backend.reset(cutoff_dim=12, pure=pure)
+        backend.reset(cutoff_dim=CUTOFF, pure=pure)
 
         c0 = 1 / np.sqrt(2)
         c1 = 3
@@ -377,7 +381,7 @@ class TestSingleModePolyQuadratureExpectations:
         d = np.array([c3, 0, 0, c4, 0, 0])
         k = 5
 
-        # prepare a squeezed displaced state
+        # prepare a displaced squeezed state
         backend.prepare_displaced_squeezed_state(a, r, phi, 0)
 
         state = backend.state()
@@ -399,6 +403,7 @@ class TestMultiModePolyQuadratureExpectations:
     def test_three_mode_arbitrary(self, setup_backend, pure, hbar, tol):
         """Test that the correct result is returned for an arbitrary quadratic polynomial"""
         backend = setup_backend(3)
+        # increase the cutoff to 7 for accuracy
         backend.reset(cutoff_dim=7, pure=pure)
 
         # fmt:off

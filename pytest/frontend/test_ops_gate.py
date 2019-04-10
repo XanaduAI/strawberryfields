@@ -27,9 +27,9 @@ from strawberryfields.parameters import Parameter
 
 # make test deterministic
 np.random.random(42)
-a = np.random.random()
-b = np.random.random()
-c = np.random.random()
+A = np.random.random()
+B = np.random.random()
+C = np.random.random()
 
 
 @pytest.mark.parametrize("gate", ops.gates)
@@ -56,10 +56,10 @@ class TestGateBasics:
             return gate
 
         if gate in ops.one_args_gates:
-            return gate(a)
+            return gate(A)
 
         if gate in ops.two_args_gates:
-            return gate(a, b)
+            return gate(A, B)
 
     @pytest.fixture
     def H(self, gate):
@@ -68,10 +68,10 @@ class TestGateBasics:
             return gate
 
         if gate in ops.one_args_gates:
-            return gate(c)
+            return gate(C)
 
         if gate in ops.two_args_gates:
-            return gate(c, b)
+            return gate(C, B)
 
     def test_merge_inverse(self, G):
         """gate merged with its inverse is the identity"""
@@ -109,7 +109,7 @@ class TestGateBasics:
         if G in ops.zero_args_gates:
             pytest.skip("Gates with no arguments are not merged")
 
-        a, b = np.random.random([2])
+        A, B = np.random.random([2])
         merged = G.merge(H)
 
         # should not be the identity
@@ -138,6 +138,10 @@ class TestGateBasics:
             self.res = [x.evaluate() for x in self.p]
 
         with monkeypatch.context() as m:
+            # patch the standard Operation class apply method
+            # with our dummy method, that stores the applied parameter
+            # in the attribute res. This allows us to extract
+            # and verify the parameter was properly negated.
             m.setattr(ops.Operation, "apply", dummy_apply)
             G2.apply(None, None, None)
 

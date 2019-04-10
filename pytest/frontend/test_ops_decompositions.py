@@ -319,7 +319,8 @@ class TestGaussianTransform:
         assert G.hbar == hbar
 
     def test_passive(self, tol):
-        """Test that there is no squeezing"""
+        """Test that a passive decomposition is correctly flagged as requiring
+        only a single interferometer"""
         eng, q = sf.Engine(3)
 
         with eng:
@@ -331,7 +332,8 @@ class TestGaussianTransform:
         assert not hasattr(G, "U2")
 
     def test_active(self, tol):
-        """Test that there is squeezing"""
+        """Test that an active decomposition is correctly flagged as requiring
+        two interferometers and squeezing"""
         eng, q = sf.Engine(3)
         S1 = random_symplectic(3, passive=False)
 
@@ -636,7 +638,7 @@ class TestGaussian:
             assert cmd.op.p[1].x == 0
 
     def test_rotated_squeezed_decomposition(self, hbar, tol):
-        """Test that an squeeze state decomposition provides the correct covariance matrix"""
+        """Test that a rotated squeeze state decomposition provides the correct covariance matrix"""
         n = 3
         eng, q = sf.Engine(n, hbar=hbar)
 

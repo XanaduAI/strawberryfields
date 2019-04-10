@@ -22,7 +22,7 @@ import numpy as np
 import strawberryfields.backends.shared_ops as so
 
 # fmt: off
-bs_4_val = np.array([ 1.00000000+0.j,  1.00000000+0.j,  1.00000000+0.j,  1.00000000+0.j,
+BS_4_VAL = np.array([ 1.00000000+0.j,  1.00000000+0.j,  1.00000000+0.j,  1.00000000+0.j,
         1.00000000+0.j,  1.41421356+0.j,  1.73205081+0.j,  1.00000000+0.j,
         1.73205081+0.j,  1.00000000+0.j, -1.00000000+0.j, -1.41421356+0.j,
        -1.73205081+0.j,  1.00000000+0.j, -1.00000000+0.j,  1.00000000+0.j,
@@ -41,7 +41,7 @@ bs_4_val = np.array([ 1.00000000+0.j,  1.00000000+0.j,  1.00000000+0.j,  1.00000
        -6.00000000+0.j,  1.00000000+0.j, -1.00000000+0.j,  9.00000000+0.j,
        -9.00000000+0.j,  1.00000000+0.j])
 
-bs_4_idx = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+BS_4_IDX = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
         2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
         3, 3, 3, 3],
@@ -64,7 +64,7 @@ bs_4_idx = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 
 # fmt: on
 
-squeeze_parity_8 = np.array(
+SQUEEZE_PARITY_8 = np.array(
     [
         [1, 0, -1, 0, 1, 0, -1, 0],
         [0, 1, 0, -1, 0, 1, 0, -1],
@@ -78,7 +78,7 @@ squeeze_parity_8 = np.array(
 )
 
 
-squeeze_factor_4 = np.array(
+SQUEEZE_FACTOR_4 = np.array(
     [
         [
             [1.0, 0.0, -0.0, 0.0],
@@ -120,8 +120,8 @@ class TestBeamsplitterFactors:
         factors_val = factors[factors != 0.0]
         factors_idx = np.array(np.nonzero(factors))
 
-        assert np.allclose(factors_val, bs_4_val, atol=tol, rtol=0)
-        assert np.allclose(factors_idx, bs_4_idx, atol=tol, rtol=0)
+        assert np.allclose(factors_val, BS_4_VAL, atol=tol, rtol=0)
+        assert np.allclose(factors_idx, BS_4_IDX, atol=tol, rtol=0)
 
     def test_save_load(self, tmpdir, tol):
         """test saving and loading of beamsplitter factors"""
@@ -132,8 +132,8 @@ class TestBeamsplitterFactors:
         factors_val = factors[factors != 0.0]
         factors_idx = np.array(np.nonzero(factors))
 
-        assert np.allclose(factors_val, bs_4_val, atol=tol, rtol=0)
-        assert np.allclose(factors_idx, bs_4_idx, atol=tol, rtol=0)
+        assert np.allclose(factors_val, BS_4_VAL, atol=tol, rtol=0)
+        assert np.allclose(factors_idx, BS_4_IDX, atol=tol, rtol=0)
 
 
 class TestSqueezingFactors:
@@ -142,12 +142,12 @@ class TestSqueezingFactors:
     def test_squeeze_parity(self, tol):
         """Test the squeeze parity function returns the correct result"""
         parity = so.squeeze_parity(8)
-        assert np.allclose(parity, squeeze_parity_8, atol=tol, rtol=0)
+        assert np.allclose(parity, SQUEEZE_PARITY_8, atol=tol, rtol=0)
 
     def test_generate(self, tol):
         """test generating squeezoing factors gives expected results"""
         factors = so.generate_squeeze_factors(4)
-        assert np.allclose(factors, squeeze_factor_4, atol=tol, rtol=0)
+        assert np.allclose(factors, SQUEEZE_FACTOR_4, atol=tol, rtol=0)
 
     def test_save_load(self, tmpdir, tol):
         """test saving and loading of squeezoing factors"""
@@ -155,7 +155,7 @@ class TestSqueezingFactors:
         so.save_squeeze_factors(factors_in, directory=str(tmpdir))
         factors_out = so.load_squeeze_factors(4, directory=str(tmpdir))
 
-        assert np.allclose(factors_out, squeeze_factor_4, atol=tol, rtol=0)
+        assert np.allclose(factors_out, SQUEEZE_FACTOR_4, atol=tol, rtol=0)
 
 
 class TestPhaseSpaceFunctions:

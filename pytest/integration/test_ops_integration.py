@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for Gate classes in ops.py"""
+r"""Integration tests for frontend operations applied to the backend"""
 import pytest
 
 import numpy as np
@@ -23,9 +23,8 @@ from strawberryfields.backends import BaseGaussian
 
 # make test deterministic
 np.random.random(42)
-a = 0.1234
-b = -0.543
-c = 0.312
+A = 0.1234
+B = -0.543
 
 
 @pytest.mark.parametrize("gate", ops.gates)
@@ -39,10 +38,10 @@ class TestGateApplication:
             return gate
 
         if gate in ops.one_args_gates:
-            return gate(a)
+            return gate(A)
 
         if gate in ops.two_args_gates:
-            return gate(a, b)
+            return gate(A, B)
 
     def test_gate_dagger_vacuum(self, G, setup_eng, tol):
         """Test applying gate inverses after the gate cancels out"""
@@ -74,7 +73,7 @@ class TestChannelApplication:
         eng, q = setup_eng(1)
 
         with eng:
-            ops.Dgate(a) | q[0]
+            ops.Dgate(A) | q[0]
             ops.LossChannel(0) | q[0]
 
         state = eng.run()
@@ -88,7 +87,7 @@ class TestChannelApplication:
         nbar = 0.43
 
         with eng:
-            ops.Dgate(a) | q[0]
+            ops.Dgate(A) | q[0]
             ops.ThermalLossChannel(0, nbar) | q[0]
 
         state = eng.run()

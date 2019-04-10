@@ -24,9 +24,7 @@ from strawberryfields import ops
 
 # make test deterministic
 np.random.random(42)
-a = np.random.random()
-b = np.random.random()
-c = np.random.random()
+A = np.random.random()
 
 
 # all single-mode gates with at least one parameter
@@ -48,7 +46,7 @@ def permute_gates():
 def test_merge_dagger(G):
     """Optimizer merging single-mode gates with their daggered versions."""
     eng, _ = sf.Engine(1)
-    G = G(a)
+    G = G(A)
 
     with eng:
         G | 0
@@ -62,8 +60,8 @@ def test_merge_dagger(G):
 def test_merge_negated(G):
     """Optimizer merging single-mode gates with their negated versions."""
     eng, _ = sf.Engine(1)
-    G1 = G(a)
-    G2 = G(-a)
+    G1 = G(A)
+    G2 = G(-A)
 
     with eng:
         G1 | 0
