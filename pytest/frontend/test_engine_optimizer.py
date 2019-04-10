@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for Gate classes in ops.py"""
+r"""Unit tests for engine optimizer engine.py"""
 import pytest
 
 pytestmark = pytest.mark.frontend
@@ -73,8 +73,8 @@ def test_merge_negated(G):
     assert not eng.cmd_queue
 
 
-def test_merge_palindronic_cancelling(permute_gates):
-    """Optimizer merging chains cancel out with palindronic cancelling"""
+def test_merge_palindromic_cancelling(permute_gates):
+    """Optimizer merging chains cancel out with palindromic cancelling"""
     eng, _ = sf.Engine(3)
 
     with eng:

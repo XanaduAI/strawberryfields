@@ -331,7 +331,7 @@ class TestGaussianTransform:
         assert not hasattr(G, "U2")
 
     def test_active(self, tol):
-        """Test that is now squeezing"""
+        """Test that there is squeezing"""
         eng, q = sf.Engine(3)
         S1 = random_symplectic(3, passive=False)
 
@@ -557,7 +557,7 @@ class TestGaussian:
             G._apply(q, DummyBackend())
 
     def test_decomposition(self, hbar, tol):
-        """Test that an arbitrary decomposition provides right covariance matrix"""
+        """Test that an arbitrary decomposition provides the right covariance matrix"""
         n = 3
         eng, q = sf.Engine(n, hbar=hbar)
 
@@ -614,7 +614,7 @@ class TestGaussian:
             assert np.allclose(cmd.op.p[0].x, nbar[i], atol=tol, rtol=0)
 
     def test_squeezed_decomposition(self, hbar, tol):
-        """Test that an squeeze state decomposition provides correct covariance matrix"""
+        """Test that an squeeze state decomposition provides correct the covariance matrix"""
         n = 3
         eng, q = sf.Engine(n, hbar=hbar)
 
@@ -636,7 +636,7 @@ class TestGaussian:
             assert cmd.op.p[1].x == 0
 
     def test_rotated_squeezed_decomposition(self, hbar, tol):
-        """Test that an squeeze state decomposition provides correct covariance matrix"""
+        """Test that an squeeze state decomposition provides the correct covariance matrix"""
         n = 3
         eng, q = sf.Engine(n, hbar=hbar)
 

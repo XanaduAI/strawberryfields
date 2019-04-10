@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for the states.py submodule"""
+r"""Unit tests for the poly_quad_expectations method in the states.py submodule"""
 import pytest
 
 import numpy as np
@@ -125,7 +125,7 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(var, len(d) * hbar / 4, atol=tol, rtol=0)
 
     def test_x_squeezed(self, setup_backend, tol, pure):
-        """Test that the correct E(x) is returned for the squeezed coherent state."""
+        """Test that the correct E(x) is returned for the squeezed state."""
         backend = setup_backend(3)
         backend.reset(cutoff_dim=12, pure=pure)
 
@@ -241,7 +241,7 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(var, nbar * (nbar + 1), atol=tol, rtol=0)
 
     def test_n_squeeze(self, setup_backend, tol, hbar, pure):
-        """Test expectation and variance of the number operator on a squeeze state"""
+        """Test expectation and variance of the number operator on a squeezed state"""
         backend = setup_backend(3)
         backend.reset(cutoff_dim=12, pure=pure)
 
@@ -305,7 +305,7 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
     def test_xp_vacuum(self, setup_backend, tol, sample_normal_expectations):
-        """Test that the correct result is returned for E(xp)"""
+        """Test that the correct result is returned for E(xp) on the vacuum state"""
         backend = setup_backend(3)
 
         # set quadratic coefficient
@@ -328,8 +328,8 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(mean, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
-    def test_xp(self, setup_backend, tol, pure, sample_normal_expectations):
-        """Test that the correct result is returned for E(xp)"""
+    def test_xp_displaced_squeezed(self, setup_backend, tol, pure, sample_normal_expectations):
+        """Test that the correct result is returned for E(xp) on a displaced squeezed state"""
         backend = setup_backend(3)
         backend.reset(cutoff_dim=12, pure=pure)
 
@@ -355,7 +355,7 @@ class TestSingleModePolyQuadratureExpectations:
     def test_arbitrary_quadratic(
         self, setup_backend, tol, pure, sample_normal_expectations
     ):
-        """Test that the correct result is returned for E(c0 x^2 + c1 p^2 + c2 xp + c3 x + c4 p + k)"""
+        """Test that the correct result is returned for E(c0 x^2 + c1 p^2 + c2 xp + c3 x + c4 p + k) on a displaced squeezed state"""
         backend = setup_backend(3)
         backend.reset(cutoff_dim=12, pure=pure)
 

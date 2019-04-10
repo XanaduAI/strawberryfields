@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Default parameters, commandline arguments and common routines for the TensorFlow backend unit tests.
+Default parameters, environment variables, fixtures, and common routines for the unit tests.
 """
 # pylint: disable=redefined-outer-name
 import os

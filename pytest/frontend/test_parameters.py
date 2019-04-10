@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Integration tests to make sure hbar values set correctly in returned results"""
+r"""Integration tests to make sure hbar values are set correctly in returned results"""
 import pytest
 
 pytestmark = pytest.mark.frontend
