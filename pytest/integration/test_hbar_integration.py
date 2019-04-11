@@ -90,7 +90,11 @@ class BackendOnly:
     def test_squeeze_variance(self, setup_backend, hbar, pure, monkeypatch, tol):
         """test homodyne measurement of a squeeze state is correct,
         returning a variance of np.exp(-2*r)*h/2"""
-        # TODO: this is just a backend test!
+        # TODO: this test is a backend test that duplicates
+        # the existing `test_squeeze_variance` integration test.
+        # It should live in the backend folder, but currently takes too
+        # long to run both.
+        # We should revisit this test and decide what to do with it.
         backend = setup_backend(1)
 
         res = np.empty(0)
