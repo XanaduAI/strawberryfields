@@ -188,7 +188,7 @@ class Circuit:
             raise UnsupportedGateException('Unsupported operation {0} not printable by circuit builder!'.format(str(op)))
         elif mode == len(wires):
             method(*wires)
-        elif mode != len(wires):
+        else:
             raise ModeMismatchException('{0} mode gate applied to {1} wires!'.format(mode, len(wires)))
 
     def _x(self, wire):
