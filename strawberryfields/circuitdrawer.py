@@ -86,8 +86,8 @@ import datetime
 import os
 from .qcircuit_strings import QUANTUM_WIRE, PAULI_X_COMP, PAULI_Z_COMP, CONTROL, \
     TARGET, COLUMN_SPACING, ROW_SPACING, DOCUMENT_END, WIRE_OPERATION, WIRE_TERMINATOR, CIRCUIT_BODY_TERMINATOR, \
-    CIRCUIT_BODY_START, INIT_DOCUMENT, PIPE, D_COMP, R_COMP, P_COMP, V_COMP, FOURIER_COMP, BS_COMP, S_COMP, \
-    K_COMP
+    CIRCUIT_BODY_START, INIT_DOCUMENT, PIPE, D_COMP, R_COMP, P_COMP, V_COMP, FOURIER_COMP, BS_MULTI_COMP, \
+    S_MULTI_COMP, K_COMP, MULTIGATE, GHOST, S_COMP
 
 
 class ModeMismatchException(Exception):
@@ -297,7 +297,7 @@ class Circuit:
             first_wire (int): the first subsystem wire to apply the operator to.
             second_wire (int): the second subsystem wire to apply the operator to.
         """
-        self._multi_mode_gate(BS_COMP, [first_wire, second_wire])
+        self._multi_mode_gate(BS_MULTI_COMP, [first_wire, second_wire])
 
     def _s2(self, first_wire, second_wire):
         """Adds an two mode squeezing operator to the circuit.
@@ -306,7 +306,7 @@ class Circuit:
             first_wire (int): the first subsystem wire to apply the operator to.
             second_wire (int): the second subsystem wire to apply the operator to.
         """
-        self._multi_mode_gate(S_COMP, [first_wire, second_wire])
+        self._multi_mode_gate(S_MULTI_COMP, [first_wire, second_wire])
 
     # operation types
 
@@ -330,7 +330,7 @@ class Circuit:
                 post_wire.append(QUANTUM_WIRE.format(1))
 
     def _multi_mode_gate(self, circuit_op, wires):
-        """Adds multiple of the same single-mode operator to the circuit.
+        """Adds a multi-mode operator to the circuit.
 
         Args:
             circuit_op (str): the latex code for the operator.
@@ -341,9 +341,14 @@ class Circuit:
         if not self._on_empty_column():
             self._add_column()
 
+        first_wire = wires.pop(0)
+        wire_ops = matrix[first_wire]
+        wire_ops[-1] = MULTIGATE.format(1, circuit_op)
+        matrix[first_wire] = wire_ops
+
         for wire in wires:
             wire_ops = matrix[wire]
-            wire_ops[-1] = circuit_op
+            wire_ops[-1] = GHOST.format(circuit_op)
             matrix[wire] = wire_ops
 
         self._circuit_matrix = matrix
@@ -491,6 +496,7 @@ class Circuit:
 
     def _end_circuit(self):
         """Ends the latex circuit content."""
+        self._add_column()
         self._document += CIRCUIT_BODY_TERMINATOR
 
     def _end_wire(self):

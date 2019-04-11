@@ -129,8 +129,8 @@ class CircuitDrawerTests(BaseTest):
             Zgate(1) | (q[0])
             CXgate(1) | (q[0], q[1])
             CZgate(1) | (q[0], q[1])
-            BSgate(1) | (q[0], q[1])
-            S2gate(1) | (q[0], q[1])
+            BSgate(0, 1) | (q[0], q[1])
+            S2gate(0, 1) | (q[0], q[1])
             CKgate(1) | (q[0], q[1])
             Kgate(1) | (q[0])
             Vgate(1) | (q[0])
@@ -147,7 +147,7 @@ class CircuitDrawerTests(BaseTest):
     def test_add_column(self):
         self.drawer._add_column()
         for wire in self.drawer._circuit_matrix:
-            self.assertTrue(wire[-1] == QUANTUM_WIRE.format(1))
+            self.assertTrue(wire[-1] == QUANTUM_WIRE)
 
     def test_on_empty_column(self):
         self.logTestName()

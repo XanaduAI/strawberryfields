@@ -29,7 +29,8 @@ ROW_SPACING = '@R={0}' #spacing
 UNIFORM_ROW_SPACING = '@!R'
 UNIFORM_COLUMN_SPACING = '@!C'
 UNIFORM_ELEMENT_SPACING = '@!'
-QUANTUM_WIRE = r'\qw[{0}]' #length vector i.e. "-1"
+QUANTUM_WIRE = r'\qw'
+MULTI_QUANTUM_WIRE = r'\qw[{0}]' #length vector i.e. "-1"
 VERTICAL_QUANTUM_WIRE = r'\qwx[{0}]' #length vector
 WIRE_END = r'\qwa[{0}]' #length vector
 CLASSICAL_WIRE = r'\cw[{0}]' #length vector
@@ -71,11 +72,12 @@ V_COMP = LABELLED_GATE.format('V')
 K_COMP = LABELLED_GATE.format('K')
 FOURIER_COMP = LABELLED_GATE.format('F')
 
-BS_COMP = LABELLED_GATE.format('BS')
+BS_MULTI_COMP = 'BS'
+S_MULTI_COMP = 'S'
 
 WIRE_OPERATION = '& {0}'
 WIRE_TERMINATOR = r'\\' + '\n'
-CIRCUIT_BODY_TERMINATOR = '\n}\n'
+CIRCUIT_BODY_TERMINATOR = '}\n'
 CIRCUIT_BODY_START = ' {' + '\n'
 INIT_DOCUMENT = DOCUMENT_CLASS + '\n' + QCIRCUIT_PACKAGE + '\n' + BEGIN_DOCUMENT + '\n' + CIRCUIT_START
 
