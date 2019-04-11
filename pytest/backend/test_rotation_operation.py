@@ -36,14 +36,14 @@ class TestRepresentationIndependent:
         assert np.all(backend.is_vacuum(tol))
 
 
-@pytest.mark.backends('fock', 'tf')
+@pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
 
     @pytest.mark.parametrize("theta", SHIFT_THETAS)
     def test_normalized_rotated_coherent_states(self, setup_backend, theta, tol):
         """Tests if a range of phase-shifted coherent states are normalized."""
-        alpha = 1.
+        alpha = 1.0
         backend = setup_backend(1)
 
         backend.prepare_coherent_state(alpha, 0)
@@ -51,7 +51,7 @@ class TestFockRepresentation:
 
         state = backend.state()
         tr = state.trace()
-        assert np.allclose(tr, 1., atol=tol, rtol=0.)
+        assert np.allclose(tr, 1.0, atol=tol, rtol=0.0)
 
     @pytest.mark.parametrize("theta", SHIFT_THETAS)
     def test_rotated_fock_states(self, setup_backend, theta, pure, cutoff, tol):
@@ -72,9 +72,9 @@ class TestFockRepresentation:
                 numer_state = s.dm()
 
             k = np.arange(cutoff)
-            ref_state = np.where(k == n, np.exp(1j*theta*k), 0)
+            ref_state = np.where(k == n, np.exp(1j * theta * k), 0)
 
             if not pure:
                 ref_state = np.outer(ref_state, np.conj(ref_state))
 
-            assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.)
+            assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)

@@ -14,12 +14,12 @@
 r"""
 Tests for the various Tensorflow-specific symbolic options of the frontend/backend.
 """
- #pylint: disable=expression-not-assigned,too-many-public-methods,pointless-statement
+# pylint: disable=expression-not-assigned,too-many-public-methods,pointless-statement
 
 import pytest
 
 # this test file is only supported by the TF backend
-pytestmark = pytest.mark.backends('tf')
+pytestmark = pytest.mark.backends("tf")
 
 import numpy as np
 from scipy.special import factorial
@@ -33,7 +33,7 @@ ALPHA = 0.5
 def coherent_state(alpha, cutoff):
     """Returns the Fock representation of the coherent state |alpha> up to dimension given by cutoff"""
     n = np.arange(cutoff)
-    return np.exp(- 0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(factorial(n))
+    return np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(factorial(n))
 
 
 def _vac_ket(cutoff):
@@ -75,13 +75,15 @@ class TestOneModeSymbolic:
 
         with eng:
             Dgate(0.5) | q
-            MeasureX   | q
+            MeasureX | q
 
         eng.run(eval=False)
         val = q[0].val
         assert isinstance(val, tf.Tensor)
 
-    def test_eng_run_with_session_and_feed_dict(self, setup_eng, batch_size, cutoff, tol):
+    def test_eng_run_with_session_and_feed_dict(
+        self, setup_eng, batch_size, cutoff, tol
+    ):
         """Tests whether passing a tf Session and feed_dict
         through `eng.run` leads to proper numerical simulation."""
         a = tf.Variable(0.5)
@@ -98,14 +100,14 @@ class TestOneModeSymbolic:
             k = state.ket()
 
             if batch_size is not None:
-                dm = np.einsum('bi,bj->bij', k, np.conj(k))
+                dm = np.einsum("bi,bj->bij", k, np.conj(k))
             else:
                 dm = np.outer(k, np.conj(k))
         else:
             dm = state.dm()
 
         vac_dm = _vac_dm(cutoff)
-        assert np.allclose(dm, vac_dm, atol=tol, rtol=0.)
+        assert np.allclose(dm, vac_dm, atol=tol, rtol=0.0)
 
     #########################################
     # tests of eval behaviour of ket method
@@ -147,7 +149,7 @@ class TestOneModeSymbolic:
         state = eng.run()
         ket = state.ket(eval=True)
         vac = _vac_ket(cutoff)
-        assert np.allclose(ket, vac, atol=tol, rtol=0.)
+        assert np.allclose(ket, vac, atol=tol, rtol=0.0)
 
     #########################################
     # tests of eval behaviour of dm method
@@ -192,7 +194,7 @@ class TestOneModeSymbolic:
         state = eng.run()
         dm = state.dm(eval=True)
         vac_dm = _vac_dm(cutoff)
-        assert np.allclose(dm, vac_dm, atol=tol, rtol=0.)
+        assert np.allclose(dm, vac_dm, atol=tol, rtol=0.0)
 
     #########################################
     # tests of eval behaviour of trace method
@@ -231,7 +233,7 @@ class TestOneModeSymbolic:
         state = eng.run()
 
         tr = state.trace(eval=True)
-        assert np.allclose(tr, 1, atol=tol, rtol=0.)
+        assert np.allclose(tr, 1, atol=tol, rtol=0.0)
 
     #########################################
     # tests of eval behaviour of reduced_dm method
@@ -267,7 +269,7 @@ class TestOneModeSymbolic:
         state = eng.run()
         rho = state.reduced_dm([0], eval=True)
         vac_dm = _vac_dm(cutoff)
-        assert np.allclose(rho, vac_dm, atol=tol, rtol=0.)
+        assert np.allclose(rho, vac_dm, atol=tol, rtol=0.0)
 
     #########################################
     # tests of eval behaviour of fidelity_vacuum method
@@ -302,7 +304,7 @@ class TestOneModeSymbolic:
         eng, _ = setup_eng(1)
         state = eng.run()
         fidel_vac = state.fidelity_vacuum(eval=True)
-        assert np.allclose(fidel_vac, 1., atol=tol, rtol=0.)
+        assert np.allclose(fidel_vac, 1.0, atol=tol, rtol=0.0)
 
     #########################################
     # tests of eval behaviour of is_vacuum method
@@ -376,7 +378,7 @@ class TestOneModeSymbolic:
 
         state = eng.run()
         fidel_coh = state.fidelity_coherent([ALPHA], eval=True)
-        assert np.allclose(fidel_coh, 1, atol=tol, rtol=0.)
+        assert np.allclose(fidel_coh, 1, atol=tol, rtol=0.0)
 
     #########################################
     # tests of eval behaviour of fidelity method
@@ -415,7 +417,7 @@ class TestOneModeSymbolic:
 
         state = eng.run()
         fidel_coh = state.fidelity(coherent_state(ALPHA, cutoff), 0, eval=True)
-        assert np.allclose(fidel_coh, 1, atol=tol, rtol=0.)
+        assert np.allclose(fidel_coh, 1, atol=tol, rtol=0.0)
 
     #########################################
     # tests of eval behaviour of quad_expectation method
@@ -449,7 +451,7 @@ class TestOneModeSymbolic:
     def test_eval_true_state_quad_expectation(self, setup_eng, tol):
         """Tests whether the local quadrature expectation value of the state returns
         the correct value when eval=True is passed to the quad_expectation method of a state."""
-        hbar = 2.
+        hbar = 2.0
         eng, q = setup_eng(1)
 
         with eng:
@@ -457,10 +459,10 @@ class TestOneModeSymbolic:
 
         state = eng.run()
         e, v = state.quad_expectation(0, 0, eval=True)
-        true_exp = np.sqrt(hbar / 2.) * (ALPHA + np.conj(ALPHA))
-        true_var = hbar / 2.
-        assert np.allclose(e, true_exp, atol=tol, rtol=0.)
-        assert np.allclose(v, true_var, atol=tol, rtol=0.)
+        true_exp = np.sqrt(hbar / 2.0) * (ALPHA + np.conj(ALPHA))
+        true_var = hbar / 2.0
+        assert np.allclose(e, true_exp, atol=tol, rtol=0.0)
+        assert np.allclose(v, true_var, atol=tol, rtol=0.0)
 
     #########################################
     # tests of eval behaviour of mean_photon method
@@ -503,8 +505,8 @@ class TestOneModeSymbolic:
         nbar, var = state.mean_photon(0, eval=True)
         ref_nbar = np.abs(ALPHA) ** 2
         ref_var = np.abs(ALPHA) ** 2
-        assert np.allclose(nbar, ref_nbar, atol=tol, rtol=0.)
-        assert np.allclose(var, ref_var, atol=tol, rtol=0.)
+        assert np.allclose(nbar, ref_nbar, atol=tol, rtol=0.0)
+        assert np.allclose(var, ref_var, atol=tol, rtol=0.0)
 
 
 class TestTwoModeSymbolic:
@@ -550,12 +552,17 @@ class TestTwoModeSymbolic:
 
         state = eng.run()
         probs = state.all_fock_probs(eval=True).flatten()
-        ref_probs = np.abs(np.outer(coherent_state(ALPHA, cutoff), coherent_state(-ALPHA, cutoff))).flatten() ** 2
+        ref_probs = (
+            np.abs(
+                np.outer(coherent_state(ALPHA, cutoff), coherent_state(-ALPHA, cutoff))
+            ).flatten()
+            ** 2
+        )
 
         if batch_size is not None:
             ref_probs = np.tile(ref_probs, batch_size)
 
-        assert np.allclose(probs, ref_probs, atol=tol, rtol=0.)
+        assert np.allclose(probs, ref_probs, atol=tol, rtol=0.0)
 
     #########################################
     # tests of eval behaviour of fock_prob method
@@ -600,5 +607,7 @@ class TestTwoModeSymbolic:
 
         state = eng.run()
         prob = state.fock_prob([n1, n2], eval=True)
-        ref_prob = np.abs(np.outer(coherent_state(ALPHA, cutoff), coherent_state(-ALPHA, cutoff)) ** 2)[n1, n2]
-        assert np.allclose(prob, ref_prob, atol=tol, rtol=0.)
+        ref_prob = np.abs(
+            np.outer(coherent_state(ALPHA, cutoff), coherent_state(-ALPHA, cutoff)) ** 2
+        )[n1, n2]
+        assert np.allclose(prob, ref_prob, atol=tol, rtol=0.0)

@@ -16,8 +16,8 @@ r"""Unit tests for homodyne measurements."""
 import numpy as np
 
 
-N_MEAS = 300   # number of homodyne measurements to perform
-NUM_STDS = 10.
+N_MEAS = 300  # number of homodyne measurements to perform
+NUM_STDS = 10.0
 std_10 = NUM_STDS / np.sqrt(N_MEAS)
 
 
@@ -28,7 +28,7 @@ class TestRepresentationIndependent:
         """Tests that modes get reset to the vacuum after measurement."""
         backend = setup_backend(1)
 
-        r = np.arcsinh(1.0)  #pylint: disable=assignment-from-no-return
+        r = np.arcsinh(1.0)  # pylint: disable=assignment-from-no-return
         alpha = 0.8
 
         backend.squeeze(r, 0)
@@ -50,15 +50,14 @@ class TestRepresentationIndependent:
             meas_result = backend.measure_homodyne(0, 0)
             x = np.append(x, meas_result)
 
-        assert np.allclose(x.mean(), 0., atol=std_10 + tol, rtol=0)
-        assert np.allclose(x.std(), 1., atol=std_10 + tol, rtol=0)
-
+        assert np.allclose(x.mean(), 0.0, atol=std_10 + tol, rtol=0)
+        assert np.allclose(x.std(), 1.0, atol=std_10 + tol, rtol=0)
 
     def test_mean_coherent(self, setup_backend, pure, tol):
         """Tests that the mean and standard deviation estimates of many homodyne
         measurements are in agreement with the expected values for a
         coherent state"""
-        alpha = 1.+1.j
+        alpha = 1.0 + 1.0j
         x = np.empty(0)
 
         backend = setup_backend(1)

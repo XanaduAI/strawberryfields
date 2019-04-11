@@ -43,7 +43,7 @@ class TestRepresentationIndependent:
         assert np.all(backend.is_vacuum(tol))
 
 
-@pytest.mark.backends('fock', 'tf')
+@pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
 
@@ -56,7 +56,7 @@ class TestFockRepresentation:
         backend.prepare_squeezed_state(r, theta, 0)
         state = backend.state()
         tr = state.trace()
-        assert np.allclose(tr, 1., atol=tol, rtol=0.)
+        assert np.allclose(tr, 1.0, atol=tol, rtol=0.0)
 
     @pytest.mark.parametrize("r", SQZ_R)
     @pytest.mark.parametrize("theta", SQZ_THETA)
@@ -82,7 +82,9 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("r", SQZ_R)
     @pytest.mark.parametrize("theta", SQZ_THETA)
-    def test_reference_squeezed_states(self, setup_backend, r, theta, batch_size, pure, cutoff, tol):
+    def test_reference_squeezed_states(
+        self, setup_backend, r, theta, batch_size, pure, cutoff, tol
+    ):
         """Tests if a range of squeezed vacuum states are equal to the form of Eq. (5.5.6) in Loudon."""
         backend = setup_backend(1)
 
@@ -95,7 +97,12 @@ class TestFockRepresentation:
             num_state = s.dm()
 
         n = np.arange(0, cutoff, 2)
-        even_refs = np.sqrt(sech(r)) * np.sqrt(factorial(n)) / factorial(n / 2) * (-0.5 * np.exp(1j * theta) * np.tanh(r)) ** (n / 2)
+        even_refs = (
+            np.sqrt(sech(r))
+            * np.sqrt(factorial(n))
+            / factorial(n / 2)
+            * (-0.5 * np.exp(1j * theta) * np.tanh(r)) ** (n / 2)
+        )
 
         if batch_size is not None:
             if pure:
@@ -110,4 +117,4 @@ class TestFockRepresentation:
                 even_entries = num_state[::2, ::2]
                 even_refs = np.outer(even_refs, np.conj(even_refs))
 
-        assert np.allclose(even_entries, even_refs, atol=tol, rtol=0.)
+        assert np.allclose(even_entries, even_refs, atol=tol, rtol=0.0)

@@ -19,7 +19,7 @@ import pytest
 import numpy as np
 
 
-MAG_ALPHAS = np.linspace(0, .8, 4)
+MAG_ALPHAS = np.linspace(0, 0.8, 4)
 PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 7, endpoint=False)
 NBARS = np.linspace(0, 5, 7)
 SEED = 143
@@ -44,7 +44,7 @@ class TestRepresentationIndependent:
         alpha = mag_alpha * np.exp(1j * phase_alpha)
         backend.prepare_coherent_state(alpha, 0)
         state = backend.state()
-        assert np.allclose(state.fidelity_coherent([alpha]), 1., atol=tol, rtol=0.)
+        assert np.allclose(state.fidelity_coherent([alpha]), 1.0, atol=tol, rtol=0.0)
 
     @pytest.mark.parametrize("nbar", NBARS)
     def test_prepare_thermal_state(self, setup_backend, nbar, cutoff, tol):
@@ -56,11 +56,13 @@ class TestRepresentationIndependent:
         backend.prepare_thermal_state(nbar, 0)
         ref_probs = np.array([nbar ** n / (nbar + 1) ** (n + 1) for n in range(cutoff)])
         state = backend.state()
-        state_probs = np.array([state.fock_prob([n]) for n in range(cutoff)]).T # transpose needed for array broadcasting to work in batch mode (data is unaffected in non-batched mode)
-        assert np.allclose(ref_probs, state_probs, atol=tol, rtol=0.)
+        state_probs = np.array(
+            [state.fock_prob([n]) for n in range(cutoff)]
+        ).T  # transpose needed for array broadcasting to work in batch mode (data is unaffected in non-batched mode)
+        assert np.allclose(ref_probs, state_probs, atol=tol, rtol=0.0)
 
 
-@pytest.mark.backends('fock', 'tf')
+@pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
 
@@ -72,11 +74,13 @@ class TestFockRepresentation:
         backend.prepare_vacuum_state(0)
         state = backend.state()
         tr = state.trace()
-        assert np.allclose(tr, 1., atol=tol, rtol=0.)
+        assert np.allclose(tr, 1.0, atol=tol, rtol=0.0)
 
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS)
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
-    def test_normalized_coherent_state(self, setup_backend, mag_alpha, phase_alpha, tol):
+    def test_normalized_coherent_state(
+        self, setup_backend, mag_alpha, phase_alpha, tol
+    ):
         """Tests if a range of coherent states are normalized."""
 
         alpha = mag_alpha * np.exp(1j * phase_alpha)
@@ -85,29 +89,41 @@ class TestFockRepresentation:
         backend.prepare_coherent_state(alpha, 0)
         state = backend.state()
         tr = state.trace()
-        assert np.allclose(tr, 1., atol=tol, rtol=0.)
+        assert np.allclose(tr, 1.0, atol=tol, rtol=0.0)
 
     def test_prepare_ket_state(self, setup_backend, cutoff, tol):
         """Tests if a ket state with arbitrary parameters is correctly prepared."""
         np.random.seed(SEED)
-        random_ket = np.random.uniform(-1, 1, cutoff) + 1j*np.random.uniform(-1, 1, cutoff)
+        random_ket = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(
+            -1, 1, cutoff
+        )
         random_ket = random_ket / np.linalg.norm(random_ket)
         backend = setup_backend(1)
 
         backend.prepare_ket_state(random_ket, 0)
         state = backend.state()
-        assert np.allclose(state.fidelity(random_ket, 0), 1., atol=tol, rtol=0.)
+        assert np.allclose(state.fidelity(random_ket, 0), 1.0, atol=tol, rtol=0.0)
 
-    def test_prepare_batched_ket_state(self, setup_backend, pure, batch_size, cutoff, tol):
+    def test_prepare_batched_ket_state(
+        self, setup_backend, pure, batch_size, cutoff, tol
+    ):
         """Tests if a batch of ket states with arbitrary parameters is correctly
         prepared by comparing the fock probabilities of the batched case with
         individual runs with non batched input states."""
 
         if batch_size is None:
-            pytest.skip('Test skipped if no batching')
+            pytest.skip("Test skipped if no batching")
 
         np.random.seed(SEED)
-        random_kets = np.array([(lambda ket: ket / np.linalg.norm(ket))(np.random.uniform(-1, 1, cutoff) + 1j*np.random.uniform(-1, 1, cutoff)) for _ in range(batch_size)])
+        random_kets = np.array(
+            [
+                (lambda ket: ket / np.linalg.norm(ket))(
+                    np.random.uniform(-1, 1, cutoff)
+                    + 1j * np.random.uniform(-1, 1, cutoff)
+                )
+                for _ in range(batch_size)
+            ]
+        )
         backend = setup_backend(1)
 
         backend.prepare_ket_state(random_kets, 0)
@@ -123,15 +139,19 @@ class TestFockRepresentation:
             individual_probs.append(probs_for_this_ket[0])
 
         individual_probs = np.array(individual_probs)
-        assert np.allclose(batched_probs, individual_probs, atol=tol, rtol=0.)
+        assert np.allclose(batched_probs, individual_probs, atol=tol, rtol=0.0)
 
     def test_prepare_rank_two_dm_state(self, setup_backend, cutoff, tol):
         """Tests if rank two dm states with arbitrary parameters are correctly prepared."""
 
         np.random.seed(SEED)
-        random_ket1 = np.random.uniform(-1, 1, cutoff) + 1j*np.random.uniform(-1, 1, cutoff)
+        random_ket1 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(
+            -1, 1, cutoff
+        )
         random_ket1 = random_ket1 / np.linalg.norm(random_ket1)
-        random_ket2 = np.random.uniform(-1, 1, cutoff) + 1j*np.random.uniform(-1, 1, cutoff)
+        random_ket2 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(
+            -1, 1, cutoff
+        )
         random_ket2 = random_ket2 / np.linalg.norm(random_ket2)
 
         backend = setup_backend(1)
@@ -144,25 +164,31 @@ class TestFockRepresentation:
         state = backend.state()
         ket_probs2 = np.array([state.fock_prob([n]) for n in range(cutoff)])
 
-        ket_probs = 0.2*ket_probs1 + 0.8*ket_probs2
+        ket_probs = 0.2 * ket_probs1 + 0.8 * ket_probs2
 
-        random_rho = 0.2*np.outer(np.conj(random_ket1), random_ket1) + 0.8*np.outer(np.conj(random_ket2), random_ket2)
+        random_rho = 0.2 * np.outer(np.conj(random_ket1), random_ket1) + 0.8 * np.outer(
+            np.conj(random_ket2), random_ket2
+        )
 
         backend = setup_backend(1)
         backend.prepare_dm_state(random_rho, 0)
         state = backend.state()
         rho_probs = np.array([state.fock_prob([n]) for n in range(cutoff)])
 
-        assert np.allclose(state.trace(), 1., atol=tol, rtol=0.)
-        assert np.allclose(rho_probs, ket_probs, atol=tol, rtol=0.)
+        assert np.allclose(state.trace(), 1.0, atol=tol, rtol=0.0)
+        assert np.allclose(rho_probs, ket_probs, atol=tol, rtol=0.0)
 
-    def test_prepare_random_dm_state(self, setup_backend, batch_size, pure, cutoff, tol):
+    def test_prepare_random_dm_state(
+        self, setup_backend, batch_size, pure, cutoff, tol
+    ):
         """Tests if a random dm state is correctly prepared."""
 
         np.random.seed(SEED)
-        random_rho = np.random.normal(size=[cutoff, cutoff]) + 1j*np.random.normal(size=[cutoff, cutoff])
+        random_rho = np.random.normal(size=[cutoff, cutoff]) + 1j * np.random.normal(
+            size=[cutoff, cutoff]
+        )
         random_rho = np.dot(random_rho.conj().T, random_rho)
-        random_rho = random_rho/random_rho.trace()
+        random_rho = random_rho / random_rho.trace()
 
         backend = setup_backend(1)
         backend.prepare_dm_state(random_rho, 0)
@@ -181,18 +207,22 @@ class TestFockRepresentation:
             backend.prepare_ket_state(v, 0)
             state = backend.state()
             probs_for_this_v = np.array(state.all_fock_probs())
-            kets_mixed_probs += e*probs_for_this_v
+            kets_mixed_probs += e * probs_for_this_v
 
-        assert np.allclose(rho_probs, kets_mixed_probs, atol=tol, rtol=0.)
+        assert np.allclose(rho_probs, kets_mixed_probs, atol=tol, rtol=0.0)
 
     @pytest.mark.parametrize("theta", PHASE_ALPHAS)
-    def test_rotated_superposition_states(self, setup_backend, theta, pure, cutoff, tol):
+    def test_rotated_superposition_states(
+        self, setup_backend, theta, pure, cutoff, tol
+    ):
         r"""Tests if a range of phase-shifted superposition states are equal to the form of
         \sum_n exp(i * theta * n)|n>"""
 
         backend = setup_backend(1)
 
-        ref_state = np.array([np.exp(1j * theta * k) for k in range(cutoff)]) / np.sqrt(cutoff)
+        ref_state = np.array([np.exp(1j * theta * k) for k in range(cutoff)]) / np.sqrt(
+            cutoff
+        )
 
         if not pure:
             ref_state = np.outer(ref_state, np.conj(ref_state))
@@ -205,4 +235,4 @@ class TestFockRepresentation:
         else:
             numer_state = s.dm()
 
-        assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.)
+        assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)

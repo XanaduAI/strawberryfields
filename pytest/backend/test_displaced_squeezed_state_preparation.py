@@ -19,8 +19,8 @@ import pytest
 import numpy as np
 from scipy.special import factorial
 
-MAG_ALPHAS = np.linspace(0.1, .5, 2)
-PHASE_ALPHAS = np.linspace(np.pi/6, 2 * np.pi, 2, endpoint=False)
+MAG_ALPHAS = np.linspace(0.1, 0.5, 2)
+PHASE_ALPHAS = np.linspace(np.pi / 6, 2 * np.pi, 2, endpoint=False)
 SQZ_R = np.linspace(0.01, 0.1, 2)
 SQZ_PHI = np.linspace(np.pi / 3, 2 * np.pi, 2, endpoint=False)
 
@@ -45,7 +45,9 @@ class TestRepresentationIndependent:
 
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS)
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
-    def test_displaced_squeezed_with_no_squeezing(self, setup_backend, mag_alpha, phase_alpha, tol):
+    def test_displaced_squeezed_with_no_squeezing(
+        self, setup_backend, mag_alpha, phase_alpha, tol
+    ):
         """Tests if a squeezed coherent state with no squeezing is equal to a coherent state."""
         r = phi = 0
         alpha = mag_alpha * np.exp(1j * phase_alpha)
@@ -57,7 +59,7 @@ class TestRepresentationIndependent:
         assert np.allclose(fidel, 1, atol=tol, rtol=0)
 
 
-@pytest.mark.backends('fock', 'tf')
+@pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
 
@@ -65,7 +67,9 @@ class TestFockRepresentation:
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
     @pytest.mark.parametrize("r", SQZ_R)
     @pytest.mark.parametrize("phi", SQZ_PHI)
-    def test_normalized_displaced_squeezed_state(self, setup_backend, mag_alpha, phase_alpha, r, phi, tol):
+    def test_normalized_displaced_squeezed_state(
+        self, setup_backend, mag_alpha, phase_alpha, r, phi, tol
+    ):
         """Tests if a range of squeezed vacuum states are normalized."""
         alpha = mag_alpha * np.exp(1j * phase_alpha)
         backend = setup_backend(1)
@@ -77,7 +81,9 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("r", SQZ_R)
     @pytest.mark.parametrize("phi", SQZ_PHI)
-    def test_displaced_squeezed_with_no_displacement(self, setup_backend, r, phi, cutoff, batch_size, pure, tol):
+    def test_displaced_squeezed_with_no_displacement(
+        self, setup_backend, r, phi, cutoff, batch_size, pure, tol
+    ):
         """Tests if a squeezed coherent state with no displacement is equal to a squeezed state (Eq. (5.5.6) in Loudon)."""
         alpha = 0
         backend = setup_backend(1)
@@ -91,7 +97,12 @@ class TestFockRepresentation:
             num_state = state.dm()
 
         n = np.arange(0, cutoff, 2)
-        even_refs = np.sqrt(sech(r)) * np.sqrt(factorial(n)) / factorial(n / 2) * (-0.5 * np.exp(1j * phi) * np.tanh(r)) ** (n / 2)
+        even_refs = (
+            np.sqrt(sech(r))
+            * np.sqrt(factorial(n))
+            / factorial(n / 2)
+            * (-0.5 * np.exp(1j * phi) * np.tanh(r)) ** (n / 2)
+        )
 
         if batch_size is not None:
             if pure:

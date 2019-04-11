@@ -21,7 +21,7 @@ import numpy as np
 KAPPAS = np.linspace(0, 2 * np.pi, 7)
 
 
-@pytest.mark.backends('fock', 'tf')
+@pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
 
@@ -39,7 +39,7 @@ class TestFockRepresentation:
         else:
             numer_state = s.dm()
         ref_state = np.exp(1j * kappa * np.arange(cutoff) ** 2) / cutoff
-        assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.)
+        assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)
 
     @pytest.mark.parametrize("kappa", KAPPAS)
     def test_cross_kerr_interaction(self, setup_backend, kappa, cutoff, tol):
@@ -62,6 +62,6 @@ class TestFockRepresentation:
 
         n1 = np.arange(cutoff).reshape(-1, 1)
         n2 = np.arange(cutoff).reshape(1, -1)
-        ref_state = np.exp(1j*kappa*n1*n2).flatten()/cutoff
-        ref_state = np.reshape(ref_state, [cutoff]*2)
-        assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.)
+        ref_state = np.exp(1j * kappa * n1 * n2).flatten() / cutoff
+        ref_state = np.reshape(ref_state, [cutoff] * 2)
+        assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)

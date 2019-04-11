@@ -16,7 +16,7 @@ r"""Unit tests for measurements in the Fock basis"""
 import pytest
 
 # fock measurements only supported by fock backends
-pytestmark = pytest.mark.backends('fock', 'tf')
+pytestmark = pytest.mark.backends("fock", "tf")
 
 import numpy as np
 
@@ -39,7 +39,9 @@ class TestFockRepresentation:
 
     def test_normalized_conditional_states(self, setup_backend, cutoff, pure, tol):
         """Tests if the conditional states resulting from Fock measurements in a subset of modes are normalized."""
-        state_preps = [n for n in range(cutoff)] + [cutoff - n for n in range(cutoff)] # [0, 1, 2, ..., cutoff-1, cutoff, cutoff-1, ..., 2, 1]
+        state_preps = [n for n in range(cutoff)] + [
+            cutoff - n for n in range(cutoff)
+        ]  # [0, 1, 2, ..., cutoff-1, cutoff, cutoff-1, ..., 2, 1]
         backend = setup_backend(3)
 
         for idx in range(NUM_REPEATS):
@@ -58,7 +60,9 @@ class TestFockRepresentation:
 
     def test_fock_measurements(self, setup_backend, cutoff, batch_size, pure, tol):
         """Tests if Fock measurements results on a variety of multi-mode Fock states are correct."""
-        state_preps = [n for n in range(cutoff)] + [cutoff - n for n in range(cutoff)] # [0, 1, 2, ..., cutoff-1, cutoff, cutoff-1, ..., 2, 1]
+        state_preps = [n for n in range(cutoff)] + [
+            cutoff - n for n in range(cutoff)
+        ]  # [0, 1, 2, ..., cutoff-1, cutoff, cutoff-1, ..., 2, 1]
 
         singletons = [(0,), (1,), (2,)]
         pairs = [(0, 1), (0, 2), (1, 2)]
@@ -70,11 +74,15 @@ class TestFockRepresentation:
         for idx in range(NUM_REPEATS):
             backend.reset(pure=pure)
 
-            n = [state_preps[idx % cutoff],
-                 state_preps[(idx + 1) % cutoff],
-                 state_preps[(idx + 2) % cutoff]]
+            n = [
+                state_preps[idx % cutoff],
+                state_preps[(idx + 1) % cutoff],
+                state_preps[(idx + 2) % cutoff],
+            ]
             n = np.array(n)
-            meas_modes = np.array(mode_choices[idx % len(mode_choices)]) # cycle through mode choices
+            meas_modes = np.array(
+                mode_choices[idx % len(mode_choices)]
+            )  # cycle through mode choices
 
             backend.prepare_fock_state(n[0], 0)
             backend.prepare_fock_state(n[1], 1)
@@ -84,6 +92,6 @@ class TestFockRepresentation:
             ref_result = n[meas_modes]
 
             if batch_size is not None:
-                ref_result = tuple(np.array([i]*batch_size) for i in ref_result)
+                ref_result = tuple(np.array([i] * batch_size) for i in ref_result)
 
             assert np.allclose(meas_result, ref_result, atol=tol, rtol=0)

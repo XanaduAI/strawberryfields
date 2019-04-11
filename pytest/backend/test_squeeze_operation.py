@@ -17,7 +17,7 @@ Convention: The squeezing unitary is fixed to be
 U(z) = \exp(0.5 (z^* \hat{a}^2 - z (\hat{a^\dagger}^2)))
 where \hat{a} is the photon annihilation operator.
 """
-#pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments
 import pytest
 
 import numpy as np
@@ -35,15 +35,21 @@ def matrix_elem(n, r, m):
     if n % 2 != m % 2:
         return 0.0
 
-    if r == 0.:
-        return np.complex(n == m) # delta function
+    if r == 0.0:
+        return np.complex(n == m)  # delta function
 
     k = np.arange(m % 2, min([m, n]) + 1, 2)
     res = np.sum(
-        (-1)**((n-k)/2)
-        * np.exp((lg(m+1) + lg(n+1))/2 - lg(k+1) - lg((m-k)/2+1) - lg((n-k)/2+1))
-        * (np.sinh(r)/2+eps)**((n+m-2*k)/2) / (np.cosh(r)**((n+m+1)/2))
+        (-1) ** ((n - k) / 2)
+        * np.exp(
+            (lg(m + 1) + lg(n + 1)) / 2
+            - lg(k + 1)
+            - lg((m - k) / 2 + 1)
+            - lg((n - k) / 2 + 1)
         )
+        * (np.sinh(r) / 2 + eps) ** ((n + m - 2 * k) / 2)
+        / (np.cosh(r) ** ((n + m + 1) / 2))
+    )
     return res
 
 
@@ -57,7 +63,7 @@ class TestRepresentationIndependent:
         assert np.all(backend.is_vacuum(tol))
 
 
-@pytest.mark.backends('fock', 'tf')
+@pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
 
@@ -67,13 +73,12 @@ class TestFockRepresentation:
         """Tests if a range of alpha-displaced states have the correct fidelity
         with the corresponding coherent state.
         """
-        z = r*np.exp(1j*p)
+        z = r * np.exp(1j * p)
 
         backend = setup_backend(1)
         backend.squeeze(z, 0)
         state = backend.state()
         assert np.allclose(state.trace(), 1, atol=tol, rtol=0)
-
 
     @pytest.mark.parametrize("r", MAG)
     @pytest.mark.parametrize("p", PHASE)
@@ -98,10 +103,11 @@ class TestFockRepresentation:
 
         assert np.all(odd_entries == 0)
 
-
     @pytest.mark.parametrize("r", MAG)
     @pytest.mark.parametrize("p", PHASE)
-    def test_reference_squeezed_vacuum(self, setup_backend, r, p, cutoff, batch_size, pure, tol):
+    def test_reference_squeezed_vacuum(
+        self, setup_backend, r, p, cutoff, batch_size, pure, tol
+    ):
         """Tests if a range of squeezed vacuum states are equal to the form of Eq. (5.5.6) in Loudon."""
         z = r * np.exp(1j * p)
 
@@ -115,7 +121,12 @@ class TestFockRepresentation:
             num_state = state.dm()
 
         k = np.arange(0, cutoff, 2)
-        even_refs = np.sqrt(1/np.cosh(r))*np.sqrt(fac(k))/fac(k / 2)*(-0.5*np.exp(1j*p)*np.tanh(r))**(k/2)
+        even_refs = (
+            np.sqrt(1 / np.cosh(r))
+            * np.sqrt(fac(k))
+            / fac(k / 2)
+            * (-0.5 * np.exp(1j * p) * np.tanh(r)) ** (k / 2)
+        )
 
         if pure:
             if batch_size is not None:
@@ -130,7 +141,6 @@ class TestFockRepresentation:
                 even_entries = num_state[::2, ::2]
 
         assert np.allclose(even_entries, even_refs, atol=tol, rtol=0)
-
 
     @pytest.mark.parametrize("r", MAG)
     def test_reference_squeezed_fock(self, setup_backend, r, cutoff, pure, tol):

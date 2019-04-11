@@ -18,14 +18,14 @@ Convention: The displacement unitary is fixed to be
 U(\alpha) = \exp(alpha \hat{a}^\dagger - \alpha^* \hat{a})
 where \hat{a}^\dagger is the photon creation operator.
 """
-#pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments
 import pytest
 
 import numpy as np
 from scipy.special import factorial as fac
 
 
-MAG_ALPHAS = np.linspace(0, .8, 4)
+MAG_ALPHAS = np.linspace(0, 0.8, 4)
 PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 7, endpoint=False)
 
 
@@ -44,7 +44,7 @@ class TestRepresentationIndependent:
         """Tests if a range of alpha-displaced states have the correct fidelity
         with the corresponding coherent state.
         """
-        alpha = r*np.exp(1j*p)
+        alpha = r * np.exp(1j * p)
 
         backend = setup_backend(1)
         backend.displacement(alpha, 0)
@@ -54,7 +54,7 @@ class TestRepresentationIndependent:
         assert np.allclose(fid, 1, atol=tol, rtol=0)
 
 
-@pytest.mark.backends('fock', 'tf')
+@pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
 
@@ -62,7 +62,7 @@ class TestFockRepresentation:
     @pytest.mark.parametrize("p", PHASE_ALPHAS)
     def test_normalized_displaced_state(self, setup_backend, r, p, tol):
         """Tests if a range of displaced states are normalized."""
-        alpha = r*np.exp(1j*p)
+        alpha = r * np.exp(1j * p)
 
         backend = setup_backend(1)
         backend.displacement(alpha, 0)
@@ -76,7 +76,7 @@ class TestFockRepresentation:
         r"""Tests if a range of alpha-displaced states have the correct Fock basis elements:
            |\alpha> = exp(-0.5 |\alpha|^2) \sum_n \alpha^n / \sqrt{n!} |n>
         """
-        alpha = r*np.exp(1j*p)
+        alpha = r * np.exp(1j * p)
 
         backend = setup_backend(1)
         backend.displacement(alpha, 0)
@@ -88,7 +88,7 @@ class TestFockRepresentation:
             numer_state = state.dm()
 
         n = np.arange(cutoff)
-        ref_state = np.exp(-0.5*np.abs(alpha)**2)*alpha**n / np.sqrt(fac(n))
+        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
 
         if not pure:
             ref_state = np.outer(ref_state, np.conj(ref_state))

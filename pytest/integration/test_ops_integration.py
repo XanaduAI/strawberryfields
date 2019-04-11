@@ -18,7 +18,10 @@ import numpy as np
 
 import strawberryfields as sf
 from strawberryfields import ops
+
 from strawberryfields.backends import BaseGaussian
+from strawberryfields.backends.states import BaseFockState
+from strawberryfields.backends.gaussianbackend import GaussianState
 
 
 # make test deterministic
@@ -189,3 +192,133 @@ class TestPreparationApplication:
         with eng:
             with pytest.raises(ValueError, match="Gaussian states are not supported"):
                 ops.DensityMatrix(state) | q[0]
+
+
+@pytest.mark.backends("fock", "tf")
+class TestKetDensityMatrixIntegration:
+    """Tests for the frontend Fock multi-mode state preparations"""
+
+    def test_ket_input_validation(self, setup_eng, hbar, cutoff):
+        """Test exceptions"""
+        mu = np.array([0.0, 0.0])
+        cov = np.identity(2)
+        state1 = GaussianState((mu, cov), 1, True, hbar)
+        state2 = BaseFockState(np.zeros(cutoff), 1, False, cutoff, hbar)
+
+        eng, q = setup_eng(2)
+
+        with eng:
+            with pytest.raises(ValueError, match="Gaussian states are not supported"):
+                ops.Ket(state1) | q[0]
+            with pytest.raises(ValueError, match="not pure"):
+                ops.Ket(state2) | q[0]
+
+    def test_ket_one_mode(self, setup_eng, hbar, cutoff, tol):
+        """Tests single mode ket preparation"""
+        eng, q = setup_eng(2)
+        ket0 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
+        ket0 = ket0 / np.linalg.norm(ket0)
+
+        with eng:
+            ops.Ket(ket0) | q[0]
+
+        state = eng.run(modes=[0])
+        assert np.allclose(state.dm(), np.outer(ket0, ket0.conj()), atol=tol, rtol=0)
+
+        eng.reset()
+        state1 = BaseFockState(ket0, 1, True, cutoff, hbar)
+
+        with eng:
+            ops.Ket(state1) | q[0]
+
+        state2 = eng.run(modes=[0])
+        assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
+
+    def test_ket_two_mode(self, setup_eng, hbar, cutoff, tol):
+        """Tests multimode ket preparation"""
+        eng, q = setup_eng(2)
+        ket0 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
+        ket0 = ket0 / np.linalg.norm(ket0)
+        ket1 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
+        ket1 = ket1 / np.linalg.norm(ket1)
+
+        ket = np.outer(ket0, ket1)
+
+        with eng:
+            ops.Ket(ket) | q
+
+        state = eng.run()
+        assert np.allclose(
+            state.dm(), np.einsum("ij,kl->ikjl", ket, ket.conj()), atol=tol, rtol=0
+        )
+
+        eng.reset()
+        state1 = BaseFockState(ket, 2, True, cutoff, hbar)
+
+        with eng:
+            ops.Ket(state1) | q
+
+        state2 = eng.run()
+        assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
+
+    def test_dm_input_validation(self, setup_eng, hbar, cutoff, tol):
+        """Test exceptions"""
+        mu = np.array([0.0, 0.0])
+        cov = np.identity(2)
+        state = GaussianState((mu, cov), 1, True, hbar)
+
+        eng, q = setup_eng(2)
+
+        with eng:
+            with pytest.raises(ValueError, match="Gaussian states are not supported"):
+                ops.DensityMatrix(state) | q[0]
+
+    def test_dm_one_mode(self, setup_eng, hbar, cutoff, tol):
+        """Tests single mode DM preparation"""
+        eng, q = setup_eng(2)
+
+        ket = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
+        ket = ket / np.linalg.norm(ket)
+        rho = np.outer(ket, ket.conj())
+
+        with eng:
+            ops.DensityMatrix(rho) | q[0]
+
+        state = eng.run(modes=[0])
+        assert np.allclose(state.dm(), rho, atol=tol, rtol=0)
+
+        eng.reset()
+        state1 = BaseFockState(rho, 1, False, cutoff, hbar)
+
+        with eng:
+            ops.DensityMatrix(state1) | q[0]
+
+        state2 = eng.run(modes=[0])
+        assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
+
+    def test_dm_two_mode(self, setup_eng, hbar, cutoff, tol):
+        """Tests multimode dm preparation"""
+        eng, q = setup_eng(2)
+
+        ket0 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
+        ket0 = ket0 / np.linalg.norm(ket0)
+        ket1 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
+        ket1 = ket1 / np.linalg.norm(ket1)
+
+        ket = np.outer(ket0, ket1)
+        rho = np.einsum("ij,kl->ikjl", ket, ket.conj())
+
+        with eng:
+            ops.DensityMatrix(rho) | q
+
+        state = eng.run()
+        assert np.allclose(state.dm(), rho, atol=tol, rtol=0)
+
+        eng.reset()
+        state1 = BaseFockState(rho, 2, False, cutoff, hbar)
+
+        with eng:
+            ops.DensityMatrix(state1) | q
+
+        state2 = eng.run()
+        assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)

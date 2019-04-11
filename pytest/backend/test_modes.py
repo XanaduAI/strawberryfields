@@ -50,7 +50,7 @@ class TestRepresentationIndependent:
         assert np.all(res == [1, 3])
 
 
-@pytest.mark.backends('fock', 'tf')
+@pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
 
@@ -62,7 +62,7 @@ class TestFockRepresentation:
             backend.add_mode(num_subsystems)
             state = backend.state()
             tr = state.trace()
-            assert np.allclose(tr, 1., atol=tol, rtol=0.)
+            assert np.allclose(tr, 1.0, atol=tol, rtol=0.0)
 
     def test_normalized_del_mode(self, setup_backend, tol):
         """Tests if a state is normalized after deleting modes."""
@@ -72,7 +72,7 @@ class TestFockRepresentation:
             backend.del_mode(n)
             state = backend.state()
             tr = state.trace()
-            assert np.allclose(tr, 1., atol=tol, rtol=0.)
+            assert np.allclose(tr, 1.0, atol=tol, rtol=0.0)
 
     def test_fock_measurements_after_add_mode(self, setup_backend, pure, cutoff):
         """Tests Fock measurements on a system after adding vacuum modes."""
