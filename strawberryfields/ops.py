@@ -596,8 +596,11 @@ class Decomposition(Operation):
             # check if the matrices cancel
             if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
                 return None
-            new_decomp = self.__class__(U)
-            return new_decomp
+
+            if hasattr(self, 'hbar'):
+                return self.__class__(U, hbar=self.hbar)
+
+            return self.__class__(U)
         else:
             raise MergeFailure('Not the same decomposition type.')
 
@@ -748,18 +751,16 @@ class Gate(Transformation):
                 #temp.p[0] = p0
                 temp.dagger = self.dagger
                 return temp
-        else:
-            raise MergeFailure('Not the same gate family.')
 
         if isinstance(other, self.__class__):
             # without knowing anything more specific about the gates, we
             # can only merge them if they are each others' inverses
             if self.dagger != other.dagger:
                 return None
-            else:
-                raise MergeFailure("Don't know how to merge these gates.")
-        else:
-            raise MergeFailure('Not the same gate family.')
+
+            raise MergeFailure("Don't know how to merge these gates.")
+
+        raise MergeFailure('Not the same gate family.')
 
 
 # ====================================================================

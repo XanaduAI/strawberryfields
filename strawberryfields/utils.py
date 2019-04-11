@@ -550,7 +550,7 @@ def random_covariance(N, hbar=2, pure=False):
     if pure:
         return (hbar/2) * S @ S.T
 
-    nbar = np.abs(np.random.random(N))
+    nbar = 2*np.abs(np.random.random(N)) + 1
     Vth = (hbar/2) * np.diag(np.concatenate([nbar, nbar]))
 
     return S @ Vth @ S.T

@@ -36,7 +36,7 @@ def takagi(N, tol=1e-13, rounding=13):
 
     Returns:
         tuple(array,array): Returns the tuple (rl, U), where rl are the
-            (rounded) singular values, and U is the Takagi unitary ``N = U @ np.diag(l) @ np.transpose(U)``
+            (rounded) singular values, and U is the Takagi unitary ``N = U @ np.diag(rl) @ np.transpose(U)``
     """
     (n, m) = N.shape
     if n != m:
@@ -313,12 +313,15 @@ def williamson(V, tol=1e-11):
             and ``S`` is a symplectic matrix such that :math:`V = S^T Db S`
     """
     (n, m) = V.shape
+
+    if n != m:
+        raise ValueError("The input matrix is not square")
+
     diffn = np.linalg.norm(V-np.transpose(V))
 
     if diffn >= tol:
         raise ValueError("The input matrix is not symmetric")
-    if n != m:
-        raise ValueError("The input matrix is not square")
+
     if n % 2 != 0:
         raise ValueError(
             "The input matrix must have an even number of rows/columns")
