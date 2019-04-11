@@ -135,7 +135,7 @@ class TestSingleModePolyQuadratureExpectations:
         d = np.array([1, 0, 0, 0, 0, 0])
         k = 0
 
-        # prepare a displaced squeezed state
+        # prepare a squeezed state
         backend.squeeze(r, 0)
 
         state = backend.state()
@@ -152,7 +152,7 @@ class TestSingleModePolyQuadratureExpectations:
         d = np.array([1, 0, 0, 0, 0, 0])
         k = 0
 
-        # prepare a displaced squeezed state
+        # prepare a displaced state
         backend.displacement(a, 0)
 
         state = backend.state()
