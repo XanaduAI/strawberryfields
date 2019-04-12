@@ -81,9 +81,9 @@ x_test_0_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \gate{X} \\
- & \qw \\
- & \qw \\
+ & \gate{X}  & \qw \\
+ & \qw  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -91,9 +91,9 @@ x_test_1_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \qw \\
- & \gate{X} \\
- & \qw \\
+ & \qw  & \qw \\
+ & \gate{X}  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -101,9 +101,9 @@ xx_test_1_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \qw  & \qw \\
- & \gate{X}  & \gate{X} \\
- & \qw  & \qw \\
+ & \qw  & \qw  & \qw \\
+ & \gate{X}  & \gate{X}  & \qw \\
+ & \qw  & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -111,9 +111,9 @@ x_z_test_0_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \gate{X}  & \gate{Z} \\
- & \qw  & \qw \\
- & \qw  & \qw \\
+ & \gate{X}  & \gate{Z}  & \qw \\
+ & \qw  & \qw  & \qw \\
+ & \qw  & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -121,9 +121,9 @@ k_test_0_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \gate{K} \\
- & \qw \\
- & \qw \\
+ & \gate{K}  & \qw \\
+ & \qw  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -131,9 +131,9 @@ k_test_1_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \qw \\
- & \gate{K} \\
- & \qw \\
+ & \qw  & \qw \\
+ & \gate{K}  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -141,9 +141,9 @@ v_test_0_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \gate{V} \\
- & \qw \\
- & \qw \\
+ & \gate{V}  & \qw \\
+ & \qw  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -151,9 +151,9 @@ v_test_1_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \qw \\
- & \gate{V} \\
- & \qw \\
+ & \qw  & \qw \\
+ & \gate{V}  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -161,9 +161,9 @@ p_test_0_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \gate{P} \\
- & \qw \\
- & \qw \\
+ & \gate{P}  & \qw \\
+ & \qw  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -171,9 +171,9 @@ p_test_1_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \qw \\
- & \gate{P} \\
- & \qw \\
+ & \qw  & \qw \\
+ & \gate{P}  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -181,9 +181,9 @@ r_test_0_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \gate{R} \\
- & \qw \\
- & \qw \\
+ & \gate{R}  & \qw \\
+ & \qw  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -191,9 +191,9 @@ r_test_1_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \qw \\
- & \gate{R} \\
- & \qw \\
+ & \qw  & \qw \\
+ & \gate{R}  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -201,9 +201,9 @@ z_test_0_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \gate{Z} \\
- & \qw \\
- & \qw \\
+ & \gate{Z}  & \qw \\
+ & \qw  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -211,9 +211,9 @@ z_test_1_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \qw \\
- & \gate{Z} \\
- & \qw \\
+ & \qw  & \qw \\
+ & \gate{Z}  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -221,9 +221,9 @@ zz_test_1_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \qw  & \qw \\
- & \gate{Z}  & \gate{Z} \\
- & \qw  & \qw \\
+ & \qw  & \qw  & \qw \\
+ & \gate{Z}  & \gate{Z}  & \qw \\
+ & \qw  & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -231,9 +231,9 @@ x_0_z_1_test_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \gate{X} \\
- & \gate{Z} \\
- & \qw \\
+ & \gate{X}  & \qw \\
+ & \gate{Z}  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -241,9 +241,9 @@ cx_test_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \ctrl{1} \\
- & \targ \\
- & \qw \\
+ & \ctrl{1}  & \qw \\
+ & \targ  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -251,9 +251,9 @@ cz_test_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \ctrl{1} \\
- & \gate{Z} \\
- & \qw \\
+ & \ctrl{1}  & \qw \\
+ & \gate{Z}  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -261,9 +261,9 @@ bs_test_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \multigate{1}{BS} \\
- & \ghost{BS} \\
- & \qw \\
+ & \multigate{1}{BS}  & \qw \\
+ & \ghost{BS}  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -271,9 +271,9 @@ s2_test_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \multigate{1}{S} \\
- & \ghost{S} \\
- & \qw \\
+ & \multigate{1}{S}  & \qw \\
+ & \ghost{S}  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -281,9 +281,9 @@ ck_test_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \ctrl{1} \\
- & \gate{K} \\
- & \qw \\
+ & \ctrl{1}  & \qw \\
+ & \gate{K}  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -291,9 +291,9 @@ s_test_0_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \gate{S} \\
- & \qw \\
- & \qw \\
+ & \gate{S}  & \qw \\
+ & \qw  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -301,9 +301,9 @@ s_test_1_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \qw \\
- & \gate{S} \\
- & \qw \\
+ & \qw  & \qw \\
+ & \gate{S}  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -311,9 +311,9 @@ d_test_0_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \gate{D} \\
- & \qw \\
- & \qw \\
+ & \gate{D}  & \qw \\
+ & \qw  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 
@@ -321,9 +321,19 @@ d_test_1_output = r"""\documentclass{article}
 \usepackage{qcircuit}
 \begin{document}
 \Qcircuit {
- & \qw \\
- & \gate{D} \\
- & \qw \\
+ & \qw  & \qw \\
+ & \gate{D}  & \qw \\
+ & \qw  & \qw \\
+}
+\end{document}"""
+
+fourier_output = r"""\documentclass{article}
+\usepackage{qcircuit}
+\begin{document}
+\Qcircuit {
+ & \gate{F}  & \qw \\
+ & \qw  & \qw \\
+ & \qw  & \qw \\
 }
 \end{document}"""
 

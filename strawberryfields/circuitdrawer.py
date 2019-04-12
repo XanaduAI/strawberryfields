@@ -90,8 +90,17 @@ from .qcircuit_strings import QUANTUM_WIRE, PAULI_X_COMP, PAULI_Z_COMP, CONTROL,
     S_MULTI_COMP, K_COMP, MULTIGATE, GHOST, S_COMP
 
 
+class NotDrawableException(Exception):
+    """Exception raised when a circuit is not drawable.
+
+    This class corresponds to the exception raised by :meth:`~.parse_op`
+    when a circuit is deemed impossible to effectively render using qcircuit.
+    """
+    pass
+
+
 class ModeMismatchException(Exception):
-    """Exception raised when parsing a Gate object
+    """Exception raised when parsing a Gate object.
 
     This class corresponds to the exception raised by :meth:`~.parse_op`
     when an operator is interpreted as an n-mode gate but is applied to a number of modes != n.
@@ -132,7 +141,7 @@ class Circuit:
             'Pgate': self._p,
             'Vgate': self._v,
             'Kgate': self._k,
-            'FourierGate': self._fourier
+            'Fourier': self._fourier
         }
 
         self.two_mode_gates = {
@@ -335,6 +344,8 @@ class Circuit:
         Args:
             circuit_op (str): the latex code for the operator.
             wires (list[int]): a list of the indeces of subsystem wires to apply the gate to.
+        Raises:
+            ModeMismatchException: if the operator is applied to non-adjacent wires.
         """
         matrix = self._circuit_matrix
 
@@ -345,11 +356,16 @@ class Circuit:
         wire_ops = matrix[first_wire]
         wire_ops[-1] = MULTIGATE.format(1, circuit_op)
         matrix[first_wire] = wire_ops
+        previous_wire = first_wire
 
+        wires.sort()
         for wire in wires:
+            if not previous_wire == wire - 1:
+                raise NotDrawableException('{0} multi-mode gate applied to non-adjacent wires!'.format(circuit_op))
             wire_ops = matrix[wire]
             wire_ops[-1] = GHOST.format(circuit_op)
             matrix[wire] = wire_ops
+            previous_wire = wire
 
         self._circuit_matrix = matrix
 
@@ -456,6 +472,8 @@ class Circuit:
         self._apply_spacing()
         self._begin_circuit()
 
+        self._add_column()
+
         for wire_ops in enumerate(self._circuit_matrix):
             for wire_op in wire_ops[1]:
                 self._write_operation_to_document(wire_op)
@@ -496,7 +514,6 @@ class Circuit:
 
     def _end_circuit(self):
         """Ends the latex circuit content."""
-        self._add_column()
         self._document += CIRCUIT_BODY_TERMINATOR
 
     def _end_wire(self):
