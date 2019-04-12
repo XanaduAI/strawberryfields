@@ -195,7 +195,7 @@ class Circuit:
 
         if method is None:
             raise UnsupportedGateException('Unsupported operation {0} not printable by circuit builder!'.format(str(op)))
-        elif mode == len(wires):
+        if mode == len(wires):
             method(*wires)
         else:
             raise ModeMismatchException('{0} mode gate applied to {1} wires!'.format(mode, len(wires)))
