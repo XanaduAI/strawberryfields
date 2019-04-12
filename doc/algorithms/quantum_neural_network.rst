@@ -27,17 +27,18 @@ The network begins with an input layer of real-valued neurons, which feed forwar
 
 where :math:`W \in \mathbb{R}^{m \times n}` is a matrix, :math:`b \in \mathbb{R}^{m}` is a vector, and :math:`\varphi` is a nonlinear function (also known as the activation function). The matrix multiplication :math:`W \mathbf{x}` is a linear transformation on :math:`\mathbf{x}`, while :math:`W \mathbf{x} + \mathbf{b}` represents an **affine transformation**. In principle, any nonlinear function can be chosen for :math:`\varphi`, but often the choice is fixed from a `standard set of activations <https://en.wikipedia.org/wiki/Activation_function>`_ that include the rectified linear unit (ReLU) and the sigmoid function acting on each neuron. Finally, the output layer enacts an affine transformation on the last hidden layer, but the activation function may be linear (including the identity), or a different nonlinear function such as `softmax <https://en.wikipedia.org/wiki/Softmax_function>`_ (for classification).
 
-Layers in the feedforward neural network above are called **fully connected** as every neuron in a given hidden or output layer can be connected to all neurons in the previous layer through the matrix :math:`W`. Over time, specialized versions of layers have been developed to focus on different problems. For example, convolutional layers have a restricted form of connectivity and are suited to machine learning with images. We focus here on fully connected layers as the most general type. Training of neural networks uses variations of the `gradient descent <https://en.wikipedia.org/wiki/Gradient_descent>`_ algorithm on a cost function characterizing the similarity between outputs of the neural network and training data. The gradient of the cost function can be calculated using automatic differentiation, with knowledge of the feedforward network structure.
+Layers in the feedforward neural network above are called **fully connected** as every neuron in a given hidden layer or output layer can be connected to all neurons in the previous layer through the matrix :math:`W`. Over time, specialized versions of layers have been developed to focus on different problems. For example, convolutional layers have a restricted form of connectivity and are suited to machine learning with images. We focus here on fully connected layers as the most general type. Training of neural networks uses variations of the `gradient descent <https://en.wikipedia.org/wiki/Gradient_descent>`_ algorithm on a cost function characterizing the similarity between outputs of the neural network and training data. The gradient of the cost function can be calculated using `automatic differentiation <https://en.wikipedia.org/wiki/Automatic_differentiation>`_, with knowledge of the feedforward network structure.
 
-Quantum neural networks aim to encode the neural network structure into a quantum system, with the intention of benefitting from quantum information processing. Nevertheless, there have been numerous attempts to define a quantum neural network and so far there is no clear consensus on the best approach. The quantum neural network detailed below, following the work of :cite:`killoran2018continuous`, has a CV architecture and is naturally realized using standard CV gates from Strawberry Fields.
+Quantum neural networks aim to encode neural networks into a quantum system, with the intention of benefitting from quantum information processing. There have been numerous attempts to define a quantum neural network and so far there is no clear consensus on the best approach. The quantum neural network detailed below, following the work of :cite:`killoran2018continuous`, has a CV architecture and is naturally realized using standard CV gates from Strawberry Fields.
 
 CV implementation
 ------------------------------------
 
-As with the boson sampling problem, the multimode linear interferometer can be decomposed into two-mode beamsplitters (:class:`~.BSgate`) and single-mode phase shifters (:class:`~.Rgate`) :cite:`reck1994`, allowing for a straightforward translation into a CV quantum circuit.
+A CV quantum neural network layer can be defined as 
 
-For example, in the case of a 4 mode interferometer, with arbitrary :math:`4\times 4` unitary :math:`U`, the CV quantum circuit for Gaussian boson sampling is given by
+.. math:: \mathcal{L} := \Phi \circ \mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1},
 
+where :math:`\mathcal{U}_{k}=U_{k}(\boldsymbol{\theta}_{k},\boldsymbol{\phi}_{k})` is an :math:`N` mode interferometer, :math:`\mathcal{D}=\otimes_{i=1}^{N}D(\alpha_{i})` and :math:`\mathcal{S}=\otimes_{i=1}^{N}S(r_{i})` are displacement gates (:class:`~.Dgate`) and squeezing gates (:class:`~.Sgate`) acting on each mode with :math:`\alpha_{i} \in \mathbb{C}` and :math:`r_{i} \in \mathbb{R}`, and finally :math:`\Phi=\otimes_{i=1}^{N}\Phi(\lambda_{i})` is a non-Gaussian gate on each mode with parameter :math:`\lambda_{i}`. Any non-Gaussian gate such as the cubic phase gate (:class:`~.Vgate`) represents a valid choice, but we recommend the Kerr gate (:class:`~.Kgate`) for simulations in Strawberry Fields as it is diagonal in the Fock basis. The layer is shown below as a circuit:
 
 :html:`<br>`
 
@@ -48,14 +49,53 @@ For example, in the case of a 4 mode interferometer, with arbitrary :math:`4\tim
 
 :html:`<br>`
 
-In the above, the single mode squeeze states all apply identical squeezing :math:`z=r`, the parameters of the beamsplitters and the rotation gates determine the unitary :math:`U`, and finally the detectors perform Fock state measurements on the output modes. As with boson sampling, for :math:`N` input modes, we must have a minimum of :math:`N+1` columns in the beamsplitter array :cite:`clements2016`.
+These layers can then be composed to form a quantum neural network (see :cite:`killoran2018continuous` to understand how to vary the network width).
 
+Let's see how the quantum layer can embed the transformation :math:`\mathcal{L}(\mathbf{x}) = \varphi (W \mathbf{x} + \mathbf{b})` of a classical neural network layer. Suppose :math:`N`-dimensional data is encoded in position eigenstates so that
+
+.. math:: \mathbf{x} \Leftrightarrow \ket{\mathbf{x}} := \ket{x_{1}} \otimes \ldots \otimes \ket{x_{N}}.
+
+We want to perform the transformation
+
+.. math:: \ket{\mathbf{x}} \Rightarrow \ket{\varphi (W \mathbf{x} + \mathbf{b})}.
+
+It turns out that the quantum circuit above can do precisely this! Consider first the affine transformation :math:`W \mathbf{x} + \mathbf{b}`. We can write :math:`W = O_{2} \Sigma O_{1}` with :math:`O_{k}` orthogonal matrices and :math:`\Sigma` a positive diagonal matrix. These orthogonal transformations can be carried out using interferometers without access to phase, i.e., with :math:`\boldsymbol{\phi}_{k} = 0`:
+
+.. math:: U_{k}(\boldsymbol{\theta}_{k},\mathbf{0})\ket{\mathbf{x}} = \ket{O_{k} \mathbf{x}}.
+
+On the other hand, the diagonal matrix :math:`\Sigma = {\rm diag}\left(\{c_{i}\}_{i=1}^{N}\right)` can be achieved through squeezing:
+
+.. math:: \otimes_{i=1}^{N}S(r_{i})\ket{\mathbf{x}} \propto \ket{\Sigma \mathbf{x}},
+
+with :math:`r_{i} = \log (c_{i})`. Finally, the addition of a bias vector :math:`\mathbf{b}` is done using position displacement gates:
+
+.. math:: \otimes_{i=1}^{N}D(\alpha_{i})\ket{\mathbf{x}} = \ket{\mathbf{x} + \mathbf{b}},
+
+with :math:`\mathbf{b} = \{\alpha_{i}\}_{i=1}^{N}` and :math:`\alpha_{i} \in \mathbb{R}`. Putting this all together, we see that the operation :math:`\mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1}` with phaseless interferometers and position displacement performs the transformation :math:`\ket{\mathbf{x}} \Rightarrow \ket{W \mathbf{x} + \mathbf{b}}` on position eigenstates.
+
+.. warning:: The TensorFlow backend is the natural simulator for quantum neural networks, but this backend cannot naturally accommodate position eigenstates, which require infinite squeezing. For simulation of position eigenstates in this backend, the best approach is to use a displaced squeezed state (:class:`strawberryfields.backends.tfbackend.TFBackend.prepare_displaced_squeezed_state`) with high squeezing value r. However, to avoid significant numerical error, it is important to make sure that all initial states have negligible amplitude in the Fock basis for Fock states :math:`\ket{n}, ~~n\geq \texttt{cutoff_dim}`, with :math:`\texttt{cutoff_dim}` the cutoff dimension.
+
+Finally, the nonlinear function :math:`\varphi` can be achieved through a restricted type of non-Gaussian gates :math:`\otimes_{i=1}^{N}\Phi(\lambda_{i})` acting on each mode (see :cite:`killoran2018continuous` for more details), resulting in the transformation
+
+.. math:: \otimes_{i=1}^{N}\Phi(\lambda_{i})\ket{\mathbf{x}} = \ket{\varphi(\mathbf{x})}.
+
+The operation :math:`\mathcal{L} = \Phi \circ \mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1}` with phaseless interferometers, position displacements, and restricted non-Gaussian gates can hence be seen as enacting a classical neural network layer on position eigenstates. However, CV quantum neural network layers can be made more powerful than this by lifting the above restrictions on :math:`\mathcal{L}`, i.e.:
+
+- Using arbitrary interferometers :math:`U_{k}(\boldsymbol{\theta}_{k},\boldsymbol{\phi}_{k})` with access to phase and general displacement gates (i.e., not necessarily position displacement). This allows :math:`\mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1}` to represent a general Gaussian operation.
+- Using arbitrary non-Gaussian gates :math:`\Phi(\boldsymbol{\lambda})`, such as the Kerr gate.
+- Encoding data outside of the position eigenbasis, for example using instead the Fock basis.
+
+In fact, gates in a single layer form a universal gate set, making the CV quantum neural network a model for universal quantum computing, i.e., a sufficient number of layers can carry out any quantum algorithm implementable on a CV quantum computer. The exact implications this has to improve machine learning are still a topic for further investigation.
+
+CV quantum neural networks can be trained both through classical simulation and directly on quantum hardware. Strawberry Fields relies on classical simulation to evaluate cost functions of the CV quantum neural network and the resultant gradients with respect to parameters of each layer. However, this becomes an intractable task with increasing network depth and width. Ultimately, direct evaluation on hardware is the feasible approach for large scale networks, with an approach suggested in :cite:`schuld2019evaluating`. The `PennyLane <https://pennylane.readthedocs.io/en/latest/>`_ library provides tools for training hybrid quantum-classical machine learning models with both simulators and quantum hardware.
+
+CV quantum neural network layers are shown for one to four modes below:
 
 :html:`<br>`
 
 .. figure:: ../_static/layer_1mode.svg
     :align: center
-    :width: 70%
+    :width: 31%
     :target: javascript:void(0);
 
     One mode layer
@@ -65,7 +105,7 @@ In the above, the single mode squeeze states all apply identical squeezing :math
 
 .. figure:: ../_static/layer_2mode.svg
     :align: center
-    :width: 70%
+    :width: 46%
     :target: javascript:void(0);
 
     Two mode layer
@@ -76,7 +116,7 @@ In the above, the single mode squeeze states all apply identical squeezing :math
 
 .. figure:: ../_static/layer_3mode.svg
     :align: center
-    :width: 70%
+    :width: 75%
     :target: javascript:void(0);
 
     Three mode layer
@@ -85,78 +125,49 @@ In the above, the single mode squeeze states all apply identical squeezing :math
 
 .. figure:: ../_static/layer_4mode.svg
     :align: center
-    :width: 70%
+    :width: 90%
     :target: javascript:void(0);
 
     Four mode layer
 
 :html:`<br>`
 
+Here, the multimode linear interferometers :math:`U_{1}` and :math:`U_{2}` have been decomposed into two-mode beamsplitters (:class:`~.BSgate`) and single-mode phase shifters (:class:`~.Rgate`) using the Clements decomposition :cite:`clements2016`.
 
 Blackbird code
 ---------------
 
-.. code-block:: python
-    :linenos:
+The first step to writing a CV quantum neural network layer in Blackbird code is to define a function for the two interferometers:
 
-    def Interferometer(theta, phi, rphi, q):
-        """Parameterised interferometer acting on N qumodes
+.. literalinclude:: ../../examples/quantum_neural_network.py
+   :language: python
+   :linenos:
+   :tab-width: 4
+   :start-after: # define interferometer
+   :end-before: # Rgate only applied to first N - 1 modes
 
-        Args:
-            theta (list): list of length N(N-1)/2 real parameters
-            phi (list): list of length N(N-1)/2 real parameters
-            rphi (list): list of length N-1 real parameters
-            q (list): list of qumodes the interferometer is to be applied to
-        """
-        N = len(q)
+.. warning:: The :class:`~.Interferometer` class in Strawberry Fields does not reproduce the functionality above. Instead, :class:`~.Interferometer` applies a given input unitary according to the Clements decomposition.
 
-        if N == 1:
-            # the interferometer is a single rotation
-            Rgate(rphi[0]) | q[0]
-            return
+Using the above interferometer function, an :math:`N` mode CV quantum neural network layer is given by:
 
-        n = 0 # keep track of free parameters
+.. literalinclude:: ../../examples/quantum_neural_network.py
+   :language: python
+   :linenos:
+   :dedent: 4
+   :tab-width: 4
+   :start-after: # begin layer
+   :end-before: # end layer
 
-        # Apply the rectangular beamsplitter array
-        # The array depth is N
-        for l in range(N):
-            for k, (q1, q2) in enumerate(zip(q[:-1], q[1:])):
-                # skip even or odd pairs depending on layer
-                if (l+k)%2 != 1:
-                    BSgate(theta[n], phi[n]) | (q1, q2)
-                    n += 1
-
-        # apply the final local phase shifts to all modes except the last one
-        for i, p in enumerate(rphi):
-            Rgate(p) | q[i]
-
-
-The boson sampling circuit displayed above, with randomly chosen rotation angles and beamsplitter parameters, can be implemented using the Blackbird quantum circuit language:
-
-.. literalinclude:: ../../examples/gaussian_boson_sampling.py
-    :language: python
-    :linenos:
-    :dedent: 4
-    :tab-width: 4
-    :start-after: with eng:
-    :end-before: # end circuit
-
-If we wish to simulate Fock measurements, we can additionally include 
+The variables fed into the gates of the layer can be defined as TensorFlow variables, for example ``theta_variables_1 = tf.Variable(tf.random_normal(shape=[BS_variable_number]))`` with ``BS_variable_number = int(N * (N - 1) / 2)``. Multiple layers can then be joined into a network using:
 
 .. code-block:: python
 
-    Measure | q[0]
-    Measure | q[1]
-    Measure | q[2]
-    Measure | q[3]
+    with eng:
 
-after the beamsplitter array. After constructing the circuit and running the engine, the values of the Fock state measurements will be available in the attributes ``q[i].val`` for ``i=0,1,2,3``. In order to sample from this distribution, it will be required to repeat the execution of this circuit multiple times, storing the resulting measurements each time.
-
-.. warning:: While all backends support the Gaussian boson sampling scheme, the Gaussian backend currently does not support the Fock state measurement operation :class:`.MeasureFock` (provided by the shortcut ``Measure``).
-
-Alternatively, you may omit the measurements, and extract the resulting Fock state probabilities directly via the state methods :meth:`~.BaseFockState.all_fock_probs` (supported by Fock backends) or :meth:`~.BaseState.fock_prob` (supported by all backends).
+        for _ in range(layers):
+            layer(q)
 
 .. note::
-    A fully functional Strawberry Fields simulation containing the above Blackbird code is included at :download:`examples/gaussian_boson_sampling.py <../../examples/gaussian_boson_sampling.py>`. 
+    A fully functional Strawberry Fields simulation containing the above Blackbird code for state preparation is included at :download:`examples/quantum_neural_network.py <../../examples/quantum_neural_network.py>`. 
 
-    For more details on running the above Blackbird code in Strawberry Fields, including calculations of how to determine the output Fock state probabilities using the matrix permanent and comparisons to the returned state, refer to the in-depth :ref:`Gaussian boson sampling tutorial <gaussian_boson_tutorial>`.
+    Applications of CV quantum neural networks to `state preparation <../gallery/state_learner/StateLearning.html>`_ and `gate synthesis <../gallery/gate_synthesis/GateSynthesis.html>`_ can be found in the Strawberry Fields gallery.
