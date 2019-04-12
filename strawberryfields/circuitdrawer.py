@@ -352,13 +352,14 @@ class Circuit:
         if not self._on_empty_column():
             self._add_column()
 
+        wires.sort()
+
         first_wire = wires.pop(0)
         wire_ops = matrix[first_wire]
         wire_ops[-1] = MULTIGATE.format(1, circuit_op)
         matrix[first_wire] = wire_ops
         previous_wire = first_wire
 
-        wires.sort()
         for wire in wires:
             if not previous_wire == wire - 1:
                 raise NotDrawableException('{0} multi-mode gate applied to non-adjacent wires!'.format(circuit_op))
