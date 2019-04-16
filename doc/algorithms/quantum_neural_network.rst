@@ -99,7 +99,12 @@ Finally, the nonlinear function :math:`\varphi` can be achieved through a restri
 
 .. math:: \otimes_{i=1}^{N}\Phi(\lambda_{i})\ket{\mathbf{x}} = \ket{\varphi(\mathbf{x})}.
 
-The operation :math:`\mathcal{L} = \Phi \circ \mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1}` with phaseless interferometers, position displacements, and restricted non-Gaussian gates can hence be seen as enacting a classical neural network layer :math:`\ket{\mathbf{x}} \Rightarrow \ket{\phi(W \mathbf{x} + \mathbf{b})}` on position eigenstates. However, CV quantum neural network layers can be made more powerful than this by lifting the above restrictions on :math:`\mathcal{L}`, i.e.:
+The operation :math:`\mathcal{L} = \Phi \circ \mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1}` with phaseless interferometers, position displacements, and restricted non-Gaussian gates can hence be seen as enacting a classical neural network layer :math:`\ket{\mathbf{x}} \Rightarrow \ket{\phi(W \mathbf{x} + \mathbf{b})}` on position eigenstates. 
+
+Extending to quantum neural networks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In fact, CV quantum neural network layers can be made more expressive than their classical counterparts. We can do this by lifting the above restrictions on :math:`\mathcal{L}`, i.e.:
 
 - Using arbitrary interferometers :math:`U_{k}(\boldsymbol{\theta}_{k},\boldsymbol{\phi}_{k})` with access to phase and general displacement gates (i.e., not necessarily position displacement). This allows :math:`\mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1}` to represent a general Gaussian operation.
 - Using arbitrary non-Gaussian gates :math:`\Phi(\lambda_{i})`, such as the Kerr gate.
