@@ -77,7 +77,7 @@ We want to perform the transformation
 
 .. math:: \ket{\mathbf{x}} \Rightarrow \ket{\varphi (W \mathbf{x} + \mathbf{b})}.
 
-It turns out that the quantum circuit above can do precisely this! Consider first the affine transformation :math:`W \mathbf{x} + \mathbf{b}`. We can write :math:`W = O_{2} \Sigma O_{1}` with :math:`O_{k}` orthogonal matrices and :math:`\Sigma` a positive diagonal matrix. These orthogonal transformations can be carried out using interferometers without access to phase, i.e., with :math:`\boldsymbol{\phi}_{k} = 0`:
+It turns out that the quantum circuit above can do precisely this! Consider first the affine transformation :math:`W \mathbf{x} + \mathbf{b}`. We can always write :math:`W = O_{2} \Sigma O_{1}` with :math:`O_{k}` orthogonal matrices and :math:`\Sigma` a positive diagonal matrix. These orthogonal transformations can be carried out using interferometers without access to phase, i.e., with :math:`\boldsymbol{\phi}_{k} = 0`:
 
 .. math:: U_{k}(\boldsymbol{\theta}_{k},\mathbf{0})\ket{\mathbf{x}} = \ket{O_{k} \mathbf{x}}.
 
