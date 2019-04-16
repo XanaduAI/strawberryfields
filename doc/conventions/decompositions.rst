@@ -91,6 +91,8 @@ In the case where :math:`V` represents a pure state (:math:`|V|-(\hbar/2)^{2N}=0
 .. note:: :math:`V` must be a valid quantum state satisfying the uncertainty principle: :math:`V+\frac{1}{2}i\hbar\Omega\geq 0`. If this is not the case, the Williamson decomposition will return non-physical thermal states with :math:`\bar{n}_i<0`.
 
 
+.. _bloch_messiah:
+
 Bloch-Messiah (or Euler) decomposition
 -------------------------------------------
 
