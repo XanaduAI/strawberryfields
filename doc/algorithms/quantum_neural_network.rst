@@ -114,7 +114,7 @@ In fact, gates in a single layer form a universal gate set, making the CV quantu
 
 CV quantum neural networks can be trained both through classical simulation and directly on quantum hardware. Strawberry Fields relies on classical simulation to evaluate cost functions of the CV quantum neural network and the resultant gradients with respect to parameters of each layer. However, this becomes an intractable task with increasing network depth and width. Ultimately, direct evaluation on hardware will likely be necessary to large scale networks; an approach for hardware-based training is mapped out in :cite:`schuld2019evaluating`. The `PennyLane <https://pennylane.readthedocs.io/en/latest/>`_ library provides tools for training hybrid quantum-classical machine learning models, using both simulators and real-world quantum hardware.
 
-CV quantum neural network layers are shown for one to four modes below:
+Example CV quantum neural network layers are shown, for one to four modes, below:
 
 :html:`<br>`
 
