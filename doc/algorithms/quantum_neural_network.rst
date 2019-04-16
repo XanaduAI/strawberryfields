@@ -54,8 +54,10 @@ where
 
  * :math:`\mathcal{S}=\otimes_{i=1}^{N}S(r_{i})` is a single mode squeezing gate (:class:`~.Sgate`) acting on each mode with squeezing parameter :math:`r_{i} \in \mathbb{R}`, and
  
- * :math:`\Phi=\otimes_{i=1}^{N}\Phi(\lambda_{i})` is a non-Gaussian gate on each mode with parameter :math:`\lambda_{i} \in \mathbb{R}`. Any non-Gaussian gate such as the cubic phase gate (:class:`~.Vgate`) represents a valid choice, but we recommend the Kerr gate (:class:`~.Kgate`) for simulations in Strawberry Fields as it is diagonal in the Fock basis.
- 
+ * :math:`\Phi=\otimes_{i=1}^{N}\Phi(\lambda_{i})` is a non-Gaussian gate on each mode with parameter :math:`\lambda_{i} \in \mathbb{R}`.
+
+.. note:: Any non-Gaussian gate such as the cubic phase gate (:class:`~.Vgate`) represents a valid choice, but we recommend the Kerr gate (:class:`~.Kgate`) for simulations in Strawberry Fields. The Kerr gate is more accurate numerically because it is diagonal in the Fock basis. 
+
 The layer is shown below as a circuit:
 
 :html:`<br>`
@@ -77,7 +79,7 @@ We want to perform the transformation
 
 .. math:: \ket{\mathbf{x}} \Rightarrow \ket{\varphi (W \mathbf{x} + \mathbf{b})}.
 
-It turns out that the quantum circuit above can do precisely this! Consider first the affine transformation :math:`W \mathbf{x} + \mathbf{b}`. Using the :ref:`Block-Messiah decomposition <bloch_messiah>`, we can always write :math:`W = O_{2} \Sigma O_{1}` with :math:`O_{k}` orthogonal matrices and :math:`\Sigma` a positive diagonal matrix. These orthogonal transformations can be carried out using interferometers without access to phase, i.e., with :math:`\boldsymbol{\phi}_{k} = 0`:
+It turns out that the quantum circuit above can do precisely this! Consider first the affine transformation :math:`W \mathbf{x} + \mathbf{b}`. Leveraging the singular value decomposition, we can always write :math:`W = O_{2} \Sigma O_{1}` with :math:`O_{k}` orthogonal matrices and :math:`\Sigma` a positive diagonal matrix. These orthogonal transformations can be carried out using interferometers without access to phase, i.e., with :math:`\boldsymbol{\phi}_{k} = 0`:
 
 .. math:: U_{k}(\boldsymbol{\theta}_{k},\mathbf{0})\ket{\mathbf{x}} = \ket{O_{k} \mathbf{x}}.
 
