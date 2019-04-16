@@ -23,7 +23,15 @@ Here, the neural network depth is determined by the number of layers, while the 
 
 .. math:: \mathcal{L}(\mathbf{x}) = \varphi (W \mathbf{x} + \mathbf{b}),
 
-where :math:`W \in \mathbb{R}^{m \times n}` is a matrix, :math:`b \in \mathbb{R}^{m}` is a vector, and :math:`\varphi` is a nonlinear function (also known as the activation function). The matrix multiplication :math:`W \mathbf{x}` is a linear transformation on :math:`\mathbf{x}`, while :math:`W \mathbf{x} + \mathbf{b}` represents an **affine transformation**. In principle, any nonlinear function can be chosen for :math:`\varphi`, but often the choice is fixed from a `standard set of activations <https://en.wikipedia.org/wiki/Activation_function>`_ that include the rectified linear unit (ReLU) and the sigmoid function acting on each neuron. Finally, the output layer enacts an affine transformation on the last hidden layer, but the activation function may be linear (including the identity), or a different nonlinear function such as `softmax <https://en.wikipedia.org/wiki/Softmax_function>`_ (for classification).
+where
+
+* :math:`W \in \mathbb{R}^{m \times n}` is a matrix,
+
+* :math:`b \in \mathbb{R}^{m}` is a vector, and
+
+* :math:`\varphi` is a nonlinear function (also known as the activation function).
+
+The matrix multiplication :math:`W \mathbf{x}` is a linear transformation on :math:`\mathbf{x}`, while :math:`W \mathbf{x} + \mathbf{b}` represents an **affine transformation**. In principle, any nonlinear function can be chosen for :math:`\varphi`, but often the choice is fixed from a `standard set of activations <https://en.wikipedia.org/wiki/Activation_function>`_ that include the rectified linear unit (ReLU) and the sigmoid function acting on each neuron. Finally, the output layer enacts an affine transformation on the last hidden layer, but the activation function may be linear (including the identity), or a different nonlinear function such as `softmax <https://en.wikipedia.org/wiki/Softmax_function>`_ (for classification).
 
 Layers in the feedforward neural network above are called **fully connected** as every neuron in a given hidden layer or output layer can be connected to all neurons in the previous layer through the matrix :math:`W`. Over time, specialized versions of layers have been developed to focus on different problems. For example, convolutional layers have a restricted form of connectivity and are suited to machine learning with images. We focus here on fully connected layers as the most general type. Training of neural networks uses variations of the `gradient descent <https://en.wikipedia.org/wiki/Gradient_descent>`_ algorithm on a cost function characterizing the similarity between outputs of the neural network and training data. The gradient of the cost function can be calculated using `automatic differentiation <https://en.wikipedia.org/wiki/Automatic_differentiation>`_, with knowledge of the feedforward network structure.
 
