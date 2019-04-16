@@ -46,7 +46,17 @@ A CV quantum neural network layer can be defined as
 
 .. math:: \mathcal{L} := \Phi \circ \mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1},
 
-where :math:`\mathcal{U}_{k}=U_{k}(\boldsymbol{\theta}_{k},\boldsymbol{\phi}_{k})` is an :math:`N` mode interferometer, :math:`\mathcal{D}=\otimes_{i=1}^{N}D(\alpha_{i})` and :math:`\mathcal{S}=\otimes_{i=1}^{N}S(r_{i})` are displacement gates (:class:`~.Dgate`) and squeezing gates (:class:`~.Sgate`) acting on each mode with :math:`\alpha_{i} \in \mathbb{C}` and :math:`r_{i} \in \mathbb{R}`, and finally :math:`\Phi=\otimes_{i=1}^{N}\Phi(\lambda_{i})` is a non-Gaussian gate on each mode with parameter :math:`\lambda_{i} \in \mathbb{R}`. Any non-Gaussian gate such as the cubic phase gate (:class:`~.Vgate`) represents a valid choice, but we recommend the Kerr gate (:class:`~.Kgate`) for simulations in Strawberry Fields as it is diagonal in the Fock basis. The layer is shown below as a circuit:
+where
+
+* :math:`\mathcal{U}_{k}=U_{k}(\boldsymbol{\theta}_{k},\boldsymbol{\phi}_{k})` is an :math:`N` mode interferometer, 
+
+* :math:`\mathcal{D}=\otimes_{i=1}^{N}D(\alpha_{i})` is a single mode displacement gate (:class:`~.Dgate`) with complex displacement :math:`\alpha_{i} \in \mathbb{C}`,
+
+ * :math:`\mathcal{S}=\otimes_{i=1}^{N}S(r_{i})` is a single mode squeezing gate (:class:`~.Sgate`) acting on each mode with squeezing parameter :math:`r_{i} \in \mathbb{R}`, and
+ 
+ * :math:`\Phi=\otimes_{i=1}^{N}\Phi(\lambda_{i})` is a non-Gaussian gate on each mode with parameter :math:`\lambda_{i} \in \mathbb{R}`. Any non-Gaussian gate such as the cubic phase gate (:class:`~.Vgate`) represents a valid choice, but we recommend the Kerr gate (:class:`~.Kgate`) for simulations in Strawberry Fields as it is diagonal in the Fock basis.
+ 
+The layer is shown below as a circuit:
 
 :html:`<br>`
 
