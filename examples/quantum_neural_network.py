@@ -43,7 +43,6 @@ def interferometer(theta, phi, rphi, q):
                 n += 1
 
     # apply the final local phase shifts to all modes except the last one
-
     for i in range(max(1, N - 1)):
         Rgate(rphi[i]) | q[i]
     # Rgate only applied to first N - 1 modes

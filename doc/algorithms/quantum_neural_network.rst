@@ -8,7 +8,7 @@ Quantum neural network
 
     "Neural Network are not black boxes. They are a big pile of linear algebra." - `Randall Munroe, xkcd <https://xkcd.com/1838/>`_
 
-Machine learning has a wide range of models for tasks such as classification, regression, and clustering. Neural networks are one of the most successful models, having experienced a resurgence in use over the past decade due to increases in computational power and parallelization. The typical structure of a neural network consists of a series of interacting layers that perform transformations on data passing through the network. An archetypal neural network structure is the feedforward neural network, visualized by the following example:
+Machine learning has a wide range of models for tasks such as classification, regression, and clustering. Neural networks are one of the most successful models, having experienced a resurgence in use over the past decade due to improvements in computational power and advanced software libraries. The typical structure of a neural network consists of a series of interacting layers that perform transformations on data passing through the network. An archetypal neural network structure is the feedforward neural network, visualized by the following example:
 
 :html:`<br>`
 
@@ -37,7 +37,7 @@ Layers in the feedforward neural network above are called **fully connected** as
 
 Training of neural networks uses variations of the `gradient descent <https://en.wikipedia.org/wiki/Gradient_descent>`_ algorithm on a cost function characterizing the similarity between outputs of the neural network and training data. The gradient of the cost function can be calculated using `automatic differentiation <https://en.wikipedia.org/wiki/Automatic_differentiation>`_, with knowledge of the feedforward network structure.
 
-Quantum neural networks aim to encode neural networks into a quantum system, with the intention of benefitting from quantum information processing. There have been numerous attempts to define a quantum neural network, each with varying advantages and disadvantages. The quantum neural network detailed below, following the work of :cite:`killoran2018continuous`, has a CV architecture and is naturally realized using standard CV gates from Strawberry Fields.
+Quantum neural networks aim to encode neural networks into a quantum system, with the intention of benefiting from quantum information processing. There have been numerous attempts to define a quantum neural network, each with varying advantages and disadvantages. The quantum neural network detailed below, following the work of :cite:`killoran2018continuous`, has a CV architecture and is realized using standard CV gates from Strawberry Fields. One advantage of this CV architecture is that it naturally accommodates for the continuous nature of neural networks. Additionally, the CV model is able to easily apply non-linear transformations using the phase space picture - a task which qubit-based models struggle with, often relying on measurement postselection which has a probability of failure.
 
 CV implementation
 ------------------------------------
@@ -69,7 +69,9 @@ The layer is shown below as a circuit:
 
 :html:`<br>`
 
-These layers can then be composed to form a quantum neural network (see :cite:`killoran2018continuous` to understand how to vary the network width).
+These layers can then be composed to form a quantum neural network. The width of the network can also be varied between layers :cite:`killoran2018continuous`.
+Reproducing classical neural networks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Let's see how the quantum layer can embed the transformation :math:`\mathcal{L}(\mathbf{x}) = \varphi (W \mathbf{x} + \mathbf{b})` of a classical neural network layer. Suppose :math:`N`-dimensional data is encoded in position eigenstates so that
 
@@ -93,13 +95,18 @@ with :math:`r_{i} = \log (c_{i})`. Finally, the addition of a bias vector :math:
 
 with :math:`\mathbf{b} = \{\alpha_{i}\}_{i=1}^{N}` and :math:`\alpha_{i} \in \mathbb{R}`. Putting this all together, we see that the operation :math:`\mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1}` with phaseless interferometers and position displacement performs the transformation :math:`\ket{\mathbf{x}} \Rightarrow \ket{W \mathbf{x} + \mathbf{b}}` on position eigenstates.
 
-.. warning:: The TensorFlow backend is the natural simulator for quantum neural networks in Strawberry Fields, but this backend cannot naturally accommodate position eigenstates, which require infinite squeezing. For simulation of position eigenstates in this backend, the best approach is to use a displaced squeezed state (:class:`prepare_displaced_squeezed_state <strawberryfields.backends.tfbackend.TFBackend.prepare_displaced_squeezed_state>`) with high squeezing value r. However, to avoid significant numerical error, it is important to make sure that all initial states have negligible amplitude in the Fock basis for Fock states :math:`\ket{n}, ~~n\geq \texttt{cutoff_dim}`, with :math:`\texttt{cutoff_dim}` the cutoff dimension.
+.. warning:: The TensorFlow backend is the natural simulator for quantum neural networks in Strawberry Fields, but this backend cannot naturally accommodate position eigenstates, which require infinite squeezing. For simulation of position eigenstates in this backend, the best approach is to use a displaced squeezed state (:class:`prepare_displaced_squeezed_state <strawberryfields.backends.tfbackend.TFBackend.prepare_displaced_squeezed_state>`) with high squeezing value r. However, to avoid significant numerical error, it is important to make sure that all initial states have negligible amplitude for Fock states :math:`\ket{n}` with :math:`n\geq \texttt{cutoff_dim}`, where :math:`\texttt{cutoff_dim}` is the cutoff dimension.
 
 Finally, the nonlinear function :math:`\varphi` can be achieved through a restricted type of non-Gaussian gates :math:`\otimes_{i=1}^{N}\Phi(\lambda_{i})` acting on each mode (see :cite:`killoran2018continuous` for more details), resulting in the transformation
 
 .. math:: \otimes_{i=1}^{N}\Phi(\lambda_{i})\ket{\mathbf{x}} = \ket{\varphi(\mathbf{x})}.
 
-The operation :math:`\mathcal{L} = \Phi \circ \mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1}` with phaseless interferometers, position displacements, and restricted non-Gaussian gates can hence be seen as enacting a classical neural network layer :math:`\ket{\mathbf{x}} \Rightarrow \ket{\phi(W \mathbf{x} + \mathbf{b})}` on position eigenstates. However, CV quantum neural network layers can be made more powerful than this by lifting the above restrictions on :math:`\mathcal{L}`, i.e.:
+The operation :math:`\mathcal{L} = \Phi \circ \mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1}` with phaseless interferometers, position displacements, and restricted non-Gaussian gates can hence be seen as enacting a classical neural network layer :math:`\ket{\mathbf{x}} \Rightarrow \ket{\phi(W \mathbf{x} + \mathbf{b})}` on position eigenstates. 
+
+Extending to quantum neural networks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In fact, CV quantum neural network layers can be made more expressive than their classical counterparts. We can do this by lifting the above restrictions on :math:`\mathcal{L}`, i.e.:
 
 - Using arbitrary interferometers :math:`U_{k}(\boldsymbol{\theta}_{k},\boldsymbol{\phi}_{k})` with access to phase and general displacement gates (i.e., not necessarily position displacement). This allows :math:`\mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1}` to represent a general Gaussian operation.
 - Using arbitrary non-Gaussian gates :math:`\Phi(\lambda_{i})`, such as the Kerr gate.
@@ -107,9 +114,9 @@ The operation :math:`\mathcal{L} = \Phi \circ \mathcal{D} \circ \mathcal{U}_{2} 
 
 In fact, gates in a single layer form a universal gate set, making the CV quantum neural network a model for universal quantum computing, i.e., a sufficient number of layers can carry out any quantum algorithm implementable on a CV quantum computer.
 
-CV quantum neural networks can be trained both through classical simulation and directly on quantum hardware. Strawberry Fields relies on classical simulation to evaluate cost functions of the CV quantum neural network and the resultant gradients with respect to parameters of each layer. However, this becomes an intractable task with increasing network depth and width. Ultimately, direct evaluation on hardware is the feasible approach for large scale networks, with an approach suggested in :cite:`schuld2019evaluating`. The `PennyLane <https://pennylane.readthedocs.io/en/latest/>`_ library provides tools for training hybrid quantum-classical machine learning models with both simulators and quantum hardware.
+CV quantum neural networks can be trained both through classical simulation and directly on quantum hardware. Strawberry Fields relies on classical simulation to evaluate cost functions of the CV quantum neural network and the resultant gradients with respect to parameters of each layer. However, this becomes an intractable task with increasing network depth and width. Ultimately, direct evaluation on hardware will likely be necessary to large scale networks; an approach for hardware-based training is mapped out in :cite:`schuld2019evaluating`. The `PennyLane <https://pennylane.readthedocs.io/en/latest/>`_ library provides tools for training hybrid quantum-classical machine learning models, using both simulators and real-world quantum hardware.
 
-CV quantum neural network layers are shown for one to four modes below:
+Example CV quantum neural network layers are shown, for one to four modes, below:
 
 :html:`<br>`
 
@@ -189,4 +196,4 @@ The variables fed into the gates of the layer are defined as TensorFlow variable
 .. note::
     A fully functional Strawberry Fields simulation containing the above Blackbird code for state preparation is included at :download:`examples/quantum_neural_network.py <../../examples/quantum_neural_network.py>`. 
 
-    Applications of CV quantum neural networks to `state learning <../gallery/state_learner/StateLearning.html>`_ and `gate synthesis <../gallery/gate_synthesis/GateSynthesis.html>`_ can be found in the Strawberry Fields gallery.
+Applications of CV quantum neural networks to `state learning <../gallery/state_learner/StateLearning.html>`_ and `gate synthesis <../gallery/gate_synthesis/GateSynthesis.html>`_ can be found in the Strawberry Fields gallery.
