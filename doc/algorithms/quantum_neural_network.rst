@@ -68,6 +68,8 @@ The layer is shown below as a circuit:
 :html:`<br>`
 
 These layers can then be composed to form a quantum neural network. The width of the network can also be varied between layers :cite:`killoran2018continuous`.
+Reproducing classical neural networks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Let's see how the quantum layer can embed the transformation :math:`\mathcal{L}(\mathbf{x}) = \varphi (W \mathbf{x} + \mathbf{b})` of a classical neural network layer. Suppose :math:`N`-dimensional data is encoded in position eigenstates so that
 
