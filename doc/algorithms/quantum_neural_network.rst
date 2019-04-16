@@ -52,9 +52,9 @@ where
 
 * :math:`\mathcal{D}=\otimes_{i=1}^{N}D(\alpha_{i})` is a single mode displacement gate (:class:`~.Dgate`) with complex displacement :math:`\alpha_{i} \in \mathbb{C}`,
 
- * :math:`\mathcal{S}=\otimes_{i=1}^{N}S(r_{i})` is a single mode squeezing gate (:class:`~.Sgate`) acting on each mode with squeezing parameter :math:`r_{i} \in \mathbb{R}`, and
+* :math:`\mathcal{S}=\otimes_{i=1}^{N}S(r_{i})` is a single mode squeezing gate (:class:`~.Sgate`) acting on each mode with squeezing parameter :math:`r_{i} \in \mathbb{R}`, and
  
- * :math:`\Phi=\otimes_{i=1}^{N}\Phi(\lambda_{i})` is a non-Gaussian gate on each mode with parameter :math:`\lambda_{i} \in \mathbb{R}`.
+* :math:`\Phi=\otimes_{i=1}^{N}\Phi(\lambda_{i})` is a non-Gaussian gate on each mode with parameter :math:`\lambda_{i} \in \mathbb{R}`.
 
 .. note:: Any non-Gaussian gate such as the cubic phase gate (:class:`~.Vgate`) represents a valid choice, but we recommend the Kerr gate (:class:`~.Kgate`) for simulations in Strawberry Fields. The Kerr gate is more accurate numerically because it is diagonal in the Fock basis. 
 
@@ -70,6 +70,7 @@ The layer is shown below as a circuit:
 :html:`<br>`
 
 These layers can then be composed to form a quantum neural network. The width of the network can also be varied between layers :cite:`killoran2018continuous`.
+
 Reproducing classical neural networks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
