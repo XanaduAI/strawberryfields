@@ -8,7 +8,7 @@ Quantum neural network
 
     "Neural Network are not black boxes. They are a big pile of linear algebra." - `Randall Munroe, xkcd <https://xkcd.com/1838/>`_
 
-Machine learning has a wide range of models for tasks such as classification, regression, and clustering. Neural networks are one of the most successful models, having experienced a resurgence in use over the past decade due to increases in computational power and parallelization. The typical structure of a neural network consists of a series of interacting layers that perform transformations on data passing through the network. An archetypal neural network structure is the feedforward neural network, visualized by the following example:
+Machine learning has a wide range of models for tasks such as classification, regression, and clustering. Neural networks are one of the most successful models, having experienced a resurgence in use over the past decade due to improvements in computational power and advanced software libraries. The typical structure of a neural network consists of a series of interacting layers that perform transformations on data passing through the network. An archetypal neural network structure is the feedforward neural network, visualized by the following example:
 
 :html:`<br>`
 
