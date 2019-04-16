@@ -194,4 +194,4 @@ The variables fed into the gates of the layer are defined as TensorFlow variable
 .. note::
     A fully functional Strawberry Fields simulation containing the above Blackbird code for state preparation is included at :download:`examples/quantum_neural_network.py <../../examples/quantum_neural_network.py>`. 
 
-    Applications of CV quantum neural networks to `state learning <../gallery/state_learner/StateLearning.html>`_ and `gate synthesis <../gallery/gate_synthesis/GateSynthesis.html>`_ can be found in the Strawberry Fields gallery.
+Applications of CV quantum neural networks to `state learning <../gallery/state_learner/StateLearning.html>`_ and `gate synthesis <../gallery/gate_synthesis/GateSynthesis.html>`_ can be found in the Strawberry Fields gallery.
