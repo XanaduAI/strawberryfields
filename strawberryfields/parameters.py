@@ -81,7 +81,7 @@ import numbers
 import numpy as np
 import tensorflow as tf
 
-from .engine import (RegRef, RegRefTransform)
+from .program import (RegRef, RegRefTransform)
 
 
 # supported TF classes

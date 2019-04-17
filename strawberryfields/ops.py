@@ -73,11 +73,11 @@ There are six kinds of :class:`Operation` objects:
 * :class:`Measurement` operations manipulate the register state and produce classical information.
   The information is directly available only after the simulation has been run up to the point of measurement::
 
-    eng, q = sf.Engine(2)
+    eng, (alice, bob) = sf.Engine(2)
     with eng:
-      Measure       | q[0]
+      Measure       | alice
       eng.run()
-      Dgate(q[0].val) | q[1]
+      Dgate(alice.val) | bob
 
   Alternatively one may use a symbolic reference to the register containing the measurement result
   by supplying registers as the argument to an :class:`Operation`, in which case the measurement may be deferred,
@@ -298,7 +298,8 @@ from scipy.special import factorial as fac
 
 from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
-from .engine import Engine as _Engine, Command, RegRefTransform, MergeFailure
+from .engine import Engine
+from .program import (Program, Command, RegRefTransform, MergeFailure)
 from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
                          sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2,
                          transpose, squeeze)
@@ -307,7 +308,6 @@ from .decompositions import clements, bloch_messiah, williamson, graph_embed
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
 # pylint: disable=too-many-arguments
-
 
 # numerical tolerances
 _decomposition_merge_tol = 1e-13
@@ -403,7 +403,7 @@ class Operation:
         if (not reg) or (self.ns != None and self.ns != len(reg)):
             raise ValueError("Wrong number of subsystems.")
         # send it to the engine
-        reg = _Engine._current_context.append(self, reg)
+        reg = Program._current_context.append(self, reg)
         return reg
 
     def merge(self, other):
@@ -531,7 +531,7 @@ class Measurement(Operation):
     be accessed in the program through the symbolic subsystem reference
     to the measured subsystem.
 
-    When the measurement happens, the state of the circuit is updated
+    When the measurement happens, the state of the system is updated
     to the conditional state corresponding to the measurement result.
     Measurements also support postselection, see below.
 
@@ -1500,13 +1500,13 @@ class Delete(MetaOperation):
 
     def __or__(self, reg):
         reg = super().__or__(reg)
-        _Engine._current_context._delete_subsystems(reg)
+        Program._current_context._delete_subsystems(reg)
 
     def _apply(self, reg, backend, **kwargs):
         backend.del_mode(reg)
 
     def __str__(self):
-        # the shorthand object
+        # use the shorthand object
         return 'Del'
 
 
@@ -1529,9 +1529,9 @@ class New_modes(MetaOperation):
         # pylint: disable=attribute-defined-outside-init
         self.n = n  # int: store the number of new modes for the __str__ method
         # create RegRef placeholders for the new modes
-        refs = _Engine._current_context._add_subsystems(n)
+        refs = Program._current_context._add_subsystems(n)
         # send the actual creation command to the engine
-        _Engine._current_context.append(self, refs)
+        Program._current_context.append(self, refs)
         return refs
 
     def _apply(self, reg, backend, **kwargs):
@@ -1539,8 +1539,8 @@ class New_modes(MetaOperation):
         inds = backend.add_mode(len(reg))
 
     def __str__(self):
-        # HACK, trailing space signals "do not print anything more" to Command.__str__.
-        return 'New({}) '.format(self.n)
+        # use the shorthand object
+        return 'New({})'.format(self.n)
 
 
 class All(MetaOperation):
@@ -1564,9 +1564,9 @@ class All(MetaOperation):
         reg = _seq_to_list(reg)
         # convert into commands
         # make sure reg does not contain duplicates (we feed them to Engine.append() one by one)
-        _Engine._current_context._test_regrefs(reg)
+        Program._current_context._test_regrefs(reg)
         for r in reg:
-            _Engine._current_context.append(self.op, [r])
+            Program._current_context.append(self.op, [r])
 
 
 # ====================================================================
@@ -1898,8 +1898,9 @@ class Gaussian(Preparation, Decomposition):
         return cmds
 
 
-# ====================================================================
-# Shorthand pre-constructed objects
+#=======================================================================
+# Shorthands, e.g. pre-constructed singleton-like objects
+
 New = New_modes()
 Del = Delete()
 Vac = Vacuum()
@@ -1912,12 +1913,13 @@ Fourier = Fouriergate()
 
 RR = RegRefTransform
 
+shorthands = ['New', 'Del', 'Vac', 'Measure', 'MeasureX', 'MeasureP', 'MeasureHD', 'Fourier', 'RR',
+              'All']
 
-# ====================================================================
+#=======================================================================
 # here we list different classes of operations for unit testing purposes
 
-# all these are pre-constructed objects, not classes
-zero_args_gates = (Fourier,)
+zero_args_gates = (Fouriergate,)
 one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate,
                   Kgate, CXgate, CZgate, CKgate)
 two_args_gates = (Dgate, Sgate, BSgate, S2gate)
@@ -1925,5 +1927,15 @@ gates = zero_args_gates + one_args_gates + two_args_gates
 
 channels = (LossChannel, ThermalLossChannel)
 
-state_preparations = (Vacuum, Coherent, Squeezed,
-                      DisplacedSqueezed, Fock, Thermal, Catstate)
+state_preparations = (Vacuum, Coherent, Squeezed, DisplacedSqueezed, Fock, Ket,
+                      DensityMatrix, Catstate, Thermal)
+
+measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne)
+
+
+decompositions = (Interferometer, GraphEmbed, GaussianTransform, Gaussian)
+
+#=======================================================================
+# exported symbols
+
+__all__ = [cls.__name__ for cls in gates + channels + state_preparations + measurements + decompositions] + shorthands

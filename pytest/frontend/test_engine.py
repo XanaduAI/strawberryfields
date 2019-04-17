@@ -24,34 +24,46 @@ import numpy as np
 
 import strawberryfields as sf
 from strawberryfields import engine
+from strawberryfields import program
 from strawberryfields import ops
 from strawberryfields.backends.base import BaseBackend
 
 
 def test_load_backend(monkeypatch):
     """Test backend can be correctly loaded via strings"""
-    eng, q = sf.Engine(1)
-    eng.run("base", return_state=False)
-
+    eng = sf.Engine('base')
     assert isinstance(eng.backend, BaseBackend)
-
-    # running the engine again should not change the backend instance
-    b = eng.backend
-    b._short_name = "base"
-    eng.run("base", return_state=False)
-
-    assert eng.backend is b
 
 
 def test_no_return_state(backend):
     """Tests that engine returns None when no state is requested"""
-    eng, q = sf.Engine(2)
+    prog = sf.Program(2)
+    eng  = sf.Engine(backend)
 
-    with eng:
+    with prog.context as q:
         ops.Dgate(0.34) | q[0]
 
-    res = eng.run(backend, return_state=False)
+    res = eng.run(prog, return_state=False)
     assert res is None
+
+
+class TestProgram:
+    """Tests the Program class."""
+
+    def test_with_block(self):
+        """Test gate application using a with block."""
+        prog = sf.Program(2)
+        # command queue is empty
+        assert len(prog) == 0
+
+        with prog.context as q:
+            ops.Dgate(0.5) | q[0]
+        # now there is one gate in the queue
+        assert len(prog) == 1
+
+    def test_unlink(self):
+        # TODO
+        pass
 
 
 class TestQueue:
@@ -59,24 +71,12 @@ class TestQueue:
 
     def test_identity_command(self, backend):
         """Tests that the None command acts as the identity"""
-        eng, q = sf.Engine(2)
-
-        identity = engine.Command(None, q[0])
-        eng.cmd_queue = [identity]
-
-        eng.run(backend)
-
-        res = eng._cmd_applied_all()
-        assert res == []
-
-    def test_apply_gate(self):
-        """Test successful gate application"""
-        eng, _ = sf.Engine(2)
-
-        with eng:
-            ops.Dgate(0.5) | 0
-
-        assert len(eng.cmd_queue) == 1
+        prog = sf.Program(2)
+        identity = program.Command(None, prog.reg[0])
+        prog.circuit.append(identity)
+        assert len(prog) == 1
+        prog = prog.compile('base')
+        assert len(prog) == 0
 
     def test_clear_queue(self):
         """Test clearing queue is successfull"""
@@ -91,34 +91,23 @@ class TestQueue:
         eng.reset_queue()
         assert not eng.cmd_queue
 
-    def test_applied_queue(self, backend):
-        """Tests that the None command acts as the identity"""
-        eng, _ = sf.Engine(2)
-
-        with eng:
-            ops.Dgate(0.5) | 0
-
-        eng.run(backend)
-
-        assert eng.cmd_queue == []
-        # history is length 1
-        assert len(eng.cmd_applied) == 1
-        # queue in history is length 1 (Dgate)
-        assert len(eng.cmd_applied[0]) == 1
-
     def test_print_commands(self, backend):
         """Test print_queue and print_applied returns correct strings."""
-        eng, q = sf.Engine(2)
+        prog = sf.Program(2)
+        res = []
+        print_fn = lambda x: res.append(x.__str__())
+
+        # prog should now be empty
+        prog.print(print_fn)
+        assert res == []
 
         # define some gates
         D = ops.Dgate(0.5)
         BS = ops.BSgate(2 * np.pi, np.pi / 2)
         R = ops.Rgate(np.pi)
 
-        # get register references
-        alice, bob = q
-
-        with eng:
+        with prog.context as q:
+            alice, bob = q
             D | alice
             BS | (alice, bob)
             ops.Del | alice
@@ -131,15 +120,14 @@ class TestQueue:
             ops.MeasureX | charlie
 
         res = []
-        print_fn = lambda x: res.append(x.__str__())
-        eng.print_queue(print_fn)
+        prog.print(print_fn)
 
         expected = [
             "Dgate(0.5, 0) | (q[0])",
             "BSgate(6.283, 1.571) | (q[0], q[1])",
             "Del | (q[0])",
             "Rgate(3.142) | (q[1])",
-            "New(1) ",
+            "New(1)",
             "BSgate(6.283, 1.571) | (q[1], q[2])",
             "MeasureX | (q[1])",
             "Dgate(RR(q[1]), 0).H | (q[2])",
@@ -148,14 +136,9 @@ class TestQueue:
         ]
 
         assert res == expected
-        state = eng.run(backend)
 
-        # queue should now be empty
-        res = []
-        eng.print_queue(print_fn)
-        assert res == []
-
-        # print_applied should now not be empty
+        eng = sf.Engine(backend)
+        state = eng.run(prog)
         res = []
         eng.print_applied(print_fn)
         assert res == ["Run 0:"] + expected
@@ -164,80 +147,92 @@ class TestQueue:
 class TestRegRefs:
     """Testing register references."""
 
-    def test_wrong_index(self):
+    def test_corrupt_index(self):
         """This should never happen!"""
-        eng, q = sf.Engine(2)
-        q[0].ind = 1
-
-        with eng:
-            with pytest.raises(engine.RegRefError, match="Should never happen!"):
+        prog = sf.Program(2)
+        with prog.context as q:
+            q[0].ind = 1
+            with pytest.raises(program.RegRefError, match="Should never happen!"):
                 ops.Dgate(0.5) | q[0]
 
-    def test_nonexistent(self):
-        """Test that acting on a non-existent mode raises an error"""
-        eng, q = sf.Engine(2)
-
-        with eng:
+    def test_nonexistent_index(self):
+        """Acting on a non-existent mode raises an error."""
+        prog = sf.Program(2)
+        with prog.context as q:
             with pytest.raises(IndexError):
                 ops.Dgate(0.5) | q[3]
-
-            with pytest.raises(engine.RegRefError, match="does not exist"):
+            with pytest.raises(program.RegRefError, match="does not exist"):
                 ops.Dgate(0.5) | 3
 
-    def test_deleted(self):
+    def test_deleted_index(self):
         """Test that acting on a deleted mode raises an error"""
-        eng, q = sf.Engine(2)
-
-        with eng:
+        prog = sf.Program(2)
+        with prog.context as q:
             ops.Del | q[0]
-            with pytest.raises(engine.RegRefError, match="been deleted"):
+            with pytest.raises(program.RegRefError, match="been deleted"):
                 ops.Dgate(0.5) | 0
 
-            with pytest.raises(engine.RegRefError, match="been deleted"):
+            with pytest.raises(program.RegRefError, match="been deleted"):
                 ops.Dgate(0.5) | q[0]
 
-    def test_wrong_engine(self):
-        """Test that acting on a mode not belonging to the engine raises error"""
-        eng, _ = sf.Engine(2)
-        q_new = engine.RegRef(3)
-
-        with eng:
-            with pytest.raises(engine.RegRefError, match="Unknown RegRef."):
-                ops.Dgate(0.5) | q_new
+    def test_unknown_regref(self):
+        """Applying an operation on a RegRef not belonging to the program."""
+        prog = sf.Program(2)
+        r = program.RegRef(3)
+        with prog.context:
+            with pytest.raises(program.RegRefError, match="Unknown RegRef."):
+                ops.Dgate(0.5) | r
 
     def test_invalid_measurement(self, backend):
-        """cannot use a measurement before it exists"""
-        eng, q = sf.Engine(2)
-
-        with eng:
+        """Cannot use a measurement before it exists."""
+        prog = sf.Program(2)
+        eng  = sf.Engine(backend)
+        with prog.context as q:
             ops.Dgate(q[0]) | q[1]
+        with pytest.raises(program.CircuitError, match="nonexistent measurement result"):
+            eng.run(prog)
 
-        with pytest.raises(engine.CircuitError, match="nonexistent measurement result"):
-            eng.run(backend)
-
-    def test_invalid(self):
-        """cannot referring to a register with a non-integral or RegRef object"""
-        eng, _ = sf.Engine(2)
-
-        with eng:
-            with pytest.raises(engine.RegRefError, match="using integers and RegRefs"):
+    def test_invalid_regref(self):
+        """Cannot refer to a register with a non-integral or RegRef object."""
+        prog = sf.Program(2)
+        with prog.context:
+            with pytest.raises(program.RegRefError, match="using integers and RegRefs"):
                 ops.Dgate(0) | 1.2
 
 
 class TestQueueHistory:
     """Testing for history checkpoints"""
 
+    def test_with_block(self, backend):
+        """Tests engine history."""
+        prog = sf.Program(2)
+        eng  = sf.Engine(backend)
+
+        with prog.context as q:
+            ops.Dgate(0.5) | q[0]
+        prog = prog.compile('base')
+
+        # no programs have been run
+        assert not eng.run_progs
+        eng.run(prog)
+        # one program has been run
+        assert len(eng.run_progs) == 1
+        assert eng.run_progs[-1] == prog
+
+
     def test_checkpoints(self, backend):
         """Test history checkpoints work when creating and deleting modes."""
-        eng, q = sf.Engine(2)
-        alice, bob = q
+
+        eng = sf.Engine(backend)
+        prog = sf.Program(2)
 
         # define some gates
         D = ops.Dgate(0.5)
         BS = ops.BSgate(2 * np.pi, np.pi / 2)
         R = ops.Rgate(np.pi)
 
-        with eng:
+        with prog.context as q:
+            alice, bob = q
             D | alice
             BS | (alice, bob)
             ops.Del | alice
@@ -249,8 +244,7 @@ class TestQueueHistory:
             D.H | charlie
             ops.MeasureX | charlie
 
-        eng.optimize()
-        eng.run(backend)
+        eng.run(prog)
 
         assert not alice.active
         assert charlie.active
@@ -284,14 +278,15 @@ class TestQueueHistory:
     def test_create_delete_reset(self, backend):
         """Test various use cases creating and deleting modes,
         together with engine resets."""
-        eng, reg = sf.Engine(2)
+        eng = sf.Engine(backend)
 
         # define some gates
         X = ops.Xgate(0.5)
 
-        alice, bob = reg
+        qumodes = 2
+
         # states of the subsystems: active, not_measured
-        state = np.full((len(reg), 2), True)
+        state = np.full((qumodes, 2), True)
 
         def prog1(q):
             """program 1"""
@@ -338,6 +333,10 @@ class TestQueueHistory:
             # now measured (assumes p will always measure reg!)
             state[reg.ind, 1] = False
             check()
+
+
+        alice, bob = reg
+
 
         reset()
         ## (1) run several independent programs, resetting everything in between
