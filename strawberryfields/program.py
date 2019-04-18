@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-Quantum circuit
-===============
+Quantum programs
+================
 
 **Module name:** :mod:`strawberryfields.program`
 
@@ -37,7 +37,7 @@ A typical use looks like
       Measure        | q
   eng = sf.Engine(backend='fock')
   eng.run(prog, cutoff_dim=5)
-  v1 = prog.reg[1].val
+  v1 = prog.register[1].val
 
 
 Program methods
@@ -47,7 +47,7 @@ Program methods
 
 .. autosummary::
    context
-   reg
+   register
    num_subsystems
    unlink
    append
@@ -56,10 +56,11 @@ Program methods
    print
    __len__
 
-..
-    The following are internal Program methods. In most cases the user should not
-    call these directly.
-    .. autosummary::
+
+The following are internal Program methods. In most cases the user should not
+call these directly.
+
+.. autosummary::
        __enter__
        __exit__
        _reset_regrefs
@@ -133,14 +134,14 @@ The purpose of the optimizer part of the compiler is to simplify the circuit
 to make it cheaper and faster to execute. Different backends might require
 different types of optimization, but in general the fewer operations a circuit has,
 the faster it should run. The optimizer thus should convert the circuit into a
-simpler but otherwise equivalent version of itself, preserving the probability
-distributions of the measurement results. The optimization utilizes the abstract
-algebraic properties of the gates, and in no point should require a
-matrix representation.
+simpler circuit while preserving the probability distributions of the measurement results.
+The optimization utilizes the abstract algebraic properties of the gates,
+and in no point should require a matrix representation.
 
-Currently the optimization is somewhat simple, being able to merge neighboring
-gates belonging to the same gate family and sharing the same set of subsystems,
-and canceling pairs of a gate and its inverse.
+Currently the optimization is very simple. It
+
+* merges neighboring gates belonging to the same gate family and sharing the same set of subsystems
+* cancels neighboring pairs of a gate and its inverse
 
 .. currentmodule:: strawberryfields.program
 
@@ -205,7 +206,7 @@ class CircuitError(RuntimeError):
     pass
 
 class MergeFailure(RuntimeError):
-    """Exception raised by :func:`~strawberryfields.ops.Operation.merge` when an
+    """Exception raised by :meth:`strawberryfields.ops.Operation.merge` when an
     attempted merge fails.
 
     E.g. trying to merge two gates of different families.
@@ -217,7 +218,7 @@ class Command:
     """Represents a quantum operation applied on specific subsystems of the register.
 
     Args:
-        op (Operation): quantum operation to apply
+        op (~strawberryfields.ops.Operation): quantum operation to apply
         reg (Sequence[RegRef]): Subsystems to which the operation is applied.
             Note that the order matters here.
     """
@@ -273,7 +274,7 @@ class RegRef:
     not be updated. Once a RegRef is assigned a subsystem index it will never
     change, not even if the subsystem is deleted.
 
-    The RegRefs are constructed in :func:`Program._add_subsystems`.
+    The RegRefs are constructed in :meth:`Program._add_subsystems`.
 
     Args:
         ind (int): index of the register subsystem referred to
@@ -374,18 +375,28 @@ class Program:
 
     A quantum circuit is a set of quantum operations applied in a specific order
     to a set of subsystems (represented by wires) of the quantum register.
-
-    The Program class represents a quantum circuit as a directed acyclic graph (DAG)
+    The Program class represents a quantum circuit in general as a directed acyclic graph (DAG)
     whose nodes are :class:`Command` instances, and each (directed) edge in the graph
     corresponds to a specific wire along which the two associated Commands are connected.
 
-    Because subsystems can be created and deleted, the Program instances must keep track
-    of them using :class:`RegRef`s. The RegRefs also store measurement results.
+    Program instances also act as context managers (and the context itself) for inputting
+    quantum circuits using a `with` block and :class:`Operation` instances.
+    The contexts may not be nested.
+
+    The quantum circuit is inputted by using the :meth:`~strawberryfields.ops.Operation.__or__`
+    methods of the quantum operations, which call the :meth:`append` method of the Program.
+    :meth:`append` checks that the register references are valid and then
+    adds a new :class:`.Command` instance to the Program.
+
+    The ``New`` and ``Del`` operations modify the quantum register itself by adding
+    and deleting subsystems. The Program keeps track of these changes (using
+    :class:`RegRef` instances that represent the register)
+    as they are appended to it in order to be able to report register
+    reference errors as soon as they happen.
 
     Program p2 can be run after Program p1 if the RegRef state at the end of p1 matches the
     RegRef state at the start of p2. This is enforced by constructing p2 as an explicit
     successor of p1, which makes them share their RegRefs.
-
     When a Program is run or it obtains a successor, it is locked and no more Commands can be appended to it.
 
     Args:
@@ -406,8 +417,10 @@ class Program:
         self.locked = False
 
         # create subsystem references
-        #: Program: program segment preceding this one, where the RegRefs are inherited from
+        #: Program: program segment preceding this one, with whom the RegRefs are shared
         self.prev = prev
+        #: Program: program segment following this one, with whom the RegRefs are shared
+        self.next = None
         if prev is None:
             #: int: initial number of subsystems
             self.init_num_subsystems = num_subsystems
@@ -418,19 +431,27 @@ class Program:
 
             self._add_subsystems(num_subsystems)
         else:
-            # TODO make sure the user does not branch the program, i.e. every prog has at most one successor
-            # just refer to parent program's regrefs
+            # link the programs
+            if prev.next:
+                raise RuntimeError('Program already has a successor.')
+            prev._lock()
+            prev.next = self
+            # share the parent program's regrefs
             self.init_num_subsystems = prev.init_num_subsystems
             self.reg_refs = prev.reg_refs
             self.unused_indices = prev.unused_indices
-            prev._lock()
+
 
     def __str__(self):
         """String representation."""
         return self.__class__.__name__ + '({}, {} subsystems, compiled for {})'.format(self.name, self.num_subsystems, self.backend)
 
     def __len__(self):
-        """Number of Commands in the program."""
+        """Program length.
+
+        Returns:
+            int: number of Commands in the program
+        """
         return len(self.circuit)
 
     def print(self, print_fn=print):
@@ -460,7 +481,7 @@ class Program:
             Program._current_context = self
         else:
             raise RuntimeError('Only one Program context can be active at a time.')
-        return self.reg
+        return self.register
 
     def __exit__(self, ex_type, ex_value, ex_tb):
         """Exit the quantum circuit context."""
@@ -470,7 +491,7 @@ class Program:
     #  RegRef accounting
     # =================================================
     @property
-    def reg(self):
+    def register(self):
         """Return symbolic references to all the currently valid register subsystems.
 
         Returns:
@@ -485,12 +506,12 @@ class Program:
         Returns:
             int: number of currently valid register subsystems
         """
-        return len(self.reg)
+        return len(self.register)
 
     def _reset_regrefs(self):
-        """Resets any measurement values stored in the RegRefs.
+        """Clears any measurement values stored in the RegRefs.
 
-        Called by :class:`Engine` when resetting the backend.
+        Called by :class:`~.engine.Engine` when resetting the backend.
         """
         for r in self.reg_refs.values():
             r.val = None
@@ -502,7 +523,7 @@ class Program:
         but rather indirectly by using :class:`~strawberryfields.ops.New_modes`
         instances in the Program context.
 
-        .. note:: This is the only place where RegRef instances are constructed.
+        .. note:: This is the only place where :class:`RegRef` instances are constructed.
 
         Args:
             n (int): number of subsystems to add
@@ -541,10 +562,11 @@ class Program:
         # NOTE: deleted indices are *not* removed from self.unused_indices
 
     def _lock(self):
-        """Lock (finalize) the program.
+        """Finalize the program.
 
         When a Program is locked no more Commands can be appended to it, and a checkpoint is made of the RegRef state.
-        The locking happens when the program is run, or a successor Program is constructed.
+        The locking happens when the program is run, or a successor Program is constructed,
+        in order to ensure that the RegRef state shared by the Programs remains consistent.
         """
         if not self.locked:
             self.locked = True
@@ -552,13 +574,18 @@ class Program:
 
     def unlink(self):
         """Unlink the last Program in a chain.
+
+        The circuit of the unlinked Program is cleared.
+        The RegRefs are restored to the state they had before the start of the unlinked Program.
         """
-        if self.locked:
+        if self.locked or self.next:
             raise RuntimeError('Locked Programs cannot be unlinked.')  # for now
         if not self.prev:
             raise RuntimeError('The program has no predecessor from which it could be unlinked.')
         # restore the RegRef state from the predecessor's checkpoint
         self.prev._restore_checkpoint()
+        # unlink it
+        self.prev.next = None
         # make the unlinked Program independent by re-initializing it
         self.__init__(self.init_num_subsystems)
 
@@ -576,7 +603,7 @@ class Program:
     def _restore_checkpoint(self):
         """Restore a RegRef checkpoint.
 
-        Called after the predecessor Program is deleted.
+        Called after the predecessor Program is unlinked.
         Any RegRefs created after the checkpoint are made inactive and
         deleted from self.reg_refs.
         """
@@ -674,10 +701,9 @@ class Program:
         Returns:
             Program: compiled program
         """
-        self._lock()
         db = backend_database[backend]
 
-        def _compile_sequence(seq):
+        def compile_sequence(seq):
             """Compiles the given Command sequence."""
             compiled = []
             for cmd in seq:
@@ -702,13 +728,14 @@ class Program:
                     raise CircuitError('The operation {} cannot be used with the {} backend.'.format(cmd.op.__class__.__name__, backend))
             return compiled
 
-        seq = _compile_sequence(self.circuit)
-        comp_prog = copy.copy(self)  # shares the member objects with the non-compiled instance
-        comp_prog.backend = backend
-        comp_prog.circuit = seq
+        self._lock()
+        seq = compile_sequence(self.circuit)
+        compiled = copy.copy(self)  # shares the member objects with the non-compiled instance
+        compiled.backend = backend
+        compiled.circuit = seq
         if optimize:
-            comp_prog.optimize()
-        return comp_prog
+            compiled.optimize()
+        return compiled
 
     @staticmethod
     def _list_to_grid(ls):
