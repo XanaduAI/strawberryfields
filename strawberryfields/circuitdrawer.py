@@ -190,6 +190,9 @@ class Circuit:
             ModeMismatchException: if the operator is interpreted as an n-mode gate but is applied to a number of modes != n.
 
         """
+        if not op.__class__.__name__ == 'Command':
+            return
+
         method, mode = self._gate_from_operator(op)
         wires = list(map(lambda register: register.ind, op.reg))
 

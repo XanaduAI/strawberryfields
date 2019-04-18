@@ -14,6 +14,7 @@ from pathlib import Path
 from defaults import BaseTest, strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.circuitdrawer import Circuit as CircuitDrawer
+from strawberryfields.circuitdrawer import UnsupportedGateException, NotDrawableException, ModeMismatchException
 
 from draw_circuit_test_utils import *
 
@@ -426,8 +427,24 @@ class CircuitDrawerTests(BaseTest):
         with self.eng:
             BSgate(0, 2) | (q[0], q[2])
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(NotDrawableException):
             self.eng.draw_circuit(print_queued_ops=True)
+
+    def test_unsupported_gate(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Fakegate() | (q[0])
+
+        with self.assertRaises(UnsupportedGateException):
+            self.eng.draw_circuit(print_queued_ops=True)
+
+    def test_mode_mismatch(self):
+        self.logTestName()
+
+        with self.assertRaises(ModeMismatchException):
+            self.drawer.parse_op(Fakeop())
 
     def test_compile(self):
         self.logTestName()
@@ -445,6 +462,21 @@ class CircuitDrawerTests(BaseTest):
 
         output_file = Path(document)
         self.assertTrue(output_file.is_file())
+
+    def test_not_queued(self):
+        self.logTestName()
+        q = self.eng.register
+
+        with self.eng:
+            Dgate(1) | (q[1])
+
+        self.eng.run()
+
+        result = self.eng.draw_circuit(print_queued_ops=False)
+        self.assertTrue(
+            result[1] == d_test_1_output,
+            failure_message(result[1], d_test_1_output)
+        )
 
 
 if __name__ == '__main__':

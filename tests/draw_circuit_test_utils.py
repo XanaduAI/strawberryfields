@@ -18,6 +18,36 @@ Draw circuit test utils
 String constants and utility function(s) used by tests of the :class:`~strawberryfields.circuitdrawer.Circuit' class.
 """
 import difflib
+from strawberryfields.ops import Gate
+from strawberryfields.engine import RegRef
+
+
+class Fakegate(Gate):
+    r'''
+    Extension of the base Gate class to use to test unsupported operation handling.
+    '''
+
+    def __init__(self):
+        super().__init__([0])
+
+    def _apply(self, reg, backend, **kwargs):
+        pass
+
+
+class Fakeop:
+    r'''
+    Fake operation used to test mode mismatch handling, a beam splitter with only one
+    register reference.
+    '''
+
+    def __init__(self):
+        self.reg = [RegRef(0)]
+        Fakeop.__name__ = 'Command'
+
+    # Custom string representation necessary to trick the circuitdrawer
+    # into executing the unsupported operation.
+    def __repr__(self):
+        return 'BSgate | (q[0])'
 
 LINE_RETURN = '\n'
 WIRE_TERMINATOR = r'\\' + '\n'
