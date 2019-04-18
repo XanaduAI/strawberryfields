@@ -21,7 +21,7 @@ Quantum compiler engine
 .. currentmodule:: strawberryfields.engine
 
 The :class:`Engine` class is responsible for communicating
-quantum programs represented by :class:`Program` objects
+quantum programs represented by :class:`.Program` objects
 to a backend that could be e.g. a simulator, a hardware quantum processor, or a circuit drawer.
 
 A typical use looks like
@@ -33,12 +33,12 @@ A typical use looks like
       Vac            | q[1]
       Sgate(2)       | q[1]
       Dgate(0.5)     | q[0]
-      BSgate(1)      | q
+      BSgate(1)      | q[0:2]
       Dgate(0.5).H   | q[0]
       Measure        | q
   eng = sf.Engine(backend='fock')
   eng.run(prog, cutoff_dim=5)
-  v1 = prog.reg[1].val
+  v1 = prog.register[1].val
 
 
 Engine methods
@@ -47,8 +47,8 @@ Engine methods
 .. currentmodule:: strawberryfields.engine.Engine
 
 .. autosummary::
-   reset
    run
+   reset
    print_applied
    return_state
 
@@ -58,6 +58,8 @@ Engine methods
     .. autosummary::
        _run_program
 
+
+.. currentmodule:: strawberryfields.engine
 
 Exceptions
 ----------
@@ -111,28 +113,10 @@ def _convert(func):
 
 
 class Engine:
-    r"""Quantum compiler engine.
+    r"""Quantum program executor engine.
 
-    Acts as a context manager (and the context itself) for quantum circuits.
-    The contexts may not be nested.
-
-    .. currentmodule:: strawberryfields.engine.Engine
-
-    The quantum circuit is inputted by using the :meth:`~strawberryfields.ops.Operation.__or__`
-    methods of the quantum operations, which call the :meth:`append` method of the Engine.
-    :meth:`append` checks that the register references are valid and then
-    adds a new :class:`.Command` instance to the Engine command queue.
-
-    :meth:`run` executes the command queue on the chosen backend, and makes
+    :meth:`run` executes :class:`.Program` instances on the chosen backend, and makes
     measurement results available via the :class:`.RegRef` instances.
-
-    The ``New`` and ``Del`` operations modify the quantum register itself by adding
-    and deleting subsystems. The Engine keeps track of these changes as
-    they enter the command queue in order to be able to report register
-    reference errors as soon as they happen.
-
-    The backend, however, only becomes aware of subsystem changes when
-    the circuit is run. See :meth:`reset_queue` and :meth:`reset`.
 
     Args:
         backend (str): name of the backend
@@ -181,7 +165,7 @@ class Engine:
         Note that the reset does nothing to any Program objects in existence, beyond erasing the measured values.
 
         Keyword Args:
-            : The keyword args are passed on to :meth:`strawberryfields.backends.base.BaseBackend.reset`.
+            kwargs: The keyword args are passed on to :meth:`strawberryfields.backends.base.BaseBackend.reset`.
         """
         self.backend.reset(**kwargs)
 
@@ -245,11 +229,10 @@ class Engine:
         return applied
 
     def run(self, program, return_state=True, modes=None, **kwargs):
-        """Execute the given circuit by sending it to the backend.
+        """Execute the given program by sending it to the backend.
 
-        The backend state is updated, and a new RegRef checkpoint is created.
-        The circuit queue is emptied, and its contents (possibly decomposed) are
-        appended to self.run_progs.
+        * The backend state is updated.
+        * The executed Program(s) are appended to self.run_progs.
 
         Args:
             program (Program, Sequence[Program]): quantum circuit(s) to run

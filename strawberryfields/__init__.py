@@ -25,14 +25,15 @@ Overview
 |
 
 The Strawberry Fields codebase includes a number of complementary components.
-These can be separated into frontend components (:file:`engine.py`, :file:`ops.py`,
-and :file:`utils.py`) and backend components (all found within the :file:`strawberryfields.backends` submodule).
+These can be separated into frontend components
+and backend components (all found within the :file:`strawberryfields.backends` submodule).
 
 Software components
 -------------------
 
 **Frontend:**
 
+* Quantum programs: :mod:`strawberryfields.program`
 * Quantum compiler engine: :mod:`strawberryfields.engine`
 * Quantum operations: :mod:`strawberryfields.ops`
 * Utilities: :mod:`strawberryfields.utils`
@@ -49,7 +50,6 @@ Top-level functions
 -------------------
 
 .. autosummary::
-   Engine
    convert
    version
 
@@ -57,11 +57,9 @@ Code details
 ~~~~~~~~~~~~
 """
 
-from __future__ import unicode_literals
 from ._version import __version__
 from .program import Program
-from .engine import Engine
-from .engine import _convert as convert
+from .engine import (Engine, _convert as convert)
 
 __all__ = ['Engine', 'Program', 'convert', 'version']
 

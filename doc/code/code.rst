@@ -1,4 +1,2 @@
 .. automodule:: strawberryfields
-   :members:
-
-
+   :members: version, convert
