@@ -21,12 +21,12 @@ import numpy as np
 import strawberryfields as sf
 
 from strawberryfields import ops
-from strawberryfields.engine import Engine, MergeFailure, RegRefError
+from strawberryfields.program import (Program, MergeFailure, RegRefError)
 from strawberryfields import utils
 from strawberryfields.parameters import Parameter
 
 
-@pytest.mark.parametrize("state", ops.state_preparations)
+@pytest.mark.parametrize("state", ops.simple_state_preparations)  # these have __init__ methods with default arguments
 class TestStatePreparationBasics:
     """Basic properties of state preparation operations."""
 
@@ -43,9 +43,9 @@ class TestStatePreparationBasics:
     def test_exceptions(self, state):
         """Test exceptions raised if state prep used on invalid modes"""
         G = state()
-        eng, _ = sf.Engine(2)
+        prog = sf.Program(2)
 
-        with eng:
+        with prog.context:
             # all states act on a single mode
             with pytest.raises(ValueError):
                 G.__or__([0, 1])

@@ -1927,11 +1927,10 @@ gates = zero_args_gates + one_args_gates + two_args_gates
 
 channels = (LossChannel, ThermalLossChannel)
 
-state_preparations = (Vacuum, Coherent, Squeezed, DisplacedSqueezed, Fock, Ket,
-                      DensityMatrix, Catstate, Thermal)
+simple_state_preparations = (Vacuum, Coherent, Squeezed, DisplacedSqueezed, Fock, Catstate, Thermal)  # have __init__ methods with default arguments
+state_preparations = simple_state_preparations + (Ket, DensityMatrix)
 
 measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne)
-
 
 decompositions = (Interferometer, GraphEmbed, GaussianTransform, Gaussian)
 
