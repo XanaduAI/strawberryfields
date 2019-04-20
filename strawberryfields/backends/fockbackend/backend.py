@@ -1,4 +1,4 @@
-# Copyright 2018 Xanadu Quantum Technologies Inc.
+# Copyright 2019 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,8 +24,9 @@ from cmath import phase
 import numpy as np
 
 from strawberryfields.backends import BaseFock, ModeMap
+from strawberryfields.backends.states import BaseFockState
+
 from .circuit import Circuit
-from ..states import BaseFockState
 
 indices = string.ascii_lowercase
 

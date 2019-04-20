@@ -1,4 +1,4 @@
-# Copyright 2018 Xanadu Quantum Technologies Inc.
+# Copyright 2019 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import tensorflow as tf
 import numpy as np
 from scipy.special import binom, factorial
 
-from ..shared_ops import generate_bs_factors, load_bs_factors, save_bs_factors, squeeze_parity
+from strawberryfields.backends.shared_ops import generate_bs_factors, load_bs_factors, save_bs_factors, squeeze_parity
 
 def_type = tf.complex64
 max_num_indices = len(indices)

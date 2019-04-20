@@ -1,4 +1,4 @@
-# Copyright 2018 Xanadu Quantum Technologies Inc.
+# Copyright 2019 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import numpy as np
 import tensorflow as tf
 from scipy.special import factorial
 
-from ..states import BaseFockState
+from strawberryfields.backends.states import BaseFockState
 from .ops import _check_for_eval, def_type, ladder_ops, phase_shifter_matrix, reduced_density_matrix
 
 
