@@ -84,10 +84,33 @@ Code details
 """
 import datetime
 import os
-from .qcircuit_strings import QUANTUM_WIRE, PAULI_X_COMP, PAULI_Z_COMP, CONTROL, \
-    TARGET, COLUMN_SPACING, ROW_SPACING, DOCUMENT_END, WIRE_OPERATION, WIRE_TERMINATOR, CIRCUIT_BODY_TERMINATOR, \
-    CIRCUIT_BODY_START, INIT_DOCUMENT, PIPE, D_COMP, R_COMP, P_COMP, V_COMP, FOURIER_COMP, BS_MULTI_COMP, \
-    S_MULTI_COMP, K_COMP, MULTIGATE, GHOST, S_COMP
+from .qcircuit_strings import (
+    QUANTUM_WIRE,
+    PAULI_X_COMP,
+    PAULI_Z_COMP,
+    CONTROL,
+    TARGET,
+    COLUMN_SPACING,
+    ROW_SPACING,
+    DOCUMENT_END,
+    WIRE_OPERATION,
+    WIRE_TERMINATOR,
+    CIRCUIT_BODY_TERMINATOR,
+    CIRCUIT_BODY_START,
+    INIT_DOCUMENT,
+    PIPE,
+    D_COMP,
+    R_COMP,
+    P_COMP,
+    V_COMP,
+    FOURIER_COMP,
+    BS_MULTI_COMP,
+    S_MULTI_COMP,
+    K_COMP,
+    MULTIGATE,
+    GHOST,
+    S_COMP,
+)
 
 
 class NotDrawableException(Exception):
@@ -96,6 +119,7 @@ class NotDrawableException(Exception):
     This class corresponds to the exception raised by :meth:`~.parse_op`
     when a circuit is deemed impossible to effectively render using qcircuit.
     """
+
     pass
 
 
@@ -105,6 +129,7 @@ class ModeMismatchException(Exception):
     This class corresponds to the exception raised by :meth:`~.parse_op`
     when an operator is interpreted as an n-mode gate but is applied to a number of modes != n.
     """
+
     pass
 
 
@@ -114,6 +139,7 @@ class UnsupportedGateException(Exception):
     This class corresponds to the exception raised by :meth:`~.parse_op` when it is attempted to add an
     unsupported operator to the circuit.
     """
+
     pass
 
 
@@ -124,32 +150,33 @@ class Circuit:
         wires (int): the number of quantum wires or subsystems to use in the
             circuit diagram.
     """
+
     _circuit_matrix = []
 
     def __init__(self, wires):
-        self._document = ''
+        self._document = ""
         self._circuit_matrix = [[QUANTUM_WIRE.format(1)] for wire in range(wires)]
         self._column_spacing = None
         self._row_spacing = None
 
         self.single_mode_gates = {
-            'Xgate': self._x,
-            'Zgate': self._z,
-            'Dgate': self._d,
-            'Sgate': self._s,
-            'Rgate': self._r,
-            'Pgate': self._p,
-            'Vgate': self._v,
-            'Kgate': self._k,
-            'Fourier': self._fourier
+            "Xgate": self._x,
+            "Zgate": self._z,
+            "Dgate": self._d,
+            "Sgate": self._s,
+            "Rgate": self._r,
+            "Pgate": self._p,
+            "Vgate": self._v,
+            "Kgate": self._k,
+            "Fourier": self._fourier,
         }
 
         self.two_mode_gates = {
-            'CXgate': self._cx,
-            'CZgate': self._cz,
-            'CKgate': self._ck,
-            'BSgate': self._bs,
-            'S2gate': self._s2
+            "CXgate": self._cx,
+            "CZgate": self._cz,
+            "CKgate": self._ck,
+            "BSgate": self._bs,
+            "S2gate": self._s2,
         }
 
     def _gate_from_operator(self, op):
@@ -190,18 +217,22 @@ class Circuit:
             ModeMismatchException: if the operator is interpreted as an n-mode gate but is applied to a number of modes != n.
 
         """
-        if not op.__class__.__name__ == 'Command':
+        if not op.__class__.__name__ == "Command":
             return
 
         method, mode = self._gate_from_operator(op)
         wires = list(map(lambda register: register.ind, op.reg))
 
         if method is None:
-            raise UnsupportedGateException('Unsupported operation {0} not printable by circuit builder!'.format(str(op)))
+            raise UnsupportedGateException(
+                "Unsupported operation {0} not printable by circuit builder!".format(str(op))
+            )
         if mode == len(wires):
             method(*wires)
         else:
-            raise ModeMismatchException('{0} mode gate applied to {1} wires!'.format(mode, len(wires)))
+            raise ModeMismatchException(
+                "{0} mode gate applied to {1} wires!".format(mode, len(wires))
+            )
 
     def _x(self, wire):
         """Adds a position displacement operator to the circuit.
@@ -338,7 +369,7 @@ class Circuit:
             wire_ops.append(circuit_op)
             for prev_wire in matrix[:wire]:
                 prev_wire.append(QUANTUM_WIRE.format(1))
-            for post_wire in matrix[wire + 1:]:
+            for post_wire in matrix[wire + 1 :]:
                 post_wire.append(QUANTUM_WIRE.format(1))
 
     def _multi_mode_gate(self, circuit_op, wires):
@@ -365,7 +396,9 @@ class Circuit:
 
         for wire in wires:
             if not previous_wire == wire - 1:
-                raise NotDrawableException('{0} multi-mode gate applied to non-adjacent wires!'.format(circuit_op))
+                raise NotDrawableException(
+                    "{0} multi-mode gate applied to non-adjacent wires!".format(circuit_op)
+                )
             wire_ops = matrix[wire]
             wire_ops[-1] = GHOST.format(circuit_op)
             matrix[wire] = wire_ops
@@ -462,7 +495,7 @@ class Circuit:
         Returns:
             str: string with space added to either side.
         """
-        return ' ' + string + ' '
+        return " " + string + " "
 
     # latex translation
 
@@ -488,19 +521,25 @@ class Circuit:
 
         return self._document
 
-    def compile_document(self, tex_dir='./circuit_tex'):
+    def compile_document(self, tex_dir="./circuit_tex"):
         """Compiles latex documents.
 
         Args:
-            tex_dir (Str): relative directory for latex document output.
+            tex_dir (str): relative directory for latex document output.
+
+        Returns:
+            str: the file path of the resulting latex document.
         """
         tex_dir = os.path.abspath(tex_dir)
+
         if not os.path.isdir(tex_dir):
             os.mkdir(tex_dir)
+
         file_name = "output_{0}".format(datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p"))
-        file_path = '{0}/{1}.tex'.format(tex_dir, file_name)
-        output_file = open(file_path, "w+")
-        output_file.write(self._document)
+        file_path = "{0}/{1}.tex".format(tex_dir, file_name)
+
+        with open(file_path, "w+") as output_file:
+            output_file.write(self._document)
 
         return file_path
 
@@ -527,7 +566,9 @@ class Circuit:
     def _apply_spacing(self):
         """Applies wire and operator visual spacing."""
         if self._column_spacing is not None:
-            self._document += Circuit._pad_with_spaces(COLUMN_SPACING.format(self._column_spacing))
+            self._document += Circuit._pad_with_spaces(
+                COLUMN_SPACING.format(self._column_spacing)
+            )
         if self._row_spacing is not None:
             self._document += Circuit._pad_with_spaces(ROW_SPACING.format(self._row_spacing))
 

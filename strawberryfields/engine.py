@@ -702,7 +702,7 @@ class Engine:
             for c in r:
                 print_fn(c)
 
-    def draw_circuit(self, print_queued_ops=True):
+    def draw_circuit(self, print_queued_ops=True, tex_dir='./circuit_tex', write_to_file=True):
         r"""Draw the circuit using the Qcircuit :math:`\LaTeX` package.
 
         This will generate the tex code required to display the queued or applied
@@ -712,6 +712,8 @@ class Engine:
             print_queued_ops (bool): by default, the quantum circuit representing
                 the queued quantum operations is drawn. Set this to ``False`` to
                 instead draw the circuit of the previously applied quantum operations.
+            tex_dir (str): relative directory for latex document output.
+            write_to_file (bool): if False, no output file is created.
 
         Returns:
             list(str): the filename of the written tex document and the written tex content.
@@ -724,7 +726,9 @@ class Engine:
             self.print_applied(circuit.parse_op)
 
         tex = circuit.dump_to_document()
-        document = circuit.compile_document()
+
+        if write_to_file:
+            document = circuit.compile_document(tex_dir=tex_dir)
 
         return [document, tex]
 
