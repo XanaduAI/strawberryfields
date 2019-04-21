@@ -1,4 +1,4 @@
-# Release 0.10.0.dev0 (development)
+# Release 0.10
 
 ### New features
 
