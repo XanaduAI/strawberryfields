@@ -940,6 +940,28 @@ class TestEngineIntegration:
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
+    def test_compile_custom_dir(self, tmpdir):
+        eng, q = sf.Engine(3)
+
+        with eng:
+            ops.Dgate(1) | (q[1])
+            ops.Rgate(1) | (q[1])
+            ops.S2gate(1) | (q[0], q[1])
+
+        subdir = tmpdir.join("subdir")
+        document = eng.draw_circuit(print_queued_ops=True, tex_dir=subdir)[0]
+
+        file_name = "output_{0}.tex".format(
+            datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p")
+        )
+        assert document.split("/")[-1] == file_name
+
+        output_file = subdir.join(file_name)
+        assert os.path.isfile(output_file)
+
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_not_queued(self, backend, tmpdir):
         eng, q = sf.Engine(3)
         eng.backend = backend
