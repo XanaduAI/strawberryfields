@@ -55,18 +55,18 @@ test: test-frontend test-gaussian test-fock test-tf batch-test-tf
 
 test-%:
 	@echo "Testing $(subst test-,,$@) backend..."
-	$(PYTHON) $(TESTRUNNER) -m $(subst test-,,$@)
+	$(PYTHON) $(TESTRUNNER) -m $(subst test-,,"$@")
 
 batch-test-%:
 	@echo "Testing $(subst batch-test-,,$@) backend in batch mode..."
-	export BATCHED=1 && $(PYTHON) $(TESTRUNNER) -m $(subst batch-test-,,$@)
+	export BATCHED=1 && $(PYTHON) $(TESTRUNNER) -m $(subst batch-test-,,"$@")
 
 coverage: coverage-frontend coverage-gaussian coverage-fock coverage-tf batch-coverage-tf
 
 coverage-%:
-	@echo "Generating coverage report for $(subst coverage-,,$@) backend..."
-	 $(TESTRUNNER) $(COVERAGE) -m $(subst coverage-,,$@)
+	@echo "Generating coverage report for $(subst coverage-,,$@)..."
+	 $(TESTRUNNER) $(COVERAGE) -m $(subst coverage-,,"$@")
 
 batch-coverage-%:
-	@echo "Generating coverage report for $(subst batch-coverage-,,$@) backend in batch mode..."
-	export BATCHED=1 &&  $(TESTRUNNER) $(COVERAGE) -m $(subst batch-coverage-,,$@)
+	@echo "Generating coverage report for $(subst batch-coverage-,,"$@") in batch mode..."
+	export BATCHED=1 &&  $(TESTRUNNER) $(COVERAGE) -m $(subst batch-coverage-,,"$@")
