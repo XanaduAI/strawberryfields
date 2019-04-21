@@ -727,6 +727,7 @@ class Engine:
 
         tex = circuit.dump_to_document()
 
+        document = None
         if write_to_file:
             document = circuit.compile_document(tex_dir=tex_dir)
 
