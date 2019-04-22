@@ -55,6 +55,7 @@ Program methods
    compile
    optimize
    print
+   draw_circuit
    lock
 
 The following are internal Program methods. In most cases the user should not
@@ -158,6 +159,9 @@ import functools
 import numbers
 
 import networkx as nx
+
+import strawberryfields.circuitdrawer
+
 
 
 def _print_list(i, q, print_fn=print):
@@ -867,3 +871,27 @@ class Program:
         # convert the circuit back into a list (via a DAG)
         DAG = self._grid_to_DAG(grid)
         self.circuit = self._DAG_to_list(DAG)
+
+
+    def draw_circuit(self, tex_dir='./circuit_tex', write_to_file=True):
+        r"""Draw the circuit using the Qcircuit :math:`\LaTeX` package.
+
+        This will generate the tex code required to display the queued or applied
+        quantum operations as a quantum circuit.
+
+        Args:
+            tex_dir (str): relative directory for latex document output.
+            write_to_file (bool): if False, no output file is created.
+
+        Returns:
+            list(str): the filename of the written tex document and the written tex content.
+        """
+        circuit = circuitdrawer.Circuit(wires=self.init_num_subsystems)
+        self.print(circuit.parse_op)
+        tex = circuit.dump_to_document()
+
+        document = None
+        if write_to_file:
+            document = circuit.compile_document(tex_dir=tex_dir)
+
+        return [document, tex]

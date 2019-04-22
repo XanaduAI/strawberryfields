@@ -37,6 +37,7 @@ Software components
 * Quantum compiler engine: :mod:`strawberryfields.engine`
 * Quantum operations: :mod:`strawberryfields.ops`
 * Utilities: :mod:`strawberryfields.utils`
+* Circuit drawer: :mod:`strawberryfields.circuitdrawer`
 
 **Backend:**
 
