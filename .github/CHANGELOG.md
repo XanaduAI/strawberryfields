@@ -4,6 +4,8 @@
 
 - Added two new utility functions to extract a numerical representation of a circuit from an Engine object: `extract_unitary` and `extract_channel`.
 
+- Added a LaTeX quantum circuit drawer, that outputs the engine queue or the applied operations as a qcircuit compatible circuit diagram.
+
 - Added support for an alternative form of Clements decomposition, where the local phases occur at the end rather than in the middle of the beamsplitter array. This decomposition is more symmetric than the intermediate one, which could make it more robust. This form also makes it easier to implement a tensor-network simulation of linear optics.
 
 - Adds the `GraphEmbed` quantum operation/decomposition to the Strawberry Fields frontend. This allows the embedding of an arbitrary (complex-valued) weighted adjacency matrix into a Gaussian boson sampler.
@@ -11,6 +13,8 @@
 - Adds support for the Reck decomposition
 
 ### Improvements
+
+- Test suite has been ported to pytest
 
 - Linting improvements
 
@@ -22,9 +26,9 @@
 
 ### Contributors
 
-This release contains contributions from:
+This release contains contributions from (in alphabetical order):
 
-Filippo Miatto, Ish Dhand, Nicolás Quesada, Josh Izaac, Christian Gogolin, Shahnawaz Ahmed, and Nathan Killoran.
+Shahnawaz Ahmed, Ish Dhand, Christian Gogolin, Josh Izaac, Nathan Killoran, Filippo Miatto, Nicolás Quesada.
 
 
 # Release 0.9
