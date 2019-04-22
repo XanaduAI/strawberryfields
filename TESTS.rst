@@ -12,7 +12,7 @@ To ensure that Strawberry Fields is working correctly after installation, the te
 
     $ make test
 
-Note that this runs *all* of the tests, using *all* available backends, so can be quite slow (it should take around 40 minutes to complete). Alternatively, you can run the full test suite for a particular component by running
+Note that this runs *all* of the tests, using *all* available backends, in both pure *and* mixed modes, so can be quite slow (it should take around 1 hour to complete). Alternatively, you can run the full test suite for a particular component by running
 ::
 
     $ make test-[component]
