@@ -78,38 +78,9 @@ Code details
 # cf. _pydecimal.py in the python standard distribution.
 
 from collections.abc import Sequence
-from functools import wraps
 
 from .backends import load_backend
 from .backends.base import (NotApplicableError, BaseBackend)
-
-
-def _convert(func):
-    r"""Decorator for converting user defined functions to a :class:`RegRefTransform`.
-
-    This allows classical processing of measured qumodes values.
-
-    Example usage:
-
-    .. code-block:: python
-
-        @convert
-        def F(x):
-            # some classical processing of x
-            return f(x)
-
-        with eng:
-            MeasureX       | q[0]
-            Dgate(F(q[0])) | q[1]
-
-    Args:
-        func (function): function to be converted to a :class:`RegRefTransform`.
-    """
-    @wraps(func)
-    def wrapper(*args):
-        "Unused docstring."
-        return RegRefTransform(args, func)
-    return wrapper
 
 
 class Engine:
@@ -169,16 +140,16 @@ class Engine:
         """
         self.backend.reset(**kwargs)
 
-        if self.run_progs:
-            self.run_progs[0]._reset_regrefs()  # the regrefs are shared by the Programs, so this is enough
+        for p in self.run_progs:
+            p._clear_regrefs()
         self.run_progs.clear()
 
     def print_applied(self, print_fn=print):
         """Print all commands applied to the qumodes since the backend was first initialized.
 
         This will be blank until the first call to :meth:`run`. The output may
-        differ compared to :meth:`print_queue`, due to command decompositions
-        and optimizations supported by the backend.
+        differ compared to :meth:`Program.print`, due to command decompositions
+        and optimizations made by :meth:`run`.
 
         Args:
             print_fn (function): optional custom function to use for string printing.
@@ -228,7 +199,7 @@ class Engine:
                     raise err from None
         return applied
 
-    def run(self, program, return_state=True, modes=None, **kwargs):
+    def run(self, program, return_state=True, modes=None, compile=True, **kwargs):
         """Execute the given program by sending it to the backend.
 
         * The backend state is updated.
@@ -236,16 +207,10 @@ class Engine:
 
         Args:
             program (Program, Sequence[Program]): quantum circuit(s) to run
-            backend (str, BaseBackend, None): Backend for executing the commands.
-                Either a backend name ("gaussian", "fock", or "tf"), in which case it
-                is loaded and initialized, or a BaseBackend instance, or None to keep
-                the current backend.
             return_state (bool): If True, returns the state of the circuit after the
                 circuit has been run like :meth:`return_state` was called.
             modes (Sequence[int]): Modes to be returned in the state object. If None, returns all modes.
-            apply_history (bool): If True, all applied operations from the previous calls to
-                eng.run are reapplied to the backend state, before applying recently
-                queued quantum operations.
+            compile (bool): if True, compile the Program instances before sending them to the backend
         """
         if not isinstance(program, Sequence):
             program = [program]
@@ -256,18 +221,18 @@ class Engine:
 
         # TODO unsuccessful run due to exceptions should ideally have no effect on the backend state (state checkpoints?)
         try:
+            prev = None  # previous program segment
             for p in program:
                 if self.run_progs:
-                    if p.prev != self.run_progs[-1]:
-                        raise RuntimeError('When running several Programs in succession they must be linked.')
-                else:
-                    if p.prev:
-                        raise RuntimeError('The first Program cannot have a predecessor.')
+                    prev = self.run_progs[-1]
+
+                if prev is not None and not p.can_follow(prev):
+                    raise RuntimeError("Register mismatch after Program {}, '{}'.".format(len(self.run_progs)-1, prev.name))
 
                 # if the program hasn't been compiled for this backend, do it now
-                if p.backend != self.backend._short_name:
+                if compile and p.backend != self.backend._short_name:
                     p = p.compile(self.backend._short_name)
-                p._lock()
+                p.lock()
 
                 # TODO handle remote backends here, store measurement results in the RegRefs or maybe in the Engine object.
                 temp = self._run_program(p, **kwargs)

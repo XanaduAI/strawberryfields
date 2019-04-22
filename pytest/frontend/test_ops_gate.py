@@ -37,8 +37,8 @@ class TestGateBasics:
     """Test the basic properties of gates"""
 
     @pytest.fixture(autouse=True)
-    def eng(self):
-        """Dummy engine context for each test"""
+    def prog(self):
+        """Dummy program context for each test"""
         prog = sf.Program(2)
         Program._current_context = prog
         yield prog

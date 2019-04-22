@@ -102,14 +102,18 @@ class TestProgramGateInteraction:
         """test deleting a mode"""
         q = prog.register
         assert q[1].active
+        assert prog.num_subsystems == 2
         ops.Del | q[1]
         assert not q[1].active
+        assert prog.num_subsystems == 1
 
     def test_create(self, prog):
         """test creating a mode"""
         q = prog.register
+        assert prog.num_subsystems == 2
         new_q, = ops.New(1)
         assert new_q.active
+        assert prog.num_subsystems == 3
 
     def test_delete_already_deleted(self, prog):
         """deleting a mode that was already deleted"""

@@ -35,7 +35,7 @@ A typical use looks like
       BSgate(1)      | q
       Dgate(0.5).H   | q[0]
       Measure        | q
-  eng = sf.Engine(backend='fock')
+  eng = sf.Engine('fock')
   eng.run(prog, cutoff_dim=5)
   v1 = prog.register[1].val
 
@@ -49,13 +49,13 @@ Program methods
    context
    register
    num_subsystems
-   unlink
+   __len__
+   can_follow
    append
    compile
    optimize
    print
-   __len__
-
+   lock
 
 The following are internal Program methods. In most cases the user should not
 call these directly.
@@ -63,12 +63,9 @@ call these directly.
 .. autosummary::
        __enter__
        __exit__
-       _reset_regrefs
+       _clear_regrefs
        _add_subsystems
        _delete_subsystems
-       _lock
-       _set_checkpoint
-       _restore_checkpoint
        _index_to_regref
        _test_regrefs
        _list_to_grid
@@ -157,6 +154,7 @@ Code details
 
 from collections.abc import Sequence
 import copy
+import functools
 import numbers
 
 import networkx as nx
@@ -170,6 +168,33 @@ def _print_list(i, q, print_fn=print):
     for x in q:
         print_fn(x.op, ', ', end='')
     print_fn()
+
+def _convert(func):
+    r"""Decorator for converting user defined functions to a :class:`RegRefTransform`.
+
+    This allows classical processing of measured qumodes values.
+
+    Example usage:
+
+    .. code-block:: python
+
+        @convert
+        def F(x):
+            # some classical processing of x
+            return f(x)
+
+        with eng:
+            MeasureX       | q[0]
+            Dgate(F(q[0])) | q[1]
+
+    Args:
+        func (function): function to be converted to a :class:`RegRefTransform`.
+    """
+    @functools.wraps(func)
+    def wrapper(*args):
+        "Unused docstring."
+        return RegRefTransform(args, func)
+    return wrapper
 
 
 # TODO replace this mock backend capability database
@@ -185,7 +210,13 @@ backend_database = {
         'MeasureFock': True,
     },
     'base': {
+        'New_modes': True,
+        'Delete': True,
         'Dgate': True,
+        'Rgate': True,
+        'Sgate': True,
+        'BSgate': True,
+        'MeasureHomodyne': True,
     }
 }
 
@@ -217,6 +248,9 @@ class MergeFailure(RuntimeError):
 class Command:
     """Represents a quantum operation applied on specific subsystems of the register.
 
+    A Command instance is immutable once created, and can be shared between
+    several :class:`Program` instances.
+
     Args:
         op (~strawberryfields.ops.Operation): quantum operation to apply
         reg (Sequence[RegRef]): Subsystems to which the operation is applied.
@@ -237,7 +271,7 @@ class Command:
         self.decomp = decomp
 
     def __str__(self):
-        """Prints the command using proper Blackbird syntax."""
+        """Print the command using Blackbird syntax."""
         temp = str(self.op)
         if self.op.ns == 0:
             # op takes no subsystems as parameters, do not print anything more
@@ -267,8 +301,9 @@ class RegRef:
     The objects of this class refer to a specific subsystem (mode) of
     a quantum register.
 
-    Only one RegRef instance should exist per subsystem, :class:`Program`
-    keeps the authoritative mapping of subsystem indices to RegRef instances.
+    Within the scope of each :class:`Program` instance, only one RegRef instance
+    should exist per subsystem. :class:`Program` keeps the authoritative mapping
+    of subsystem indices to RegRef instances.
     Subsystem measurement results are stored in the "official" RegRef object.
     If other RegRefs objects referring to the same subsystem exist, they will
     not be updated. Once a RegRef is assigned a subsystem index it will never
@@ -288,6 +323,17 @@ class RegRef:
 
     def __str__(self):
         return 'q[{}]'.format(self.ind)
+
+    def __hash__(self):
+        return hash((self.ind, self.active))
+
+    def __eq__(self, other):
+        """Equality comparison.
+
+        Compares the index and the activity state of the two RegRefs, the val field does not matter.
+        NOTE: Affects the hashability of RegRefs, see also :meth:`__hash__`.
+        """
+        return self.ind == other.ind and self.active == other.active
 
 
 class RegRefTransform:
@@ -332,7 +378,7 @@ class RegRefTransform:
             raise ValueError('Identity transformation only takes one parameter.')
 
     def __str__(self):
-        """Prints the RegRefTransform using Blackbird syntax."""
+        """Print the RegRefTransform using Blackbird syntax."""
         temp = [str(r) for r in self.regrefs]
         rr = ', '.join(temp)
 
@@ -374,7 +420,7 @@ class Program:
     """Represents a quantum circuit.
 
     A quantum circuit is a set of quantum operations applied in a specific order
-    to a set of subsystems (represented by wires) of the quantum register.
+    to a set of subsystems (represented by wires in the circuit diagram) of the quantum register.
     The Program class represents a quantum circuit in general as a directed acyclic graph (DAG)
     whose nodes are :class:`Command` instances, and each (directed) edge in the graph
     corresponds to a specific wire along which the two associated Commands are connected.
@@ -394,19 +440,19 @@ class Program:
     as they are appended to it in order to be able to report register
     reference errors as soon as they happen.
 
-    Program p2 can be run after Program p1 if the RegRef state at the end of p1 matches the
-    RegRef state at the start of p2. This is enforced by constructing p2 as an explicit
-    successor of p1, which makes them share their RegRefs.
+    Program `p2` can be run after Program `p1` if the RegRef state at the end of `p1` matches the
+    RegRef state at the start of `p2`. This can be enforced by constructing `p2` as an explicit
+    successor of `p1`, in which case the regrefs are copied over.
     When a Program is run or it obtains a successor, it is locked and no more Commands can be appended to it.
 
     Args:
-        num_subsystems (int): number of subsystems in the quantum register
+        num_subsystems (int, Program): Initial number of subsystems in the quantum register.
+            Alternatively, another Program instance from which to inherit the register state.
         name (str): program name (optional)
-        prev (Program): predecessor of this program
     """
     _current_context = None  # context for inputting a program
 
-    def __init__(self, num_subsystems=None, name=None, prev=None):
+    def __init__(self, num_subsystems, name=None):
         #: str: program name
         self.name = name
         #: list[Command]: Commands constituting the quantum circuit in temporal order
@@ -417,34 +463,34 @@ class Program:
         self.locked = False
 
         # create subsystem references
-        #: Program: program segment preceding this one, with whom the RegRefs are shared
-        self.prev = prev
-        #: Program: program segment following this one, with whom the RegRefs are shared
-        self.next = None
-        if prev is None:
+        if isinstance(num_subsystems, numbers.Integral):
             #: int: initial number of subsystems
             self.init_num_subsystems = num_subsystems
             #: dict[int, RegRef]: mapping from subsystem indices to corresponding RegRef objects
             self.reg_refs = {}
             #: set[int]: created subsystem indices that have not been used (operated on) yet
             self.unused_indices = set()
-
             self._add_subsystems(num_subsystems)
+        elif isinstance(num_subsystems, Program):
+            # it's the parent program
+            parent = num_subsystems
+            # copy the RegRef state from the parent program
+            parent.lock()  # make sure the parent isn't accidentally updated by the user
+            self.init_num_subsystems = parent.num_subsystems
+            self.reg_refs = copy.deepcopy(parent.reg_refs)  # independent copy of the RegRefs
+            self.unused_indices = copy.copy(parent.unused_indices)
         else:
-            # link the programs
-            if prev.next:
-                raise RuntimeError('Program already has a successor.')
-            prev._lock()
-            prev.next = self
-            # share the parent program's regrefs
-            self.init_num_subsystems = prev.init_num_subsystems
-            self.reg_refs = prev.reg_refs
-            self.unused_indices = prev.unused_indices
+            raise TypeError('First argument must be either the number of subsystems or the parent Program.')
 
+        # save the initial regref state
+        #: dict[int, RegRef]: like reg_refs
+        self.init_reg_refs = copy.deepcopy(self.reg_refs)
+        #: set[int]: like unused_indices
+        self.init_unused_indices = copy.copy(self.unused_indices)
 
     def __str__(self):
         """String representation."""
-        return self.__class__.__name__ + '({}, {} subsystems, compiled for {})'.format(self.name, self.num_subsystems, self.backend)
+        return self.__class__.__name__ + '({}, {}->{} subsystems, compiled for {})'.format(self.name, self.init_num_subsystems, self.num_subsystems, self.backend)
 
     def __len__(self):
         """Program length.
@@ -455,7 +501,7 @@ class Program:
         return len(self.circuit)
 
     def print(self, print_fn=print):
-        """Print the program contents.
+        """Print the program contents using Blackbird syntax.
 
         Args:
             print_fn (function): optional custom function to use for string printing.
@@ -508,7 +554,7 @@ class Program:
         """
         return len(self.register)
 
-    def _reset_regrefs(self):
+    def _clear_regrefs(self):
         """Clears any measurement values stored in the RegRefs.
 
         Called by :class:`~.engine.Engine` when resetting the backend.
@@ -545,7 +591,6 @@ class Program:
 
     def _delete_subsystems(self, refs):
         """Delete existing subsystem references.
-        TODO is this required? self is not really used, maybe the caller can deactivate the refs directly?
 
         To avoid discrepancies with the backend this method must not be called directly,
         but rather indirectly by using :class:`~strawberryfields.ops.Delete` instances
@@ -561,61 +606,29 @@ class Program:
             #self.reg_refs[r.ind].active = False
         # NOTE: deleted indices are *not* removed from self.unused_indices
 
-    def _lock(self):
+    def lock(self):
         """Finalize the program.
 
-        When a Program is locked no more Commands can be appended to it, and a checkpoint is made of the RegRef state.
+        When a Program is locked, no more Commands can be appended to it.
         The locking happens when the program is run, or a successor Program is constructed,
-        in order to ensure that the RegRef state shared by the Programs remains consistent.
+        in order to ensure that the RegRef state of the Program does not change anymore.
         """
-        if not self.locked:
-            self.locked = True
-            self._set_checkpoint()
+        self.locked = True
 
-    def unlink(self):
-        """Unlink the last Program in a chain.
+    def can_follow(self, prev):
+        """Checks if this program can follow the given program.
 
-        The circuit of the unlinked Program is cleared.
-        The RegRefs are restored to the state they had before the start of the unlinked Program.
+        This requires that the final RegRef state of the first program matches
+        the initial RegRef state of the second program, i.e. they have the same number
+        number of RegRefs, all with identical indices and activity states.
+
+        Args:
+            prev (Program): preceding program fragment
+        Returns:
+            bool: True if the Program can follow prev
         """
-        if self.locked or self.next:
-            raise RuntimeError('Locked Programs cannot be unlinked.')  # for now
-        if not self.prev:
-            raise RuntimeError('The program has no predecessor from which it could be unlinked.')
-        # restore the RegRef state from the predecessor's checkpoint
-        self.prev._restore_checkpoint()
-        # unlink it
-        self.prev.next = None
-        # make the unlinked Program independent by re-initializing it
-        self.__init__(self.init_num_subsystems)
-
-    def _set_checkpoint(self):
-        """Make a RegRef checkpoint.
-
-        Stores the activity state of the RegRefs in self.reg_refs, as well
-        as self.unused_indices so that they can be restored.
-        """
-        #: dict[int, bool]: activity state of the current RegRefs
-        self._reg_refs_checkpoint = {k: r.active for k, r in self.reg_refs.items()}
-        #: set[int]: like unused_indices
-        self._unused_indices_checkpoint = self.unused_indices.copy()
-
-    def _restore_checkpoint(self):
-        """Restore a RegRef checkpoint.
-
-        Called after the predecessor Program is unlinked.
-        Any RegRefs created after the checkpoint are made inactive and
-        deleted from self.reg_refs.
-        """
-        for k, r in list(self.reg_refs.items()):  # convert to a list since we modify the dictionary during iteration
-            if k in self._reg_refs_checkpoint:
-                # existed in the last checkpoint
-                r.active = self._reg_refs_checkpoint[k]
-            else:
-                # did not exist
-                r.active = False
-                del self.reg_refs[k]
-        self.unused_indices |= self._unused_indices_checkpoint
+        # TODO NOTE unused_indices is not compared here, in order to allow program fragment repetition
+        return self.init_reg_refs == prev.reg_refs
 
     def _index_to_regref(self, ind):
         """Try to find a RegRef corresponding to a given subsystem index.
@@ -695,6 +708,8 @@ class Program:
         The compilation step validates the program, making sure all the Operations used are accepted by the backend.
         Additionally it may decompose certain gates into sequences of simpler gates.
 
+        TODO for now the compilation happens in-place, i.e. it modifies self.
+
         Args:
             backend (str): target backend
             optimize (bool): try to optimize the program by merging and canceling gates
@@ -719,7 +734,7 @@ class Program:
                         try:
                             temp = cmd.op.decompose(cmd.reg)
                             # now compile the decomposition
-                            temp = _compile_sequence(temp)
+                            temp = compile_sequence(temp)
                             compiled.extend(temp)
                         except NotImplementedError as err:
                             # simplify the error message by suppressing the previous exception
@@ -728,9 +743,10 @@ class Program:
                     raise CircuitError('The operation {} cannot be used with the {} backend.'.format(cmd.op.__class__.__name__, backend))
             return compiled
 
-        self._lock()
+        self.lock()
         seq = compile_sequence(self.circuit)
-        compiled = copy.copy(self)  # shares the member objects with the non-compiled instance
+        compiled = self
+        #compiled = copy.deepcopy(self)  # independent of the original
         compiled.backend = backend
         compiled.circuit = seq
         if optimize:

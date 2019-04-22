@@ -58,8 +58,8 @@ Code details
 """
 
 from ._version import __version__
-from .program import Program
-from .engine import (Engine, _convert as convert)
+from .program import (Program, _convert as convert)
+from .engine import Engine
 
 __all__ = ['Engine', 'Program', 'convert', 'version']
 
