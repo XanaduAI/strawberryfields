@@ -1,4 +1,4 @@
-# Release 0.10.0.dev0 (development)
+# Release 0.10
 
 ### New features
 
@@ -11,6 +11,8 @@
 - Adds the `GraphEmbed` quantum operation/decomposition to the Strawberry Fields frontend. This allows the embedding of an arbitrary (complex-valued) weighted adjacency matrix into a Gaussian boson sampler.
 
 - Adds support for the Reck decomposition
+
+- Added documentation to the Quantum Algorithms section on CV quantum neural networks
 
 ### Improvements
 
@@ -28,7 +30,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Shahnawaz Ahmed, Ish Dhand, Christian Gogolin, Josh Izaac, Nathan Killoran, Filippo Miatto, Nicolás Quesada.
+Shahnawaz Ahmed, Thomas R. Bromley, Ish Dhand, Marcus Edwards, Christian Gogolin, Josh Izaac, Nathan Killoran, Filippo Miatto, Nicolás Quesada.
 
 
 # Release 0.9

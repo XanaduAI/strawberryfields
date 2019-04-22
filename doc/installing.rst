@@ -27,8 +27,8 @@ If you currently do not have Python 3 installed, we recommend `Anaconda for Pyth
 
 .. note::
 
-	As Tensorflow does not currently support Python 3.7 and above, we are unable to
-	also support Strawberry Fields on Python 3.7.
+    As Tensorflow does not currently support Python 3.7 and above, we are unable to
+    also support Strawberry Fields on Python 3.7.
 
 
 Installation
@@ -37,7 +37,7 @@ Installation
 Installation of Strawberry Fields, as well as all required Python packages mentioned above, can be installed via ``pip``:
 ::
 
-   	$ python -m pip install strawberryfields
+    $ python -m pip install strawberryfields
 
 
 If you are using the ``tensorflow-gpu`` module for TensorFlow GPU support, you can install the following package for GPU support in Strawberry Fields:
@@ -51,7 +51,7 @@ Make sure you are using the Python 3 version of pip.
 Alternatively, you can install Strawberry Fields from the source code by navigating to the top directory and running
 ::
 
-	$ python setup.py install
+    $ python setup.py install
 
 
 Notebook downloads
@@ -66,7 +66,7 @@ Two of the tutorials provided in the documentation, quantum teleporation and Gau
 To open them, launch the Jupyter notebook environment by clicking on the 'Jupyter notebook' shortcut in the start menu (Windows), or by running the following in the Anaconda Prompt/Command Prompt/Terminal:
 ::
 
-	jupyter notebook
+    jupyter notebook
 
 Your web browser should open with the Jupyter notebook home page; simply click the 'Upload' button, browse to the tutorial file you downloaded above, and upload the file. You will now be able to open it and work through the tutorial.
 
@@ -75,23 +75,58 @@ Your web browser should open with the Jupyter notebook home page; simply click t
 Software tests
 ==============
 
+The Strawberry Fields test suite requires `pytest <https://docs.pytest.org/en/latest/>`_ and `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_ for coverage reports. These can both be installed via ``pip``:
+::
+
+    $ pip install pytest pytest-cov
+
+
 To ensure that Strawberry Fields is working correctly after installation, the test suite can be run by navigating to the source code folder and running
 ::
 
-	$ make test
+    $ make test
 
-Note that this runs *all* of the tests, using *all* available backends, so can be quite slow (it should take around 40 minutes to complete). Alternatively, you can run the full test suite for a particular backend by running
+Note that this runs *all* of the tests, using *all* available backends, so can be quite slow (it should take around 40 minutes to complete). Alternatively, you can run the full test suite for a particular component by running
 ::
 
-	$ make test-[backend]
+    $ make test-[component]
 
-where ``[backend]`` should be replaced with the :ref:`backend <backends>` you would like to test (``fock``, ``tf``, or ``gaussian``).
+where ``[component]`` should be replaced with either ``frontend`` for the Strawberry Fields frontend UI, or one of the :ref:`backend <backends>` you would like to test (``fock``, ``tf``, or ``gaussian``).
 
-Individual test modules are run using
-
+Pytest can accept a boolean logic string specifying exactly which tests to run, if finer control is needed. For example, to run all tests for the frontend and the Gaussian backend, as well as the Fock backend (but only for pure states), you can run:
 ::
 
-	$ python tests/test_gate.py --backend=[backend]
+    $ make test-"gaussian or frontend or (fock and pure)"
+
+The above syntax also works for the ``make coverage`` command, as well as ``make batch-test`` command for running the tests in batched mode.
+
+
+Individual test modules are run by invoking pytest directly from the command line:
+::
+
+    $ pytest tests/test_gate.py
+
+
+.. note:: **Adding tests to Strawberry Fields**
+
+    The ``tests`` folder is organised into three subfolders: ``backend`` for tests that
+    only import a Strawberry Fields backend, ``frontend`` for tests that import the Strawberry
+    Fields UI but do not make use of a backend, and ``integration`` for tests that test
+    integration of the frontend and backends.
+
+    When writing new tests, make sure to mark what components it tests. For a backend test,
+    you can use the ``backends`` mark, which accepts the names of the backends:
+
+    .. code-block:: python
+
+        pytest.mark.backends("fock", "gaussian")
+
+    For a frontend-only test, you can use the frontend mark:
+
+    .. code-block:: python
+
+        pytest.mark.frontend
+
 
 
 Documentation
@@ -106,9 +141,9 @@ To build the documentation, the following additional packages are required:
 If using Ubuntu, they can be installed via a combination of ``apt`` and ``pip``:
 ::
 
-	$ sudo apt install graphviz
-	$ pip install sphinx --user
-	$ pip install sphinxcontrib-bibtex --user
+    $ sudo apt install graphviz
+    $ pip install sphinx --user
+    $ pip install sphinxcontrib-bibtex --user
 
 To build the HTML documentation, go to the top-level directory and run
 ::
