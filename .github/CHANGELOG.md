@@ -12,6 +12,8 @@
 
 - Adds support for the Reck decomposition
 
+- Added documentation to the Quantum Algorithms section on CV quantum neural networks
+
 ### Improvements
 
 - Test suite has been ported to pytest
@@ -28,7 +30,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Shahnawaz Ahmed, Ish Dhand, Christian Gogolin, Josh Izaac, Nathan Killoran, Filippo Miatto, Nicolás Quesada.
+Shahnawaz Ahmed, Thomas R. Bromley, Ish Dhand, Marcus Edwards, Christian Gogolin, Josh Izaac, Nathan Killoran, Filippo Miatto, Nicolás Quesada.
 
 
 # Release 0.9
