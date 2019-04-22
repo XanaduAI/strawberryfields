@@ -1,4 +1,4 @@
-PYTHON3 := $(shell which python3 2>/dev/null)
+PYTHON := $(shell which python3 2>/dev/null)
 TESTRUNNER := python3 -m pytest tests -p no:warnings
 COVERAGE := --cov=strawberryfields --cov-report=html:coverage_html_report --cov-append
 
