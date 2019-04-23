@@ -94,13 +94,15 @@ class Engine:
             conventions followed. By default, :math:`\hbar=2`. See
             :ref:`conventions` for more details.
     """
-    def __init__(self, backend, host=None, *, hbar=2, **kwargs):
+    def __init__(self, backend, host=None, **kwargs):
         #: list[Program]: list of Programs that have been run
         self.run_progs = []
         #: str: URL of the remote backend host
         self.host = host
+        #: dict[str]: keyword arguments for the backend
+        self.kwargs = kwargs
         #: float: numerical value of hbar in the (implicit) units of position * momentum
-        self.hbar = hbar
+        self.hbar = kwargs.get('hbar', 2)
 
         if isinstance(backend, str):
             #: str: short name of the backend
@@ -112,7 +114,6 @@ class Engine:
             self.backend = backend
         else:
             raise TypeError('backend must be a string or a BaseBackend instance.')
-        # TODO kwargs for backend?
 
     def __str__(self):
         """String representation."""
@@ -210,16 +211,15 @@ class Engine:
         if not isinstance(program, Sequence):
             program = [program]
 
-        if not self.run_progs:
-            # initialize the backend
-            self.backend.begin_circuit(num_subsystems=program[0].init_num_subsystems, hbar=self.hbar, **kwargs)
-
         # TODO unsuccessful run due to exceptions should ideally have no effect on the backend state (state checkpoints?)
         try:
             prev = None  # previous program segment
             for p in program:
                 if self.run_progs:
                     prev = self.run_progs[-1]
+                else:
+                    # initialize the backend TODO where should this happen? c.f. the fixtures in convtest.py
+                    self.backend.begin_circuit(num_subsystems=p.init_num_subsystems, **self.kwargs)
 
                 if prev is not None and not p.can_follow(prev):
                     raise RuntimeError("Register mismatch after Program {}, '{}'.".format(len(self.run_progs)-1, prev.name))

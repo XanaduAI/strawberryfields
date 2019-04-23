@@ -658,7 +658,7 @@ class Program:
         """Checks if this program can follow the given program.
 
         This requires that the final RegRef state of the first program matches
-        the initial RegRef state of the second program, i.e. they have the same number
+        the initial RegRef state of the second program, i.e., they have the same number
         number of RegRefs, all with identical indices and activity states.
 
         Args:
@@ -914,11 +914,11 @@ class Program:
         diagram corresponding to the Program.
 
         Args:
-            tex_dir (str): relative directory for latex document output.
-            write_to_file (bool): if False, no output file is created.
+            tex_dir (str): relative directory for latex document output
+            write_to_file (bool): if False, no output file is created
 
         Returns:
-            list[str]: filename of the written tex document and the written tex content.
+            list[str]: filename of the written tex document and the written tex content
         """
         drawer = sfcd.Circuit(wires=self.init_num_subsystems)
         self.print(drawer.parse_op)

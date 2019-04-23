@@ -16,6 +16,7 @@ import pytest
 
 import numpy as np
 
+import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.backends import BaseGaussian, BaseFock
 from strawberryfields.backends import TFBackend, GaussianBackend, FockBackend
@@ -34,15 +35,8 @@ c = 0.312
 )
 def test_load_backend(name, expected, cutoff):
     """Test backends can be correctly loaded via strings"""
-    eng, q = sf.Engine(1)
-    eng.run(name, cutoff_dim=cutoff)
-
+    eng = sf.Engine(name)
     assert isinstance(eng.backend, expected)
-
-    # running the engine again should not change the backend instance
-    b = eng.backend
-    eng.run(name, cutoff_dim=cutoff)
-    assert eng.backend is b
 
 
 class TestEngineReset:
@@ -50,28 +44,29 @@ class TestEngineReset:
 
     def test_init_vacuum(self, setup_eng, tol):
         """Test that the engine is initialized to the vacuum state"""
-        eng, _ = setup_eng(2)
+        eng, prog = setup_eng(2)
+        eng.run(prog)  # run an empty program
         assert np.all(eng.backend.is_vacuum(tol))
 
-    def test_reset_vacuum(self, setup_eng, pure, cutoff, tol):
+    def test_reset_vacuum(self, setup_eng, tol):
         """Test that resetting the engine returns to the vacuum state"""
-        eng, q = setup_eng(2)
+        eng, prog = setup_eng(2)
 
-        with eng:
+        with prog.context:
             ops.Dgate(0.5) | 0
 
-        eng.run()
+        eng.run(prog)
         assert not np.all(eng.backend.is_vacuum(tol))
 
-        eng.reset(pure=pure)
+        eng.reset()
         assert np.all(eng.backend.is_vacuum(tol))
 
+    @pytest.mark.skip('FIXME when backend reset logic is done')
     @pytest.mark.backends("fock")
-    def test_eng_reset(self, setup_eng, cutoff):
+    def test_eng_reset(self, setup_eng):
         """Test the Engine.reset() features."""
-        eng, _ = setup_eng(2)
-
-        state = eng.run()
+        eng, prog = setup_eng(2)
+        state = eng.run(prog)
 
         # change the cutoff dimension
         old_cutoff = eng.backend.get_cutoff_dim()
@@ -81,7 +76,7 @@ class TestEngineReset:
         new_cutoff = old_cutoff + 1
         eng.reset(cutoff_dim=new_cutoff)
 
-        state = eng.run()
+        state = eng.run(prog)
         temp = eng.backend.get_cutoff_dim()
 
         assert temp == new_cutoff
@@ -96,9 +91,9 @@ class TestProperExecution:
 
     def test_regref_transform(self, setup_eng):
         """Test circuit with regref transforms doesn't raise any errors"""
-        eng, q = setup_eng(2)
+        eng, prog = setup_eng(2)
 
-        with eng:
+        with prog.context as q:
             ops.MeasureX | q[0]
             ops.Sgate(q[0]) | q[1]
             # symbolic hermitian conjugate together with register reference
@@ -106,43 +101,38 @@ class TestProperExecution:
             ops.Sgate(ops.RR(q[0], lambda x: x ** 2)) | q[1]
             ops.Dgate(ops.RR(q[0], lambda x: -x)).H | q[1]
 
-        eng.run()
+        eng.run(prog)
 
     def test_homodyne_measurement_vacuum(self, setup_eng, tol):
         """MeasureX and MeasureP leave the mode in the vacuum state"""
-        eng, q = setup_eng(2)
-
-        with eng:
+        eng, prog = setup_eng(2)
+        with prog.context as q:
             ops.Coherent(a, c) | q[0]
             ops.Coherent(b, c) | q[1]
             ops.MeasureX | q[0]
             ops.MeasureP | q[1]
 
-        eng.run()
+        eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
     def test_homodyne_measurement_vacuum_phi(self, setup_eng, tol):
         """Homodyne measurements leave the mode in the vacuum state"""
-        eng, q = setup_eng(2)
-
-        with eng:
+        eng, prog = setup_eng(2)
+        with prog.context as q:
             ops.Coherent(a, b) | q[0]
             ops.MeasureHomodyne(c) | q[0]
 
-        eng.run()
+        eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
     def test_program_subroutine(self, setup_eng, tol):
         """Simple quantum program with a subroutine and references."""
-        eng, q = setup_eng(2)
+        eng, prog = setup_eng(2)
 
         # define some gates
         D = ops.Dgate(0.5)
         BS = ops.BSgate(0.7 * np.pi, np.pi / 2)
         R = ops.Rgate(np.pi / 3)
-        # get register references
-        alice, bob = q
-
         def subroutine(a, b):
             """Subroutine for the quantum program"""
             R | a
@@ -150,30 +140,33 @@ class TestProperExecution:
             R.H | a
 
         # main program
-        with eng:
+        with prog.context as q:
+            # get register references
+            alice, bob = q
             ops.All(ops.Vacuum()) | (alice, bob)
             D | alice
             subroutine(alice, bob)
             BS | (alice, bob)
             subroutine(bob, alice)
 
-        state = eng.run()
+        state = eng.run(prog)
 
         # state norm must be invariant
         if isinstance(eng.backend, BaseFock):
             assert np.allclose(state.trace(), 1, atol=tol, rtol=0)
 
-    def test_checkpoints(self, setup_eng, tol):
-        """Test history checkpoints work when creating and deleting modes."""
-        eng, q = setup_eng(2)
-        alice, bob = q
+    def test_subsystems(self, setup_eng, tol):
+        """Check that the backend keeps in sync with the program when creating and deleting modes."""
+        null = sf.Program(2)  # empty program
+        eng, prog = setup_eng(2)
 
         # define some gates
         D = ops.Dgate(0.5)
         BS = ops.BSgate(2 * np.pi, np.pi / 2)
         R = ops.Rgate(np.pi)
 
-        with eng:
+        with prog.context as q:
+            alice, bob = q
             D | alice
             BS | (alice, bob)
             ops.Del | alice
@@ -185,19 +178,11 @@ class TestProperExecution:
             D.H | charlie
             ops.MeasureX | charlie
 
-        eng.optimize()
-        state = eng.run()
-
-        # state norm must be invariant
-        if isinstance(eng.backend, BaseFock):
-            assert np.allclose(state.trace(), 1, atol=tol, rtol=0)
-
-        def check_reg(self, expected_n=None):
-            """Compare Engine.register with the mode list returned by the backend.
-            They should always be in agreement after Engine.run(), Engine.reset_queue()
-            and Engine.reset().
+        def check_reg(p, expected_n=None):
+            """Compare Program.register with the mode list returned by the backend.
+            They should always be in agreement after Engine.run() and Engine.reset().
             """
-            rr = eng.register
+            rr = p.register
             modes = eng.backend.get_modes()
             # number of elements
             assert len(rr) == len(modes)
@@ -210,75 +195,41 @@ class TestProperExecution:
             # activity
             assert np.all([r.active for r in rr])
 
+        state = eng.run(null)
+        check_reg(null, 2)
+        state = eng.run(prog)
+        check_reg(prog, 1)
+
+        # state norm must be invariant
+        if isinstance(eng.backend, BaseFock):
+            assert np.allclose(state.trace(), 1, atol=tol, rtol=0)
+
         # check that reset() works
-        check_reg(1)
         eng.reset()
-
-        new_reg = eng.register
-        # original number of modes
-        assert len(new_reg) == len(q)
-
         # the regrefs are reset as well
-        assert np.all([r.val is None for r in new_reg])
-        check_reg(2)
+        assert np.all([r.val is None for r in prog.register])
 
-    def test_apply_history(self, setup_eng, pure):
-        """Tests the reapply history argument works correctly with a backend"""
-        eng, q = setup_eng(2)
 
+    def test_empty_program(self, setup_eng):
+        """Empty programs do not change the state of the backend."""
+        eng, p1 = setup_eng(2)
         a = 0.23
         r = 0.1
-
-        def inspect():
-            res = []
-            print_fn = lambda x: res.append(x.__str__())
-            eng.print_applied(print_fn)
-            return res
-
-        with eng:
+        with p1.context as q:
             ops.Dgate(a) | q[0]
             ops.Sgate(r) | q[1]
+        state1 = eng.run(p1)
 
-        state1 = eng.run()
-        expected = [
-            "Run 0:",
-            "Dgate({}, 0) | (q[0])".format(a),
-            "Sgate({}, 0) | (q[1])".format(r),
-        ]
-
-        assert inspect() == expected
-
-        # reset backend, but reapply history
-        eng.backend.reset(pure=pure)
-        state2 = eng.run(apply_history=True)
-        assert inspect() == expected
+        # empty program
+        p2 = sf.Program(p1)
+        state2 = eng.run(p2)
         assert state1 == state2
 
-        # append more commands to the same backend
-        with eng:
+        p3 = sf.Program(p2)
+        with p3.context as q:
             ops.Rgate(r) | q[0]
+        state3 = eng.run(p3)
+        assert not state1 == state3
 
-        state3 = eng.run()
-        expected = [
-            "Run 0:",
-            "Dgate({}, 0) | (q[0])".format(a),
-            "Sgate({}, 0) | (q[1])".format(r),
-            "Run 1:",
-            "Rgate({}) | (q[0])".format(r),
-        ]
-
-        assert inspect() == expected
-        assert not state2 == state3
-
-        # reset backend, but reapply history
-        eng.backend.reset(pure=pure)
-        state4 = eng.run(apply_history=True)
-        expected = [
-            "Run 0:",
-            "Dgate({}, 0) | (q[0])".format(a),
-            "Sgate({}, 0) | (q[1])".format(r),
-            "Rgate({}) | (q[0])".format(r),
-        ]
-
-        assert inspect() == expected
+        state4 = eng.run(p2)
         assert state3 == state4
