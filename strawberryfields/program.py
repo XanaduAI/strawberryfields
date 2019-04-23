@@ -228,7 +228,7 @@ backend_database = {
 class RegRefError(IndexError):
     """Exception raised by :class:`Program` when it encounters an invalid register reference.
 
-    E.g. trying to apply a gate to a nonexistent or deleted subsystem.
+    E.g., trying to apply a gate to a nonexistent or deleted subsystem.
     """
     pass
 
@@ -236,7 +236,7 @@ class CircuitError(RuntimeError):
     """Exception raised by :class:`Program` when it encounters an illegal
     operation in the quantum circuit.
 
-    E.g. trying to use a measurement result before it is available.
+    E.g., trying to use a measurement result before it is available.
     """
     pass
 
@@ -244,7 +244,7 @@ class MergeFailure(RuntimeError):
     """Exception raised by :meth:`strawberryfields.ops.Operation.merge` when an
     attempted merge fails.
 
-    E.g. trying to merge two gates of different families.
+    E.g., trying to merge two gates of different families.
     """
     pass
 
@@ -309,7 +309,7 @@ class RegRef:
     should exist per subsystem. :class:`Program` keeps the authoritative mapping
     of subsystem indices to RegRef instances.
     Subsystem measurement results are stored in the "official" RegRef object.
-    If other RegRefs objects referring to the same subsystem exist, they will
+    If other RegRef objects referring to the same subsystem exist, they will
     not be updated. Once a RegRef is assigned a subsystem index it will never
     change, not even if the subsystem is deleted.
 
@@ -414,7 +414,7 @@ class RegRefTransform:
         if any(v is None for v in temp):
             # NOTE: "if None in temp" causes an error if temp contains arrays,
             # since it uses the == comparison in addition to "is"
-            raise CircuitError("Trying to use a nonexistent measurement result (e.g. before it can be measured).")
+            raise CircuitError("Trying to use a nonexistent measurement result (e.g., before it can be measured).")
         if self.func is None:
             return temp[0]
         return self.func(*temp)
@@ -430,7 +430,7 @@ class Program:
     corresponds to a specific wire along which the two associated Commands are connected.
 
     Program instances also act as context managers (and the context itself) for inputting
-    quantum circuits using a `with` block and :class:`Operation` instances.
+    quantum circuits using a :code:`with` block and :class:`Operation` instances.
     The contexts may not be nested.
 
     The quantum circuit is inputted by using the :meth:`~strawberryfields.ops.Operation.__or__`
@@ -508,7 +508,7 @@ class Program:
         """Print the program contents using Blackbird syntax.
 
         Args:
-            print_fn (function): optional custom function to use for string printing.
+            print_fn (function): optional custom function to use for string printing
         """
         for k in self.circuit:
             print_fn(k)

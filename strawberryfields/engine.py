@@ -22,7 +22,7 @@ Quantum compiler engine
 
 The :class:`Engine` class is responsible for communicating
 quantum programs represented by :class:`.Program` objects
-to a backend that could be e.g. a simulator, a hardware quantum processor, or a circuit drawer.
+to a backend that could be e.g., a simulator, a hardware quantum processor, or a circuit drawer.
 
 A typical use looks like
 ::
@@ -210,7 +210,7 @@ class Engine:
             return_state (bool): If True, returns the state of the circuit after the
                 circuit has been run like :meth:`return_state` was called.
             modes (Sequence[int]): Modes to be returned in the state object. If None, returns all modes.
-            compile (bool): if True, compile the Program instances before sending them to the backend
+            compile (bool): If True, compile the Program instances before sending them to the backend.
         """
         if not isinstance(program, Sequence):
             program = [program]
