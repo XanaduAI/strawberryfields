@@ -333,7 +333,7 @@ class Operation:
     """Abstract base class for quantum operations acting on one or more subsystems.
 
     The extra_deps instance variable is a set containing the :class:`.RegRef`
-    the :class:`Operation` depends on. In the quantum diagram notation it
+    the :class:`Operation` depends on. In the quantum circuit diagram notation it
     corresponds to the vertical double lines of classical information
     entering the :class:`Operation` that originate in a measurement of a subsystem.
 

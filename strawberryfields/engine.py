@@ -74,9 +74,6 @@ Code details
 """
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
-# todo: Avoid issues with Engine contexts and threading,
-# cf. _pydecimal.py in the python standard distribution.
-
 from collections.abc import Sequence
 
 from .backends import load_backend
@@ -97,8 +94,6 @@ class Engine:
             conventions followed. By default, :math:`\hbar=2`. See
             :ref:`conventions` for more details.
     """
-    _current_context = None
-
     def __init__(self, backend, host=None, *, hbar=2, **kwargs):
         #: list[Program]: list of Programs that have been run
         self.run_progs = []

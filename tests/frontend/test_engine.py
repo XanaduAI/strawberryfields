@@ -145,10 +145,10 @@ class TestRegRefs:
     """Testing register references."""
 
     def test_corrupt_index(self, prog):
-        """This should never happen!"""
+        """User messes up the RegRef indices."""
         with prog.context as q:
             q[0].ind = 1
-            with pytest.raises(program.RegRefError, match="Should never happen!"):
+            with pytest.raises(program.RegRefError, match="RegRef state has become inconsistent"):
                 ops.Dgate(0.5) | q[0]
 
     def test_nonexistent_index(self, prog):

@@ -39,6 +39,9 @@ A typical use looks like
   eng.run(prog, cutoff_dim=5)
   v1 = prog.register[1].val
 
+The Program objects also keep track of the state of the quantum register they act on, using a dictionary of :class:`RegRef` objects.
+The currently active register references can be accessed using the :meth:`~Program.register` method.
+
 
 Program methods
 ---------------
@@ -160,7 +163,7 @@ import numbers
 
 import networkx as nx
 
-import strawberryfields.circuitdrawer
+import strawberryfields.circuitdrawer as sfcd
 
 
 
@@ -206,23 +209,51 @@ backend_database = {
     'fock': {
         'New_modes': True,
         'Delete': True,
+        'Vacuum': True,
+        'Coherent': True,
+        'Squeezed': True,
+        'DisplacedSqueezed': True,
+        'Fock': True,
         'Rgate': True,
-        'Sgate': True,
+        'Fouriergate': True,
         'Dgate': True,
+        'Xgate': True,
+        'Zgate': True,
+        'Sgate': True,
+        'Pgate': False,
+        'Vgate': True,
+        'Kgate': True,
         'BSgate': True,
+        'CXgate': False,
+        'CZgate': False,
+        'CKgate': True,
         'S2gate': False,  # use a decomposition
+        'MeasureHomodyne': True,
         'MeasureFock': True,
     },
-    'base': {
+    'gaussian': {
         'New_modes': True,
         'Delete': True,
-        'Dgate': True,
+        'Vacuum': True,
+        'Coherent': True,
+        'Squeezed': True,
+        'DisplacedSqueezed': True,
         'Rgate': True,
+        'Fouriergate': True,
+        'Dgate': True,
+        'Xgate': True,
+        'Zgate': True,
         'Sgate': True,
+        'Pgate': False,
         'BSgate': True,
+        'CXgate': False,
+        'CZgate': False,
+        'S2gate': False,  # use a decomposition
         'MeasureHomodyne': True,
-    }
+    },
 }
+backend_database['tf'] = backend_database['fock']  # tf can do the same things as fock
+backend_database['base'] = backend_database['fock']
 
 
 class RegRefError(IndexError):
@@ -329,6 +360,10 @@ class RegRef:
         return 'q[{}]'.format(self.ind)
 
     def __hash__(self):
+        """Hashing method.
+
+        NOTE: Has to match :meth:`__eq__` such that if two RegRefs compare equal they must have equal hashes.
+        """
         return hash((self.ind, self.active))
 
     def __eq__(self, other):
@@ -671,7 +706,7 @@ class Program:
                 if rr not in self.reg_refs.values():
                     raise RegRefError('Unknown RegRef.')
                 if self.reg_refs[rr.ind] is not rr:
-                    raise RegRefError('Should never happen!')
+                    raise RegRefError('RegRef state has become inconsistent.')
             elif isinstance(rr, numbers.Integral):
                 rr = self._index_to_regref(rr)
             else:
@@ -712,8 +747,6 @@ class Program:
         The compilation step validates the program, making sure all the Operations used are accepted by the backend.
         Additionally it may decompose certain gates into sequences of simpler gates.
 
-        TODO for now the compilation happens in-place, i.e. it modifies self.
-
         Args:
             backend (str): target backend
             optimize (bool): try to optimize the program by merging and canceling gates
@@ -749,6 +782,7 @@ class Program:
 
         self.lock()
         seq = compile_sequence(self.circuit)
+        # TODO for now the compilation happens in-place, i.e. it modifies self.
         compiled = self
         #compiled = copy.deepcopy(self)  # independent of the original
         compiled.backend = backend
@@ -876,22 +910,22 @@ class Program:
     def draw_circuit(self, tex_dir='./circuit_tex', write_to_file=True):
         r"""Draw the circuit using the Qcircuit :math:`\LaTeX` package.
 
-        This will generate the tex code required to display the queued or applied
-        quantum operations as a quantum circuit.
+        This will generate the LaTeX code required to draw the quantum circuit
+        diagram corresponding to the Program.
 
         Args:
             tex_dir (str): relative directory for latex document output.
             write_to_file (bool): if False, no output file is created.
 
         Returns:
-            list(str): the filename of the written tex document and the written tex content.
+            list[str]: filename of the written tex document and the written tex content.
         """
-        circuit = circuitdrawer.Circuit(wires=self.init_num_subsystems)
-        self.print(circuit.parse_op)
-        tex = circuit.dump_to_document()
+        drawer = sfcd.Circuit(wires=self.init_num_subsystems)
+        self.print(drawer.parse_op)
+        tex = drawer.dump_to_document()
 
         document = None
         if write_to_file:
-            document = circuit.compile_document(tex_dir=tex_dir)
+            document = drawer.compile_document(tex_dir=tex_dir)
 
         return [document, tex]
