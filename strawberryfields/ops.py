@@ -444,8 +444,18 @@ class Operation:
         # todo: For now decompose() works on unevaluated Parameters.
         # This causes an error if a :class:`.RegRefTransform`-based Parameter is used, and
         # decompose() tries to do arithmetic on it.
-        raise NotImplementedError(
-            'No decomposition available: {}'.format(self))
+        return self._decompose(reg)
+
+    def _decompose(self, reg):
+        """Internal decomposition method defined by subclasses.
+
+        Args:
+            reg (Sequence[RegRef]): subsystems the operation is acting on
+
+        Returns:
+            list[Command]: decomposition as a list of operations acting on specific subsystems
+        """
+        raise NotImplementedError('No decomposition available: {}'.format(self))
 
     def _apply(self, reg, backend, **kwargs):
         """Internal apply method. Uses numeric subsystem referencing.
@@ -575,10 +585,12 @@ class Measurement(Operation):
 
 
 class Decomposition(Operation):
-    """Abstract base class for decompositions.
+    """Abstract base class for multimode matrix transformations.
 
-    This class provides the base behaviour for decomposing various objects
+    This class provides the base behaviour for decomposing various multimode operations
     into a sequence of gates and state preparations.
+
+    The first parameter p[0] of the Decomposition is always a square matrix.
     """
 
     def merge(self, other):
@@ -694,6 +706,19 @@ class Gate(Transformation):
         s = copy.copy(self)
         s.dagger = not s.dagger
         return s
+
+    def decompose(self, reg):
+        """Decompose the operation into elementary operations supported by the backend API.
+
+        Like :func:`Operation.decompose`, but applies self.dagger.
+        """
+        seq = self._decompose(reg)
+        if self.dagger:
+            # apply daggers, reverse the Command sequence
+            for cmd in seq:
+                cmd.op.dagger = not cmd.op.dagger
+            seq = list(reversed(seq))
+        return seq
 
     def apply(self, reg, backend, hbar, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
@@ -1243,7 +1268,7 @@ class Pgate(Gate):
     def __init__(self, s):
         super().__init__([s])
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         # into a squeeze and a rotation
         temp = self.p[0] / 2
         r = arccosh(sqrt(1+temp**2))
@@ -1353,7 +1378,7 @@ class S2gate(Gate):
     def __init__(self, r, phi=0.):
         super().__init__([r, phi])
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         # two opposite squeezers sandwiched between 50% beamsplitters
         S = Sgate(self.p[0], self.p[1])
         BS = BSgate(pi/4, 0)
@@ -1382,7 +1407,7 @@ class CXgate(Gate):
     def __init__(self, s=1):
         super().__init__([s])
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         s = self.p[0]
         r = arcsinh(-s/2)
         theta = 0.5*arctan2(-1.0/cosh(r), -tanh(r))
@@ -1414,7 +1439,7 @@ class CZgate(Gate):
     def __init__(self, s=1):
         super().__init__([s])
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         # phase-rotated CZ
         CX = CXgate(self.p[0])
         return [
@@ -1598,7 +1623,7 @@ class Interferometer(Decomposition):
             self.BS1, self.BS2, self.R = clements(U, tol=tol)
             self.ns = U.shape[0]
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         cmds = []
 
         if not self.identity:
@@ -1653,7 +1678,7 @@ class GraphEmbed(Decomposition):
                 A, max_mean_photon=max_mean_photon, make_traceless=make_traceless, tol=tol)
             self.ns = self.U.shape[0]
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         cmds = []
 
         if not self.identity:
@@ -1747,7 +1772,7 @@ class GaussianTransform(Decomposition):
         self.ns = N
         self.vacuum = vacuum
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         cmds = []
 
         if self.active:
@@ -1833,6 +1858,7 @@ class Gaussian(Preparation, Decomposition):
             self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
 
         super().__init__([V, r])
+        # FIXME merge() probably does not work for Gaussians if r is not zero?
 
     def _apply(self, reg, backend, **kwargs):
         if self.decomp:
@@ -1843,7 +1869,7 @@ class Gaussian(Preparation, Decomposition):
         p = _unwrap(self.p)
         backend.prepare_gaussian_state(p[1], p[0], reg)
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         # pylint: disable=too-many-branches
         cmds = []
 

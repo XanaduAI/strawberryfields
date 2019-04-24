@@ -164,8 +164,8 @@ class Engine:
         """
         return self.backend.state(modes=modes, **kwargs)
 
-    def _run_program(self, prog, **kwargs):
-        """Execute a program on the local backend.
+    def _run_program_locally(self, prog, **kwargs):
+        """Execute a program on a local backend.
 
         This method should not be called directly.
 
@@ -188,7 +188,7 @@ class Engine:
                 try:
                     temp = cmd.op.decompose(cmd.reg)
                     # run the decomposition
-                    applied_cmds = self._run_command_list(temp)
+                    applied_cmds = self._run_program_locally(temp, **kwargs)
                     applied.extend(applied_cmds)
                 except NotImplementedError as err:
                     # simplify the error message by suppressing the previous exception
@@ -218,7 +218,7 @@ class Engine:
                 if self.run_progs:
                     prev = self.run_progs[-1]
                 else:
-                    # initialize the backend TODO where should this happen? c.f. the fixtures in convtest.py
+                    # initialize the backend TODO where should this happen? c.f. the fixtures in conftest.py
                     self.backend.begin_circuit(num_subsystems=p.init_num_subsystems, **self.kwargs)
 
                 if prev is not None and not p.can_follow(prev):
@@ -230,7 +230,7 @@ class Engine:
                 p.lock()
 
                 # TODO handle remote backends here, store measurement results in the RegRefs or maybe in the Engine object.
-                temp = self._run_program(p, **kwargs)
+                temp = self._run_program_locally(p, **kwargs)
                 self.run_progs.append(p)
         except Exception as e:
             # TODO reset the backend to the last checkpoint here?

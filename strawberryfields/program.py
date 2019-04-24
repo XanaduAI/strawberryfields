@@ -213,7 +213,11 @@ backend_database = {
         'Coherent': True,
         'Squeezed': True,
         'DisplacedSqueezed': True,
+        'Ket': True,
+        'DensityMatrix': True,
         'Fock': True,
+        'LossChannel': True,
+        'ThermalLossChannel': True,
         'Rgate': True,
         'Fouriergate': True,
         'Dgate': True,
@@ -238,6 +242,8 @@ backend_database = {
         'Coherent': True,
         'Squeezed': True,
         'DisplacedSqueezed': True,
+        'LossChannel': True,
+        'ThermalLossChannel': True,
         'Rgate': True,
         'Fouriergate': True,
         'Dgate': True,
@@ -496,10 +502,12 @@ class Program:
         self.name = name
         #: list[Command]: Commands constituting the quantum circuit in temporal order
         self.circuit = []
-        #: str: backend for which the circuit has been compiled
-        self.backend = None
         #: bool: True if no more Commands can be appended to the Program
         self.locked = False
+        #: str: backend for which the circuit has been compiled
+        self.backend = None
+        #: Program: for compiled programs, this is the original
+        self.source = None
 
         # create subsystem references
         if isinstance(num_subsystems, numbers.Integral):
@@ -649,7 +657,7 @@ class Program:
         """Finalize the program.
 
         When a Program is locked, no more Commands can be appended to it.
-        The locking happens when the program is run, or a successor Program is constructed,
+        The locking happens when the program is run, compiled, or a successor Program is constructed,
         in order to ensure that the RegRef state of the Program does not change anymore.
         """
         self.locked = True
@@ -747,6 +755,10 @@ class Program:
         The compilation step validates the program, making sure all the Operations used are accepted by the backend.
         Additionally it may decompose certain gates into sequences of simpler gates.
 
+        The compiled program shares its RegRefs with the original, which makes it easier to access the measurement
+        results, but also necessitates the locking of both the compiled program and the original to make sure the
+        RegRef state remains consistent.
+
         Args:
             backend (str): target backend
             optimize (bool): try to optimize the program by merging and canceling gates
@@ -782,11 +794,14 @@ class Program:
 
         self.lock()
         seq = compile_sequence(self.circuit)
-        # TODO for now the compilation happens in-place, i.e. it modifies self.
-        compiled = self
-        #compiled = copy.deepcopy(self)  # independent of the original
+        compiled = copy.copy(self)  # shares RegRefs with the source
         compiled.backend = backend
         compiled.circuit = seq
+        # link to the original source Program
+        if self.source is None:
+            compiled.source  = self
+        else:
+            compiled.source  = self.source
         if optimize:
             compiled.optimize()
         return compiled

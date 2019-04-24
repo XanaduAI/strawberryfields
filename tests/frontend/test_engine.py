@@ -135,7 +135,7 @@ class TestProgram:
 
         assert res == expected
 
-        state = eng.run(prog, compile=False)
+        state = eng.run(prog, compile=False)  # FIXME optimization can change gate order, however this is not a good way of avoiding it
         res = []
         eng.print_applied(print_fn)
         assert res == ["Run 0:"] + expected
@@ -230,7 +230,7 @@ class TestEngine:
         eng.run(prog)
         # one program has been run
         assert len(eng.run_progs) == 1
-        assert eng.run_progs[-1] == prog
+        assert eng.run_progs[-1].source == prog
 
     def test_reset(self, eng):
         """Running independent programs with an engine reset in between."""
