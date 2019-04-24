@@ -298,7 +298,6 @@ from scipy.special import factorial as fac
 
 from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
-from .engine import Engine
 from .program import (Program, Command, RegRefTransform, MergeFailure)
 from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
                          sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2,
@@ -400,7 +399,7 @@ class Operation:
         """
         # into a list of subsystems
         reg = _seq_to_list(reg)
-        if (not reg) or (self.ns != None and self.ns != len(reg)):
+        if (not reg) or (self.ns is not None and self.ns != len(reg)):
             raise ValueError("Wrong number of subsystems.")
         # send it to the engine
         reg = Program._current_context.append(self, reg)
@@ -525,12 +524,10 @@ class Preparation(Operation):
         # sequential preparation, only the last one matters
         if isinstance(other, Preparation):
             # give a warning, since this is pointless and probably a user error
-            warnings.warn(
-                'Two subsequent state preparations, first one has no effect.')
+            warnings.warn('Two subsequent state preparations, first one has no effect.')
             return other
-        else:
-            raise MergeFailure(
-                'For now, Preparations cannot be merged with anything else.')
+
+        raise MergeFailure('For now, Preparations cannot be merged with anything else.')
 
 
 class Measurement(Operation):
@@ -613,8 +610,8 @@ class Decomposition(Operation):
                 return self.__class__(U, hbar=self.hbar)
 
             return self.__class__(U)
-        else:
-            raise MergeFailure('Not the same decomposition type.')
+
+        raise MergeFailure('Not the same decomposition type.')
 
 
 class Transformation(Operation):
@@ -628,7 +625,6 @@ class Transformation(Operation):
     # to remove, and make Channel and Gate top-level derived classes.
     #
     # Are there any useful operations/properties shared by Gate/Channel?
-    pass
 
 
 # ====================================================================
@@ -663,8 +659,8 @@ class Channel(Transformation):
                 return self.__class__(T)
 
             return self.__class__(T, *self.p[1:])
-        else:
-            raise MergeFailure('Not the same operation family.')
+
+        raise MergeFailure('Not the same operation family.')
 
 
 class Gate(Transformation):
@@ -760,22 +756,22 @@ class Gate(Transformation):
             p0 = self.p[0] + temp
             if p0 == 0:
                 return None  # identity gate
+
+            # return a copy
+            # HACK: some of the subclass constructors only take a single parameter,
+            # some take two, none take three
+            if len(self.p) == 1:
+                temp = self.__class__(p0)
             else:
-                # return a copy
-                # HACK: some of the subclass constructors only take a single parameter,
-                # some take two, none take three
-                if len(self.p) == 1:
-                    temp = self.__class__(p0)
-                else:
-                    temp = self.__class__(p0, *self.p[1:])
-                # NOTE deepcopy would make copies of RegRefs inside a possible
-                # RegRefTransformation parameter, RegRefs must not be copied.
-                # OTOH copy results in temp having the same p list as self,
-                # which we would modify below.
-                #temp = copy.copy(self)
-                #temp.p[0] = p0
-                temp.dagger = self.dagger
-                return temp
+                temp = self.__class__(p0, *self.p[1:])
+            # NOTE deepcopy would make copies of RegRefs inside a possible
+            # RegRefTransformation parameter, RegRefs must not be copied.
+            # OTOH copy results in temp having the same p list as self,
+            # which we would modify below.
+            #temp = copy.copy(self)
+            #temp.p[0] = p0
+            temp.dagger = self.dagger
+            return temp
 
         if isinstance(other, self.__class__):
             # without knowing anything more specific about the gates, we
@@ -1721,9 +1717,6 @@ class GaussianTransform(Decomposition):
 
     Args:
         S (array): a :math:`2N\times 2N` symplectic matrix describing the Gaussian transformation.
-        hbar (float): the value of :math:`\hbar` used in the definition of the :math:`\x`
-            and :math:`\p` quadrature operators. Note that if used inside of an engine
-            context, the hbar value of the engine will override this keyword argument.
         vacuum (bool): set to True if acting on a vacuum state. In this case, :math:`O_2 V O_2^T = I`,
             and the unitary associated with orthogonal symplectic :math:`O_2` will be ignored.
         tol (float): the tolerance used when checking if the matrix is symplectic:
@@ -1731,17 +1724,8 @@ class GaussianTransform(Decomposition):
     """
     ns = None
 
-    def __init__(self, S, hbar=None, vacuum=False, tol=1e-10):
+    def __init__(self, S, vacuum=False, tol=1e-10):
         super().__init__([S])
-
-        try:
-            self.hbar = _Engine._current_context.hbar
-        except AttributeError:
-            if hbar is None:
-                raise ValueError("Either specify the hbar keyword argument, "
-                                 "or use this operator inside an engine context.")
-            else:
-                self.hbar = hbar
 
         N = S.shape[0]//2
 
@@ -1815,8 +1799,8 @@ class Gaussian(Preparation, Decomposition):
         r (array): a length :math:`2N` vector of means, of the
             form :math:`(\x_0,\dots,\x_{N-1},\p_0,\dots,\p_{N-1})`.
             If None, it is assumed that :math:`r=0`.
-        decomp (bool): if False, no decomposition is applied, and the specified modes
-            are explicity prepared in the provided Gaussian state.
+        decomp (bool): Should the operation be decomposed into a sequence of elementary gates?
+            If False, the state preparation is performed directly via the backend API.
         hbar (float): the value of :math:`\hbar` used in the definition of the :math:`\x`
             and :math:`\p` quadrature operators. Note that if used inside of an engine
             context, the hbar value of the engine will override this keyword argument.
@@ -1825,16 +1809,9 @@ class Gaussian(Preparation, Decomposition):
     # pylint: disable=too-many-instance-attributes
     ns = None
 
-    def __init__(self, V, r=None, decomp=True, hbar=None, tol=1e-6):
-        try:
-            self.hbar = _Engine._current_context.hbar
-        except AttributeError:
-            if hbar is None:
-                raise ValueError("Either specify the hbar keyword argument, "
-                                 "or use this operator inside an engine context.")
-            else:
-                self.hbar = hbar
-
+    def __init__(self, V, r=None, decomp=True, hbar=2, tol=1e-6):
+        # TODO NOTE: there is no contextual hbar value anymore, is the hbar actually necessary here?
+        self.hbar = hbar
         self.ns = V.shape[0]//2
 
         if r is None:
@@ -1843,18 +1820,15 @@ class Gaussian(Preparation, Decomposition):
         r = np.asarray(r)
 
         if len(r) != V.shape[0]:
-            raise ValueError(
-                'Vector of means must have the same length as the covariance matrix.')
+            raise ValueError('Vector of means must have the same length as the covariance matrix.')
 
         self.x_disp = r[:self.ns]
         self.p_disp = r[self.ns:]
 
-        self.decomp = False
+        self.decomp = decomp
         if decomp:
-            self.decomp = True
             th, self.S = williamson(V, tol=tol)
-            self.pure = np.abs(np.linalg.det(
-                V) - (self.hbar/2)**(2*self.ns)) < tol
+            self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < tol
             self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
 
         super().__init__([V, r])
@@ -1871,6 +1845,8 @@ class Gaussian(Preparation, Decomposition):
 
     def _decompose(self, reg):
         # pylint: disable=too-many-branches
+        if not self.decomp:
+            return None  # refuse to decompose
         cmds = []
 
         V = self.p[0].x
@@ -1912,8 +1888,7 @@ class Gaussian(Preparation, Decomposition):
                             Command(Thermal(nbar), reg[n], decomp=True))
 
             cmds.append(
-                Command(GaussianTransform(self.S, hbar=self.hbar,
-                                          vacuum=self.pure), reg, decomp=True)
+                Command(GaussianTransform(self.S, vacuum=self.pure), reg, decomp=True)
             )
 
         cmds += [Command(Xgate(u), reg[n], decomp=True)

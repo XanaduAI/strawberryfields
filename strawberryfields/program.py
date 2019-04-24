@@ -791,9 +791,13 @@ class Program:
                         # op not directly supported by the backend, try a decomposition instead
                         try:
                             temp = cmd.op.decompose(cmd.reg)
-                            # now compile the decomposition
-                            temp = compile_sequence(temp)
-                            compiled.extend(temp)
+                            if temp is None:
+                                # decomposition refused
+                                compiled.append(cmd)
+                            else:
+                                # now compile the decomposition
+                                temp = compile_sequence(temp)
+                                compiled.extend(temp)
                         except NotImplementedError as err:
                             # simplify the error message by suppressing the previous exception
                             raise err from None
