@@ -25,15 +25,15 @@ class TestMeasurement:
     @pytest.mark.backends("fock", "tf")
     def test_fock_measurement(self, setup_eng, tol):
         """Test Fock measurements return expected results"""
-        eng, q = setup_eng(2)
+        eng, prog = setup_eng(2)
         n = [2, 1]
 
-        with eng:
+        with prog.context as q:
             ops.Fock(n[0]) | q[0]
             ops.Fock(n[1]) | q[1]
             ops.Measure | q
 
-        eng.run()
+        eng.run(prog)
         assert np.all(q[0].val == n[0])
         assert np.all(q[1].val == n[1])
 
@@ -43,16 +43,16 @@ class TestMeasurement:
     @pytest.mark.backends("gaussian")
     def test_heterodyne(self, setup_eng, tol):
         """Test Fock measurements return expected results"""
-        eng, q = setup_eng(2)
+        eng, prog = setup_eng(2)
         a = [0.43 - 0.12j, 0.02 + 0.2j]
 
-        with eng:
+        with prog.context as q:
             ops.Coherent(a[0]) | q[0]
             ops.Coherent(a[1]) | q[1]
             ops.MeasureHD | q[0]
             ops.MeasureHD | q[1]
 
-        eng.run()
+        eng.run(prog)
 
         # Heterodyne measurements put the modes into vacuum state
         assert eng.backend.is_vacuum(tol)
@@ -67,13 +67,13 @@ class TestPostselection:
         x = 0.2
         r = 5
 
-        eng, q = setup_eng(2)
+        eng, prog = setup_eng(2)
 
-        with eng:
+        with prog.context as q:
             ops.S2gate(r) | q
             ops.MeasureHomodyne(0, select=x) | q[0]
 
-        eng.run()
+        eng.run(prog)
         assert np.allclose(q[0].val, x, atol=tol, rtol=0)
 
     @pytest.mark.backends("gaussian")
@@ -83,13 +83,13 @@ class TestPostselection:
         alpha = 0.43 - 0.12j
         r = 5
 
-        eng, q = setup_eng(2)
+        eng, prog = setup_eng(2)
 
-        with eng:
+        with prog.context as q:
             ops.S2gate(r) | q
             ops.MeasureHeterodyne(select=alpha) | q[0]
 
-        eng.run()
+        eng.run(prog)
         assert np.allclose(q[0].val, alpha, atol=tol, rtol=0)
 
     @pytest.mark.backends("fock", "tf")
@@ -97,22 +97,20 @@ class TestPostselection:
         """Test that Fock post-selection on Fock states
         exiting one arm of a beamsplitter results in conservation
         of photon number in the other. """
-        eng, q = setup_eng(2)
-
-        for n in range(cutoff - 1):
-            total_photons = cutoff - 1
-
-            with eng:
+        total_photons = cutoff - 1
+        for n in range(cutoff):
+            eng, prog = setup_eng(2)
+            with prog.context as q:
                 ops.Fock(n) | q[0]
                 ops.Fock(total_photons - n) | q[1]
                 ops.BSgate() | q
-                ops.MeasureFock(select=cutoff // 2) | q[0]
+                ops.MeasureFock(select=n//2) | q[0]
                 ops.MeasureFock() | q[1]
 
-            eng.run()
+            eng.run(prog, compile=False)  # FIXME measurements above commute, but they should not since the postselection may fail if the other one is performed first!
             photons_out = sum([i.val for i in q])
 
             if batch_size is not None:
-                total_photons = np.tile(total_photons, batch_size)
-
-            assert np.all(photons_out == total_photons)
+                assert np.all(photons_out == np.tile(total_photons, batch_size))
+            else:
+                assert np.all(photons_out == total_photons)

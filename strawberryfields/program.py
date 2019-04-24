@@ -216,6 +216,8 @@ backend_database = {
         'Ket': True,
         'DensityMatrix': True,
         'Fock': True,
+        'Catstate': True,
+        'Thermal': True,
         'LossChannel': True,
         'ThermalLossChannel': True,
         'Rgate': True,
@@ -232,6 +234,10 @@ backend_database = {
         'CZgate': False,
         'CKgate': True,
         'S2gate': False,  # use a decomposition
+        'Interferometer': False,
+        'GraphEmbed': False,
+        'Gaussian': False,
+        'GaussianTransform': False,
         'MeasureHomodyne': True,
         'MeasureFock': True,
     },
@@ -242,6 +248,7 @@ backend_database = {
         'Coherent': True,
         'Squeezed': True,
         'DisplacedSqueezed': True,
+        'Thermal': True,
         'LossChannel': True,
         'ThermalLossChannel': True,
         'Rgate': True,
@@ -255,7 +262,12 @@ backend_database = {
         'CXgate': False,
         'CZgate': False,
         'S2gate': False,  # use a decomposition
+        'Interferometer': False,
+        'GraphEmbed': False,
+        'Gaussian': False,
+        'GaussianTransform': False,
         'MeasureHomodyne': True,
+        'MeasureHeterodyne': True,
     },
 }
 backend_database['tf'] = backend_database['fock']  # tf can do the same things as fock
@@ -267,7 +279,6 @@ class RegRefError(IndexError):
 
     E.g., trying to apply a gate to a nonexistent or deleted subsystem.
     """
-    pass
 
 class CircuitError(RuntimeError):
     """Exception raised by :class:`Program` when it encounters an illegal
@@ -275,7 +286,6 @@ class CircuitError(RuntimeError):
 
     E.g., trying to use a measurement result before it is available.
     """
-    pass
 
 class MergeFailure(RuntimeError):
     """Exception raised by :meth:`strawberryfields.ops.Operation.merge` when an
@@ -283,7 +293,6 @@ class MergeFailure(RuntimeError):
 
     E.g., trying to merge two gates of different families.
     """
-    pass
 
 
 class Command:
@@ -799,9 +808,9 @@ class Program:
         compiled.circuit = seq
         # link to the original source Program
         if self.source is None:
-            compiled.source  = self
+            compiled.source = self
         else:
-            compiled.source  = self.source
+            compiled.source = self.source
         if optimize:
             compiled.optimize()
         return compiled
