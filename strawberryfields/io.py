@@ -32,9 +32,6 @@ Code details
 """
 # pylint: disable=protected-access,too-many-nested-blocks
 import os
-
-from numpy.compat import os_PathLike
-
 import blackbird
 
 from . import ops
@@ -128,9 +125,9 @@ def to_program(bb):
         for op in bb.operations:
             try:
                 if 'args' in op:
-                    getattr(ops, op["op"])(*op["args"], **op["kwargs"]) | [q[i] for i in op["modes"]]
+                    getattr(ops, op["op"])(*op["args"], **op["kwargs"]) | [q[i] for i in op["modes"]] #pylint:disable=expression-not-assigned
                 else:
-                    getattr(ops, op["op"]) | [q[i] for i in op["modes"]]
+                    getattr(ops, op["op"]) | [q[i] for i in op["modes"]] #pylint:disable=expression-not-assigned
             except AttributeError:
                 raise NameError("Quantum operation {} not defined!".format(op["op"]))
 
