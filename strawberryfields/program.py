@@ -308,7 +308,7 @@ class Command:
     """
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, op, reg, decomp=False):
+    def __init__(self, op, reg):
         # accept a single RegRef in addition to a Sequence
         if not isinstance(reg, Sequence):
             reg = [reg]
@@ -317,8 +317,6 @@ class Command:
         self.op = op
         #: Sequence[RegRef]: subsystems to which the operation is applied
         self.reg = reg
-        #: bool: is this Command a part of a decomposition?
-        self.decomp = decomp
 
     def __str__(self):
         """Print the command using Blackbird syntax."""
