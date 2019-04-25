@@ -88,31 +88,30 @@ Decorators
 ----------
 
 The :class:`~.strawberryfields.utils.operation` decorator allows functions containing quantum operations
-acting on a qumode to be used as an operation itself within an engine context.
+acting on a qumode to be used as an operation itself within a :class:`.Program` context.
 
 .. autosummary::
    operation
 
 
-Engine functions
-----------------
+Program functions
+-----------------
 
-These functions act on instances of a compiler :class:`~.strawberryfields.engine.Engine`, returning
-or extracting information from the queued engine operations.
+These functions act on :class:`.Program` instances, returning
+or extracting information from the quantum circuit.
 
-For example, these might be used directly on the engine object as follows:
+For example, these might be used as follows:
 
 .. code-block:: python
 
-    eng, q = sf.Engine(2)
-
-    with eng:
+    prog = sf.Program(2)
+    with prog.context as q:
         BSgate(0.543, 0.123) | (q[0], q[1])
 
-    U = extract_unitary(eng, cutoff_dim=10)
+    U = extract_unitary(prog, cutoff_dim=10)
 
-In this example, ``U`` is an array representing the unitary operation in the
-Fock basis of the queued engine operations (here, a single beamsplitter).
+In this example, ``U`` is a unitary array representing the quantum circuit `prog`
+in the Fock basis (here, a single beamsplitter).
 
 
 .. autosummary::
@@ -121,31 +120,25 @@ Fock basis of the queued engine operations (here, a single beamsplitter).
     extract_unitary
     extract_channel
 
-.. note::
-
-    These functions act on an engine with *queued* operations. If the engine has already
-    been run via ``eng.run()``, then the queue will be empty and these functions will
-    simply be acting on an empty circuit (i.e., the identity).
-
 
 Code details
 ~~~~~~~~~~~~
 
 """
 import collections
+import copy
 from inspect import signature
 
 import tensorflow as tf
 import numpy as np
 from numpy.random import randn
-from numpy.polynomial.hermite import hermval as H
-
+from numpy.polynomial.hermite import hermval
 import scipy as sp
 from scipy.special import factorial as fac
 
-from .program import _convert
-from .backends import load_backend
-from .ops import Command, Gate, Channel, Ket
+import strawberryfields as sf
+from .program import _convert, Command
+from .ops import Gate, Channel, Ket
 # pylint: disable=abstract-method,ungrouped-imports,
 
 # ------------------------------------------------------------------------
@@ -155,7 +148,7 @@ from .ops import Command, Gate, Channel, Ket
 
 @_convert
 def neg(x):
-    r"""Negates a measured mode value.
+    r"""Negates a measured value.
 
     Args:
         x (RegRef): mode that has been previously measured
@@ -165,7 +158,7 @@ def neg(x):
 
 @_convert
 def mag(x):
-    r"""Returns the magnitude :math:`|z|` of a measured mode value.
+    r"""Returns the magnitude :math:`|z|` of a measured value.
 
     Args:
         x (RegRef): mode that has been previously measured
@@ -175,7 +168,7 @@ def mag(x):
 
 @_convert
 def phase(x):
-    r"""Returns the phase :math:`\phi` of a measured mode value :math:`z=re^{i\phi}`.
+    r"""Returns the phase :math:`\phi` of a measured value :math:`z=re^{i\phi}`.
 
     Args:
         x (RegRef): mode that has been previously measured
@@ -184,7 +177,7 @@ def phase(x):
 
 
 def scale(x, a):
-    r"""Scales the value of a measured mode by factor ``a``.
+    r"""Scales the measured value by factor ``a``.
 
     Args:
         x (RegRef): mode that has been previously measured
@@ -198,7 +191,7 @@ def scale(x, a):
 
 
 def shift(x, b):
-    r"""Shifts the value of a measured mode by factor ``b``.
+    r"""Shifts the measured value by factor ``b``.
 
     Args:
         x (RegRef): mode that has been previously measured
@@ -212,7 +205,7 @@ def shift(x, b):
 
 
 def scale_shift(x, a, b):
-    r"""Scales the value of a measured mode by factor ``a`` then shifts the result by ``b``.
+    r"""Scales the measured value by factor ``a`` then shifts the result by ``b``.
 
     .. math:: u' = au + b
 
@@ -229,7 +222,7 @@ def scale_shift(x, a, b):
 
 
 def power(x, a):
-    r"""Raises the value of a measured mode to power a.
+    r"""Raises the measured value to power ``a``.
 
     Args:
         x (RegRef): mode that has been previously measured
@@ -451,7 +444,7 @@ def displaced_squeezed_state(a, r, phi, basis='fock', fock_dim=5, hbar=2.):
                  for n in range(fock_dim)]
             )
 
-            vec = [H(gamma/np.sqrt(phase_factor*np.sinh(2*r)), row)
+            vec = [hermval(gamma/np.sqrt(phase_factor*np.sinh(2*r)), row)
                    for row in coeff]
 
             state = N*np.array(vec)
@@ -534,7 +527,7 @@ def randnc(*arg):
 
 
 def random_covariance(N, hbar=2, pure=False):
-    r"""Returns a random covariance matrix.
+    r"""Random covariance matrix.
 
     Args:
         N (int): number of modes
@@ -557,7 +550,7 @@ def random_covariance(N, hbar=2, pure=False):
 
 
 def random_symplectic(N, passive=False):
-    r"""Returns a random symplectic matrix representing a Gaussian transformation.
+    r"""Random symplectic matrix representing a Gaussian transformation.
 
     The squeezing parameters :math:`r` for active transformations are randomly
     sampled from the standard normal distribution, while passive transformations
@@ -587,7 +580,7 @@ def random_symplectic(N, passive=False):
 
 
 def random_interferometer(N):
-    r"""Returns a random unitary matrix representing an interferometer.
+    r"""Random unitary matrix representing an interferometer.
 
     For more details, see :cite:`mezzadri2006`.
 
@@ -611,7 +604,7 @@ def random_interferometer(N):
 
 class operation:
     """Groups a sequence of gates into a single operation to be used
-    within an engine context.
+    within a Program context.
 
     For example:
 
@@ -627,24 +620,24 @@ class operation:
     operation acts on.
 
     The function it acts on can contain arbitrary
-    Python and blackbird code that may normally be placed within an
-    engine context. Note that it must always accept the qumode register
+    Python and Blackbird code that may normally be placed within a
+    Program context. Note that it must always accept the register
     ``q`` it acts on as the *last* argument of the function.
 
     Once defined, it can be used like any other quantum operation:
 
     .. code-block:: python
 
-        eng, q = sf.Engine(3)
-        with eng:
+        prog = sf.Program(3)
+        with prog.context as q:
             custom_operation(0.5719, 2.0603) | (q[0], q[1], q[3])
 
-    Note that here, we do not pass the qumode register ``q`` directly
+    Note that here, we do not pass the register ``q`` directly
     to the function - instead, it is defined on the right hand side
-    of the ``|`` operation, like all other blackbird code.
+    of the ``|`` operation, like all other Blackbird code.
 
     Args:
-        ns (int): number of registers required by the operation
+        ns (int): number of subsystems required by the operation
     """
 
     def __init__(self, ns):
@@ -716,33 +709,30 @@ class operation:
 
 
 #=================================================
-# Engine functions
+# Program functions
 #=================================================
 
 
-def is_unitary(engine):
-    """Returns True if every command in the queue is of type :class:`strawberryfields.ops.Gate`.
+def is_unitary(prog):
+    """True iff all the operations in the program are unitary.
 
     Args:
-        engine (Engine): a Strawberry Fields engine instance
-
+        prog (Program): quantum program
     Returns:
-        bool: returns True if all queued operations are unitary
+        bool: True iff all operations in the program are of type :class:`strawberryfields.ops.Gate`
     """
-    return all(isinstance(cmd.op, Gate) for cmd in engine.cmd_queue)
+    return all(isinstance(cmd.op, Gate) for cmd in prog.circuit)
 
 
-def is_channel(engine):
-    """Returns true if every command in the queue is either of type :class:`strawberryfields.ops.Gate`
-    or type :class:`strawberryfields.ops.Channel`.
+def is_channel(prog):
+    """True iff all the operations in the program can be represented as quantum channels.
 
     Args:
-        engine (Engine): a Strawberry Fields engine instance
-
+        prog (Program): quantum program
     Returns:
-        bool: returns True if all queued operations are either a quantum gate or a channel
+        bool: True if all operations in the program are of types :class:`strawberryfields.ops.Gate` and :class:`strawberryfields.ops.Channel`
     """
-    return all(isinstance(cmd.op, (Channel, Gate)) for cmd in engine.cmd_queue)
+    return all(isinstance(cmd.op, (Channel, Gate)) for cmd in prog.circuit)
 
 
 def _vectorize(tensor):
@@ -823,63 +813,67 @@ def _unvectorize(tensor, num_subsystems):
     return transposed_back
 
 
-def _interleaved_identities(num_subsystems: int, cutoff_dim: int):
-    """Returns the tensor product of ``num_subsystems`` copies of the identity matrix with the indices interleaved.
+def _interleaved_identities(n: int, cutoff_dim: int):
+    r"""Maximally entangled state of `n` modes.
 
-    For example, when ``num_subsystems=3``, this function creates the tensor product of
-    three identity matrices :math:`I_{ijklmn}` (where :math:`ij`, :math:`kl`, and :math:`mn`
-    are the three sets of indices), and returns the tensor :math:`I_{ikmjln}`.
+    Returns the tensor :math:`\sum_{abc\ldots} \ket{abc\ldots}\bra{abc\ldots}`
+    representing an unnormalized, maximally entangled state of `n` subsystems.
 
     Args:
-        num_subsystems (int): number of subsystems to consider
-        cutoff_dim (int): the Fock basis truncation
+        n (int): number of subsystems
+        cutoff_dim (int): Fock basis truncation dimension
 
     Returns:
-        array: the resulting interleaved identity tensor product
+        array: unnormalized maximally entangled state, shape == (cutoff_dim,) * (2*n)
     """
     I = np.identity(cutoff_dim)
-    for _ in range(1, num_subsystems):
-        I = np.tensordot(I, np.identity(cutoff_dim), axes=0)
+    temp = I
+    for _ in range(1, n):
+        temp = np.tensordot(temp, I, axes=0)
 
-    # This is just some index gymnastics, the listcomp creates a sequence that advances by alternating steps like so:
-    # for num_subsystems=3 it's [0, 3, 1, 4, 2, 5]
-    # for num_subsystems=4 it's [0, 4, 1, 5, 2, 6, 3, 7]
-    # for num_subsystems=5 it's [0, 5, 1, 6, 2, 7, 3, 8, 4, 9]
-    # and so on...
-    return np.einsum(I, [int(n) for n in np.arange(2*num_subsystems).reshape((2, num_subsystems)).T.reshape([-1])])
+    # use einsum to permute the indices such that |a><a|*|b><b|*|c><c|*... becomes |abc...><abc...|
+    sublist = [int(n) for n in np.arange(2*n).reshape((2, n)).T.reshape([-1])]
+    return np.einsum(temp, sublist)
 
 
-def _engine_with_CJ_cmd_queue(engine, cutoff_dim: int):
-    """Doubles the number of modes of an engine object and prepends to its command queue
-    the operation that creates the interleaved identities ket.
+def _program_in_CJ_rep(prog, cutoff_dim: int):
+    """Convert a Program object to Choi-Jamiolkowski representation.
 
-    Here, CJ is from Choi-Jamiolkowski, as under the hood we are expliting the CJ isomorphism.
+    Doubles the number of modes of a Program object and prepends to its circuit
+    the preparation of the maximally entangled ket state.
+
+    The core idea is that when we apply any quantum channel (e.g. a unitary gate)
+    to the density matrix of the maximally entangled state, we obtain the Choi matrix
+    of the channel as the result.
+
+    If the channel is unitary, applying it on the maximally entangled ket yields
+    the corresponding unitary matrix, reshaped.
 
     Args:
-        engine (Engine): a Strawberry Fields engine instance
+        prog (Program): quantum program
         cutoff_dim (int): the Fock basis truncation
 
     Returns:
-        strawberryfields.engine.Engine: returns the same Engine instance, with the number of subsystems
-        increased and the interleaved identities ket prepended to the queue
-
+        Program: modified program
     """
-    N = engine.init_num_subsystems
-    engine._add_subsystems(N) # pylint: disable=protected-access
-    I = _interleaved_identities(num_subsystems=N, cutoff_dim=cutoff_dim)
-    engine.cmd_queue = [Command(Ket(I), list(engine.reg_refs.values()))] + engine.cmd_queue
-    return engine
+    prog = copy.deepcopy(prog)
+    N = prog.init_num_subsystems
+    prog._add_subsystems(N) # pylint: disable=protected-access
+    prog.init_num_subsystems = 2*N
+    I = _interleaved_identities(N, cutoff_dim)
+    # prepend the circuit with the I ket preparation
+    prog.circuit.insert(0, Command(Ket(I), list(prog.reg_refs.values())))
+    return prog
 
 
-def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, backend: str = 'fock'):
-    r"""Returns the array representation of a queued unitary circuit
-    as a NumPy ndarray (``'fock'`` backend) or as a TensorFlow Tensor (``'tf'`` backend).
+def extract_unitary(prog, cutoff_dim: int, vectorize_modes: bool = False, backend: str = 'fock'):
+    r"""Numerical array representation of a unitary quantum circuit.
 
     Note that the circuit must only include operations of the :class:`strawberryfields.ops.Gate` class.
 
     * If ``vectorize_modes=True``, it returns a matrix.
     * If ``vectorize_modes=False``, it returns an operator with :math:`2N` indices,
-      where N is the number of modes that the engine is created with. Adjacent
+      where N is the number of modes that the Program is created with. Adjacent
       indices correspond to output-input pairs of the same mode.
 
 
@@ -888,63 +882,58 @@ def extract_unitary(engine, cutoff_dim: int, vectorize_modes: bool = False, back
         computing the output given by one photon at each input (notice the order of the indices: :math:`[out_1, in_1, out_2, in_2,\dots]`).
         The result tells us that the two photons always emerge together from a random output port and never one per port.
 
-    >>> engine, (A, B) = sf.Engine(num_subsystems=2)
-    >>> with engine:
-    >>>     BSgate(np.pi/4) | (A, B)
-    >>> U = extract_unitary(engine, cutoff_dim=3)
+    >>> prog = sf.Program(num_subsystems=2)
+    >>> with prog.context as q:
+    >>>     BSgate(np.pi/4) | q
+    >>> U = extract_unitary(prog, cutoff_dim=3)
     >>> print(abs(U[:,1,:,1])**2)
     [[0.  0.  0.5]
      [0.  0.  0. ]
      [0.5 0.  0. ]])
 
     Args:
-        engine (Engine): the engine containing a queued circuit
+        prog (Program): quantum program
         cutoff_dim (int): dimension of each index
         vectorize_modes (bool): if True, reshape input and output modes in order to return a matrix
         backend (str): the backend to build the unitary; ``'fock'`` (default) and ``'tf'`` are supported
 
     Returns:
-        array: the numerical array of the unitary circuit
+        array, tf.Tensor: numerical array of the unitary circuit
+            as a NumPy ndarray (``'fock'`` backend) or as a TensorFlow Tensor (``'tf'`` backend)
 
     Raises:
         TypeError: if the operations used to construct the circuit are not all unitary
     """
 
-    if not is_unitary(engine):
+    if not is_unitary(prog):
         raise TypeError("The circuit definition contains elements that are not of type Gate")
 
     if backend not in ('fock', 'tf'):
         raise ValueError("Only 'fock' and 'tf' backends are supported")
 
-    from copy import deepcopy
-
-    # This is an independent copy of the engine object, with an additional Command at the beginning
-    # of the cmd_queue which creates a ket made of identities.
-    # The core idea is that when we apply the unitary to the "identity" ket
-    # we obtain the unitary itself as the result.
-    _engine = _engine_with_CJ_cmd_queue(deepcopy(engine), cutoff_dim=cutoff_dim)
-
-    _backend = load_backend(backend) # (!) _backend is the object, backend is just 'fock' or 'tf'
-    _backend.begin_circuit(num_subsystems=_engine.num_subsystems, cutoff_dim=cutoff_dim, hbar=_engine.hbar, pure=True)
-    result = _engine.run(_backend, cutoff_dim=cutoff_dim).ket()
-
-    N = _engine.init_num_subsystems
+    N = prog.init_num_subsystems
+    # extract the unitary matrix by running a modified version of the Program
+    p = _program_in_CJ_rep(prog, cutoff_dim)
+    eng = sf.Engine(backend, cutoff_dim=cutoff_dim, pure=True)
+    result = eng.run(p).ket()
 
     if vectorize_modes:
         if backend == 'fock':
-            return np.reshape(result, [cutoff_dim**N, cutoff_dim**N])
-
-        return tf.reshape(result, [cutoff_dim**N, cutoff_dim**N])
+            reshape = np.reshape
+        else:
+            reshape = tf.reshape
+        return reshape(result, [cutoff_dim**N, cutoff_dim**N])
 
     # here we rearrange the indices to go back to the order [in1, out1, in2, out2, etc...]
     if backend == 'fock':
-        return np.transpose(result, [int(n) for n in np.arange(2*N).reshape((2, N)).T.reshape([-1])])
+        tp = np.transpose
+    else:
+        tp = tf.transpose
+    return tp(result, [int(n) for n in np.arange(2*N).reshape((2, N)).T.reshape([-1])])
 
-    return tf.transpose(result, [int(n) for n in np.arange(2*N).reshape((2, N)).T.reshape([-1])])
 
-
-def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vectorize_modes: bool = False):
-    r"""Returns a numerical array representation of a channel from a queued Engine circuit.
+def extract_channel(prog, cutoff_dim: int, representation: str = 'choi', vectorize_modes: bool = False):
+    r"""Numerical array representation of the channel corresponding to a quantum circuit.
 
     The representation choices include the Choi state representation, the Liouville representation, and
     the Kraus representation.
@@ -965,7 +954,7 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
       - ``representation='choi'`` and ``representation='liouville'`` return an array
         with :math:`4N` indices
       - ``representation='kraus'`` returns an array of Kraus operators with :math:`2N` indices each,
-        where :math:`N` is the number of modes that the engine is created with
+        where :math:`N` is the number of modes that the Program is created with
 
     Note that the Kraus representation automatically returns only the non-zero Kraus operators.
     One can reduce the number of operators by discarding Kraus operators with small norm (thus approximating the channel).
@@ -1055,8 +1044,8 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
         Here we show that the Choi operator of the identity channel is proportional to
         a maximally entangled Bell :math:`\ket{\phi^+}` state:
 
-    >>> engine, A = sf.Engine(num_subsystems=1)
-    >>> C = extract_channel(engine, cutoff_dim=2, representation='choi')
+    >>> prog = sf.Program(num_subsystems=1)
+    >>> C = extract_channel(prog, cutoff_dim=2, representation='choi')
     >>> print(abs(C).reshape((4,4)))
     [[1. 0. 0. 1.]
      [0. 0. 0. 0.]
@@ -1064,30 +1053,26 @@ def extract_channel(engine, cutoff_dim: int, representation: str = 'choi', vecto
      [1. 0. 0. 1.]]
 
     Args:
-        engine (Engine): the engine containing the circuit
+        prog (Program): program containing the circuit
         cutoff_dim (int): dimension of each index
         representation (str): choice between ``'choi'``, ``'liouville'`` or ``'kraus'``
         vectorize_modes (bool): if True, reshapes the result into rank-4 tensor,
             otherwise it returns a rank-4N tensor, where N is the number of modes
 
     Returns:
-        the numerical array of the channel, according to the specified representation
-        and vectorization options
+        array: channel, according to the specified options
 
     Raises:
         TypeError: if the gates used to construct the circuit are not all unitary or channels
     """
-    if not is_channel(engine):
+    if not is_channel(prog):
         raise TypeError("The circuit definition contains elements that are neither of type Gate nor of type Channel")
 
-    from copy import deepcopy
+    N = prog.init_num_subsystems
+    p = _program_in_CJ_rep(prog, cutoff_dim)
 
-    _engine = _engine_with_CJ_cmd_queue(deepcopy(engine), cutoff_dim=cutoff_dim)
-    N = _engine.init_num_subsystems
-
-    backend = load_backend('fock')
-    backend.begin_circuit(num_subsystems=_engine.num_subsystems, cutoff_dim=cutoff_dim, hbar=_engine.hbar, pure=True)
-    choi = _engine.run(backend, cutoff_dim=cutoff_dim).dm()
+    eng = sf.Engine('fock', cutoff_dim=cutoff_dim, pure=True)
+    choi = eng.run(p).dm()
     choi = np.einsum('abcd->cdab', _vectorize(choi))
 
     if representation.lower() == 'choi':
