@@ -18,7 +18,8 @@ Default parameters, environment variables, fixtures, and common routines for the
 import os
 import pytest
 
-from strawberryfields import Engine
+from strawberryfields.engine import Engine
+from strawberryfields.program import Program
 from strawberryfields.backends.base import BaseBackend
 from strawberryfields.backends.fockbackend import FockBackend
 from strawberryfields.backends.gaussianbackend import GaussianBackend
@@ -101,6 +102,7 @@ def backend(monkeypatch):
         m.setattr(dummy_backend, "measure_homodyne", lambda phi, modes, select: 5)
         m.setattr(dummy_backend, "state", lambda modes: None)
         m.setattr(dummy_backend, "reset", lambda: None)
+        dummy_backend.get_cutoff_dim = lambda: 6
         yield dummy_backend
 
 
@@ -126,7 +128,10 @@ def setup_backend(
 ):  # pylint: disable=redefined-outer-name
     """Parameterized fixture, used to automatically create a backend of certain number of modes.
 
-    Every test that uses this fixture, or a fixture that depends on it (such as ``setup_eng``)
+    This fixture should only be used in backend tests, as it bypasses Engine and
+    initializes the backend directly.
+
+    Every test that uses this fixture, or a fixture that depends on it
     will be run three times, one for each backend.
 
     To explicitly mark a test to only work on certain backends, you may
@@ -149,15 +154,45 @@ def setup_backend(
     return _setup_backend
 
 
-@pytest.fixture
-def setup_eng(setup_backend):  # pylint: disable=redefined-outer-name
-    """Parameterized fixture, used to automatically create an engine with certain number of modes"""
+@pytest.fixture(
+    params=[
+        pytest.param('fock', marks=pytest.mark.fock),
+        pytest.param('gaussian', marks=pytest.mark.gaussian),
+        pytest.param('tf', marks=pytest.mark.tf),
+    ]
+)
+def setup_backend_pars(
+    request, cutoff, hbar, pure, batch_size
+):  # pylint: disable=redefined-outer-name
+    """Parameterized fixture, a container for the backend parameters.
 
-    def _setup_eng(num_subsystems):
+    Every test that uses this fixture, or a fixture that depends on it
+    will be run three times, one for each backend.
+
+    To explicitly mark a test to only work on certain backends, you may
+    use the ``@pytest.mark.backends()`` fixture. For example, for a test that
+    only works on the TF and Fock backends, ``@pytest.mark.backends('tf', 'fock').
+    """
+
+    return {
+        'backend_name': request.param,
+        'cutoff_dim': cutoff,
+        'hbar': hbar,
+        'pure': pure,
+        'batch_size': batch_size,
+    }
+
+
+@pytest.fixture
+def setup_eng(setup_backend_pars):  # pylint: disable=redefined-outer-name
+    """Parameterized fixture, used to automatically create an Engine and a Program with a certain number of modes."""
+
+    def _setup_eng(num_subsystems, **kwargs):
         """Factory function"""
-        eng, q = Engine(num_subsystems)
-        eng.backend = setup_backend(num_subsystems)
-        return eng, q
+        prog = Program(num_subsystems)
+        setup_backend_pars.update(kwargs)  # override defaults with kwargs
+        eng = Engine(backend=setup_backend_pars['backend_name'], **setup_backend_pars)
+        return eng, prog
 
     return _setup_eng
 

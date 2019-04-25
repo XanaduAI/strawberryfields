@@ -25,14 +25,15 @@ Overview
 |
 
 The Strawberry Fields codebase includes a number of complementary components.
-These can be separated into frontend components (:file:`engine.py`, :file:`ops.py`,
-and :file:`utils.py`) and backend components (all found within the :file:`strawberryfields.backends` submodule).
+These can be separated into frontend components
+and backend components (all found within the :file:`strawberryfields.backends` submodule).
 
 Software components
 -------------------
 
 **Frontend:**
 
+* Quantum programs: :mod:`strawberryfields.program`
 * Quantum compiler engine: :mod:`strawberryfields.engine`
 * Quantum operations: :mod:`strawberryfields.ops`
 * Utilities: :mod:`strawberryfields.utils`
@@ -50,7 +51,6 @@ Top-level functions
 -------------------
 
 .. autosummary::
-   Engine
    convert
    version
 
@@ -58,12 +58,11 @@ Code details
 ~~~~~~~~~~~~
 """
 
-from __future__ import unicode_literals
 from ._version import __version__
-from .engine import Engine as _Engine
-from .engine import _convert as convert
+from .program import (Program, _convert as convert)
+from .engine import Engine
 
-__all__ = ['Engine', 'convert', 'version']
+__all__ = ['Engine', 'Program', 'convert', 'version']
 
 
 def version():
@@ -74,22 +73,3 @@ def version():
       str: package version number
     """
     return __version__
-
-
-def Engine(num_subsystems, **kwargs):
-    r"""
-    Helper function for creating an engine and associated quantum register.
-
-    Args:
-      num_subsystems (int): number of subsystems in the quantum register
-    Keyword Args:
-      hbar (float): The value of :math:`\hbar` to initialise the engine with, depending on the
-        conventions followed. By default, :math:`\hbar=2`. See
-        :ref:`conventions` for more details.
-
-    Returns:
-        (strawberryFields.engine.Engine, tuple[RegRef]): tuple containing (i) a Strawberry Fields Engine object, and (ii) a tuple of quantum register references
-
-    """
-    eng = _Engine(num_subsystems, **kwargs)
-    return eng, eng.register

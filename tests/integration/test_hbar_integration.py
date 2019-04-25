@@ -37,18 +37,18 @@ class TestIntegration:
     def test_squeeze_variance_frontend(self, setup_eng, hbar, tol):
         """test homodyne measurement of a squeeze state is correct,
         returning a variance of np.exp(-2*r)*h/2, via the frontend"""
-        eng, q = setup_eng(1)
+        eng, prog = setup_eng(1)
 
-        with eng:
+        with prog.context as q:
             ops.Sgate(R) | q
             ops.MeasureX | q
 
         res = np.empty(0)
 
         for i in range(N_MEAS):
-            eng.reset(keep_history=True)
-            eng.run()
+            eng.run(prog)
             res = np.append(res, q[0].val)
+            eng.reset()
 
         assert np.allclose(
             np.var(res), np.exp(-2 * R) * hbar / 2, atol=STD_10 + tol, rtol=0
@@ -57,12 +57,12 @@ class TestIntegration:
     @pytest.mark.backends("gaussian")
     def test_x_displacement(self, setup_eng, hbar, tol):
         """test x displacement on the Gaussian backend gives correct displacement"""
-        eng, q = setup_eng(1)
+        eng, prog = setup_eng(1)
 
-        with eng:
+        with prog.context as q:
             ops.Xgate(X) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         mu_x = state.means()[0]
 
         assert state.hbar == hbar
@@ -71,12 +71,12 @@ class TestIntegration:
     @pytest.mark.backends("gaussian")
     def test_z_displacement(self, setup_eng, hbar, tol):
         """test x displacement on the Gaussian backend gives correct displacement"""
-        eng, q = setup_eng(1)
+        eng, prog = setup_eng(1)
 
-        with eng:
+        with prog.context as q:
             ops.Zgate(P) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         mu_z = state.means()[1]
 
         assert state.hbar == hbar

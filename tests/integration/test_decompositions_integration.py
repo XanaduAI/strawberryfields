@@ -69,32 +69,32 @@ class TestGaussianBackendDecompositions:
 
     def test_covariance_random_state_mixed(self, setup_eng, V_mixed, tol):
         """Test applying a mixed covariance state"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(V_mixed) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         assert np.allclose(state.cov(), V_mixed, atol=tol)
 
     def test_covariance_random_state_pure(self, setup_eng, V_pure, tol):
         """Test applying a pure covariance state"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(V_pure) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         assert np.allclose(state.cov(), V_pure, atol=tol)
 
     def test_gaussian_transform(self, setup_eng, hbar, tol):
         """Test applying a Gaussian symplectic transform"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
 
-        with eng:
+        with prog.context as q:
             ops.GaussianTransform(S) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         assert np.allclose(state.cov(), S @ S.T * hbar / 2, atol=tol)
 
     def test_graph_embed(self, setup_eng, tol):
@@ -102,12 +102,12 @@ class TestGaussianBackendDecompositions:
         results in the property Amat/A = c J, where c is a real constant,
         and J is the all ones matrix"""
         N = 3
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
 
-        with eng:
+        with prog.context as q:
             ops.GraphEmbed(A) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         Amat = eng.backend.circuit.Amat()
 
         # check that the matrix Amat is constructed to be of the form
@@ -122,61 +122,67 @@ class TestGaussianBackendDecompositions:
 
     def test_graph_embed_identity(self, setup_eng, tol):
         """Test that nothing is done if the adjacency matrix is the identity"""
-        eng, q = setup_eng(3)
-
-        with eng:
+        prog = sf.Program(3)
+        with prog.context as q:
             ops.GraphEmbed(np.identity(6)) | q
 
-        state = eng.run()
-        assert len(eng.cmd_applied[0]) == 0
+        assert len(prog) == 1
+        prog = prog.compile()
+        assert len(prog) == 0
 
     def test_passive_gaussian_transform(self, setup_eng, tol):
         """Test applying a passive Gaussian symplectic transform,
         which is simply an interferometer"""
-        eng, q = setup_eng(3)
+        eng, p1 = setup_eng(3)
         O = np.vstack([np.hstack([u1.real, -u1.imag]), np.hstack([u1.imag, u1.real])])
 
-        with eng:
+        with p1.context as q:
             ops.All(ops.Squeezed(0.5)) | q
-            init = eng.run()
+        init = eng.run(p1)
+
+        p2 = sf.Program(p1)
+        with p2.context as q:
             ops.GaussianTransform(O) | q
 
-        state = eng.run()
+        state = eng.run(p2)
         assert np.allclose(state.cov(), O @ init.cov() @ O.T, atol=tol)
 
     def test_active_gaussian_transform_on_vacuum(self, setup_eng, hbar, tol):
         """Test applying a passive Gaussian symplectic transform,
         which is simply squeezing and ONE interferometer"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
 
-        with eng:
+        with prog.context as q:
             ops.GaussianTransform(S, vacuum=True) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         assert np.allclose(state.cov(), S @ S.T * hbar / 2, atol=tol)
 
     def test_interferometer(self, setup_eng, tol):
         """Test applying an interferometer"""
-        eng, q = setup_eng(3)
+        eng, p1 = setup_eng(3)
 
-        with eng:
+        with p1.context as q:
             ops.All(ops.Squeezed(0.5)) | q
-            init = eng.run()
+        init = eng.run(p1)
+
+        p2 = sf.Program(p1)
+        with p2.context as q:
             ops.Interferometer(u1) | q
 
-        state = eng.run()
+        state = eng.run(p2)
         O = np.vstack([np.hstack([u1.real, -u1.imag]), np.hstack([u1.imag, u1.real])])
         assert np.allclose(state.cov(), O @ init.cov() @ O.T, atol=tol)
 
     def test_identity_interferometer(self, setup_eng, tol):
         """Test that applying an identity interferometer does nothing"""
-        eng, q = setup_eng(3)
-
-        with eng:
+        prog = sf.Program(3)
+        with prog.context as q:
             ops.Interferometer(np.identity(6)) | q
 
-        state = eng.run()
-        assert len(eng.cmd_applied[0]) == 0
+        assert len(prog) == 1
+        prog = prog.compile()
+        assert len(prog) == 0
 
 
 @pytest.mark.backends("gaussian")
@@ -186,12 +192,12 @@ class TestGaussianBackendPrepareState:
 
     def test_vacuum(self, setup_eng, hbar, tol):
         """Testing a vacuum state"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(np.identity(6) * hbar / 2, decomp=False) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         cov = state.cov()
         means = state.means()
         assert np.all(cov == np.identity(6))
@@ -199,40 +205,40 @@ class TestGaussianBackendPrepareState:
 
     def test_squeezed(self, setup_eng, hbar, tol):
         """Testing a squeezed state"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
         cov = (hbar / 2) * np.diag([np.exp(-0.1)] * 3 + [np.exp(0.1)] * 3)
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(cov, decomp=False) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         assert np.allclose(state.cov(), cov, atol=tol)
 
     def test_displaced_squeezed(self, setup_eng, hbar, tol):
         """Testing a displaced squeezed state"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
         cov = (hbar / 2) * np.diag([np.exp(-0.1)] * 3 + [np.exp(0.1)] * 3)
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(cov, r=[0, 0.1, 0.2, -0.1, 0.3, 0], decomp=False) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         assert np.allclose(state.cov(), cov, atol=tol)
 
     def test_thermal(self, setup_eng, hbar, tol):
         """Testing a thermal state"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
         cov = np.diag(hbar * (np.array([0.3, 0.4, 0.2] * 2) + 0.5))
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(cov, decomp=False) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         assert np.allclose(state.cov(), cov, atol=tol)
 
     def test_rotated_squeezed(self, setup_eng, hbar, tol):
         """Testing a rotated squeezed state"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
 
         r = 0.1
         phi = 0.2312
@@ -240,10 +246,10 @@ class TestGaussianBackendPrepareState:
         A = changebasis(3)
         cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3) @ A
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(cov, decomp=False) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         assert np.allclose(state.cov(), cov, atol=tol)
 
 
@@ -253,57 +259,57 @@ class TestGaussianBackendDecomposeState:
 
     def test_vacuum(self, setup_eng, hbar, tol):
         """Testing decomposed vacuum state"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(np.identity(6) * hbar / 2) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         cov = state.cov()
         means = state.means()
         assert np.all(cov == np.identity(6))
         assert np.all(means == np.zeros([6]))
-        assert len(eng.cmd_applied[0]) == 0
+        assert len(eng.run_progs[-1]) == 0
 
     def test_squeezed(self, setup_eng, hbar, tol):
         """Testing decomposed squeezed state"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
         cov = (hbar / 2) * np.diag([np.exp(-0.1)] * 3 + [np.exp(0.1)] * 3)
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(cov) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         assert np.allclose(state.cov(), cov, atol=tol)
-        assert np.all(len(eng.cmd_applied[0]) == 3)
+        assert len(eng.run_progs[-1]) == 3
 
     def test_displaced_squeezed(self, setup_eng, hbar, tol):
         """Testing decomposed displaced squeezed state"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
         cov = (hbar / 2) * np.diag([np.exp(-0.1)] * 3 + [np.exp(0.1)] * 3)
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(cov, r=[0, 0.1, 0.2, -0.1, 0.3, 0]) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         assert np.allclose(state.cov(), cov, atol=tol)
-        assert np.all(len(eng.cmd_applied[0]) == 7)
+        assert len(eng.run_progs[-1]) == 7
 
     def test_thermal(self, setup_eng, hbar, tol):
         """Testing decomposed thermal state"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
         cov = np.diag(hbar * (np.array([0.3, 0.4, 0.2] * 2) + 0.5))
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(cov) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         assert np.allclose(state.cov(), cov, atol=tol)
-        assert np.all(len(eng.cmd_applied[0]) == 3)
+        assert len(eng.run_progs[-1]) == 3
 
     def test_rotated_squeezed(self, setup_eng, hbar, tol):
         """Testing decomposed rotated squeezed state"""
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
 
         r = 0.1
         phi = 0.2312
@@ -311,12 +317,12 @@ class TestGaussianBackendDecomposeState:
         A = changebasis(3)
         cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3) @ A
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(cov) | q
 
-        state = eng.run()
+        state = eng.run(prog)
         assert np.allclose(state.cov(), cov, atol=tol)
-        assert np.all(len(eng.cmd_applied[0]) == 3)
+        assert len(eng.run_progs[-1]) == 3
 
 
 @pytest.mark.backends("tf", "fock")
@@ -325,33 +331,33 @@ class TestFockBackendDecomposeState:
     by measuring the fidelities."""
 
     def test_vacuum(self, setup_eng, hbar, tol):
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(np.identity(6) * hbar / 2) | q
 
-        state = eng.run()
-        assert len(eng.cmd_applied[0]) == 0
+        state = eng.run(prog)
         assert np.allclose(state.fidelity_vacuum(), 1, atol=tol)
+        assert len(eng.run_progs[-1]) == 0
 
     def test_squeezed(self, setup_eng, cutoff, hbar, tol):
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
         r = 0.05
         phi = 0
         cov = (hbar / 2) * np.diag([np.exp(-2 * r)] * 3 + [np.exp(2 * r)] * 3)
         in_state = squeezed_state(r, phi, basis="fock", fock_dim=cutoff)
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(cov) | q
 
-        state = eng.run()
-        assert len(eng.cmd_applied[0]) == 3
+        state = eng.run(prog)
+        assert len(eng.run_progs[-1]) == 3
 
         for n in range(3):
             assert np.allclose(state.fidelity(in_state, n), 1, atol=tol)
 
     def test_rotated_squeezed(self, setup_eng, cutoff, hbar, tol):
-        eng, q = setup_eng(3)
+        eng, prog = setup_eng(3)
 
         r = 0.1
         phi = 0.2312
@@ -361,10 +367,11 @@ class TestFockBackendDecomposeState:
         A = changebasis(3)
         cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3) @ A
 
-        with eng:
+        with prog.context as q:
             ops.Gaussian(cov) | q
 
-        state = eng.run()
-        assert len(eng.cmd_applied[0]) == 3
+        state = eng.run(prog)
+        assert len(eng.run_progs[-1]) == 3
+
         for n in range(3):
             assert np.allclose(state.fidelity(in_state, n), 1, atol=tol)

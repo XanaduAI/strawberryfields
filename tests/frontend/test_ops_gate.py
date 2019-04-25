@@ -21,7 +21,7 @@ import numpy as np
 import strawberryfields as sf
 
 from strawberryfields import ops
-from strawberryfields.engine import Engine, MergeFailure, RegRefError
+from strawberryfields.program import (Program, MergeFailure, RegRefError)
 from strawberryfields import utils
 from strawberryfields.parameters import Parameter
 
@@ -37,12 +37,12 @@ class TestGateBasics:
     """Test the basic properties of gates"""
 
     @pytest.fixture(autouse=True)
-    def eng(self):
-        """Dummy engine context for each test"""
-        eng, _ = sf.Engine(2)
-        Engine._current_context = eng
-        yield eng
-        Engine._current_context = None
+    def prog(self):
+        """Dummy program context for each test"""
+        prog = sf.Program(2)
+        Program._current_context = prog
+        yield prog
+        Program._current_context = None
 
     @pytest.fixture
     def Q(self):
@@ -53,7 +53,7 @@ class TestGateBasics:
     def G(self, gate):
         """Initialize each gate"""
         if gate in ops.zero_args_gates:
-            return gate
+            return gate()
 
         if gate in ops.one_args_gates:
             return gate(A)
@@ -65,7 +65,7 @@ class TestGateBasics:
     def H(self, gate):
         """Second gate fixture of the same class, with same phase as G"""
         if gate in ops.zero_args_gates:
-            return gate
+            return gate()
 
         if gate in ops.one_args_gates:
             return gate(C)
@@ -106,7 +106,7 @@ class TestGateBasics:
     def test_non_trivial_merging(self, G, H):
         """test the merging of two gates (with default values
         for optional parameters)"""
-        if G in ops.zero_args_gates:
+        if G.__class__ in ops.zero_args_gates:
             pytest.skip("Gates with no arguments are not merged")
 
         A, B = np.random.random([2])
@@ -154,9 +154,9 @@ class TestGateBasics:
 def test_merge_regrefs():
     """Test merging two gates with regref parameters, that are
     the inverse of each other."""
-    eng, q = sf.Engine(2)
+    prog = sf.Program(2)
 
-    with eng:
+    with prog.context as q:
         ops.MeasureX | q[0]
         D = ops.Dgate(q[0])
 

@@ -228,6 +228,7 @@ class BaseBackend:
 
     def __init__(self):
         self._supported = {}
+        self._short_name = 'base'
 
     def __str__(self):
         """String representation."""

@@ -73,11 +73,11 @@ There are six kinds of :class:`Operation` objects:
 * :class:`Measurement` operations manipulate the register state and produce classical information.
   The information is directly available only after the simulation has been run up to the point of measurement::
 
-    eng, q = sf.Engine(2)
+    eng, (alice, bob) = sf.Engine(2)
     with eng:
-      Measure       | q[0]
+      Measure       | alice
       eng.run()
-      Dgate(q[0].val) | q[1]
+      Dgate(alice.val) | bob
 
   Alternatively one may use a symbolic reference to the register containing the measurement result
   by supplying registers as the argument to an :class:`Operation`, in which case the measurement may be deferred,
@@ -298,7 +298,7 @@ from scipy.special import factorial as fac
 
 from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
-from .engine import Engine as _Engine, Command, RegRefTransform, MergeFailure
+from .program import (Program, Command, RegRefTransform, MergeFailure)
 from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
                          sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2,
                          transpose, squeeze)
@@ -307,7 +307,6 @@ from .decompositions import clements, bloch_messiah, williamson, graph_embed
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
 # pylint: disable=too-many-arguments
-
 
 # numerical tolerances
 _decomposition_merge_tol = 1e-13
@@ -333,7 +332,7 @@ class Operation:
     """Abstract base class for quantum operations acting on one or more subsystems.
 
     The extra_deps instance variable is a set containing the :class:`.RegRef`
-    the :class:`Operation` depends on. In the quantum diagram notation it
+    the :class:`Operation` depends on. In the quantum circuit diagram notation it
     corresponds to the vertical double lines of classical information
     entering the :class:`Operation` that originate in a measurement of a subsystem.
 
@@ -400,10 +399,10 @@ class Operation:
         """
         # into a list of subsystems
         reg = _seq_to_list(reg)
-        if (not reg) or (self.ns != None and self.ns != len(reg)):
+        if (not reg) or (self.ns is not None and self.ns != len(reg)):
             raise ValueError("Wrong number of subsystems.")
         # send it to the engine
-        reg = _Engine._current_context.append(self, reg)
+        reg = Program._current_context.append(self, reg)
         return reg
 
     def merge(self, other):
@@ -444,8 +443,18 @@ class Operation:
         # todo: For now decompose() works on unevaluated Parameters.
         # This causes an error if a :class:`.RegRefTransform`-based Parameter is used, and
         # decompose() tries to do arithmetic on it.
-        raise NotImplementedError(
-            'No decomposition available: {}'.format(self))
+        return self._decompose(reg)
+
+    def _decompose(self, reg):
+        """Internal decomposition method defined by subclasses.
+
+        Args:
+            reg (Sequence[RegRef]): subsystems the operation is acting on
+
+        Returns:
+            list[Command]: decomposition as a list of operations acting on specific subsystems
+        """
+        raise NotImplementedError('No decomposition available: {}'.format(self))
 
     def _apply(self, reg, backend, **kwargs):
         """Internal apply method. Uses numeric subsystem referencing.
@@ -515,12 +524,10 @@ class Preparation(Operation):
         # sequential preparation, only the last one matters
         if isinstance(other, Preparation):
             # give a warning, since this is pointless and probably a user error
-            warnings.warn(
-                'Two subsequent state preparations, first one has no effect.')
+            warnings.warn('Two subsequent state preparations, first one has no effect.')
             return other
-        else:
-            raise MergeFailure(
-                'For now, Preparations cannot be merged with anything else.')
+
+        raise MergeFailure('For now, Preparations cannot be merged with anything else.')
 
 
 class Measurement(Operation):
@@ -531,7 +538,7 @@ class Measurement(Operation):
     be accessed in the program through the symbolic subsystem reference
     to the measured subsystem.
 
-    When the measurement happens, the state of the circuit is updated
+    When the measurement happens, the state of the system is updated
     to the conditional state corresponding to the measurement result.
     Measurements also support postselection, see below.
 
@@ -575,10 +582,12 @@ class Measurement(Operation):
 
 
 class Decomposition(Operation):
-    """Abstract base class for decompositions.
+    """Abstract base class for multimode matrix transformations.
 
-    This class provides the base behaviour for decomposing various objects
+    This class provides the base behaviour for decomposing various multimode operations
     into a sequence of gates and state preparations.
+
+    The first parameter p[0] of the Decomposition is always a square matrix.
     """
 
     def merge(self, other):
@@ -601,8 +610,8 @@ class Decomposition(Operation):
                 return self.__class__(U, hbar=self.hbar)
 
             return self.__class__(U)
-        else:
-            raise MergeFailure('Not the same decomposition type.')
+
+        raise MergeFailure('Not the same decomposition type.')
 
 
 class Transformation(Operation):
@@ -616,7 +625,6 @@ class Transformation(Operation):
     # to remove, and make Channel and Gate top-level derived classes.
     #
     # Are there any useful operations/properties shared by Gate/Channel?
-    pass
 
 
 # ====================================================================
@@ -651,8 +659,8 @@ class Channel(Transformation):
                 return self.__class__(T)
 
             return self.__class__(T, *self.p[1:])
-        else:
-            raise MergeFailure('Not the same operation family.')
+
+        raise MergeFailure('Not the same operation family.')
 
 
 class Gate(Transformation):
@@ -695,6 +703,19 @@ class Gate(Transformation):
         s.dagger = not s.dagger
         return s
 
+    def decompose(self, reg):
+        """Decompose the operation into elementary operations supported by the backend API.
+
+        Like :func:`Operation.decompose`, but applies self.dagger.
+        """
+        seq = self._decompose(reg)
+        if self.dagger:
+            # apply daggers, reverse the Command sequence
+            for cmd in seq:
+                cmd.op.dagger = not cmd.op.dagger
+            seq = list(reversed(seq))
+        return seq
+
     def apply(self, reg, backend, hbar, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
 
@@ -735,22 +756,22 @@ class Gate(Transformation):
             p0 = self.p[0] + temp
             if p0 == 0:
                 return None  # identity gate
+
+            # return a copy
+            # HACK: some of the subclass constructors only take a single parameter,
+            # some take two, none take three
+            if len(self.p) == 1:
+                temp = self.__class__(p0)
             else:
-                # return a copy
-                # HACK: some of the subclass constructors only take a single parameter,
-                # some take two, none take three
-                if len(self.p) == 1:
-                    temp = self.__class__(p0)
-                else:
-                    temp = self.__class__(p0, *self.p[1:])
-                # NOTE deepcopy would make copies of RegRefs inside a possible
-                # RegRefTransformation parameter, RegRefs must not be copied.
-                # OTOH copy results in temp having the same p list as self,
-                # which we would modify below.
-                #temp = copy.copy(self)
-                #temp.p[0] = p0
-                temp.dagger = self.dagger
-                return temp
+                temp = self.__class__(p0, *self.p[1:])
+            # NOTE deepcopy would make copies of RegRefs inside a possible
+            # RegRefTransformation parameter, RegRefs must not be copied.
+            # OTOH copy results in temp having the same p list as self,
+            # which we would modify below.
+            #temp = copy.copy(self)
+            #temp.p[0] = p0
+            temp.dagger = self.dagger
+            return temp
 
         if isinstance(other, self.__class__):
             # without knowing anything more specific about the gates, we
@@ -1243,7 +1264,7 @@ class Pgate(Gate):
     def __init__(self, s):
         super().__init__([s])
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         # into a squeeze and a rotation
         temp = self.p[0] / 2
         r = arccosh(sqrt(1+temp**2))
@@ -1353,7 +1374,7 @@ class S2gate(Gate):
     def __init__(self, r, phi=0.):
         super().__init__([r, phi])
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         # two opposite squeezers sandwiched between 50% beamsplitters
         S = Sgate(self.p[0], self.p[1])
         BS = BSgate(pi/4, 0)
@@ -1382,7 +1403,7 @@ class CXgate(Gate):
     def __init__(self, s=1):
         super().__init__([s])
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         s = self.p[0]
         r = arcsinh(-s/2)
         theta = 0.5*arctan2(-1.0/cosh(r), -tanh(r))
@@ -1414,7 +1435,7 @@ class CZgate(Gate):
     def __init__(self, s=1):
         super().__init__([s])
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         # phase-rotated CZ
         CX = CXgate(self.p[0])
         return [
@@ -1500,13 +1521,13 @@ class Delete(MetaOperation):
 
     def __or__(self, reg):
         reg = super().__or__(reg)
-        _Engine._current_context._delete_subsystems(reg)
+        Program._current_context._delete_subsystems(reg)
 
     def _apply(self, reg, backend, **kwargs):
         backend.del_mode(reg)
 
     def __str__(self):
-        # the shorthand object
+        # use the shorthand object
         return 'Del'
 
 
@@ -1529,9 +1550,9 @@ class New_modes(MetaOperation):
         # pylint: disable=attribute-defined-outside-init
         self.n = n  # int: store the number of new modes for the __str__ method
         # create RegRef placeholders for the new modes
-        refs = _Engine._current_context._add_subsystems(n)
+        refs = Program._current_context._add_subsystems(n)
         # send the actual creation command to the engine
-        _Engine._current_context.append(self, refs)
+        Program._current_context.append(self, refs)
         return refs
 
     def _apply(self, reg, backend, **kwargs):
@@ -1539,8 +1560,8 @@ class New_modes(MetaOperation):
         inds = backend.add_mode(len(reg))
 
     def __str__(self):
-        # HACK, trailing space signals "do not print anything more" to Command.__str__.
-        return 'New({}) '.format(self.n)
+        # use the shorthand object
+        return 'New({})'.format(self.n)
 
 
 class All(MetaOperation):
@@ -1564,9 +1585,9 @@ class All(MetaOperation):
         reg = _seq_to_list(reg)
         # convert into commands
         # make sure reg does not contain duplicates (we feed them to Engine.append() one by one)
-        _Engine._current_context._test_regrefs(reg)
+        Program._current_context._test_regrefs(reg)
         for r in reg:
-            _Engine._current_context.append(self.op, [r])
+            Program._current_context.append(self.op, [r])
 
 
 # ====================================================================
@@ -1598,7 +1619,7 @@ class Interferometer(Decomposition):
             self.BS1, self.BS2, self.R = clements(U, tol=tol)
             self.ns = U.shape[0]
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         cmds = []
 
         if not self.identity:
@@ -1653,7 +1674,7 @@ class GraphEmbed(Decomposition):
                 A, max_mean_photon=max_mean_photon, make_traceless=make_traceless, tol=tol)
             self.ns = self.U.shape[0]
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         cmds = []
 
         if not self.identity:
@@ -1696,9 +1717,6 @@ class GaussianTransform(Decomposition):
 
     Args:
         S (array): a :math:`2N\times 2N` symplectic matrix describing the Gaussian transformation.
-        hbar (float): the value of :math:`\hbar` used in the definition of the :math:`\x`
-            and :math:`\p` quadrature operators. Note that if used inside of an engine
-            context, the hbar value of the engine will override this keyword argument.
         vacuum (bool): set to True if acting on a vacuum state. In this case, :math:`O_2 V O_2^T = I`,
             and the unitary associated with orthogonal symplectic :math:`O_2` will be ignored.
         tol (float): the tolerance used when checking if the matrix is symplectic:
@@ -1706,17 +1724,8 @@ class GaussianTransform(Decomposition):
     """
     ns = None
 
-    def __init__(self, S, hbar=None, vacuum=False, tol=1e-10):
+    def __init__(self, S, vacuum=False, tol=1e-10):
         super().__init__([S])
-
-        try:
-            self.hbar = _Engine._current_context.hbar
-        except AttributeError:
-            if hbar is None:
-                raise ValueError("Either specify the hbar keyword argument, "
-                                 "or use this operator inside an engine context.")
-            else:
-                self.hbar = hbar
 
         N = S.shape[0]//2
 
@@ -1747,7 +1756,7 @@ class GaussianTransform(Decomposition):
         self.ns = N
         self.vacuum = vacuum
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         cmds = []
 
         if self.active:
@@ -1790,8 +1799,8 @@ class Gaussian(Preparation, Decomposition):
         r (array): a length :math:`2N` vector of means, of the
             form :math:`(\x_0,\dots,\x_{N-1},\p_0,\dots,\p_{N-1})`.
             If None, it is assumed that :math:`r=0`.
-        decomp (bool): if False, no decomposition is applied, and the specified modes
-            are explicity prepared in the provided Gaussian state.
+        decomp (bool): Should the operation be decomposed into a sequence of elementary gates?
+            If False, the state preparation is performed directly via the backend API.
         hbar (float): the value of :math:`\hbar` used in the definition of the :math:`\x`
             and :math:`\p` quadrature operators. Note that if used inside of an engine
             context, the hbar value of the engine will override this keyword argument.
@@ -1800,16 +1809,9 @@ class Gaussian(Preparation, Decomposition):
     # pylint: disable=too-many-instance-attributes
     ns = None
 
-    def __init__(self, V, r=None, decomp=True, hbar=None, tol=1e-6):
-        try:
-            self.hbar = _Engine._current_context.hbar
-        except AttributeError:
-            if hbar is None:
-                raise ValueError("Either specify the hbar keyword argument, "
-                                 "or use this operator inside an engine context.")
-            else:
-                self.hbar = hbar
-
+    def __init__(self, V, r=None, decomp=True, hbar=2, tol=1e-6):
+        # TODO NOTE: there is no contextual hbar value anymore, is the hbar actually necessary here?
+        self.hbar = hbar
         self.ns = V.shape[0]//2
 
         if r is None:
@@ -1818,21 +1820,19 @@ class Gaussian(Preparation, Decomposition):
         r = np.asarray(r)
 
         if len(r) != V.shape[0]:
-            raise ValueError(
-                'Vector of means must have the same length as the covariance matrix.')
+            raise ValueError('Vector of means must have the same length as the covariance matrix.')
 
         self.x_disp = r[:self.ns]
         self.p_disp = r[self.ns:]
 
-        self.decomp = False
+        self.decomp = decomp
         if decomp:
-            self.decomp = True
             th, self.S = williamson(V, tol=tol)
-            self.pure = np.abs(np.linalg.det(
-                V) - (self.hbar/2)**(2*self.ns)) < tol
+            self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < tol
             self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
 
         super().__init__([V, r])
+        # FIXME merge() probably does not work for Gaussians if r is not zero?
 
     def _apply(self, reg, backend, **kwargs):
         if self.decomp:
@@ -1843,8 +1843,10 @@ class Gaussian(Preparation, Decomposition):
         p = _unwrap(self.p)
         backend.prepare_gaussian_state(p[1], p[0], reg)
 
-    def decompose(self, reg):
+    def _decompose(self, reg):
         # pylint: disable=too-many-branches
+        if not self.decomp:
+            return None  # refuse to decompose
         cmds = []
 
         V = self.p[0].x
@@ -1886,8 +1888,7 @@ class Gaussian(Preparation, Decomposition):
                             Command(Thermal(nbar), reg[n], decomp=True))
 
             cmds.append(
-                Command(GaussianTransform(self.S, hbar=self.hbar,
-                                          vacuum=self.pure), reg, decomp=True)
+                Command(GaussianTransform(self.S, vacuum=self.pure), reg, decomp=True)
             )
 
         cmds += [Command(Xgate(u), reg[n], decomp=True)
@@ -1898,8 +1899,9 @@ class Gaussian(Preparation, Decomposition):
         return cmds
 
 
-# ====================================================================
-# Shorthand pre-constructed objects
+#=======================================================================
+# Shorthands, e.g. pre-constructed singleton-like objects
+
 New = New_modes()
 Del = Delete()
 Vac = Vacuum()
@@ -1912,12 +1914,13 @@ Fourier = Fouriergate()
 
 RR = RegRefTransform
 
+shorthands = ['New', 'Del', 'Vac', 'Measure', 'MeasureX', 'MeasureP', 'MeasureHD', 'Fourier', 'RR',
+              'All']
 
-# ====================================================================
+#=======================================================================
 # here we list different classes of operations for unit testing purposes
 
-# all these are pre-constructed objects, not classes
-zero_args_gates = (Fourier,)
+zero_args_gates = (Fouriergate,)
 one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate,
                   Kgate, CXgate, CZgate, CKgate)
 two_args_gates = (Dgate, Sgate, BSgate, S2gate)
@@ -1925,5 +1928,14 @@ gates = zero_args_gates + one_args_gates + two_args_gates
 
 channels = (LossChannel, ThermalLossChannel)
 
-state_preparations = (Vacuum, Coherent, Squeezed,
-                      DisplacedSqueezed, Fock, Thermal, Catstate)
+simple_state_preparations = (Vacuum, Coherent, Squeezed, DisplacedSqueezed, Fock, Catstate, Thermal)  # have __init__ methods with default arguments
+state_preparations = simple_state_preparations + (Ket, DensityMatrix)
+
+measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne)
+
+decompositions = (Interferometer, GraphEmbed, GaussianTransform, Gaussian)
+
+#=======================================================================
+# exported symbols
+
+__all__ = [cls.__name__ for cls in gates + channels + state_preparations + measurements + decompositions] + shorthands

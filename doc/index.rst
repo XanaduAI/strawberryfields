@@ -141,6 +141,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    :hidden:
 
    code/code
+   code/program
    code/engine
    code/ops
    code/utils

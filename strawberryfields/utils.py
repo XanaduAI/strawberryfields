@@ -143,7 +143,7 @@ from numpy.polynomial.hermite import hermval as H
 import scipy as sp
 from scipy.special import factorial as fac
 
-from .engine import _convert
+from .program import _convert
 from .backends import load_backend
 from .ops import Command, Gate, Channel, Ket
 # pylint: disable=abstract-method,ungrouped-imports,
