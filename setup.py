@@ -27,7 +27,8 @@ requirements = [
     "numpy>=1.13",
     "scipy>=1.0.0",
     "networkx>=2.0",
-    "tensorflow>=1.3.0,<1.7"
+    "tensorflow>=1.3.0,<1.7",
+    "quantum-blackbird"
 ]
 
 # extra_requirements = [
