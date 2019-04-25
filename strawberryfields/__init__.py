@@ -62,7 +62,7 @@ from .io import save, load
 from .program import Program, _convert as convert
 from ._version import __version__
 
-__all__ = ["Engine", "Program", "convert", "version", "save"]
+__all__ = ["Engine", "Program", "convert", "version", "save", "load"]
 
 
 def version():
