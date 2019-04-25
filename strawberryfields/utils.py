@@ -138,7 +138,6 @@ from scipy.special import factorial as fac
 
 import strawberryfields as sf
 from .program import _convert, Command
-from .backends import load_backend
 from .ops import Gate, Channel, Ket
 # pylint: disable=abstract-method,ungrouped-imports,
 
