@@ -41,16 +41,17 @@ from . import ops
 from .program import Program
 
 
-def to_blackbird(prog):
+def to_blackbird(prog, version="1.0"):
     """Convert a Strawberry Fields Program to a Blackbird Program.
 
     Args:
         prog (Program): the Strawberry Fields program
+        version (str): Blackbird script version number
 
     Returns:
         blackbird.BlackbirdProgram:
     """
-    bb = blackbird.BlackbirdProgram(name=prog.name, version=1.0)
+    bb = blackbird.BlackbirdProgram(name=prog.name, version=version)
 
     if prog.backend is not None:
         # set the target
@@ -68,7 +69,7 @@ def to_blackbird(prog):
             if cmd.op.select is not None:
                 op["kwargs"]["select"] = cmd.op.select
 
-            if cmd.op.p is not None:
+            if cmd.op.p:
                 # argument is quadrature phase
                 op["kwargs"]["phi"] = cmd.op.p[0].x
 
@@ -115,15 +116,23 @@ def to_program(bb):
         program:
     """
     # create a SF program
-    prog = Program(len(bb.modes), name=bb.name)
+    if not bb.modes:
+        # we can't return an empty program, since we don't know how many modes
+        # to initialize the Program object with.
+        raise ValueError("Blackbird program contains no quantum operations!")
+
+    prog = Program(max(bb.modes)+1, name=bb.name)
 
     # append the quantum operations
     with prog.context as q:
         for op in bb.operations:
             try:
-                getattr(ops, op["op"])(*op["args"], **op["kwargs"]) | [q[i] for i in op["modes"]]
+                if 'args' in op:
+                    getattr(ops, op["op"])(*op["args"], **op["kwargs"]) | [q[i] for i in op["modes"]]
+                else:
+                    getattr(ops, op["op"]) | [q[i] for i in op["modes"]]
             except AttributeError:
-                raise NameError("Quantum operation {} not defined!".format(op["name"]))
+                raise NameError("Quantum operation {} not defined!".format(op["op"]))
 
     # compile the program if a target exists
     if bb.target["name"] is not None:
@@ -133,7 +142,7 @@ def to_program(bb):
 
 
 def save(file, prog):
-    """Saves a quantum program to Blackbird .xbb file.
+    """Saves a quantum program to a Blackbird .xbb file.
 
     Args:
         file (Union[file, str, pathlib.Path]): File or filename to which
@@ -187,7 +196,7 @@ def load(file):
         if hasattr(file, "read"):
             # argument file is a file-object
             fid = file
-        elif isinstance(file, (os_PathLike, str)):
+        else:
             # argument file is a Path or string
             f = os.fspath(file)
             fid = open(f, "r")
