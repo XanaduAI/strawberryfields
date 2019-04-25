@@ -113,7 +113,7 @@ def to_program(bb):
         bb (blackbird.BlackbirdProgram): the input Blackbird program object
 
     Returns:
-        program:
+        Program: corresponding SF program
     """
     # create a SF program
     if not bb.modes:
