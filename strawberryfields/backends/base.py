@@ -117,11 +117,6 @@ Code details
 
 """
 
-# todo If we move to Sphinx 1.7, the docstrings of the methods in the derived classes FockBackend,
-# TFBackend and GaussianBackend that are declared in BaseBackend should be removed entirely.
-# This way they are inherited directly from the parent class BaseBackend and thus kept automatically up-to-date.
-# The derived classes should provide a docstring for these methods only if they change their behavior for some reason.
-
 # pylint: disable=no-self-use
 
 
@@ -130,7 +125,6 @@ class NotApplicableError(TypeError):
     E.g. :meth:`measure_fock` on a Gaussian backend.
     Conceptually different from NotImplementedError (which means "not implemented, but at some point may be").
     """
-    pass
 
 
 class ModeMap:
@@ -151,7 +145,7 @@ class ModeMap:
         if mode is None:
             return False
 
-        if mode >= 0 and mode < len(self._map):
+        if 0 <= mode < len(self._map):
             return True
 
         return False
@@ -257,8 +251,8 @@ class BaseBackend:
     def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=True, **kwargs):
         r"""Instantiate a quantum circuit.
 
-        Instantiates a circuit with num_subsystems modes to track and update a quantum optical state.
-        The state of the circuit is initialized to vacuum.
+        Instantiates a representation of a quantum optical state with num_subsystems modes.
+        The state is initialized to vacuum.
 
         The modes in the circuit are indexed sequentially using integers, starting from zero.
         Once an index is assigned to a mode, it can never be re-assigned to another mode.
@@ -272,10 +266,10 @@ class BaseBackend:
                 By default, :math:`\hbar=2`. See :ref:`conventions` for more details.
             pure (bool): whether to initialize the circuit in a pure state (will use a mixed state if pure is False)
         """
-        pass  # BaseBackend can be instantiated for testing purposes, even though it does not do anything.
+        # BaseBackend can be instantiated for testing purposes, even though it does not do anything.
 
     def add_mode(self, n=1):
-        """Add one or more modes to the circuit.
+        """Add modes to the circuit.
 
         The new modes are initialized to the vacuum state.
         They are assigned mode indices sequentially, starting from the first unassigned index.
@@ -289,7 +283,7 @@ class BaseBackend:
         raise NotImplementedError
 
     def del_mode(self, modes):
-        """Delete one or more modes from the circuit.
+        """Delete modes from the circuit.
 
         The deleted modes are traced out.
         As a result the state may have to be described using a density matrix.
@@ -299,7 +293,7 @@ class BaseBackend:
         Deleting a mode that has already been deleted raises an IndexError exception.
 
         Args:
-            modes (Sequence[int]): list of mode numbers to delete
+            modes (Sequence[int]): mode numbers to delete
         """
         raise NotImplementedError
 
@@ -383,10 +377,10 @@ class BaseBackend:
         r"""Prepare a thermal state in the specified mode.
 
         The requested mode is traced out and replaced with the thermal state :math:`\rho(nbar)`.
-        As a result the state will be described using a density matrix.
+        As a result the state may have to be described using a density matrix.
 
         Args:
-            nbar (float): thermal population of the mode
+            nbar (float): thermal population (mean photon number) of the mode
             mode (int): which mode to prepare the thermal state in
         """
         raise NotImplementedError
@@ -480,7 +474,7 @@ class BaseBackend:
             tol (float): numerical tolerance for how close state must be to true vacuum state
 
         Returns:
-            bool: True if vacuum state up to tolerance tol
+            bool: True iff vacuum state up to tolerance tol
         """
         raise NotImplementedError
 
@@ -488,13 +482,13 @@ class BaseBackend:
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
         Args:
-            modes (int or Sequence[int]): specifies the mode(s) to restrict the return state to
-                This argument is optional; the default value ``modes=None`` returns the state containing all modes.
+            modes (int or Sequence[int] or None): specifies the modes to restrict the return state to
+                None returns the state containing all modes.
                 If modes is not ordered, the returned state contains the requested modes in the given order, i.e.,
                 requesting the modes=[3,1] results in a two mode state being returned with the first mode being
                 subsystem 3 and the second mode being subsystem 1 of simulator.
         Returns:
-            An instance of the Strawberry Fields State class, suited to the particular backend.
+            BaseState: state description, suited to the particular backend
         """
         raise NotImplementedError
 
@@ -526,23 +520,23 @@ class BaseFock(BaseBackend):
 
         Args:
             n (int): Fock state to prepare
-            mode (int): which mode to prepare the fock state in
+            mode (int): which mode to prepare the Fock state in
         """
         raise NotImplementedError
 
     def prepare_ket_state(self, state, modes):
-        r"""Prepare the given ket state (in the Fock basis) in the specified modes.
+        r"""Prepare the given ket state in the specified modes.
 
-        The requested mode(s) is/are traced out and replaced with the given ket state
+        The requested modes are traced out and replaced with the given ket state
         (in the Fock basis). As a result the state may have to be described using a
         density matrix.
 
         Args:
-            state (array): state in the Fock basis
+            state (array): Ket state in the Fock basis.
                 The state can be given in either vector form, with one index,
                 or tensor form, with one index per mode. For backends supporting batched
                 mode, state can be a batch of such vectors or tensors.
-            modes (int or Sequence[int]): which mode to prepare the state in
+            modes (int or Sequence[int]): Modes to prepare the state in.
                 If modes is not ordered this is taken into account when preparing the state,
                 i.e., when a two mode state is prepared in modes=[3,1], then the first
                 mode of state goes into mode 3 and the second mode goes into mode 1 of the simulator.
@@ -550,13 +544,14 @@ class BaseFock(BaseBackend):
         raise NotImplementedError
 
     def prepare_dm_state(self, state, modes):
-        r"""Prepare the given dm state (in the Fock basis) in the specified modes.
+        r"""Prepare the given dm state in the specified modes.
 
-        The requested mode(s) is/are traced out and replaced with the given dm state (in the Fock basis).
+        The requested modes are traced out and replaced with the given density matrix
+        state (in the Fock basis).
         As a result the state will be described using a density matrix.
 
         Args:
-            state (array): state in the Fock basis
+            state (array): Density matrix in the Fock basis.
                 The state can be given in either matrix form, with two indices, or tensor
                 form, with two indices per mode. For backends supporting batched mode,
                 state can be a batch of such matrices or tensors.
@@ -611,9 +606,9 @@ class BaseFock(BaseBackend):
 
         Args:
             modes (Sequence[int]): which modes to measure
-            select (Sequence[int]): (Optional) desired values of measurement results.
+            select (Sequence[int]): Desired values of measurement results.
                 Allows user to post-select on specific measurement results instead of randomly sampling.
-
+                len(select) == len(modes).
         Returns:
             tuple[int]: corresponding measurement results
         """
@@ -623,10 +618,10 @@ class BaseFock(BaseBackend):
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
         Args:
-            modes (int or Sequence[int]): specifies the mode or modes to restrict the return state to.
-                This argument is optional; the default value ``modes=None`` returns the state containing all modes.
+            modes (None or int or Sequence[int]): Specifies the mode or modes to restrict the returned state to.
+                None returns the state containing all modes.
         Returns:
-            An instance of the Strawberry Fields FockState class.
+            FockState: state description
         """
         raise NotImplementedError
 
