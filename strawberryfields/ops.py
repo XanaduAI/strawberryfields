@@ -1271,8 +1271,8 @@ class Pgate(Gate):
         theta = arctan(temp)
         phi = -pi/2 * sign(temp) - theta
         return [
-            Command(Sgate(r, phi), reg, decomp=True),
-            Command(Rgate(theta), reg, decomp=True)
+            Command(Sgate(r, phi), reg),
+            Command(Rgate(theta), reg)
         ]
 
 
@@ -1379,10 +1379,10 @@ class S2gate(Gate):
         S = Sgate(self.p[0], self.p[1])
         BS = BSgate(pi/4, 0)
         return [
-            Command(BS, reg, decomp=True),
-            Command(S, reg[0], decomp=True),
-            Command(S.H, reg[1], decomp=True),
-            Command(BS.H, reg, decomp=True)
+            Command(BS, reg),
+            Command(S, reg[0]),
+            Command(S.H, reg[1]),
+            Command(BS.H, reg)
         ]
 
 
@@ -1411,10 +1411,10 @@ class CXgate(Gate):
         BS1 = BSgate(theta, 0)
         BS2 = BSgate(theta+pi/2, 0)
         return [
-            Command(BS1, reg, decomp=True),
-            Command(Sgate(r, 0), reg[0], decomp=True),
-            Command(Sgate(-r, 0), reg[1], decomp=True),
-            Command(BS2, reg, decomp=True)
+            Command(BS1, reg),
+            Command(Sgate(r, 0), reg[0]),
+            Command(Sgate(-r, 0), reg[1]),
+            Command(BS2, reg)
         ]
 
 
@@ -1439,9 +1439,9 @@ class CZgate(Gate):
         # phase-rotated CZ
         CX = CXgate(self.p[0])
         return [
-            Command(Rgate(-pi/2), reg[1], decomp=True),
-            Command(CX, reg, decomp=True),
-            Command(Rgate(pi/2), reg[1], decomp=True)
+            Command(Rgate(-pi/2), reg[1]),
+            Command(CX, reg),
+            Command(Rgate(pi/2), reg[1])
         ]
 
 
@@ -1625,22 +1625,20 @@ class Interferometer(Decomposition):
         if not self.identity:
             for n, m, theta, phi, _ in self.BS1:
                 if np.abs(phi) >= _decomposition_merge_tol:
-                    cmds.append(Command(Rgate(phi), reg[n], decomp=True))
+                    cmds.append(Command(Rgate(phi), reg[n]))
                 if np.abs(theta) >= _decomposition_merge_tol:
-                    cmds.append(Command(BSgate(theta, 0),
-                                        (reg[n], reg[m]), decomp=True))
+                    cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m])))
 
             for n, expphi in enumerate(self.R):
                 if np.abs(expphi - 1) >= _decomposition_merge_tol:
                     q = log(expphi).imag
-                    cmds.append(Command(Rgate(q), reg[n], decomp=True))
+                    cmds.append(Command(Rgate(q), reg[n]))
 
             for n, m, theta, phi, _ in reversed(self.BS2):
                 if np.abs(theta) >= _decomposition_merge_tol:
-                    cmds.append(Command(BSgate(-theta, 0),
-                                        (reg[n], reg[m]), decomp=True))
+                    cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m])))
                 if np.abs(phi) >= _decomposition_merge_tol:
-                    cmds.append(Command(Rgate(-phi), reg[n], decomp=True))
+                    cmds.append(Command(Rgate(-phi), reg[n]))
 
         return cmds
 
@@ -1680,10 +1678,10 @@ class GraphEmbed(Decomposition):
         if not self.identity:
             for n, s in enumerate(self.sq):
                 if np.abs(s) >= _decomposition_merge_tol:
-                    cmds.append(Command(Sgate(s), reg[n], decomp=True))
+                    cmds.append(Command(Sgate(s), reg[n]))
 
             if np.all(np.abs(self.U - np.identity(len(self.U))) >= _decomposition_merge_tol):
-                cmds.append(Command(Interferometer(self.U), reg, decomp=True))
+                cmds.append(Command(Interferometer(self.U), reg))
 
         return cmds
 
@@ -1761,18 +1759,18 @@ class GaussianTransform(Decomposition):
 
         if self.active:
             if not self.vacuum:
-                cmds = [Command(Interferometer(self.U2), reg, decomp=True)]
+                cmds = [Command(Interferometer(self.U2), reg)]
 
             for n, expr in enumerate(self.Sq):
                 if np.abs(expr - 1) >= _decomposition_merge_tol:
                     r = abs(log(expr))
                     phi = np.angle(log(expr))
-                    cmds.append(Command(Sgate(-r, phi), reg[n], decomp=True))
+                    cmds.append(Command(Sgate(-r, phi), reg[n]))
 
-            cmds.append(Command(Interferometer(self.U1), reg, decomp=True))
+            cmds.append(Command(Interferometer(self.U1), reg))
         else:
             if not self.vacuum:
-                cmds = [Command(Interferometer(self.U1), reg, decomp=True)]
+                cmds = [Command(Interferometer(self.U1), reg)]
 
         return cmds
 
@@ -1863,7 +1861,7 @@ class Gaussian(Preparation, Decomposition):
             for n, expr in enumerate(D[:self.ns]*2/self.hbar):
                 if np.abs(expr - 1) >= _decomposition_merge_tol:
                     r = abs(log(expr)/2)
-                    cmds.append(Command(Sgate(r, 0), reg[n], decomp=True))
+                    cmds.append(Command(Sgate(r, 0), reg[n]))
 
         elif self.pure and is_block_diag:
             # covariance matrix consists of rotated squeezed states
@@ -1871,29 +1869,26 @@ class Gaussian(Preparation, Decomposition):
                 if not np.all(v - np.identity(2)*self.hbar/2 < 1e-10):
                     r = np.abs(arccosh(np.sum(np.diag(v/self.hbar)))/2)
                     phi = arctan(2*v[0, 1] / np.sum(np.diag(v)*[1, -1]))
-                    cmds.append(Command(Sgate(r, phi), reg[n], decomp=True))
+                    cmds.append(Command(Sgate(r, phi), reg[n]))
 
         elif not self.pure and is_diag and np.all(D[:self.ns] == D[self.ns:]):
             # covariance matrix consists of thermal states
             for n, nbar in enumerate(D[:self.ns]/self.hbar - 0.5):
                 if nbar >= _decomposition_merge_tol:
-                    cmds.append(Command(Thermal(nbar), reg[n], decomp=True))
+                    cmds.append(Command(Thermal(nbar), reg[n]))
 
         else:
             if not self.pure:
                 # mixed state, must initialise thermal states
                 for n, nbar in enumerate(self.nbar):
                     if np.abs(nbar) >= _decomposition_merge_tol:
-                        cmds.append(
-                            Command(Thermal(nbar), reg[n], decomp=True))
+                        cmds.append(Command(Thermal(nbar), reg[n]))
 
-            cmds.append(
-                Command(GaussianTransform(self.S, vacuum=self.pure), reg, decomp=True)
-            )
+            cmds.append(Command(GaussianTransform(self.S, vacuum=self.pure), reg))
 
-        cmds += [Command(Xgate(u), reg[n], decomp=True)
+        cmds += [Command(Xgate(u), reg[n])
                  for n, u in enumerate(self.x_disp) if u != 0]
-        cmds += [Command(Zgate(u), reg[n], decomp=True)
+        cmds += [Command(Zgate(u), reg[n])
                  for n, u in enumerate(self.p_disp) if u != 0]
 
         return cmds
