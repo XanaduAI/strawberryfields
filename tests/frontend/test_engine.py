@@ -42,7 +42,7 @@ def prog():
     return sf.Program(2)
 
 
-def test_load_backend(monkeypatch):
+def test_load_backend():
     """Backend can be correctly loaded via strings"""
     eng = sf.Engine('base')
     assert isinstance(eng.backend, BaseBackend)

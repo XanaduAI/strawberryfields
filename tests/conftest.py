@@ -102,6 +102,7 @@ def backend(monkeypatch):
         m.setattr(dummy_backend, "measure_homodyne", lambda phi, modes, select: 5)
         m.setattr(dummy_backend, "state", lambda modes: None)
         m.setattr(dummy_backend, "reset", lambda: None)
+        dummy_backend.get_cutoff_dim = lambda: 6
         yield dummy_backend
 
 
