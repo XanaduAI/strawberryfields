@@ -95,9 +95,8 @@ def to_blackbird(prog, version="1.0"):
                             "The RegRefTransform in operation {} "
                             "is not supported by Blackbird.".format(cmd.op)
                         )
-                    else:
-                        op["args"].append(a.x)
-
+                    # else:
+                    op["args"].append(a.x)
         bb._operations.append(op)
 
     return bb
