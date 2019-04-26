@@ -649,10 +649,10 @@ class TestEngineUtilityFunctions:
     def test_interleaved_identities(self, tol):
         """Test interleaved utility function"""
 
-        II = utils._interleaved_identities(n=2, cutoff_dim=3)
+        II = utils._interleaved_identities(num_subsystems=2, cutoff_dim=3)
         assert np.allclose(np.einsum("abab", II), 3 ** 2, atol=tol, rtol=0)
 
-        III = utils._interleaved_identities(n=3, cutoff_dim=5)
+        III = utils._interleaved_identities(num_subsystems=3, cutoff_dim=5)
         assert np.allclose(np.einsum("abcabc", III), 5 ** 3, atol=tol, rtol=0)
 
 
