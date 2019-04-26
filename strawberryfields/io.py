@@ -75,8 +75,8 @@ def to_blackbird(prog, version="1.0"):
                 for a in cmd.op.p:
                     # check if reg ref transform
                     if isinstance(a.x, ops.RegRefTransform):
-                        if a.x.func_str is not None:
-                            # Note: not currently guaranteed to work,
+                        # if a.x.func_str is not None:
+                            # TODO: will not satisfy all use cases
                             # as the RegRefTransform string cannot be checked
                             # to determine if it is a valid function for serialization!
                             #
@@ -89,12 +89,12 @@ def to_blackbird(prog, version="1.0"):
                             #   * Don't allow classical processing of measurements
                             #     on remote backends
                             #
-                            op["args"].append(a.x.func_str)
-                        else:
-                            raise ValueError(
-                                "The RegRefTransform in operation {} "
-                                "is not supported by Blackbird.".format(cmd.op)
-                            )
+                            # op["args"].append(a.x.func_str)
+                        # else:
+                        raise ValueError(
+                            "The RegRefTransform in operation {} "
+                            "is not supported by Blackbird.".format(cmd.op)
+                        )
                     else:
                         op["args"].append(a.x)
 
@@ -144,9 +144,9 @@ def to_program(bb):
                 # the gate has no arguments
                 gate | regrefs #pylint:disable=expression-not-assigned,pointless-statement
 
-    # compile the program if a target exists
+    # set the compile target on the program if a target exists
     if bb.target["name"] is not None:
-        return prog.compile(bb.target["name"])
+        prog.backend = bb.target["name"]
 
     return prog
 
