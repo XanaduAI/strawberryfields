@@ -123,20 +123,26 @@ def to_program(bb):
     # append the quantum operations
     with prog.context as q:
         for op in bb.operations:
-            try:
+            # check if operation name is in the list of
+            # defined StrawberryFields operations.
+            # This is used by checking against the ops.py __all__
+            # module attribute, which contains the names
+            # of all defined quantum operations
+            if op["op"] in ops.__all__:
                 # get the quantum operation from the sf.ops module
                 gate = getattr(ops, op["op"])
-                # create the list of regrefs
-                regrefs = [q[i] for i in op["modes"]]
-
-                if 'args' in op:
-                    # the gate has arguments
-                    gate(*op["args"], **op["kwargs"]) | regrefs #pylint:disable=expression-not-assigned
-                else:
-                    # the gate has no arguments
-                    gate | regrefs #pylint:disable=expression-not-assigned,pointless-statement
-            except AttributeError:
+            else:
                 raise NameError("Quantum operation {} not defined!".format(op["op"]))
+
+            # create the list of regrefs
+            regrefs = [q[i] for i in op["modes"]]
+
+            if 'args' in op:
+                # the gate has arguments
+                gate(*op["args"], **op["kwargs"]) | regrefs #pylint:disable=expression-not-assigned
+            else:
+                # the gate has no arguments
+                gate | regrefs #pylint:disable=expression-not-assigned,pointless-statement
 
     # compile the program if a target exists
     if bb.target["name"] is not None:

@@ -325,12 +325,12 @@ class TestBlackbirdToSFConversion:
         name test_program
         version 1.0
 
-        Toffoli | [0, 1]
+        np | [0, 1]
         """
 
         bb = blackbird.loads(bb_script)
 
-        with pytest.raises(NameError, match="operation Toffoli not defined"):
+        with pytest.raises(NameError, match="operation np not defined"):
             io.to_program(bb)
 
     def test_metadata(self):
