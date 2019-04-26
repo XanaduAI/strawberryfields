@@ -124,10 +124,17 @@ def to_program(bb):
     with prog.context as q:
         for op in bb.operations:
             try:
+                # get the quantum operation from the sf.ops module
+                gate = getattr(ops, op["op"])
+                # create the list of regrefs
+                regrefs = [q[i] for i in op["modes"]]
+
                 if 'args' in op:
-                    getattr(ops, op["op"])(*op["args"], **op["kwargs"]) | [q[i] for i in op["modes"]] #pylint:disable=expression-not-assigned
+                    # the gate has arguments
+                    gate(*op["args"], **op["kwargs"]) | regrefs #pylint:disable=expression-not-assigned
                 else:
-                    getattr(ops, op["op"]) | [q[i] for i in op["modes"]] #pylint:disable=expression-not-assigned
+                    # the gate has no arguments
+                    gate | regrefs #pylint:disable=expression-not-assigned,pointless-statement
             except AttributeError:
                 raise NameError("Quantum operation {} not defined!".format(op["op"]))
 
@@ -138,11 +145,11 @@ def to_program(bb):
     return prog
 
 
-def save(file, prog):
+def save(f, prog):
     """Saves a quantum program to a Blackbird .xbb file.
 
     Args:
-        file (Union[file, str, pathlib.Path]): File or filename to which
+        f (Union[file, str, pathlib.Path]): File or filename to which
             the data is saved. If file is a file-object, then the filename
             is unchanged. If file is a string or Path, a .xbb extension will
             be appended to the file name if it does not already have one.
@@ -151,17 +158,17 @@ def save(file, prog):
     own_file = False
     bb = to_blackbird(prog).serialize()
 
-    if hasattr(file, "read"):
+    if hasattr(f, "read"):
         # argument file is a file-object
-        fid = file
+        fid = f
     else:
         # argument file is a string or Path
-        f = os.fspath(file)
+        filename = os.fspath(f)
 
-        if not f.endswith(".xbb"):
-            f = f + ".xbb"
+        if not filename.endswith(".xbb"):
+            filename = filename + ".xbb"
 
-        fid = open(f, "w")
+        fid = open(filename, "w")
 
         # this function owns the open file,
         # must remember to safely close it.
@@ -175,11 +182,11 @@ def save(file, prog):
             fid.close()
 
 
-def load(file):
+def load(f):
     """Load a quantum program from a Blackbird .xbb file.
 
     Args:
-        file (Union[file, str, pathlib.Path]): File or filename to which
+        f (Union[file, str, pathlib.Path]): File or filename to which
             the data is saved. If file is a file-object, then the filename
             is unchanged. If file is a string or Path, a .xbb extension will
             be appended to the file name if it does not already have one.
@@ -190,13 +197,13 @@ def load(file):
     own_file = False
 
     try:
-        if hasattr(file, "read"):
+        if hasattr(f, "read"):
             # argument file is a file-object
-            fid = file
+            fid = f
         else:
             # argument file is a Path or string
-            f = os.fspath(file)
-            fid = open(f, "r")
+            filename = os.fspath(f)
+            fid = open(filename, "r")
             own_file = True
 
     except TypeError:

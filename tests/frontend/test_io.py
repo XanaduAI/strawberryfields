@@ -149,8 +149,7 @@ class TestSFToBlackbirdConversion:
         assert bb.operations[0] == expected
 
     def test_two_mode_gate(self):
-        """Test gate with keyword argument converts"""
-        # create a test program
+        """Test two mode gate converts"""
         prog = Program(4)
 
         with prog.context as q:
@@ -320,7 +319,7 @@ class TestBlackbirdToSFConversion:
             io.to_program(bb)
 
     def test_gate_not_defined(self):
-        """Test empty program raises error"""
+        """Test unknown gate raises error"""
 
         bb_script = """\
         name test_program
@@ -401,7 +400,7 @@ class TestBlackbirdToSFConversion:
         assert prog.circuit[0].reg[0].ind == 0
 
     def test_gate_multimode(self):
-        """Test gate with keyword argument converts"""
+        """Test multimode gate converts"""
 
         bb_script = """\
         name test_program
@@ -493,6 +492,14 @@ class TestLoad:
         with pytest.raises(ValueError, match="must be a string, path"):
             sf.load(1)
 
+    def assert_programs_equal(self, prog1, prog2):
+        """Asserts that two SF Program objects are equivalent"""
+        for cmd1, cmd2 in zip(prog1.circuit, prog2.circuit):
+            assert cmd1.op.__class__.__name__ == cmd2.op.__class__.__name__
+            assert cmd1.reg[0].ind == cmd2.reg[0].ind
+            if cmd1.op.p:
+                assert np.all(cmd1.op.p[0].x == cmd2.op.p[0].x)
+
     def test_load_filename_path_object(self, prog, tmpdir):
         """Test loading a program using a path object"""
         filename = tmpdir.join("test.xbb")
@@ -503,11 +510,7 @@ class TestLoad:
         res = sf.load(filename)
 
         # check loaded program is the same as expected
-        for cmd1, cmd2 in zip(res.circuit, prog.circuit):
-            assert cmd1.op.__class__.__name__ == cmd2.op.__class__.__name__
-            assert cmd1.reg[0].ind == cmd2.reg[0].ind
-            if cmd1.op.p:
-                assert np.all(cmd1.op.p[0].x == cmd2.op.p[0].x)
+        self.assert_programs_equal(res, prog)
 
     def test_load_filename_string(self, prog, tmpdir):
         """Test loading a program using a string filename"""
@@ -519,11 +522,7 @@ class TestLoad:
         res = sf.load(filename)
 
         # check loaded program is the same as expected
-        for cmd1, cmd2 in zip(res.circuit, prog.circuit):
-            assert cmd1.op.__class__.__name__ == cmd2.op.__class__.__name__
-            assert cmd1.reg[0].ind == cmd2.reg[0].ind
-            if cmd1.op.p:
-                assert np.all(cmd1.op.p[0].x == cmd2.op.p[0].x)
+        self.assert_programs_equal(res, prog)
 
     def test_load_file_object(self, prog, tmpdir):
         """Test loading a program via a file object"""
@@ -536,8 +535,4 @@ class TestLoad:
             res = sf.load(f)
 
         # check loaded program is the same as expected
-        for cmd1, cmd2 in zip(res.circuit, prog.circuit):
-            assert cmd1.op.__class__.__name__ == cmd2.op.__class__.__name__
-            assert cmd1.reg[0].ind == cmd2.reg[0].ind
-            if cmd1.op.p:
-                assert np.all(cmd1.op.p[0].x == cmd2.op.p[0].x)
+        self.assert_programs_equal(res, prog)
