@@ -358,7 +358,7 @@ class TestWilliamsonDecomposition:
 
     def test_vacuum_state(self, tol, hbar):
         """Test vacuum state"""
-        V = np.identity(4) * hbar / 2
+        V = np.identity(4)
         Db, S = dec.williamson(V)
         assert np.allclose(Db, np.identity(4), atol=tol, rtol=0)
         assert np.allclose(S, np.identity(4), atol=tol, rtol=0)
