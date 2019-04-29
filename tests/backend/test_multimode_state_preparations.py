@@ -289,7 +289,7 @@ class TestFockBasisMultimode:
 class TestGaussianMultimode:
     """Tests for simulators that use the Gaussian representation."""
 
-    def test_singlemode_gaussian_state(self, setup_backend, batch_size, pure, tol):
+    def test_singlemode_gaussian_state(self, setup_backend, batch_size, pure, tol, hbar):
         """Test single mode Gaussian state preparation"""
         N = 4
         backend = setup_backend(N)
@@ -310,17 +310,17 @@ class TestGaussianMultimode:
 
         # test Gaussian state is correct
         state = backend.state([1])
-        assert np.allclose(state.means(), means, atol=tol, rtol=0)
-        assert np.allclose(state.cov(), cov, atol=tol, rtol=0)
+        assert np.allclose(state.means(), means*np.sqrt(hbar/2), atol=tol, rtol=0)
+        assert np.allclose(state.cov(), cov*hbar/2, atol=tol, rtol=0)
 
         # test that displaced squeezed states are unchanged
-        ex_means, ex_V = displaced_squeezed_state(a, r, phi, basis="gaussian")
+        ex_means, ex_V = displaced_squeezed_state(a, r, phi, basis="gaussian", hbar=hbar)
         for i in [0, 2, 3]:
             state = backend.state([i])
             assert np.allclose(state.means(), ex_means, atol=tol, rtol=0)
             assert np.allclose(state.cov(), ex_V, atol=tol, rtol=0)
 
-    def test_multimode_gaussian_state(self, setup_backend, batch_size, pure, tol):
+    def test_multimode_gaussian_state(self, setup_backend, batch_size, pure, tol, hbar):
         """Test multimode Gaussian state preparation"""
         N = 4
         backend = setup_backend(N)
@@ -341,17 +341,17 @@ class TestGaussianMultimode:
 
         # test Gaussian state is correct
         state = backend.state([1, 3])
-        assert np.allclose(state.means(), means, atol=tol, rtol=0)
-        assert np.allclose(state.cov(), cov, atol=tol, rtol=0)
+        assert np.allclose(state.means(), means*np.sqrt(hbar/2), atol=tol, rtol=0)
+        assert np.allclose(state.cov(), cov*hbar/2, atol=tol, rtol=0)
 
         # test that displaced squeezed states are unchanged
-        ex_means, ex_V = displaced_squeezed_state(a, r, phi, basis="gaussian")
+        ex_means, ex_V = displaced_squeezed_state(a, r, phi, basis="gaussian", hbar=hbar)
         for i in [0, 2]:
             state = backend.state([i])
             assert np.allclose(state.means(), ex_means, atol=tol, rtol=0)
             assert np.allclose(state.cov(), ex_V, atol=tol, rtol=0)
 
-    def test_full_mode_squeezed_state(self, setup_backend, batch_size, pure, tol):
+    def test_full_mode_squeezed_state(self, setup_backend, batch_size, pure, tol, hbar):
         """Test full register Gaussian state preparation"""
         N = 4
         backend = setup_backend(N)
@@ -365,11 +365,11 @@ class TestGaussianMultimode:
 
         # test Gaussian state is correct
         state = backend.state()
-        assert np.allclose(state.means(), means, atol=tol, rtol=0)
-        assert np.allclose(state.cov(), cov, atol=tol, rtol=0)
+        assert np.allclose(state.means(), means*np.sqrt(hbar/2), atol=tol, rtol=0)
+        assert np.allclose(state.cov(), cov*hbar/2, atol=tol, rtol=0)
 
     def test_multimode_gaussian_random_state(
-        self, setup_backend, batch_size, pure, tol
+        self, setup_backend, batch_size, pure, tol, hbar
     ):
         """Test multimode Gaussian state preparation on a random state"""
         N = 4
@@ -385,8 +385,8 @@ class TestGaussianMultimode:
 
         # test Gaussian state is correct
         state = backend.state()
-        assert np.allclose(state.means(), means, atol=tol, rtol=0)
-        assert np.allclose(state.cov(), cov, atol=tol, rtol=0)
+        assert np.allclose(state.means(), means*np.sqrt(hbar/2), atol=tol, rtol=0)
+        assert np.allclose(state.cov(), cov*hbar/2, atol=tol, rtol=0)
 
         # prepare Gaussian state in mode 2 and 1
         means2 = 2 * np.random.random(size=[4]) - 1
@@ -432,5 +432,5 @@ class TestGaussianMultimode:
 
         ex_cov[rows, cols] = cov2[rows2, cols2]
 
-        assert np.allclose(state.means(), ex_means, atol=tol, rtol=0)
-        assert np.allclose(state.cov(), ex_cov, atol=tol, rtol=0)
+        assert np.allclose(state.means(), ex_means*np.sqrt(hbar/2), atol=tol, rtol=0)
+        assert np.allclose(state.cov(), ex_cov*hbar/2, atol=tol, rtol=0)

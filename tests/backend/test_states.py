@@ -291,36 +291,36 @@ class TestFidelities:
         state = backend.state()
         assert np.allclose(state.fidelity_vacuum(), 1, atol=tol, rtol=0)
 
-    def test_coherent_fidelity(self, setup_backend, cutoff, tol):
+    def test_coherent_fidelity(self, setup_backend, cutoff, tol, hbar):
         backend = setup_backend(2)
         backend.prepare_coherent_state(a, 0)
         backend.displacement(a, 1)
         state = backend.state()
 
         if isinstance(backend, backends.BaseFock):
-            in_state = utils.coherent_state(a, basis="fock", fock_dim=cutoff)
+            in_state = utils.coherent_state(a, basis="fock", fock_dim=cutoff, hbar=hbar)
         else:
-            in_state = utils.coherent_state(a, basis="gaussian")
+            in_state = utils.coherent_state(a, basis="gaussian", hbar=hbar)
 
         assert np.allclose(state.fidelity(in_state, 0), 1, atol=tol, rtol=0)
         assert np.allclose(state.fidelity(in_state, 1), 1, atol=tol, rtol=0)
         assert np.allclose(state.fidelity_coherent([a, a]), 1, atol=tol, rtol=0)
 
-    def test_squeezed_fidelity(self, setup_backend, cutoff, tol):
+    def test_squeezed_fidelity(self, setup_backend, cutoff, tol, hbar):
         backend = setup_backend(2)
         backend.prepare_squeezed_state(r, phi, 0)
         backend.squeeze(r * np.exp(1j * phi), 1)
         state = backend.state()
 
         if isinstance(backend, backends.BaseFock):
-            in_state = utils.squeezed_state(r, phi, basis="fock", fock_dim=cutoff)
+            in_state = utils.squeezed_state(r, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
         else:
-            in_state = utils.squeezed_state(r, phi, basis="gaussian")
+            in_state = utils.squeezed_state(r, phi, basis="gaussian", hbar=hbar)
 
         assert np.allclose(state.fidelity(in_state, 0), 1, atol=tol, rtol=0)
         assert np.allclose(state.fidelity(in_state, 1), 1, atol=tol, rtol=0)
 
-    def test_squeezed_coherent_fidelity(self, setup_backend, cutoff, tol):
+    def test_squeezed_coherent_fidelity(self, setup_backend, cutoff, tol, hbar):
         backend = setup_backend(2)
         backend.prepare_displaced_squeezed_state(a, r, phi, 0)
         backend.squeeze(r * np.exp(1j * phi), 1)
@@ -329,10 +329,10 @@ class TestFidelities:
 
         if isinstance(backend, backends.BaseFock):
             in_state = utils.displaced_squeezed_state(
-                a, r, phi, basis="fock", fock_dim=cutoff
+                a, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
             )
         else:
-            in_state = utils.displaced_squeezed_state(a, r, phi, basis="gaussian")
+            in_state = utils.displaced_squeezed_state(a, r, phi, basis="gaussian", hbar=hbar)
 
         assert np.allclose(state.fidelity(in_state, 0), 1, atol=tol, rtol=0)
         assert np.allclose(state.fidelity(in_state, 1), 1, atol=tol, rtol=0)

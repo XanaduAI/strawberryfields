@@ -1828,8 +1828,11 @@ class Gaussian(Preparation, Decomposition):
             th, self.S = williamson(V, tol=tol)
             self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < tol
             self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
+            super().__init__([V, r])
+        else:
+            # scale state
+            super().__init__([V*2/hbar, r/np.sqrt(2*hbar)])
 
-        super().__init__([V, r])
         # FIXME merge() probably does not work for Gaussians if r is not zero?
 
     def _apply(self, reg, backend, **kwargs):
