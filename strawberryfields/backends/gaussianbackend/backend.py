@@ -34,19 +34,17 @@ class GaussianBackend(BaseGaussian):
         self._supported["mixed_states"] = True
         self._short_name = "gaussian"
 
-    def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=None, **kwargs):
+    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=None, **kwargs):
         r"""
         Create a quantum circuit (initialized in vacuum state) with number of modes
         equal to num_subsystems.
 
         Args:
             num_subsystems (int): number of modes the circuit should begin with
-            hbar (float): The value of :math:`\hbar` to initialise the circuit with, depending on the conventions followed.
-                By default, :math:`\hbar=2`. See :ref:`conventions` for more details.
         """
         # pylint: disable=attribute-defined-outside-init
         self._init_modes = num_subsystems
-        self.circuit = GaussianModes(num_subsystems, hbar)
+        self.circuit = GaussianModes(num_subsystems)
 
     def add_mode(self, n=1):
         """
@@ -360,4 +358,4 @@ class GaussianBackend(BaseGaussian):
             Amat = self.circuit.Amat()
 
         return GaussianState((means, covmat), len(modes), qmat, Amat,
-                             hbar=self.circuit.hbar, mode_names=mode_names)
+                             mode_names=mode_names)

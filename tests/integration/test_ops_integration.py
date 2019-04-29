@@ -203,8 +203,8 @@ class TestKetDensityMatrixIntegration:
         """Test exceptions"""
         mu = np.array([0.0, 0.0])
         cov = np.identity(2)
-        state1 = GaussianState((mu, cov), 1, True, hbar)
-        state2 = BaseFockState(np.zeros(cutoff), 1, False, cutoff, hbar)
+        state1 = GaussianState((mu, cov), 1, None, None)
+        state2 = BaseFockState(np.zeros(cutoff), 1, False, cutoff)
 
         eng, prog = setup_eng(2)
 
@@ -227,7 +227,7 @@ class TestKetDensityMatrixIntegration:
         eng.reset()
 
         prog = sf.Program(2)
-        state1 = BaseFockState(ket0, 1, True, cutoff, hbar)
+        state1 = BaseFockState(ket0, 1, True, cutoff)
         with prog.context as q:
             ops.Ket(state1) | q[0]
         state2 = eng.run(prog, modes=[0])
@@ -252,7 +252,7 @@ class TestKetDensityMatrixIntegration:
         eng.reset()
 
         prog = sf.Program(2)
-        state1 = BaseFockState(ket, 2, True, cutoff, hbar)
+        state1 = BaseFockState(ket, 2, True, cutoff)
         with prog.context as q:
             ops.Ket(state1) | q
         state2 = eng.run(prog)
@@ -262,7 +262,7 @@ class TestKetDensityMatrixIntegration:
         """Test exceptions"""
         mu = np.array([0.0, 0.0])
         cov = np.identity(2)
-        state = GaussianState((mu, cov), 1, True, hbar)
+        state = GaussianState((mu, cov), 1, None, None)
 
         eng, prog = setup_eng(2)
 
@@ -285,7 +285,7 @@ class TestKetDensityMatrixIntegration:
         eng.reset()
 
         prog = sf.Program(2)
-        state1 = BaseFockState(rho, 1, False, cutoff, hbar)
+        state1 = BaseFockState(rho, 1, False, cutoff)
         with prog.context as q:
             ops.DensityMatrix(state1) | q[0]
         state2 = eng.run(prog, modes=[0])
@@ -310,7 +310,7 @@ class TestKetDensityMatrixIntegration:
         eng.reset()
 
         prog = sf.Program(2)
-        state1 = BaseFockState(rho, 2, False, cutoff, hbar)
+        state1 = BaseFockState(rho, 2, False, cutoff)
         with prog.context as q:
             ops.DensityMatrix(state1) | q
         state2 = eng.run(prog)

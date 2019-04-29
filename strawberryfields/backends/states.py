@@ -23,11 +23,8 @@ Quantum states API
 .. currentmodule:: strawberryfields.backends.states
 
 This module provides classes which represent the quantum state
-returned by a simulator backend and the quantum engine:
+returned by a simulator backend via :class:`.Engine`.
 
-.. code-block:: python3
-
-    state = eng.run('backend')
 
 Base quantum state
 -------------------------------
@@ -124,6 +121,7 @@ from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
 
+import strawberryfields as sf
 from .shared_ops import rotation_matrix as _R
 from .shared_ops import changebasis
 
@@ -133,9 +131,9 @@ class BaseState(abc.ABC):
     r"""Abstract base class for the representation of quantum states."""
     EQ_TOLERANCE = 1e-10
 
-    def __init__(self, num_modes, hbar=2, mode_names=None):
+    def __init__(self, num_modes, mode_names=None):
         self._modes = num_modes
-        self._hbar = hbar
+        self._hbar = sf.hbar  # always use the global frontend hbar value for state objects
         self._data = None
         self._pure = None
 
@@ -415,15 +413,14 @@ class BaseFockState(BaseState):
         num_modes (int): the number of modes in the state
         pure (bool): True if the state is a pure state, false if the state is mixed
         cutoff_dim (int): the Fock basis truncation size
-        hbar (float): (default 2) The value of :math:`\hbar` in the definition of :math:`\x` and :math:`\p` (see :ref:`opcon`)
         mode_names (Sequence): (optional) this argument contains a list providing mode names
             for each mode in the state
     """
 
-    def __init__(self, state_data, num_modes, pure, cutoff_dim, hbar=2., mode_names=None):
+    def __init__(self, state_data, num_modes, pure, cutoff_dim, mode_names=None):
         # pylint: disable=too-many-arguments
 
-        super().__init__(num_modes, hbar, mode_names)
+        super().__init__(num_modes, mode_names)
 
         self._data = state_data
         self._cutoff = cutoff_dim
@@ -882,18 +879,17 @@ class BaseGaussianState(BaseState):
             covariance matrix array ``cov``, in terms of the complex displacement.
         num_modes (int): the number of modes in the state
         pure (bool): True if the state is a pure state, false if the state is mixed
-        hbar (float): (default 2) The value of :math:`\hbar` in the definition of :math:`\x` and :math:`\p` (see :ref:`opcon`)
         mode_names (Sequence): (optional) this argument contains a list providing mode names
             for each mode in the state
     """
-    def __init__(self, state_data, num_modes, hbar=2., mode_names=None):
-        super().__init__(num_modes, hbar, mode_names)
+    def __init__(self, state_data, num_modes, mode_names=None):
+        super().__init__(num_modes, mode_names)
 
         self._data = state_data
 
-        # vector of means and covariance matrix
-        self._mu = self._data[0]
-        self._cov = self._data[1]
+        # vector of means and covariance matrix, using frontend x,p scaling
+        self._mu = self._data[0] * np.sqrt(self._hbar/2)
+        self._cov = self._data[1] * (self._hbar/2)
 
         # complex displacements of the Gaussian state
         self._alpha = self._mu[:self._modes] + 1j*self._mu[self._modes:]

@@ -296,6 +296,7 @@ from numpy import pi
 from scipy.linalg import block_diag
 from scipy.special import factorial as fac
 
+import strawberryfields as sf
 from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
 from .program import (Program, Command, RegRefTransform, MergeFailure)
@@ -388,8 +389,7 @@ class Operation:
     def __or__(self, reg):
         """Apply the operation to a part of a quantum register.
 
-        Dispatches the Operation to the :class:`~strawberryfields.engine.Engine`
-        command queue for later execution.
+        Appends the Operation to a :class:`.Program` instance.
 
         Args:
             reg (RegRef, Sequence[RegRef]): subsystem(s) the operation is acting on
@@ -401,7 +401,7 @@ class Operation:
         reg = _seq_to_list(reg)
         if (not reg) or (self.ns is not None and self.ns != len(reg)):
             raise ValueError("Wrong number of subsystems.")
-        # send it to the engine
+        # append it to the Program
         reg = Program._current_context.append(self, reg)
         return reg
 
@@ -467,8 +467,8 @@ class Operation:
         raise NotImplementedError(
             'Missing direct implementation: {}'.format(self))
 
-    def apply(self, reg, backend, hbar, **kwargs):
-        """Ask a backend to execute the operation on the current register state right away.
+    def apply(self, reg, backend, **kwargs):
+        """Ask a local backend to execute the operation on the current register state right away.
 
         Takes care of parameter evaluations and any pending formal
         transformations (like dagger) and then calls _apply.
@@ -499,7 +499,6 @@ class Operation:
 
         # convert RegRefs back to indices for the backend API
         temp = [rr.ind for rr in reg]
-        self.hbar = hbar  # pylint: disable=attribute-defined-outside-init
         # call the child class specialized _apply method
         result = self._apply(temp, backend, **kwargs)
 
@@ -567,12 +566,12 @@ class Measurement(Operation):
         raise MergeFailure(
             'For now, measurements cannot be merged with anything else.')
 
-    def apply(self, reg, backend, hbar, **kwargs):
+    def apply(self, reg, backend, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
 
         Like :func:`Operation.apply`, but also stores the measurement result in the RegRefs.
         """
-        values = super().apply(reg, backend, hbar, **kwargs)
+        values = super().apply(reg, backend, **kwargs)
         # measurement can act on multiple modes
         if self.ns == 1:
             values = [values]
@@ -605,9 +604,6 @@ class Decomposition(Operation):
             # check if the matrices cancel
             if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
                 return None
-
-            if hasattr(self, 'hbar'):
-                return self.__class__(U, hbar=self.hbar)
 
             return self.__class__(U)
 
@@ -716,7 +712,7 @@ class Gate(Transformation):
             seq = list(reversed(seq))
         return seq
 
-    def apply(self, reg, backend, hbar, **kwargs):
+    def apply(self, reg, backend, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
 
         Like :func:`Operation.apply`, but takes into account the special nature of
@@ -738,7 +734,7 @@ class Gate(Transformation):
         self.p = [z] + [x.evaluate() for x in self.p[1:]]
         # calling the parent apply, skipping re-evaluation of self.p
         # (which wouldn't hurt but is unnecessary)
-        super().apply(reg, backend, hbar, eval_params=False, **kwargs)
+        super().apply(reg, backend, eval_params=False, **kwargs)
         self.p = temp  # restore original unevaluated Parameter instances
 
     def merge(self, other):
@@ -803,7 +799,7 @@ class Vacuum(Preparation):
 
     def __str__(self):
         # return the shorthand object when the
-        # command queue is printed by the user
+        # command is printed by the user
         return 'Vac'
 
 
@@ -897,14 +893,6 @@ class Catstate(Preparation):
        \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha}),
 
     where :math:`N = \sqrt{2 (1+\cos(\phi)e^{-2|\alpha|^2})}` is the normalization factor.
-
-    This is a Strawberry Fields quantum gate operator, and thus is used within an engine
-    context as follows:
-
-    .. code-block:: python
-
-        with eng:
-            Catstate(1, 0.2) | q[0]
 
     Args:
         alpha (complex): displacement parameter
@@ -1079,7 +1067,12 @@ class MeasureHomodyne(Measurement):
 
     def _apply(self, reg, backend, **kwargs):
         p = _unwrap(self.p)
-        return backend.measure_homodyne(p[0], *reg, select=self.select, **kwargs)
+        s = sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
+        select = self.select
+        if select is not None:
+           select = select / s
+
+        return s * backend.measure_homodyne(p[0], *reg, select=select, **kwargs)
 
     def __str__(self):
         if self.select is None:
@@ -1208,7 +1201,7 @@ class Xgate(Gate):
         super().__init__([x])
 
     def _apply(self, reg, backend, **kwargs):
-        z = self.p[0] / sqrt(2 * self.hbar)
+        z = self.p[0] / sqrt(2 * sf.hbar)
         backend.displacement(z.x, *reg)
 
 
@@ -1226,7 +1219,7 @@ class Zgate(Gate):
         super().__init__([p])
 
     def _apply(self, reg, backend, **kwargs):
-        z = self.p[0] * 1j/sqrt(2 * self.hbar)
+        z = self.p[0] * 1j/sqrt(2 * sf.hbar)
         backend.displacement(z.x, *reg)
 
 
@@ -1280,7 +1273,7 @@ class Vgate(Gate):
     r""":ref:`Cubic phase <cubic>` gate.
 
     .. math::
-       V(\gamma) = e^{i \frac{\gamma}{3} \hat{x}^3/\hbar}
+       V(\gamma) = e^{i \frac{\gamma}{3 \hbar} \hat{x}^3}
 
     .. warning:: The cubic phase gate has lower accuracy than the Kerr gate at the same cutoff dimension.
 
@@ -1292,8 +1285,9 @@ class Vgate(Gate):
         super().__init__([gamma])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _unwrap(self.p)
-        backend.cubic_phase(p[0], *reg)
+        gamma_prime = self.p[0] * sqrt(sf.hbar / 2)
+        # the backend API call cubic_phase is hbar-independent
+        backend.cubic_phase(gamma_prime.x, *reg)
 
 
 class Kgate(Gate):
@@ -1538,20 +1532,24 @@ class New_modes(MetaOperation):
     The new modes are prepapred in the vacuum state.
 
     This class cannot be used with the :meth:`__or__` syntax since it would be misleading,
-    instead we use :meth:`__call__` on a single instance to dispatch the command to the engine.
+    instead we use :meth:`__call__` on a single instance to dispatch the command to the :class:`.Program`.
     """
     ns = 0
 
     def __call__(self, n=1):
         """Adds one or more new modes to the system in a deferred way.
 
-        Dispatches the command to the command queue.
+        Appends the operation to a :class:`.Program` instance.
+
+        Args:
+            n (int): number of modes added
         """
+        # FIXME there is just a single instance, hence instance attributes may be overwritten!
         # pylint: disable=attribute-defined-outside-init
         self.n = n  # int: store the number of new modes for the __str__ method
         # create RegRef placeholders for the new modes
         refs = Program._current_context._add_subsystems(n)
-        # send the actual creation command to the engine
+        # append the actual creation command to the program
         Program._current_context.append(self, refs)
         return refs
 
@@ -1584,7 +1582,7 @@ class All(MetaOperation):
         # into a list of subsystems
         reg = _seq_to_list(reg)
         # convert into commands
-        # make sure reg does not contain duplicates (we feed them to Engine.append() one by one)
+        # make sure reg does not contain duplicates (we feed them to Program.append() one by one)
         Program._current_context._test_regrefs(reg)
         for r in reg:
             Program._current_context.append(self.op, [r])
@@ -1799,17 +1797,17 @@ class Gaussian(Preparation, Decomposition):
             If None, it is assumed that :math:`r=0`.
         decomp (bool): Should the operation be decomposed into a sequence of elementary gates?
             If False, the state preparation is performed directly via the backend API.
-        hbar (float): the value of :math:`\hbar` used in the definition of the :math:`\x`
-            and :math:`\p` quadrature operators. Note that if used inside of an engine
-            context, the hbar value of the engine will override this keyword argument.
         tol (float): the tolerance used when checking if the matrix is symmetric: :math:`|V-V^T| \leq tol`
     """
     # pylint: disable=too-many-instance-attributes
     ns = None
 
-    def __init__(self, V, r=None, decomp=True, hbar=2, tol=1e-6):
+    def __init__(self, V, r=None, decomp=True, tol=1e-6):
         # TODO NOTE: there is no contextual hbar value anymore, is the hbar actually necessary here?
-        self.hbar = hbar
+
+        #: float: value of :math:`\hbar` used in the definition of the :math:`\x` and :math:`\p` quadrature operators
+        # TODO can we just divide V by hbar/2 here and remove hbar from further expressions?
+        self.hbar = sf.hbar
         self.ns = V.shape[0]//2
 
         if r is None:
@@ -1829,11 +1827,7 @@ class Gaussian(Preparation, Decomposition):
             th, self.S = williamson(V, tol=tol)
             self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < tol
             self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
-            super().__init__([V, r])
-        else:
-            # scale state for hbar=2 to be applied directly
-            # by the backend
-            super().__init__([V*2/hbar, r*np.sqrt(2/hbar)])
+        super().__init__([V, r])
 
         # FIXME merge() probably does not work for Gaussians if r is not zero?
 
@@ -1844,7 +1838,8 @@ class Gaussian(Preparation, Decomposition):
             raise NotImplementedError
 
         p = _unwrap(self.p)
-        backend.prepare_gaussian_state(p[1], p[0], reg)
+        s = sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
+        backend.prepare_gaussian_state(p[1]/s, p[0]/(s*s), reg)
 
     def _decompose(self, reg):
         # pylint: disable=too-many-branches

@@ -133,7 +133,7 @@ class TestGateBasics:
         assert not G.dagger
         assert G2.dagger
 
-        def dummy_apply(self, reg, backend, hbar, eval_params=False):
+        def dummy_apply(self, reg, backend, eval_params=False):
             """Dummy apply function, used to store the evaluated params"""
             self.res = [x.evaluate() for x in self.p]
 
@@ -143,7 +143,7 @@ class TestGateBasics:
             # in the attribute res. This allows us to extract
             # and verify the parameter was properly negated.
             m.setattr(ops.Operation, "apply", dummy_apply)
-            G2.apply(None, None, None)
+            G2.apply(None, None)
 
         orig_params = [x.evaluate() for x in G2.p]
         applied_params = G2.res

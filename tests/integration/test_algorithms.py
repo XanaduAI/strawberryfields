@@ -35,8 +35,8 @@ def test_teleportation_fidelity(setup_eng, pure):
         BS | (q[1], q[2])
 
         BS | (q[0], q[1])
-        MeasureHomodyne(0, select=0) | q[0]
-        MeasureHomodyne(np.pi / 2, select=0) | q[1]
+        MeasureHomodyne(0, select=0.07) | q[0]
+        MeasureHomodyne(np.pi / 2, select=0.1) | q[1]
 
     state = eng.run(prog)
     fidelity = state.fidelity_coherent([0, 0, 0.5 + 0.2j])

@@ -18,6 +18,7 @@ Default parameters, environment variables, fixtures, and common routines for the
 import os
 import pytest
 
+import strawberryfields as sf
 from strawberryfields.engine import Engine
 from strawberryfields.program import Program
 from strawberryfields.backends.base import BaseBackend
@@ -56,7 +57,8 @@ def alpha():
 @pytest.fixture(scope="session")
 def hbar():
     """The value of hbar"""
-    return float(os.environ.get("HBAR", HBAR))
+    sf.hbar = float(os.environ.get("HBAR", HBAR))
+    return sf.hbar
 
 
 @pytest.fixture(
@@ -124,7 +126,7 @@ def print_fixtures(cutoff, hbar, batch_size):
     ]
 )
 def setup_backend(
-    request, cutoff, hbar, pure, batch_size
+    request, cutoff, pure, batch_size
 ):  # pylint: disable=redefined-outer-name
     """Parameterized fixture, used to automatically create a backend of certain number of modes.
 
@@ -145,7 +147,6 @@ def setup_backend(
         backend.begin_circuit(
             num_subsystems=num_subsystems,
             cutoff_dim=cutoff,
-            hbar=hbar,
             pure=pure,
             batch_size=batch_size,
         )
@@ -162,7 +163,7 @@ def setup_backend(
     ]
 )
 def setup_backend_pars(
-    request, cutoff, hbar, pure, batch_size
+    request, cutoff, pure, batch_size
 ):  # pylint: disable=redefined-outer-name
     """Parameterized fixture, a container for the backend parameters.
 
@@ -173,11 +174,9 @@ def setup_backend_pars(
     use the ``@pytest.mark.backends()`` fixture. For example, for a test that
     only works on the TF and Fock backends, ``@pytest.mark.backends('tf', 'fock').
     """
-
     return {
         'backend_name': request.param,
         'cutoff_dim': cutoff,
-        'hbar': hbar,
         'pure': pure,
         'batch_size': batch_size,
     }
