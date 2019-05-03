@@ -172,8 +172,8 @@ class TestCircuitDrawerClass:
         with pytest.raises(ModeMismatchException):
             drawer.parse_op(Fakeop())
 
-# FIXME circuit drawer tests
-@pytest.mark.broken
+
+@pytest.mark.broken('FIXME circuit drawer tests')
 class TestEngineIntegration:
     """Tests for calling the circuit drawer via the engine"""
 

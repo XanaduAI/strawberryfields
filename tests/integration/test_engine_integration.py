@@ -61,8 +61,7 @@ class TestEngineReset:
         eng.reset()
         assert np.all(eng.backend.is_vacuum(tol))
 
-    # FIXME when backend reset logic is done
-    @pytest.mark.broken
+    @pytest.mark.broken('FIXME when backend reset logic is done')
     @pytest.mark.backends("fock")
     def test_eng_reset(self, setup_eng):
         """Test the Engine.reset() features."""

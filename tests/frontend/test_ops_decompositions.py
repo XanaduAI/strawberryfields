@@ -275,8 +275,7 @@ class TestGraphEmbed:
         assert np.allclose(ratio, np.ones([n, n]), atol=tol, rtol=0)
 
 
-# FIXME hbar issue
-@pytest.mark.broken
+@pytest.mark.broken('FIXME hbar issue')
 class TestGaussianTransform:
     """Tests for the GaussianTransform quantum operation"""
 
@@ -482,8 +481,7 @@ class TestGaussianTransform:
         assert np.allclose(cov, S @ S.T * hbar / 2, atol=tol, rtol=0)
 
 
-# FIXME hbar issue
-@pytest.mark.broken
+@pytest.mark.broken('FIXME hbar issue')
 class TestGaussian:
     """Tests for the Gaussian quantum state preparation"""
 
