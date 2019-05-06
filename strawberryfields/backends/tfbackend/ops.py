@@ -289,8 +289,8 @@ def beamsplitter_matrix(t, r, D, batched=False, save=False, directory=None):
     """creates the two mode beamsplitter matrix"""
     if not batched:
         # put in a fake batch dimension for broadcasting convenience
-        t = tf.expand_dims(t, -1)
-        r = tf.expand_dims(r, -1)
+        t = tf.expand_dims(t, 0)
+        r = tf.expand_dims(r, 0)
     t = tf.cast(tf.reshape(t, [-1, 1, 1, 1, 1, 1]), def_type)
     r = tf.cast(tf.reshape(r, [-1, 1, 1, 1, 1, 1]), def_type)
     mag_t = tf.cast(t, tf.float32)
