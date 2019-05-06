@@ -45,7 +45,8 @@ MOCK_MODULES = [
     'scipy.linalg',
     'tensorflow',
     'networkx',
-    'numbers'
+    'numbers',
+    'blackbird'
     ]
 
 np_math_fns = ['abs',
