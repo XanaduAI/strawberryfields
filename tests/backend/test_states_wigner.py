@@ -84,7 +84,7 @@ def test_squeezed_coherent(setup_backend, hbar, tol):
     cov = np.dot(rot, np.dot(cov, rot.T)) * hbar / 2.0
     Wexact = wigner(GRID, mu, cov)
 
-    assert np.allclose(W, Wexact, atol=tol, rtol=0)
+    assert np.allclose(W, Wexact, atol=0.01, rtol=0)
 
 
 def test_two_mode_squeezed(setup_backend, hbar, tol):
@@ -106,5 +106,5 @@ def test_two_mode_squeezed(setup_backend, hbar, tol):
     cov = np.diag([np.exp(2 * R), np.exp(-2 * R)]) * hbar / 2
     W1exact = wigner(GRID, mu, cov)
 
-    assert np.allclose(W0, W0exact, atol=tol, rtol=0)
-    assert np.allclose(W1, W1exact, atol=tol, rtol=0)
+    assert np.allclose(W0, W0exact, atol=0.01, rtol=0)
+    assert np.allclose(W1, W1exact, atol=0.01, rtol=0)

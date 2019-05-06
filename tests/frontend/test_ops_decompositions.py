@@ -255,9 +255,9 @@ class TestGraphEmbed:
         O = np.zeros_like(I)
         X = np.block([[O, I], [I, O]])
 
-        x = cov[:n, :n] * 2 / hbar
-        xp = cov[:n, n:] * 2 / hbar
-        p = cov[n:, n:] * 2 / hbar
+        x = cov[:n, :n]
+        xp = cov[:n, n:]
+        p = cov[n:, n:]
 
         aidaj = (x + p + 1j * (xp - xp.T) - 2 * I) / 4
         aiaj = (x - p + 1j * (xp + xp.T)) / 4

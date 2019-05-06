@@ -126,7 +126,7 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(mean, 0, atol=tol, rtol=0)
         assert np.allclose(var, len(d) * hbar / 4, atol=tol, rtol=0)
 
-    def test_x_squeezed(self, setup_backend, tol, pure):
+    def test_x_squeezed(self, setup_backend, tol, pure, hbar):
         """Test that the correct E(x) is returned for the squeezed state."""
         backend = setup_backend(3)
         backend.reset(cutoff_dim=CUTOFF, pure=pure)
@@ -142,7 +142,7 @@ class TestSingleModePolyQuadratureExpectations:
         mean, var = state.poly_quad_expectation(A, d, k, phi=0)
 
         assert np.allclose(mean, 0, atol=tol, rtol=0)
-        assert np.allclose(var, np.exp(-2 * r), atol=tol, rtol=0)
+        assert np.allclose(var, np.exp(-2 * r)*hbar/2, atol=tol, rtol=0)
 
     def test_x_displaced(self, setup_backend, tol, hbar):
         """Test that the correct E(x) is returned for a displaced state."""
@@ -306,7 +306,7 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(mean, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
-    def test_xp_vacuum(self, setup_backend, tol, sample_normal_expectations):
+    def test_xp_vacuum(self, setup_backend, tol, sample_normal_expectations, hbar):
         """Test that the correct result is returned for E(xp) on the vacuum state"""
         backend = setup_backend(3)
 
@@ -322,16 +322,16 @@ class TestSingleModePolyQuadratureExpectations:
 
         mean_ex, var_ex = sample_normal_expectations(
             lambda X, P, XP: XP,
-            correction=-np.linalg.det(2 * A[:, [0, 3]][[0, 3]]),
+            correction=-np.linalg.det(hbar * A[:, [0, 3]][[0, 3]]),
             mu=np.zeros([2]),
-            cov=np.identity(2),
+            cov=np.identity(2)*hbar/2,
         )
 
         assert np.allclose(mean, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
     def test_xp_displaced_squeezed(
-        self, setup_backend, tol, pure, sample_normal_expectations
+        self, setup_backend, tol, pure, sample_normal_expectations, hbar
     ):
         """Test that the correct result is returned for E(xp) on a displaced squeezed state"""
         backend = setup_backend(3)
@@ -351,13 +351,13 @@ class TestSingleModePolyQuadratureExpectations:
         mean, var = state.poly_quad_expectation(A, d, k, phi=qphi)
 
         mean_ex, var_ex = sample_normal_expectations(
-            lambda X, P, XP: XP, correction=-np.linalg.det(2 * A[:, [0, 3]][[0, 3]])
+            lambda X, P, XP: XP, correction=-np.linalg.det(hbar * A[:, [0, 3]][[0, 3]])
         )
         assert np.allclose(mean, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
     def test_arbitrary_quadratic(
-        self, setup_backend, tol, pure, sample_normal_expectations
+        self, setup_backend, tol, pure, sample_normal_expectations, hbar
     ):
         """Test that the correct result is returned for E(c0 x^2 + c1 p^2 + c2 xp + c3 x + c4 p + k) on a displaced squeezed state"""
         backend = setup_backend(3)
@@ -389,7 +389,7 @@ class TestSingleModePolyQuadratureExpectations:
 
         mean_ex, var_ex = sample_normal_expectations(
             lambda X, P, XP: c0 * X ** 2 + c1 * P ** 2 + c2 * XP + c3 * X + c4 * P + k,
-            correction=-np.linalg.det(2 * A[:, [0, 3]][[0, 3]]),
+            correction=-np.linalg.det(hbar * A[:, [0, 3]][[0, 3]]),
         )
 
         assert np.allclose(mean, mean_ex, atol=tol, rtol=0)

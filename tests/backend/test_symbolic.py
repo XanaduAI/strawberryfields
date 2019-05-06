@@ -446,10 +446,9 @@ class TestOneModeSymbolic:
         assert isinstance(e, tf.Tensor)
         assert isinstance(v, tf.Tensor)
 
-    def test_eval_true_state_quad_expectation(self, setup_eng, tol):
+    def test_eval_true_state_quad_expectation(self, setup_eng, tol, hbar):
         """Tests whether the local quadrature expectation value of the state returns
         the correct value when eval=True is passed to the quad_expectation method of a state."""
-        hbar = 2.0
         eng, prog = setup_eng(1)
 
         with prog.context as q:

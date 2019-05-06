@@ -109,7 +109,7 @@ class TestThermalLossChannel:
     @pytest.mark.parametrize("T", LOSS_TS)
     @pytest.mark.parametrize("nbar", MAG_ALPHAS)
     def test_thermal_loss_channel_on_squeezed_state(
-        self, nbar, T, setup_backend, pure, tol
+        self, nbar, T, setup_backend, pure, tol, hbar
     ):
         """Tests thermal loss channel on a squeezed state"""
         backend = setup_backend(1)
@@ -124,7 +124,9 @@ class TestThermalLossChannel:
                 T * np.exp(-2 * r) + (1 - T) * (2 * nbar + 1),
                 T * np.exp(2 * r) + (1 - T) * (2 * nbar + 1),
             ]
-        )
+        )*hbar/2
+
+        print(res, exp)
 
         assert np.allclose(res, exp, atol=tol, rtol=0)
 
