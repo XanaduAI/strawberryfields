@@ -48,7 +48,7 @@ class TestInitialStatesAgreeGaussian:
         with prog.context as q:
             ops.Vac | q[0]
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
 
         mu, cov = utils.vacuum_state(basis="gaussian", hbar=hbar)
         mu_exp, cov_exp = state.reduced_gaussian(0)
@@ -63,7 +63,7 @@ class TestInitialStatesAgreeGaussian:
         with prog.context as q:
             ops.Dgate(a) | q[0]
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
 
         mu, cov = utils.coherent_state(a, basis="gaussian", hbar=hbar)
         mu_exp, cov_exp = state.reduced_gaussian(0)
@@ -78,7 +78,7 @@ class TestInitialStatesAgreeGaussian:
         with prog.context as q:
             ops.Sgate(r, phi) | q[0]
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
 
         mu, cov = utils.squeezed_state(r, phi, basis="gaussian", hbar=hbar)
         mu_exp, cov_exp = state.reduced_gaussian(0)
@@ -94,7 +94,7 @@ class TestInitialStatesAgreeGaussian:
             ops.Sgate(r, phi) | q[0]
             ops.Dgate(a) | q[0]
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
 
         mu, cov = utils.displaced_squeezed_state(a, r, phi, basis="gaussian", hbar=hbar)
         mu_exp, cov_exp = state.reduced_gaussian(0)
@@ -119,7 +119,7 @@ class TestInitialStatesAgreeFock:
         with prog.context as q:
             ops.Vac | q[0]
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
 
         ket = utils.vacuum_state(basis="fock", fock_dim=cutoff, hbar=hbar)
 
@@ -142,7 +142,7 @@ class TestInitialStatesAgreeFock:
         with prog.context as q:
             ops.Dgate(a) | q[0]
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         ket = utils.coherent_state(a, basis="fock", fock_dim=cutoff, hbar=hbar)
 
         if not pure:
@@ -163,7 +163,7 @@ class TestInitialStatesAgreeFock:
         with prog.context as q:
             ops.Sgate(r, phi) | q[0]
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         ket = utils.squeezed_state(r, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
 
         if not pure:
@@ -186,7 +186,7 @@ class TestInitialStatesAgreeFock:
             ops.Sgate(r, phi) | q[0]
             ops.Dgate(a) | q[0]
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         ket = utils.displaced_squeezed_state(
             a, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
         )
@@ -208,7 +208,7 @@ class TestInitialStatesAgreeFock:
         with prog.context as q:
             ops.Fock(n) | q[0]
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         ket = utils.fock_state(n, fock_dim=cutoff)
         if not pure:
             expected = state.dm()
@@ -228,7 +228,7 @@ class TestInitialStatesAgreeFock:
         with prog.context as q:
             ops.Catstate(a, p) | q[0]
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         ket = utils.cat_state(a, p, fock_dim=cutoff)
 
         if not pure:
@@ -274,7 +274,7 @@ class TestTeleportationOperationTest:
             ops.MeasureHomodyne(0, select=0) | q[0]
             ops.MeasureHomodyne(np.pi / 2, select=0) | q[1]
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         fidelity = state.fidelity_coherent([0, 0, 0.5 + 0.2j])
         assert np.allclose(fidelity, 1, atol=0.1, rtol=0)
 
@@ -306,7 +306,7 @@ class TestTeleportationOperationTest:
 
 @pytest.fixture
 def backend_name(setup_backend_pars):
-    return setup_backend_pars['backend_name']
+    return setup_backend_pars[0]
 
 
 @pytest.mark.backends("fock", "tf")
@@ -407,7 +407,7 @@ class TestExtractUnitary:
         else:
             final_state = U @ initial_state
 
-        expected_state = eng_ref.run([p0, prog]).ket()
+        expected_state = eng_ref.run([p0, prog]).state.ket()
         assert np.allclose(final_state, expected_state, atol=tol, rtol=0)
 
     def test_extract_arbitrary_unitary_two_modes_vectorized(
@@ -452,7 +452,7 @@ class TestExtractUnitary:
         else:
             final_state = U @ initial_state.reshape([-1])
 
-        expected_state = eng_ref.run([p0, prog]).ket().reshape([-1])
+        expected_state = eng_ref.run([p0, prog]).state.ket().reshape([-1])
         assert np.allclose(final_state, expected_state, atol=tol, rtol=0)
 
     def test_extract_arbitrary_unitary_two_modes_not_vectorized(
@@ -488,7 +488,7 @@ class TestExtractUnitary:
             backend=eng_ref.backend_name,
         )
         final_state = np.einsum("abcd,bd->ac", U, initial_state)
-        expected_state = eng_ref.run([p0, prog]).ket()
+        expected_state = eng_ref.run([p0, prog]).state.ket()
 
         assert np.allclose(final_state, expected_state, atol=tol, rtol=0)
 
@@ -515,7 +515,7 @@ class TestExtractChannelOneMode:
             S | q
             L | q
 
-        rho = eng_ref.run([p0, prog]).dm()
+        rho = eng_ref.run([p0, prog]).state.dm()
         return prog, rho, initial_state
 
     def test_extract_choi_channel(self, setup_one_mode_circuit, cutoff, tol):
@@ -574,7 +574,7 @@ class TestExtractChannelTwoMode:
             S | q[1]
             B | q
 
-        rho = eng_ref.run([p0, prog]).dm()
+        rho = eng_ref.run([p0, prog]).state.dm()
         return prog, rho, initial_state
 
     def test_extract_choi_channel(self, setup_two_mode_circuit, cutoff, tol):

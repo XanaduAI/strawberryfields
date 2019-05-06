@@ -36,7 +36,7 @@ single_mode_gates = [x for x in ops.one_args_gates + ops.two_args_gates if x.ns 
 @pytest.fixture
 def eng(backend):
     """Engine fixture."""
-    return sf.Engine(backend)
+    return sf.LocalEngine(backend)
 
 
 @pytest.fixture

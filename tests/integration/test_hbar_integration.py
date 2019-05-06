@@ -62,7 +62,7 @@ class TestIntegration:
         with prog.context as q:
             ops.Xgate(X) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         mu_x = state.means()[0]
 
         assert state.hbar == hbar
@@ -76,7 +76,7 @@ class TestIntegration:
         with prog.context as q:
             ops.Zgate(P) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         mu_z = state.means()[1]
 
         assert state.hbar == hbar

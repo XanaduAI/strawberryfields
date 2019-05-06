@@ -34,7 +34,10 @@ In this section, we provide the definitions of various quantum operations used b
    conventions/others
 
 
-.. note:: In Strawberry Fields we use the convention :math:`\hbar=2` by default, but other conventions can also be chosen on engine :func:`initialization <strawberryfields.Engine>`. In this document we keep :math:`\hbar` explicit.
+.. note:: In Strawberry Fields we use the convention :math:`\hbar=2` by default, but other
+   conventions can also be chosen by setting the global variable :py:data:`strawberryfields.hbar`
+   at the beginning of a session.
+   In this document we keep :math:`\hbar` explicit.
 
 
 .. note::

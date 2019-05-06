@@ -24,22 +24,10 @@ This module implements the :class:`Program` class which acts as a representation
 The Program object also acts as a context for defining the quantum circuit using the Python-embedded Blackbird syntax.
 
 A typical use looks like
-::
 
-  prog = sf.Program(num_subsystems)
-  with prog.context as q:
-      Coherent(0.5)  | q[0]
-      Vac            | q[1]
-      Sgate(2)       | q[1]
-      Dgate(0.5)     | q[0]
-      BSgate(1)      | q
-      Dgate(0.5).H   | q[0]
-      Measure        | q
-  eng = sf.Engine('fock')
-  eng.run(prog, cutoff_dim=5)
-  v1 = prog.register[1].val
+.. include:: example_use.rst
 
-The Program objects also keep track of the state of the quantum register they act on, using a dictionary of :class:`RegRef` objects.
+The Program objects keep track of the state of the quantum register they act on, using a dictionary of :class:`RegRef` objects.
 The currently active register references can be accessed using the :meth:`~Program.register` method.
 
 
@@ -141,7 +129,7 @@ and in no point should require a matrix representation.
 
 Currently the optimization is very simple. It
 
-* merges neighboring gates belonging to the same gate family and sharing the same set of subsystems
+* merges neighboring gates belonging to the same gate family and acting on the same sequence of subsystems
 * cancels neighboring pairs of a gate and its inverse
 
 .. currentmodule:: strawberryfields.program
@@ -190,7 +178,7 @@ def _convert(func):
             # some classical processing of x
             return f(x)
 
-        with eng:
+        with prog.context as q:
             MeasureX       | q[0]
             Dgate(F(q[0])) | q[1]
 
