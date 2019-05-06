@@ -30,7 +30,7 @@ This module implements the backend API. It contains the classes
 
 as well as a few methods which apply only to the Gaussian backend.
 
-.. note:: The backend API is hbar-independent.
+.. note:: The backend API is :math:`\hbar` independent.
           Internally the Strawberry Fields backends use :math:`\hbar=2`.
 
 
@@ -463,7 +463,7 @@ class BaseBackend:
            \hat{q}_\phi = \sqrt{2/\hbar}(\cos(\phi)\hat{x} +\sin(\phi)\hat{p}) = e^{-i\phi} \hat{a} +e^{i\phi} \hat{a}^\dagger.
 
         .. note::
-           This method is hbar-independent.
+           This method is :math:`\hbar` independent.
            The returned values can be converted to conventional position/momentum
            eigenvalues by multiplying them with :math:`\sqrt{\hbar/2}`.
 
@@ -592,16 +592,16 @@ class BaseFock(BaseBackend):
         to the specified mode.
 
         .. note::
-           This method is hbar-independent.
-           The usual definition of the cubic phase gate is hbar-dependent:
+           This method is :math:`\hbar` independent.
+           The usual definition of the cubic phase gate is :math:`\hbar` dependent:
 
            .. math::
               V(\gamma) = \exp\left(i \frac{\gamma}{3\hbar} \hat{x}^3\right) = \exp\left(i \frac{\gamma \sqrt{\hbar/2}}{6} (\hat{a} +\hat{a}^\dagger)^3\right).
 
            Hence the cubic phase gate `V(gamma)` is executed on a backend by scaling the
            `gamma` parameter by :math:`\sqrt{\hbar/2}` and then passing it to this method,
-           much in the way the hbar-dependent `X` and `Z` gates are implemented through the
-           hbar-independent :meth:`~BaseBackend.displacement` method.
+           much in the way the :math:`\hbar` dependent `X` and `Z` gates are implemented through the
+           :math:`\hbar` independent :meth:`~BaseBackend.displacement` method.
 
         .. warning::
             The cubic phase gate can suffer heavily from numerical inaccuracies
@@ -694,7 +694,7 @@ class BaseGaussian(BaseBackend):
         The requested modes are traced out and replaced with the given Gaussian state.
 
         .. note::
-           This method is hbar-independent.
+           This method is :math:`\hbar` independent.
            The input arrays are the means and covariance of the
            :math:`a+a^\dagger` and :math:`-i(a-a^\dagger)` operators.
            They are obtained by dividing the xp means by :math:`\sqrt{\hbar/2}`
