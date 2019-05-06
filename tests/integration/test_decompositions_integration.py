@@ -218,12 +218,14 @@ class TestGaussianBackendPrepareState:
         """Testing a displaced squeezed state"""
         eng, prog = setup_eng(3)
         cov = (hbar / 2) * np.diag([np.exp(-0.1)] * 3 + [np.exp(0.1)] * 3)
+        means = np.array([0, 0.1, 0.2, -0.1, 0.3, 0])
 
         with prog.context as q:
-            ops.Gaussian(cov, r=[0, 0.1, 0.2, -0.1, 0.3, 0], decomp=False, hbar=hbar) | q
+            ops.Gaussian(cov, r=means, decomp=False, hbar=hbar) | q
 
         state = eng.run(prog)
         assert np.allclose(state.cov(), cov, atol=tol)
+        assert np.allclose(state.means(), means, atol=tol)
 
     def test_thermal(self, setup_eng, hbar, tol):
         """Testing a thermal state"""
@@ -287,12 +289,14 @@ class TestGaussianBackendDecomposeState:
         """Testing decomposed displaced squeezed state"""
         eng, prog = setup_eng(3)
         cov = (hbar / 2) * np.diag([np.exp(-0.1)] * 3 + [np.exp(0.1)] * 3)
+        means = np.array([0, 0.1, 0.2, -0.1, 0.3, 0])
 
         with prog.context as q:
-            ops.Gaussian(cov, r=[0, 0.1, 0.2, -0.1, 0.3, 0], hbar=hbar) | q
+            ops.Gaussian(cov, r=means, hbar=hbar) | q
 
         state = eng.run(prog)
         assert np.allclose(state.cov(), cov, atol=tol)
+        assert np.allclose(state.means(), means, atol=tol)
         assert len(eng.run_progs[-1]) == 7
 
     def test_thermal(self, setup_eng, hbar, tol):

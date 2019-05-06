@@ -30,7 +30,7 @@ from strawberryfields.backends.tfbackend import TFBackend
 TOL = 1e-3
 CUTOFF = 6
 ALPHA = 0.1
-HBAR = 2
+HBAR = 1.7
 BATCHED = False
 BATCHSIZE = 2
 

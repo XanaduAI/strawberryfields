@@ -1824,14 +1824,16 @@ class Gaussian(Preparation, Decomposition):
         self.p_disp = r[self.ns:]
 
         self.decomp = decomp
+
         if decomp:
             th, self.S = williamson(V, tol=tol)
             self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < tol
             self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
             super().__init__([V, r])
         else:
-            # scale state
-            super().__init__([V*2/hbar, r/np.sqrt(2*hbar)])
+            # scale state for hbar=2 to be applied directly
+            # by the backend
+            super().__init__([V*2/hbar, r*np.sqrt(2/hbar)])
 
         # FIXME merge() probably does not work for Gaussians if r is not zero?
 
