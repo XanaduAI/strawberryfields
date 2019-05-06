@@ -221,3 +221,11 @@ def pytest_runtest_setup(item):
                 "\nTest {} only runs with {} backend(s), "
                 "but {} backend provided".format(item.nodeid, test_backends, b)
             )
+
+    # skip broken tests
+    for mark in item.iter_markers():
+        if mark.name == "broken":
+            if mark.args:
+                pytest.skip("Broken test skipped: {}".format(*mark.args))
+            else:
+                pytest.skip("Test skipped as corresponding code base is currently broken!")
