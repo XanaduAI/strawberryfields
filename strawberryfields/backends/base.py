@@ -30,8 +30,9 @@ This module implements the backend API. It contains the classes
 
 as well as a few methods which apply only to the Gaussian backend.
 
-.. note:: The Strawberry Fields backends by default assume :math:`\hbar=2`, however
-    different conventions may be chosen when calling :meth:`~.BaseBackend.begin_circuit`
+.. note:: The backend API is :math:`\hbar` independent.
+          Internally the Strawberry Fields backends use :math:`\hbar=2`.
+
 
 .. note::
     Keyword arguments are denoted ``**kwargs``, and allow additional
@@ -111,6 +112,8 @@ for quantum optical circuits.
 
 .. autosummary::
     measure_heterodyne
+
+.. currentmodule:: strawberryfields.backends.base
 
 Code details
 ~~~~~~~~~~~~
@@ -254,7 +257,7 @@ class BaseBackend:
         """
         return self._supported.get(name, False)
 
-    def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=True, **kwargs):
+    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=True, **kwargs):
         r"""Instantiate a quantum circuit.
 
         Instantiates a circuit with num_subsystems modes to track and update a quantum optical state.
@@ -452,8 +455,17 @@ class BaseBackend:
         r"""Measure a :ref:`phase space quadrature <homodyne>` of the given mode.
 
         For the measured mode, samples the probability distribution
-        :math:`f(q) = \bra{q}_x R^\dagger(\phi) \rho R(\phi) \ket{q}_x`
+        :math:`f(q) = \bra{q_\phi} R^\dagger(\phi) \rho R(\phi) \ket{q_\phi}`
         and returns the sampled value.
+        Here :math:`\ket{q_\phi}` is the eigenstate of the operator
+
+        .. math::
+           \hat{q}_\phi = \sqrt{2/\hbar}(\cos(\phi)\hat{x} +\sin(\phi)\hat{p}) = e^{-i\phi} \hat{a} +e^{i\phi} \hat{a}^\dagger.
+
+        .. note::
+           This method is :math:`\hbar` independent.
+           The returned values can be converted to conventional position/momentum
+           eigenvalues by multiplying them with :math:`\sqrt{\hbar/2}`.
 
         Updates the current state of the circuit such that the measured mode is reset
         to the vacuum state. This is because we cannot represent exact position or
@@ -494,7 +506,7 @@ class BaseBackend:
                 requesting the modes=[3,1] results in a two mode state being returned with the first mode being
                 subsystem 3 and the second mode being subsystem 1 of simulator.
         Returns:
-            An instance of the Strawberry Fields State class, suited to the particular backend.
+            BaseState: state description, suited to the particular backend
         """
         raise NotImplementedError
 
@@ -569,8 +581,27 @@ class BaseFock(BaseBackend):
         raise NotImplementedError
 
 
-    def cubic_phase(self, gamma, mode):
+    def cubic_phase(self, gamma_prime, mode):
         r"""Apply the cubic phase operation to the specified mode.
+
+        Applies the operation
+
+        .. math::
+           \exp\left(i \frac{\gamma'}{6} (\hat{a} +\hat{a}^\dagger)^3\right)
+
+        to the specified mode.
+
+        .. note::
+           This method is :math:`\hbar` independent.
+           The usual definition of the cubic phase gate is :math:`\hbar` dependent:
+
+           .. math::
+              V(\gamma) = \exp\left(i \frac{\gamma}{3\hbar} \hat{x}^3\right) = \exp\left(i \frac{\gamma \sqrt{\hbar/2}}{6} (\hat{a} +\hat{a}^\dagger)^3\right).
+
+           Hence the cubic phase gate `V(gamma)` is executed on a backend by scaling the
+           `gamma` parameter by :math:`\sqrt{\hbar/2}` and then passing it to this method,
+           much in the way the :math:`\hbar` dependent `X` and `Z` gates are implemented through the
+           :math:`\hbar` independent :meth:`~BaseBackend.displacement` method.
 
         .. warning::
             The cubic phase gate can suffer heavily from numerical inaccuracies
@@ -580,7 +611,7 @@ class BaseFock(BaseBackend):
             provides an alternative non-Gaussian gate.
 
         Args:
-            gamma (float): cubic phase shift
+            gamma_prime (float): scaled cubic phase shift, :math:`\gamma' = \gamma \sqrt{\hbar/2}`
             mode (int): which mode to apply it to
         """
         raise NotImplementedError
@@ -626,7 +657,7 @@ class BaseFock(BaseBackend):
             modes (int or Sequence[int]): specifies the mode or modes to restrict the return state to.
                 This argument is optional; the default value ``modes=None`` returns the state containing all modes.
         Returns:
-            An instance of the Strawberry Fields FockState class.
+            FockState: state description
         """
         raise NotImplementedError
 
@@ -660,11 +691,18 @@ class BaseGaussian(BaseBackend):
         r"""Prepare the given Gaussian state (via the provided vector of
         means and the covariance matrix) in the specified modes.
 
-        The requested mode(s) is/are traced out and replaced with the given Gaussian state.
+        The requested modes are traced out and replaced with the given Gaussian state.
+
+        .. note::
+           This method is :math:`\hbar` independent.
+           The input arrays are the means and covariance of the
+           :math:`a+a^\dagger` and :math:`-i(a-a^\dagger)` operators.
+           They are obtained by dividing the xp means by :math:`\sqrt{\hbar/2}`
+           and the xp covariance by :math:`\hbar/2`.
 
         Args:
-            r (array): the vector of means in xp ordering.
-            V (array): the covariance matrix in xp ordering.
+            r (array): vector of means in xp ordering
+            V (array): covariance matrix in xp ordering
             modes (int or Sequence[int]): which mode to prepare the state in
                 If the modes are not sorted, this is take into account when preparing the state.
                 i.e., when a two mode state is prepared in modes=[3,1], then the first

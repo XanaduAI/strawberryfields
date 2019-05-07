@@ -29,14 +29,12 @@ class GaussianState(BaseGaussianState):
         num_modes (int): the number of modes in the state
         qmat (array): The covariance matrix for the Q function
         Amat (array): The A matrix from Hamilton's paper
-        hbar (float): (default 2) The value of :math:`\hbar` in the commutation relation
-            :math:`[\x,\p]=i\hbar`
         mode_names (Sequence): (optional) this argument contains a list providing mode names
             for each mode in the state
     """
-    def __init__(self, state_data, num_modes, qmat, Amat, hbar=2., mode_names=None):
+    def __init__(self, state_data, num_modes, qmat, Amat, mode_names=None):
         # pylint: disable=too-many-arguments
-        super().__init__(state_data, num_modes, hbar, mode_names)
+        super().__init__(state_data, num_modes, mode_names)
 
         # some of the Gaussian backend operations expect as input a 'GaussianMode' class.
         # The following mini class matches the attributes expected for fock_probs and fidelity.
