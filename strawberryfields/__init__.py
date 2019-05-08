@@ -73,3 +73,7 @@ def version():
       str: package version number
     """
     return __version__
+
+
+#: float: numerical value of hbar for the frontend (in the implicit units of position * momentum)
+hbar = 2

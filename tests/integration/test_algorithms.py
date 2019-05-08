@@ -24,23 +24,29 @@ from strawberryfields.utils import scale
 def test_teleportation_fidelity(setup_eng, pure):
     """Test that teleportation of a coherent state has high fidelity"""
     eng, prog = setup_eng(3)
+    s = np.sqrt(2)
+    z = 2
+    BS = BSgate(np.pi / 4, 0)
+    alpha = 0.5 + 0.2j
+
     with prog.context as q:
         # TODO: at some point, use the blackbird parser to
         # read in the following directly from the examples folder
-        Coherent(0.5 + 0.2j) | q[0]
-        BS = BSgate(np.pi / 4, 0)
+        Coherent(alpha) | q[0]
 
-        Squeezed(-2) | q[1]
-        Squeezed(2) | q[2]
+        Squeezed(-z) | q[1]
+        Squeezed(z) | q[2]
         BS | (q[1], q[2])
 
         BS | (q[0], q[1])
-        MeasureHomodyne(0, select=0) | q[0]
-        MeasureHomodyne(np.pi / 2, select=0) | q[1]
+        MeasureHomodyne(0, select=0.07) | q[0]
+        MeasureHomodyne(np.pi / 2, select=0.1) | q[1]
+        Xgate(scale(q[0], s)) | q[2]
+        Zgate(scale(q[1], s)) | q[2]
 
     state = eng.run(prog)
-    fidelity = state.fidelity_coherent([0, 0, 0.5 + 0.2j])
-    assert np.allclose(fidelity, 1, atol=0.1, rtol=0)
+    fidelity = state.fidelity_coherent([0, 0, alpha])
+    assert np.allclose(fidelity, 1, atol=0.02, rtol=0)
 
 
 @pytest.mark.backends("gaussian")

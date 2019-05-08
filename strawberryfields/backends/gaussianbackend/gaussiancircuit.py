@@ -27,7 +27,7 @@ class GaussianModes:
     The state of the modes is manipulated by calling the various methods."""
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, num_subsystems, hbar):
+    def __init__(self, num_subsystems):
         r"""The class is initialized by providing an integer indicating the number of modes
         Unlike the "standard" covariance matrix for the Wigner function that uses symmetric ordering
         as defined in e.g.
@@ -50,7 +50,7 @@ class GaussianModes:
         if not isinstance(num_subsystems, int):
             raise ValueError("Number of modes must be an integer")
 
-        self.hbar = hbar
+        self.hbar = 2
         self.reset(num_subsystems)
 
     def add_mode(self, n=1):

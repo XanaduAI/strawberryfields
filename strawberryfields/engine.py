@@ -72,7 +72,6 @@ Code details
 ~~~~~~~~~~~~
 
 """
-# pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
 from collections.abc import Sequence
 
@@ -90,9 +89,6 @@ class Engine:
         backend (str): name of the backend
         host    (str): URL of the remote backend host, or None if a local backend is used
     Keyword Args:
-        hbar (float): The value of :math:`\hbar` to initialise the engine with, depending on the
-            conventions followed. By default, :math:`\hbar=2`. See
-            :ref:`conventions` for more details.
     """
     def __init__(self, backend, host=None, **kwargs):
         #: list[Program]: list of Programs that have been run
@@ -101,8 +97,6 @@ class Engine:
         self.host = host
         #: dict[str]: keyword arguments for the backend
         self.kwargs = kwargs
-        #: float: numerical value of hbar in the (implicit) units of position * momentum
-        self.hbar = kwargs.get('hbar', 2)
 
         if isinstance(backend, str):
             #: str: short name of the backend
@@ -178,7 +172,7 @@ class Engine:
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend
-                cmd.op.apply(cmd.reg, self.backend, hbar=self.hbar, **kwargs)
+                cmd.op.apply(cmd.reg, self.backend, **kwargs)
                 applied.append(cmd)
             except NotApplicableError:
                 # command is not applicable to the current backend type
@@ -230,7 +224,7 @@ class Engine:
                 p.lock()
 
                 # TODO handle remote backends here, store measurement results in the RegRefs or maybe in the Engine object.
-                temp = self._run_program_locally(p, **kwargs)
+                self._run_program_locally(p, **kwargs)
                 self.run_progs.append(p)
         except Exception as e:
             # TODO reset the backend to the last checkpoint here?
