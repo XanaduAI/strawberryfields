@@ -173,14 +173,13 @@ class TestCircuitDrawerClass:
             drawer.parse_op(Fakeop())
 
 
-@pytest.mark.broken('FIXME circuit drawer tests')
 class TestEngineIntegration:
     """Tests for calling the circuit drawer via the engine"""
 
     def test_one_mode_gates_from_operators(self, drawer):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Xgate(1) | (q[0])
             ops.Zgate(1) | (q[0])
             ops.Kgate(1) | (q[0])
@@ -190,30 +189,30 @@ class TestEngineIntegration:
             ops.Sgate(1) | (q[0])
             ops.Dgate(1) | (q[0])
 
-        for op in eng.cmd_queue:
+        for op in prog.circuit:
             method, mode = drawer._gate_from_operator(op)
             assert callable(method) and hasattr(drawer, method.__name__)
             assert mode == 1
 
     def test_two_mode_gates_from_operators(self, drawer):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.CXgate(1) | (q[0], q[1])
             ops.CZgate(1) | (q[0], q[1])
             ops.BSgate(1) | (q[0], q[1])
             ops.S2gate(1) | (q[0], q[1])
             ops.CKgate(1) | (q[0], q[1])
 
-        for op in eng.cmd_queue:
+        for op in prog.circuit:
             method, mode = drawer._gate_from_operator(op)
             assert callable(method) and hasattr(drawer, method.__name__)
             assert mode == 2
 
     def test_parse_op(self, drawer):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Xgate(1) | (q[0])
             ops.Zgate(1) | (q[0])
             ops.CXgate(1) | (q[0], q[1])
@@ -228,7 +227,7 @@ class TestEngineIntegration:
             ops.Sgate(1) | (q[0])
             ops.Dgate(1) | (q[0])
 
-        for op in eng.cmd_queue:
+        for op in prog.circuit:
             drawer.parse_op(op)
 
         expected_circuit_matrix = [
@@ -259,9 +258,9 @@ class TestEngineIntegration:
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_fourier(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Fourier | (q[0])
 
         fourier_output = dedent(
@@ -276,16 +275,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == fourier_output, failure_message(result, fourier_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_x_0(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Xgate(1) | (q[0])
 
         x_test_0_output = dedent(
@@ -300,16 +299,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == x_test_0_output, failure_message(result, x_test_0_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_x_1(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Xgate(1) | (q[1])
 
         x_test_1_output = dedent(
@@ -324,16 +323,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == x_test_1_output, failure_message(result, x_test_1_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_xx_1(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Xgate(1) | (q[1])
             ops.Xgate(1) | (q[1])
 
@@ -349,16 +348,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == xx_test_1_output, failure_message(result, xx_test_1_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_x_z_0(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Xgate(1) | (q[0])
             ops.Zgate(1) | (q[0])
 
@@ -374,16 +373,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == x_z_test_0_output, failure_message(result, x_z_test_0_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_x_0_z_1(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Xgate(1) | (q[0])
             ops.Zgate(1) | (q[1])
 
@@ -399,16 +398,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == x_0_z_1_test_output, failure_message(result, x_0_z_1_test_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_z_0(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Zgate(1) | (q[0])
 
         z_test_0_output = dedent(
@@ -423,16 +422,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == z_test_0_output, failure_message(result, z_test_0_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_z_1(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Zgate(1) | (q[1])
 
         z_test_1_output = dedent(
@@ -447,16 +446,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == z_test_1_output, failure_message(result, z_test_1_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_zz_1(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Zgate(1) | (q[1])
             ops.Zgate(1) | (q[1])
 
@@ -472,16 +471,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == zz_test_1_output, failure_message(result, zz_test_1_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_cx(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.CXgate(1) | (q[0], q[1])
 
         cx_test_output = dedent(
@@ -496,16 +495,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == cx_test_output, failure_message(result, cx_test_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_cz(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.CZgate(1) | (q[0], q[1])
 
         cz_test_output = dedent(
@@ -520,16 +519,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == cz_test_output, failure_message(result, cz_test_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_bs(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.BSgate(0, 1) | (q[0], q[1])
 
         bs_test_output = dedent(
@@ -544,16 +543,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == bs_test_output, failure_message(result, bs_test_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_s2(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.S2gate(1) | (q[0], q[1])
 
         s2_test_output = dedent(
@@ -568,16 +567,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == s2_test_output, failure_message(result, s2_test_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_ck(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.CKgate(1) | (q[0], q[1])
 
         ck_test_output = dedent(
@@ -592,16 +591,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == ck_test_output, failure_message(result, ck_test_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_k_0(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Kgate(1) | (q[0])
 
         k_test_0_output = dedent(
@@ -616,16 +615,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == k_test_0_output, failure_message(result, k_test_0_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_k_1(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Kgate(1) | (q[1])
 
         k_test_1_output = dedent(
@@ -640,16 +639,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == k_test_1_output, failure_message(result, k_test_1_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_v_0(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Vgate(1) | (q[0])
 
         v_test_0_output = dedent(
@@ -664,16 +663,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == v_test_0_output, failure_message(result, v_test_0_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_v_1(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Vgate(1) | (q[1])
 
         v_test_1_output = dedent(
@@ -688,16 +687,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == v_test_1_output, failure_message(result, v_test_1_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_p_0(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Pgate(1) | (q[0])
 
         p_test_0_output = dedent(
@@ -712,16 +711,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == p_test_0_output, failure_message(result, p_test_0_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_p_1(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Pgate(1) | (q[1])
 
         p_test_1_output = dedent(
@@ -736,16 +735,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == p_test_1_output, failure_message(result, p_test_1_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_r_0(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Rgate(1) | (q[0])
 
         r_test_0_output = dedent(
@@ -760,16 +759,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == r_test_0_output, failure_message(result, r_test_0_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_r_1(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Rgate(1) | (q[1])
 
         r_test_1_output = dedent(
@@ -784,16 +783,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == r_test_1_output, failure_message(result, r_test_1_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_s_0(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Sgate(1) | (q[0])
 
         s_test_0_output = dedent(
@@ -808,16 +807,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == s_test_0_output, failure_message(result, s_test_0_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_s_1(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Sgate(1) | (q[1])
 
         s_test_1_output = dedent(
@@ -832,16 +831,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == s_test_1_output, failure_message(result, s_test_1_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_d_0(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Dgate(1) | (q[0])
 
         d_test_0_output = dedent(
@@ -856,16 +855,16 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == d_test_0_output, failure_message(result, d_test_0_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_d_1(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Dgate(1) | (q[1])
 
         d_test_1_output = dedent(
@@ -880,26 +879,26 @@ class TestEngineIntegration:
             \end{document}"""
         )
 
-        result = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[1]
+        result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == d_test_1_output, failure_message(result, d_test_1_output)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_not_drawable(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.BSgate(0, 2) | (q[0], q[2])
 
         with pytest.raises(NotDrawableException):
-            eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)
+            prog.draw_circuit(tex_dir=tmpdir)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_unsupported_gate(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
         class Fakegate(ops.Gate):
             r"""Extension of the base Gate class to use to test
@@ -911,24 +910,24 @@ class TestEngineIntegration:
             def _apply(self, reg, backend, **kwargs):
                 pass
 
-        with eng:
+        with prog.context as q:
             Fakegate() | (q[0])
 
         with pytest.raises(UnsupportedGateException):
-            eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)
+            prog.draw_circuit(tex_dir=tmpdir)
 
     @pytest.mark.skipif(
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_compile(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Dgate(1) | (q[1])
             ops.Rgate(1) | (q[1])
             ops.S2gate(1) | (q[0], q[1])
 
-        document = eng.draw_circuit(print_queued_ops=True, tex_dir=tmpdir)[0]
+        document = prog.draw_circuit(tex_dir=tmpdir)[0]
 
         file_name = "output_{0}.tex".format(
             datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p")
@@ -942,15 +941,15 @@ class TestEngineIntegration:
         sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
     )
     def test_compile_custom_dir(self, tmpdir):
-        eng, q = sf.Engine(3)
+        prog = sf.Program(3)
 
-        with eng:
+        with prog.context as q:
             ops.Dgate(1) | (q[1])
             ops.Rgate(1) | (q[1])
             ops.S2gate(1) | (q[0], q[1])
 
         subdir = tmpdir.join("subdir")
-        document = eng.draw_circuit(print_queued_ops=True, tex_dir=subdir)[0]
+        document = prog.draw_circuit(tex_dir=subdir)[0]
 
         file_name = "output_{0}.tex".format(
             datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p")
@@ -959,30 +958,3 @@ class TestEngineIntegration:
 
         output_file = subdir.join(file_name)
         assert os.path.isfile(output_file)
-
-    @pytest.mark.skipif(
-        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
-    )
-    def test_not_queued(self, backend, tmpdir):
-        eng, q = sf.Engine(3)
-        eng.backend = backend
-
-        with eng:
-            ops.Dgate(1) | (q[1])
-
-        eng.run()
-
-        d_test_1_output = dedent(
-            r"""            \documentclass{article}
-            \usepackage{qcircuit}
-            \begin{document}
-            \Qcircuit {
-             & \qw  & \qw \\
-             & \gate{D}  & \qw \\
-             & \qw  & \qw \\
-            }
-            \end{document}"""
-        )
-
-        result = eng.draw_circuit(print_queued_ops=False, tex_dir=tmpdir)
-        assert result[1] == d_test_1_output, failure_message(result[1], d_test_1_output)
