@@ -100,7 +100,11 @@ class TestProgram:
     def test_print_commands(self, eng, prog):
         """Program.print and Engine.print_applied return correct strings."""
         prog = sf.Program(2)
+
+        # store the result of the print command in list res
         res = []
+        # use a print function that simply appends the operation
+        # name to the results list
         print_fn = lambda x: res.append(x.__str__())
 
         # prog should now be empty
@@ -158,9 +162,7 @@ class TestRegRefs:
         """User messes up the RegRef indices."""
         with prog.context as q:
             q[0].ind = 1
-            with pytest.raises(
-                program.RegRefError, match="RegRef state has become inconsistent"
-            ):
+            with pytest.raises(program.RegRefError, match="RegRef state has become inconsistent"):
                 ops.Dgate(0.5) | q[0]
 
     def test_nonexistent_index(self, prog):
@@ -192,9 +194,7 @@ class TestRegRefs:
         """Cannot use a measurement before it exists."""
         with prog.context as q:
             ops.Dgate(q[0]) | q[1]
-        with pytest.raises(
-            program.CircuitError, match="nonexistent measurement result"
-        ):
+        with pytest.raises(program.CircuitError, match="nonexistent measurement result"):
             eng.run(prog)
 
     def test_invalid_regref(self, prog):
