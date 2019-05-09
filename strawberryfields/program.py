@@ -553,7 +553,7 @@ class Program:
 
     @property
     def context(self):
-        """Syntactic sugar for defining a Program using the with statement.
+        """Syntactic sugar for defining a Program using the :code:`with` statement.
 
         The Program object itself acts as the context manager.
         """

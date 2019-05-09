@@ -1,64 +1,78 @@
+# Copyright 2019 Xanadu Quantum Technologies Inc.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
-Gate parameters
-===============
+Quantum operation parameters
+============================
 
 **Module name:** :mod:`strawberryfields.parameters`
 
 .. currentmodule:: strawberryfields.parameters
 
-The :class:`Parameter` class is an abstraction of a parameter passed to the
-quantum circuit operations represented by :class:`~strawberryfields.ops.ParOperation`.
-The parameter objects can represent a number, a NumPy array, a value measured from the quantum register
-(:class:`~strawberryfields.engine.RegRefTransform`),
-or a TensorFlow object.
+The :class:`Parameter` class encapsulates a parameter passed to the
+quantum operations represented by :class:`.Operation`.
+The parameter objects can represent a
 
-.. currentmodule:: strawberryfields
+* number
+* NumPy array
+* value measured from the quantum register (:class:`.RegRefTransform`)
+* TensorFlow object
 
-The normal lifecycle of a ParOperation object and its associated Parameter instances is as follows:
 
-* A ParOperation instance is created, and given some parameters as input.
+The normal lifecycle of an Operation object and its associated Parameter instances is as follows:
 
-* :meth:`ParOperation.__init__` converts the inputs into Parameter instances.
-  Plain :class:`~engine.RegRef` instances are wrapped in a trivial
-  :class:`~engine.RegRefTransform`.
+* An Operation instance is constructed, and given some input arguments.
+
+* :meth:`.Operation.__init__` converts the inputs into Parameter instances.
+  Plain :class:`.RegRef` instances are wrapped in a trivial :class:`.RegRefTransform`.
   RegRefTransforms add their RegRef dependencies to the Parameter and consequently to the Operation.
 
-* The Operation instance is applied using its :func:`~ops.Operation.__or__`
-  method inside an :class:`~engine.Engine` context.
-  This creates a :class:`~engine.Command` instance that wraps
-  the Operation and the RegRefs it acts on, which is appended to the Engine command queue.
+* The Operation instance is applied using its :meth:`~ops.Operation.__or__`
+  method inside an :class:`.Program` context.
+  This creates a :class:`.Command` instance that wraps
+  the Operation and the RegRefs it acts on, which is appended to the Program command queue.
 
-* Once the entire program is inputted, Engine optimizes it. This involves merging and commuting Commands
-  inside the circuit graph, the building of which requires knowledge of their dependencies, both direct and Parameter-based.
+* Once the entire program is inputted, it is compiled and optimized. This involves
+  merging and commuting Commands inside the circuit graph. The circuit graph is built
+  using the knowledge of which subsystems the Commands act and depend on.
 
-* Merging two :class:`~ops.Gate` instances of the same subclass involves
+* Merging two :class:`.Gate` instances of the same subclass involves
   adding their first parameters after equality-comparing the others. This is easily done if
-  all the parameters have an immediate value. RegRefTransforms and TensorFlow objects are more complicated,
-  but could in principle be handled.
+  all the parameters have an immediate numerical value.
+  RegRefTransforms and TensorFlow objects are more complicated, but could in principle be handled.
+  For now, we simply don't do the merge if RegRefTransforms or TensorFlow objects are involved.
 
-For now, we simply don't do the merge if RegRefTransforms or TensorFlow objects are involved.
-
-* The optimized command queue is run by Engine, which calls the :func:`~ops.Operation.apply` method
-  of each Operation in turn (and tries :func:`~ops.Operation.decompose`
+* The compiled Program is run by :class:`.Engine`, which calls the :meth:`~ops.Operation.apply` method
+  of each Operation in turn (and tries :meth:`~ops.Operation.decompose`
   if a :py:exc:`NotImplementedError` exception is raised).
 
-* :func:`~ops.ParOperation.apply` evaluates the numeric value of any
-  RegRefTransform-based Parameters using :func:`Parameter.evaluate` (other types of Parameters are simply passed through).
-  The parameter values and the subsystem indices are passed to :func:`~ops.Operation._apply`.
+* :meth:`Operation.apply` evaluates the numeric value of any
+  RegRefTransform-based Parameters using :meth:`Parameter.evaluate` (other types of Parameters are simply passed through).
+  The parameter values and the subsystem indices are passed to :meth:`Operation._apply`.
 
-* :func:`~ops.Operation._apply` "unwraps" the Parameter instances. There are three different cases:
+* :meth:`~ops.Operation._apply` "unwraps" the Parameter instances. There are three different cases:
 
   1. We still need to do some arithmetic, unwrap after it is done using p.x.
   2. No arithmetic required, use :func:`~parameters._unwrap`.
   3. No parameters are used, do nothing.
 
-  Finally, _apply calls the appropriate backend API method using the unwrapped parameters.
+  Finally, :meth:`_apply` calls the appropriate backend API method using the unwrapped parameters.
   It is up to the backend to either accept NumPy arrays and Tensorflow objects as parameters, or not.
 
 What we cannot do at the moment:
 
 * Use anything except integers and RegRefs (or Sequences thereof) as the subsystem parameter
-  for the :func:`~ops.Operation.__or__` method.
+  for the :meth:`~ops.Operation.__or__` method.
   Technically we could allow any Parameters or valid Parameter initializers that evaluate into an integer.
 * Do arithmetic with RegRefTransforms.
 
@@ -103,8 +117,8 @@ def _unwrap(params):
 class Parameter():
     """Represents a parameter passed to a :class:`strawberryfields.ops.Operation` subclass constructor.
 
-    The supported parameter types are Python and NumPy numeric types, NumPy arrays, :class:`RegRef` instances,
-    :class:`RegRefTransform` instances, and certain TensorFlow objects. RegRef instances are internally represented as
+    The supported parameter types are Python and NumPy numeric types, NumPy arrays, :class:`.RegRef` instances,
+    :class:`.RegRefTransform` instances, and certain TensorFlow objects. RegRef instances are internally represented as
     trivial RegRefTransforms.
 
     All but the RR and TensorFlow parameters represent an immediate numeric value that
@@ -124,8 +138,7 @@ class Parameter():
 
     def __init__(self, x):
         if isinstance(x, Parameter):
-            raise TypeError(
-                'Tried initializing a Parameter using a Parameter.')
+            raise TypeError('Tried initializing a Parameter using a Parameter.')
 
         #: set[RegRef]: parameter value depends on these RegRefs (if any), it can only be evaluated after the corresponding subsystems have been measured
         self.deps = set()
