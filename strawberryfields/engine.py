@@ -20,10 +20,11 @@ Quantum program executor engine
 
 .. currentmodule:: strawberryfields.engine
 
-The :class:`BaseEngine` subclasses are responsible for communicating
-quantum programs represented by :class:`.Program` objects
-to a backend that could be e.g., a simulator, a hardware quantum processor, or a circuit drawer,
-and returning the result to the user.
+This module implements :class:`BaseEngine` and its subclasses that are responsible for
+communicating quantum programs represented by :class:`.Program` objects
+to a backend that could be e.g., a simulator, a hardware quantum processor,
+or a circuit drawer, and returning the result to the user.
+One can think of each BaseEngine instance as a separate quantum computation.
 
 A typical use looks like
 
@@ -39,10 +40,10 @@ Classes
    Result
 
 
-BaseEngine methods
-------------------
+LocalEngine methods
+-------------------
 
-.. currentmodule:: strawberryfields.engine.BaseEngine
+.. currentmodule:: strawberryfields.engine.LocalEngine
 
 .. autosummary::
    run
@@ -55,6 +56,7 @@ BaseEngine methods
     .. autosummary::
        _init_backend
        _run_program
+       _run
 
 
 .. currentmodule:: strawberryfields.engine
@@ -91,7 +93,8 @@ class Result:
         self.samples = samples
 
     def __str__(self):
-        return self.__class__.__name__ + ': {} subsystems, state: {}'.format(len(self.samples), self.state) + '\n' + str(self.samples)
+        return self.__class__.__name__ + ': {} subsystems, state: {}'.format(len(self.samples), self.state)\
+            + '\n  samples: ' + str(self.samples)
 
 
 class BaseEngine(abc.ABC):
@@ -116,7 +119,7 @@ class BaseEngine(abc.ABC):
         """String representation."""
 
     @abc.abstractmethod
-    def reset(self,  backend_options):
+    def reset(self, backend_options):
         r"""Re-initialize the quantum computation.
 
         Resets the state of the engine and the quantum circuit represented by the backend.
@@ -130,7 +133,7 @@ class BaseEngine(abc.ABC):
 
         Args:
            backend_options (Dict[str, Any]): keyword arguments for the backend,
-              overriding the old values
+              updating (overriding) old values
         """
         self.backend_options.update(backend_options)
         for p in self.run_progs:
@@ -162,7 +165,7 @@ class BaseEngine(abc.ABC):
 
     @abc.abstractmethod
     def _run_program(self, prog, **kwargs):
-        """Execute a program on the backend.
+        """Execute a single program on the backend.
 
         This method should not be called directly.
 
@@ -172,23 +175,24 @@ class BaseEngine(abc.ABC):
             list[Command]: commands that were applied to the backend
         """
 
-    def run(self, program, *, modes=None, compile=True, **kwargs):
-        """Execute the given program by sending it to the backend.
+    def _run(self, program, *, compile=True, **kwargs):
+        """Execute the given programs by sending them to the backend.
 
-        * Each executed Program is compiled and optimized
-        * The compiled versions of the executed Programs are appended to self.run_progs.
-        * The backend state is updated.
-        * The result of the computation is returned.
-        * Additionally, the latest measurement results of each subsystem are stored
-          in the :class:`.RegRef` instances of the corresponding Program.
+        For each :class:`Program` instance given as input, the following happens:
+
+        * The Program instance is compiled and optimized.
+        * The compiled program is executed on the backend, updating the backend state.
+        * The latest measurement results of each subsystem are stored
+          in the :class:`.RegRef` instances of the corresponding Program, as well as in self.samples.
+        * The compiled program is appended to self.run_progs.
+
+        Finally, the result of the computation is returned.
 
         Args:
             program (Program, Sequence[Program]): quantum programs to run
-            modes (None, Sequence[int]): Modes to be returned in the state object.
-                An empty sequence [] means no state object is returned. None returns all the modes.
             compile (bool): If True, compile the Program instances before sending them to the backend.
 
-        The keyword args are passed to :meth:`_run_program`.
+        The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
 
         Returns:
             Result: results of the computation
@@ -203,13 +207,14 @@ class BaseEngine(abc.ABC):
                     # initialize the backend
                     self._init_backend(p.init_num_subsystems)
                 else:
+                    # there was a previous program segment
                     if not p.can_follow(prev):
-                        raise RuntimeError("Register mismatch after Program {}, '{}'.".format(len(self.run_progs)-1, prev.name))
+                        raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
 
-                    # todo copy vals from self.samples in case same prog is used in two engines....
-                    # copy the measured values in RegRefs over from prev
-                    for k, v in prev.reg_refs.items():
-                        p.reg_refs[k].val = v.val
+                    # Copy the latest measured values in the RegRefs of p.
+                    # We cannot copy from prev directly because it could be used in more than one engine.
+                    for k, v in enumerate(self.samples):
+                        p.reg_refs[k].val = v
 
                 # if the program hasn't been compiled for this backend, do it now
                 if compile and p.backend != self.backend_name:
@@ -218,16 +223,14 @@ class BaseEngine(abc.ABC):
 
                 self._run_program(p, **kwargs)
                 self.run_progs.append(p)
+                # store the latest measurement results
+                self.samples = [p.reg_refs[k].val for k in sorted(p.reg_refs)]
                 prev = p
         except Exception as e:
             raise e
         else:
             # program execution was successful
             pass
-
-        if prev:
-            # store the latest measurement results
-            self.samples = [prev.reg_refs[k].val for k in sorted(prev.reg_refs)]
 
         return Result(self.samples)
 
@@ -259,19 +262,6 @@ class LocalEngine(BaseEngine):
         return self.__class__.__name__ + '({})'.format(self.backend_name)
 
     def reset(self, backend_options={}):
-        r"""Re-initialize the backend state to vacuum.
-
-        Resets the state of the quantum circuit represented by the backend.
-
-        * The original number of modes is restored.
-        * All modes are reset to the vacuum state.
-        * All RegRefs of previously run Programs are cleared of measured values.
-        * List of previously run Progams is cleared.
-
-        Note that the reset does nothing to any Program objects in existence, beyond erasing the measured values.
-
-        The keyword args are passed on to :meth:`strawberryfields.backends.base.BaseBackend.reset`.
-        """
         super().reset(backend_options)
         self.backend_options.pop('batch_size', None)  # HACK to make tests work for now
         self.backend.reset(**self.backend_options)
@@ -285,7 +275,7 @@ class LocalEngine(BaseEngine):
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend
-                res = cmd.op.apply(cmd.reg, self.backend, **kwargs)  # TODO we could also handle storing the measurement vals here
+                cmd.op.apply(cmd.reg, self.backend, **kwargs)  # NOTE we could also handle storing measured vals here
                 applied.append(cmd)
             except NotApplicableError:
                 # command is not applicable to the current backend type
@@ -302,13 +292,26 @@ class LocalEngine(BaseEngine):
                     raise err from None
         return applied
 
-    def run(self, program, *, modes=None, compile=True, **kwargs):
-        result = super().run(program, modes=modes, compile=compile, **kwargs)
+    def run(self, program, *, compile=True, modes=None, state_options={}, **kwargs):
+        """Execute the given programs by sending them to the backend.
+
+        Extends :meth:`BaseEngine._run`.
+
+        Args:
+            modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
+                An empty sequence [] means no state object is returned. None returns all the modes.
+            state_options (Dict[str, Any]): keyword arguments for :meth:`.BaseBackend.state`
+
+        Returns:
+            Result: results of the computation
+        """
+
+        result = super()._run(program, compile=compile, **kwargs)
         if isinstance(modes, Sequence) and not modes:
             # empty sequence
             pass
         else:
-            result.state = self.backend.state(modes=modes)  # TODO tfbackend.state can use kwargs
+            result.state = self.backend.state(modes, **state_options)  # tfbackend.state can use kwargs
         return result
 
 
