@@ -82,19 +82,19 @@ class TestOneModeSymbolic:
         val = q[0].val
         assert isinstance(val, tf.Tensor)
 
-    @pytest.mark.broken('FIXME')
     def test_eng_run_with_session_and_feed_dict(self, setup_eng, batch_size, cutoff, tol):
         """Tests whether passing a tf Session and feed_dict
         through `eng.run` leads to proper numerical simulation."""
         a = tf.Variable(0.5)
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
+        tf_params = {'session': sess, 'feed_dict': {a: 0.0}}
         eng, prog = setup_eng(1)
 
         with prog.context as q:
             Dgate(a) | q
 
-        state = eng.run(prog, session=sess, feed_dict={a: 0.0}).state
+        state = eng.run(prog, state_options=tf_params).state
 
         if state.is_pure:
             k = state.ket()

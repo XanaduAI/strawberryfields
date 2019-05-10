@@ -111,7 +111,7 @@ class TestProperExecution:
         # the same samples can also be found in the regrefs
         assert [r.val for r in prog.register] == res.samples
         # first mode was measured
-        assert isinstance(res.samples[0], numbers.Number)
+        assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
         # second mode was not measured
         assert res.samples[1] is None
 
