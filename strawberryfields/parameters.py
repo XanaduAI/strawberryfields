@@ -62,7 +62,7 @@ The normal lifecycle of an Operation object and its associated Parameter instanc
 
 * :meth:`~ops.Operation._apply` "unwraps" the Parameter instances. There are three different cases:
 
-  1. We still need to do some arithmetic, unwrap after it is done using p.x.
+  1. We still need to do some arithmetic, unwrap after it is done using `p.x`.
   2. No arithmetic required, use :func:`~parameters._unwrap`.
   3. No parameters are used, do nothing.
 

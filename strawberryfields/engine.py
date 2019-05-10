@@ -93,7 +93,8 @@ class Result:
         self.samples = samples
 
     def __str__(self):
-        return self.__class__.__name__ + ': {} subsystems, state: {}'.format(len(self.samples), self.state)\
+        
+        return "Result: {} subsystems, state: {}\n samples: {}'.format(len(self.samples), self.state, self.samples)
             + '\n  samples: ' + str(self.samples)
 
 
@@ -183,7 +184,7 @@ class BaseEngine(abc.ABC):
         * The Program instance is compiled and optimized.
         * The compiled program is executed on the backend, updating the backend state.
         * The latest measurement results of each subsystem are stored
-          in the :class:`.RegRef` instances of the corresponding Program, as well as in self.samples.
+          in the :class:`.RegRef` instances of the corresponding Program, as well as in :attr:`~.samples`.
         * The compiled program is appended to self.run_progs.
 
         Finally, the result of the computation is returned.
