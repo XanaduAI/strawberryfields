@@ -94,8 +94,7 @@ class Result:
 
     def __str__(self):
         
-        return "Result: {} subsystems, state: {}\n samples: {}'.format(len(self.samples), self.state, self.samples)
-            + '\n  samples: ' + str(self.samples)
+        return 'Result: {} subsystems, state: {}\n samples: {}'.format(len(self.samples), self.state, self.samples)
 
 
 class BaseEngine(abc.ABC):

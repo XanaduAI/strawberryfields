@@ -74,8 +74,7 @@ There are six kinds of :class:`Operation` objects:
 * :class:`Measurement` operations manipulate the register state and produce classical information.
   The information is directly available only after the program has been run up to the point of measurement::
 
-    with prog.context as q:
-        alice, bob = q
+    with prog.context as (alice, bob):
         Measure       | alice
 
     eng = sf.LocalEngine(backend='fock')
@@ -86,8 +85,7 @@ There are six kinds of :class:`Operation` objects:
   by supplying registers as the argument to an :class:`Operation`, in which case the measurement may be deferred,
   i.e., we may symbolically use the measurement result before it exists::
 
-    with prog.context as q:
-        alice, bob = q
+    with prog.context as (alice, bob):
         Measure   | alice
         Dgate(alice) | bob
 
@@ -116,8 +114,7 @@ There are six kinds of :class:`Operation` objects:
   In practice the user only deals with the pre-constructed
   instances :py:data:`Del` and :py:data:`New`::
 
-    with prog.context as q:
-        alice, = q
+    with prog.context as (alice,):
         Sgate(1)    | alice
         bob, charlie = New(2)
         BSgate(0.5) | (alice, bob)
