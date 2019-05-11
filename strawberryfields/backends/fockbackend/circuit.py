@@ -1,4 +1,4 @@
-# Copyright 2018 Xanadu Quantum Technologies Inc.
+# Copyright 2019 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,14 +52,12 @@ class Circuit():
     in the fock basis.
     """
 
-    def __init__(self, num, trunc, hbar=2, pure=True, do_checks=False, mode='blas'):
+    def __init__(self, num, trunc, pure=True, do_checks=False, mode='blas'):
         r"""Class initializer.
 
         Args:
             num (non-negative int): Number of modes in the register.
             trunc (positive int): Truncation parameter.  Fock states up to |trunc-1> are representable.
-            hbar (int): The value of :math:`\hbar` to initialise the circuit with, depending on the conventions followed.
-                By default, :math:`\hbar=2`. See :ref:`conventions` for more details.
             pure (bool, optional): Whether states are pure (True) or mixed (False)
             do_checks (bool, optional): Whether arguments are to be checked first
             mode (str, optional): Whether to use BLAS or einsum for matrix operations.
@@ -74,7 +72,7 @@ class Circuit():
             raise ValueError("Truncation must be positive -- got {}".format(trunc))
 
         self._num_modes = num
-        self._hbar = hbar
+        self._hbar = 2
         self._checks = do_checks
         self._mode = mode
         self.reset(pure=pure, cutoff_dim=trunc)

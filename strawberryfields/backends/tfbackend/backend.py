@@ -1,4 +1,4 @@
-# Copyright 2018 Xanadu Quantum Technologies Inc.
+# Copyright 2019 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ class TFBackend(BaseFock):
             remapped_modes = remapped_modes[0]
         return remapped_modes
 
-    def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=True, **kwargs):
+    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=True, **kwargs):
         r"""Create a quantum circuit (initialized in vacuum state) with the number of modes
         equal to num_subsystems and a Fock-space cutoff dimension of cutoff_dim.
 
@@ -71,8 +71,6 @@ class TFBackend(BaseFock):
             cutoff_dim (int): numerical cutoff dimension in Fock space for each mode.
                 ``cutoff_dim=D`` represents the Fock states :math:`|0\rangle,\dots,|D-1\rangle`.
                 This argument is **required** for the Tensorflow backend.
-            hbar (float): The value of :math:`\hbar` to initialise the circuit with, depending on the conventions followed.
-                By default, :math:`\hbar=2`. See :ref:`conventions` for more details.
             pure (bool): whether to begin the circuit in a pure state representation
             **kwargs: optional keyword arguments which will be passed to the underlying circuit class
 
@@ -95,7 +93,7 @@ class TFBackend(BaseFock):
                 raise ValueError("batch_size of 1 not supported, please use different batch_size or set batch_size=None")
             else:
                 self._modemap = ModeMap(num_subsystems)
-                circuit = Circuit(self._graph, num_subsystems, cutoff_dim, hbar, pure, batch_size)
+                circuit = Circuit(self._graph, num_subsystems, cutoff_dim, pure, batch_size)
 
         self._init_modes = num_subsystems
         self.circuit = circuit
@@ -113,8 +111,6 @@ class TFBackend(BaseFock):
                   If False, then the circuit is reset to its initial state, but ops that
                   have already been declared are still accessible.
           cutoff_dim (int): new cutoff dimension for the simulated circuit.
-          hbar (float): New :math:`\hbar` value. See :ref:`conventions` for more details.
-
         """
         hard = kwargs.get('hard', True)
         if hard:
@@ -420,7 +416,7 @@ class TFBackend(BaseFock):
 
             modenames = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
             state_ = FockStateTF(s, len(modes), pure, self.circuit.cutoff_dim,
-                                 graph=self._graph, batched=batched, hbar=self.circuit.hbar,
+                                 graph=self._graph, batched=batched,
                                  mode_names=modenames, eval=evaluate_results)
         return state_
 

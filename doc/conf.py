@@ -45,7 +45,8 @@ MOCK_MODULES = [
     'scipy.linalg',
     'tensorflow',
     'networkx',
-    'numbers'
+    'numbers',
+    'blackbird'
     ]
 
 np_math_fns = ['abs',
@@ -103,6 +104,7 @@ extensions = [
     'nbsphinx'
 ]
 
+mathjax_path = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"
 
 # nbsphinx settings
 
@@ -126,8 +128,8 @@ master_doc = 'index'
 # General information about the project.
 project = 'Strawberry Fields'
 copyright = """Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook. <br>
-Strawberry Fields: A Software Platform for Photonic Quantum Computing. arXiv:1804.03159, 2018.<br>
-&copy; Copyright 2018, Xanadu Quantum Technologies Inc."""
+"Strawberry Fields: A Software Platform for Photonic Quantum Computing", Quantum, 3, 129 (2019).<br>
+&copy; Copyright 2019, Xanadu Quantum Technologies Inc."""
 author = 'Xanadu Inc.'
 
 # The version info for the project you're documenting, acts as replacement for

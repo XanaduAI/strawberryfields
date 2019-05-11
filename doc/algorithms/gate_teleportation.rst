@@ -8,7 +8,7 @@ Gate teleportation
 
     "Entanglement-assisted communication becomes entanglement-assisted computation" - Furusawa :cite:`furusawa2011`
 
-In the quantum state teleportation algorithm discussed above, the quantum state is transferred from the sender to the receiver exactly. However, quantum teleportation can be used in a much more powerful manner, by simultaneously processing and manipulating the teleported state; this is known as **gate teleportation**. 
+In the quantum state teleportation algorithm, the quantum state is transferred from the sender to the receiver exactly. However, quantum teleportation can be used in a much more powerful manner, by simultaneously processing and manipulating the teleported state; this is known as **gate teleportation**. 
 
 But the biggest departure from its namesake is the method in which the gate to be 'teleported' is applied; rather than applying a quantum unitary directly to the first qumode in the system, the unitary is applied via the projective measurement of the first qumode onto a particular basis. This measurement-based approach provides significant advantages over applying unitary gates directly, for example by reducing resources, and in the application of experimentally hard-to-implement gates :cite:`furusawa2011`. In fact, gate teleportation forms a universal quantum computing primitive, and is a precursor to cluster state models of quantum computation :cite:`gottesman1999`:cite:`gu2009`.
 

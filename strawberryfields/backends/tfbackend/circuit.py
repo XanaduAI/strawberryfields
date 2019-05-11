@@ -1,4 +1,4 @@
-# Copyright 2018 Xanadu Quantum Technologies Inc.
+# Copyright 2019 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -48,11 +48,12 @@ class Circuit:
          using the Fock representation with given cutoff_dim.
          The state of the modes is manipulated by calling the various methods."""
     # pylint: disable=too-many-instance-attributes,too-many-public-methods
-    def __init__(self, graph, num_modes, cutoff_dim, hbar=2., pure=True, batch_size=None):
+    def __init__(self, graph, num_modes, cutoff_dim, pure=True, batch_size=None):
         self._graph = None # will be set when reset is called below, but reset needs something to compare to
         self._batch_size = batch_size
         self._batched = False if batch_size is None else True
-        self.reset(pure, graph, num_subsystems=num_modes, cutoff_dim=cutoff_dim, hbar=hbar)
+        self._hbar = 2
+        self.reset(pure, graph, num_subsystems=num_modes, cutoff_dim=cutoff_dim)
 
     def _make_vac_states(self, cutoff_dim):
         """Make vacuum state tensors for the underlying graph"""
@@ -191,7 +192,7 @@ class Circuit:
         self._update_state(new_state)
         self._num_modes += num_modes
 
-    def reset(self, pure=True, graph=None, num_subsystems=None, cutoff_dim=None, hbar=None):
+    def reset(self, pure=True, graph=None, num_subsystems=None, cutoff_dim=None):
         r"""
         Resets the state of the circuit to have all modes in vacuum.
         For all the parameters, None means unchanged.
@@ -202,7 +203,6 @@ class Circuit:
               graph (and all its defined operations) will be kept.
             num_subsystems (int): sets the number of modes in the reset circuit.
             cutoff_dim (int): new Fock space cutoff dimension to use.
-            hbar (float): new :math:`\hbar` value. See :ref:`conventions` for more details.
         """
         if pure is not None:
             if not isinstance(pure, bool):
@@ -218,11 +218,6 @@ class Circuit:
             if not isinstance(cutoff_dim, int) or cutoff_dim < 1:
                 raise ValueError("Argument 'cutoff_dim' must be a positive integer")
             self._cutoff_dim = cutoff_dim
-
-        if hbar is not None:
-            if not isinstance(hbar, numbers.Real) or hbar <= 0:
-                raise ValueError("Argument 'hbar' must be a positive number")
-            self._hbar = hbar
 
         if graph is not None:
             if not isinstance(graph, tf.Graph):

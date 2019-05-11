@@ -1,4 +1,4 @@
-# Copyright 2018 Xanadu Quantum Technologies Inc.
+# Copyright 2019 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ def takagi(N, tol=1e-13, rounding=13):
 
     Returns:
         tuple(array,array): Returns the tuple (rl, U), where rl are the
-            (rounded) singular values, and U is the Takagi unitary ``N = U @ np.diag(l) @ np.transpose(U)``
+            (rounded) singular values, and U is the Takagi unitary ``N = U @ np.diag(rl) @ np.transpose(U)``
     """
     (n, m) = N.shape
     if n != m:
@@ -258,6 +258,41 @@ def clements_phase_end(V, tol=1e-11):
 
     return (new_tlist, new_diags)
 
+def triangular_decomposition(V, tol=1e-11):
+    r"""Triangular decomposition of unitary due to Reck et al.
+
+    See Reck et al. Phys. Rev. Lett. 73, 58 [10.1103/PhysRevLett.73.58]
+    for more details and Clements et al. Optica 3, 1460 (2016) for details
+    on notation.
+
+    Args:
+        V (array): Unitary matrix of size ``n_size``
+        tol (int): the number of decimal places to use when determining
+            whether the matrix is unitary
+
+    Returns:
+        tuple[array]: returns a tuple of the form ``(tlist,np.diag(localV))``
+            where:
+
+            * ``tlist``: list containing ``[n,m,theta,phi,n_size]`` of the T unitaries needed
+            * ``localV``: Diagonal unitary applied at the beginning of circuit
+    """
+    localV = V
+    (nsize, _) = localV.shape
+
+    diffn = np.linalg.norm(V @ V.conj().T - np.identity(nsize))
+    if diffn >= tol:
+        raise ValueError("The input matrix is not unitary")
+
+    tlist = []
+    for i in range(nsize-2, -1, -1):
+        for j in range(i+1):
+            tlist.append(nullT(nsize-j-1, nsize-i-2, localV))
+            localV = T(*tlist[-1]) @ localV
+
+    return list(reversed(tlist)), np.diag(localV)
+
+
 def williamson(V, tol=1e-11):
     r"""Performs the Williamson decomposition of positive definite (real) symmetric matrix.
 
@@ -278,12 +313,15 @@ def williamson(V, tol=1e-11):
             and ``S`` is a symplectic matrix such that :math:`V = S^T Db S`
     """
     (n, m) = V.shape
+
+    if n != m:
+        raise ValueError("The input matrix is not square")
+
     diffn = np.linalg.norm(V-np.transpose(V))
 
     if diffn >= tol:
         raise ValueError("The input matrix is not symmetric")
-    if n != m:
-        raise ValueError("The input matrix is not square")
+
     if n % 2 != 0:
         raise ValueError(
             "The input matrix must have an even number of rows/columns")

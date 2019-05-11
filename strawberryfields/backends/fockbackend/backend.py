@@ -1,4 +1,4 @@
-# Copyright 2018 Xanadu Quantum Technologies Inc.
+# Copyright 2019 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,8 +24,9 @@ from cmath import phase
 import numpy as np
 
 from strawberryfields.backends import BaseFock, ModeMap
+from strawberryfields.backends.states import BaseFockState
+
 from .circuit import Circuit
-from ..states import BaseFockState
 
 indices = string.ascii_lowercase
 
@@ -55,7 +56,7 @@ class FockBackend(BaseFock):
             remapped_modes = remapped_modes[0]
         return remapped_modes
 
-    def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=True, **kwargs):
+    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=True, **kwargs):
         r"""
         Create a quantum circuit (initialized in vacuum state) with the number of modes
         equal to num_subsystems and a Fock-space cutoff dimension of cutoff_dim.
@@ -65,8 +66,6 @@ class FockBackend(BaseFock):
             cutoff_dim (int): numerical cutoff dimension in Fock space for each mode.
                 ``cutoff_dim=D`` represents the Fock states :math:`|0\rangle,\dots,|D-1\rangle`.
                 This argument is **required** for the Fock backend.
-            hbar (float): The value of :math:`\hbar` to initialise the circuit with, depending on the conventions followed.
-                By default, :math:`\hbar=2`. See :ref:`conventions` for more details.
             pure (bool): whether to begin the circuit in a pure state representation
         """
         # pylint: disable=attribute-defined-outside-init
@@ -80,7 +79,7 @@ class FockBackend(BaseFock):
             raise ValueError("Argument 'pure' must be either True or False")
 
         self._init_modes = num_subsystems
-        self.circuit = Circuit(num_subsystems, cutoff_dim, hbar, pure)
+        self.circuit = Circuit(num_subsystems, cutoff_dim, pure)
         self._modemap = ModeMap(num_subsystems)
 
     def add_mode(self, n=1):
@@ -363,10 +362,9 @@ class FockBackend(BaseFock):
             index_permutation = [2*x+i for x in mode_permutation for i in (0, 1)]
             red_state = np.transpose(red_state, np.argsort(index_permutation))
 
-        hbar = self.circuit._hbar
         cutoff = self.circuit._trunc # pylint: disable=protected-access
         mode_names = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
-        state = BaseFockState(red_state, len(modes), pure, cutoff, hbar, mode_names)
+        state = BaseFockState(red_state, len(modes), pure, cutoff, mode_names)
         return state
 
     # ==============================================
