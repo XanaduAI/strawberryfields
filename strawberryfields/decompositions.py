@@ -379,6 +379,10 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
     As in the Takagi decomposition, the singular values of N are considered
     equal if they are equal after np.round(values, rounding).
 
+    If S is a passive transformation, then return the S as the first passive
+    transformation, and set the the squeezing and second unitary matrices to
+    identity. This choice is not unique.
+
     For more info see:
     https://math.stackexchange.com/questions/1886038/finding-euler-decomposition-of-a-symplectic-matrix
 
