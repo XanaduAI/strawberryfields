@@ -147,9 +147,8 @@ class TestProgram:
 
         assert res == expected
 
-        state = eng.run(
-            prog, compile=False
-        )  # FIXME optimization can change gate order, however this is not a good way of avoiding it
+        # NOTE optimization can change gate order
+        state = eng.run(prog, compile_options={'optimize': False})
         res = []
         eng.print_applied(print_fn)
         assert res == ["Run 0:"] + expected

@@ -42,12 +42,13 @@ register objects using the following syntax:
       G(params) | q
       F(params) | (q[1], q[6], q[2])
 
-Here :samp:`prog` is an instance of :class:`strawberryfields.program.Program` and defines the context in which
-the commands are stored.
+Here :samp:`prog` is an instance of :class:`strawberryfields.program.Program`
+which defines the context where the commands are stored.
 Within each command, the part on the left is an :class:`Operation` instance,
 quite typically a constructor call for the requested operation class with the relevant parameters.
-The vertical bar calls the :func:`__or__` method of the :class:`Operation` object, with the part on the right as the parameter.
-The part on the right is a single :class:`strawberryfields.engine.RegRef` object or, for multi-mode gates, a sequence of them.
+The vertical bar calls the :func:`__or__` method of the :class:`Operation` object,
+with the part on the right as the parameter. The part on the right is a single
+:class:`strawberryfields.engine.RegRef` object or, for multi-mode gates, a sequence of them.
 It is of course also possible to construct gates separately and reuse them several times::
 
   R = Rgate(s)
@@ -458,7 +459,7 @@ class Operation:
             backend (BaseBackend): backend to execute the operation
 
         Returns:
-            array[Number] or None: Measurement results, if any. shape == (len(reg), shots).
+            array[Number] or None: Measurement results, if any; shape == (len(reg), shots).
         """
         raise NotImplementedError('Missing direct implementation: {}'.format(self))
 

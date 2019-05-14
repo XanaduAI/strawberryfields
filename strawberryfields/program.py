@@ -744,19 +744,24 @@ class Program:
         self.circuit.append(Command(op, reg))
         return reg
 
-    def compile(self, backend='fock', optimize=True):
+    def compile(self, backend='fock', **kwargs):
         """Compile the program for the given backend.
 
-        The compilation step validates the program, making sure all the Operations used are accepted by the backend.
+        The compilation step validates the program, making sure all the Operations
+        used are accepted by the target backend.
         Additionally it may decompose certain gates into sequences of simpler gates.
 
-        The compiled program shares its RegRefs with the original, which makes it easier to access the measurement
-        results, but also necessitates the locking of both the compiled program and the original to make sure the
-        RegRef state remains consistent.
+        The compiled program shares its RegRefs with the original, which makes it easier
+        to access the measurement results, but also necessitates the locking of both the
+        compiled program and the original to make sure the RegRef state remains consistent.
 
         Args:
             backend (str): target backend
-            optimize (bool): try to optimize the program by merging and canceling gates
+
+        Keyword Args:
+            optimize (bool): If True, try to optimize the program by merging and canceling gates.
+                The default is False.
+
         Returns:
             Program: compiled program
         """
@@ -801,7 +806,7 @@ class Program:
             compiled.source = self
         else:
             compiled.source = self.source
-        if optimize:
+        if kwargs.get('optimize', False):
             compiled.optimize()
         return compiled
 

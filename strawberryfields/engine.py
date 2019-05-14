@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-Quantum program executor engine
-===============================
+Execution engine
+================
 
 **Module name:** :mod:`strawberryfields.engine`
 
@@ -93,7 +93,7 @@ class Result:
         self.samples = samples
 
     def __str__(self):
-        
+        """String representation."""
         return 'Result: {} subsystems, state: {}\n samples: {}'.format(len(self.samples), self.state, self.samples)
 
 
@@ -175,14 +175,16 @@ class BaseEngine(abc.ABC):
             list[Command]: commands that were applied to the backend
         """
 
-    def _run(self, program, *, compile=True, **kwargs):
+    def _run(self, program, *, compile_options={}, **kwargs):
         """Execute the given programs by sending them to the backend.
 
+        If multiple Programs are given they will be executed sequentially as
+        parts of a single computation.
         For each :class:`Program` instance given as input, the following happens:
 
-        * The Program instance is compiled and optimized.
-        * The compiled program is executed on the backend, updating the backend state.
-        * The latest measurement results of each subsystem are stored
+        * The Program instance is compiled and optimized for the target backend.
+        * The compiled program is executed on the backend.
+        * The measurement results of each subsystem (if any) are stored
           in the :class:`.RegRef` instances of the corresponding Program, as well as in :attr:`~.samples`.
         * The compiled program is appended to self.run_progs.
 
@@ -190,7 +192,7 @@ class BaseEngine(abc.ABC):
 
         Args:
             program (Program, Sequence[Program]): quantum programs to run
-            compile (bool): If True, compile the Program instances before sending them to the backend.
+            compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
 
         The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
 
@@ -217,8 +219,8 @@ class BaseEngine(abc.ABC):
                         p.reg_refs[k].val = v
 
                 # if the program hasn't been compiled for this backend, do it now
-                if compile and p.backend != self.backend_name:
-                    p = p.compile(self.backend_name)
+                if p.backend != self.backend_name:
+                    p = p.compile(self.backend_name, **compile_options)
                 p.lock()
 
                 self._run_program(p, **kwargs)
@@ -281,18 +283,11 @@ class LocalEngine(BaseEngine):
                 # command is not applicable to the current backend type
                 raise NotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
             except NotImplementedError:
-                # command not directly supported by backend API, try a decomposition instead
-                try:
-                    temp = cmd.op.decompose(cmd.reg)
-                    # run the decomposition
-                    applied_cmds = self._run_program(temp, **kwargs)
-                    applied.extend(applied_cmds)
-                except NotImplementedError as err:
-                    # simplify the error message by suppressing the previous exception
-                    raise err from None
+                # command not directly supported by backend API
+                raise NotImplementedError('The operation {} has not been implemented for {}.'.format(cmd.op, self.backend)) from None
         return applied
 
-    def run(self, program, *, compile=True, modes=None, state_options={}, **kwargs):
+    def run(self, program, *, compile_options={}, modes=None, state_options={}, **kwargs):
         """Execute the given programs by sending them to the backend.
 
         Extends :meth:`BaseEngine._run`.
@@ -306,7 +301,7 @@ class LocalEngine(BaseEngine):
             Result: results of the computation
         """
 
-        result = super()._run(program, compile=compile, **kwargs)
+        result = super()._run(program, compile_options=compile_options, **kwargs)
         if isinstance(modes, Sequence) and not modes:
             # empty sequence
             pass

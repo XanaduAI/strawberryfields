@@ -42,9 +42,9 @@ The normal lifecycle of an Operation object and its associated Parameter instanc
   This creates a :class:`.Command` instance that wraps
   the Operation and the RegRefs it acts on, which is appended to the Program command queue.
 
-* Once the entire program is inputted, it is compiled and optimized. This involves
-  merging and commuting Commands inside the circuit graph. The circuit graph is built
-  using the knowledge of which subsystems the Commands act and depend on.
+* Before the Program is run, it is compiled and optimized for a specific backend. This involves
+  merging and commuting Commands inside the graph representing the quantum circuit.
+  The circuit graph is built using the knowledge of which subsystems the Commands act and depend on.
 
 * Merging two :class:`.Gate` instances of the same subclass involves
   adding their first parameters after equality-comparing the others. This is easily done if
