@@ -150,6 +150,23 @@ def to_program(bb):
     return prog
 
 
+def to_DiGraph(bb):
+    """Convert a Blackbird Program to a NetworkX directed acyclic graph
+    of Strawberry Fields command objects.
+
+    Args:
+        bb (blackbird.BlackbirdProgram): the input Blackbird program object
+
+    Returns:
+        nx.DiGraph: directed acyclic graph
+    """
+    prog = to_program(bb)
+    cmd_grid = Program._list_to_grid(prog.circuit)
+    G = Program._grid_to_DAG(cmd_grid)
+
+    return G
+
+
 def save(f, prog):
     """Saves a quantum program to a Blackbird .xbb file.
 

@@ -164,6 +164,7 @@ import numbers
 import networkx as nx
 
 import strawberryfields.circuitdrawer as sfcd
+import strawberryfields.data as backend_database
 
 
 
@@ -202,76 +203,6 @@ def _convert(func):
         "Unused docstring."
         return RegRefTransform(args, func)
     return wrapper
-
-
-# TODO replace this mock backend capability database
-backend_database = {
-    'fock': {
-        'New_modes': True,
-        'Delete': True,
-        'Vacuum': True,
-        'Coherent': True,
-        'Squeezed': True,
-        'DisplacedSqueezed': True,
-        'Ket': True,
-        'DensityMatrix': True,
-        'Fock': True,
-        'Catstate': True,
-        'Thermal': True,
-        'LossChannel': True,
-        'ThermalLossChannel': True,
-        'Rgate': True,
-        'Fouriergate': True,
-        'Dgate': True,
-        'Xgate': True,
-        'Zgate': True,
-        'Sgate': True,
-        'Pgate': False,
-        'Vgate': True,
-        'Kgate': True,
-        'BSgate': True,
-        'CXgate': False,
-        'CZgate': False,
-        'CKgate': True,
-        'S2gate': False,  # use a decomposition
-        'Interferometer': False,
-        'GraphEmbed': False,
-        'Gaussian': False,
-        'GaussianTransform': False,
-        'MeasureHomodyne': True,
-        'MeasureFock': True,
-    },
-    'gaussian': {
-        'New_modes': True,
-        'Delete': True,
-        'Vacuum': True,
-        'Coherent': True,
-        'Squeezed': True,
-        'DisplacedSqueezed': True,
-        'Thermal': True,
-        'LossChannel': True,
-        'ThermalLossChannel': True,
-        'Rgate': True,
-        'Fouriergate': True,
-        'Dgate': True,
-        'Xgate': True,
-        'Zgate': True,
-        'Sgate': True,
-        'Pgate': False,
-        'BSgate': True,
-        'CXgate': False,
-        'CZgate': False,
-        'S2gate': False,  # use a decomposition
-        'Interferometer': False,
-        'GraphEmbed': False,
-        'Gaussian': False,
-        'GaussianTransform': False,
-        'MeasureHomodyne': True,
-        'MeasureHeterodyne': True,
-    },
-}
-backend_database['tf'] = backend_database['fock']  # tf can do the same things as fock
-backend_database['base'] = backend_database['fock']
 
 
 class RegRefError(IndexError):
@@ -772,33 +703,39 @@ class Program:
         Returns:
             Program: compiled program
         """
-        db = backend_database[backend]
+        if hasattr(backend_database, backend):
+            db = getattr(backend_database, backend)
+        else:
+            raise ValueError("Could not find backend {} in Strawberry Fields database".format(backend))
 
         def compile_sequence(seq):
             """Compiles the given Command sequence."""
             compiled = []
             for cmd in seq:
+                op_name = cmd.op.__class__.__name__
+
                 # None represents an identity gate
                 if cmd.op is None:
                     continue
-                elif cmd.op.__class__.__name__ in db:
-                    # backend can handle the op
-                    if db[cmd.op.__class__.__name__]:
-                        compiled.append(cmd)
-                    else:
-                        # op not directly supported by the backend, try a decomposition instead
-                        try:
-                            temp = cmd.op.decompose(cmd.reg)
-                            if temp is None:
-                                # decomposition refused
-                                compiled.append(cmd)
-                            else:
-                                # now compile the decomposition
-                                temp = compile_sequence(temp)
-                                compiled.extend(temp)
-                        except NotImplementedError as err:
-                            # simplify the error message by suppressing the previous exception
-                            raise err from None
+                elif op_name in db.primitives:
+                    # backend can handle the op natively
+                    compiled.append(cmd)
+                elif op_name in db.decompositions:
+                    # op not directly supported by the backend
+                    # requires a decomposition
+                    try:
+                        temp = cmd.op.decompose(cmd.reg)
+                        if temp is None:
+                            # decomposition refused
+                            compiled.append(cmd)
+                        else:
+                            # now compile the decomposition
+                            temp = compile_sequence(temp)
+                            compiled.extend(temp)
+                    except NotImplementedError as err:
+                        # Operation does not have _decompose() method defined!
+                        # simplify the error message by suppressing the previous exception
+                        raise err from None
                 else:
                     raise CircuitError('The operation {} cannot be used with the {} backend.'.format(cmd.op.__class__.__name__, backend))
             return compiled
