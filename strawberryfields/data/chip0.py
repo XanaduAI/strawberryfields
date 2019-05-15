@@ -16,7 +16,8 @@ import textwrap
 
 import networkx as nx
 import blackbird
-# from strawberryfields.io import to_DiGraph
+
+from strawberryfields.io import to_DiGraph
 
 from .device import DeviceData
 

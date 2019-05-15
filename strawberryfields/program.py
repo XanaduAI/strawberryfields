@@ -164,7 +164,7 @@ import numbers
 import networkx as nx
 
 import strawberryfields.circuitdrawer as sfcd
-import strawberryfields.data as backend_database
+from strawberryfields.data import backend_databases
 
 
 
@@ -703,8 +703,8 @@ class Program:
         Returns:
             Program: compiled program
         """
-        if hasattr(backend_database, backend):
-            db = getattr(backend_database, backend)
+        if backend in backend_databases:
+            db = backend_database[backend]
         else:
             raise ValueError("Could not find backend {} in Strawberry Fields database".format(backend))
 
