@@ -726,7 +726,8 @@ class Program:
                     # op not directly supported by the backend
                     # requires a decomposition
                     try:
-                        temp = cmd.op.decompose(cmd.reg)
+                        kwargs = db.decompositions[op_name]
+                        temp = cmd.op.decompose(cmd.reg, **kwargs)
                         if temp is None:
                             # decomposition refused
                             compiled.append(cmd)
@@ -740,20 +741,46 @@ class Program:
                         raise err from None
                 else:
                     raise CircuitError('The operation {} cannot be used with the {} backend.'.format(cmd.op.__class__.__name__, backend))
+
             return compiled
 
         self.lock()
         seq = compile_sequence(self.circuit)
+
+        if db.topology is not None:
+            # check topology
+            grid = self._list_to_grid(self.circuit)
+            DAG = self._grid_to_DAG(grid)
+
+            # relabel the DAG nodes to integers, with attributes
+            # specifying the operation name. This allows them to be
+            # compared, rather than using Command objects.
+            mapping = {i: n.op.__class__.__name__ for i, n in enumerate(DAG.nodes())}
+            circuit = nx.convert_node_labels_to_integers(DAG)
+            nx.set_node_attributes(circuit, mapping, name='name')
+
+            def node_match(n1, n2):
+                """Returns True if both nodes have the same name"""
+                return n1['name'] == n2['name']
+
+            # check if topology matches
+            if not nx.is_isomorphic(circuit, db.topology, node_match):
+                # try and compile the program to match the topology
+                raise CircuitError('Program cannot be used with the {} backend due to incompatible topology'.format(backend))
+
         compiled = copy.copy(self)  # shares RegRefs with the source
         compiled.backend = backend
         compiled.circuit = seq
+
         # link to the original source Program
         if self.source is None:
             compiled.source = self
         else:
             compiled.source = self.source
+
         if optimize:
             compiled.optimize()
+
         return compiled
 
     @staticmethod
@@ -870,7 +897,6 @@ class Program:
         # convert the circuit back into a list (via a DAG)
         DAG = self._grid_to_DAG(grid)
         self.circuit = self._DAG_to_list(DAG)
-
 
     def draw_circuit(self, tex_dir='./circuit_tex', write_to_file=True):
         r"""Draw the circuit using the Qcircuit :math:`\LaTeX` package.

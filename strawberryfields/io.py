@@ -33,6 +33,8 @@ Code details
 """
 # pylint: disable=protected-access,too-many-nested-blocks
 import os
+
+import networkx as nx
 import blackbird
 
 from . import ops
@@ -151,12 +153,17 @@ def to_program(bb):
     return prog
 
 
-def to_DiGraph(bb):
+def to_DiGraph(bb, commands=True):
     """Convert a Blackbird Program to a NetworkX directed acyclic graph
     of Strawberry Fields command objects.
 
     Args:
         bb (blackbird.BlackbirdProgram): the input Blackbird program object
+        commands (bool): if ``True``, the directed acyclic graph will consist
+            of :class:`~.Command` objects, specifying a particular :class:`~.Operation`
+            instance. If ``False``, the graph nodes will simply be labelled using
+            integers, with a separate node attribute dictionary used to specify
+            the operation name and parameters.
 
     Returns:
         nx.DiGraph: directed acyclic graph
@@ -164,6 +171,11 @@ def to_DiGraph(bb):
     prog = to_program(bb)
     cmd_grid = Program._list_to_grid(prog.circuit)
     G = Program._grid_to_DAG(cmd_grid)
+
+    if not commands:
+        mapping = {i: n.op.__class__.__name__ for i, n in enumerate(G.nodes())}
+        G = nx.convert_node_labels_to_integers(G)
+        nx.set_node_attributes(G, mapping, name='name')
 
     return G
 

@@ -14,6 +14,7 @@
 """Chip0 backend validation data"""
 import textwrap
 
+import networkx as nx
 import blackbird
 
 from strawberryfields.io import to_DiGraph
@@ -69,5 +70,6 @@ class Chip0(DeviceData):
                 external_phase=0,
                 internal_phase=0,
             )
-        )
+        ),
+        commands=False,
     )
