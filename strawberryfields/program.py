@@ -164,8 +164,6 @@ import numbers
 import networkx as nx
 
 import strawberryfields.circuitdrawer as sfcd
-from strawberryfields.data import backend_databases
-
 
 
 def _print_list(i, q, print_fn=print):
@@ -176,6 +174,7 @@ def _print_list(i, q, print_fn=print):
     for x in q:
         print_fn(x.op, ', ', end='')
     print_fn()
+
 
 def _convert(func):
     r"""Decorator for converting user defined functions to a :class:`RegRefTransform`.
@@ -703,8 +702,11 @@ class Program:
         Returns:
             Program: compiled program
         """
+        # TODO: Avoid circular import
+        from strawberryfields.data import backend_databases
+
         if backend in backend_databases:
-            db = backend_database[backend]
+            db = backend_databases[backend]
         else:
             raise ValueError("Could not find backend {} in Strawberry Fields database".format(backend))
 

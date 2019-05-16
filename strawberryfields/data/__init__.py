@@ -17,6 +17,6 @@ from .fock import Fock
 from .gaussian import Gaussian
 from .tensorflow import TF
 
-backend_databases = {"chip0": Chip0, "fock": Fock, "gaussian": Gaussian, "tf": TF}
+backend_databases = {"base": Fock, "chip0": Chip0, "fock": Fock, "gaussian": Gaussian, "tf": TF}
 """dict[str, DeviceData]: dictionary mapping backend shortname
 to the validation dataclass."""

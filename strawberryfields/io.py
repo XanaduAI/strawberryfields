@@ -24,6 +24,7 @@ Summary
 .. autosummary::
     to_blackbird
     to_program
+    to_DiGraph
     save
     load
 

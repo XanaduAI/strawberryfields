@@ -94,7 +94,7 @@ class DeviceData(abc.ABC):
         """
         return dict()
 
-    @abc.abstractmethod
+    @property
     def topology(self):
         """The allowed circuit topology of the backend device as a directed
         acyclic graph.
@@ -107,7 +107,7 @@ class DeviceData(abc.ABC):
         """
         return None
 
-    @abc.abstractmethod
+    @property
     def blackbird_template(self):
         """The Blackbird script that will be accepted by the backend device.
 

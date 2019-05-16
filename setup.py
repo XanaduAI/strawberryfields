@@ -45,7 +45,7 @@ info = {
     'license': 'Apache License 2.0',
     'packages': [
                     'strawberryfields',
-                    # 'strawberryfields.templates',
+                    'strawberryfields.data',
                     'strawberryfields.backends',
                     'strawberryfields.backends.tfbackend',
                     'strawberryfields.backends.fockbackend',

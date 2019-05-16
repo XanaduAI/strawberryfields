@@ -14,7 +14,6 @@
 """Chip0 backend validation data"""
 import textwrap
 
-import networkx as nx
 import blackbird
 
 from strawberryfields.io import to_DiGraph
@@ -62,7 +61,7 @@ class Chip0(DeviceData):
     # returned DAG has all parameters set to 0
     topology = to_DiGraph(
         blackbird.loads(
-            self.blackbird_template.format(
+            blackbird_template.format(
                 name="topology",
                 shots=1,
                 squeezing0=0,

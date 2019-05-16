@@ -26,7 +26,7 @@ class Fock(DeviceData):
         # meta operations
         "All",
         "New",
-        "Del",
+        "Delete",
         # state preparations
         "Vacuum",
         "Coherent",
