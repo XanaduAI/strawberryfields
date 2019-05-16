@@ -25,7 +25,7 @@ class Gaussian(DeviceData):
     primitives = {
         # meta operations
         "All",
-        "New",
+        "New_modes",
         "Delete",
         # state preparations
         "Vacuum",

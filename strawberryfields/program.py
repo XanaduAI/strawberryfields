@@ -706,7 +706,7 @@ class Program:
         from strawberryfields.data import backend_databases
 
         if backend in backend_databases:
-            db = backend_databases[backend]
+            db = backend_databases[backend]()
         else:
             raise ValueError("Could not find backend {} in Strawberry Fields database".format(backend))
 
@@ -716,29 +716,34 @@ class Program:
             for cmd in seq:
                 op_name = cmd.op.__class__.__name__
 
-                # None represents an identity gate
                 if cmd.op is None:
+                    # None represents an identity gate
                     continue
-                elif op_name in db.primitives:
-                    # backend can handle the op natively
-                    compiled.append(cmd)
+
                 elif op_name in db.decompositions:
-                    # op not directly supported by the backend
-                    # requires a decomposition
+                    # backend requests an op decomposition
+
+                    if op_name in db.primitives and not cmd.op.decomp:
+                        # op is a backend primitive, and
+                        # user has requested to bypass decomposition
+                        compiled.append(cmd)
+                        continue
+
                     try:
                         kwargs = db.decompositions[op_name]
                         temp = cmd.op.decompose(cmd.reg, **kwargs)
-                        if temp is None:
-                            # decomposition refused
-                            compiled.append(cmd)
-                        else:
-                            # now compile the decomposition
-                            temp = compile_sequence(temp)
-                            compiled.extend(temp)
+                        # now compile the decomposition
+                        temp = compile_sequence(temp)
+                        compiled.extend(temp)
                     except NotImplementedError as err:
                         # Operation does not have _decompose() method defined!
                         # simplify the error message by suppressing the previous exception
                         raise err from None
+
+                elif op_name in db.primitives:
+                    # backend can handle the op natively
+                    compiled.append(cmd)
+
                 else:
                     raise CircuitError('The operation {} cannot be used with the {} backend.'.format(cmd.op.__class__.__name__, backend))
 
