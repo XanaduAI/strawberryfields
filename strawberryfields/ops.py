@@ -1832,19 +1832,12 @@ class Gaussian(Preparation, Decomposition):
         # FIXME merge() probably does not work for Gaussians if r is not zero?
 
     def _apply(self, reg, backend, **kwargs):
-        if self.decomp:
-            # explicity raise a NotImplementedError,
-            # so that the engine knows to perform a decomposition.
-            raise NotImplementedError
-
         p = _unwrap(self.p)
         s = sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
         backend.prepare_gaussian_state(p[1]/s, p[0]/(s*s), reg)
 
     def _decompose(self, reg):
         # pylint: disable=too-many-branches
-        if not self.decomp:
-            return None  # refuse to decompose
         cmds = []
 
         V = self.p[0].x
