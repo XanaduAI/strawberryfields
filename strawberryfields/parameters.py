@@ -26,7 +26,7 @@ The parameter objects can represent a
 * number
 * NumPy array
 * value measured from the quantum register (:class:`.RegRefTransform`)
-* TensorFlow object
+* TensorFlow object (:class:`tf.Variable` or :code:`tf.placeholder`)
 
 
 The normal lifecycle of an Operation object and its associated Parameter instances is as follows:
@@ -43,21 +43,22 @@ The normal lifecycle of an Operation object and its associated Parameter instanc
   the Operation and the RegRefs it acts on, which is appended to the Program command queue.
 
 * Before the Program is run, it is compiled and optimized for a specific backend. This involves
-  merging and commuting Commands inside the graph representing the quantum circuit.
+  checking that the Program only contains valid Operations, decomposing non-elementary Operations
+  using :meth:`~ops.Operation.decompose`, and finally merging and commuting Commands inside
+  the graph representing the quantum circuit.
   The circuit graph is built using the knowledge of which subsystems the Commands act and depend on.
 
 * Merging two :class:`.Gate` instances of the same subclass involves
   adding their first parameters after equality-comparing the others. This is easily done if
   all the parameters have an immediate numerical value.
   RegRefTransforms and TensorFlow objects are more complicated, but could in principle be handled.
-  For now, we simply don't do the merge if RegRefTransforms or TensorFlow objects are involved.
+  For now, we simply don't merge Operations that depend on RegRefTransforms or TensorFlow objects.
 
-* The compiled Program is run by :class:`.Engine`, which calls the :meth:`~ops.Operation.apply` method
-  of each Operation in turn (and tries :meth:`~ops.Operation.decompose`
-  if a :py:exc:`NotImplementedError` exception is raised).
+* The compiled Program is run by a :class:`.BaseEngine` instance, which calls the
+  :meth:`~ops.Operation.apply` method of each Operation in turn.
 
-* :meth:`Operation.apply` evaluates the numeric value of any
-  RegRefTransform-based Parameters using :meth:`Parameter.evaluate` (other types of Parameters are simply passed through).
+* :meth:`Operation.apply` evaluates the numeric value of any RegRefTransform-based Parameters
+  using :meth:`Parameter.evaluate` (other types of Parameters are simply passed through).
   The parameter values and the subsystem indices are passed to :meth:`Operation._apply`.
 
 * :meth:`~ops.Operation._apply` "unwraps" the Parameter instances. There are three different cases:
