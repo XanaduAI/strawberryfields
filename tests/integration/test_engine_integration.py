@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Integration tests for the frontend engine.py module with the backends"""
+import numbers
 import pytest
 
 import numpy as np
@@ -20,6 +21,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.backends import BaseGaussian, BaseFock
 from strawberryfields.backends import TFBackend, GaussianBackend, FockBackend
+from strawberryfields.backends.states import BaseState
 
 
 # make test deterministic
@@ -61,31 +63,57 @@ class TestEngineReset:
         eng.reset()
         assert np.all(eng.backend.is_vacuum(tol))
 
-    @pytest.mark.broken('FIXME when backend reset logic is done')
     @pytest.mark.backends("fock")
-    def test_eng_reset(self, setup_eng):
+    def test_eng_reset(self, setup_eng, cutoff):
         """Test the Engine.reset() features."""
         eng, prog = setup_eng(2)
-        state = eng.run(prog)
+
+        state = eng.run(prog).state
+        backend_cutoff = eng.backend.get_cutoff_dim()
+        assert state._cutoff == backend_cutoff
+        assert cutoff == backend_cutoff
 
         # change the cutoff dimension
-        old_cutoff = eng.backend.get_cutoff_dim()
-        assert state._cutoff == old_cutoff
-        assert cutoff == old_cutoff
+        new_cutoff = cutoff + 1
+        eng.reset({'cutoff_dim': new_cutoff})
 
-        new_cutoff = old_cutoff + 1
-        eng.reset(cutoff_dim=new_cutoff)
-
-        state = eng.run(prog)
-        temp = eng.backend.get_cutoff_dim()
-
-        assert temp == new_cutoff
-        assert state._cutoff == new_cutoff
+        state = eng.run(prog).state
+        backend_cutoff = eng.backend.get_cutoff_dim()
+        assert state._cutoff == backend_cutoff
+        assert new_cutoff == backend_cutoff
 
 
 class TestProperExecution:
     """Test that various frontend circuits execute through
     the backend with no error"""
+
+    def test_no_return_state(self, setup_eng):
+        """Engine returns no state object when no modes are requested."""
+        eng, prog = setup_eng(2)
+        res = eng.run(prog, modes=[])
+        assert res.state is None
+
+    def test_return_state(self, setup_eng):
+        """Engine returns a valid state object."""
+        eng, prog = setup_eng(2)
+        res = eng.run(prog)
+        assert isinstance(res.state, BaseState)
+
+    def test_return_samples(self, setup_eng):
+        """Engine returns measurement samples."""
+        eng, prog = setup_eng(2)
+        with prog.context as q:
+            ops.MeasureX | q[0]
+
+        res = eng.run(prog, modes=[])
+        # one entry for each mode
+        assert len(res.samples) == 2
+        # the same samples can also be found in the regrefs
+        assert [r.val for r in prog.register] == res.samples
+        # first mode was measured
+        assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
+        # second mode was not measured
+        assert res.samples[1] is None
 
     # TODO: Some of these tests should probably check *something* after execution
 
@@ -149,7 +177,7 @@ class TestProperExecution:
             BS | (alice, bob)
             subroutine(bob, alice)
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
 
         # state norm must be invariant
         if isinstance(eng.backend, BaseFock):
@@ -197,7 +225,7 @@ class TestProperExecution:
 
         state = eng.run(null)
         check_reg(null, 2)
-        state = eng.run(prog)
+        state = eng.run(prog).state
         check_reg(prog, 1)
 
         # state norm must be invariant
@@ -218,18 +246,18 @@ class TestProperExecution:
         with p1.context as q:
             ops.Dgate(a) | q[0]
             ops.Sgate(r) | q[1]
-        state1 = eng.run(p1)
+        state1 = eng.run(p1).state
 
         # empty program
         p2 = sf.Program(p1)
-        state2 = eng.run(p2)
+        state2 = eng.run(p2).state
         assert state1 == state2
 
         p3 = sf.Program(p2)
         with p3.context as q:
             ops.Rgate(r) | q[0]
-        state3 = eng.run(p3)
+        state3 = eng.run(p3).state
         assert not state1 == state3
 
-        state4 = eng.run(p2)
+        state4 = eng.run(p2).state
         assert state3 == state4

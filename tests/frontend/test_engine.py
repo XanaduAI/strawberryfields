@@ -27,7 +27,15 @@ from strawberryfields.backends.base import BaseBackend
 @pytest.fixture
 def eng(backend):
     """Engine fixture."""
-    return sf.Engine(backend)
+    return sf.LocalEngine(backend)
+
+@pytest.fixture
+def prog(backend):
+    """Program fixture."""
+    prog = sf.Program(2)
+    with prog.context as q:
+        ops.Dgate(0.5) | q[0]
+    return prog
 
 
 class TestEngine:
@@ -35,30 +43,20 @@ class TestEngine:
 
     def test_load_backend(self):
         """Backend can be correctly loaded via strings"""
-        eng = sf.Engine("base")
+        eng = sf.LocalEngine("base")
         assert isinstance(eng.backend, BaseBackend)
+
+    def test_bad_backend(self):
+        """Backend must be a string or a BaseBackend instance."""
+        with pytest.raises(TypeError, match='backend must be a string or a BaseBackend instance'):
+            eng = sf.LocalEngine(0)
 
 
 class TestEngineProgramInteraction:
     """Test the Engine class and its interaction with Program instances."""
 
-    def test_no_return_state(self, eng):
-        """Engine returns None when no state is requested"""
-        prog = sf.Program(2)
-
-        with prog.context as q:
-            ops.Dgate(0.34) | q[0]
-
-        res = eng.run(prog, return_state=False)
-        assert res is None
-
-    def test_history(self, eng):
+    def test_history(self, eng, prog):
         """Engine history."""
-        prog = sf.Program(2)
-
-        with prog.context as q:
-            ops.Dgate(0.5) | q[0]
-
         # no programs have been run
         assert not eng.run_progs
         eng.run(prog)
@@ -66,22 +64,17 @@ class TestEngineProgramInteraction:
         assert len(eng.run_progs) == 1
         assert eng.run_progs[-1].source == prog
 
-    def test_reset(self, eng):
+    def test_reset(self, eng, prog):
         """Running independent programs with an engine reset in between."""
-        D = ops.Dgate(0.5)
-        p1 = sf.Program(2)
-        with p1.context as q:
-            D | q[1]
         assert not eng.run_progs
-        eng.run(p1)
+        eng.run(prog)
         assert len(eng.run_progs) == 1
 
         eng.reset()
         assert not eng.run_progs
-
         p2 = sf.Program(3)
         with p2.context as q:
-            D | q[2]
+            ops.Rgate(1.0) | q[2]
         eng.run(p2)
         assert len(eng.run_progs) == 1
 
@@ -107,6 +100,7 @@ class TestEngineProgramInteraction:
         eng.run(p1)
         assert len(eng.run_progs) == 1
 
+        # p2 succeeds p1
         p2 = sf.Program(p1)
         with p2.context as q:
             D | q[1]
@@ -120,8 +114,8 @@ class TestEngineProgramInteraction:
         eng.reset()
         assert not eng.run_progs
 
-    def test_apply_history(self, eng):
-        """Tests the reapply history argument"""
+    def test_print_applied(self, eng):
+        """Tests the printing of executed programs."""
         a = 0.23
         r = 0.1
 
@@ -137,17 +131,17 @@ class TestEngineProgramInteraction:
             ops.Sgate(r) | q[1]
 
         eng.run(p1)
-        expected = [
+        expected1 = [
             "Run 0:",
             "Dgate({}, 0) | (q[1])".format(a),
             "Sgate({}, 0) | (q[1])".format(r),
         ]
-        assert inspect() == expected
+        assert inspect() == expected1
 
         # run the program again
         eng.reset()
         eng.run(p1)
-        assert inspect() == expected
+        assert inspect() == expected1
 
         # apply more commands to the same backend
         p2 = sf.Program(2)
@@ -155,18 +149,13 @@ class TestEngineProgramInteraction:
             ops.Rgate(r) | q[1]
 
         eng.run(p2)
-        expected = [
-            "Run 0:",
-            "Dgate({}, 0) | (q[1])".format(a),
-            "Sgate({}, 0) | (q[1])".format(r),
+        expected2 = expected1 + [
             "Run 1:",
             "Rgate({}) | (q[1])".format(r),
         ]
-
-        assert inspect() == expected
+        assert inspect() == expected2
 
         # reapply history
         eng.reset()
         eng.run([p1, p2])
-
-        assert inspect() == expected
+        assert inspect() == expected2

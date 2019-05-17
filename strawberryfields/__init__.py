@@ -57,12 +57,12 @@ Top-level functions
 Code details
 ~~~~~~~~~~~~
 """
-from .engine import Engine
+from .engine import (Engine, LocalEngine)
 from .io import save, load
 from .program import Program, _convert as convert
 from ._version import __version__
 
-__all__ = ["Engine", "Program", "convert", "version", "save", "load"]
+__all__ = ["Engine", "LocalEngine", "Program", "convert", "version", "save", "load"]
 
 
 def version():

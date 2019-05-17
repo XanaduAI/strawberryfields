@@ -24,7 +24,7 @@ Quantum operations
 .. note::
 
   In the :mod:`strawberryfields.ops` API we use the convention :math:`\hbar=2` by default, however
-  this can be changed on engine initialisation.
+  this can be changed using the global variable :py:data:`strawberryfields.hbar`.
 
   See :ref:`conventions` for more details.
 
@@ -33,61 +33,62 @@ for continuous-variable (CV) quantum systems.
 The syntax is modeled after ProjectQ :cite:`projectq2016`.
 
 Quantum operations (state preparation, unitary gates, measurements, channels) act on
-register objects using the following syntax::
+register objects using the following syntax:
 
-  with eng:
-    G(params) | q
-    F(params) | (q[1], q[6], q[2])
+.. code-block:: python
 
-Here :samp:`eng` is an instance of :class:`strawberryfields.engine.Engine` and defines the context in which
-the commands are executed.
+  prog = sf.Program(3)
+  with prog.context as q:
+      G(params) | q
+      F(params) | (q[1], q[6], q[2])
+
+Here :samp:`prog` is an instance of :class:`strawberryfields.program.Program`
+which defines the context where the commands are stored.
 Within each command, the part on the left is an :class:`Operation` instance,
 quite typically a constructor call for the requested operation class with the relevant parameters.
-The vertical bar calls the :func:`__or__` method of the :class:`Operation` object, with the part on the right as the parameter.
-The part on the right is a single :class:`strawberryfields.engine.RegRef` object or, for multi-mode gates, a sequence of them.
+The vertical bar calls the :func:`__or__` method of the :class:`Operation` object,
+with the part on the right as the parameter. The part on the right is a single
+:class:`strawberryfields.engine.RegRef` object or, for multi-mode gates, a sequence of them.
 It is of course also possible to construct gates separately and reuse them several times::
 
   R = Rgate(s)
-  with eng:
-    R   | q
-    Xgate(t) | q
-    R.H | q
+  with prog.context as q:
+      R   | q
+      Xgate(t) | q
+      R.H | q
 
 
 There are six kinds of :class:`Operation` objects:
 
 * :class:`Preparation` operations only manipulate the register state::
 
-    eng, q = sf.Engine(3)
-    with eng:
-      Vac | q[0]
-      All(Coherent(0.4, 0.2)) | (q[1], q[2])
+    with prog.context as q:
+        Vac | q[0]
+        All(Coherent(0.4, 0.2)) | (q[1], q[2])
 
 * Transformations such as :class:`Gate` and :class:`Channel` operations only manipulate the register state::
 
-    eng, q = sf.Engine(2)
-    with eng:
-      Dgate(0.3)   | q[0]
-      BSgate(-0.5) | q[0:2]
+    with prog.context as q:
+        Dgate(0.3)   | q[0]
+        BSgate(-0.5) | q[0:2]
 
 * :class:`Measurement` operations manipulate the register state and produce classical information.
-  The information is directly available only after the simulation has been run up to the point of measurement::
+  The information is directly available only after the program has been run up to the point of measurement::
 
-    eng, (alice, bob) = sf.Engine(2)
-    with eng:
-      Measure       | alice
-      eng.run()
-      Dgate(alice.val) | bob
+    with prog.context as (alice, bob):
+        Measure       | alice
+
+    eng = sf.LocalEngine(backend='fock')
+    eng.run(prog)
+    print(alice.val)
 
   Alternatively one may use a symbolic reference to the register containing the measurement result
   by supplying registers as the argument to an :class:`Operation`, in which case the measurement may be deferred,
   i.e., we may symbolically use the measurement result before it exists::
 
-    eng, (alice, bob) = sf.Engine(2)
-    with eng:
-      Measure   | alice
-      Dgate(alice) | bob
-    eng.run()
+    with prog.context as (alice, bob):
+        Measure   | alice
+        Dgate(alice) | bob
 
   One may also include an arbitrary post-processing function for the measurement result, to be applied
   before using it as the argument to another :class:`Operation`. The :func:`~.convert` decorator can be used in Python
@@ -95,39 +96,32 @@ There are six kinds of :class:`Operation` objects:
 
     @convert
     def square(q):
-      return q ** 2
+        return q ** 2
 
-    eng, q = sf.Engine(2)
-    with eng:
-      Measure           | q[0]
-      Dgate(square(q[0])) | q[1]
-    eng.run()
+    with prog.context as q:
+        Measure           | q[0]
+        Dgate(square(q[0])) | q[1]
 
   Finally, the lower-level :class:`strawberryfields.engine.RegRefTransform` (RR) and
   an optional lambda function can be used to achieve the same functionality::
 
-    eng, q = sf.Engine(3)
-    with eng:
-      Measure       | q[0]
-      Dgate(RR(q[0])) | q[1]
-      Dgate(RR(q[0], lambda q: q ** 2)) | q[2]
-    eng.run()
-
+    with prog.context as q:
+        Measure       | q[0]
+        Dgate(RR(q[0])) | q[1]
+        Dgate(RR(q[0], lambda q: q ** 2)) | q[2]
 
 * Meta-operations such as :class:`Delete` and :class:`New_modes` Operations delete
   and create modes during program execution.
   In practice the user only deals with the pre-constructed
   instances :py:data:`Del` and :py:data:`New`::
 
-    eng, (alice,) = sf.Engine(1)
-    with eng:
-      Sgate(1)    | alice
-      bob, charlie = New(2)
-      BSgate(0.5) | (alice, bob)
-      CXgate(1)   | (alice, charlie)
-      Del         | alice
-      S2gate(0.4) | (charlie, bob)
-
+    with prog.context as (alice,):
+        Sgate(1)    | alice
+        bob, charlie = New(2)
+        BSgate(0.5) | (alice, bob)
+        CXgate(1)   | (alice, charlie)
+        Del         | alice
+        S2gate(0.4) | (charlie, bob)
 
 * Finally, :class:`Decomposition` operations are a special case, and can act as
   either transformations *or* state preparation, depending on the decomposition used.
@@ -463,15 +457,17 @@ class Operation:
             reg (Sequence[int]): subsystem indices the operation is
                 acting on (this is how the backend API wants them)
             backend (BaseBackend): backend to execute the operation
+
+        Returns:
+            array[Number] or None: Measurement results, if any; shape == (len(reg), shots).
         """
-        raise NotImplementedError(
-            'Missing direct implementation: {}'.format(self))
+        raise NotImplementedError('Missing direct implementation: {}'.format(self))
 
     def apply(self, reg, backend, **kwargs):
         """Ask a local backend to execute the operation on the current register state right away.
 
         Takes care of parameter evaluations and any pending formal
-        transformations (like dagger) and then calls _apply.
+        transformations (like dagger) and then calls :meth:`Operation._apply`.
 
         Args:
             reg (Sequence[RegRef]): subsystem(s) the operation is acting on
@@ -483,7 +479,7 @@ class Operation:
                 useful if the parameters are pre-evaluated prior to calling this method.
 
         Returns:
-            : The result of self._apply
+            Any: the result of self._apply
         """
         eval_params = kwargs.get('eval_params', True)
         original_p = self.p  # store the original parameters
@@ -563,8 +559,7 @@ class Measurement(Operation):
         return temp
 
     def merge(self, other):
-        raise MergeFailure(
-            'For now, measurements cannot be merged with anything else.')
+        raise MergeFailure('For now, measurements cannot be merged with anything else.')
 
     def apply(self, reg, backend, **kwargs):
         """Ask a backend to execute the operation on the current register state right away.
@@ -954,8 +949,7 @@ class Ket(Preparation):
                 raise ValueError("Provided Fock state is not pure.")
             super().__init__([state.ket()])
         elif isinstance(state, BaseGaussianState):
-            raise ValueError(
-                "Gaussian states are not supported for the Ket operation.")
+            raise ValueError("Gaussian states are not supported for the Ket operation.")
         else:
             super().__init__([state])
 
@@ -988,8 +982,7 @@ class DensityMatrix(Preparation):
         if isinstance(state, BaseFockState):
             super().__init__([state.dm()])
         elif isinstance(state, BaseGaussianState):
-            raise ValueError(
-                "Gaussian states are not supported for the Ket operation.")
+            raise ValueError("Gaussian states are not supported for the Ket operation.")
         else:
             super().__init__([state])
 
@@ -1070,7 +1063,7 @@ class MeasureHomodyne(Measurement):
         s = sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
         select = self.select
         if select is not None:
-           select = select / s
+            select = select / s
 
         return s * backend.measure_homodyne(p[0], *reg, select=select, **kwargs)
 
@@ -1603,7 +1596,7 @@ class Interferometer(Decomposition):
     Args:
         U (array): an :math:`N\times N` complex unitary matrix.
         tol (float): the tolerance used when checking if the matrix is unitary:
-            :math:`|UU^\dagger-I| \leq tol`
+            :math:`|UU^\dagger-I| \leq` tol
     """
     ns = None
 
@@ -1652,10 +1645,10 @@ class GraphEmbed(Decomposition):
         A (array): an :math:`N\times N` complex or real symmetric matrix
         max_mean_photon (float): threshold value. It guarantees that the mode with
             the largest squeezing has ``max_mean_photon`` as the mean photon number
-            i.e., :math:`sinh(r_{max})^2 == max_mean_photon`
+            i.e., :math:`sinh(r_{max})^2 ==` max_mean_photon
         make_traceless (boolean): removes the trace of the input matrix
         tol (float): the tolerance used when checking if the input matrix is symmetric:
-            :math:`|A-A^T| < tol`
+            :math:`|A-A^T| <` tol
     """
     ns = None
 
@@ -1716,7 +1709,7 @@ class GaussianTransform(Decomposition):
         vacuum (bool): set to True if acting on a vacuum state. In this case, :math:`O_2 V O_2^T = I`,
             and the unitary associated with orthogonal symplectic :math:`O_2` will be ignored.
         tol (float): the tolerance used when checking if the matrix is symplectic:
-            :math:`|S^T\Omega S-\Omega| \leq tol`
+            :math:`|S^T\Omega S-\Omega| \leq` tol
     """
     ns = None
 
@@ -1797,7 +1790,7 @@ class Gaussian(Preparation, Decomposition):
             If None, it is assumed that :math:`r=0`.
         decomp (bool): Should the operation be decomposed into a sequence of elementary gates?
             If False, the state preparation is performed directly via the backend API.
-        tol (float): the tolerance used when checking if the matrix is symmetric: :math:`|V-V^T| \leq tol`
+        tol (float): the tolerance used when checking if the matrix is symmetric: :math:`|V-V^T| \leq` tol
     """
     # pylint: disable=too-many-instance-attributes
     ns = None
