@@ -104,7 +104,10 @@ class BaseEngine(abc.ABC):
         backend (str): backend short name
         backend_options (Dict[str, Any]): keyword arguments for the backend
     """
-    def __init__(self, backend, backend_options={}):
+    def __init__(self, backend, backend_options=None):
+        if backend_options is None:
+            backend_options = {}
+
         #: str: short name of the backend
         self.backend_name = backend
         #: Dict[str, Any]: keyword arguments for the backend
@@ -263,7 +266,10 @@ class LocalEngine(BaseEngine):
     def __str__(self):
         return self.__class__.__name__ + '({})'.format(self.backend_name)
 
-    def reset(self, backend_options={}):
+    def reset(self, backend_options=None):
+        if backend_options is None:
+            backend_options = {}
+
         super().reset(backend_options)
         self.backend_options.pop('batch_size', None)  # HACK to make tests work for now
         self.backend.reset(**self.backend_options)
