@@ -234,7 +234,7 @@ class BaseEngine(abc.ABC):
             # program execution was successful
             pass
 
-        return Result(self.samples)
+        return Result(self.samples.copy())
 
 
 class LocalEngine(BaseEngine):
@@ -293,9 +293,13 @@ class LocalEngine(BaseEngine):
         Extends :meth:`BaseEngine._run`.
 
         Args:
+            program (Program, Sequence[Program]): quantum programs to run
+            compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
             modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
                 An empty sequence [] means no state object is returned. None returns all the modes.
             state_options (Dict[str, Any]): keyword arguments for :meth:`.BaseBackend.state`
+
+        The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
 
         Returns:
             Result: results of the computation
