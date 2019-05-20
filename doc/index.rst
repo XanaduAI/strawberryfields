@@ -81,7 +81,7 @@ Finally, detailed documentation on the :ref:`Strawberry fields API <code>` is pr
 How to cite
 ===========
 
-If you are doing research using Strawberry Fields, please cite `our paper <https://quantum-journal.org/papers/q-2019-03-11-129/>`_:
+If you are doing research using Strawberry Fields, please cite `our paper <https://quantum-journal.org/papers/q-2019-03-11-129/>`_ :cite:`strawberryfields`:
 
   Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook. "Strawberry Fields: A Software Platform for Photonic Quantum Computing", Quantum, 3, 129 (2019).
 
