@@ -103,9 +103,10 @@ def about():
     print('Scipy version:             {}'.format(scipy.__version__))
     try:
         import tensorflow
-        print('TensorFlow version:        {}'.format(tensorflow.__version__))
-    except:
-        pass
+        tf_version = tensorflow.__version__
+    except ModuleNotFoundError:
+        tf_version = None
+    print('TensorFlow version:        {}'.format(tf_version))
 
 
 def cite():
