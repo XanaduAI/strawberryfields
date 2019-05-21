@@ -117,7 +117,7 @@ Code details
 
 """
 
-# pylint: disable=no-self-use
+# pylint: disable=no-self-use,missing-docstring
 
 
 class NotApplicableError(TypeError):
@@ -218,7 +218,6 @@ class ModeMap:
 
 class BaseBackend:
     """Abstract base class for backends."""
-    # pylint: disable=too-many-public-methods
 
     def __init__(self):
         self._supported = {}
@@ -316,7 +315,8 @@ class BaseBackend:
         may be changed during the reset, see the keyword args below.
 
         Args:
-            pure (bool): if True, initialize the circuit in a pure state (will use a mixed state if pure is False)
+            pure (bool): if True, initialize the circuit in a pure state representation
+                (will use a mixed state representation if pure is False)
 
         Keyword Args:
             cutoff_dim (int): new Hilbert space truncation dimension (for Fock basis backends only)
@@ -552,7 +552,7 @@ class BaseFock(BaseBackend):
         raise NotImplementedError
 
     def prepare_dm_state(self, state, modes):
-        r"""Prepare the given dm state in the specified modes.
+        r"""Prepare the given mixed state in the specified modes.
 
         The requested modes are traced out and replaced with the given density matrix
         state (in the Fock basis).
@@ -679,35 +679,27 @@ class BaseGaussian(BaseBackend):
         raise NotImplementedError
 
     def get_cutoff_dim(self):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def prepare_fock_state(self, n, mode):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def prepare_ket_state(self, state, mode):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def prepare_dm_state(self, state, mode):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def cubic_phase(self, gamma, mode):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def kerr_interaction(self, kappa, mode):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def cross_kerr_interaction(self, kappa, mode1, mode2):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def measure_fock(self, modes, select=None):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def state(self, modes=None, **kwargs):

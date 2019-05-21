@@ -114,10 +114,7 @@ class GaussianBackend(BaseGaussian):
         Returns:
             float: measured value
         """
-        if "eps" in kwargs:
-            eps = kwargs["eps"]
-        else:
-            eps = 0.0002
+        eps = kwargs.get('eps', 0.0002)
 
         # phi is the rotation of the measurement operator, hence the minus
         self.circuit.phase_shift(-phi, mode)
