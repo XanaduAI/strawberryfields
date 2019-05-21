@@ -260,10 +260,10 @@ class BaseBackend:
 
         Args:
             num_subsystems (int): number of modes in the circuit
-            cutoff_dim (int): numerical Hilbert space cutoff dimension (used for circuits operating in Fock basis)
+            cutoff_dim (int): numerical Hilbert space cutoff dimension for the modes (used for circuits operating in Fock basis)
             hbar (float): The value of :math:`\hbar` to initialise the circuit with, depending on the conventions followed.
                 By default, :math:`\hbar=2`. See :ref:`conventions` for more details.
-            pure (bool): whether to initialize the circuit in a pure state (will use a mixed state if pure is False)
+            pure (bool): If True, use a pure state representation (otherwise will use a mixed state representation)
         """
         # BaseBackend can be instantiated for testing purposes, even though it does not do anything.
 
