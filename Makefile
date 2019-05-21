@@ -65,7 +65,7 @@ coverage: coverage-frontend coverage-gaussian coverage-fock coverage-tf batch-co
 
 coverage-%:
 	@echo "Generating coverage report for $(subst coverage-,,$@)..."
-	 $(TESTRUNNER) $(COVERAGE) -m $(subst coverage-,,"$@")
+	$(PYTHON) $(TESTRUNNER) $(COVERAGE) -m $(subst coverage-,,"$@")
 
 batch-coverage-%:
 	@echo "Generating coverage report for $(subst batch-coverage-,,"$@") in batch mode..."

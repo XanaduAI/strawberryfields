@@ -30,17 +30,15 @@ class FockStateTF(BaseFockState):
             num_modes (int): the number of modes in the state
             pure (bool): True if the state is a pure state, false if the state is mixed
             cutoff_dim (int): the Fock basis truncation size
-            hbar (float): (default 2) The value of :math:`\hbar` in the commutation relation
-                    :math:`[\x,\p]=i\hbar`
             mode_names (Sequence): (optional) this argument contains a list providing mode names
                     for each mode in the state.
             eval (bool): indicates the default return behaviour for the class instance (symbolic when eval=False, numerical when eval=True)
     """
 
-    def __init__(self, state_data, num_modes, pure, cutoff_dim, graph, batched=False, hbar=2., mode_names=None, eval=True):
+    def __init__(self, state_data, num_modes, pure, cutoff_dim, graph, batched=False, mode_names=None, eval=True):
         # pylint: disable=too-many-arguments
         state_data = tf.convert_to_tensor(state_data, name="state_data") # convert everything to a Tensor so we have the option to do symbolic evaluations
-        super().__init__(state_data, num_modes, pure, cutoff_dim, hbar, mode_names)
+        super().__init__(state_data, num_modes, pure, cutoff_dim, mode_names)
         self._batched = batched
         self._str = "<FockStateTF: num_modes={}, cutoff={}, pure={}, batched={}, hbar={}>". \
                                 format(self.num_modes, self.cutoff_dim, self._pure, self._batched, self._hbar)

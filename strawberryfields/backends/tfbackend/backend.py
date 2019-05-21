@@ -65,7 +65,7 @@ class TFBackend(BaseFock):
             remapped_modes = remapped_modes[0]
         return remapped_modes
 
-    def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=True, **kwargs):
+    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=True, **kwargs):
         r"""Instantiate a quantum circuit.
 
         Instantiates a representation of a quantum optical state with num_subsystems modes.
@@ -79,8 +79,6 @@ class TFBackend(BaseFock):
         Args:
             num_subsystems (int): number of modes in the circuit
             cutoff_dim (int): numerical Hilbert space cutoff dimension for the modes
-            hbar (float): The value of :math:`\hbar` to initialise the circuit with, depending on the conventions followed.
-                By default, :math:`\hbar=2`. See :ref:`conventions` for more details.
             pure (bool): If True, use a pure state representation (otherwise will use a mixed state representation)
 
         Keyword Args:
@@ -102,7 +100,7 @@ class TFBackend(BaseFock):
                 raise ValueError("batch_size of 1 not supported, please use different batch_size or set batch_size=None")
 
             self._modemap = ModeMap(num_subsystems)
-            circuit = Circuit(self._graph, num_subsystems, cutoff_dim, hbar, pure, batch_size)
+            circuit = Circuit(self._graph, num_subsystems, cutoff_dim, pure, batch_size)
 
         self._init_modes = num_subsystems
         self.circuit = circuit
@@ -290,7 +288,7 @@ class TFBackend(BaseFock):
 
             modenames = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
             state_ = FockStateTF(s, len(modes), pure, self.circuit.cutoff_dim,
-                                 graph=self._graph, batched=batched, hbar=self.circuit.hbar,
+                                 graph=self._graph, batched=batched,
                                  mode_names=modenames, eval=evaluate_results)
         return state_
 

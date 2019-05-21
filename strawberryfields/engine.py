@@ -13,50 +13,50 @@
 # limitations under the License.
 
 """
-Quantum compiler engine
-========================================================
+Execution engine
+================
 
 **Module name:** :mod:`strawberryfields.engine`
 
 .. currentmodule:: strawberryfields.engine
 
-The :class:`Engine` class is responsible for communicating
-quantum programs represented by :class:`.Program` objects
-to a backend that could be e.g., a simulator, a hardware quantum processor, or a circuit drawer.
+This module implements :class:`BaseEngine` and its subclasses that are responsible for
+communicating quantum programs represented by :class:`.Program` objects
+to a backend that could be e.g., a simulator, a hardware quantum processor,
+or a circuit drawer, and returning the result to the user.
+One can think of each BaseEngine instance as a separate quantum computation.
 
 A typical use looks like
-::
 
-  prog = sf.Program(num_subsystems)
-  with prog.context as q:
-      Coherent(0.5)  | q[0]
-      Vac            | q[1]
-      Sgate(2)       | q[1]
-      Dgate(0.5)     | q[0]
-      BSgate(1)      | q[0:2]
-      Dgate(0.5).H   | q[0]
-      Measure        | q
-  eng = sf.Engine(backend='fock')
-  eng.run(prog, cutoff_dim=5)
-  v1 = prog.register[1].val
+.. include:: example_use.rst
 
 
-Engine methods
---------------
+Classes
+-------
 
-.. currentmodule:: strawberryfields.engine.Engine
+.. autosummary::
+   BaseEngine
+   LocalEngine
+   Result
+
+
+LocalEngine methods
+-------------------
+
+.. currentmodule:: strawberryfields.engine.LocalEngine
 
 .. autosummary::
    run
-   reset
    print_applied
-   return_state
+   reset
 
 ..
-    The following are internal Engine methods. In most cases the user should not
+    The following are internal BaseEngine methods. In most cases the user should not
     call these directly.
     .. autosummary::
+       _init_backend
        _run_program
+       _run
 
 
 .. currentmodule:: strawberryfields.engine
@@ -72,57 +72,60 @@ Code details
 ~~~~~~~~~~~~
 
 """
-# pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
+import abc
 from collections.abc import Sequence
 
 from .backends import load_backend
 from .backends.base import (NotApplicableError, BaseBackend)
 
 
-class Engine:
-    r"""Quantum program executor engine.
+class Result:
+    """Result of a quantum computation.
 
-    :meth:`run` executes :class:`.Program` instances on the chosen backend, and makes
-    measurement results available via the :class:`.RegRef` instances.
-
-    Args:
-        backend (str): name of the backend
-        host    (str): URL of the remote backend host, or None if a local backend is used
-    Keyword Args:
-        hbar (float): The value of :math:`\hbar` to initialise the engine with, depending on the
-            conventions followed. By default, :math:`\hbar=2`. See
-            :ref:`conventions` for more details.
+    Represents the results of the execution of a quantum program.
+    Returned by :meth:`.BaseEngine.run`.
     """
-    def __init__(self, backend, host=None, **kwargs):
-        #: list[Program]: list of Programs that have been run
-        self.run_progs = []
-        #: str: URL of the remote backend host
-        self.host = host
-        #: dict[str]: keyword arguments for the backend
-        self.kwargs = kwargs
-        #: float: numerical value of hbar in the (implicit) units of position * momentum
-        self.hbar = kwargs.get('hbar', 2)
-
-        if isinstance(backend, str):
-            #: str: short name of the backend
-            self.backend_name = backend
-            #: BaseBackend: backend for executing the quantum circuit
-            self.backend = load_backend(backend)
-        elif isinstance(backend, BaseBackend):
-            self.backend_name = backend._short_name
-            self.backend = backend
-        else:
-            raise TypeError('backend must be a string or a BaseBackend instance.')
+    def __init__(self, samples):
+        #: BaseState: quantum state object returned by a local backend, if any
+        self.state = None
+        #: List[List[Number]]: measurement samples, shape == (modes, shots)
+        self.samples = samples
 
     def __str__(self):
         """String representation."""
-        return self.__class__.__name__ + '({})'.format(self.backend_name)
+        return 'Result: {} subsystems, state: {}\n samples: {}'.format(len(self.samples), self.state, self.samples)
 
-    def reset(self, **kwargs):
-        r"""Re-initialize the backend state to vacuum.
 
-        Resets the state of the quantum circuit represented by the backend.
+class BaseEngine(abc.ABC):
+    r"""ABC for quantum program executor engines.
+
+    Args:
+        backend (str): backend short name
+        backend_options (Dict[str, Any]): keyword arguments for the backend
+    """
+    def __init__(self, backend, backend_options=None):
+        if backend_options is None:
+            backend_options = {}
+
+        #: str: short name of the backend
+        self.backend_name = backend
+        #: Dict[str, Any]: keyword arguments for the backend
+        self.backend_options = backend_options.copy()  # dict is mutable
+        #: List[Program]: list of Programs that have been run
+        self.run_progs = []
+        #: List[List[Number]]: latest measurement results, shape == (modes, shots)
+        self.samples = None
+
+    @abc.abstractmethod
+    def __str__(self):
+        """String representation."""
+
+    @abc.abstractmethod
+    def reset(self, backend_options):
+        r"""Re-initialize the quantum computation.
+
+        Resets the state of the engine and the quantum circuit represented by the backend.
 
         * The original number of modes is restored.
         * All modes are reset to the vacuum state.
@@ -131,17 +134,18 @@ class Engine:
 
         Note that the reset does nothing to any Program objects in existence, beyond erasing the measured values.
 
-        Keyword Args:
-            kwargs: The keyword args are passed on to :meth:`strawberryfields.backends.base.BaseBackend.reset`.
+        Args:
+           backend_options (Dict[str, Any]): keyword arguments for the backend,
+              updating (overriding) old values
         """
-        self.backend.reset(**kwargs)
-
+        self.backend_options.update(backend_options)
         for p in self.run_progs:
             p._clear_regrefs()
         self.run_progs.clear()
+        self.samples = None
 
     def print_applied(self, print_fn=print):
-        """Print all commands applied to the qumodes since the backend was first initialized.
+        """Print all the Programs run since the backend was initialized.
 
         This will be blank until the first call to :meth:`run`. The output may
         differ compared to :meth:`Program.print`, due to command decompositions
@@ -154,18 +158,17 @@ class Engine:
             print_fn('Run {}:'.format(k))
             r.print(print_fn)
 
-    def return_state(self, modes=None, **kwargs):
-        """Return the backend state object.
+    @abc.abstractmethod
+    def _init_backend(self, init_num_subsystems):
+        """Initialize the backend.
 
         Args:
-            modes (Sequence[int]): Modes to be returned. If None, all modes are returned.
-        Returns:
-            BaseState: object containing details and methods for manipulation of the returned circuit state
+            init_num_subsystems (int): number of subsystems the backend is initialized to
         """
-        return self.backend.state(modes=modes, **kwargs)
 
-    def _run_program_locally(self, prog, **kwargs):
-        """Execute a program on a local backend.
+    @abc.abstractmethod
+    def _run_program(self, prog, **kwargs):
+        """Execute a single program on the backend.
 
         This method should not be called directly.
 
@@ -174,72 +177,147 @@ class Engine:
         Returns:
             list[Command]: commands that were applied to the backend
         """
-        applied = []
-        for cmd in prog.circuit:
-            try:
-                # try to apply it to the backend
-                cmd.op.apply(cmd.reg, self.backend, hbar=self.hbar, **kwargs)
-                applied.append(cmd)
-            except NotApplicableError:
-                # command is not applicable to the current backend type
-                raise NotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
-            except NotImplementedError:
-                # command not directly supported by backend API, try a decomposition instead
-                try:
-                    temp = cmd.op.decompose(cmd.reg)
-                    # run the decomposition
-                    applied_cmds = self._run_program_locally(temp, **kwargs)
-                    applied.extend(applied_cmds)
-                except NotImplementedError as err:
-                    # simplify the error message by suppressing the previous exception
-                    raise err from None
-        return applied
 
-    def run(self, program, return_state=True, modes=None, compile=True, **kwargs):
-        """Execute the given program by sending it to the backend.
+    def _run(self, program, *, compile_options={}, **kwargs):
+        """Execute the given programs by sending them to the backend.
 
-        * The backend state is updated.
-        * The executed Program(s) are appended to self.run_progs.
+        If multiple Programs are given they will be executed sequentially as
+        parts of a single computation.
+        For each :class:`Program` instance given as input, the following happens:
+
+        * The Program instance is compiled and optimized for the target backend.
+        * The compiled program is executed on the backend.
+        * The measurement results of each subsystem (if any) are stored
+          in the :class:`.RegRef` instances of the corresponding Program, as well as in :attr:`~.samples`.
+        * The compiled program is appended to self.run_progs.
+
+        Finally, the result of the computation is returned.
 
         Args:
-            program (Program, Sequence[Program]): quantum circuit(s) to run
-            return_state (bool): If True, returns the state of the circuit after the
-                circuit has been run like :meth:`return_state` was called.
-            modes (Sequence[int]): Modes to be returned in the state object. If None, returns all modes.
-            compile (bool): If True, compile the Program instances before sending them to the backend.
+            program (Program, Sequence[Program]): quantum programs to run
+            compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+
+        The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
+
+        Returns:
+            Result: results of the computation
         """
         if not isinstance(program, Sequence):
             program = [program]
 
-        # TODO unsuccessful run due to exceptions should ideally have no effect on the backend state (state checkpoints?)
         try:
-            prev = None  # previous program segment
+            prev = self.run_progs[-1] if self.run_progs else None  # previous program segment
             for p in program:
-                if self.run_progs:
-                    prev = self.run_progs[-1]
+                if prev is None:
+                    # initialize the backend
+                    self._init_backend(p.init_num_subsystems)
                 else:
-                    # initialize the backend TODO where should this happen? c.f. the fixtures in conftest.py
-                    self.backend.begin_circuit(num_subsystems=p.init_num_subsystems, **self.kwargs)
+                    # there was a previous program segment
+                    if not p.can_follow(prev):
+                        raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
 
-                if prev is not None and not p.can_follow(prev):
-                    raise RuntimeError("Register mismatch after Program {}, '{}'.".format(len(self.run_progs)-1, prev.name))
+                    # Copy the latest measured values in the RegRefs of p.
+                    # We cannot copy from prev directly because it could be used in more than one engine.
+                    for k, v in enumerate(self.samples):
+                        p.reg_refs[k].val = v
 
                 # if the program hasn't been compiled for this backend, do it now
-                if compile and p.backend != self.backend._short_name:
-                    p = p.compile(self.backend._short_name)
+                if p.backend != self.backend_name:
+                    p = p.compile(self.backend_name, **compile_options)
                 p.lock()
 
-                # TODO handle remote backends here, store measurement results in the RegRefs or maybe in the Engine object.
-                temp = self._run_program_locally(p, **kwargs)
+                self._run_program(p, **kwargs)
                 self.run_progs.append(p)
+                # store the latest measurement results
+                self.samples = [p.reg_refs[k].val for k in sorted(p.reg_refs)]
+                prev = p
         except Exception as e:
-            # TODO reset the backend to the last checkpoint here?
             raise e
         else:
             # program execution was successful
             pass
 
-        if return_state:
-            return self.return_state(modes=modes, **kwargs)
+        return Result(self.samples.copy())
 
-        return None
+
+class LocalEngine(BaseEngine):
+    """Local quantum program executor engine.
+
+    Executes :class:`.Program` instances on the chosen local backend, and makes
+    the results available via :class:`.Result`.
+
+    Args:
+        backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
+        backend_options (Dict[str, Any]): keyword arguments to be passed to the backend
+    """
+    def __init__(self, backend, *, backend_options={}):
+        super().__init__(backend, backend_options)
+
+        if isinstance(backend, str):
+            self.backend_name = backend
+            #: BaseBackend: backend for executing the quantum circuit
+            self.backend = load_backend(backend)
+        elif isinstance(backend, BaseBackend):
+            self.backend_name = backend._short_name
+            self.backend = backend
+        else:
+            raise TypeError('backend must be a string or a BaseBackend instance.')
+
+    def __str__(self):
+        return self.__class__.__name__ + '({})'.format(self.backend_name)
+
+    def reset(self, backend_options=None):
+        if backend_options is None:
+            backend_options = {}
+
+        super().reset(backend_options)
+        self.backend_options.pop('batch_size', None)  # HACK to make tests work for now
+        self.backend.reset(**self.backend_options)
+        # TODO should backend.reset and backend.begin_circuit be combined?
+
+    def _init_backend(self, init_num_subsystems):
+        self.backend.begin_circuit(init_num_subsystems, **self.backend_options)
+
+    def _run_program(self, prog, **kwargs):
+        applied = []
+        for cmd in prog.circuit:
+            try:
+                # try to apply it to the backend
+                cmd.op.apply(cmd.reg, self.backend, **kwargs)  # NOTE we could also handle storing measured vals here
+                applied.append(cmd)
+            except NotApplicableError:
+                # command is not applicable to the current backend type
+                raise NotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
+            except NotImplementedError:
+                # command not directly supported by backend API
+                raise NotImplementedError('The operation {} has not been implemented for {}.'.format(cmd.op, self.backend)) from None
+        return applied
+
+    def run(self, program, *, compile_options={}, modes=None, state_options={}, **kwargs):
+        """Execute the given programs by sending them to the backend.
+
+        Extends :meth:`BaseEngine._run`.
+
+        Args:
+            program (Program, Sequence[Program]): quantum programs to run
+            compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+            modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
+                An empty sequence [] means no state object is returned. None returns all the modes.
+            state_options (Dict[str, Any]): keyword arguments for :meth:`.BaseBackend.state`
+
+        The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
+
+        Returns:
+            Result: results of the computation
+        """
+
+        result = super()._run(program, compile_options=compile_options, **kwargs)
+        if isinstance(modes, Sequence) and not modes:
+            # empty sequence
+            pass
+        else:
+            result.state = self.backend.state(modes, **state_options)  # tfbackend.state can use kwargs
+        return result
+
+
+Engine = LocalEngine  # alias for backwards compatibility

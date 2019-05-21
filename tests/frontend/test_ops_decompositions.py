@@ -255,9 +255,9 @@ class TestGraphEmbed:
         O = np.zeros_like(I)
         X = np.block([[O, I], [I, O]])
 
-        x = cov[:n, :n] * 2 / hbar
-        xp = cov[:n, n:] * 2 / hbar
-        p = cov[n:, n:] * 2 / hbar
+        x = cov[:n, :n]
+        xp = cov[:n, n:]
+        p = cov[n:, n:]
 
         aidaj = (x + p + 1j * (xp - xp.T) - 2 * I) / 4
         aiaj = (x - p + 1j * (xp + xp.T)) / 4
@@ -275,7 +275,7 @@ class TestGraphEmbed:
         assert np.allclose(ratio, np.ones([n, n]), atol=tol, rtol=0)
 
 
-@pytest.mark.skip('FIXME hbar issue')
+@pytest.mark.broken('FIXME hbar issue')
 class TestGaussianTransform:
     """Tests for the GaussianTransform quantum operation"""
 
@@ -481,7 +481,7 @@ class TestGaussianTransform:
         assert np.allclose(cov, S @ S.T * hbar / 2, atol=tol, rtol=0)
 
 
-@pytest.mark.skip('FIXME hbar issue')
+@pytest.mark.broken('FIXME hbar issue')
 class TestGaussian:
     """Tests for the Gaussian quantum state preparation"""
 

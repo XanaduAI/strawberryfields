@@ -32,11 +32,27 @@ class GaussianBackend(BaseGaussian):
         super().__init__()
         self._supported["mixed_states"] = True
         self._short_name = "gaussian"
+        self._init_modes = None
+        self.circuit = None
 
-    def begin_circuit(self, num_subsystems, cutoff_dim=None, hbar=2, pure=None, **kwargs):
-        # pylint: disable=attribute-defined-outside-init
+    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=None, **kwargs):
+        r"""Instantiate a quantum circuit.
+
+        Instantiates a representation of a quantum optical state with num_subsystems modes.
+        The state is initialized to vacuum.
+
+        The modes in the circuit are indexed sequentially using integers, starting from zero.
+        Once an index is assigned to a mode, it can never be re-assigned to another mode.
+        If the mode is deleted its index becomes invalid.
+        An operation acting on an invalid or unassigned mode index raises an IndexError exception.
+
+        Args:
+            num_subsystems (int): number of modes in the circuit
+            cutoff_dim (int): unused in this backend
+            pure (bool): unused in this backend
+        """
         self._init_modes = num_subsystems
-        self.circuit = GaussianModes(num_subsystems, hbar)
+        self.circuit = GaussianModes(num_subsystems)
 
     def add_mode(self, n=1):
         self.circuit.add_mode(n)
@@ -205,4 +221,4 @@ class GaussianBackend(BaseGaussian):
             Amat = self.circuit.Amat()
 
         return GaussianState((means, covmat), len(modes), qmat, Amat,
-                             hbar=self.circuit.hbar, mode_names=mode_names)
+                             mode_names=mode_names)

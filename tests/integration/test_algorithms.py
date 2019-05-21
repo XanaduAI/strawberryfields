@@ -24,23 +24,29 @@ from strawberryfields.utils import scale
 def test_teleportation_fidelity(setup_eng, pure):
     """Test that teleportation of a coherent state has high fidelity"""
     eng, prog = setup_eng(3)
+    s = np.sqrt(2)
+    z = 2
+    BS = BSgate(np.pi / 4, 0)
+    alpha = 0.5 + 0.2j
+
     with prog.context as q:
         # TODO: at some point, use the blackbird parser to
         # read in the following directly from the examples folder
-        Coherent(0.5 + 0.2j) | q[0]
-        BS = BSgate(np.pi / 4, 0)
+        Coherent(alpha) | q[0]
 
-        Squeezed(-2) | q[1]
-        Squeezed(2) | q[2]
+        Squeezed(-z) | q[1]
+        Squeezed(z) | q[2]
         BS | (q[1], q[2])
 
         BS | (q[0], q[1])
-        MeasureHomodyne(0, select=0) | q[0]
-        MeasureHomodyne(np.pi / 2, select=0) | q[1]
+        MeasureHomodyne(0, select=0.07) | q[0]
+        MeasureHomodyne(np.pi / 2, select=0.1) | q[1]
+        Xgate(scale(q[0], s)) | q[2]
+        Zgate(scale(q[1], s)) | q[2]
 
-    state = eng.run(prog)
-    fidelity = state.fidelity_coherent([0, 0, 0.5 + 0.2j])
-    assert np.allclose(fidelity, 1, atol=0.1, rtol=0)
+    state = eng.run(prog).state
+    fidelity = state.fidelity_coherent([0, 0, alpha])
+    assert np.allclose(fidelity, 1, atol=0.02, rtol=0)
 
 
 @pytest.mark.backends("gaussian")
@@ -69,7 +75,7 @@ def test_gaussian_gate_teleportation(setup_eng, pure):
         Pgate(0.5) | q[3]
         Fourier | q[3]
 
-    state = eng.run(prog)
+    state = eng.run(prog).state
     cov1 = state.reduced_gaussian(2)[1]
     cov2 = state.reduced_gaussian(3)[1]
     assert np.allclose(cov1, cov2, atol=0.05, rtol=0)
@@ -119,7 +125,7 @@ def test_gaussian_boson_sampling_fock_probs(setup_eng, batch_size, tol):
         0.01031294525345511,
     ]
 
-    state = eng.run(prog)
+    state = eng.run(prog).state
     probs = [state.fock_prob(i) for i in measure_states]
     probs = np.array(probs).T.flatten()
 
@@ -160,7 +166,7 @@ def test_boson_sampling_fock_probs(setup_eng, batch_size, tol):
     measure_states = [[1, 1, 0, 1], [2, 0, 0, 1]]
     results = [0.174689160486, 0.106441927246]
 
-    state = eng.run(prog)
+    state = eng.run(prog).state
     probs = [state.fock_prob(i) for i in measure_states]
     probs = np.array(probs).T.flatten()
 
@@ -200,7 +206,7 @@ def test_hamiltonian_simulation_fock_probs(setup_eng, pure, batch_size, tol):
             Kgate(r) | q[1]
             Rgate(-r) | q[1]
 
-    state = eng.run(prog)
+    state = eng.run(prog).state
     probs = [state.fock_prob(i) for i in measure_states]
     probs = np.array(probs).T.flatten()
 
@@ -235,7 +241,7 @@ class TestGaussianCloning:
             Coherent(a) | q[0]
             self.gaussian_cloning_circuit(q)
 
-        state = eng.run(prog, modes=[0, 3])
+        state = eng.run(prog, modes=[0, 3]).state
         coh = np.array([state.is_coherent(i) for i in range(2)])
         disp = state.displacement()
 
@@ -258,7 +264,7 @@ class TestGaussianCloning:
         a_list = np.empty([shots], dtype=np.complex128)
 
         for i in range(shots):
-            state = eng.run(prog, modes=[0])
+            state = eng.run(prog, modes=[0]).state
             eng.reset()
             f_list[i] = state.fidelity_coherent([0.7 + 1.2j])
             a_list[i] = state.displacement()

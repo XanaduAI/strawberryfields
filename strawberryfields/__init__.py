@@ -57,12 +57,12 @@ Top-level functions
 Code details
 ~~~~~~~~~~~~
 """
-
+from .engine import (Engine, LocalEngine)
+from .io import save, load
+from .program import Program, _convert as convert
 from ._version import __version__
-from .program import (Program, _convert as convert)
-from .engine import Engine
 
-__all__ = ['Engine', 'Program', 'convert', 'version']
+__all__ = ["Engine", "LocalEngine", "Program", "convert", "version", "save", "load"]
 
 
 def version():
@@ -73,3 +73,7 @@ def version():
       str: package version number
     """
     return __version__
+
+
+#: float: numerical value of hbar for the frontend (in the implicit units of position * momentum)
+hbar = 2

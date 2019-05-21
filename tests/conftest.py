@@ -18,7 +18,8 @@ Default parameters, environment variables, fixtures, and common routines for the
 import os
 import pytest
 
-from strawberryfields.engine import Engine
+import strawberryfields as sf
+from strawberryfields.engine import LocalEngine
 from strawberryfields.program import Program
 from strawberryfields.backends.base import BaseBackend
 from strawberryfields.backends.fockbackend import FockBackend
@@ -30,7 +31,7 @@ from strawberryfields.backends.tfbackend import TFBackend
 TOL = 1e-3
 CUTOFF = 6
 ALPHA = 0.1
-HBAR = 2
+HBAR = 1.7
 BATCHED = False
 BATCHSIZE = 2
 
@@ -56,7 +57,8 @@ def alpha():
 @pytest.fixture(scope="session")
 def hbar():
     """The value of hbar"""
-    return float(os.environ.get("HBAR", HBAR))
+    sf.hbar = float(os.environ.get("HBAR", HBAR))
+    return sf.hbar
 
 
 @pytest.fixture(
@@ -124,7 +126,7 @@ def print_fixtures(cutoff, hbar, batch_size):
     ]
 )
 def setup_backend(
-    request, cutoff, hbar, pure, batch_size
+    request, cutoff, pure, batch_size
 ):  # pylint: disable=redefined-outer-name
     """Parameterized fixture, used to automatically create a backend of certain number of modes.
 
@@ -145,7 +147,6 @@ def setup_backend(
         backend.begin_circuit(
             num_subsystems=num_subsystems,
             cutoff_dim=cutoff,
-            hbar=hbar,
             pure=pure,
             batch_size=batch_size,
         )
@@ -162,7 +163,7 @@ def setup_backend(
     ]
 )
 def setup_backend_pars(
-    request, cutoff, hbar, pure, batch_size
+    request, cutoff, pure, batch_size
 ):  # pylint: disable=redefined-outer-name
     """Parameterized fixture, a container for the backend parameters.
 
@@ -173,11 +174,8 @@ def setup_backend_pars(
     use the ``@pytest.mark.backends()`` fixture. For example, for a test that
     only works on the TF and Fock backends, ``@pytest.mark.backends('tf', 'fock').
     """
-
-    return {
-        'backend_name': request.param,
+    return request.param, {
         'cutoff_dim': cutoff,
-        'hbar': hbar,
         'pure': pure,
         'batch_size': batch_size,
     }
@@ -190,8 +188,9 @@ def setup_eng(setup_backend_pars):  # pylint: disable=redefined-outer-name
     def _setup_eng(num_subsystems, **kwargs):
         """Factory function"""
         prog = Program(num_subsystems)
-        setup_backend_pars.update(kwargs)  # override defaults with kwargs
-        eng = Engine(backend=setup_backend_pars['backend_name'], **setup_backend_pars)
+        backend, backend_options = setup_backend_pars
+        backend_options.update(kwargs)  # override defaults with kwargs
+        eng = LocalEngine(backend=backend, backend_options=backend_options)
         return eng, prog
 
     return _setup_eng
@@ -221,3 +220,11 @@ def pytest_runtest_setup(item):
                 "\nTest {} only runs with {} backend(s), "
                 "but {} backend provided".format(item.nodeid, test_backends, b)
             )
+
+    # skip broken tests
+    for mark in item.iter_markers():
+        if mark.name == "broken":
+            if mark.args:
+                pytest.skip("Broken test skipped: {}".format(*mark.args))
+            else:
+                pytest.skip("Test skipped as corresponding code base is currently broken!")
