@@ -92,8 +92,8 @@ def about():
     import scipy
 
     # a QuTiP-style infobox
-    print('\nStrawberry Fields: a Python library for continuous variable quantum circuits.')
-    print('Copyright 2019 Xanadu Quantum Technologies Inc.\n')
+    print('\nStrawberry Fields: a Python library for continuous-variable quantum circuits.')
+    print('Copyright 2018-2019 Xanadu Quantum Technologies Inc.\n')
 
     print('Python version:            {}.{}.{}'.format(*sys.version_info[0:3]))
     print('Platform info:             {}'.format(platform.platform()))
