@@ -298,7 +298,9 @@ class BaseBackend:
         raise NotImplementedError
 
     def get_modes(self):
-        """Return a list of the active mode indices for the circuit.
+        """Return a list of the active modes for the circuit.
+
+        A mode is active if it has been created and has not been deleted.
 
         Returns:
             list[int]: sorted list of active (assigned, not invalid) mode indices
@@ -361,6 +363,8 @@ class BaseBackend:
     def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
         r"""Prepare a displaced squeezed state in the specified mode.
 
+        FIXME this method is not currently used by the engine
+
         The requested mode is traced out and replaced with the displaced squeezed
         state state :math:`\ket{\alpha, z}`, where :math:`z=re^{i\phi}`.
         As a result the state may have to be described using a density matrix.
@@ -415,6 +419,8 @@ class BaseBackend:
     def beamsplitter(self, t, r, mode1, mode2):
         """Apply the beamsplitter operation to the specified modes.
 
+        It is assumed that :math:`|r|^2+|t|^2 = t^2+|r|^2=1`, i.e that t is real.
+
         Args:
             t (float): transmitted amplitude
             r (complex): reflected amplitude (with phase)
@@ -457,21 +463,23 @@ class BaseBackend:
         Args:
             phi (float): phase angle of the quadrature to measure (x: :math:`\phi=0`, p: :math:`\phi=\pi/2`)
             mode (int): which mode to measure
-            select (float): (Optional) desired values of measurement results.
-                Allows user to post-select on specific measurement results instead of randomly sampling.
+            select (None or float): If not None: desired value of the measurement result.
+                Enables post-selection on specific measurement results instead of random sampling.
             **kwargs: can be used to pass user-specified numerical parameters to the backend.
                 Options for such arguments will be documented in the respective subclasses.
 
         Returns:
-            float: measured value
+            float or array[float]: measured value
         """
         raise NotImplementedError
 
     def is_vacuum(self, tol=0.0, **kwargs):
-        r"""Test whether the current circuit state is in vacuum (up to tolerance tol).
+        r"""Test whether the current circuit state is vacuum (up given tolerance).
+
+        FIXME The backends do not implement this method consistently, fockbackend uses np.linalg.norm whereas the other two use fidelity. Switch to fidelity for all?
 
         Args:
-            tol (float): numerical tolerance for how close state must be to true vacuum state
+            tol (float): numerical tolerance for how close state must be to true vacuum state (in terms of fidelity?)
 
         Returns:
             bool: True iff vacuum state up to tolerance tol
@@ -482,13 +490,13 @@ class BaseBackend:
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
         Args:
-            modes (int or Sequence[int] or None): specifies the modes to restrict the return state to
-                None returns the state containing all modes.
+            modes (int or Sequence[int] or None): Specifies the modes to restrict the return state to.
+                None returns the state containing all the modes.
                 If modes is not ordered, the returned state contains the requested modes in the given order, i.e.,
                 requesting the modes=[3,1] results in a two mode state being returned with the first mode being
-                subsystem 3 and the second mode being subsystem 1 of simulator.
+                subsystem 3 and the second mode being subsystem 1.
         Returns:
-            BaseState: state description, suited to the particular backend
+            BaseState: state description, specific class depends on the backend
         """
         raise NotImplementedError
 
@@ -606,8 +614,8 @@ class BaseFock(BaseBackend):
 
         Args:
             modes (Sequence[int]): which modes to measure
-            select (Sequence[int]): Desired values of measurement results.
-                Allows user to post-select on specific measurement results instead of randomly sampling.
+            select (None or Sequence[int]): If not None: desired values of the measurement results.
+                Enables post-selection on specific measurement results instead of random sampling.
                 len(select) == len(modes).
         Returns:
             tuple[int]: corresponding measurement results
@@ -618,8 +626,11 @@ class BaseFock(BaseBackend):
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
         Args:
-            modes (None or int or Sequence[int]): Specifies the mode or modes to restrict the returned state to.
-                None returns the state containing all modes.
+            modes (int or Sequence[int] or None): Specifies the modes to restrict the return state to.
+                None returns the state containing all the modes.
+                If modes is not ordered, the returned state contains the requested modes in the given order, i.e.,
+                requesting the modes=[3,1] results in a two mode state being returned with the first mode being
+                subsystem 3 and the second mode being subsystem 1.
         Returns:
             FockState: state description
         """
@@ -642,28 +653,28 @@ class BaseGaussian(BaseBackend):
         Updates the current state of the circuit such that the measured mode is reset to the vacuum state.
 
         Args:
-            modes (Sequence[int]): which modes to measure
-            select (complex): (Optional) desired values of measurement result.
-                Allows user to post-select on specific measurement results instead of randomly sampling.
+            mode (int): which mode to measure
+            select (None or complex): If not None: desired value of the measurement result.
+                Enables post-selection on specific measurement results instead of random sampling.
 
         Returns:
-            complex: measured values
+            complex: measured value
         """
         raise NotImplementedError
 
     def prepare_gaussian_state(self, r, V, modes):
-        r"""Prepare the given Gaussian state (via the provided vector of
-        means and the covariance matrix) in the specified modes.
+        r"""Prepare a Gaussian state.
 
-        The requested mode(s) is/are traced out and replaced with the given Gaussian state.
+        The specified modes are traced out and replaced with a Gaussian state
+        provided via a vector of means and a covariance matrix.
 
         Args:
-            r (array): the vector of means in xp ordering.
-            V (array): the covariance matrix in xp ordering.
-            modes (int or Sequence[int]): which mode to prepare the state in
-                If the modes are not sorted, this is take into account when preparing the state.
-                i.e., when a two mode state is prepared in modes=[3,1], then the first
-                mode of state goes into mode 3 and the second mode goes into mode 1 of the simulator.
+            r (array): vector of means in xp ordering
+            V (array): covariance matrix in xp ordering
+            modes (int or Sequence[int]): Which modes to prepare the state in.
+                If the modes are not sorted, this is taken into account when preparing the state.
+                I.e., when a two mode state is prepared in modes=[3,1], the first
+                mode of the given state goes into mode 3 and the second mode goes into mode 1.
         """
         raise NotImplementedError
 
@@ -698,3 +709,17 @@ class BaseGaussian(BaseBackend):
     def measure_fock(self, modes, select=None):
         # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
+
+    def state(self, modes=None, **kwargs):
+        r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
+
+        Args:
+            modes (int or Sequence[int] or None): Specifies the modes to restrict the return state to.
+                None returns the state containing all the modes.
+                If modes is not ordered, the returned state contains the requested modes in the given order, i.e.,
+                requesting the modes=[3,1] results in a two mode state being returned with the first mode being
+                subsystem 3 and the second mode being subsystem 1.
+        Returns:
+            GaussianState: state description
+        """
+        raise NotImplementedError

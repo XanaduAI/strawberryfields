@@ -450,11 +450,15 @@ class TFBackend(BaseFock):
             phi (float): angle (relative to x-axis) for the measurement.
             select (float): (Optional) desired values of measurement results. Allows user to post-select on specific measurement results instead of randomly sampling.
             mode (Sequence[int]): index of mode where operation is carried out
-            **kwargs: optional keyword args (`session`: a Tensorflow session; `feed_dict`: a Python dictionary feeding the desired numerical values for Tensors)
-                                which will be used by the Tensorflow simulator for numerically evaluating the measurement results.
+
+        Keyword Args:
+            session: Tensorflow session
+            feed_dict (Dict): dictionary feeding the desired numerical values for Tensors
                                 In addition, kwargs can be used to (optionally) pass user-specified numerical parameters `max` and `num_bins`.
                                 These are used numerically to build the probability distribution function (pdf) for the homodyne measurement.
                                 Specifically, the pdf is discretized onto the 1D grid [-max,max], with num_bins equally spaced bins.
+
+        The optional `session` and `feed_dict` kwargs are be used by the Tensorflow simulator for numerically evaluating the measurement results.
 
         Returns:
             tuple[float] or tuple[Tensor]: measurement outcomes
@@ -485,14 +489,6 @@ class TFBackend(BaseFock):
         return result
 
     def del_mode(self, modes):
-        """
-        Trace out the specified modes from the underlying circuit state.
-        Note: This will reduce the number of indices used for the state representation,
-        and also convert the state representation to mixed.
-
-        Args:
-            modes (Sequence[int]): the modes to be removed from the circuit
-        """
         with tf.name_scope('Del_mode'):
             remapped_modes = self._remap_modes(modes)
             if isinstance(remapped_modes, int):
@@ -501,14 +497,6 @@ class TFBackend(BaseFock):
             self._modemap.delete(modes)
 
     def add_mode(self, n=1):
-        """
-        Add n new modes to the underlying circuit state. Indices for new modes
-        always occur at the end of the state tensor.
-        Note: This will increase the number of indices used for the state representation.
-
-        Args:
-            n (int): the number of modes to be added to the circuit.
-        """
         with tf.name_scope('Add_mode'):
             self.circuit.add_mode(n)
             self._modemap.add(n)
@@ -519,6 +507,6 @@ class TFBackend(BaseFock):
         Get the Tensorflow Graph object where the current quantum circuit is defined.
 
         Returns:
-            (Graph): the circuit's graph
+            tf.Graph: the circuit's graph
         """
         return self._graph
