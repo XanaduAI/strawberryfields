@@ -164,6 +164,7 @@ import numbers
 import networkx as nx
 
 import strawberryfields.circuitdrawer as sfcd
+from strawberryfields.data import backend_databases
 
 
 def _print_list(i, q, print_fn=print):
@@ -702,9 +703,6 @@ class Program:
         Returns:
             Program: compiled program
         """
-        # TODO: Avoid circular import
-        from strawberryfields.data import backend_databases
-
         if backend in backend_databases:
             db = backend_databases[backend]()
         else:
