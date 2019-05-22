@@ -39,6 +39,10 @@ class FockBackend(BaseFock):
         super().__init__()
         self._supported["mixed_states"] = True
         self._short_name = "fock"
+        # TODO docstrings
+        self._init_modes = None
+        self._modemap = None
+        self.circuit = None
 
     def _remap_modes(self, modes):
         if isinstance(modes, int):
@@ -56,19 +60,27 @@ class FockBackend(BaseFock):
             remapped_modes = remapped_modes[0]
         return remapped_modes
 
-    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=True, **kwargs):
-        r"""
-        Create a quantum circuit (initialized in vacuum state) with the number of modes
-        equal to num_subsystems and a Fock-space cutoff dimension of cutoff_dim.
+    def begin_circuit(self, num_subsystems, **kwargs):
+        r"""Instantiate a quantum circuit.
+
+        Instantiates a representation of a quantum optical state with ``num_subsystems`` modes.
+        The state is initialized to vacuum.
+
+        The modes in the circuit are indexed sequentially using integers, starting from zero.
+        Once an index is assigned to a mode, it can never be re-assigned to another mode.
+        If the mode is deleted its index becomes invalid.
+        An operation acting on an invalid or unassigned mode index raises an ``IndexError`` exception.
 
         Args:
-            num_subsystems (int): number of modes the circuit should begin with
-            cutoff_dim (int): numerical cutoff dimension in Fock space for each mode.
-                ``cutoff_dim=D`` represents the Fock states :math:`|0\rangle,\dots,|D-1\rangle`.
-                This argument is **required** for the Fock backend.
-            pure (bool): whether to begin the circuit in a pure state representation
+            num_subsystems (int): number of modes in the circuit
+
+        Keyword Args:
+            cutoff_dim (int): Numerical Hilbert space cutoff dimension for the modes.
+                For each mode, the simulator can represent the Fock states :math:`\ket{0}, \ket{1}, \ldots, \ket{\texttt{cutoff_dim}-1}`.
+            pure (bool): If True (default), use a pure state representation (otherwise will use a mixed state representation).
         """
-        # pylint: disable=attribute-defined-outside-init
+        cutoff_dim = kwargs.get('cutoff_dim', None)
+        pure = kwargs.get('pure', True)
         if cutoff_dim is None:
             raise ValueError("Argument 'cutoff_dim' must be passed to the Fock backend")
         if not isinstance(cutoff_dim, int):
@@ -202,7 +214,7 @@ class FockBackend(BaseFock):
             index_permutation = [2*x+i for x in mode_permutation for i in (0, 1)]
             red_state = np.transpose(red_state, np.argsort(index_permutation))
 
-        cutoff = self.circuit._trunc # pylint: disable=protected-access
+        cutoff = self.circuit._trunc
         mode_names = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
         state = BaseFockState(red_state, len(modes), pure, cutoff, mode_names)
         return state

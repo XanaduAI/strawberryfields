@@ -65,7 +65,7 @@ class TFBackend(BaseFock):
             remapped_modes = remapped_modes[0]
         return remapped_modes
 
-    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=True, **kwargs):
+    def begin_circuit(self, num_subsystems, **kwargs):
         r"""Instantiate a quantum circuit.
 
         Instantiates a representation of a quantum optical state with ``num_subsystems`` modes.
@@ -78,27 +78,30 @@ class TFBackend(BaseFock):
 
         Args:
             num_subsystems (int): number of modes in the circuit
-            cutoff_dim (int): numerical Hilbert space cutoff dimension for the modes
-            pure (bool): If True, use a pure state representation (otherwise will use a mixed state representation)
 
         Keyword Args:
+            cutoff_dim (int): Numerical Hilbert space cutoff dimension for the modes.
+                For each mode, the simulator can represent the Fock states :math:`\ket{0}, \ket{1}, \ldots, \ket{\texttt{cutoff_dim}-1}`.
+            pure (bool): If True (default), use a pure state representation (otherwise will use a mixed state representation).
             batch_size (None or int): Size of the batch-axis dimension. If None, no batch-axis will be used.
         """
+        cutoff_dim = kwargs.get('cutoff_dim', None)
+        pure = kwargs.get('pure', True)
+        batch_size = kwargs.get('batch_size', None)
+
+        if cutoff_dim is None:
+            raise ValueError("Argument 'cutoff_dim' must be passed to the Tensorflow backend")
+
+        if not isinstance(num_subsystems, int):
+            raise ValueError("Argument 'num_subsystems' must be a positive integer")
+        if not isinstance(cutoff_dim, int):
+            raise ValueError("Argument 'cutoff_dim' must be a positive integer")
+        if not isinstance(pure, bool):
+            raise ValueError("Argument 'pure' must be either True or False")
+        if batch_size == 1:
+            raise ValueError("batch_size of 1 not supported, please use different batch_size or set batch_size=None")
+
         with tf.name_scope('Begin_circuit'):
-            batch_size = kwargs.get('batch_size', None)
-
-            if cutoff_dim is None:
-                raise ValueError("Argument 'cutoff_dim' must be passed to the Tensorflow backend")
-
-            if not isinstance(num_subsystems, int):
-                raise ValueError("Argument 'num_subsystems' must be a positive integer")
-            if not isinstance(cutoff_dim, int):
-                raise ValueError("Argument 'cutoff_dim' must be a positive integer")
-            if not isinstance(pure, bool):
-                raise ValueError("Argument 'pure' must be either True or False")
-            if batch_size == 1:
-                raise ValueError("batch_size of 1 not supported, please use different batch_size or set batch_size=None")
-
             self._modemap = ModeMap(num_subsystems)
             circuit = Circuit(self._graph, num_subsystems, cutoff_dim, pure, batch_size)
 

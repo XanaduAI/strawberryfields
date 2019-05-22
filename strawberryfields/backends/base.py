@@ -250,7 +250,7 @@ class BaseBackend:
         """
         return self._supported.get(name, False)
 
-    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=True, **kwargs):
+    def begin_circuit(self, num_subsystems, **kwargs):
         r"""Instantiate a quantum circuit.
 
         Instantiates a representation of a quantum optical state with ``num_subsystems`` modes.
@@ -259,12 +259,10 @@ class BaseBackend:
         The modes in the circuit are indexed sequentially using integers, starting from zero.
         Once an index is assigned to a mode, it can never be re-assigned to another mode.
         If the mode is deleted its index becomes invalid.
-        An operation acting on an invalid or unassigned mode index raises an IndexError exception.
+        An operation acting on an invalid or unassigned mode index raises an ``IndexError`` exception.
 
         Args:
             num_subsystems (int): number of modes in the circuit
-            cutoff_dim (int): numerical Hilbert space cutoff dimension for the modes (used for circuits operating in Fock basis)
-            pure (bool): If True, use a pure state representation (otherwise will use a mixed state representation)
         """
         # BaseBackend can be instantiated for testing purposes, even though it does not do anything.
 
@@ -290,7 +288,7 @@ class BaseBackend:
 
         The indices of the deleted modes become invalid for the lifetime of the circuit object.
         They will never be reassigned to other modes.
-        Deleting a mode that has already been deleted raises an IndexError exception.
+        Deleting a mode that has already been deleted raises an ``IndexError`` exception.
 
         Args:
             modes (Sequence[int]): mode numbers to delete

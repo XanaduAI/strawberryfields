@@ -35,22 +35,7 @@ class GaussianBackend(BaseGaussian):
         self._init_modes = None
         self.circuit = None
 
-    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=None, **kwargs):
-        r"""Instantiate a quantum circuit.
-
-        Instantiates a representation of a quantum optical state with ``num_subsystems`` modes.
-        The state is initialized to vacuum.
-
-        The modes in the circuit are indexed sequentially using integers, starting from zero.
-        Once an index is assigned to a mode, it can never be re-assigned to another mode.
-        If the mode is deleted its index becomes invalid.
-        An operation acting on an invalid or unassigned mode index raises an IndexError exception.
-
-        Args:
-            num_subsystems (int): number of modes in the circuit
-            cutoff_dim (int): unused in this backend
-            pure (bool): unused in this backend
-        """
+    def begin_circuit(self, num_subsystems, **kwargs):
         self._init_modes = num_subsystems
         self.circuit = GaussianModes(num_subsystems)
 
