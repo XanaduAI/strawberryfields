@@ -85,7 +85,7 @@ Fock backends
 .. currentmodule:: strawberryfields.backends.base
 
 
-Some methods are only implemented in the subclass :class:`FockBackend`,
+Some methods are only implemented in the subclass :class:`BaseFock`,
 which is the base class for simulators using a Fock-state representation
 for quantum optical circuits.
 
@@ -453,7 +453,7 @@ class BaseBackend:
         r"""Measure a :ref:`phase space quadrature <homodyne>` of the given mode.
 
         For the measured mode, samples the probability distribution
-        :math:`f(q) = \bra{q_\phi} R^\dagger(\phi) \rho R(\phi) \ket{q_\phi}`
+        :math:`f(q) = \bra{q_\phi} \rho \ket{q_\phi}`
         and returns the sampled value.
         Here :math:`\ket{q_\phi}` is the eigenstate of the operator
 
@@ -475,11 +475,12 @@ class BaseBackend:
             mode (int): which mode to measure
             select (None or float): If not None: desired value of the measurement result.
                 Enables post-selection on specific measurement results instead of random sampling.
-            **kwargs: can be used to pass user-specified numerical parameters to the backend.
-                Options for such arguments will be documented in the respective subclasses.
+
+        Keyword arguments can be used to pass additional parameters to the backend.
+        Options for such arguments will be documented in the respective subclasses.
 
         Returns:
-            float or array[float]: measured value
+            float: measured value
         """
         raise NotImplementedError
 
@@ -497,14 +498,14 @@ class BaseBackend:
         raise NotImplementedError
 
     def state(self, modes=None, **kwargs):
-        r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
+        r"""Returns the state of the quantum simulation.
 
         Args:
             modes (int or Sequence[int] or None): Specifies the modes to restrict the return state to.
                 None returns the state containing all the modes.
-                If ``modes`` is not ordered, the returned state contains the requested modes in the given order, i.e.,
-                requesting ``modes=[3,1]`` results in a two mode state being returned with the first mode being
-                subsystem 3 and the second mode being subsystem 1.
+                The returned state contains the requested modes in the given order, i.e.,
+                ``modes=[3,0]`` results in a two mode state being returned with the first mode being
+                subsystem 3 and the second mode being subsystem 0.
         Returns:
             BaseState: state description, specific child class depends on the backend
         """
@@ -645,23 +646,19 @@ class BaseFock(BaseBackend):
             modes (Sequence[int]): which modes to measure
             select (None or Sequence[int]): If not None: desired values of the measurement results.
                 Enables post-selection on specific measurement results instead of random sampling.
-                Note that ``len(select) == len(modes)``.
+                ``len(select) == len(modes)`` is required.
         Returns:
-            tuple[int]: corresponding measurement results
+            tuple[int]: measurement results
         """
         raise NotImplementedError
 
     def state(self, modes=None, **kwargs):
-        r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
+        r"""Returns the state of the quantum simulation.
 
-        Args:
-            modes (int or Sequence[int] or None): Specifies the modes to restrict the return state to.
-                None returns the state containing all the modes.
-                If ``modes`` is not ordered, the returned state contains the requested modes in the given order, i.e.,
-                requesting ``modes=[3,1]`` results in a two mode state being returned with the first mode being
-                subsystem 3 and the second mode being subsystem 1.
+        See :meth:`.BaseBackend.state`.
+
         Returns:
-            FockState: state description
+            BaseFockState: state description
         """
         raise NotImplementedError
 
@@ -739,15 +736,11 @@ class BaseGaussian(BaseBackend):
         raise NotApplicableError
 
     def state(self, modes=None, **kwargs):
-        r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
+        """Returns the state of the quantum simulation.
 
-        Args:
-            modes (int or Sequence[int] or None): Specifies the modes to restrict the return state to.
-                None returns the state containing all the modes.
-                If modes is not ordered, the returned state contains the requested modes in the given order, i.e.,
-                requesting ``modes=[3,1]`` results in a two mode state being returned with the first mode being
-                subsystem 3 and the second mode being subsystem 1.
+        See :meth:`.BaseBackend.state`.
+
         Returns:
-            GaussianState: state description
+            BaseGaussianState: state description
         """
         raise NotImplementedError

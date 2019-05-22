@@ -80,6 +80,11 @@ class GaussianBackend(BaseGaussian):
         self.circuit.loss(0.0, mode)
         self.circuit.squeeze(r, phi, mode)
 
+    def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
+        self.circuit.loss(0.0, mode)
+        self.circuit.squeeze(r, phi, mode)
+        self.circuit.displace(alpha, mode)
+
     def rotation(self, phi, mode):
         self.circuit.phase_shift(phi, mode)
 
@@ -91,11 +96,6 @@ class GaussianBackend(BaseGaussian):
         r = abs(z)
         self.circuit.squeeze(r, phi, mode)
 
-    def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
-        # FIXME reset to vacuum missing!
-        self.circuit.squeeze(r, phi, mode)
-        self.circuit.displace(alpha, mode)
-
     def beamsplitter(self, t, r, mode1, mode2):
         if isinstance(t, complex):
             raise ValueError("Beamsplitter transmittivity t must be a float.")
@@ -106,26 +106,13 @@ class GaussianBackend(BaseGaussian):
     def measure_homodyne(self, phi, mode, select=None, **kwargs):
         r"""Measure a :ref:`phase space quadrature <homodyne>` of the given mode.
 
-        For the measured mode, samples the probability distribution
-        :math:`f(q) = \bra{q}_x R^\dagger(\phi) \rho R(\phi) \ket{q}_x`
-        and returns the sampled value.
-
-        Updates the current state of the circuit such that the measured mode is reset
-        to the vacuum state. This is because we cannot represent exact position or
-        momentum eigenstates in any of the backends, and experimentally the photons
-        are destroyed in a homodyne measurement.
-
-        Args:
-            phi (float): phase angle of the quadrature to measure (x: :math:`\phi=0`, p: :math:`\phi=\pi/2`)
-            mode (int): which mode to measure
-            select (None or float): If not None: desired value of the measurement result.
-                Enables post-selection on specific measurement results instead of random sampling.
+        See :meth:`.BaseBackend.measure_homodyne`.
 
         Keyword Args:
             eps (float): Homodyne amounts to projection onto a quadrature eigenstate.
                 This eigenstate is approximated by a squeezed state whose variance has been
-                squeezed to the amount eps, V_(meas) = eps**2.
-                Perfect homodyning is obtained when eps :math:`\to 0`.
+                squeezed to the amount ``eps``, :math:`V_\text{meas} = \texttt{eps}^2`.
+                Perfect homodyning is obtained when ``eps`` :math:`\to 0`.
 
         Returns:
             float: measured value
@@ -183,6 +170,13 @@ class GaussianBackend(BaseGaussian):
         self.circuit.thermal_loss(T, nbar, mode)
 
     def state(self, modes=None, **kwargs):
+        """Returns the state of the quantum simulation.
+
+        See :meth:`.BaseBackend.state`.
+
+        Returns:
+            GaussianState: state description
+        """
         m = self.circuit.scovmat()
         r = self.circuit.smean()
 

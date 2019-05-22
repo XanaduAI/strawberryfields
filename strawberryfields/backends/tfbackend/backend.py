@@ -226,17 +226,12 @@ class TFBackend(BaseFock):
     def state(self, modes=None, **kwargs):
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
-        Args:
-            modes (int or Sequence[int] or None): Specifies the modes to restrict the return state to.
-                None returns the state containing all the modes.
-                If modes is not ordered, the returned state contains the requested modes in the given order, i.e.,
-                requesting ``modes=[3,1]`` results in a two mode state being returned with the first mode being
-                subsystem 3 and the second mode being subsystem 1.
+        See :meth:`.BaseBackend.state`.
 
         Keyword Args:
             session (tf.Session): TensorFlow session
             feed_dict (Dict): Dictionary containing the desired numerical values for Tensors
-                for numerically evaluating the state. Used with `session`.
+                for numerically evaluating the state. Used with ``session``.
 
         Returns:
             FockStateTF: state description
@@ -295,13 +290,7 @@ class TFBackend(BaseFock):
     def measure_fock(self, modes, select=None, **kwargs):
         """Measure the given modes in the Fock basis.
 
-        Updates the current state of the circuit to the conditional state of this measurement result.
-
-        Args:
-            modes (Sequence[int]): which modes to measure
-            select (None or Sequence[int]): If not None: desired values of the measurement results.
-                Enables post-selection on specific measurement results instead of random sampling.
-                Note that ``len(select) == len(modes)``.
+        See :meth:`.BaseFock.measure_fock`.
 
         Keyword Args:
             session (tf.Session): TensorFlow session
@@ -317,13 +306,9 @@ class TFBackend(BaseFock):
         return meas
 
     def measure_homodyne(self, phi, mode, select=None, **kwargs):
-        """
-        Perform a homodyne measurement on the specified modes.
+        """Perform a homodyne measurement on the specified modes.
 
-        Args:
-            phi (float): angle (relative to x-axis) for the measurement.
-            select (float): (Optional) desired values of measurement results. Allows user to post-select on specific measurement results instead of randomly sampling.
-            mode (Sequence[int]): index of mode where operation is carried out
+        See :meth:`.BaseBackend.measure_homodyne`.
 
         Keyword Args:
             session (tf.Session): TensorFlow session
@@ -334,7 +319,7 @@ class TFBackend(BaseFock):
             max (float): The pdf is discretized onto the 1D grid [-max,max] (default: 10).
 
         Returns:
-            tuple[float] or tuple[Tensor]: measurement outcomes
+            float or tf.Tensor: measurement outcome
         """
         with tf.name_scope('Measure_homodyne'):
             remapped_mode = self._remap_modes(mode)

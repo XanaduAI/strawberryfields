@@ -133,16 +133,12 @@ class FockBackend(BaseFock):
     def measure_homodyne(self, phi, mode, select=None, **kwargs):
         """Perform a homodyne measurement on the specified mode.
 
-        Args:
-            phi (float): angle (relative to x-axis) for the measurement
-            mode (int): index of mode where operation is carried out
-            select (float): (Optional) desired values of measurement results
-            **kwargs: Can be used to (optionally) pass user-specified numerical parameters `max` and `num_bins`.
-                                These are used numerically to build the probability distribution function (pdf) for the homdyne measurement
-                                Specifically, the pdf is discretized onto the 1D grid [-max,max], with num_bins equally spaced bins
+        See :meth:`.BaseBackend.measure_homodyne`.
 
-        Returns:
-            float: measurement outcome
+        Keyword Args:
+            num_bins (int): Number of equally spaced bins for the probability distribution function
+                (pdf) simulating the homodyne measurement (default: 100000).
+            max (float): The pdf is discretized onto the 1D grid [-max,max] (default: 10).
         """
         return self.circuit.measure_homodyne(phi, self._remap_modes(mode), select=select, **kwargs)
 
@@ -157,14 +153,6 @@ class FockBackend(BaseFock):
 
 
     def state(self, modes=None, **kwargs):
-        r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
-
-        Args:
-            modes (int, Sequence[int], None): specifies the mode or modes to restrict the return state to.
-                If none returns the state containing all modes.
-        Returns:
-            BaseFockState: an instance of the Strawberry Fields FockState class.
-        """
         s, pure = self.circuit.get_state()
 
         if modes is None:
