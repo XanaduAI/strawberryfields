@@ -15,7 +15,7 @@
 from .device import DeviceData
 
 
-class Fock(DeviceData):
+class FockData(DeviceData):
     """Validation data for the Fock backend"""
 
     modes = 0

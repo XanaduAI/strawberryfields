@@ -15,7 +15,7 @@
 from .device import DeviceData
 
 
-class Gaussian(DeviceData):
+class GaussianData(DeviceData):
     """Validation data for the Gaussian backend"""
 
     modes = 0

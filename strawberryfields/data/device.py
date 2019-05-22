@@ -109,7 +109,7 @@ class DeviceData(abc.ABC):
 
     @property
     def blackbird_template(self):
-        """The Blackbird script that will be accepted by the backend device.
+        """The Blackbird template that will be accepted by the backend device.
 
         This property is optional; if arbitrary topologies are allowed by the device,
         this will simply return ``None``.

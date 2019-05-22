@@ -16,13 +16,12 @@ import textwrap
 
 import networkx as nx
 import blackbird
-
-from strawberryfields.io import to_DiGraph
+from blackbird.utils import to_DiGraph
 
 from .device import DeviceData
 
 
-class Chip0(DeviceData):
+class Chip0Data(DeviceData):
     """Validation data for the Chip0 simulator"""
 
     modes = 0
@@ -35,9 +34,9 @@ class Chip0(DeviceData):
 
     blackbird_template = textwrap.dedent(
         """\
-        name {name}
+        name chip0_template
         version 1.0
-        target gbsdevice_01 (shots={shots})
+        target chip0 (shots={shots})
 
         # for n spatial degrees, first n signal modes, then n idler modes, phase zero
         S2gate({squeezing0}, 0.0) | [0, 2]
@@ -52,24 +51,22 @@ class Chip0(DeviceData):
         BSgate({internal_phase}, 0.0) | [2, 3]
 
         # Measurement in Fock basis
-        Measure | [0]
-        Measure | [1]
-        Measure | [2]
-        Measure | [3]
+        MeasureFock() | [0]
+        MeasureFock() | [1]
+        MeasureFock() | [2]
+        MeasureFock() | [3]
         """
     )
 
     # returned DAG has all parameters set to 0
     topology = to_DiGraph(
-        blackbird.loads(
-            blackbird_template.format(
-                name="topology",
-                shots=1,
-                squeezing0=0,
-                squeezing1=0,
-                external_phase=0,
-                internal_phase=0,
-            )
-        ),
-        commands=False,
+        blackbird.loads(blackbird_template)(
+            squeezing0=0,
+            squeezing1=0,
+            external_phase=0,
+            internal_phase=0,
+        )
     )
+
+    for i in sorted(topology.nodes().data()):
+        print(i)

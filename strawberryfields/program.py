@@ -723,7 +723,7 @@ class Program:
                 elif op_name in db.decompositions:
                     # backend requests an op decomposition
 
-                    if op_name in db.primitives and not cmd.op.decomp:
+                    if op_name in db.primitives and not hasattr(cmd.op, 'decomp'):
                         # op is a backend primitive, and
                         # user has requested to bypass decomposition
                         compiled.append(cmd)
@@ -763,6 +763,9 @@ class Program:
             mapping = {i: n.op.__class__.__name__ for i, n in enumerate(DAG.nodes())}
             circuit = nx.convert_node_labels_to_integers(DAG)
             nx.set_node_attributes(circuit, mapping, name='name')
+
+            for i in sorted(circuit.nodes().data()):
+                print(i)
 
             def node_match(n1, n2):
                 """Returns True if both nodes have the same name"""

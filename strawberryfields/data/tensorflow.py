@@ -15,7 +15,7 @@
 from .device import DeviceData
 
 
-class TF(DeviceData):
+class TFData(DeviceData):
     """Validation data for the TF backend"""
 
     modes = 0
