@@ -38,7 +38,7 @@ class GaussianBackend(BaseGaussian):
     def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=None, **kwargs):
         r"""Instantiate a quantum circuit.
 
-        Instantiates a representation of a quantum optical state with num_subsystems modes.
+        Instantiates a representation of a quantum optical state with ``num_subsystems`` modes.
         The state is initialized to vacuum.
 
         The modes in the circuit are indexed sequentially using integers, starting from zero.

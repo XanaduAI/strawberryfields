@@ -253,7 +253,7 @@ class BaseBackend:
     def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=True, **kwargs):
         r"""Instantiate a quantum circuit.
 
-        Instantiates a representation of a quantum optical state with num_subsystems modes.
+        Instantiates a representation of a quantum optical state with ``num_subsystems`` modes.
         The state is initialized to vacuum.
 
         The modes in the circuit are indexed sequentially using integers, starting from zero.
@@ -484,7 +484,7 @@ class BaseBackend:
         raise NotImplementedError
 
     def is_vacuum(self, tol=0.0, **kwargs):
-        r"""Test whether the current circuit state is vacuum (up given tolerance).
+        r"""Test whether the current circuit state is vacuum (up to given tolerance).
 
         FIXME The backends do not implement this method consistently, fockbackend uses np.linalg.norm whereas the other two use fidelity. Switch to fidelity for all?
 
@@ -502,8 +502,8 @@ class BaseBackend:
         Args:
             modes (int or Sequence[int] or None): Specifies the modes to restrict the return state to.
                 None returns the state containing all the modes.
-                If modes is not ordered, the returned state contains the requested modes in the given order, i.e.,
-                requesting the modes=[3,1] results in a two mode state being returned with the first mode being
+                If ``modes`` is not ordered, the returned state contains the requested modes in the given order, i.e.,
+                requesting ``modes=[3,1]`` results in a two mode state being returned with the first mode being
                 subsystem 3 and the second mode being subsystem 1.
         Returns:
             BaseState: state description, specific child class depends on the backend
@@ -645,7 +645,7 @@ class BaseFock(BaseBackend):
             modes (Sequence[int]): which modes to measure
             select (None or Sequence[int]): If not None: desired values of the measurement results.
                 Enables post-selection on specific measurement results instead of random sampling.
-                len(select) == len(modes).
+                Note that ``len(select) == len(modes)``.
         Returns:
             tuple[int]: corresponding measurement results
         """
@@ -657,8 +657,8 @@ class BaseFock(BaseBackend):
         Args:
             modes (int or Sequence[int] or None): Specifies the modes to restrict the return state to.
                 None returns the state containing all the modes.
-                If modes is not ordered, the returned state contains the requested modes in the given order, i.e.,
-                requesting the modes=[3,1] results in a two mode state being returned with the first mode being
+                If ``modes`` is not ordered, the returned state contains the requested modes in the given order, i.e.,
+                requesting ``modes=[3,1]`` results in a two mode state being returned with the first mode being
                 subsystem 3 and the second mode being subsystem 1.
         Returns:
             FockState: state description
@@ -709,7 +709,7 @@ class BaseGaussian(BaseBackend):
             V (array): covariance matrix in xp ordering
             modes (int or Sequence[int]): Which modes to prepare the state in.
                 If the modes are not sorted, this is taken into account when preparing the state.
-                I.e., when a two mode state is prepared in modes=[3,1], the first
+                I.e., when a two mode state is prepared with ``modes=[3,1]``, the first
                 mode of the given state goes into mode 3 and the second mode goes into mode 1.
         """
         raise NotImplementedError
@@ -745,7 +745,7 @@ class BaseGaussian(BaseBackend):
             modes (int or Sequence[int] or None): Specifies the modes to restrict the return state to.
                 None returns the state containing all the modes.
                 If modes is not ordered, the returned state contains the requested modes in the given order, i.e.,
-                requesting the modes=[3,1] results in a two mode state being returned with the first mode being
+                requesting ``modes=[3,1]`` results in a two mode state being returned with the first mode being
                 subsystem 3 and the second mode being subsystem 1.
         Returns:
             GaussianState: state description

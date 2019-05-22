@@ -68,13 +68,13 @@ class TFBackend(BaseFock):
     def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=True, **kwargs):
         r"""Instantiate a quantum circuit.
 
-        Instantiates a representation of a quantum optical state with num_subsystems modes.
+        Instantiates a representation of a quantum optical state with ``num_subsystems`` modes.
         The state is initialized to vacuum.
 
         The modes in the circuit are indexed sequentially using integers, starting from zero.
         Once an index is assigned to a mode, it can never be re-assigned to another mode.
         If the mode is deleted its index becomes invalid.
-        An operation acting on an invalid or unassigned mode index raises an IndexError exception.
+        An operation acting on an invalid or unassigned mode index raises an ``IndexError`` exception.
 
         Args:
             num_subsystems (int): number of modes in the circuit
@@ -230,7 +230,7 @@ class TFBackend(BaseFock):
             modes (int or Sequence[int] or None): Specifies the modes to restrict the return state to.
                 None returns the state containing all the modes.
                 If modes is not ordered, the returned state contains the requested modes in the given order, i.e.,
-                requesting the modes=[3,1] results in a two mode state being returned with the first mode being
+                requesting ``modes=[3,1]`` results in a two mode state being returned with the first mode being
                 subsystem 3 and the second mode being subsystem 1.
 
         Keyword Args:
@@ -301,12 +301,12 @@ class TFBackend(BaseFock):
             modes (Sequence[int]): which modes to measure
             select (None or Sequence[int]): If not None: desired values of the measurement results.
                 Enables post-selection on specific measurement results instead of random sampling.
-                len(select) == len(modes).
+                Note that ``len(select) == len(modes)``.
 
         Keyword Args:
             session (tf.Session): TensorFlow session
             feed_dict (Dict): Dictionary containing the desired numerical values for Tensors
-                for numerically evaluating the measurement results. Used with `session`.
+                for numerically evaluating the measurement results. Used with ``session``.
 
         Returns:
             tuple[int] or tuple[Tensor]: measurement outcomes
@@ -328,7 +328,7 @@ class TFBackend(BaseFock):
         Keyword Args:
             session (tf.Session): TensorFlow session
             feed_dict (Dict): Dictionary containing the desired numerical values for Tensors
-                for numerically evaluating the measurement results. Used with `session`.
+                for numerically evaluating the measurement results. Used with ``session``.
             num_bins (int): Number of equally spaced bins for the probability distribution function
                 (pdf) simulating the homodyne measurement (default: 100000).
             max (float): The pdf is discretized onto the 1D grid [-max,max] (default: 10).
