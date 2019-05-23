@@ -39,10 +39,9 @@ class FockBackend(BaseFock):
         super().__init__()
         self._supported["mixed_states"] = True
         self._short_name = "fock"
-        # TODO docstrings
-        self._init_modes = None
-        self._modemap = None
-        self.circuit = None
+        self._init_modes = None  #: int: initial number of modes in the circuit
+        self._modemap = None     #: Modemap: maps external mode indices to internal ones
+        self.circuit = None      #: ~.fockbackend.circuit.Circuit: representation of the simulated quantum state
 
     def _remap_modes(self, modes):
         if isinstance(modes, int):
@@ -76,7 +75,7 @@ class FockBackend(BaseFock):
 
         Keyword Args:
             cutoff_dim (int): Numerical Hilbert space cutoff dimension for the modes.
-                For each mode, the simulator can represent the Fock states :math:`\ket{0}, \ket{1}, \ldots, \ket{\texttt{cutoff_dim}-1}`.
+                For each mode, the simulator can represent the Fock states :math:`\ket{0}, \ket{1}, \ldots, \ket{\text{cutoff_dim}-1}`.
             pure (bool): If True (default), use a pure state representation (otherwise will use a mixed state representation).
         """
         cutoff_dim = kwargs.get('cutoff_dim', None)
