@@ -485,13 +485,15 @@ class BaseBackend:
     def is_vacuum(self, tol=0.0, **kwargs):
         r"""Test whether the current circuit state is vacuum (up to given tolerance).
 
-        FIXME The backends do not implement this method consistently, fockbackend uses np.linalg.norm whereas the other two use fidelity. Switch to fidelity for all?
+        Returns True iff :math:`|\bra{0} \rho \ket{0} -1| \le` ``tol``, i.e.,
+        the fidelity of the current circuit state with the vacuum state is within
+        the given tolerance from 1.
 
         Args:
-            tol (float): numerical tolerance for how close state must be to true vacuum state (in terms of fidelity?)
+            tol (float): numerical tolerance
 
         Returns:
-            bool: True iff vacuum state up to tolerance tol
+            bool: True iff current state is vacuum up to tolerance tol
         """
         raise NotImplementedError
 

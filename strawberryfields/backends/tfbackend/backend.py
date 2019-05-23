@@ -340,7 +340,7 @@ class TFBackend(BaseFock):
                     v = sess.run(vac_elem)
                     sess.close()
 
-            result = (1 - v) <= tol
+            result = np.abs(v-1) <= tol
         return result
 
     def del_mode(self, modes):
