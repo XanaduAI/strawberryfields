@@ -36,5 +36,5 @@ class TestIsVacuum:
 
         backend = setup_backend(1)
         backend.displacement(r, 0)
-        assert not backend.is_vacuum(lim-tol)
-        assert backend.is_vacuum(lim+tol)
+        assert not np.any(backend.is_vacuum(lim-tol))
+        assert np.all(backend.is_vacuum(lim+tol))
