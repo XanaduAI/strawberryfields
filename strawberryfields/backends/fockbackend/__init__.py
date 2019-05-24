@@ -50,15 +50,24 @@ are for the first mode, the second are for the second mode, etc.
 
 .. currentmodule:: strawberryfields.backends.fockbackend.FockBackend
 
-Basic quantum simulator methods
--------------------------------
+FockBackend methods
+-------------------
 
 .. autosummary::
+   supports
    begin_circuit
+   add_mode
+   del_mode
+   get_modes
+   get_cutoff_dim
+   reset
+   state
+   is_vacuum
    prepare_vacuum_state
    prepare_coherent_state
    prepare_squeezed_state
    prepare_displaced_squeezed_state
+   prepare_thermal_state
    prepare_fock_state
    prepare_ket_state
    prepare_dm_state
@@ -66,23 +75,14 @@ Basic quantum simulator methods
    displacement
    squeeze
    beamsplitter
+   cubic_phase
    kerr_interaction
    cross_kerr_interaction
-   cubic_phase
    loss
-   measure_fock
+   thermal_loss
    measure_homodyne
-   del_mode
-   add_mode
-   get_modes
-   state
+   measure_fock
 
-Auxiliary methods
------------------
-
-.. autosummary::
-   reset
-   get_cutoff_dim
 
 Code details
 ~~~~~~~~~~~~

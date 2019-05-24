@@ -52,8 +52,8 @@ Hierarchy for backends
     :parts: 1
 
 
-Base backend
------------------------------------
+BaseBackend
+-----------
 
 .. currentmodule:: strawberryfields.backends.base.BaseBackend
 
@@ -64,6 +64,8 @@ Base backend
     del_mode
     get_modes
     reset
+    state
+    is_vacuum
     prepare_vacuum_state
     prepare_coherent_state
     prepare_squeezed_state
@@ -76,8 +78,6 @@ Base backend
     loss
     thermal_loss
     measure_homodyne
-    state
-    is_vacuum
 
 Fock backends
 ------------------

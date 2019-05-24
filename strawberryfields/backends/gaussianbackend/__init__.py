@@ -39,35 +39,33 @@ matrices :math:`N` and :math:`M` that are defined as follows
 and a vector of means :math:`\alpha_i =\langle a_i \rangle`
 
 
-Basic quantum simulator methods
-================================
+GaussianBackend methods
+=======================
 
 .. currentmodule:: strawberryfields.backends.gaussianbackend.GaussianBackend
 
-The :class:`GaussianBackend` simulator implements a number of state preparations, gates, and measurements (listed below).
-
 .. autosummary::
+   supports
    begin_circuit
+   add_mode
+   del_mode
+   get_modes
+   reset
+   state
+   is_vacuum
    prepare_vacuum_state
    prepare_coherent_state
    prepare_squeezed_state
    prepare_displaced_squeezed_state
-   prepare_fock_state
-   prepare_ket_state
+   prepare_thermal_state
    rotation
    displacement
    squeeze
    beamsplitter
    loss
-   measure_fock
+   thermal_loss
    measure_homodyne
    measure_heterodyne
-   is_vacuum
-   del_mode
-   add_mode
-   get_modes
-   reset
-   state
 
 Code details
 ~~~~~~~~~~~~

@@ -57,20 +57,28 @@ while mixed states have shape
 
 .. currentmodule:: strawberryfields.backends.tfbackend.TFBackend
 
-Basic quantum simulator methods
-================================
+TFBackend methods
+=================
 
-The :class:`TFBackend` simulator implements a number of state preparations, gates, and measurements (listed below).
 The parameters supplied for these operations can be either numeric (float, complex) values
 or Tensorflow :class:`Variables`/:class:`Tensors`. The Tensorflow objects can either be scalars or vectors. For
 vectors, they must have the same dimension as the declared batch size of the underlying circuit.
 
 .. autosummary::
+   supports
    begin_circuit
+   add_mode
+   del_mode
+   get_modes
+   get_cutoff_dim
+   reset
+   state
+   is_vacuum
    prepare_vacuum_state
    prepare_coherent_state
    prepare_squeezed_state
    prepare_displaced_squeezed_state
+   prepare_thermal_state
    prepare_fock_state
    prepare_ket_state
    prepare_dm_state
@@ -82,20 +90,11 @@ vectors, they must have the same dimension as the declared batch size of the und
    kerr_interaction
    cross_kerr_interaction
    loss
-   measure_fock
+   thermal_loss
    measure_homodyne
-   del_mode
-   add_mode
-   get_modes
-   state
-
-Auxiliary methods
-==================
-
-.. autosummary::
-   reset
-   get_cutoff_dim
+   measure_fock
    graph
+
 
 Code details
 ~~~~~~~~~~~~
