@@ -121,11 +121,11 @@ def graph_embed(A, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
         A (array[complex]): square, symmetric (weighted) adjacency matrix of the graph
         max_mean_photon (float): Threshold value. It guarantees that the mode with
             the largest squeezing has ``max_mean_photon`` as the mean photon number
-            i.e., :math:`sinh(r_{max})^2 ==` max_mean_photon.
+            i.e., :math:`sinh(r_{max})^2 ==` ``max_mean_photon``.
         make_traceless (bool): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
             the graph.
-        tol (float): Tolerance used when checking if the input matrix is symmetric: :math:`|A-A^T| <` tol.
+        tol (float): tolerance used when checking if the input matrix is symmetric: :math:`|A-A^T| <` tol
 
     Returns:
         tuple[array, array]: squeezing parameters of the input
