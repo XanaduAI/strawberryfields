@@ -122,6 +122,9 @@ In the case where the symplectic matrix :math:`S` is applied to a vacuum state :
 
 As such, a symplectic transformation acting on the vacuum is sufficiently characterised by single mode squeezers followed by a passive Gaussian transformation (:math:`S = O_1 Z`).
 
+
+.. _clements:
+
 Clements decomposition
 -----------------------
 

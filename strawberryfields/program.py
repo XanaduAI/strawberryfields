@@ -736,7 +736,7 @@ class Program:
 
         # test that the target subsystem references are ok
         reg = self._test_regrefs(reg)
-        # also test possible RegRef dependencies
+        # also test possible Parameter-related dependencies
         self._test_regrefs(op.extra_deps)
         for rr in reg:
             # it's used now
