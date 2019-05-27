@@ -272,14 +272,11 @@ class TestRectangularSymmetricDecomposition:
         nmax, mmax = U.shape
         assert nmax == mmax
         tlist, diags = dec.rectangular_symmetric(U)
-        print(tlist, diags)
         qrec = np.identity(nmax)
         for i in tlist:
             qrec = self.S(*i) @ qrec
         qrec = np.diag(diags) @ qrec
-        print('original: ', U)
-        print('reconstructed: ', qrec)
-        assert np.allclose(U, qrec, atol=1e-6+0*tol, rtol=0)
+        assert np.allclose(U, qrec, atol=tol, rtol=0)
 
 
 class TestTriangularDecomposition:
