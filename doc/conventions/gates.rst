@@ -135,7 +135,7 @@ Two important special cases of the last formula are obtained when :math:`r \to 0
 
   to deduce that :math:`f_{n,m}(r,\phi,0)` is zero if :math:`n` is even and :math:`m` is odd or vice versa.
 
-When writing the Bloch Messiah reduction :cite:`gianfranco2016`:cite:`gianfranco2016b` of a Gaussian state in the Fock basis one often needs the following matrix element
+When writing the Bloch-Messiah reduction :cite:`cariolaro2016`:cite:`cariolaro2016b` of a Gaussian state in the Fock basis one often needs the following matrix element
 
 .. math::
    \bra{k} D(\alpha) R(\theta) S(r) \ket{l}  = e^{i \theta l }  \bra{k} D(\alpha) S(r e^{2i \theta}) \ket{l} = e^{i \theta l} f^*_{l,k}(-r,-2\theta,-\alpha)

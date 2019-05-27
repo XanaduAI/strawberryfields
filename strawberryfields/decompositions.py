@@ -11,7 +11,36 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Common shared decompositions that can be used by backends"""
+"""
+Matrix decompositions
+=====================
+
+**Module name:** :mod:`strawberryfields.decompositions`
+
+.. currentmodule:: strawberryfields.decompositions
+
+This module implements common shared matrix decompositions that are used to perform gate decompositions.
+
+
+Functions
+---------
+
+.. autosummary::
+   takagi
+   graph_embed
+   clements
+   clements_phase_end
+   triangular_decomposition
+   williamson
+   bloch_messiah
+   covmat_to_hamil
+   hamil_to_covmat
+
+
+Code details
+~~~~~~~~~~~~
+
+"""
 
 from itertools import groupby
 
@@ -22,21 +51,20 @@ from .backends.shared_ops import sympmat, changebasis
 
 
 def takagi(N, tol=1e-13, rounding=13):
-    r"""Computes the Autonne-Takagi decomposition of a complex symmetric (not Hermitian!) matrix.
+    r"""Autonne-Takagi decomposition of a complex symmetric (not Hermitian!) matrix.
 
     Note that singular values of N are considered equal if they are equal after np.round(values, tol).
 
-    See Cariolaro et al. Phys. Rev. A 94, 062109 (2016) [10.1103/PhysRevA.94.062109]
-    and references therein for a derivation
+    See :cite:`cariolaro2016` and references therein for a derivation.
 
     Args:
-        N (array): square, symmetric complex numpy array N
+        N (array[complex]): square, symmetric matrix N
         rounding (int): the number of decimal places to use when rounding the singular values of N
-        tol (float): the tolerance used when checking if the input matrix is symmetric: :math:`|N-N^T| < tol`
+        tol (float): the tolerance used when checking if the input matrix is symmetric: :math:`|N-N^T| <` tol
 
     Returns:
-        tuple(array,array): Returns the tuple (rl, U), where rl are the
-            (rounded) singular values, and U is the Takagi unitary ``N = U @ np.diag(rl) @ np.transpose(U)``
+        tuple[array, array]: (rl, U), where rl are the (rounded) singular values,
+            and U is the Takagi unitary, such that :math:`N = U \diag(rl) U^T`.
     """
     (n, m) = N.shape
     if n != m:
@@ -79,36 +107,40 @@ def takagi(N, tol=1e-13, rounding=13):
     return rl, U
 
 
-def graph_embed(mat, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
-    r""" Given an symmetric adjacency matrix (in general, with arbitrary complex off-diagonal and
-    real diagonal entries),
-    it returns the squeezing parameters and interferometer necessary for
+def graph_embed(A, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
+    r"""Embed a graph into a Gaussian state.
+
+    Given a graph in terms of a symmetric adjacency matrix
+    (in general with arbitrary complex off-diagonal and real diagonal entries),
+    returns the squeezing parameters and interferometer necessary for
     creating the Gaussian state whose off-diagonal parts are proportional to that matrix.
 
+    Uses :func:`takagi`.
+
     Args:
-        mat (array): square symmetric complex (or real or integer) array representing a (weighted) adjacency matrix of a graph
-        max_mean_photon (float): threshold value. It guarantees that the mode with
+        A (array[complex]): square, symmetric (weighted) adjacency matrix of the graph
+        max_mean_photon (float): Threshold value. It guarantees that the mode with
             the largest squeezing has ``max_mean_photon`` as the mean photon number
-            i.e., :math:`sinh(r_{max})^2 == max_mean_photon`
-        make_traceless (boolean): removes the trace of the input matrix, by performing the transformation
+            i.e., :math:`sinh(r_{max})^2 ==` ``max_mean_photon``.
+        make_traceless (bool): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
             the graph.
-        tol (float): the tolerance used when checking if the input matrix is symmetric: :math:`|mat-mat^T| < tol`
+        tol (float): tolerance used when checking if the input matrix is symmetric: :math:`|A-A^T| <` tol
 
     Returns:
-        tuple(array, array): tuple containing the squeezing parameters of the input
-        state to the interferometer, and the unitary matrix representing the interferometer
+        tuple[array, array]: squeezing parameters of the input
+            state to the interferometer, and the unitary matrix representing the interferometer
     """
-    (m, n) = mat.shape
+    (m, n) = A.shape
 
     if m != n:
-        raise ValueError("The Matrix is not square")
+        raise ValueError("The matrix is not square.")
 
-    if np.linalg.norm(mat-np.transpose(mat)) >= tol:
-        raise ValueError("The input matrix is not symmetric")
+    if np.linalg.norm(A-np.transpose(A)) >= tol:
+        raise ValueError("The matrix is not symmetric.")
 
     if make_traceless:
-        A = mat - np.trace(mat)*np.identity(n)/n
+        A = A - np.trace(A)*np.identity(n)/n
 
     s, U = takagi(A, tol=tol)
     sc = np.sqrt(1.0+1.0/max_mean_photon)
@@ -168,11 +200,10 @@ def nullT(n, m, U):
 
 
 def clements(V, tol=1e-11):
-    r"""Performs the Clements decomposition of a unitary complex matrix, with local
+    r"""Clements decomposition of a unitary matrix, with local
     phase shifts applied between two interferometers.
 
-    See Clements et al. Optica 3, 1460 (2016) [10.1364/OPTICA.3.001460]
-    for more details.
+    See :ref:`clements` or :cite:`clements2016` for more details.
 
     This function returns a circuit corresponding to an intermediate step in
     Clements decomposition as described in Eq. 4 of the article. In this form,
@@ -183,17 +214,17 @@ def clements(V, tol=1e-11):
     material of the article.
 
     Args:
-        V (array): Unitary matrix of size n_size
+        V (array[complex]): unitary matrix of size n_size
         tol (float): the tolerance used when checking if the matrix is unitary:
-            :math:`|VV^\dagger-I| \leq tol`
+            :math:`|VV^\dagger-I| \leq` tol
 
     Returns:
-        tuple[array]: returns a tuple of the form ``(tilist,tlist,np.diag(localV))``
+        tuple[array]: tuple of the form ``(tilist,tlist,np.diag(localV))``
             where:
 
             * ``tilist``: list containing ``[n,m,theta,phi,n_size]`` of the Ti unitaries needed
             * ``tlist``: list containing ``[n,m,theta,phi,n_size]`` of the T unitaries needed
-            * ``localV``: Diagonal unitary sitting sandwhiched by Ti's and the T's
+            * ``localV``: Diagonal unitary sitting sandwiched by Ti's and the T's
     """
     localV = V
     (nsize, _) = localV.shape
@@ -216,18 +247,19 @@ def clements(V, tol=1e-11):
 
     return tilist, tlist, np.diag(localV)
 
-def clements_phase_end(V, tol=1e-11):
-    r"""Clements decomposition of unitary matrix
 
-    See Clements et al. Optica 3, 1460 (2016) [10.1364/OPTICA.3.001460]
-    for more details.
+def clements_phase_end(V, tol=1e-11):
+    r"""Clements decomposition of a unitary matrix.
+
+    See :cite:`clements2016` for more details.
 
     Final step in the decomposition of a given discrete unitary matrix.
     The output is of the form given in Eq. 5.
 
     Args:
-        V (array): Unitary matrix of size n_size
-        tol (int): the number of decimal places to use when determining whether the matrix is unitary
+        V (array[complex]): unitary matrix of size n_size
+        tol (float): the tolerance used when checking if the matrix is unitary:
+            :math:`|VV^\dagger-I| \leq` tol
 
     Returns:
         tuple[array]: returns a tuple of the form ``(tlist,np.diag(localV))``
@@ -258,17 +290,16 @@ def clements_phase_end(V, tol=1e-11):
 
     return (new_tlist, new_diags)
 
-def triangular_decomposition(V, tol=1e-11):
-    r"""Triangular decomposition of unitary due to Reck et al.
 
-    See Reck et al. Phys. Rev. Lett. 73, 58 [10.1103/PhysRevLett.73.58]
-    for more details and Clements et al. Optica 3, 1460 (2016) for details
-    on notation.
+def triangular_decomposition(V, tol=1e-11):
+    r"""Triangular decomposition of a unitary matrix due to Reck et al.
+
+    See :cite:`reck1994` for more details and :cite:`clements2016` for details on notation.
 
     Args:
-        V (array): Unitary matrix of size ``n_size``
-        tol (int): the number of decimal places to use when determining
-            whether the matrix is unitary
+        V (array[complex]): unitary matrix of size ``n_size``
+        tol (float): the tolerance used when checking if the matrix is unitary:
+            :math:`|VV^\dagger-I| \leq` tol
 
     Returns:
         tuple[array]: returns a tuple of the form ``(tlist,np.diag(localV))``
@@ -294,22 +325,24 @@ def triangular_decomposition(V, tol=1e-11):
 
 
 def williamson(V, tol=1e-11):
-    r"""Performs the Williamson decomposition of positive definite (real) symmetric matrix.
+    r"""Williamson decomposition of positive-definite (real) symmetric matrix.
+
+    See :ref:`williamson`.
 
     Note that it is assumed that the symplectic form is
 
-    ..math:: \Omega = \begin{bmatrix}0&I\\-I&0\end{bmatrix}
+    .. math:: \Omega = \begin{bmatrix}0&I\\-I&0\end{bmatrix}
 
     where :math:`I` is the identity matrix and :math:`0` is the zero matrix.
 
     See https://math.stackexchange.com/questions/1171842/finding-the-symplectic-matrix-in-williamsons-theorem/2682630#2682630
 
     Args:
-        V (array): A positive definite symmetric (real) matrix V
-        tol (float): the tolerance used when checking if the matrix is symmetric: :math:`|V-V^T| \leq tol`
+        V (array[float]): positive definite symmetric (real) matrix
+        tol (float): the tolerance used when checking if the matrix is symmetric: :math:`|V-V^T| \leq` tol
 
     Returns:
-        tuple(array,array): Returns a tuple ``(Db, S)`` where ``Db`` is a diagonal matrix
+        tuple[array,array]: ``(Db, S)`` where ``Db`` is a diagonal matrix
             and ``S`` is a symplectic matrix such that :math:`V = S^T Db S`
     """
     (n, m) = V.shape
@@ -365,14 +398,16 @@ def williamson(V, tol=1e-11):
 
 
 def bloch_messiah(S, tol=1e-10, rounding=9):
-    r""" Performs the Bloch-Messiah decomposition of a symplectic matrix in terms of
-    two symplectic unitaries and squeezing transformation.
+    r"""Bloch-Messiah decomposition of a symplectic matrix.
 
+    See :ref:`bloch_messiah`.
+
+    Decomposes a symplectic matrix into two symplectic unitaries and squeezing transformation.
     It automatically sorts the squeezers so that they respect the canonical symplectic form.
 
     Note that it is assumed that the symplectic form is
 
-    ..math:: \Omega = \begin{bmatrix}0&I\\-I&0\end{bmatrix}
+    .. math:: \Omega = \begin{bmatrix}0&I\\-I&0\end{bmatrix}
 
     where :math:`I` is the identity matrix and :math:`0` is the zero matrix.
 
@@ -387,7 +422,7 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
     https://math.stackexchange.com/questions/1886038/finding-euler-decomposition-of-a-symplectic-matrix
 
     Args:
-        S (array): A symplectic matrix S
+        S (array[float]): symplectic matrix
         tol (float): the tolerance used when checking if the matrix is symplectic:
             :math:`|S^T\Omega S-\Omega| \leq tol`
         rounding (int): the number of decimal places to use when rounding the singular values
@@ -470,7 +505,7 @@ def covmat_to_hamil(V, tol=1e-10):  # pragma: no cover
     where :math:`Q = (x_1,\dots,x_n,p_1,\dots,p_n)` are the canonical
     operators, and Z is the partition function.
 
-    For more details, see https://arxiv.org/pdf/1507.01941.pdf
+    For more details, see https://arxiv.org/abs/1507.01941
 
     Args:
         V (array): Gaussian covariance matrix
@@ -506,7 +541,7 @@ def hamil_to_covmat(H, tol=1e-10):  # pragma: no cover
     Given a Hamiltonian matrix of a Gaussian state H, finds the equivalent covariance matrix
     V in the xp ordering.
 
-    For more details, see https://arxiv.org/pdf/1507.01941.pdf
+    For more details, see https://arxiv.org/abs/1507.01941
 
     Args:
         H (array): positive definite Hamiltonian matrix
