@@ -294,20 +294,20 @@ def clements_phase_end(V, tol=1e-11):
 def rectangular_symmetric(V, tol=1e-11):
     r"""Rectangular decomposition of a unitary into symmetric beamsplitters.
 
-    This decomposition starts with the output from :func:`clements_phase_end`
+    This decomposition starts with the output from :func:`~.clements_phase_end`
     and further decomposes each of the T unitaries into two phase-shifters and
     two symmetric (50:50) beamsplitters.
 
-    The two beamsplitters in this decomposition of T are modeled by :class:`ops.BSgate`
-    with arguments (pi/4, pi/2), and the two phase-shifters (see :class:`ops.Rgate`)
+    The two beamsplitters in this decomposition of T are modeled by :class:`~.ops.BSgate`
+    with arguments :math:`(\pi/4, \pi/2)`, and the two phase-shifters (see :class:`~.ops.Rgate`)
     act on the input mode with the lower index of the two. The phase imposed
     by the first phaseshifter (before the first beamsplitter) is named
-    `external_phase`, while we call the phase shift between the beamsplitters
-    `internal_phase`.
+    ``external_phase``, while we call the phase shift between the beamsplitters
+    ``internal_phase``.
 
     The algorithm applied in this function makes use of the following identity:
 
-    ::
+    .. code-block:: python
 
         Rgate(alpha) | 1
         Rgate(beta) | 2
@@ -323,14 +323,14 @@ def rectangular_symmetric(V, tol=1e-11):
         Rgate(beta-theta+pi) | 1
         Rgate(beta-theta) | 2
 
-    The phase-shifts by alpha and beta are thus pushed consecutively through
+    The phase-shifts by ``alpha`` and ``beta`` are thus pushed consecutively through
     all the T unitaries of the interferometer and these unitaries are converted
     into pairs of symmetric beamsplitters with two phase shifts. The phase
     shifts at the end of the interferometer are added to the ones from the
-    diagonal unitary at the end of the interferometer obtained from :func:`clements_phase_end`.
+    diagonal unitary at the end of the interferometer obtained from :func:`~.clements_phase_end`.
 
     Args:
-        V (array): Unitary matrix of size n_size
+        V (array): unitary matrix of size n_size
         tol (int): the number of decimal places to use when determining
           whether the matrix is unitary
 
