@@ -222,9 +222,8 @@ def pytest_runtest_setup(item):
             )
 
     # skip broken tests
-    for mark in item.iter_markers():
-        if mark.name == "broken":
-            if mark.args:
-                pytest.skip("Broken test skipped: {}".format(*mark.args))
-            else:
-                pytest.skip("Test skipped as corresponding code base is currently broken!")
+    for mark in item.iter_markers(name="broken"):
+        if mark.args:
+            pytest.skip("Broken test skipped: {}".format(*mark.args))
+        else:
+            pytest.skip("Test skipped as corresponding code base is currently broken!")

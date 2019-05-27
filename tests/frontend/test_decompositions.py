@@ -91,7 +91,7 @@ class TestGraphEmbed:
     def test_square_validation(self):
         """Test that the graph_embed decomposition raises exception if not square"""
         A = np.random.random([4, 5]) + 1j * np.random.random([4, 5])
-        with pytest.raises(ValueError, match="Matrix is not square"):
+        with pytest.raises(ValueError, match="matrix is not square"):
             dec.graph_embed(A)
 
     def test_symmetric_validation(self):
