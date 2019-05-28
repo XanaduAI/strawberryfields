@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for program.py"""
+import textwrap
 import pytest
 
 pytestmark = pytest.mark.frontend
@@ -331,9 +332,9 @@ class TestValidation:
         prog = sf.Program(3)
         U = np.array([[0, 1], [1, 0]])
 
-        with prog.context:
-            ops.S2gate(0.6) | [0, 1]
-            ops.Interferometer(U) | [0, 1]
+        with prog.context as q:
+            ops.S2gate(0.6) | [q[0], q[1]]
+            ops.Interferometer(U) | [q[0], q[1]]
 
         with monkeypatch.context() as m:
             # monkeypatch our DummyDevice into the
@@ -367,9 +368,9 @@ class TestValidation:
         prog = sf.Program(3)
         U = np.array([[0, 1], [1, 0]])
 
-        with prog.context:
-            ops.S2gate(0.6) | [0, 1]
-            ops.Interferometer(U) | [0, 1]
+        with prog.context as q:
+            ops.S2gate(0.6) | [q[0], q[1]]
+            ops.Interferometer(U) | [q[0], q[1]]
 
         with monkeypatch.context() as m:
             # monkeypatch our DummyDevice into the
@@ -407,9 +408,9 @@ class TestValidation:
         prog = sf.Program(3)
         U = np.array([[0, 1], [1, 0]])
 
-        with prog.context:
-            ops.Rgate(0.6) | 0
-            ops.Interferometer(U) | [0, 1]
+        with prog.context as q:
+            ops.Rgate(0.6) | q[0]
+            ops.Interferometer(U) | [q[0], q[1]]
 
         with monkeypatch.context() as m:
             # monkeypatch our DummyDevice into the
@@ -428,10 +429,9 @@ class TestValidation:
         the Kerr gate as an existing example.
         """
         prog = sf.Program(3)
-        U = np.array([[0, 1], [1, 0]])
 
-        with prog.context:
-            ops.Kgate(0.6) | 0
+        with prog.context as q:
+            ops.Kgate(0.6) | q[0]
 
         with pytest.raises(program.CircuitError, match="Kgate cannot be used with the gaussian backend"):
             new_prog = prog.compile(backend='gaussian')
@@ -446,8 +446,8 @@ class TestValidation:
         prog = sf.Program(3)
         cov = np.array([[0, 1], [1, 0]])
 
-        with prog.context:
-            ops.Gaussian(cov, decomp=False) | 0
+        with prog.context as q:
+            ops.Gaussian(cov, decomp=False) | q[0]
 
         new_prog = prog.compile(backend='gaussian')
 
@@ -479,3 +479,99 @@ class TestValidation:
         circuit = new_prog.circuit
         assert circuit[0].op.__class__.__name__ == "Sgate"
         assert circuit[0].op.p[0] == r
+
+    def test_topology_validation(self, monkeypatch):
+        """Test compilation properly matches the device toplogy"""
+
+        class DummyDevice(DeviceSpecs):
+            """A device with no decompositions"""
+            modes = 0
+            remote = False
+            interactive = True
+            primitives = {'Sgate', 'BSgate', 'Dgate', 'MeasureFock'}
+            decompositions = set()
+
+            blackbird_template = textwrap.dedent(
+                """\
+                name test
+                version 0.0
+
+                Sgate({sq}, 0) | 0
+                Dgate(-7.123) | 1
+                BSgate({theta}) | 0, 1
+                MeasureFock() | 0
+                MeasureFock() | 2
+                """
+            )
+
+        dev = DummyDevice()
+
+        prog = sf.Program(3)
+
+        with prog.context as q:
+            # the circuit given below is an
+            # isomorphism of the one provided above
+            # in blackbird_template, so should validate.
+            ops.Measure | q[2]
+            ops.Dgate(-7.123) | q[1]
+            ops.Sgate(0.543) | q[0]
+            ops.BSgate(-0.32) | (q[0], q[1])
+            ops.MeasureFock() | q[0]
+
+        with monkeypatch.context() as m:
+            # monkeypatch our DummyDevice into the
+            # backend database
+            db =  {'dummy': DummyDevice}
+            m.setattr("strawberryfields.devicespecs.backend_databases", db)
+            new_prog = prog.compile(backend='dummy')
+
+        # no exception should be raised; topology correctly validated
+        assert len(new_prog) == 5
+
+    def test_invalid_topology(self, monkeypatch):
+        """Test compilation raises exception if toplogy not matched"""
+
+        class DummyDevice(DeviceSpecs):
+            """A device with no decompositions"""
+            modes = 0
+            remote = False
+            interactive = True
+            primitives = {'Sgate', 'BSgate', 'Dgate', 'MeasureFock'}
+            decompositions = set()
+
+            blackbird_template = textwrap.dedent(
+                """\
+                name test
+                version 0.0
+
+                Sgate({sq}, 0) | 0
+                Dgate(-7.123) | 1
+                BSgate({theta}) | 0, 1
+                MeasureFock() | 0
+                MeasureFock() | 2
+                """
+            )
+
+        dev = DummyDevice()
+
+        prog = sf.Program(3)
+
+        with prog.context as q:
+            # the circuit given below is NOT an
+            # isomorphism of the one provided above
+            # in blackbird_template, as the Sgate
+            # comes AFTER the beamsplitter.
+            ops.Measure | q[2]
+            ops.Dgate(-7.123) | q[1]
+            ops.BSgate(-0.32) | (q[0], q[1])
+            ops.Sgate(0.543) | q[0]
+            ops.MeasureFock() | q[0]
+
+        with monkeypatch.context() as m:
+            # monkeypatch our DummyDevice into the
+            # backend database
+            db =  {'dummy': DummyDevice}
+            m.setattr("strawberryfields.devicespecs.backend_databases", db)
+
+            with pytest.raises(program.CircuitError, match="incompatible topology"):
+                new_prog = prog.compile(backend='dummy')

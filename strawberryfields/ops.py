@@ -1073,7 +1073,7 @@ class MeasureHomodyne(Measurement):
         if self.select is None:
             if self.p[0] == 0:
                 return 'MeasureX'
-            elif self.p[0] == pi/2:
+            if self.p[0] == pi/2:
                 return 'MeasureP'
         return super().__str__()
 

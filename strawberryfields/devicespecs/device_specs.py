@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Abstract base class for storing device data for validation"""
-from typing import List, Set, Dict, Tuple, Optional, Union
+from typing import List, Set, Dict
 import abc
 
 import blackbird

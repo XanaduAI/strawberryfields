@@ -14,8 +14,6 @@
 """Chip0 backend validation data"""
 import textwrap
 
-import networkx as nx
-
 from .device_specs import DeviceSpecs
 
 
