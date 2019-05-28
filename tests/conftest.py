@@ -19,7 +19,7 @@ import os
 import pytest
 
 import strawberryfields as sf
-from strawberryfields.engine import Engine
+from strawberryfields.engine import LocalEngine
 from strawberryfields.program import Program
 from strawberryfields.backends.base import BaseBackend
 from strawberryfields.backends.fockbackend import FockBackend
@@ -174,8 +174,7 @@ def setup_backend_pars(
     use the ``@pytest.mark.backends()`` fixture. For example, for a test that
     only works on the TF and Fock backends, ``@pytest.mark.backends('tf', 'fock').
     """
-    return {
-        'backend_name': request.param,
+    return request.param, {
         'cutoff_dim': cutoff,
         'pure': pure,
         'batch_size': batch_size,
@@ -189,8 +188,9 @@ def setup_eng(setup_backend_pars):  # pylint: disable=redefined-outer-name
     def _setup_eng(num_subsystems, **kwargs):
         """Factory function"""
         prog = Program(num_subsystems)
-        setup_backend_pars.update(kwargs)  # override defaults with kwargs
-        eng = Engine(backend=setup_backend_pars['backend_name'], **setup_backend_pars)
+        backend, backend_options = setup_backend_pars
+        backend_options.update(kwargs)  # override defaults with kwargs
+        eng = LocalEngine(backend=backend, backend_options=backend_options)
         return eng, prog
 
     return _setup_eng
@@ -222,9 +222,8 @@ def pytest_runtest_setup(item):
             )
 
     # skip broken tests
-    for mark in item.iter_markers():
-        if mark.name == "broken":
-            if mark.args:
-                pytest.skip("Broken test skipped: {}".format(*mark.args))
-            else:
-                pytest.skip("Test skipped as corresponding code base is currently broken!")
+    for mark in item.iter_markers(name="broken"):
+        if mark.args:
+            pytest.skip("Broken test skipped: {}".format(*mark.args))
+        else:
+            pytest.skip("Test skipped as corresponding code base is currently broken!")

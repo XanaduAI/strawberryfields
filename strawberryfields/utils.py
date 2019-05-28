@@ -914,8 +914,8 @@ def extract_unitary(prog, cutoff_dim: int, vectorize_modes: bool = False, backen
     N = prog.init_num_subsystems
     # extract the unitary matrix by running a modified version of the Program
     p = _program_in_CJ_rep(prog, cutoff_dim)
-    eng = sf.Engine(backend, cutoff_dim=cutoff_dim, pure=True)
-    result = eng.run(p).ket()
+    eng = sf.LocalEngine(backend, backend_options={'cutoff_dim': cutoff_dim, 'pure': True})
+    result = eng.run(p).state.ket()
 
     if vectorize_modes:
         if backend == 'fock':
@@ -1071,8 +1071,8 @@ def extract_channel(prog, cutoff_dim: int, representation: str = 'choi', vectori
     N = prog.init_num_subsystems
     p = _program_in_CJ_rep(prog, cutoff_dim)
 
-    eng = sf.Engine('fock', cutoff_dim=cutoff_dim, pure=True)
-    choi = eng.run(p).dm()
+    eng = sf.LocalEngine('fock', backend_options={'cutoff_dim': cutoff_dim, 'pure': True})
+    choi = eng.run(p).state.dm()
     choi = np.einsum('abcd->cdab', _vectorize(choi))
 
     if representation.lower() == 'choi':

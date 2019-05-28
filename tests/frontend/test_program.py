@@ -39,7 +39,7 @@ single_mode_gates = [x for x in ops.one_args_gates + ops.two_args_gates if x.ns 
 @pytest.fixture
 def eng(backend):
     """Engine fixture."""
-    return sf.Engine(backend)
+    return sf.LocalEngine(backend)
 
 
 @pytest.fixture
@@ -150,9 +150,8 @@ class TestProgram:
 
         assert res == expected
 
-        state = eng.run(
-            prog, compile=False
-        )  # FIXME optimization can change gate order, however this is not a good way of avoiding it
+        # NOTE optimization can change gate order
+        state = eng.run(prog, compile_options={'optimize': False})
         res = []
         eng.print_applied(print_fn)
         assert res == ["Run 0:"] + expected

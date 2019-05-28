@@ -57,12 +57,16 @@ Top-level functions
 Code details
 ~~~~~~~~~~~~
 """
-from .engine import Engine
+from .engine import (Engine, LocalEngine)
 from .io import save, load
 from .program import Program, _convert as convert
 from ._version import __version__
 
-__all__ = ["Engine", "Program", "convert", "version", "save", "load"]
+__all__ = ["Engine", "LocalEngine", "Program", "convert", "version", "save", "load", "about", "cite"]
+
+
+#: float: numerical value of hbar for the frontend (in the implicit units of position * momentum)
+hbar = 2
 
 
 def version():
@@ -75,5 +79,48 @@ def version():
     return __version__
 
 
-#: float: numerical value of hbar for the frontend (in the implicit units of position * momentum)
-hbar = 2
+def about():
+    """About box for Strawberry Fields.
+
+    Prints the installed version numbers for SF and its dependencies,
+    and some system info. Please include this information in bug reports.
+    """
+    import sys
+    import platform
+    import os
+    import numpy
+    import scipy
+
+    # a QuTiP-style infobox
+    print('\nStrawberry Fields: a Python library for continuous-variable quantum circuits.')
+    print('Copyright 2018-2019 Xanadu Quantum Technologies Inc.\n')
+
+    print('Python version:            {}.{}.{}'.format(*sys.version_info[0:3]))
+    print('Platform info:             {}'.format(platform.platform()))
+    print('Installation path:         {}'.format(os.path.dirname(__file__)))
+    print('Strawberry Fields version: {}'.format(__version__))
+    print('Numpy version:             {}'.format(numpy.__version__))
+    print('Scipy version:             {}'.format(scipy.__version__))
+    try:
+        import tensorflow
+        tf_version = tensorflow.__version__
+    except ModuleNotFoundError:
+        tf_version = None
+    print('TensorFlow version:        {}'.format(tf_version))
+
+
+def cite():
+    """Prints a BibTeX citation for Strawberry Fields.
+    """
+    citation = """@article{strawberryfields,
+    title = {{S}trawberry {F}ields: A Software Platform for Photonic Quantum Computing},
+    author = {Killoran, Nathan and Izaac, Josh and Quesada, Nicol{\'{a}}s and Bergholm, Ville and Amy, Matthew and Weedbrook, Christian},
+    journal = {Quantum},
+    volume = {3},
+    pages = {129},
+    year = {2019},
+    doi = {10.22331/q-2019-03-11-129},
+    archivePrefix = {arXiv},
+    eprint = {1804.03159},
+}"""
+    print(citation)

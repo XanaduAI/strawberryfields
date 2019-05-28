@@ -44,7 +44,7 @@ def test_teleportation_fidelity(setup_eng, pure):
         Xgate(scale(q[0], s)) | q[2]
         Zgate(scale(q[1], s)) | q[2]
 
-    state = eng.run(prog)
+    state = eng.run(prog).state
     fidelity = state.fidelity_coherent([0, 0, alpha])
     assert np.allclose(fidelity, 1, atol=0.02, rtol=0)
 
@@ -75,7 +75,7 @@ def test_gaussian_gate_teleportation(setup_eng, pure):
         Pgate(0.5) | q[3]
         Fourier | q[3]
 
-    state = eng.run(prog)
+    state = eng.run(prog).state
     cov1 = state.reduced_gaussian(2)[1]
     cov2 = state.reduced_gaussian(3)[1]
     assert np.allclose(cov1, cov2, atol=0.05, rtol=0)
@@ -125,7 +125,7 @@ def test_gaussian_boson_sampling_fock_probs(setup_eng, batch_size, tol):
         0.01031294525345511,
     ]
 
-    state = eng.run(prog)
+    state = eng.run(prog).state
     probs = [state.fock_prob(i) for i in measure_states]
     probs = np.array(probs).T.flatten()
 
@@ -166,7 +166,7 @@ def test_boson_sampling_fock_probs(setup_eng, batch_size, tol):
     measure_states = [[1, 1, 0, 1], [2, 0, 0, 1]]
     results = [0.174689160486, 0.106441927246]
 
-    state = eng.run(prog)
+    state = eng.run(prog).state
     probs = [state.fock_prob(i) for i in measure_states]
     probs = np.array(probs).T.flatten()
 
@@ -206,7 +206,7 @@ def test_hamiltonian_simulation_fock_probs(setup_eng, pure, batch_size, tol):
             Kgate(r) | q[1]
             Rgate(-r) | q[1]
 
-    state = eng.run(prog)
+    state = eng.run(prog).state
     probs = [state.fock_prob(i) for i in measure_states]
     probs = np.array(probs).T.flatten()
 
@@ -241,7 +241,7 @@ class TestGaussianCloning:
             Coherent(a) | q[0]
             self.gaussian_cloning_circuit(q)
 
-        state = eng.run(prog, modes=[0, 3])
+        state = eng.run(prog, modes=[0, 3]).state
         coh = np.array([state.is_coherent(i) for i in range(2)])
         disp = state.displacement()
 
@@ -264,7 +264,7 @@ class TestGaussianCloning:
         a_list = np.empty([shots], dtype=np.complex128)
 
         for i in range(shots):
-            state = eng.run(prog, modes=[0])
+            state = eng.run(prog, modes=[0]).state
             eng.reset()
             f_list[i] = state.fidelity_coherent([0.7 + 1.2j])
             a_list[i] = state.displacement()

@@ -73,7 +73,7 @@ class TestGaussianBackendDecompositions:
         with prog.context as q:
             ops.Gaussian(V_mixed) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), V_mixed, atol=tol, rtol=0)
 
     def test_covariance_random_state_pure(self, setup_eng, V_pure, tol):
@@ -82,7 +82,7 @@ class TestGaussianBackendDecompositions:
         with prog.context as q:
             ops.Gaussian(V_pure) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), V_pure, atol=tol)
 
     def test_gaussian_transform(self, setup_eng, hbar, tol):
@@ -92,7 +92,7 @@ class TestGaussianBackendDecompositions:
         with prog.context as q:
             ops.GaussianTransform(S) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), S @ S.T * hbar / 2, atol=tol)
 
     def test_graph_embed(self, setup_eng, tol):
@@ -105,7 +105,7 @@ class TestGaussianBackendDecompositions:
         with prog.context as q:
             ops.GraphEmbed(A) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         Amat = eng.backend.circuit.Amat()
 
         # check that the matrix Amat is constructed to be of the form
@@ -136,13 +136,13 @@ class TestGaussianBackendDecompositions:
 
         with p1.context as q:
             ops.All(ops.Squeezed(0.5)) | q
-        init = eng.run(p1)
+        init = eng.run(p1).state
 
         p2 = sf.Program(p1)
         with p2.context as q:
             ops.GaussianTransform(O) | q
 
-        state = eng.run(p2)
+        state = eng.run(p2).state
         assert np.allclose(state.cov(), O @ init.cov() @ O.T, atol=tol)
 
     def test_active_gaussian_transform_on_vacuum(self, setup_eng, hbar, tol):
@@ -153,7 +153,7 @@ class TestGaussianBackendDecompositions:
         with prog.context as q:
             ops.GaussianTransform(S, vacuum=True) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), S @ S.T * hbar / 2, atol=tol)
 
     def test_interferometer(self, setup_eng, tol):
@@ -162,13 +162,13 @@ class TestGaussianBackendDecompositions:
 
         with p1.context as q:
             ops.All(ops.Squeezed(0.5)) | q
-        init = eng.run(p1)
+        init = eng.run(p1).state
 
         p2 = sf.Program(p1)
         with p2.context as q:
             ops.Interferometer(u1) | q
 
-        state = eng.run(p2)
+        state = eng.run(p2).state
         O = np.vstack([np.hstack([u1.real, -u1.imag]), np.hstack([u1.imag, u1.real])])
         assert np.allclose(state.cov(), O @ init.cov() @ O.T, atol=tol)
 
@@ -195,7 +195,7 @@ class TestGaussianBackendPrepareState:
         with prog.context as q:
             ops.Gaussian(cov, decomp=False) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), cov, atol=tol)
         assert np.all(state.means() == np.zeros([6]))
         assert np.allclose(state.fidelity_vacuum(), 1, atol=tol)
@@ -208,7 +208,7 @@ class TestGaussianBackendPrepareState:
         with prog.context as q:
             ops.Gaussian(cov, decomp=False) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), cov, atol=tol)
 
     def test_displaced_squeezed(self, setup_eng, hbar, tol):
@@ -220,7 +220,7 @@ class TestGaussianBackendPrepareState:
         with prog.context as q:
             ops.Gaussian(cov, r=means, decomp=False) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), cov, atol=tol)
         assert np.allclose(state.means(), means, atol=tol)
 
@@ -232,7 +232,7 @@ class TestGaussianBackendPrepareState:
         with prog.context as q:
             ops.Gaussian(cov, decomp=False) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), cov, atol=tol)
 
     def test_rotated_squeezed(self, setup_eng, hbar, tol):
@@ -248,7 +248,7 @@ class TestGaussianBackendPrepareState:
         with prog.context as q:
             ops.Gaussian(cov, decomp=False) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), cov, atol=tol)
 
 
@@ -263,7 +263,7 @@ class TestGaussianBackendDecomposeState:
         with prog.context as q:
             ops.Gaussian(cov) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), cov, atol=tol)
         assert np.all(state.means() == np.zeros([6]))
         assert np.allclose(state.fidelity_vacuum(), 1, atol=tol)
@@ -277,7 +277,7 @@ class TestGaussianBackendDecomposeState:
         with prog.context as q:
             ops.Gaussian(cov) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), cov, atol=tol)
         assert len(eng.run_progs[-1]) == 3
 
@@ -290,7 +290,7 @@ class TestGaussianBackendDecomposeState:
         with prog.context as q:
             ops.Gaussian(cov, r=means) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), cov, atol=tol)
         assert np.allclose(state.means(), means, atol=tol)
         assert len(eng.run_progs[-1]) == 7
@@ -303,7 +303,7 @@ class TestGaussianBackendDecomposeState:
         with prog.context as q:
             ops.Gaussian(cov) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), cov, atol=tol)
         assert len(eng.run_progs[-1]) == 3
 
@@ -320,7 +320,7 @@ class TestGaussianBackendDecomposeState:
         with prog.context as q:
             ops.Gaussian(cov) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.cov(), cov, atol=tol)
         assert len(eng.run_progs[-1]) == 3
 
@@ -336,7 +336,7 @@ class TestFockBackendDecomposeState:
         with prog.context as q:
             ops.Gaussian(np.identity(6) * hbar / 2) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert np.allclose(state.fidelity_vacuum(), 1, atol=tol)
         assert len(eng.run_progs[-1]) == 0
 
@@ -350,7 +350,7 @@ class TestFockBackendDecomposeState:
         with prog.context as q:
             ops.Gaussian(cov) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert len(eng.run_progs[-1]) == 3
 
         for n in range(3):
@@ -370,7 +370,7 @@ class TestFockBackendDecomposeState:
         with prog.context as q:
             ops.Gaussian(cov) | q
 
-        state = eng.run(prog)
+        state = eng.run(prog).state
         assert len(eng.run_progs[-1]) == 3
 
         for n in range(3):
