@@ -32,6 +32,9 @@ class Chip0Specs(DeviceSpecs):
     # mapping for the interferometer when #87 is merged
     decompositions = {"Interferometer": {}}
 
+    # TODO: update the below to specify the rectangular_symmetric
+    # mapping for the interferometer when #87 is merged.
+    # The current topology defined below is just for demonstration
     blackbird_template = textwrap.dedent(
         """\
         name chip0_template
@@ -42,15 +45,11 @@ class Chip0Specs(DeviceSpecs):
         S2gate({sq0}, 0.0) | [0, 2]
         S2gate({sq1}, 0.0) | [1, 3]
 
-        # this will need to be updated to use the new
-        # rectangular_symmetric mapping when #87 is merged
         Rgate({phase}) | 0
         BSgate({theta}, {phi}) | [0, 1]
         Rgate({phase}) | 0
         Rgate({phase}) | 1
 
-        # this will need to be updated to use the new
-        # rectangular_symmetric mapping when #87 is merged
         Rgate({phase}) | 2
         BSgate({theta}, {phi}) | [2, 3]
         Rgate({phase}) | 2
@@ -62,4 +61,3 @@ class Chip0Specs(DeviceSpecs):
         MeasureFock() | [3]
         """
     )
-

@@ -114,7 +114,7 @@ class DeviceSpecs(abc.ABC):
         # returned DAG has all parameters set to 0
         bb = blackbird.loads(self.blackbird_template)
 
-        if bb.is_template:
+        if bb.is_template():
             params = bb.parameters
             kwargs = {p: 0 for p in params}
 
