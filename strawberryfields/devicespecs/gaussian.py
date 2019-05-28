@@ -11,15 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""TensorFlow backend validation data"""
-from .device import DeviceData
+"""Gaussian backend validation data"""
+from .device_specs import DeviceSpecs
 
 
-class TFData(DeviceData):
-    """Validation data for the TF backend"""
+class GaussianSpecs(DeviceSpecs):
+    """Validation data for the Gaussian backend"""
 
     modes = 0
-    remote = False
+    remote = True
     interactive = True
 
     primitives = {
@@ -33,26 +33,21 @@ class TFData(DeviceData):
         "Squeezed",
         "DisplacedSqueezed",
         "Thermal",
-        "Fock",
-        "Catstate",
-        "Ket",
-        "DensityMatrix",
+        "Gaussian",
         # measurements
-        "MeasureFock",
         "MeasureHomodyne",
+        "MeasureHeterodyne",
         # channels
         "LossChannel",
+        "ThermalLossChannel",
         # single mode gates
         "Dgate",
         "Xgate",
         "Zgate",
         "Sgate",
         "Rgate",
-        "Vgate",
-        "Kgate",
         "Fouriergate",
         "BSgate",
-        "CKgate",
     }
 
     decompositions = {

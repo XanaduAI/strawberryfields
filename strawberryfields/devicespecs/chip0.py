@@ -15,42 +15,47 @@
 import textwrap
 
 import networkx as nx
-import blackbird
-from blackbird.utils import to_DiGraph
 
-from .device import DeviceData
+from .device_specs import DeviceSpecs
 
 
-class Chip0Data(DeviceData):
+class Chip0Specs(DeviceSpecs):
     """Validation data for the Chip0 simulator"""
 
     modes = 0
     remote = True
     interactive = True
 
-    primitives = {"S2gate", "BSgate", "MeasureFock"}
+    primitives = {"S2gate", "Interferometer", "MeasureFock", "Rgate", "BSgate"}
 
-    decompositions = {"BSgate": {}, "Rgate": {}, "Interferometer": {}}
+    # TODO: update the below to specify the rectangular_symmetric
+    # mapping for the interferometer when #87 is merged
+    decompositions = {"Interferometer": {}}
 
     blackbird_template = textwrap.dedent(
         """\
         name chip0_template
         version 1.0
-        target chip0 (shots={shots})
+        target chip0 (shots=1)
 
         # for n spatial degrees, first n signal modes, then n idler modes, phase zero
-        S2gate({squeezing0}, 0.0) | [0, 2]
-        S2gate({squeezing1}, 0.0) | [1, 3]
+        S2gate({sq0}, 0.0) | [0, 2]
+        S2gate({sq1}, 0.0) | [1, 3]
 
-        # standard 2x2 interferometer for the signal modes (the lower ones in frequency)
-        BSgate(0.0, {external_phase}) | [0, 1]
-        BSgate({internal_phase}, 0.0) | [0, 1]
+        # this will need to be updated to use the new
+        # rectangular_symmetric mapping when #87 is merged
+        Rgate({phase}) | 0
+        BSgate({theta}, {phi}) | [0, 1]
+        Rgate({phase}) | 0
+        Rgate({phase}) | 1
 
-        #duplicate the interferometer for the idler modes (the higher ones in frequency)
-        BSgate(0.0, {external_phase}) | [2, 3]
-        BSgate({internal_phase}, 0.0) | [2, 3]
+        # this will need to be updated to use the new
+        # rectangular_symmetric mapping when #87 is merged
+        Rgate({phase}) | 2
+        BSgate({theta}, {phi}) | [2, 3]
+        Rgate({phase}) | 2
+        Rgate({phase}) | 3
 
-        # Measurement in Fock basis
         MeasureFock() | [0]
         MeasureFock() | [1]
         MeasureFock() | [2]
@@ -58,15 +63,3 @@ class Chip0Data(DeviceData):
         """
     )
 
-    # returned DAG has all parameters set to 0
-    topology = to_DiGraph(
-        blackbird.loads(blackbird_template)(
-            squeezing0=0,
-            squeezing1=0,
-            external_phase=0,
-            internal_phase=0,
-        )
-    )
-
-    for i in sorted(topology.nodes().data()):
-        print(i)

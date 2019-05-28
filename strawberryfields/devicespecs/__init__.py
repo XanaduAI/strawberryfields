@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Device validation submodule"""
-from .chip0 import Chip0Data
-from .fock import FockData
-from .gaussian import GaussianData
-from .tensorflow import TFData
+from .chip0 import Chip0Specs
+from .fock import FockSpecs
+from .gaussian import GaussianSpecs
+from .tensorflow import TFSpecs
 
 
 backend_databases = {
-    "base": FockData,
-    "chip0": Chip0Data,
-    "fock": FockData,
-    "gaussian": GaussianData,
-    "tf": TFData,
+    "base": FockSpecs,
+    "chip0": Chip0Specs,
+    "fock": FockSpecs,
+    "gaussian": GaussianSpecs,
+    "tf": TFSpecs,
 }
-"""dict[str, DeviceData]: dictionary mapping backend shortname
+"""dict[str, DeviceSpecs]: dictionary mapping backend shortname
 to the validation dataclass."""

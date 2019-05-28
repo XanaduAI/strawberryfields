@@ -164,7 +164,7 @@ import numbers
 import networkx as nx
 
 import strawberryfields.circuitdrawer as sfcd
-from strawberryfields.data import backend_databases
+from strawberryfields.devicespecs import backend_databases
 
 
 def _print_list(i, q, print_fn=print):
@@ -721,7 +721,7 @@ class Program:
                 elif op_name in db.decompositions:
                     # backend requests an op decomposition
 
-                    if op_name in db.primitives and not hasattr(cmd.op, 'decomp'):
+                    if op_name in db.primitives and not hasattr(cmd.op, '_decompose'):
                         # op is a backend primitive, and
                         # user has requested to bypass decomposition
                         compiled.append(cmd)
@@ -752,7 +752,7 @@ class Program:
 
         if db.topology is not None:
             # check topology
-            grid = self._list_to_grid(self.circuit)
+            grid = self._list_to_grid(seq)
             DAG = self._grid_to_DAG(grid)
 
             # relabel the DAG nodes to integers, with attributes
@@ -761,9 +761,6 @@ class Program:
             mapping = {i: n.op.__class__.__name__ for i, n in enumerate(DAG.nodes())}
             circuit = nx.convert_node_labels_to_integers(DAG)
             nx.set_node_attributes(circuit, mapping, name='name')
-
-            for i in sorted(circuit.nodes().data()):
-                print(i)
 
             def node_match(n1, n2):
                 """Returns True if both nodes have the same name"""

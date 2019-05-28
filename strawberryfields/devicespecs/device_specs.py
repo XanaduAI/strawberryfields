@@ -15,8 +15,11 @@
 from typing import List, Set, Dict, Tuple, Optional, Union
 import abc
 
+import blackbird
+from blackbird.utils import to_DiGraph
 
-class DeviceData(abc.ABC):
+
+class DeviceSpecs(abc.ABC):
     """Abstract base class for backend data"""
 
     @property
@@ -105,7 +108,24 @@ class DeviceData(abc.ABC):
         Returns:
             networkx.DAGGraph: a directed acyclic
         """
-        return None
+        if self.blackbird_template is None:
+            return None
+
+        # returned DAG has all parameters set to 0
+        bb = blackbird.loads(self.blackbird_template)
+
+        if bb.is_template:
+            params = bb.parameters
+            kwargs = {p: 0 for p in params}
+
+            # initialize the topology with all template
+            # parameters set to zero
+            topology = to_DiGraph(bb(**kwargs))
+
+        else:
+            topology = to_DiGraph(bb)
+
+        return topology
 
     @property
     def blackbird_template(self):

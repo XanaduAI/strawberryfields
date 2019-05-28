@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Fock backend validation data"""
-from .device import DeviceData
+from .device_specs import DeviceSpecs
 
 
-class FockData(DeviceData):
+class FockSpecs(DeviceSpecs):
     """Validation data for the Fock backend"""
 
     modes = 0
