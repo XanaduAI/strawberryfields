@@ -23,6 +23,9 @@ import strawberryfields as sf
 from strawberryfields import program
 from strawberryfields import ops
 
+from strawberryfields import devicespecs
+from strawberryfields.devicespecs.device_specs import DeviceSpecs
+
 
 # make test deterministic
 np.random.random(42)
@@ -306,3 +309,174 @@ class TestOptimizer:
 
         prog.optimize()
         assert len(prog) == 2
+
+
+class TestValidation:
+    """Test for Program device validation within
+    the compile() method."""
+
+    def test_no_decompositions(self, monkeypatch):
+        """Test that no decompositions take
+        place if the device doesn't support it."""
+
+        class DummyDevice(DeviceSpecs):
+            """A device with no decompositions"""
+            modes = 0
+            remote = False
+            interactive = True
+            primitives = {'S2gate', 'Interferometer'}
+            decompositions = set()
+
+        dev = DummyDevice()
+
+        prog = sf.Program(3)
+        U = np.array([[0, 1], [1, 0]])
+
+        with prog.context:
+            ops.S2gate(0.6) | [0, 1]
+            ops.Interferometer(U) | [0, 1]
+
+        with monkeypatch.context() as m:
+            # monkeypatch our DummyDevice into the
+            # backend database
+            db =  {'dummy': DummyDevice}
+            m.setattr("strawberryfields.devicespecs.backend_databases", db)
+            new_prog = prog.compile(backend='dummy')
+
+        # check compiled program only has two gates
+        assert len(new_prog) == 2
+
+        # test gates are correct
+        circuit = new_prog.circuit
+        assert circuit[0].op.__class__.__name__ == "S2gate"
+        assert circuit[1].op.__class__.__name__ == "Interferometer"
+
+    def test_decompositions(self, monkeypatch):
+        """Test that decompositions take
+        place if the device requests it."""
+
+        class DummyDevice(DeviceSpecs):
+            """A device with no decompositions"""
+            modes = 0
+            remote = False
+            interactive = True
+            primitives = {'S2gate', 'Interferometer', 'BSgate', 'Sgate'}
+            decompositions = {'S2gate': {}}
+
+        dev = DummyDevice()
+
+        prog = sf.Program(3)
+        U = np.array([[0, 1], [1, 0]])
+
+        with prog.context:
+            ops.S2gate(0.6) | [0, 1]
+            ops.Interferometer(U) | [0, 1]
+
+        with monkeypatch.context() as m:
+            # monkeypatch our DummyDevice into the
+            # backend database
+            db =  {'dummy': DummyDevice}
+            m.setattr("strawberryfields.devicespecs.backend_databases", db)
+            new_prog = prog.compile(backend='dummy')
+
+        # check compiled program now has 5 gates
+        # the S2gate should decompose into two BS and two Sgates
+        assert len(new_prog) == 5
+
+        # test gates are correct
+        circuit = new_prog.circuit
+        assert circuit[0].op.__class__.__name__ == "BSgate"
+        assert circuit[1].op.__class__.__name__ == "Sgate"
+        assert circuit[2].op.__class__.__name__ == "Sgate"
+        assert circuit[3].op.__class__.__name__ == "BSgate"
+        assert circuit[4].op.__class__.__name__ == "Interferometer"
+
+    def test_invalid_decompositions(self, monkeypatch):
+        """Test that an exception is raised if the device spec
+        requests a decomposition that doesn't exist"""
+
+        class DummyDevice(DeviceSpecs):
+            """A device with no decompositions"""
+            modes = 0
+            remote = False
+            interactive = True
+            primitives = {'Rgate', 'Interferometer'}
+            decompositions = {'Rgate': {}}
+
+        dev = DummyDevice()
+
+        prog = sf.Program(3)
+        U = np.array([[0, 1], [1, 0]])
+
+        with prog.context:
+            ops.Rgate(0.6) | 0
+            ops.Interferometer(U) | [0, 1]
+
+        with monkeypatch.context() as m:
+            # monkeypatch our DummyDevice into the
+            # backend database
+            db =  {'dummy': DummyDevice}
+            m.setattr("strawberryfields.devicespecs.backend_databases", db)
+
+            with pytest.raises(NotImplementedError, match="No decomposition available: Rgate"):
+                new_prog = prog.compile(backend='dummy')
+
+    def test_invalid_primitive(self):
+        """Test that an exception is raised if the program
+        contains a primitive not allowed on the device.
+
+        Here, we can simply use the guassian backend and
+        the Kerr gate as an existing example.
+        """
+        prog = sf.Program(3)
+        U = np.array([[0, 1], [1, 0]])
+
+        with prog.context:
+            ops.Kgate(0.6) | 0
+
+        with pytest.raises(program.CircuitError, match="Kgate cannot be used with the gaussian backend"):
+            new_prog = prog.compile(backend='gaussian')
+
+    def test_user_defined_decomposition_false(self):
+        """Test that an operation that is both a primitive AND
+        a decomposition (for instance, ops.Gaussian in the gaussian
+        backend) can have it's decomposition behaviour user defined.
+
+        In this case, the Gaussian operation should remain after compilation.
+        """
+        prog = sf.Program(3)
+        cov = np.array([[0, 1], [1, 0]])
+
+        with prog.context:
+            ops.Gaussian(cov, decomp=False) | 0
+
+        new_prog = prog.compile(backend='gaussian')
+
+        assert len(new_prog) == 1
+        circuit = new_prog.circuit
+        assert circuit[0].op.__class__.__name__ == "Gaussian"
+
+    def test_user_defined_decomposition_true(self):
+        """Test that an operation that is both a primitive AND
+        a decomposition (for instance, ops.Gaussian in the gaussian
+        backend) can have it's decomposition behaviour user defined.
+
+        In this case, the Gaussian operation should compile
+        to an Sgate.
+        """
+        prog = sf.Program(3)
+        r = 0.453
+        cov = np.array([[np.exp(-2*r), 0], [0, np.exp(2*r)]])*sf.hbar/2
+
+        with prog.context:
+            ops.Gaussian(cov, decomp=True) | 0
+
+        new_prog = prog.compile(backend='gaussian')
+
+        print([i.op.__class__.__name__ for i in new_prog.circuit])
+        assert len(new_prog) == 1
+
+        # decomposed gate should be an Sgate
+        circuit = new_prog.circuit
+        assert circuit[0].op.__class__.__name__ == "Sgate"
+        assert circuit[0].op.p[0] == r

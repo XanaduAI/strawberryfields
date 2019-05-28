@@ -354,6 +354,8 @@ class Operation:
         self._extra_deps = set()
         #: list[Parameter]
         self.p = []
+        #: bool
+        self.decomp = True
 
         if par:
             # convert each parameter into a Parameter instance, keep track of dependenciens
@@ -1821,13 +1823,14 @@ class Gaussian(Preparation, Decomposition):
         self.x_disp = r[:self.ns]
         self.p_disp = r[self.ns:]
 
-        self.decomp = decomp
-
         if decomp:
             th, self.S = williamson(V, tol=tol)
             self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < tol
             self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
+
         super().__init__([V, r])
+
+        self.decomp = decomp
 
         # FIXME merge() probably does not work for Gaussians if r is not zero?
 

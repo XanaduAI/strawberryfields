@@ -164,7 +164,7 @@ import numbers
 import networkx as nx
 
 import strawberryfields.circuitdrawer as sfcd
-from strawberryfields.devicespecs import backend_databases
+import strawberryfields.devicespecs as specs
 
 
 def _print_list(i, q, print_fn=print):
@@ -703,8 +703,8 @@ class Program:
         Returns:
             Program: compiled program
         """
-        if backend in backend_databases:
-            db = backend_databases[backend]()
+        if backend in specs.backend_databases:
+            db = specs.backend_databases[backend]()
         else:
             raise ValueError("Could not find backend {} in Strawberry Fields database".format(backend))
 
@@ -721,11 +721,23 @@ class Program:
                 elif op_name in db.decompositions:
                     # backend requests an op decomposition
 
-                    if op_name in db.primitives and not hasattr(cmd.op, '_decompose'):
-                        # op is a backend primitive, and
-                        # user has requested to bypass decomposition
-                        compiled.append(cmd)
-                        continue
+                    # TODO: allow the user to selectively turn off decomposition
+                    # by passing the kwarg `decomp=False` to more
+                    # operations (currently only ops.Gaussian allows this).
+                    #
+                    # For example, the 'gaussian' backend supports setting the state
+                    # via passing directly the (mu, cov) OR by first having the
+                    # frontend decompose into other primitive gates.
+                    # That is, ops.Gaussian is both a primitive _and_ a decomposition
+                    # for the 'gaussian' backend, and it's behaviour can be chosen
+                    # by the user.
+                    if (op_name in db.primitives) and hasattr(cmd.op, 'decomp'):
+                        # op is a backend primitive, AND backend also
+                        # supports decomposition of this primitive.
+                        if not cmd.op.decomp:
+                            # However, user has requested to bypass decomposition
+                            compiled.append(cmd)
+                            continue
 
                     try:
                         kwargs = db.decompositions[op_name]
