@@ -24,7 +24,6 @@ Summary
 .. autosummary::
     to_blackbird
     to_program
-    to_DiGraph
     save
     load
 
@@ -33,7 +32,6 @@ Code details
 """
 # pylint: disable=protected-access,too-many-nested-blocks
 import os
-
 import blackbird
 
 from . import ops
