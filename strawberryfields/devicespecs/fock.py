@@ -19,6 +19,7 @@ class FockSpecs(DeviceSpecs):
     """Validation data for the Fock backend"""
 
     modes = None
+    local = True
     remote = True
     interactive = True
 

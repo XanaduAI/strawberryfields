@@ -35,6 +35,15 @@ class DeviceSpecs(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def local(self) -> bool:
+        """Whether the backend supports local execution.
+
+        Returns:
+            bool: ``True`` if the backend supports local execution
+        """
+
+    @property
+    @abc.abstractmethod
     def remote(self) -> bool:
         """Whether the backend supports remote execution.
 

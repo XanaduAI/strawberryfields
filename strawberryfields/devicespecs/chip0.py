@@ -22,6 +22,7 @@ class Chip0Specs(DeviceSpecs):
 
     modes = 4
     remote = True
+    local = True
     interactive = True
 
     primitives = {"S2gate", "Interferometer", "MeasureFock", "Rgate", "BSgate"}

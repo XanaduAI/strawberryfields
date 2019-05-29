@@ -19,6 +19,7 @@ class GaussianSpecs(DeviceSpecs):
     """Validation data for the Gaussian backend"""
 
     modes = None
+    local = True
     remote = True
     interactive = True
 

@@ -323,6 +323,7 @@ class TestValidation:
             """A device with 2 modes"""
             modes = 2
             remote = False
+            local = True
             interactive = True
             primitives = {'S2gate', 'Interferometer'}
             decompositions = set()
@@ -352,6 +353,7 @@ class TestValidation:
             """A device with no decompositions"""
             modes = None
             remote = False
+            local = True
             interactive = True
             primitives = {'S2gate', 'Interferometer'}
             decompositions = set()
@@ -388,6 +390,7 @@ class TestValidation:
             """A device with no decompositions"""
             modes = None
             remote = False
+            local = True
             interactive = True
             primitives = {'S2gate', 'Interferometer', 'BSgate', 'Sgate'}
             decompositions = {'S2gate': {}}
@@ -428,6 +431,7 @@ class TestValidation:
             """A device with no decompositions"""
             modes = None
             remote = False
+            local = True
             interactive = True
             primitives = {'Rgate', 'Interferometer'}
             decompositions = {'Rgate': {}}
@@ -515,6 +519,7 @@ class TestValidation:
             """A device with no decompositions"""
             modes = None
             remote = False
+            local = True
             interactive = True
             primitives = {'Sgate', 'BSgate', 'Dgate', 'MeasureFock'}
             decompositions = set()
@@ -563,6 +568,7 @@ class TestValidation:
             """A device with no decompositions"""
             modes = None
             remote = False
+            local = True
             interactive = True
             primitives = {'Sgate', 'BSgate', 'Dgate', 'MeasureFock'}
             decompositions = set()

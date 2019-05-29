@@ -779,6 +779,7 @@ class Program:
             # check if topology matches
             if not nx.is_isomorphic(circuit, db.graph, node_match):
                 # TODO: try and compile the program to match the topology
+                # TODO: add support for parameter range matching/compilation
                 raise CircuitError('Program cannot be used with the {} backend due to incompatible topology'.format(backend))
 
         compiled = copy.copy(self)  # shares RegRefs with the source

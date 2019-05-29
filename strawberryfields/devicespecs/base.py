@@ -22,6 +22,7 @@ class BaseSpecs(DeviceSpecs):
 
     modes = None
     remote = False
+    local = True
     interactive = True
 
     primitives = {

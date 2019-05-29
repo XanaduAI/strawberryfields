@@ -44,13 +44,14 @@ DeviceSpecs methods
 
 .. autosummary::
    modes
+   local
    remote
    interactive
    primitives
    decompositions
    parameter_ranges
-   topology
-   blackbird_template
+   graph
+   circuit
 
 Code details
 ^^^^^^^^^^^^

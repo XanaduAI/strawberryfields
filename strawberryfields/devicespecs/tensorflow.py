@@ -19,6 +19,7 @@ class TFSpecs(DeviceSpecs):
     """Validation data for the TF backend"""
 
     modes = None
+    local = True
     remote = False
     interactive = True
 
