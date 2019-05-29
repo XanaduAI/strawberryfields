@@ -131,8 +131,8 @@ class DeviceSpecs(abc.ABC):
     def circuit(self):
         """The Blackbird circuit that will be accepted by the backend device.
 
-        This property is optional; if arbitrary topologies are allowed by the device,
-        this will simply return ``None``.
+        This property is optional. If arbitrary topologies are allowed by the device,
+        **do not define this property**. In such a case, it will simply return ``None``.
 
         If the device expects a specific template for the recieved Blackbird
         script, this method will return the serialized Blackbird circuit in string

@@ -704,7 +704,7 @@ class Program:
         if db.modes is not None:
             if self.num_subsystems > db.modes:
                 raise CircuitError("This program requires {} modes, but the {} backend "
-                                   "only supports an {} mode program".format(self.num_subsystems, backend, db.modes))
+                                   "only supports a {} mode program".format(self.num_subsystems, backend, db.modes))
 
         def compile_sequence(seq):
             """Compiles the given Command sequence."""

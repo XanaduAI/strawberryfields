@@ -27,8 +27,8 @@ These details are used by the :class:`~.Program` class when validating and
 compiling quantum programs. By querying the data class corresponding to the
 requested device/backend, the :class:`~.Program` will be able to:
 
-1. **Validate** that the program has the correct number of modes, valid
-   quantum operations,
+1. **Validate** that the program has the correct number of modes, and consists
+   of valid quantum operations for that device.
 
 2. **Compile** the program to match the backend topology, making use
    of allowed decompositions along the way.
@@ -56,6 +56,7 @@ Code details
 ^^^^^^^^^^^^
 """
 from .device_specs import DeviceSpecs
+from .base import BaseSpecs
 from .chip0 import Chip0Specs
 from .fock import FockSpecs
 from .gaussian import GaussianSpecs
@@ -63,7 +64,7 @@ from .tensorflow import TFSpecs
 
 
 backend_specs = {
-    "base": FockSpecs,
+    "base": BaseSpecs,
     "chip0": Chip0Specs,
     "fock": FockSpecs,
     "gaussian": GaussianSpecs,
