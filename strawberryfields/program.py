@@ -152,7 +152,7 @@ import numbers
 import networkx as nx
 
 import strawberryfields.circuitdrawer as sfcd
-
+import strawberryfields.devicespecs as specs
 
 
 def _print_list(i, q, print_fn=print):
@@ -163,6 +163,7 @@ def _print_list(i, q, print_fn=print):
     for x in q:
         print_fn(x.op, ', ', end='')
     print_fn()
+
 
 def _convert(func):
     r"""Decorator for converting user defined functions to a :class:`RegRefTransform`.
@@ -190,76 +191,6 @@ def _convert(func):
         "Unused docstring."
         return RegRefTransform(args, func)
     return wrapper
-
-
-# TODO replace this mock backend capability database
-backend_database = {
-    'fock': {
-        'New_modes': True,
-        'Delete': True,
-        'Vacuum': True,
-        'Coherent': True,
-        'Squeezed': True,
-        'DisplacedSqueezed': True,
-        'Ket': True,
-        'DensityMatrix': True,
-        'Fock': True,
-        'Catstate': True,
-        'Thermal': True,
-        'LossChannel': True,
-        'ThermalLossChannel': True,
-        'Rgate': True,
-        'Fouriergate': True,
-        'Dgate': True,
-        'Xgate': True,
-        'Zgate': True,
-        'Sgate': True,
-        'Pgate': False,
-        'Vgate': True,
-        'Kgate': True,
-        'BSgate': True,
-        'CXgate': False,
-        'CZgate': False,
-        'CKgate': True,
-        'S2gate': False,  # use a decomposition
-        'Interferometer': False,
-        'GraphEmbed': False,
-        'Gaussian': False,
-        'GaussianTransform': False,
-        'MeasureHomodyne': True,
-        'MeasureFock': True,
-    },
-    'gaussian': {
-        'New_modes': True,
-        'Delete': True,
-        'Vacuum': True,
-        'Coherent': True,
-        'Squeezed': True,
-        'DisplacedSqueezed': True,
-        'Thermal': True,
-        'LossChannel': True,
-        'ThermalLossChannel': True,
-        'Rgate': True,
-        'Fouriergate': True,
-        'Dgate': True,
-        'Xgate': True,
-        'Zgate': True,
-        'Sgate': True,
-        'Pgate': False,
-        'BSgate': True,
-        'CXgate': False,
-        'CZgate': False,
-        'S2gate': False,  # use a decomposition
-        'Interferometer': False,
-        'GraphEmbed': False,
-        'Gaussian': False,
-        'GaussianTransform': False,
-        'MeasureHomodyne': True,
-        'MeasureHeterodyne': True,
-    },
-}
-backend_database['tf'] = backend_database['fock']  # tf can do the same things as fock
-backend_database['base'] = backend_database['fock']
 
 
 class RegRefError(IndexError):
@@ -765,49 +696,105 @@ class Program:
         Returns:
             Program: compiled program
         """
-        db = backend_database[backend]
+        if backend in specs.backend_specs:
+            db = specs.backend_specs[backend]()
+        else:
+            raise ValueError("Could not find backend {} in Strawberry Fields database".format(backend))
+
+        if db.modes is not None:
+            if self.num_subsystems > db.modes:
+                raise CircuitError("This program requires {} modes, but the {} backend "
+                                   "only supports a {} mode program".format(self.num_subsystems, backend, db.modes))
 
         def compile_sequence(seq):
             """Compiles the given Command sequence."""
             compiled = []
             for cmd in seq:
-                # None represents an identity gate
+                op_name = cmd.op.__class__.__name__
+
                 if cmd.op is None:
+                    # None represents an identity gate
                     continue
-                elif cmd.op.__class__.__name__ in db:
-                    # backend can handle the op
-                    if db[cmd.op.__class__.__name__]:
-                        compiled.append(cmd)
-                    else:
-                        # op not directly supported by the backend, try a decomposition instead
-                        try:
-                            temp = cmd.op.decompose(cmd.reg)
-                            if temp is None:
-                                # decomposition refused
-                                compiled.append(cmd)
-                            else:
-                                # now compile the decomposition
-                                temp = compile_sequence(temp)
-                                compiled.extend(temp)
-                        except NotImplementedError as err:
-                            # simplify the error message by suppressing the previous exception
-                            raise err from None
+
+                elif op_name in db.decompositions:
+                    # backend requests an op decomposition
+
+                    # TODO: allow the user to selectively turn off decomposition
+                    # by passing the kwarg `decomp=False` to more
+                    # operations (currently only ops.Gaussian allows this).
+                    #
+                    # For example, the 'gaussian' backend supports setting the state
+                    # via passing directly the (mu, cov) OR by first having the
+                    # frontend decompose into other primitive gates.
+                    # That is, ops.Gaussian is both a primitive _and_ a decomposition
+                    # for the 'gaussian' backend, and it's behaviour can be chosen
+                    # by the user.
+                    if (op_name in db.primitives) and hasattr(cmd.op, 'decomp'):
+                        # op is a backend primitive, AND backend also
+                        # supports decomposition of this primitive.
+                        if not cmd.op.decomp:
+                            # However, user has requested to bypass decomposition
+                            compiled.append(cmd)
+                            continue
+
+                    try:
+                        kwargs = db.decompositions[op_name]
+                        temp = cmd.op.decompose(cmd.reg, **kwargs)
+                        # now compile the decomposition
+                        temp = compile_sequence(temp)
+                        compiled.extend(temp)
+                    except NotImplementedError as err:
+                        # Operation does not have _decompose() method defined!
+                        # simplify the error message by suppressing the previous exception
+                        raise err from None
+
+                elif op_name in db.primitives:
+                    # backend can handle the op natively
+                    compiled.append(cmd)
+
                 else:
                     raise CircuitError('The operation {} cannot be used with the {} backend.'.format(cmd.op.__class__.__name__, backend))
+
             return compiled
 
         self.lock()
         seq = compile_sequence(self.circuit)
+
+        if db.graph is not None:
+            # check topology
+            grid = self._list_to_grid(seq)
+            DAG = self._grid_to_DAG(grid)
+
+            # relabel the DAG nodes to integers, with attributes
+            # specifying the operation name. This allows them to be
+            # compared, rather than using Command objects.
+            mapping = {i: n.op.__class__.__name__ for i, n in enumerate(DAG.nodes())}
+            circuit = nx.convert_node_labels_to_integers(DAG)
+            nx.set_node_attributes(circuit, mapping, name='name')
+
+            def node_match(n1, n2):
+                """Returns True if both nodes have the same name"""
+                return n1['name'] == n2['name']
+
+            # check if topology matches
+            if not nx.is_isomorphic(circuit, db.graph, node_match):
+                # TODO: try and compile the program to match the topology
+                # TODO: add support for parameter range matching/compilation
+                raise CircuitError('Program cannot be used with the {} backend due to incompatible topology'.format(backend))
+
         compiled = copy.copy(self)  # shares RegRefs with the source
         compiled.backend = backend
         compiled.circuit = seq
+
         # link to the original source Program
         if self.source is None:
             compiled.source = self
         else:
             compiled.source = self.source
+
         if kwargs.get('optimize', False):
             compiled.optimize()
+
         return compiled
 
     @staticmethod
@@ -924,7 +911,6 @@ class Program:
         # convert the circuit back into a list (via a DAG)
         DAG = self._grid_to_DAG(grid)
         self.circuit = self._DAG_to_list(DAG)
-
 
     def draw_circuit(self, tex_dir='./circuit_tex', write_to_file=True):
         r"""Draw the circuit using the Qcircuit :math:`\LaTeX` package.

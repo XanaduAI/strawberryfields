@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for program.py"""
+import textwrap
 import pytest
 
 pytestmark = pytest.mark.frontend
@@ -22,6 +23,9 @@ import strawberryfields as sf
 
 from strawberryfields import program
 from strawberryfields import ops
+
+from strawberryfields import devicespecs
+from strawberryfields.devicespecs.device_specs import DeviceSpecs
 
 
 # make test deterministic
@@ -305,3 +309,303 @@ class TestOptimizer:
 
         prog.optimize()
         assert len(prog) == 2
+
+
+class TestValidation:
+    """Test for Program device validation within
+    the compile() method."""
+
+    def test_incorrect_modes(self, monkeypatch):
+        """Test that an exception is raised if the device
+        is called with the incorrect number of modes"""
+
+        class DummyDevice(DeviceSpecs):
+            """A device with 2 modes"""
+            modes = 2
+            remote = False
+            local = True
+            interactive = True
+            primitives = {'S2gate', 'Interferometer'}
+            decompositions = set()
+
+        dev = DummyDevice()
+
+        prog = sf.Program(3)
+
+        with prog.context as q:
+            ops.S2gate(0.6) | [q[0], q[1]]
+            ops.S2gate(0.6) | [q[1], q[2]]
+
+        with monkeypatch.context() as m:
+            # monkeypatch our DummyDevice into the
+            # backend database
+            db =  {'dummy': DummyDevice}
+            m.setattr("strawberryfields.devicespecs.backend_specs", db)
+
+            with pytest.raises(program.CircuitError, match="requires 3 modes"):
+                new_prog = prog.compile(backend='dummy')
+
+    def test_no_decompositions(self, monkeypatch):
+        """Test that no decompositions take
+        place if the device doesn't support it."""
+
+        class DummyDevice(DeviceSpecs):
+            """A device with no decompositions"""
+            modes = None
+            remote = False
+            local = True
+            interactive = True
+            primitives = {'S2gate', 'Interferometer'}
+            decompositions = set()
+
+        dev = DummyDevice()
+
+        prog = sf.Program(3)
+        U = np.array([[0, 1], [1, 0]])
+
+        with prog.context as q:
+            ops.S2gate(0.6) | [q[0], q[1]]
+            ops.Interferometer(U) | [q[0], q[1]]
+
+        with monkeypatch.context() as m:
+            # monkeypatch our DummyDevice into the
+            # backend database
+            db =  {'dummy': DummyDevice}
+            m.setattr("strawberryfields.devicespecs.backend_specs", db)
+            new_prog = prog.compile(backend='dummy')
+
+        # check compiled program only has two gates
+        assert len(new_prog) == 2
+
+        # test gates are correct
+        circuit = new_prog.circuit
+        assert circuit[0].op.__class__.__name__ == "S2gate"
+        assert circuit[1].op.__class__.__name__ == "Interferometer"
+
+    def test_decompositions(self, monkeypatch):
+        """Test that decompositions take
+        place if the device requests it."""
+
+        class DummyDevice(DeviceSpecs):
+            """A device with no decompositions"""
+            modes = None
+            remote = False
+            local = True
+            interactive = True
+            primitives = {'S2gate', 'Interferometer', 'BSgate', 'Sgate'}
+            decompositions = {'S2gate': {}}
+
+        dev = DummyDevice()
+
+        prog = sf.Program(3)
+        U = np.array([[0, 1], [1, 0]])
+
+        with prog.context as q:
+            ops.S2gate(0.6) | [q[0], q[1]]
+            ops.Interferometer(U) | [q[0], q[1]]
+
+        with monkeypatch.context() as m:
+            # monkeypatch our DummyDevice into the
+            # backend database
+            db =  {'dummy': DummyDevice}
+            m.setattr("strawberryfields.devicespecs.backend_specs", db)
+            new_prog = prog.compile(backend='dummy')
+
+        # check compiled program now has 5 gates
+        # the S2gate should decompose into two BS and two Sgates
+        assert len(new_prog) == 5
+
+        # test gates are correct
+        circuit = new_prog.circuit
+        assert circuit[0].op.__class__.__name__ == "BSgate"
+        assert circuit[1].op.__class__.__name__ == "Sgate"
+        assert circuit[2].op.__class__.__name__ == "Sgate"
+        assert circuit[3].op.__class__.__name__ == "BSgate"
+        assert circuit[4].op.__class__.__name__ == "Interferometer"
+
+    def test_invalid_decompositions(self, monkeypatch):
+        """Test that an exception is raised if the device spec
+        requests a decomposition that doesn't exist"""
+
+        class DummyDevice(DeviceSpecs):
+            """A device with no decompositions"""
+            modes = None
+            remote = False
+            local = True
+            interactive = True
+            primitives = {'Rgate', 'Interferometer'}
+            decompositions = {'Rgate': {}}
+
+        dev = DummyDevice()
+
+        prog = sf.Program(3)
+        U = np.array([[0, 1], [1, 0]])
+
+        with prog.context as q:
+            ops.Rgate(0.6) | q[0]
+            ops.Interferometer(U) | [q[0], q[1]]
+
+        with monkeypatch.context() as m:
+            # monkeypatch our DummyDevice into the
+            # backend database
+            db =  {'dummy': DummyDevice}
+            m.setattr("strawberryfields.devicespecs.backend_specs", db)
+
+            with pytest.raises(NotImplementedError, match="No decomposition available: Rgate"):
+                new_prog = prog.compile(backend='dummy')
+
+    def test_invalid_primitive(self):
+        """Test that an exception is raised if the program
+        contains a primitive not allowed on the device.
+
+        Here, we can simply use the guassian backend and
+        the Kerr gate as an existing example.
+        """
+        prog = sf.Program(3)
+
+        with prog.context as q:
+            ops.Kgate(0.6) | q[0]
+
+        with pytest.raises(program.CircuitError, match="Kgate cannot be used with the gaussian backend"):
+            new_prog = prog.compile(backend='gaussian')
+
+    def test_user_defined_decomposition_false(self):
+        """Test that an operation that is both a primitive AND
+        a decomposition (for instance, ops.Gaussian in the gaussian
+        backend) can have it's decomposition behaviour user defined.
+
+        In this case, the Gaussian operation should remain after compilation.
+        """
+        prog = sf.Program(3)
+        cov = np.array([[0, 1], [1, 0]])
+
+        with prog.context as q:
+            ops.Gaussian(cov, decomp=False) | q[0]
+
+        new_prog = prog.compile(backend='gaussian')
+
+        assert len(new_prog) == 1
+        circuit = new_prog.circuit
+        assert circuit[0].op.__class__.__name__ == "Gaussian"
+
+    def test_user_defined_decomposition_true(self):
+        """Test that an operation that is both a primitive AND
+        a decomposition (for instance, ops.Gaussian in the gaussian
+        backend) can have it's decomposition behaviour user defined.
+
+        In this case, the Gaussian operation should compile
+        to an Sgate.
+        """
+        prog = sf.Program(3)
+        r = 0.453
+        cov = np.array([[np.exp(-2*r), 0], [0, np.exp(2*r)]])*sf.hbar/2
+
+        with prog.context:
+            ops.Gaussian(cov, decomp=True) | 0
+
+        new_prog = prog.compile(backend='gaussian')
+
+        assert len(new_prog) == 1
+
+        # decomposed gate should be an Sgate
+        circuit = new_prog.circuit
+        assert circuit[0].op.__class__.__name__ == "Sgate"
+        assert circuit[0].op.p[0] == r
+
+    def test_topology_validation(self, monkeypatch):
+        """Test compilation properly matches the device topology"""
+
+        class DummyDevice(DeviceSpecs):
+            """A device with no decompositions"""
+            modes = None
+            remote = False
+            local = True
+            interactive = True
+            primitives = {'Sgate', 'BSgate', 'Dgate', 'MeasureFock'}
+            decompositions = set()
+
+            circuit = textwrap.dedent(
+                """\
+                name test
+                version 0.0
+
+                Sgate({sq}, 0) | 0
+                Dgate(-7.123) | 1
+                BSgate({theta}) | 0, 1
+                MeasureFock() | 0
+                MeasureFock() | 2
+                """
+            )
+
+        dev = DummyDevice()
+
+        prog = sf.Program(3)
+
+        with prog.context as q:
+            # the circuit given below is an
+            # isomorphism of the one provided above
+            # in circuit, so should validate.
+            ops.Measure | q[2]
+            ops.Dgate(-7.123) | q[1]
+            ops.Sgate(0.543) | q[0]
+            ops.BSgate(-0.32) | (q[0], q[1])
+            ops.MeasureFock() | q[0]
+
+        with monkeypatch.context() as m:
+            # monkeypatch our DummyDevice into the
+            # backend database
+            db =  {'dummy': DummyDevice}
+            m.setattr("strawberryfields.devicespecs.backend_specs", db)
+            new_prog = prog.compile(backend='dummy')
+
+        # no exception should be raised; topology correctly validated
+        assert len(new_prog) == 5
+
+    def test_invalid_topology(self, monkeypatch):
+        """Test compilation raises exception if toplogy not matched"""
+
+        class DummyDevice(DeviceSpecs):
+            """A device with no decompositions"""
+            modes = None
+            remote = False
+            local = True
+            interactive = True
+            primitives = {'Sgate', 'BSgate', 'Dgate', 'MeasureFock'}
+            decompositions = set()
+
+            circuit = textwrap.dedent(
+                """\
+                name test
+                version 0.0
+
+                Sgate({sq}, 0) | 0
+                Dgate(-7.123) | 1
+                BSgate({theta}) | 0, 1
+                MeasureFock() | 0
+                MeasureFock() | 2
+                """
+            )
+
+        dev = DummyDevice()
+
+        prog = sf.Program(3)
+
+        with prog.context as q:
+            # the circuit given below is NOT an
+            # isomorphism of the one provided above
+            # in circuit, as the Sgate
+            # comes AFTER the beamsplitter.
+            ops.Measure | q[2]
+            ops.Dgate(-7.123) | q[1]
+            ops.BSgate(-0.32) | (q[0], q[1])
+            ops.Sgate(0.543) | q[0]
+            ops.MeasureFock() | q[0]
+
+        with monkeypatch.context() as m:
+            # monkeypatch our DummyDevice into the
+            # backend database
+            db =  {'dummy': DummyDevice}
+            m.setattr("strawberryfields.devicespecs.backend_specs", db)
+
+            with pytest.raises(program.CircuitError, match="incompatible topology"):
+                new_prog = prog.compile(backend='dummy')

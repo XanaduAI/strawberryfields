@@ -348,6 +348,8 @@ class Operation:
         self._extra_deps = set()
         #: list[Parameter]
         self.p = []
+        #: bool
+        self.decomp = True
 
         if par:
             # convert each parameter into a Parameter instance, keep track of dependenciens
@@ -1071,7 +1073,7 @@ class MeasureHomodyne(Measurement):
         if self.select is None:
             if self.p[0] == 0:
                 return 'MeasureX'
-            elif self.p[0] == pi/2:
+            if self.p[0] == pi/2:
                 return 'MeasureP'
         return super().__str__()
 
@@ -1814,30 +1816,24 @@ class Gaussian(Preparation, Decomposition):
         self.x_disp = r[:self.ns]
         self.p_disp = r[self.ns:]
 
-        self.decomp = decomp
-
         if decomp:
             th, self.S = williamson(V, tol=tol)
             self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < tol
             self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
+
         super().__init__([V, r])
+
+        self.decomp = decomp
 
         # FIXME merge() probably does not work for Gaussians if r is not zero?
 
     def _apply(self, reg, backend, **kwargs):
-        if self.decomp:
-            # explicity raise a NotImplementedError,
-            # so that the engine knows to perform a decomposition.
-            raise NotImplementedError
-
         p = _unwrap(self.p)
         s = sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
         backend.prepare_gaussian_state(p[1]/s, p[0]/(s*s), reg)
 
     def _decompose(self, reg):
         # pylint: disable=too-many-branches
-        if not self.decomp:
-            return None  # refuse to decompose
         cmds = []
 
         V = self.p[0].x
