@@ -315,13 +315,42 @@ class TestValidation:
     """Test for Program device validation within
     the compile() method."""
 
+    def test_incorrect_modes(self, monkeypatch):
+        """Test that an exception is raised if the device
+        is called with the incorrect number of modes"""
+
+        class DummyDevice(DeviceSpecs):
+            """A device with 2 modes"""
+            modes = 2
+            remote = False
+            interactive = True
+            primitives = {'S2gate', 'Interferometer'}
+            decompositions = set()
+
+        dev = DummyDevice()
+
+        prog = sf.Program(3)
+
+        with prog.context as q:
+            ops.S2gate(0.6) | [q[0], q[1]]
+            ops.S2gate(0.6) | [q[1], q[2]]
+
+        with monkeypatch.context() as m:
+            # monkeypatch our DummyDevice into the
+            # backend database
+            db =  {'dummy': DummyDevice}
+            m.setattr("strawberryfields.devicespecs.backend_specs", db)
+
+            with pytest.raises(program.CircuitError, match="requires 3 modes"):
+                new_prog = prog.compile(backend='dummy')
+
     def test_no_decompositions(self, monkeypatch):
         """Test that no decompositions take
         place if the device doesn't support it."""
 
         class DummyDevice(DeviceSpecs):
             """A device with no decompositions"""
-            modes = 0
+            modes = None
             remote = False
             interactive = True
             primitives = {'S2gate', 'Interferometer'}
@@ -340,7 +369,7 @@ class TestValidation:
             # monkeypatch our DummyDevice into the
             # backend database
             db =  {'dummy': DummyDevice}
-            m.setattr("strawberryfields.devicespecs.backend_databases", db)
+            m.setattr("strawberryfields.devicespecs.backend_specs", db)
             new_prog = prog.compile(backend='dummy')
 
         # check compiled program only has two gates
@@ -357,7 +386,7 @@ class TestValidation:
 
         class DummyDevice(DeviceSpecs):
             """A device with no decompositions"""
-            modes = 0
+            modes = None
             remote = False
             interactive = True
             primitives = {'S2gate', 'Interferometer', 'BSgate', 'Sgate'}
@@ -376,7 +405,7 @@ class TestValidation:
             # monkeypatch our DummyDevice into the
             # backend database
             db =  {'dummy': DummyDevice}
-            m.setattr("strawberryfields.devicespecs.backend_databases", db)
+            m.setattr("strawberryfields.devicespecs.backend_specs", db)
             new_prog = prog.compile(backend='dummy')
 
         # check compiled program now has 5 gates
@@ -397,7 +426,7 @@ class TestValidation:
 
         class DummyDevice(DeviceSpecs):
             """A device with no decompositions"""
-            modes = 0
+            modes = None
             remote = False
             interactive = True
             primitives = {'Rgate', 'Interferometer'}
@@ -416,7 +445,7 @@ class TestValidation:
             # monkeypatch our DummyDevice into the
             # backend database
             db =  {'dummy': DummyDevice}
-            m.setattr("strawberryfields.devicespecs.backend_databases", db)
+            m.setattr("strawberryfields.devicespecs.backend_specs", db)
 
             with pytest.raises(NotImplementedError, match="No decomposition available: Rgate"):
                 new_prog = prog.compile(backend='dummy')
@@ -484,13 +513,13 @@ class TestValidation:
 
         class DummyDevice(DeviceSpecs):
             """A device with no decompositions"""
-            modes = 0
+            modes = None
             remote = False
             interactive = True
             primitives = {'Sgate', 'BSgate', 'Dgate', 'MeasureFock'}
             decompositions = set()
 
-            blackbird_template = textwrap.dedent(
+            circuit = textwrap.dedent(
                 """\
                 name test
                 version 0.0
@@ -510,7 +539,7 @@ class TestValidation:
         with prog.context as q:
             # the circuit given below is an
             # isomorphism of the one provided above
-            # in blackbird_template, so should validate.
+            # in circuit, so should validate.
             ops.Measure | q[2]
             ops.Dgate(-7.123) | q[1]
             ops.Sgate(0.543) | q[0]
@@ -521,7 +550,7 @@ class TestValidation:
             # monkeypatch our DummyDevice into the
             # backend database
             db =  {'dummy': DummyDevice}
-            m.setattr("strawberryfields.devicespecs.backend_databases", db)
+            m.setattr("strawberryfields.devicespecs.backend_specs", db)
             new_prog = prog.compile(backend='dummy')
 
         # no exception should be raised; topology correctly validated
@@ -532,13 +561,13 @@ class TestValidation:
 
         class DummyDevice(DeviceSpecs):
             """A device with no decompositions"""
-            modes = 0
+            modes = None
             remote = False
             interactive = True
             primitives = {'Sgate', 'BSgate', 'Dgate', 'MeasureFock'}
             decompositions = set()
 
-            blackbird_template = textwrap.dedent(
+            circuit = textwrap.dedent(
                 """\
                 name test
                 version 0.0
@@ -558,7 +587,7 @@ class TestValidation:
         with prog.context as q:
             # the circuit given below is NOT an
             # isomorphism of the one provided above
-            # in blackbird_template, as the Sgate
+            # in circuit, as the Sgate
             # comes AFTER the beamsplitter.
             ops.Measure | q[2]
             ops.Dgate(-7.123) | q[1]
@@ -570,7 +599,7 @@ class TestValidation:
             # monkeypatch our DummyDevice into the
             # backend database
             db =  {'dummy': DummyDevice}
-            m.setattr("strawberryfields.devicespecs.backend_databases", db)
+            m.setattr("strawberryfields.devicespecs.backend_specs", db)
 
             with pytest.raises(program.CircuitError, match="incompatible topology"):
                 new_prog = prog.compile(backend='dummy')

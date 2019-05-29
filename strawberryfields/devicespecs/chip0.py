@@ -20,7 +20,7 @@ from .device_specs import DeviceSpecs
 class Chip0Specs(DeviceSpecs):
     """Validation data for the Chip0 simulator"""
 
-    modes = 0
+    modes = 4
     remote = True
     interactive = True
 
@@ -33,13 +33,12 @@ class Chip0Specs(DeviceSpecs):
     # TODO: update the below to specify the rectangular_symmetric
     # mapping for the interferometer when #87 is merged.
     # The current topology defined below is just for demonstration
-    blackbird_template = textwrap.dedent(
+    circuit = textwrap.dedent(
         """\
         name chip0_template
-        version 1.0
+        version 0.0
         target chip0 (shots=1)
 
-        # for n spatial degrees, first n signal modes, then n idler modes, phase zero
         S2gate({sq0}, 0.0) | [0, 2]
         S2gate({sq1}, 0.0) | [1, 3]
 

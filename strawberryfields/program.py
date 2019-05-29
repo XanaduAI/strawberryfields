@@ -696,10 +696,15 @@ class Program:
         Returns:
             Program: compiled program
         """
-        if backend in specs.backend_databases:
-            db = specs.backend_databases[backend]()
+        if backend in specs.backend_specs:
+            db = specs.backend_specs[backend]()
         else:
             raise ValueError("Could not find backend {} in Strawberry Fields database".format(backend))
+
+        if db.modes is not None:
+            if self.num_subsystems > db.modes:
+                raise CircuitError("This program requires {} modes, but the {} backend "
+                                   "only supports an {} mode program".format(self.num_subsystems, backend, db.modes))
 
         def compile_sequence(seq):
             """Compiles the given Command sequence."""
@@ -755,7 +760,7 @@ class Program:
         self.lock()
         seq = compile_sequence(self.circuit)
 
-        if db.topology is not None:
+        if db.graph is not None:
             # check topology
             grid = self._list_to_grid(seq)
             DAG = self._grid_to_DAG(grid)
@@ -772,7 +777,7 @@ class Program:
                 return n1['name'] == n2['name']
 
             # check if topology matches
-            if not nx.is_isomorphic(circuit, db.topology, node_match):
+            if not nx.is_isomorphic(circuit, db.graph, node_match):
                 # TODO: try and compile the program to match the topology
                 raise CircuitError('Program cannot be used with the {} backend due to incompatible topology'.format(backend))
 

@@ -44,6 +44,7 @@ class TestAbstractDeviceSpec:
 
         dummy = DummyDevice()
 
+        assert isinstance(dummy.parameter_ranges, dict)
         assert not dummy.parameter_ranges
 
     def test_program_topology_construction(self):
@@ -61,7 +62,7 @@ class TestAbstractDeviceSpec:
             primitives = set()
             decompositions = set()
 
-            blackbird_template = textwrap.dedent(
+            circuit = textwrap.dedent(
                 """\
                 name test
                 version 0.0
@@ -75,7 +76,7 @@ class TestAbstractDeviceSpec:
             )
 
         dummy = DummyDevice()
-        top = dummy.topology
+        top = dummy.graph
 
         circuit = top.nodes().data()
 
@@ -108,7 +109,7 @@ class TestAbstractDeviceSpec:
             primitives = set()
             decompositions = set()
 
-            blackbird_template = textwrap.dedent(
+            circuit = textwrap.dedent(
                 """\
                 name test
                 version 0.0
@@ -122,7 +123,7 @@ class TestAbstractDeviceSpec:
             )
 
         dummy = DummyDevice()
-        top = dummy.topology
+        top = dummy.graph
 
         circuit = top.nodes().data()
 

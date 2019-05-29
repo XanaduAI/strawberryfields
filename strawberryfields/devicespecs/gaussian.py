@@ -18,7 +18,7 @@ from .device_specs import DeviceSpecs
 class GaussianSpecs(DeviceSpecs):
     """Validation data for the Gaussian backend"""
 
-    modes = 0
+    modes = None
     remote = True
     interactive = True
 

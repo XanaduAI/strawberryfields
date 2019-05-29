@@ -11,14 +11,58 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Device validation submodule"""
+"""
+Backend specifications
+======================
+
+**Module name:** :mod:`strawberryfields.devicespecs`
+
+.. currentmodule:: strawberryfields.devicespecs
+
+This module implements the :class:`~.DeviceSpecs` class, an abstract base
+data class used to store details and specifications of the Strawberry Fields
+backend and devices.
+
+These details are used by the :class:`~.Program` class when validating and
+compiling quantum programs. By querying the data class corresponding to the
+requested device/backend, the :class:`~.Program` will be able to:
+
+1. **Validate** that the program has the correct number of modes, valid
+   quantum operations,
+
+2. **Compile** the program to match the backend topology, making use
+   of allowed decompositions along the way.
+
+To access the correct specifications dataclass, :attr:`~.backend_specs` provides
+a dictionary mapping the backend shortname to the correct dataclass.
+
+
+DeviceSpecs methods
+-------------------
+
+.. currentmodule:: strawberryfields.devicespecs.DeviceSpecs
+
+.. autosummary::
+   modes
+   remote
+   interactive
+   primitives
+   decompositions
+   parameter_ranges
+   topology
+   blackbird_template
+
+Code details
+^^^^^^^^^^^^
+"""
+from .device_specs import DeviceSpecs
 from .chip0 import Chip0Specs
 from .fock import FockSpecs
 from .gaussian import GaussianSpecs
 from .tensorflow import TFSpecs
 
 
-backend_databases = {
+backend_specs = {
     "base": FockSpecs,
     "chip0": Chip0Specs,
     "fock": FockSpecs,
@@ -27,3 +71,5 @@ backend_databases = {
 }
 """dict[str, DeviceSpecs]: dictionary mapping backend shortname
 to the validation dataclass."""
+
+__all__ = ["backend_specs", "DeviceSpecs"]

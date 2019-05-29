@@ -18,7 +18,7 @@ from .device_specs import DeviceSpecs
 class FockSpecs(DeviceSpecs):
     """Validation data for the Fock backend"""
 
-    modes = 0
+    modes = None
     remote = True
     interactive = True
 

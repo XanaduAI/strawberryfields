@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Abstract base class for storing device data for validation"""
-from typing import List, Set, Dict
+from typing import List, Set, Dict, Union
 import abc
 
 import blackbird
@@ -24,7 +24,7 @@ class DeviceSpecs(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def modes(self) -> int:
+    def modes(self) -> Union[int, None]:
         """The supported number of modes of the device.
 
         If the device supports arbitrary number of modes, set this to 0.
@@ -93,12 +93,12 @@ class DeviceSpecs(abc.ABC):
         Returns:
             dict[str, list]: a dictionary mapping an allowed quantum operation
             to a nested list of the form ``[[p0_min, p0_max], [p1_min, p0_max], ...]``.
-            where ``pi`` corresponds to the ``i``th gate parameter.
+            where ``pi`` corresponds to the ``i`` th gate parameter.
         """
         return dict()
 
     @property
-    def topology(self):
+    def graph(self):
         """The allowed circuit topology of the backend device as a directed
         acyclic graph.
 
@@ -106,13 +106,13 @@ class DeviceSpecs(abc.ABC):
         this will simply return ``None``.
 
         Returns:
-            networkx.DAGGraph: a directed acyclic graph
+            networkx.DiGraph: a directed acyclic graph
         """
-        if self.blackbird_template is None:
+        if self.circuit is None:
             return None
 
         # returned DAG has all parameters set to 0
-        bb = blackbird.loads(self.blackbird_template)
+        bb = blackbird.loads(self.circuit)
 
         if bb.is_template():
             params = bb.parameters
@@ -128,17 +128,17 @@ class DeviceSpecs(abc.ABC):
         return topology
 
     @property
-    def blackbird_template(self):
-        """The Blackbird template that will be accepted by the backend device.
+    def circuit(self):
+        """The Blackbird circuit that will be accepted by the backend device.
 
         This property is optional; if arbitrary topologies are allowed by the device,
         this will simply return ``None``.
 
         If the device expects a specific template for the recieved Blackbird
-        script, this method will return the serialized Blackbird template in string
+        script, this method will return the serialized Blackbird circuit in string
         form.
 
         Returns:
-            str: Blackbird template
+            Union[str, None]: Blackbird program or template representing the circuit
         """
         return None
