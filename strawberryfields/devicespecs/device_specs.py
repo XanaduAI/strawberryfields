@@ -39,7 +39,7 @@ class DeviceSpecs(abc.ABC):
         """Whether the backend supports remote execution.
 
         Returns:
-            bool: returns ``True`` if the backend supports remote execution.
+            bool: ``True`` if the backend supports remote execution
         """
 
     @property
@@ -49,7 +49,7 @@ class DeviceSpecs(abc.ABC):
         the backend state is not reset between engine executions.
 
         Returns:
-            bool: returns ``True`` if the backend supports interactive use.
+            bool: ``True`` if the backend supports interactive use
         """
 
     @property
@@ -80,7 +80,7 @@ class DeviceSpecs(abc.ABC):
         given by the dictionary value.
 
         Returns:
-            dict[str, dict]: the quamtum operations that are supported
+            dict[str, dict]: the quantum operations that are supported
             by the backend via decomposition
         """
 
@@ -93,7 +93,7 @@ class DeviceSpecs(abc.ABC):
         Returns:
             dict[str, list]: a dictionary mapping an allowed quantum operation
             to a nested list of the form ``[[p0_min, p0_max], [p1_min, p0_max], ...]``.
-            where ``pi`` corresponds to the ``i``th gate parameter.z
+            where ``pi`` corresponds to the ``i``th gate parameter.
         """
         return dict()
 
@@ -106,7 +106,7 @@ class DeviceSpecs(abc.ABC):
         this will simply return ``None``.
 
         Returns:
-            networkx.DAGGraph: a directed acyclic
+            networkx.DAGGraph: a directed acyclic graph
         """
         if self.blackbird_template is None:
             return None
@@ -135,7 +135,7 @@ class DeviceSpecs(abc.ABC):
         this will simply return ``None``.
 
         If the device expects a specific template for the recieved Blackbird
-        script, this method will return the seralized Blackbird template in string
+        script, this method will return the serialized Blackbird template in string
         form.
 
         Returns:

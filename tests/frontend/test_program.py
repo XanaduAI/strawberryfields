@@ -472,7 +472,6 @@ class TestValidation:
 
         new_prog = prog.compile(backend='gaussian')
 
-        print([i.op.__class__.__name__ for i in new_prog.circuit])
         assert len(new_prog) == 1
 
         # decomposed gate should be an Sgate
@@ -481,7 +480,7 @@ class TestValidation:
         assert circuit[0].op.p[0] == r
 
     def test_topology_validation(self, monkeypatch):
-        """Test compilation properly matches the device toplogy"""
+        """Test compilation properly matches the device topology"""
 
         class DummyDevice(DeviceSpecs):
             """A device with no decompositions"""
