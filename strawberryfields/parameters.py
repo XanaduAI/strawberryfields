@@ -90,10 +90,11 @@ Code details
 ~~~~~~~~~~~~
 
 """
+import sys
+import mock
 import numbers
 
 import numpy as np
-import tensorflow as tf
 
 import strawberryfields as sf
 
@@ -102,12 +103,10 @@ from .program import (RegRef, RegRefTransform)
 
 try:
     import tensorflow as tf
+    _tf_classes = (tf.Tensor, tf.Variable)
 except ImportError:
-    import numpy as tf # HACK
-
-
-# supported TF classes
-_tf_classes = (tf.Tensor, tf.Variable)
+    tf = mock.MagicMock()
+    _tf_classes = tuple()
 
 
 def _unwrap(params):

@@ -3,8 +3,6 @@ import numpy as np
 import strawberryfields as sf
 from strawberryfields.ops import *
 
-import tensorflow as tf
-
 # initialise the engine and register
 prog = sf.Program(4)
 
