@@ -90,13 +90,10 @@ Code details
 ~~~~~~~~~~~~
 
 """
-import sys
-import mock
 import numbers
 
+import mock
 import numpy as np
-
-import strawberryfields as sf
 
 from .program import (RegRef, RegRefTransform)
 
