@@ -41,4 +41,4 @@ measure_states = [[0,0,0,0], [1,1,0,0], [0,1,0,1], [1,1,1,1], [2,0,0,0]]
 # different Fock states at the output, and print them to the terminal
 for i in measure_states:
     prob = state.fock_prob(i)
-print("|{}>: {}".format("".join(str(j) for j in i), prob))
+    print("|{}>: {}".format("".join(str(j) for j in i), prob))
