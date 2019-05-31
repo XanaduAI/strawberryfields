@@ -77,6 +77,7 @@ mock_fns.update({"pi": MagicMock(),
                  "Number": int,
                  "Tensor": list,
                  "Variable": list,
+                 "__version__": "1.3",
                  "ndarray": MagicMock})
 
 mock = Mock(**mock_fns)
