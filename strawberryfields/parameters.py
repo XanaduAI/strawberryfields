@@ -90,13 +90,20 @@ Code details
 ~~~~~~~~~~~~
 
 """
-
 import numbers
 
 import numpy as np
 import tensorflow as tf
 
+import strawberryfields as sf
+
 from .program import (RegRef, RegRefTransform)
+
+
+try:
+    import tensorflow as tf
+except ImportError:
+    import numpy as tf # HACK
 
 
 # supported TF classes

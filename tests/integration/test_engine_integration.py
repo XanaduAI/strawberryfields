@@ -20,7 +20,8 @@ import numpy as np
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.backends import BaseGaussian, BaseFock
-from strawberryfields.backends import TFBackend, GaussianBackend, FockBackend
+from strawberryfields.backends import GaussianBackend, FockBackend
+from strawberryfields.backends.tfbackend import TFBackend
 from strawberryfields.backends.states import BaseState
 
 

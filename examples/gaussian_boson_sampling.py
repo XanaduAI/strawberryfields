@@ -3,8 +3,10 @@ import numpy as np
 import strawberryfields as sf
 from strawberryfields.ops import *
 
+import tensorflow as tf
+
 # initialise the engine and register
-eng, q = sf.Engine(4)
+prog = sf.Program(4)
 
 # define the linear interferometer
 U = np.array([
@@ -18,8 +20,7 @@ U = np.array([
     -0.421179844245+0.183644837982j, 0.818769184612+0.068015658737j]
 ])
 
-
-with eng:
+with prog.context as q:
     # prepare the input squeezed states
     S = Sgate(1)
     S | q[0]
@@ -32,7 +33,8 @@ with eng:
     # end circuit
 
 # run the engine
-state = eng.run('gaussian')
+eng = sf.LocalEngine(backend='gaussian')
+state = eng.run(prog).state
 
 # Fock states to measure at output
 measure_states = [[0,0,0,0], [1,1,0,0], [0,1,0,1], [1,1,1,1], [2,0,0,0]]
