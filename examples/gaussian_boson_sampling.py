@@ -4,7 +4,7 @@ import strawberryfields as sf
 from strawberryfields.ops import *
 
 # initialise the engine and register
-prog = sf.Program(4)
+eng, q = sf.Engine(4)
 
 # define the linear interferometer
 U = np.array([
@@ -18,7 +18,8 @@ U = np.array([
     -0.421179844245+0.183644837982j, 0.818769184612+0.068015658737j]
 ])
 
-with prog.context as q:
+
+with eng:
     # prepare the input squeezed states
     S = Sgate(1)
     S | q[0]
@@ -31,8 +32,7 @@ with prog.context as q:
     # end circuit
 
 # run the engine
-eng = sf.LocalEngine(backend='gaussian')
-state = eng.run(prog).state
+state = eng.run('gaussian')
 
 # Fock states to measure at output
 measure_states = [[0,0,0,0], [1,1,0,0], [0,1,0,1], [1,1,1,1], [2,0,0,0]]
@@ -41,4 +41,4 @@ measure_states = [[0,0,0,0], [1,1,0,0], [0,1,0,1], [1,1,1,1], [2,0,0,0]]
 # different Fock states at the output, and print them to the terminal
 for i in measure_states:
     prob = state.fock_prob(i)
-    print("|{}>: {}".format("".join(str(j) for j in i), prob))
+print("|{}>: {}".format("".join(str(j) for j in i), prob))
