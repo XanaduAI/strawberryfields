@@ -361,12 +361,12 @@ class Circuit():
         """
         Tests whether the system is in the vacuum state.
         """
-        # base_shape = [self._trunc for i in range(self._num_modes)]
+        # fid = <0|\rho|0>
         if self._pure:
-            vac = ops.vacuumState(self._num_modes, self._trunc)
+            fid = np.abs(self._state.flat[0]) ** 2
         else:
-            vac = ops.vacuumStateMixed(self._num_modes, self._trunc)
-        return np.linalg.norm((self._state - vac).ravel()) < tol
+            fid = self._state.flat[0]
+        return np.abs(fid-1) <= tol
 
     def get_state(self):
         """

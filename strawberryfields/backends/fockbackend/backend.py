@@ -39,6 +39,9 @@ class FockBackend(BaseFock):
         super().__init__()
         self._supported["mixed_states"] = True
         self._short_name = "fock"
+        self._init_modes = None  #: int: initial number of modes in the circuit
+        self._modemap = None     #: Modemap: maps external mode indices to internal ones
+        self.circuit = None      #: ~.fockbackend.circuit.Circuit: representation of the simulated quantum state
 
     def _remap_modes(self, modes):
         if isinstance(modes, int):
@@ -50,25 +53,33 @@ class FockBackend(BaseFock):
         submap = [map_[m] for m in modes]
         if not self._modemap.valid(modes) or None in submap:
             raise ValueError('The specified modes are not valid.')
-        else:
-            remapped_modes = self._modemap.remap(modes)
+
+        remapped_modes = self._modemap.remap(modes)
         if was_int:
             remapped_modes = remapped_modes[0]
         return remapped_modes
 
-    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=True, **kwargs):
-        r"""
-        Create a quantum circuit (initialized in vacuum state) with the number of modes
-        equal to num_subsystems and a Fock-space cutoff dimension of cutoff_dim.
+    def begin_circuit(self, num_subsystems, **kwargs):
+        r"""Instantiate a quantum circuit.
+
+        Instantiates a representation of a quantum optical state with ``num_subsystems`` modes.
+        The state is initialized to vacuum.
+
+        The modes in the circuit are indexed sequentially using integers, starting from zero.
+        Once an index is assigned to a mode, it can never be re-assigned to another mode.
+        If the mode is deleted its index becomes invalid.
+        An operation acting on an invalid or unassigned mode index raises an ``IndexError`` exception.
 
         Args:
-            num_subsystems (int): number of modes the circuit should begin with
-            cutoff_dim (int): numerical cutoff dimension in Fock space for each mode.
-                ``cutoff_dim=D`` represents the Fock states :math:`|0\rangle,\dots,|D-1\rangle`.
-                This argument is **required** for the Fock backend.
-            pure (bool): whether to begin the circuit in a pure state representation
+            num_subsystems (int): number of modes in the circuit
+
+        Keyword Args:
+            cutoff_dim (int): Numerical Hilbert space cutoff dimension for the modes.
+                For each mode, the simulator can represent the Fock states :math:`\ket{0}, \ket{1}, \ldots, \ket{\text{cutoff_dim}-1}`.
+            pure (bool): If True (default), use a pure state representation (otherwise will use a mixed state representation).
         """
-        # pylint: disable=attribute-defined-outside-init
+        cutoff_dim = kwargs.get('cutoff_dim', None)
+        pure = kwargs.get('pure', True)
         if cutoff_dim is None:
             raise ValueError("Argument 'cutoff_dim' must be passed to the Fock backend")
         if not isinstance(cutoff_dim, int):
@@ -83,25 +94,10 @@ class FockBackend(BaseFock):
         self._modemap = ModeMap(num_subsystems)
 
     def add_mode(self, n=1):
-        """Add num_modes new modes to the underlying circuit state. Indices for new modes
-        always occur at the end of the state tensor.
-        Note: this will increase the number of indices used for the state representation.
-
-        Args:
-            n (int): the number of modes to be added to the circuit
-        """
         self.circuit.alloc(n)
         self._modemap.add(n)
 
     def del_mode(self, modes):
-        """Trace out the specified modes from the underlying circuit state.
-        Note: this will reduce the number of indices used for the state representation,
-        and also convert the state representation to mixed.
-
-        Args:
-            modes (list[int]): the modes to be removed from the circuit
-
-        """
         remapped_modes = self._remap_modes(modes)
         if isinstance(remapped_modes, int):
             remapped_modes = [remapped_modes]
@@ -109,210 +105,65 @@ class FockBackend(BaseFock):
         self._modemap.delete(modes)
 
     def get_modes(self):
-        """Return a list of the active mode indices for the circuit.
-
-        Returns:
-            list[int]: sorted list of active (assigned, not invalid) mode indices
-        """
         return [i for i, j in enumerate(self._modemap._map) if j is not None]
 
     def reset(self, pure=True, **kwargs):
-        """Resets the circuit state back to an all-vacuum state.
-
-        Args:
-            pure (bool): whether to use a pure state representation upon reset
-        """
         cutoff = kwargs.get('cutoff_dim', self.circuit._trunc)
         self._modemap.reset()
         self.circuit.reset(pure, num_subsystems=self._init_modes, cutoff_dim=cutoff)
 
     def prepare_vacuum_state(self, mode):
-        """Prepare the vacuum state on the specified mode.
-        Note: this may convert the state representation to mixed.
-
-        Args:
-            mode (int): index of mode where state is prepared
-        """
         self.circuit.prepare_mode_fock(0, self._remap_modes(mode))
 
     def prepare_coherent_state(self, alpha, mode):
-        """Prepare a coherent state with parameter alpha on the specified mode.
-        Note: this may convert the state representation to mixed.
-
-        Args:
-            alpha (complex): coherent state displacement parameter
-            mode (int): index of mode where state is prepared
-        """
         self.circuit.prepare_mode_coherent(alpha, self._remap_modes(mode))
 
     def prepare_squeezed_state(self, r, phi, mode):
-        r"""Prepare a squeezed vacuum state in the specified mode.
-        Note: this may convert the state representation to mixed.
-
-        The requested mode is traced out and replaced with the squeezed state :math:`\ket{z}`,
-        where :math:`z=re^{i\phi}`.
-        As a result the state may have to be described using a density matrix.
-
-        Args:
-            r (float): squeezing amplitude
-            phi (float): squeezing angle
-            mode (int): which mode to prepare the squeezed state in
-        """
         self.circuit.prepare_mode_squeezed(r, phi, self._remap_modes(mode))
 
     def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
-        """Prepare a displaced squezed state with parameters (alpha, r, phi) on the specified mode.
-        Note: this may convert the state representation to mixed.
-
-        Args:
-            alpha (complex): displacement parameter
-            r (float): squeezing amplitude
-            phi (float): squeezing phase
-            mode (int): index of mode where state is prepared
-
-        """
         self.circuit.prepare_mode_displaced_squeezed(alpha, r, phi, self._remap_modes(mode))
 
     def prepare_thermal_state(self, nbar, mode):
-        """Prepare the thermal state with mean photon number nbar on the specified mode.
-        Note: this may convert the state representation to mixed.
-
-        Args:
-            nbar (float): mean thermal population of the mode
-            mode (int): which mode to prepare the thermal state in
-        """
         self.circuit.prepare_mode_thermal(nbar, self._remap_modes(mode))
 
     def rotation(self, phi, mode):
-        """Apply the phase-space rotation operation to the specified mode.
-
-        Args:
-            phi (float): rotation angle
-            mode (int): which mode to apply the rotation to
-        """
         self.circuit.phase_shift(phi, self._remap_modes(mode))
 
     def displacement(self, alpha, mode):
-        """Perform a displacement operation on the specified mode.
-
-        Args:
-            alpha (float): displacement parameter
-            mode (int): index of mode where operation is carried out
-
-        """
         self.circuit.displacement(alpha, self._remap_modes(mode))
 
     def squeeze(self, z, mode):
-        """Perform a squeezing operation on the specified mode.
-
-        Args:
-            z (complex): squeezing parameter
-            mode (int): index of mode where operation is carried out
-
-        """
         self.circuit.squeeze(abs(z), phase(z), self._remap_modes(mode))
 
     def beamsplitter(self, t, r, mode1, mode2):
-        """Perform a beamsplitter operation on the specified modes.
-
-        Args:
-            t (float): transmittivity parameter
-            r (complex): reflectivity parameter
-            mode1 (int): index of first mode where operation is carried out
-            mode2 (int): index of second mode where operation is carried out
-
-        """
         if isinstance(t, complex):
             raise ValueError("Beamsplitter transmittivity t must be a float.")
         self.circuit.beamsplitter(t, abs(r), phase(r), self._remap_modes(mode1), self._remap_modes(mode2))
 
-    def kerr_interaction(self, kappa, mode):
-        r"""Apply the Kerr interaction :math:`\exp{(i\kappa \hat{n}^2)}` to the specified mode.
-
-        Args:
-            kappa (float): strength of the interaction
-            mode (int): which mode to apply it to
-        """
-        self.circuit.kerr_interaction(kappa, self._remap_modes(mode))
-
-    def cross_kerr_interaction(self, kappa, mode1, mode2):
-        r"""Apply the two mode cross-Kerr interaction :math:`\exp{(i\kappa \hat{n}_1\hat{n}_2)}` to the specified modes.
-
-        Args:
-            kappa (float): strength of the interaction
-            mode1 (int): first mode that cross-Kerr interaction acts on
-            mode2 (int): second mode that cross-Kerr interaction acts on
-        """
-        self.circuit.cross_kerr_interaction(kappa, self._remap_modes(mode1), self._remap_modes(mode2))
-
-    def cubic_phase(self, gamma, mode):
-        r"""Apply the cubic phase operation to the specified mode.
-
-        .. warning:: The cubic phase gate can suffer heavily from numerical inaccuracies due to finite-dimensional cutoffs in the Fock basis.
-                     The gate implementation in Strawberry Fields is unitary, but it does not implement an exact cubic phase gate.
-                     The Kerr gate provides an alternative non-Gaussian gate.
-
-        Args:
-            gamma (float): cubic phase shift
-            mode (int): which mode to apply it to
-        """
-        self.circuit.cubic_phase_shift(gamma, self._remap_modes(mode))
-
     def measure_homodyne(self, phi, mode, select=None, **kwargs):
         """Perform a homodyne measurement on the specified mode.
 
-        Args:
-            phi (float): angle (relative to x-axis) for the measurement
-            mode (int): index of mode where operation is carried out
-            select (float): (Optional) desired values of measurement results
-            **kwargs: Can be used to (optionally) pass user-specified numerical parameters `max` and `num_bins`.
-                                These are used numerically to build the probability distribution function (pdf) for the homdyne measurement
-                                Specifically, the pdf is discretized onto the 1D grid [-max,max], with num_bins equally spaced bins
+        See :meth:`.BaseBackend.measure_homodyne`.
 
-        Returns:
-            float: measurement outcome
+        Keyword Args:
+            num_bins (int): Number of equally spaced bins for the probability distribution function
+                (pdf) simulating the homodyne measurement (default: 100000).
+            max (float): The pdf is discretized onto the 1D grid [-max,max] (default: 10).
         """
         return self.circuit.measure_homodyne(phi, self._remap_modes(mode), select=select, **kwargs)
 
     def loss(self, T, mode):
-        """Perform a loss channel operation on the specified mode.
-
-        Args:
-            T: loss parameter
-            mode (int): index of mode where operation is carried out
-
-        """
         self.circuit.loss(T, self._remap_modes(mode))
 
     def is_vacuum(self, tol=0.0, **kwargs):
-        r"""Test whether the current circuit state is in vacuum (up to tolerance tol).
-
-        Args:
-            tol (float): numerical tolerance for how close state must be to true vacuum state
-
-        Returns:
-            bool: True if vacuum state up to tolerance tol
-        """
         return self.circuit.is_vacuum(tol)
 
     def get_cutoff_dim(self):
-        """Returns the Hilbert space cutoff dimension used.
-
-        Returns:
-            int: cutoff dimension
-        """
         return self.circuit._trunc
 
 
     def state(self, modes=None, **kwargs):
-        r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
-
-        Args:
-            modes (int, Sequence[int], None): specifies the mode or modes to restrict the return state to.
-                If none returns the state containing all modes.
-        Returns:
-            BaseFockState: an instance of the Strawberry Fields FockState class.
-        """
         s, pure = self.circuit.get_state()
 
         if modes is None:
@@ -362,7 +213,7 @@ class FockBackend(BaseFock):
             index_permutation = [2*x+i for x in mode_permutation for i in (0, 1)]
             red_state = np.transpose(red_state, np.argsort(index_permutation))
 
-        cutoff = self.circuit._trunc # pylint: disable=protected-access
+        cutoff = self.circuit._trunc
         mode_names = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
         state = BaseFockState(red_state, len(modes), pure, cutoff, mode_names)
         return state
@@ -372,45 +223,22 @@ class FockBackend(BaseFock):
     # ==============================================
 
     def prepare_fock_state(self, n, mode):
-        """Prepare a Fock state on the specified mode.
-        Note: this may convert the state representation to mixed.
-
-        Args:
-            n (int): number state to prepare
-            mode (int): index of mode where state is prepared
-
-        """
         self.circuit.prepare_mode_fock(n, self._remap_modes(mode))
 
     def prepare_ket_state(self, state, modes):
-        """Prepare an arbitrary pure state on the specified mode.
-        Note: this may convert the state representation to mixed.
-
-        Args:
-            state (array): vector representation of ket state to prepare
-            mode (int): index of mode where state is prepared
-        """
         self.circuit.prepare_multimode(state, self._remap_modes(modes))
 
     def prepare_dm_state(self, state, modes):
-        """Prepare an arbitrary mixed state on the specified mode.
-        Note: this will convert the state representation to mixed.
-
-        Args:
-            state (array): density matrix representation of state to prepare
-            mode (int): index of mode where state is prepared
-        """
         self.circuit.prepare_multimode(state, self._remap_modes(modes))
 
+    def cubic_phase(self, gamma, mode):
+        self.circuit.cubic_phase_shift(gamma, self._remap_modes(mode))
+
+    def kerr_interaction(self, kappa, mode):
+        self.circuit.kerr_interaction(kappa, self._remap_modes(mode))
+
+    def cross_kerr_interaction(self, kappa, mode1, mode2):
+        self.circuit.cross_kerr_interaction(kappa, self._remap_modes(mode1), self._remap_modes(mode2))
+
     def measure_fock(self, modes, select=None, **kwargs):
-        """Perform a Fock measurement on the specified modes.
-
-        Args:
-            modes (list[int]): indices of mode where operation is carried out
-            select (list[int]): (Optional) desired values of measurement results.
-                                                     The length of this list must match the length of the modes list.
-
-        Returns:
-            list[int]: measurement outcomes
-        """
         return self.circuit.measure_fock(self._remap_modes(modes), select=select)

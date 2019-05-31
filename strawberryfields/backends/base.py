@@ -52,8 +52,8 @@ Hierarchy for backends
     :parts: 1
 
 
-Base backend
------------------------------------
+BaseBackend
+-----------
 
 .. currentmodule:: strawberryfields.backends.base.BaseBackend
 
@@ -64,6 +64,8 @@ Base backend
     del_mode
     get_modes
     reset
+    state
+    is_vacuum
     prepare_vacuum_state
     prepare_coherent_state
     prepare_squeezed_state
@@ -76,8 +78,6 @@ Base backend
     loss
     thermal_loss
     measure_homodyne
-    state
-    is_vacuum
 
 Fock backends
 ------------------
@@ -85,7 +85,7 @@ Fock backends
 .. currentmodule:: strawberryfields.backends.base
 
 
-Some methods are only implemented in the subclass :class:`FockBackend`,
+Some methods are only implemented in the subclass :class:`BaseFock`,
 which is the base class for simulators using a Fock-state representation
 for quantum optical circuits.
 
@@ -120,12 +120,7 @@ Code details
 
 """
 
-# todo If we move to Sphinx 1.7, the docstrings of the methods in the derived classes FockBackend,
-# TFBackend and GaussianBackend that are declared in BaseBackend should be removed entirely.
-# This way they are inherited directly from the parent class BaseBackend and thus kept automatically up-to-date.
-# The derived classes should provide a docstring for these methods only if they change their behavior for some reason.
-
-# pylint: disable=no-self-use
+# pylint: disable=no-self-use,missing-docstring
 
 
 class NotApplicableError(TypeError):
@@ -133,7 +128,6 @@ class NotApplicableError(TypeError):
     E.g. :meth:`measure_fock` on a Gaussian backend.
     Conceptually different from NotImplementedError (which means "not implemented, but at some point may be").
     """
-    pass
 
 
 class ModeMap:
@@ -154,7 +148,7 @@ class ModeMap:
         if mode is None:
             return False
 
-        if mode >= 0 and mode < len(self._map):
+        if 0 <= mode < len(self._map):
             return True
 
         return False
@@ -227,7 +221,6 @@ class ModeMap:
 
 class BaseBackend:
     """Abstract base class for backends."""
-    # pylint: disable=too-many-public-methods
 
     def __init__(self):
         self._supported = {}
@@ -257,28 +250,24 @@ class BaseBackend:
         """
         return self._supported.get(name, False)
 
-    def begin_circuit(self, num_subsystems, *, cutoff_dim=None, pure=True, **kwargs):
+    def begin_circuit(self, num_subsystems, **kwargs):
         r"""Instantiate a quantum circuit.
 
-        Instantiates a circuit with num_subsystems modes to track and update a quantum optical state.
-        The state of the circuit is initialized to vacuum.
+        Instantiates a representation of a quantum optical state with ``num_subsystems`` modes.
+        The state is initialized to vacuum.
 
         The modes in the circuit are indexed sequentially using integers, starting from zero.
         Once an index is assigned to a mode, it can never be re-assigned to another mode.
         If the mode is deleted its index becomes invalid.
-        An operation acting on an invalid or unassigned mode index raises an IndexError exception.
+        An operation acting on an invalid or unassigned mode index raises an ``IndexError`` exception.
 
         Args:
             num_subsystems (int): number of modes in the circuit
-            cutoff_dim (int): numerical Hilbert space cutoff dimension (used for circuits operating in Fock basis)
-            hbar (float): The value of :math:`\hbar` to initialise the circuit with, depending on the conventions followed.
-                By default, :math:`\hbar=2`. See :ref:`conventions` for more details.
-            pure (bool): whether to initialize the circuit in a pure state (will use a mixed state if pure is False)
         """
-        pass  # BaseBackend can be instantiated for testing purposes, even though it does not do anything.
+        # BaseBackend can be instantiated for testing purposes, even though it does not do anything.
 
     def add_mode(self, n=1):
-        """Add one or more modes to the circuit.
+        """Add modes to the circuit.
 
         The new modes are initialized to the vacuum state.
         They are assigned mode indices sequentially, starting from the first unassigned index.
@@ -292,22 +281,24 @@ class BaseBackend:
         raise NotImplementedError
 
     def del_mode(self, modes):
-        """Delete one or more modes from the circuit.
+        """Delete modes from the circuit.
 
         The deleted modes are traced out.
         As a result the state may have to be described using a density matrix.
 
         The indices of the deleted modes become invalid for the lifetime of the circuit object.
         They will never be reassigned to other modes.
-        Deleting a mode that has already been deleted raises an IndexError exception.
+        Deleting a mode that has already been deleted raises an ``IndexError`` exception.
 
         Args:
-            modes (Sequence[int]): list of mode numbers to delete
+            modes (Sequence[int]): mode numbers to delete
         """
         raise NotImplementedError
 
     def get_modes(self):
-        """Return a list of the active mode indices for the circuit.
+        """Return a list of the active modes for the circuit.
+
+        A mode is active if it has been created and has not been deleted.
 
         Returns:
             list[int]: sorted list of active (assigned, not invalid) mode indices
@@ -323,7 +314,8 @@ class BaseBackend:
         may be changed during the reset, see the keyword args below.
 
         Args:
-            pure (bool): if True, initialize the circuit in a pure state (will use a mixed state if pure is False)
+            pure (bool): if True, initialize the circuit in a pure state representation
+                (will use a mixed state representation if pure is False)
 
         Keyword Args:
             cutoff_dim (int): new Hilbert space truncation dimension (for Fock basis backends only)
@@ -386,10 +378,10 @@ class BaseBackend:
         r"""Prepare a thermal state in the specified mode.
 
         The requested mode is traced out and replaced with the thermal state :math:`\rho(nbar)`.
-        As a result the state will be described using a density matrix.
+        As a result the state may have to be described using a density matrix.
 
         Args:
-            nbar (float): thermal population of the mode
+            nbar (float): thermal population (mean photon number) of the mode
             mode (int): which mode to prepare the thermal state in
         """
         raise NotImplementedError
@@ -424,6 +416,8 @@ class BaseBackend:
     def beamsplitter(self, t, r, mode1, mode2):
         """Apply the beamsplitter operation to the specified modes.
 
+        It is assumed that :math:`|r|^2+|t|^2 = t^2+|r|^2=1`, i.e that t is real.
+
         Args:
             t (float): transmitted amplitude
             r (complex): reflected amplitude (with phase)
@@ -455,7 +449,7 @@ class BaseBackend:
         r"""Measure a :ref:`phase space quadrature <homodyne>` of the given mode.
 
         For the measured mode, samples the probability distribution
-        :math:`f(q) = \bra{q_\phi} R^\dagger(\phi) \rho R(\phi) \ket{q_\phi}`
+        :math:`f(q) = \bra{q_\phi} \rho \ket{q_\phi}`
         and returns the sampled value.
         Here :math:`\ket{q_\phi}` is the eigenstate of the operator
 
@@ -475,10 +469,11 @@ class BaseBackend:
         Args:
             phi (float): phase angle of the quadrature to measure (x: :math:`\phi=0`, p: :math:`\phi=\pi/2`)
             mode (int): which mode to measure
-            select (float): (Optional) desired values of measurement results.
-                Allows user to post-select on specific measurement results instead of randomly sampling.
-            **kwargs: can be used to pass user-specified numerical parameters to the backend.
-                Options for such arguments will be documented in the respective subclasses.
+            select (None or float): If not None: desired value of the measurement result.
+                Enables post-selection on specific measurement results instead of random sampling.
+
+        Keyword arguments can be used to pass additional parameters to the backend.
+        Options for such arguments will be documented in the respective subclasses.
 
         Returns:
             float: measured value
@@ -486,27 +481,31 @@ class BaseBackend:
         raise NotImplementedError
 
     def is_vacuum(self, tol=0.0, **kwargs):
-        r"""Test whether the current circuit state is in vacuum (up to tolerance tol).
+        r"""Test whether the current circuit state is vacuum (up to given tolerance).
+
+        Returns True iff :math:`|\bra{0} \rho \ket{0} -1| \le` ``tol``, i.e.,
+        the fidelity of the current circuit state with the vacuum state is within
+        the given tolerance from 1.
 
         Args:
-            tol (float): numerical tolerance for how close state must be to true vacuum state
+            tol (float): numerical tolerance
 
         Returns:
-            bool: True if vacuum state up to tolerance tol
+            bool: True iff current state is vacuum up to tolerance tol
         """
         raise NotImplementedError
 
     def state(self, modes=None, **kwargs):
-        r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
+        r"""Returns the state of the quantum simulation.
 
         Args:
-            modes (int or Sequence[int]): specifies the mode(s) to restrict the return state to
-                This argument is optional; the default value ``modes=None`` returns the state containing all modes.
-                If modes is not ordered, the returned state contains the requested modes in the given order, i.e.,
-                requesting the modes=[3,1] results in a two mode state being returned with the first mode being
-                subsystem 3 and the second mode being subsystem 1 of simulator.
+            modes (int or Sequence[int] or None): Specifies the modes to restrict the return state to.
+                None returns the state containing all the modes.
+                The returned state contains the requested modes in the given order, i.e.,
+                ``modes=[3,0]`` results in a two mode state being returned with the first mode being
+                subsystem 3 and the second mode being subsystem 0.
         Returns:
-            BaseState: state description, suited to the particular backend
+            BaseState: state description, specific child class depends on the backend
         """
         raise NotImplementedError
 
@@ -538,23 +537,23 @@ class BaseFock(BaseBackend):
 
         Args:
             n (int): Fock state to prepare
-            mode (int): which mode to prepare the fock state in
+            mode (int): which mode to prepare the Fock state in
         """
         raise NotImplementedError
 
     def prepare_ket_state(self, state, modes):
-        r"""Prepare the given ket state (in the Fock basis) in the specified modes.
+        r"""Prepare the given ket state in the specified modes.
 
-        The requested mode(s) is/are traced out and replaced with the given ket state
+        The requested modes are traced out and replaced with the given ket state
         (in the Fock basis). As a result the state may have to be described using a
         density matrix.
 
         Args:
-            state (array): state in the Fock basis
+            state (array): Ket state in the Fock basis.
                 The state can be given in either vector form, with one index,
                 or tensor form, with one index per mode. For backends supporting batched
                 mode, state can be a batch of such vectors or tensors.
-            modes (int or Sequence[int]): which mode to prepare the state in
+            modes (int or Sequence[int]): Modes to prepare the state in.
                 If modes is not ordered this is taken into account when preparing the state,
                 i.e., when a two mode state is prepared in modes=[3,1], then the first
                 mode of state goes into mode 3 and the second mode goes into mode 1 of the simulator.
@@ -562,13 +561,14 @@ class BaseFock(BaseBackend):
         raise NotImplementedError
 
     def prepare_dm_state(self, state, modes):
-        r"""Prepare the given dm state (in the Fock basis) in the specified modes.
+        r"""Prepare the given mixed state in the specified modes.
 
-        The requested mode(s) is/are traced out and replaced with the given dm state (in the Fock basis).
+        The requested modes are traced out and replaced with the given density matrix
+        state (in the Fock basis).
         As a result the state will be described using a density matrix.
 
         Args:
-            state (array): state in the Fock basis
+            state (array): Density matrix in the Fock basis.
                 The state can be given in either matrix form, with two indices, or tensor
                 form, with two indices per mode. For backends supporting batched mode,
                 state can be a batch of such matrices or tensors.
@@ -581,13 +581,13 @@ class BaseFock(BaseBackend):
         raise NotImplementedError
 
 
-    def cubic_phase(self, gamma_prime, mode):
+    def cubic_phase(self, gamma, mode):
         r"""Apply the cubic phase operation to the specified mode.
 
         Applies the operation
 
         .. math::
-           \exp\left(i \frac{\gamma'}{6} (\hat{a} +\hat{a}^\dagger)^3\right)
+           \exp\left(i \frac{\gamma}{6} (\hat{a} +\hat{a}^\dagger)^3\right)
 
         to the specified mode.
 
@@ -596,10 +596,10 @@ class BaseFock(BaseBackend):
            The usual definition of the cubic phase gate is :math:`\hbar` dependent:
 
            .. math::
-              V(\gamma) = \exp\left(i \frac{\gamma}{3\hbar} \hat{x}^3\right) = \exp\left(i \frac{\gamma \sqrt{\hbar/2}}{6} (\hat{a} +\hat{a}^\dagger)^3\right).
+              V(\gamma') = \exp\left(i \frac{\gamma'}{3\hbar} \hat{x}^3\right) = \exp\left(i \frac{\gamma' \sqrt{\hbar/2}}{6} (\hat{a} +\hat{a}^\dagger)^3\right).
 
-           Hence the cubic phase gate `V(gamma)` is executed on a backend by scaling the
-           `gamma` parameter by :math:`\sqrt{\hbar/2}` and then passing it to this method,
+           Hence the cubic phase gate :math:`V(\gamma')` is executed on a backend by scaling the
+           :math:`\gamma'` parameter by :math:`\sqrt{\hbar/2}` and then passing it to this method,
            much in the way the :math:`\hbar` dependent `X` and `Z` gates are implemented through the
            :math:`\hbar` independent :meth:`~BaseBackend.displacement` method.
 
@@ -611,7 +611,7 @@ class BaseFock(BaseBackend):
             provides an alternative non-Gaussian gate.
 
         Args:
-            gamma_prime (float): scaled cubic phase shift, :math:`\gamma' = \gamma \sqrt{\hbar/2}`
+            gamma (float): scaled cubic phase shift, :math:`\gamma = \gamma' \sqrt{\hbar/2}`
             mode (int): which mode to apply it to
         """
         raise NotImplementedError
@@ -642,22 +642,21 @@ class BaseFock(BaseBackend):
 
         Args:
             modes (Sequence[int]): which modes to measure
-            select (Sequence[int]): (Optional) desired values of measurement results.
-                Allows user to post-select on specific measurement results instead of randomly sampling.
-
+            select (None or Sequence[int]): If not None: desired values of the measurement results.
+                Enables post-selection on specific measurement results instead of random sampling.
+                ``len(select) == len(modes)`` is required.
         Returns:
-            tuple[int]: corresponding measurement results
+            tuple[int]: measurement results
         """
         raise NotImplementedError
 
     def state(self, modes=None, **kwargs):
-        r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
+        r"""Returns the state of the quantum simulation.
 
-        Args:
-            modes (int or Sequence[int]): specifies the mode or modes to restrict the return state to.
-                This argument is optional; the default value ``modes=None`` returns the state containing all modes.
+        See :meth:`.BaseBackend.state`.
+
         Returns:
-            FockState: state description
+            BaseFockState: state description
         """
         raise NotImplementedError
 
@@ -678,20 +677,20 @@ class BaseGaussian(BaseBackend):
         Updates the current state of the circuit such that the measured mode is reset to the vacuum state.
 
         Args:
-            modes (Sequence[int]): which modes to measure
-            select (complex): (Optional) desired values of measurement result.
-                Allows user to post-select on specific measurement results instead of randomly sampling.
+            mode (int): which mode to measure
+            select (None or complex): If not None: desired value of the measurement result.
+                Enables post-selection on specific measurement results instead of random sampling.
 
         Returns:
-            complex: measured values
+            complex: measured value
         """
         raise NotImplementedError
 
     def prepare_gaussian_state(self, r, V, modes):
-        r"""Prepare the given Gaussian state (via the provided vector of
-        means and the covariance matrix) in the specified modes.
+        r"""Prepare a Gaussian state.
 
-        The requested modes are traced out and replaced with the given Gaussian state.
+        The specified modes are traced out and replaced with a Gaussian state
+        provided via a vector of means and a covariance matrix.
 
         .. note::
            This method is :math:`\hbar` independent.
@@ -703,41 +702,43 @@ class BaseGaussian(BaseBackend):
         Args:
             r (array): vector of means in xp ordering
             V (array): covariance matrix in xp ordering
-            modes (int or Sequence[int]): which mode to prepare the state in
-                If the modes are not sorted, this is take into account when preparing the state.
-                i.e., when a two mode state is prepared in modes=[3,1], then the first
-                mode of state goes into mode 3 and the second mode goes into mode 1 of the simulator.
+            modes (int or Sequence[int]): Which modes to prepare the state in.
+                If the modes are not sorted, this is taken into account when preparing the state.
+                I.e., when a two mode state is prepared with ``modes=[3,1]``, the first
+                mode of the given state goes into mode 3 and the second mode goes into mode 1.
         """
         raise NotImplementedError
 
     def get_cutoff_dim(self):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def prepare_fock_state(self, n, mode):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def prepare_ket_state(self, state, mode):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def prepare_dm_state(self, state, mode):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def cubic_phase(self, gamma, mode):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def kerr_interaction(self, kappa, mode):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def cross_kerr_interaction(self, kappa, mode1, mode2):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
 
     def measure_fock(self, modes, select=None):
-        # pylint: disable=unused-argument,missing-docstring
         raise NotApplicableError
+
+    def state(self, modes=None, **kwargs):
+        """Returns the state of the quantum simulation.
+
+        See :meth:`.BaseBackend.state`.
+
+        Returns:
+            BaseGaussianState: state description
+        """
+        raise NotImplementedError

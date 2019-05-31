@@ -460,6 +460,9 @@ class Circuit:
                 vac_component = tf.reshape(self._state, [self._batch_size, -1])[:, 0]
             else:
                 vac_component = tf.reshape(self._state, [-1])[0]
+
+            if self._state_is_pure:
+                return tf.abs(vac_component) ** 2
             return vac_component
 
     def measure_fock(self, modes, select=None, **kwargs):

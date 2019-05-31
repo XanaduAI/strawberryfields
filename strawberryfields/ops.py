@@ -857,10 +857,15 @@ class DisplacedSqueezed(Preparation):
 
     def _apply(self, reg, backend, **kwargs):
         p = _unwrap(self.p)
-        # prepare the squeezed state
-        backend.prepare_squeezed_state(p[1], p[2], *reg)
-        # displace the state by alpha
-        backend.displacement(p[0], *reg)
+        # prepare the displaced squeezed state directly
+        backend.prepare_displaced_squeezed_state(p[0], p[1], p[2], *reg)
+
+    def _decompose(self, reg):
+        # squeezed state preparation followed by a displacement gate
+        return [
+            Command(Squeezed(self.p[1], self.p[2]), reg),
+            Command(Dgate(self.p[0]), reg)
+        ]
 
 
 class Fock(Preparation):
