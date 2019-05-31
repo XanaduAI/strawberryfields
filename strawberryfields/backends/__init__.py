@@ -40,7 +40,7 @@ def load_backend(name):
         # isolate the import of tensorflow
         from .tfbackend import TFBackend
 
-        return TFBackend
+        return TFBackend()
 
     if name in supported_backends:
         backend = supported_backends[name]()
