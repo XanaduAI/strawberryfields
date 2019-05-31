@@ -187,8 +187,6 @@ def excepthook(type, value, traceback):
     print(value)
 
 
-if tf_available and tf_version[:3] == "1.3":
-    import tensorflow as tf
-else:
+if not (tf_available and tf_version[:3] == "1.3"):
     sys.excepthook = excepthook
     raise ImportError(tf_info)
