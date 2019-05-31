@@ -25,6 +25,7 @@ import tensorflow as tf
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.parameters import Parameter
+from strawberryfields.backends.tfbackend import TFBackend
 
 
 # TODO: skipping tf test here for now.
@@ -62,7 +63,7 @@ def test_parameters_with_operations(batch_size, setup_eng, backend, hbar):
 
     # other types of parameters
     other_inputs = [0.14]
-    if isinstance(eng.backend, sf.backends.TFBackend):
+    if isinstance(eng.backend, TFBackend):
         # HACK: add placeholders for tf.Variables
         other_inputs.append(np.inf)
         if batch_size is not None:
@@ -137,7 +138,7 @@ def test_parameters_with_operations(batch_size, setup_eng, backend, hbar):
             if isinstance(p[0].x, ops.RR):
                 continue
 
-            if isinstance(eng.backend, sf.backends.TFBackend):
+            if isinstance(eng.backend, TFBackend):
                 # declare tensorflow Variables here (otherwise they will be on a different graph when we do backend.reset below)
                 # replace placeholders with tf.Variable instances
                 def f(q):
