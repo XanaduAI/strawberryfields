@@ -63,7 +63,7 @@ Python version:
     python --version
 
 If the above prints out 3.7, and you still want to use TensorFlow, you will need to install Python 3.6.
-The recommended method is to install `Miniconda3 <https://docs.conda.io/en/latest/miniconda.html>`_.
+The recommended method is to install `Anaconda for Python 3 <https://www.anaconda.com/download/>`_.
 
 Once installed, you can then create a Python 3.6 Conda environment:
 
