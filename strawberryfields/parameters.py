@@ -101,7 +101,7 @@ from .program import (RegRef, RegRefTransform)
 try:
     import tensorflow as tf
     _tf_classes = (tf.Tensor, tf.Variable)
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     tf = mock.MagicMock()
     _tf_classes = tuple()
 

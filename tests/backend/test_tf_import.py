@@ -12,37 +12,93 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for TensorFlow 1.3 version checking"""
+from importlib import reload
+import sys
+
 import pytest
 
-
-def test_incorrect_tf_version(monkeypatch):
-    """Test that an exception is raised if the version
-    of TensorFlow installed is not version 1.3"""
-    with monkeypatch.context() as m:
-        # force Python check to pass
-        m.setattr("sys.version_info", (3, 6, 3))
-        m.setattr("tensorflow.__version__", "1.12.2")
-
-        with pytest.raises(ImportError, message="version 1.3 of TensorFlow is required"):
-            from strawberryfields.backends.tfbackend import TFBackend
+import strawberryfields as sf
 
 
-def test_incorrect_python_version(monkeypatch):
-    """Test that an exception is raised if the version
-    of Python installed is > 3.6"""
-    with monkeypatch.context() as m:
-        m.setattr("sys.version_info", (3, 8, 1))
+try:
+    import tensorflow
+except (ImportError, ModuleNotFoundError):
+    tf_available = False
+    import mock
+    tensorflow = mock.Mock(__version__="1.12.2")
+else:
+    tf_available = True
 
-        with pytest.raises(ImportError, message="you will need to install Python 3.6"):
-            from strawberryfields.backends.tfbackend import TFBackend
+
+class TestBackendImport:
+    """Test importing the backend directly"""
+
+    def test_incorrect_tf_version(self, monkeypatch):
+        """Test that an exception is raised if the version
+        of TensorFlow installed is not version 1.3"""
+        with monkeypatch.context() as m:
+            # force Python check to pass
+            m.setattr("sys.version_info", (3, 6, 3))
+            m.setattr(tensorflow, "__version__", "1.12.2")
+
+            with pytest.raises(ImportError, message="version 1.3 of TensorFlow is required"):
+                reload(sf.backends.tfbackend)
+
+    def test_incorrect_python_version(self, monkeypatch):
+        """Test that an exception is raised if the version
+        of Python installed is > 3.6"""
+        with monkeypatch.context() as m:
+            m.setattr("sys.version_info", (3, 8, 1))
+            m.setattr(tensorflow, "__version__", "1.12.2")
+
+            with pytest.raises(ImportError, message="you will need to install Python 3.6"):
+                reload(sf.backends.tfbackend)
+
+    @pytest.mark.skipif(tf_available, reason="Test only works if TF not installed")
+    def test_tensorflow_not_installed(self, monkeypatch):
+        """Test that an exception is raised if TensorFlow is not installed"""
+        with monkeypatch.context() as m:
+            # force Python check to pass
+            m.setattr("sys.version_info", (3, 6, 3))
+
+            with pytest.raises(ImportError, message="version 1.3 of TensorFlow is required"):
+                reload(sf.backends.tfbackend)
 
 
-def test_tensorflow_not_installed(monkeypatch):
-    """Test that an exception is raised if TensorFlow is not installed"""
-    with monkeypatch.context() as m:
-        # force Python check to pass
-        m.setattr("sys.version_info", (3, 6, 3))
-        m.delitem("sys.modules", "tensorflow", raising=False)
+@pytest.mark.frontend
+class TestFrontendImport:
+    """Test importing via the frontend"""
 
-        with pytest.raises(ImportError, message="version 1.3 of TensorFlow is required"):
-            from strawberryfields.backends.tfbackend import TFBackend
+    def test_incorrect_tf_version(self, monkeypatch):
+        """Test that an exception is raised if the version
+        of TensorFlow installed is not version 1.3"""
+        with monkeypatch.context() as m:
+            # force Python check to pass
+            m.setattr("sys.version_info", (3, 6, 3))
+            m.setattr(tensorflow, "__version__", "1.12.2")
+
+            with pytest.raises(ImportError, message="version 1.3 of TensorFlow is required"):
+                reload(sf.backends.tfbackend)
+                sf.LocalEngine('tf')
+
+    def test_incorrect_python_version(self, monkeypatch):
+        """Test that an exception is raised if the version
+        of Python installed is > 3.6"""
+        with monkeypatch.context() as m:
+            m.setattr("sys.version_info", (3, 8, 1))
+            m.setattr(tensorflow, "__version__", "1.12.2")
+
+            with pytest.raises(ImportError, message="you will need to install Python 3.6"):
+                reload(sf.backends.tfbackend)
+                sf.LocalEngine('tf')
+
+    @pytest.mark.skipif(tf_available, reason="Test only works if TF not installed")
+    def test_tensorflow_not_installed(self, monkeypatch):
+        """Test that an exception is raised if TensorFlow is not installed"""
+        with monkeypatch.context() as m:
+            # force Python check to pass
+            m.setattr("sys.version_info", (3, 6, 3))
+
+            with pytest.raises(ImportError, message="version 1.3 of TensorFlow is required"):
+                reload(sf.backends.tfbackend)
+                sf.LocalEngine('tf')

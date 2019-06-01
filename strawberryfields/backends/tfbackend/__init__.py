@@ -144,19 +144,16 @@ Code details
 import sys
 
 try:
-    import tensorflow as tf
+    import tensorflow
 except (ImportError, ModuleNotFoundError):
     tf_available = False
+    tf_version = None
 else:
     tf_available = True
-    tf_version = tf.__version__
-
-from .backend import TFBackend
-from .ops import def_type as tf_complex_type
+    tf_version = tensorflow.__version__
 
 
 tf_info = """\
-ImportError:
 To use Strawberry Fields with TensorFlow support, version 1.3 of
 TensorFlow is required. This can be installed as follows:
 
@@ -165,7 +162,6 @@ pip install tensorflow==1.3
 
 
 tf_info_python = """\
-ImportError:
 To use Strawberry Fields with TensorFlow support, version 1.3 of
 TensorFlow is required.
 
@@ -198,3 +194,7 @@ if not (tf_available and tf_version[:3] == "1.3"):
         raise ImportError(tf_info_python)
 
     raise ImportError(tf_info)
+
+
+from .backend import TFBackend
+from .ops import def_type as tf_complex_type
