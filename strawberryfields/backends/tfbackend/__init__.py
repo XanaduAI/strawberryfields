@@ -148,7 +148,7 @@ from .ops import def_type as tf_complex_type
 
 try:
     import tensorflow as tf
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     tf_available = False
 else:
     tf_available = True

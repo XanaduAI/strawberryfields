@@ -20,15 +20,17 @@ import logging
 import pytest
 
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
 
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.parameters import Parameter
-from strawberryfields.backends.tfbackend import TFBackend
+# from strawberryfields.backends.tfbackend import TFBackend
+
+TFBackend = int # hack to avoid removing TFBackend from test
 
 
-# TODO: skipping tf test here for now.
+# TODO: broken for TensorFlow. Skipping tf test here for now.
 @pytest.mark.backends("fock")
 def test_parameters_with_operations(batch_size, setup_eng, backend, hbar):
     """Test using different types of Parameters with different classes

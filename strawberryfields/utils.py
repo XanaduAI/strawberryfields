@@ -129,7 +129,11 @@ import collections
 import copy
 from inspect import signature
 
-import tensorflow as tf
+try:
+    import tensorflow as tf
+except (ImportError, ModuleNotFoundError):
+    tf_available = False
+
 import numpy as np
 from numpy.random import randn
 from numpy.polynomial.hermite import hermval

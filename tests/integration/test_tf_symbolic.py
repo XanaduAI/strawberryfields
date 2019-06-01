@@ -23,9 +23,17 @@ pytestmark = pytest.mark.backends("tf")
 
 import numpy as np
 from scipy.special import factorial
-import tensorflow as tf
+
+try:
+    import tensorflow as tf
+except (ImportError, ModuleNotFoundError):
+    pytestmark = pytest.mark.skip("TensorFlow not installed")
+else:
+    if tf.__version__[:3] != "1.3":
+        pytestmark = pytest.mark.skip("Test only runs with TensorFlow 1.3")
 
 from strawberryfields.ops import Dgate, MeasureX
+
 
 ALPHA = 0.5
 evalf = {'eval': False}
