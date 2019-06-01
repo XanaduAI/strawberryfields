@@ -143,9 +143,6 @@ Code details
 """
 import sys
 
-from .backend import TFBackend
-from .ops import def_type as tf_complex_type
-
 try:
     import tensorflow as tf
 except (ImportError, ModuleNotFoundError):
@@ -153,6 +150,9 @@ except (ImportError, ModuleNotFoundError):
 else:
     tf_available = True
     tf_version = tf.__version__
+
+from .backend import TFBackend
+from .ops import def_type as tf_complex_type
 
 
 tf_info = """\
