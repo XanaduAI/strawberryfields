@@ -162,13 +162,13 @@ TensorFlow is required. This can be installed as follows:
 
 pip install tensorflow==1.3
 
-Note that TensorFlow version 1.3 is only support on Python version
+Note that TensorFlow version 1.3 is only supported on Python versions
 less than 3.7. You can use the following command to check your
 Python version:
 
 python --version
 
-If the above prints out 3.7, you will need to install Python 3.6.
+If the above prints out 3.7, and you still want to use TensorFlow, you will need to install Python 3.6.
 The recommended method is to install Miniconda3:
 
 https://docs.conda.io/en/latest/miniconda.html
