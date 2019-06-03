@@ -1,7 +1,7 @@
 References and further reading
 ===============================
 
-.. _futher_reading:
+.. _further_reading:
 
 Further reading
 ---------------

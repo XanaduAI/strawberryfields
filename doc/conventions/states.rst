@@ -101,7 +101,7 @@ In the limit :math:`r \to \infty`, the squeezed state's variance in the :math:`\
 
 We can also consider the case :math:`r \to -\infty`, where we find a state proportional to the eigenstate :math:`\ket{p}` of the :math:`\p` quadrature with eigenvalue 0. In the laboratory and in numerical simulation we must approximate every quadrature eigenstate using a finitely squeezed state (being careful that the variance of the relevant quadrature is much smaller than any other uncertainty relevant to the system). Any other quadrature eigenstate can be obtained from the :math:`x=0` eigenstate by applying suitable displacement and rotation operators.
 
-Finally, note that Gaussian operations will transform the vector of means via an affine transformation and the covariance matrix via similarity transformation; for a detailed discussion of these transformation, see Sec. 2 of *Gaussian quantum information* by Weedbrook et al. in the :ref:`further reading <futher_reading>` section.
+Finally, note that Gaussian operations will transform the vector of means via an affine transformation and the covariance matrix via similarity transformation; for a detailed discussion of these transformation, see Sec. 2 of *Gaussian quantum information* by Weedbrook et al. in the :ref:`further reading <further_reading>` section.
 
 Given a :math:`2N \times 2N` real symmetric matrix, how can we check that it is a valid covariance matrix? And if it is valid, which operations (displacement, squeezing, multiport interferometers) should be performed to prepare the corresponding Gaussian state?
 
