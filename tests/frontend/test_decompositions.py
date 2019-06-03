@@ -223,26 +223,6 @@ class TestRectangularSymmetricDecomposition:
         with pytest.raises(ValueError, match="matrix is not unitary"):
             dec.rectangular_symmetric(A)
 
-    @classmethod
-    def S(cls, m, n, internal_phase, external_phase, nmax):
-        r"""a section composed by external phase shift, BS, internal phase shift, BS
-
-        .. todo::
-
-           Move this function into decompositions and maybe rename and / or optimize.
-        """
-        print(m, n, internal_phase, external_phase, nmax)
-        Rexternal = np.identity(nmax, dtype=np.complex128)
-        Rexternal[m, m] = np.exp(1j * external_phase)
-        Rinternal = np.identity(nmax, dtype=np.complex128)
-        Rinternal[m, m] = np.exp(1j * internal_phase)
-        BS = np.identity(nmax, dtype=np.complex128)
-        BS[m, m] = 1.0 / np.sqrt(2)
-        BS[m, n] = 1.0j / np.sqrt(2)
-        BS[n, m] = 1.0j / np.sqrt(2)
-        BS[n, n] = 1.0 / np.sqrt(2)
-        return BS @ Rinternal @ BS @ Rexternal
-
     @pytest.mark.parametrize('U', [
         pytest.param(np.identity(2), id='identity2'),
         pytest.param(np.identity(2)[::-1], id='antiidentity2'),
@@ -267,14 +247,12 @@ class TestRectangularSymmetricDecomposition:
 
         Test passes if the product matches identity.
         """
-
-
         nmax, mmax = U.shape
         assert nmax == mmax
         tlist, diags = dec.rectangular_symmetric(U)
         qrec = np.identity(nmax)
         for i in tlist:
-            qrec = self.S(*i) @ qrec
+            qrec = dec.mach_zehnder(*i) @ qrec
         qrec = np.diag(diags) @ qrec
         assert np.allclose(U, qrec, atol=tol, rtol=0)
 

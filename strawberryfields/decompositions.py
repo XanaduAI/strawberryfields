@@ -260,12 +260,33 @@ def clements_phase_end(V, tol=1e-11):
     return (new_tlist, new_diags)
 
 
+def mach_zehnder(m, n, internal_phase, external_phase, nmax):
+    r"""A two-mode Mach-Zehnder interferometer section.
+
+    This section is constructed by an external phase shifter on the input mode
+    m, a symmetric beamsplitter combining modes m and n, an internal phase
+    shifter on mode m, and another symmetric beamsplitter combining modes m
+    and n.
+    """
+    Rexternal = np.identity(nmax, dtype=np.complex128)
+    Rexternal[m, m] = np.exp(1j * external_phase)
+    Rinternal = np.identity(nmax, dtype=np.complex128)
+    Rinternal[m, m] = np.exp(1j * internal_phase)
+    BS = np.identity(nmax, dtype=np.complex128)
+    BS[m, m] = 1.0 / np.sqrt(2)
+    BS[m, n] = 1.0j / np.sqrt(2)
+    BS[n, m] = 1.0j / np.sqrt(2)
+    BS[n, n] = 1.0 / np.sqrt(2)
+    return BS @ Rinternal @ BS @ Rexternal
+
+
 def rectangular_symmetric(V, tol=1e-11):
-    r"""Rectangular decomposition of a unitary into symmetric beamsplitters.
+    r"""Decomposition of a unitary into an array of symmetric beamsplitters.
 
     This decomposition starts with the output from :func:`clements_phase_end`
-    and further decomposes each of the T unitaries into two phase-shifters and
-    two symmetric (50:50) beamsplitters.
+    and further decomposes each of the T unitaries into Mach-Zehnder
+    interferometers consisting of two phase-shifters and two symmetric (50:50)
+    beamsplitters.
 
     The two beamsplitters in this decomposition of T are modeled by :class:`ops.BSgate`
     with arguments (pi/4, pi/2), and the two phase-shifters (see :class:`ops.Rgate`)
