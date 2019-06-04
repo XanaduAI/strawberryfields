@@ -15,7 +15,13 @@ r"""Integration tests for the utils.py module"""
 import pytest
 
 import numpy as np
-import tensorflow as tf
+
+try:
+    import tensorflow as tf
+except (ImportError, ModuleNotFoundError) as e:
+    import mock
+    tf = mock.MagicMock()
+    tf.Tensor = int
 
 import strawberryfields as sf
 import strawberryfields.ops as ops

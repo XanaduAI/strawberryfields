@@ -20,14 +20,17 @@ import logging
 import pytest
 
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
 
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.parameters import Parameter
+# from strawberryfields.backends.tfbackend import TFBackend
+
+TFBackend = int # hack to avoid removing TFBackend from test
 
 
-# TODO: skipping tf test here for now.
+# TODO: broken for TensorFlow. Skipping tf test here for now.
 @pytest.mark.backends("fock")
 def test_parameters_with_operations(batch_size, setup_eng, backend, hbar):
     """Test using different types of Parameters with different classes
@@ -62,7 +65,7 @@ def test_parameters_with_operations(batch_size, setup_eng, backend, hbar):
 
     # other types of parameters
     other_inputs = [0.14]
-    if isinstance(eng.backend, sf.backends.TFBackend):
+    if isinstance(eng.backend, TFBackend):
         # HACK: add placeholders for tf.Variables
         other_inputs.append(np.inf)
         if batch_size is not None:
@@ -137,7 +140,7 @@ def test_parameters_with_operations(batch_size, setup_eng, backend, hbar):
             if isinstance(p[0].x, ops.RR):
                 continue
 
-            if isinstance(eng.backend, sf.backends.TFBackend):
+            if isinstance(eng.backend, TFBackend):
                 # declare tensorflow Variables here (otherwise they will be on a different graph when we do backend.reset below)
                 # replace placeholders with tf.Variable instances
                 def f(q):

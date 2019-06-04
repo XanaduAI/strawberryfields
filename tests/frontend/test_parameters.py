@@ -17,7 +17,6 @@ import pytest
 pytestmark = pytest.mark.frontend
 
 import numpy as np
-import tensorflow as tf
 
 import strawberryfields as sf
 from strawberryfields import ops
@@ -26,15 +25,18 @@ from strawberryfields.parameters import Parameter
 # make test deterministic
 np.random.random(32)
 
-TEST_VALUES = [
-    3,
-    0.14,
-    4.2 + 0.5j,
-    np.random.random(3),
-    tf.Variable(2),
-    tf.Variable(0.4),
-    tf.Variable(0.8 + 1.1j),
-]
+
+TEST_VALUES = [3, 0.14, 4.2 + 0.5j, np.random.random(3)]
+
+
+try:
+    import tensorflow as tf
+except (ImportError, ModuleNotFoundError) as e:
+    tf_available = False
+else:
+    tf_available = True
+    TEST_VALUES.extend([tf.Variable(2), tf.Variable(0.4), tf.Variable(0.8 + 1.1j)])
+
 
 TEST_PARAMETERS = [Parameter(i) for i in TEST_VALUES]
 
@@ -71,6 +73,7 @@ def test_parameter_shape():
     assert res == (2, 3)
 
 
+@pytest.mark.skipif(not tf_available, reason="Test only works with TensorFlow installed")
 def test_parameter_shape_tf():
     """Tests that ensure wrapping occurs as expected"""
     var = np.array([[1, 2, 3], [4, 5, 6]])

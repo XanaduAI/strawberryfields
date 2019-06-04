@@ -20,38 +20,58 @@ as well as the following Python packages:
 * `NumPy <http://numpy.org/>`_  >=1.13.3
 * `SciPy <http://scipy.org/>`_  >=1.0.0
 * `NetworkX <http://networkx.github.io/>`_ >=2.0
-* `Tensorflow <https://www.tensorflow.org/>`_ >=1.3,<1.7
+* `Blackbird <https://quantum-blackbird.readthedocs.io>`_ >=0.2.0
 
 
 If you currently do not have Python 3 installed, we recommend `Anaconda for Python 3 <https://www.anaconda.com/download/>`_, a distributed version of Python packaged for scientific computation.
-
-.. note::
-
-    As Tensorflow does not currently support Python 3.7 and above, we are unable to
-    also support Strawberry Fields on Python 3.7.
 
 
 Installation
 ============
 
 Installation of Strawberry Fields, as well as all required Python packages mentioned above, can be installed via ``pip``:
-::
 
-    $ python -m pip install strawberryfields
+.. code-block:: console
 
-
-If you are using the ``tensorflow-gpu`` module for TensorFlow GPU support, you can install the following package for GPU support in Strawberry Fields:
-::
-
-    $ python -m pip install strawberryfields-gpu
+    pip install strawberryfields
 
 
-Make sure you are using the Python 3 version of pip.
+TensorFlow support
+==================
 
-Alternatively, you can install Strawberry Fields from the source code by navigating to the top directory and running
-::
+To use Strawberry Fields with TensorFlow, version 1.3 of
+TensorFlow is required. This can be installed alongside Strawberry Fields
+as follows:
 
-    $ python setup.py install
+.. code-block:: console
+
+    pip install strawberryfields tensorflow==1.3
+
+Or, to install Strawberry Fields and TensorFlow with GPU and CUDA support:
+
+.. code-block:: console
+
+    pip install strawberryfields tensorflow-gpu==1.3
+
+
+Note that TensorFlow version 1.3 is only supported on Python versions
+less than 3.7. You can use the following command to check your
+Python version:
+
+.. code-block:: console
+
+    python --version
+
+If the above prints out 3.7, and you still want to use TensorFlow, you will need to install Python 3.6.
+The recommended method is to install `Anaconda for Python 3 <https://www.anaconda.com/download/>`_.
+
+Once installed, you can then create a Python 3.6 Conda environment:
+
+.. code-block:: console
+
+    conda create --name sf_tensorflow_env python=3.6
+    conda activate sf_tensorflow_env
+    pip install strawberryfields tensorflow==1.3
 
 
 Notebook downloads

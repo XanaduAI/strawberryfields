@@ -90,17 +90,20 @@ Code details
 ~~~~~~~~~~~~
 
 """
-
 import numbers
 
+from unittest import mock
 import numpy as np
-import tensorflow as tf
 
 from .program import (RegRef, RegRefTransform)
 
 
-# supported TF classes
-_tf_classes = (tf.Tensor, tf.Variable)
+try:
+    import tensorflow as tf
+    _tf_classes = (tf.Tensor, tf.Variable)
+except (ImportError, ModuleNotFoundError):
+    tf = mock.MagicMock()
+    _tf_classes = tuple()
 
 
 def _unwrap(params):

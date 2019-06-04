@@ -14,16 +14,20 @@
 """This module loads the required backend classes"""
 
 from .base import BaseBackend, BaseFock, BaseGaussian, ModeMap
-from .tfbackend import TFBackend
 from .gaussianbackend import GaussianBackend
 from .fockbackend import FockBackend
 
-__all__ = ['BaseBackend', 'BaseFock', 'BaseGaussian', 'FockBackend', 'GaussianBackend', 'TFBackend']
+__all__ = [
+    "BaseBackend",
+    "BaseFock",
+    "BaseGaussian",
+    "FockBackend",
+    "GaussianBackend",
+    "TFBackend",
+]
 
-supported_backends = {"base": BaseBackend,
-                      "tf": TFBackend,
-                      "gaussian": GaussianBackend,
-                      "fock": FockBackend}
+supported_backends = {"base": BaseBackend, "gaussian": GaussianBackend, "fock": FockBackend}
+
 
 def load_backend(name):
     """Loads the specified backend by mapping a string
@@ -31,8 +35,15 @@ def load_backend(name):
     dictionary. Note that this function is used by the
     frontend only, and should not be user-facing.
     """
+    if name == "tf":
+        # treat the tensorflow backend differently, to
+        # isolate the import of tensorflow
+        from .tfbackend import TFBackend
+
+        return TFBackend()
+
     if name in supported_backends:
         backend = supported_backends[name]()
         return backend
-    else:
-        raise ValueError("Backend '{}' is not supported.".format(name))
+
+    raise ValueError("Backend '{}' is not supported.".format(name))

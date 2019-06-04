@@ -20,8 +20,20 @@ import numpy as np
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.backends import BaseGaussian, BaseFock
-from strawberryfields.backends import TFBackend, GaussianBackend, FockBackend
+from strawberryfields.backends import GaussianBackend, FockBackend
 from strawberryfields.backends.states import BaseState
+
+
+try:
+    from strawberryfields.backends.tfbackend import TFBackend
+except (ImportError, ModuleNotFoundError, ValueError) as e:
+    eng_backend_params = [("gaussian", GaussianBackend), ("fock", FockBackend)]
+else:
+    eng_backend_params = [
+        ("tf", TFBackend),
+        ("gaussian", GaussianBackend),
+        ("fock", FockBackend),
+    ]
 
 
 # make test deterministic
@@ -31,10 +43,7 @@ b = -0.543
 c = 0.312
 
 
-@pytest.mark.parametrize(
-    "name,expected",
-    [("tf", TFBackend), ("gaussian", GaussianBackend), ("fock", FockBackend)],
-)
+@pytest.mark.parametrize("name,expected", eng_backend_params)
 def test_load_backend(name, expected, cutoff):
     """Test backends can be correctly loaded via strings"""
     eng = sf.Engine(name)
@@ -75,7 +84,7 @@ class TestEngineReset:
 
         # change the cutoff dimension
         new_cutoff = cutoff + 1
-        eng.reset({'cutoff_dim': new_cutoff})
+        eng.reset({"cutoff_dim": new_cutoff})
 
         state = eng.run(prog).state
         backend_cutoff = eng.backend.get_cutoff_dim()
@@ -161,6 +170,7 @@ class TestProperExecution:
         D = ops.Dgate(0.5)
         BS = ops.BSgate(0.7 * np.pi, np.pi / 2)
         R = ops.Rgate(np.pi / 3)
+
         def subroutine(a, b):
             """Subroutine for the quantum program"""
             R | a
@@ -236,7 +246,6 @@ class TestProperExecution:
         eng.reset()
         # the regrefs are reset as well
         assert np.all([r.val is None for r in prog.register])
-
 
     def test_empty_program(self, setup_eng):
         """Empty programs do not change the state of the backend."""

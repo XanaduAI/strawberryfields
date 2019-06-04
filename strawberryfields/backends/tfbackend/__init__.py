@@ -141,6 +141,60 @@ Code details
    :members:
 
 """
+import sys
+
+try:
+    import tensorflow
+except (ImportError, ModuleNotFoundError):
+    tf_available = False
+    tf_version = None
+else:
+    tf_available = True
+    tf_version = tensorflow.__version__
+
+
+tf_info = """\
+To use Strawberry Fields with TensorFlow support, version 1.3 of
+TensorFlow is required. This can be installed as follows:
+
+pip install tensorflow==1.3
+"""
+
+
+tf_info_python = """\
+To use Strawberry Fields with TensorFlow support, version 1.3 of
+TensorFlow is required.
+
+Note that TensorFlow version 1.3 is only supported on Python versions
+less than or equal to 3.6. To continue using TensorFlow with Strawberry Fields,
+you will need to install Python 3.6.
+
+The recommended method is to install Anaconda3:
+
+https://www.anaconda.com/download
+
+Once installed, you can then create a Python 3.6 Conda environment:
+
+conda create --name sf_tensorflow_env python=3.6
+conda activate sf_tensorflow_env
+pip install strawberryfields tensorflow==1.3
+"""
+
+
+def excepthook(type, value, traceback):
+    """Exception hook to suppress superfluous exceptions"""
+    #pylint: disable=unused-argument
+    print(value)
+
+
+if not (tf_available and tf_version[:3] == "1.3"):
+    sys.excepthook = excepthook
+
+    if sys.version_info[1] > 6:
+        raise ImportError(tf_info_python)
+
+    raise ImportError(tf_info)
+
 
 from .backend import TFBackend
 from .ops import def_type as tf_complex_type
