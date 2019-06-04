@@ -92,7 +92,7 @@ Code details
 """
 import numbers
 
-import mock
+from unittest import mock
 import numpy as np
 
 from .program import (RegRef, RegRefTransform)
