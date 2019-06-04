@@ -175,8 +175,8 @@ https://www.anaconda.com/download
 
 Once installed, you can then create a Python 3.6 Conda environment:
 
-conda create --name new_env python=3.6
-conda activate new_env
+conda create --name sf_tensorflow_env python=3.6
+conda activate sf_tensorflow_env
 pip install strawberryfields tensorflow==1.3
 """
 
