@@ -1825,7 +1825,6 @@ class Gaussian(Preparation, Decomposition):
         backend.prepare_gaussian_state(p[1]/s, p[0], reg)
 
     def _decompose(self, reg):
-        # FIXME this is a Preparation, are some of the decompositions below missing Vacuum preparations?
         # pylint: disable=too-many-branches
         cmds = []
 
@@ -1843,7 +1842,9 @@ class Gaussian(Preparation, Decomposition):
             for n, expr in enumerate(D[:self.ns]):
                 if np.abs(expr - 1) >= _decomposition_tol:
                     r = abs(log(expr)/2)
-                    cmds.append(Command(Sgate(r, 0), reg[n]))
+                    cmds.append(Command(Squeezed(r, 0), reg[n]))
+                else:
+                    cmds.append(Command(Vac, reg[n]))
 
         elif self.pure and is_block_diag:
             # covariance matrix consists of rotated squeezed states
@@ -1851,13 +1852,17 @@ class Gaussian(Preparation, Decomposition):
                 if not np.all(v - np.identity(2) < 1e-10):   # FIXME magic tolerance
                     r = np.abs(arccosh(np.sum(np.diag(v)) / 2)) / 2
                     phi = arctan(2 * v[0, 1] / np.sum(np.diag(v) * [1, -1]))
-                    cmds.append(Command(Sgate(r, phi), reg[n]))
+                    cmds.append(Command(Squeezed(r, phi), reg[n]))
+                else:
+                    cmds.append(Command(Vac, reg[n]))
 
         elif not self.pure and is_diag and np.all(D[:self.ns] == D[self.ns:]):
             # covariance matrix consists of thermal states
             for n, nbar in enumerate(0.5 * (D[:self.ns] - 1.0)):
                 if nbar >= _decomposition_tol:
                     cmds.append(Command(Thermal(nbar), reg[n]))
+                else:
+                    cmds.append(Command(Vac, reg[n]))
 
         else:
             if not self.pure:
@@ -1865,6 +1870,12 @@ class Gaussian(Preparation, Decomposition):
                 for n, nbar in enumerate(self.nbar):
                     if np.abs(nbar) >= _decomposition_tol:
                         cmds.append(Command(Thermal(nbar), reg[n]))
+                    else:
+                        cmds.append(Command(Vac, reg[n]))
+
+            else:
+                for r in reg:
+                    cmds.append(Command(Vac, r))
 
             cmds.append(Command(GaussianTransform(self.S, vacuum=self.pure), reg))
 

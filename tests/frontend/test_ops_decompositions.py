@@ -503,7 +503,7 @@ class TestGaussian:
         # calculating the resulting decomposed symplectic
         for cmd in cmds:
             # all operations should be BSgates, Rgates, or Sgates
-            assert isinstance(cmd.op, (ops.Thermal, ops.GaussianTransform))
+            assert isinstance(cmd.op, (ops.Vacuum, ops.Thermal, ops.GaussianTransform))
 
             # build up the symplectic transform
             modes = [i.ind for i in cmd.reg]
@@ -525,7 +525,7 @@ class TestGaussian:
         assert np.allclose(cov, cov_res, atol=tol, rtol=0)
 
     def test_thermal_decomposition(self, hbar, tol):
-        """Test that an thermal state decomposition provides correct covariance matrix"""
+        """Test that a thermal covariance matrix decomposes into Thermal preparations."""
         n = 3
         prog = sf.Program(n)
         nbar = np.array([0.453, 0.23, 0.543])
@@ -538,12 +538,11 @@ class TestGaussian:
 
         # calculating the resulting decomposed symplectic
         for i, cmd in enumerate(cmds):
-            # all operations should be Thermal states
             assert isinstance(cmd.op, ops.Thermal)
             assert np.allclose(cmd.op.p[0].x, nbar[i], atol=tol, rtol=0)
 
     def test_squeezed_decomposition(self, hbar, tol):
-        """Test that an squeeze state decomposition provides correct the covariance matrix"""
+        """Test that an axially squeezed covariance matrix decomposes into Squeezed preparations."""
         n = 3
         prog = sf.Program(n)
 
@@ -558,13 +557,12 @@ class TestGaussian:
 
         # calculating the resulting decomposed symplectic
         for i, cmd in enumerate(cmds):
-            # all operations should be Sgates
-            assert isinstance(cmd.op, ops.Sgate)
+            assert isinstance(cmd.op, ops.Squeezed)
             assert np.allclose(cmd.op.p[0].x, sq_r[i], atol=tol, rtol=0)
             assert cmd.op.p[1].x == 0
 
     def test_rotated_squeezed_decomposition(self, hbar, tol):
-        """Test that a rotated squeeze state decomposition provides the correct covariance matrix"""
+        """Test that a rotated squeezed covariance matrix decomposes into Squeezed preparations"""
         n = 3
         prog = sf.Program(n)
 
@@ -584,7 +582,28 @@ class TestGaussian:
 
         # calculating the resulting decomposed symplectic
         for i, cmd in enumerate(cmds):
-            # all operations should be Sgates
-            assert isinstance(cmd.op, ops.Sgate)
+            assert isinstance(cmd.op, ops.Squeezed)
             assert np.allclose(cmd.op.p[0].x, sq_r[i], atol=tol, rtol=0)
             assert np.allclose(cmd.op.p[1].x, sq_phi[i], atol=tol, rtol=0)
+
+    def test_degenerate_decomposition(self, hbar, tol):
+        """Test that a decomposition involving no squeezing results in a Vacuum preparation."""
+        n = 2
+        prog = sf.Program(n)
+
+        sq_r = np.array([0, 1.5])
+        S = np.diag(np.exp(np.concatenate([-sq_r, sq_r])))
+        cov = S @ S.T * (hbar / 2)
+
+        G = ops.Gaussian(cov)
+        cmds = G.decompose(prog.register)
+
+        assert len(cmds) == 2
+
+        for cmd in cmds[:1]:
+            assert isinstance(cmd.op, ops.Vacuum)
+
+        for cmd in cmds[1:]:
+            assert isinstance(cmd.op, ops.Squeezed)
+            assert np.allclose(cmd.op.p[0].x, sq_r[1], atol=tol, rtol=0)
+            assert np.allclose(cmd.op.p[1].x, 0, atol=tol, rtol=0)

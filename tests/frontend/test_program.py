@@ -494,7 +494,7 @@ class TestValidation:
         backend) can have it's decomposition behaviour user defined.
 
         In this case, the Gaussian operation should compile
-        to an Sgate.
+        to a Squeezed preparation.
         """
         prog = sf.Program(3)
         r = 0.453
@@ -507,9 +507,8 @@ class TestValidation:
 
         assert len(new_prog) == 1
 
-        # decomposed gate should be an Sgate
         circuit = new_prog.circuit
-        assert circuit[0].op.__class__.__name__ == "Sgate"
+        assert circuit[0].op.__class__.__name__ == "Squeezed"
         assert circuit[0].op.p[0] == r
 
     def test_topology_validation(self, monkeypatch):
