@@ -122,7 +122,7 @@ class TestGaussianBackendDecompositions:
         """Test that nothing is done if the adjacency matrix is the identity"""
         prog = sf.Program(3)
         with prog.context as q:
-            ops.GraphEmbed(np.identity(6)) | q
+            ops.GraphEmbed(np.identity(3)) | q
 
         assert len(prog) == 1
         prog = prog.compile()
@@ -176,7 +176,7 @@ class TestGaussianBackendDecompositions:
         """Test that applying an identity interferometer does nothing"""
         prog = sf.Program(3)
         with prog.context as q:
-            ops.Interferometer(np.identity(6)) | q
+            ops.Interferometer(np.identity(3)) | q
 
         assert len(prog) == 1
         prog = prog.compile()
@@ -267,7 +267,7 @@ class TestGaussianBackendDecomposeState:
         assert np.allclose(state.cov(), cov, atol=tol)
         assert np.all(state.means() == np.zeros([6]))
         assert np.allclose(state.fidelity_vacuum(), 1, atol=tol)
-        assert len(eng.run_progs[-1]) == 0
+        assert len(eng.run_progs[-1]) == 3
 
     def test_squeezed(self, setup_eng, hbar, tol):
         """Testing decomposed squeezed state"""
@@ -338,7 +338,7 @@ class TestFockBackendDecomposeState:
 
         state = eng.run(prog).state
         assert np.allclose(state.fidelity_vacuum(), 1, atol=tol)
-        assert len(eng.run_progs[-1]) == 0
+        assert len(eng.run_progs[-1]) == 3
 
     def test_squeezed(self, setup_eng, cutoff, hbar, tol):
         eng, prog = setup_eng(3)
