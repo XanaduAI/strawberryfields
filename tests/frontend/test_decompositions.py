@@ -213,6 +213,50 @@ class TestRectangularDecomposition:
         assert np.allclose(U, qrec, atol=tol, rtol=0)
 
 
+class TestRectangularSymmetricDecomposition:
+    """Tests for linear interferometer decomposition into rectangular grid of
+    phase-shifters and pairs of symmetric beamsplitters"""
+
+    def test_unitary_validation(self):
+        """Test that an exception is raised if not unitary"""
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
+        with pytest.raises(ValueError, match="matrix is not unitary"):
+            dec.rectangular_symmetric(A)
+
+    @pytest.mark.parametrize('U', [
+        pytest.param(np.identity(2), id='identity2'),
+        pytest.param(np.identity(2)[::-1], id='antiidentity2'),
+        pytest.param(haar_measure(2), id='random2'),
+        pytest.param(np.identity(4), id='identity4'),
+        pytest.param(np.identity(3)[::-1], id='antiidentity4'),
+        pytest.param(haar_measure(4), id='random4'),
+        pytest.param(np.identity(8), id='identity8'),
+        pytest.param(np.identity(8)[::-1], id='antiidentity8'),
+        pytest.param(haar_measure(8), id='random8'),
+        pytest.param(np.identity(20), id='identity20'),
+        pytest.param(np.identity(20)[::-1], id='antiidentity20'),
+        pytest.param(haar_measure(20), id='random20')
+        ])
+    def test_decomposition(self, U, tol):
+        """This test checks the function :func:`dec.rectangular_symmetric` for
+        various unitary matrices.
+
+        A given unitary (identity or random draw from Haar measure) is
+        decomposed using the function :func:`dec.rectangular_symmetric`
+        and the resulting beamsplitters are multiplied together.
+
+        Test passes if the product matches identity.
+        """
+        nmax, mmax = U.shape
+        assert nmax == mmax
+        tlist, diags = dec.rectangular_symmetric(U)
+        qrec = np.identity(nmax)
+        for i in tlist:
+            qrec = dec.mach_zehnder(*i) @ qrec
+        qrec = np.diag(diags) @ qrec
+        assert np.allclose(U, qrec, atol=tol, rtol=0)
+
+
 class TestTriangularDecomposition:
     """Tests for linear interferometer triangular decomposition"""
 

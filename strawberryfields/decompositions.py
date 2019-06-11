@@ -291,6 +291,94 @@ def clements_phase_end(V, tol=1e-11):
     return (new_tlist, new_diags)
 
 
+def mach_zehnder(m, n, internal_phase, external_phase, nmax):
+    r"""A two-mode Mach-Zehnder interferometer section.
+
+    This section is constructed by an external phase shifter on the input mode
+    m, a symmetric beamsplitter combining modes m and n, an internal phase
+    shifter on mode m, and another symmetric beamsplitter combining modes m
+    and n.
+    """
+    Rexternal = np.identity(nmax, dtype=np.complex128)
+    Rexternal[m, m] = np.exp(1j * external_phase)
+    Rinternal = np.identity(nmax, dtype=np.complex128)
+    Rinternal[m, m] = np.exp(1j * internal_phase)
+    BS = np.identity(nmax, dtype=np.complex128)
+    BS[m, m] = 1.0 / np.sqrt(2)
+    BS[m, n] = 1.0j / np.sqrt(2)
+    BS[n, m] = 1.0j / np.sqrt(2)
+    BS[n, n] = 1.0 / np.sqrt(2)
+    return BS @ Rinternal @ BS @ Rexternal
+
+
+def rectangular_symmetric(V, tol=1e-11):
+    r"""Decomposition of a unitary into an array of symmetric beamsplitters.
+
+    This decomposition starts with the output from :func:`clements_phase_end`
+    and further decomposes each of the T unitaries into Mach-Zehnder
+    interferometers consisting of two phase-shifters and two symmetric (50:50)
+    beamsplitters.
+
+    The two beamsplitters in this decomposition of T are modeled by :class:`~.ops.BSgate`
+    with arguments :math:`(\pi/4, \pi/2)`, and the two phase-shifters (see :class:`~.ops.Rgate`)
+    act on the input mode with the lower index of the two. The phase imposed
+    by the first phaseshifter (before the first beamsplitter) is named
+    ``external_phase``, while we call the phase shift between the beamsplitters
+    ``internal_phase``.
+
+    The algorithm applied in this function makes use of the following identity:
+
+    .. code-block:: python
+
+        Rgate(alpha) | 1
+        Rgate(beta) | 2
+        Rgate(phi) | 1
+        BSgate(theta, 0) | 1, 2
+
+        equals
+
+        Rgate(phi+alpha-beta) | 1
+        BSgate(pi/4, pi/2) | 1, 2
+        Rgate(2*theta+pi) | 1, 2
+        BSgate(pi/4, pi/2) | 1, 2
+        Rgate(beta-theta+pi) | 1
+        Rgate(beta-theta) | 2
+
+    The phase-shifts by ``alpha`` and ``beta`` are thus pushed consecutively through
+    all the T unitaries of the interferometer and these unitaries are converted
+    into pairs of symmetric beamsplitters with two phase shifts. The phase
+    shifts at the end of the interferometer are added to the ones from the
+    diagonal unitary at the end of the interferometer obtained from :func:`~.clements_phase_end`.
+
+    Args:
+        V (array): unitary matrix of size n_size
+        tol (int): the number of decimal places to use when determining
+          whether the matrix is unitary
+
+    Returns:
+        tuple[array]: returns a tuple of the form ``(tlist,np.diag(localV))``
+            where:
+
+            * ``tlist``: list containing ``[n,m,internal_phase,external_phase,n_size]`` of the T unitaries needed
+            * ``localV``: Diagonal unitary matrix to be applied at the end of circuit
+    """
+    tlist, diags = clements_phase_end(V, tol)
+    new_tlist, new_diags = [], np.ones(len(diags), dtype=diags.dtype)
+    for i in tlist:
+        em, en = int(i[0]), int(i[1])
+        alpha, beta = np.angle(new_diags[em]), np.angle(new_diags[en])
+        theta, phi = i[2], i[3]
+        external_phase = np.fmod((phi + alpha - beta), 2 * np.pi)
+        internal_phase = np.fmod((np.pi + 2.0 * theta), 2 * np.pi)
+        new_alpha = beta - theta + np.pi
+        new_beta = 0*np.pi - theta + beta
+        new_i = [i[0], i[1], internal_phase, external_phase, i[4]]
+        new_diags[em], new_diags[en] = np.exp(1j*new_alpha), np.exp(1j*new_beta)
+        new_tlist = new_tlist + [new_i]
+    new_diags = diags * new_diags
+    return (new_tlist, new_diags)
+
+
 def triangular_decomposition(V, tol=1e-11):
     r"""Triangular decomposition of a unitary matrix due to Reck et al.
 
