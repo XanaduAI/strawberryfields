@@ -736,6 +736,7 @@ def is_channel(prog):
     Returns:
         bool: True if all operations in the program are of types :class:`strawberryfields.ops.Gate` and :class:`strawberryfields.ops.Channel`
     """
+    # FIXME isn't a preparation also a quantum channel?
     return all(isinstance(cmd.op, (Channel, Gate)) for cmd in prog.circuit)
 
 
