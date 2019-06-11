@@ -349,8 +349,6 @@ class Operation:
         self._extra_deps = set()
         #: list[Parameter]
         self.p = []
-        #: bool
-        self.decomp = True
 
         if par:
             # convert each parameter into a Parameter instance, keep track of dependenciens
@@ -586,6 +584,7 @@ class Decomposition(Operation):
 
     The first parameter p[0] of the Decomposition is always a square matrix.
     """
+    ns = None  # overridden by child classes in __init__
 
     def merge(self, other):
         # can be merged if they are the same class
@@ -1606,17 +1605,16 @@ class Interferometer(Decomposition):
         tol (float): the tolerance used when checking if the matrix is unitary:
             :math:`|UU^\dagger-I| \leq` tol
     """
-    ns = None
 
     def __init__(self, U, tol=1e-11):
         super().__init__([U])
+        self.ns = U.shape[0]
 
         if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
             self.identity = True
         else:
             self.identity = False
             self.BS1, self.BS2, self.R = clements(U, tol=tol)
-            self.ns = U.shape[0]
 
     def _decompose(self, reg):
         cmds = []
@@ -1658,10 +1656,10 @@ class GraphEmbed(Decomposition):
         tol (float): the tolerance used when checking if the input matrix is symmetric:
             :math:`|A-A^T| <` tol
     """
-    ns = None
 
     def __init__(self, A, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
         super().__init__([A])
+        self.ns = A.shape[0]
 
         if np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol):
             self.identity = True
@@ -1669,7 +1667,6 @@ class GraphEmbed(Decomposition):
             self.identity = False
             self.sq, self.U = graph_embed(
                 A, max_mean_photon=max_mean_photon, make_traceless=make_traceless, tol=tol)
-            self.ns = self.U.shape[0]
 
     def _decompose(self, reg):
         cmds = []
@@ -1722,9 +1719,9 @@ class GaussianTransform(Decomposition):
     """
     def __init__(self, S, vacuum=False, tol=1e-10):
         super().__init__([S])
-
+        self.ns = S.shape[0] // 2
         self.vacuum = vacuum  #: bool: if True, ignore the first unitary matrix when applying the gate
-        N = S.shape[0]//2
+        N = self.ns  # shorthand
 
         # check if input symplectic is passive (orthogonal)
         diffn = np.linalg.norm(S @ S.T - np.identity(2*N))
@@ -1738,8 +1735,6 @@ class GaussianTransform(Decomposition):
         else:
             # transformation is active, do Bloch-Messiah
             O1, smat, O2 = bloch_messiah(S, tol=tol)
-            N = S.shape[0]//2
-
             X1 = O1[:N, :N]
             P1 = O1[N:, :N]
             X2 = O2[:N, :N]
@@ -1801,9 +1796,8 @@ class Gaussian(Preparation, Decomposition):
 
     def __init__(self, V, r=None, decomp=True, tol=1e-6):
         # internally we eliminate hbar from the covariance matrix V (or equivalently set hbar=2), but not from the means vector r
-        V = V / (sf.hbar/2)
-
-        self.ns = V.shape[0]//2  #: int: number of modes
+        V = V / (sf.hbar / 2)
+        self.ns = V.shape[0] // 2
 
         if r is None:
             r = np.zeros(2*self.ns)
@@ -1811,6 +1805,8 @@ class Gaussian(Preparation, Decomposition):
 
         if len(r) != V.shape[0]:
             raise ValueError('Vector of means must have the same length as the covariance matrix.')
+
+        super().__init__([V, r])  # V is hbar-independent, r is not
 
         self.x_disp = r[:self.ns]
         self.p_disp = r[self.ns:]
@@ -1820,9 +1816,7 @@ class Gaussian(Preparation, Decomposition):
             self.pure = np.abs(np.linalg.det(V) - 1.0) < tol
             self.nbar = 0.5 * (np.diag(th)[:self.ns] - 1.0)
 
-        super().__init__([V, r])  # V is hbar-independent, r is not
         self.decomp = decomp  #: bool: if False, use the backend API call instead of decomposition
-
         # FIXME merge() probably does not work for Gaussians if r is not zero?
 
     def _apply(self, reg, backend, **kwargs):
