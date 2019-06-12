@@ -46,10 +46,13 @@ S = random_symplectic(3)
 def V_mixed(hbar):
     return random_covariance(3, hbar=hbar, pure=False)
 
-
 @pytest.fixture
 def V_pure(hbar):
     return random_covariance(3, hbar=hbar, pure=True)
+
+@pytest.fixture
+def r_means(hbar):
+    return np.random.randn(6) * np.sqrt(hbar / 2)
 
 
 A = np.array(
@@ -66,24 +69,6 @@ A -= np.trace(A) * np.identity(3) / 3
 @pytest.mark.backends("gaussian")
 class TestGaussianBackendDecompositions:
     """Test that the frontend decompositions work on the Gaussian backend"""
-
-    def test_covariance_random_state_mixed(self, setup_eng, V_mixed, tol):
-        """Test applying a mixed covariance state"""
-        eng, prog = setup_eng(3)
-        with prog.context as q:
-            ops.Gaussian(V_mixed) | q
-
-        state = eng.run(prog).state
-        assert np.allclose(state.cov(), V_mixed, atol=tol, rtol=0)
-
-    def test_covariance_random_state_pure(self, setup_eng, V_pure, tol):
-        """Test applying a pure covariance state"""
-        eng, prog = setup_eng(3)
-        with prog.context as q:
-            ops.Gaussian(V_pure) | q
-
-        state = eng.run(prog).state
-        assert np.allclose(state.cov(), V_pure, atol=tol)
 
     def test_gaussian_transform(self, setup_eng, hbar, tol):
         """Test applying a Gaussian symplectic transform"""
@@ -288,7 +273,7 @@ class TestGaussianBackendDecomposeState:
         means = np.array([0, 0.1, 0.2, -0.1, 0.3, 0])
 
         with prog.context as q:
-            ops.Gaussian(cov, r=means) | q
+            ops.Gaussian(cov, means) | q
 
         state = eng.run(prog).state
         assert np.allclose(state.cov(), cov, atol=tol)
@@ -323,6 +308,28 @@ class TestGaussianBackendDecomposeState:
         state = eng.run(prog).state
         assert np.allclose(state.cov(), cov, atol=tol)
         assert len(eng.run_progs[-1]) == 3
+
+    def test_random_state_mixed(self, setup_eng, V_mixed, r_means, tol):
+        """Test applying a mixed covariance state"""
+        eng, prog = setup_eng(3)
+        with prog.context as q:
+            ops.Gaussian(V_mixed, r_means) | q
+
+        state = eng.run(prog).state
+        assert np.allclose(state.cov(), V_mixed, atol=tol, rtol=0)
+        assert np.allclose(state.means(), r_means, atol=tol, rtol=0)
+        assert len(eng.run_progs[-1]) == 30
+
+    def test_random_state_pure(self, setup_eng, V_pure, r_means, tol):
+        """Test applying a pure covariance state"""
+        eng, prog = setup_eng(3)
+        with prog.context as q:
+            ops.Gaussian(V_pure, r_means) | q
+
+        state = eng.run(prog).state
+        assert np.allclose(state.cov(), V_pure, atol=tol, rtol=0)
+        assert np.allclose(state.means(), r_means, atol=tol, rtol=0)
+        assert len(eng.run_progs[-1]) == 21
 
 
 @pytest.mark.backends("tf", "fock")

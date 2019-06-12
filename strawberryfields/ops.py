@@ -1848,7 +1848,7 @@ class Gaussian(Preparation, Decomposition):
         elif self.pure and is_block_diag:
             # covariance matrix consists of rotated squeezed states
             for n, v in enumerate(BD_modes):
-                if not np.all(v - np.identity(2) < 1e-10):   # FIXME magic tolerance
+                if not np.all(v - np.identity(2) < _decomposition_tol):
                     r = np.abs(arccosh(np.sum(np.diag(v)) / 2)) / 2
                     phi = arctan(2 * v[0, 1] / np.sum(np.diag(v) * [1, -1]))
                     cmds.append(Command(Squeezed(r, phi), reg[n]))
