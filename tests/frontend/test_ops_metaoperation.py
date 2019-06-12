@@ -81,9 +81,9 @@ class TestProgramGateInteraction:
         assert prog.circuit[1].reg[1].ind == 2
 
     def test_create_or_exception(self):
-        """New_modes must not be called via its __or__ method"""
+        """_New_modes must not be called via its __or__ method"""
         with pytest.raises(ValueError):
-            ops.New_modes(1).__or__(0)
+            ops._New_modes(1).__or__(0)
 
     def test_create_non_positive_integer(self, prog):
         """number of new modes must be a positive integer"""

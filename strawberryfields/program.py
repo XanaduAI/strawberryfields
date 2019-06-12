@@ -566,7 +566,7 @@ class Program:
         """Delete existing subsystem references.
 
         To avoid discrepancies with the backend this method must not be called directly,
-        but rather indirectly by using :class:`~strawberryfields.ops.Delete` instances
+        but rather indirectly by using :class:`~strawberryfields.ops._Delete` instances
         in the Program context.
 
         Args:

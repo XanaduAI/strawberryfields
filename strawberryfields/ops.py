@@ -110,10 +110,9 @@ There are six kinds of :class:`Operation` objects:
         Dgate(RR(q[0])) | q[1]
         Dgate(RR(q[0], lambda q: q ** 2)) | q[2]
 
-* Meta-operations such as :class:`Delete` and :class:`New_modes` delete
-  and create modes during program execution.
-  In practice the user only deals with the pre-constructed
-  instance :py:data:`Del` and the function :func:`New`::
+* Modes can be created and deleted during program execution using the
+  function :func:`New` and the pre-constructed object :py:data:`Del`.
+  Behind the scenes they utilize the meta-operations :class:`_New_modes` and :class:`_Delete`::
 
     with prog.context as (alice,):
         Sgate(1)    | alice
@@ -241,8 +240,8 @@ Meta-operations
 
 .. autosummary::
    All
-   New_modes
-   Delete
+   _New_modes
+   _Delete
 
 
 Operations shortcuts
@@ -263,8 +262,8 @@ this is to provide shorthands for operations that accept no arguments, as well a
 
 ======================   =================================================================================
 **Shorthand variable**   **Operation**
-``New``                  :class:`~.New_modes`
-``Del``                  :class:`~.Delete`
+``New``                  :class:`~._New_modes`
+``Del``                  :class:`~._Delete`
 ``Vac``                  :class:`~.Vacuum`
 ``Fourier``              :class:`~.Fouriergate`
 ``Measure``              :class:`~.MeasureFock`
@@ -1504,7 +1503,7 @@ class MetaOperation(Operation):
         super().__init__(par=[])
 
 
-class Delete(MetaOperation):
+class _Delete(MetaOperation):
     """Deletes one or more existing modes.
     Also accessible via the shortcut variable ``Del``.
 
@@ -1540,11 +1539,11 @@ def New(n=1):
     # create RegRefs for the new modes
     refs = Program._current_context._add_subsystems(n)
     # append the actual Operation to the Program
-    Program._current_context.append(New_modes(n), refs)
+    Program._current_context.append(_New_modes(n), refs)
     return refs
 
 
-class New_modes(MetaOperation):
+class _New_modes(MetaOperation):
     """Used internally for adding new modes to the system in a deferred way.
 
     This class cannot be used with the :meth:`__or__` syntax since it would be misleading.
@@ -1898,7 +1897,7 @@ class Gaussian(Preparation, Decomposition):
 #=======================================================================
 # Shorthands, e.g. pre-constructed singleton-like objects
 
-Del = Delete()
+Del = _Delete()
 Vac = Vacuum()
 Measure = MeasureFock()
 MeasureX = MeasureHomodyne(0)
