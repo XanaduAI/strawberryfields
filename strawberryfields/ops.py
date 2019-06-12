@@ -1817,7 +1817,6 @@ class Gaussian(Preparation, Decomposition):
             self.nbar = 0.5 * (np.diag(th)[:self.ns] - 1.0)
 
         self.decomp = decomp  #: bool: if False, use the backend API call instead of decomposition
-        # FIXME merge() probably does not work for Gaussians if r is not zero?
 
     def _apply(self, reg, backend, **kwargs):
         p = _unwrap(self.p)

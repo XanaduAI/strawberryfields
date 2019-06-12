@@ -452,19 +452,23 @@ class TestGaussian:
     """Tests for the Gaussian quantum state preparation"""
 
     def test_merge(self, hbar, tol):
-        """Test that two covariances matrices overwrite each other on merge"""
+        """Test that merging two Preparations only keeps the latter one."""
         n = 3
         V1 = random_covariance(n, pure=False, hbar=hbar)
         V2 = random_covariance(n, pure=True, hbar=hbar)
+        r1 = np.random.randn(2*n)
+        r2 = np.random.randn(2*n)
 
-        cov1 = ops.Gaussian(V1)
-        cov2 = ops.Gaussian(V2)
+        G1 = ops.Gaussian(V1, r1)
+        G2 = ops.Gaussian(V2, r2)
 
-        # applying a second covariance matrix replaces the first
-        assert cov1.merge(cov2) == cov2
+        # applying a second state preparation replaces the first
+        assert G1.merge(G2) is G2
 
-        # the same is true of state preparations
-        assert ops.Squeezed(2).merge(cov2) == cov2
+        # the same is true of all state preparations
+        S = ops.Squeezed(2)
+        assert S.merge(G2) is G2
+        assert G2.merge(S) is S
 
     def test_incorrect_means_length(self, hbar):
         """Test that an exception is raised len(means)!=len(cov)"""
