@@ -26,8 +26,8 @@ class TFSpecs(DeviceSpecs):
     primitives = {
         # meta operations
         "All",
-        "New_modes",
-        "Delete",
+        "_New_modes",
+        "_Delete",
         # state preparations
         "Vacuum",
         "Coherent",

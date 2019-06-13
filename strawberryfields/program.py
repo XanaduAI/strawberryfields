@@ -539,8 +539,8 @@ class Program:
         """Create new subsystem references, add them to the reg_ref dictionary.
 
         To avoid discrepancies with the backend this method must not be called directly,
-        but rather indirectly by using :class:`~strawberryfields.ops.New_modes`
-        instances in the Program context.
+        but rather indirectly by using :func:`~strawberryfields.ops.New`
+        in a Program context.
 
         .. note:: This is the only place where :class:`RegRef` instances are constructed.
 
@@ -566,7 +566,7 @@ class Program:
         """Delete existing subsystem references.
 
         To avoid discrepancies with the backend this method must not be called directly,
-        but rather indirectly by using :class:`~strawberryfields.ops.Delete` instances
+        but rather indirectly by using :class:`~strawberryfields.ops._Delete` instances
         in the Program context.
 
         Args:

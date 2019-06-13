@@ -110,10 +110,9 @@ There are six kinds of :class:`Operation` objects:
         Dgate(RR(q[0])) | q[1]
         Dgate(RR(q[0], lambda q: q ** 2)) | q[2]
 
-* Meta-operations such as :class:`Delete` and :class:`New_modes` Operations delete
-  and create modes during program execution.
-  In practice the user only deals with the pre-constructed
-  instances :py:data:`Del` and :py:data:`New`::
+* Modes can be created and deleted during program execution using the
+  function :func:`New` and the pre-constructed object :py:data:`Del`.
+  Behind the scenes they utilize the meta-operations :class:`_New_modes` and :class:`_Delete`::
 
     with prog.context as (alice,):
         Sgate(1)    | alice
@@ -241,8 +240,8 @@ Meta-operations
 
 .. autosummary::
    All
-   New_modes
-   Delete
+   _New_modes
+   _Delete
 
 
 Operations shortcuts
@@ -263,8 +262,8 @@ this is to provide shorthands for operations that accept no arguments, as well a
 
 ======================   =================================================================================
 **Shorthand variable**   **Operation**
-``New``                  :class:`~.New_modes`
-``Del``                  :class:`~.Delete`
+``New``                  :class:`~._New_modes`
+``Del``                  :class:`~._Delete`
 ``Vac``                  :class:`~.Vacuum`
 ``Fourier``              :class:`~.Fouriergate`
 ``Measure``              :class:`~.MeasureFock`
@@ -1504,7 +1503,7 @@ class MetaOperation(Operation):
         super().__init__(par=[])
 
 
-class Delete(MetaOperation):
+class _Delete(MetaOperation):
     """Deletes one or more existing modes.
     Also accessible via the shortcut variable ``Del``.
 
@@ -1525,33 +1524,40 @@ class Delete(MetaOperation):
         return 'Del'
 
 
-class New_modes(MetaOperation):
-    """Used for adding new modes to the system.
-    Also accessible via the shortcut variable ``New``.
+def New(n=1):
+    """Adds new subsystems to the quantum register.
 
-    The new modes are prepapred in the vacuum state.
+    The new modes are prepared in the vacuum state.
 
-    This class cannot be used with the :meth:`__or__` syntax since it would be misleading,
-    instead we use :meth:`__call__` on a single instance to dispatch the command to the :class:`.Program`.
+    Must only be called in a :class:`Program` context.
+
+    Args:
+        n (int): number of subsystems to add
+    Returns:
+        tuple[RegRef]: tuple of the newly added subsystem references
+    """
+    # create RegRefs for the new modes
+    refs = Program._current_context._add_subsystems(n)
+    # append the actual Operation to the Program
+    Program._current_context.append(_New_modes(n), refs)
+    return refs
+
+
+class _New_modes(MetaOperation):
+    """Used internally for adding new modes to the system in a deferred way.
+
+    This class cannot be used with the :meth:`__or__` syntax since it would be misleading.
+    Indeed, users should *not* use this class directly, but rather the function :func:`New`.
     """
     ns = 0
 
-    def __call__(self, n=1):
-        """Adds one or more new modes to the system in a deferred way.
-
-        Appends the operation to a :class:`.Program` instance.
-
-        Args:
-            n (int): number of modes added
+    def __init__(self, n=1):
         """
-        # FIXME there is just a single instance, hence instance attributes may be overwritten!
-        # pylint: disable=attribute-defined-outside-init
+        Args:
+            n (int): number of modes to add
+        """
+        super().__init__()
         self.n = n  # int: store the number of new modes for the __str__ method
-        # create RegRef placeholders for the new modes
-        refs = Program._current_context._add_subsystems(n)
-        # append the actual creation command to the program
-        Program._current_context.append(self, refs)
-        return refs
 
     def _apply(self, reg, backend, **kwargs):
         # pylint: disable=unused-variable
@@ -1891,8 +1897,7 @@ class Gaussian(Preparation, Decomposition):
 #=======================================================================
 # Shorthands, e.g. pre-constructed singleton-like objects
 
-New = New_modes()
-Del = Delete()
+Del = _Delete()
 Vac = Vacuum()
 Measure = MeasureFock()
 MeasureX = MeasureHomodyne(0)
