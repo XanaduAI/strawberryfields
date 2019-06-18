@@ -1536,6 +1536,8 @@ def New(n=1):
     Returns:
         tuple[RegRef]: tuple of the newly added subsystem references
     """
+    if Program._current_context is None:
+        raise RuntimeError('New() can only be called inside a Program context.')
     # create RegRefs for the new modes
     refs = Program._current_context._add_subsystems(n)
     # append the actual Operation to the Program
