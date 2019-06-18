@@ -580,7 +580,6 @@ class TestOperation:
 class TestEngineUtilityFunctions:
     """Tests for some engine auxiliary functions"""
 
-    @pytest.mark.skip('FIXME is_unitary')
     def test_is_unitary_no_channel(self, prog):
         """test that the is_unitary function returns True if no channels are present"""
         assert utils.is_unitary(prog)
@@ -589,7 +588,6 @@ class TestEngineUtilityFunctions:
             BSgate(0.4) | q
         assert utils.is_unitary(prog)
 
-    @pytest.mark.skip('FIXME is_unitary')
     def test_is_unitary_with_channel(self, prog):
         """test that the is_unitary function returns False if channels are present"""
         with prog.context as q:
@@ -598,7 +596,6 @@ class TestEngineUtilityFunctions:
             BSgate(0.4) | q
         assert not utils.is_unitary(prog)
 
-    @pytest.mark.skip('FIXME is_channel')
     def test_is_channel_no_measurement(self, prog):
         """test that the is_channel function returns True if no measurements are present"""
         assert utils.is_channel(prog)
@@ -608,7 +605,6 @@ class TestEngineUtilityFunctions:
             BSgate(0.4) | q
         assert utils.is_channel(prog)
 
-    @pytest.mark.skip('FIXME is_channel')
     def test_is_channel_measurement(self, prog):
         """is_channel() returns False if measurements are present"""
         with prog.context as q:
@@ -618,10 +614,8 @@ class TestEngineUtilityFunctions:
             Sgate(0.4) | q[1]
         assert not utils.is_channel(prog)
 
-    @pytest.mark.skip('FIXME is_channel')
     def test_is_channel_preparation(self, prog):
         """is_channel() returns False if preparations are present"""
-        # FIXME isn't a preparation also a quantum channel?
         with prog.context as q:
             Sgate(0.4) | q[0]
             BSgate() | q
