@@ -17,9 +17,10 @@ API Client library that interacts with the compute-service API over the HTTP
 protocol.
 """
 
+import urllib
+
 import json
 import requests
-import urllib
 
 
 class MethodNotSupportedException(TypeError):
@@ -114,6 +115,8 @@ class ResourceManager:
     This class handles all interactions with APIClient by the resource.
     """
 
+    http_status_code = None
+
     def __init__(self, resource, client=None):
         """
         Initialize the manager with resource and client instances . A client
@@ -123,7 +126,6 @@ class ResourceManager:
         """
         setattr(self, "resource", resource)
         setattr(self, "client", client or APIClient())
-        setattr(self, "http_status_code", None)
 
     def join_path(self, path):
         """
