@@ -20,6 +20,7 @@ import pytest
 from strawberryfields import api_client
 from strawberryfields.api_client import (
     requests,
+    Job,
     ResourceManager,
     ObjectAlreadyCreatedException,
     MethodNotSupportedException,
@@ -267,27 +268,17 @@ class TestResourceManager:
         mock_resource = MagicMock()
         mock_client = MagicMock()
 
-        fields = (
-            "id",
-            "status",
-            "result_url",
-            "circuit_url",
-            "created_at",
-            "started_at",
-            "finished_at",
-            "running_time",
-        )
+        fields = [MagicMock() for i in range(5)]
 
-        mock_resource.FIELDS = {f: MagicMock() for f in fields}
+        mock_resource.fields = {f: MagicMock() for f in fields}
         mock_data = {f: MagicMock() for f in fields}
 
         manager = ResourceManager(mock_resource, mock_client)
 
         manager.refresh_data(mock_data)
 
-        for key, value in mock_resource.FIELDS.items():
-            value.assert_called_once()
-            # TODO: test that the attributes on the resource were set correctly
+        for field in mock_resource.fields:
+            field.set.assert_called_once()
 
 
 @pytest.mark.api_client
@@ -306,19 +297,19 @@ class TestJob:
             requests,
             "post",
             lambda url, headers, data: MockPOSTResponse(201))
-        job = api_client.Job()
+        job = Job()
         job.manager.create(params={})
 
         keys_to_check = SAMPLE_JOB_CREATE_RESPONSE.keys()
         for key in keys_to_check:
-            assert getattr(job, key) == SAMPLE_JOB_CREATE_RESPONSE[key]
+            assert getattr(job, key).value == SAMPLE_JOB_CREATE_RESPONSE[key]
 
     def test_create_bad_request(self, monkeypatch):
         monkeypatch.setattr(
             requests,
             "post",
             lambda url, headers, data: MockPOSTResponse(400))
-        job = api_client.Job()
+        job = Job()
 
         job.manager.create(params={})
         assert job.manager.http_status_code == 400

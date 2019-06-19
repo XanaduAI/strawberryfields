@@ -19,6 +19,7 @@ protocol.
 
 import urllib
 
+import dateutil.parser
 import json
 import requests
 
@@ -153,7 +154,7 @@ class ResourceManager:
         if "POST" not in self.resource.SUPPORTED_METHODS:
             raise MethodNotSupportedException("POST method on this resource is not supported")
 
-        if getattr(self.resource, "id", None) is not None:
+        if self.resource.id:
             raise ObjectAlreadyCreatedException("ID must be None when calling create")
 
         response = self.client.post(self.resource.PATH, params)
@@ -197,13 +198,8 @@ class ResourceManager:
         converts it to the correct type.
         """
 
-        for key in self.resource.FIELDS:
-            # TODO: treat everything as strings, and don't overload the fields
-            # parameter to also convert the values.
-            if key in data and data[key] is not None:
-                setattr(self.resource, key, self.resource.FIELDS[key](data[key]))
-            else:
-                setattr(self.resource, key, None)
+        for field in self.resource.fields:
+            field.set(data.get(field.name, None))
 
 
 class Resource:
@@ -214,10 +210,55 @@ class Resource:
 
     SUPPORTED_METHODS = ()
     PATH = ""
-    FIELDS = {}
+    fields = ()
 
     def __init__(self):
         self.manager = ResourceManager(self)
+        for field in self.fields:
+            setattr(self, field.name, field)
+
+
+class Field:
+    """
+    A helper class to classify and clean data returned by the API.
+    """
+
+    value = None
+
+    def __init__(self, name, clean=str):
+        """
+        Initialize the Field object with a name and a cleaning function.
+        """
+
+        self.name = name
+        self.clean = clean
+
+    def __str__(self):
+        """
+        Return the string representation of the value.
+        """
+        return str(self.value)
+
+    def __bool__(self):
+        """
+        Use the value to determine boolean state.
+        """
+        return self.value is not None
+
+    def set(self, value):
+        """
+        Set the value of the Field to `value`.
+        """
+        self.value = value
+
+    @property
+    def cleaned_value(self):
+        """
+        Return the cleaned value of the field (for example, an integer or Date
+        object)
+        """
+        if self.value is not None:
+            return self.clean(self.value)
 
 
 class Job(Resource):
@@ -228,14 +269,18 @@ class Job(Resource):
     SUPPORTED_METHODS = ("GET", "POST")
     PATH = "jobs"
 
-    # TODO: change this to a flat list.
-    FIELDS = {
-        "id": int,
-        "status": str,
-        "result_url": str,
-        "circuit_url": str,
-        "created_at": str,
-        "started_at": str,
-        "finished_at": str,
-        "running_time": str,
-    }
+    def __init__(self):
+        """
+        Initialize the Job resource with a set of pre-defined fields.
+        """
+        self.fields = (
+            Field("id", int),
+            Field("status"),
+            Field("result_url"),
+            Field("circuit_url"),
+            Field("created_at", dateutil.parser.parse),
+            Field("started_at", dateutil.parser.parse),
+            Field("finished_at", dateutil.parser.parse),
+            Field("running_time", dateutil.parser.parse),
+        )
+        super().__init__()
