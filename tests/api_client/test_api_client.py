@@ -154,17 +154,8 @@ class TestAPIClient:
             password = 'TEST_PASSWORD'
             client.authenticate(username, password)
 
-    def test_set_authorization_header(self):
-        assert True
-
     def test_join_path(self, client):
         assert client.join_path('jobs') == 'localhost/jobs'
-
-    def test_get(self, client, monkeypatch):
-        assert True
-
-    def test_post(self, client):
-        assert True
 
 
 @pytest.mark.api_client
@@ -283,15 +274,6 @@ class TestResourceManager:
 
 @pytest.mark.api_client
 class TestJob:
-    def test_init(self):
-        assert True
-
-    def test_get(self):
-        assert True
-
-    def test_refresh_data(self):
-        assert True
-
     def test_create_created(self, monkeypatch):
         monkeypatch.setattr(
             requests,
@@ -313,6 +295,3 @@ class TestJob:
 
         job.manager.create(params={})
         assert job.manager.http_status_code == 400
-
-    def test_join_path(self):
-        assert True
