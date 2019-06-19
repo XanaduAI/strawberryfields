@@ -18,11 +18,61 @@ Unit tests for API client
 
 import pytest
 from strawberryfields import api_client
+from strawberryfields.api_client import requests
+
+status_codes = requests.status_codes.codes
 
 
 @pytest.fixture
 def client():
     return api_client.APIClient()
+
+
+SAMPLE_JOB_CREATE_RESPONSE = {
+    "id": 29583,
+    "status": "queued",
+    "result_url": "https://platform.xanadu.ai/jobs/29583/result",
+    "circuit_url": "https://platform.xanadu.ai/jobs/29583/circuit",
+    "created_at": "2019-05-24T15:55:43.872531Z",
+    "started_at": None,
+    "finished_at": None,
+    "running_time": None,
+}
+
+
+class MockCreatedResponse:
+    possible_responses = {
+        201: SAMPLE_JOB_CREATE_RESPONSE,
+        400: {
+            "code": "parse-error",
+            "detail": (
+                "The blackbird script could not be parsed. "
+                "Please fix errors in the script and try again.")
+        },
+        401: {
+            "code": "unauthenticated",
+            "detail": "Requires authentication"
+        },
+        409: {
+            "code": "unsupported-circuit",
+            "detail": (
+                "This circuit is not compatible with the specified hardware.")
+        },
+        500: {
+            "code": "server-error",
+            "detail": (
+                "Unexpected server error. Please try your request again "
+                "later.")
+        },
+    }
+
+    status_code = None
+
+    def __init__(self, status_code):
+        self.status_code = status_code
+
+    def json(self):
+        return self.possible_responses[self.status_code]
 
 
 @pytest.mark.api_client
@@ -31,7 +81,7 @@ class TestAPIClient:
         client = api_client.APIClient()
         assert client.USE_SSL is True
         assert client.AUTHENTICATION_TOKEN == ''
-        assert client.BASE_URL == 'localhost/'
+        assert client.BASE_URL == 'localhost'
         assert client.HEADERS == {}
 
     def test_init_custom_token_client(self):
@@ -55,7 +105,7 @@ class TestAPIClient:
     def test_join_path(self, client):
         assert client.join_path('jobs') == 'localhost/jobs'
 
-    def test_get(self, client):
+    def test_get(self, client, monkeypatch):
         assert True
 
     def test_post(self, client):
@@ -70,11 +120,23 @@ class TestJob:
     def test_get(self):
         assert True
 
-    def test_update_job(self):
+    def test_refresh_data(self):
         assert True
 
-    def test_create(self):
-        assert True
+    def test_create(self, monkeypatch):
+        monkeypatch.setattr(
+            requests,
+            "post",
+            lambda url, headers, data: MockCreatedResponse(201))
+        job = api_client.Job()
+        job.manager.create(params={})
+        assert job.id == SAMPLE_JOB_CREATE_RESPONSE['id']
+        assert job.status == SAMPLE_JOB_CREATE_RESPONSE['status']
+        assert job.result_url == SAMPLE_JOB_CREATE_RESPONSE['result_url']
+        assert job.created_at == SAMPLE_JOB_CREATE_RESPONSE['created_at']
+        assert job.started_at == SAMPLE_JOB_CREATE_RESPONSE['started_at']
+        assert job.finished_at == SAMPLE_JOB_CREATE_RESPONSE['finished_at']
+        assert job.running_time == SAMPLE_JOB_CREATE_RESPONSE['running_time']
 
     def test_join_path(self):
         assert True

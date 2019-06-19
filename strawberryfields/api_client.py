@@ -1,15 +1,41 @@
+# Copyright 2019 Xanadu Quantum Technologies Inc.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+r"""
+API Client library that interacts with the compute-service API over the HTTP
+protocol.
+"""
+
 from urllib.parse import urljoin
 import requests
+import json
 
 
 class APIClient:
+    '''
+    An object that allows the user to connect to the compute-service API.
+    '''
     ALLOWED_BASE_URLS = [
         'localhost',
     ]
-    DEFAULT_BASE_URL = 'localhost/'
+    DEFAULT_BASE_URL = 'localhost'
     CONFIGURATION_PATH = ''
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, use_ssl=True, base_url=None, *args, **kwargs):
+        '''
+        Initialize the API client with various parameters.
+        '''
         # TODO: Load username, password, or authentication token from
         # configuration file
 
@@ -17,19 +43,18 @@ class APIClient:
         self.AUTHENTICATION_TOKEN = kwargs.get('authentication_token', '')
         self.HEADERS = {}
 
-        if 'headers' in kwargs:
-            self.HEADERS.update(kwargs['headers'])
-
-        if 'base_url' in kwargs:
-            base_url = kwargs['base_url']
-            if base_url in self.ALLOWED_BASE_URLS:
-                self.BASE_URL = base_url
-            else:
-                raise ValueError('base_url parameter not in allowed list')
-        else:
+        if not base_url:
             self.BASE_URL = self.DEFAULT_BASE_URL
+        elif base_url in self.ALLOWED_BASE_URLS:
+            self.BASE_URL = base_url
+        else:
+            raise ValueError('base_url parameter not in allowed list')
 
     def load_configuration(self):
+        '''
+        Loads username, password, and/or authentication token from a config
+        file.
+        '''
         raise NotImplementedError()
 
     def authenticate(self, username, password):
@@ -40,62 +65,138 @@ class APIClient:
         raise NotImplementedError()
 
     def set_authorization_header(self, authentication_token):
+        '''
+        Adds the authorization header to the headers dictionary to be included
+        with all API requests.
+        '''
         self.headers['Authorization'] = authentication_token
 
     def join_path(self, path):
-        return urljoin(self.BASE_URL, path)
+        '''
+        Joins a base url with an additional path (e.g. a resource name and ID)
+        '''
+        return urljoin(f"{self.BASE_URL}/", path)
 
     def get(self, path):
+        '''
+        Sends a GET request to the provided path. Returns a response object.
+        '''
         return requests.get(
-            url=self.join_path(path), headers=self.headers)
+            url=self.join_path(path), headers=self.HEADERS)
 
     def post(self, path, payload):
+        '''
+        Converts payload to a JSON string. Sends a POST request to the provided
+        path. Returns a response object.
+        '''
+        data = json.dumps(payload)
         return requests.post(
-            url=self.join_path(path), headers=self.headers, data=payload)
+            url=self.join_path(path), headers=self.HEADERS, data=data)
 
 
-class Job:
-    RESOURCE_PATH = 'jobs/'
-    FIELDS = {
-        "id": int,
-        "status": str,
-        "result_url": str,
-        "circuit_url": str,
-        "created_at": str,
-        "started_at": str,
-        "finished_at": str,
-        "running_time": str,
-    }
-
-    def __init__(self, client=None, id=None, *args, **kwargs):
-        if client is None:
-            client = APIClient()
-
-        self.client = client
-
-        if id is not None:
-            self.get(id)
+class ResourceManager:
+    def __init__(self, resource, client=None):
+        '''
+        Initialize the manager with resource and client instances . A client
+        instance is used as a persistent HTTP communications object, and a
+        resource instance corresponds to a particular type of resource (e.g.
+        Job)
+        '''
+        setattr(self, 'resource', resource)
+        setattr(self, 'client', client or APIClient())
 
     def join_path(self, path):
-        return urljoin(self.RESOURCE_PATH, path)
-
-    def update_job(self, data):
-        for key in self.FIELDS:
-            setattr(self, key, self.FIELDS[key](data.get(key)))
+        '''
+        Joins a resource base path with an additional path (e.g. an ID)
+        '''
+        return urljoin(f"{self.resource.PATH}/", path)
 
     def get(self, job_id):
+        '''
+        Attempts to retrieve a particular record by sending a GET
+        request to the appropriate endpoint. If successful, the resource
+        object is populated with the data in the response.
+        '''
+        if 'GET' not in self.resource.SUPPORTED_METHODS:
+            raise TypeError('GET method on this resource is not supported')
+
         response = self.client.get(self.join_path(str(job_id)))
-        if response.status_code == requests.status_codes.OK:
-            self.update_job(response.json())
+        if response.status_code == requests.status_codes.codes.OK:
+            self.refresh_data(response.json())
         else:
-            # TODO: handle errors
-            raise Exception(response.status_code)
+            self.handle_error_response(response)
 
     def create(self, params):
-        # TODO do basic validation
-        response = self.client.post(self.RESOURCE_PATH, params)
-        if response.status_code == requests.status_codes.CREATED:
-            self.update_job(response.json())
+        '''
+        Attempts to create a new instance of a resource by sending a POST
+        request to the appropriate endpoint.
+        '''
+        if 'POST' not in self.resource.SUPPORTED_METHODS:
+            raise TypeError('POST method on this resource is not supported')
+
+        if getattr(self.resource, 'id', None) is not None:
+            raise TypeError('ID must be None when calling create')
+
+        response = self.client.post(self.resource.PATH, params)
+        if response.status_code == 201:
+            self.refresh_data(response.json())
         else:
-            # TODO: handle errors
-            raise Exception(response.status_code)
+            raise self.handle_error_response(response)
+
+    def handle_error_response(self, response):
+        '''
+        Handles an error response that is returned by the server.
+        '''
+
+        if response.status_code == 400:
+            pass
+        elif response.status_code == 401:
+            pass
+        elif response.status_code == 409:
+            pass
+        elif response.status_code in (500, 503, 504):
+            pass
+
+    def refresh_data(self, data):
+        '''
+        Refreshes the instance's attributes with the provided data and
+        converts it to the correct type.
+        '''
+
+        for key in self.resource.FIELDS:
+            if key in data and data[key] is not None:
+                setattr(
+                    self.resource, key, self.resource.FIELDS[key](data[key]))
+            else:
+                setattr(self.resource, key, None)
+
+
+class Resource:
+    '''
+    A base class for an API resource. This class should be extended for each
+    resource endpoint.
+    '''
+    SUPPORTED_METHODS = ()
+    PATH = ''
+    FIELDS = {}
+
+    def __init__(self):
+        self.manager = ResourceManager(self)
+
+
+class Job(Resource):
+    '''
+    The API resource corresponding to jobs.
+    '''
+    SUPPORTED_METHODS = ('GET', 'POST')
+    PATH = 'jobs'
+    FIELDS = {
+        'id': int,
+        'status': str,
+        'result_url': str,
+        'circuit_url': str,
+        'created_at': str,
+        'started_at': str,
+        'finished_at': str,
+        'running_time': str,
+    }
