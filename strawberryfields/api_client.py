@@ -18,9 +18,9 @@ protocol.
 """
 
 import urllib
+import json
 
 import dateutil.parser
-import json
 import requests
 
 
@@ -257,8 +257,7 @@ class Field:
         Return the cleaned value of the field (for example, an integer or Date
         object)
         """
-        if self.value is not None:
-            return self.clean(self.value)
+        return self.clean(self.value) if self.value is not None else None
 
 
 class Job(Resource):
