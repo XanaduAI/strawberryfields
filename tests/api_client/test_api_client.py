@@ -74,6 +74,9 @@ class MockCreatedResponse:
     def json(self):
         return self.possible_responses[self.status_code]
 
+    def raise_for_status(self):
+        raise requests.exceptions.HTTPError()
+
 
 @pytest.mark.api_client
 class TestAPIClient:
@@ -123,20 +126,27 @@ class TestJob:
     def test_refresh_data(self):
         assert True
 
-    def test_create(self, monkeypatch):
+    def test_create_created(self, monkeypatch):
         monkeypatch.setattr(
             requests,
             "post",
             lambda url, headers, data: MockCreatedResponse(201))
         job = api_client.Job()
         job.manager.create(params={})
-        assert job.id == SAMPLE_JOB_CREATE_RESPONSE['id']
-        assert job.status == SAMPLE_JOB_CREATE_RESPONSE['status']
-        assert job.result_url == SAMPLE_JOB_CREATE_RESPONSE['result_url']
-        assert job.created_at == SAMPLE_JOB_CREATE_RESPONSE['created_at']
-        assert job.started_at == SAMPLE_JOB_CREATE_RESPONSE['started_at']
-        assert job.finished_at == SAMPLE_JOB_CREATE_RESPONSE['finished_at']
-        assert job.running_time == SAMPLE_JOB_CREATE_RESPONSE['running_time']
+
+        keys_to_check = SAMPLE_JOB_CREATE_RESPONSE.keys()
+        for key in keys_to_check:
+            assert getattr(job, key) == SAMPLE_JOB_CREATE_RESPONSE[key]
+
+    def test_create_bad_request(self, monkeypatch):
+        monkeypatch.setattr(
+            requests,
+            "post",
+            lambda url, headers, data: MockCreatedResponse(400))
+        job = api_client.Job()
+
+        job.manager.create(params={})
+        assert job.manager.http_status_code == 400
 
     def test_join_path(self):
         assert True

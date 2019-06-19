@@ -23,24 +23,23 @@ import json
 
 
 class APIClient:
-    '''
+    """
     An object that allows the user to connect to the compute-service API.
-    '''
-    ALLOWED_BASE_URLS = [
-        'localhost',
-    ]
-    DEFAULT_BASE_URL = 'localhost'
-    CONFIGURATION_PATH = ''
+    """
+
+    ALLOWED_BASE_URLS = ["localhost"]
+    DEFAULT_BASE_URL = "localhost"
+    CONFIGURATION_PATH = ""
 
     def __init__(self, use_ssl=True, base_url=None, *args, **kwargs):
-        '''
+        """
         Initialize the API client with various parameters.
-        '''
+        """
         # TODO: Load username, password, or authentication token from
         # configuration file
 
-        self.USE_SSL = kwargs.get('use_ssl', True)
-        self.AUTHENTICATION_TOKEN = kwargs.get('authentication_token', '')
+        self.USE_SSL = kwargs.get("use_ssl", True)
+        self.AUTHENTICATION_TOKEN = kwargs.get("authentication_token", "")
         self.HEADERS = {}
 
         if not base_url:
@@ -48,77 +47,75 @@ class APIClient:
         elif base_url in self.ALLOWED_BASE_URLS:
             self.BASE_URL = base_url
         else:
-            raise ValueError('base_url parameter not in allowed list')
+            raise ValueError("base_url parameter not in allowed list")
 
     def load_configuration(self):
-        '''
+        """
         Loads username, password, and/or authentication token from a config
         file.
-        '''
+        """
         raise NotImplementedError()
 
     def authenticate(self, username, password):
-        '''
+        """
         Retrieve an authentication token from the server via username
         and password authentication.
-        '''
+        """
         raise NotImplementedError()
 
     def set_authorization_header(self, authentication_token):
-        '''
+        """
         Adds the authorization header to the headers dictionary to be included
         with all API requests.
-        '''
-        self.headers['Authorization'] = authentication_token
+        """
+        self.headers["Authorization"] = authentication_token
 
     def join_path(self, path):
-        '''
+        """
         Joins a base url with an additional path (e.g. a resource name and ID)
-        '''
+        """
         return urljoin(f"{self.BASE_URL}/", path)
 
     def get(self, path):
-        '''
+        """
         Sends a GET request to the provided path. Returns a response object.
-        '''
-        return requests.get(
-            url=self.join_path(path), headers=self.HEADERS)
+        """
+        return requests.get(url=self.join_path(path), headers=self.HEADERS)
 
     def post(self, path, payload):
-        '''
+        """
         Converts payload to a JSON string. Sends a POST request to the provided
         path. Returns a response object.
-        '''
+        """
         data = json.dumps(payload)
-        return requests.post(
-            url=self.join_path(path), headers=self.HEADERS, data=data)
+        return requests.post(url=self.join_path(path), headers=self.HEADERS, data=data)
 
 
 class ResourceManager:
     def __init__(self, resource, client=None):
-        '''
+        """
         Initialize the manager with resource and client instances . A client
         instance is used as a persistent HTTP communications object, and a
         resource instance corresponds to a particular type of resource (e.g.
         Job)
-        '''
-        setattr(self, 'resource', resource)
-        setattr(self, 'client', client or APIClient())
+        """
+        setattr(self, "resource", resource)
+        setattr(self, "client", client or APIClient())
 
     def join_path(self, path):
-        '''
+        """
         Joins a resource base path with an additional path (e.g. an ID)
-        '''
+        """
         return urljoin(f"{self.resource.PATH}/", path)
 
     def get(self, job_id):
-        '''
+        """
         Attempts to retrieve a particular record by sending a GET
         request to the appropriate endpoint. If successful, the resource
         object is populated with the data in the response.
-        '''
-        if 'GET' not in self.resource.SUPPORTED_METHODS:
-            raise TypeError('GET method on this resource is not supported')
+        """
+        if "GET" not in self.resource.SUPPORTED_METHODS:
+            raise TypeError("GET method on this resource is not supported")
 
         response = self.client.get(self.join_path(str(job_id)))
         if response.status_code == requests.status_codes.codes.OK:
@@ -127,26 +124,41 @@ class ResourceManager:
             self.handle_error_response(response)
 
     def create(self, params):
-        '''
+        """
         Attempts to create a new instance of a resource by sending a POST
         request to the appropriate endpoint.
-        '''
-        if 'POST' not in self.resource.SUPPORTED_METHODS:
-            raise TypeError('POST method on this resource is not supported')
+        """
+        if "POST" not in self.resource.SUPPORTED_METHODS:
+            raise TypeError("POST method on this resource is not supported")
 
-        if getattr(self.resource, 'id', None) is not None:
-            raise TypeError('ID must be None when calling create')
+        if getattr(self.resource, "id", None) is not None:
+            raise TypeError("ID must be None when calling create")
 
         response = self.client.post(self.resource.PATH, params)
+
+        self.handle_response(response)
+
+    def handle_response(self, response):
+        """
+        Store the status code on the manager object and handle the response
+        based on the status code.
+        """
+        self.http_status_code = response.status_code
         if response.status_code == 201:
-            self.refresh_data(response.json())
+            self.handle_success_response(response)
         else:
-            raise self.handle_error_response(response)
+            self.handle_error_response(response)
+
+    def handle_success_response(self, response):
+        """
+        Handles a successful response by refreshing the instance fields.
+        """
+        self.refresh_data(response.json())
 
     def handle_error_response(self, response):
-        '''
+        """
         Handles an error response that is returned by the server.
-        '''
+        """
 
         if response.status_code == 400:
             pass
@@ -158,26 +170,26 @@ class ResourceManager:
             pass
 
     def refresh_data(self, data):
-        '''
+        """
         Refreshes the instance's attributes with the provided data and
         converts it to the correct type.
-        '''
+        """
 
         for key in self.resource.FIELDS:
             if key in data and data[key] is not None:
-                setattr(
-                    self.resource, key, self.resource.FIELDS[key](data[key]))
+                setattr(self.resource, key, self.resource.FIELDS[key](data[key]))
             else:
                 setattr(self.resource, key, None)
 
 
 class Resource:
-    '''
+    """
     A base class for an API resource. This class should be extended for each
     resource endpoint.
-    '''
+    """
+
     SUPPORTED_METHODS = ()
-    PATH = ''
+    PATH = ""
     FIELDS = {}
 
     def __init__(self):
@@ -185,18 +197,19 @@ class Resource:
 
 
 class Job(Resource):
-    '''
+    """
     The API resource corresponding to jobs.
-    '''
-    SUPPORTED_METHODS = ('GET', 'POST')
-    PATH = 'jobs'
+    """
+
+    SUPPORTED_METHODS = ("GET", "POST")
+    PATH = "jobs"
     FIELDS = {
-        'id': int,
-        'status': str,
-        'result_url': str,
-        'circuit_url': str,
-        'created_at': str,
-        'started_at': str,
-        'finished_at': str,
-        'running_time': str,
+        "id": int,
+        "status": str,
+        "result_url": str,
+        "circuit_url": str,
+        "created_at": str,
+        "started_at": str,
+        "finished_at": str,
+        "running_time": str,
     }
