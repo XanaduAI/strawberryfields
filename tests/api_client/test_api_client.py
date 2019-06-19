@@ -18,7 +18,14 @@ Unit tests for API client
 
 import pytest
 from strawberryfields import api_client
-from strawberryfields.api_client import requests
+from strawberryfields.api_client import (
+    requests,
+    ResourceManager,
+    ObjectAlreadyCreatedException,
+    MethodNotSupportedException,
+)
+
+from unittest.mock import MagicMock
 
 status_codes = requests.status_codes.codes
 
@@ -39,8 +46,32 @@ SAMPLE_JOB_CREATE_RESPONSE = {
     "running_time": None,
 }
 
+SAMPLE_JOB_RESPONSE = {
+    "id": 19856,
+    "status": "complete",
+    "result_url": "https://platform.xanadu.ai/jobs/19856/result",
+    "circuit_url": "https://platform.xanadu.ai/jobs/19856/circuit",
+    "created_at": "2019-05-24T15:55:43.872531Z",
+    "started_at": "2019-05-24T16:01:12.145636Z",
+    "finished_at": "2019-05-24T16:01:12.145645Z",
+    "running_time": "9µs"
+}
 
-class MockCreatedResponse:
+
+class MockResponse:
+    status_code = None
+
+    def __init__(self, status_code):
+        self.status_code = status_code
+
+    def json(self):
+        return self.possible_responses[self.status_code]
+
+    def raise_for_status(self):
+        raise requests.exceptions.HTTPError()
+
+
+class MockPOSTResponse(MockResponse):
     possible_responses = {
         201: SAMPLE_JOB_CREATE_RESPONSE,
         400: {
@@ -57,6 +88,26 @@ class MockCreatedResponse:
             "code": "unsupported-circuit",
             "detail": (
                 "This circuit is not compatible with the specified hardware.")
+        },
+        500: {
+            "code": "server-error",
+            "detail": (
+                "Unexpected server error. Please try your request again "
+                "later.")
+        },
+    }
+
+
+class MockGETResponse(MockResponse):
+    possible_responses = {
+        200: SAMPLE_JOB_RESPONSE,
+        401: {
+            "code": "unauthenticated",
+            "detail": "Requires authentication"
+        },
+        404: {
+            "code": "",
+            "detail": "",
         },
         500: {
             "code": "server-error",
@@ -116,6 +167,130 @@ class TestAPIClient:
 
 
 @pytest.mark.api_client
+class TestResourceManager:
+    def test_init(self):
+        resource = MagicMock()
+        client = MagicMock()
+        manager = ResourceManager(resource, client)
+
+        assert manager.resource == resource
+        assert manager.client == client
+
+    def test_join_path(self):
+        mock_resource = MagicMock()
+        mock_resource.PATH = 'some-path'
+
+        manager = ResourceManager(mock_resource, MagicMock())
+        assert manager.join_path('test') == "some-path/test"
+
+    def test_get_unsupported(self):
+        mock_resource = MagicMock()
+        mock_resource.SUPPORTED_METHODS = ()
+        manager = ResourceManager(mock_resource, MagicMock())
+        with pytest.raises(MethodNotSupportedException):
+            manager.get(1)
+
+    def test_get(self, monkeypatch):
+        mock_resource = MagicMock()
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_client.get = MagicMock(return_value=mock_response)
+
+        mock_resource.SUPPORTED_METHODS = ('GET',)
+
+        manager = ResourceManager(mock_resource, mock_client)
+        monkeypatch.setattr(manager, "handle_response", MagicMock())
+
+        manager.get(1)
+
+        # TODO test that this is called with correct path
+        mock_client.get.assert_called_once()
+        manager.handle_response.assert_called_once_with(mock_response)
+
+    def test_create_unsupported(self):
+        mock_resource = MagicMock()
+        mock_resource.SUPPORTED_METHODS = ()
+        manager = ResourceManager(mock_resource, MagicMock())
+        with pytest.raises(MethodNotSupportedException):
+            manager.create({})
+
+    def test_create_id_already_exists(self):
+        mock_resource = MagicMock()
+        mock_resource.SUPPORTED_METHODS = ('POST',)
+        mock_resource.id = MagicMock()
+        manager = ResourceManager(mock_resource, MagicMock())
+        with pytest.raises(ObjectAlreadyCreatedException):
+            manager.create({})
+
+    def test_create(self, monkeypatch):
+        mock_resource = MagicMock()
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_client.post = MagicMock(return_value=mock_response)
+
+        mock_resource.SUPPORTED_METHODS = ('POST',)
+        mock_resource.id = None
+
+        manager = ResourceManager(mock_resource, mock_client)
+        monkeypatch.setattr(manager, "handle_response", MagicMock())
+
+        manager.create({})
+
+        # TODO test that this is called with correct path and params
+        mock_client.post.assert_called_once()
+        manager.handle_response.assert_called_once_with(mock_response)
+
+    def test_handle_response(self, monkeypatch):
+        mock_resource = MagicMock()
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_handle_success_response = MagicMock()
+        mock_handle_error_response = MagicMock()
+
+        manager = ResourceManager(mock_resource, mock_client)
+
+        monkeypatch.setattr(
+            manager, "handle_success_response", mock_handle_success_response)
+
+        monkeypatch.setattr(
+            manager, "handle_error_response", mock_handle_error_response)
+
+        manager.handle_response(mock_response)
+        assert manager.http_status_code == mock_response.status_code
+        mock_handle_error_response.assert_called_once_with(mock_response)
+
+        mock_response.status_code = 200
+        manager.handle_response(mock_response)
+        mock_handle_success_response.assert_called_once_with(mock_response)
+
+    def test_handle_refresh_data(self):
+        mock_resource = MagicMock()
+        mock_client = MagicMock()
+
+        fields = (
+            "id",
+            "status",
+            "result_url",
+            "circuit_url",
+            "created_at",
+            "started_at",
+            "finished_at",
+            "running_time",
+        )
+
+        mock_resource.FIELDS = {f: MagicMock() for f in fields}
+        mock_data = {f: MagicMock() for f in fields}
+
+        manager = ResourceManager(mock_resource, mock_client)
+
+        manager.refresh_data(mock_data)
+
+        for key, value in mock_resource.FIELDS.items():
+            value.assert_called_once()
+            # TODO: test that the attributes on the resource were set correctly
+
+
+@pytest.mark.api_client
 class TestJob:
     def test_init(self):
         assert True
@@ -130,7 +305,7 @@ class TestJob:
         monkeypatch.setattr(
             requests,
             "post",
-            lambda url, headers, data: MockCreatedResponse(201))
+            lambda url, headers, data: MockPOSTResponse(201))
         job = api_client.Job()
         job.manager.create(params={})
 
@@ -142,7 +317,7 @@ class TestJob:
         monkeypatch.setattr(
             requests,
             "post",
-            lambda url, headers, data: MockCreatedResponse(400))
+            lambda url, headers, data: MockPOSTResponse(400))
         job = api_client.Job()
 
         job.manager.create(params={})

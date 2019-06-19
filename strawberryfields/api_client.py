@@ -17,9 +17,17 @@ API Client library that interacts with the compute-service API over the HTTP
 protocol.
 """
 
-from urllib.parse import urljoin
+import urllib
 import requests
 import json
+
+
+class MethodNotSupportedException(TypeError):
+    pass
+
+
+class ObjectAlreadyCreatedException(TypeError):
+    pass
 
 
 class APIClient:
@@ -74,7 +82,7 @@ class APIClient:
         """
         Joins a base url with an additional path (e.g. a resource name and ID)
         """
-        return urljoin(f"{self.BASE_URL}/", path)
+        return urllib.parse.urljoin(f"{self.BASE_URL}/", path)
 
     def get(self, path):
         """
@@ -106,7 +114,7 @@ class ResourceManager:
         """
         Joins a resource base path with an additional path (e.g. an ID)
         """
-        return urljoin(f"{self.resource.PATH}/", path)
+        return urllib.parse.urljoin(f"{self.resource.PATH}/", path)
 
     def get(self, job_id):
         """
@@ -115,13 +123,10 @@ class ResourceManager:
         object is populated with the data in the response.
         """
         if "GET" not in self.resource.SUPPORTED_METHODS:
-            raise TypeError("GET method on this resource is not supported")
+            raise MethodNotSupportedException("GET method on this resource is not supported")
 
         response = self.client.get(self.join_path(str(job_id)))
-        if response.status_code == requests.status_codes.codes.OK:
-            self.refresh_data(response.json())
-        else:
-            self.handle_error_response(response)
+        self.handle_response(response)
 
     def create(self, params):
         """
@@ -129,10 +134,10 @@ class ResourceManager:
         request to the appropriate endpoint.
         """
         if "POST" not in self.resource.SUPPORTED_METHODS:
-            raise TypeError("POST method on this resource is not supported")
+            raise MethodNotSupportedException("POST method on this resource is not supported")
 
         if getattr(self.resource, "id", None) is not None:
-            raise TypeError("ID must be None when calling create")
+            raise ObjectAlreadyCreatedException("ID must be None when calling create")
 
         response = self.client.post(self.resource.PATH, params)
 
@@ -144,7 +149,7 @@ class ResourceManager:
         based on the status code.
         """
         self.http_status_code = response.status_code
-        if response.status_code == 201:
+        if response.status_code in (200, 201):
             self.handle_success_response(response)
         else:
             self.handle_error_response(response)
@@ -176,6 +181,8 @@ class ResourceManager:
         """
 
         for key in self.resource.FIELDS:
+            # TODO: treat everything as strings, and don't overload the fields
+            # parameter to also convert the values.
             if key in data and data[key] is not None:
                 setattr(self.resource, key, self.resource.FIELDS[key](data[key]))
             else:
@@ -203,6 +210,8 @@ class Job(Resource):
 
     SUPPORTED_METHODS = ("GET", "POST")
     PATH = "jobs"
+
+    # TODO: change this to a flat list.
     FIELDS = {
         "id": int,
         "status": str,
