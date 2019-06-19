@@ -17,16 +17,26 @@ API Client library that interacts with the compute-service API over the HTTP
 protocol.
 """
 
-import urllib
-import requests
 import json
+import requests
+import urllib
 
 
 class MethodNotSupportedException(TypeError):
+    """
+    Exception to be raised when a ResourceManager method is not supported for a
+    particular Resource.
+    """
+
     pass
 
 
 class ObjectAlreadyCreatedException(TypeError):
+    """
+    Exception to be raised when an object has already been created but the user
+    is attempting to create it again.
+    """
+
     pass
 
 
@@ -39,14 +49,14 @@ class APIClient:
     DEFAULT_BASE_URL = "localhost"
     CONFIGURATION_PATH = ""
 
-    def __init__(self, use_ssl=True, base_url=None, *args, **kwargs):
+    def __init__(self, use_ssl=True, base_url=None, **kwargs):
         """
         Initialize the API client with various parameters.
         """
         # TODO: Load username, password, or authentication token from
         # configuration file
 
-        self.USE_SSL = kwargs.get("use_ssl", True)
+        self.USE_SSL = use_ssl
         self.AUTHENTICATION_TOKEN = kwargs.get("authentication_token", "")
         self.HEADERS = {}
 
@@ -100,6 +110,10 @@ class APIClient:
 
 
 class ResourceManager:
+    """
+    This class handles all interactions with APIClient by the resource.
+    """
+
     def __init__(self, resource, client=None):
         """
         Initialize the manager with resource and client instances . A client
@@ -109,6 +123,7 @@ class ResourceManager:
         """
         setattr(self, "resource", resource)
         setattr(self, "client", client or APIClient())
+        setattr(self, "http_status_code", None)
 
     def join_path(self, path):
         """
