@@ -217,6 +217,12 @@ class Resource:
         for field in self.fields:
             setattr(self, field.name, field)
 
+    def reload(self):
+        """
+        A helper method to fetch the latest data from the API.
+        """
+        raise NotImplementedError
+
 
 class Field:
     """
@@ -280,6 +286,6 @@ class Job(Resource):
             Field("created_at", dateutil.parser.parse),
             Field("started_at", dateutil.parser.parse),
             Field("finished_at", dateutil.parser.parse),
-            Field("running_time", dateutil.parser.parse),
+            Field("running_time"),
         )
         super().__init__()
