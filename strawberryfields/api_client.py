@@ -78,6 +78,10 @@ import dateutil.parser
 import requests
 
 
+def join_path(base_path, path):
+    return urllib.parse.urljoin(f"{base_path}/", path)
+
+
 class MethodNotSupportedException(TypeError):
     """
     Exception to be raised when a ResourceManager method is not supported for a
@@ -185,7 +189,7 @@ class APIClient:
         """
         Joins a base url with an additional path (e.g. a resource name and ID)
         """
-        return urllib.parse.urljoin(f"{self.BASE_URL}/", path)
+        return join_path(self.BASE_URL, path)
 
     def get(self, path):
         """
@@ -234,7 +238,7 @@ class ResourceManager:
         """
         Joins a resource base path with an additional path (e.g. an ID)
         """
-        return urllib.parse.urljoin(f"{self.resource.PATH}/", path)
+        return join_path(self.resource.PATH, path)
 
     def get(self, job_id):
         """
