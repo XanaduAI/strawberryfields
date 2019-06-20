@@ -376,6 +376,12 @@ class Job(Resource):
         self.result = JobResult(self.id, client=self.manager.client)
         self.circuit = JobCircuit(self.id, client=self.manager.client)
 
+    def reload(self):
+        if self.id:
+            self.manager.get(self.id)
+        else:
+            raise UserWarning('Can not reload job data since no job ID was provided')
+
 
 class JobResult(Resource):
     """
