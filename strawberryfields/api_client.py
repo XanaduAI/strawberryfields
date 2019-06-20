@@ -185,15 +185,26 @@ class APIClient:
         """
         Sends a GET request to the provided path. Returns a response object.
         """
-        return requests.get(url=self.join_path(path), headers=self.HEADERS)
+        try:
+            response = requests.get(url=self.join_path(path), headers=self.HEADERS)
+        except requests.exceptions.ConnectionError as e:
+            response = None
+            warnings.warn(f'Could not connect to server ({e})')
+        return response
 
     def post(self, path, payload):
         """
         Converts payload to a JSON string. Sends a POST request to the provided
         path. Returns a response object.
         """
+        # TODO: catch any exceptions from dumping JSON
         data = json.dumps(payload)
-        return requests.post(url=self.join_path(path), headers=self.HEADERS, data=data)
+        try:
+            response = requests.post(url=self.join_path(path), headers=self.HEADERS, data=data)
+        except requests.exceptions.ConnectionError as e:
+            response = None
+            warnings.warn(f'Could not connect to server ({e})')
+        return response
 
 
 class ResourceManager:
