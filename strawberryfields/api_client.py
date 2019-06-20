@@ -293,8 +293,8 @@ class Resource:
     PATH = ""
     fields = ()
 
-    def __init__(self):
-        self.manager = ResourceManager(self)
+    def __init__(self, client=None):
+        self.manager = ResourceManager(self, client=client)
         for field in self.fields:
             setattr(self, field.name, field)
 
@@ -373,8 +373,8 @@ class Job(Resource):
 
     def refresh_data(self):
         super().refresh_data()
-        self.result = JobResult(self.id)
-        self.circuit = JobCircuit(self.id)
+        self.result = JobResult(self.id, client=self.manager.client)
+        self.circuit = JobCircuit(self.id, client=self.manager.client)
 
 
 class JobResult(Resource):
