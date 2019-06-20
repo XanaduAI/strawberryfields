@@ -72,6 +72,7 @@ Classes
 import urllib
 import json
 import os
+import warnings
 
 import dateutil.parser
 import requests
@@ -100,8 +101,8 @@ class APIClient:
     An object that allows the user to connect to the compute-service API.
     """
 
-    ALLOWED_BASE_URLS = ["localhost"]
-    DEFAULT_BASE_URL = "localhost"
+    ALLOWED_HOSTNAMES = ["localhost"]
+    DEFAULT_HOSTNAME = "localhost"
 
     ENV_KEY_PREFIX = "SF_API"
     ENV_AUTH_TOKEN_KEY = f"{ENV_KEY_PREFIX}_AUTH_TOKEN"
@@ -117,7 +118,7 @@ class APIClient:
 
         configuration = {
             "use_ssl": True,
-            "base_url": self.DEFAULT_BASE_URL,
+            "hostname": self.DEFAULT_HOSTNAME,
             "authentication_token": None,
         }
 
@@ -127,24 +128,27 @@ class APIClient:
         # Override any values that are explicitly passed when initializing client
         configuration.update(kwargs)
 
-        if configuration["base_url"] is None:
-            raise ValueError("base_url parameter is missing")
+        if configuration["hostname"] is None:
+            raise ValueError("hostname parameter is missing")
 
-        if configuration["base_url"] not in self.ALLOWED_BASE_URLS:
-            raise ValueError("base_url parameter not in allowed list")
+        if configuration["hostname"] not in self.ALLOWED_HOSTNAMES:
+            raise ValueError("hostname parameter not in allowed list")
 
-        self.HEADERS = {}
-        self.BASE_URL = configuration["base_url"]
-        self.AUTHENTICATION_TOKEN = configuration["authentication_token"]
         self.USE_SSL = configuration["use_ssl"]
+        if not self.USE_SSL:
+            warnings.warn('Connecting insecurely to API server', UserWarning)
 
-        # TODO: warn if not use_ssl
+        self.HOSTNAME = configuration["hostname"]
+        self.BASE_URL = f"{'https' if self.USE_SSL else 'http'}://{self.HOSTNAME}"
+        self.AUTHENTICATION_TOKEN = configuration["authentication_token"]
+        self.HEADERS = {}
+
         # TODO: warn if no authentication token
 
     def get_configuration_from_environment(self):
         configuration = {
             "authentication_token": os.environ.get(self.ENV_AUTH_TOKEN_KEY),
-            "base_url": os.environ.get(self.ENV_API_HOST_KEY),
+            "hostname": os.environ.get(self.ENV_API_HOST_KEY),
             "use_ssl": os.environ.get(self.ENV_USE_SSL_KEY),
         }
 
