@@ -104,10 +104,10 @@ class APIClient:
     ALLOWED_HOSTNAMES = ["localhost"]
     DEFAULT_HOSTNAME = "localhost"
 
-    ENV_KEY_PREFIX = "SF_API"
-    ENV_AUTH_TOKEN_KEY = f"{ENV_KEY_PREFIX}_AUTH_TOKEN"
-    ENV_API_HOST_KEY = f"{ENV_KEY_PREFIX}_API_HOST"
-    ENV_USE_SSL_KEY = f"{ENV_KEY_PREFIX}_USE_SSL"
+    ENV_KEY_PREFIX = "SF_API_"
+    ENV_AUTHENTICATION_TOKEN_KEY = f"{ENV_KEY_PREFIX}AUTHENTICATION_TOKEN"
+    ENV_API_HOSTNAME_KEY = f"{ENV_KEY_PREFIX}API_HOSTNAME"
+    ENV_USE_SSL_KEY = f"{ENV_KEY_PREFIX}USE_SSL"
 
     def __init__(self, **kwargs):
         """
@@ -146,9 +146,15 @@ class APIClient:
         # TODO: warn if no authentication token
 
     def get_configuration_from_environment(self):
+        """
+        Retrieve configuration from environment variables. The variables are defined as follows:
+        - SF_API_USE_SSL: True or False
+        - SF_API_HOSTNAME: The hostname of the server to connect to
+        - SF_API_AUTHENTICATION_TOKEN: The authentication token to use when connecting to the API
+        """
         configuration = {
-            "authentication_token": os.environ.get(self.ENV_AUTH_TOKEN_KEY),
-            "hostname": os.environ.get(self.ENV_API_HOST_KEY),
+            "authentication_token": os.environ.get(self.ENV_AUTHENTICATION_TOKEN_KEY),
+            "hostname": os.environ.get(self.ENV_API_HOSTNAME_KEY),
             "use_ssl": os.environ.get(self.ENV_USE_SSL_KEY),
         }
 
@@ -317,7 +323,13 @@ class Resource:
         """
         A helper method to fetch the latest data from the API.
         """
-        raise NotImplementedError
+        if not hasattr(self, "id"):
+            raise TypeError("Resource does not have an ID")
+
+        if self.id:
+            self.manager.get(self.id)
+        else:
+            warnings.warn("Could not reload resource data", UserWarning)
 
 
 class Field:
@@ -384,18 +396,24 @@ class Job(Resource):
             Field("finished_at", dateutil.parser.parse),
             Field("running_time"),
         )
+
+        self.result = None
+        self.circuit = None
+
         super().__init__()
 
     def refresh_data(self):
-        super().refresh_data()
-        self.result = JobResult(self.id, client=self.manager.client)
-        self.circuit = JobCircuit(self.id, client=self.manager.client)
+        """
+        Refresh the job fields and attach a JobResult and JobCircuit object to the Job instance.
+        """
 
-    def reload(self):
-        if self.id:
-            self.manager.get(self.id)
-        else:
-            raise UserWarning("Can not reload job data since no job ID was provided")
+        super().refresh_data()
+
+        if self.result is not None:
+            self.result = JobResult(self.id, client=self.manager.client)
+
+        if self.circuit is not None:
+            self.circuit = JobCircuit(self.id, client=self.manager.client)
 
 
 class JobResult(Resource):
