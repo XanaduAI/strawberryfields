@@ -204,7 +204,7 @@ class TestResourceManager:
         mock_resource.SUPPORTED_METHODS = ()
         manager = ResourceManager(mock_resource, MagicMock())
         with pytest.raises(MethodNotSupportedException):
-            manager.create({})
+            manager.create()
 
     def test_create_id_already_exists(self):
         mock_resource = MagicMock()
@@ -212,7 +212,7 @@ class TestResourceManager:
         mock_resource.id = MagicMock()
         manager = ResourceManager(mock_resource, MagicMock())
         with pytest.raises(ObjectAlreadyCreatedException):
-            manager.create({})
+            manager.create()
 
     def test_create(self, monkeypatch):
         mock_resource = MagicMock()
@@ -226,7 +226,7 @@ class TestResourceManager:
         manager = ResourceManager(mock_resource, mock_client)
         monkeypatch.setattr(manager, "handle_response", MagicMock())
 
-        manager.create({})
+        manager.create()
 
         # TODO test that this is called with correct path and params
         mock_client.post.assert_called_once()
