@@ -17,6 +17,7 @@ Unit tests for API client
 """
 
 import pytest
+import json
 from strawberryfields import api_client
 from strawberryfields.api_client import (
     requests,
@@ -67,6 +68,10 @@ class MockResponse:
 
     def json(self):
         return self.possible_responses[self.status_code]
+
+    @property
+    def text(self):
+        return json.dumps(self.json())
 
     def raise_for_status(self):
         raise requests.exceptions.HTTPError()

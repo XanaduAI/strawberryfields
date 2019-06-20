@@ -296,14 +296,26 @@ class ResourceManager:
         Handles an error response that is returned by the server.
         """
 
-        if response.status_code == 400:
-            pass
+        # TODO: Improve error messaging and parse the actual error output (json).
+
+        if response.status_code in (400, 409):
+            warnings.warn(
+                "The server did not accept the request, and returned an error "
+                f"({response.status_code}: {response.text}).",
+                UserWarning,
+            )
         elif response.status_code == 401:
-            pass
-        elif response.status_code == 409:
-            pass
+            warnings.warn(
+                "The server did not accept the request due to an authentication error "
+                f"({response.status_code}: {response.text}).",
+                UserWarning,
+            )
         elif response.status_code in (500, 503, 504):
-            pass
+            warnings.warn(
+                f"The client encountered an unexpected temporary server error "
+                "({response.status_code}: {response.text}).",
+                UserWarning,
+            )
 
     def refresh_data(self, data):
         """
