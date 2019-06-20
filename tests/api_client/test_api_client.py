@@ -135,7 +135,7 @@ class TestAPIClient:
     def test_init_default_client(self):
         client = api_client.APIClient()
         assert client.USE_SSL is True
-        assert client.AUTHENTICATION_TOKEN == ''
+        assert client.AUTHENTICATION_TOKEN is None
         assert client.BASE_URL == 'localhost'
         assert client.HEADERS == {}
 
@@ -146,7 +146,7 @@ class TestAPIClient:
 
     def test_load_configuration(self, client):
         with pytest.raises(NotImplementedError):
-            client.load_configuration()
+            client.load_configuration_from_file()
 
     def test_authenticate(self, client):
         with pytest.raises(NotImplementedError):

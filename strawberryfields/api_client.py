@@ -71,6 +71,7 @@ Classes
 
 import urllib
 import json
+import os
 
 import dateutil.parser
 import requests
@@ -101,27 +102,55 @@ class APIClient:
 
     ALLOWED_BASE_URLS = ["localhost"]
     DEFAULT_BASE_URL = "localhost"
-    CONFIGURATION_PATH = ""
 
-    def __init__(self, use_ssl=True, base_url=None, **kwargs):
+    ENV_KEY_PREFIX = "SF_API"
+    ENV_AUTH_TOKEN_KEY = f"{ENV_KEY_PREFIX}_AUTH_TOKEN"
+    ENV_API_HOST_KEY = f"{ENV_KEY_PREFIX}_API_HOST"
+    ENV_USE_SSL_KEY = f"{ENV_KEY_PREFIX}_USE_SSL"
+
+    def __init__(self, **kwargs):
         """
         Initialize the API client with various parameters.
         """
         # TODO: Load username, password, or authentication token from
         # configuration file
 
-        self.USE_SSL = use_ssl
-        self.AUTHENTICATION_TOKEN = kwargs.get("authentication_token", "")
-        self.HEADERS = {}
+        configuration = {
+            "use_ssl": True,
+            "base_url": self.DEFAULT_BASE_URL,
+            "authentication_token": None,
+        }
 
-        if not base_url:
-            self.BASE_URL = self.DEFAULT_BASE_URL
-        elif base_url in self.ALLOWED_BASE_URLS:
-            self.BASE_URL = base_url
-        else:
+        # Try getting everything first from environment variables
+        configuration.update(self.get_configuration_from_environment())
+
+        # Override any values that are explicitly passed when initializing client
+        configuration.update(kwargs)
+
+        if configuration["base_url"] is None:
+            raise ValueError("base_url parameter is missing")
+
+        if configuration["base_url"] not in self.ALLOWED_BASE_URLS:
             raise ValueError("base_url parameter not in allowed list")
 
-    def load_configuration(self):
+        self.HEADERS = {}
+        self.BASE_URL = configuration["base_url"]
+        self.AUTHENTICATION_TOKEN = configuration["authentication_token"]
+        self.USE_SSL = configuration["use_ssl"]
+
+        # TODO: warn if not use_ssl
+        # TODO: warn if no authentication token
+
+    def get_configuration_from_environment(self):
+        configuration = {
+            "authentication_token": os.environ.get(self.ENV_AUTH_TOKEN_KEY),
+            "base_url": os.environ.get(self.ENV_API_HOST_KEY),
+            "use_ssl": os.environ.get(self.ENV_USE_SSL_KEY),
+        }
+
+        return {key: value for key, value in configuration.items() if value is not None}
+
+    def load_configuration_from_file(self):
         """
         Loads username, password, and/or authentication token from a config
         file.
