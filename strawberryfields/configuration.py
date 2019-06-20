@@ -23,7 +23,7 @@ This module contains the :class:`Configuration` class, which is used to
 load, store, save, and modify configuration options for Strawberry Fields.
 
 Behaviour
----------
+--------
 
 On first import, Strawberry Fields attempts to load the configuration file `config.toml`, by
 scanning the following three directories in order of preference:
