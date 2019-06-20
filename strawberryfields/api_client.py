@@ -95,7 +95,7 @@ def join_path(base_path, path):
     Returns:
         str: A joined path.
     """
-    return urllib.parse.urljoin(f"{base_path}/", path)
+    return urllib.parse.urljoin("{}/".format(base_path), path)
 
 
 class MethodNotSupportedException(TypeError):
@@ -125,9 +125,9 @@ class APIClient:
     DEFAULT_HOSTNAME = "localhost"
 
     ENV_KEY_PREFIX = "SF_API_"
-    ENV_AUTHENTICATION_TOKEN_KEY = f"{ENV_KEY_PREFIX}AUTHENTICATION_TOKEN"
-    ENV_API_HOSTNAME_KEY = f"{ENV_KEY_PREFIX}API_HOSTNAME"
-    ENV_USE_SSL_KEY = f"{ENV_KEY_PREFIX}USE_SSL"
+    ENV_AUTHENTICATION_TOKEN_KEY = "{}AUTHENTICATION_TOKEN".format(ENV_KEY_PREFIX)
+    ENV_API_HOSTNAME_KEY = "{}API_HOSTNAME".format(ENV_KEY_PREFIX)
+    ENV_USE_SSL_KEY = "{}USE_SSL".format(ENV_KEY_PREFIX)
 
     def __init__(self, **kwargs):
         """
@@ -159,7 +159,7 @@ class APIClient:
             warnings.warn("Connecting insecurely to API server", UserWarning)
 
         self.HOSTNAME = configuration["hostname"]
-        self.BASE_URL = f"{'https' if self.USE_SSL else 'http'}://{self.HOSTNAME}"
+        self.BASE_URL = "{}://{}".format("https" if self.USE_SSL else "http", self.HOSTNAME)
         self.AUTHENTICATION_TOKEN = configuration["authentication_token"]
         self.HEADERS = {}
 
@@ -235,7 +235,7 @@ class APIClient:
             response = requests.get(url=self.join_path(path), headers=self.HEADERS)
         except requests.exceptions.ConnectionError as e:
             response = None
-            warnings.warn(f"Could not connect to server ({e})")
+            warnings.warn("Could not connect to server ({})".format(e))
         return response
 
     def post(self, path, payload):
@@ -257,7 +257,7 @@ class APIClient:
             response = requests.post(url=self.join_path(path), headers=self.HEADERS, data=data)
         except requests.exceptions.ConnectionError as e:
             response = None
-            warnings.warn(f"Could not connect to server ({e})")
+            warnings.warn("Could not connect to server ({})".format(e))
         return response
 
 
@@ -353,19 +353,19 @@ class ResourceManager:
         if response.status_code in (400, 409):
             warnings.warn(
                 "The server did not accept the request, and returned an error "
-                f"({response.status_code}: {response.text}).",
+                "({}: {}).".format(response.status_code, response.text),
                 UserWarning,
             )
         elif response.status_code == 401:
             warnings.warn(
                 "The server did not accept the request due to an authentication error "
-                f"({response.status_code}: {response.text}).",
+                "({}: {}).".format(response.status_code, response.text),
                 UserWarning,
             )
         elif response.status_code in (500, 503, 504):
             warnings.warn(
-                f"The client encountered an unexpected temporary server error "
-                "({response.status_code}: {response.text}).",
+                "The client encountered an unexpected temporary server error "
+                "({}: {}).".format(response.status_code, response.text),
                 UserWarning,
             )
 
