@@ -85,6 +85,13 @@ import requests
 def join_path(base_path, path):
     """
     Joins two paths, a base path and another path and returns a string.
+
+    Args:
+        base_path (str): The left side of the joined path.
+        path (str): The right side of the joined path.
+
+    Returns:
+        str: A joined path.
     """
     return urllib.parse.urljoin(f"{base_path}/", path)
 
@@ -181,7 +188,11 @@ class APIClient:
     def authenticate(self, username, password):
         """
         Retrieve an authentication token from the server via username
-        and password authentication.
+        and password authentication and calls set_authorization_header.
+
+        Args:
+            username (str): A user name.
+            password (str): A password.
         """
         raise NotImplementedError()
 
@@ -189,18 +200,34 @@ class APIClient:
         """
         Adds the authorization header to the headers dictionary to be included
         with all API requests.
+
+        Args:
+            authentication_token (str): An authentication token used to access the API.
         """
         self.headers["Authorization"] = authentication_token
 
     def join_path(self, path):
         """
         Joins a base url with an additional path (e.g. a resource name and ID)
+
+        Args:
+            path (str): A path to be joined with BASE_URL.
+
+        Returns:
+            str: A joined path.
         """
         return join_path(self.BASE_URL, path)
 
     def get(self, path):
         """
         Sends a GET request to the provided path. Returns a response object.
+
+        Args:
+            path (str): A path to send the GET request to.
+
+        Returns:
+            requests.Response: A response object, or None if no response could be fetched from the
+            server.
         """
         try:
             response = requests.get(url=self.join_path(path), headers=self.HEADERS)
@@ -213,6 +240,14 @@ class APIClient:
         """
         Converts payload to a JSON string. Sends a POST request to the provided
         path. Returns a response object.
+
+        Args:
+            path (str): A path to send the GET request to.
+            payload: A JSON serializable object to be sent to the server.
+
+        Returns:
+            requests.Response: A response object, or None if no response could be fetched from the
+            server.
         """
         # TODO: catch any exceptions from dumping JSON
         data = json.dumps(payload)
@@ -252,6 +287,9 @@ class ResourceManager:
         Attempts to retrieve a particular record by sending a GET
         request to the appropriate endpoint. If successful, the resource
         object is populated with the data in the response.
+
+        Args:
+            job_id (int): The ID of an object to be retrieved.
         """
         if "GET" not in self.resource.SUPPORTED_METHODS:
             raise MethodNotSupportedException("GET method on this resource is not supported")
@@ -263,6 +301,9 @@ class ResourceManager:
         """
         Attempts to create a new instance of a resource by sending a POST
         request to the appropriate endpoint.
+
+        Args:
+            **params: Arbitrary parameters to be passed on to the POST request.
         """
         if "POST" not in self.resource.SUPPORTED_METHODS:
             raise MethodNotSupportedException("POST method on this resource is not supported")
@@ -278,6 +319,9 @@ class ResourceManager:
         """
         Store the status code on the manager object and handle the response
         based on the status code.
+
+        Args:
+            response (requests.Response): A response object to be parsed.
         """
         self.http_status_code = response.status_code
         if response.status_code in (200, 201):
@@ -288,12 +332,18 @@ class ResourceManager:
     def handle_success_response(self, response):
         """
         Handles a successful response by refreshing the instance fields.
+
+        Args:
+            response (requests.Response): A response object to be parsed.
         """
         self.refresh_data(response.json())
 
     def handle_error_response(self, response):
         """
         Handles an error response that is returned by the server.
+
+        Args:
+            response (requests.Response): A response object to be parsed.
         """
 
         # TODO: Improve error messaging and parse the actual error output (json).
@@ -321,8 +371,10 @@ class ResourceManager:
         """
         Refreshes the instance's attributes with the provided data and
         converts it to the correct type.
-        """
 
+        Args:
+            data (dict): A dictionary containing keys and values of data to be stored on the object.
+        """
         for field in self.resource.fields:
             field.set(data.get(field.name, None))
 
@@ -338,6 +390,12 @@ class Resource:
     fields = ()
 
     def __init__(self, client=None):
+        """
+        Initialize the Resource by populating attributes based on fields and settings a manager.
+
+        Args:
+            client (APIClient): An APIClient instance to use as a client.
+        """
         self.manager = ResourceManager(self, client=client)
         for field in self.fields:
             setattr(self, field.name, field)
@@ -365,8 +423,11 @@ class Field:
     def __init__(self, name, clean=str):
         """
         Initialize the Field object with a name and a cleaning function.
-        """
 
+        Args:
+            name (str): A string representing the name of the field (e.g. "created_at").
+            clean: A method that returns a cleaned value of the field, of the correct type.
+        """
         self.name = name
         self.clean = clean
 
@@ -385,6 +446,9 @@ class Field:
     def set(self, value):
         """
         Set the value of the Field to `value`.
+
+        Args:
+            value: The value to be stored on the Field object.
         """
         self.value = value
 
@@ -429,7 +493,6 @@ class Job(Resource):
         """
         Refresh the job fields and attach a JobResult and JobCircuit object to the Job instance.
         """
-
         super().refresh_data()
 
         if self.result is not None:
@@ -450,6 +513,9 @@ class JobResult(Resource):
     def __init__(self, job_id):
         """
         Initialize the JobResult resource with a pre-defined field.
+
+        Args:
+            job_id (int): The ID of the Job object corresponding to the JobResult object.
         """
         self.fields = (Field("result", json.loads),)
 
@@ -468,6 +534,9 @@ class JobCircuit(Resource):
     def __init__(self, job_id):
         """
         Initialize the JobCircuit resource with a pre-defined field.
+
+        Args:
+            job_id (int): The ID of the Job object corresponding to the JobResult object.
         """
         self.fields = (Field("circuit"),)
 
