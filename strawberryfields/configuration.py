@@ -142,11 +142,11 @@ class Configuration:
 
         The environment variable takes precedence."""
         for section, section_config in self._config.items():
-            env_prefix = "SF_" + section
+            env_prefix = "SF_" + section.upper()
 
             for key, value in section_config.items():
                 # environment variables take precendence
-                env = env_prefix + key
+                env = env_prefix + key.upper()
                 if env in os.environ:
                     self._config[section][key] = os.environ[env]
                     continue
