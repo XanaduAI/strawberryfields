@@ -144,7 +144,7 @@ class Configuration:
         for section, section_config in self._config.items():
             env_prefix = "SF_{}_".format(section.upper())
 
-            for key, value in section_config.items():
+            for key, _ in section_config.items():
                 # environment variables take precedence
                 env = env_prefix + key.upper()
                 if env in os.environ:
