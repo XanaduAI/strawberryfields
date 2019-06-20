@@ -173,10 +173,10 @@ class APIClient:
         configuration = {
             "authentication_token": os.environ.get(self.ENV_AUTHENTICATION_TOKEN_KEY),
             "hostname": os.environ.get(self.ENV_API_HOSTNAME_KEY),
-            "use_ssl": os.environ.get(self.ENV_USE_SSL_KEY),
+            "use_ssl": os.environ.get(self.ENV_USE_SSL_KEY) in ("1", "True", "TRUE"),
         }
 
-        return {key: value for key, value in configuration.items() if value is not None}
+        return {key: value for key, value in configuration.items() if key in os.environ}
 
     def load_configuration_from_file(self):
         """
