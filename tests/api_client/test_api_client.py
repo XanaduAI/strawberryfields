@@ -162,7 +162,7 @@ class TestAPIClient:
             client.authenticate(username, password)
 
     def test_join_path(self, client):
-        assert client.join_path('jobs') == 'localhost/jobs'
+        assert client.join_path('jobs') == f'{client.BASE_URL}/jobs'
 
 
 @pytest.mark.api_client

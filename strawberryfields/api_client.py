@@ -136,7 +136,7 @@ class APIClient:
 
         self.USE_SSL = configuration["use_ssl"]
         if not self.USE_SSL:
-            warnings.warn('Connecting insecurely to API server', UserWarning)
+            warnings.warn("Connecting insecurely to API server", UserWarning)
 
         self.HOSTNAME = configuration["hostname"]
         self.BASE_URL = f"{'https' if self.USE_SSL else 'http'}://{self.HOSTNAME}"
@@ -189,7 +189,7 @@ class APIClient:
             response = requests.get(url=self.join_path(path), headers=self.HEADERS)
         except requests.exceptions.ConnectionError as e:
             response = None
-            warnings.warn(f'Could not connect to server ({e})')
+            warnings.warn(f"Could not connect to server ({e})")
         return response
 
     def post(self, path, payload):
@@ -203,7 +203,7 @@ class APIClient:
             response = requests.post(url=self.join_path(path), headers=self.HEADERS, data=data)
         except requests.exceptions.ConnectionError as e:
             response = None
-            warnings.warn(f'Could not connect to server ({e})')
+            warnings.warn(f"Could not connect to server ({e})")
         return response
 
 
@@ -395,7 +395,7 @@ class Job(Resource):
         if self.id:
             self.manager.get(self.id)
         else:
-            raise UserWarning('Can not reload job data since no job ID was provided')
+            raise UserWarning("Can not reload job data since no job ID was provided")
 
 
 class JobResult(Resource):
