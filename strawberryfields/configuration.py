@@ -52,7 +52,7 @@ and has the following format:
 
 .. code-block:: toml
 
-    [API]
+    [api]
     # Options for the Strawberry Fields Cloud API
     authentatication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
     hostname = "localhost"
@@ -113,7 +113,7 @@ class Configuration:
     def __repr__(self):
         return "Strawberry Fields Configuration <{}>".format(self._filepath)
 
-    def __init__(self, name):
+    def __init__(self, name="config.toml"):
         # Look for an existing configuration file
         self._config = DEFAULT_CONFIG
         self._config_file = {}
@@ -142,10 +142,10 @@ class Configuration:
 
         The environment variable takes precedence."""
         for section, section_config in self._config.items():
-            env_prefix = "SF_" + section.upper()
+            env_prefix = "SF_{}_".format(section.upper())
 
             for key, value in section_config.items():
-                # environment variables take precendence
+                # environment variables take precedence
                 env = env_prefix + key.upper()
                 if env in os.environ:
                     self._config[section][key] = os.environ[env]
@@ -160,7 +160,7 @@ class Configuration:
         if key in self._config:
             return self._config[key]
 
-        raise ConfigurationError("Unkown Strawberry Fields configuration section.")
+        raise ConfigurationError("Unknown Strawberry Fields configuration section.")
 
     @property
     def path(self):
