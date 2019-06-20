@@ -79,6 +79,9 @@ import requests
 
 
 def join_path(base_path, path):
+    """
+    Joins two paths, a base path and another path and returns a string.
+    """
     return urllib.parse.urljoin(f"{base_path}/", path)
 
 
