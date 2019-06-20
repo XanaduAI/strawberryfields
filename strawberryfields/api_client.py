@@ -382,16 +382,14 @@ class JobResult(Resource):
     The API resource corresponding to the job result.
     """
 
-    SUPPORTED_METHODS = ("GET", )
+    SUPPORTED_METHODS = ("GET",)
     PATH = "jobs/{job_id}/result"
 
     def __init__(self, job_id):
         """
         Initialize the JobResult resource with a pre-defined field.
         """
-        self.fields = (
-            Field("result", json.loads),
-        )
+        self.fields = (Field("result", json.loads),)
 
         self.PATH = self.PATH.format(job_id=job_id)
         super().__init__()
@@ -402,16 +400,14 @@ class JobCircuit(Resource):
     The API resource corresponding to the job circuit.
     """
 
-    SUPPORTED_METHODS = ("GET", )
+    SUPPORTED_METHODS = ("GET",)
     PATH = "jobs/{job_id}/circuit"
 
     def __init__(self, job_id):
         """
         Initialize the JobCircuit resource with a pre-defined field.
         """
-        self.fields = (
-            Field("circuit"),
-        )
+        self.fields = (Field("circuit"),)
 
         self.PATH = self.PATH.format(job_id=job_id)
         super().__init__()
