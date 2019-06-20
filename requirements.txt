@@ -5,4 +5,4 @@ tensorflow==1.3
 tensorflow-tensorboard>=0.1.8
 quantum-blackbird
 toml
-user_config_dir
+appdirs
