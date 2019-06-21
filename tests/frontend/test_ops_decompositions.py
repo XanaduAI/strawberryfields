@@ -209,7 +209,7 @@ class TestGraphEmbed:
 
         A = np.random.random([n, n]) + 1j * np.random.random([n, n])
         A += A.T
-        A -= np.trace(A) * np.identity(n) / 3
+        A -= np.trace(A) * np.identity(n) / n
 
         sq, U = dec.graph_embed(A)
 
