@@ -144,7 +144,7 @@ def fock_prob(gaussian_state, ocp):
     Calculates the probability of measuring the gaussian state s2 in the photon number
     occupation pattern ocp"""
 
-    r = gaussian_state.smeanxp()
+    mu = gaussian_state.smeanxp()
     cov = gaussian_state.scovmatxp()
     if is_pure_cov(cov):
         return np.abs(pure_state_amplitude(mu, cov, ocp, check_purity = False))**2

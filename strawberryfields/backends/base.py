@@ -445,7 +445,7 @@ class BaseBackend:
         """
         raise NotImplementedError
 
-    def measure_homodyne(self, phi, mode, select=None, **kwargs):
+    def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         r"""Measure a :ref:`phase space quadrature <homodyne>` of the given mode.
 
         For the measured mode, samples the probability distribution
@@ -469,6 +469,7 @@ class BaseBackend:
         Args:
             phi (float): phase angle of the quadrature to measure (x: :math:`\phi=0`, p: :math:`\phi=\pi/2`)
             mode (int): which mode to measure
+            shots (int): number of measurement samples to obtain
             select (None or float): If not None: desired value of the measurement result.
                 Enables post-selection on specific measurement results instead of random sampling.
 
@@ -478,16 +479,18 @@ class BaseBackend:
         Returns:
             float: measured value
         """
+        print("HI")
         raise NotImplementedError
           
     
-    def measure_fock(self, modes, select=None, **kwargs):
+    def measure_fock(self, modes, shots=1, select=None, **kwargs):
         """Measure the given modes in the Fock basis.
 
         Updates the current state of the circuit to the conditional state of this measurement result.
 
         Args:
             modes (Sequence[int]): which modes to measure
+            shots (int): number of measurement samples to obtain
             select (None or Sequence[int]): If not None: desired values of the measurement results.
                 Enables post-selection on specific measurement results instead of random sampling.
                 ``len(select) == len(modes)`` is required.
@@ -672,13 +675,14 @@ class BaseGaussian(BaseBackend):
         super().__init__()
         self._supported["gaussian"] = True
 
-    def measure_heterodyne(self, mode, select=None):
+    def measure_heterodyne(self, mode, shots=1, select=None):
         r"""Perform a heterodyne measurement on the given mode.
 
         Updates the current state of the circuit such that the measured mode is reset to the vacuum state.
 
         Args:
             mode (int): which mode to measure
+            shots (int): number of measurement samples to obtain
             select (None or complex): If not None: desired value of the measurement result.
                 Enables post-selection on specific measurement results instead of random sampling.
 
