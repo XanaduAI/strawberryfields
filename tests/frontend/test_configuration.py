@@ -100,7 +100,7 @@ class TestConfiguration:
         config = conf.Configuration()
 
         # make a change
-        config._config['api']['hostname'] = "https://6.4.2.4"
+        config._config["api"]["hostname"] = "https://6.4.2.4"
         config.save(filename)
 
         result = toml.load(filename)
@@ -109,12 +109,14 @@ class TestConfiguration:
     def test_attribute_loading(self):
         """Test attributes automatically get the correct section key"""
         config = conf.Configuration()
-        assert config.api == config._config['api']
+        assert config.api == config._config["api"]
 
     def test_failed_attribute_loading(self):
         """Test an exception is raised if key does not exist"""
         config = conf.Configuration()
-        with pytest.raises(conf.ConfigurationError, match="Unknown"):
+        with pytest.raises(
+            conf.ConfigurationError, match="Unknown Strawberry Fields configuration section"
+        ):
             config.test
 
     def test_env_vars_take_precedence(self, tmpdir):
