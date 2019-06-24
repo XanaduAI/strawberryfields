@@ -35,35 +35,6 @@ def fock_amplitudes_one_mode(alpha, cov, cutoff):
     return  density_matrix(r, cov, normalize=True, cutoff=cutoff)
 
 
-def fock_amplitudes_one_mode(alpha, mat, cutoff, tol=1e-8):
-    """ Returns the Fock space density matrix of gaussian state characterized
-    by a complex displacement alpha and a (symmetric) covariance matrix
-    cutoff determines what is the maximum Fock state  and tol is a value used
-    to calculate how many terms should be included in the calculation of matrix elements
-    if the state is mixed"""
-    if mat.shape != (2, 2):
-        raise ValueError("Covariance matrix mat must be 2x2")
-
-    (nth, theta, r) = bm_reduction(mat)
-
-    if abs(nth) < tol:
-        psi = np.conjugate(np.array([one_mode_matelem(-alpha, -r, -2*theta, m, 0) for m in range(cutoff+1)]))
-        return np.outer(psi, np.conj(psi))
-
-    rat = nth/(1+nth)
-    ### The following heuristic determines how many terms to take based
-    ### on the temperature of the thermal state and the tolerance prescribed by the user in tol
-    mmax = int(-1+np.log(tol)/np.log(rat))+1
-    rho = np.zeros((cutoff+1, cutoff+1), dtype=complex)
-    ss = 1.0
-    for n in range(mmax):
-        psi = np.sqrt(ss)*np.conjugate(np.array([one_mode_matelem(-alpha, -r, -2*theta, m, n) for m in range(cutoff+1)]))
-        rho += np.outer(psi, np.conj(psi))
-        ss = ss*rat
-    return rho/(1+nth)
-
-
-
 def sm_fidelity(mu1, mu2, cov1, cov2, tol=1e-8):
     """ Calculates the squared fidelity between the gaussian states s1 and s2. It uses the formulas from
     Quantum Fidelity for Arbitrary Gaussian States
