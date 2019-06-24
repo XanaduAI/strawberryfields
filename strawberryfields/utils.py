@@ -78,7 +78,6 @@ These functions generate random numbers and matrices corresponding to various
 quantum states and operations.
 
 .. autosummary::
-   randn
    randnc
    random_covariance
    random_symplectic
@@ -238,8 +237,8 @@ def power(x, a):
 
     Args:
         x (RegRef): mode that has been previously measured
-        a (float): the exponent of x. Note that a can be
-            negative and fractional.
+        a (float): the exponent of x; note that ``a`` can be
+            negative and fractional
     """
     if a < 0:
         tmp = float(a)
@@ -266,7 +265,7 @@ def squeezed_cov(r, phi, hbar=2):
         r (complex): the squeezing magnitude
         p (float): the squeezing phase :math:`\phi`
         hbar (float): (default 2) the value of :math:`\hbar` in the commutation
-            relation :math:`[\x,\p]=i\hbar`.
+            relation :math:`[\x,\p]=i\hbar`
     Returns:
         array: the squeezed state
     """
@@ -281,13 +280,13 @@ def vacuum_state(basis="fock", fock_dim=5, hbar=2.0):
     r""" Returns the vacuum state
 
     Args:
-        basis (str): if 'fock', calculates the initial state
+        basis (str): If 'fock', calculates the initial state
             in the Fock basis. If 'gaussian', returns the
             vector of means and the covariance matrix.
         fock_dim (int): the size of the truncated Fock basis if
-            using the Fock basis representation.
+            using the Fock basis representation
         hbar (float): (default 2) the value of :math:`\hbar` in the commutation
-            relation :math:`[\x,\p]=i\hbar`.
+            relation :math:`[\x,\p]=i\hbar`
     Returns:
         array: the vacuum state
     """
@@ -323,13 +322,13 @@ def coherent_state(a, basis="fock", fock_dim=5, hbar=2.0):
 
     Args:
         a (complex) : the displacement
-        basis (str): if 'fock', calculates the initial state
+        basis (str): If 'fock', calculates the initial state
             in the Fock basis. If 'gaussian', returns the
             vector of means and the covariance matrix.
         fock_dim (int): the size of the truncated Fock basis if
-            using the Fock basis representation.
+            using the Fock basis representation
         hbar (float): (default 2) the value of :math:`\hbar` in the commutation
-            relation :math:`[\x,\p]=i\hbar`.
+            relation :math:`[\x,\p]=i\hbar`
     Returns:
         array: the coherent state
     """
@@ -372,13 +371,13 @@ def squeezed_state(r, p, basis="fock", fock_dim=5, hbar=2.0):
     Args:
         r (complex): the squeezing magnitude
         p (float): the squeezing phase :math:`\phi`
-        basis (str): if 'fock', calculates the initial state
+        basis (str): If 'fock', calculates the initial state
             in the Fock basis. If 'gaussian', returns the
             vector of means and the covariance matrix.
         fock_dim (int): the size of the truncated Fock basis if
-            using the Fock basis representation.
+            using the Fock basis representation
         hbar (float): (default 2) the value of :math:`\hbar` in the commutation
-            relation :math:`[\x,\p]=i\hbar`.
+            relation :math:`[\x,\p]=i\hbar`
     Returns:
         array: the squeezed state
     """
@@ -429,13 +428,13 @@ def displaced_squeezed_state(a, r, phi, basis="fock", fock_dim=5, hbar=2.0):
         a (complex): the displacement
         r (complex): the squeezing magnitude
         phi (float): the squeezing phase :math:`\phi`
-        basis (str): if 'fock', calculates the initial state
+        basis (str): If 'fock', calculates the initial state
             in the Fock basis. If 'gaussian', returns the
             vector of means and the covariance matrix.
         fock_dim (int): the size of the truncated Fock basis if
-            using the Fock basis representation.
+            using the Fock basis representation
         hbar (float): (default 2) the value of :math:`\hbar` in the commutation
-            relation :math:`[\x,\p]=i\hbar`.
+            relation :math:`[\x,\p]=i\hbar`
     Returns:
         array: the squeezed coherent state
     """
@@ -505,7 +504,7 @@ def cat_state(a, p=0, fock_dim=5):
     Args:
         a (complex): the displacement
         p (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
-            cat state, and ``p=1`` an odd cat state.
+            cat state, and ``p=1`` an odd cat state
         fock_dim (int): the size of the truncated Fock basis
     Returns:
         array: the cat state
@@ -545,9 +544,9 @@ def random_covariance(N, hbar=2, pure=False, block_diag=False):
         N (int): number of modes
         hbar (float): the value of :math:`\hbar` to use in the definition
             of the quadrature operators :math:`\x` and :math:`\p`
-        pure (bool): if True, a random covariance matrix corresponding
-            to a pure state is returned
-        block_diag (bool): if True, uses passive Gaussian transformations that are orthogonal
+        pure (bool): If True, a random covariance matrix corresponding
+            to a pure state is returned.
+        block_diag (bool): If True, uses passive Gaussian transformations that are orthogonal
             instead of unitary. This implies that the positions :math:`q` do not mix with
             the momenta :math:`p` and thus the covariance matrix is block diagonal.
     Returns:
@@ -573,10 +572,10 @@ def random_symplectic(N, passive=False, block_diag=False):
 
     Args:
         N (int): number of modes
-        passive (bool): if True, returns a passive Gaussian transformation (i.e.,
+        passive (bool): If True, returns a passive Gaussian transformation (i.e.,
             one that preserves photon number). If False (default), returns an active
             transformation.
-        block_diag (bool): if True, uses passive Gaussian transformations that are orthogonal
+        block_diag (bool): If True, uses passive Gaussian transformations that are orthogonal
             instead of unitary. This implies that the positions :math:`q` do not mix with
             the momenta :math:`p` and thus the symplectic operator is block diagonal
     Returns:
@@ -939,7 +938,7 @@ def extract_unitary(prog, cutoff_dim: int, vectorize_modes: bool = False, backen
     Args:
         prog (Program): quantum program
         cutoff_dim (int): dimension of each index
-        vectorize_modes (bool): if True, reshape input and output modes in order to return a matrix
+        vectorize_modes (bool): If True, reshape input and output modes in order to return a matrix.
         backend (str): the backend to build the unitary; ``'fock'`` (default) and ``'tf'`` are supported
 
     Returns:
