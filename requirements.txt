@@ -4,3 +4,4 @@ scipy>=1.0.0
 tensorflow==1.3
 tensorflow-tensorboard>=0.1.8
 quantum-blackbird
+hafnian>=0.6

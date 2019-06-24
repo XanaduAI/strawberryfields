@@ -14,7 +14,6 @@
 """Gaussian circuit operations"""
 # pylint: disable=duplicate-code,attribute-defined-outside-init
 import numpy as np
-
 from . import ops
 from ..shared_ops import changebasis
 
@@ -234,6 +233,19 @@ class GaussianModes:
         mm22 = self.nmat+np.transpose(self.nmat)-self.mmat-np.conj(self.mmat)+np.identity(self.nlen)
         return np.concatenate((np.concatenate((mm11, mm12), axis=1),
                                np.concatenate((np.transpose(mm12), mm22), axis=1)), axis=0).real
+
+    def smeanxp(self):
+        r"""Constructs and returns the symmetric ordered vector of mean in the xp ordering.
+        The ordered for the canonical operators is $ q_1,..,q_n, p_1,...,p_n$.
+        This differs from the ordering used in [1] which is $q_1,p_1,q_2,p_2,...,q_n,p_n$
+        Note that one ordering can be obtained from the other by using a permutation matrix.
+        Said permutation matrix is implemented in the function changebasis(n) where n is
+        the number of modes."""
+        nmodes = self.nlen
+        r = np.empty(2*nmodes)
+        r[0:nmodes] = 2*self.mean.real
+        r[nmodes:2*nmodes] = 2*self.mean.real
+        return r
 
     def scovmat(self):
         """Constructs and returns the symmetric ordered covariance matrix as defined in [1]

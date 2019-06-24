@@ -64,7 +64,7 @@ class GaussianState(BaseGaussianState):
         mu, cov = self.reduced_gaussian([modes]) # pylint: disable=unused-variable
         cov = cov * 2/self._hbar
 
-        return fock_amplitudes_one_mode(self._alpha[modes], cov, cutoff-1)
+        return fock_amplitudes_one_mode(self._alpha[modes], cov, cutoff)
 
     #==========================================
     # The methods below inherit their docstring
