@@ -175,7 +175,7 @@ class GaussianBackend(BaseGaussian):
 
     def measure_fock(self, modes, shots=1, select=None):
         if select is not None:
-            raise NotImplemented("Postselection is currently not supported"
+            raise NotImplemented("Postselection is currently not supported "
                                  "with measure_fock on the gaussian backend")
 
         # TODO: add logic to make sure the correct modes are measured
@@ -183,8 +183,8 @@ class GaussianBackend(BaseGaussian):
         cov = self.circuit.scovmatxp()
         # check we are sampling from a gaussian state with zero mean
         if not allclose(mu, zeros_like(mu)):
-            raise NotImplemented("PNR measurement is only supported for"
-                                 "Gaussian states with zero mean")
+            raise NotImplementedError("PNR measurement is only supported for "
+                                      "Gaussian states with zero mean")
 
         samples = hafnian_sample_state(cov, shots)
         return samples

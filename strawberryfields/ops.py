@@ -1027,7 +1027,7 @@ class MeasureFock(Measurement):
 
     Also accessible via the shortcut variable ``Measure``.
 
-    The modes are projected to the Fock state corresponding to the result of the measurement.
+    After measurement, the modes are reset to the vacuum state.
     """
     ns = None
 
