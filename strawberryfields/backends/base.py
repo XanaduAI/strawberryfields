@@ -78,6 +78,7 @@ BaseBackend
     loss
     thermal_loss
     measure_homodyne
+    measure_fock
 
 Fock backends
 ------------------
@@ -99,7 +100,6 @@ for quantum optical circuits.
     cubic_phase
     kerr_interaction
     cross_kerr_interaction
-    measure_fock
 
 Gaussian backends
 ---------------------
@@ -479,6 +479,22 @@ class BaseBackend:
             float: measured value
         """
         raise NotImplementedError
+          
+    
+    def measure_fock(self, modes, select=None, **kwargs):
+        """Measure the given modes in the Fock basis.
+
+        Updates the current state of the circuit to the conditional state of this measurement result.
+
+        Args:
+            modes (Sequence[int]): which modes to measure
+            select (None or Sequence[int]): If not None: desired values of the measurement results.
+                Enables post-selection on specific measurement results instead of random sampling.
+                ``len(select) == len(modes)`` is required.
+        Returns:
+            tuple[int]: measurement results
+        """
+        raise NotImplementedError
 
     def is_vacuum(self, tol=0.0, **kwargs):
         r"""Test whether the current circuit state is vacuum (up to given tolerance).
@@ -635,21 +651,6 @@ class BaseFock(BaseBackend):
         """
         raise NotImplementedError
 
-    def measure_fock(self, modes, select=None, **kwargs):
-        """Measure the given modes in the Fock basis.
-
-        Updates the current state of the circuit to the conditional state of this measurement result.
-
-        Args:
-            modes (Sequence[int]): which modes to measure
-            select (None or Sequence[int]): If not None: desired values of the measurement results.
-                Enables post-selection on specific measurement results instead of random sampling.
-                ``len(select) == len(modes)`` is required.
-        Returns:
-            tuple[int]: measurement results
-        """
-        raise NotImplementedError
-
     def state(self, modes=None, **kwargs):
         r"""Returns the state of the quantum simulation.
 
@@ -729,10 +730,6 @@ class BaseGaussian(BaseBackend):
 
     def cross_kerr_interaction(self, kappa, mode1, mode2):
         raise NotApplicableError
-
-    #def measure_fock(self, modes, select=None):
-    #    print("hello from measure fock in the gaussian backend")
-    #    raise NotApplicableError
 
     def state(self, modes=None, **kwargs):
         """Returns the state of the quantum simulation.
