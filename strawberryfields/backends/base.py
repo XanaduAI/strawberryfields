@@ -730,8 +730,9 @@ class BaseGaussian(BaseBackend):
     def cross_kerr_interaction(self, kappa, mode1, mode2):
         raise NotApplicableError
 
-    def measure_fock(self, modes, select=None):
-        raise NotApplicableError
+    #def measure_fock(self, modes, select=None):
+    #    print("hello from measure fock in the gaussian backend")
+    #    raise NotApplicableError
 
     def state(self, modes=None, **kwargs):
         """Returns the state of the quantum simulation.

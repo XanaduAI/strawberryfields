@@ -38,6 +38,7 @@ class GaussianSpecs(DeviceSpecs):
         # measurements
         "MeasureHomodyne",
         "MeasureHeterodyne",
+        "MeasureFock",
         # channels
         "LossChannel",
         "ThermalLossChannel",
