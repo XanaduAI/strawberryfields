@@ -182,8 +182,10 @@ class GaussianBackend(BaseGaussian):
         mu = self.circuit.mean
         cov = self.circuit.scovmatxp()
         # check we are sampling from a gaussian state with zero mean
-        # TODO: make this raise an exception
-        assert allclose(mu, zeros_like(mu))
+        if not allclose(mu, zeros_like(mu)):
+            raise NotImplemented("PNR measurement is only supported for"
+                                 "Gaussian states with zero mean")
+
         samples = hafnian_sample_state(cov, shots)
         return samples
 
