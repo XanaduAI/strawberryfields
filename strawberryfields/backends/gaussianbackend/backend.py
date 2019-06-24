@@ -28,8 +28,6 @@ from numpy import (
 )
 from numpy.linalg import inv
 
-from hafnian.samples import hafnian_sample_state
-
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.shared_ops import changebasis
 
@@ -175,13 +173,18 @@ class GaussianBackend(BaseGaussian):
     def thermal_loss(self, T, nbar, mode):
         self.circuit.thermal_loss(T, nbar, mode)
 
-    def measure_fock(self, modes, select=None):
+    def measure_fock(self, modes, shots=1, select=None):
+        if select is not None:
+            raise NotImplemented("Postselection is currently not supported"
+                                 "with measure_fock on the gaussian backend")
+
+        # TODO: add logic to make sure the correct modes are measured
         mu = self.circuit.mean
         cov = self.circuit.scovmatxp()
         # check we are sampling from a gaussian state with zero mean
+        # TODO: make this raise an exception
         assert allclose(mu, zeros_like(mu))
-        n_samples = 1
-        samples = hafnian_sample_state(cov, n_samples)
+        samples = hafnian_sample_state(cov, shots)
         return samples
 
     def state(self, modes=None, **kwargs):
