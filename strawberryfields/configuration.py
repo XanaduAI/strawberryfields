@@ -174,7 +174,7 @@ class Configuration:
         """Load a configuration file.
 
         Args:
-            filepath (str): path to the configuration file.
+            filepath (str): path to the configuration file
         """
         with open(filepath, "r") as f:
             self._config_file = toml.load(f)
@@ -183,7 +183,7 @@ class Configuration:
         """Save a configuration file.
 
         Args:
-            filepath (str): path to the configuration file.
+            filepath (str): path to the configuration file
         """
         with open(filepath, "w") as f:
             toml.dump(self._config, f)

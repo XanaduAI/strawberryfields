@@ -100,7 +100,7 @@ class TestConfiguration:
         config = conf.Configuration()
 
         # make a change
-        config._config['api']['hostname'] = "https:/6.4.2.4"
+        config._config['api']['hostname'] = "https://6.4.2.4"
         config.save(filename)
 
         result = toml.load(filename)
