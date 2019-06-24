@@ -298,6 +298,10 @@ class LocalEngine(BaseEngine):
             except NotImplementedError:
                 # command not directly supported by backend API
                 raise NotImplementedError('The operation {} has not been implemented for {}.'.format(cmd.op, self.backend)) from None
+                # TODO: may need more care in this message. There are occasions where an operation is supported,
+                # but not in combination with other operations in the same circuit (e.g., Dgate and MeasureFock in Gaussian backend).
+                # This incompatibility can be checked and caught during compilation, but since we allow users to submit
+                # uncompiled programs for execution, such a circuit would run and give a confusing error message here
         return applied
 
     def run(self, program, *, shots=1, compile_options={}, modes=None, state_options={}, **kwargs):
