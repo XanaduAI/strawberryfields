@@ -88,7 +88,7 @@ class GaussianBackend(BaseGaussian):
         phi = angle(r)
         self.circuit.beamsplitter(-theta, -phi, mode1, mode2)
 
-    def measure_homodyne(self, phi, mode, select=None, **kwargs):
+    def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         r"""Measure a :ref:`phase space quadrature <homodyne>` of the given mode.
 
         See :meth:`.BaseBackend.measure_homodyne`.
@@ -115,7 +115,7 @@ class GaussianBackend(BaseGaussian):
 
         return qs * sqrt(2*self.circuit.hbar)/2
 
-    def measure_heterodyne(self, mode, select=None):
+    def measure_heterodyne(self, mode, shots=1, select=None):
         if select is None:
             m = identity(2)
             res = 0.5*self.circuit.measure_dyne(m, [mode])

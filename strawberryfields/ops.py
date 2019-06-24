@@ -474,9 +474,11 @@ class Operation:
             backend (BaseBackend): backend to execute the operation
 
         Keyword Args:
-            eval_params (bool): set this to False to explicitly turn off the
+            eval_params (bool): Set this to False to explicitly turn off the
                 evaluation of parameters in the Operation.apply method. This is
                 useful if the parameters are pre-evaluated prior to calling this method.
+            shots (int): Number of independent evaluations to perform.
+                Only applies to Measurements.
 
         Returns:
             Any: the result of self._apply
@@ -1034,8 +1036,8 @@ class MeasureFock(Measurement):
             select = [select]
         super().__init__([], select)
 
-    def _apply(self, reg, backend, **kwargs):
-        return backend.measure_fock(reg, select=self.select, **kwargs)
+    def _apply(self, reg, backend, shots=1, **kwargs):
+        return backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
 
     def __str__(self):
         if self.select is None:
@@ -1064,14 +1066,14 @@ class MeasureHomodyne(Measurement):
     def __init__(self, phi, select=None):
         super().__init__([phi], select)
 
-    def _apply(self, reg, backend, **kwargs):
+    def _apply(self, reg, backend, shots=1, **kwargs):
         p = _unwrap(self.p)
         s = sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
         select = self.select
         if select is not None:
             select = select / s
 
-        return s * backend.measure_homodyne(p[0], *reg, select=select, **kwargs)
+        return s * backend.measure_homodyne(p[0], *reg, shots=shots, select=select, **kwargs)
 
     def __str__(self):
         if self.select is None:
@@ -1099,8 +1101,8 @@ class MeasureHeterodyne(Measurement):
     def __init__(self, select=None):
         super().__init__([], select)
 
-    def _apply(self, reg, backend, **kwargs):
-        return backend.measure_heterodyne(*reg, select=self.select, **kwargs)
+    def _apply(self, reg, backend, shots=1, **kwargs):
+        return backend.measure_heterodyne(*reg, shots=shots, select=self.select, **kwargs)
 
     def __str__(self):
         if self.select is None:
