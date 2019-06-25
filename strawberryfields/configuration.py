@@ -122,7 +122,7 @@ class Configuration:
         self._user_config_dir = user_config_dir("strawberryfields", "Xanadu")
         self._env_config_dir = os.environ.get("SF_CONF", "")
 
-        # search the current directory, the directory under environment
+        # Search the current directory, the directory under environment
         # variable SF_CONF, and default user config directory, in that order.
         directories = [os.curdir, self._env_config_dir, self._user_config_dir, ""]
         for idx, directory in enumerate(directories):
@@ -131,6 +131,7 @@ class Configuration:
                 self.load(self._filepath)
                 break
             except FileNotFoundError:
+                # check if we have searched all directories
                 if idx == len(directories) - 1:
                     log.info("No Strawberry Fields configuration file found.")
 
@@ -144,21 +145,20 @@ class Configuration:
         for section, section_config in self._config.items():
             env_prefix = "SF_{}_".format(section.upper())
 
-            for key, _ in section_config.items():
-                # environment variables take precedence
+            for key in section_config:
+                # Environment variables take precedence
                 env = env_prefix + key.upper()
-                if env in os.environ:
-                    self._config[section][key] = os.environ[env]
-                    continue
 
-                # check if a configuration file exists
-                if self._config_file:
-                    # update from configuration file
+                if env in os.environ:
+                    # Update from environment variable
+                    self._config[section][key] = os.environ[env]
+                elif self._config_file:
+                    # Update from configuration file
                     self._config[section][key] = self._config_file[section][key]
 
-    def __getattr__(self, key):
-        if key in self._config:
-            return self._config[key]
+    def __getattr__(self, section):
+        if section in self._config:
+            return self._config[section]
 
         raise ConfigurationError("Unknown Strawberry Fields configuration section.")
 
