@@ -18,10 +18,11 @@ from itertools import tee
 
 import numpy as np
 
-from hafnian.quantum import density_matrix_element, is_pure_cov, pure_state_amplitude
+from hafnian.quantum import density_matrix_element, is_pure_cov, pure_state_amplitude, state_vector
 
 from scipy.linalg import sqrtm
 from scipy.special import binom, factorial
+
 
 def fock_amplitudes_one_mode(alpha, cov, cutoff):
     """ Returns the Fock space density matrix of gaussian state characterized
@@ -139,13 +140,11 @@ def xmat(n):
                            np.concatenate((idm, 0*idm), axis=1)), axis=0).real
 
 
-def fock_prob(gaussian_state, ocp):
+def fock_prob(mu, cov, ocp):
     """
     Calculates the probability of measuring the gaussian state s2 in the photon number
     occupation pattern ocp"""
-
-    mu = gaussian_state.smeanxp()
-    cov = gaussian_state.scovmatxp()
     if is_pure_cov(cov):
-        return np.abs(pure_state_amplitude(mu, cov, ocp, check_purity = False))**2
+        return np.abs(pure_state_amplitude(mu, cov, ocp, check_purity=False))**2
+
     return  density_matrix_element(mu, cov, ocp, ocp).real
