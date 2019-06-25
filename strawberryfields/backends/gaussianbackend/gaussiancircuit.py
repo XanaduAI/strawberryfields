@@ -389,7 +389,7 @@ class GaussianModes:
         fid = self.fidelity_vacuum()
         return np.abs(fid-1) <= tol
 
-    def measure_dyne(self, covmat, indices):
+    def measure_dyne(self, covmat, indices, shots=1):
         """ Performs the general-dyne measurement specified in covmat, the indices should correspond
         with the ordering of the covmat of the measurement
         covmat specifies a gaussian effect via its covariance matrix. For more information see
@@ -412,9 +412,10 @@ class GaussianModes:
 
         r = self.smean()
         (va, vc) = ops.chop_in_blocks_vector(r, expind)
-        vm = np.random.multivariate_normal(vc, C)
-
-        va = va+np.dot(np.dot(B, np.linalg.inv(C+covmat)), vm-vc)
+        vm = np.random.multivariate_normal(vc, C, size=shots)
+        # The next line is a hack in that it only updates conditioned on the first samples value
+        # should still wotk if shots = 1
+        va = va+np.dot(np.dot(B, np.linalg.inv(C+covmat)), vm[0]-vc)
         va = ops.reassemble_vector(va, expind)
         self.fromsmean(va)
         return vm

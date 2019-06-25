@@ -117,13 +117,18 @@ class GaussianBackend(BaseGaussian):
         Returns:
             float: measured value
         """
+        if select is not None and shots != 1:
+            raise ValueError("Post selection and multiple shots is not implemented")
         eps = kwargs.get("eps", 0.0002)
 
         # phi is the rotation of the measurement operator, hence the minus
         self.circuit.phase_shift(-phi, mode)
 
         if select is None:
-            qs = self.circuit.homodyne(mode, eps)[0]
+            if shots == 1:
+                qs = self.circuit.homodyne(mode, eps)[0,0]
+            else:
+                qs = self.circuit.homodyne(mode, eps, shots = shots)[:,0]
         else:
             val = select * 2 / sqrt(2 * self.circuit.hbar)
             qs = self.circuit.post_select_homodyne(mode, val, eps)
@@ -131,10 +136,17 @@ class GaussianBackend(BaseGaussian):
         return qs * sqrt(2 * self.circuit.hbar) / 2
 
     def measure_heterodyne(self, mode, shots=1, select=None):
+
+        if select is not None and shots != 1:
+            raise ValueError("Post selection and multiple shots is not implemented")
+
         if select is None:
             m = identity(2)
-            res = 0.5 * self.circuit.measure_dyne(m, [mode])
-            return res[0] + 1j * res[1]
+            res = 0.5 * self.circuit.measure_dyne(m, [mode], shots=shots)
+            if shots == 1:
+                return (res[0,0] + 1j * res[0,1])
+            else:
+                return res[:,0] + 1j * res[:,1]
 
         res = select
         self.circuit.post_select_heterodyne(mode, select)
