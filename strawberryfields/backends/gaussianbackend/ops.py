@@ -147,4 +147,4 @@ def fock_prob(mu, cov, ocp):
     if is_pure_cov(cov):
         return np.abs(pure_state_amplitude(mu, cov, ocp, check_purity=False))**2
 
-    return  density_matrix_element(mu, cov, ocp, ocp).real
+    return  density_matrix_element(mu, cov, list(ocp), list(ocp)).real
