@@ -12,16 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Gaussian operations"""
-from types import GeneratorType
-from collections import OrderedDict
-from itertools import tee
 
 import numpy as np
 
-from hafnian.quantum import density_matrix_element, is_pure_cov, pure_state_amplitude, state_vector
-
 from scipy.linalg import sqrtm
-from scipy.special import binom, factorial
+
+from hafnian.quantum import density_matrix_element, is_pure_cov, pure_state_amplitude, state_vector, density_matrix
+
 
 
 def fock_amplitudes_one_mode(alpha, cov, cutoff):
@@ -116,6 +113,9 @@ def reassemble(A, idtodelete):
 
 
 def reassemble_vector(va, idtodelete):
+    r"""Creates a vector with zeros indices idtodelete
+    and everywhere else it puts the entries of va
+    """
     ntot = len(va)+len(idtodelete)
     ind = set(np.arange(ntot))-set(idtodelete)
     newv = np.zeros(ntot)
