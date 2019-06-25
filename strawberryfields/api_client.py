@@ -272,7 +272,7 @@ class ResourceManager:
         """
         Initialize the manager with resource and client instances. A client
         instance is used as a persistent HTTP communications object, and a
-        resource instance corresponds to a particular type of resource (e.g.
+        resource instance corresponds to a particular type of resource (e.g.,
         Job)
         """
         self.resource = resource
