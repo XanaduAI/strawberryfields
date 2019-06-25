@@ -126,16 +126,16 @@ class Configuration:
         # variable SF_CONF, and default user config directory, in that order.
         directories = [os.getcwd(), self._env_config_dir, self._user_config_dir]
         for idx, directory in enumerate(directories):
+            self._filepath = os.path.join(directory, self._name)
             try:
-                self._filepath = os.path.join(directory, self._name)
                 self.load(self._filepath)
-                break
             except FileNotFoundError:
                 # check if we have searched all directories
                 if idx == len(directories) - 1:
                     log.info("No Strawberry Fields configuration file found.")
-
-        self.update_config()
+            else:
+                self.update_config()
+                break
 
     def update_config(self):
         """Updates the configuration from either a loaded configuration
