@@ -53,7 +53,7 @@ class TestConfiguration:
             f.write(TEST_FILE)
 
         with monkeypatch.context() as m:
-            m.setattr(os, "curdir", str(tmpdir))
+            m.setattr(os, "getcwd", lambda: str(tmpdir))
             os.environ["SF_CONF"] = ""
             config = conf.Configuration()
 

@@ -124,7 +124,7 @@ class Configuration:
 
         # Search the current directory, the directory under environment
         # variable SF_CONF, and default user config directory, in that order.
-        directories = [os.curdir, self._env_config_dir, self._user_config_dir, ""]
+        directories = [os.getcwd(), self._env_config_dir, self._user_config_dir]
         for idx, directory in enumerate(directories):
             try:
                 self._filepath = os.path.join(directory, self._name)
