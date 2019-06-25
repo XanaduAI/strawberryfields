@@ -479,7 +479,6 @@ class BaseBackend:
         Returns:
             float: measured value
         """
-        print("HI")
         raise NotImplementedError
           
     
