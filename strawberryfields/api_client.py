@@ -210,7 +210,7 @@ class APIClient:
 
     def join_path(self, path):
         """
-        Joins a base url with an additional path (e.g. a resource name and ID)
+        Joins a base url with an additional path (e.g., a resource name and ID)
 
         Args:
             path (str): A path to be joined with BASE_URL.
@@ -275,28 +275,28 @@ class ResourceManager:
         resource instance corresponds to a particular type of resource (e.g.
         Job)
         """
-        setattr(self, "resource", resource)
-        setattr(self, "client", client or APIClient())
+        self.resource = resource
+        self.client = client or APIClient()
 
     def join_path(self, path):
         """
-        Joins a resource base path with an additional path (e.g. an ID)
+        Joins a resource base path with an additional path (e.g., an ID)
         """
         return join_path(self.resource.PATH, path)
 
-    def get(self, job_id):
+    def get(self, resource_id):
         """
         Attempts to retrieve a particular record by sending a GET
         request to the appropriate endpoint. If successful, the resource
         object is populated with the data in the response.
 
         Args:
-            job_id (int): The ID of an object to be retrieved.
+            resource_id (int): The ID of an object to be retrieved.
         """
         if "GET" not in self.resource.SUPPORTED_METHODS:
             raise MethodNotSupportedException("GET method on this resource is not supported")
 
-        response = self.client.get(self.join_path(str(job_id)))
+        response = self.client.get(self.join_path(str(resource_id)))
         self.handle_response(response)
 
     def create(self, **params):
@@ -350,7 +350,7 @@ class ResourceManager:
 
         # TODO: Improve error messaging and parse the actual error output (json).
 
-        if response.status_code in (400, 409):
+        if response.status_code in (400, 404, 409):
             warnings.warn(
                 "The server did not accept the request, and returned an error "
                 "({}: {}).".format(response.status_code, response.text),
@@ -365,6 +365,12 @@ class ResourceManager:
         elif response.status_code in (500, 503, 504):
             warnings.warn(
                 "The client encountered an unexpected temporary server error "
+                "({}: {}).".format(response.status_code, response.text),
+                UserWarning,
+            )
+        else:
+            warnings.warn(
+                "The client encountered an unexpected server error "
                 "({}: {}).".format(response.status_code, response.text),
                 UserWarning,
             )
@@ -393,7 +399,7 @@ class Resource:
 
     def __init__(self, client=None):
         """
-        Initialize the Resource by populating attributes based on fields and settings a manager.
+        Initialize the Resource by populating attributes based on fields and setting a manager.
 
         Args:
             client (APIClient): An APIClient instance to use as a client.
@@ -427,7 +433,7 @@ class Field:
         Initialize the Field object with a name and a cleaning function.
 
         Args:
-            name (str): A string representing the name of the field (e.g. "created_at").
+            name (str): A string representing the name of the field (e.g., "created_at").
             clean: A method that returns a cleaned value of the field, of the correct type.
         """
         self.name = name

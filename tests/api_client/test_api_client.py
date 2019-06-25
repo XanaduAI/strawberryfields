@@ -112,8 +112,8 @@ class MockGETResponse(MockResponse):
             "detail": "Requires authentication"
         },
         404: {
-            "code": "",
-            "detail": "",
+            "code": "not-found",
+            "detail": "The requested resource could not be found or does not exist.",
         },
         500: {
             "code": "server-error",
