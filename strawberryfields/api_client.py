@@ -143,7 +143,7 @@ class APIClient:
             "authentication_token": None,
         }
 
-        # Try getting everything first from environment variables
+        # Try getting everything first from configuration
         config.update(self.get_configuration_from_config())
 
         # Override any values that are explicitly passed when initializing client
