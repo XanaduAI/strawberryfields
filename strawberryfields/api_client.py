@@ -121,7 +121,10 @@ class APIClient:
     An object that allows the user to connect to the Xanadu Platform API.
     """
 
-    ALLOWED_HOSTNAMES = ["localhost"]
+    ALLOWED_HOSTNAMES = [
+        "localhost",
+        "localhost:8080",
+    ]
     DEFAULT_HOSTNAME = "localhost"
 
     ENV_KEY_PREFIX = "SF_API_"
@@ -162,6 +165,9 @@ class APIClient:
         self.BASE_URL = "{}://{}".format("https" if self.USE_SSL else "http", self.HOSTNAME)
         self.AUTHENTICATION_TOKEN = configuration["authentication_token"]
         self.HEADERS = {}
+
+        if self.AUTHENTICATION_TOKEN is not None:
+            self.set_authorization_header(self.AUTHENTICATION_TOKEN)
 
         # TODO: warn if no authentication token
 
@@ -206,7 +212,7 @@ class APIClient:
         Args:
             authentication_token (str): An authentication token used to access the API.
         """
-        self.headers["Authorization"] = authentication_token
+        self.HEADERS["Authorization"] = authentication_token
 
     def join_path(self, path):
         """

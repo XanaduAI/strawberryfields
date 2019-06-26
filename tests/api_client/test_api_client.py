@@ -61,6 +61,11 @@ SAMPLE_JOB_RESPONSE = {
 
 
 class MockResponse:
+    '''
+    A helper class to generate a mock response based on status code. Mocks
+    the `json` and `text` attributes of a requests.Response class.
+    '''
+
     status_code = None
 
     def __init__(self, status_code):
@@ -138,6 +143,9 @@ class MockGETResponse(MockResponse):
 @pytest.mark.api_client
 class TestAPIClient:
     def test_init_default_client(self):
+        """
+        Test that initializing a default client generates an APIClient with the expected params.
+        """
         client = api_client.APIClient()
         assert client.USE_SSL is True
         assert client.AUTHENTICATION_TOKEN is None
@@ -145,6 +153,10 @@ class TestAPIClient:
         assert client.HEADERS == {}
 
     def test_init_default_client_no_ssl(self):
+        """
+        Test setting use_ssl to False when initializing a client generates the correct base URL and
+        sets the correct flag.
+        """
         client = api_client.APIClient(use_ssl=False)
         assert client.USE_SSL is False
         assert client.AUTHENTICATION_TOKEN is None
@@ -152,27 +164,64 @@ class TestAPIClient:
         assert client.HEADERS == {}
 
     def test_init_custom_token_client(self):
+        """
+        Test that the token is correctly set when initializing a client.
+        """
         test_token = 'TEST'
         client = api_client.APIClient(authentication_token=test_token)
         assert client.AUTHENTICATION_TOKEN == test_token
 
-    def test_load_configuration(self, client):
+    def test_init_custom_token_client_headers_set(self, monkeypatch):
+        """
+        Test that set_authentication_token is being called when setting a custom token.
+        """
+        test_token = 'TEST'
+        mock_set_authorization_header = MagicMock()
+        monkeypatch.setattr(
+            api_client.APIClient, "set_authorization_header", mock_set_authorization_header)
+        api_client.APIClient(authentication_token=test_token)
+        mock_set_authorization_header.assert_called_once_with(test_token)
+
+    def test_set_authorization_header(self):
+        """
+        Test that the authentication token is added to the header correctly.
+        """
+        client = api_client.APIClient()
+
+        authentication_token = MagicMock()
+        client.set_authorization_header(authentication_token)
+        assert client.HEADERS['Authorization'] == authentication_token
+
+    def test_load_configuration_from_file(self, client):
+        """
+        Test that the configuration is loaded from file correctly (not yet implemented).
+        """
         with pytest.raises(NotImplementedError):
             client.load_configuration_from_file()
 
     def test_authenticate(self, client):
+        """
+        Test that the client can authenticate correctly (not yet implemented).
+        """
         with pytest.raises(NotImplementedError):
             username = 'TEST_USER'
             password = 'TEST_PASSWORD'
             client.authenticate(username, password)
 
     def test_join_path(self, client):
-        assert client.join_path('jobs') == f'{client.BASE_URL}/jobs'
+        """
+        Test that two paths can be joined and separated by a forward slash.
+        """
+        assert client.join_path('jobs') == '{client.BASE_URL}/jobs'.format(client=client)
 
 
 @pytest.mark.api_client
 class TestResourceManager:
     def test_init(self):
+        """
+        Test that a resource manager instance can be initialized correctly with a resource and
+        client instance
+        """
         resource = MagicMock()
         client = MagicMock()
         manager = ResourceManager(resource, client)
@@ -181,6 +230,9 @@ class TestResourceManager:
         assert manager.client == client
 
     def test_join_path(self):
+        """
+        Test that the resource path can be joined corectly with the base path
+        """
         mock_resource = MagicMock()
         mock_resource.PATH = 'some-path'
 
@@ -188,6 +240,10 @@ class TestResourceManager:
         assert manager.join_path('test') == "some-path/test"
 
     def test_get_unsupported(self):
+        """
+        Test a GET request with a resource that does not support it. Asserts that
+        MethodNotSupportedException is raised.
+        """
         mock_resource = MagicMock()
         mock_resource.SUPPORTED_METHODS = ()
         manager = ResourceManager(mock_resource, MagicMock())
@@ -195,6 +251,10 @@ class TestResourceManager:
             manager.get(1)
 
     def test_get(self, monkeypatch):
+        """
+        Test a successful GET request. Tests that manager.handle_response is being called with
+        the correct Response object.
+        """
         mock_resource = MagicMock()
         mock_client = MagicMock()
         mock_response = MagicMock()
@@ -212,6 +272,10 @@ class TestResourceManager:
         manager.handle_response.assert_called_once_with(mock_response)
 
     def test_create_unsupported(self):
+        """
+        Test a POST (create) request with a resource that does not support that type or request.
+        Asserts that MethodNotSupportedException is raised.
+        """
         mock_resource = MagicMock()
         mock_resource.SUPPORTED_METHODS = ()
         manager = ResourceManager(mock_resource, MagicMock())
@@ -219,6 +283,10 @@ class TestResourceManager:
             manager.create()
 
     def test_create_id_already_exists(self):
+        """
+        Tests that once an object is created, create method can not be called again. Asserts that
+        ObjectAlreadyCreatedException is raised.
+        """
         mock_resource = MagicMock()
         mock_resource.SUPPORTED_METHODS = ('POST',)
         mock_resource.id = MagicMock()
@@ -227,6 +295,10 @@ class TestResourceManager:
             manager.create()
 
     def test_create(self, monkeypatch):
+        """
+        Tests a successful POST (create) method. Asserts that handle_response is called with the
+        correct Response object.
+        """
         mock_resource = MagicMock()
         mock_client = MagicMock()
         mock_response = MagicMock()
@@ -245,6 +317,10 @@ class TestResourceManager:
         manager.handle_response.assert_called_once_with(mock_response)
 
     def test_handle_response(self, monkeypatch):
+        """
+        Tests that a successful response initiates a call to handle_success_response, and that an
+        error response initiates a call to handle_error_response.
+        """
         mock_resource = MagicMock()
         mock_client = MagicMock()
         mock_response = MagicMock()
@@ -268,25 +344,33 @@ class TestResourceManager:
         mock_handle_success_response.assert_called_once_with(mock_response)
 
     def test_handle_refresh_data(self):
+        """
+        Tests the ResourceManager.refresh_data method. Ensures that Field.set is called once with
+        the correct data value.
+        """
         mock_resource = MagicMock()
         mock_client = MagicMock()
 
         fields = [MagicMock() for i in range(5)]
 
         mock_resource.fields = {f: MagicMock() for f in fields}
-        mock_data = {f: MagicMock() for f in fields}
+        mock_data = {f.name: MagicMock() for f in fields}
 
         manager = ResourceManager(mock_resource, mock_client)
 
         manager.refresh_data(mock_data)
 
         for field in mock_resource.fields:
-            field.set.assert_called_once()
+            field.set.assert_called_once_with(mock_data[field.name])
 
 
 @pytest.mark.api_client
 class TestJob:
     def test_create_created(self, monkeypatch):
+        """
+        Tests a successful Job creatioin with a mock POST response. Asserts that all fields on
+        the Job instance have been set correctly and match the mock data.
+        """
         monkeypatch.setattr(
             requests,
             "post",
@@ -299,6 +383,9 @@ class TestJob:
             assert getattr(job, key).value == SAMPLE_JOB_CREATE_RESPONSE[key]
 
     def test_create_bad_request(self, monkeypatch):
+        """
+        Tests that the correct error code is returned when a bad request is sent to the server.
+        """
         monkeypatch.setattr(
             requests,
             "post",
