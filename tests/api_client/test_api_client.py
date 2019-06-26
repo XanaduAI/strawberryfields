@@ -56,15 +56,15 @@ SAMPLE_JOB_RESPONSE = {
     "created_at": "2019-05-24T15:55:43.872531Z",
     "started_at": "2019-05-24T16:01:12.145636Z",
     "finished_at": "2019-05-24T16:01:12.145645Z",
-    "running_time": "9µs"
+    "running_time": "9µs",
 }
 
 
 class MockResponse:
-    '''
+    """
     A helper class to generate a mock response based on status code. Mocks
     the `json` and `text` attributes of a requests.Response class.
-    '''
+    """
 
     status_code = None
 
@@ -89,22 +89,17 @@ class MockPOSTResponse(MockResponse):
             "code": "parse-error",
             "detail": (
                 "The blackbird script could not be parsed. "
-                "Please fix errors in the script and try again.")
+                "Please fix errors in the script and try again."
+            ),
         },
-        401: {
-            "code": "unauthenticated",
-            "detail": "Requires authentication"
-        },
+        401: {"code": "unauthenticated", "detail": "Requires authentication"},
         409: {
             "code": "unsupported-circuit",
-            "detail": (
-                "This circuit is not compatible with the specified hardware.")
+            "detail": ("This circuit is not compatible with the specified hardware."),
         },
         500: {
             "code": "server-error",
-            "detail": (
-                "Unexpected server error. Please try your request again "
-                "later.")
+            "detail": ("Unexpected server error. Please try your request again " "later."),
         },
     }
 
@@ -112,19 +107,14 @@ class MockPOSTResponse(MockResponse):
 class MockGETResponse(MockResponse):
     possible_responses = {
         200: SAMPLE_JOB_RESPONSE,
-        401: {
-            "code": "unauthenticated",
-            "detail": "Requires authentication"
-        },
+        401: {"code": "unauthenticated", "detail": "Requires authentication"},
         404: {
             "code": "not-found",
             "detail": "The requested resource could not be found or does not exist.",
         },
         500: {
             "code": "server-error",
-            "detail": (
-                "Unexpected server error. Please try your request again "
-                "later.")
+            "detail": ("Unexpected server error. Please try your request again " "later."),
         },
     }
 
@@ -149,7 +139,7 @@ class TestAPIClient:
         client = api_client.APIClient()
         assert client.USE_SSL is True
         assert client.AUTHENTICATION_TOKEN is None
-        assert client.BASE_URL == 'https://localhost'
+        assert client.BASE_URL == "https://localhost"
         assert client.HEADERS == {}
 
     def test_init_default_client_no_ssl(self):
@@ -160,14 +150,14 @@ class TestAPIClient:
         client = api_client.APIClient(use_ssl=False)
         assert client.USE_SSL is False
         assert client.AUTHENTICATION_TOKEN is None
-        assert client.BASE_URL == 'http://localhost'
+        assert client.BASE_URL == "http://localhost"
         assert client.HEADERS == {}
 
     def test_init_custom_token_client(self):
         """
         Test that the token is correctly set when initializing a client.
         """
-        test_token = 'TEST'
+        test_token = "TEST"
         client = api_client.APIClient(authentication_token=test_token)
         assert client.AUTHENTICATION_TOKEN == test_token
 
@@ -175,10 +165,11 @@ class TestAPIClient:
         """
         Test that set_authentication_token is being called when setting a custom token.
         """
-        test_token = 'TEST'
+        test_token = "TEST"
         mock_set_authorization_header = MagicMock()
         monkeypatch.setattr(
-            api_client.APIClient, "set_authorization_header", mock_set_authorization_header)
+            api_client.APIClient, "set_authorization_header", mock_set_authorization_header
+        )
         api_client.APIClient(authentication_token=test_token)
         mock_set_authorization_header.assert_called_once_with(test_token)
 
@@ -190,7 +181,7 @@ class TestAPIClient:
 
         authentication_token = MagicMock()
         client.set_authorization_header(authentication_token)
-        assert client.HEADERS['Authorization'] == authentication_token
+        assert client.HEADERS["Authorization"] == authentication_token
 
     def test_load_configuration_from_file(self, client):
         """
@@ -204,15 +195,15 @@ class TestAPIClient:
         Test that the client can authenticate correctly (not yet implemented).
         """
         with pytest.raises(NotImplementedError):
-            username = 'TEST_USER'
-            password = 'TEST_PASSWORD'
+            username = "TEST_USER"
+            password = "TEST_PASSWORD"
             client.authenticate(username, password)
 
     def test_join_path(self, client):
         """
         Test that two paths can be joined and separated by a forward slash.
         """
-        assert client.join_path('jobs') == '{client.BASE_URL}/jobs'.format(client=client)
+        assert client.join_path("jobs") == "{client.BASE_URL}/jobs".format(client=client)
 
 
 @pytest.mark.api_client
@@ -234,10 +225,10 @@ class TestResourceManager:
         Test that the resource path can be joined corectly with the base path
         """
         mock_resource = MagicMock()
-        mock_resource.PATH = 'some-path'
+        mock_resource.PATH = "some-path"
 
         manager = ResourceManager(mock_resource, MagicMock())
-        assert manager.join_path('test') == "some-path/test"
+        assert manager.join_path("test") == "some-path/test"
 
     def test_get_unsupported(self):
         """
@@ -260,7 +251,7 @@ class TestResourceManager:
         mock_response = MagicMock()
         mock_client.get = MagicMock(return_value=mock_response)
 
-        mock_resource.SUPPORTED_METHODS = ('GET',)
+        mock_resource.SUPPORTED_METHODS = ("GET",)
 
         manager = ResourceManager(mock_resource, mock_client)
         monkeypatch.setattr(manager, "handle_response", MagicMock())
@@ -288,7 +279,7 @@ class TestResourceManager:
         ObjectAlreadyCreatedException is raised.
         """
         mock_resource = MagicMock()
-        mock_resource.SUPPORTED_METHODS = ('POST',)
+        mock_resource.SUPPORTED_METHODS = ("POST",)
         mock_resource.id = MagicMock()
         manager = ResourceManager(mock_resource, MagicMock())
         with pytest.raises(ObjectAlreadyCreatedException):
@@ -304,7 +295,7 @@ class TestResourceManager:
         mock_response = MagicMock()
         mock_client.post = MagicMock(return_value=mock_response)
 
-        mock_resource.SUPPORTED_METHODS = ('POST',)
+        mock_resource.SUPPORTED_METHODS = ("POST",)
         mock_resource.id = None
 
         manager = ResourceManager(mock_resource, mock_client)
@@ -329,11 +320,9 @@ class TestResourceManager:
 
         manager = ResourceManager(mock_resource, mock_client)
 
-        monkeypatch.setattr(
-            manager, "handle_success_response", mock_handle_success_response)
+        monkeypatch.setattr(manager, "handle_success_response", mock_handle_success_response)
 
-        monkeypatch.setattr(
-            manager, "handle_error_response", mock_handle_error_response)
+        monkeypatch.setattr(manager, "handle_error_response", mock_handle_error_response)
 
         manager.handle_response(mock_response)
         assert manager.http_status_code == mock_response.status_code
@@ -371,10 +360,7 @@ class TestJob:
         Tests a successful Job creatioin with a mock POST response. Asserts that all fields on
         the Job instance have been set correctly and match the mock data.
         """
-        monkeypatch.setattr(
-            requests,
-            "post",
-            lambda url, headers, data: MockPOSTResponse(201))
+        monkeypatch.setattr(requests, "post", lambda url, headers, data: MockPOSTResponse(201))
         job = Job()
         job.manager.create(params={})
 
@@ -386,10 +372,7 @@ class TestJob:
         """
         Tests that the correct error code is returned when a bad request is sent to the server.
         """
-        monkeypatch.setattr(
-            requests,
-            "post",
-            lambda url, headers, data: MockPOSTResponse(400))
+        monkeypatch.setattr(requests, "post", lambda url, headers, data: MockPOSTResponse(400))
         job = Job()
 
         job.manager.create(params={})
