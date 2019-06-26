@@ -197,7 +197,6 @@ class GaussianBackend(BaseGaussian):
         if not allclose(mu, zeros_like(mu)):
             raise NotImplementedError("PNR measurement is only supported for "
                                       "Gaussian states with zero mean")
-
         samples = hafnian_sample_state(cov, shots)
         return samples
 

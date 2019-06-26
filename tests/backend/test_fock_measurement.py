@@ -16,7 +16,7 @@ r"""Unit tests for measurements in the Fock basis"""
 import pytest
 
 # fock measurements only supported by fock backends
-pytestmark = pytest.mark.backends("fock", "tf")
+pytestmark = pytest.mark.backends("fock", "tf", "gaussian")
 
 import numpy as np
 
@@ -95,3 +95,17 @@ class TestFockRepresentation:
                 ref_result = tuple(np.array([i] * batch_size) for i in ref_result)
 
             assert np.allclose(meas_result, ref_result, atol=tol, rtol=0)
+
+
+
+class TestRepresentationIndependent:
+    """Basic implementation-independent tests."""
+    def test_vacuum_measurements(self, setup_backend, pure):
+        """Tests Fock measurement on the vacuum state."""
+        backend = setup_backend(3)
+
+        for _ in range(NUM_REPEATS):
+            backend.reset(pure=pure)
+
+            meas = backend.measure_fock([0, 1, 2])[0]
+            assert np.all(np.array(meas) == 0)
