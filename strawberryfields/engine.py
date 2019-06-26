@@ -75,6 +75,7 @@ Code details
 
 import abc
 from collections.abc import Sequence
+from numpy import stack, shape
 
 from .backends import load_backend
 from .backends.base import (NotApplicableError, BaseBackend)
@@ -89,7 +90,10 @@ class Result:
     def __init__(self, samples):
         #: BaseState: quantum state object returned by a local backend, if any
         self.state = None
-        #: List[List[Number]]: measurement samples, shape == (modes, shots)
+        #: array(array(Number)): measurement samples, shape == (modes,) or shape == (shots, modes)
+        # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
+        if len(shape(samples)) > 1:
+            samples = stack(samples, 1)
         self.samples = samples
 
     def __str__(self):
@@ -204,6 +208,14 @@ class BaseEngine(abc.ABC):
         Returns:
             Result: results of the computation
         """
+
+        def _broadcast_nones(val, shots):
+            """Helper function to ensure register values have same shape, even if not measured"""
+            if val is None and shots > 1:
+                return [None] * shots
+            else:
+                return val
+
         if not isinstance(program, Sequence):
             program = [program]
 
@@ -236,7 +248,8 @@ class BaseEngine(abc.ABC):
                 self._run_program(p, **kwargs)
                 self.run_progs.append(p)
                 # store the latest measurement results
-                self.samples = [p.reg_refs[k].val for k in sorted(p.reg_refs)]
+                shots = kwargs.get("shots", 1)
+                self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
                 prev = p
         except Exception as e:
             raise e
