@@ -19,6 +19,7 @@ pytestmark = pytest.mark.frontend
 import numpy as np
 
 import strawberryfields as sf
+import strawberryfields.program_utils as pu
 
 from strawberryfields import ops
 from strawberryfields.program import (Program, MergeFailure, RegRefError)
@@ -37,9 +38,9 @@ class TestProgramGateInteraction:
     def prog(self):
         """Dummy program context for each test"""
         prog = sf.Program(2)
-        Program._current_context = prog
+        pu.Program_current_context = prog
         yield prog
-        Program._current_context = None
+        pu.Program_current_context = None
 
     @pytest.mark.parametrize("gate", ops.one_args_gates + ops.two_args_gates)
     def test_dispatch_one_mode_gates(self, gate):

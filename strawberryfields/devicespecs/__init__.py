@@ -61,6 +61,7 @@ from .base import BaseSpecs
 from .chip0 import Chip0Specs
 from .fock import FockSpecs
 from .gaussian import GaussianSpecs
+from .gbs import GBSSpecs
 from .tensorflow import TFSpecs
 
 
@@ -69,6 +70,7 @@ backend_specs = {
     "chip0": Chip0Specs,
     "fock": FockSpecs,
     "gaussian": GaussianSpecs,
+    "gbs": GBSSpecs,
     "tf": TFSpecs,
 }
 """dict[str, DeviceSpecs]: dictionary mapping backend shortname

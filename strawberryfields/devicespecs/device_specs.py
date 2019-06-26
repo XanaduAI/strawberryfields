@@ -174,3 +174,12 @@ class DeviceSpecs(abc.ABC):
             Union[str, None]: Blackbird program or template representing the circuit
         """
         return None
+
+    @property
+    def compile(self):
+        """Device-specific compilation method.
+
+        This property is optional. If no special compilation logic is required,
+        **do not define this property**. In such a case, it will simply return ``None``.
+        """
+        return None

@@ -292,7 +292,8 @@ from scipy.special import factorial as fac
 import strawberryfields as sf
 from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
-from .program import (Program, Command, RegRefTransform, MergeFailure)
+import strawberryfields.program_utils as pu
+from .program_utils import (Command, RegRefTransform, MergeFailure)
 from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
                          sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2,
                          transpose, squeeze)
@@ -396,7 +397,7 @@ class Operation:
         if (not reg) or (self.ns is not None and self.ns != len(reg)):
             raise ValueError("Wrong number of subsystems.")
         # append it to the Program
-        reg = Program._current_context.append(self, reg)
+        reg = pu.Program_current_context.append(self, reg)
         return reg
 
     def merge(self, other):
@@ -1517,7 +1518,7 @@ class _Delete(MetaOperation):
 
     def __or__(self, reg):
         reg = super().__or__(reg)
-        Program._current_context._delete_subsystems(reg)
+        pu.Program_current_context._delete_subsystems(reg)
 
     def _apply(self, reg, backend, **kwargs):
         backend.del_mode(reg)
@@ -1539,12 +1540,12 @@ def New(n=1):
     Returns:
         tuple[RegRef]: tuple of the newly added subsystem references
     """
-    if Program._current_context is None:
+    if pu.Program_current_context is None:
         raise RuntimeError('New() can only be called inside a Program context.')
     # create RegRefs for the new modes
-    refs = Program._current_context._add_subsystems(n)
+    refs = pu.Program_current_context._add_subsystems(n)
     # append the actual Operation to the Program
-    Program._current_context.append(_New_modes(n), refs)
+    pu.Program_current_context.append(_New_modes(n), refs)
     return refs
 
 
@@ -1594,9 +1595,9 @@ class All(MetaOperation):
         reg = _seq_to_list(reg)
         # convert into commands
         # make sure reg does not contain duplicates (we feed them to Program.append() one by one)
-        Program._current_context._test_regrefs(reg)
+        pu.Program_current_context._test_regrefs(reg)
         for r in reg:
-            Program._current_context.append(self.op, [r])
+            pu.Program_current_context.append(self.op, [r])
 
 
 # ====================================================================
