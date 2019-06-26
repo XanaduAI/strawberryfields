@@ -16,10 +16,7 @@ import pytest
 
 pytestmark = pytest.mark.frontend
 
-import numpy as np
-
 import strawberryfields as sf
-from strawberryfields import engine
 from strawberryfields import ops
 from strawberryfields.backends.base import BaseBackend
 

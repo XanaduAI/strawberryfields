@@ -451,7 +451,7 @@ class TestGaussianTransform:
 class TestGaussian:
     """Tests for the Gaussian quantum state preparation"""
 
-    def test_merge(self, hbar, tol):
+    def test_merge(self, hbar):
         """Test that merging two Preparations only keeps the latter one."""
         n = 3
         V1 = random_covariance(n, pure=False, hbar=hbar)

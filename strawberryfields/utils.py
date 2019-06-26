@@ -682,7 +682,7 @@ class operation:
             raise ValueError("Wrong number of subsystems")
 
         reg_len = 1
-        if isinstance(reg, collections.Sized):
+        if isinstance(reg, collections.abc.Sized):
             reg_len = len(reg)
 
         if reg_len != self.ns:
