@@ -27,7 +27,9 @@ requirements = [
     "numpy>=1.16.3",
     "scipy>=1.0.0",
     "networkx>=2.0",
-    "quantum-blackbird>=0.2.0"
+    "quantum-blackbird>=0.2.0",
+    "toml",
+    "appdirs"
 ]
 
 # extra_requirements = [
