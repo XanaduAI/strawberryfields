@@ -11,7 +11,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Abstract base class for storing device data for validation"""
+"""
+Backend capabilities
+====================
+
+**Module name:** :mod:`strawberryfields.devicespecs.device_specs`
+
+.. currentmodule:: strawberryfields.devicespecs.device_specs
+
+The :class:`DeviceSpecs` class stores information about the capabilities of various execution backends.
+This information is used e.g. in :class:`Program` validation.
+
+
+Classes
+-------
+
+.. autosummary::
+   DeviceSpecs
+
+
+Code details
+~~~~~~~~~~~~
+
+"""
+
 from typing import List, Set, Dict, Union
 import abc
 
@@ -20,7 +43,7 @@ from blackbird.utils import to_DiGraph
 
 
 class DeviceSpecs(abc.ABC):
-    """Abstract base class for backend data"""
+    """Abstract base class for describing execution backend capabilities."""
 
     @property
     @abc.abstractmethod

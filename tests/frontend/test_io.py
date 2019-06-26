@@ -439,7 +439,7 @@ class TestBlackbirdToSFConversion:
         assert prog.backend == 'gaussian'
 
         # after compilation
-        prog = prog.compile()
+        prog = prog.compile('gaussian')
 
         assert len(prog) == 2
         assert prog.circuit[0].op.__class__.__name__ == "Sgate"

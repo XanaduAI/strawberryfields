@@ -26,6 +26,7 @@ from strawberryfields import ops
 
 from strawberryfields import devicespecs
 from strawberryfields.devicespecs.device_specs import DeviceSpecs
+from strawberryfields.temporary import check_GBS
 
 
 # make test deterministic
@@ -315,6 +316,18 @@ class TestValidation:
     """Test for Program device validation within
     the compile() method."""
 
+    def test_disconnected_circuit(self):
+        """Test the detection of a disconnected circuit."""
+        prog = sf.Program(3)
+        with prog.context as q:
+            ops.S2gate(0.6) | q[0:2]
+            ops.Dgate(1.0)  | q[2]
+            ops.Measure  | q[0:2]
+            ops.MeasureX | q[2]
+
+        with pytest.warns(UserWarning, match='The circuit consists of 2 disconnected components.'):
+            new_prog = prog.compile(backend='fock')
+
     def test_incorrect_modes(self, monkeypatch):
         """Test that an exception is raised if the device
         is called with the incorrect number of modes"""
@@ -387,7 +400,6 @@ class TestValidation:
         place if the device requests it."""
 
         class DummyDevice(DeviceSpecs):
-            """A device with no decompositions"""
             modes = None
             remote = False
             local = True
@@ -428,7 +440,6 @@ class TestValidation:
         requests a decomposition that doesn't exist"""
 
         class DummyDevice(DeviceSpecs):
-            """A device with no decompositions"""
             modes = None
             remote = False
             local = True
@@ -515,7 +526,6 @@ class TestValidation:
         """Test compilation properly matches the device topology"""
 
         class DummyDevice(DeviceSpecs):
-            """A device with no decompositions"""
             modes = None
             remote = False
             local = True
@@ -564,7 +574,6 @@ class TestValidation:
         """Test compilation raises exception if toplogy not matched"""
 
         class DummyDevice(DeviceSpecs):
-            """A device with no decompositions"""
             modes = None
             remote = False
             local = True
@@ -608,3 +617,78 @@ class TestValidation:
 
             with pytest.raises(program.CircuitError, match="incompatible topology"):
                 new_prog = prog.compile(backend='dummy')
+
+
+class TestGBSCheck:
+    """Test the Gaussian boson sampling check method."""
+
+    def test_GBS_fail_1(self):
+        """GBS failure."""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.Measure | q
+            ops.Rgate(1.0)  | q[0]
+
+        with pytest.raises(program.CircuitError, match="Operations following the Fock measurements."):
+            check_GBS(prog)
+
+    def test_GBS_fail_2(self):
+        """GBS failure."""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.Sgate(-0.3) | q[1]
+            ops.Kgate(1.0) | q[0]
+            ops.Measure | q
+
+        with pytest.raises(program.CircuitError, match="Non-gaussian Operation:"):
+            check_GBS(prog)
+
+    def test_GBS_fail_3(self):
+        """GBS failure."""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.Dgate(1.0) | q[0]
+            ops.Sgate(-0.5) | q[1]
+
+        with pytest.raises(program.CircuitError, match="No Fock measurements."):
+            check_GBS(prog)
+
+    def test_GBS_fail_4(self):
+        """GBS failure."""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.Dgate(1.0) | q[0]
+            ops.Measure | q[0]
+            ops.Dgate(-1.0) | q[1]
+            ops.BSgate(-0.5, 2.0) | q  # intervening gate
+            ops.Measure | q[1]
+
+        with pytest.raises(program.CircuitError, match="The Fock measurements are not consecutive."):
+            check_GBS(prog)
+
+    def test_GBS_fail_5(self):
+        """GBS failure."""
+        prog = sf.Program(3)
+        with prog.context as q:
+            ops.Dgate(1.0) | q[0]
+            ops.Measure | q[0]
+            ops.Measure | q
+
+        with pytest.raises(program.CircuitError, match="Measuring the same mode more than once."):
+            check_GBS(prog)
+
+    def test_GBS_success(self):
+        """GBS check passes."""
+        prog = sf.Program(3)
+        with prog.context as q:
+            ops.Sgate(1.0) | q[0]
+            ops.Measure | q[0]
+            ops.BSgate(1.4, 0.4) | q[1:3]
+            ops.Measure | q[2]
+            ops.Rgate(-1.0) | q[1]
+            ops.Measure | q[1]
+
+        check_GBS(prog)
+        assert len(prog.circuit) == 4
+        assert prog.circuit[-1].op.__class__ == ops.MeasureFock
+        assert [x.ind for x in prog.circuit[-1].reg] == list(range(3))

@@ -414,8 +414,7 @@ class Operation:
             the identity gate (doing nothing).
 
         Raises:
-            ~strawberryfields.engine.MergeFailure: if the two
-                operations cannot be merged
+            ~.program.MergeFailure: if the two operations cannot be merged
         """
         # todo: Using the return value None to denote the identity is a
         # bit dangerous, since a function with no explicit return statement

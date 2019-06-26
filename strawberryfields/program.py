@@ -63,6 +63,7 @@ call these directly.
        _list_to_grid
        _grid_to_DAG
        _DAG_to_list
+       _group_operations
 
 
 Helper classes
@@ -148,6 +149,7 @@ from collections.abc import Sequence
 import copy
 import functools
 import numbers
+import warnings
 
 import networkx as nx
 
@@ -245,6 +247,11 @@ class Command:
             return temp
         return '{} | ({})'.format(temp, ", ".join([str(rr) for rr in self.reg]))
 
+    def __lt__(self, other):
+        # Needed as a tiebreaker for NetworkX lexicographical_topological_sort()
+        # due to a buggy implementation! Any order will do. Remove when NetworkX is fixed.
+        return True
+
     def get_dependencies(self):
         """Subsystems the command depends on.
 
@@ -285,7 +292,7 @@ class RegRef:
 
     def __init__(self, ind):
         self.ind = ind   #: int: subsystem index
-        self.val = None  #: Real: measured eigenvalue. None if the subsystem has not been measured yet
+        self.val = None  #: float, complex: Measurement result. None if the subsystem has not been measured yet.
         self.active = True  #: bool: True at construction, False after the subsystem is deleted
 
     def __str__(self):
@@ -381,7 +388,7 @@ class RegRefTransform:
         if any(v is None for v in temp):
             # NOTE: "if None in temp" causes an error if temp contains arrays,
             # since it uses the == comparison in addition to "is"
-            raise CircuitError("Trying to use a nonexistent measurement result (e.g., before it can be measured).")
+            raise CircuitError("Trying to use a nonexistent measurement result (e.g., before it has been measured).")
         if self.func is None:
             return temp[0]
         return self.func(*temp)
@@ -428,7 +435,7 @@ class Program:
         self.name = name
         #: list[Command]: Commands constituting the quantum circuit in temporal order
         self.circuit = []
-        #: bool: True if no more Commands can be appended to the Program
+        #: bool: if True, no more Commands can be appended to the Program
         self.locked = False
         #: str: backend for which the circuit has been compiled
         self.backend = None
@@ -675,7 +682,7 @@ class Program:
         self.circuit.append(Command(op, reg))
         return reg
 
-    def compile(self, backend='fock', **kwargs):
+    def compile(self, backend, **kwargs):
         """Compile the program for the given backend.
 
         The compilation step validates the program, making sure all the Operations
@@ -692,6 +699,8 @@ class Program:
         Keyword Args:
             optimize (bool): If True, try to optimize the program by merging and canceling gates.
                 The default is False.
+            warn_connected (bool): If True, the user is warned if the quantum circuit is not weakly
+                connected. The default is True.
 
         Returns:
             Program: compiled program
@@ -702,6 +711,7 @@ class Program:
             raise ValueError("Could not find backend {} in Strawberry Fields database".format(backend))
 
         if db.modes is not None:
+            # FIXME wrong, subsystems may be created and destroyed by program, self.num_subsystems is just the final number
             if self.num_subsystems > db.modes:
                 raise CircuitError("This program requires {} modes, but the {} backend "
                                    "only supports a {} mode program".format(self.num_subsystems, backend, db.modes))
@@ -713,7 +723,7 @@ class Program:
                 op_name = cmd.op.__class__.__name__
 
                 if cmd.op is None:
-                    # None represents an identity gate
+                    # None represents an identity gate   TODO is this case necessary?
                     continue
 
                 elif op_name in db.decompositions:
@@ -760,10 +770,15 @@ class Program:
         self.lock()
         seq = compile_sequence(self.circuit)
 
+        if kwargs.get('warn_connected', True):
+            DAG = self._list_to_DAG(seq)
+            temp = nx.algorithms.components.number_weakly_connected_components(DAG)
+            if temp > 1:
+                warnings.warn('The circuit consists of {} disconnected components.'.format(temp))
+
         if db.graph is not None:
             # check topology
-            grid = self._list_to_grid(seq)
-            DAG = self._grid_to_DAG(grid)
+            DAG = self._list_to_DAG(seq)
 
             # relabel the DAG nodes to integers, with attributes
             # specifying the operation name. This allows them to be
@@ -799,40 +814,38 @@ class Program:
 
     @staticmethod
     def _list_to_grid(ls):
-        """Transforms a list of commands to a grid representation.
+        """Transforms a list of Commands to a grid representation.
 
-        The grid is a mapping from subsystem indices to lists of :class:`Command` instances touching that subsystem.
-        The same Command instance will appear in each list that corresponds to one of its subsystems.
+        The grid is a mapping from subsystem indices to lists of :class:`Command` instances touching
+        that subsystem, in temporal order. The same Command instance will appear in each list that
+        corresponds to one of its subsystems.
 
         Args:
-            ls (list[Command]): circuit to be transformed
+            ls (Iterable[Command]): quantum circuit
         Returns:
-            Grid[Command]: transformed circuit
+            dict[int, list[Command]]: same circuit in grid form
         """
         grid = {}
         # enter every operation in the list to its proper position in the grid
         for cmd in ls:
             for r in cmd.get_dependencies():
                 # Add cmd to the grid to the end of the line r.ind.
-                if r.ind not in grid:
-                    grid[r.ind] = []  # add a new line to the circuit
-                grid[r.ind].append(cmd)
+                grid.setdefault(r.ind, []).append(cmd)
         return grid
 
     @staticmethod
     def _grid_to_DAG(grid):
-        """Transforms a command grid to a DAG representation.
+        """Transforms a grid of Commands to a DAG representation.
 
         In the DAG each node is a :class:`Command` instance, and edges point from Commands to their dependents/followers.
 
         Args:
-            grid (Grid[Command]): circuit to be transformed
+            grid (dict[int, list[Command]]): quantum circuit
         Returns:
-            DAG[Command]: transformed circuit
+            DAG[Command]: same circuit in DAG form
         """
         DAG = nx.DiGraph()
-        for key in grid:
-            q = grid[key]
+        for key, q in grid.items():
             _print_list(0, q)
             if q:
                 # add the first operation on the wire that does not depend on anything
@@ -843,20 +856,89 @@ class Program:
         return DAG
 
     @staticmethod
-    def _DAG_to_list(dag):
-        """Transforms a command DAG to a list representation.
+    def _list_to_DAG(ls):
+        """Transforms a list of Commands to a DAG representation.
 
-        The list contains the :class:`Command` instances in (one possible) topological order.
+        In the DAG each node is a :class:`Command` instance, and edges point from Commands to their dependents/followers.
 
         Args:
-            dag (DAG[Command]): circuit to be transformed
+            ls (Iterable[Command]): quantum circuit
         Returns:
-            list[Command]: transformed circuit
+            DAG[Command]: same circuit in DAG form
+        """
+        return Program._grid_to_DAG(Program._list_to_grid(ls))
+
+    @staticmethod
+    def _DAG_to_list(dag):
+        """Transforms a Command DAG to a list representation.
+
+        The list contains the :class:`Command` instances in (one possible) topological order,
+        i.e., dependants following the operations they depend on.
+
+        Args:
+            dag (DAG[Command]): quantum circuit
+        Returns:
+            list[Command]: same circuit in list form
         """
         # sort the operation graph into topological order
-        # (dependants following the operations they depend on)
         temp = nx.algorithms.dag.topological_sort(dag)
         return list(temp)
+
+    @staticmethod
+    def _group_operations(seq, predicate):
+        """Group a set of Operations in a circuit together (if possible).
+
+        For the purposes of this method, we call a :class:`Operation` instance *marked* iff
+        ``predicate`` returns True on it.
+
+        This method converts the quantum circuit in ``seq`` into an equivalent circuit ``A+B+C``,
+        where the :class:`Command` instances in sequences ``A`` and ``C`` do not contain any
+        marked Operations.
+        The sequence ``B`` contains all marked Operations in the circuit, and possibly
+        additional unmarked instances that could not be moved into ``A`` or ``C`` using the
+        available commutation rules.
+        Any of the three returned sequences can be empty (but if ``B`` is empty then so is ``C``).
+
+        Args:
+            seq (Sequence[Command]): quantum circuit
+            predicate (Callable[[Operation], bool]): Grouping predicate. Returns True for the
+                Operations to be grouped together, False for the others.
+        Returns:
+            Tuple[Sequence[Command]]: A, B, C such that A+B+C is equivalent to seq,
+                and A and C do not contain any marked Operation instances.
+        """
+
+        def find_first_index(seq):
+            """Index of the first element in the sequence for which the predicate function returns True.
+            If no such element exists, returns the length of the sequence.
+            """
+            return next((i for i, e in enumerate(seq) if predicate(e.op)), len(seq))
+
+        def marked_last(node):
+            """Mapping from nodes to sorting keys to resolve ambiguities in the topological sort.
+            Larger key values come later in the lexicographical-topological ordering.
+            """
+            if predicate(node.op):
+                return 1
+            return 0
+
+        def lex_topo(seq, key):
+            """Sorts a Command sequence lexicographical-topologically using the given lexicographic key function."""
+            DAG = Program._list_to_DAG(seq)
+            return list(nx.algorithms.dag.lexicographical_topological_sort(DAG, key=key))
+
+        C = lex_topo(seq, key=marked_last)
+        ind = find_first_index(C)
+        A = C[:ind]  # initial unmarked instances
+        B = C[ind:]  # marked and possibly unmarked
+
+        # re-sort B, marked instances first
+        C = lex_topo(B, key=lambda x: -marked_last(x))
+        # find last marked
+        ind = len(C) - find_first_index(list(reversed(C)))
+        B = C[:ind]  # marked and still possibly unmarked
+        C = C[ind:]  # final unmarked instances
+        return A, B, C
 
     def optimize(self):
         """Try to simplify and optimize the quantum circuit.
