@@ -29,6 +29,8 @@ requirements = [
     "networkx>=2.0",
     "quantum-blackbird>=0.2.0",
     "hafnian>=0.6"
+    "toml",
+    "appdirs"
 ]
 
 # extra_requirements = [
