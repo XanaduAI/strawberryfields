@@ -137,31 +137,31 @@ class APIClient:
         # TODO: Load username, password, or authentication token from
         # configuration file
 
-        configuration = {
+        config = {
             "use_ssl": True,
             "hostname": self.DEFAULT_HOSTNAME,
             "authentication_token": None,
         }
 
         # Try getting everything first from environment variables
-        configuration.update(self.get_configuration_from_config())
+        config.update(self.get_configuration_from_config())
 
         # Override any values that are explicitly passed when initializing client
-        configuration.update(kwargs)
+        config.update(kwargs)
 
-        if configuration["hostname"] is None:
+        if config["hostname"] is None:
             raise ValueError("hostname parameter is missing")
 
-        if configuration["hostname"] not in self.ALLOWED_HOSTNAMES:
+        if config["hostname"] not in self.ALLOWED_HOSTNAMES:
             raise ValueError("hostname parameter not in allowed list")
 
-        self.USE_SSL = configuration["use_ssl"]
+        self.USE_SSL = config["use_ssl"]
         if not self.USE_SSL:
             warnings.warn("Connecting insecurely to API server", UserWarning)
 
-        self.HOSTNAME = configuration["hostname"]
+        self.HOSTNAME = config["hostname"]
         self.BASE_URL = "{}://{}".format("https" if self.USE_SSL else "http", self.HOSTNAME)
-        self.AUTHENTICATION_TOKEN = configuration["authentication_token"]
+        self.AUTHENTICATION_TOKEN = config["authentication_token"]
         self.HEADERS = {}
 
         if self.AUTHENTICATION_TOKEN is not None:
