@@ -19,6 +19,7 @@ Unit tests for API client
 import pytest
 import json
 from strawberryfields import api_client
+from strawberryfields import configuration
 from strawberryfields.api_client import (
     requests,
     Job,
@@ -183,12 +184,13 @@ class TestAPIClient:
         client.set_authorization_header(authentication_token)
         assert client.HEADERS["Authorization"] == authentication_token
 
-    def test_load_configuration_from_file(self, client):
+    def test_get_configuration_from_config(self, client, monkeypatch):
         """
         Test that the configuration is loaded from file correctly (not yet implemented).
         """
-        with pytest.raises(NotImplementedError):
-            client.load_configuration_from_file()
+        mock_configuration = MagicMock()
+        monkeypatch.setattr(configuration, "Configuration", mock_configuration.Configuration)
+        assert client.get_configuration_from_config() == mock_configuration.Configuration().api
 
     def test_authenticate(self, client):
         """

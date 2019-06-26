@@ -61,7 +61,14 @@ and has the following format:
 Summary of options
 ------------------
 
-todo
+SF_API_USE_SSL:
+    Whether to use SSL or not when connecting to the API. True or False.
+SF_API_HOSTNAME:
+    The hostname of the server to connect to. Defaults to localhost. Must be one of the allowed
+    hosts.
+SF_API_AUTHENTICATION_TOKEN:
+    The authentication token to use when connecting to the API. Will be sent with every request in
+    the header.
 
 Summary of methods
 ------------------

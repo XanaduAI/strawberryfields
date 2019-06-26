@@ -77,11 +77,12 @@ Classes
 
 import urllib
 import json
-import os
 import warnings
 
 import dateutil.parser
 import requests
+
+from strawberryfields import configuration
 
 
 def join_path(base_path, path):
@@ -121,10 +122,7 @@ class APIClient:
     An object that allows the user to connect to the Xanadu Platform API.
     """
 
-    ALLOWED_HOSTNAMES = [
-        "localhost",
-        "localhost:8080",
-    ]
+    ALLOWED_HOSTNAMES = ["localhost", "localhost:8080"]
     DEFAULT_HOSTNAME = "localhost"
 
     ENV_KEY_PREFIX = "SF_API_"
@@ -146,7 +144,7 @@ class APIClient:
         }
 
         # Try getting everything first from environment variables
-        configuration.update(self.get_configuration_from_environment())
+        configuration.update(self.get_configuration_from_config())
 
         # Override any values that are explicitly passed when initializing client
         configuration.update(kwargs)
@@ -171,27 +169,12 @@ class APIClient:
 
         # TODO: warn if no authentication token
 
-    def get_configuration_from_environment(self):
+    def get_configuration_from_config(self):
         """
-        Retrieve configuration from environment variables. The variables are defined as follows:
-        - SF_API_USE_SSL: True or False
-        - SF_API_HOSTNAME: The hostname of the server to connect to
-        - SF_API_AUTHENTICATION_TOKEN: The authentication token to use when connecting to the API
+        Retrieve configuration from environment variables or config file based on Strawberry Fields
+        configuration.
         """
-        configuration = {
-            "authentication_token": os.environ.get(self.ENV_AUTHENTICATION_TOKEN_KEY),
-            "hostname": os.environ.get(self.ENV_API_HOSTNAME_KEY),
-            "use_ssl": os.environ.get(self.ENV_USE_SSL_KEY) in ("1", "True", "TRUE"),
-        }
-
-        return {key: value for key, value in configuration.items() if key in os.environ}
-
-    def load_configuration_from_file(self):
-        """
-        Loads username, password, and/or authentication token from a config
-        file.
-        """
-        raise NotImplementedError()
+        return configuration.Configuration().api
 
     def authenticate(self, username, password):
         """
