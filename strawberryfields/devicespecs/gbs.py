@@ -13,7 +13,7 @@
 # limitations under the License.
 """Gaussian boson sampling validation data."""
 
-from strawberryfields.program_utils import (CircuitError, Command, _group_operations)
+from strawberryfields.program_utils import (CircuitError, Command, group_operations)
 import strawberryfields.ops as ops
 
 from .gaussian import GaussianSpecs
@@ -65,18 +65,18 @@ class GBSSpecs(GaussianSpecs):
         Args:
             seq (Sequence[Command]): quantum circuit to modify
         Returns:
-            Sequence[Command]: modified circuit
+            List[Command]: modified circuit
         Raises:
             CircuitError: the circuit does not correspond to GBS
         """
-        A, B, C = _group_operations(seq, lambda x: isinstance(x, ops.MeasureFock))
+        A, B, C = group_operations(seq, lambda x: isinstance(x, ops.MeasureFock))
 
         # C should be empty
         if C:
             raise CircuitError('Operations following the Fock measurements.')
 
         # A should only contain Gaussian operations
-        # (but this is already guaranteed by _group_operations and our primitive set)
+        # (but this is already guaranteed by group_operations and our primitive set)
         #for cmd in A:
         #    temp = cmd.op.__class__.__name__
         #    if temp not in gaussian_ops:
@@ -91,12 +91,12 @@ class GBSSpecs(GaussianSpecs):
         for cmd in B:
             if not isinstance(cmd.op, ops.MeasureFock):
                 raise CircuitError('The Fock measurements are not consecutive.')
-            else:
-                # combine the Fock measurements
-                temp = set(cmd.reg)
-                if measured & temp:
-                    raise CircuitError('Measuring the same mode more than once.')
-                measured |= temp
+
+            # combine the Fock measurements
+            temp = set(cmd.reg)
+            if measured & temp:
+                raise CircuitError('Measuring the same mode more than once.')
+            measured |= temp
 
         # replace B with a single Fock measurement
         B = [Command(ops.MeasureFock(), list(measured))]

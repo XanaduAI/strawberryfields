@@ -22,6 +22,10 @@ import functools
 import networkx as nx
 
 
+__all__ = ['Program_current_context', '_convert', 'RegRefError', 'CircuitError', 'MergeFailure',
+           'Command', 'RegRef', 'RegRefTransform',
+           'list_to_grid', 'grid_to_DAG', 'DAG_to_list', 'list_to_DAG', 'group_operations']
+
 
 Program_current_context = None
 """Context for inputting a Program. Used to be a class attribute of :class:`Program`, moved
@@ -262,7 +266,7 @@ class RegRefTransform:
 # Utility functions
 # =================
 
-def _list_to_grid(ls):
+def list_to_grid(ls):
     """Transforms a list of Commands to a grid representation.
 
     The grid is a mapping from subsystem indices to lists of :class:`Command` instances touching
@@ -283,7 +287,7 @@ def _list_to_grid(ls):
     return grid
 
 
-def _grid_to_DAG(grid):
+def grid_to_DAG(grid):
     """Transforms a grid of Commands to a DAG representation.
 
     In the DAG each node is a :class:`Command` instance, and edges point from Commands to their dependents/followers.
@@ -294,7 +298,7 @@ def _grid_to_DAG(grid):
         DAG[Command]: same circuit in DAG form
     """
     DAG = nx.DiGraph()
-    for key, q in grid.items():
+    for _, q in grid.items():
         if q:
             # add the first operation on the wire that does not depend on anything
             DAG.add_node(q[0])
@@ -304,7 +308,7 @@ def _grid_to_DAG(grid):
     return DAG
 
 
-def _list_to_DAG(ls):
+def list_to_DAG(ls):
     """Transforms a list of Commands to a DAG representation.
 
     In the DAG each node is a :class:`Command` instance, and edges point from Commands to their dependents/followers.
@@ -314,10 +318,10 @@ def _list_to_DAG(ls):
     Returns:
         DAG[Command]: same circuit in DAG form
     """
-    return _grid_to_DAG(_list_to_grid(ls))
+    return grid_to_DAG(list_to_grid(ls))
 
 
-def _DAG_to_list(dag):
+def DAG_to_list(dag):
     """Transforms a Command DAG to a list representation.
 
     The list contains the :class:`Command` instances in (one possible) topological order,
@@ -333,7 +337,7 @@ def _DAG_to_list(dag):
     return list(temp)
 
 
-def _group_operations(seq, predicate):
+def group_operations(seq, predicate):
     """Group a set of Operations in a circuit together (if possible).
 
     For the purposes of this method, we call a :class:`Operation` instance *marked* iff
@@ -372,7 +376,7 @@ def _group_operations(seq, predicate):
 
     def lex_topo(seq, key):
         """Sorts a Command sequence lexicographical-topologically using the given lexicographic key function."""
-        DAG = _list_to_DAG(seq)
+        DAG = list_to_DAG(seq)
         return list(nx.algorithms.dag.lexicographical_topological_sort(DAG, key=key))
 
     C = lex_topo(seq, key=marked_last)

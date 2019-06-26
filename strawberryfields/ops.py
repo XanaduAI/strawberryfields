@@ -290,9 +290,9 @@ from scipy.linalg import block_diag
 from scipy.special import factorial as fac
 
 import strawberryfields as sf
+import strawberryfields.program_utils as pu
 from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
-import strawberryfields.program_utils as pu
 from .program_utils import (Command, RegRefTransform, MergeFailure)
 from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
                          sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2,
@@ -415,7 +415,7 @@ class Operation:
             the identity gate (doing nothing).
 
         Raises:
-            ~.program.MergeFailure: if the two operations cannot be merged
+            .MergeFailure: if the two operations cannot be merged
         """
         # todo: Using the return value None to denote the identity is a
         # bit dangerous, since a function with no explicit return statement

@@ -175,11 +175,15 @@ class DeviceSpecs(abc.ABC):
         """
         return None
 
-    @property
-    def compile(self):
-        """Device-specific compilation method.
+    compile = None
+    """Device-specific compilation method.
 
-        This property is optional. If no special compilation logic is required,
-        **do not define this property**. In such a case, it will simply return ``None``.
-        """
-        return None
+    If no special compilation logic is required, **do not define this method**.
+
+    Args:
+        seq (Sequence[Command]): quantum circuit to modify
+    Returns:
+        List[Command]: modified circuit
+    Raises:
+        CircuitError: the circuit is not valid for the device
+    """

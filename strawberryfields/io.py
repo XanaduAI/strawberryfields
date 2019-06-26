@@ -35,7 +35,8 @@ import os
 import blackbird
 
 from . import ops
-from .program import (Program, RegRefTransform)
+from .program import (Program,)
+from .program_utils import (RegRefTransform,)
 
 
 def to_blackbird(prog, version="1.0"):

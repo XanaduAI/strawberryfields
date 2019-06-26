@@ -77,11 +77,11 @@ Utility functions
 -----------------
 
 .. autosummary::
-   _list_to_grid
-   _grid_to_DAG
-   _list_to_DAG
-   _DAG_to_list
-   _group_operations
+   list_to_grid
+   grid_to_DAG
+   list_to_DAG
+   DAG_to_list
+   group_operations
 
 
 Exceptions
@@ -120,7 +120,7 @@ During the optimization three different (but equivalent) representations of the 
 .. currentmodule:: strawberryfields.program.Program
 
 The three representations can be converted to each other
-using the methods :func:`_list_to_grid`, :func:`_grid_to_DAG` and :func:`_DAG_to_list`.
+using the functions :func:`list_to_grid`, :func:`grid_to_DAG` and :func:`DAG_to_list`.
 
 
 Optimizer
@@ -157,7 +157,7 @@ import networkx as nx
 import strawberryfields.circuitdrawer as sfcd
 import strawberryfields.devicespecs as specs
 import strawberryfields.program_utils as pu
-from .program_utils import *
+from .program_utils import (Command, RegRef, CircuitError, RegRefError, MergeFailure)
 
 
 
@@ -543,7 +543,7 @@ class Program:
         seq = compile_sequence(self.circuit)
 
         if kwargs.get('warn_connected', True):
-            DAG = pu._list_to_DAG(seq)
+            DAG = pu.list_to_DAG(seq)
             temp = nx.algorithms.components.number_weakly_connected_components(DAG)
             if temp > 1:
                 warnings.warn('The circuit consists of {} disconnected components.'.format(temp))
@@ -555,7 +555,7 @@ class Program:
         # TODO subsume the topology check in db.compile?
         if db.graph is not None:
             # check topology
-            DAG = pu._list_to_DAG(seq)
+            DAG = pu.list_to_DAG(seq)
 
             # relabel the DAG nodes to integers, with attributes
             # specifying the operation name. This allows them to be
@@ -601,7 +601,7 @@ class Program:
         """
         # print('\n\nOptimizing...\nUnused inds: ', self.unused_indices)
 
-        grid = pu._list_to_grid(self.circuit)
+        grid = pu.list_to_grid(self.circuit)
         # for k in grid:
         #    print('mode {}, len {}'.format(k, len(grid[k])))
 
@@ -642,8 +642,8 @@ class Program:
                 i += 1  # failed at merging the ops, move forward
 
         # convert the circuit back into a list (via a DAG)
-        DAG = pu._grid_to_DAG(grid)
-        self.circuit = pu._DAG_to_list(DAG)
+        DAG = pu.grid_to_DAG(grid)
+        self.circuit = pu.DAG_to_list(DAG)
 
 
     def draw_circuit(self, tex_dir='./circuit_tex', write_to_file=True):

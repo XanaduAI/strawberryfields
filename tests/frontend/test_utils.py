@@ -21,8 +21,8 @@ from numpy.polynomial.hermite import hermval as H
 from scipy.special import factorial as fac
 
 import strawberryfields as sf
-from strawberryfields.program import (RegRef, RegRefTransform)
-from strawberryfields.ops import Sgate, BSgate, LossChannel, MeasureX, Squeezed
+from strawberryfields.program_utils import (RegRef, RegRefTransform)
+from strawberryfields.ops import (Sgate, BSgate, LossChannel, MeasureX, Squeezed)
 import strawberryfields.utils as utils
 
 
