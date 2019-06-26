@@ -1,0 +1,12 @@
+## =================================================================
+##      STRAWBERRY FIELDS API CONFIGURATION OPTIONS
+## =================================================================
+
+[api]
+# Options for the Strawberry Fields Cloud API
+# Fill in your authentication
+authentatication_token = None # example token form: 071cdcce-9241-4965-93af-4a4dbc739135
+# Fill in the hostname of the Cloud API
+hostname = "localhost"
+# Whether Strawberry Fields should use SSL to connect to the API
+use_ssl = true

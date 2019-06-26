@@ -143,6 +143,7 @@ from scipy.special import factorial as fac
 import strawberryfields as sf
 from .program import _convert, Command
 from .ops import Gate, Channel, Ket
+
 # pylint: disable=abstract-method,ungrouped-imports,
 
 # ------------------------------------------------------------------------
@@ -187,10 +188,12 @@ def scale(x, a):
         x (RegRef): mode that has been previously measured
         a (float): scaling factor
     """
+
     @_convert
     def rrt(x):
         """RegRefTransform function"""
-        return a*x
+        return a * x
+
     return rrt(x)
 
 
@@ -201,10 +204,12 @@ def shift(x, b):
         x (RegRef): mode that has been previously measured
         b (float): shifting factor
     """
+
     @_convert
     def rrt(x):
         """RegRefTransform function"""
-        return b+x
+        return b + x
+
     return rrt(x)
 
 
@@ -218,10 +223,12 @@ def scale_shift(x, a, b):
         a (float): scaling factor
         b (float): shifting factor
     """
+
     @_convert
     def rrt(x):
         """RegRefTransform function"""
-        return a*x + b
+        return a * x + b
+
     return rrt(x)
 
 
@@ -230,8 +237,8 @@ def power(x, a):
 
     Args:
         x (RegRef): mode that has been previously measured
-        a (float): the exponent of x. Note that a can be
-            negative and fractional.
+        a (float): the exponent of x; note that ``a`` can be
+            negative and fractional
     """
     if a < 0:
         tmp = float(a)
@@ -242,7 +249,9 @@ def power(x, a):
     def rrt(x):
         """RegRefTransform function"""
         return np.power(x, tmp)
+
     return rrt(x)
+
 
 # ------------------------------------------------------------------------
 # State functions - Fock basis and Gaussian basis                |
@@ -256,46 +265,44 @@ def squeezed_cov(r, phi, hbar=2):
         r (complex): the squeezing magnitude
         p (float): the squeezing phase :math:`\phi`
         hbar (float): (default 2) the value of :math:`\hbar` in the commutation
-            relation :math:`[\x,\p]=i\hbar`.
+            relation :math:`[\x,\p]=i\hbar`
     Returns:
         array: the squeezed state
     """
-    cov = np.array([[np.exp(-2*r), 0],
-                    [0, np.exp(2*r)]]) * hbar/2
+    cov = np.array([[np.exp(-2 * r), 0], [0, np.exp(2 * r)]]) * hbar / 2
 
-    R = np.array([[np.cos(phi/2), -np.sin(phi/2)],
-                  [np.sin(phi/2), np.cos(phi/2)]])
+    R = np.array([[np.cos(phi / 2), -np.sin(phi / 2)], [np.sin(phi / 2), np.cos(phi / 2)]])
 
     return np.dot(np.dot(R, cov), R.T)
 
 
-def vacuum_state(basis='fock', fock_dim=5, hbar=2.):
+def vacuum_state(basis="fock", fock_dim=5, hbar=2.0):
     r""" Returns the vacuum state
 
     Args:
-        basis (str): if 'fock', calculates the initial state
+        basis (str): If 'fock', calculates the initial state
             in the Fock basis. If 'gaussian', returns the
             vector of means and the covariance matrix.
         fock_dim (int): the size of the truncated Fock basis if
-            using the Fock basis representation.
+            using the Fock basis representation
         hbar (float): (default 2) the value of :math:`\hbar` in the commutation
-            relation :math:`[\x,\p]=i\hbar`.
+            relation :math:`[\x,\p]=i\hbar`
     Returns:
         array: the vacuum state
     """
-    if basis == 'fock':
+    if basis == "fock":
         state = np.zeros((fock_dim))
-        state[0] = 1.
+        state[0] = 1.0
 
-    elif basis == 'gaussian':
+    elif basis == "gaussian":
         means = np.zeros((2))
-        cov = np.identity(2) * hbar/2
+        cov = np.identity(2) * hbar / 2
         state = [means, cov]
 
     return state
 
 
-def coherent_state(a, basis='fock', fock_dim=5, hbar=2.):
+def coherent_state(a, basis="fock", fock_dim=5, hbar=2.0):
     r""" Returns the coherent state
 
     This can be returned either in the Fock basis,
@@ -315,30 +322,30 @@ def coherent_state(a, basis='fock', fock_dim=5, hbar=2.):
 
     Args:
         a (complex) : the displacement
-        basis (str): if 'fock', calculates the initial state
+        basis (str): If 'fock', calculates the initial state
             in the Fock basis. If 'gaussian', returns the
             vector of means and the covariance matrix.
         fock_dim (int): the size of the truncated Fock basis if
-            using the Fock basis representation.
+            using the Fock basis representation
         hbar (float): (default 2) the value of :math:`\hbar` in the commutation
-            relation :math:`[\x,\p]=i\hbar`.
+            relation :math:`[\x,\p]=i\hbar`
     Returns:
         array: the coherent state
     """
-    if basis == 'fock':
-        state = np.array([
-            np.exp(-0.5*np.abs(a)**2)*a**n/np.sqrt(fac(n))
-            for n in range(fock_dim)])
+    if basis == "fock":
+        state = np.array(
+            [np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n)) for n in range(fock_dim)]
+        )
 
-    elif basis == 'gaussian':
-        means = np.array([a.real, a.imag]) * np.sqrt(2*hbar)
-        cov = np.identity(2) * hbar/2
+    elif basis == "gaussian":
+        means = np.array([a.real, a.imag]) * np.sqrt(2 * hbar)
+        cov = np.identity(2) * hbar / 2
         state = [means, cov]
 
     return state
 
 
-def squeezed_state(r, p, basis='fock', fock_dim=5, hbar=2.):
+def squeezed_state(r, p, basis="fock", fock_dim=5, hbar=2.0):
     r""" Returns the squeezed state
 
     This can be returned either in the Fock basis,
@@ -364,35 +371,35 @@ def squeezed_state(r, p, basis='fock', fock_dim=5, hbar=2.):
     Args:
         r (complex): the squeezing magnitude
         p (float): the squeezing phase :math:`\phi`
-        basis (str): if 'fock', calculates the initial state
+        basis (str): If 'fock', calculates the initial state
             in the Fock basis. If 'gaussian', returns the
             vector of means and the covariance matrix.
         fock_dim (int): the size of the truncated Fock basis if
-            using the Fock basis representation.
+            using the Fock basis representation
         hbar (float): (default 2) the value of :math:`\hbar` in the commutation
-            relation :math:`[\x,\p]=i\hbar`.
+            relation :math:`[\x,\p]=i\hbar`
     Returns:
         array: the squeezed state
     """
     phi = p
 
-    if basis == 'fock':
+    if basis == "fock":
+
         def ket(n):
             """Squeezed state kets"""
-            return (np.sqrt(fac(2*n))/(2**n*fac(n))) * (-np.exp(1j*phi)*np.tanh(r))**n
+            return (np.sqrt(fac(2 * n)) / (2 ** n * fac(n))) * (-np.exp(1j * phi) * np.tanh(r)) ** n
 
-        state = np.array([ket(n//2) if n %
-                          2 == 0 else 0. for n in range(fock_dim)])
-        state *= np.sqrt(1/np.cosh(r))
+        state = np.array([ket(n // 2) if n % 2 == 0 else 0.0 for n in range(fock_dim)])
+        state *= np.sqrt(1 / np.cosh(r))
 
-    elif basis == 'gaussian':
+    elif basis == "gaussian":
         means = np.zeros((2))
         state = [means, squeezed_cov(r, phi, hbar)]
 
     return state
 
 
-def displaced_squeezed_state(a, r, phi, basis='fock', fock_dim=5, hbar=2.):
+def displaced_squeezed_state(a, r, phi, basis="fock", fock_dim=5, hbar=2.0):
     r""" Returns the squeezed coherent state
 
     This can be returned either in the Fock basis,
@@ -421,44 +428,44 @@ def displaced_squeezed_state(a, r, phi, basis='fock', fock_dim=5, hbar=2.):
         a (complex): the displacement
         r (complex): the squeezing magnitude
         phi (float): the squeezing phase :math:`\phi`
-        basis (str): if 'fock', calculates the initial state
+        basis (str): If 'fock', calculates the initial state
             in the Fock basis. If 'gaussian', returns the
             vector of means and the covariance matrix.
         fock_dim (int): the size of the truncated Fock basis if
-            using the Fock basis representation.
+            using the Fock basis representation
         hbar (float): (default 2) the value of :math:`\hbar` in the commutation
-            relation :math:`[\x,\p]=i\hbar`.
+            relation :math:`[\x,\p]=i\hbar`
     Returns:
         array: the squeezed coherent state
     """
     # pylint: disable=too-many-arguments
-    if basis == 'fock':
+    if basis == "fock":
 
         if r != 0:
-            phase_factor = np.exp(1j*phi)
+            phase_factor = np.exp(1j * phi)
             ch = np.cosh(r)
             sh = np.sinh(r)
             th = np.tanh(r)
 
-            gamma = a*ch+np.conj(a)*phase_factor*sh
-            N = np.exp(-0.5*np.abs(a)**2-0.5*np.conj(a)**2*phase_factor*th)
+            gamma = a * ch + np.conj(a) * phase_factor * sh
+            N = np.exp(-0.5 * np.abs(a) ** 2 - 0.5 * np.conj(a) ** 2 * phase_factor * th)
 
             coeff = np.diag(
-                [(0.5*phase_factor*th)**(n/2)/np.sqrt(fac(n)*ch)
-                 for n in range(fock_dim)]
+                [
+                    (0.5 * phase_factor * th) ** (n / 2) / np.sqrt(fac(n) * ch)
+                    for n in range(fock_dim)
+                ]
             )
 
-            vec = [hermval(gamma/np.sqrt(phase_factor*np.sinh(2*r)), row)
-                   for row in coeff]
+            vec = [hermval(gamma / np.sqrt(phase_factor * np.sinh(2 * r)), row) for row in coeff]
 
-            state = N*np.array(vec)
+            state = N * np.array(vec)
 
         else:
-            state = coherent_state(
-                a, basis='fock', fock_dim=fock_dim)  # pragma: no cover
+            state = coherent_state(a, basis="fock", fock_dim=fock_dim)  # pragma: no cover
 
-    elif basis == 'gaussian':
-        means = np.array([a.real, a.imag]) * np.sqrt(2*hbar)
+    elif basis == "gaussian":
+        means = np.array([a.real, a.imag]) * np.sqrt(2 * hbar)
         state = [means, squeezed_cov(r, phi, hbar)]
 
     return state
@@ -479,7 +486,7 @@ def fock_state(n, fock_dim=5):
         array: the Fock state
     """
     ket = np.zeros((fock_dim))
-    ket[n] = 1.
+    ket[n] = 1.0
     return ket
 
 
@@ -497,25 +504,25 @@ def cat_state(a, p=0, fock_dim=5):
     Args:
         a (complex): the displacement
         p (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
-            cat state, and ``p=1`` an odd cat state.
+            cat state, and ``p=1`` an odd cat state
         fock_dim (int): the size of the truncated Fock basis
     Returns:
         array: the cat state
     """
     # p=0 if even, p=pi if odd
-    phi = np.pi*p
+    phi = np.pi * p
 
     # normalisation constant
-    temp = np.exp(-0.5 * np.abs(a)**2)
-    N = temp / np.sqrt(2*(1 + np.cos(phi) * temp**4))
+    temp = np.exp(-0.5 * np.abs(a) ** 2)
+    N = temp / np.sqrt(2 * (1 + np.cos(phi) * temp ** 4))
 
     # coherent states
     k = np.arange(fock_dim)
-    c1 = (a**k) / np.sqrt(fac(k))
-    c2 = ((-a)**k) / np.sqrt(fac(k))
+    c1 = (a ** k) / np.sqrt(fac(k))
+    c2 = ((-a) ** k) / np.sqrt(fac(k))
 
     # add them up with a relative phase
-    ket = (c1 + np.exp(1j*phi) * c2) * N
+    ket = (c1 + np.exp(1j * phi) * c2) * N
 
     return ket
 
@@ -527,33 +534,36 @@ def cat_state(a, p=0, fock_dim=5):
 
 def randnc(*arg):
     """Normally distributed array of random complex numbers."""
-    return randn(*arg) + 1j*randn(*arg)
+    return randn(*arg) + 1j * randn(*arg)
 
 
-def random_covariance(N, hbar=2, pure=False):
+def random_covariance(N, hbar=2, pure=False, block_diag=False):
     r"""Random covariance matrix.
 
     Args:
         N (int): number of modes
         hbar (float): the value of :math:`\hbar` to use in the definition
             of the quadrature operators :math:`\x` and :math:`\p`
-        pure (bool): if True, a random covariance matrix corresponding
-            to a pure state is returned
+        pure (bool): If True, a random covariance matrix corresponding
+            to a pure state is returned.
+        block_diag (bool): If True, uses passive Gaussian transformations that are orthogonal
+            instead of unitary. This implies that the positions :math:`q` do not mix with
+            the momenta :math:`p` and thus the covariance matrix is block diagonal.
     Returns:
         array: random :math:`2N\times 2N` covariance matrix
     """
-    S = random_symplectic(N)
+    S = random_symplectic(N, block_diag=block_diag)
 
     if pure:
-        return (hbar/2) * S @ S.T
+        return (hbar / 2) * S @ S.T
 
-    nbar = 2*np.abs(np.random.random(N)) + 1
-    Vth = (hbar/2) * np.diag(np.concatenate([nbar, nbar]))
+    nbar = 2 * np.abs(np.random.random(N)) + 1
+    Vth = (hbar / 2) * np.diag(np.concatenate([nbar, nbar]))
 
     return S @ Vth @ S.T
 
 
-def random_symplectic(N, passive=False):
+def random_symplectic(N, passive=False, block_diag=False):
     r"""Random symplectic matrix representing a Gaussian transformation.
 
     The squeezing parameters :math:`r` for active transformations are randomly
@@ -562,19 +572,22 @@ def random_symplectic(N, passive=False):
 
     Args:
         N (int): number of modes
-        passive (bool): if True, returns a passive Gaussian transformation (i.e.,
+        passive (bool): If True, returns a passive Gaussian transformation (i.e.,
             one that preserves photon number). If False (default), returns an active
             transformation.
+        block_diag (bool): If True, uses passive Gaussian transformations that are orthogonal
+            instead of unitary. This implies that the positions :math:`q` do not mix with
+            the momenta :math:`p` and thus the symplectic operator is block diagonal
     Returns:
         array: random :math:`2N\times 2N` symplectic matrix
     """
-    U = random_interferometer(N)
+    U = random_interferometer(N, real=block_diag)
     O = np.vstack([np.hstack([U.real, -U.imag]), np.hstack([U.imag, U.real])])
 
     if passive:
         return O
 
-    U = random_interferometer(N)
+    U = random_interferometer(N, real=block_diag)
     P = np.vstack([np.hstack([U.real, -U.imag]), np.hstack([U.imag, U.real])])
 
     r = np.abs(randnc(N))
@@ -583,21 +596,25 @@ def random_symplectic(N, passive=False):
     return O @ Sq @ P
 
 
-def random_interferometer(N):
+def random_interferometer(N, real=False):
     r"""Random unitary matrix representing an interferometer.
 
     For more details, see :cite:`mezzadri2006`.
 
     Args:
         N (int): number of modes
+        real (bool): return a random real orthogonal matrix
 
     Returns:
         array: random :math:`N\times N` unitary distributed with the Haar measure
     """
-    z = randnc(N, N)/np.sqrt(2.0)
+    if real:
+        z = randn(N, N)
+    else:
+        z = randnc(N, N) / np.sqrt(2.0)
     q, r = sp.linalg.qr(z)
     d = sp.diagonal(r)
-    ph = d/np.abs(d)
+    ph = d / np.abs(d)
     U = np.multiply(q, ph, q)
     return U
 
@@ -605,6 +622,7 @@ def random_interferometer(N):
 # ------------------------------------------------------------------------
 # Decorators                                                            |
 # ------------------------------------------------------------------------
+
 
 class operation:
     """Groups a sequence of gates into a single operation to be used
@@ -685,8 +703,7 @@ class operation:
         num_params = len(func_sig.parameters)
 
         if num_params == 0:
-            raise ValueError(
-                "Operation must receive the qumode register as an argument.")
+            raise ValueError("Operation must receive the qumode register as an argument.")
 
         if num_params != len(self.args) + 1:
             raise ValueError("Mismatch in the number of arguments")
@@ -712,9 +729,9 @@ class operation:
         return f_proxy
 
 
-#=================================================
+# =================================================
 # Program functions
-#=================================================
+# =================================================
 
 
 def is_unitary(prog):
@@ -736,6 +753,7 @@ def is_channel(prog):
     Returns:
         bool: True if all operations in the program are of types :class:`strawberryfields.ops.Gate` and :class:`strawberryfields.ops.Channel`
     """
+    # FIXME isn't a preparation also a quantum channel?
     return all(isinstance(cmd.op, (Channel, Gate)) for cmd in prog.circuit)
 
 
@@ -770,16 +788,26 @@ def _vectorize(tensor):
     dims = tensor.ndim
 
     if dims % 4 != 0:
-        raise ValueError('Tensor must have a number of indices that is a multiple of 4, but it has {dims} indices'.format(dims=dims))
+        raise ValueError(
+            "Tensor must have a number of indices that is a multiple of 4, but it has {dims} indices".format(
+                dims=dims
+            )
+        )
 
     shape = tensor.shape
 
     if len(set(shape)) != 1:
-        raise ValueError('Tensor indices must have all the same dimension, but tensor has shape {shape}'.format(shape=shape))
+        raise ValueError(
+            "Tensor indices must have all the same dimension, but tensor has shape {shape}".format(
+                shape=shape
+            )
+        )
 
-    transposed = np.einsum(tensor, [int(n) for n in np.arange(dims).reshape((2, dims//2)).T.reshape([-1])])
-    vectorized = np.reshape(transposed, [shape[0]**(dims//4)]*4)
-    transposed_back = np.einsum('abcd -> acbd', vectorized)
+    transposed = np.einsum(
+        tensor, [int(n) for n in np.arange(dims).reshape((2, dims // 2)).T.reshape([-1])]
+    )
+    vectorized = np.reshape(transposed, [shape[0] ** (dims // 4)] * 4)
+    transposed_back = np.einsum("abcd -> acbd", vectorized)
 
     return transposed_back
 
@@ -803,16 +831,28 @@ def _unvectorize(tensor, num_subsystems):
     dims = tensor.ndim
 
     if dims != 4:
-        raise ValueError('tensor must have 4 indices, but it has {dims} indices'.format(dims=dims))
+        raise ValueError("tensor must have 4 indices, but it has {dims} indices".format(dims=dims))
 
     shape = tensor.shape
 
     if len(set(shape)) != 1:
-        raise ValueError('tensor indices must have all the same dimension, but tensor has shape {shape}'.format(shape=shape))
+        raise ValueError(
+            "tensor indices must have all the same dimension, but tensor has shape {shape}".format(
+                shape=shape
+            )
+        )
 
-    transposed = np.einsum('abcd -> acbd', tensor)
-    unvectorized = np.reshape(transposed, [int(shape[0]**(1/num_subsystems))]*(4*num_subsystems))
-    transposed_back = np.einsum(unvectorized, [int(n) for n in np.arange(4*num_subsystems).reshape((2*num_subsystems, 2)).T.reshape([-1])])
+    transposed = np.einsum("abcd -> acbd", tensor)
+    unvectorized = np.reshape(
+        transposed, [int(shape[0] ** (1 / num_subsystems))] * (4 * num_subsystems)
+    )
+    transposed_back = np.einsum(
+        unvectorized,
+        [
+            int(n)
+            for n in np.arange(4 * num_subsystems).reshape((2 * num_subsystems, 2)).T.reshape([-1])
+        ],
+    )
 
     return transposed_back
 
@@ -836,7 +876,7 @@ def _interleaved_identities(n: int, cutoff_dim: int):
         temp = np.tensordot(temp, I, axes=0)
 
     # use einsum to permute the indices such that |a><a|*|b><b|*|c><c|*... becomes |abc...><abc...|
-    sublist = [int(n) for n in np.arange(2*n).reshape((2, n)).T.reshape([-1])]
+    sublist = [int(n) for n in np.arange(2 * n).reshape((2, n)).T.reshape([-1])]
     return np.einsum(temp, sublist)
 
 
@@ -862,15 +902,15 @@ def _program_in_CJ_rep(prog, cutoff_dim: int):
     """
     prog = copy.deepcopy(prog)
     N = prog.init_num_subsystems
-    prog._add_subsystems(N) # pylint: disable=protected-access
-    prog.init_num_subsystems = 2*N
+    prog._add_subsystems(N)  # pylint: disable=protected-access
+    prog.init_num_subsystems = 2 * N
     I = _interleaved_identities(N, cutoff_dim)
     # prepend the circuit with the I ket preparation
     prog.circuit.insert(0, Command(Ket(I), list(prog.reg_refs.values())))
     return prog
 
 
-def extract_unitary(prog, cutoff_dim: int, vectorize_modes: bool = False, backend: str = 'fock'):
+def extract_unitary(prog, cutoff_dim: int, vectorize_modes: bool = False, backend: str = "fock"):
     r"""Numerical array representation of a unitary quantum circuit.
 
     Note that the circuit must only include operations of the :class:`strawberryfields.ops.Gate` class.
@@ -898,7 +938,7 @@ def extract_unitary(prog, cutoff_dim: int, vectorize_modes: bool = False, backen
     Args:
         prog (Program): quantum program
         cutoff_dim (int): dimension of each index
-        vectorize_modes (bool): if True, reshape input and output modes in order to return a matrix
+        vectorize_modes (bool): If True, reshape input and output modes in order to return a matrix.
         backend (str): the backend to build the unitary; ``'fock'`` (default) and ``'tf'`` are supported
 
     Returns:
@@ -912,31 +952,33 @@ def extract_unitary(prog, cutoff_dim: int, vectorize_modes: bool = False, backen
     if not is_unitary(prog):
         raise TypeError("The circuit definition contains elements that are not of type Gate")
 
-    if backend not in ('fock', 'tf'):
+    if backend not in ("fock", "tf"):
         raise ValueError("Only 'fock' and 'tf' backends are supported")
 
     N = prog.init_num_subsystems
     # extract the unitary matrix by running a modified version of the Program
     p = _program_in_CJ_rep(prog, cutoff_dim)
-    eng = sf.LocalEngine(backend, backend_options={'cutoff_dim': cutoff_dim, 'pure': True})
+    eng = sf.LocalEngine(backend, backend_options={"cutoff_dim": cutoff_dim, "pure": True})
     result = eng.run(p).state.ket()
 
     if vectorize_modes:
-        if backend == 'fock':
+        if backend == "fock":
             reshape = np.reshape
         else:
             reshape = tf.reshape
-        return reshape(result, [cutoff_dim**N, cutoff_dim**N])
+        return reshape(result, [cutoff_dim ** N, cutoff_dim ** N])
 
     # here we rearrange the indices to go back to the order [in1, out1, in2, out2, etc...]
-    if backend == 'fock':
+    if backend == "fock":
         tp = np.transpose
     else:
         tp = tf.transpose
-    return tp(result, [int(n) for n in np.arange(2*N).reshape((2, N)).T.reshape([-1])])
+    return tp(result, [int(n) for n in np.arange(2 * N).reshape((2, N)).T.reshape([-1])])
 
 
-def extract_channel(prog, cutoff_dim: int, representation: str = 'choi', vectorize_modes: bool = False):
+def extract_channel(
+    prog, cutoff_dim: int, representation: str = "choi", vectorize_modes: bool = False
+):
     r"""Numerical array representation of the channel corresponding to a quantum circuit.
 
     The representation choices include the Choi state representation, the Liouville representation, and
@@ -1070,29 +1112,33 @@ def extract_channel(prog, cutoff_dim: int, representation: str = 'choi', vectori
         TypeError: if the gates used to construct the circuit are not all unitary or channels
     """
     if not is_channel(prog):
-        raise TypeError("The circuit definition contains elements that are neither of type Gate nor of type Channel")
+        raise TypeError(
+            "The circuit definition contains elements that are neither of type Gate nor of type Channel"
+        )
 
     N = prog.init_num_subsystems
     p = _program_in_CJ_rep(prog, cutoff_dim)
 
-    eng = sf.LocalEngine('fock', backend_options={'cutoff_dim': cutoff_dim, 'pure': True})
+    eng = sf.LocalEngine("fock", backend_options={"cutoff_dim": cutoff_dim, "pure": True})
     choi = eng.run(p).state.dm()
-    choi = np.einsum('abcd->cdab', _vectorize(choi))
+    choi = np.einsum("abcd->cdab", _vectorize(choi))
 
-    if representation.lower() == 'choi':
+    if representation.lower() == "choi":
         result = choi
         if not vectorize_modes:
             result = _unvectorize(result, N)
 
-    elif representation.lower() == 'liouville':
-        result = np.einsum('abcd -> dbca', choi)
+    elif representation.lower() == "liouville":
+        result = np.einsum("abcd -> dbca", choi)
         if not vectorize_modes:
             result = _unvectorize(result, N)
 
-    elif representation.lower() == 'kraus':
+    elif representation.lower() == "kraus":
         # The liouville operator is the sum of a bipartite product of kraus matrices, so if we vectorize them we obtain
         # a matrix whose eigenvectors are proportional to the vectorized kraus operators
-        vectorized_liouville = np.einsum('abcd -> cadb', choi).reshape([cutoff_dim**(2*N), cutoff_dim**(2*N)])
+        vectorized_liouville = np.einsum("abcd -> cadb", choi).reshape(
+            [cutoff_dim ** (2 * N), cutoff_dim ** (2 * N)]
+        )
         eigvals, eigvecs = np.linalg.eig(vectorized_liouville)
 
         # We keep only those eigenvectors that correspond to non-zero eigenvalues
@@ -1100,15 +1146,21 @@ def extract_channel(prog, cutoff_dim: int, representation: str = 'choi', vectori
         eigvals = eigvals[~np.isclose(abs(eigvals), 0)]
 
         # We rescale the eigenvectors with the sqrt of the eigenvalues (the other sqrt would rescale the right eigenvectors)
-        rescaled_eigenvectors = np.einsum('b,ab->ab', np.sqrt(eigvals), eigvecs)
+        rescaled_eigenvectors = np.einsum("b,ab->ab", np.sqrt(eigvals), eigvecs)
 
         # Finally we reshape the eigenvectors to form matrices, i.e., the Kraus operators and we make the first index
         # be the one that indexes the list of Kraus operators.
-        result = np.einsum('abc->cab', rescaled_eigenvectors.reshape([cutoff_dim**N, cutoff_dim**N, -1]))
+        result = np.einsum(
+            "abc->cab", rescaled_eigenvectors.reshape([cutoff_dim ** N, cutoff_dim ** N, -1])
+        )
 
         if not vectorize_modes:
-            result = np.einsum(np.reshape(result, [-1]+[cutoff_dim]*(2*N)), range(1+2*N), [0]+[2*n+1 for n in range(N)]+[2*n+2 for n in range(N)])
+            result = np.einsum(
+                np.reshape(result, [-1] + [cutoff_dim] * (2 * N)),
+                range(1 + 2 * N),
+                [0] + [2 * n + 1 for n in range(N)] + [2 * n + 2 for n in range(N)],
+            )
     else:
-        raise ValueError('representation {} not supported'.format(representation))
+        raise ValueError("representation {} not supported".format(representation))
 
     return result

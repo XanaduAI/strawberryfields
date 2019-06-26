@@ -14,7 +14,12 @@
 """
 Unit tests for top-level Strawberry Fields functions.
 """
+import pytest
+
 import strawberryfields as sf
+
+
+pytestmark = pytest.mark.frontend
 
 
 def test_about(capfd):

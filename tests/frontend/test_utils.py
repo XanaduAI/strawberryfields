@@ -21,7 +21,7 @@ from numpy.polynomial.hermite import hermval as H
 from scipy.special import factorial as fac
 
 import strawberryfields as sf
-from strawberryfields.program import (RegRef, RegRefTransform)
+from strawberryfields.program import RegRef, RegRefTransform
 from strawberryfields.ops import Sgate, BSgate, LossChannel, MeasureX, Squeezed
 import strawberryfields.utils as utils
 
@@ -35,10 +35,12 @@ PHI = np.linspace(0, 1.43, 4)
 # Convert function tests
 # ===================================================================================
 
+
 @pytest.fixture
 def rr():
     """RegRef fixture."""
     return RegRef(0)
+
 
 @pytest.fixture
 def prog():
@@ -214,9 +216,7 @@ class TestInitialStates:
     @pytest.mark.parametrize("a, r, phi", zip(ALPHA, R, PHI))
     def test_displaced_squeezed_state_gaussian(self, a, r, phi, hbar, tol):
         """test displaced squeezed state returns correct means and covariance"""
-        means, cov = utils.displaced_squeezed_state(
-            a, r, phi, basis="gaussian", hbar=hbar
-        )
+        means, cov = utils.displaced_squeezed_state(a, r, phi, basis="gaussian", hbar=hbar)
 
         means_expected = np.array([[a.real, a.imag]]) * np.sqrt(2 * hbar)
         cov_expected = (hbar / 2) * np.array(
@@ -238,9 +238,7 @@ class TestInitialStates:
     @pytest.mark.parametrize("a, r, phi", zip(ALPHA, R, PHI))
     def test_displaced_squeezed_state_fock(self, a, r, phi, hbar, cutoff, tol):
         """test displaced squeezed state returns correct Fock basis state vector"""
-        state = utils.displaced_squeezed_state(
-            a, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
-        )
+        state = utils.displaced_squeezed_state(a, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
 
         if r == 0:
             pytest.skip("test only non-zero squeezing")
@@ -248,14 +246,12 @@ class TestInitialStates:
         n = np.arange(cutoff)
         gamma = a * np.cosh(r) + np.conj(a) * np.exp(1j * phi) * np.sinh(r)
         coeff = np.diag(
-            (0.5 * np.exp(1j * phi) * np.tanh(r)) ** (n / 2)
-            / np.sqrt(fac(n) * np.cosh(r))
+            (0.5 * np.exp(1j * phi) * np.tanh(r)) ** (n / 2) / np.sqrt(fac(n) * np.cosh(r))
         )
 
         expected = H(gamma / np.sqrt(np.exp(1j * phi) * np.sinh(2 * r)), coeff)
         expected *= np.exp(
-            -0.5 * np.abs(a) ** 2
-            - 0.5 * np.conj(a) ** 2 * np.exp(1j * phi) * np.tanh(r)
+            -0.5 * np.abs(a) ** 2 - 0.5 * np.conj(a) ** 2 * np.exp(1j * phi) * np.tanh(r)
         )
 
         assert np.allclose(state, expected, atol=tol, rtol=0)
@@ -263,9 +259,7 @@ class TestInitialStates:
     @pytest.mark.parametrize("a, phi", zip(ALPHA, PHI))
     def test_displaced_squeezed_fock_no_squeezing(self, a, phi, hbar, cutoff, tol):
         """test displaced squeezed state returns coherent state when there is no squeezing"""
-        state = utils.displaced_squeezed_state(
-            a, 0, phi, basis="fock", fock_dim=cutoff, hbar=hbar
-        )
+        state = utils.displaced_squeezed_state(a, 0, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
 
         n = np.arange(cutoff)
         expected = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n))
@@ -275,9 +269,7 @@ class TestInitialStates:
     @pytest.mark.parametrize("r, phi", zip(R, PHI))
     def test_displaced_squeezed_fock_no_displacement(self, r, phi, hbar, cutoff, tol):
         """test displaced squeezed state returns squeezed state when there is no displacement"""
-        state = utils.displaced_squeezed_state(
-            0, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
-        )
+        state = utils.displaced_squeezed_state(0, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
 
         n = np.arange(cutoff)
         kets = (np.sqrt(fac(2 * (n // 2))) / (2 ** (n // 2) * fac(n // 2))) * (
@@ -341,28 +333,28 @@ class TestRandomMatrices:
         return 3
 
     @pytest.mark.parametrize("pure_state", [True, False])
-    def test_random_covariance_square(self, modes, hbar, pure_state):
+    @pytest.mark.parametrize("block_diag", [True, False])
+    def test_random_covariance_square(self, modes, hbar, pure_state, block_diag):
         """Test that a random covariance matrix is the right shape"""
-        V = utils.random_covariance(modes, hbar=hbar, pure=pure_state)
+        V = utils.random_covariance(modes, hbar=hbar, pure=pure_state, block_diag=block_diag)
         assert np.all(V.shape == np.array([2 * modes, 2 * modes]))
 
     @pytest.mark.parametrize("pure_state", [True, False])
-    def test_random_covariance_symmetric(self, modes, hbar, pure_state, tol):
+    @pytest.mark.parametrize("block_diag", [True, False])
+    def test_random_covariance_symmetric(self, modes, hbar, pure_state, tol, block_diag):
         """Test that a random covariance matrix is symmetric"""
-        V = utils.random_covariance(modes, hbar=hbar, pure=pure_state)
+        V = utils.random_covariance(modes, hbar=hbar, pure=pure_state, block_diag=block_diag)
         assert np.allclose(V.T, V, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("pure_state", [True, False])
-    def test_random_covariance_valid(self, modes, hbar, pure_state, tol):
+    @pytest.mark.parametrize("block_diag", [True, False])
+    def test_random_covariance_valid(self, modes, hbar, pure_state, tol, block_diag):
         """Test that a random covariance matrix satisfies the uncertainty principle V+i hbar O/2 >=0"""
-        V = utils.random_covariance(modes, hbar=hbar, pure=pure_state)
+        V = utils.random_covariance(modes, hbar=hbar, pure=pure_state, block_diag=block_diag)
 
         idm = np.identity(modes)
         omega = np.concatenate(
-            (
-                np.concatenate((0 * idm, idm), axis=1),
-                np.concatenate((-idm, 0 * idm), axis=1),
-            ),
+            (np.concatenate((0 * idm, idm), axis=1), np.concatenate((-idm, 0 * idm), axis=1)),
             axis=0,
         )
 
@@ -370,58 +362,63 @@ class TestRandomMatrices:
         eigs[np.abs(eigs) < tol] = 0
         assert np.all(eigs >= 0)
 
-    def test_random_covariance_pure(self, modes, hbar, tol):
+    @pytest.mark.parametrize("block_diag", [True, False])
+    def test_random_covariance_pure(self, modes, hbar, tol, block_diag):
         """Test that a pure random covariance matrix has correct purity"""
-        V = utils.random_covariance(modes, hbar=hbar, pure=True)
+        V = utils.random_covariance(modes, hbar=hbar, pure=True, block_diag=block_diag)
         det = np.linalg.det(V) - (hbar / 2) ** (2 * modes)
         assert np.allclose(det, 0, atol=tol, rtol=0)
 
-    def test_random_covariance_mixed(self, modes, hbar, tol):
+    @pytest.mark.parametrize("block_diag", [True, False])
+    def test_random_covariance_mixed(self, modes, hbar, tol, block_diag):
         """Test that a mixed random covariance matrix has correct purity"""
-        V = utils.random_covariance(modes, hbar=hbar, pure=False)
+        V = utils.random_covariance(modes, hbar=hbar, pure=False, block_diag=block_diag)
         det = np.linalg.det(V) - (hbar / 2) ** (2 * modes)
         assert not np.allclose(det, 0, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("passive", [True, False])
-    def test_random_symplectic_square(self, modes, hbar, passive):
+    @pytest.mark.parametrize("block_diag", [True, False])
+    def test_random_symplectic_square(self, modes, hbar, passive, block_diag):
         """Test that a random symplectic matrix on is the right shape"""
-        S = utils.random_symplectic(modes, passive=passive)
+        S = utils.random_symplectic(modes, passive=passive, block_diag=block_diag)
         assert np.all(S.shape == np.array([2 * modes, 2 * modes]))
 
     @pytest.mark.parametrize("passive", [True, False])
-    def test_random_symplectic_symplectic(self, modes, hbar, passive, tol):
+    @pytest.mark.parametrize("block_diag", [True, False])
+    def test_random_symplectic_symplectic(self, modes, hbar, passive, tol, block_diag):
         """Test that a random symplectic matrix is symplectic"""
-        S = utils.random_symplectic(modes, passive=passive)
+        S = utils.random_symplectic(modes, passive=passive, block_diag=block_diag)
 
         idm = np.identity(modes)
         omega = np.concatenate(
-            (
-                np.concatenate((0 * idm, idm), axis=1),
-                np.concatenate((-idm, 0 * idm), axis=1),
-            ),
+            (np.concatenate((0 * idm, idm), axis=1), np.concatenate((-idm, 0 * idm), axis=1)),
             axis=0,
         )
 
         assert np.allclose(S @ omega @ S.T, omega, atol=tol, rtol=0)
 
-    def test_random_symplectic_passive_orthogonal(self, modes, hbar, tol):
+    @pytest.mark.parametrize("block_diag", [True, False])
+    def test_random_symplectic_passive_orthogonal(self, modes, hbar, tol, block_diag):
         """Test that a passive random symplectic matrix is orthogonal"""
-        S = utils.random_symplectic(modes, passive=True)
+        S = utils.random_symplectic(modes, passive=True, block_diag=block_diag)
         assert np.allclose(S @ S.T, np.identity(2 * modes), atol=tol, rtol=0)
 
-    def test_random_symplectic_active_not_orthogonal(self, modes, hbar, tol):
+    @pytest.mark.parametrize("block_diag", [True, False])
+    def test_random_symplectic_active_not_orthogonal(self, modes, hbar, tol, block_diag):
         """Test that an active random symplectic matrix is not orthogonal"""
-        S = utils.random_symplectic(modes, passive=False)
+        S = utils.random_symplectic(modes, passive=False, block_diag=block_diag)
         assert not np.allclose(S @ S.T, np.identity(2 * modes), atol=tol, rtol=0)
 
-    def test_random_inteferometer_is_square(self, modes):
+    @pytest.mark.parametrize("real", [True, False])
+    def test_random_inteferometer_is_square(self, modes, real):
         """Test that a random interferometer is square"""
-        U = utils.random_interferometer(modes)
+        U = utils.random_interferometer(modes, real=real)
         assert np.all(U.shape == np.array([modes, modes]))
 
-    def test_random_inteferometer_is_unitary(self, modes, tol):
+    @pytest.mark.parametrize("real", [True, False])
+    def test_random_inteferometer_is_unitary(self, modes, tol, real):
         """Test that a random interferometer is unitary"""
-        U = utils.random_interferometer(modes)
+        U = utils.random_interferometer(modes, real=real)
         assert np.allclose(U @ U.conj().T, np.identity(modes), atol=tol, rtol=0)
 
 
@@ -580,7 +577,6 @@ class TestOperation:
 class TestEngineUtilityFunctions:
     """Tests for some engine auxiliary functions"""
 
-    @pytest.mark.skip('FIXME is_unitary')
     def test_is_unitary_no_channel(self, prog):
         """test that the is_unitary function returns True if no channels are present"""
         assert utils.is_unitary(prog)
@@ -589,7 +585,6 @@ class TestEngineUtilityFunctions:
             BSgate(0.4) | q
         assert utils.is_unitary(prog)
 
-    @pytest.mark.skip('FIXME is_unitary')
     def test_is_unitary_with_channel(self, prog):
         """test that the is_unitary function returns False if channels are present"""
         with prog.context as q:
@@ -598,7 +593,6 @@ class TestEngineUtilityFunctions:
             BSgate(0.4) | q
         assert not utils.is_unitary(prog)
 
-    @pytest.mark.skip('FIXME is_channel')
     def test_is_channel_no_measurement(self, prog):
         """test that the is_channel function returns True if no measurements are present"""
         assert utils.is_channel(prog)
@@ -608,7 +602,6 @@ class TestEngineUtilityFunctions:
             BSgate(0.4) | q
         assert utils.is_channel(prog)
 
-    @pytest.mark.skip('FIXME is_channel')
     def test_is_channel_measurement(self, prog):
         """is_channel() returns False if measurements are present"""
         with prog.context as q:
@@ -618,10 +611,8 @@ class TestEngineUtilityFunctions:
             Sgate(0.4) | q[1]
         assert not utils.is_channel(prog)
 
-    @pytest.mark.skip('FIXME is_channel')
     def test_is_channel_preparation(self, prog):
         """is_channel() returns False if preparations are present"""
-        # FIXME isn't a preparation also a quantum channel?
         with prog.context as q:
             Sgate(0.4) | q[0]
             BSgate() | q
@@ -639,12 +630,8 @@ class TestEngineUtilityFunctions:
             *[cutoff] * 4
         )  # (2^2)^4 -> 2^8 -> (2^2)^4
 
-        assert np.allclose(
-            dm, utils._unvectorize(utils._vectorize(dm), 2), atol=tol, rtol=0
-        )
-        assert np.allclose(
-            dm2, utils._vectorize(utils._unvectorize(dm2, 2)), atol=tol, rtol=0
-        )
+        assert np.allclose(dm, utils._unvectorize(utils._vectorize(dm), 2), atol=tol, rtol=0)
+        assert np.allclose(dm2, utils._vectorize(utils._unvectorize(dm2, 2)), atol=tol, rtol=0)
 
     def test_interleaved_identities(self, tol):
         """Test interleaved utility function"""

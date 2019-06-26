@@ -304,6 +304,7 @@ from .decompositions import clements, bloch_messiah, williamson, graph_embed
 
 # numerical tolerances
 _decomposition_merge_tol = 1e-13
+_decomposition_tol = 1e-13  # TODO this tolerance is used for various purposes and is not well-defined
 
 
 def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
@@ -347,8 +348,6 @@ class Operation:
         self._extra_deps = set()
         #: list[Parameter]
         self.p = []
-        #: bool
-        self.decomp = True
 
         if par:
             # convert each parameter into a Parameter instance, keep track of dependenciens
@@ -584,6 +583,7 @@ class Decomposition(Operation):
 
     The first parameter p[0] of the Decomposition is always a square matrix.
     """
+    ns = None  # overridden by child classes in __init__
 
     def merge(self, other):
         # can be merged if they are the same class
@@ -1536,6 +1536,8 @@ def New(n=1):
     Returns:
         tuple[RegRef]: tuple of the newly added subsystem references
     """
+    if Program._current_context is None:
+        raise RuntimeError('New() can only be called inside a Program context.')
     # create RegRefs for the new modes
     refs = Program._current_context._add_subsystems(n)
     # append the actual Operation to the Program
@@ -1602,46 +1604,45 @@ class All(MetaOperation):
 class Interferometer(Decomposition):
     r"""Apply a linear interferometer to the specified qumodes.
 
-    This operation uses the Clements decomposition to decompose
+    This operation uses the :ref:`Clements decomposition <clements>` to decompose
     a linear interferometer into a sequence of beamsplitters and
     rotation gates.
 
     Args:
-        U (array): an :math:`N\times N` complex unitary matrix.
+        U (array[complex]): an :math:`N\times N` unitary matrix
         tol (float): the tolerance used when checking if the matrix is unitary:
             :math:`|UU^\dagger-I| \leq` tol
     """
-    ns = None
 
     def __init__(self, U, tol=1e-11):
         super().__init__([U])
+        self.ns = U.shape[0]
 
         if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
             self.identity = True
         else:
             self.identity = False
             self.BS1, self.BS2, self.R = clements(U, tol=tol)
-            self.ns = U.shape[0]
 
     def _decompose(self, reg):
         cmds = []
 
         if not self.identity:
             for n, m, theta, phi, _ in self.BS1:
-                if np.abs(phi) >= _decomposition_merge_tol:
+                if np.abs(phi) >= _decomposition_tol:
                     cmds.append(Command(Rgate(phi), reg[n]))
-                if np.abs(theta) >= _decomposition_merge_tol:
+                if np.abs(theta) >= _decomposition_tol:
                     cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m])))
 
             for n, expphi in enumerate(self.R):
-                if np.abs(expphi - 1) >= _decomposition_merge_tol:
+                if np.abs(expphi - 1) >= _decomposition_tol:
                     q = log(expphi).imag
                     cmds.append(Command(Rgate(q), reg[n]))
 
             for n, m, theta, phi, _ in reversed(self.BS2):
-                if np.abs(theta) >= _decomposition_merge_tol:
+                if np.abs(theta) >= _decomposition_tol:
                     cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m])))
-                if np.abs(phi) >= _decomposition_merge_tol:
+                if np.abs(phi) >= _decomposition_tol:
                     cmds.append(Command(Rgate(-phi), reg[n]))
 
         return cmds
@@ -1663,10 +1664,10 @@ class GraphEmbed(Decomposition):
         tol (float): the tolerance used when checking if the input matrix is symmetric:
             :math:`|A-A^T| <` tol
     """
-    ns = None
 
     def __init__(self, A, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
         super().__init__([A])
+        self.ns = A.shape[0]
 
         if np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol):
             self.identity = True
@@ -1674,17 +1675,16 @@ class GraphEmbed(Decomposition):
             self.identity = False
             self.sq, self.U = graph_embed(
                 A, max_mean_photon=max_mean_photon, make_traceless=make_traceless, tol=tol)
-            self.ns = self.U.shape[0]
 
     def _decompose(self, reg):
         cmds = []
 
         if not self.identity:
             for n, s in enumerate(self.sq):
-                if np.abs(s) >= _decomposition_merge_tol:
+                if np.abs(s) >= _decomposition_tol:
                     cmds.append(Command(Sgate(s), reg[n]))
 
-            if np.all(np.abs(self.U - np.identity(len(self.U))) >= _decomposition_merge_tol):
+            if np.all(np.abs(self.U - np.identity(len(self.U))) >= _decomposition_tol):
                 cmds.append(Command(Interferometer(self.U), reg))
 
         return cmds
@@ -1693,8 +1693,8 @@ class GraphEmbed(Decomposition):
 class GaussianTransform(Decomposition):
     r"""Apply a Gaussian symplectic transformation to the specified qumodes.
 
-    This operation uses the Bloch-Messiah decomposition to decompose a symplectic
-    matrix :math:`S`:
+    This operation uses the :ref:`Bloch-Messiah decomposition <bloch_messiah>`
+    to decompose a symplectic matrix :math:`S`:
 
     .. math:: S = O_1 R O_2
 
@@ -1709,7 +1709,8 @@ class GaussianTransform(Decomposition):
     where :math:`I` is the :math:`N\times N` identity matrix, and :math:`0` is the zero matrix.
 
     The two orthogonal symplectic unitaries describing the interferometers are then further
-    decomposed via the :class:`~.Interferometer` operator and the Clements decomposition:
+    decomposed via the :class:`~.Interferometer` operator and the
+    :ref:`Clements decomposition <clements>`:
 
     .. math:: U_i = X_i + iY_i
 
@@ -1718,45 +1719,38 @@ class GaussianTransform(Decomposition):
     .. math:: O_i = \begin{bmatrix}X&-Y\\Y&X\end{bmatrix}
 
     Args:
-        S (array): a :math:`2N\times 2N` symplectic matrix describing the Gaussian transformation.
+        S (array[float]): a :math:`2N\times 2N` symplectic matrix describing the Gaussian transformation.
         vacuum (bool): set to True if acting on a vacuum state. In this case, :math:`O_2 V O_2^T = I`,
             and the unitary associated with orthogonal symplectic :math:`O_2` will be ignored.
         tol (float): the tolerance used when checking if the matrix is symplectic:
             :math:`|S^T\Omega S-\Omega| \leq` tol
     """
-    ns = None
-
     def __init__(self, S, vacuum=False, tol=1e-10):
         super().__init__([S])
-
-        N = S.shape[0]//2
+        self.ns = S.shape[0] // 2
+        self.vacuum = vacuum  #: bool: if True, ignore the first unitary matrix when applying the gate
+        N = self.ns  # shorthand
 
         # check if input symplectic is passive (orthogonal)
         diffn = np.linalg.norm(S @ S.T - np.identity(2*N))
+        self.active = (np.abs(diffn) > _decomposition_tol)  #: bool: S is an active symplectic transformation
 
-        if np.abs(diffn) <= _decomposition_merge_tol:
+        if not self.active:
             # The transformation is passive, do Clements
-            self.active = False
             X1 = S[:N, :N]
             P1 = S[N:, :N]
             self.U1 = X1+1j*P1
         else:
             # transformation is active, do Bloch-Messiah
-            self.active = True
             O1, smat, O2 = bloch_messiah(S, tol=tol)
-            N = S.shape[0]//2
-
             X1 = O1[:N, :N]
             P1 = O1[N:, :N]
             X2 = O2[:N, :N]
             P2 = O2[N:, :N]
 
-            self.U1 = X1+1j*P1
-            self.U2 = X2+1j*P2
-            self.Sq = np.diagonal(smat)[:N]
-
-        self.ns = N
-        self.vacuum = vacuum
+            self.U1 = X1+1j*P1  #: array[complex]: unitary matrix corresponding to O_1
+            self.U2 = X2+1j*P2  #: array[complex]: unitary matrix corresponding to O_2
+            self.Sq = np.diagonal(smat)[:N]  #: array[complex]: diagonal vector of the squeezing matrix R
 
     def _decompose(self, reg):
         cmds = []
@@ -1766,7 +1760,7 @@ class GaussianTransform(Decomposition):
                 cmds = [Command(Interferometer(self.U2), reg)]
 
             for n, expr in enumerate(self.Sq):
-                if np.abs(expr - 1) >= _decomposition_merge_tol:
+                if np.abs(expr - 1) >= _decomposition_tol:
                     r = abs(log(expr))
                     phi = np.angle(log(expr))
                     cmds.append(Command(Sgate(-r, phi), reg[n]))
@@ -1782,7 +1776,7 @@ class GaussianTransform(Decomposition):
 class Gaussian(Preparation, Decomposition):
     r"""Prepare the specified modes in a Gaussian state.
 
-    This operation uses the Williamson decomposition to prepare
+    This operation uses the :ref:`Williamson decomposition <williamson>` to prepare
     quantum modes into a given Gaussian state, specified by a
     vector of means and a covariance matrix.
 
@@ -1797,8 +1791,8 @@ class Gaussian(Preparation, Decomposition):
     **only** supported by backends using the Gaussian representation.
 
     Args:
-        V (array): the :math:`2N\times 2N` (real and positive definite) covariance matrix.
-        r (array): a length :math:`2N` vector of means, of the
+        V (array[float]): an :math:`2N\times 2N` (real and positive definite) covariance matrix
+        r (array[float] or None): Length :math:`2N` vector of means, of the
             form :math:`(\x_0,\dots,\x_{N-1},\p_0,\dots,\p_{N-1})`.
             If None, it is assumed that :math:`r=0`.
         decomp (bool): Should the operation be decomposed into a sequence of elementary gates?
@@ -1809,39 +1803,33 @@ class Gaussian(Preparation, Decomposition):
     ns = None
 
     def __init__(self, V, r=None, decomp=True, tol=1e-6):
-        # TODO NOTE: there is no contextual hbar value anymore, is the hbar actually necessary here?
-
-        #: float: value of :math:`\hbar` used in the definition of the :math:`\x` and :math:`\p` quadrature operators
-        # TODO can we just divide V by hbar/2 here and remove hbar from further expressions?
-        self.hbar = sf.hbar
-        self.ns = V.shape[0]//2
+        # internally we eliminate hbar from the covariance matrix V (or equivalently set hbar=2), but not from the means vector r
+        V = V / (sf.hbar / 2)
+        self.ns = V.shape[0] // 2
 
         if r is None:
-            # all zeroes
-            r = [0] * (2*self.ns)
+            r = np.zeros(2*self.ns)
         r = np.asarray(r)
 
         if len(r) != V.shape[0]:
             raise ValueError('Vector of means must have the same length as the covariance matrix.')
+
+        super().__init__([V, r])  # V is hbar-independent, r is not
 
         self.x_disp = r[:self.ns]
         self.p_disp = r[self.ns:]
 
         if decomp:
             th, self.S = williamson(V, tol=tol)
-            self.pure = np.abs(np.linalg.det(V) - (self.hbar/2)**(2*self.ns)) < tol
-            self.nbar = np.diag(th)[:self.ns]/self.hbar - 0.5
+            self.pure = np.abs(np.linalg.det(V) - 1.0) < tol
+            self.nbar = 0.5 * (np.diag(th)[:self.ns] - 1.0)
 
-        super().__init__([V, r])
-
-        self.decomp = decomp
-
-        # FIXME merge() probably does not work for Gaussians if r is not zero?
+        self.decomp = decomp  #: bool: if False, use the backend API call instead of decomposition
 
     def _apply(self, reg, backend, **kwargs):
         p = _unwrap(self.p)
         s = sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
-        backend.prepare_gaussian_state(p[1]/s, p[0]/(s*s), reg)
+        backend.prepare_gaussian_state(p[1]/s, p[0], reg)
 
     def _decompose(self, reg):
         # pylint: disable=too-many-branches
@@ -1858,31 +1846,43 @@ class Gaussian(Preparation, Decomposition):
 
         if self.pure and is_diag:
             # covariance matrix consists of x/p quadrature squeezed state
-            for n, expr in enumerate(D[:self.ns]*2/self.hbar):
-                if np.abs(expr - 1) >= _decomposition_merge_tol:
+            for n, expr in enumerate(D[:self.ns]):
+                if np.abs(expr - 1) >= _decomposition_tol:
                     r = abs(log(expr)/2)
-                    cmds.append(Command(Sgate(r, 0), reg[n]))
+                    cmds.append(Command(Squeezed(r, 0), reg[n]))
+                else:
+                    cmds.append(Command(Vac, reg[n]))
 
         elif self.pure and is_block_diag:
             # covariance matrix consists of rotated squeezed states
             for n, v in enumerate(BD_modes):
-                if not np.all(v - np.identity(2)*self.hbar/2 < 1e-10):
-                    r = np.abs(arccosh(np.sum(np.diag(v/self.hbar)))/2)
-                    phi = arctan(2*v[0, 1] / np.sum(np.diag(v)*[1, -1]))
-                    cmds.append(Command(Sgate(r, phi), reg[n]))
+                if not np.all(v - np.identity(2) < _decomposition_tol):
+                    r = np.abs(arccosh(np.sum(np.diag(v)) / 2)) / 2
+                    phi = arctan(2 * v[0, 1] / np.sum(np.diag(v) * [1, -1]))
+                    cmds.append(Command(Squeezed(r, phi), reg[n]))
+                else:
+                    cmds.append(Command(Vac, reg[n]))
 
         elif not self.pure and is_diag and np.all(D[:self.ns] == D[self.ns:]):
             # covariance matrix consists of thermal states
-            for n, nbar in enumerate(D[:self.ns]/self.hbar - 0.5):
-                if nbar >= _decomposition_merge_tol:
+            for n, nbar in enumerate(0.5 * (D[:self.ns] - 1.0)):
+                if nbar >= _decomposition_tol:
                     cmds.append(Command(Thermal(nbar), reg[n]))
+                else:
+                    cmds.append(Command(Vac, reg[n]))
 
         else:
             if not self.pure:
                 # mixed state, must initialise thermal states
                 for n, nbar in enumerate(self.nbar):
-                    if np.abs(nbar) >= _decomposition_merge_tol:
+                    if np.abs(nbar) >= _decomposition_tol:
                         cmds.append(Command(Thermal(nbar), reg[n]))
+                    else:
+                        cmds.append(Command(Vac, reg[n]))
+
+            else:
+                for r in reg:
+                    cmds.append(Command(Vac, r))
 
             cmds.append(Command(GaussianTransform(self.S, vacuum=self.pure), reg))
 

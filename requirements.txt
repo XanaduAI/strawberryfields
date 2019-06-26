@@ -5,3 +5,5 @@ tensorflow==1.3
 tensorflow-tensorboard>=0.1.8
 quantum-blackbird
 python-dateutil==2.8.0
+toml
+appdirs

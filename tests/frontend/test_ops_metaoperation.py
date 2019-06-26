@@ -82,20 +82,24 @@ class TestProgramGateInteraction:
 
     def test_create_or_exception(self):
         """_New_modes must not be called via its __or__ method"""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='Wrong number of subsystems'):
             ops._New_modes(1).__or__(0)
+
+    def test_create_outside_program_context(self):
+        """New() must be only called inside a Program context."""
+        with pytest.raises(RuntimeError, match='can only be called inside a Program context'):
+            ops.New()
 
     def test_create_non_positive_integer(self, prog):
         """number of new modes must be a positive integer"""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='is not a positive integer'):
             ops.New(-2)
-
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='is not a positive integer'):
             ops.New(1.5)
 
     def test_delete_not_existing(self, prog):
         """deleting nonexistent modes not allowed"""
-        with pytest.raises(RegRefError):
+        with pytest.raises(RegRefError, match='does not exist'):
             ops.Del.__or__(100)
 
     def test_delete(self, prog):
@@ -119,7 +123,7 @@ class TestProgramGateInteraction:
         """deleting a mode that was already deleted"""
         q = prog.register
         ops.Del | q[1]
-        with pytest.raises(RegRefError):
+        with pytest.raises(RegRefError, match='has already been deleted'):
             ops.Del.__or__(1)
 
     def test_create_delete_multiple_modes(self):
