@@ -569,9 +569,23 @@ class Measurement(Operation):
         Like :func:`Operation.apply`, but also stores the measurement result in the RegRefs.
         """
         values = super().apply(reg, backend, **kwargs)
-        # measurement can act on multiple modes
-        if self.ns == 1:
-            values = [values]
+        # store the results in an iterable with the measured modes indexed along
+        # the first axis and shots along second axis (if larger than 1)
+        shots = kwargs.get("shots", 1)
+        if shots == 1:
+            if self.ns == 1:
+                values = [values] # in this case, backend would return a scalar
+            else:
+                # shape would be (len(reg),)
+                pass
+        else:
+            if self.ns == 1:
+                # shape would be (shots,)
+                values = [values]
+            else:
+                # shape would be (shots, num_meas,)
+                values = values.T
+
         # store the results in the register reference objects
         for v, r in zip(values, reg):
             r.val = v

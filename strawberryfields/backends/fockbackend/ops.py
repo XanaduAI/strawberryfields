@@ -260,8 +260,8 @@ def project_reset(modes, x, state, pure, n, trunc):
     Applies the operator :math:`\ket{00\dots 0}\bra{\mathbf{x}}` to the
     modes in `modes`.
     """
-    inSlice = sliceExp(modes, dict(zip(modes, x)), n)
-    outSlice = sliceExp(modes, dict(zip(modes, [0] * len(modes))), n)
+    inSlice = tuple(sliceExp(modes, dict(zip(modes, x)), n))
+    outSlice = tuple(sliceExp(modes, dict(zip(modes, [0] * len(modes))), n))
 
     def intersperse(lst):
         # pylint: disable=missing-docstring

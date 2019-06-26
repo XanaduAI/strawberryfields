@@ -234,7 +234,7 @@ class BaseEngine(abc.ABC):
                 # Measurements need to know about shots
 
                 self._run_program(p, **kwargs)
-                self.run_progs.append(p) #TODO: is the number of shots something that should be stored in ``p``?
+                self.run_progs.append(p)
                 # store the latest measurement results
                 self.samples = [p.reg_refs[k].val for k in sorted(p.reg_refs)]
                 prev = p
@@ -297,11 +297,7 @@ class LocalEngine(BaseEngine):
                 raise NotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
             except NotImplementedError:
                 # command not directly supported by backend API
-                raise NotImplementedError('The operation {} has not been implemented for {}.'.format(cmd.op, self.backend)) from None
-                # TODO: may need more care in this message. There are occasions where an operation is supported,
-                # but not in combination with other operations in the same circuit (e.g., Dgate and MeasureFock in Gaussian backend).
-                # This incompatibility can be checked and caught during compilation, but since we allow users to submit
-                # uncompiled programs for execution, such a circuit would run and give a confusing error message here
+                raise NotImplementedError('The operation {} has not been implemented in {} for the arguments {}.'.format(cmd.op, self.backend, kwargs)) from None
         return applied
 
     def run(self, program, *, shots=1, compile_options={}, modes=None, state_options={}, **kwargs):

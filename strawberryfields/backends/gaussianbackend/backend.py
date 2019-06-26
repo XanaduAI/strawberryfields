@@ -198,6 +198,10 @@ class GaussianBackend(BaseGaussian):
             raise NotImplementedError("PNR measurement is only supported for "
                                       "Gaussian states with zero mean")
         samples = hafnian_sample_state(cov, shots)
+        # for backward compatibility with previous measurement behaviour,
+        # if only one shot, then we drop the shots axis
+        if shots == 1:
+            samples = samples.reshape((len(modes),))
         return samples
 
     def state(self, modes=None, **kwargs):
