@@ -78,14 +78,6 @@ class TestProgram:
             ops.BSgate(0.5, 0.3) | (q[1], q[0])
         assert len(prog) == 2
 
-    def test_identity_command(self, prog):
-        """Tests that the None command acts as the identity"""
-        identity = program.Command(None, prog.register[0])
-        prog.circuit.append(identity)
-        assert len(prog) == 1
-        prog = prog.compile("base")
-        assert len(prog) == 0
-
     def test_parent_program(self):
         """Continuing one program with another."""
         D = ops.Dgate(0.5)

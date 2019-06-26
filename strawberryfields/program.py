@@ -682,7 +682,7 @@ class Program:
         self.circuit.append(Command(op, reg))
         return reg
 
-    def compile(self, backend, **kwargs):
+    def compile(self, backend='fock', **kwargs):
         """Compile the program for the given backend.
 
         The compilation step validates the program, making sure all the Operations
@@ -722,11 +722,7 @@ class Program:
             for cmd in seq:
                 op_name = cmd.op.__class__.__name__
 
-                if cmd.op is None:
-                    # None represents an identity gate   TODO is this case necessary?
-                    continue
-
-                elif op_name in db.decompositions:
+                if op_name in db.decompositions:
                     # backend requests an op decomposition
 
                     # TODO: allow the user to selectively turn off decomposition

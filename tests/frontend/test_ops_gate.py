@@ -73,6 +73,7 @@ class TestGateBasics:
         if gate in ops.two_args_gates:
             return gate(C, B)
 
+
     def test_merge_inverse(self, G):
         """gate merged with its inverse is the identity"""
         assert G.merge(G.H) is None
@@ -82,25 +83,38 @@ class TestGateBasics:
         if isinstance(G, Q.__class__):
             pytest.skip("Gates are the same type.")
 
-        with pytest.raises(MergeFailure):
+        with pytest.raises(MergeFailure, match='Not the same gate family.'):
             Q.merge(G)
 
-        with pytest.raises(MergeFailure):
+        with pytest.raises(MergeFailure, match='Not the same gate family.'):
             G.merge(Q)
+
+    def test_merge_incompatible_gate(self, gate):
+        """multi-parameter gates cannot be merged if the parameters other than the first are different"""
+        if gate not in ops.two_args_gates:
+            pytest.skip("Must be a multi-parameter gate.")
+
+        G = gate(A, B)
+        H = gate(A, C)
+
+        with pytest.raises(MergeFailure, match="Don't know how to merge these gates."):
+            H.merge(G)
+
+        with pytest.raises(MergeFailure, match="Don't know how to merge these gates."):
+            G.merge(H)
 
     def test_wrong_number_subsystems(self, G):
         """wrong number of subsystems"""
-        if G.ns == 1:
-            with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='Wrong number of subsystems.'):
+            if G.ns == 1:
                 G.__or__([0, 1])
-        else:
-            with pytest.raises(ValueError):
+            else:
                 G.__or__(0)
 
     def test_repeated_index(self, G):
         """multimode gates: can't repeat the same index"""
         if G.ns == 2:
-            with pytest.raises(RegRefError):
+            with pytest.raises(RegRefError, match='Trying to act on the same subsystem more than once.'):
                 G.__or__([0, 0])
 
     def test_non_trivial_merging(self, G, H):
@@ -109,7 +123,6 @@ class TestGateBasics:
         if G.__class__ in ops.zero_args_gates:
             pytest.skip("Gates with no arguments are not merged")
 
-        A, B = np.random.random([2])
         merged = G.merge(H)
 
         # should not be the identity
@@ -152,13 +165,17 @@ class TestGateBasics:
 
 
 def test_merge_regrefs():
-    """Test merging two gates with regref parameters, that are
-    the inverse of each other."""
+    """Test merging two gates with regref parameters."""
     prog = sf.Program(2)
-
     with prog.context as q:
         ops.MeasureX | q[0]
         D = ops.Dgate(q[0])
+        F = ops.Dgate(q[0], 0.1)
 
+    # gates that are the inverse of each other
     merged = D.merge(D.H)
     assert merged is None
+
+    # gates that have different parameters
+    with pytest.raises(MergeFailure, match="Don't know how to merge these gates."):
+        F.merge(D.H)
