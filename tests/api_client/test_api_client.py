@@ -211,7 +211,7 @@ class TestResourceManager:
     def test_init(self):
         """
         Test that a resource manager instance can be initialized correctly with a resource and
-        client instance
+        client instance. Assets that both manager.resource and manager.client are set.
         """
         resource = MagicMock()
         client = MagicMock()
@@ -222,7 +222,7 @@ class TestResourceManager:
 
     def test_join_path(self):
         """
-        Test that the resource path can be joined corectly with the base path
+        Test that the resource path can be joined corectly with the base path.
         """
         mock_resource = MagicMock()
         mock_resource.PATH = "some-path"
