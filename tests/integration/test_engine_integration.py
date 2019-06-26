@@ -270,3 +270,51 @@ class TestProperExecution:
 
         state4 = eng.run(p2).state
         assert state3 == state4
+
+    # TODO: when ``shots`` is incorporated into other backends, unmark this test
+    @pytest.mark.backends("gaussian")
+    def test_measurefock_shots(self, setup_eng):
+        """Tests that passing shots with a program containing MeasureFock
+           returns a result whose entries have the right shapes and values"""
+        shots = 5
+        expected = np.zeros(dtype=int, shape=(shots,))
+
+        # all modes
+        eng, p1 = setup_eng(3)
+        with p1.context as q:
+            ops.MeasureFock() | q
+        samples = eng.run(p1, shots=shots).samples
+        assert np.allclose(samples, [expected] * 3, atol=0, rtol=0)
+
+        # some modes
+        eng, p2 = setup_eng(3)
+        with p2.context as q:
+            ops.MeasureFock() | (q[0], q[2])
+        samples = eng.run(p2, shots=shots).samples
+        assert np.allclose(samples[0], expected, atol=0, rtol=0)
+        assert samples[1] is None
+        assert np.allclose(samples[2], expected, atol=0, rtol=0)
+
+        # one mode
+        eng, p3 = setup_eng(3)
+        with p3.context as q:
+            ops.MeasureFock() | q[0]
+        samples = eng.run(p3, shots=shots).samples
+        assert np.allclose(samples[0], expected, atol=0, rtol=0)
+        assert samples[1] is None
+        assert samples[2] is None
+
+    # TODO: when ``shots`` is incorporated into other backends, delete this test
+    @pytest.mark.backends("tf", "fock")
+    def test_measurefock_shots_exception(self, setup_eng):
+        shots = 5
+        eng, p1 = setup_eng(3)
+        with p1.context as q:
+            ops.MeasureFock() | q
+
+        backend_name = eng.backend.__str__()
+        with pytest.raises(NotImplementedError,
+                           match=r"""(Measure|MeasureFock) has not been implemented in {} """
+                                  """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
+            eng.run(p1, shots=shots).samples
+            
