@@ -97,15 +97,19 @@ class TestFockRepresentation:
             assert np.allclose(meas_result, ref_result, atol=tol, rtol=0)
 
 
-
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
-    def test_vacuum_measurements(self, setup_backend, pure):
-        """Tests Fock measurement on the vacuum state."""
-        backend = setup_backend(3)
 
-        for _ in range(NUM_REPEATS):
-            backend.reset(pure=pure)
-
-            meas = backend.measure_fock([0, 1, 2])[0]
-            assert np.all(np.array(meas) == 0)
+    def test_two_mode_squeezed_measurements(self, setup_backend, pure):
+        """Tests Fock measurement on the two mode squeezed vacuum state."""
+        backend = setup_backend(2)
+        r = np.arcsinh(1.0)
+        shots = 100
+        backend.reset(pure=pure)
+        # Circuit to prepare two mode squeezed vacuum
+        backend.squeeze(-r, 0)
+        backend.squeeze(r, 1)
+        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
+        meas_modes = [0, 1]
+        meas_results = backend.measure_fock(meas_modes, shots=shots)
+        assert np.all(meas_results[:, 0] == meas_results[:, 1])
