@@ -13,7 +13,7 @@
 # limitations under the License.
 """Gaussian boson sampling validation data."""
 
-from strawberryfields.program_utils import (CircuitError, Command, group_operations)
+from strawberryfields.program_utils import CircuitError, Command, group_operations
 import strawberryfields.ops as ops
 
 from .gaussian import GaussianSpecs
@@ -51,7 +51,6 @@ class GBSSpecs(GaussianSpecs):
         "BSgate",
     }
 
-
     def compile(self, seq):
         """Try to arrange a quantum circuit into a form suitable for Gaussian boson sampling.
 
@@ -59,8 +58,8 @@ class GBSSpecs(GaussianSpecs):
         problem, i.e., if it is equivalent to a circuit A+B, where the sequence A only contains
         Gaussian operations, and B only contains Fock measurements.
 
-        If the answer is yes, the circuit is arranged into the A+B order, and all the Fock measurements
-        are combined into a single :class:`MeasureFock` operation.
+        If the answer is yes, the circuit is arranged into the A+B order, and all the Fock
+        measurements are combined into a single :class:`MeasureFock` operation.
 
         Args:
             seq (Sequence[Command]): quantum circuit to modify
@@ -76,15 +75,11 @@ class GBSSpecs(GaussianSpecs):
             raise CircuitError('Operations following the Fock measurements.')
 
         # A should only contain Gaussian operations
-        # (but this is already guaranteed by group_operations and our primitive set)
-        #for cmd in A:
-        #    temp = cmd.op.__class__.__name__
-        #    if temp not in gaussian_ops:
-        #        raise CircuitError('Non-gaussian Operation: {}.'.format(temp))
+        # (but this is already guaranteed by group_operations() and our primitive set)
 
         # without Fock measurements GBS is pointless
         if not B:
-            raise CircuitError('No Fock measurements.')
+            raise CircuitError('GBS circuits must contain Fock measurements.')
 
         # there should be only Fock measurements in B
         measured = set()
@@ -100,4 +95,4 @@ class GBSSpecs(GaussianSpecs):
 
         # replace B with a single Fock measurement
         B = [Command(ops.MeasureFock(), list(measured))]
-        return A+B
+        return A + B
