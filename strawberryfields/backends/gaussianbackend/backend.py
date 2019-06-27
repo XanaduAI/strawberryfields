@@ -129,7 +129,7 @@ class GaussianBackend(BaseGaussian):
             if shots == 1:
                 qs = self.circuit.homodyne(mode, eps)[0,0]
             else:
-                qs = self.circuit.homodyne(mode, eps, shots = shots)[:,0]
+                qs = self.circuit.homodyne(mode, eps, shots=shots)[:, 0]
         else:
             val = select * 2 / sqrt(2 * self.circuit.hbar)
             qs = self.circuit.post_select_homodyne(mode, val, eps)
@@ -191,7 +191,6 @@ class GaussianBackend(BaseGaussian):
             raise NotImplemented("Postselection is currently not supported "
                                  "with measure_fock on the gaussian backend")
 
-        # TODO: add logic to make sure the correct modes are measured
         mu = self.circuit.mean
         cov = self.circuit.scovmatxp()
         # check we are sampling from a gaussian state with zero mean
