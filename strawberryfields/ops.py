@@ -583,7 +583,7 @@ class Measurement(Operation):
                 # shape would be (shots,)
                 values = [values]
             else:
-                # shape would be (shots, num_meas,)
+                # shape would be (shots, num_meas)
                 values = values.T
 
         # store the results in the register reference objects
