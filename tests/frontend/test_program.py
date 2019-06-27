@@ -630,7 +630,7 @@ class TestGBS:
             ops.Dgate(1.0) | q[0]
             ops.Sgate(-0.5) | q[1]
 
-        with pytest.raises(program.CircuitError, match="No Fock measurements."):
+        with pytest.raises(program.CircuitError, match="GBS circuits must contain Fock measurements."):
             prog.compile('gbs')
 
     def test_GBS_fail_3(self):

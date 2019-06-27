@@ -301,7 +301,6 @@ from .decompositions import clements, bloch_messiah, williamson, graph_embed
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
-# pylint: disable=too-many-arguments
 
 # numerical tolerances
 _decomposition_merge_tol = 1e-13
