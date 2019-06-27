@@ -25,6 +25,7 @@ from numpy import (
     vstack,
     zeros_like,
     allclose,
+    ix_,
 )
 from numpy.linalg import inv
 
@@ -197,7 +198,11 @@ class GaussianBackend(BaseGaussian):
         if not allclose(mu, zeros_like(mu)):
             raise NotImplementedError("PNR measurement is only supported for "
                                       "Gaussian states with zero mean")
-        samples = hafnian_sample_state(cov, shots)
+        x_idxs = array(modes)
+        p_idxs = x_idxs + len(mu)
+        modes_idxs = concatenate([x_idxs, p_idxs])
+        reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
+        samples = hafnian_sample_state(reduced_cov, shots)
         # for backward compatibility with previous measurement behaviour,
         # if only one shot, then we drop the shots axis
         if shots == 1:

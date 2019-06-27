@@ -284,25 +284,27 @@ class TestProperExecution:
         with p1.context as q:
             ops.MeasureFock() | q
         samples = eng.run(p1, shots=shots).samples
-        assert np.allclose(samples, [expected] * 3, atol=0, rtol=0)
+        assert samples.shape == (shots, 3)
+        assert np.allclose(samples, np.stack([expected]*3, axis=1), atol=0, rtol=0)
 
         # some modes
         eng, p2 = setup_eng(3)
         with p2.context as q:
             ops.MeasureFock() | (q[0], q[2])
         samples = eng.run(p2, shots=shots).samples
-        assert np.allclose(samples[0], expected, atol=0, rtol=0)
-        assert samples[1] is None
-        assert np.allclose(samples[2], expected, atol=0, rtol=0)
+        assert samples.shape == (shots, 3)
+        assert np.allclose(samples[:,0].astype(int), expected, atol=0, rtol=0)
+        assert all(s is None for s in samples[:, 1])
+        assert np.allclose(samples[:,2].astype(int), expected, atol=0, rtol=0)
 
         # one mode
         eng, p3 = setup_eng(3)
         with p3.context as q:
             ops.MeasureFock() | q[0]
         samples = eng.run(p3, shots=shots).samples
-        assert np.allclose(samples[0], expected, atol=0, rtol=0)
-        assert samples[1] is None
-        assert samples[2] is None
+        assert np.allclose(samples[:, 0].astype(int), expected, atol=0, rtol=0)
+        assert all(s is None for s in samples[:, 1])
+        assert all(s is None for s in samples[:, 2])
 
     # TODO: when ``shots`` is incorporated into other backends, delete this test
     @pytest.mark.backends("tf", "fock")
@@ -317,4 +319,3 @@ class TestProperExecution:
                            match=r"""(Measure|MeasureFock) has not been implemented in {} """
                                   """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
             eng.run(p1, shots=shots).samples
-            
