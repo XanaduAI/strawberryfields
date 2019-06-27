@@ -15,18 +15,14 @@
 r"""Unit tests for measurements in the Fock basis"""
 import pytest
 
-# fock measurements only supported by fock backends
-pytestmark = pytest.mark.backends("fock", "tf")
-
 import numpy as np
 
 
 NUM_REPEATS = 50
 
-
+@pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
-
 
     def test_normalized_conditional_states(self, setup_backend, cutoff, pure, tol):
         """Tests if the conditional states resulting from Fock measurements in a subset of modes are normalized."""
@@ -87,6 +83,7 @@ class TestFockRepresentation:
 
             assert np.allclose(meas_result, ref_result, atol=tol, rtol=0)
 
+
 @pytest.mark.backends("fock", "tf", "gaussian")
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
@@ -97,7 +94,7 @@ class TestRepresentationIndependent:
             backend = setup_backend(2)
             backend.reset(pure=pure)
 
-            r = 0.15
+            r = 0.25
             # Circuit to prepare two mode squeezed vacuum
             backend.squeeze(-r, 0)
             backend.squeeze(r, 1)
