@@ -488,10 +488,12 @@ class Program:
             raise ValueError("Could not find backend {} in Strawberry Fields database".format(backend))
 
         if db.modes is not None:
-            # FIXME wrong, subsystems may be created and destroyed by program, self.num_subsystems is just the final number
-            if self.num_subsystems > db.modes:
-                raise CircuitError("This program requires {} modes, but the {} backend "
-                                   "only supports a {} mode program".format(self.num_subsystems, backend, db.modes))
+            # subsystems may be created and destroyed, this is total number that has ever existed
+            if len(self.reg_refs) > db.modes:
+                raise CircuitError(
+                    "This program requires {} modes, but the {} backend "
+                    "only supports a {} mode program".format(self.num_subsystems, backend, db.modes)
+                )
 
         def compile_sequence(seq):
             """Compiles the given Command sequence."""
