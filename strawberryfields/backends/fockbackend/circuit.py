@@ -431,6 +431,8 @@ class Circuit():
             unmeasured = [i for i in range(self._num_modes) if i not in measure]
             reduced = ops.partial_trace(state, self._num_modes, unmeasured)
             dist = np.ravel(ops.diagonal(reduced, len(measure)).real)
+            # kill spurious tiny values (which are sometimes negative)
+            dist = dist * ~np.isclose(dist, 0.)
 
             # Make a random choice
             if sum(dist) != 1:
