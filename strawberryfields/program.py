@@ -552,28 +552,6 @@ class Program:
         if db.compile is not None:
             seq = db.compile(seq)
 
-        # TODO subsume the topology check in db.compile?
-        if db.graph is not None:
-            # check topology
-            DAG = pu.list_to_DAG(seq)
-
-            # relabel the DAG nodes to integers, with attributes
-            # specifying the operation name. This allows them to be
-            # compared, rather than using Command objects.
-            mapping = {i: n.op.__class__.__name__ for i, n in enumerate(DAG.nodes())}
-            circuit = nx.convert_node_labels_to_integers(DAG)
-            nx.set_node_attributes(circuit, mapping, name='name')
-
-            def node_match(n1, n2):
-                """Returns True if both nodes have the same name"""
-                return n1['name'] == n2['name']
-
-            # check if topology matches
-            if not nx.is_isomorphic(circuit, db.graph, node_match):
-                # TODO: try and compile the program to match the topology
-                # TODO: add support for parameter range matching/compilation
-                raise CircuitError('Program cannot be used with the {} backend due to incompatible topology'.format(backend))
-
         self.lock()
         compiled = copy.copy(self)  # shares RegRefs with the source
         compiled.backend = backend

@@ -22,6 +22,7 @@ from .gaussian import GaussianSpecs
 class GBSSpecs(GaussianSpecs):
     """Validation data for Gaussian boson sampling."""
 
+    short_name = 'gbs'
     primitives = {
         # meta operations
         "All",
@@ -95,4 +96,4 @@ class GBSSpecs(GaussianSpecs):
 
         # replace B with a single Fock measurement
         B = [Command(ops.MeasureFock(), list(measured))]
-        return A + B
+        return super().compile(A + B)
