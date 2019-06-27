@@ -41,7 +41,7 @@ This page contains some common continuous-variable (CV) decompositions. However,
 Gaussian unitaries
 -------------------
 
-Gaussian states are those with positive Wigner distributions, and are fully characterised by their first and second moments; the means vector :math:`\hat{\mathbf{r}}=(\hat{\x}_1,\dots,\hat{\x}_N,\hat{\p}_1,\dots,\hat{\p}_N)`, and the covariance matrix :math:`V_{ij}=\frac{1}{2}\langle\Delta r_i\Delta r_j + \Delta r_i\Delta r_j\rangle` respectively (for more details, see :ref:`gaussian_basis`).
+Gaussian states are those with positive Wigner distributions, and are fully characterised by their first and second moments; the means vector :math:`\hat{\mathbf{r}}=(\x_1,\dots,\x_N,\p_1,\dots,\p_N)`, and the covariance matrix :math:`V_{ij}=\frac{1}{2}\langle\Delta r_i\Delta r_j + \Delta r_i\Delta r_j\rangle` respectively (for more details, see :ref:`gaussian_basis`).
 
 Gaussian unitaries, it then follows, are quantum operations that retain the Gaussian character of the state; i.e., the set of unitary transformations :math:`U`  that transform Gaussian states into Gaussian states:
 
