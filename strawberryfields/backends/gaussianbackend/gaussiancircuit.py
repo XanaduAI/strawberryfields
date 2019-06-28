@@ -420,11 +420,11 @@ class GaussianModes:
         self.fromsmean(va)
         return vm
 
-    def homodyne(self, n, eps=0.0002):
+    def homodyne(self, n, shots=1, eps=0.0002):
         """ Performs a homodyne measurement by calling measure dyne an giving it the
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
         covmat = np.diag(np.array([eps**2, 1./eps**2]))
-        res = self.measure_dyne(covmat, [n])
+        res = self.measure_dyne(covmat, [n], shots=shots)
 
         return res
 
