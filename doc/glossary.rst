@@ -26,7 +26,7 @@ Expressions that are grouped together are used synonymously in the Strawberry Fi
 
    device
       Something that can run a well-defined subclass of quantum :term:`programs <program>`.
-      Each :term:`backend` corresponds to one or more devices.
+      The same device can potentially be evaluated on more than one :term:`backend`, and each :term:`backend` can implement one or more devices.
       See: :class:`.DeviceSpecs`
 
    equivalent circuit
@@ -35,7 +35,6 @@ Expressions that are grouped together are used synonymously in the Strawberry Fi
       probability distributions.
 
    engine
-   frontend
       A class for executing quantum :term:`programs <program>` on a specific :term:`backend`.
       See: :class:`.BaseEngine`
 
@@ -50,11 +49,14 @@ Expressions that are grouped together are used synonymously in the Strawberry Fi
    operation
    quantum operation
       Something that acts on specific subsystems of the :term:`register`, changing its state and
-      possibly returning classical information, e.g. a state preparation, :term:`gate`,
-      :term:`measurement` etc.
+      possibly returning classical information, e.g., a state preparation, :term:`gate`,
+      :term:`measurement`, etc.
       See: :class:`.Operation`
 
    register
    quantum register
+   system
+   mode
+   qumode
       A quantum system (or a simulation of one) storing the state of the quantum computation.
       Typically consists of several subsystems (which in CV quantum computing are called modes).
