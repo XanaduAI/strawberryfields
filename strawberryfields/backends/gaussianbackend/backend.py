@@ -134,7 +134,7 @@ class GaussianBackend(BaseGaussian):
             qs = self.circuit.homodyne(mode, **kwargs)[0, 0]
         else:
             val = select * 2 / sqrt(2 * self.circuit.hbar)
-            qs = self.circuit.post_select_homodyne(mode, val)
+            qs = self.circuit.post_select_homodyne(mode, val, **kwargs)
 
         return qs * sqrt(2 * self.circuit.hbar) / 2
 
