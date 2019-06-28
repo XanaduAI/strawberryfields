@@ -20,9 +20,53 @@ import numpy as np
 
 NUM_REPEATS = 50
 
+
+@pytest.mark.backends("gaussian")
+class TestGaussianRepresentation:
+    """Tests that make use of the Fock basis representation."""
+
+    def measure_fock_gaussian_warning(self, setup_backend):
+        """Tests that Fock measurements are not implemented when shots != 1.
+        Should be deleted when this functionality is implemented."""
+
+        backend = setup_backend(3)
+
+        with pytest.warns(Warning, match="Cannot simulate non-Gaussian states. Conditional state after "
+                                         "Fock measurement has not been updated."):
+            backend.measure_fock([0, 1], shots=5)
+
+
 @pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
+
+    def shots_not_implemented_fock(self, setup_backend):
+        """Tests that Fock measurements are not implemented when shots != 1.
+        Should be deleted when this functionality is implemented."""
+
+        backend = setup_backend(3)
+
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for Fock measurement".format(backend._short_name)):
+            backend.measure_fock([0, 1], shots=5)
+
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for Fock measurement".format(backend._short_name)):
+            backend.measure_fock([0, 1], shots=-5)
+
+    def shots_not_implemented_homodyne(self, setup_backend):
+        """Tests that homodyne measurements are not implemented when shots != 1.
+        Should be deleted when this functionality is implemented."""
+
+        backend = setup_backend(3)
+
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for homodyne measurement".format(backend._short_name)):
+            backend.measure_homodyne([0, 1], shots=5)
+
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for homodyne measurement".format(backend._short_name)):
+            backend.measure_homodyne([0, 1], shots=-5)
 
     def test_normalized_conditional_states(self, setup_backend, cutoff, pure, tol):
         """Tests if the conditional states resulting from Fock measurements in a subset of modes are normalized."""
