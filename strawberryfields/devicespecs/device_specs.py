@@ -20,7 +20,7 @@ Backend capabilities
 .. currentmodule:: strawberryfields.devicespecs.device_specs
 
 The :class:`DeviceSpecs` class stores information about the capabilities of various execution backends.
-This information is used e.g. in :class:`Program` validation.
+This information is used e.g., in :class:`Program` validation.
 
 
 Classes

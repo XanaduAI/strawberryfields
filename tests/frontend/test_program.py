@@ -613,8 +613,8 @@ class TestValidation:
 class TestGBS:
     """Test the Gaussian boson sampling device."""
 
-    def test_GBS_fail_1(self):
-        """GBS failure."""
+    def test_GBS_compile_ops_after_measure(self):
+        """Tests that GBS compilation fails when there are operations following a Fock measurement."""
         prog = sf.Program(2)
         with prog.context as q:
             ops.Measure | q
@@ -623,8 +623,8 @@ class TestGBS:
         with pytest.raises(program.CircuitError, match="Operations following the Fock measurements."):
             prog.compile('gbs')
 
-    def test_GBS_fail_2(self):
-        """GBS failure."""
+    def test_GBS_compile_no_fock_meas(self):
+        """Tests that GBS compilation fails when no fock measurements are made."""
         prog = sf.Program(2)
         with prog.context as q:
             ops.Dgate(1.0) | q[0]
@@ -633,8 +633,8 @@ class TestGBS:
         with pytest.raises(program.CircuitError, match="GBS circuits must contain Fock measurements."):
             prog.compile('gbs')
 
-    def test_GBS_fail_3(self):
-        """GBS failure."""
+    def test_GBS_compile_nonconsec_measurefock(self):
+        """Tests that GBS compilation fails when Fock measurements are made with an intervening gate."""
         prog = sf.Program(2)
         with prog.context as q:
             ops.Dgate(1.0) | q[0]
@@ -646,8 +646,8 @@ class TestGBS:
         with pytest.raises(program.CircuitError, match="The Fock measurements are not consecutive."):
             prog.compile('gbs')
 
-    def test_GBS_fail_4(self):
-        """GBS failure."""
+    def test_GBS_compile_measure_same_twice(self):
+        """Tests that GBS compilation fails when the same mode is measured more than once."""
         prog = sf.Program(3)
         with prog.context as q:
             ops.Dgate(1.0) | q[0]
@@ -669,6 +669,6 @@ class TestGBS:
             ops.Measure | q[1]
 
         prog = prog.compile('gbs')
-        assert len(prog.circuit) == 4
+        assert len(prog) == 4
         assert prog.circuit[-1].op.__class__ == ops.MeasureFock
         assert [x.ind for x in prog.circuit[-1].reg] == list(range(3))

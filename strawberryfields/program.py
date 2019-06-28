@@ -492,7 +492,7 @@ class Program:
             if len(self.reg_refs) > db.modes:
                 raise CircuitError(
                     "This program requires {} modes, but the {} backend "
-                    "only supports a {} mode program".format(self.num_subsystems, backend, db.modes)
+                    "only supports a {}-mode program".format(len(self.reg_refs), backend, db.modes)
                 )
 
         def compile_sequence(seq):
