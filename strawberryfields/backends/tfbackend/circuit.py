@@ -657,7 +657,7 @@ class Circuit:
 
             # return measurement result
             if evaluate_results:
-                _meas = [t.eval(feed_dict, session) for t in meas_result]
+                _meas = session.run(meas_result, feed_dict=feed_dict)
                 if close_session:
                     session.close()
             else:
