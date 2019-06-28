@@ -304,7 +304,7 @@ class TFBackend(BaseFock):
         """
         if shots > 1:
             raise NotImplementedError("TF backend currently does not support "
-                                      "shots > 1")
+                                      "shots > 1 for Fock measurement")
         with tf.name_scope('Measure_fock'):
             remapped_modes = self._remap_modes(modes)
             meas = self.circuit.measure_fock(remapped_modes, select=select, **kwargs)
@@ -328,7 +328,7 @@ class TFBackend(BaseFock):
         """
         if shots > 1:
             raise NotImplementedError("TF backend currently does not support "
-                                      "shots > 1")
+                                      "shots > 1 for homodyne measurement")
         with tf.name_scope('Measure_homodyne'):
             remapped_mode = self._remap_modes(mode)
             meas = self.circuit.measure_homodyne(phi, remapped_mode, select, **kwargs)

@@ -153,7 +153,7 @@ class FockBackend(BaseFock):
         """
         if shots > 1:
             raise NotImplementedError("Fock backend currently does not support "
-                                      "shots > 1")
+                                      "shots > 1 for homodyne measurement")
         return self.circuit.measure_homodyne(phi, self._remap_modes(mode), select=select, **kwargs)
 
     def loss(self, T, mode):
@@ -246,5 +246,5 @@ class FockBackend(BaseFock):
     def measure_fock(self, modes, shots=1, select=None, **kwargs):
         if shots > 1:
             raise NotImplementedError("Fock backend currently does not support "
-                                      "shots > 1")
+                                      "shots > 1 for Fock measurement")
         return self.circuit.measure_fock(self._remap_modes(modes), select=select)

@@ -13,6 +13,8 @@
 # limitations under the License.
 # pylint: disable=too-many-public-methods
 """Gaussian backend"""
+import warnings
+
 from numpy import (
     empty,
     concatenate,
@@ -117,17 +119,19 @@ class GaussianBackend(BaseGaussian):
         Returns:
             float: measured value
         """
-        if select is not None and shots != 1:
-            raise ValueError("Post selection and multiple shots is not implemented")
+        if shots > 1:
+            if select is not None:
+                raise NotImplementedError("Gaussian backend currently does not support "
+                                          "postselection if shots > 1 for homodyne measurement")
+
+            raise NotImplementedError("Gaussian backend currently does not support "
+                                      "shots > 1 for homodyne measurement")
 
         # phi is the rotation of the measurement operator, hence the minus
         self.circuit.phase_shift(-phi, mode)
 
         if select is None:
-            if shots == 1:
-                qs = self.circuit.homodyne(mode, **kwargs)[0, 0]
-            else:
-                qs = self.circuit.homodyne(mode, shots=shots, **kwargs)[:, 0]
+            qs = self.circuit.homodyne(mode, **kwargs)[0, 0]
         else:
             val = select * 2 / sqrt(2 * self.circuit.hbar)
             qs = self.circuit.post_select_homodyne(mode, val)
@@ -136,8 +140,13 @@ class GaussianBackend(BaseGaussian):
 
     def measure_heterodyne(self, mode, shots=1, select=None):
 
-        if select is not None and shots != 1:
-            raise ValueError("Post selection and multiple shots is not implemented")
+        if shots > 1:
+            if select is not None:
+                raise NotImplementedError("Gaussian backend currently does not support "
+                                          "postselection if shots > 1 for heterodyne measurement")
+
+            raise NotImplementedError("Gaussian backend currently does not support "
+                                      "shots > 1 for heterodyne measurement")
 
         if select is None:
             m = identity(2)
@@ -185,9 +194,12 @@ class GaussianBackend(BaseGaussian):
         self.circuit.thermal_loss(T, nbar, mode)
 
     def measure_fock(self, modes, shots=1, select=None):
-        if select is not None:
-            raise NotImplementedError("Postselection is currently not supported "
-                                      "with measure_fock on the gaussian backend")
+        if shots > 1:
+            if select is not None:
+                raise NotImplementedError("Gaussian backend currently does not support "
+                                          "postselection if shots > 1 for Fock measurement")
+            warnings.warn("Cannot simulate non-Gaussian states. "
+                          "Conditional state after Fock measurement has not been updated.")
 
         mu = self.circuit.mean
         cov = self.circuit.scovmatxp()
