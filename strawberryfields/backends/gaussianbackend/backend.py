@@ -125,9 +125,9 @@ class GaussianBackend(BaseGaussian):
 
         if select is None:
             if shots == 1:
-                qs = self.circuit.homodyne(mode)[0, 0]
+                qs = self.circuit.homodyne(mode, **kwargs)[0, 0]
             else:
-                qs = self.circuit.homodyne(mode, shots=shots)[:, 0]
+                qs = self.circuit.homodyne(mode, shots=shots, **kwargs)[:, 0]
         else:
             val = select * 2 / sqrt(2 * self.circuit.hbar)
             qs = self.circuit.post_select_homodyne(mode, val)

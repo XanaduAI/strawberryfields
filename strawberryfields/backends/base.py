@@ -461,7 +461,7 @@ class BaseBackend:
            The returned values can be converted to conventional position/momentum
            eigenvalues by multiplying them with :math:`\sqrt{\hbar/2}`.
 
-        Updates the current state of the circuit such that the measured mode is reset
+        Updates the current state such that the measured mode is reset
         to the vacuum state. This is because we cannot represent exact position or
         momentum eigenstates in any of the backends, and experimentally the photons
         are destroyed in a homodyne measurement.
@@ -484,7 +484,9 @@ class BaseBackend:
     def measure_fock(self, modes, shots=1, select=None, **kwargs):
         """Measure the given modes in the Fock basis.
 
-        Updates the current state of the circuit to the conditional state of this measurement result.
+        ..note::
+          When :code:``shots == 1``, updates the current system state to the conditional state of that
+          measurement result. When :code:``shots > 1``, the system state is not updated.
 
         Args:
             modes (Sequence[int]): which modes to measure

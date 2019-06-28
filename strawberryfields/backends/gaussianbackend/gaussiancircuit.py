@@ -222,9 +222,11 @@ class GaussianModes:
 
     def scovmatxp(self):
         r"""Constructs and returns the symmetric ordered covariance matrix in the xp ordering.
-        The ordered for the canonical operators is :math:`q_1,..,q_n, p_1,...,p_n`.
+
+        The order for the canonical operators is :math:`q_1,..,q_n, p_1,...,p_n`.
         This differs from the ordering used in [1] which is :math:`q_1,p_1,q_2,p_2,...,q_n,p_n`
         Note that one ordering can be obtained from the other by using a permutation matrix.
+
         Said permutation matrix is implemented in the function changebasis(n) where n is
         the number of modes.
         """
@@ -236,11 +238,14 @@ class GaussianModes:
 
     def smeanxp(self):
         r"""Constructs and returns the symmetric ordered vector of mean in the xp ordering.
+
         The order for the canonical operators is :math:`q_1, \ldots, q_n, p_1, \ldots, p_n`.
         This differs from the ordering used in [1] which is :math:`q_1, p_1, q_2, p_2, \ldots, q_n, p_n`.
         Note that one ordering can be obtained from the other by using a permutation matrix.
+
         Said permutation matrix is implemented in the function changebasis(n) where n is
-        the number of modes."""
+        the number of modes.
+        """
         nmodes = self.nlen
         r = np.empty(2*nmodes)
         r[0:nmodes] = 2*self.mean.real
