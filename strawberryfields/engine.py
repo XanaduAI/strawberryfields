@@ -213,8 +213,7 @@ class BaseEngine(abc.ABC):
             """Helper function to ensure register values have same shape, even if not measured"""
             if val is None and shots > 1:
                 return [None] * shots
-            else:
-                return val
+            return val
 
         if not isinstance(program, Sequence):
             program = [program]

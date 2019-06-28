@@ -480,8 +480,7 @@ class BaseBackend:
             float: measured value
         """
         raise NotImplementedError
-          
-    
+
     def measure_fock(self, modes, shots=1, select=None, **kwargs):
         """Measure the given modes in the Fock basis.
 

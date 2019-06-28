@@ -28,11 +28,10 @@ from numpy import (
     ix_,
 )
 from numpy.linalg import inv
+from hafnian.samples import hafnian_sample_state
 
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.shared_ops import changebasis
-
-from hafnian.samples import hafnian_sample_state
 
 from .ops import xmat
 from .gaussiancircuit import GaussianModes
@@ -120,19 +119,18 @@ class GaussianBackend(BaseGaussian):
         """
         if select is not None and shots != 1:
             raise ValueError("Post selection and multiple shots is not implemented")
-        eps = kwargs.get("eps", 0.0002)
 
         # phi is the rotation of the measurement operator, hence the minus
         self.circuit.phase_shift(-phi, mode)
 
         if select is None:
             if shots == 1:
-                qs = self.circuit.homodyne(mode, eps)[0,0]
+                qs = self.circuit.homodyne(mode)[0, 0]
             else:
-                qs = self.circuit.homodyne(mode, eps, shots=shots)[:, 0]
+                qs = self.circuit.homodyne(mode, shots=shots)[:, 0]
         else:
             val = select * 2 / sqrt(2 * self.circuit.hbar)
-            qs = self.circuit.post_select_homodyne(mode, val, eps)
+            qs = self.circuit.post_select_homodyne(mode, val)
 
         return qs * sqrt(2 * self.circuit.hbar) / 2
 
@@ -145,9 +143,9 @@ class GaussianBackend(BaseGaussian):
             m = identity(2)
             res = 0.5 * self.circuit.measure_dyne(m, [mode], shots=shots)
             if shots == 1:
-                return (res[0,0] + 1j * res[0,1])
-            else:
-                return res[:,0] + 1j * res[:,1]
+                return res[0, 0] + 1j * res[0, 1]
+
+            return res[:, 0] + 1j * res[:, 1]
 
         res = select
         self.circuit.post_select_heterodyne(mode, select)
@@ -188,8 +186,8 @@ class GaussianBackend(BaseGaussian):
 
     def measure_fock(self, modes, shots=1, select=None):
         if select is not None:
-            raise NotImplemented("Postselection is currently not supported "
-                                 "with measure_fock on the gaussian backend")
+            raise NotImplementedError("Postselection is currently not supported "
+                                      "with measure_fock on the gaussian backend")
 
         mu = self.circuit.mean
         cov = self.circuit.scovmatxp()
