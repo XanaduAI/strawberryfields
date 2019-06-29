@@ -119,13 +119,13 @@ class GaussianBackend(BaseGaussian):
         Returns:
             float: measured value
         """
-        if shots > 1:
+        if shots != 1:
             if select is not None:
                 raise NotImplementedError("Gaussian backend currently does not support "
-                                          "postselection if shots > 1 for homodyne measurement")
+                                          "postselection if shots != 1 for homodyne measurement")
 
             raise NotImplementedError("Gaussian backend currently does not support "
-                                      "shots > 1 for homodyne measurement")
+                                      "shots != 1 for homodyne measurement")
 
         # phi is the rotation of the measurement operator, hence the minus
         self.circuit.phase_shift(-phi, mode)
@@ -140,21 +140,18 @@ class GaussianBackend(BaseGaussian):
 
     def measure_heterodyne(self, mode, shots=1, select=None):
 
-        if shots > 1:
+        if shots != 1:
             if select is not None:
                 raise NotImplementedError("Gaussian backend currently does not support "
-                                          "postselection if shots > 1 for heterodyne measurement")
+                                          "postselection if shots != 1 for heterodyne measurement")
 
             raise NotImplementedError("Gaussian backend currently does not support "
-                                      "shots > 1 for heterodyne measurement")
+                                      "shots != 1 for heterodyne measurement")
 
         if select is None:
             m = identity(2)
             res = 0.5 * self.circuit.measure_dyne(m, [mode], shots=shots)
-            if shots == 1:
-                return res[0, 0] + 1j * res[0, 1]
-
-            return res[:, 0] + 1j * res[:, 1]
+            return res[0, 0] + 1j * res[0, 1]
 
         res = select
         self.circuit.post_select_heterodyne(mode, select)
@@ -194,10 +191,10 @@ class GaussianBackend(BaseGaussian):
         self.circuit.thermal_loss(T, nbar, mode)
 
     def measure_fock(self, modes, shots=1, select=None):
-        if shots > 1:
+        if shots != 1:
             if select is not None:
                 raise NotImplementedError("Gaussian backend currently does not support "
-                                          "postselection if shots > 1 for Fock measurement")
+                                          "postselection if shots != 1 for Fock measurement")
             warnings.warn("Cannot simulate non-Gaussian states. "
                           "Conditional state after Fock measurement has not been updated.")
 
