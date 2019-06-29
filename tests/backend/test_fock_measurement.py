@@ -15,27 +15,58 @@
 r"""Unit tests for measurements in the Fock basis"""
 import pytest
 
-# fock measurements only supported by fock backends
-pytestmark = pytest.mark.backends("fock", "tf")
-
 import numpy as np
 
 
 NUM_REPEATS = 50
 
 
+@pytest.mark.backends("gaussian")
+class TestGaussianRepresentation:
+    """Tests that make use of the Fock basis representation."""
+
+    def measure_fock_gaussian_warning(self, setup_backend):
+        """Tests that Fock measurements are not implemented when shots != 1.
+        Should be deleted when this functionality is implemented."""
+
+        backend = setup_backend(3)
+
+        with pytest.warns(Warning, match="Cannot simulate non-Gaussian states. Conditional state after "
+                                         "Fock measurement has not been updated."):
+            backend.measure_fock([0, 1], shots=5)
+
+
+@pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
 
-    def test_vacuum_measurements(self, setup_backend, pure):
-        """Tests Fock measurement on the vacuum state."""
+    def shots_not_implemented_fock(self, setup_backend):
+        """Tests that Fock measurements are not implemented when shots != 1.
+        Should be deleted when this functionality is implemented."""
+
         backend = setup_backend(3)
 
-        for _ in range(NUM_REPEATS):
-            backend.reset(pure=pure)
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for Fock measurement".format(backend._short_name)):
+            backend.measure_fock([0, 1], shots=5)
 
-            meas = backend.measure_fock([0, 1, 2])[0]
-            assert np.all(np.array(meas) == 0)
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for Fock measurement".format(backend._short_name)):
+            backend.measure_fock([0, 1], shots=-5)
+
+    def shots_not_implemented_homodyne(self, setup_backend):
+        """Tests that homodyne measurements are not implemented when shots != 1.
+        Should be deleted when this functionality is implemented."""
+
+        backend = setup_backend(3)
+
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for homodyne measurement".format(backend._short_name)):
+            backend.measure_homodyne([0, 1], shots=5)
+
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for homodyne measurement".format(backend._short_name)):
+            backend.measure_homodyne([0, 1], shots=-5)
 
     def test_normalized_conditional_states(self, setup_backend, cutoff, pure, tol):
         """Tests if the conditional states resulting from Fock measurements in a subset of modes are normalized."""
@@ -95,3 +126,33 @@ class TestFockRepresentation:
                 ref_result = tuple(np.array([i] * batch_size) for i in ref_result)
 
             assert np.allclose(meas_result, ref_result, atol=tol, rtol=0)
+
+
+@pytest.mark.backends("fock", "tf", "gaussian")
+class TestRepresentationIndependent:
+    """Basic implementation-independent tests."""
+
+    def test_two_mode_squeezed_measurements(self, setup_backend, pure):
+        """Tests Fock measurement on the two mode squeezed vacuum state."""
+        for _ in range(NUM_REPEATS):
+            backend = setup_backend(2)
+            backend.reset(pure=pure)
+
+            r = 0.25
+            # Circuit to prepare two mode squeezed vacuum
+            backend.squeeze(-r, 0)
+            backend.squeeze(r, 1)
+            backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
+            meas_modes = [0, 1]
+            meas_results = backend.measure_fock(meas_modes)
+            assert np.all(meas_results[0] == meas_results[1])
+
+    def test_vacuum_measurements(self, setup_backend, pure):
+        """Tests Fock measurement on the vacuum state."""
+        backend = setup_backend(3)
+
+        for _ in range(NUM_REPEATS):
+            backend.reset(pure=pure)
+
+            meas = backend.measure_fock([0, 1, 2])[0]
+            assert np.all(np.array(meas) == 0)

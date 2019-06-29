@@ -24,7 +24,6 @@ import strawberryfields as sf
 from strawberryfields import program
 from strawberryfields import ops
 
-from strawberryfields import devicespecs
 from strawberryfields.devicespecs.device_specs import DeviceSpecs
 
 
@@ -152,7 +151,7 @@ class TestProgram:
         assert res == expected
 
         # NOTE optimization can change gate order
-        state = eng.run(prog, compile_options={'optimize': False})
+        result = eng.run(prog, compile_options={'optimize': False})
         res = []
         eng.print_applied(print_fn)
         assert res == ["Run 0:"] + expected

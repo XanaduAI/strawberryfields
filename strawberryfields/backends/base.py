@@ -78,6 +78,7 @@ BaseBackend
     loss
     thermal_loss
     measure_homodyne
+    measure_fock
 
 Fock backends
 ------------------
@@ -99,7 +100,6 @@ for quantum optical circuits.
     cubic_phase
     kerr_interaction
     cross_kerr_interaction
-    measure_fock
 
 Gaussian backends
 ---------------------
@@ -445,7 +445,7 @@ class BaseBackend:
         """
         raise NotImplementedError
 
-    def measure_homodyne(self, phi, mode, select=None, **kwargs):
+    def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         r"""Measure a :ref:`phase space quadrature <homodyne>` of the given mode.
 
         For the measured mode, samples the probability distribution
@@ -461,7 +461,7 @@ class BaseBackend:
            The returned values can be converted to conventional position/momentum
            eigenvalues by multiplying them with :math:`\sqrt{\hbar/2}`.
 
-        Updates the current state of the circuit such that the measured mode is reset
+        Updates the current state such that the measured mode is reset
         to the vacuum state. This is because we cannot represent exact position or
         momentum eigenstates in any of the backends, and experimentally the photons
         are destroyed in a homodyne measurement.
@@ -469,6 +469,7 @@ class BaseBackend:
         Args:
             phi (float): phase angle of the quadrature to measure (x: :math:`\phi=0`, p: :math:`\phi=\pi/2`)
             mode (int): which mode to measure
+            shots (int): number of measurement samples to obtain
             select (None or float): If not None: desired value of the measurement result.
                 Enables post-selection on specific measurement results instead of random sampling.
 
@@ -477,6 +478,24 @@ class BaseBackend:
 
         Returns:
             float: measured value
+        """
+        raise NotImplementedError
+
+    def measure_fock(self, modes, shots=1, select=None, **kwargs):
+        """Measure the given modes in the Fock basis.
+
+        ..note::
+          When :code:``shots == 1``, updates the current system state to the conditional state of that
+          measurement result. When :code:``shots > 1``, the system state is not updated.
+
+        Args:
+            modes (Sequence[int]): which modes to measure
+            shots (int): number of measurement samples to obtain
+            select (None or Sequence[int]): If not None: desired values of the measurement results.
+                Enables post-selection on specific measurement results instead of random sampling.
+                ``len(select) == len(modes)`` is required.
+        Returns:
+            tuple[int]: measurement results
         """
         raise NotImplementedError
 
@@ -635,21 +654,6 @@ class BaseFock(BaseBackend):
         """
         raise NotImplementedError
 
-    def measure_fock(self, modes, select=None, **kwargs):
-        """Measure the given modes in the Fock basis.
-
-        Updates the current state of the circuit to the conditional state of this measurement result.
-
-        Args:
-            modes (Sequence[int]): which modes to measure
-            select (None or Sequence[int]): If not None: desired values of the measurement results.
-                Enables post-selection on specific measurement results instead of random sampling.
-                ``len(select) == len(modes)`` is required.
-        Returns:
-            tuple[int]: measurement results
-        """
-        raise NotImplementedError
-
     def state(self, modes=None, **kwargs):
         r"""Returns the state of the quantum simulation.
 
@@ -671,13 +675,14 @@ class BaseGaussian(BaseBackend):
         super().__init__()
         self._supported["gaussian"] = True
 
-    def measure_heterodyne(self, mode, select=None):
+    def measure_heterodyne(self, mode, shots=1, select=None):
         r"""Perform a heterodyne measurement on the given mode.
 
         Updates the current state of the circuit such that the measured mode is reset to the vacuum state.
 
         Args:
             mode (int): which mode to measure
+            shots (int): number of measurement samples to obtain
             select (None or complex): If not None: desired value of the measurement result.
                 Enables post-selection on specific measurement results instead of random sampling.
 
@@ -728,9 +733,6 @@ class BaseGaussian(BaseBackend):
         raise NotApplicableError
 
     def cross_kerr_interaction(self, kappa, mode1, mode2):
-        raise NotApplicableError
-
-    def measure_fock(self, modes, select=None):
         raise NotApplicableError
 
     def state(self, modes=None, **kwargs):

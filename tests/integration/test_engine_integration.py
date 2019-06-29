@@ -270,3 +270,55 @@ class TestProperExecution:
 
         state4 = eng.run(p2).state
         assert state3 == state4
+
+    # TODO: when ``shots`` is incorporated into other backends, unmark this test
+    @pytest.mark.backends("gaussian")
+    def test_measurefock_shots(self, setup_eng):
+        """Tests that passing shots with a program containing MeasureFock
+           returns a result whose entries have the right shapes and values"""
+        shots = 5
+        expected = np.zeros(dtype=int, shape=(shots,))
+
+        # all modes
+        eng, p1 = setup_eng(3)
+        with p1.context as q:
+            ops.MeasureFock() | q
+        samples = eng.run(p1, shots=shots).samples.astype(int)
+        assert samples.shape == (shots, 3)
+        assert all(samples[:, 0] == expected)
+        assert all(samples[:, 1] == expected)
+        assert all(samples[:, 2] == expected)
+
+        # some modes
+        eng, p2 = setup_eng(3)
+        with p2.context as q:
+            ops.MeasureFock() | (q[0], q[2])
+        samples = eng.run(p2, shots=shots).samples
+        assert samples.shape == (shots, 3)
+        assert all(samples[:, 0].astype(int) == expected)
+        assert all(s is None for s in samples[:, 1])
+        assert all(samples[:, 2].astype(int) == expected)
+
+        # one mode
+        eng, p3 = setup_eng(3)
+        with p3.context as q:
+            ops.MeasureFock() | q[0]
+        samples = eng.run(p3, shots=shots).samples
+        assert samples.shape == (shots, 3)
+        assert all(samples[:, 0].astype(int) == expected)
+        assert all(s is None for s in samples[:, 1])
+        assert all(s is None for s in samples[:, 2])
+
+    # TODO: when ``shots`` is incorporated into other backends, delete this test
+    @pytest.mark.backends("tf", "fock")
+    def test_measurefock_shots_exception(self, setup_eng):
+        shots = 5
+        eng, p1 = setup_eng(3)
+        with p1.context as q:
+            ops.MeasureFock() | q
+
+        backend_name = eng.backend.__str__()
+        with pytest.raises(NotImplementedError,
+                           match=r"""(Measure|MeasureFock) has not been implemented in {} """
+                                  """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
+            eng.run(p1, shots=shots).samples

@@ -35,15 +35,8 @@ class GaussianState(BaseGaussianState):
     def __init__(self, state_data, num_modes, qmat, Amat, mode_names=None):
         # pylint: disable=too-many-arguments
         super().__init__(state_data, num_modes, mode_names)
-
-        # some of the Gaussian backend operations expect as input a 'GaussianMode' class.
-        # The following mini class matches the attributes expected for fock_probs and fidelity.
-        self._gmode = type("_GaussianMode", (), {
-            "nlen" : self._modes,
-            "mean" : self._alpha,
-            "qmat": (lambda: qmat),
-            "Amat": (lambda: Amat)
-        })
+        self.qmat = qmat
+        self.Amat = Amat
 
     def reduced_dm(self, modes, **kwargs):
         r"""Returns the reduced density matrix in the Fock basis for a particular mode.
@@ -64,7 +57,7 @@ class GaussianState(BaseGaussianState):
         mu, cov = self.reduced_gaussian([modes]) # pylint: disable=unused-variable
         cov = cov * 2/self._hbar
 
-        return fock_amplitudes_one_mode(self._alpha[modes], cov, cutoff-1)
+        return fock_amplitudes_one_mode(self._alpha[modes], cov, cutoff)
 
     #==========================================
     # The methods below inherit their docstring
@@ -80,7 +73,12 @@ class GaussianState(BaseGaussianState):
 
         ocp = np.uint8(np.array(n))
 
-        return fock_prob(self._gmode, ocp)
+        # get the vector and means and covariance
+        # matrix, and normalize so that hbar=2
+        mu = self.means() * np.sqrt(2/self.hbar)
+        cov = self.cov() * 2/self.hbar
+
+        return fock_prob(mu, cov, ocp)
 
     def mean_photon(self, mode, **kwargs):
         mu, cov = self.reduced_gaussian([mode])
@@ -106,8 +104,7 @@ class GaussianState(BaseGaussianState):
         if len(alpha_list) != self._modes:
             raise ValueError("alpha_list must be same length as the number of modes")
 
-        Q = self._gmode.qmat()
-        Qi = np.linalg.inv(Q)
+        Qi = np.linalg.inv(self.qmat)
         delta = self._alpha - alpha_list
 
         delta = np.concatenate((delta, delta.conj()))

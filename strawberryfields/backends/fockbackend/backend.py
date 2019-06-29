@@ -141,7 +141,7 @@ class FockBackend(BaseFock):
             raise ValueError("Beamsplitter transmittivity t must be a float.")
         self.circuit.beamsplitter(t, abs(r), phase(r), self._remap_modes(mode1), self._remap_modes(mode2))
 
-    def measure_homodyne(self, phi, mode, select=None, **kwargs):
+    def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         """Perform a homodyne measurement on the specified mode.
 
         See :meth:`.BaseBackend.measure_homodyne`.
@@ -151,6 +151,9 @@ class FockBackend(BaseFock):
                 (pdf) simulating the homodyne measurement (default: 100000).
             max (float): The pdf is discretized onto the 1D grid [-max,max] (default: 10).
         """
+        if shots != 1:
+            raise NotImplementedError("fock backend currently does not support "
+                                      "shots != 1 for homodyne measurement")
         return self.circuit.measure_homodyne(phi, self._remap_modes(mode), select=select, **kwargs)
 
     def loss(self, T, mode):
@@ -240,5 +243,8 @@ class FockBackend(BaseFock):
     def cross_kerr_interaction(self, kappa, mode1, mode2):
         self.circuit.cross_kerr_interaction(kappa, self._remap_modes(mode1), self._remap_modes(mode2))
 
-    def measure_fock(self, modes, select=None, **kwargs):
+    def measure_fock(self, modes, shots=1, select=None, **kwargs):
+        if shots != 1:
+            raise NotImplementedError("fock backend currently does not support "
+                                      "shots != 1 for Fock measurement")
         return self.circuit.measure_fock(self._remap_modes(modes), select=select)
