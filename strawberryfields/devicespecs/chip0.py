@@ -20,6 +20,7 @@ from .device_specs import DeviceSpecs
 class Chip0Specs(DeviceSpecs):
     """Validation data for the Chip0 simulator"""
 
+    short_name = 'chip0'
     modes = 4
     remote = True
     local = True

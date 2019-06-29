@@ -20,6 +20,7 @@ class BaseSpecs(DeviceSpecs):
     below matches the methods supported by the abstract base
     class :class:`~.BaseBackend`."""
 
+    short_name = 'base'
     modes = None
     remote = False
     local = True

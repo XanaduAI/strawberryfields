@@ -76,14 +76,6 @@ class TestProgram:
             ops.BSgate(0.5, 0.3) | (q[1], q[0])
         assert len(prog) == 2
 
-    def test_identity_command(self, prog):
-        """Tests that the None command acts as the identity"""
-        identity = program.Command(None, prog.register[0])
-        prog.circuit.append(identity)
-        assert len(prog) == 1
-        prog = prog.compile("base")
-        assert len(prog) == 0
-
     def test_parent_program(self):
         """Continuing one program with another."""
         D = ops.Dgate(0.5)
@@ -314,6 +306,18 @@ class TestValidation:
     """Test for Program device validation within
     the compile() method."""
 
+    def test_disconnected_circuit(self):
+        """Test the detection of a disconnected circuit."""
+        prog = sf.Program(3)
+        with prog.context as q:
+            ops.S2gate(0.6) | q[0:2]
+            ops.Dgate(1.0)  | q[2]
+            ops.Measure  | q[0:2]
+            ops.MeasureX | q[2]
+
+        with pytest.warns(UserWarning, match='The circuit consists of 2 disconnected components.'):
+            new_prog = prog.compile(backend='fock')
+
     def test_incorrect_modes(self, monkeypatch):
         """Test that an exception is raised if the device
         is called with the incorrect number of modes"""
@@ -386,7 +390,6 @@ class TestValidation:
         place if the device requests it."""
 
         class DummyDevice(DeviceSpecs):
-            """A device with no decompositions"""
             modes = None
             remote = False
             local = True
@@ -427,7 +430,6 @@ class TestValidation:
         requests a decomposition that doesn't exist"""
 
         class DummyDevice(DeviceSpecs):
-            """A device with no decompositions"""
             modes = None
             remote = False
             local = True
@@ -514,7 +516,6 @@ class TestValidation:
         """Test compilation properly matches the device topology"""
 
         class DummyDevice(DeviceSpecs):
-            """A device with no decompositions"""
             modes = None
             remote = False
             local = True
@@ -563,7 +564,6 @@ class TestValidation:
         """Test compilation raises exception if toplogy not matched"""
 
         class DummyDevice(DeviceSpecs):
-            """A device with no decompositions"""
             modes = None
             remote = False
             local = True
@@ -607,3 +607,67 @@ class TestValidation:
 
             with pytest.raises(program.CircuitError, match="incompatible topology"):
                 new_prog = prog.compile(backend='dummy')
+
+
+class TestGBS:
+    """Test the Gaussian boson sampling device."""
+
+    def test_GBS_compile_ops_after_measure(self):
+        """Tests that GBS compilation fails when there are operations following a Fock measurement."""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.Measure | q
+            ops.Rgate(1.0)  | q[0]
+
+        with pytest.raises(program.CircuitError, match="Operations following the Fock measurements."):
+            prog.compile('gbs')
+
+    def test_GBS_compile_no_fock_meas(self):
+        """Tests that GBS compilation fails when no fock measurements are made."""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.Dgate(1.0) | q[0]
+            ops.Sgate(-0.5) | q[1]
+
+        with pytest.raises(program.CircuitError, match="GBS circuits must contain Fock measurements."):
+            prog.compile('gbs')
+
+    def test_GBS_compile_nonconsec_measurefock(self):
+        """Tests that GBS compilation fails when Fock measurements are made with an intervening gate."""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.Dgate(1.0) | q[0]
+            ops.Measure | q[0]
+            ops.Dgate(-1.0) | q[1]
+            ops.BSgate(-0.5, 2.0) | q  # intervening gate
+            ops.Measure | q[1]
+
+        with pytest.raises(program.CircuitError, match="The Fock measurements are not consecutive."):
+            prog.compile('gbs')
+
+    def test_GBS_compile_measure_same_twice(self):
+        """Tests that GBS compilation fails when the same mode is measured more than once."""
+        prog = sf.Program(3)
+        with prog.context as q:
+            ops.Dgate(1.0) | q[0]
+            ops.Measure | q[0]
+            ops.Measure | q
+
+        with pytest.raises(program.CircuitError, match="Measuring the same mode more than once."):
+            prog.compile('gbs')
+
+    def test_GBS_success(self):
+        """GBS check passes."""
+        prog = sf.Program(3)
+        with prog.context as q:
+            ops.Sgate(1.0) | q[0]
+            ops.Measure | q[0]
+            ops.BSgate(1.4, 0.4) | q[1:3]
+            ops.Measure | q[2]
+            ops.Rgate(-1.0) | q[1]
+            ops.Measure | q[1]
+
+        prog = prog.compile('gbs')
+        assert len(prog) == 4
+        assert prog.circuit[-1].op.__class__ == ops.MeasureFock
+        assert [x.ind for x in prog.circuit[-1].reg] == list(range(3))

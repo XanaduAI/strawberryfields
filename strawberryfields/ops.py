@@ -290,9 +290,10 @@ from scipy.linalg import block_diag
 from scipy.special import factorial as fac
 
 import strawberryfields as sf
+import strawberryfields.program_utils as pu
 from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
-from .program import (Program, Command, RegRefTransform, MergeFailure)
+from .program_utils import (Command, RegRefTransform, MergeFailure)
 from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
                          sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2,
                          transpose, squeeze)
@@ -300,7 +301,6 @@ from .decompositions import clements, bloch_messiah, williamson, graph_embed
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
-# pylint: disable=too-many-arguments
 
 # numerical tolerances
 _decomposition_merge_tol = 1e-13
@@ -396,7 +396,7 @@ class Operation:
         if (not reg) or (self.ns is not None and self.ns != len(reg)):
             raise ValueError("Wrong number of subsystems.")
         # append it to the Program
-        reg = Program._current_context.append(self, reg)
+        reg = pu.Program_current_context.append(self, reg)
         return reg
 
     def merge(self, other):
@@ -414,8 +414,7 @@ class Operation:
             the identity gate (doing nothing).
 
         Raises:
-            ~strawberryfields.engine.MergeFailure: if the two
-                operations cannot be merged
+            .MergeFailure: if the two operations cannot be merged
         """
         # todo: Using the return value None to denote the identity is a
         # bit dangerous, since a function with no explicit return statement
@@ -743,46 +742,50 @@ class Gate(Transformation):
         self.p = temp  # restore original unevaluated Parameter instances
 
     def merge(self, other):
-        # can be merged if they are the same class and share all the other parameters
-        if isinstance(other, self.__class__) and self.p[1:] == other.p[1:] \
-           and len(self._extra_deps)+len(other._extra_deps) == 0:
+        if not self.__class__ == other.__class__:
+            raise MergeFailure('Not the same gate family.')
+
+        if len(self._extra_deps)+len(other._extra_deps) == 0:
             # no extra dependencies <=> no RegRefTransform parameters,
             # with which we cannot do arithmetic at the moment
-            # make sure the gates have the same dagger flag, if not, invert the second p[0]
-            if self.dagger == other.dagger:
-                temp = other.p[0]
-            else:
-                temp = -other.p[0]
-            # now we can add up the parameters and keep self.dagger
-            p0 = self.p[0] + temp
-            if p0 == 0:
-                return None  # identity gate
 
-            # return a copy
-            # HACK: some of the subclass constructors only take a single parameter,
-            # some take two, none take three
-            if len(self.p) == 1:
-                temp = self.__class__(p0)
-            else:
-                temp = self.__class__(p0, *self.p[1:])
-            # NOTE deepcopy would make copies of RegRefs inside a possible
-            # RegRefTransformation parameter, RegRefs must not be copied.
-            # OTOH copy results in temp having the same p list as self,
-            # which we would modify below.
-            #temp = copy.copy(self)
-            #temp.p[0] = p0
-            temp.dagger = self.dagger
-            return temp
+            # gates can be merged if they are the same class and share all the other parameters
+            if self.p[1:] == other.p[1:]:
+                # make sure the gates have the same dagger flag, if not, invert the second p[0]
+                if self.dagger == other.dagger:
+                    temp = other.p[0]
+                else:
+                    temp = -other.p[0]
+                # now we can add up the parameters and keep self.dagger
+                p0 = self.p[0] + temp
+                if p0 == 0:
+                    return None  # identity gate
 
-        if isinstance(other, self.__class__):
+                # return a copy
+                # HACK: some of the subclass constructors only take a single parameter,
+                # some take two, none take three
+                if len(self.p) == 1:
+                    temp = self.__class__(p0)
+                else:
+                    temp = self.__class__(p0, *self.p[1:])
+                # NOTE deepcopy would make copies of RegRefs inside a possible
+                # RegRefTransformation parameter, RegRefs must not be copied.
+                # OTOH copy results in temp having the same p list as self,
+                # which we would modify below.
+                #temp = copy.copy(self)
+                #temp.p[0] = p0
+                temp.dagger = self.dagger
+                return temp
+
+        else:
+            # gates have RegRefTransform parameters:
             # without knowing anything more specific about the gates, we
             # can only merge them if they are each others' inverses
-            if self.dagger != other.dagger:
+            if self.p == other.p and self.dagger != other.dagger:
                 return None
 
-            raise MergeFailure("Don't know how to merge these gates.")
+        raise MergeFailure("Don't know how to merge these gates.")
 
-        raise MergeFailure('Not the same gate family.')
 
 
 # ====================================================================
@@ -1523,7 +1526,7 @@ class _Delete(MetaOperation):
 
     def __or__(self, reg):
         reg = super().__or__(reg)
-        Program._current_context._delete_subsystems(reg)
+        pu.Program_current_context._delete_subsystems(reg)
 
     def _apply(self, reg, backend, **kwargs):
         backend.del_mode(reg)
@@ -1545,12 +1548,12 @@ def New(n=1):
     Returns:
         tuple[RegRef]: tuple of the newly added subsystem references
     """
-    if Program._current_context is None:
+    if pu.Program_current_context is None:
         raise RuntimeError('New() can only be called inside a Program context.')
     # create RegRefs for the new modes
-    refs = Program._current_context._add_subsystems(n)
+    refs = pu.Program_current_context._add_subsystems(n)
     # append the actual Operation to the Program
-    Program._current_context.append(_New_modes(n), refs)
+    pu.Program_current_context.append(_New_modes(n), refs)
     return refs
 
 
@@ -1600,9 +1603,9 @@ class All(MetaOperation):
         reg = _seq_to_list(reg)
         # convert into commands
         # make sure reg does not contain duplicates (we feed them to Program.append() one by one)
-        Program._current_context._test_regrefs(reg)
+        pu.Program_current_context._test_regrefs(reg)
         for r in reg:
-            Program._current_context.append(self.op, [r])
+            pu.Program_current_context.append(self.op, [r])
 
 
 # ====================================================================
