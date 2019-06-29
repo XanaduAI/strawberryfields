@@ -26,7 +26,8 @@ Expressions that are grouped together are used synonymously in the Strawberry Fi
 
    device
       Something that can run a well-defined subclass of quantum :term:`programs <program>`.
-      The same device can potentially be evaluated on more than one :term:`backend`, and each :term:`backend` can implement one or more devices.
+      The same device can potentially be evaluated on more than one :term:`backend`, and each
+      :term:`backend` can implement one or more devices.
       See: :class:`.DeviceSpecs`
 
    equivalent circuit
@@ -37,6 +38,12 @@ Expressions that are grouped together are used synonymously in the Strawberry Fi
    engine
       A class for executing quantum :term:`programs <program>` on a specific :term:`backend`.
       See: :class:`.BaseEngine`
+
+   frontend
+      All components of Strawberry Fields that are user-facing. Includes the user interface
+      (:term:`engine`, :term:`program`, :term:`operation`);
+      excludes the :term:`backends <backend>`.
+      See: :class:`.BaseEngine`, :class:`.Program`, :mod:`Operation <.ops>`
 
    gate
    quantum gate
@@ -60,3 +67,9 @@ Expressions that are grouped together are used synonymously in the Strawberry Fi
    qumode
       A quantum system (or a simulation of one) storing the state of the quantum computation.
       Typically consists of several subsystems (which in CV quantum computing are called modes).
+
+   state preparation
+   preparation
+      An operation where a quantum system or subsystem is prepared in a known fixed state.
+      Typically accomplished by applying a specific sequence of gates to a known
+      reference state.
