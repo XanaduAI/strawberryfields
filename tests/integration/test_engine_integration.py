@@ -453,14 +453,90 @@ class TestResults:
         assert res.measured_modes == expected_measured_modes[perm]
         assert res.samples_array == expected_samples_array[perm]
 
+    @pytest.mark.backends("gaussian")
+    def test_results_measure_heterodyne_no_shots(self, eng):
+        """Tests the Results object when all modes are measured with heterodyne
+           and no value for ``shots`` is given"""
+
+        p = sf.Program(3)
+        with p.context as q:
+            ops.MeasureHeterodyne | q[1]
+        res = eng.run(p)
+
+        assert type(res.samples) == dict
+        assert res.samples.keys == [1]
+        assert type(res.samples[1]) == float
+        assert res.measured_modes == [1]
+        assert type(res.samples_array) == np.ndarray
+        assert res.samples_array.dtype == float
+        assert res.samples.shape == (1,)
+
+    @pytest.mark.backends("gaussian")
+    def test_results_measure_heterodyne_shots(self, eng):
+        """Tests the Results object when all modes are measured with heterodyne
+           and a value for ``shots`` is given"""
+
+        # TODO: replace with proper test when implemented
+        shots = 5
+        p = sf.Program(3)
+        with p.context as q:
+            ops.MeasureHeterodyne | q[1]
+        with pytest.raises(NotImplementedError,
+                           match="{} backend currently does not support "
+                                 "shots != 1 for heterodyne measurement".format(backend._short_name)):
+            res = eng.run(p, shots=shots)
+
+    def test_results_measure_homodyne_no_shots(self, eng):
+        """Tests the Results object when all modes are measured with heterodyne
+           and no value for ``shots`` is given"""
+
+        p = sf.Program(3)
+        with p.context as q:
+            ops.MeasureHomodyne | q[1]
+        res = eng.run(p)
+
+        assert type(res.samples) == dict
+        assert res.samples.keys == [1]
+        assert type(res.samples[1]) == float
+        assert res.measured_modes == [1]
+        assert type(res.samples_array) == np.ndarray
+        assert res.samples_array.dtype == float
+        assert res.samples.shape == (1,)
+
+    def test_results_measure_homodyne_shots(self, eng):
+        """Tests the Results object when all modes are measured with homodyne
+           and a value for ``shots`` is given"""
+
+        # TODO: replace with proper test when implemented
+        shots = 5
+        p = sf.Program(3)
+        with p.context as q:
+            ops.MeasureHomodyne | q[1]
+        with pytest.raises(NotImplementedError,
+                           match="{} backend currently does not support "
+                                 "shots != 1 for homodyne measurement".format(backend._short_name)):
+            res = eng.run(p, shots=shots)
+
     @pytest.mark.backends("tf")
-    def test_results_batched_no_shots(self, eng):
-        """Tests the Results object when a batched computation is run,
-           and no value for ``shots`` is given."""
+    def test_results_batched_all_measure_fock_no_shots(self, eng):
+        """Tests the Results object when all modes are measured in the Fock basis
+            in batch mode and no value for ``shots`` is given."""
         assert False
 
     @pytest.mark.backends("tf")
-    def test_results_batched_shots(self, eng):
-        """Tests the Results object when a batched computation is run,
-           and a value for ``shots`` is given."""
+    def test_results_batched_subset_measure_fock_no_shots(self, eng):
+        """Tests the Results object when a subset of modes are measured in the Fock basis
+            in batch mode and no value for ``shots`` is given."""
+        assert False
+
+    @pytest.mark.backends("tf")
+    def test_results_batched_subset_measure_fock_shots(self, eng):
+        """Tests the Results object when all modes are measured in the Fock basis
+            in batch mode and a value for ``shots`` is given."""
+        assert False
+
+    @pytest.mark.backends("tf")
+    def test_results_batched_subset_measure_fock_shots(self, eng):
+        """Tests the Results object when a subset of modes are measured in the Fock basis
+            in batch mode and a value for ``shots`` is given."""
         assert False

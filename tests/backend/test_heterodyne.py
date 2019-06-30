@@ -80,3 +80,17 @@ class TestHeterodyne:
         xvar = xi.std() ** 2 + xr.std() ** 2
 
         assert np.allclose(np.sqrt(xvar), np.sqrt(0.5), atol=std_10 + tol, rtol=0)
+
+    def shots_not_implemented_heterodyne(self, setup_backend):
+        """Tests that heterodyne measurements are not implemented when shots != 1.
+        Should be deleted when this functionality is implemented."""
+
+        backend = setup_backend(3)
+
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for heterodyne measurement".format(backend._short_name)):
+            backend.measure_homodyne([0, 1], shots=5)
+
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for heterodyne measurement".format(backend._short_name)):
+            backend.measure_homodyne([0, 1], shots=-5)
