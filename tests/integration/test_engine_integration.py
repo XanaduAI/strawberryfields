@@ -19,7 +19,7 @@ import numpy as np
 
 import strawberryfields as sf
 from strawberryfields import ops
-from strawberryfields.backends import BaseGaussian, BaseFock
+from strawberryfields.backends import BaseFock
 from strawberryfields.backends import GaussianBackend, FockBackend
 from strawberryfields.backends.states import BaseState
 
@@ -34,6 +34,7 @@ else:
         ("gaussian", GaussianBackend),
         ("fock", FockBackend),
     ]
+    from tensorflow import Tensor
 
 
 # make test deterministic
@@ -107,22 +108,7 @@ class TestProperExecution:
         eng, prog = setup_eng(2)
         res = eng.run(prog)
         assert isinstance(res.state, BaseState)
-
-    def test_return_samples(self, setup_eng):
-        """Engine returns measurement samples."""
-        eng, prog = setup_eng(2)
-        with prog.context as q:
-            ops.MeasureX | q[0]
-
-        res = eng.run(prog, modes=[])
-        # one entry for each mode
-        assert len(res.samples) == 2
-        # the same samples can also be found in the regrefs
-        assert [r.val for r in prog.register] == res.samples
-        # first mode was measured
-        assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
-        # second mode was not measured
-        assert res.samples[1] is None
+        assert res.state.num_modes == 2
 
     # TODO: Some of these tests should probably check *something* after execution
 
@@ -326,6 +312,37 @@ class TestProperExecution:
 class TestResults:
     """Integration tests for the Results class"""
 
+    def test_results_no_meas(self, eng):
+        """Tests the Results object when a program containing no measurements is run."""
+
+        p = sf.Program(3)
+        with p.context as q:
+            ops.Dgate(0.1) | q[0]
+        res = eng.run(p)
+
+        assert type(res.samples) == dict
+        assert len(res.samples) == 0
+        assert type(res.measured_modes) == list
+        assert len(res.measured_modes) == 0
+        assert type(res.samples_array) == np.ndarray
+        assert res.samples_array.shape == (0,)  # no entries or axes yet
+
+    def test_return_samples(self, setup_eng):
+        """Engine returns measurement samples."""
+        eng, prog = setup_eng(2)
+        with prog.context as q:
+            ops.MeasureX | q[0]
+
+        res = eng.run(prog, modes=[])
+        # one entry for each mode
+        assert len(res.samples) == 2
+        # the same samples can also be found in the regrefs
+        assert [r.val for r in prog.register] == res.samples
+        # first mode was measured
+        assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
+        # second mode was not measured
+        assert res.samples[1] is None
+
     def test_results_all_measure_fock_no_shots(self, eng):
         """Tests the Results object when all modes are measured in the Fock basis
             and no value for ``shots`` is given."""
@@ -518,25 +535,208 @@ class TestResults:
             res = eng.run(p, shots=shots)
 
     @pytest.mark.backends("tf")
-    def test_results_batched_all_measure_fock_no_shots(self, eng):
+    def test_results_batched_all_measure_fock_no_shots(self):
         """Tests the Results object when all modes are measured in the Fock basis
             in batch mode and no value for ``shots`` is given."""
-        assert False
+
+        batch_size = 3
+        expected_keys = [0, 1, 2]
+
+        # measured in canonical order
+        eng = sf.Engine("tf", backend_options={"batch_size": batch_size})
+        p1 = sf.Program(3)
+        with p1.context as q:
+            ops.Measure | q
+        res = eng.run(p1)
+
+        assert type(res.samples) == dict
+        assert res.samples.keys == expected_keys
+        assert all(type(s) == Tensor for s in res.samples)
+        assert all(s.shape == (batch_size, 1) for s in res.samples)
+        assert res.measured_modes == expected_keys
+        assert type(res.samples_array) == Tensor
+        assert res.samples_array.dtype == float
+        assert res.samples.shape == (batch_size, 1)
+
+        # measured in non-canonical order
+        p2 = sf.Program(3)
+        with p2.context as q:
+            ops.Measure | (q[2], q[1], q[0])
+        res = eng.run(p2)
+
+        perm = [2, 1, 0]
+
+        assert type(res.samples) == dict
+        assert res.samples.keys == expected_keys
+        assert all(type(s) == Tensor for s in res.samples)
+        assert all(s.shape == (batch_size, 1) for s in res.samples)
+        assert res.measured_modes == expected_keys[perm]
+        assert type(res.samples_array) == Tensor
+        assert res.samples_array.dtype == float
+        assert res.samples.shape == (batch_size, 1)
 
     @pytest.mark.backends("tf")
-    def test_results_batched_subset_measure_fock_no_shots(self, eng):
+    def test_results_batched_subset_measure_fock_no_shots(self):
         """Tests the Results object when a subset of modes are measured in the Fock basis
             in batch mode and no value for ``shots`` is given."""
-        assert False
+
+        batch_size = 3
+        expected_keys = [0, 2]
+
+        # measured in canonical order
+        eng = sf.Engine("tf", backend_options={"batch_size": batch_size})
+        p1 = sf.Program(3)
+        with p1.context as q:
+            ops.Measure | (q[0], q[2])
+        res = eng.run(p1)
+
+        assert type(res.samples) == dict
+        assert res.samples.keys == expected_keys
+        assert all(type(s) == Tensor for s in res.samples)
+        assert all(s.shape == (batch_size, 1) for s in res.samples)
+        assert res.measured_modes == expected_keys
+        assert type(res.samples_array) == Tensor
+        assert res.samples_array.dtype == float
+        assert res.samples.shape == (batch_size, 1)
+
+        # measured in non-canonical order
+        p2 = sf.Program(3)
+        with p2.context as q:
+            ops.Measure | (q[2], q[0])
+        res = eng.run(p2)
+
+        perm = [1, 0]
+
+        assert type(res.samples) == dict
+        assert res.samples.keys == expected_keys
+        assert all(type(s) == Tensor for s in res.samples)
+        assert all(s.shape == (batch_size, 1) for s in res.samples)
+        assert res.measured_modes == expected_keys[perm]
+        assert type(res.samples_array) == Tensor
+        assert res.samples_array.dtype == float
+        assert res.samples.shape == (batch_size, 1)
 
     @pytest.mark.backends("tf")
-    def test_results_batched_subset_measure_fock_shots(self, eng):
+    def test_results_batched_all_measure_fock_shots(self):
         """Tests the Results object when all modes are measured in the Fock basis
             in batch mode and a value for ``shots`` is given."""
-        assert False
+
+        batch_size = 3
+        num_meas = 3
+        shots = 3
+        expected_keys = [0, 1, 2]
+
+        # measured in canonical order
+        eng = sf.Engine("tf", backend_options={"batch_size": batch_size})
+        p1 = sf.Program(3)
+        with p1.context as q:
+            ops.Measure | q
+        res = eng.run(p1, shots=shots)
+
+        assert type(res.samples) == dict
+        assert res.samples.keys == expected_keys
+        assert all(type(s) == Tensor for s in res.samples)
+        assert all(s.shape == (batch_size, shots) for s in res.samples)
+        assert res.measured_modes == expected_keys
+        assert type(res.samples_array) == Tensor
+        assert res.samples_array.dtype == float
+        assert res.samples.shape == (batch_size, num_meas, shots)
+
+        # measured in non-canonical order
+        p2 = sf.Program(3)
+        with p2.context as q:
+            ops.Measure | (q[2], q[1], q[0])
+        res = eng.run(p2)
+
+        perm = [2, 1, 0]
+
+        assert type(res.samples) == dict
+        assert res.samples.keys == expected_keys
+        assert all(type(s) == Tensor for s in res.samples)
+        assert all(s.shape == (batch_size, shots) for s in res.samples)
+        assert res.measured_modes == expected_keys[perm]
+        assert type(res.samples_array) == Tensor
+        assert res.samples_array.dtype == float
+        assert res.samples.shape == (batch_size, num_meas, shots)
 
     @pytest.mark.backends("tf")
-    def test_results_batched_subset_measure_fock_shots(self, eng):
+    def test_results_batched_subset_measure_fock_shots(self):
         """Tests the Results object when a subset of modes are measured in the Fock basis
             in batch mode and a value for ``shots`` is given."""
-        assert False
+
+        batch_size = 3
+        num_meas = 2
+        shots = 3
+        expected_keys = [0, 2]
+
+        # measured in canonical order
+        eng = sf.Engine("tf", backend_options={"batch_size": batch_size})
+        p1 = sf.Program(3)
+        with p1.context as q:
+            ops.Measure | (q[0], q[2])
+        res = eng.run(p1)
+
+        assert type(res.samples) == dict
+        assert res.samples.keys == expected_keys
+        assert all(type(s) == Tensor for s in res.samples)
+        assert all(s.shape == (batch_size, shots) for s in res.samples)
+        assert res.measured_modes == expected_keys
+        assert type(res.samples_array) == Tensor
+        assert res.samples_array.dtype == float
+        assert res.samples.shape == (batch_size, num_meas, shots)
+
+        # measured in non-canonical order
+        p2 = sf.Program(3)
+        with p2.context as q:
+            ops.Measure | (q[2], q[0])
+        res = eng.run(p2)
+
+        perm = [1, 0]
+
+        assert type(res.samples) == dict
+        assert res.samples.keys == expected_keys
+        assert all(type(s) == Tensor for s in res.samples)
+        assert all(s.shape == (batch_size, shots) for s in res.samples)
+        assert res.measured_modes == expected_keys[perm]
+        assert type(res.samples_array) == Tensor
+        assert res.samples_array.dtype == float
+        assert res.samples.shape == (batch_size, num_meas, shots)
+
+    @pytest.mark.backends("tf")
+    def test_results_batched_measure_homodyne_no_shots(self):
+        """Tests the Results object when homodyne measurement is made
+            in batch mode and no value for ``shots`` is given."""
+
+        batch_size = 2
+        eng = sf.Engine("tf", backend_options={"batch_size": batch_size})
+        p = sf.Program(3)
+        with p.context as q:
+            ops.MeasureHomodyne | q[1]
+        res = eng.run(p)
+
+        assert type(res.samples) == dict
+        assert res.samples.keys == [1]
+        assert type(res.samples[1]) == Tensor
+        assert res.samples[1].shape == (batch_size, 1)
+        assert res.measured_modes == [1]
+        assert type(res.samples_array) == np.ndarray
+        assert res.samples_array.dtype == float
+        assert res.samples.shape == (batch_size, 1)
+
+    @pytest.mark.backends("tf")
+    def test_results_batched_measure_homodyne_shots(self):
+        """Tests the Results object when homodyne measurement is made
+            in batch mode and no value for ``shots`` is given."""
+
+        # TODO: replace with proper test when implemented
+        # note that this will lead to a different test than
+        # ``test_results_measure_homodyne_shots`` above,
+        # even though they current test for the same thing
+        shots = 5
+        p = sf.Program(3)
+        with p.context as q:
+            ops.MeasureHomodyne | q[1]
+        with pytest.raises(NotImplementedError,
+                           match="{} backend currently does not support "
+                                 "shots != 1 for homodyne measurement".format(backend._short_name)):
+            res = eng.run(p, shots=shots)
