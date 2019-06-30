@@ -56,20 +56,4 @@ corresponding GitHub repository. We will update the status below with a link to 
      and one Gaussian backend (using NumPy). Some ideas for a new backend include:
      - **Gaussian-Tensorflow**: (*status: open*) Duplicate the included Gaussian backend, and add Tensorflow support
      - **MPI support**: (*status: open*) Add MPI support (using mpi4py) to one of the backends
-     - **Circuit drawer**: (*status: open*) Create a backend that outputs a circuit diagram of the executed command queue.
-       This circuit diagram output could be in the form of TeX code, or an svg/eps/png image.
-
- * **Turn circuits into operators**
-   - *Status: open*
-   - Modify Strawberry Fields such that a function returning a sequence of gates can be converted into a
-     quantum `Operator`. One suggestion is to use a decorator to convert the circuit function into an operator:
-     ```python
-     @operator
-     def Circuit([x, y,...], q):
-         Op1(x) | (q[0], q[1])
-         Op2(y) | q[0]
-
-     with eng:
-         Op3() | q[1]
-         Circuit(0.1, 0.2) | q
      ```
