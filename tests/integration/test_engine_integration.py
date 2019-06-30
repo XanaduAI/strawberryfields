@@ -322,3 +322,82 @@ class TestProperExecution:
                            match=r"""(Measure|MeasureFock) has not been implemented in {} """
                                   """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
             eng.run(p1, shots=shots).samples
+
+class TestResults:
+    """Integration tests for the Results class"""
+
+    def test_results_all_measured_no_shots(self, eng):
+        """Tests the Results object when all modes are measured and
+            no value for ``shots`` is given."""
+
+        # measured in canonical order
+        expected_samples = {0: 0,
+                            1: 0,
+                            2: 0}
+        expected_measured_modes = [0, 1, 2]
+        expected_samples_array = np.array([[0], [0], [0]])  # shape = (3,1)
+
+        p1 = sf.Program(3)
+        with p1.context as q:
+            ops.Measure | q
+        res = eng.run(p1)
+
+        assert res.samples == expected_samples
+        assert res.measured_modes == expected_measured_modes
+        assert res.samples_array == expected_samples_array
+
+        # measured in non-canonical order
+        p2 = sf.Program(3)
+        with p2.context as q:
+            ops.Measure | (q[2], q[1], q[0])
+        res = eng.run(p2)
+
+        perm = [2, 1, 0]
+        assert res.samples == expected_samples
+        assert res.measured_modes == expected_measured_modes[perm]
+        assert res.samples_array == expected_samples_array[perm]
+
+    def test_results_subset_measured_no_shots(self, eng):
+        """Tests the Results object when a subset of modes is measured and
+           no value for ``shots`` is given."""
+        expected_samples = {0: 0,
+                            1: 0}
+        expected_measured_modes = [0, 1]
+        expected_samples_array = np.array([[0], [0]])
+
+        # measured in canonical order
+        p1 = sf.Program(3)
+        with p1.context as q:
+            ops.Measure | (q[0], q[1])
+        res = eng.run(p1)
+
+        assert res.samples == expected_samples
+        assert res.measured_modes == expected_measured_modes
+        assert res.samples_array == expected_samples_array
+
+        # measured in non-canonical order
+        p2 = sf.Program(3)
+        with p2.context as q:
+            ops.Measure | (q[1], q[0])
+        res = eng.run(p2)
+
+        perm = [1, 0]
+        assert res.samples == expected_samples
+        assert res.measured_modes == expected_measured_modes[perm]
+        assert res.samples_array == expected_samples_array[perm]
+
+    def test_results_shots(self, eng):
+        """Tests the Results object when a value for ``shots`` is given."""
+        assert False
+
+    @pytest.mark.backends("tf")
+    def test_results_batched_no_shots(self, eng):
+        """Tests the Results object when a batched computation is run,
+           and no value for ``shots`` is given."""
+        assert False
+
+    @pytest.mark.backends("tf")
+    def test_results_batched_shots(self, eng):
+        """Tests the Results object when a batched computation is run,
+           and a value for ``shots`` is given."""
+        assert False

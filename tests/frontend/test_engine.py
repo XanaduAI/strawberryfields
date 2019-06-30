@@ -16,9 +16,12 @@ import pytest
 
 pytestmark = pytest.mark.frontend
 
+from numpy import ndarray
+
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.backends.base import BaseBackend
+
 
 
 @pytest.fixture
@@ -156,3 +159,20 @@ class TestEngineProgramInteraction:
         eng.reset()
         eng.run([p1, p2])
         assert inspect() == expected2
+
+
+class TestResults:
+    """Unit tests for the Results class"""
+
+    def test_results_empty_prog(self, eng):
+        """Tests the Results object when an empty program is run."""
+
+        p = sf.Program(3)
+        res = eng.run(p)
+
+        assert type(res.samples) == dict
+        assert len(res.samples) == 0
+        assert type(res.measured_modes) == list
+        assert len(res.measured_modes) == 0
+        assert type(res.samples_array) == ndarray
+        assert res.samples_array.shape == (0,)  # no entries or axes yet
