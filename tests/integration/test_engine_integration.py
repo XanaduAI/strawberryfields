@@ -45,7 +45,7 @@ c = 0.312
 
 
 @pytest.mark.parametrize("name,expected", eng_backend_params)
-def test_load_backend(name, expected, cutoff):
+def test_load_backend(name, expected):
     """Test backends can be correctly loaded via strings"""
     eng = sf.Engine(name)
     assert isinstance(eng.backend, expected)
@@ -476,7 +476,7 @@ class TestResults:
 
         eng, p = setup_eng(3)
         with p.context as q:
-            ops.MeasureHeterodyne | q[1]
+            ops.MeasureHeterodyne() | q[1]
         res = eng.run(p)
 
         assert type(res.samples) == dict
@@ -509,7 +509,7 @@ class TestResults:
 
         eng, p = setup_eng(3)
         with p.context as q:
-            ops.MeasureHomodyne(0.34) | q[1]
+            ops.MeasureHomodyne(c) | q[1]
         res = eng.run(p)
 
         assert type(res.samples) == dict
@@ -528,7 +528,7 @@ class TestResults:
         shots = 5
         eng, p = setup_eng(3)
         with p.context as q:
-            ops.MeasureHomodyne(0.34) | q[1]
+            ops.MeasureHomodyne(c) | q[1]
         name = eng.backend._short_name.capitalize()
         with pytest.raises(NotImplementedError,
                            match="{} backend currently does not support "
@@ -712,7 +712,7 @@ class TestResults:
         eng = sf.Engine("tf", backend_options={"batch_size": batch_size})
         p = sf.Program(3)
         with p.context as q:
-            ops.MeasureHomodyne | q[1]
+            ops.MeasureHomodyne(c) | q[1]
         res = eng.run(p)
 
         assert type(res.samples) == dict
@@ -736,7 +736,7 @@ class TestResults:
         shots = 5
         p = sf.Program(3)
         with p.context as q:
-            ops.MeasureHomodyne | q[1]
+            ops.MeasureHomodyne(c) | q[1]
         name = eng.backend._short_name.capitalize()
         with pytest.raises(NotImplementedError,
                            match="{} backend currently does not support "
