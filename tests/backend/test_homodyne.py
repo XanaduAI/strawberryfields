@@ -72,16 +72,12 @@ class TestRepresentationIndependent:
 
         assert np.allclose(x.mean(), 2 * alpha.real, atol=std_10 + tol)
 
-    def shots_not_implemented_homodyne(self, setup_backend):
+    def test_shots_not_implemented_homodyne(self, setup_backend):
         """Tests that homodyne measurements are not implemented when shots != 1.
         Should be deleted when this functionality is implemented."""
 
         backend = setup_backend(3)
-
+        name = backend._short_name.capitalize()
         with pytest.raises(NotImplementedError, match="{} backend currently does not support "
-                                                      "shots != 1 for homodyne measurement".format(backend._short_name)):
-            backend.measure_homodyne([0, 1], shots=5)
-
-        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
-                                                      "shots != 1 for homodyne measurement".format(backend._short_name)):
-            backend.measure_homodyne([0, 1], shots=-5)
+                                                      "shots != 1 for homodyne measurement".format(name)):
+            backend.measure_homodyne(1.5, 1, shots=-5)

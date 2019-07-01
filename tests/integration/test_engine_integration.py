@@ -259,7 +259,7 @@ class TestProperExecution:
 
     # TODO: when ``shots`` is incorporated into other backends, unmark this test
     @pytest.mark.backends("gaussian")
-    def test_measurefock_shots(self, setup_eng):
+    def test_measure_fock_shots(self, setup_eng):
         """Tests that passing shots with a program containing MeasureFock
            returns a result whose entries have the right shapes and values"""
         shots = 5
@@ -297,7 +297,7 @@ class TestProperExecution:
 
     # TODO: when ``shots`` is incorporated into other backends, delete this test
     @pytest.mark.backends("tf", "fock")
-    def test_measurefock_shots_exception(self, setup_eng):
+    def test_measure_fock_shots_exception(self, setup_eng):
         shots = 5
         eng, p1 = setup_eng(3)
         with p1.context as q:
@@ -312,10 +312,9 @@ class TestProperExecution:
 class TestResults:
     """Integration tests for the Results class"""
 
-    def test_results_no_meas(self, eng):
+    def test_results_no_meas(self, setup_eng):
         """Tests the Results object when a program containing no measurements is run."""
-
-        p = sf.Program(3)
+        eng, p = setup_eng(3)
         with p.context as q:
             ops.Dgate(0.1) | q[0]
         res = eng.run(p)
@@ -343,7 +342,7 @@ class TestResults:
         # second mode was not measured
         assert res.samples[1] is None
 
-    def test_results_all_measure_fock_no_shots(self, eng):
+    def test_results_all_measure_fock_no_shots(self, setup_eng):
         """Tests the Results object when all modes are measured in the Fock basis
             and no value for ``shots`` is given."""
 
@@ -354,7 +353,7 @@ class TestResults:
         expected_measured_modes = [0, 1, 2]
         expected_samples_array = np.array([[0], [0], [0]])  # shape = (3,1)
 
-        p1 = sf.Program(3)
+        eng, p1 = setup_eng(3)
         with p1.context as q:
             ops.Measure | q
         res = eng.run(p1)
@@ -364,7 +363,7 @@ class TestResults:
         assert res.samples_array == expected_samples_array
 
         # measured in non-canonical order
-        p2 = sf.Program(3)
+        eng, p2 = setup_eng(3)
         with p2.context as q:
             ops.Measure | (q[2], q[1], q[0])
         res = eng.run(p2)
@@ -374,7 +373,7 @@ class TestResults:
         assert res.measured_modes == expected_measured_modes[perm]
         assert res.samples_array == expected_samples_array[perm]
 
-    def test_results_subset_measure_fock_no_shots(self, eng):
+    def test_results_subset_measure_fock_no_shots(self, setup_eng):
         """Tests the Results object when a subset of modes are measured in the Fock basis
             and no value for ``shots`` is given."""
         expected_samples = {0: 0,
@@ -383,7 +382,7 @@ class TestResults:
         expected_samples_array = np.array([[0], [0]])
 
         # measured in canonical order
-        p1 = sf.Program(3)
+        eng, p1 = setup_eng(3)
         with p1.context as q:
             ops.Measure | (q[0], q[2])
         res = eng.run(p1)
@@ -393,7 +392,7 @@ class TestResults:
         assert res.samples_array == expected_samples_array
 
         # measured in non-canonical order
-        p2 = sf.Program(3)
+        eng, p2 = setup_eng(3)
         with p2.context as q:
             ops.Measure | (q[2], q[0])
         res = eng.run(p2)
@@ -403,7 +402,7 @@ class TestResults:
         assert res.measured_modes == expected_measured_modes[perm]
         assert res.samples_array == expected_samples_array[perm]
 
-    def test_results_all_measure_fock_with_shots(self, eng):
+    def test_results_all_measure_fock_with_shots(self, setup_eng):
         """Tests the Results object when all modes are measured in the Fock basis
             and a value for ``shots`` is given."""
 
@@ -417,7 +416,7 @@ class TestResults:
         expected_measured_modes = [0, 1, 2]
         expected_samples_array = np.array([zeros] * 3)  # shape = (3,5)
 
-        p1 = sf.Program(3)
+        eng, p1 = setup_eng(3)
         with p1.context as q:
             ops.Measure | q
         res = eng.run(p1, shots=shots)
@@ -427,7 +426,7 @@ class TestResults:
         assert res.samples_array == expected_samples_array
 
         # measured in non-canonical order
-        p2 = sf.Program(3)
+        eng, p2 = setup_eng(3)
         with p2.context as q:
             ops.Measure | (q[2], q[1], q[0])
         res = eng.run(p2, shots=shots)
@@ -437,7 +436,7 @@ class TestResults:
         assert res.measured_modes == expected_measured_modes[perm]
         assert res.samples_array == expected_samples_array[perm]
 
-    def test_results_subset_measure_fock_with_shots(self, eng):
+    def test_results_subset_measure_fock_with_shots(self, setup_eng):
         """Tests the Results object when a subset of modes are measured in the Fock basis
             and a value for ``shots`` is given."""
 
@@ -450,7 +449,7 @@ class TestResults:
         expected_measured_modes = [0, 2]
         expected_samples_array = np.array([zeros] * 2)  # shape = (2,5)
 
-        p1 = sf.Program(3)
+        eng, p1 = setup_eng(3)
         with p1.context as q:
             ops.Measure | (q[0], q[2])
         res = eng.run(p1, shots=shots)
@@ -460,7 +459,7 @@ class TestResults:
         assert res.samples_array == expected_samples_array
 
         # measured in non-canonical order
-        p2 = sf.Program(3)
+        eng, p2 = setup_eng(3)
         with p2.context as q:
             ops.Measure | (q[2], q[0])
         res = eng.run(p2, shots=shots)
@@ -471,11 +470,11 @@ class TestResults:
         assert res.samples_array == expected_samples_array[perm]
 
     @pytest.mark.backends("gaussian")
-    def test_results_measure_heterodyne_no_shots(self, eng):
+    def test_results_measure_heterodyne_no_shots(self, setup_eng):
         """Tests the Results object when all modes are measured with heterodyne
            and no value for ``shots`` is given"""
 
-        p = sf.Program(3)
+        eng, p = setup_eng(3)
         with p.context as q:
             ops.MeasureHeterodyne | q[1]
         res = eng.run(p)
@@ -489,27 +488,28 @@ class TestResults:
         assert res.samples.shape == (1,)
 
     @pytest.mark.backends("gaussian")
-    def test_results_measure_heterodyne_shots(self, eng):
+    def test_results_measure_heterodyne_shots(self, setup_eng):
         """Tests the Results object when all modes are measured with heterodyne
            and a value for ``shots`` is given"""
 
+        eng, p = setup_eng(3)
         # TODO: replace with proper test when implemented
         shots = 5
-        p = sf.Program(3)
         with p.context as q:
-            ops.MeasureHeterodyne | q[1]
+            ops.MeasureHeterodyne() | q[1]
+        name = eng.backend._short_name.capitalize()
         with pytest.raises(NotImplementedError,
                            match="{} backend currently does not support "
-                                 "shots != 1 for heterodyne measurement".format(backend._short_name)):
+                                 "shots != 1 for heterodyne measurement".format(name)):
             res = eng.run(p, shots=shots)
 
-    def test_results_measure_homodyne_no_shots(self, eng):
+    def test_results_measure_homodyne_no_shots(self, setup_eng):
         """Tests the Results object when all modes are measured with heterodyne
            and no value for ``shots`` is given"""
 
-        p = sf.Program(3)
+        eng, p = setup_eng(3)
         with p.context as q:
-            ops.MeasureHomodyne | q[1]
+            ops.MeasureHomodyne(0.34) | q[1]
         res = eng.run(p)
 
         assert type(res.samples) == dict
@@ -520,18 +520,19 @@ class TestResults:
         assert res.samples_array.dtype == float
         assert res.samples.shape == (1,)
 
-    def test_results_measure_homodyne_shots(self, eng):
+    def test_results_measure_homodyne_shots(self, setup_eng):
         """Tests the Results object when all modes are measured with homodyne
            and a value for ``shots`` is given"""
 
         # TODO: replace with proper test when implemented
         shots = 5
-        p = sf.Program(3)
+        eng, p = setup_eng(3)
         with p.context as q:
-            ops.MeasureHomodyne | q[1]
+            ops.MeasureHomodyne(0.34) | q[1]
+        name = eng.backend._short_name.capitalize()
         with pytest.raises(NotImplementedError,
                            match="{} backend currently does not support "
-                                 "shots != 1 for homodyne measurement".format(backend._short_name)):
+                                 "shots != 1 for homodyne measurement".format(name)):
             res = eng.run(p, shots=shots)
 
     @pytest.mark.backends("tf")
@@ -736,7 +737,8 @@ class TestResults:
         p = sf.Program(3)
         with p.context as q:
             ops.MeasureHomodyne | q[1]
+        name = eng.backend._short_name.capitalize()
         with pytest.raises(NotImplementedError,
                            match="{} backend currently does not support "
-                                 "shots != 1 for homodyne measurement".format(backend._short_name)):
+                                 "shots != 1 for homodyne measurement".format(name)):
             res = eng.run(p, shots=shots)

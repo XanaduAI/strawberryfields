@@ -327,7 +327,7 @@ class TFBackend(BaseFock):
             float or tf.Tensor: measurement outcome
         """
         if shots != 1:
-            raise NotImplementedError("TF backend currently does not support "
+            raise NotImplementedError("Tf backend currently does not support "
                                       "shots != 1 for homodyne measurement")
         with tf.name_scope('Measure_homodyne'):
             remapped_mode = self._remap_modes(mode)
