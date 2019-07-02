@@ -18,11 +18,11 @@ pytestmark = pytest.mark.frontend
 
 import numpy as np
 
-import strawberryfields as sf
 import strawberryfields.program_utils as pu
 
 from strawberryfields import ops
-from strawberryfields.program import (Program, MergeFailure, RegRefError)
+from strawberryfields.program import Program
+from strawberryfields.program_utils import MergeFailure, RegRefError
 from strawberryfields import utils
 from strawberryfields.parameters import Parameter
 
@@ -40,7 +40,7 @@ class TestGateBasics:
     @pytest.fixture(autouse=True)
     def prog(self):
         """Dummy program context for each test"""
-        prog = sf.Program(2)
+        prog = Program(2)
         pu.Program_current_context = prog
         yield prog
         pu.Program_current_context = None
@@ -167,7 +167,7 @@ class TestGateBasics:
 
 def test_merge_regrefs():
     """Test merging two gates with regref parameters."""
-    prog = sf.Program(2)
+    prog = Program(2)
     with prog.context as q:
         ops.MeasureX | q[0]
         D = ops.Dgate(q[0])

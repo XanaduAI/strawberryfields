@@ -21,7 +21,7 @@ import numpy as np
 import strawberryfields as sf
 
 from strawberryfields import ops
-from strawberryfields.program import MergeFailure
+from strawberryfields.program_utils import MergeFailure
 from strawberryfields import utils
 from strawberryfields.parameters import Parameter
 
