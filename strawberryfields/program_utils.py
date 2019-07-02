@@ -28,7 +28,7 @@ __all__ = ['Program_current_context', '_convert', 'RegRefError', 'CircuitError',
 
 
 Program_current_context = None
-"""Context for inputting a Program. Used to be a class attribute of :class:`.Program`, moved
+"""Context for inputting a Program. Used to be a class attribute of :class:`.Program`, placed
 here to avoid cyclic imports."""
 # todo: Avoid issues with Program contexts and threading,
 # cf. _pydecimal.py in the python standard distribution.
@@ -421,7 +421,6 @@ def optimize_circuit(seq):
     Returns:
         List[Command]: optimized circuit
     """
-    # print('\n\nOptimizing...\nUnused inds: ', self.unused_indices)
     def _print_list(i, q, print_fn=print):
         "For debugging."
         # pylint: disable=unreachable
@@ -432,15 +431,12 @@ def optimize_circuit(seq):
         print_fn()
 
     grid = list_to_grid(seq)
-    # for k in grid:
-    #    print('mode {}, len {}'.format(k, len(grid[k])))
 
     # try merging neighboring operations on each wire
     # TODO the merging could also be done using the circuit DAG, which
     # might be smarter (ns>1 would be easy)
     for k in grid:
         q = grid[k]
-        #print('\nqumode {}:\n'.format(k))
         i = 0  # index along the wire
         _print_list(i, q)
         while i+1 < len(q):

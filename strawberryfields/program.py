@@ -188,9 +188,9 @@ class Program:
         self.circuit = []
         #: bool: if True, no more Commands can be appended to the Program
         self.locked = False
-        #: str, None: for compiled Programs the short name of the target circuit template, otherwise None
+        #: str, None: for compiled Programs, the short name of the target circuit template, otherwise None
         self.target = None
-        #: Program, None: for compiled Programs this is the original, otherwise None
+        #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
 
         # create subsystem references
@@ -458,7 +458,7 @@ class Program:
         Validates the program against the given target, making sure all the Operations
         used are accepted by the target template.
         Additionally, depending on the target, the compilation may modify the quantum circuit
-        into an equivalent circuit, e.g. by decomposing certain gates into sequences
+        into an equivalent circuit, e.g., by decomposing certain gates into sequences
         of simpler gates, or optimizing the gate ordering using commutation rules.
 
         The returned compiled Program shares its :class:`RegRefs <RegRef>` with the original,
@@ -484,7 +484,7 @@ class Program:
         elif target in specs.backend_specs:
             db = specs.backend_specs[target]()
         else:
-            raise ValueError("Could not find target '{}' in Strawberry Fields database".format(target))
+            raise ValueError("Could not find target '{}' in Strawberry Fields template database".format(target))
 
         if db.modes is not None:
             # subsystems may be created and destroyed, this is total number that has ever existed

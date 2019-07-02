@@ -248,7 +248,7 @@ class TestOptimizer:
         assert len(prog) == 0
 
     def test_merge_palindromic_cancelling(self, permute_gates):
-        """Optimizer merging chains that cancel out with palindromically"""
+        """Optimizer merging chains that cancel out palindromically"""
         prog = sf.Program(3)
 
         with prog.context:
