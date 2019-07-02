@@ -27,7 +27,7 @@ from strawberryfields import utils
 from strawberryfields.parameters import Parameter
 
 # make test deterministic
-np.random.random(42)
+np.random.seed(42)
 A = np.random.random()
 B = np.random.random()
 C = np.random.random()

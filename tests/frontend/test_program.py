@@ -28,7 +28,7 @@ from strawberryfields.devicespecs.device_specs import DeviceSpecs
 
 
 # make test deterministic
-np.random.random(42)
+np.random.seed(42)
 A = np.random.random()
 
 
