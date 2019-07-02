@@ -75,6 +75,7 @@ Code details
 
 import abc
 from collections.abc import Sequence
+from numpy import stack, shape
 
 from .backends import load_backend
 from .backends.base import (NotApplicableError, BaseBackend)
@@ -89,7 +90,10 @@ class Result:
     def __init__(self, samples):
         #: BaseState: quantum state object returned by a local backend, if any
         self.state = None
-        #: List[List[Number]]: measurement samples, shape == (modes, shots)
+        #: array(array(Number)): measurement samples, shape == (modes,) or shape == (shots, modes)
+        # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
+        if len(shape(samples)) > 1:
+            samples = stack(samples, 1)
         self.samples = samples
 
     def __str__(self):
@@ -167,18 +171,19 @@ class BaseEngine(abc.ABC):
         """
 
     @abc.abstractmethod
-    def _run_program(self, prog, **kwargs):
+    def _run_program(self, prog, shots, **kwargs):
         """Execute a single program on the backend.
 
         This method should not be called directly.
 
         Args:
             prog (Program): program to run
+            shots (int): number of independent measurement evaluations for this program
         Returns:
             list[Command]: commands that were applied to the backend
         """
 
-    def _run(self, program, *, compile_options={}, **kwargs):
+    def _run(self, program, *, shots=1, compile_options={}, **kwargs):
         """Execute the given programs by sending them to the backend.
 
         If multiple Programs are given they will be executed sequentially as
@@ -195,6 +200,7 @@ class BaseEngine(abc.ABC):
 
         Args:
             program (Program, Sequence[Program]): quantum programs to run
+            shots (int): number of times the program measurement evaluation is repeated
             compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
 
         The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
@@ -202,6 +208,13 @@ class BaseEngine(abc.ABC):
         Returns:
             Result: results of the computation
         """
+
+        def _broadcast_nones(val, shots):
+            """Helper function to ensure register values have same shape, even if not measured"""
+            if val is None and shots > 1:
+                return [None] * shots
+            return val
+
         if not isinstance(program, Sequence):
             program = [program]
 
@@ -223,13 +236,19 @@ class BaseEngine(abc.ABC):
 
                 # if the program hasn't been compiled for this backend, do it now
                 if p.backend != self.backend_name:
-                    p = p.compile(self.backend_name, **compile_options)
+                    p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
                 p.lock()
+
+                kwargs["shots"] = shots
+                # Note: by putting ``shots`` into keyword arguments, it allows for the
+                # signatures of methods in Operations to remain cleaner, since only
+                # Measurements need to know about shots
 
                 self._run_program(p, **kwargs)
                 self.run_progs.append(p)
                 # store the latest measurement results
-                self.samples = [p.reg_refs[k].val for k in sorted(p.reg_refs)]
+                shots = kwargs.get("shots", 1)
+                self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
                 prev = p
         except Exception as e:
             raise e
@@ -290,16 +309,17 @@ class LocalEngine(BaseEngine):
                 raise NotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
             except NotImplementedError:
                 # command not directly supported by backend API
-                raise NotImplementedError('The operation {} has not been implemented for {}.'.format(cmd.op, self.backend)) from None
+                raise NotImplementedError('The operation {} has not been implemented in {} for the arguments {}.'.format(cmd.op, self.backend, kwargs)) from None
         return applied
 
-    def run(self, program, *, compile_options={}, modes=None, state_options={}, **kwargs):
+    def run(self, program, *, shots=1, compile_options={}, modes=None, state_options={}, **kwargs):
         """Execute the given programs by sending them to the backend.
 
         Extends :meth:`BaseEngine._run`.
 
         Args:
             program (Program, Sequence[Program]): quantum programs to run
+            shots (int): number of times the program measurement evaluation is repeated
             compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
             modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
                 An empty sequence [] means no state object is returned. None returns all the modes.
@@ -311,7 +331,7 @@ class LocalEngine(BaseEngine):
             Result: results of the computation
         """
 
-        result = super()._run(program, compile_options=compile_options, **kwargs)
+        result = super()._run(program, shots=shots, compile_options=compile_options, **kwargs)
         if isinstance(modes, Sequence) and not modes:
             # empty sequence
             pass

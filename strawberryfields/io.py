@@ -35,7 +35,8 @@ import os
 import blackbird
 
 from . import ops
-from .program import Program
+from .program import (Program,)
+from .program_utils import (RegRefTransform,)
 
 
 def to_blackbird(prog, version="1.0"):
@@ -74,7 +75,7 @@ def to_blackbird(prog, version="1.0"):
             if cmd.op.p is not None:
                 for a in cmd.op.p:
                     # check if reg ref transform
-                    if isinstance(a.x, ops.RegRefTransform):
+                    if isinstance(a.x, RegRefTransform):
                         # if a.x.func_str is not None:
                             # TODO: will not satisfy all use cases
                             # as the RegRefTransform string cannot be checked

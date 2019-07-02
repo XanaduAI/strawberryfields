@@ -131,7 +131,7 @@ def backend(monkeypatch):
         m.setattr(dummy_backend, "squeeze", lambda r, modes: None)
         m.setattr(dummy_backend, "rotation", lambda r, modes: None)
         m.setattr(dummy_backend, "beamsplitter", lambda t, r, m1, m2: None)
-        m.setattr(dummy_backend, "measure_homodyne", lambda phi, modes, select: 5)
+        m.setattr(dummy_backend, "measure_homodyne", lambda phi, modes, select, shots: 5)
         m.setattr(dummy_backend, "state", lambda modes: None)
         m.setattr(dummy_backend, "reset", lambda: None)
         dummy_backend.get_cutoff_dim = lambda: 6

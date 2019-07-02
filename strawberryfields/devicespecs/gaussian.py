@@ -18,6 +18,7 @@ from .device_specs import DeviceSpecs
 class GaussianSpecs(DeviceSpecs):
     """Validation data for the Gaussian backend"""
 
+    short_name = 'gaussian'
     modes = None
     local = True
     remote = True
@@ -38,6 +39,7 @@ class GaussianSpecs(DeviceSpecs):
         # measurements
         "MeasureHomodyne",
         "MeasureHeterodyne",
+        "MeasureFock",
         # channels
         "LossChannel",
         "ThermalLossChannel",

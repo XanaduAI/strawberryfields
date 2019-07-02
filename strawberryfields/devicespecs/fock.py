@@ -18,6 +18,7 @@ from .device_specs import DeviceSpecs
 class FockSpecs(DeviceSpecs):
     """Validation data for the Fock backend"""
 
+    short_name = 'fock'
     modes = None
     local = True
     remote = True

@@ -18,7 +18,7 @@ import pytest
 
 import toml
 
-from strawberryfields import configuration as conf
+from strawberryfields._dev import configuration as conf
 
 pytestmark = pytest.mark.frontend
 logging.getLogger().setLevel(1)

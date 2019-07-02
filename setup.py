@@ -30,6 +30,7 @@ requirements = [
     "networkx>=2.0",
     "quantum-blackbird>=0.2.0",
     "python-dateutil>=2.8.0",
+    "hafnian>=0.6",
     "toml",
     "appdirs",
 ]
@@ -57,15 +58,12 @@ info = {
     "package_data": {"strawberryfields": ["backends/data/*"]},
     "include_package_data": True,
     "description": "Open source library for continuous-variable quantum computation",
-    "long_description": open("README.rst").read(),
+    "long_description": open("README.rst", encoding="utf-8").read(),
     "provides": ["strawberryfields"],
     "install_requires": requirements,
     # 'extras_require': extra_requirements,
     "command_options": {
-        "build_sphinx": {
-            "version": ("setup.py", version),
-            "release": ("setup.py", version),
-        }
+        "build_sphinx": {"version": ("setup.py", version), "release": ("setup.py", version)}
     },
 }
 

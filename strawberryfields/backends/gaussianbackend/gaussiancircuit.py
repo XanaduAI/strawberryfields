@@ -14,7 +14,6 @@
 """Gaussian circuit operations"""
 # pylint: disable=duplicate-code,attribute-defined-outside-init
 import numpy as np
-
 from . import ops
 from ..shared_ops import changebasis
 
@@ -223,9 +222,11 @@ class GaussianModes:
 
     def scovmatxp(self):
         r"""Constructs and returns the symmetric ordered covariance matrix in the xp ordering.
-        The ordered for the canonical operators is $ q_1,..,q_n, p_1,...,p_n$.
-        This differes from the ordering used in [1] which is $q_1,p_1,q_2,p_2,...,q_n,p_n$
+
+        The order for the canonical operators is :math:`q_1,..,q_n, p_1,...,p_n`.
+        This differs from the ordering used in [1] which is :math:`q_1,p_1,q_2,p_2,...,q_n,p_n`
         Note that one ordering can be obtained from the other by using a permutation matrix.
+
         Said permutation matrix is implemented in the function changebasis(n) where n is
         the number of modes.
         """
@@ -234,6 +235,22 @@ class GaussianModes:
         mm22 = self.nmat+np.transpose(self.nmat)-self.mmat-np.conj(self.mmat)+np.identity(self.nlen)
         return np.concatenate((np.concatenate((mm11, mm12), axis=1),
                                np.concatenate((np.transpose(mm12), mm22), axis=1)), axis=0).real
+
+    def smeanxp(self):
+        r"""Constructs and returns the symmetric ordered vector of mean in the xp ordering.
+
+        The order for the canonical operators is :math:`q_1, \ldots, q_n, p_1, \ldots, p_n`.
+        This differs from the ordering used in [1] which is :math:`q_1, p_1, q_2, p_2, \ldots, q_n, p_n`.
+        Note that one ordering can be obtained from the other by using a permutation matrix.
+
+        Said permutation matrix is implemented in the function changebasis(n) where n is
+        the number of modes.
+        """
+        nmodes = self.nlen
+        r = np.empty(2*nmodes)
+        r[0:nmodes] = 2*self.mean.real
+        r[nmodes:2*nmodes] = 2*self.mean.real
+        return r
 
     def scovmat(self):
         """Constructs and returns the symmetric ordered covariance matrix as defined in [1]
@@ -377,7 +394,7 @@ class GaussianModes:
         fid = self.fidelity_vacuum()
         return np.abs(fid-1) <= tol
 
-    def measure_dyne(self, covmat, indices):
+    def measure_dyne(self, covmat, indices, shots=1):
         """ Performs the general-dyne measurement specified in covmat, the indices should correspond
         with the ordering of the covmat of the measurement
         covmat specifies a gaussian effect via its covariance matrix. For more information see
@@ -400,18 +417,19 @@ class GaussianModes:
 
         r = self.smean()
         (va, vc) = ops.chop_in_blocks_vector(r, expind)
-        vm = np.random.multivariate_normal(vc, C)
-
-        va = va+np.dot(np.dot(B, np.linalg.inv(C+covmat)), vm-vc)
+        vm = np.random.multivariate_normal(vc, C, size=shots)
+        # The next line is a hack in that it only updates conditioned on the first samples value
+        # should still work if shots = 1
+        va = va+np.dot(np.dot(B, np.linalg.inv(C+covmat)), vm[0]-vc)
         va = ops.reassemble_vector(va, expind)
         self.fromsmean(va)
         return vm
 
-    def homodyne(self, n, eps=0.0002):
+    def homodyne(self, n, shots=1, eps=0.0002):
         """ Performs a homodyne measurement by calling measure dyne an giving it the
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
         covmat = np.diag(np.array([eps**2, 1./eps**2]))
-        res = self.measure_dyne(covmat, [n])
+        res = self.measure_dyne(covmat, [n], shots=shots)
 
         return res
 
