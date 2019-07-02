@@ -75,7 +75,8 @@ Code details
 
 import abc
 from collections.abc import Sequence
-from numpy import stack, shape
+
+import numpy as np
 
 from .backends import load_backend
 from .backends.base import (NotApplicableError, BaseBackend)
@@ -86,15 +87,40 @@ class Result:
 
     Represents the results of the execution of a quantum program.
     Returned by :meth:`.BaseEngine.run`.
+
+    Args:
+        samples (list[list[int, float, None]]): nested list of
+            measurement samples, with shape ``(modes, shots)``
     """
     def __init__(self, samples):
         #: BaseState: quantum state object returned by a local backend, if any
         self.state = None
-        #: array(array(Number)): measurement samples, shape == (modes,) or shape == (shots, modes)
-        # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
-        if len(shape(samples)) > 1:
-            samples = stack(samples, 1)
-        self.samples = samples
+
+        # samples arrives as a list of arrays, need to convert here to a multidimensional array
+        if len(np.shape(samples)) > 1:
+            samples_array = np.stack(samples, 1)
+
+        samples_array = np.array(samples, dtype=np.float64)
+
+        if samples_array.ndim == 1:
+            samples_array = np.expand_dims(samples_array, axis=1)
+
+        #: list[int]: list of measured modes
+        self.measured_modes = np.nonzero(~np.isnan(samples_array).all(axis=1))[0].tolist()
+
+        #: dict[int, list[float, int]]: dictionary mapping measured mode to the resulting
+        # list of samples.
+        self.samples = {m: samples_array[m].item() if len(samples_array[m]) == 1 else list(samples_array[m]) for m in self.measured_modes}
+
+        # remove non-measured modes
+        samples_array = samples_array[~np.isnan(samples_array).all(axis=1)]
+
+        if np.prod(samples_array.shape) == 0:
+            # no modes were measured
+            samples_array = np.array([])
+
+        #: array[float, int, None]: measurement samples, with shape ``(modes, shots)``
+        self.samples_array = samples_array
 
     def __str__(self):
         """String representation."""
