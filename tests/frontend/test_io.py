@@ -433,11 +433,7 @@ class TestBlackbirdToSFConversion:
         bb = blackbird.loads(bb_script)
         prog = io.to_program(bb)
 
-        #assert len(prog) == 1
-        #assert prog.circuit[0].op.__class__.__name__ == "Pgate"
-        #assert prog.circuit[0].reg[0].ind == 0
-        #assert prog.target == 'gaussian'
-
+        assert prog.target == 'gaussian'
         assert len(prog) == 2
         assert prog.circuit[0].op.__class__.__name__ == "Sgate"
         assert prog.circuit[0].reg[0].ind == 0
