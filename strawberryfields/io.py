@@ -51,6 +51,7 @@ def to_blackbird(prog, version="1.0"):
     """
     bb = blackbird.BlackbirdProgram(name=prog.name, version=version)
 
+    # TODO not sure if this makes sense: the program has *already been* compiled using this target
     if prog.target is not None:
         # set the target
         bb._target["name"] = prog.target
@@ -144,10 +145,10 @@ def to_program(bb):
                 # the gate has no arguments
                 gate | regrefs #pylint:disable=expression-not-assigned,pointless-statement
 
-    # set the compile target on the program if a target exists
-    # FIXME what's the purpose of the "target" keyword in Blackbird? should we instead compile the program here for target?
-    if bb.target["name"] is not None:
-        prog.target = bb.target["name"]
+    # compile the program if a compile target is given
+    targ = bb.target
+    if targ["name"] is not None:
+        prog = prog.compile(targ["name"], **targ["options"])
 
     return prog
 
