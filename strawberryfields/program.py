@@ -143,7 +143,7 @@ import networkx as nx
 import strawberryfields.circuitdrawer as sfcd
 import strawberryfields.devicespecs as specs
 import strawberryfields.program_utils as pu
-from .program_utils import (Command, RegRef, CircuitError, RegRefError, MergeFailure)
+from .program_utils import Command, RegRef, CircuitError, RegRefError
 
 
 
@@ -188,8 +188,7 @@ class Program:
         self.circuit = []
         #: bool: if True, no more Commands can be appended to the Program
         self.locked = False
-        #: str, None: for compiled Programs the short name of the target circuit template,
-        # otherwise None
+        #: str, None: for compiled Programs the short name of the target circuit template, otherwise None
         self.target = None
         #: Program, None: for compiled Programs this is the original, otherwise None
         self.source = None
@@ -463,12 +462,12 @@ class Program:
         of simpler gates, or optimizing the gate ordering using commutation rules.
 
         The returned compiled Program shares its :class:`RegRefs <RegRef>` with the original,
-        which makes it easier to access the measurement results, but also necessitates the locking
-        of both the compiled program and the original to make sure the RegRef state remains
-        consistent.
+        which makes it easier to access the measurement results, but also necessitates the
+        :meth:`locking <lock>` of both the compiled program and the original to make sure the
+        RegRef state remains consistent.
 
         Args:
-            target (str, DeviceSpecs): short name of the target circuit template, or the template class itself
+            target (str, DeviceSpecs): short name of the target circuit template, or the template itself
 
         Keyword Args:
             optimize (bool): If True, try to optimize the program by merging and canceling gates.
