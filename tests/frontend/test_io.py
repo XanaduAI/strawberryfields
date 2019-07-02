@@ -436,7 +436,7 @@ class TestBlackbirdToSFConversion:
         assert len(prog) == 1
         assert prog.circuit[0].op.__class__.__name__ == "Pgate"
         assert prog.circuit[0].reg[0].ind == 0
-        assert prog.backend == 'gaussian'
+        assert prog.target == 'gaussian'
 
         # after compilation
         prog = prog.compile('gaussian')
@@ -448,7 +448,7 @@ class TestBlackbirdToSFConversion:
         assert prog.circuit[1].reg[0].ind == 0
 
     # TODO: add ability to Program.compile() to use existing
-    # prog.backend attribute if no argument is provided
+    # prog.target attribute if no argument is provided
     # def test_invalid_compilation(self):
     #     """Test an invalid compilation target raises error on attempted compilation"""
     #     bb_script = """\
@@ -464,7 +464,7 @@ class TestBlackbirdToSFConversion:
     #     assert len(prog) == 1
     #     assert prog.circuit[0].op.__class__.__name__ == "Kgate"
     #     assert prog.circuit[0].reg[0].ind == 0
-    #     assert prog.backend == 'gaussian'
+    #     assert prog.target == 'gaussian'
 
     #     # after compilation
     #     with pytest.raises(CircuitError, match="cannot be used with the gaussian backend"):

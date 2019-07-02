@@ -51,9 +51,9 @@ def to_blackbird(prog, version="1.0"):
     """
     bb = blackbird.BlackbirdProgram(name=prog.name, version=version)
 
-    if prog.backend is not None:
+    if prog.target is not None:
         # set the target
-        bb._target["name"] = prog.backend
+        bb._target["name"] = prog.target
 
     # fill in the quantum circuit
     for cmd in prog.circuit:
@@ -145,8 +145,9 @@ def to_program(bb):
                 gate | regrefs #pylint:disable=expression-not-assigned,pointless-statement
 
     # set the compile target on the program if a target exists
+    # FIXME what's the purpose of the "target" keyword in Blackbird? should we instead compile the program here for target?
     if bb.target["name"] is not None:
-        prog.backend = bb.target["name"]
+        prog.target = bb.target["name"]
 
     return prog
 
