@@ -57,13 +57,13 @@ Top-level functions
 Code details
 ~~~~~~~~~~~~
 """
-from .engine import (Engine, LocalEngine)
+from .engine import (Engine, LocalEngine, StarshipEngine)
 from .io import save, load
 from .program_utils import _convert as convert
 from .program import Program
 from ._version import __version__
 
-__all__ = ["Engine", "LocalEngine", "Program", "convert", "version", "save", "load", "about", "cite"]
+__all__ = ["Engine", "LocalEngine", "StarshipEngine", "Program", "convert", "version", "save", "load", "about", "cite"]
 
 
 #: float: numerical value of hbar for the frontend (in the implicit units of position * momentum)

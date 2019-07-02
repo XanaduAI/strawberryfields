@@ -156,3 +156,61 @@ class TestEngineProgramInteraction:
         eng.reset()
         eng.run([p1, p2])
         assert inspect() == expected2
+
+
+class TestStarshipEngine:
+    """
+    Tests various methods on the remote engine StarshipEngine.
+    """
+
+    def test_job_submitted(self, monkeypatch):
+        """
+        Test that a job is successfully submitted to the APIClient instance.
+        """
+
+        # Note this is currently more of an integration test, currently a WIP / under development.
+
+        from unittest.mock import MagicMock
+
+        from strawberryfields.ops import S2gate, MeasureFock, Rgate, BSgate
+        from strawberryfields import StarshipEngine
+        from strawberryfields.api_client import APIClient
+
+        engine = StarshipEngine()
+
+        # We don't want to actually send any requests, though we should make sure POST was called
+        mock_api_client_post = MagicMock()
+        mock_get= MagicMock()
+        mock_get_response = MagicMock()
+        mock_get_response.status_code = 200
+        mock_get_response.json.return_value = {'status': 'COMPLETE', 'id': 1234}
+        mock_get.return_value = mock_get_response
+
+        mock_post_response = MagicMock()
+        mock_post_response.status_code = 201
+        mock_post_response.json.return_value = {'status': 'QUEUED', 'id': 1234}
+        mock_api_client_post.return_value = mock_post_response
+
+        monkeypatch.setattr(APIClient, "post", mock_api_client_post)
+        monkeypatch.setattr(APIClient, "get", mock_get)
+
+        prog = sf.Program(4)
+        with prog.context as q:
+            S2gate(2)       | [0, 2]
+            S2gate(2)       | [1, 3]
+            Rgate(3)        | 0
+            BSgate()        | [0, 1]
+            Rgate(3)        | 0
+            Rgate(3)        | 1
+            Rgate(3)        | 2
+            BSgate()        | [2, 3]
+            Rgate(3)        | 2
+            Rgate(3)        | 3
+            MeasureFock()   | [0]
+            MeasureFock()   | [1]
+            MeasureFock()   | [2]
+            MeasureFock()   | [3]
+
+        engine.run(prog)
+
+        mock_api_client_post.assert_called_once()

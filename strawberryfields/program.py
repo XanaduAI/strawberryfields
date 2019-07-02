@@ -171,7 +171,6 @@ def _print_list(i, q, print_fn=print):
     print_fn()
 
 
-
 class Program:
     """Represents a quantum circuit.
 
@@ -264,6 +263,14 @@ class Program:
         """
         for k in self.circuit:
             print_fn(k)
+
+    def get_blackbird_syntax(self):
+        """
+        Returns a string containing the Blackbird syntax for this program.
+        """
+
+        commands = [command.get_blackbird_syntax() for command in self.circuit]
+        return "\n".join(commands)
 
     @property
     def context(self):

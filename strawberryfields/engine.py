@@ -74,11 +74,15 @@ Code details
 """
 
 import abc
+import uuid
 from collections.abc import Sequence
 from numpy import stack, shape
+from time import sleep
 
 from .backends import load_backend
 from .backends.base import (NotApplicableError, BaseBackend)
+
+from strawberryfields.api_client import (APIClient, Job)
 
 
 class Result:
@@ -190,10 +194,10 @@ class BaseEngine(abc.ABC):
         parts of a single computation.
         For each :class:`Program` instance given as input, the following happens:
 
-        * The Program instance is compiled and optimized for the target backend.
+        * The Program instance is compiled for the target backend.
         * The compiled program is executed on the backend.
-        * The measurement results of each subsystem (if any) are stored
-          in the :class:`.RegRef` instances of the corresponding Program, as well as in :attr:`~.samples`.
+        * The measurement results of each subsystem (if any) are stored in the :class:`.RegRef`
+          instances of the corresponding Program, as well as in :attr:`~.samples`.
         * The compiled program is appended to self.run_progs.
 
         Finally, the result of the computation is returned.
@@ -209,7 +213,7 @@ class BaseEngine(abc.ABC):
             Result: results of the computation
         """
 
-        def _broadcast_nones(val, shots):
+        def _normalize_sample(val):
             """Helper function to ensure register values have same shape, even if not measured"""
             if val is None and shots > 1:
                 return [None] * shots
@@ -218,45 +222,47 @@ class BaseEngine(abc.ABC):
         if not isinstance(program, Sequence):
             program = [program]
 
-        try:
-            prev = self.run_progs[-1] if self.run_progs else None  # previous program segment
-            for p in program:
-                if prev is None:
-                    # initialize the backend
-                    self._init_backend(p.init_num_subsystems)
-                else:
-                    # there was a previous program segment
-                    if not p.can_follow(prev):
-                        raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
+        kwargs["shots"] = shots
+        # NOTE: by putting ``shots`` into keyword arguments, it allows for the
+        # signatures of methods in Operations to remain cleaner, since only
+        # Measurements need to know about shots
 
-                    # Copy the latest measured values in the RegRefs of p.
-                    # We cannot copy from prev directly because it could be used in more than one engine.
-                    for k, v in enumerate(self.samples):
-                        p.reg_refs[k].val = v
+        if self.backend_name in getattr(self, "HARDWARE_BACKENDS", []):
+            p = program[0]
+            p = p.compile(self.backend_name)  # TODO: does compile need to know about shots?
+            p.lock()
+            self.run_progs.append(p)
+            samples = self._run_program(p, **kwargs)
+            return Result(samples)
 
-                # if the program hasn't been compiled for this backend, do it now
-                if p.backend != self.backend_name:
-                    p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
-                p.lock()
+        prev = self.run_progs[-1] if self.run_progs else None  # previous program segment
+        for p in program:
+            if prev is None:
+                # initialize the backend
+                self._init_backend(p.init_num_subsystems)
+            else:
+                # there was a previous program segment
+                if not p.can_follow(prev):
+                    raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
 
-                kwargs["shots"] = shots
-                # Note: by putting ``shots`` into keyword arguments, it allows for the
-                # signatures of methods in Operations to remain cleaner, since only
-                # Measurements need to know about shots
+                # Copy the latest measured values in the RegRefs of p.
+                # We cannot copy from prev directly because it could be used in more than one engine.
+                for k, v in enumerate(self.samples):
+                    p.reg_refs[k].val = v
 
-                self._run_program(p, **kwargs)
-                self.run_progs.append(p)
-                # store the latest measurement results
-                shots = kwargs.get("shots", 1)
-                self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
-                prev = p
-        except Exception as e:
-            raise e
-        else:
-            # program execution was successful
-            pass
+            # if the program hasn't been compiled for this backend, do it now
+            if p.backend != self.backend_name:
+                p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
+            p.lock()
 
-        return Result(self.samples.copy())
+            self._run_program(p, **kwargs)
+            self.run_progs.append(p)
+
+            reg_refs = [p.reg_refs[k].val for k in sorted(p.reg_refs)]
+            self.samples = map(_normalize_sample, reg_refs)
+            prev = p
+
+        return Result(list(self.samples))
 
 
 class LocalEngine(BaseEngine):
@@ -338,6 +344,129 @@ class LocalEngine(BaseEngine):
         else:
             result.state = self.backend.state(modes, **state_options)  # tfbackend.state can use kwargs
         return result
+
+
+class StarshipEngine(BaseEngine):
+    """
+    Starship quantum program executor engine.
+
+    Executes :class:`.Program` instances on the chosen remote backend, and makes
+    the results available via :class:`.Result`.
+
+    Args:
+        backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
+    """
+
+    API_DEFAULT_REFRESH_SECONDS = 0
+    HARDWARE_BACKENDS = ('chip0', )
+
+    def __init__(self):
+        # Only chip0 backend supported initially.
+        backend = "chip0"
+        super().__init__(backend)
+
+        self.client = APIClient(hostname="localhost")
+        self.jobs = []
+
+    def __str__(self):
+        return self.__class__.__name__ + '({})'.format(self.backend_name)
+
+    def reset(self, backend_options=None):
+        """
+        Reset must be called in order to submit a new job. This clears the job queue as well as
+        any ran Programs.
+        """
+        if backend_options is None:
+            backend_options = {}
+
+        super().reset(backend_options)
+        self.jobs.clear()
+
+    def _init_backend(self, *args):
+        """
+        TODO: This does not do anything rightn now.
+        """
+        # Do nothing for now...
+        pass
+
+    def generate_job_content(self, name, shots, blackbird_code):
+        """
+        Generates a string representing the Blackbird code that will be sent to the server.
+        Assumes the current backend as the target.
+
+        Args:
+            name (str): The name of the job to be created (e.g. StateTeleportation).
+            shots (int): The number of shots.
+            blackbird_code: The blackbird code of the job.
+
+        Returns:
+            str: A string containing the job content to be sent to the server.
+        """
+        target = self.backend_name
+        template = """
+            name {name}
+            version 1.0
+            target {target} (shots={shots})
+
+            {blackbird_code}
+        """.format(
+                name=name,
+                target=target,
+                shots=str(shots),
+                blackbird_code=blackbird_code)
+
+        return "\n".join([l.strip() for l in template.strip().split("\n")])
+
+    def _run_program(self, program, **kwargs):
+        """
+        Given a compiled program, gets the blackbird circuit code and creates (or resumes) a job
+        via the API. If the job is completed, returns the job result.
+
+        A queued job can be interrupted by a KeyboardInterrupt event, at which point if the job ID
+        was retrieved from the server, the job will be accessible via engine.jobs.
+
+        Args:
+            program (strawberryfields.program.Program): A program instance to be executed remotely.
+
+        Returns:
+            (list): A list representing the result samples
+
+        Raises:
+            Exception: In case a job could not be submitted or completed.
+            TypeError: In case a job is already queued and a user is trying to submit a new job.
+        """
+        blackbird_code = program.get_blackbird_syntax()
+        job_content = self.generate_job_content(blackbird_code=blackbird_code, **kwargs)
+
+        if self.jobs:
+            raise TypeError("A job is already queued. Please reset the engine and try again.")
+
+        job = Job(client=self.client)
+        job.manager.create(circuit=job_content)
+        self.jobs.append(job)
+
+        try:
+            while not job.is_complete:
+                job.reload()
+                if job.is_failed:
+                    raise Exception("The job could not be submitted or completed.")
+                sleep(self.API_DEFAULT_REFRESH_SECONDS)
+
+            job.result.manager.get()
+            return job.result.result.value
+        except KeyboardInterrupt:
+            if job.id:
+                print("Job {} is queued in the background.".format(job.id.value))
+            else:
+                raise Exception(
+                    "Job could not be sent to server, please try again later.")
+
+    def run(self, program, shots=1, name=None, **kwargs):
+        """
+        Compile a given program and queue a job in the Starship.
+        """
+        name = name or str(uuid.uuid4())
+        return super()._run(program, shots=shots, name=name, **kwargs)
 
 
 Engine = LocalEngine  # alias for backwards compatibility

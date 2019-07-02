@@ -34,7 +34,6 @@ here to avoid cyclic imports."""
 # cf. _pydecimal.py in the python standard distribution.
 
 
-
 def _convert(func):
     r"""Decorator for converting user defined functions to a :class:`RegRefTransform`.
 
@@ -69,12 +68,14 @@ class RegRefError(IndexError):
     E.g., trying to apply a gate to a nonexistent or deleted subsystem.
     """
 
+
 class CircuitError(RuntimeError):
     """Exception raised by :class:`Program` when it encounters an illegal
     operation in the quantum circuit.
 
     E.g., trying to use a measurement result before it is available.
     """
+
 
 class MergeFailure(RuntimeError):
     """Exception raised by :meth:`strawberryfields.ops.Operation.merge` when an
@@ -109,11 +110,21 @@ class Command:
 
     def __str__(self):
         """Print the command using Blackbird syntax."""
-        temp = str(self.op)
+        return self.get_blackbird_syntax()
+
+    def get_blackbird_syntax(self):
+        """
+        Return a string containing the Blackbird syntac.
+        """
+
+        operation = str(self.op)
         if self.op.ns == 0:
             # op takes no subsystems as parameters, do not print anything more
-            return temp
-        return '{} | ({})'.format(temp, ", ".join([str(rr) for rr in self.reg]))
+            code = operation
+        else:
+            subsystems = ", ".join([str(r) for r in self.reg])
+            code = "{} | ({})".format(operation, subsystems)
+        return code
 
     def __lt__(self, other):
         # Needed as a tiebreaker for NetworkX lexicographical_topological_sort()
