@@ -309,8 +309,11 @@ class Program:
         Returns:
             tuple[RegRef]: tuple of the newly added subsystem references
         """
+        if self.locked:
+            raise CircuitError('The Program is locked, no new subsystems can be created.')
         if not isinstance(n, numbers.Integral) or n < 1:
             raise ValueError('Number of added subsystems {} is not a positive integer.'.format(n))
+
         first_unassigned_index = len(self.reg_refs)
         # create a list of RegRefs
         inds = [first_unassigned_index+i for i in range(n)]
@@ -423,7 +426,7 @@ class Program:
             list[RegRef]: subsystem list as RegRefs
         """
         if self.locked:
-            raise RuntimeError('The Program is locked, no more Commands can be appended to it.')
+            raise CircuitError('The Program is locked, no more Commands can be appended to it.')
 
         # test that the target subsystem references are ok
         reg = self._test_regrefs(reg)
@@ -488,11 +491,11 @@ class Program:
 
         if db.modes is not None:
             # subsystems may be created and destroyed, this is total number that has ever existed
-            temp = len(self.reg_refs)
-            if temp > db.modes:
+            modes_total = len(self.reg_refs)
+            if modes_total > db.modes:
                 raise CircuitError(
                     "This program requires {} modes, but the target '{}' "
-                    "only supports a {}-mode program".format(temp, target, db.modes)
+                    "only supports a {}-mode program".format(modes_total, target, db.modes)
                 )
 
         def compile_sequence(seq):

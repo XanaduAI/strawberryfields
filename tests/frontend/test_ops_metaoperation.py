@@ -21,7 +21,7 @@ import numpy as np
 import strawberryfields.program_utils as pu
 from strawberryfields import ops
 from strawberryfields.program import Program
-from strawberryfields.program_utils import MergeFailure, RegRefError
+from strawberryfields.program_utils import MergeFailure, RegRefError, CircuitError
 from strawberryfields import utils
 from strawberryfields.parameters import Parameter
 
@@ -96,6 +96,18 @@ class TestProgramGateInteraction:
             ops.New(-2)
         with pytest.raises(ValueError, match='is not a positive integer'):
             ops.New(1.5)
+
+    def test_create_locked(self, prog):
+        """No new modes can be created in a locked Program."""
+        prog.lock()
+        with pytest.raises(CircuitError, match='The Program is locked, no new subsystems can be created'):
+            ops.New(1)
+
+    def test_delete_locked(self, prog):
+        """No modes can be deleted in a locked Program."""
+        prog.lock()
+        with pytest.raises(CircuitError, match='The Program is locked, no more Commands can be appended to it'):
+            ops.Del | 0
 
     def test_delete_not_existing(self, prog):
         """deleting nonexistent modes not allowed"""
