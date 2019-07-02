@@ -82,7 +82,7 @@ import warnings
 import dateutil.parser
 import requests
 
-from strawberryfields import configuration
+from strawberryfields._dev import configuration
 
 
 def join_path(base_path, path):
