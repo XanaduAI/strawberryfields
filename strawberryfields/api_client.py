@@ -137,11 +137,7 @@ class APIClient:
         # TODO: Load username, password, or authentication token from
         # configuration file
 
-        config = {
-            "use_ssl": True,
-            "hostname": self.DEFAULT_HOSTNAME,
-            "authentication_token": None,
-        }
+        config = {"use_ssl": True, "hostname": self.DEFAULT_HOSTNAME, "authentication_token": None}
 
         # Try getting everything first from configuration
         config.update(self.get_configuration_from_config())
@@ -273,7 +269,7 @@ class ResourceManager:
         """
         return join_path(self.resource.PATH, path)
 
-    def get(self, resource_id):
+    def get(self, resource_id=None):
         """
         Attempts to retrieve a particular record by sending a GET
         request to the appropriate endpoint. If successful, the resource
@@ -314,11 +310,18 @@ class ResourceManager:
         Args:
             response (requests.Response): A response object to be parsed.
         """
-        self.http_status_code = response.status_code
-        if response.status_code in (200, 201):
-            self.handle_success_response(response)
+        if hasattr(response, "status_code"):
+            self.http_status_code = response.status_code
+
+            if response.status_code in (200, 201):
+                self.handle_success_response(response)
+            else:
+                self.handle_error_response(response)
         else:
-            self.handle_error_response(response)
+            self.handle_no_response()
+
+    def handle_no_response(self):
+        warnings.warn("Your request could not be completed")
 
     def handle_success_response(self, response):
         """
@@ -338,6 +341,11 @@ class ResourceManager:
         """
 
         # TODO: Improve error messaging and parse the actual error output (json).
+
+        # NOTE: This is here temporarily, however we should also handle actual errors returned
+        # from the server after a job is successfully submitted.
+
+        self.resource.status.set("FAILED")
 
         if response.status_code in (400, 404, 409):
             warnings.warn(
@@ -375,6 +383,9 @@ class ResourceManager:
         for field in self.resource.fields:
             field.set(data.get(field.name, None))
 
+        if hasattr(self.resource, "refresh_data"):
+            self.resource.refresh_data()
+
 
 class Resource:
     """
@@ -405,7 +416,7 @@ class Resource:
             raise TypeError("Resource does not have an ID")
 
         if self.id:
-            self.manager.get(self.id)
+            self.manager.get(self.id.value)
         else:
             warnings.warn("Could not reload resource data", UserWarning)
 
@@ -486,16 +497,23 @@ class Job(Resource):
 
         super().__init__(client=client)
 
+    @property
+    def is_complete(self):
+        return self.status.value and self.status.value.upper() == "COMPLETE"
+
+    @property
+    def is_failed(self):
+        # TODO this does not actually exist in the spec yet.
+        return self.status.value and self.status.value.upper() == "FAILED"
+
     def refresh_data(self):
         """
         Refresh the job fields and attach a JobResult and JobCircuit object to the Job instance.
         """
-        super().refresh_data()
-
-        if self.result is not None:
+        if self.result is None:
             self.result = JobResult(self.id, client=self.manager.client)
 
-        if self.circuit is not None:
+        if self.circuit is None:
             self.circuit = JobCircuit(self.id, client=self.manager.client)
 
 
