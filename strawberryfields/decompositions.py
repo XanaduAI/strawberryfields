@@ -46,6 +46,7 @@ from itertools import groupby
 
 import numpy as np
 from scipy.linalg import block_diag, sqrtm, polar, schur
+from hafnian.quantum import find_scaling_adjacency_matrix
 
 from .backends.shared_ops import sympmat, changebasis
 
@@ -107,7 +108,7 @@ def takagi(N, tol=1e-13, rounding=13):
     return rl, U
 
 
-def graph_embed(A, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
+def graph_embed_deprecated(A, max_mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08):
     r"""Embed a graph into a Gaussian state.
 
     Given a graph in terms of a symmetric adjacency matrix
@@ -125,7 +126,8 @@ def graph_embed(A, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
         make_traceless (bool): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
             the graph.
-        tol (float): tolerance used when checking if the input matrix is symmetric: :math:`|A-A^T| <` tol
+        rtol (float): relative tolerance used when checking if the input matrix is symmetric.
+        atol (float): absolute tolerance used when checking if the input matrix is symmetric.
 
     Returns:
         tuple[array, array]: squeezing parameters of the input
@@ -136,15 +138,58 @@ def graph_embed(A, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
     if m != n:
         raise ValueError("The matrix is not square.")
 
-    if np.linalg.norm(A-np.transpose(A)) >= tol:
-        raise ValueError("The matrix is not symmetric.")
+    #if not np.allclose(A, np.transpose(A), rtol=rtol, atol=atol)
+    #    raise ValueError("The matrix is not symmetric.")
 
     if make_traceless:
         A = A - np.trace(A)*np.identity(n)/n
 
-    s, U = takagi(A, tol=tol)
+    s, U = takagi(A, tol=atol)
     sc = np.sqrt(1.0+1.0/max_mean_photon)
     vals = -np.arctanh(s/(s[0]*sc))
+    return vals, U
+
+
+def graph_embed(A, mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08):
+    r"""Embed a graph into a Gaussian state.
+
+    Given a graph in terms of a symmetric adjacency matrix
+    (in general with arbitrary complex off-diagonal and real diagonal entries),
+    returns the squeezing parameters and interferometer necessary for
+    creating the Gaussian state whose off-diagonal parts are proportional to that matrix.
+
+    Uses :func:`takagi`.
+
+    Args:
+        A (array[complex]): square, symmetric (weighted) adjacency matrix of the graph
+        max_mean_photon (float): Threshold value. It guarantees that the mode with
+            the largest squeezing has ``max_mean_photon`` as the mean photon number
+            i.e., :math:`sinh(r_{max})^2 ==` ``max_mean_photon``.
+        make_traceless (bool): Removes the trace of the input matrix, by performing the transformation
+            :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
+            the graph.
+        rtol (float): relative tolerance used when checking if the input matrix is symmetric.
+        atol (float): absolute tolerance used when checking if the input matrix is symmetric.
+
+    Returns:
+        tuple[array, array]: squeezing parameters of the input
+            state to the interferometer, and the unitary matrix representing the interferometer
+    """
+    (m, n) = A.shape
+
+    if m != n:
+        raise ValueError("The matrix is not square.")
+
+    #if not np.allclose(A, np.transpose(A), rtol=rtol, atol=atol)
+    #    raise ValueError("The matrix is not symmetric.")
+
+    if make_traceless:
+        A = A - np.trace(A)*np.identity(n)/n
+
+    scale = find_scaling_adjacency_matrix(A, mean_photon)
+    A = scale*A
+    s, U = takagi(A, tol=atol)
+    vals = -np.arctanh(s)
     return vals, U
 
 

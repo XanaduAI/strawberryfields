@@ -100,18 +100,18 @@ class TestGraphEmbed:
         with pytest.raises(ValueError, match="matrix is not symmetric"):
             dec.graph_embed(A)
 
-    def test_mean_photon(self, tol):
+    def test_max_mean_photon_deprecated(self, tol):
         """This test verifies that the maximum amount of squeezing used to encode
         the graph is indeed capped by the parameter max_mean_photon"""
         max_mean_photon = 2
         A = np.random.random([6, 6]) + 1j * np.random.random([6, 6])
         A += A.T
-        sc, _ = dec.graph_embed(A, max_mean_photon=max_mean_photon)
+        sc, _ = dec.graph_embed_deprecated(A, max_mean_photon=max_mean_photon)
         res_mean_photon = np.sinh(np.max(np.abs(sc))) ** 2
 
         assert np.allclose(res_mean_photon, max_mean_photon, atol=tol, rtol=0)
 
-    def test_make_traceless(self, monkeypatch, tol):
+    def test_make_traceless_deprecated(self, monkeypatch, tol):
         """Test that A is properly made traceless"""
         A = np.random.random([6, 6]) + 1j * np.random.random([6, 6])
         A += A.T
@@ -122,10 +122,18 @@ class TestGraphEmbed:
             # monkeypatch the takagi function to simply return A,
             # so that we can inspect it and make sure it is now traceless
             m.setattr(dec, "takagi", lambda A, tol: (np.ones([6]), A))
-            _, A_out = dec.graph_embed(A, make_traceless=True)
+            _, A_out = dec.graph_embed_deprecated(A, make_traceless=True)
 
         assert np.allclose(np.trace(A_out), 0, atol=tol, rtol=0)
 
+    def test_mean_photon(self, monkeypatch, tol):
+        """Test that the mean phhoton number is correct """
+        A = np.random.random([6, 6]) + 1j * np.random.random([6, 6])
+        A += A.T
+        n_mean = 10.0
+        sc, _ = dec.graph_embed(A, mean_photon=n_mean)
+        n_mean_calc = np.sum(np.sinh(sc)**2)
+        assert np.allclose(n_mean, n_mean_calc, atol=tol, rtol=0)
 
 class TestRectangularDecomposition:
     """Tests for linear interferometer rectangular decomposition"""
