@@ -531,10 +531,10 @@ class TestResults:
         shots = 5
         with p.context as q:
             ops.MeasureHeterodyne() | q[1]
-        name = eng.backend._short_name.capitalize()
+        name = eng.backend.__class__.__name__
         with pytest.raises(NotImplementedError,
-                           match="{} backend currently does not support "
-                                 "shots != 1 for heterodyne measurement".format(name)):
+                           match="The operation (MeasureHeterodyne|MeasureHD) has not been "
+                                 "implemented in {} for the arguments {{'shots': {}}}".format(name, shots)):
             res = eng.run(p, shots=shots)
 
     def test_results_measure_homodyne_no_shots(self, setup_eng):
@@ -566,7 +566,8 @@ class TestResults:
             ops.MeasureHomodyne(c) | q[1]
         name = eng.backend.__class__.__name__
         with pytest.raises(NotImplementedError,
-                           match=r"The operation MeasureHomodyne(0.312) has not been implemented in"):
+                           match="The operation MeasureHomodyne\({}\) has not been "
+                                 "implemented in {} for the arguments {{'shots': {}}}".format(c, name, shots)):
             res = eng.run(p, shots=shots)
 
     #TODO: following tests should be marked to run only when BATCHED=1
@@ -642,8 +643,8 @@ class TestResults:
         p = sf.Program(3)
         with p.context as q:
             ops.MeasureHomodyne(c) | q[1]
-        name = eng.backend._short_name.capitalize()
+        name = eng.backend.__class__.__name__
         with pytest.raises(NotImplementedError,
-                           match="{} backend currently does not support "
-                                 "shots != 1 for homodyne measurement".format(name)):
+                           match="The operation MeasureHomodyne\({}\) has not been "
+                                 "implemented in {} for the arguments {{'shots': {}}}".format(c, name, shots)):
             res = eng.run(p, shots=shots)
