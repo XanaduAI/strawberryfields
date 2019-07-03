@@ -54,7 +54,7 @@ and has the following format:
 
     [api]
     # Options for the Strawberry Fields Cloud API
-    authentatication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
+    authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
     hostname = "localhost"
     use_ssl = true
 
@@ -95,7 +95,7 @@ from appdirs import user_config_dir
 log.getLogger()
 
 
-DEFAULT_CONFIG = {"api": {"authentatication_token": "", "hostname": "localhost", "use_ssl": True}}
+DEFAULT_CONFIG = {"api": {"authentication_token": "", "hostname": "localhost", "use_ssl": True}}
 
 
 class ConfigurationError(Exception):
