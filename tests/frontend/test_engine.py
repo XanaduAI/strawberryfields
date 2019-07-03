@@ -19,6 +19,8 @@ pytestmark = pytest.mark.frontend
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.backends.base import BaseBackend
+from unittest.mock import MagicMock
+from strawberryfields import StarshipEngine
 
 
 @pytest.fixture
@@ -158,29 +160,166 @@ class TestEngineProgramInteraction:
         assert inspect() == expected2
 
 
+@pytest.fixture
+def starship_engine(monkeypatch):
+    """
+    Create a reusable StarshipEngine instance without a real APIClient.
+    """
+    mock_api_client = MagicMock()
+    monkeypatch.setattr("strawberryfields.engine.APIClient", mock_api_client)
+    engine = StarshipEngine()
+    monkeypatch.setattr(engine, "API_DEFAULT_REFRESH_SECONDS", 0)
+    return engine
+
+
 class TestStarshipEngine:
     """
     Tests various methods on the remote engine StarshipEngine.
     """
 
-    def test_job_submitted(self, monkeypatch):
+    def test_init(self, monkeypatch):
         """
-        Test that a job is successfully submitted to the APIClient instance.
+        Tests that a StarshipEngine instance is correctly initialized when additional APIClient
+        parameters are passed.
+        """
+        mock_api_client = MagicMock()
+        mock_api_client_params = {'param': MagicMock()}
+        monkeypatch.setattr("strawberryfields.engine.APIClient", mock_api_client)
+        engine = StarshipEngine(mock_api_client_params)
+        mock_api_client.assert_called_once_with(param=mock_api_client_params['param'])
+        assert engine.jobs == []
+
+    def test_reset(self, starship_engine):
+        """
+        Tests that StarshipEngine.jobs is correctly cleared when callling StarshipEnging.reset.
+        """
+        starship_engine.jobs.append(MagicMock())
+        assert len(starship_engine.jobs) == 1
+        starship_engine.reset()
+        assert len(starship_engine.jobs) == 0
+
+    def test_generate_job_content(self, starship_engine):
+        """
+        Tests that StarshipEngine.generate_job_content returns the correct string given name,
+        shots, and blackbird_code parameters.
+        """
+        name = MagicMock()
+        shots = MagicMock()
+        blackbird_code = MagicMock()
+
+        output = starship_engine.generate_job_content(name, shots, blackbird_code)
+        lines = output.split('\n')
+        assert lines[0] == "name {}".format(name)
+        assert lines[1] == "version 1.0"
+        assert lines[2] == "target {} (shots={})".format(starship_engine.backend_name, shots)
+        assert lines[3] == ""
+        assert lines[4] == str(blackbird_code)
+
+    def test__run_program(self, starship_engine, monkeypatch):
+        """
+        Tests StarshipEngine._run_program. Asserts that a program is converted to blackbird code,
+        compiled into a job content string that the API can accept, and that a Job is submitted via
+        the APIClient to the API with the correct attributes. Also asserts that a completed job's
+        result samples are returned.
+        """
+        mock_to_blackbird = MagicMock()
+        mock_generate_job_content = MagicMock()
+        mock_job = MagicMock()
+        program = MagicMock()
+
+        mock_job.is_complete = True
+
+        monkeypatch.setattr("strawberryfields.engine.to_blackbird", mock_to_blackbird)
+        monkeypatch.setattr(starship_engine, "generate_job_content", mock_generate_job_content)
+        monkeypatch.setattr("strawberryfields.engine.Job", mock_job)
+
+        some_params = {'param': MagicMock()}
+        
+        result = starship_engine._run_program(program, **some_params)
+
+        mock_to_blackbird.assert_called_once_with(program)
+        mock_generate_job_content.assert_called_once_with(
+            blackbird_code=mock_to_blackbird(program), param=some_params["param"])
+
+        mock_job.assert_called_once_with(client=starship_engine.client)
+
+        mock_job_instance = mock_job(client=starship_engine.client)
+        mock_job_instance.manager.create.assert_called_once_with(
+            circuit=mock_generate_job_content(mock_to_blackbird(program)))
+        mock_job_instance.result.manager.get.assert_called_once()
+
+        assert starship_engine.jobs == [mock_job(client=starship_engine.client)]
+        assert result == mock_job_instance.result.result.value
+
+    def test__run(self, starship_engine, monkeypatch):
+        """
+        Tests StarshipEngine._run, with the assumption that the backend is a hardware backend
+        that supports running only a single program. This test ensures that a program is compiled
+        for the hardware backend, is locked, is added to self.run_progs, that it is run and that
+        a Result object is returned populated with the result samples.
         """
 
-        # Note this is currently more of an integration test, currently a WIP / under development.
+        mock_hardware_backend_name = str(MagicMock())
+        mock_run_program = MagicMock()
+        mock_program = MagicMock()
+        mock_result = MagicMock()
+        mock_shots = MagicMock()
 
+        monkeypatch.setattr(starship_engine, "backend_name", mock_hardware_backend_name)
+        monkeypatch.setattr(starship_engine, "HARDWARE_BACKENDS", [mock_hardware_backend_name])
+        monkeypatch.setattr(starship_engine, "_run_program", mock_run_program)
+        monkeypatch.setattr("strawberryfields.engine.Result", mock_result)
+
+        result = starship_engine._run(mock_program, shots=mock_shots)
+
+        assert starship_engine.backend_name in starship_engine.HARDWARE_BACKENDS
+        mock_program.compile.assert_called_once_with(starship_engine.backend_name)
+        mock_compiled_program = mock_program.compile(starship_engine.backend_name)
+        mock_compiled_program.lock.assert_called_once()
+        mock_run_program.assert_called_once_with(mock_compiled_program, shots=mock_shots)
+        mock_samples = mock_run_program(mock_compiled_program, shots=mock_shots)
+        assert starship_engine.run_progs == [mock_compiled_program]
+        assert result == mock_result(mock_samples)
+
+    def test_run(self, starship_engine, monkeypatch):
+        """
+        Tests StarshipEngine.run. It is expected that StarshipEnging._run is called with the correct
+        parameters.
+        """
+        mock_run = MagicMock()
+        monkeypatch.setattr("strawberryfields.engine.BaseEngine._run", mock_run)
+
+        name = MagicMock()
+        program = MagicMock()
+        shots = MagicMock()
+        params = {'param': MagicMock()}
+
+        starship_engine.run(program, shots, name, **params)
+        mock_run.assert_called_once_with(program, shots=shots, name=name, param=params['param'])
+
+    def test_engine_with_mocked_api_client_sample_job(self, monkeypatch):
+        """
+        This is an integration test that tests and actual program being submitted to a mock API, and
+        how the engine handles a successful response from the server (first by queuing a job then by
+        fetching the result.)
+        """
+
+        # NOTE: this is currently more of an integration test, currently a WIP / under development.
+
+        import os
         from unittest.mock import MagicMock
-
         from strawberryfields.ops import S2gate, MeasureFock, Rgate, BSgate
         from strawberryfields import StarshipEngine
         from strawberryfields.api_client import APIClient
+        from strawberryfields._dev import configuration as conf
 
-        engine = StarshipEngine()
+        api_client_params = {'hostname': "localhost"}
+        engine = StarshipEngine(api_client_params)
+        monkeypatch.setattr(engine, "API_DEFAULT_REFRESH_SECONDS", 0)
 
         # We don't want to actually send any requests, though we should make sure POST was called
         mock_api_client_post = MagicMock()
-        mock_get= MagicMock()
+        mock_get = MagicMock()
         mock_get_response = MagicMock()
         mock_get_response.status_code = 200
         mock_get_response.json.return_value = {'status': 'COMPLETE', 'id': 1234}

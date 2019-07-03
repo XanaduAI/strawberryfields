@@ -83,6 +83,7 @@ from .backends import load_backend
 from .backends.base import (NotApplicableError, BaseBackend)
 
 from strawberryfields.api_client import (APIClient, Job)
+from strawberryfields.io import to_blackbird
 
 
 class Result:
@@ -357,15 +358,16 @@ class StarshipEngine(BaseEngine):
         backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
     """
 
-    API_DEFAULT_REFRESH_SECONDS = 0
+    API_DEFAULT_REFRESH_SECONDS = 1
     HARDWARE_BACKENDS = ('chip0', )
 
-    def __init__(self):
+    def __init__(self, api_client_params=None):
         # Only chip0 backend supported initially.
         backend = "chip0"
         super().__init__(backend)
 
-        self.client = APIClient(hostname="localhost")
+        api_client_params = api_client_params or {}
+        self.client = APIClient(**api_client_params)
         self.jobs = []
 
     def __str__(self):
@@ -384,7 +386,7 @@ class StarshipEngine(BaseEngine):
 
     def _init_backend(self, *args):
         """
-        TODO: This does not do anything rightn now.
+        TODO: This does not do anything right now.
         """
         # Do nothing for now...
         pass
@@ -403,19 +405,16 @@ class StarshipEngine(BaseEngine):
             str: A string containing the job content to be sent to the server.
         """
         target = self.backend_name
-        template = """
-            name {name}
-            version 1.0
-            target {target} (shots={shots})
-
-            {blackbird_code}
-        """.format(
+        return "\n".join([
+            "name {name}",
+            "version 1.0",
+            "target {target} (shots={shots})",
+            "",
+            "{blackbird_code}"]).format(
                 name=name,
                 target=target,
                 shots=str(shots),
                 blackbird_code=blackbird_code)
-
-        return "\n".join([l.strip() for l in template.strip().split("\n")])
 
     def _run_program(self, program, **kwargs):
         """
@@ -435,7 +434,7 @@ class StarshipEngine(BaseEngine):
             Exception: In case a job could not be submitted or completed.
             TypeError: In case a job is already queued and a user is trying to submit a new job.
         """
-        blackbird_code = program.get_blackbird_syntax()
+        blackbird_code = to_blackbird(program)
         job_content = self.generate_job_content(blackbird_code=blackbird_code, **kwargs)
 
         if self.jobs:

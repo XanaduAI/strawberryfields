@@ -264,14 +264,6 @@ class Program:
         for k in self.circuit:
             print_fn(k)
 
-    def get_blackbird_syntax(self):
-        """
-        Returns a string containing the Blackbird syntax for this program.
-        """
-
-        commands = [command.get_blackbird_syntax() for command in self.circuit]
-        return "\n".join(commands)
-
     @property
     def context(self):
         """Syntactic sugar for defining a Program using the :code:`with` statement.

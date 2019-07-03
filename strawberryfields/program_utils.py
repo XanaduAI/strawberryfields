@@ -109,12 +109,8 @@ class Command:
         self.reg = reg
 
     def __str__(self):
-        """Print the command using Blackbird syntax."""
-        return self.get_blackbird_syntax()
-
-    def get_blackbird_syntax(self):
         """
-        Return a string containing the Blackbird syntac.
+        Return a string containing the Blackbird syntax.
         """
 
         operation = str(self.op)
