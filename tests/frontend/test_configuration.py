@@ -27,14 +27,14 @@ logging.getLogger().setLevel(1)
 TEST_FILE = """\
 [api]
 # Options for the Strawberry Fields Cloud API
-authentatication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
+authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
 hostname = "localhost"
 use_ssl = true
 """
 
 EXPECTED_CONFIG = {
     "api": {
-        "authentatication_token": "071cdcce-9241-4965-93af-4a4dbc739135",
+        "authentication_token": "071cdcce-9241-4965-93af-4a4dbc739135",
         "hostname": "localhost",
         "use_ssl": True,
     }
