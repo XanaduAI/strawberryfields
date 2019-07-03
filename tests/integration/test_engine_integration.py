@@ -368,8 +368,9 @@ class TestResults:
 
         res = eng.run(p1)
 
-        assert np.all([res.samples[k] == expected_samples[k]
-                       for k in expected_samples.keys()])
+        assert np.all(res.samples[0] == expected_samples[0])
+        assert np.all(res.samples[1] == expected_samples[1])
+        assert np.all(res.samples[2] == expected_samples[2])
         assert res.measured_modes == expected_measured_modes
         assert np.all(res.samples_array == expected_samples_array)
 
@@ -388,7 +389,9 @@ class TestResults:
 
         res = eng.run(p1)
 
-        assert np.all(res.samples == expected_samples)
+        assert np.all(res.samples[0] == expected_samples[0])
+        assert 1 not in res.samples
+        assert np.all(res.samples[2] == expected_samples[2])
         assert res.measured_modes == expected_measured_modes
         assert np.all(res.samples_array == expected_samples_array)
 
