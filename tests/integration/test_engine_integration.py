@@ -272,6 +272,7 @@ class TestProperExecution:
 
         samples = eng.run(p1, shots=shots).samples
 
+        assert type(samples) == dict
         assert len(samples) == 3
         assert np.all(samples[0] == expected)
         assert np.all(samples[1] == expected)
@@ -284,6 +285,7 @@ class TestProperExecution:
 
         samples = eng.run(p2, shots=shots).samples
 
+        assert type(samples) == dict
         assert len(samples) == 2
         assert np.all(samples[0] == expected)
         assert 1 not in samples
@@ -296,6 +298,7 @@ class TestProperExecution:
 
         samples = eng.run(p3, shots=shots).samples
 
+        assert type(samples) == dict
         assert len(samples) == 1
         assert np.all(samples[0] == expected)
         assert 1 not in samples
@@ -339,7 +342,7 @@ class TestResults:
         with prog.context as q:
             ops.MeasureX | q[0]
 
-        res = eng.run(prog, modes=[])
+        res = eng.run(prog)
         # one entry for each mode
         assert len(res.samples) == 1
         # the same samples can also be found in the regrefs
