@@ -586,20 +586,19 @@ class Circuit:
                 print("logprobs.shape ", logprobs.shape)
                 # tf.multinomial requries a 2D tensor of shape (batch_size, num_classes)
                 sample_tensor = tf.multinomial(tf.reshape(logprobs, [batch_size, -1]), num_samples=shots)
+                # since ``shots==1`` is only supported, we can safely squeeze it out here
+                # todo: if we support ``shots>1`` in this backend, will have to change this behaviour
+                sample_tensor = tf.squeeze(sample_tensor, [-1])
                 print("sample_tensor.shape", sample_tensor.shape)
                 # sample_tensor has integer entries and shape (batch_size, shots)
                 # for each entry of (batch,shots), we need to convert the integer to
                 # the corresponding multiindex [n0,n1,n2,...]
                 meas_result = ops.unravel_index(sample_tensor, [self._cutoff_dim] * num_reduced_state_modes)
-                # note: `ops.unravel_index` returns a tensor with shape (shots, batch_size, len(modes))
-                # so we need to do some reordering
-                # todo: fix the underlying ``ops.unravel_index``
-                meas_result = tf.transpose(meas_result, perm=[1, 0, 2])
-                # shape is now (batch_size, len(shots), samples)
-                print("meas_result2.shape", meas_result.shape)
+                print("meas_result.shape", meas_result.shape)
+                # shape is now (batch_size, len(modes))
                 if not self._batched:
                     # no batch index, can get rid of extra first axis
-                    # that we added
+                    # that gets added by ``ops.unravel_index``
                     meas_result = meas_result[0]
                     print("meas_resultjr.shape", meas_result.shape)
 
@@ -607,12 +606,12 @@ class Circuit:
             # this is to best match with assignment of measurement values to registers
             # without needing to know about whether the backend is working in batch mode
             if self._batched:
-                ret_shape = (len(modes), self._batch_size, shots)
+                ret_meas_result = tf.transpose(meas_result, perm=[1, 0])
             else:
-                ret_shape = (len(modes), shots)
+                ret_meas_result = meas_result
+            ret_meas_result = tf.expand_dims(ret_meas_result, [-1], name="Meas_result")
             print("meas_result.shape", meas_result.shape)
-            print("ret_shape", ret_shape)
-            ret_meas_result = tf.reshape(meas_result, ret_shape, name="Meas_result")
+            print("ret_meas_result.shape", ret_meas_result)
 
             # evaluate measurement result if necessary
             if evaluate_results:
