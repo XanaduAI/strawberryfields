@@ -89,37 +89,41 @@ class Result:
     Returned by :meth:`.BaseEngine.run`.
 
     Args:
-        samples (list[list[int, float, None]]): nested list of
-            measurement samples, with shape ``(modes, shots)``
+        samples (dict[int, List[int, float]): dictionary of measurement samples;
+            keys are mode numbers, entries have shape ``(modes, shots)``
     """
     def __init__(self, samples):
         #: BaseState: quantum state object returned by a local backend, if any
         self.state = None
 
-        # samples arrives as a list of arrays, need to convert here to a multidimensional array
-        if len(np.shape(samples)) > 1:
-            samples_array = np.stack(samples, 1)
-
-        samples_array = np.array(samples, dtype=np.float64)
-
-        if samples_array.ndim == 1:
-            samples_array = np.expand_dims(samples_array, axis=1)
+        #: dict[int, List[int, float]]
+        self.samples = samples
 
         #: list[int]: list of measured modes
-        self.measured_modes = np.nonzero(~np.isnan(samples_array).all(axis=1))[0].tolist()
+        self.measured_modes = list(samples.keys())
 
-        #: dict[int, list[float, int]]: dictionary mapping measured mode to the resulting
-        # list of samples.
-        self.samples = {m: samples_array[m].item() if len(samples_array[m]) == 1 else list(samples_array[m]) for m in self.measured_modes}
-
-        # remove non-measured modes
-        samples_array = samples_array[~np.isnan(samples_array).all(axis=1)]
-
-        if np.prod(samples_array.shape) == 0:
-            # no modes were measured
+        # samples arrives as a dictionary, need to convert here to a multidimensional array
+        if len(samples) == 0:
             samples_array = np.array([])
+        else:
+            arrs = [np.array(v) for v in samples.values()]
+            samples_shapes = [v.shape for v in arrs]
+            ref_shape = samples_shapes[0]
 
-        #: array[float, int, None]: measurement samples, with shape ``(modes, shots)``
+            if not np.all([s == ref_shape for s in samples_shapes]):
+                raise ValueError("The returned samples do not all have the same shape.")
+
+            if len(ref_shape) == 0:
+                #  scalars, single shot
+                samples_array = np.expand_dims(np.stack(arrs), axis=1)  # shape==(modes, 1)
+            elif len(ref_shape) == 1:
+                #  1d array, axis corresponds to shots
+                samples_array = np.stack(arrs, axis=0)  # shape==(modes, shots)
+            else:
+                #  2d array, axes are (batch_size, shots)
+                samples_array = np.stack(arrs, axis=1)  # shape==(batch_size, modes, 1)
+
+        #: array[float, int]: measurement samples, with shape ``([batch_size], modes, shots)``
         self.samples_array = samples_array
 
     def __str__(self):
@@ -235,12 +239,6 @@ class BaseEngine(abc.ABC):
             Result: results of the computation
         """
 
-        def _broadcast_nones(val, shots):
-            """Helper function to ensure register values have same shape, even if not measured"""
-            if val is None and shots > 1:
-                return [None] * shots
-            return val
-
         if not isinstance(program, Sequence):
             program = [program]
 
@@ -273,8 +271,7 @@ class BaseEngine(abc.ABC):
                 self._run_program(p, **kwargs)
                 self.run_progs.append(p)
                 # store the latest measurement results
-                shots = kwargs.get("shots", 1)
-                self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
+                self.samples = {r.ind: r.val for r in p.reg_refs.values() if r.val is not None}
                 prev = p
         except Exception as e:
             raise e

@@ -209,11 +209,9 @@ class GaussianBackend(BaseGaussian):
         modes_idxs = concatenate([x_idxs, p_idxs])
         reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
         samples = hafnian_sample_state(reduced_cov, shots)
-        # for backward compatibility with previous measurement behaviour,
-        # if only one shot, then we drop the shots axis
-        if shots == 1:
-            samples = samples.reshape((len(modes),))
-        return samples
+        # this returns an array of integers of shape (shots, len(modes))
+        # but frontend requires nested list of shape (len(modes), shots)
+        return [list(res) for res in samples.T]
 
     def state(self, modes=None, **kwargs):
         """Returns the state of the quantum simulation.

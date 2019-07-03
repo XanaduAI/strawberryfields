@@ -300,14 +300,14 @@ class TFBackend(BaseFock):
                 for numerically evaluating the measurement results. Used with ``session``.
 
         Returns:
-            tuple[int] or tuple[Tensor]: measurement outcomes
+            An Tensor/array of shape (len(modes), [batch_size,] shots)
         """
         if shots != 1:
             raise NotImplementedError("TF backend currently does not support "
                                       "shots != 1 for Fock measurement")
         with tf.name_scope('Measure_fock'):
             remapped_modes = self._remap_modes(modes)
-            meas = self.circuit.measure_fock(remapped_modes, select=select, **kwargs)
+            meas = self.circuit.measure_fock(remapped_modes, shots=shots, select=select, **kwargs)
         return meas
 
     def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
@@ -331,7 +331,7 @@ class TFBackend(BaseFock):
                                       "shots != 1 for homodyne measurement")
         with tf.name_scope('Measure_homodyne'):
             remapped_mode = self._remap_modes(mode)
-            meas = self.circuit.measure_homodyne(phi, remapped_mode, select, **kwargs)
+            meas = self.circuit.measure_homodyne(phi, remapped_mode, shots=shots, select=select, **kwargs)
         return meas
 
     def is_vacuum(self, tol=0.0, **kwargs):

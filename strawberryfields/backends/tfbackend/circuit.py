@@ -465,19 +465,20 @@ class Circuit:
                 return tf.abs(vac_component) ** 2
             return vac_component
 
-    def measure_fock(self, modes, select=None, **kwargs):
+    def measure_fock(self, modes, shots=1, select=None, **kwargs):
         """
         Measures 'modes' in the Fock basis and updates remaining modes conditioned on this result.
         After measurement, the states in 'modes' are reset to the vacuum.
 
         Args:
-            modes (Sequence[int]): which modes to measure (in increasing order).
+            modes (Sequence[int]): which modes to measure (in increasing order)
+            shots (int): how many measurement samples to perform
             select (Sequence[int]): user-specified measurement value (used instead of random sampling)
             **kwargs: can be used to pass a session or a feed_dict. Otherwise a temporary session
             and no feed_dict will be used.
 
         Returns:
-            A list with the Fock number measurement results for each mode.
+            An Tensor/array of shape (len(modes), [batch_size,] shots)
         """
         # allow integer (non-list) arguments
         # not part of the API, but provided for convenience
@@ -593,12 +594,18 @@ class Circuit:
                 if not self._batched:
                     meas_result = meas_result[0] # no batch index, can get rid of first axis
 
-            # unstack this here because that's how it should be returned
-            meas_result = tf.unstack(meas_result, axis=-1, name="Meas_result")
+            # frontend expects shape which is (len(modes), [batch_size,], shots)
+            # this is to best match with assignment of measurement values to registers
+            # without needing to know about whether the backend is working in batch mode
+            if self._batched:
+                ret_shape = (len(modes), self._batch_size, shots)
+            else:
+                ret_shape = (len(modes, shots))
+            ret_meas_result = tf.reshape(meas_result, ret_shape, name="Meas_result")
 
             # evaluate measurement result if necessary
             if evaluate_results:
-                meas_result = session.run(meas_result, feed_dict=feed_dict)
+                ret_meas_result, meas_result = session.run([ret_meas_result, meas_result], feed_dict=feed_dict)
                 if close_session:
                     session.close()
 
@@ -608,7 +615,7 @@ class Circuit:
                 self.reset(pure=self._state_is_pure)
             else:
                 # only some modes were measured: put unmeasured modes in conditional state, while reseting measured modes to vac
-                fock_state = tf.one_hot(tf.stack(meas_result, axis=-1), depth=self._cutoff_dim, dtype=ops.def_type)
+                fock_state = tf.one_hot(meas_result, depth=self._cutoff_dim, dtype=ops.def_type)
                 conditional_state = self._state
                 for idx, mode in enumerate(modes):
                     if self._batched:
@@ -661,9 +668,9 @@ class Circuit:
 
                 self._update_state(new_state)
 
-            return tuple(meas_result)
+            return ret_meas_result
 
-    def measure_homodyne(self, phi, mode, select=None, **kwargs):
+    def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         """
             Measures 'modes' in the basis of quadrature eigenstates (rotated by phi)
             and updates remaining modes conditioned on this result.
@@ -671,13 +678,14 @@ class Circuit:
 
             Args:
                 phi (float): phase angle of quadrature to measure
+                shots (int): how many measurement samples to perform
                 mode (int): which mode to measure.
                 select (float): user-specified measurement value (used instead of random sampling)
                 **kwargs: can be used to pass a session or a feed_dict. Otherwise a temporary session
                 and no feed_dict will be used.
 
         Returns:
-            The measured value (or a list of measured values when running in batch mode).
+            The measured value (or an array of measured values when running in batch mode).
         """
 
         if not isinstance(mode, int):
@@ -767,12 +775,21 @@ class Circuit:
                 homodyne_sample = tf.gather(q_tensor, samples_idx)
                 homodyne_sample = tf.squeeze(homodyne_sample)
 
+
+            # frontend expects shape which is ([batch_size,], shots)
+            # this is to best match with assignment of measurement values to registers
+            # without needing to know about whether the backend is working in batch mode
+            if self._batched:
+                ret_shape = (self._batch_size, shots)
+            else:
+                ret_shape = (shots,)
+            ret_meas_result = tf.reshape(homodyne_sample, ret_shape, name="Meas_result")
+
+            # evaluate measurement result if necessary
             if evaluate_results:
-                meas_result = homodyne_sample.eval(feed_dict, session)
+                ret_meas_result, meas_result = session.run([ret_meas_result, homodyne_sample], feed_dict=feed_dict)
                 if close_session:
                     session.close()
-            else:
-                meas_result = tf.identity(homodyne_sample, name="Meas_result")
 
             # project remaining modes into conditional state
             if self._num_modes == 1:
@@ -831,7 +848,7 @@ class Circuit:
 
                 self._update_state(new_state)
 
-            return meas_result
+            return ret_meas_result
 
     @property
     def num_modes(self):
