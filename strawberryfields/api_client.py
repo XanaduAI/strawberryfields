@@ -122,7 +122,10 @@ class APIClient:
     An object that allows the user to connect to the Xanadu Platform API.
     """
 
-    ALLOWED_HOSTNAMES = ["localhost", "localhost:8080"]
+    USER_AGENT = "strawberryfields-api-client/0.1"
+
+    ALLOWED_HOSTNAMES = ["localhost", "localhost:8080", "platform.strawberryfields.ai"]
+
     DEFAULT_HOSTNAME = "localhost"
 
     ENV_KEY_PREFIX = "SF_API_"
@@ -158,12 +161,10 @@ class APIClient:
         self.HOSTNAME = config["hostname"]
         self.BASE_URL = "{}://{}".format("https" if self.USE_SSL else "http", self.HOSTNAME)
         self.AUTHENTICATION_TOKEN = config["authentication_token"]
-        self.HEADERS = {}
+        self.HEADERS = {"User-Agent": self.USER_AGENT}
 
         if self.AUTHENTICATION_TOKEN is not None:
             self.set_authorization_header(self.AUTHENTICATION_TOKEN)
-
-        # TODO: warn if no authentication token
 
     def get_configuration_from_config(self):
         """
@@ -281,7 +282,10 @@ class ResourceManager:
         if "GET" not in self.resource.SUPPORTED_METHODS:
             raise MethodNotSupportedException("GET method on this resource is not supported")
 
-        response = self.client.get(self.join_path(str(resource_id)))
+        if resource_id is not None:
+            response = self.client.get(self.join_path(str(resource_id)))
+        else:
+            response = self.client.get(self.resource.PATH)
         self.handle_response(response)
 
     def create(self, **params):
@@ -321,6 +325,9 @@ class ResourceManager:
             self.handle_no_response()
 
     def handle_no_response(self):
+        """
+        Placeholder method to handle an unsuccessful request (e.g. due to no network connection).
+        """
         warnings.warn("Your request could not be completed")
 
     def handle_success_response(self, response):
@@ -341,11 +348,6 @@ class ResourceManager:
         """
 
         # TODO: Improve error messaging and parse the actual error output (json).
-
-        # NOTE: This is here temporarily, however we should also handle actual errors returned
-        # from the server after a job is successfully submitted.
-
-        self.resource.status.set("FAILED")
 
         if response.status_code in (400, 404, 409):
             warnings.warn(
@@ -499,11 +501,16 @@ class Job(Resource):
 
     @property
     def is_complete(self):
+        """
+        Returns True if the job status is "COMPLETE". Case insensitive. Returns False otherwise.
+        """
         return self.status.value and self.status.value.upper() == "COMPLETE"
 
     @property
     def is_failed(self):
-        # TODO this does not actually exist in the spec yet.
+        """
+        Returns True if the job status is "FAILED". Case insensitive. Returns False otherwise.
+        """
         return self.status.value and self.status.value.upper() == "FAILED"
 
     def refresh_data(self):
