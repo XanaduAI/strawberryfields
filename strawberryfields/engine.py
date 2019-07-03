@@ -90,14 +90,14 @@ class Result:
     Returned by :meth:`.BaseEngine.run`.
 
     Args:
-        samples (dict[int, List[int, float]): dictionary of measurement samples;
-            keys are mode numbers, entries have shape ``(modes, shots)``
+        samples (Dict[int, array[Number]): dictionary of measurement samples;
+            keys are mode numbers, entries have shape ``([batch_size,] shots,)``
     """
     def __init__(self, samples):
         #: BaseState: quantum state object returned by a local backend, if any
         self.state = None
 
-        #: dict[int, List[int, float]]
+        #: Dict[int, array[Number]]
         self.samples = samples
 
         #: list[int]: list of measured modes
@@ -105,27 +105,12 @@ class Result:
 
         # samples arrives as a dictionary, need to convert here to a multidimensional array
         if not samples:
-            samples_array = np.array([])
+            self.samples_array = np.zeros((0, 0))
         else:
-            arrs = [np.array(v) for v in samples.values()]
-            samples_shapes = [v.shape for v in arrs]
-            ref_shape = samples_shapes[0]
+            arrs = list(samples.values())
+            #: array[Number]: measurement samples, with shape ``(modes, [batch_size,] shots)``
+            self.samples_array = np.stack(arrs)  # gives an error if the arrs are not all the same shape
 
-            if not np.all([s == ref_shape for s in samples_shapes]):
-                raise ValueError("The returned samples do not all have the same shape.")
-
-            if not ref_shape:
-                #  scalars, single shot
-                samples_array = np.expand_dims(np.stack(arrs), axis=1)  # shape==(modes, 1)
-            elif len(ref_shape) == 1:
-                #  1d array, axis corresponds to shots
-                samples_array = np.stack(arrs, axis=0)  # shape==(modes, shots)
-            else:
-                #  2d array, axes are (batch_size, shots)
-                samples_array = np.stack(arrs, axis=1)  # shape==(batch_size, modes, 1)
-
-        #: array[float, int]: measurement samples, with shape ``([batch_size], modes, shots)``
-        self.samples_array = samples_array
 
     def __str__(self):
         """String representation."""
@@ -149,7 +134,7 @@ class BaseEngine(abc.ABC):
         self.backend_options = backend_options.copy()  # dict is mutable
         #: List[Program]: list of Programs that have been run
         self.run_progs = []
-        #: List[List[Number]]: latest measurement results, shape == (modes, shots)
+        #: Dict[int, array[Number]]: measurement results for measured modes, array shape == ([batch_size,] shots,)
         self.samples = None
 
     @abc.abstractmethod
@@ -262,8 +247,8 @@ class BaseEngine(abc.ABC):
 
                 # Copy the latest measured values in the RegRefs of p.
                 # We cannot copy from prev directly because it could be used in more than one engine.
-                for k, v in enumerate(self.samples):
-                    p.reg_refs[k].val = v
+                for r in p.reg_refs.values():
+                    r.val = self.samples.get(r.ind, None)
 
             # if the program hasn't been compiled for this backend, do it now
             if p.backend != self.backend_name:
@@ -326,6 +311,8 @@ class LocalEngine(BaseEngine):
                 cmd.op.apply(cmd.reg, self.backend, **kwargs)  # NOTE we could also handle storing measured vals here
                 applied.append(cmd)
             except NotApplicableError:
+                # NOTE: This exception has largely been supplanted by the compilation process, but it's good
+                # to have it as a backup if the backend circuit template has a bug.
                 # command is not applicable to the current backend type
                 raise NotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
             except NotImplementedError as ex:

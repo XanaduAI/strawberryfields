@@ -257,6 +257,7 @@ class RegRefTransform:
             # NOTE: "if None in temp" causes an error if temp contains arrays,
             # since it uses the == comparison in addition to "is"
             raise CircuitError("Trying to use a nonexistent measurement result (e.g., before it has been measured).")
+        temp = [v.flat[0] for v in temp]  # TODO TEST: for multi-shot measurements use only the first sample, not sure how this should work for batched operation!
         if self.func is None:
             return temp[0]
         return self.func(*temp)

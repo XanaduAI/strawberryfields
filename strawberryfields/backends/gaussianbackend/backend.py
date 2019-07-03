@@ -195,8 +195,8 @@ class GaussianBackend(BaseGaussian):
             if select is not None:
                 raise NotImplementedError("Gaussian backend currently does not support "
                                           "postselection if shots != 1 for Fock measurement")
-            warnings.warn("Cannot simulate non-Gaussian states. "
-                          "Conditional state after Fock measurement has not been updated.")
+        warnings.warn("The Gaussian backend cannot simulate non-Gaussian states. "
+                      "Conditional state after Fock measurement has not been updated.")
 
         mu = self.circuit.mean
         cov = self.circuit.scovmatxp()
@@ -211,7 +211,7 @@ class GaussianBackend(BaseGaussian):
         samples = hafnian_sample_state(reduced_cov, shots)
         # this returns an array of integers of shape (shots, len(modes))
         # but frontend requires nested list of shape (len(modes), shots)
-        return [list(res) for res in samples.T]
+        return samples.T
 
     def state(self, modes=None, **kwargs):
         """Returns the state of the quantum simulation.

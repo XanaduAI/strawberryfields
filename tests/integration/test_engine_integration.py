@@ -312,10 +312,10 @@ class TestProperExecution:
         with p1.context as q:
             ops.MeasureFock() | q
 
-        backend_name = eng.backend.__str__()
+        backend_name = eng.backend._short_name
         with pytest.raises(NotImplementedError,
-                           match=r"""(Measure|MeasureFock) has not been implemented in {} """
-                                  """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
+                           match="Measure has not been implemented in the '{}' backend "
+                           "for the arguments {{'shots': {}}}".format(backend_name, shots)):
             eng.run(p1, shots=shots).samples
 
 
@@ -334,7 +334,7 @@ class TestResults:
         assert type(res.measured_modes) == list
         assert len(res.measured_modes) == 0
         assert type(res.samples_array) == np.ndarray
-        assert res.samples_array.shape == (0,)  # no entries or axes yet
+        assert res.samples_array.shape == (0, 0)  # no entries or axes yet
 
     def test_return_samples(self, setup_eng):
         """Engine returns measurement samples."""
@@ -429,7 +429,7 @@ class TestResults:
             and a value for ``shots`` is given."""
 
         shots = 5
-        zeros = [0] * shots
+        zeros = np.zeros(shots)
 
         # measured in canonical order
         expected_samples = {0: zeros,
@@ -442,7 +442,7 @@ class TestResults:
             ops.Measure | (q[0], q[2])
         res = eng.run(p1, shots=shots)
 
-        assert res.samples == expected_samples
+        assert all([np.all(v == expected_samples[k]) for k, v in res.samples.items()])
         assert res.measured_modes == expected_measured_modes
         assert np.all(res.samples_array == expected_samples_array)
 
@@ -459,11 +459,14 @@ class TestResults:
         assert type(res.samples) == dict
         assert len(res.samples) == 1
         assert 1 in res.samples
-        assert isinstance(res.samples[1], np.complex)
+        assert isinstance(res.samples[1], np.ndarray)
         assert res.measured_modes == [1]
         assert type(res.samples_array) == np.ndarray
         assert res.samples_array.dtype == np.complex
-        assert res.samples_array.shape[-2:] == (1, 1)  # ignores possible batch axis
+        # ignores possible batch axis
+        assert res.samples_array.shape[0] == 1
+        assert res.samples_array.shape[-1] == 1
+
 
     @pytest.mark.backends("gaussian")
     def test_results_measure_heterodyne_with_shots(self, setup_eng):
@@ -475,10 +478,10 @@ class TestResults:
         shots = 5
         with p.context as q:
             ops.MeasureHeterodyne() | q[1]
-        name = eng.backend.__class__.__name__
+        name = eng.backend._short_name
         with pytest.raises(NotImplementedError,
-                           match="The operation (MeasureHeterodyne|MeasureHD) has not been "
-                                 "implemented in {} for the arguments {{'shots': {}}}".format(name, shots)):
+                           match="The operation MeasureHD has not been "
+                                 "implemented in the '{}' backend for the arguments {{'shots': {}}}".format(name, shots)):
             res = eng.run(p, shots=shots)
 
     def test_results_measure_homodyne_no_shots(self, setup_eng):
@@ -497,7 +500,9 @@ class TestResults:
         assert res.measured_modes == [1]
         assert type(res.samples_array) == np.ndarray
         assert res.samples_array.dtype == np.float
-        assert res.samples_array.shape[-2:] == (1, 1)  # ignores possible batch axis
+        # ignore batch axis
+        assert res.samples_array.shape[0] == 1
+        assert res.samples_array.shape[-1] == 1
 
     def test_results_measure_homodyne_shots(self, setup_eng):
         """Tests the Results object when all modes are measured with homodyne
@@ -508,10 +513,10 @@ class TestResults:
         eng, p = setup_eng(3)
         with p.context as q:
             ops.MeasureHomodyne(c) | q[1]
-        name = eng.backend.__class__.__name__
+        name = eng.backend._short_name
         with pytest.raises(NotImplementedError,
                            match="The operation MeasureHomodyne\({}\) has not been "
-                                 "implemented in {} for the arguments {{'shots': {}}}".format(c, name, shots)):
+                                 "implemented in the '{}' backend for the arguments {{'shots': {}}}".format(c, name, shots)):
             res = eng.run(p, shots=shots)
 
     #TODO: following tests should be marked to run only when BATCHED=1
@@ -534,7 +539,7 @@ class TestResults:
         assert type(res.samples) == dict
         assert np.all([val == expected[k] for k,val in res.samples.items()])
         assert sorted(res.measured_modes) == list(expected.keys())
-        assert res.samples_array.shape == (batch_size, 3, 1)
+        assert res.samples_array.shape == (3, batch_size, 1)
 
     @pytest.mark.backends("tf")
     def test_results_batched_subset_measure_fock_no_shots(self, batch_size):
@@ -554,7 +559,7 @@ class TestResults:
         assert type(res.samples) == dict
         assert np.all([val == expected[k] for k,val in res.samples.items()])
         assert sorted(res.measured_modes) == list(expected.keys())
-        assert res.samples_array.shape == (batch_size, 2, 1)
+        assert res.samples_array.shape == (2, batch_size, 1)
 
     @pytest.mark.backends("tf")
     def test_results_batched_measure_homodyne_no_shots(self, batch_size):
@@ -570,7 +575,7 @@ class TestResults:
 
         assert type(res.samples) == dict
         assert res.measured_modes == [1]
-        assert res.samples_array.shape == (batch_size, 1, 1)
+        assert res.samples_array.shape == (1, batch_size, 1)
 
     @pytest.mark.backends("tf")
     def test_results_batched_measure_homodyne_with_shots(self, batch_size):
@@ -587,8 +592,8 @@ class TestResults:
         p = sf.Program(3)
         with p.context as q:
             ops.MeasureHomodyne(c) | q[1]
-        name = eng.backend.__class__.__name__
+        name = eng.backend._short_name
         with pytest.raises(NotImplementedError,
                            match="The operation MeasureHomodyne\({}\) has not been "
-                                 "implemented in {} for the arguments {{'shots': {}}}".format(c, name, shots)):
+                                 "implemented in the '{}' backend for the arguments {{'shots': {}}}".format(c, name, shots)):
             res = eng.run(p, shots=shots)

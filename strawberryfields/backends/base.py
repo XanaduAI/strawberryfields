@@ -495,7 +495,7 @@ class BaseBackend:
                 Enables post-selection on specific measurement results instead of random sampling.
                 ``len(select) == len(modes)`` is required.
         Returns:
-            tuple[int]: measurement results
+            array[int]: measurement results, ``shape == (len(modes), shots)``
         """
         raise NotImplementedError
 

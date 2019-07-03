@@ -349,13 +349,12 @@ class Operation:
         #: list[Parameter]
         self.p = []
 
-        if par:
-            # convert each parameter into a Parameter instance, keep track of dependenciens
-            for q in par:
-                if not isinstance(q, Parameter):
-                    q = Parameter(q)
-                self.p.append(q)
-                self._extra_deps.update(q.deps)
+        # convert each parameter into a Parameter instance, keep track of dependenciens
+        for q in par:
+            if not isinstance(q, Parameter):
+                q = Parameter(q)
+            self.p.append(q)
+            self._extra_deps.update(q.deps)
 
     def __str__(self):
         """String representation for the Operation using Blackbird syntax.
@@ -568,15 +567,14 @@ class Measurement(Operation):
         Like :func:`Operation.apply`, but also stores the measurement result in the RegRefs.
         """
         values = super().apply(reg, backend, **kwargs)
-        # convert the returned values into an iterable with the measured modes indexed along
-        # the first axis and shots along second axis, so that we can assign
-        # register values
-        shots = kwargs.get("shots", 1)
+
+        print('Measurement.apply(): values = ', values, type(values))
+        # HACK: for now, let the homodyne and heterodyne backend API calls return just scalars, wrap them into an array here
+        # (currently homodyne and heterodyne measurements can only act on one mode at a time)
         if self.ns == 1:
-            values = [values]  # values is either a scalar, or has shape (shots,)
-        else:
-            if shots <= 0:
-                raise ValueError("Number of shots must be greater than zero.")
+            if not isinstance(values, np.ndarray): # TF backend returns homodyne results in an array...
+                values = np.array([[values]])  # values is a scalar
+
         # store the results in the register reference objects
         for v, r in zip(values, reg):
             r.val = v

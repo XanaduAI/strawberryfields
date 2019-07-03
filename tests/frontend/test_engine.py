@@ -175,4 +175,4 @@ class TestResults:
         assert type(res.measured_modes) == list
         assert len(res.measured_modes) == 0
         assert type(res.samples_array) == ndarray
-        assert res.samples_array.shape == (0,)  # no entries or axes yet
+        assert res.samples_array.shape == (0, 0)  # no entries or axes yet
