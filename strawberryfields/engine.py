@@ -75,11 +75,12 @@ Code details
 
 import abc
 from collections.abc import Sequence
+import numbers
 
 import numpy as np
 
-from .backends import load_backend
-from .backends.base import (NotApplicableError, BaseBackend)
+from strawberryfields.backends import load_backend
+from strawberryfields.backends.base import (NotApplicableError, BaseBackend)
 
 
 class Result:
@@ -103,7 +104,7 @@ class Result:
         self.measured_modes = list(samples.keys())
 
         # samples arrives as a dictionary, need to convert here to a multidimensional array
-        if len(samples) == 0:
+        if not samples:
             samples_array = np.array([])
         else:
             arrs = [np.array(v) for v in samples.values()]
@@ -113,7 +114,7 @@ class Result:
             if not np.all([s == ref_shape for s in samples_shapes]):
                 raise ValueError("The returned samples do not all have the same shape.")
 
-            if len(ref_shape) == 0:
+            if not ref_shape:
                 #  scalars, single shot
                 samples_array = np.expand_dims(np.stack(arrs), axis=1)  # shape==(modes, 1)
             elif len(ref_shape) == 1:
@@ -201,7 +202,7 @@ class BaseEngine(abc.ABC):
         """
 
     @abc.abstractmethod
-    def _run_program(self, prog, shots, **kwargs):
+    def _run_program(self, prog, **kwargs):
         """Execute a single program on the backend.
 
         This method should not be called directly.
@@ -242,42 +243,39 @@ class BaseEngine(abc.ABC):
         if not isinstance(program, Sequence):
             program = [program]
 
-        try:
-            prev = self.run_progs[-1] if self.run_progs else None  # previous program segment
-            for p in program:
-                if prev is None:
-                    # initialize the backend
-                    self._init_backend(p.init_num_subsystems)
-                else:
-                    # there was a previous program segment
-                    if not p.can_follow(prev):
-                        raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
+        if not isinstance(shots, numbers.Integral) or shots < 1:
+            raise ValueError("Number of shots must be an integer greater than zero.")
+        kwargs["shots"] = shots
+        # Note: by putting ``shots`` into keyword arguments, it allows for the
+        # signatures of methods in Operations to remain cleaner, since only
+        # Measurements need to know about shots
 
-                    # Copy the latest measured values in the RegRefs of p.
-                    # We cannot copy from prev directly because it could be used in more than one engine.
-                    for k, v in enumerate(self.samples):
-                        p.reg_refs[k].val = v
+        prev = self.run_progs[-1] if self.run_progs else None  # previous program segment
+        for p in program:
+            if prev is None:
+                # initialize the backend
+                self._init_backend(p.init_num_subsystems)
+            else:
+                # there was a previous program segment
+                if not p.can_follow(prev):
+                    raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
 
-                # if the program hasn't been compiled for this backend, do it now
-                if p.backend != self.backend_name:
-                    p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
-                p.lock()
+                # Copy the latest measured values in the RegRefs of p.
+                # We cannot copy from prev directly because it could be used in more than one engine.
+                for k, v in enumerate(self.samples):
+                    p.reg_refs[k].val = v
 
-                kwargs["shots"] = shots
-                # Note: by putting ``shots`` into keyword arguments, it allows for the
-                # signatures of methods in Operations to remain cleaner, since only
-                # Measurements need to know about shots
+            # if the program hasn't been compiled for this backend, do it now
+            if p.backend != self.backend_name:
+                p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
+            p.lock()
 
-                self._run_program(p, **kwargs)
-                self.run_progs.append(p)
-                # store the latest measurement results
-                self.samples = {r.ind: r.val for r in p.reg_refs.values() if r.val is not None}
-                prev = p
-        except Exception as e:
-            raise e
-        else:
-            # program execution was successful
-            pass
+
+            self._run_program(p, **kwargs)
+            self.run_progs.append(p)
+            # store the latest measurement results
+            self.samples = {r.ind: r.val for r in p.reg_refs.values() if r.val is not None}
+            prev = p
 
         return Result(self.samples.copy())
 
@@ -330,9 +328,13 @@ class LocalEngine(BaseEngine):
             except NotApplicableError:
                 # command is not applicable to the current backend type
                 raise NotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
-            except NotImplementedError:
-                # command not directly supported by backend API
-                raise NotImplementedError('The operation {} has not been implemented in {} for the arguments {}.'.format(cmd.op, self.backend, kwargs)) from None
+            except NotImplementedError as ex:
+                # command not supported by backend API
+                # amend the error message
+                raise NotImplementedError(
+                    "The operation {} has not been implemented in the '{}' backend for the arguments {}:  ".format(cmd.op, self.backend_name, kwargs)
+                    +ex.args[0]
+                ) from None
         return applied
 
     def run(self, program, *, shots=1, compile_options={}, modes=None, state_options={}, **kwargs):

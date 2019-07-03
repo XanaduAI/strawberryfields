@@ -463,12 +463,10 @@ class Circuit():
 
         # account for shots in return
         if shots != 1:
-            raise NotImplementedError("measure_fock is no currently implemented in Fock"
+            raise NotImplementedError("measure_fock is not currently implemented in Fock"
                                       "backend for ``shots`` != 1")
-        else:
-            outcome = np.expand_dims(outcome, 1)
 
-        return outcome
+        return np.expand_dims(outcome, 1)
 
     def measure_homodyne(self, phi, mode, select=None, **kwargs):
         """
