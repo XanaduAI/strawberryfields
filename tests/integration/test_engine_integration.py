@@ -348,7 +348,7 @@ class TestResults:
         # the same samples can also be found in the regrefs
         assert prog.register[0].val == res.samples[0]
         # first mode was measured
-        assert isinstance(res.samples[0], (numbers.Number, list))
+        assert res.samples[0].dtype == float
         # second mode was not measured
         assert 1 not in res.samples
 
@@ -549,7 +549,7 @@ class TestResults:
         assert type(res.samples) == dict
         assert len(res.samples) == 1
         assert 1 in res.samples
-        assert isinstance(res.samples[1], np.float)
+        assert res.samples[1].dtype == float
         assert res.measured_modes == [1]
         assert type(res.samples_array) == np.ndarray
         assert res.samples_array.dtype == np.float
@@ -564,10 +564,9 @@ class TestResults:
         eng, p = setup_eng(3)
         with p.context as q:
             ops.MeasureHomodyne(c) | q[1]
-        name = eng.backend._short_name.capitalize()
+        name = eng.backend.__class__.__name__
         with pytest.raises(NotImplementedError,
-                           match="{} backend currently does not support "
-                                 "shots != 1 for homodyne measurement".format(name)):
+                           match=r"The operation MeasureHomodyne(0.312) has not been implemented in"):
             res = eng.run(p, shots=shots)
 
     #TODO: following tests should be marked to run only when BATCHED=1

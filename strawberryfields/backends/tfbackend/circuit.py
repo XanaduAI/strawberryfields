@@ -600,7 +600,7 @@ class Circuit:
             if self._batched:
                 ret_shape = (len(modes), self._batch_size, shots)
             else:
-                ret_shape = (len(modes, shots))
+                ret_shape = (len(modes), shots)
             ret_meas_result = tf.reshape(meas_result, ret_shape, name="Meas_result")
 
             # evaluate measurement result if necessary
