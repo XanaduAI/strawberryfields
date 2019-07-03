@@ -80,9 +80,9 @@ from numpy import stack, shape
 from time import sleep
 
 from .backends import load_backend
-from .backends.base import (NotApplicableError, BaseBackend)
+from .backends.base import NotApplicableError, BaseBackend
 
-from strawberryfields.api_client import (APIClient, Job)
+from strawberryfields.api_client import APIClient, Job
 from strawberryfields.io import to_blackbird
 
 
@@ -92,6 +92,7 @@ class Result:
     Represents the results of the execution of a quantum program.
     Returned by :meth:`.BaseEngine.run`.
     """
+
     def __init__(self, samples):
         #: BaseState: quantum state object returned by a local backend, if any
         self.state = None
@@ -103,7 +104,9 @@ class Result:
 
     def __str__(self):
         """String representation."""
-        return 'Result: {} subsystems, state: {}\n samples: {}'.format(len(self.samples), self.state, self.samples)
+        return "Result: {} subsystems, state: {}\n samples: {}".format(
+            len(self.samples), self.state, self.samples
+        )
 
 
 class BaseEngine(abc.ABC):
@@ -113,6 +116,7 @@ class BaseEngine(abc.ABC):
         backend (str): backend short name
         backend_options (Dict[str, Any]): keyword arguments for the backend
     """
+
     def __init__(self, backend, backend_options=None):
         if backend_options is None:
             backend_options = {}
@@ -164,7 +168,7 @@ class BaseEngine(abc.ABC):
             print_fn (function): optional custom function to use for string printing.
         """
         for k, r in enumerate(self.run_progs):
-            print_fn('Run {}:'.format(k))
+            print_fn("Run {}:".format(k))
             r.print(print_fn)
 
     @abc.abstractmethod
@@ -244,7 +248,9 @@ class BaseEngine(abc.ABC):
             else:
                 # there was a previous program segment
                 if not p.can_follow(prev):
-                    raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
+                    raise RuntimeError(
+                        "Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name)
+                    )
 
                 # Copy the latest measured values in the RegRefs of p.
                 # We cannot copy from prev directly because it could be used in more than one engine.
@@ -253,7 +259,9 @@ class BaseEngine(abc.ABC):
 
             # if the program hasn't been compiled for this backend, do it now
             if p.backend != self.backend_name:
-                p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
+                p = p.compile(
+                    self.backend_name, **compile_options
+                )  # TODO: shots might be relevant for compilation?
             p.lock()
 
             self._run_program(p, **kwargs)
@@ -276,6 +284,7 @@ class LocalEngine(BaseEngine):
         backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
         backend_options (Dict[str, Any]): keyword arguments to be passed to the backend
     """
+
     def __init__(self, backend, *, backend_options={}):
         super().__init__(backend, backend_options)
 
@@ -287,17 +296,17 @@ class LocalEngine(BaseEngine):
             self.backend_name = backend._short_name
             self.backend = backend
         else:
-            raise TypeError('backend must be a string or a BaseBackend instance.')
+            raise TypeError("backend must be a string or a BaseBackend instance.")
 
     def __str__(self):
-        return self.__class__.__name__ + '({})'.format(self.backend_name)
+        return self.__class__.__name__ + "({})".format(self.backend_name)
 
     def reset(self, backend_options=None):
         if backend_options is None:
             backend_options = {}
 
         super().reset(backend_options)
-        self.backend_options.pop('batch_size', None)  # HACK to make tests work for now
+        self.backend_options.pop("batch_size", None)  # HACK to make tests work for now
         self.backend.reset(**self.backend_options)
         # TODO should backend.reset and backend.begin_circuit be combined?
 
@@ -309,14 +318,22 @@ class LocalEngine(BaseEngine):
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend
-                cmd.op.apply(cmd.reg, self.backend, **kwargs)  # NOTE we could also handle storing measured vals here
+                cmd.op.apply(
+                    cmd.reg, self.backend, **kwargs
+                )  # NOTE we could also handle storing measured vals here
                 applied.append(cmd)
             except NotApplicableError:
                 # command is not applicable to the current backend type
-                raise NotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
+                raise NotApplicableError(
+                    "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
+                ) from None
             except NotImplementedError:
                 # command not directly supported by backend API
-                raise NotImplementedError('The operation {} has not been implemented in {} for the arguments {}.'.format(cmd.op, self.backend, kwargs)) from None
+                raise NotImplementedError(
+                    "The operation {} has not been implemented in {} for the arguments {}.".format(
+                        cmd.op, self.backend, kwargs
+                    )
+                ) from None
         return applied
 
     def run(self, program, *, shots=1, compile_options={}, modes=None, state_options={}, **kwargs):
@@ -343,7 +360,9 @@ class LocalEngine(BaseEngine):
             # empty sequence
             pass
         else:
-            result.state = self.backend.state(modes, **state_options)  # tfbackend.state can use kwargs
+            result.state = self.backend.state(
+                modes, **state_options
+            )  # tfbackend.state can use kwargs
         return result
 
 
@@ -359,7 +378,7 @@ class StarshipEngine(BaseEngine):
     """
 
     API_DEFAULT_REFRESH_SECONDS = 1
-    HARDWARE_BACKENDS = ('chip0', )
+    HARDWARE_BACKENDS = ("chip0",)
 
     def __init__(self, api_client_params=None):
         # Only chip0 backend supported initially.
@@ -371,7 +390,7 @@ class StarshipEngine(BaseEngine):
         self.jobs = []
 
     def __str__(self):
-        return self.__class__.__name__ + '({})'.format(self.backend_name)
+        return self.__class__.__name__ + "({})".format(self.backend_name)
 
     def reset(self, backend_options=None):
         """
@@ -405,16 +424,31 @@ class StarshipEngine(BaseEngine):
             str: A string containing the job content to be sent to the server.
         """
         target = self.backend_name
-        return "\n".join([
-            "name {name}",
-            "version 1.0",
-            "target {target} (shots={shots})",
-            "",
-            "{blackbird_code}"]).format(
-                name=name,
-                target=target,
-                shots=str(shots),
-                blackbird_code=blackbird_code)
+        return "\n".join(
+            [
+                "name {name}",
+                "version 1.0",
+                "target {target} (shots={shots})",
+                "",
+                "{blackbird_code}",
+            ]
+        ).format(name=name, target=target, shots=str(shots), blackbird_code=blackbird_code)
+
+    def _queue_job(self, job_content):
+        """
+        Create a Job instance based on job_content, and send the job to the API. Append to list
+        of jobs.
+
+        Args:
+            job_content (str): The Blackbird code to execute
+
+        Returns:
+            (strawberryfields.api_client.Job): A Job instance referencing the queued job.
+        """
+        job = Job(client=self.client)
+        job.manager.create(circuit=job_content)
+        self.jobs.append(job)
+        return job
 
     def _run_program(self, program, **kwargs):
         """
@@ -434,31 +468,29 @@ class StarshipEngine(BaseEngine):
             Exception: In case a job could not be submitted or completed.
             TypeError: In case a job is already queued and a user is trying to submit a new job.
         """
-        blackbird_code = to_blackbird(program)
-        job_content = self.generate_job_content(blackbird_code=blackbird_code, **kwargs)
-
         if self.jobs:
             raise TypeError("A job is already queued. Please reset the engine and try again.")
 
-        job = Job(client=self.client)
-        job.manager.create(circuit=job_content)
-        self.jobs.append(job)
+        blackbird_code = to_blackbird(program)
+        job_content = self.generate_job_content(blackbird_code=blackbird_code, **kwargs)
+        job = self._queue_job(job_content)
 
         try:
-            while not job.is_complete:
+            while not job.is_failed and not job.is_complete:
                 job.reload()
-                if job.is_failed:
-                    raise Exception("The job could not be submitted or completed.")
                 sleep(self.API_DEFAULT_REFRESH_SECONDS)
-
-            job.result.manager.get()
-            return job.result.result.value
         except KeyboardInterrupt:
             if job.id:
                 print("Job {} is queued in the background.".format(job.id.value))
             else:
-                raise Exception(
-                    "Job could not be sent to server, please try again later.")
+                raise Exception("Job was not sent to server. Please try again.")
+
+        if job.is_failed:
+            # TODO: Add failure details here, and use a better exception.
+            raise Exception("Job execution failed. Please try again.")
+        elif job.is_complete:
+            job.result.manager.get()
+            return job.result.result.value
 
     def run(self, program, shots=1, name=None, **kwargs):
         """

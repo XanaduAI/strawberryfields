@@ -211,23 +211,32 @@ class TestStarshipEngine:
         assert lines[3] == ""
         assert lines[4] == str(blackbird_code)
 
+    def test_queue_job(self, starship_engine, monkeypatch):
+        mock_job = MagicMock()
+        monkeypatch.setattr("strawberryfields.engine.Job", mock_job)
+        mock_job_content = MagicMock()
+
+        result = starship_engine._queue_job(mock_job_content)
+        mock_job.assert_called_once_with(client=starship_engine.client)
+        result.manager.create.assert_called_once_with(circuit=mock_job_content)
+        assert starship_engine.jobs == [result]
+
     def test__run_program(self, starship_engine, monkeypatch):
         """
         Tests StarshipEngine._run_program. Asserts that a program is converted to blackbird code,
-        compiled into a job content string that the API can accept, and that a Job is submitted via
-        the APIClient to the API with the correct attributes. Also asserts that a completed job's
-        result samples are returned.
+        compiled into a job content string and that the job is queued. Also asserts that a
+        completed job's result samples are returned.
         """
         mock_to_blackbird = MagicMock()
         mock_generate_job_content = MagicMock()
-        mock_job = MagicMock()
         program = MagicMock()
-
+        mock_job = MagicMock()
         mock_job.is_complete = True
+        mock_job.is_failed = False
 
         monkeypatch.setattr("strawberryfields.engine.to_blackbird", mock_to_blackbird)
         monkeypatch.setattr(starship_engine, "generate_job_content", mock_generate_job_content)
-        monkeypatch.setattr("strawberryfields.engine.Job", mock_job)
+        monkeypatch.setattr(starship_engine, "_queue_job", lambda job_content: mock_job)
 
         some_params = {"param": MagicMock()}
         result = starship_engine._run_program(program, **some_params)
@@ -237,16 +246,27 @@ class TestStarshipEngine:
             blackbird_code=mock_to_blackbird(program), param=some_params["param"]
         )
 
-        mock_job.assert_called_once_with(client=starship_engine.client)
+        assert result == mock_job.result.result.value
 
-        mock_job_instance = mock_job(client=starship_engine.client)
-        mock_job_instance.manager.create.assert_called_once_with(
-            circuit=mock_generate_job_content(mock_to_blackbird(program))
-        )
-        mock_job_instance.result.manager.get.assert_called_once()
+    def test__run_program_fails(self, starship_engine, monkeypatch):
+        """
+        Tests that an Exception is raised when a job has failed.
+        """
+        mock_to_blackbird = MagicMock()
+        mock_generate_job_content = MagicMock()
+        program = MagicMock()
+        mock_job = MagicMock()
+        mock_job.is_complete = False
+        mock_job.is_failed = True
 
-        assert starship_engine.jobs == [mock_job(client=starship_engine.client)]
-        assert result == mock_job_instance.result.result.value
+        monkeypatch.setattr("strawberryfields.engine.to_blackbird", mock_to_blackbird)
+        monkeypatch.setattr(starship_engine, "generate_job_content", mock_generate_job_content)
+        monkeypatch.setattr(starship_engine, "_queue_job", lambda job_content: mock_job)
+
+        some_params = {"param": MagicMock()}
+
+        with pytest.raises(Exception):
+            starship_engine._run_program(program, **some_params)
 
     def test__run(self, starship_engine, monkeypatch):
         """
