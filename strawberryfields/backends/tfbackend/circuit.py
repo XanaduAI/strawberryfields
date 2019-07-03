@@ -255,6 +255,7 @@ class Circuit:
         """
         Traces out the state in 'mode' and replaces it with a Fock state defined by n.
         """
+        print("preparing state {} in mode {}: ".format(n, mode))
         if self._valid_modes(mode):
             with self._graph.as_default():
                 n = self._maybe_batch(n, convert_to_tensor=False)
@@ -554,8 +555,6 @@ class Circuit:
                     # in this case, measure directly on the pure state
                     probs = tf.abs(self._state) ** 2
                     logprobs = tf.log(probs)
-                    sample = tf.multinomial(tf.reshape(logprobs, [batch_size, -1]), 1)
-                    sample_tensor = tf.squeeze(sample)
                 else:
                     # otherwise, trace out unmeasured modes and sample using diagonal of reduced state
                     removed_ctr = 0
@@ -584,15 +583,25 @@ class Circuit:
                     diag_entries = tf.matrix_diag_part(diag_tensor)
                     # hack so we can use tf.multinomial for sampling
                     logprobs = tf.log(tf.cast(diag_entries, tf.float64))
-                    sample = tf.multinomial(tf.reshape(logprobs, [batch_size, -1]), 1)
-                    # sample is a single integer; we need to convert it to the corresponding [n0,n1,n2,...]
-                    sample_tensor = tf.squeeze(sample)
-
-                # sample_val is a single integer for each batch entry;
-                # we need to convert it to the corresponding [n0,n1,n2,...]
+                print("logprobs.shape ", logprobs.shape)
+                # tf.multinomial requries a 2D tensor of shape (batch_size, num_classes)
+                sample_tensor = tf.multinomial(tf.reshape(logprobs, [batch_size, -1]), num_samples=shots)
+                print("sample_tensor.shape", sample_tensor.shape)
+                # sample_tensor has integer entries and shape (batch_size, shots)
+                # for each entry of (batch,shots), we need to convert the integer to
+                # the corresponding multiindex [n0,n1,n2,...]
                 meas_result = ops.unravel_index(sample_tensor, [self._cutoff_dim] * num_reduced_state_modes)
+                # note: `ops.unravel_index` returns a tensor with shape (shots, batch_size, len(modes))
+                # so we need to do some reordering
+                # todo: fix the underlying ``ops.unravel_index``
+                meas_result = tf.transpose(meas_result, perm=[1, 0, 2])
+                # shape is now (batch_size, len(shots), samples)
+                print("meas_result2.shape", meas_result.shape)
                 if not self._batched:
-                    meas_result = meas_result[0] # no batch index, can get rid of first axis
+                    # no batch index, can get rid of extra first axis
+                    # that we added
+                    meas_result = meas_result[0]
+                    print("meas_resultjr.shape", meas_result.shape)
 
             # frontend expects shape which is (len(modes), [batch_size,], shots)
             # this is to best match with assignment of measurement values to registers
@@ -601,6 +610,8 @@ class Circuit:
                 ret_shape = (len(modes), self._batch_size, shots)
             else:
                 ret_shape = (len(modes), shots)
+            print("meas_result.shape", meas_result.shape)
+            print("ret_shape", ret_shape)
             ret_meas_result = tf.reshape(meas_result, ret_shape, name="Meas_result")
 
             # evaluate measurement result if necessary
@@ -608,6 +619,8 @@ class Circuit:
                 ret_meas_result, meas_result = session.run([ret_meas_result, meas_result], feed_dict=feed_dict)
                 if close_session:
                     session.close()
+            print("ret_meas_result", ret_meas_result)
+            print("meas_result", meas_result)
 
             # project remaining modes into conditional state
             if len(modes) == self._num_modes:
@@ -622,6 +635,8 @@ class Circuit:
                         f = fock_state[:, idx]
                     else:
                         f = fock_state[idx]
+                    print("fock_state", fock_state)
+                    print("conditional_state", conditional_state)
                     conditional_state = ops.conditional_state(conditional_state, f, mode, self._state_is_pure, batched=self._batched)
 
                 if self._state_is_pure:

@@ -247,4 +247,4 @@ class FockBackend(BaseFock):
         if shots != 1:
             raise NotImplementedError("fock backend currently does not support "
                                       "shots != 1 for Fock measurement")
-        return self.circuit.measure_fock(self._remap_modes(modes), select=select)
+        return self.circuit.measure_fock(self._remap_modes(modes), shots=shots, select=select)

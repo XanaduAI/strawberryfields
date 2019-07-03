@@ -380,7 +380,7 @@ class Circuit():
         """
         self._apply_channel(ops.lossChannel(T, self._trunc), [mode])
 
-    def measure_fock(self, modes, select=None):
+    def measure_fock(self, modes, shots=1, select=None):
         """
         Measures a list of modes.
         """
@@ -460,6 +460,13 @@ class Circuit():
         # include post-selected values in measurement outcomes
         if select is not None:
             outcome = copy.copy(select)
+
+        # account for shots in return
+        if shots != 1:
+            raise NotImplementedError("measure_fock is no currently implemented in Fock"
+                                      "backend for ``shots`` != 1")
+        else:
+            outcome = np.expand_dims(outcome, 1)
 
         return outcome
 

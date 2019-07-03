@@ -76,7 +76,7 @@ class TestFockRepresentation:
                 tr = state.trace()
                 assert np.allclose(tr, 1, atol=tol, rtol=0)
 
-    def test_fock_measurements(self, setup_backend, cutoff, batch_size, pure, tol):
+    def test_fock_measurements(self, setup_backend, cutoff, batch_size, pure):
         """Tests if Fock measurements results on a variety of multi-mode Fock states are correct."""
         state_preps = [n for n in range(cutoff)] + [
             cutoff - n for n in range(cutoff)
@@ -106,15 +106,16 @@ class TestFockRepresentation:
             backend.prepare_fock_state(n[1], 1)
             backend.prepare_fock_state(n[2], 2)
 
-            meas_result = backend.measure_fock(meas_modes)
-            ref_result = n[meas_modes]
-            print(ref_result.shape)
-            if batch_size is not None:
-                ref_result = tuple(np.array([i] * batch_size) for i in ref_result)
+            meas_result = backend.measure_fock(meas_modes)  # shape (modes, [batch_size,] shots)
+            print("measuring modes {}".format(meas_modes))
+            print("measurement results are {}".format(meas_result))
 
-            print(meas_result.shape)
-            print(np.array(ref_result).shape)
-            assert np.allclose(meas_result, ref_result, atol=tol, rtol=0)
+            ref_result = n[meas_modes]  # shape (modes,)
+            ref_result = np.expand_dims(ref_result, 1)  # account for shots axis
+            if batch_size is not None:
+                ref_result = np.expand_dims(ref_result, 1)
+
+            assert np.all(meas_result == ref_result)
 
 
 @pytest.mark.backends("fock", "tf", "gaussian")

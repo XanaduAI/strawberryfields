@@ -373,23 +373,6 @@ class TestResults:
         assert res.measured_modes == expected_measured_modes
         assert np.all(res.samples_array == expected_samples_array)
 
-        # TODO: refactor returned measurements
-        # so that they are in the same order as requested
-        # by the user
-
-        # # measured in non-canonical order
-        # eng, p2 = setup_eng(3)
-
-        # with p2.context as q:
-        #     ops.Measure | (q[2], q[1], q[0])
-
-        # res = eng.run(p2)
-
-        # perm = [2, 1, 0]
-        # assert res.samples == expected_samples
-        # assert res.measured_modes == [expected_measured_modes[i] for i in perm]
-        # assert np.all(res.samples_array == expected_samples_array[perm])
-
     def test_results_subset_measure_fock_no_shots(self, setup_eng):
         """Tests the Results object when a subset of modes are measured in the Fock basis
             and no value for ``shots`` is given."""
@@ -408,23 +391,6 @@ class TestResults:
         assert np.all(res.samples == expected_samples)
         assert res.measured_modes == expected_measured_modes
         assert np.all(res.samples_array == expected_samples_array)
-
-        # TODO: refactor returned measurements
-        # so that they are in the same order as requested
-        # by the user
-
-        # # measured in non-canonical order
-        # eng, p2 = setup_eng(3)
-
-        # with p2.context as q:
-        #     ops.Measure | (q[2], q[0])
-
-        # res = eng.run(p2)
-
-        # expected_measured_modes = [2, 0]
-        # assert res.samples == expected_samples
-        # assert res.measured_modes == expected_measured_modes
-        # assert np.all(res.samples_array == expected_samples_array)
 
     # TODO: when ``shots`` is incorporated into other backends, add here
     @pytest.mark.backends("gaussian")
@@ -453,21 +419,6 @@ class TestResults:
         assert res.measured_modes == expected_measured_modes
         assert np.all(res.samples_array == expected_samples_array)
 
-        # TODO: refactor returned measurements
-        # so that they are in the same order as requested
-        # by the user
-
-        # # measured in non-canonical order
-        # eng, p2 = setup_eng(3)
-        # with p2.context as q:
-        #     ops.Measure | (q[2], q[1], q[0])
-        # res = eng.run(p2, shots=shots)
-
-        # perm = [2, 1, 0]
-        # assert res.samples == expected_samples
-        # assert res.measured_modes == expected_measured_modes[perm]
-        # assert res.samples_array == expected_samples_array[perm]
-
     # TODO: when ``shots`` is incorporated into other backends, add here
     @pytest.mark.backends("gaussian")
     def test_results_subset_measure_fock_with_shots(self, setup_eng):
@@ -491,17 +442,6 @@ class TestResults:
         assert res.samples == expected_samples
         assert res.measured_modes == expected_measured_modes
         assert np.all(res.samples_array == expected_samples_array)
-
-        # # measured in non-canonical order
-        # eng, p2 = setup_eng(3)
-        # with p2.context as q:
-        #     ops.Measure | (q[2], q[0])
-        # res = eng.run(p2, shots=shots)
-
-        # perm = [2, 0]
-        # assert res.samples == expected_samples
-        # assert res.measured_modes == expected_measured_modes[perm]
-        # assert res.samples_array == expected_samples_array[perm]
 
     @pytest.mark.backends("gaussian")
     def test_results_measure_heterodyne_no_shots(self, setup_eng):
