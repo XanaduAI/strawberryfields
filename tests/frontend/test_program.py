@@ -23,7 +23,6 @@ import strawberryfields as sf
 
 from strawberryfields import program
 from strawberryfields import ops
-from strawberryfields.utils import random_covariance
 from strawberryfields.devicespecs.device_specs import DeviceSpecs
 
 
@@ -443,8 +442,8 @@ class TestValidation:
         In this case, the Gaussian operation should remain after compilation.
         """
         prog = sf.Program(2)
-        cov = random_covariance(2, pure=False)
-        r = np.random.randn(4)
+        cov = np.ones((4, 4)) + np.eye(4)
+        r = np.array([0, 1, 1, 2])
         with prog.context as q:
             ops.Gaussian(cov, r, decomp=False) | q
 
@@ -456,7 +455,7 @@ class TestValidation:
         # test compilation against multiple targets in sequence
         # fock target always decomposes the Gaussian operation
         prog = prog.compile(target='fock')
-        assert len(prog) == 16
+        assert len(prog) == 12
 
     def test_user_defined_decomposition_true(self):
         """Test that an operation that is both a primitive AND
