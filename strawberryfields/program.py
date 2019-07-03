@@ -505,12 +505,13 @@ class Program:
                 op_name = cmd.op.__class__.__name__
                 if op_name in db.decompositions:
                     # target can implement this op decomposed
-                    if (op_name in db.primitives) and hasattr(cmd.op, 'decomp'):
-                        # some Decompositions are also primitives for some targets
-                        if not cmd.op.decomp:
-                            # user has requested to bypass decomposition
+                    if hasattr(cmd.op, 'decomp') and not cmd.op.decomp:
+                        # user has requested application of the op as a primitive
+                        if op_name in db.primitives:
                             compiled.append(cmd)
                             continue
+                        else:
+                            raise CircuitError("The operation {} is not a primitive for the target '{}'".format(cmd.op.__class__.__name__, target))
                     try:
                         kwargs = db.decompositions[op_name]
                         temp = cmd.op.decompose(cmd.reg, **kwargs)
@@ -541,7 +542,7 @@ class Program:
 
         # run optimizations
         if kwargs.get('optimize', False):
-            seq = Program.optimize_circuit(seq)
+            seq = pu.optimize_circuit(seq)
 
         # does the device have its own compilation method?
         if db.compile is not None:

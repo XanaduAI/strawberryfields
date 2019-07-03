@@ -454,8 +454,8 @@ class TestValidation:
 
         # test compilation against multiple targets in sequence
         # fock target always decomposes the Gaussian operation
-        prog = prog.compile(target='fock')
-        assert len(prog) == 12
+        with pytest.raises(program.CircuitError, match="The operation Gaussian is not a primitive for the target 'fock'"):
+            prog = prog.compile(target='fock')
 
     def test_user_defined_decomposition_true(self):
         """Test that an operation that is both a primitive AND
