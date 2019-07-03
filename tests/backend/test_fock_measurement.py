@@ -108,10 +108,12 @@ class TestFockRepresentation:
 
             meas_result = backend.measure_fock(meas_modes)
             ref_result = n[meas_modes]
-
+            print(ref_result.shape)
             if batch_size is not None:
                 ref_result = tuple(np.array([i] * batch_size) for i in ref_result)
 
+            print(meas_result.shape)
+            print(np.array(ref_result).shape)
             assert np.allclose(meas_result, ref_result, atol=tol, rtol=0)
 
 

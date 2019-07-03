@@ -547,7 +547,7 @@ class Circuit:
 
             if select is not None:
                 # just use the supplied measurement results
-                meas_result = select
+                meas_result = tf.convert_to_tensor(select)
             else:
                 # compute and sample measurement result
                 if self._state_is_pure and len(modes) == self._num_modes:

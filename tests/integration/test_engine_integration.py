@@ -346,7 +346,7 @@ class TestResults:
         # one entry for each mode
         assert len(res.samples) == 1
         # the same samples can also be found in the regrefs
-        assert prog.register[0].val == res.samples[0]
+        assert np.all(prog.register[0].val == res.samples[0])
         # first mode was measured
         assert res.samples[0].dtype == float
         # second mode was not measured
@@ -368,7 +368,8 @@ class TestResults:
 
         res = eng.run(p1)
 
-        assert res.samples == expected_samples
+        assert np.all([res.samples[k] == expected_samples[k]
+                       for k in expected_samples.keys()])
         assert res.measured_modes == expected_measured_modes
         assert np.all(res.samples_array == expected_samples_array)
 
@@ -404,7 +405,7 @@ class TestResults:
 
         res = eng.run(p1)
 
-        assert res.samples == expected_samples
+        assert np.all(res.samples == expected_samples)
         assert res.measured_modes == expected_measured_modes
         assert np.all(res.samples_array == expected_samples_array)
 
@@ -519,7 +520,7 @@ class TestResults:
         assert res.measured_modes == [1]
         assert type(res.samples_array) == np.ndarray
         assert res.samples_array.dtype == np.complex
-        assert res.samples_array.shape == (1, 1)
+        assert res.samples_array.shape[-2:] == (1, 1)  # ignores possible batch axis
 
     @pytest.mark.backends("gaussian")
     def test_results_measure_heterodyne_with_shots(self, setup_eng):
@@ -553,7 +554,7 @@ class TestResults:
         assert res.measured_modes == [1]
         assert type(res.samples_array) == np.ndarray
         assert res.samples_array.dtype == np.float
-        assert res.samples_array.shape == (1, 1)
+        assert res.samples_array.shape[-2:] == (1, 1)  # ignores possible batch axis
 
     def test_results_measure_homodyne_shots(self, setup_eng):
         """Tests the Results object when all modes are measured with homodyne
