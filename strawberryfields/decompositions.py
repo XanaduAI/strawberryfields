@@ -70,7 +70,7 @@ def takagi(N, tol=1e-13, rounding=13):
     (n, m) = N.shape
     if n != m:
         raise ValueError("The input matrix must be square")
-    if np.linalg.norm(N-np.transpose(N)) >= tol:
+    if np.linalg.norm(N - np.transpose(N)) >= tol:
         raise ValueError("The input matrix is not symmetric")
 
     v, l, ws = np.linalg.svd(N)
@@ -87,7 +87,7 @@ def takagi(N, tol=1e-13, rounding=13):
     for k in result:
         for ind, j in enumerate(k):  # pylint: disable=unused-variable
             k[ind] = kk
-            kk = kk+1
+            kk = kk + 1
 
     # Generate the lists with the degenerate column subspaces
     vas = []
@@ -138,19 +138,19 @@ def graph_embed_deprecated(A, max_mean_photon=1.0, make_traceless=False, rtol=1e
     if m != n:
         raise ValueError("The matrix is not square.")
 
-    #if not np.allclose(A, np.transpose(A), rtol=rtol, atol=atol)
-    #    raise ValueError("The matrix is not symmetric.")
+    if not np.allclose(A, np.transpose(A), rtol=rtol, atol=atol):
+        raise ValueError("The matrix is not symmetric.")
 
     if make_traceless:
-        A = A - np.trace(A)*np.identity(n)/n
+        A = A - np.trace(A) * np.identity(n) / n
 
     s, U = takagi(A, tol=atol)
-    sc = np.sqrt(1.0+1.0/max_mean_photon)
-    vals = -np.arctanh(s/(s[0]*sc))
+    sc = np.sqrt(1.0 + 1.0 / max_mean_photon)
+    vals = -np.arctanh(s / (s[0] * sc))
     return vals, U
 
 
-def graph_embed(A, mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08):
+def graph_embed(A, mean_photon=1.0, make_traceless=False, atol=1e-08):
     r"""Embed a graph into a Gaussian state.
 
     Given a graph in terms of a symmetric adjacency matrix
@@ -180,14 +180,14 @@ def graph_embed(A, mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08
     if m != n:
         raise ValueError("The matrix is not square.")
 
-    #if not np.allclose(A, np.transpose(A), rtol=rtol, atol=atol)
+    # if not np.allclose(A, np.transpose(A), rtol=rtol, atol=atol)
     #    raise ValueError("The matrix is not symmetric.")
 
     if make_traceless:
-        A = A - np.trace(A)*np.identity(n)/n
+        A = A - np.trace(A) * np.identity(n) / n
 
     scale = find_scaling_adjacency_matrix(A, mean_photon)
-    A = scale*A
+    A = scale * A
     s, U = takagi(A, tol=atol)
     vals = -np.arctanh(s)
     return vals, U
@@ -196,9 +196,9 @@ def graph_embed(A, mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08
 def T(m, n, theta, phi, nmax):
     r"""The Clements T matrix from Eq. 1 of the paper"""
     mat = np.identity(nmax, dtype=np.complex128)
-    mat[m, m] = np.exp(1j*phi)*np.cos(theta)
+    mat[m, m] = np.exp(1j * phi) * np.cos(theta)
     mat[m, n] = -np.sin(theta)
-    mat[n, m] = np.exp(1j*phi)*np.sin(theta)
+    mat[n, m] = np.exp(1j * phi) * np.sin(theta)
     mat[n, n] = np.cos(theta)
     return mat
 
@@ -215,15 +215,15 @@ def nullTi(m, n, U):
     if nmax != mmax:
         raise ValueError("U must be a square matrix")
 
-    if U[m, n+1] == 0:
-        thetar = np.pi/2
+    if U[m, n + 1] == 0:
+        thetar = np.pi / 2
         phir = 0
     else:
-        r = U[m, n] / U[m, n+1]
+        r = U[m, n] / U[m, n + 1]
         thetar = np.arctan(np.abs(r))
         phir = np.angle(r)
 
-    return [n, n+1, thetar, phir, nmax]
+    return [n, n + 1, thetar, phir, nmax]
 
 
 def nullT(n, m, U):
@@ -233,15 +233,15 @@ def nullT(n, m, U):
     if nmax != mmax:
         raise ValueError("U must be a square matrix")
 
-    if U[n-1, m] == 0:
-        thetar = np.pi/2
+    if U[n - 1, m] == 0:
+        thetar = np.pi / 2
         phir = 0
     else:
-        r = -U[n, m] / U[n-1, m]
+        r = -U[n, m] / U[n - 1, m]
         thetar = np.arctan(np.abs(r))
         phir = np.angle(r)
 
-    return [n-1, n, thetar, phir, nmax]
+    return [n - 1, n, thetar, phir, nmax]
 
 
 def clements(V, tol=1e-11):
@@ -280,14 +280,14 @@ def clements(V, tol=1e-11):
 
     tilist = []
     tlist = []
-    for k, i in enumerate(range(nsize-2, -1, -1)):
+    for k, i in enumerate(range(nsize - 2, -1, -1)):
         if k % 2 == 0:
-            for j in reversed(range(nsize-1-i)):
-                tilist.append(nullTi(i+j+1, j, localV))
+            for j in reversed(range(nsize - 1 - i)):
+                tilist.append(nullTi(i + j + 1, j, localV))
                 localV = localV @ Ti(*tilist[-1])
         else:
-            for j in range(nsize-1-i):
-                tlist.append(nullT(i+j+1, j, localV))
+            for j in range(nsize - 1 - i):
+                tlist.append(nullT(i + j + 1, j, localV))
                 localV = T(*tlist[-1]) @ localV
 
     return tilist, tlist, np.diag(localV)
@@ -324,12 +324,12 @@ def clements_phase_end(V, tol=1e-11):
 
         # The new parameters required for D',T' st. T^(-1)D = D'T'
         new_theta = theta
-        new_phi = np.fmod((alpha - beta + np.pi), 2*np.pi)
+        new_phi = np.fmod((alpha - beta + np.pi), 2 * np.pi)
         new_alpha = beta - phi + np.pi
         new_beta = beta
 
         new_i = [i[0], i[1], new_theta, new_phi, i[4]]
-        new_diags[em], new_diags[en] = np.exp(1j*new_alpha), np.exp(1j*new_beta)
+        new_diags[em], new_diags[en] = np.exp(1j * new_alpha), np.exp(1j * new_beta)
 
         new_tlist = new_tlist + [new_i]
 
@@ -416,9 +416,9 @@ def rectangular_symmetric(V, tol=1e-11):
         external_phase = np.fmod((phi + alpha - beta), 2 * np.pi)
         internal_phase = np.fmod((np.pi + 2.0 * theta), 2 * np.pi)
         new_alpha = beta - theta + np.pi
-        new_beta = 0*np.pi - theta + beta
+        new_beta = 0 * np.pi - theta + beta
         new_i = [i[0], i[1], internal_phase, external_phase, i[4]]
-        new_diags[em], new_diags[en] = np.exp(1j*new_alpha), np.exp(1j*new_beta)
+        new_diags[em], new_diags[en] = np.exp(1j * new_alpha), np.exp(1j * new_beta)
         new_tlist = new_tlist + [new_i]
     new_diags = diags * new_diags
     return (new_tlist, new_diags)
@@ -449,9 +449,9 @@ def triangular_decomposition(V, tol=1e-11):
         raise ValueError("The input matrix is not unitary")
 
     tlist = []
-    for i in range(nsize-2, -1, -1):
-        for j in range(i+1):
-            tlist.append(nullT(nsize-j-1, nsize-i-2, localV))
+    for i in range(nsize - 2, -1, -1):
+        for j in range(i + 1):
+            tlist.append(nullT(nsize - j - 1, nsize - i - 2, localV))
             localV = T(*tlist[-1]) @ localV
 
     return list(reversed(tlist)), np.diag(localV)
@@ -483,16 +483,15 @@ def williamson(V, tol=1e-11):
     if n != m:
         raise ValueError("The input matrix is not square")
 
-    diffn = np.linalg.norm(V-np.transpose(V))
+    diffn = np.linalg.norm(V - np.transpose(V))
 
     if diffn >= tol:
         raise ValueError("The input matrix is not symmetric")
 
     if n % 2 != 0:
-        raise ValueError(
-            "The input matrix must have an even number of rows/columns")
+        raise ValueError("The input matrix must have an even number of rows/columns")
 
-    n = n//2
+    n = n // 2
     omega = sympmat(n)
     rotmat = changebasis(n)
     vals = np.linalg.eigvalsh(V)
@@ -514,7 +513,7 @@ def williamson(V, tol=1e-11):
     # go to the ordering x_1, ..., x_n, p_1, ... , p_n
 
     for i in range(n):
-        if s1[2*i, 2*i+1] > 0:
+        if s1[2 * i, 2 * i + 1] > 0:
             seq.append(I)
         else:
             seq.append(X)
@@ -522,10 +521,9 @@ def williamson(V, tol=1e-11):
     p = block_diag(*seq)
     Kt = K @ p
     s1t = p @ s1 @ p
-    dd = np.transpose(rotmat) @ s1t @rotmat
+    dd = np.transpose(rotmat) @ s1t @ rotmat
     Ktt = Kt @ rotmat
-    Db = np.diag([1/dd[i, i+n] for i in range(n)] + [1/dd[i, i+n]
-                                                     for i in range(n)])
+    Db = np.diag([1 / dd[i, i + n] for i in range(n)] + [1 / dd[i, i + n] for i in range(n)])
     S = Mm12 @ Ktt @ sqrtm(Db)
     return Db, np.linalg.inv(S).T
 
@@ -570,24 +568,23 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
     if n != m:
         raise ValueError("The input matrix is not square")
     if n % 2 != 0:
-        raise ValueError(
-            "The input matrix must have an even number of rows/columns")
+        raise ValueError("The input matrix must have an even number of rows/columns")
 
-    n = n//2
+    n = n // 2
     omega = sympmat(n)
     if np.linalg.norm(np.transpose(S) @ omega @ S - omega) >= tol:
         raise ValueError("The input matrix is not symplectic")
 
-    if np.linalg.norm(np.transpose(S) @ S - np.eye(2*n)) >= tol:
+    if np.linalg.norm(np.transpose(S) @ S - np.eye(2 * n)) >= tol:
 
-        u, sigma = polar(S, side='left')
+        u, sigma = polar(S, side="left")
         ss, uss = takagi(sigma, tol=tol, rounding=rounding)
 
         # Apply a permutation matrix so that the squeezers appear in the order
         # s_1,...,s_n, 1/s_1,...1/s_n
-        perm = np.array(list(range(0, n)) + list(reversed(range(n, 2*n))))
+        perm = np.array(list(range(0, n)) + list(reversed(range(n, 2 * n))))
 
-        pmat = np.identity(2*n)[perm, :]
+        pmat = np.identity(2 * n)[perm, :]
         ut = uss @ pmat
 
         # Apply a second permutation matrix to permute s
@@ -608,7 +605,7 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
         u_list, v_list = [], []
 
         for start_i, stop_i in zip(start_is, stop_is):
-            x = qomega[start_i: stop_i, n + start_i: n + stop_i].real
+            x = qomega[start_i:stop_i, n + start_i : n + stop_i].real
             u_svd, _s_svd, v_svd = np.linalg.svd(x)
             u_list = u_list + [u_svd]
             v_list = v_list + [v_svd.T]
@@ -621,8 +618,8 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
 
     else:
         ut1 = S
-        st1 = np.eye(2*n)
-        v1 = np.eye(2*n)
+        st1 = np.eye(2 * n)
+        v1 = np.eye(2 * n)
 
     return ut1, st1, v1
 
@@ -650,10 +647,10 @@ def covmat_to_hamil(V, tol=1e-10):  # pragma: no cover
     (n, m) = V.shape
     if n != m:
         raise ValueError("Input matrix must be square")
-    if np.linalg.norm(V-np.transpose(V)) >= tol:
+    if np.linalg.norm(V - np.transpose(V)) >= tol:
         raise ValueError("The input matrix is not symmetric")
 
-    n = n//2
+    n = n // 2
     omega = sympmat(n)
 
     vals = np.linalg.eigvalsh(V)
@@ -661,9 +658,9 @@ def covmat_to_hamil(V, tol=1e-10):  # pragma: no cover
         if val <= 0:
             raise ValueError("Input matrix is not positive definite")
 
-    W = 1j*V @ omega
+    W = 1j * V @ omega
     l, v = np.linalg.eig(W)
-    H = (1j * omega @ (v @ np.diag(np.arctanh(1.0/l.real)) @ np.linalg.inv(v))).real
+    H = (1j * omega @ (v @ np.diag(np.arctanh(1.0 / l.real)) @ np.linalg.inv(v))).real
 
     return H
 
@@ -686,7 +683,7 @@ def hamil_to_covmat(H, tol=1e-10):  # pragma: no cover
     (n, m) = H.shape
     if n != m:
         raise ValueError("Input matrix must be square")
-    if np.linalg.norm(H-np.transpose(H)) >= tol:
+    if np.linalg.norm(H - np.transpose(H)) >= tol:
         raise ValueError("The input matrix is not symmetric")
 
     vals = np.linalg.eigvalsh(H)
@@ -694,10 +691,10 @@ def hamil_to_covmat(H, tol=1e-10):  # pragma: no cover
         if val <= 0:
             raise ValueError("Input matrix is not positive definite")
 
-    n = n//2
+    n = n // 2
     omega = sympmat(n)
 
-    Wi = 1j*omega @ H
+    Wi = 1j * omega @ H
     l, v = np.linalg.eig(Wi)
-    V = (1j * (v @ np.diag(1.0/np.tanh(l.real)) @ np.linalg.inv(v)) @ omega).real
+    V = (1j * (v @ np.diag(1.0 / np.tanh(l.real)) @ np.linalg.inv(v)) @ omega).real
     return V
