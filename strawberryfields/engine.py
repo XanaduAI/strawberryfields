@@ -82,8 +82,16 @@ from time import sleep
 from .backends import load_backend
 from .backends.base import NotApplicableError, BaseBackend
 
-from strawberryfields.api_client import APIClient, Job
+from strawberryfields.api_client import APIClient, Job, JobNotQueuedError, JobExecutionError
 from strawberryfields.io import to_blackbird
+
+
+class OneJobAtATimeError(Exception):
+    """
+    Raised when a user attempts to execute more than one job on the same engine instance.
+    """
+
+    pass
 
 
 class Result:
@@ -412,10 +420,10 @@ class StarshipEngine(BaseEngine):
         Args:
             name (str): the name of the job to be created (e.g. StateTeleportation)
             shots (int): the number of shots
-            blackbird_code: the blackbird code of the job
+            program (Program): program to be converted to Blackbird code
 
         Returns:
-            str: job content to be sent to the server
+            blackbird.BlackbirdProgram
         """
         bb = to_blackbird(program, version="1.0")
         bb._name = name
@@ -461,7 +469,9 @@ class StarshipEngine(BaseEngine):
             TypeError: In case a job is already queued and a user is trying to submit a new job.
         """
         if self.jobs:
-            raise TypeError("A job is already queued. Please reset the engine and try again.")
+            raise OneJobAtATimeError(
+                "A job is already queued. Please reset the engine and try again."
+            )
 
         job_content = self._get_blackbird(program=program, **kwargs).serialize()
         job = self._queue_job(job_content)
@@ -474,11 +484,11 @@ class StarshipEngine(BaseEngine):
             if job.id:
                 print("Job {} is queued in the background.".format(job.id.value))
             else:
-                raise Exception("Job was not sent to server. Please try again.")
+                raise JobNotQueuedError("Job was not sent to server. Please try again.")
 
         if job.is_failed:
-            # TODO: Add failure details here, and use a better exception.
-            raise Exception("Job execution failed. Please try again.")
+            # TODO: Add failure details here. Should this exception be raised elsewhere?
+            raise JobExecutionError("Job execution failed. Please try again.")
         elif job.is_complete:
             job.result.manager.get()
             return job.result.result.value

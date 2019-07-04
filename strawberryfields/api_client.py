@@ -117,6 +117,22 @@ class ObjectAlreadyCreatedException(TypeError):
     pass
 
 
+class JobNotQueuedError(Exception):
+    """
+    Raised when a job is not successfully queued for whatever reason.
+    """
+
+    pass
+
+
+class JobExecutionError(Exception):
+    """
+    Raised when job execution failed and a job result does not exist.
+    """
+
+    pass
+
+
 class APIClient:
     """
     An object that allows the user to connect to the Xanadu Platform API.

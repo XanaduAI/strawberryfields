@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, call
 import strawberryfields as sf
 from strawberryfields import StarshipEngine
 from strawberryfields import ops
-from strawberryfields.api_client import APIClient
+from strawberryfields.api_client import APIClient, JobExecutionError
 from strawberryfields.backends.base import BaseBackend
 
 pytestmark = pytest.mark.frontend
@@ -264,7 +264,7 @@ class TestStarshipEngine:
 
         some_params = {"param": MagicMock()}
 
-        with pytest.raises(Exception):
+        with pytest.raises(JobExecutionError):
             starship_engine._run_program(program, **some_params)
 
     def test__run(self, starship_engine, monkeypatch):
