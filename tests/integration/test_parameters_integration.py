@@ -80,8 +80,8 @@ def test_parameters_with_operations(batch_size, setup_eng, backend, hbar):
         G = G(*par)
         with prog:
             if measure:
-                r[0].val = [0.1]
-                r[1].val = [0.2]
+                r[0].val = np.array([0.1])
+                r[1].val = np.array([0.2])
             if G.ns == 1:
                 G | r[0]
             else:
