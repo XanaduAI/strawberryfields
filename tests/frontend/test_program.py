@@ -453,7 +453,6 @@ class TestValidation:
         assert circuit[0].op.__class__.__name__ == "Gaussian"
 
         # test compilation against multiple targets in sequence
-        # fock target always decomposes the Gaussian operation
         with pytest.raises(program.CircuitError, match="The operation Gaussian is not a primitive for the target 'fock'"):
             prog = prog.compile(target='fock')
 
