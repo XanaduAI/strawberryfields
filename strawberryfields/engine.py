@@ -218,7 +218,7 @@ class BaseEngine(abc.ABC):
             Result: results of the computation
         """
 
-        def _normalize_sample(val):
+        def _broadcast_nones(val, shots):
             """Helper function to ensure register values have same shape, even if not measured"""
             if val is None and shots > 1:
                 return [None] * shots
@@ -231,14 +231,6 @@ class BaseEngine(abc.ABC):
         # NOTE: by putting ``shots`` into keyword arguments, it allows for the
         # signatures of methods in Operations to remain cleaner, since only
         # Measurements need to know about shots
-
-        if self.backend_name in getattr(self, "HARDWARE_BACKENDS", []):
-            p = program[0]
-            p = p.compile(self.backend_name)  # TODO: does compile need to know about shots?
-            p.lock()
-            self.run_progs.append(p)
-            samples = self._run_program(p, **kwargs)
-            return Result(samples)
 
         prev = self.run_progs[-1] if self.run_progs else None  # previous program segment
         for p in program:
@@ -264,11 +256,16 @@ class BaseEngine(abc.ABC):
                 )  # TODO: shots might be relevant for compilation?
             p.lock()
 
-            self._run_program(p, **kwargs)
-            self.run_progs.append(p)
+            if self.backend_name in getattr(self, "HARDWARE_BACKENDS", []):
+                self.samples = self._run_program(p, **kwargs)
+            else:
+                self._run_program(p, **kwargs)
+                shots = kwargs.get("shots", 1)
+                self.samples = [
+                    _broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)
+                ]
 
-            reg_refs = [p.reg_refs[k].val for k in sorted(p.reg_refs)]
-            self.samples = map(_normalize_sample, reg_refs)
+            self.run_progs.append(p)
             prev = p
 
         return Result(list(self.samples))
@@ -377,31 +374,20 @@ class StarshipEngine(BaseEngine):
         backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
     """
 
-    API_DEFAULT_REFRESH_SECONDS = 1
     HARDWARE_BACKENDS = ("chip0",)
 
-    def __init__(self, api_client_params=None):
+    def __init__(self, polling_delay_seconds=1, **kwargs):
         # Only chip0 backend supported initially.
         backend = "chip0"
         super().__init__(backend)
 
-        api_client_params = api_client_params or {}
+        api_client_params = {k: v for k, v in kwargs.items() if k in APIClient.DEFAULT_CONFIG}
         self.client = APIClient(**api_client_params)
+        self.polling_delay_seconds = polling_delay_seconds
         self.jobs = []
 
     def __str__(self):
         return self.__class__.__name__ + "({})".format(self.backend_name)
-
-    def reset(self, backend_options=None):
-        """
-        Reset must be called in order to submit a new job. This clears the job queue as well as
-        any ran Programs.
-        """
-        if backend_options is None:
-            backend_options = {}
-
-        super().reset(backend_options)
-        self.jobs.clear()
 
     def _init_backend(self, *args):
         """
@@ -410,9 +396,17 @@ class StarshipEngine(BaseEngine):
         # Do nothing for now...
         pass
 
-    def generate_job_content(self, name, shots, blackbird_code):
+    def reset(self):
         """
-        Generates a string representing the Blackbird code that will be sent to the server.
+        Reset must be called in order to submit a new job. This clears the job queue as well as
+        any ran Programs.
+        """
+        super().reset(backend_options={})
+        self.jobs.clear()
+
+    def _get_blackbird(self, name, shots, program):
+        """
+        Returns a Blackbird object to be sent later to the server when creating a job.
         Assumes the current backend as the target.
 
         Args:
@@ -423,16 +417,14 @@ class StarshipEngine(BaseEngine):
         Returns:
             str: A string containing the job content to be sent to the server.
         """
-        target = self.backend_name
-        return "\n".join(
-            [
-                "name {name}",
-                "version 1.0",
-                "target {target} (shots={shots})",
-                "",
-                "{blackbird_code}",
-            ]
-        ).format(name=name, target=target, shots=str(shots), blackbird_code=blackbird_code)
+        bb = to_blackbird(program, version="1.0")
+        bb._name = name
+
+        # TODO: This is potentially not needed here
+        bb._target["name"] = self.backend_name
+
+        bb._target["options"] = {"shots": shots}
+        return bb
 
     def _queue_job(self, job_content):
         """
@@ -471,14 +463,13 @@ class StarshipEngine(BaseEngine):
         if self.jobs:
             raise TypeError("A job is already queued. Please reset the engine and try again.")
 
-        blackbird_code = to_blackbird(program)
-        job_content = self.generate_job_content(blackbird_code=blackbird_code, **kwargs)
+        job_content = self._get_blackbird(program=program, **kwargs).serialize()
         job = self._queue_job(job_content)
 
         try:
             while not job.is_failed and not job.is_complete:
                 job.reload()
-                sleep(self.API_DEFAULT_REFRESH_SECONDS)
+                sleep(self.polling_delay_seconds)
         except KeyboardInterrupt:
             if job.id:
                 print("Job {} is queued in the background.".format(job.id.value))
@@ -493,9 +484,30 @@ class StarshipEngine(BaseEngine):
             return job.result.result.value
 
     def run(self, program, shots=1, name=None, **kwargs):
+        """Compile the given program and execute it by queuing a job in the Starship.
+
+        For the :class:`Program` instance given as input, the following happens:
+
+        * The Program instance is compiled for the target backend.
+        * The compiled program is sent as a job to the Starship
+        * The measurement results of each subsystem (if any) are stored in the :attr:`~.samples`.
+        * The compiled program is appended to self.run_progs.
+        * The queued or completed jobs are appended to self.jobs.
+
+        Finally, the result of the computation is returned.
+
+        Args:
+            program (Program, Sequence[Program]): quantum programs to run
+            name (str): The name of the program (an arbitrary string)
+            shots (int): number of times the program measurement evaluation is repeated
+
+        The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
+
+        Returns:
+            Result: results of the computation
         """
-        Compile a given program and queue a job in the Starship.
-        """
+
+        # TODO: this is probably not needed
         name = name or str(uuid.uuid4())
         return super()._run(program, shots=shots, name=name, **kwargs)
 

@@ -133,6 +133,8 @@ class APIClient:
     ENV_API_HOSTNAME_KEY = "{}API_HOSTNAME".format(ENV_KEY_PREFIX)
     ENV_USE_SSL_KEY = "{}USE_SSL".format(ENV_KEY_PREFIX)
 
+    DEFAULT_CONFIG = {"use_ssl": True, "hostname": DEFAULT_HOSTNAME, "authentication_token": None}
+
     def __init__(self, **kwargs):
         """
         Initialize the API client with various parameters.
@@ -140,7 +142,7 @@ class APIClient:
         # TODO: Load username, password, or authentication token from
         # configuration file
 
-        config = {"use_ssl": True, "hostname": self.DEFAULT_HOSTNAME, "authentication_token": None}
+        config = {k: v for k, v in self.DEFAULT_CONFIG.items()}
 
         # Try getting everything first from configuration
         config.update(self.get_configuration_from_config())

@@ -13,16 +13,15 @@
 # limitations under the License.
 r"""Unit tests for engine.py"""
 import pytest
-
-pytestmark = pytest.mark.frontend
+from unittest.mock import MagicMock, call
 
 import strawberryfields as sf
-from strawberryfields import ops
-from strawberryfields.backends.base import BaseBackend
-from unittest.mock import MagicMock
 from strawberryfields import StarshipEngine
+from strawberryfields import ops
 from strawberryfields.api_client import APIClient
-from strawberryfields.ops import S2gate, MeasureFock, Rgate, BSgate
+from strawberryfields.backends.base import BaseBackend
+
+pytestmark = pytest.mark.frontend
 
 
 @pytest.fixture
@@ -47,8 +46,7 @@ def starship_engine(monkeypatch):
     """
     mock_api_client = MagicMock()
     monkeypatch.setattr("strawberryfields.engine.APIClient", mock_api_client)
-    engine = StarshipEngine()
-    monkeypatch.setattr(engine, "API_DEFAULT_REFRESH_SECONDS", 0)
+    engine = StarshipEngine(polling_delay_seconds=0)
     return engine
 
 
@@ -179,10 +177,9 @@ class TestStarshipEngine:
         parameters are passed.
         """
         mock_api_client = MagicMock()
-        mock_api_client_params = {"param": MagicMock()}
         monkeypatch.setattr("strawberryfields.engine.APIClient", mock_api_client)
-        engine = StarshipEngine(mock_api_client_params)
-        mock_api_client.assert_called_once_with(param=mock_api_client_params["param"])
+        engine = StarshipEngine()
+        assert engine.client == mock_api_client()
         assert engine.jobs == []
 
     def test_reset(self, starship_engine):
@@ -194,22 +191,27 @@ class TestStarshipEngine:
         starship_engine.reset()
         assert len(starship_engine.jobs) == 0
 
-    def test_generate_job_content(self, starship_engine):
+    def test__get_blackbird(self, starship_engine, monkeypatch):
         """
-        Tests that StarshipEngine.generate_job_content returns the correct string given name,
-        shots, and blackbird_code parameters.
+        Tests that StarshipEngine._get_blackbird returns the correct string given name,
+        shots, and program parameters.
         """
+        methods = MagicMock()
         inputs = MagicMock()
 
-        output = starship_engine.generate_job_content(
-            inputs.name, inputs.shots, inputs.blackbird_code
+        monkeypatch.setattr("strawberryfields.engine.to_blackbird", methods.to_blackbird)
+
+        output = starship_engine._get_blackbird(inputs.name, inputs.shots, inputs.program)
+
+        methods.to_blackbird.assert_called_once_with(inputs.program, version="1.0")
+        assert output._name == inputs.name
+        assert len(output._target.__setitem__.call_args_list) == 2
+        assert output._target.__setitem__.call_args_list[0] == call(
+            "name", starship_engine.backend_name
         )
-        lines = output.split("\n")
-        assert lines[0] == "name {}".format(inputs.name)
-        assert lines[1] == "version 1.0"
-        assert lines[2] == "target {} (shots={})".format(starship_engine.backend_name, inputs.shots)
-        assert lines[3] == ""
-        assert lines[4] == str(inputs.blackbird_code)
+        assert output._target.__setitem__.call_args_list[1] == call(
+            "options", {"shots": inputs.shots}
+        )
 
     def test_queue_job(self, starship_engine, monkeypatch):
         mock_job = MagicMock()
@@ -228,23 +230,20 @@ class TestStarshipEngine:
         completed job's result samples are returned.
         """
         mock_to_blackbird = MagicMock()
-        mock_generate_job_content = MagicMock()
+        mock__get_blackbird = MagicMock()
         program = MagicMock()
         mock_job = MagicMock()
         mock_job.is_complete = True
         mock_job.is_failed = False
 
         monkeypatch.setattr("strawberryfields.engine.to_blackbird", mock_to_blackbird)
-        monkeypatch.setattr(starship_engine, "generate_job_content", mock_generate_job_content)
+        monkeypatch.setattr(starship_engine, "_get_blackbird", mock__get_blackbird)
         monkeypatch.setattr(starship_engine, "_queue_job", lambda job_content: mock_job)
 
         some_params = {"param": MagicMock()}
         result = starship_engine._run_program(program, **some_params)
 
-        mock_to_blackbird.assert_called_once_with(program)
-        mock_generate_job_content.assert_called_once_with(
-            blackbird_code=mock_to_blackbird(program), param=some_params["param"]
-        )
+        mock__get_blackbird.assert_called_once_with(program=program, param=some_params["param"])
 
         assert result == mock_job.result.result.value
 
@@ -253,14 +252,14 @@ class TestStarshipEngine:
         Tests that an Exception is raised when a job has failed.
         """
         mock_to_blackbird = MagicMock()
-        mock_generate_job_content = MagicMock()
+        mock__get_blackbird = MagicMock()
         program = MagicMock()
         mock_job = MagicMock()
         mock_job.is_complete = False
         mock_job.is_failed = True
 
         monkeypatch.setattr("strawberryfields.engine.to_blackbird", mock_to_blackbird)
-        monkeypatch.setattr(starship_engine, "generate_job_content", mock_generate_job_content)
+        monkeypatch.setattr(starship_engine, "_get_blackbird", mock__get_blackbird)
         monkeypatch.setattr(starship_engine, "_queue_job", lambda job_content: mock_job)
 
         some_params = {"param": MagicMock()}
@@ -277,6 +276,7 @@ class TestStarshipEngine:
         """
 
         inputs = MagicMock()
+        inputs.shots = 1
         outputs = MagicMock()
         methods = MagicMock()
 
@@ -292,9 +292,11 @@ class TestStarshipEngine:
         mock_compiled_program = inputs.program.compile(starship_engine.backend_name)
         mock_compiled_program.lock.assert_called_once()
         methods._run_program.assert_called_once_with(mock_compiled_program, shots=inputs.shots)
-        mock_samples = methods._run_program(mock_compiled_program, shots=inputs.shots)
+        assert starship_engine.samples == starship_engine._run_program(
+            mock_compiled_program, shots=inputs.shots
+        )
         assert starship_engine.run_progs == [mock_compiled_program]
-        assert result == outputs.result(mock_samples)
+        assert result == outputs.result(starship_engine.samples)
 
     def test_run(self, starship_engine, monkeypatch):
         """
@@ -322,15 +324,17 @@ class TestStarshipEngine:
         # NOTE: this is currently more of an integration test, currently a WIP / under development.
 
         api_client_params = {"hostname": "localhost"}
-        engine = StarshipEngine(api_client_params)
-        monkeypatch.setattr(engine, "API_DEFAULT_REFRESH_SECONDS", 0)
+        engine = StarshipEngine(polling_delay_seconds=0, **api_client_params)
 
         # We don't want to actually send any requests, though we should make sure POST was called
         mock_api_client_post = MagicMock()
         mock_get = MagicMock()
         mock_get_response = MagicMock()
         mock_get_response.status_code = 200
-        mock_get_response.json.return_value = {"status": "COMPLETE", "id": 1234}
+
+        # Including "result" here is a little hacky, but it is here as this response is returned
+        # for both job.get() and job.result.get()
+        mock_get_response.json.return_value = {"status": "COMPLETE", "id": 1234, "result": {1: []}}
         mock_get.return_value = mock_get_response
 
         mock_post_response = MagicMock()
@@ -343,20 +347,20 @@ class TestStarshipEngine:
 
         prog = sf.Program(4)
         with prog.context as q:
-            S2gate(2) | [0, 2]
-            S2gate(2) | [1, 3]
-            Rgate(3) | 0
-            BSgate() | [0, 1]
-            Rgate(3) | 0
-            Rgate(3) | 1
-            Rgate(3) | 2
-            BSgate() | [2, 3]
-            Rgate(3) | 2
-            Rgate(3) | 3
-            MeasureFock() | [0]
-            MeasureFock() | [1]
-            MeasureFock() | [2]
-            MeasureFock() | [3]
+            ops.S2gate(2) | [0, 2]
+            ops.S2gate(2) | [1, 3]
+            ops.Rgate(3) | 0
+            ops.BSgate() | [0, 1]
+            ops.Rgate(3) | 0
+            ops.Rgate(3) | 1
+            ops.Rgate(3) | 2
+            ops.BSgate() | [2, 3]
+            ops.Rgate(3) | 2
+            ops.Rgate(3) | 3
+            ops.MeasureFock() | [0]
+            ops.MeasureFock() | [1]
+            ops.MeasureFock() | [2]
+            ops.MeasureFock() | [3]
 
         engine.run(prog)
 
