@@ -20,11 +20,7 @@ import numpy as np
 
 import strawberryfields as sf
 from strawberryfields import decompositions as dec
-from strawberryfields.utils import (
-    random_interferometer,
-    random_symplectic,
-    random_covariance,
-)
+from strawberryfields.utils import random_interferometer, random_symplectic, random_covariance
 from strawberryfields import ops
 
 # make the test file deterministic
@@ -121,9 +117,7 @@ def _beamsplitter(theta, phi, modes, num_modes):
     w = np.array(modes)
 
     S2[w.reshape(-1, 1), w.reshape(1, -1)] = S[:2, :2].copy()  # X
-    S2[(w + num_modes).reshape(-1, 1), (w + num_modes).reshape(1, -1)] = S[
-        2:, 2:
-    ].copy()  # P
+    S2[(w + num_modes).reshape(-1, 1), (w + num_modes).reshape(1, -1)] = S[2:, 2:].copy()  # P
     S2[w.reshape(-1, 1), (w + num_modes).reshape(1, -1)] = S[:2, 2:].copy()  # XP
     S2[(w + num_modes).reshape(-1, 1), w.reshape(1, -1)] = S[2:, :2].copy()  # PX
 
@@ -224,9 +218,7 @@ class TestGraphEmbed:
         # calculating the resulting decomposed symplectic
         for cmd in cmds:
             # all operations should be BSgates, Rgates, or Sgates
-            assert isinstance(
-                cmd.op, (ops.Interferometer, ops.BSgate, ops.Rgate, ops.Sgate)
-            )
+            assert isinstance(cmd.op, (ops.Interferometer, ops.BSgate, ops.Rgate, ops.Sgate))
 
             # build up the symplectic transform
             modes = [i.ind for i in cmd.reg]
@@ -242,9 +234,7 @@ class TestGraphEmbed:
 
             if isinstance(cmd.op, ops.Interferometer):
                 U1 = cmd.op.p[0].x
-                S_U = np.vstack(
-                    [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
-                )
+                S_U = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
                 S = S_U @ S
 
         # the resulting covariance state
@@ -355,9 +345,7 @@ class TestGaussianTransform:
 
             if isinstance(cmd.op, ops.Interferometer):
                 U1 = cmd.op.p[0].x
-                S_U = np.vstack(
-                    [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
-                )
+                S_U = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
                 S = S_U @ S
 
         # the resulting covariance state
@@ -391,9 +379,7 @@ class TestGaussianTransform:
 
             if isinstance(cmd.op, ops.Interferometer):
                 U1 = cmd.op.p[0].x
-                S_U = np.vstack(
-                    [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
-                )
+                S_U = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
                 S = S_U @ S
 
         # the resulting covariance state
@@ -437,9 +423,7 @@ class TestGaussianTransform:
 
             if isinstance(cmd.op, ops.Interferometer):
                 U1 = cmd.op.p[0].x
-                S_U = np.vstack(
-                    [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
-                )
+                S_U = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
                 S = S_U @ S
 
         # the resulting covariance state
@@ -456,8 +440,8 @@ class TestGaussian:
         n = 3
         V1 = random_covariance(n, pure=False, hbar=hbar)
         V2 = random_covariance(n, pure=True, hbar=hbar)
-        r1 = np.random.randn(2*n)
-        r2 = np.random.randn(2*n)
+        r1 = np.random.randn(2 * n)
+        r2 = np.random.randn(2 * n)
 
         G1 = ops.Gaussian(V1, r1)
         G2 = ops.Gaussian(V2, r2)
@@ -484,6 +468,7 @@ class TestGaussian:
 
         class DummyBackend:
             """Dummy backend class"""
+
             def prepare_gaussian_state(*args):
                 """Raises a syntax error when called"""
                 raise SyntaxError
@@ -513,9 +498,7 @@ class TestGaussian:
             modes = [i.ind for i in cmd.reg]
 
             if isinstance(cmd.op, ops.Thermal):
-                cov_init[cmd.reg[0].ind, cmd.reg[0].ind] = (
-                    (2 * cmd.op.p[0].x + 1) * hbar / 2
-                )
+                cov_init[cmd.reg[0].ind, cmd.reg[0].ind] = (2 * cmd.op.p[0].x + 1) * hbar / 2
                 cov_init[cmd.reg[0].ind + n, cmd.reg[0].ind + n] = (
                     (2 * cmd.op.p[0].x + 1) * hbar / 2
                 )

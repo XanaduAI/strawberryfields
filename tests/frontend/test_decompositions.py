@@ -33,11 +33,7 @@ def omega(n):
     """Returns the symplectic matrix for n modes"""
     idm = np.identity(n)
     O = np.concatenate(
-        (
-            np.concatenate((0 * idm, idm), axis=1),
-            np.concatenate((-idm, 0 * idm), axis=1),
-        ),
-        axis=0,
+        (np.concatenate((0 * idm, idm), axis=1), np.concatenate((-idm, 0 * idm), axis=1)), axis=0
     )
     return O
 
@@ -134,8 +130,9 @@ class TestGraphEmbed:
         A += A.T
         n_mean = 10.0
         sc, _ = dec.graph_embed(A, mean_photon=n_mean)
-        n_mean_calc = np.sum(np.sinh(sc)**2)
+        n_mean_calc = np.sum(np.sinh(sc) ** 2)
         assert np.allclose(n_mean, n_mean_calc, atol=tol, rtol=0)
+
 
 class TestRectangularDecomposition:
     """Tests for linear interferometer rectangular decomposition"""
@@ -233,20 +230,23 @@ class TestRectangularSymmetricDecomposition:
         with pytest.raises(ValueError, match="matrix is not unitary"):
             dec.rectangular_symmetric(A)
 
-    @pytest.mark.parametrize('U', [
-        pytest.param(np.identity(2), id='identity2'),
-        pytest.param(np.identity(2)[::-1], id='antiidentity2'),
-        pytest.param(haar_measure(2), id='random2'),
-        pytest.param(np.identity(4), id='identity4'),
-        pytest.param(np.identity(3)[::-1], id='antiidentity4'),
-        pytest.param(haar_measure(4), id='random4'),
-        pytest.param(np.identity(8), id='identity8'),
-        pytest.param(np.identity(8)[::-1], id='antiidentity8'),
-        pytest.param(haar_measure(8), id='random8'),
-        pytest.param(np.identity(20), id='identity20'),
-        pytest.param(np.identity(20)[::-1], id='antiidentity20'),
-        pytest.param(haar_measure(20), id='random20')
-        ])
+    @pytest.mark.parametrize(
+        "U",
+        [
+            pytest.param(np.identity(2), id="identity2"),
+            pytest.param(np.identity(2)[::-1], id="antiidentity2"),
+            pytest.param(haar_measure(2), id="random2"),
+            pytest.param(np.identity(4), id="identity4"),
+            pytest.param(np.identity(3)[::-1], id="antiidentity4"),
+            pytest.param(haar_measure(4), id="random4"),
+            pytest.param(np.identity(8), id="identity8"),
+            pytest.param(np.identity(8)[::-1], id="antiidentity8"),
+            pytest.param(haar_measure(8), id="random8"),
+            pytest.param(np.identity(20), id="identity20"),
+            pytest.param(np.identity(20)[::-1], id="antiidentity20"),
+            pytest.param(haar_measure(20), id="random20"),
+        ],
+    )
     def test_decomposition(self, U, tol):
         """This test checks the function :func:`dec.rectangular_symmetric` for
         various unitary matrices.
@@ -344,9 +344,7 @@ class TestWilliamsonDecomposition:
 
             # interferometer 1
             U1 = haar_measure(n)
-            S1 = np.vstack(
-                [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
-            )
+            S1 = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
 
             # squeezing
             r = np.log(0.2 * np.arange(n) + 2)
@@ -354,9 +352,7 @@ class TestWilliamsonDecomposition:
 
             # interferometer 2
             U2 = haar_measure(n)
-            S2 = np.vstack(
-                [np.hstack([U2.real, -U2.imag]), np.hstack([U2.imag, U2.real])]
-            )
+            S2 = np.vstack([np.hstack([U2.real, -U2.imag]), np.hstack([U2.imag, U2.real])])
 
             # final symplectic
             S_final = S2 @ Sq @ S1
@@ -399,9 +395,7 @@ class TestWilliamsonDecomposition:
         """Test that the graph_embed decomposition raises exception if not even number of rows"""
         A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         A += A.T
-        with pytest.raises(
-            ValueError, match="must have an even number of rows/columns"
-        ):
+        with pytest.raises(ValueError, match="must have an even number of rows/columns"):
             dec.williamson(A)
 
     def test_positive_definite_validation(self):
@@ -474,9 +468,7 @@ class TestBlochMessiahDecomposition:
 
             # interferometer 1
             U1 = haar_measure(n)
-            S1 = np.vstack(
-                [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
-            )
+            S1 = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
 
             Sq = np.identity(2 * n)
             if not passive:
@@ -486,9 +478,7 @@ class TestBlochMessiahDecomposition:
 
             # interferometer 2
             U2 = haar_measure(n)
-            S2 = np.vstack(
-                [np.hstack([U2.real, -U2.imag]), np.hstack([U2.imag, U2.real])]
-            )
+            S2 = np.vstack([np.hstack([U2.real, -U2.imag]), np.hstack([U2.imag, U2.real])])
 
             # final symplectic
             S_final = S2 @ Sq @ S1
@@ -516,9 +506,7 @@ class TestBlochMessiahDecomposition:
         """Test raises exception if not even number of rows"""
         A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         A += A.T
-        with pytest.raises(
-            ValueError, match="must have an even number of rows/columns"
-        ):
+        with pytest.raises(ValueError, match="must have an even number of rows/columns"):
             dec.bloch_messiah(A)
 
     def test_identity(self, tol):
