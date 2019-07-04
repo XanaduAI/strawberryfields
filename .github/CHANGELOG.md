@@ -8,9 +8,9 @@
     - `LocalEngine.run()` returns a `Result` object that contains both a state object and measurement samples.
     - The way kwargs were used has been simplified by introducing the new kwargs-like arguments `backend_options` and `state_options`. `LocalEngine.run()` passes the actual kwargs only to `Operation.apply()`.
 - The Gaussian backend now officially supports Fock-basis measurements (`MeasureFock`/`Measure`/`measure_fock`), but does not update the quantum state.
-- New `shots` keyword argument added to `Engine.run()`, enabling multi-shot sampling. Currently supported only in the Gaussian backend, and only for Fock measurements.
+- New `shots` keyword argument added to `Engine.run()`, enabling multi-shot sampling. Supported only in the Gaussian backend, and only for Fock measurements.
 - Added the ability to compile quantum programs to match a desired circuit target.
-- Included a compilation target for Gaussian Boson Sampling circuits.
+- Included a number of compilation targets, including Gaussian Boson Sampling circuits.
 - Added a frontend validation database, the `devicespecs` submodule, for validating that quantum programs can be executed on certain backends and providing compilation methods.
 - Added the `sf.io` module, which is used to save/load standalone Blackbird scripts from/into Strawberry Fields. Note that the Blackbird DSL has been spun off as an independent package and is now a dependency of Strawberry Fields.
 - Added a new decomposition `mach_zehnder` to the decompositions module. 
@@ -24,6 +24,8 @@
 - Added two top-level functions:
     - `about()`, which prints human-readable system info including installed versions of various Python packages.
     - `cite()`, which prints a bibtex citation for SF.
+- Added a glossary to the documentation
+
 
 ### Improvements
 
