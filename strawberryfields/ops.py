@@ -1682,14 +1682,17 @@ class GraphEmbed(Decomposition):
 
     Args:
         A (array): an :math:`N\times N` complex or real symmetric matrix
-        mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
-            representing the graph satisfies  :math:`\sum_i sinh(r_{i})^2 ==` ``mean_photon``
-        make_traceless (boolean): removes the trace of the input matrix
+        mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state
+            representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
+        make_traceless (boolean): Removes the trace of the input matrix, by performing the transformation
+            :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
+            the graph but will lead to different photon number statistics for events with more than
+            one photon in any mode.
         tol (float): the tolerance used when checking if the input matrix is symmetric:
             :math:`|A-A^T| <` tol
     """
 
-    def __init__(self, A, mean_photon, make_traceless=False, tol=1e-6):
+    def __init__(self, A, mean_photon_per_mode=1.0, make_traceless=False, tol=1e-6):
         super().__init__([A])
         self.ns = A.shape[0]
 
@@ -1698,7 +1701,7 @@ class GraphEmbed(Decomposition):
         else:
             self.identity = False
             self.sq, self.U = graph_embed(
-                A, mean_photon=mean_photon, make_traceless=make_traceless, atol=tol
+                A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=make_traceless, atol=tol
             )
 
     def _decompose(self, reg):

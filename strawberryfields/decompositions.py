@@ -124,7 +124,7 @@ def graph_embed_deprecated(A, max_mean_photon=1.0, make_traceless=False, rtol=1e
         A (array[complex]): square, symmetric (weighted) adjacency matrix of the graph
         max_mean_photon (float): Threshold value. It guarantees that the mode with
             the largest squeezing has ``max_mean_photon`` as the mean photon number
-            i.e., :math:`sinh(r_{max})^2 ==` ``max_mean_photon``.
+            i.e., :math:`sinh(r_{max})^2 ==` :code:``max_mean_photon``.
         make_traceless (bool): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
             the graph but will lead to different photon number statistics for events with more than
@@ -153,7 +153,7 @@ def graph_embed_deprecated(A, max_mean_photon=1.0, make_traceless=False, rtol=1e
     return vals, U
 
 
-def graph_embed(A, mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08):
+def graph_embed(A, mean_photon_per_mode=1.0, make_traceless=False, rtol=1e-05, atol=1e-08):
     r"""Embed a graph into a Gaussian state.
 
     Given a graph in terms of a symmetric adjacency matrix
@@ -165,8 +165,8 @@ def graph_embed(A, mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08
 
     Args:
         A (array[complex]): square, symmetric (weighted) adjacency matrix of the graph
-        mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
-            representing the graph satisfies  :math:`\sum_i sinh(r_{i})^2 ==` ``mean_photon``
+        mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state
+            representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
         make_traceless (bool): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
             the graph but will lead to different photon number statistics for events with more than
@@ -189,7 +189,7 @@ def graph_embed(A, mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08
     if make_traceless:
         A = A - np.trace(A) * np.identity(n) / n
 
-    scale = find_scaling_adjacency_matrix(A, mean_photon)
+    scale = find_scaling_adjacency_matrix(A, mean_photon_per_mode)
     A = scale * A
     s, U = takagi(A, tol=atol)
     vals = -np.arctanh(s)

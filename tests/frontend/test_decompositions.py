@@ -124,12 +124,13 @@ class TestGraphEmbed:
 
         assert np.allclose(np.trace(A_out), 0, atol=tol, rtol=0)
 
-    def test_mean_photon(self, monkeypatch, tol):
+    def test_mean_photon(self, tol):
         """Test that the mean photon number is correct in graph_embed"""
-        A = np.random.random([6, 6]) + 1j * np.random.random([6, 6])
+        num_modes = 6
+        A = np.random.random([num_modes, num_modes]) + 1j * np.random.random([num_modes, num_modes])
         A += A.T
-        n_mean = 10.0
-        sc, _ = dec.graph_embed(A, mean_photon=n_mean)
+        n_mean = 10.0 / num_modes
+        sc, _ = dec.graph_embed(A, mean_photon_per_mode=n_mean)
         n_mean_calc = np.sum(np.sinh(sc) ** 2)
         assert np.allclose(n_mean, n_mean_calc, atol=tol, rtol=0)
 
