@@ -18,15 +18,15 @@ pytestmark = pytest.mark.frontend
 
 import numpy as np
 
-import strawberryfields as sf
-
+import strawberryfields.program_utils as pu
 from strawberryfields import ops
-from strawberryfields.program import (Program, MergeFailure, RegRefError)
+from strawberryfields.program import Program
+from strawberryfields.program_utils import MergeFailure, RegRefError, CircuitError
 from strawberryfields import utils
 from strawberryfields.parameters import Parameter
 
 # make test deterministic
-np.random.random(42)
+np.random.seed(42)
 a = np.random.random()
 
 
@@ -36,15 +36,15 @@ class TestProgramGateInteraction:
     @pytest.fixture
     def prog(self):
         """Dummy program context for each test"""
-        prog = sf.Program(2)
-        Program._current_context = prog
+        prog = Program(2)
+        pu.Program_current_context = prog
         yield prog
-        Program._current_context = None
+        pu.Program_current_context = None
 
     @pytest.mark.parametrize("gate", ops.one_args_gates + ops.two_args_gates)
     def test_dispatch_one_mode_gates(self, gate):
         """test one mode gates automatically add to the queue"""
-        prog = sf.Program(2)
+        prog = Program(2)
         G = gate(a)
 
         if G.ns == 2:
@@ -63,7 +63,7 @@ class TestProgramGateInteraction:
     @pytest.mark.parametrize("gate", ops.one_args_gates + ops.two_args_gates)
     def test_dispatch_two_mode_gates(self, gate):
         """test two mode gates automatically add to the queue"""
-        prog = sf.Program(3)
+        prog = Program(3)
         G = gate(a)
 
         if G.ns == 1:
@@ -97,6 +97,18 @@ class TestProgramGateInteraction:
         with pytest.raises(ValueError, match='is not a positive integer'):
             ops.New(1.5)
 
+    def test_create_locked(self, prog):
+        """No new modes can be created in a locked Program."""
+        prog.lock()
+        with pytest.raises(CircuitError, match='The Program is locked, no new subsystems can be created'):
+            ops.New(1)
+
+    def test_delete_locked(self, prog):
+        """No modes can be deleted in a locked Program."""
+        prog.lock()
+        with pytest.raises(CircuitError, match='The Program is locked, no more Commands can be appended to it'):
+            ops.Del | 0
+
     def test_delete_not_existing(self, prog):
         """deleting nonexistent modes not allowed"""
         with pytest.raises(RegRefError, match='does not exist'):
@@ -128,7 +140,7 @@ class TestProgramGateInteraction:
 
     def test_create_delete_multiple_modes(self):
         """test creating and deleting multiple modes"""
-        prog = sf.Program(3)
+        prog = Program(3)
 
         with prog.context as (alice, bob, charlie):
             edward, frank, grace = ops.New(3)

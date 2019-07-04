@@ -348,6 +348,7 @@ class TestBlackbirdToSFConversion:
         prog = io.to_program(bb)
 
         assert prog.name == bb.name
+        assert prog.name == 'test_program'
 
     def test_gate_no_arg(self):
         """Test gate with no argument converts"""
@@ -429,46 +430,27 @@ class TestBlackbirdToSFConversion:
         target gaussian
         Pgate(0.54) | 0
         """
-
         bb = blackbird.loads(bb_script)
         prog = io.to_program(bb)
 
-        assert len(prog) == 1
-        assert prog.circuit[0].op.__class__.__name__ == "Pgate"
-        assert prog.circuit[0].reg[0].ind == 0
-        assert prog.backend == 'gaussian'
-
-        # after compilation
-        prog = prog.compile()
-
+        assert prog.target == 'gaussian'
         assert len(prog) == 2
         assert prog.circuit[0].op.__class__.__name__ == "Sgate"
         assert prog.circuit[0].reg[0].ind == 0
         assert prog.circuit[1].op.__class__.__name__ == "Rgate"
         assert prog.circuit[1].reg[0].ind == 0
 
-    # TODO: add ability to Program.compile() to use existing
-    # prog.backend attribute if no argument is provided
-    # def test_invalid_compilation(self):
-    #     """Test an invalid compilation target raises error on attempted compilation"""
-    #     bb_script = """\
-    #     name test_program
-    #     version 1.0
-    #     target gaussian
-    #     Kgate(0.54) | 0
-    #     """
-
-    #     bb = blackbird.loads(bb_script)
-    #     prog = io.to_program(bb)
-
-    #     assert len(prog) == 1
-    #     assert prog.circuit[0].op.__class__.__name__ == "Kgate"
-    #     assert prog.circuit[0].reg[0].ind == 0
-    #     assert prog.backend == 'gaussian'
-
-    #     # after compilation
-    #     with pytest.raises(CircuitError, match="cannot be used with the gaussian backend"):
-    #         prog.compile()
+    def test_invalid_compilation(self):
+         """Test an invalid compilation target raises error on attempted compilation"""
+         bb_script = """\
+         name test_program
+         version 1.0
+         target gaussian
+         Kgate(0.54) | 0
+         """
+         bb = blackbird.loads(bb_script)
+         with pytest.raises(CircuitError, match="cannot be used with the target"):
+             prog = io.to_program(bb)
 
 
 class TestSave:

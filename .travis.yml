@@ -1,4 +1,3 @@
-sudo: false
 language: python
 cache: pip
 python:
@@ -13,13 +12,9 @@ matrix:
   include:
     - env: OPTIONS="frontend or fock or gaussian"
     - env: OPTIONS="tf and pure"
-      sudo: required
     - env: OPTIONS="tf and mixed"
-      sudo: required
     - env: BATCHED=1 OPTIONS="tf and pure"
-      sudo: required
     - env: BATCHED=1 OPTIONS="tf and mixed"
-      sudo: required
 install:
   - pip install -r requirements.txt
   - pip install wheel codecov pytest pytest-cov --upgrade

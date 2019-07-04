@@ -290,6 +290,7 @@ from scipy.linalg import block_diag
 from scipy.special import factorial as fac
 
 import strawberryfields as sf
+import strawberryfields.program_utils as pu
 from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
 from .program import Program, Command, RegRefTransform, MergeFailure
@@ -317,7 +318,6 @@ from .decompositions import clements, bloch_messiah, williamson, graph_embed
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
-# pylint: disable=too-many-arguments
 
 # numerical tolerances
 _decomposition_merge_tol = 1e-13
@@ -354,8 +354,8 @@ class Operation:
     :class:`~strawberryfields.parameters.Parameter` class for more details.
 
     Args:
-        par (Sequence[...]): parameters. len(par) >= 1. Alternatively,
-            set to [] or None to allow initialisation with no parameters.
+        par (Sequence[Any]): Operation parameters. An empty sequence if no parameters
+            are required.
     """
 
     # default: one-subsystem operation
@@ -366,16 +366,15 @@ class Operation:
     def __init__(self, par):
         #: set[RegRef]: extra dependencies due to deferred measurements, used during optimization
         self._extra_deps = set()
-        #: list[Parameter]
+        #: list[Parameter]: operation parameters
         self.p = []
 
-        if par:
-            # convert each parameter into a Parameter instance, keep track of dependenciens
-            for q in par:
-                if not isinstance(q, Parameter):
-                    q = Parameter(q)
-                self.p.append(q)
-                self._extra_deps.update(q.deps)
+        # convert each parameter into a Parameter instance, keep track of dependenciens
+        for q in par:
+            if not isinstance(q, Parameter):
+                q = Parameter(q)
+            self.p.append(q)
+            self._extra_deps.update(q.deps)
 
     def __str__(self):
         """String representation for the Operation using Blackbird syntax.
@@ -384,7 +383,7 @@ class Operation:
             str: string representation
         """
         # defaults to the class name
-        if self.p is None:
+        if not self.p:
             return self.__class__.__name__
 
         # class name and parameter values
@@ -393,7 +392,7 @@ class Operation:
 
     @property
     def extra_deps(self):
-        """Extra dependencies due to parameters that depend on deferred measurements.
+        """Extra dependencies due to parameters that depend on measurements.
 
         Returns:
             set[RegRef]: dependencies
@@ -416,7 +415,7 @@ class Operation:
         if (not reg) or (self.ns is not None and self.ns != len(reg)):
             raise ValueError("Wrong number of subsystems.")
         # append it to the Program
-        reg = Program._current_context.append(self, reg)
+        reg = pu.Program_current_context.append(self, reg)
         return reg
 
     def merge(self, other):
@@ -434,8 +433,7 @@ class Operation:
             the identity gate (doing nothing).
 
         Raises:
-            ~strawberryfields.engine.MergeFailure: if the two
-                operations cannot be merged
+            .MergeFailure: if the two operations cannot be merged
         """
         # todo: Using the return value None to denote the identity is a
         # bit dangerous, since a function with no explicit return statement
@@ -548,7 +546,7 @@ class Preparation(Operation):
 
 
 class Measurement(Operation):
-    """Abstract base class for projective subsystem measurements.
+    """Abstract base class for subsystem measurements.
 
     The measurement is deferred: its result is available only
     after the backend has executed it. The value of the measurement can
@@ -616,6 +614,12 @@ class Decomposition(Operation):
 
     ns = None  # overridden by child classes in __init__
 
+    def __init__(self, par, decomp=True):
+        super().__init__(par)
+        self.decomp = decomp
+        """bool: If False, try to apply the Decomposition as a single primitive operation
+        instead of decomposing it."""
+
     def merge(self, other):
         # can be merged if they are the same class
         if isinstance(other, self.__class__):
@@ -657,7 +661,7 @@ class Transformation(Operation):
 
 
 class Channel(Transformation):
-    """Abstract base class for channels.
+    """Abstract base class for quantum channels.
 
     This class provides the base behaviour for non-unitary
     maps and transformations.
@@ -768,49 +772,49 @@ class Gate(Transformation):
         self.p = temp  # restore original unevaluated Parameter instances
 
     def merge(self, other):
-        # can be merged if they are the same class and share all the other parameters
-        if (
-            isinstance(other, self.__class__)
-            and self.p[1:] == other.p[1:]
-            and len(self._extra_deps) + len(other._extra_deps) == 0
-        ):
+        if not self.__class__ == other.__class__:
+            raise MergeFailure('Not the same gate family.')
+
+        if len(self._extra_deps)+len(other._extra_deps) == 0:
             # no extra dependencies <=> no RegRefTransform parameters,
             # with which we cannot do arithmetic at the moment
-            # make sure the gates have the same dagger flag, if not, invert the second p[0]
-            if self.dagger == other.dagger:
-                temp = other.p[0]
-            else:
-                temp = -other.p[0]
-            # now we can add up the parameters and keep self.dagger
-            p0 = self.p[0] + temp
-            if p0 == 0:
-                return None  # identity gate
 
-            # return a copy
-            # HACK: some of the subclass constructors only take a single parameter,
-            # some take two, none take three
-            if len(self.p) == 1:
-                temp = self.__class__(p0)
-            else:
-                temp = self.__class__(p0, *self.p[1:])
-            # NOTE deepcopy would make copies of RegRefs inside a possible
-            # RegRefTransformation parameter, RegRefs must not be copied.
-            # OTOH copy results in temp having the same p list as self,
-            # which we would modify below.
-            # temp = copy.copy(self)
-            # temp.p[0] = p0
-            temp.dagger = self.dagger
-            return temp
+            # gates can be merged if they are the same class and share all the other parameters
+            if self.p[1:] == other.p[1:]:
+                # make sure the gates have the same dagger flag, if not, invert the second p[0]
+                if self.dagger == other.dagger:
+                    temp = other.p[0]
+                else:
+                    temp = -other.p[0]
+                # now we can add up the parameters and keep self.dagger
+                p0 = self.p[0] + temp
+                if p0 == 0:
+                    return None  # identity gate
 
-        if isinstance(other, self.__class__):
+                # return a copy
+                # HACK: some of the subclass constructors only take a single parameter,
+                # some take two, none take three
+                if len(self.p) == 1:
+                    temp = self.__class__(p0)
+                else:
+                    temp = self.__class__(p0, *self.p[1:])
+                # NOTE deepcopy would make copies of RegRefs inside a possible
+                # RegRefTransformation parameter, RegRefs must not be copied.
+                # OTOH copy results in temp having the same p list as self,
+                # which we would modify below.
+                #temp = copy.copy(self)
+                #temp.p[0] = p0
+                temp.dagger = self.dagger
+                return temp
+
+        else:
+            # gates have RegRefTransform parameters:
             # without knowing anything more specific about the gates, we
             # can only merge them if they are each others' inverses
-            if self.dagger != other.dagger:
+            if self.p == other.p and self.dagger != other.dagger:
                 return None
 
-            raise MergeFailure("Don't know how to merge these gates.")
-
-        raise MergeFailure("Not the same gate family.")
+        raise MergeFailure("Don't know how to merge these gates.")
 
 
 # ====================================================================
@@ -1538,7 +1542,7 @@ class _Delete(MetaOperation):
 
     def __or__(self, reg):
         reg = super().__or__(reg)
-        Program._current_context._delete_subsystems(reg)
+        pu.Program_current_context._delete_subsystems(reg)
 
     def _apply(self, reg, backend, **kwargs):
         backend.del_mode(reg)
@@ -1560,12 +1564,12 @@ def New(n=1):
     Returns:
         tuple[RegRef]: tuple of the newly added subsystem references
     """
-    if Program._current_context is None:
-        raise RuntimeError("New() can only be called inside a Program context.")
+    if pu.Program_current_context is None:
+        raise RuntimeError('New() can only be called inside a Program context.')
     # create RegRefs for the new modes
-    refs = Program._current_context._add_subsystems(n)
+    refs = pu.Program_current_context._add_subsystems(n)
     # append the actual Operation to the Program
-    Program._current_context.append(_New_modes(n), refs)
+    pu.Program_current_context.append(_New_modes(n), refs)
     return refs
 
 
@@ -1616,9 +1620,9 @@ class All(MetaOperation):
         reg = _seq_to_list(reg)
         # convert into commands
         # make sure reg does not contain duplicates (we feed them to Program.append() one by one)
-        Program._current_context._test_regrefs(reg)
+        pu.Program_current_context._test_regrefs(reg)
         for r in reg:
-            Program._current_context.append(self.op, [r])
+            pu.Program_current_context.append(self.op, [r])
 
 
 # ====================================================================
@@ -1846,17 +1850,15 @@ class Gaussian(Preparation, Decomposition):
         if len(r) != V.shape[0]:
             raise ValueError("Vector of means must have the same length as the covariance matrix.")
 
-        super().__init__([V, r])  # V is hbar-independent, r is not
+        super().__init__([V, r], decomp=decomp)  # V is hbar-independent, r is not
 
         self.x_disp = r[: self.ns]
         self.p_disp = r[self.ns :]
 
-        if decomp:
-            th, self.S = williamson(V, tol=tol)
-            self.pure = np.abs(np.linalg.det(V) - 1.0) < tol
-            self.nbar = 0.5 * (np.diag(th)[: self.ns] - 1.0)
-
-        self.decomp = decomp  #: bool: if False, use the backend API call instead of decomposition
+        # needed only if decomposed
+        th, self.S = williamson(V, tol=tol)
+        self.pure = np.abs(np.linalg.det(V) - 1.0) < tol
+        self.nbar = 0.5 * (np.diag(th)[:self.ns] - 1.0)
 
     def _apply(self, reg, backend, **kwargs):
         p = _unwrap(self.p)

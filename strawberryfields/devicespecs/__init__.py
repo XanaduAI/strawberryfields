@@ -61,17 +61,13 @@ from .base import BaseSpecs
 from .chip0 import Chip0Specs
 from .fock import FockSpecs
 from .gaussian import GaussianSpecs
+from .gbs import GBSSpecs
 from .tensorflow import TFSpecs
 
 
-backend_specs = {
-    "base": BaseSpecs,
-    "chip0": Chip0Specs,
-    "fock": FockSpecs,
-    "gaussian": GaussianSpecs,
-    "tf": TFSpecs,
-}
-"""dict[str, DeviceSpecs]: dictionary mapping backend shortname
-to the validation dataclass."""
+devices = (BaseSpecs, Chip0Specs, FockSpecs, GaussianSpecs, GBSSpecs, TFSpecs)
+
+backend_specs = {c.short_name: c for c in devices}
+"""dict[str, DeviceSpecs]: dictionary mapping device short_name to the corresponding class."""
 
 __all__ = ["backend_specs", "DeviceSpecs"]

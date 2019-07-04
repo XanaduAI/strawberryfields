@@ -18,10 +18,9 @@ pytestmark = pytest.mark.frontend
 
 import numpy as np
 
-import strawberryfields as sf
-
 from strawberryfields import ops
-from strawberryfields.program import (Program, MergeFailure, RegRefError)
+from strawberryfields.program import Program
+from strawberryfields.program_utils import MergeFailure, RegRefError
 from strawberryfields import utils
 from strawberryfields.parameters import Parameter
 
@@ -43,7 +42,7 @@ class TestStatePreparationBasics:
     def test_exceptions(self, state):
         """Test exceptions raised if state prep used on invalid modes"""
         G = state()
-        prog = sf.Program(2)
+        prog = Program(2)
 
         with prog.context:
             # all states act on a single mode

@@ -190,10 +190,10 @@ class BaseEngine(abc.ABC):
         parts of a single computation.
         For each :class:`Program` instance given as input, the following happens:
 
-        * The Program instance is compiled and optimized for the target backend.
+        * The Program instance is compiled for the target backend.
         * The compiled program is executed on the backend.
-        * The measurement results of each subsystem (if any) are stored
-          in the :class:`.RegRef` instances of the corresponding Program, as well as in :attr:`~.samples`.
+        * The measurement results of each subsystem (if any) are stored in the :class:`.RegRef`
+          instances of the corresponding Program, as well as in :attr:`~.samples`.
         * The compiled program is appended to self.run_progs.
 
         Finally, the result of the computation is returned.
@@ -218,43 +218,36 @@ class BaseEngine(abc.ABC):
         if not isinstance(program, Sequence):
             program = [program]
 
-        try:
-            prev = self.run_progs[-1] if self.run_progs else None  # previous program segment
-            for p in program:
-                if prev is None:
-                    # initialize the backend
-                    self._init_backend(p.init_num_subsystems)
-                else:
-                    # there was a previous program segment
-                    if not p.can_follow(prev):
-                        raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
+        kwargs["shots"] = shots
+        # NOTE: by putting ``shots`` into keyword arguments, it allows for the
+        # signatures of methods in Operations to remain cleaner, since only
+        # Measurements need to know about shots
 
-                    # Copy the latest measured values in the RegRefs of p.
-                    # We cannot copy from prev directly because it could be used in more than one engine.
-                    for k, v in enumerate(self.samples):
-                        p.reg_refs[k].val = v
+        prev = self.run_progs[-1] if self.run_progs else None  # previous program segment
+        for p in program:
+            if prev is None:
+                # initialize the backend
+                self._init_backend(p.init_num_subsystems)
+            else:
+                # there was a previous program segment
+                if not p.can_follow(prev):
+                    raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
 
-                # if the program hasn't been compiled for this backend, do it now
-                if p.backend != self.backend_name:
-                    p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
-                p.lock()
+                # Copy the latest measured values in the RegRefs of p.
+                # We cannot copy from prev directly because it could be used in more than one engine.
+                for k, v in enumerate(self.samples):
+                    p.reg_refs[k].val = v
 
-                kwargs["shots"] = shots
-                # Note: by putting ``shots`` into keyword arguments, it allows for the
-                # signatures of methods in Operations to remain cleaner, since only
-                # Measurements need to know about shots
+            # if the program hasn't been compiled for this backend, do it now
+            if p.target != self.backend_name:
+                p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
+            p.lock()
 
-                self._run_program(p, **kwargs)
-                self.run_progs.append(p)
-                # store the latest measurement results
-                shots = kwargs.get("shots", 1)
-                self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
-                prev = p
-        except Exception as e:
-            raise e
-        else:
-            # program execution was successful
-            pass
+            self._run_program(p, **kwargs)
+            self.run_progs.append(p)
+            # store the latest measurement results
+            self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
+            prev = p
 
         return Result(self.samples.copy())
 

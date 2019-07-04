@@ -140,11 +140,10 @@ from numpy.polynomial.hermite import hermval
 import scipy as sp
 from scipy.special import factorial as fac
 
-import strawberryfields as sf
-from .program import _convert, Command
+from .engine import LocalEngine
+from .program_utils import _convert, Command
 from .ops import Gate, Channel, Ket
 
-# pylint: disable=abstract-method,ungrouped-imports,
 
 # ------------------------------------------------------------------------
 # RegRef convert functions                                              |
@@ -901,6 +900,7 @@ def _program_in_CJ_rep(prog, cutoff_dim: int):
         Program: modified program
     """
     prog = copy.deepcopy(prog)
+    prog.locked = False  # unlock the copy so we can modify it
     N = prog.init_num_subsystems
     prog._add_subsystems(N)  # pylint: disable=protected-access
     prog.init_num_subsystems = 2 * N
@@ -958,7 +958,7 @@ def extract_unitary(prog, cutoff_dim: int, vectorize_modes: bool = False, backen
     N = prog.init_num_subsystems
     # extract the unitary matrix by running a modified version of the Program
     p = _program_in_CJ_rep(prog, cutoff_dim)
-    eng = sf.LocalEngine(backend, backend_options={"cutoff_dim": cutoff_dim, "pure": True})
+    eng = LocalEngine(backend, backend_options={"cutoff_dim": cutoff_dim, "pure": True})
     result = eng.run(p).state.ket()
 
     if vectorize_modes:
@@ -1119,7 +1119,7 @@ def extract_channel(
     N = prog.init_num_subsystems
     p = _program_in_CJ_rep(prog, cutoff_dim)
 
-    eng = sf.LocalEngine("fock", backend_options={"cutoff_dim": cutoff_dim, "pure": True})
+    eng = LocalEngine("fock", backend_options={"cutoff_dim": cutoff_dim, "pure": True})
     choi = eng.run(p).state.dm()
     choi = np.einsum("abcd->cdab", _vectorize(choi))
 
