@@ -88,7 +88,7 @@ def layer(q):
 
 
 # initialize engine and program objects
-eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": cutoff_dim, "eval": False})
+eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": cutoff_dim})
 qnn = sf.Program(modes)
 
 with qnn.context as q:
@@ -96,8 +96,8 @@ with qnn.context as q:
         layer(q)
 
 # starting the engine
-state = eng.run(qnn)
-ket = state.ket()
+results = eng.run(qnn, state_options={"eval": False})
+ket = results.state.ket()
 
 # defining cost function
 difference = tf.reduce_sum(tf.abs(ket - target_state))
