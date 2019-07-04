@@ -352,48 +352,62 @@ class TestResults:
         # second mode was not measured
         assert 1 not in res.samples
 
-    def test_results_all_measure_fock_no_shots(self, setup_eng):
+
+
+    def test_results_all_measure_fock_no_shots(self, setup_eng, batch_size):
         """Tests the Results object when all modes are measured in the Fock basis
             and no value for ``shots`` is given."""
 
-        # measured in canonical order
-        expected_samples = {0: [0], 1: [0], 2: [0]}
+        if batch_size is None:
+            zeros = np.zeros((1,), dtype=int)
+            shape = (3, 1)
+        else:
+            zeros = np.zeros((batch_size, 1), dtype=int)
+            shape = (3, batch_size, 1)
+
+        expected_samples = {0: zeros, 1: zeros, 2: zeros}
         expected_measured_modes = [0, 1, 2]
-        expected_samples_array = np.array([[0], [0], [0]])  # shape = (3,1)
+        expected_samples_array = np.zeros(shape, dtype=int)
 
-        eng, p1 = setup_eng(3)
-
-        with p1.context as q:
+        eng, p = setup_eng(3)
+        with p.context as q:
             ops.Measure | q
+        res = eng.run(p)
 
-        res = eng.run(p1)
-
-        assert np.all(res.samples[0] == expected_samples[0])
-        assert np.all(res.samples[1] == expected_samples[1])
-        assert np.all(res.samples[2] == expected_samples[2])
+        assert type(res.samples) == dict
+        assert all([np.all(val == expected_samples[k]) for k, val in res.samples.items()])
         assert res.measured_modes == expected_measured_modes
+        assert res.samples_array.shape == shape
         assert np.all(res.samples_array == expected_samples_array)
 
-    def test_results_subset_measure_fock_no_shots(self, setup_eng):
+
+    def test_results_subset_measure_fock_no_shots(self, setup_eng, batch_size):
         """Tests the Results object when a subset of modes are measured in the Fock basis
             and no value for ``shots`` is given."""
-        expected_samples = {0: [0], 2: [0]}
+
+        if batch_size is None:
+            zeros = np.zeros((1,), dtype=int)
+            shape = (2, 1)
+        else:
+            zeros = np.zeros((batch_size, 1), dtype=int)
+            shape = (2, batch_size, 1)
+
+        expected_samples = {0: zeros, 2: zeros}
         expected_measured_modes = [0, 2]
-        expected_samples_array = np.array([[0], [0]])
+        expected_samples_array = np.zeros(shape, dtype=int)
 
-        # measured in canonical order
-        eng, p1 = setup_eng(3)
-
-        with p1.context as q:
+        eng, p = setup_eng(3)
+        with p.context as q:
             ops.Measure | (q[0], q[2])
+        res = eng.run(p)
 
-        res = eng.run(p1)
-
-        assert np.all(res.samples[0] == expected_samples[0])
+        assert type(res.samples) == dict
         assert 1 not in res.samples
-        assert np.all(res.samples[2] == expected_samples[2])
+        assert all([np.all(val == expected_samples[k]) for k, val in res.samples.items()])
         assert res.measured_modes == expected_measured_modes
+        assert res.samples_array.shape == shape
         assert np.all(res.samples_array == expected_samples_array)
+
 
     # TODO: when ``shots`` is incorporated into other backends, add here
     @pytest.mark.backends("gaussian")
@@ -484,9 +498,16 @@ class TestResults:
                                  "implemented in the '{}' backend for the arguments {{'shots': {}}}".format(name, shots)):
             res = eng.run(p, shots=shots)
 
-    def test_results_measure_homodyne_no_shots(self, setup_eng):
+    def test_results_measure_homodyne_no_shots(self, setup_eng, batch_size):
         """Tests the Results object when all modes are measured with heterodyne
            and no value for ``shots`` is given"""
+
+        if batch_size is None:
+            shape = (1, 1)
+        else:
+            shape = (1, batch_size, 1)
+
+        expected_measured_modes = [1]
 
         eng, p = setup_eng(3)
         with p.context as q:
@@ -496,102 +517,28 @@ class TestResults:
         assert type(res.samples) == dict
         assert len(res.samples) == 1
         assert 1 in res.samples
-        assert res.samples[1].dtype == float
-        assert res.measured_modes == [1]
-        assert type(res.samples_array) == np.ndarray
+        assert res.measured_modes == expected_measured_modes
+        assert res.samples_array.shape == shape
         assert res.samples_array.dtype == np.float
-        # ignore batch axis
-        assert res.samples_array.shape[0] == 1
-        assert res.samples_array.shape[-1] == 1
 
-    def test_results_measure_homodyne_shots(self, setup_eng):
+
+    def test_results_measure_homodyne_with_shots(self, setup_eng, batch_size):
         """Tests the Results object when all modes are measured with homodyne
            and a value for ``shots`` is given"""
 
-        # TODO: replace with proper test when implemented
         shots = 5
+        if batch_size is None:
+            shape = (1, shots)
+        else:
+            shape = (1, batch_size, shots)
+
+        expected_measured_modes = [1]
+
         eng, p = setup_eng(3)
         with p.context as q:
             ops.MeasureHomodyne(c) | q[1]
-        name = eng.backend._short_name
-        with pytest.raises(NotImplementedError,
-                           match="The operation MeasureHomodyne\({}\) has not been "
-                                 "implemented in the '{}' backend for the arguments {{'shots': {}}}".format(c, name, shots)):
-            res = eng.run(p, shots=shots)
-
-    #TODO: following tests should be marked to run only when BATCHED=1
-
-    @pytest.mark.backends("tf")
-    def test_results_batched_all_measure_fock_no_shots(self, batch_size):
-        """Tests the Results object when all modes are measured in the Fock basis
-            in batch mode and no value for ``shots`` is given."""
-
-        zeros = np.zeros(batch_size, dtype=int)
-        expected = {0: zeros, 1: zeros, 2: zeros}
-
-        eng = sf.Engine("tf", backend_options={"batch_size": batch_size,
-                                               "cutoff_dim": 3})
-        p1 = sf.Program(3)
-        with p1.context as q:
-            ops.Measure | q
-        res = eng.run(p1)
-
-        assert type(res.samples) == dict
-        assert np.all([val == expected[k] for k,val in res.samples.items()])
-        assert sorted(res.measured_modes) == list(expected.keys())
-        assert res.samples_array.shape == (3, batch_size, 1)
-
-    @pytest.mark.backends("tf")
-    def test_results_batched_subset_measure_fock_no_shots(self, batch_size):
-        """Tests the Results object when a subset of modes are measured in the Fock basis
-            in batch mode and no value for ``shots`` is given."""
-
-        zeros = np.zeros(batch_size, dtype=int)
-        expected = {0: zeros, 2: zeros}
-
-        eng = sf.Engine("tf", backend_options={"batch_size": batch_size,
-                                               "cutoff_dim": 3})
-        p1 = sf.Program(3)
-        with p1.context as q:
-            ops.Measure | (q[0], q[2])
-        res = eng.run(p1)
-
-        assert type(res.samples) == dict
-        assert np.all([val == expected[k] for k,val in res.samples.items()])
-        assert sorted(res.measured_modes) == list(expected.keys())
-        assert res.samples_array.shape == (2, batch_size, 1)
-
-    @pytest.mark.backends("tf")
-    def test_results_batched_measure_homodyne_no_shots(self, batch_size):
-        """Tests the Results object when homodyne measurement is made
-            in batch mode and no value for ``shots`` is given."""
-
-        eng = sf.Engine("tf", backend_options={"batch_size": batch_size,
-                                               "cutoff_dim": 3})
-        p = sf.Program(3)
-        with p.context as q:
-            ops.MeasureHomodyne(c) | q[1]
-        res = eng.run(p)
-
-        assert type(res.samples) == dict
-        assert res.measured_modes == [1]
-        assert res.samples_array.shape == (1, batch_size, 1)
-
-    @pytest.mark.backends("tf")
-    def test_results_batched_measure_homodyne_with_shots(self, batch_size):
-        """Tests the Results object when homodyne measurement is made
-            in batch mode and no value for ``shots`` is given."""
 
         # TODO: replace with proper test when implemented
-        # note that this will lead to a different test than
-        # ``test_results_measure_homodyne_shots`` above,
-        # even though they currently test for the same thing
-        shots = 5
-        eng = sf.Engine("tf", backend_options={"batch_size":batch_size,
-                                               "cutoff_dim":3})
-        p = sf.Program(3)
-        with p.context as q:
-            ops.MeasureHomodyne(c) | q[1]
         name = eng.backend._short_name
         with pytest.raises(NotImplementedError,
                            match="The operation MeasureHomodyne\({}\) has not been "

@@ -90,7 +90,7 @@ class Result:
     Returned by :meth:`.BaseEngine.run`.
 
     Args:
-        samples (Dict[int, array[Number]): dictionary of measurement samples;
+        samples (Dict[int, array[Number]]): dictionary of measurement samples;
             keys are mode numbers, entries have shape ``([batch_size,] shots,)``
     """
     def __init__(self, samples):

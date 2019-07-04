@@ -217,8 +217,8 @@ def pytest_runtest_setup(item):
     else:
         allowed_backends = {"gaussian", "fock"}
 
-    # load the marker specifying what the backend is
-    marks = {mark.name for mark in item.iter_markers() if mark.name in allowed_backends}
+    # find the currently active backend marker (at most one)
+    backend_marks = {mark.name for mark in item.iter_markers() if mark.name in allowed_backends}
 
     # load a marker specifying whether the test only works with certain backends
     test_backends = [mark.args for mark in item.iter_markers(name="backends")]
@@ -231,7 +231,7 @@ def pytest_runtest_setup(item):
         # otherwise, extract the set of backend strings the test works with
         test_backends = test_backends[0]
 
-    for b in marks:
+    for b in backend_marks:
         if b not in test_backends:
             pytest.skip(
                 "\nTest {} only runs with {} backend(s), "

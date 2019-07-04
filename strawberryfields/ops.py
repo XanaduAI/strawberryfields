@@ -281,6 +281,7 @@ Code details
 
 from collections.abc import Sequence
 import copy
+import numbers
 import warnings
 
 import numpy as np
@@ -573,8 +574,10 @@ class Measurement(Operation):
         if self.ns == 1:
             if isinstance(values, np.ndarray): # TF backend returns homodyne results in an array...
                 values = np.expand_dims(values, 0)  # add the modes index
-            else:
+            elif isinstance(values, numbers.Number):
                 values = np.array([[values]])  # values is a scalar
+            else:
+                values = [values] # TF backend can also return an unevaluated tf.Tensor...
 
         # store the results in the register reference objects
         for v, r in zip(values, reg):
