@@ -50,7 +50,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ville Bergholm, Tom Bromley, Ish Dhand, Xueshi Guo, Josh Izaac, Nathan Killoran, Leonhard Neuhaus, Nicolás Quesada.
+Ville Bergholm, Tom Bromley, Ish Dhand, Karel Dumon, Xueshi Guo, Josh Izaac, Nathan Killoran, Leonhard Neuhaus, Nicolás Quesada.
 
 
 # Release 0.10
