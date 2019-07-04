@@ -3,8 +3,9 @@ import strawberryfields as sf
 from strawberryfields.ops import *
 from numpy import pi
 
-# initialise the engine and register
-eng, q = sf.Engine(2)
+# initialize engine and program objects
+eng = sf.Engine(backend="fock", backend_options={"cutoff_dim": 5})
+ham_simulation = sf.Program(2)
 
 # set the Hamiltonian parameters
 J = 1           # hopping transition
@@ -14,7 +15,7 @@ t = 1.086       # timestep
 theta = -J*t/k  
 r = -U*t/(2*k)
 
-with eng:
+with ham_simulation.context as q:
     # prepare the initial state
     Fock(2) | q[0]
 
@@ -30,8 +31,8 @@ with eng:
     # end circuit
 
 # run the engine
-state = eng.run("fock", cutoff_dim=5)
+results = eng.run(ham_simulation)
 # the output state probabilities
-print(state.fock_prob([0,2]))
-print(state.fock_prob([1,1]))
-print(state.fock_prob([2,0]))
+print(results.state.fock_prob([0,2]))
+print(results.state.fock_prob([1,1]))
+print(results.state.fock_prob([2,0]))
