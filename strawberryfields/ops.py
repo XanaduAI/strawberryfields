@@ -1682,7 +1682,7 @@ class GraphEmbed(Decomposition):
 
     Args:
         A (array): an :math:`N\times N` complex or real symmetric matrix
-        mean_photon (float): mean_photon (float): It guarantees that the mean photon number in the pure Gaussian state
+        mean_photon (float): mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
             representing the graph satisfies  :math:`\sum_i sinh(r_{i})^2 ==` ``mean_photon``
         make_traceless (boolean): removes the trace of the input matrix
         tol (float): the tolerance used when checking if the input matrix is symmetric:

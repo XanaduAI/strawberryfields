@@ -125,7 +125,7 @@ class TestGraphEmbed:
         assert np.allclose(np.trace(A_out), 0, atol=tol, rtol=0)
 
     def test_mean_photon(self, monkeypatch, tol):
-        """Test that the mean phhoton number is correct """
+        """Test that the mean photon number is correct in graph_embed"""
         A = np.random.random([6, 6]) + 1j * np.random.random([6, 6])
         A += A.T
         n_mean = 10.0
