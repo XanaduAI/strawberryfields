@@ -166,7 +166,7 @@ def graph_embed(A, mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08
     Args:
         A (array[complex]): square, symmetric (weighted) adjacency matrix of the graph
         mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
-            representing the graph satisfies  :math:`\sum_i sinh(r_{i})^2 ==` ``mean_photon``.
+            representing the graph satisfies  :math:`\sum_i sinh(r_{i})^2 ==` ``mean_photon``
         make_traceless (bool): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
             the graph but will lead to different photon number statistics for events with more than
