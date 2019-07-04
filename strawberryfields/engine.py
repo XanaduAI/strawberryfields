@@ -410,12 +410,12 @@ class StarshipEngine(BaseEngine):
         Assumes the current backend as the target.
 
         Args:
-            name (str): The name of the job to be created (e.g. StateTeleportation).
-            shots (int): The number of shots.
-            blackbird_code: The blackbird code of the job.
+            name (str): the name of the job to be created (e.g. StateTeleportation)
+            shots (int): the number of shots
+            blackbird_code: the blackbird code of the job
 
         Returns:
-            str: A string containing the job content to be sent to the server.
+            str: job content to be sent to the server
         """
         bb = to_blackbird(program, version="1.0")
         bb._name = name
@@ -432,10 +432,10 @@ class StarshipEngine(BaseEngine):
         of jobs.
 
         Args:
-            job_content (str): The Blackbird code to execute
+            job_content (str): the Blackbird code to execute
 
         Returns:
-            (strawberryfields.api_client.Job): A Job instance referencing the queued job.
+            (strawberryfields.api_client.Job): a Job instance referencing the queued job
         """
         job = Job(client=self.client)
         job.manager.create(circuit=job_content)
@@ -447,14 +447,14 @@ class StarshipEngine(BaseEngine):
         Given a compiled program, gets the blackbird circuit code and creates (or resumes) a job
         via the API. If the job is completed, returns the job result.
 
-        A queued job can be interrupted by a KeyboardInterrupt event, at which point if the job ID
-        was retrieved from the server, the job will be accessible via engine.jobs.
+        A queued job can be interrupted by a ``KeyboardInterrupt`` event, at which point if the job ID
+        was retrieved from the server, the job will be accessible via :meth:`~.Starship.jobs`.
 
         Args:
-            program (strawberryfields.program.Program): A program instance to be executed remotely.
+            program (strawberryfields.program.Program): program to be executed remotely
 
         Returns:
-            (list): A list representing the result samples
+            (list): a list representing the result samples
 
         Raises:
             Exception: In case a job could not be submitted or completed.
