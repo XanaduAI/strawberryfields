@@ -21,12 +21,12 @@ import numpy as np
 import strawberryfields as sf
 
 from strawberryfields import ops
-from strawberryfields.program import MergeFailure
+from strawberryfields.program_utils import MergeFailure
 from strawberryfields import utils
 from strawberryfields.parameters import Parameter
 
 # make test deterministic
-np.random.random(42)
+np.random.seed(42)
 a = np.random.random()
 b = np.random.random()
 c = np.random.random()

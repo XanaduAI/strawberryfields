@@ -23,12 +23,11 @@ import strawberryfields as sf
 
 from strawberryfields import program
 from strawberryfields import ops
-
 from strawberryfields.devicespecs.device_specs import DeviceSpecs
 
 
 # make test deterministic
-np.random.random(42)
+np.random.seed(42)
 A = np.random.random()
 
 
@@ -230,7 +229,7 @@ class TestOptimizer:
             G | 0
             G.H | 0
 
-        prog.optimize()
+        prog = prog.optimize()
         assert len(prog) == 0
 
     @pytest.mark.parametrize("G", single_mode_gates)
@@ -244,11 +243,11 @@ class TestOptimizer:
             G1 | 0
             G2 | 0
 
-        prog.optimize()
+        prog = prog.optimize()
         assert len(prog) == 0
 
     def test_merge_palindromic_cancelling(self, permute_gates):
-        """Optimizer merging chains cancel out with palindromic cancelling"""
+        """Optimizer merging chains that cancel out palindromically"""
         prog = sf.Program(3)
 
         with prog.context:
@@ -257,11 +256,11 @@ class TestOptimizer:
             for G in reversed(permute_gates):
                 G.H | 0
 
-        prog.optimize()
+        prog = prog.optimize()
         assert len(prog) == 0
 
     def test_merge_pairwise_cancelling(self, permute_gates):
-        """Optimizer merging chains cancel out with pairwise cancelling"""
+        """Optimizer merging chains that cancel out pairwise"""
         prog = sf.Program(3)
 
         with prog.context:
@@ -269,12 +268,12 @@ class TestOptimizer:
                 G | 0
                 G.H | 0
 
-        prog.optimize()
+        prog = prog.optimize()
         assert len(prog) == 0
 
     def test_merge_interleaved_chains_two_modes(self, permute_gates):
-        """Optimizer merging chains cancel out with palindromic
-        cancelling with interleaved chains on two modes"""
+        """Optimizer merging chains that cancel out palindromically,
+        interleaved on two modes"""
         prog = sf.Program(3)
 
         # create a random vector of 0s and 1s, corresponding
@@ -287,7 +286,7 @@ class TestOptimizer:
             for G, m in zip(reversed(permute_gates), reversed(modes)):
                 G.H | m
 
-        prog.optimize()
+        prog = prog.optimize()
         assert len(prog) == 0
 
     def test_merge_incompatible(self):
@@ -298,7 +297,7 @@ class TestOptimizer:
             ops.Xgate(0.6) | 0
             ops.Zgate(0.2) | 0
 
-        prog.optimize()
+        prog = prog.optimize()
         assert len(prog) == 2
 
 
@@ -316,9 +315,9 @@ class TestValidation:
             ops.MeasureX | q[2]
 
         with pytest.warns(UserWarning, match='The circuit consists of 2 disconnected components.'):
-            new_prog = prog.compile(backend='fock')
+            new_prog = prog.compile(target='fock')
 
-    def test_incorrect_modes(self, monkeypatch):
+    def test_incorrect_modes(self):
         """Test that an exception is raised if the device
         is called with the incorrect number of modes"""
 
@@ -331,24 +330,15 @@ class TestValidation:
             primitives = {'S2gate', 'Interferometer'}
             decompositions = set()
 
-        dev = DummyDevice()
-
         prog = sf.Program(3)
-
         with prog.context as q:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.S2gate(0.6) | [q[1], q[2]]
 
-        with monkeypatch.context() as m:
-            # monkeypatch our DummyDevice into the
-            # backend database
-            db =  {'dummy': DummyDevice}
-            m.setattr("strawberryfields.devicespecs.backend_specs", db)
+        with pytest.raises(program.CircuitError, match="requires 3 modes"):
+            new_prog = prog.compile(target=DummyDevice())
 
-            with pytest.raises(program.CircuitError, match="requires 3 modes"):
-                new_prog = prog.compile(backend='dummy')
-
-    def test_no_decompositions(self, monkeypatch):
+    def test_no_decompositions(self):
         """Test that no decompositions take
         place if the device doesn't support it."""
 
@@ -361,21 +351,13 @@ class TestValidation:
             primitives = {'S2gate', 'Interferometer'}
             decompositions = set()
 
-        dev = DummyDevice()
-
         prog = sf.Program(3)
         U = np.array([[0, 1], [1, 0]])
-
         with prog.context as q:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.Interferometer(U) | [q[0], q[1]]
 
-        with monkeypatch.context() as m:
-            # monkeypatch our DummyDevice into the
-            # backend database
-            db =  {'dummy': DummyDevice}
-            m.setattr("strawberryfields.devicespecs.backend_specs", db)
-            new_prog = prog.compile(backend='dummy')
+        new_prog = prog.compile(target=DummyDevice())
 
         # check compiled program only has two gates
         assert len(new_prog) == 2
@@ -385,7 +367,7 @@ class TestValidation:
         assert circuit[0].op.__class__.__name__ == "S2gate"
         assert circuit[1].op.__class__.__name__ == "Interferometer"
 
-    def test_decompositions(self, monkeypatch):
+    def test_decompositions(self):
         """Test that decompositions take
         place if the device requests it."""
 
@@ -397,21 +379,13 @@ class TestValidation:
             primitives = {'S2gate', 'Interferometer', 'BSgate', 'Sgate'}
             decompositions = {'S2gate': {}}
 
-        dev = DummyDevice()
-
         prog = sf.Program(3)
         U = np.array([[0, 1], [1, 0]])
-
         with prog.context as q:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.Interferometer(U) | [q[0], q[1]]
 
-        with monkeypatch.context() as m:
-            # monkeypatch our DummyDevice into the
-            # backend database
-            db =  {'dummy': DummyDevice}
-            m.setattr("strawberryfields.devicespecs.backend_specs", db)
-            new_prog = prog.compile(backend='dummy')
+        new_prog = prog.compile(target=DummyDevice())
 
         # check compiled program now has 5 gates
         # the S2gate should decompose into two BS and two Sgates
@@ -425,7 +399,7 @@ class TestValidation:
         assert circuit[3].op.__class__.__name__ == "BSgate"
         assert circuit[4].op.__class__.__name__ == "Interferometer"
 
-    def test_invalid_decompositions(self, monkeypatch):
+    def test_invalid_decompositions(self):
         """Test that an exception is raised if the device spec
         requests a decomposition that doesn't exist"""
 
@@ -437,23 +411,14 @@ class TestValidation:
             primitives = {'Rgate', 'Interferometer'}
             decompositions = {'Rgate': {}}
 
-        dev = DummyDevice()
-
         prog = sf.Program(3)
         U = np.array([[0, 1], [1, 0]])
-
         with prog.context as q:
             ops.Rgate(0.6) | q[0]
             ops.Interferometer(U) | [q[0], q[1]]
 
-        with monkeypatch.context() as m:
-            # monkeypatch our DummyDevice into the
-            # backend database
-            db =  {'dummy': DummyDevice}
-            m.setattr("strawberryfields.devicespecs.backend_specs", db)
-
-            with pytest.raises(NotImplementedError, match="No decomposition available: Rgate"):
-                new_prog = prog.compile(backend='dummy')
+        with pytest.raises(NotImplementedError, match="No decomposition available: Rgate"):
+            new_prog = prog.compile(target=DummyDevice())
 
     def test_invalid_primitive(self):
         """Test that an exception is raised if the program
@@ -463,12 +428,11 @@ class TestValidation:
         the Kerr gate as an existing example.
         """
         prog = sf.Program(3)
-
         with prog.context as q:
             ops.Kgate(0.6) | q[0]
 
-        with pytest.raises(program.CircuitError, match="Kgate cannot be used with the gaussian backend"):
-            new_prog = prog.compile(backend='gaussian')
+        with pytest.raises(program.CircuitError, match="Kgate cannot be used with the target"):
+            new_prog = prog.compile(target='gaussian')
 
     def test_user_defined_decomposition_false(self):
         """Test that an operation that is both a primitive AND
@@ -477,17 +441,20 @@ class TestValidation:
 
         In this case, the Gaussian operation should remain after compilation.
         """
-        prog = sf.Program(3)
-        cov = np.array([[0, 1], [1, 0]])
-
+        prog = sf.Program(2)
+        cov = np.ones((4, 4)) + np.eye(4)
+        r = np.array([0, 1, 1, 2])
         with prog.context as q:
-            ops.Gaussian(cov, decomp=False) | q[0]
+            ops.Gaussian(cov, r, decomp=False) | q
 
-        new_prog = prog.compile(backend='gaussian')
-
-        assert len(new_prog) == 1
-        circuit = new_prog.circuit
+        prog = prog.compile(target='gaussian')
+        assert len(prog) == 1
+        circuit = prog.circuit
         assert circuit[0].op.__class__.__name__ == "Gaussian"
+
+        # test compilation against multiple targets in sequence
+        with pytest.raises(program.CircuitError, match="The operation Gaussian is not a primitive for the target 'fock'"):
+            prog = prog.compile(target='fock')
 
     def test_user_defined_decomposition_true(self):
         """Test that an operation that is both a primitive AND
@@ -500,11 +467,10 @@ class TestValidation:
         prog = sf.Program(3)
         r = 0.453
         cov = np.array([[np.exp(-2*r), 0], [0, np.exp(2*r)]])*sf.hbar/2
-
         with prog.context:
             ops.Gaussian(cov, decomp=True) | 0
 
-        new_prog = prog.compile(backend='gaussian')
+        new_prog = prog.compile(target='gaussian')
 
         assert len(new_prog) == 1
 
@@ -512,7 +478,7 @@ class TestValidation:
         assert circuit[0].op.__class__.__name__ == "Squeezed"
         assert circuit[0].op.p[0] == r
 
-    def test_topology_validation(self, monkeypatch):
+    def test_topology_validation(self):
         """Test compilation properly matches the device topology"""
 
         class DummyDevice(DeviceSpecs):
@@ -536,10 +502,7 @@ class TestValidation:
                 """
             )
 
-        dev = DummyDevice()
-
         prog = sf.Program(3)
-
         with prog.context as q:
             # the circuit given below is an
             # isomorphism of the one provided above
@@ -550,17 +513,12 @@ class TestValidation:
             ops.BSgate(-0.32) | (q[0], q[1])
             ops.MeasureFock() | q[0]
 
-        with monkeypatch.context() as m:
-            # monkeypatch our DummyDevice into the
-            # backend database
-            db =  {'dummy': DummyDevice}
-            m.setattr("strawberryfields.devicespecs.backend_specs", db)
-            new_prog = prog.compile(backend='dummy')
+        new_prog = prog.compile(target=DummyDevice())
 
         # no exception should be raised; topology correctly validated
         assert len(new_prog) == 5
 
-    def test_invalid_topology(self, monkeypatch):
+    def test_invalid_topology(self):
         """Test compilation raises exception if toplogy not matched"""
 
         class DummyDevice(DeviceSpecs):
@@ -584,10 +542,7 @@ class TestValidation:
                 """
             )
 
-        dev = DummyDevice()
-
         prog = sf.Program(3)
-
         with prog.context as q:
             # the circuit given below is NOT an
             # isomorphism of the one provided above
@@ -599,14 +554,8 @@ class TestValidation:
             ops.Sgate(0.543) | q[0]
             ops.MeasureFock() | q[0]
 
-        with monkeypatch.context() as m:
-            # monkeypatch our DummyDevice into the
-            # backend database
-            db =  {'dummy': DummyDevice}
-            m.setattr("strawberryfields.devicespecs.backend_specs", db)
-
-            with pytest.raises(program.CircuitError, match="incompatible topology"):
-                new_prog = prog.compile(backend='dummy')
+        with pytest.raises(program.CircuitError, match="incompatible topology"):
+            new_prog = prog.compile(target=DummyDevice())
 
 
 class TestGBS:
@@ -669,5 +618,6 @@ class TestGBS:
 
         prog = prog.compile('gbs')
         assert len(prog) == 4
-        assert prog.circuit[-1].op.__class__ == ops.MeasureFock
-        assert [x.ind for x in prog.circuit[-1].reg] == list(range(3))
+        last_cmd = prog.circuit[-1]
+        assert last_cmd.op.__class__ == ops.MeasureFock
+        assert [x.ind for x in last_cmd.reg] == list(range(3))
