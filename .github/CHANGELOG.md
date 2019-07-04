@@ -30,6 +30,7 @@
 ### Improvements
 
 - Removed TensorFlow as an explicit dependency of Strawberry Fields. This was causing complicated dependency issues due to version mismatches between TensorFlow, Strawberry Fields, and Python 3, which made installing difficult for new users. Advanced users can still install TensorFlow manually using `pip install tensorflow==1.3` and use as before.
+- The behaviour and function signature of the `GraphEmbed` operation has been updated.
 - Remove the unused `Command.decomp` instance attribute.
 - Better error messages for the `New` operation when used outside of a circuit.
 - Bugfix in `Gate.merge()`
@@ -189,3 +190,4 @@ Initial public release.
 This release contains contributions from:
 
 Nathan Killoran, Josh Izaac, Nicolás Quesada, Matthew Amy, and Ville Bergholm.
+
