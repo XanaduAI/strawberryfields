@@ -199,17 +199,17 @@ class TestStarshipEngine:
         Tests that StarshipEngine.generate_job_content returns the correct string given name,
         shots, and blackbird_code parameters.
         """
-        name = MagicMock()
-        shots = MagicMock()
-        blackbird_code = MagicMock()
+        inputs = MagicMock()
 
-        output = starship_engine.generate_job_content(name, shots, blackbird_code)
+        output = starship_engine.generate_job_content(
+            inputs.name, inputs.shots, inputs.blackbird_code
+        )
         lines = output.split("\n")
-        assert lines[0] == "name {}".format(name)
+        assert lines[0] == "name {}".format(inputs.name)
         assert lines[1] == "version 1.0"
-        assert lines[2] == "target {} (shots={})".format(starship_engine.backend_name, shots)
+        assert lines[2] == "target {} (shots={})".format(starship_engine.backend_name, inputs.shots)
         assert lines[3] == ""
-        assert lines[4] == str(blackbird_code)
+        assert lines[4] == str(inputs.blackbird_code)
 
     def test_queue_job(self, starship_engine, monkeypatch):
         mock_job = MagicMock()
@@ -276,27 +276,25 @@ class TestStarshipEngine:
         a Result object is returned populated with the result samples.
         """
 
-        mock_hardware_backend_name = str(MagicMock())
-        mock_run_program = MagicMock()
-        mock_program = MagicMock()
-        mock_result = MagicMock()
-        mock_shots = MagicMock()
+        inputs = MagicMock()
+        outputs = MagicMock()
+        methods = MagicMock()
 
-        monkeypatch.setattr(starship_engine, "backend_name", mock_hardware_backend_name)
-        monkeypatch.setattr(starship_engine, "HARDWARE_BACKENDS", [mock_hardware_backend_name])
-        monkeypatch.setattr(starship_engine, "_run_program", mock_run_program)
-        monkeypatch.setattr("strawberryfields.engine.Result", mock_result)
+        monkeypatch.setattr(starship_engine, "backend_name", str(inputs.mock_backend))
+        monkeypatch.setattr(starship_engine, "HARDWARE_BACKENDS", [str(inputs.mock_backend)])
+        monkeypatch.setattr(starship_engine, "_run_program", methods._run_program)
+        monkeypatch.setattr("strawberryfields.engine.Result", outputs.result)
 
-        result = starship_engine._run(mock_program, shots=mock_shots)
+        result = starship_engine._run(inputs.program, shots=inputs.shots)
 
         assert starship_engine.backend_name in starship_engine.HARDWARE_BACKENDS
-        mock_program.compile.assert_called_once_with(starship_engine.backend_name)
-        mock_compiled_program = mock_program.compile(starship_engine.backend_name)
+        inputs.program.compile.assert_called_once_with(starship_engine.backend_name)
+        mock_compiled_program = inputs.program.compile(starship_engine.backend_name)
         mock_compiled_program.lock.assert_called_once()
-        mock_run_program.assert_called_once_with(mock_compiled_program, shots=mock_shots)
-        mock_samples = mock_run_program(mock_compiled_program, shots=mock_shots)
+        methods._run_program.assert_called_once_with(mock_compiled_program, shots=inputs.shots)
+        mock_samples = methods._run_program(mock_compiled_program, shots=inputs.shots)
         assert starship_engine.run_progs == [mock_compiled_program]
-        assert result == mock_result(mock_samples)
+        assert result == outputs.result(mock_samples)
 
     def test_run(self, starship_engine, monkeypatch):
         """
@@ -306,13 +304,13 @@ class TestStarshipEngine:
         mock_run = MagicMock()
         monkeypatch.setattr("strawberryfields.engine.BaseEngine._run", mock_run)
 
-        name = MagicMock()
-        program = MagicMock()
-        shots = MagicMock()
-        params = {"param": MagicMock()}
+        inputs = MagicMock()
+        inputs.params = {"param": MagicMock()}
 
-        starship_engine.run(program, shots, name, **params)
-        mock_run.assert_called_once_with(program, shots=shots, name=name, param=params["param"])
+        starship_engine.run(inputs.program, inputs.shots, inputs.name, **inputs.params)
+        mock_run.assert_called_once_with(
+            inputs.program, shots=inputs.shots, name=inputs.name, param=inputs.params["param"]
+        )
 
     def test_engine_with_mocked_api_client_sample_job(self, monkeypatch):
         """
