@@ -28,7 +28,7 @@ requirements = [
     "scipy>=1.0.0",
     "networkx>=2.0",
     "quantum-blackbird>=0.2.0",
-    "hafnian>=0.6",
+    "hafnian>=0.6"
     "toml",
     "appdirs"
 ]
@@ -56,7 +56,7 @@ info = {
     'package_data': {'strawberryfields': ['backends/data/*']},
     'include_package_data': True,
     'description': 'Open source library for continuous-variable quantum computation',
-    'long_description': open('README.rst', encoding='utf-8').read(),
+    'long_description': open('README.rst').read(),
     'provides': ["strawberryfields"],
     'install_requires': requirements,
     # 'extras_require': extra_requirements,

@@ -47,12 +47,8 @@ MOCK_MODULES = [
     'networkx',
     'networkx.algorithms',
     'numbers',
-    'blackbird',
-    'blackbird.utils',
-    'hafnian',
-    'hafnian.lib',
-    'hafnian.samples',
-    'hafnian.quantum',
+    'blackbird'
+    'blackbird.utils'
     ]
 
 np_math_fns = ['abs',

@@ -11,44 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Backend capabilities
-====================
-
-**Module name:** :mod:`strawberryfields.devicespecs.device_specs`
-
-.. currentmodule:: strawberryfields.devicespecs.device_specs
-
-The :class:`DeviceSpecs` class stores information about the capabilities of various execution backends.
-This information is used e.g., in :class:`Program` validation.
-
-
-Classes
--------
-
-.. autosummary::
-   DeviceSpecs
-
-
-Code details
-~~~~~~~~~~~~
-
-"""
+"""Abstract base class for storing device data for validation"""
 from typing import List, Set, Dict, Union
 import abc
 
-import networkx as nx
 import blackbird
 from blackbird.utils import to_DiGraph
 
-import strawberryfields.program_utils as pu
-
 
 class DeviceSpecs(abc.ABC):
-    """Abstract base class for describing execution backend capabilities."""
-
-    short_name = ''
-    """str: short name of the device"""
+    """Abstract base class for backend data"""
 
     @property
     @abc.abstractmethod
@@ -179,41 +151,3 @@ class DeviceSpecs(abc.ABC):
             Union[str, None]: Blackbird program or template representing the circuit
         """
         return None
-
-    def compile(self, seq):
-        """Device-specific compilation method.
-
-        If additional compilation logic is required, child classes can redefine this method.
-
-        Args:
-            seq (Sequence[Command]): quantum circuit to modify
-        Returns:
-            List[Command]: modified circuit
-        Raises:
-            CircuitError: the circuit is not valid for the device
-        """
-        if self.graph is not None:
-            # check topology
-            DAG = pu.list_to_DAG(seq)
-
-            # relabel the DAG nodes to integers, with attributes
-            # specifying the operation name. This allows them to be
-            # compared, rather than using Command objects.
-            mapping = {i: n.op.__class__.__name__ for i, n in enumerate(DAG.nodes())}
-            circuit = nx.convert_node_labels_to_integers(DAG)
-            nx.set_node_attributes(circuit, mapping, name='name')
-
-            def node_match(n1, n2):
-                """Returns True if both nodes have the same name"""
-                return n1['name'] == n2['name']
-
-            # check if topology matches
-            if not nx.is_isomorphic(circuit, self.graph, node_match):
-                # TODO: try and compile the program to match the topology
-                # TODO: add support for parameter range matching/compilation
-                raise pu.CircuitError(
-                    "Program cannot be used with the device '{}' "
-                    "due to incompatible topology.".format(self.short_name)
-                )
-
-        return seq

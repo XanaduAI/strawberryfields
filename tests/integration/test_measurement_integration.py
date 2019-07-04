@@ -107,7 +107,7 @@ class TestPostselection:
                 ops.MeasureFock(select=n//2) | q[0]
                 ops.MeasureFock() | q[1]
 
-            eng.run(prog)  # FIXME measurements above commute, but they should not since the postselection may fail if the other one is performed first!
+            eng.run(prog, compile=False)  # FIXME measurements above commute, but they should not since the postselection may fail if the other one is performed first!
             photons_out = sum([i.val for i in q])
 
             if batch_size is not None:

@@ -596,12 +596,6 @@ class Circuit:
             # unstack this here because that's how it should be returned
             meas_result = tf.unstack(meas_result, axis=-1, name="Meas_result")
 
-            # evaluate measurement result if necessary
-            if evaluate_results:
-                meas_result = session.run(meas_result, feed_dict=feed_dict)
-                if close_session:
-                    session.close()
-
             # project remaining modes into conditional state
             if len(modes) == self._num_modes:
                 # in this case, all modes were measured and we can put everything in vacuum by reseting
@@ -641,7 +635,7 @@ class Circuit:
                 else:
                     meas_modes_vac = ops.combine_single_modes([single_mode_vac] * len(modes), self._batched)
                 batch_index = indices[:batch_offset]
-                meas_mode_indices = indices[batch_offset:batch_offset + mode_size * len(modes)]
+                meas_mode_indices = indices[batch_offset :batch_offset + mode_size * len(modes)]
                 conditional_indices = indices[batch_offset + mode_size * len(modes) : batch_offset + mode_size * self._num_modes]
                 eqn_lhs = batch_index + meas_mode_indices + "," + batch_index + conditional_indices
                 eqn_rhs = ''
@@ -661,7 +655,15 @@ class Circuit:
 
                 self._update_state(new_state)
 
-            return tuple(meas_result)
+            # return measurement result
+            if evaluate_results:
+                _meas = session.run(meas_result, feed_dict=feed_dict)
+                if close_session:
+                    session.close()
+            else:
+                _meas = meas_result
+
+            return tuple(_meas)
 
     def measure_homodyne(self, phi, mode, select=None, **kwargs):
         """

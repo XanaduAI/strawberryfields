@@ -127,15 +127,12 @@ class Configuration:
         directories = [os.getcwd(), self._env_config_dir, self._user_config_dir]
         for directory in directories:
             self._filepath = os.path.join(directory, self._name)
-            try:
-                config = self.load(self._filepath)
+            config = self.load(self._filepath)
+            if config:
+                self.update_config()
                 break
-            except FileNotFoundError:
-                config = False
 
-        if config:
-            self.update_config()
-        else:
+        if config is None:
             log.info("No Strawberry Fields configuration file found.")
 
     def update_config(self):
@@ -177,10 +174,12 @@ class Configuration:
         Args:
             filepath (str): path to the configuration file
         """
-        with open(filepath, "r") as f:
-            self._config_file = toml.load(f)
-
-        return self._config_file
+        try:
+            with open(filepath, "r") as f:
+                self._config_file = toml.load(f)
+            return self._config_file
+        except FileNotFoundError:
+            return None
 
     def save(self, filepath):
         """Save a configuration file.

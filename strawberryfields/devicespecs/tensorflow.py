@@ -18,7 +18,6 @@ from .device_specs import DeviceSpecs
 class TFSpecs(DeviceSpecs):
     """Validation data for the TF backend"""
 
-    short_name = 'tf'
     modes = None
     local = True
     remote = False

@@ -59,8 +59,7 @@ Code details
 """
 from .engine import (Engine, LocalEngine)
 from .io import save, load
-from .program_utils import _convert as convert
-from .program import Program
+from .program import Program, _convert as convert
 from ._version import __version__
 
 __all__ = ["Engine", "LocalEngine", "Program", "convert", "version", "save", "load", "about", "cite"]

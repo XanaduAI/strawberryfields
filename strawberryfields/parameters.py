@@ -95,7 +95,7 @@ import numbers
 from unittest import mock
 import numpy as np
 
-from .program_utils import (RegRef, RegRefTransform)
+from .program import (RegRef, RegRefTransform)
 
 
 try:
