@@ -110,7 +110,7 @@ class Command:
 
     def __str__(self):
         """
-        Return a string containing the Blackbird syntax.
+        Return a string containing the command in Blackbird syntax.
         """
 
         operation = str(self.op)
