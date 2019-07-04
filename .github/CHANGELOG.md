@@ -33,7 +33,6 @@
 - The behaviour and function signature of the `GraphEmbed` operation has been updated.
 - Remove the unused `Command.decomp` instance attribute.
 - Better error messages for the `New` operation when used outside of a circuit.
-- Bugfix in `Gate.merge()`
 - Docstrings updated in the decompositions module.
 - Docstrings for Fock backend reformatted and cleaned up.
 - Cleaning up of citations and `references.bib` file.
@@ -43,6 +42,7 @@
 
 - Fixed a bug with installation on Windows for certain locales.
 - Fixed a bug in the `New` operation.
+- Bugfix in `Gate.merge()`
 - Fixed bugs in `measure_fock` in the TensorFlow backend which caused samples to be evaluated independently and for conditional states to be potentially decoupled from the measurement results.
 - Fixed a latent bug in `graph_embed`.
 - Bugfix for Bloch-Messiah returning non-symplectic matrices when input is passive.
