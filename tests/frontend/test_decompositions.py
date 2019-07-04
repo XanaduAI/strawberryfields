@@ -88,17 +88,19 @@ class TestTakagi:
 class TestGraphEmbed:
     """graph_embed tests"""
 
-    def test_square_validation(self):
+    @pytest.mark.parametrize("embed_func", [dec.graph_embed, dec.graph_embed_deprecated])
+    def test_square_validation(self, embed_func):
         """Test that the graph_embed decomposition raises exception if not square"""
         A = np.random.random([4, 5]) + 1j * np.random.random([4, 5])
         with pytest.raises(ValueError, match="matrix is not square"):
-            dec.graph_embed(A)
+            embed_func(A)
 
-    def test_symmetric_validation(self):
+    @pytest.mark.parametrize("embed_func", [dec.graph_embed, dec.graph_embed_deprecated])
+    def test_symmetric_validation(self, embed_func):
         """Test that the graph_embed decomposition raises exception if not symmetric"""
         A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         with pytest.raises(ValueError, match="matrix is not symmetric"):
-            dec.graph_embed(A)
+            embed_func(A)
 
     def test_max_mean_photon_deprecated(self, tol):
         """This test verifies that the maximum amount of squeezing used to encode

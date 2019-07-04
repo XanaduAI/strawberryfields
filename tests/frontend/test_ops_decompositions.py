@@ -210,10 +210,10 @@ class TestGraphEmbed:
         A = np.random.random([n, n]) + 1j * np.random.random([n, n])
         A += A.T
         A -= np.trace(A) * np.identity(n) / n
+        n_mean = float(n)
+        sq, U = dec.graph_embed(A, n_mean)
 
-        sq, U = dec.graph_embed(A)
-
-        G = ops.GraphEmbed(A)
+        G = ops.GraphEmbed(A, n_mean)
         cmds = G.decompose(prog.register)
 
         assert np.all(sq == G.sq)

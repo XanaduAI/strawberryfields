@@ -1666,15 +1666,14 @@ class GraphEmbed(Decomposition):
 
     Args:
         A (array): an :math:`N\times N` complex or real symmetric matrix
-        max_mean_photon (float): threshold value. It guarantees that the mode with
-            the largest squeezing has ``max_mean_photon`` as the mean photon number
-            i.e., :math:`sinh(r_{max})^2 ==` max_mean_photon
+        mean_photon (float): mean_photon (float): It guarantees that the mean photon number in the pure Gaussian state
+            representing the graph satisfies  :math:`\sum_i sinh(r_{i})^2 ==` ``mean_photon``
         make_traceless (boolean): removes the trace of the input matrix
         tol (float): the tolerance used when checking if the input matrix is symmetric:
             :math:`|A-A^T| <` tol
     """
 
-    def __init__(self, A, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
+    def __init__(self, A, mean_photon, make_traceless=False, tol=1e-6):
         super().__init__([A])
         self.ns = A.shape[0]
 
@@ -1683,7 +1682,7 @@ class GraphEmbed(Decomposition):
         else:
             self.identity = False
             self.sq, self.U = graph_embed(
-                A, max_mean_photon=max_mean_photon, make_traceless=make_traceless, tol=tol)
+                A, mean_photon=mean_photon, make_traceless=make_traceless, atol=tol)
 
     def _decompose(self, reg):
         cmds = []

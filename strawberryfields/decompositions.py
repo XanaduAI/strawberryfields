@@ -125,7 +125,8 @@ def graph_embed_deprecated(A, max_mean_photon=1.0, make_traceless=False, rtol=1e
             i.e., :math:`sinh(r_{max})^2 ==` ``max_mean_photon``.
         make_traceless (bool): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
-            the graph.
+            the graph but will lead to different photon number statistics for events with more than
+            one photon in any mode.
         rtol (float): relative tolerance used when checking if the input matrix is symmetric.
         atol (float): absolute tolerance used when checking if the input matrix is symmetric.
 
@@ -150,7 +151,7 @@ def graph_embed_deprecated(A, max_mean_photon=1.0, make_traceless=False, rtol=1e
     return vals, U
 
 
-def graph_embed(A, mean_photon=1.0, make_traceless=False, atol=1e-08):
+def graph_embed(A, mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08):
     r"""Embed a graph into a Gaussian state.
 
     Given a graph in terms of a symmetric adjacency matrix
@@ -162,11 +163,12 @@ def graph_embed(A, mean_photon=1.0, make_traceless=False, atol=1e-08):
 
     Args:
         A (array[complex]): square, symmetric (weighted) adjacency matrix of the graph
-        max_mean_photon (float): It guarantees that the mean photon number in the pure Gaussian state
+        mean_photon (float): It guarantees that the mean photon number in the pure Gaussian state
             representing the graph satisfies  :math:`\sum_i sinh(r_{i})^2 ==` ``mean_photon``.
         make_traceless (bool): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
-            the graph.
+            the graph but will lead to different photon number statistics for events with more than
+            one photon in any mode.
         rtol (float): relative tolerance used when checking if the input matrix is symmetric.
         atol (float): absolute tolerance used when checking if the input matrix is symmetric.
 
@@ -179,8 +181,8 @@ def graph_embed(A, mean_photon=1.0, make_traceless=False, atol=1e-08):
     if m != n:
         raise ValueError("The matrix is not square.")
 
-    # if not np.allclose(A, np.transpose(A), rtol=rtol, atol=atol)
-    #    raise ValueError("The matrix is not symmetric.")
+    if not np.allclose(A, np.transpose(A), rtol=rtol, atol=atol):
+        raise ValueError("The matrix is not symmetric.")
 
     if make_traceless:
         A = A - np.trace(A) * np.identity(n) / n
