@@ -111,6 +111,8 @@ def takagi(N, tol=1e-13, rounding=13):
 def graph_embed_deprecated(A, max_mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08):
     r"""Embed a graph into a Gaussian state.
 
+    Note: The default behaviour of graph embedding has been changed; see :func:`graph_embed`. This version is deprecated, but has been kept for consistency.
+    
     Given a graph in terms of a symmetric adjacency matrix
     (in general with arbitrary complex off-diagonal and real diagonal entries),
     returns the squeezing parameters and interferometer necessary for
@@ -126,8 +128,8 @@ def graph_embed_deprecated(A, max_mean_photon=1.0, make_traceless=False, rtol=1e
         make_traceless (bool): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
             the graph.
-        rtol (float): relative tolerance used when checking if the input matrix is symmetric.
-        atol (float): absolute tolerance used when checking if the input matrix is symmetric.
+        rtol (float): relative tolerance used when checking if the input matrix is symmetric
+        atol (float): absolute tolerance used when checking if the input matrix is symmetric
 
     Returns:
         tuple[array, array]: squeezing parameters of the input
@@ -162,17 +164,18 @@ def graph_embed(A, mean_photon=1.0, make_traceless=False, atol=1e-08):
 
     Args:
         A (array[complex]): square, symmetric (weighted) adjacency matrix of the graph
-        max_mean_photon (float): It guarantees that the mean photon number in the pure Gaussian state
+        max_mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
             representing the graph satisfies  :math:`\sum_i sinh(r_{i})^2 ==` ``mean_photon``.
         make_traceless (bool): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
-            the graph.
-        rtol (float): relative tolerance used when checking if the input matrix is symmetric.
-        atol (float): absolute tolerance used when checking if the input matrix is symmetric.
+            the graph but will lead to different photon number statistics for events with more than
+            one photon in any mode.
+        rtol (float): relative tolerance used when checking if the input matrix is symmetric
+        atol (float): absolute tolerance used when checking if the input matrix is symmetric
 
     Returns:
         tuple[array, array]: squeezing parameters of the input
-            state to the interferometer, and the unitary matrix representing the interferometer
+        state to the interferometer, and the unitary matrix representing the interferometer
     """
     (m, n) = A.shape
 
