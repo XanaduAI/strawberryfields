@@ -35,7 +35,7 @@ The Blackbird programming language supports the following measurement operations
 |                                  |                                                    |                           | :class:`~.BaseGaussian` |
 +----------------------------------+----------------------------------------------------+---------------------------+-------------------------+
 
-Note that, while all backends support homodyne detection, the Gaussian backend is the only backend to support heterodyne detection. On the other hand, Fock-basis measurements are supported in all backends, though the Gaussian backend does not update the post-measurement quantum state, which would be non-Gaussian.
+.. note:: While all backends support homodyne detection, the Gaussian backend is the only backend to support heterodyne detection. On the other hand, Fock-basis measurements are supported in all backends, though the Gaussian backend does not update the post-measurement quantum state, which would be non-Gaussian.
 
 The measurement operators are used in the same manner as all other quantum transformation operations in Blackbird:
 
@@ -76,19 +76,22 @@ Constructing this circuit in Strawberry Fields with :math:`n=2,~m=3`, let's perf
 
 .. note:: If the :class:`~.BSgate` parameters are not specified, by default a 50-50 beamsplitter ``BSgate(pi/4,0)`` is applied.
 
-The default action after every measurement is to reset the measured modes to the vacuum state. However, once the engine has been run, we can extract the measured value of mode ``q[0]`` via the ``.val`` attribute:
+The default action after every measurement is to reset the measured modes to the vacuum state. However, we can extract the measured value of mode ``q[0]`` via the ``results``
+object returned by the engine after it has finished execution:
 
->>> q[0].val
+>>> results.samples[0]
 1
 
-.. note:: Since no measurement has yet been applied to the second mode, ``q[1].val`` will return ``None``.
+.. note:: Since measurement is a stochastic process, your results might differ when executing this code.
 
-Alternatively, we may return :meth:`result.samples <strawberryfields.engine.Result.samples>`:
+Since no measurement has yet been applied to the second mode, ``results.samples[1]`` will return ``None``.
 
 >>> results.samples
 [1, None]
 
-Therefore, we know that, to preserve the photon number, ``q[1]`` must be in the state :math:`\ket{4}`. Executing the backend again, and this time applying the second Fock measurement:
+Therefore, we know that, to preserve the photon number, ``q[1]`` must be in the state :math:`\ket{m+n-k}`, where :math:`m` and :math:`n` are the photon numbers of the initial states
+and :math:`k` is value returned in :code:`result.samples`.
+Executing the backend again, and this time applying the second Fock measurement:
 
 .. code-block:: python3
 
@@ -99,9 +102,9 @@ Therefore, we know that, to preserve the photon number, ``q[1]`` must be in the 
     results = eng.run(prog2)
 
 
-As expected, we get
+We will find that the second measurement yields :math:`m+n-k`. In this case, we get
 
->>> q[1].val
+>>> results.samples[1]
 4
 
 
@@ -127,16 +130,14 @@ For example, we can rewrite the example above using post-selection:
         MeasureFock(select=0) | q[0]
         Measure  | q[1]
 
-    eng.run(prog)
+    result = eng.run(prog)
 
 .. warning:: When passing the ``select`` argument to the measurement operator, we can no longer use the shortcut, we have to use the **full name** of the measurement operator.
 
-Since we are post-selecting a measurement of 0 photons in mode ``q[0]``, we expect ``q[0].val`` to be ``0`` and ``q[1].val`` to be ``5``. Indeed,
+Since we are post-selecting a measurement of 0 photons in mode ``q[0]``, we expect ``result.samples[0]`` to be ``0`` and ``result.samples[1]`` to be ``5``. Indeed,
 
->>> q[0].val
-0
->>> q[1].val
-5
+>>> result.samples
+[0, 5]
 
 .. warning::
 

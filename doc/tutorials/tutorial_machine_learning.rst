@@ -67,9 +67,9 @@ To properly evaluate measurement results, we must therefore do a little more wor
 
     sess = tf.Session()
     sess.run(tf.global_variables_initializer())
-    feed_dict = {phi:0.0}
+    feed_dict = {phi: 0.0}
 
-    results = eng.run(prog, state_options={"session":sess, "feed_dict":feed_dict})
+    results = eng.run(prog, state_options={"session": sess, "feed_dict": feed_dict})
 
 This code will execute without error, and both the output results and the register :code:`q` will contain numeric values based on the given value for the angle phi. We can select measurement results at other angles by supplying different values for :code:`phi` in :code:`feed_dict`.
 
@@ -78,7 +78,10 @@ This code will execute without error, and both the output results and the regist
 Symbolic computation
 ~~~~~~~~~~~~~~~~~~~~
 
-Supplying a :code:`Session` and :code:`feed_dict` to :code:`eng.run()` is okay for checking one or two numerical values. However, each call of :code:`eng.run()` will create additional redundant nodes in the underlying Tensorflow computational graph. A better method is to make the single call :code:`eng.run(eval=False)`. This will carry out the computation symbolically but not numerically. The final state and the register :code:`q` will both instead contain *unevaluted Tensors*. These Tensors can be evaluated numerically by running the :code:`tf.Session` and supplying the desired values for any placeholders:
+Supplying a :code:`Session` and :code:`feed_dict` to :code:`eng.run()` is okay for checking one or two numerical values.
+However, each call of :code:`eng.run()` will create additional redundant nodes in the underlying Tensorflow computational graph.
+A better method is to make the single call :code:`eng.run(prog, state_options={"eval": False})`. This will carry out the computation symbolically but not numerically.
+The results returned by the engine will instead contain *unevaluted Tensors*. These Tensors can be evaluated numerically by running the :code:`tf.Session` and supplying the desired values for any placeholders:
 
 .. code-block:: python
 
@@ -89,7 +92,7 @@ Supplying a :code:`Session` and :code:`feed_dict` to :code:`eng.run()` is okay f
         MeasureHomodyne(phi) | q[0]
 
     eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": 7})
-    results = eng.run(prog, state_options={"eval":False})
+    results = eng.run(prog, state_options={"eval": False})
 
     state_density_matrix = results.state.dm()
     homodyne_meas = results.samples[0]
@@ -103,7 +106,7 @@ The parameters for Blackbird states, gates, and measurements may be more complex
 .. code-block:: python
 
     input_ = tf.placeholder(tf.float32, shape=(2,1))
-    weights = tf.Variable([[0.1,0.1]])
+    weights = tf.Variable([[0.1, 0.1]])
     bias = tf.Variable(0.0)
     NN = tf.sigmoid(tf.matmul(weights, input_) + bias)
     NNDgate = Dgate(NN)

@@ -29,7 +29,7 @@ The first import statement imports Strawberry Fields as ``sf``, allowing us to a
 Program initialization
 ======================
 
-We can now initialize our quantum program using by instantiating
+We can now initialize our quantum program by instantiating
 a :class:`~.strawberryfields.program.Program` class:
 
 ``sf.Program(num_subsystems, name=None)``
@@ -37,7 +37,7 @@ a :class:`~.strawberryfields.program.Program` class:
 where
 
 * ``num_subsystems`` (*int*) is the number of modes we want to initialize in our quantum register
-* ``name`` (*str*) is the name of the program (optional).
+* ``name`` (*str*) is the name of the program (optional)
 
 .. note::
 
@@ -56,7 +56,7 @@ where
 
     See :ref:`conventions` for more details.
 
-Therefore, to initialize our program:
+Therefore, to initialize a program on three quantum registers, we write:
 
 .. code-block:: python
 
@@ -139,10 +139,9 @@ A couple of things to note here:
 Executing the program
 =====================
 
-Once the program is constructed, we then must initialize an **engine**, which executes
+Once the program is constructed, we then must initialize an **engine**, which is responsible for executing
 the program on a specified **backend** (which can be either a local simulator, or a
-remote simulator/hardware device). We do this by instantiating an
-:class:`~.strawberryfields.engine.LocalEngine`:
+remote simulator/hardware device). Engines are initialized as follows:
 
 ``sf.Engine(backend, backend_options={})``
 
@@ -150,9 +149,7 @@ where
 
 * ``backend``: a string or :class:`~.BaseBackend` object representing the Strawberry Fields backend we wish to use; we have the choice of two Fock backends [#]_, the NumPy based (``'fock'``) and Tensorflow (``'tf'``), and one Gaussian backend [#]_ (``'gaussian'``).
 
-  This is *required* the first time running the engine, but optional for subsequent runs - if not provided, the previously used backend will continue to be used.
-
-  Note that if the backend string is altered in a later call to :meth:`eng.run <.Engine.run>`, for example by switching from ``'fock'`` to ``'gaussian'``, this is treated as a new backend, initialised in the vacuum state.
+  This argument is *required* when creating the engine.
 
 * ``backend_options`` is a dictionary containing options specific to the chosen backend.
 
@@ -178,7 +175,7 @@ in our truncated Fock basis. We now have all the parameters ready to initialize 
     For example, to prepare a squeezed vacuum state in the :math:`x` quadrature with ``cutoff_dim=10``, a squeezing factor of :math:`r=1` provides an acceptable approximation, since :math:`|\braketD{n}{z}|^2<0.02` for :math:`n\geq 10`.
 
 
-We can now execute our quantum program ``prog`` on the engine via the :func:`strawberryfields.engine.Engine.run` method:
+We can now execute our quantum program ``prog`` on the engine via the :func:`Engine.run` method:
 
 .. code-block:: python
 
@@ -210,11 +207,11 @@ The :meth:`eng.run <.LocalEngine.run>` method accepts the arguments:
 
 Other useful engine methods that can be called at any time include:
 
-* :func:`eng.print_applied() <strawberryfields.engine.BaseEngine.print_applied>`: prints all commands applied using :meth:`eng.run <strawberryfields.engine.LocalEngine.run>` since the last backend reset/initialisation.
+* :func:`eng.print_applied() <strawberryfields.engine.BaseEngine.print_applied>`: Prints all commands applied using :meth:`eng.run <strawberryfields.engine.LocalEngine.run>` since the last backend reset/initialisation.
 
   - This may differ from your original constructed program due to program compilation. As a result, this shows all applied gate decompositions, which may differ depending on the backend.
 
-* :func:`eng.reset() <strawberryfields.engine.BaseEngine.reset>`: resets the backend circuit to the vacuum state.
+* :func:`eng.reset() <strawberryfields.engine.BaseEngine.reset>`: Resets the backend circuit to the vacuum state.
 
 
 Results and visualization
@@ -226,7 +223,7 @@ for accessing the results of your program execution:
 
 ..
 
-* ``results.state``: the quantum state object contains details and methods
+* ``results.state``: The quantum state object contains details and methods
   for manipulation of the final circuit state.
 
   Note that only local simulators will
@@ -237,7 +234,7 @@ for accessing the results of your program execution:
 
 ..
 
-* ``results.samples``: measurement samples from any measurements performed.
+* ``results.samples``: Measurement samples from any measurements performed.
   Returned measurement samples will have shape ``(modes,)``. If multiple
   shots are requested during execution, the returned measurement samples
   will instead have shape ``(shots, modes)``.
