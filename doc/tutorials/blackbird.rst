@@ -5,7 +5,9 @@ Blackbird programming language
 
 .. sectionauthor:: Nathan Killoran <nathan@xanadu.ai>, Josh Izaac <josh@xanadu.ai>
 
-In this section, we provide an overview of the **Blackbird quantum programming language**. This simple and elegant language breaks down a quantum circuit into a set of instructions detailing the quantum operations we would like to apply, as well as the the subsystems that these operations act on [#f1]_. 
+In this section, we provide an overview of the **Blackbird quantum programming language**. This simple and elegant language breaks down a quantum circuit into a set of instructions detailing the quantum operations we would like to apply, as well as the the subsystems that these operations act on [#f1]_. The Blackbird language is built-in to Strawberry Fields, but also exists as a separate Python `package <https://quantum-blackbird.readthedocs.io/en/latest/>`_. 
+
+Using the Strawberry Fields :mod:`.io` module, Blackbird scripts can be serialized and deserialized between files and Strawberry Fields Programs.
 
 Operations
 ============
