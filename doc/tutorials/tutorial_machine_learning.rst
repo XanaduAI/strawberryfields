@@ -69,7 +69,7 @@ To properly evaluate measurement results, we must therefore do a little more wor
     sess.run(tf.global_variables_initializer())
     feed_dict = {phi:0.0}
 
-    results = eng.run(prog, cutoff_dim=7, state_options={"session":sess, "feed_dict":feed_dict})
+    results = eng.run(prog, state_options={"session":sess, "feed_dict":feed_dict})
 
 This code will execute without error, and both the output results and the register :code:`q` will contain numeric values based on the given value for the angle phi. We can select measurement results at other angles by supplying different values for :code:`phi` in :code:`feed_dict`.
 
@@ -82,14 +82,17 @@ Supplying a :code:`Session` and :code:`feed_dict` to :code:`eng.run()` is okay f
 
 .. code-block:: python
 
-    eng, q = sf.Engine(2)
-    with eng:
+    prog = sf.Program(2)
+
+    with prog.context as q:
         Dgate(alpha)         | q[0]
         MeasureHomodyne(phi) | q[0]
 
-    results = eng.run('tf', cutoff_dim=7, state_options={"eval":False})
+    eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": 7})
+    results = eng.run(prog, state_options={"eval":False})
+
     state_density_matrix = results.state.dm()
-    homodyne_meas = q[0].val
+    homodyne_meas = results.samples[0]
     dm_x, meas_x = sess.run([state_density_matrix, homodyne_meas], feed_dict={phi: 0.0})
 
 Processing data
@@ -127,12 +130,12 @@ It is common in machine learning to process data in *batches*. Strawberry Fields
     # run simulation in batched-processing mode
     batch_size = 3
     prog = sf.Program(2)
-    eng = sf.Engine('tf', backend_options={"cutoff_dim": 7, , "batch_size": batch_size})
+    eng = sf.Engine('tf', backend_options={"cutoff_dim": 7, "batch_size": batch_size})
 
     with prog.context as q:
         Dgate(tf.Variable([0.1] * batch_size)) | q[0]
 
-    state = eng.run(prog, state_options={"eval":False})
+    state = eng.run(prog, state_options={"eval": False})
 
 .. note:: The batch size should be static, i.e., not changing over the course of a computation.
 
@@ -173,12 +176,10 @@ Use the optimization methods outlined above to find the famous `Hong-Ou-Mandel e
 
 .. rubric:: Footnotes
 
-.. [#] Note that certain operations -- in particular, measurements --  may not have gradients defined within Tensorflow. When optimizing via gradient descent, we must be careful to define a circuit which is end-to-end differentiable. 
+.. [#] Note that certain operations -- in particular, measurements --  may not have gradients defined within Tensorflow. When optimizing via gradient descent, we must be careful to define a circuit which is end-to-end differentiable.
 
 .. [#] Note that :code:`batch_size` should not be set to 1. Instead, use ``batch_size=None``, or just omit the ``batch_size`` argument.
 
 .. [#] In this tutorial, we have applied classical machine learning tools to learn a quantum optical circuit. Of course, there are many other possibilities for combining machine learning and quantum computing, e.g., using quantum algorithms to speed up machine learning subroutines, or fully quantum learning on unprocessed quantum data.
 
 .. [#] Remember that it might be necessary to reshape a ket or density matrix before using some of these functions.
-
-
