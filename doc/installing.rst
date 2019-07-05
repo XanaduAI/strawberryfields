@@ -22,8 +22,8 @@ as well as the following Python packages:
 * `NetworkX <http://networkx.github.io/>`_ >=2.0
 * `Blackbird <https://quantum-blackbird.readthedocs.io>`_ >=0.2.0
 * `Hafnian <https://hafnian.readthedocs.io>`_ >=0.6.0
-* `toml <https://pypi.org/project/toml/>_`
-* `appdirs <https://pypi.org/project/appdirs/>_`
+* `toml <https://pypi.org/project/toml/>`_
+* `appdirs <https://pypi.org/project/appdirs/>`_
 
 
 If you currently do not have Python 3 installed, we recommend `Anaconda for Python 3 <https://www.anaconda.com/download/>`_, a distributed version of Python packaged for scientific computation.
