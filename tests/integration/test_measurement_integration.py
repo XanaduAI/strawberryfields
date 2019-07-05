@@ -115,7 +115,6 @@ class TestPostselection:
             else:
                 assert np.all(photons_out == total_photons)
 
-
     @pytest.mark.backends("gaussian")
     @pytest.mark.fixture('pure')
     def test_embed_graph(self, setup_eng, cutoff, batch_size):
@@ -137,11 +136,3 @@ class TestPostselection:
         param = n_mean_per_mode
         expected = (1 / (1 + param)) * (param / (1 + param)) ** (np.arange(len(rel_freq)))
         assert np.allclose(rel_freq, expected, atol=10 / np.sqrt(n_samples))
-
-        #eng.run(prog)  # FIXME measurements above commute, but they should not since the postselection may fail if the other one is performed first!
-        #photons_out = sum([i.val for i in q])
-
-        #if batch_size is not None:
-        #    assert np.all(photons_out == np.tile(total_photons, batch_size))
-        #else:
-        #    assert np.all(photons_out == total_photons)
