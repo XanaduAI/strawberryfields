@@ -60,7 +60,7 @@ This can be easily implemented using the Blackbird quantum circuit language:
    :linenos:
    :dedent: 4
    :tab-width: 4
-   :start-after: with eng:
+   :start-after: with teleportation.context as q:
    :end-before: # end circuit
 
 Some important notes:

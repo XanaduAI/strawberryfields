@@ -1667,9 +1667,11 @@ class Interferometer(Decomposition):
 
 class GraphEmbed(Decomposition):
     r"""Embed a graph into an interferometer setup.
+
     This operation uses the Takagi decomposition to decompose
     an adjacency matrix into a sequence of squeezers and beamsplitters and
     rotation gates.
+
     Args:
         A (array): an :math:`N\times N` complex or real symmetric matrix
         mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state

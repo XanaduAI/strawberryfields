@@ -18,7 +18,7 @@ The Gaussian boson sampling scheme remains, on initial observation, quite simila
 
 * Each output mode of the interferometer (denoted by state :math:`\ket{\psi'}`) is then measured in the Fock basis, :math:`\bigotimes_i n_i\ket{n_i}\bra{n_i}`.
 
-Without loss of generality, we can absorb the squeezing phase parameter :math:`\phi` into the interferometer, and set :math:`\phi=0` for convenience. 
+Without loss of generality, we can absorb the squeezing phase parameter :math:`\phi` into the interferometer, and set :math:`\phi=0` for convenience.
 
 Using phase space methods, Hamilton et al. :cite:`hamilton2017` showed that the probability of measuring a Fock state containing only 0 or 1 photons per mode is given by
 
@@ -74,10 +74,10 @@ The boson sampling circuit displayed above, with randomly chosen rotation angles
    :linenos:
    :dedent: 4
    :tab-width: 4
-   :start-after: with eng:
+   :start-after: with gbs.context as q:
    :end-before: # end circuit
 
-If we wish to simulate Fock measurements, we can additionally include 
+If we wish to simulate Fock measurements, we can additionally include
 
 .. code-block:: python
 
@@ -86,13 +86,13 @@ If we wish to simulate Fock measurements, we can additionally include
     Measure | q[2]
     Measure | q[3]
 
-after the beamsplitter array. After constructing the circuit and running the engine, the values of the Fock state measurements will be available in the attributes ``q[i].val`` for ``i=0,1,2,3``. In order to sample from this distribution, it will be required to repeat the execution of this circuit multiple times, storing the resulting measurements each time.
+after the beamsplitter array. After constructing the circuit and running the engine, the values of the Fock state measurements will be available by returning :attr:`~.Results.samples`. In order to sample from this distribution, it will be required to repeat the execution of this circuit multiple times, storing the resulting measurements each time.
 
 .. warning:: While all backends support the Gaussian boson sampling scheme, the Gaussian backend currently does not support the Fock state measurement operation :class:`.MeasureFock` (provided by the shortcut ``Measure``).
 
 Alternatively, you may omit the measurements, and extract the resulting Fock state probabilities directly via the state methods :meth:`~.BaseFockState.all_fock_probs` (supported by Fock backends) or :meth:`~.BaseState.fock_prob` (supported by all backends).
 
 .. note::
-  A fully functional Strawberry Fields simulation containing the above Blackbird code is included at :download:`examples/gaussian_boson_sampling.py <../../examples/gaussian_boson_sampling.py>`. 
+  A fully functional Strawberry Fields simulation containing the above Blackbird code is included at :download:`examples/gaussian_boson_sampling.py <../../examples/gaussian_boson_sampling.py>`.
 
   For more details on running the above Blackbird code in Strawberry Fields, including calculations of how to determine the output Fock state probabilities using the matrix permanent and comparisons to the returned state, refer to the in-depth :ref:`Gaussian boson sampling tutorial <gaussian_boson_tutorial>`.
