@@ -22,8 +22,7 @@ Execution engine
 
 This module implements :class:`BaseEngine` and its subclasses that are responsible for
 communicating quantum programs represented by :class:`.Program` objects
-to a backend that could be e.g., a simulator, a hardware quantum processor,
-or a circuit drawer, and returning the result to the user.
+to a backend that could be e.g., a simulator or a hardware quantum processor.
 One can think of each BaseEngine instance as a separate quantum computation.
 
 A typical use looks like
