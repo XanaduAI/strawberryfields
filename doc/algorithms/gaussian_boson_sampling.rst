@@ -81,14 +81,10 @@ If we wish to simulate Fock measurements, we can additionally include
 
 .. code-block:: python
 
-    Measure | q[0]
-    Measure | q[1]
-    Measure | q[2]
-    Measure | q[3]
+    Measure | q
 
-after the beamsplitter array. After constructing the circuit and running the engine, the values of the Fock state measurements will be available by returning :attr:`~.Result.samples`. In order to sample from this distribution, it will be required to repeat the execution of this circuit multiple times, storing the resulting measurements each time.
-
-.. warning:: While all backends support the Gaussian boson sampling scheme, the Gaussian backend currently does not support the Fock state measurement operation :class:`.MeasureFock` (provided by the shortcut ``Measure``).
+after the beamsplitter array. After constructing the circuit and running the engine, the values of the Fock state measurements will be available within the :attr:`samples` attribute of the :class:`~.Result` object returned by the engine.
+In order to sample from this distribution :math:`N` times, the keyword argument :code:`shots=N` can be provided to the :func:`eng.run()` command (only supported for Gaussian backend).
 
 Alternatively, you may omit the measurements, and extract the resulting Fock state probabilities directly via the state methods :meth:`~.BaseFockState.all_fock_probs` (supported by Fock backends) or :meth:`~.BaseState.fock_prob` (supported by all backends).
 

@@ -189,7 +189,7 @@ The variables fed into the gates of the layer are defined as TensorFlow variable
 
 .. code-block:: python
 
-    with eng:
+    with prog.context as q:
 
         for _ in range(layers):
             layer(q)
