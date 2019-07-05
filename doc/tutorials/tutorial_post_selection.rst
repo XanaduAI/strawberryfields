@@ -32,15 +32,16 @@ The Blackbird programming language supports the following measurement operations
 | Heterodyne detection             | :class:`MeasureHeterodyne() <.MeasureHeterodyne>`  | ``MeasureHD``             | :class:`~.BaseGaussian` |
 +----------------------------------+----------------------------------------------------+---------------------------+-------------------------+
 | Photon-counting                  | :class:`MeasureFock() <.MeasureFock>`              | ``Measure``               | :class:`~.BaseFock`     |
+|                                  |                                                    |                           | :class:`~.BaseGaussian` |
 +----------------------------------+----------------------------------------------------+---------------------------+-------------------------+
 
-Note that, while all backends support homodyne detection, the Gaussian backend is the only backend to support heterodyne detection. Similarly, while Fock-basis measurements are only supported in backends which use the Fock representation (the Fock and Tensorflow backends).
+Note that, while all backends support homodyne detection, the Gaussian backend is the only backend to support heterodyne detection. On the other hand, Fock-basis measurements are supported in all backends, though the Gaussian backend does not update the post-measurement quantum state, which would be non-Gaussian.
 
 The measurement operators are used in the same manner as all other quantum transformation operations in Blackbird:
 
 ``MeasurementOperator | (q[0], q[1], q[2], ...)``
 
-where the left hand side represents the measurement operator (along with any required or optional arguments), and the right hand side signifies the modes which are to be measured.
+where the left-hand side represents the measurement operator (along with any required or optional arguments), and the right-hand side signifies the modes which are to be measured.
 
 To see how this works in practice, consider the following circuit, where two incident Fock states :math:`\ket{n}` and :math:`\ket{m}` are directed on a beamsplitter, with two photon detectors at the output modes.
 
@@ -252,7 +253,7 @@ These only need to be used when passing a measured mode value as a gate paramete
 In this particular example, we are casting the complex-valued Heterodyne measurement to a real value using the ``phase`` classical processing function, allowing us to pass it as a beamsplitter parameter.
 
 
-User defined processing functions
+User-defined processing functions
 -----------------------------------
 
 If you need a classical processing function beyond the basic ones provided in the :mod:`strawberryfields.utils` module, you can use the :func:`strawberryfields.convert` decorator to create your own. For example, consider the case where you might need to take the *logarithm* of a measured value, but only within a certain range, and use this as a subsequent gate parameter.

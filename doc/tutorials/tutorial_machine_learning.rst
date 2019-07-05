@@ -120,19 +120,19 @@ We can also use the :func:`strawberryfields.convert` decorator to allow arbitrar
 Working with batches
 ~~~~~~~~~~~~~~~~~~~~
 
-It is common in machine learning to process data in *batches*. Strawberry Fields supports both unbatched and batched data when using the Tensorflow backend. Unbatched operation is the default behaviour (shown above). To enable batched operation, you should provide an extra :code:`batch_size` argument [#]_ when calling :meth:`eng.run() <.Engine.run>`, e.g.,
+It is common in machine learning to process data in *batches*. Strawberry Fields supports both unbatched and batched data when using the Tensorflow backend. Unbatched operation is the default behaviour (shown above). To enable batched operation, you should provide an extra :code:`batch_size` argument [#]_ within the :code:`backend_options` dictionary, e.g.,
 
 .. code-block:: python
 
     # run simulation in batched-processing mode
     batch_size = 3
     prog = sf.Program(2)
-    eng = sf.Engine('tf', backend_options={"cutoff_dim": 7})
+    eng = sf.Engine('tf', backend_options={"cutoff_dim": 7, , "batch_size": batch_size})
 
     with prog.context as q:
         Dgate(tf.Variable([0.1] * batch_size)) | q[0]
 
-    state = eng.run(prog, state_options={"eval":False, "batch_size":batch_size})
+    state = eng.run(prog, state_options={"eval":False})
 
 .. note:: The batch size should be static, i.e., not changing over the course of a computation.
 
@@ -173,7 +173,7 @@ Use the optimization methods outlined above to find the famous `Hong-Ou-Mandel e
 
 .. rubric:: Footnotes
 
-.. [#] Note that certain operations -- in particular, measurements --  may not have gradients defined within Tensorflow. When optimizing via gradient descent, we must be careful to define a circuit which is end-to-end differentiable. The gradient support of Tensorflow is constantly growing; users are recommended to check the `Tensorflow docs <http://tensorflow.org>`_ and the `Tensorflow github page <https://github.com/tensorflow/tensorflow>`_ for the latest implementation details.
+.. [#] Note that certain operations -- in particular, measurements --  may not have gradients defined within Tensorflow. When optimizing via gradient descent, we must be careful to define a circuit which is end-to-end differentiable. 
 
 .. [#] Note that :code:`batch_size` should not be set to 1. Instead, use ``batch_size=None``, or just omit the ``batch_size`` argument.
 
