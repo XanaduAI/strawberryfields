@@ -182,23 +182,30 @@ We can now execute our quantum program ``prog`` on the engine via the :func:`str
 
 .. code-block:: python
 
-    result = eng.run(prog, shots=1, modes=None, compile_options={})
+    result = eng.run(prog, shots=1, modes=None, state_options={}, compile_options={})
 
 The :meth:`eng.run <.LocalEngine.run>` method accepts the arguments:
 
 ..
 
-* ``shots``: a positive integer that specified the number of times the program measurement evaluation is to be repeated.
+* ``shots``: A positive integer that specifies the number of times the program measurement evaluation is to be repeated.
 
 ..
 
-* ``modes``: a list of integers, that specifies which modes we wish to return in the state object. If the state is a mixed state represented by a density matrix, then the engine will automatically perform a partial trace to return only the modes specified. Note that this only affects the returned state object - all modes remain in the backend circuit.
+* ``modes``: A list of integers, that specifies which modes we wish to return in the state object. If the state is a mixed state represented by a density matrix, then the backend will automatically perform a partial trace to return only the modes specified. Note that this only affects the returned state object - all modes remain in the backend circuit.
 
 ..
 
-* ``compile_options``: a dictionary of keyword arguments to be passed to program compilation.
+* ``state_options``: A dictionary of keyword arguments to be passed to the backend when it prepares the returned quantum state from a simulator backend. For example, TensorFlow objects like a ``session`` and a ``feed_dict`` can be passed to the TensorFlow backend. 
+
+..
+
+* ``compile_options``: A dictionary of keyword arguments to be used for program compilation.
   To ensure the ``program`` will run on the specified backend, the engine will perform
   **program compilation**, by calling the :meth:`~.Program.compile` method.
+
+.. note::
+   A ``shots`` value different than 1 is currently only supported for one specific case: the :code:`MeasureFock/Measure` operation executed on the Gaussian backend.
 
 
 Other useful engine methods that can be called at any time include:
@@ -380,7 +387,7 @@ Full program
 .. rubric:: Footnotes
 
 .. [#] Fock backends are backends which represent the quantum state and operations via the Fock basis. These can represent *all* possible CV states and operations, but also introduce numerical error due to truncation of the Fock space, and consume more memory.
-.. [#] The Gaussian backend, due to its ability to represent states and operations as Gaussian objects/transforms in the phase space, consumes less memory and is less computationally intensive then the Fock backends. However, it cannot represent non-Gaussian operations and states (such as the cubic phase gate, Fock measurements, and Fock states, amongst others).
+.. [#] The Gaussian backend, due to its ability to represent states and operations as Gaussian objects/transforms in the phase space, consumes less memory and is less computationally intensive then the Fock backends. However, it cannot represent non-Gaussian operations and states (such as the cubic phase gate, and Fock states, amongst others). The only exception is Fock measurements. The Gaussian backend can simulate these, but it does not update the post-measurement quantum state, which would be non-Gaussian.
 .. [#] If using the Gaussian backend, state methods and attributes available for extracting the state information include:
 
     * :meth:`~.BaseGaussianState.means` and :meth:`~.BaseGaussianState.cov` for returning the vector of means and the covariance matrix of the specified modes
