@@ -121,28 +121,9 @@ Now that we have the interferometer unitary transformation :math:`U`, as well as
 Calculating the hafnian
 ------------------------
 
-Before we can calculate the right hand side of the Gaussian boson sampling equation, we need a method of calculating the hafnian. Since the hafnian is classically hard to compute, it is not provided in either NumPy *or* SciPy, so we will use the following custom function:
+Before we can calculate the right hand side of the Gaussian boson sampling equation, we need a method of calculating the hafnian. Since the hafnian is classically hard to compute, it is not provided in either NumPy *or* SciPy, so we will use `hafnian <https://hafnian.readthedocs.io>`_ package, installed alongside Strawberry Fields:
 
->>> from itertools import permutations
->>> from scipy.special import factorial
->>> def Haf(M):
-...     n=len(M)
-...     m=int(n/2)
-...     haf=0.0
-...     for i in permutations(range(n)):
-...         prod=1.0
-...         for j in range(m):
-...             prod*=M[i[2*j],i[2*j+1]]
-...         haf+=prod
-...     return haf/(factorial(m)*(2**m))
-
-.. note::
-
-    This function is written based on the basic definition of the hafnian,
-
-    .. math:: \text{Haf}(A) = \frac{1}{n!2^n} \sum_{\sigma \in S_{2n}} \prod_{j=1}^n A_{\sigma(2j - 1), \sigma(2j)}
-
-    Notice that this function counts each term in the definition multiple times, and renormalizes to remove the multiple counts by dividing by a factor :math:`n!2^n`. **This function is extremely slow!**
+>>> from hafnian import haf
 
 Now, for the right hand side numerator, we first calculate the submatrix :math:`[(UU^T\tanh(r))]_{st}`:
 
@@ -174,7 +155,7 @@ Now that we have a method for calculating the hafnian, let's compare the output 
 * **Measuring** :math:`\ket{1,1,0,0}` **at the output**
 
   >>> B = (np.dot(U,U.T) * np.tanh(1))[:, [0,1]][[0,1]]
-  >>> np.abs(Haf(B))**2 / np.cosh(1)**4
+  >>> np.abs(haf(B))**2 / np.cosh(1)**4
   0.068559563712223492
 
   Compare this to the Strawberry Fields result ``0.0685595637122246``
@@ -183,7 +164,7 @@ Now that we have a method for calculating the hafnian, let's compare the output 
 * **Measuring** :math:`\ket{0,1,0,1}` **at the output**
 
   >>> B = (np.dot(U,U.T) * np.tanh(1))[:, [1,3]][[1,3]]
-  >>> np.abs(Haf(B))**2 / np.cosh(1)**4
+  >>> np.abs(haf(B))**2 / np.cosh(1)**4
   0.0020560972589773979
 
   Compare this to the Strawberry Fields result ``0.002056097258977398``
@@ -194,7 +175,7 @@ Now that we have a method for calculating the hafnian, let's compare the output 
   This corresponds to the hafnian of the full matrix :math:`B=UU^T\tanh(r)`:
 
   >>> B = (np.dot(U,U.T) * np.tanh(1))
-  >>> np.abs(Haf(B))**2 / np.cosh(1)**4
+  >>> np.abs(haf(B))**2 / np.cosh(1)**4
   0.0083429463998674833
 
   Compare this to the Strawberry Fields result ``0.00834294639986785``
@@ -206,7 +187,7 @@ Now that we have a method for calculating the hafnian, let's compare the output 
   first row and first column, making sure to divide by :math:`2!`:
 
   >>> B = (np.dot(U,U.T) * np.tanh(1))[:, [0,0]][[0,0]]
-  >>> np.abs(Haf(B))**2 / (2*np.cosh(1)**4)
+  >>> np.abs(haf(B))**2 / (2*np.cosh(1)**4)
   0.010312945253454881
 
   Compare this to the Strawberry Fields result ``0.01031294525345511``

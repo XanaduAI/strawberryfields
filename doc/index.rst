@@ -148,16 +148,15 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    code/decompositions
    code/utils
    code/circuitdrawer
-   code/backend
    code/backend.states
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Backend API
+   :hidden:
+
+   code/backend
    code/backend.gaussian
    code/backend.fock
    code/backend.tf
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
