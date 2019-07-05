@@ -87,7 +87,7 @@ If we wish to simulate Fock measurements, we can additionally include
     Measure | q[2]
     Measure | q[3]
 
-after the beamsplitter array. After constructing the circuit and running the engine, the values of the Fock state measurements will be available by returning :attr:`~.Results.samples`. In order to sample from this distribution, it will be required to repeat the execution of this circuit multiple times, storing the resulting measurements each time.
+after the beamsplitter array. After constructing the circuit and running the engine, the values of the Fock state measurements will be available by returning :attr:`~.Result.samples`. In order to sample from this distribution, it will be required to repeat the execution of this circuit multiple times, storing the resulting measurements each time.
 
 Alternatively, you may omit the measurements, and extract the resulting Fock state probabilities directly via the state method :meth:`~.BaseFockState.all_fock_probs`.
 

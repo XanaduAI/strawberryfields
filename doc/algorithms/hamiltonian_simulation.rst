@@ -79,8 +79,8 @@ where, for this example, we have set ``J=1``, ``U=1.5``, ``k=20``, ``t=1.086``, 
 .. literalinclude:: ../../examples/hamiltonian_simulation.py
    :language: python
    :linenos:
-   :start-after: results =
-   :end-before: )
+   :start-after: # run the engine
+   :end-before: # the output state probabilities
 
 the site occupation probabilities can be calculated via
 

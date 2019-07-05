@@ -74,7 +74,7 @@ Consider the following gate teleportation circuit,
 
 :html:`<br>`
 
-Here, the state :math:`\ket{\psi}`, a squeezed state with :math:`r=0.1`, is teleported to the final qumode, with the :class:`quadratic phase gate <Pgate>` :math:`P(s)=e^{is\hat{x}^2/2\hbar}` teleported to act on it - with the quadratic phase gate chosen as it is diagonal in the :math:`\x` quadrature. This can be easily implemented using the Blackbird quantum circuit language:
+Here, the state :math:`\ket{\psi}`, a squeezed state with :math:`r=0.1`, is teleported to the final qumode, with the quadratic phase gate (:class:`~strawberryfields.ops.Pgate`) :math:`P(s)=e^{is\hat{x}^2/2\hbar}` teleported to act on it - with the quadratic phase gate chosen as it is diagonal in the :math:`\x` quadrature. This can be easily implemented using the Blackbird quantum circuit language:
 
 .. literalinclude:: ../../examples/gate_teleportation.py
    :language: python

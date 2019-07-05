@@ -88,13 +88,46 @@ class Result:
     Returned by :meth:`.BaseEngine.run`.
     """
     def __init__(self, samples):
-        #: BaseState: quantum state object returned by a local backend, if any
-        self.state = None
-        #: array(array(Number)): measurement samples, shape == (modes,) or shape == (shots, modes)
+        self._state = None
+
         # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
         if len(shape(samples)) > 1:
             samples = stack(samples, 1)
-        self.samples = samples
+
+        self._samples = samples
+
+    @property
+    def samples(self):
+        """Measurement samples.
+
+        Returned measurement samples will have shape ``(modes,)``. If multiple
+        shots are requested during execution, the returned measurement samples
+        will instead have shape ``(shots, modes)``.
+
+        Returns:
+            array[array[float, int]]: measurement samples returned from
+            program execution
+        """
+        return self._samples
+
+    @property
+    def state(self):
+        """The quantum state object.
+
+        The quantum state object contains details and methods
+        for manipulation of the final circuit state.
+
+        .. note::
+
+            Only local simulators will return a state object. Remote
+            simulators and hardware backends will return
+            :attr:`measurement samples <~.Result.samples>`,
+            but the return value of ``state`` will be ``None``.
+
+        Returns:
+            BaseState: quantum state returned from program execution
+        """
+        return self._state
 
     def __str__(self):
         """String representation."""
@@ -329,7 +362,7 @@ class LocalEngine(BaseEngine):
             # empty sequence
             pass
         else:
-            result.state = self.backend.state(modes, **state_options)  # tfbackend.state can use kwargs
+            result._state = self.backend.state(modes, **state_options)  # tfbackend.state can use kwargs
         return result
 
 
