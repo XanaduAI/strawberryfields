@@ -69,7 +69,7 @@ To properly evaluate measurement results, we must therefore do a little more wor
     sess.run(tf.global_variables_initializer())
     feed_dict = {phi:0.0}
 
-    results = eng.run(prog, cutoff_dim=7, state_options={"session":sess, "feed_dict":feed_dict)
+    results = eng.run(prog, cutoff_dim=7, state_options={"session":sess, "feed_dict":feed_dict})
 
 This code will execute without error, and both the output results and the register :code:`q` will contain numeric values based on the given value for the angle phi. We can select measurement results at other angles by supplying different values for :code:`phi` in :code:`feed_dict`.
 
