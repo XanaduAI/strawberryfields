@@ -173,7 +173,7 @@ Use the optimization methods outlined above to find the famous `Hong-Ou-Mandel e
 
 .. rubric:: Footnotes
 
-.. [#] Note that certain operations -- in particular, measurements --  may not have gradients defined within Tensorflow. When optimizing via gradient descent, we must be careful to define a circuit which is end-to-end differentiable. The gradient support of Tensorflow is constantly growing; users are recommended to check the `Tensorflow docs <http://tensorflow.org>`_ and the `Tensorflow github page <https://github.com/tensorflow/tensorflow>`_ for the latest implementation details.
+.. [#] Note that certain operations -- in particular, measurements --  may not have gradients defined within Tensorflow. When optimizing via gradient descent, we must be careful to define a circuit which is end-to-end differentiable. 
 
 .. [#] Note that :code:`batch_size` should not be set to 1. Instead, use ``batch_size=None``, or just omit the ``batch_size`` argument.
 
