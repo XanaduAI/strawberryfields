@@ -17,10 +17,13 @@ Strawberry Fields requires the following libraries be installed:
 
 as well as the following Python packages:
 
-* `NumPy <http://numpy.org/>`_  >=1.13.3
+* `NumPy <http://numpy.org/>`_  >=1.16.3
 * `SciPy <http://scipy.org/>`_  >=1.0.0
 * `NetworkX <http://networkx.github.io/>`_ >=2.0
 * `Blackbird <https://quantum-blackbird.readthedocs.io>`_ >=0.2.0
+* `Hafnian <https://hafnian.readthedocs.io>`_ >=0.6.0
+* `toml <https://pypi.org/project/toml/>_`
+* `appdirs <https://pypi.org/project/appdirs/>_`
 
 
 If you currently do not have Python 3 installed, we recommend `Anaconda for Python 3 <https://www.anaconda.com/download/>`_, a distributed version of Python packaged for scientific computation.
