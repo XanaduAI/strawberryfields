@@ -356,6 +356,8 @@ class LocalEngine(BaseEngine):
             Result: results of the computation
         """
 
+        # session or feed_dict are needed by TF backend during simulation if program contains measurements
+        kwargs.update(state_options)
         result = super()._run(program, shots=shots, compile_options=compile_options, **kwargs)
         if isinstance(modes, Sequence) and not modes:
             # empty sequence

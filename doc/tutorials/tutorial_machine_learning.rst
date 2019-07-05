@@ -119,6 +119,8 @@ We can also use the :func:`strawberryfields.convert` decorator to allow arbitrar
     def sigmoid(x):
         return tf.sigmoid(x)
 
+    prog = sf.Program(2)
+
     with prog.context as q:
         MeasureX             | q[0]
         Dgate(sigmoid(q[0])) | q[1]
@@ -138,7 +140,7 @@ It is common in machine learning to process data in *batches*. Strawberry Fields
     with prog.context as q:
         Dgate(tf.Variable([0.1] * batch_size)) | q[0]
 
-    state = eng.run(prog, state_options={"eval": False})
+    result = eng.run(prog, state_options={"eval": False})
 
 .. note:: The batch size should be static, i.e., not changing over the course of a computation.
 
