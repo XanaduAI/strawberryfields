@@ -30,7 +30,7 @@ Program initialization
 ======================
 
 We can now initialize our quantum program using by instantiating
-a :class:`strawberryfields.Program` class:
+a :class:`~.strawberryfields.program.Program` class:
 
 ``sf.Program(num_subsystems, name=None)``
 
@@ -45,7 +45,7 @@ where
     the commutation relation :math:`[\x,\p]=i\hbar`.
 
     Other conventions can also be chosen by setting the global variable
-    :attr:`strawberryfields.hbar` at the beginning of a session.
+    :attr:`sf.hbar` at the beginning of a session.
 
 
     The value of :math:`\hbar` chosen modifies the application of the
@@ -111,7 +111,7 @@ to teleport the coherent state :math:`\ket{\alpha}` where :math:`\alpha=1+0.5i`:
 
 A couple of things to note here:
 
-* **The quantum register returned from the** :func:`strawberryfields.Program.context` **context manager is a sequence**. Individual modes can be accessed via standard Python indexing and slicing techniques.
+* **The quantum register returned from the** ``program.context`` **context manager is a sequence**. Individual modes can be accessed via standard Python indexing and slicing techniques.
 
 ..
     * **Preparing initial states, measurements, and gate operations all make use of the following syntax:**
@@ -141,8 +141,8 @@ Executing the program
 
 Once the program is constructed, we then must initialize an **engine**, which executes
 the program on a specified **backend** (which can be either a local simulator, or a
-remote simulator/hardware device). We do this by instantiating
-:class:`strawberryfields.Engine`:
+remote simulator/hardware device). We do this by instantiating an
+:class:`~.strawberryfields.engine.LocalEngine`:
 
 ``sf.Engine(backend, backend_options={})``
 
@@ -182,9 +182,9 @@ We can now execute our quantum program ``prog`` on the engine via the :func:`str
 
 .. code-block:: python
 
-    result = eng.run(prog, shots=1, modes=None, compile_options={}, state_options={})
+    result = eng.run(prog, shots=1, modes=None, compile_options={})
 
-The :meth:`eng.run <.LocalEngine.run>` method accepts the arguments
+The :meth:`eng.run <.LocalEngine.run>` method accepts the arguments:
 
 ..
 
@@ -198,14 +198,24 @@ The :meth:`eng.run <.LocalEngine.run>` method accepts the arguments
 
 * ``compile_options``: a dictionary of keyword arguments to be passed to program compilation.
   To ensure the ``program`` will run on the specified backend, the engine will perform
-  **program compilation**, by calling the :meth:`~Program.compile` method.
-
-..
-
-* ``state_options``: a dictionary of keyword arguments to be passed to the returned state object.
+  **program compilation**, by calling the :meth:`~.Program.compile` method.
 
 
-The returned :class:`~Result` object contains two useful attributes:
+Other useful engine methods that can be called at any time include:
+
+* :func:`eng.print_applied() <strawberryfields.engine.BaseEngine.print_applied>`: prints all commands applied using :meth:`eng.run <strawberryfields.engine.LocalEngine.run>` since the last backend reset/initialisation.
+
+  - This may differ from your original constructed program due to program compilation. As a result, this shows all applied gate decompositions, which may differ depending on the backend.
+
+* :func:`eng.reset() <strawberryfields.engine.BaseEngine.reset>`: resets the backend circuit to the vacuum state.
+
+
+Results and visualization
+==========================
+
+
+The returned :class:`~Result` object provides several useful properties
+for accessing the results of your program execution:
 
 ..
 
@@ -225,18 +235,6 @@ The returned :class:`~Result` object contains two useful attributes:
   shots are requested during execution, the returned measurement samples
   will instead have shape ``(shots, modes)``.
 
-
-Other useful engine methods that can be called at any time include:
-
-* :func:`eng.print_applied() <strawberryfields.engine.LocalEngine.print_applied>`: prints all commands applied using :meth:`eng.run <strawberryfields.engine.LocalEngine.run>` since the last backend reset/initialisation.
-
-  - This may differ from your original constructed program due to program compilation. As a result, this shows all applied gate decompositions, which may differ depending on the backend.
-
-* :func:`eng.reset() <strawberryfields.engine.LocalEngine.reset>`: resets the backend circuit to the vacuum state.
-
-
-Results and visualization
-==========================
 
 To analyze these results, it is convenient to now move to a Python console or interactive environment, such as `iPython <https://ipython.org/>`_ or `Jupyter Notebook <http://jupyter.org/>`_. In the following, Python input will be specified with the prompt ``>>>``, and output will follow.
 
