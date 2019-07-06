@@ -134,4 +134,4 @@ class TestPostselection:
         print((cov - np.identity(4)) / 4)
         print(n_mean)
         print(expected)
-        assert np.allclose(n_mean, expected)
+        assert False #np.allclose(n_mean, expected)
