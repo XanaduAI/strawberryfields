@@ -127,6 +127,11 @@ class TestPostselection:
 
         state = eng.run(prog).state
         cov = state.cov()
-        n_mean = np.trace(cov-np.identity(4)) / 4
+        n_mean = np.trace(cov - np.identity(4)) / 4
         expected = 2 * n_mean_per_mode
+        print(cov)
+        print(cov - np.identity(4))
+        print((cov - np.identity(4)) / 4)
+        print(n_mean)
+        print(expected)
         assert np.allclose(n_mean, expected)
