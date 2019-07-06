@@ -186,20 +186,13 @@ def graph_embed(A, mean_photon_per_mode=1.0, make_traceless=False, rtol=1e-05, a
     if not np.allclose(A, np.transpose(A), rtol=rtol, atol=atol):
         raise ValueError("The matrix is not symmetric.")
 
-    print("Inside `graph_embed`")
-    print("Received A:", A)
     if make_traceless:
         A = A - np.trace(A) * np.identity(n) / n
-    print("After conditional:", A)
+
     scale = find_scaling_adjacency_matrix(A, n * mean_photon_per_mode)
-    print("scale:", scale)
     A = scale * A
-    print("After scale:", A)
     s, U = takagi(A, tol=atol)
-    print("s:", s)
-    print("U:", U)
     vals = -np.arctanh(s)
-    print("vals:", vals)
     return vals, U
 
 

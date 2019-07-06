@@ -260,13 +260,6 @@ class GaussianBackend(BaseGaussian):
         else:
             Amat = self.circuit.Amat()
 
-        print("In backend.state")
-        print("means:", means)
-        print("covmat:", covmat)
-        print("modes:", modes)
-        print("qmat", qmat)
-        print("Amat", Amat)
-
         return GaussianState(
             (means, covmat), len(modes), qmat, Amat, mode_names=mode_names
         )

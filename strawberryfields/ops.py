@@ -1662,8 +1662,6 @@ class Interferometer(Decomposition):
                 if np.abs(phi) >= _decomposition_tol:
                     cmds.append(Command(Rgate(-phi), reg[n]))
 
-        print("In Interferometer._decompose")
-        print("cmds:", [(c.op, [p.x for p in c.op.p]) for c in cmds])
         return cmds
 
 
@@ -1707,8 +1705,6 @@ class GraphEmbed(Decomposition):
 
             if np.all(np.abs(self.U - np.identity(len(self.U))) >= _decomposition_tol):
                 cmds.append(Command(Interferometer(self.U), reg))
-        print("In GraphEmbed._decompose")
-        print("cmds:", [(c.op, [p.x for p in c.op.p]) for c in cmds])
         return cmds
 
 

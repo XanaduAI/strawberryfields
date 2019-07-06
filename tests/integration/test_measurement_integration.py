@@ -116,7 +116,7 @@ class TestPostselection:
                 assert np.all(photons_out == total_photons)
 
     @pytest.mark.backends("gaussian")
-    def test_embed_graph(self, setup_eng):
+    def test_embed_graph(self, setup_eng, hbar):
         """Test that an embedded graph has the right total mean photon number. """
 
         eng, prog = setup_eng(2)
@@ -127,12 +127,6 @@ class TestPostselection:
 
         state = eng.run(prog).state
         cov = state.cov()
-        n_mean = np.trace(cov - np.identity(4)) / 4
+        n_mean_tot = np.trace(cov / (hbar / 2) - np.identity(4)) / 4
         expected = 2 * n_mean_per_mode
-        print("In test_embed_graph")
-        print("cov:", cov)
-        print("cov - I:", cov - np.identity(4))
-        print("(cov-I)/4:", (cov - np.identity(4)) / 4)
-        print("n_mean:", n_mean)
-        print("expected:", expected)
-        assert False #np.allclose(n_mean, expected)
+        assert np.allclose(n_mean_tot, expected)
