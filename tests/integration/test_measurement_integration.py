@@ -119,20 +119,16 @@ class TestPostselection:
     @pytest.mark.fixture('pure')
     def test_embed_graph(self, setup_eng, cutoff, batch_size):
         """Test that a graph embeded with the right photon number gives the right statistics. """
-        n_samples = 10000
+
         eng, prog = setup_eng(2)
         A = np.array([[0.0, 1.0], [1.0, 0.0]])
         n_mean_per_mode = 1
         with prog.context as q:
             ops.GraphEmbed(A, n_mean_per_mode) | (q[0], q[1])
             ops.MeasureFock() | (q[0], q[1])
-        result = eng.run(prog, shots = n_samples)
-        samples = result.samples
-        assert np.all(samples[:,0] == samples[:,1])
-        samples1d = samples[:,0]
-        bins = np.arange(0, max(samples1d), 1)
-        (freq, _) = np.histogram(samples1d, bins=bins)
-        rel_freq = freq / n_samples
-        param = n_mean_per_mode
-        expected = (1 / (1 + param)) * (param / (1 + param)) ** (np.arange(len(rel_freq)))
-        assert np.allclose(rel_freq, expected, atol=10 / np.sqrt(n_samples))
+
+        state = eng.run(prog).state
+        cov = state.cov()
+        n_mean = np.trace(cov-np.identity(4))/4
+        expected = 2*n_mean_per_mode
+        assert np.allclose(n_mean, expected)
