@@ -125,7 +125,6 @@ class TestPostselection:
         n_mean_per_mode = 1
         with prog.context as q:
             ops.GraphEmbed(A, n_mean_per_mode) | (q[0], q[1])
-            ops.MeasureFock() | (q[0], q[1])
 
         state = eng.run(prog).state
         cov = state.cov()
