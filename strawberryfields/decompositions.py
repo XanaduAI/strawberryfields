@@ -189,7 +189,7 @@ def graph_embed(A, mean_photon_per_mode=1.0, make_traceless=False, rtol=1e-05, a
     if make_traceless:
         A = A - np.trace(A) * np.identity(n) / n
 
-    scale = find_scaling_adjacency_matrix(A, mean_photon_per_mode)
+    scale = find_scaling_adjacency_matrix(A, n * mean_photon_per_mode)
     A = scale * A
     s, U = takagi(A, tol=atol)
     vals = -np.arctanh(s)

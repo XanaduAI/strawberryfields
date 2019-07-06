@@ -1706,7 +1706,6 @@ class GraphEmbed(Decomposition):
 
             if np.all(np.abs(self.U - np.identity(len(self.U))) >= _decomposition_tol):
                 cmds.append(Command(Interferometer(self.U), reg))
-
         return cmds
 
 
