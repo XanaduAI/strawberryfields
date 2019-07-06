@@ -133,7 +133,7 @@ class TestGraphEmbed:
         A += A.T
         n_mean = 10.0 / num_modes
         sc, _ = dec.graph_embed(A, mean_photon_per_mode=n_mean)
-        n_mean_calc = np.sum(np.sinh(sc) ** 2)
+        n_mean_calc = np.mean(np.sinh(sc) ** 2)
 
         assert np.allclose(n_mean, n_mean_calc, atol=tol, rtol=0)
 

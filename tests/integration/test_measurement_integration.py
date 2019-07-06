@@ -104,7 +104,7 @@ class TestPostselection:
                 ops.Fock(n) | q[0]
                 ops.Fock(total_photons - n) | q[1]
                 ops.BSgate() | q
-                ops.MeasureFock(select=n//2) | q[0]
+                ops.MeasureFock(select=n // 2) | q[0]
                 ops.MeasureFock() | q[1]
 
             eng.run(prog)  # FIXME measurements above commute, but they should not since the postselection may fail if the other one is performed first!
@@ -116,9 +116,8 @@ class TestPostselection:
                 assert np.all(photons_out == total_photons)
 
     @pytest.mark.backends("gaussian")
-    @pytest.mark.fixture('pure')
-    def test_embed_graph(self, setup_eng, cutoff, batch_size):
-        """Test that a graph embeded with the right photon number gives the right statistics. """
+    def test_embed_graph(self, setup_eng):
+        """Test that an embedded graph has the right total mean photon number. """
 
         eng, prog = setup_eng(2)
         A = np.array([[0.0, 1.0], [1.0, 0.0]])
@@ -128,6 +127,6 @@ class TestPostselection:
 
         state = eng.run(prog).state
         cov = state.cov()
-        n_mean = np.trace(cov-np.identity(4))/4
-        expected = 2*n_mean_per_mode
+        n_mean = np.trace(cov-np.identity(4)) / 4
+        expected = 2 * n_mean_per_mode
         assert np.allclose(n_mean, expected)
