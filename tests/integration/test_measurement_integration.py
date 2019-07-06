@@ -129,9 +129,10 @@ class TestPostselection:
         cov = state.cov()
         n_mean = np.trace(cov - np.identity(4)) / 4
         expected = 2 * n_mean_per_mode
-        print(cov)
-        print(cov - np.identity(4))
-        print((cov - np.identity(4)) / 4)
-        print(n_mean)
-        print(expected)
+        print("In test_embed_graph")
+        print("cov:", cov)
+        print("cov - I:", cov - np.identity(4))
+        print("(cov-I)/4:", (cov - np.identity(4)) / 4)
+        print("n_mean:", n_mean)
+        print("expected:", expected)
         assert False #np.allclose(n_mean, expected)
