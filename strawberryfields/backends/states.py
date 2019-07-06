@@ -134,6 +134,8 @@ class BaseState(abc.ABC):
     def __init__(self, num_modes, mode_names=None):
         self._modes = num_modes
         self._hbar = sf.hbar  # always use the global frontend hbar value for state objects
+        print("In BaseState.__init__")
+        print("sf.hbar:", sf.hbar)
         self._data = None
         self._pure = None
 
@@ -890,6 +892,10 @@ class BaseGaussianState(BaseState):
         # vector of means and covariance matrix, using frontend x,p scaling
         self._mu = self._data[0] * np.sqrt(self._hbar/2)
         self._cov = self._data[1] * (self._hbar/2)
+        print("In BaseGaussianState.__init__")
+        print("self._data:", self._data)
+        print("self._hbar/2:", self._hbar/2)
+        print("self._cov:", self._cov)
 
         # complex displacements of the Gaussian state
         self._alpha = self._mu[:self._modes] + 1j*self._mu[self._modes:]
