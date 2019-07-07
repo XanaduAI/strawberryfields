@@ -120,7 +120,7 @@ class Result:
 
             Only local simulators will return a state object. Remote
             simulators and hardware backends will return
-            :attr:`measurement samples <~.Result.samples>`,
+            :attr:`measurement samples <Result.samples>`,
             but the return value of ``state`` will be ``None``.
 
         Returns:

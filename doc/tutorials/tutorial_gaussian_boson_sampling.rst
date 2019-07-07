@@ -41,7 +41,8 @@ A couple of things to note in this particular example:
 
 ..
 
-1. To prepare the input single mode squeezed vacuum state :math:`\ket{z} = 1`, we apply a squeezing operator to each modes (initially in the vacuum state). This is done via the :class:`~.Sgate` operator.
+1. To prepare the input single mode squeezed vacuum state :math:`\ket{z}` where :math:`z = 1`,
+   we apply a squeezing gate :class:`~.Sgate` to each of the modes (initially in the vacuum state).
 
 ..
 

@@ -53,8 +53,12 @@ Software components
 Top-level functions
 -------------------
 
+.. currentmodule: strawberryfields
+
 .. autosummary::
    convert
+   about
+   cite
    version
 
 Code details
@@ -114,7 +118,9 @@ def about():
 
 
 def cite():
-    """Prints a BibTeX citation for Strawberry Fields.
+    """Prints the BibTeX citation for Strawberry Fields.
+
+    BibTex code for reference :cite:`strawberryfields`.
     """
     citation = """@article{strawberryfields,
     title = {{S}trawberry {F}ields: A Software Platform for Photonic Quantum Computing},
