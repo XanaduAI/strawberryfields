@@ -79,7 +79,7 @@ Note that gate Operations have some subtle differences to state preparation oper
 
 * Unlike state preparation operators, some gates (such as the beamsplitter above) can be applied to multiple qumodes.
 
-  .. note:: The number of qumodes the gate acts upon and the sequence of qumodes to the right of the ``|`` operator must *always* match -- we cannot apply the beamsplitter to a single qumode.
+  .. note:: The number of qumodes the gate acts upon and the sequence of qumodes to the right of the ``|`` operator must *always* match---we cannot apply the beamsplitter to a single qumode.
 
 * We can also apply the Hermitian conjugate of a gate operator; this is specified by appending ``.H`` to the operator. For example:
 
