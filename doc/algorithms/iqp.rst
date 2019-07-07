@@ -10,10 +10,10 @@ Instantaneous quantum polynomial
 
 Like boson sampling and Gaussian boson sampling before it, the instantaneous quantum polynomial (IQP) protocol is a restricted, non-universal model of quantum computation, designed to implement a computation that is classically intractable and verifiable by a remote adjudicator.
 
-.. 
+..
   First introduced by :cite:`shepherd2009iqp` in the discrete variable qubit model, the protocol is devised with a two-party classical communication channel in mind; here, Alice designs a classically intractable problem with a 'hidden variable' she can use to verify the result. Bob then runs the IQP scheme with Alice's input; the scheme, due to its use of a non-universal gate set, is designed to scale in polynomial time. Finally, Alice verifies that Bob has achieved quantum supremacy, by considering the time taken to receive the result and using her hidden knowledge of the problem set.
 
-First introduced by :cite:`shepherd2009iqp` in the discrete variable qubit model, the scheme, due to its use of a non-universal gate set, is designed to scale in polynomial time. In particular, IQP circuits are defined as follows: 
+First introduced by :cite:`shepherd2009iqp` in the discrete variable qubit model, the scheme, due to its use of a non-universal gate set, is designed to scale in polynomial time. In particular, IQP circuits are defined as follows:
 
 1. there are :math:`N` inputs in state :math:`\ket{0}` acted on by Hadamard gates;
 
@@ -62,11 +62,11 @@ The 4 mode IQP circuit displayed above, with gate parameters chosen randomly, ca
    :linenos:
    :dedent: 4
    :tab-width: 4
-   :start-after: with eng:
+   :start-after: with iqp_circuit.context as q:
    :end-before: # end circuit
 
 
 In the above circuit, the homodyne measurements have been excluded to allow for analysis of the full quantum state; however these can be included using :class:`~.MeasureHomodyne`.
 
 .. note::
-  A fully functional Strawberry Fields simulation containing the above Blackbird code is included at :download:`examples/IQP.py <../../examples/IQP.py>`. 
+  A fully functional Strawberry Fields simulation containing the above Blackbird code is included at :download:`examples/IQP.py <../../examples/IQP.py>`.

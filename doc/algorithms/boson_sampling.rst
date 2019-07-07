@@ -29,7 +29,7 @@ where :math:`W` represents the action of :math:`U` on the Fock basis (:math:`W` 
 
 i.e., the sampled single photon probability distribution is proportional to the **permanent** of :math:`U_{st}`, a submatrix of the interferometer unitary, dependent upon the input and output Fock states.
 
-.. note:: 
+.. note::
 
     The permanent of a matrix, defined by
 
@@ -39,7 +39,7 @@ i.e., the sampled single photon probability distribution is proportional to the 
 
     In graph theory, the permanent calculates the number of perfect `matchings <https://en.wikipedia.org/wiki/Matching_(graph_theory)>`_ in a `bipartite graph <https://en.wikipedia.org/wiki/Bipartite_graph>`_ with adjacency matrix :math:`A`.
 
-Whilst the determinant can be calculated efficiently on classical computers, computing the permanent belongs to the computational complexity class of #P-Hard problems :cite:`valiant1979`, which are strongly believed to be classically hard to calculate. (Surprisingly, even calculating the permanent in an *approximate* manner is a member of #P and intractable classically). 
+Whilst the determinant can be calculated efficiently on classical computers, computing the permanent belongs to the computational complexity class of #P-Hard problems :cite:`valiant1979`, which are strongly believed to be classically hard to calculate. (Surprisingly, even calculating the permanent in an *approximate* manner is a member of #P and intractable classically).
 
 This implies that simulating boson sampling cannot be done efficiently on a classical computer, providing a potential challenge to the extended Church-Turing thesis, and demonstrating the power of (non-universal) quantum computation.
 
@@ -60,7 +60,7 @@ For example, in the case of a 4 mode interferometer, with arbitrary :math:`4\tim
 
 :html:`<br>`
 
-In the above, the detectors perform Fock state measurements, and the parameters of the beamsplitters and the rotation gates determines the unitary :math:`U`. Note that, in order to allow for arbitrary linear unitaries for :math:`m` imput modes, we must have a minimum of :math:`m+1` columns in the beamsplitter array :cite:`clements2016`. 
+In the above, the detectors perform Fock state measurements, and the parameters of the beamsplitters and the rotation gates determines the unitary :math:`U`. Note that, in order to allow for arbitrary linear unitaries for :math:`m` imput modes, we must have a minimum of :math:`m+1` columns in the beamsplitter array :cite:`clements2016`.
 
 
 Blackbird code
@@ -73,21 +73,18 @@ The boson sampling circuit displayed above, with randomly chosen rotation angles
    :linenos:
    :dedent: 4
    :tab-width: 4
-   :start-after: with eng:
+   :start-after: with boson_sampling.context as q:
    :end-before: # end circuit
 
 .. warning:: Currently, only the Fock backends (i.e., ``fock`` and ``tensorflow``) support boson sampling, as the Gaussian backend cannot initialise Fock states.
 
-If we wish to simulate Fock measurements, we can additionally include 
+If we wish to simulate Fock measurements, we can additionally include
 
 .. code-block:: python
 
-    Measure | q[0]
-    Measure | q[1]
-    Measure | q[2]
-    Measure | q[3]
+    Measure | q
 
-after the beamsplitter array. After constructing the circuit and running the engine, the values of the Fock state measurements will be available in the attributes ``q[i].val`` for ``i=0,1,2,3``. In order to sample from this distribution, it will be required to repeat the execution of this circuit multiple times, storing the resulting measurements each time.
+after the beamsplitter array. After constructing the circuit and running the engine, the values of the Fock state measurements will be available within the :attr:`samples` attribute of the :class:`~.Result` object returned by the engine.
 
 Alternatively, you may omit the measurements, and extract the resulting Fock state probabilities directly via the state method :meth:`~.BaseFockState.all_fock_probs`.
 

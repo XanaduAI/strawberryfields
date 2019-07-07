@@ -58,7 +58,7 @@ Expressions that are grouped together are used synonymously in the Strawberry Fi
       Something that acts on specific subsystems of the :term:`register`, changing its state and
       possibly returning classical information, e.g., a state preparation, :term:`gate`,
       :term:`measurement`, etc.
-      See: :class:`.Operation`
+      See: :mod:`Operation <.ops>`
 
    register
    quantum register

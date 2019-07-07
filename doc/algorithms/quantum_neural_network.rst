@@ -42,21 +42,21 @@ Quantum neural networks aim to encode neural networks into a quantum system, wit
 CV implementation
 ------------------------------------
 
-A CV quantum neural network layer can be defined as 
+A CV quantum neural network layer can be defined as
 
 .. math:: \mathcal{L} := \Phi \circ \mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1},
 
 where
 
-* :math:`\mathcal{U}_{k}=U_{k}(\boldsymbol{\theta}_{k},\boldsymbol{\phi}_{k})` is an :math:`N` mode interferometer, 
+* :math:`\mathcal{U}_{k}=U_{k}(\boldsymbol{\theta}_{k},\boldsymbol{\phi}_{k})` is an :math:`N` mode interferometer,
 
 * :math:`\mathcal{D}=\otimes_{i=1}^{N}D(\alpha_{i})` is a single mode displacement gate (:class:`~.Dgate`) with complex displacement :math:`\alpha_{i} \in \mathbb{C}`,
 
 * :math:`\mathcal{S}=\otimes_{i=1}^{N}S(r_{i})` is a single mode squeezing gate (:class:`~.Sgate`) acting on each mode with squeezing parameter :math:`r_{i} \in \mathbb{R}`, and
- 
+
 * :math:`\Phi=\otimes_{i=1}^{N}\Phi(\lambda_{i})` is a non-Gaussian gate on each mode with parameter :math:`\lambda_{i} \in \mathbb{R}`.
 
-.. note:: Any non-Gaussian gate such as the cubic phase gate (:class:`~.Vgate`) represents a valid choice, but we recommend the Kerr gate (:class:`~.Kgate`) for simulations in Strawberry Fields. The Kerr gate is more accurate numerically because it is diagonal in the Fock basis. 
+.. note:: Any non-Gaussian gate such as the cubic phase gate (:class:`~.Vgate`) represents a valid choice, but we recommend the Kerr gate (:class:`~.Kgate`) for simulations in Strawberry Fields. The Kerr gate is more accurate numerically because it is diagonal in the Fock basis.
 
 The layer is shown below as a circuit:
 
@@ -102,7 +102,7 @@ Finally, the nonlinear function :math:`\varphi` can be achieved through a restri
 
 .. math:: \otimes_{i=1}^{N}\Phi(\lambda_{i})\ket{\mathbf{x}} = \ket{\varphi(\mathbf{x})}.
 
-The operation :math:`\mathcal{L} = \Phi \circ \mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1}` with phaseless interferometers, position displacements, and restricted non-Gaussian gates can hence be seen as enacting a classical neural network layer :math:`\ket{\mathbf{x}} \Rightarrow \ket{\phi(W \mathbf{x} + \mathbf{b})}` on position eigenstates. 
+The operation :math:`\mathcal{L} = \Phi \circ \mathcal{D} \circ \mathcal{U}_{2} \circ \mathcal{S} \circ \mathcal{U}_{1}` with phaseless interferometers, position displacements, and restricted non-Gaussian gates can hence be seen as enacting a classical neural network layer :math:`\ket{\mathbf{x}} \Rightarrow \ket{\phi(W \mathbf{x} + \mathbf{b})}` on position eigenstates.
 
 Extending to quantum neural networks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,9 +174,9 @@ The first step to writing a CV quantum neural network layer in Blackbird code is
    :start-after: # define interferometer
    :end-before: # Rgate only applied to first N - 1 modes
 
-.. warning:: The :class:`~.Interferometer` class in Strawberry Fields does not reproduce the functionality above. Instead, :class:`~.Interferometer` applies a given input unitary according to the Clements decomposition.
+.. warning:: The :class:`~.Interferometer` class in Strawberry Fields does not reproduce the functionality above. Instead, :class:`~.Interferometer` applies a given input unitary matrix according to the Clements decomposition.
 
-Using the above interferometer function, an :math:`N` mode CV quantum neural network layer is given by the function:
+Using the above ``interferometer`` function, an :math:`N` mode CV quantum neural network layer is given by the function:
 
 .. literalinclude:: ../../examples/quantum_neural_network.py
    :language: python
@@ -189,12 +189,12 @@ The variables fed into the gates of the layer are defined as TensorFlow variable
 
 .. code-block:: python
 
-    with eng:
+    with prog.context as q:
 
         for _ in range(layers):
             layer(q)
 
 .. note::
-    A fully functional Strawberry Fields simulation containing the above Blackbird code for state preparation is included at :download:`examples/quantum_neural_network.py <../../examples/quantum_neural_network.py>`. 
+    A fully functional Strawberry Fields simulation containing the above Blackbird code for state preparation is included at :download:`examples/quantum_neural_network.py <../../examples/quantum_neural_network.py>`.
 
 Applications of CV quantum neural networks to `state learning <../gallery/state_learner/StateLearning.html>`_ and `gate synthesis <../gallery/gate_synthesis/GateSynthesis.html>`_ can be found in the Strawberry Fields gallery.

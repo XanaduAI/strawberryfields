@@ -15,7 +15,7 @@ In this short tutorial, we will walk through the application of the boson sampli
 Circuit construction and simulation
 ====================================
 
-A 4-mode boson sampling circuit is given by 
+A 4-mode boson sampling circuit is given by
 
 .. image:: ../_static/boson_sampling_ex.svg
     :align: center
@@ -35,35 +35,35 @@ To begin, create a new text file with the name :file:`boson_sampling.py`, and op
 
 A couple of things to note in this particular example:
 
-.. 
+..
 
 1. We initialize the input state :math:`\ket{\psi} = \ket{1,1,0,1}`, by creating a single photon Fock state in modes 0, 1 and 3. This is done via the :class:`~.Fock` operator. Mode 2 is initialized as a vacuum state using the ``Vac`` operator (a shortcut to :class:`~.Vacuum`). This is *optional* - modes are automatically created in the vacuum state upon engine initialization.
 
-.. 
+..
 
 2. Next we apply the rotation gates, :class:`~.Rgate`, to each mode. The resulting rotation in the phase space occurs in the anticlockwise direction, with angle :math:`\phi`.
-    
-.. 
+
+..
 
 3. Finally, we apply the array of beamsplitters, using the :class:`~.BSgate` operator, with arguments ``(theta,phi)``.
 
    * The transmission amplitude is then given by :math:`t=\cos\theta`
    * The reflection amplitude is given by :math:`r=e^{i\phi}\sin{\theta}`
 
-.. 
+..
 
 4. The rotation gate and beamsplitter parameters have been chosen at random, leading to an arbitrary unitary :math:`U` acting on the input modes annihilation and creation operators. After leaving the beamsplitter array, we will denote the output state by :math:`\ket{\psi'}`.
 
-.. 
+..
 
 5. As only Fock backends support boson sampling, we are using the :ref:`numpy_backend`, indicated with the argument ``'fock'``, along with a 4 mode register and a Fock state truncation/cutoff dimension of 7 (i.e., all information of quantum amplitudes of Fock states :math:`\ket{n}`, :math:`n\geq 7`, is discarded).
 
-.. 
+..
 
 6. We are **not** performing Fock measurements at the output; this is to ensure the state is preserved, so we can extract the joint Fock state probabilities after the beamsplitter array.
 
-   The state method :meth:`~.BaseFockState.all_fock_probs` returns a :math:`\overbrace{D\times D\times\cdots\times D}^{\text{num modes}}` array, where :math:`D` is the Fock basis cutoff truncation, containing the marginal Fock state probabilities - in this example, it would have dimension :math:`7\times 7\times 7\times 7`. We can then access the probability of measuring a particular output state by indexing. For example, 
-   
+   The state method :meth:`~.BaseFockState.all_fock_probs` returns a :math:`\overbrace{D\times D\times\cdots\times D}^{\text{num modes}}` array, where :math:`D` is the Fock basis cutoff truncation, containing the marginal Fock state probabilities - in this example, it would have dimension :math:`7\times 7\times 7\times 7`. We can then access the probability of measuring a particular output state by indexing. For example,
+
    .. math:: \texttt{probs[1, 1, 1, 0]} = \left|\braketD{1,1,1,0}{\psi'}\right|^2
 
 After saving the file, you can then run the simulation by executing on the command line:
@@ -154,9 +154,9 @@ Finally, we combine the unitaries to form a single :math:`4\times 4` unitary via
 
 >>> U = multi_dot([UBS5, UBS4, UBS3, UBS2, UBS1, Uphase])
 
-We find that 
+We find that
 
-.. math:: 
+.. math::
     U = \left[\begin{matrix}
         0.2195-0.2565i & 0.6111+0.5242i & -0.1027+0.4745i & -0.0273+0.0373i\\
         0.4513+0.6026i & 0.4570+0.0123i & 0.1316-0.4504i & 0.0353-0.0532i\\
@@ -180,29 +180,9 @@ For this example, we'll consider the output state :math:`\ket{2,0,0,1}`. Extract
 >>> probs[2,0,0,1]
 0.10644192724642336
 
-Before we can calculate the right hand side of equation, we need a method of calculating the permanent. Since the permanent is classically hard to compute, it is not provided in either NumPy *or* SciPy, so we will use the definition provided in `SciPy Issue #7151 <https://github.com/scipy/scipy/issues/7151>`_ on GitHub: 
+Before we can calculate the right hand side of equation, we need a method of calculating the permanent. Since the permanent is classically hard to compute, it is not provided in either NumPy *or* SciPy, so we will use `hafnian <https://hafnian.readthedocs.io>`_ package, installed alongside Strawberry Fields:
 
->>> def perm(M):
-...     n = M.shape[0]
-...     d = np.ones(n)
-...     j =  0
-...     s = 1
-...     f = np.arange(n)
-...     v = M.sum(axis=0)
-...     p = np.prod(v)
-...     while (j < n-1):
-...         v -= 2*d[j]*M[j]
-...         d[j] = -d[j]
-...         s = -s
-...         prod = np.prod(v)
-...         p += s*prod
-...         f[0] = 0
-...         f[j] = f[j+1]
-...         f[j+1] = j+1
-...         j = f[0]
-...     return p/2**(n-1) 
-
-.. note:: This function makes use of the `Balasubramanian-Bax-Franklin-Glynn formula <https://en.wikipedia.org/wiki/Computing_the_permanent#Balasubramanian-Bax-Franklin-Glynn_formula>`_, which scales as :math:`\mathcal{O}(2^{n-1}n^2)` for an :math:`n\times n` matrix.
+>>> from hafnian import perm
 
 Finally, how do we determine the submatrix :math:`U_{st}`? This isn't too hard :cite:`tillmann2013`; first, we calculate the submatrix :math:`U_s` by taking :math:`m_k` copies of the :math:`k\text{th}` **columns** of :math:`U`, where :math:`m_k` is the photon number of the :math:`k\text{th}` input state.
 
@@ -246,8 +226,8 @@ They agree with almost negligable error! This is due to the high accuracy of the
     0.17468916048563934
 
 
-.. note:: 
+.. note::
 
-    Although returning only an **approximation** of the Fock state joint probability, and thus only approximating the various submatrix permanents, the Fock backends are still computing a classically intractable problem. 
+    Although returning only an **approximation** of the Fock state joint probability, and thus only approximating the various submatrix permanents, the Fock backends are still computing a classically intractable problem.
 
     This is because approximating the matrix permanent remains a countably hard classical problem.

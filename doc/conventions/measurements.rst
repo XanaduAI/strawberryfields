@@ -84,7 +84,7 @@ Heterodyne measurement
 Photon counting measurement
 ---------------------------------------------
 
-.. warning:: Photon counting is currently not implemented in the Gaussian backend.
+.. warning:: Photon counting is available in the Gaussian backend, but the state of the circuit is not updated after measurement (since it would be non-Gaussian).
 
 .. admonition:: Definition
    :class: defn

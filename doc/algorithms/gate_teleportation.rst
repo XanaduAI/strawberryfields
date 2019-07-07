@@ -8,7 +8,7 @@ Gate teleportation
 
     "Entanglement-assisted communication becomes entanglement-assisted computation" - Furusawa :cite:`furusawa2011`
 
-In the quantum state teleportation algorithm, the quantum state is transferred from the sender to the receiver exactly. However, quantum teleportation can be used in a much more powerful manner, by simultaneously processing and manipulating the teleported state; this is known as **gate teleportation**. 
+In the quantum state teleportation algorithm, the quantum state is transferred from the sender to the receiver exactly. However, quantum teleportation can be used in a much more powerful manner, by simultaneously processing and manipulating the teleported state; this is known as **gate teleportation**.
 
 But the biggest departure from its namesake is the method in which the gate to be 'teleported' is applied; rather than applying a quantum unitary directly to the first qumode in the system, the unitary is applied via the projective measurement of the first qumode onto a particular basis. This measurement-based approach provides significant advantages over applying unitary gates directly, for example by reducing resources, and in the application of experimentally hard-to-implement gates :cite:`furusawa2011`. In fact, gate teleportation forms a universal quantum computing primitive, and is a precursor to cluster state models of quantum computation :cite:`gottesman1999`:cite:`gu2009`.
 
@@ -65,7 +65,7 @@ Additional gates can now be added simply by introducing additional qumodes with 
 Blackbird code
 ---------------
 
-Consider the following gate teleportation circuit, 
+Consider the following gate teleportation circuit,
 
 .. image:: ../_static/gate_teleport_ex.svg
     :align: center
@@ -74,14 +74,14 @@ Consider the following gate teleportation circuit,
 
 :html:`<br>`
 
-Here, the state :math:`\ket{\psi}`, a squeezed state with :math:`r=0.1`, is teleported to the final qumode, with the :class:`quadratic phase gate <Pgate>` :math:`P(s)=e^{is\hat{x}^2/2\hbar}` teleported to act on it - with the quadratic phase gate chosen as it is diagonal in the :math:`\x` quadrature. This can be easily implemented using the Blackbird quantum circuit language:
+Here, the state :math:`\ket{\psi}`, a squeezed state with :math:`r=0.1`, is teleported to the final qumode, with the quadratic phase gate (:class:`~strawberryfields.ops.Pgate`) :math:`P(s)=e^{is\hat{x}^2/2\hbar}` teleported to act on it - with the quadratic phase gate chosen as it is diagonal in the :math:`\x` quadrature. This can be easily implemented using the Blackbird quantum circuit language:
 
 .. literalinclude:: ../../examples/gate_teleportation.py
    :language: python
    :linenos:
    :dedent: 4
    :tab-width: 4
-   :start-after: with eng:
+   :start-after: with gate_teleportation.context as q:
    :end-before: # compare
 
 
@@ -89,16 +89,16 @@ Some important notes:
 
 * As with the state teleportation circuit above, perfectly squeezed vacuum states are not physically realizable; preparing the states with a squeezing factor of :math:`|r|=2` (:math:`\sim 18\text{dB}`) is a reasonable approximation.
 
-.. 
+..
 
 * The Blackbird notation ``Operator.H`` denotes the Hermitian conjugate of the corresponding operator.
 
-.. 
+..
 
 * Here, we do not make the corrections to the final state; this is left as an exercise to the reader. For additional details, see the gate teleportation commutation relations derived by van Loock :cite:`loock2007`.
 
 
-To easily check that the output of the circuit is as expected, we can make sure that it agrees with the (uncorrected) state 
+To easily check that the output of the circuit is as expected, we can make sure that it agrees with the (uncorrected) state
 
 .. math:: X({q_1})FP(0.5)X(q_0)F \ket{z}
 
