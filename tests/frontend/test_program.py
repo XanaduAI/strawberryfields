@@ -23,7 +23,7 @@ import strawberryfields as sf
 
 from strawberryfields import program
 from strawberryfields import ops
-from strawberryfields.devicespecs.device_specs import DeviceSpecs
+from strawberryfields.circuitspecs.circuit_specs import CircuitSpecs
 
 
 # make test deterministic
@@ -302,7 +302,7 @@ class TestOptimizer:
 
 
 class TestValidation:
-    """Test for Program device validation within
+    """Test for Program circuit validation within
     the compile() method."""
 
     def test_disconnected_circuit(self):
@@ -318,11 +318,11 @@ class TestValidation:
             new_prog = prog.compile(target='fock')
 
     def test_incorrect_modes(self):
-        """Test that an exception is raised if the device
+        """Test that an exception is raised if the circuit spec
         is called with the incorrect number of modes"""
 
-        class DummyDevice(DeviceSpecs):
-            """A device with 2 modes"""
+        class DummyCircuit(CircuitSpecs):
+            """A circuit with 2 modes"""
             modes = 2
             remote = False
             local = True
@@ -336,14 +336,14 @@ class TestValidation:
             ops.S2gate(0.6) | [q[1], q[2]]
 
         with pytest.raises(program.CircuitError, match="requires 3 modes"):
-            new_prog = prog.compile(target=DummyDevice())
+            new_prog = prog.compile(target=DummyCircuit())
 
     def test_no_decompositions(self):
         """Test that no decompositions take
-        place if the device doesn't support it."""
+        place if the circuit spec doesn't support it."""
 
-        class DummyDevice(DeviceSpecs):
-            """A device with no decompositions"""
+        class DummyCircuit(CircuitSpecs):
+            """A circuit spec with no decompositions"""
             modes = None
             remote = False
             local = True
@@ -357,7 +357,7 @@ class TestValidation:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.Interferometer(U) | [q[0], q[1]]
 
-        new_prog = prog.compile(target=DummyDevice())
+        new_prog = prog.compile(target=DummyCircuit())
 
         # check compiled program only has two gates
         assert len(new_prog) == 2
@@ -369,9 +369,9 @@ class TestValidation:
 
     def test_decompositions(self):
         """Test that decompositions take
-        place if the device requests it."""
+        place if the circuit spec requests it."""
 
-        class DummyDevice(DeviceSpecs):
+        class DummyCircuit(CircuitSpecs):
             modes = None
             remote = False
             local = True
@@ -385,7 +385,7 @@ class TestValidation:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.Interferometer(U) | [q[0], q[1]]
 
-        new_prog = prog.compile(target=DummyDevice())
+        new_prog = prog.compile(target=DummyCircuit())
 
         # check compiled program now has 5 gates
         # the S2gate should decompose into two BS and two Sgates
@@ -400,10 +400,10 @@ class TestValidation:
         assert circuit[4].op.__class__.__name__ == "Interferometer"
 
     def test_invalid_decompositions(self):
-        """Test that an exception is raised if the device spec
+        """Test that an exception is raised if the circuit spec
         requests a decomposition that doesn't exist"""
 
-        class DummyDevice(DeviceSpecs):
+        class DummyCircuit(CircuitSpecs):
             modes = None
             remote = False
             local = True
@@ -418,13 +418,13 @@ class TestValidation:
             ops.Interferometer(U) | [q[0], q[1]]
 
         with pytest.raises(NotImplementedError, match="No decomposition available: Rgate"):
-            new_prog = prog.compile(target=DummyDevice())
+            new_prog = prog.compile(target=DummyCircuit())
 
     def test_invalid_primitive(self):
         """Test that an exception is raised if the program
-        contains a primitive not allowed on the device.
+        contains a primitive not allowed on the circuit spec.
 
-        Here, we can simply use the guassian backend and
+        Here, we can simply use the guassian circuit spec and
         the Kerr gate as an existing example.
         """
         prog = sf.Program(3)
@@ -479,9 +479,9 @@ class TestValidation:
         assert circuit[0].op.p[0] == r
 
     def test_topology_validation(self):
-        """Test compilation properly matches the device topology"""
+        """Test compilation properly matches the circuit spec topology"""
 
-        class DummyDevice(DeviceSpecs):
+        class DummyCircuit(CircuitSpecs):
             modes = None
             remote = False
             local = True
@@ -513,7 +513,7 @@ class TestValidation:
             ops.BSgate(-0.32) | (q[0], q[1])
             ops.MeasureFock() | q[0]
 
-        new_prog = prog.compile(target=DummyDevice())
+        new_prog = prog.compile(target=DummyCircuit())
 
         # no exception should be raised; topology correctly validated
         assert len(new_prog) == 5
@@ -521,7 +521,7 @@ class TestValidation:
     def test_invalid_topology(self):
         """Test compilation raises exception if toplogy not matched"""
 
-        class DummyDevice(DeviceSpecs):
+        class DummyCircuit(CircuitSpecs):
             modes = None
             remote = False
             local = True
@@ -555,11 +555,11 @@ class TestValidation:
             ops.MeasureFock() | q[0]
 
         with pytest.raises(program.CircuitError, match="incompatible topology"):
-            new_prog = prog.compile(target=DummyDevice())
+            new_prog = prog.compile(target=DummyCircuit())
 
 
 class TestGBS:
-    """Test the Gaussian boson sampling device."""
+    """Test the Gaussian boson sampling circuit spec."""
 
     def test_GBS_compile_ops_after_measure(self):
         """Tests that GBS compilation fails when there are operations following a Fock measurement."""

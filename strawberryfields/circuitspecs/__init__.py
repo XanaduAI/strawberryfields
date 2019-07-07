@@ -15,32 +15,33 @@
 Backend specifications
 ======================
 
-**Module name:** :mod:`strawberryfields.devicespecs`
+**Module name:** :mod:`strawberryfields.circuitspecs`
 
-.. currentmodule:: strawberryfields.devicespecs
+.. currentmodule:: strawberryfields.circuitspecs
 
-This module implements the :class:`~.DeviceSpecs` class, an abstract base
-data class used to store details and specifications of the Strawberry Fields
-backend and devices.
+This module implements the :class:`~.CircuitSpecs` class, an abstract base
+data class used to store details, specifications, and compilation rules for various
+families of Strawberry Fields circuits, e.g., the structure of circuits which can
+be executed on particular hardware or simulator backends.
 
 These details are used by the :class:`~.Program` class when validating and
-compiling quantum programs. By querying the data class corresponding to the
-requested device/backend, the :class:`~.Program` will be able to:
+compiling quantum programs. By querying the data class corresponding to a
+requested device/backend target, the :class:`~.Program` will be able to:
 
 1. **Validate** that the program has the correct number of modes, and consists
-   of valid quantum operations for that device.
+   of valid (or decomposable) quantum operations for that circuit class.
 
-2. **Compile** the program to match the backend topology, making use
-   of allowed decompositions along the way.
+2. **Compile** the program to match the topology or operations supported by
+   the specified circuit class, making use of allowed decompositions along the way.
 
 To access the correct specifications dataclass, :attr:`~.backend_specs` provides
-a dictionary mapping the backend shortname to the correct dataclass.
+a dictionary mapping the circuit family shortname to the correct dataclass.
 
 
-DeviceSpecs methods
+CircuitSpecs methods
 -------------------
 
-.. currentmodule:: strawberryfields.devicespecs.DeviceSpecs
+.. currentmodule:: strawberryfields.circuitspecs.CircuitSpecs
 
 .. autosummary::
    modes
@@ -56,7 +57,7 @@ DeviceSpecs methods
 Code details
 ^^^^^^^^^^^^
 """
-from .device_specs import DeviceSpecs
+from .circuit_specs import CircuitSpecs
 from .base import BaseSpecs
 from .chip0 import Chip0Specs
 from .fock import FockSpecs
@@ -65,9 +66,9 @@ from .gbs import GBSSpecs
 from .tensorflow import TFSpecs
 
 
-devices = (BaseSpecs, Chip0Specs, FockSpecs, GaussianSpecs, GBSSpecs, TFSpecs)
+specs = (BaseSpecs, Chip0Specs, FockSpecs, GaussianSpecs, GBSSpecs, TFSpecs)
 
-backend_specs = {c.short_name: c for c in devices}
-"""dict[str, DeviceSpecs]: dictionary mapping device short_name to the corresponding class."""
+backend_specs = {c.short_name: c for c in specs}
+"""dict[str, CircuitSpecs]: dictionary mapping circuit family short_name to the corresponding class."""
 
-__all__ = ["backend_specs", "DeviceSpecs"]
+__all__ = ["backend_specs", "CircuitSpecs"]

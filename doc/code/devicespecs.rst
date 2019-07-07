@@ -1,3 +1,3 @@
-.. automodule:: strawberryfields.devicespecs
+.. automodule:: strawberryfields.circuitspecs
    :members:
    :private-members:

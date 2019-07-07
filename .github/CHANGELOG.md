@@ -11,7 +11,7 @@
 - New `shots` keyword argument added to `Engine.run()`, enabling multi-shot sampling. Supported only in the Gaussian backend, and only for Fock measurements.
 - Added the ability to compile quantum programs to match a desired circuit target.
 - Included a number of compilation targets, including Gaussian Boson Sampling circuits.
-- Added a frontend validation database, the `devicespecs` submodule, for validating that quantum programs can be executed on certain backends and providing compilation methods.
+- Added a frontend validation database, the `circuitspecs` submodule, for validating that quantum programs can be executed on certain backends and providing compilation methods.
 - Added the `sf.io` module, which is used to save/load standalone Blackbird scripts from/into Strawberry Fields. Note that the Blackbird DSL has been spun off as an independent package and is now a dependency of Strawberry Fields.
 - Added a new decomposition `mach_zehnder` to the decompositions module. 
 - Added a `Configuration` class, which is used to load, store, save, and modify configuration options for Strawberry Fields.

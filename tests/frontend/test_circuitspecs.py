@@ -11,20 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for the DeviceSpec class"""
+r"""Unit tests for the CircuitSpec class"""
 import textwrap
 
 import pytest
 
-import strawberryfields.devicespecs as ds
-from strawberryfields.devicespecs.device_specs import DeviceSpecs
+from strawberryfields.circuitspecs.circuit_specs import CircuitSpecs
 
 
 pytestmark = pytest.mark.frontend
 
 
-class TestAbstractDeviceSpec:
-	"""Tests for the abstract DeviceSpec class.
+class TestAbstractCircuitSpec:
+	"""Tests for the abstract CircuitSpec class.
 	This class primarily consists of abstract methods,
 	so only the methods containing logic are tested.
 	"""
@@ -33,8 +32,8 @@ class TestAbstractDeviceSpec:
 		"""If not defined, the parameter_ranges property
 		should return an empty dictionary."""
 
-		class DummyDevice(DeviceSpecs):
-			"""Dummy device used to instantiate
+		class DummyCircuit(CircuitSpecs):
+			"""Dummy circuit used to instantiate
 			the abstract base class"""
 			modes = 0
 			remote = False
@@ -43,19 +42,19 @@ class TestAbstractDeviceSpec:
 			primitives = set()
 			decompositions = set()
 
-		dummy = DummyDevice()
+		dummy = DummyCircuit()
 
 		assert isinstance(dummy.parameter_ranges, dict)
 		assert not dummy.parameter_ranges
 
 	def test_program_topology_construction(self):
-		"""If a device spec includes a Blackbird program,
+		"""If a circuit spec includes a Blackbird program,
 		the topology property should return the equivalent
 		directed acyclic graph.
 		"""
 
-		class DummyDevice(DeviceSpecs):
-			"""Dummy device used to instantiate
+		class DummyCircuit(CircuitSpecs):
+			"""Dummy circuit used to instantiate
 			the abstract base class"""
 			modes = 0
 			remote = False
@@ -77,7 +76,7 @@ class TestAbstractDeviceSpec:
 				"""
 			)
 
-		dummy = DummyDevice()
+		dummy = DummyCircuit()
 		top = dummy.graph
 
 		circuit = top.nodes().data()
@@ -97,13 +96,13 @@ class TestAbstractDeviceSpec:
 		assert edges == {(0, 2), (1, 2), (2, 3)}
 
 	def test_template_topology_construction(self):
-		"""If a device spec includes a Blackbird template,
+		"""If a circuit spec includes a Blackbird template,
 		the topology property should return the equivalent
 		directed acyclic graph, with all parameters set to zero.
 		"""
 
-		class DummyDevice(DeviceSpecs):
-			"""Dummy device used to instantiate
+		class DummyCircuit(CircuitSpecs):
+			"""Dummy circuit used to instantiate
 			the abstract base class"""
 			modes = 0
 			remote = False
@@ -125,7 +124,7 @@ class TestAbstractDeviceSpec:
 				"""
 			)
 
-		dummy = DummyDevice()
+		dummy = DummyCircuit()
 		top = dummy.graph
 
 		circuit = top.nodes().data()

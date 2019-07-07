@@ -19,21 +19,23 @@ Expressions that are grouped together are used synonymously in the Strawberry Fi
       Represents a quantum computation.
       See: :class:`.Program`
 
+   circuit class
+   circuit family
+      A collection of :term:`circuits <circuit>` that can run a well-defined subclass of
+      quantum :term:`programs <program>`. The same circuit class can potentially be evaluated
+      on more than one :term:`backend`, and each :term:`backend` can possibly implement one or more
+      circuit classes.
+      See: :class:`.CircuitSpecs`
+
    compilation
       The process of converting a quantum :term:`program` into an :term:`equivalent program` that
-      can be run on a specific :term:`device`. The compilation can fail if the device is incapable
-      of running the program.
-
-   device
-      Something that can run a well-defined subclass of quantum :term:`programs <program>`.
-      The same device can potentially be evaluated on more than one :term:`backend`, and each
-      :term:`backend` can implement one or more devices.
-      See: :class:`.DeviceSpecs`
+      matches with a particular :term:`circuit class` or can be run on a specific :term:`device`.
+      The compilation can fail if the program cannot be made to match the target circuit class.
 
    equivalent circuit
    equivalent program
       Two quantum :term:`circuits <circuit>` are equivalent iff they produce the same output
-      probability distributions.
+      probability distributions. Equivalent circuits are necessarily in the same :term:`circuit class`.
 
    engine
       A class for executing quantum :term:`programs <program>` on a specific :term:`backend`.

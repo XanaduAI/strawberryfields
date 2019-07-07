@@ -37,7 +37,7 @@ Software components
 * Quantum execution and compilation engine: :mod:`strawberryfields.engine`
 * Quantum operations: :mod:`strawberryfields.ops`
 * Input/output functions: :mod:`strawberryfields.io`
-* Circuit specifications: :mod:`strawberryfields.devicespecs`
+* Circuit specifications: :mod:`strawberryfields.circuitspecs`
 * Decompositions: :mod:`strawberryfields.decompositions`
 * Utilities: :mod:`strawberryfields.utils`
 * Circuit drawer: :mod:`strawberryfields.circuitdrawer`

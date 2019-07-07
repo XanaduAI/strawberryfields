@@ -47,7 +47,7 @@ info = {
     'license': 'Apache License 2.0',
     'packages': [
                     'strawberryfields',
-                    'strawberryfields.devicespecs',
+                    'strawberryfields.circuitspecs',
                     'strawberryfields.backends',
                     'strawberryfields.backends.tfbackend',
                     'strawberryfields.backends.fockbackend',

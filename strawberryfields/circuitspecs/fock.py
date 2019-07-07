@@ -11,19 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Fock backend validation data"""
-from .device_specs import DeviceSpecs
+"""Circuit specifications for the Fock simulator backend."""
+from .circuit_specs import CircuitSpecs
 
 
-class BaseSpecs(DeviceSpecs):
-    """Validation data for the Base backend. The information
-    below matches the methods supported by the abstract base
-    class :class:`~.BaseBackend`."""
+class FockSpecs(CircuitSpecs):
+    """Circuit specifications for the Fock backend."""
 
-    short_name = 'base'
+    short_name = 'fock'
     modes = None
-    remote = False
     local = True
+    remote = True
     interactive = True
 
     primitives = {
@@ -37,7 +35,12 @@ class BaseSpecs(DeviceSpecs):
         "Squeezed",
         "DisplacedSqueezed",
         "Thermal",
+        "Fock",
+        "Catstate",
+        "Ket",
+        "DensityMatrix",
         # measurements
+        "MeasureFock",
         "MeasureHomodyne",
         # channels
         "LossChannel",
@@ -48,8 +51,10 @@ class BaseSpecs(DeviceSpecs):
         "Sgate",
         "Rgate",
         "Vgate",
+        "Kgate",
         "Fouriergate",
         "BSgate",
+        "CKgate",
     }
 
     decompositions = {
