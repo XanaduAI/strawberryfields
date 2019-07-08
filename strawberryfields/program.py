@@ -484,10 +484,10 @@ class Program:
         if isinstance(target, specs.CircuitSpecs):
             db = target
             target = db.short_name
-        elif target in specs.backend_specs:
-            db = specs.backend_specs[target]()
+        elif target in specs.circuit_db:
+            db = specs.circuit_db[target]()
         else:
-            raise ValueError("Could not find target '{}' in Strawberry Fields template database".format(target))
+            raise ValueError("Could not find target '{}' in the Strawberry Fields circuit database.".format(target))
 
         if db.modes is not None:
             # subsystems may be created and destroyed, this is total number that has ever existed

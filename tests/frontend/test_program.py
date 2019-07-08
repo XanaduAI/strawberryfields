@@ -305,6 +305,15 @@ class TestValidation:
     """Test for Program circuit validation within
     the compile() method."""
 
+    def test_unknown_circuit_spec(self):
+        """Test an unknown compile target."""
+        prog = sf.Program(3)
+        with prog.context as q:
+            ops.Measure  | q
+
+        with pytest.raises(ValueError, match="Could not find target 'foo' in the Strawberry Fields circuit database"):
+            new_prog = prog.compile(target='foo')
+
     def test_disconnected_circuit(self):
         """Test the detection of a disconnected circuit."""
         prog = sf.Program(3)
