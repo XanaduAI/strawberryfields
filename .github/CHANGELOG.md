@@ -7,13 +7,17 @@
 - The Engine API has been changed slightly:
     - `LocalEngine.run()` returns a `Result` object that contains both a state object and measurement samples.
     - The way kwargs were used has been simplified by introducing the new kwargs-like arguments `backend_options` and `state_options`. `LocalEngine.run()` passes the actual kwargs only to `Operation.apply()`.
-- The Gaussian backend now officially supports Fock-basis measurements (`MeasureFock`/`Measure`/`measure_fock`), but does not update the quantum state.
-- New `shots` keyword argument added to `Engine.run()`, enabling multi-shot sampling. Supported only in the Gaussian backend, and only for Fock measurements.
-- Added the ability to compile quantum programs to match a desired circuit target.
-- Included a number of compilation targets, including Gaussian Boson Sampling circuits.
-- Added a frontend validation database, the `circuitspecs` submodule, for validating that quantum programs can be executed on certain backends and providing compilation methods.
-- Added the `sf.io` module, which is used to save/load standalone Blackbird scripts from/into Strawberry Fields. Note that the Blackbird DSL has been spun off as an independent package and is now a dependency of Strawberry Fields.
-- Added a new decomposition `mach_zehnder` to the decompositions module. 
+- The Gaussian backend now officially supports Fock-basis measurements (`MeasureFock`/`Measure`/
+  `measure_fock`), but does not update the quantum state after a Fock measurement.
+- `shots` keyword argument added to `Engine.run()`, enabling multi-shot sampling. Supported only
+  in the Gaussian backend, and only for Fock measurements.
+- Added the `circuitspecs` subpackage, containing the `CircuitSpecs` class and a quantum circuit database.
+  The database can be used to
+    - Validate that a `Program` belongs in a specific circuit class.
+    - Compile a `Program` for a desired circuit target, e.g., so that it can be executed on a given backend.
+  The database includes a number of compilation targets, including Gaussian Boson Sampling circuits.
+- Added the `io` module, which is used to save/load standalone Blackbird scripts from/into Strawberry Fields. Note that the Blackbird DSL has been spun off as an independent package and is now a dependency of Strawberry Fields.
+- Added a new decomposition `mach_zehnder` to the decompositions module.
 - Added a `Configuration` class, which is used to load, store, save, and modify configuration options for Strawberry Fields.
 - The way hbar is handled has been simplified:
     - The backend API is now entirely hbar-independent, i.e., every backend API method is defined in terms of a and a^\dagger only, not x and p.
@@ -24,7 +28,7 @@
 - Added two top-level functions:
     - `about()`, which prints human-readable system info including installed versions of various Python packages.
     - `cite()`, which prints a bibtex citation for SF.
-- Added a glossary to the documentation
+- Added a glossary to the documentation.
 
 
 ### Improvements

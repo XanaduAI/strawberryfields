@@ -12,36 +12,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Backend specifications
+Circuit specifications
 ======================
 
 **Module name:** :mod:`strawberryfields.circuitspecs`
 
 .. currentmodule:: strawberryfields.circuitspecs
 
-This module implements the :class:`~.CircuitSpecs` class, an abstract base
-data class used to store details, specifications, and compilation rules for various
-families of Strawberry Fields circuits, e.g., the structure of circuits which can
-be executed on particular hardware or simulator backends.
+This subpackage implements the :class:`CircuitSpecs` class, an abstract base class
+used to define classes or families of quantum circuits, e.g., circuits that can be executed on particular
+hardware or simulator backends.
 
-These details are used by the :class:`~.Program` class when validating and
-compiling quantum programs. By querying the data class corresponding to a
-requested device/backend target, the :class:`~.Program` will be able to:
+The information in the CircuitSpecs instances is used by :meth:`.Program.compile` to validate and
+compile quantum programs. By querying the CircuitSpecs class representing the requested compilation
+target, Program.compile can
 
-1. **Validate** that the program has the correct number of modes, and consists
-   of valid (or decomposable) quantum operations for that circuit class.
+1. **Validate** that the Program has the correct number of modes, and consists
+   of valid quantum operations in the correct topology for the targeted circuit class.
 
-2. **Compile** the program to match the topology or operations supported by
-   the specified circuit class, making use of allowed decompositions along the way.
+2. **Compile** the Program into an :term:`equivalent circuit` that has the topology required by the
+   targeted circuit class, decomposing circuit operations as required.
 
-To access the correct specifications dataclass, :attr:`~.backend_specs` provides
-a dictionary mapping the circuit family shortname to the correct dataclass.
+Note that the compilation process is not perfect and can provide false negatives, i.e., it can admit
+failure by raising a :class:`.CircuitError` even if the Program theoretically belongs in the target
+circuit class.
+
+The circuit class database :attr:`backend_specs` is a dictionary mapping the circuit family
+shortname to the corresponding CircuitSpecs instance.
+In particular, for each backend supported by Strawberry Fields the database contains a
+corresponding CircuitSpecs instance with the same shortname, used to validate Programs to be
+executed on that backend.
+
+
+.. currentmodule:: strawberryfields.circuitspecs.circuit_specs
+
+Classes
+-------
+
+.. autosummary::
+   CircuitSpecs
 
 
 CircuitSpecs methods
--------------------
+--------------------
 
-.. currentmodule:: strawberryfields.circuitspecs.CircuitSpecs
+.. currentmodule:: strawberryfields.circuitspecs.circuit_specs.CircuitSpecs
 
 .. autosummary::
    modes
@@ -53,9 +68,11 @@ CircuitSpecs methods
    parameter_ranges
    graph
    circuit
+   compile
+
 
 Code details
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 """
 from .circuit_specs import CircuitSpecs
 from .base import BaseSpecs
@@ -69,6 +86,6 @@ from .tensorflow import TFSpecs
 specs = (BaseSpecs, Chip0Specs, FockSpecs, GaussianSpecs, GBSSpecs, TFSpecs)
 
 backend_specs = {c.short_name: c for c in specs}
-"""dict[str, CircuitSpecs]: dictionary mapping circuit family short_name to the corresponding class."""
+"""dict[str, ~strawberryfields.circuitspecs.CircuitSpecs]: dictionary mapping circuit family short_name to the corresponding class."""
 
 __all__ = ["backend_specs", "CircuitSpecs"]

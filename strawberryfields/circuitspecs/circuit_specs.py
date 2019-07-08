@@ -11,34 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Backend capabilities
-====================
 
-**Module name:** :mod:`strawberryfields.circuitspecs.circuit_specs`
+# The module docstring is in strawberryfields/circuitspecs/__init__.py
 
-.. currentmodule:: strawberryfields.circuitspecs.circuit_specs
-
-The :class:`CircuitSpecs` class stores information about the capabilities of families or classes of circuits.
-For some circuit classes (e.g,, physical hardware chips), the specifications can be quite rigid. For other classes,
-e.g., circuit families supported by a particular simulator backend, the specifications can be more flexible and general.
-Key ingredients in a specification include: the primitive gates supported in the circuit class, the gates that can be
-decomposed to be supported, and the possible connectivity restrictions.
-
-This information is used e.g., in :class:`Program` validation and compilation.
-
-
-Classes
--------
-
-.. autosummary::
-   CircuitSpecs
-
-
-Code details
-~~~~~~~~~~~~
-
-"""
 from typing import List, Set, Dict, Union
 import abc
 
@@ -50,10 +25,22 @@ import strawberryfields.program_utils as pu
 
 
 class CircuitSpecs(abc.ABC):
-    """Abstract base class for describing circuit specifications."""
+    """Abstract base class for describing circuit classes.
+
+    This class stores information about :term:`classes of quantum circuits <circuit class>`.
+    For some circuit classes (e.g, ones corresponding to physical hardware chips), the
+    specifications can be quite rigid. For other classes, e.g., circuits supported by a particular
+    simulator backend, the specifications can be more flexible and general.
+
+    Key ingredients in a specification include: the primitive gates supported by the circuit class,
+    the gates that can be decomposed to sequences of primitive gates, and the possible
+    topology/connectivity restrictions.
+
+    This information is used e.g., in :meth:`.Program.compile` for validation and compilation.
+    """
 
     short_name = ''
-    """str: short name of the Circuit class"""
+    """str: short name of the circuit class"""
 
     @property
     @abc.abstractmethod
@@ -101,7 +88,7 @@ class CircuitSpecs(abc.ABC):
         by the circuit class.
 
         Returns:
-            set[str]: the quantum primitives the circuit class supports
+            set[str]: the names of the quantum primitives the circuit class supports
         """
 
     @property
@@ -117,8 +104,8 @@ class CircuitSpecs(abc.ABC):
             {'operation_name': {'option1': val, 'option2': val,...}}
 
         For each operation specified in the dictionary, the
-        :meth:`~Operation.decompose` method will be called during
-        :class:`Program` compilation, with keyword arguments
+        :meth:`.Operation.decompose` method will be called during
+        :class:`.Program` compilation, with keyword arguments
         given by the dictionary value.
 
         Returns:
@@ -195,7 +182,7 @@ class CircuitSpecs(abc.ABC):
         Returns:
             List[Command]: modified circuit
         Raises:
-            CircuitError: the circuit is not valid within this circuit class
+            CircuitError: the given circuit cannot be validated to belong to this circuit class
         """
         if self.graph is not None:
             # check topology
