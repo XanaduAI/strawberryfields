@@ -13,6 +13,9 @@
 # limitations under the License.
 
 # The module docstring is in strawberryfields/circuitspecs/__init__.py
+"""
+**Module name:** :mod:`strawberryfields.circuitspecs.circuit_specs`
+"""
 
 from typing import List, Set, Dict, Union
 import abc
