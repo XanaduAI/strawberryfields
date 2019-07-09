@@ -215,7 +215,7 @@ class BaseEngine(abc.ABC):
             list[Command]: commands that were applied to the backend
         """
 
-    def _run(self, program, *, shots=1, compile_options={}, **kwargs):
+    def _run(self, program, *, shots=1, compile_options=None, **kwargs):
         """Execute the given programs by sending them to the backend.
 
         If multiple Programs are given they will be executed sequentially as
@@ -233,7 +233,7 @@ class BaseEngine(abc.ABC):
         Args:
             program (Program, Sequence[Program]): quantum programs to run
             shots (int): number of times the program measurement evaluation is repeated
-            compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+            compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
 
         The ``kwargs`` keyword arguments are passed to the backend API calls via :meth:`Operation.apply`.
 
@@ -246,6 +246,8 @@ class BaseEngine(abc.ABC):
             if val is None and shots > 1:
                 return [None] * shots
             return val
+
+        compile_options = compile_options or {}
 
         if not isinstance(program, Sequence):
             program = [program]
@@ -292,9 +294,10 @@ class LocalEngine(BaseEngine):
 
     Args:
         backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
-        backend_options (Dict[str, Any]): keyword arguments to be passed to the backend
+        backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
-    def __init__(self, backend, *, backend_options={}):
+    def __init__(self, backend, *, backend_options=None):
+        backend_options = backend_options or {}
         super().__init__(backend, backend_options)
 
         if isinstance(backend, str):
@@ -337,7 +340,7 @@ class LocalEngine(BaseEngine):
                 raise NotImplementedError('The operation {} has not been implemented in {} for the arguments {}.'.format(cmd.op, self.backend, kwargs)) from None
         return applied
 
-    def run(self, program, *, shots=1, compile_options={}, run_options={}, state_options={}):
+    def run(self, program, *, shots=1, compile_options=None, run_options=None, state_options=None):
         """Execute the given programs by sending them to the backend.
 
         Extends :meth:`BaseEngine._run`.
@@ -345,8 +348,8 @@ class LocalEngine(BaseEngine):
         Args:
             program (Program, Sequence[Program]): quantum programs to run
             shots (int): number of times the program measurement evaluation is repeated
-            compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
-            run_options (Dict[str, Any]): keyword arguments passed to the backend API calls via :meth:`Operation.apply`
+            compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+            run_options (None, Dict[str, Any]): keyword arguments passed to the backend API calls via :meth:`Operation.apply`
             state_options (None, Dict[str, Any]): Keyword arguments for :meth:`.BaseBackend.state`.
                 ``None`` means no state object is returned in :attr:`Result.state`.
 
@@ -364,11 +367,17 @@ class LocalEngine(BaseEngine):
         ``state_options`` can contain the following:
 
         Keyword Args:
+            return (bool): Whether to return a :class:`.BaseState` object object within ``Result.state``.
+                Default is True.
             modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
                 ``None`` returns all the modes (default).
         """
+        compile_options = compile_options or {}
+        run_options = run_options or {}
         result = super()._run(program, shots=shots, compile_options=compile_options, **run_options)
-        if state_options is not None:
+
+        state_options = state_options or {}
+        if state_options.get("return", True):
             # state object requested
             # session and feed_dict are needed by TF backend both during simulation (if program
             # contains measurements) and state object construction.
