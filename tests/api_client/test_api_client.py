@@ -139,9 +139,9 @@ class TestAPIClient:
         """
         client = api_client.APIClient()
         assert client.USE_SSL is True
-        assert client.AUTHENTICATION_TOKEN is None
+        assert not client.AUTHENTICATION_TOKEN
         assert client.BASE_URL == "https://localhost"
-        assert client.HEADERS['User-Agent'] == client.USER_AGENT
+        assert client.HEADERS["User-Agent"] == client.USER_AGENT
 
     def test_init_default_client_no_ssl(self):
         """
@@ -150,9 +150,9 @@ class TestAPIClient:
         """
         client = api_client.APIClient(use_ssl=False)
         assert client.USE_SSL is False
-        assert client.AUTHENTICATION_TOKEN is None
+        assert not client.AUTHENTICATION_TOKEN
         assert client.BASE_URL == "http://localhost"
-        assert client.HEADERS['User-Agent'] == client.USER_AGENT
+        assert client.HEADERS["User-Agent"] == client.USER_AGENT
 
     def test_init_custom_token_client(self):
         """

@@ -47,8 +47,12 @@ MOCK_MODULES = [
     'networkx',
     'networkx.algorithms',
     'numbers',
-    'blackbird'
-    'blackbird.utils'
+    'blackbird',
+    'blackbird.utils',
+    'hafnian',
+    'hafnian.lib',
+    'hafnian.samples',
+    'hafnian.quantum',
     ]
 
 np_math_fns = ['abs',
@@ -320,31 +324,31 @@ html_theme_path = ['.']
 
 # xanadu theme options (see theme.conf for more information)
 html_theme_options = {
-
     # Set the path to a special layout to include for the homepage
-    # "index_template": "special_index.html",
+    # "homepage": "special_index.html",
 
     # Set the name of the project to appear in the left sidebar.
     "project_nav_name": "Strawberry Fields",
+    "project_logo": "_static/strawberry_fields.png",
+    "touch_icon": "_static/logo_new.png",
+    "touch_icon_small": "_static/logo_new_small.png",
+    "large_toc": True,
 
-    # Set your Disqus short name to enable comments
-    # "disqus_comments_shortname": "strawberryfields-1",
-
-    # Set you GA account ID to enable tracking
+    # Set GA account ID to enable tracking
     "google_analytics_account": "UA-116279123-2",
 
-    # Path to a touch icon
-    "touch_icon": "logo_new.png",
+    # colors
+    "navigation_button": "#b13a59",
+    "navigation_button_hover": "#712b3d",
+    "toc_caption": "#b13a59",
+    "toc_hover": "#b13a59",
+    "table_header_bg": "#ffdce5",
+    "table_header_border": "#b13a59",
+    "download_button": "#b13a59",
 
-    # Specify a base_url used to generate sitemap.xml links. If not
-    # specified, then no sitemap will be built.
-    # "base_url": ""
-
-    # Allow a separate homepage from the master_doc
-    # "homepage": "index",
-
-    # Allow the project link to be overriden to a custom URL.
-    # "projectlink": "http://myproject.url",
+    # gallery options
+    "github_repo": "XanaduAI/strawberryfields",
+    # "gallery_dirs": sphinx_gallery_conf['gallery_dirs']
 }
 
 edit_on_github_project = 'XanaduAI/strawberryfields'

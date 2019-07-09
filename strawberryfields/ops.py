@@ -335,8 +335,8 @@ class Operation:
     :class:`~strawberryfields.parameters.Parameter` class for more details.
 
     Args:
-        par (Sequence[...]): parameters. len(par) >= 1. Alternatively,
-            set to [] or None to allow initialisation with no parameters.
+        par (Sequence[Any]): Operation parameters. An empty sequence if no parameters
+            are required.
     """
     # default: one-subsystem operation
     #: int: number of subsystems the operation acts on,
@@ -346,16 +346,15 @@ class Operation:
     def __init__(self, par):
         #: set[RegRef]: extra dependencies due to deferred measurements, used during optimization
         self._extra_deps = set()
-        #: list[Parameter]
+        #: list[Parameter]: operation parameters
         self.p = []
 
-        if par:
-            # convert each parameter into a Parameter instance, keep track of dependenciens
-            for q in par:
-                if not isinstance(q, Parameter):
-                    q = Parameter(q)
-                self.p.append(q)
-                self._extra_deps.update(q.deps)
+        # convert each parameter into a Parameter instance, keep track of dependenciens
+        for q in par:
+            if not isinstance(q, Parameter):
+                q = Parameter(q)
+            self.p.append(q)
+            self._extra_deps.update(q.deps)
 
     def __str__(self):
         """String representation for the Operation using Blackbird syntax.
@@ -364,7 +363,7 @@ class Operation:
             str: string representation
         """
         # defaults to the class name
-        if self.p is None:
+        if not self.p:
             return self.__class__.__name__
 
         # class name and parameter values
@@ -373,7 +372,7 @@ class Operation:
 
     @property
     def extra_deps(self):
-        """Extra dependencies due to parameters that depend on deferred measurements.
+        """Extra dependencies due to parameters that depend on measurements.
 
         Returns:
             set[RegRef]: dependencies
@@ -527,7 +526,7 @@ class Preparation(Operation):
 
 
 class Measurement(Operation):
-    """Abstract base class for projective subsystem measurements.
+    """Abstract base class for subsystem measurements.
 
     The measurement is deferred: its result is available only
     after the backend has executed it. The value of the measurement can
@@ -593,6 +592,12 @@ class Decomposition(Operation):
     """
     ns = None  # overridden by child classes in __init__
 
+    def __init__(self, par, decomp=True):
+        super().__init__(par)
+        self.decomp = decomp
+        """bool: If False, try to apply the Decomposition as a single primitive operation
+        instead of decomposing it."""
+
     def merge(self, other):
         # can be merged if they are the same class
         if isinstance(other, self.__class__):
@@ -633,7 +638,7 @@ class Transformation(Operation):
 
 
 class Channel(Transformation):
-    """Abstract base class for channels.
+    """Abstract base class for quantum channels.
 
     This class provides the base behaviour for non-unitary
     maps and transformations.
@@ -1669,15 +1674,17 @@ class GraphEmbed(Decomposition):
 
     Args:
         A (array): an :math:`N\times N` complex or real symmetric matrix
-        max_mean_photon (float): threshold value. It guarantees that the mode with
-            the largest squeezing has ``max_mean_photon`` as the mean photon number
-            i.e., :math:`sinh(r_{max})^2 ==` max_mean_photon
-        make_traceless (boolean): removes the trace of the input matrix
+        mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state
+            representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
+        make_traceless (boolean): Removes the trace of the input matrix, by performing the transformation
+            :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
+            the graph but will lead to different photon number statistics for events with more than
+            one photon in any mode.
         tol (float): the tolerance used when checking if the input matrix is symmetric:
             :math:`|A-A^T| <` tol
     """
 
-    def __init__(self, A, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
+    def __init__(self, A, mean_photon_per_mode=1.0, make_traceless=False, tol=1e-6):
         super().__init__([A])
         self.ns = A.shape[0]
 
@@ -1686,7 +1693,8 @@ class GraphEmbed(Decomposition):
         else:
             self.identity = False
             self.sq, self.U = graph_embed(
-                A, max_mean_photon=max_mean_photon, make_traceless=make_traceless, tol=tol)
+                A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=make_traceless, atol=tol
+            )
 
     def _decompose(self, reg):
         cmds = []
@@ -1698,7 +1706,6 @@ class GraphEmbed(Decomposition):
 
             if np.all(np.abs(self.U - np.identity(len(self.U))) >= _decomposition_tol):
                 cmds.append(Command(Interferometer(self.U), reg))
-
         return cmds
 
 
@@ -1826,17 +1833,15 @@ class Gaussian(Preparation, Decomposition):
         if len(r) != V.shape[0]:
             raise ValueError('Vector of means must have the same length as the covariance matrix.')
 
-        super().__init__([V, r])  # V is hbar-independent, r is not
+        super().__init__([V, r], decomp=decomp)  # V is hbar-independent, r is not
 
         self.x_disp = r[:self.ns]
         self.p_disp = r[self.ns:]
 
-        if decomp:
-            th, self.S = williamson(V, tol=tol)
-            self.pure = np.abs(np.linalg.det(V) - 1.0) < tol
-            self.nbar = 0.5 * (np.diag(th)[:self.ns] - 1.0)
-
-        self.decomp = decomp  #: bool: if False, use the backend API call instead of decomposition
+        # needed only if decomposed
+        th, self.S = williamson(V, tol=tol)
+        self.pure = np.abs(np.linalg.det(V) - 1.0) < tol
+        self.nbar = 0.5 * (np.diag(th)[:self.ns] - 1.0)
 
     def _apply(self, reg, backend, **kwargs):
         p = _unwrap(self.p)

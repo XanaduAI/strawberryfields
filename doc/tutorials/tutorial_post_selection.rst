@@ -32,15 +32,16 @@ The Blackbird programming language supports the following measurement operations
 | Heterodyne detection             | :class:`MeasureHeterodyne() <.MeasureHeterodyne>`  | ``MeasureHD``             | :class:`~.BaseGaussian` |
 +----------------------------------+----------------------------------------------------+---------------------------+-------------------------+
 | Photon-counting                  | :class:`MeasureFock() <.MeasureFock>`              | ``Measure``               | :class:`~.BaseFock`     |
+|                                  |                                                    |                           | :class:`~.BaseGaussian` |
 +----------------------------------+----------------------------------------------------+---------------------------+-------------------------+
 
-Note that, while all backends support homodyne detection, the Gaussian backend is the only backend to support heterodyne detection. Similarly, while Fock-basis measurements are only supported in backends which use the Fock representation (the Fock and Tensorflow backends).
+.. note:: While all backends support homodyne detection, the Gaussian backend is the only backend to support heterodyne detection. On the other hand, Fock-basis measurements are supported in all backends, though the Gaussian backend does not update the post-measurement quantum state, which would be non-Gaussian.
 
 The measurement operators are used in the same manner as all other quantum transformation operations in Blackbird:
 
 ``MeasurementOperator | (q[0], q[1], q[2], ...)``
 
-where the left hand side represents the measurement operator (along with any required or optional arguments), and the right hand side signifies the modes which are to be measured.
+where the left-hand side represents the measurement operator (along with any required or optional arguments), and the right-hand side signifies the modes which are to be measured.
 
 To see how this works in practice, consider the following circuit, where two incident Fock states :math:`\ket{n}` and :math:`\ket{m}` are directed on a beamsplitter, with two photon detectors at the output modes.
 
@@ -59,45 +60,53 @@ Constructing this circuit in Strawberry Fields with :math:`n=2,~m=3`, let's perf
 
 .. code-block:: python3
 
-    #!/usr/bin/env python3
     import strawberryfields as sf
     from strawberryfields.ops import *
 
-    eng, q = sf.Engine(2)
-    with eng:
+    prog = sf.Program(2)
+    eng = sf.Engine("fock", backend_options={"cutoff_dim": 6})
+
+    with prog.context as q:
         Fock(2)  | q[0]
         Fock(3)  | q[1]
         BSgate() | (q[0], q[1])
         Measure  | q[0]
 
-    eng.run("fock", cutoff_dim=6)
+    results = eng.run(prog)
 
 .. note:: If the :class:`~.BSgate` parameters are not specified, by default a 50-50 beamsplitter ``BSgate(pi/4,0)`` is applied.
 
-The default action after every measurement is to reset the measured modes to the vacuum state. However, once the engine has been run, we can extract the measured value of mode ``q[0]`` via the ``.val`` attribute:
+The default action after every measurement is to reset the measured modes to the vacuum state. However, we can extract the measured value of mode ``q[0]`` via the ``results``
+object returned by the engine after it has finished execution:
 
->>> q[0].val
+>>> results.samples[0]
 1
 
-.. note:: Since no measurement has yet been applied to the second mode, ``q[1].val`` will return ``None``.
+.. note:: Since measurement is a stochastic process, your results might differ when executing this code.
 
-Therefore, we know that, to preserve the photon number, ``q[1]`` must be in the state :math:`\ket{4}`. Running the backend again, and this time applying the second Fock measurement:
+Since no measurement has yet been applied to the second mode, ``results.samples[1]`` will return ``None``.
+
+>>> results.samples
+[1, None]
+
+Therefore, we know that, to preserve the photon number, ``q[1]`` must be in the state :math:`\ket{m+n-k}`, where :math:`m` and :math:`n` are the photon numbers of the initial states
+and :math:`k` is value returned in :code:`result.samples`.
+Executing the backend again, and this time applying the second Fock measurement:
 
 .. code-block:: python3
 
-    eng.reset_queue()  # resets the command queue
-    with eng:
+    prog2 = sf.Program(2)
+    with prog2.context as q:
         Measure | q[1]
 
-    eng.run("fock", cutoff_dim=6, reset_backend=False)
+    results = eng.run(prog2)
 
 
-As expected, we get
+We will find that the second measurement yields :math:`m+n-k`. In this case, we get
 
->>> q[1].val
+>>> results.samples[1]
 4
 
-.. note:: By setting ``reset_backend=False``, we are ensuring that the backend continues using the output state from the previous simulation, rather than restarting from the vacuum state.
 
 |PS|
 ==========
@@ -108,28 +117,27 @@ For example, we can rewrite the example above using post-selection:
 
 .. code-block:: python3
 
-    #!/usr/bin/env python3
     import strawberryfields as sf
     from strawberryfields.ops import *
 
-    eng, q = sf.Engine(2)
-    with eng:
+    prog = sf.Program(2)
+    eng = sf.Engine("fock", backend_options={"cutoff_dim": 6})
+
+    with prog.context as q:
         Fock(2) | q[0]
         Fock(3) | q[1]
         BSgate() | (q[0], q[1])
         MeasureFock(select=0) | q[0]
         Measure  | q[1]
 
-    eng.run("fock", cutoff_dim=6)
+    result = eng.run(prog)
 
 .. warning:: When passing the ``select`` argument to the measurement operator, we can no longer use the shortcut, we have to use the **full name** of the measurement operator.
 
-Since we are post-selecting a measurement of 0 photons in mode ``q[0]``, we expect ``q[0].val`` to be ``0`` and ``q[1].val`` to be ``5``. Indeed,
+Since we are post-selecting a measurement of 0 photons in mode ``q[0]``, we expect ``result.samples[0]`` to be ``0`` and ``result.samples[1]`` to be ``5``. Indeed,
 
->>> q[0].val
-0
->>> q[1].val
-5
+>>> result.samples
+[0, 5]
 
 .. warning::
 
@@ -137,7 +145,7 @@ Since we are post-selecting a measurement of 0 photons in mode ``q[0]``, we expe
 
     >>> eng.run("fock", cutoff_dim=6, select=[1,2])
     ZeroDivisionError: Measurement has zero probability.
-    
+
     This check is provided for convenience, but the user should always be aware of post-selecting on zero-probability events. The current implementation of homodyne measurements in the Fock backend *does not* currently perform this check.
 
 Example
@@ -161,16 +169,18 @@ We can simulate this conditional displacement using post-selection. Utilizing th
 
 .. code-block:: python3
 
-    #!/usr/bin/env python3
     import strawberryfields as sf
     from strawberryfields.ops import *
 
-    eng, q = sf.Engine(2)
+    prog = sf.Program(2)
+    eng = sf.Engine("gaussian")
+
+    with prog.context as q:
     with eng:
         S2gate(1)                    | (q[0], q[1])
         MeasureHomodyne(0,select=1)  | q[0]
 
-    state = eng.run('gaussian')
+    state = eng.run('gaussian').state
 
 To check the displacement of the second output mode, we can use the :meth:`~.BaseGaussianState.reduced_gaussian` state method to extract the vector of means and the covariance matrix:
 
@@ -181,7 +191,7 @@ The vector of means contains the mean quadrature displacements, and for a single
 >>> print(mu[0])
 0.964027569826
 
-The :math:`x` quadrature displacement of the second mode is conditional to the post-selected value in the circuit construction above. 
+The :math:`x` quadrature displacement of the second mode is conditional to the post-selected value in the circuit construction above.
 
 
 Measurement control and processing
@@ -211,7 +221,7 @@ Note that, the return type of the measurement determines the parameter type, pot
 
 
 Classical processing
---------------------- 
+---------------------
 
 Sometimes, additional classical processing needs to be performed on the measured value before using it as a gate parameter; Strawberry Fields provides some simple classical processing functions (known as **register transforms**) in the module :mod:`strawberryfields.utils`:
 
@@ -244,14 +254,13 @@ These only need to be used when passing a measured mode value as a gate paramete
 In this particular example, we are casting the complex-valued Heterodyne measurement to a real value using the ``phase`` classical processing function, allowing us to pass it as a beamsplitter parameter.
 
 
-User defined processing functions
+User-defined processing functions
 -----------------------------------
 
 If you need a classical processing function beyond the basic ones provided in the :mod:`strawberryfields.utils` module, you can use the :func:`strawberryfields.convert` decorator to create your own. For example, consider the case where you might need to take the *logarithm* of a measured value, but only within a certain range, and use this as a subsequent gate parameter.
 
 .. code-block:: python3
 
-    #!/usr/bin/env python3
     import numpy as np
     import strawberryfields as sf
     from strawberryfields.ops import *
@@ -263,8 +272,9 @@ If you need a classical processing function beyond the basic ones provided in th
         else:
             return q
 
-    eng, q = sf.Engine(2)
-    with eng:
+    prog = sf.Program(2)
+
+    with prog.context as q:
         MeasureX      | q[0]
         Xgate(log(q)) | q[1]
 
@@ -272,7 +282,7 @@ By using the ``@sf.convert`` decorator directly above our user-defined custom pr
 
 :html:`<div class="aside admonition" id="aside1"><a data-toggle="collapse" data-parent="#aside1" href="#content1" class="collapsed"><p class="first admonition-title">Advanced: RegRefTransforms (click to expand) <i class="fas fa-chevron-circle-down"></i></p></a><div id="content1" class="collapse" data-parent="#aside1" style="height: 0px;">`
 
-    
+
 Under the hood, the convert decorator is converting the user-defined processing function to a :class:`~.RegRefTransform` instance, which is how the Strawberry Fields engine understands transformations on qumodes. While it is always advised to use the built in classical processing functions, or the :func:`strawberryfields.convert` decorator for custom functions, the more advanced :class:`~.RegRefTransform` class can be used when more functionality is needed, for example processing functions on multiple qumodes.
 
 The ``RegRefTransform`` is initialised as follows:
@@ -291,18 +301,20 @@ For example, the above user defined ``log`` function can be rewritten using an e
         else:
             return q
 
-    eng, q = sf.Engine(2)
-    with eng:
+    prog = sf.Program(2)
+
+    with prog.context as q:
         MeasureX      | q[0]
         Xgate(RR(q[0],log)) | q[1]
 
-However, ``RegRefTransform`` allows for more flexibility, by allowing us to define a classical processing function that acts on multiple qubits. For example, we can combine two Homodyne measurement results to form a single complex argument for a displacement gate: 
+However, ``RegRefTransform`` allows for more flexibility, by allowing us to define a classical processing function that acts on multiple qubits. For example, we can combine two Homodyne measurement results to form a single complex argument for a displacement gate:
 
 
 .. code-block:: python3
 
-    eng, q = sf.Engine(3)
-    with eng:
+    prog = sf.Program(3)
+
+    with prog.context as q:
         MeasureX      | q[0]
         MeasureP      | q[1]
         Dgate(RR([q[0],q[1]], lambda q0,q1: q0+1j*q1)) | q[2]

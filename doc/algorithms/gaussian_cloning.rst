@@ -116,14 +116,14 @@ The symmetric Gaussian cloning circuit displayed above can be implemented using 
    :linenos:
    :dedent: 4
    :tab-width: 4
-   :start-after: with eng:
+   :start-after: with gaussian_cloning.context as q:
    :end-before: # end circuit
 
 After constructing the circuit and running the engine,
 
 .. literalinclude:: ../../examples/gaussian_cloning.py
    :language: python
-   :start-at: state =
+   :start-at: results =
    :end-at: ])
 
 you can call the :ref:`state method <state_class>` :meth:`~.BaseState.fidelity_coherent`
@@ -151,7 +151,7 @@ In order to calculate the average fidelity over an ensemble, you will need to ru
 
 .. literalinclude:: ../../examples/gaussian_cloning.py
    :language: python
-   :start-at: shots =
+   :start-at: reps =
    :end-at: displacement()
 
 >>> np.mean(f)

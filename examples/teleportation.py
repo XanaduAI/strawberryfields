@@ -1,11 +1,14 @@
+#!/usr/bin/env python3
 import strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.utils import scale
 from numpy import pi, sqrt
 
-eng,q = sf.Engine(3)
+# initialize engine and program objects
+eng = sf.Engine(backend="gaussian")
+teleportation = sf.Program(3)
 
-with eng:
+with teleportation.context as q:
     psi, alice, bob = q[0], q[1], q[2]
 
     # state to be teleported:
@@ -31,8 +34,8 @@ with eng:
     Zgate(scale(alice, sqrt(2))) | bob
     # end circuit
 
-state = eng.run('gaussian')
+results = eng.run(teleportation)
 # view Bob's output state and fidelity
-print(q[0].val,q[1].val)
-print(state.displacement([2]))
-print(state.fidelity_coherent([0,0,1+0.5j]))
+print(q[0].val, q[1].val)
+print(results.state.displacement([2]))
+print(results.state.fidelity_coherent([0, 0, 1+0.5j]))

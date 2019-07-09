@@ -110,7 +110,7 @@ class TestGaussianBackendDecompositions:
             ops.GraphEmbed(np.identity(3)) | q
 
         assert len(prog) == 1
-        prog = prog.compile()
+        prog = prog.compile('gaussian')
         assert len(prog) == 0
 
     def test_passive_gaussian_transform(self, setup_eng, tol):
@@ -164,7 +164,7 @@ class TestGaussianBackendDecompositions:
             ops.Interferometer(np.identity(3)) | q
 
         assert len(prog) == 1
-        prog = prog.compile()
+        prog = prog.compile('gaussian')
         assert len(prog) == 0
 
 

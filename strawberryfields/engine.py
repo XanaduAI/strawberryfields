@@ -22,8 +22,7 @@ Execution engine
 
 This module implements :class:`BaseEngine` and its subclasses that are responsible for
 communicating quantum programs represented by :class:`.Program` objects
-to a backend that could be e.g., a simulator, a hardware quantum processor,
-or a circuit drawer, and returning the result to the user.
+to a backend that could be e.g., a simulator or a hardware quantum processor.
 One can think of each BaseEngine instance as a separate quantum computation.
 
 A typical use looks like
@@ -84,6 +83,7 @@ from .backends.base import NotApplicableError, BaseBackend
 
 from strawberryfields.api_client import APIClient, Job, JobNotQueuedError, JobExecutionError
 from strawberryfields.io import to_blackbird
+from strawberryfields._dev.configuration import DEFAULT_CONFIG
 
 
 class OneJobAtATimeError(Exception):
@@ -102,19 +102,50 @@ class Result:
     """
 
     def __init__(self, samples):
-        #: BaseState: quantum state object returned by a local backend, if any
-        self.state = None
-        #: array(array(Number)): measurement samples, shape == (modes,) or shape == (shots, modes)
+        self._state = None
+
         # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
         if len(shape(samples)) > 1:
             samples = stack(samples, 1)
-        self.samples = samples
+
+        self._samples = samples
+
+    @property
+    def samples(self):
+        """Measurement samples.
+
+        Returned measurement samples will have shape ``(modes,)``. If multiple
+        shots are requested during execution, the returned measurement samples
+        will instead have shape ``(shots, modes)``.
+
+        Returns:
+            array[array[float, int]]: measurement samples returned from
+            program execution
+        """
+        return self._samples
+
+    @property
+    def state(self):
+        """The quantum state object.
+
+        The quantum state object contains details and methods
+        for manipulation of the final circuit state.
+
+        .. note::
+
+            Only local simulators will return a state object. Remote
+            simulators and hardware backends will return
+            :attr:`measurement samples <Result.samples>`,
+            but the return value of ``state`` will be ``None``.
+
+        Returns:
+            BaseState: quantum state returned from program execution
+        """
+        return self._state
 
     def __str__(self):
         """String representation."""
-        return "Result: {} subsystems, state: {}\n samples: {}".format(
-            len(self.samples), self.state, self.samples
-        )
+        return "Result: {} subsystems, state: {}\n samples: {}".format(len(self.samples), self.state, self.samples)
 
 
 class BaseEngine(abc.ABC):
@@ -176,7 +207,7 @@ class BaseEngine(abc.ABC):
             print_fn (function): optional custom function to use for string printing.
         """
         for k, r in enumerate(self.run_progs):
-            print_fn("Run {}:".format(k))
+            print_fn('Run {}:'.format(k))
             r.print(print_fn)
 
     @abc.abstractmethod
@@ -248,9 +279,7 @@ class BaseEngine(abc.ABC):
             else:
                 # there was a previous program segment
                 if not p.can_follow(prev):
-                    raise RuntimeError(
-                        "Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name)
-                    )
+                    raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
 
                 # Copy the latest measured values in the RegRefs of p.
                 # We cannot copy from prev directly because it could be used in more than one engine.
@@ -258,10 +287,8 @@ class BaseEngine(abc.ABC):
                     p.reg_refs[k].val = v
 
             # if the program hasn't been compiled for this backend, do it now
-            if p.backend != self.backend_name:
-                p = p.compile(
-                    self.backend_name, **compile_options
-                )  # TODO: shots might be relevant for compilation?
+            if p.target != self.backend_name:
+                p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
             p.lock()
 
             if self.backend_name in getattr(self, "HARDWARE_BACKENDS", []):
@@ -269,14 +296,13 @@ class BaseEngine(abc.ABC):
             else:
                 self._run_program(p, **kwargs)
                 shots = kwargs.get("shots", 1)
-                self.samples = [
-                    _broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)
-                ]
+                self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
 
             self.run_progs.append(p)
+
             prev = p
 
-        return Result(list(self.samples))
+        return Result(self.samples.copy())
 
 
 class LocalEngine(BaseEngine):
@@ -323,22 +349,14 @@ class LocalEngine(BaseEngine):
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend
-                cmd.op.apply(
-                    cmd.reg, self.backend, **kwargs
-                )  # NOTE we could also handle storing measured vals here
+                cmd.op.apply(cmd.reg, self.backend, **kwargs)  # NOTE we could also handle storing measured vals here
                 applied.append(cmd)
             except NotApplicableError:
                 # command is not applicable to the current backend type
-                raise NotApplicableError(
-                    "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
-                ) from None
+                raise NotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
             except NotImplementedError:
                 # command not directly supported by backend API
-                raise NotImplementedError(
-                    "The operation {} has not been implemented in {} for the arguments {}.".format(
-                        cmd.op, self.backend, kwargs
-                    )
-                ) from None
+                raise NotImplementedError('The operation {} has not been implemented in {} for the arguments {}.'.format(cmd.op, self.backend, kwargs)) from None
         return applied
 
     def run(self, program, *, shots=1, compile_options={}, modes=None, state_options={}, **kwargs):
@@ -360,14 +378,14 @@ class LocalEngine(BaseEngine):
             Result: results of the computation
         """
 
+        # session or feed_dict are needed by TF backend during simulation if program contains measurements
+        kwargs.update(state_options)
         result = super()._run(program, shots=shots, compile_options=compile_options, **kwargs)
         if isinstance(modes, Sequence) and not modes:
             # empty sequence
             pass
         else:
-            result.state = self.backend.state(
-                modes, **state_options
-            )  # tfbackend.state can use kwargs
+            result._state = self.backend.state(modes, **state_options)  # tfbackend.state can use kwargs
         return result
 
 
@@ -389,7 +407,7 @@ class StarshipEngine(BaseEngine):
         backend = "chip0"
         super().__init__(backend)
 
-        api_client_params = {k: v for k, v in kwargs.items() if k in APIClient.DEFAULT_CONFIG}
+        api_client_params = {k: v for k, v in kwargs.items() if k in DEFAULT_CONFIG['api'].keys()}
         self.client = APIClient(**api_client_params)
         self.polling_delay_seconds = polling_delay_seconds
         self.jobs = []
