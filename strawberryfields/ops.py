@@ -737,8 +737,7 @@ class Gate(Transformation):
         # convert RegRefs back to indices for the backend API
         temp = [rr.ind for rr in reg]
         # call the child class specialized _apply method
-        result = self._apply(temp, backend, **kwargs)
-
+        self._apply(temp, backend, **kwargs)
         self.p = original_p  # restore original unevaluated Parameter instances
 
     def merge(self, other):
