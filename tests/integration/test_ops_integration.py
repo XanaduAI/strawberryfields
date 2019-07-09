@@ -25,7 +25,7 @@ from strawberryfields.backends.gaussianbackend import GaussianState
 
 
 # make test deterministic
-np.random.random(42)
+np.random.seed(42)
 A = 0.1234
 B = -0.543
 

@@ -48,7 +48,7 @@ class DeviceSpecs(abc.ABC):
     """Abstract base class for describing execution backend capabilities."""
 
     short_name = ''
-    """The short name of the device."""
+    """str: short name of the device"""
 
     @property
     @abc.abstractmethod

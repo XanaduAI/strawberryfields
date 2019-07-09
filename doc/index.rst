@@ -112,7 +112,6 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    gallery/gallery
    research
 
-
 .. toctree::
    :maxdepth: 2
    :caption: Continuous-variable quantum computing
@@ -121,6 +120,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    introduction
    op_conventions
    quantum_algorithms
+   glossary
    references
 
 .. toctree::
@@ -142,22 +142,22 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
 
    code/code
    code/program
-   code/devicespecs
    code/engine
    code/ops
+   code/io
+   code/devicespecs
    code/decompositions
    code/utils
    code/circuitdrawer
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Backend API
+   :hidden:
+
    code/backend
    code/backend.states
    code/backend.gaussian
    code/backend.fock
    code/backend.tf
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

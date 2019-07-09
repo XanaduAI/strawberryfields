@@ -3,8 +3,9 @@ import numpy as np
 import strawberryfields as sf
 from strawberryfields.ops import *
 
-# initialise the engine and register
-eng, q = sf.Engine(4)
+# initialize engine and program objects
+eng = sf.Engine(backend="gaussian")
+gbs = sf.Program(4)
 
 # define the linear interferometer
 U = np.array([
@@ -19,7 +20,7 @@ U = np.array([
 ])
 
 
-with eng:
+with gbs.context as q:
     # prepare the input squeezed states
     S = Sgate(1)
     S | q[0]
@@ -32,7 +33,7 @@ with eng:
     # end circuit
 
 # run the engine
-state = eng.run('gaussian')
+results = eng.run(gbs)
 
 # Fock states to measure at output
 measure_states = [[0,0,0,0], [1,1,0,0], [0,1,0,1], [1,1,1,1], [2,0,0,0]]
@@ -40,5 +41,5 @@ measure_states = [[0,0,0,0], [1,1,0,0], [0,1,0,1], [1,1,1,1], [2,0,0,0]]
 # extract the probabilities of calculating several
 # different Fock states at the output, and print them to the terminal
 for i in measure_states:
-    prob = state.fock_prob(i)
+    prob = results.state.fock_prob(i)
     print("|{}>: {}".format("".join(str(j) for j in i), prob))

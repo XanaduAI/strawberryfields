@@ -7,7 +7,7 @@
   <link rel="stylesheet" type="text/css" href="{{ pathto('_static/fonts/open-sans/stylesheet.css', 1) }}" />
   <!-- Licensed under the SIL Open Font License -->
   <link rel="stylesheet" type="text/css" href="{{ pathto('_static/fonts/source-serif-pro/source-serif-pro.css', 1) }}" />
-  <link href="https://fonts.googleapis.com/css?family=Noto+Serif" rel="stylesheet"> 
+  <link href="https://fonts.googleapis.com/css?family=Noto+Serif" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="{{ pathto('_static/css/bootstrap.min.css', 1) }}" />
   <link rel="stylesheet" type="text/css" href="{{ pathto('_static/css/bootstrap-theme.min.css', 1) }}" />
   <link rel="stylesheet" type="text/css" href="{{ pathto('_static/css/nanoscroller.css', 1) }}" />
@@ -15,7 +15,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script type="text/x-mathjax-config">
      MathJax.Hub.Config({
-       "HTML-CSS": { scale: 90, linebreaks: { automatic: true } }, 
+       "HTML-CSS": { scale: 90, linebreaks: { automatic: true } },
        TeX: {
          Macros: {
            pr : ['|\#1\\rangle\\langle\#1|',1],
@@ -61,7 +61,7 @@
        }
      });
      </script>
-  
+
   {%- block ga %}
     {%- if theme_google_analytics_account %}
       <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -204,6 +204,25 @@
             </div>
             {% endblock %}
             <div class="document clearer body">
+
+              {% if theme_gallery_dirs in pagename %}
+                <div class="xanadu-call-to-action-links">
+                  <div id="tutorial-type">{{ pagename }}</div>
+                  <div id="download-python-link">
+                    <i class="fab fa-python"></i>&nbsp;
+                    <div class="call-to-action-desktop-view">Download Python script</div>
+                  </div>
+                  <div id="download-notebook-link">
+                    <i class="fas fa-download"></i>&nbsp;
+                    <div class="call-to-action-desktop-view">Download Notebook</div>
+                  </div>
+                  <div id="github-view-link">
+                    <i class="fab fa-github"></i>&nbsp;
+                    <div class="call-to-action-desktop-view">View on GitHub</div>
+                  </div>
+                </div>
+              {% endif %}
+
               {% block body %} {% endblock %}
             </div>
             {%- block bottom_rel_links %}
@@ -248,9 +267,11 @@
             $('.logo-small').addClass('active');
             $(".nano").nanoScroller({ scrollTo: $('.current') });
         } else {
-            $('.text-logo').addClass('active');
-            $('.logo').removeClass('active');
-            $('.logo-small').addClass('active');
+            {% if theme_large_toc %}
+              $('.text-logo').addClass('active');
+              $('.logo').removeClass('active');
+              $('.logo-small').addClass('active');
+            {% endif %}
             $(".nano").nanoScroller({ scrollTop: 93 });
         }
     }
@@ -274,9 +295,29 @@
         });
     });
 </script>
+<script type="text/javascript">
+var downloadNote = $(".sphx-glr-download-link-note.admonition.note");
+if (downloadNote.length >= 1) {
+    var tutorialUrlArray = $("#tutorial-type").text().split('/');
+        tutorialUrlArray[0] = "examples"
+
+    var githubLink = "https://github.com/" + "{{ theme_github_repo }}" + "/blob/master/" + tutorialUrlArray.join("/") + ".py",
+        pythonLink = $(".reference.download")[0].href,
+        notebookLink = $(".reference.download")[1].href,
+        notebookDownloadPath = notebookLink.split('_downloads')[1].split('/').pop();
+
+    $("#download-python-link").wrap("<a href=" + pythonLink + " data-behavior='call-to-action-event' data-response='Download Python script' download target='_blank'/>");
+    $("#download-notebook-link").wrap("<a href=" + notebookLink + " data-behavior='call-to-action-event' data-response='Download Notebook' download target='_blank'/>");
+    $("#github-view-link").wrap("<a href=" + githubLink + " data-behavior='call-to-action-event' data-response='View on Github' target='_blank'/>");
+} else {
+    $(".xanadu-call-to-action-links").hide();
+}
+</script>
 {%- block footer_wrapper %}
   <div class="footer">
-    {{ copyright }} Documentation created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+    {{ copyright }}
+    <br>
+    Documentation created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
   </div>
 {%- endblock %}
 {%- endblock %}

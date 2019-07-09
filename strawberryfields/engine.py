@@ -22,8 +22,7 @@ Execution engine
 
 This module implements :class:`BaseEngine` and its subclasses that are responsible for
 communicating quantum programs represented by :class:`.Program` objects
-to a backend that could be e.g., a simulator, a hardware quantum processor,
-or a circuit drawer, and returning the result to the user.
+to a backend that could be e.g., a simulator or a hardware quantum processor.
 One can think of each BaseEngine instance as a separate quantum computation.
 
 A typical use looks like
@@ -88,13 +87,46 @@ class Result:
     Returned by :meth:`.BaseEngine.run`.
     """
     def __init__(self, samples):
-        #: BaseState: quantum state object returned by a local backend, if any
-        self.state = None
-        #: array(array(Number)): measurement samples, shape == (modes,) or shape == (shots, modes)
+        self._state = None
+
         # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
         if len(shape(samples)) > 1:
             samples = stack(samples, 1)
-        self.samples = samples
+
+        self._samples = samples
+
+    @property
+    def samples(self):
+        """Measurement samples.
+
+        Returned measurement samples will have shape ``(modes,)``. If multiple
+        shots are requested during execution, the returned measurement samples
+        will instead have shape ``(shots, modes)``.
+
+        Returns:
+            array[array[float, int]]: measurement samples returned from
+            program execution
+        """
+        return self._samples
+
+    @property
+    def state(self):
+        """The quantum state object.
+
+        The quantum state object contains details and methods
+        for manipulation of the final circuit state.
+
+        .. note::
+
+            Only local simulators will return a state object. Remote
+            simulators and hardware backends will return
+            :attr:`measurement samples <Result.samples>`,
+            but the return value of ``state`` will be ``None``.
+
+        Returns:
+            BaseState: quantum state returned from program execution
+        """
+        return self._state
 
     def __str__(self):
         """String representation."""
@@ -190,10 +222,10 @@ class BaseEngine(abc.ABC):
         parts of a single computation.
         For each :class:`Program` instance given as input, the following happens:
 
-        * The Program instance is compiled and optimized for the target backend.
+        * The Program instance is compiled for the target backend.
         * The compiled program is executed on the backend.
-        * The measurement results of each subsystem (if any) are stored
-          in the :class:`.RegRef` instances of the corresponding Program, as well as in :attr:`~.samples`.
+        * The measurement results of each subsystem (if any) are stored in the :class:`.RegRef`
+          instances of the corresponding Program, as well as in :attr:`~.samples`.
         * The compiled program is appended to self.run_progs.
 
         Finally, the result of the computation is returned.
@@ -218,43 +250,36 @@ class BaseEngine(abc.ABC):
         if not isinstance(program, Sequence):
             program = [program]
 
-        try:
-            prev = self.run_progs[-1] if self.run_progs else None  # previous program segment
-            for p in program:
-                if prev is None:
-                    # initialize the backend
-                    self._init_backend(p.init_num_subsystems)
-                else:
-                    # there was a previous program segment
-                    if not p.can_follow(prev):
-                        raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
+        kwargs["shots"] = shots
+        # NOTE: by putting ``shots`` into keyword arguments, it allows for the
+        # signatures of methods in Operations to remain cleaner, since only
+        # Measurements need to know about shots
 
-                    # Copy the latest measured values in the RegRefs of p.
-                    # We cannot copy from prev directly because it could be used in more than one engine.
-                    for k, v in enumerate(self.samples):
-                        p.reg_refs[k].val = v
+        prev = self.run_progs[-1] if self.run_progs else None  # previous program segment
+        for p in program:
+            if prev is None:
+                # initialize the backend
+                self._init_backend(p.init_num_subsystems)
+            else:
+                # there was a previous program segment
+                if not p.can_follow(prev):
+                    raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
 
-                # if the program hasn't been compiled for this backend, do it now
-                if p.backend != self.backend_name:
-                    p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
-                p.lock()
+                # Copy the latest measured values in the RegRefs of p.
+                # We cannot copy from prev directly because it could be used in more than one engine.
+                for k, v in enumerate(self.samples):
+                    p.reg_refs[k].val = v
 
-                kwargs["shots"] = shots
-                # Note: by putting ``shots`` into keyword arguments, it allows for the
-                # signatures of methods in Operations to remain cleaner, since only
-                # Measurements need to know about shots
+            # if the program hasn't been compiled for this backend, do it now
+            if p.target != self.backend_name:
+                p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
+            p.lock()
 
-                self._run_program(p, **kwargs)
-                self.run_progs.append(p)
-                # store the latest measurement results
-                shots = kwargs.get("shots", 1)
-                self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
-                prev = p
-        except Exception as e:
-            raise e
-        else:
-            # program execution was successful
-            pass
+            self._run_program(p, **kwargs)
+            self.run_progs.append(p)
+            # store the latest measurement results
+            self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
+            prev = p
 
         return Result(self.samples.copy())
 
@@ -331,12 +356,14 @@ class LocalEngine(BaseEngine):
             Result: results of the computation
         """
 
+        # session or feed_dict are needed by TF backend during simulation if program contains measurements
+        kwargs.update(state_options)
         result = super()._run(program, shots=shots, compile_options=compile_options, **kwargs)
         if isinstance(modes, Sequence) and not modes:
             # empty sequence
             pass
         else:
-            result.state = self.backend.state(modes, **state_options)  # tfbackend.state can use kwargs
+            result._state = self.backend.state(modes, **state_options)  # tfbackend.state can use kwargs
         return result
 
 

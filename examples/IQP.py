@@ -2,10 +2,11 @@
 import strawberryfields as sf
 from strawberryfields.ops import *
 
-# initialise the engine and register
-eng, q = sf.Engine(4)
+# initialize engine and program objects
+eng = sf.Engine(backend="fock", backend_options={"cutoff_dim": 5})
+iqp_circuit = sf.Program(4)
 
-with eng:
+with iqp_circuit.context as q:
     # prepare the input squeezed states
     S = Sgate(-1)
     S | q[0]
@@ -21,7 +22,7 @@ with eng:
     Zgate(0.8578)  | q[2]
     CZgate(1.321)  | (q[1], q[2])
     Zgate(0.473)   | q[3]
-    CZgate(0.9946) | (q[0], q[2])
+    CZgate(0.9946) | (q[0], q[3])
     Zgate(0.1223)  | q[3]
     Vgate(0.6157)  | q[0]
     Vgate(0.3110)  | q[1]
@@ -29,4 +30,4 @@ with eng:
     # end circuit
 
 # run the engine
-eng.run("fock", cutoff_dim=5)
+results = eng.run(iqp_circuit)
