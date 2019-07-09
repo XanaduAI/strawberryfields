@@ -33,6 +33,8 @@ requirements = [
     "hafnian>=0.6",
     "toml",
     "appdirs",
+    "requests>=2.22.0",
+    "urllib3>=1.25.3",
 ]
 
 # extra_requirements = [
