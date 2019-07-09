@@ -303,14 +303,14 @@ class TestStarshipEngine:
         Tests StarshipEngine.run. It is expected that StarshipEngine._run is called with the correct
         parameters.
         """
-        mock_run = MagicMock()
-        monkeypatch.setattr("strawberryfields.engine.BaseEngine._run", mock_run)
+        mock__run = MagicMock()
+        monkeypatch.setattr("strawberryfields.engine.BaseEngine._run", mock__run)
 
         inputs = MagicMock()
         inputs.params = {"param": MagicMock()}
 
-        starship_engine.run(inputs.program, inputs.shots, inputs.name, **inputs.params)
-        mock_run.assert_called_once_with(
+        starship_engine.run(inputs.program, inputs.name, inputs.shots, **inputs.params)
+        mock__run.assert_called_once_with(
             inputs.program, shots=inputs.shots, name=inputs.name, param=inputs.params["param"]
         )
 
@@ -362,6 +362,6 @@ class TestStarshipEngine:
             ops.MeasureFock() | [2]
             ops.MeasureFock() | [3]
 
-        engine.run(prog)
+        engine.run(prog, "SomeProg")
 
         mock_api_client_post.assert_called_once()

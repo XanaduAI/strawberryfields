@@ -133,7 +133,6 @@ class MockGETResponse(MockResponse):
         raise requests.exceptions.HTTPError()
 
 
-@pytest.mark.api_client
 class TestAPIClient:
     def test_init_default_client(self):
         """
@@ -210,7 +209,6 @@ class TestAPIClient:
         assert client.join_path("jobs") == "{client.BASE_URL}/jobs".format(client=client)
 
 
-@pytest.mark.api_client
 class TestResourceManager:
     def test_init(self):
         """
@@ -357,7 +355,6 @@ class TestResourceManager:
             field.set.assert_called_once_with(mock_data[field.name])
 
 
-@pytest.mark.api_client
 class TestJob:
     def test_create_created(self, monkeypatch):
         """
@@ -379,5 +376,8 @@ class TestJob:
         monkeypatch.setattr(requests, "post", lambda url, headers, data: MockPOSTResponse(400))
         job = Job()
 
-        job.manager.create(params={})
-        assert job.manager.http_status_code == 400
+        with pytest.raises(Exception):
+            job.manager.create(params={})
+        assert len(job.manager.errors) == 1
+        assert job.manager.errors[0]["status_code"] == 400
+        assert job.manager.errors[0]["content"] == MockPOSTResponse(400).json()

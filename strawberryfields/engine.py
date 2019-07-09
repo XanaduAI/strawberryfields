@@ -530,7 +530,7 @@ class StarshipEngine(BaseEngine):
             job.result.manager.get()
             return job.result.result.value
 
-    def run(self, program, shots=1, name="", **kwargs):
+    def run(self, program, name, shots=1, **kwargs):
         """Compile the given program and execute it by queuing a job in the Starship.
 
         For the :class:`Program` instance given as input, the following happens:
