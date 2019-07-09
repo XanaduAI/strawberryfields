@@ -136,6 +136,10 @@ class TestInitialStatesAgreeFock:
             expected = state.ket()
             ket = np.tile(ket, (bsize, 1))
 
+        print("**********************************************")
+        print(ket)
+        print(expected)
+        raise ValueError  # temporary, to capture and display stdout on travis, even when test passes
         assert np.allclose(expected, ket, atol=tol, rtol=0)
 
     def test_coherent(self, setup_eng, hbar, cutoff, bsize, pure, tol):

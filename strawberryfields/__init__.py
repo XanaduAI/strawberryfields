@@ -98,6 +98,8 @@ def about():
     import os
     import numpy
     import scipy
+    import hafnian
+    import blackbird
 
     # a QuTiP-style infobox
     print('\nStrawberry Fields: a Python library for continuous-variable quantum circuits.')
@@ -109,6 +111,8 @@ def about():
     print('Strawberry Fields version: {}'.format(__version__))
     print('Numpy version:             {}'.format(numpy.__version__))
     print('Scipy version:             {}'.format(scipy.__version__))
+    print('Hafnian version:           {}'.format(hafnian.__version__))
+    print('Blackbird version:         {}'.format(blackbird.__version__))
     try:
         import tensorflow
         tf_version = tensorflow.__version__

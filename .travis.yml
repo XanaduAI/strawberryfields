@@ -21,7 +21,7 @@ install:
   - python3 setup.py bdist_wheel
   - pip install dist/StrawberryFields*.whl
 script:
-  - python3 -m pytest tests --cov=strawberryfields -p no:warnings --tb=native -m "$OPTIONS"
+  - python3 -m pytest -k tests/integration/test_utils_integration.py --cov=strawberryfields -p no:warnings --tb=native -m "$OPTIONS"
 after_success:
   - codecov
 notifications:
