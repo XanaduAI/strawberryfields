@@ -73,7 +73,6 @@ Code details
 """
 
 import abc
-import uuid
 from collections.abc import Sequence
 from numpy import stack, shape
 from time import sleep
@@ -145,7 +144,9 @@ class Result:
 
     def __str__(self):
         """String representation."""
-        return "Result: {} subsystems, state: {}\n samples: {}".format(len(self.samples), self.state, self.samples)
+        return "Result: {} subsystems, state: {}\n samples: {}".format(
+            len(self.samples), self.state, self.samples
+        )
 
 
 class BaseEngine(abc.ABC):
@@ -184,7 +185,8 @@ class BaseEngine(abc.ABC):
         * All RegRefs of previously run Programs are cleared of measured values.
         * List of previously run Progams is cleared.
 
-        Note that the reset does nothing to any Program objects in existence, beyond erasing the measured values.
+        Note that the reset does nothing to any Program objects in existence, beyond erasing the
+        measured values.
 
         Args:
            backend_options (Dict[str, Any]): keyword arguments for the backend,
@@ -207,7 +209,7 @@ class BaseEngine(abc.ABC):
             print_fn (function): optional custom function to use for string printing.
         """
         for k, r in enumerate(self.run_progs):
-            print_fn('Run {}:'.format(k))
+            print_fn("Run {}:".format(k))
             r.print(print_fn)
 
     @abc.abstractmethod
@@ -279,16 +281,20 @@ class BaseEngine(abc.ABC):
             else:
                 # there was a previous program segment
                 if not p.can_follow(prev):
-                    raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
+                    raise RuntimeError(
+                        "Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name)
+                    )
 
                 # Copy the latest measured values in the RegRefs of p.
-                # We cannot copy from prev directly because it could be used in more than one engine.
+                # We cannot copy from prev directly because it could be used in more than one
+                # engine.
                 for k, v in enumerate(self.samples):
                     p.reg_refs[k].val = v
 
             # if the program hasn't been compiled for this backend, do it now
             if p.target != self.backend_name:
-                p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
+                # TODO: shots might be relevant for compilation?
+                p = p.compile(self.backend_name, **compile_options)
             p.lock()
 
             if self.backend_name in getattr(self, "HARDWARE_BACKENDS", []):
@@ -296,7 +302,9 @@ class BaseEngine(abc.ABC):
             else:
                 self._run_program(p, **kwargs)
                 shots = kwargs.get("shots", 1)
-                self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
+                self.samples = [
+                    _broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)
+                ]
 
             self.run_progs.append(p)
 
@@ -349,14 +357,21 @@ class LocalEngine(BaseEngine):
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend
-                cmd.op.apply(cmd.reg, self.backend, **kwargs)  # NOTE we could also handle storing measured vals here
+                # NOTE we could also handle storing measured vals here
+                cmd.op.apply(cmd.reg, self.backend, **kwargs)
                 applied.append(cmd)
             except NotApplicableError:
                 # command is not applicable to the current backend type
-                raise NotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
+                raise NotApplicableError(
+                    "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
+                ) from None
             except NotImplementedError:
                 # command not directly supported by backend API
-                raise NotImplementedError('The operation {} has not been implemented in {} for the arguments {}.'.format(cmd.op, self.backend, kwargs)) from None
+                raise NotImplementedError(
+                    "The operation {} has not been implemented in {} for the arguments {}.".format(
+                        cmd.op, self.backend, kwargs
+                    )
+                ) from None
         return applied
 
     def run(self, program, *, shots=1, compile_options={}, modes=None, state_options={}, **kwargs):
@@ -368,7 +383,8 @@ class LocalEngine(BaseEngine):
             program (Program, Sequence[Program]): quantum programs to run
             shots (int): number of times the program measurement evaluation is repeated
             compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
-            modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
+            modes (None, Sequence[int]):
+                Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
                 An empty sequence [] means no state object is returned. None returns all the modes.
             state_options (Dict[str, Any]): keyword arguments for :meth:`.BaseBackend.state`
 
@@ -378,14 +394,16 @@ class LocalEngine(BaseEngine):
             Result: results of the computation
         """
 
-        # session or feed_dict are needed by TF backend during simulation if program contains measurements
+        # session or feed_dict are needed by TF backend during simulation if program contains
+        # measurements
         kwargs.update(state_options)
         result = super()._run(program, shots=shots, compile_options=compile_options, **kwargs)
         if isinstance(modes, Sequence) and not modes:
             # empty sequence
             pass
         else:
-            result._state = self.backend.state(modes, **state_options)  # tfbackend.state can use kwargs
+            # tfbackend.state can use kwargs
+            result._state = self.backend.state(modes, **state_options)
         return result
 
 
@@ -407,7 +425,7 @@ class StarshipEngine(BaseEngine):
         backend = "chip0"
         super().__init__(backend)
 
-        api_client_params = {k: v for k, v in kwargs.items() if k in DEFAULT_CONFIG['api'].keys()}
+        api_client_params = {k: v for k, v in kwargs.items() if k in DEFAULT_CONFIG["api"].keys()}
         self.client = APIClient(**api_client_params)
         self.polling_delay_seconds = polling_delay_seconds
         self.jobs = []
@@ -473,8 +491,9 @@ class StarshipEngine(BaseEngine):
         Given a compiled program, gets the blackbird circuit code and creates (or resumes) a job
         via the API. If the job is completed, returns the job result.
 
-        A queued job can be interrupted by a ``KeyboardInterrupt`` event, at which point if the job ID
-        was retrieved from the server, the job will be accessible via :meth:`~.Starship.jobs`.
+        A queued job can be interrupted by a ``KeyboardInterrupt`` event, at which point if the
+        job ID was retrieved from the server, the job will be accessible via
+        :meth:`~.Starship.jobs`.
 
         Args:
             program (strawberryfields.program.Program): program to be executed remotely
@@ -511,7 +530,7 @@ class StarshipEngine(BaseEngine):
             job.result.manager.get()
             return job.result.result.value
 
-    def run(self, program, shots=1, name=None, **kwargs):
+    def run(self, program, shots=1, name="", **kwargs):
         """Compile the given program and execute it by queuing a job in the Starship.
 
         For the :class:`Program` instance given as input, the following happens:
@@ -535,8 +554,6 @@ class StarshipEngine(BaseEngine):
             Result: results of the computation
         """
 
-        # TODO: this is probably not needed
-        name = name or str(uuid.uuid4())
         return super()._run(program, shots=shots, name=name, **kwargs)
 
 
