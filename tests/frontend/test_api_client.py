@@ -30,6 +30,8 @@ from strawberryfields.api_client import (
 
 from unittest.mock import MagicMock
 
+pytestmark = pytest.mark.frontend
+
 status_codes = requests.status_codes.codes
 
 
