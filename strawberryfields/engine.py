@@ -358,7 +358,7 @@ class LocalEngine(BaseEngine):
         Keyword Args:
             eval (bool): TF backend only. If False, the backend returns unevaluated tf.Tensors instead of
                 arrays as measurement results. (default: True)
-            session (tf.Session): TF backend only.
+            session (tf.Session): TensorFlow session. TF backend only.
             feed_dict (dict[str, Any]): TF backend only.
 
         ``state_options`` can contain the following:
