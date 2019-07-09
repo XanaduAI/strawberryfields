@@ -86,7 +86,7 @@ class TestOneModeSymbolic:
             Dgate(0.5) | q
             MeasureX | q
 
-        eng.run(prog, eval=False)
+        eng.run(prog, run_options=evalf)
         val = q[0].val
         assert isinstance(val, tf.Tensor)
 

@@ -97,9 +97,9 @@ class TestProperExecution:
     the backend with no error"""
 
     def test_no_return_state(self, setup_eng):
-        """Engine returns no state object when no modes are requested."""
+        """Engine returns no state object when none is requested."""
         eng, prog = setup_eng(2)
-        res = eng.run(prog, modes=[])
+        res = eng.run(prog, state_options=None)
         assert res.state is None
 
     def test_return_state(self, setup_eng):
@@ -114,7 +114,7 @@ class TestProperExecution:
         with prog.context as q:
             ops.MeasureX | q[0]
 
-        res = eng.run(prog, modes=[])
+        res = eng.run(prog, state_options=None)
         # one entry for each mode
         assert len(res.samples) == 2
         # the same samples can also be found in the regrefs

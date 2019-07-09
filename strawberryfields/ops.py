@@ -471,37 +471,25 @@ class Operation:
             reg (Sequence[RegRef]): subsystem(s) the operation is acting on
             backend (BaseBackend): backend to execute the operation
 
-        Keyword Args:
-            eval_params (bool): Set this to False to explicitly turn off the
-                evaluation of parameters in the Operation.apply method. This is
-                useful if the parameters are pre-evaluated prior to calling this method.
-            shots (int): Number of independent evaluations to perform.
-                Only applies to Measurements.
-
         Returns:
             Any: the result of self._apply
         """
-        eval_params = kwargs.get('eval_params', True)
+        # NOTE: We cannot just replace all RegRefTransform parameters with their
+        # numerical values here. If we re-initialize a measured mode and
+        # re-measure it, the RegRefTransform value should change accordingly
+        # when it is used again after the new measurement.
+
         original_p = self.p  # store the original parameters
-
-        if eval_params and original_p:
-            # NOTE: We cannot just replace all RegRefTransform parameters with their
-            # numerical values here. If we re-initialize a measured mode and
-            # re-measure it, the RegRefTransform value should change accordingly
-            # when it is used again after the new measurement.
-
-            # Evaluate the Parameters, restore the originals later:
-            self.p = [x.evaluate() for x in self.p]
+        # Evaluate the Parameters, restore the originals later:
+        self.p = [x.evaluate() for x in self.p]
 
         # convert RegRefs back to indices for the backend API
         temp = [rr.ind for rr in reg]
         # call the child class specialized _apply method
         result = self._apply(temp, backend, **kwargs)
 
-        if eval_params and original_p:
-            # restore original unevaluated Parameter instances
-            self.p = original_p
-
+        # restore original unevaluated Parameter instances
+        self.p = original_p
         return result
 
 
@@ -565,6 +553,10 @@ class Measurement(Operation):
         """Ask a backend to execute the operation on the current register state right away.
 
         Like :func:`Operation.apply`, but also stores the measurement result in the RegRefs.
+
+        Keyword Args:
+            shots (int): Number of independent evaluations to perform.
+                Only applies to Measurements.
         """
         values = super().apply(reg, backend, **kwargs)
         # convert the returned values into an iterable with the measured modes indexed along
@@ -738,13 +730,16 @@ class Gate(Transformation):
             return
         if self.dagger:
             z = -z
-        temp = self.p  # store the original Parameters
+        original_p = self.p  # store the original Parameters
         # evaluate the rest of the Parameters, restore the originals later
         self.p = [z] + [x.evaluate() for x in self.p[1:]]
-        # calling the parent apply, skipping re-evaluation of self.p
-        # (which wouldn't hurt but is unnecessary)
-        super().apply(reg, backend, eval_params=False, **kwargs)
-        self.p = temp  # restore original unevaluated Parameter instances
+
+        # convert RegRefs back to indices for the backend API
+        temp = [rr.ind for rr in reg]
+        # call the child class specialized _apply method
+        result = self._apply(temp, backend, **kwargs)
+
+        self.p = original_p  # restore original unevaluated Parameter instances
 
     def merge(self, other):
         if not self.__class__ == other.__class__:

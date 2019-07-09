@@ -241,7 +241,7 @@ class TestGaussianCloning:
             Coherent(a) | q[0]
             self.gaussian_cloning_circuit(q)
 
-        state = eng.run(prog, modes=[0, 3]).state
+        state = eng.run(prog, state_options={'modes': [0, 3]}).state
         coh = np.array([state.is_coherent(i) for i in range(2)])
         disp = state.displacement()
 
@@ -264,7 +264,7 @@ class TestGaussianCloning:
         a_list = np.empty([shots], dtype=np.complex128)
 
         for i in range(shots):
-            state = eng.run(prog, modes=[0]).state
+            state = eng.run(prog, state_options={'modes': [0]}).state
             eng.reset()
             f_list[i] = state.fidelity_coherent([0.7 + 1.2j])
             a_list[i] = state.displacement()

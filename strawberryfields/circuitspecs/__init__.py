@@ -33,14 +33,21 @@ target, Program.compile can
 2. **Compile** the Program into an :term:`equivalent circuit` that has the topology required by the
    targeted circuit class, decomposing circuit operations as required.
 
-Note that the compilation process is not perfect and can provide false negatives, i.e., it can admit
-failure by raising a :class:`.CircuitError` even if the Program theoretically belongs in the target
-circuit class.
+Note that the compilation process is not perfect and can provide false negatives: it can admit
+failure by raising a :class:`.CircuitError` even if the Program theoretically is equivalent to a
+circuit that belongs in the target circuit class.
+
+
+Data members
+------------
+
+.. autosummary::
+   circuit_db
 
 The circuit class database :attr:`circuit_db` is a dictionary mapping the circuit family
-shortname to the corresponding CircuitSpecs instance.
+short name to the corresponding CircuitSpecs instance.
 In particular, for each backend supported by Strawberry Fields the database contains a
-corresponding CircuitSpecs instance with the same shortname, used to validate Programs to be
+corresponding CircuitSpecs instance with the same short name, used to validate Programs to be
 executed on that backend.
 
 
@@ -86,6 +93,6 @@ from .tensorflow import TFSpecs
 specs = (BaseSpecs, Chip0Specs, FockSpecs, GaussianSpecs, GBSSpecs, TFSpecs)
 
 circuit_db = {c.short_name: c for c in specs}
-"""dict[str, ~strawberryfields.circuitspecs.CircuitSpecs]: dictionary mapping circuit family short_name to the corresponding class."""
+"""dict[str, ~strawberryfields.circuitspecs.CircuitSpecs]: Map from circuit family short name to the corresponding class."""
 
 __all__ = ["circuit_db", "CircuitSpecs"]

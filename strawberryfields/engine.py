@@ -220,13 +220,13 @@ class BaseEngine(abc.ABC):
 
         If multiple Programs are given they will be executed sequentially as
         parts of a single computation.
-        For each :class:`Program` instance given as input, the following happens:
+        For each :class:`.Program` instance given as input, the following happens:
 
         * The Program instance is compiled for the target backend.
         * The compiled program is executed on the backend.
         * The measurement results of each subsystem (if any) are stored in the :class:`.RegRef`
-          instances of the corresponding Program, as well as in :attr:`~.samples`.
-        * The compiled program is appended to self.run_progs.
+          instances of the corresponding Program, as well as in :attr:`~BaseEngine.samples`.
+        * The compiled program is appended to :attr:`~BaseEngine.run_progs`.
 
         Finally, the result of the computation is returned.
 
@@ -235,7 +235,7 @@ class BaseEngine(abc.ABC):
             shots (int): number of times the program measurement evaluation is repeated
             compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
 
-        The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
+        The ``kwargs`` keyword arguments are passed to the backend API calls via :meth:`Operation.apply`.
 
         Returns:
             Result: results of the computation
@@ -337,7 +337,7 @@ class LocalEngine(BaseEngine):
                 raise NotImplementedError('The operation {} has not been implemented in {} for the arguments {}.'.format(cmd.op, self.backend, kwargs)) from None
         return applied
 
-    def run(self, program, *, shots=1, compile_options={}, modes=None, state_options={}, **kwargs):
+    def run(self, program, *, shots=1, compile_options={}, run_options={}, state_options={}):
         """Execute the given programs by sending them to the backend.
 
         Extends :meth:`BaseEngine._run`.
@@ -346,24 +346,35 @@ class LocalEngine(BaseEngine):
             program (Program, Sequence[Program]): quantum programs to run
             shots (int): number of times the program measurement evaluation is repeated
             compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
-            modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
-                An empty sequence [] means no state object is returned. None returns all the modes.
-            state_options (Dict[str, Any]): keyword arguments for :meth:`.BaseBackend.state`
-
-        The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
+            run_options (Dict[str, Any]): keyword arguments passed to the backend API calls via :meth:`Operation.apply`
+            state_options (None, Dict[str, Any]): Keyword arguments for :meth:`.BaseBackend.state`.
+                ``None`` means no state object is returned in :attr:`Result.state`.
 
         Returns:
             Result: results of the computation
-        """
 
-        # session or feed_dict are needed by TF backend during simulation if program contains measurements
-        kwargs.update(state_options)
-        result = super()._run(program, shots=shots, compile_options=compile_options, **kwargs)
-        if isinstance(modes, Sequence) and not modes:
-            # empty sequence
-            pass
-        else:
-            result._state = self.backend.state(modes, **state_options)  # tfbackend.state can use kwargs
+        ``run_options`` can contain the following:
+
+        Keyword Args:
+            eval (bool): TF backend only. If False, the backend returns unevaluated tf.Tensors instead of
+                arrays as measurement results. (default: True)
+            session (tf.Session): TF backend only.
+            feed_dict (dict[str, Any]): TF backend only.
+
+        ``state_options`` can contain the following:
+
+        Keyword Args:
+            modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
+                ``None`` returns all the modes (default).
+        """
+        result = super()._run(program, shots=shots, compile_options=compile_options, **run_options)
+        if state_options is not None:
+            # state object requested
+            # session and feed_dict are needed by TF backend both during simulation (if program
+            # contains measurements) and state object construction.
+            state_options.update(run_options)
+            state_options.setdefault('modes', None)
+            result._state = self.backend.state(**state_options)
         return result
 
 
