@@ -177,9 +177,6 @@ class APIClient:
         if self.AUTHENTICATION_TOKEN:
             self.set_authorization_header(self.AUTHENTICATION_TOKEN)
 
-        # Configuration keys are added here for convenience
-        self.CONFIG_KEYS = config.keys()
-
     def get_configuration_from_config(self):
         """
         Retrieve configuration from environment variables or config file based on Strawberry Fields
@@ -260,6 +257,7 @@ class ResourceManager:
     """
 
     http_status_code = None
+    errors = None
 
     def __init__(self, resource, client=None):
         """
@@ -270,6 +268,7 @@ class ResourceManager:
         """
         self.resource = resource
         self.client = client or APIClient()
+        self.errors = []
 
     def join_path(self, path):
         """
@@ -354,32 +353,12 @@ class ResourceManager:
             response (requests.Response): a response object to be parsed
         """
 
-        # TODO: Improve error messaging and parse the actual error output (json).
-
-        if response.status_code in (400, 404, 409):
-            warnings.warn(
-                "The server did not accept the request, and returned an error "
-                "({}: {}).".format(response.status_code, response.text),
-                UserWarning,
-            )
-        elif response.status_code == 401:
-            warnings.warn(
-                "The server did not accept the request due to an authentication error "
-                "({}: {}).".format(response.status_code, response.text),
-                UserWarning,
-            )
-        elif response.status_code in (500, 503, 504):
-            warnings.warn(
-                "The client encountered an unexpected temporary server error "
-                "({}: {}).".format(response.status_code, response.text),
-                UserWarning,
-            )
-        else:
-            warnings.warn(
-                "The client encountered an unexpected server error "
-                "({}: {}).".format(response.status_code, response.text),
-                UserWarning,
-            )
+        error = {"status_code": response.status_code, "content": response.json()}
+        self.errors.append(error)
+        try:
+            response.raise_for_status()
+        except Exception as e:
+            raise Exception(response.text) from e
 
     def refresh_data(self, data):
         """
