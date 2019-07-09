@@ -26,9 +26,9 @@ protocol, based on the requests module. It also provides helper classes to facil
 with this API via the Resource subclasses, as well as the ResourceManager wrapper around APIClient
 that is available for each resource.
 
-A single APIClient instance can be used throughout one's session in the application. The application
-will attempt to configure the APIClient instance using a configuration file or defaults, but the
-user can choose to override various parameters of the APIClient manually.
+A single :class:`~.APIClient` instance can be used throughout one's session in the application. The application
+will attempt to configure the :class:`~.APIClient` instance using a configuration file or defaults, but the
+user can choose to override various parameters of the :class:`~.APIClient` manually.
 
 A typical use looks like this:
     .. code-block:: python
@@ -197,8 +197,8 @@ class APIClient:
         and password authentication and calls set_authorization_header.
 
         Args:
-            username (str): A user name.
-            password (str): A password.
+            username (str): a user name
+            password (str): password
         """
         raise NotImplementedError()
 
@@ -208,19 +208,19 @@ class APIClient:
         with all API requests.
 
         Args:
-            authentication_token (str): An authentication token used to access the API.
+            authentication_token (str): an authentication token used to access the API
         """
         self.HEADERS["Authorization"] = authentication_token
 
     def join_path(self, path):
         """
-        Joins a base url with an additional path (e.g., a resource name and ID)
+        Joins a base url with an additional path (e.g., a resource name and ID).
 
         Args:
-            path (str): A path to be joined with BASE_URL.
+            path (str): A path to be joined with ``BASE_URL``
 
         Returns:
-            str: A joined path.
+            str: resulting joined path
         """
         return join_path(self.BASE_URL, path)
 
@@ -229,7 +229,7 @@ class APIClient:
         Sends a GET request to the provided path. Returns a response object.
 
         Args:
-            path (str): A path to send the GET request to.
+            path (str): path to send the GET request to
 
         Returns:
             requests.Response: A response object, or None if no response could be fetched from the
@@ -248,8 +248,8 @@ class APIClient:
         path. Returns a response object.
 
         Args:
-            path (str): A path to send the GET request to.
-            payload: A JSON serializable object to be sent to the server.
+            path (str): path to send the GET request to
+            payload: JSON serializable object to be sent to the server
 
         Returns:
             requests.Response: A response object, or None if no response could be fetched from the
@@ -295,7 +295,7 @@ class ResourceManager:
         object is populated with the data in the response.
 
         Args:
-            resource_id (int): The ID of an object to be retrieved.
+            resource_id (int): the ID of an object to be retrieved
         """
         if "GET" not in self.resource.SUPPORTED_METHODS:
             raise MethodNotSupportedException("GET method on this resource is not supported")
@@ -312,7 +312,7 @@ class ResourceManager:
         request to the appropriate endpoint.
 
         Args:
-            **params: Arbitrary parameters to be passed on to the POST request.
+            **params: arbitrary parameters to be passed on to the POST request
         """
         if "POST" not in self.resource.SUPPORTED_METHODS:
             raise MethodNotSupportedException("POST method on this resource is not supported")
@@ -330,7 +330,7 @@ class ResourceManager:
         based on the status code.
 
         Args:
-            response (requests.Response): A response object to be parsed.
+            response (requests.Response): a response object to be parsed
         """
         if hasattr(response, "status_code"):
             self.http_status_code = response.status_code
@@ -353,7 +353,7 @@ class ResourceManager:
         Handles a successful response by refreshing the instance fields.
 
         Args:
-            response (requests.Response): A response object to be parsed.
+            response (requests.Response): a response object to be parsed
         """
         self.refresh_data(response.json())
 
@@ -362,7 +362,7 @@ class ResourceManager:
         Handles an error response that is returned by the server.
 
         Args:
-            response (requests.Response): A response object to be parsed.
+            response (requests.Response): a response object to be parsed
         """
 
         # TODO: Improve error messaging and parse the actual error output (json).
