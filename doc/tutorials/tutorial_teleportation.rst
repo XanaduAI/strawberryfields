@@ -189,10 +189,11 @@ The :meth:`eng.run <.LocalEngine.run>` method accepts the arguments:
 
 ..
 
-* ``run_options``: A dictionary of keyword arguments to be passed to the backend when it prepares the returned measurement results and quantum state from a simulator backend. Common arguments are:
+* ``run_options``: A dictionary of keyword arguments to be passed to the backend when it prepares the returned measurement results and quantum state from a simulator backend. The available options depend on the backend in use; common arguments include:
 
     - ``shots``: A positive integer that specifies the number of times the program measurement evaluation is to be repeated. 
     - ``modes``: An optional list of integers that specifies which modes we wish the backend to return for the quantum state. If the state is a mixed state represented by a density matrix, then the backend will automatically perform a partial trace to return only the modes specified. Note that this only affects the returned state object---all modes remain in the backend circuit.
+
     - ``eval``, ``session``, and ``feed_dict``: These are special keyword arguments used by the TensorFlow backend. See the :ref:`machine_learning_tutorial` for details about what these are used for. 
 
 ..

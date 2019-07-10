@@ -23,9 +23,9 @@ This subpackage implements the :class:`CircuitSpecs` class, an abstract base cla
 used to define classes or families of quantum circuits, e.g., circuits that can be executed on particular
 hardware or simulator backends.
 
-The information in the CircuitSpecs instances is used by :meth:`.Program.compile` to validate and
-compile quantum programs. By querying the CircuitSpecs class representing the requested compilation
-target, Program.compile can
+The information in the ``CircuitSpecs`` instances is used by :meth:`.Program.compile` to validate and
+compile quantum programs. By querying the ``CircuitSpecs`` class representing the requested compilation
+target, ``Program.compile`` can
 
 1. **Validate** that the Program has the correct number of modes, and consists
    of valid quantum operations in the correct topology for the targeted circuit class.
