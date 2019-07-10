@@ -175,25 +175,26 @@ in our truncated Fock basis. We now have all the parameters ready to initialize 
     For example, to prepare a squeezed vacuum state in the :math:`x` quadrature with ``cutoff_dim=10``, a squeezing factor of :math:`r=1` provides an acceptable approximation, since :math:`|\braketD{n}{z}|^2<0.02` for :math:`n\geq 10`.
 
 
-We can now execute our quantum program ``prog`` on the engine via the :func:`Engine.run` method:
+We can now execute our quantum program ``program`` on the engine via the :func:`Engine.run` method:
 
 .. code-block:: python
 
-    result = eng.run(prog, shots=1, modes=None, state_options={}, compile_options={})
+    result = eng.run(program, run_options={shots=1, modes=None}, compile_options={})
 
 The :meth:`eng.run <.LocalEngine.run>` method accepts the arguments:
 
-..
+.. 
 
-* ``shots``: A positive integer that specifies the number of times the program measurement evaluation is to be repeated.
-
-..
-
-* ``modes``: A list of integers, that specifies which modes we wish to return in the state object. If the state is a mixed state represented by a density matrix, then the backend will automatically perform a partial trace to return only the modes specified. Note that this only affects the returned state object - all modes remain in the backend circuit.
+* ``program``: The :class:`~.Program` to execute. 
 
 ..
 
-* ``state_options``: A dictionary of keyword arguments to be passed to the backend when it prepares the returned quantum state from a simulator backend. For example, TensorFlow objects like a ``session`` and a ``feed_dict`` can be passed to the TensorFlow backend. 
+* ``run_options``: A dictionary of keyword arguments to be passed to the backend when it prepares the returned measurement results and quantum state from a simulator backend. The available options depend on the backend in use; common arguments include:
+
+    - ``shots``: A positive integer that specifies the number of times the program measurement evaluation is to be repeated. 
+    - ``modes``: An optional list of integers that specifies which modes we wish the backend to return for the quantum state. If the state is a mixed state represented by a density matrix, then the backend will automatically perform a partial trace to return only the modes specified. Note that this only affects the returned state object---all modes remain in the backend circuit.
+
+    - ``eval``, ``session``, and ``feed_dict``: These are special keyword arguments used by the TensorFlow backend. See the :ref:`machine_learning_tutorial` for details about what these are used for. 
 
 ..
 

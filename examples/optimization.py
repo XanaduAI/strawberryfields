@@ -10,7 +10,7 @@ circuit = sf.Program(1)
 alpha = tf.Variable(0.1)
 with circuit.context as q:
     Dgate(alpha) | q[0]
-results = eng.run(circuit, state_options={"eval": False})
+results = eng.run(circuit, run_options={"eval": False})
 
 # loss is probability for the Fock state n=1
 prob = results.state.fock_prob([1])
