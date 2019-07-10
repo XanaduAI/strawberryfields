@@ -470,7 +470,7 @@ class Program:
         RegRef state remains consistent.
 
         Args:
-            target (str, ~strawberryfields.circuitspecs.CircuitSpecs): short name of the target circuit template, or the template itself
+            target (str, ~strawberryfields.circuitspecs.CircuitSpecs): short name of the target circuit specification, or the specification object itself
 
         Keyword Args:
             optimize (bool): If True, try to optimize the program by merging and canceling gates.

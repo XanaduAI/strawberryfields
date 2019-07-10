@@ -350,8 +350,8 @@ class LocalEngine(BaseEngine):
             shots (int): number of times the program measurement evaluation is repeated
             compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
             run_options (None, Dict[str, Any]): keyword arguments passed to the backend API calls via :meth:`Operation.apply`
-            state_options (None, Dict[str, Any]): Keyword arguments for :meth:`.BaseBackend.state`.
-                ``None`` means no state object is returned in :attr:`Result.state`.
+            state_options (None, Dict[str, Any]): keyword arguments for :meth:`.BaseBackend.state`;
+                passing ``{'results': None}`` means no state object is returned in :attr:`Result.state`.
 
         Returns:
             Result: results of the computation
@@ -359,10 +359,10 @@ class LocalEngine(BaseEngine):
         ``run_options`` can contain the following:
 
         Keyword Args:
-            eval (bool): TF backend only. If False, the backend returns unevaluated tf.Tensors instead of
-                arrays as measurement results. (default: True)
+            eval (bool): If False, the backend returns unevaluated tf.Tensors instead of
+                numbers/arrays as measurement results (default: True). TF backend only. 
             session (tf.Session): TensorFlow session. TF backend only.
-            feed_dict (dict[str, Any]): TF backend only.
+            feed_dict (dict[str, Any]): TensorFlow feed dictionary. TF backend only.
 
         ``state_options`` can contain the following:
 

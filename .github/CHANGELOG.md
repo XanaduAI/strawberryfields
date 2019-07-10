@@ -6,7 +6,11 @@
 - Introduced the `BaseEngine` abstract base class and the `LocalEngine` child class. `Engine` is kept as an alias for `LocalEngine`.
 - The Engine API has been changed slightly:
     - `LocalEngine.run()` returns a `Result` object that contains both a state object and measurement samples.
-    - The way kwargs were used has been simplified by introducing the new kwargs-like arguments `backend_options` and `state_options`. `LocalEngine.run()` passes the actual kwargs only to `Operation.apply()`.
+    - The way kwargs were used has been simplified by introducing the new kwargs-like arguments:
+        - `backend_options` are provided upon initialization of the `LocalEngine`, and passed on to the corresponding backend when it is created.
+        - `compile_options` can be provided when calling `LocalEngine.run()`. These are passed to the `compile()` method of the program before execution.
+        - `run_options` can be provided when calling `LocalEngine.run()`. These are passed to the backend API calls via :meth:`Operation.apply`
+        - `state_options` can be provided when calling `LocalEngine.run()`. These are used to determine the characteristic of the `Results` object returned after the program is finished executing.
 - The Gaussian backend now officially supports Fock-basis measurements (`MeasureFock`/`Measure`/
   `measure_fock`), but does not update the quantum state after a Fock measurement.
 - `shots` keyword argument added to `Engine.run()`, enabling multi-shot sampling. Supported only
