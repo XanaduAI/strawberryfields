@@ -99,7 +99,7 @@ class TestProperExecution:
     def test_no_return_state(self, setup_eng):
         """Engine returns no state object when none is requested."""
         eng, prog = setup_eng(2)
-        res = eng.run(prog, state_options={"return": False})
+        res = eng.run(prog, run_options={"return_state": False})
         assert res.state is None
 
     def test_return_state(self, setup_eng):
@@ -114,7 +114,7 @@ class TestProperExecution:
         with prog.context as q:
             ops.MeasureX | q[0]
 
-        res = eng.run(prog, state_options=None)
+        res = eng.run(prog, run_options=None)
         # one entry for each mode
         assert len(res.samples) == 2
         # the same samples can also be found in the regrefs
@@ -283,7 +283,7 @@ class TestProperExecution:
         eng, p1 = setup_eng(3)
         with p1.context as q:
             ops.MeasureFock() | q
-        samples = eng.run(p1, shots=shots).samples.astype(int)
+        samples = eng.run(p1, run_options={"shots": shots}).samples.astype(int)
         assert samples.shape == (shots, 3)
         assert all(samples[:, 0] == expected)
         assert all(samples[:, 1] == expected)
@@ -293,7 +293,7 @@ class TestProperExecution:
         eng, p2 = setup_eng(3)
         with p2.context as q:
             ops.MeasureFock() | (q[0], q[2])
-        samples = eng.run(p2, shots=shots).samples
+        samples = eng.run(p2, run_options={"shots": shots}).samples
         assert samples.shape == (shots, 3)
         assert all(samples[:, 0].astype(int) == expected)
         assert all(s is None for s in samples[:, 1])
@@ -303,7 +303,7 @@ class TestProperExecution:
         eng, p3 = setup_eng(3)
         with p3.context as q:
             ops.MeasureFock() | q[0]
-        samples = eng.run(p3, shots=shots).samples
+        samples = eng.run(p3, run_options={"shots": shots}).samples
         assert samples.shape == (shots, 3)
         assert all(samples[:, 0].astype(int) == expected)
         assert all(s is None for s in samples[:, 1])
@@ -321,4 +321,4 @@ class TestProperExecution:
         with pytest.raises(NotImplementedError,
                            match=r"""(Measure|MeasureFock) has not been implemented in {} """
                                   """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
-            eng.run(p1, shots=shots).samples
+            eng.run(p1, run_options={"shots": shots}).samples

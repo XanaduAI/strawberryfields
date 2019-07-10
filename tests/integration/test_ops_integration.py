@@ -221,7 +221,7 @@ class TestKetDensityMatrixIntegration:
         ket0 = ket0 / np.linalg.norm(ket0)
         with prog.context as q:
             ops.Ket(ket0) | q[0]
-        state = eng.run(prog, state_options={'modes': [0]}).state
+        state = eng.run(prog, run_options={'modes': [0]}).state
         assert np.allclose(state.dm(), np.outer(ket0, ket0.conj()), atol=tol, rtol=0)
 
         eng.reset()
@@ -230,7 +230,7 @@ class TestKetDensityMatrixIntegration:
         state1 = BaseFockState(ket0, 1, True, cutoff)
         with prog.context as q:
             ops.Ket(state1) | q[0]
-        state2 = eng.run(prog, state_options={'modes': [0]}).state
+        state2 = eng.run(prog, run_options={'modes': [0]}).state
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
 
     def test_ket_two_mode(self, setup_eng, hbar, cutoff, tol):
@@ -279,7 +279,7 @@ class TestKetDensityMatrixIntegration:
         rho = np.outer(ket, ket.conj())
         with prog.context as q:
             ops.DensityMatrix(rho) | q[0]
-        state = eng.run(prog, state_options={'modes': [0]}).state
+        state = eng.run(prog, run_options={'modes': [0]}).state
         assert np.allclose(state.dm(), rho, atol=tol, rtol=0)
 
         eng.reset()
@@ -288,7 +288,7 @@ class TestKetDensityMatrixIntegration:
         state1 = BaseFockState(rho, 1, False, cutoff)
         with prog.context as q:
             ops.DensityMatrix(state1) | q[0]
-        state2 = eng.run(prog, state_options={'modes': [0]}).state
+        state2 = eng.run(prog, run_options={'modes': [0]}).state
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
 
     def test_dm_two_mode(self, setup_eng, hbar, cutoff, tol):
