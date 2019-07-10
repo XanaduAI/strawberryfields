@@ -11,17 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Fock backend validation data"""
-from .device_specs import DeviceSpecs
+"""Circuit specifications for the TensorFlow simulator backend."""
+from .circuit_specs import CircuitSpecs
 
 
-class FockSpecs(DeviceSpecs):
-    """Validation data for the Fock backend"""
+class TFSpecs(CircuitSpecs):
+    """Circuit specifications for the TensorFlow backend."""
 
-    short_name = 'fock'
+    short_name = 'tf'
     modes = None
     local = True
-    remote = True
+    remote = False
     interactive = True
 
     primitives = {

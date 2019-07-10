@@ -15,7 +15,7 @@
 Unit tests for top-level Strawberry Fields functions.
 """
 import pytest
-
+import re
 import strawberryfields as sf
 
 
@@ -29,6 +29,16 @@ def test_about(capfd):
     # substantial output (actual length varies)
     assert len(err) == 0
     assert len(out) > 300
+
+    assert "Strawberry Fields version" in out
+    sf_version_match = re.search(r"Strawberry Fields version:\s+([\S]+)\n", out).group(1)
+    assert sf_version_match == sf.version()
+
+    assert "Numpy version" in out
+    assert "Scipy version" in out
+    assert "Hafnian version" in out
+    assert "Blackbird version" in out
+
 
 
 def test_cite(capfd):

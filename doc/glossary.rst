@@ -8,7 +8,8 @@ Expressions that are grouped together are used synonymously in the Strawberry Fi
 
    backend
       Executes quantum :term:`programs <program>`. Can be either a classical simulator or a
-      quantum hardware device, local or remote.
+      quantum hardware device, local or remote. Different backends can have different capabilities
+      in terms of efficiency and which :term:`class of circuits <circuit class>` they can execute.
       See: :class:`.BaseBackend`
 
    circuit
@@ -19,21 +20,24 @@ Expressions that are grouped together are used synonymously in the Strawberry Fi
       Represents a quantum computation.
       See: :class:`.Program`
 
-   compilation
-      The process of converting a quantum :term:`program` into an :term:`equivalent program` that
-      can be run on a specific :term:`device`. The compilation can fail if the device is incapable
-      of running the program.
+   circuit class
+   circuit family
+      A well-defined subset of :term:`quantum circuits <circuit>`.
+      Members of a given circuit class can potentially be evaluated
+      on more than one :term:`backend`, and each backend has an associated circuit class it
+      can execute.
+      See: :class:`~.strawberryfields.circuitspecs.CircuitSpecs`
 
-   device
-      Something that can run a well-defined subclass of quantum :term:`programs <program>`.
-      The same device can potentially be evaluated on more than one :term:`backend`, and each
-      :term:`backend` can implement one or more devices.
-      See: :class:`.DeviceSpecs`
+   compilation
+      The process of converting a `source` quantum :term:`program` into an :term:`equivalent program`
+      that belongs in the `target` :term:`circuit class`.
+      The compilation can fail if the program cannot be made equivalent to the target circuit class.
 
    equivalent circuit
    equivalent program
       Two quantum :term:`circuits <circuit>` are equivalent iff they produce the same output
-      probability distributions.
+      probability distributions. Two equivalent circuits are not necessarily in the same
+      :term:`circuit class`.
 
    engine
       A class for executing quantum :term:`programs <program>` on a specific :term:`backend`.
@@ -70,6 +74,6 @@ Expressions that are grouped together are used synonymously in the Strawberry Fi
 
    state preparation
    preparation
-      An operation where a quantum system or subsystem is prepared in a known fixed state.
+      An :term:`operation` where a quantum system or subsystem is prepared in a known fixed state.
       Typically accomplished by applying a specific sequence of gates to a known
       reference state.

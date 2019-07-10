@@ -141,7 +141,7 @@ import warnings
 import networkx as nx
 
 import strawberryfields.circuitdrawer as sfcd
-import strawberryfields.devicespecs as specs
+import strawberryfields.circuitspecs as specs
 import strawberryfields.program_utils as pu
 from .program_utils import Command, RegRef, CircuitError, RegRefError
 
@@ -469,7 +469,7 @@ class Program:
         RegRef state remains consistent.
 
         Args:
-            target (str, DeviceSpecs): short name of the target circuit template, or the template itself
+            target (str, ~strawberryfields.circuitspecs.CircuitSpecs): short name of the target circuit specification, or the specification object itself
 
         Keyword Args:
             optimize (bool): If True, try to optimize the program by merging and canceling gates.
@@ -480,13 +480,13 @@ class Program:
         Returns:
             Program: compiled program
         """
-        if isinstance(target, specs.DeviceSpecs):
+        if isinstance(target, specs.CircuitSpecs):
             db = target
             target = db.short_name
-        elif target in specs.backend_specs:
-            db = specs.backend_specs[target]()
+        elif target in specs.circuit_db:
+            db = specs.circuit_db[target]()
         else:
-            raise ValueError("Could not find target '{}' in Strawberry Fields template database".format(target))
+            raise ValueError("Could not find target '{}' in the Strawberry Fields circuit database.".format(target))
 
         if db.modes is not None:
             # subsystems may be created and destroyed, this is total number that has ever existed
@@ -543,7 +543,7 @@ class Program:
         if kwargs.get('optimize', False):
             seq = pu.optimize_circuit(seq)
 
-        # does the device have its own compilation method?
+        # does the circuit spec  have its own compilation method?
         if db.compile is not None:
             seq = db.compile(seq)
 

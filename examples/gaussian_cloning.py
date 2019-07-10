@@ -31,7 +31,7 @@ with gaussian_cloning.context as q:
     # end circuit
 
 # run the engine
-results = eng.run(gaussian_cloning, modes=[0, 3])
+results = eng.run(gaussian_cloning, run_options={"modes": [0, 3]})
 
 # return the cloning fidelity
 fidelity = sqrt(results.state.fidelity_coherent([0.7+1.2j, 0.7+1.2j]))
@@ -45,7 +45,7 @@ a = np.empty([reps], dtype=np.complex128)
 
 for i in range(reps):
     eng.reset()
-    results = eng.run(gaussian_cloning, modes=[0])
+    results = eng.run(gaussian_cloning, run_options={"modes": [0]})
     f[i] = results.state.fidelity_coherent([0.7+1.2j])
     a[i] = results.state.displacement()
 

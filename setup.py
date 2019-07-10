@@ -51,7 +51,7 @@ info = {
     "license": "Apache License 2.0",
     "packages": [
         "strawberryfields",
-        "strawberryfields.devicespecs",
+        "strawberryfields.circuitspecs",
         "strawberryfields.backends",
         "strawberryfields.backends.tfbackend",
         "strawberryfields.backends.fockbackend",
@@ -63,7 +63,7 @@ info = {
     "long_description": open("README.rst", encoding="utf-8").read(),
     "provides": ["strawberryfields"],
     "install_requires": requirements,
-    # 'extras_require': extra_requirements,
+    # "extras_require": extra_requirements,
     "command_options": {
         "build_sphinx": {"version": ("setup.py", version), "release": ("setup.py", version)}
     },
