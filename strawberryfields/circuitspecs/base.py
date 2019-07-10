@@ -11,17 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""TensorFlow backend validation data"""
-from .device_specs import DeviceSpecs
+"""Circuit specifications for the simulator backends."""
+from .circuit_specs import CircuitSpecs
 
 
-class TFSpecs(DeviceSpecs):
-    """Validation data for the TF backend"""
+class BaseSpecs(CircuitSpecs):
+    """Circuit specifications for the Base backend. The information
+    below matches the methods supported by the abstract base
+    class :class:`~.BaseBackend`."""
 
-    short_name = 'tf'
+    short_name = 'base'
     modes = None
-    local = True
     remote = False
+    local = True
     interactive = True
 
     primitives = {
@@ -35,12 +37,7 @@ class TFSpecs(DeviceSpecs):
         "Squeezed",
         "DisplacedSqueezed",
         "Thermal",
-        "Fock",
-        "Catstate",
-        "Ket",
-        "DensityMatrix",
         # measurements
-        "MeasureFock",
         "MeasureHomodyne",
         # channels
         "LossChannel",
@@ -51,10 +48,8 @@ class TFSpecs(DeviceSpecs):
         "Sgate",
         "Rgate",
         "Vgate",
-        "Kgate",
         "Fouriergate",
         "BSgate",
-        "CKgate",
     }
 
     decompositions = {

@@ -96,7 +96,7 @@ with qnn.context as q:
         layer(q)
 
 # starting the engine
-results = eng.run(qnn, state_options={"eval": False})
+results = eng.run(qnn, run_options={"eval": False})
 ket = results.state.ket()
 
 # defining cost function
