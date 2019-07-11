@@ -336,8 +336,8 @@ class Operation:
     :class:`~strawberryfields.parameters.Parameter` class for more details.
 
     Args:
-        par (Sequence[...]): parameters. len(par) >= 1. Alternatively,
-            set to [] or None to allow initialisation with no parameters.
+        par (Sequence[Any]): Operation parameters. An empty sequence if no parameters
+            are required.
     """
     # default: one-subsystem operation
     #: int: number of subsystems the operation acts on,
@@ -347,7 +347,7 @@ class Operation:
     def __init__(self, par):
         #: set[RegRef]: extra dependencies due to deferred measurements, used during optimization
         self._extra_deps = set()
-        #: list[Parameter]
+        #: list[Parameter]: operation parameters
         self.p = []
 
         # convert each parameter into a Parameter instance, keep track of dependenciens
@@ -364,7 +364,7 @@ class Operation:
             str: string representation
         """
         # defaults to the class name
-        if self.p is None:
+        if not self.p:
             return self.__class__.__name__
 
         # class name and parameter values
@@ -373,7 +373,7 @@ class Operation:
 
     @property
     def extra_deps(self):
-        """Extra dependencies due to parameters that depend on deferred measurements.
+        """Extra dependencies due to parameters that depend on measurements.
 
         Returns:
             set[RegRef]: dependencies
@@ -472,37 +472,25 @@ class Operation:
             reg (Sequence[RegRef]): subsystem(s) the operation is acting on
             backend (BaseBackend): backend to execute the operation
 
-        Keyword Args:
-            eval_params (bool): Set this to False to explicitly turn off the
-                evaluation of parameters in the Operation.apply method. This is
-                useful if the parameters are pre-evaluated prior to calling this method.
-            shots (int): Number of independent evaluations to perform.
-                Only applies to Measurements.
-
         Returns:
             Any: the result of self._apply
         """
-        eval_params = kwargs.get('eval_params', True)
+        # NOTE: We cannot just replace all RegRefTransform parameters with their
+        # numerical values here. If we re-initialize a measured mode and
+        # re-measure it, the RegRefTransform value should change accordingly
+        # when it is used again after the new measurement.
+
         original_p = self.p  # store the original parameters
-
-        if eval_params and original_p:
-            # NOTE: We cannot just replace all RegRefTransform parameters with their
-            # numerical values here. If we re-initialize a measured mode and
-            # re-measure it, the RegRefTransform value should change accordingly
-            # when it is used again after the new measurement.
-
-            # Evaluate the Parameters, restore the originals later:
-            self.p = [x.evaluate() for x in self.p]
+        # Evaluate the Parameters, restore the originals later:
+        self.p = [x.evaluate() for x in self.p]
 
         # convert RegRefs back to indices for the backend API
         temp = [rr.ind for rr in reg]
         # call the child class specialized _apply method
         result = self._apply(temp, backend, **kwargs)
 
-        if eval_params and original_p:
-            # restore original unevaluated Parameter instances
-            self.p = original_p
-
+        # restore original unevaluated Parameter instances
+        self.p = original_p
         return result
 
 
@@ -527,7 +515,7 @@ class Preparation(Operation):
 
 
 class Measurement(Operation):
-    """Abstract base class for projective subsystem measurements.
+    """Abstract base class for subsystem measurements.
 
     The measurement is deferred: its result is available only
     after the backend has executed it. The value of the measurement can
@@ -566,6 +554,10 @@ class Measurement(Operation):
         """Ask a backend to execute the operation on the current register state right away.
 
         Like :func:`Operation.apply`, but also stores the measurement result in the RegRefs.
+
+        Keyword Args:
+            shots (int): Number of independent evaluations to perform.
+                Only applies to Measurements.
         """
         values = super().apply(reg, backend, **kwargs)
 
@@ -593,6 +585,12 @@ class Decomposition(Operation):
     The first parameter p[0] of the Decomposition is always a square matrix.
     """
     ns = None  # overridden by child classes in __init__
+
+    def __init__(self, par, decomp=True):
+        super().__init__(par)
+        self.decomp = decomp
+        """bool: If False, try to apply the Decomposition as a single primitive operation
+        instead of decomposing it."""
 
     def merge(self, other):
         # can be merged if they are the same class
@@ -634,7 +632,7 @@ class Transformation(Operation):
 
 
 class Channel(Transformation):
-    """Abstract base class for channels.
+    """Abstract base class for quantum channels.
 
     This class provides the base behaviour for non-unitary
     maps and transformations.
@@ -734,13 +732,15 @@ class Gate(Transformation):
             return
         if self.dagger:
             z = -z
-        temp = self.p  # store the original Parameters
+        original_p = self.p  # store the original Parameters
         # evaluate the rest of the Parameters, restore the originals later
         self.p = [z] + [x.evaluate() for x in self.p[1:]]
-        # calling the parent apply, skipping re-evaluation of self.p
-        # (which wouldn't hurt but is unnecessary)
-        super().apply(reg, backend, eval_params=False, **kwargs)
-        self.p = temp  # restore original unevaluated Parameter instances
+
+        # convert RegRefs back to indices for the backend API
+        temp = [rr.ind for rr in reg]
+        # call the child class specialized _apply method
+        self._apply(temp, backend, **kwargs)
+        self.p = original_p  # restore original unevaluated Parameter instances
 
     def merge(self, other):
         if not self.__class__ == other.__class__:
@@ -1670,15 +1670,17 @@ class GraphEmbed(Decomposition):
 
     Args:
         A (array): an :math:`N\times N` complex or real symmetric matrix
-        max_mean_photon (float): threshold value. It guarantees that the mode with
-            the largest squeezing has ``max_mean_photon`` as the mean photon number
-            i.e., :math:`sinh(r_{max})^2 ==` max_mean_photon
-        make_traceless (boolean): removes the trace of the input matrix
+        mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state
+            representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
+        make_traceless (boolean): Removes the trace of the input matrix, by performing the transformation
+            :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
+            the graph but will lead to different photon number statistics for events with more than
+            one photon in any mode.
         tol (float): the tolerance used when checking if the input matrix is symmetric:
             :math:`|A-A^T| <` tol
     """
 
-    def __init__(self, A, max_mean_photon=1.0, make_traceless=True, tol=1e-6):
+    def __init__(self, A, mean_photon_per_mode=1.0, make_traceless=False, tol=1e-6):
         super().__init__([A])
         self.ns = A.shape[0]
 
@@ -1687,7 +1689,8 @@ class GraphEmbed(Decomposition):
         else:
             self.identity = False
             self.sq, self.U = graph_embed(
-                A, max_mean_photon=max_mean_photon, make_traceless=make_traceless, tol=tol)
+                A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=make_traceless, atol=tol
+            )
 
     def _decompose(self, reg):
         cmds = []
@@ -1699,7 +1702,6 @@ class GraphEmbed(Decomposition):
 
             if np.all(np.abs(self.U - np.identity(len(self.U))) >= _decomposition_tol):
                 cmds.append(Command(Interferometer(self.U), reg))
-
         return cmds
 
 
@@ -1827,17 +1829,15 @@ class Gaussian(Preparation, Decomposition):
         if len(r) != V.shape[0]:
             raise ValueError('Vector of means must have the same length as the covariance matrix.')
 
-        super().__init__([V, r])  # V is hbar-independent, r is not
+        super().__init__([V, r], decomp=decomp)  # V is hbar-independent, r is not
 
         self.x_disp = r[:self.ns]
         self.p_disp = r[self.ns:]
 
-        if decomp:
-            th, self.S = williamson(V, tol=tol)
-            self.pure = np.abs(np.linalg.det(V) - 1.0) < tol
-            self.nbar = 0.5 * (np.diag(th)[:self.ns] - 1.0)
-
-        self.decomp = decomp  #: bool: if False, use the backend API call instead of decomposition
+        # needed only if decomposed
+        th, self.S = williamson(V, tol=tol)
+        self.pure = np.abs(np.linalg.det(V) - 1.0) < tol
+        self.nbar = 0.5 * (np.diag(th)[:self.ns] - 1.0)
 
     def _apply(self, reg, backend, **kwargs):
         p = _unwrap(self.p)

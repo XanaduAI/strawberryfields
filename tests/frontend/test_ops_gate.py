@@ -18,16 +18,16 @@ pytestmark = pytest.mark.frontend
 
 import numpy as np
 
-import strawberryfields as sf
 import strawberryfields.program_utils as pu
 
 from strawberryfields import ops
-from strawberryfields.program import (Program, MergeFailure, RegRefError)
+from strawberryfields.program import Program
+from strawberryfields.program_utils import MergeFailure, RegRefError
 from strawberryfields import utils
 from strawberryfields.parameters import Parameter
 
 # make test deterministic
-np.random.random(42)
+np.random.seed(42)
 A = np.random.random()
 B = np.random.random()
 C = np.random.random()
@@ -40,7 +40,7 @@ class TestGateBasics:
     @pytest.fixture(autouse=True)
     def prog(self):
         """Dummy program context for each test"""
-        prog = sf.Program(2)
+        prog = Program(2)
         pu.Program_current_context = prog
         yield prog
         pu.Program_current_context = None
@@ -147,7 +147,7 @@ class TestGateBasics:
         assert not G.dagger
         assert G2.dagger
 
-        def dummy_apply(self, reg, backend, eval_params=False):
+        def dummy_apply(self, reg, backend, **kwargs):
             """Dummy apply function, used to store the evaluated params"""
             self.res = [x.evaluate() for x in self.p]
 
@@ -156,8 +156,8 @@ class TestGateBasics:
             # with our dummy method, that stores the applied parameter
             # in the attribute res. This allows us to extract
             # and verify the parameter was properly negated.
-            m.setattr(ops.Operation, "apply", dummy_apply)
-            G2.apply(None, None)
+            m.setattr(G2.__class__, "_apply", dummy_apply)
+            G2.apply([], None)
 
         orig_params = [x.evaluate() for x in G2.p]
         applied_params = G2.res
@@ -167,7 +167,7 @@ class TestGateBasics:
 
 def test_merge_regrefs():
     """Test merging two gates with regref parameters."""
-    prog = sf.Program(2)
+    prog = Program(2)
     with prog.context as q:
         ops.MeasureX | q[0]
         D = ops.Dgate(q[0])

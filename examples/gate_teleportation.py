@@ -1,9 +1,12 @@
+#!/usr/bin/env python3
 import strawberryfields as sf
 from strawberryfields.ops import *
 
-eng, q = sf.Engine(4)
+# initialize engine and program objects
+eng = sf.Engine(backend="gaussian")
+gate_teleportation = sf.Program(4)
 
-with eng:
+with gate_teleportation.context as q:
     # create initial states
     Squeezed(0.1) | q[0]
     Squeezed(-2)  | q[1]
@@ -33,6 +36,6 @@ with eng:
     Xgate(q[1])   | q[3]
     # end circuit
 
-state = eng.run('gaussian')
-print(state.reduced_gaussian([2]))
-print(state.reduced_gaussian([3]))
+results = eng.run(gate_teleportation)
+print(results.state.reduced_gaussian([2]))
+print(results.state.reduced_gaussian([3]))

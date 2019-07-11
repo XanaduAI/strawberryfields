@@ -24,11 +24,11 @@ import networkx as nx
 
 __all__ = ['Program_current_context', '_convert', 'RegRefError', 'CircuitError', 'MergeFailure',
            'Command', 'RegRef', 'RegRefTransform',
-           'list_to_grid', 'grid_to_DAG', 'DAG_to_list', 'list_to_DAG', 'group_operations']
+           'list_to_grid', 'grid_to_DAG', 'DAG_to_list', 'list_to_DAG', 'group_operations', 'optimize_circuit']
 
 
 Program_current_context = None
-"""Context for inputting a Program. Used to be a class attribute of :class:`Program`, moved
+"""Context for inputting a Program. Used to be a class attribute of :class:`.Program`, placed
 here to avoid cyclic imports."""
 # todo: Avoid issues with Program contexts and threading,
 # cf. _pydecimal.py in the python standard distribution.
@@ -64,13 +64,13 @@ def _convert(func):
 
 
 class RegRefError(IndexError):
-    """Exception raised by :class:`Program` when it encounters an invalid register reference.
+    """Exception raised by :class:`.Program` when it encounters an invalid register reference.
 
     E.g., trying to apply a gate to a nonexistent or deleted subsystem.
     """
 
 class CircuitError(RuntimeError):
-    """Exception raised by :class:`Program` when it encounters an illegal
+    """Exception raised by :class:`.Program` when it encounters an illegal
     operation in the quantum circuit.
 
     E.g., trying to use a measurement result before it is available.
@@ -88,7 +88,7 @@ class Command:
     """Represents a quantum operation applied on specific subsystems of the register.
 
     A Command instance is immutable once created, and can be shared between
-    several :class:`Program` instances.
+    several :class:`.Program` instances.
 
     Args:
         op (~strawberryfields.ops.Operation): quantum operation to apply
@@ -143,15 +143,15 @@ class RegRef:
     The objects of this class refer to a specific subsystem (mode) of
     a quantum register.
 
-    Within the scope of each :class:`Program` instance, only one RegRef instance
-    should exist per subsystem. :class:`Program` keeps the authoritative mapping
+    Within the scope of each :class:`.Program` instance, only one RegRef instance
+    should exist per subsystem. Program keeps the authoritative mapping
     of subsystem indices to RegRef instances.
     Subsystem measurement results are stored in the "official" RegRef object.
     If other RegRef objects referring to the same subsystem exist, they will
     not be updated. Once a RegRef is assigned a subsystem index it will never
     change, not even if the subsystem is deleted.
 
-    The RegRefs are constructed in :meth:`Program._add_subsystems`.
+    The RegRefs are constructed in :meth:`.Program._add_subsystems`.
 
     Args:
         ind (int): index of the register subsystem referred to
@@ -291,12 +291,13 @@ def list_to_grid(ls):
 def grid_to_DAG(grid):
     """Transforms a grid of Commands to a DAG representation.
 
-    In the DAG each node is a :class:`Command` instance, and edges point from Commands to their dependents/followers.
+    In the DAG (directed acyclic graph) each node is a :class:`Command` instance,
+    and edges point from Commands to their immediate dependents/followers.
 
     Args:
         grid (dict[int, list[Command]]): quantum circuit
     Returns:
-        DAG[Command]: same circuit in DAG form
+        networkx.DiGraph[Command]: same circuit in DAG form
     """
     DAG = nx.DiGraph()
     for _, q in grid.items():
@@ -312,12 +313,13 @@ def grid_to_DAG(grid):
 def list_to_DAG(ls):
     """Transforms a list of Commands to a DAG representation.
 
-    In the DAG each node is a :class:`Command` instance, and edges point from Commands to their dependents/followers.
+    In the DAG (directed acyclic graph) each node is a :class:`Command` instance,
+    and edges point from Commands to their immediate dependents/followers.
 
     Args:
         ls (Iterable[Command]): quantum circuit
     Returns:
-        DAG[Command]: same circuit in DAG form
+        networkx.DiGraph[Command]: same circuit in DAG form
     """
     return grid_to_DAG(list_to_grid(ls))
 
@@ -329,7 +331,7 @@ def DAG_to_list(dag):
     i.e., dependants following the operations they depend on.
 
     Args:
-        dag (DAG[Command]): quantum circuit
+        dag (networkx.DiGraph[Command]): quantum circuit
     Returns:
         list[Command]: same circuit in list form
     """
@@ -392,3 +394,80 @@ def group_operations(seq, predicate):
     B = C[:ind]  # marked and still possibly unmarked
     C = C[ind:]  # final unmarked instances
     return A, B, C
+
+
+def optimize_circuit(seq):
+    """Try to simplify and optimize a quantum circuit.
+
+    The purpose of the optimizer is to simplify the circuit
+    to make it cheaper and faster to execute. Different backends may require
+    different types of optimization, but in general the fewer operations a circuit has,
+    the faster it should run. The optimizer thus should convert the circuit into a
+    simpler :term:`equivalent circuit`.
+
+    The optimizations are based on the abstract algebraic properties of the Operations
+    constituting the circuit, e.g., combining two consecutive gates of the same gate family,
+    and at no point should require a matrix representation of any kind.
+    The optimization must also not change the state of the RegRefs in any way.
+
+    Currently the optimization is very simple. It
+
+    * merges neighboring :class:`state preparations <.Preparation>` and :class:`gates <.Gate>`
+      belonging to the same family and acting on the same sequence of subsystems
+    * cancels neighboring pairs of a gate and its inverse
+
+    Args:
+        seq (Sequence[Command]): quantum circuit to optimize
+
+    Returns:
+        List[Command]: optimized circuit
+    """
+    def _print_list(i, q, print_fn=print):
+        "For debugging."
+        # pylint: disable=unreachable
+        return
+        print_fn('i: {},  len: {}   '.format(i, len(q)), end='')
+        for x in q:
+            print_fn(x.op, ', ', end='')
+        print_fn()
+
+    grid = list_to_grid(seq)
+
+    # try merging neighboring operations on each wire
+    # TODO the merging could also be done using the circuit DAG, which
+    # might be smarter (ns>1 would be easy)
+    for k in grid:
+        q = grid[k]
+        i = 0  # index along the wire
+        _print_list(i, q)
+        while i+1 < len(q):
+            # at least two operations left to merge on this wire
+            try:
+                a = q[i]
+                b = q[i+1]
+                # the ops must have equal size and act on the same wires
+                if a.op.ns == b.op.ns and a.reg == b.reg:
+                    if a.op.ns != 1:
+                        # ns > 1 is tougher. on no wire must there be anything
+                        # between them, also deleting is more complicated
+                        # todo treat it as a failed merge for now
+                        i += 1
+                        continue
+                    op = a.op.merge(b.op)
+                    # merge was successful, delete the old ops
+                    del q[i:i+2]
+                    # insert the merged op (unless it's identity)
+                    if op is not None:
+                        q.insert(i, Command(op, a.reg))
+                    # move one spot backwards to try another merge
+                    if i > 0:
+                        i -= 1
+                    _print_list(i, q)
+                    continue
+            except MergeFailure:
+                pass
+            i += 1  # failed at merging the ops, move forward
+
+    # convert the circuit back into a list (via a DAG)
+    DAG = grid_to_DAG(grid)
+    return DAG_to_list(DAG)

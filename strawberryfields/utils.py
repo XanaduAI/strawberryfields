@@ -900,6 +900,7 @@ def _program_in_CJ_rep(prog, cutoff_dim: int):
         Program: modified program
     """
     prog = copy.deepcopy(prog)
+    prog.locked = False  # unlock the copy so we can modify it
     N = prog.init_num_subsystems
     prog._add_subsystems(N)  # pylint: disable=protected-access
     prog.init_num_subsystems = 2 * N

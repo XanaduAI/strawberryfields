@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Chip0 backend validation data"""
+"""Circuit class specification for the chip0 class of circuits."""
 import textwrap
 
-from .device_specs import DeviceSpecs
+from .circuit_specs import CircuitSpecs
 
 
-class Chip0Specs(DeviceSpecs):
-    """Validation data for the Chip0 simulator"""
+class Chip0Specs(CircuitSpecs):
+    """Circuit specifications for the chip0 class of circuits."""
 
     short_name = 'chip0'
     modes = 4

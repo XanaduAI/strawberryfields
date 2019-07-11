@@ -29,7 +29,7 @@ using the Gaussian formalism. The primary component of the GaussianBackend is a
 :class:`GaussianBackend` provides the basic API-compatible interface to the simulator, while the
 :class:`GaussianModes` object actually carries out the mathematical simulation.
 
-The :class:`GaussianModes` simulators maintains an internal covariance matrix -- vector of means
+The :class:`GaussianModes` simulators maintain an internal covariance matrix & vector of means
 representation of a multi-mode quantum optical system.
 
 Note that unlike commonly used covariance matrix representations we encode our state in two complex

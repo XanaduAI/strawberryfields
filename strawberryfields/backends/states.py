@@ -890,7 +890,6 @@ class BaseGaussianState(BaseState):
         # vector of means and covariance matrix, using frontend x,p scaling
         self._mu = self._data[0] * np.sqrt(self._hbar/2)
         self._cov = self._data[1] * (self._hbar/2)
-
         # complex displacements of the Gaussian state
         self._alpha = self._mu[:self._modes] + 1j*self._mu[self._modes:]
         self._alpha /= np.sqrt(2*self._hbar)

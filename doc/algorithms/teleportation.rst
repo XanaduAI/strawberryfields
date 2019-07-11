@@ -3,13 +3,11 @@
 State teleportation
 ===================
 
-.. role:: html(raw)
-   :format: html
-
-|
-
    "A trick that quantum magicians use to produce phenomena that cannot be imitated by classical magicians." -  A. Peres :cite:`bru2002`
 
+
+.. role:: html(raw)
+   :format: html
 
 Quantum teleportation - sometimes referred to as state teleportation to avoid confusion with gate teleportation - is the reliable transfer of an unknown quantum state across spatially separated qubits or qumodes, through the use of a classical transmission channel and quantum entanglement :cite:`bennett1993`. Considered a fundamental quantum information protocol, it has applications ranging from quantum communication to enabling distributed information processing in quantum computation :cite:`furusawa2011`.
 
@@ -60,7 +58,7 @@ This can be easily implemented using the Blackbird quantum circuit language:
    :linenos:
    :dedent: 4
    :tab-width: 4
-   :start-after: with eng:
+   :start-after: with teleportation.context as q:
    :end-before: # end circuit
 
 Some important notes:

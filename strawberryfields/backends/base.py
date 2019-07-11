@@ -263,6 +263,10 @@ class BaseBackend:
 
         Args:
             num_subsystems (int): number of modes in the circuit
+
+        Keyword Args:
+            cutoff_dim (int): Hilbert space truncation dimension (for Fock basis backends only)
+            batch_size (int): (optional) batch-axis dimension, enables batched operation if > 1 (for the TF backend only)
         """
         # BaseBackend can be instantiated for testing purposes, even though it does not do anything.
 

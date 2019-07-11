@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-import numpy as np
 import strawberryfields as sf
 from strawberryfields.ops import *
 
-# initialise the engine and register
-eng, q = sf.Engine(4)
+# initialize engine and program objects
+eng = sf.Engine(backend="fock", backend_options={"cutoff_dim": 7})
+boson_sampling = sf.Program(4)
 
-with eng:
+with boson_sampling.context as q:
     # prepare the input fock states
     Fock(1) | q[0]
     Fock(1) | q[1]
@@ -31,11 +31,11 @@ with eng:
     # end circuit
 
 # run the engine
-state = eng.run('fock', cutoff_dim=7)
+results = eng.run(boson_sampling)
 
 # extract the joint Fock probabilities
-probs = state.all_fock_probs()
+probs = results.state.all_fock_probs()
 
 # print the joint Fock state probabilities
-print(probs[1,1,0,1])
-print(probs[2,0,0,1])
+print(probs[1, 1, 0, 1])
+print(probs[2, 0, 0, 1])

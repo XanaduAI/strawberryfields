@@ -3,15 +3,17 @@ import strawberryfields as sf
 from strawberryfields.ops import *
 import tensorflow as tf
 
-eng, q = sf.Engine(1)
+# initialize engine and program objects
+eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": 7})
+circuit = sf.Program(1)
 
 alpha = tf.Variable(0.1)
-with eng:
+with circuit.context as q:
     Dgate(alpha) | q[0]
-state = eng.run('tf', cutoff_dim=7, eval=False)
+results = eng.run(circuit, run_options={"eval": False})
 
 # loss is probability for the Fock state n=1
-prob = state.fock_prob([1])
+prob = results.state.fock_prob([1])
 loss = -prob  # negative sign to maximize prob
 
 # Set up optimization

@@ -6,14 +6,21 @@
 - Introduced the `BaseEngine` abstract base class and the `LocalEngine` child class. `Engine` is kept as an alias for `LocalEngine`.
 - The Engine API has been changed slightly:
     - `LocalEngine.run()` returns a `Result` object that contains both a state object and measurement samples.
-    - The way kwargs were used has been simplified by introducing the new kwargs-like arguments `backend_options` and `state_options`. `LocalEngine.run()` passes the actual kwargs only to `Operation.apply()`.
-- The Gaussian backend now officially supports Fock-basis measurements (`MeasureFock`/`Measure`/`measure_fock`), but does not update the quantum state.
-- New `shots` keyword argument added to `Engine.run()`, enabling multi-shot sampling. Currently supported only in the Gaussian backend, and only for Fock measurements.
-- Added the ability to compile quantum programs to match a desired circuit target.
-- Included a compilation target for Gaussian Boson Sampling circuits.
-- Added a frontend validation database, the `devicespecs` submodule, for validating that quantum programs can be executed on certain backends and providing compilation methods.
-- Added the `sf.io` module, which is used to save/load standalone Blackbird scripts from/into Strawberry Fields. Note that the Blackbird DSL has been spun off as an independent package and is now a dependency of Strawberry Fields.
-- Added a new decomposition `mach_zehnder` to the decompositions module. 
+    - The way kwargs were used has been simplified by introducing the kwargs-like arguments:
+        - `backend_options` are provided upon initialization of the `LocalEngine`, and passed on to the corresponding backend when it is created.
+        - `compile_options` can be provided when calling `LocalEngine.run()`. These are passed to the `compile()` method of the program before execution.
+        - `run_options` can be provided when calling `LocalEngine.run()`. These are used to determine the characteristics of the measurements and state contained in the `Results` object returned after the program is finished executing.
+ - The Gaussian backend now officially supports Fock-basis measurements (`MeasureFock`/`Measure`/
+  `measure_fock`), but does not update the quantum state after a Fock measurement.
+- `shots` keyword argument added to `Engine.run()`, enabling multi-shot sampling. Supported only
+  in the Gaussian backend, and only for Fock measurements.
+- Added the `circuitspecs` subpackage, containing the `CircuitSpecs` class and a quantum circuit database.
+  The database can be used to
+    - Validate that a `Program` belongs in a specific circuit class.
+    - Compile a `Program` for a desired circuit target, e.g., so that it can be executed on a given backend.
+  The database includes a number of compilation targets, including Gaussian Boson Sampling circuits.
+- Added the `io` module, which is used to save/load standalone Blackbird scripts from/into Strawberry Fields. Note that the Blackbird DSL has been spun off as an independent package and is now a dependency of Strawberry Fields.
+- Added a new decomposition `mach_zehnder` to the decompositions module.
 - Added a `Configuration` class, which is used to load, store, save, and modify configuration options for Strawberry Fields.
 - The way hbar is handled has been simplified:
     - The backend API is now entirely hbar-independent, i.e., every backend API method is defined in terms of a and a^\dagger only, not x and p.
@@ -24,13 +31,15 @@
 - Added two top-level functions:
     - `about()`, which prints human-readable system info including installed versions of various Python packages.
     - `cite()`, which prints a bibtex citation for SF.
+- Added a glossary to the documentation.
+
 
 ### Improvements
 
 - Removed TensorFlow as an explicit dependency of Strawberry Fields. This was causing complicated dependency issues due to version mismatches between TensorFlow, Strawberry Fields, and Python 3, which made installing difficult for new users. Advanced users can still install TensorFlow manually using `pip install tensorflow==1.3` and use as before.
+- The behaviour and function signature of the `GraphEmbed` operation has been updated.
 - Remove the unused `Command.decomp` instance attribute.
 - Better error messages for the `New` operation when used outside of a circuit.
-- Bugfix in `Gate.merge()`
 - Docstrings updated in the decompositions module.
 - Docstrings for Fock backend reformatted and cleaned up.
 - Cleaning up of citations and `references.bib` file.
@@ -40,6 +49,7 @@
 
 - Fixed a bug with installation on Windows for certain locales.
 - Fixed a bug in the `New` operation.
+- Bugfix in `Gate.merge()`
 - Fixed bugs in `measure_fock` in the TensorFlow backend which caused samples to be evaluated independently and for conditional states to be potentially decoupled from the measurement results.
 - Fixed a latent bug in `graph_embed`.
 - Bugfix for Bloch-Messiah returning non-symplectic matrices when input is passive.
@@ -48,7 +58,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ville Bergholm, Tom Bromley, Ish Dhand, Xueshi Guo, Josh Izaac, Nathan Killoran, Leonhard Neuhaus, Nicolás Quesada.
+Ville Bergholm, Tom Bromley, Ish Dhand, Karel Dumon, Xueshi Guo, Josh Izaac, Nathan Killoran, Leonhard Neuhaus, Nicolás Quesada.
 
 
 # Release 0.10
@@ -187,3 +197,4 @@ Initial public release.
 This release contains contributions from:
 
 Nathan Killoran, Josh Izaac, Nicolás Quesada, Matthew Amy, and Ville Bergholm.
+

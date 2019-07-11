@@ -28,7 +28,7 @@ requirements = [
     "scipy>=1.0.0",
     "networkx>=2.0",
     "quantum-blackbird>=0.2.0",
-    "hafnian>=0.6"
+    "hafnian>=0.6",
     "toml",
     "appdirs"
 ]
@@ -47,7 +47,7 @@ info = {
     'license': 'Apache License 2.0',
     'packages': [
                     'strawberryfields',
-                    'strawberryfields.devicespecs',
+                    'strawberryfields.circuitspecs',
                     'strawberryfields.backends',
                     'strawberryfields.backends.tfbackend',
                     'strawberryfields.backends.fockbackend',

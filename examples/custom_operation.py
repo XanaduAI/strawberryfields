@@ -17,7 +17,7 @@ from strawberryfields.utils import operation
 
 @operation(4)
 def prepare_squeezing(q):
-    """This operation prepares modes 0 to 4
+    """This operation prepares modes 0 and 1
     as squeezed states with r = -1.
 
     Args:
@@ -26,8 +26,6 @@ def prepare_squeezing(q):
     S = Sgate(-1)
     S | q[0]
     S | q[1]
-    S | q[2]
-    S | q[3]
 
 
 @operation(3)
@@ -37,21 +35,22 @@ def circuit_op(v1, v2, q):
     Args:
         v1 (float): parameter for CZgate
         v2 (float): parameter for the cubic phase gate
-        q (register): the qumode register.
+        q (register): the qumode register
     """
     CZgate(v1) | (q[0], q[1])
-    Vgate(v2) | q[2]
+    Vgate(v2) | q[1]
 
 
-# initialise the engine and register
-eng, q = sf.Engine(4)
+# initialize engine and program objects
+eng = sf.Engine(backend="fock", backend_options={"cutoff_dim": 5})
+circuit = sf.Program(4)
 
-with eng:
+with circuit.context as q:
     # The following operation takes no arguments
     prepare_squeezing() | q
 
-    # another operation with 2 parameters that operates on three registers: 0, 1, 3
+    # another operation with 2 parameters that operates on three registers: 0, 1
     circuit_op(0.5719, 2.0603) | (q[0], q[1], q[3])
 
 # run the engine
-state = eng.run("fock", cutoff_dim=5)
+results = eng.run(circuit)

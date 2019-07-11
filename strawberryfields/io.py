@@ -51,9 +51,10 @@ def to_blackbird(prog, version="1.0"):
     """
     bb = blackbird.BlackbirdProgram(name=prog.name, version=version)
 
-    if prog.backend is not None:
+    # TODO not sure if this makes sense: the program has *already been* compiled using this target
+    if prog.target is not None:
         # set the target
-        bb._target["name"] = prog.backend
+        bb._target["name"] = prog.target
 
     # fill in the quantum circuit
     for cmd in prog.circuit:
@@ -144,9 +145,10 @@ def to_program(bb):
                 # the gate has no arguments
                 gate | regrefs #pylint:disable=expression-not-assigned,pointless-statement
 
-    # set the compile target on the program if a target exists
-    if bb.target["name"] is not None:
-        prog.backend = bb.target["name"]
+    # compile the program if a compile target is given
+    targ = bb.target
+    if targ["name"] is not None:
+        prog = prog.compile(targ["name"], **targ["options"])
 
     return prog
 
