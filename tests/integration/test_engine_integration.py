@@ -278,16 +278,21 @@ class TestResults:
 
     # TODO: when ``shots`` is incorporated into other backends, unmark this test
     @pytest.mark.backends("gaussian")
-    def test_results_measure_fock_shots(self, setup_eng):
+    def test_results_measure_fock_shots(self, setup_eng, batch_size):
         """Tests that passing shots with a program containing MeasureFock
            returns a result whose entries have the right shapes and values"""
         shots = 5
-        zeros = np.zeros(dtype=int, shape=(shots,))
+        if batch_size is None:
+            zeros = np.zeros((shots,), dtype=int)
+            shape = (3, shots)
+        else:
+            zeros = np.zeros((batch_size, shots), dtype=int)
+            shape = (3, batch_size, shots)
 
         # measured in canonical order
         expected_samples = {0: zeros, 1: zeros, 2: zeros}
         expected_measured_modes = [0, 1, 2]
-        expected_samples_array = np.array([zeros] * 3)  # shape = (3,5)
+        expected_samples_array = np.zeros(shape, dtype=int)
 
         # all modes
         eng, p1 = setup_eng(3)
