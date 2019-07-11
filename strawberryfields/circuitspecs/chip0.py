@@ -25,35 +25,33 @@ class Chip0Specs(CircuitSpecs):
     remote = True
     local = True
     interactive = True
-
+    
     primitives = {"S2gate", "Interferometer", "MeasureFock", "Rgate", "BSgate"}
-
-    # TODO: update the below to specify the rectangular_symmetric
-    # mapping for the interferometer when #87 is merged
     decompositions = {"Interferometer": {}}
-
-    # TODO: update the below to specify the rectangular_symmetric
-    # mapping for the interferometer when #87 is merged.
-    # The current topology defined below is just for demonstration
+    
     circuit = textwrap.dedent(
         """\
-        name chip0_template
-        version 0.0
-        target chip0 (shots=1)
+        name template_2x2_chip0
+        version 1.0
+        target chip0 (shots=10)
 
-        S2gate({sq0}, 0.0) | [0, 2]
-        S2gate({sq1}, 0.0) | [1, 3]
+        # for n spatial degrees, first n signal modes, then n idler modes, phase zero
+        S2gate({squeezing_amplitude_0}, 0.0) | [0, 2]
+        S2gate({squeezing_amplitude_1}, 0.0) | [1, 3]
 
-        Rgate({phase}) | 0
-        BSgate({theta}, {phi}) | [0, 1]
-        Rgate({phase}) | 0
-        Rgate({phase}) | 1
+        # standard 2x2 interferometer for the signal modes (the lower ones in frequency)
+        Rgate({external_phase_0}) | [0]
+        BSgate(pi/4, pi/2) | [0, 1]
+        Rgate({internal_phase_0}) | [0]
+        BSgate(pi/4, pi/2) | [0, 1]
 
-        Rgate({phase}) | 2
-        BSgate({theta}, {phi}) | [2, 3]
-        Rgate({phase}) | 2
-        Rgate({phase}) | 3
+        #duplicate the interferometer for the idler modes (the higher ones in frequency)
+        Rgate({external_phase_0}) | [2]
+        BSgate(pi/4, pi/2) | [2, 3]
+        Rgate({internal_phase_0}) | [2]
+        BSgate(pi/4, pi/2) | [2, 3]
 
+        # Measurement in Fock basis
         MeasureFock() | [0, 1, 2, 3]
         """
     )
