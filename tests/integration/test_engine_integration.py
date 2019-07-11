@@ -99,7 +99,7 @@ class TestProperExecution:
     def test_no_return_state(self, setup_eng):
         """Engine returns no state object when none is requested."""
         eng, prog = setup_eng(2)
-        res = eng.run(prog, run_options={"return_state": False})
+        res = eng.run(prog, run_options={"modes": []})
         assert res.state is None
 
     def test_return_state(self, setup_eng):
