@@ -1,48 +1,119 @@
-#  Release 0.11.dev
+
+# Release 0.11.1
+
+### Bug fixes
+
+* Removes `ModuleNotFoundError` from the codebase, replacing all occurrences with `ImportError`. Since `ModuleNotFoundError` was only introduced in Python 3.6+, this fixes a bug where Strawberry Fields was not importable on Python 3.5 [#124](https://github.com/XanaduAI/strawberryfields/pull/124).
+
+* Updates the Chip0 template to use MeasureFock() | [0, 1, 2, 3], which will allow correct fock measurement behaviour when simulated on the Gaussian backend.
+
+
+# Release 0.11.0
+
+This is a significant release, with breaking changes to how quantum programs are constructed and executed. For example, the following Strawberry Fields program, <= version 0.10:
+
+```python
+eng, q = sf.Engine(2, hbar=0.5)
+
+with eng:
+    Sgate(0.5) | q[0]
+    MeasureFock() | q[0]
+
+state = eng.run("fock", cutoff_dim=5)
+ket = state.ket()
+print(q[0].val)
+```
+
+would now be written, in v0.11, as follows:
+
+```python
+sf.hbar = 0.5
+prog = sf.Program(2)
+eng = sf.Engine("fock", backend_options={"cutoff_dim": 5})
+
+with prog.context as q:
+    Sgate(0.5) | q[0]
+    MeasureFock() | q[0]
+
+results = eng.run(prog)
+ket = results.state.ket()
+print(results.samples[0])
+```
 
 ### New features
 
 - The functionality of the `Engine` class has been divided into two new classes: `Program`, which represents a quantum circuit or a fragment thereof, and `Engine`, which executes `Program` instances.
+
 - Introduced the `BaseEngine` abstract base class and the `LocalEngine` child class. `Engine` is kept as an alias for `LocalEngine`.
+
 - The Engine API has been changed slightly:
-    - `LocalEngine.run()` returns a `Result` object that contains both a state object and measurement samples.
-    - The way kwargs were used has been simplified by introducing the kwargs-like arguments:
-        - `backend_options` are provided upon initialization of the `LocalEngine`, and passed on to the corresponding backend when it is created.
-        - `compile_options` can be provided when calling `LocalEngine.run()`. These are passed to the `compile()` method of the program before execution.
-        - `run_options` can be provided when calling `LocalEngine.run()`. These are used to determine the characteristics of the measurements and state contained in the `Results` object returned after the program is finished executing.
- - The Gaussian backend now officially supports Fock-basis measurements (`MeasureFock`/`Measure`/
-  `measure_fock`), but does not update the quantum state after a Fock measurement.
-- `shots` keyword argument added to `Engine.run()`, enabling multi-shot sampling. Supported only
-  in the Gaussian backend, and only for Fock measurements.
+
+    - The engine is initialized with the required backend, as well as a `backend_options` dictionary, which is passed to the backend:
+      ```python
+      eng = sf.Engine("fock", backend_options={"cutoff_dim": 5}
+      ```
+    - `LocalEngine.run()` now accepts a program to execute, and returns a `Result` object that contains both a state object (`Result.state`) and measurement samples (`Result.samples`):
+      ```python
+      results = eng.run(prog)
+      state = results.state
+      samples = results.samples
+      ```
+    - `compile_options` can be provided when calling `LocalEngine.run()`. These are passed to the `compile()` method of the program before execution.
+    - `run_options` can be provided when calling `LocalEngine.run()`. These are used to determine the characteristics of the measurements and state contained in the `Results` object returned after the program is finished executing.
+
+    - `shots` keyword argument can be passed to `run_options`, enabling multi-shot sampling. Supported only
+      in the Gaussian backend, and only for Fock measurements.
+
+ - The Gaussian backend now officially supports Fock-basis measurements (`MeasureFock`), but does not update the quantum state after a Fock measurement.
+
+- Added the `io` module, which is used to save/load standalone Blackbird scripts from/into Strawberry Fields. Note that the Blackbird DSL has been spun off as an independent package and is now a dependency of Strawberry Fields.
+
+- Added a new interferometer decomposition `mach_zehnder` to the decompositions module.
+
+- Added a `Configuration` class, which is used to load, store, save, and modify configuration options for Strawberry Fields.
+
+- `hbar` is now set globally for the entire session, by setting the value of `sf.hbar` (default is 2).
+
+
+- Added the ability to generate random real (orthogonal) interferometers and random block diagonal symplectic and covariance matrices.
+
+- Added two top-level functions:
+    - `about()`, which prints human-readable system info including installed versions of various Python packages.
+    - `cite()`, which prints a bibtex citation for SF.
+
+- Added a glossary to the documentation.
+
+### API Changes
+
 - Added the `circuitspecs` subpackage, containing the `CircuitSpecs` class and a quantum circuit database.
+
   The database can be used to
     - Validate that a `Program` belongs in a specific circuit class.
     - Compile a `Program` for a desired circuit target, e.g., so that it can be executed on a given backend.
   The database includes a number of compilation targets, including Gaussian Boson Sampling circuits.
-- Added the `io` module, which is used to save/load standalone Blackbird scripts from/into Strawberry Fields. Note that the Blackbird DSL has been spun off as an independent package and is now a dependency of Strawberry Fields.
-- Added a new decomposition `mach_zehnder` to the decompositions module.
-- Added a `Configuration` class, which is used to load, store, save, and modify configuration options for Strawberry Fields.
+
 - The way hbar is handled has been simplified:
     - The backend API is now entirely hbar-independent, i.e., every backend API method is defined in terms of a and a^\dagger only, not x and p.
     - The backends always explicitly use `hbar=2` internally.
     - `hbar` is now a global, frontend-only variable that the user can set at the beginning of the session. It is used at the `Operation.apply()` level to scale the inputs and outputs of the backend API calls as needed, and inside the `State` objects.
     - The only backend API calls that need to do hbar scaling for the input parameters are the X, Z, and V gates, the Gaussian state decomposition, and homodyne measurements (both the returned value and postselection argument are scaled).
-- Added the ability to generate random real (orthogonal) interferometers and random block diagonal symplectic and covariance matrices.
-- Added two top-level functions:
-    - `about()`, which prints human-readable system info including installed versions of various Python packages.
-    - `cite()`, which prints a bibtex citation for SF.
-- Added a glossary to the documentation.
-
 
 ### Improvements
 
-- Removed TensorFlow as an explicit dependency of Strawberry Fields. This was causing complicated dependency issues due to version mismatches between TensorFlow, Strawberry Fields, and Python 3, which made installing difficult for new users. Advanced users can still install TensorFlow manually using `pip install tensorflow==1.3` and use as before.
+- Removed TensorFlow as an explicit dependency of Strawberry Fields. Advanced users can still install TensorFlow manually using `pip install tensorflow==1.3` and use as before.
+
 - The behaviour and function signature of the `GraphEmbed` operation has been updated.
+
 - Remove the unused `Command.decomp` instance attribute.
+
 - Better error messages for the `New` operation when used outside of a circuit.
+
 - Docstrings updated in the decompositions module.
+
 - Docstrings for Fock backend reformatted and cleaned up.
+
 - Cleaning up of citations and `references.bib` file.
+
 - Typos in documentation fixed.
 
 ## Bug fixes

@@ -145,7 +145,7 @@ import sys
 
 try:
     import tensorflow
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     tf_available = False
     tf_version = None
 else:
