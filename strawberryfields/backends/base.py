@@ -222,13 +222,16 @@ class ModeMap:
 class BaseBackend:
     """Abstract base class for backends."""
 
+    #: str: short name of the backend
+    short_name = 'base'
+    #: str, None: Short name of the CircuitSpecs class used to validate Programs for this backend. None if no validation is required.
+    circuit_spec = None
+
     def __init__(self):
         self._supported = {}
-        self._short_name = 'base'
 
     def __str__(self):
         """String representation."""
-        # defaults to the class name
         return self.__class__.__name__
 
     def supports(self, name):

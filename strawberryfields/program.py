@@ -188,7 +188,7 @@ class Program:
         self.circuit = []
         #: bool: if True, no more Commands can be appended to the Program
         self.locked = False
-        #: str, None: for compiled Programs, the short name of the target circuit template, otherwise None
+        #: str, None: for compiled Programs, the short name of the target CircuitSpecs template, otherwise None
         self.target = None
         #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
@@ -221,7 +221,7 @@ class Program:
 
     def __str__(self):
         """String representation."""
-        return self.__class__.__name__ + '({}, {}->{} subsystems, compiled for {})'.format(
+        return self.__class__.__name__ + "({}, {}->{} subsystems, compiled for '{}')".format(
             self.name, self.init_num_subsystems, self.num_subsystems, self.target
         )
 

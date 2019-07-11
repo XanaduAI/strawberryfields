@@ -29,6 +29,9 @@ from .states import FockStateTF
 class TFBackend(BaseFock):
     """TensorFlow backend implementation."""
 
+    short_name = 'tf'
+    circuit_spec = 'tf'
+
     def __init__(self, graph=None):
         """Initialize a TFBackend object.
 
@@ -39,7 +42,6 @@ class TFBackend(BaseFock):
         self._supported["mixed_states"] = True
         self._supported["batched"] = True
         self._supported["symbolic"] = True
-        self._short_name = "tf"
         if graph is None:
             self._graph = tf.get_default_graph()
         else:
