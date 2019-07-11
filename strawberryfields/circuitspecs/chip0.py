@@ -54,9 +54,6 @@ class Chip0Specs(CircuitSpecs):
         Rgate({phase}) | 2
         Rgate({phase}) | 3
 
-        MeasureFock() | [0]
-        MeasureFock() | [1]
-        MeasureFock() | [2]
-        MeasureFock() | [3]
+        MeasureFock() | [0, 1, 2, 3]
         """
     )
