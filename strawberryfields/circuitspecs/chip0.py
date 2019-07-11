@@ -25,10 +25,10 @@ class Chip0Specs(CircuitSpecs):
     remote = True
     local = True
     interactive = True
-    
+
     primitives = {"S2gate", "Interferometer", "MeasureFock", "Rgate", "BSgate"}
     decompositions = {"Interferometer": {}}
-    
+
     circuit = textwrap.dedent(
         """\
         name template_2x2_chip0
