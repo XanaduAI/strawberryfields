@@ -295,7 +295,6 @@ class TestGraphEmbed:
         G = ops.GraphEmbed(A)
         cmds = G.decompose(prog.register)
 
-        #print([str(cmd.op) for cmd in cmds])
         assert str(cmds[-1].op)[:4] == "Interferometer"[:4]
 
 class TestGaussianTransform:
