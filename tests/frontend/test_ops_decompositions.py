@@ -293,7 +293,7 @@ class TestGraphEmbed:
         ]
         )
         sq, U = dec.graph_embed(A)
-
+        assert not np.allclose(U, np.identity(n))
         G = ops.GraphEmbed(A)
         cmds = G.decompose(prog.register)
 
