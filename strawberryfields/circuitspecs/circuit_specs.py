@@ -212,3 +212,37 @@ class CircuitSpecs(abc.ABC):
                 )
 
         return seq
+
+    def compile_sequence(self, seq):
+        """Compiles a given Command sequence."""
+        compiled = []
+        for cmd in seq:
+            op_name = cmd.op.__class__.__name__
+            if op_name in self.decompositions:
+                # target can implement this op decomposed
+                if hasattr(cmd.op, 'decomp') and not cmd.op.decomp:
+                    # user has requested application of the op as a primitive
+                    if op_name in self.primitives:
+                        compiled.append(cmd)
+                        continue
+                    else:
+                        raise pu.CircuitError("The operation {} is not a primitive for the target '{}'".format(cmd.op.__class__.__name__, target))
+                try:
+                    kwargs = self.decompositions[op_name]
+                    temp = cmd.op.decompose(cmd.reg, **kwargs)
+                    # now compile the decomposition
+                    temp = self.compile_sequence(temp)
+                    compiled.extend(temp)
+                except NotImplementedError as err:
+                    # Operation does not have _decompose() method defined!
+                    # simplify the error message by suppressing the previous exception
+                    raise err from None
+
+            elif op_name in self.primitives:
+                # target can handle the op natively
+                compiled.append(cmd)
+
+            else:
+                raise pu.CircuitError("The operation {} cannot be used with the target '{}'.".format(cmd.op.__class__.__name__, target))
+
+        return compiled

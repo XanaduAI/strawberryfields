@@ -1716,7 +1716,6 @@ class Interferometer(Decomposition):
 
         if not self.identity:
             decomp_fn = getattr(dec, mesh)
-            print(decomp_fn)
             self.BS1, self.R, self.BS2 = decomp_fn(self.p[0].x, tol=tol)
 
             for n, m, theta, phi, _ in self.BS1:
@@ -1779,7 +1778,7 @@ class GraphEmbed(Decomposition):
                 A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=make_traceless, atol=tol
             )
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         cmds = []
 
         if not self.identity:
@@ -1788,7 +1787,8 @@ class GraphEmbed(Decomposition):
                     cmds.append(Command(Sgate(s), reg[n]))
 
             if np.all(np.abs(self.U - np.identity(len(self.U))) >= _decomposition_tol):
-                cmds.append(Command(Interferometer(self.U), reg))
+                mesh = kwargs.get("mesh", "rectangular")
+                cmds.append(Command(Interferometer(self.U, mesh=mesh), reg))
         return cmds
 
 
@@ -1854,8 +1854,9 @@ class GaussianTransform(Decomposition):
             self.U2 = X2+1j*P2  #: array[complex]: unitary matrix corresponding to O_2
             self.Sq = np.diagonal(smat)[:N]  #: array[complex]: diagonal vector of the squeezing matrix R
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         cmds = []
+        mesh = kwargs.get("mesh", "rectangular")
 
         if self.active:
             if not self.vacuum:
@@ -1867,10 +1868,10 @@ class GaussianTransform(Decomposition):
                     phi = np.angle(log(expr))
                     cmds.append(Command(Sgate(-r, phi), reg[n]))
 
-            cmds.append(Command(Interferometer(self.U1), reg))
+            cmds.append(Command(Interferometer(self.U1, mesh=mesh), reg))
         else:
             if not self.vacuum:
-                cmds = [Command(Interferometer(self.U1), reg)]
+                cmds = [Command(Interferometer(self.U1, mesh=mesh), reg)]
 
         return cmds
 

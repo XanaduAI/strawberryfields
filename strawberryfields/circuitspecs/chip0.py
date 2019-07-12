@@ -15,11 +15,13 @@
 import textwrap
 
 import numpy as np
+from numpy.linalg import multi_dot
 
 from strawberryfields.program_utils import CircuitError, Command, group_operations
+import strawberryfields.ops as ops
 
 from .circuit_specs import CircuitSpecs
-from .gbs import GBSspecs
+from .gbs import GBSSpecs
 
 
 class Chip0Specs(CircuitSpecs):
@@ -58,9 +60,9 @@ class Chip0Specs(CircuitSpecs):
 
         # final local phases
         Rgate({phi0}) | 0
-        Rgate({phi0}) | 1
-        Rgate({phi0}) | 2
-        Rgate({phi0}) | 3
+        Rgate({phi1}) | 1
+        Rgate({phi2}) | 2
+        Rgate({phi3}) | 3
 
         # Measurement in Fock basis
         MeasureFock() | [0, 1, 2, 3]
@@ -75,23 +77,41 @@ class Chip0Specs(CircuitSpecs):
         # next check for S2gates
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
 
-        if not A:
+        if A:
             raise CircuitError('Chip0 circuits must start with S2gates.')
 
         # finally, combine and then decompose all unitaries
         A, B, C = group_operations(seq, lambda x: isinstance(x, (ops.Rgate, ops.BSgate)))
 
         U_list = []
+        regrefs = set()
 
         for cmd in B:
+            modes = [i.ind for i in cmd.reg]
+            params = [i.x for i in cmd.op.p]
+            regrefs |= set(cmd.reg)
+            U = np.identity(self.modes, dtype=np.complex128)
+
             if isinstance(cmd.op, ops.Rgate):
-                U = 0 # expression for Rgate unitary acting on system
+                U[modes[0], modes[0]] = np.exp(1j*params[0])
 
             elif isinstance(cmd.op, ops.BSgate):
-                U = 0 # expression for BSgate unitary acting on system
+                t = np.cos(params[0])
+                r = np.exp(1j*params[1])*np.sin(params[0])
+                U[modes[0], modes[0]] = t
+                U[modes[0], modes[1]] = -np.conj(r)
+                U[modes[1], modes[0]] = r
+                U[modes[1], modes[1]] = t
 
             U_list.append(U)
 
+        U = multi_dot(U_list)
+
+        # replace B with an interferometer
+        Ucmd = Command(ops.Interferometer(U, mesh="rectangular_symmetric"), list(regrefs))
+        # decompose the interferometer
+        B = self.compile_sequence(B)
+
         # finally, make sure it matches the circuit template
-        seq = super().compile(seq)
+        seq = super().compile(A + B + C)
         return seq
