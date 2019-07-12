@@ -1698,7 +1698,7 @@ class GraphEmbed(Decomposition):
                 if np.abs(s) >= _decomposition_tol:
                     cmds.append(Command(Sgate(s), reg[n]))
 
-            if not np.allclose(self.U, np.identity(len(self.U)), atol = _decomposition_tol):
+            if not np.allclose(self.U, np.identity(len(self.U)), atol=_decomposition_tol):
                 cmds.append(Command(Interferometer(self.U), reg))
         return cmds
 
