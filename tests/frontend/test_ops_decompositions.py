@@ -275,6 +275,29 @@ class TestGraphEmbed:
         assert np.allclose(ratio, np.ones([n, n]), atol=tol, rtol=0)
 
 
+
+    def test_decomposition_interferometer_with_zero(self, hbar, tol):
+        """Test that an graph is correctly decomposed"""
+        n = 6
+        prog = sf.Program(n)
+
+        A = np.array([
+        [0, 1, 0, 0, 1, 1],
+        [1, 0, 1, 0, 1, 1],
+        [0, 1, 0, 1, 1, 0],
+        [0, 0, 1, 0, 1, 0],
+        [1, 1, 1, 1, 0, 1],
+        [1, 1, 0, 0, 1, 0],
+        ]
+        )
+        sq, U = dec.graph_embed(A)
+
+        G = ops.GraphEmbed(A)
+        cmds = G.decompose(prog.register)
+
+        #print([str(cmd.op) for cmd in cmds])
+        assert str(cmds[-1].op)[:4] == "Interferometer"[:4]
+
 class TestGaussianTransform:
     """Tests for the GaussianTransform quantum operation"""
 
