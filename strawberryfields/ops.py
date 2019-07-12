@@ -1701,7 +1701,7 @@ class Interferometer(Decomposition):
         allowed_meshes = {"rectangular", "rectangular_phase_end", "rectangular_symmetric", "triangular"}
 
         if mesh not in allowed_meshes:
-            raise ValueError("Unknown mesh {}. Mesh must be one of {}".format(mesh, allowed_meshes))
+            raise ValueError("Unknown mesh '{}'. Mesh must be one of {}".format(mesh, allowed_meshes))
 
         if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
             self.identity = True
