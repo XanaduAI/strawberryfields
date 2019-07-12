@@ -277,7 +277,9 @@ class TestGraphEmbed:
 
 
     def test_decomposition_interferometer_with_zero(self, hbar, tol):
-        """Test that an graph is correctly decomposed"""
+        """Test that an graph is correctly decomposed when the interferometer
+        has one zero somewhere is the unitary matrix, which is the case for the
+        Adjacency matrix below"""
         n = 6
         prog = sf.Program(n)
 
