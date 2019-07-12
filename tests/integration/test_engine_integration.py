@@ -277,7 +277,7 @@ class TestResults:
         assert res.samples_array.shape == (0, 0)  # no entries or axes yet
 
     # TODO: when ``shots`` is incorporated into other backends, unmark this test
-    @pytest.mark.backends("gaussian")
+    @pytest.mark.backends("gaussian", "fock")
     def test_results_measure_fock_shots(self, setup_eng, batch_size):
         """Tests that passing shots with a program containing MeasureFock
            returns a result whose entries have the right shapes and values"""
@@ -346,7 +346,7 @@ class TestResults:
 
 
     # TODO: when ``shots`` is incorporated into other backends, delete this test
-    @pytest.mark.backends("tf", "fock")
+    @pytest.mark.backends("tf")
     def test_measure_fock_shots_exception(self, setup_eng):
         shots = 5
         eng, p1 = setup_eng(3)

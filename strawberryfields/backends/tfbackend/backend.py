@@ -300,7 +300,8 @@ class TFBackend(BaseFock):
                 for numerically evaluating the measurement results. Used with ``session``.
 
         Returns:
-            An Tensor/array of shape (len(modes), [batch_size,] shots)
+            array[int], list[tf.Tensor]: Measurement results, ``shape == (len(modes), [batch_size,] shots)``.
+                Unevaluated results are returned as a list of ``len(modes)`` tf.Tensors, each with ``shape == ([batch_size,] shots)``.
         """
         if shots != 1:
             raise NotImplementedError("TF backend currently does not support "

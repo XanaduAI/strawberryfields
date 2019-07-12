@@ -244,7 +244,4 @@ class FockBackend(BaseFock):
         self.circuit.cross_kerr_interaction(kappa, self._remap_modes(mode1), self._remap_modes(mode2))
 
     def measure_fock(self, modes, shots=1, select=None, **kwargs):
-        if shots != 1:
-            raise NotImplementedError("fock backend currently does not support "
-                                      "shots != 1 for Fock measurement")
         return self.circuit.measure_fock(self._remap_modes(modes), shots=shots, select=select)

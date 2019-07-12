@@ -19,6 +19,17 @@ import numpy as np
 from strawberryfields import ops
 
 
+SHOTS = (1, 4)  # parametrization for shots
+
+
+def meas_shape(batch_size, shots):
+    """Shape of the measurement result array."""
+    if batch_size is None:
+        return (shots,)
+    else:
+        return (batch_size, shots)
+
+
 class TestMeasurement:
     """Test that measurements work correctly from the frontend"""
 
@@ -29,16 +40,38 @@ class TestMeasurement:
         n = [2, 1]
 
         with prog.context as q:
-            ops.Fock(n[0]) | q[0]
-            ops.Fock(n[1]) | q[1]
+            for nn, qq in zip(n, q):
+                ops.Fock(nn) | qq
             ops.Measure | q
 
         eng.run(prog)
-        assert np.all(q[0].val == n[0])
-        assert np.all(q[1].val == n[1])
+        for nn, qq in zip(n, q):
+            assert np.all(qq.val == nn)
 
         # Fock measurements put the modes into vacuum state
         assert np.all(eng.backend.is_vacuum(tol))
+
+
+    @pytest.mark.backends("fock")
+    @pytest.mark.parametrize("shots", SHOTS)
+    def test_fock_measurement_unordered(self, setup_eng, shots, batch_size, tol):
+        """Test a multi-mode Fock measurement with jumbled regrefs."""
+        shape = meas_shape(batch_size, shots)
+        n = [2, 0, 3]
+
+        eng, prog = setup_eng(3)
+        with prog.context as q:
+            for nn, qq in zip(n, q):
+                ops.Fock(nn) | qq
+            ops.Measure | (q[2], q[0], q[1])
+
+        eng.run(prog, run_options={'shots': shots})
+        for nn, qq in zip(n, q):
+            assert np.all(qq.val == nn * np.ones(shape, dtype=int))
+
+        # Fock measurements put the modes into vacuum state
+        assert np.all(eng.backend.is_vacuum(tol))
+
 
     @pytest.mark.backends("gaussian")
     def test_heterodyne(self, setup_eng, tol):
@@ -114,6 +147,62 @@ class TestPostselection:
                 assert np.all(photons_out == np.tile(total_photons, batch_size))
             else:
                 assert np.all(photons_out == total_photons)
+
+    @pytest.mark.backends("fock")
+    @pytest.mark.parametrize("shots", SHOTS)
+    def test_measure_fock_single_mode_select(self, setup_eng, cutoff, shots, batch_size):
+        """Test Fock post-selection on multiple modes."""
+
+        shape = meas_shape(batch_size, shots)
+        n = cutoff-1
+        expected = n * np.ones(shape, dtype=int)
+
+        # postselect
+        eng, prog = setup_eng(2)
+        with prog.context as q:
+            ops.Dgate(0.1) | q[0]
+            ops.Dgate(1.3) | q[1]
+            ops.MeasureFock(select=n) | q[0]
+        eng.run(prog, run_options={'shots': shots})
+        assert np.all(q[0].val == expected)
+        assert q[1].val is None
+
+    @pytest.mark.backends("fock")
+    @pytest.mark.parametrize("shots", SHOTS)
+    def test_measure_fock_multimode_select(self, setup_eng, cutoff, shots, batch_size):
+        """Test Fock post-selection on multiple modes."""
+
+        # NOTE for now the Fock backend does not do batching, but the asserts below pass due to broadcasting
+        shape = meas_shape(batch_size, shots)
+        n = np.array([cutoff-1, 1, 0])
+        perm = [1, 2, 0]  # mode permutation for the measurement
+        m = len(n)
+        expected = np.tensordot(n, np.ones(shape, dtype=int), axes=0)
+
+        # postselect all modes
+        eng, prog = setup_eng(m)
+        with prog.context as q:
+            ops.Dgate(0.1) | q[0]
+            ops.Dgate(1.3) | q[1]
+            ops.Dgate(0.5) | q[2]
+            ops.MeasureFock(select=list(n[perm])) | tuple(q[k] for k in perm)
+        eng.run(prog, run_options={'shots': shots})
+        for k in range(m):
+            assert np.all(q[k].val == expected[k])
+
+        # postselect some modes
+        eng, prog = setup_eng(m)
+        with prog.context as q:
+            ops.Dgate(0.7) | q[0]
+            ops.Fock(2)    | q[1]
+            ops.Dgate(0.2) | q[2]
+            ops.MeasureFock(select=[None, n[2], n[0]]) | tuple(q[k] for k in perm)
+        eng.run(prog, run_options={'shots': shots})
+        assert np.all(q[0].val == expected[0])
+        assert np.all(q[1].val == np.ones(shape, dtype=int) * 2)
+        assert np.all(q[2].val == expected[2])
+
+
 
     @pytest.mark.backends("gaussian")
     def test_embed_graph(self, setup_eng, hbar):

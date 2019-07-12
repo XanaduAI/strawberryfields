@@ -208,9 +208,8 @@ class GaussianBackend(BaseGaussian):
         p_idxs = x_idxs + len(mu)
         modes_idxs = concatenate([x_idxs, p_idxs])
         reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
-        samples = hafnian_sample_state(reduced_cov, shots)
         # this returns an array of integers of shape (shots, len(modes))
-        # but frontend requires nested list of shape (len(modes), shots)
+        samples = hafnian_sample_state(reduced_cov, shots)
         return samples.T
 
     def state(self, modes=None, **kwargs):

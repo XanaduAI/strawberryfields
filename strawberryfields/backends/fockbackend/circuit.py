@@ -29,8 +29,7 @@ Contents
      Circuit
 
 """
-# pylint: disable=too-many-arguments,len-as-condition,attribute-defined-outside-init
-# pylint: disable=too-many-branches,too-many-locals,too-many-public-methods
+# pylint: disable=len-as-condition, too-many-public-methods, too-many-branches
 
 import copy
 import string
@@ -75,6 +74,8 @@ class Circuit():
         self._hbar = 2
         self._checks = do_checks
         self._mode = mode
+        self._state = None
+        self._pure = None
         self.reset(pure=pure, cutoff_dim=trunc)
 
     def _apply_gate(self, mat, modes):
@@ -383,11 +384,10 @@ class Circuit():
     def measure_fock(self, modes, shots=1, select=None):
         """
         Measures a list of modes.
-        """
-        # pylint: disable=singleton-comparison
-        if select is not None and np.any(np.array(select) == None):
-            raise NotImplementedError("Post-selection lists must only contain numerical values.")
 
+        Args:
+            select (list[int, None]): Postselections for the measured modes. None in select means the corresponding mode is NOT postselected but actually measured.
+        """
         # Make sure the state is mixed
         if self._pure:
             state = ops.mix(self._state, self._num_modes)
@@ -403,7 +403,7 @@ class Circuit():
                                  "selected values (including None) must match the number of measured modes")
 
             # make sure the select values are all integers or nones
-            if not all(isinstance(s, int) or s is None for s in select):
+            if not all(isinstance(s, numbers.Integral) or s is None for s in select):
                 raise TypeError("The post-select list elements either be integers or None")
 
             # modes to measure
@@ -413,19 +413,18 @@ class Circuit():
             selected = [i for i, s in zip(modes, select) if s is not None]
             select_values = [s for s in select if s is not None]
 
-            # project out postselected modes
+            # project onto the postselected values
             self._state = ops.project_reset(selected, select_values, self._state, self._pure, self._num_modes, self._trunc)
-
-            if self.norm() == 0:
+            norm = self.norm()
+            if norm == 0:
                 raise ZeroDivisionError("Measurement has zero probability.")
-
-            self._state = self._state / self.norm()
+            self._state = self._state / norm
 
         else:
             # no post-selection; modes to measure are the modes provided
             measure = modes
 
-        if len(measure) > 0:
+        if measure:
             # sampling needs to be performed
             # Compute distribution by tracing out modes not measured, then computing the diagonal
             unmeasured = [i for i in range(self._num_modes) if i not in measure]
@@ -434,39 +433,38 @@ class Circuit():
             # kill spurious tiny values (which are sometimes negative)
             dist = dist * ~np.isclose(dist, 0.)
 
-            # Make a random choice
-            if sum(dist) != 1:
+            temp = sum(dist)
+            if temp != 1:
                 # WARNING: distribution is not normalized, could hide errors
-                i = np.random.choice(list(range(len(dist))), p=dist / sum(dist))
-            else:
-                i = np.random.choice(list(range(len(dist))), p=dist)
+                dist /= temp
 
+            # Make a random choice
+            i = np.random.choice(len(dist), size=shots, p=dist)
+            # list of arrays (one per measured mode) of measurement results
             permuted_outcome = ops.unIndex(i, len(measure), self._trunc)
 
             # Permute the outcome to match the order of the modes in 'measure'
             permutation = np.argsort(measure)
-            outcome = [0] * len(measure)
-            for i in range(len(measure)):
-                outcome[permutation[i]] = permuted_outcome[i]
+            outcome = np.empty((len(measure), shots), dtype=int)
+            outcome[permutation, :] = permuted_outcome
 
-            # Project the state onto the measurement outcome & reset in vacuum
-            self._state = ops.project_reset(measure, outcome, self._state, self._pure, self._num_modes, self._trunc)
-
-            if self.norm() == 0:
+            # Project the state onto the measurement outcome (first shot!) & reset in vacuum
+            # FIXME decide what happens to the state in multishot measurement
+            self._state = ops.project_reset(measure, outcome[:,0], self._state, self._pure, self._num_modes, self._trunc)
+            norm = self.norm()
+            if norm == 0:
                 raise ZeroDivisionError("Measurement has zero probability.")
-
-            self._state = self._state / self.norm()
+            self._state = self._state / norm
+        else:
+            outcome = []
 
         # include post-selected values in measurement outcomes
         if select is not None:
-            outcome = copy.copy(select)
+            ones = np.ones((shots,), dtype=int)
+            it = iter(outcome)
+            outcome = np.array([next(it) if x is None else x * ones for x in select])
 
-        # account for shots in return
-        if shots != 1:
-            raise NotImplementedError("measure_fock is not currently implemented in Fock"
-                                      "backend for ``shots`` != 1")
-
-        return np.expand_dims(outcome, 1)
+        return outcome
 
     def measure_homodyne(self, phi, mode, select=None, **kwargs):
         """
