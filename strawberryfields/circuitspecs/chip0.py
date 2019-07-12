@@ -14,7 +14,12 @@
 """Circuit class specification for the chip0 class of circuits."""
 import textwrap
 
+import numpy as np
+
+from strawberryfields.program_utils import CircuitError, Command, group_operations
+
 from .circuit_specs import CircuitSpecs
+from .gbs import GBSspecs
 
 
 class Chip0Specs(CircuitSpecs):
@@ -51,10 +56,42 @@ class Chip0Specs(CircuitSpecs):
         Rgate({internal_phase_0}) | [2]
         BSgate(pi/4, pi/2) | [2, 3]
 
+        # final local phases
+        Rgate({phi0}) | 0
+        Rgate({phi0}) | 1
+        Rgate({phi0}) | 2
+        Rgate({phi0}) | 3
+
         # Measurement in Fock basis
         MeasureFock() | [0, 1, 2, 3]
         """
     )
 
     def compile(self, seq):
+        # first do general GBS compilation to make sure
+        # Fock measurements are correct
+        seq = GBSSpecs().compile(seq)
+
+        # next check for S2gates
+        A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
+
+        if not A:
+            raise CircuitError('Chip0 circuits must start with S2gates.')
+
+        # finally, combine and then decompose all unitaries
+        A, B, C = group_operations(seq, lambda x: isinstance(x, (ops.Rgate, ops.BSgate)))
+
+        U_list = []
+
+        for cmd in B:
+            if isinstance(cmd.op, ops.Rgate):
+                U = 0 # expression for Rgate unitary acting on system
+
+            elif isinstance(cmd.op, ops.BSgate):
+                U = 0 # expression for BSgate unitary acting on system
+
+            U_list.append(U)
+
+        # finally, make sure it matches the circuit template
+        seq = super().compile(seq)
         return seq
