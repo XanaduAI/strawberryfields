@@ -1,3 +1,11 @@
+#  Release 0.12.dev
+
+### Improvements
+
+- Removed the `return_state` keyword argument from `LocalEngine.run()`. Now no state object is
+  returned if `modes==[]`. https://github.com/XanaduAI/strawberryfields/pull/126
+
+
 #  Release 0.11.dev
 
 ### New features
