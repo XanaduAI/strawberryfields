@@ -146,7 +146,6 @@ import strawberryfields.program_utils as pu
 from .program_utils import Command, RegRef, CircuitError, RegRefError
 
 
-
 class Program:
     """Represents a quantum circuit.
 
