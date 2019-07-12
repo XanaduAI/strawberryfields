@@ -1,3 +1,10 @@
+# Release 0.12.dev
+
+### Improvements
+
+* Added the `circuit_spec` attribute to `BaseBackend` to denote which CircuitSpecs class should be
+  used to validate programs for each backend [#125](https://github.com/XanaduAI/strawberryfields/pull/125).
+
 
 # Release 0.11.1
 
