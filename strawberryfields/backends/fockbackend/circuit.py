@@ -31,7 +31,6 @@ Contents
 """
 # pylint: disable=len-as-condition, too-many-public-methods, too-many-branches
 
-import copy
 import string
 import numbers
 from itertools import product
@@ -450,7 +449,7 @@ class Circuit():
 
             # Project the state onto the measurement outcome (first shot!) & reset in vacuum
             # FIXME decide what happens to the state in multishot measurement
-            self._state = ops.project_reset(measure, outcome[:,0], self._state, self._pure, self._num_modes, self._trunc)
+            self._state = ops.project_reset(measure, outcome[:, 0], self._state, self._pure, self._num_modes, self._trunc)
             norm = self.norm()
             if norm == 0:
                 raise ZeroDivisionError("Measurement has zero probability.")
