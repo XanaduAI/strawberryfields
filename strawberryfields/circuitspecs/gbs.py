@@ -49,7 +49,7 @@ class GBSSpecs(GaussianSpecs):
         "Sgate",
         "Rgate",
         "Fouriergate",
-        "BSgate",
+        "BSgate"
     }
 
     def compile(self, seq):

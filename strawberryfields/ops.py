@@ -297,7 +297,8 @@ from .program_utils import (Command, RegRefTransform, MergeFailure)
 from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
                          sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2,
                          transpose, squeeze)
-from .decompositions import clements, bloch_messiah, williamson, graph_embed
+
+from . import decompositions as dec
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
@@ -421,7 +422,7 @@ class Operation:
         # a special singleton Identity object instead?
         raise NotImplementedError
 
-    def decompose(self, reg):
+    def decompose(self, reg, **kwargs):
         """Decompose the operation into elementary operations supported by the backend API.
 
         See :mod:`strawberryfields.backends.base`.
@@ -435,7 +436,7 @@ class Operation:
         # todo: For now decompose() works on unevaluated Parameters.
         # This causes an error if a :class:`.RegRefTransform`-based Parameter is used, and
         # decompose() tries to do arithmetic on it.
-        return self._decompose(reg)
+        return self._decompose(reg, **kwargs)
 
     def _decompose(self, reg):
         """Internal decomposition method defined by subclasses.
@@ -700,12 +701,12 @@ class Gate(Transformation):
         s.dagger = not s.dagger
         return s
 
-    def decompose(self, reg):
+    def decompose(self, reg, **kwargs):
         """Decompose the operation into elementary operations supported by the backend API.
 
         Like :func:`Operation.decompose`, but applies self.dagger.
         """
-        seq = self._decompose(reg)
+        seq = self._decompose(reg, **kwargs)
         if self.dagger:
             # apply daggers, reverse the Command sequence
             for cmd in seq:
@@ -1361,6 +1362,30 @@ class BSgate(Gate):
         backend.beamsplitter(t.x, r.x, *reg)
 
 
+class MZgate(Gate):
+    r"""Mach-Zehnder interferometer.
+
+    .. math::
+        MZ(\phi_1, \phi_2) = BS(\pi/4, \pi/2) (R(\phi_1)\otimes I) BS(\pi/4, \pi/2) (R(\phi_2)\otimes I)
+
+    Args:
+        phi1 (float): internal phase
+        phi2 (float): external phase
+    """
+
+    def __init__(self, phi1, phi2):
+        super().__init__([phi1, phi2])
+
+    def _decompose(self, reg):
+        # into a local phse shifts and two 50-50 beamsplitters
+        return [
+            Command(Rgate(self.p[1].x), reg[0]),
+            Command(BSgate(np.pi/4, np.pi/2), reg),
+            Command(Rgate(self.p[0].x), reg[0]),
+            Command(BSgate(np.pi/4, np.pi/2), reg)
+        ]
+
+
 class S2gate(Gate):
     r""":ref:`Two-mode squeezing <two_mode_squeezing>` gate.
 
@@ -1615,46 +1640,110 @@ class All(MetaOperation):
 class Interferometer(Decomposition):
     r"""Apply a linear interferometer to the specified qumodes.
 
-    This operation uses the :ref:`Clements decomposition <clements>` to decompose
+    This operation uses either the :ref:`rectangular decomposition <rectangular>`
+    or :ref:`triangular decomposition <triangular>` to decompose
     a linear interferometer into a sequence of beamsplitters and
     rotation gates.
 
+    By specifying the keyword argument ``mesh``, the scheme used to implement the interferometer
+    may be adjusted:
+
+    * ``mesh='rectangular'`` (default): uses the scheme described in
+      :cite:`clements2016`, resulting in a *rectangular* array of
+      :math:`M(M-1)/2` beamsplitters arranged in :math:`M` slices and ordered from left
+      to right and top to bottom in each slice. The first beamsplitter acts on
+      wires :math:`0` and :math:`1`:
+
+      .. figure:: ../../_static/clements.png
+          :align: center
+          :width: 30%
+          :target: javascript:void(0);
+
+
+    * ``mesh='triangular'``: uses the scheme described in :cite:`reck1994`,
+      resulting in a *triangular* array of :math:`M(M-1)/2` beamsplitters arranged in
+      :math:`2M-3` slices and ordered from left to right and top to bottom. The
+      first and fourth beamsplitters act on wires :math:`M-1` and :math:`M`, the second
+      on :math:`M-2` and :math:`M-1`, and the third on :math:`M-3` and :math:`M-2`, and
+      so on.
+
+      .. figure:: ../../_static/reck.png
+          :align: center
+          :width: 30%
+          :target: javascript:void(0);
+
     Args:
         U (array[complex]): an :math:`N\times N` unitary matrix
-        tol (float): the tolerance used when checking if the matrix is unitary:
-            :math:`|UU^\dagger-I| \leq` tol
+        mesh (str): the scheme used to implement the interferometer.
+            Options include:
+
+            - ``'rectangular'`` - rectangular mesh, with local phase shifts
+              applied between interferometers.
+
+            - ``'rectangular_phase_end'`` - rectangular mesh, with local phase shifts
+              placed after all interferometers.
+
+            - ``'rectangular_symmetric'`` - rectangular mesh, with local phase shifts
+              placed after all interferometers, and all beasmplitters decomposed into
+              symmetric beamsplitters.
+
+            - ``'triangular'`` - triangular mesh
+        tol (float): the tolerance used when checking if the input matrix is unitary:
+            :math:`|U-U^\dagger| <` tol
     """
 
-    def __init__(self, U, tol=1e-11):
+    def __init__(self, U, mesh="rectangular", tol=1e-6):
         super().__init__([U])
         self.ns = U.shape[0]
+        self.mesh = mesh
+        self.tol = tol
+
+        allowed_meshes = {"rectangular", "rectangular_phase_end", "rectangular_symmetric", "triangular"}
+
+        if mesh not in allowed_meshes:
+            raise ValueError("Unknown mesh {}. Mesh must be one of {}".format(mesh, allowed_meshes))
 
         if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
             self.identity = True
         else:
             self.identity = False
-            self.BS1, self.BS2, self.R = clements(U, tol=tol)
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
+        mesh = kwargs.get("mesh", self.mesh)
+        tol = kwargs.get("tol", self.tol)
+
         cmds = []
 
         if not self.identity:
+            decomp_fn = getattr(dec, mesh)
+            print(decomp_fn)
+            self.BS1, self.R, self.BS2 = decomp_fn(self.p[0].x, tol=tol)
+
             for n, m, theta, phi, _ in self.BS1:
-                if np.abs(phi) >= _decomposition_tol:
-                    cmds.append(Command(Rgate(phi), reg[n]))
-                if np.abs(theta) >= _decomposition_tol:
-                    cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m])))
+                if "symmetric" in mesh:
+                    # Mach-Zehnder interferometers
+                    theta = theta if np.abs(theta) >= _decomposition_tol else 0
+                    phi = phi if np.abs(phi) >= _decomposition_tol else 0
+                    cmds.append(Command(MZgate(phi, theta), (reg[n], reg[m])))
+
+                else:
+                    # Clements style beamsplitters
+                    if np.abs(phi) >= _decomposition_tol:
+                        cmds.append(Command(Rgate(phi), reg[n]))
+                    if np.abs(theta) >= _decomposition_tol:
+                        cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m])))
 
             for n, expphi in enumerate(self.R):
                 if np.abs(expphi - 1) >= _decomposition_tol:
                     q = log(expphi).imag
                     cmds.append(Command(Rgate(q), reg[n]))
 
-            for n, m, theta, phi, _ in reversed(self.BS2):
-                if np.abs(theta) >= _decomposition_tol:
-                    cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m])))
-                if np.abs(phi) >= _decomposition_tol:
-                    cmds.append(Command(Rgate(-phi), reg[n]))
+            if self.BS2 is not None:
+                for n, m, theta, phi, _ in reversed(self.BS2):
+                    if np.abs(theta) >= _decomposition_tol:
+                        cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m])))
+                    if np.abs(phi) >= _decomposition_tol:
+                        cmds.append(Command(Rgate(-phi), reg[n]))
 
         return cmds
 
@@ -1686,7 +1775,7 @@ class GraphEmbed(Decomposition):
             self.identity = True
         else:
             self.identity = False
-            self.sq, self.U = graph_embed(
+            self.sq, self.U = dec.graph_embed(
                 A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=make_traceless, atol=tol
             )
 
@@ -1723,7 +1812,7 @@ class GaussianTransform(Decomposition):
 
     The two orthogonal symplectic unitaries describing the interferometers are then further
     decomposed via the :class:`~.Interferometer` operator and the
-    :ref:`Clements decomposition <clements>`:
+    :ref:`Rectangular decomposition <rectangular>`:
 
     .. math:: U_i = X_i + iY_i
 
@@ -1755,7 +1844,7 @@ class GaussianTransform(Decomposition):
             self.U1 = X1+1j*P1
         else:
             # transformation is active, do Bloch-Messiah
-            O1, smat, O2 = bloch_messiah(S, tol=tol)
+            O1, smat, O2 = dec.bloch_messiah(S, tol=tol)
             X1 = O1[:N, :N]
             P1 = O1[N:, :N]
             X2 = O2[:N, :N]
@@ -1833,7 +1922,7 @@ class Gaussian(Preparation, Decomposition):
         self.p_disp = r[self.ns:]
 
         # needed only if decomposed
-        th, self.S = williamson(V, tol=tol)
+        th, self.S = dec.williamson(V, tol=tol)
         self.pure = np.abs(np.linalg.det(V) - 1.0) < tol
         self.nbar = 0.5 * (np.diag(th)[:self.ns] - 1.0)
 

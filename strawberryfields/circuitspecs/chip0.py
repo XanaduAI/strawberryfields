@@ -26,8 +26,8 @@ class Chip0Specs(CircuitSpecs):
     local = True
     interactive = True
 
-    primitives = {"S2gate", "Interferometer", "MeasureFock", "Rgate", "BSgate"}
-    decompositions = {"Interferometer": {}}
+    primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate"}
+    decompositions = {"Interferometer": {"mesh": "rectangular_symmetric"}, "MZgate": {}}
 
     circuit = textwrap.dedent(
         """\
@@ -55,3 +55,6 @@ class Chip0Specs(CircuitSpecs):
         MeasureFock() | [0, 1, 2, 3]
         """
     )
+
+    def compile(self, seq):
+        return seq
