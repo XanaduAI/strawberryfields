@@ -517,6 +517,38 @@ class TestEngineIntegration:
 
         assert results.run_options == {"shots": 1000}
 
+    def test_program_sequence(self, eng, monkeypatch):
+        """Test that program run_options are successively
+        updated if a sequence of programs is executed."""
+        bb_script = """\
+        name test_program
+        version 1.0
+        target gaussian (shots=100)
+        Pgate(0.54) | 0
+        MeasureX | 0
+        """
+        bb = blackbird.loads(bb_script)
+        prog1 = io.to_program(bb)
+
+        bb_script = """\
+        name test_program
+        version 1.0
+        target gaussian (shots=1024)
+        Pgate(0.54) | 0
+        MeasureX | 0
+        """
+        bb = blackbird.loads(bb_script)
+        prog2 = io.to_program(bb)
+
+        assert prog1.run_options == {"shots": 100}
+        assert prog2.run_options == {"shots": 1024}
+
+        with monkeypatch.context() as m:
+            m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
+            results = eng.run([prog1, prog2])
+
+        assert results.run_options == prog2.run_options
+
 
 class TestSave:
     """Test sf.save functionality"""
