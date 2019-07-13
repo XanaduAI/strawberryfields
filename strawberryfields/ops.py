@@ -1366,7 +1366,7 @@ class MZgate(Gate):
     r"""Mach-Zehnder interferometer.
 
     .. math::
-        MZ(\phi_1, \phi_2) = BS(\pi/4, \pi/2) (R(\phi_1)\otimes I) BS(\pi/4, \pi/2) (R(\phi_2)\otimes I)
+        MZ(\phi_1, \phi_2) = BS(\pi/4, \pi/2) (R(\phi_2)\otimes I) BS(\pi/4, \pi/2) (R(\phi_1)\otimes I)
 
     Args:
         phi1 (float): external phase

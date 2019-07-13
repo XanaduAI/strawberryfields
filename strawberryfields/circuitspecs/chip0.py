@@ -81,6 +81,7 @@ class Chip0Specs(CircuitSpecs):
         Raises:
             CircuitError: the circuit does not correspond to Chip0
         """
+        # pylint: disable=too-many-statements,too-many-branches
         # First, check if provided sequence matches the circuit template.
         # This will avoid superfluous compilation if the user is using the
         # template directly.

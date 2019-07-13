@@ -65,6 +65,7 @@ class TestChip0Compilation:
 
         for cmd1, cmd2 in zip(res.circuit, expected.circuit):
             assert cmd1.op.__class__ == cmd2.op.__class__
+            assert [p.x for p in cmd1.op.p] == [p.x for p in cmd2.op.p]
             assert [i.ind for i in cmd1.reg] == [i.ind for i in cmd2.reg]
 
     def test_not_all_modes_measured(self):
@@ -127,25 +128,26 @@ class TestChip0Compilation:
             ops.S2gate(0.5, 0) | (q[1], q[3])
 
             # corresponds to an identity on modes [0, 1]
-            ops.Rgate(3.142) | q[0]
-            ops.BSgate(0.7854, 1.571) | (q[0], q[1])
             ops.Rgate(0) | q[0]
-            ops.BSgate(0.7854, 1.571) | (q[0], q[1])
-            ops.Rgate(3.142) | q[0]
+            ops.BSgate(np.pi/4, np.pi/2) | (q[0], q[1])
+            ops.Rgate(np.pi) | q[0]
+            ops.BSgate(np.pi/4, np.pi/2) | (q[0], q[1])
+            ops.Rgate(np.pi) | q[0]
             ops.Rgate(0) | q[1]
 
             # corresponds to an identity on modes [2, 3]
-            ops.Rgate(3.142) | q[2]
-            ops.BSgate(0.7854, 1.571) | (q[2], q[3])
             ops.Rgate(0) | q[2]
-            ops.BSgate(0.7854, 1.571) | (q[2], q[3])
-            ops.Rgate(3.142) | q[2]
+            ops.BSgate(np.pi/4, np.pi/2) | (q[2], q[3])
+            ops.Rgate(np.pi) | q[2]
+            ops.BSgate(np.pi/4, np.pi/2) | (q[2], q[3])
+            ops.Rgate(np.pi) | q[2]
             ops.Rgate(0) | q[3]
 
             ops.MeasureFock() | (q[0], q[3], q[1], q[2])
 
         for cmd1, cmd2 in zip(res.circuit, expected.circuit):
             assert cmd1.op.__class__ == cmd2.op.__class__
+            assert [p.x for p in cmd1.op.p] == [p.x for p in cmd2.op.p]
             assert [i.ind for i in cmd1.reg] == [i.ind for i in cmd2.reg]
 
     def test_interferometers(self):
@@ -175,6 +177,7 @@ class TestChip0Compilation:
 
         for cmd1, cmd2 in zip(res.circuit, expected.circuit):
             assert cmd1.op.__class__ == cmd2.op.__class__
+            assert [p.x for p in cmd1.op.p] == [p.x for p in cmd2.op.p]
             assert [i.ind for i in cmd1.reg] == [i.ind for i in cmd2.reg]
 
     def test_unitaries_do_not_match(self):
@@ -234,7 +237,7 @@ class TestChip0Compilation:
             # corresponds to MZgate(phi, theta) on modes [0, 1]
             ops.Rgate(phi) | q[0]
             ops.BSgate(np.pi/4, np.pi/2) | (q[0], q[1])
-            ops.Rgate(theta) | q[0]
+            ops.Rgate(theta+2*np.pi) | q[0]
             ops.BSgate(np.pi/4, np.pi/2) | (q[0], q[1])
             ops.Rgate(0) | q[0]
             ops.Rgate(0) | q[1]
@@ -242,7 +245,7 @@ class TestChip0Compilation:
             # corresponds to MZgate(phi, theta) on modes [2, 3]
             ops.Rgate(phi) | q[2]
             ops.BSgate(np.pi/4, np.pi/2) | (q[2], q[3])
-            ops.Rgate(theta) | q[2]
+            ops.Rgate(theta+2*np.pi) | q[2]
             ops.BSgate(np.pi/4, np.pi/2) | (q[2], q[3])
             ops.Rgate(0) | q[2]
             ops.Rgate(0) | q[3]
@@ -251,6 +254,7 @@ class TestChip0Compilation:
 
         for cmd1, cmd2 in zip(res.circuit, expected.circuit):
             assert cmd1.op.__class__ == cmd2.op.__class__
+            assert np.allclose([p.x for p in cmd1.op.p], [p.x for p in cmd2.op.p])
             assert [i.ind for i in cmd1.reg] == [i.ind for i in cmd2.reg]
 
     def test_50_50_BSgate(self):
@@ -292,4 +296,5 @@ class TestChip0Compilation:
 
         for cmd1, cmd2 in zip(res.circuit, expected.circuit):
             assert cmd1.op.__class__ == cmd2.op.__class__
+            assert [p.x for p in cmd1.op.p] == [p.x for p in cmd2.op.p]
             assert [i.ind for i in cmd1.reg] == [i.ind for i in cmd2.reg]
