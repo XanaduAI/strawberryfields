@@ -377,7 +377,7 @@ class LocalEngine(BaseEngine):
             [temp_run_options.update(p.run_options) for p in program]
         else:
             # single program to execute
-            temp_run_options.update(rogram.run_options)
+            temp_run_options.update(program.run_options)
 
         temp_run_options.update(run_options or {})
         temp_run_options.setdefault("shots", 1)
