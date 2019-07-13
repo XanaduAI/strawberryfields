@@ -213,8 +213,38 @@ class CircuitSpecs(abc.ABC):
 
         return seq
 
-    def compile_sequence(self, seq):
-        """Compiles a given Command sequence."""
+    def decompose(self, seq):
+        """Recursively decompose all gates in a given sequence, as allowed
+        by the circuit specification.
+
+        This method follows the directives defined in the
+        :attr:`~.CircuiSpecs.primitives` and :attr:`~.CircuitSpecs.decompositions`
+        class attributes to determine whether a command should be decomposed.
+
+        The order of precedence to determine whether decomposition
+        should be applied is as follows.
+
+        1. First, we check if the operation is in :attr:`~.CircuitSpecs.decompositions`.
+           If not, decomposition is skipped, and the operation is applied
+             as a primitive (unless not supported by the ``CircuitSpec``).
+
+        2. Next, we check if the operation supports decomposition, and if the user
+           has explicitly requested no decomposition.
+
+           - If ``True``, the operation is applied
+             as a primitive, unless not supported by the ``CircuitSpec``.
+
+           - If ``False``, we attempt to decompose the operation by calling
+             :meth:`~.Operation.decompose`.
+
+        Args:
+            list[strawberryfields.program_utils.Command]: list of commands to
+                be compiled
+
+        Returns:
+            list[strawberryfields.program_utils.Command]: list of compiled commands
+            for the circuit specification
+        """
         compiled = []
         for cmd in seq:
             op_name = cmd.op.__class__.__name__
@@ -231,7 +261,7 @@ class CircuitSpecs(abc.ABC):
                     kwargs = self.decompositions[op_name]
                     temp = cmd.op.decompose(cmd.reg, **kwargs)
                     # now compile the decomposition
-                    temp = self.compile_sequence(temp)
+                    temp = self.decompose(temp)
                     compiled.extend(temp)
                 except NotImplementedError as err:
                     # Operation does not have _decompose() method defined!

@@ -498,7 +498,7 @@ class Program:
                     "only supports a {}-mode program".format(modes_total, target, db.modes)
                 )
 
-        seq = db.compile_sequence(self.circuit)
+        seq = db.decompose(self.circuit)
 
         if kwargs.get('warn_connected', True):
             DAG = pu.list_to_DAG(seq)

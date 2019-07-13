@@ -16,6 +16,7 @@ import textwrap
 
 import numpy as np
 from numpy.linalg import multi_dot
+from scipy.linalg import block_diag
 
 from strawberryfields.program_utils import CircuitError, Command, group_operations
 import strawberryfields.ops as ops
@@ -70,48 +71,96 @@ class Chip0Specs(CircuitSpecs):
     )
 
     def compile(self, seq):
+        # First, check if provided sequence matches the circuit template.
+        # This will avoid superfluous compilation if the user is using the
+        # template directly.
+        try:
+            seq = super().compile(seq)
+        except CircuitError:
+            # failed topology check. Continue to more general
+            # compilation below.
+            pass
+        else:
+            return seq
+
         # first do general GBS compilation to make sure
         # Fock measurements are correct
+        # ---------------------------------------------
         seq = GBSSpecs().compile(seq)
 
-        # next check for S2gates
+        # Check circuit begins with two mode squeezers
+        # --------------------------------------------
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
 
         if A:
-            raise CircuitError('Chip0 circuits must start with S2gates.')
+            raise CircuitError('Circuits must start with two S2gates.')
 
-        # finally, combine and then decompose all unitaries
+        # get circuit registers
+        regrefs = sorted([q for cmd in B for q in cmd.reg], key=lambda q: q.ind)
+
+        if len(regrefs) != self.modes:
+            raise CircuitError("S2gates placed on the incorrect modes.")
+
+        # Compile the unitary: combine and then decompose all unitaries
+        # -------------------------------------------------------------
         A, B, C = group_operations(seq, lambda x: isinstance(x, (ops.Rgate, ops.BSgate)))
 
-        U_list = []
-        regrefs = set()
+        # begin unitary lists for mode [0, 1] and modes [2, 3] with
+        # two identity matrices. This is because multi_dot requires
+        # at least two matrices in the list.
+        U_list01 = [np.identity(self.modes//2, dtype=np.complex128)]*2
+        U_list23 = [np.identity(self.modes//2, dtype=np.complex128)]*2
 
         for cmd in B:
+            # calculate the unitary matrix representing each
+            # rotation gate and each beamsplitter
+            # Note: this is done separately on modes [0, 1]
+            # and modes [2, 3]
             modes = [i.ind for i in cmd.reg]
             params = [i.x for i in cmd.op.p]
-            regrefs |= set(cmd.reg)
-            U = np.identity(self.modes, dtype=np.complex128)
+            U = np.identity(self.modes//2, dtype=np.complex128)
 
             if isinstance(cmd.op, ops.Rgate):
-                U[modes[0], modes[0]] = np.exp(1j*params[0])
+                m = modes[0]
+                U[m % 2, m % 2] = np.exp(1j*params[0])
 
             elif isinstance(cmd.op, ops.BSgate):
+                m, n = modes
+
                 t = np.cos(params[0])
                 r = np.exp(1j*params[1])*np.sin(params[0])
-                U[modes[0], modes[0]] = t
-                U[modes[0], modes[1]] = -np.conj(r)
-                U[modes[1], modes[0]] = r
-                U[modes[1], modes[1]] = t
 
-            U_list.append(U)
+                U[m % 2, m % 2] = t
+                U[m % 2, n % 2] = -np.conj(r)
+                U[n % 2, m % 2] = r
+                U[n % 2, n % 2] = t
 
-        U = multi_dot(U_list)
+            if set(modes) == {0, 1}:
+                U_list01.append(U)
+            elif set(modes) == {2, 3}:
+                U_list23.append(U)
+
+        # multiply all unitaries together, to get the final
+        # unitary representation on modes [0, 1] and [2, 3].
+        U01 = multi_dot(U_list01)
+        U23 = multi_dot(U_list23)
+
+        # check unitaries are equal
+        if not np.allclose(U01, U23):
+            raise CircuitError("Interferometer on modes [0, 1] must be identical to interferometer on modes [2, 3].")
+
+        U = block_diag(U01, U23)
 
         # replace B with an interferometer
-        Ucmd = Command(ops.Interferometer(U, mesh="rectangular_symmetric"), list(regrefs))
-        # decompose the interferometer
-        B = self.compile_sequence(B)
+        B = [
+            Command(ops.Interferometer(U01), regrefs[:2]),
+            Command(ops.Interferometer(U23), regrefs[2:])
+        ]
 
-        # finally, make sure it matches the circuit template
+        # decompose the interferometer, using Mach-Zehnder interferometers
+        B = self.decompose(B)
+
+        # Do a final circuit topology check
+        # ---------------------------------
         seq = super().compile(A + B + C)
         return seq
