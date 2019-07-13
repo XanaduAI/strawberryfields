@@ -165,7 +165,7 @@ class TestInterferometer:
         n = 3
         prog = sf.Program(n)
         U = random_interferometer(n)
-        BS1, BS2, R = dec.clements(U)
+        BS1, R, BS2 = dec.rectangular(U)
 
         G = ops.Interferometer(U)
         cmds = G.decompose(prog.register)

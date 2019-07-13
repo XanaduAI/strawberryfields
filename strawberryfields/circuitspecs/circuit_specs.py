@@ -257,7 +257,7 @@ class CircuitSpecs(abc.ABC):
                         compiled.append(cmd)
                         continue
                     else:
-                        raise pu.CircuitError("The operation {} is not a primitive for the target '{}'".format(cmd.op.__class__.__name__, target))
+                        raise pu.CircuitError("The operation {} is not a primitive for the target '{}'".format(cmd.op.__class__.__name__, self.short_name))
                 try:
                     kwargs = self.decompositions[op_name]
                     temp = cmd.op.decompose(cmd.reg, **kwargs)
@@ -274,6 +274,6 @@ class CircuitSpecs(abc.ABC):
                 compiled.append(cmd)
 
             else:
-                raise pu.CircuitError("The operation {} cannot be used with the target '{}'.".format(cmd.op.__class__.__name__, target))
+                raise pu.CircuitError("The operation {} cannot be used with the target '{}'.".format(cmd.op.__class__.__name__, self.short_name))
 
         return compiled
