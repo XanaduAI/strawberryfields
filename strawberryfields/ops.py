@@ -438,7 +438,7 @@ class Operation:
         # decompose() tries to do arithmetic on it.
         return self._decompose(reg, **kwargs)
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         """Internal decomposition method defined by subclasses.
 
         Args:
@@ -871,7 +871,7 @@ class DisplacedSqueezed(Preparation):
         # prepare the displaced squeezed state directly
         backend.prepare_displaced_squeezed_state(p[0], p[1], p[2], *reg)
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # squeezed state preparation followed by a displacement gate
         return [
             Command(Squeezed(self.p[1], self.p[2]), reg),
@@ -1268,7 +1268,7 @@ class Pgate(Gate):
     def __init__(self, s):
         super().__init__([s])
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # into a squeeze and a rotation
         temp = self.p[0] / 2
         r = arccosh(sqrt(1+temp**2))
@@ -1376,7 +1376,7 @@ class MZgate(Gate):
     def __init__(self, phi1, phi2):
         super().__init__([phi1, phi2])
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # into a local phse shifts and two 50-50 beamsplitters
         return [
             Command(Rgate(self.p[1].x), reg[0]),
@@ -1403,7 +1403,7 @@ class S2gate(Gate):
     def __init__(self, r, phi=0.):
         super().__init__([r, phi])
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # two opposite squeezers sandwiched between 50% beamsplitters
         S = Sgate(self.p[0], self.p[1])
         BS = BSgate(pi/4, 0)
@@ -1432,7 +1432,7 @@ class CXgate(Gate):
     def __init__(self, s=1):
         super().__init__([s])
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         s = self.p[0]
         r = arcsinh(-s/2)
         theta = 0.5*arctan2(-1.0/cosh(r), -tanh(r))
@@ -1464,7 +1464,7 @@ class CZgate(Gate):
     def __init__(self, s=1):
         super().__init__([s])
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # phase-rotated CZ
         CX = CXgate(self.p[0])
         return [
@@ -1694,6 +1694,7 @@ class Interferometer(Decomposition):
         tol (float): the tolerance used when checking if the input matrix is unitary:
             :math:`|U-U^\dagger| <` tol
     """
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, U, mesh="rectangular", drop_identity=True, tol=1e-6):
         super().__init__([U])
@@ -1707,10 +1708,7 @@ class Interferometer(Decomposition):
         if mesh not in allowed_meshes:
             raise ValueError("Unknown mesh '{}'. Mesh must be one of {}".format(mesh, allowed_meshes))
 
-        if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol) and drop_identity:
-            self.identity = True
-        else:
-            self.identity = False
+        self.identity = np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol)
 
     def _decompose(self, reg, **kwargs):
         mesh = kwargs.get("mesh", self.mesh)
@@ -1721,9 +1719,9 @@ class Interferometer(Decomposition):
 
         if not self.identity or not drop_identity:
             decomp_fn = getattr(dec, mesh)
-            self.BS1, self.R, self.BS2 = decomp_fn(self.p[0].x, tol=tol)
+            BS1, R, BS2 = decomp_fn(self.p[0].x, tol=tol)
 
-            for n, m, theta, phi, _ in self.BS1:
+            for n, m, theta, phi, _ in BS1:
                 theta = theta if np.abs(theta) >= _decomposition_tol else 0
                 phi = phi if np.abs(phi) >= _decomposition_tol else 0
 
@@ -1739,16 +1737,16 @@ class Interferometer(Decomposition):
                     if not (drop_identity and theta == 0):
                         cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m])))
 
-            for n, expphi in enumerate(self.R):
+            for n, expphi in enumerate(R):
                 # local phase shifts
                 q = log(expphi).imag if np.abs(expphi - 1) >= _decomposition_tol else 0
                 if not (drop_identity and q == 0):
                     cmds.append(Command(Rgate(q), reg[n]))
 
-            if self.BS2 is not None:
+            if BS2 is not None:
                 # Clements style beamsplitters
 
-                for n, m, theta, phi, _ in reversed(self.BS2):
+                for n, m, theta, phi, _ in reversed(BS2):
                     theta = theta if np.abs(theta) >= _decomposition_tol else 0
                     phi = phi if np.abs(phi) >= _decomposition_tol else 0
 
@@ -1945,7 +1943,7 @@ class Gaussian(Preparation, Decomposition):
         s = sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
         backend.prepare_gaussian_state(p[1]/s, p[0], reg)
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # pylint: disable=too-many-branches
         cmds = []
 

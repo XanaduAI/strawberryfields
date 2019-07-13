@@ -188,6 +188,7 @@ class CircuitSpecs(abc.ABC):
         Raises:
             CircuitError: the given circuit cannot be validated to belong to this circuit class
         """
+        # registers is not used here, but may be used if the method is overwritten pylint: disable=unused-argument
         if self.graph is not None:
             # check topology
             DAG = pu.list_to_DAG(seq)
