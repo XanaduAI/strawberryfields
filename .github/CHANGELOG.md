@@ -1,17 +1,15 @@
-# Release 0.12.dev
+# Release 0.11.1.dev
 
 ### Improvements
 
 * Added the `circuit_spec` attribute to `BaseBackend` to denote which CircuitSpecs class should be
   used to validate programs for each backend [#125](https://github.com/XanaduAI/strawberryfields/pull/125).
-
-
-# Release 0.11.1
+* Removed the `return_state` keyword argument from `LocalEngine.run()`. Now no state object is
+  returned if `modes==[]`. https://github.com/XanaduAI/strawberryfields/pull/126
 
 ### Bug fixes
 
 * Removes `ModuleNotFoundError` from the codebase, replacing all occurrences with `ImportError`. Since `ModuleNotFoundError` was only introduced in Python 3.6+, this fixes a bug where Strawberry Fields was not importable on Python 3.5 [#124](https://github.com/XanaduAI/strawberryfields/pull/124).
-
 * Updates the Chip0 template to use MeasureFock() | [0, 1, 2, 3], which will allow correct fock measurement behaviour when simulated on the Gaussian backend.
 
 
