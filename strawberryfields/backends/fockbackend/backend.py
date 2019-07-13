@@ -34,11 +34,13 @@ indices = string.ascii_lowercase
 class FockBackend(BaseFock):
     """ Backend in the Fock basis """
 
+    short_name = 'fock'
+    circuit_spec = 'fock'
+
     def __init__(self):
         """Instantiate a FockBackend object."""
         super().__init__()
         self._supported["mixed_states"] = True
-        self._short_name = "fock"
         self._init_modes = None  #: int: initial number of modes in the circuit
         self._modemap = None     #: Modemap: maps external mode indices to internal ones
         self.circuit = None      #: ~.fockbackend.circuit.Circuit: representation of the simulated quantum state

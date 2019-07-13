@@ -47,11 +47,11 @@ class TestFockRepresentation:
         backend = setup_backend(3)
 
         with pytest.raises(NotImplementedError, match="{} backend currently does not support "
-                                                      "shots != 1 for Fock measurement".format(backend._short_name)):
+                                                      "shots != 1 for Fock measurement".format(backend.short_name)):
             backend.measure_fock([0, 1], shots=5)
 
         with pytest.raises(NotImplementedError, match="{} backend currently does not support "
-                                                      "shots != 1 for Fock measurement".format(backend._short_name)):
+                                                      "shots != 1 for Fock measurement".format(backend.short_name)):
             backend.measure_fock([0, 1], shots=-5)
 
     def shots_not_implemented_homodyne(self, setup_backend):
@@ -61,11 +61,11 @@ class TestFockRepresentation:
         backend = setup_backend(3)
 
         with pytest.raises(NotImplementedError, match="{} backend currently does not support "
-                                                      "shots != 1 for homodyne measurement".format(backend._short_name)):
+                                                      "shots != 1 for homodyne measurement".format(backend.short_name)):
             backend.measure_homodyne([0, 1], shots=5)
 
         with pytest.raises(NotImplementedError, match="{} backend currently does not support "
-                                                      "shots != 1 for homodyne measurement".format(backend._short_name)):
+                                                      "shots != 1 for homodyne measurement".format(backend.short_name)):
             backend.measure_homodyne([0, 1], shots=-5)
 
     def test_normalized_conditional_states(self, setup_backend, cutoff, pure, tol):
