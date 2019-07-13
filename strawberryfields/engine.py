@@ -291,9 +291,9 @@ class BaseEngine(abc.ABC):
                     p.reg_refs[k].val = v
 
             # if the program hasn't been compiled for this backend, do it now
-            if p.target != self.backend_name:
-                # TODO: shots might be relevant for compilation?
-                p = p.compile(self.backend_name, **compile_options)
+            target = self.backend.circuit_spec
+            if target is not None and p.target != target:
+                p = p.compile(target, **compile_options)
             p.lock()
 
             if self.backend_name in getattr(self, "HARDWARE_BACKENDS", []):
@@ -318,7 +318,7 @@ class LocalEngine(BaseEngine):
     the results available via :class:`.Result`.
 
     Args:
-        backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
+        backend (str, BaseBackend): short name of the backend, or a pre-constructed backend instance
         backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
     def __init__(self, backend, *, backend_options=None):
@@ -330,7 +330,7 @@ class LocalEngine(BaseEngine):
             #: BaseBackend: backend for executing the quantum circuit
             self.backend = load_backend(backend)
         elif isinstance(backend, BaseBackend):
-            self.backend_name = backend._short_name
+            self.backend_name = backend.short_name
             self.backend = backend
         else:
             raise TypeError("backend must be a string or a BaseBackend instance.")
@@ -391,9 +391,7 @@ class LocalEngine(BaseEngine):
         Keyword Args:
             shots (int): number of times the program measurement evaluation is repeated
             modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
-                ``None`` returns all the modes (default).
-            return_state (bool): Whether to return a :class:`.BaseState` object object within ``Result.state``.
-                Default is True.
+                ``None`` returns all the modes (default). An empty sequence means no state object is returned.
             eval (bool): If False, the backend returns unevaluated tf.Tensors instead of
                 numbers/arrays for returned measurement results and state (default: True). TF backend only.
             session (tf.Session): TensorFlow session, used when evaluating returned measurement results and state.
@@ -402,21 +400,36 @@ class LocalEngine(BaseEngine):
                 and state. TF backend only.
         """
         compile_options = compile_options or {}
-        run_options = run_options or {}
-        run_options.setdefault("shots", 1)
-        run_options.setdefault('modes', None)
+        temp_run_options = {}
+
+        if isinstance(program, Sequence):
+            # succesively update all run option defaults.
+            # the run options of successive programs
+            # overwrite the run options of previous programs
+            # in the list
+            [temp_run_options.update(p.run_options) for p in program]
+        else:
+            # single program to execute
+            temp_run_options.update(program.run_options)
+
+        temp_run_options.update(run_options or {})
+        temp_run_options.setdefault("shots", 1)
+        temp_run_options.setdefault('modes', None)
 
         # avoid unexpected keys being sent to Operations
         eng_run_keys = ["eval", "session", "feed_dict", "shots"]
-        eng_run_options = {key: run_options[key] for key in run_options.keys() & eng_run_keys}
+        eng_run_options = {key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys}
 
         result = super()._run(program, compile_options=compile_options, **eng_run_options)
 
-        if run_options.get("return_state", True):
+        modes = temp_run_options["modes"]
+
+        if modes is None or modes:
             # state object requested
             # session and feed_dict are needed by TF backend both during simulation (if program
             # contains measurements) and state object construction.
-            result._state = self.backend.state(**run_options)
+            result._state = self.backend.state(**temp_run_options)
+
         return result
 
 

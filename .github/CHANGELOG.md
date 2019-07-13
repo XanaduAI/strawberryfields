@@ -1,11 +1,32 @@
+# Release 0.11.1.dev
 
-# Release 0.11.1
+### Improvements
+
+* Added the `circuit_spec` attribute to `BaseBackend` to denote which CircuitSpecs class should be
+  used to validate programs for each backend [#125](https://github.com/XanaduAI/strawberryfields/pull/125).
+* Removed the `return_state` keyword argument from `LocalEngine.run()`. Now no state object is
+  returned if `modes==[]`. https://github.com/XanaduAI/strawberryfields/pull/126
 
 ### Bug fixes
 
-* Removes `ModuleNotFoundError` from the codebase, replacing all occurrences with `ImportError`. Since `ModuleNotFoundError` was only introduced in Python 3.6+, this fixes a bug where Strawberry Fields was not importable on Python 3.5 [#124](https://github.com/XanaduAI/strawberryfields/pull/124).
+* Allows imported Blackbird programs to store `target` options
+  as default run options. During eng.run, if no run options are provided
+  as a keyword argument, the engine will fall back on the run options stored
+  within the program.
 
-* Updates the Chip0 template to use MeasureFock() | [0, 1, 2, 3], which will allow correct fock measurement behaviour when simulated on the Gaussian backend.
+  This fixes a bug where shots specified in Blackbird scripts were not being
+  passed to `eng.run`. [#130](https://github.com/XanaduAI/strawberryfields/pull/130)
+
+* Removes `ModuleNotFoundError` from the codebase, replacing all occurrences
+  with `ImportError`. Since `ModuleNotFoundError` was only introduced in
+  Python 3.6+, this fixes a bug where Strawberry Fields was not importable
+  on Python 3.5 [#124](https://github.com/XanaduAI/strawberryfields/pull/124).
+
+* Updates the Chip0 template to use MeasureFock() | [0, 1, 2, 3], which will
+  allow correct fock measurement behaviour when simulated on the Gaussian backend.
+  
+* Fixed a bug in the `GraphEmbed` op, which was not correctly determining when a 
+  unitary was the identity [#128](https://github.com/XanaduAI/strawberryfields/pull/128).
 
 
 # Release 0.11.0

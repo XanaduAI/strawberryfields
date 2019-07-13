@@ -274,6 +274,33 @@ class TestGraphEmbed:
 
         assert np.allclose(ratio, np.ones([n, n]), atol=tol, rtol=0)
 
+    def test_decomposition_interferometer_with_zero(self, tol):
+        """Test that an graph is correctly decomposed when the interferometer
+        has one zero somewhere in the unitary matrix, which is the case for the
+        adjacency matrix below"""
+        n = 6
+        prog = sf.Program(n)
+
+        A = np.array([
+        [0, 1, 0, 0, 1, 1],
+        [1, 0, 1, 0, 1, 1],
+        [0, 1, 0, 1, 1, 0],
+        [0, 0, 1, 0, 1, 0],
+        [1, 1, 1, 1, 0, 1],
+        [1, 1, 0, 0, 1, 0],
+        ]
+        )
+        sq, U = dec.graph_embed(A)
+        assert not np.allclose(U, np.identity(n))
+
+        G = ops.GraphEmbed(A)
+        cmds = G.decompose(prog.register)
+        last_op = cmds[-1].op
+        param_val = last_op.p[0].x
+
+        assert isinstance(last_op, ops.Interferometer)
+        assert last_op.ns == n
+        assert np.allclose(param_val, U, atol=tol, rtol=0)
 
 class TestGaussianTransform:
     """Tests for the GaussianTransform quantum operation"""
