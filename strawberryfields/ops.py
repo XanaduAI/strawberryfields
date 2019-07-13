@@ -1786,8 +1786,8 @@ class GraphEmbed(Decomposition):
             self.identity = True
         else:
             self.identity = False
-            self.sq, self.U = dec.graph_embed(
-                A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=make_traceless, atol=tol
+            self.sq, self.U = graph_embed(
+                A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=make_traceless, atol=tol, rtol=0
             )
 
     def _decompose(self, reg, **kwargs):
@@ -1798,9 +1798,10 @@ class GraphEmbed(Decomposition):
                 if np.abs(s) >= _decomposition_tol:
                     cmds.append(Command(Sgate(s), reg[n]))
 
-            if np.all(np.abs(self.U - np.identity(len(self.U))) >= _decomposition_tol):
+            if not np.allclose(self.U, np.identity(len(self.U)), atol=_decomposition_tol, rtol=0):
                 mesh = kwargs.get("mesh", "rectangular")
                 cmds.append(Command(Interferometer(self.U, mesh=mesh), reg))
+
         return cmds
 
 
