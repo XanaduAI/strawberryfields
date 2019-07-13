@@ -461,13 +461,12 @@ class StarshipEngine(BaseEngine):
         super().reset(backend_options={})
         self.jobs.clear()
 
-    def _get_blackbird(self, name, shots, program):
+    def _get_blackbird(self, shots, program):
         """
         Returns a Blackbird object to be sent later to the server when creating a job.
         Assumes the current backend as the target.
 
         Args:
-            name (str): the name of the job to be created (e.g. StateTeleportation)
             shots (int): the number of shots
             program (Program): program to be converted to Blackbird code
 
@@ -475,11 +474,10 @@ class StarshipEngine(BaseEngine):
             blackbird.BlackbirdProgram
         """
         bb = to_blackbird(program, version="1.0")
-        bb._name = name
 
         # TODO: This is potentially not needed here
         bb._target["name"] = self.backend_name
-
+        # TODO: set up shots pass-through once PR #130 is merged
         bb._target["options"] = {"shots": shots}
         return bb
 
@@ -543,7 +541,7 @@ class StarshipEngine(BaseEngine):
             job.result.manager.get()
             return job.result.result.value
 
-    def run(self, program, name, shots=1, **kwargs):
+    def run(self, program, shots=1, **kwargs):
         """Compile the given program and execute it by queuing a job in the Starship.
 
         For the :class:`Program` instance given as input, the following happens:
@@ -558,7 +556,6 @@ class StarshipEngine(BaseEngine):
 
         Args:
             program (Program, Sequence[Program]): quantum programs to run
-            name (str): The name of the program (an arbitrary string)
             shots (int): number of times the program measurement evaluation is repeated
 
         The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
@@ -567,7 +564,7 @@ class StarshipEngine(BaseEngine):
             Result: results of the computation
         """
 
-        return super()._run(program, shots=shots, name=name, **kwargs)
+        return super()._run(program, shots=shots, **kwargs)
 
 
 Engine = LocalEngine  # alias for backwards compatibility
