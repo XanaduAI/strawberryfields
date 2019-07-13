@@ -367,8 +367,18 @@ class LocalEngine(BaseEngine):
                 and state. TF backend only.
         """
         compile_options = compile_options or {}
+        temp_run_options = {}
 
-        temp_run_options = program.run_options
+        if isinstance(program, Sequence):
+            # succesively update all run option defaults.
+            # the run options of successive programs
+            # overwrite the run options of previous programs
+            # in the list
+            [temp_run_options.update(p.run_options) for p in program]
+        else:
+            # single program to execute
+            temp_run_options.update(rogram.run_options)
+
         temp_run_options.update(run_options or {})
         temp_run_options.setdefault("shots", 1)
         temp_run_options.setdefault('modes', None)
