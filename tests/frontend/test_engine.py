@@ -275,7 +275,7 @@ class TestStarshipEngine:
         """
 
         inputs = MagicMock()
-        inputs.shots = 1
+        inputs.shots = 5
         outputs = MagicMock()
         methods = MagicMock()
 
@@ -283,11 +283,12 @@ class TestStarshipEngine:
         monkeypatch.setattr(starship_engine, "HARDWARE_BACKENDS", [str(inputs.mock_backend)])
         monkeypatch.setattr(starship_engine, "_run_program", methods._run_program)
         monkeypatch.setattr("strawberryfields.engine.Result", outputs.result)
+        monkeypatch.setattr(starship_engine, "backend", inputs.mock_backend)
 
         result = starship_engine._run(inputs.program, shots=inputs.shots)
 
         assert starship_engine.backend_name in starship_engine.HARDWARE_BACKENDS
-        inputs.program.compile.assert_called_once_with(starship_engine.backend_name)
+        inputs.program.compile.assert_called_once_with(starship_engine.backend.circuit_spec)
         mock_compiled_program = inputs.program.compile(starship_engine.backend_name)
         mock_compiled_program.lock.assert_called_once()
         methods._run_program.assert_called_once_with(mock_compiled_program, shots=inputs.shots)

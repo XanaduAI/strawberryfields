@@ -451,6 +451,11 @@ class StarshipEngine(BaseEngine):
         backend = "chip0"
         super().__init__(backend)
 
+        # todo: move this into backend class
+        class Chip0Backend(BaseBackend):
+            circuit_spec = "chip0"
+        self.backend = Chip0Backend()
+
         api_client_params = {k: v for k, v in kwargs.items() if k in DEFAULT_CONFIG["api"].keys()}
         self.client = APIClient(**api_client_params)
         self.polling_delay_seconds = polling_delay_seconds
@@ -490,7 +495,6 @@ class StarshipEngine(BaseEngine):
 
         # TODO: This is potentially not needed here
         bb._target["name"] = self.backend_name
-        # TODO: set up shots pass-through once PR #130 is merged
         bb._target["options"] = {"shots": shots}
         return bb
 
@@ -534,6 +538,7 @@ class StarshipEngine(BaseEngine):
                 "A job is already queued. Please reset the engine and try again."
             )
 
+        kwargs.update(program.run_options)
         job_content = self._get_blackbird(program=program, **kwargs).serialize()
         job = self._queue_job(job_content)
 
