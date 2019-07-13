@@ -512,7 +512,7 @@ class Program:
 
         # does the circuit spec  have its own compilation method?
         if db.compile is not None:
-            seq = db.compile(seq)
+            seq = db.compile(seq, self.register)
 
         # create the compiled Program
         compiled = self._linked_copy()

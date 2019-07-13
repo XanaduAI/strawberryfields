@@ -1688,22 +1688,26 @@ class Interferometer(Decomposition):
               symmetric beamsplitters.
 
             - ``'triangular'`` - triangular mesh
+
+        drop_identity (bool): If ``True``, decomposed gates with trivial parameters,
+            such that they correspond to an identity operation, are removed.
         tol (float): the tolerance used when checking if the input matrix is unitary:
             :math:`|U-U^\dagger| <` tol
     """
 
-    def __init__(self, U, mesh="rectangular", tol=1e-6):
+    def __init__(self, U, mesh="rectangular", drop_identity=True, tol=1e-6):
         super().__init__([U])
         self.ns = U.shape[0]
         self.mesh = mesh
         self.tol = tol
+        self.drop_identity = drop_identity
 
         allowed_meshes = {"rectangular", "rectangular_phase_end", "rectangular_symmetric", "triangular"}
 
         if mesh not in allowed_meshes:
             raise ValueError("Unknown mesh '{}'. Mesh must be one of {}".format(mesh, allowed_meshes))
 
-        if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
+        if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol) and drop_identity:
             self.identity = True
         else:
             self.identity = False
@@ -1711,37 +1715,46 @@ class Interferometer(Decomposition):
     def _decompose(self, reg, **kwargs):
         mesh = kwargs.get("mesh", self.mesh)
         tol = kwargs.get("tol", self.tol)
+        drop_identity = kwargs.get("drop_identity", self.drop_identity)
 
         cmds = []
 
-        if not self.identity:
+        if not self.identity or not drop_identity:
             decomp_fn = getattr(dec, mesh)
             self.BS1, self.R, self.BS2 = decomp_fn(self.p[0].x, tol=tol)
 
             for n, m, theta, phi, _ in self.BS1:
+                theta = theta if np.abs(theta) >= _decomposition_tol else 0
+                phi = phi if np.abs(phi) >= _decomposition_tol else 0
+
                 if "symmetric" in mesh:
                     # Mach-Zehnder interferometers
-                    theta = theta if np.abs(theta) >= _decomposition_tol else 0
-                    phi = phi if np.abs(phi) >= _decomposition_tol else 0
                     cmds.append(Command(MZgate(phi, theta), (reg[n], reg[m])))
 
                 else:
                     # Clements style beamsplitters
-                    if np.abs(phi) >= _decomposition_tol:
+                    if not (drop_identity and phi == 0):
                         cmds.append(Command(Rgate(phi), reg[n]))
-                    if np.abs(theta) >= _decomposition_tol:
+
+                    if not (drop_identity and theta == 0):
                         cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m])))
 
             for n, expphi in enumerate(self.R):
-                if np.abs(expphi - 1) >= _decomposition_tol:
-                    q = log(expphi).imag
+                # local phase shifts
+                q = log(expphi).imag if np.abs(expphi - 1) >= _decomposition_tol else 0
+                if not (drop_identity and q == 0):
                     cmds.append(Command(Rgate(q), reg[n]))
 
             if self.BS2 is not None:
+                # Clements style beamsplitters
+
                 for n, m, theta, phi, _ in reversed(self.BS2):
-                    if np.abs(theta) >= _decomposition_tol:
+                    theta = theta if np.abs(theta) >= _decomposition_tol else 0
+                    phi = phi if np.abs(phi) >= _decomposition_tol else 0
+
+                    if not (drop_identity and theta == 0):
                         cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m])))
-                    if np.abs(phi) >= _decomposition_tol:
+                    if not (drop_identity and phi == 0):
                         cmds.append(Command(Rgate(-phi), reg[n]))
 
         return cmds

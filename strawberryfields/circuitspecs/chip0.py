@@ -35,7 +35,7 @@ class Chip0Specs(CircuitSpecs):
     interactive = True
 
     primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate"}
-    decompositions = {"Interferometer": {"mesh": "rectangular_symmetric"}, "MZgate": {}}
+    decompositions = {"Interferometer": {"mesh": "rectangular_symmetric", "drop_identity": False}, "MZgate": {}}
 
     circuit = textwrap.dedent(
         """\
@@ -70,12 +70,22 @@ class Chip0Specs(CircuitSpecs):
         """
     )
 
-    def compile(self, seq):
+    def compile(self, seq, registers):
+        """Try to arrange a quantum circuit into a form suitable for Chip0.
+
+        Args:
+            seq (Sequence[Command]): quantum circuit to modify
+            registers (Sequence[RegRefs]): quantum registers
+        Returns:
+            List[Command]: modified circuit
+        Raises:
+            CircuitError: the circuit does not correspond to Chip0
+        """
         # First, check if provided sequence matches the circuit template.
         # This will avoid superfluous compilation if the user is using the
         # template directly.
         try:
-            seq = super().compile(seq)
+            seq = super().compile(seq, registers)
         except CircuitError:
             # failed topology check. Continue to more general
             # compilation below.
@@ -86,7 +96,11 @@ class Chip0Specs(CircuitSpecs):
         # first do general GBS compilation to make sure
         # Fock measurements are correct
         # ---------------------------------------------
-        seq = GBSSpecs().compile(seq)
+        seq = GBSSpecs().compile(seq, registers)
+        A, B, C = group_operations(seq, lambda x: isinstance(x, ops.MeasureFock))
+
+        if len(B[0].reg) != self.modes:
+            raise CircuitError('All modes must be measured.')
 
         # Check circuit begins with two mode squeezers
         # --------------------------------------------
@@ -96,7 +110,7 @@ class Chip0Specs(CircuitSpecs):
             raise CircuitError('Circuits must start with two S2gates.')
 
         # get circuit registers
-        regrefs = sorted([q for cmd in B for q in cmd.reg], key=lambda q: q.ind)
+        regrefs = {q for cmd in B for q in cmd.reg}
 
         if len(regrefs) != self.modes:
             raise CircuitError("S2gates placed on the incorrect modes.")
@@ -104,6 +118,11 @@ class Chip0Specs(CircuitSpecs):
         # Compile the unitary: combine and then decompose all unitaries
         # -------------------------------------------------------------
         A, B, C = group_operations(seq, lambda x: isinstance(x, (ops.Rgate, ops.BSgate)))
+
+        if not C:
+            # no interferometer was applied
+            A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
+            A = B # move the S2gates to A
 
         # begin unitary lists for mode [0, 1] and modes [2, 3] with
         # two identity matrices. This is because multi_dot requires
@@ -136,9 +155,9 @@ class Chip0Specs(CircuitSpecs):
                 U[n % 2, n % 2] = t
 
             if set(modes) == {0, 1}:
-                U_list01.append(U)
+                U_list01.insert(0, U)
             elif set(modes) == {2, 3}:
-                U_list23.append(U)
+                U_list23.insert(0, U)
 
         # multiply all unitaries together, to get the final
         # unitary representation on modes [0, 1] and [2, 3].
@@ -153,8 +172,8 @@ class Chip0Specs(CircuitSpecs):
 
         # replace B with an interferometer
         B = [
-            Command(ops.Interferometer(U01), regrefs[:2]),
-            Command(ops.Interferometer(U23), regrefs[2:])
+            Command(ops.Interferometer(U01), registers[:2]),
+            Command(ops.Interferometer(U23), registers[2:])
         ]
 
         # decompose the interferometer, using Mach-Zehnder interferometers
@@ -162,5 +181,5 @@ class Chip0Specs(CircuitSpecs):
 
         # Do a final circuit topology check
         # ---------------------------------
-        seq = super().compile(A + B + C)
+        seq = super().compile(A + B + C, registers)
         return seq

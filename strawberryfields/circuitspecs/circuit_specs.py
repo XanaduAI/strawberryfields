@@ -175,13 +175,14 @@ class CircuitSpecs(abc.ABC):
         """
         return None
 
-    def compile(self, seq):
+    def compile(self, seq, registers):
         """Class-specific circuit compilation method.
 
         If additional compilation logic is required, child classes can redefine this method.
 
         Args:
             seq (Sequence[Command]): quantum circuit to modify
+            registers (Sequence[RegRefs]): quantum registers
         Returns:
             List[Command]: modified circuit
         Raises:
