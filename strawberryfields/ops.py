@@ -1369,9 +1369,10 @@ class MZgate(Gate):
         MZ(\phi_1, \phi_2) = BS(\pi/4, \pi/2) (R(\phi_1)\otimes I) BS(\pi/4, \pi/2) (R(\phi_2)\otimes I)
 
     Args:
-        phi1 (float): internal phase
-        phi2 (float): external phase
+        phi1 (float): external phase
+        phi2 (float): internal phase
     """
+    ns = 2
 
     def __init__(self, phi1, phi2):
         super().__init__([phi1, phi2])
@@ -1379,9 +1380,9 @@ class MZgate(Gate):
     def _decompose(self, reg, **kwargs):
         # into a local phse shifts and two 50-50 beamsplitters
         return [
-            Command(Rgate(self.p[1].x), reg[0]),
-            Command(BSgate(np.pi/4, np.pi/2), reg),
             Command(Rgate(self.p[0].x), reg[0]),
+            Command(BSgate(np.pi/4, np.pi/2), reg),
+            Command(Rgate(self.p[1].x), reg[0]),
             Command(BSgate(np.pi/4, np.pi/2), reg)
         ]
 

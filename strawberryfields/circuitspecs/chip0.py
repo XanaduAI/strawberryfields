@@ -119,45 +119,47 @@ class Chip0Specs(CircuitSpecs):
         # -------------------------------------------------------------
         A, B, C = group_operations(seq, lambda x: isinstance(x, (ops.Rgate, ops.BSgate)))
 
-        if not C:
-            # no interferometer was applied
-            A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
-            A = B # move the S2gates to A
-
         # begin unitary lists for mode [0, 1] and modes [2, 3] with
         # two identity matrices. This is because multi_dot requires
         # at least two matrices in the list.
         U_list01 = [np.identity(self.modes//2, dtype=np.complex128)]*2
         U_list23 = [np.identity(self.modes//2, dtype=np.complex128)]*2
 
-        for cmd in B:
-            # calculate the unitary matrix representing each
-            # rotation gate and each beamsplitter
-            # Note: this is done separately on modes [0, 1]
-            # and modes [2, 3]
-            modes = [i.ind for i in cmd.reg]
-            params = [i.x for i in cmd.op.p]
-            U = np.identity(self.modes//2, dtype=np.complex128)
+        if not C:
+            # no interferometer was applied
+            A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
+            A = B # move the S2gates to A
+        else:
+            for cmd in B:
+                # calculate the unitary matrix representing each
+                # rotation gate and each beamsplitter
+                # Note: this is done separately on modes [0, 1]
+                # and modes [2, 3]
+                modes = [i.ind for i in cmd.reg]
+                params = [i.x for i in cmd.op.p]
+                U = np.identity(self.modes//2, dtype=np.complex128)
 
-            if isinstance(cmd.op, ops.Rgate):
-                m = modes[0]
-                U[m % 2, m % 2] = np.exp(1j*params[0])
+                if isinstance(cmd.op, ops.Rgate):
+                    m = modes[0]
+                    U[m % 2, m % 2] = np.exp(1j*params[0])
 
-            elif isinstance(cmd.op, ops.BSgate):
-                m, n = modes
+                elif isinstance(cmd.op, ops.BSgate):
+                    m, n = modes
 
-                t = np.cos(params[0])
-                r = np.exp(1j*params[1])*np.sin(params[0])
+                    t = np.cos(params[0])
+                    r = np.exp(1j*params[1])*np.sin(params[0])
 
-                U[m % 2, m % 2] = t
-                U[m % 2, n % 2] = -np.conj(r)
-                U[n % 2, m % 2] = r
-                U[n % 2, n % 2] = t
+                    U[m % 2, m % 2] = t
+                    U[m % 2, n % 2] = -np.conj(r)
+                    U[n % 2, m % 2] = r
+                    U[n % 2, n % 2] = t
 
-            if set(modes) == {0, 1}:
-                U_list01.insert(0, U)
-            elif set(modes) == {2, 3}:
-                U_list23.insert(0, U)
+                if set(modes).issubset({0, 1}):
+                    U_list01.insert(0, U)
+                elif set(modes).issubset({2, 3}):
+                    U_list23.insert(0, U)
+                else:
+                    raise CircuitError("Unitary must be applied separately to modes [0, 1] and modes [2, 3].")
 
         # multiply all unitaries together, to get the final
         # unitary representation on modes [0, 1] and [2, 3].
