@@ -367,21 +367,24 @@ class LocalEngine(BaseEngine):
                 and state. TF backend only.
         """
         compile_options = compile_options or {}
-        run_options = run_options or {}
-        run_options.setdefault("shots", 1)
-        run_options.setdefault('modes', None)
+
+        temp_run_options = program.run_options
+        temp_run_options.update(run_options or {})
+        temp_run_options.setdefault("shots", 1)
+        temp_run_options.setdefault('modes', None)
 
         # avoid unexpected keys being sent to Operations
         eng_run_keys = ["eval", "session", "feed_dict", "shots"]
-        eng_run_options = {key: run_options[key] for key in run_options.keys() & eng_run_keys}
+        eng_run_options = {key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys}
 
         result = super()._run(program, compile_options=compile_options, **eng_run_options)
 
-        if run_options.get("return_state", True):
+        if temp_run_options.get("return_state", True):
             # state object requested
             # session and feed_dict are needed by TF backend both during simulation (if program
             # contains measurements) and state object construction.
-            result._state = self.backend.state(**run_options)
+            result._state = self.backend.state(**temp_run_options)
+
         return result
 
 

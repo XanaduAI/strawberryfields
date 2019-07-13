@@ -193,6 +193,13 @@ class Program:
         #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
 
+        self.run_options = {}
+        """dict[str, Any]: dictionary of default run options, to be passed to the engine upon
+        execution of the program. Note that if the ``run_options`` dictionary is passed
+        directly to :meth:`~.Engine.run`, it takes precedence over the run options specified
+        here.
+        """
+
         # create subsystem references
         if isinstance(num_subsystems, numbers.Integral):
             #: int: initial number of subsystems
@@ -552,6 +559,12 @@ class Program:
         compiled = self._linked_copy()
         compiled.circuit = seq
         compiled.target = target
+
+        # get run options of compiled program
+        # for the moment, shots is the only supported run option.
+        if "shots" in kwargs:
+            compiled.run_options["shots"] = kwargs["shots"]
+
         return compiled
 
 
