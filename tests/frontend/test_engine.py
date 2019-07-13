@@ -201,10 +201,9 @@ class TestStarshipEngine:
 
         monkeypatch.setattr("strawberryfields.engine.to_blackbird", methods.to_blackbird)
 
-        output = starship_engine._get_blackbird(inputs.name, inputs.shots, inputs.program)
+        output = starship_engine._get_blackbird(inputs.shots, inputs.program)
 
         methods.to_blackbird.assert_called_once_with(inputs.program, version="1.0")
-        assert output._name == inputs.name
         assert len(output._target.__setitem__.call_args_list) == 2
         assert output._target.__setitem__.call_args_list[0] == call(
             "name", starship_engine.backend_name
@@ -309,9 +308,9 @@ class TestStarshipEngine:
         inputs = MagicMock()
         inputs.params = {"param": MagicMock()}
 
-        starship_engine.run(inputs.program, inputs.name, inputs.shots, **inputs.params)
+        starship_engine.run(inputs.program, inputs.shots, **inputs.params)
         mock__run.assert_called_once_with(
-            inputs.program, shots=inputs.shots, name=inputs.name, param=inputs.params["param"]
+            inputs.program, shots=inputs.shots, param=inputs.params["param"]
         )
 
     def test_engine_with_mocked_api_client_sample_job(self, monkeypatch):
@@ -347,21 +346,18 @@ class TestStarshipEngine:
 
         prog = sf.Program(4)
         with prog.context as q:
-            ops.S2gate(2) | [0, 2]
-            ops.S2gate(2) | [1, 3]
-            ops.Rgate(3) | 0
-            ops.BSgate() | [0, 1]
-            ops.Rgate(3) | 0
-            ops.Rgate(3) | 1
-            ops.Rgate(3) | 2
-            ops.BSgate() | [2, 3]
-            ops.Rgate(3) | 2
-            ops.Rgate(3) | 3
-            ops.MeasureFock() | [0]
-            ops.MeasureFock() | [1]
-            ops.MeasureFock() | [2]
-            ops.MeasureFock() | [3]
+            ops.S2gate(2) | (q[0], q[2])
+            ops.S2gate(2) | (q[1], q[3])
+            ops.Rgate(3) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.Rgate(3) | q[0]
+            ops.BSgate(3) | (q[0], q[1])
+            ops.Rgate(3) | q[2]
+            ops.BSgate() | (q[2], q[3])
+            ops.Rgate(3) | q[2]
+            ops.BSgate() | (q[2], q[3])
+            ops.MeasureFock() | q
 
-        engine.run(prog, "SomeProg")
+        engine.run(prog)
 
         mock_api_client_post.assert_called_once()
