@@ -356,9 +356,7 @@ class LocalEngine(BaseEngine):
         Keyword Args:
             shots (int): number of times the program measurement evaluation is repeated
             modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
-                ``None`` returns all the modes (default).
-            return_state (bool): Whether to return a :class:`.BaseState` object object within ``Result.state``.
-                Default is True.
+                ``None`` returns all the modes (default). An empty sequence means no state object is returned.
             eval (bool): If False, the backend returns unevaluated tf.Tensors instead of
                 numbers/arrays for returned measurement results and state (default: True). TF backend only.
             session (tf.Session): TensorFlow session, used when evaluating returned measurement results and state.
@@ -389,7 +387,9 @@ class LocalEngine(BaseEngine):
 
         result = super()._run(program, compile_options=compile_options, **eng_run_options)
 
-        if temp_run_options.get("return_state", True):
+        modes = temp_run_options["modes"]
+
+        if modes is None or modes:
             # state object requested
             # session and feed_dict are needed by TF backend both during simulation (if program
             # contains measurements) and state object construction.
