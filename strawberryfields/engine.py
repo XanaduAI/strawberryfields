@@ -270,8 +270,9 @@ class BaseEngine(abc.ABC):
                     p.reg_refs[k].val = v
 
             # if the program hasn't been compiled for this backend, do it now
-            if p.target != self.backend_name:
-                p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
+            target = self.backend.circuit_spec
+            if target is not None and p.target != target:
+                p = p.compile(target, **compile_options)
             p.lock()
 
             self._run_program(p, **kwargs)
@@ -290,7 +291,7 @@ class LocalEngine(BaseEngine):
     the results available via :class:`.Result`.
 
     Args:
-        backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
+        backend (str, BaseBackend): short name of the backend, or a pre-constructed backend instance
         backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
     def __init__(self, backend, *, backend_options=None):
@@ -302,7 +303,7 @@ class LocalEngine(BaseEngine):
             #: BaseBackend: backend for executing the quantum circuit
             self.backend = load_backend(backend)
         elif isinstance(backend, BaseBackend):
-            self.backend_name = backend._short_name
+            self.backend_name = backend.short_name
             self.backend = backend
         else:
             raise TypeError('backend must be a string or a BaseBackend instance.')

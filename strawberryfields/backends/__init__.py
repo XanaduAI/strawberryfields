@@ -26,7 +26,7 @@ __all__ = [
     "TFBackend",
 ]
 
-supported_backends = {"base": BaseBackend, "gaussian": GaussianBackend, "fock": FockBackend}
+supported_backends = {b.short_name: b for b in (BaseBackend, GaussianBackend, FockBackend)}
 
 
 def load_backend(name):

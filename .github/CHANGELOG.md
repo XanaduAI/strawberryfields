@@ -1,12 +1,11 @@
-#  Release 0.12.dev
+# Release 0.11.1.dev
 
 ### Improvements
 
-- Removed the `return_state` keyword argument from `LocalEngine.run()`. Now no state object is
+* Added the `circuit_spec` attribute to `BaseBackend` to denote which CircuitSpecs class should be
+  used to validate programs for each backend [#125](https://github.com/XanaduAI/strawberryfields/pull/125).
+* Removed the `return_state` keyword argument from `LocalEngine.run()`. Now no state object is
   returned if `modes==[]`. https://github.com/XanaduAI/strawberryfields/pull/126
-
-
-# Release 0.11.1
 
 ### Bug fixes
 
@@ -25,6 +24,9 @@
 
 * Updates the Chip0 template to use MeasureFock() | [0, 1, 2, 3], which will
   allow correct fock measurement behaviour when simulated on the Gaussian backend.
+  
+* Fixed a bug in the `GraphEmbed` op, which was not correctly determining when a 
+  unitary was the identity [#128](https://github.com/XanaduAI/strawberryfields/pull/128).
 
 
 # Release 0.11.0
