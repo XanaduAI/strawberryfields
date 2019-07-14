@@ -1642,7 +1642,7 @@ class Interferometer(Decomposition):
     r"""Apply a linear interferometer to the specified qumodes.
 
     This operation uses either the :ref:`rectangular decomposition <rectangular>`
-    or :ref:`triangular decomposition <triangular>` to decompose
+    or triangular decomposition to decompose
     a linear interferometer into a sequence of beamsplitters and
     rotation gates.
 
@@ -1786,7 +1786,7 @@ class GraphEmbed(Decomposition):
             self.identity = True
         else:
             self.identity = False
-            self.sq, self.U = graph_embed(
+            self.sq, self.U = dec.graph_embed(
                 A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=make_traceless, atol=tol, rtol=0
             )
 
