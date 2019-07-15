@@ -19,7 +19,7 @@ Unit tests for API client
 import pytest
 import json
 from strawberryfields import api_client
-from strawberryfields._dev import configuration
+from strawberryfields import configuration
 from strawberryfields.api_client import (
     requests,
     Job,
