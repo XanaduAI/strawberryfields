@@ -82,7 +82,7 @@ from .backends.base import NotApplicableError, BaseBackend
 
 from strawberryfields.api_client import APIClient, Job, JobNotQueuedError, JobExecutionError
 from strawberryfields.io import to_blackbird
-from strawberryfields._dev.configuration import DEFAULT_CONFIG
+from strawberryfields.configuration import DEFAULT_CONFIG
 
 
 class OneJobAtATimeError(Exception):
