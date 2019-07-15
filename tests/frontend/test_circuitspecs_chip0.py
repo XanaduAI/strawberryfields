@@ -97,7 +97,7 @@ class TestChip0Compilation:
             res = prog.compile("chip0")
 
     def test_incorrect_s2gates(self):
-        """Test exceptions raised if S2gates are on incorrect modes"""
+        """Test exceptions raised if S2gates do not appear on correct modes"""
         prog = sf.Program(4)
         U = random_interferometer(2)
 
@@ -164,16 +164,16 @@ class TestChip0Compilation:
 
         res = prog.compile("chip0")
 
-        prog = sf.Program(4)
+        expected = sf.Program(4)
 
-        with prog.context as q:
+        with expected.context as q:
             ops.S2gate(0.5, 0) | (q[0], q[2])
             ops.S2gate(0.5, 0) | (q[1], q[3])
             ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[0], q[1])
             ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[2], q[3])
             ops.MeasureFock() | q
 
-        expected = prog.compile(DummyCircuit())
+        expected = expected.compile(DummyCircuit())
 
         for cmd1, cmd2 in zip(res.circuit, expected.circuit):
             assert cmd1.op.__class__ == cmd2.op.__class__

@@ -1366,7 +1366,7 @@ class MZgate(Gate):
     r"""Mach-Zehnder interferometer.
 
     .. math::
-        MZ(\phi_1, \phi_2) = BS(\pi/4, \pi/2) (R(\phi_2)\otimes I) BS(\pi/4, \pi/2) (R(\phi_1)\otimes I)
+        \mathrm{MZ}(\phi_1, \phi_2) = BS(\pi/4, \pi/2) (R(\phi_2)\otimes I) BS(\pi/4, \pi/2) (R(\phi_1)\otimes I)
 
     Args:
         phi1 (float): external phase
@@ -1378,7 +1378,7 @@ class MZgate(Gate):
         super().__init__([phi1, phi2])
 
     def _decompose(self, reg, **kwargs):
-        # into a local phse shifts and two 50-50 beamsplitters
+        # into local phase shifts and two 50-50 beamsplitters
         return [
             Command(Rgate(self.p[0].x), reg[0]),
             Command(BSgate(np.pi/4, np.pi/2), reg),
@@ -1679,14 +1679,14 @@ class Interferometer(Decomposition):
             Options include:
 
             - ``'rectangular'`` - rectangular mesh, with local phase shifts
-              applied between interferometers.
+              applied between interferometers
 
             - ``'rectangular_phase_end'`` - rectangular mesh, with local phase shifts
-              placed after all interferometers.
+              placed after all interferometers
 
             - ``'rectangular_symmetric'`` - rectangular mesh, with local phase shifts
-              placed after all interferometers, and all beasmplitters decomposed into
-              symmetric beamsplitters.
+              placed after all interferometers, and all beamsplitters decomposed into
+              symmetric beamsplitters
 
             - ``'triangular'`` - triangular mesh
 
