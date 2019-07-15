@@ -188,10 +188,17 @@ class Program:
         self.circuit = []
         #: bool: if True, no more Commands can be appended to the Program
         self.locked = False
-        #: str, None: for compiled Programs, the short name of the target circuit template, otherwise None
+        #: str, None: for compiled Programs, the short name of the target CircuitSpecs template, otherwise None
         self.target = None
         #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
+
+        self.run_options = {}
+        """dict[str, Any]: dictionary of default run options, to be passed to the engine upon
+        execution of the program. Note that if the ``run_options`` dictionary is passed
+        directly to :meth:`~.Engine.run`, it takes precedence over the run options specified
+        here.
+        """
 
         # create subsystem references
         if isinstance(num_subsystems, numbers.Integral):
@@ -221,7 +228,7 @@ class Program:
 
     def __str__(self):
         """String representation."""
-        return self.__class__.__name__ + '({}, {}->{} subsystems, compiled for {})'.format(
+        return self.__class__.__name__ + "({}, {}->{} subsystems, compiled for '{}')".format(
             self.name, self.init_num_subsystems, self.num_subsystems, self.target
         )
 
@@ -518,6 +525,12 @@ class Program:
         compiled = self._linked_copy()
         compiled.circuit = seq
         compiled.target = target
+
+        # get run options of compiled program
+        # for the moment, shots is the only supported run option.
+        if "shots" in kwargs:
+            compiled.run_options["shots"] = kwargs["shots"]
+
         return compiled
 
 

@@ -59,7 +59,7 @@ class TestEngineProgramInteraction:
         eng.run(prog)
         # one program has been run
         assert len(eng.run_progs) == 1
-        assert eng.run_progs[-1].source == prog
+        assert eng.run_progs[-1] == prog  # no compilation required with BaseBackend
 
     def test_reset(self, eng, prog):
         """Running independent programs with an engine reset in between."""
