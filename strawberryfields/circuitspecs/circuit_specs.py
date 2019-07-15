@@ -220,7 +220,7 @@ class CircuitSpecs(abc.ABC):
         by the circuit specification.
 
         This method follows the directives defined in the
-        :attr:`~.CircuiSpecs.primitives` and :attr:`~.CircuitSpecs.decompositions`
+        :attr:`~.CircuitSpecs.primitives` and :attr:`~.CircuitSpecs.decompositions`
         class attributes to determine whether a command should be decomposed.
 
         The order of precedence to determine whether decomposition
@@ -228,20 +228,20 @@ class CircuitSpecs(abc.ABC):
 
         1. First, we check if the operation is in :attr:`~.CircuitSpecs.decompositions`.
            If not, decomposition is skipped, and the operation is applied
-           as a primitive (unless not supported by the ``CircuitSpec``).
+           as a primitive (if supported by the ``CircuitSpecs``).
 
         2. Next, we check if the operation supports decomposition, and if the user
            has explicitly requested no decomposition.
 
-           - If ``True``, the operation is applied
-             as a primitive, unless not supported by the ``CircuitSpec``.
+           - If both the above are true, the operation is applied
+             as a primitive (if supported by the ``CircuitSpecs``).
 
            - If ``False``, we attempt to decompose the operation by calling
              :meth:`~.Operation.decompose`.
 
         Args:
             list[strawberryfields.program_utils.Command]: list of commands to
-                be compiled
+                be decomposed
 
         Returns:
             list[strawberryfields.program_utils.Command]: list of compiled commands
