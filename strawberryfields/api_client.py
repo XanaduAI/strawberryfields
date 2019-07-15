@@ -504,10 +504,10 @@ class Job(Resource):
         Refresh the job fields and attach a JobResult and JobCircuit object to the Job instance.
         """
         if self.result is None:
-            self.result = JobResult(self.id, client=self.manager.client)
+            self.result = JobResult(self.id.value, client=self.manager.client)
 
         if self.circuit is None:
-            self.circuit = JobCircuit(self.id, client=self.manager.client)
+            self.circuit = JobCircuit(self.id.value, client=self.manager.client)
 
 
 class JobResult(Resource):
