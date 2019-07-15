@@ -230,6 +230,7 @@ Two-mode gates
 
 .. autosummary::
    BSgate
+   MZgate
    S2gate
    CXgate
    CZgate
@@ -1366,7 +1367,10 @@ class MZgate(Gate):
     r"""Mach-Zehnder interferometer.
 
     .. math::
-        \mathrm{MZ}(\phi_{ex}, \phi_{in}) = BS(\pi/4, \pi/2) (R(\phi_{in})\otimes I) BS(\pi/4, \pi/2) (R(\phi_{ex})\otimes I)
+
+        \mathrm{MZ}(\phi_{ex}, \phi_{in}) = BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
+            (R(\phi_{in})\otimes I) BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
+            (R(\phi_{ex})\otimes I)
 
     Args:
         phi_ex (float): external phase
@@ -1663,7 +1667,7 @@ class Interferometer(Decomposition):
       to the end of the beamsplitter array.
 
       By default, the interferometers are decomposed into :class:`~.BSgate` operations.
-      To instead decompose the interferometer using :class:`Mach-Zehnder interferometers <~.MZgate>`,
+      To instead decompose the interferometer using the :class:`~.ops.MZgate`,
       use ``mesh='rectangular_symmetric'``.
 
     * ``mesh='triangular'``: uses the scheme described in :cite:`reck1994`,
@@ -2034,7 +2038,7 @@ shorthands = ['New', 'Del', 'Vac', 'Measure', 'MeasureX', 'MeasureP', 'MeasureHD
 zero_args_gates = (Fouriergate,)
 one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate,
                   Kgate, CXgate, CZgate, CKgate)
-two_args_gates = (Dgate, Sgate, BSgate, S2gate)
+two_args_gates = (Dgate, Sgate, BSgate, MZgate, S2gate)
 gates = zero_args_gates + one_args_gates + two_args_gates
 
 channels = (LossChannel, ThermalLossChannel)
