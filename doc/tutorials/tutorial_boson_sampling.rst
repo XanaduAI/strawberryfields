@@ -136,7 +136,7 @@ First of all, we need to convert the ``BSgate`` arguments, ``theta`` and ``phi``
 
 into transmission and reflection amplitudes :math:`t` and :math:`r`:
 
->>> t_r_amplitudes = [(np.cos(q), np.exp(p)*np.sin(q)) for q,p in BSargs]
+>>> t_r_amplitudes = [(np.cos(q), np.exp(p*1j)*np.sin(q)) for q,p in BSargs]
 
 Next, we generate the individual beamsplitter unitary transformations,
 

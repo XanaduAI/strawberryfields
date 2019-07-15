@@ -6,6 +6,7 @@
   used to validate programs for each backend [#125](https://github.com/XanaduAI/strawberryfields/pull/125).
 * Removed the `return_state` keyword argument from `LocalEngine.run()`. Now no state object is
   returned if `modes==[]`. https://github.com/XanaduAI/strawberryfields/pull/126
+* Fixed a typo in the boson sampling tutorial. [#133](https://github.com/XanaduAI/strawberryfields/pull/133)
 
 ### Bug fixes
 
