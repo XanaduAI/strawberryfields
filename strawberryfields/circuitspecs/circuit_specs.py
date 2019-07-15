@@ -228,7 +228,7 @@ class CircuitSpecs(abc.ABC):
 
         1. First, we check if the operation is in :attr:`~.CircuitSpecs.decompositions`.
            If not, decomposition is skipped, and the operation is applied
-             as a primitive (unless not supported by the ``CircuitSpec``).
+           as a primitive (unless not supported by the ``CircuitSpec``).
 
         2. Next, we check if the operation supports decomposition, and if the user
            has explicitly requested no decomposition.

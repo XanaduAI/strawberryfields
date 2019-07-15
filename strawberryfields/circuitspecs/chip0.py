@@ -126,7 +126,7 @@ class Chip0Specs(CircuitSpecs):
         U_list01 = [np.identity(self.modes//2, dtype=np.complex128)]*2
         U_list23 = [np.identity(self.modes//2, dtype=np.complex128)]*2
 
-        if not C:
+        if not B:
             # no interferometer was applied
             A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
             A = B # move the S2gates to A

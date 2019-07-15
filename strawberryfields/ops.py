@@ -1366,16 +1366,16 @@ class MZgate(Gate):
     r"""Mach-Zehnder interferometer.
 
     .. math::
-        MZ(\phi_1, \phi_2) = BS(\pi/4, \pi/2) (R(\phi_2)\otimes I) BS(\pi/4, \pi/2) (R(\phi_1)\otimes I)
+        MZ(\phi_{ex}, \phi_{in}) = BS(\pi/4, \pi/2) (R(\phi_{in})\otimes I) BS(\pi/4, \pi/2) (R(\phi_{ex})\otimes I)
 
     Args:
-        phi1 (float): external phase
-        phi2 (float): internal phase
+        phi_ex (float): external phase
+        phi_in (float): internal phase
     """
     ns = 2
 
-    def __init__(self, phi1, phi2):
-        super().__init__([phi1, phi2])
+    def __init__(self, phi_ex, phi_in):
+        super().__init__([phi_ex, phi_in])
 
     def _decompose(self, reg, **kwargs):
         # into a local phse shifts and two 50-50 beamsplitters
@@ -1651,27 +1651,30 @@ class Interferometer(Decomposition):
 
     * ``mesh='rectangular'`` (default): uses the scheme described in
       :cite:`clements2016`, resulting in a *rectangular* array of
-      :math:`M(M-1)/2` beamsplitters arranged in :math:`M` slices and ordered from left
-      to right and top to bottom in each slice. The first beamsplitter acts on
-      wires :math:`0` and :math:`1`:
+      :math:`M(M-1)/2` beamsplitters:
 
-      .. figure:: ../../_static/clements.png
+      .. figure:: ../_static/clements.png
           :align: center
           :width: 30%
           :target: javascript:void(0);
 
+      Local phase shifts appear in the middle of the beamsplitter array.
+      Use ``mesh='rectangular_phase_end`` to instead commute all local phase shifts
+      to the end of the beamsplitter array.
+
+      By default, the interferometers are decomposed into :class:`~.BSgate` operations.
+      To instead decompose the interferometer using :class:`Mach-Zehnder interferometers <~.MZgate>`,
+      use ``mesh='rectangular_symmetric'``.
 
     * ``mesh='triangular'``: uses the scheme described in :cite:`reck1994`,
-      resulting in a *triangular* array of :math:`M(M-1)/2` beamsplitters arranged in
-      :math:`2M-3` slices and ordered from left to right and top to bottom. The
-      first and fourth beamsplitters act on wires :math:`M-1` and :math:`M`, the second
-      on :math:`M-2` and :math:`M-1`, and the third on :math:`M-3` and :math:`M-2`, and
-      so on.
+      resulting in a *triangular* array of :math:`M(M-1)/2` beamsplitters:
 
-      .. figure:: ../../_static/reck.png
+      .. figure:: ../_static/reck.png
           :align: center
           :width: 30%
           :target: javascript:void(0);
+
+      Local phase shifts appear at the end of the beamsplitter array.
 
     Args:
         U (array[complex]): an :math:`N\times N` unitary matrix
