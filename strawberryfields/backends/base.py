@@ -481,7 +481,7 @@ class BaseBackend:
         Options for such arguments will be documented in the respective subclasses.
 
         Returns:
-            float: measured value
+            array[float]: measurement results, ``shape == (1, shots)``
         """
         raise NotImplementedError
 
@@ -691,7 +691,7 @@ class BaseGaussian(BaseBackend):
                 Enables post-selection on specific measurement results instead of random sampling.
 
         Returns:
-            complex: measured value
+            array[complex]: measurement results, ``shape == (1, shots)``
         """
         raise NotImplementedError
 

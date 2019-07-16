@@ -300,8 +300,8 @@ class TFBackend(BaseFock):
                 for numerically evaluating the measurement results. Used with ``session``.
 
         Returns:
-            array[int], list[tf.Tensor]: Measurement results, ``shape == (len(modes), [batch_size,] shots)``.
-                Unevaluated results are returned as a list of ``len(modes)`` tf.Tensors, each with ``shape == ([batch_size,] shots)``.
+            array[int], array[tf.Tensor]: Measurement results, ``shape == (len(modes), [batch_size,] shots)``.
+                Unevaluated results are returned as an array of ``len(modes)`` tf.Tensors, each with ``shape == ([batch_size,] shots)``.
         """
         if shots != 1:
             raise NotImplementedError("TF backend currently does not support "
@@ -325,7 +325,8 @@ class TFBackend(BaseFock):
             max (float): The pdf is discretized onto the 1D grid [-max,max] (default: 10).
 
         Returns:
-            float or tf.Tensor: measurement outcome
+            array[float], array[tf.Tensor]: Measurement results, ``shape == (1, [batch_size,] shots)``.
+                Unevaluated results are returned as an array containing one tf.Tensor with ``shape == ([batch_size,] shots)``.
         """
         if shots != 1:
             raise NotImplementedError("Tf backend currently does not support "

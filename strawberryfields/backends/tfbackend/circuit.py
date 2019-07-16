@@ -742,20 +742,11 @@ class Circuit:
                 # \psi_n(x) = 1/sqrt[2^n n!](\frac{m \omega}{\pi \hbar})^{1/4}
                 #             \exp{-\frac{m \omega}{2\hbar} x^2} H_n(\sqrt{\frac{m \omega}{\pi}} x)
                 # where H_n(x) is the (physicists) nth Hermite polynomial
-                if "max" in kwargs:
-                    q_mag = kwargs["max"]
-                else:
-                    q_mag = 10
-                if "num_bins" in kwargs:
-                    num_bins = kwargs["num_bins"]
-                else:
-                    num_bins = 100000
-                if "q_tensor" in self._cache:
-                    # use cached q_tensor
-                    q_tensor = self._cache["q_tensor"]
-                else:
-                    q_tensor = tf.constant(np.linspace(-q_mag, q_mag, num_bins))
-                    self._cache["q_tensor"] = q_tensor
+                q_mag = kwargs.get('max', 10)
+                num_bins = kwargs.get('num_bins', 100000)
+                q_tensor = self._cache.setdefault('q_tensor', tf.constant(np.linspace(-q_mag, q_mag, num_bins)))
+                # FIXME what if q_mag or num_bins have changed?
+
                 x = np.sqrt(m_omega_over_hbar) * q_tensor
                 if "hermite_polys" in self._cache:
                     # use cached polynomials
@@ -790,7 +781,7 @@ class Circuit:
                 homodyne_sample = tf.squeeze(homodyne_sample)
 
 
-            # frontend expects shape which is ([batch_size,], shots)
+            # frontend expects an array with shape == (modes, [batch_size,], shots)
             # this is to best match with assignment of measurement values to registers
             # without needing to know about whether the backend is working in batch mode
             if self._batched:
@@ -862,7 +853,7 @@ class Circuit:
 
                 self._update_state(new_state)
 
-            return ret_meas_result
+            return np.array([ret_meas_result])  # an unevaluated tf.Tensor is not iterable so we wrap it in an array which is.
 
     @property
     def num_modes(self):

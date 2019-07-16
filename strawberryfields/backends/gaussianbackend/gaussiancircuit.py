@@ -418,7 +418,7 @@ class GaussianModes:
         r = self.smean()
         (va, vc) = ops.chop_in_blocks_vector(r, expind)
         vm = np.random.multivariate_normal(vc, C, size=shots)
-        # The next line is a hack in that it only updates conditioned on the first samples value
+        # FIXME The next line is a hack in that it only updates conditioned on the first samples value
         # should still work if shots = 1
         va = va+np.dot(np.dot(B, np.linalg.inv(C+covmat)), vm[0]-vc)
         va = ops.reassemble_vector(va, expind)
@@ -430,8 +430,7 @@ class GaussianModes:
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
         covmat = np.diag(np.array([eps**2, 1./eps**2]))
         res = self.measure_dyne(covmat, [n], shots=shots)
-
-        return res
+        return np.expand_dims(res[:, 0], 0)  # all shots, X quadrature, add modes axis
 
     def post_select_homodyne(self, n, val, eps=0.0002):
         """ Performs a homodyne measurement but postelecting on the value vals for mode n """

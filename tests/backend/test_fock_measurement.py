@@ -25,13 +25,13 @@ NUM_REPEATS = 50
 class TestGaussianRepresentation:
     """Tests that make use of the Fock basis representation."""
 
-    def measure_fock_gaussian_warning(self, setup_backend):
+    def test_measure_fock_gaussian_warning(self, setup_backend):
         """Tests that Fock measurements are not implemented when shots != 1.
         Should be deleted when this functionality is implemented."""
 
         backend = setup_backend(3)
 
-        with pytest.warns(Warning, match="Cannot simulate non-Gaussian states. Conditional state after "
+        with pytest.warns(Warning, match="Gaussian backend cannot simulate non-Gaussian states. Conditional state after "
                                          "Fock measurement has not been updated."):
             backend.measure_fock([0, 1], shots=5)
 
@@ -39,21 +39,6 @@ class TestGaussianRepresentation:
 @pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
-
-    def shots_not_implemented_fock(self, setup_backend):
-        """Tests that Fock measurements are not implemented when shots != 1.
-        Should be deleted when this functionality is implemented."""
-
-        backend = setup_backend(3)
-
-        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
-                                                      "shots != 1 for Fock measurement".format(backend._short_name)):
-            backend.measure_fock([0, 1], shots=5)
-
-        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
-                                                      "shots != 1 for Fock measurement".format(backend._short_name)):
-            backend.measure_fock([0, 1], shots=-5)
-
 
     def test_normalized_conditional_states(self, setup_backend, cutoff, pure, tol):
         """Tests if the conditional states resulting from Fock measurements in a subset of modes are normalized."""
@@ -118,9 +103,36 @@ class TestFockRepresentation:
             assert np.all(meas_result == ref_result)
 
 
-@pytest.mark.backends("fock", "tf", "gaussian")
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
+
+    @pytest.mark.backends("tf")
+    def test_shots_not_implemented_fock(self, setup_backend):
+        """Tests that Fock measurements are not implemented when shots != 1.
+        Should be deleted when this functionality is implemented."""
+
+        backend = setup_backend(3)
+
+        with pytest.raises(NotImplementedError, match="TF backend currently does not support "
+                                                      "shots != 1 for Fock measurement"):
+            backend.measure_fock([0, 1], shots=5)
+
+    def test_vacuum_fock(self, setup_backend):
+        """Tests the Fock measurement with shots==1."""
+        backend = setup_backend(3)
+        res = backend.measure_fock([0, 1, 2])
+        assert isinstance(res, np.ndarray)
+        assert res.shape == (3, 1)
+        assert np.all(res == 0)
+
+    @pytest.mark.backends('fock', 'gaussian')
+    def test_vacuum_multishot_fock(self, setup_backend):
+        """Tests the Fock measurement with shots > 1."""
+        backend = setup_backend(3)
+        res = backend.measure_fock([0, 1], shots=3)
+        assert isinstance(res, np.ndarray)
+        assert res.shape == (2, 3)
+        assert np.all(res == 0)
 
     def test_two_mode_squeezed_measurements(self, setup_backend, pure):
         """Tests Fock measurement on the two mode squeezed vacuum state."""
@@ -136,13 +148,3 @@ class TestRepresentationIndependent:
             meas_modes = [0, 1]
             meas_results = backend.measure_fock(meas_modes)
             assert np.all(meas_results[0] == meas_results[1])
-
-    def test_vacuum_measurements(self, setup_backend, pure):
-        """Tests Fock measurement on the vacuum state."""
-        backend = setup_backend(3)
-
-        for _ in range(NUM_REPEATS):
-            backend.reset(pure=pure)
-
-            meas = backend.measure_fock([0, 1, 2])[0]
-            assert np.all(np.array(meas) == 0)

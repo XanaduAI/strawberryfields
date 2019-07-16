@@ -560,17 +560,6 @@ class Measurement(Operation):
                 Only applies to Measurements.
         """
         values = super().apply(reg, backend, **kwargs)
-
-        # HACK: for now, let the homodyne and heterodyne backend API calls return just scalars, wrap them into an array here
-        # (currently homodyne and heterodyne measurements can only act on one mode at a time)
-        if self.ns == 1:
-            if isinstance(values, np.ndarray): # TF backend returns homodyne results in an array...
-                values = np.expand_dims(values, 0)  # add the modes index
-            elif isinstance(values, numbers.Number):
-                values = np.array([[values]])  # values is a scalar
-            else:
-                values = [values] # TF backend can also return an unevaluated tf.Tensor...
-
         # store the results in the register reference objects
         for v, r in zip(values, reg):
             r.val = v

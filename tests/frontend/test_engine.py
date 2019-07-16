@@ -25,12 +25,12 @@ from strawberryfields.backends.base import BaseBackend
 
 
 @pytest.fixture
-def eng(backend):
+def eng(fake_backend):
     """Engine fixture."""
-    return sf.LocalEngine(backend)
+    return sf.LocalEngine(fake_backend)
 
 @pytest.fixture
-def prog(backend):
+def prog():
     """Program fixture."""
     prog = sf.Program(2)
     with prog.context as q:

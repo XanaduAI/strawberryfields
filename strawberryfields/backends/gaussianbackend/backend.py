@@ -15,11 +15,10 @@
 """Gaussian backend"""
 import warnings
 
+import numpy as np
 from numpy import (
-    empty,
     concatenate,
     array,
-    identity,
     arctan2,
     angle,
     sqrt,
@@ -27,9 +26,7 @@ from numpy import (
     vstack,
     zeros_like,
     allclose,
-    ix_,
 )
-from numpy.linalg import inv
 from hafnian.samples import hafnian_sample_state
 
 from strawberryfields.backends import BaseGaussian
@@ -115,48 +112,27 @@ class GaussianBackend(BaseGaussian):
                 This eigenstate is approximated by a squeezed state whose variance has been
                 squeezed to the amount ``eps``, :math:`V_\text{meas} = \texttt{eps}^2`.
                 Perfect homodyning is obtained when ``eps`` :math:`\to 0`.
-
-        Returns:
-            float: measured value
         """
-        if shots != 1:
-            if select is not None:
-                raise NotImplementedError("Gaussian backend currently does not support "
-                                          "postselection if shots != 1 for homodyne measurement")
-
-            raise NotImplementedError("Gaussian backend currently does not support "
-                                      "shots != 1 for homodyne measurement")
-
         # phi is the rotation of the measurement operator, hence the minus
         self.circuit.phase_shift(-phi, mode)
 
         if select is None:
-            qs = self.circuit.homodyne(mode, **kwargs)[0, 0]
+            qs = self.circuit.homodyne(mode, shots, **kwargs)
         else:
             val = select * 2 / sqrt(2 * self.circuit.hbar)
             qs = self.circuit.post_select_homodyne(mode, val, **kwargs)
+            qs = np.full((1, shots), qs)
 
         return qs * sqrt(2 * self.circuit.hbar) / 2
 
     def measure_heterodyne(self, mode, shots=1, select=None):
-
-        if shots != 1:
-            if select is not None:
-                raise NotImplementedError("Gaussian backend currently does not support "
-                                          "postselection if shots != 1 for heterodyne measurement")
-
-            raise NotImplementedError("Gaussian backend currently does not support "
-                                      "shots != 1 for heterodyne measurement")
-
         if select is None:
-            m = identity(2)
-            res = 0.5 * self.circuit.measure_dyne(m, [mode], shots=shots)
-            return res[0, 0] + 1j * res[0, 1]
+            res = 0.5 * self.circuit.measure_dyne(np.identity(2), [mode], shots=shots)
+            res = res[:, 0] + 1j * res[:, 1]
+            return np.expand_dims(res, 0)  # add the modes index
 
-        res = select
         self.circuit.post_select_heterodyne(mode, select)
-
-        return res
+        return np.full((1, shots), select)
 
     def prepare_gaussian_state(self, r, V, modes):
         if isinstance(modes, int):
@@ -207,7 +183,7 @@ class GaussianBackend(BaseGaussian):
         x_idxs = array(modes)
         p_idxs = x_idxs + len(mu)
         modes_idxs = concatenate([x_idxs, p_idxs])
-        reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
+        reduced_cov = cov[np.ix_(modes_idxs, modes_idxs)]
         # this returns an array of integers of shape (shots, len(modes))
         samples = hafnian_sample_state(reduced_cov, shots)
         return samples.T
@@ -227,7 +203,7 @@ class GaussianBackend(BaseGaussian):
             modes = list(range(len(self.get_modes())))
 
         listmodes = list(concatenate((2 * array(modes), 2 * array(modes) + 1)))
-        covmat = empty((2 * len(modes), 2 * len(modes)))
+        covmat = np.empty((2 * len(modes), 2 * len(modes)))
         means = r[listmodes]
 
         for i, ii in enumerate(listmodes):
@@ -253,7 +229,7 @@ class GaussianBackend(BaseGaussian):
 
             # calculate reduced Amat
             N = qmat.shape[0] // 2
-            Amat = dot(xmat(N), identity(2 * N) - inv(qmat))
+            Amat = dot(xmat(N), np.identity(2 * N) - np.linalg.inv(qmat))
         else:
             Amat = self.circuit.Amat()
 

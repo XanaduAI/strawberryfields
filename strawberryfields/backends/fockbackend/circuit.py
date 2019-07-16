@@ -33,7 +33,7 @@ Contents
 
 import string
 import numbers
-from itertools import product
+import itertools
 
 import numpy as np
 from numpy import sqrt, pi
@@ -432,13 +432,7 @@ class Circuit():
             # kill spurious tiny values (which are sometimes negative)
             dist = dist * ~np.isclose(dist, 0.)
 
-            temp = sum(dist)
-            if temp != 1:
-                # WARNING: distribution is not normalized, could hide errors
-                dist /= temp
-
-            # Make a random choice
-            i = np.random.choice(len(dist), size=shots, p=dist)
+            i = ops.get_samples(dist, shots)
             # list of arrays (one per measured mode) of measurement results
             permuted_outcome = ops.unIndex(i, len(measure), self._trunc)
 
@@ -465,7 +459,7 @@ class Circuit():
 
         return outcome
 
-    def measure_homodyne(self, phi, mode, select=None, **kwargs):
+    def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         """
         Performs a homodyne measurement on a mode.
         """
@@ -478,9 +472,8 @@ class Circuit():
             state = self._state
 
         if select is not None:
-            meas_result = select
-            if isinstance(meas_result, numbers.Number):
-                homodyne_sample = float(meas_result)
+            if isinstance(select, numbers.Number):
+                homodyne_sample = np.full((shots,), float(select))
             else:
                 raise TypeError("Selected measurement result must be of numeric type.")
         else:
@@ -502,7 +495,7 @@ class Circuit():
 
             q_tensor, Hvals = ops.hermiteVals(q_mag, num_bins, m_omega_over_hbar, self._trunc)
             H_matrix = np.zeros((self._trunc, self._trunc, num_bins))
-            for n, m in product(range(self._trunc), repeat=2):
+            for n, m in itertools.product(range(self._trunc), repeat=2):
                 H_matrix[n][m] = 1 / sqrt(2**n * bang(n) * 2**m * bang(m)) * Hvals[n] * Hvals[m]
             H_terms = np.expand_dims(reduced, -1) * np.expand_dims(H_matrix, 0)
             rho_dist = np.sum(H_terms, axis=(1, 2)) \
@@ -510,21 +503,17 @@ class Circuit():
                                  * np.exp(-m_omega_over_hbar * q_tensor**2) \
                                  * (q_tensor[1] - q_tensor[0]) # Delta_q for normalization (only works if the bins are equally spaced)
 
-            # Sample from rho_dist. This is a bit different from tensorflow due to how
-            # numpy treats multinomial sampling. In particular, numpy returns a
-            # histogram of the samples whereas tensorflow gives the list of samples.
-            # Numpy also does not use the log probabilities
+            # Sample from rho_dist.
             probs = rho_dist.flatten().real
-            probs /= np.sum(probs)
-            sample_hist = np.random.multinomial(1, probs)
-            sample_idx = list(sample_hist).index(1)
+            sample_idx = ops.get_samples(probs, shots)
             homodyne_sample = q_tensor[sample_idx]
 
         # Project remaining modes into the conditional state
         inf_squeezed_vac = \
-            np.array([(-0.5)**(n//2) * sqrt(bang(n)) / bang(n//2) if n%2 == 0 else 0.0 + 0.0j \
+            np.array([(-0.5)**(n//2) * sqrt(bang(n)) / bang(n//2) if n%2 == 0 else 0 \
                 for n in range(self._trunc)], dtype=ops.def_type)
-        alpha = homodyne_sample * sqrt(m_omega_over_hbar / 2)
+        # FIXME decide what happens to the state in multishot measurement (here we use the first sample to collapse the state)
+        alpha = homodyne_sample[0] * sqrt(m_omega_over_hbar / 2)
 
         composed = np.dot(ops.phase(phi, self._trunc), ops.displacement(alpha, self._trunc))
         args = [composed, inf_squeezed_vac, True, [0], 1, self._trunc]
@@ -533,11 +522,12 @@ class Circuit():
         elif self._mode == 'einsum':
             eigenstate = ops.apply_gate_einsum(*args)
 
-        vac_state = np.array([1.0 + 0.0j if i == 0 else 0.0 + 0.0j for i in range(self._trunc)], dtype=ops.def_type)
+        vac_state = np.zeros(self._trunc, dtype=ops.def_type)
+        vac_state[0] = 1.0
         projector = np.outer(vac_state, eigenstate.conj())
         self._apply_gate(projector, [mode])
 
         # Normalize
         self._state = self._state / self.norm()
 
-        return homodyne_sample
+        return np.expand_dims(homodyne_sample, 0)  # add the modes index

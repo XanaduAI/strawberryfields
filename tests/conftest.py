@@ -18,6 +18,8 @@ Default parameters, environment variables, fixtures, and common routines for the
 import os
 import pytest
 
+import numpy as np
+
 import strawberryfields as sf
 from strawberryfields.engine import LocalEngine
 from strawberryfields.program import Program
@@ -120,7 +122,7 @@ def batch_size():
 
 
 @pytest.fixture
-def backend(monkeypatch):
+def fake_backend(monkeypatch):
     """Create a mocked out backend fixture for front-end only tests"""
     dummy_backend = BaseBackend()
     with monkeypatch.context() as m:
@@ -131,7 +133,7 @@ def backend(monkeypatch):
         m.setattr(dummy_backend, "squeeze", lambda r, modes: None)
         m.setattr(dummy_backend, "rotation", lambda r, modes: None)
         m.setattr(dummy_backend, "beamsplitter", lambda t, r, m1, m2: None)
-        m.setattr(dummy_backend, "measure_homodyne", lambda phi, modes, select, shots: 5)
+        m.setattr(dummy_backend, "measure_homodyne", lambda phi, modes, select, shots: np.array([[5]]))
         m.setattr(dummy_backend, "state", lambda modes, shots: None)
         m.setattr(dummy_backend, "reset", lambda: None)
         dummy_backend.get_cutoff_dim = lambda: 6

@@ -35,8 +35,7 @@ class TestRepresentationIndependent:
         backend.squeeze(r, 0)
         backend.displacement(alpha, 0)
         backend.measure_homodyne(0, 0)
-
-        assert np.all(backend.is_vacuum(tol))
+        assert backend.is_vacuum(tol)
 
     def test_mean_and_std_vacuum(self, setup_backend, pure, tol):
         """Tests that the mean and standard deviation estimates of many homodyne
@@ -72,12 +71,20 @@ class TestRepresentationIndependent:
 
         assert np.allclose(x.mean(), 2 * alpha.real, atol=std_10 + tol)
 
+    @pytest.mark.backends('tf')
     def test_shots_not_implemented_homodyne(self, setup_backend):
         """Tests that homodyne measurements are not implemented when shots != 1.
         Should be deleted when this functionality is implemented."""
-
         backend = setup_backend(3)
         name = backend._short_name.capitalize()
         with pytest.raises(NotImplementedError, match="{} backend currently does not support "
                                                       "shots != 1 for homodyne measurement".format(name)):
             backend.measure_homodyne(1.5, 1, shots=-5)
+
+    @pytest.mark.backends('fock', 'gaussian')
+    def test_vacuum_multishot_homodyne(self, setup_backend):
+        """Tests the homodyne measurement with shots > 1."""
+        backend = setup_backend(3)
+        res = backend.measure_homodyne(0, 1, shots=3)
+        assert isinstance(res, np.ndarray)
+        assert res.shape == (1, 3)

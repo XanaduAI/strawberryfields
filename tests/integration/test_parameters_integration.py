@@ -32,7 +32,7 @@ TFBackend = int # hack to avoid removing TFBackend from test
 
 # TODO: broken for TensorFlow. Skipping tf test here for now.
 @pytest.mark.backends("fock")
-def test_parameters_with_operations(batch_size, setup_eng, backend, hbar):
+def test_parameters_with_operations(batch_size, setup_eng):
     """Test using different types of Parameters with different classes
     of ParOperations."""
 

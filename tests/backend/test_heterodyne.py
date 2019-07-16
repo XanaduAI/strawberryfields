@@ -30,13 +30,24 @@ std_10 = num_stds / np.sqrt(n_meas)
 class TestHeterodyne:
     """Basic implementation-independent tests."""
 
-    def test_mode_reset_vacuum(self, setup_backend, tol):
-        """Test heterodyne measurement resets mode to vacuum"""
+    def test_heterodyne(self, setup_backend, tol):
+        """Test the heterodyne measurement."""
         backend = setup_backend(1)
         backend.squeeze(squeeze_val, 0)
         backend.displacement(mag_alphas[-1], 0)
-        backend.measure_homodyne(0, 0)
-        assert np.all(backend.is_vacuum(tol))
+        res = backend.measure_heterodyne(0)
+        assert isinstance(res, np.ndarray)
+        assert res.shape == (1, 1)
+        assert backend.is_vacuum(tol)
+
+    def test_multishot_heterodyne(self, setup_backend, tol):
+        """Tests the heterodyne measurement with shots > 1."""
+        backend = setup_backend(3)
+        backend.displacement(mag_alphas[-1], 1)
+        res = backend.measure_heterodyne(1, shots=3)
+        assert isinstance(res, np.ndarray)
+        assert res.shape == (1, 3)
+        assert backend.is_vacuum(tol)
 
     def test_mean_vacuum(self, setup_backend, pure, tol):
         """Test heterodyne provides the correct vacuum mean"""
@@ -80,13 +91,3 @@ class TestHeterodyne:
         xvar = xi.std() ** 2 + xr.std() ** 2
 
         assert np.allclose(np.sqrt(xvar), np.sqrt(0.5), atol=std_10 + tol, rtol=0)
-
-    def test_shots_not_implemented_heterodyne(self, setup_backend):
-        """Tests that heterodyne measurements are not implemented when shots != 1.
-        Should be deleted when this functionality is implemented."""
-
-        backend = setup_backend(3)
-        name = backend._short_name.capitalize()
-        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
-                                                      "shots != 1 for heterodyne measurement".format(name)):
-            backend.measure_heterodyne(1, shots=5)

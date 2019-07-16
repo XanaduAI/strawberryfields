@@ -430,7 +430,11 @@ class TestResults:
         assert type(res.samples) == dict
         assert len(res.samples) == 1
         assert 1 in res.samples
+        # the same samples can also be found in the regrefs
+        assert np.all(q[1].val == res.samples[1])
+
         assert isinstance(res.samples[1], np.ndarray)
+        assert res.samples[1].dtype == complex
         assert res.measured_modes == [1]
         assert type(res.samples_array) == np.ndarray
         assert res.samples_array.dtype == np.complex
@@ -445,15 +449,26 @@ class TestResults:
            and a value for ``shots`` is given"""
 
         eng, p = setup_eng(3)
-        # TODO: replace with proper test when implemented
-        shots = 5
+        shots = 3
         with p.context as q:
             ops.MeasureHeterodyne() | q[1]
         name = eng.backend._short_name
-        with pytest.raises(NotImplementedError,
-                           match="The operation MeasureHD has not been "
-                                 "implemented in the '{}' backend for the arguments {{'shots': {}}}".format(name, shots)):
-            res = eng.run(p, run_options={"shots": shots})
+        res = eng.run(p, run_options={"shots": shots})
+
+        assert type(res.samples) == dict
+        assert len(res.samples) == 1
+        assert 1 in res.samples
+        # the same samples can also be found in the regrefs
+        assert np.all(q[1].val == res.samples[1])
+
+        assert isinstance(res.samples[1], np.ndarray)
+        assert res.samples[1].dtype == complex
+        assert res.measured_modes == [1]
+        assert type(res.samples_array) == np.ndarray
+        assert res.samples_array.dtype == np.complex
+        # ignores possible batch axis
+        assert res.samples_array.shape[0] == 1
+        assert res.samples_array.shape[-1] == shots
 
     def test_results_measure_homodyne_no_shots(self, setup_eng, batch_size):
         """Tests the Results object when all modes are measured with heterodyne
@@ -483,7 +498,38 @@ class TestResults:
         assert res.samples_array.dtype == np.float
 
 
+    # TODO: when ``shots`` is incorporated into other backends, unmark this test
+    @pytest.mark.backends("fock", "gaussian")
     def test_results_measure_homodyne_with_shots(self, setup_eng, batch_size):
+        """Tests the Results object when a heterodyne measurement is made with shots>1.
+        """
+        shots = 5
+        if batch_size is None:
+            shape = (1, shots)
+        else:
+            shape = (1, batch_size, shots)
+
+        # one mode
+        expected_measured_modes = [1]
+
+        eng, p = setup_eng(3)
+        with p.context as q:
+            ops.MeasureHomodyne(c) | q[1]
+        res = eng.run(p, run_options={"shots": shots})
+
+        assert type(res.samples) == dict
+        assert len(res.samples) == 1
+        assert 1 in res.samples
+        # the same samples can also be found in the regrefs
+        assert np.all(q[1].val == res.samples[1])
+        assert isinstance(res.samples[1], np.ndarray)
+        assert res.samples[1].dtype == float
+        assert res.measured_modes == expected_measured_modes
+        assert res.samples_array.shape == shape
+        assert res.samples_array.dtype == np.float
+
+    @pytest.mark.backends("tf")
+    def test_results_measure_homodyne_with_shots_fail(self, setup_eng, batch_size):
         """Tests the Results object when all modes are measured with homodyne
            and a value for ``shots`` is given"""
 

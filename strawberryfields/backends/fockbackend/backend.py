@@ -151,10 +151,7 @@ class FockBackend(BaseFock):
                 (pdf) simulating the homodyne measurement (default: 100000).
             max (float): The pdf is discretized onto the 1D grid [-max,max] (default: 10).
         """
-        if shots != 1:
-            raise NotImplementedError("Fock backend currently does not support "
-                                      "shots != 1 for homodyne measurement")
-        return self.circuit.measure_homodyne(phi, self._remap_modes(mode), select=select, **kwargs)
+        return self.circuit.measure_homodyne(phi, self._remap_modes(mode), shots, select, **kwargs)
 
     def loss(self, T, mode):
         self.circuit.loss(T, self._remap_modes(mode))

@@ -105,6 +105,25 @@ def_type = np.complex128
 indices = string.ascii_lowercase
 
 
+
+def get_samples(dist, n):
+    """Samples the given discrete probability distribution n times.
+
+    Args:
+        dist (array[float]): probability distribution
+        n (int): number of samples to draw
+
+    Returns:
+        array[int]: drawn samples, shape==(n,)
+    """
+    temp = sum(dist)
+    if temp != 1:
+        # WARNING: distribution is not normalized, could hide errors
+        dist /= temp
+    # Make a random choice
+    return np.random.choice(len(dist), size=n, p=dist)
+
+
 def genOfRange(size):
     """
     Converts a range into a generator.
