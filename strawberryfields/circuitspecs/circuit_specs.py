@@ -230,14 +230,14 @@ class CircuitSpecs(abc.ABC):
            If not, decomposition is skipped, and the operation is applied
            as a primitive (if supported by the ``CircuitSpecs``).
 
-        2. Next, we check if the operation supports decomposition, and if the user
+        2. Next, we check if (a) the operation supports decomposition, and (b) if the user
            has explicitly requested no decomposition.
 
-           - If both the above are true, the operation is applied
+           - If both (a) and (b) are true, the operation is applied
              as a primitive (if supported by the ``CircuitSpecs``).
 
-           - If ``False``, we attempt to decompose the operation by calling
-             :meth:`~.Operation.decompose`.
+           - Otherwise, we attempt to decompose the operation by calling
+             :meth:`~.Operation.decompose` recursively.
 
         Args:
             list[strawberryfields.program_utils.Command]: list of commands to

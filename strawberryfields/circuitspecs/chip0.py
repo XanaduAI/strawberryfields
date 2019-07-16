@@ -28,14 +28,17 @@ from .gbs import GBSSpecs
 class Chip0Specs(CircuitSpecs):
     """Circuit specifications for the chip0 class of circuits."""
 
-    short_name = 'chip0'
+    short_name = "chip0"
     modes = 4
     remote = True
     local = True
     interactive = True
 
     primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate"}
-    decompositions = {"Interferometer": {"mesh": "rectangular_symmetric", "drop_identity": False}, "MZgate": {}}
+    decompositions = {
+        "Interferometer": {"mesh": "rectangular_symmetric", "drop_identity": False},
+        "MZgate": {},
+    }
 
     circuit = textwrap.dedent(
         """\
@@ -101,20 +104,20 @@ class Chip0Specs(CircuitSpecs):
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.MeasureFock))
 
         if len(B[0].reg) != self.modes:
-            raise CircuitError('All modes must be measured.')
+            raise CircuitError("All modes must be measured.")
 
         # Check circuit begins with two mode squeezers
         # --------------------------------------------
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
 
         if A:
-            raise CircuitError('Circuits must start with two S2gates.')
+            raise CircuitError("Circuits must start with two S2gates.")
 
         # get circuit registers
         regrefs = {q for cmd in B for q in cmd.reg}
 
         if len(regrefs) != self.modes:
-            raise CircuitError("S2gates placed on the incorrect modes.")
+            raise CircuitError("S2gates do not appear on the correct modes.")
 
         # Compile the unitary: combine and then decompose all unitaries
         # -------------------------------------------------------------
@@ -123,13 +126,13 @@ class Chip0Specs(CircuitSpecs):
         # begin unitary lists for mode [0, 1] and modes [2, 3] with
         # two identity matrices. This is because multi_dot requires
         # at least two matrices in the list.
-        U_list01 = [np.identity(self.modes//2, dtype=np.complex128)]*2
-        U_list23 = [np.identity(self.modes//2, dtype=np.complex128)]*2
+        U_list01 = [np.identity(self.modes // 2, dtype=np.complex128)] * 2
+        U_list23 = [np.identity(self.modes // 2, dtype=np.complex128)] * 2
 
         if not B:
             # no interferometer was applied
             A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
-            A = B # move the S2gates to A
+            A = B  # move the S2gates to A
         else:
             for cmd in B:
                 # calculate the unitary matrix representing each
@@ -138,17 +141,17 @@ class Chip0Specs(CircuitSpecs):
                 # and modes [2, 3]
                 modes = [i.ind for i in cmd.reg]
                 params = [i.x for i in cmd.op.p]
-                U = np.identity(self.modes//2, dtype=np.complex128)
+                U = np.identity(self.modes // 2, dtype=np.complex128)
 
                 if isinstance(cmd.op, ops.Rgate):
                     m = modes[0]
-                    U[m % 2, m % 2] = np.exp(1j*params[0])
+                    U[m % 2, m % 2] = np.exp(1j * params[0])
 
                 elif isinstance(cmd.op, ops.BSgate):
                     m, n = modes
 
                     t = np.cos(params[0])
-                    r = np.exp(1j*params[1])*np.sin(params[0])
+                    r = np.exp(1j * params[1]) * np.sin(params[0])
 
                     U[m % 2, m % 2] = t
                     U[m % 2, n % 2] = -np.conj(r)
@@ -160,7 +163,9 @@ class Chip0Specs(CircuitSpecs):
                 elif set(modes).issubset({2, 3}):
                     U_list23.insert(0, U)
                 else:
-                    raise CircuitError("Unitary must be applied separately to modes [0, 1] and modes [2, 3].")
+                    raise CircuitError(
+                        "Unitary must be applied separately to modes [0, 1] and modes [2, 3]."
+                    )
 
         # multiply all unitaries together, to get the final
         # unitary representation on modes [0, 1] and [2, 3].
@@ -169,14 +174,16 @@ class Chip0Specs(CircuitSpecs):
 
         # check unitaries are equal
         if not np.allclose(U01, U23):
-            raise CircuitError("Interferometer on modes [0, 1] must be identical to interferometer on modes [2, 3].")
+            raise CircuitError(
+                "Interferometer on modes [0, 1] must be identical to interferometer on modes [2, 3]."
+            )
 
         U = block_diag(U01, U23)
 
         # replace B with an interferometer
         B = [
             Command(ops.Interferometer(U01), registers[:2]),
-            Command(ops.Interferometer(U23), registers[2:])
+            Command(ops.Interferometer(U23), registers[2:]),
         ]
 
         # decompose the interferometer, using Mach-Zehnder interferometers
