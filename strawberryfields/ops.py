@@ -281,7 +281,6 @@ Code details
 
 from collections.abc import Sequence
 import copy
-import numbers
 import warnings
 
 import numpy as np

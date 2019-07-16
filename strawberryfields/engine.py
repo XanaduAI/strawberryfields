@@ -372,7 +372,8 @@ class LocalEngine(BaseEngine):
             # the run options of successive programs
             # overwrite the run options of previous programs
             # in the list
-            [temp_run_options.update(p.run_options) for p in program]
+            for p in program:
+                temp_run_options.update(p.run_options)
         else:
             # single program to execute
             temp_run_options.update(program.run_options)

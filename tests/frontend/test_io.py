@@ -36,9 +36,9 @@ U = np.array([[0.219546940711-0.256534554457j, 0.611076853957+0.524178937791j, -
 
 
 @pytest.fixture
-def eng(backend):
+def eng(fake_backend):
     """Engine fixture."""
-    return sf.LocalEngine(backend)
+    return sf.LocalEngine(fake_backend)
 
 
 @pytest.fixture(scope="module")
