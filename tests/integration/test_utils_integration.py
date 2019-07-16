@@ -474,7 +474,7 @@ class TestExtractUnitary:
         )
 
         eng_ref, p0 = setup_eng(2)
-        if eng_ref.backend._short_name == "tf":
+        if eng_ref.backend.short_name == "tf":
             pytest.skip("Un vectorized mode only supports Fock backend for now")
 
         with p0.context as q:

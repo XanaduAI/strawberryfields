@@ -113,11 +113,13 @@ def about():
     print('Scipy version:             {}'.format(scipy.__version__))
     print('Hafnian version:           {}'.format(hafnian.__version__))
     print('Blackbird version:         {}'.format(blackbird.__version__))
+
     try:
         import tensorflow
         tf_version = tensorflow.__version__
-    except ModuleNotFoundError:
+    except ImportError:
         tf_version = None
+
     print('TensorFlow version:        {}'.format(tf_version))
 
 
