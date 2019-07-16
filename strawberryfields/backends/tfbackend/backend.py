@@ -350,7 +350,7 @@ class TFBackend(BaseFock):
                     sess.close()
 
             result = np.abs(v-1) <= tol
-        return result
+        return np.all(result)  # FIXME how should we handle batching here?
 
     def del_mode(self, modes):
         with tf.name_scope('Del_mode'):

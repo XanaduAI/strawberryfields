@@ -117,12 +117,18 @@ class TestRepresentationIndependent:
                                                       "shots != 1 for Fock measurement"):
             backend.measure_fock([0, 1], shots=5)
 
-    def test_vacuum_fock(self, setup_backend):
+    def test_vacuum_fock(self, setup_backend, batch_size):
         """Tests the Fock measurement with shots==1."""
+
+        if batch_size is None:
+            shape = (3, 1)
+        else:
+            shape = (3, batch_size, 1)
+
         backend = setup_backend(3)
         res = backend.measure_fock([0, 1, 2])
         assert isinstance(res, np.ndarray)
-        assert res.shape == (3, 1)
+        assert res.shape == shape
         assert np.all(res == 0)
 
     @pytest.mark.backends('fock', 'gaussian')

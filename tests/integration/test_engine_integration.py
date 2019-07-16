@@ -353,7 +353,7 @@ class TestResults:
         with p1.context as q:
             ops.MeasureFock() | q
 
-        backend_name = eng.backend._short_name
+        backend_name = eng.backend.short_name
         with pytest.raises(NotImplementedError,
                            match="Measure has not been implemented in the '{}' backend "
                            "for the arguments {{'shots': {}}}".format(backend_name, shots)):
@@ -452,7 +452,6 @@ class TestResults:
         shots = 3
         with p.context as q:
             ops.MeasureHeterodyne() | q[1]
-        name = eng.backend._short_name
         res = eng.run(p, run_options={"shots": shots})
 
         assert type(res.samples) == dict
@@ -546,7 +545,7 @@ class TestResults:
             ops.MeasureHomodyne(c) | q[1]
 
         # TODO: replace with proper test when implemented
-        name = eng.backend._short_name
+        name = eng.backend.short_name
         with pytest.raises(NotImplementedError,
                            match="The operation MeasureHomodyne\({}\) has not been "
                                  "implemented in the '{}' backend for the arguments {{'shots': {}}}".format(c, name, shots)):

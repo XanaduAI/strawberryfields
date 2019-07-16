@@ -76,7 +76,7 @@ class TestRepresentationIndependent:
         """Tests that homodyne measurements are not implemented when shots != 1.
         Should be deleted when this functionality is implemented."""
         backend = setup_backend(3)
-        name = backend._short_name.capitalize()
+        name = backend.short_name.capitalize()
         with pytest.raises(NotImplementedError, match="{} backend currently does not support "
                                                       "shots != 1 for homodyne measurement".format(name)):
             backend.measure_homodyne(1.5, 1, shots=-5)
