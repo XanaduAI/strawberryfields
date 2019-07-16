@@ -1,3 +1,53 @@
+# Release 0.12.0-dev
+
+### New features
+
+* Adds the MZgate to ops.py, representing a Mach-Zehnder interferometer. This is
+  not a primitive of the existing simulator backends; rather, `_decompose()` is
+  defined, decomposing it into an external phase shift, two 50-50 beamsplitters,
+  and an internal phase shift.
+  [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
+
+* The `Chip0Spec` circuit class now defines a `compile` method, allowing
+  arbitrary unitaries comprised of `{Interferometer, BSgate, Rgate, MZgate}`
+  operations to be validated and compiled to match the topology of chip0.
+  [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
+
+
+### API Changes
+
+* Several changes to the `strawberryfields.decompositions` module:
+  [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
+
+  - The name `clements` has been replaced with `rectangular` to
+    correspond with the shape of the resulting decomposition.
+
+  - All interferometer decompositions (`rectangular`, `rectangular_phase_end`,
+    `rectangular_symmetric`, and `triangular`) now have standardized outputs
+    `(tlist, diag, tilist)`, so they can easily be swapped.
+
+
+* Several changes to `ops.Interferometer`:
+  [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
+
+  - The calculation of the ops.Interferometer decomposition has been moved from
+    `__init__` to `_decompose()`, allowing the interferometer decomposition type
+    to be set by a `CircuitSpec` during compilation.
+
+  - `**kwargs` is now passed through from `Operation.decompose` -> `Gate.decompose`
+    -> `SpecificOp._decompose`, allowing decomposition options to be passed during
+    compilation.
+
+  - `ops.Interferometer` now accepts the keyword argument `mesh` to be set during
+    initialization, allowing the user to specify the decomposition they want.
+
+* Moves the `Program.compile_seq` method to `CircuitSpecs.decompose`. This allows it
+  to be accessed from the `CircuitSpec.compile` method. Furthermore, it now must also
+  be passed the program registers, as compilation may sometimes require this.
+  [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
+
+---
+
 # Release 0.11.1
 
 ### Improvements
@@ -37,6 +87,7 @@
   unitary was the identity
   [#128](https://github.com/XanaduAI/strawberryfields/pull/128).
 
+---
 
 # Release 0.11.0
 
@@ -78,21 +129,26 @@ print(results.samples[0])
 
 - The Engine API has been changed slightly:
 
-    - The engine is initialized with the required backend, as well as a `backend_options` dictionary, which is passed to the backend:
-      ```python
-      eng = sf.Engine("fock", backend_options={"cutoff_dim": 5}
-      ```
-    - `LocalEngine.run()` now accepts a program to execute, and returns a `Result` object that contains both a state object (`Result.state`) and measurement samples (`Result.samples`):
-      ```python
-      results = eng.run(prog)
-      state = results.state
-      samples = results.samples
-      ```
-    - `compile_options` can be provided when calling `LocalEngine.run()`. These are passed to the `compile()` method of the program before execution.
-    - `run_options` can be provided when calling `LocalEngine.run()`. These are used to determine the characteristics of the measurements and state contained in the `Results` object returned after the program is finished executing.
+  The engine is initialized with the required backend, as well as a `backend_options` dictionary, which is passed to the backend:
 
-    - `shots` keyword argument can be passed to `run_options`, enabling multi-shot sampling. Supported only
-      in the Gaussian backend, and only for Fock measurements.
+    ```python
+    eng = sf.Engine("fock", backend_options={"cutoff_dim": 5}
+    ```
+
+  `LocalEngine.run()` now accepts a program to execute, and returns a `Result` object that contains both a state object (`Result.state`) and measurement samples (`Result.samples`):
+
+    ```python
+    results = eng.run(prog)
+    state = results.state
+    samples = results.samples
+    ```
+
+  - `compile_options` can be provided when calling `LocalEngine.run()`. These are passed to the `compile()` method of the program before execution.
+
+  - `run_options` can be provided when calling `LocalEngine.run()`. These are used to determine the characteristics of the measurements and state contained in the `Results` object returned after the program is finished executing.
+
+  - `shots` keyword argument can be passed to `run_options`, enabling multi-shot sampling. Supported only
+    in the Gaussian backend, and only for Fock measurements.
 
  - The Gaussian backend now officially supports Fock-basis measurements (`MeasureFock`), but does not update the quantum state after a Fock measurement.
 
@@ -160,6 +216,8 @@ print(results.samples[0])
 This release contains contributions from (in alphabetical order):
 
 Ville Bergholm, Tom Bromley, Ish Dhand, Karel Dumon, Xueshi Guo, Josh Izaac, Nathan Killoran, Leonhard Neuhaus, Nicolás Quesada.
+
+---
 
 
 # Release 0.10
