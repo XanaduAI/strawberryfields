@@ -89,7 +89,7 @@ to teleport the coherent state :math:`\ket{\alpha}` where :math:`\alpha=1+0.5i`:
     def custom(x):
         return -x*sqrt(2)
 
-    with program.context as q:
+    with prog.context as q:
         # prepare initial states
         Coherent(1+0.5j) | q[0]
         Squeezed(-2) | q[1]
@@ -111,7 +111,7 @@ to teleport the coherent state :math:`\ket{\alpha}` where :math:`\alpha=1+0.5i`:
 
 A couple of things to note here:
 
-* **The quantum register returned from the** ``program.context`` **context manager is a sequence**. Individual modes can be accessed via standard Python indexing and slicing techniques.
+* **The quantum register returned from the** ``prog.context`` **context manager is a sequence**. Individual modes can be accessed via standard Python indexing and slicing techniques.
 
 ..
     * **Preparing initial states, measurements, and gate operations all make use of the following syntax:**
@@ -175,11 +175,11 @@ in our truncated Fock basis. We now have all the parameters ready to initialize 
     For example, to prepare a squeezed vacuum state in the :math:`x` quadrature with ``cutoff_dim=10``, a squeezing factor of :math:`r=1` provides an acceptable approximation, since :math:`|\braketD{n}{z}|^2<0.02` for :math:`n\geq 10`.
 
 
-We can now execute our quantum program ``program`` on the engine via the :func:`Engine.run` method:
+We can now execute our quantum program ``prog`` on the engine via the :func:`Engine.run` method:
 
 .. code-block:: python
 
-    result = eng.run(program, run_options={shots=1, modes=None}, compile_options={})
+    result = eng.run(prog, run_options={shots=1, modes=None}, compile_options={})
 
 The :meth:`eng.run <.LocalEngine.run>` method accepts the arguments:
 
@@ -199,7 +199,7 @@ The :meth:`eng.run <.LocalEngine.run>` method accepts the arguments:
 ..
 
 * ``compile_options``: A dictionary of keyword arguments to be used for program compilation.
-  To ensure the ``program`` will run on the specified backend, the engine will perform
+  To ensure the ``~.Program`` will run on the specified backend, the engine will perform
   **program compilation**, by calling the :meth:`~.Program.compile` method.
 
 .. note::
