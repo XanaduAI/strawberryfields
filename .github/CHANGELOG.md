@@ -1,3 +1,9 @@
+# v0.11.2-dev
+
+### Improvements
+
+* Fixed typo in the Gaussian Boson Sampling example notebook.
+
 # Release 0.11.1
 
 ### Improvements
