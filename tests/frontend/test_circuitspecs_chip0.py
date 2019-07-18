@@ -145,10 +145,10 @@ class TestChip0Compilation:
             squeezing_amplitude_1=0.65,
             external_phase_0=0.54,
             internal_phase_0=-0.23,
-            phi0=1.24,
-            phi1=-0.54,
-            phi2=4.12,
-            phi3=0,
+            final_phase_0=1.24,
+            final_phase_1=-0.54,
+            final_phase_2=4.12,
+            final_phase_3=0,
         )
 
         expected = to_program(bb)
@@ -208,6 +208,9 @@ class TestChip0Compilation:
             ops.MeasureFock() | q
 
         res = prog.compile("chip0")
+
+        for cmd in res.circuit:
+            print(cmd)
 
         expected = sf.Program(4)
 
@@ -317,17 +320,17 @@ class TestChip0Compilation:
             ops.S2gate(0.5, 0) | (q[1], q[3])
 
             # corresponds to MZgate(phi, theta) on modes [0, 1]
-            ops.Rgate(phi) | q[0]
+            ops.Rgate(phi % (2*np.pi)) | q[0]
             ops.BSgate(np.pi / 4, np.pi / 2) | (q[0], q[1])
-            ops.Rgate(theta + 2 * np.pi) | q[0]
+            ops.Rgate(theta % (2*np.pi)) | q[0]
             ops.BSgate(np.pi / 4, np.pi / 2) | (q[0], q[1])
             ops.Rgate(0) | q[0]
             ops.Rgate(0) | q[1]
 
             # corresponds to MZgate(phi, theta) on modes [2, 3]
-            ops.Rgate(phi) | q[2]
+            ops.Rgate(phi % (2*np.pi)) | q[2]
             ops.BSgate(np.pi / 4, np.pi / 2) | (q[2], q[3])
-            ops.Rgate(theta + 2 * np.pi) | q[2]
+            ops.Rgate(theta % (2*np.pi)) | q[2]
             ops.BSgate(np.pi / 4, np.pi / 2) | (q[2], q[3])
             ops.Rgate(0) | q[2]
             ops.Rgate(0) | q[3]

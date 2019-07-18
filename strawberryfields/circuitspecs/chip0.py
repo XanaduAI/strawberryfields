@@ -63,10 +63,10 @@ class Chip0Specs(CircuitSpecs):
         BSgate(pi/4, pi/2) | [2, 3]
 
         # final local phases
-        Rgate({phi0}) | 0
-        Rgate({phi1}) | 1
-        Rgate({phi2}) | 2
-        Rgate({phi3}) | 3
+        Rgate({final_phase_0}) | 0
+        Rgate({final_phase_1}) | 1
+        Rgate({final_phase_2}) | 2
+        Rgate({final_phase_3}) | 3
 
         # Measurement in Fock basis
         MeasureFock() | [0, 1, 2, 3]

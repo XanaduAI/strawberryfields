@@ -49,6 +49,7 @@
 ### Bug fixes
 
 * Fixed typo in the Gaussian Boson Sampling example notebook.
+  [#133](https://github.com/XanaduAI/strawberryfields/pull/133)
 
 ---
 

@@ -1693,7 +1693,7 @@ class Interferometer(Decomposition):
 
             - ``'rectangular_symmetric'`` - rectangular mesh, with local phase shifts
               placed after all interferometers, and all beamsplitters decomposed into
-              symmetric beamsplitters
+              pairs of symmetric beamsplitters and phase shifters
 
             - ``'triangular'`` - triangular mesh
 
@@ -1735,7 +1735,7 @@ class Interferometer(Decomposition):
 
                 if "symmetric" in mesh:
                     # Mach-Zehnder interferometers
-                    cmds.append(Command(MZgate(phi, theta), (reg[n], reg[m])))
+                    cmds.append(Command(MZgate(np.mod(phi, 2*np.pi), np.mod(theta, 2*np.pi)), (reg[n], reg[m])))
 
                 else:
                     # Clements style beamsplitters
