@@ -46,6 +46,10 @@
   be passed the program registers, as compilation may sometimes require this.
   [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
 
+### Bug fixes
+
+* Fixed typo in the Gaussian Boson Sampling example notebook.
+
 ---
 
 # Release 0.11.1
