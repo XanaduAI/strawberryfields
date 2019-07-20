@@ -19,24 +19,24 @@ Quantum operation parameters
 
 .. currentmodule:: strawberryfields.parameters
 
-The :class:`Parameter` class encapsulates a parameter passed to the
+The classes in this module encapsulate parameters passed to the
 quantum operations represented by :class:`.Operation`.
-There are three basic types of Parameters:
+There are three basic types of parameters:
 
-1. Numerical parameters (bound and fixed): An immediate, immutable numerical object (float, complex,
-   int, array).
-   NOTE: currently implemented as-is, not using the Parameter class. This can be changed if necessary,
+1. Numerical parameters (bound and fixed): An immediate, immutable numerical object
+   (float, complex, int, array).
+   NOTE: currently implemented as-is, not encapsulated in a class. This can be changed if necessary,
    in which case most of the functions in this module would become Parameter class methods.
 2. Measured parameters (bound but not fixed): Certain quantum circuits/protocols require that
    Operations can be conditioned on measurement results obtained during the execution of the
    circuit. In this case the parameter value is not known/fixed until the measurement is made
-   (or simulated).
-   Measured parameters are constructed from the :class:`RegRef` instance storing the measurement
+   (or simulated). Represented by :class:`MeasuredParameter` instances.
+   Constructed from the :class:`RegRef` instance storing the measurement
    result using the :meth:`RegRef.par` method.
 3. Free parameters (not bound nor fixed): A *parametrized circuit template* is a circuit that
    depends on a number of unbound (free) parameters. These parameters need to be bound to fixed
    numerical values before the circuit can be executed on a hardware quantum device or a numeric
-   simulator.
+   simulator. Represented by :class:`FreeParameter` instances.
    Simulators with symbolic capability can accept a parametrized circuit as input (and should
    return symbolic expressions representing the measurement results, with the same free parameters,
    as output).
@@ -44,14 +44,14 @@ There are three basic types of Parameters:
    :meth:`Program.args` method.
 
 The Operations can accept parameters that are functions or arithmetic combinations of any number of
-these basic types of Parameters.
+these basic types of parameters, made possible by the parameters inheriting :class:`sympy.Symbol`.
 
 
 The normal lifecycle of an Operation object and its associated Parameter instances is as follows:
 
 * An Operation instance is constructed, and given some input arguments.
   :meth:`.Operation.__init__` converts the inputs into Parameter instances.
-  The RegRef dependencies of Measured parameters are added to :attr:`Operation._measurement_deps`.
+  The RegRef dependencies of measured parameters are added to :attr:`Operation._measurement_deps`.
 
 * The Operation instance is applied using its :meth:`~ops.Operation.__or__`
   method inside a :class:`.Program` context.
@@ -64,42 +64,47 @@ The normal lifecycle of an Operation object and its associated Parameter instanc
   the graph representing the quantum circuit.
   The circuit graph is built using the knowledge of which subsystems the Commands act and depend on.
 
-* Merging two :class:`.Gate` instances of the same subclass involves
+* Decompositions, merges and commutations often involve creation new Operations with transformed
+  parameter values.
+  For example, merging two :class:`.Gate` instances of the same subclass involves
   adding their first parameters after equality-comparing the others. This is easily done if
   all the parameters have an immediate numerical value.
-  Measured and free parameters are more complicated, but are handled by Sympy.
-  TODO test/merge Operations that depend on RegRefTransforms or TensorFlow objects.
+  Measured and free parameters are handled symbolically by Sympy.
 
 * The compiled Program is run by a :class:`.BaseEngine` instance, which calls the
-  :meth:`~ops.Operation.apply` method of each Operation in turn.
+  :meth:`apply` method of each Operation in turn.
 
-* :meth:`Operation.apply` evaluates the numeric value of any RegRefTransform-based Parameters
-  using :meth:`Parameter.evaluate` (other types of Parameters are simply passed through).
-  The parameter values and the subsystem indices are passed to :meth:`Operation._apply`.
-
-* :meth:`~ops.Operation._apply` "unwraps" the Parameter instances. There are three different cases:
-
-  1. We still need to do some arithmetic, unwrap after it is done using `p.x`.
-  2. No arithmetic required, use :func:`~parameters._unwrap`.
-  3. No parameters are used, do nothing.
-
-  Finally, :meth:`_apply` calls the appropriate backend API method using the unwrapped parameters.
+* :meth:`apply` then calls :meth:`_apply` which is unique for each Operation subclass.
+  It may perform additional numeric or symbolic transformations on the parameters, and
+  then finally evaluates the numeric value of the parameters using :func:`_evaluate`.
+  The numeric parameter values are passed to the appropriate backend API method.
   It is up to the backend to either accept NumPy arrays and Tensorflow objects as parameters, or not.
 
 What we cannot do at the moment:
 
-* Use anything except integers and RegRefs (or Sequences thereof) as the subsystem parameter
+* Use anything except integers and RegRefs (or Sequences thereof) as the subsystem argument
   for the :meth:`~ops.Operation.__or__` method.
-  Technically we could allow any Parameters or valid Parameter initializers that evaluate into an integer.
+  Technically we could allow any Parameters that evaluate into an integer.
 
 
-Parameter methods
------------------
+Functions
+---------
 
-.. currentmodule:: strawberryfields.parameters.Parameter
+.. currentmodule:: strawberryfields.parameters
 
 .. autosummary::
-   evaluate
+   _evaluate
+   is_symbolic_par
+   get_measurement_deps
+   get_par_str
+
+
+Parameter classes
+-----------------
+
+.. autosummary::
+   MeasuredParameter
+   FreeParameter
 
 
 Code details
@@ -107,7 +112,6 @@ Code details
 
 """
 from collections.abc import Sequence
-import numbers
 
 import numpy as np
 import sympy
