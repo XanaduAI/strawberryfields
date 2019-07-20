@@ -48,6 +48,7 @@ Program methods
    optimize
    print
    draw_circuit
+   args
 
 The following are internal Program methods. In most cases the user should not
 call these directly.
@@ -73,7 +74,6 @@ Helper classes
 .. autosummary::
    Command
    RegRef
-   RegRefTransform
 
 
 Utility functions
@@ -192,7 +192,8 @@ class Program:
         self.target = None
         #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
-
+        #: dict[str, Parameter]: free circuit parameters owned by this Program
+        self.free_params = {}
         self.run_options = {}
         """dict[str, Any]: dictionary of default run options, to be passed to the engine upon
         execution of the program. Note that if the ``run_options`` dictionary is passed
@@ -438,7 +439,7 @@ class Program:
         # test that the target subsystem references are ok
         reg = self._test_regrefs(reg)
         # also test possible Parameter-related dependencies
-        self._test_regrefs(op.extra_deps)
+        self._test_regrefs(op.measurement_deps)
         for rr in reg:
             # it's used now
             self.unused_indices.discard(rr.ind)
@@ -608,3 +609,32 @@ class Program:
             document = drawer.compile_document(tex_dir=tex_dir)
 
         return [document, tex]
+
+    def args(self, *args):
+        """Create and access free circuit parameters.
+
+        Returns the named free parameters. If a parameter does not exist yet, it is created and returned.
+
+        Args:
+            args (tuple[str]): names of the free parameters to access
+
+        Returns:
+            Parameter, tuple[Parameter]:
+        """
+        ret = []
+        for a in args:
+            if not isinstance(a, str):
+                raise TypeError('Parameter names must be strings.')
+
+            if a not in self.free_params:
+                if self.locked:
+                    raise CircuitError('The Program is locked, no more free parameters can be created.')
+                p = FreeParameter(a)
+                self.free_params[a] = p
+            else:
+                p = self.free_params[a]
+            ret.append(p)
+
+        if len(ret) == 1:
+            return ret[0]
+        return ret

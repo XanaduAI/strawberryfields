@@ -141,16 +141,15 @@ import scipy as sp
 from scipy.special import factorial as fac
 
 from .engine import LocalEngine
-from .program_utils import _convert, Command
+from .program_utils import Command
 from .ops import Gate, Channel, Ket
-
+from .parameters import parfuncs as pf
 
 # ------------------------------------------------------------------------
 # RegRef convert functions                                              |
 # ------------------------------------------------------------------------
 
 
-@_convert
 def neg(x):
     r"""Negates a measured value.
 
@@ -160,24 +159,22 @@ def neg(x):
     return -x
 
 
-@_convert
 def mag(x):
     r"""Returns the magnitude :math:`|z|` of a measured value.
 
     Args:
         x (RegRef): mode that has been previously measured
     """
-    return np.abs(x)
+    return pf.Abs(x)
 
 
-@_convert
 def phase(x):
     r"""Returns the phase :math:`\phi` of a measured value :math:`z=re^{i\phi}`.
 
     Args:
         x (RegRef): mode that has been previously measured
     """
-    return np.angle(x)
+    return pf.arg(x)
 
 
 def scale(x, a):
@@ -187,13 +184,7 @@ def scale(x, a):
         x (RegRef): mode that has been previously measured
         a (float): scaling factor
     """
-
-    @_convert
-    def rrt(x):
-        """RegRefTransform function"""
-        return a * x
-
-    return rrt(x)
+    return a * x
 
 
 def shift(x, b):
@@ -203,13 +194,7 @@ def shift(x, b):
         x (RegRef): mode that has been previously measured
         b (float): shifting factor
     """
-
-    @_convert
-    def rrt(x):
-        """RegRefTransform function"""
-        return b + x
-
-    return rrt(x)
+    return b + x
 
 
 def scale_shift(x, a, b):
@@ -222,13 +207,7 @@ def scale_shift(x, a, b):
         a (float): scaling factor
         b (float): shifting factor
     """
-
-    @_convert
-    def rrt(x):
-        """RegRefTransform function"""
-        return a * x + b
-
-    return rrt(x)
+    return a * x + b
 
 
 def power(x, a):
@@ -244,12 +223,7 @@ def power(x, a):
     else:
         tmp = a
 
-    @_convert
-    def rrt(x):
-        """RegRefTransform function"""
-        return np.power(x, tmp)
-
-    return rrt(x)
+    return x ** tmp
 
 
 # ------------------------------------------------------------------------

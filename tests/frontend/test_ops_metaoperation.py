@@ -23,7 +23,7 @@ from strawberryfields import ops
 from strawberryfields.program import Program
 from strawberryfields.program_utils import MergeFailure, RegRefError, CircuitError
 from strawberryfields import utils
-from strawberryfields.parameters import Parameter
+
 
 # make test deterministic
 np.random.seed(42)

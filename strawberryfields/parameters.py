@@ -21,26 +21,42 @@ Quantum operation parameters
 
 The :class:`Parameter` class encapsulates a parameter passed to the
 quantum operations represented by :class:`.Operation`.
-The parameter objects can represent a
+There are three basic types of Parameters:
 
-* number
-* NumPy array
-* value measured from the quantum register (:class:`.RegRefTransform`)
-* TensorFlow object (:class:`tf.Variable` or :code:`tf.placeholder`)
+1. Numerical parameters (bound and fixed): An immediate, immutable numerical object (float, complex,
+   int, array).
+   NOTE: currently implemented as-is, not using the Parameter class. This can be changed if necessary,
+   in which case most of the functions in this module would become Parameter class methods.
+2. Measured parameters (bound but not fixed): Certain quantum circuits/protocols require that
+   Operations can be conditioned on measurement results obtained during the execution of the
+   circuit. In this case the parameter value is not known/fixed until the measurement is made
+   (or simulated).
+   Measured parameters are constructed from the :class:`RegRef` instance storing the measurement
+   result using the :meth:`RegRef.par` method.
+3. Free parameters (not bound nor fixed): A *parametrized circuit template* is a circuit that
+   depends on a number of unbound (free) parameters. These parameters need to be bound to fixed
+   numerical values before the circuit can be executed on a hardware quantum device or a numeric
+   simulator.
+   Simulators with symbolic capability can accept a parametrized circuit as input (and should
+   return symbolic expressions representing the measurement results, with the same free parameters,
+   as output).
+   Free parameters belong to a single :class:`Program` instance, and are constructed using the
+   :meth:`Program.args` method.
+
+The Operations can accept parameters that are functions or arithmetic combinations of any number of
+these basic types of Parameters.
 
 
 The normal lifecycle of an Operation object and its associated Parameter instances is as follows:
 
 * An Operation instance is constructed, and given some input arguments.
-
-* :meth:`.Operation.__init__` converts the inputs into Parameter instances.
-  Plain :class:`.RegRef` instances are wrapped in a trivial :class:`.RegRefTransform`.
-  RegRefTransforms add their RegRef dependencies to the Parameter and consequently to the Operation.
+  :meth:`.Operation.__init__` converts the inputs into Parameter instances.
+  The RegRef dependencies of Measured parameters are added to :attr:`Operation._measurement_deps`.
 
 * The Operation instance is applied using its :meth:`~ops.Operation.__or__`
-  method inside an :class:`.Program` context.
+  method inside a :class:`.Program` context.
   This creates a :class:`.Command` instance that wraps
-  the Operation and the RegRefs it acts on, which is appended to the Program command queue.
+  the Operation and the RegRefs it acts on, which is appended to :attr:`.Program.circuit`.
 
 * Before the Program is run, it is compiled and optimized for a specific backend. This involves
   checking that the Program only contains valid Operations, decomposing non-elementary Operations
@@ -51,8 +67,8 @@ The normal lifecycle of an Operation object and its associated Parameter instanc
 * Merging two :class:`.Gate` instances of the same subclass involves
   adding their first parameters after equality-comparing the others. This is easily done if
   all the parameters have an immediate numerical value.
-  RegRefTransforms and TensorFlow objects are more complicated, but could in principle be handled.
-  For now, we simply don't merge Operations that depend on RegRefTransforms or TensorFlow objects.
+  Measured and free parameters are more complicated, but are handled by Sympy.
+  TODO test/merge Operations that depend on RegRefTransforms or TensorFlow objects.
 
 * The compiled Program is run by a :class:`.BaseEngine` instance, which calls the
   :meth:`~ops.Operation.apply` method of each Operation in turn.
@@ -75,7 +91,7 @@ What we cannot do at the moment:
 * Use anything except integers and RegRefs (or Sequences thereof) as the subsystem parameter
   for the :meth:`~ops.Operation.__or__` method.
   Technically we could allow any Parameters or valid Parameter initializers that evaluate into an integer.
-* Do arithmetic with RegRefTransforms.
+
 
 Parameter methods
 -----------------
@@ -90,264 +106,156 @@ Code details
 ~~~~~~~~~~~~
 
 """
+from collections.abc import Sequence
 import numbers
 
-from unittest import mock
 import numpy as np
-
-from .program_utils import (RegRef, RegRefTransform)
-
-
-try:
-    import tensorflow as tf
-    _tf_classes = (tf.Tensor, tf.Variable)
-except ImportError:
-    tf = mock.MagicMock()
-    _tf_classes = tuple()
+import sympy
+import sympy.functions as parfuncs  # functions for manipulating the Parameters
 
 
-def _unwrap(params):
-    """Unwrap a parameter sequence.
+class ParameterError(RuntimeError):
+    """Exception raised when the Parameter classes encounter an illegal operation.
+
+    E.g., trying to use a measurement result before it is available.
+    """
+
+
+def _evaluate(params):
+    """Evaluate a parameter sequence.
+
+    Any parameters descending from sympy.Basic are evaluated, others are returned as is.
 
     Args:
-      params (Sequence[Parameter]): parameters to unwrap
+      params (Sequence[Any]): parameters to evaluate
 
     Returns:
-      tuple[Number, array, Tensor, Variable]: unwrapped Parameters
+      list[Any]: evaluated parameters
     """
-    return tuple(p.x for p in params)
+    scalar = False
+    if not isinstance(params, Sequence):
+        scalar = True
+        params = [params]
+    def xxx(p):
+        if not is_symbolic_par(p):
+            return p
+        p = p.evalf()
+        # TODO bind free params: p.evalf(subs=free_param_dict)
+        # TODO the float() conversion prevents symbolic params from being passed through, maybe the backend should do float() conversion?
+        if not p.is_real:
+            return complex(p)
+        elif p.is_integer:
+            return int(p)
+        return float(p)
+
+    ret = list(map(xxx, params))
+    if scalar:
+        return ret[0]
+    return ret
 
 
-class Parameter():
-    """Represents a parameter passed to a :class:`strawberryfields.ops.Operation` subclass constructor.
+def is_symbolic_par(p):
+    """Returns True iff p is a symbolic parameter instance."""
+    return isinstance(p, sympy.Basic)
 
-    The supported parameter types are Python and NumPy numeric types, NumPy arrays, :class:`.RegRef` instances,
-    :class:`.RegRefTransform` instances, and certain TensorFlow objects. RegRef instances are internally represented as
-    trivial RegRefTransforms.
 
-    All but the RR and TensorFlow parameters represent an immediate numeric value that
-    will not change. RR parameters can only be evaluated after the corresponding register
-    subsystems have been measured. TF parameters can be evaluated whenever, but they depend on TF objects that
-    are evaluated using :meth:`tf.Session.run`.
+def get_measurement_deps(p):
+    """RegRef dependencies of an Operation parameter.
 
-    The class supports various arithmetic operations which may change the internal representation of the result.
-    If a TensorFlow object is involved, the result will always be a TensorFlow object.
+    Returns the RegRefs that the parameter p depends on through the :class:`MeasuredParameter`
+    atoms it contains
 
     Args:
-      x (Number, array, Tensor, Variable, RegRef, RegRefTransform): parameter value
+        p (Any): Operation parameter
+
+    Returns:
+        set[RegRef]:
     """
-    # turn off the NumPy ufunc dispatching mechanism which is incompatible with our approach (see https://docs.scipy.org/doc/numpy-1.14.0/neps/ufunc-overrides.html)
-    # NOTE: Another possible approach would be to use https://docs.scipy.org/doc/numpy-1.14.0/reference/generated/numpy.lib.mixins.NDArrayOperatorsMixin.html
-    __array_ufunc__ = None
+    ret = set()
+    if not is_symbolic_par(p):
+        return ret
 
-    def __init__(self, x):
-        if isinstance(x, Parameter):
-            raise TypeError('Tried initializing a Parameter using a Parameter.')
-
-        #: set[RegRef]: parameter value depends on these RegRefs (if any), it can only be evaluated after the corresponding subsystems have been measured
-        self.deps = set()
-
-        # wrap RegRefs in the identity RegRefTransform
-        if isinstance(x, RegRef):
-            x = RegRefTransform(x)
-        elif isinstance(x, (numbers.Number, np.ndarray, _tf_classes, RegRefTransform)):
-            pass
-        else:
-            raise TypeError('Unsupported base object type: ' +
-                            x.__class__.__name__)
-
-        # add extra dependencies due to RegRefs
-        if isinstance(x, RegRefTransform):
-            self.deps.update(x.regrefs)
-        self.x = x  #: parameter value, or reference
-
-    def __str__(self):
-        if isinstance(self.x, numbers.Number):
-            return '{:.4g}'.format(self.x)
-        return self.x.__str__()
-
-    def __format__(self, format_spec):
-        return self.x.__format__(format_spec)
-
-    def evaluate(self):
-        """Evaluate the numerical value of a RegRefTransform-based parameter.
-
-        Returns:
-          Parameter: self, unless self.x is a RegRefTransform in which case it is evaluated and a new Parameter instance is constructed on the result and returned
-        """
-        if isinstance(self.x, RegRefTransform):
-            return Parameter(self.x.evaluate())
-        return self
-
-    def _unwrap_and_cast(self, other):
-        """Unwrap Parameters and cast TensorFlow-type parameters to other dtypes during arithmetic.
-
-        The main reason we need this is that TensorFlow does not automatically promote int to float or float to complex but requires an explicit cast.
-
-        Args:
-          other: the other input of a binary arithmetic operation
-        Returns:
-          (self, other) unwrapped, cast into compatible dtypes
-        """
-        # todo: Decide whether to cast to single or double precision by default (both float and complex).
-        t = self.x
-        if isinstance(other, Parameter):
-            other = other.x
-        swap = False
-        if not isinstance(t, _tf_classes):
-            if isinstance(other, _tf_classes):
-                t, other = other, t  # make sure other is the non-tf type for simplicity
-                swap = True
-            else:
-                # only TensorFlow types are cast
-                return t, other
-
-        if t.dtype.is_complex:
-            if isinstance(other, _tf_classes) and not other.dtype.is_complex:
-                other = tf.cast(other, tf.complex128)
-        else:
-            if (np.iscomplexobj(other) or
-                    (isinstance(other, _tf_classes) and other.dtype.is_complex)):
-                t = tf.cast(t, tf.complex128)
-            elif t.dtype.is_integer:
-                if (isinstance(other, float) or
-                        (isinstance(other, np.ndarray) and np.issubdtype(other.dtype, np.floating)) or
-                        (isinstance(other, _tf_classes) and other.dtype.is_floating)):
-                    t = tf.cast(t, tf.float32)
-            elif t.dtype.is_floating:
-                if isinstance(other, _tf_classes) and other.dtype.is_integer:
-                    other = tf.cast(other, tf.float32)
-
-        if swap:
-            return other, t
-        return t, other
-
-    @staticmethod
-    def _wrap(x):
-        """Wraps x inside a Parameter instance, unless x is a Parameter instance itself.
-
-        Needed because of the way the reverse binary arithmetic methods work.
-
-        Returns:
-          Parameter: x as a Parameter instance
-        """
-        if isinstance(x, Parameter):
-            return x
-        return Parameter(x)
-
-    # the arithmetic methods below basically are just responsible for calling _unwrap_and_cast which exposes self.x, then the arithmetic ops of the supported parameter types take over
-    def __add__(self, other):
-        temp, other = self._unwrap_and_cast(other)
-        return self._wrap(temp + other)
-
-    def __radd__(self, other):
-        temp, other = self._unwrap_and_cast(other)
-        return self._wrap(other + temp)
-
-    def __sub__(self, other):
-        temp, other = self._unwrap_and_cast(other)
-        return self._wrap(temp - other)
-
-    def __rsub__(self, other):
-        temp, other = self._unwrap_and_cast(other)
-        return self._wrap(other - temp)
-
-    def __mul__(self, other):
-        temp, other = self._unwrap_and_cast(other)
-        return self._wrap(temp * other)
-
-    def __rmul__(self, other):
-        temp, other = self._unwrap_and_cast(other)
-        return self._wrap(other * temp)
-
-    def __truediv__(self, other):
-        temp, other = self._unwrap_and_cast(other)
-        return self._wrap(temp / other)
-
-    def __rtruediv__(self, other):
-        temp, other = self._unwrap_and_cast(other)
-        return self._wrap(other / temp)
-
-    def __pow__(self, other):
-        temp, other = self._unwrap_and_cast(other)
-        return self._wrap(temp ** other)
-
-    def __rpow__(self, other):
-        temp, other = self._unwrap_and_cast(other)
-        return self._wrap(other ** temp)
-
-    def __neg__(self):
-        # pylint: disable=invalid-unary-operand-type
-        return Parameter(-self.x)
-
-    # other properties
-    @property
-    def shape(self):
-        """Returns the shape of array parameters."""
-        try:
-            return self.x.shape
-        except AttributeError:
-            return None
-
-    # comparisons
-    def __eq__(self, other):
-        """Equality comparison.
-
-        .. note:: This method may be too permissive, maybe it should return False if either parameter is not a numbers.Number or a np.ndarray?
-
-        Returns:
-          bool: True iff both self and other have immediate, equal values, or identical dependence on measurements, otherwise False.
-        """
-        if isinstance(other, Parameter):
-            other = other.x
-        # see RegRefTransform.__eq__
-        return self.x == other
+    # p is a Sympy expression, possibly containing measured parameters
+    for k in p.atoms(MeasuredParameter):
+        ret.add(k.regref)
+    return ret
 
 
-# corresponding numpy and tensorflow functions
-np_math_fns = {"abs": (np.abs, tf.abs),
-               "sign": (np.sign, tf.sign),
-               "sin": (np.sin, tf.sin),
-               "cos": (np.cos, tf.cos),
-               "cosh": (np.cosh, tf.cosh),
-               "tanh": (np.tanh, tf.tanh),
-               "exp": (np.exp, tf.exp),
-               "log": (np.log, tf.log),
-               "sqrt": (np.sqrt, tf.sqrt),
-               "arctan": (np.arctan, tf.atan),
-               "arctan2": (np.arctan2, tf.atan2),
-               "arcsinh": (np.arcsinh, tf.asinh),
-               "arccosh": (np.arccosh, tf.acosh),
-               "matmul": (np.matmul, tf.matmul),
-               "expand_dims": (np.expand_dims, tf.expand_dims),
-               "squeeze": (np.squeeze, tf.squeeze),
-               "transpose": (np.transpose, tf.transpose),
-               "reshape": (np.reshape, tf.reshape)
-               }
+def get_par_str(p):
+    """String representation of the Operation parameter.
 
+    Args:
+        p (Any): Operation parameter
 
-def math_fn_wrap(np_fn, tf_fn):
-    """Wrapper function for the standard math functions.
-
-    It checks the type of the incoming object and calls the appropriate NumPy or TensorFlow function.
+    Returns:
+        str: string representation
     """
-    def wrapper(*args, **kwargs):
-        """wrapper function"""
-        if any([isinstance(a, _tf_classes) for a in args]):
-            # if anything is a tf object, use the tensorflow version of the function
-            return tf_fn(*args, **kwargs)
-        elif any([isinstance(a, Parameter) for a in args]):
-            # for Parameters, call the function on the data and construct a new instance
-            temp = (a.x if isinstance(a, Parameter) else a for a in args)
-            return Parameter(wrapper(*temp))
-        # otherwise, default to numpy version
-        return np_fn(*args, **kwargs)
-
-    wrapper.__name__ = np_fn.__name__
-    wrapper.__doc__ = math_fn_wrap.__doc__
-    return wrapper
+    if is_symbolic_par(p):
+        return str(p)
+    return '{:.4g}'.format(p)  # numeric parameters
 
 
-# HACK, edit the global namespace to have sort-of single dispatch overloading for the standard math functions
-for name, fn in np_math_fns.items():
-    globals()[name] = math_fn_wrap(*fn)
+
+
+#class MeasuredParameter(sympy.AtomicExpr):  # something is messed up in Sympy caching, maybe, frontend tests fail depending on their execution order
+class MeasuredParameter(sympy.Symbol):
+    """Single measurement result used as an Operation parameter.
+
+    A MeasuredParameter instance, given as a parameter to a
+    :class:`~strawberryfields.ops.Operation` constructor, represents
+    a dependence of the Operation on classical information obtained by
+    measuring a subsystem of the register.
+
+    Used for deferred measurements, i.e., using a measurement's value
+    symbolically in defining a gate before the numeric value of that
+    measurement is available.
+
+    Replaces RegRefTransforms.
+    Arbitrary functions of atomic MeasuredParameters
+
+    Args:
+        regref (RegRef): register reference responsible for storing the measurement result
+    """
+
+    def __new__(cls, *args):
+        # do not pass args to sympy.Basic.__new__ so they do not end up in self._args
+        obj = super().__new__(cls, 'q'+str(args[0].ind))
+        #obj = super().__new__(cls)
+        return obj
+
+    def __init__(self, regref):
+        if not regref.active:
+            # TODO: Maybe we want to delete a mode right after measurement to save comp effort?
+            # The measurement result would still be preserved in the RegRef...
+            raise ValueError('Trying to use an inactive RegRef.')
+        #: RegRef: the parameter value depends on this RegRef, it can only be evaluated after the corresponding subsystem has been measured
+        self.regref = regref
+
+    def _sympystr(self, printer):
+        """"The Sympy printing system uses this method instead of __str__."""
+        return str(self.regref) + '.par'
+
+    def _eval_evalf(self, prec):
+        """Returns the numeric result of the measurement if it is available.
+
+        Returns:
+            sympy.Number: measurement result
+        """
+        res = self.regref.val
+        if res is None:
+            raise ParameterError("Trying to use a nonexistent measurement result (e.g., before it has been measured).")
+        return sympy.Number(res)
+
+
+
+class FreeParameter(sympy.Symbol):
+    """Symbolic, unbound Operation parameter.
+
+    Args:
+        name (str): name of the free parameter
+    """
+    def __init__(self, name):
+        #: str: name of the free parameter
+        self.name = name
+        #: Program, None: the Program owning this free parameter instance
+        self.owner = None

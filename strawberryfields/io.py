@@ -32,11 +32,12 @@ Code details
 """
 # pylint: disable=protected-access,too-many-nested-blocks
 import os
+
 import blackbird
 
 from . import ops
 from .program import (Program,)
-from .program_utils import (RegRefTransform,)
+from .parameters import (is_symbolic_par,)
 
 
 def to_blackbird(prog, version="1.0"):
@@ -70,35 +71,15 @@ def to_blackbird(prog, version="1.0"):
 
             if cmd.op.p:
                 # argument is quadrature phase
-                op["kwargs"]["phi"] = cmd.op.p[0].x
+                op["kwargs"]["phi"] = cmd.op.p[0]
 
         else:
-            if cmd.op.p is not None:
-                for a in cmd.op.p:
-                    # check if reg ref transform
-                    if isinstance(a.x, RegRefTransform):
-                        # if a.x.func_str is not None:
-                            # TODO: will not satisfy all use cases
-                            # as the RegRefTransform string cannot be checked
-                            # to determine if it is a valid function for serialization!
-                            #
-                            # Possible solutions:
-                            #
-                            #   * Use SymPy to represent functions, as
-                            #     SymPy provides methods for converting to
-                            #     Python functions as well as serialization
-                            #
-                            #   * Don't allow classical processing of measurements
-                            #     on remote backends
-                            #
-                            # op["args"].append(a.x.func_str)
-                        # else:
-                        raise ValueError(
-                            "The RegRefTransform in operation {} "
-                            "is not supported by Blackbird.".format(cmd.op)
-                        )
-                    # else:
-                    op["args"].append(a.x)
+            for a in cmd.op.p:
+                if is_symbolic_par(a):
+                    # SymPy object, convert to string
+                    a = str(a)
+                op["args"].append(a)
+
         bb._operations.append(op)
 
     return bb

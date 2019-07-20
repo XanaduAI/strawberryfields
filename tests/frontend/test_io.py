@@ -283,31 +283,17 @@ class TestSFToBlackbirdConversion:
         assert bb.operations[0] == expected
 
     # TODO: determine best way to serialize regref transforms
-    # def test_regref_func_str(self):
-    #     """Test a regreftransform with a function string converts properly"""
-    #     prog = Program(2)
-
-    #     with prog.context as q:
-    #         ops.Sgate(0.43) | q[0]
-    #         ops.MeasureX | q[0]
-    #         ops.Zgate(ops.RR(q[0], lambda x: 2 * x, func_str="2*q0")) | q[1]
-
-    #     bb = io.to_blackbird(prog)
-    #     expected = {"op": "Zgate", "modes": [1], "args": ["2*q0"], "kwargs": {}}
-
-    #     assert bb.operations[-1] == expected
-
-    def test_regref_no_func_str(self):
-        """Test a regreftransform with no function string raises exception"""
+    def test_regref_func_str(self):
+        """Test a regreftransform with a function string converts properly"""
         prog = Program(2)
-
         with prog.context as q:
             ops.Sgate(0.43) | q[0]
             ops.MeasureX | q[0]
-            ops.Zgate(ops.RR(q[0], lambda x: 2 * x)) | q[1]
+            ops.Zgate(2 * q[0].par) | q[1]
 
-        with pytest.raises(ValueError, match="not supported by Blackbird"):
-            io.to_blackbird(prog)
+        bb = io.to_blackbird(prog)
+        expected = {"op": "Zgate", "modes": [1], "args": ["2*q[0].par"], "kwargs": {}}
+        assert bb.operations[-1] == expected
 
 
 class TestBlackbirdToSFConversion:
@@ -386,8 +372,8 @@ class TestBlackbirdToSFConversion:
 
         assert len(prog) == 1
         assert prog.circuit[0].op.__class__.__name__ == "Sgate"
-        assert prog.circuit[0].op.p[0].x == 0.54
-        assert prog.circuit[0].op.p[1].x == 0.12
+        assert prog.circuit[0].op.p[0] == 0.54
+        assert prog.circuit[0].op.p[1] == 0.12
         assert prog.circuit[0].reg[0].ind == 0
 
     def test_gate_kwarg(self):
@@ -405,7 +391,7 @@ class TestBlackbirdToSFConversion:
 
         assert len(prog) == 1
         assert prog.circuit[0].op.__class__.__name__ == "Dgate"
-        assert prog.circuit[0].op.p[0].x == 0.54
+        assert prog.circuit[0].op.p[0] == 0.54
         assert prog.circuit[0].reg[0].ind == 0
 
     def test_gate_multimode(self):
@@ -423,8 +409,8 @@ class TestBlackbirdToSFConversion:
 
         assert len(prog) == 1
         assert prog.circuit[0].op.__class__.__name__ == "BSgate"
-        assert prog.circuit[0].op.p[0].x == 0.54
-        assert prog.circuit[0].op.p[1].x == np.pi
+        assert prog.circuit[0].op.p[0] == 0.54
+        assert prog.circuit[0].op.p[1] == np.pi
         assert prog.circuit[0].reg[0].ind == 0
         assert prog.circuit[0].reg[1].ind == 2
 
@@ -610,7 +596,7 @@ class TestLoad:
             assert cmd1.op.__class__.__name__ == cmd2.op.__class__.__name__
             assert cmd1.reg[0].ind == cmd2.reg[0].ind
             if cmd1.op.p:
-                assert np.all(cmd1.op.p[0].x == cmd2.op.p[0].x)
+                assert np.all(cmd1.op.p[0] == cmd2.op.p[0])
 
     def test_load_filename_path_object(self, prog, tmpdir):
         """Test loading a program using a path object"""

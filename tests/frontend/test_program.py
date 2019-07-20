@@ -23,6 +23,7 @@ import strawberryfields as sf
 
 from strawberryfields import program
 from strawberryfields import ops
+from strawberryfields.parameters import ParameterError
 from strawberryfields.circuitspecs.circuit_specs import CircuitSpecs
 
 
@@ -119,7 +120,7 @@ class TestProgram:
             charlie, = ops.New(1)
             BS | (bob, charlie)
             ops.MeasureX | bob
-            ops.Dgate(bob).H | charlie
+            ops.Dgate(bob.par).H | charlie
             ops.Del | bob
             ops.MeasureX | charlie
 
@@ -134,7 +135,7 @@ class TestProgram:
             "New(1)",
             "BSgate(6.283, 1.571) | (q[1], q[2])",
             "MeasureX | (q[1])",
-            "Dgate(RR(q[1]), 0).H | (q[2])",
+            "Dgate(q[1].par, 0).H | (q[2])",
             "Del | (q[1])",
             "MeasureX | (q[2])",
         ]
@@ -186,8 +187,8 @@ class TestRegRefs:
     def test_invalid_measurement(self, eng, prog):
         """Cannot use a measurement before it exists."""
         with prog.context as q:
-            ops.Dgate(q[0]) | q[1]
-        with pytest.raises(program.CircuitError, match="nonexistent measurement result"):
+            ops.Dgate(q[0].par) | q[1]
+        with pytest.raises(ParameterError, match="nonexistent measurement result"):
             eng.run(prog)
 
     def test_invalid_regref(self, prog):

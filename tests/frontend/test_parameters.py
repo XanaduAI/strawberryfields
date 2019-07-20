@@ -14,72 +14,22 @@
 r"""Unit tests for the parameters.py module."""
 import pytest
 
-pytestmark = pytest.mark.frontend
+#pytestmark = pytest.mark.frontend
+pytestmark = pytest.mark.skip('Unused for now, add some Sympy tests later.')
 
 import numpy as np
 
 import strawberryfields as sf
 from strawberryfields import ops
-from strawberryfields.parameters import Parameter
+from strawberryfields.parameters import is_symbolic_par
 
 # make test deterministic
-np.random.random(32)
+np.random.seed(32)
 
 
 TEST_VALUES = [3, 0.14, 4.2 + 0.5j, np.random.random(3)]
+TEST_PARAMETERS = [i for i in TEST_VALUES]
 
-
-try:
-    import tensorflow as tf
-except (ImportError, ModuleNotFoundError) as e:
-    tf_available = False
-else:
-    tf_available = True
-    TEST_VALUES.extend([tf.Variable(2), tf.Variable(0.4), tf.Variable(0.8 + 1.1j)])
-
-
-TEST_PARAMETERS = [Parameter(i) for i in TEST_VALUES]
-
-
-def test_parameter_wrapping_integer():
-    """Tests that ensure wrapping works with integers"""
-    var = 5
-    res = Parameter._wrap(var)
-    assert isinstance(res, Parameter)
-    assert res.x == var
-
-
-def test_parameter_wrapping_parameters():
-    """Tests that ensure wrapping works with other parameters"""
-    var = 5
-    var = Parameter(var)
-    res = Parameter._wrap(var)
-    assert isinstance(res, Parameter)
-    assert res.x == var
-
-
-def test_parameter_no_shape():
-    """Tests that ensure wrapping occurs as expected"""
-    var = Parameter(5)
-    res = var.shape
-    assert res is None
-
-
-def test_parameter_shape():
-    """Tests that ensure wrapping occurs as expected"""
-    var = np.array([[1, 2, 3], [4, 5, 6]])
-    p = Parameter(var)
-    res = p.shape
-    assert res == (2, 3)
-
-
-@pytest.mark.skipif(not tf_available, reason="Test only works with TensorFlow installed")
-def test_parameter_shape_tf():
-    """Tests that ensure wrapping occurs as expected"""
-    var = np.array([[1, 2, 3], [4, 5, 6]])
-    p = Parameter(tf.convert_to_tensor(var))
-    res = p.shape
-    assert res == (2, 3)
 
 
 @pytest.mark.parametrize("p", TEST_PARAMETERS)
