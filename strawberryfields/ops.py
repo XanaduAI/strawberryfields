@@ -279,7 +279,7 @@ Code details
 ~~~~~~~~~~~~
 
 """
-
+from collections import Counter
 from collections.abc import Sequence
 import copy
 import warnings
@@ -1812,6 +1812,89 @@ class GraphEmbed(Decomposition):
         return cmds
 
 
+class BipartiteGraphEmbed(Decomposition):
+    r"""Embed a bipartite graph into an interferometer setup.
+
+    This operation uses the Takagi decomposition to decompose
+    an adjacency matrix into a sequence of two mode squeezers, beamsplitters, and
+    rotation gates.
+
+    Args:
+        A (array): An :math:`N\times N` complex or real symmetric matrix representing
+            a bipartite graph, where the number of vertices in the two vertex sets are even.
+        mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state
+            representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
+        make_traceless (boolean): Removes the trace of the input matrix, by performing the transformation
+            :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
+            the graph but will lead to different photon number statistics for events with more than
+            one photon in any mode.
+        drop_identity (bool): If ``True``, decomposed gates with trivial parameters,
+            such that they correspond to an identity operation, are removed.
+        tol (float): the tolerance used when checking if the input matrix is symmetric:
+            :math:`|A-A^T| <` tol
+    """
+
+    def __init__(self, A, mean_photon_per_mode=1.0, make_traceless=False, drop_identity=True, tol=1e-6):
+        super().__init__([A])
+        self.ns = A.shape[0]
+        self.mean_photon = mean_photon_per_mode
+        self.traceless = make_traceless
+        self.drop_identity = drop_identity
+        self.tol = tol
+
+        self.identity = np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol)
+
+    def _decompose(self, reg, **kwargs):
+        mean_photon_per_mode = kwargs.get("mean_photon_per_mode", self.mean_photon)
+        make_traceless = kwargs.get("make_traceless", self.traceless)
+        drop_identity = kwargs.get("drop_identity", self.drop_identity)
+        tol = kwargs.get("tol", self.tol)
+        mesh = kwargs.get("mesh", "rectangular")
+
+        cmds = []
+
+        N = self.ns
+        perm = np.arange(N).reshape(2, -1).T
+        A = self.p[0].x[:, perm.flatten()][perm.flatten()]
+
+        sq, U = dec.graph_embed(
+            A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=True, atol=tol, rtol=0
+        )
+
+        if not self.identity or not drop_identity:
+            for (m, n), s in zip(perm, sq.reshape(-1, 2)[:, 0]):
+                s = s if np.abs(s) >= _decomposition_tol else 0
+
+                print(m, n, s)
+
+                U_list = [np.identity(N, dtype=np.complex128)] * 2
+
+                if not (drop_identity and s == 0):
+                    cmds.append(Command(S2gate(s), (reg[m], reg[n])))
+
+                    Utmp = np.identity(N, dtype=np.complex128)
+                    Utmp[m, m] = 1/np.sqrt(2)
+                    Utmp[m, n] = -1/np.sqrt(2)
+                    Utmp[n, m] = 1/np.sqrt(2)
+                    Utmp[n, n] = 1j/np.sqrt(2)
+                    U_list.insert(0, Utmp)
+
+                    # cmds.append(Command(BSgate(), (reg[m], reg[n])))
+                    # cmds.append(Command(Rgate(np.pi/2), reg[n]))
+
+            U = U if not np.allclose(U, np.identity(len(U)), atol=_decomposition_tol, rtol=0) else np.identity(len(U))
+
+            if not (drop_identity and np.all(U == np.identity(len(U)))):
+                # perm = np.arange(N).reshape(-1, 2).T
+                U_list.insert(0, U[:, perm.flatten()][perm.flatten()])
+                from numpy.linalg import multi_dot
+                U = multi_dot(U_list)
+                print(np.round(U, 4))
+                cmds.append(Command(Interferometer(U, mesh=mesh, drop_identity=drop_identity, tol=tol), reg))
+
+        return cmds
+
+
 class GaussianTransform(Decomposition):
     r"""Apply a Gaussian symplectic transformation to the specified qumodes.
 
@@ -2048,7 +2131,7 @@ state_preparations = simple_state_preparations + (Ket, DensityMatrix)
 
 measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne)
 
-decompositions = (Interferometer, GraphEmbed, GaussianTransform, Gaussian)
+decompositions = (Interferometer, GraphEmbed, GaussianTransform, Gaussian, BipartiteGraphEmbed)
 
 #=======================================================================
 # exported symbols

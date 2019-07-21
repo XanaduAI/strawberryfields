@@ -63,4 +63,5 @@ class GaussianSpecs(CircuitSpecs):
         "CXgate": {},
         "CZgate": {},
         "MZgate": {},
+        "BipartiteGraphEmbed": {}
     }

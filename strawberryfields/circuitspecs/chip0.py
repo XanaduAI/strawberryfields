@@ -37,6 +37,7 @@ class Chip0Specs(CircuitSpecs):
     primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate"}
     decompositions = {
         "Interferometer": {"mesh": "rectangular_symmetric", "drop_identity": False},
+        "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False},
         "MZgate": {},
     }
 
