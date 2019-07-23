@@ -141,37 +141,36 @@ class APIClient:
 
     USER_AGENT = "strawberryfields-api-client/0.1"
 
-    ALLOWED_HOSTNAMES = ["localhost", "localhost:8080", "platform.strawberryfields.ai"]
+    ALLOWED_HOSTNAMES = [
+        "localhost",
+        "localhost:8080",
+        "platform.strawberryfields.ai",
+    ]
 
     DEFAULT_HOSTNAME = "localhost"
-
-    ENV_KEY_PREFIX = "SF_API_"
-    ENV_AUTHENTICATION_TOKEN_KEY = "{}AUTHENTICATION_TOKEN".format(ENV_KEY_PREFIX)
-    ENV_API_HOSTNAME_KEY = "{}API_HOSTNAME".format(ENV_KEY_PREFIX)
-    ENV_USE_SSL_KEY = "{}USE_SSL".format(ENV_KEY_PREFIX)
 
     def __init__(self, **kwargs):
         """
         Initialize the API client with various parameters.
         """
-        config = self.get_configuration_from_config()
+        self._config = self.get_configuration_from_config()
 
         # Override any values that are explicitly passed when initializing client
-        config.update(kwargs)
+        self._config.update(kwargs)
 
-        if config["hostname"] is None:
+        if self._config["hostname"] is None:
             raise ValueError("hostname parameter is missing")
 
-        if config["hostname"] not in self.ALLOWED_HOSTNAMES:
+        if self._config["hostname"] not in self.ALLOWED_HOSTNAMES:
             raise ValueError("hostname parameter not in allowed list")
 
-        self.USE_SSL = config["use_ssl"]
+        self.USE_SSL = self._config["use_ssl"]
         if not self.USE_SSL:
             warnings.warn("Connecting insecurely to API server", UserWarning)
 
-        self.HOSTNAME = config["hostname"]
+        self.HOSTNAME = self._config["hostname"]
         self.BASE_URL = "{}://{}".format("https" if self.USE_SSL else "http", self.HOSTNAME)
-        self.AUTHENTICATION_TOKEN = config["authentication_token"]
+        self.AUTHENTICATION_TOKEN = self._config["authentication_token"]
         self.HEADERS = {"User-Agent": self.USER_AGENT}
 
         if self.AUTHENTICATION_TOKEN:

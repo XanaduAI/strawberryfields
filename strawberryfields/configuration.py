@@ -160,7 +160,7 @@ class Configuration:
                 if env in os.environ:
                     # Update from environment variable
                     self._config[section][key] = os.environ[env]
-                elif self._config_file:
+                elif self._config_file and key in self._config_file[section]:
                     # Update from configuration file
                     self._config[section][key] = self._config_file[section][key]
 
