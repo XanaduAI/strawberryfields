@@ -81,8 +81,8 @@ import json
 import warnings
 
 import dateutil.parser
-import requests
 
+import requests
 from strawberryfields import configuration
 
 
@@ -141,11 +141,7 @@ class APIClient:
 
     USER_AGENT = "strawberryfields-api-client/0.1"
 
-    ALLOWED_HOSTNAMES = [
-        "localhost",
-        "localhost:8080",
-        "platform.strawberryfields.ai",
-    ]
+    ALLOWED_HOSTNAMES = ["localhost", "localhost:8080", "platform.strawberryfields.ai"]
 
     DEFAULT_HOSTNAME = "localhost"
 
@@ -154,6 +150,7 @@ class APIClient:
         Initialize the API client with various parameters.
         """
         self._config = self.get_configuration_from_config()
+        self._config["debug"] = self._config["debug"] in (True, "True", "true", "TRUE", 1)
 
         # Override any values that are explicitly passed when initializing client
         self._config.update(kwargs)
@@ -172,9 +169,14 @@ class APIClient:
         self.BASE_URL = "{}://{}".format("https" if self.USE_SSL else "http", self.HOSTNAME)
         self.AUTHENTICATION_TOKEN = self._config["authentication_token"]
         self.HEADERS = {"User-Agent": self.USER_AGENT}
+        self.DEBUG = self._config["debug"]
 
         if self.AUTHENTICATION_TOKEN:
             self.set_authorization_header(self.AUTHENTICATION_TOKEN)
+
+        if self.DEBUG:
+            self.errors = []
+            self.responses = []
 
     def get_configuration_from_config(self):
         """
@@ -216,6 +218,35 @@ class APIClient:
         """
         return join_path(self.BASE_URL, path)
 
+    def request(self, method, **params):
+        """
+        Calls ``method`` with ``params`` after applying headers. Records the request type and
+        parameters to ``self.errors`` if the request is not successful, and the response to
+        ``self.responses`` if a response is returned from the server.
+
+        Args:
+            method: one of ``requests.get`` or ``requests.post``
+            **params: the parameters to pass on to the method (e.g. ``url``, ``data``, etc.)
+
+        Returns:
+            requests.Response: a response object, or None if no response could be fetched
+        """
+        assert method in (requests.get, requests.post)
+
+        params["headers"] = self.HEADERS
+
+        try:
+            response = method(**params)
+        except Exception as e:
+            if self.DEBUG:
+                self.errors.append((method, params, e))
+            raise
+
+        if self.DEBUG:
+            self.responses.append(response)
+
+        return response
+
     def get(self, path):
         """
         Sends a GET request to the provided path. Returns a response object.
@@ -224,12 +255,9 @@ class APIClient:
             path (str): path to send the GET request to
 
         Returns:
-            requests.Response: A response object, or None if no response could be fetched from the
-            server.
+            requests.Response: A response object, or None if no response could be fetched
         """
-        # TODO: better error handling (e.g. ConnectionError)
-        response = requests.get(url=self.join_path(path), headers=self.HEADERS)
-        return response
+        return self.request(requests.get, url=self.join_path(path))
 
     def post(self, path, payload):
         """
@@ -241,13 +269,9 @@ class APIClient:
             payload: JSON serializable object to be sent to the server
 
         Returns:
-            requests.Response: A response object, or None if no response could be fetched from the
-            server.
+            requests.Response: A response object, or None if no response could be fetched
         """
-        # TODO: catch any exceptions from dumping JSON, and handle request errors
-        data = json.dumps(payload)
-        response = requests.post(url=self.join_path(path), headers=self.HEADERS, data=data)
-        return response
+        return self.request(requests.post, url=self.join_path(path), data=json.dumps(payload))
 
 
 class ResourceManager:

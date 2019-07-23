@@ -30,6 +30,7 @@ TEST_FILE = """\
 authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
 hostname = "localhost"
 use_ssl = true
+debug = false
 """
 
 EXPECTED_CONFIG = {
@@ -37,6 +38,7 @@ EXPECTED_CONFIG = {
         "authentication_token": "071cdcce-9241-4965-93af-4a4dbc739135",
         "hostname": "localhost",
         "use_ssl": True,
+        "debug": False,
     }
 }
 

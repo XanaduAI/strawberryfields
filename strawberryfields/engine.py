@@ -308,7 +308,8 @@ class BaseEngine(abc.ABC):
             self.run_progs.append(p) 
             prev = p
 
-        return Result(self.samples.copy())
+        if self.samples:
+            return Result(self.samples.copy())
 
 
 class LocalEngine(BaseEngine):

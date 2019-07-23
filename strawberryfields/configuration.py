@@ -95,7 +95,9 @@ from appdirs import user_config_dir
 log.getLogger()
 
 
-DEFAULT_CONFIG = {"api": {"authentication_token": "", "hostname": "localhost", "use_ssl": True}}
+DEFAULT_CONFIG = {
+    "api": {"authentication_token": "", "hostname": "localhost", "use_ssl": True, "debug": False}
+}
 
 
 class ConfigurationError(Exception):

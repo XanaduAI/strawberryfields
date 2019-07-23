@@ -138,10 +138,10 @@ class TestAPIClient:
         """
         Test that initializing a default client generates an APIClient with the expected params.
         """
-        client = api_client.APIClient(hostname="localhost")
+        client = api_client.APIClient(use_ssl=True, authentication_token="")
         assert client.USE_SSL is True
         assert not client.AUTHENTICATION_TOKEN
-        assert client.BASE_URL == "https://localhost"
+        assert client.BASE_URL.startswith("https://")
         assert client.HEADERS["User-Agent"] == client.USER_AGENT
 
     def test_init_default_client_no_ssl(self):
@@ -151,8 +151,7 @@ class TestAPIClient:
         """
         client = api_client.APIClient(use_ssl=False)
         assert client.USE_SSL is False
-        assert not client.AUTHENTICATION_TOKEN
-        assert client.HEADERS["User-Agent"] == client.USER_AGENT
+        assert client.BASE_URL.startswith("http://")
 
     def test_init_custom_token_client(self):
         """
