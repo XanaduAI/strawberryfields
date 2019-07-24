@@ -9,7 +9,6 @@ from strawberryfields.engine import StarshipEngine
 from strawberryfields.io import load
 from strawberryfields import configuration
 
-DEFAULT_HOSTNAME = "platform.strawberryfields.ai"
 PROMPTS = {
     "hostname": "Please enter the hostname of the server to connect to: [{}] ",
     "authentication_token": "Please enter the authentication token to use when connecting: [{}] ",
