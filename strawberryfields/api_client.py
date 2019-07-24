@@ -150,7 +150,6 @@ class APIClient:
         Initialize the API client with various parameters.
         """
         self._config = self.get_configuration_from_config()
-        self._config["debug"] = self._config["debug"] in (True, "True", "true", "TRUE", 1)
 
         # Override any values that are explicitly passed when initializing client
         self._config.update(kwargs)
