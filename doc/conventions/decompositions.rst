@@ -94,7 +94,7 @@ In the case where :math:`V` represents a pure state (:math:`|V|-(\hbar/2)^{2N}=0
 .. _bloch_messiah:
 
 Bloch-Messiah (or Euler) decomposition
--------------------------------------------
+--------------------------------------
 
 .. admonition:: Definition
     :class: defn
@@ -123,12 +123,12 @@ In the case where the symplectic matrix :math:`S` is applied to a vacuum state :
 As such, a symplectic transformation acting on the vacuum is sufficiently characterised by single mode squeezers followed by a passive Gaussian transformation (:math:`S = O_1 Z`).
 
 
-.. _clements:
+.. _rectangular:
 
-Clements decomposition
------------------------
+Rectangular decomposition
+-------------------------
 
-The Clements decomposition allows any passive Gaussian transformation to be decomposed into a series of beamsplitters and rotation gates.
+The rectangular decomposition allows any passive Gaussian transformation to be decomposed into a series of beamsplitters and rotation gates.
 
 .. admonition:: Definition
     :class: defn
@@ -147,6 +147,6 @@ The Clements decomposition allows any passive Gaussian transformation to be deco
 
 .. note::
 
-    The decomposition as formulated by Clements :cite:`clements2016` uses a different beamsplitter convention to Strawberry Fields:
+    The rectangular decomposition as formulated by Clements :cite:`clements2016` uses a different beamsplitter convention to Strawberry Fields:
 
     .. math:: BS_{clements}(\theta, \phi) = BS(\theta, 0) R(\phi)
