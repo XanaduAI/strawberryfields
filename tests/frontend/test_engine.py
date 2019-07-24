@@ -346,17 +346,24 @@ class TestStarshipEngine:
         monkeypatch.setattr(APIClient, "get", mock_get)
 
         prog = sf.Program(4)
+
+        sqz0 = 1.0
+        sqz1 = 1.0
+        phi0 = 0.574
+        phi1 = 1.33
+        pi = 3.14
+
         with prog.context as q:
-            ops.S2gate(2) | (q[0], q[2])
-            ops.S2gate(2) | (q[1], q[3])
-            ops.Rgate(3) | q[0]
-            ops.BSgate() | (q[0], q[1])
-            ops.Rgate(3) | q[0]
-            ops.BSgate(3) | (q[0], q[1])
-            ops.Rgate(3) | q[2]
-            ops.BSgate() | (q[2], q[3])
-            ops.Rgate(3) | q[2]
-            ops.BSgate() | (q[2], q[3])
+            ops.S2gate(sqz0, 0.0) | (q[0], q[2])
+            ops.S2gate(sqz1, 0.0) | (q[1], q[3])
+            ops.Rgate(phi0) | q[0]
+            ops.BSgate(pi / 4, pi / 2) | (q[0], q[1])
+            ops.Rgate(phi1) | q[0]
+            ops.BSgate(pi / 4, pi / 2) | (q[0], q[1])
+            ops.Rgate(phi0) | q[2]
+            ops.BSgate(pi / 4, pi / 2) | (q[2], q[3])
+            ops.Rgate(phi1) | q[2]
+            ops.BSgate(pi / 4, pi / 2) | (q[2], q[3])
             ops.MeasureFock() | q
 
         engine.run(prog)
