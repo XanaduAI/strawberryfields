@@ -1838,16 +1838,11 @@ class BipartiteGraphEmbed(Decomposition):
         super().__init__([A])
         self.ns = A.shape[0]
         self.mean_photon = mean_photon_per_mode
-        self.traceless = make_traceless
-        self.drop_identity = drop_identity
         self.tol = tol
-
         self.identity = np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol)
 
     def _decompose(self, reg, **kwargs):
         mean_photon_per_mode = kwargs.get("mean_photon_per_mode", self.mean_photon)
-        make_traceless = kwargs.get("make_traceless", self.traceless)
-        drop_identity = kwargs.get("drop_identity", self.drop_identity)
         tol = kwargs.get("tol", self.tol)
         mesh = kwargs.get("mesh", "rectangular")
 
@@ -1857,7 +1852,7 @@ class BipartiteGraphEmbed(Decomposition):
         perm = np.arange(N).reshape(2, -1).T
         A = self.p[0].x[:, perm.flatten()][perm.flatten()]
 
-        sq, U = dec.graph_embed(
+        sq, U, V = dec.graph_embed(
             A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=True, atol=tol, rtol=0
         )
 
