@@ -63,14 +63,14 @@ if __name__ == "__main__":
 
     eng = StarshipEngine()
     program = load(args.input)
-    eng.run(program)
+    result = eng.run(program)
 
     if args.output_path:
         with open(args.output_path, "w") as file:
-            file.write(str(eng.samples))
+            file.write(str(result.samples))
             file.close()
     else:
-        sys.stdout.write(str(eng.samples))
+        sys.stdout.write(str(result.samples))
 
     if args.debug:
         pdb.set_trace()
