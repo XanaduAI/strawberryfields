@@ -138,6 +138,50 @@ class TestGraphEmbed:
         assert np.allclose(n_mean, n_mean_calc, atol=tol, rtol=0)
 
 
+class TestBipartiteGraphEmbed:
+    """graph_embed tests"""
+
+    def test_square_validation(self):
+        """Test that the graph_embed decomposition raises exception if not square"""
+        A = np.random.random([4, 5]) + 1j * np.random.random([4, 5])
+        with pytest.raises(ValueError, match="matrix is not square"):
+            dec.bipartite_graph_embed(A)
+
+    @pytest.mark.parametrize("make_symmetric", [True, False])
+    def test_mean_photon(self, tol, make_symmetric):
+        """Test that the mean photon number is correct in graph_embed"""
+        num_modes = 6
+        A = np.random.random([num_modes, num_modes]) + 1j * np.random.random(
+            [num_modes, num_modes]
+        )
+        if make_symmetric:
+            A += A.T
+        n_mean = 1.0
+        sc, _, _ = dec.bipartite_graph_embed(A, mean_photon_per_mode=n_mean)
+        n_mean_calc = np.sum(np.sinh(sc) ** 2) / (num_modes)
+        assert np.allclose(n_mean, n_mean_calc, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("make_symmetric", [True, False])
+    def test_correct_graph(self, tol, make_symmetric):
+        """Test that the graph is embeded correctly"""
+        num_modes = 3
+        A = np.random.random([num_modes, num_modes]) + 1j * np.random.random(
+            [num_modes, num_modes]
+        )
+        U, l, V = np.linalg.svd(A)
+        new_l = np.array(
+            [np.tanh(np.arcsinh(np.sqrt(i))) for i in range(1, num_modes + 1)]
+        )
+        n_mean = 0.5 * (num_modes + 1)
+        if make_symmetric:
+            At = U @ np.diag(new_l) @ U.T
+        else:
+            At = U @ np.diag(new_l) @ V.T
+        sqf, Uf, Vf = dec.bipartite_graph_embed(At, mean_photon_per_mode=n_mean)
+
+        assert np.allclose(np.tanh(-np.flip(sqf)), new_l)
+        assert np.allclose(Uf @ np.diag(np.tanh(-sqf)) @ Vf.T, At)
+
 class TestRectangularDecomposition:
     """Tests for linear interferometer rectangular decomposition"""
 

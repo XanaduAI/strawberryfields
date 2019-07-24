@@ -202,8 +202,8 @@ def bipartite_graph_embed(A, mean_photon_per_mode=1.0, rtol=1e-05, atol=1e-08):
 
     Given a bipartite graph in terms of an adjacency matrix
     (in general with arbitrary complex entries),
-    returns the two-mode squeezing parameters and interferometer necessary for
-    creating the Gaussian state whose off-diagonal parts are proportional to that matrix.
+    returns the two-mode squeezing parameters and interferometers necessary for
+    creating the Gaussian state that encodes such adjacency matrix
 
     Uses :func:`takagi`.
 
@@ -223,22 +223,17 @@ def bipartite_graph_embed(A, mean_photon_per_mode=1.0, rtol=1e-05, atol=1e-08):
     if m != n:
         raise ValueError("The matrix is not square.")
 
-    #if not np.allclose(A, np.transpose(A), rtol=rtol, atol=atol):
-    #    raise ValueError("The matrix is not symmetric.")
-
-    B = np.block_diag([[0*A, A], [A.T, 0*A]])
-    scale = find_scaling_adjacency_matrix(B, n * mean_photon_per_mode)
+    B = np.block([[0 * A, A], [A.T, 0 * A]])
+    scale = find_scaling_adjacency_matrix(B, 2 * n * mean_photon_per_mode)
     A = scale * A
     if np.allclose(A, A.T, rtol=rtol, atol=atol):
         s, u = takagi(A, tol=atol)
         v = u
     else:
         u, s, v = np.linalg.svd(A)
-        v = v.conj()
+        v = v.T
     vals = -np.arctanh(s)
     return vals, u, v
-
-
 
 
 def T(m, n, theta, phi, nmax):
