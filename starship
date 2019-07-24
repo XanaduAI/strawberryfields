@@ -59,7 +59,7 @@ if __name__ == "__main__":
         )
         authentication_token = (
             input(PROMPTS["authentication_token"].format(config.api["authentication_token"]))
-            or config.api["hostname"]
+            or config.api["authentication_token"]
         )
         save = input(PROMPTS["save"]).upper() == "Y"
 
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     program = load(args.input)
     result = eng.run(program)
 
-    if args.output_path:
+    if hasattr(args, "output_path"):
         with open(args.output_path, "w") as file:
             file.write(str(result.samples))
     else:
