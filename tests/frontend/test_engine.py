@@ -295,7 +295,6 @@ class TestStarshipEngine:
         assert starship_engine.samples == starship_engine._run_program(
             mock_compiled_program, shots=inputs.shots
         )
-        assert starship_engine.run_progs == [mock_compiled_program]
         assert result == outputs.result(starship_engine.samples)
 
     def test_run(self, starship_engine, monkeypatch):

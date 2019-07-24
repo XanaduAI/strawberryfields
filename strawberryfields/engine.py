@@ -304,8 +304,8 @@ class BaseEngine(abc.ABC):
                 self.samples = [
                     _broadcast_nones(p.reg_refs[k].val, kwargs["shots"]) for k in sorted(p.reg_refs)
                 ]
+                self.run_progs.append(p)
 
-            self.run_progs.append(p) 
             prev = p
 
         return Result(self.samples.copy())
@@ -550,7 +550,12 @@ class StarshipEngine(BaseEngine):
             if job.id:
                 print("Job {} is queued in the background.".format(job.id.value))
             else:
+                self.reset()
                 raise JobNotQueuedError("Job was not sent to server. Please try again.")
+
+        # Job either failed or is complete - in either case, clear the job queue so that the engine is
+        # ready for future jobs.
+        self.reset()
 
         if job.is_failed:
             # TODO: Add failure details here. Should this exception be raised elsewhere?
