@@ -23,10 +23,10 @@ Quantum operations
 
 .. note::
 
-  In the :mod:`strawberryfields.ops` API we use the convention :math:`\hbar=2` by default, however
-  this can be changed using the global variable :py:data:`strawberryfields.hbar`.
+    In the :mod:`strawberryfields.ops` API we use the convention :math:`\hbar=2` by default, however
+    this can be changed using the global variable :py:data:`strawberryfields.hbar`.
 
-  See :ref:`conventions` for more details.
+    See :ref:`conventions` for more details.
 
 This module defines and implements the Python-embedded quantum programming language
 for continuous-variable (CV) quantum systems.
@@ -37,10 +37,10 @@ register objects using the following syntax:
 
 .. code-block:: python
 
-  prog = sf.Program(3)
-  with prog.context as q:
-      G(params) | q
-      F(params) | (q[1], q[6], q[2])
+    prog = sf.Program(3)
+    with prog.context as q:
+        G(params) | q
+        F(params) | (q[1], q[6], q[2])
 
 Here :samp:`prog` is an instance of :class:`strawberryfields.program.Program`
 which defines the context where the commands are stored.
@@ -51,11 +51,11 @@ with the part on the right as the parameter. The part on the right is a single
 :class:`strawberryfields.engine.RegRef` object or, for multi-mode gates, a sequence of them.
 It is of course also possible to construct gates separately and reuse them several times::
 
-  R = Rgate(s)
-  with prog.context as q:
-      R   | q
-      Xgate(t) | q
-      R.H | q
+    R = Rgate(s)
+    with prog.context as q:
+        R   | q
+        Xgate(t) | q
+        R.H | q
 
 
 There are six kinds of :class:`Operation` objects:
@@ -142,14 +142,14 @@ Base classes
 The abstract base class hierarchy exists to provide the correct semantics for the actual operations that inherit them.
 
 .. autosummary::
-   Operation
-   Preparation
-   Transformation
-   Gate
-   Channel
-   Measurement
-   Decomposition
-   MetaOperation
+    Operation
+    Preparation
+    Transformation
+    Gate
+    Channel
+    Measurement
+    Decomposition
+    MetaOperation
 
 
 Operation class
@@ -160,12 +160,12 @@ All Operations have the following methods.
 .. currentmodule:: strawberryfields.ops.Operation
 
 .. autosummary::
-   __str__
-   __or__
-   merge
-   decompose
-   apply
-   _apply
+    __str__
+    __or__
+    merge
+    decompose
+    apply
+    _apply
 
 .. currentmodule:: strawberryfields.ops
 
@@ -174,24 +174,24 @@ State preparation
 -----------------
 
 .. autosummary::
-   Vacuum
-   Coherent
-   Squeezed
-   DisplacedSqueezed
-   Thermal
-   Fock
-   Catstate
-   Ket
-   DensityMatrix
-   Gaussian
+    Vacuum
+    Coherent
+    Squeezed
+    DisplacedSqueezed
+    Thermal
+    Fock
+    Catstate
+    Ket
+    DensityMatrix
+    Gaussian
 
 Measurements
 ------------
 
 .. autosummary::
-   MeasureFock
-   MeasureHomodyne
-   MeasureHeterodyne
+    MeasureFock
+    MeasureHomodyne
+    MeasureHeterodyne
 
 
 Channels
@@ -216,32 +216,33 @@ Single-mode gates
 -----------------
 
 .. autosummary::
-   Dgate
-   Xgate
-   Zgate
-   Sgate
-   Rgate
-   Pgate
-   Vgate
-   Fouriergate
+    Dgate
+    Xgate
+    Zgate
+    Sgate
+    Rgate
+    Pgate
+    Vgate
+    Fouriergate
 
 Two-mode gates
 --------------
 
 .. autosummary::
-   BSgate
-   S2gate
-   CXgate
-   CZgate
-   CKgate
+    BSgate
+    MZgate
+    S2gate
+    CXgate
+    CZgate
+    CKgate
 
 Meta-operations
 ---------------
 
 .. autosummary::
-   All
-   _New_modes
-   _Delete
+    All
+    _New_modes
+    _Delete
 
 
 Operations shortcuts
@@ -252,11 +253,11 @@ this is to provide shorthands for operations that accept no arguments, as well a
 
 .. raw:: html
 
-   <style>
+    <style>
       .widetable {
          width:100%;
       }
-   </style>
+    </style>
 
 .. rst-class:: longtable widetable
 
@@ -297,7 +298,8 @@ from .program_utils import (Command, RegRefTransform, MergeFailure)
 from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
                          sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2,
                          transpose, squeeze)
-from .decompositions import clements, bloch_messiah, williamson, graph_embed
+
+from . import decompositions as dec
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
@@ -421,7 +423,7 @@ class Operation:
         # a special singleton Identity object instead?
         raise NotImplementedError
 
-    def decompose(self, reg):
+    def decompose(self, reg, **kwargs):
         """Decompose the operation into elementary operations supported by the backend API.
 
         See :mod:`strawberryfields.backends.base`.
@@ -435,9 +437,9 @@ class Operation:
         # todo: For now decompose() works on unevaluated Parameters.
         # This causes an error if a :class:`.RegRefTransform`-based Parameter is used, and
         # decompose() tries to do arithmetic on it.
-        return self._decompose(reg)
+        return self._decompose(reg, **kwargs)
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         """Internal decomposition method defined by subclasses.
 
         Args:
@@ -603,7 +605,7 @@ class Decomposition(Operation):
             # easier to perform. The constructor restores it.
             # Another option would be to add the required methods to Parameter class.
             # check if the matrices cancel
-            if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
+            if np.allclose(U, np.identity(len(U)), atol=_decomposition_merge_tol, rtol=0):
                 return None
 
             return self.__class__(U)
@@ -700,12 +702,12 @@ class Gate(Transformation):
         s.dagger = not s.dagger
         return s
 
-    def decompose(self, reg):
+    def decompose(self, reg, **kwargs):
         """Decompose the operation into elementary operations supported by the backend API.
 
         Like :func:`Operation.decompose`, but applies self.dagger.
         """
-        seq = self._decompose(reg)
+        seq = self._decompose(reg, **kwargs)
         if self.dagger:
             # apply daggers, reverse the Command sequence
             for cmd in seq:
@@ -870,7 +872,7 @@ class DisplacedSqueezed(Preparation):
         # prepare the displaced squeezed state directly
         backend.prepare_displaced_squeezed_state(p[0], p[1], p[2], *reg)
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # squeezed state preparation followed by a displacement gate
         return [
             Command(Squeezed(self.p[1], self.p[2]), reg),
@@ -1267,7 +1269,7 @@ class Pgate(Gate):
     def __init__(self, s):
         super().__init__([s])
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # into a squeeze and a rotation
         temp = self.p[0] / 2
         r = arccosh(sqrt(1+temp**2))
@@ -1361,6 +1363,34 @@ class BSgate(Gate):
         backend.beamsplitter(t.x, r.x, *reg)
 
 
+class MZgate(Gate):
+    r"""Mach-Zehnder interferometer.
+
+    .. math::
+
+        \mathrm{MZ}(\phi_{ex}, \phi_{in}) = BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
+            (R(\phi_{in})\otimes I) BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
+            (R(\phi_{ex})\otimes I)
+
+    Args:
+        phi_ex (float): external phase
+        phi_in (float): internal phase
+    """
+    ns = 2
+
+    def __init__(self, phi_ex, phi_in):
+        super().__init__([phi_ex, phi_in])
+
+    def _decompose(self, reg, **kwargs):
+        # into local phase shifts and two 50-50 beamsplitters
+        return [
+            Command(Rgate(self.p[0].x), reg[0]),
+            Command(BSgate(np.pi/4, np.pi/2), reg),
+            Command(Rgate(self.p[1].x), reg[0]),
+            Command(BSgate(np.pi/4, np.pi/2), reg)
+        ]
+
+
 class S2gate(Gate):
     r""":ref:`Two-mode squeezing <two_mode_squeezing>` gate.
 
@@ -1378,7 +1408,7 @@ class S2gate(Gate):
     def __init__(self, r, phi=0.):
         super().__init__([r, phi])
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # two opposite squeezers sandwiched between 50% beamsplitters
         S = Sgate(self.p[0], self.p[1])
         BS = BSgate(pi/4, 0)
@@ -1407,7 +1437,7 @@ class CXgate(Gate):
     def __init__(self, s=1):
         super().__init__([s])
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         s = self.p[0]
         r = arcsinh(-s/2)
         theta = 0.5*arctan2(-1.0/cosh(r), -tanh(r))
@@ -1439,7 +1469,7 @@ class CZgate(Gate):
     def __init__(self, s=1):
         super().__init__([s])
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # phase-rotated CZ
         CX = CXgate(self.p[0])
         return [
@@ -1615,46 +1645,123 @@ class All(MetaOperation):
 class Interferometer(Decomposition):
     r"""Apply a linear interferometer to the specified qumodes.
 
-    This operation uses the :ref:`Clements decomposition <clements>` to decompose
+    This operation uses either the :ref:`rectangular decomposition <rectangular>`
+    or triangular decomposition to decompose
     a linear interferometer into a sequence of beamsplitters and
     rotation gates.
 
+    By specifying the keyword argument ``mesh``, the scheme used to implement the interferometer
+    may be adjusted:
+
+    * ``mesh='rectangular'`` (default): uses the scheme described in
+      :cite:`clements2016`, resulting in a *rectangular* array of
+      :math:`M(M-1)/2` beamsplitters:
+
+      .. figure:: ../_static/clements.png
+          :align: center
+          :width: 30%
+          :target: javascript:void(0);
+
+      Local phase shifts appear in the middle of the beamsplitter array.
+      Use ``mesh='rectangular_phase_end`` to instead commute all local phase shifts
+      to the end of the beamsplitter array.
+
+      By default, the interferometers are decomposed into :class:`~.BSgate` operations.
+      To instead decompose the interferometer using the :class:`~.ops.MZgate`,
+      use ``mesh='rectangular_symmetric'``.
+
+    * ``mesh='triangular'``: uses the scheme described in :cite:`reck1994`,
+      resulting in a *triangular* array of :math:`M(M-1)/2` beamsplitters:
+
+      .. figure:: ../_static/reck.png
+          :align: center
+          :width: 30%
+          :target: javascript:void(0);
+
+      Local phase shifts appear at the end of the beamsplitter array.
+
     Args:
         U (array[complex]): an :math:`N\times N` unitary matrix
-        tol (float): the tolerance used when checking if the matrix is unitary:
-            :math:`|UU^\dagger-I| \leq` tol
-    """
+        mesh (str): the scheme used to implement the interferometer.
+            Options include:
 
-    def __init__(self, U, tol=1e-11):
+            - ``'rectangular'`` - rectangular mesh, with local phase shifts
+              applied between interferometers
+
+            - ``'rectangular_phase_end'`` - rectangular mesh, with local phase shifts
+              placed after all interferometers
+
+            - ``'rectangular_symmetric'`` - rectangular mesh, with local phase shifts
+              placed after all interferometers, and all beamsplitters decomposed into
+              pairs of symmetric beamsplitters and phase shifters
+
+            - ``'triangular'`` - triangular mesh
+
+        drop_identity (bool): If ``True``, decomposed gates with trivial parameters,
+            such that they correspond to an identity operation, are removed.
+        tol (float): the tolerance used when checking if the input matrix is unitary:
+            :math:`|U-U^\dagger| <` tol
+    """
+    # pylint: disable=too-many-instance-attributes
+
+    def __init__(self, U, mesh="rectangular", drop_identity=True, tol=1e-6):
         super().__init__([U])
         self.ns = U.shape[0]
+        self.mesh = mesh
+        self.tol = tol
+        self.drop_identity = drop_identity
 
-        if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
-            self.identity = True
-        else:
-            self.identity = False
-            self.BS1, self.BS2, self.R = clements(U, tol=tol)
+        allowed_meshes = {"rectangular", "rectangular_phase_end", "rectangular_symmetric", "triangular"}
 
-    def _decompose(self, reg):
+        if mesh not in allowed_meshes:
+            raise ValueError("Unknown mesh '{}'. Mesh must be one of {}".format(mesh, allowed_meshes))
+
+        self.identity = np.allclose(U, np.identity(len(U)), atol=_decomposition_merge_tol, rtol=0)
+
+    def _decompose(self, reg, **kwargs):
+        mesh = kwargs.get("mesh", self.mesh)
+        tol = kwargs.get("tol", self.tol)
+        drop_identity = kwargs.get("drop_identity", self.drop_identity)
+
         cmds = []
 
-        if not self.identity:
-            for n, m, theta, phi, _ in self.BS1:
-                if np.abs(phi) >= _decomposition_tol:
-                    cmds.append(Command(Rgate(phi), reg[n]))
-                if np.abs(theta) >= _decomposition_tol:
-                    cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m])))
+        if not self.identity or not drop_identity:
+            decomp_fn = getattr(dec, mesh)
+            BS1, R, BS2 = decomp_fn(self.p[0].x, tol=tol)
 
-            for n, expphi in enumerate(self.R):
-                if np.abs(expphi - 1) >= _decomposition_tol:
-                    q = log(expphi).imag
+            for n, m, theta, phi, _ in BS1:
+                theta = theta if np.abs(theta) >= _decomposition_tol else 0
+                phi = phi if np.abs(phi) >= _decomposition_tol else 0
+
+                if "symmetric" in mesh:
+                    # Mach-Zehnder interferometers
+                    cmds.append(Command(MZgate(np.mod(phi, 2*np.pi), np.mod(theta, 2*np.pi)), (reg[n], reg[m])))
+
+                else:
+                    # Clements style beamsplitters
+                    if not (drop_identity and phi == 0):
+                        cmds.append(Command(Rgate(phi), reg[n]))
+
+                    if not (drop_identity and theta == 0):
+                        cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m])))
+
+            for n, expphi in enumerate(R):
+                # local phase shifts
+                q = log(expphi).imag if np.abs(expphi - 1) >= _decomposition_tol else 0
+                if not (drop_identity and q == 0):
                     cmds.append(Command(Rgate(q), reg[n]))
 
-            for n, m, theta, phi, _ in reversed(self.BS2):
-                if np.abs(theta) >= _decomposition_tol:
-                    cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m])))
-                if np.abs(phi) >= _decomposition_tol:
-                    cmds.append(Command(Rgate(-phi), reg[n]))
+            if BS2 is not None:
+                # Clements style beamsplitters
+
+                for n, m, theta, phi, _ in reversed(BS2):
+                    theta = theta if np.abs(theta) >= _decomposition_tol else 0
+                    phi = phi if np.abs(phi) >= _decomposition_tol else 0
+
+                    if not (drop_identity and theta == 0):
+                        cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m])))
+                    if not (drop_identity and phi == 0):
+                        cmds.append(Command(Rgate(-phi), reg[n]))
 
         return cmds
 
@@ -1682,15 +1789,15 @@ class GraphEmbed(Decomposition):
         super().__init__([A])
         self.ns = A.shape[0]
 
-        if np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol):
+        if np.allclose(A, np.identity(len(A)), atol=_decomposition_merge_tol, rtol=0):
             self.identity = True
         else:
             self.identity = False
-            self.sq, self.U = graph_embed(
+            self.sq, self.U = dec.graph_embed(
                 A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=make_traceless, atol=tol, rtol=0
             )
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         cmds = []
 
         if not self.identity:
@@ -1699,7 +1806,9 @@ class GraphEmbed(Decomposition):
                     cmds.append(Command(Sgate(s), reg[n]))
 
             if not np.allclose(self.U, np.identity(len(self.U)), atol=_decomposition_tol, rtol=0):
-                cmds.append(Command(Interferometer(self.U), reg))
+                mesh = kwargs.get("mesh", "rectangular")
+                cmds.append(Command(Interferometer(self.U, mesh=mesh), reg))
+
         return cmds
 
 
@@ -1723,7 +1832,7 @@ class GaussianTransform(Decomposition):
 
     The two orthogonal symplectic unitaries describing the interferometers are then further
     decomposed via the :class:`~.Interferometer` operator and the
-    :ref:`Clements decomposition <clements>`:
+    :ref:`Rectangular decomposition <rectangular>`:
 
     .. math:: U_i = X_i + iY_i
 
@@ -1755,7 +1864,7 @@ class GaussianTransform(Decomposition):
             self.U1 = X1+1j*P1
         else:
             # transformation is active, do Bloch-Messiah
-            O1, smat, O2 = bloch_messiah(S, tol=tol)
+            O1, smat, O2 = dec.bloch_messiah(S, tol=tol)
             X1 = O1[:N, :N]
             P1 = O1[N:, :N]
             X2 = O2[:N, :N]
@@ -1765,8 +1874,9 @@ class GaussianTransform(Decomposition):
             self.U2 = X2+1j*P2  #: array[complex]: unitary matrix corresponding to O_2
             self.Sq = np.diagonal(smat)[:N]  #: array[complex]: diagonal vector of the squeezing matrix R
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         cmds = []
+        mesh = kwargs.get("mesh", "rectangular")
 
         if self.active:
             if not self.vacuum:
@@ -1778,10 +1888,10 @@ class GaussianTransform(Decomposition):
                     phi = np.angle(log(expr))
                     cmds.append(Command(Sgate(-r, phi), reg[n]))
 
-            cmds.append(Command(Interferometer(self.U1), reg))
+            cmds.append(Command(Interferometer(self.U1, mesh=mesh), reg))
         else:
             if not self.vacuum:
-                cmds = [Command(Interferometer(self.U1), reg)]
+                cmds = [Command(Interferometer(self.U1, mesh=mesh), reg)]
 
         return cmds
 
@@ -1833,7 +1943,7 @@ class Gaussian(Preparation, Decomposition):
         self.p_disp = r[self.ns:]
 
         # needed only if decomposed
-        th, self.S = williamson(V, tol=tol)
+        th, self.S = dec.williamson(V, tol=tol)
         self.pure = np.abs(np.linalg.det(V) - 1.0) < tol
         self.nbar = 0.5 * (np.diag(th)[:self.ns] - 1.0)
 
@@ -1842,7 +1952,7 @@ class Gaussian(Preparation, Decomposition):
         s = sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
         backend.prepare_gaussian_state(p[1]/s, p[0], reg)
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # pylint: disable=too-many-branches
         cmds = []
 
@@ -1928,7 +2038,7 @@ shorthands = ['New', 'Del', 'Vac', 'Measure', 'MeasureX', 'MeasureP', 'MeasureHD
 zero_args_gates = (Fouriergate,)
 one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate,
                   Kgate, CXgate, CZgate, CKgate)
-two_args_gates = (Dgate, Sgate, BSgate, S2gate)
+two_args_gates = (Dgate, Sgate, BSgate, MZgate, S2gate)
 gates = zero_args_gates + one_args_gates + two_args_gates
 
 channels = (LossChannel, ThermalLossChannel)
