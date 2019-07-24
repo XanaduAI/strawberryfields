@@ -145,7 +145,7 @@ class TestRectangularDecomposition:
         """Test that an exception is raised if not unitary"""
         A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         with pytest.raises(ValueError, match="matrix is not unitary"):
-            dec.clements(A)
+            dec.rectangular(A)
 
     def test_identity(self, tol):
         """This test checks the rectangular decomposition for an identity unitary.
@@ -159,7 +159,7 @@ class TestRectangularDecomposition:
         n = 20
         U = np.identity(n)
 
-        tilist, tlist, diags = dec.clements(U)
+        tilist, diags, tlist = dec.rectangular(U)
 
         qrec = np.identity(n)
 
@@ -186,7 +186,7 @@ class TestRectangularDecomposition:
         n = 20
         U = haar_measure(n)
 
-        tilist, tlist, diags = dec.clements(U)
+        tilist, diags, tlist = dec.rectangular(U)
 
         qrec = np.identity(n)
 
@@ -212,7 +212,7 @@ class TestRectangularDecomposition:
         n = 20
         U = haar_measure(n)
 
-        tlist, diags = dec.clements_phase_end(U)
+        tlist, diags, _ = dec.rectangular_phase_end(U)
 
         qrec = np.identity(n)
 
@@ -260,7 +260,7 @@ class TestRectangularSymmetricDecomposition:
         """
         nmax, mmax = U.shape
         assert nmax == mmax
-        tlist, diags = dec.rectangular_symmetric(U)
+        tlist, diags, _ = dec.rectangular_symmetric(U)
         qrec = np.identity(nmax)
         for i in tlist:
             qrec = dec.mach_zehnder(*i) @ qrec
@@ -275,7 +275,7 @@ class TestTriangularDecomposition:
         """Test that an exception is raised if not unitary"""
         A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         with pytest.raises(ValueError, match="matrix is not unitary"):
-            dec.triangular_decomposition(A)
+            dec.triangular(A)
 
     def test_identity(self, tol):
         """This test checks the rectangular decomposition for an identity unitary.
@@ -289,7 +289,7 @@ class TestTriangularDecomposition:
         n = 20
         U = np.identity(n)
 
-        tlist, diags = dec.triangular_decomposition(U)
+        tlist, diags, _ = dec.triangular(U)
 
         qrec = np.diag(diags)
 
@@ -311,7 +311,7 @@ class TestTriangularDecomposition:
         n = 20
         U = haar_measure(n)
 
-        tlist, diags = dec.triangular_decomposition(U)
+        tlist, diags, _ = dec.triangular(U)
 
         qrec = np.diag(diags)
 

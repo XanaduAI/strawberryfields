@@ -72,7 +72,7 @@ The above recipe maps an :math:`N`-mode quantum state living in a Hilbert space 
  
 .. math::    W(\mathbf{r}) =\frac{\exp\left( -\frac{1}{2} (\mathbf{r} -\bar{ \mathbf{r}}) \mathbf{V}^{-1} (\mathbf{r}-\bar{\mathbf{r}} ) \right)}{(2 \pi)^N \sqrt{\text{det} \mathbf{V}}},
 
-where :math:`\bar{ \mathbf{r}} = \langle \hat{\mathbf{r}} \rangle_\rho = \text{Tr}\left(\hat{ \mathbf{r}}  \hat \rho \right)` is the displacement or mean vector and :math:`\mathbf{V}_{ij} = \frac{1}{2} \langle \Delta r_i \Delta r_j+ \Delta r_i \Delta r_j \rangle` with :math:`\Delta \hat{\mathbf{ r}}=\hat{ \mathbf{r}}-\bar{ \mathbf{r}}` is the covariance matrix. Gaussian states are completely charaterized by the mean vector and covariance matrix (their first and second moments respectively).
+where :math:`\bar{ \mathbf{r}} = \langle \hat{\mathbf{r}} \rangle_\rho = \text{Tr}\left(\hat{ \mathbf{r}}  \hat \rho \right)` is the displacement or mean vector and :math:`\mathbf{V}_{ij} = \frac{1}{2} \langle \Delta r_i \Delta r_j+ \Delta r_j \Delta r_i \rangle` with :math:`\Delta \hat{\mathbf{ r}}=\hat{ \mathbf{r}}-\bar{ \mathbf{r}}` is the covariance matrix. Gaussian states are completely charaterized by the mean vector and covariance matrix (their first and second moments respectively).
 
 .. note:: The diagonal elements of the covariance matrix are simply the *variances* of each quadrature :math:`V_{i,i} = (\Delta x_i)^2` and :math:`V_{i+N,i+N}=(\Delta p_i)^2` for :math:`i \leq N`, where :math:`\Delta x_i\Delta p_i\geq\frac{\hbar}{2}`.
 
