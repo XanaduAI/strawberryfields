@@ -66,4 +66,5 @@ class TFSpecs(CircuitSpecs):
         "S2gate": {},
         "CXgate": {},
         "CZgate": {},
+        "MZgate": {},
     }

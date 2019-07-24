@@ -62,4 +62,5 @@ class GaussianSpecs(CircuitSpecs):
         "S2gate": {},
         "CXgate": {},
         "CZgate": {},
+        "MZgate": {},
     }

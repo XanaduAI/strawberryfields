@@ -175,18 +175,20 @@ class CircuitSpecs(abc.ABC):
         """
         return None
 
-    def compile(self, seq):
+    def compile(self, seq, registers):
         """Class-specific circuit compilation method.
 
         If additional compilation logic is required, child classes can redefine this method.
 
         Args:
             seq (Sequence[Command]): quantum circuit to modify
+            registers (Sequence[RegRefs]): quantum registers
         Returns:
             List[Command]: modified circuit
         Raises:
             CircuitError: the given circuit cannot be validated to belong to this circuit class
         """
+        # registers is not used here, but may be used if the method is overwritten pylint: disable=unused-argument
         if self.graph is not None:
             # check topology
             DAG = pu.list_to_DAG(seq)
@@ -212,3 +214,67 @@ class CircuitSpecs(abc.ABC):
                 )
 
         return seq
+
+    def decompose(self, seq):
+        """Recursively decompose all gates in a given sequence, as allowed
+        by the circuit specification.
+
+        This method follows the directives defined in the
+        :attr:`~.CircuitSpecs.primitives` and :attr:`~.CircuitSpecs.decompositions`
+        class attributes to determine whether a command should be decomposed.
+
+        The order of precedence to determine whether decomposition
+        should be applied is as follows.
+
+        1. First, we check if the operation is in :attr:`~.CircuitSpecs.decompositions`.
+           If not, decomposition is skipped, and the operation is applied
+           as a primitive (if supported by the ``CircuitSpecs``).
+
+        2. Next, we check if (a) the operation supports decomposition, and (b) if the user
+           has explicitly requested no decomposition.
+
+           - If both (a) and (b) are true, the operation is applied
+             as a primitive (if supported by the ``CircuitSpecs``).
+
+           - Otherwise, we attempt to decompose the operation by calling
+             :meth:`~.Operation.decompose` recursively.
+
+        Args:
+            list[strawberryfields.program_utils.Command]: list of commands to
+                be decomposed
+
+        Returns:
+            list[strawberryfields.program_utils.Command]: list of compiled commands
+            for the circuit specification
+        """
+        compiled = []
+        for cmd in seq:
+            op_name = cmd.op.__class__.__name__
+            if op_name in self.decompositions:
+                # target can implement this op decomposed
+                if hasattr(cmd.op, 'decomp') and not cmd.op.decomp:
+                    # user has requested application of the op as a primitive
+                    if op_name in self.primitives:
+                        compiled.append(cmd)
+                        continue
+                    else:
+                        raise pu.CircuitError("The operation {} is not a primitive for the target '{}'".format(cmd.op.__class__.__name__, self.short_name))
+                try:
+                    kwargs = self.decompositions[op_name]
+                    temp = cmd.op.decompose(cmd.reg, **kwargs)
+                    # now compile the decomposition
+                    temp = self.decompose(temp)
+                    compiled.extend(temp)
+                except NotImplementedError as err:
+                    # Operation does not have _decompose() method defined!
+                    # simplify the error message by suppressing the previous exception
+                    raise err from None
+
+            elif op_name in self.primitives:
+                # target can handle the op natively
+                compiled.append(cmd)
+
+            else:
+                raise pu.CircuitError("The operation {} cannot be used with the target '{}'.".format(cmd.op.__class__.__name__, self.short_name))
+
+        return compiled
