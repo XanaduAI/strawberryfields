@@ -23,10 +23,10 @@ Quantum operations
 
 .. note::
 
-  In the :mod:`strawberryfields.ops` API we use the convention :math:`\hbar=2` by default, however
-  this can be changed using the global variable :py:data:`strawberryfields.hbar`.
+    In the :mod:`strawberryfields.ops` API we use the convention :math:`\hbar=2` by default, however
+    this can be changed using the global variable :py:data:`strawberryfields.hbar`.
 
-  See :ref:`conventions` for more details.
+    See :ref:`conventions` for more details.
 
 This module defines and implements the Python-embedded quantum programming language
 for continuous-variable (CV) quantum systems.
@@ -37,10 +37,10 @@ register objects using the following syntax:
 
 .. code-block:: python
 
-  prog = sf.Program(3)
-  with prog.context as q:
-      G(params) | q
-      F(params) | (q[1], q[6], q[2])
+    prog = sf.Program(3)
+    with prog.context as q:
+        G(params) | q
+        F(params) | (q[1], q[6], q[2])
 
 Here :samp:`prog` is an instance of :class:`strawberryfields.program.Program`
 which defines the context where the commands are stored.
@@ -51,11 +51,11 @@ with the part on the right as the parameter. The part on the right is a single
 :class:`strawberryfields.engine.RegRef` object or, for multi-mode gates, a sequence of them.
 It is of course also possible to construct gates separately and reuse them several times::
 
-  R = Rgate(s)
-  with prog.context as q:
-      R   | q
-      Xgate(t) | q
-      R.H | q
+    R = Rgate(s)
+    with prog.context as q:
+        R   | q
+        Xgate(t) | q
+        R.H | q
 
 
 There are six kinds of :class:`Operation` objects:
@@ -142,14 +142,14 @@ Base classes
 The abstract base class hierarchy exists to provide the correct semantics for the actual operations that inherit them.
 
 .. autosummary::
-   Operation
-   Preparation
-   Transformation
-   Gate
-   Channel
-   Measurement
-   Decomposition
-   MetaOperation
+    Operation
+    Preparation
+    Transformation
+    Gate
+    Channel
+    Measurement
+    Decomposition
+    MetaOperation
 
 
 Operation class
@@ -160,12 +160,12 @@ All Operations have the following methods.
 .. currentmodule:: strawberryfields.ops.Operation
 
 .. autosummary::
-   __str__
-   __or__
-   merge
-   decompose
-   apply
-   _apply
+    __str__
+    __or__
+    merge
+    decompose
+    apply
+    _apply
 
 .. currentmodule:: strawberryfields.ops
 
@@ -174,24 +174,24 @@ State preparation
 -----------------
 
 .. autosummary::
-   Vacuum
-   Coherent
-   Squeezed
-   DisplacedSqueezed
-   Thermal
-   Fock
-   Catstate
-   Ket
-   DensityMatrix
-   Gaussian
+    Vacuum
+    Coherent
+    Squeezed
+    DisplacedSqueezed
+    Thermal
+    Fock
+    Catstate
+    Ket
+    DensityMatrix
+    Gaussian
 
 Measurements
 ------------
 
 .. autosummary::
-   MeasureFock
-   MeasureHomodyne
-   MeasureHeterodyne
+    MeasureFock
+    MeasureHomodyne
+    MeasureHeterodyne
 
 
 Channels
@@ -216,33 +216,33 @@ Single-mode gates
 -----------------
 
 .. autosummary::
-   Dgate
-   Xgate
-   Zgate
-   Sgate
-   Rgate
-   Pgate
-   Vgate
-   Fouriergate
+    Dgate
+    Xgate
+    Zgate
+    Sgate
+    Rgate
+    Pgate
+    Vgate
+    Fouriergate
 
 Two-mode gates
 --------------
 
 .. autosummary::
-   BSgate
-   MZgate
-   S2gate
-   CXgate
-   CZgate
-   CKgate
+    BSgate
+    MZgate
+    S2gate
+    CXgate
+    CZgate
+    CKgate
 
 Meta-operations
 ---------------
 
 .. autosummary::
-   All
-   _New_modes
-   _Delete
+    All
+    _New_modes
+    _Delete
 
 
 Operations shortcuts
@@ -253,11 +253,11 @@ this is to provide shorthands for operations that accept no arguments, as well a
 
 .. raw:: html
 
-   <style>
+    <style>
       .widetable {
          width:100%;
       }
-   </style>
+    </style>
 
 .. rst-class:: longtable widetable
 
@@ -605,7 +605,7 @@ class Decomposition(Operation):
             # easier to perform. The constructor restores it.
             # Another option would be to add the required methods to Parameter class.
             # check if the matrices cancel
-            if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
+            if np.allclose(U, np.identity(len(U)), atol=_decomposition_merge_tol, rtol=0):
                 return None
 
             return self.__class__(U)
@@ -1716,7 +1716,7 @@ class Interferometer(Decomposition):
         if mesh not in allowed_meshes:
             raise ValueError("Unknown mesh '{}'. Mesh must be one of {}".format(mesh, allowed_meshes))
 
-        self.identity = np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol)
+        self.identity = np.allclose(U, np.identity(len(U)), atol=_decomposition_merge_tol, rtol=0)
 
     def _decompose(self, reg, **kwargs):
         mesh = kwargs.get("mesh", self.mesh)
@@ -1789,7 +1789,7 @@ class GraphEmbed(Decomposition):
         super().__init__([A])
         self.ns = A.shape[0]
 
-        if np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol):
+        if np.allclose(A, np.identity(len(A)), atol=_decomposition_merge_tol, rtol=0):
             self.identity = True
         else:
             self.identity = False
