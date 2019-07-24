@@ -18,21 +18,21 @@ PROMPTS = {
 }
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run Strawberry Fields code on StarshipEngine")
+    parser = argparse.ArgumentParser(description="run Strawberry Fields code on StarshipEngine")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--input", "-i", help="The XBB file to run")
+    group.add_argument("--input", "-i", help="the XBB file to run")
     parser.add_argument(
         "--output",
         "-o",
-        help="Where to output the result of the program. Outputs to stdout by default",
+        help="where to output the result of the program - outputs to stdout by default",
     )
     parser.add_argument(
-        "--debug", action="store_true", help="Returns a pdb shell after executing the program"
+        "--debug", action="store_true", help="returns a pdb shell after executing the program"
     )
     group.add_argument(
         "--reconfigure",
         action="store_true",
-        help="An interactive tool to reconfigure the API connection before executing the program",
+        help="an interactive tool to reconfigure the API connection before executing the program",
     )
 
     args = parser.parse_args()
