@@ -67,6 +67,7 @@ info = {
     "command_options": {
         "build_sphinx": {"version": ("setup.py", version), "release": ("setup.py", version)}
     },
+    "scripts": ["starship"],
 }
 
 classifiers = [
