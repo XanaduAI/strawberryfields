@@ -1050,11 +1050,6 @@ class MeasureFock(Measurement):
     def _apply(self, reg, backend, shots=1, **kwargs):
         return backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
 
-    def __str__(self):
-        if self.select is None:
-            return 'MeasureFock()'
-        return 'MeasureFock(select={})'.format(self.select)
-
 
 class MeasureHomodyne(Measurement):
     r"""Performs a :ref:`homodyne measurement <homodyne>`, measures one quadrature of a mode.
