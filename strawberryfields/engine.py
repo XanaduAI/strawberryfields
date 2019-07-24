@@ -308,7 +308,7 @@ class BaseEngine(abc.ABC):
             self.run_progs.append(p) 
             prev = p
 
-        if self.samples:
+        if self.samples is not None:
             return Result(self.samples.copy())
 
 

@@ -66,4 +66,5 @@ class FockSpecs(CircuitSpecs):
         "S2gate": {},
         "CXgate": {},
         "CZgate": {},
+        "MZgate": {},
     }

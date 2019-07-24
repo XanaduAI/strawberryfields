@@ -34,7 +34,7 @@ scanning the following three directories in order of preference:
 
    * On Linux: ``~/.config/strawberryfields``
    * On Windows: ``~C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields``
-   * On MacOS: ``~/Library/Preferences/strawberryfields``
+   * On MacOS: ``~/Library/Application\ Support/strawberryfields``
 
 If no configuration file is found, a warning message will be displayed in the logs,
 and all device parameters will need to be passed as keyword arguments when
@@ -99,6 +99,23 @@ DEFAULT_CONFIG = {
     "api": {"authentication_token": "", "hostname": "localhost", "use_ssl": True, "debug": False}
 }
 
+BOOLEAN_KEYS = ("debug", "use_ssl")
+
+
+def parse_environment_variable(key, value):
+    trues = (True, "true", "True", "TRUE", "1", 1)
+    falses = (False, "false", "False", "FALSE", "0", 0)
+
+    if key in BOOLEAN_KEYS:
+        if value in trues:
+            return True
+        elif value in falses:
+            return False
+        else:
+            raise ValueError("Boolean could not be parsed")
+    else:
+        return value
+
 
 class ConfigurationError(Exception):
     """Exception used for configuration errors"""
@@ -161,7 +178,7 @@ class Configuration:
 
                 if env in os.environ:
                     # Update from environment variable
-                    self._config[section][key] = os.environ[env]
+                    self._config[section][key] = parse_environment_variable(env, os.environ[env])
                 elif self._config_file and key in self._config_file[section]:
                     # Update from configuration file
                     self._config[section][key] = self._config_file[section][key]

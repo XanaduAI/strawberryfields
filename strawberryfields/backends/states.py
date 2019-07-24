@@ -449,8 +449,9 @@ class BaseFockState(BaseState):
         if self.data.shape != other.data.shape:
             return False
 
-        if np.all(np.abs(self.dm() - other.dm()) <= self.EQ_TOLERANCE):
+        if np.allclose(self.dm(), other.dm(), atol=self.EQ_TOLERANCE, rtol=0):
             return True
+
         return False
 
     @property
@@ -917,9 +918,10 @@ class BaseGaussianState(BaseState):
         if self.num_modes != other.num_modes:
             return False
 
-        if np.all(np.abs(self._mu - other._mu) <= self.EQ_TOLERANCE) and \
-                np.all(np.abs(self._cov - other._cov) <= self.EQ_TOLERANCE):
+        if np.allclose(self._mu, other._mu, atol=self.EQ_TOLERANCE, rtol=0) and \
+                np.allclose(self._cov, other._cov, atol=self.EQ_TOLERANCE, rtol=0):
             return True
+
         return False
 
     def means(self):
@@ -1008,7 +1010,7 @@ class BaseGaussianState(BaseState):
         """
         mu, cov = self.reduced_gaussian([mode]) # pylint: disable=unused-variable
         cov /= self._hbar/2
-        return np.all(np.abs(cov - np.identity(2)) < tol)
+        return np.allclose(cov, np.identity(2), atol=tol, rtol=0)
 
     def displacement(self, modes=None):
         r"""Returns the displacement parameter :math:`\alpha` of the modes specified.
