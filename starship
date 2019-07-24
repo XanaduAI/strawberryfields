@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import argparse
+import pdb
+
+from strawberryfields.engine import StarshipEngine
+from strawberryfields.io import load
+from strawberryfields import configuration
+
+DEFAULT_HOSTNAME = "platform.strawberryfields.ai"
+PROMPTS = {
+    "hostname": "Please enter the hostname of the server to connect to: [{}] ",
+    "authentication_token": "Please enter the authentication token to use when connecting: [{}] ",
+    "save": "Would you like to save these settings to a local cofiguration file in the current "
+    "directory? [Y/n] ",
+}
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run Strawberry Fields code on StarshipEngine")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--input", "-i", help="The XBB file to run")
+    parser.add_argument(
+        "--output",
+        "-o",
+        help="Where to output the result of the program. Outputs to stdout by default",
+    )
+    parser.add_argument(
+        "--debug", action="store_true", help="Returns a pdb shell after executing the program"
+    )
+    group.add_argument(
+        "--reconfigure",
+        action="store_true",
+        help="An interactive tool to reconfigure the API connection before executing the program",
+    )
+
+    args = parser.parse_args()
+
+    if args.reconfigure:
+        config = configuration.Configuration()
+
+        hostname = (
+            input(PROMPTS["hostname"].format(config.api["hostname"])) or config.api["hostname"]
+        )
+        authentication_token = (
+            input(PROMPTS["authentication_token"].format(config.api["authentication_token"]))
+            or config.api["hostname"]
+        )
+        save = input(PROMPTS["save"]).upper() == "Y"
+
+        if not save:
+            sys.stdout.write("Not writing configuration to file...")
+        else:
+            if not os.path.isfile("config.toml"):
+                sys.stdout.write("Writing configuration file to current working directory...\n")
+            else:
+                sys.stdout.write("Updating configuration in current working directory...\n")
+
+            config.api["hostname"] = hostname
+            config.api["authentication_token"] = authentication_token
+            config.save("config.toml")
+        sys.exit()
+
+    eng = StarshipEngine()
+    program = load(args.input)
+    eng.run(program)
+
+    if args.output_path:
+        with open(args.output_path, "w") as file:
+            file.write(str(eng.samples))
+            file.close()
+    else:
+        sys.stdout.write(str(eng.samples))
+
+    if args.debug:
+        pdb.set_trace()
