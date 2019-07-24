@@ -31,7 +31,7 @@ class TestMeasurement:
         with prog.context as q:
             ops.Fock(n[0]) | q[0]
             ops.Fock(n[1]) | q[1]
-            ops.Measure | q
+            ops.MeasureFock() | q
 
         eng.run(prog)
         assert np.all(q[0].val == n[0])

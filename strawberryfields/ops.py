@@ -76,7 +76,7 @@ There are six kinds of :class:`Operation` objects:
   The information is directly available only after the program has been run up to the point of measurement::
 
     with prog.context as (alice, bob):
-        Measure       | alice
+        MeasureFock() | alice
 
     eng = sf.LocalEngine(backend='fock')
     eng.run(prog)
@@ -87,7 +87,7 @@ There are six kinds of :class:`Operation` objects:
   i.e., we may symbolically use the measurement result before it exists::
 
     with prog.context as (alice, bob):
-        Measure   | alice
+        MeasureFock()| alice
         Dgate(alice) | bob
 
   One may also include an arbitrary post-processing function for the measurement result, to be applied
@@ -99,14 +99,14 @@ There are six kinds of :class:`Operation` objects:
         return q ** 2
 
     with prog.context as q:
-        Measure           | q[0]
+        MeasureFock()       | q[0]
         Dgate(square(q[0])) | q[1]
 
   Finally, the lower-level :class:`strawberryfields.engine.RegRefTransform` (RR) and
   an optional lambda function can be used to achieve the same functionality::
 
     with prog.context as q:
-        Measure       | q[0]
+        MeasureFock()   | q[0]
         Dgate(RR(q[0])) | q[1]
         Dgate(RR(q[0], lambda q: q ** 2)) | q[2]
 
@@ -267,7 +267,6 @@ this is to provide shorthands for operations that accept no arguments, as well a
 ``Del``                  :class:`~._Delete`
 ``Vac``                  :class:`~.Vacuum`
 ``Fourier``              :class:`~.Fouriergate`
-``Measure``              :class:`~.MeasureFock`
 ``MeasureX``             :class:`~.MeasureHomodyne` (:math:`\phi=0`), :math:`x` quadrature measurement
 ``MeasureP``             :class:`~.MeasureHomodyne` (:math:`\phi=\pi/2`), :math:`p` quadrature measurement
 ``MeasureHD``            :class:`~.MeasureHeterodyne`
@@ -282,6 +281,7 @@ Code details
 
 from collections.abc import Sequence
 import copy
+import sys
 import warnings
 
 import numpy as np
@@ -1052,7 +1052,7 @@ class MeasureFock(Measurement):
 
     def __str__(self):
         if self.select is None:
-            return 'Measure'
+            return 'MeasureFock()'
         return 'MeasureFock(select={})'.format(self.select)
 
 
@@ -2020,7 +2020,6 @@ class Gaussian(Preparation, Decomposition):
 
 Del = _Delete()
 Vac = Vacuum()
-Measure = MeasureFock()
 MeasureX = MeasureHomodyne(0)
 MeasureP = MeasureHomodyne(pi/2)
 MeasureHD = MeasureHeterodyne()
@@ -2031,6 +2030,43 @@ RR = RegRefTransform
 
 shorthands = ['New', 'Del', 'Vac', 'Measure', 'MeasureX', 'MeasureP', 'MeasureHD', 'Fourier', 'RR',
               'All']
+
+
+class Wrapper:
+    """Wrapper class to modify the module level
+    attribute lookup.
+
+    This allows module attributes to be deprecated.
+
+    Current list of deprecated attributes:
+
+    * ``Measure``: instead use ``MeasureFock``
+
+    .. note::
+
+        With Python 3.7+, there is new support for a module-level
+        ``__getattr__`` function, which should enable this functionality
+        without needing to modify ``sys.modules``.
+    """
+    deprecation_map = {"Measure": "MeasureFock"}
+
+    def __init__(self, mod):
+        self.mod = mod
+
+    def __getattr__(self, name):
+        if name in self.deprecation_map:
+            new_name = self.deprecation_map[name]
+
+            warnings.warn("The shorthand '{}' has been deprecated, "
+                          "please use '{}()' instead.".format(name, new_name))
+
+            return getattr(self.mod, new_name)()
+
+        return getattr(self.mod, name)
+
+
+
+sys.modules[__name__] = Wrapper(sys.modules[__name__])
 
 #=======================================================================
 # here we list different classes of operations for unit testing purposes
