@@ -68,7 +68,6 @@ if __name__ == "__main__":
     if args.output_path:
         with open(args.output_path, "w") as file:
             file.write(str(result.samples))
-            file.close()
     else:
         sys.stdout.write(str(result.samples))
 
