@@ -158,7 +158,7 @@ def graph_embed(A, mean_photon_per_mode=1.0, make_traceless=False, rtol=1e-05, a
     r"""Embed a graph into a Gaussian state.
 
     Given a graph in terms of a symmetric adjacency matrix
-    (in general with arbitrary complex off-diagonal and real diagonal entries),
+    (in general with arbitrary complex entries),
     returns the squeezing parameters and interferometer necessary for
     creating the Gaussian state whose off-diagonal parts are proportional to that matrix.
 
