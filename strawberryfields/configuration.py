@@ -34,7 +34,7 @@ scanning the following three directories in order of preference:
 
    * On Linux: ``~/.config/strawberryfields``
    * On Windows: ``~C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields``
-   * On MacOS: ``~/Library/Preferences/strawberryfields``
+   * On MacOS: ``~/Library/Application\ Support/strawberryfields``
 
 If no configuration file is found, a warning message will be displayed in the logs,
 and all device parameters will need to be passed as keyword arguments when
@@ -160,7 +160,7 @@ class Configuration:
                 if env in os.environ:
                     # Update from environment variable
                     self._config[section][key] = os.environ[env]
-                elif self._config_file:
+                elif self._config_file and key in self._config_file[section]:
                     # Update from configuration file
                     self._config[section][key] = self._config_file[section][key]
 

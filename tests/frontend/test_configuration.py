@@ -32,6 +32,12 @@ hostname = "localhost"
 use_ssl = true
 """
 
+TEST_FILE_ONE_VALUE = """\
+[api]
+# Options for the Strawberry Fields Cloud API
+authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
+"""
+
 EXPECTED_CONFIG = {
     "api": {
         "authentication_token": "071cdcce-9241-4965-93af-4a4dbc739135",
@@ -134,3 +140,18 @@ class TestConfiguration:
         config = conf.Configuration(str(filename))
 
         assert config.api["hostname"] == host
+
+    def test_update_config_with_limited_config_file(self, tmpdir, monkeypatch):
+        """
+        This test asserts that the given a config file that only provides a single
+        value, the rest of the configuration values are filled in using defaults.
+        """
+        filename = tmpdir.join("config.toml")
+
+        with open(filename, "w") as f:
+            f.write(TEST_FILE_ONE_VALUE)
+
+        config = conf.Configuration(str(filename))
+        assert config.api["hostname"] == conf.DEFAULT_CONFIG["api"]["hostname"]
+        assert config.api["use_ssl"] == conf.DEFAULT_CONFIG["api"]["use_ssl"]
+        assert config.api["authentication_token"] == "071cdcce-9241-4965-93af-4a4dbc739135"
