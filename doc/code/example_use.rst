@@ -8,7 +8,7 @@
        BSgate(1)      | q[0:2]
        Rgate(0.5)     | q[0]
        Dgate(0.5).H   | q[1]
-       Measure        | q
+       MeasureFock()  | q
 
    eng = sf.LocalEngine(backend='fock', backend_options={'cutoff_dim': 5})
    result = eng.run(prog)

@@ -161,3 +161,16 @@ class TestProgramGateInteraction:
         assert len(q) == 4
         # Program.reg_refs contains all the regrefs, active and inactive
         assert len(prog.reg_refs) == 6
+
+
+class TestOperationDeprecation:
+    """Tests for operation deprecation"""
+
+    def test_measure_deprecation(self):
+        """Test that use of the Measure shorthand correctly
+        raises a deprecation warning"""
+
+        msg = r"The shorthand '{}' has been deprecated, please use '{}\(\)' instead"
+
+        with pytest.warns(UserWarning, match=msg.format("Measure", "MeasureFock")):
+            ops.Measure
