@@ -308,7 +308,8 @@ class BaseEngine(abc.ABC):
 
             prev = p
 
-        return Result(self.samples.copy())
+        if self.samples is not None:
+            return Result(self.samples.copy())
 
 
 class LocalEngine(BaseEngine):

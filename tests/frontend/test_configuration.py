@@ -18,6 +18,8 @@ import pytest
 
 import toml
 
+from unittest.mock import MagicMock
+
 from strawberryfields import configuration as conf
 
 pytestmark = pytest.mark.frontend
@@ -30,6 +32,7 @@ TEST_FILE = """\
 authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
 hostname = "localhost"
 use_ssl = true
+debug = false
 """
 
 TEST_FILE_ONE_VALUE = """\
@@ -43,6 +46,7 @@ EXPECTED_CONFIG = {
         "authentication_token": "071cdcce-9241-4965-93af-4a4dbc739135",
         "hostname": "localhost",
         "use_ssl": True,
+        "debug": False,
     }
 }
 
@@ -140,6 +144,23 @@ class TestConfiguration:
         config = conf.Configuration(str(filename))
 
         assert config.api["hostname"] == host
+
+    def test_parse_environment_variable(self, monkeypatch):
+        monkeypatch.setattr(conf, "BOOLEAN_KEYS", ("some_boolean",))
+        assert conf.parse_environment_variable("some_boolean", "true") is True
+        assert conf.parse_environment_variable("some_boolean", "True") is True
+        assert conf.parse_environment_variable("some_boolean", "TRUE") is True
+        assert conf.parse_environment_variable("some_boolean", "1") is True
+        assert conf.parse_environment_variable("some_boolean", 1) is True
+
+        assert conf.parse_environment_variable("some_boolean", "false") is False
+        assert conf.parse_environment_variable("some_boolean", "False") is False
+        assert conf.parse_environment_variable("some_boolean", "FALSE") is False
+        assert conf.parse_environment_variable("some_boolean", "0") is False
+        assert conf.parse_environment_variable("some_boolean", 0) is False
+
+        something_else = MagicMock()
+        assert conf.parse_environment_variable("not_a_boolean", something_else) == something_else
 
     def test_update_config_with_limited_config_file(self, tmpdir, monkeypatch):
         """

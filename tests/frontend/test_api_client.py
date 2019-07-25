@@ -138,10 +138,10 @@ class TestAPIClient:
         """
         Test that initializing a default client generates an APIClient with the expected params.
         """
-        client = api_client.APIClient(hostname="localhost")
+        client = api_client.APIClient(use_ssl=True, authentication_token="")
         assert client.USE_SSL is True
         assert not client.AUTHENTICATION_TOKEN
-        assert client.BASE_URL == "https://localhost"
+        assert client.BASE_URL.startswith("https://")
         assert client.HEADERS["User-Agent"] == client.USER_AGENT
 
     def test_init_default_client_no_ssl(self):
@@ -151,8 +151,7 @@ class TestAPIClient:
         """
         client = api_client.APIClient(use_ssl=False)
         assert client.USE_SSL is False
-        assert not client.AUTHENTICATION_TOKEN
-        assert client.HEADERS["User-Agent"] == client.USER_AGENT
+        assert client.BASE_URL.startswith("http://")
 
     def test_init_custom_token_client(self):
         """
@@ -352,6 +351,39 @@ class TestResourceManager:
 
         for field in mock_resource.fields:
             field.set.assert_called_once_with(mock_data[field.name])
+
+    def test_debug_mode(self, monkeypatch):
+        """
+        Tests that the client object keeps track of responses and errors when debug mode is enabled.
+        """
+        class MockException(Exception):
+            """
+            A mock exception to ensure that the exception raised is the expected one.
+            """
+            pass
+
+        def mock_raise(exception):
+            raise exception
+
+        mock_get_response = MockGETResponse(200)
+
+        monkeypatch.setattr(requests, "get", lambda url, headers: mock_get_response)
+        monkeypatch.setattr(requests, "post", lambda url, headers, data: mock_raise(MockException))
+
+        client = api_client.APIClient(debug=True)
+
+        assert client.DEBUG is True
+        assert client.errors == []
+        assert client.responses == []
+
+        client.get("")
+        assert len(client.responses) == 1
+        assert client.responses[0] == mock_get_response
+
+        with pytest.raises(MockException):
+            client.post("", {})
+
+        assert len(client.errors) == 1
 
 
 class TestJob:
