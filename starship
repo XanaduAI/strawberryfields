@@ -32,7 +32,7 @@ PROMPTS = {
 }
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="run Strawberry Fields code on StarshipEngine")
+    parser = argparse.ArgumentParser(description="run a blackbird script on StarshipEngine")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--input", "-i", help="the XBB file to run")
     parser.add_argument(
