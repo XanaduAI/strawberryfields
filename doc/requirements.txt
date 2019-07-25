@@ -2,3 +2,4 @@ sphinxcontrib-bibtex
 ipykernel
 nbsphinx
 toml
+appdirs
