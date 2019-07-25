@@ -628,7 +628,7 @@ class TestGBS:
         prog = prog.compile('gbs')
         assert len(prog) == 4
         last_cmd = prog.circuit[-1]
-        assert last_cmd.op.__class__ == ops.MeasureFock
+        assert isinstance(last_cmd.op, ops.MeasureFock)
         assert [x.ind for x in last_cmd.reg] == list(range(3))
 
     def test_GBS_measure_fock_register_order(self):
@@ -644,5 +644,5 @@ class TestGBS:
 
         prog = prog.compile("gbs")
         last_cmd = prog.circuit[-1]
-        assert last_cmd.op.__class__ == ops.MeasureFock
+        assert isinstance(last_cmd.op, ops.MeasureFock)
         assert [x.ind for x in last_cmd.reg] == list(range(4))
