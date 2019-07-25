@@ -182,6 +182,7 @@ class TestBipartiteGraphEmbed:
         assert np.allclose(np.tanh(-np.flip(sqf)), new_l)
         assert np.allclose(Uf @ np.diag(np.tanh(-sqf)) @ Vf.T, At)
 
+
 class TestRectangularDecomposition:
     """Tests for linear interferometer rectangular decomposition"""
 

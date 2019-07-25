@@ -309,7 +309,7 @@ class TestValidation:
         """Test an unknown compile target."""
         prog = sf.Program(3)
         with prog.context as q:
-            ops.Measure  | q
+            ops.MeasureFock() | q
 
         with pytest.raises(ValueError, match="Could not find target 'foo' in the Strawberry Fields circuit database"):
             new_prog = prog.compile(target='foo')
@@ -320,7 +320,7 @@ class TestValidation:
         with prog.context as q:
             ops.S2gate(0.6) | q[0:2]
             ops.Dgate(1.0)  | q[2]
-            ops.Measure  | q[0:2]
+            ops.MeasureFock() | q[0:2]
             ops.MeasureX | q[2]
 
         with pytest.warns(UserWarning, match='The circuit consists of 2 disconnected components.'):
@@ -516,7 +516,7 @@ class TestValidation:
             # the circuit given below is an
             # isomorphism of the one provided above
             # in circuit, so should validate.
-            ops.Measure | q[2]
+            ops.MeasureFock() | q[2]
             ops.Dgate(-7.123) | q[1]
             ops.Sgate(0.543) | q[0]
             ops.BSgate(-0.32) | (q[0], q[1])
@@ -557,7 +557,7 @@ class TestValidation:
             # isomorphism of the one provided above
             # in circuit, as the Sgate
             # comes AFTER the beamsplitter.
-            ops.Measure | q[2]
+            ops.MeasureFock() | q[2]
             ops.Dgate(-7.123) | q[1]
             ops.BSgate(-0.32) | (q[0], q[1])
             ops.Sgate(0.543) | q[0]
@@ -574,7 +574,7 @@ class TestGBS:
         """Tests that GBS compilation fails when there are operations following a Fock measurement."""
         prog = sf.Program(2)
         with prog.context as q:
-            ops.Measure | q
+            ops.MeasureFock() | q
             ops.Rgate(1.0)  | q[0]
 
         with pytest.raises(program.CircuitError, match="Operations following the Fock measurements."):
@@ -595,10 +595,10 @@ class TestGBS:
         prog = sf.Program(2)
         with prog.context as q:
             ops.Dgate(1.0) | q[0]
-            ops.Measure | q[0]
+            ops.MeasureFock() | q[0]
             ops.Dgate(-1.0) | q[1]
             ops.BSgate(-0.5, 2.0) | q  # intervening gate
-            ops.Measure | q[1]
+            ops.MeasureFock() | q[1]
 
         with pytest.raises(program.CircuitError, match="The Fock measurements are not consecutive."):
             prog.compile('gbs')
@@ -608,8 +608,8 @@ class TestGBS:
         prog = sf.Program(3)
         with prog.context as q:
             ops.Dgate(1.0) | q[0]
-            ops.Measure | q[0]
-            ops.Measure | q
+            ops.MeasureFock() | q[0]
+            ops.MeasureFock() | q
 
         with pytest.raises(program.CircuitError, match="Measuring the same mode more than once."):
             prog.compile('gbs')
@@ -619,14 +619,30 @@ class TestGBS:
         prog = sf.Program(3)
         with prog.context as q:
             ops.Sgate(1.0) | q[0]
-            ops.Measure | q[0]
+            ops.MeasureFock() | q[0]
             ops.BSgate(1.4, 0.4) | q[1:3]
-            ops.Measure | q[2]
+            ops.MeasureFock() | q[2]
             ops.Rgate(-1.0) | q[1]
-            ops.Measure | q[1]
+            ops.MeasureFock() | q[1]
 
         prog = prog.compile('gbs')
         assert len(prog) == 4
         last_cmd = prog.circuit[-1]
-        assert last_cmd.op.__class__ == ops.MeasureFock
+        assert isinstance(last_cmd.op, ops.MeasureFock)
         assert [x.ind for x in last_cmd.reg] == list(range(3))
+
+    def test_GBS_measure_fock_register_order(self):
+        """Test that compilation of MeasureFock on multiple modes
+        sorts the resulting register indices in ascending order."""
+        prog = sf.Program(4)
+
+        with prog.context as q:
+            ops.S2gate(0.45) | (q[0], q[2])
+            ops.S2gate(0.45) | (q[0], q[2])
+            ops.BSgate(0.54, -0.12) | (q[0], q[1])
+            ops.MeasureFock() | (q[0], q[3], q[2], q[1])
+
+        prog = prog.compile("gbs")
+        last_cmd = prog.circuit[-1]
+        assert isinstance(last_cmd.op, ops.MeasureFock)
+        assert [x.ind for x in last_cmd.reg] == list(range(4))

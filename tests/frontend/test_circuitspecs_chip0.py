@@ -320,17 +320,17 @@ class TestChip0Compilation:
             ops.S2gate(0.5, 0) | (q[1], q[3])
 
             # corresponds to MZgate(phi, theta) on modes [0, 1]
-            ops.Rgate(phi % (2*np.pi)) | q[0]
+            ops.Rgate(np.mod(phi, 2*np.pi)) | q[0]
             ops.BSgate(np.pi / 4, np.pi / 2) | (q[0], q[1])
-            ops.Rgate(theta % (2*np.pi)) | q[0]
+            ops.Rgate(np.mod(theta, 2*np.pi)) | q[0]
             ops.BSgate(np.pi / 4, np.pi / 2) | (q[0], q[1])
             ops.Rgate(0) | q[0]
             ops.Rgate(0) | q[1]
 
             # corresponds to MZgate(phi, theta) on modes [2, 3]
-            ops.Rgate(phi % (2*np.pi)) | q[2]
+            ops.Rgate(np.mod(phi, 2*np.pi)) | q[2]
             ops.BSgate(np.pi / 4, np.pi / 2) | (q[2], q[3])
-            ops.Rgate(theta % (2*np.pi)) | q[2]
+            ops.Rgate(np.mod(theta, 2*np.pi)) | q[2]
             ops.BSgate(np.pi / 4, np.pi / 2) | (q[2], q[3])
             ops.Rgate(0) | q[2]
             ops.Rgate(0) | q[3]

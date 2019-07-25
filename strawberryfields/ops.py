@@ -23,10 +23,10 @@ Quantum operations
 
 .. note::
 
-  In the :mod:`strawberryfields.ops` API we use the convention :math:`\hbar=2` by default, however
-  this can be changed using the global variable :py:data:`strawberryfields.hbar`.
+    In the :mod:`strawberryfields.ops` API we use the convention :math:`\hbar=2` by default, however
+    this can be changed using the global variable :py:data:`strawberryfields.hbar`.
 
-  See :ref:`conventions` for more details.
+    See :ref:`conventions` for more details.
 
 This module defines and implements the Python-embedded quantum programming language
 for continuous-variable (CV) quantum systems.
@@ -37,10 +37,10 @@ register objects using the following syntax:
 
 .. code-block:: python
 
-  prog = sf.Program(3)
-  with prog.context as q:
-      G(params) | q
-      F(params) | (q[1], q[6], q[2])
+    prog = sf.Program(3)
+    with prog.context as q:
+        G(params) | q
+        F(params) | (q[1], q[6], q[2])
 
 Here :samp:`prog` is an instance of :class:`strawberryfields.program.Program`
 which defines the context where the commands are stored.
@@ -51,11 +51,11 @@ with the part on the right as the parameter. The part on the right is a single
 :class:`strawberryfields.engine.RegRef` object or, for multi-mode gates, a sequence of them.
 It is of course also possible to construct gates separately and reuse them several times::
 
-  R = Rgate(s)
-  with prog.context as q:
-      R   | q
-      Xgate(t) | q
-      R.H | q
+    R = Rgate(s)
+    with prog.context as q:
+        R   | q
+        Xgate(t) | q
+        R.H | q
 
 
 There are six kinds of :class:`Operation` objects:
@@ -76,7 +76,7 @@ There are six kinds of :class:`Operation` objects:
   The information is directly available only after the program has been run up to the point of measurement::
 
     with prog.context as (alice, bob):
-        Measure       | alice
+        MeasureFock() | alice
 
     eng = sf.LocalEngine(backend='fock')
     eng.run(prog)
@@ -87,7 +87,7 @@ There are six kinds of :class:`Operation` objects:
   i.e., we may symbolically use the measurement result before it exists::
 
     with prog.context as (alice, bob):
-        Measure   | alice
+        MeasureFock()| alice
         Dgate(alice) | bob
 
   One may also include an arbitrary post-processing function for the measurement result, to be applied
@@ -99,14 +99,14 @@ There are six kinds of :class:`Operation` objects:
         return q ** 2
 
     with prog.context as q:
-        Measure           | q[0]
+        MeasureFock()       | q[0]
         Dgate(square(q[0])) | q[1]
 
   Finally, the lower-level :class:`strawberryfields.engine.RegRefTransform` (RR) and
   an optional lambda function can be used to achieve the same functionality::
 
     with prog.context as q:
-        Measure       | q[0]
+        MeasureFock()   | q[0]
         Dgate(RR(q[0])) | q[1]
         Dgate(RR(q[0], lambda q: q ** 2)) | q[2]
 
@@ -142,14 +142,14 @@ Base classes
 The abstract base class hierarchy exists to provide the correct semantics for the actual operations that inherit them.
 
 .. autosummary::
-   Operation
-   Preparation
-   Transformation
-   Gate
-   Channel
-   Measurement
-   Decomposition
-   MetaOperation
+    Operation
+    Preparation
+    Transformation
+    Gate
+    Channel
+    Measurement
+    Decomposition
+    MetaOperation
 
 
 Operation class
@@ -160,12 +160,12 @@ All Operations have the following methods.
 .. currentmodule:: strawberryfields.ops.Operation
 
 .. autosummary::
-   __str__
-   __or__
-   merge
-   decompose
-   apply
-   _apply
+    __str__
+    __or__
+    merge
+    decompose
+    apply
+    _apply
 
 .. currentmodule:: strawberryfields.ops
 
@@ -174,24 +174,24 @@ State preparation
 -----------------
 
 .. autosummary::
-   Vacuum
-   Coherent
-   Squeezed
-   DisplacedSqueezed
-   Thermal
-   Fock
-   Catstate
-   Ket
-   DensityMatrix
-   Gaussian
+    Vacuum
+    Coherent
+    Squeezed
+    DisplacedSqueezed
+    Thermal
+    Fock
+    Catstate
+    Ket
+    DensityMatrix
+    Gaussian
 
 Measurements
 ------------
 
 .. autosummary::
-   MeasureFock
-   MeasureHomodyne
-   MeasureHeterodyne
+    MeasureFock
+    MeasureHomodyne
+    MeasureHeterodyne
 
 
 Channels
@@ -208,6 +208,7 @@ Decompositions
 .. autosummary::
     Interferometer
     GraphEmbed
+    BipartiteGraphEmbed
     GaussianTransform
     Gaussian
 
@@ -216,33 +217,33 @@ Single-mode gates
 -----------------
 
 .. autosummary::
-   Dgate
-   Xgate
-   Zgate
-   Sgate
-   Rgate
-   Pgate
-   Vgate
-   Fouriergate
+    Dgate
+    Xgate
+    Zgate
+    Sgate
+    Rgate
+    Pgate
+    Vgate
+    Fouriergate
 
 Two-mode gates
 --------------
 
 .. autosummary::
-   BSgate
-   MZgate
-   S2gate
-   CXgate
-   CZgate
-   CKgate
+    BSgate
+    MZgate
+    S2gate
+    CXgate
+    CZgate
+    CKgate
 
 Meta-operations
 ---------------
 
 .. autosummary::
-   All
-   _New_modes
-   _Delete
+    All
+    _New_modes
+    _Delete
 
 
 Operations shortcuts
@@ -253,11 +254,11 @@ this is to provide shorthands for operations that accept no arguments, as well a
 
 .. raw:: html
 
-   <style>
+    <style>
       .widetable {
          width:100%;
       }
-   </style>
+    </style>
 
 .. rst-class:: longtable widetable
 
@@ -267,7 +268,6 @@ this is to provide shorthands for operations that accept no arguments, as well a
 ``Del``                  :class:`~._Delete`
 ``Vac``                  :class:`~.Vacuum`
 ``Fourier``              :class:`~.Fouriergate`
-``Measure``              :class:`~.MeasureFock`
 ``MeasureX``             :class:`~.MeasureHomodyne` (:math:`\phi=0`), :math:`x` quadrature measurement
 ``MeasureP``             :class:`~.MeasureHomodyne` (:math:`\phi=\pi/2`), :math:`p` quadrature measurement
 ``MeasureHD``            :class:`~.MeasureHeterodyne`
@@ -282,6 +282,7 @@ Code details
 from collections import Counter
 from collections.abc import Sequence
 import copy
+import sys
 import warnings
 
 import numpy as np
@@ -605,7 +606,7 @@ class Decomposition(Operation):
             # easier to perform. The constructor restores it.
             # Another option would be to add the required methods to Parameter class.
             # check if the matrices cancel
-            if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
+            if np.allclose(U, np.identity(len(U)), atol=_decomposition_merge_tol, rtol=0):
                 return None
 
             return self.__class__(U)
@@ -1049,11 +1050,6 @@ class MeasureFock(Measurement):
 
     def _apply(self, reg, backend, shots=1, **kwargs):
         return backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
-
-    def __str__(self):
-        if self.select is None:
-            return 'Measure'
-        return 'MeasureFock(select={})'.format(self.select)
 
 
 class MeasureHomodyne(Measurement):
@@ -1716,7 +1712,7 @@ class Interferometer(Decomposition):
         if mesh not in allowed_meshes:
             raise ValueError("Unknown mesh '{}'. Mesh must be one of {}".format(mesh, allowed_meshes))
 
-        self.identity = np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol)
+        self.identity = np.allclose(U, np.identity(len(U)), atol=_decomposition_merge_tol, rtol=0)
 
     def _decompose(self, reg, **kwargs):
         mesh = kwargs.get("mesh", self.mesh)
@@ -1775,7 +1771,7 @@ class GraphEmbed(Decomposition):
 
     Args:
         A (array): an :math:`N\times N` complex or real symmetric matrix
-        mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state
+        mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
             representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
         make_traceless (boolean): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
@@ -1785,16 +1781,16 @@ class GraphEmbed(Decomposition):
             :math:`|A-A^T| <` tol
     """
 
-    def __init__(self, A, mean_photon_per_mode=1.0, make_traceless=False, tol=1e-6):
+    def __init__(self, A, mean_photon=1.0, make_traceless=False, tol=1e-6):
         super().__init__([A])
         self.ns = A.shape[0]
 
-        if np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol):
+        if np.allclose(A, np.identity(len(A)), atol=_decomposition_merge_tol, rtol=0):
             self.identity = True
         else:
             self.identity = False
             self.sq, self.U = dec.graph_embed(
-                A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=make_traceless, atol=tol, rtol=0
+                A, mean_photon_per_mode=mean_photon, make_traceless=make_traceless, atol=tol, rtol=0
             )
 
     def _decompose(self, reg, **kwargs):
@@ -1822,70 +1818,50 @@ class BipartiteGraphEmbed(Decomposition):
     Args:
         A (array): An :math:`N\times N` complex or real symmetric matrix representing
             a bipartite graph, where the number of vertices in the two vertex sets are even.
-        mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state
+        mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
             representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
-        make_traceless (boolean): Removes the trace of the input matrix, by performing the transformation
-            :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
-            the graph but will lead to different photon number statistics for events with more than
-            one photon in any mode.
         drop_identity (bool): If ``True``, decomposed gates with trivial parameters,
             such that they correspond to an identity operation, are removed.
         tol (float): the tolerance used when checking if the input matrix is symmetric:
             :math:`|A-A^T| <` tol
     """
 
-    def __init__(self, A, mean_photon_per_mode=1.0, make_traceless=False, drop_identity=True, tol=1e-6):
+    def __init__(self, A, mean_photon=1.0, drop_identity=True, tol=1e-6):
         super().__init__([A])
         self.ns = A.shape[0]
-        self.mean_photon = mean_photon_per_mode
+        self.mean_photon = mean_photon
         self.tol = tol
         self.identity = np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol)
+        self.drop_identity = drop_identity
 
     def _decompose(self, reg, **kwargs):
-        mean_photon_per_mode = kwargs.get("mean_photon_per_mode", self.mean_photon)
+        mean_photon = kwargs.get("mean_photon", self.mean_photon)
         tol = kwargs.get("tol", self.tol)
         mesh = kwargs.get("mesh", "rectangular")
+        drop_identity = kwargs.get("drop_identity", self.drop_identity)
 
         cmds = []
 
-        N = self.ns
-        perm = np.arange(N).reshape(2, -1).T
-        A = self.p[0].x[:, perm.flatten()][perm.flatten()]
+        A = self.p[0].x
+        N = len(A)//2
 
-        sq, U, V = dec.graph_embed(
-            A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=True, atol=tol, rtol=0
-        )
+        sq, U, V = dec.bipartite_graph_embed(A[:N, N:], mean_photon_per_mode=mean_photon, atol=tol, rtol=0)
 
         if not self.identity or not drop_identity:
-            for (m, n), s in zip(perm, sq.reshape(-1, 2)[:, 0]):
+            for m, s in enumerate(sq):
                 s = s if np.abs(s) >= _decomposition_tol else 0
 
-                print(m, n, s)
-
-                U_list = [np.identity(N, dtype=np.complex128)] * 2
-
                 if not (drop_identity and s == 0):
-                    cmds.append(Command(S2gate(s), (reg[m], reg[n])))
-
-                    Utmp = np.identity(N, dtype=np.complex128)
-                    Utmp[m, m] = 1/np.sqrt(2)
-                    Utmp[m, n] = -1/np.sqrt(2)
-                    Utmp[n, m] = 1/np.sqrt(2)
-                    Utmp[n, n] = 1j/np.sqrt(2)
-                    U_list.insert(0, Utmp)
-
-                    # cmds.append(Command(BSgate(), (reg[m], reg[n])))
-                    # cmds.append(Command(Rgate(np.pi/2), reg[n]))
+                    cmds.append(Command(S2gate(-s), (reg[m], reg[m+N])))
 
             U = U if not np.allclose(U, np.identity(len(U)), atol=_decomposition_tol, rtol=0) else np.identity(len(U))
+            V = V if not np.allclose(V, np.identity(len(V)), atol=_decomposition_tol, rtol=0) else np.identity(len(V))
 
             if not (drop_identity and np.all(U == np.identity(len(U)))):
-                # perm = np.arange(N).reshape(-1, 2).T
-                U_list.insert(0, U[:, perm.flatten()][perm.flatten()])
-                from numpy.linalg import multi_dot
-                U = multi_dot(U_list)
-                print(np.round(U, 4))
-                cmds.append(Command(Interferometer(U, mesh=mesh, drop_identity=drop_identity, tol=tol), reg))
+                cmds.append(Command(Interferometer(U, mesh=mesh, drop_identity=drop_identity, tol=tol), reg[:N]))
+
+            if not (drop_identity and np.all(V == np.identity(len(V)))):
+                cmds.append(Command(Interferometer(V, mesh=mesh, drop_identity=drop_identity, tol=tol), reg[N:]))
 
         return cmds
 
@@ -2098,7 +2074,6 @@ class Gaussian(Preparation, Decomposition):
 
 Del = _Delete()
 Vac = Vacuum()
-Measure = MeasureFock()
 MeasureX = MeasureHomodyne(0)
 MeasureP = MeasureHomodyne(pi/2)
 MeasureHD = MeasureHeterodyne()
@@ -2109,6 +2084,43 @@ RR = RegRefTransform
 
 shorthands = ['New', 'Del', 'Vac', 'Measure', 'MeasureX', 'MeasureP', 'MeasureHD', 'Fourier', 'RR',
               'All']
+
+
+class Wrapper:
+    """Wrapper class to modify the module level
+    attribute lookup.
+
+    This allows module attributes to be deprecated.
+
+    Current list of deprecated attributes:
+
+    * ``Measure``: instead use ``MeasureFock``
+
+    .. note::
+
+        With Python 3.7+, there is new support for a module-level
+        ``__getattr__`` function, which should enable this functionality
+        without needing to modify ``sys.modules``.
+    """
+    deprecation_map = {"Measure": "MeasureFock"}
+
+    def __init__(self, mod):
+        self.mod = mod
+
+    def __getattr__(self, name):
+        if name in self.deprecation_map:
+            new_name = self.deprecation_map[name]
+
+            warnings.warn("The shorthand '{}' has been deprecated, "
+                          "please use '{}()' instead.".format(name, new_name))
+
+            return getattr(self.mod, new_name)()
+
+        return getattr(self.mod, name)
+
+
+
+sys.modules[__name__] = Wrapper(sys.modules[__name__])
 
 #=======================================================================
 # here we list different classes of operations for unit testing purposes
@@ -2126,7 +2138,7 @@ state_preparations = simple_state_preparations + (Ket, DensityMatrix)
 
 measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne)
 
-decompositions = (Interferometer, GraphEmbed, GaussianTransform, Gaussian, BipartiteGraphEmbed)
+decompositions = (Interferometer, GraphEmbed, BipartiteGraphEmbed, GaussianTransform, Gaussian, BipartiteGraphEmbed)
 
 #=======================================================================
 # exported symbols

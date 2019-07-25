@@ -158,7 +158,7 @@ def graph_embed(A, mean_photon_per_mode=1.0, make_traceless=False, rtol=1e-05, a
     r"""Embed a graph into a Gaussian state.
 
     Given a graph in terms of a symmetric adjacency matrix
-    (in general with arbitrary complex off-diagonal and real diagonal entries),
+    (in general with arbitrary complex entries),
     returns the squeezing parameters and interferometer necessary for
     creating the Gaussian state whose off-diagonal parts are proportional to that matrix.
 
@@ -226,12 +226,14 @@ def bipartite_graph_embed(A, mean_photon_per_mode=1.0, rtol=1e-05, atol=1e-08):
     B = np.block([[0 * A, A], [A.T, 0 * A]])
     scale = find_scaling_adjacency_matrix(B, 2 * n * mean_photon_per_mode)
     A = scale * A
+
     if np.allclose(A, A.T, rtol=rtol, atol=atol):
         s, u = takagi(A, tol=atol)
         v = u
     else:
         u, s, v = np.linalg.svd(A)
         v = v.T
+
     vals = -np.arctanh(s)
     return vals, u, v
 
