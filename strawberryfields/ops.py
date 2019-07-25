@@ -279,7 +279,6 @@ Code details
 ~~~~~~~~~~~~
 
 """
-from collections import Counter
 from collections.abc import Sequence
 import copy
 import sys
@@ -2138,7 +2137,7 @@ state_preparations = simple_state_preparations + (Ket, DensityMatrix)
 
 measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne)
 
-decompositions = (Interferometer, GraphEmbed, BipartiteGraphEmbed, GaussianTransform, Gaussian, BipartiteGraphEmbed)
+decompositions = (Interferometer, GraphEmbed, BipartiteGraphEmbed, GaussianTransform, Gaussian)
 
 #=======================================================================
 # exported symbols
