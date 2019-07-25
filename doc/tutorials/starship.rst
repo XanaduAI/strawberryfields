@@ -22,7 +22,7 @@ You can generate this file interactively by using the ``starship`` command as fo
 
 .. code-block:: console
 
-   (strawberryfields)$ starship --reconfigure
+   starship --reconfigure
    Please enter the hostname of the server to connect to: [platform.example.com]
    Please enter the authentication token to use when connecting: [] ElUFm3O6m6q1DXPmpi5g4hWEhYHXFxBc
    Would you like to save these settings to a local cofiguration file in the current directory? [Y/n] y
@@ -33,7 +33,7 @@ To test connectivity, you can use the following command:
 
 .. code-block:: console
 
-   (strawberryfields)$ starship --hello
+   starship --hello
    You have successfully authenticated to the platform!
 
 
@@ -94,6 +94,6 @@ To execute this file from the command line, use the ``starship`` command as foll
 
 .. code-block:: console
 
-   (strawberryfields)$ starship --input test.xbb --output out
+   starship --input test.xbb --output out.txt
 
 After executing the above command, the result will be stored in ``out`` in the current working directory. You can also omit the ``--output`` parameter to print the result to the screen.
