@@ -85,7 +85,7 @@ To execute this file using Python, you can use a code block like this:
    from strawberryfields.io import load
 
    eng = StarshipEngine()
-   prog = load("chip0.xbb")
+   prog = load("test.xbb")
    result = eng.run(prog)
    print(result.samples)
 
