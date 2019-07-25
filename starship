@@ -21,6 +21,7 @@ import argparse
 import pdb
 
 from strawberryfields.engine import StarshipEngine
+from strawberryfields.api_client import APIClient
 from strawberryfields.io import load
 from strawberryfields import configuration
 
@@ -49,6 +50,12 @@ if __name__ == "__main__":
         help="an interactive tool to reconfigure the API connection before executing the program",
     )
 
+    group.add_argument(
+        "--hello",
+        action="store_true",
+        help="test the API connection",
+    )
+
     args = parser.parse_args()
 
     if args.reconfigure:
@@ -75,16 +82,29 @@ if __name__ == "__main__":
             config.api["authentication_token"] = authentication_token
             config.save("config.toml")
         sys.exit()
+    elif args.hello:
+        client = APIClient()
+        response = client.get("")
+        if response.status_code == 403:
+            sys.stderr.write(
+                "Could not authenticate with token {} - please try again\n".format(
+                    client.AUTHENTICATION_TOKEN))
+            sys.exit(1)
+        else:
+            # Hack at the moment, but should check status code 200 against test endpoint
+            sys.stdout.write("You have successfully authenticated to the platform!\n")
+            sys.exit()
 
     eng = StarshipEngine()
     program = load(args.input)
     result = eng.run(program)
 
-    if hasattr(args, "output_path"):
-        with open(args.output_path, "w") as file:
-            file.write(str(result.samples))
-    else:
-        sys.stdout.write(str(result.samples))
+    if result.samples is not None:
+        if hasattr(args, "output_path"):
+            with open(args.output_path, "w") as file:
+                file.write(str(result.samples))
+        else:
+            sys.stdout.write(str(result.samples))
 
     if args.debug:
         pdb.set_trace()
