@@ -5,7 +5,7 @@ Blackbird programming language
 
 .. sectionauthor:: Nathan Killoran <nathan@xanadu.ai>, Josh Izaac <josh@xanadu.ai>
 
-In this section, we provide an overview of the **Blackbird quantum programming language**. This simple and elegant language breaks down a quantum circuit into a set of instructions detailing the quantum operations we would like to apply, as well as the the subsystems that these operations act on [#f1]_. The Blackbird language is built-in to Strawberry Fields, but also exists as a separate Python `package <https://quantum-blackbird.readthedocs.io/en/latest/>`_. 
+In this section, we provide an overview of the **Blackbird quantum programming language**. This simple and elegant language breaks down a quantum circuit into a set of instructions detailing the quantum operations we would like to apply, as well as the the subsystems that these operations act on [#f1]_. The Blackbird language is built-in to Strawberry Fields, but also exists as a separate Python `package <https://quantum-blackbird.readthedocs.io/en/latest/>`_.
 
 Using the Strawberry Fields :mod:`.io` module, Blackbird scripts can be serialized and deserialized between files and Strawberry Fields Programs.
 
@@ -31,10 +31,10 @@ where ``args`` represents a list of parameters for the operation, and ``q`` is t
 State preparation
 ==================
 
-States can be prepared using the state preparation Operators :class:`~.Vacuum`, :class:`~.Fock`, :class:`~.Coherent`, :class:`~.Squeezed`, :class:`~.DisplacedSqueezed`, and :class:`~.Thermal`. By default, all qumode subsystems are assumed initialised in the vacuum state. 
+States can be prepared using the state preparation Operators :class:`~.Vacuum`, :class:`~.Fock`, :class:`~.Coherent`, :class:`~.Squeezed`, :class:`~.DisplacedSqueezed`, and :class:`~.Thermal`. By default, all qumode subsystems are assumed initialised in the vacuum state.
 
 .. code-block:: python3
-    
+
     # State preparation in Blackbird
     Fock(1) | q[0]
     Coherent(0.5+2j) | q[1]
@@ -57,14 +57,14 @@ Gates are applied within Blackbird code in the exact same manner as state prepar
 
     # Apply the Displacement gate to qumode 0
     alpha = 2.0 + 1j
-    Dgate(alpha) | q[0] 
+    Dgate(alpha) | q[0]
 
     # Apply the Rotation gate
     phi = 3.14 / 2
-    Rgate(phi) | q[0] 
+    Rgate(phi) | q[0]
 
     # Apply the Squeezing gate
-    Sgate(2.0, 0.17) | q[0] 
+    Sgate(2.0, 0.17) | q[0]
 
     # Apply the Beamsplitter gate to qumodes 0 & 1
     BSgate(3.14 / 10, 0.223) | (q[0], q[1])
@@ -93,13 +93,13 @@ Note that gate Operations have some subtle differences to state preparation oper
 Measurements
 ==================
 
-In Blackbird, several CV measurement Operations are available; these include homodyne detection (:class:`.MeasureHomodyne`, as well as the shortcuts ``MeasureX`` and ``MeasureP``), heterodyne detection (:class:`MeasureHD <.MeasureHeterodyne>`), and photon detection (:class:`Measure <.MeasureFock>`). These are applied directly to the qumodes to be measured:
+In Blackbird, several CV measurement Operations are available; these include homodyne detection (:class:`.MeasureHomodyne`, as well as the shortcuts ``MeasureX`` and ``MeasureP``), heterodyne detection (:class:`MeasureHD <.MeasureHeterodyne>`), and photon detection (:class:`.MeasureFock`). These are applied directly to the qumodes to be measured:
 
 .. code-block:: python3
 
     # Homodyne measurement at angle phi
     phi = 0.25 * 3.14
-    MeasureHomodyne(phi) | q[0] 
+    MeasureHomodyne(phi) | q[0]
 
     # Special homodyne measurements
     MeasureX | q[0]
@@ -112,7 +112,6 @@ In Blackbird, several CV measurement Operations are available; these include hom
     # Number state measurements of various qumodes
     MeasureFock() | q[0]
     MeasureFock() | (q[1], q[2]) # multiple modes
-    Measure       | q[3]         # shorthand
 
 For more details on measurements, as well as advanced features such as postselection, see the :ref:`ps_tutorial`.
 
