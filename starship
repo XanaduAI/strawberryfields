@@ -49,7 +49,6 @@ if __name__ == "__main__":
         action="store_true",
         help="an interactive tool to reconfigure the API connection before executing the program",
     )
-
     group.add_argument(
         "--hello",
         action="store_true",
@@ -84,11 +83,18 @@ if __name__ == "__main__":
         sys.exit()
     elif args.hello:
         client = APIClient()
-        response = client.get("")
-        if response.status_code == 403:
-            sys.stderr.write(
-                "Could not authenticate with token {} - please try again\n".format(
-                    client.AUTHENTICATION_TOKEN))
+        try:
+            response = client.get("")
+        except Exception as e:
+            sys.stderr.write("Could not connect to server:\n{}\n".format(e))
+            sys.exit(1)
+        if response.status_code in (401, 403):
+            if not client.AUTHENTICATION_TOKEN:
+                sys.stderr.write("Could not authenticate -- no token provided\n")
+            else:
+                sys.stderr.write(
+                    "Could not authenticate with token {} - please try again\n".format(
+                        client.AUTHENTICATION_TOKEN))
             sys.exit(1)
         else:
             # Hack at the moment, but should check status code 200 against test endpoint
