@@ -567,7 +567,7 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
         rounding (int): the number of decimal places to use when rounding the singular values
 
     Returns:
-        tuple[array]: Returns the tuple ``(ut1, st1, vt1)``. ``ut1`` and ``vt1`` are symplectic unitaries,
+        tuple[array]: Returns the tuple ``(ut1, st1, vt1)``. ``ut1`` and ``vt1`` are symplectic orthogonal,
             and ``st1`` is diagonal and of the form :math:`= \text{diag}(s1,\dots,s_n, 1/s_1,\dots,1/s_n)`
             such that :math:`S = ut1  st1  v1`
     """
@@ -630,7 +630,7 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
         st1 = np.eye(2*n)
         v1 = np.eye(2*n)
 
-    return ut1, st1, v1
+    return ut1.real, st1.real, v1.real
 
 
 def covmat_to_hamil(V, tol=1e-10):  # pragma: no cover
