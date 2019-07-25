@@ -16,6 +16,10 @@
 
 ### API Changes
 
+* The `strawberryfields.ops.Measure` shorthand has been deprecated in favour
+  of `strawberryfields.ops.MeasureFock()`.
+  [#145](https://github.com/XanaduAI/strawberryfields/pull/145)
+
 * Several changes to the `strawberryfields.decompositions` module:
   [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
 
@@ -47,6 +51,10 @@
   [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
 
 ### Bug fixes
+
+* When using the `'gbs'` compilation target, the measured registers are now sorted in
+  ascending order in the resulting compiled program.
+  [#144](https://github.com/XanaduAI/strawberryfields/pull/144)
 
 * Fixed typo in the Gaussian Boson Sampling example notebook.
   [#133](https://github.com/XanaduAI/strawberryfields/pull/133)
