@@ -1,0 +1,116 @@
+#!/usr/bin/env python
+
+# Copyright 2019 Xanadu Quantum Technologies Inc.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+import os
+import sys
+import argparse
+import pdb
+
+from strawberryfields.engine import StarshipEngine
+from strawberryfields.api_client import APIClient
+from strawberryfields.io import load
+from strawberryfields import configuration
+
+PROMPTS = {
+    "hostname": "Please enter the hostname of the server to connect to: [{}] ",
+    "authentication_token": "Please enter the authentication token to use when connecting: [{}] ",
+    "save": "Would you like to save these settings to a local cofiguration file in the current "
+    "directory? [Y/n] ",
+}
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="run a blackbird script on StarshipEngine")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--input", "-i", help="the xbb file to run")
+    parser.add_argument(
+        "--output",
+        "-o",
+        help="where to output the result of the program - outputs to stdout by default",
+    )
+    parser.add_argument(
+        "--debug", action="store_true", help="returns a pdb shell after executing the program"
+    )
+    group.add_argument(
+        "--reconfigure",
+        action="store_true",
+        help="an interactive tool to reconfigure the API connection before executing the program",
+    )
+    group.add_argument(
+        "--hello",
+        action="store_true",
+        help="test the API connection",
+    )
+
+    args = parser.parse_args()
+
+    if args.reconfigure:
+        config = configuration.Configuration()
+
+        hostname = (
+            input(PROMPTS["hostname"].format(config.api["hostname"])) or config.api["hostname"]
+        )
+        authentication_token = (
+            input(PROMPTS["authentication_token"].format(config.api["authentication_token"]))
+            or config.api["authentication_token"]
+        )
+        save = input(PROMPTS["save"]).upper() == "Y"
+
+        if not save:
+            sys.stdout.write("Not writing configuration to file...")
+        else:
+            if not os.path.isfile("config.toml"):
+                sys.stdout.write("Writing configuration file to current working directory...\n")
+            else:
+                sys.stdout.write("Updating configuration in current working directory...\n")
+
+            config.api["hostname"] = hostname
+            config.api["authentication_token"] = authentication_token
+            config.save("config.toml")
+        sys.exit()
+    elif args.hello:
+        client = APIClient()
+        try:
+            response = client.get("")
+        except Exception as e:
+            sys.stderr.write("Could not connect to server:\n{}\n".format(e))
+            sys.exit(1)
+        if response.status_code in (401, 403):
+            if not client.AUTHENTICATION_TOKEN:
+                sys.stderr.write("Could not authenticate -- no token provided\n")
+            else:
+                sys.stderr.write(
+                    "Could not authenticate with token {} - please try again\n".format(
+                        client.AUTHENTICATION_TOKEN))
+            sys.exit(1)
+        else:
+            # Hack at the moment, but should check status code 200 against test endpoint
+            sys.stdout.write("You have successfully authenticated to the platform!\n")
+            sys.exit()
+
+    eng = StarshipEngine()
+    program = load(args.input)
+    result = eng.run(program)
+
+    if result.samples is not None:
+        if hasattr(args, "output_path"):
+            with open(args.output_path, "w") as file:
+                file.write(str(result.samples))
+        else:
+            sys.stdout.write(str(result.samples))
+
+    if args.debug:
+        pdb.set_trace()
