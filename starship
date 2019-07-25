@@ -105,7 +105,7 @@ if __name__ == "__main__":
     program = load(args.input)
     result = eng.run(program)
 
-    if result.samples is not None:
+    if result and result.samples is not None:
         if hasattr(args, "output_path"):
             with open(args.output_path, "w") as file:
                 file.write(str(result.samples))
