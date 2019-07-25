@@ -97,4 +97,4 @@ To execute this file from the command line, use the ``starship`` command as foll
 
    starship --input test.xbb --output out.txt
 
-After executing the above command, the result will be stored in ``out`` in the current working directory. You can also omit the ``--output`` parameter to print the result to the screen.
+After executing the above command, the result will be stored in ``out.txt`` in the current working directory. You can also omit the ``--output`` parameter to print the result to the screen.
