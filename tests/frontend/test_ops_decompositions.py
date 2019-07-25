@@ -321,10 +321,46 @@ class TestGraphEmbed:
 class TestBipartiteGraphEmbed:
     """Tests for the BipartiteGraphEmbed quantum operation"""
 
-    def test_identity(self, tol):
-        """Test that nothing is done if the adjacency matrix is the identity"""
-        G = ops.BipartiteGraphEmbed(np.identity(6))
-        assert G.identity
+    def test_not_bipartite(self, tol):
+        """Test exception raised if the graph is not bipartite"""
+        A = np.array([
+                [0, 1, 0, 0, 1, 1],
+                [1, 0, 1, 0, 1, 1],
+                [0, 1, 0, 1, 1, 0],
+                [0, 0, 1, 0, 1, 0],
+                [1, 1, 1, 1, 0, 1],
+                [1, 1, 0, 0, 1, 0]
+            ]
+        )
+
+        with pytest.raises(ValueError, match="does not represent a bipartite graph"):
+            ops.BipartiteGraphEmbed(A)
+
+        A = np.array([
+                [0, 0, 0, 0, 1, 1],
+                [0, 0, 0, 0, 1, 1],
+                [0, 0, 0, 1, 1, 0],
+                [0, 0, 0, 0, 0, 0],
+                [1, 1, 0, 0, 0, 0],
+                [1, 1, 0, 0, 0, 0]
+            ]
+        )
+
+        with pytest.raises(ValueError, match="does not represent a bipartite graph"):
+            ops.BipartiteGraphEmbed(A)
+
+        A = np.array([
+                [0, 0, 1, 0, 1, 1],
+                [0, 0, 0, 0, 1, 1],
+                [0, 0, 0, 1, 1, 0],
+                [0, 0, 1, 0, 0, 0],
+                [1, 1, 1, 0, 0, 0],
+                [1, 1, 0, 0, 0, 0]
+            ]
+        )
+
+        with pytest.raises(ValueError, match="does not represent a bipartite graph"):
+            ops.BipartiteGraphEmbed(A)
 
     def test_decomposition(self, hbar, tol):
         """Test that a graph is correctly decomposed"""

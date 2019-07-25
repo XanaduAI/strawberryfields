@@ -1815,8 +1815,8 @@ class BipartiteGraphEmbed(Decomposition):
     rotation gates.
 
     Args:
-        A (array): An :math:`N\times N` complex or real symmetric matrix representing
-            a bipartite graph, where the number of vertices in the two vertex sets are even.
+        A (array): an :math:`N\times N` complex or real symmetric adjacency matrix representing
+            a bipartite graph
         mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
             representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
         drop_identity (bool): If ``True``, decomposed gates with trivial parameters,
@@ -1832,6 +1832,17 @@ class BipartiteGraphEmbed(Decomposition):
         self.tol = tol
         self.identity = np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol)
         self.drop_identity = drop_identity
+
+        # check if A is a bipartite graph
+        N = A.shape[0]//2
+        A00 = A[:N, :N]
+        A11 = A[N:, N:]
+
+        diag_zeros = np.allclose(A00, np.zeros_like(A00), atol=tol, rtol=0)
+        diag_zeros = diag_zeros and np.allclose(A11, np.zeros_like(A11), atol=tol, rtol=0)
+
+        if (not diag_zeros) or (not np.allclose(A, A.T, atol=tol, rtol=0)):
+            raise ValueError("Adjacency matrix {} does not represent a bipartite graph".format(A))
 
     def _decompose(self, reg, **kwargs):
         mean_photon = kwargs.get("mean_photon", self.mean_photon)
