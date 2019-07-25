@@ -352,6 +352,39 @@ class TestResourceManager:
         for field in mock_resource.fields:
             field.set.assert_called_once_with(mock_data[field.name])
 
+    def test_debug_mode(self, monkeypatch):
+        """
+        Tests that the client object keeps track of responses and errors when debug mode is enabled.
+        """
+        class MockException(Exception):
+            """
+            A mock exception to ensure that the exception raised is the expected one.
+            """
+            pass
+
+        def mock_raise(exception):
+            raise exception
+
+        mock_get_response = MockGETResponse(200)
+
+        monkeypatch.setattr(requests, "get", lambda url, headers: mock_get_response)
+        monkeypatch.setattr(requests, "post", lambda url, headers, data: mock_raise(MockException))
+
+        client = api_client.APIClient(debug=True)
+
+        assert client.DEBUG is True
+        assert client.errors == []
+        assert client.responses == []
+
+        client.get("")
+        assert len(client.responses) == 1
+        assert client.responses[0] == mock_get_response
+
+        with pytest.raises(MockException):
+            client.post("", {})
+
+        assert len(client.errors) == 1
+
 
 class TestJob:
     def test_create_created(self, monkeypatch):
