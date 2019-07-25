@@ -628,5 +628,21 @@ class TestGBS:
         prog = prog.compile('gbs')
         assert len(prog) == 4
         last_cmd = prog.circuit[-1]
-        assert last_cmd.op.__class__ == ops.MeasureFock
+        assert isinstance(last_cmd.op, ops.MeasureFock)
         assert [x.ind for x in last_cmd.reg] == list(range(3))
+
+    def test_GBS_measure_fock_register_order(self):
+        """Test that compilation of MeasureFock on multiple modes
+        sorts the resulting register indices in ascending order."""
+        prog = sf.Program(4)
+
+        with prog.context as q:
+            ops.S2gate(0.45) | (q[0], q[2])
+            ops.S2gate(0.45) | (q[0], q[2])
+            ops.BSgate(0.54, -0.12) | (q[0], q[1])
+            ops.MeasureFock() | (q[0], q[3], q[2], q[1])
+
+        prog = prog.compile("gbs")
+        last_cmd = prog.circuit[-1]
+        assert isinstance(last_cmd.op, ops.MeasureFock)
+        assert [x.ind for x in last_cmd.reg] == list(range(4))
