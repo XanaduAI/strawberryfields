@@ -96,5 +96,5 @@ class GBSSpecs(GaussianSpecs):
             measured |= temp
 
         # replace B with a single Fock measurement
-        B = [Command(ops.MeasureFock(), list(measured))]
+        B = [Command(ops.MeasureFock(), sorted(list(measured), key=lambda x: x.ind))]
         return super().compile(A + B, registers)
