@@ -281,6 +281,7 @@ Code details
 """
 from collections.abc import Sequence
 import copy
+import types
 import sys
 import warnings
 
@@ -1810,39 +1811,62 @@ class GraphEmbed(Decomposition):
 class BipartiteGraphEmbed(Decomposition):
     r"""Embed a bipartite graph into an interferometer setup.
 
+    A bipartite graph is a graph that consists of two vertex sets :math:`U` and :math:`V`,
+    such that every edge in the graph connects a vertex between :math:`U` and :math:`V`.
+    That is, there are no edges between vertices in the same vertex set.
+
+    The adjacency matrix of an :math:`N` vertex undirected bipartite graph
+    is a :math:`N\times N` symmetric matrix of the form
+
+    .. math:: A = \begin{bmatrix}0 & B \\ B^T & 0\end{bmatrix}
+
+    where :math:`B` is a :math:N/2\times N/2` matrix representing the (weighted)
+    edges between the vertex set.
+
     This operation uses the Takagi decomposition to decompose
     an adjacency matrix into a sequence of two mode squeezers, beamsplitters, and
     rotation gates.
 
     Args:
-        A (array): an :math:`N\times N` complex or real symmetric adjacency matrix representing
-            a bipartite graph
+        A (array): Either an :math:`N\times N` complex or real symmetric adjacency matrix
+            :math:`A`, or an :math:`N/2\times N/2` complex or real matrix :math:`B`
+            representing the edges between the vertex sets if ``edges=True``.
         mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
             representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
+        edges (bool): set to ``True`` if argument ``A`` represents the edges :math:`B`
+            between the vertex sets rather than the full adjacency matrix
         drop_identity (bool): If ``True``, decomposed gates with trivial parameters,
             such that they correspond to an identity operation, are removed.
         tol (float): the tolerance used when checking if the input matrix is symmetric:
             :math:`|A-A^T| <` tol
     """
 
-    def __init__(self, A, mean_photon=1.0, drop_identity=True, tol=1e-6):
-        super().__init__([A])
-        self.ns = A.shape[0]
+    def __init__(self, A, mean_photon=1.0, edges=False, drop_identity=True, tol=1e-6):
         self.mean_photon = mean_photon
         self.tol = tol
         self.identity = np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol)
         self.drop_identity = drop_identity
 
-        # check if A is a bipartite graph
-        N = A.shape[0]//2
-        A00 = A[:N, :N]
-        A11 = A[N:, N:]
+        if edges:
+            self.ns = 2*A.shape[0]
+            B = A
+        else:
+            self.ns = A.shape[0]
 
-        diag_zeros = np.allclose(A00, np.zeros_like(A00), atol=tol, rtol=0)
-        diag_zeros = diag_zeros and np.allclose(A11, np.zeros_like(A11), atol=tol, rtol=0)
+            # check if A is a bipartite graph
+            N = A.shape[0]//2
+            A00 = A[:N, :N]
+            A11 = A[N:, N:]
 
-        if (not diag_zeros) or (not np.allclose(A, A.T, atol=tol, rtol=0)):
-            raise ValueError("Adjacency matrix {} does not represent a bipartite graph".format(A))
+            diag_zeros = np.allclose(A00, np.zeros_like(A00), atol=tol, rtol=0)
+            diag_zeros = diag_zeros and np.allclose(A11, np.zeros_like(A11), atol=tol, rtol=0)
+
+            if (not diag_zeros) or (not np.allclose(A, A.T, atol=tol, rtol=0)):
+                raise ValueError("Adjacency matrix {} does not represent a bipartite graph".format(A))
+
+            B = A[:N, N:]
+
+        super().__init__([B])
 
     def _decompose(self, reg, **kwargs):
         mean_photon = kwargs.get("mean_photon", self.mean_photon)
@@ -1852,10 +1876,10 @@ class BipartiteGraphEmbed(Decomposition):
 
         cmds = []
 
-        A = self.p[0].x
-        N = len(A)//2
+        B = self.p[0].x
+        N = len(B)
 
-        sq, U, V = dec.bipartite_graph_embed(A[:N, N:], mean_photon_per_mode=mean_photon, atol=tol, rtol=0)
+        sq, U, V = dec.bipartite_graph_embed(B, mean_photon_per_mode=mean_photon, atol=tol, rtol=0)
 
         if not self.identity or not drop_identity:
             for m, s in enumerate(sq):
@@ -2095,8 +2119,35 @@ RR = RegRefTransform
 shorthands = ['New', 'Del', 'Vac', 'Measure', 'MeasureX', 'MeasureP', 'MeasureHD', 'Fourier', 'RR',
               'All']
 
+#=======================================================================
+# here we list different classes of operations for unit testing purposes
 
-class Wrapper:
+zero_args_gates = (Fouriergate,)
+one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate,
+                  Kgate, CXgate, CZgate, CKgate)
+two_args_gates = (Dgate, Sgate, BSgate, MZgate, S2gate)
+gates = zero_args_gates + one_args_gates + two_args_gates
+
+channels = (LossChannel, ThermalLossChannel)
+
+simple_state_preparations = (Vacuum, Coherent, Squeezed, DisplacedSqueezed, Fock, Catstate, Thermal)  # have __init__ methods with default arguments
+state_preparations = simple_state_preparations + (Ket, DensityMatrix)
+
+measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne)
+
+decompositions = (Interferometer, GraphEmbed, GaussianTransform, Gaussian)
+
+#=======================================================================
+# exported symbols
+
+__all__ = [cls.__name__ for cls in gates + channels + state_preparations + measurements + decompositions] + shorthands
+
+
+#=======================================================================
+# Module wrapper for deprecating shorthands
+
+
+class Wrapper(types.ModuleType):
     """Wrapper class to modify the module level
     attribute lookup.
 
@@ -2116,6 +2167,8 @@ class Wrapper:
 
     def __init__(self, mod):
         self.mod = mod
+        self.__dict__.update(mod.__dict__)
+        super().__init__("strawberryfields.ops", doc=sys.modules[__name__].__doc__)
 
     def __getattr__(self, name):
         if name in self.deprecation_map:
@@ -2128,29 +2181,8 @@ class Wrapper:
 
         return getattr(self.mod, name)
 
+    def __dir__(self):
+        return __all__
 
 
 sys.modules[__name__] = Wrapper(sys.modules[__name__])
-
-#=======================================================================
-# here we list different classes of operations for unit testing purposes
-
-zero_args_gates = (Fouriergate,)
-one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate,
-                  Kgate, CXgate, CZgate, CKgate)
-two_args_gates = (Dgate, Sgate, BSgate, MZgate, S2gate)
-gates = zero_args_gates + one_args_gates + two_args_gates
-
-channels = (LossChannel, ThermalLossChannel)
-
-simple_state_preparations = (Vacuum, Coherent, Squeezed, DisplacedSqueezed, Fock, Catstate, Thermal)  # have __init__ methods with default arguments
-state_preparations = simple_state_preparations + (Ket, DensityMatrix)
-
-measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne)
-
-decompositions = (Interferometer, GraphEmbed, BipartiteGraphEmbed, GaussianTransform, Gaussian)
-
-#=======================================================================
-# exported symbols
-
-__all__ = [cls.__name__ for cls in gates + channels + state_preparations + measurements + decompositions] + shorthands
