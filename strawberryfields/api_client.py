@@ -14,7 +14,7 @@
 
 """
 APIClient library
-================
+=================
 
 **Module name:** :mod:`strawberryfields.api_client`
 
