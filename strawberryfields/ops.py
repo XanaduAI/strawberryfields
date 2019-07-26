@@ -281,6 +281,7 @@ Code details
 
 from collections.abc import Sequence
 import copy
+import types
 import sys
 import warnings
 
@@ -2026,43 +2027,6 @@ RR = RegRefTransform
 shorthands = ['New', 'Del', 'Vac', 'Measure', 'MeasureX', 'MeasureP', 'MeasureHD', 'Fourier', 'RR',
               'All']
 
-
-class Wrapper:
-    """Wrapper class to modify the module level
-    attribute lookup.
-
-    This allows module attributes to be deprecated.
-
-    Current list of deprecated attributes:
-
-    * ``Measure``: instead use ``MeasureFock``
-
-    .. note::
-
-        With Python 3.7+, there is new support for a module-level
-        ``__getattr__`` function, which should enable this functionality
-        without needing to modify ``sys.modules``.
-    """
-    deprecation_map = {"Measure": "MeasureFock"}
-
-    def __init__(self, mod):
-        self.mod = mod
-
-    def __getattr__(self, name):
-        if name in self.deprecation_map:
-            new_name = self.deprecation_map[name]
-
-            warnings.warn("The shorthand '{}' has been deprecated, "
-                          "please use '{}()' instead.".format(name, new_name))
-
-            return getattr(self.mod, new_name)()
-
-        return getattr(self.mod, name)
-
-
-
-sys.modules[__name__] = Wrapper(sys.modules[__name__])
-
 #=======================================================================
 # here we list different classes of operations for unit testing purposes
 
@@ -2085,3 +2049,48 @@ decompositions = (Interferometer, GraphEmbed, GaussianTransform, Gaussian)
 # exported symbols
 
 __all__ = [cls.__name__ for cls in gates + channels + state_preparations + measurements + decompositions] + shorthands
+
+
+#=======================================================================
+# Module wrapper for deprecating shorthands
+
+
+class Wrapper(types.ModuleType):
+    """Wrapper class to modify the module level
+    attribute lookup.
+
+    This allows module attributes to be deprecated.
+
+    Current list of deprecated attributes:
+
+    * ``Measure``: instead use ``MeasureFock``
+
+    .. note::
+
+        With Python 3.7+, there is new support for a module-level
+        ``__getattr__`` function, which should enable this functionality
+        without needing to modify ``sys.modules``.
+    """
+    deprecation_map = {"Measure": "MeasureFock"}
+
+    def __init__(self, mod):
+        self.mod = mod
+        self.__dict__.update(mod.__dict__)
+        super().__init__("strawberryfields.ops", doc=sys.modules[__name__].__doc__)
+
+    def __getattr__(self, name):
+        if name in self.deprecation_map:
+            new_name = self.deprecation_map[name]
+
+            warnings.warn("The shorthand '{}' has been deprecated, "
+                          "please use '{}()' instead.".format(name, new_name))
+
+            return getattr(self.mod, new_name)()
+
+        return getattr(self.mod, name)
+
+    def __dir__(self):
+        return __all__
+
+
+sys.modules[__name__] = Wrapper(sys.modules[__name__])
