@@ -197,6 +197,47 @@ def graph_embed(A, mean_photon_per_mode=1.0, make_traceless=False, rtol=1e-05, a
     return vals, U
 
 
+def bipartite_graph_embed(A, mean_photon_per_mode=1.0, rtol=1e-05, atol=1e-08):
+    r"""Embed a bipartite graph into a Gaussian state.
+
+    Given a bipartite graph in terms of an adjacency matrix
+    (in general with arbitrary complex entries),
+    returns the two-mode squeezing parameters and interferometers necessary for
+    creating the Gaussian state that encodes such adjacency matrix
+
+    Uses :func:`takagi`.
+
+    Args:
+        A (array[complex]): square, (weighted) adjacency matrix of the bipartite graph
+        mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state
+            representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
+        rtol (float): relative tolerance used when checking if the input matrix is symmetric
+        atol (float): absolute tolerance used when checking if the input matrix is symmetric
+
+    Returns:
+        tuple[array, array, array]: squeezing parameters of the input
+        state to the interferometer, and the unitaries matrix representing the interferometer
+    """
+    (m, n) = A.shape
+
+    if m != n:
+        raise ValueError("The matrix is not square.")
+
+    B = np.block([[0 * A, A], [A.T, 0 * A]])
+    scale = find_scaling_adjacency_matrix(B, 2 * n * mean_photon_per_mode)
+    A = scale * A
+
+    if np.allclose(A, A.T, rtol=rtol, atol=atol):
+        s, u = takagi(A, tol=atol)
+        v = u
+    else:
+        u, s, v = np.linalg.svd(A)
+        v = v.T
+
+    vals = -np.arctanh(s)
+    return vals, u, v
+
+
 def T(m, n, theta, phi, nmax):
     r"""The Clements T matrix from Eq. 1 of the paper"""
     mat = np.identity(nmax, dtype=np.complex128)
