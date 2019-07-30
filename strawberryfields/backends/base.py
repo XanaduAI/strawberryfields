@@ -507,7 +507,7 @@ class BaseBackend:
         raise NotImplementedError
 
     def measure_threshold(self, modes, shots=1, select=None, **kwargs):
-        """Measure the given modes in the thresholded Fock basis, i.e., 0 or non zero photons).
+        """Measure the given modes in the thresholded Fock basis, i.e., zero or nonzero photons).
 
         ..note::
           When :code:``shots == 1``, updates the current system state to the conditional state of that

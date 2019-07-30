@@ -1055,7 +1055,7 @@ class MeasureFock(Measurement):
 
 class MeasureThreshold(Measurement):
     """:ref:`photo_detection`: measures a set of modes in the thresholded Fock basis, i.e.
-    0 or more than 0 photons.
+    zero or nonzero photons.
 
     After measurement, the modes are reset to the vacuum state.
     """
