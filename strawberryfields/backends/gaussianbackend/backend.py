@@ -230,7 +230,7 @@ class GaussianBackend(BaseGaussian):
         cov = self.circuit.scovmatxp()
         # check we are sampling from a gaussian state with zero mean
         if not allclose(mu, zeros_like(mu)):
-            raise NotImplementedError("PNR measurement is only supported for "
+            raise NotImplementedError("Threshold measurement is only supported for "
                                       "Gaussian states with zero mean")
         x_idxs = array(modes)
         p_idxs = x_idxs + len(mu)
