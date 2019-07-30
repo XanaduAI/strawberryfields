@@ -49,7 +49,7 @@ The easiest way to execute a program using StarshipEngine is to create a Blackbi
 and place it in your current working directory. Check the :ref:`Blackbird tutorial <blackbird>` for how to create this file.
 
 For this example, consider the following Blackbird script, which represents a quantum program that matches
-exactly the gate layout of the Chip0 photonic hardware device. We will save the following file as ``test.xbb``
+exactly the gate layout of the `chip0` photonic hardware device. We will save the following file as ``test.xbb``
 in our current working directory:
 
 .. code-block:: python
@@ -62,26 +62,25 @@ in our current working directory:
    float phi0 = 0.574
    float phi1 = 1.33
 
-   # Initial states are two-mode squeezed states,
-   # applied to alternating pairs of modes.
+   # Initial states are two-mode squeezed states
    S2gate(1.0, 0.0) | [0, 2]
    S2gate(1.0, 0.0) | [1, 3]
 
-   # A standard 2x2 interferometer is applied
+   # A standard two-mode interferometer is applied
    # to the first pair of modes
    Rgate(phi0) | [0]
    BSgate(pi/4, pi/2) | [0, 1]
    Rgate(phi1) | [0]
    BSgate(pi/4, pi/2) | [0, 1]
 
-   # The 2x2 interferometer above is duplicateed
+   # The 2x2 interferometer above is duplicated
    # for the second pair of modes
    Rgate(phi0) | [2]
    BSgate(pi/4, pi/2) | [2, 3]
    Rgate(phi1) | [2]
    BSgate(pi/4, pi/2) | [2, 3]
 
-   # Perform a PNR measurement in the Fock basis
+   # Perform a photon number counting measurement
    MeasureFock() | [0, 1, 2, 3]
 
 After you have created your Blackbird script, you can execute it using the command line, or using a Python shell.
@@ -120,9 +119,10 @@ Program compilation
 ===================
 
 In addition to using the program template above, which directly matches the physical
-layout of the hardware device, you can define your interferometer using any combination
+layout of the hardware device, you can apply any two-mode interferometer to the pairs of modes.
+The interferometer can be composed of any combination
 of beamsplitters (:class:`~.ops.BSgate`), rotations/phase shifts (:class:`~.ops.Rgate`).
-Additionally, you can use the :class:`~.ops.Interferometer` command to directly pass a
+Furthermore, you can use the :class:`~.ops.Interferometer` command to directly pass a
 unitary matrix to be decomposed and compiled to match the device architecture.
 
 For example, consider the following Blackbird script:
