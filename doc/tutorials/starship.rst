@@ -62,6 +62,12 @@ in our current working directory:
    float phi0 = 0.574
    float phi1 = 1.33
 
+   # final local phases
+   float local_phase_0 = -0.543
+   float local_phase_1 = 2.43
+   float local_phase_2 = 0.11
+   float local_phase_3 = -3.21
+
    # Initial states are two-mode squeezed states
    S2gate(1.0, 0.0) | [0, 2]
    S2gate(1.0, 0.0) | [1, 3]
@@ -79,6 +85,12 @@ in our current working directory:
    BSgate(pi/4, pi/2) | [2, 3]
    Rgate(phi1) | [2]
    BSgate(pi/4, pi/2) | [2, 3]
+
+   # final local phases
+   Rgate(local_phase_0) | 0
+   Rgate(local_phase_1) | 1
+   Rgate(local_phase_2) | 2
+   Rgate(local_phase_3) | 3
 
    # Perform a photon number counting measurement
    MeasureFock() | [0, 1, 2, 3]
