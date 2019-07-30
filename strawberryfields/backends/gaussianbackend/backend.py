@@ -196,7 +196,7 @@ class GaussianBackend(BaseGaussian):
         if shots != 1:
             if select is not None:
                 raise NotImplementedError("Gaussian backend currently does not support "
-                                          "postselection if shots != 1 for Fock measurement")
+                                          "postselection")
             warnings.warn("Cannot simulate non-Gaussian states. "
                           "Conditional state after Fock measurement has not been updated.")
 
@@ -222,7 +222,7 @@ class GaussianBackend(BaseGaussian):
         if shots != 1:
             if select is not None:
                 raise NotImplementedError("Gaussian backend currently does not support "
-                                          "postselection if shots != 1 for Threshold measurement")
+                                          "postselection")
             warnings.warn("Cannot simulate non-Gaussian states. "
                           "Conditional state after Threshold measurement has not been updated.")
 
