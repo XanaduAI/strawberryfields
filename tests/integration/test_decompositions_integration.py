@@ -66,6 +66,15 @@ A = np.array(
 A -= np.trace(A) * np.identity(3) / 3
 
 
+Abp = np.array([[0, 0, 0, 0.11959425, 0.71324479, 0.76078505],
+ [0, 0, 0, 0.5612772, 0.77096718, 0.4937956],
+ [0, 0, 0, 0.52273283, 0.42754102, 0.02541913],
+ [0.11959425, 0.5612772, 0.52273283, 0, 0, 0, ],
+ [0.71324479, 0.77096718, 0.42754102, 0, 0, 0, ],
+ [0.76078505, 0.4937956, 0.02541913, 0, 0, 0, ]])
+
+
+
 @pytest.mark.backends("gaussian")
 class TestGaussianBackendDecompositions:
     """Test that the frontend decompositions work on the Gaussian backend"""
@@ -112,6 +121,63 @@ class TestGaussianBackendDecompositions:
         assert len(prog) == 1
         prog = prog.compile('gaussian')
         assert len(prog) == 0
+
+    def test_bipartite_graph_embed(self, setup_eng, tol):
+        """Test that embedding a bipartite adjacency matrix A
+        results in the property Amat/A = c J, where c is a real constant,
+        and J is the all ones matrix"""
+        N = 6
+        eng, prog = setup_eng(6)
+
+        with prog.context as q:
+            ops.BipartiteGraphEmbed(Abp) | q
+
+        state = eng.run(prog).state
+        Amat = eng.backend.circuit.Amat()
+
+        # check that the matrix Amat is constructed to be of the form
+        # Amat = [[B^\dagger, 0], [0, B]]
+        assert np.allclose(Amat[:N, :N], Amat[N:, N:].conj().T, atol=tol)
+        assert np.allclose(Amat[:N, N:], np.zeros([N, N]), atol=tol)
+        assert np.allclose(Amat[N:, :N], np.zeros([N, N]), atol=tol)
+
+        # final Amat
+        Amat = Amat[:N, :N]
+        n = N // 2
+
+        ratio = np.real_if_close(Amat[n:, :n] / Abp[n:, :n])
+        ratio /= ratio[0, 0]
+        assert np.allclose(ratio, np.ones([n, n]), atol=tol)
+
+    def test_bipartite_graph_embed_edgeset(self, setup_eng, tol):
+        """Test that embedding a bipartite edge set B
+        results in the property Amat/A = c J, where c is a real constant,
+        and J is the all ones matrix"""
+        N = 6
+        eng, prog = setup_eng(6)
+        B = Abp[:N//2, N//2:]
+        print(B)
+
+        with prog.context as q:
+            ops.BipartiteGraphEmbed(B, edges=True) | q
+
+        state = eng.run(prog).state
+        Amat = eng.backend.circuit.Amat()
+
+        # check that the matrix Amat is constructed to be of the form
+        # Amat = [[B^\dagger, 0], [0, B]]
+        assert np.allclose(Amat[:N, :N], Amat[N:, N:].conj().T, atol=tol)
+        assert np.allclose(Amat[:N, N:], np.zeros([N, N]), atol=tol)
+        assert np.allclose(Amat[N:, :N], np.zeros([N, N]), atol=tol)
+
+        # final Amat
+        Amat = Amat[:N, :N]
+        n = N // 2
+
+        ratio = np.real_if_close(Amat[n:, :n] / B.T)
+        ratio /= ratio[0, 0]
+        assert np.allclose(ratio, np.ones([n, n]), atol=tol)
+
 
     def test_passive_gaussian_transform(self, setup_eng, tol):
         """Test applying a passive Gaussian symplectic transform,

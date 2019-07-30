@@ -60,6 +60,7 @@ class FockSpecs(CircuitSpecs):
     decompositions = {
         "Interferometer": {},
         "GraphEmbed": {},
+        "BipartiteGraphEmbed": {},
         "GaussianTransform": {},
         "Gaussian": {},
         "Pgate": {},
