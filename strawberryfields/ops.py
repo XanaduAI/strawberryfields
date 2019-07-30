@@ -1823,9 +1823,8 @@ class BipartiteGraphEmbed(Decomposition):
     where :math:`B` is a :math:N/2\times N/2` matrix representing the (weighted)
     edges between the vertex set.
 
-    This operation uses the Takagi decomposition to decompose
-    an adjacency matrix into a sequence of two mode squeezers, beamsplitters, and
-    rotation gates.
+    This operation decomposes an adjacency matrix into a sequence of two
+    mode squeezers, beamsplitters, and rotation gates.
 
     Args:
         A (array): Either an :math:`N\times N` complex or real symmetric adjacency matrix
@@ -1858,8 +1857,8 @@ class BipartiteGraphEmbed(Decomposition):
             A00 = A[:N, :N]
             A11 = A[N:, N:]
 
-            diag_zeros = np.allclose(A00, np.zeros_like(A00), atol=tol, rtol=0)
-            diag_zeros = diag_zeros and np.allclose(A11, np.zeros_like(A11), atol=tol, rtol=0)
+            diag_zeros = np.allclose(A00, np.zeros_like(A00), atol=tol, rtol=0) \
+                and np.allclose(A11, np.zeros_like(A11), atol=tol, rtol=0)
 
             if (not diag_zeros) or (not np.allclose(A, A.T, atol=tol, rtol=0)):
                 raise ValueError("Adjacency matrix {} does not represent a bipartite graph".format(A))
@@ -1888,14 +1887,13 @@ class BipartiteGraphEmbed(Decomposition):
                 if not (drop_identity and s == 0):
                     cmds.append(Command(S2gate(-s), (reg[m], reg[m+N])))
 
-            U = U if not np.allclose(U, np.identity(len(U)), atol=_decomposition_tol, rtol=0) else np.identity(len(U))
-            V = V if not np.allclose(V, np.identity(len(V)), atol=_decomposition_tol, rtol=0) else np.identity(len(V))
+            for X, _reg in ((U, reg[:N]), (V, reg[N:])):
 
-            if not (drop_identity and np.all(U == np.identity(len(U)))):
-                cmds.append(Command(Interferometer(U, mesh=mesh, drop_identity=drop_identity, tol=tol), reg[:N]))
+                if np.allclose(X, np.identity(len(X)), atol=_decomposition_tol, rtol=0):
+                    X = np.identity(len(X))
 
-            if not (drop_identity and np.all(V == np.identity(len(V)))):
-                cmds.append(Command(Interferometer(V, mesh=mesh, drop_identity=drop_identity, tol=tol), reg[N:]))
+                if not (drop_identity and np.all(X == np.identity(len(X)))):
+                    cmds.append(Command(Interferometer(X, mesh=mesh, drop_identity=drop_identity, tol=tol), _reg))
 
         return cmds
 
