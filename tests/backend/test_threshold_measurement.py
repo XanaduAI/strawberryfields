@@ -26,8 +26,7 @@ class TestGaussianRepresentation:
     """Tests that make use of the Fock basis representation."""
 
     def measure_threshold_gaussian_warning(self, setup_backend):
-        """Tests that Threshold measurements are not implemented when shots != 1.
-        Should be deleted when this functionality is implemented."""
+        """Tests the warning message when MeasureThreshold is called."""
 
         backend = setup_backend(3)
 
