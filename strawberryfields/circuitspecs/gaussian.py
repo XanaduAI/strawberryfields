@@ -40,6 +40,7 @@ class GaussianSpecs(CircuitSpecs):
         "MeasureHomodyne",
         "MeasureHeterodyne",
         "MeasureFock",
+        "MeasureThreshold",
         # channels
         "LossChannel",
         "ThermalLossChannel",
