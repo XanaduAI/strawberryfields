@@ -280,7 +280,8 @@ class ResourceManager:
     This class handles all interactions with APIClient by the resource.
     """
 
-    http_status_code = None
+    http_response_data = None
+    http_response_status_code = None
     errors = None
 
     def __init__(self, resource, client=None):
@@ -345,7 +346,8 @@ class ResourceManager:
             response (requests.Response): a response object to be parsed
         """
         if hasattr(response, "status_code"):
-            self.http_status_code = response.status_code
+            self.http_response_data = response.json()
+            self.http_response_status_code = response.status_code
 
             if response.status_code in (200, 201):
                 self.handle_success_response(response)

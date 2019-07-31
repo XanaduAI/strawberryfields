@@ -263,8 +263,9 @@ class TestStarshipEngine:
 
         some_params = {"param": MagicMock()}
 
-        with pytest.raises(JobExecutionError):
+        with pytest.raises(JobExecutionError) as e:
             starship_engine._run_program(program, **some_params)
+        assert e.value.args[0] == str(mock_job.manager.http_response_data['meta'])
 
     def test__run(self, starship_engine, monkeypatch):
         """

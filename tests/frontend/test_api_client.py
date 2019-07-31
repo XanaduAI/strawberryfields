@@ -325,7 +325,8 @@ class TestResourceManager:
         monkeypatch.setattr(manager, "handle_error_response", mock_handle_error_response)
 
         manager.handle_response(mock_response)
-        assert manager.http_status_code == mock_response.status_code
+        assert manager.http_response_data == mock_response.json()
+        assert manager.http_response_status_code == mock_response.status_code
         mock_handle_error_response.assert_called_once_with(mock_response)
 
         mock_response.status_code = 200
