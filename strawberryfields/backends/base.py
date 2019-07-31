@@ -509,9 +509,10 @@ class BaseBackend:
     def measure_threshold(self, modes, shots=1, select=None, **kwargs):
         """Measure the given modes in the thresholded Fock basis, i.e., zero or nonzero photons).
 
-        ..note::
-          When :code:``shots == 1``, updates the current system state to the conditional state of that
-          measurement result. When :code:``shots > 1``, the system state is not updated.
+        .. note::
+
+            When :code:``shots == 1``, updates the current system state to the conditional state of that
+            measurement result. When :code:``shots > 1``, the system state is not updated.
 
         Args:
             modes (Sequence[int]): which modes to measure
