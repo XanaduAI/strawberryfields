@@ -43,7 +43,7 @@ info = {
     'version': version,
     'maintainer': 'Xanadu Inc.',
     'maintainer_email': 'nathan@xanadu.ai',
-    'url': 'http://xanadu.ai',
+    'url': 'https://github.com/XanaduAI/StrawberryFields',
     'license': 'Apache License 2.0',
     'packages': [
                     'strawberryfields',
@@ -67,7 +67,7 @@ info = {
 }
 
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Apache Software License",
@@ -80,6 +80,7 @@ classifiers = [
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3 :: Only',
     "Topic :: Scientific/Engineering :: Physics"
 ]
