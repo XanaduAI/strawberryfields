@@ -56,6 +56,10 @@ def to_blackbird(prog, version="1.0"):
         # set the target
         bb._target["name"] = prog.target
 
+        # set the run options
+        if prog.run_options:
+            bb._target["options"] = prog.run_options
+
     # fill in the quantum circuit
     for cmd in prog.circuit:
         op = {"kwargs": {}, "args": []}

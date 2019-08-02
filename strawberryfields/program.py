@@ -188,7 +188,7 @@ class Program:
         #: bool: if True, no more Commands can be appended to the Program
         self.locked = False
         #: str, None: for compiled Programs, the short name of the target CircuitSpecs template, otherwise None
-        self.target = None
+        self._target = None
         #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
 
@@ -523,7 +523,7 @@ class Program:
         # create the compiled Program
         compiled = self._linked_copy()
         compiled.circuit = seq
-        compiled.target = target
+        compiled._target = target
 
         # get run options of compiled program
         # for the moment, shots is the only supported run option.
@@ -573,3 +573,15 @@ class Program:
             document = drawer.compile_document(tex_dir=tex_dir)
 
         return [document, tex]
+
+    @property
+    def target(self):
+        """The target specification the program has been compiled against.
+
+        If the program has not been compiled, this will return ``None``.
+
+        Returns:
+            str or None: the short name of the target CircuitSpecs template if
+            compiled, otherwise None
+        """
+        return self._target
