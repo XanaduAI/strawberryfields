@@ -572,7 +572,7 @@ class Starship(BaseEngine):
 
         * The Program instance is compiled for the target backend.
         * The compiled program is sent as a job to the Starship
-        * The measurement results of each subsystem (if any) are stored in the :attr:`~.samples`.
+        * The measurement results of each subsystem (if any) are stored in the :attr:`~.BaseEngine.samples`.
         * The compiled program is appended to self.run_progs.
         * The queued or completed jobs are appended to self.jobs.
 

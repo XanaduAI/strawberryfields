@@ -208,6 +208,7 @@ Decompositions
 .. autosummary::
     Interferometer
     GraphEmbed
+    BipartiteGraphEmbed
     GaussianTransform
     Gaussian
 
@@ -278,9 +279,9 @@ Code details
 ~~~~~~~~~~~~
 
 """
-
 from collections.abc import Sequence
 import copy
+import types
 import sys
 import warnings
 
@@ -1770,7 +1771,7 @@ class GraphEmbed(Decomposition):
 
     Args:
         A (array): an :math:`N\times N` complex or real symmetric matrix
-        mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state
+        mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
             representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
         make_traceless (boolean): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
@@ -1780,7 +1781,7 @@ class GraphEmbed(Decomposition):
             :math:`|A-A^T| <` tol
     """
 
-    def __init__(self, A, mean_photon_per_mode=1.0, make_traceless=False, tol=1e-6):
+    def __init__(self, A, mean_photon=1.0, make_traceless=False, tol=1e-6):
         super().__init__([A])
         self.ns = A.shape[0]
 
@@ -1789,7 +1790,7 @@ class GraphEmbed(Decomposition):
         else:
             self.identity = False
             self.sq, self.U = dec.graph_embed(
-                A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=make_traceless, atol=tol, rtol=0
+                A, mean_photon_per_mode=mean_photon, make_traceless=make_traceless, atol=tol, rtol=0
             )
 
     def _decompose(self, reg, **kwargs):
@@ -1803,6 +1804,96 @@ class GraphEmbed(Decomposition):
             if not np.allclose(self.U, np.identity(len(self.U)), atol=_decomposition_tol, rtol=0):
                 mesh = kwargs.get("mesh", "rectangular")
                 cmds.append(Command(Interferometer(self.U, mesh=mesh), reg))
+
+        return cmds
+
+
+class BipartiteGraphEmbed(Decomposition):
+    r"""Embed a bipartite graph into an interferometer setup.
+
+    A bipartite graph is a graph that consists of two vertex sets :math:`U` and :math:`V`,
+    such that every edge in the graph connects a vertex between :math:`U` and :math:`V`.
+    That is, there are no edges between vertices in the same vertex set.
+
+    The adjacency matrix of an :math:`N` vertex undirected bipartite graph
+    is a :math:`N\times N` symmetric matrix of the form
+
+    .. math:: A = \begin{bmatrix}0 & B \\ B^T & 0\end{bmatrix}
+
+    where :math:`B` is a :math:N/2\times N/2` matrix representing the (weighted)
+    edges between the vertex set.
+
+    This operation decomposes an adjacency matrix into a sequence of two
+    mode squeezers, beamsplitters, and rotation gates.
+
+    Args:
+        A (array): Either an :math:`N\times N` complex or real symmetric adjacency matrix
+            :math:`A`, or an :math:`N/2\times N/2` complex or real matrix :math:`B`
+            representing the edges between the vertex sets if ``edges=True``.
+        mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
+            representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
+        edges (bool): set to ``True`` if argument ``A`` represents the edges :math:`B`
+            between the vertex sets rather than the full adjacency matrix
+        drop_identity (bool): If ``True``, decomposed gates with trivial parameters,
+            such that they correspond to an identity operation, are removed.
+        tol (float): the tolerance used when checking if the input matrix is symmetric:
+            :math:`|A-A^T| <` tol
+    """
+
+    def __init__(self, A, mean_photon=1.0, edges=False, drop_identity=True, tol=1e-6):
+        self.mean_photon = mean_photon
+        self.tol = tol
+        self.identity = np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol)
+        self.drop_identity = drop_identity
+
+        if edges:
+            self.ns = 2*A.shape[0]
+            B = A
+        else:
+            self.ns = A.shape[0]
+
+            # check if A is a bipartite graph
+            N = A.shape[0]//2
+            A00 = A[:N, :N]
+            A11 = A[N:, N:]
+
+            diag_zeros = np.allclose(A00, np.zeros_like(A00), atol=tol, rtol=0) \
+                and np.allclose(A11, np.zeros_like(A11), atol=tol, rtol=0)
+
+            if (not diag_zeros) or (not np.allclose(A, A.T, atol=tol, rtol=0)):
+                raise ValueError("Adjacency matrix {} does not represent a bipartite graph".format(A))
+
+            B = A[:N, N:]
+
+        super().__init__([B])
+
+    def _decompose(self, reg, **kwargs):
+        mean_photon = kwargs.get("mean_photon", self.mean_photon)
+        tol = kwargs.get("tol", self.tol)
+        mesh = kwargs.get("mesh", "rectangular")
+        drop_identity = kwargs.get("drop_identity", self.drop_identity)
+
+        cmds = []
+
+        B = self.p[0].x
+        N = len(B)
+
+        sq, U, V = dec.bipartite_graph_embed(B, mean_photon_per_mode=mean_photon, atol=tol, rtol=0)
+
+        if not self.identity or not drop_identity:
+            for m, s in enumerate(sq):
+                s = s if np.abs(s) >= _decomposition_tol else 0
+
+                if not (drop_identity and s == 0):
+                    cmds.append(Command(S2gate(-s), (reg[m], reg[m+N])))
+
+            for X, _reg in ((U, reg[:N]), (V, reg[N:])):
+
+                if np.allclose(X, np.identity(len(X)), atol=_decomposition_tol, rtol=0):
+                    X = np.identity(len(X))
+
+                if not (drop_identity and np.all(X == np.identity(len(X)))):
+                    cmds.append(Command(Interferometer(X, mesh=mesh, drop_identity=drop_identity, tol=tol), _reg))
 
         return cmds
 
@@ -2026,43 +2117,6 @@ RR = RegRefTransform
 shorthands = ['New', 'Del', 'Vac', 'Measure', 'MeasureX', 'MeasureP', 'MeasureHD', 'Fourier', 'RR',
               'All']
 
-
-class Wrapper:
-    """Wrapper class to modify the module level
-    attribute lookup.
-
-    This allows module attributes to be deprecated.
-
-    Current list of deprecated attributes:
-
-    * ``Measure``: instead use ``MeasureFock``
-
-    .. note::
-
-        With Python 3.7+, there is new support for a module-level
-        ``__getattr__`` function, which should enable this functionality
-        without needing to modify ``sys.modules``.
-    """
-    deprecation_map = {"Measure": "MeasureFock"}
-
-    def __init__(self, mod):
-        self.mod = mod
-
-    def __getattr__(self, name):
-        if name in self.deprecation_map:
-            new_name = self.deprecation_map[name]
-
-            warnings.warn("The shorthand '{}' has been deprecated, "
-                          "please use '{}()' instead.".format(name, new_name))
-
-            return getattr(self.mod, new_name)()
-
-        return getattr(self.mod, name)
-
-
-
-sys.modules[__name__] = Wrapper(sys.modules[__name__])
-
 #=======================================================================
 # here we list different classes of operations for unit testing purposes
 
@@ -2085,3 +2139,48 @@ decompositions = (Interferometer, GraphEmbed, GaussianTransform, Gaussian)
 # exported symbols
 
 __all__ = [cls.__name__ for cls in gates + channels + state_preparations + measurements + decompositions] + shorthands
+
+
+#=======================================================================
+# Module wrapper for deprecating shorthands
+
+
+class Wrapper(types.ModuleType):
+    """Wrapper class to modify the module level
+    attribute lookup.
+
+    This allows module attributes to be deprecated.
+
+    Current list of deprecated attributes:
+
+    * ``Measure``: instead use ``MeasureFock``
+
+    .. note::
+
+        With Python 3.7+, there is new support for a module-level
+        ``__getattr__`` function, which should enable this functionality
+        without needing to modify ``sys.modules``.
+    """
+    deprecation_map = {"Measure": "MeasureFock"}
+
+    def __init__(self, mod):
+        self.mod = mod
+        self.__dict__.update(mod.__dict__)
+        super().__init__("strawberryfields.ops", doc=sys.modules[__name__].__doc__)
+
+    def __getattr__(self, name):
+        if name in self.deprecation_map:
+            new_name = self.deprecation_map[name]
+
+            warnings.warn("The shorthand '{}' has been deprecated, "
+                          "please use '{}()' instead.".format(name, new_name))
+
+            return getattr(self.mod, new_name)()
+
+        return getattr(self.mod, name)
+
+    def __dir__(self):
+        return __all__
+
+
+sys.modules[__name__] = Wrapper(sys.modules[__name__])

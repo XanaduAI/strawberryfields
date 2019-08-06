@@ -56,6 +56,7 @@ class GaussianSpecs(CircuitSpecs):
     decompositions = {
         "Interferometer": {},
         "GraphEmbed": {},
+        "BipartiteGraphEmbed": {},
         "GaussianTransform": {},
         "Gaussian": {},
         "Pgate": {},

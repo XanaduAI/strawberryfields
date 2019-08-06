@@ -88,7 +88,11 @@ if __name__ == "__main__":
         except Exception as e:
             sys.stderr.write("Could not connect to server:\n{}\n".format(e))
             sys.exit(1)
-        if response.status_code in (401, 403):
+
+        if response.status_code == 200:
+            sys.stdout.write("You have successfully authenticated to the platform!\n")
+            sys.exit()
+        elif response.status_code in (401, 403):
             if not client.AUTHENTICATION_TOKEN:
                 sys.stderr.write("Could not authenticate -- no token provided\n")
             else:
@@ -97,15 +101,15 @@ if __name__ == "__main__":
                         client.AUTHENTICATION_TOKEN))
             sys.exit(1)
         else:
-            # Hack at the moment, but should check status code 200 against test endpoint
-            sys.stdout.write("You have successfully authenticated to the platform!\n")
-            sys.exit()
+            sys.stderr.write("Could not connect to server: {}, {}\n".format(
+                str(response.status_code), response.content))
+            sys.exit(1)
 
     eng = Starship()
     program = load(args.input)
     result = eng.run(program)
 
-    if result.samples is not None:
+    if result and result.samples is not None:
         if hasattr(args, "output_path"):
             with open(args.output_path, "w") as file:
                 file.write(str(result.samples))

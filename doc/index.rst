@@ -134,6 +134,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    Boson sampling & the permanent <tutorials/tutorial_boson_sampling>
    Gaussian boson sampling & the hafnian <tutorials/tutorial_gaussian_boson_sampling>
    Optimization & machine learning <tutorials/tutorial_machine_learning>
+   tutorials/starship.rst
 
 .. toctree::
    :maxdepth: 2
@@ -161,3 +162,4 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    code/backend.gaussian
    code/backend.fock
    code/backend.tf
+   code/api_client.rst

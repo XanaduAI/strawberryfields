@@ -13,6 +13,9 @@
   operations to be validated and compiled to match the topology of chip0.
   [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
 
+* `strawberryfields.ops.BipartiteGraphEmbed` quantum decomposition now added,
+  allowing a bipartite graph to be embedded on a device that allows for
+  initial two-mode squeezed states, and block diagonal unitaries.
 
 ### API Changes
 
