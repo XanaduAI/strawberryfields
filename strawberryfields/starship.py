@@ -70,10 +70,10 @@ class Starship:
         """
         Process jobs that have been put into a queue.
         """
-        for i in range(self.complete_jobs_queue.qsize()):
-            self.complete_jobs.append(self.complete_jobs.get())
+        for _ in range(self.complete_jobs_queue.qsize()):
+            self.complete_jobs.append(self.complete_jobs_queue.get())
 
-        for i in range(self.failed_jobs_queue.qsize()):
+        for _ in range(self.failed_jobs_queue.qsize()):
             self.failed_jobs.append(self.failed_jobs_queue.get())
 
     def _create_job(self, job_content):
