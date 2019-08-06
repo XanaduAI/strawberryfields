@@ -20,7 +20,7 @@ import sys
 import argparse
 import pdb
 
-from strawberryfields.engine import StarshipEngine
+from strawberryfields.engine import Starship
 from strawberryfields.api_client import APIClient
 from strawberryfields.io import load
 from strawberryfields import configuration
@@ -33,7 +33,7 @@ PROMPTS = {
 }
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="run a blackbird script on StarshipEngine")
+    parser = argparse.ArgumentParser(description="run a blackbird script on Starship")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--input", "-i", help="the xbb file to run")
     parser.add_argument(
@@ -101,7 +101,7 @@ if __name__ == "__main__":
             sys.stdout.write("You have successfully authenticated to the platform!\n")
             sys.exit()
 
-    eng = StarshipEngine()
+    eng = Starship()
     program = load(args.input)
     result = eng.run(program)
 

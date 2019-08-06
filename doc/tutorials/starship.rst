@@ -1,16 +1,16 @@
 .. _starship:
 
-Running Jobs with StarshipEngine
+Running Jobs with Starship
 ################################
 
 .. sectionauthor:: Zeid Zabaneh <zeid@xanadu.ai>
 
-In this section, we provide a tutorial of the **StarshipEngine**, an engine used to connect to the Xanadu cloud platform and execute jobs remotely (e.g., on a quantum chip).
+In this section, we provide a tutorial of the **Starship**, an engine used to connect to the Xanadu cloud platform and execute jobs remotely (e.g., on a quantum chip).
 
-Configuring StarshipEngine
+Configuring Starship
 ==========================
 
-Before using StarshipEngine, you need to configure the hostname and authentication token that will provide you access to the API. The easiest way is to create a configuration file named ``config.toml`` in your working directory. A typical file looks like this:
+Before using Starship, you need to configure the hostname and authentication token that will provide you access to the API. The easiest way is to create a configuration file named ``config.toml`` in your working directory. A typical file looks like this:
 
 .. code-block:: console
 
@@ -39,7 +39,7 @@ To test connectivity, you can use the following command:
 
 Executing your first program
 ============================
-The easiest way to execute a program using StarshipEngine is to create a blackbird script (an ``xbb`` file) and place it in your current working directory. Check the :ref:`blackbird tutorial <tutorial>` for how to create this file.
+The easiest way to execute a program using Starship is to create a blackbird script (an ``xbb`` file) and place it in your current working directory. Check the :ref:`blackbird tutorial <tutorial>` for how to create this file.
 
 For this example, we will use the following file and save it to ``test.xbb`` in our current working directory:
 
@@ -81,10 +81,10 @@ To execute this file using Python, you can use a code block like this:
 
 .. code-block:: python3
 
-   from strawberryfields import StarshipEngine
+   from strawberryfields import Starship
    from strawberryfields.io import load
 
-   eng = StarshipEngine()
+   eng = Starship()
    prog = load("test.xbb")
    result = eng.run(prog)
    print(result.samples)

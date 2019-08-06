@@ -141,7 +141,7 @@ class APIClient:
 
     USER_AGENT = "strawberryfields-api-client/0.1"
 
-    ALLOWED_HOSTNAMES = ["localhost", "localhost:8080", "platform.strawberryfields.ai"]
+    ALLOWED_HOSTNAMES = ["localhost", "localhost:8000", "platform.strawberryfields.ai"]
 
     DEFAULT_HOSTNAME = "localhost"
 
@@ -158,7 +158,7 @@ class APIClient:
             raise ValueError("hostname parameter is missing")
 
         if self._config["hostname"] not in self.ALLOWED_HOSTNAMES:
-            raise ValueError("hostname parameter not in allowed list")
+            raise ValueError("hostname {} not in allowed list".format(self._config["hostname"]))
 
         self.USE_SSL = self._config["use_ssl"]
         if not self.USE_SSL:
@@ -430,7 +430,7 @@ class Resource:
         if self.id:
             self.manager.get(self.id.value)
         else:
-            warnings.warn("Could not reload resource data", UserWarning)
+            raise Exception("Tried to reload a nonexisting resource")
 
 
 class Field:
@@ -510,6 +510,10 @@ class Job(Resource):
         super().__init__(client=client)
 
     @property
+    def is_processing(self):
+        return self.status.value and self.status.value.upper() not in ("COMPLETE", "FAILED")
+
+    @property
     def is_complete(self):
         """
         Returns True if the job status is "COMPLETE". Case insensitive. Returns False otherwise.
@@ -549,7 +553,9 @@ class JobResult(Resource):
         Args:
             job_id (int): The ID of the Job object corresponding to the JobResult object.
         """
-        self.fields = (Field("result", json.loads),)
+        from strawberryfields.engine import Result
+
+        self.fields = (Field("result", Result),)
 
         self.PATH = self.PATH.format(job_id=job_id)
         super().__init__(client=client)

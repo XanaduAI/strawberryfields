@@ -434,7 +434,7 @@ class LocalEngine(BaseEngine):
         return result
 
 
-class StarshipEngine(BaseEngine):
+class Starship(BaseEngine):
     """
     Starship quantum program executor engine.
 
