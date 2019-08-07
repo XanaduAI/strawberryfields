@@ -30,7 +30,8 @@ from strawberryfields.configuration import DEFAULT_CONFIG
 from strawberryfields.io import to_blackbird
 from time import sleep
 
-from multiprocessing import Process, Queue
+from queue import Queue
+from threading import Thread
 
 
 class Starship:
@@ -55,11 +56,12 @@ class Starship:
         api_client_params = {k: v for k, v in kwargs.items() if k in DEFAULT_CONFIG["api"].keys()}
         self.client = APIClient(**api_client_params)
         self.polling_delay_seconds = polling_delay_seconds
-        self.jobs = []
-        self.processes = []
+
         self.complete_jobs_queue = Queue()
         self.failed_jobs_queue = Queue()
 
+        self.jobs = []
+        self.threads = []
         self.complete_jobs = []
         self.failed_jobs = []
 
@@ -90,20 +92,6 @@ class Starship:
         job = Job(client=self.client)
         job.manager.create(circuit=job_content)
         return job
-
-    def _poll_for_job_results(self, job):
-        """
-        Regularly fetch updated job statuses from server.
-        """
-        while job.is_processing:
-            job.reload()
-            sleep(self.polling_delay_seconds)
-
-        if job.is_complete:
-            self.complete_jobs_queue.put(job)
-        else:
-            self.failed_jobs_queue.put(job)
-            raise JobExecutionError("Job execution failed. Please try again.")
 
     def _compile_program(self, program, *, compile_options=None):
         """
@@ -139,18 +127,32 @@ class Starship:
         self.jobs.append(job)
         return job
 
+    def _poll_for_job_results(self, job):
+        """
+        Regularly fetch updated job statuses from server.
+        """
+        while job.is_processing:
+            job.reload()
+            sleep(self.polling_delay_seconds)
+
+        if job.is_complete:
+            self.complete_jobs_queue.put(job)
+        else:
+            self.failed_jobs_queue.put(job)
+            raise JobExecutionError("Job execution failed. Please try again.")
+
     def _process_job(self, job, asynchronous=False):
         """
-        Given a particular Job instance, creates a polling process and adds it to the queue.
+        Given a particular Job instance, creates a polling thread and adds it to the queue.
         """
 
         # TODO: when batching support is added, this will no longer be necessary
-        process = Process(target=self._poll_for_job_results, args=(job,))
-        process.start()
-        self.processes.append(process)
+        thread = Thread(target=self._poll_for_job_results, args=(job,))
+        thread.start()
+        self.threads.append(thread)
         if not asynchronous:
-            process.join()
-        return process
+            thread.join()
+        return thread
 
     def run(self, program, *, compile_options=None, **kwargs):
         """
