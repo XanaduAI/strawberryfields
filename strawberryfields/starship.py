@@ -131,6 +131,10 @@ class Starship:
         """
         Regularly fetch updated job statuses from server.
         """
+
+        # TODO: this should be rewritten to query a single endpoint
+        # that polls for a batch (or multiple jobs by ID)
+
         while job.is_processing:
             job.reload()
             sleep(self.polling_delay_seconds)
@@ -147,6 +151,9 @@ class Starship:
         """
 
         # TODO: when batching support is added, this will no longer be necessary
+        # but instead, starship itself will continuously poll an endpoint if needed
+        # to get latest job data (via a single thread)
+
         thread = Thread(target=self._poll_for_job_results, args=(job,))
         thread.start()
         self.threads.append(thread)

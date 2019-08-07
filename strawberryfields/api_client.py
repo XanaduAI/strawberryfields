@@ -62,6 +62,9 @@ A typical use looks like this:
 
         job.result.reload()  # Reloads the JobResult object from the API
 
+        job.result.result.value  # Returns the raw value of the result field in the result response
+        job.result.result.cleaned_value  # Returns a populated :class:`~.Result` instance
+
         job.manager.get(1536)  # Fetches job 1536 from the server and updates the instance
 
 Classes
