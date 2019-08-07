@@ -51,6 +51,11 @@ EXPECTED_CONFIG = {
 }
 
 
+def teardown_module():
+    config = conf.Configuration()
+    config.api["hostname"] = "localhost"
+
+
 class TestConfiguration:
     """Tests for the configuration class"""
 
