@@ -30,7 +30,7 @@ from numpy import (
     ix_,
 )
 from numpy.linalg import inv
-from hafnian.samples import hafnian_sample_state, torontonian_sample_state
+from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.shared_ops import changebasis

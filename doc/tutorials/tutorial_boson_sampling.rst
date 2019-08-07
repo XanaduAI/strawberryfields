@@ -180,9 +180,9 @@ For this example, we'll consider the output state :math:`\ket{2,0,0,1}`. Extract
 >>> probs[2,0,0,1]
 0.10644192724642336
 
-Before we can calculate the right hand side of equation, we need a method of calculating the permanent. Since the permanent is classically hard to compute, it is not provided in either NumPy *or* SciPy, so we will use `hafnian <https://hafnian.readthedocs.io>`_ package, installed alongside Strawberry Fields:
+Before we can calculate the right hand side of equation, we need a method of calculating the permanent. Since the permanent is classically hard to compute, it is not provided in either NumPy *or* SciPy, so we will use `The Walrus <https://the-walrus.readthedocs.io>`_ library, installed alongside Strawberry Fields:
 
->>> from hafnian import perm
+>>> from thewalrus import perm
 
 Finally, how do we determine the submatrix :math:`U_{st}`? This isn't too hard :cite:`tillmann2013`; first, we calculate the submatrix :math:`U_s` by taking :math:`m_k` copies of the :math:`k\text{th}` **columns** of :math:`U`, where :math:`m_k` is the photon number of the :math:`k\text{th}` input state.
 
