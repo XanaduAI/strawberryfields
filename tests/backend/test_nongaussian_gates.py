@@ -18,13 +18,53 @@ import pytest
 
 import numpy as np
 
+from scipy.linalg import expm
+
 KAPPAS = np.linspace(0, 2 * np.pi, 7)
+GAMMAS = np.linspace(0, 2 * np.pi, 7)
 
 
 @pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
 
+    @pytest.mark.parametrize("gamma", GAMMAS)
+    def test_cubic_phase(self, setup_backend, gamma, cutoff, tol):
+        """Tests if the Cubic phase gate has the right effect on states in the Fock basis"""
+
+        backend = setup_backend(1)
+
+        backend.prepare_ket_state(np.ones([cutoff]) / cutoff, 0)
+        backend.cubic_phase(gamma, 0)
+        s = backend.state()
+        if s.is_pure:
+            numer_state = s.ket()
+        else:
+            numer_state = s.dm()
+            
+        #Create annihilation operator matrix
+        ladder_vals = np.arange(1, cutoff)
+        ladder_vals = np.sqrt(ladder_vals)
+        a = np.zeros([cutoff, cutoff])
+        np.fill_diagonal(a[:,1:], ladder_vals)
+        
+        #Construct x matrix and it's third power
+        x = (a + np.transpose(a))/np.sqrt(2)
+        x3 = np.matmul(x, np.matmul(x,x))
+        
+        gate = expm(1j * gamma * x3 / 3)
+        
+        #state to be transformed
+        ket1 = np.array([1.0 for n in range(cutoff)])
+        ket1 /= np.linalg.norm(ket1)
+        ket1 = ket1.reshape(-1,1)
+        
+        ref_state = np.matmul(gate, ket)
+        
+        assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)
+        
+        
+    
     @pytest.mark.parametrize("kappa", KAPPAS)
     def test_kerr_interaction(self, setup_backend, kappa, cutoff, tol):
         """Tests if the Kerr interaction has the right effect on states in the Fock basis"""
