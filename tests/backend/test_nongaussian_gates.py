@@ -31,7 +31,7 @@ class TestFockRepresentation:
 """
     @pytest.mark.parametrize("gamma", GAMMAS)
     def test_cubic_phase(self, setup_backend, gamma, cutoff, tol):
-        """Tests if the Cubic phase gate has the right effect on states in the Fock basis"""
+        #Tests if the Cubic phase gate has the right effect on states in the Fock basis
 
         backend = setup_backend(1)
 
