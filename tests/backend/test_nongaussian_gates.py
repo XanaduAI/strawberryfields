@@ -62,6 +62,7 @@ class TestFockRepresentation:
         ref_state = np.matmul(gate, ket)
 
         print(ref_state)
+        print(numer_state)
 
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)
 
