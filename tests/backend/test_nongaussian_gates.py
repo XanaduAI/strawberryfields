@@ -44,6 +44,10 @@ class TestFockRepresentation:
         else:
             numer_state = s.dm()
         ref_state = np.exp(1j * kappa * np.arange(cutoff) ** 2) / cutoff
+
+        print(ref_state)
+        print(numer_state)
+
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)
 
     @pytest.mark.parametrize("kappa", KAPPAS)
