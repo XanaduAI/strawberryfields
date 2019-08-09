@@ -28,6 +28,7 @@ GAMMAS = np.linspace(0, 2 * np.pi, 7)
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
 
+"""
     @pytest.mark.parametrize("gamma", GAMMAS)
     def test_cubic_phase(self, setup_backend, gamma, cutoff, tol):
         """Tests if the Cubic phase gate has the right effect on states in the Fock basis"""
@@ -66,7 +67,7 @@ class TestFockRepresentation:
 
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)
 
-
+"""
 
     @pytest.mark.parametrize("kappa", KAPPAS)
     def test_kerr_interaction(self, setup_backend, kappa, cutoff, tol):
