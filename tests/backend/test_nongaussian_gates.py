@@ -30,11 +30,11 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("gamma", GAMMAS)
     def test_cubic_phase(self, setup_backend, gamma, cutoff, tol):
-        #Tests if the Cubic phase gate has the right effect on states in the Fock basis
+        """Tests if the Cubic phase gate has the right effect on states in the Fock basis"""
 
         backend = setup_backend(1)
 
-        backend.prepare_ket_state(np.ones([cutoff]) / cutoff, 0)
+        backend.prepare_ket_state(np.ones([cutoff]) / np.sqrt(cutoff), 0)
         backend.cubic_phase(gamma, 0)
         s = backend.state()
         if s.is_pure:
@@ -48,24 +48,19 @@ class TestFockRepresentation:
         a = np.zeros([cutoff, cutoff])
         np.fill_diagonal(a[:,1:], ladder_vals)
 
-        #Construct x matrix and it's third power
-        x = (a + np.transpose(a))/np.sqrt(2)
+        #Construct (unnormalized) x matrix, ie a+a^dag, and it's third power
+        x = a + np.transpose(a)
         x3 = np.matmul(x, np.matmul(x,x))
 
-        gate = expm(1j * gamma * x3 / 3)
+        gate = expm(1j * gamma * x3 / 6)
 
         #state to be transformed
         ket1 = np.array([1.0 for n in range(cutoff)])
         ket1 /= np.linalg.norm(ket1)
         ket = ket1.reshape(-1,1)
 
-        ref_state = np.matmul(gate, ket)
-
-        print(ref_state)
-        print(numer_state)
-
+        ref_state = np.matmul(gate, ket).flatten()
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)
-
 
     @pytest.mark.parametrize("kappa", KAPPAS)
     def test_kerr_interaction(self, setup_backend, kappa, cutoff, tol):
