@@ -79,7 +79,7 @@ class TestRepresentationIndependent:
             meas_results = backend.measure_threshold(meas_modes)
 
             for i in range(num_modes):
-                assert meas_results[i] == 0 or meas_results[i] ==1
+                assert meas_results[i] == 0 or meas_results[i] == 1
 
 
 
