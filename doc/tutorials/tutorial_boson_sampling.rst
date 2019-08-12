@@ -180,7 +180,7 @@ For this example, we'll consider the output state :math:`\ket{2,0,0,1}`. Extract
 >>> probs[2,0,0,1]
 0.10644192724642336
 
-Before we can calculate the right hand side of equation, we need a method of calculating the permanent. Since the permanent is classically hard to compute, it is not provided in either NumPy *or* SciPy, so we will use `The Walrus <https://the-walrus.readthedocs.io>`_ library, installed alongside Strawberry Fields:
+Before we can calculate the right-hand-side of the equation, we need a method of calculating the permanent. Since the permanent is classically hard to compute, it is not provided in either NumPy *or* SciPy, so we will use `The Walrus <https://the-walrus.readthedocs.io>`_ library, installed alongside Strawberry Fields:
 
 >>> from thewalrus import perm
 
