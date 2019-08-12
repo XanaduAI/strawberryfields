@@ -46,18 +46,18 @@ class TestFockRepresentation:
         ladder_vals = np.arange(1, cutoff)
         ladder_vals = np.sqrt(ladder_vals)
         a = np.zeros([cutoff, cutoff])
-        np.fill_diagonal(a[:,1:], ladder_vals)
+        np.fill_diagonal(a[:, 1:], ladder_vals)
 
         #Construct (unnormalized) x matrix, ie a+a^dag, and it's third power
         x = a + np.transpose(a)
-        x3 = np.matmul(x, np.matmul(x,x))
+        x3 = np.matmul(x, np.matmul(x, x))
 
         gate = expm(1j * gamma * x3 / 6)
 
         #state to be transformed
         ket1 = np.array([1.0 for n in range(cutoff)])
         ket1 /= np.linalg.norm(ket1)
-        ket = ket1.reshape(-1,1)
+        ket = ket1.reshape(-1, 1)
 
         ref_state = np.matmul(gate, ket).flatten()
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)
