@@ -23,7 +23,6 @@ from scipy.linalg import expm
 KAPPAS = np.linspace(0, 2 * np.pi, 7)
 GAMMAS = np.linspace(0, 2 * np.pi, 7)
 
-
 @pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
     """Tests that make use of the Fock basis representation."""
