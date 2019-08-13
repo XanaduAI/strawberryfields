@@ -54,7 +54,7 @@ class TestFockRepresentation:
         gate = expm(1j * gamma * x3 / 6)
 
         #state to be transformed
-        ket1 = np.array([1.0 for n in range(cutoff)])
+        ket1 = np.ones([cutoff])
         ket1 /= np.linalg.norm(ket1)
         ket = ket1.reshape(-1, 1)
 
