@@ -322,6 +322,7 @@ class LocalEngine(BaseEngine):
         backend (str, BaseBackend): short name of the backend, or a pre-constructed backend instance
         backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
+
     def __init__(self, backend, *, backend_options=None):
         backend_options = backend_options or {}
         super().__init__(backend, backend_options)
@@ -415,11 +416,13 @@ class LocalEngine(BaseEngine):
 
         temp_run_options.update(run_options or {})
         temp_run_options.setdefault("shots", 1)
-        temp_run_options.setdefault('modes', None)
+        temp_run_options.setdefault("modes", None)
 
         # avoid unexpected keys being sent to Operations
         eng_run_keys = ["eval", "session", "feed_dict", "shots"]
-        eng_run_options = {key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys}
+        eng_run_options = {
+            key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys
+        }
 
         result = super()._run(program, compile_options=compile_options, **eng_run_options)
 
@@ -455,6 +458,7 @@ class StarshipEngine(BaseEngine):
         # todo: move this into backend class
         class Chip0Backend(BaseBackend):
             circuit_spec = "chip0"
+
         self.backend = Chip0Backend()
 
         api_client_params = {k: v for k, v in kwargs.items() if k in DEFAULT_CONFIG["api"].keys()}
@@ -559,8 +563,8 @@ class StarshipEngine(BaseEngine):
         self.reset()
 
         if job.is_failed:
-            # TODO: Add failure details here. Should this exception be raised elsewhere?
-            raise JobExecutionError("Job execution failed. Please try again.")
+            message = str(job.manager.http_response_data["meta"])
+            raise JobExecutionError(message)
         elif job.is_complete:
             job.result.manager.get()
             return job.result.result.value
