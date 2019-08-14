@@ -2133,7 +2133,7 @@ state_preparations = simple_state_preparations + (Ket, DensityMatrix)
 
 measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne)
 
-decompositions = (Interferometer, GraphEmbed, GaussianTransform, Gaussian)
+decompositions = (Interferometer, BipartiteGraphEmbed, GraphEmbed, GaussianTransform, Gaussian)
 
 #=======================================================================
 # exported symbols
