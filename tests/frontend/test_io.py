@@ -212,7 +212,7 @@ class TestSFToBlackbirdConversion:
         prog = Program(1)
 
         with prog.context as q:
-            ops.Measure | q[0]
+            ops.MeasureFock() | q[0]
 
         bb = io.to_blackbird(prog)
         expected = {"op": "MeasureFock", "modes": [0], "args": [], "kwargs": {}}

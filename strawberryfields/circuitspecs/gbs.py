@@ -49,10 +49,10 @@ class GBSSpecs(GaussianSpecs):
         "Sgate",
         "Rgate",
         "Fouriergate",
-        "BSgate",
+        "BSgate"
     }
 
-    def compile(self, seq):
+    def compile(self, seq, registers):
         """Try to arrange a quantum circuit into a form suitable for Gaussian boson sampling.
 
         This method checks whether the circuit can be implemented as a Gaussian boson sampling
@@ -64,6 +64,7 @@ class GBSSpecs(GaussianSpecs):
 
         Args:
             seq (Sequence[Command]): quantum circuit to modify
+            registers (Sequence[RegRefs]): quantum registers
         Returns:
             List[Command]: modified circuit
         Raises:
@@ -95,5 +96,5 @@ class GBSSpecs(GaussianSpecs):
             measured |= temp
 
         # replace B with a single Fock measurement
-        B = [Command(ops.MeasureFock(), list(measured))]
-        return super().compile(A + B)
+        B = [Command(ops.MeasureFock(), sorted(list(measured), key=lambda x: x.ind))]
+        return super().compile(A + B, registers)

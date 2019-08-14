@@ -67,10 +67,10 @@ Constructing this circuit in Strawberry Fields with :math:`n=2,~m=3`, let's perf
     eng = sf.Engine("fock", backend_options={"cutoff_dim": 6})
 
     with prog.context as q:
-        Fock(2)  | q[0]
-        Fock(3)  | q[1]
-        BSgate() | (q[0], q[1])
-        Measure  | q[0]
+        Fock(2)       | q[0]
+        Fock(3)       | q[1]
+        BSgate()      | (q[0], q[1])
+        MeasureFock() | q[0]
 
     results = eng.run(prog)
 
@@ -97,7 +97,7 @@ Executing the backend again, and this time applying the second Fock measurement:
 
     prog2 = sf.Program(2)
     with prog2.context as q:
-        Measure | q[1]
+        MeasureFock() | q[1]
 
     results = eng.run(prog2)
 
@@ -128,11 +128,9 @@ For example, we can rewrite the example above using post-selection:
         Fock(3) | q[1]
         BSgate() | (q[0], q[1])
         MeasureFock(select=0) | q[0]
-        Measure  | q[1]
+        MeasureFock() | q[1]
 
     result = eng.run(prog)
-
-.. warning:: When passing the ``select`` argument to the measurement operator, we can no longer use the shortcut, we have to use the **full name** of the measurement operator.
 
 Since we are post-selecting a measurement of 0 photons in mode ``q[0]``, we expect ``result.samples[0]`` to be ``0`` and ``result.samples[1]`` to be ``5``. Indeed,
 

@@ -60,10 +60,12 @@ class TFSpecs(CircuitSpecs):
     decompositions = {
         "Interferometer": {},
         "GraphEmbed": {},
+        "BipartiteGraphEmbed": {},
         "GaussianTransform": {},
         "Gaussian": {},
         "Pgate": {},
         "S2gate": {},
         "CXgate": {},
         "CZgate": {},
+        "MZgate": {},
     }

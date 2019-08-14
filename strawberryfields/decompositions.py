@@ -28,9 +28,10 @@ Functions
 .. autosummary::
    takagi
    graph_embed
-   clements
-   clements_phase_end
-   triangular_decomposition
+   rectangular
+   rectangular_phase_end
+   rectangular_symmetric
+   triangular
    williamson
    bloch_messiah
    covmat_to_hamil
@@ -157,7 +158,7 @@ def graph_embed(A, mean_photon_per_mode=1.0, make_traceless=False, rtol=1e-05, a
     r"""Embed a graph into a Gaussian state.
 
     Given a graph in terms of a symmetric adjacency matrix
-    (in general with arbitrary complex off-diagonal and real diagonal entries),
+    (in general with arbitrary complex entries),
     returns the squeezing parameters and interferometer necessary for
     creating the Gaussian state whose off-diagonal parts are proportional to that matrix.
 
@@ -194,6 +195,47 @@ def graph_embed(A, mean_photon_per_mode=1.0, make_traceless=False, rtol=1e-05, a
     s, U = takagi(A, tol=atol)
     vals = -np.arctanh(s)
     return vals, U
+
+
+def bipartite_graph_embed(A, mean_photon_per_mode=1.0, rtol=1e-05, atol=1e-08):
+    r"""Embed a bipartite graph into a Gaussian state.
+
+    Given a bipartite graph in terms of an adjacency matrix
+    (in general with arbitrary complex entries),
+    returns the two-mode squeezing parameters and interferometers necessary for
+    creating the Gaussian state that encodes such adjacency matrix
+
+    Uses :func:`takagi`.
+
+    Args:
+        A (array[complex]): square, (weighted) adjacency matrix of the bipartite graph
+        mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state
+            representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
+        rtol (float): relative tolerance used when checking if the input matrix is symmetric
+        atol (float): absolute tolerance used when checking if the input matrix is symmetric
+
+    Returns:
+        tuple[array, array, array]: squeezing parameters of the input
+        state to the interferometer, and the unitaries matrix representing the interferometer
+    """
+    (m, n) = A.shape
+
+    if m != n:
+        raise ValueError("The matrix is not square.")
+
+    B = np.block([[0 * A, A], [A.T, 0 * A]])
+    scale = find_scaling_adjacency_matrix(B, 2 * n * mean_photon_per_mode)
+    A = scale * A
+
+    if np.allclose(A, A.T, rtol=rtol, atol=atol):
+        s, u = takagi(A, tol=atol)
+        v = u
+    else:
+        u, s, v = np.linalg.svd(A)
+        v = v.T
+
+    vals = -np.arctanh(s)
+    return vals, u, v
 
 
 def T(m, n, theta, phi, nmax):
@@ -247,14 +289,14 @@ def nullT(n, m, U):
     return [n-1, n, thetar, phir, nmax]
 
 
-def clements(V, tol=1e-11):
-    r"""Clements decomposition of a unitary matrix, with local
+def rectangular(V, tol=1e-11):
+    r"""Rectangular decomposition of a unitary matrix, with local
     phase shifts applied between two interferometers.
 
-    See :ref:`clements` or :cite:`clements2016` for more details.
+    See :ref:`rectangular` or :cite:`clements2016` for more details.
 
     This function returns a circuit corresponding to an intermediate step in
-    Clements decomposition as described in Eq. 4 of the article. In this form,
+    the decomposition as described in Eq. 4 of the article. In this form,
     the circuit comprises some T matrices (as in Eq. 1), then phases on all modes,
     and more T matrices.
 
@@ -267,7 +309,7 @@ def clements(V, tol=1e-11):
             :math:`|VV^\dagger-I| \leq` tol
 
     Returns:
-        tuple[array]: tuple of the form ``(tilist,tlist,np.diag(localV))``
+        tuple[array]: tuple of the form ``(tilist,np.diag(localV),tlist)``
             where:
 
             * ``tilist``: list containing ``[n,m,theta,phi,n_size]`` of the Ti unitaries needed
@@ -293,11 +335,12 @@ def clements(V, tol=1e-11):
                 tlist.append(nullT(i+j+1, j, localV))
                 localV = T(*tlist[-1]) @ localV
 
-    return tilist, tlist, np.diag(localV)
+    return tilist, np.diag(localV), tlist
 
 
-def clements_phase_end(V, tol=1e-11):
-    r"""Clements decomposition of a unitary matrix.
+def rectangular_phase_end(V, tol=1e-11):
+    r"""Rectangular decomposition of a unitary matrix, with all
+    local phase shifts placed after the interferometers.
 
     See :cite:`clements2016` for more details.
 
@@ -310,13 +353,13 @@ def clements_phase_end(V, tol=1e-11):
             :math:`|VV^\dagger-I| \leq` tol
 
     Returns:
-        tuple[array]: returns a tuple of the form ``(tlist,np.diag(localV))``
+        tuple[array]: returns a tuple of the form ``(tlist, np.diag(localV), None)``
             where:
 
             * ``tlist``: list containing ``[n,m,theta,phi,n_size]`` of the T unitaries needed
             * ``localV``: Diagonal unitary matrix to be applied at the end of circuit
     """
-    tilist, tlist, diags = clements(V, tol)
+    tilist, diags, tlist = rectangular(V, tol)
     new_tlist, new_diags = tilist.copy(), diags.copy()
 
     # Push each beamsplitter through the diagonal unitary
@@ -336,7 +379,7 @@ def clements_phase_end(V, tol=1e-11):
 
         new_tlist = new_tlist + [new_i]
 
-    return (new_tlist, new_diags)
+    return new_tlist, new_diags, None
 
 
 def mach_zehnder(m, n, internal_phase, external_phase, nmax):
@@ -362,7 +405,7 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
 def rectangular_symmetric(V, tol=1e-11):
     r"""Decomposition of a unitary into an array of symmetric beamsplitters.
 
-    This decomposition starts with the output from :func:`clements_phase_end`
+    This decomposition starts with the output from :func:`rectangular_phase_end`
     and further decomposes each of the T unitaries into Mach-Zehnder
     interferometers consisting of two phase-shifters and two symmetric (50:50)
     beamsplitters.
@@ -396,7 +439,7 @@ def rectangular_symmetric(V, tol=1e-11):
     all the T unitaries of the interferometer and these unitaries are converted
     into pairs of symmetric beamsplitters with two phase shifts. The phase
     shifts at the end of the interferometer are added to the ones from the
-    diagonal unitary at the end of the interferometer obtained from :func:`~.clements_phase_end`.
+    diagonal unitary at the end of the interferometer obtained from :func:`~.rectangular_phase_end`.
 
     Args:
         V (array): unitary matrix of size n_size
@@ -404,13 +447,13 @@ def rectangular_symmetric(V, tol=1e-11):
           whether the matrix is unitary
 
     Returns:
-        tuple[array]: returns a tuple of the form ``(tlist,np.diag(localV))``
+        tuple[array]: returns a tuple of the form ``(tlist,np.diag(localV), None)``
             where:
 
             * ``tlist``: list containing ``[n,m,internal_phase,external_phase,n_size]`` of the T unitaries needed
             * ``localV``: Diagonal unitary matrix to be applied at the end of circuit
     """
-    tlist, diags = clements_phase_end(V, tol)
+    tlist, diags, _ = rectangular_phase_end(V, tol)
     new_tlist, new_diags = [], np.ones(len(diags), dtype=diags.dtype)
     for i in tlist:
         em, en = int(i[0]), int(i[1])
@@ -424,10 +467,11 @@ def rectangular_symmetric(V, tol=1e-11):
         new_diags[em], new_diags[en] = np.exp(1j*new_alpha), np.exp(1j*new_beta)
         new_tlist = new_tlist + [new_i]
     new_diags = diags * new_diags
-    return (new_tlist, new_diags)
+
+    return new_tlist, new_diags, None
 
 
-def triangular_decomposition(V, tol=1e-11):
+def triangular(V, tol=1e-11):
     r"""Triangular decomposition of a unitary matrix due to Reck et al.
 
     See :cite:`reck1994` for more details and :cite:`clements2016` for details on notation.
@@ -438,7 +482,7 @@ def triangular_decomposition(V, tol=1e-11):
             :math:`|VV^\dagger-I| \leq` tol
 
     Returns:
-        tuple[array]: returns a tuple of the form ``(tlist,np.diag(localV))``
+        tuple[array]: returns a tuple of the form ``(tlist,np.diag(localV), None)``
             where:
 
             * ``tlist``: list containing ``[n,m,theta,phi,n_size]`` of the T unitaries needed
@@ -457,7 +501,7 @@ def triangular_decomposition(V, tol=1e-11):
             tlist.append(nullT(nsize-j-1, nsize-i-2, localV))
             localV = T(*tlist[-1]) @ localV
 
-    return list(reversed(tlist)), np.diag(localV)
+    return list(reversed(tlist)), np.diag(localV), None
 
 
 def williamson(V, tol=1e-11):
@@ -564,7 +608,7 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
         rounding (int): the number of decimal places to use when rounding the singular values
 
     Returns:
-        tuple[array]: Returns the tuple ``(ut1, st1, vt1)``. ``ut1`` and ``vt1`` are symplectic unitaries,
+        tuple[array]: Returns the tuple ``(ut1, st1, vt1)``. ``ut1`` and ``vt1`` are symplectic orthogonal,
             and ``st1`` is diagonal and of the form :math:`= \text{diag}(s1,\dots,s_n, 1/s_1,\dots,1/s_n)`
             such that :math:`S = ut1  st1  v1`
     """
@@ -627,7 +671,7 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
         st1 = np.eye(2*n)
         v1 = np.eye(2*n)
 
-    return ut1, st1, v1
+    return ut1.real, st1.real, v1.real
 
 
 def covmat_to_hamil(V, tol=1e-10):  # pragma: no cover

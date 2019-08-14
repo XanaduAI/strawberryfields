@@ -16,10 +16,11 @@
 import sys
 import os
 from setuptools import setup
+
 # from sphinx.setup_command import BuildDoc
 
 with open("strawberryfields/_version.py") as f:
-	version = f.readlines()[-1].split()[-1].strip("\"'")
+    version = f.readlines()[-1].split()[-1].strip("\"'")
 
 # cmdclass = {'build_docs': BuildDoc}
 
@@ -30,7 +31,7 @@ requirements = [
     "quantum-blackbird>=0.2.0",
     "hafnian>=0.6",
     "toml",
-    "appdirs"
+    "appdirs",
 ]
 
 # extra_requirements = [
@@ -39,35 +40,34 @@ requirements = [
 # ]
 
 info = {
-    'name': 'StrawberryFields',
-    'version': version,
-    'maintainer': 'Xanadu Inc.',
-    'maintainer_email': 'nathan@xanadu.ai',
-    'url': 'http://xanadu.ai',
-    'license': 'Apache License 2.0',
-    'packages': [
-                    'strawberryfields',
-                    'strawberryfields.circuitspecs',
-                    'strawberryfields.backends',
-                    'strawberryfields.backends.tfbackend',
-                    'strawberryfields.backends.fockbackend',
-                    'strawberryfields.backends.gaussianbackend'
-                ],
-    'package_data': {'strawberryfields': ['backends/data/*']},
-    'include_package_data': True,
-    'description': 'Open source library for continuous-variable quantum computation',
-    'long_description': open('README.rst', encoding='utf-8').read(),
-    'provides': ["strawberryfields"],
-    'install_requires': requirements,
+    "name": "StrawberryFields",
+    "version": version,
+    "maintainer": "Xanadu Inc.",
+    "maintainer_email": "nathan@xanadu.ai",
+    "url": "https://github.com/XanaduAI/StrawberryFields",
+    "license": "Apache License 2.0",
+    "packages": [
+        "strawberryfields",
+        "strawberryfields.circuitspecs",
+        "strawberryfields.backends",
+        "strawberryfields.backends.tfbackend",
+        "strawberryfields.backends.fockbackend",
+        "strawberryfields.backends.gaussianbackend",
+    ],
+    "package_data": {"strawberryfields": ["backends/data/*"]},
+    "include_package_data": True,
+    "description": "Open source library for continuous-variable quantum computation",
+    "long_description": open("README.rst", encoding="utf-8").read(),
+    "provides": ["strawberryfields"],
+    "install_requires": requirements,
     # 'extras_require': extra_requirements,
-    'command_options': {
-        'build_sphinx': {
-            'version': ('setup.py', version),
-            'release': ('setup.py', version)}}
+    "command_options": {
+        "build_sphinx": {"version": ("setup.py", version), "release": ("setup.py", version)}
+    },
 }
 
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Apache Software License",
@@ -77,11 +77,12 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python",
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: 3 :: Only',
-    "Topic :: Scientific/Engineering :: Physics"
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Physics",
 ]
 
 setup(classifiers=classifiers, **(info))
