@@ -26,7 +26,7 @@ There are three basic types of parameters:
 1. Numerical parameters (bound and fixed): An immediate, immutable numerical object
    (float, complex, int, array).
    NOTE: currently implemented as-is, not encapsulated in a class. This can be changed if necessary,
-   in which case most of the functions in this module would become Parameter class methods.
+   in which case most of the top-level functions in this module would become Parameter methods.
 2. Measured parameters (bound but not fixed): Certain quantum circuits/protocols require that
    Operations can be conditioned on measurement results obtained during the execution of the
    circuit. In this case the parameter value is not known/fixed until the measurement is made
@@ -43,7 +43,7 @@ There are three basic types of parameters:
    Free parameters belong to a single :class:`Program` instance, and are constructed using the
    :meth:`Program.args` method.
 
-The Operations can accept parameters that are functions or arithmetic combinations of any number of
+The Operations can accept parameters that are functions or algebraic combinations of any number of
 these basic types of parameters, made possible by the parameters inheriting :class:`sympy.Symbol`.
 
 
@@ -76,7 +76,7 @@ The normal lifecycle of an Operation object and its associated Parameter instanc
 
 * :meth:`apply` then calls :meth:`_apply` which is unique for each Operation subclass.
   It may perform additional numeric or symbolic transformations on the parameters, and
-  then finally evaluates the numeric value of the parameters using :func:`_evaluate`.
+  then finally evaluates the numeric value of the parameters using :func:`par_evaluate`.
   The numeric parameter values are passed to the appropriate backend API method.
   It is up to the backend to either accept NumPy arrays and Tensorflow objects as parameters, or not.
 
@@ -93,10 +93,10 @@ Functions
 .. currentmodule:: strawberryfields.parameters
 
 .. autosummary::
-   _evaluate
-   is_symbolic_par
-   get_measurement_deps
-   get_par_str
+   par_evaluate
+   par_is_symbolic
+   par_regref_deps
+   par_str
 
 
 Parameter classes
@@ -125,58 +125,63 @@ class ParameterError(RuntimeError):
     """
 
 
-def _evaluate(params):
+def par_evaluate(params):
     """Evaluate a parameter sequence.
 
     Any parameters descending from sympy.Basic are evaluated, others are returned as is.
+    Evaluation means that free and measured parameters are replaced by their numeric values.
+
+    Alternatively, evaluates a single parameter and returns its value.
 
     Args:
-      params (Sequence[Any]): parameters to evaluate
+        params (Sequence[Any]): parameters to evaluate
 
     Returns:
-      list[Any]: evaluated parameters
+        list[Any]: evaluated parameters
     """
     scalar = False
     if not isinstance(params, Sequence):
         scalar = True
         params = [params]
-    def xxx(p):
-        if not is_symbolic_par(p):
+
+    def do_evaluate(p):
+        if not par_is_symbolic(p):
             return p
         p = p.evalf()
         # TODO bind free params: p.evalf(subs=free_param_dict)
-        # TODO the float() conversion prevents symbolic params from being passed through, maybe the backend should do float() conversion?
+        # TODO the float() conversion below prevents symbolic params from being passed through, maybe the backend should do float() conversion?
         if not p.is_real:
             return complex(p)
         elif p.is_integer:
             return int(p)
         return float(p)
 
-    ret = list(map(xxx, params))
+    ret = list(map(do_evaluate, params))
     if scalar:
         return ret[0]
     return ret
 
 
-def is_symbolic_par(p):
-    """Returns True iff p is a symbolic parameter instance."""
+def par_is_symbolic(p):
+    """Returns True iff p is a symbolic parameter instance.
+    """
     return isinstance(p, sympy.Basic)
 
 
-def get_measurement_deps(p):
+def par_regref_deps(p):
     """RegRef dependencies of an Operation parameter.
 
-    Returns the RegRefs that the parameter p depends on through the :class:`MeasuredParameter`
-    atoms it contains
+    Returns the RegRefs that the parameter depends on through the :class:`MeasuredParameter`
+    atoms it contains.
 
     Args:
         p (Any): Operation parameter
 
     Returns:
-        set[RegRef]:
+        set[RegRef]: RegRefs the parameter depends on
     """
     ret = set()
-    if not is_symbolic_par(p):
+    if not par_is_symbolic(p):
         return ret
 
     # p is a Sympy expression, possibly containing measured parameters
@@ -185,7 +190,7 @@ def get_measurement_deps(p):
     return ret
 
 
-def get_par_str(p):
+def par_str(p):
     """String representation of the Operation parameter.
 
     Args:
@@ -194,7 +199,7 @@ def get_par_str(p):
     Returns:
         str: string representation
     """
-    if is_symbolic_par(p):
+    if par_is_symbolic(p):
         return str(p)
     return '{:.4g}'.format(p)  # numeric parameters
 

@@ -296,7 +296,7 @@ import strawberryfields.program_utils as pu
 from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
 from .program_utils import (Command, RegRef, MergeFailure)
-from .parameters import (get_measurement_deps, get_par_str, _evaluate, parfuncs as pf)
+from .parameters import (par_regref_deps, par_str, par_evaluate, parfuncs as pf)
 import strawberryfields.decompositions as dec
 
 # pylint: disable=abstract-method
@@ -353,7 +353,7 @@ class Operation:
             if isinstance(q, RegRef):
                 raise TypeError('Use RegRef.par for measured parameters.')
             self.p.append(q)
-            self._measurement_deps |= get_measurement_deps(q)
+            self._measurement_deps |= par_regref_deps(q)
 
     def __str__(self):
         """String representation for the Operation using Blackbird syntax.
@@ -366,7 +366,7 @@ class Operation:
             return self.__class__.__name__
 
         # class name and parameter values
-        temp = [get_par_str(i) for i in self.p]
+        temp = [par_str(i) for i in self.p]
         return self.__class__.__name__+'('+', '.join(temp)+')'
 
     @property
@@ -796,7 +796,7 @@ class Coherent(Preparation):
 
     def _apply(self, reg, backend, **kwargs):
         z = self.p[0] * pf.exp(1j * self.p[1])
-        backend.prepare_coherent_state(_evaluate(z), *reg)
+        backend.prepare_coherent_state(par_evaluate(z), *reg)
 
 
 class Squeezed(Preparation):
@@ -811,7 +811,7 @@ class Squeezed(Preparation):
         super().__init__([r, p])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         backend.prepare_squeezed_state(p[0], p[1], *reg)
 
 
@@ -836,7 +836,7 @@ class DisplacedSqueezed(Preparation):
         super().__init__([alpha, r, p])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         # prepare the displaced squeezed state directly
         backend.prepare_displaced_squeezed_state(p[0], p[1], p[2], *reg)
 
@@ -862,7 +862,7 @@ class Fock(Preparation):
         super().__init__([n])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         backend.prepare_fock_state(p[0], *reg)
 
 
@@ -886,7 +886,7 @@ class Catstate(Preparation):
         super().__init__([alpha, p])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         alpha = p[0]
         phi = pi*p[1]
         D = backend.get_cutoff_dim()
@@ -942,7 +942,7 @@ class Ket(Preparation):
             super().__init__([state])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         backend.prepare_ket_state(p[0], reg)
 
 
@@ -975,7 +975,7 @@ class DensityMatrix(Preparation):
             super().__init__([state])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         backend.prepare_dm_state(p[0], reg)
 
 
@@ -993,7 +993,7 @@ class Thermal(Preparation):
         super().__init__([n])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         backend.prepare_thermal_state(p[0], *reg)
 
 
@@ -1042,7 +1042,7 @@ class MeasureHomodyne(Measurement):
         super().__init__([phi], select)
 
     def _apply(self, reg, backend, shots=1, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         s = np.sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
         select = self.select
         if select is not None:
@@ -1107,7 +1107,7 @@ class LossChannel(Channel):
         super().__init__([T])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         backend.loss(p[0], *reg)
 
 
@@ -1130,7 +1130,7 @@ class ThermalLossChannel(Channel):
         super().__init__([T, nbar])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         backend.thermal_loss(p[0], p[1], *reg)
 
 
@@ -1160,7 +1160,7 @@ class Dgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         z = self.p[0] * pf.exp(1j * self.p[1])
-        backend.displacement(_evaluate(z), *reg)
+        backend.displacement(par_evaluate(z), *reg)
 
 
 class Xgate(Gate):
@@ -1178,7 +1178,7 @@ class Xgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         z = self.p[0] / pf.sqrt(2 * sf.hbar)
-        backend.displacement(_evaluate(z), *reg)
+        backend.displacement(par_evaluate(z), *reg)
 
 
 class Zgate(Gate):
@@ -1196,7 +1196,7 @@ class Zgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         z = self.p[0] * 1j/pf.sqrt(2 * sf.hbar)
-        backend.displacement(_evaluate(z), *reg)
+        backend.displacement(par_evaluate(z), *reg)
 
 
 class Sgate(Gate):
@@ -1217,7 +1217,7 @@ class Sgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         z = self.p[0] * pf.exp(1j * self.p[1])
-        backend.squeeze(_evaluate(z), *reg)
+        backend.squeeze(par_evaluate(z), *reg)
 
 
 class Pgate(Gate):
@@ -1263,7 +1263,7 @@ class Vgate(Gate):
     def _apply(self, reg, backend, **kwargs):
         gamma_prime = self.p[0] * pf.sqrt(sf.hbar / 2)
         # the backend API call cubic_phase is hbar-independent
-        backend.cubic_phase(_evaluate(gamma_prime), *reg)
+        backend.cubic_phase(par_evaluate(gamma_prime), *reg)
 
 
 class Kgate(Gate):
@@ -1280,7 +1280,7 @@ class Kgate(Gate):
         super().__init__([kappa])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         backend.kerr_interaction(p[0], *reg)
 
 
@@ -1298,7 +1298,7 @@ class Rgate(Gate):
         super().__init__([theta])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         backend.rotation(p[0], *reg)
 
 
@@ -1324,7 +1324,7 @@ class BSgate(Gate):
     def _apply(self, reg, backend, **kwargs):
         tr = (pf.cos(self.p[0]),
               pf.sin(self.p[0]) * pf.exp(1j * self.p[1]))
-        backend.beamsplitter(*_evaluate(tr), *reg)
+        backend.beamsplitter(*par_evaluate(tr), *reg)
 
 
 class MZgate(Gate):
@@ -1348,9 +1348,9 @@ class MZgate(Gate):
     def _decompose(self, reg, **kwargs):
         # into local phase shifts and two 50-50 beamsplitters
         return [
-            Command(Rgate(self.p[0].x), reg[0]),
+            Command(Rgate(self.p[0]), reg[0]),
             Command(BSgate(np.pi/4, np.pi/2), reg),
-            Command(Rgate(self.p[1].x), reg[0]),
+            Command(Rgate(self.p[1]), reg[0]),
             Command(BSgate(np.pi/4, np.pi/2), reg)
         ]
 
@@ -1458,7 +1458,7 @@ class CKgate(Gate):
         super().__init__([kappa])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         backend.cross_kerr_interaction(p[0], *reg)
 
 
@@ -1477,7 +1477,7 @@ class Fouriergate(Gate):
         super().__init__([pi/2])
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         backend.rotation(p[0], *reg)
 
     def __str__(self):
@@ -1691,7 +1691,7 @@ class Interferometer(Decomposition):
 
         if not self.identity or not drop_identity:
             decomp_fn = getattr(dec, mesh)
-            BS1, R, BS2 = decomp_fn(self.p[0].x, tol=tol)
+            BS1, R, BS2 = decomp_fn(self.p[0], tol=tol)
 
             for n, m, theta, phi, _ in BS1:
                 theta = theta if np.abs(theta) >= _decomposition_tol else 0
@@ -1843,7 +1843,7 @@ class BipartiteGraphEmbed(Decomposition):
 
         cmds = []
 
-        B = self.p[0].x
+        B = self.p[0]
         N = len(B)
 
         sq, U, V = dec.bipartite_graph_embed(B, mean_photon_per_mode=mean_photon, atol=tol, rtol=0)
@@ -2002,7 +2002,7 @@ class Gaussian(Preparation, Decomposition):
         self.nbar = 0.5 * (np.diag(th)[:self.ns] - 1.0)
 
     def _apply(self, reg, backend, **kwargs):
-        p = _evaluate(self.p)
+        p = par_evaluate(self.p)
         s = np.sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
         backend.prepare_gaussian_state(p[1]/s, p[0], reg)
 

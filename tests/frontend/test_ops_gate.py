@@ -23,7 +23,7 @@ import strawberryfields.program_utils as pu
 from strawberryfields import ops
 from strawberryfields.program import Program
 from strawberryfields.program_utils import MergeFailure, RegRefError
-from strawberryfields.parameters import _evaluate
+from strawberryfields.parameters import par_evaluate
 
 
 # make test deterministic
@@ -149,7 +149,7 @@ class TestGateBasics:
 
         def dummy_apply(self, reg, backend, **kwargs):
             """Dummy apply function, used to store the evaluated params"""
-            self.res = _evaluate(self.p)
+            self.res = par_evaluate(self.p)
 
         with monkeypatch.context() as m:
             # patch the standard Operation class apply method
@@ -159,7 +159,7 @@ class TestGateBasics:
             m.setattr(G2.__class__, "_apply", dummy_apply)
             G2.apply([], None)
 
-        orig_params = _evaluate(G2.p)
+        orig_params = par_evaluate(G2.p)
         applied_params = G2.res
         # dagger should negate the first param
         assert applied_params == [-orig_params[0]] + orig_params[1:]

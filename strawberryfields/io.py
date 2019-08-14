@@ -36,8 +36,8 @@ import os
 import blackbird
 
 from . import ops
-from .program import (Program,)
-from .parameters import (is_symbolic_par,)
+from .program import Program
+from .parameters import par_is_symbolic
 
 
 def to_blackbird(prog, version="1.0"):
@@ -75,7 +75,7 @@ def to_blackbird(prog, version="1.0"):
 
         else:
             for a in cmd.op.p:
-                if is_symbolic_par(a):
+                if par_is_symbolic(a):
                     # SymPy object, convert to string
                     a = str(a)
                 op["args"].append(a)

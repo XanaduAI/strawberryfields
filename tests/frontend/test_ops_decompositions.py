@@ -20,6 +20,7 @@ import numpy as np
 from hafnian.quantum import Amat
 
 import strawberryfields as sf
+from strawberryfields.parameters import par_evaluate
 from strawberryfields import decompositions as dec
 from strawberryfields.utils import (
     random_interferometer,
@@ -395,7 +396,7 @@ class TestBipartiteGraphEmbed:
                 assert len(modes) == 2
                 assert modes[1] == modes[0] + n
 
-                r, phi = [i.x for i in cmd.op.p]
+                r, phi = par_evaluate(cmd.op.p)
                 assert -r in sq
                 assert phi == 0
 
@@ -407,7 +408,7 @@ class TestBipartiteGraphEmbed:
                 assert (modes == [0, 1, 2]) or (modes == [3, 4, 5])
 
                 # check matrix is unitary
-                U1 = cmd.op.p[0].x
+                U1 = par_evaluate(cmd.op.p[0])
                 assert np.allclose(U1 @ U1.conj().T, np.identity(n), atol=tol, rtol=0)
 
                 if modes[0] == 0:

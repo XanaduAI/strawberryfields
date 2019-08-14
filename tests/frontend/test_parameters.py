@@ -21,7 +21,6 @@ import numpy as np
 
 import strawberryfields as sf
 from strawberryfields import ops
-from strawberryfields.parameters import is_symbolic_par
 
 # make test deterministic
 np.random.seed(32)

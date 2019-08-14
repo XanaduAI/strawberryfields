@@ -156,7 +156,7 @@ def neg(x):
     Args:
         x (RegRef): mode that has been previously measured
     """
-    return -x
+    return -x.par
 
 
 def mag(x):
@@ -165,7 +165,7 @@ def mag(x):
     Args:
         x (RegRef): mode that has been previously measured
     """
-    return pf.Abs(x)
+    return pf.Abs(x.par)
 
 
 def phase(x):
@@ -174,7 +174,7 @@ def phase(x):
     Args:
         x (RegRef): mode that has been previously measured
     """
-    return pf.arg(x)
+    return pf.arg(x.par)
 
 
 def scale(x, a):
@@ -184,7 +184,7 @@ def scale(x, a):
         x (RegRef): mode that has been previously measured
         a (float): scaling factor
     """
-    return a * x
+    return a * x.par
 
 
 def shift(x, b):
@@ -194,7 +194,7 @@ def shift(x, b):
         x (RegRef): mode that has been previously measured
         b (float): shifting factor
     """
-    return b + x
+    return b + x.par
 
 
 def scale_shift(x, a, b):
@@ -207,7 +207,7 @@ def scale_shift(x, a, b):
         a (float): scaling factor
         b (float): shifting factor
     """
-    return a * x + b
+    return a * x.par + b
 
 
 def power(x, a):
@@ -223,7 +223,7 @@ def power(x, a):
     else:
         tmp = a
 
-    return x ** tmp
+    return x.par ** tmp
 
 
 # ------------------------------------------------------------------------
