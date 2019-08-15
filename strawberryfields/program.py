@@ -144,7 +144,7 @@ import strawberryfields.circuitdrawer as sfcd
 import strawberryfields.circuitspecs as specs
 import strawberryfields.program_utils as pu
 from .program_utils import Command, RegRef, CircuitError, RegRefError
-
+from .parameters import FreeParameter
 
 
 class Program:

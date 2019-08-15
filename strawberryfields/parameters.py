@@ -111,9 +111,10 @@ Code details
 ~~~~~~~~~~~~
 
 """
+# pylint: disable=too-many-ancestors
+
 from collections.abc import Sequence
 
-import numpy as np
 import sympy
 import sympy.functions as parfuncs  # functions for manipulating the Parameters
 
@@ -152,7 +153,7 @@ def par_evaluate(params):
         # TODO the float() conversion below prevents symbolic params from being passed through, maybe the backend should do float() conversion?
         if not p.is_real:
             return complex(p)
-        elif p.is_integer:
+        if p.is_integer:
             return int(p)
         return float(p)
 

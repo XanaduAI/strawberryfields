@@ -17,7 +17,6 @@ Quantum program utilities. Module docs in program.py.
 """
 
 from collections.abc import Sequence
-import functools
 
 import networkx as nx
 

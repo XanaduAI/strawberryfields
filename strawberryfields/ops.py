@@ -279,11 +279,11 @@ from scipy.special import factorial as fac
 
 import strawberryfields as sf
 import strawberryfields.program_utils as pu
+import strawberryfields.decompositions as dec
 from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
 from .program_utils import (Command, RegRef, MergeFailure)
 from .parameters import (par_regref_deps, par_str, par_evaluate, parfuncs as pf)
-import strawberryfields.decompositions as dec
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
@@ -1386,6 +1386,8 @@ class CXgate(Gate):
         s = self.p[0]
         r = pf.asinh(-s/2)
         theta = 0.5*pf.atan2(-1.0/pf.cosh(r), -pf.tanh(r))
+        # FIXME pf.atan2() does not seem to work with evalf(), i.e. it does not evaluate to a number even if the arguments do
+        #theta = 0.5*pf.atan(1/pf.cosh(r)/pf.tanh(r))
 
         BS1 = BSgate(theta, 0)
         BS2 = BSgate(theta+pi/2, 0)
