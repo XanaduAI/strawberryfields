@@ -21,7 +21,7 @@ import numpy as np
 from scipy.linalg import expm
 
 KAPPAS = np.linspace(0, 2 * np.pi, 7)
-GAMMAS = np.linspace(0, 6, 7)
+GAMMAS = np.linspace(0, 2 * np.pi, 7)
 
 @pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
@@ -54,8 +54,7 @@ class TestFockRepresentation:
         gate = expm(1j * gamma * x3 / 6)
 
         #state to be transformed
-        ket = np.array([1.0 for n in range(cutoff)])
-        ket /= np.linalg.norm(ket)
+        ket = np.ones([cutoff]) / np.sqrt(cutoff)
 
         ref_state = np.matmul(gate, ket)
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)
