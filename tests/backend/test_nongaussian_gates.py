@@ -21,7 +21,7 @@ import numpy as np
 from scipy.linalg import expm
 
 KAPPAS = np.linspace(0, 2 * np.pi, 7)
-GAMMAS = np.linspace(0, 2 * np.pi, 7)
+GAMMAS = np.linspace(0, 6, 7)
 
 @pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
