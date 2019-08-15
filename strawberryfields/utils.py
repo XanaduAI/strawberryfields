@@ -24,33 +24,6 @@ This module defines and implements several utility functions and language extens
 StrawberryFields.
 
 
-Classical processing functions
-------------------------------
-
-These functions provide common mathematical operations that may be required for
-classical processing of measured modes input to other gates. They may be used
-as follows:
-
-.. code-block:: python
-
-    MeasureX | q[0]
-    Xgate(scale(q[0], sqrt(0.5))) | q[1]
-
-Available classical processing functions include:
-
-.. autosummary::
-    neg
-    mag
-    phase
-    scale
-    shift
-    scale_shift
-    power
-
-If more advanced classical processing is required, custom classical processing
-functions can be created using the :func:`strawberryfields.convert` decorator.
-
-
 NumPy state functions
 ---------------------
 
@@ -143,87 +116,7 @@ from scipy.special import factorial as fac
 from .engine import LocalEngine
 from .program_utils import Command
 from .ops import Gate, Channel, Ket
-from .parameters import parfuncs as pf
 
-# ------------------------------------------------------------------------
-# RegRef convert functions                                              |
-# ------------------------------------------------------------------------
-
-
-def neg(x):
-    r"""Negates a measured value.
-
-    Args:
-        x (RegRef): mode that has been previously measured
-    """
-    return -x.par
-
-
-def mag(x):
-    r"""Returns the magnitude :math:`|z|` of a measured value.
-
-    Args:
-        x (RegRef): mode that has been previously measured
-    """
-    return pf.Abs(x.par)
-
-
-def phase(x):
-    r"""Returns the phase :math:`\phi` of a measured value :math:`z=re^{i\phi}`.
-
-    Args:
-        x (RegRef): mode that has been previously measured
-    """
-    return pf.arg(x.par)
-
-
-def scale(x, a):
-    r"""Scales the measured value by factor ``a``.
-
-    Args:
-        x (RegRef): mode that has been previously measured
-        a (float): scaling factor
-    """
-    return a * x.par
-
-
-def shift(x, b):
-    r"""Shifts the measured value by factor ``b``.
-
-    Args:
-        x (RegRef): mode that has been previously measured
-        b (float): shifting factor
-    """
-    return b + x.par
-
-
-def scale_shift(x, a, b):
-    r"""Scales the measured value by factor ``a`` then shifts the result by ``b``.
-
-    .. math:: u' = au + b
-
-    Args:
-        x (RegRef): mode that has been previously measured
-        a (float): scaling factor
-        b (float): shifting factor
-    """
-    return a * x.par + b
-
-
-def power(x, a):
-    r"""Raises the measured value to power ``a``.
-
-    Args:
-        x (RegRef): mode that has been previously measured
-        a (float): the exponent of x; note that ``a`` can be
-            negative and fractional
-    """
-    if a < 0:
-        tmp = float(a)
-    else:
-        tmp = a
-
-    return x.par ** tmp
 
 
 # ------------------------------------------------------------------------

@@ -48,55 +48,6 @@ def prog():
     return sf.Program(2)
 
 
-class TestConvertFunctions:
-    """Unit tests for convert utility functions"""
-
-    def test_neg(self):
-        """Test that the neg function"""
-        x = 0.4532
-        assert utils.neg(x) == -x
-
-    def test_mag(self):
-        """Test that the mag function"""
-        z = 0.574 -0.6543j
-        assert utils.mag(z) == np.abs(z)
-
-    def test_phase(self):
-        """Test that the phase function"""
-        z = 0.574 -0.6543j
-        assert utils.phase(z) == np.angle(z)
-
-    def test_scale(self):
-        """Test that the neg function creates a regref transform that negates"""
-        a = 0.574
-        x = -0.6543
-        assert utils.scale(x, a) == a * x
-
-    def test_shift(self):
-        """Test that the neg function creates a regref transform that negates"""
-        a = 0.574
-        x = -0.6543
-        assert utils.shift(x, a) == a + x
-
-    def test_scale_shift(self):
-        """Test that the neg function creates a regref transform that negates"""
-        a = 0.574
-        b = -0.6543
-        x = 0.4321
-        assert utils.scale_shift(x, a, b) == a * x + b
-
-    def test_power_positive_frac(self):
-        """Test that the neg function creates a regref transform that negates"""
-        a = 0.574
-        x = 0.6543
-        assert utils.power(x, a) == x ** a
-
-    def test_power_negative_int(self):
-        """Test that the neg function creates a regref transform that negates"""
-        a = -3
-        x = 0.6543
-        assert utils.power(x, a) == x ** a
-
 
 # ===================================================================================
 # Initial states tests
