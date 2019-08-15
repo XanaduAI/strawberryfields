@@ -87,28 +87,15 @@ There are six kinds of :class:`Operation` objects:
   i.e., we may symbolically use the measurement result before it exists::
 
     with prog.context as (alice, bob):
-        MeasureFock()| alice
-        Dgate(alice) | bob
+        MeasureFock()    | alice
+        Dgate(alice.par) | bob
 
-  One may also include an arbitrary post-processing function for the measurement result, to be applied
-  before using it as the argument to another :class:`Operation`. The :func:`~.convert` decorator can be used in Python
-  to convert a user-defined function into a post-processing function recognized by the engine::
-
-    @convert
-    def square(q):
-        return q ** 2
+  One may also use classical algebraic post-processing on the measurement result, to be applied
+  before using it as the argument to another :class:`Operation`::
 
     with prog.context as q:
-        MeasureFock()       | q[0]
-        Dgate(square(q[0])) | q[1]
-
-  Finally, the lower-level :class:`strawberryfields.engine.RegRefTransform` (RR) and
-  an optional lambda function can be used to achieve the same functionality::
-
-    with prog.context as q:
-        MeasureFock()   | q[0]
-        Dgate(RR(q[0])) | q[1]
-        Dgate(RR(q[0], lambda q: q ** 2)) | q[2]
+        MeasureFock()        | q[0]
+        Dgate(q[0].par ** 2) | q[1]
 
 * Modes can be created and deleted during program execution using the
   function :func:`New` and the pre-constructed object :py:data:`Del`.
@@ -271,7 +258,6 @@ this is to provide shorthands for operations that accept no arguments, as well a
 ``MeasureX``             :class:`~.MeasureHomodyne` (:math:`\phi=0`), :math:`x` quadrature measurement
 ``MeasureP``             :class:`~.MeasureHomodyne` (:math:`\phi=\pi/2`), :math:`p` quadrature measurement
 ``MeasureHD``            :class:`~.MeasureHeterodyne`
-``RR``                   Alias for :class:`~.RegRefTransform`
 ======================   =================================================================================
 
 
@@ -431,13 +417,12 @@ class Operation:
         Returns:
             list[Command]: decomposition as a list of operations acting on specific subsystems
         """
-        # todo: For now decompose() works on unevaluated Parameters.
-        # This causes an error if a :class:`.RegRefTransform`-based Parameter is used, and
-        # decompose() tries to do arithmetic on it.
         return self._decompose(reg, **kwargs)
 
     def _decompose(self, reg, **kwargs):
         """Internal decomposition method defined by subclasses.
+
+        NOTE: Does not evaluate Operation parameters, symbolic parameters remain symbolic.
 
         Args:
             reg (Sequence[RegRef]): subsystems the operation is acting on
@@ -629,27 +614,24 @@ class Channel(Transformation):
     """
 
     def merge(self, other):
-        # check that other is an identical channel, and that there are
-        # no extra dependencies <=> no RegRefTransform parameters
-        if isinstance(other, self.__class__) \
-                and len(self._measurement_deps)+len(other._measurement_deps) == 0:
-            # check that all other parameters are identical
-            if np.all(self.p[1:] != other.p[1:]):
-                raise MergeFailure('Other parameters differ.')
+        if not self.__class__ == other.__class__:
+            raise MergeFailure('Not the same channel family.')
 
-            # determine the new loss parameter
+        # channels can be merged if they are the same class and share all the other parameters
+        if self.p[1:] == other.p[1:]:
+            # determine the combined first parameter
             T = self.p[0] * other.p[0]
-
             # if one, replace with the identity
             if T == 1:
                 return None
 
-            if len(self.p) == 1:
-                return self.__class__(T)
+            # return a copy
+            # NOTE deepcopy would make copies the parameters which would mess things up
+            temp = copy.copy(self)
+            temp.p = [T] + self.p[1:]  # change the parameter list
+            return temp
 
-            return self.__class__(T, *self.p[1:])
-
-        raise MergeFailure('Not the same operation family.')
+        raise MergeFailure("Don't know how to merge these operations.")
 
 
 class Gate(Transformation):
@@ -686,8 +668,7 @@ class Gate(Transformation):
             Gate: formal inverse of this gate
         """
         # HACK Semantically a bad use of @property since this method is not a getter.
-        # NOTE deepcopy would make copies of RegRefs inside a possible
-        # RegRefTransformation parameter, RegRefs must not be copied.
+        # NOTE deepcopy would make copies of the parameters which would mess things up
         s = copy.copy(self)
         s.dagger = not s.dagger
         return s

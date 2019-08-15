@@ -47,11 +47,11 @@ The Operations can accept parameters that are functions or algebraic combination
 these basic types of parameters, made possible by the parameters inheriting :class:`sympy.Symbol`.
 
 
-The normal lifecycle of an Operation object and its associated Parameter instances is as follows:
+The normal lifecycle of an Operation object and its associated parameters is as follows:
 
 * An Operation instance is constructed, and given some input arguments.
-  :meth:`.Operation.__init__` converts the inputs into Parameter instances.
-  The RegRef dependencies of measured parameters are added to :attr:`Operation._measurement_deps`.
+  In :meth:`.Operation.__init__`,
+  the RegRef dependencies of measured parameters are added to :attr:`Operation._measurement_deps`.
 
 * The Operation instance is applied using its :meth:`~ops.Operation.__or__`
   method inside a :class:`.Program` context.
@@ -64,8 +64,8 @@ The normal lifecycle of an Operation object and its associated Parameter instanc
   the graph representing the quantum circuit.
   The circuit graph is built using the knowledge of which subsystems the Commands act and depend on.
 
-* Decompositions, merges and commutations often involve creation new Operations with transformed
-  parameter values.
+* Decompositions, merges and commutations often involve creation new Operations with algebraically
+  transformed parameters.
   For example, merging two :class:`.Gate` instances of the same subclass involves
   adding their first parameters after equality-comparing the others. This is easily done if
   all the parameters have an immediate numerical value.
@@ -84,7 +84,7 @@ What we cannot do at the moment:
 
 * Use anything except integers and RegRefs (or Sequences thereof) as the subsystem argument
   for the :meth:`~ops.Operation.__or__` method.
-  Technically we could allow any Parameters that evaluate into an integer.
+  Technically we could allow any parameters that evaluate into an integer.
 
 
 Functions
