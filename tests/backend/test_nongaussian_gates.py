@@ -21,7 +21,7 @@ import numpy as np
 from scipy.linalg import expm
 
 KAPPAS = np.linspace(0, 2 * np.pi, 7)
-GAMMAS = np.linspace(0, 2 * np.pi, 7)
+GAMMAS = np.linspace(0, 6, 7)
 
 @pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
@@ -48,13 +48,13 @@ class TestFockRepresentation:
         np.fill_diagonal(a[:, 1:], ladder_vals)
 
         #Construct (unnormalized) x matrix, ie a+a^dag, and it's third power
-        x = a + np.transpose(a)
-        x3 = np.matmul(x, np.matmul(x, x))
+        x = a + a.T
+        x3 = x @ x @ x
 
         gate = expm(1j * gamma * x3 / 6)
 
         #state to be transformed
-        ket = np.ones([cutoff]) / np.sqrt(cutoff)
+        ket = np.ones(cutoff) / np.sqrt(cutoff)
 
         ref_state = np.matmul(gate, ket)
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)
