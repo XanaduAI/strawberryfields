@@ -8,6 +8,8 @@ import networkx as nx
 import pytest
 
 from strawberryfields.future.apps.graph import dense
+from strawberryfields.future.apps.graph import resize
+from strawberryfields.future.apps.graph import sample
 
 samples_subgraphs = np.array(
     [
@@ -54,7 +56,7 @@ class TestFindDense:
             return objective_return
 
         with monkeypatch.context() as m:
-            m.setattr("dense.METHOD_DICT", {methods: custom_method})
+            m.setattr(dense, "METHOD_DICT", {methods: custom_method})
 
             result = dense.find_dense(
                 graph=graph, nodes=3, iterations=10, options={"heuristic": {"method": methods}}
@@ -94,12 +96,12 @@ class TestRandomSearch:
         graph = nx.relabel_nodes(graph, lambda x: x ** 2)
 
         with monkeypatch.context() as m:
-            m.setattr("glassonion.graph.sample.sample_subgraphs", self.sampler)
+            m.setattr(sample, "sample_subgraphs", self.sampler)
             # The monkeypatch above is not necessary given the one below, but simply serves to
             # speed up testing by not requiring a call to ``sample_subgraphs``, which is a
             # bottleneck
 
-            m.setattr("glassonion.graph.resize.resize_subgraphs", self.sampler)
+            m.setattr(resize, "resize_subgraphs", self.sampler)
 
             result = dense.random_search(graph=graph, nodes=4, iterations=10)
 

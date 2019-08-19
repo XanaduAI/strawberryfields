@@ -120,7 +120,7 @@ class TestSubgraphAdjacency:
         explore that the optimised subgraph returned is still a valid subgraph."""
 
         with monkeypatch.context() as m:
-            m.setattr("utils.to_networkx_graph", lambda x: x)
+            m.setattr(utils, "to_networkx_graph", lambda x: x)
             subgraphs = np.array(list(itertools.combinations(range(dim), int(dim / 2))))
             subgraphs = list(map(lambda x: x ** 2, subgraphs))
             graph = nx.relabel_nodes(graph, lambda x: x ** 2)
@@ -134,7 +134,7 @@ class TestSubgraphAdjacency:
         """Test if function raises a ``ValueError`` if a list of nodes that cannot be contained
         within the graph is given"""
         with monkeypatch.context() as m:
-            m.setattr("utils.to_networkx_graph", lambda x: x)
+            m.setattr(utils, "to_networkx_graph", lambda x: x)
             nodes = range(dim + 1)
 
             with pytest.raises(ValueError, match="Must input a list of subgraph"):

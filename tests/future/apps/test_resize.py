@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 
 from strawberryfields.future.apps.graph import resize
+from strawberryfields.future.apps.graph import utils
 
 subgraphs = [
     [1, 2, 3, 4, 5],
@@ -25,8 +26,8 @@ subgraphs = [
 
 @pytest.fixture()
 def patch_is_subgraph(monkeypatch):
-    """dummy function for ``glassonion.graph.utils.is_subgraph``"""
-    monkeypatch.setattr("glassonion.graph.utils.is_subgraph", lambda v1, v2: True)
+    """dummy function for ``utils.is_subgraph``"""
+    monkeypatch.setattr(utils, "is_subgraph", lambda v1, v2: True)
 
 
 @pytest.mark.parametrize("dim", [5])
@@ -75,7 +76,7 @@ class TestResizeSubgraphs:
             return objective_return
 
         with monkeypatch.context() as m:
-            m.setattr("resize.METHOD_DICT", {methods: custom_method})
+            m.setattr(resize, "METHOD_DICT", {methods: custom_method})
 
             result = resize.resize_subgraphs(
                 subgraphs=[[0, 1]], graph=graph, target=4, resize_options={"method": methods}
@@ -117,7 +118,7 @@ class TestGreedyDensity:
         """Test if function raises an ``Exception`` when an element of ``subgraphs`` is not
         contained within nodes of the graph """
         with monkeypatch.context() as m:
-            m.setattr("glassonion.graph.utils.is_subgraph", lambda v1, v2: False)
+            m.setattr(utils, "is_subgraph", lambda v1, v2: False)
             with pytest.raises(Exception, match="Input is not a valid subgraph"):
                 resize.greedy_density(subgraphs=[[0, 9]], graph=graph, target=3)
 
@@ -156,7 +157,7 @@ class TestGreedyDegree:
         """Test if function raises an ``Exception`` when an element of ``subgraphs`` is not
         contained within nodes of the graph """
         with monkeypatch.context() as m:
-            m.setattr("glassonion.graph.utils.is_subgraph", lambda v1, v2: False)
+            m.setattr(utils, "is_subgraph", lambda v1, v2: False)
             with pytest.raises(Exception, match="Input is not a valid subgraph"):
                 resize.greedy_degree(subgraphs=[[0, 9]], graph=graph, target=3)
 

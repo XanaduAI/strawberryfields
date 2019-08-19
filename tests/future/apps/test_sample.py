@@ -8,6 +8,7 @@ import strawberryfields as sf
 import pytest
 
 from strawberryfields.future.apps import sample
+from strawberryfields.future.apps.graph import utils
 
 
 @pytest.fixture()
@@ -17,8 +18,8 @@ def _valid_backend(monkeypatch):
 
 @pytest.fixture()
 def is_undirected(monkeypatch):
-    """dummy function for ``glassonion.graph.utils.is_undirected``"""
-    monkeypatch.setattr("glassonion.graph.utils.is_undirected", lambda _: True)
+    """dummy function for ``utils.is_undirected``"""
+    monkeypatch.setattr(utils, "is_undirected", lambda _: True)
 
 
 samples_pnr_nopostselect = np.array(
@@ -71,7 +72,7 @@ class TestQuantumSampler:
         """Test if function raises a ``ValueError`` for a matrix that fails
         :func:`graph.utils.is_undirected` """
         with monkeypatch.context() as m:
-            m.setattr("glassonion.graph.utils.is_undirected", lambda _: False)
+            m.setattr(utils, "is_undirected", lambda _: False)
             with pytest.raises(ValueError, match="Input must be a NumPy array"):
                 sample.quantum_sampler(A=adj, n_mean=1.0)
 
@@ -99,7 +100,7 @@ class TestQuantumSampler:
             return samples_pnr_nopostselect
 
         with monkeypatch.context() as m:
-            m.setattr("glassonion.sample._sample_sf", dummy_sample_sf)
+            m.setattr(sample, "_sample_sf", dummy_sample_sf)
             samples = sample.quantum_sampler(
                 A=adj,
                 n_mean=1.0,
@@ -123,7 +124,7 @@ class TestQuantumSampler:
             return samples_pnr_nopostselect
 
         with monkeypatch.context() as m:
-            m.setattr("glassonion.sample._sample_sf", dummy_sample_sf)
+            m.setattr(sample, "_sample_sf", dummy_sample_sf)
             samples = np.array(
                 sample.quantum_sampler(
                     A=adj,
@@ -147,7 +148,7 @@ class TestQuantumSampler:
             return sample_pnr_postselect
 
         with monkeypatch.context() as m:
-            m.setattr("glassonion.sample._sample_sf", dummy_sample_sf)
+            m.setattr(sample, "_sample_sf", dummy_sample_sf)
             samples = np.array(
                 sample.quantum_sampler(
                     A=adj,
@@ -177,7 +178,7 @@ class TestQuantumSampler:
             return sample_pnr_postselect
 
         with monkeypatch.context() as m:
-            m.setattr("glassonion.sample._sample_sf", dummy_sample_sf)
+            m.setattr(sample, "_sample_sf", dummy_sample_sf)
             samples = np.array(
                 sample.quantum_sampler(
                     A=adj,
@@ -313,7 +314,7 @@ class TestSampleSF:
         mean_photon_per_mode = 1.0
 
         with p.context as q:
-            sf.ops.GraphEmbed(adj, mean_photon_per_mode=mean_photon_per_mode) | q
+            sf.ops.GraphEmbed(adj, mean_photon=mean_photon_per_mode) | q
             sf.ops.Measure | q
 
         p = p.compile("gbs")
