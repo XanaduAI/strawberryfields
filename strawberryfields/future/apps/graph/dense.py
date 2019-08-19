@@ -46,12 +46,9 @@ Code details
 """
 from typing import Tuple, Optional
 import networkx as nx
-
-import glassonion.sample
-import glassonion.graph.resize
-import glassonion.graph.sample
-import glassonion.graph.utils
-from glassonion.graph.utils import graph_type
+from ..sample import BACKEND_DEFAULTS
+from . import resize, sample, utils
+from .utils import graph_type
 
 
 def find_dense(
@@ -116,7 +113,7 @@ def find_dense(
         method = METHOD_DICT[method]
 
     return method(
-        graph=glassonion.graph.utils.to_networkx_graph(graph),
+        graph=utils.to_networkx_graph(graph),
         nodes=nodes,
         iterations=iterations,
         options=options,
@@ -147,7 +144,7 @@ def random_search(
     """
     options = {**OPTIONS_DEFAULTS, **(options or {})}
 
-    samples = glassonion.graph.sample.sample_subgraphs(
+    samples = sample.sample_subgraphs(
         graph=graph,
         nodes=nodes,
         samples=iterations,
@@ -155,7 +152,7 @@ def random_search(
         backend_options=options["backend"],
     )
 
-    samples = glassonion.graph.resize.resize_subgraphs(
+    samples = resize.resize_subgraphs(
         subgraphs=samples, graph=graph, target=nodes, resize_options=options["resize"]
     )
 
@@ -171,9 +168,9 @@ method."""
 
 OPTIONS_DEFAULTS = {
     "heuristic": {"method": random_search},
-    "backend": glassonion.graph.sample.SAMPLE_DEFAULTS,
-    "resize": glassonion.graph.resize.RESIZE_DEFAULTS,
-    "sample": glassonion.sample.BACKEND_DEFAULTS,
+    "backend": BACKEND_DEFAULTS,
+    "resize": resize.RESIZE_DEFAULTS,
+    "sample": sample.SAMPLE_DEFAULTS,
 }
 """Dict[str, dict[str, Any]]: Options for dense subgraph identification heuristics. Composed of a
 dictionary of dictionaries with the first level specifying the option type, selected from keys

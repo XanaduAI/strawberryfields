@@ -35,7 +35,7 @@ from typing import Iterable, Optional
 import itertools
 import networkx as nx
 
-import glassonion.graph.utils
+from . import utils
 
 RESIZE_DEFAULTS = {"method": "greedy-density"}
 """Dict[str, Any]: Dictionary to specify default parameters of options for resizing
@@ -140,7 +140,7 @@ def greedy_density(
     for s in subgraphs:
         s = set(s)
 
-        if not glassonion.graph.utils.is_subgraph(s, graph):
+        if not utils.is_subgraph(s, graph):
             raise ValueError("Input is not a valid subgraph")
 
         while len(s) != target:
@@ -198,7 +198,7 @@ def greedy_degree(
     for s in subgraphs:
         s = set(s)
 
-        if not glassonion.graph.utils.is_subgraph(s, graph):
+        if not utils.is_subgraph(s, graph):
             raise ValueError("Input is not a valid subgraph")
 
         while len(s) != target:

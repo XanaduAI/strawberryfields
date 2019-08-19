@@ -37,7 +37,7 @@ Code details
 from typing import Optional
 import numpy as np
 import strawberryfields as sf
-import glassonion.graph.utils
+from .graph import utils
 
 QUANTUM_BACKENDS = ("gaussian",)
 """tuple[str]: Available quantum backends for sampling."""
@@ -111,7 +111,7 @@ def quantum_sampler(
     """
     backend_options = {**BACKEND_DEFAULTS, **(backend_options or {})}
 
-    if not glassonion.graph.utils.is_undirected(A):
+    if not utils.is_undirected(A):
         raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
 
     if samples < 1:

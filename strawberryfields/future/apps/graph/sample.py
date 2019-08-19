@@ -25,8 +25,7 @@ Code details
 from typing import Optional
 import networkx as nx
 import numpy as np
-
-import glassonion.sample
+from .. import sample
 
 SAMPLE_DEFAULTS = {"distribution": "gbs", "postselect_ratio": 0.75}
 """Dict[str, Any]: Dictionary to specify default parameters of options in :func:`sample_subgraphs`.
@@ -80,14 +79,14 @@ def sample_subgraphs(
     distribution = sample_options["distribution"]
 
     if distribution == "uniform":
-        s = glassonion.sample.uniform_sampler(
+        s = sample.uniform_sampler(
             modes=graph.order(), sampled_modes=nodes, samples=samples
         )
     elif distribution == "gbs":
         postselect = int(sample_options["postselect_ratio"] * nodes)
         backend_options = {**(backend_options or {}), "postselect": postselect}
 
-        s = glassonion.sample.quantum_sampler(
+        s = sample.quantum_sampler(
             A=nx.to_numpy_array(graph),
             n_mean=nodes,
             samples=samples,
