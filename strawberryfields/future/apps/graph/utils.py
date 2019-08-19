@@ -3,20 +3,20 @@ r"""
 Graph functions
 ===============
 
-**Module name:** :mod:`glassonion.graph.utils`
+**Module name:** :mod:`strawberryfields.future.apps.graph.utils`
 
-.. currentmodule:: glassonion.graph.utils
+.. currentmodule:: strawberryfields.future.apps.graph.utils
 
 This module provides some ancillary functions for dealing with graphs. This includes
 :func:`is_undirected` to check if an input matrix corresponds to an undirected graph (i.e.,
 is symmetric) and :func:`subgraph_adjacency` to return the adjacency matrix of a subgraph when an
 input graph and subset of nodes is specified.
 
-Furthermore, the frontend :func:`~glassonion.graph.dense_subgraph.find_dense` function
-allows users to input graphs both as a `NumPy <https://www.numpy.org/>`__ array containing the
-adjacency matrix and as a `NetworkX <https://networkx.github.io/>`__ ``Graph`` object. The
-:func:`to_networkx_graph` function allows both inputs to be processed into a NetworkX Graph for
-ease of processing in GlassOnion.
+Furthermore, the frontend :func:`~strawberryfields.future.apps.graph.dense_subgraph.find_dense`
+function allows users to input graphs both as a `NumPy <https://www.numpy.org/>`__ array
+containing the adjacency matrix and as a `NetworkX <https://networkx.github.io/>`__ ``Graph``
+object. The :func:`to_networkx_graph` function allows both inputs to be processed into a NetworkX
+Graph for ease of processing.
 
 Summary
 -------

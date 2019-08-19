@@ -3,9 +3,9 @@ r"""
 Sampling functions
 ==================
 
-**Module name:** :mod:`glassonion.sample`
+**Module name:** :mod:`strawberryfields.future.apps.sample`
 
-.. currentmodule:: glassonion.sample
+.. currentmodule:: strawberryfields.future.apps.sample
 
 This module provides functionality for generating samples from both a quantum device and the
 uniform distribution.
@@ -83,8 +83,8 @@ def quantum_sampler(
             Requested backend for sampling. Available backends are listed in
             ``QUANTUM_BACKENDS``, these are:
 
-            - ``"gaussian"``: for simulating the output of a GBS device using the Gaussian
-              backend of `Strawberry Fields <https://strawberryfields.readthedocs.io/en/latest/>`__.
+            - ``"gaussian"``: for simulating the output of a GBS device using the
+            :mod:`strawberryfields.backends.gaussianbackend`
 
         key: ``"threshold"``, value: *bool*
             Performs sampling using threshold (on/off click) detectors if ``True``
@@ -169,8 +169,8 @@ def _sample_sf(p: sf.Program, shots: int = 1, backend_options: Optional[dict] = 
         sampling; defaults to :const:`BACKEND_DEFAULTS`
 
     Returns:
-        array: an array of ``len(shots)`` samples, with each sample the result of running the
-        Strawberry Fields program ``p``
+        array: an array of ``len(shots)`` samples, with each sample the result of running a
+        :class:`~strawberryfields.program.Program` specified by ``p``
     """
     backend_options = {**BACKEND_DEFAULTS, **(backend_options or {})}
 

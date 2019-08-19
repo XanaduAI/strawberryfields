@@ -3,13 +3,14 @@ r"""
 Graph sampling
 ==============
 
-**Module name:** :mod:`glassonion.graph.sample`
+**Module name:** :mod:`strawberryfields.future.apps.graph.sample`
 
-.. currentmodule:: glassonion.graph.sample
+.. currentmodule:: strawberryfields.future.apps.graph.sample
 
 This module provides functionality for sampling of subgraphs from undirected graphs. The
-:func:`sample_subgraphs` function generates raw samples from :mod:`glassonion.sample` and
-converts them to subgraphs using :func:`to_subgraphs`.
+:func:`sample_subgraphs` function generates raw samples from
+:mod:`strawberryfields.future.apps.sample` and converts them to subgraphs using
+:func:`to_subgraphs`.
 
 Summary
 -------

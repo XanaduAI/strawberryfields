@@ -3,15 +3,16 @@ r"""
 Graph resizing
 ==============
 
-**Module name:** :mod:`glassonion.graph.resize`
+**Module name:** :mod:`strawberryfields.future.apps.graph.resize`
 
-.. currentmodule:: glassonion.graph.resize
+.. currentmodule:: strawberryfields.future.apps.graph.resize
 
 This module provides functionality for resizing of subgraphs. Samples from
-:func:`~glassonion.sample.quantum_sampler` have a variable number of clicks (equivalently,
-the number of ones for samples with threshold detection). This results in subgraphs of a random
-size in :func:`~glassonion.graph.sample.dense_subgraph_sampler_gbs`. However, some algorithms may
-want to work with subgraphs of a fixed size, necessitating the resizing of sample subgraphs.
+:func:`~strawberryfields.future.apps.sample.quantum_sampler` have a variable number of clicks (
+equivalently, the number of ones for samples with threshold detection). This results in subgraphs of
+a random size in :func:`~strawberryfields.future.apps.graph.sample.dense_subgraph_sampler_gbs`.
+However, some algorithms may want to work with subgraphs of a fixed size, necessitating the
+resizing of sample subgraphs.
 
 Resizing functionality is provided by the :func:`resize_subgraphs` function, allowing the user to
 make use of different methods for resizing. The available methods are specified in
