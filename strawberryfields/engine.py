@@ -22,8 +22,7 @@ Execution engine
 
 This module implements :class:`BaseEngine` and its subclasses that are responsible for
 communicating quantum programs represented by :class:`.Program` objects
-to a backend that could be e.g., a simulator, a hardware quantum processor,
-or a circuit drawer, and returning the result to the user.
+to a backend that could be e.g., a simulator or a hardware quantum processor.
 One can think of each BaseEngine instance as a separate quantum computation.
 
 A typical use looks like
@@ -88,13 +87,45 @@ class Result:
     Returned by :meth:`.BaseEngine.run`.
     """
     def __init__(self, samples):
-        #: BaseState: quantum state object returned by a local backend, if any
-        self.state = None
-        #: array(array(Number)): measurement samples, shape == (modes,) or shape == (shots, modes)
+        self._state = None
+
         # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
         if len(shape(samples)) > 1:
             samples = stack(samples, 1)
-        self.samples = samples
+        self._samples = samples
+
+    @property
+    def samples(self):
+        """Measurement samples.
+
+        Returned measurement samples will have shape ``(modes,)``. If multiple
+        shots are requested during execution, the returned measurement samples
+        will instead have shape ``(shots, modes)``.
+
+        Returns:
+            array[array[float, int]]: measurement samples returned from
+            program execution
+        """
+        return self._samples
+
+    @property
+    def state(self):
+        """The quantum state object.
+
+        The quantum state object contains details and methods
+        for manipulation of the final circuit state.
+
+        .. note::
+
+            Only local simulators will return a state object. Remote
+            simulators and hardware backends will return
+            :attr:`measurement samples <Result.samples>`,
+            but the return value of ``state`` will be ``None``.
+
+        Returns:
+            BaseState: quantum state returned from program execution
+        """
+        return self._state
 
     def __str__(self):
         """String representation."""
@@ -171,54 +202,54 @@ class BaseEngine(abc.ABC):
         """
 
     @abc.abstractmethod
-    def _run_program(self, prog, shots, **kwargs):
+    def _run_program(self, prog, **kwargs):
         """Execute a single program on the backend.
 
         This method should not be called directly.
 
         Args:
             prog (Program): program to run
-            shots (int): number of independent measurement evaluations for this program
         Returns:
             list[Command]: commands that were applied to the backend
         """
 
-    def _run(self, program, *, shots=1, compile_options={}, **kwargs):
+    def _run(self, program, *, compile_options=None, **kwargs):
         """Execute the given programs by sending them to the backend.
 
         If multiple Programs are given they will be executed sequentially as
         parts of a single computation.
-        For each :class:`Program` instance given as input, the following happens:
+        For each :class:`.Program` instance given as input, the following happens:
 
         * The Program instance is compiled for the target backend.
         * The compiled program is executed on the backend.
         * The measurement results of each subsystem (if any) are stored in the :class:`.RegRef`
-          instances of the corresponding Program, as well as in :attr:`~.samples`.
-        * The compiled program is appended to self.run_progs.
+          instances of the corresponding Program, as well as in :attr:`~BaseEngine.samples`.
+        * The compiled program is appended to :attr:`~BaseEngine.run_progs`.
 
         Finally, the result of the computation is returned.
 
         Args:
             program (Program, Sequence[Program]): quantum programs to run
-            shots (int): number of times the program measurement evaluation is repeated
-            compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+            compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
 
-        The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
+        The ``kwargs`` keyword arguments are passed to the backend API calls via :meth:`Operation.apply`.
 
         Returns:
             Result: results of the computation
         """
 
-        def _broadcast_nones(val, shots):
+        def _broadcast_nones(val, dim):
             """Helper function to ensure register values have same shape, even if not measured"""
-            if val is None and shots > 1:
-                return [None] * shots
+            if val is None and dim > 1:
+                return [None] * dim
             return val
+
+        compile_options = compile_options or {}
 
         if not isinstance(program, Sequence):
             program = [program]
 
-        kwargs["shots"] = shots
+        kwargs.setdefault("shots", 1)
         # NOTE: by putting ``shots`` into keyword arguments, it allows for the
         # signatures of methods in Operations to remain cleaner, since only
         # Measurements need to know about shots
@@ -239,14 +270,15 @@ class BaseEngine(abc.ABC):
                     p.reg_refs[k].val = v
 
             # if the program hasn't been compiled for this backend, do it now
-            if p.target != self.backend_name:
-                p = p.compile(self.backend_name, **compile_options) # TODO: shots might be relevant for compilation?
+            target = self.backend.circuit_spec
+            if target is not None and p.target != target:
+                p = p.compile(target, **compile_options)
             p.lock()
 
             self._run_program(p, **kwargs)
             self.run_progs.append(p)
             # store the latest measurement results
-            self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
+            self.samples = [_broadcast_nones(p.reg_refs[k].val, kwargs["shots"]) for k in sorted(p.reg_refs)]
             prev = p
 
         return Result(self.samples.copy())
@@ -259,10 +291,11 @@ class LocalEngine(BaseEngine):
     the results available via :class:`.Result`.
 
     Args:
-        backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
-        backend_options (Dict[str, Any]): keyword arguments to be passed to the backend
+        backend (str, BaseBackend): short name of the backend, or a pre-constructed backend instance
+        backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
-    def __init__(self, backend, *, backend_options={}):
+    def __init__(self, backend, *, backend_options=None):
+        backend_options = backend_options or {}
         super().__init__(backend, backend_options)
 
         if isinstance(backend, str):
@@ -270,7 +303,7 @@ class LocalEngine(BaseEngine):
             #: BaseBackend: backend for executing the quantum circuit
             self.backend = load_backend(backend)
         elif isinstance(backend, BaseBackend):
-            self.backend_name = backend._short_name
+            self.backend_name = backend.short_name
             self.backend = backend
         else:
             raise TypeError('backend must be a string or a BaseBackend instance.')
@@ -305,31 +338,64 @@ class LocalEngine(BaseEngine):
                 raise NotImplementedError('The operation {} has not been implemented in {} for the arguments {}.'.format(cmd.op, self.backend, kwargs)) from None
         return applied
 
-    def run(self, program, *, shots=1, compile_options={}, modes=None, state_options={}, **kwargs):
+    def run(self, program, *, compile_options=None, run_options=None):
         """Execute the given programs by sending them to the backend.
 
         Extends :meth:`BaseEngine._run`.
 
         Args:
             program (Program, Sequence[Program]): quantum programs to run
-            shots (int): number of times the program measurement evaluation is repeated
-            compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
-            modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
-                An empty sequence [] means no state object is returned. None returns all the modes.
-            state_options (Dict[str, Any]): keyword arguments for :meth:`.BaseBackend.state`
-
-        The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
+            compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+            run_options (None, Dict[str, Any]): keyword arguments that are needed by the backend during execution
+                e.g., in :meth:`Operation.apply` or :meth:`.BaseBackend.state`
 
         Returns:
             Result: results of the computation
-        """
 
-        result = super()._run(program, shots=shots, compile_options=compile_options, **kwargs)
-        if isinstance(modes, Sequence) and not modes:
-            # empty sequence
-            pass
+        ``run_options`` can contain the following:
+
+        Keyword Args:
+            shots (int): number of times the program measurement evaluation is repeated
+            modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
+                ``None`` returns all the modes (default). An empty sequence means no state object is returned.
+            eval (bool): If False, the backend returns unevaluated tf.Tensors instead of
+                numbers/arrays for returned measurement results and state (default: True). TF backend only.
+            session (tf.Session): TensorFlow session, used when evaluating returned measurement results and state.
+                TF backend only.
+            feed_dict (dict[str, Any]): TensorFlow feed dictionary, used when evaluating returned measurement results
+                and state. TF backend only.
+        """
+        compile_options = compile_options or {}
+        temp_run_options = {}
+
+        if isinstance(program, Sequence):
+            # succesively update all run option defaults.
+            # the run options of successive programs
+            # overwrite the run options of previous programs
+            # in the list
+            [temp_run_options.update(p.run_options) for p in program]
         else:
-            result.state = self.backend.state(modes, **state_options)  # tfbackend.state can use kwargs
+            # single program to execute
+            temp_run_options.update(program.run_options)
+
+        temp_run_options.update(run_options or {})
+        temp_run_options.setdefault("shots", 1)
+        temp_run_options.setdefault('modes', None)
+
+        # avoid unexpected keys being sent to Operations
+        eng_run_keys = ["eval", "session", "feed_dict", "shots"]
+        eng_run_options = {key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys}
+
+        result = super()._run(program, compile_options=compile_options, **eng_run_options)
+
+        modes = temp_run_options["modes"]
+
+        if modes is None or modes:
+            # state object requested
+            # session and feed_dict are needed by TF backend both during simulation (if program
+            # contains measurements) and state object construction.
+            result._state = self.backend.state(**temp_run_options)
+
         return result
 
 

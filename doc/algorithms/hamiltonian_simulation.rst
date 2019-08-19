@@ -8,14 +8,14 @@ Hamiltonian simulation
 
 	"The problem of simulating the dynamics of quantum systems was the original motivation for quantum computers and remains one of their major potential applications." - Berry et al. :cite:`berry2015`
 
-The simulation of atoms, molecules and other biochemical systems is another application uniquely suited to quantum computation. For example, the ground state energy of large systems, the dynamical behaviour of an ensemble of molecules, or complex molecular behaviour such as protein folding, are often computationally hard or downright impossible to determine via classical computation or experimentation :cite:`aspuruguzik2005hamiltonian,whitfield2011hamiltonian`. 
+The simulation of atoms, molecules and other biochemical systems is another application uniquely suited to quantum computation. For example, the ground state energy of large systems, the dynamical behaviour of an ensemble of molecules, or complex molecular behaviour such as protein folding, are often computationally hard or downright impossible to determine via classical computation or experimentation :cite:`aspuruguzik2005hamiltonian,whitfield2011hamiltonian`.
 
 In the discrete-variable qubit model, efficient methods of Hamiltonian simulation have been discussed at-length, providing several implementations depending on properties of the Hamiltonian, and resulting in a linear simulation time :cite:`childs2012hamiltonian,berry2006hamiltonian`. Efficient implementations of Hamiltonian simulation also exist in the CV formulation :cite:`kalajdzievski2018hamiltonian`, with specific application to `Bose-Hubbard Hamiltonians <https://en.wikipedia.org/wiki/Bose%E2%80%93Hubbard_model>`_ (describing a system of interacting bosonic particles on a lattice of orthogonal position states :cite:`sowinski2012hamiltonian`). As such, this method is ideally suited to photonic quantum computation.
 
 CV implementation
 ----------------------------------
 
-For a quick example, consider a lattice composed of two adjacent nodes: 
+For a quick example, consider a lattice composed of two adjacent nodes:
 
 
 .. raw:: html
@@ -34,7 +34,7 @@ For a quick example, consider a lattice composed of two adjacent nodes:
 
 This graph is represented by the :math:`2\times 2` adjacency matrix :math:`A=\begin{bmatrix}0&1\\1&0\end{bmatrix}`. Here, each node in the graph represents a qumode, so we can model the dynamics of Bosons on this structure via a 2-qumode CV circuit.
 
-The `Bose-Hubbard Hamiltonian <https://en.wikipedia.org/wiki/Bose%E2%80%93Hubbard_model>`_ with on-site interactions is given by 
+The `Bose-Hubbard Hamiltonian <https://en.wikipedia.org/wiki/Bose%E2%80%93Hubbard_model>`_ with on-site interactions is given by
 
 .. math:: H = J\sum_{i}\sum_j A_{ij} \ad_i\a_j + \frac{1}{2}U\sum_i \hat{n}_i(\hat{n}_i-1)= J(\ad_1 \a_2 + \ad_2\a_1) + \frac{1}{2}U (  \hat{n}_1^2 - \hat{n}_1 + \hat{n}_2^2 - \hat{n}_2)
 
@@ -71,11 +71,20 @@ The Hamiltonian simulation circuit displayed above for the 2-node lattice, can b
    :linenos:
    :dedent: 4
    :tab-width: 4
-   :start-after: with eng:
+   :start-after: with ham_simulation.context as q:
    :end-before: # end circuit
 
-where, for this example, we have set ``J=1``, ``U=1.5``, ``k=20``, ``t=1.086``, ``theta = -J*t/k``, and ``r = -U*t/(2*k)``. After constructing the circuit and running the engine, the site occupation probabilities can be calculated via
+where, for this example, we have set ``J=1``, ``U=1.5``, ``k=20``, ``t=1.086``, ``theta = -J*t/k``, and ``r = -U*t/(2*k)``. After constructing the circuit and running the engine,
 
+.. literalinclude:: ../../examples/hamiltonian_simulation.py
+   :language: python
+   :linenos:
+   :start-after: # run the engine
+   :end-before: # the output state probabilities
+
+the site occupation probabilities can be calculated via
+
+>>> state = results.state
 >>> state.fock_prob([2,0])
 0.52240124572001989
 >>> state.fock_prob([1,1])
@@ -113,4 +122,4 @@ which acts on the Fock basis :math:`\{\ket{0,2},\ket{1,1},\ket{2,0}\}`. Using th
 which agrees, within the expected error margin, with our Strawberry Fields Hamiltonian simulation.
 
 .. note::
-  A fully functional Strawberry Fields simulation containing the above Blackbird code is included at :download:`examples/hamiltonian_simulation.py <../../examples/hamiltonian_simulation.py>`. 
+  A fully functional Strawberry Fields simulation containing the above Blackbird code is included at :download:`examples/hamiltonian_simulation.py <../../examples/hamiltonian_simulation.py>`.

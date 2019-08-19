@@ -43,12 +43,14 @@ from .states import GaussianState
 class GaussianBackend(BaseGaussian):
     """Gaussian backend implementation"""
 
+    short_name = "gaussian"
+    circuit_spec = "gaussian"
+
     def __init__(self):
         """Initialize the backend.
         """
         super().__init__()
         self._supported["mixed_states"] = True
-        self._short_name = "gaussian"
         self._init_modes = None
         self.circuit = None
 

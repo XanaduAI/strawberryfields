@@ -17,6 +17,7 @@ import pytest
 pytestmark = pytest.mark.frontend
 
 import numpy as np
+from hafnian.quantum import Amat
 
 import strawberryfields as sf
 from strawberryfields import decompositions as dec
@@ -31,14 +32,32 @@ from strawberryfields import ops
 np.random.seed(42)
 
 
-def _expand_one(S, mode, num_modes):
-    """Expand a one mode symplectic matrix to all modes"""
-    S2 = np.identity(2 * num_modes)
+def expand(S, modes, num_modes):
+    r"""Expands a Symplectic matrix S to act on the entire subsystem.
 
-    ind = np.concatenate([np.array([mode]), np.array([mode]) + num_modes])
-    rows = ind.reshape(-1, 1)
-    cols = ind.reshape(1, -1)
-    S2[rows, cols] = S.copy()
+    Args:
+        S (array): a :math:`2M\times 2M` Symplectic matrix
+        modes (Sequence[int]): the modes that S acts on
+        num_modes (int): total number of modes in the system
+
+    Returns:
+        array: the resulting :math:`2N\times 2N` Symplectic matrix
+    """
+    if num_modes == 1:
+        # total number of modes is 1, simply return the matrix
+        return S
+
+    N = num_modes
+    w = np.asarray(modes)
+
+    M = len(S) // 2
+    S2 = np.identity(2 * N)
+
+    S2[w.reshape(-1, 1), w.reshape(1, -1)] = S[:M, :M].copy()  # XX
+    S2[(w + N).reshape(-1, 1), (w + N).reshape(1, -1)] = S[M:, M:].copy()  # PP
+    S2[w.reshape(-1, 1), (w + N).reshape(1, -1)] = S[:M, M:].copy()  # XP
+    S2[(w + N).reshape(-1, 1), w.reshape(1, -1)] = S[M:, :M].copy()  # PX
+
     return S2
 
 
@@ -57,10 +76,7 @@ def _rotation(phi, mode, num_modes):
     s = np.sin(phi)
     S = np.array([[c, -s], [s, c]])
 
-    if num_modes == 1:
-        return S
-
-    return _expand_one(S, mode, num_modes)
+    return expand(S, mode, num_modes)
 
 
 def _squeezing(r, phi, mode, num_modes):
@@ -82,10 +98,36 @@ def _squeezing(r, phi, mode, num_modes):
 
     S = np.array([[ch - cp * sh, -sp * sh], [-sp * sh, ch + cp * sh]])
 
-    if num_modes == 1:
-        return S
+    return expand(S, mode, num_modes)
 
-    return _expand_one(S, mode, num_modes)
+
+def _two_mode_squeezing(r, phi, modes, num_modes):
+    """Two mode squeezing in the phase space.
+
+    Args:
+        r (float): squeezing magnitude
+        phi (float): rotation parameter
+        modes (list[int]): modes it is applied to
+        num_modes (int): total number of modes in the system
+
+    Returns:
+        array: symplectic transformation matrix
+    """
+    cp = np.cos(phi)
+    sp = np.sin(phi)
+    ch = np.cosh(r)
+    sh = np.sinh(r)
+
+    S = np.array(
+        [
+            [ch, cp * sh, 0, sp * sh],
+            [cp * sh, ch, sp * sh, 0],
+            [0, sp * sh, ch, -cp * sh],
+            [sp * sh, 0, -cp * sh, ch],
+        ]
+    )
+
+    return expand(S, modes, num_modes)
 
 
 def _beamsplitter(theta, phi, modes, num_modes):
@@ -114,20 +156,7 @@ def _beamsplitter(theta, phi, modes, num_modes):
         ]
     )
 
-    if num_modes == 2:
-        return S
-
-    S2 = np.identity(2 * num_modes)
-    w = np.array(modes)
-
-    S2[w.reshape(-1, 1), w.reshape(1, -1)] = S[:2, :2].copy()  # X
-    S2[(w + num_modes).reshape(-1, 1), (w + num_modes).reshape(1, -1)] = S[
-        2:, 2:
-    ].copy()  # P
-    S2[w.reshape(-1, 1), (w + num_modes).reshape(1, -1)] = S[:2, 2:].copy()  # XP
-    S2[(w + num_modes).reshape(-1, 1), w.reshape(1, -1)] = S[2:, :2].copy()  # PX
-
-    return S2
+    return expand(S, modes, num_modes)
 
 
 class TestInterferometer:
@@ -165,7 +194,6 @@ class TestInterferometer:
         n = 3
         prog = sf.Program(n)
         U = random_interferometer(n)
-        BS1, BS2, R = dec.clements(U)
 
         G = ops.Interferometer(U)
         cmds = G.decompose(prog.register)
@@ -251,25 +279,157 @@ class TestGraphEmbed:
         cov = S @ S.T
 
         # calculate Hamilton's A matrix: A = X.(I-Q^{-1})*
-        I = np.identity(n)
-        O = np.zeros_like(I)
-        X = np.block([[O, I], [I, O]])
-
-        x = cov[:n, :n]
-        xp = cov[:n, n:]
-        p = cov[n:, n:]
-
-        aidaj = (x + p + 1j * (xp - xp.T) - 2 * I) / 4
-        aiaj = (x - p + 1j * (xp + xp.T)) / 4
-
-        Q = np.block([[aidaj, aiaj.conj()], [aiaj, aidaj.conj()]]) + np.identity(2 * n)
-
-        A_res = X @ (np.identity(2 * n) - np.linalg.inv(Q)).conj()
+        A_res = np.real_if_close(Amat(cov))
 
         # The bottom right corner of A_res should be identical to A,
         # up to some constant scaling factor. Check if the ratio
         # of all elements is one
         ratio = np.real_if_close(A_res[n:, n:] / A)
+        ratio /= ratio[0, 0]
+
+        assert np.allclose(ratio, np.ones([n, n]), atol=tol, rtol=0)
+
+    def test_decomposition_interferometer_with_zero(self, tol):
+        """Test that an graph is correctly decomposed when the interferometer
+        has one zero somewhere in the unitary matrix, which is the case for the
+        adjacency matrix below"""
+        n = 6
+        prog = sf.Program(n)
+
+        A = np.array([
+        [0, 1, 0, 0, 1, 1],
+        [1, 0, 1, 0, 1, 1],
+        [0, 1, 0, 1, 1, 0],
+        [0, 0, 1, 0, 1, 0],
+        [1, 1, 1, 1, 0, 1],
+        [1, 1, 0, 0, 1, 0],
+        ]
+        )
+        sq, U = dec.graph_embed(A)
+        assert not np.allclose(U, np.identity(n))
+
+        G = ops.GraphEmbed(A)
+        cmds = G.decompose(prog.register)
+        last_op = cmds[-1].op
+        param_val = last_op.p[0].x
+
+        assert isinstance(last_op, ops.Interferometer)
+        assert last_op.ns == n
+        assert np.allclose(param_val, U, atol=tol, rtol=0)
+
+
+class TestBipartiteGraphEmbed:
+    """Tests for the BipartiteGraphEmbed quantum operation"""
+
+    def test_not_bipartite(self, tol):
+        """Test exception raised if the graph is not bipartite"""
+        A = np.array([
+                [0, 1, 0, 0, 1, 1],
+                [1, 0, 1, 0, 1, 1],
+                [0, 1, 0, 1, 1, 0],
+                [0, 0, 1, 0, 1, 0],
+                [1, 1, 1, 1, 0, 1],
+                [1, 1, 0, 0, 1, 0]
+            ]
+        )
+
+        with pytest.raises(ValueError, match="does not represent a bipartite graph"):
+            ops.BipartiteGraphEmbed(A)
+
+        A = np.array([
+                [0, 0, 0, 0, 1, 1],
+                [0, 0, 0, 0, 1, 1],
+                [0, 0, 0, 1, 1, 0],
+                [0, 0, 0, 0, 0, 0],
+                [1, 1, 0, 0, 0, 0],
+                [1, 1, 0, 0, 0, 0]
+            ]
+        )
+
+        with pytest.raises(ValueError, match="does not represent a bipartite graph"):
+            ops.BipartiteGraphEmbed(A)
+
+        A = np.array([
+                [0, 0, 1, 0, 1, 1],
+                [0, 0, 0, 0, 1, 1],
+                [0, 0, 0, 1, 1, 0],
+                [0, 0, 1, 0, 0, 0],
+                [1, 1, 1, 0, 0, 0],
+                [1, 1, 0, 0, 0, 0]
+            ]
+        )
+
+        with pytest.raises(ValueError, match="does not represent a bipartite graph"):
+            ops.BipartiteGraphEmbed(A)
+
+    def test_decomposition(self, hbar, tol):
+        """Test that a graph is correctly decomposed"""
+        n = 3
+        prog = sf.Program(2*n)
+
+        A = np.zeros([2*n, 2*n])
+        B = np.random.random([n, n])
+
+        A[:n, n:] = B
+        A += A.T
+
+        sq, U, V = dec.bipartite_graph_embed(B)
+
+        G = ops.BipartiteGraphEmbed(A)
+        cmds = G.decompose(prog.register)
+
+        S = np.identity(4 * n)
+
+        # calculating the resulting decomposed symplectic
+        for cmd in cmds:
+            # all operations should be BSgates, Rgates, or S2gates
+            assert isinstance(
+                cmd.op, (ops.Interferometer, ops.S2gate)
+            )
+
+            # build up the symplectic transform
+            modes = [i.ind for i in cmd.reg]
+
+            if isinstance(cmd.op, ops.S2gate):
+                # check that the registers are i, i+n
+                assert len(modes) == 2
+                assert modes[1] == modes[0] + n
+
+                r, phi = [i.x for i in cmd.op.p]
+                assert -r in sq
+                assert phi == 0
+
+                S = _two_mode_squeezing(r, phi, modes, 2*n) @ S
+
+            if isinstance(cmd.op, ops.Interferometer):
+                # check that each unitary only applies to half the modes
+                assert len(modes) == n
+                assert (modes == [0, 1, 2]) or (modes == [3, 4, 5])
+
+                # check matrix is unitary
+                U1 = cmd.op.p[0].x
+                assert np.allclose(U1 @ U1.conj().T, np.identity(n), atol=tol, rtol=0)
+
+                if modes[0] == 0:
+                    assert np.allclose(U1, U, atol=tol, rtol=0)
+                else:
+                    assert modes[0] == 3
+                    assert np.allclose(U1, V, atol=tol, rtol=0)
+
+                S_U = np.vstack(
+                    [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
+                )
+
+                S = expand(S_U, modes, 2*n) @ S
+
+        # the resulting covariance state
+        cov = S @ S.T
+        A_res = Amat(cov)[:2*n, :2*n]
+
+        # The bottom right corner of A_res should be identical to A,
+        # up to some constant scaling factor. Check if the ratio
+        # of all elements is one
+        ratio = np.real_if_close(A_res[n:, :n] / B.T)
         ratio /= ratio[0, 0]
 
         assert np.allclose(ratio, np.ones([n, n]), atol=tol, rtol=0)

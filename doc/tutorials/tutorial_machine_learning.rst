@@ -8,26 +8,26 @@ Optimization & machine learning tutorial
 .. note:: This is a more advanced tutorial for users who already have an understanding of Strawberry Fields, e.g., those who have completed the initial :ref:`teleportation tutorial <tutorial>`. Some basic knowledge of `Tensorflow <https://www.tensorflow.org/>`_ is also helpful.
 
 In this tutorial, we show how the user can carry out optimization and machine learning on quantum circuits in Strawberry Fields. This functionality is provided via the Tensorflow simulator backend. By leveraging Tensorflow, we have
-access to a number of additional funtionalities, including GPU integration, automatic gradient computation, built-in optimization algorithms, and other machine learning tools. 
+access to a number of additional funtionalities, including GPU integration, automatic gradient computation, built-in optimization algorithms, and other machine learning tools.
 
-Basic functionality 
+Basic functionality
 ===================
 
-As usual, we can initialize a Strawberry Fields engine using :func:`strawberryfields.Engine`.
+As usual, we can initialize a Strawberry Fields program:
 
 .. code-block:: python
-    
+
     import strawberryfields as sf
     from strawberryfields.ops import *
 
-    eng, q = sf.Engine(2)
-    
-    
+    prog = sf.Program(2)
+
+
 Replacing numbers with Tensors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a circuit contains only numerical parameters, the :ref:`tensorflow_backend` works the same as the other backends. However, with the Tensorflow backend, we have the additional option to use Tensorflow objects (e.g., :code:`tf.Variable`, :code:`tf.constant`, :code:`tf.placeholder`, or :code:`tf.Tensor`) for the parameters of Blackbird states, gates, and measurements.
-    
+
 .. code-block:: python
 
     import tensorflow as tf
@@ -36,24 +36,30 @@ When a circuit contains only numerical parameters, the :ref:`tensorflow_backend`
     phi_bs = tf.sigmoid(0.0) # this will be a tf.Tensor object
     phi = tf.placeholder(tf.float32)
 
-    with eng:
+    with prog.context as q:
         # States
         Coherent(alpha)            | q[0]
 
         # Gates
         BSgate(theta_bs, phi_bs)   | (q[0], q[1])
-        
+
         # Measurements
         MeasureHomodyne(phi)       | q[0]
 
 
-To run a Strawberry Fields simulation with the Tensorflow backend, we need to specify :code:`'tf'` as the backend argument when calling :meth:`eng.run() <.Engine.run>`. However, directly evaluating a circuit which contains Tensorflow objects using :meth:`eng.run() <.Engine.run>` will produce errors. The reason for this is that :meth:`eng.run() <.Engine.run>` tries, by default, to numerically evaluate any measurement result. But Tensorflow requires several extra ingredients to do this: 
+To run a Strawberry Fields simulation with the Tensorflow backend, we need to specify :code:`'tf'` as the backend argument when initializing the engine:
 
-1. Numerical computations must be carried out using a :code:`tf.Session`. 
+.. code-block:: python
 
-2. All :code:`tf.Variable` objects must be initialized within this :code:`tf.Session` (the initial values are supplied when creating the variables). 
+    eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": 7})
 
-3. Numerical values must be provided for any :code:`tf.placeholder` objects using a feed dictionary (:code:`feed_dict`). 
+We can now run our program using :meth:`eng.run() <.Engine.run>`. However, directly evaluating a circuit which contains Tensorflow objects using :meth:`eng.run() <.Engine.run>` will produce errors. The reason for this is that :meth:`eng.run() <.Engine.run>` tries, by default, to numerically evaluate any measurement result. But Tensorflow requires several extra ingredients to do this:
+
+1. Numerical computations must be carried out using a :code:`tf.Session`.
+
+2. All :code:`tf.Variable` objects must be initialized within this :code:`tf.Session` (the initial values are supplied when creating the variables).
+
+3. Numerical values must be provided for any :code:`tf.placeholder` objects using a feed dictionary (:code:`feed_dict`).
 
 To properly evaluate measurement results, we must therefore do a little more work:
 
@@ -61,28 +67,35 @@ To properly evaluate measurement results, we must therefore do a little more wor
 
     sess = tf.Session()
     sess.run(tf.global_variables_initializer())
-    feed_dict = {phi:0.0}
-    state = eng.run('tf', cutoff_dim=7, session=sess, feed_dict=feed_dict) 
-    
-This code will execute without error, and both the output state and the register :code:`q` will contain numeric values based on the given value for the angle phi. We can select measurement results at other angles by supplying different values for :code:`phi` in :code:`feed_dict`. 
+    feed_dict = {phi: 0.0}
 
-.. note:: When being used as a numerical simulator (similar to the other backends), the Tensorflow backend creates temporary sessions in order to evaluate measurement results numerically. 
+    results = eng.run(prog, run_options={"session": sess, "feed_dict": feed_dict})
+
+This code will execute without error, and both the output results and the register :code:`q` will contain numeric values based on the given value for the angle phi. We can select measurement results at other angles by supplying different values for :code:`phi` in :code:`feed_dict`.
+
+.. note:: When being used as a numerical simulator (similar to the other backends), the Tensorflow backend creates temporary sessions in order to evaluate measurement results numerically.
 
 Symbolic computation
 ~~~~~~~~~~~~~~~~~~~~
 
-Supplying a :code:`Session` and :code:`feed_dict` to :code:`eng.run()` is okay for checking one or two numerical values. However, each call of :code:`eng.run()` will create additional redundant nodes in the underlying Tensorflow computational graph. A better method is to make the single call :code:`eng.run(eval=False)`. This will carry out the computation symbolically but not numerically. The final state and the register :code:`q` will both instead contain *unevaluted Tensors*. These Tensors can be evaluated numerically by running the :code:`tf.Session` and supplying the desired values for any placeholders:
+Supplying a :code:`Session` and :code:`feed_dict` to :code:`eng.run()` is okay for checking one or two numerical values.
+However, each call of :code:`eng.run()` will create additional redundant nodes in the underlying Tensorflow computational graph.
+A better method is to make the single call :code:`eng.run(prog, run_options={"eval": False})`. This will carry out the computation symbolically but not numerically.
+The results returned by the engine will instead contain *unevaluted Tensors*. These Tensors can be evaluated numerically by running the :code:`tf.Session` and supplying the desired values for any placeholders:
 
 .. code-block:: python
 
-    eng, q = sf.Engine(2)
-    with eng:
+    prog = sf.Program(2)
+
+    with prog.context as q:
         Dgate(alpha)         | q[0]
         MeasureHomodyne(phi) | q[0]
 
-    state = eng.run('tf', cutoff_dim=7, eval=False)
-    state_density_matrix = state.dm()
-    homodyne_meas = q[0].val
+    eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": 7})
+    results = eng.run(prog, run_options={"eval": False})
+
+    state_density_matrix = results.state.dm()
+    homodyne_meas = results.samples[0]
     dm_x, meas_x = sess.run([state_density_matrix, homodyne_meas], feed_dict={phi: 0.0})
 
 Processing data
@@ -93,7 +106,7 @@ The parameters for Blackbird states, gates, and measurements may be more complex
 .. code-block:: python
 
     input_ = tf.placeholder(tf.float32, shape=(2,1))
-    weights = tf.Variable([[0.1,0.1]]) 
+    weights = tf.Variable([[0.1, 0.1]])
     bias = tf.Variable(0.0)
     NN = tf.sigmoid(tf.matmul(weights, input_) + bias)
     NNDgate = Dgate(NN)
@@ -105,28 +118,31 @@ We can also use the :func:`strawberryfields.convert` decorator to allow arbitrar
     @sf.convert
     def sigmoid(x):
         return tf.sigmoid(x)
-      
-    with eng:
+
+    prog = sf.Program(2)
+
+    with prog.context as q:
         MeasureX             | q[0]
         Dgate(sigmoid(q[0])) | q[1]
-       
+
 Working with batches
 ~~~~~~~~~~~~~~~~~~~~
 
-It is common in machine learning to process data in *batches*. Strawberry Fields supports both unbatched and batched data when using the Tensorflow backend. Unbatched operation is the default behaviour (shown above). To enable batched operation, you should provide an extra :code:`batch_size` argument [#]_ when calling :meth:`eng.run() <.Engine.run>`, e.g.,
+It is common in machine learning to process data in *batches*. Strawberry Fields supports both unbatched and batched data when using the Tensorflow backend. Unbatched operation is the default behaviour (shown above). To enable batched operation, you should provide an extra :code:`batch_size` argument [#]_ within the :code:`backend_options` dictionary, e.g.,
 
 .. code-block:: python
 
-    # run simulation in batched-processing mode 
+    # run simulation in batched-processing mode
     batch_size = 3
-    eng, q = sf.Engine(2)
+    prog = sf.Program(2)
+    eng = sf.Engine('tf', backend_options={"cutoff_dim": 7, "batch_size": batch_size})
 
-    with eng:
+    with prog.context as q:
         Dgate(tf.Variable([0.1] * batch_size)) | q[0]
 
-    state = eng.run('tf', cutoff_dim=7, eval=False, batch_size=batch_size)
+    result = eng.run(prog, run_options={"eval": False})
 
-.. note:: The batch size should be static, i.e., not changing over the course of a computation. 
+.. note:: The batch size should be static, i.e., not changing over the course of a computation.
 
 Parameters supplied to a circuit in batch-mode operation can either be scalars or vectors (of length :code:`batch_size`). Scalars are automatically broadcast over the batch dimension.
 
@@ -141,9 +157,9 @@ Measurement results will be returned as Tensors with shape :code:`(batch_size,)`
 Example: variational quantum circuit optimization
 =================================================
 
-A key element of machine learning is optimization. We can use Tensorflow's automatic differentiation tools to optimize the parameters of *variational quantum circuits*. In this approach, we fix a circuit architecture where the states, gates, and/or measurements may have learnable parameters associated with them. We then define a loss function based on the output state of this circuit. 
+A key element of machine learning is optimization. We can use Tensorflow's automatic differentiation tools to optimize the parameters of *variational quantum circuits*. In this approach, we fix a circuit architecture where the states, gates, and/or measurements may have learnable parameters associated with them. We then define a loss function based on the output state of this circuit.
 
-.. warning:: The state representation in the simulator can change from a ket (pure) to a density matrix (mixed) if we use certain operations (e.g., state preparations). We can check :code:`state.is_pure` to determine which representation is being used. 
+.. warning:: The state representation in the simulator can change from a ket (pure) to a density matrix (mixed) if we use certain operations (e.g., state preparations). We can check :code:`state.is_pure` to determine which representation is being used.
 
 In the example below, we optimize a :class:`~.Dgate` to produce an output with the largest overlap with the Fock state :math:`n=1`.
 
@@ -165,12 +181,10 @@ Use the optimization methods outlined above to find the famous `Hong-Ou-Mandel e
 
 .. rubric:: Footnotes
 
-.. [#] Note that certain operations -- in particular, measurements --  may not have gradients defined within Tensorflow. When optimizing via gradient descent, we must be careful to define a circuit which is end-to-end differentiable. The gradient support of Tensorflow is constantly growing; users are recommended to check the `Tensorflow docs <http://tensorflow.org>`_ and the `Tensorflow github page <https://github.com/tensorflow/tensorflow>`_ for the latest implementation details.
+.. [#] Note that certain operations---in particular, measurements---may not have gradients defined within Tensorflow. When optimizing via gradient descent, we must be careful to define a circuit which is end-to-end differentiable.
 
 .. [#] Note that :code:`batch_size` should not be set to 1. Instead, use ``batch_size=None``, or just omit the ``batch_size`` argument.
 
-.. [#] In this tutorial, we have applied classical machine learning tools to learn a quantum optical circuit. Of course, there are many other possibilities for combining machine learning and quantum computing, e.g., using quantum algorithms to speed up machine learning subroutines, or fully quantum learning on unprocessed quantum data.  
+.. [#] In this tutorial, we have applied classical machine learning tools to learn a quantum optical circuit. Of course, there are many other possibilities for combining machine learning and quantum computing, e.g., using quantum algorithms to speed up machine learning subroutines, or fully quantum learning on unprocessed quantum data.
 
-.. [#] Remember that it might be necessary to reshape a ket or density matrix before using some of these functions. 
-
-
+.. [#] Remember that it might be necessary to reshape a ket or density matrix before using some of these functions.

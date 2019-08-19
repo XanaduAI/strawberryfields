@@ -5,10 +5,11 @@ from strawberryfields.utils import scale
 from numpy import pi, sqrt
 import numpy as np
 
-# initialise the engine and register
-eng, q = sf.Engine(4)
+# initialize engine and program objects
+eng = sf.Engine(backend="gaussian")
+gaussian_cloning = sf.Program(4)
 
-with eng:
+with gaussian_cloning.context as q:
     # state to be cloned
     Coherent(0.7+1.2j) | q[0]
 
@@ -30,23 +31,24 @@ with eng:
     # end circuit
 
 # run the engine
-state = eng.run('gaussian', modes=[0,3])
+results = eng.run(gaussian_cloning, run_options={"modes": [0, 3]})
 
 # return the cloning fidelity
-fidelity = sqrt(state.fidelity_coherent([0.7+1.2j, 0.7+1.2j]))
+fidelity = sqrt(results.state.fidelity_coherent([0.7+1.2j, 0.7+1.2j]))
 # return the cloned displacement
-alpha = state.displacement()
+alpha = results.state.displacement()
 
 # run the engine over an ensemble
-shots = 1000
-f = np.empty([shots])
-a = np.empty([shots], dtype=np.complex128)
+reps = 1000
+f = np.empty([reps])
+a = np.empty([reps], dtype=np.complex128)
 
-for i in range(shots):
-    state = eng.run('gaussian', reset_backend=True, modes=[0])
-    f[i] = state.fidelity_coherent([0.7+1.2j])
-    a[i] = state.displacement()
+for i in range(reps):
+    eng.reset()
+    results = eng.run(gaussian_cloning, run_options={"modes": [0]})
+    f[i] = results.state.fidelity_coherent([0.7+1.2j])
+    a[i] = results.state.displacement()
 
-print(np.mean(f))
-print(np.mean(a))
-print(np.cov([a.real, a.imag]))
+print("Fidelity of cloned state:", np.mean(f))
+print("Mean displacement of cloned state:", np.mean(a))
+print("Mean covariance matrix of cloned state:", np.cov([a.real, a.imag]))

@@ -28,6 +28,7 @@ from strawberryfields.parameters import Parameter
 # make test deterministic
 np.random.seed(42)
 a = np.random.random()
+b = np.random.random()
 
 
 class TestProgramGateInteraction:
@@ -45,7 +46,11 @@ class TestProgramGateInteraction:
     def test_dispatch_one_mode_gates(self, gate):
         """test one mode gates automatically add to the queue"""
         prog = Program(2)
-        G = gate(a)
+
+        if gate in ops.two_args_gates:
+            G = gate(a, b)
+        else:
+            G = gate(a)
 
         if G.ns == 2:
             pytest.skip("test only for 1 mode gates.")
@@ -64,7 +69,11 @@ class TestProgramGateInteraction:
     def test_dispatch_two_mode_gates(self, gate):
         """test two mode gates automatically add to the queue"""
         prog = Program(3)
-        G = gate(a)
+
+        if gate in ops.two_args_gates:
+            G = gate(a, b)
+        else:
+            G = gate(a)
 
         if G.ns == 1:
             pytest.skip("test only for 1 mode gates.")
@@ -152,3 +161,16 @@ class TestProgramGateInteraction:
         assert len(q) == 4
         # Program.reg_refs contains all the regrefs, active and inactive
         assert len(prog.reg_refs) == 6
+
+
+class TestOperationDeprecation:
+    """Tests for operation deprecation"""
+
+    def test_measure_deprecation(self):
+        """Test that use of the Measure shorthand correctly
+        raises a deprecation warning"""
+
+        msg = r"The shorthand '{}' has been deprecated, please use '{}\(\)' instead"
+
+        with pytest.warns(UserWarning, match=msg.format("Measure", "MeasureFock")):
+            ops.Measure

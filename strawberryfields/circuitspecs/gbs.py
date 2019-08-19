@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Gaussian boson sampling validation data."""
+"""Circuit class specification for the general Gaussian Boson Sampling class of circuits."""
 
 from strawberryfields.program_utils import CircuitError, Command, group_operations
 import strawberryfields.ops as ops
@@ -20,7 +20,7 @@ from .gaussian import GaussianSpecs
 
 
 class GBSSpecs(GaussianSpecs):
-    """Validation data for Gaussian boson sampling."""
+    """Circuit specifications for the general GBS class of circuits."""
 
     short_name = 'gbs'
     primitives = {
@@ -49,10 +49,10 @@ class GBSSpecs(GaussianSpecs):
         "Sgate",
         "Rgate",
         "Fouriergate",
-        "BSgate",
+        "BSgate"
     }
 
-    def compile(self, seq):
+    def compile(self, seq, registers):
         """Try to arrange a quantum circuit into a form suitable for Gaussian boson sampling.
 
         This method checks whether the circuit can be implemented as a Gaussian boson sampling
@@ -64,6 +64,7 @@ class GBSSpecs(GaussianSpecs):
 
         Args:
             seq (Sequence[Command]): quantum circuit to modify
+            registers (Sequence[RegRefs]): quantum registers
         Returns:
             List[Command]: modified circuit
         Raises:
@@ -95,5 +96,5 @@ class GBSSpecs(GaussianSpecs):
             measured |= temp
 
         # replace B with a single Fock measurement
-        B = [Command(ops.MeasureFock(), list(measured))]
-        return super().compile(A + B)
+        B = [Command(ops.MeasureFock(), sorted(list(measured), key=lambda x: x.ind))]
+        return super().compile(A + B, registers)

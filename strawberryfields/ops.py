@@ -23,10 +23,10 @@ Quantum operations
 
 .. note::
 
-  In the :mod:`strawberryfields.ops` API we use the convention :math:`\hbar=2` by default, however
-  this can be changed using the global variable :py:data:`strawberryfields.hbar`.
+    In the :mod:`strawberryfields.ops` API we use the convention :math:`\hbar=2` by default, however
+    this can be changed using the global variable :py:data:`strawberryfields.hbar`.
 
-  See :ref:`conventions` for more details.
+    See :ref:`conventions` for more details.
 
 This module defines and implements the Python-embedded quantum programming language
 for continuous-variable (CV) quantum systems.
@@ -37,10 +37,10 @@ register objects using the following syntax:
 
 .. code-block:: python
 
-  prog = sf.Program(3)
-  with prog.context as q:
-      G(params) | q
-      F(params) | (q[1], q[6], q[2])
+    prog = sf.Program(3)
+    with prog.context as q:
+        G(params) | q
+        F(params) | (q[1], q[6], q[2])
 
 Here :samp:`prog` is an instance of :class:`strawberryfields.program.Program`
 which defines the context where the commands are stored.
@@ -51,11 +51,11 @@ with the part on the right as the parameter. The part on the right is a single
 :class:`strawberryfields.engine.RegRef` object or, for multi-mode gates, a sequence of them.
 It is of course also possible to construct gates separately and reuse them several times::
 
-  R = Rgate(s)
-  with prog.context as q:
-      R   | q
-      Xgate(t) | q
-      R.H | q
+    R = Rgate(s)
+    with prog.context as q:
+        R   | q
+        Xgate(t) | q
+        R.H | q
 
 
 There are six kinds of :class:`Operation` objects:
@@ -76,7 +76,7 @@ There are six kinds of :class:`Operation` objects:
   The information is directly available only after the program has been run up to the point of measurement::
 
     with prog.context as (alice, bob):
-        Measure       | alice
+        MeasureFock() | alice
 
     eng = sf.LocalEngine(backend='fock')
     eng.run(prog)
@@ -87,7 +87,7 @@ There are six kinds of :class:`Operation` objects:
   i.e., we may symbolically use the measurement result before it exists::
 
     with prog.context as (alice, bob):
-        Measure   | alice
+        MeasureFock()| alice
         Dgate(alice) | bob
 
   One may also include an arbitrary post-processing function for the measurement result, to be applied
@@ -99,14 +99,14 @@ There are six kinds of :class:`Operation` objects:
         return q ** 2
 
     with prog.context as q:
-        Measure           | q[0]
+        MeasureFock()       | q[0]
         Dgate(square(q[0])) | q[1]
 
   Finally, the lower-level :class:`strawberryfields.engine.RegRefTransform` (RR) and
   an optional lambda function can be used to achieve the same functionality::
 
     with prog.context as q:
-        Measure       | q[0]
+        MeasureFock()   | q[0]
         Dgate(RR(q[0])) | q[1]
         Dgate(RR(q[0], lambda q: q ** 2)) | q[2]
 
@@ -142,14 +142,14 @@ Base classes
 The abstract base class hierarchy exists to provide the correct semantics for the actual operations that inherit them.
 
 .. autosummary::
-   Operation
-   Preparation
-   Transformation
-   Gate
-   Channel
-   Measurement
-   Decomposition
-   MetaOperation
+    Operation
+    Preparation
+    Transformation
+    Gate
+    Channel
+    Measurement
+    Decomposition
+    MetaOperation
 
 
 Operation class
@@ -160,12 +160,12 @@ All Operations have the following methods.
 .. currentmodule:: strawberryfields.ops.Operation
 
 .. autosummary::
-   __str__
-   __or__
-   merge
-   decompose
-   apply
-   _apply
+    __str__
+    __or__
+    merge
+    decompose
+    apply
+    _apply
 
 .. currentmodule:: strawberryfields.ops
 
@@ -174,24 +174,24 @@ State preparation
 -----------------
 
 .. autosummary::
-   Vacuum
-   Coherent
-   Squeezed
-   DisplacedSqueezed
-   Thermal
-   Fock
-   Catstate
-   Ket
-   DensityMatrix
-   Gaussian
+    Vacuum
+    Coherent
+    Squeezed
+    DisplacedSqueezed
+    Thermal
+    Fock
+    Catstate
+    Ket
+    DensityMatrix
+    Gaussian
 
 Measurements
 ------------
 
 .. autosummary::
-   MeasureFock
-   MeasureHomodyne
-   MeasureHeterodyne
+    MeasureFock
+    MeasureHomodyne
+    MeasureHeterodyne
 
 
 Channels
@@ -208,6 +208,7 @@ Decompositions
 .. autosummary::
     Interferometer
     GraphEmbed
+    BipartiteGraphEmbed
     GaussianTransform
     Gaussian
 
@@ -216,32 +217,33 @@ Single-mode gates
 -----------------
 
 .. autosummary::
-   Dgate
-   Xgate
-   Zgate
-   Sgate
-   Rgate
-   Pgate
-   Vgate
-   Fouriergate
+    Dgate
+    Xgate
+    Zgate
+    Sgate
+    Rgate
+    Pgate
+    Vgate
+    Fouriergate
 
 Two-mode gates
 --------------
 
 .. autosummary::
-   BSgate
-   S2gate
-   CXgate
-   CZgate
-   CKgate
+    BSgate
+    MZgate
+    S2gate
+    CXgate
+    CZgate
+    CKgate
 
 Meta-operations
 ---------------
 
 .. autosummary::
-   All
-   _New_modes
-   _Delete
+    All
+    _New_modes
+    _Delete
 
 
 Operations shortcuts
@@ -252,11 +254,11 @@ this is to provide shorthands for operations that accept no arguments, as well a
 
 .. raw:: html
 
-   <style>
+    <style>
       .widetable {
          width:100%;
       }
-   </style>
+    </style>
 
 .. rst-class:: longtable widetable
 
@@ -266,7 +268,6 @@ this is to provide shorthands for operations that accept no arguments, as well a
 ``Del``                  :class:`~._Delete`
 ``Vac``                  :class:`~.Vacuum`
 ``Fourier``              :class:`~.Fouriergate`
-``Measure``              :class:`~.MeasureFock`
 ``MeasureX``             :class:`~.MeasureHomodyne` (:math:`\phi=0`), :math:`x` quadrature measurement
 ``MeasureP``             :class:`~.MeasureHomodyne` (:math:`\phi=\pi/2`), :math:`p` quadrature measurement
 ``MeasureHD``            :class:`~.MeasureHeterodyne`
@@ -278,9 +279,10 @@ Code details
 ~~~~~~~~~~~~
 
 """
-
 from collections.abc import Sequence
 import copy
+import types
+import sys
 import warnings
 
 import numpy as np
@@ -297,7 +299,8 @@ from .program_utils import (Command, RegRefTransform, MergeFailure)
 from .parameters import (Parameter, _unwrap, matmul, sign, abs, exp, log, sqrt,
                          sin, cos, cosh, tanh, arcsinh, arccosh, arctan, arctan2,
                          transpose, squeeze)
-from .decompositions import clements, bloch_messiah, williamson, graph_embed
+
+from . import decompositions as dec
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
@@ -421,7 +424,7 @@ class Operation:
         # a special singleton Identity object instead?
         raise NotImplementedError
 
-    def decompose(self, reg):
+    def decompose(self, reg, **kwargs):
         """Decompose the operation into elementary operations supported by the backend API.
 
         See :mod:`strawberryfields.backends.base`.
@@ -435,9 +438,9 @@ class Operation:
         # todo: For now decompose() works on unevaluated Parameters.
         # This causes an error if a :class:`.RegRefTransform`-based Parameter is used, and
         # decompose() tries to do arithmetic on it.
-        return self._decompose(reg)
+        return self._decompose(reg, **kwargs)
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         """Internal decomposition method defined by subclasses.
 
         Args:
@@ -471,37 +474,25 @@ class Operation:
             reg (Sequence[RegRef]): subsystem(s) the operation is acting on
             backend (BaseBackend): backend to execute the operation
 
-        Keyword Args:
-            eval_params (bool): Set this to False to explicitly turn off the
-                evaluation of parameters in the Operation.apply method. This is
-                useful if the parameters are pre-evaluated prior to calling this method.
-            shots (int): Number of independent evaluations to perform.
-                Only applies to Measurements.
-
         Returns:
             Any: the result of self._apply
         """
-        eval_params = kwargs.get('eval_params', True)
+        # NOTE: We cannot just replace all RegRefTransform parameters with their
+        # numerical values here. If we re-initialize a measured mode and
+        # re-measure it, the RegRefTransform value should change accordingly
+        # when it is used again after the new measurement.
+
         original_p = self.p  # store the original parameters
-
-        if eval_params and original_p:
-            # NOTE: We cannot just replace all RegRefTransform parameters with their
-            # numerical values here. If we re-initialize a measured mode and
-            # re-measure it, the RegRefTransform value should change accordingly
-            # when it is used again after the new measurement.
-
-            # Evaluate the Parameters, restore the originals later:
-            self.p = [x.evaluate() for x in self.p]
+        # Evaluate the Parameters, restore the originals later:
+        self.p = [x.evaluate() for x in self.p]
 
         # convert RegRefs back to indices for the backend API
         temp = [rr.ind for rr in reg]
         # call the child class specialized _apply method
         result = self._apply(temp, backend, **kwargs)
 
-        if eval_params and original_p:
-            # restore original unevaluated Parameter instances
-            self.p = original_p
-
+        # restore original unevaluated Parameter instances
+        self.p = original_p
         return result
 
 
@@ -565,6 +556,10 @@ class Measurement(Operation):
         """Ask a backend to execute the operation on the current register state right away.
 
         Like :func:`Operation.apply`, but also stores the measurement result in the RegRefs.
+
+        Keyword Args:
+            shots (int): Number of independent evaluations to perform.
+                Only applies to Measurements.
         """
         values = super().apply(reg, backend, **kwargs)
         # convert the returned values into an iterable with the measured modes indexed along
@@ -611,7 +606,7 @@ class Decomposition(Operation):
             # easier to perform. The constructor restores it.
             # Another option would be to add the required methods to Parameter class.
             # check if the matrices cancel
-            if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
+            if np.allclose(U, np.identity(len(U)), atol=_decomposition_merge_tol, rtol=0):
                 return None
 
             return self.__class__(U)
@@ -708,12 +703,12 @@ class Gate(Transformation):
         s.dagger = not s.dagger
         return s
 
-    def decompose(self, reg):
+    def decompose(self, reg, **kwargs):
         """Decompose the operation into elementary operations supported by the backend API.
 
         Like :func:`Operation.decompose`, but applies self.dagger.
         """
-        seq = self._decompose(reg)
+        seq = self._decompose(reg, **kwargs)
         if self.dagger:
             # apply daggers, reverse the Command sequence
             for cmd in seq:
@@ -738,13 +733,15 @@ class Gate(Transformation):
             return
         if self.dagger:
             z = -z
-        temp = self.p  # store the original Parameters
+        original_p = self.p  # store the original Parameters
         # evaluate the rest of the Parameters, restore the originals later
         self.p = [z] + [x.evaluate() for x in self.p[1:]]
-        # calling the parent apply, skipping re-evaluation of self.p
-        # (which wouldn't hurt but is unnecessary)
-        super().apply(reg, backend, eval_params=False, **kwargs)
-        self.p = temp  # restore original unevaluated Parameter instances
+
+        # convert RegRefs back to indices for the backend API
+        temp = [rr.ind for rr in reg]
+        # call the child class specialized _apply method
+        self._apply(temp, backend, **kwargs)
+        self.p = original_p  # restore original unevaluated Parameter instances
 
     def merge(self, other):
         if not self.__class__ == other.__class__:
@@ -876,7 +873,7 @@ class DisplacedSqueezed(Preparation):
         # prepare the displaced squeezed state directly
         backend.prepare_displaced_squeezed_state(p[0], p[1], p[2], *reg)
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # squeezed state preparation followed by a displacement gate
         return [
             Command(Squeezed(self.p[1], self.p[2]), reg),
@@ -1053,11 +1050,6 @@ class MeasureFock(Measurement):
 
     def _apply(self, reg, backend, shots=1, **kwargs):
         return backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
-
-    def __str__(self):
-        if self.select is None:
-            return 'Measure'
-        return 'MeasureFock(select={})'.format(self.select)
 
 
 class MeasureHomodyne(Measurement):
@@ -1273,7 +1265,7 @@ class Pgate(Gate):
     def __init__(self, s):
         super().__init__([s])
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # into a squeeze and a rotation
         temp = self.p[0] / 2
         r = arccosh(sqrt(1+temp**2))
@@ -1367,6 +1359,34 @@ class BSgate(Gate):
         backend.beamsplitter(t.x, r.x, *reg)
 
 
+class MZgate(Gate):
+    r"""Mach-Zehnder interferometer.
+
+    .. math::
+
+        \mathrm{MZ}(\phi_{ex}, \phi_{in}) = BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
+            (R(\phi_{in})\otimes I) BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
+            (R(\phi_{ex})\otimes I)
+
+    Args:
+        phi_ex (float): external phase
+        phi_in (float): internal phase
+    """
+    ns = 2
+
+    def __init__(self, phi_ex, phi_in):
+        super().__init__([phi_ex, phi_in])
+
+    def _decompose(self, reg, **kwargs):
+        # into local phase shifts and two 50-50 beamsplitters
+        return [
+            Command(Rgate(self.p[0].x), reg[0]),
+            Command(BSgate(np.pi/4, np.pi/2), reg),
+            Command(Rgate(self.p[1].x), reg[0]),
+            Command(BSgate(np.pi/4, np.pi/2), reg)
+        ]
+
+
 class S2gate(Gate):
     r""":ref:`Two-mode squeezing <two_mode_squeezing>` gate.
 
@@ -1384,7 +1404,7 @@ class S2gate(Gate):
     def __init__(self, r, phi=0.):
         super().__init__([r, phi])
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # two opposite squeezers sandwiched between 50% beamsplitters
         S = Sgate(self.p[0], self.p[1])
         BS = BSgate(pi/4, 0)
@@ -1413,7 +1433,7 @@ class CXgate(Gate):
     def __init__(self, s=1):
         super().__init__([s])
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         s = self.p[0]
         r = arcsinh(-s/2)
         theta = 0.5*arctan2(-1.0/cosh(r), -tanh(r))
@@ -1445,7 +1465,7 @@ class CZgate(Gate):
     def __init__(self, s=1):
         super().__init__([s])
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # phase-rotated CZ
         CX = CXgate(self.p[0])
         return [
@@ -1621,59 +1641,137 @@ class All(MetaOperation):
 class Interferometer(Decomposition):
     r"""Apply a linear interferometer to the specified qumodes.
 
-    This operation uses the :ref:`Clements decomposition <clements>` to decompose
+    This operation uses either the :ref:`rectangular decomposition <rectangular>`
+    or triangular decomposition to decompose
     a linear interferometer into a sequence of beamsplitters and
     rotation gates.
 
+    By specifying the keyword argument ``mesh``, the scheme used to implement the interferometer
+    may be adjusted:
+
+    * ``mesh='rectangular'`` (default): uses the scheme described in
+      :cite:`clements2016`, resulting in a *rectangular* array of
+      :math:`M(M-1)/2` beamsplitters:
+
+      .. figure:: ../_static/clements.png
+          :align: center
+          :width: 30%
+          :target: javascript:void(0);
+
+      Local phase shifts appear in the middle of the beamsplitter array.
+      Use ``mesh='rectangular_phase_end`` to instead commute all local phase shifts
+      to the end of the beamsplitter array.
+
+      By default, the interferometers are decomposed into :class:`~.BSgate` operations.
+      To instead decompose the interferometer using the :class:`~.ops.MZgate`,
+      use ``mesh='rectangular_symmetric'``.
+
+    * ``mesh='triangular'``: uses the scheme described in :cite:`reck1994`,
+      resulting in a *triangular* array of :math:`M(M-1)/2` beamsplitters:
+
+      .. figure:: ../_static/reck.png
+          :align: center
+          :width: 30%
+          :target: javascript:void(0);
+
+      Local phase shifts appear at the end of the beamsplitter array.
+
     Args:
         U (array[complex]): an :math:`N\times N` unitary matrix
-        tol (float): the tolerance used when checking if the matrix is unitary:
-            :math:`|UU^\dagger-I| \leq` tol
-    """
+        mesh (str): the scheme used to implement the interferometer.
+            Options include:
 
-    def __init__(self, U, tol=1e-11):
+            - ``'rectangular'`` - rectangular mesh, with local phase shifts
+              applied between interferometers
+
+            - ``'rectangular_phase_end'`` - rectangular mesh, with local phase shifts
+              placed after all interferometers
+
+            - ``'rectangular_symmetric'`` - rectangular mesh, with local phase shifts
+              placed after all interferometers, and all beamsplitters decomposed into
+              pairs of symmetric beamsplitters and phase shifters
+
+            - ``'triangular'`` - triangular mesh
+
+        drop_identity (bool): If ``True``, decomposed gates with trivial parameters,
+            such that they correspond to an identity operation, are removed.
+        tol (float): the tolerance used when checking if the input matrix is unitary:
+            :math:`|U-U^\dagger| <` tol
+    """
+    # pylint: disable=too-many-instance-attributes
+
+    def __init__(self, U, mesh="rectangular", drop_identity=True, tol=1e-6):
         super().__init__([U])
         self.ns = U.shape[0]
+        self.mesh = mesh
+        self.tol = tol
+        self.drop_identity = drop_identity
 
-        if np.all(np.abs(U - np.identity(len(U))) < _decomposition_merge_tol):
-            self.identity = True
-        else:
-            self.identity = False
-            self.BS1, self.BS2, self.R = clements(U, tol=tol)
+        allowed_meshes = {"rectangular", "rectangular_phase_end", "rectangular_symmetric", "triangular"}
 
-    def _decompose(self, reg):
+        if mesh not in allowed_meshes:
+            raise ValueError("Unknown mesh '{}'. Mesh must be one of {}".format(mesh, allowed_meshes))
+
+        self.identity = np.allclose(U, np.identity(len(U)), atol=_decomposition_merge_tol, rtol=0)
+
+    def _decompose(self, reg, **kwargs):
+        mesh = kwargs.get("mesh", self.mesh)
+        tol = kwargs.get("tol", self.tol)
+        drop_identity = kwargs.get("drop_identity", self.drop_identity)
+
         cmds = []
 
-        if not self.identity:
-            for n, m, theta, phi, _ in self.BS1:
-                if np.abs(phi) >= _decomposition_tol:
-                    cmds.append(Command(Rgate(phi), reg[n]))
-                if np.abs(theta) >= _decomposition_tol:
-                    cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m])))
+        if not self.identity or not drop_identity:
+            decomp_fn = getattr(dec, mesh)
+            BS1, R, BS2 = decomp_fn(self.p[0].x, tol=tol)
 
-            for n, expphi in enumerate(self.R):
-                if np.abs(expphi - 1) >= _decomposition_tol:
-                    q = log(expphi).imag
+            for n, m, theta, phi, _ in BS1:
+                theta = theta if np.abs(theta) >= _decomposition_tol else 0
+                phi = phi if np.abs(phi) >= _decomposition_tol else 0
+
+                if "symmetric" in mesh:
+                    # Mach-Zehnder interferometers
+                    cmds.append(Command(MZgate(np.mod(phi, 2*np.pi), np.mod(theta, 2*np.pi)), (reg[n], reg[m])))
+
+                else:
+                    # Clements style beamsplitters
+                    if not (drop_identity and phi == 0):
+                        cmds.append(Command(Rgate(phi), reg[n]))
+
+                    if not (drop_identity and theta == 0):
+                        cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m])))
+
+            for n, expphi in enumerate(R):
+                # local phase shifts
+                q = log(expphi).imag if np.abs(expphi - 1) >= _decomposition_tol else 0
+                if not (drop_identity and q == 0):
                     cmds.append(Command(Rgate(q), reg[n]))
 
-            for n, m, theta, phi, _ in reversed(self.BS2):
-                if np.abs(theta) >= _decomposition_tol:
-                    cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m])))
-                if np.abs(phi) >= _decomposition_tol:
-                    cmds.append(Command(Rgate(-phi), reg[n]))
+            if BS2 is not None:
+                # Clements style beamsplitters
+
+                for n, m, theta, phi, _ in reversed(BS2):
+                    theta = theta if np.abs(theta) >= _decomposition_tol else 0
+                    phi = phi if np.abs(phi) >= _decomposition_tol else 0
+
+                    if not (drop_identity and theta == 0):
+                        cmds.append(Command(BSgate(-theta, 0), (reg[n], reg[m])))
+                    if not (drop_identity and phi == 0):
+                        cmds.append(Command(Rgate(-phi), reg[n]))
 
         return cmds
 
 
 class GraphEmbed(Decomposition):
     r"""Embed a graph into an interferometer setup.
+
     This operation uses the Takagi decomposition to decompose
     an adjacency matrix into a sequence of squeezers and beamsplitters and
     rotation gates.
-    
+
     Args:
         A (array): an :math:`N\times N` complex or real symmetric matrix
-        mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state
+        mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
             representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
         make_traceless (boolean): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
@@ -1683,19 +1781,19 @@ class GraphEmbed(Decomposition):
             :math:`|A-A^T| <` tol
     """
 
-    def __init__(self, A, mean_photon_per_mode=1.0, make_traceless=False, tol=1e-6):
+    def __init__(self, A, mean_photon=1.0, make_traceless=False, tol=1e-6):
         super().__init__([A])
         self.ns = A.shape[0]
 
-        if np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol):
+        if np.allclose(A, np.identity(len(A)), atol=_decomposition_merge_tol, rtol=0):
             self.identity = True
         else:
             self.identity = False
-            self.sq, self.U = graph_embed(
-                A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=make_traceless, atol=tol
+            self.sq, self.U = dec.graph_embed(
+                A, mean_photon_per_mode=mean_photon, make_traceless=make_traceless, atol=tol, rtol=0
             )
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         cmds = []
 
         if not self.identity:
@@ -1703,8 +1801,99 @@ class GraphEmbed(Decomposition):
                 if np.abs(s) >= _decomposition_tol:
                     cmds.append(Command(Sgate(s), reg[n]))
 
-            if np.all(np.abs(self.U - np.identity(len(self.U))) >= _decomposition_tol):
-                cmds.append(Command(Interferometer(self.U), reg))
+            if not np.allclose(self.U, np.identity(len(self.U)), atol=_decomposition_tol, rtol=0):
+                mesh = kwargs.get("mesh", "rectangular")
+                cmds.append(Command(Interferometer(self.U, mesh=mesh), reg))
+
+        return cmds
+
+
+class BipartiteGraphEmbed(Decomposition):
+    r"""Embed a bipartite graph into an interferometer setup.
+
+    A bipartite graph is a graph that consists of two vertex sets :math:`U` and :math:`V`,
+    such that every edge in the graph connects a vertex between :math:`U` and :math:`V`.
+    That is, there are no edges between vertices in the same vertex set.
+
+    The adjacency matrix of an :math:`N` vertex undirected bipartite graph
+    is a :math:`N\times N` symmetric matrix of the form
+
+    .. math:: A = \begin{bmatrix}0 & B \\ B^T & 0\end{bmatrix}
+
+    where :math:`B` is a :math:N/2\times N/2` matrix representing the (weighted)
+    edges between the vertex set.
+
+    This operation decomposes an adjacency matrix into a sequence of two
+    mode squeezers, beamsplitters, and rotation gates.
+
+    Args:
+        A (array): Either an :math:`N\times N` complex or real symmetric adjacency matrix
+            :math:`A`, or an :math:`N/2\times N/2` complex or real matrix :math:`B`
+            representing the edges between the vertex sets if ``edges=True``.
+        mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
+            representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
+        edges (bool): set to ``True`` if argument ``A`` represents the edges :math:`B`
+            between the vertex sets rather than the full adjacency matrix
+        drop_identity (bool): If ``True``, decomposed gates with trivial parameters,
+            such that they correspond to an identity operation, are removed.
+        tol (float): the tolerance used when checking if the input matrix is symmetric:
+            :math:`|A-A^T| <` tol
+    """
+
+    def __init__(self, A, mean_photon=1.0, edges=False, drop_identity=True, tol=1e-6):
+        self.mean_photon = mean_photon
+        self.tol = tol
+        self.identity = np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol)
+        self.drop_identity = drop_identity
+
+        if edges:
+            self.ns = 2*A.shape[0]
+            B = A
+        else:
+            self.ns = A.shape[0]
+
+            # check if A is a bipartite graph
+            N = A.shape[0]//2
+            A00 = A[:N, :N]
+            A11 = A[N:, N:]
+
+            diag_zeros = np.allclose(A00, np.zeros_like(A00), atol=tol, rtol=0) \
+                and np.allclose(A11, np.zeros_like(A11), atol=tol, rtol=0)
+
+            if (not diag_zeros) or (not np.allclose(A, A.T, atol=tol, rtol=0)):
+                raise ValueError("Adjacency matrix {} does not represent a bipartite graph".format(A))
+
+            B = A[:N, N:]
+
+        super().__init__([B])
+
+    def _decompose(self, reg, **kwargs):
+        mean_photon = kwargs.get("mean_photon", self.mean_photon)
+        tol = kwargs.get("tol", self.tol)
+        mesh = kwargs.get("mesh", "rectangular")
+        drop_identity = kwargs.get("drop_identity", self.drop_identity)
+
+        cmds = []
+
+        B = self.p[0].x
+        N = len(B)
+
+        sq, U, V = dec.bipartite_graph_embed(B, mean_photon_per_mode=mean_photon, atol=tol, rtol=0)
+
+        if not self.identity or not drop_identity:
+            for m, s in enumerate(sq):
+                s = s if np.abs(s) >= _decomposition_tol else 0
+
+                if not (drop_identity and s == 0):
+                    cmds.append(Command(S2gate(-s), (reg[m], reg[m+N])))
+
+            for X, _reg in ((U, reg[:N]), (V, reg[N:])):
+
+                if np.allclose(X, np.identity(len(X)), atol=_decomposition_tol, rtol=0):
+                    X = np.identity(len(X))
+
+                if not (drop_identity and np.all(X == np.identity(len(X)))):
+                    cmds.append(Command(Interferometer(X, mesh=mesh, drop_identity=drop_identity, tol=tol), _reg))
 
         return cmds
 
@@ -1729,7 +1918,7 @@ class GaussianTransform(Decomposition):
 
     The two orthogonal symplectic unitaries describing the interferometers are then further
     decomposed via the :class:`~.Interferometer` operator and the
-    :ref:`Clements decomposition <clements>`:
+    :ref:`Rectangular decomposition <rectangular>`:
 
     .. math:: U_i = X_i + iY_i
 
@@ -1761,7 +1950,7 @@ class GaussianTransform(Decomposition):
             self.U1 = X1+1j*P1
         else:
             # transformation is active, do Bloch-Messiah
-            O1, smat, O2 = bloch_messiah(S, tol=tol)
+            O1, smat, O2 = dec.bloch_messiah(S, tol=tol)
             X1 = O1[:N, :N]
             P1 = O1[N:, :N]
             X2 = O2[:N, :N]
@@ -1771,8 +1960,9 @@ class GaussianTransform(Decomposition):
             self.U2 = X2+1j*P2  #: array[complex]: unitary matrix corresponding to O_2
             self.Sq = np.diagonal(smat)[:N]  #: array[complex]: diagonal vector of the squeezing matrix R
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         cmds = []
+        mesh = kwargs.get("mesh", "rectangular")
 
         if self.active:
             if not self.vacuum:
@@ -1784,10 +1974,10 @@ class GaussianTransform(Decomposition):
                     phi = np.angle(log(expr))
                     cmds.append(Command(Sgate(-r, phi), reg[n]))
 
-            cmds.append(Command(Interferometer(self.U1), reg))
+            cmds.append(Command(Interferometer(self.U1, mesh=mesh), reg))
         else:
             if not self.vacuum:
-                cmds = [Command(Interferometer(self.U1), reg)]
+                cmds = [Command(Interferometer(self.U1, mesh=mesh), reg)]
 
         return cmds
 
@@ -1839,7 +2029,7 @@ class Gaussian(Preparation, Decomposition):
         self.p_disp = r[self.ns:]
 
         # needed only if decomposed
-        th, self.S = williamson(V, tol=tol)
+        th, self.S = dec.williamson(V, tol=tol)
         self.pure = np.abs(np.linalg.det(V) - 1.0) < tol
         self.nbar = 0.5 * (np.diag(th)[:self.ns] - 1.0)
 
@@ -1848,7 +2038,7 @@ class Gaussian(Preparation, Decomposition):
         s = sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
         backend.prepare_gaussian_state(p[1]/s, p[0], reg)
 
-    def _decompose(self, reg):
+    def _decompose(self, reg, **kwargs):
         # pylint: disable=too-many-branches
         cmds = []
 
@@ -1916,7 +2106,6 @@ class Gaussian(Preparation, Decomposition):
 
 Del = _Delete()
 Vac = Vacuum()
-Measure = MeasureFock()
 MeasureX = MeasureHomodyne(0)
 MeasureP = MeasureHomodyne(pi/2)
 MeasureHD = MeasureHeterodyne()
@@ -1934,7 +2123,7 @@ shorthands = ['New', 'Del', 'Vac', 'Measure', 'MeasureX', 'MeasureP', 'MeasureHD
 zero_args_gates = (Fouriergate,)
 one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate,
                   Kgate, CXgate, CZgate, CKgate)
-two_args_gates = (Dgate, Sgate, BSgate, S2gate)
+two_args_gates = (Dgate, Sgate, BSgate, MZgate, S2gate)
 gates = zero_args_gates + one_args_gates + two_args_gates
 
 channels = (LossChannel, ThermalLossChannel)
@@ -1944,9 +2133,54 @@ state_preparations = simple_state_preparations + (Ket, DensityMatrix)
 
 measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne)
 
-decompositions = (Interferometer, GraphEmbed, GaussianTransform, Gaussian)
+decompositions = (Interferometer, BipartiteGraphEmbed, GraphEmbed, GaussianTransform, Gaussian)
 
 #=======================================================================
 # exported symbols
 
 __all__ = [cls.__name__ for cls in gates + channels + state_preparations + measurements + decompositions] + shorthands
+
+
+#=======================================================================
+# Module wrapper for deprecating shorthands
+
+
+class Wrapper(types.ModuleType):
+    """Wrapper class to modify the module level
+    attribute lookup.
+
+    This allows module attributes to be deprecated.
+
+    Current list of deprecated attributes:
+
+    * ``Measure``: instead use ``MeasureFock``
+
+    .. note::
+
+        With Python 3.7+, there is new support for a module-level
+        ``__getattr__`` function, which should enable this functionality
+        without needing to modify ``sys.modules``.
+    """
+    deprecation_map = {"Measure": "MeasureFock"}
+
+    def __init__(self, mod):
+        self.mod = mod
+        self.__dict__.update(mod.__dict__)
+        super().__init__("strawberryfields.ops", doc=sys.modules[__name__].__doc__)
+
+    def __getattr__(self, name):
+        if name in self.deprecation_map:
+            new_name = self.deprecation_map[name]
+
+            warnings.warn("The shorthand '{}' has been deprecated, "
+                          "please use '{}()' instead.".format(name, new_name))
+
+            return getattr(self.mod, new_name)()
+
+        return getattr(self.mod, name)
+
+    def __dir__(self):
+        return __all__
+
+
+sys.modules[__name__] = Wrapper(sys.modules[__name__])

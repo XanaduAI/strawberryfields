@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import numpy as np
 import tensorflow as tf
 import strawberryfields as sf
 from strawberryfields.ops import *
@@ -31,14 +32,14 @@ def interferometer(theta, phi, rphi, q):
         Rgate(rphi[0]) | q[0]
         return
 
-    n = 0 # keep track of free parameters
+    n = 0  # keep track of free parameters
 
     # Apply the rectangular beamsplitter array
     # The array depth is N
     for l in range(N):
         for k, (q1, q2) in enumerate(zip(q[:-1], q[1:])):
             # skip even or odd pairs depending on layer
-            if (l+k)%2 != 1:
+            if (l + k) % 2 != 1:
                 BSgate(theta[n], phi[n]) | (q1, q2)
                 n += 1
 
@@ -86,17 +87,17 @@ def layer(q):
     # end layer
 
 
-# initialise the engine and register
-eng, q = sf.Engine(modes)
+# initialize engine and program objects
+eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": cutoff_dim})
+qnn = sf.Program(modes)
 
-with eng:
-
+with qnn.context as q:
     for _ in range(layers):
         layer(q)
 
 # starting the engine
-state = eng.run('tf', cutoff_dim=cutoff_dim, eval=False)
-ket = state.ket()
+results = eng.run(qnn, run_options={"eval": False})
+ket = results.state.ket()
 
 # defining cost function
 difference = tf.reduce_sum(tf.abs(ket - target_state))

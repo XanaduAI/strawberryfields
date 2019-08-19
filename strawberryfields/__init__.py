@@ -34,8 +34,11 @@ Software components
 **Frontend:**
 
 * Quantum programs: :mod:`strawberryfields.program`
-* Quantum compiler engine: :mod:`strawberryfields.engine`
+* Quantum execution and compilation engine: :mod:`strawberryfields.engine`
 * Quantum operations: :mod:`strawberryfields.ops`
+* Input/output functions: :mod:`strawberryfields.io`
+* Circuit specifications: :mod:`strawberryfields.circuitspecs`
+* Decompositions: :mod:`strawberryfields.decompositions`
 * Utilities: :mod:`strawberryfields.utils`
 * Circuit drawer: :mod:`strawberryfields.circuitdrawer`
 
@@ -50,8 +53,12 @@ Software components
 Top-level functions
 -------------------
 
+.. currentmodule: strawberryfields
+
 .. autosummary::
    convert
+   about
+   cite
    version
 
 Code details
@@ -91,6 +98,8 @@ def about():
     import os
     import numpy
     import scipy
+    import hafnian
+    import blackbird
 
     # a QuTiP-style infobox
     print('\nStrawberry Fields: a Python library for continuous-variable quantum circuits.')
@@ -102,16 +111,22 @@ def about():
     print('Strawberry Fields version: {}'.format(__version__))
     print('Numpy version:             {}'.format(numpy.__version__))
     print('Scipy version:             {}'.format(scipy.__version__))
+    print('Hafnian version:           {}'.format(hafnian.__version__))
+    print('Blackbird version:         {}'.format(blackbird.__version__))
+
     try:
         import tensorflow
         tf_version = tensorflow.__version__
-    except ModuleNotFoundError:
+    except ImportError:
         tf_version = None
+
     print('TensorFlow version:        {}'.format(tf_version))
 
 
 def cite():
-    """Prints a BibTeX citation for Strawberry Fields.
+    """Prints the BibTeX citation for Strawberry Fields.
+
+    BibTex code for reference :cite:`strawberryfields`.
     """
     citation = """@article{strawberryfields,
     title = {{S}trawberry {F}ields: A Software Platform for Photonic Quantum Computing},

@@ -131,7 +131,7 @@ from inspect import signature
 
 try:
     import tensorflow as tf
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     tf_available = False
 
 import numpy as np

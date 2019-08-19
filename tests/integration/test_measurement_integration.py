@@ -31,7 +31,7 @@ class TestMeasurement:
         with prog.context as q:
             ops.Fock(n[0]) | q[0]
             ops.Fock(n[1]) | q[1]
-            ops.Measure | q
+            ops.MeasureFock() | q
 
         eng.run(prog)
         assert np.all(q[0].val == n[0])
@@ -104,7 +104,7 @@ class TestPostselection:
                 ops.Fock(n) | q[0]
                 ops.Fock(total_photons - n) | q[1]
                 ops.BSgate() | q
-                ops.MeasureFock(select=n//2) | q[0]
+                ops.MeasureFock(select=n // 2) | q[0]
                 ops.MeasureFock() | q[1]
 
             eng.run(prog)  # FIXME measurements above commute, but they should not since the postselection may fail if the other one is performed first!
@@ -114,3 +114,19 @@ class TestPostselection:
                 assert np.all(photons_out == np.tile(total_photons, batch_size))
             else:
                 assert np.all(photons_out == total_photons)
+
+    @pytest.mark.backends("gaussian")
+    def test_embed_graph(self, setup_eng, hbar):
+        """Test that an embedded graph has the right total mean photon number. """
+
+        eng, prog = setup_eng(2)
+        A = np.array([[0.0, 1.0], [1.0, 0.0]])
+        n_mean_per_mode = 1
+        with prog.context as q:
+            ops.GraphEmbed(A, n_mean_per_mode) | (q[0], q[1])
+
+        state = eng.run(prog).state
+        cov = state.cov()
+        n_mean_tot = np.trace(cov / (hbar / 2) - np.identity(4)) / 4
+        expected = 2 * n_mean_per_mode
+        assert np.allclose(n_mean_tot, expected)

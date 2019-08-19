@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Gaussian backend validation data"""
-from .device_specs import DeviceSpecs
+"""Circuit specifications for the Fock simulator backend."""
+from .circuit_specs import CircuitSpecs
 
 
-class GaussianSpecs(DeviceSpecs):
-    """Validation data for the Gaussian backend"""
+class FockSpecs(CircuitSpecs):
+    """Circuit specifications for the Fock backend."""
 
-    short_name = 'gaussian'
+    short_name = 'fock'
     modes = None
     local = True
     remote = True
@@ -35,31 +35,37 @@ class GaussianSpecs(DeviceSpecs):
         "Squeezed",
         "DisplacedSqueezed",
         "Thermal",
-        "Gaussian",
+        "Fock",
+        "Catstate",
+        "Ket",
+        "DensityMatrix",
         # measurements
-        "MeasureHomodyne",
-        "MeasureHeterodyne",
         "MeasureFock",
+        "MeasureHomodyne",
         # channels
         "LossChannel",
-        "ThermalLossChannel",
         # single mode gates
         "Dgate",
         "Xgate",
         "Zgate",
         "Sgate",
         "Rgate",
+        "Vgate",
+        "Kgate",
         "Fouriergate",
         "BSgate",
+        "CKgate",
     }
 
     decompositions = {
         "Interferometer": {},
         "GraphEmbed": {},
+        "BipartiteGraphEmbed": {},
         "GaussianTransform": {},
         "Gaussian": {},
         "Pgate": {},
         "S2gate": {},
         "CXgate": {},
         "CZgate": {},
+        "MZgate": {},
     }

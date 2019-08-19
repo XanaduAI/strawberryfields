@@ -11,17 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""TensorFlow backend validation data"""
-from .device_specs import DeviceSpecs
+"""Circuit specifications for the Gaussian simulator backend."""
+from .circuit_specs import CircuitSpecs
 
 
-class TFSpecs(DeviceSpecs):
-    """Validation data for the TF backend"""
+class GaussianSpecs(CircuitSpecs):
+    """Circuit specifications for the Gaussian backend."""
 
-    short_name = 'tf'
+    short_name = 'gaussian'
     modes = None
     local = True
-    remote = False
+    remote = True
     interactive = True
 
     primitives = {
@@ -35,35 +35,33 @@ class TFSpecs(DeviceSpecs):
         "Squeezed",
         "DisplacedSqueezed",
         "Thermal",
-        "Fock",
-        "Catstate",
-        "Ket",
-        "DensityMatrix",
+        "Gaussian",
         # measurements
-        "MeasureFock",
         "MeasureHomodyne",
+        "MeasureHeterodyne",
+        "MeasureFock",
         # channels
         "LossChannel",
+        "ThermalLossChannel",
         # single mode gates
         "Dgate",
         "Xgate",
         "Zgate",
         "Sgate",
         "Rgate",
-        "Vgate",
-        "Kgate",
         "Fouriergate",
         "BSgate",
-        "CKgate",
     }
 
     decompositions = {
         "Interferometer": {},
         "GraphEmbed": {},
+        "BipartiteGraphEmbed": {},
         "GaussianTransform": {},
         "Gaussian": {},
         "Pgate": {},
         "S2gate": {},
         "CXgate": {},
         "CZgate": {},
+        "MZgate": {},
     }

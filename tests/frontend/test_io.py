@@ -35,6 +35,12 @@ U = np.array([[0.219546940711-0.256534554457j, 0.611076853957+0.524178937791j, -
 # fmt: on
 
 
+@pytest.fixture
+def eng(backend):
+    """Engine fixture."""
+    return sf.LocalEngine(backend)
+
+
 @pytest.fixture(scope="module")
 def prog():
     prog = Program(4, name="test_program")
@@ -206,7 +212,7 @@ class TestSFToBlackbirdConversion:
         prog = Program(1)
 
         with prog.context as q:
-            ops.Measure | q[0]
+            ops.MeasureFock() | q[0]
 
         bb = io.to_blackbird(prog)
         expected = {"op": "MeasureFock", "modes": [0], "args": [], "kwargs": {}}
@@ -451,6 +457,97 @@ class TestBlackbirdToSFConversion:
          bb = blackbird.loads(bb_script)
          with pytest.raises(CircuitError, match="cannot be used with the target"):
              prog = io.to_program(bb)
+
+
+class DummyResults:
+    """Dummy results object"""
+
+
+def dummy_run(self, program, compile_options=None, **eng_run_options):
+    """A dummy run function, that when called returns a dummy
+    results object, with run options available as an attribute.
+    This allows run_options to be returned and inspected after calling eng.run
+    """
+    results = DummyResults()
+    results.run_options = eng_run_options
+    return results
+
+
+class TestEngineIntegration:
+    """Test that target options interface correctly with eng.run"""
+
+    def test_shots(self, eng, monkeypatch):
+        """Test that passing shots correctly propagates to an engine run"""
+        bb_script = """\
+        name test_program
+        version 1.0
+        target gaussian (shots=100)
+        Pgate(0.54) | 0
+        MeasureX | 0
+        """
+        bb = blackbird.loads(bb_script)
+        prog = io.to_program(bb)
+
+        assert prog.run_options == {"shots": 100}
+
+        with monkeypatch.context() as m:
+            m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
+            results = eng.run(prog)
+
+        assert results.run_options == {"shots": 100}
+
+    def test_shots_overwritten(self, eng, monkeypatch):
+        """Test if run_options are passed to eng.run, they
+        overwrite those stored in the compiled program"""
+        bb_script = """\
+        name test_program
+        version 1.0
+        target gaussian (shots=100)
+        Pgate(0.54) | 0
+        MeasureX | 0
+        """
+        bb = blackbird.loads(bb_script)
+        prog = io.to_program(bb)
+
+        assert prog.run_options == {"shots": 100}
+
+        with monkeypatch.context() as m:
+            m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
+            results = eng.run(prog, run_options={"shots": 1000})
+
+        assert results.run_options == {"shots": 1000}
+
+    def test_program_sequence(self, eng, monkeypatch):
+        """Test that program run_options are successively
+        updated if a sequence of programs is executed."""
+        bb_script = """\
+        name test_program
+        version 1.0
+        target gaussian (shots=100)
+        Pgate(0.54) | 0
+        MeasureX | 0
+        """
+        bb = blackbird.loads(bb_script)
+        prog1 = io.to_program(bb)
+
+        bb_script = """\
+        name test_program
+        version 1.0
+        target gaussian (shots=1024)
+        Pgate(0.54) | 0
+        MeasureX | 0
+        """
+        bb = blackbird.loads(bb_script)
+        prog2 = io.to_program(bb)
+
+        assert prog1.run_options == {"shots": 100}
+        assert prog2.run_options == {"shots": 1024}
+
+        with monkeypatch.context() as m:
+            m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
+            results = eng.run([prog1, prog2])
+
+        assert results.run_options == prog2.run_options
 
 
 class TestSave:
