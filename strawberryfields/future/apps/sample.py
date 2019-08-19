@@ -133,7 +133,7 @@ def quantum_sampler(
     mean_photon_per_mode = n_mean / float(nodes)
 
     with p.context as q:
-        sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
+        sf.ops.GraphEmbed(A, mean_photon=mean_photon_per_mode) | q
         sf.ops.Measure | q
 
     p = p.compile("gbs")
