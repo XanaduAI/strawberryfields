@@ -1,2 +1,2 @@
-.. automodule:: glassonion.graph.resize
+.. automodule:: strawberryfields.future.apps.graph.resize
     :members:

@@ -1,2 +1,2 @@
-.. automodule:: glassonion.graph.sample
+.. automodule:: strawberryfields.future.apps.graph.sample
     :members:

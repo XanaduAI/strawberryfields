@@ -1,2 +1,2 @@
-.. automodule:: glassonion.sample
+.. automodule:: strawberryfields.future.apps.sample
     :members:

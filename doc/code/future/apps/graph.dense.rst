@@ -1,2 +1,2 @@
-.. automodule:: glassonion.graph.dense
+.. automodule:: strawberryfields.future.apps.graph.dense
     :members:
