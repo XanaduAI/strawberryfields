@@ -53,6 +53,7 @@ info = {
         "strawberryfields.backends.tfbackend",
         "strawberryfields.backends.fockbackend",
         "strawberryfields.backends.gaussianbackend",
+        "strawberryfields.future.apps"
     ],
     "package_data": {"strawberryfields": ["backends/data/*"]},
     "include_package_data": True,
