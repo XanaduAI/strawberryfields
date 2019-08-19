@@ -1,13 +1,13 @@
 # Copyright 2019 Xanadu Quantum Technologies Inc.
 r"""
-Unit tests for glassonion.sample
+Unit tests for strawberryfields.future.apps.sample
 """
 # pylint: disable=no-self-use,unused-argument,protected-access
 import numpy as np
 import strawberryfields as sf
 import pytest
 
-import glassonion.sample as sample
+from strawberryfields.future.apps import sample
 
 
 @pytest.fixture()

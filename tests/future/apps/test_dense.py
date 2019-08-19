@@ -1,14 +1,13 @@
 # Copyright 2019 Xanadu Quantum Technologies Inc.
 r"""
-Unit tests for glassonion.graph.dense
+Unit tests for strawberryfields.future.apps.graph.dense
 """
 # pylint: disable=no-self-use,unused-argument
 import numpy as np
 import networkx as nx
 import pytest
 
-import glassonion.graph.dense
-import glassonion.sample
+from strawberryfields.future.apps.graph import dense
 
 samples_subgraphs = np.array(
     [
@@ -28,7 +27,7 @@ samples_subgraphs = np.array(
 
 @pytest.mark.parametrize("dim", [5])
 class TestFindDense:
-    """Tests for the function ``glassonion.graph.dense.find_dense``"""
+    """Tests for the function ``dense.find_dense``"""
 
     def test_callable_input(self, adj):
         """Tests if function returns the correct output given a custom method set by the user"""
@@ -38,13 +37,13 @@ class TestFindDense:
             """Mockup of custom-method function fed to ``find_dense``"""
             return objective_return
 
-        result = glassonion.graph.dense.find_dense(
+        result = dense.find_dense(
             graph=adj, nodes=3, iterations=10, options={"heuristic": {"method": custom_method}}
         )
 
         assert result == objective_return
 
-    @pytest.mark.parametrize("methods", glassonion.graph.dense.METHOD_DICT)
+    @pytest.mark.parametrize("methods", dense.METHOD_DICT)
     def test_valid_input(self, graph, monkeypatch, methods):
         """Tests if function returns the correct output under normal conditions. The method is here
         monkey patched to return a known result."""
@@ -55,9 +54,9 @@ class TestFindDense:
             return objective_return
 
         with monkeypatch.context() as m:
-            m.setattr("glassonion.graph.dense.METHOD_DICT", {methods: custom_method})
+            m.setattr("dense.METHOD_DICT", {methods: custom_method})
 
-            result = glassonion.graph.dense.find_dense(
+            result = dense.find_dense(
                 graph=graph, nodes=3, iterations=10, options={"heuristic": {"method": methods}}
             )
 
@@ -66,7 +65,7 @@ class TestFindDense:
 
 @pytest.mark.parametrize("dim", [5])
 class TestRandomSearch:
-    """Tests for the function ``glassonion.graph.dense.random_search``"""
+    """Tests for the function ``dense.random_search``"""
 
     def sampler(self, *args, **kwargs):
         """Dummy function for sampling subgraphs"""
@@ -102,6 +101,6 @@ class TestRandomSearch:
 
             m.setattr("glassonion.graph.resize.resize_subgraphs", self.sampler)
 
-            result = glassonion.graph.dense.random_search(graph=graph, nodes=4, iterations=10)
+            result = dense.random_search(graph=graph, nodes=4, iterations=10)
 
         assert result == (optimal_density, optimal_sample)

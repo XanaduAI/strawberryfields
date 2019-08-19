@@ -1,13 +1,13 @@
 # Copyright 2019 Xanadu Quantum Technologies Inc.
 r"""
-Unit tests for glassonion.graph.resize
+Unit tests for strawberryfields.future.apps.graph.resize
 """
 # pylint: disable=no-self-use,unused-argument
 import networkx as nx
 import numpy as np
 import pytest
 
-import glassonion.graph.resize
+from strawberryfields.future.apps.graph import resize
 
 subgraphs = [
     [1, 2, 3, 4, 5],
@@ -31,24 +31,24 @@ def patch_is_subgraph(monkeypatch):
 
 @pytest.mark.parametrize("dim", [5])
 class TestResizeSubgraphs:
-    """Tests for the function ``glassonion.graph.resize.resize_subgraphs``"""
+    """Tests for the function ``resize.resize_subgraphs``"""
 
     def test_target_wrong_type(self, graph):
         """Test if function raises a ``TypeError`` when incorrect type given for ``target`` """
         with pytest.raises(TypeError, match="target must be an integer"):
-            glassonion.graph.resize.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=[])
+            resize.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=[])
 
     def test_target_small(self, graph):
         """Test if function raises a ``ValueError`` when a too small number is given for
         ``target`` """
         with pytest.raises(ValueError, match="target must be greater than two and less than"):
-            glassonion.graph.resize.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=1)
+            resize.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=1)
 
     def test_target_big(self, graph):
         """Test if function raises a ``ValueError`` when a too large number is given for
         ``target`` """
         with pytest.raises(ValueError, match="target must be greater than two and less than"):
-            glassonion.graph.resize.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=5)
+            resize.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=5)
 
     def test_callable_input(self, graph):
         """Tests if function returns the correct output given a custom method set by the user"""
@@ -58,13 +58,13 @@ class TestResizeSubgraphs:
             """Mockup of custom-method function fed to ``find_dense``"""
             return objective_return
 
-        result = glassonion.graph.resize.resize_subgraphs(
+        result = resize.resize_subgraphs(
             subgraphs=[[0, 1]], graph=graph, target=4, resize_options={"method": custom_method}
         )
 
         assert result == objective_return
 
-    @pytest.mark.parametrize("methods", glassonion.graph.resize.METHOD_DICT)
+    @pytest.mark.parametrize("methods", resize.METHOD_DICT)
     def test_valid_input(self, graph, monkeypatch, methods):
         """Tests if function returns the correct output under normal conditions. The resizing
         method is here monkey patched to return a known result."""
@@ -75,9 +75,9 @@ class TestResizeSubgraphs:
             return objective_return
 
         with monkeypatch.context() as m:
-            m.setattr("glassonion.graph.resize.METHOD_DICT", {methods: custom_method})
+            m.setattr("resize.METHOD_DICT", {methods: custom_method})
 
-            result = glassonion.graph.resize.resize_subgraphs(
+            result = resize.resize_subgraphs(
                 subgraphs=[[0, 1]], graph=graph, target=4, resize_options={"method": methods}
             )
 
@@ -85,7 +85,7 @@ class TestResizeSubgraphs:
 
 
 @pytest.mark.parametrize("dim, target", [(6, 4), (8, 5)])
-@pytest.mark.parametrize("methods", glassonion.graph.resize.METHOD_DICT)
+@pytest.mark.parametrize("methods", resize.METHOD_DICT)
 def test_resize_subgraphs_integration(graph, target, methods):
     """Test if function returns resized subgraphs of the correct form given an input list of
     variable sized subgraphs specified by ``subgraphs``. The output should be a list of ``len(
@@ -97,7 +97,7 @@ def test_resize_subgraphs_integration(graph, target, methods):
     graph = nx.relabel_nodes(graph, lambda x: x ** 2)
     graph_nodes = set(graph.nodes)
     s_relabeled = [(np.array(s) ** 2).tolist() for s in subgraphs]
-    resized = glassonion.graph.resize.resize_subgraphs(
+    resized = resize.resize_subgraphs(
         subgraphs=s_relabeled, graph=graph, target=target, resize_options={"method": methods}
     )
     resized = np.array(resized)
@@ -111,7 +111,7 @@ def test_resize_subgraphs_integration(graph, target, methods):
 @pytest.mark.usefixtures("patch_is_subgraph")
 @pytest.mark.parametrize("dim", [5])
 class TestGreedyDensity:
-    """Tests for the function ``glassonion.graph.resize.greedy_density``"""
+    """Tests for the function ``resize.greedy_density``"""
 
     def test_invalid_subgraph(self, graph, monkeypatch):
         """Test if function raises an ``Exception`` when an element of ``subgraphs`` is not
@@ -119,7 +119,7 @@ class TestGreedyDensity:
         with monkeypatch.context() as m:
             m.setattr("glassonion.graph.utils.is_subgraph", lambda v1, v2: False)
             with pytest.raises(Exception, match="Input is not a valid subgraph"):
-                glassonion.graph.resize.greedy_density(subgraphs=[[0, 9]], graph=graph, target=3)
+                resize.greedy_density(subgraphs=[[0, 9]], graph=graph, target=3)
 
     def test_normal_conditions_grow(self, graph):
         """Test if function returns correct subgraph under normal conditions, where one needs to
@@ -127,7 +127,7 @@ class TestGreedyDensity:
         subgraph of the nodes [0, 1, 4] and aiming to grow to 4 nodes. We can see that there are
         two subgraphs of size 4: [0, 1, 2, 4] with 3 edges and [0, 1, 3, 4] with 4 edges,
         so we hence expect the second option as the returned solution."""
-        subgraph = glassonion.graph.resize.greedy_density(
+        subgraph = resize.greedy_density(
             subgraphs=[[0, 1, 4]], graph=graph, target=4
         )[0]
         assert np.allclose(subgraph, [0, 1, 3, 4])
@@ -141,7 +141,7 @@ class TestGreedyDensity:
         the returned solution."""
         adj = ((0, 1, 0, 0, 0), (1, 0, 1, 1, 0), (0, 1, 0, 1, 0), (0, 1, 1, 0, 1), (0, 0, 0, 1, 0))
         graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
-        subgraph = glassonion.graph.resize.greedy_density(
+        subgraph = resize.greedy_density(
             subgraphs=[[1, 2, 3, 4]], graph=graph, target=3
         )[0]
         assert np.allclose(subgraph, [1, 2, 3])
@@ -150,7 +150,7 @@ class TestGreedyDensity:
 @pytest.mark.usefixtures("patch_is_subgraph")
 @pytest.mark.parametrize("dim", [5])
 class TestGreedyDegree:
-    """Tests for the function ``glassonion.graph.resize.greedy_degree``"""
+    """Tests for the function ``resize.greedy_degree``"""
 
     def test_invalid_subgraph(self, graph, monkeypatch):
         """Test if function raises an ``Exception`` when an element of ``subgraphs`` is not
@@ -158,7 +158,7 @@ class TestGreedyDegree:
         with monkeypatch.context() as m:
             m.setattr("glassonion.graph.utils.is_subgraph", lambda v1, v2: False)
             with pytest.raises(Exception, match="Input is not a valid subgraph"):
-                glassonion.graph.resize.greedy_degree(subgraphs=[[0, 9]], graph=graph, target=3)
+                resize.greedy_degree(subgraphs=[[0, 9]], graph=graph, target=3)
 
     def test_normal_conditions_grow(self, graph):
         """Test if function returns correct subgraph under normal conditions, where one needs to
@@ -179,7 +179,7 @@ class TestGreedyDegree:
         )
         graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
 
-        subgraph = glassonion.graph.resize.greedy_degree(
+        subgraph = resize.greedy_degree(
             subgraphs=[[0, 1, 4]], graph=graph, target=4
         )[0]
 
@@ -203,7 +203,7 @@ class TestGreedyDegree:
             (1, 0, 0, 0, 0, 0, 0),
         )
         graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
-        subgraph = glassonion.graph.resize.greedy_degree(
+        subgraph = resize.greedy_degree(
             subgraphs=[[0, 1, 2, 3]], graph=graph, target=3
         )
         assert np.allclose(subgraph, [0, 1, 3])

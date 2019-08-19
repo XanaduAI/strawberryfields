@@ -1,12 +1,12 @@
 # Copyright 2019 Xanadu Quantum Technologies Inc.
 r"""
-Unit tests for glassonion.graph.sample
+Unit tests for strawberryfields.future.apps.graph.sample
 """
 # pylint: disable=no-self-use,unused-argument,too-many-arguments
 import networkx as nx
 import pytest
 
-import glassonion.graph.sample
+from strawberryfields.future.apps.graph import sample
 
 quantum_samples = [
     [0, 1, 1, 1, 1, 1],
@@ -39,10 +39,10 @@ integration_sample_number = 2
 
 @pytest.mark.parametrize("dim", [6])
 def test_sample_subgraphs_invalid_distribution(graph):
-    """Tests if function ``glassonion.graph.sample.sample_subgraphs`` raises a ``ValueError`` for an
+    """Tests if function ``sample.sample_subgraphs`` raises a ``ValueError`` for an
     invalid sampling distribution"""
     with pytest.raises(ValueError, match="Invalid distribution selected"):
-        glassonion.graph.sample.sample_subgraphs(
+        sample.sample_subgraphs(
             graph, nodes=2, samples=10, sample_options={"distribution": ""}
         )
 
@@ -52,11 +52,11 @@ def test_sample_subgraphs_invalid_distribution(graph):
 )
 @pytest.mark.parametrize("distribution", ("uniform", "gbs"))
 def test_sample_subgraphs_integration(graph, nodes, samples, distribution):
-    """Integration tests for the function ``glassonion.graph.sample.sample_subgraphs``"""
+    """Integration tests for the function ``sample.sample_subgraphs``"""
 
     graph = nx.relabel_nodes(graph, lambda x: x ** 2)
     graph_nodes = set(graph.nodes)
-    output_samples = glassonion.graph.sample.sample_subgraphs(
+    output_samples = sample.sample_subgraphs(
         graph=graph, nodes=nodes, samples=samples, sample_options={"distribution": distribution}
     )
 
@@ -66,12 +66,12 @@ def test_sample_subgraphs_integration(graph, nodes, samples, distribution):
 
 @pytest.mark.parametrize("dim", [6])
 class TestToSubgraphs:
-    """Tests for the function ``glassonion.graph.sample.to_subgraphs``"""
+    """Tests for the function ``sample.to_subgraphs``"""
 
     def test_graph(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
         ``quantum_samples``."""
-        assert glassonion.graph.sample.to_subgraphs(graph, samples=quantum_samples) == subgraphs
+        assert sample.to_subgraphs(graph, samples=quantum_samples) == subgraphs
 
     def test_graph_mapped(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
@@ -83,5 +83,5 @@ class TestToSubgraphs:
         subgraphs_mapped = [sorted([graph_nodes[i] for i in subgraph]) for subgraph in subgraphs]
 
         assert (
-            glassonion.graph.sample.to_subgraphs(graph, samples=quantum_samples) == subgraphs_mapped
+            sample.to_subgraphs(graph, samples=quantum_samples) == subgraphs_mapped
         )
