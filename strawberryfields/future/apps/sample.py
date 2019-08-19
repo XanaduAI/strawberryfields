@@ -42,7 +42,12 @@ from .graph import utils
 QUANTUM_BACKENDS = ("gaussian",)
 """tuple[str]: Available quantum backends for sampling."""
 
-BACKEND_DEFAULTS = {"remote": False, "backend": "gaussian", "threshold": True, "postselect": 0}
+BACKEND_DEFAULTS = {
+    "remote": False,
+    "backend": "gaussian",
+    "threshold": True,
+    "postselect": 0,
+}
 """Dict[str, Any]: Dictionary to specify default parameters of options in backend sampling for
 :func:`quantum_sampler`.
 """
@@ -63,7 +68,10 @@ def _valid_backend(backend: str) -> bool:
 
 # pylint: disable=expression-not-assigned,pointless-statement
 def quantum_sampler(
-    A: np.ndarray, n_mean: float, samples: int = 1, backend_options: Optional[dict] = None
+    A: np.ndarray,
+    n_mean: float,
+    samples: int = 1,
+    backend_options: Optional[dict] = None,
 ) -> list:
     r"""Generate samples from GBS
 
@@ -112,7 +120,9 @@ def quantum_sampler(
     backend_options = {**BACKEND_DEFAULTS, **(backend_options or {})}
 
     if not utils.is_undirected(A):
-        raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
+        raise ValueError(
+            "Input must be a NumPy array corresponding to a symmetric matrix"
+        )
 
     if samples < 1:
         raise ValueError("Number of samples must be at least one")
@@ -159,7 +169,9 @@ def quantum_sampler(
     return s
 
 
-def _sample_sf(p: sf.Program, shots: int = 1, backend_options: Optional[dict] = None) -> np.ndarray:
+def _sample_sf(
+    p: sf.Program, shots: int = 1, backend_options: Optional[dict] = None
+) -> np.ndarray:
     """Generate samples from Strawberry Fields.
 
     Args:

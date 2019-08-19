@@ -59,9 +59,9 @@ def to_networkx_graph(graph: graph_type) -> nx.Graph:
             and is_undirected(graph)
         ):
             graph = nx.Graph(graph.real.astype("float"))
-        elif (graph.dtype is np.dtype("float") or graph.dtype is np.dtype("int")) and is_undirected(
-            graph
-        ):
+        elif (
+            graph.dtype is np.dtype("float") or graph.dtype is np.dtype("int")
+        ) and is_undirected(graph):
             graph = nx.Graph(graph)
         else:
             raise Exception(
@@ -90,7 +90,12 @@ def is_undirected(mat: np.ndarray) -> bool:
 
     dims = mat.shape
 
-    conditions = len(dims) == 2 and dims[0] == dims[1] and dims[0] > 1 and np.allclose(mat, mat.T)
+    conditions = (
+        len(dims) == 2
+        and dims[0] == dims[1]
+        and dims[0] > 1
+        and np.allclose(mat, mat.T)
+    )
 
     return conditions
 

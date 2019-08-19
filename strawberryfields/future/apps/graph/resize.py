@@ -44,7 +44,10 @@ RESIZE_DEFAULTS = {"method": "greedy-density"}
 
 
 def resize_subgraphs(
-    subgraphs: Iterable, graph: nx.Graph, target: int, resize_options: Optional[dict] = None
+    subgraphs: Iterable,
+    graph: nx.Graph,
+    target: int,
+    resize_options: Optional[dict] = None,
 ) -> list:
     """Resize subgraphs to a given size.
 
@@ -97,11 +100,16 @@ def resize_subgraphs(
     if not callable(method):
         method = METHOD_DICT[method]
 
-    return method(subgraphs=subgraphs, graph=graph, target=target, resize_options=resize_options)
+    return method(
+        subgraphs=subgraphs, graph=graph, target=target, resize_options=resize_options
+    )
 
 
 def greedy_density(
-    subgraphs: Iterable, graph: nx.Graph, target: int, resize_options: Optional[dict] = None
+    subgraphs: Iterable,
+    graph: nx.Graph,
+    target: int,
+    resize_options: Optional[dict] = None,
 ) -> list:
     """Method to greedily resize subgraphs based upon density.
 
@@ -158,7 +166,10 @@ def greedy_density(
 
 
 def greedy_degree(
-    subgraphs: Iterable, graph: nx.Graph, target: int, resize_options: Optional[dict] = None
+    subgraphs: Iterable,
+    graph: nx.Graph,
+    target: int,
+    resize_options: Optional[dict] = None,
 ) -> list:
     """Method to greedily resize subgraphs based upon vertex degree.
 
