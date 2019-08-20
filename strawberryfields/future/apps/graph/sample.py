@@ -120,18 +120,18 @@ def to_subgraphs(graph: nx.Graph, samples: list) -> list:
     graph_nodes = list(graph.nodes)
     node_number = len(graph_nodes)
 
-    def to_subgraph(sample: list) -> list:
+    def to_subgraph(s: list) -> list:
         """Convert a single sample to a subgraph.
 
         Args:
-           sample (list): a binary sample of ``len(nodes)``
+           s (list): a binary sample of ``len(nodes)``
 
         Returns:
             list: a subgraph specified by its nodes
         """
-        return list(np.nonzero(sample)[0])
+        return list(np.nonzero(s)[0])
 
-    subgraph_samples = [to_subgraph(sample) for sample in samples]
+    subgraph_samples = [to_subgraph(s) for s in samples]
 
     if graph_nodes != list(range(node_number)):
         return [sorted([graph_nodes[i] for i in s]) for s in subgraph_samples]
