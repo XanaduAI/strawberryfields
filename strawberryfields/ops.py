@@ -190,6 +190,7 @@ Measurements
 
 .. autosummary::
     MeasureFock
+    MeasureThreshold
     MeasureHomodyne
     MeasureHeterodyne
 
@@ -1050,6 +1051,23 @@ class MeasureFock(Measurement):
 
     def _apply(self, reg, backend, shots=1, **kwargs):
         return backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
+
+
+class MeasureThreshold(Measurement):
+    """Measures a set of modes with thresholded Fock-state measurements, i.e.,
+    measuring whether a mode contain zero or nonzero photons.
+
+    After measurement, the modes are reset to the vacuum state.
+    """
+    ns = None
+
+    def __init__(self, select=None):
+        if select is not None and not isinstance(select, Sequence):
+            select = [select]
+        super().__init__([], select)
+
+    def _apply(self, reg, backend, shots=1, **kwargs):
+        return backend.measure_threshold(reg, shots=shots, select=self.select, **kwargs)
 
 
 class MeasureHomodyne(Measurement):
@@ -2131,7 +2149,7 @@ channels = (LossChannel, ThermalLossChannel)
 simple_state_preparations = (Vacuum, Coherent, Squeezed, DisplacedSqueezed, Fock, Catstate, Thermal)  # have __init__ methods with default arguments
 state_preparations = simple_state_preparations + (Ket, DensityMatrix)
 
-measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne)
+measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne, MeasureThreshold)
 
 decompositions = (Interferometer, BipartiteGraphEmbed, GraphEmbed, GaussianTransform, Gaussian)
 

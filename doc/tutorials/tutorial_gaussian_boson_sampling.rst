@@ -122,9 +122,9 @@ Now that we have the interferometer unitary transformation :math:`U`, as well as
 Calculating the hafnian
 ------------------------
 
-Before we can calculate the right hand side of the Gaussian boson sampling equation, we need a method of calculating the hafnian. Since the hafnian is classically hard to compute, it is not provided in either NumPy *or* SciPy, so we will use `hafnian <https://hafnian.readthedocs.io>`_ package, installed alongside Strawberry Fields:
+Before we can calculate the right hand side of the Gaussian boson sampling equation, we need a method of calculating the hafnian. Since the hafnian is classically hard to compute, it is not provided in either NumPy *or* SciPy, so we will use `The Walrus <https://the-walrus.readthedocs.io>`_ library, installed alongside Strawberry Fields:
 
->>> from hafnian import haf
+>>> from thewalrus import haf
 
 Now, for the right hand side numerator, we first calculate the submatrix :math:`[(UU^T\tanh(r))]_{st}`:
 
