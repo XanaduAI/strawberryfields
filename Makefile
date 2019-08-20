@@ -51,7 +51,7 @@ docs:
 clean-docs:
 	make -C doc clean
 
-test: test-frontend test-gaussian test-fock test-tf batch-test-tf
+test: test-frontend test-gaussian test-fock test-tf batch-test-tf test-apps
 
 test-%:
 	@echo "Testing $(subst test-,,$@) backend..."
