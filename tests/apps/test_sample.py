@@ -7,8 +7,8 @@ import numpy as np
 import strawberryfields as sf
 import pytest
 
-from strawberryfields.future.apps import sample
-from strawberryfields.future.apps.graph import utils
+from strawberryfields.apps import sample
+from strawberryfields.apps.graph import utils
 
 pytestmark = pytest.mark.apps
 

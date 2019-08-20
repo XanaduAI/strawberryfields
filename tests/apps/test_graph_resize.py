@@ -7,8 +7,7 @@ import networkx as nx
 import numpy as np
 import pytest
 
-from strawberryfields.future.apps.graph import resize
-from strawberryfields.future.apps.graph import utils
+from strawberryfields.apps.graph import utils, resize
 
 pytestmark = pytest.mark.apps
 

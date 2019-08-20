@@ -8,7 +8,7 @@ import numpy as np
 import networkx as nx
 import pytest
 
-from strawberryfields.future.apps.graph import utils
+from strawberryfields.apps.graph import utils
 
 pytestmark = pytest.mark.apps
 

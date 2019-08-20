@@ -6,7 +6,7 @@ Unit tests for strawberryfields.future.apps.graph.sample
 import networkx as nx
 import pytest
 
-from strawberryfields.future.apps.graph import sample
+from strawberryfields.apps.graph import sample
 
 pytestmark = pytest.mark.apps
 
