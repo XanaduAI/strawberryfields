@@ -6,6 +6,8 @@ import numpy as np
 import networkx as nx
 import pytest
 
+pytestmark = pytest.mark.apps
+
 
 @pytest.fixture
 def adj(dim: int):

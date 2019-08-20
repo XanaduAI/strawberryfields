@@ -10,6 +10,8 @@ import pytest
 from strawberryfields.future.apps import sample
 from strawberryfields.future.apps.graph import utils
 
+pytestmark = pytest.mark.apps
+
 
 @pytest.fixture()
 def _valid_backend(monkeypatch):
@@ -85,9 +87,14 @@ class TestQuantumSampler:
     def test_badpostselect(self, adj):
         """Tests if function raises a ``ValueError`` when a negative value is set for
         ``postselect`` """
-        with pytest.raises(ValueError, match="Can only postselect on nonnegative values"):
+        with pytest.raises(
+            ValueError, match="Can only postselect on nonnegative values"
+        ):
             sample.quantum_sampler(
-                A=adj, n_mean=1.0, samples=sample_number, backend_options={"postselect": -1}
+                A=adj,
+                n_mean=1.0,
+                samples=sample_number,
+                backend_options={"postselect": -1},
             )
 
     @pytest.mark.parametrize("valid_backends", sample.QUANTUM_BACKENDS)
@@ -105,7 +112,11 @@ class TestQuantumSampler:
                 A=adj,
                 n_mean=1.0,
                 samples=sample_number,
-                backend_options={"backend": valid_backends, "threshold": False, "postselect": 0},
+                backend_options={
+                    "backend": valid_backends,
+                    "threshold": False,
+                    "postselect": 0,
+                },
             )
 
         assert np.allclose(samples_pnr_nopostselect, samples)
@@ -130,7 +141,11 @@ class TestQuantumSampler:
                     A=adj,
                     n_mean=1.0,
                     samples=sample_number,
-                    backend_options={"backend": valid_backends, "threshold": True, "postselect": 0},
+                    backend_options={
+                        "backend": valid_backends,
+                        "threshold": True,
+                        "postselect": 0,
+                    },
                 )
             )
 
@@ -162,7 +177,9 @@ class TestQuantumSampler:
                 )
             )
 
-        samples_target = np.array([sample_pnr_postselect[0] for _ in range(sample_number)])
+        samples_target = np.array(
+            [sample_pnr_postselect[0] for _ in range(sample_number)]
+        )
 
         assert np.allclose(samples, samples_target)
 
@@ -184,11 +201,17 @@ class TestQuantumSampler:
                     A=adj,
                     n_mean=1.0,
                     samples=sample_number,
-                    backend_options={"backend": valid_backends, "threshold": True, "postselect": 1},
+                    backend_options={
+                        "backend": valid_backends,
+                        "threshold": True,
+                        "postselect": 1,
+                    },
                 )
             )
 
-        samples_target = np.array([sample_pnr_postselect[0] for _ in range(sample_number)])
+        samples_target = np.array(
+            [sample_pnr_postselect[0] for _ in range(sample_number)]
+        )
         samples_target[samples_target >= 1] = 1
 
         assert np.allclose(samples, samples_target)
@@ -358,7 +381,9 @@ class TestUniformSampler:
     def test_insufficient_samples(self):
         """Test if function returns ``ValueError`` when user specifies a number of samples less
         than 1 """
-        with pytest.raises(ValueError, match="Number of samples must be greater than zero"):
+        with pytest.raises(
+            ValueError, match="Number of samples must be greater than zero"
+        ):
             sample.uniform_sampler(modes=2, sampled_modes=2, samples=0)
 
     def test_output_dimensions(self):

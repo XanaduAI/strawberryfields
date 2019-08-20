@@ -10,6 +10,8 @@ import pytest
 
 from strawberryfields.future.apps.graph import utils
 
+pytestmark = pytest.mark.apps
+
 adj_dim_range = range(2, 6)
 
 
@@ -48,7 +50,9 @@ class TestToNetworkXGraph:
         adj[1, 0] = 0
         with monkeypatch.context() as m:
             m.setattr(utils, "is_undirected", lambda _: False)
-            with pytest.raises(Exception, match="Graphs input as a NumPy array must be real,"):
+            with pytest.raises(
+                Exception, match="Graphs input as a NumPy array must be real,"
+            ):
                 utils.to_networkx_graph(adj)
 
     def test_invalid_adjacency_complex(self, adj, monkeypatch):
@@ -56,7 +60,9 @@ class TestToNetworkXGraph:
         adj = adj * 1j
         with monkeypatch.context() as m:
             m.setattr(utils, "is_undirected", lambda _: True)
-            with pytest.raises(Exception, match="Graphs input as a NumPy array must be real,"):
+            with pytest.raises(
+                Exception, match="Graphs input as a NumPy array must be real,"
+            ):
                 utils.to_networkx_graph(adj)
 
     def test_valid_graph(self, adj):
@@ -148,7 +154,9 @@ class TestIsSubgraph:
     def test_invalid_type(self, graph):
         """Test if function raises a ``TypeError`` when fed an invalid subgraph type (i.e.,
         not iterable)."""
-        with pytest.raises(TypeError, match="subgraph and graph.nodes must be iterable"):
+        with pytest.raises(
+            TypeError, match="subgraph and graph.nodes must be iterable"
+        ):
             utils.is_subgraph(None, graph)
 
     def test_valid_subgraphs(self, graph, dim):
