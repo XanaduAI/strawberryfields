@@ -2,6 +2,11 @@
 
 ### New features
 
+* Add in first version of an applications layer aimed at solving problems using
+  Gaussian boson sampling. This layer focuses on graph-based problems and
+  currently has algorithms for the densest ``k``-subgraph problem.
+  [#164](https://github.com/XanaduAI/strawberryfields/pull/164)
+
 * Adds the MZgate to ops.py, representing a Mach-Zehnder interferometer. This is
   not a primitive of the existing simulator backends; rather, `_decompose()` is
   defined, decomposing it into an external phase shift, two 50-50 beamsplitters,
