@@ -154,16 +154,15 @@ else:
 
 
 tf_info = """\
-To use Strawberry Fields with TensorFlow support, version 1.3 of
-TensorFlow is required. This can be installed as follows:
+To use Strawberry Fields with TensorFlow support, version 1.3 of TensorFlow is required.
+This can be installed as follows:
 
 pip install tensorflow==1.3
 """
 
 
 tf_info_python = """\
-To use Strawberry Fields with TensorFlow support, version 1.3 of
-TensorFlow is required.
+To use Strawberry Fields with TensorFlow support, version 1.3 of TensorFlow is required.
 
 Note that TensorFlow version 1.3 is only supported on Python versions
 less than or equal to 3.6. To continue using TensorFlow with Strawberry Fields,
