@@ -1357,7 +1357,7 @@ class BSgate(Gate):
     :ref:`Beamsplitter <beamsplitter>` gate.
 
     .. math::
-       B(\theta,\phi) = \exp\left(\theta (e^{i \phi} a^\dagger b -e^{-i \phi}a b^\dagger) \right)
+       B(\theta,\phi) = \exp\left(\theta (e^{i \phi} a_1 a_2^\dagger -e^{-i \phi} a_1^\dagger a_2) \right)
 
     Args:
         theta (float): Transmittivity angle :math:`\theta`. The transmission amplitude of the beamsplitter is :math:`t = \cos(\theta)`.
