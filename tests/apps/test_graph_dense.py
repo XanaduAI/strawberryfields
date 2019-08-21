@@ -93,7 +93,7 @@ class TestRandomSearch:
 
         return (samples_subgraphs ** 2).tolist()
 
-    def test_densest_outputted(self, graph, monkeypatch):
+    def test_returns_densest(self, graph, monkeypatch):
         """Tests if function returns the densest subgraph from a fixed set of subgraph samples. The
         samples are given by ``samples_subgraphs`` and are defined with respect to the adjacency
         matrix given below. Note that graph nodes are numbered in this test as [0, 1, 4, 9,
