@@ -23,12 +23,13 @@ This module provides functionality for generating samples from both a quantum de
 uniform distribution.
 
 The :func:`quantum_sampler` function allows users to simulate Gaussian boson sampling (GBS) by
-choosing a symmetric input matrix to sample from. For a symmetric :math:`N \times N` input
-matrix :math:`A`, corresponding to an undirected graph, an :math:`N`-mode GBS device with threshold
-detectors generates samples that are binary strings of length ``N``. Various problems can be
-encoded in the matrix :math:`A` so that the output samples are informative and can be used as a
-form of randomness to improve solvers, as outlined in Refs. :cite:`arrazola2018using` and
-:cite:`arrazola2018quantum` and also shown in our :ref:`tutorial_dense_subgraph` tutorial.
+choosing a symmetric input matrix to sample from :cite:`bradler2018gaussian`. For a symmetric
+:math:`N \times N` input matrix :math:`A`, corresponding to an undirected graph,
+an :math:`N`-mode GBS device with threshold detectors generates samples that are binary strings
+of length ``N``. Various problems can be encoded in the matrix :math:`A` so that the output
+samples are informative and can be used as a form of randomness to improve solvers, as outlined
+in Refs. :cite:`arrazola2018using` and :cite:`arrazola2018quantum` and also shown in our
+:ref:`tutorial_dense_subgraph` tutorial.
 
 On the other hand, the :func:`uniform_sampler` function allows users to generate samples where a
 subset of modes are selected using the uniform distribution.
