@@ -1,6 +1,6 @@
 # Copyright 2019 Xanadu Quantum Technologies Inc.
 r"""
-Unit tests for strawberryfields.future.apps.graph.utils
+Unit tests for strawberryfields.apps.graph.utils
 """
 # pylint: disable=no-self-use,protected-access
 import itertools

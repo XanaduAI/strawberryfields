@@ -3,9 +3,9 @@ r"""
 Dense subgraph identification
 =============================
 
-**Module name:** :mod:`strawberryfields.future.apps.graph.dense`
+**Module name:** :mod:`strawberryfields.apps.graph.dense`
 
-.. currentmodule:: strawberryfields.future.apps.graph.dense
+.. currentmodule:: strawberryfields.apps.graph.dense
 
 The frontend module for users to find dense subgraphs. The :func:`find_dense` function
 provides approximate solutions to the densest-:math:`k` subgraph problem
@@ -69,11 +69,11 @@ def find_dense(
     - ``"heuristic"``: specifying options used by optimization heuristic; corresponding
       dictionary of options explained further :ref:`below <heuristic>`
     - ``"backend"``: specifying options used by backend quantum samplers; corresponding
-      dictionary of options explained further in :mod:`~strawberryfields.future.apps.sample`
+      dictionary of options explained further in :mod:`~strawberryfields.apps.sample`
     - ``"resize"``: specifying options used by resizing method; corresponding dictionary of
-      options explained further in :mod:`~strawberryfields.future.apps.graph.resize`
+      options explained further in :mod:`~strawberryfields.apps.graph.resize`
     - ``"sample"``: specifying options used in sampling; corresponding dictionary of options
-      explained further in :mod:`~strawberryfields.future.apps.graph.sample`
+      explained further in :mod:`~strawberryfields.apps.graph.sample`
 
     If unspecified, a default set of options is adopted for a given option type.
 
@@ -126,8 +126,8 @@ def random_search(
     """Random search algorithm for finding dense subgraphs of a given size.
 
     The algorithm proceeds by sampling subgraphs according to the
-    :func:`~strawberryfields.future.apps.graph.sample.sample_subgraphs`. The resultant subgraphs
-    are resized using :func:`~strawberryfields.future.apps.graph.resize.resize_subgraphs` to
+    :func:`~strawberryfields.apps.graph.sample.sample_subgraphs`. The resultant subgraphs
+    are resized using :func:`~strawberryfields.apps.graph.resize.resize_subgraphs` to
     be of size ``nodes``. The densest subgraph is then selected among all the resultant
     subgraphs. Specified``options`` must be of the form given in :func:`find_dense`.
 

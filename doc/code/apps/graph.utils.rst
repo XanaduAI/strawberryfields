@@ -1,2 +1,2 @@
-.. automodule:: strawberryfields.future.apps.graph.utils
+.. automodule:: strawberryfields.apps.graph.utils
     :members:

@@ -1,2 +1,2 @@
-.. automodule:: strawberryfields.future.apps.graph.dense
+.. automodule:: strawberryfields.apps.graph.dense
     :members:

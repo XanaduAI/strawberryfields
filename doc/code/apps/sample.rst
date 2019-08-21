@@ -1,2 +1,2 @@
-.. automodule:: strawberryfields.future.apps.sample
+.. automodule:: strawberryfields.apps.sample
     :members:

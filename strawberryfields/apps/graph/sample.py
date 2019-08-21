@@ -3,13 +3,13 @@ r"""
 Graph sampling
 ==============
 
-**Module name:** :mod:`strawberryfields.future.apps.graph.sample`
+**Module name:** :mod:`strawberryfields.apps.graph.sample`
 
-.. currentmodule:: strawberryfields.future.apps.graph.sample
+.. currentmodule:: strawberryfields.apps.graph.sample
 
 This module provides functionality for sampling of subgraphs from undirected graphs. The
 :func:`sample_subgraphs` function generates raw samples from
-:mod:`strawberryfields.future.apps.sample` and converts them to subgraphs using
+:mod:`strawberryfields.apps.sample` and converts them to subgraphs using
 :func:`to_subgraphs`.
 
 Summary

@@ -1,2 +1,2 @@
-.. automodule:: strawberryfields.future.apps.graph.resize
+.. automodule:: strawberryfields.apps.graph.resize
     :members:

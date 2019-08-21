@@ -1,6 +1,6 @@
 # Copyright 2019 Xanadu Quantum Technologies Inc.
 r"""
-Unit tests for strawberryfields.future.apps.sample
+Unit tests for strawberryfields.apps.sample
 """
 # pylint: disable=no-self-use,unused-argument,protected-access
 import numpy as np

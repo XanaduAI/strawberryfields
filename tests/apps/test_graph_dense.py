@@ -1,6 +1,6 @@
 # Copyright 2019 Xanadu Quantum Technologies Inc.
 r"""
-Unit tests for strawberryfields.future.apps.graph.dense
+Unit tests for strawberryfields.apps.graph.dense
 """
 # pylint: disable=no-self-use,unused-argument
 import numpy as np

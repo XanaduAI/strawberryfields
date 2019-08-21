@@ -1,6 +1,6 @@
 # Copyright 2019 Xanadu Quantum Technologies Inc.
 r"""
-Unit tests for strawberryfields.future.apps.graph.resize
+Unit tests for strawberryfields.apps.graph.resize
 """
 # pylint: disable=no-self-use,unused-argument
 import networkx as nx

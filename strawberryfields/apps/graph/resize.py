@@ -3,14 +3,14 @@ r"""
 Graph resizing
 ==============
 
-**Module name:** :mod:`strawberryfields.future.apps.graph.resize`
+**Module name:** :mod:`strawberryfields.apps.graph.resize`
 
-.. currentmodule:: strawberryfields.future.apps.graph.resize
+.. currentmodule:: strawberryfields.apps.graph.resize
 
 This module provides functionality for resizing of subgraphs. Samples from
-:func:`~strawberryfields.future.apps.sample.quantum_sampler` have a variable number of clicks (
+:func:`~strawberryfields.apps.sample.quantum_sampler` have a variable number of clicks (
 equivalently, the number of ones for samples with threshold detection). This results in subgraphs of
-a random size in :func:`~strawberryfields.future.apps.graph.sample.dense_subgraph_sampler_gbs`.
+a random size in :func:`~strawberryfields.apps.graph.sample.dense_subgraph_sampler_gbs`.
 However, some algorithms may want to work with subgraphs of a fixed size, necessitating the
 resizing of sample subgraphs.
 
