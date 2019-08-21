@@ -63,7 +63,7 @@ class TestValidateGraph:
         with monkeypatch.context() as m:
             m.setattr(utils, "is_undirected", lambda _: False)
             with pytest.raises(
-                Exception, match="Graphs input as a NumPy array must be real,"
+                Exception, match="Input NumPy arrays must be real and symmetric"
             ):
                 utils.validate_graph(adj)
 
@@ -73,7 +73,7 @@ class TestValidateGraph:
         with monkeypatch.context() as m:
             m.setattr(utils, "is_undirected", lambda _: True)
             with pytest.raises(
-                Exception, match="Graphs input as a NumPy array must be real,"
+                Exception, match="Input NumPy arrays must be real and symmetric"
             ):
                 utils.validate_graph(adj)
 

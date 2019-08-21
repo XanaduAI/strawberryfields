@@ -67,19 +67,6 @@ BACKEND_DEFAULTS = {
 """
 
 
-def _valid_backend(backend: str) -> bool:
-    r"""Performs a validation check that the requested backend can be run based upon the
-    ``QUANTUM_BACKENDS`` tuple.
-
-    Args:
-        backend (str): requested backend for sampling
-
-    Returns:
-        bool: returns only ``True`` if a valid backend is selected
-    """
-    return backend in QUANTUM_BACKENDS
-
-
 # pylint: disable=expression-not-assigned,pointless-statement
 def quantum_sampler(
     A: np.ndarray,
@@ -200,7 +187,7 @@ def _sample_sf(
     """
     backend_options = {**BACKEND_DEFAULTS, **(backend_options or {})}
 
-    if not _valid_backend(backend_options["backend"]):
+    if not backend_options["backend"] in QUANTUM_BACKENDS:
         raise ValueError("Invalid backend selected")
 
     if backend_options["remote"]:

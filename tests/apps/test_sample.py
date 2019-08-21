@@ -26,11 +26,6 @@ pytestmark = pytest.mark.apps
 
 
 @pytest.fixture()
-def _valid_backend(monkeypatch):
-    monkeypatch.setattr(sample, "_valid_backend", lambda _: True)
-
-
-@pytest.fixture()
 def is_undirected(monkeypatch):
     """dummy function for ``utils.is_undirected``"""
     monkeypatch.setattr(utils, "is_undirected", lambda _: True)
@@ -58,23 +53,6 @@ sample_pnr_postselect = np.array([[2, 0, 1, 3]])
 sample_threshold_postselect = np.array([[1, 0, 1, 1]])
 
 adj_dim_range = range(2, 6)
-
-
-class TestValidBackend:
-    """Tests for the function ``glassonion.sample._valid_backend``"""
-
-    @pytest.mark.parametrize("valid_backend", sample.QUANTUM_BACKENDS)
-    def test_valid_backends(self, valid_backend):
-        """Test if function returns ``None`` for any of the valid backends listed in
-        sample.QUANTUM_BACKENDS """
-        assert sample._valid_backend(valid_backend)
-
-    def test_invalid_backend(self):
-        """Test if function raises a ``ValueError`` for an invalid backend, chosen here to be an
-        empty string """
-        invalid_backend = ""
-
-        assert not sample._valid_backend(invalid_backend)
 
 
 @pytest.mark.usefixtures("is_undirected")
@@ -321,7 +299,6 @@ class TestQuantumSamplerIntegration:
 
 
 # pylint: disable=expression-not-assigned,pointless-statement
-@pytest.mark.usefixtures("_valid_backend")
 class TestSampleSF:
     """Tests for the function ``glassonion.sample._sample_sf``"""
 
@@ -330,14 +307,12 @@ class TestSampleSF:
 
         invalid_backend = ""
 
-        with monkeypatch.context() as m:
-            m.setattr(sample, "_valid_backend", lambda _: False)
-            with pytest.raises(ValueError, match="Invalid backend selected"):
-                sample._sample_sf(
-                    p=sf.Program(num_subsystems=1),
-                    shots=sample_number,
-                    backend_options={"remote": False, "backend": invalid_backend},
-                )
+        with pytest.raises(ValueError, match="Invalid backend selected"):
+            sample._sample_sf(
+                p=sf.Program(num_subsystems=1),
+                shots=sample_number,
+                backend_options={"remote": False, "backend": invalid_backend},
+            )
 
     @pytest.mark.parametrize("valid_backend", sample.QUANTUM_BACKENDS)
     @pytest.mark.parametrize("dim", [4])
