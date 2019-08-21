@@ -57,10 +57,12 @@ Code details
 ^^^^^^^^^^^^
 """
 from typing import Tuple, Optional
+
 import networkx as nx
-from ..sample import BACKEND_DEFAULTS
-from . import resize, sample, utils
-from .utils import graph_type
+
+from strawberryfields.apps.graph import resize, sample, utils
+from strawberryfields.apps.graph.utils import graph_type
+from strawberryfields.apps.sample import BACKEND_DEFAULTS
 
 
 def find_dense(

@@ -36,9 +36,11 @@ Code details
 ^^^^^^^^^^^^
 """
 from typing import Optional
+
 import networkx as nx
 import numpy as np
-from .. import sample
+
+from strawberryfields.apps import sample
 
 SAMPLE_DEFAULTS = {"distribution": "gbs", "postselect_ratio": 0.75}
 """Dict[str, Any]: Dictionary to specify default parameters of options in :func:`sample_subgraphs`.

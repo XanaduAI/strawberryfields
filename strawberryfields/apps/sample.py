@@ -47,9 +47,11 @@ Code details
 ^^^^^^^^^^^^
 """
 from typing import Optional
+
 import numpy as np
 import strawberryfields as sf
-from .graph import utils
+
+from strawberryfields.apps.graph import utils
 
 QUANTUM_BACKENDS = ("gaussian",)
 """tuple[str]: Available quantum backends for sampling."""
