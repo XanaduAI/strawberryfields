@@ -62,7 +62,7 @@ BACKEND_DEFAULTS = {
     "threshold": True,
     "postselect": 0,
 }
-"""Dict[str, Any]: Dictionary to specify default parameters of options in backend sampling for
+"""dict[str, Any]: Dictionary to specify default parameters of options in backend sampling for
 :func:`quantum_sampler`.
 """
 

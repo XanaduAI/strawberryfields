@@ -52,7 +52,7 @@ import networkx as nx
 from strawberryfields.apps.graph import utils
 
 RESIZE_DEFAULTS = {"method": "greedy-density"}
-"""Dict[str, Any]: Dictionary to specify default parameters of options for resizing
+"""dict[str, Any]: Dictionary to specify default parameters of options for resizing
 """
 
 
@@ -242,6 +242,6 @@ def greedy_degree(
 
 
 METHOD_DICT = {"greedy-density": greedy_density, "greedy-degree": greedy_degree}
-"""Dict[str, func]: Included methods for resizing subgraphs. The dictionary keys are strings
+"""dict[str, func]: Included methods for resizing subgraphs. The dictionary keys are strings
 describing the method, while the dictionary values are callable functions corresponding to the
 method."""

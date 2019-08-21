@@ -116,7 +116,7 @@ def find_dense(
             of heuristic search algorithm; defaults to :const:`OPTIONS_DEFAULTS`
 
     Returns:
-        Tuple[float, list]: the density and list of nodes corresponding to the densest subgraph
+        tuple[float, list]: the density and list of nodes corresponding to the densest subgraph
         found
     """
     options = {**OPTIONS_DEFAULTS, **(options or {})}
@@ -153,7 +153,7 @@ def random_search(
             of heuristic search algorithm; defaults to :const:`OPTIONS_DEFAULTS`
 
     Returns:
-        Tuple[float, list]: the density and list of nodes corresponding to the densest subgraph
+        tuple[float, list]: the density and list of nodes corresponding to the densest subgraph
         found
     """
     options = {**OPTIONS_DEFAULTS, **(options or {})}
@@ -176,7 +176,7 @@ def random_search(
 
 
 METHOD_DICT = {"random-search": random_search}
-"""Dict[str, func]: Included methods for finding dense subgraphs. The dictionary keys are strings
+"""dict[str, func]: Included methods for finding dense subgraphs. The dictionary keys are strings
 describing the method, while the dictionary values are callable functions corresponding to the
 method."""
 
@@ -186,7 +186,7 @@ OPTIONS_DEFAULTS = {
     "resize": resize.RESIZE_DEFAULTS,
     "sample": sample.SAMPLE_DEFAULTS,
 }
-"""Dict[str, dict[str, Any]]: Options for dense subgraph identification heuristics. Composed of a
+"""dict[str, dict[str, Any]]: Options for dense subgraph identification heuristics. Composed of a
 dictionary of dictionaries with the first level specifying the option type, selected from keys
 ``"heuristic"``, ``"backend"``, ``"resize"``, and ``"sample"``, with the corresponding value a
 dictionary of options for that type.
