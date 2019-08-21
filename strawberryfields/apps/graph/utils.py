@@ -76,7 +76,7 @@ def validate_graph(graph: graph_type) -> nx.Graph:
         ) and is_undirected(graph):
             graph = nx.Graph(graph)
         else:
-            raise Exception(
+            raise ValueError(
                 "Input NumPy arrays must be real and symmetric matrices and of dtype float or "
                 "complex"
             )
