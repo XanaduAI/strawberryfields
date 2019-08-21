@@ -54,7 +54,7 @@ Summary
     random_search
 
 Code details
-------------
+^^^^^^^^^^^^
 """
 from typing import Tuple, Optional
 import networkx as nx

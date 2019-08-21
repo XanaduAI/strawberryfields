@@ -44,7 +44,7 @@ Summary
     random_seed
 
 Code details
-------------
+^^^^^^^^^^^^
 """
 from typing import Optional
 import numpy as np

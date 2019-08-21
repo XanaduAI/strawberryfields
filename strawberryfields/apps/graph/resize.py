@@ -41,7 +41,7 @@ Summary
     greedy_degree
 
 Code details
-------------
+^^^^^^^^^^^^
 """
 
 from typing import Iterable, Optional

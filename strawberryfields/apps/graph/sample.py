@@ -33,7 +33,7 @@ Summary
     to_subgraphs
 
 Code details
-------------
+^^^^^^^^^^^^
 """
 from typing import Optional
 import networkx as nx

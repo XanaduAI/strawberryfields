@@ -41,7 +41,7 @@ Summary
     update_options
 
 Code details
-------------
+^^^^^^^^^^^^
 """
 from typing import Union, Iterable
 
