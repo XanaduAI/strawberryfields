@@ -67,7 +67,6 @@ BACKEND_DEFAULTS = {
 """
 
 
-# pylint: disable=expression-not-assigned,pointless-statement
 def quantum_sampler(
     A: np.ndarray,
     n_mean: float,
@@ -133,6 +132,7 @@ def quantum_sampler(
 
     mean_photon_per_mode = n_mean / float(nodes)
 
+    # pylint: disable=expression-not-assigned,pointless-statement
     with p.context as q:
         sf.ops.GraphEmbed(A, mean_photon=mean_photon_per_mode) | q
         sf.ops.Measure | q
