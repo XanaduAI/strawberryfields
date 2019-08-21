@@ -19,7 +19,7 @@ Dense subgraph identification
 
 .. currentmodule:: strawberryfields.apps.graph.dense
 
-The frontend module for users to find dense subgraphs. The :func:`find_dense` function
+Functions for finding dense subgraphs. The :func:`find_dense` function
 provides approximate solutions to the densest-:math:`k` subgraph problem
 :cite:`arrazola2018using`, which is NP-hard. This problem considers an undirected graph :math:`G
 = (V, E)` of :math:`N` nodes :math:`V` and a list of edges :math:`E`, and sets the objective of
