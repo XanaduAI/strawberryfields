@@ -50,7 +50,7 @@ def to_networkx_graph(graph: graph_type) -> nx.Graph:
         graph (graph_type): input graph to be processed
 
     Returns:
-        graph: the NetworkX graph corresponding to the input
+        nx.Graph: the NetworkX graph corresponding to the input
     """
     if isinstance(graph, np.ndarray):
         if (
@@ -64,7 +64,7 @@ def to_networkx_graph(graph: graph_type) -> nx.Graph:
         ) and is_undirected(graph):
             graph = nx.Graph(graph)
         else:
-            raise Exception(
+            raise ValueError(
                 "Graphs input as a NumPy array must be real, symmetric and of dtype "
                 "float or complex"
             )

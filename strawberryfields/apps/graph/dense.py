@@ -7,7 +7,7 @@ Dense subgraph identification
 
 .. currentmodule:: strawberryfields.future.apps.graph.dense
 
-The frontend module for users to find dense subgraphs. The :func:`find_dense` function
+Functions for finding dense subgraphs. The :func:`find_dense` function
 provides approximate solutions to the densest-:math:`k` subgraph problem
 :cite:`arrazola2018using`, which is NP-hard. This problem considers an undirected graph :math:`G
 = (V, E)` of :math:`N` nodes :math:`V` and a list of edges :math:`E`, and sets the objective of
@@ -42,7 +42,7 @@ Summary
     random_search
 
 Code details
-------------
+^^^^^^^^^^^^
 """
 from typing import Tuple, Optional
 import networkx as nx
@@ -102,7 +102,7 @@ def find_dense(
             of heuristic search algorithm; defaults to :const:`OPTIONS_DEFAULTS`
 
     Returns:
-        Tuple[float, list]: the density and list of nodes corresponding to the densest subgraph
+        tuple[float, list]: the density and list of nodes corresponding to the densest subgraph
         found
     """
     options = {**OPTIONS_DEFAULTS, **(options or {})}
@@ -172,7 +172,7 @@ OPTIONS_DEFAULTS = {
     "resize": resize.RESIZE_DEFAULTS,
     "sample": sample.SAMPLE_DEFAULTS,
 }
-"""Dict[str, dict[str, Any]]: Options for dense subgraph identification heuristics. Composed of a
+"""Dict[str, Dict[str, Any]]: Options for dense subgraph identification heuristics. Composed of a
 dictionary of dictionaries with the first level specifying the option type, selected from keys
 ``"heuristic"``, ``"backend"``, ``"resize"``, and ``"sample"``, with the corresponding value a
 dictionary of options for that type.
