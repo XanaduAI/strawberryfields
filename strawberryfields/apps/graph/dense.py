@@ -127,7 +127,7 @@ def find_dense(
         method = METHOD_DICT[method]
 
     return method(
-        graph=utils.to_networkx_graph(graph),
+        graph=utils.validate_graph(graph),
         nodes=nodes,
         iterations=iterations,
         options=options,

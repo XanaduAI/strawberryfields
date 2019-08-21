@@ -27,7 +27,7 @@ input graph and subset of nodes is specified.
 Furthermore, the frontend :func:`~strawberryfields.apps.graph.dense_subgraph.find_dense`
 function allows users to input graphs both as a `NumPy <https://www.numpy.org/>`__ array
 containing the adjacency matrix and as a `NetworkX <https://networkx.github.io/>`__ ``Graph``
-object. The :func:`to_networkx_graph` function allows both inputs to be processed into a NetworkX
+object. The :func:`validate_graph` function allows both inputs to be processed into a NetworkX
 Graph for ease of processing.
 
 Summary
@@ -36,7 +36,7 @@ Summary
 .. autosummary::
     is_undirected
     subgraph_adjacency
-    to_networkx_graph
+    validate_graph
     is_subgraph
     update_options
 
@@ -51,18 +51,18 @@ import numpy as np
 graph_type = Union[nx.Graph, np.ndarray]
 
 
-def to_networkx_graph(graph: graph_type) -> nx.Graph:
-    """Converts input into a NetworkX ``Graph`` (i.e., an undirected graph).
+def validate_graph(graph: graph_type) -> nx.Graph:
+    """Checks if input graph is valid
 
-    Given an input undirected graph of type ``graph_type = Union[nx.Graph, np.ndarray]``,
-    this function outputs a NetworkX graph of type ``nx.Graph``. The input ``np.ndarray`` must be a
-    matrix that is symmetric (i.e., satisfy :func:`is_undirected`) and also real.
+    Checks if input Numpy array is a valid adjacency matrix, i.e., real and symmetric,
+    and returns the corresponding NetworkX graph. If a NetworkX graph is input, this function
+    simply returns the input.
 
     Args:
         graph (graph_type): input graph to be processed
 
     Returns:
-        graph: the NetworkX graph corresponding to the input
+        nx.Graph: the NetworkX graph corresponding to the input
     """
     if isinstance(graph, np.ndarray):
         if (
@@ -125,7 +125,7 @@ def subgraph_adjacency(graph: graph_type, nodes: list) -> np.ndarray:
     Returns:
         array: the adjacency matrix of the subgraph
     """
-    graph = to_networkx_graph(graph)
+    graph = validate_graph(graph)
     all_nodes = graph.nodes
 
     if not set(nodes).issubset(all_nodes):

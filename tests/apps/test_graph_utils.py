@@ -28,15 +28,15 @@ adj_dim_range = range(2, 6)
 
 
 @pytest.mark.parametrize("dim", adj_dim_range)
-class TestToNetworkXGraph:
-    """Tests for the function ``glassonion.graphs.utils.to_networkx_graph``"""
+class TestValidateGraph:
+    """Tests for the function ``glassonion.graphs.utils.validate_graph``"""
 
     def test_valid_adjacency(self, adj, monkeypatch):
         """Test if function returns the NetworkX Graph class corresponding to the input adjacency
         matrix """
         with monkeypatch.context() as m:
             m.setattr(utils, "is_undirected", lambda _: True)
-            graph = utils.to_networkx_graph(adj)
+            graph = utils.validate_graph(adj)
         assert np.allclose(adj, nx.to_numpy_array(graph))
 
     def test_valid_adjacency_complex_dtype(self, adj, monkeypatch):
@@ -45,7 +45,7 @@ class TestToNetworkXGraph:
         with monkeypatch.context() as m:
             m.setattr(utils, "is_undirected", lambda _: True)
             adj = adj.astype(complex)
-            graph = utils.to_networkx_graph(adj)
+            graph = utils.validate_graph(adj)
         assert np.allclose(adj, nx.to_numpy_array(graph))
 
     def test_valid_adjacency_int_dtype(self, adj, monkeypatch):
@@ -54,7 +54,7 @@ class TestToNetworkXGraph:
         with monkeypatch.context() as m:
             m.setattr(utils, "is_undirected", lambda _: True)
             adj = adj.astype(int)
-            graph = utils.to_networkx_graph(adj)
+            graph = utils.validate_graph(adj)
         assert np.allclose(adj, nx.to_numpy_array(graph))
 
     def test_invalid_adjacency_nonsymmetric(self, adj, monkeypatch):
@@ -65,7 +65,7 @@ class TestToNetworkXGraph:
             with pytest.raises(
                 Exception, match="Graphs input as a NumPy array must be real,"
             ):
-                utils.to_networkx_graph(adj)
+                utils.validate_graph(adj)
 
     def test_invalid_adjacency_complex(self, adj, monkeypatch):
         """Test if function raises a ``ValueError`` for a complex symmetric matrix"""
@@ -75,19 +75,19 @@ class TestToNetworkXGraph:
             with pytest.raises(
                 Exception, match="Graphs input as a NumPy array must be real,"
             ):
-                utils.to_networkx_graph(adj)
+                utils.validate_graph(adj)
 
     def test_valid_graph(self, adj):
         """Test if function returns the same as input when a NetworkX Graph class is the input"""
         nx_graph = nx.Graph(adj)
-        graph = utils.to_networkx_graph(nx_graph)
+        graph = utils.validate_graph(nx_graph)
         assert graph is nx_graph
 
     def test_invalid_type(self, adj):
         """Test if function raises a ``TypeError`` when the input is not a NumPy array or
         NetworkX graph """
         with pytest.raises(TypeError, match="Graph is not of valid type"):
-            utils.to_networkx_graph(adj.tolist())
+            utils.validate_graph(adj.tolist())
 
 
 @pytest.mark.parametrize("dim", adj_dim_range)
@@ -138,7 +138,7 @@ class TestSubgraphAdjacency:
         explore that the optimised subgraph returned is still a valid subgraph."""
 
         with monkeypatch.context() as m:
-            m.setattr(utils, "to_networkx_graph", lambda x: x)
+            m.setattr(utils, "validate_graph", lambda x: x)
             subgraphs = np.array(list(itertools.combinations(range(dim), int(dim / 2))))
             subgraphs = list(map(lambda x: x ** 2, subgraphs))
             graph = nx.relabel_nodes(graph, lambda x: x ** 2)
@@ -152,7 +152,7 @@ class TestSubgraphAdjacency:
         """Test if function raises a ``ValueError`` if a list of nodes that cannot be contained
         within the graph is given"""
         with monkeypatch.context() as m:
-            m.setattr(utils, "to_networkx_graph", lambda x: x)
+            m.setattr(utils, "validate_graph", lambda x: x)
             nodes = range(dim + 1)
 
             with pytest.raises(ValueError, match="Must input a list of subgraph"):
