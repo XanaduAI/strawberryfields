@@ -77,8 +77,8 @@ def validate_graph(graph: graph_type) -> nx.Graph:
             graph = nx.Graph(graph)
         else:
             raise Exception(
-                "Graphs input as a NumPy array must be real, symmetric and of dtype "
-                "float or complex"
+                "Input NumPy arrays must be real and symmetric matrices and of dtype float or "
+                "complex"
             )
 
     elif not isinstance(graph, nx.Graph):
