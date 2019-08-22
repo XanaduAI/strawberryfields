@@ -41,7 +41,7 @@ class TestBackendImport:
             m.setattr("sys.version_info", (3, 6, 3))
             m.setattr(tensorflow, "__version__", "1.12.2")
 
-            with pytest.raises(ImportError, message="version 1.3 of TensorFlow is required"):
+            with pytest.raises(ImportError, match="version 1.3 of TensorFlow is required"):
                 reload(sf.backends.tfbackend)
 
     def test_incorrect_python_version(self, monkeypatch):
@@ -51,7 +51,7 @@ class TestBackendImport:
             m.setattr("sys.version_info", (3, 8, 1))
             m.setattr(tensorflow, "__version__", "1.12.2")
 
-            with pytest.raises(ImportError, message="you will need to install Python 3.6"):
+            with pytest.raises(ImportError, match="you will need to install Python 3.6"):
                 reload(sf.backends.tfbackend)
 
     @pytest.mark.skipif(tf_available, reason="Test only works if TF not installed")
@@ -61,7 +61,7 @@ class TestBackendImport:
             # force Python check to pass
             m.setattr("sys.version_info", (3, 6, 3))
 
-            with pytest.raises(ImportError, message="version 1.3 of TensorFlow is required"):
+            with pytest.raises(ImportError, match="version 1.3 of TensorFlow is required"):
                 reload(sf.backends.tfbackend)
 
 
@@ -77,7 +77,7 @@ class TestFrontendImport:
             m.setattr("sys.version_info", (3, 6, 3))
             m.setattr(tensorflow, "__version__", "1.12.2")
 
-            with pytest.raises(ImportError, message="version 1.3 of TensorFlow is required"):
+            with pytest.raises(ImportError, match="version 1.3 of TensorFlow is required"):
                 reload(sf.backends.tfbackend)
                 sf.LocalEngine('tf')
 
@@ -88,7 +88,7 @@ class TestFrontendImport:
             m.setattr("sys.version_info", (3, 8, 1))
             m.setattr(tensorflow, "__version__", "1.12.2")
 
-            with pytest.raises(ImportError, message="you will need to install Python 3.6"):
+            with pytest.raises(ImportError, match="you will need to install Python 3.6"):
                 reload(sf.backends.tfbackend)
                 sf.LocalEngine('tf')
 
@@ -99,6 +99,6 @@ class TestFrontendImport:
             # force Python check to pass
             m.setattr("sys.version_info", (3, 6, 3))
 
-            with pytest.raises(ImportError, message="version 1.3 of TensorFlow is required"):
+            with pytest.raises(ImportError, match="version 1.3 of TensorFlow is required"):
                 reload(sf.backends.tfbackend)
                 sf.LocalEngine('tf')

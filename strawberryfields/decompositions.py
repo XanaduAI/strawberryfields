@@ -47,7 +47,7 @@ from itertools import groupby
 
 import numpy as np
 from scipy.linalg import block_diag, sqrtm, polar, schur
-from hafnian.quantum import find_scaling_adjacency_matrix
+from thewalrus.quantum import find_scaling_adjacency_matrix
 
 from .backends.shared_ops import sympmat, changebasis
 

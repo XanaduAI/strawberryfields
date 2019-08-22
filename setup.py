@@ -31,6 +31,7 @@ requirements = [
     "quantum-blackbird>=0.2.0",
     "python-dateutil>=2.8.0",
     "hafnian>=0.6",
+    "thewalrus>=0.7",
     "toml",
     "appdirs",
     "requests>=2.22.0",
@@ -56,6 +57,7 @@ info = {
         "strawberryfields.backends.tfbackend",
         "strawberryfields.backends.fockbackend",
         "strawberryfields.backends.gaussianbackend",
+        "strawberryfields.apps"
     ],
     "package_data": {"strawberryfields": ["backends/data/*"]},
     "include_package_data": True,

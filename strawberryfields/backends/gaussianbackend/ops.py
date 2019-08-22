@@ -17,7 +17,7 @@ import numpy as np
 
 from scipy.linalg import sqrtm
 
-from hafnian.quantum import density_matrix_element, is_pure_cov, pure_state_amplitude, state_vector, density_matrix
+from thewalrus.quantum import density_matrix_element, is_pure_cov, pure_state_amplitude, state_vector, density_matrix
 
 
 

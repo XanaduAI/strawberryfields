@@ -6,6 +6,7 @@ tensorflow-tensorboard>=0.1.8
 quantum-blackbird
 python-dateutil==2.8.0
 hafnian>=0.6
+thewalrus>=0.7
 toml
 appdirs
 requests==2.22.0

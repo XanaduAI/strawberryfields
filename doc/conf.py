@@ -49,10 +49,10 @@ MOCK_MODULES = [
     'numbers',
     'blackbird',
     'blackbird.utils',
-    'hafnian',
-    'hafnian.lib',
-    'hafnian.samples',
-    'hafnian.quantum',
+    'thewalrus',
+    'thewalrus.libwalrus',
+    'thewalrus.samples',
+    'thewalrus.quantum',
     ]
 
 np_math_fns = ['abs',
