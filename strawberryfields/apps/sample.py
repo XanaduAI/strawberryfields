@@ -135,7 +135,7 @@ def quantum_sampler(
 
     # pylint: disable=expression-not-assigned,pointless-statement
     with p.context as q:
-        sf.ops.GraphEmbed(A, mean_photon=mean_photon_per_mode) | q
+        sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
         sf.ops.Measure | q
 
     p = p.compile("gbs")

@@ -324,7 +324,7 @@ class TestSampleSF:
         mean_photon_per_mode = 1.0
 
         with p.context as q:
-            sf.ops.GraphEmbed(adj, mean_photon=mean_photon_per_mode) | q
+            sf.ops.GraphEmbed(adj, mean_photon_per_mode=mean_photon_per_mode) | q
             sf.ops.Measure | q
 
         p = p.compile("gbs")
