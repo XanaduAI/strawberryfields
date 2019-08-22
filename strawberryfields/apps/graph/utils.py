@@ -38,7 +38,9 @@ Summary
     subgraph_adjacency
     validate_graph
     is_subgraph
-    update_options
+    is_clique
+    c_0
+    c_1
 
 Code details
 ^^^^^^^^^^^^
@@ -153,3 +155,76 @@ def is_subgraph(subgraph: Iterable, graph: nx.Graph):
         return set(subgraph).issubset(graph.nodes)
     except TypeError:
         raise TypeError("subgraph and graph.nodes must be iterable")
+
+
+def is_clique(graph: nx.Graph) -> bool:
+    """Determines if the input graph is a clique
+
+    Args:
+        graph (nx.Graph): the input graph
+
+    Returns:
+        bool: returns ``True`` if input graph is a clique and ``False`` otherwise
+    """
+    edges = graph.edges
+    nodes = graph.order()
+
+    return len(edges) == nodes * (nodes - 1) / 2  # a clique has of n nodes has n*(n-1)/2 edges
+
+
+def c_0(subgraph: list, graph: nx.Graph):
+    """Generates the set C0 of nodes that are connected to all nodes in the input subgraph
+
+    The set C0 is defined in :cite:`pullan2006phased`.
+
+    Args:
+        subgraph (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
+        graph (nx.Graph): the input graph
+
+    Returns:
+        list[int]: a list containing the C0 nodes for the subgraph
+    """
+    if not is_clique(graph.subgraph(subgraph)):  # Each subgraph must be a clique
+        raise ValueError("Input subgraph is not a clique")
+
+    c0_nodes = []
+    non_clique_nodes = set(graph.nodes) - set(subgraph)  # All nodes that are not in the clique
+
+    for i in non_clique_nodes:
+        if set(subgraph).issubset(graph.neighbors(i)):
+            c0_nodes.append(i)
+
+    return c0_nodes
+
+
+def c_1(subgraph: list, graph: nx.Graph):
+    """Generates the set C1 of nodes that are connected to all but one of the nodes in the input
+    subgraph
+
+    The set C1 is defined in :cite:`pullan2006phased`.
+
+    Args:
+        subgraph (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
+        graph (nx.Graph): the input graph
+
+   Returns:
+       list[int]: a list of tuples ``[(i_clique, i), (j_clique, j),...,(k_clique, k)]``. Here
+       ``i,j,...,k`` are the nodes in C1, while ``i_clique, j_clique,...,k_clique`` are the nodes in
+       the clique they can be swapped with.
+       """
+    if not is_clique(graph.subgraph(subgraph)):  # Each subgraph must be a clique
+        raise ValueError("Input subgraph is not a clique")
+
+    c1_nodes = []
+    non_clique_nodes = set(graph.nodes) - set(subgraph)  # All nodes that are not in the clique
+
+    subgraph = set(subgraph)
+
+    for i in non_clique_nodes:
+        neighbors_in_subgraph = subgraph.intersection(graph.neighbors(i))
+
+        if len(neighbors_in_subgraph) == len(subgraph) - 1:
+            to_swap = subgraph - neighbors_in_subgraph
+            c1_nodes.append((to_swap.pop(), i))
+
+    return c1_nodes
