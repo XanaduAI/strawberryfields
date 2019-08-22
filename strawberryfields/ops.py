@@ -1789,7 +1789,7 @@ class GraphEmbed(Decomposition):
 
     Args:
         A (array): an :math:`N\times N` complex or real symmetric matrix
-        mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
+        mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state
             representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
         make_traceless (boolean): Removes the trace of the input matrix, by performing the transformation
             :math:`\tilde{A} = A-\mathrm{tr}(A) \I/n`. This may reduce the amount of squeezing needed to encode
@@ -1799,7 +1799,7 @@ class GraphEmbed(Decomposition):
             :math:`|A-A^T| <` tol
     """
 
-    def __init__(self, A, mean_photon=1.0, make_traceless=False, tol=1e-6):
+    def __init__(self, A, mean_photon_per_mode=1.0, make_traceless=False, tol=1e-6):
         super().__init__([A])
         self.ns = A.shape[0]
 
@@ -1808,7 +1808,7 @@ class GraphEmbed(Decomposition):
         else:
             self.identity = False
             self.sq, self.U = dec.graph_embed(
-                A, mean_photon_per_mode=mean_photon, make_traceless=make_traceless, atol=tol, rtol=0
+                A, mean_photon_per_mode=mean_photon_per_mode, make_traceless=make_traceless, atol=tol, rtol=0
             )
 
     def _decompose(self, reg, **kwargs):
@@ -1848,7 +1848,7 @@ class BipartiteGraphEmbed(Decomposition):
         A (array): Either an :math:`N\times N` complex or real symmetric adjacency matrix
             :math:`A`, or an :math:`N/2\times N/2` complex or real matrix :math:`B`
             representing the edges between the vertex sets if ``edges=True``.
-        mean_photon (float): guarantees that the mean photon number in the pure Gaussian state
+        mean_photon_per_mode (float): guarantees that the mean photon number in the pure Gaussian state
             representing the graph satisfies  :math:`\frac{1}{N}\sum_{i=1}^N sinh(r_{i})^2 ==` :code:``mean_photon``
         edges (bool): set to ``True`` if argument ``A`` represents the edges :math:`B`
             between the vertex sets rather than the full adjacency matrix
@@ -1858,8 +1858,8 @@ class BipartiteGraphEmbed(Decomposition):
             :math:`|A-A^T| <` tol
     """
 
-    def __init__(self, A, mean_photon=1.0, edges=False, drop_identity=True, tol=1e-6):
-        self.mean_photon = mean_photon
+    def __init__(self, A, mean_photon_per_mode=1.0, edges=False, drop_identity=True, tol=1e-6):
+        self.mean_photon_per_mode = mean_photon_per_mode
         self.tol = tol
         self.identity = np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol)
         self.drop_identity = drop_identity
@@ -1886,7 +1886,7 @@ class BipartiteGraphEmbed(Decomposition):
         super().__init__([B])
 
     def _decompose(self, reg, **kwargs):
-        mean_photon = kwargs.get("mean_photon", self.mean_photon)
+        mean_photon_per_mode = kwargs.get("mean_photon_per_mode", self.mean_photon_per_mode)
         tol = kwargs.get("tol", self.tol)
         mesh = kwargs.get("mesh", "rectangular")
         drop_identity = kwargs.get("drop_identity", self.drop_identity)
@@ -1896,7 +1896,7 @@ class BipartiteGraphEmbed(Decomposition):
         B = self.p[0].x
         N = len(B)
 
-        sq, U, V = dec.bipartite_graph_embed(B, mean_photon_per_mode=mean_photon, atol=tol, rtol=0)
+        sq, U, V = dec.bipartite_graph_embed(B, mean_photon_per_mode=mean_photon_per_mode, atol=tol, rtol=0)
 
         if not self.identity or not drop_identity:
             for m, s in enumerate(sq):
