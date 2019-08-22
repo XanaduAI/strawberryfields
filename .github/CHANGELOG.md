@@ -22,6 +22,10 @@
   allowing a bipartite graph to be embedded on a device that allows for
   initial two-mode squeezed states, and block diagonal unitaries.
 
+* Added support for threshold measurement in the Gaussian backend, via the new backend API
+  method `measure_threshold`.
+  [#152](https://github.com/XanaduAI/strawberryfields/pull/152)
+
 ### API Changes
 
 * The `strawberryfields.ops.Measure` shorthand has been deprecated in favour

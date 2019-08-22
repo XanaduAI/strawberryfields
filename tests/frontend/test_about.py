@@ -36,7 +36,7 @@ def test_about(capfd):
 
     assert "Numpy version" in out
     assert "Scipy version" in out
-    assert "Hafnian version" in out
+    assert "The Walrus version" in out
     assert "Blackbird version" in out
 
 

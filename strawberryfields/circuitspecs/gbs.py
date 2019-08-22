@@ -39,6 +39,7 @@ class GBSSpecs(GaussianSpecs):
         "MeasureHomodyne",
         "MeasureHeterodyne",
         "MeasureFock",
+        "MeasureThreshold",
         # channels
         "LossChannel",
         "ThermalLossChannel",

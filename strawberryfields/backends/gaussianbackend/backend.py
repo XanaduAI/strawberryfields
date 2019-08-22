@@ -30,7 +30,7 @@ from numpy import (
     ix_,
 )
 from numpy.linalg import inv
-from hafnian.samples import hafnian_sample_state
+from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.shared_ops import changebasis
@@ -196,7 +196,7 @@ class GaussianBackend(BaseGaussian):
         if shots != 1:
             if select is not None:
                 raise NotImplementedError("Gaussian backend currently does not support "
-                                          "postselection if shots != 1 for Fock measurement")
+                                          "postselection")
             warnings.warn("Cannot simulate non-Gaussian states. "
                           "Conditional state after Fock measurement has not been updated.")
 
@@ -216,6 +216,33 @@ class GaussianBackend(BaseGaussian):
         if shots == 1:
             samples = samples.reshape((len(modes),))
         return samples
+
+
+    def measure_threshold(self, modes, shots=1, select=None):
+        if shots != 1:
+            if select is not None:
+                raise NotImplementedError("Gaussian backend currently does not support "
+                                          "postselection")
+            warnings.warn("Cannot simulate non-Gaussian states. "
+                          "Conditional state after Threshold measurement has not been updated.")
+
+        mu = self.circuit.mean
+        cov = self.circuit.scovmatxp()
+        # check we are sampling from a gaussian state with zero mean
+        if not allclose(mu, zeros_like(mu)):
+            raise NotImplementedError("Threshold measurement is only supported for "
+                                      "Gaussian states with zero mean")
+        x_idxs = array(modes)
+        p_idxs = x_idxs + len(mu)
+        modes_idxs = concatenate([x_idxs, p_idxs])
+        reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
+        samples = torontonian_sample_state(reduced_cov, shots)
+        # for backward compatibility with previous measurement behaviour,
+        # if only one shot, then we drop the shots axis
+        if shots == 1:
+            samples = samples.reshape((len(modes),))
+        return samples
+
 
     def state(self, modes=None, **kwargs):
         """Returns the state of the quantum simulation.

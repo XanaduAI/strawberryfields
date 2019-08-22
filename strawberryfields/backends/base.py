@@ -506,6 +506,25 @@ class BaseBackend:
         """
         raise NotImplementedError
 
+    def measure_threshold(self, modes, shots=1, select=None, **kwargs):
+        """Measure the given modes in the thresholded Fock basis, i.e., zero or nonzero photons).
+
+        .. note::
+
+            When :code:``shots == 1``, updates the current system state to the conditional state of that
+            measurement result. When :code:``shots > 1``, the system state is not updated.
+
+        Args:
+            modes (Sequence[int]): which modes to measure
+            shots (int): number of measurement samples to obtain
+            select (None or Sequence[int]): If not None: desired values of the measurement results.
+                Enables post-selection on specific measurement results instead of random sampling.
+                ``len(select) == len(modes)`` is required.
+        Returns:
+            tuple[int]: measurement results
+        """
+        raise NotImplementedError
+
     def is_vacuum(self, tol=0.0, **kwargs):
         r"""Test whether the current circuit state is vacuum (up to given tolerance).
 

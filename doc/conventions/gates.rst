@@ -322,7 +322,7 @@ Controlled-X gate
    The controlled-X gate, also known as the addition gate or the sum gate, is a controlled displacement in position. It is given by
 
    .. math::
-      \text{CX}(s) = \int dx \xket{x}\xbra{x} \otimes D\left(\sqrt{\frac{s x}{2\hbar}}\right) = \exp\left({-i \frac{s}{\hbar} \: \x_1 \otimes \p_2}\right).
+      \text{CX}(s) = \int dx \xket{x}\xbra{x} \otimes D\left(\frac{s x}{\sqrt{2\hbar}}\right) = \exp\left({-i \frac{s}{\hbar} \: \x_1 \otimes \p_2}\right).
 
 .. tip:: *Implemented in Strawberry Fields as a quantum gate by* :class:`strawberryfields.ops.CXgate`
 

@@ -21,7 +21,7 @@ as well as the following Python packages:
 * `SciPy <http://scipy.org/>`_  >=1.0.0
 * `NetworkX <http://networkx.github.io/>`_ >=2.0
 * `Blackbird <https://quantum-blackbird.readthedocs.io>`_ >=0.2.0
-* `Hafnian <https://hafnian.readthedocs.io>`_ >=0.6.0
+* `The Walrus <https://the-walrus.readthedocs.io>`_ >=0.7.0
 * `toml <https://pypi.org/project/toml/>`_
 * `appdirs <https://pypi.org/project/appdirs/>`_
 
