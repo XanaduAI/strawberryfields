@@ -1385,17 +1385,16 @@ class CXgate(Gate):
     def _decompose(self, reg, **kwargs):
         s = self.p[0]
         r = pf.asinh(-s/2)
-        theta = 0.5*pf.atan2(-1.0/pf.cosh(r), -pf.tanh(r))
-        # FIXME pf.atan2() does not seem to work with evalf(), i.e. it does not evaluate to a number even if the arguments do
-        #theta = 0.5*pf.atan(1/pf.cosh(r)/pf.tanh(r))
-
-        BS1 = BSgate(theta, 0)
-        BS2 = BSgate(theta+pi/2, 0)
+        #theta = 0.5*pf.atan2(-1.0/pf.cosh(r), -pf.tanh(r))
+        # FIXME in sympy 1.4 atan2._eval_evalf() has a bug, it does not work with Symbol._eval_evalf().
+        # This is a partial workaround for s>0. When sympy is fixed (in version 1.5?), go back to using pf.atan2.
+        # If s<0 we would need to add pi/2 to theta, but since s is symbolic at this point, it'd be complicated.
+        theta = 0.5 * pf.atan(1 / pf.sinh(r))
         return [
-            Command(BS1, reg),
+            Command(BSgate(theta, 0), reg),
             Command(Sgate(r, 0), reg[0]),
             Command(Sgate(-r, 0), reg[1]),
-            Command(BS2, reg)
+            Command(BSgate(theta + pi/2, 0), reg),
         ]
 
 
