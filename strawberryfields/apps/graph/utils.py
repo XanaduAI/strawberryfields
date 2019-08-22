@@ -19,16 +19,14 @@ Graph functions
 
 .. currentmodule:: strawberryfields.apps.graph.utils
 
-This module provides some ancillary functions for dealing with graphs. This includes
-:func:`is_undirected` to check if an input matrix corresponds to an undirected graph (i.e.,
-is symmetric) and :func:`subgraph_adjacency` to return the adjacency matrix of a subgraph when an
-input graph and subset of nodes is specified.
+This module provides some ancillary functions for dealing with graphs. This includes graph
+validation functions such as :func:`is_undirected`, :func:`validate_graph` and :func:`is_subgraph`;
+clique-based utility functions :func:`is_clique`, :func:`c_0` and :func:`c_1`; and a utility
+function to return the adjacency matrix of a subgraph, :func:`subgraph_adjacency`.
 
-Furthermore, the frontend :func:`~strawberryfields.apps.graph.dense_subgraph.find_dense`
-function allows users to input graphs both as a `NumPy <https://www.numpy.org/>`__ array
-containing the adjacency matrix and as a `NetworkX <https://networkx.github.io/>`__ ``Graph``
-object. The :func:`validate_graph` function allows both inputs to be processed into a NetworkX
-Graph for ease of processing.
+Furthermore, ``graph_type = Union[nx.Graph, np.ndarray]`` is defined here as an input type that
+can be either a NetworkX graph or an adjacency matrix in the form of a NumPy array. Some
+functions in the applications layer are able to accept either input.
 
 Summary
 -------
