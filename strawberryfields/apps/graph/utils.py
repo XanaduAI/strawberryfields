@@ -26,7 +26,7 @@ function to return the adjacency matrix of a subgraph, :func:`subgraph_adjacency
 
 Furthermore, ``graph_type = Union[nx.Graph, np.ndarray]`` is defined here as an input type that
 can be either a NetworkX graph or an adjacency matrix in the form of a NumPy array. Some
-functions in the applications layer are able to accept either input.
+functions in this module are able to accept either input.
 
 Summary
 -------
