@@ -166,17 +166,17 @@ def is_clique(graph: nx.Graph) -> bool:
 
 
 def c_0(clique: list, graph: nx.Graph):
-    """Generates the set :math:`c_0` of nodes that are connected to all nodes in the input
+    """Generates the set :math:`C_0` of nodes that are connected to all nodes in the input
     clique subgraph.
 
-    The set :math:`c_0` is defined in :cite:`pullan2006phased`.
+    The set :math:`C_0` is defined in :cite:`pullan2006phased`.
 
     Args:
         clique (list[int]): A subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
 
     Returns:
-        list[int]: A list containing the :math:`c_0` nodes for the clique
+        list[int]: A list containing the :math:`C_0` nodes for the clique
     """
     if not is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
@@ -193,10 +193,10 @@ def c_0(clique: list, graph: nx.Graph):
 
 
 def c_1(clique: list, graph: nx.Graph):
-    """Generates the set :math:`c_1` of nodes that are connected to all but one of the nodes in
+    """Generates the set :math:`C_1` of nodes that are connected to all but one of the nodes in
     the input clique subgraph
 
-    The set :math:`c_1` is defined in :cite:`pullan2006phased`.
+    The set :math:`C_1` is defined in :cite:`pullan2006phased`.
 
     Args:
         clique (list[int]): A subgraph specified by a list of nodes; the subgraph must be a clique
@@ -204,7 +204,7 @@ def c_1(clique: list, graph: nx.Graph):
 
     Returns:
        list[int]: A list of tuples ``[(i_clique, i), (j_clique, j),...,(k_clique, k)]``. Here
-       ``i,j,...,k`` are the nodes in :math:`c_1`, while ``i_clique, j_clique,...,k_clique`` are the
+       ``i,j,...,k`` are the nodes in :math:`C_1`, while ``i_clique, j_clique,...,k_clique`` are the
         nodes in the clique they can be swapped with.
        """
     if not is_clique(graph.subgraph(clique)):
