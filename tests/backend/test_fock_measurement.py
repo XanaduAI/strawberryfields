@@ -162,15 +162,12 @@ class TestRepresentationIndependent:
         """Test that a coherent state with a mean photon number of 4 and sampled NUM_REPEATS times will produce photons"""
         backend = setup_backend(1)
         alpha = 2.0
-        nonzero = False
+        meas = np.array(backend.measure_fock([0]))
 
         for _ in range(NUM_REPEATS):
             backend.reset(pure=pure)
             backend.displacement(alpha, 0)
-            meas = backend.measure_fock([0])[0]
-            if meas > 0:
-                nonzero = True
-                break
-        assert nonzero
+            meas += backend.measure_fock([0])
+        assert np.all(meas > 0)
 
 
