@@ -448,3 +448,75 @@ class TestFockBackendDecomposeState:
 
         for n in range(3):
             assert np.allclose(state.fidelity(in_state, n), 1, atol=tol)
+
+class TestDecompositionsGaussianGates:
+    """Test the actions of several non-primitive Gaussian gates"""
+
+    @pytest.mark.backends("gaussian")
+    def test_CXgate(self, setup_eng, hbar, tol):
+        """Test the action of the CX gate on approximate x eigenstates"""
+        N = 2
+        eng, prog = setup_eng(N)
+        r = 3
+        x1 = 2
+        x2 = 1
+        s = 0.5
+        with prog.context as q:
+            ops.Sgate(r) | q[0]
+            ops.Xgate(x1) | q[0]
+            ops.Sgate(r) | q[1]
+            ops.Xgate(x2) | q[1]
+            ops.CXgate(s) | q
+        state = eng.run(prog).state
+        expected = np.array([x1, x2 + s * x1, 0, 0])
+        # Checks the means are transformed correctly
+        assert np.allclose(state.means(), expected, atol=tol)
+        _, cov1 = state.reduced_gaussian(0)
+        purity = np.linalg.det(cov1)
+        # Checks the right amount of entanglement is generated
+        assert np.allclose(purity, (1 + s ** 2) * (0.5 * hbar) ** 2, atol=tol)
+
+    @pytest.mark.backends("gaussian")
+    def test_CZgate(self, setup_eng, hbar, tol):
+        """Test the action of the CZ gate on approximate x eigenstates"""
+        N = 2
+        eng, prog = setup_eng(N)
+        r = 4
+        x1 = 2
+        x2 = 1
+        s = 0.5
+        with prog.context as q:
+            ops.Sgate(r) | q[0]
+            ops.Xgate(x1) | q[0]
+            ops.Sgate(r) | q[1]
+            ops.Xgate(x2) | q[1]
+            ops.CZgate(s) | q
+        state = eng.run(prog).state
+        expected = np.array([x1, x2, s * x2, s * x1])
+        # Checks the means are transformed correctly
+        assert np.allclose(state.means(), expected, atol=tol)
+        _, cov1 = state.reduced_gaussian(0)
+        purity = np.linalg.det(cov1)
+        # Checks the right amount of entanglement is generated
+        assert np.allclose(purity, (1 + np.exp(-4 * r) * s ** 2) * (0.5 * hbar) ** 2, atol=tol)
+
+    @pytest.mark.backends("fock")
+    def test_S2gate(self, setup_eng, pure, hbar, tol):
+        """Test the action of the S2gate gate on vacuum"""
+        if not pure:
+            pytest.skip("Test only runs on pure states")
+        N = 2
+        eng, prog = setup_eng(N)
+        nbar = 1
+        s = np.arcsinh(np.sqrt(1.0))
+        phi = 0 * np.pi / 3
+        with prog.context as q:
+            ops.S2gate(s, phi) | q
+        state = eng.run(prog).state
+        ket = state.ket()
+        n, _ = ket.shape
+        diag_elems = (1 / np.sqrt(1 + nbar)) * (
+            np.exp(1j * phi) * np.sqrt((nbar / (1 + nbar)))
+        ) ** (list(range(n)))
+        diag_elems[-1] = 0
+        assert np.allclose(np.diag(diag_elems), ket, atol=0.2)
