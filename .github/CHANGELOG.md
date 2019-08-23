@@ -42,7 +42,6 @@
     `rectangular_symmetric`, and `triangular`) now have standardized outputs
     `(tlist, diag, tilist)`, so they can easily be swapped.
 
-
 * Several changes to `ops.Interferometer`:
   [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
 
@@ -62,6 +61,11 @@
   be passed the program registers, as compilation may sometimes require this.
   [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
 
+### Improvements
+
+* Photon-counting measurements can now be done in the Gaussian backend for states with nonzero displacement.
+  [#154](https://github.com/XanaduAI/strawberryfields/pull/154)
+
 ### Bug fixes
 
 * When using the `'gbs'` compilation target, the measured registers are now sorted in
@@ -70,6 +74,9 @@
 
 * Fixed typo in the Gaussian Boson Sampling example notebook.
   [#133](https://github.com/XanaduAI/strawberryfields/pull/133)
+
+* Fixed a bug in the function `smeanxp` of the Gaussian Backend simulator. 
+  [#154](https://github.com/XanaduAI/strawberryfields/pull/154)
 
 ---
 
