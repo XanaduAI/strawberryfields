@@ -208,11 +208,10 @@ class TestC0:
     """Tests function :math:`c_0` that generates the set of nodes connected to all nodes in a
     clique"""
 
-    @pytest.mark.parametrize("subdim", range(2, 10))
-    def test_correct_c_0(self, dim, subdim):
+    def test_correct_c_0(self, dim):
         """Tests that :math:`c_0` is generated correctly for the lollipop graph"""
         g = nx.lollipop_graph(dim, 1)
-        s = set(range(subdim))
+        s = set(range(int(dim / 2)))
         res = set(utils.c_0(s, g))
 
         assert res not in s
