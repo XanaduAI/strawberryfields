@@ -454,6 +454,7 @@ class TestDecompositionsGaussianGates:
 
     @pytest.mark.backends("gaussian")
     def test_Pgate(self, setup_eng, pure, hbar, tol):
+        """Test the action of the P gate in phase space"""
         if not pure:
             pytest.skip("Test only runs on pure states")
         N = 1
@@ -477,7 +478,7 @@ class TestDecompositionsGaussianGates:
 
     @pytest.mark.backends("gaussian")
     def test_CXgate(self, setup_eng, pure, hbar, tol):
-        """Test the action of the CX gate on approximate x eigenstates"""
+        """Test the action of the CX gate in phase space"""
         if not pure:
             pytest.skip("Test only runs on pure states")
         N = 2
@@ -507,7 +508,7 @@ class TestDecompositionsGaussianGates:
 
     @pytest.mark.backends("gaussian")
     def test_CZgate(self, setup_eng, pure, hbar, tol):
-        """Test the action of the CZ gate on approximate x eigenstates"""
+        """Test the action of the CZ gate in phase space"""
         if not pure:
             pytest.skip("Test only runs on pure states")
         N = 2
@@ -537,7 +538,7 @@ class TestDecompositionsGaussianGates:
 
     @pytest.mark.backends("fock")
     def test_S2gate_fock(self, setup_eng, pure, hbar, tol):
-        """Test the action of the S2gate gate on vacuum"""
+        """Test the action of the S2gate gate on vacuum in Fock space"""
         if not pure:
             pytest.skip("Test only runs on pure states")
         N = 2
