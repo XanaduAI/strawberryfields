@@ -71,9 +71,9 @@ def validate_graph(graph: graph_type) -> nx.Graph:
             and is_undirected(graph)
         ):
             graph = nx.Graph(graph.real.astype("float"))
-        elif (
-            graph.dtype is np.dtype("float") or graph.dtype is np.dtype("int")
-        ) and is_undirected(graph):
+        elif (graph.dtype is np.dtype("float") or graph.dtype is np.dtype("int")) and is_undirected(
+            graph
+        ):
             graph = nx.Graph(graph)
         else:
             raise ValueError(
@@ -102,12 +102,7 @@ def is_undirected(mat: np.ndarray) -> bool:
 
     dims = mat.shape
 
-    conditions = (
-        len(dims) == 2
-        and dims[0] == dims[1]
-        and dims[0] > 1
-        and np.allclose(mat, mat.T)
-    )
+    conditions = len(dims) == 2 and dims[0] == dims[1] and dims[0] > 1 and np.allclose(mat, mat.T)
 
     return conditions
 
@@ -156,13 +151,13 @@ def is_subgraph(subgraph: Iterable, graph: nx.Graph):
 
 
 def is_clique(graph: nx.Graph) -> bool:
-    """Determines if the input graph is a clique. A clique of n nodes has n*(n-1)/2 edges
+    """Determines if the input graph is a clique. A clique of n nodes has :math:`n*(n-1)/2` edges
 
     Args:
         graph (nx.Graph): The input graph
 
     Returns:
-        bool: Returns ``True`` if input graph is a clique and ``False`` otherwise
+        bool: ``True`` if input graph is a clique and ``False`` otherwise
     """
     edges = graph.edges
     nodes = graph.order()
