@@ -1,3 +1,5 @@
+* Adds new integration tests for the Gaussian gates that are not primitive, i.e P, CX, CZ, and S2. Addresses issue [#171](https://github.com/XanaduAI/strawberryfields/issues/171)
+
 # Release 0.12.0-dev
 
 ### New features
