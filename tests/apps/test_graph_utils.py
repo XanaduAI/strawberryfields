@@ -227,7 +227,7 @@ class TestC0:
 
         assert K == list(range(dim - 1))
 
-    def test_c_0_input_is_clique(self, dim):
+    def test_c_0_error_on_not_clique_input(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
         A = np.ones((dim, dim)) - np.eye(dim)
         A = nx.Graph(A)
@@ -266,7 +266,7 @@ class TestC1:
 
         assert utils.is_clique(A.subgraph(S))
 
-    def test_c1input_is_clique(self, dim):
+    def test_c_1_error_on_not_clique_input(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
         A = np.ones((dim, dim)) - np.eye(dim)
         A = nx.Graph(A)

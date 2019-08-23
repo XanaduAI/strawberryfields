@@ -162,7 +162,7 @@ def is_clique(graph: nx.Graph) -> bool:
         graph (nx.Graph): The input graph
 
     Returns:
-        bool: Returns ``True`` if input graph is a clique and ``False`` otherwise
+        bool: ``True`` if input graph is a clique and ``False`` otherwise
     """
     edges = graph.edges
     nodes = graph.order()
@@ -170,37 +170,37 @@ def is_clique(graph: nx.Graph) -> bool:
     return len(edges) == nodes * (nodes - 1) / 2
 
 
-def c_0(subgraph: list, graph: nx.Graph):
-    """Generates the set :math:`c_0` of nodes that are connected to all nodes in the input subgraph
+def c_0(clique: list, graph: nx.Graph):
+    """Generates the set :math:`C_0` of nodes that are connected to all nodes in the input subgraph
 
-    The set :math:`c_0` is defined in :cite:`pullan2006phased`.
+    The set :math:`C_0` is defined in :cite:`pullan2006phased`.
 
     Args:
         subgraph (list[int]): A subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
 
     Returns:
-        list[int]: A list containing the :math:`c_0` nodes for the subgraph
+        list[int]: A list containing the :math:`C_0` nodes for the subgraph
     """
-    if not is_clique(graph.subgraph(subgraph)):
+    if not is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
 
-    set_subgraph = set(subgraph)
+    set_clique = set(clique)
     c_0_nodes = []
-    non_clique_nodes = set(graph.nodes) - set_subgraph
+    non_clique_nodes = set(graph.nodes) - set_clique
 
     for i in non_clique_nodes:
-        if set_subgraph.issubset(graph.neighbors(i)):
+        if set_clique.issubset(graph.neighbors(i)):
             c_0_nodes.append(i)
 
     return c_0_nodes
 
 
-def c_1(subgraph: list, graph: nx.Graph):
-    """Generates the set :math:`c_1` of nodes that are connected to all but one of the nodes in
+def c_1(clique: list, graph: nx.Graph):
+    """Generates the set :math:`C_1` of nodes that are connected to all but one of the nodes in
     the input subgraph
 
-    The set :math:`c_1` is defined in :cite:`pullan2006phased`.
+    The set :math:`C_1` is defined in :cite:`pullan2006phased`.
 
     Args:
         subgraph (list[int]): A subgraph specified by a list of nodes; the subgraph must be a clique
@@ -208,22 +208,22 @@ def c_1(subgraph: list, graph: nx.Graph):
 
     Returns:
        list[int]: A list of tuples ``[(i_clique, i), (j_clique, j),...,(k_clique, k)]``. Here
-       ``i,j,...,k`` are the nodes in :math:`c_1`, while ``i_clique, j_clique,...,k_clique`` are the
+       ``i,j,...,k`` are the nodes in :math:`C_1`, while ``i_clique, j_clique,...,k_clique`` are the
         nodes in the clique they can be swapped with.
        """
-    if not is_clique(graph.subgraph(subgraph)):
+    if not is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
 
-    set_subgraph = set(subgraph)
+    set_clique = set(clique)
 
     c_1_nodes = []
-    non_clique_nodes = set(graph.nodes) - set_subgraph
+    non_clique_nodes = set(graph.nodes) - set_clique
 
     for i in non_clique_nodes:
-        neighbors_in_subgraph = set_subgraph.intersection(graph.neighbors(i))
+        neighbors_in_subgraph = set_clique.intersection(graph.neighbors(i))
 
-        if len(neighbors_in_subgraph) == len(set_subgraph) - 1:
-            to_swap = set_subgraph - neighbors_in_subgraph
+        if len(neighbors_in_subgraph) == len(set_clique) - 1:
+            to_swap = set_clique - neighbors_in_subgraph
             (i_clique,) = to_swap
             c_1_nodes.append((i_clique, i))
 
