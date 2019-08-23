@@ -453,55 +453,90 @@ class TestDecompositionsGaussianGates:
     """Test the actions of several non-primitive Gaussian gates"""
 
     @pytest.mark.backends("gaussian")
-    def test_CXgate(self, setup_eng, hbar, tol):
+    def test_Pgate(self, setup_eng, pure, hbar, tol):
+        if not pure:
+            pytest.skip("Test only runs on pure states")
+        N = 1
+        eng, prog = setup_eng(N)
+        r = 3
+        x1 = 2
+        p1 = 1.3
+        s = 0.5 * 0
+        with prog.context as q:
+            ops.Sgate(r) | q
+            ops.Xgate(x1) | q
+            ops.Zgate(p1) | q
+            ops.Pgate(s) | q
+        state = eng.run(prog).state
+
+        Pmat = np.array([[1, 0], [s, 1]])
+        Vexpected = 0.5 * hbar * Pmat @ np.diag(np.exp([-2 * r, 2 * r])) @ Pmat.T
+        assert np.allclose(Vexpected, state.cov())
+        rexpected = Pmat @ np.array([x1, p1])
+        assert np.allclose(rexpected, state.means())
+
+    @pytest.mark.backends("gaussian")
+    def test_CXgate(self, setup_eng, pure, hbar, tol):
         """Test the action of the CX gate on approximate x eigenstates"""
+        if not pure:
+            pytest.skip("Test only runs on pure states")
         N = 2
         eng, prog = setup_eng(N)
         r = 3
         x1 = 2
         x2 = 1
+        p1 = 0.0
+        p2 = 0.0
         s = 0.5
         with prog.context as q:
             ops.Sgate(r) | q[0]
             ops.Xgate(x1) | q[0]
+            ops.Zgate(p1) | q[0]
             ops.Sgate(r) | q[1]
             ops.Xgate(x2) | q[1]
+            ops.Zgate(p2) | q[1]
             ops.CXgate(s) | q
         state = eng.run(prog).state
-        expected = np.array([x1, x2 + s * x1, 0, 0])
+        CXmat = np.array([[1, 0, 0, 0], [s, 1, 0, 0], [0, 0, 1, -s], [0, 0, 0, 1]])
+        Vexpected = 0.5 * hbar * CXmat @ np.diag(np.exp([-2 * r, -2 * r, 2 * r, 2 * r])) @ CXmat.T
+        # Checks the covariance matrix is transformed correctly
+        assert np.allclose(state.cov(), Vexpected, atol=tol)
+        rexpected = CXmat @ np.array([x1, x2, p1, p2])
         # Checks the means are transformed correctly
-        assert np.allclose(state.means(), expected, atol=tol)
-        _, cov1 = state.reduced_gaussian(0)
-        purity = np.linalg.det(cov1)
-        # Checks the right amount of entanglement is generated
-        assert np.allclose(purity, (1 + s ** 2) * (0.5 * hbar) ** 2, atol=tol)
+        assert np.allclose(state.means(), rexpected, atol=tol)
 
     @pytest.mark.backends("gaussian")
-    def test_CZgate(self, setup_eng, hbar, tol):
+    def test_CZgate(self, setup_eng, pure, hbar, tol):
         """Test the action of the CZ gate on approximate x eigenstates"""
+        if not pure:
+            pytest.skip("Test only runs on pure states")
         N = 2
         eng, prog = setup_eng(N)
-        r = 4
+        r = 3
         x1 = 2
         x2 = 1
+        p1 = 0.0
+        p2 = 0.0
         s = 0.5
         with prog.context as q:
             ops.Sgate(r) | q[0]
             ops.Xgate(x1) | q[0]
+            ops.Zgate(p1) | q[0]
             ops.Sgate(r) | q[1]
             ops.Xgate(x2) | q[1]
+            ops.Zgate(p2) | q[1]
             ops.CZgate(s) | q
         state = eng.run(prog).state
-        expected = np.array([x1, x2, s * x2, s * x1])
+        CZmat = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, s, 1, 0], [s, 0, 0, 1]])
+        Vexpected = 0.5 * hbar * CZmat @ np.diag(np.exp([-2 * r, -2 * r, 2 * r, 2 * r])) @ CZmat.T
+        # Checks the covariance matrix is transformed correctly
+        assert np.allclose(state.cov(), Vexpected, atol=tol)
+        rexpected = CZmat @ np.array([x1, x2, p1, p2])
         # Checks the means are transformed correctly
-        assert np.allclose(state.means(), expected, atol=tol)
-        _, cov1 = state.reduced_gaussian(0)
-        purity = np.linalg.det(cov1)
-        # Checks the right amount of entanglement is generated
-        assert np.allclose(purity, (1 + np.exp(-4 * r) * s ** 2) * (0.5 * hbar) ** 2, atol=tol)
+        assert np.allclose(state.means(), rexpected, atol=tol)
 
     @pytest.mark.backends("fock")
-    def test_S2gate(self, setup_eng, pure, hbar, tol):
+    def test_S2gate_fock(self, setup_eng, pure, hbar, tol):
         """Test the action of the S2gate gate on vacuum"""
         if not pure:
             pytest.skip("Test only runs on pure states")
