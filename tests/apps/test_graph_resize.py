@@ -242,3 +242,49 @@ class TestGreedyDegree:
         )  # multiply by 0.5 to follow weightings of adj fixture
         subgraph = resize.greedy_degree(subgraphs=[[0, 1, 2, 3]], graph=graph, target=3)
         assert np.allclose(subgraph, [0, 1, 3])
+
+
+@pytest.mark.parametrize("dim", range(6, 10))
+class TestCliqueShrink:
+    """Tests clique_shrink function that removes nodes in an input subgraph until it becomes a
+    clique."""
+
+    def test_is_output_clique(self, dim):
+        """Tests that the output subgraph is a valid clique, in this case the the
+        maximum clique in a lollipop graph"""
+        graph = nx.lollipop_graph(dim, dim)
+        subgraph = list(range(2 * dim))  # subgraph is the entire graph
+        out = graph.subgraph(resize.clique_shrink(subgraph, graph))
+        assert utils.is_clique(out)
+        assert resize.clique_shrink(subgraph, graph) == list(range(dim))
+
+    def test_input_clique_then_output_clique(self, dim):
+        """Tests that if the input is already a clique, then the output is the same clique. """
+        graph = nx.lollipop_graph(dim, dim)
+        subgraph = list(range(dim))  # this is a clique, the "candy" of the lollipop
+
+        assert resize.clique_shrink(subgraph, graph) == subgraph
+
+    def test_degree_relative_to_subgraph(self, dim):
+        """Tests that function removes nodes of small degree relative to the subgraph,
+        not relative to the entire graph. This is done by creating an unbalanced barbell graph,
+        with one "bell" larger than the other. The input subgraph is the small bell (a clique) plus
+        a node from the larger bell."""
+        b1 = np.ones((dim, dim)) - np.eye(dim)
+        b2 = np.ones((dim + 1, dim + 1)) - np.eye(dim + 1)
+        a = np.zeros((2 * dim + 1, 2 * dim + 1))
+        a[:dim, :dim] = b1
+        a[dim:, dim:] = b2
+        a[dim - 1, dim] = a[dim, dim - 1] = 1
+        graph = nx.to_networkx_graph(a)
+        subgraph = list(range(dim + 1))
+
+        assert resize.clique_shrink(subgraph, graph) == list(range(dim))
+
+    def test_wheel_graph(self, dim):
+        """Tests that output is correct for a wheel graph, whose largest cliques have dimension
+        3."""
+        graph = nx.wheel_graph(dim)
+        subgraph = list(range(dim))  # subgraph is the entire graph
+
+        assert len(resize.clique_shrink(subgraph, graph)) == 3
