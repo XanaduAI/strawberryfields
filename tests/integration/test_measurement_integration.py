@@ -130,3 +130,18 @@ class TestPostselection:
         n_mean_tot = np.trace(cov / (hbar / 2) - np.identity(4)) / 4
         expected = 2 * n_mean_per_mode
         assert np.allclose(n_mean_tot, expected)
+
+
+    @pytest.mark.backends("gaussian")
+    def test_coherent_state_has_photons(self, setup_eng, hbar):
+        """Test that a coherent state with a mean photon number of 4 and sampled 100 times will produce photons"""
+        shots = 100
+        eng, prog = setup_eng(1)
+        alpha = 2
+        with prog.context as q:
+            ops.Coherent(alpha) | q[0]
+            ops.MeasureFock() | q[0]
+        state = eng.run(prog).state
+        samples = np.array(eng.run(prog, run_options={"shots": shots})).flatten()
+
+        assert not np.all(samples == np.zeros_like(samples, dtype=int))

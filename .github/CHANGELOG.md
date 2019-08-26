@@ -2,7 +2,7 @@
 
 ### New features
 
-* Add in first version of an applications layer aimed at solving problems using
+* Adds in first version of an applications layer aimed at solving problems using
   Gaussian boson sampling. This layer focuses on graph-based problems and
   currently has algorithms for the densest ``k``-subgraph problem.
   [#164](https://github.com/XanaduAI/strawberryfields/pull/164)
@@ -22,8 +22,8 @@
   allowing a bipartite graph to be embedded on a device that allows for
   initial two-mode squeezed states, and block diagonal unitaries.
 
-* Added support for threshold measurement in the Gaussian backend, via the new backend API
-  method `measure_threshold`.
+* Added threshold measurements, via the new operation `MeasureThreshold`,
+  and provided implementation of this operation in the Gaussian backend.
   [#152](https://github.com/XanaduAI/strawberryfields/pull/152)
 
 ### API Changes
@@ -41,7 +41,6 @@
   - All interferometer decompositions (`rectangular`, `rectangular_phase_end`,
     `rectangular_symmetric`, and `triangular`) now have standardized outputs
     `(tlist, diag, tilist)`, so they can easily be swapped.
-
 
 * Several changes to `ops.Interferometer`:
   [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
@@ -62,6 +61,14 @@
   be passed the program registers, as compilation may sometimes require this.
   [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
 
+### Improvements
+
+* Photon-counting measurements can now be done in the Gaussian backend for states with nonzero displacement.
+  [#154](https://github.com/XanaduAI/strawberryfields/pull/154)
+  
+* Added a new test for the cubic phase gate
+  [#160](https://github.com/XanaduAI/strawberryfields/pull/160)
+
 ### Bug fixes
 
 * When using the `'gbs'` compilation target, the measured registers are now sorted in
@@ -70,6 +77,17 @@
 
 * Fixed typo in the Gaussian Boson Sampling example notebook.
   [#133](https://github.com/XanaduAI/strawberryfields/pull/133)
+
+* Fixed a bug in the function `smeanxp` of the Gaussian Backend simulator. 
+  [#154](https://github.com/XanaduAI/strawberryfields/pull/154)
+  
+* Clarified description of matrices that are accepted by graph embed operation.
+  [#147](https://github.com/XanaduAI/strawberryfields/pull/147)
+  
+* Fixed typos in the documentation of the CX gate and BSgate
+  [#166](https://github.com/XanaduAI/strawberryfields/pull/166)
+  [#167](https://github.com/XanaduAI/strawberryfields/pull/167)
+  [#169](https://github.com/XanaduAI/strawberryfields/pull/169)
 
 ---
 

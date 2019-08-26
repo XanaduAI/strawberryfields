@@ -201,16 +201,19 @@ class GaussianBackend(BaseGaussian):
                           "Conditional state after Fock measurement has not been updated.")
 
         mu = self.circuit.mean
+        mean = self.circuit.smeanxp()
         cov = self.circuit.scovmatxp()
-        # check we are sampling from a gaussian state with zero mean
-        if not allclose(mu, zeros_like(mu)):
-            raise NotImplementedError("PNR measurement is only supported for "
-                                      "Gaussian states with zero mean")
+
         x_idxs = array(modes)
         p_idxs = x_idxs + len(mu)
         modes_idxs = concatenate([x_idxs, p_idxs])
         reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
-        samples = hafnian_sample_state(reduced_cov, shots)
+        reduced_mean = mean[modes_idxs]
+        # check we are sampling from a gaussian state with zero mean
+        if allclose(mu, zeros_like(mu)):
+            samples = hafnian_sample_state(reduced_cov, shots)
+        else:
+            samples = hafnian_sample_state(reduced_cov, shots, mean=reduced_mean)
         # for backward compatibility with previous measurement behaviour,
         # if only one shot, then we drop the shots axis
         if shots == 1:
