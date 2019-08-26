@@ -462,7 +462,7 @@ class TestDecompositionsGaussianGates:
         r = 3
         x1 = 2
         p1 = 1.3
-        s = 0.5 * 0
+        s = 0.5
         with prog.context as q:
             ops.Sgate(r) | q
             ops.Xgate(x1) | q
@@ -472,9 +472,9 @@ class TestDecompositionsGaussianGates:
 
         Pmat = np.array([[1, 0], [s, 1]])
         Vexpected = 0.5 * hbar * Pmat @ np.diag(np.exp([-2 * r, 2 * r])) @ Pmat.T
-        assert np.allclose(Vexpected, state.cov())
+        assert np.allclose(Vexpected, state.cov(), atol=tol, rtol=0)
         rexpected = Pmat @ np.array([x1, p1])
-        assert np.allclose(rexpected, state.means())
+        assert np.allclose(rexpected, state.means(), atol=tol, rtol=0)
 
     @pytest.mark.backends("gaussian")
     def test_CXgate(self, setup_eng, pure, hbar, tol):
@@ -486,8 +486,8 @@ class TestDecompositionsGaussianGates:
         r = 3
         x1 = 2
         x2 = 1
-        p1 = 0.0
-        p2 = 0.0
+        p1 = 1.37
+        p2 = 2.71
         s = 0.5
         with prog.context as q:
             ops.Sgate(r) | q[0]
@@ -501,10 +501,10 @@ class TestDecompositionsGaussianGates:
         CXmat = np.array([[1, 0, 0, 0], [s, 1, 0, 0], [0, 0, 1, -s], [0, 0, 0, 1]])
         Vexpected = 0.5 * hbar * CXmat @ np.diag(np.exp([-2 * r, -2 * r, 2 * r, 2 * r])) @ CXmat.T
         # Checks the covariance matrix is transformed correctly
-        assert np.allclose(state.cov(), Vexpected, atol=tol)
+        assert np.allclose(state.cov(), Vexpected, atol=tol, rtol=0)
         rexpected = CXmat @ np.array([x1, x2, p1, p2])
         # Checks the means are transformed correctly
-        assert np.allclose(state.means(), rexpected, atol=tol)
+        assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
 
     @pytest.mark.backends("gaussian")
     def test_CZgate(self, setup_eng, pure, hbar, tol):
@@ -516,8 +516,8 @@ class TestDecompositionsGaussianGates:
         r = 3
         x1 = 2
         x2 = 1
-        p1 = 0.0
-        p2 = 0.0
+        p1 = 1.37
+        p2 = 2.71
         s = 0.5
         with prog.context as q:
             ops.Sgate(r) | q[0]
@@ -531,10 +531,10 @@ class TestDecompositionsGaussianGates:
         CZmat = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, s, 1, 0], [s, 0, 0, 1]])
         Vexpected = 0.5 * hbar * CZmat @ np.diag(np.exp([-2 * r, -2 * r, 2 * r, 2 * r])) @ CZmat.T
         # Checks the covariance matrix is transformed correctly
-        assert np.allclose(state.cov(), Vexpected, atol=tol)
+        assert np.allclose(state.cov(), Vexpected, atol=tol, rtol=0)
         rexpected = CZmat @ np.array([x1, x2, p1, p2])
         # Checks the means are transformed correctly
-        assert np.allclose(state.means(), rexpected, atol=tol)
+        assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
 
     @pytest.mark.backends("fock")
     def test_S2gate_fock(self, setup_eng, pure, hbar, tol):
@@ -545,7 +545,7 @@ class TestDecompositionsGaussianGates:
         eng, prog = setup_eng(N)
         nbar = 1
         s = np.arcsinh(np.sqrt(1.0))
-        phi = 0 * np.pi / 3
+        phi = np.pi / 3
         with prog.context as q:
             ops.S2gate(s, phi) | q
         state = eng.run(prog).state
@@ -553,6 +553,6 @@ class TestDecompositionsGaussianGates:
         n, _ = ket.shape
         diag_elems = (1 / np.sqrt(1 + nbar)) * (
             np.exp(1j * phi) * np.sqrt((nbar / (1 + nbar)))
-        ) ** (list(range(n)))
+        ) ** (np.arange(n))
         diag_elems[-1] = 0
-        assert np.allclose(np.diag(diag_elems), ket, atol=0.2)
+        assert np.allclose(np.diag(diag_elems), ket, atol=0.2, rtol=0)
