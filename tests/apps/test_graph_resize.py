@@ -220,12 +220,11 @@ class TestCliqueSwap:
     """Tests for the function ``strawberryfields.apps.graph.resize.clique_swap``"""
 
     def test_swap(self, dim):
-        """Test if function performs correct swap operation. Input is a lollipop graph,
-        consisting of a fully connected graph with a single additional node connected to just one
-        of the nodes in the graph. Additionally, a connection between node ``0`` and ``dim - 1``
-        is removed. An input clique of the first ``dim - 1`` nodes is then input, with the result
-        being a different clique with the first node removed and the ``dim`` node added."""
-        graph = nx.lollipop_graph(dim, 1)
+        """Test if function performs correct swap operation. Input is a complete graph with a
+        connection between node ``0`` and ``dim - 1`` removed. An input clique of the first
+        ``dim - 1`` nodes is then input, with the result being a different clique with the first
+        node removed and the ``dim`` node added."""
+        graph = nx.complete_graph(dim)
         graph.remove_edge(0, dim - 1)
         s = list(range(dim - 1))
         assert set(resize.clique_swap(s, graph)) == set(range(1, dim))
