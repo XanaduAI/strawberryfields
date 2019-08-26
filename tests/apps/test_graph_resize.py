@@ -55,17 +55,13 @@ class TestResizeSubgraphs:
     def test_target_small(self, graph):
         """Test if function raises a ``ValueError`` when a too small number is given for
         ``target`` """
-        with pytest.raises(
-            ValueError, match="target must be greater than two and less than"
-        ):
+        with pytest.raises(ValueError, match="target must be greater than two and less than"):
             resize.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=1)
 
     def test_target_big(self, graph):
         """Test if function raises a ``ValueError`` when a too large number is given for
         ``target`` """
-        with pytest.raises(
-            ValueError, match="target must be greater than two and less than"
-        ):
+        with pytest.raises(ValueError, match="target must be greater than two and less than"):
             resize.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=5)
 
     def test_callable_input(self, graph):
@@ -77,10 +73,7 @@ class TestResizeSubgraphs:
             return objective_return
 
         result = resize.resize_subgraphs(
-            subgraphs=[[0, 1]],
-            graph=graph,
-            target=4,
-            resize_options={"method": custom_method},
+            subgraphs=[[0, 1]], graph=graph, target=4, resize_options={"method": custom_method}
         )
 
         assert result == objective_return
@@ -99,10 +92,7 @@ class TestResizeSubgraphs:
             m.setattr(resize, "METHOD_DICT", {methods: custom_method})
 
             result = resize.resize_subgraphs(
-                subgraphs=[[0, 1]],
-                graph=graph,
-                target=4,
-                resize_options={"method": methods},
+                subgraphs=[[0, 1]], graph=graph, target=4, resize_options={"method": methods}
             )
 
         assert result == objective_return
@@ -122,10 +112,7 @@ def test_resize_subgraphs_integration(graph, target, methods):
     graph_nodes = set(graph.nodes)
     s_relabeled = [(np.array(s) ** 2).tolist() for s in subgraphs]
     resized = resize.resize_subgraphs(
-        subgraphs=s_relabeled,
-        graph=graph,
-        target=target,
-        resize_options={"method": methods},
+        subgraphs=s_relabeled, graph=graph, target=target, resize_options={"method": methods}
     )
     resized = np.array(resized)
     dims = resized.shape
@@ -154,9 +141,7 @@ class TestGreedyDensity:
         subgraph of the nodes [0, 1, 4] and aiming to grow to 4 nodes. We can see that there are
         two subgraphs of size 4: [0, 1, 2, 4] with 3 edges and [0, 1, 3, 4] with 4 edges,
         so we hence expect the second option as the returned solution."""
-        subgraph = resize.greedy_density(subgraphs=[[0, 1, 4]], graph=graph, target=4)[
-            0
-        ]
+        subgraph = resize.greedy_density(subgraphs=[[0, 1, 4]], graph=graph, target=4)[0]
         assert np.allclose(subgraph, [0, 1, 3, 4])
 
     def test_normal_conditions_shrink(self, graph):
@@ -166,19 +151,9 @@ class TestGreedyDensity:
         nodes. We can see that there are 4 candidate subgraphs: [1, 2, 3] with 3 edges, and [1,
         2, 4], [1, 3, 4], and [2, 3, 4] all with 2 edges, so we hence expect the first option as
         the returned solution."""
-        adj = (
-            (0, 1, 0, 0, 0),
-            (1, 0, 1, 1, 0),
-            (0, 1, 0, 1, 0),
-            (0, 1, 1, 0, 1),
-            (0, 0, 0, 1, 0),
-        )
-        graph = nx.Graph(
-            0.5 * np.array(adj)
-        )  # multiply by 0.5 to follow weightings of adj fixture
-        subgraph = resize.greedy_density(
-            subgraphs=[[1, 2, 3, 4]], graph=graph, target=3
-        )[0]
+        adj = ((0, 1, 0, 0, 0), (1, 0, 1, 1, 0), (0, 1, 0, 1, 0), (0, 1, 1, 0, 1), (0, 0, 0, 1, 0))
+        graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
+        subgraph = resize.greedy_density(subgraphs=[[1, 2, 3, 4]], graph=graph, target=3)[0]
         assert np.allclose(subgraph, [1, 2, 3])
 
 
@@ -212,9 +187,7 @@ class TestGreedyDegree:
             (0, 0, 1, 0, 0, 0, 0),
             (0, 0, 1, 0, 0, 0, 0),
         )
-        graph = nx.Graph(
-            0.5 * np.array(adj)
-        )  # multiply by 0.5 to follow weightings of adj fixture
+        graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
 
         subgraph = resize.greedy_degree(subgraphs=[[0, 1, 4]], graph=graph, target=4)[0]
 
@@ -237,9 +210,7 @@ class TestGreedyDegree:
             (1, 0, 0, 0, 0, 0, 0),
             (1, 0, 0, 0, 0, 0, 0),
         )
-        graph = nx.Graph(
-            0.5 * np.array(adj)
-        )  # multiply by 0.5 to follow weightings of adj fixture
+        graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
         subgraph = resize.greedy_degree(subgraphs=[[0, 1, 2, 3]], graph=graph, target=3)
         assert np.allclose(subgraph, [0, 1, 3])
 
@@ -272,8 +243,9 @@ class TestCliqueSwap:
         graph.remove_edge(0, dim - 1)
         graph.remove_edge(0, dim - 2)
         s = list(range(dim - 2))
-        assert set(resize.clique_swap(s, graph, node_select="degree")) == set(range(1, dim - 2)) \
-               | {dim - 1}
+        assert set(resize.clique_swap(s, graph, node_select="degree")) == set(range(1, dim - 2)) | {
+            dim - 1
+        }
 
     def test_swap_degree_tie(self, dim):
         """Test if function performs correct swap operation using randomness to break ties during
