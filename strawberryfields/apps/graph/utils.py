@@ -206,7 +206,7 @@ def c_1(clique: list, graph: nx.Graph):
        list[int]: A list of tuples ``[(i_clique, i), (j_clique, j),...,(k_clique, k)]``. Here
        ``i,j,...,k`` are the nodes in :math:`C_1`, while ``i_clique, j_clique,...,k_clique`` are the
         nodes in the clique they can be swapped with.
-       """
+   """
     if not is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
 
