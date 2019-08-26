@@ -39,6 +39,7 @@ Summary
     resize_subgraphs
     greedy_density
     greedy_degree
+    clique_shrink
 
 Code details
 ^^^^^^^^^^^^
@@ -48,6 +49,7 @@ from typing import Iterable, Optional
 import itertools
 
 import networkx as nx
+import numpy as np
 
 from strawberryfields.apps.graph import utils
 
@@ -245,3 +247,29 @@ METHOD_DICT = {"greedy-density": greedy_density, "greedy-degree": greedy_degree}
 """dict[str, func]: Included methods for resizing subgraphs. The dictionary keys are strings
 describing the method, while the dictionary values are callable functions corresponding to the
 method."""
+
+
+def clique_shrink(subgraph: list, graph: nx.Graph):
+    """Shrinks an input subgraph until it forms a clique.
+        Args:
+            subgraph (list): A subgraph specified by a list of nodes.
+            graph (nx.Graph): The input graph.
+
+        Returns:
+            list[int]: A clique of size smaller or equal than the input subgraph.
+        """
+
+    if not utils.is_subgraph(subgraph, graph):
+        raise ValueError("Input is not a valid subgraph")
+
+    subgraph = graph.subgraph(subgraph)
+    set_subgraph = set(subgraph)
+
+    while not utils.is_clique(subgraph):
+        node_candidates = subgraph.nodes()
+        deg_min = min(subgraph.degree(n) for n in node_candidates)
+        ties = [n for n in node_candidates if subgraph.degree(n) == deg_min]
+        set_subgraph -= {np.random.choice(ties)}
+        subgraph = graph.subgraph(set_subgraph)
+
+    return sorted(set_subgraph)
