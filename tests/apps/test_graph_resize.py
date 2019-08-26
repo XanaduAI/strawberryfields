@@ -242,3 +242,61 @@ class TestGreedyDegree:
         )  # multiply by 0.5 to follow weightings of adj fixture
         subgraph = resize.greedy_degree(subgraphs=[[0, 1, 2, 3]], graph=graph, target=3)
         assert np.allclose(subgraph, [0, 1, 3])
+
+
+@pytest.mark.parametrize("dim", range(4, 10))
+class TestCliqueGrow:
+    """Tests for the function ``strawberryfields.apps.graph.resize.clique_grow``"""
+
+    def test_grow_maximal(self, dim):
+        """Test if function grows to expected maximal graph and then stops. The chosen graph is
+        composed of two fully connected graphs joined together at one node. Starting from the
+        first node, ``clique_grow`` is expected to grow to be the first fully connected graph."""
+        graph = nx.barbell_graph(dim, 0)
+        s = [0]
+        assert set(resize.clique_grow(s, graph)) == set(range(dim))
+
+    def test_grow_maximal_degree(self, dim):
+        """Test if function grows to expected maximal graph when degree-based node selection is
+        used. The chosen graph is a fully connected graph with only the final node being
+        connected to an additional node. Furthermore, the ``dim - 2`` node is disconnected from
+        the ``dim - 1`` node. Starting from the first ``dim - 3`` nodes, one can either add in
+        the ``dim - 2`` node or the ``dim - 1`` node. The ``dim - 1`` node has a higher degree
+        due to the lollipop graph structure, and hence should be selected."""
+        graph = nx.lollipop_graph(dim, 1)
+        graph.remove_edge(dim - 2, dim - 1)
+        s = set(range(dim - 2))
+        target = s | {dim - 1}
+        assert set(resize.clique_grow(s, graph, node_select="degree")) == target
+
+    def test_grow_maximal_degree_tie(self, dim):
+        """Test if function grows using randomness to break ties during degree-based node
+        selection. The chosen graph is a fully connected graph with the ``dim - 2`` and ``dim -
+        1`` nodes then disconnected. Starting from the first ``dim - 3`` nodes, one can add
+        either of the ``dim - 2`` and ``dim - 1`` nodes. As they have the same degree, they should
+        be selected randomly with equal probability. This function checks that, with 100
+        repetitions, either of the options has been represented at least once."""
+        graph = nx.complete_graph(dim)
+        graph.remove_edge(dim - 2, dim - 1)
+        s = set(range(dim - 2))
+
+        np.random.seed(0)  # set random seed for reproducible results
+
+        results = [
+            (set(resize.clique_grow(s, graph, node_select="degree")) - s).pop() for _ in range(100)
+        ]
+
+        assert set(results) == {dim - 1} | {dim - 2}
+
+    def test_input_not_clique(self, dim):
+        """Tests if function raises a ``ValueError`` when input is not a clique"""
+        with pytest.raises(ValueError, match="Input subgraph is not a clique"):
+            resize.clique_grow([0, 1], nx.empty_graph(dim))
+
+    def test_bad_node_select(self, dim):
+        """Tests if function raises a ``ValueError`` when input an invalid ``node_select``
+        argument"""
+        graph = nx.barbell_graph(dim, 0)
+        s = [0]
+        with pytest.raises(ValueError, match="Node selection method not recognized"):
+            resize.clique_grow(s, graph, node_select="")
