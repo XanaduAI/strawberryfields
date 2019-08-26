@@ -245,7 +245,7 @@ def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform"):
     Proceeds by calculating the set :math:`C_1` of nodes in the rest of the graph that are
     connected to all but one of the nodes in the clique. If this set is not empty, this function
     randomly picks a node and swaps it with the corresponding node in the clique that is not
-    connected to it. The set :math:`C_1` and corresponding nodes in the clique is provided by the
+    connected to it. The set :math:`C_1` and corresponding nodes in the clique are provided by the
     :func:`~strawberryfields.apps.graph.utils.c_1` function.
 
     Whenever there are multiple nodes within :math:`C_1`, one must choose which node to add to
@@ -279,7 +279,7 @@ def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform"):
             to_swap_index = np.random.choice(np.where(degrees == degrees.max())[0])
             swap_nodes = c_1[to_swap_index]
         else:
-            raise NameError("Node selection method not recognized")
+            raise ValueError("Node selection method not recognized")
 
         clique.remove(swap_nodes[0])
         clique.add(swap_nodes[1])

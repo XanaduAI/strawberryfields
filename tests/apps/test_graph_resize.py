@@ -220,7 +220,7 @@ class TestCliqueSwap:
     """Tests for the function ``strawberryfields.apps.graph.resize.clique_swap``"""
 
     def test_swap(self, dim):
-        """Test if function performs correct swap operation. Input graph is a lollipop graph,
+        """Test if function performs correct swap operation. Input is a lollipop graph,
         consisting of a fully connected graph with a single additional node connected to just one
         of the nodes in the graph. Additionally, a connection between node ``0`` and ``dim - 1``
         is removed. An input clique of the first ``dim - 1`` nodes is then input, with the result
@@ -272,7 +272,7 @@ class TestCliqueSwap:
     def test_input_not_clique(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
         with pytest.raises(ValueError, match="Input subgraph is not a clique"):
-            resize.clique_grow([0, 1], nx.empty_graph(dim))
+            resize.clique_swap([0, 1], nx.empty_graph(dim))
 
     def test_bad_node_select(self, dim):
         """Tests if function raises a ``ValueError`` when input an invalid ``node_select``
@@ -280,4 +280,4 @@ class TestCliqueSwap:
         graph = nx.barbell_graph(dim, 0)
         s = [0]
         with pytest.raises(ValueError, match="Node selection method not recognized"):
-            resize.clique_grow(s, graph, node_select="")
+            resize.clique_swap(s, graph, node_select="")
