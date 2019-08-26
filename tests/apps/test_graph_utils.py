@@ -29,7 +29,7 @@ adj_dim_range = range(2, 6)
 
 @pytest.mark.parametrize("dim", adj_dim_range)
 class TestValidateGraph:
-    """Tests for the function ``glassonion.graphs.utils.validate_graph``"""
+    """Tests for the function ``strawberryfields.apps.graph.utils.validate_graph``"""
 
     def test_valid_adjacency(self, adj, monkeypatch):
         """Test if function returns the NetworkX Graph class corresponding to the input adjacency
@@ -92,7 +92,7 @@ class TestValidateGraph:
 
 @pytest.mark.parametrize("dim", adj_dim_range)
 class TestIsUndirected:
-    """Tests for the function ``glassonion.graphs.utils.is_undirected``"""
+    """Tests for the function ``strawberryfields.apps.graph.utils.is_undirected``"""
 
     def test_valid_input(self, adj):
         """Test if function returns ``True`` for a symmetric matrix"""
@@ -129,7 +129,7 @@ class TestIsUndirected:
 
 @pytest.mark.parametrize("dim", [4, 5, 6])
 class TestSubgraphAdjacency:
-    """Tests for the function ``glassonion.graphs.utils.subgraph_adjacency``"""
+    """Tests for the function ``strawberryfields.apps.graph.utils.subgraph_adjacency``"""
 
     def test_input(self, dim, graph, monkeypatch):
         """Test if function returns the correct adjacency matrix of a subgraph. This test
@@ -161,7 +161,7 @@ class TestSubgraphAdjacency:
 
 @pytest.mark.parametrize("dim", [4, 5, 6])
 class TestIsSubgraph:
-    """Tests for the function ``glassonion.graphs.utils.is_subgraph``"""
+    """Tests for the function ``strawberryfields.apps.graph.utils.is_subgraph``"""
 
     def test_invalid_type(self, graph):
         """Test if function raises a ``TypeError`` when fed an invalid subgraph type (i.e.,
@@ -186,3 +186,91 @@ class TestIsSubgraph:
         subgraphs = itertools.combinations(range(dim), int(dim / 2))
 
         assert not all([utils.is_subgraph(list(s), graph) for s in subgraphs])
+
+
+@pytest.mark.parametrize("dim", range(2, 10))
+class TestIsClique:
+    """Tests for the function `strawberryfields.apps.graph.utils.is_clique` """
+
+    def test_no_false_negatives(self, dim):
+        """Tests that cliques are labelled as such"""
+        g = nx.complete_graph(dim)
+        assert utils.is_clique(g)
+
+    def test_no_false_positives(self, dim):
+        """Tests that non-cliques are labelled as such"""
+        g = nx.empty_graph(dim)
+        assert not utils.is_clique(g)
+
+
+@pytest.mark.parametrize("dim", range(2, 10))
+class TestC0:
+    """Tests function :math:`c_0` that generates the set of nodes connected to all nodes in a
+    clique"""
+
+    def test_correct_c_0(self, dim):
+        """Tests that :math:`c_0` is generated correctly for the lollipop graph"""
+        g = nx.lollipop_graph(dim, 1)
+        s = set(range(int(dim / 2)))
+        res = set(utils.c_0(s, g))
+
+        assert res not in s
+        assert {dim + 1} not in res
+        assert res | s == set(range(dim))
+
+    def test_c_0_comp_graph(self, dim):
+        """ Tests that the set :math:`c_0` for a node in a clique consists of all remaining nodes"""
+        A = nx.complete_graph(dim)
+        S = [dim - 1]
+        K = utils.c_0(S, A)
+
+        assert K == list(range(dim - 1))
+
+    def test_c_0_error_on_not_clique_input(self, dim):
+        """Tests if function raises a ``ValueError`` when input is not a clique"""
+        A = np.ones((dim, dim)) - np.eye(dim)
+        A = nx.Graph(A)
+        A.remove_edge(0, 1)
+        S = [0, 1]
+
+        with pytest.raises(ValueError, match="Input subgraph is not a clique"):
+            utils.c_0(S, A)
+
+
+@pytest.mark.parametrize("dim", range(4, 10))
+class TestC1:
+    """Tests function :math:`c_1` that generates the set of nodes connected to all *but one* of
+    the nodes
+    in a clique"""
+
+    def test_c_1_comp_graph(self, dim):
+        """Tests that :math:`c_1` set is correctly generated for an almost-complete graph, where
+        edge (0, 1) is removed """
+        A = nx.complete_graph(dim)
+        A.remove_edge(0, 1)
+        S = [i for i in range(1, dim)]
+        c1 = utils.c_1(S, A)
+
+        assert c1 == [(1, 0)]
+
+    def test_c_1_swap_to_clique(self, dim):
+        """Tests that :math:`c_1` set gives a valid clique after swapping """
+        A = nx.complete_graph(dim)
+        A.remove_edge(0, 1)
+        S = [i for i in range(1, dim)]
+        c1 = utils.c_1(S, A)
+        swap_nodes = c1[0]
+        S.remove(swap_nodes[0])
+        S.append(swap_nodes[1])
+
+        assert utils.is_clique(A.subgraph(S))
+
+    def test_c_1_error_on_not_clique_input(self, dim):
+        """Tests if function raises a ``ValueError`` when input is not a clique"""
+        A = np.ones((dim, dim)) - np.eye(dim)
+        A = nx.Graph(A)
+        A.remove_edge(0, 1)
+        S = [0, 1]
+
+        with pytest.raises(ValueError, match="Input subgraph is not a clique"):
+            utils.c_1(S, A)

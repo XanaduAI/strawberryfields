@@ -19,16 +19,14 @@ Graph functions
 
 .. currentmodule:: strawberryfields.apps.graph.utils
 
-This module provides some ancillary functions for dealing with graphs. This includes
-:func:`is_undirected` to check if an input matrix corresponds to an undirected graph (i.e.,
-is symmetric) and :func:`subgraph_adjacency` to return the adjacency matrix of a subgraph when an
-input graph and subset of nodes is specified.
+This module provides some ancillary functions for dealing with graphs. This includes graph
+validation functions such as :func:`is_undirected`, :func:`validate_graph` and :func:`is_subgraph`;
+clique-based utility functions :func:`is_clique`, :func:`c_0` and :func:`c_1`; and a utility
+function to return the adjacency matrix of a subgraph, :func:`subgraph_adjacency`.
 
-Furthermore, the frontend :func:`~strawberryfields.apps.graph.dense_subgraph.find_dense`
-function allows users to input graphs both as a `NumPy <https://www.numpy.org/>`__ array
-containing the adjacency matrix and as a `NetworkX <https://networkx.github.io/>`__ ``Graph``
-object. The :func:`validate_graph` function allows both inputs to be processed into a NetworkX
-Graph for ease of processing.
+Furthermore, ``graph_type = Union[nx.Graph, np.ndarray]`` is defined here as an input type that
+can be either a NetworkX graph or an adjacency matrix in the form of a NumPy array. Some
+functions in this module are able to accept either input.
 
 Summary
 -------
@@ -38,7 +36,9 @@ Summary
     subgraph_adjacency
     validate_graph
     is_subgraph
-    update_options
+    is_clique
+    c_0
+    c_1
 
 Code details
 ^^^^^^^^^^^^
@@ -71,9 +71,9 @@ def validate_graph(graph: graph_type) -> nx.Graph:
             and is_undirected(graph)
         ):
             graph = nx.Graph(graph.real.astype("float"))
-        elif (
-            graph.dtype is np.dtype("float") or graph.dtype is np.dtype("int")
-        ) and is_undirected(graph):
+        elif (graph.dtype is np.dtype("float") or graph.dtype is np.dtype("int")) and is_undirected(
+            graph
+        ):
             graph = nx.Graph(graph)
         else:
             raise ValueError(
@@ -102,12 +102,7 @@ def is_undirected(mat: np.ndarray) -> bool:
 
     dims = mat.shape
 
-    conditions = (
-        len(dims) == 2
-        and dims[0] == dims[1]
-        and dims[0] > 1
-        and np.allclose(mat, mat.T)
-    )
+    conditions = len(dims) == 2 and dims[0] == dims[1] and dims[0] > 1 and np.allclose(mat, mat.T)
 
     return conditions
 
@@ -153,3 +148,78 @@ def is_subgraph(subgraph: Iterable, graph: nx.Graph):
         return set(subgraph).issubset(graph.nodes)
     except TypeError:
         raise TypeError("subgraph and graph.nodes must be iterable")
+
+
+def is_clique(graph: nx.Graph) -> bool:
+    """Determines if the input graph is a clique. A clique of n nodes has :math:`n*(n-1)/2` edges
+
+    Args:
+        graph (nx.Graph): The input graph
+
+    Returns:
+        bool: ``True`` if input graph is a clique and ``False`` otherwise
+    """
+    edges = graph.edges
+    nodes = graph.order()
+
+    return len(edges) == nodes * (nodes - 1) / 2
+
+
+def c_0(clique: list, graph: nx.Graph):
+    """Generates the set :math:`C_0` of nodes that are connected to all nodes in the input
+    clique subgraph.
+
+    The set :math:`C_0` is defined in :cite:`pullan2006phased`.
+
+    Args:
+        clique (list[int]): A subgraph specified by a list of nodes; the subgraph must be a clique
+        graph (nx.Graph): the input graph
+
+    Returns:
+        list[int]: A list containing the :math:`C_0` nodes for the clique
+    """
+    if not is_clique(graph.subgraph(clique)):
+        raise ValueError("Input subgraph is not a clique")
+
+    clique = set(clique)
+    c_0_nodes = []
+    non_clique_nodes = set(graph.nodes) - clique
+
+    for i in non_clique_nodes:
+        if clique.issubset(graph.neighbors(i)):
+            c_0_nodes.append(i)
+
+    return c_0_nodes
+
+
+def c_1(clique: list, graph: nx.Graph):
+    """Generates the set :math:`C_1` of nodes that are connected to all but one of the nodes in
+    the input clique subgraph
+
+    The set :math:`C_1` is defined in :cite:`pullan2006phased`.
+
+    Args:
+        clique (list[int]): A subgraph specified by a list of nodes; the subgraph must be a clique
+        graph (nx.Graph): the input graph
+
+    Returns:
+       list[int]: A list of tuples ``[(i_clique, i), (j_clique, j),...,(k_clique, k)]``. Here
+       ``i,j,...,k`` are the nodes in :math:`C_1`, while ``i_clique, j_clique,...,k_clique`` are the
+        nodes in the clique they can be swapped with.
+   """
+    if not is_clique(graph.subgraph(clique)):
+        raise ValueError("Input subgraph is not a clique")
+
+    clique = set(clique)
+    c_1_nodes = []
+    non_clique_nodes = set(graph.nodes) - clique
+
+    for i in non_clique_nodes:
+        neighbors_in_subgraph = clique.intersection(graph.neighbors(i))
+
+        if len(neighbors_in_subgraph) == len(clique) - 1:
+            to_swap = clique - neighbors_in_subgraph
+            (i_clique,) = to_swap
+            c_1_nodes.append((i_clique, i))
+
+    return c_1_nodes
