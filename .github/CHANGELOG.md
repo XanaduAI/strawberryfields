@@ -1,5 +1,3 @@
-* Adds new integration tests for the Gaussian gates that are not primitive, i.e. P, CX, CZ, and S2. Addresses issue [#171](https://github.com/XanaduAI/strawberryfields/issues/171)
-
 # Release 0.12.0-dev
 
 ### New features
@@ -22,6 +20,8 @@
 * Added support for threshold measurement in the Gaussian backend, via the new backend API
   method `measure_threshold`.
   [#152](https://github.com/XanaduAI/strawberryfields/pull/152)
+
+* Adds new integration tests for the Gaussian gates that are not primitive, i.e. P, CX, CZ, and S2. Addresses issue [#171](https://github.com/XanaduAI/strawberryfields/issues/171)
 
 ### API Changes
 
