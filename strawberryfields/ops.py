@@ -1455,6 +1455,7 @@ class CXgate(Gate):
         s = self.p[0]
         r = arcsinh(-s/2)
         theta = 0.5*arctan2(-1.0/cosh(r), -tanh(r))
+        
         BS1 = BSgate(theta, 0)
         BS2 = BSgate(theta+pi/2, 0)
         return [
