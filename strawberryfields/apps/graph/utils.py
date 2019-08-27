@@ -151,7 +151,17 @@ def is_subgraph(subgraph: Iterable, graph: nx.Graph):
 
 
 def is_clique(graph: nx.Graph) -> bool:
-    """Determines if the input graph is a clique. A clique of n nodes has :math:`n*(n-1)/2` edges
+    """Determines if the input graph is a clique. A clique of n nodes has :math:`n*(n-1)/2` edges.
+
+    Example usage:
+
+    .. code-block::
+
+        from strawberryfields.apps.graph import utils
+        import networkx as nx
+        G = nx.complete_graph(10)
+        utils.is_clique(G)
+        >>> True
 
     Args:
         graph (nx.Graph): The input graph

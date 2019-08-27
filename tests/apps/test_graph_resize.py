@@ -242,9 +242,9 @@ class TestCliqueSwap:
         graph.remove_edge(0, dim - 1)
         graph.remove_edge(0, dim - 2)
         s = list(range(dim - 2))
-        assert set(resize.clique_swap(s, graph, node_select="degree")) == set(range(1, dim - 2)) | {
-            dim - 1
-        }
+        result = set(resize.clique_swap(s, graph, node_select="degree"))
+        expected = set(range(1, dim - 2)) | {dim - 1}
+        assert result == expected
 
     def test_swap_degree_tie(self, dim):
         """Test if function performs correct swap operation using randomness to break ties during
