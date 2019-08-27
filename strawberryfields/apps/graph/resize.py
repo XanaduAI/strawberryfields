@@ -239,7 +239,7 @@ describing the method, while the dictionary values are callable functions corres
 method."""
 
 
-def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform"):
+def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
     """If possible, generates a new clique by swapping a node in the input clique with a node
     outside the clique.
 
