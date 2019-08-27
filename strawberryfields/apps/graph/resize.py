@@ -47,6 +47,7 @@ Code details
 
 from typing import Iterable, Optional
 import itertools
+import random
 
 import networkx as nx
 import numpy as np
@@ -252,14 +253,12 @@ def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
     if not utils.is_subgraph(subgraph, graph):
         raise ValueError("Input is not a valid subgraph")
 
-    subgraph = graph.subgraph(subgraph)
-    set_subgraph = set(subgraph)
+    subgraph = graph.subgraph(subgraph).copy()  # Create NetworkX Graph version of subgraph
 
     while not utils.is_clique(subgraph):
-        node_candidates = subgraph.nodes()
-        deg_min = min(subgraph.degree(n) for n in node_candidates)
-        ties = [n for n in node_candidates if subgraph.degree(n) == deg_min]
-        set_subgraph -= {np.random.choice(ties)}
-        subgraph = graph.subgraph(set_subgraph)
+        degrees = list(subgraph.degree())
+        random.shuffle(degrees)
+        to_remove = min(degrees, key=lambda x: x[1])
+        subgraph.remove_node(to_remove[0])
 
-    return sorted(set_subgraph)
+    return list(subgraph.nodes())
