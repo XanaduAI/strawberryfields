@@ -50,7 +50,6 @@ import itertools
 import random
 
 import networkx as nx
-import numpy as np
 
 from strawberryfields.apps.graph import utils
 
