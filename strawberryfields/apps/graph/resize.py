@@ -265,6 +265,9 @@ def clique_grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
         list[int]: a new clique subgraph of equal or larger size than the input
     """
 
+    if not utils.is_subgraph(clique, graph):
+        raise ValueError("Input is not a valid subgraph")
+
     if not utils.is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
 

@@ -271,3 +271,8 @@ class TestCliqueGrow:
         s = [0]
         with pytest.raises(ValueError, match="Node selection method not recognized"):
             resize.clique_grow(s, graph, node_select="")
+
+    def test_input_not_subgraph(self, dim):
+        """Test if function raises a ``ValueError`` when input is not a subgraph"""
+        with pytest.raises(ValueError, match="Input is not a valid subgraph"):
+            resize.clique_grow([dim + 1], nx.empty_graph(dim))
