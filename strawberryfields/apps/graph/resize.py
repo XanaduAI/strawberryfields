@@ -238,15 +238,16 @@ describing the method, while the dictionary values are callable functions corres
 method."""
 
 
-def clique_shrink(subgraph: list, graph: nx.Graph):
+def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
     """Shrinks an input subgraph until it forms a clique.
-        Args:
-            subgraph (list): A subgraph specified by a list of nodes.
-            graph (nx.Graph): The input graph.
 
-        Returns:
-            list[int]: A clique of size smaller or equal than the input subgraph.
-        """
+    Args:
+        subgraph (list[int]): a subgraph specified by a list of nodes
+        graph (nx.Graph): the input graph
+
+    Returns:
+        list[int]: a clique of size smaller than or equal to the input subgraph
+    """
 
     if not utils.is_subgraph(subgraph, graph):
         raise ValueError("Input is not a valid subgraph")
