@@ -49,6 +49,7 @@ Program methods
    print
    draw_circuit
    args
+   bind_args
 
 The following are internal Program methods. In most cases the user should not
 call these directly.

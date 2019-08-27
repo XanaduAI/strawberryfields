@@ -449,7 +449,7 @@ class DummyResults:
     """Dummy results object"""
 
 
-def dummy_run(self, program, compile_options=None, **eng_run_options):
+def dummy_run(self, program, args, compile_options=None, **eng_run_options):
     """A dummy run function, that when called returns a dummy
     results object, with run options available as an attribute.
     This allows run_options to be returned and inspected after calling eng.run
