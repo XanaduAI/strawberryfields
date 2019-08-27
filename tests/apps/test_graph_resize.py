@@ -273,6 +273,11 @@ class TestCliqueSwap:
         with pytest.raises(ValueError, match="Input subgraph is not a clique"):
             resize.clique_swap([0, 1], nx.empty_graph(dim))
 
+    def test_input_valid_subgraph(self, dim):
+        """Tests if function raises a ``ValueError`` when input is not a clique"""
+        with pytest.raises(ValueError, match="Input is not a valid subgraph"):
+            resize.clique_swap([0, dim], nx.empty_graph(dim))
+
     def test_bad_node_select(self, dim):
         """Tests if function raises a ``ValueError`` when input an invalid ``node_select``
         argument"""
