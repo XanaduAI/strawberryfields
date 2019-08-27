@@ -18,10 +18,12 @@ import inspect
 import itertools
 import warnings
 
+import pytest
 import numpy as np
 
 import strawberryfields.program_utils as pu
 from strawberryfields import ops
+from strawberryfields.parameters import ParameterError
 
 
 # ops.Fock requires an integer parameter
@@ -34,6 +36,29 @@ scalar_arg_preparations = (
 )
 
 testset = ops.one_args_gates + ops.two_args_gates + ops.channels + scalar_arg_preparations
+
+
+def test_free_parameters(setup_eng, tol):
+    """Programs with free parameters."""
+
+    eng, prog = setup_eng(1)
+    x = prog.args('x')  # free parameter
+    with prog.context as q:
+        ops.Dgate(x) | q
+
+    with pytest.raises(ParameterError, match="Unknown free parameter"):
+        eng.run(prog, args={'foo': 1.0})
+    with pytest.raises(ParameterError, match="unbound parameter with no default value"):
+        eng.run(prog)
+
+    eng.run(prog, args={x: 0.0})
+    assert eng.backend.is_vacuum(tol)
+    eng.reset()
+
+    # now set a default value for the free parameter
+    x.default = 0.0
+    eng.run(prog)
+    assert eng.backend.is_vacuum(tol)
 
 
 def test_parameters_with_operations(batch_size, setup_eng):

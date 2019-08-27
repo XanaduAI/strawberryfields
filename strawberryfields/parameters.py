@@ -40,8 +40,8 @@ There are three basic types of parameters:
    Simulators with symbolic capability can accept a parametrized circuit as input (and should
    return symbolic expressions representing the measurement results, with the same free parameters,
    as output).
-   Free parameters belong to a single :class:`Program` instance, and are constructed using the
-   :meth:`Program.args` method.
+   Free parameters belong to a single :class:`Program` instance, are constructed using the
+   :meth:`Program.args` method, and are bound using :meth:`Program.bind_args`.
 
 The Operations can accept parameters that are functions or algebraic combinations of any number of
 these basic types of parameters, made possible by the parameters inheriting :class:`sympy.Symbol`.
@@ -80,11 +80,17 @@ The normal lifecycle of an Operation object and its associated parameters is as 
   The numeric parameter values are passed to the appropriate backend API method.
   It is up to the backend to either accept NumPy arrays and Tensorflow objects as parameters, or not.
 
+
 What we cannot do at the moment:
 
 * Use anything except integers and RegRefs (or Sequences thereof) as the subsystem argument
   for the :meth:`~ops.Operation.__or__` method.
   Technically we could allow any parameters that evaluate into an integer.
+
+* Binary arithmetic between sympy symbols and numpy arrays produces numpy object arrays containing
+  sympy symbols. These cannot be easily manipulated using sympy functions and methods, hence for now
+  we disallow symbolic operations involving numpy arrays.
+
 
 
 Functions
@@ -111,7 +117,7 @@ Code details
 ~~~~~~~~~~~~
 
 """
-# pylint: disable=too-many-ancestors
+# pylint: disable=too-many-ancestors,unused-import
 
 from collections.abc import Sequence
 
@@ -148,8 +154,14 @@ def par_evaluate(params):
     def do_evaluate(p):
         if not par_is_symbolic(p):
             return p
-        p = p.evalf()
-        # TODO bind free params: p.evalf(subs=free_param_dict)
+
+        #p = p.evalf()  # TODO sympy 1.4 has some bugs which prevent using this for now, workaround below
+        # build the substitution dict for binding free and measured params
+        d = {}
+        for k in p.atoms(MeasuredParameter, FreeParameter):
+            d[k] = k._eval_evalf(None)
+        p = p.evalf(subs=d)
+        # TODO evalf cannot handle substitutions with arbitrary objects even if p is atomic, hence substituting e.g. TF classes causes sympy to raise an error
         # TODO the float() conversion below prevents symbolic params from being passed through, maybe the backend should do float() conversion?
         if not p.is_real:
             return complex(p)
@@ -220,8 +232,7 @@ class MeasuredParameter(sympy.Symbol):
     symbolically in defining a gate before the numeric value of that
     measurement is available.
 
-    Replaces RegRefTransforms.
-    Arbitrary functions of atomic MeasuredParameters
+    Former RegRefTransform functionality is provided by the sympy.Symbol base class.
 
     Args:
         regref (RegRef): register reference responsible for storing the measurement result
@@ -249,17 +260,20 @@ class MeasuredParameter(sympy.Symbol):
         """Returns the numeric result of the measurement if it is available.
 
         Returns:
-            sympy.Number: measurement result
+            Any: measurement result
+
+        Raises:
+            ParameterError: iff the parameter has not been measured yet
         """
         res = self.regref.val
         if res is None:
-            raise ParameterError("Trying to use a nonexistent measurement result (e.g., before it has been measured).")
-        return sympy.Number(res)
+            raise ParameterError("{}: trying to use a nonexistent measurement result (e.g., before it has been measured).".format(self))
+        return res
 
 
 
 class FreeParameter(sympy.Symbol):
-    """Symbolic, unbound Operation parameter.
+    """Symbolic Operation parameter.
 
     Args:
         name (str): name of the free parameter
@@ -267,5 +281,22 @@ class FreeParameter(sympy.Symbol):
     def __init__(self, name):
         #: str: name of the free parameter
         self.name = name
-        #: Program, None: the Program owning this free parameter instance
-        self.owner = None
+        #: Any: value of the parameter, None means unbound
+        self.val = None
+        #: Any: default value of the parameter, used if unbound
+        self.default = None
+
+    def _eval_evalf(self, prec):
+        """Returns the value of the parameter if it has been bound, or the default value if not.
+
+        Returns:
+            Any: bound value, or the default value if not bound
+
+        Raises:
+            ParameterError: iff the parameter has not been bound, and has no default value
+        """
+        if self.val is None:
+            if self.default is None:
+                raise ParameterError("{}: unbound parameter with no default value.".format(self))
+            return self.default
+        return self.val

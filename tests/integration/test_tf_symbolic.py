@@ -90,6 +90,7 @@ class TestOneModeSymbolic:
         val = q[0].val
         assert isinstance(val, tf.Tensor)
 
+    @pytest.mark.broken('cannot bind TF objects to free params for now')
     def test_eng_run_with_session_and_feed_dict(self, setup_eng, batch_size, cutoff, tol):
         """Tests whether passing a tf Session and feed_dict
         through `eng.run` leads to proper numerical simulation."""
@@ -97,12 +98,13 @@ class TestOneModeSymbolic:
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
         tf_params = {'session': sess, 'feed_dict': {a: 0.0}}
+
         eng, prog = setup_eng(1)
-
+        x = prog.args('a')  # free parameter
         with prog.context as q:
-            Dgate(a) | q
+            Dgate(x) | q
 
-        state = eng.run(prog, run_options=tf_params).state
+        state = eng.run(prog, args={'a': a}, run_options=tf_params).state
 
         if state.is_pure:
             k = state.ket()

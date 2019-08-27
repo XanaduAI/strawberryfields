@@ -144,7 +144,7 @@ import strawberryfields.circuitdrawer as sfcd
 import strawberryfields.circuitspecs as specs
 import strawberryfields.program_utils as pu
 from .program_utils import Command, RegRef, CircuitError, RegRefError
-from .parameters import FreeParameter
+from .parameters import FreeParameter, ParameterError
 
 
 class Program:
@@ -450,6 +450,7 @@ class Program:
         """Create a copy of the Program, linked to the original.
 
         Both the original and the copy are :meth:`locked <lock>`, since they share their RegRefs.
+        FreeParameters are also shared.
 
         Returns:
             Program: a copy of the Program
@@ -576,6 +577,7 @@ class Program:
 
         return [document, tex]
 
+
     def args(self, *args):
         """Create and access free circuit parameters.
 
@@ -585,7 +587,7 @@ class Program:
             args (tuple[str]): names of the free parameters to access
 
         Returns:
-            Parameter, tuple[Parameter]:
+            FreeParameter, list[FreeParameter]:
         """
         ret = []
         for a in args:
@@ -604,3 +606,22 @@ class Program:
         if len(ret) == 1:
             return ret[0]
         return ret
+
+    def bind_args(self, binding):
+        """Binds the free parameters of the program to the given values.
+
+        Args:
+            binding (dict[Union[str, FreeParameter], Any]): mapping from parameter names (or the
+                parameters themselves) to parameter values
+
+        Raises:
+            ParameterError: tried to bind an unknown parameter
+        """
+        for k, v in binding.items():
+            temp = self.free_params.get(k)  # it's a name
+            if temp:
+                temp.val = v
+            elif k in self.free_params.values():  # it's a parameter
+                k.val = v
+            else:
+                raise ParameterError("Unknown free parameter '{}'".format(k))
