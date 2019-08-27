@@ -238,7 +238,7 @@ describing the method, while the dictionary values are callable functions corres
 method."""
 
 
-def clique_grow(clique: list, graph: nx.Graph, node_select: str = "uniform"):
+def clique_grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
     """Iteratively adds new nodes to the input clique to generate a larger clique.
 
     Each iteration involves calculating the set :math:`C_0` (provided by the function
