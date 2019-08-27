@@ -249,7 +249,7 @@ class GaussianModes:
         nmodes = self.nlen
         r = np.empty(2*nmodes)
         r[0:nmodes] = 2*self.mean.real
-        r[nmodes:2*nmodes] = 2*self.mean.real
+        r[nmodes:2*nmodes] = 2*self.mean.imag
         return r
 
     def scovmat(self):
