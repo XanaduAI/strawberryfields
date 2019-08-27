@@ -217,45 +217,60 @@ class TestGreedyDegree:
 
 @pytest.mark.parametrize("dim", range(6, 10))
 class TestCliqueShrink:
-    """Tests clique_shrink function that removes nodes in an input subgraph until it becomes a
-    clique."""
+    """Tests for the function ``resize.clique_shrink``"""
 
     def test_is_output_clique(self, dim):
-        """Tests that the output subgraph is a valid clique, in this case the the
-        maximum clique in a lollipop graph"""
+        """Test that the output subgraph is a valid clique, in this case the the maximum clique
+        in a lollipop graph"""
         graph = nx.lollipop_graph(dim, dim)
         subgraph = list(range(2 * dim))  # subgraph is the entire graph
-        out = graph.subgraph(resize.clique_shrink(subgraph, graph))
-        assert utils.is_clique(out)
-        assert resize.clique_shrink(subgraph, graph) == list(range(dim))
+        resized = resize.clique_shrink(subgraph, graph)
+        assert utils.is_clique(graph.subgraph(resized))
+        assert resized == list(range(dim))
 
     def test_input_clique_then_output_clique(self, dim):
-        """Tests that if the input is already a clique, then the output is the same clique. """
+        """Test that if the input is already a clique, then the output is the same clique. """
         graph = nx.lollipop_graph(dim, dim)
         subgraph = list(range(dim))  # this is a clique, the "candy" of the lollipop
 
         assert resize.clique_shrink(subgraph, graph) == subgraph
 
     def test_degree_relative_to_subgraph(self, dim):
-        """Tests that function removes nodes of small degree relative to the subgraph,
+        """Test that function removes nodes of small degree relative to the subgraph,
         not relative to the entire graph. This is done by creating an unbalanced barbell graph,
         with one "bell" larger than the other. The input subgraph is the small bell (a clique) plus
-        a node from the larger bell."""
-        b1 = np.ones((dim, dim)) - np.eye(dim)
-        b2 = np.ones((dim + 1, dim + 1)) - np.eye(dim + 1)
-        a = np.zeros((2 * dim + 1, 2 * dim + 1))
-        a[:dim, :dim] = b1
-        a[dim:, dim:] = b2
-        a[dim - 1, dim] = a[dim, dim - 1] = 1
-        graph = nx.to_networkx_graph(a)
+        a node from the larger bell. The function should remove only the node from the larger
+        bell, since this has a low degree within the subgraph, despite having high degree overall"""
+        g = nx.disjoint_union(nx.complete_graph(dim), nx.complete_graph(dim + 1))
+        g.add_edge(dim, dim - 1)
         subgraph = list(range(dim + 1))
-
-        assert resize.clique_shrink(subgraph, graph) == list(range(dim))
+        assert resize.clique_shrink(subgraph, g) == list(range(dim))
 
     def test_wheel_graph(self, dim):
-        """Tests that output is correct for a wheel graph, whose largest cliques have dimension
-        3."""
+        """Test that output is correct for a wheel graph, whose largest cliques have dimension
+        3. The cliques always include the central spoke and two consecutive nodes in the outer
+        wheel."""
         graph = nx.wheel_graph(dim)
-        subgraph = list(range(dim))  # subgraph is the entire graph
+        subgraph = graph.nodes()  # subgraph is the entire graph
+        clique = resize.clique_shrink(subgraph, graph)
 
-        assert len(resize.clique_shrink(subgraph, graph)) == 3
+        assert len(clique) == 3
+        assert clique[0] == 0
+        assert clique[1] + 1 == clique[2] or (clique[1] == 1 and clique[2] == dim - 1)
+
+    def test_wheel_graph_tie(self, dim):
+        """Test that output is correct for a wheel graph, whose largest cliques have dimension
+        3. The cliques always include the central spoke and two consecutive nodes in the outer
+        wheel. Since the function uses randomness in node selection when there is a tie (which
+        occurs in the case of the wheel graph), this test checks that, with 100 repetitions,
+        multiple 3-node cliques are returned."""
+        graph = nx.wheel_graph(dim)
+        subgraph = graph.nodes()  # subgraph is the entire graph
+
+        np.random.seed(0)  # set random seed for reproducible results
+
+        cliques = [resize.clique_shrink(subgraph, graph) for _ in range(100)]
+
+        nodes_returned = set([node for clique in cliques for node in clique])
+
+        assert len(nodes_returned) > 3
