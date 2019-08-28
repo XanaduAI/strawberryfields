@@ -220,7 +220,7 @@ class TestCliqueShrink:
     """Tests for the function ``resize.clique_shrink``"""
 
     def test_is_output_clique(self, dim):
-        """Test that the output subgraph is a valid clique, in this case the the maximum clique
+        """Test that the output subgraph is a valid clique, in this case the maximum clique
         in a lollipop graph"""
         graph = nx.lollipop_graph(dim, dim)
         subgraph = list(range(2 * dim))  # subgraph is the entire graph
