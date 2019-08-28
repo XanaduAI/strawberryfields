@@ -192,7 +192,7 @@ def c_0(clique: list, graph: nx.Graph):
         >>> graph = nx.complete_graph(10)
         >>> subgraph = [0, 1, 2, 3, 4]
         >>> utils.c_0(subgraph, graph)
-        [5, 6, 7, 8, 9, 9]
+        [5, 6, 7, 8, 9]
 
     Args:
         clique (list[int]): A subgraph specified by a list of nodes; the subgraph must be a clique.
