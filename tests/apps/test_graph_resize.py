@@ -55,17 +55,13 @@ class TestResizeSubgraphs:
     def test_target_small(self, graph):
         """Test if function raises a ``ValueError`` when a too small number is given for
         ``target`` """
-        with pytest.raises(
-            ValueError, match="target must be greater than two and less than"
-        ):
+        with pytest.raises(ValueError, match="target must be greater than two and less than"):
             resize.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=1)
 
     def test_target_big(self, graph):
         """Test if function raises a ``ValueError`` when a too large number is given for
         ``target`` """
-        with pytest.raises(
-            ValueError, match="target must be greater than two and less than"
-        ):
+        with pytest.raises(ValueError, match="target must be greater than two and less than"):
             resize.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=5)
 
     def test_callable_input(self, graph):
@@ -77,10 +73,7 @@ class TestResizeSubgraphs:
             return objective_return
 
         result = resize.resize_subgraphs(
-            subgraphs=[[0, 1]],
-            graph=graph,
-            target=4,
-            resize_options={"method": custom_method},
+            subgraphs=[[0, 1]], graph=graph, target=4, resize_options={"method": custom_method}
         )
 
         assert result == objective_return
@@ -99,10 +92,7 @@ class TestResizeSubgraphs:
             m.setattr(resize, "METHOD_DICT", {methods: custom_method})
 
             result = resize.resize_subgraphs(
-                subgraphs=[[0, 1]],
-                graph=graph,
-                target=4,
-                resize_options={"method": methods},
+                subgraphs=[[0, 1]], graph=graph, target=4, resize_options={"method": methods}
             )
 
         assert result == objective_return
@@ -122,10 +112,7 @@ def test_resize_subgraphs_integration(graph, target, methods):
     graph_nodes = set(graph.nodes)
     s_relabeled = [(np.array(s) ** 2).tolist() for s in subgraphs]
     resized = resize.resize_subgraphs(
-        subgraphs=s_relabeled,
-        graph=graph,
-        target=target,
-        resize_options={"method": methods},
+        subgraphs=s_relabeled, graph=graph, target=target, resize_options={"method": methods}
     )
     resized = np.array(resized)
     dims = resized.shape
@@ -154,9 +141,7 @@ class TestGreedyDensity:
         subgraph of the nodes [0, 1, 4] and aiming to grow to 4 nodes. We can see that there are
         two subgraphs of size 4: [0, 1, 2, 4] with 3 edges and [0, 1, 3, 4] with 4 edges,
         so we hence expect the second option as the returned solution."""
-        subgraph = resize.greedy_density(subgraphs=[[0, 1, 4]], graph=graph, target=4)[
-            0
-        ]
+        subgraph = resize.greedy_density(subgraphs=[[0, 1, 4]], graph=graph, target=4)[0]
         assert np.allclose(subgraph, [0, 1, 3, 4])
 
     def test_normal_conditions_shrink(self, graph):
@@ -166,19 +151,9 @@ class TestGreedyDensity:
         nodes. We can see that there are 4 candidate subgraphs: [1, 2, 3] with 3 edges, and [1,
         2, 4], [1, 3, 4], and [2, 3, 4] all with 2 edges, so we hence expect the first option as
         the returned solution."""
-        adj = (
-            (0, 1, 0, 0, 0),
-            (1, 0, 1, 1, 0),
-            (0, 1, 0, 1, 0),
-            (0, 1, 1, 0, 1),
-            (0, 0, 0, 1, 0),
-        )
-        graph = nx.Graph(
-            0.5 * np.array(adj)
-        )  # multiply by 0.5 to follow weightings of adj fixture
-        subgraph = resize.greedy_density(
-            subgraphs=[[1, 2, 3, 4]], graph=graph, target=3
-        )[0]
+        adj = ((0, 1, 0, 0, 0), (1, 0, 1, 1, 0), (0, 1, 0, 1, 0), (0, 1, 1, 0, 1), (0, 0, 0, 1, 0))
+        graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
+        subgraph = resize.greedy_density(subgraphs=[[1, 2, 3, 4]], graph=graph, target=3)[0]
         assert np.allclose(subgraph, [1, 2, 3])
 
 
@@ -212,9 +187,7 @@ class TestGreedyDegree:
             (0, 0, 1, 0, 0, 0, 0),
             (0, 0, 1, 0, 0, 0, 0),
         )
-        graph = nx.Graph(
-            0.5 * np.array(adj)
-        )  # multiply by 0.5 to follow weightings of adj fixture
+        graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
 
         subgraph = resize.greedy_degree(subgraphs=[[0, 1, 4]], graph=graph, target=4)[0]
 
@@ -237,8 +210,69 @@ class TestGreedyDegree:
             (1, 0, 0, 0, 0, 0, 0),
             (1, 0, 0, 0, 0, 0, 0),
         )
-        graph = nx.Graph(
-            0.5 * np.array(adj)
-        )  # multiply by 0.5 to follow weightings of adj fixture
+        graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
         subgraph = resize.greedy_degree(subgraphs=[[0, 1, 2, 3]], graph=graph, target=3)
         assert np.allclose(subgraph, [0, 1, 3])
+
+
+@pytest.mark.parametrize("dim", range(4, 10))
+class TestCliqueGrow:
+    """Tests for the function ``strawberryfields.apps.graph.resize.clique_grow``"""
+
+    def test_grow_maximal(self, dim):
+        """Test if function grows to expected maximal graph and then stops. The chosen graph is
+        composed of two fully connected graphs joined together at one node. Starting from the
+        first node, ``clique_grow`` is expected to grow to be the first fully connected graph."""
+        graph = nx.barbell_graph(dim, 0)
+        s = [0]
+        assert set(resize.clique_grow(s, graph)) == set(range(dim))
+
+    def test_grow_maximal_degree(self, dim):
+        """Test if function grows to expected maximal graph when degree-based node selection is
+        used. The chosen graph is a fully connected graph with only the final node being
+        connected to an additional node. Furthermore, the ``dim - 2`` node is disconnected from
+        the ``dim - 1`` node. Starting from the first ``dim - 3`` nodes, one can either add in
+        the ``dim - 2`` node or the ``dim - 1`` node. The ``dim - 1`` node has a higher degree
+        due to the lollipop graph structure, and hence should be selected."""
+        graph = nx.lollipop_graph(dim, 1)
+        graph.remove_edge(dim - 2, dim - 1)
+        s = set(range(dim - 2))
+        target = s | {dim - 1}
+        assert set(resize.clique_grow(s, graph, node_select="degree")) == target
+
+    def test_grow_maximal_degree_tie(self, dim):
+        """Test if function grows using randomness to break ties during degree-based node
+        selection. The chosen graph is a fully connected graph with the ``dim - 2`` and ``dim -
+        1`` nodes then disconnected. Starting from the first ``dim - 3`` nodes, one can add
+        either of the ``dim - 2`` and ``dim - 1`` nodes. As they have the same degree, they should
+        be selected randomly with equal probability. This function checks that, with 100
+        repetitions, either of the options has been represented at least once."""
+        graph = nx.complete_graph(dim)
+        graph.remove_edge(dim - 2, dim - 1)
+        s = set(range(dim - 2))
+
+        np.random.seed(0)  # set random seed for reproducible results
+
+        results = [
+            (set(resize.clique_grow(s, graph, node_select="degree")) - s).pop() for _ in range(100)
+        ]
+
+        assert set(results) == {dim - 1} | {dim - 2}
+
+    def test_input_not_clique(self, dim):
+        """Tests if function raises a ``ValueError`` when input is not a clique"""
+        with pytest.raises(ValueError, match="Input subgraph is not a clique"):
+            resize.clique_grow([0, 1], nx.empty_graph(dim))
+
+    def test_bad_node_select(self, dim):
+        """Tests if function raises a ``ValueError`` when input an invalid ``node_select``
+        argument"""
+        graph = nx.barbell_graph(dim, 0)
+        s = [0]
+        with pytest.raises(ValueError, match="Node selection method not recognized"):
+            resize.clique_grow(s, graph, node_select="")
+
+    def test_input_not_subgraph(self, dim):
+        """Test if function raises a ``ValueError`` when input is not a subgraph"""
+        with pytest.raises(ValueError, match="Input is not a valid subgraph"):
+            resize.clique_grow([dim + 1], nx.empty_graph(dim))
