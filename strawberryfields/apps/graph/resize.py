@@ -40,6 +40,7 @@ Summary
     greedy_density
     greedy_degree
     clique_grow
+    clique_swap
 
 Code details
 ^^^^^^^^^^^^
@@ -47,6 +48,7 @@ Code details
 
 from typing import Iterable, Optional
 import itertools
+import random
 
 import networkx as nx
 import numpy as np
@@ -286,5 +288,57 @@ def clique_grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
             raise ValueError("Node selection method not recognized")
 
         c_0 = utils.c_0(clique, graph)
+
+    return sorted(clique)
+
+
+def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
+    """If possible, generates a new clique by swapping a node in the input clique with a node
+    outside the clique.
+
+    Proceeds by calculating the set :math:`C_1` of nodes in the rest of the graph that are
+    connected to all but one of the nodes in the clique. If this set is not empty, this function
+    randomly picks a node and swaps it with the corresponding node in the clique that is not
+    connected to it. The set :math:`C_1` and corresponding nodes in the clique are provided by the
+    :func:`~strawberryfields.apps.graph.utils.c_1` function.
+
+    Whenever there are multiple nodes within :math:`C_1`, one must choose which node to add to
+    the growing clique. This function allows a method of choosing nodes to be set with the
+    ``node_select`` argument, with node selection based on uniform randomness and node degree
+    supported. Degree-based node selection involves picking the node with the greatest degree,
+    with ties settled by uniform random choice.
+
+    Args:
+        clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
+        graph (nx.Graph): the input graph
+        node_select (str): method of selecting nodes from :math:`C_0` during growth. Can be either
+            ``"uniform"`` for uniform random selection or ``"degree"`` for degree-based selection.
+            Defaults to ``"uniform"``.
+
+       Returns:
+           list[int]: a new clique subgraph of equal size as the input
+       """
+
+    if not utils.is_subgraph(clique, graph):
+        raise ValueError("Input is not a valid subgraph")
+
+    if not utils.is_clique(graph.subgraph(clique)):
+        raise ValueError("Input subgraph is not a clique")
+
+    clique = set(clique)
+    c_1 = utils.c_1(clique, graph)
+
+    if c_1:
+        if node_select == "uniform":
+            swap_nodes = random.choice(c_1)
+        elif node_select == "degree":
+            degrees = np.array([graph.degree(n[1]) for n in c_1])
+            to_swap_index = np.random.choice(np.where(degrees == degrees.max())[0])
+            swap_nodes = c_1[to_swap_index]
+        else:
+            raise ValueError("Node selection method not recognized")
+
+        clique.remove(swap_nodes[0])
+        clique.add(swap_nodes[1])
 
     return sorted(clique)

@@ -276,3 +276,75 @@ class TestCliqueGrow:
         """Test if function raises a ``ValueError`` when input is not a subgraph"""
         with pytest.raises(ValueError, match="Input is not a valid subgraph"):
             resize.clique_grow([dim + 1], nx.empty_graph(dim))
+
+
+@pytest.mark.parametrize("dim", range(5, 10))
+class TestCliqueSwap:
+    """Tests for the function ``strawberryfields.apps.graph.resize.clique_swap``"""
+
+    def test_swap(self, dim):
+        """Test if function performs correct swap operation. Input is a complete graph with a
+        connection between node ``0`` and ``dim - 1`` removed. An input clique of the first
+        ``dim - 1`` nodes is then input, with the result being a different clique with the first
+        node removed and the ``dim`` node added."""
+        graph = nx.complete_graph(dim)
+        graph.remove_edge(0, dim - 1)
+        s = list(range(dim - 1))
+        assert set(resize.clique_swap(s, graph)) == set(range(1, dim))
+
+    def test_swap_degree(self, dim):
+        """Test if function performs correct swap operation when degree-based node selection is
+        used. Input graph is a lollipop graph, consisting of a fully connected graph with a
+        single additional node connected to just one of the nodes in the graph. Additionally,
+        a connection between node ``0`` and ``dim - 1`` is removed as well as a connection
+        between node ``0`` and ``dim - 2``. A clique of the first ``dim - 2`` nodes is then
+        input. In this case, C1 consists of nodes ``dim - 1`` and ``dim - 2``. However,
+        node ``dim - 1`` has greater degree due to the extra node in the lollipop graph. This
+        test confirms that the resultant swap is performed correctly."""
+        graph = nx.lollipop_graph(dim, 1)
+        graph.remove_edge(0, dim - 1)
+        graph.remove_edge(0, dim - 2)
+        s = list(range(dim - 2))
+        result = set(resize.clique_swap(s, graph, node_select="degree"))
+        expected = set(range(1, dim - 2)) | {dim - 1}
+        assert result == expected
+
+    def test_swap_degree_tie(self, dim):
+        """Test if function performs correct swap operation using randomness to break ties during
+        degree-based node selection. Input graph is a fully connected graph. Additionally,
+        a connection between node ``0`` and ``dim - 1`` is removed as well as a connection
+        between node ``0`` and ``dim - 2``. A clique of the first ``dim - 2`` nodes is then
+        input. In this case, C1 consists of nodes ``dim - 1`` and ``dim - 2``. As they have the
+        same degree, they should be selected randomly with equal probability. This function
+        checks that, with 100 repetitions, either of the options has been represented at least once.
+        """
+        graph = nx.complete_graph(dim)
+        graph.remove_edge(0, dim - 1)
+        graph.remove_edge(0, dim - 2)
+        s = set(range(dim - 2))
+
+        np.random.seed(0)  # set random seed for reproducible results
+
+        results = [
+            (set(resize.clique_swap(s, graph, node_select="degree")) - s).pop() for _ in range(100)
+        ]
+
+        assert set(results) == {dim - 1} | {dim - 2}
+
+    def test_input_not_clique(self, dim):
+        """Tests if function raises a ``ValueError`` when input is not a clique"""
+        with pytest.raises(ValueError, match="Input subgraph is not a clique"):
+            resize.clique_swap([0, 1], nx.empty_graph(dim))
+
+    def test_input_valid_subgraph(self, dim):
+        """Tests if function raises a ``ValueError`` when input is not a clique"""
+        with pytest.raises(ValueError, match="Input is not a valid subgraph"):
+            resize.clique_swap([0, dim], nx.empty_graph(dim))
+
+    def test_bad_node_select(self, dim):
+        """Tests if function raises a ``ValueError`` when input an invalid ``node_select``
+        argument"""
+        graph = nx.barbell_graph(dim, 0)
+        s = [0]
+        with pytest.raises(ValueError, match="Node selection method not recognized"):
+            resize.clique_swap(s, graph, node_select="")
