@@ -39,6 +39,7 @@ Summary
     resize_subgraphs
     greedy_density
     greedy_degree
+    clique_grow
     clique_swap
 
 Code details
@@ -237,6 +238,58 @@ METHOD_DICT = {"greedy-density": greedy_density, "greedy-degree": greedy_degree}
 """dict[str, func]: Included methods for resizing subgraphs. The dictionary keys are strings
 describing the method, while the dictionary values are callable functions corresponding to the
 method."""
+
+
+def clique_grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
+    """Iteratively adds new nodes to the input clique to generate a larger clique.
+
+    Each iteration involves calculating the set :math:`C_0` (provided by the function
+    :func:`~strawberryfields.apps.graph.utils.c_0`) with respect to the current clique. This set
+    represents the nodes in the rest of the graph that are connected to all of the nodes in the
+    current clique. Therefore, adding any of the nodes in :math:`C_0` will create a larger clique.
+    This function proceeds by repeatedly evaluating :math:`C_0` and selecting and adding a node
+    from this set to add to the current clique. Growth is continued until :math:`C_0` becomes empty.
+
+    Whenever there are multiple nodes within :math:`C_0`, one must choose which node to add to
+    the growing clique. This function allows a method of choosing nodes to be set with the
+    ``node_select`` argument, with node selection based on uniform randomness and node degree
+    supported. Degree-based node selection involves picking the node with the greatest degree,
+    with ties settled by uniform random choice.
+
+    Args:
+        clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
+        graph (nx.Graph): the input graph
+        node_select (str): method of selecting nodes from :math:`C_0` during growth. Can be either
+            ``"uniform"`` for uniform random selection or ``"degree"`` for degree-based selection.
+            Defaults to ``"uniform"``.
+
+    Returns:
+        list[int]: a new clique subgraph of equal or larger size than the input
+    """
+
+    if not utils.is_subgraph(clique, graph):
+        raise ValueError("Input is not a valid subgraph")
+
+    if not utils.is_clique(graph.subgraph(clique)):
+        raise ValueError("Input subgraph is not a clique")
+
+    clique = set(clique)
+    c_0 = utils.c_0(clique, graph)
+
+    while c_0:
+        if node_select == "uniform":
+            clique.add(np.random.choice(c_0))
+        elif node_select == "degree":
+            degrees = np.array([graph.degree(n) for n in c_0])
+            to_add_index = np.random.choice(np.where(degrees == degrees.max())[0])
+            to_add = c_0[to_add_index]
+            clique.add(to_add)
+        else:
+            raise ValueError("Node selection method not recognized")
+
+        c_0 = utils.c_0(clique, graph)
+
+    return sorted(clique)
 
 
 def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
