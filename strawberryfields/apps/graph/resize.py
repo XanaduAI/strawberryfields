@@ -244,7 +244,7 @@ def clique_grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
     Each iteration involves calculating the set :math:`C_0` (provided by the function
     :func:`~strawberryfields.apps.graph.utils.c_0`) with respect to the current clique. This set
     represents the nodes in the rest of the graph that are connected to all of the nodes in the
-    current clique. Hence, adding any of the nodes in :math:`C_0` will create a larger clique.
+    current clique. Therefore, adding any of the nodes in :math:`C_0` will create a larger clique.
     This function proceeds by repeatedly evaluating :math:`C_0` and selecting and adding a node
     from this set to add to the current clique. Growth is continued until :math:`C_0` becomes empty.
 
