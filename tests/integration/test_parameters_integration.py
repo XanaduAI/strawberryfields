@@ -51,14 +51,21 @@ def test_free_parameters(setup_eng, tol):
     with pytest.raises(ParameterError, match="unbound parameter with no default value"):
         eng.run(prog)
 
+    # successful run
     eng.run(prog, args={x: 0.0})
-    assert eng.backend.is_vacuum(tol)
+    assert np.all(eng.backend.is_vacuum(tol))
     eng.reset()
 
     # now set a default value for the free parameter
     x.default = 0.0
     eng.run(prog)
-    assert eng.backend.is_vacuum(tol)
+    assert np.all(eng.backend.is_vacuum(tol))
+    eng.reset()
+
+    # override the default
+    x.default = 1.0
+    eng.run(prog, args={x: 0.0})
+    assert np.all(eng.backend.is_vacuum(tol))
 
 
 def test_parameters_with_operations(batch_size, setup_eng):

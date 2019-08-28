@@ -272,7 +272,6 @@ import sys
 import warnings
 
 import numpy as np
-from numpy import pi
 
 from scipy.linalg import block_diag
 from scipy.special import factorial as fac
@@ -776,8 +775,9 @@ class Coherent(Preparation):
         super().__init__([a, p])
 
     def _apply(self, reg, backend, **kwargs):
-        z = self.p[0] * pf.exp(1j * self.p[1])
-        backend.prepare_coherent_state(par_evaluate(z), *reg)
+        p = par_evaluate(self.p)
+        z = p[0] * np.exp(1j * p[1])
+        backend.prepare_coherent_state(z, *reg)
 
 
 class Squeezed(Preparation):
@@ -869,7 +869,7 @@ class Catstate(Preparation):
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
         alpha = p[0]
-        phi = pi*p[1]
+        phi = np.pi * p[1]
         D = backend.get_cutoff_dim()
         l = np.arange(D)[:, np.newaxis]
 
@@ -1035,7 +1035,7 @@ class MeasureHomodyne(Measurement):
         if self.select is None:
             if self.p[0] == 0:
                 return 'MeasureX'
-            if self.p[0] == pi/2:
+            if self.p[0] == np.pi / 2:
                 return 'MeasureP'
         return super().__str__()
 
@@ -1140,8 +1140,9 @@ class Dgate(Gate):
         super().__init__([a, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        z = self.p[0] * pf.exp(1j * self.p[1])
-        backend.displacement(par_evaluate(z), *reg)
+        p = par_evaluate(self.p)
+        z = p[0] * np.exp(1j * p[1])
+        backend.displacement(z, *reg)
 
 
 class Xgate(Gate):
@@ -1158,8 +1159,9 @@ class Xgate(Gate):
         super().__init__([x])
 
     def _apply(self, reg, backend, **kwargs):
-        z = self.p[0] / pf.sqrt(2 * sf.hbar)
-        backend.displacement(par_evaluate(z), *reg)
+        p = par_evaluate(self.p)
+        z = p[0] / np.sqrt(2 * sf.hbar)
+        backend.displacement(z, *reg)
 
 
 class Zgate(Gate):
@@ -1176,8 +1178,9 @@ class Zgate(Gate):
         super().__init__([p])
 
     def _apply(self, reg, backend, **kwargs):
-        z = self.p[0] * 1j/pf.sqrt(2 * sf.hbar)
-        backend.displacement(par_evaluate(z), *reg)
+        p = par_evaluate(self.p)
+        z = p[0] * 1j / np.sqrt(2 * sf.hbar)
+        backend.displacement(z, *reg)
 
 
 class Sgate(Gate):
@@ -1197,8 +1200,9 @@ class Sgate(Gate):
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        z = self.p[0] * pf.exp(1j * self.p[1])
-        backend.squeeze(par_evaluate(z), *reg)
+        p = par_evaluate(self.p)
+        z = p[0] * np.exp(1j * p[1])
+        backend.squeeze(z, *reg)
 
 
 class Pgate(Gate):
@@ -1219,7 +1223,7 @@ class Pgate(Gate):
         temp = self.p[0] / 2
         r = pf.acosh(pf.sqrt(1+temp**2))
         theta = pf.atan(temp)
-        phi = -pi/2 * pf.sign(temp) - theta
+        phi = -np.pi / 2 * pf.sign(temp) - theta
         return [
             Command(Sgate(r, phi), reg),
             Command(Rgate(theta), reg)
@@ -1242,7 +1246,7 @@ class Vgate(Gate):
         super().__init__([gamma])
 
     def _apply(self, reg, backend, **kwargs):
-        gamma_prime = self.p[0] * pf.sqrt(sf.hbar / 2)
+        gamma_prime = self.p[0] * np.sqrt(sf.hbar / 2)
         # the backend API call cubic_phase is hbar-independent
         backend.cubic_phase(par_evaluate(gamma_prime), *reg)
 
@@ -1298,14 +1302,15 @@ class BSgate(Gate):
     """
     ns = 2
 
-    def __init__(self, theta=pi/4, phi=0.):
+    def __init__(self, theta=np.pi/4, phi=0.):
         # default: 50% beamsplitter
         super().__init__([theta, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        tr = (pf.cos(self.p[0]),
-              pf.sin(self.p[0]) * pf.exp(1j * self.p[1]))
-        backend.beamsplitter(*par_evaluate(tr), *reg)
+        p = par_evaluate(self.p)
+        tr = (np.cos(p[0]),
+              np.sin(p[0]) * np.exp(1j * p[1]))
+        backend.beamsplitter(*tr, *reg)
 
 
 class MZgate(Gate):
@@ -1356,7 +1361,7 @@ class S2gate(Gate):
     def _decompose(self, reg, **kwargs):
         # two opposite squeezers sandwiched between 50% beamsplitters
         S = Sgate(self.p[0], self.p[1])
-        BS = BSgate(pi/4, 0)
+        BS = BSgate(np.pi / 4, 0)
         return [
             Command(BS, reg),
             Command(S, reg[0]),
@@ -1394,7 +1399,7 @@ class CXgate(Gate):
             Command(BSgate(theta, 0), reg),
             Command(Sgate(r, 0), reg[0]),
             Command(Sgate(-r, 0), reg[1]),
-            Command(BSgate(theta + pi/2, 0), reg),
+            Command(BSgate(theta + np.pi / 2, 0), reg),
         ]
 
 
@@ -1419,9 +1424,9 @@ class CZgate(Gate):
         # phase-rotated CZ
         CX = CXgate(self.p[0])
         return [
-            Command(Rgate(-pi/2), reg[1]),
+            Command(Rgate(-np.pi / 2), reg[1]),
             Command(CX, reg),
-            Command(Rgate(pi/2), reg[1])
+            Command(Rgate(np.pi / 2), reg[1])
         ]
 
 
@@ -1456,7 +1461,7 @@ class Fouriergate(Gate):
     """
 
     def __init__(self):
-        super().__init__([pi/2])
+        super().__init__([np.pi / 2])
 
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
@@ -2057,7 +2062,7 @@ class Gaussian(Preparation, Decomposition):
 Del = _Delete()
 Vac = Vacuum()
 MeasureX = MeasureHomodyne(0)
-MeasureP = MeasureHomodyne(pi/2)
+MeasureP = MeasureHomodyne(np.pi / 2)
 MeasureHD = MeasureHeterodyne()
 
 Fourier = Fouriergate()

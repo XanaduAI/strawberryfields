@@ -585,10 +585,10 @@ class Program:
         Returns the named free parameters. If a parameter does not exist yet, it is created and returned.
 
         Args:
-            args (tuple[str]): names of the free parameters to access
+            args (tuple[str]): name(s) of the free parameters to access
 
         Returns:
-            FreeParameter, list[FreeParameter]:
+            FreeParameter, list[FreeParameter]: requested parameter(s)
         """
         ret = []
         for a in args:
