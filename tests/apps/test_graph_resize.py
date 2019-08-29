@@ -15,6 +15,8 @@ r"""
 Unit tests for strawberryfields.apps.graph.resize
 """
 # pylint: disable=no-self-use,unused-argument
+import itertools
+
 import networkx as nx
 import numpy as np
 import pytest
@@ -41,6 +43,21 @@ subgraphs = [
 def patch_is_subgraph(monkeypatch):
     """dummy function for ``utils.is_subgraph``"""
     monkeypatch.setattr(utils, "is_subgraph", lambda v1, v2: True)
+
+
+shuffle_counter = 0
+
+
+def patch_random_shuffle(x):
+    """Dummy function for ``np.random.shuffle`` to make output deterministic. This dummy function
+    just returns a certain permutation of the input based upon a counter which increases by one
+    each time the function is called"""
+    global shuffle_counter
+    p = list(itertools.permutations(x))
+    shuffle_counter += 1
+    x.clear()
+    x.extend(p[shuffle_counter % len(p)])
+    return None
 
 
 @pytest.mark.parametrize("dim", [5])
@@ -393,7 +410,7 @@ class TestCliqueShrink:
         assert clique[0] == 0
         assert clique[1] + 1 == clique[2] or (clique[1] == 1 and clique[2] == dim - 1)
 
-    def test_wheel_graph_tie(self, dim):
+    def test_wheel_graph_tie(self, dim, monkeypatch):
         """Test that output is correct for a wheel graph, whose largest cliques have dimension
         3. The cliques always include the central spoke and two consecutive nodes in the outer
         wheel. Since the function uses randomness in node selection when there is a tie (which
@@ -402,10 +419,9 @@ class TestCliqueShrink:
         graph = nx.wheel_graph(dim)
         subgraph = graph.nodes()  # subgraph is the entire graph
 
-        np.random.seed(0)  # set random seed for reproducible results
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "shuffle", patch_random_shuffle)
+            c1 = resize.clique_shrink(subgraph, graph)
+            c2 = resize.clique_shrink(subgraph, graph)
 
-        cliques = [resize.clique_shrink(subgraph, graph) for _ in range(100)]
-
-        nodes_returned = set([node for clique in cliques for node in clique])
-
-        assert len(nodes_returned) > 3
+        assert c1 != c2
