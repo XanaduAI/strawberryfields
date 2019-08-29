@@ -15,7 +15,7 @@ r"""
 Unit tests for strawberryfields.apps.graph.resize
 """
 # pylint: disable=no-self-use,unused-argument
-import itertools
+import functools
 
 import networkx as nx
 import numpy as np
@@ -45,28 +45,18 @@ def patch_is_subgraph(monkeypatch):
     monkeypatch.setattr(utils, "is_subgraph", lambda v1, v2: True)
 
 
-shuffle_counter = 0
-choice_counter = 0
-
-
-def patch_random_shuffle(x):
+def patch_random_shuffle(x, reverse):
     """Dummy function for ``np.random.shuffle`` to make output deterministic. This dummy function
-    just returns a certain permutation of the input set by a counter which increases by one each
-    time the function is called."""
-    global shuffle_counter
-    p = list(itertools.permutations(x))
-    shuffle_counter += 1
-    x.clear()
-    x.extend(p[shuffle_counter % len(p)])
+    reverses ``x`` in place if ``reverse == True`` and does nothing otherwise."""
+    if reverse:
+        x.reverse()
     return None
 
 
-def patch_random_choice(x):
+def patch_random_choice(x, element):
     """Dummy function for ``np.random.choice`` to make output deterministic. This dummy function
-    just returns a counter which increases by one each time the function is called."""
-    global choice_counter
-    choice_counter += 1
-    return x[choice_counter % len(x)]
+    just returns the element of ``x`` specified by ``element``."""
+    return x[element]
 
 
 @pytest.mark.parametrize("dim", [5])
@@ -278,9 +268,15 @@ class TestCliqueGrow:
         graph.remove_edge(dim - 2, dim - 1)
         s = set(range(dim - 2))
 
+        patch_random_choice_1 = functools.partial(patch_random_choice, element=0)
+        patch_random_choice_2 = functools.partial(patch_random_choice, element=1)
+
         with monkeypatch.context() as m:
-            m.setattr(np.random, "choice", patch_random_choice)
+            m.setattr(np.random, "choice", patch_random_choice_1)
             c1 = resize.clique_grow(s, graph, node_select="degree")
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_2)
             c2 = resize.clique_grow(s, graph, node_select="degree")
 
         assert c1 != c2
@@ -350,9 +346,15 @@ class TestCliqueSwap:
         graph.remove_edge(0, dim - 2)
         s = set(range(dim - 2))
 
+        patch_random_choice_1 = functools.partial(patch_random_choice, element=0)
+        patch_random_choice_2 = functools.partial(patch_random_choice, element=1)
+
         with monkeypatch.context() as m:
-            m.setattr(np.random, "choice", patch_random_choice)
+            m.setattr(np.random, "choice", patch_random_choice_1)
             c1 = resize.clique_swap(s, graph, node_select="degree")
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_2)
             c2 = resize.clique_swap(s, graph, node_select="degree")
 
         assert c1 != c2
@@ -429,9 +431,14 @@ class TestCliqueShrink:
         graph = nx.wheel_graph(dim)
         subgraph = graph.nodes()  # subgraph is the entire graph
 
+        patch_random_shuffle_1 = functools.partial(patch_random_shuffle, reverse=False)
+        patch_random_shuffle_2 = functools.partial(patch_random_shuffle, reverse=True)
+
         with monkeypatch.context() as m:
-            m.setattr(np.random, "shuffle", patch_random_shuffle)
+            m.setattr(np.random, "shuffle", patch_random_shuffle_1)
             c1 = resize.clique_shrink(subgraph, graph)
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "shuffle", patch_random_shuffle_2)
             c2 = resize.clique_shrink(subgraph, graph)
 
         assert c1 != c2
