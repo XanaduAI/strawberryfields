@@ -371,4 +371,4 @@ def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
         to_remove = min(degrees, key=lambda x: x[1])
         subgraph.remove_node(to_remove[0])
 
-    return list(subgraph.nodes())
+    return sorted(subgraph.nodes())
