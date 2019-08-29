@@ -46,18 +46,27 @@ def patch_is_subgraph(monkeypatch):
 
 
 shuffle_counter = 0
+choice_counter = 0
 
 
 def patch_random_shuffle(x):
     """Dummy function for ``np.random.shuffle`` to make output deterministic. This dummy function
-    just returns a certain permutation of the input based upon a counter which increases by one
-    each time the function is called"""
+    just returns a certain permutation of the input set by a counter which increases by one each
+    time the function is called."""
     global shuffle_counter
     p = list(itertools.permutations(x))
     shuffle_counter += 1
     x.clear()
     x.extend(p[shuffle_counter % len(p)])
     return None
+
+
+def patch_random_choice(x):
+    """Dummy function for ``np.random.choice`` to make output deterministic. This dummy function
+    just returns a counter which increases by one each time the function is called."""
+    global choice_counter
+    choice_counter += 1
+    return x[choice_counter % len(x)]
 
 
 @pytest.mark.parametrize("dim", [5])
@@ -257,24 +266,24 @@ class TestCliqueGrow:
         target = s | {dim - 1}
         assert set(resize.clique_grow(s, graph, node_select="degree")) == target
 
-    def test_grow_maximal_degree_tie(self, dim):
+    def test_grow_maximal_degree_tie(self, dim, monkeypatch):
         """Test if function grows using randomness to break ties during degree-based node
         selection. The chosen graph is a fully connected graph with the ``dim - 2`` and ``dim -
         1`` nodes then disconnected. Starting from the first ``dim - 3`` nodes, one can add
         either of the ``dim - 2`` and ``dim - 1`` nodes. As they have the same degree, they should
-        be selected randomly with equal probability. This function checks that, with 100
-        repetitions, either of the options has been represented at least once."""
+        be selected randomly with equal probability. This function monkeypatches the
+        ``np.random.choice`` call to guarantee that one of the nodes is picked during one run of
+        ``clique_grow`` and the other node is picked during the next run."""
         graph = nx.complete_graph(dim)
         graph.remove_edge(dim - 2, dim - 1)
         s = set(range(dim - 2))
 
-        np.random.seed(0)  # set random seed for reproducible results
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice)
+            c1 = resize.clique_grow(s, graph, node_select="degree")
+            c2 = resize.clique_grow(s, graph, node_select="degree")
 
-        results = [
-            (set(resize.clique_grow(s, graph, node_select="degree")) - s).pop() for _ in range(100)
-        ]
-
-        assert set(results) == {dim - 1} | {dim - 2}
+        assert c1 != c2
 
     def test_input_not_clique(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
@@ -326,27 +335,27 @@ class TestCliqueSwap:
         expected = set(range(1, dim - 2)) | {dim - 1}
         assert result == expected
 
-    def test_swap_degree_tie(self, dim):
+    def test_swap_degree_tie(self, dim, monkeypatch):
         """Test if function performs correct swap operation using randomness to break ties during
         degree-based node selection. Input graph is a fully connected graph. Additionally,
         a connection between node ``0`` and ``dim - 1`` is removed as well as a connection
         between node ``0`` and ``dim - 2``. A clique of the first ``dim - 2`` nodes is then
         input. In this case, C1 consists of nodes ``dim - 1`` and ``dim - 2``. As they have the
         same degree, they should be selected randomly with equal probability. This function
-        checks that, with 100 repetitions, either of the options has been represented at least once.
+        monkeypatches the ``np.random.choice`` call to guarantee that one of the nodes is picked
+        during one run of ``clique_swap`` and the other node is picked during the next run.
         """
         graph = nx.complete_graph(dim)
         graph.remove_edge(0, dim - 1)
         graph.remove_edge(0, dim - 2)
         s = set(range(dim - 2))
 
-        np.random.seed(0)  # set random seed for reproducible results
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice)
+            c1 = resize.clique_swap(s, graph, node_select="degree")
+            c2 = resize.clique_swap(s, graph, node_select="degree")
 
-        results = [
-            (set(resize.clique_swap(s, graph, node_select="degree")) - s).pop() for _ in range(100)
-        ]
-
-        assert set(results) == {dim - 1} | {dim - 2}
+        assert c1 != c2
 
     def test_input_not_clique(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
@@ -414,8 +423,9 @@ class TestCliqueShrink:
         """Test that output is correct for a wheel graph, whose largest cliques have dimension
         3. The cliques always include the central spoke and two consecutive nodes in the outer
         wheel. Since the function uses randomness in node selection when there is a tie (which
-        occurs in the case of the wheel graph), this test checks that, with 100 repetitions,
-        multiple 3-node cliques are returned."""
+        occurs in the case of the wheel graph), the resultant shrunk cliques are expected to be
+        different each time ``clique_shrink`` is run. This function monkeypatches the
+        ``np.random.shuffle`` call so that different nodes are removed during each run."""
         graph = nx.wheel_graph(dim)
         subgraph = graph.nodes()  # subgraph is the entire graph
 
