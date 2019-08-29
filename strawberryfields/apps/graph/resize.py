@@ -49,7 +49,6 @@ Code details
 
 from typing import Iterable, Optional
 import itertools
-import random
 
 import networkx as nx
 import numpy as np
@@ -331,7 +330,8 @@ def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
 
     if c_1:
         if node_select == "uniform":
-            swap_nodes = random.choice(c_1)
+            swap_index = np.random.choice(len(c_1))
+            swap_nodes = c_1[swap_index]
         elif node_select == "degree":
             degrees = np.array([graph.degree(n[1]) for n in c_1])
             to_swap_index = np.random.choice(np.where(degrees == degrees.max())[0])
@@ -367,7 +367,7 @@ def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
 
     while not utils.is_clique(subgraph):
         degrees = list(subgraph.degree())
-        random.shuffle(degrees)  # used to make sure selection of node with lowest degree is not
+        np.random.shuffle(degrees)  # used to make sure selection of node with lowest degree is not
         # deterministic in case of a tie (https://docs.python.org/3/library/functions.html#min)
 
         to_remove = min(degrees, key=lambda x: x[1])
