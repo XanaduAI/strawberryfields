@@ -367,7 +367,9 @@ def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
 
     while not utils.is_clique(subgraph):
         degrees = list(subgraph.degree())
-        random.shuffle(degrees)
+        random.shuffle(degrees)  # used to make sure selection of node with lowest degree is not
+        # deterministic in case of a tie (https://docs.python.org/3/library/functions.html#min)
+
         to_remove = min(degrees, key=lambda x: x[1])
         subgraph.remove_node(to_remove[0])
 
