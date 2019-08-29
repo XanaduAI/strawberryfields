@@ -348,6 +348,10 @@ def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
 def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
     """Shrinks an input subgraph until it forms a clique.
 
+    Proceeds by removing nodes in the input subgraph one at a time until the result is a clique
+    that satisfies :func:`~strawberryfields.apps.graph.utils.is_clique`. Upon each iteration,
+    this function selects the node with the lowest degree relative to the subgraph and removes it.
+
     Args:
         subgraph (list[int]): a subgraph specified by a list of nodes
         graph (nx.Graph): the input graph
