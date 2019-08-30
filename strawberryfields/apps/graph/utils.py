@@ -163,12 +163,15 @@ def is_clique(graph: nx.Graph) -> bool:
         >>> graph = nx.complete_graph(10)
         >>> utils.is_clique(graph)
         True
+        >>> graph = nx.empty_graph(10)
+        >>> utils.is_clique(graph)
+        False
 
     Args:
-        graph (nx.Graph): The input graph.
+        graph (nx.Graph): the input graph
 
     Returns:
-        bool: ``True`` if input graph is a clique and ``False`` otherwise.
+        bool: ``True`` if input graph is a clique and ``False`` otherwise
     """
     edges = graph.edges
     nodes = graph.order()
@@ -196,7 +199,7 @@ def c_0(clique: list, graph: nx.Graph):
 
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
-        graph (nx.Graph): The input graph.
+        graph (nx.Graph): the input graph
 
     Returns:
         list[int]: a list containing the :math:`C_0` nodes for the clique
@@ -235,7 +238,7 @@ def c_1(clique: list, graph: nx.Graph):
         [(1, 3), (2, 4)]
 
     Args:
-        clique (list[int]): A subgraph specified by a list of nodes; the subgraph must be a clique
+         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
 
     Returns:
