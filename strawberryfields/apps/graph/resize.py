@@ -368,6 +368,17 @@ def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
     that satisfies :func:`~strawberryfields.apps.graph.utils.is_clique`. Upon each iteration,
     this function selects the node with the lowest degree relative to the subgraph and removes it.
 
+    Example usage:
+
+    .. code-block::
+
+        >>> from strawberryfields.apps.graph import resize
+        >>> import networkx as nx
+        >>> graph = nx.barbell_graph(4, 0)
+        >>> subgraph = [0, 1, 2, 3, 4, 5]
+        >>> resize.clique_shrink(subgraph, graph)
+        [0, 1, 2, 3]
+
     Args:
         subgraph (list[int]): a subgraph specified by a list of nodes
         graph (nx.Graph): the input graph
