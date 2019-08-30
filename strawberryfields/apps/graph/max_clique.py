@@ -95,5 +95,5 @@ def local_search(
 
     if grow == swap or iterations == 0:
         return swap
-    else:
-        return local_search(swap, graph, iterations, node_select)
+
+    return local_search(swap, graph, iterations, node_select)
