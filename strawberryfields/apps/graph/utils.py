@@ -195,7 +195,7 @@ def c_0(clique: list, graph: nx.Graph):
         [5, 6, 7, 8, 9]
 
     Args:
-        clique (list[int]): A subgraph specified by a list of nodes; the subgraph must be a clique.
+        clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): The input graph.
 
     Returns:
