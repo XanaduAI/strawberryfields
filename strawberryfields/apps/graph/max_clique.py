@@ -48,8 +48,9 @@ import networkx as nx
 from strawberryfields.apps.graph import resize
 
 
-def local_search(clique: list, graph: nx.Graph, iterations: int = 100, node_select: str =
-"uniform") -> list:
+def local_search(
+    clique: list, graph: nx.Graph, iterations: int = 100, node_select: str = "uniform"
+) -> list:
     """Use local search algorithm to identify large cliques.
 
     This function implements a version of the local search algorithm given in
