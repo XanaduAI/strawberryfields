@@ -316,14 +316,14 @@ def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
         >>> import networkx as nx
         >>> graph = nx.wheel_graph(5)
         >>> graph.remove_edge(0, 4)
-        >>> subgraph = [0, 1, 2]  # these nodes form a clique
-        >>> resize.clique_swap(subgraph, graph)
+        >>> clique = [0, 1, 2]
+        >>> resize.clique_swap(clique, graph)
         [0, 2, 3]
         >>> graph = nx.lollipop_graph(5, 1)
         >>> graph.remove_edge(0, 4)
         >>> graph.remove_edge(0, 3)
-        >>> subgraph = [0, 1, 2]
-        >>> resize.clique_swap(subgraph, graph, node_select="degree")
+        >>> clique = [0, 1, 2]
+        >>> resize.clique_swap(clique, graph, node_select="degree")
         [1, 2, 4]
 
     Args:

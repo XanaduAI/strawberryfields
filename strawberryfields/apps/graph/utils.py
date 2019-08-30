@@ -193,8 +193,8 @@ def c_0(clique: list, graph: nx.Graph):
         >>> from strawberryfields.apps.graph import utils
         >>> import networkx as nx
         >>> graph = nx.complete_graph(10)
-        >>> subgraph = [0, 1, 2, 3, 4]
-        >>> utils.c_0(subgraph, graph)
+        >>> clique = [0, 1, 2, 3, 4]
+        >>> utils.c_0(clique, graph)
         [5, 6, 7, 8, 9]
 
     Args:
@@ -233,8 +233,8 @@ def c_1(clique: list, graph: nx.Graph):
         >>> from strawberryfields.apps.graph import utils
         >>> import networkx as nx
         >>> graph = nx.wheel_graph(5)
-        >>> subgraph = [0, 1, 2]  # these nodes form a clique
-        >>> utils.c_1(subgraph, graph)
+        >>> clique = [0, 1, 2]
+        >>> utils.c_1(clique, graph)
         [(1, 3), (2, 4)]
 
     Args:
