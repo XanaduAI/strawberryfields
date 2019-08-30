@@ -79,7 +79,7 @@ class TestLocalSearch:
 
         assert result == clique
 
-    def test_complete_graph(self):
+    def test_expected_growth(self):
         """Test if function performs a growth and swap phase, followed by another growth and
         attempted swap phase. This is carried out by starting with a 4+1 node lollipop graph,
         adding a connection from node 4 to node 2 and starting with the [3, 4] clique. The local
