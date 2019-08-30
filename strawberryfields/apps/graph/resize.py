@@ -363,7 +363,8 @@ def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
     if not utils.is_subgraph(subgraph, graph):
         raise ValueError("Input is not a valid subgraph")
 
-    subgraph = graph.subgraph(subgraph).copy()  # A copy is required to be able to modify structure
+    subgraph = graph.subgraph(subgraph).copy()  # A copy is required to be able to modify the
+    # structure of the subgraph (https://networkx.github.io/documentation/stable/reference/classes/generated/networkx.Graph.subgraph.html)
 
     while not utils.is_clique(subgraph):
         degrees = list(subgraph.degree())
