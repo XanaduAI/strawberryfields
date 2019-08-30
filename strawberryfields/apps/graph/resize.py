@@ -41,6 +41,7 @@ Summary
     greedy_degree
     clique_grow
     clique_swap
+    clique_shrink
 
 Code details
 ^^^^^^^^^^^^
@@ -48,7 +49,6 @@ Code details
 
 from typing import Iterable, Optional
 import itertools
-import random
 
 import networkx as nx
 import numpy as np
@@ -330,7 +330,8 @@ def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
 
     if c_1:
         if node_select == "uniform":
-            swap_nodes = random.choice(c_1)
+            swap_index = np.random.choice(len(c_1))
+            swap_nodes = c_1[swap_index]
         elif node_select == "degree":
             degrees = np.array([graph.degree(n[1]) for n in c_1])
             to_swap_index = np.random.choice(np.where(degrees == degrees.max())[0])
@@ -342,3 +343,35 @@ def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
         clique.add(swap_nodes[1])
 
     return sorted(clique)
+
+
+def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
+    """Shrinks an input subgraph until it forms a clique.
+
+    Proceeds by removing nodes in the input subgraph one at a time until the result is a clique
+    that satisfies :func:`~strawberryfields.apps.graph.utils.is_clique`. Upon each iteration,
+    this function selects the node with the lowest degree relative to the subgraph and removes it.
+
+    Args:
+        subgraph (list[int]): a subgraph specified by a list of nodes
+        graph (nx.Graph): the input graph
+
+    Returns:
+        list[int]: a clique of size smaller than or equal to the input subgraph
+    """
+
+    if not utils.is_subgraph(subgraph, graph):
+        raise ValueError("Input is not a valid subgraph")
+
+    subgraph = graph.subgraph(subgraph).copy()  # A copy is required to be able to modify the
+    # structure of the subgraph (https://networkx.github.io/documentation/stable/reference/classes/generated/networkx.Graph.subgraph.html)
+
+    while not utils.is_clique(subgraph):
+        degrees = list(subgraph.degree())
+        np.random.shuffle(degrees)  # used to make sure selection of node with lowest degree is not
+        # deterministic in case of a tie (https://docs.python.org/3/library/functions.html#min)
+
+        to_remove = min(degrees, key=lambda x: x[1])
+        subgraph.remove_node(to_remove[0])
+
+    return sorted(subgraph.nodes())
