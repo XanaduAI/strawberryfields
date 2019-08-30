@@ -199,7 +199,7 @@ def c_0(clique: list, graph: nx.Graph):
         graph (nx.Graph): The input graph.
 
     Returns:
-        list[int]: A list containing the :math:`C_0` nodes for the clique.
+        list[int]: a list containing the :math:`C_0` nodes for the clique
 
     """
     if not is_clique(graph.subgraph(clique)):
