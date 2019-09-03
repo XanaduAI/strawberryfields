@@ -53,23 +53,32 @@ def local_search(clique: list, graph: nx.Graph, iterations, node_select: str = "
 
     This function implements a version of the local search algorithm given in
     :ref:`pullan2006dynamic` and :ref:`pullan2006phased`. It proceeds by iteratively applying
-    phases of greedy growth and plateau search to the input clique subgraph. Growth is achieved
-    using the :func:`~.clique_grow` function, which repeatedly evaluates the set :math:`C_0` of
-    nodes in the remainder of the graph that are connected to all nodes in the clique,
-    and selects one candidate node from :math:`C_0` to make a larger clique. Plateau search is
-    performed with the :func:`~.clique_swap` function, which evaluates the set :math:`C_1` of
-    nodes in the remainder of the graph that are connected to all but one of the nodes in the
-    clique. The function then proceeds to select one candidate from :math:`C_1` and swap it with
-    its corresponding node in the clique.
+    phases of greedy growth and plateau search to the input clique subgraph.
+
+    **Growth phase**
+
+    Growth is achieved using the :func:`~.clique_grow` function, which repeatedly evaluates the
+    set :math:`C_0` of nodes in the remainder of the graph that are connected to all nodes in the
+    clique, and selects one candidate node from :math:`C_0` to make a larger clique.
+
+    **Search phase**
+
+    Plateau search is performed with the :func:`~.clique_swap` function, which evaluates the set
+    :math:`C_1` of nodes in the remainder of the graph that are connected to all but one of the
+    nodes in the clique. The function then proceeds to select one candidate from :math:`C_1` and
+    swap it with its corresponding node in the clique.
+
+    Whenever the sets :math:`C_0` and :math:`C_1` used during growth and swapping have more than
+    one element, there must be a choice of which node to add or swap. This choice is specified
+    with the ``node_select`` argument, with node selection based on uniform randomness and node
+    degree supported. Degree-based node selection involves picking the node with the greatest
+    degree, with ties settled by uniform random choice.
+
+    **Stopping**
 
     The iterative applications of growth and search are applied until either the specified number
     of iterations has been carried out or when a dead end has been reached. The function reaches
-    a dead end when it is unable to perform any new swaps or growth. Whenever the sets
-    :math:`C_0` and :math:`C_1` used during growth and swapping have more than one element,
-    there must be a choice of which node to add or swap. This choice is specified with the
-    ``node_select`` argument, with node selection based on uniform randomness and node degree
-    supported. Degree-based node selection involves picking the node with the greatest degree,
-    with ties settled by uniform random choice.
+    a dead end when it is unable to perform any new swaps or growth.
 
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
