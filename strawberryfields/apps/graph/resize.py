@@ -310,21 +310,19 @@ def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
 
     Example usage:
 
-    .. code-block::
-
-        >>> from strawberryfields.apps.graph import resize
-        >>> import networkx as nx
-        >>> graph = nx.wheel_graph(5)
-        >>> graph.remove_edge(0, 4)
-        >>> clique = [0, 1, 2]
-        >>> resize.clique_swap(clique, graph)
-        [0, 2, 3]
-        >>> graph = nx.lollipop_graph(5, 1)
-        >>> graph.remove_edge(0, 4)
-        >>> graph.remove_edge(0, 3)
-        >>> clique = [0, 1, 2]
-        >>> resize.clique_swap(clique, graph, node_select="degree")
-        [1, 2, 4]
+    >>> from strawberryfields.apps.graph import resize
+    >>> import networkx as nx
+    >>> graph = nx.wheel_graph(5)
+    >>> graph.remove_edge(0, 4)
+    >>> clique = [0, 1, 2]
+    >>> resize.clique_swap(clique, graph)
+    [0, 2, 3]
+    >>> graph = nx.lollipop_graph(5, 1)
+    >>> graph.remove_edge(0, 4)
+    >>> graph.remove_edge(0, 3)
+    >>> clique = [0, 1, 2]
+    >>> resize.clique_swap(clique, graph, node_select="degree")
+    [1, 2, 4]
 
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique

@@ -156,16 +156,14 @@ def is_clique(graph: nx.Graph) -> bool:
 
     Example usage:
 
-    .. code-block::
-
-        >>> from strawberryfields.apps.graph import utils
-        >>> import networkx as nx
-        >>> graph = nx.complete_graph(10)
-        >>> utils.is_clique(graph)
-        True
-        >>> graph = nx.empty_graph(10)
-        >>> utils.is_clique(graph)
-        False
+    >>> from strawberryfields.apps.graph import utils
+    >>> import networkx as nx
+    >>> graph = nx.complete_graph(10)
+    >>> utils.is_clique(graph)
+    True
+    >>> graph = nx.empty_graph(10)
+    >>> utils.is_clique(graph)
+    False
 
     Args:
         graph (nx.Graph): the input graph
@@ -188,14 +186,12 @@ def c_0(clique: list, graph: nx.Graph):
 
     Example usage:
 
-    .. code-block::
-
-        >>> from strawberryfields.apps.graph import utils
-        >>> import networkx as nx
-        >>> graph = nx.complete_graph(10)
-        >>> clique = [0, 1, 2, 3, 4]
-        >>> utils.c_0(clique, graph)
-        [5, 6, 7, 8, 9]
+    >>> from strawberryfields.apps.graph import utils
+    >>> import networkx as nx
+    >>> graph = nx.complete_graph(10)
+    >>> clique = [0, 1, 2, 3, 4]
+    >>> utils.c_0(clique, graph)
+    [5, 6, 7, 8, 9]
 
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
@@ -228,14 +224,12 @@ def c_1(clique: list, graph: nx.Graph):
 
     Example usage:
 
-    .. code-block::
-
-        >>> from strawberryfields.apps.graph import utils
-        >>> import networkx as nx
-        >>> graph = nx.wheel_graph(5)
-        >>> clique = [0, 1, 2]
-        >>> utils.c_1(clique, graph)
-        [(1, 3), (2, 4)]
+    >>> from strawberryfields.apps.graph import utils
+    >>> import networkx as nx
+    >>> graph = nx.wheel_graph(5)
+    >>> clique = [0, 1, 2]
+    >>> utils.c_1(clique, graph)
+    [(1, 3), (2, 4)]
 
     Args:
          clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
