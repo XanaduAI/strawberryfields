@@ -54,14 +54,13 @@ def local_search(clique: list, graph: nx.Graph, iterations, node_select: str = "
     This function implements a version of the local search algorithm given in
     :ref:`pullan2006dynamic` and :ref:`pullan2006phased`. It proceeds by iteratively applying
     phases of greedy growth and plateau search to the input clique subgraph. Growth is achieved
-    using the :func:`~strawberryfields.apps.graph.resize.clique_grow` function, which repeatedly
-    evaluates the set :math:`C_0` of nodes in the remainder of the graph that are connected to
-    all nodes in the clique, and selects one candidate node from :math:`C_0` to make a larger
-    clique. Plateau search is performed with the
-    :func:`~strawberryfields.apps.graph.resize.clique_swap` function, which evaluates the set
-    :math:`C_1` of nodes in the remainder of the graph that are connected to all but one of the
-    nodes in the clique, and selects one candidate from :math:`C_1` and its corresponding
-    unconnected node in the clique to swap.
+    using the :func:`~.clique_grow` function, which repeatedly evaluates the set :math:`C_0` of
+    nodes in the remainder of the graph that are connected to all nodes in the clique,
+    and selects one candidate node from :math:`C_0` to make a larger clique. Plateau search is
+    performed with the :func:`~.clique_swap` function, which evaluates the set :math:`C_1` of
+    nodes in the remainder of the graph that are connected to all but one of the nodes in the
+    clique, and selects one candidate from :math:`C_1` and its corresponding unconnected node in
+    the clique to swap.
 
     The iterative applications of growth and search are applied until either the specified number
     of iterations has been carried out or when a dead end has been reached. The function reaches
