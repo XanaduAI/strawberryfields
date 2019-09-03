@@ -66,7 +66,7 @@ class TestLocalSearch:
         """Test if function stops when in a dead end (i.e., ``grow == swap``) such that no
         swapping is possible. This is achieved by monkeypatching ``clique_grow`` and
         ``clique_swap`` so that they simply return the same clique as fed in, which should cause
-        the local search algorithm to conclude that it is already in a dead and and return the
+        the local search algorithm to conclude that it is already in a dead end and return the
         same clique."""
 
         graph = nx.complete_graph(5)
@@ -75,7 +75,7 @@ class TestLocalSearch:
         with monkeypatch.context() as m:
             m.setattr(resize, "clique_grow", patch_clique_resize)
             m.setattr(resize, "clique_swap", patch_clique_resize)
-            result = max_clique.local_search(clique, graph)
+            result = max_clique.local_search(clique, graph, iterations=100)
 
         assert result == clique
 
@@ -91,5 +91,5 @@ class TestLocalSearch:
         graph.add_edge(4, 2)
 
         clique = [3, 4]
-        result = max_clique.local_search(clique, graph)
+        result = max_clique.local_search(clique, graph, iterations=100)
         assert result == [0, 1, 2, 3]
