@@ -80,6 +80,14 @@ def local_search(clique: list, graph: nx.Graph, iterations, node_select: str = "
     of iterations has been carried out or when a dead end has been reached. The function reaches
     a dead end when it is unable to perform any new swaps or growth.
 
+    Example usage:
+
+    >>> graph = nx.lollipop_graph(4, 1)
+    >>> graph.add_edge(4, 2)
+    >>> clique = [3, 4]
+    >>> local_search(clique, graph, iterations=10)
+    [0, 1, 2, 3]
+
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
