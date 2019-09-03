@@ -151,10 +151,17 @@ def is_subgraph(subgraph: Iterable, graph: nx.Graph):
 
 
 def is_clique(graph: nx.Graph) -> bool:
-    """Determines if the input graph is a clique. A clique of n nodes has :math:`n*(n-1)/2` edges.
+    """Determines if the input graph is a clique. A clique of :math:`n` nodes has exactly :math:`n(
+    n-1)/2` edges.
+
+    Example usage:
+
+    >>> graph = nx.complete_graph(10)
+    >>> is_clique(graph)
+    True
 
     Args:
-        graph (nx.Graph): The input graph
+        graph (nx.Graph): the input graph
 
     Returns:
         bool: ``True`` if input graph is a clique and ``False`` otherwise
@@ -169,14 +176,23 @@ def c_0(clique: list, graph: nx.Graph):
     """Generates the set :math:`C_0` of nodes that are connected to all nodes in the input
     clique subgraph.
 
-    The set :math:`C_0` is defined in :cite:`pullan2006phased`.
+    The set :math:`C_0` is defined in :cite:`pullan2006phased` and is used to determine nodes
+    that can be added to the current clique to grow it into a larger one.
+
+    Example usage:
+
+    >>> graph = nx.complete_graph(10)
+    >>> clique = [0, 1, 2, 3, 4]
+    >>> c_0(clique, graph)
+    [5, 6, 7, 8, 9]
 
     Args:
-        clique (list[int]): A subgraph specified by a list of nodes; the subgraph must be a clique
+        clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
 
     Returns:
-        list[int]: A list containing the :math:`C_0` nodes for the clique
+        list[int]: a list containing the :math:`C_0` nodes for the clique
+
     """
     if not is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
@@ -196,16 +212,23 @@ def c_1(clique: list, graph: nx.Graph):
     """Generates the set :math:`C_1` of nodes that are connected to all but one of the nodes in
     the input clique subgraph
 
-    The set :math:`C_1` is defined in :cite:`pullan2006phased`.
+    The set :math:`C_1` is defined in :cite:`pullan2006phased` and is used to determine outside
+    nodes that can be swapped with clique nodes to create a new clique.
+
+    Example usage:
+
+    >>> graph = nx.wheel_graph(5)
+    >>> clique = [0, 1, 2]
+    >>> c_1(clique, graph)
+    [(1, 3), (2, 4)]
 
     Args:
-        clique (list[int]): A subgraph specified by a list of nodes; the subgraph must be a clique
+        clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
 
     Returns:
-       list[int]: A list of tuples ``[(i_clique, i), (j_clique, j),...,(k_clique, k)]``. Here
-       ``i,j,...,k`` are the nodes in :math:`C_1`, while ``i_clique, j_clique,...,k_clique`` are the
-        nodes in the clique they can be swapped with.
+       list[tuple(int)]: A list of tuples. The first node in the tuple is the node in the clique and the
+       second node is the outside node it can be swapped with.
    """
     if not is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
