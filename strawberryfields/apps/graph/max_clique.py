@@ -59,8 +59,8 @@ def local_search(clique: list, graph: nx.Graph, iterations, node_select: str = "
     and selects one candidate node from :math:`C_0` to make a larger clique. Plateau search is
     performed with the :func:`~.clique_swap` function, which evaluates the set :math:`C_1` of
     nodes in the remainder of the graph that are connected to all but one of the nodes in the
-    clique, and selects one candidate from :math:`C_1` and its corresponding unconnected node in
-    the clique to swap.
+    clique. The function then proceeds to select one candidate from :math:`C_1` and swap it with
+    its corresponding node in the clique.
 
     The iterative applications of growth and search are applied until either the specified number
     of iterations has been carried out or when a dead end has been reached. The function reaches
@@ -76,8 +76,8 @@ def local_search(clique: list, graph: nx.Graph, iterations, node_select: str = "
         graph (nx.Graph): the input graph
         iterations (int): number of steps in the algorithm
         node_select (str): method of selecting nodes during swap and growth. Can be either
-        ``"uniform"`` for uniform random selection or ``"degree"`` for degree-based selection.
-        Defaults to ``"uniform"``
+            ``"uniform"`` for uniform random selection or ``"degree"`` for degree-based selection.
+            Defaults to ``"uniform"``
 
     Returns:
        list[int]: the largest cliques found by the algorithm
