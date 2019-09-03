@@ -41,7 +41,7 @@ Summary
     local_search
 
 Code details
-------------
+^^^^^^^^^^^^
 """
 import networkx as nx
 
