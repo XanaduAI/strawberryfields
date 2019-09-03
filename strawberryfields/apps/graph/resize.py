@@ -258,19 +258,17 @@ def clique_grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
 
     Example usage:
 
-    .. code-block::
-
-        >>> from strawberryfields.apps.graph import resize
-        >>> import networkx as nx
-        >>> graph = nx.complete_graph(10)
-        >>> clique = [0, 1, 2, 3, 4]
-        >>> resize.clique_grow(clique, graph)
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-        >>> graph = nx.lollipop_graph(5, 1)
-        >>> graph.remove_edge(3, 4)
-        >>> clique = [0, 1, 2]
-        >>> resize.clique_grow(clique, graph, node_select="degree")
-        [0, 1, 2, 4]
+    >>> from strawberryfields.apps.graph import resize
+    >>> import networkx as nx
+    >>> graph = nx.complete_graph(10)
+    >>> clique = [0, 1, 2, 3, 4]
+    >>> resize.clique_grow(clique, graph)
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    >>> graph = nx.lollipop_graph(5, 1)
+    >>> graph.remove_edge(3, 4)
+    >>> clique = [0, 1, 2]
+    >>> resize.clique_grow(clique, graph, node_select="degree")
+    [0, 1, 2, 4]
 
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
@@ -370,14 +368,12 @@ def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
 
     Example usage:
 
-    .. code-block::
-
-        >>> from strawberryfields.apps.graph import resize
-        >>> import networkx as nx
-        >>> graph = nx.barbell_graph(4, 0)
-        >>> subgraph = [0, 1, 2, 3, 4, 5]
-        >>> resize.clique_shrink(subgraph, graph)
-        [0, 1, 2, 3]
+    >>> from strawberryfields.apps.graph import resize
+    >>> import networkx as nx
+    >>> graph = nx.barbell_graph(4, 0)
+    >>> subgraph = [0, 1, 2, 3, 4, 5]
+    >>> resize.clique_shrink(subgraph, graph)
+    [0, 1, 2, 3]
 
     Args:
         subgraph (list[int]): a subgraph specified by a list of nodes
