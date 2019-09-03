@@ -223,7 +223,7 @@ def c_1(clique: list, graph: nx.Graph):
     [(1, 3), (2, 4)]
 
     Args:
-         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
+        clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
 
     Returns:
