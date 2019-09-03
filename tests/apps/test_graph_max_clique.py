@@ -44,7 +44,7 @@ class TestLocalSearch:
         """Test if function raises a ``ValueError`` when a non-positive number of iterations is
         specified"""
         with pytest.raises(ValueError, match="Number of iterations must be a positive int"):
-            max_clique.local_search(clique=[0, 1, 2, 3], graph=nx.empty_graph(5), iterations=-1)
+            max_clique.local_search(clique=[0, 1, 2, 3], graph=nx.complete_graph(5), iterations=-1)
 
     def test_max_iterations(self, monkeypatch):
         """Test if function stops after 5 iterations despite not being in a dead end (i.e., when

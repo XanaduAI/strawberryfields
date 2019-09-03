@@ -90,7 +90,7 @@ def local_search(clique: list, graph: nx.Graph, iterations, node_select: str = "
 
     iterations -= 1
 
-    if grow == swap or iterations == 0:
+    if set(grow) == set(swap) or iterations == 0:
         return swap
 
     return local_search(swap, graph, iterations, node_select)
