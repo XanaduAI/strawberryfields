@@ -48,9 +48,7 @@ import networkx as nx
 from strawberryfields.apps.graph import resize
 
 
-def local_search(
-    clique: list, graph: nx.Graph, iterations: int = 100, node_select: str = "uniform"
-) -> list:
+def local_search(clique: list, graph: nx.Graph, iterations, node_select: str = "uniform") -> list:
     """Use local search algorithm to identify large cliques.
 
     This function implements a version of the local search algorithm given in
@@ -77,7 +75,7 @@ def local_search(
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
-        iterations (int): number of steps in the algorithm; defaults to 100
+        iterations (int): number of steps in the algorithm
         node_select (str): method of selecting nodes during swap and growth. Can be either
         ``"uniform"`` for uniform random selection or ``"degree"`` for degree-based selection.
         Defaults to ``"uniform"``
