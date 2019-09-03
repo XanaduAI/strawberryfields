@@ -315,6 +315,14 @@ def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
     supported. Degree-based node selection involves picking the node with the greatest degree,
     with ties settled by uniform random choice.
 
+    Example usage:
+
+    >>> graph = nx.wheel_graph(5)
+    >>> graph.remove_edge(0, 4)
+    >>> clique = [0, 1, 2]
+    >>> clique_swap(clique, graph)
+    [0, 2, 3]
+
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
