@@ -262,11 +262,6 @@ def clique_grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
     >>> clique = [0, 1, 2, 3, 4]
     >>> clique_grow(clique, graph)
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    >>> graph = nx.lollipop_graph(5, 1)
-    >>> graph.remove_edge(3, 4)
-    >>> clique = [0, 1, 2]
-    >>> clique_grow(clique, graph, node_select="degree")
-    [0, 1, 2, 4]
 
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
