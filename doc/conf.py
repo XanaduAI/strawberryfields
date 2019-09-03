@@ -110,6 +110,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinxcontrib.bibtex',
     'edit_on_github',
+    'sphinx_autodoc_typehints',
     'nbsphinx'
 ]
 
