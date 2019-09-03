@@ -52,7 +52,7 @@ def local_search(clique: list, graph: nx.Graph, iterations, node_select: str = "
     """Use local search algorithm to identify large cliques.
 
     This function implements a version of the local search algorithm given in
-    :ref:`pullan2006dynamic` and :ref:`pullan2006phased`. It proceeds by iteratively applying
+    :cite:`pullan2006dynamic` and :cite:`pullan2006phased`. It proceeds by iteratively applying
     phases of greedy growth and plateau search to the input clique subgraph.
 
     **Growth phase**
