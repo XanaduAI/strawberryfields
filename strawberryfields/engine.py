@@ -314,11 +314,8 @@ class LocalEngine(BaseEngine):
         return self.__class__.__name__ + '({})'.format(self.backend_name)
 
     def reset(self, backend_options=None):
-        if backend_options is None:
-            backend_options = {}
-
+        backend_options = backend_options or {}
         super().reset(backend_options)
-        self.backend_options.pop('batch_size', None)  # HACK to make tests work for now
         self.backend.reset(**self.backend_options)
         # TODO should backend.reset and backend.begin_circuit be combined?
 

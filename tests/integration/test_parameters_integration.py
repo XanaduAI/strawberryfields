@@ -118,7 +118,6 @@ def test_parameters_with_operations(batch_size, setup_eng):
         prog.circuit = []
         eng.reset()
 
-    print(testset)
     for G in testset:
         print(G)
         sig = inspect.signature(G.__init__)
