@@ -365,7 +365,7 @@ def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
 
     Proceeds by removing nodes in the input subgraph one at a time until the result is a clique
     that satisfies :func:`~strawberryfields.apps.graph.utils.is_clique`. Upon each iteration,
-    this function selects the node with the lowest degree relative to the subgraph and removes it.
+    this function selects the node with lowest degree relative to the subgraph and removes it.
 
     Example usage:
 
