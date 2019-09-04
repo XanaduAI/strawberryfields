@@ -22,6 +22,8 @@ import numpy as np
 from strawberryfields.apps.graph import max_clique
 from strawberryfields.apps.graph import resize
 
+pytestmark = pytest.mark.apps
+
 
 def patch_random_choice(x):
     """Dummy function for ``np.random.choice`` to make output deterministic. This dummy function
