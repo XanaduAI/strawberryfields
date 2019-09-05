@@ -44,7 +44,10 @@ There are three basic types of parameters:
    :meth:`Program.args` method, and are bound using :meth:`Program.bind_args`.
 
 The Operations can accept parameters that are functions or algebraic combinations of any number of
-these basic types of parameters, made possible by the parameters inheriting :class:`sympy.Symbol`.
+these basic types of parameters, made possible by the measured and free parameters inheriting
+:class:`sympy.Symbol`.
+Binary arithmetic operations between sympy symbols and numpy arrays produces numpy object arrays
+containing sympy symbols.
 
 
 The normal lifecycle of an Operation object and its associated parameters is as follows:
@@ -87,11 +90,6 @@ What we cannot do at the moment:
   for the :meth:`~ops.Operation.__or__` method.
   Technically we could allow any parameters that evaluate into an integer.
 
-* Binary arithmetic between sympy symbols and numpy arrays produces numpy object arrays containing
-  sympy symbols. These cannot be easily manipulated using sympy functions and methods, hence for now
-  we disallow symbolic operations involving numpy arrays.
-
-
 
 Functions
 ---------
@@ -120,9 +118,32 @@ Code details
 # pylint: disable=too-many-ancestors,unused-import
 
 from collections.abc import Sequence
+import functools
+import types
 
+import numpy as np
 import sympy
-import sympy.functions as parfuncs  # functions for manipulating the Parameters
+import sympy.functions as sf
+
+
+def wrap_mathfunc(func):
+    """Applies the wrapped sympy function elementwise to numpy arrays.
+
+    Required because the sympy math functions cannot deal with arrays.
+    We implement no broadcasting; if the first argument is a numpy array, we assume
+    all the arguments are arrays of the same shape.
+    """
+    @functools.wraps(func)
+    def wrapper(*args):
+        if isinstance(args[0], np.ndarray):
+            # apply func elementwise, recursively, on the args
+            return np.array([wrapper(*k) for k in zip(*args)])
+        return func(*args)
+    return wrapper
+
+# namespace of mathematical functions for manipulating Parameters
+parfuncs = types.SimpleNamespace(**{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != '_'})
+
 
 
 class ParameterError(RuntimeError):
@@ -137,6 +158,7 @@ def par_evaluate(params):
 
     Any parameters descending from sympy.Basic are evaluated, others are returned as is.
     Evaluation means that free and measured parameters are replaced by their numeric values.
+    Numpy arrays are evaluated elementwise.
 
     Alternatively, evaluates a single parameter and returns its value.
 
@@ -152,6 +174,9 @@ def par_evaluate(params):
         params = [params]
 
     def do_evaluate(p):
+        if isinstance(p, np.ndarray):
+            return np.array([do_evaluate(k) for k in p])
+
         if not par_is_symbolic(p):
             return p
 
@@ -225,7 +250,6 @@ def par_str(p):
 
 
 
-
 #class MeasuredParameter(sympy.AtomicExpr):  # something is messed up in Sympy caching, maybe, frontend tests fail depending on their execution order
 class MeasuredParameter(sympy.Symbol):
     """Single measurement result used as an Operation parameter.
@@ -245,11 +269,9 @@ class MeasuredParameter(sympy.Symbol):
         regref (RegRef): register reference responsible for storing the measurement result
     """
 
-    def __new__(cls, *args):
-        # do not pass args to sympy.Basic.__new__ so they do not end up in self._args
-        obj = super().__new__(cls, 'q'+str(args[0].ind))
-        #obj = super().__new__(cls)
-        return obj
+    def __new__(cls, regref):
+        # sympy.Basic.__new__ wants a name, other arguments must not end up in self._args
+        return super().__new__(cls, 'q'+str(regref.ind))
 
     def __init__(self, regref):
         if not regref.active:
