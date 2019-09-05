@@ -111,6 +111,13 @@ Parameter classes
    FreeParameter
 
 
+Exceptions
+----------
+
+.. autosummary::
+   ParameterError
+
+
 Code details
 ~~~~~~~~~~~~
 
@@ -153,6 +160,11 @@ class ParameterError(RuntimeError):
     """
 
 
+def is_object_array(p):
+    """Returns True iff p is an object array."""
+    return isinstance(p, np.ndarray) and p.dtype == object
+
+
 def par_evaluate(params):
     """Evaluate a parameter sequence.
 
@@ -174,7 +186,7 @@ def par_evaluate(params):
         params = [params]
 
     def do_evaluate(p):
-        if isinstance(p, np.ndarray):
+        if is_object_array(p):
             return np.array([do_evaluate(k) for k in p])
 
         if not par_is_symbolic(p):
@@ -195,7 +207,7 @@ def par_evaluate(params):
                 return int(p)
             return float(p)
 
-        # using lambdify we can also substitute numpy arrays for the atoms
+        # using lambdify we can also substitute np.ndarrays and tf.Tensors for the atoms
         atoms = list(p.atoms(MeasuredParameter, FreeParameter))
         func = sympy.lambdify(atoms, p, 'numpy')
         vals = [k._eval_evalf(None) for k in atoms]
@@ -209,9 +221,10 @@ def par_evaluate(params):
 
 def par_is_symbolic(p):
     """Returns True iff p is a symbolic parameter instance.
+
+    An array is symbolic if any of its elements are.
     """
-    if isinstance(p, np.ndarray):
-        # an array is symbolic if any of its elements are
+    if is_object_array(p):
         return np.any([par_is_symbolic(k) for k in p])
     return isinstance(p, sympy.Basic)
 
@@ -229,12 +242,14 @@ def par_regref_deps(p):
         set[RegRef]: RegRefs the parameter depends on
     """
     ret = set()
-    if not par_is_symbolic(p):
-        return ret
-
-    # p is a Sympy expression, possibly containing measured parameters
-    for k in p.atoms(MeasuredParameter):
-        ret.add(k.regref)
+    if is_object_array(p):
+        # p is an object array, possibly containing symbols
+        for k in p:
+            ret.update(par_regref_deps(k))
+    elif isinstance(p, sympy.Basic):
+        # p is a Sympy expression, possibly containing measured parameters
+        for k in p.atoms(MeasuredParameter):
+            ret.add(k.regref)
     return ret
 
 

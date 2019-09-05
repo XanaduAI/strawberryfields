@@ -90,7 +90,6 @@ class TestOneModeSymbolic:
         val = q[0].val
         assert isinstance(val, tf.Tensor)
 
-    @pytest.mark.broken('cannot bind TF objects to free params for now')
     def test_eng_run_with_session_and_feed_dict(self, setup_eng, batch_size, cutoff, tol):
         """Tests whether passing a tf Session and feed_dict
         through `eng.run` leads to proper numerical simulation."""
