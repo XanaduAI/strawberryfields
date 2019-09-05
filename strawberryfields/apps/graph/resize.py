@@ -19,16 +19,15 @@ Graph resizing
 
 .. currentmodule:: strawberryfields.apps.graph.resize
 
-This module provides functionality for resizing of subgraphs. Samples from
-:func:`~strawberryfields.apps.sample.quantum_sampler` have a variable number of clicks (
-equivalently, the number of ones for samples with threshold detection). This results in subgraphs of
-a random size in :func:`~strawberryfields.apps.graph.sample.dense_subgraph_sampler_gbs`.
-However, some algorithms may want to work with subgraphs of a fixed size, necessitating the
-resizing of sample subgraphs.
+This module provides functionality for resizing of subgraphs. Subgraph resizing is used in
+algorithms for finding dense subgraphs and maximum cliques for the following elements:
 
-Resizing functionality is provided by the :func:`resize_subgraphs` function, allowing the user to
-make use of different methods for resizing. The available methods are specified in
-:func:`resize_subgraphs`.
+- Samples from GBS have a variable number of clicks, resulting in subgraph samples of variable
+  size (functionality provided by :func:`~.sample_subgraphs`). Resizing can be used to realize a
+  certain property, such as to reach a desired size (see :func:`resize_subgraphs`) or to resize
+  to a clique (see :func:`clique_shrink`).
+- Heuristic algorithms can use graph resizing to explore the search space, for example growing and
+  swapping a clique (see :func:`clique_grow` and :func:`clique_swap`).
 
 Summary
 -------
