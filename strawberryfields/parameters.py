@@ -115,7 +115,7 @@ Code details
 ~~~~~~~~~~~~
 
 """
-# pylint: disable=too-many-ancestors,unused-import
+# pylint: disable=too-many-ancestors,unused-argument,protected-access
 
 from collections.abc import Sequence
 import functools
@@ -210,6 +210,9 @@ def par_evaluate(params):
 def par_is_symbolic(p):
     """Returns True iff p is a symbolic parameter instance.
     """
+    if isinstance(p, np.ndarray):
+        # an array is symbolic if any of its elements are
+        return np.any([par_is_symbolic(k) for k in p])
     return isinstance(p, sympy.Basic)
 
 
@@ -244,9 +247,12 @@ def par_str(p):
     Returns:
         str: string representation
     """
+    if isinstance(p, np.ndarray):
+        np.set_printoptions(precision=4)
+        return str(p)
     if par_is_symbolic(p):
         return str(p)
-    return '{:.4g}'.format(p)  # numeric parameters
+    return '{:.4g}'.format(p)  # scalar parameters
 
 
 

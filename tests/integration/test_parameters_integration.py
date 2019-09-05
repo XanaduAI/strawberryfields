@@ -23,7 +23,7 @@ import numpy as np
 
 import strawberryfields.program_utils as pu
 from strawberryfields import ops
-from strawberryfields.parameters import ParameterError
+from strawberryfields.parameters import ParameterError, parfuncs as pf
 
 
 # ops.Fock requires an integer parameter
@@ -38,6 +38,7 @@ scalar_arg_preparations = (
 testset = ops.one_args_gates + ops.two_args_gates + ops.channels + scalar_arg_preparations
 
 
+
 def test_free_parameters(setup_eng, tol):
     """Programs with free parameters."""
 
@@ -45,6 +46,7 @@ def test_free_parameters(setup_eng, tol):
     x = prog.args('x')  # free parameter
     with prog.context as q:
         ops.Dgate(x) | q
+        ops.Sgate(-1.2 * x * pf.sin(x**2 - 0.1)) | q
 
     with pytest.raises(ParameterError, match="Unknown free parameter"):
         eng.run(prog, args={'foo': 1.0})
