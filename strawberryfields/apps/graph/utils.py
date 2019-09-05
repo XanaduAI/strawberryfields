@@ -210,7 +210,7 @@ def c_0(clique: list, graph: nx.Graph):
 
 def c_1(clique: list, graph: nx.Graph):
     """Generates the set :math:`C_1` of nodes that are connected to all but one of the nodes in
-    the input clique subgraph
+    the input clique subgraph.
 
     The set :math:`C_1` is defined in :cite:`pullan2006phased` and is used to determine outside
     nodes that can be swapped with clique nodes to create a new clique.
@@ -227,8 +227,8 @@ def c_1(clique: list, graph: nx.Graph):
         graph (nx.Graph): the input graph
 
     Returns:
-       list[tuple(int)]: A list of tuples. The first node in the tuple is the node in the clique and the
-       second node is the outside node it can be swapped with.
+       list[tuple(int)]: A list of tuples. The first node in the tuple is the node in the clique
+       and the second node is the outside node it can be swapped with.
    """
     if not is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
