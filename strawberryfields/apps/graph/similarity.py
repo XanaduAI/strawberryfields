@@ -25,8 +25,21 @@ Summary
 -------
 
 .. autosummary::
+    sample_to_orbit
 
 
 Code details
 ^^^^^^^^^^^^
 """
+
+
+def sample_to_orbit(sample: list) -> list:
+    """Provides the orbit corresponding to a given sample.
+
+    Args:
+        sample (list[int]): a sample from GBS
+
+    Returns:
+        list[int]: the orbit of the sample
+    """
+    return sorted(sample)
