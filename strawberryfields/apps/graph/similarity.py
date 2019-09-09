@@ -55,7 +55,7 @@ def sample_to_event(sample: list, max_count_per_mode: int) -> list:
     Args:
         sample (list[int]): a sample from GBS
         max_count_per_mode (int): the maximum number of photons counted in any given mode for a
-            sample to categorized as an event. Samples with counts exceeding this value are
+            sample to be categorized as an event. Samples with counts exceeding this value are
             attributed the event ``None``.
 
     Returns:
