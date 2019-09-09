@@ -49,7 +49,7 @@ from strawberryfields.apps.graph import resize
 
 
 def local_search(clique: list, graph: nx.Graph, iterations, node_select: str = "uniform") -> list:
-    """Use local search algorithm to identify large cliques.
+    """Local search algorithm for identifying large cliques.
 
     This function implements a version of the local search algorithm given in
     :cite:`pullan2006dynamic` and :cite:`pullan2006phased`. It proceeds by iteratively applying
