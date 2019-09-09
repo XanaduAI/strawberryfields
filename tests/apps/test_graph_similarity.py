@@ -26,9 +26,10 @@ pytestmark = pytest.mark.apps
 @pytest.mark.parametrize("dim", [2, 3])
 def test_sample_to_orbit(dim):
     """Test if function ``similarity.sample_to_orbit`` correctly returns the original orbit after
-    taking all permutations over the orbit. The starting orbit is a fixed sample of a repetion of
-    2's, followed by a repetition of 1's and a repetition of 0's - each repeated ``dim`` times."""
-    sorted_sample = [2] * dim + [1] * dim + [0] * dim
+    taking all permutations over the orbit. The starting orbit is a fixed repetition of 2's,
+    followed by a repetition of 1's, each repeated ``dim`` times, and in a system of ``3 * dim``
+    modes."""
     orbit = [2] * dim + [1] * dim
+    sorted_sample = [2] * dim + [1] * dim + [0] * dim
     permutations = itertools.permutations(sorted_sample)
     assert all([similarity.sample_to_orbit(p) == orbit for p in permutations])
