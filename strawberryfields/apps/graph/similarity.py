@@ -19,14 +19,14 @@ Graph similarity
 
 .. currentmodule:: strawberryfields.apps.graph.similarity
 
-Functionality for calculating feature vectors of graphs using GBS
+Functionality for calculating feature vectors of graphs using GBS.
 
 Summary
 -------
 
 .. autosummary::
     sample_to_orbit
-
+    sample_to_event
 
 Code details
 ^^^^^^^^^^^^
@@ -43,3 +43,21 @@ def sample_to_orbit(sample: list) -> list:
         list[int]: the orbit of the sample
     """
     return sorted(sample)
+
+
+def sample_to_event(sample: list, max_count_per_mode: int) -> list:
+    """Provides the event corresponding to a given sample.
+
+    Args:
+        sample (list[int]): a sample from GBS
+        max_count_per_mode (int): the maximum number of photons counted in any given mode for a
+            sample to categorized as an event. Samples with counts exceeding this value are
+            attributed the event ``None``.
+
+    Returns:
+        list[int]: the orbit of the sample
+    """
+    if max(sample) <= max_count_per_mode:
+        return sum(sample)
+
+    return None
