@@ -28,7 +28,7 @@ def test_sample_to_orbit(dim):
     """Test if function ``similarity.sample_to_orbit`` correctly returns the original orbit after
     taking all permutations over the orbit. The starting orbit is a fixed sample of a repetion of
     2's, followed by a repetition of 1's and a repetition of 0's - each repeated ``dim`` times."""
-    orbit = [2] * dim + [1] * dim + [0] * dim
-    permutations = itertools.permutations(orbit)
-    permutations_to_orbits = [similarity.sample_to_orbit(p) for p in permutations]
-    assert all([p == orbit for p in permutations_to_orbits])
+    sorted_sample = [2] * dim + [1] * dim + [0] * dim
+    orbit = [2] * dim + [1] * dim
+    permutations = itertools.permutations(sorted_sample)
+    assert all([similarity.sample_to_orbit(p) == orbit for p in permutations])
