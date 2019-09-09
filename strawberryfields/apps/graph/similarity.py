@@ -31,6 +31,7 @@ Summary
 Code details
 ^^^^^^^^^^^^
 """
+from typing import Generator
 
 
 def sample_to_orbit(sample: list) -> list:
@@ -65,3 +66,38 @@ def sample_to_event(sample: list, max_count_per_mode: int) -> list:
         return sum(sample)
 
     return None
+
+
+def orbits(photon_number: int) -> Generator[list, None, None]:
+    """Generate all the possible orbits for a given photon number.
+
+    Provides a generator over the integer partitions of ``photon_number``.
+    Code derived from `website <http://jeromekelleher.net/generating-integer-partitions.html>`__
+    of Jerome Kelleher's, which is based upon Ref. :cite:`kelleher2009generating`.
+
+    Args:
+        photon_number (int): number of photons to generate orbits from
+
+    Returns:
+        Generator[list[int]]: orbits with total photon number adding up to ``photon_number``
+    """
+    a = [0 for _ in range(photon_number + 1)]
+    k = 1
+    y = photon_number - 1
+    while k != 0:
+        x = a[k - 1] + 1
+        k -= 1
+        while 2 * x <= y:
+            a[k] = x
+            y -= x
+            k += 1
+        l = k + 1
+        while x <= y:
+            a[k] = x
+            a[l] = y
+            yield sorted(a[: k + 2], reverse=True)
+            x += 1
+            y -= 1
+        a[k] = x + y
+        y = x + y - 1
+        yield sorted(a[: k + 1], reverse=True)

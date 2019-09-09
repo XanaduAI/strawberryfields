@@ -16,6 +16,7 @@ Unit tests for strawberryfields.apps.graph.similarity
 """
 # pylint: disable=no-self-use,unused-argument,too-many-arguments
 import itertools
+
 import pytest
 
 from strawberryfields.apps.graph import similarity
@@ -33,3 +34,16 @@ def test_sample_to_orbit(dim):
     sorted_sample = [2] * dim + [1] * dim + [0] * dim
     permutations = itertools.permutations(sorted_sample)
     assert all([similarity.sample_to_orbit(p) == orbit for p in permutations])
+
+
+def test_orbits():
+    """Test if function ``similarity.orbits`` correctly returns the integer partitions of 5.
+    This test does not require ``similarity.orbits`` to return the orbits in any specified order."""
+    partition = [[5], [4, 1], [3, 2], [3, 1, 1], [2, 1, 1, 1], [2, 2, 1], [1, 1, 1, 1, 1]]
+    orbits = list(similarity.orbits(5))
+    try:
+        for o in orbits:
+            partition.remove(o)
+    except ValueError:
+        pass
+    assert not partition
