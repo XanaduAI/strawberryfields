@@ -36,13 +36,15 @@ Code details
 def sample_to_orbit(sample: list) -> list:
     """Provides the orbit corresponding to a given sample.
 
+    Orbits are simply a sorting of samples in non-increasing order.
+
     Args:
         sample (list[int]): a sample from GBS
 
     Returns:
         list[int]: the orbit of the sample
     """
-    return sorted(sample)
+    return sorted(sample, reverse=True)
 
 
 def sample_to_event(sample: list, max_count_per_mode: int) -> list:
