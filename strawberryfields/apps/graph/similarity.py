@@ -27,6 +27,7 @@ Summary
 .. autosummary::
     sample_to_orbit
     sample_to_event
+    orbits
 
 Code details
 ^^^^^^^^^^^^
