@@ -154,7 +154,7 @@ def is_clique(graph: nx.Graph) -> bool:
     """Determines if the input graph is a clique. A clique of :math:`n` nodes has exactly :math:`n(
     n-1)/2` edges.
 
-    Example usage:
+    **Example usage:**
 
     >>> graph = nx.complete_graph(10)
     >>> is_clique(graph)
@@ -179,7 +179,7 @@ def c_0(clique: list, graph: nx.Graph):
     The set :math:`C_0` is defined in :cite:`pullan2006phased` and is used to determine nodes
     that can be added to the current clique to grow it into a larger one.
 
-    Example usage:
+    **Example usage:**
 
     >>> graph = nx.complete_graph(10)
     >>> clique = [0, 1, 2, 3, 4]
@@ -215,7 +215,7 @@ def c_1(clique: list, graph: nx.Graph):
     The set :math:`C_1` is defined in :cite:`pullan2006phased` and is used to determine outside
     nodes that can be swapped with clique nodes to create a new clique.
 
-    Example usage:
+    **Example usage:**
 
     >>> graph = nx.wheel_graph(5)
     >>> clique = [0, 1, 2]

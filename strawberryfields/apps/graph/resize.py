@@ -255,7 +255,7 @@ def clique_grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
     supported. Degree-based node selection involves picking the node with the greatest degree,
     with ties settled by uniform random choice.
 
-    Example usage:
+    **Example usage:**
 
     >>> graph = nx.complete_graph(10)
     >>> clique = [0, 1, 2, 3, 4]
@@ -314,7 +314,7 @@ def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
     supported. Degree-based node selection involves picking the node with the greatest degree,
     with ties settled by uniform random choice.
 
-    Example usage:
+    **Example usage:**
 
     >>> graph = nx.wheel_graph(5)
     >>> graph.remove_edge(0, 4)
@@ -366,7 +366,7 @@ def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
     that satisfies :func:`~strawberryfields.apps.graph.utils.is_clique`. Upon each iteration,
     this function selects the node with lowest degree relative to the subgraph and removes it.
 
-    Example usage:
+    **Example usage:**
 
     >>> graph = nx.barbell_graph(4, 0)
     >>> subgraph = [0, 1, 2, 3, 4, 5]
