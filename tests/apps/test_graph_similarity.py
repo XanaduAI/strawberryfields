@@ -47,3 +47,30 @@ def test_orbits():
     except ValueError:
         pass
     assert not partition
+
+
+@pytest.mark.parametrize("dim", [3, 4, 5])
+@pytest.mark.parametrize("max_count_per_mode", [1, 2])
+def test_sample_to_event(dim, max_count_per_mode):
+    """Test if function ``similarity.sample_to_event`` gives the correct set of events when
+    applied to all orbits with a fixed number of photons ``dim``. This test ensures: (i) that the
+    only events returned are either ``dim`` or ``None``; (ii) that orbits exceeding the
+    ``max_count_per_mode`` value are attributed the ``None`` event; and that (iii) that orbits
+    not exceeding the ``max_count_per_mode`` are attributed the event ``dim``."""
+    orbits = list(similarity.orbits(dim))
+    events = [similarity.sample_to_event(o, max_count_per_mode) for o in orbits]
+
+    max_count_correct = True
+    photon_number_correct = True
+
+    for i, e in enumerate(events):
+        if max(orbits[i]) > max_count_per_mode:
+            if e is not None:
+                max_count_correct = False
+        else:
+            if e != dim:
+                photon_number_correct = False
+
+    assert set(events) == {dim, None}
+    assert max_count_correct
+    assert photon_number_correct

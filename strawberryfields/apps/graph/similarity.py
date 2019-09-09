@@ -73,7 +73,7 @@ def orbits(photon_number: int) -> Generator[list, None, None]:
 
     Provides a generator over the integer partitions of ``photon_number``.
     Code derived from `website <http://jeromekelleher.net/generating-integer-partitions.html>`__
-    of Jerome Kelleher's, which is based upon Ref. :cite:`kelleher2009generating`.
+    of Jerome Kelleher's, which is based upon an algorithm from Ref. :cite:`kelleher2009generating`.
 
     Args:
         photon_number (int): number of photons to generate orbits from
