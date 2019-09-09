@@ -173,3 +173,4 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    code/apps/graph.resize
    code/apps/graph.sample
    code/apps/graph.utils
+   code/apps/graph.max_clique
