@@ -15,9 +15,9 @@ r"""
 Maximum clique
 ==============
 
-**Module name:** :mod:`strawberryfields.apps.graph.max_clique`
+**Module name:** :mod:`strawberryfields.gbs.graph.max_clique`
 
-.. currentmodule:: strawberryfields.apps.graph.max_clique
+.. currentmodule:: strawberryfields.gbs.graph.max_clique
 
 This module provides tools for users to identify large cliques in graphs. A clique is a subgraph
 where all nodes are connected to each other. The maximum clique problem is to identify the

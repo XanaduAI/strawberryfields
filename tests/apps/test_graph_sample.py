@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.graph.sample
+Unit tests for strawberryfields.gbs.graph.sample
 """
 # pylint: disable=no-self-use,unused-argument,too-many-arguments
 import networkx as nx
@@ -20,7 +20,7 @@ import pytest
 
 from strawberryfields.apps import g_sample
 
-pytestmark = pytest.mark.apps
+pytestmark = pytest.mark.gbs
 
 quantum_samples = [
     [0, 1, 1, 1, 1, 1],

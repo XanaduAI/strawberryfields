@@ -15,9 +15,9 @@ r"""
 Sampling functions
 ==================
 
-**Module name:** :mod:`strawberryfields.apps.sample`
+**Module name:** :mod:`strawberryfields.gbs.sample`
 
-.. currentmodule:: strawberryfields.apps.sample
+.. currentmodule:: strawberryfields.gbs.sample
 
 This module provides functionality for generating samples from both a quantum device and the
 uniform distribution.

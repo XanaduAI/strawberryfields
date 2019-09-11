@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.graph.max_clique
+Unit tests for strawberryfields.gbs.graph.max_clique
 """
 # pylint: disable=no-self-use,unused-argument
 import pytest
@@ -21,7 +21,7 @@ import numpy as np
 
 from strawberryfields.apps import max_clique, resize
 
-pytestmark = pytest.mark.apps
+pytestmark = pytest.mark.gbs
 
 
 def patch_random_choice(x):

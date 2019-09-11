@@ -15,9 +15,9 @@ r"""
 Graph functions
 ===============
 
-**Module name:** :mod:`strawberryfields.apps.graph.utils`
+**Module name:** :mod:`strawberryfields.gbs.graph.utils`
 
-.. currentmodule:: strawberryfields.apps.graph.utils
+.. currentmodule:: strawberryfields.gbs.graph.utils
 
 This module provides some ancillary functions for dealing with graphs. This includes graph
 validation functions such as :func:`is_undirected`, :func:`validate_graph` and :func:`is_subgraph`;

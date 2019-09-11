@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.sample
+Unit tests for strawberryfields.gbs.sample
 """
 # pylint: disable=no-self-use,unused-argument,protected-access
 import numpy as np
@@ -21,7 +21,7 @@ import pytest
 
 from strawberryfields.apps import sample, utils
 
-pytestmark = pytest.mark.apps
+pytestmark = pytest.mark.gbs
 
 
 @pytest.fixture()

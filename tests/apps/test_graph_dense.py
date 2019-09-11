@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.graph.dense
+Unit tests for strawberryfields.gbs.graph.dense
 """
 # pylint: disable=no-self-use,unused-argument
 import numpy as np
@@ -21,7 +21,7 @@ import pytest
 
 from strawberryfields.apps import resize, dense, g_sample
 
-pytestmark = pytest.mark.apps
+pytestmark = pytest.mark.gbs
 
 
 samples_subgraphs = np.array(

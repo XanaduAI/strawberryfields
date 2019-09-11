@@ -15,9 +15,9 @@ r"""
 Graph resizing
 ==============
 
-**Module name:** :mod:`strawberryfields.apps.graph.resize`
+**Module name:** :mod:`strawberryfields.gbs.graph.resize`
 
-.. currentmodule:: strawberryfields.apps.graph.resize
+.. currentmodule:: strawberryfields.gbs.graph.resize
 
 This module provides functionality for resizing of subgraphs. Subgraph resizing is used in
 algorithms for finding dense subgraphs and maximum cliques for the following elements:
@@ -244,7 +244,7 @@ def clique_grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
     """Iteratively adds new nodes to the input clique to generate a larger clique.
 
     Each iteration involves calculating the set :math:`C_0` (provided by the function
-    :func:`~strawberryfields.apps.graph.utils.c_0`) with respect to the current clique. This set
+    :func:`~strawberryfields.gbs.graph.utils.c_0`) with respect to the current clique. This set
     represents the nodes in the rest of the graph that are connected to all of the nodes in the
     current clique. Therefore, adding any of the nodes in :math:`C_0` will create a larger clique.
     This function proceeds by repeatedly evaluating :math:`C_0` and selecting and adding a node
@@ -307,7 +307,7 @@ def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
     connected to all but one of the nodes in the clique. If this set is not empty, this function
     randomly picks a node and swaps it with the corresponding node in the clique that is not
     connected to it. The set :math:`C_1` and corresponding nodes in the clique are provided by the
-    :func:`~strawberryfields.apps.graph.utils.c_1` function.
+    :func:`~strawberryfields.gbs.graph.utils.c_1` function.
 
     Whenever there are multiple nodes within :math:`C_1`, one must choose which node to add to
     the growing clique. This function allows a method of choosing nodes to be set with the
@@ -364,7 +364,7 @@ def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
     """Shrinks an input subgraph until it forms a clique.
 
     Proceeds by removing nodes in the input subgraph one at a time until the result is a clique
-    that satisfies :func:`~strawberryfields.apps.graph.utils.is_clique`. Upon each iteration,
+    that satisfies :func:`~strawberryfields.gbs.graph.utils.is_clique`. Upon each iteration,
     this function selects the node with lowest degree relative to the subgraph and removes it.
 
     **Example usage:**

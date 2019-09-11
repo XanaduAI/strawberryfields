@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.graph.resize
+Unit tests for strawberryfields.gbs.graph.resize
 """
 # pylint: disable=no-self-use,unused-argument
 import functools
@@ -23,7 +23,7 @@ import pytest
 
 from strawberryfields.apps import resize, utils
 
-pytestmark = pytest.mark.apps
+pytestmark = pytest.mark.gbs
 
 subgraphs = [
     [1, 2, 3, 4, 5],
@@ -233,7 +233,7 @@ class TestGreedyDegree:
 
 @pytest.mark.parametrize("dim", range(4, 10))
 class TestCliqueGrow:
-    """Tests for the function ``strawberryfields.apps.graph.resize.clique_grow``"""
+    """Tests for the function ``strawberryfields.gbs.graph.resize.clique_grow``"""
 
     def test_grow_maximal(self, dim):
         """Test if function grows to expected maximal graph and then stops. The chosen graph is
@@ -302,7 +302,7 @@ class TestCliqueGrow:
 
 @pytest.mark.parametrize("dim", range(5, 10))
 class TestCliqueSwap:
-    """Tests for the function ``strawberryfields.apps.graph.resize.clique_swap``"""
+    """Tests for the function ``strawberryfields.gbs.graph.resize.clique_swap``"""
 
     def test_swap(self, dim):
         """Test if function performs correct swap operation. Input is a complete graph with a
