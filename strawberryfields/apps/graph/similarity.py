@@ -41,7 +41,7 @@ def sample_to_orbit(sample: list) -> list:
     Orbits are simply a sorting of samples in non-increasing order with the zeros at the end
     removed.
 
-    Example usage:
+    **Example usage:**
 
     >>> sample = [1, 2, 0, 0, 1, 1, 0, 3]
     >>> sample_to_orbit(sample)
@@ -60,7 +60,7 @@ def sample_to_orbit(sample: list) -> list:
 def sample_to_event(sample: list, max_count_per_mode: int) -> Union[int, None]:
     """Provides the event corresponding to a given sample.
 
-    Example usage:
+    **Example usage:**
 
     >>> sample = [1, 2, 0, 0, 1, 1, 0, 3]
     >>> sample_to_event(sample, 4)
@@ -91,7 +91,7 @@ def orbits(photon_number: int) -> Generator[list, None, None]:
     Code derived from `website <http://jeromekelleher.net/generating-integer-partitions.html>`__
     of Jerome Kelleher's, which is based upon an algorithm from Ref. :cite:`kelleher2009generating`.
 
-    Example usage:
+    **Example usage:**
 
     >>> o = orbits(5)
     >>> list(o)
