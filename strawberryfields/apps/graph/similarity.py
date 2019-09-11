@@ -34,7 +34,6 @@ Code details
 """
 from typing import Generator
 from random import shuffle, choice
-import numpy as np
 
 
 def sample_to_orbit(sample: list) -> list:
@@ -147,14 +146,16 @@ def uniform_sample_orbit(orbit: list, modes: int) -> list:
 
     """
     if modes < len(orbit):
-        raise ValueError('Number of modes cannot be smaller than length of orbit')
+        raise ValueError("Number of modes cannot be smaller than length of orbit")
 
-    sample = orbit + [0]*(modes-len(orbit))
+    sample = orbit + [0] * (modes - len(orbit))
     shuffle(sample)
     return sample
 
 
-def uniform_sample_event(photon_number: int, max_count_per_mode: int, modes: int,) -> list:
+def uniform_sample_event(
+    photon_number: int, max_count_per_mode: int, modes: int
+) -> list:
     """
     Generates a sample selected uniformly at random from the the specified event.
 
@@ -176,13 +177,17 @@ def uniform_sample_event(photon_number: int, max_count_per_mode: int, modes: int
 
     """
     if max_count_per_mode < 1:
-        raise ValueError('Maximum number of photons per mode must be equal or greater than 1')
+        raise ValueError(
+            "Maximum number of photons per mode must be equal or greater than 1"
+        )
 
-    if max_count_per_mode*modes < photon_number:
-        raise ValueError("""No valid samples can be generated. 
-        Consider increasing the max_count_per_mode or reducing the number of photons.""")
+    if max_count_per_mode * modes < photon_number:
+        raise ValueError(
+            """No valid samples can be generated. 
+        Consider increasing the max_count_per_mode or reducing the number of photons."""
+        )
 
-    sample = [0]*modes
+    sample = [0] * modes
     list_modes = list(range(modes))
 
     for _ in range(photon_number):
@@ -192,4 +197,3 @@ def uniform_sample_event(photon_number: int, max_count_per_mode: int, modes: int
             list_modes.remove(j)
 
     return sample
-
