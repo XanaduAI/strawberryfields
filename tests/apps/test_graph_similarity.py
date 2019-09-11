@@ -74,3 +74,60 @@ def test_sample_to_event(dim, max_count_per_mode):
     assert set(events) == {dim, None}
     assert max_count_correct
     assert photon_number_correct
+
+
+@pytest.mark.parametrize("dim", [3, 4, 5])
+class TestUniformOrbit:
+
+    """Tests for the function ``uniform_sample_orbit``"""
+
+    def test_bad_nr_modes(self, dim):
+        """Tests if function raises a ``ValueError`` when the number of modes is smaller than the
+        length of the orbit. The test creates a collision-free orbit of length `dim` and calls
+        the function with `dim-1` modes."""
+        with pytest.raises(ValueError, match='Number of modes cannot be smaller than length '
+                                             'of orbit'):
+            similarity.uniform_sample_orbit([1]*dim, dim-1)
+
+    def test_correct_orbit(self, dim):
+        """Tests if the generated sample belongs to the desired orbit. It generates an orbit with
+        collisions and creates a uniform sample from that orbit. It then checks that the orbit of
+        the sample is the desired one."""
+
+        orbit = [2]*dim + [1]*dim
+        sample = similarity.uniform_sample_orbit(orbit, 3*dim)
+
+        assert similarity.sample_to_orbit(sample) == orbit
+
+
+@pytest.mark.parametrize("dim", [3, 4, 5])
+class TestUniformEvent:
+
+    """Tests for the function ``uniform_sample_event``"""
+
+    def test_max_count_per_mode(self, dim):
+        """Tests if function raises a ``ValueError`` when the maximum number of photons per
+        modes is smaller than 1."""
+        with pytest.raises(ValueError, match='Maximum number of photons per mode must be equal or '
+                                             'greater than 1'):
+            similarity.uniform_sample_event(dim, 0, 2*dim)
+
+    def test_valid_inputs(self, dim):
+        """Tests if the function raises a ``ValueError`` when the arguments to the function
+        cannot lead to a valid event. The test works by giving as input a number of photons that
+        is too large to correspond to a valid event with the given number of modes and maximum
+        count per mode."""
+
+        with pytest.raises(ValueError, match="""No valid samples can be generated. 
+        Consider increasing the max_count_per_mode or reducing the number of photons."""):
+            similarity.uniform_sample_event(dim+1, 1, dim)
+
+    def test_correct_event(self, dim):
+        """Tests if the generated sample belongs to the desired event. The test """
+
+        sample = similarity.uniform_sample_event(dim, 1, 2*dim)
+
+        assert similarity.sample_to_event(sample) == dim
+
+
+
