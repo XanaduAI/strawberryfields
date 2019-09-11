@@ -19,8 +19,7 @@ import pytest
 import networkx as nx
 import numpy as np
 
-from strawberryfields.apps.graph import max_clique
-from strawberryfields.apps.graph import resize
+from strawberryfields.apps import max_clique, resize
 
 pytestmark = pytest.mark.apps
 

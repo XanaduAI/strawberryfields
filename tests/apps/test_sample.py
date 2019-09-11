@@ -19,8 +19,7 @@ import numpy as np
 import strawberryfields as sf
 import pytest
 
-from strawberryfields.apps import sample
-from strawberryfields.apps.graph import utils
+from strawberryfields.apps import sample, utils
 
 pytestmark = pytest.mark.apps
 

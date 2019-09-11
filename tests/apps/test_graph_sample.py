@@ -18,7 +18,7 @@ Unit tests for strawberryfields.apps.graph.sample
 import networkx as nx
 import pytest
 
-from strawberryfields.apps.graph import sample
+from strawberryfields.apps import g_sample
 
 pytestmark = pytest.mark.apps
 
@@ -56,7 +56,7 @@ def test_sample_subgraphs_invalid_distribution(graph):
     """Tests if function ``sample.sample_subgraphs`` raises a ``ValueError`` for an
     invalid sampling distribution"""
     with pytest.raises(ValueError, match="Invalid distribution selected"):
-        sample.sample_subgraphs(
+        g_sample.sample_subgraphs(
             graph, nodes=2, samples=10, sample_options={"distribution": ""}
         )
 
@@ -71,7 +71,7 @@ def test_sample_subgraphs_integration(graph, nodes, samples, distribution):
 
     graph = nx.relabel_nodes(graph, lambda x: x ** 2)
     graph_nodes = set(graph.nodes)
-    output_samples = sample.sample_subgraphs(
+    output_samples = g_sample.sample_subgraphs(
         graph=graph,
         nodes=nodes,
         samples=samples,
@@ -89,7 +89,7 @@ class TestToSubgraphs:
     def test_graph(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
         ``quantum_samples``."""
-        assert sample.to_subgraphs(graph, samples=quantum_samples) == subgraphs
+        assert g_sample.to_subgraphs(graph, samples=quantum_samples) == subgraphs
 
     def test_graph_mapped(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
@@ -102,4 +102,4 @@ class TestToSubgraphs:
             sorted([graph_nodes[i] for i in subgraph]) for subgraph in subgraphs
         ]
 
-        assert sample.to_subgraphs(graph, samples=quantum_samples) == subgraphs_mapped
+        assert g_sample.to_subgraphs(graph, samples=quantum_samples) == subgraphs_mapped

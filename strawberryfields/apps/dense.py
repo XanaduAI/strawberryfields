@@ -60,8 +60,8 @@ from typing import Tuple, Optional
 
 import networkx as nx
 
-from strawberryfields.apps.graph import resize, sample, utils
-from strawberryfields.apps.graph.utils import graph_type
+from strawberryfields.apps import resize, utils, g_sample
+from strawberryfields.apps.utils import graph_type
 from strawberryfields.apps.sample import BACKEND_DEFAULTS
 
 
@@ -158,7 +158,7 @@ def random_search(
     """
     options = {**OPTIONS_DEFAULTS, **(options or {})}
 
-    samples = sample.sample_subgraphs(
+    samples = g_sample.sample_subgraphs(
         graph=graph,
         nodes=nodes,
         samples=iterations,
@@ -184,7 +184,7 @@ OPTIONS_DEFAULTS = {
     "heuristic": {"method": random_search},
     "backend": BACKEND_DEFAULTS,
     "resize": resize.RESIZE_DEFAULTS,
-    "sample": sample.SAMPLE_DEFAULTS,
+    "sample": g_sample.SAMPLE_DEFAULTS,
 }
 """dict[str, dict[str, Any]]: Options for dense subgraph identification heuristics. Composed of a
 dictionary of dictionaries with the first level specifying the option type, selected from keys

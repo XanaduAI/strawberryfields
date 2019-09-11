@@ -53,7 +53,7 @@ import itertools
 import networkx as nx
 import numpy as np
 
-from strawberryfields.apps.graph import utils
+from strawberryfields.apps import utils
 
 RESIZE_DEFAULTS = {"method": "greedy-density"}
 """dict[str, Any]: Dictionary to specify default parameters of options for resizing

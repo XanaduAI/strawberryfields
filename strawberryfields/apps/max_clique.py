@@ -45,7 +45,7 @@ Code details
 """
 import networkx as nx
 
-from strawberryfields.apps.graph import resize
+from strawberryfields.apps import resize
 
 
 def local_search(clique: list, graph: nx.Graph, iterations, node_select: str = "uniform") -> list:
