@@ -1,2 +1,2 @@
-.. automodule:: strawberryfields.apps.graph.max_clique
+.. automodule:: strawberryfields.gbs.graph.max_clique
     :members:

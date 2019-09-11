@@ -1,2 +1,2 @@
-.. automodule:: strawberryfields.apps.sample
+.. automodule:: strawberryfields.gbs.sample
     :members:

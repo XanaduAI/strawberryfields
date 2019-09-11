@@ -51,7 +51,7 @@ from typing import Optional
 import numpy as np
 import strawberryfields as sf
 
-from strawberryfields.apps import utils
+from strawberryfields.gbs import utils
 
 QUANTUM_BACKENDS = ("gaussian",)
 """tuple[str]: Available quantum backends for sampling."""

@@ -60,9 +60,9 @@ from typing import Tuple, Optional
 
 import networkx as nx
 
-from strawberryfields.apps import resize, utils, g_sample
-from strawberryfields.apps.utils import graph_type
-from strawberryfields.apps.sample import BACKEND_DEFAULTS
+from strawberryfields.gbs import resize, utils, g_sample
+from strawberryfields.gbs.utils import graph_type
+from strawberryfields.gbs.sample import BACKEND_DEFAULTS
 
 
 def find_dense(
