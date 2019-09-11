@@ -49,7 +49,7 @@ from strawberryfields.apps.graph import resize
 
 
 def local_search(clique: list, graph: nx.Graph, iterations, node_select: str = "uniform") -> list:
-    """Use local search algorithm to identify large cliques.
+    """Local search algorithm for identifying large cliques.
 
     This function implements a version of the local search algorithm given in
     :cite:`pullan2006dynamic` and :cite:`pullan2006phased`. It proceeds by iteratively applying
@@ -80,7 +80,7 @@ def local_search(clique: list, graph: nx.Graph, iterations, node_select: str = "
     of iterations has been carried out or when a dead end has been reached. The function reaches
     a dead end when it is unable to perform any new swaps or growth.
 
-    Example usage:
+    **Example usage:**
 
     >>> graph = nx.lollipop_graph(4, 1)
     >>> graph.add_edge(4, 2)

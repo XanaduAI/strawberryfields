@@ -154,7 +154,7 @@ def is_clique(graph: nx.Graph) -> bool:
     """Determines if the input graph is a clique. A clique of :math:`n` nodes has exactly :math:`n(
     n-1)/2` edges.
 
-    Example usage:
+    **Example usage:**
 
     >>> graph = nx.complete_graph(10)
     >>> is_clique(graph)
@@ -179,7 +179,7 @@ def c_0(clique: list, graph: nx.Graph):
     The set :math:`C_0` is defined in :cite:`pullan2006phased` and is used to determine nodes
     that can be added to the current clique to grow it into a larger one.
 
-    Example usage:
+    **Example usage:**
 
     >>> graph = nx.complete_graph(10)
     >>> clique = [0, 1, 2, 3, 4]
@@ -210,12 +210,12 @@ def c_0(clique: list, graph: nx.Graph):
 
 def c_1(clique: list, graph: nx.Graph):
     """Generates the set :math:`C_1` of nodes that are connected to all but one of the nodes in
-    the input clique subgraph
+    the input clique subgraph.
 
     The set :math:`C_1` is defined in :cite:`pullan2006phased` and is used to determine outside
     nodes that can be swapped with clique nodes to create a new clique.
 
-    Example usage:
+    **Example usage:**
 
     >>> graph = nx.wheel_graph(5)
     >>> clique = [0, 1, 2]
@@ -227,8 +227,8 @@ def c_1(clique: list, graph: nx.Graph):
         graph (nx.Graph): the input graph
 
     Returns:
-       list[tuple(int)]: A list of tuples. The first node in the tuple is the node in the clique and the
-       second node is the outside node it can be swapped with.
+       list[tuple(int)]: A list of tuples. The first node in the tuple is the node in the clique
+       and the second node is the outside node it can be swapped with.
    """
     if not is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
