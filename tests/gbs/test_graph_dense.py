@@ -19,7 +19,7 @@ import numpy as np
 import networkx as nx
 import pytest
 
-from strawberryfields.apps import resize, dense, g_sample
+from strawberryfields.gbs import resize, dense, g_sample
 
 pytestmark = pytest.mark.gbs
 

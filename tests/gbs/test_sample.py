@@ -19,7 +19,7 @@ import numpy as np
 import strawberryfields as sf
 import pytest
 
-from strawberryfields.apps import sample, utils
+from strawberryfields.gbs import sample, utils
 
 pytestmark = pytest.mark.gbs
 

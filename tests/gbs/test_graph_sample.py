@@ -18,7 +18,7 @@ Unit tests for strawberryfields.gbs.graph.sample
 import networkx as nx
 import pytest
 
-from strawberryfields.apps import g_sample
+from strawberryfields.gbs import g_sample
 
 pytestmark = pytest.mark.gbs
 

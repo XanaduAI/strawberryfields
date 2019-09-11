@@ -20,7 +20,7 @@ import numpy as np
 import networkx as nx
 import pytest
 
-from strawberryfields.apps import utils
+from strawberryfields.gbs import utils
 
 pytestmark = pytest.mark.gbs
 
