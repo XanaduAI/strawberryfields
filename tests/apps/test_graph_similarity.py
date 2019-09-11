@@ -24,16 +24,21 @@ from strawberryfields.apps.graph import similarity
 pytestmark = pytest.mark.apps
 
 
-@pytest.mark.parametrize("dim", [2, 3])
+@pytest.mark.parametrize("dim", [2, 3, 4])
 def test_sample_to_orbit(dim):
     """Test if function ``similarity.sample_to_orbit`` correctly returns the original orbit after
-    taking all permutations over the orbit. The starting orbit is a fixed repetition of 2's,
-    followed by a repetition of 1's, each repeated ``dim`` times, and in a system of ``3 * dim``
-    modes."""
-    orbit = [2] * dim + [1] * dim
-    sorted_sample = [2] * dim + [1] * dim + [0] * dim
-    permutations = itertools.permutations(sorted_sample)
-    assert all([similarity.sample_to_orbit(p) == orbit for p in permutations])
+    taking all permutations over the orbit. The starting orbits are all orbits for a fixed photon
+    number ``dim``."""
+    orbits = similarity.orbits(dim)
+    checks = []
+    for o in orbits:
+        sorted_sample = o.copy()
+        sorted_sample_len = len(sorted_sample)
+        if sorted_sample_len != dim:
+            sorted_sample += [0] * sorted_sample_len
+        permutations = itertools.permutations(sorted_sample)
+        checks.append(all([similarity.sample_to_orbit(p) == o for p in permutations]))
+    assert all(checks)
 
 
 class TestOrbits:

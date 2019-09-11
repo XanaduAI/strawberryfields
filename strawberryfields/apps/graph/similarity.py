@@ -32,8 +32,7 @@ Summary
 Code details
 ^^^^^^^^^^^^
 """
-from typing import Generator
-from random import shuffle, choice
+from typing import Generator, Union
 
 
 def sample_to_orbit(sample: list) -> list:
@@ -58,7 +57,7 @@ def sample_to_orbit(sample: list) -> list:
     return [c for c in sorted_sample if c != 0]
 
 
-def sample_to_event(sample: list, max_count_per_mode: int) -> list:
+def sample_to_event(sample: list, max_count_per_mode: int) -> Union[int, None]:
     """Provides the event corresponding to a given sample.
 
     Example usage:
