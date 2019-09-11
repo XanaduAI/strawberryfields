@@ -33,6 +33,7 @@ Code details
 ^^^^^^^^^^^^
 """
 from typing import Generator
+from random import shuffle, choice
 
 
 def sample_to_orbit(sample: list) -> list:
