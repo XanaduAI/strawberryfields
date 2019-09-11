@@ -36,17 +36,32 @@ def test_sample_to_orbit(dim):
     assert all([similarity.sample_to_orbit(p) == orbit for p in permutations])
 
 
-def test_orbits():
-    """Test if function ``similarity.orbits`` correctly returns the integer partitions of 5.
-    This test does not require ``similarity.orbits`` to return the orbits in any specified order."""
-    partition = [[5], [4, 1], [3, 2], [3, 1, 1], [2, 1, 1, 1], [2, 2, 1], [1, 1, 1, 1, 1]]
-    orbits = list(similarity.orbits(5))
-    try:
-        for o in orbits:
-            partition.remove(o)
-    except ValueError:
-        pass
-    assert not partition
+class TestOrbits:
+    """Tests for the function ``strawberryfields.apps.graph.similarity.orbits``"""
+
+    @pytest.mark.parametrize("dim", [2, 3, 4, 5])
+    def test_orbit_generator(self, dim):
+        """Test if function generates valid orbits, i.e., that are lists that sum to ``dim`` and
+        are sorted in descending order."""
+
+        def _check_orbit(orbit, val):
+            """Checks if an input ``orbit`` has a sum equal to ``val`` and is a sorted list in
+            descending order."""
+            return sum(orbit) == val and orbit == sorted(orbit, reverse=True)
+
+        assert all([_check_orbit(o, dim) for o in similarity.orbits(dim)])
+
+    def test_orbits(self):
+        """Test if function returns all the integer partitions of 5. This test does not
+        require ``similarity.orbits`` to return the orbits in any specified order."""
+        partition = [[5], [4, 1], [3, 2], [3, 1, 1], [2, 1, 1, 1], [2, 2, 1], [1, 1, 1, 1, 1]]
+        orbits = list(similarity.orbits(5))
+        try:
+            for o in orbits:
+                partition.remove(o)
+        except ValueError:
+            pass
+        assert not partition
 
 
 @pytest.mark.parametrize("dim", [3, 4, 5])
