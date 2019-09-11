@@ -26,6 +26,7 @@ algorithms for finding dense subgraphs and maximum cliques for the following ele
   size (functionality provided by :func:`~.sample_subgraphs`). Resizing can be used to realize a
   certain property, such as to reach a desired size (see :func:`resize_subgraphs`) or to resize
   to a clique (see :func:`clique_shrink`).
+
 - Heuristic algorithms can use graph resizing to explore the search space, for example growing and
   swapping a clique (see :func:`clique_grow` and :func:`clique_swap`).
 
