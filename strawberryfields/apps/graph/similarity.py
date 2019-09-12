@@ -53,8 +53,7 @@ def sample_to_orbit(sample: list) -> list:
     Returns:
         list[int]: the orbit of the sample
     """
-    sorted_sample = sorted(sample, reverse=True)
-    return [c for c in sorted_sample if c != 0]
+    return sorted(filter(None, sample), reverse=True)
 
 
 def sample_to_event(sample: list, max_count_per_mode: int) -> Union[int, None]:
