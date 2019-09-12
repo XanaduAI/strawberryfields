@@ -21,27 +21,27 @@ import networkx as nx
 import numpy as np
 import pytest
 
-from strawberryfields.gbs import clique, resize
+from strawberryfields.gbs import clique, utils
 
 pytestmark = pytest.mark.gbs
 
 
-def patch_random_choice(x):
+def patch_random_choice(x, element):
     """Dummy function for ``np.random.choice`` to make output deterministic. This dummy function
     just returns the element of ``x`` specified by ``element``."""
     if isinstance(x, int):  # np.random.choice can accept an int or 1D array-like input
-        return 0
+        return element
 
-    return x[0]
+    return x[element]
 
 
-def patch_clique_resize(c, graph, node_select):
+def patch_resize(c, graph, node_select):
     """Dummy function for ``grow`` and ``swap`` to make output unchanged."""
     return c
 
 
 class TestLocalSearch:
-    """Tests for the function ``max_clique.search``"""
+    """Tests for the function ``clique.search``"""
 
     def test_bad_iterations(self):
         """Test if function raises a ``ValueError`` when a non-positive number of iterations is
@@ -60,7 +60,8 @@ class TestLocalSearch:
         c = [0, 1]
 
         with monkeypatch.context() as m:
-            m.setattr(np.random, "choice", patch_random_choice)
+            p = functools.partial(patch_random_choice, element=0)
+            m.setattr(np.random, "choice", p)
             result = clique.search(c, graph, iterations=5)
 
         assert result == [0, 2, 3]
@@ -76,8 +77,8 @@ class TestLocalSearch:
         c = [0, 1, 2]
 
         with monkeypatch.context() as m:
-            m.setattr(resize, "grow", patch_clique_resize)
-            m.setattr(resize, "swap", patch_clique_resize)
+            m.setattr(clique, "grow", patch_resize)
+            m.setattr(clique, "swap", patch_resize)
             result = clique.search(c, graph, iterations=100)
 
         assert result == c
@@ -107,7 +108,7 @@ def patch_random_shuffle(x, reverse):
 
 @pytest.mark.parametrize("dim", range(4, 10))
 class TestCliqueGrow:
-    """Tests for the function ``strawberryfields.gbs.graph.resize.grow``"""
+    """Tests for the function ``strawberryfields.clique.grow``"""
 
     def test_grow_maximal(self, dim):
         """Test if function grows to expected maximal graph and then stops. The chosen graph is
@@ -177,7 +178,7 @@ class TestCliqueGrow:
 
 @pytest.mark.parametrize("dim", range(5, 10))
 class TestCliqueSwap:
-    """Tests for the function ``strawberryfields.gbs.graph.resize.swap``"""
+    """Tests for the function ``strawberryfields.clique.swap``"""
 
     def test_swap(self, dim):
         """Test if function performs correct swap operation. Input is a complete graph with a
@@ -255,7 +256,7 @@ class TestCliqueSwap:
 
 @pytest.mark.parametrize("dim", range(6, 10))
 class TestCliqueShrink:
-    """Tests for the function ``resize.shrink``"""
+    """Tests for the function ``clique.shrink``"""
 
     def test_is_output_clique(self, dim):
         """Test that the output subgraph is a valid clique, in this case the maximum clique
@@ -290,11 +291,11 @@ class TestCliqueShrink:
         wheel."""
         graph = nx.wheel_graph(dim)
         subgraph = graph.nodes()  # subgraph is the entire graph
-        clique = clique.clique_shrink(subgraph, graph)
+        subgraph = clique.shrink(subgraph, graph)
 
-        assert len(clique) == 3
-        assert clique[0] == 0
-        assert clique[1] + 1 == clique[2] or (clique[1] == 1 and clique[2] == dim - 1)
+        assert len(subgraph) == 3
+        assert subgraph[0] == 0
+        assert subgraph[1] + 1 == subgraph[2] or (subgraph[1] == 1 and subgraph[2] == dim - 1)
 
     def test_wheel_graph_tie(self, dim, monkeypatch):
         """Test that output is correct for a wheel graph, whose largest cliques have dimension

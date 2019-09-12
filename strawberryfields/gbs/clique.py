@@ -120,15 +120,15 @@ def search(clique: list, graph: nx.Graph, iterations, node_select: str = "unifor
     if iterations < 1:
         raise ValueError("Number of iterations must be a positive int")
 
-    grow = grow(clique, graph, node_select=node_select)
-    swap = swap(grow, graph, node_select=node_select)
+    grown = grow(clique, graph, node_select=node_select)
+    swapped = swap(grown, graph, node_select=node_select)
 
     iterations -= 1
 
-    if set(grow) == set(swap) or iterations == 0:
-        return swap
+    if set(grown) == set(swapped) or iterations == 0:
+        return swapped
 
-    return search(swap, graph, iterations, node_select)
+    return search(swapped, graph, iterations, node_select)
 
 
 def grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
