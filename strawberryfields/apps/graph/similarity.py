@@ -108,7 +108,7 @@ def orbits(photon_number: int) -> Generator[list, None, None]:
     Returns:
         Generator[list[int]]: orbits with total photon number adding up to ``photon_number``
     """
-    a = [0 for _ in range(photon_number + 1)]
+    a = [0] * (photon_number + 1)
     k = 1
     y = photon_number - 1
     while k != 0:
