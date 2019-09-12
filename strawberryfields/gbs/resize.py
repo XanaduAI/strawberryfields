@@ -15,9 +15,9 @@ r"""
 Graph resizing
 ==============
 
-**Module name:** :mod:`strawberryfields.gbs.graph.resize`
+**Module name:** :mod:`strawberryfields.gbs.resize`
 
-.. currentmodule:: strawberryfields.gbs.graph.resize
+.. currentmodule:: strawberryfields.gbs.resize
 
 This module provides functionality for resizing of subgraphs.
 
@@ -35,8 +35,8 @@ Code details
 ^^^^^^^^^^^^
 """
 
-from typing import Iterable, Optional
 import itertools
+from typing import Iterable, Optional
 
 import networkx as nx
 

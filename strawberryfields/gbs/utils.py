@@ -15,9 +15,9 @@ r"""
 Graph functions
 ===============
 
-**Module name:** :mod:`strawberryfields.gbs.graph.utils`
+**Module name:** :mod:`strawberryfields.gbs.utils`
 
-.. currentmodule:: strawberryfields.gbs.graph.utils
+.. currentmodule:: strawberryfields.gbs.utils
 
 This module provides some ancillary functions for dealing with graphs. This includes graph
 validation functions such as :func:`is_undirected`, :func:`validate_graph` and :func:`is_subgraph`;
@@ -43,7 +43,7 @@ Summary
 Code details
 ^^^^^^^^^^^^
 """
-from typing import Union, Iterable
+from typing import Iterable, Union
 
 import networkx as nx
 import numpy as np

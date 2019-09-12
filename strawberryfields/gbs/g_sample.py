@@ -15,9 +15,9 @@ r"""
 Graph sampling
 ==============
 
-**Module name:** :mod:`strawberryfields.gbs.graph.sample`
+**Module name:** :mod:`strawberryfields.gbs.sample`
 
-.. currentmodule:: strawberryfields.gbs.graph.sample
+.. currentmodule:: strawberryfields.gbs.sample
 
 This module provides functionality for sampling of subgraphs from undirected graphs. The
 :func:`sample_subgraphs` function generates raw samples from
@@ -94,9 +94,7 @@ def sample_subgraphs(
     distribution = sample_options["distribution"]
 
     if distribution == "uniform":
-        s = sample.uniform_sampler(
-            modes=graph.order(), sampled_modes=nodes, samples=samples
-        )
+        s = sample.uniform_sampler(modes=graph.order(), sampled_modes=nodes, samples=samples)
     elif distribution == "gbs":
         postselect = int(sample_options["postselect_ratio"] * nodes)
         backend_options = {**(backend_options or {}), "postselect": postselect}

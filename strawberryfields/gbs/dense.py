@@ -15,9 +15,9 @@ r"""
 Dense subgraph identification
 =============================
 
-**Module name:** :mod:`strawberryfields.gbs.graph.dense`
+**Module name:** :mod:`strawberryfields.gbs.dense`
 
-.. currentmodule:: strawberryfields.gbs.graph.dense
+.. currentmodule:: strawberryfields.gbs.dense
 
 Functions for finding dense subgraphs. The :func:`find_dense` function
 provides approximate solutions to the densest-:math:`k` subgraph problem
@@ -56,13 +56,13 @@ Summary
 Code details
 ^^^^^^^^^^^^
 """
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 import networkx as nx
 
-from strawberryfields.gbs import resize, utils, g_sample
-from strawberryfields.gbs.utils import graph_type
+from strawberryfields.gbs import g_sample, resize, utils
 from strawberryfields.gbs.sample import BACKEND_DEFAULTS
+from strawberryfields.gbs.utils import graph_type
 
 
 def find_dense(
@@ -85,9 +85,9 @@ def find_dense(
     - ``"backend"``: specifying options used by backend quantum samplers; corresponding
       dictionary of options explained further in :mod:`~strawberryfields.gbs.sample`
     - ``"resize"``: specifying options used by resizing method; corresponding dictionary of
-      options explained further in :mod:`~strawberryfields.gbs.graph.resize`
+      options explained further in :mod:`~strawberryfields.gbs.resize`
     - ``"sample"``: specifying options used in sampling; corresponding dictionary of options
-      explained further in :mod:`~strawberryfields.gbs.graph.sample`
+      explained further in :mod:`~strawberryfields.gbs.sample`
 
     If unspecified, a default set of options is adopted for a given option type.
 
@@ -127,10 +127,7 @@ def find_dense(
         method = METHOD_DICT[method]
 
     return method(
-        graph=utils.validate_graph(graph),
-        nodes=nodes,
-        iterations=iterations,
-        options=options,
+        graph=utils.validate_graph(graph), nodes=nodes, iterations=iterations, options=options
     )
 
 
@@ -140,8 +137,8 @@ def random_search(
     """Random search algorithm for finding dense subgraphs of a given size.
 
     The algorithm proceeds by sampling subgraphs according to the
-    :func:`~strawberryfields.gbs.graph.sample.sample_subgraphs`. The resultant subgraphs
-    are resized using :func:`~strawberryfields.gbs.graph.resize.resize_subgraphs` to
+    :func:`~strawberryfields.gbs.sample.sample_subgraphs`. The resultant subgraphs
+    are resized using :func:`~strawberryfields.gbs.resize.resize_subgraphs` to
     be of size ``nodes``. The densest subgraph is then selected among all the resultant
     subgraphs. Specified``options`` must be of the form given in :func:`find_dense`.
 
