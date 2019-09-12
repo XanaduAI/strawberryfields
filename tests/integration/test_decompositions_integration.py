@@ -538,7 +538,7 @@ class TestDecompositionsGaussianGates:
 
     @pytest.mark.backends("fock", "tf")
     def test_S2gate_fock(self, setup_eng, pure, tol):
-        """Test the action of the S2gate gate on vacuum in Fock space"""
+        """Test the action of the S2gate on vacuum in Fock space"""
         if not pure:
             pytest.skip("Test only runs on pure states")
         N = 2
@@ -556,3 +556,78 @@ class TestDecompositionsGaussianGates:
         ) ** (np.arange(n))
         diag_elems[-1] = 0
         assert np.allclose(np.diag(diag_elems), ket, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize('s', np.linspace(0., 0.6, 5))
+    def test_Pgate_decomp_equal(self, setup_eng, s, tol):
+        """Tests that the Pgate gives the same transformation as its decomposition."""
+        eng, prog = setup_eng(1)
+
+        r = np.arccosh(np.sqrt(1 + (s / 2) ** 2))
+        theta = np.arctan(s / 2)
+        phi = -np.sign(s) * np.pi / 2 - theta
+
+        with prog.context as q:
+            ops.Pgate(s) | q
+            # run decomposition with reversed arguments
+            ops.Rgate(-theta) | q
+            ops.Sgate(r, phi + np.pi) | q
+
+        eng.run(prog)
+        assert np.all(eng.backend.is_vacuum(tol))
+
+    @pytest.mark.parametrize('s', np.linspace(0., 0.6, 5))
+    def test_CXgate_decomp_equal(self, setup_eng, s, tol):
+        """Tests that the CXgate gives the same transformation as its decomposition."""
+        eng, prog = setup_eng(2)
+
+        r = np.arcsinh(-s / 2)
+        y = -1 / np.cosh(r)
+        x = -np.tanh(r)
+        theta = np.arctan2(y, x) / 2
+
+        with prog.context as q:
+            ops.CXgate(s) | q
+            # run decomposition with reversed arguments
+            ops.BSgate(-(np.pi / 2 + theta), 0) | q
+            ops.Sgate(r, np.pi) | q[0]
+            ops.Sgate(r, 0) | q[1]
+            ops.BSgate(-theta, 0) | q
+
+        eng.run(prog)
+        assert np.all(eng.backend.is_vacuum(tol))
+
+    @pytest.mark.parametrize('s', np.linspace(0., 0.6, 5))
+    def test_CZgate_decomp_equal(self, setup_eng, s, tol):
+        """Tests that the CZgate gives the same transformation as its decomposition."""
+        eng, prog = setup_eng(2)
+
+        with prog.context as q:
+            ops.CZgate(s) | q
+            # run decomposition with reversed arguments
+            ops.Rgate(-np.pi / 2) | q[1]
+            ops.CXgate(-s) | q
+            ops.Rgate(np.pi / 2) | q[1]
+
+        eng.run(prog)
+        assert np.all(eng.backend.is_vacuum(tol))
+
+    @pytest.mark.parametrize('r', np.linspace(0., 0.6, 5))
+    def test_S2gate_decomp_equal(self, setup_eng, r, tol):
+        """Tests that the S2gate gives the same transformation as its decomposition."""
+        eng, prog = setup_eng(2)
+
+        r = 0.25
+        phi = np.pi / 5
+
+        with prog.context as q:
+            ops.S2gate(r, phi) | q
+            # run decomposition with reversed arguments
+            ops.BSgate(np.pi / 4, 0) | q
+            ops.Sgate(r, phi + np.pi) | q[0]
+            ops.Sgate(r, phi) | q[1]
+            ops.BSgate(-np.pi / 4, 0) | q
+
+        eng.run(prog)
+        assert np.all(eng.backend.is_vacuum(tol))
+
+
