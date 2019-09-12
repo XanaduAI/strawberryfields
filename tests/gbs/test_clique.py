@@ -104,7 +104,7 @@ def patch_random_shuffle(x, reverse):
     reverses ``x`` in place if ``reverse == True`` and does nothing otherwise."""
     if reverse:
         x.reverse()
-    return None
+
 
 @pytest.mark.parametrize("dim", range(4, 10))
 class TestCliqueGrow:
@@ -129,8 +129,7 @@ class TestCliqueGrow:
         graph.remove_edge(dim - 2, dim - 1)
         s = set(range(dim - 2))
         target = s | {dim - 1}
-        assert set(
-            clique.grow(s, graph, node_select="degree")) == target
+        assert set(clique.grow(s, graph, node_select="degree")) == target
 
     def test_grow_maximal_degree_tie(self, dim, monkeypatch):
         """Test if function grows using randomness to break ties during degree-based node

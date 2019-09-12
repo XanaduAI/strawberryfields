@@ -16,8 +16,9 @@ Unit tests for strawberryfields.gbs.graph.utils
 """
 # pylint: disable=no-self-use,protected-access
 import itertools
-import numpy as np
+
 import networkx as nx
+import numpy as np
 import pytest
 
 from strawberryfields.gbs import utils
@@ -62,9 +63,7 @@ class TestValidateGraph:
         adj[1, 0] = 0
         with monkeypatch.context() as m:
             m.setattr(utils, "is_undirected", lambda _: False)
-            with pytest.raises(
-                Exception, match="Input NumPy arrays must be real and symmetric"
-            ):
+            with pytest.raises(Exception, match="Input NumPy arrays must be real and symmetric"):
                 utils.validate_graph(adj)
 
     def test_invalid_adjacency_complex(self, adj, monkeypatch):
@@ -72,9 +71,7 @@ class TestValidateGraph:
         adj = adj * 1j
         with monkeypatch.context() as m:
             m.setattr(utils, "is_undirected", lambda _: True)
-            with pytest.raises(
-                Exception, match="Input NumPy arrays must be real and symmetric"
-            ):
+            with pytest.raises(Exception, match="Input NumPy arrays must be real and symmetric"):
                 utils.validate_graph(adj)
 
     def test_valid_graph(self, adj):
@@ -166,9 +163,7 @@ class TestIsSubgraph:
     def test_invalid_type(self, graph):
         """Test if function raises a ``TypeError`` when fed an invalid subgraph type (i.e.,
         not iterable)."""
-        with pytest.raises(
-            TypeError, match="subgraph and graph.nodes must be iterable"
-        ):
+        with pytest.raises(TypeError, match="subgraph and graph.nodes must be iterable"):
             utils.is_subgraph(None, graph)
 
     def test_valid_subgraphs(self, graph, dim):
