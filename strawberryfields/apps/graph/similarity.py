@@ -38,8 +38,8 @@ from typing import Generator, Union
 def sample_to_orbit(sample: list) -> list:
     """Provides the orbit corresponding to a given sample.
 
-    Orbits are simply a sorting of samples in non-increasing order with the zeros at the end
-    removed.
+    Orbits are simply a sorting of integer photon number samples in non-increasing order with the
+    zeros at the end removed.
 
     **Example usage:**
 
