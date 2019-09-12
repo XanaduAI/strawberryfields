@@ -45,17 +45,17 @@ Clique resizing
 ---------------
 
 Clique resizing can be used in heuristic algorithms to explore the search space. This module
-provides functionality for growing cliques (see :func:`clique_grow`) and for swapping nodes
-within a clique to locally explore the search spare (see :func:`clique_swap`).
+provides functionality for growing cliques (see :func:`grow`) and for swapping nodes
+within a clique to locally explore the search spare (see :func:`swap`).
 
 Subgraphs sampled from GBS are not guaranteed to be cliques. On the other hand, heuristic
 algorithms for finding the maximum clique often need to start with a candidate clique. This
-module allows non-clique subgraphs to be shrunk to cliques with the :func:`clique_shrink` function.
+module allows non-clique subgraphs to be shrunk to cliques with the :func:`shrink` function.
 
 .. autosummary::
-    clique_grow
-    clique_swap
-    clique_shrink
+    grow
+    swap
+    shrink
 
 Code details
 ^^^^^^^^^^^^
@@ -75,13 +75,13 @@ def search(clique: list, graph: nx.Graph, iterations, node_select: str = "unifor
 
     **Growth phase**
 
-    Growth is achieved using the :func:`~.clique_grow` function, which repeatedly evaluates the
+    Growth is achieved using the :func:`~.grow` function, which repeatedly evaluates the
     set :math:`C_0` of nodes in the remainder of the graph that are connected to all nodes in the
     clique, and selects one candidate node from :math:`C_0` to make a larger clique.
 
     **Search phase**
 
-    Plateau search is performed with the :func:`~.clique_swap` function, which evaluates the set
+    Plateau search is performed with the :func:`~.swap` function, which evaluates the set
     :math:`C_1` of nodes in the remainder of the graph that are connected to all but one of the
     nodes in the clique. The function then proceeds to select one candidate from :math:`C_1` and
     swap it with its corresponding node in the clique.
@@ -120,8 +120,8 @@ def search(clique: list, graph: nx.Graph, iterations, node_select: str = "unifor
     if iterations < 1:
         raise ValueError("Number of iterations must be a positive int")
 
-    grow = clique_grow(clique, graph, node_select=node_select)
-    swap = clique_swap(grow, graph, node_select=node_select)
+    grow = grow(clique, graph, node_select=node_select)
+    swap = swap(grow, graph, node_select=node_select)
 
     iterations -= 1
 
@@ -131,7 +131,7 @@ def search(clique: list, graph: nx.Graph, iterations, node_select: str = "unifor
     return search(swap, graph, iterations, node_select)
 
 
-def clique_grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
+def grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
     """Iteratively adds new nodes to the input clique to generate a larger clique.
 
     Each iteration involves calculating the set :math:`C_0` (provided by the function
@@ -151,7 +151,7 @@ def clique_grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
 
     >>> graph = nx.complete_graph(10)
     >>> clique = [0, 1, 2, 3, 4]
-    >>> clique_grow(clique, graph)
+    >>> grow(clique, graph)
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     Args:
@@ -190,7 +190,7 @@ def clique_grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
     return sorted(clique)
 
 
-def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
+def swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
     """If possible, generates a new clique by swapping a node in the input clique with a node
     outside the clique.
 
@@ -211,7 +211,7 @@ def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
     >>> graph = nx.wheel_graph(5)
     >>> graph.remove_edge(0, 4)
     >>> clique = [0, 1, 2]
-    >>> clique_swap(clique, graph)
+    >>> swap(clique, graph)
     [0, 2, 3]
 
     Args:
@@ -251,7 +251,7 @@ def clique_swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> 
     return sorted(clique)
 
 
-def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
+def shrink(subgraph: list, graph: nx.Graph) -> list:
     """Shrinks an input subgraph until it forms a clique.
 
     Proceeds by removing nodes in the input subgraph one at a time until the result is a clique
@@ -262,7 +262,7 @@ def clique_shrink(subgraph: list, graph: nx.Graph) -> list:
 
     >>> graph = nx.barbell_graph(4, 0)
     >>> subgraph = [0, 1, 2, 3, 4, 5]
-    >>> clique_shrink(subgraph, graph)
+    >>> shrink(subgraph, graph)
     [0, 1, 2, 3]
 
     Args:

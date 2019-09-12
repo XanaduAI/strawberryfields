@@ -36,7 +36,7 @@ def patch_random_choice(x):
 
 
 def patch_clique_resize(c, graph, node_select):
-    """Dummy function for ``clique_grow`` and ``clique_swap`` to make output unchanged."""
+    """Dummy function for ``grow`` and ``swap`` to make output unchanged."""
     return c
 
 
@@ -52,7 +52,7 @@ class TestLocalSearch:
     def test_max_iterations(self, monkeypatch):
         """Test if function stops after 5 iterations despite not being in a dead end (i.e., when
         ``grow != swap``). This is achieved by monkeypatching the ``np.random.choice`` call in
-        ``clique_grow`` and ``clique_swap`` so that for a 5-node wheel graph starting as a [0,
+        ``grow`` and ``swap`` so that for a 5-node wheel graph starting as a [0,
         1] node clique, the algorithm simply oscillates between [0, 1, 2] and [0, 2, 3] for each
         iteration of growth & swap. For odd iterations, we get [0, 2, 3]."""
 
@@ -67,8 +67,8 @@ class TestLocalSearch:
 
     def test_dead_end(self, monkeypatch):
         """Test if function stops when in a dead end (i.e., ``grow == swap``) such that no
-        swapping is possible. This is achieved by monkeypatching ``clique_grow`` and
-        ``clique_swap`` so that they simply return the same clique as fed in, which should cause
+        swapping is possible. This is achieved by monkeypatching ``grow`` and
+        ``swap`` so that they simply return the same clique as fed in, which should cause
         the local search algorithm to conclude that it is already in a dead end and return the
         same clique."""
 
@@ -76,8 +76,8 @@ class TestLocalSearch:
         c = [0, 1, 2]
 
         with monkeypatch.context() as m:
-            m.setattr(resize, "clique_grow", patch_clique_resize)
-            m.setattr(resize, "clique_swap", patch_clique_resize)
+            m.setattr(resize, "grow", patch_clique_resize)
+            m.setattr(resize, "swap", patch_clique_resize)
             result = clique.search(c, graph, iterations=100)
 
         assert result == c
@@ -107,15 +107,15 @@ def patch_random_shuffle(x, reverse):
 
 @pytest.mark.parametrize("dim", range(4, 10))
 class TestCliqueGrow:
-    """Tests for the function ``strawberryfields.gbs.graph.resize.clique_grow``"""
+    """Tests for the function ``strawberryfields.gbs.graph.resize.grow``"""
 
     def test_grow_maximal(self, dim):
         """Test if function grows to expected maximal graph and then stops. The chosen graph is
         composed of two fully connected graphs joined together at one node. Starting from the
-        first node, ``clique_grow`` is expected to grow to be the first fully connected graph."""
+        first node, ``grow`` is expected to grow to be the first fully connected graph."""
         graph = nx.barbell_graph(dim, 0)
         s = [0]
-        assert set(clique.clique_grow(s, graph)) == set(range(dim))
+        assert set(clique.grow(s, graph)) == set(range(dim))
 
     def test_grow_maximal_degree(self, dim):
         """Test if function grows to expected maximal graph when degree-based node selection is
@@ -129,7 +129,7 @@ class TestCliqueGrow:
         s = set(range(dim - 2))
         target = s | {dim - 1}
         assert set(
-            clique.clique_grow(s, graph, node_select="degree")) == target
+            clique.grow(s, graph, node_select="degree")) == target
 
     def test_grow_maximal_degree_tie(self, dim, monkeypatch):
         """Test if function grows using randomness to break ties during degree-based node
@@ -138,7 +138,7 @@ class TestCliqueGrow:
         either of the ``dim - 2`` and ``dim - 1`` nodes. As they have the same degree, they should
         be selected randomly with equal probability. This function monkeypatches the
         ``np.random.choice`` call to guarantee that one of the nodes is picked during one run of
-        ``clique_grow`` and the other node is picked during the next run."""
+        ``grow`` and the other node is picked during the next run."""
         graph = nx.complete_graph(dim)
         graph.remove_edge(dim - 2, dim - 1)
         s = set(range(dim - 2))
@@ -148,18 +148,18 @@ class TestCliqueGrow:
 
         with monkeypatch.context() as m:
             m.setattr(np.random, "choice", patch_random_choice_1)
-            c1 = clique.clique_grow(s, graph, node_select="degree")
+            c1 = clique.grow(s, graph, node_select="degree")
 
         with monkeypatch.context() as m:
             m.setattr(np.random, "choice", patch_random_choice_2)
-            c2 = clique.clique_grow(s, graph, node_select="degree")
+            c2 = clique.grow(s, graph, node_select="degree")
 
         assert c1 != c2
 
     def test_input_not_clique(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
         with pytest.raises(ValueError, match="Input subgraph is not a clique"):
-            clique.clique_grow([0, 1], nx.empty_graph(dim))
+            clique.grow([0, 1], nx.empty_graph(dim))
 
     def test_bad_node_select(self, dim):
         """Tests if function raises a ``ValueError`` when input an invalid ``node_select``
@@ -167,17 +167,17 @@ class TestCliqueGrow:
         graph = nx.barbell_graph(dim, 0)
         s = [0]
         with pytest.raises(ValueError, match="Node selection method not recognized"):
-            clique.clique_grow(s, graph, node_select="")
+            clique.grow(s, graph, node_select="")
 
     def test_input_not_subgraph(self, dim):
         """Test if function raises a ``ValueError`` when input is not a subgraph"""
         with pytest.raises(ValueError, match="Input is not a valid subgraph"):
-            clique.clique_grow([dim + 1], nx.empty_graph(dim))
+            clique.grow([dim + 1], nx.empty_graph(dim))
 
 
 @pytest.mark.parametrize("dim", range(5, 10))
 class TestCliqueSwap:
-    """Tests for the function ``strawberryfields.gbs.graph.resize.clique_swap``"""
+    """Tests for the function ``strawberryfields.gbs.graph.resize.swap``"""
 
     def test_swap(self, dim):
         """Test if function performs correct swap operation. Input is a complete graph with a
@@ -187,7 +187,7 @@ class TestCliqueSwap:
         graph = nx.complete_graph(dim)
         graph.remove_edge(0, dim - 1)
         s = list(range(dim - 1))
-        assert set(clique.clique_swap(s, graph)) == set(range(1, dim))
+        assert set(clique.swap(s, graph)) == set(range(1, dim))
 
     def test_swap_degree(self, dim):
         """Test if function performs correct swap operation when degree-based node selection is
@@ -202,7 +202,7 @@ class TestCliqueSwap:
         graph.remove_edge(0, dim - 1)
         graph.remove_edge(0, dim - 2)
         s = list(range(dim - 2))
-        result = set(clique.clique_swap(s, graph, node_select="degree"))
+        result = set(clique.swap(s, graph, node_select="degree"))
         expected = set(range(1, dim - 2)) | {dim - 1}
         assert result == expected
 
@@ -214,7 +214,7 @@ class TestCliqueSwap:
         input. In this case, C1 consists of nodes ``dim - 1`` and ``dim - 2``. As they have the
         same degree, they should be selected randomly with equal probability. This function
         monkeypatches the ``np.random.choice`` call to guarantee that one of the nodes is picked
-        during one run of ``clique_swap`` and the other node is picked during the next run.
+        during one run of ``swap`` and the other node is picked during the next run.
         """
         graph = nx.complete_graph(dim)
         graph.remove_edge(0, dim - 1)
@@ -226,23 +226,23 @@ class TestCliqueSwap:
 
         with monkeypatch.context() as m:
             m.setattr(np.random, "choice", patch_random_choice_1)
-            c1 = clique.clique_swap(s, graph, node_select="degree")
+            c1 = clique.swap(s, graph, node_select="degree")
 
         with monkeypatch.context() as m:
             m.setattr(np.random, "choice", patch_random_choice_2)
-            c2 = clique.clique_swap(s, graph, node_select="degree")
+            c2 = clique.swap(s, graph, node_select="degree")
 
         assert c1 != c2
 
     def test_input_not_clique(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
         with pytest.raises(ValueError, match="Input subgraph is not a clique"):
-            clique.clique_swap([0, 1], nx.empty_graph(dim))
+            clique.swap([0, 1], nx.empty_graph(dim))
 
     def test_input_valid_subgraph(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
         with pytest.raises(ValueError, match="Input is not a valid subgraph"):
-            clique.clique_swap([0, dim], nx.empty_graph(dim))
+            clique.swap([0, dim], nx.empty_graph(dim))
 
     def test_bad_node_select(self, dim):
         """Tests if function raises a ``ValueError`` when input an invalid ``node_select``
@@ -250,19 +250,19 @@ class TestCliqueSwap:
         graph = nx.barbell_graph(dim, 0)
         s = [0]
         with pytest.raises(ValueError, match="Node selection method not recognized"):
-            clique.clique_swap(s, graph, node_select="")
+            clique.swap(s, graph, node_select="")
 
 
 @pytest.mark.parametrize("dim", range(6, 10))
 class TestCliqueShrink:
-    """Tests for the function ``resize.clique_shrink``"""
+    """Tests for the function ``resize.shrink``"""
 
     def test_is_output_clique(self, dim):
         """Test that the output subgraph is a valid clique, in this case the maximum clique
         in a lollipop graph"""
         graph = nx.lollipop_graph(dim, dim)
         subgraph = list(range(2 * dim))  # subgraph is the entire graph
-        resized = clique.clique_shrink(subgraph, graph)
+        resized = clique.shrink(subgraph, graph)
         assert utils.is_clique(graph.subgraph(resized))
         assert resized == list(range(dim))
 
@@ -271,7 +271,7 @@ class TestCliqueShrink:
         graph = nx.lollipop_graph(dim, dim)
         subgraph = list(range(dim))  # this is a clique, the "candy" of the lollipop
 
-        assert clique.clique_shrink(subgraph, graph) == subgraph
+        assert clique.shrink(subgraph, graph) == subgraph
 
     def test_degree_relative_to_subgraph(self, dim):
         """Test that function removes nodes of small degree relative to the subgraph,
@@ -282,7 +282,7 @@ class TestCliqueShrink:
         g = nx.disjoint_union(nx.complete_graph(dim), nx.complete_graph(dim + 1))
         g.add_edge(dim, dim - 1)
         subgraph = list(range(dim + 1))
-        assert clique.clique_shrink(subgraph, g) == list(range(dim))
+        assert clique.shrink(subgraph, g) == list(range(dim))
 
     def test_wheel_graph(self, dim):
         """Test that output is correct for a wheel graph, whose largest cliques have dimension
@@ -301,7 +301,7 @@ class TestCliqueShrink:
         3. The cliques always include the central spoke and two consecutive nodes in the outer
         wheel. Since the function uses randomness in node selection when there is a tie (which
         occurs in the case of the wheel graph), the resultant shrunk cliques are expected to be
-        different each time ``clique_shrink`` is run. This function monkeypatches the
+        different each time ``shrink`` is run. This function monkeypatches the
         ``np.random.shuffle`` call so that different nodes are removed during each run."""
         graph = nx.wheel_graph(dim)
         subgraph = graph.nodes()  # subgraph is the entire graph
@@ -311,9 +311,9 @@ class TestCliqueShrink:
 
         with monkeypatch.context() as m:
             m.setattr(np.random, "shuffle", patch_random_shuffle_1)
-            c1 = clique.clique_shrink(subgraph, graph)
+            c1 = clique.shrink(subgraph, graph)
         with monkeypatch.context() as m:
             m.setattr(np.random, "shuffle", patch_random_shuffle_2)
-            c2 = clique.clique_shrink(subgraph, graph)
+            c2 = clique.shrink(subgraph, graph)
 
         assert c1 != c2
