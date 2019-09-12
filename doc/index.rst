@@ -168,9 +168,9 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    :caption: Applications Layer
    :hidden:
 
-   code/apps/sample
-   code/apps/graph.dense
-   code/apps/graph.resize
-   code/apps/graph.sample
-   code/apps/graph.utils
-   code/apps/graph.max_clique
+   code/gbs/sample
+   code/gbs/dense
+   code/gbs/resize
+   code/gbs/sample
+   code/gbs/utils
+   code/gbs/clique

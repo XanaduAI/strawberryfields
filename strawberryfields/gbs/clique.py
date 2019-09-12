@@ -12,19 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Maximum clique
+Maximum Clique
 ==============
 
-**Module name:** :mod:`strawberryfields.gbs.graph.max_clique`
+**Module name:** :mod:`strawberryfields.gbs.clique`
 
-.. currentmodule:: strawberryfields.gbs.graph.max_clique
+.. currentmodule:: strawberryfields.gbs.clique
 
 This module provides tools for users to identify large cliques in graphs. A clique is a subgraph
 where all nodes are connected to each other. The maximum clique problem is to identify the
 largest clique in a graph. The problem is NP-Hard in a worst-case setting, which is why it is
 valuable to develop better algorithms to tackle it.
 
-The core of this module is a local search algorithm that proceeds as follows:
+Heuristics
+----------
+
+The heuristic provided is a local search algorithm from :cite:`pullan2006dynamic` and
+:cite:`pullan2006phased` that proceeds as follows:
 
 #. A small clique in the graph is identified. The initial clique can be a single node, or it can
    be obtained by shrinking a random subgraph, for example obtained from GBS.
@@ -33,9 +37,6 @@ The core of this module is a local search algorithm that proceeds as follows:
 
 Steps 2-3 are repeated until a pre-determined number of steps have been completed, or until no
 more growth or swaps are possible.
-
-Summary
--------
 
 .. autosummary::
     local_search

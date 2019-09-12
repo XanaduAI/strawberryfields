@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.gbs.graph.max_clique
+Unit tests for strawberryfields.gbs.clique
 """
 # pylint: disable=no-self-use,unused-argument
-import pytest
 import networkx as nx
 import numpy as np
+import pytest
 
-from strawberryfields.gbs import max_clique, resize
+from strawberryfields.gbs import clique, resize
 
 pytestmark = pytest.mark.gbs
 
@@ -33,9 +33,9 @@ def patch_random_choice(x):
     return x[0]
 
 
-def patch_clique_resize(clique, graph, node_select):
+def patch_clique_resize(c, graph, node_select):
     """Dummy function for ``clique_grow`` and ``clique_swap`` to make output unchanged."""
-    return clique
+    return c
 
 
 class TestLocalSearch:
@@ -45,7 +45,7 @@ class TestLocalSearch:
         """Test if function raises a ``ValueError`` when a non-positive number of iterations is
         specified"""
         with pytest.raises(ValueError, match="Number of iterations must be a positive int"):
-            max_clique.local_search(clique=[0, 1, 2, 3], graph=nx.complete_graph(5), iterations=-1)
+            clique.local_search(clique=[0, 1, 2, 3], graph=nx.complete_graph(5), iterations=-1)
 
     def test_max_iterations(self, monkeypatch):
         """Test if function stops after 5 iterations despite not being in a dead end (i.e., when
@@ -55,11 +55,11 @@ class TestLocalSearch:
         iteration of growth & swap. For odd iterations, we get [0, 2, 3]."""
 
         graph = nx.wheel_graph(5)
-        clique = [0, 1]
+        c = [0, 1]
 
         with monkeypatch.context() as m:
             m.setattr(np.random, "choice", patch_random_choice)
-            result = max_clique.local_search(clique, graph, iterations=5)
+            result = clique.local_search(c, graph, iterations=5)
 
         assert result == [0, 2, 3]
 
@@ -71,14 +71,14 @@ class TestLocalSearch:
         same clique."""
 
         graph = nx.complete_graph(5)
-        clique = [0, 1, 2]
+        c = [0, 1, 2]
 
         with monkeypatch.context() as m:
             m.setattr(resize, "clique_grow", patch_clique_resize)
             m.setattr(resize, "clique_swap", patch_clique_resize)
-            result = max_clique.local_search(clique, graph, iterations=100)
+            result = clique.local_search(c, graph, iterations=100)
 
-        assert result == clique
+        assert result == c
 
     def test_expected_growth(self):
         """Test if function performs a growth and swap phase, followed by another growth and
@@ -91,6 +91,6 @@ class TestLocalSearch:
         graph = nx.lollipop_graph(4, 1)
         graph.add_edge(4, 2)
 
-        clique = [3, 4]
-        result = max_clique.local_search(clique, graph, iterations=100)
+        c = [3, 4]
+        result = clique.local_search(c, graph, iterations=100)
         assert result == [0, 1, 2, 3]
