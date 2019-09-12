@@ -543,7 +543,7 @@ class TestDecompositionsGaussianGates:
             pytest.skip("Test only runs on pure states")
         N = 2
         eng, prog = setup_eng(N)
-        nbar = 1.0
+        nbar = 0.1
         s = np.arcsinh(np.sqrt(nbar))
         phi = np.pi / 3
         with prog.context as q:
@@ -629,5 +629,4 @@ class TestDecompositionsGaussianGates:
 
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
-
 
