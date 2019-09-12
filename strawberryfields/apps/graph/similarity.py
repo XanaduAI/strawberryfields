@@ -58,7 +58,13 @@ def sample_to_orbit(sample: list) -> list:
 
 
 def sample_to_event(sample: list, max_count_per_mode: int) -> Union[int, None]:
-    """Provides the event corresponding to a given sample.
+    r"""Provides the event corresponding to a given sample.
+
+    An event is a combination of orbits. For a fixed photon number, orbits are combined into an
+    event if the photon count in any mode does not exceed ``max_count_per_mode``, i.e.,
+    an orbit :math:`o=\{o_{1},o_{2},\ldots\}` with a total photon number :math:`\sum_{i}o_{i}=k`
+    is included in the event :math:`E_{k}` if :math:`\max_{i} \{o_{i}\}` is not larger than
+    ``max_count_per_mode``.
 
     **Example usage:**
 
