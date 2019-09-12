@@ -29,6 +29,15 @@ all_orbits = {
     5: [[1, 1, 1, 1, 1], [2, 1, 1, 1], [3, 1, 1], [2, 2, 1], [4, 1], [3, 2], [5]],
 }
 
+all_events = {
+    (3, 1): [3, None, None],
+    (4, 1): [4, None, None, None, None],
+    (5, 1): [5, None, None, None, None, None, None],
+    (3, 2): [3, 3, None],
+    (4, 2): [4, 4, None, 4, None],
+    (5, 2): [5, 5, None, 5, None, None, None],
+}
+
 
 @pytest.mark.parametrize("dim", [3, 4, 5])
 def test_sample_to_orbit(dim):
@@ -47,30 +56,23 @@ def test_sample_to_orbit(dim):
     assert all(checks)
 
 
+@pytest.mark.parametrize("dim", [3, 4, 5])
 class TestOrbits:
     """Tests for the function ``strawberryfields.apps.graph.similarity.orbits``"""
 
-    @pytest.mark.parametrize("dim", [2, 3, 4, 5])
-    def test_orbit_generator(self, dim):
-        """Test if function generates valid orbits, i.e., that are lists that sum to ``dim`` and
-        are sorted in descending order."""
+    def test_orbit_sum(self, dim):
+        """Test if function generates orbits that are lists that sum to ``dim``."""
+        assert all([sum(o) == dim for o in similarity.orbits(dim)])
 
-        def _sum_check(orbit, val):
-            """Checks if an input ``orbit`` has a sum equal to ``val``."""
-            return sum(orbit) == val
+    def test_orbit_sorted(self, dim):
+        """Test if function generates orbits that are lists sorted in descending order."""
+        assert all([o == sorted(o, reverse=True) for o in similarity.orbits(dim)])
 
-        def _sorted_check(orbit):
-            """Checks if an input ``orbit`` is a sorted list in non-increasing order."""
-            return orbit == sorted(orbit, reverse=True)
-
-        assert all([_sum_check(o, dim) for o in similarity.orbits(dim)])
-        assert all([_sorted_check(o) for o in similarity.orbits(dim)])
-
-    def test_orbits(self):
+    def test_orbits(self, dim):
         """Test if function returns all the integer partitions of 5. This test does not
         require ``similarity.orbits`` to return the orbits in any specified order."""
-        partition = [[5], [4, 1], [3, 2], [3, 1, 1], [2, 1, 1, 1], [2, 2, 1], [1, 1, 1, 1, 1]]
-        orbits = similarity.orbits(5)
+        partition = all_orbits[dim]
+        orbits = similarity.orbits(dim)
 
         assert sorted(partition) == sorted(orbits)
 
@@ -83,18 +85,7 @@ def test_sample_to_event(dim, max_count_per_mode):
     exceeding the ``max_count_per_mode`` value are attributed the ``None`` event and that orbits
     not exceeding the ``max_count_per_mode`` are attributed the event ``dim``."""
     orbits = all_orbits[dim]
+    target_events = all_events[(dim, max_count_per_mode)]
     events = [similarity.sample_to_event(o, max_count_per_mode) for o in orbits]
 
-    max_count_correct = True
-    photon_number_correct = True
-
-    for i, e in enumerate(events):
-        if max(orbits[i]) > max_count_per_mode:
-            if e is not None:
-                max_count_correct = False
-        else:
-            if e != dim:
-                photon_number_correct = False
-
-    assert max_count_correct
-    assert photon_number_correct
+    assert events == target_events
