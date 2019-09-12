@@ -555,4 +555,4 @@ class TestDecompositionsGaussianGates:
             np.exp(1j * phi) * np.sqrt((nbar / (1 + nbar)))
         ) ** (np.arange(n))
         diag_elems[-1] = 0
-        assert np.allclose(np.diag(diag_elems), ket, atol=0.2, rtol=0)
+        assert np.allclose(np.diag(diag_elems), ket, atol=tol, rtol=0)
