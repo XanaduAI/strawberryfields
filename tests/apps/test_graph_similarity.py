@@ -49,24 +49,24 @@ class TestOrbits:
         """Test if function generates valid orbits, i.e., that are lists that sum to ``dim`` and
         are sorted in descending order."""
 
-        def _check_orbit(orbit, val):
-            """Checks if an input ``orbit`` has a sum equal to ``val`` and is a sorted list in
-            descending order."""
-            return sum(orbit) == val and orbit == sorted(orbit, reverse=True)
+        def _sum_check(orbit, val):
+            """Checks if an input ``orbit`` has a sum equal to ``val``."""
+            return sum(orbit) == val
 
-        assert all([_check_orbit(o, dim) for o in similarity.orbits(dim)])
+        def _sorted_check(orbit):
+            """Checks if an input ``orbit`` is a sorted list in non-increasing order."""
+            return orbit == sorted(orbit, reverse=True)
+
+        assert all([_sum_check(o, dim) for o in similarity.orbits(dim)])
+        assert all([_sorted_check(o) for o in similarity.orbits(dim)])
 
     def test_orbits(self):
         """Test if function returns all the integer partitions of 5. This test does not
         require ``similarity.orbits`` to return the orbits in any specified order."""
         partition = [[5], [4, 1], [3, 2], [3, 1, 1], [2, 1, 1, 1], [2, 2, 1], [1, 1, 1, 1, 1]]
-        orbits = list(similarity.orbits(5))
-        try:
-            for o in orbits:
-                partition.remove(o)
-        except ValueError:
-            pass
-        assert not partition
+        orbits = similarity.orbits(5)
+
+        assert sorted(partition) == sorted(orbits)
 
 
 all_orbits = {
