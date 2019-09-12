@@ -1,2 +1,2 @@
-.. automodule:: strawberryfields.gbs.graph.resize
+.. automodule:: strawberryfields.gbs.resize
     :members:

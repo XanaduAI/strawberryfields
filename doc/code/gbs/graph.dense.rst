@@ -1,2 +1,2 @@
-.. automodule:: strawberryfields.gbs.graph.dense
+.. automodule:: strawberryfields.gbs.dense
     :members:
