@@ -28,8 +28,7 @@ choosing a symmetric input matrix to sample from :cite:`bradler2018gaussian`. Fo
 an :math:`N`-mode GBS device with threshold detectors generates samples that are binary strings
 of length ``N``. Various problems can be encoded in the matrix :math:`A` so that the output
 samples are informative and can be used as a form of randomness to improve solvers, as outlined
-in Refs. :cite:`arrazola2018using` and :cite:`arrazola2018quantum` and also shown in our
-:ref:`tutorial_dense_subgraph` tutorial.
+in Refs. :cite:`arrazola2018using` and :cite:`arrazola2018quantum`.
 
 On the other hand, the :func:`uniform_sampler` function allows users to generate samples where a
 subset of modes are selected using the uniform distribution.
@@ -57,22 +56,14 @@ from strawberryfields.apps.graph import utils
 QUANTUM_BACKENDS = ("gaussian",)
 """tuple[str]: Available quantum backends for sampling."""
 
-BACKEND_DEFAULTS = {
-    "remote": False,
-    "backend": "gaussian",
-    "threshold": True,
-    "postselect": 0,
-}
+BACKEND_DEFAULTS = {"remote": False, "backend": "gaussian", "threshold": True, "postselect": 0}
 """dict[str, Any]: Dictionary to specify default parameters of options in backend sampling for
 :func:`quantum_sampler`.
 """
 
 
 def quantum_sampler(
-    A: np.ndarray,
-    n_mean: float,
-    samples: int = 1,
-    backend_options: Optional[dict] = None,
+    A: np.ndarray, n_mean: float, samples: int = 1, backend_options: Optional[dict] = None
 ) -> list:
     r"""Generate samples from GBS
 
@@ -93,7 +84,7 @@ def quantum_sampler(
             ``QUANTUM_BACKENDS``, these are:
 
             - ``"gaussian"``: for simulating the output of a GBS device using the
-            :mod:`strawberryfields.backends.gaussianbackend`
+              :mod:`strawberryfields.backends.gaussianbackend`
 
         key: ``"threshold"``, value: *bool*
             Performs sampling using threshold (on/off click) detectors if ``True``
@@ -111,7 +102,7 @@ def quantum_sampler(
         n_mean (float): mean photon number
         samples (int): number of samples; defaults to 1
         backend_options (dict[str, Any]): dictionary specifying options used by backends during
-        sampling; defaults to :const:`BACKEND_DEFAULTS`
+            sampling; defaults to :const:`BACKEND_DEFAULTS`
 
     Returns:
         list[list[int]]: a list of length ``samples`` whose elements are length :math:`N` lists of
@@ -121,9 +112,7 @@ def quantum_sampler(
     backend_options = {**BACKEND_DEFAULTS, **(backend_options or {})}
 
     if not utils.is_undirected(A):
-        raise ValueError(
-            "Input must be a NumPy array corresponding to a symmetric matrix"
-        )
+        raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
 
     if samples < 1:
         raise ValueError("Number of samples must be at least one")
@@ -171,9 +160,7 @@ def quantum_sampler(
     return s
 
 
-def _sample_sf(
-    p: sf.Program, shots: int = 1, backend_options: Optional[dict] = None
-) -> np.ndarray:
+def _sample_sf(p: sf.Program, shots: int = 1, backend_options: Optional[dict] = None) -> np.ndarray:
     """Generate samples from Strawberry Fields.
 
     Args:
