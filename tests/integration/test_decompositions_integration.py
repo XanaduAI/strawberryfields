@@ -536,8 +536,8 @@ class TestDecompositionsGaussianGates:
         # Checks the means are transformed correctly
         assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
 
-    @pytest.mark.backends("fock")
-    def test_S2gate_fock(self, setup_eng, pure, hbar, tol):
+    @pytest.mark.backends("fock", "tf")
+    def test_S2gate_fock(self, setup_eng, pure, tol):
         """Test the action of the S2gate gate on vacuum in Fock space"""
         if not pure:
             pytest.skip("Test only runs on pure states")
@@ -550,7 +550,7 @@ class TestDecompositionsGaussianGates:
             ops.S2gate(s, phi) | q
         state = eng.run(prog).state
         ket = state.ket()
-        n, _ = ket.shape
+        n = ket.shape[-1]
         diag_elems = (1 / np.sqrt(1 + nbar)) * (
             np.exp(1j * phi) * np.sqrt((nbar / (1 + nbar)))
         ) ** (np.arange(n))
