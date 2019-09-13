@@ -28,6 +28,8 @@ Summary
     sample_to_orbit
     sample_to_event
     orbits
+    uniform_sample_orbit
+    uniform_sample_event
 
 Code details
 ^^^^^^^^^^^^
@@ -133,10 +135,11 @@ def orbits(photon_number: int) -> Generator[list, None, None]:
 
 
 def uniform_sample_orbit(orbit: list, modes: int) -> list:
-    """Generates a sample selected uniformly at random from the the specified orbit.
+    """Generates a sample selected uniformly at random from the specified orbit.
 
-    For a specific orbit and a number of modes, this functions produces a sample from that orbit,
-    selected uniformly at random from all possibilities.
+    An orbit has a number of constituting samples, which are given by taking all permutations
+    over the orbit. For a given orbit and number of modes, this function produces a sample
+    selected uniformly at random among all samples in the orbit.
 
     **Example usage**:
 
@@ -159,11 +162,12 @@ def uniform_sample_orbit(orbit: list, modes: int) -> list:
 
 
 def uniform_sample_event(photon_number: int, max_count_per_mode: int, modes: int) -> list:
-    """Generates a sample selected uniformly at random from the the specified event.
+    """Generates a sample selected uniformly at random from the specified event.
 
-    Given an event specified by a photon number and a maximum number of photons per mode,
-    this function produces a sample from that event, selected uniformly at random from all
-    possibilities.
+    An event has a number of constituting samples, which are given by combining samples within all
+    orbits with a fixed photon number whose photon count in any mode does not exceed
+    ``max_count_per_mode``. This function produces a sample selected uniformly at random among
+    all samples in the event.
 
     **Example usage**:
 
@@ -176,24 +180,24 @@ def uniform_sample_event(photon_number: int, max_count_per_mode: int, modes: int
         modes (int): number of modes in the sample
 
     Returns:
-        list[int]: a sample in the orbit
+        list[int]: a sample in the event
     """
     if max_count_per_mode < 1:
         raise ValueError("Maximum number of photons per mode must be equal or greater than 1")
 
     if max_count_per_mode * modes < photon_number:
         raise ValueError(
-            """No valid samples can be generated.
-        Consider increasing the max_count_per_mode or reducing the number of photons."""
+            "No valid samples can be generated. Consider increasing the "
+            "max_count_per_mode or reducing the number of photons."
         )
 
     sample = [0] * modes
-    list_modes = list(range(modes))
+    available_modes = list(range(modes))
 
     for _ in range(photon_number):
-        j = choice(list_modes)
+        j = choice(available_modes)
         sample[j] += 1
         if sample[j] == max_count_per_mode:
-            list_modes.remove(j)
+            available_modes.remove(j)
 
     return sample
