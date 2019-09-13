@@ -1,2 +1,2 @@
-.. automodule:: strawberryfields.apps.graph.similarity
+.. automodule:: strawberryfields.gbs.similarity
     :members:
