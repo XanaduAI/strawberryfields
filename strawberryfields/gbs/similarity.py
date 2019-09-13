@@ -27,12 +27,16 @@ Summary
 .. autosummary::
     sample_to_orbit
     sample_to_event
+    orbit_to_sample
+    event_to_sample
     orbits
 
 Code details
 ^^^^^^^^^^^^
 """
 from typing import Generator, Union
+
+import numpy as np
 
 
 def sample_to_orbit(sample: list) -> list:
@@ -128,3 +132,72 @@ def orbits(photon_number: int) -> Generator[list, None, None]:
         a[k] = x + y
         y = x + y - 1
         yield sorted(a[: k + 1], reverse=True)
+
+
+def orbit_to_sample(orbit: list, modes: int) -> list:
+    """Generates a sample selected uniformly at random from the specified orbit.
+
+    An orbit has a number of constituting samples, which are given by taking all permutations
+    over the orbit. For a given orbit and number of modes, this function produces a sample
+    selected uniformly at random among all samples in the orbit.
+
+    **Example usage**:
+
+    >>> orbit_to_sample([2, 1, 1], 6)
+    [0, 1, 2, 0, 1, 0]
+
+    Args:
+        orbit (list[int]): orbit to generate a sample from
+        modes (int): number of modes in the sample
+
+    Returns:
+        list[int]: a sample in the orbit
+    """
+    if modes < len(orbit):
+        raise ValueError("Number of modes cannot be smaller than length of orbit")
+
+    sample = orbit + [0] * (modes - len(orbit))
+    np.random.shuffle(sample)
+    return sample
+
+
+def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> list:
+    """Generates a sample selected uniformly at random from the specified event.
+
+    An event has a number of constituting samples, which are given by combining samples within all
+    orbits with a fixed photon number whose photon count in any mode does not exceed
+    ``max_count_per_mode``. This function produces a sample selected uniformly at random among
+    all samples in the event.
+
+    **Example usage**:
+
+    >>> event_to_sample(4, 2, 6)
+    [0, 1, 0, 0, 2, 1]
+
+    Args:
+        photon_number (int): number of photons in the event
+        max_count_per_mode (int): maximum number of photons per mode in the event
+        modes (int): number of modes in the sample
+
+    Returns:
+        list[int]: a sample in the event
+    """
+    if max_count_per_mode < 1:
+        raise ValueError("Maximum number of photons per mode must be equal or greater than 1")
+
+    if max_count_per_mode * modes < photon_number:
+        raise ValueError(
+            "No valid samples can be generated. Consider increasing the "
+            "max_count_per_mode or reducing the number of photons."
+        )
+
+    sample = [0] * modes
+    available_modes = list(range(modes))
+
+    for _ in range(photon_number):
+        j = np.random.choice(available_modes)
+        sample[j] += 1
+        if sample[j] == max_count_per_mode:
+            available_modes.remove(j)
+
+    return sample
