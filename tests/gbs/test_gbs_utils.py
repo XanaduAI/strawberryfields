@@ -12,24 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.graph.utils
+Unit tests for strawberryfields.gbs.graph.utils
 """
 # pylint: disable=no-self-use,protected-access
 import itertools
-import numpy as np
+
 import networkx as nx
+import numpy as np
 import pytest
 
-from strawberryfields.apps.graph import utils
+from strawberryfields.gbs import utils
 
-pytestmark = pytest.mark.apps
+pytestmark = pytest.mark.gbs
 
 adj_dim_range = range(2, 6)
 
 
 @pytest.mark.parametrize("dim", adj_dim_range)
 class TestValidateGraph:
-    """Tests for the function ``strawberryfields.apps.graph.utils.validate_graph``"""
+    """Tests for the function ``strawberryfields.gbs.graph.utils.validate_graph``"""
 
     def test_valid_adjacency(self, adj, monkeypatch):
         """Test if function returns the NetworkX Graph class corresponding to the input adjacency
@@ -62,9 +63,7 @@ class TestValidateGraph:
         adj[1, 0] = 0
         with monkeypatch.context() as m:
             m.setattr(utils, "is_undirected", lambda _: False)
-            with pytest.raises(
-                Exception, match="Input NumPy arrays must be real and symmetric"
-            ):
+            with pytest.raises(Exception, match="Input NumPy arrays must be real and symmetric"):
                 utils.validate_graph(adj)
 
     def test_invalid_adjacency_complex(self, adj, monkeypatch):
@@ -72,9 +71,7 @@ class TestValidateGraph:
         adj = adj * 1j
         with monkeypatch.context() as m:
             m.setattr(utils, "is_undirected", lambda _: True)
-            with pytest.raises(
-                Exception, match="Input NumPy arrays must be real and symmetric"
-            ):
+            with pytest.raises(Exception, match="Input NumPy arrays must be real and symmetric"):
                 utils.validate_graph(adj)
 
     def test_valid_graph(self, adj):
@@ -92,7 +89,7 @@ class TestValidateGraph:
 
 @pytest.mark.parametrize("dim", adj_dim_range)
 class TestIsUndirected:
-    """Tests for the function ``strawberryfields.apps.graph.utils.is_undirected``"""
+    """Tests for the function ``strawberryfields.gbs.graph.utils.is_undirected``"""
 
     def test_valid_input(self, adj):
         """Test if function returns ``True`` for a symmetric matrix"""
@@ -129,7 +126,7 @@ class TestIsUndirected:
 
 @pytest.mark.parametrize("dim", [4, 5, 6])
 class TestSubgraphAdjacency:
-    """Tests for the function ``strawberryfields.apps.graph.utils.subgraph_adjacency``"""
+    """Tests for the function ``strawberryfields.gbs.graph.utils.subgraph_adjacency``"""
 
     def test_input(self, dim, graph, monkeypatch):
         """Test if function returns the correct adjacency matrix of a subgraph. This test
@@ -161,14 +158,12 @@ class TestSubgraphAdjacency:
 
 @pytest.mark.parametrize("dim", [4, 5, 6])
 class TestIsSubgraph:
-    """Tests for the function ``strawberryfields.apps.graph.utils.is_subgraph``"""
+    """Tests for the function ``strawberryfields.gbs.graph.utils.is_subgraph``"""
 
     def test_invalid_type(self, graph):
         """Test if function raises a ``TypeError`` when fed an invalid subgraph type (i.e.,
         not iterable)."""
-        with pytest.raises(
-            TypeError, match="subgraph and graph.nodes must be iterable"
-        ):
+        with pytest.raises(TypeError, match="subgraph and graph.nodes must be iterable"):
             utils.is_subgraph(None, graph)
 
     def test_valid_subgraphs(self, graph, dim):
@@ -190,7 +185,7 @@ class TestIsSubgraph:
 
 @pytest.mark.parametrize("dim", range(2, 10))
 class TestIsClique:
-    """Tests for the function `strawberryfields.apps.graph.utils.is_clique` """
+    """Tests for the function `strawberryfields.gbs.graph.utils.is_clique` """
 
     def test_no_false_negatives(self, dim):
         """Tests that cliques are labelled as such"""

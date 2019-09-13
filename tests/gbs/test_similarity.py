@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.graph.similarity
+Unit tests for strawberryfields.gbs.similarity
 """
 # pylint: disable=no-self-use,unused-argument,too-many-arguments
 import itertools
 
 import pytest
 
-from strawberryfields.apps.graph import similarity
+from strawberryfields.gbs import similarity
 
 pytestmark = pytest.mark.apps
 
@@ -58,7 +58,7 @@ def test_sample_to_orbit(dim):
 
 @pytest.mark.parametrize("dim", [3, 4, 5])
 class TestOrbits:
-    """Tests for the function ``strawberryfields.apps.graph.similarity.orbits``"""
+    """Tests for the function ``strawberryfields.gbs.similarity.orbits``"""
 
     def test_orbit_sum(self, dim):
         """Test if function generates orbits that are lists that sum to ``dim``."""

@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.graph.dense
+Unit tests for strawberryfields.gbs.graph.dense
 """
 # pylint: disable=no-self-use,unused-argument
-import numpy as np
 import networkx as nx
+import numpy as np
 import pytest
 
-from strawberryfields.apps.graph import dense, sample, resize
+from strawberryfields.gbs import dense, g_sample, resize
 
-pytestmark = pytest.mark.apps
+pytestmark = pytest.mark.gbs
 
 
 samples_subgraphs = np.array(
@@ -53,10 +53,7 @@ class TestFindDense:
             return objective_return
 
         result = dense.find_dense(
-            graph=adj,
-            nodes=3,
-            iterations=10,
-            options={"heuristic": {"method": custom_method}},
+            graph=adj, nodes=3, iterations=10, options={"heuristic": {"method": custom_method}}
         )
 
         assert result == objective_return
@@ -75,10 +72,7 @@ class TestFindDense:
             m.setattr(dense, "METHOD_DICT", {methods: custom_method})
 
             result = dense.find_dense(
-                graph=graph,
-                nodes=3,
-                iterations=10,
-                options={"heuristic": {"method": methods}},
+                graph=graph, nodes=3, iterations=10, options={"heuristic": {"method": methods}}
             )
 
         assert result == objective_return
@@ -109,15 +103,13 @@ class TestRandomSearch:
             (1, 1, 0, 1, 0, 0),
             (0, 0, 0, 0, 0, 0),
         )
-        graph = nx.Graph(
-            0.5 * np.array(adj)
-        )  # multiply by 0.5 to follow weightings of adj fixture
+        graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
         optimal_density = 1.0
         optimal_sample = [0, 1, 9, 16]
         graph = nx.relabel_nodes(graph, lambda x: x ** 2)
 
         with monkeypatch.context() as m:
-            m.setattr(sample, "sample_subgraphs", self.sampler)
+            m.setattr(g_sample, "sample_subgraphs", self.sampler)
             # The monkeypatch above is not necessary given the one below, but simply serves to
             # speed up testing by not requiring a call to ``sample_subgraphs``, which is a
             # bottleneck
