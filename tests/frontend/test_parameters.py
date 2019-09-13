@@ -67,7 +67,23 @@ class TestParameter:
         assert par_is_symbolic(p * r)
         assert par_is_symbolic(p / r)
         assert par_is_symbolic(p ** r)
-        assert par_is_symbolic(p / p)  # no simplification
+        assert par_is_symbolic(p - p)  # no simplification
+
+        # object array with symbols
+        a = np.array([[0.1, 3, 0], [0.3, 2, p], [1, 2, 4]])
+        assert a.dtype == object
+        assert par_is_symbolic(a)
+
+        # object array, no symbols
+        a = np.array([[0.1, 3, 0], [0.3, 2, 0], [1, 2, 4]], dtype=object)
+        assert a.dtype == object
+        assert not par_is_symbolic(a)
+
+        # float array, no symbols
+        a = np.array([[0.1, 3, 0], [0.3, 2, 0], [1, 2, 4]])
+        assert a.dtype != object
+        assert not par_is_symbolic(a)
+
 
     def test_par_regref_deps(self):
         """RegRef dependencies of parameters."""

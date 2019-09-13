@@ -225,7 +225,7 @@ def par_is_symbolic(p):
     An array is symbolic if any of its elements are.
     """
     if is_object_array(p):
-        return np.any([par_is_symbolic(k) for k in p])
+        return any(par_is_symbolic(k) for k in p)
     return isinstance(p, sympy.Basic)
 
 
