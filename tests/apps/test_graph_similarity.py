@@ -94,21 +94,21 @@ def test_sample_to_event(dim, max_count_per_mode):
     assert events == target_events
 
 
-class TestUniformSampleOrbit:
-    """Tests for the function ``strawberryfields.apps.graph.similarity.uniform_sample_orbit``"""
+class TestOrbitToSample:
+    """Tests for the function ``strawberryfields.apps.graph.similarity.orbit_to_sample``"""
 
     def test_low_modes(self):
         """Test if function raises a ``ValueError`` if fed an argument for ``modes`` that does
         not exceed the length of the input orbit."""
         with pytest.raises(ValueError, match="Number of modes cannot"):
-            similarity.uniform_sample_orbit([1, 2, 3], 2)
+            similarity.orbit_to_sample([1, 2, 3], 2)
 
     @pytest.mark.parametrize("orb_dim", [3, 4, 5])
     @pytest.mark.parametrize("modes_dim", [6, 7])
     def test_sample_length(self, orb_dim, modes_dim):
         """Test if function returns a sample that is of correct length ``modes_dim`` when fed a
         collision-free event of ``orb_dim`` photons."""
-        samp = similarity.uniform_sample_orbit(all_orbits[orb_dim][0], modes_dim)
+        samp = similarity.orbit_to_sample(all_orbits[orb_dim][0], modes_dim)
         assert len(samp) == modes_dim
 
     def test_sample_composition(self):
@@ -136,33 +136,33 @@ class TestUniformSampleOrbit:
             [5, 0, 0, 0, 0],
         ]  # padding orbits with zeros at the end for comparison to samples
 
-        counts = [Counter(similarity.uniform_sample_orbit(o, modes)) for o in all_orbits_cumulative]
+        counts = [Counter(similarity.orbit_to_sample(o, modes)) for o in all_orbits_cumulative]
         ideal_counts = [Counter(o) for o in all_orbits_zeros]
 
         assert counts == ideal_counts
 
 
-class TestUniformSampleEvent:
-    """Tests for the function ``strawberryfields.apps.graph.similarity.uniform_sample_event``"""
+class TestEventToSample:
+    """Tests for the function ``strawberryfields.apps.graph.similarity.event_to_sample``"""
 
     def test_low_count(self):
         """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is not positive."""
         with pytest.raises(ValueError, match="Maximum number of photons"):
-            similarity.uniform_sample_event(2, 0, 5)
+            similarity.event_to_sample(2, 0, 5)
 
     def test_high_photon(self):
         """Test if function raises a ``ValueError`` if ``photon_number`` is so high that it
         cannot correspond to a sample given the constraints of ``max_count_per_mode`` and
         ``modes``"""
         with pytest.raises(ValueError, match="No valid samples can be generated."):
-            similarity.uniform_sample_event(5, 1, 4)
+            similarity.event_to_sample(5, 1, 4)
 
     @pytest.mark.parametrize("photon_num", [3, 4, 5, 6])
     @pytest.mark.parametrize("modes_dim", [10, 11])
     @pytest.mark.parametrize("count", [3, 4, 5, 6])
     def test_sample_length(self, photon_num, modes_dim, count):
         """Test if function returns a sample that is of correct length ``modes_dim``."""
-        samp = similarity.uniform_sample_event(
+        samp = similarity.event_to_sample(
             photon_number=photon_num, max_count_per_mode=count, modes=modes_dim
         )
         assert len(samp) == modes_dim
@@ -172,7 +172,7 @@ class TestUniformSampleEvent:
     @pytest.mark.parametrize("count", [3, 4, 5, 6])
     def test_sample_sum(self, photon_num, modes_dim, count):
         """Test if function returns a sample that has the correct number of photons."""
-        samp = similarity.uniform_sample_event(
+        samp = similarity.event_to_sample(
             photon_number=photon_num, max_count_per_mode=count, modes=modes_dim
         )
         assert sum(samp) == photon_num
@@ -182,7 +182,7 @@ class TestUniformSampleEvent:
     @pytest.mark.parametrize("count", [3, 4, 5, 6])
     def test_sample_max_count(self, photon_num, modes_dim, count):
         """Test if function returns a sample that has maximum element not exceeding ``count``."""
-        samp = similarity.uniform_sample_event(
+        samp = similarity.event_to_sample(
             photon_number=photon_num, max_count_per_mode=count, modes=modes_dim
         )
         assert max(samp) <= count
@@ -198,7 +198,7 @@ class TestUniformSampleEvent:
         modes_dim = 10
         with monkeypatch.context() as m:
             m.setattr("numpy.random.choice", lambda x: x[0])
-            samp = similarity.uniform_sample_event(
+            samp = similarity.event_to_sample(
                 photon_number=photon_num, max_count_per_mode=count, modes=modes_dim
             )
         assert samp[0] == count

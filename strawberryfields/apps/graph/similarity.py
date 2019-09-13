@@ -27,9 +27,9 @@ Summary
 .. autosummary::
     sample_to_orbit
     sample_to_event
+    orbit_to_sample
+    event_to_sample
     orbits
-    uniform_sample_orbit
-    uniform_sample_event
 
 Code details
 ^^^^^^^^^^^^
@@ -134,7 +134,7 @@ def orbits(photon_number: int) -> Generator[list, None, None]:
         yield sorted(a[: k + 1], reverse=True)
 
 
-def uniform_sample_orbit(orbit: list, modes: int) -> list:
+def orbit_to_sample(orbit: list, modes: int) -> list:
     """Generates a sample selected uniformly at random from the specified orbit.
 
     An orbit has a number of constituting samples, which are given by taking all permutations
@@ -143,7 +143,7 @@ def uniform_sample_orbit(orbit: list, modes: int) -> list:
 
     **Example usage**:
 
-    >>> uniform_sample_orbit([2, 1, 1], 6)
+    >>> orbit_to_sample([2, 1, 1], 6)
     [0, 1, 2, 0, 1, 0]
 
     Args:
@@ -161,7 +161,7 @@ def uniform_sample_orbit(orbit: list, modes: int) -> list:
     return sample
 
 
-def uniform_sample_event(photon_number: int, max_count_per_mode: int, modes: int) -> list:
+def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> list:
     """Generates a sample selected uniformly at random from the specified event.
 
     An event has a number of constituting samples, which are given by combining samples within all
@@ -171,7 +171,7 @@ def uniform_sample_event(photon_number: int, max_count_per_mode: int, modes: int
 
     **Example usage**:
 
-    >>> uniform_sample_event(4, 2, 6)
+    >>> event_to_sample(4, 2, 6)
     [0, 1, 0, 0, 2, 1]
 
     Args:
