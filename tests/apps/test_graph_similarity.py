@@ -16,6 +16,7 @@ Unit tests for strawberryfields.apps.graph.similarity
 """
 # pylint: disable=no-self-use,unused-argument,too-many-arguments
 import itertools
+from collections import Counter
 
 import pytest
 
@@ -28,6 +29,8 @@ all_orbits = {
     4: [[1, 1, 1, 1], [2, 1, 1], [3, 1], [2, 2], [4]],
     5: [[1, 1, 1, 1, 1], [2, 1, 1, 1], [3, 1, 1], [2, 2, 1], [4, 1], [3, 2], [5]],
 }
+
+all_orbits_cumulative = [o for orbs in all_orbits.values() for o in orbs]
 
 all_events = {
     (3, 1): [3, None, None],
@@ -89,3 +92,53 @@ def test_sample_to_event(dim, max_count_per_mode):
     events = [similarity.sample_to_event(o, max_count_per_mode) for o in orbits]
 
     assert events == target_events
+
+
+class TestUniformSampleOrbit:
+    """Tests for the function ``strawberryfields.apps.graph.similarity.uniform_sample_orbit``"""
+
+    def test_low_modes(self):
+        """Test if function raises a ``ValueError`` if fed an argument for ``modes`` that does
+        not exceed the length of the input orbit."""
+        with pytest.raises(
+            ValueError, match="Number of modes cannot be smaller than length of " "orbit"
+        ):
+            similarity.uniform_sample_orbit([1, 2, 3], 2)
+
+    @pytest.mark.parametrize("orb_dim", [3, 4, 5])
+    @pytest.mark.parametrize("modes_dim", [6, 7])
+    def test_sample_length(self, orb_dim, modes_dim):
+        """Test if function returns a sample that is of correct length ``modes_dim`` when fed a
+        collision-free event of ``orb_dim`` photons."""
+        samp = similarity.uniform_sample_orbit(all_orbits[orb_dim][0], modes_dim)
+        assert len(samp) == modes_dim
+
+    def test_sample_composition(self):
+        """Test if function returns a sample that corresponds to the input orbit. Input orbits
+        are orbits from ``all_orbits_cumulative``, i.e., all orbits from 3-5 photons. This test
+        checks if a sample corresponds to an orbit by counting the occurrence of elements in the
+        sample and comparing to a count of elements in the orbit."""
+        modes = 5
+
+        all_orbits_zeros = [
+            [1, 1, 1, 0, 0],
+            [2, 1, 0, 0, 0],
+            [3, 0, 0, 0, 0],
+            [1, 1, 1, 1, 0],
+            [2, 1, 1, 0, 0],
+            [3, 1, 0, 0, 0],
+            [2, 2, 0, 0, 0],
+            [4, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1],
+            [2, 1, 1, 1, 0],
+            [3, 1, 1, 0, 0],
+            [2, 2, 1, 0, 0],
+            [4, 1, 0, 0, 0],
+            [3, 2, 0, 0, 0],
+            [5, 0, 0, 0, 0],
+        ]  # padding orbits with zeros at the end for comparison to samples
+
+        counts = [Counter(similarity.uniform_sample_orbit(o, modes)) for o in all_orbits_cumulative]
+        ideal_counts = [Counter(o) for o in all_orbits_zeros]
+
+        assert counts == ideal_counts
