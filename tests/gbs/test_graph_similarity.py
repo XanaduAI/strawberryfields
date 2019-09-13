@@ -19,7 +19,7 @@ import itertools
 
 import pytest
 
-from strawberryfields.apps.graph import similarity
+from strawberryfields.gbs import similarity
 
 pytestmark = pytest.mark.apps
 
