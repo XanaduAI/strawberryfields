@@ -32,8 +32,9 @@ Summary
 Code details
 ^^^^^^^^^^^^
 """
-from random import choice, shuffle
 from typing import Generator, Union
+
+from numpy.random import choice, shuffle
 
 
 def sample_to_orbit(sample: list) -> list:
