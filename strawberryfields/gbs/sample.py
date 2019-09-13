@@ -15,9 +15,9 @@ r"""
 Sampling functions
 ==================
 
-**Module name:** :mod:`strawberryfields.apps.sample`
+**Module name:** :mod:`strawberryfields.gbs.sample`
 
-.. currentmodule:: strawberryfields.apps.sample
+.. currentmodule:: strawberryfields.gbs.sample
 
 This module provides functionality for generating samples from both a quantum device and the
 uniform distribution.
@@ -51,7 +51,7 @@ from typing import Optional
 import numpy as np
 import strawberryfields as sf
 
-from strawberryfields.apps.graph import utils
+from strawberryfields.gbs import utils
 
 QUANTUM_BACKENDS = ("gaussian",)
 """tuple[str]: Available quantum backends for sampling."""

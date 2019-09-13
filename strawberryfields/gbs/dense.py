@@ -15,9 +15,9 @@ r"""
 Dense subgraph identification
 =============================
 
-**Module name:** :mod:`strawberryfields.apps.graph.dense`
+**Module name:** :mod:`strawberryfields.gbs.dense`
 
-.. currentmodule:: strawberryfields.apps.graph.dense
+.. currentmodule:: strawberryfields.gbs.dense
 
 Functions for finding dense subgraphs. The :func:`find_dense` function
 provides approximate solutions to the densest-:math:`k` subgraph problem
@@ -56,13 +56,13 @@ Summary
 Code details
 ^^^^^^^^^^^^
 """
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 import networkx as nx
 
-from strawberryfields.apps.graph import resize, sample, utils
-from strawberryfields.apps.graph.utils import graph_type
-from strawberryfields.apps.sample import BACKEND_DEFAULTS
+from strawberryfields.gbs import g_sample, resize, utils
+from strawberryfields.gbs.sample import BACKEND_DEFAULTS
+from strawberryfields.gbs.utils import graph_type
 
 
 def find_dense(
@@ -83,11 +83,11 @@ def find_dense(
     - ``"heuristic"``: specifying options used by optimization heuristic; corresponding
       dictionary of options explained further :ref:`below <heuristic>`
     - ``"backend"``: specifying options used by backend quantum samplers; corresponding
-      dictionary of options explained further in :mod:`~strawberryfields.apps.sample`
+      dictionary of options explained further in :mod:`~strawberryfields.gbs.sample`
     - ``"resize"``: specifying options used by resizing method; corresponding dictionary of
-      options explained further in :mod:`~strawberryfields.apps.graph.resize`
+      options explained further in :mod:`~strawberryfields.gbs.resize`
     - ``"sample"``: specifying options used in sampling; corresponding dictionary of options
-      explained further in :mod:`~strawberryfields.apps.graph.sample`
+      explained further in :mod:`~strawberryfields.gbs.sample`
 
     If unspecified, a default set of options is adopted for a given option type.
 
@@ -127,10 +127,7 @@ def find_dense(
         method = METHOD_DICT[method]
 
     return method(
-        graph=utils.validate_graph(graph),
-        nodes=nodes,
-        iterations=iterations,
-        options=options,
+        graph=utils.validate_graph(graph), nodes=nodes, iterations=iterations, options=options
     )
 
 
@@ -140,8 +137,8 @@ def random_search(
     """Random search algorithm for finding dense subgraphs of a given size.
 
     The algorithm proceeds by sampling subgraphs according to the
-    :func:`~strawberryfields.apps.graph.sample.sample_subgraphs`. The resultant subgraphs
-    are resized using :func:`~strawberryfields.apps.graph.resize.resize_subgraphs` to
+    :func:`~strawberryfields.gbs.sample.sample_subgraphs`. The resultant subgraphs
+    are resized using :func:`~strawberryfields.gbs.resize.resize_subgraphs` to
     be of size ``nodes``. The densest subgraph is then selected among all the resultant
     subgraphs. Specified``options`` must be of the form given in :func:`find_dense`.
 
@@ -158,7 +155,7 @@ def random_search(
     """
     options = {**OPTIONS_DEFAULTS, **(options or {})}
 
-    samples = sample.sample_subgraphs(
+    samples = g_sample.sample_subgraphs(
         graph=graph,
         nodes=nodes,
         samples=iterations,
@@ -184,7 +181,7 @@ OPTIONS_DEFAULTS = {
     "heuristic": {"method": random_search},
     "backend": BACKEND_DEFAULTS,
     "resize": resize.RESIZE_DEFAULTS,
-    "sample": sample.SAMPLE_DEFAULTS,
+    "sample": g_sample.SAMPLE_DEFAULTS,
 }
 """dict[str, dict[str, Any]]: Options for dense subgraph identification heuristics. Composed of a
 dictionary of dictionaries with the first level specifying the option type, selected from keys

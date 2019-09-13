@@ -15,9 +15,9 @@ r"""
 Graph similarity
 ================
 
-**Module name:** :mod:`strawberryfields.apps.graph.similarity`
+**Module name:** :mod:`strawberryfields.gbs.similarity`
 
-.. currentmodule:: strawberryfields.apps.graph.similarity
+.. currentmodule:: strawberryfields.gbs.similarity
 
 Functionality for calculating feature vectors of graphs using GBS.
 

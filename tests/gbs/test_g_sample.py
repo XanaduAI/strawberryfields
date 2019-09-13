@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.graph.sample
+Unit tests for strawberryfields.gbs.graph.sample
 """
 # pylint: disable=no-self-use,unused-argument,too-many-arguments
 import networkx as nx
 import pytest
 
-from strawberryfields.apps.graph import sample
+from strawberryfields.gbs import g_sample
 
-pytestmark = pytest.mark.apps
+pytestmark = pytest.mark.gbs
 
 quantum_samples = [
     [0, 1, 1, 1, 1, 1],
@@ -56,14 +56,11 @@ def test_sample_subgraphs_invalid_distribution(graph):
     """Tests if function ``sample.sample_subgraphs`` raises a ``ValueError`` for an
     invalid sampling distribution"""
     with pytest.raises(ValueError, match="Invalid distribution selected"):
-        sample.sample_subgraphs(
-            graph, nodes=2, samples=10, sample_options={"distribution": ""}
-        )
+        g_sample.sample_subgraphs(graph, nodes=2, samples=10, sample_options={"distribution": ""})
 
 
 @pytest.mark.parametrize(
-    "dim, nodes, samples",
-    [(6, 4, integration_sample_number), (8, 4, integration_sample_number)],
+    "dim, nodes, samples", [(6, 4, integration_sample_number), (8, 4, integration_sample_number)]
 )
 @pytest.mark.parametrize("distribution", ("uniform", "gbs"))
 def test_sample_subgraphs_integration(graph, nodes, samples, distribution):
@@ -71,11 +68,8 @@ def test_sample_subgraphs_integration(graph, nodes, samples, distribution):
 
     graph = nx.relabel_nodes(graph, lambda x: x ** 2)
     graph_nodes = set(graph.nodes)
-    output_samples = sample.sample_subgraphs(
-        graph=graph,
-        nodes=nodes,
-        samples=samples,
-        sample_options={"distribution": distribution},
+    output_samples = g_sample.sample_subgraphs(
+        graph=graph, nodes=nodes, samples=samples, sample_options={"distribution": distribution}
     )
 
     assert len(output_samples) == samples
@@ -89,7 +83,7 @@ class TestToSubgraphs:
     def test_graph(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
         ``quantum_samples``."""
-        assert sample.to_subgraphs(graph, samples=quantum_samples) == subgraphs
+        assert g_sample.to_subgraphs(graph, samples=quantum_samples) == subgraphs
 
     def test_graph_mapped(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
@@ -98,8 +92,6 @@ class TestToSubgraphs:
         subgraph returned is still a valid subgraph."""
         graph = nx.relabel_nodes(graph, lambda x: x ** 2)
         graph_nodes = list(graph.nodes)
-        subgraphs_mapped = [
-            sorted([graph_nodes[i] for i in subgraph]) for subgraph in subgraphs
-        ]
+        subgraphs_mapped = [sorted([graph_nodes[i] for i in subgraph]) for subgraph in subgraphs]
 
-        assert sample.to_subgraphs(graph, samples=quantum_samples) == subgraphs_mapped
+        assert g_sample.to_subgraphs(graph, samples=quantum_samples) == subgraphs_mapped
