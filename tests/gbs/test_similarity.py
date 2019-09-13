@@ -157,34 +157,28 @@ class TestEventToSample:
         with pytest.raises(ValueError, match="No valid samples can be generated."):
             similarity.event_to_sample(5, 1, 4)
 
-    @pytest.mark.parametrize("photon_num", [3, 4, 5, 6])
+    @pytest.mark.parametrize("photon_num", [5, 6])
     @pytest.mark.parametrize("modes_dim", [10, 11])
-    @pytest.mark.parametrize("count", [3, 4, 5, 6])
+    @pytest.mark.parametrize("count", [3, 4])
     def test_sample_length(self, photon_num, modes_dim, count):
         """Test if function returns a sample that is of correct length ``modes_dim``."""
-        samp = similarity.event_to_sample(
-            photon_number=photon_num, max_count_per_mode=count, modes=modes_dim
-        )
+        samp = similarity.event_to_sample(photon_num, count, modes_dim)
         assert len(samp) == modes_dim
 
-    @pytest.mark.parametrize("photon_num", [3, 4, 5, 6])
+    @pytest.mark.parametrize("photon_num", [5, 6])
     @pytest.mark.parametrize("modes_dim", [10, 11])
-    @pytest.mark.parametrize("count", [3, 4, 5, 6])
+    @pytest.mark.parametrize("count", [3, 4])
     def test_sample_sum(self, photon_num, modes_dim, count):
         """Test if function returns a sample that has the correct number of photons."""
-        samp = similarity.event_to_sample(
-            photon_number=photon_num, max_count_per_mode=count, modes=modes_dim
-        )
+        samp = similarity.event_to_sample(photon_num, count, modes_dim)
         assert sum(samp) == photon_num
 
-    @pytest.mark.parametrize("photon_num", [3, 4, 5, 6])
+    @pytest.mark.parametrize("photon_num", [5, 6])
     @pytest.mark.parametrize("modes_dim", [10, 11])
-    @pytest.mark.parametrize("count", [3, 4, 5, 6])
+    @pytest.mark.parametrize("count", [3, 4])
     def test_sample_max_count(self, photon_num, modes_dim, count):
         """Test if function returns a sample that has maximum element not exceeding ``count``."""
-        samp = similarity.event_to_sample(
-            photon_number=photon_num, max_count_per_mode=count, modes=modes_dim
-        )
+        samp = similarity.event_to_sample(photon_num, count, modes_dim)
         assert max(samp) <= count
 
     @pytest.mark.parametrize("photon_num", [5, 6])
@@ -198,7 +192,5 @@ class TestEventToSample:
         modes_dim = 10
         with monkeypatch.context() as m:
             m.setattr("numpy.random.choice", lambda x: x[0])
-            samp = similarity.event_to_sample(
-                photon_number=photon_num, max_count_per_mode=count, modes=modes_dim
-            )
+            samp = similarity.event_to_sample(photon_num, count, modes_dim)
         assert samp[0] == count
