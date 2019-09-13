@@ -132,16 +132,20 @@ def orbits(photon_number: int) -> Generator[list, None, None]:
 
 
 def uniform_sample_orbit(orbit: list, modes: int) -> list:
-    """
-    Generates a sample selected uniformly at random from the the specified orbit.
+    """Generates a sample selected uniformly at random from the the specified orbit.
+
     For a specific orbit and a number of modes, this functions produces a sample from that orbit,
     selected uniformly at random from all possibilities.
+
     **Example usage**:
+
     >>> uniform_sample_orbit([2, 1, 1], 6)
     [0, 1, 2, 0, 1, 0]
+
     Args:
         orbit (list[int]): orbit to generate a sample from
         modes (int): number of modes in the sample
+
     Returns:
         list[int]: a sample in the orbit
     """
@@ -154,18 +158,22 @@ def uniform_sample_orbit(orbit: list, modes: int) -> list:
 
 
 def uniform_sample_event(photon_number: int, max_count_per_mode: int, modes: int) -> list:
-    """
-    Generates a sample selected uniformly at random from the the specified event.
+    """Generates a sample selected uniformly at random from the the specified event.
+
     Given an event specified by a photon number and a maximum number of photons per mode,
     this function produces a sample from that event, selected uniformly at random from all
     possibilities.
+
     **Example usage**:
+
     >>> uniform_sample_event(4, 2, 6)
     [0, 1, 0, 0, 2, 1]
+
     Args:
         photon_number (int): number of photons in the event
         max_count_per_mode (int): maximum number of photons per mode in the event
         modes (int): number of modes in the sample
+
     Returns:
         list[int]: a sample in the orbit
     """
