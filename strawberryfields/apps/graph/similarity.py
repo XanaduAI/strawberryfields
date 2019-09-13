@@ -36,7 +36,7 @@ Code details
 """
 from typing import Generator, Union
 
-from numpy.random import choice, shuffle
+import numpy as np
 
 
 def sample_to_orbit(sample: list) -> list:
@@ -157,7 +157,7 @@ def uniform_sample_orbit(orbit: list, modes: int) -> list:
         raise ValueError("Number of modes cannot be smaller than length of orbit")
 
     sample = orbit + [0] * (modes - len(orbit))
-    shuffle(sample)
+    np.random.shuffle(sample)
     return sample
 
 
@@ -195,7 +195,7 @@ def uniform_sample_event(photon_number: int, max_count_per_mode: int, modes: int
     available_modes = list(range(modes))
 
     for _ in range(photon_number):
-        j = choice(available_modes)
+        j = np.random.choice(available_modes)
         sample[j] += 1
         if sample[j] == max_count_per_mode:
             available_modes.remove(j)
