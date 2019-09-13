@@ -100,9 +100,7 @@ class TestUniformSampleOrbit:
     def test_low_modes(self):
         """Test if function raises a ``ValueError`` if fed an argument for ``modes`` that does
         not exceed the length of the input orbit."""
-        with pytest.raises(
-            ValueError, match="Number of modes cannot be smaller than length of " "orbit"
-        ):
+        with pytest.raises(ValueError, match="Number of modes cannot"):
             similarity.uniform_sample_orbit([1, 2, 3], 2)
 
     @pytest.mark.parametrize("orb_dim", [3, 4, 5])
@@ -142,3 +140,65 @@ class TestUniformSampleOrbit:
         ideal_counts = [Counter(o) for o in all_orbits_zeros]
 
         assert counts == ideal_counts
+
+
+class TestUniformSampleEvent:
+    """Tests for the function ``strawberryfields.apps.graph.similarity.uniform_sample_event``"""
+
+    def test_low_count(self):
+        """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is not positive."""
+        with pytest.raises(ValueError, match="Maximum number of photons"):
+            similarity.uniform_sample_event(2, 0, 5)
+
+    def test_high_photon(self):
+        """Test if function raises a ``ValueError`` if ``photon_number`` is so high that it
+        cannot correspond to a sample given the constraints of ``max_count_per_mode`` and
+        ``modes``"""
+        with pytest.raises(ValueError, match="No valid samples can be generated."):
+            similarity.uniform_sample_event(5, 1, 4)
+
+    @pytest.mark.parametrize("photon_num", [3, 4, 5, 6])
+    @pytest.mark.parametrize("modes_dim", [10, 11])
+    @pytest.mark.parametrize("count", [3, 4, 5, 6])
+    def test_sample_length(self, photon_num, modes_dim, count):
+        """Test if function returns a sample that is of correct length ``modes_dim``."""
+        samp = similarity.uniform_sample_event(
+            photon_number=photon_num, max_count_per_mode=count, modes=modes_dim
+        )
+        assert len(samp) == modes_dim
+
+    @pytest.mark.parametrize("photon_num", [3, 4, 5, 6])
+    @pytest.mark.parametrize("modes_dim", [10, 11])
+    @pytest.mark.parametrize("count", [3, 4, 5, 6])
+    def test_sample_sum(self, photon_num, modes_dim, count):
+        """Test if function returns a sample that has the correct number of photons."""
+        samp = similarity.uniform_sample_event(
+            photon_number=photon_num, max_count_per_mode=count, modes=modes_dim
+        )
+        assert sum(samp) == photon_num
+
+    @pytest.mark.parametrize("photon_num", [3, 4, 5, 6])
+    @pytest.mark.parametrize("modes_dim", [10, 11])
+    @pytest.mark.parametrize("count", [3, 4, 5, 6])
+    def test_sample_max_count(self, photon_num, modes_dim, count):
+        """Test if function returns a sample that has maximum element not exceeding ``count``."""
+        samp = similarity.uniform_sample_event(
+            photon_number=photon_num, max_count_per_mode=count, modes=modes_dim
+        )
+        assert max(samp) <= count
+
+    @pytest.mark.parametrize("photon_num", [5, 6])
+    @pytest.mark.parametrize("count", [3, 4])
+    def test_sample_max_count_deterministic(self, photon_num, count, monkeypatch):
+        """Test if function correctly stops adding photons to modes who have reached their
+        maximum count. This test ensures that the maximum count is exceeded in each case by
+        setting ``photon_num > count`` and monkeypatching the random choice to always pick the
+        first element of a list. This should cause the first mode to fill up with ``count``
+        photons."""
+        modes_dim = 10
+        with monkeypatch.context() as m:
+            m.setattr("numpy.random.choice", lambda x: x[0])
+            samp = similarity.uniform_sample_event(
+                photon_number=photon_num, max_count_per_mode=count, modes=modes_dim
+            )
+        assert samp[0] == count
