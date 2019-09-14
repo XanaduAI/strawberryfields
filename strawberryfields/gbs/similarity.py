@@ -218,6 +218,7 @@ def fac_prod(orbit: list) -> int:
     """Computes the product of the factorial of elements in an orbit.
 
     **Example usage**
+
     >>> fac_prod([3, 2, 2, 1])
     24
 
@@ -245,6 +246,7 @@ def compress_sample(sample: list) -> list:
     method gives a shorter representation.
 
     **Example usage**:
+
     >>> compress_sample([0, 1, 0, 1, 2, 0])
     [1, 3, 4, 4]
 
@@ -281,7 +283,6 @@ def estimate_orbit_prob(graph: nx.Graph, orbit: list, n_mean: float, samples: in
 
     Returns:
         float: the estimated probability
-
     """
     modes = graph.order()
     fac_norm = fac_prod(orbit)
@@ -302,15 +303,15 @@ def estimate_orbit_prob(graph: nx.Graph, orbit: list, n_mean: float, samples: in
 
 
 def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -> int:
-    """ Gives the number of samples belonging to the input event.
+    """Gives the number of samples belonging to the input event.
 
     Args:
         photon_number (int): number of photons in the event
         max_count_per_mode (int): maximum number of photons per mode in the event
         modes (int): number of modes for the samples
 
-        Returns:
-            int: number of samples in the event
+    Returns:
+        int: number of samples in the event
     """
     orbs = orbits(photon_number)
     cardinality = 0
@@ -345,7 +346,6 @@ def estimate_event_prob(
 
     Returns:
         float: the estimated probability
-
     """
     modes = graph.order()
     A = nx.to_numpy_array(graph)
