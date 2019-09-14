@@ -34,9 +34,15 @@ Summary
 Code details
 ^^^^^^^^^^^^
 """
+from math import factorial
 from typing import Generator, Union
 
+import networkx as nx
 import numpy as np
+import scipy.linalg as la
+from scipy.special import binom
+from thewalrus import hafnian
+from thewalrus.quantum import find_scaling_adjacency_matrix
 
 
 def sample_to_orbit(sample: list) -> list:
@@ -201,3 +207,155 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
             available_modes.remove(j)
 
     return sample
+
+
+def fac_prod(orbit: list) -> int:
+    """Computes the product of the factorial of elements in an orbit.
+
+    **Example usage**
+    >>> fac_prod([3, 2, 2, 1])
+    24
+
+    Args:
+        orbit (list[int]): the input orbit
+
+    Returns:
+        int: the product of the factorial of elements in the orbit
+    """
+
+    prod = 1
+    for i in orbit:
+        prod = prod * factorial(i)
+
+    return prod
+
+
+def compress_sample(sample: list) -> list:
+    """Converts a sample from a list of photons detected in each mode, to a list of the modes
+    where photons were detected.
+
+    There are two main methods of representing a sample from a GBS device. In the first,
+    the number of photons detected in each mode is specified. In the second, the mode in which
+    photon was detected is listed. Since there are typically less photons than modes, the second
+    method gives a shorter representation.
+
+    **Example usage**:
+    >>> compress_sample([0, 1, 0, 1, 2, 0])
+    [1, 3, 4, 4]
+
+    Args:
+        sample(list[int]): the input sample
+
+    Returns:
+        list([int]): the compressed sample
+    """
+
+    comp_sample = []
+    for i in range(len(sample)):
+        comp_sample = comp_sample + [i] * sample[i]
+
+    return comp_sample
+
+
+def estimate_orbit_prob(graph: nx.Graph, orbit: list, n_mean: float, samples: int = 1000) -> float:
+    """Gives a Monte Carlo estimate of the probability that a sample belongs to the given
+    orbit.
+
+    To make this estimate, several samples from the orbit are drawn uniformly at random. For each
+    sample, we calculate the probability of observing that sample from a GBS programmed according to
+    the input graph and mean photon number. Calculating this probability requires computing
+    normalization constants and the hafnian of the subgraph specified by the sample. These
+    probabilities are then rescaled according to the cardinality of the orbit. The estimate is
+    the sample mean of the rescaled probabilities.
+
+    Args:
+        graph (nx.Graph): the input graph encoded in the GBS device
+        orbit (list): the orbit for which to estimate the probability
+        n_mean (float): the total mean photon number of the GBS device
+        samples (int): the number of samples used in the Monte Carlo estimation
+
+    Returns:
+        float: the estimated probability
+
+    """
+    modes = graph.order()
+    fac_norm = fac_prod(orbit)
+    A = nx.to_numpy_array(graph)
+    A = A * find_scaling_adjacency_matrix(A, n_mean)
+    alpha = np.prod(np.cosh(np.arctanh(la.eigvalsh(A))))
+    cardinality = binom(modes, len(orbit))
+    prob = 0
+
+    for i in range(samples):
+        sample = compress_sample(orbit_to_sample(orbit, modes))
+        A_sample = A[sample][:, sample]
+        prob += np.abs(hafnian(A_sample)) ** 2
+
+    prob = (prob * cardinality) / (fac_norm * alpha * samples)
+
+    return prob
+
+
+def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -> int:
+    """ Gives the number of samples belonging to the input event.
+
+    Args:
+        photon_number (int): number of photons in the event
+        max_count_per_mode (int): maximum number of photons per mode in the event
+        modes (int): number of modes for the samples
+
+        Returns:
+            int: number of samples in the event
+    """
+    orbs = orbits(photon_number)
+    cardinality = 0
+
+    for orb in orbs:
+        if max(orb) <= max_count_per_mode:
+            cardinality += binom(modes, len(orb))
+
+    return cardinality
+
+
+def estimate_event_prob(
+    graph: nx.Graph, photon_number: int, max_count_per_mode: int, n_mean: float, samples: int = 1000
+) -> float:
+    """Gives a Monte Carlo estimation of the probability that a sample belongs to the given
+    event.
+
+    To make this estimate, several samples from the event are drawn uniformly at random. For each
+    sample, we calculate the probability of observing that sample from a GBS programmed according to
+    the input graph and mean photon number. Calculating this probability requires computing
+    normalization constants and the hafnian of the subgraph specified by the sample. The
+    normalization constant is different for samples belonging to different orbits. These
+    probabilities are then rescaled according to the cardinality of the event. The estimate is
+    the sample mean of the rescaled probabilities.
+
+    Args:
+        graph (nx.Graph): the input graph encoded in the GBS device
+        photon_number (int): number of photons in the event
+        max_count_per_mode (int): maximum number of photons per mode in the event
+        n_mean (float): the total mean photon number of the GBS device
+        samples (int): the number of samples used in the Monte Carlo estimation
+
+    Returns:
+        float: the estimated probability
+
+    """
+    modes = graph.order()
+    A = nx.to_numpy_array(graph)
+    A = A * find_scaling_adjacency_matrix(A, n_mean)
+    alpha = np.prod(np.cosh(np.arctanh(la.eigvalsh(A))))
+    cardinality = event_cardinality(photon_number, max_count_per_mode, modes)
+    prob = 0
+
+    for i in range(samples):
+        long_sample = event_to_sample(photon_number, max_count_per_mode, modes)
+        orbit = sample_to_orbit(long_sample)
+        sample = compress_sample(long_sample)
+        A_sample = A[sample][:, sample]
+        prob += np.abs(hafnian(A_sample)) ** 2 / fac_prod(orbit)
+
+    prob = (prob * cardinality) / (alpha * samples)
+
+    return prob
