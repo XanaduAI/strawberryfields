@@ -536,27 +536,6 @@ class TestDecompositionsGaussianGates:
         # Checks the means are transformed correctly
         assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
 
-    @pytest.mark.backends("fock", "tf")
-    def test_S2gate_fock(self, setup_eng, pure, tol):
-        """Test the action of the S2gate on vacuum in Fock space"""
-        if not pure:
-            pytest.skip("Test only runs on pure states")
-        N = 2
-        eng, prog = setup_eng(N)
-        nbar = 0.1
-        s = np.arcsinh(np.sqrt(nbar))
-        phi = np.pi / 3
-        with prog.context as q:
-            ops.S2gate(s, phi) | q
-        state = eng.run(prog).state
-        ket = state.ket()
-        n = ket.shape[-1]
-        diag_elems = (1 / np.sqrt(1 + nbar)) * (
-            np.exp(1j * phi) * np.sqrt((nbar / (1 + nbar)))
-        ) ** (np.arange(n))
-        diag_elems[-1] = 0
-        assert np.allclose(np.diag(diag_elems), ket, atol=tol, rtol=0)
-
     @pytest.mark.parametrize('s', np.linspace(0., 0.6, 5))
     def test_Pgate_decomp_equal(self, setup_eng, s, tol):
         """Tests that the Pgate gives the same transformation as its decomposition."""
