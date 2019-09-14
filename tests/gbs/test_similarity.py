@@ -194,3 +194,23 @@ class TestEventToSample:
             m.setattr("numpy.random.choice", lambda x: x[0])
             samp = similarity.event_to_sample(photon_num, count, modes_dim)
         assert samp[0] == count
+
+
+def test_orbit_cardinality():
+    """Test if function ``strawberryfields.apps.graph.similarity.orbit_cardinality`` returns the
+    correct number of samples for some hard-coded examples."""
+
+    orbits = {
+        ((1, 1, 2), 4): 12,
+        ((1, 1), 4): 6,
+        ((1, 2, 3), 4): 24,
+        ((1, 1, 1, 1), 5): 5,
+        ((1, 1, 2), 5): 30,
+        ((1, 2, 3), 5): 60,
+    }
+
+    calc_cardinalities = {}
+    for o, _ in orbits.items():
+        calc_cardinalities[o] = similarity.orbit_cardinality(*o)
+
+    assert calc_cardinalities == orbits

@@ -30,13 +30,15 @@ Summary
     orbit_to_sample
     event_to_sample
     orbits
-    estimate_orbit_prob
+    orbit_cardinality
     event_cardinality
+    estimate_orbit_prob
     estimate_event_prob
 
 Code details
 ^^^^^^^^^^^^
 """
+from collections import Counter
 from typing import Generator, Union
 
 import networkx as nx
@@ -144,6 +146,19 @@ def orbits(photon_number: int) -> Generator[list, None, None]:
         yield sorted(a[: k + 1], reverse=True)
 
 
+def _padded_orbit(orbit: list, modes: int) -> list:
+    """Adds zeros onto the end of ``orbit`` to get a list of ``len(modes)``.
+
+    Args:
+        orbit (list[int]): orbit to generate a sample from
+        modes (int): number of modes in the sample
+
+    Returns:
+        list[int]: a padded orbit of ``len(modes)``
+    """
+    return list(orbit) + [0] * (modes - len(orbit))
+
+
 def orbit_to_sample(orbit: list, modes: int) -> list:
     """Generates a sample selected uniformly at random from the specified orbit.
 
@@ -166,7 +181,7 @@ def orbit_to_sample(orbit: list, modes: int) -> list:
     if modes < len(orbit):
         raise ValueError("Number of modes cannot be smaller than length of orbit")
 
-    sample = orbit + [0] * (modes - len(orbit))
+    sample = _padded_orbit(orbit, modes)
     np.random.shuffle(sample)
     return sample
 
@@ -213,6 +228,41 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
     return sample
 
 
+def orbit_cardinality(orbit: list, modes: int) -> int:
+    """Gives the number of samples belonging to the input orbit.
+
+    Args:
+        orbit (list[int]): orbit to count number of samples
+        modes (int): number of modes in the sample
+
+    Returns:
+        int: number of samples in the orbit
+    """
+    sample = _padded_orbit(orbit, modes)
+    counts = list(Counter(sample).values())
+    return int(factorial(modes) / np.prod(factorial(counts)))
+
+
+def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -> int:
+    """Gives the number of samples belonging to the input event.
+
+    Args:
+        photon_number (int): number of photons in the event
+        max_count_per_mode (int): maximum number of photons per mode in the event
+        modes (int): number of modes in the samples
+
+    Returns:
+        int: number of samples in the event
+    """
+    cardinality = 0
+
+    for orb in orbits(photon_number):
+        if max(orb) <= max_count_per_mode:
+            cardinality += orbit_cardinality(orb, modes)
+
+    return cardinality
+
+
 def estimate_orbit_prob(graph: nx.Graph, orbit: list, n_mean: float, samples: int = 1000) -> float:
     """Gives a Monte Carlo estimate of the probability that a sample belongs to the given
     orbit.
@@ -249,27 +299,6 @@ def estimate_orbit_prob(graph: nx.Graph, orbit: list, n_mean: float, samples: in
     prob = (prob * cardinality) / (fac_norm * alpha * samples)
 
     return prob
-
-
-def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -> int:
-    """Gives the number of samples belonging to the input event.
-
-    Args:
-        photon_number (int): number of photons in the event
-        max_count_per_mode (int): maximum number of photons per mode in the event
-        modes (int): number of modes for the samples
-
-    Returns:
-        int: number of samples in the event
-    """
-    orbs = orbits(photon_number)
-    cardinality = 0
-
-    for orb in orbs:
-        if max(orb) <= max_count_per_mode:
-            cardinality += binom(modes, len(orb))
-
-    return cardinality
 
 
 def estimate_event_prob(
