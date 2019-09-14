@@ -22,7 +22,7 @@ import pytest
 
 from strawberryfields.gbs import similarity
 
-pytestmark = pytest.mark.apps
+pytestmark = pytest.mark.gbs
 
 all_orbits = {
     3: [[1, 1, 1], [2, 1], [3]],
@@ -95,7 +95,7 @@ def test_sample_to_event(dim, max_count_per_mode):
 
 
 class TestOrbitToSample:
-    """Tests for the function ``strawberryfields.apps.graph.similarity.orbit_to_sample``"""
+    """Tests for the function ``strawberryfields.gbs.similarity.orbit_to_sample``"""
 
     def test_low_modes(self):
         """Test if function raises a ``ValueError`` if fed an argument for ``modes`` that does
@@ -143,7 +143,7 @@ class TestOrbitToSample:
 
 
 class TestEventToSample:
-    """Tests for the function ``strawberryfields.apps.graph.similarity.event_to_sample``"""
+    """Tests for the function ``strawberryfields.gbs.similarity.event_to_sample``"""
 
     def test_low_count(self):
         """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is not positive."""
@@ -197,7 +197,7 @@ class TestEventToSample:
 
 
 def test_orbit_cardinality():
-    """Test if function ``strawberryfields.apps.graph.similarity.orbit_cardinality`` returns the
+    """Test if function ``strawberryfields.gbs.similarity.orbit_cardinality`` returns the
     correct number of samples for some hard-coded examples."""
 
     orbits = {
@@ -217,7 +217,7 @@ def test_orbit_cardinality():
 
 
 def test_event_cardinality():
-    """Test if function ``strawberryfields.apps.graph.similarity.event_cardinality`` returns the
+    """Test if function ``strawberryfields.gbs.similarity.event_cardinality`` returns the
     correct number of samples for some hard-coded examples."""
 
     events = {
