@@ -30,7 +30,6 @@ Summary
     orbit_to_sample
     event_to_sample
     orbits
-    fac_prod
     compress_sample
     estimate_orbit_prob
     event_cardinality
@@ -39,13 +38,12 @@ Summary
 Code details
 ^^^^^^^^^^^^
 """
-from math import factorial
 from typing import Generator, Union
 
 import networkx as nx
 import numpy as np
 import scipy.linalg as la
-from scipy.special import binom
+from scipy.special import binom, factorial
 from thewalrus import hafnian
 from thewalrus.quantum import find_scaling_adjacency_matrix
 
@@ -214,28 +212,6 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
     return sample
 
 
-def fac_prod(orbit: list) -> int:
-    """Computes the product of the factorial of elements in an orbit.
-
-    **Example usage**
-
-    >>> fac_prod([3, 2, 2, 1])
-    24
-
-    Args:
-        orbit (list[int]): the input orbit
-
-    Returns:
-        int: the product of the factorial of elements in the orbit
-    """
-
-    prod = 1
-    for i in orbit:
-        prod = prod * factorial(i)
-
-    return prod
-
-
 def compress_sample(sample: list) -> list:
     """Converts a sample from a list of photons detected in each mode, to a list of the modes
     where photons were detected.
@@ -285,7 +261,7 @@ def estimate_orbit_prob(graph: nx.Graph, orbit: list, n_mean: float, samples: in
         float: the estimated probability
     """
     modes = graph.order()
-    fac_norm = fac_prod(orbit)
+    fac_norm = np.prod(factorial(orbit))
     A = nx.to_numpy_array(graph)
     A = A * find_scaling_adjacency_matrix(A, n_mean)
     alpha = np.prod(np.cosh(np.arctanh(la.eigvalsh(A))))
@@ -359,7 +335,7 @@ def estimate_event_prob(
         orbit = sample_to_orbit(long_sample)
         sample = compress_sample(long_sample)
         A_sample = A[sample][:, sample]
-        prob += np.abs(hafnian(A_sample)) ** 2 / fac_prod(orbit)
+        prob += np.abs(hafnian(A_sample)) ** 2 / np.prod(factorial(orbit))
 
     prob = (prob * cardinality) / (alpha * samples)
 
