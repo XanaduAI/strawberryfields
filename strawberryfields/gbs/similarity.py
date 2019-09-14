@@ -30,6 +30,11 @@ Summary
     orbit_to_sample
     event_to_sample
     orbits
+    fac_prod
+    compress_sample
+    estimate_orbit_prob
+    event_cardinality
+    estimate_event_prob
 
 Code details
 ^^^^^^^^^^^^
@@ -251,8 +256,8 @@ def compress_sample(sample: list) -> list:
     """
 
     comp_sample = []
-    for i in range(len(sample)):
-        comp_sample = comp_sample + [i] * sample[i]
+    for i, s in enumerate(sample):
+        comp_sample = comp_sample + [i] * s
 
     return comp_sample
 
@@ -286,7 +291,7 @@ def estimate_orbit_prob(graph: nx.Graph, orbit: list, n_mean: float, samples: in
     cardinality = binom(modes, len(orbit))
     prob = 0
 
-    for i in range(samples):
+    for _ in range(samples):
         sample = compress_sample(orbit_to_sample(orbit, modes))
         A_sample = A[sample][:, sample]
         prob += np.abs(hafnian(A_sample)) ** 2
@@ -349,7 +354,7 @@ def estimate_event_prob(
     cardinality = event_cardinality(photon_number, max_count_per_mode, modes)
     prob = 0
 
-    for i in range(samples):
+    for _ in range(samples):
         long_sample = event_to_sample(photon_number, max_count_per_mode, modes)
         orbit = sample_to_orbit(long_sample)
         sample = compress_sample(long_sample)
