@@ -214,3 +214,23 @@ def test_orbit_cardinality():
         calc_cardinalities[o] = similarity.orbit_cardinality(*o)
 
     assert calc_cardinalities == orbits
+
+
+def test_event_cardinality():
+    """Test if function ``strawberryfields.apps.graph.similarity.event_cardinality`` returns the
+    correct number of samples for some hard-coded examples."""
+
+    events = {
+        (5, 3, 6): 216,
+        (6, 3, 6): 336,
+        (5, 2, 6): 126,
+        (5, 3, 7): 413,
+        (6, 3, 7): 728,
+        (5, 2, 7): 266,
+    }
+
+    calc_cardinalities = {}
+    for o, _ in events.items():
+        calc_cardinalities[o] = similarity.event_cardinality(*o)
+
+    assert calc_cardinalities == events
