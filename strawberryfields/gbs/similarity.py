@@ -228,6 +228,18 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
     return sample
 
 
+def _product_factorial(l: list) -> int:
+    """Computes the product of the factorial of elements in ``l``.
+
+    Args:
+        l (list[int]): the input list
+
+    Returns:
+        int: the product of factorials
+    """
+    return np.prod(factorial(l))
+
+
 def orbit_cardinality(orbit: list, modes: int) -> int:
     """Gives the number of samples belonging to the input orbit.
 
@@ -245,7 +257,7 @@ def orbit_cardinality(orbit: list, modes: int) -> int:
     """
     sample = _padded_orbit(orbit, modes)
     counts = list(Counter(sample).values())
-    return int(factorial(modes) / np.prod(factorial(counts)))
+    return int(factorial(modes) / _product_factorial(counts))
 
 
 def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -> int:
@@ -294,7 +306,7 @@ def estimate_orbit_prob(graph: nx.Graph, orbit: list, n_mean: float, samples: in
         float: the estimated probability
     """
     modes = graph.order()
-    fac_norm = np.prod(factorial(orbit))
+    fac_norm = _product_factorial(orbit)
     A = nx.to_numpy_array(graph)
     A = A * find_scaling_adjacency_matrix(A, n_mean)
     alpha = np.prod(np.cosh(np.arctanh(la.eigvalsh(A))))
@@ -347,7 +359,7 @@ def estimate_event_prob(
         orbit = sample_to_orbit(long_sample)
         sample = modes_from_counts(long_sample)
         A_sample = A[sample][:, sample]
-        prob += np.abs(hafnian(A_sample)) ** 2 / np.prod(factorial(orbit))
+        prob += np.abs(hafnian(A_sample)) ** 2 / _product_factorial(orbit)
 
     prob = (prob * cardinality) / (alpha * samples)
 
