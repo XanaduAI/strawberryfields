@@ -42,6 +42,7 @@ Summary
     quantum_sampler
     uniform_sampler
     random_seed
+    modes_from_counts
 
 Code details
 ^^^^^^^^^^^^
@@ -49,8 +50,8 @@ Code details
 from typing import Optional
 
 import numpy as np
-import strawberryfields as sf
 
+import strawberryfields as sf
 from strawberryfields.gbs import utils
 
 QUANTUM_BACKENDS = ("gaussian",)
@@ -227,3 +228,33 @@ def random_seed(seed: int = None) -> None:
         seed (int): random seed; defaults to ``None``
     """
     np.random.seed(seed)
+
+
+def modes_from_counts(sample: list) -> list:
+    r"""Convert a sample of photon counts to a list of modes where photons are detected.
+
+    There are two main methods of representing a sample. In the first, the number of photons
+    detected in each mode is specified. In the second, the modes in which each photon was detected
+    are listed. Since there are typically fewer photons than modes, the second method gives a
+    shorter representation.
+
+    This function converts from the first representation to the second. Given an :math:`N` mode
+    sample :math:`s=\{s_{1},s_{2},\ldots,s_{N}\}` of photon counts in each mode with total photon
+    number :math:`k`, this function returns a list of modes :math:`m=\{m_{1},m_{2},\ldots,
+    m_{k}\}` where photons are detected.
+
+    **Example usage:**
+
+    >>> modes_from_counts([0, 1, 0, 1, 2, 0])
+    [1, 3, 4, 4]
+
+    Args:
+       sample (list[int]): a sample of photon counts
+
+    Returns:
+        list[int]: a list of modes where photons are detected, sorted in non-decreasing order
+    """
+    modes = []
+    for i, s in enumerate(sample):
+        modes += [i] * s
+    return modes

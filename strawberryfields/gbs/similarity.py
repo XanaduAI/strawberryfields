@@ -30,7 +30,6 @@ Summary
     orbit_to_sample
     event_to_sample
     orbits
-    compress_sample
     estimate_orbit_prob
     event_cardinality
     estimate_event_prob
@@ -46,6 +45,8 @@ import scipy.linalg as la
 from scipy.special import binom, factorial
 from thewalrus import hafnian
 from thewalrus.quantum import find_scaling_adjacency_matrix
+
+from strawberryfields.gbs.sample import modes_from_counts
 
 
 def sample_to_orbit(sample: list) -> list:
@@ -212,34 +213,6 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
     return sample
 
 
-def compress_sample(sample: list) -> list:
-    """Converts a sample from a list of photons detected in each mode, to a list of the modes
-    where photons were detected.
-
-    There are two main methods of representing a sample from a GBS device. In the first,
-    the number of photons detected in each mode is specified. In the second, the mode in which
-    photon was detected is listed. Since there are typically less photons than modes, the second
-    method gives a shorter representation.
-
-    **Example usage**:
-
-    >>> compress_sample([0, 1, 0, 1, 2, 0])
-    [1, 3, 4, 4]
-
-    Args:
-        sample(list[int]): the input sample
-
-    Returns:
-        list([int]): the compressed sample
-    """
-
-    comp_sample = []
-    for i, s in enumerate(sample):
-        comp_sample = comp_sample + [i] * s
-
-    return comp_sample
-
-
 def estimate_orbit_prob(graph: nx.Graph, orbit: list, n_mean: float, samples: int = 1000) -> float:
     """Gives a Monte Carlo estimate of the probability that a sample belongs to the given
     orbit.
@@ -269,7 +242,7 @@ def estimate_orbit_prob(graph: nx.Graph, orbit: list, n_mean: float, samples: in
     prob = 0
 
     for _ in range(samples):
-        sample = compress_sample(orbit_to_sample(orbit, modes))
+        sample = modes_from_counts(orbit_to_sample(orbit, modes))
         A_sample = A[sample][:, sample]
         prob += np.abs(hafnian(A_sample)) ** 2
 
@@ -333,7 +306,7 @@ def estimate_event_prob(
     for _ in range(samples):
         long_sample = event_to_sample(photon_number, max_count_per_mode, modes)
         orbit = sample_to_orbit(long_sample)
-        sample = compress_sample(long_sample)
+        sample = modes_from_counts(long_sample)
         A_sample = A[sample][:, sample]
         prob += np.abs(hafnian(A_sample)) ** 2 / np.prod(factorial(orbit))
 
