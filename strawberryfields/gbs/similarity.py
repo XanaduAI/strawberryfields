@@ -32,7 +32,7 @@ Summary
     orbits
     orbit_cardinality
     event_cardinality
-    estimate_orbit_prob
+    p_orbit_mc
     estimate_event_prob
 
 Code details
@@ -44,7 +44,7 @@ from typing import Generator, Union
 import networkx as nx
 import numpy as np
 import scipy.linalg as la
-from scipy.special import binom, factorial
+from scipy.special import factorial
 from thewalrus import hafnian
 from thewalrus.quantum import find_scaling_adjacency_matrix
 
@@ -245,7 +245,7 @@ def orbit_cardinality(orbit: list, modes: int) -> int:
 
     **Example usage**:
 
-    >>> orbit_cardinality([1, 1, 2], 4)
+    >>> orbit_cardinality([2, 1, 1], 4)
     12
 
     Args:
@@ -285,32 +285,42 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     return cardinality
 
 
-def estimate_orbit_prob(graph: nx.Graph, orbit: list, n_mean: float, samples: int = 1000) -> float:
-    """Gives a Monte Carlo estimate of the probability that a sample belongs to the given
-    orbit.
+def p_orbit_mc(orbit: list, graph: nx.Graph, n_mean: float = 5, samples: int = 1000) -> float:
+    """Gives a Monte Carlo estimate of the probability of a given orbit with respect to a graph.
 
-    To make this estimate, several samples from the orbit are drawn uniformly at random. For each
-    sample, we calculate the probability of observing that sample from a GBS programmed according to
-    the input graph and mean photon number. Calculating this probability requires computing
-    normalization constants and the hafnian of the subgraph specified by the sample. These
-    probabilities are then rescaled according to the cardinality of the orbit. The estimate is
-    the sample mean of the rescaled probabilities.
+    To make this estimate, several samples from the orbit are drawn uniformly at random using
+    :func:`orbit_to_sample`.
+
+    For each sample, this function calculates the probability of observing that sample from a GBS
+    device programmed according to the input graph and mean photon number. Calculating sample
+    probabilities requires computing normalization constants and the hafnian of the subgraph
+    specified by the sample :cite:`hamilton2017`.
+
+    The sum of the probabilities is then rescaled according to the cardinality of the
+    orbit and the total number of samples. The resultant estimate has sample mean equal to the
+    orbit probability.
+
+    **Example usage**:
+
+    >>> graph = nx.complete_graph(10)
+    >>> p_orbit_mc([2, 1, 1], graph)
+    0.5
 
     Args:
-        graph (nx.Graph): the input graph encoded in the GBS device
-        orbit (list): the orbit for which to estimate the probability
-        n_mean (float): the total mean photon number of the GBS device
-        samples (int): the number of samples used in the Monte Carlo estimation
+        orbit (list[int]): orbit for which to estimate the probability
+        graph (nx.Graph): input graph encoded in the GBS device
+        n_mean (float): total mean photon number of the GBS device
+        samples (int): number of samples used in the Monte Carlo estimation
 
     Returns:
-        float: the estimated probability
+        float: estimated probability of the orbit with respect to the graph
     """
     modes = graph.order()
     fac_norm = _product_factorial(orbit)
     A = nx.to_numpy_array(graph)
     A = A * find_scaling_adjacency_matrix(A, n_mean)
     alpha = np.prod(np.cosh(np.arctanh(la.eigvalsh(A))))
-    cardinality = binom(modes, len(orbit))
+    cardinality = orbit_cardinality(orbit, modes)
     prob = 0
 
     for _ in range(samples):
