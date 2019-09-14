@@ -231,6 +231,11 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
 def orbit_cardinality(orbit: list, modes: int) -> int:
     """Gives the number of samples belonging to the input orbit.
 
+    **Example usage**:
+
+    >>> orbit_cardinality([1, 1, 2], 4)
+    12
+
     Args:
         orbit (list[int]): orbit to count number of samples
         modes (int): number of modes in the sample
@@ -245,6 +250,11 @@ def orbit_cardinality(orbit: list, modes: int) -> int:
 
 def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -> int:
     """Gives the number of samples belonging to the input event.
+
+    **Example usage**:
+
+    >>> event_cardinality(5, 2, 6)
+    126
 
     Args:
         photon_number (int): number of photons in the event
