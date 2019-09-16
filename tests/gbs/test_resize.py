@@ -19,6 +19,7 @@ import networkx as nx
 import numpy as np
 import pytest
 
+import strawberryfields.gbs.dense
 from strawberryfields.gbs import resize, utils
 
 pytestmark = pytest.mark.gbs
@@ -50,19 +51,19 @@ class TestResizeSubgraphs:
     def test_target_wrong_type(self, graph):
         """Test if function raises a ``TypeError`` when incorrect type given for ``target`` """
         with pytest.raises(TypeError, match="target must be an integer"):
-            resize.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=[])
+            strawberryfields.gbs.dense.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=[])
 
     def test_target_small(self, graph):
         """Test if function raises a ``ValueError`` when a too small number is given for
         ``target`` """
         with pytest.raises(ValueError, match="target must be greater than two and less than"):
-            resize.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=1)
+            strawberryfields.gbs.dense.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=1)
 
     def test_target_big(self, graph):
         """Test if function raises a ``ValueError`` when a too large number is given for
         ``target`` """
         with pytest.raises(ValueError, match="target must be greater than two and less than"):
-            resize.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=5)
+            strawberryfields.gbs.dense.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=5)
 
     def test_callable_input(self, graph):
         """Tests if function returns the correct output given a custom method set by the user"""
@@ -72,13 +73,13 @@ class TestResizeSubgraphs:
             """Mockup of custom-method function fed to ``find_dense``"""
             return objective_return
 
-        result = resize.resize_subgraphs(
+        result = strawberryfields.gbs.dense.resize_subgraphs(
             subgraphs=[[0, 1]], graph=graph, target=4, resize_options={"method": custom_method}
         )
 
         assert result == objective_return
 
-    @pytest.mark.parametrize("methods", resize.METHOD_DICT)
+    @pytest.mark.parametrize("methods", strawberryfields.gbs.dense.RESIZE_DICT)
     def test_valid_input(self, graph, monkeypatch, methods):
         """Tests if function returns the correct output under normal conditions. The resizing
         method is here monkey patched to return a known result."""
@@ -89,9 +90,9 @@ class TestResizeSubgraphs:
             return objective_return
 
         with monkeypatch.context() as m:
-            m.setattr(resize, "METHOD_DICT", {methods: custom_method})
+            m.setattr(resize, "RESIZE_DICT", {methods: custom_method})
 
-            result = resize.resize_subgraphs(
+            result = strawberryfields.gbs.dense.resize_subgraphs(
                 subgraphs=[[0, 1]], graph=graph, target=4, resize_options={"method": methods}
             )
 
@@ -99,7 +100,7 @@ class TestResizeSubgraphs:
 
 
 @pytest.mark.parametrize("dim, target", [(6, 4), (8, 5)])
-@pytest.mark.parametrize("methods", resize.METHOD_DICT)
+@pytest.mark.parametrize("methods", strawberryfields.gbs.dense.RESIZE_DICT)
 def test_resize_subgraphs_integration(graph, target, methods):
     """Test if function returns resized subgraphs of the correct form given an input list of
     variable sized subgraphs specified by ``subgraphs``. The output should be a list of ``len(
@@ -111,7 +112,7 @@ def test_resize_subgraphs_integration(graph, target, methods):
     graph = nx.relabel_nodes(graph, lambda x: x ** 2)
     graph_nodes = set(graph.nodes)
     s_relabeled = [(np.array(s) ** 2).tolist() for s in subgraphs]
-    resized = resize.resize_subgraphs(
+    resized = strawberryfields.gbs.dense.resize_subgraphs(
         subgraphs=s_relabeled, graph=graph, target=target, resize_options={"method": methods}
     )
     resized = np.array(resized)
@@ -133,7 +134,7 @@ class TestGreedyDensity:
         with monkeypatch.context() as m:
             m.setattr(utils, "is_subgraph", lambda v1, v2: False)
             with pytest.raises(Exception, match="Input is not a valid subgraph"):
-                resize.greedy_density(subgraphs=[[0, 9]], graph=graph, target=3)
+                strawberryfields.gbs.dense.greedy_density(subgraphs=[[0, 9]], graph=graph, target=3)
 
     def test_normal_conditions_grow(self, graph):
         """Test if function returns correct subgraph under normal conditions, where one needs to
@@ -141,7 +142,9 @@ class TestGreedyDensity:
         subgraph of the nodes [0, 1, 4] and aiming to grow to 4 nodes. We can see that there are
         two subgraphs of size 4: [0, 1, 2, 4] with 3 edges and [0, 1, 3, 4] with 4 edges,
         so we hence expect the second option as the returned solution."""
-        subgraph = resize.greedy_density(subgraphs=[[0, 1, 4]], graph=graph, target=4)[0]
+        subgraph = strawberryfields.gbs.dense.greedy_density(
+            subgraphs=[[0, 1, 4]], graph=graph, target=4
+        )[0]
         assert np.allclose(subgraph, [0, 1, 3, 4])
 
     def test_normal_conditions_shrink(self, graph):
@@ -153,7 +156,9 @@ class TestGreedyDensity:
         the returned solution."""
         adj = ((0, 1, 0, 0, 0), (1, 0, 1, 1, 0), (0, 1, 0, 1, 0), (0, 1, 1, 0, 1), (0, 0, 0, 1, 0))
         graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
-        subgraph = resize.greedy_density(subgraphs=[[1, 2, 3, 4]], graph=graph, target=3)[0]
+        subgraph = strawberryfields.gbs.dense.greedy_density(
+            subgraphs=[[1, 2, 3, 4]], graph=graph, target=3
+        )[0]
         assert np.allclose(subgraph, [1, 2, 3])
 
 
@@ -168,7 +173,7 @@ class TestGreedyDegree:
         with monkeypatch.context() as m:
             m.setattr(utils, "is_subgraph", lambda v1, v2: False)
             with pytest.raises(Exception, match="Input is not a valid subgraph"):
-                resize.greedy_degree(subgraphs=[[0, 9]], graph=graph, target=3)
+                strawberryfields.gbs.dense.greedy_degree(subgraphs=[[0, 9]], graph=graph, target=3)
 
     def test_normal_conditions_grow(self, graph):
         """Test if function returns correct subgraph under normal conditions, where one needs to
@@ -189,7 +194,9 @@ class TestGreedyDegree:
         )
         graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
 
-        subgraph = resize.greedy_degree(subgraphs=[[0, 1, 4]], graph=graph, target=4)[0]
+        subgraph = strawberryfields.gbs.dense.greedy_degree(
+            subgraphs=[[0, 1, 4]], graph=graph, target=4
+        )[0]
 
         assert np.allclose(subgraph, [0, 1, 2, 4])
 
@@ -211,5 +218,7 @@ class TestGreedyDegree:
             (1, 0, 0, 0, 0, 0, 0),
         )
         graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
-        subgraph = resize.greedy_degree(subgraphs=[[0, 1, 2, 3]], graph=graph, target=3)
+        subgraph = strawberryfields.gbs.dense.greedy_degree(
+            subgraphs=[[0, 1, 2, 3]], graph=graph, target=3
+        )
         assert np.allclose(subgraph, [0, 1, 3])

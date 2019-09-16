@@ -69,7 +69,7 @@ class TestFindDense:
             return objective_return
 
         with monkeypatch.context() as m:
-            m.setattr(dense, "METHOD_DICT", {methods: custom_method})
+            m.setattr(dense, "RESIZE_DICT", {methods: custom_method})
 
             result = dense.find_dense(
                 graph=graph, nodes=3, iterations=10, options={"heuristic": {"method": methods}}
