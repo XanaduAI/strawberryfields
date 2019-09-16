@@ -43,12 +43,8 @@ from typing import Generator, Union
 
 import networkx as nx
 import numpy as np
-import scipy.linalg as la
 from scipy.special import factorial
-from thewalrus import hafnian
-from thewalrus.quantum import find_scaling_adjacency_matrix
-
-from strawberryfields.gbs.sample import modes_from_counts
+import strawberryfields as sf
 
 
 def sample_to_orbit(sample: list) -> list:
@@ -146,19 +142,6 @@ def orbits(photon_number: int) -> Generator[list, None, None]:
         yield sorted(a[: k + 1], reverse=True)
 
 
-def _padded_orbit(orbit: list, modes: int) -> list:
-    """Adds zeros onto the end of ``orbit`` to get a list of ``len(modes)``.
-
-    Args:
-        orbit (list[int]): orbit to generate a sample from
-        modes (int): number of modes in the sample
-
-    Returns:
-        list[int]: a padded orbit of ``len(modes)``
-    """
-    return list(orbit) + [0] * (modes - len(orbit))
-
-
 def orbit_to_sample(orbit: list, modes: int) -> list:
     """Generates a sample selected uniformly at random from the specified orbit.
 
@@ -181,7 +164,7 @@ def orbit_to_sample(orbit: list, modes: int) -> list:
     if modes < len(orbit):
         raise ValueError("Number of modes cannot be smaller than length of orbit")
 
-    sample = _padded_orbit(orbit, modes)
+    sample = list(orbit) + [0] * (modes - len(orbit))
     np.random.shuffle(sample)
     return sample
 
@@ -228,18 +211,6 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
     return sample
 
 
-def _product_factorial(l: list) -> int:
-    """Computes the product of the factorial of elements in ``l``.
-
-    Args:
-        l (list[int]): the input list
-
-    Returns:
-        int: the product of factorials
-    """
-    return np.prod(factorial(l))
-
-
 def orbit_cardinality(orbit: list, modes: int) -> int:
     """Gives the number of samples belonging to the input orbit.
 
@@ -255,9 +226,10 @@ def orbit_cardinality(orbit: list, modes: int) -> int:
     Returns:
         int: number of samples in the orbit
     """
-    sample = _padded_orbit(orbit, modes)
+
+    sample = list(orbit) + [0] * (modes - len(orbit))
     counts = list(Counter(sample).values())
-    return int(factorial(modes) / _product_factorial(counts))
+    return int(factorial(modes) / np.prod(factorial(counts)))
 
 
 def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -> int:
@@ -285,20 +257,16 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     return cardinality
 
 
-def p_orbit_mc(orbit: list, graph: nx.Graph, n_mean: float = 5, samples: int = 1000) -> float:
+def p_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
     """Gives a Monte Carlo estimate of the probability of a given orbit with respect to a graph.
 
     To make this estimate, several samples from the orbit are drawn uniformly at random using
     :func:`orbit_to_sample`.
 
     For each sample, this function calculates the probability of observing that sample from a GBS
-    device programmed according to the input graph and mean photon number. Calculating sample
-    probabilities requires computing normalization constants and the hafnian of the subgraph
-    specified by the sample :cite:`hamilton2017`.
-
-    The sum of the probabilities is then rescaled according to the cardinality of the
-    orbit and the total number of samples. The resultant estimate has sample mean equal to the
-    orbit probability.
+    device programmed according to the input graph and mean photon number. The sum of the
+    probabilities is then rescaled according to the cardinality of the orbit and the total number of
+     samples. The estimate is the sample mean of the rescaled probabilities.
 
     **Example usage**:
 
@@ -313,39 +281,40 @@ def p_orbit_mc(orbit: list, graph: nx.Graph, n_mean: float = 5, samples: int = 1
         samples (int): number of samples used in the Monte Carlo estimation
 
     Returns:
-        float: estimated probability of the orbit with respect to the graph
+        float: estimated orbit probability
     """
+
     modes = graph.order()
-    fac_norm = _product_factorial(orbit)
+    photons = np.sum(orbit)
     A = nx.to_numpy_array(graph)
-    A = A * find_scaling_adjacency_matrix(A, n_mean)
-    alpha = np.prod(np.cosh(np.arctanh(la.eigvalsh(A))))
-    cardinality = orbit_cardinality(orbit, modes)
+    mean_photon_per_mode = n_mean / float(modes)
+
+    p = sf.Program(modes)
+    with p.context as q:
+        sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
+    eng = sf.LocalEngine(backend="gaussian")
+    result = eng.run(p)
+
     prob = 0
 
     for _ in range(samples):
-        sample = modes_from_counts(orbit_to_sample(orbit, modes))
-        A_sample = A[sample][:, sample]
-        prob += np.abs(hafnian(A_sample)) ** 2
+        sample = orbit_to_sample(orbit, modes)
+        prob += result.state.fock_prob(sample, cutoff=photons+1)
 
-    prob = (prob * cardinality) / (fac_norm * alpha * samples)
+    prob = prob*orbit_cardinality(orbit, modes)/samples
 
     return prob
 
 
-def estimate_event_prob(
-    graph: nx.Graph, photon_number: int, max_count_per_mode: int, n_mean: float, samples: int = 1000
-) -> float:
+def p_event_mc(graph: nx.Graph, photon_number: int, max_count_per_mode: int, n_mean: float = 5,
+               samples: int = 1000) -> float:
     """Gives a Monte Carlo estimation of the probability that a sample belongs to the given
     event.
 
     To make this estimate, several samples from the event are drawn uniformly at random. For each
     sample, we calculate the probability of observing that sample from a GBS programmed according to
-    the input graph and mean photon number. Calculating this probability requires computing
-    normalization constants and the hafnian of the subgraph specified by the sample. The
-    normalization constant is different for samples belonging to different orbits. These
-    probabilities are then rescaled according to the cardinality of the event. The estimate is
-    the sample mean of the rescaled probabilities.
+    the input graph and mean photon number. These probabilities are then rescaled according to the
+    cardinality of the event. The estimate is the sample mean of the rescaled probabilities.
 
     Args:
         graph (nx.Graph): the input graph encoded in the GBS device
@@ -357,20 +326,28 @@ def estimate_event_prob(
     Returns:
         float: the estimated probability
     """
+
     modes = graph.order()
     A = nx.to_numpy_array(graph)
-    A = A * find_scaling_adjacency_matrix(A, n_mean)
-    alpha = np.prod(np.cosh(np.arctanh(la.eigvalsh(A))))
-    cardinality = event_cardinality(photon_number, max_count_per_mode, modes)
+    mean_photon_per_mode = n_mean / float(modes)
+
+    p = sf.Program(modes)
+    with p.context as q:
+        sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
+    eng = sf.LocalEngine(backend="gaussian")
+    result = eng.run(p)
+
     prob = 0
 
     for _ in range(samples):
-        long_sample = event_to_sample(photon_number, max_count_per_mode, modes)
-        orbit = sample_to_orbit(long_sample)
-        sample = modes_from_counts(long_sample)
-        A_sample = A[sample][:, sample]
-        prob += np.abs(hafnian(A_sample)) ** 2 / _product_factorial(orbit)
+        sample = event_to_sample(photon_number, max_count_per_mode, modes)
+        prob += result.state.fock_prob(sample, cutoff=np.sum(sample)+1)
 
-    prob = (prob * cardinality) / (alpha * samples)
+    prob = prob*event_cardinality(photon_number, max_count_per_mode, modes) / samples
 
     return prob
+
+
+graph = nx.erdos_renyi_graph(30, 0.5)
+print(p_orbit_mc(graph, [2, 2, 1, 1], 4, samples=100))
+print(p_event_mc(graph, 4, 2, 4, samples=100))
