@@ -214,6 +214,11 @@ def feature_vector_sampling(
     to ``max_photon_number``. Probabilities are reconstructed by measuring the occurrence of
     events in the input ``samples``.
 
+    **Example usage**:
+
+    >>> feature_vector_sampling(samples, 1, 4, 1)
+    (0, 0.34, 0.08, 0.01)
+
     Args:
         samples (list[list[int]]): a list of samples generated from :func:`~.quantum_sampler`
         min_photon_number (int): minimum photon number of events in feature vector
