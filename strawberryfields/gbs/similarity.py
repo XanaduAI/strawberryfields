@@ -229,8 +229,8 @@ def feature_vector_sampling(
     Returns:
         array: a feature vector of event probabilities in the same order as ``event_photon_numbers``
     """
-    if min(event_photon_numbers) < 1:
-        raise ValueError("Cannot request events with photon number below one")
+    if min(event_photon_numbers) < 0:
+        raise ValueError("Cannot request events with photon number below zero")
 
     if max_count_per_mode < 1:
         raise ValueError("Maximum number of photons per mode must be at least one")

@@ -199,11 +199,11 @@ class TestEventToSample:
 class TestFeatureVectorSampling:
     """Tests for the function ``strawberryfields.apps.graph.similarity.feature_vector_sampling``"""
 
-    def test_bad_min_max(self):
+    def test_bad_event_photon_numbers(self):
         """Test if function raises a ``ValueError`` when input a minimum photon number that is
-        larger than maximum photon number."""
-        with pytest.raises(ValueError, match="Cannot request events with photon number below one"):
-            similarity.feature_vector_sampling([[1, 1, 0], [1, 0, 1]], [0, 4], 1)
+        below zero."""
+        with pytest.raises(ValueError, match="Cannot request events with photon number below zero"):
+            similarity.feature_vector_sampling([[1, 1, 0], [1, 0, 1]], [-1, 4], 1)
 
     def test_bad_max_count(self):
         """Test if function raises a ``ValueError`` when input a non-positive value for the
