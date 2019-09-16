@@ -202,14 +202,14 @@ class TestFeatureVectorSampling:
     def test_bad_min_max(self):
         """Test if function raises a ``ValueError`` when input a minimum photon number that is
         larger than maximum photon number."""
-        with pytest.raises(ValueError, match="Minimum photon number cannot exceed maximum"):
-            similarity.feature_vector_sampling([[1, 1, 0], [1, 0, 1]], 3, 2, 1)
+        with pytest.raises(ValueError, match="Cannot request events with photon number below one"):
+            similarity.feature_vector_sampling([[1, 1, 0], [1, 0, 1]], [0, 4], 1)
 
     def test_bad_max_count(self):
         """Test if function raises a ``ValueError`` when input a non-positive value for the
         maximum photon count per mode."""
         with pytest.raises(ValueError, match="Maximum number of photons per mode must be at least"):
-            similarity.feature_vector_sampling([[1, 1, 0], [1, 0, 1]], 3, 4, 0)
+            similarity.feature_vector_sampling([[1, 1, 0], [1, 0, 1]], [2, 4], 0)
 
     def test_correct_distribution(self, monkeypatch):
         """Test if function correctly constructs the feature vector corresponding to some hard
@@ -217,7 +217,7 @@ class TestFeatureVectorSampling:
         feature vector to test against the output of ``feature_vector_sampling``. The
         ``sample_to_event`` function called within ``feature_vector_sampling`` is monkeypatched
         to return the hard coded events corresponding to the samples."""
-        samples_events = {  # max_count_per_mode = 1
+        samples_events_mapping = {  # max_count_per_mode = 1
             (1, 1, 0, 0, 0): 2,
             (1, 1, 1, 0, 0): 3,
             (1, 1, 1, 1, 0): 4,
@@ -227,13 +227,13 @@ class TestFeatureVectorSampling:
             (4, 0, 0, 0, 0): None,
             (5, 0, 0, 0, 0): None,
             (0, 1, 1, 0, 0): 2,
-            (0, 1, 0, 1, 1): 3,
         }
-        samples = list(samples_events.keys())
-        fv_true = [0, 0.2, 0.2, 0.1]  # min_photon_number = 1, max_photon_number = 4
+        samples = list(samples_events_mapping.keys()) + [(1, 1, 1, 1, 1)]  # add a repetition
+        event_photon_numbers = [2, 1, 3, 5]  # test alternative ordering
+        fv_true = [0.2, 0, 0.1, 0.2]
 
         with monkeypatch.context() as m:
-            m.setattr(similarity, "sample_to_event", lambda x, _: samples_events[x])
-            fv = similarity.feature_vector_sampling(samples, 1, 4, 1).tolist()
+            m.setattr(similarity, "sample_to_event", lambda x, _: samples_events_mapping[x])
+            fv = similarity.feature_vector_sampling(samples, event_photon_numbers, 1).tolist()
 
         assert fv_true == fv

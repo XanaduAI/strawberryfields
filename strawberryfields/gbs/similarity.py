@@ -206,30 +206,31 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
 
 
 def feature_vector_sampling(
-    samples: list, min_photon_number: int, max_photon_number: int, max_count_per_mode: int = 2
-) -> np.array:
+    samples: list, event_photon_numbers: list, max_count_per_mode: int = 2
+) -> np.ndarray:
     """Calculates feature vector with respect to input samples.
 
-    The feature vector is composed of event probabilities ranging from ``min_photon_number``
-    to ``max_photon_number``. Probabilities are reconstructed by measuring the occurrence of
+    The feature vector is composed of event probabilities, with all events having a maximum
+    photon count in each mode of ``max_count_per_mode``. Events are then described by their total
+    photon number, and those chosen as part of the feature vector can be specified through
+    ``event_photon_numbers``. Probabilities are reconstructed by measuring the occurrence of
     events in the input ``samples``.
 
     **Example usage**:
 
-    >>> feature_vector_sampling(samples, 1, 4, 1)
-    (0, 0.34, 0.08, 0.01)
+    >>> feature_vector_sampling(samples, [2, 4, 6], 1)
+    (0.34, 0.08, 0.01)
 
     Args:
         samples (list[list[int]]): a list of samples generated from :func:`~.quantum_sampler`
-        min_photon_number (int): minimum photon number of events in feature vector
-        max_photon_number (int): maximum photon number of events in feature vector
+        event_photon_numbers (list[int]): a list of events described by their total photon number
         max_count_per_mode (int): maximum number of photons per mode in every event
 
     Returns:
-        array: a feature vector of event probabilities ordered by increasing photon number
+        array: a feature vector of event probabilities in the same order as ``event_photon_numbers``
     """
-    if min_photon_number > max_photon_number:
-        raise ValueError("Minimum photon number cannot exceed maximum")
+    if min(event_photon_numbers) < 1:
+        raise ValueError("Cannot request events with photon number below one")
 
     if max_count_per_mode < 1:
         raise ValueError("Maximum number of photons per mode must be at least one")
@@ -239,5 +240,5 @@ def feature_vector_sampling(
     e = (sample_to_event(s, max_count_per_mode) for s in samples)
     count = Counter(e)
 
-    f_vec = (count[p] / n_samples for p in range(min_photon_number, max_photon_number + 1))
+    f_vec = (count[p] / n_samples for p in event_photon_numbers)
     return np.fromiter(f_vec, float)
