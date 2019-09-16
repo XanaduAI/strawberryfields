@@ -62,7 +62,7 @@ size to be considered. This means that heuristic algorithms at some point must r
 subgraphs. Resizing functionality is provided by the following functions.
 
 .. autosummary::
-    resize_subgraphs
+    resize
     greedy_density
     greedy_degree
     RESIZE_DEFAULTS
@@ -154,7 +154,7 @@ def random_search(
 
     The algorithm proceeds by sampling subgraphs according to the
     :func:`~strawberryfields.gbs.sample.sample_subgraphs`. The resultant subgraphs
-    are resized using :func:`~strawberryfields.gbs.dense.resize_subgraphs` to
+    are resized using :func:`~strawberryfields.gbs.dense.resize` to
     be of size ``nodes``. The densest subgraph is then selected among all the resultant
     subgraphs. Specified``options`` must be of the form given in :func:`search`.
 
@@ -179,9 +179,7 @@ def random_search(
         backend_options=options["backend"],
     )
 
-    samples = resize_subgraphs(
-        subgraphs=samples, graph=graph, target=nodes, resize_options=options["resize"]
-    )
+    samples = resize(subgraphs=samples, graph=graph, target=nodes, resize_options=options["resize"])
 
     density_and_samples = [(nx.density(graph.subgraph(s)), s) for s in samples]
 
@@ -210,7 +208,7 @@ dictionary of options for that type.
 """
 
 
-def resize_subgraphs(
+def resize(
     subgraphs: Iterable, graph: nx.Graph, target: int, resize_options: Optional[dict] = None
 ) -> list:
     """Resize subgraphs to a given size.

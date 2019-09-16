@@ -115,7 +115,7 @@ class TestRandomSearch:
             # speed up testing by not requiring a call to ``sample_subgraphs``, which is a
             # bottleneck
 
-            m.setattr(dense, "resize_subgraphs", self.sampler)
+            m.setattr(dense, "resize", self.sampler)
 
             result = dense.random_search(graph=graph, nodes=4, iterations=10)
 
@@ -143,25 +143,25 @@ def patch_is_subgraph(monkeypatch):
 
 
 @pytest.mark.parametrize("dim", [5])
-class TestResizeSubgraphs:
-    """Tests for the function ``dense.resize_subgraphs``"""
+class TestResize:
+    """Tests for the function ``dense.resize``"""
 
     def test_target_wrong_type(self, graph):
         """Test if function raises a ``TypeError`` when incorrect type given for ``target`` """
         with pytest.raises(TypeError, match="target must be an integer"):
-            strawberryfields.gbs.dense.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=[])
+            strawberryfields.gbs.dense.resize(subgraphs=[[0, 1]], graph=graph, target=[])
 
     def test_target_small(self, graph):
         """Test if function raises a ``ValueError`` when a too small number is given for
         ``target`` """
         with pytest.raises(ValueError, match="target must be greater than two and less than"):
-            strawberryfields.gbs.dense.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=1)
+            strawberryfields.gbs.dense.resize(subgraphs=[[0, 1]], graph=graph, target=1)
 
     def test_target_big(self, graph):
         """Test if function raises a ``ValueError`` when a too large number is given for
         ``target`` """
         with pytest.raises(ValueError, match="target must be greater than two and less than"):
-            strawberryfields.gbs.dense.resize_subgraphs(subgraphs=[[0, 1]], graph=graph, target=5)
+            strawberryfields.gbs.dense.resize(subgraphs=[[0, 1]], graph=graph, target=5)
 
     def test_callable_input(self, graph):
         """Tests if function returns the correct output given a custom method set by the user"""
@@ -171,7 +171,7 @@ class TestResizeSubgraphs:
             """Mockup of custom-method function fed to ``search``"""
             return objective_return
 
-        result = strawberryfields.gbs.dense.resize_subgraphs(
+        result = strawberryfields.gbs.dense.resize(
             subgraphs=[[0, 1]], graph=graph, target=4, resize_options={"method": custom_method}
         )
 
@@ -184,13 +184,13 @@ class TestResizeSubgraphs:
         objective_return = (0, [0])
 
         def custom_method(*args, **kwargs):
-            """Mockup of custom-method function fed to ``resize_subgraphs``"""
+            """Mockup of custom-method function fed to ``resize``"""
             return objective_return
 
         with monkeypatch.context() as m:
             m.setattr(dense, "RESIZE_DICT", {methods: custom_method})
 
-            result = strawberryfields.gbs.dense.resize_subgraphs(
+            result = strawberryfields.gbs.dense.resize(
                 subgraphs=[[0, 1]], graph=graph, target=4, resize_options={"method": methods}
             )
 
@@ -199,7 +199,7 @@ class TestResizeSubgraphs:
 
 @pytest.mark.parametrize("dim, target", [(6, 4), (8, 5)])
 @pytest.mark.parametrize("methods", strawberryfields.gbs.dense.RESIZE_DICT)
-def test_resize_subgraphs_integration(graph, target, methods):
+def test_resize_integration(graph, target, methods):
     """Test if function returns resized subgraphs of the correct form given an input list of
     variable sized subgraphs specified by ``subgraphs``. The output should be a list of ``len(
     10)``, each element containing itself a list corresponding to a subgraph that should be of
@@ -210,7 +210,7 @@ def test_resize_subgraphs_integration(graph, target, methods):
     graph = nx.relabel_nodes(graph, lambda x: x ** 2)
     graph_nodes = set(graph.nodes)
     s_relabeled = [(np.array(s) ** 2).tolist() for s in subgraphs]
-    resized = strawberryfields.gbs.dense.resize_subgraphs(
+    resized = strawberryfields.gbs.dense.resize(
         subgraphs=s_relabeled, graph=graph, target=target, resize_options={"method": methods}
     )
     resized = np.array(resized)
