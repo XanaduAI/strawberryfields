@@ -45,19 +45,6 @@ samples_pnr_nopostselect = np.array(
     ]
 )
 
-samples_modes = [
-    [],
-    [],
-    [],
-    [2, 3],
-    [0, 1],
-    [0, 0, 1, 2, 2, 2, 3, 3, 3, 3],
-    [0, 0, 2, 3, 3, 3],
-    [],
-    [0, 1, 1, 2],
-    [],
-]
-
 sample_number = len(samples_pnr_nopostselect)
 integration_sample_number = 2
 
@@ -409,4 +396,9 @@ def test_random_seed(dim, adj):
 def test_modes_from_counts():
     """Test if the function ``strawberryfields.gbs.sample.modes_from_counts`` returns the correct
     mode samples when input a set of photon count samples."""
-    assert [sample.modes_from_counts(s) for s in samples_pnr_nopostselect] == samples_modes
+
+    counts = [[0, 0, 0, 0], [1, 0, 0, 2], [1, 1, 1, 0], [1, 2, 1, 0], [0, 1, 0, 2, 4]]
+
+    modes = [[], [0, 3, 3], [0, 1, 2], [0, 1, 1, 2], [1, 3, 3, 4, 4, 4, 4]]
+
+    assert [sample.modes_from_counts(s) for s in counts] == modes
