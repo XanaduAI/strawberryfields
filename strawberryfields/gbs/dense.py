@@ -154,7 +154,7 @@ def random_search(
 
     The algorithm proceeds by sampling subgraphs according to the
     :func:`~strawberryfields.gbs.sample.sample_subgraphs`. The resultant subgraphs
-    are resized using :func:`~strawberryfields.gbs.resize.resize_subgraphs` to
+    are resized using :func:`~strawberryfields.gbs.dense.resize_subgraphs` to
     be of size ``nodes``. The densest subgraph is then selected among all the resultant
     subgraphs. Specified``options`` must be of the form given in :func:`find_dense`.
 
