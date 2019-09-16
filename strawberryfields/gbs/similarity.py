@@ -30,10 +30,12 @@ Summary
     orbit_to_sample
     event_to_sample
     orbits
+    feature_vector_sampling
 
 Code details
 ^^^^^^^^^^^^
 """
+from collections import Counter
 from typing import Generator, Union
 
 import numpy as np
@@ -201,3 +203,36 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
             available_modes.remove(j)
 
     return sample
+
+
+def feature_vector_sampling(
+    samples: list, min_photon_number: int, max_photon_number: int, max_count_per_mode: int = 2
+) -> np.array:
+    """Calculates feature vector with respect to input samples.
+
+    The feature vector is composed of event probabilities ranging from ``min_photon_number``
+    to ``max_photon_number``. Probabilities are reconstructed by measuring the occurrence of
+    events in the input ``samples``.
+
+    Args:
+        samples (list[list[int]]): a list of samples generated from :func:`~.quantum_sampler`
+        min_photon_number (int): minimum photon number of events in feature vector
+        max_photon_number (int): maximum photon number of events in feature vector
+        max_count_per_mode (int): maximum number of photons per mode in every event
+
+    Returns:
+        array: a feature vector of event probabilities ordered by increasing photon number
+    """
+    if min_photon_number > max_photon_number:
+        raise ValueError("Minimum photon number cannot exceed maximum")
+
+    if max_count_per_mode < 1:
+        raise ValueError("Maximum number of photons per mode must be at least one")
+
+    n_samples, _ = np.array(samples).shape
+
+    e = (sample_to_event(s, max_count_per_mode) for s in samples)
+    count = Counter(e)
+
+    f_vec = (count[p] / n_samples for p in range(min_photon_number, max_photon_number + 1))
+    return np.fromiter(f_vec, float)
