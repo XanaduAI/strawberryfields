@@ -42,18 +42,18 @@ samples_subgraphs = np.array(
 
 
 @pytest.mark.parametrize("dim", [5])
-class TestFindDense:
-    """Tests for the function ``dense.find_dense``"""
+class TestSearch:
+    """Tests for the function ``dense.search``"""
 
     def test_callable_input(self, adj):
         """Tests if function returns the correct output given a custom method set by the user"""
         objective_return = (0, [0])
 
         def custom_method(*args, **kwargs):
-            """Mockup of custom-method function fed to ``find_dense``"""
+            """Mockup of custom-method function fed to ``search``"""
             return objective_return
 
-        result = dense.find_dense(
+        result = dense.search(
             graph=adj, nodes=3, iterations=10, options={"heuristic": {"method": custom_method}}
         )
 
@@ -66,13 +66,13 @@ class TestFindDense:
         objective_return = (0, [0])
 
         def custom_method(*args, **kwargs):
-            """Mockup of custom-method function fed to ``find_dense``"""
+            """Mockup of custom-method function fed to ``search``"""
             return objective_return
 
         with monkeypatch.context() as m:
             m.setattr(dense, "RESIZE_DICT", {methods: custom_method})
 
-            result = dense.find_dense(
+            result = dense.search(
                 graph=graph, nodes=3, iterations=10, options={"heuristic": {"method": methods}}
             )
 
@@ -168,7 +168,7 @@ class TestResizeSubgraphs:
         objective_return = (0, [0])
 
         def custom_method(*args, **kwargs):
-            """Mockup of custom-method function fed to ``find_dense``"""
+            """Mockup of custom-method function fed to ``search``"""
             return objective_return
 
         result = strawberryfields.gbs.dense.resize_subgraphs(

@@ -40,7 +40,7 @@ combinatorially with :math:`{N \choose k}` and is NP-hard in the worst case.
 Heuristics
 ----------
 
-The :func:`find_dense` function provides access to heuristic algorithms for finding
+The :func:`search` function provides access to heuristic algorithms for finding
 approximate solutions. At present, random search is the heuristic algorithm provided, accessible
 through the :func:`random_search` function. This algorithm proceeds by randomly generating a set
 of :math:`k` vertex subgraphs and selecting the densest. Sampling of subgraphs can be achieved
@@ -48,7 +48,7 @@ both uniformly at random and also with a quantum sampler programmed to be biased
 outputting dense subgraphs.
 
 .. autosummary::
-    find_dense
+    search
     random_search
     OPTIONS_DEFAULTS
     METHOD_DICT
@@ -81,7 +81,7 @@ from strawberryfields.gbs.sample import BACKEND_DEFAULTS
 from strawberryfields.gbs.utils import graph_type
 
 
-def find_dense(
+def search(
     graph: graph_type, nodes: int, iterations: int = 1, options: Optional[dict] = None
 ) -> Tuple[float, list]:
     """Find a dense subgraph of a given size.
@@ -156,7 +156,7 @@ def random_search(
     :func:`~strawberryfields.gbs.sample.sample_subgraphs`. The resultant subgraphs
     are resized using :func:`~strawberryfields.gbs.dense.resize_subgraphs` to
     be of size ``nodes``. The densest subgraph is then selected among all the resultant
-    subgraphs. Specified``options`` must be of the form given in :func:`find_dense`.
+    subgraphs. Specified``options`` must be of the form given in :func:`search`.
 
     Args:
         graph (nx.Graph): the input graph
