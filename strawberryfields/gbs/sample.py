@@ -281,7 +281,7 @@ def subgraphs(
         graph (nx.Graph): the input graph
         nodes (int): the mean size of subgraph samples
         samples (int): number of samples; defaults to 1
-        sample_options (dict[str, Any]): dictionary specifying options used by ``subgraphs``;
+        sample_options (dict[str, Any]): dictionary specifying options used by :func:`subgraphs`;
             defaults to :const:`SAMPLE_DEFAULTS`
         backend_options (dict[str, Any]): dictionary specifying options used by backends during
             sampling; defaults to ``None``
