@@ -324,36 +324,36 @@ class TestSampleSF:
         assert (samples >= 0).all()
 
 
-class TestUniformSampler:
-    """Tests for the function ``strawberryfields.gbs.sample.uniform_sampler``"""
+class TestUniform:
+    """Tests for the function ``strawberryfields.gbs.sample.uniform``"""
 
     def test_insufficient_modes(self):
         """Tests if function returns ``ValueError`` when user specifies a number of ``modes``
         less than 1 """
         with pytest.raises(ValueError, match="Modes and sampled_modes"):
-            sample.uniform_sampler(modes=0, sampled_modes=2, samples=2)
+            sample.uniform(modes=0, sampled_modes=2, samples=2)
 
     def test_insufficient_sampled_modes(self):
         """Tests if function returns ``ValueError`` when user specifies a number of
         ``sampled_modes`` less than 1 """
         with pytest.raises(ValueError, match="Modes and sampled_modes"):
-            sample.uniform_sampler(modes=2, sampled_modes=0, samples=2)
+            sample.uniform(modes=2, sampled_modes=0, samples=2)
 
     def test_sampled_modes_exceeds_modes(self):
         """Test if function returns ``ValueError`` when user specifies a number of
         ``sampled_modes`` that exceeds ``modes`` """
         with pytest.raises(ValueError, match="Modes and sampled_modes"):
-            sample.uniform_sampler(modes=2, sampled_modes=3, samples=2)
+            sample.uniform(modes=2, sampled_modes=3, samples=2)
 
     def test_insufficient_samples(self):
         """Test if function returns ``ValueError`` when user specifies a number of samples less
         than 1 """
         with pytest.raises(ValueError, match="Number of samples must be greater than zero"):
-            sample.uniform_sampler(modes=2, sampled_modes=2, samples=0)
+            sample.uniform(modes=2, sampled_modes=2, samples=0)
 
     def test_output_dimensions(self):
         """Tests if function returns list of correct dimensions"""
-        samples = np.array(sample.uniform_sampler(modes=2, sampled_modes=1, samples=3))
+        samples = np.array(sample.uniform(modes=2, sampled_modes=1, samples=3))
         dims = samples.shape
         assert len(dims) == 2
         assert dims[0] == 3
@@ -362,7 +362,7 @@ class TestUniformSampler:
     def test_output_sampled_modes(self):
         """Tests if samples from function are only zeros and ones and have a number of ones equal to
         ``sampled_modes``"""
-        samples = np.array(sample.uniform_sampler(modes=2, sampled_modes=1, samples=3))
+        samples = np.array(sample.uniform(modes=2, sampled_modes=1, samples=3))
 
         only_zero_one = True
 
@@ -381,11 +381,11 @@ def test_random_seed(dim, adj):
 
     sample.random_seed(1968)
     q_s_1 = sample.sample(A=adj, n_mean=2, samples=10, backend_options={"threshold": False})
-    u_s_1 = sample.uniform_sampler(modes=dim, sampled_modes=2, samples=10)
+    u_s_1 = sample.uniform(modes=dim, sampled_modes=2, samples=10)
 
     sample.random_seed(1968)
     q_s_2 = sample.sample(A=adj, n_mean=2, samples=10, backend_options={"threshold": False})
-    u_s_2 = sample.uniform_sampler(modes=dim, sampled_modes=2, samples=10)
+    u_s_2 = sample.uniform(modes=dim, sampled_modes=2, samples=10)
 
     assert np.array_equal(q_s_1, q_s_2)
     assert np.array_equal(u_s_1, u_s_2)

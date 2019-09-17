@@ -33,14 +33,14 @@ of length ``N``. Various problems can be encoded in the matrix :math:`A` so that
 samples are informative and can be used as a form of randomness to improve solvers, as outlined
 in Refs. :cite:`arrazola2018using` and :cite:`arrazola2018quantum`.
 
-On the other hand, the :func:`uniform_sampler` function allows users to generate samples where a
+On the other hand, the :func:`uniform` function allows users to generate samples where a
 subset of modes are selected using the uniform distribution.
 
 .. autosummary::
     QUANTUM_BACKENDS
     BACKEND_DEFAULTS
     sample
-    uniform_sampler
+    uniform
     random_seed
 
 Subgraph sampling through GBS
@@ -200,7 +200,7 @@ def _sample_sf(p: sf.Program, shots: int = 1, backend_options: Optional[dict] = 
     return np.array(eng.run(p, run_options={"shots": shots}).samples)
 
 
-def uniform_sampler(modes: int, sampled_modes: int, samples: int = 1) -> list:
+def uniform(modes: int, sampled_modes: int, samples: int = 1) -> list:
     """Perform classical sampling using the uniform distribution to randomly select a subset of
     modes of a given size.
 
@@ -235,7 +235,7 @@ def random_seed(seed: int = None) -> None:
 
     Wrapper function for `numpy.random.seed <https://docs.scipy.org/doc/numpy//reference/generated
     /numpy.random.seed.html>`_ to seed NumPy-based random number generators used in
-    :func:`sample` and :func:`uniform_sampler`. This allows for repeatable sampling.
+    :func:`sample` and :func:`uniform`. This allows for repeatable sampling.
 
     Args:
         seed (int): random seed; defaults to ``None``
@@ -295,7 +295,7 @@ def sample_subgraphs(
     distribution = sample_options["distribution"]
 
     if distribution == "uniform":
-        s = uniform_sampler(modes=graph.order(), sampled_modes=nodes, samples=samples)
+        s = uniform(modes=graph.order(), sampled_modes=nodes, samples=samples)
     elif distribution == "gbs":
         postselect = int(sample_options["postselect_ratio"] * nodes)
         backend_options = {**(backend_options or {}), "postselect": postselect}
