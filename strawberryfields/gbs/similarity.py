@@ -44,6 +44,7 @@ from typing import Generator, Union
 import networkx as nx
 import numpy as np
 from scipy.special import factorial
+
 import strawberryfields as sf
 
 
@@ -290,8 +291,11 @@ def p_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1
     mean_photon_per_mode = n_mean / float(modes)
 
     p = sf.Program(modes)
+
+    # pylint: disable=expression-not-assigned
     with p.context as q:
         sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
+
     eng = sf.LocalEngine(backend="gaussian")
     result = eng.run(p)
 
@@ -299,15 +303,20 @@ def p_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1
 
     for _ in range(samples):
         sample = orbit_to_sample(orbit, modes)
-        prob += result.state.fock_prob(sample, cutoff=photons+1)
+        prob += result.state.fock_prob(sample, cutoff=photons + 1)
 
-    prob = prob*orbit_cardinality(orbit, modes)/samples
+    prob = prob * orbit_cardinality(orbit, modes) / samples
 
     return prob
 
 
-def p_event_mc(graph: nx.Graph, photon_number: int, max_count_per_mode: int, n_mean: float = 5,
-               samples: int = 1000) -> float:
+def p_event_mc(
+    graph: nx.Graph,
+    photon_number: int,
+    max_count_per_mode: int,
+    n_mean: float = 5,
+    samples: int = 1000,
+) -> float:
     """Gives a Monte Carlo estimation of the probability that a sample belongs to the given
     event.
 
@@ -338,8 +347,11 @@ def p_event_mc(graph: nx.Graph, photon_number: int, max_count_per_mode: int, n_m
     mean_photon_per_mode = n_mean / float(modes)
 
     p = sf.Program(modes)
+
+    # pylint: disable=expression-not-assigned
     with p.context as q:
         sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
+
     eng = sf.LocalEngine(backend="gaussian")
     result = eng.run(p)
 
@@ -347,12 +359,8 @@ def p_event_mc(graph: nx.Graph, photon_number: int, max_count_per_mode: int, n_m
 
     for _ in range(samples):
         sample = event_to_sample(photon_number, max_count_per_mode, modes)
-        prob += result.state.fock_prob(sample, cutoff=np.sum(sample)+1)
+        prob += result.state.fock_prob(sample, cutoff=np.sum(sample) + 1)
 
-    prob = prob*event_cardinality(photon_number, max_count_per_mode, modes) / samples
+    prob = prob * event_cardinality(photon_number, max_count_per_mode, modes) / samples
 
     return prob
-
-
-graph = nx.complete_graph(8)
-print(p_orbit_mc(graph, [2, 1, 1]))
