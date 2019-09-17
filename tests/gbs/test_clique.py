@@ -21,6 +21,7 @@ import networkx as nx
 import numpy as np
 import pytest
 
+import strawberryfields.gbs.clique
 from strawberryfields.gbs import clique, utils
 
 pytestmark = pytest.mark.gbs
@@ -263,7 +264,7 @@ class TestCliqueShrink:
         graph = nx.lollipop_graph(dim, dim)
         subgraph = list(range(2 * dim))  # subgraph is the entire graph
         resized = clique.shrink(subgraph, graph)
-        assert utils.is_clique(graph.subgraph(resized))
+        assert strawberryfields.gbs.clique.is_clique(graph.subgraph(resized))
         assert resized == list(range(dim))
 
     def test_input_clique_then_output_clique(self, dim):

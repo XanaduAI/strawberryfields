@@ -21,6 +21,7 @@ import networkx as nx
 import numpy as np
 import pytest
 
+import strawberryfields.gbs.clique
 from strawberryfields.gbs import utils
 
 pytestmark = pytest.mark.gbs
@@ -190,12 +191,12 @@ class TestIsClique:
     def test_no_false_negatives(self, dim):
         """Tests that cliques are labelled as such"""
         g = nx.complete_graph(dim)
-        assert utils.is_clique(g)
+        assert strawberryfields.gbs.clique.is_clique(g)
 
     def test_no_false_positives(self, dim):
         """Tests that non-cliques are labelled as such"""
         g = nx.empty_graph(dim)
-        assert not utils.is_clique(g)
+        assert not strawberryfields.gbs.clique.is_clique(g)
 
 
 @pytest.mark.parametrize("dim", range(2, 10))
@@ -207,7 +208,7 @@ class TestC0:
         """Tests that :math:`c_0` is generated correctly for the lollipop graph"""
         g = nx.lollipop_graph(dim, 1)
         s = set(range(int(dim / 2)))
-        res = set(utils.c_0(s, g))
+        res = set(strawberryfields.gbs.clique.c_0(s, g))
 
         assert res not in s
         assert {dim + 1} not in res
@@ -217,7 +218,7 @@ class TestC0:
         """ Tests that the set :math:`c_0` for a node in a clique consists of all remaining nodes"""
         A = nx.complete_graph(dim)
         S = [dim - 1]
-        K = utils.c_0(S, A)
+        K = strawberryfields.gbs.clique.c_0(S, A)
 
         assert K == list(range(dim - 1))
 
@@ -229,7 +230,7 @@ class TestC0:
         S = [0, 1]
 
         with pytest.raises(ValueError, match="Input subgraph is not a clique"):
-            utils.c_0(S, A)
+            strawberryfields.gbs.clique.c_0(S, A)
 
 
 @pytest.mark.parametrize("dim", range(4, 10))
@@ -244,7 +245,7 @@ class TestC1:
         A = nx.complete_graph(dim)
         A.remove_edge(0, 1)
         S = [i for i in range(1, dim)]
-        c1 = utils.c_1(S, A)
+        c1 = strawberryfields.gbs.clique.c_1(S, A)
 
         assert c1 == [(1, 0)]
 
@@ -253,12 +254,12 @@ class TestC1:
         A = nx.complete_graph(dim)
         A.remove_edge(0, 1)
         S = [i for i in range(1, dim)]
-        c1 = utils.c_1(S, A)
+        c1 = strawberryfields.gbs.clique.c_1(S, A)
         swap_nodes = c1[0]
         S.remove(swap_nodes[0])
         S.append(swap_nodes[1])
 
-        assert utils.is_clique(A.subgraph(S))
+        assert strawberryfields.gbs.clique.is_clique(A.subgraph(S))
 
     def test_c_1_error_on_not_clique_input(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
@@ -268,4 +269,4 @@ class TestC1:
         S = [0, 1]
 
         with pytest.raises(ValueError, match="Input subgraph is not a clique"):
-            utils.c_1(S, A)
+            strawberryfields.gbs.clique.c_1(S, A)

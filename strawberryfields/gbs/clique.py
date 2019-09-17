@@ -57,6 +57,16 @@ module allows non-clique subgraphs to be shrunk to cliques with the :func:`shrin
     swap
     shrink
 
+Clique utility functions
+------------------------
+
+The following are utility functions for calculating properties of cliques.
+
+.. autosummary::
+    is_clique
+    c_0
+    c_1
+
 Code details
 ^^^^^^^^^^^^
 """
@@ -135,11 +145,11 @@ def grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
     """Iteratively adds new nodes to the input clique to generate a larger clique.
 
     Each iteration involves calculating the set :math:`C_0` (provided by the function
-    :func:`~strawberryfields.gbs.graph.utils.c_0`) with respect to the current clique. This set
-    represents the nodes in the rest of the graph that are connected to all of the nodes in the
-    current clique. Therefore, adding any of the nodes in :math:`C_0` will create a larger clique.
-    This function proceeds by repeatedly evaluating :math:`C_0` and selecting and adding a node
-    from this set to add to the current clique. Growth is continued until :math:`C_0` becomes empty.
+    :func:`c_0`) with respect to the current clique. This set represents the nodes in the rest of
+    the graph that are connected to all of the nodes in the current clique. Therefore, adding any of
+    the nodes in :math:`C_0` will create a larger clique. This function proceeds by repeatedly
+    evaluating :math:`C_0` and selecting and adding a node from this set to add to the current
+    clique. Growth is continued until :math:`C_0` becomes empty.
 
     Whenever there are multiple nodes within :math:`C_0`, one must choose which node to add to
     the growing clique. This function allows a method of choosing nodes to be set with the
@@ -168,24 +178,24 @@ def grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
     if not utils.is_subgraph(clique, graph):
         raise ValueError("Input is not a valid subgraph")
 
-    if not utils.is_clique(graph.subgraph(clique)):
+    if not is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
 
     clique = set(clique)
-    c_0 = utils.c_0(clique, graph)
+    _c_0 = c_0(clique, graph)
 
-    while c_0:
+    while _c_0:
         if node_select == "uniform":
-            clique.add(np.random.choice(c_0))
+            clique.add(np.random.choice(_c_0))
         elif node_select == "degree":
-            degrees = np.array([graph.degree(n) for n in c_0])
+            degrees = np.array([graph.degree(n) for n in _c_0])
             to_add_index = np.random.choice(np.where(degrees == degrees.max())[0])
-            to_add = c_0[to_add_index]
+            to_add = _c_0[to_add_index]
             clique.add(to_add)
         else:
             raise ValueError("Node selection method not recognized")
 
-        c_0 = utils.c_0(clique, graph)
+        _c_0 = c_0(clique, graph)
 
     return sorted(clique)
 
@@ -198,7 +208,7 @@ def swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
     connected to all but one of the nodes in the clique. If this set is not empty, this function
     randomly picks a node and swaps it with the corresponding node in the clique that is not
     connected to it. The set :math:`C_1` and corresponding nodes in the clique are provided by the
-    :func:`~strawberryfields.gbs.graph.utils.c_1` function.
+    :func:`c_1` function.
 
     Whenever there are multiple nodes within :math:`C_1`, one must choose which node to add to
     the growing clique. This function allows a method of choosing nodes to be set with the
@@ -228,20 +238,20 @@ def swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
     if not utils.is_subgraph(clique, graph):
         raise ValueError("Input is not a valid subgraph")
 
-    if not utils.is_clique(graph.subgraph(clique)):
+    if not is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
 
     clique = set(clique)
-    c_1 = utils.c_1(clique, graph)
+    _c_1 = c_1(clique, graph)
 
-    if c_1:
+    if _c_1:
         if node_select == "uniform":
-            swap_index = np.random.choice(len(c_1))
-            swap_nodes = c_1[swap_index]
+            swap_index = np.random.choice(len(_c_1))
+            swap_nodes = _c_1[swap_index]
         elif node_select == "degree":
-            degrees = np.array([graph.degree(n[1]) for n in c_1])
+            degrees = np.array([graph.degree(n[1]) for n in _c_1])
             to_swap_index = np.random.choice(np.where(degrees == degrees.max())[0])
-            swap_nodes = c_1[to_swap_index]
+            swap_nodes = _c_1[to_swap_index]
         else:
             raise ValueError("Node selection method not recognized")
 
@@ -255,8 +265,8 @@ def shrink(subgraph: list, graph: nx.Graph) -> list:
     """Shrinks an input subgraph until it forms a clique.
 
     Proceeds by removing nodes in the input subgraph one at a time until the result is a clique
-    that satisfies :func:`~strawberryfields.gbs.graph.utils.is_clique`. Upon each iteration,
-    this function selects the node with lowest degree relative to the subgraph and removes it.
+    that satisfies :func:`is_clique`. Upon each iteration,this function selects the node with
+    lowest degree relative to the subgraph and removes it.
 
     **Example usage:**
 
@@ -279,7 +289,7 @@ def shrink(subgraph: list, graph: nx.Graph) -> list:
     subgraph = graph.subgraph(subgraph).copy()  # A copy is required to be able to modify the
     # structure of the subgraph (https://networkx.github.io/documentation/stable/reference/classes/generated/networkx.Graph.subgraph.html)
 
-    while not utils.is_clique(subgraph):
+    while not is_clique(subgraph):
         degrees = list(subgraph.degree())
         np.random.shuffle(degrees)  # used to make sure selection of node with lowest degree is not
         # deterministic in case of a tie (https://docs.python.org/3/library/functions.html#min)
@@ -288,3 +298,101 @@ def shrink(subgraph: list, graph: nx.Graph) -> list:
         subgraph.remove_node(to_remove[0])
 
     return sorted(subgraph.nodes())
+
+
+def is_clique(graph: nx.Graph) -> bool:
+    """Determines if the input graph is a clique. A clique of :math:`n` nodes has exactly :math:`n(
+    n-1)/2` edges.
+
+    **Example usage:**
+
+    >>> graph = nx.complete_graph(10)
+    >>> is_clique(graph)
+    True
+
+    Args:
+        graph (nx.Graph): the input graph
+
+    Returns:
+        bool: ``True`` if input graph is a clique and ``False`` otherwise
+    """
+    edges = graph.edges
+    nodes = graph.order()
+
+    return len(edges) == nodes * (nodes - 1) / 2
+
+
+def c_0(clique: list, graph: nx.Graph):
+    """Generates the set :math:`C_0` of nodes that are connected to all nodes in the input
+    clique subgraph.
+
+    The set :math:`C_0` is defined in :cite:`pullan2006phased` and is used to determine nodes
+    that can be added to the current clique to grow it into a larger one.
+
+    **Example usage:**
+
+    >>> graph = nx.complete_graph(10)
+    >>> clique = [0, 1, 2, 3, 4]
+    >>> c_0(clique, graph)
+    [5, 6, 7, 8, 9]
+
+    Args:
+        clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
+        graph (nx.Graph): the input graph
+
+    Returns:
+        list[int]: a list containing the :math:`C_0` nodes for the clique
+
+    """
+    if not is_clique(graph.subgraph(clique)):
+        raise ValueError("Input subgraph is not a clique")
+
+    clique = set(clique)
+    c_0_nodes = []
+    non_clique_nodes = set(graph.nodes) - clique
+
+    for i in non_clique_nodes:
+        if clique.issubset(graph.neighbors(i)):
+            c_0_nodes.append(i)
+
+    return c_0_nodes
+
+
+def c_1(clique: list, graph: nx.Graph):
+    """Generates the set :math:`C_1` of nodes that are connected to all but one of the nodes in
+    the input clique subgraph.
+
+    The set :math:`C_1` is defined in :cite:`pullan2006phased` and is used to determine outside
+    nodes that can be swapped with clique nodes to create a new clique.
+
+    **Example usage:**
+
+    >>> graph = nx.wheel_graph(5)
+    >>> clique = [0, 1, 2]
+    >>> c_1(clique, graph)
+    [(1, 3), (2, 4)]
+
+    Args:
+        clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
+        graph (nx.Graph): the input graph
+
+    Returns:
+       list[tuple(int)]: A list of tuples. The first node in the tuple is the node in the clique
+       and the second node is the outside node it can be swapped with.
+   """
+    if not is_clique(graph.subgraph(clique)):
+        raise ValueError("Input subgraph is not a clique")
+
+    clique = set(clique)
+    c_1_nodes = []
+    non_clique_nodes = set(graph.nodes) - clique
+
+    for i in non_clique_nodes:
+        neighbors_in_subgraph = clique.intersection(graph.neighbors(i))
+
+        if len(neighbors_in_subgraph) == len(clique) - 1:
+            to_swap = clique - neighbors_in_subgraph
+            (i_clique,) = to_swap
+            c_1_nodes.append((i_clique, i))
+
+    return c_1_nodes
