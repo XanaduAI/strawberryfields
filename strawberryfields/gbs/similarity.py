@@ -218,8 +218,11 @@ def feature_vector_sampling(
 
     **Example usage**:
 
-    >>> feature_vector_sampling(samples, [2, 4, 6], 1)
-    (0.34, 0.08, 0.01)
+    >>> sample.random_seed(1967)
+    >>> adj = np.ones((4, 4))
+    >>> samples = sample.quantum_sampler(adj, 6, 10, backend_options={"threshold": False})
+    >>> feature_vector_sampling(samples, [2, 4, 6])
+    [0.1, 0.2, 0.0]
 
     Args:
         samples (list[list[int]]): a list of samples
