@@ -286,7 +286,7 @@ def p_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1
     """
 
     modes = graph.order()
-    photons = np.sum(orbit)
+    photons = sum(orbit)
     A = nx.to_numpy_array(graph)
     mean_photon_per_mode = n_mean / float(modes)
 
