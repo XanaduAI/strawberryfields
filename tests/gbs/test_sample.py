@@ -59,7 +59,7 @@ adj_dim_range = range(2, 6)
 @pytest.mark.usefixtures("is_undirected")
 @pytest.mark.parametrize("dim", [4])
 class TestSample:
-    """Tests for the function ``glassonion.sample.sample``"""
+    """Tests for the function ``strawberryfields.gbs.sample.sample``"""
 
     def test_invalid_adjacency(self, adj, monkeypatch):
         """Test if function raises a ``ValueError`` for a matrix that fails
@@ -189,7 +189,7 @@ class TestSample:
 
 @pytest.mark.parametrize("dim", adj_dim_range)
 class TestSampleIntegration:
-    """Integration tests for the function ``glassonion.sample.sample``"""
+    """Integration tests for the function ``strawberryfields.gbs.sample.sample``"""
 
     def test_pnr_nopostselect_integration(self, adj):
         """Integration test to check if function returns samples of correct form, i.e., correct
@@ -280,7 +280,7 @@ class TestSampleIntegration:
 
 # pylint: disable=expression-not-assigned,pointless-statement
 class TestSampleSF:
-    """Tests for the function ``glassonion.sample._sample_sf``"""
+    """Tests for the function ``strawberryfields.gbs.sample._sample_sf``"""
 
     def test_invalid_backend(self, monkeypatch):
         """Tests if function raises a ``ValueError`` when an invalid backend is selected"""
@@ -325,7 +325,7 @@ class TestSampleSF:
 
 
 class TestUniformSampler:
-    """Tests for the function ``glassonion.sample.uniform_sampler``"""
+    """Tests for the function ``strawberryfields.gbs.sample.uniform_sampler``"""
 
     def test_insufficient_modes(self):
         """Tests if function returns ``ValueError`` when user specifies a number of ``modes``
@@ -376,7 +376,7 @@ class TestUniformSampler:
 
 @pytest.mark.parametrize("dim", [4])
 def test_random_seed(dim, adj):
-    """Test for the function ``glassonion.sample.random_seed``. Checks that samples are identical
+    """Test for the function ``strawberryfields.gbs.sample.random_seed``. Checks that samples are identical
     after repeated initialization of ``random_seed``."""
 
     sample.random_seed(1968)
