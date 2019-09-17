@@ -230,17 +230,17 @@ def uniform(modes: int, sampled_modes: int, samples: int = 1) -> list:
     return output_samples
 
 
-def seed(seed: int = None) -> None:
+def seed(value: int = None) -> None:
     """Seed for random number generators.
 
     Wrapper function for `numpy.random.seed <https://docs.scipy.org/doc/numpy//reference/generated
-    /numpy.random.seed.html>`_ to seed NumPy-based random number generators used in
-    :func:`sample` and :func:`uniform`. This allows for repeatable sampling.
+    /numpy.random.seed.html>`_ to seed NumPy-based random number generators used in the GBS
+    applications layer. This allows for repeatable sampling.
 
     Args:
-        seed (int): random seed; defaults to ``None``
+        value (int): random seed; defaults to ``None``
     """
-    np.random.seed(seed)
+    np.random.seed(value)
 
 
 SAMPLE_DEFAULTS = {"distribution": "gbs", "postselect_ratio": 0.75}
