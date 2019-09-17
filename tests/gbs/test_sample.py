@@ -375,15 +375,15 @@ class TestUniform:
 
 
 @pytest.mark.parametrize("dim", [4])
-def test_random_seed(dim, adj):
-    """Test for the function ``strawberryfields.gbs.sample.random_seed``. Checks that samples are identical
-    after repeated initialization of ``random_seed``."""
+def test_seed(dim, adj):
+    """Test for the function ``strawberryfields.gbs.sample.seed``. Checks that samples are identical
+    after repeated initialization of ``seed``."""
 
-    sample.random_seed(1968)
+    sample.seed(1968)
     q_s_1 = sample.sample(A=adj, n_mean=2, samples=10, backend_options={"threshold": False})
     u_s_1 = sample.uniform(modes=dim, sampled_modes=2, samples=10)
 
-    sample.random_seed(1968)
+    sample.seed(1968)
     q_s_2 = sample.sample(A=adj, n_mean=2, samples=10, backend_options={"threshold": False})
     u_s_2 = sample.uniform(modes=dim, sampled_modes=2, samples=10)
 

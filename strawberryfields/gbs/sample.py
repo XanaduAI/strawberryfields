@@ -41,7 +41,7 @@ subset of modes are selected using the uniform distribution.
     BACKEND_DEFAULTS
     sample
     uniform
-    random_seed
+    seed
 
 Subgraph sampling through GBS
 -----------------------------
@@ -230,7 +230,7 @@ def uniform(modes: int, sampled_modes: int, samples: int = 1) -> list:
     return output_samples
 
 
-def random_seed(seed: int = None) -> None:
+def seed(seed: int = None) -> None:
     """Seed for random number generators.
 
     Wrapper function for `numpy.random.seed <https://docs.scipy.org/doc/numpy//reference/generated
