@@ -33,7 +33,7 @@ Summary
     orbit_cardinality
     event_cardinality
     p_orbit_mc
-    estimate_event_prob
+    p_event_mc
 
 Code details
 ^^^^^^^^^^^^
