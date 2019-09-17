@@ -21,8 +21,7 @@ import networkx as nx
 import numpy as np
 import pytest
 
-import strawberryfields.gbs.clique
-from strawberryfields.gbs import clique, utils
+from strawberryfields.gbs import clique
 
 pytestmark = pytest.mark.gbs
 
@@ -264,7 +263,7 @@ class TestCliqueShrink:
         graph = nx.lollipop_graph(dim, dim)
         subgraph = list(range(2 * dim))  # subgraph is the entire graph
         resized = clique.shrink(subgraph, graph)
-        assert strawberryfields.gbs.clique.is_clique(graph.subgraph(resized))
+        assert clique.is_clique(graph.subgraph(resized))
         assert resized == list(range(dim))
 
     def test_input_clique_then_output_clique(self, dim):
@@ -318,3 +317,90 @@ class TestCliqueShrink:
             c2 = clique.shrink(subgraph, graph)
 
         assert c1 != c2
+
+
+@pytest.mark.parametrize("dim", range(2, 10))
+class TestIsClique:
+    """Tests for the function `strawberryfields.gbs.clique.is_clique` """
+
+    def test_no_false_negatives(self, dim):
+        """Tests that cliques are labelled as such"""
+        g = nx.complete_graph(dim)
+        assert clique.is_clique(g)
+
+    def test_no_false_positives(self, dim):
+        """Tests that non-cliques are labelled as such"""
+        g = nx.empty_graph(dim)
+        assert not clique.is_clique(g)
+
+
+@pytest.mark.parametrize("dim", range(2, 10))
+class TestC0:
+    """Tests function :math:`c_0` that generates the set of nodes connected to all nodes in a
+    clique"""
+
+    def test_correct_c_0(self, dim):
+        """Tests that :math:`c_0` is generated correctly for the lollipop graph"""
+        g = nx.lollipop_graph(dim, 1)
+        s = set(range(int(dim / 2)))
+        res = set(clique.c_0(s, g))
+
+        assert res not in s
+        assert {dim + 1} not in res
+        assert res | s == set(range(dim))
+
+    def test_c_0_comp_graph(self, dim):
+        """ Tests that the set :math:`c_0` for a node in a clique consists of all remaining nodes"""
+        A = nx.complete_graph(dim)
+        S = [dim - 1]
+        K = clique.c_0(S, A)
+
+        assert K == list(range(dim - 1))
+
+    def test_c_0_error_on_not_clique_input(self, dim):
+        """Tests if function raises a ``ValueError`` when input is not a clique"""
+        A = np.ones((dim, dim)) - np.eye(dim)
+        A = nx.Graph(A)
+        A.remove_edge(0, 1)
+        S = [0, 1]
+
+        with pytest.raises(ValueError, match="Input subgraph is not a clique"):
+            clique.c_0(S, A)
+
+
+@pytest.mark.parametrize("dim", range(4, 10))
+class TestC1:
+    """Tests function :math:`c_1` that generates the set of nodes connected to all *but one* of
+    the nodes in a clique"""
+
+    def test_c_1_comp_graph(self, dim):
+        """Tests that :math:`c_1` set is correctly generated for an almost-complete graph, where
+        edge (0, 1) is removed """
+        A = nx.complete_graph(dim)
+        A.remove_edge(0, 1)
+        S = [i for i in range(1, dim)]
+        c1 = clique.c_1(S, A)
+
+        assert c1 == [(1, 0)]
+
+    def test_c_1_swap_to_clique(self, dim):
+        """Tests that :math:`c_1` set gives a valid clique after swapping """
+        A = nx.complete_graph(dim)
+        A.remove_edge(0, 1)
+        S = [i for i in range(1, dim)]
+        c1 = clique.c_1(S, A)
+        swap_nodes = c1[0]
+        S.remove(swap_nodes[0])
+        S.append(swap_nodes[1])
+
+        assert clique.is_clique(A.subgraph(S))
+
+    def test_c_1_error_on_not_clique_input(self, dim):
+        """Tests if function raises a ``ValueError`` when input is not a clique"""
+        A = np.ones((dim, dim)) - np.eye(dim)
+        A = nx.Graph(A)
+        A.remove_edge(0, 1)
+        S = [0, 1]
+
+        with pytest.raises(ValueError, match="Input subgraph is not a clique"):
+            clique.c_1(S, A)
