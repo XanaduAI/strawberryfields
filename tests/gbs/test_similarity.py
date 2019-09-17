@@ -234,6 +234,6 @@ class TestFeatureVectorSampling:
 
         with monkeypatch.context() as m:
             m.setattr(similarity, "sample_to_event", lambda x, _: samples_events_mapping[x])
-            fv = similarity.feature_vector_sampling(samples, event_photon_numbers, 1).tolist()
+            fv = similarity.feature_vector_sampling(samples, event_photon_numbers, 1)
 
         assert fv_true == fv

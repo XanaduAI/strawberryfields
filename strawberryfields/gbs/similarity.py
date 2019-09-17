@@ -207,7 +207,7 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
 
 def feature_vector_sampling(
     samples: list, event_photon_numbers: list, max_count_per_mode: int = 2
-) -> np.ndarray:
+) -> list:
     """Calculates feature vector with respect to input samples.
 
     The feature vector is composed of event probabilities, with all events having a maximum
@@ -227,7 +227,8 @@ def feature_vector_sampling(
         max_count_per_mode (int): maximum number of photons per mode in every event
 
     Returns:
-        array: a feature vector of event probabilities in the same order as ``event_photon_numbers``
+        list[float]: a feature vector of event probabilities in the same order as
+        ``event_photon_numbers``
     """
     if min(event_photon_numbers) < 0:
         raise ValueError("Cannot request events with photon number below zero")
@@ -240,5 +241,4 @@ def feature_vector_sampling(
     e = (sample_to_event(s, max_count_per_mode) for s in samples)
     count = Counter(e)
 
-    f_vec = (count[p] / n_samples for p in event_photon_numbers)
-    return np.fromiter(f_vec, float)
+    return [count[p] / n_samples for p in event_photon_numbers]
