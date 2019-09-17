@@ -368,10 +368,3 @@ def p_event_mc(
     prob = prob * event_cardinality(photon_number, max_count_per_mode, modes) / samples
 
     return prob
-
-graph = nx.complete_graph(8)
-import time
-tic = time.time()
-print(p_event_mc(graph, 4, 2))
-toc = time.time()
-print(toc-tic)
