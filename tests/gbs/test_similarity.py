@@ -288,7 +288,7 @@ class TestProbEventMC:
     def test_mean_event(self, monkeypatch):
         """Tests if the calculation of the sample mean is performed correctly. The test
         monkeypatches the fock_prob function so that the probability is the same for each sample and
-         is equal to 1/216, i.e., one over the number of samples in the event with 5 modes,
+        is equal to 1/216, i.e., one over the number of samples in the event with 5 modes,
         6 photons, and max 3 photons per mode."""
         graph = nx.complete_graph(6)
         with monkeypatch.context() as m:
