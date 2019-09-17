@@ -109,9 +109,9 @@ class TestRandomSearch:
         graph = nx.relabel_nodes(graph, lambda x: x ** 2)
 
         with monkeypatch.context() as m:
-            m.setattr(g_sample, "sample_subgraphs", self.sampler)
+            m.setattr(g_sample, "subgraphs", self.sampler)
             # The monkeypatch above is not necessary given the one below, but simply serves to
-            # speed up testing by not requiring a call to ``sample_subgraphs``, which is a
+            # speed up testing by not requiring a call to ``subgraphs``, which is a
             # bottleneck
 
             m.setattr(resize, "resize_subgraphs", self.sampler)

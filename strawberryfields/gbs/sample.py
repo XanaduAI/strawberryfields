@@ -47,13 +47,13 @@ Subgraph sampling through GBS
 -----------------------------
 
 This module also provides functionality for sampling of subgraphs from undirected graphs. The
-:func:`sample_subgraphs` function generates raw samples from :mod:`strawberryfields.gbs.sample`
+:func:`subgraphs` function generates raw samples from :mod:`strawberryfields.gbs.sample`
 and converts them to subgraphs using :func:`to_subgraphs`. Sampling can be generated both from
 GBS and by using the uniform distribution.
 
 .. autosummary::
     SAMPLE_DEFAULTS
-    sample_subgraphs
+    subgraphs
     to_subgraphs
 
 Code details
@@ -244,11 +244,11 @@ def seed(seed: int = None) -> None:
 
 
 SAMPLE_DEFAULTS = {"distribution": "gbs", "postselect_ratio": 0.75}
-"""dict[str, Any]: Dictionary to specify default parameters of options in :func:`sample_subgraphs`.
+"""dict[str, Any]: Dictionary to specify default parameters of options in :func:`subgraphs`.
 """
 
 
-def sample_subgraphs(
+def subgraphs(
     graph: nx.Graph,
     nodes: int,
     samples: int = 1,
@@ -281,7 +281,7 @@ def sample_subgraphs(
         graph (nx.Graph): the input graph
         nodes (int): the mean size of subgraph samples
         samples (int): number of samples; defaults to 1
-        sample_options (dict[str, Any]): dictionary specifying options used by ``sample_subgraphs``;
+        sample_options (dict[str, Any]): dictionary specifying options used by ``subgraphs``;
             defaults to :const:`SAMPLE_DEFAULTS`
         backend_options (dict[str, Any]): dictionary specifying options used by backends during
             sampling; defaults to ``None``

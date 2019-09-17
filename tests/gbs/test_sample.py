@@ -418,11 +418,11 @@ subgraphs = [
 
 
 @pytest.mark.parametrize("dim", [6])
-def test_sample_subgraphs_invalid_distribution(graph):
-    """Tests if function ``sample.sample_subgraphs`` raises a ``ValueError`` for an
+def test_subgraphs_invalid_distribution(graph):
+    """Tests if function ``sample.subgraphs`` raises a ``ValueError`` for an
     invalid sampling distribution"""
     with pytest.raises(ValueError, match="Invalid distribution selected"):
-        strawberryfields.gbs.sample.sample_subgraphs(
+        strawberryfields.gbs.sample.subgraphs(
             graph, nodes=2, samples=10, sample_options={"distribution": ""}
         )
 
@@ -431,12 +431,12 @@ def test_sample_subgraphs_invalid_distribution(graph):
     "dim, nodes, samples", [(6, 4, integration_sample_number), (8, 4, integration_sample_number)]
 )
 @pytest.mark.parametrize("distribution", ("uniform", "gbs"))
-def test_sample_subgraphs_integration(graph, nodes, samples, distribution):
-    """Integration tests for the function ``sample.sample_subgraphs``"""
+def test_subgraphs_integration(graph, nodes, samples, distribution):
+    """Integration tests for the function ``sample.subgraphs``"""
 
     graph = nx.relabel_nodes(graph, lambda x: x ** 2)
     graph_nodes = set(graph.nodes)
-    output_samples = strawberryfields.gbs.sample.sample_subgraphs(
+    output_samples = strawberryfields.gbs.sample.subgraphs(
         graph=graph, nodes=nodes, samples=samples, sample_options={"distribution": distribution}
     )
 
