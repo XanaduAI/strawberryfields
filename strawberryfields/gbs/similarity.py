@@ -224,7 +224,7 @@ def feature_vector_sampling(
     Args:
         samples (list[list[int]]): a list of samples
         event_photon_numbers (list[int]): a list of events described by their total photon number
-        max_count_per_mode (int): maximum number of photons per mode in every event
+        max_count_per_mode (int): maximum number of photons per mode for all events
 
     Returns:
         array: a feature vector of event probabilities in the same order as ``event_photon_numbers``
