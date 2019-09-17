@@ -67,7 +67,7 @@ The normal lifecycle of an Operation object and its associated parameters is as 
   the graph representing the quantum circuit.
   The circuit graph is built using the knowledge of which subsystems the Commands act and depend on.
 
-* Decompositions, merges and commutations often involve creation new Operations with algebraically
+* Decompositions, merges, and commutations often involve the creation of new Operations with algebraically
   transformed parameters.
   For example, merging two :class:`.Gate` instances of the same subclass involves
   adding their first parameters after equality-comparing the others. This is easily done if
@@ -168,7 +168,7 @@ def is_object_array(p):
 def par_evaluate(params):
     """Evaluate a parameter sequence.
 
-    Any parameters descending from sympy.Basic are evaluated, others are returned as is.
+    Any parameters descending from sympy.Basic are evaluated, others are returned as-is.
     Evaluation means that free and measured parameters are replaced by their numeric values.
     Numpy arrays are evaluated elementwise.
 

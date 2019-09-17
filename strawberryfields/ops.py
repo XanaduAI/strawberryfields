@@ -574,7 +574,7 @@ class Decomposition(Operation):
             # decompositions, which cannot be merged.
             U1 = self.p[0]
             U2 = other.p[0]
-            U = np.matmul(U2, U1)
+            U = U2 @ U1
             # Note: above we strip the Parameter wrapper to make the following check
             # easier to perform. The constructor restores it.
             # Another option would be to add the required methods to Parameter class.
@@ -625,7 +625,7 @@ class Channel(Transformation):
                 return None
 
             # return a copy
-            # NOTE deepcopy would make copies the parameters which would mess things up
+            # NOTE deepcopy would make copies of the parameters which would mess things up
             temp = copy.copy(self)
             temp.p = [T] + self.p[1:]  # change the parameter list
             return temp
