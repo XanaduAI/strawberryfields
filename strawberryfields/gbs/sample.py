@@ -25,7 +25,7 @@ uniform distribution.
 Gaussian boson sampling (GBS)
 -----------------------------
 
-The :func:`quantum_sampler` function allows users to simulate Gaussian boson sampling (GBS) by
+The :func:`sample` function allows users to simulate Gaussian boson sampling (GBS) by
 choosing a symmetric input matrix to sample from :cite:`bradler2018gaussian`. For a symmetric
 :math:`N \times N` input matrix :math:`A`, corresponding to an undirected graph,
 an :math:`N`-mode GBS device with threshold detectors generates samples that are binary strings
@@ -39,7 +39,7 @@ subset of modes are selected using the uniform distribution.
 .. autosummary::
     QUANTUM_BACKENDS
     BACKEND_DEFAULTS
-    quantum_sampler
+    sample
     uniform_sampler
     random_seed
 
@@ -72,11 +72,11 @@ QUANTUM_BACKENDS = ("gaussian",)
 
 BACKEND_DEFAULTS = {"remote": False, "backend": "gaussian", "threshold": True, "postselect": 0}
 """dict[str, Any]: Dictionary to specify default parameters of options in backend sampling for
-:func:`quantum_sampler`.
+:func:`sample`.
 """
 
 
-def quantum_sampler(
+def sample(
     A: np.ndarray, n_mean: float, samples: int = 1, backend_options: Optional[dict] = None
 ) -> list:
     r"""Generate samples from GBS
@@ -108,7 +108,7 @@ def quantum_sampler(
         key: ``"postselect"``, value: *int*
             Causes samples with a photon number or click number less than the
             specified value to be filtered out. Defaults to ``0`` if unspecified, resulting in no
-            postselection. Note that the number of samples returned in :func:`quantum_sampler` is
+            postselection. Note that the number of samples returned in :func:`sample` is
             still equal to the ``samples`` parameter.
 
     Args:
@@ -235,7 +235,7 @@ def random_seed(seed: int = None) -> None:
 
     Wrapper function for `numpy.random.seed <https://docs.scipy.org/doc/numpy//reference/generated
     /numpy.random.seed.html>`_ to seed NumPy-based random number generators used in
-    :func:`quantum_sampler` and :func:`uniform_sampler`. This allows for repeatable sampling.
+    :func:`sample` and :func:`uniform_sampler`. This allows for repeatable sampling.
 
     Args:
         seed (int): random seed; defaults to ``None``
@@ -300,7 +300,7 @@ def sample_subgraphs(
         postselect = int(sample_options["postselect_ratio"] * nodes)
         backend_options = {**(backend_options or {}), "postselect": postselect}
 
-        s = quantum_sampler(
+        s = sample(
             A=nx.to_numpy_array(graph),
             n_mean=nodes,
             samples=samples,

@@ -58,8 +58,8 @@ adj_dim_range = range(2, 6)
 
 @pytest.mark.usefixtures("is_undirected")
 @pytest.mark.parametrize("dim", [4])
-class TestQuantumSampler:
-    """Tests for the function ``glassonion.sample.quantum_sampler``"""
+class TestSample:
+    """Tests for the function ``glassonion.sample.sample``"""
 
     def test_invalid_adjacency(self, adj, monkeypatch):
         """Test if function raises a ``ValueError`` for a matrix that fails
@@ -67,19 +67,19 @@ class TestQuantumSampler:
         with monkeypatch.context() as m:
             m.setattr(utils, "is_undirected", lambda _: False)
             with pytest.raises(ValueError, match="Input must be a NumPy array"):
-                sample.quantum_sampler(A=adj, n_mean=1.0)
+                sample.sample(A=adj, n_mean=1.0)
 
     def test_invalid_samples(self, adj, monkeypatch):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
         requested """
         with pytest.raises(ValueError, match="Number of samples must be at least one"):
-            sample.quantum_sampler(A=adj, n_mean=1.0, samples=0)
+            sample.sample(A=adj, n_mean=1.0, samples=0)
 
     def test_badpostselect(self, adj):
         """Tests if function raises a ``ValueError`` when a negative value is set for
         ``postselect`` """
         with pytest.raises(ValueError, match="Can only postselect on nonnegative values"):
-            sample.quantum_sampler(
+            sample.sample(
                 A=adj, n_mean=1.0, samples=sample_number, backend_options={"postselect": -1}
             )
 
@@ -94,7 +94,7 @@ class TestQuantumSampler:
 
         with monkeypatch.context() as m:
             m.setattr(sample, "_sample_sf", dummy_sample_sf)
-            samples = sample.quantum_sampler(
+            samples = sample.sample(
                 A=adj,
                 n_mean=1.0,
                 samples=sample_number,
@@ -119,7 +119,7 @@ class TestQuantumSampler:
         with monkeypatch.context() as m:
             m.setattr(sample, "_sample_sf", dummy_sample_sf)
             samples = np.array(
-                sample.quantum_sampler(
+                sample.sample(
                     A=adj,
                     n_mean=1.0,
                     samples=sample_number,
@@ -143,7 +143,7 @@ class TestQuantumSampler:
         with monkeypatch.context() as m:
             m.setattr(sample, "_sample_sf", dummy_sample_sf)
             samples = np.array(
-                sample.quantum_sampler(
+                sample.sample(
                     A=adj,
                     n_mean=1.0,
                     samples=sample_number,
@@ -173,7 +173,7 @@ class TestQuantumSampler:
         with monkeypatch.context() as m:
             m.setattr(sample, "_sample_sf", dummy_sample_sf)
             samples = np.array(
-                sample.quantum_sampler(
+                sample.sample(
                     A=adj,
                     n_mean=1.0,
                     samples=sample_number,
@@ -188,14 +188,14 @@ class TestQuantumSampler:
 
 
 @pytest.mark.parametrize("dim", adj_dim_range)
-class TestQuantumSamplerIntegration:
-    """Integration tests for the function ``glassonion.sample.quantum_sampler``"""
+class TestSampleIntegration:
+    """Integration tests for the function ``glassonion.sample.sample``"""
 
     def test_pnr_nopostselect_integration(self, adj):
         """Integration test to check if function returns samples of correct form, i.e., correct
         number of samples, correct number of modes, all non-negative integers """
         samples = np.array(
-            sample.quantum_sampler(
+            sample.sample(
                 A=adj,
                 n_mean=1.0,
                 samples=integration_sample_number,
@@ -215,7 +215,7 @@ class TestQuantumSamplerIntegration:
         """Integration test to check if function returns samples of correct form, i.e., correct
         number of samples, correct number of modes, all integers of zeros and ones """
         samples = np.array(
-            sample.quantum_sampler(
+            sample.sample(
                 A=adj,
                 n_mean=1.0,
                 samples=integration_sample_number,
@@ -237,7 +237,7 @@ class TestQuantumSamplerIntegration:
         number of samples, correct number of modes, all non-negative integers with total photon
         number not less than 1 """
         samples = np.array(
-            sample.quantum_sampler(
+            sample.sample(
                 A=adj,
                 n_mean=1.0,
                 samples=integration_sample_number,
@@ -259,7 +259,7 @@ class TestQuantumSamplerIntegration:
         number of samples, correct number of modes, all integers of zeros and ones with total
         click number not less than 1 """
         samples = np.array(
-            sample.quantum_sampler(
+            sample.sample(
                 A=adj,
                 n_mean=1.0,
                 samples=integration_sample_number,
@@ -380,15 +380,11 @@ def test_random_seed(dim, adj):
     after repeated initialization of ``random_seed``."""
 
     sample.random_seed(1968)
-    q_s_1 = sample.quantum_sampler(
-        A=adj, n_mean=2, samples=10, backend_options={"threshold": False}
-    )
+    q_s_1 = sample.sample(A=adj, n_mean=2, samples=10, backend_options={"threshold": False})
     u_s_1 = sample.uniform_sampler(modes=dim, sampled_modes=2, samples=10)
 
     sample.random_seed(1968)
-    q_s_2 = sample.quantum_sampler(
-        A=adj, n_mean=2, samples=10, backend_options={"threshold": False}
-    )
+    q_s_2 = sample.sample(A=adj, n_mean=2, samples=10, backend_options={"threshold": False})
     u_s_2 = sample.uniform_sampler(modes=dim, sampled_modes=2, samples=10)
 
     assert np.array_equal(q_s_1, q_s_2)
