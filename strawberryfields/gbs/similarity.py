@@ -222,7 +222,7 @@ def feature_vector_sampling(
     (0.34, 0.08, 0.01)
 
     Args:
-        samples (list[list[int]]): a list of samples generated from :func:`~.quantum_sampler`
+        samples (list[list[int]]): a list of samples
         event_photon_numbers (list[int]): a list of events described by their total photon number
         max_count_per_mode (int): maximum number of photons per mode in every event
 
@@ -235,7 +235,7 @@ def feature_vector_sampling(
     if max_count_per_mode < 1:
         raise ValueError("Maximum number of photons per mode must be at least one")
 
-    n_samples, _ = np.array(samples).shape
+    n_samples = len(samples)
 
     e = (sample_to_event(s, max_count_per_mode) for s in samples)
     count = Counter(e)
