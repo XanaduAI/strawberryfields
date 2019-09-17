@@ -21,6 +21,8 @@ from collections import Counter
 import pytest
 
 from strawberryfields.gbs import similarity
+import networkx as nx
+import numpy as np
 
 pytestmark = pytest.mark.gbs
 
@@ -148,7 +150,7 @@ class TestEventToSample:
     def test_low_count(self):
         """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is not positive."""
         with pytest.raises(ValueError, match="Maximum number of photons"):
-            similarity.event_to_sample(2, 0, 5)
+            similarity.event_to_sample(2, -1, 5)
 
     def test_high_photon(self):
         """Test if function raises a ``ValueError`` if ``photon_number`` is so high that it
@@ -234,3 +236,65 @@ def test_event_cardinality():
         calc_cardinalities[o] = similarity.event_cardinality(*o)
 
     assert calc_cardinalities == events
+
+
+class TestProbOrbitMC:
+    """Tests for the function ``strawberryfields.gbs.similarity.p_orbit_mc.``"""
+
+    @pytest.mark.parametrize("n_mean", [0, 2, 4])
+    def test_actual_prob_orbit(self, n_mean):
+        """Tests if the output of the function is a valid probability between 0 and 1."""
+        graph = nx.complete_graph(10)
+
+        assert 0 <= similarity.p_orbit_mc(graph, [], n_mean) <= 1
+
+    def test_mean_computation_orbit(self, monkeypatch):
+        """Tests if the calculation of the sample mean is performed correctly. The test
+        monkeypatches the fock_prob function so that the probability is the same for each sample and
+         is equal to 1/5, i.e., one over the number of samples in the orbit [1,1,1,1] for 5 modes."""
+        graph = nx.complete_graph(5)
+        with monkeypatch.context() as m:
+            m.setattr("strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
+                      lambda *args, **kwargs: 0.2)
+            tol = 1e-5
+
+            assert np.abs(similarity.p_orbit_mc(graph, [1, 1, 1, 1]) - 1.0) < tol
+
+    def test_prob_vacuum_orbit(self):
+        """Tests if the function gives the right probability for the empty orbit when the GBS
+        device has been configured to have zero mean photon number."""
+        graph = nx.complete_graph(10)
+
+        assert similarity.p_orbit_mc(graph, [], 0) == 1.0
+
+
+class TestProbEventMC:
+
+    def test_prob_vacuum_event(self):
+        """Tests if the function gives the right probability for an event with zero photons when
+        the GBS device has been configured to have zero mean photon number."""
+        graph = nx.complete_graph(10)
+
+        assert similarity.p_event_mc(graph, 0, 0, 0) == 1.0
+
+    @pytest.mark.parametrize("n_mean", [0, 2, 4])
+    def test_actual_prob_event(self, n_mean):
+        """Tests if the output of the function is a valid probability between 0 and 1."""
+
+        graph = nx.complete_graph(10)
+
+        assert 0 <= similarity.p_event_mc(graph, 0, 0, 0) <= 1
+
+    def test_mean_event(self, monkeypatch):
+        """Tests if the calculation of the sample mean is performed correctly. The test
+        monkeypatches the fock_prob function so that the probability is the same for each sample and
+         is equal to 1/216, i.e., one over the number of samples in the event with 5 modes,
+         6 photons, and mac 3 photons per mode."""
+        graph = nx.complete_graph(6)
+        with monkeypatch.context() as m:
+            m.setattr("strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
+                      lambda *args, **kwargs: 1.0/336)
+            tol = 1e-5
+
+            assert np.abs(similarity.p_event_mc(graph, 6, 3) - 1.0) < tol
+

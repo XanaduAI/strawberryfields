@@ -190,8 +190,8 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
     Returns:
         list[int]: a sample in the event
     """
-    if max_count_per_mode < 1:
-        raise ValueError("Maximum number of photons per mode must be equal or greater than 1")
+    if max_count_per_mode < 0:
+        raise ValueError("Maximum number of photons must be non-negative")
 
     if max_count_per_mode * modes < photon_number:
         raise ValueError(
@@ -270,9 +270,9 @@ def p_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1
 
     **Example usage**:
 
-    >>> graph = nx.complete_graph(10)
-    >>> p_orbit_mc([2, 1, 1], graph)
-    0.5
+    >>> graph = nx.complete_graph(8)
+    >>> p_orbit_mc(graph, [2, 1, 1])
+    0.03744
 
     Args:
         orbit (list[int]): orbit for which to estimate the probability
@@ -316,6 +316,12 @@ def p_event_mc(graph: nx.Graph, photon_number: int, max_count_per_mode: int, n_m
     the input graph and mean photon number. These probabilities are then rescaled according to the
     cardinality of the event. The estimate is the sample mean of the rescaled probabilities.
 
+    **Example usage**:
+
+    >>> graph = nx.complete_graph(8)
+    >>> p_event_mc(graph, 4, 2)
+    0.1395
+
     Args:
         graph (nx.Graph): the input graph encoded in the GBS device
         photon_number (int): number of photons in the event
@@ -348,6 +354,5 @@ def p_event_mc(graph: nx.Graph, photon_number: int, max_count_per_mode: int, n_m
     return prob
 
 
-graph = nx.erdos_renyi_graph(30, 0.5)
-print(p_orbit_mc(graph, [2, 2, 1, 1], 4, samples=100))
-print(p_event_mc(graph, 4, 2, 4, samples=100))
+graph = nx.complete_graph(8)
+print(p_orbit_mc(graph, [2, 1, 1]))
