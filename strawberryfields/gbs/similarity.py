@@ -237,8 +237,8 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
 
     **Example usage**:
 
-    >>> event_cardinality(5, 2, 6)
-    126
+    >>> event_cardinality(6, 3, 7)
+    728
 
     Args:
         photon_number (int): number of photons in the event
@@ -258,7 +258,8 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
 
 
 def p_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
-    """Gives a Monte Carlo estimate of the probability of a given orbit with respect to a graph.
+    """Gives a Monte Carlo estimate of the probability of a given orbit for a GBS device encoded
+    according to the input graph.
 
     To make this estimate, several samples from the orbit are drawn uniformly at random using
     :func:`orbit_to_sample`.
@@ -266,7 +267,9 @@ def p_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1
     For each sample, this function calculates the probability of observing that sample from a GBS
     device programmed according to the input graph and mean photon number. The sum of the
     probabilities is then rescaled according to the cardinality of the orbit and the total number of
-     samples. The estimate is the sample mean of the rescaled probabilities.
+    samples. The estimate is the sample mean of the rescaled probabilities. To make
+    this estimate, several samples from the orbit are drawn uniformly at random using
+    :func:orbit_to_sample.
 
     **Example usage**:
 
@@ -275,8 +278,8 @@ def p_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1
     0.03744
 
     Args:
-        orbit (list[int]): orbit for which to estimate the probability
         graph (nx.Graph): input graph encoded in the GBS device
+        orbit (list[int]): orbit for which to estimate the probability
         n_mean (float): total mean photon number of the GBS device
         samples (int): number of samples used in the Monte Carlo estimation
 
@@ -316,13 +319,15 @@ def p_event_mc(
     n_mean: float = 5,
     samples: int = 1000,
 ) -> float:
-    """Gives a Monte Carlo estimation of the probability that a sample belongs to the given
-    event.
+    """Gives a Monte Carlo estimate of the probability of a given event for a GBS device encoded
+    according to the input graph.
 
     To make this estimate, several samples from the event are drawn uniformly at random. For each
     sample, we calculate the probability of observing that sample from a GBS programmed according to
     the input graph and mean photon number. These probabilities are then rescaled according to the
-    cardinality of the event. The estimate is the sample mean of the rescaled probabilities.
+    cardinality of the event. The estimate is the sample mean of the rescaled probabilities. To make
+    this estimate, several samples from the event are drawn uniformly at random using
+    :func:event_to_sample.
 
     **Example usage**:
 
@@ -331,11 +336,11 @@ def p_event_mc(
     0.1395
 
     Args:
-        graph (nx.Graph): the input graph encoded in the GBS device
+        graph (nx.Graph): input graph encoded in the GBS device
         photon_number (int): number of photons in the event
         max_count_per_mode (int): maximum number of photons per mode in the event
-        n_mean (float): the total mean photon number of the GBS device
-        samples (int): the number of samples used in the Monte Carlo estimation
+        n_mean (float): total mean photon number of the GBS device
+        samples (int): number of samples used in the Monte Carlo estimation
 
     Returns:
         float: the estimated probability
@@ -358,8 +363,15 @@ def p_event_mc(
 
     for _ in range(samples):
         sample = event_to_sample(photon_number, max_count_per_mode, modes)
-        prob += result.state.fock_prob(sample, cutoff=np.sum(sample) + 1)
+        prob += result.state.fock_prob(sample, cutoff=photon_number + 1)
 
     prob = prob * event_cardinality(photon_number, max_count_per_mode, modes) / samples
 
     return prob
+
+graph = nx.complete_graph(8)
+import time
+tic = time.time()
+print(p_event_mc(graph, 4, 2))
+toc = time.time()
+print(toc-tic)

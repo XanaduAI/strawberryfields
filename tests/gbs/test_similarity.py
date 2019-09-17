@@ -148,7 +148,7 @@ class TestEventToSample:
     """Tests for the function ``strawberryfields.gbs.similarity.event_to_sample``"""
 
     def test_low_count(self):
-        """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is not positive."""
+        """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is negative."""
         with pytest.raises(ValueError, match="Maximum number of photons"):
             similarity.event_to_sample(2, -1, 5)
 
@@ -238,15 +238,8 @@ def test_event_cardinality():
     assert calc_cardinalities == events
 
 
-class TestProbOrbitMC:
+class TestPOrbitMC:
     """Tests for the function ``strawberryfields.gbs.similarity.p_orbit_mc.``"""
-
-    @pytest.mark.parametrize("n_mean", [0, 2, 4])
-    def test_actual_prob_orbit(self, n_mean):
-        """Tests if the output of the function is a valid probability between 0 and 1."""
-        graph = nx.complete_graph(10)
-
-        assert 0 <= similarity.p_orbit_mc(graph, [], n_mean) <= 1
 
     def test_mean_computation_orbit(self, monkeypatch):
         """Tests if the calculation of the sample mean is performed correctly. The test
@@ -277,14 +270,6 @@ class TestProbEventMC:
 
         assert similarity.p_event_mc(graph, 0, 0, 0) == 1.0
 
-    @pytest.mark.parametrize("n_mean", [0, 2, 4])
-    def test_actual_prob_event(self, n_mean):
-        """Tests if the output of the function is a valid probability between 0 and 1."""
-
-        graph = nx.complete_graph(10)
-
-        assert 0 <= similarity.p_event_mc(graph, 0, 0, 0) <= 1
-
     def test_mean_event(self, monkeypatch):
         """Tests if the calculation of the sample mean is performed correctly. The test
         monkeypatches the fock_prob function so that the probability is the same for each sample and
@@ -297,4 +282,3 @@ class TestProbEventMC:
             tol = 1e-5
 
             assert np.abs(similarity.p_event_mc(graph, 6, 3) - 1.0) < tol
-
