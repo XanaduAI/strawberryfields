@@ -555,8 +555,7 @@ class Decomposition(Operation):
     This class provides the base behaviour for decomposing various multimode operations
     into a sequence of gates and state preparations.
 
-    The first parameter p[0] of the Decomposition is always a square matrix.
-    TODO p[0] cannot be a symbolic parameter yet...
+    .. note:: The first parameter ``p[0]`` of a Decomposition is always a square matrix, and it cannot be symbolic.
     """
     ns = None  # overridden by child classes in __init__
 
@@ -1308,9 +1307,9 @@ class BSgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
-        tr = (np.cos(p[0]),
-              np.sin(p[0]) * np.exp(1j * p[1]))
-        backend.beamsplitter(*tr, *reg)
+        t = np.cos(p[0])
+        r = np.sin(p[0]) * np.exp(1j * p[1])
+        backend.beamsplitter(t, r, *reg)
 
 
 class MZgate(Gate):

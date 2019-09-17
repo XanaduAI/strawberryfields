@@ -138,7 +138,7 @@ class TestParameter:
         qq = FreeParameter('y')
         pp.val = p
         qq.val = q
-        #binary_arithmetic(pp, qq, p, q)
+        binary_arithmetic(pp, qq, p, q)
 
     @pytest.mark.parametrize("p", TEST_VALUES)
     @pytest.mark.parametrize("q", SCALAR_TEST_VALUES)

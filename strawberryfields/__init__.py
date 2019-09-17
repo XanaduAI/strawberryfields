@@ -56,7 +56,6 @@ Top-level functions
 .. currentmodule: strawberryfields
 
 .. autosummary::
-   convert
    about
    cite
    version

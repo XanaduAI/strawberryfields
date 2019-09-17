@@ -19,42 +19,50 @@ Quantum operation parameters
 
 .. currentmodule:: strawberryfields.parameters
 
-The classes in this module encapsulate parameters passed to the
-quantum operations represented by :class:`.Operation`.
+The classes in this module represent parameters passed to the
+quantum operations represented by :class:`.Operation` subclasses.
+
+Parameter types
+---------------
+
 There are three basic types of parameters:
 
-1. Numerical parameters (bound and fixed): An immediate, immutable numerical object
-   (float, complex, int, array).
-   NOTE: currently implemented as-is, not encapsulated in a class. This can be changed if necessary,
-   in which case most of the top-level functions in this module would become Parameter methods.
-2. Measured parameters (bound but not fixed): Certain quantum circuits/protocols require that
+1. **Numerical parameters** (bound and fixed): An immediate, immutable numerical object
+   (float, complex, int, numerical array).
+   Implemented as-is, not encapsulated in a class.
+
+2. **Measured parameters** (bound but not fixed): Certain quantum circuits/protocols require that
    Operations can be conditioned on measurement results obtained during the execution of the
    circuit. In this case the parameter value is not known/fixed until the measurement is made
    (or simulated). Represented by :class:`MeasuredParameter` instances.
-   Constructed from the :class:`RegRef` instance storing the measurement
-   result using the :meth:`RegRef.par` method.
-3. Free parameters (not bound nor fixed): A *parametrized circuit template* is a circuit that
+   Constructed from the :class:`.RegRef` instance storing the measurement
+   result using the :meth:`.RegRef.par` method.
+
+3. **Free parameters** (not bound nor fixed): A *parametrized circuit template* is a circuit that
    depends on a number of unbound (free) parameters. These parameters need to be bound to fixed
    numerical values before the circuit can be executed on a hardware quantum device or a numeric
    simulator. Represented by :class:`FreeParameter` instances.
    Simulators with symbolic capability can accept a parametrized circuit as input (and should
    return symbolic expressions representing the measurement results, with the same free parameters,
    as output).
-   Free parameters belong to a single :class:`Program` instance, are constructed using the
-   :meth:`Program.args` method, and are bound using :meth:`Program.bind_args`.
+   Free parameters belong to a single :class:`.Program` instance, are constructed using the
+   :meth:`.Program.args` method, and are bound using :meth:`.Program.bind_args`.
 
-The Operations can accept parameters that are functions or algebraic combinations of any number of
-these basic types of parameters, made possible by the measured and free parameters inheriting
-:class:`sympy.Symbol`.
-Binary arithmetic operations between sympy symbols and numpy arrays produces numpy object arrays
-containing sympy symbols.
+:class:`.Operation` subclass constructors accept parameters that are functions or algebraic
+combinations of any number of these basic parameter types. This is made possible by
+:class:`MeasuredParameter` and :class:`FreeParameter` inheriting from :class:`sympy.Symbol`.
 
+.. note:: Binary arithmetic operations between sympy symbols and numpy arrays produces numpy object arrays containing sympy symbols.
+
+
+Operation lifecycle
+-------------------
 
 The normal lifecycle of an Operation object and its associated parameters is as follows:
 
 * An Operation instance is constructed, and given some input arguments.
   In :meth:`.Operation.__init__`,
-  the RegRef dependencies of measured parameters are added to :attr:`Operation._measurement_deps`.
+  the RegRef dependencies of measured parameters are added to :attr:`.Operation._measurement_deps`.
 
 * The Operation instance is applied using its :meth:`~ops.Operation.__or__`
   method inside a :class:`.Program` context.
@@ -75,12 +83,12 @@ The normal lifecycle of an Operation object and its associated parameters is as 
   Measured and free parameters are handled symbolically by Sympy.
 
 * The compiled Program is run by a :class:`.BaseEngine` instance, which calls the
-  :meth:`apply` method of each Operation in turn.
+  :meth:`~ops.Operation.apply` method of each Operation in turn.
 
-* :meth:`apply` then calls :meth:`_apply` which is unique for each Operation subclass.
-  It may perform additional numeric or symbolic transformations on the parameters, and
-  then finally evaluates the numeric value of the parameters using :func:`par_evaluate`.
-  The numeric parameter values are passed to the appropriate backend API method.
+* :meth:`~ops.Operation.apply` then calls :meth:`~ops.Operation._apply` which is redefined by each Operation subclass.
+  It evaluates the value of the parameters using :func:`par_evaluate`, and
+  may perform additional numeric transformations on them.
+  The parameter values are finally passed to the appropriate backend API method.
   It is up to the backend to either accept NumPy arrays and Tensorflow objects as parameters, or not.
 
 
@@ -148,7 +156,7 @@ def wrap_mathfunc(func):
         return func(*args)
     return wrapper
 
-# namespace of mathematical functions for manipulating Parameters
+#: SimpleNamespace: Namespace of mathematical functions for manipulating Parameters. Consists of all :mod:`sympy.functions` public members, which we wrap with :func:`wrap_mathfunc`.
 parfuncs = types.SimpleNamespace(**{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != '_'})
 
 
@@ -166,7 +174,7 @@ def is_object_array(p):
 
 
 def par_evaluate(params):
-    """Evaluate a parameter sequence.
+    """Evaluate an Operation parameter sequence.
 
     Any parameters descending from sympy.Basic are evaluated, others are returned as-is.
     Evaluation means that free and measured parameters are replaced by their numeric values.
@@ -220,7 +228,7 @@ def par_evaluate(params):
 
 
 def par_is_symbolic(p):
-    """Returns True iff p is a symbolic parameter instance.
+    """Returns True iff p is a symbolic Operation parameter instance.
 
     An array is symbolic if any of its elements are.
     """
@@ -284,7 +292,7 @@ class MeasuredParameter(sympy.Symbol):
     symbolically in defining a gate before the numeric value of that
     measurement is available.
 
-    Former RegRefTransform functionality is provided by the sympy.Symbol base class.
+    Former RegRefTransform (SF <= 0.11) functionality is provided by the sympy.Symbol base class.
 
     Args:
         regref (RegRef): register reference responsible for storing the measurement result
@@ -299,7 +307,7 @@ class MeasuredParameter(sympy.Symbol):
             # TODO: Maybe we want to delete a mode right after measurement to save comp effort?
             # The measurement result would still be preserved in the RegRef...
             raise ValueError('Trying to use an inactive RegRef.')
-        #: RegRef: the parameter value depends on this RegRef, it can only be evaluated after the corresponding subsystem has been measured
+        #: RegRef: the value of the parameter depends on this RegRef, and can only be evaluated after the corresponding subsystem has been measured
         self.regref = regref
 
     def _sympystr(self, printer):
