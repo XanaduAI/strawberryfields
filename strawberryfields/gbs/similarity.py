@@ -208,13 +208,18 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
 def feature_vector_sampling(
     samples: list, event_photon_numbers: list, max_count_per_mode: int = 2
 ) -> list:
-    """Calculates feature vector with respect to input samples.
+    r"""Calculates feature vector with respect to input samples.
 
-    The feature vector is composed of event probabilities, with all events having a maximum
-    photon count in each mode of ``max_count_per_mode``. Events are then described by their total
-    photon number, and those chosen as part of the feature vector can be specified through
-    ``event_photon_numbers``. Probabilities are reconstructed by measuring the occurrence of
-    events in the input ``samples``.
+    The feature vector is composed of event probabilities :math:`p_{k}` with all events
+    :math:`E_{k}` having a maximum photon count in each mode of ``max_count_per_mode``. Events
+    are specified by their total photon number :math:`k` and those chosen as part of the feature
+    vector can be specified through :math:`\mathbf{k}` (using the ``event_photon_numbers``
+    argument). The resultant feature vector is
+
+    .. math::
+        f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots)
+
+    Probabilities are reconstructed by measuring the occurrence of events in the input ``samples``.
 
     **Example usage**:
 
