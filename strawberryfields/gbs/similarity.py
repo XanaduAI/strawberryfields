@@ -380,5 +380,3 @@ def prob_event_mc(
     prob = prob * event_cardinality(photon_number, max_count_per_mode, modes) / samples
 
     return prob
-
-print(event_cardinality(2, 2, 3))
