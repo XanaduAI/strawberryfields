@@ -269,7 +269,7 @@ class TestProbEventMC:
         the GBS device has been configured to have zero mean photon number."""
         graph = nx.complete_graph(10)
 
-        assert similarity.p_event_mc(graph, 0, 0, 0) == 1.0
+        assert similarity.prob_event_mc(graph, 0, 0, 0) == 1.0
 
     def test_mean_event(self, monkeypatch):
         """Tests if the calculation of the sample mean is performed correctly. The test
