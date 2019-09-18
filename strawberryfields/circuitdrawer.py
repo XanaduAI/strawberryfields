@@ -89,6 +89,7 @@ import os
 # to transform Strawberry Fields operators to latex code.
 
 DOCUMENT_CLASS = r"\documentclass{article}"
+EMPTY_PAGESTYLE = r"\pagestyle{empty}"
 QCIRCUIT_PACKAGE = r"\usepackage{qcircuit}"
 BEGIN_DOCUMENT = r"\begin{document}"
 DOCUMENT_END = r"\end{document}"
@@ -149,7 +150,7 @@ WIRE_TERMINATOR = r"\\" + "\n"
 CIRCUIT_BODY_TERMINATOR = "}\n"
 CIRCUIT_BODY_START = " {" + "\n"
 INIT_DOCUMENT = (
-    DOCUMENT_CLASS + "\n" + QCIRCUIT_PACKAGE + "\n" + BEGIN_DOCUMENT + "\n" + CIRCUIT_START
+    DOCUMENT_CLASS + "\n" + EMPTY_PAGESTYLE +"\n" + QCIRCUIT_PACKAGE + "\n" + BEGIN_DOCUMENT + "\n" + CIRCUIT_START
 )
 
 PIPE = "|"
