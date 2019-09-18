@@ -21,6 +21,7 @@ import networkx as nx
 import numpy as np
 import pytest
 
+import strawberryfields.gbs.subgraph
 from strawberryfields.gbs import utils
 
 pytestmark = pytest.mark.gbs
@@ -101,7 +102,7 @@ class TestIsSubgraph:
         """Test if function raises a ``TypeError`` when fed an invalid subgraph type (i.e.,
         not iterable)."""
         with pytest.raises(TypeError, match="subgraph and graph.nodes must be iterable"):
-            utils.is_subgraph(None, graph)
+            strawberryfields.gbs.subgraph.is_subgraph(None, graph)
 
     def test_valid_subgraphs(self, graph, dim):
         """Test if function returns ``True`` when fed valid subgraphs. Note that graph nodes are
@@ -109,7 +110,7 @@ class TestIsSubgraph:
         graph = nx.relabel_nodes(graph, lambda x: x ** 2)
         subgraphs = itertools.combinations(list(graph.nodes), int(dim / 2))
 
-        assert all([utils.is_subgraph(list(s), graph) for s in subgraphs])
+        assert all([strawberryfields.gbs.subgraph.is_subgraph(list(s), graph) for s in subgraphs])
 
     def test_invalid_subgraphs(self, graph, dim):
         """Test if function returns ``False`` when fed invalid subgraphs. Note that graph nodes are
@@ -117,4 +118,6 @@ class TestIsSubgraph:
         graph = nx.relabel_nodes(graph, lambda x: x ** 2)
         subgraphs = itertools.combinations(range(dim), int(dim / 2))
 
-        assert not all([utils.is_subgraph(list(s), graph) for s in subgraphs])
+        assert not all(
+            [strawberryfields.gbs.subgraph.is_subgraph(list(s), graph) for s in subgraphs]
+        )

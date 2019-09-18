@@ -30,12 +30,10 @@ Summary
 .. autosummary::
     is_undirected
     subgraph_adjacency
-    is_subgraph
 
 Code details
 ^^^^^^^^^^^^
 """
-from typing import Iterable
 
 import networkx as nx
 import numpy as np
@@ -83,21 +81,3 @@ def subgraph_adjacency(graph: nx.Graph, nodes: list) -> np.ndarray:
         )
 
     return nx.to_numpy_array(graph.subgraph(nodes))
-
-
-def is_subgraph(subgraph: Iterable, graph: nx.Graph):
-    """Checks if input is a valid subgraph.
-
-    A valid subgraph is a set of nodes that are contained within the nodes of the graph.
-
-    Args:
-        subgraph (iterable): a collection of nodes
-        graph (nx.Graph): the input graph
-
-    Returns:
-        bool: returns ``True`` only if input subgraph is valid
-    """
-    try:
-        return set(subgraph).issubset(graph.nodes)
-    except TypeError:
-        raise TypeError("subgraph and graph.nodes must be iterable")

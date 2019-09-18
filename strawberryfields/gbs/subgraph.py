@@ -68,6 +68,12 @@ subgraphs. Resizing functionality is provided by the following functions.
     RESIZE_DEFAULTS
     RESIZE_DICT
 
+Utility functions
+-----------------
+
+.. autosummary::
+    is_subgraph
+
 Code details
 ^^^^^^^^^^^^
 """
@@ -76,7 +82,7 @@ from typing import Iterable, Optional, Tuple
 
 import networkx as nx
 
-from strawberryfields.gbs import g_sample, utils
+from strawberryfields.gbs import g_sample
 from strawberryfields.gbs.sample import BACKEND_DEFAULTS
 
 
@@ -303,7 +309,7 @@ def greedy_density(
     for s in subgraphs:
         s = set(s)
 
-        if not utils.is_subgraph(s, graph):
+        if not is_subgraph(s, graph):
             raise ValueError("Input is not a valid subgraph")
 
         while len(s) != target:
@@ -361,7 +367,7 @@ def greedy_degree(
     for s in subgraphs:
         s = set(s)
 
-        if not utils.is_subgraph(s, graph):
+        if not is_subgraph(s, graph):
             raise ValueError("Input is not a valid subgraph")
 
         while len(s) != target:
@@ -383,3 +389,21 @@ RESIZE_DICT = {"greedy-density": greedy_density, "greedy-degree": greedy_degree}
 """dict[str, func]: Included methods for resizing subgraphs. The dictionary keys are strings
 describing the method, while the dictionary values are callable functions corresponding to the
 method."""
+
+
+def is_subgraph(subgraph: Iterable, graph: nx.Graph):
+    """Checks if input is a valid subgraph.
+
+    A valid subgraph is a set of nodes that are contained within the nodes of the graph.
+
+    Args:
+        subgraph (iterable): a collection of nodes
+        graph (nx.Graph): the input graph
+
+    Returns:
+        bool: returns ``True`` only if input subgraph is valid
+    """
+    try:
+        return set(subgraph).issubset(graph.nodes)
+    except TypeError:
+        raise TypeError("subgraph and graph.nodes must be iterable")
