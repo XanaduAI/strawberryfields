@@ -198,44 +198,43 @@ class TestEventToSample:
         assert samp[0] == count
 
 
-def test_orbit_cardinality():
+orbits = [
+    [(1, 1, 2), 4, 12],
+    [(1, 1), 4, 6],
+    [(1, 2, 3), 4, 24],
+    [(1, 1, 1, 1), 5, 5],
+    [(1, 1, 2), 5, 30],
+    [(1, 2, 3), 5, 60],
+]
+
+
+@pytest.mark.parametrize("orbit, max_photon, expected", orbits)
+def test_orbit_cardinality(orbit, max_photon, expected):
     """Test if function ``strawberryfields.gbs.similarity.orbit_cardinality`` returns the
     correct number of samples for some hard-coded examples."""
+    print('orbit = ', orbit)
+    print('max_photon = ', max_photon)
+    print('expected = ', expected)
 
-    orbits = {
-        ((1, 1, 2), 4): 12,
-        ((1, 1), 4): 6,
-        ((1, 2, 3), 4): 24,
-        ((1, 1, 1, 1), 5): 5,
-        ((1, 1, 2), 5): 30,
-        ((1, 2, 3), 5): 60,
-    }
-
-    calc_cardinalities = {}
-    for o, _ in orbits.items():
-        calc_cardinalities[o] = similarity.orbit_cardinality(list(o[0]), o[1])
-
-    assert calc_cardinalities == orbits
+    assert similarity.orbit_cardinality(list(orbit), max_photon) == expected
 
 
-def test_event_cardinality():
+events = [
+    [5, 3, 6, 216],
+    [6, 3, 6, 336],
+    [5, 2, 6, 126],
+    [5, 3, 7, 413],
+    [6, 3, 7, 728],
+    [5, 2, 7, 266],
+]
+
+
+@pytest.mark.parametrize("photons, max_count, modes, expected", events)
+def test_event_cardinality(photons, max_count, modes, expected):
     """Test if function ``strawberryfields.gbs.similarity.event_cardinality`` returns the
     correct number of samples for some hard-coded examples."""
 
-    events = {
-        (5, 3, 6): 216,
-        (6, 3, 6): 336,
-        (5, 2, 6): 126,
-        (5, 3, 7): 413,
-        (6, 3, 7): 728,
-        (5, 2, 7): 266,
-    }
-
-    calc_cardinalities = {}
-    for o, _ in events.items():
-        calc_cardinalities[o] = similarity.event_cardinality(*o)
-
-    assert calc_cardinalities == events
+    assert similarity.event_cardinality(photons, max_count, modes) == expected
 
 
 class TestPOrbitMC:
@@ -251,9 +250,8 @@ class TestPOrbitMC:
                 "strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
                 lambda *args, **kwargs: 0.2,
             )
-            tol = 1e-5
 
-            assert np.abs(similarity.p_orbit_mc(graph, [1, 1, 1, 1]) - 1.0) < tol
+            assert np.allclose(similarity.p_orbit_mc(graph, [1, 1, 1, 1]) - 1.0)
 
     def test_prob_vacuum_orbit(self):
         """Tests if the function gives the right probability for the empty orbit when the GBS
@@ -284,6 +282,5 @@ class TestPEventMC:
                 "strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
                 lambda *args, **kwargs: 1.0 / 336,
             )
-            tol = 1e-5
 
-            assert np.abs(similarity.p_event_mc(graph, 6, 3) - 1.0) < tol
+            assert np.allclose(similarity.p_event_mc(graph, 6, 3) - 1.0)

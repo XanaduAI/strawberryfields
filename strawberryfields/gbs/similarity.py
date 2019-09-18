@@ -32,8 +32,8 @@ Summary
     orbits
     orbit_cardinality
     event_cardinality
-    p_orbit_mc
-    p_event_mc
+    prob_orbit_mc
+    prob_event_mc
 
 Code details
 ^^^^^^^^^^^^
@@ -215,6 +215,12 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
 def orbit_cardinality(orbit: list, modes: int) -> int:
     """Gives the number of samples belonging to the input orbit.
 
+    An orbit has a number of constituting samples, which are given by taking all permutations
+    over the orbit. This function counts how many samples of the given number of modes there are
+    in a given orbit. For example, there are three possible samples in the orbit [2,1,
+    1] with three modes: [1,1,2], [1,2,1], and [2,1,1]. With four modes, there are 12 samples in
+    total.
+
     **Example usage**:
 
     >>> orbit_cardinality([2, 1, 1], 4)
@@ -235,9 +241,15 @@ def orbit_cardinality(orbit: list, modes: int) -> int:
 def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -> int:
     """Gives the number of samples belonging to the input event.
 
+    An event has a number of constituting samples, which are given by all orbits in the event,
+    then all permutations over the orbit. This function counts how many samples of the given number
+    of modes there are in a given event. For example, for three modes, there are six samples in an
+    event with two photons and a maximum of photons two per mode: [1,1,0], [1,0,1], [0,1,1],[2,0,
+    0],[0,2,0], and [0,0,2].
+
     **Example usage**:
 
-    >>> event_cardinality(6, 3, 7)
+    >>> event_cardinality(2, 2, 3)
     728
 
     Args:
@@ -257,7 +269,7 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     return cardinality
 
 
-def p_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
+def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
     """Gives a Monte Carlo estimate of the probability of a given orbit for a GBS device encoded
     according to the input graph.
 
@@ -312,7 +324,7 @@ def p_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1
     return prob
 
 
-def p_event_mc(
+def prob_event_mc(
     graph: nx.Graph,
     photon_number: int,
     max_count_per_mode: int,
@@ -368,3 +380,5 @@ def p_event_mc(
     prob = prob * event_cardinality(photon_number, max_count_per_mode, modes) / samples
 
     return prob
+
+print(event_cardinality(2, 2, 3))
