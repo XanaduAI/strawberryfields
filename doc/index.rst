@@ -171,6 +171,5 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    code/gbs/sample
    code/gbs/subgraph
    code/gbs/g_sample
-   code/gbs/utils
    code/gbs/clique
    code/gbs/similarity
