@@ -43,7 +43,7 @@ def test_free_parameters(setup_eng, tol):
     """Programs with free parameters."""
 
     eng, prog = setup_eng(1)
-    x = prog.args('x')  # free parameter
+    x = prog.params('x')  # free parameter
     with prog.context as q:
         ops.Dgate(x) | q
         ops.Sgate(-1.2 * x * pf.sin(x**2 - 0.1)) | q

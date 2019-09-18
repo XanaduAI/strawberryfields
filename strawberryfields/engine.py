@@ -269,7 +269,7 @@ class BaseEngine(abc.ABC):
                     p.reg_refs[k].val = v
 
             # bind free parameters to their values
-            p.bind_args(args)
+            p.bind_params(args)
 
             # if the program hasn't been compiled for this backend, do it now
             target = self.backend.circuit_spec

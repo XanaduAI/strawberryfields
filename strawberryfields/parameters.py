@@ -46,7 +46,7 @@ There are three basic types of parameters:
    return symbolic expressions representing the measurement results, with the same free parameters,
    as output).
    Free parameters belong to a single :class:`.Program` instance, are constructed using the
-   :meth:`.Program.args` method, and are bound using :meth:`.Program.bind_args`.
+   :meth:`.Program.params` method, and are bound using :meth:`.Program.bind_params`.
 
 :class:`.Operation` subclass constructors accept parameters that are functions or algebraic
 combinations of any number of these basic parameter types. This is made possible by

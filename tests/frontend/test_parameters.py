@@ -18,7 +18,8 @@ import numpy as np
 
 #import strawberryfields as sf
 from strawberryfields.parameters import (par_is_symbolic, par_regref_deps, par_str, par_evaluate,
-                                         MeasuredParameter, FreeParameter, parfuncs as pf)
+                                         MeasuredParameter, FreeParameter, parfuncs as pf,
+                                         ParameterError)
 from strawberryfields.program_utils import RegRef
 
 
@@ -129,6 +130,26 @@ class TestParameter:
         assert str(0.1234567 * d) == '0.1234567*x'
         assert str(np.array([0, 1, -3, 0.987654]) * d) == '[0 1.0*x -3.0*x 0.987654*x]'
         assert str(pf.exp(1 + c) / d ** 2) == 'exp(q[1].par + 1)/x**2'
+
+    @pytest.mark.parametrize("p", TEST_VALUES)
+    def test_par_evaluate(self, p):
+        x = FreeParameter('x')
+        with pytest.raises(ParameterError, match="unbound parameter with no default value"):
+            par_evaluate(x)
+
+        # val only
+        x.val = p
+        assert np.all(par_evaluate(x) == p)
+
+        # default only
+        x.val = None
+        x.default = p
+        assert np.all(par_evaluate(x) == p)
+
+        # both val and default
+        x.val = p
+        x.default = 0.0
+        assert np.all(par_evaluate(x) == p)
 
     @pytest.mark.parametrize("p", TEST_VALUES)
     @pytest.mark.parametrize("q", TEST_VALUES)

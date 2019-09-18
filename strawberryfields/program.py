@@ -48,8 +48,8 @@ Program methods
    optimize
    print
    draw_circuit
-   args
-   bind_args
+   params
+   bind_params
 
 The following are internal Program methods. In most cases the user should not
 call these directly.
@@ -579,13 +579,13 @@ class Program:
         return [document, tex]
 
 
-    def args(self, *args):
+    def params(self, *args):
         """Create and access free circuit parameters.
 
         Returns the named free parameters. If a parameter does not exist yet, it is created and returned.
 
         Args:
-            args (tuple[str]): name(s) of the free parameters to access
+            *args (tuple[str]): name(s) of the free parameters to access
 
         Returns:
             FreeParameter, list[FreeParameter]: requested parameter(s)
@@ -608,7 +608,7 @@ class Program:
             return ret[0]
         return ret
 
-    def bind_args(self, binding):
+    def bind_params(self, binding):
         """Binds the free parameters of the program to the given values.
 
         Args:

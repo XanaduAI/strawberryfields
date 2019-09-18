@@ -99,7 +99,7 @@ class TestOneModeSymbolic:
         tf_params = {'session': sess, 'feed_dict': {a: 0.0}}
 
         eng, prog = setup_eng(1)
-        x = prog.args('a')  # free parameter
+        x = prog.params('a')  # free parameter
         with prog.context as q:
             Dgate(x) | q
 
