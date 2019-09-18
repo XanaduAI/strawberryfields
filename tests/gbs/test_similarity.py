@@ -238,7 +238,7 @@ def test_event_cardinality(photons, max_count, modes, expected):
 
 
 class TestPOrbitMC:
-    """Tests for the function ``strawberryfields.gbs.similarity.p_orbit_mc.``"""
+    """Tests for the function ``strawberryfields.gbs.similarity.prob_orbit_mc.``"""
 
     def test_mean_computation_orbit(self, monkeypatch):
         """Tests if the calculation of the sample mean is performed correctly. The test
