@@ -60,13 +60,12 @@ from typing import Optional, Tuple
 
 import networkx as nx
 
-from strawberryfields.gbs import g_sample, resize, utils
+from strawberryfields.gbs import g_sample, resize
 from strawberryfields.gbs.sample import BACKEND_DEFAULTS
-from strawberryfields.gbs.utils import graph_type
 
 
 def find_dense(
-    graph: graph_type, nodes: int, iterations: int = 1, options: Optional[dict] = None
+    graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
 ) -> Tuple[float, list]:
     """Find a dense subgraph of a given size.
 
@@ -109,7 +108,7 @@ def find_dense(
               for an example
 
     Args:
-        graph (graph_type): the input graph
+        graph (nx.Graph): the input graph
         nodes (int): the size of desired dense subgraph
         iterations (int): number of iterations to use in algorithm
         options (dict[str, dict[str, Any]]): dict-of-dicts specifying options in different parts
@@ -126,9 +125,7 @@ def find_dense(
     if not callable(method):
         method = METHOD_DICT[method]
 
-    return method(
-        graph=utils.validate_graph(graph), nodes=nodes, iterations=iterations, options=options
-    )
+    return method(graph=graph, nodes=nodes, iterations=iterations, options=options)
 
 
 def random_search(
