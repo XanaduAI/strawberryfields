@@ -20,13 +20,9 @@ Graph functions
 .. currentmodule:: strawberryfields.gbs.utils
 
 This module provides some ancillary functions for dealing with graphs. This includes graph
-validation functions such as :func:`is_undirected`, :func:`validate_graph` and :func:`is_subgraph`;
+validation functions such as :func:`is_undirected`, and :func:`is_subgraph`;
 clique-based utility functions :func:`is_clique`, :func:`c_0` and :func:`c_1`; and a utility
 function to return the adjacency matrix of a subgraph, :func:`subgraph_adjacency`.
-
-Furthermore, ``graph_type = Union[nx.Graph, np.ndarray]`` is defined here as an input type that
-can be either a NetworkX graph or an adjacency matrix in the form of a NumPy array. Some
-functions in this module are able to accept either input.
 
 Summary
 -------
@@ -34,54 +30,15 @@ Summary
 .. autosummary::
     is_undirected
     subgraph_adjacency
-    validate_graph
     is_subgraph
 
 Code details
 ^^^^^^^^^^^^
 """
-from typing import Iterable, Union
+from typing import Iterable
 
 import networkx as nx
 import numpy as np
-
-graph_type = Union[nx.Graph, np.ndarray]
-
-
-def validate_graph(graph: graph_type) -> nx.Graph:
-    """Checks if input graph is valid
-
-    Checks if input Numpy array is a valid adjacency matrix, i.e., real and symmetric,
-    and returns the corresponding NetworkX graph. If a NetworkX graph is input, this function
-    simply returns the input.
-
-    Args:
-        graph (graph_type): input graph to be processed
-
-    Returns:
-        nx.Graph: the NetworkX graph corresponding to the input
-    """
-    if isinstance(graph, np.ndarray):
-        if (
-            graph.dtype is np.dtype("complex")
-            and np.allclose(graph, graph.conj())
-            and is_undirected(graph)
-        ):
-            graph = nx.Graph(graph.real.astype("float"))
-        elif (graph.dtype is np.dtype("float") or graph.dtype is np.dtype("int")) and is_undirected(
-            graph
-        ):
-            graph = nx.Graph(graph)
-        else:
-            raise ValueError(
-                "Input NumPy arrays must be real and symmetric matrices and of dtype float or "
-                "complex"
-            )
-
-    elif not isinstance(graph, nx.Graph):
-        raise TypeError("Graph is not of valid type")
-
-    return graph
 
 
 def is_undirected(mat: np.ndarray) -> bool:
@@ -104,20 +61,19 @@ def is_undirected(mat: np.ndarray) -> bool:
     return conditions
 
 
-def subgraph_adjacency(graph: graph_type, nodes: list) -> np.ndarray:
+def subgraph_adjacency(graph: nx.Graph, nodes: list) -> np.ndarray:
     """Give adjacency matrix of a subgraph.
 
     Given a list of nodes selecting a subgraph, this function returns the corresponding adjacency
     matrix.
 
     Args:
-        graph (graph_type): the input graph
+        graph (nx.Graph): the input graph
         nodes (list): a list of nodes used to select the subgraph
 
     Returns:
         array: the adjacency matrix of the subgraph
     """
-    graph = validate_graph(graph)
     all_nodes = graph.nodes
 
     if not set(nodes).issubset(all_nodes):
