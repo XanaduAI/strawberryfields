@@ -79,7 +79,7 @@ BACKEND_DEFAULTS = {"remote": False, "backend": "gaussian", "threshold": True, "
 def sample(
     A: np.ndarray, n_mean: float, samples: int = 1, backend_options: Optional[dict] = None
 ) -> list:
-    r"""Generate samples from GBS
+    r"""Samples subgraphs from an input graph
 
     Perform quantum sampling of adjacency matrix :math:`A` using the Gaussian boson sampling
     algorithm.
@@ -230,7 +230,7 @@ def uniform(modes: int, sampled_modes: int, samples: int = 1) -> list:
     return output_samples
 
 
-def seed(value: int = None) -> None:
+def seed(value: Optional[int]) -> None:
     """Seed for random number generators.
 
     Wrapper function for `numpy.random.seed <https://docs.scipy.org/doc/numpy//reference/generated
@@ -238,7 +238,7 @@ def seed(value: int = None) -> None:
     applications layer. This allows for repeatable sampling.
 
     Args:
-        value (int): random seed; defaults to ``None``
+        value (int): random seed
     """
     np.random.seed(value)
 

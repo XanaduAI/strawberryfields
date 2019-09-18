@@ -391,32 +391,6 @@ def test_seed(dim, adj):
     assert np.array_equal(u_s_1, u_s_2)
 
 
-quantum_samples = [
-    [0, 1, 1, 1, 1, 1],
-    [1, 0, 0, 1, 0, 0],
-    [1, 1, 1, 1, 1, 1],
-    [0, 0, 1, 0, 0, 1],
-    [0, 1, 1, 1, 0, 0],
-    [0, 0, 0, 0, 1, 1],
-    [0, 0, 0, 0, 1, 1],
-    [1, 1, 0, 1, 1, 1],
-    [1, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 1, 1],
-]
-subgraphs = [
-    [1, 2, 3, 4, 5],
-    [0, 3],
-    [0, 1, 2, 3, 4, 5],
-    [2, 5],
-    [1, 2, 3],
-    [4, 5],
-    [4, 5],
-    [0, 1, 3, 4, 5],
-    [0, 3],
-    [4, 5],
-]
-
-
 @pytest.mark.parametrize("dim", [6])
 def test_subgraphs_invalid_distribution(graph):
     """Tests if function ``sample.subgraphs`` raises a ``ValueError`` for an
@@ -448,10 +422,39 @@ def test_subgraphs_integration(graph, nodes, samples, distribution):
 class TestToSubgraphs:
     """Tests for the function ``sample.to_subgraphs``"""
 
+    quantum_samples = [
+        [0, 1, 1, 1, 1, 1],
+        [1, 0, 0, 1, 0, 0],
+        [1, 1, 1, 1, 1, 1],
+        [0, 0, 1, 0, 0, 1],
+        [0, 1, 1, 1, 0, 0],
+        [0, 0, 0, 0, 1, 1],
+        [0, 0, 0, 0, 1, 1],
+        [1, 1, 0, 1, 1, 1],
+        [1, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 1, 1],
+    ]
+
+    subgraphs = [
+        [1, 2, 3, 4, 5],
+        [0, 3],
+        [0, 1, 2, 3, 4, 5],
+        [2, 5],
+        [1, 2, 3],
+        [4, 5],
+        [4, 5],
+        [0, 1, 3, 4, 5],
+        [0, 3],
+        [4, 5],
+    ]
+
     def test_graph(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
         ``quantum_samples``."""
-        assert strawberryfields.gbs.sample.to_subgraphs(graph, samples=quantum_samples) == subgraphs
+        assert (
+            strawberryfields.gbs.sample.to_subgraphs(graph, samples=self.quantum_samples)
+            == self.subgraphs
+        )
 
     def test_graph_mapped(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
@@ -460,9 +463,11 @@ class TestToSubgraphs:
         subgraph returned is still a valid subgraph."""
         graph = nx.relabel_nodes(graph, lambda x: x ** 2)
         graph_nodes = list(graph.nodes)
-        subgraphs_mapped = [sorted([graph_nodes[i] for i in subgraph]) for subgraph in subgraphs]
+        subgraphs_mapped = [
+            sorted([graph_nodes[i] for i in subgraph]) for subgraph in self.subgraphs
+        ]
 
         assert (
-            strawberryfields.gbs.sample.to_subgraphs(graph, samples=quantum_samples)
+            strawberryfields.gbs.sample.to_subgraphs(graph, samples=self.quantum_samples)
             == subgraphs_mapped
         )
