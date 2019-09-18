@@ -165,7 +165,7 @@ def orbit_to_sample(orbit: list, modes: int) -> list:
     if modes < len(orbit):
         raise ValueError("Number of modes cannot be smaller than length of orbit")
 
-    sample = list(orbit) + [0] * (modes - len(orbit))
+    sample = orbit + [0] * (modes - len(orbit))
     np.random.shuffle(sample)
     return sample
 
