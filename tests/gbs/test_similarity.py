@@ -244,7 +244,7 @@ class TestPOrbitMC:
     def test_mean_computation_orbit(self, monkeypatch):
         """Tests if the calculation of the sample mean is performed correctly. The test
         monkeypatches the fock_prob function so that the probability is the same for each sample and
-         is equal to 1/5, i.e., one over the number of samples in the orbit [1,1,1,1] for 5 modes."""
+        is equal to 1/5, i.e., one over the number of samples in the orbit [1,1,1,1] for 5 modes."""
         graph = nx.complete_graph(5)
         with monkeypatch.context() as m:
             m.setattr("strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
