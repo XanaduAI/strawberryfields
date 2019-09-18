@@ -15,9 +15,9 @@ r"""
 Graph sampling
 ==============
 
-**Module name:** :mod:`strawberryfields.gbs.sample`
+**Module name:** :mod:`strawberryfields.gbs.g_sample`
 
-.. currentmodule:: strawberryfields.gbs.sample
+.. currentmodule:: strawberryfields.gbs.g_sample
 
 This module provides functionality for sampling of subgraphs from undirected graphs. The
 :func:`sample_subgraphs` function generates raw samples from
@@ -79,8 +79,8 @@ def sample_subgraphs(
         graph (nx.Graph): the input graph
         nodes (int): the mean size of subgraph samples
         samples (int): number of samples; defaults to 1
-        sample_options (dict[str, Any]): dictionary specifying options used by ``sample_subgraphs``;
-            defaults to :const:`SAMPLE_DEFAULTS`
+        sample_options (dict[str, Any]): dictionary specifying options used by
+            :func:`sample_subgraphs`; defaults to :const:`SAMPLE_DEFAULTS`
         backend_options (dict[str, Any]): dictionary specifying options used by backends during
             sampling; defaults to ``None``
 
