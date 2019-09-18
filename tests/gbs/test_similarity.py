@@ -283,4 +283,4 @@ class TestPEventMC:
                 lambda *args, **kwargs: 1.0 / 336,
             )
 
-            assert np.allclose(similarity.p_event_mc(graph, 6, 3) - 1.0)
+            assert np.allclose(similarity.prob_event_mc(graph, 6, 3) - 1.0)
