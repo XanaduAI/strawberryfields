@@ -261,7 +261,7 @@ class TestPOrbitMC:
         assert similarity.p_orbit_mc(graph, [], 0) == 1.0
 
 
-class TestPEventMC:
+class TestProbEventMC:
     """Tests for the function ``strawberryfields.gbs.similarity.p_event_mc.``"""
 
     def test_prob_vacuum_event(self):
