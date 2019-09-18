@@ -39,6 +39,7 @@ from collections import Counter
 from typing import Generator, Union
 
 import numpy as np
+import networkx as nx
 
 
 def sample_to_orbit(sample: list) -> list:
@@ -250,3 +251,45 @@ def feature_vector_sampling(
     count = Counter(e)
 
     return [count[p] / n_samples for p in event_photon_numbers]
+
+
+def prob_event_mc(graph, photons, max_count_per_mode, n_mean, samples):
+
+    return 1/photons
+
+
+def feature_vector_mc(graph: nx.Graph,
+                      event_photon_numbers: list,
+                      max_count_per_mode: int = 2,
+                      n_mean: int = 5,
+                      samples: int=1000) -> list:
+    r"""Calculates feature vector using a Monte Carlo estimation of event probabilities.
+
+    The feature vector is composed of event probabilities :math:`p_{k}` with all events
+    :math:`E_{k}` having a maximum photon count in each mode of ``max_count_per_mode``. Events
+    are specified by their total photon number :math:`k` and those chosen as part of the feature
+    vector can be specified through :math:`\mathbf{k}` (using the ``event_photon_numbers``
+    argument). The resultant feature vector is
+
+    .. math::
+        f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots)
+
+    Probabilities are reconstructed using Monte Carlo estimation.
+
+    **Example usage**:
+
+    >>> feature_vector_mc([2, 4, 6])
+    [0.1, 0.2, 0.0]
+
+    Args:
+        samples (list[list[int]]): a list of samples
+        event_photon_numbers (list[int]): a list of events described by their total photon number
+        max_count_per_mode (int): maximum number of photons per mode for all events
+
+    Returns:
+        list[float]: a feature vector of event probabilities in the same order as
+        ``event_photon_numbers``
+    """
+
+    return [prob_event_mc(graph, photons, max_count_per_mode, n_mean, samples)
+            for photons in event_photon_numbers]
