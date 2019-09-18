@@ -227,7 +227,7 @@ def orbit_cardinality(orbit: list, modes: int) -> int:
     Returns:
         int: number of samples in the orbit
     """
-    sample = list(orbit) + [0] * (modes - len(orbit))
+    sample = orbit + [0] * (modes - len(orbit))
     counts = list(Counter(sample).values())
     return int(factorial(modes) / np.prod(factorial(counts)))
 
