@@ -69,32 +69,28 @@ class TestIsUndirected:
 class TestSubgraphAdjacency:
     """Tests for the function ``strawberryfields.gbs.graph.utils.subgraph_adjacency``"""
 
-    def test_input(self, dim, graph, monkeypatch):
+    def test_input(self, dim, graph):
         """Test if function returns the correct adjacency matrix of a subgraph. This test
         iterates over all possible subgraphs of size int(dim/2). Note that graph nodes are
         numbered as [0, 1, 4, 9, ...] (i.e., squares of the usual list) as a simple mapping to
         explore that the optimised subgraph returned is still a valid subgraph."""
 
-        with monkeypatch.context() as m:
-            m.setattr(utils, "validate_graph", lambda x: x)
-            subgraphs = np.array(list(itertools.combinations(range(dim), int(dim / 2))))
-            subgraphs = list(map(lambda x: x ** 2, subgraphs))
-            graph = nx.relabel_nodes(graph, lambda x: x ** 2)
+        subgraphs = np.array(list(itertools.combinations(range(dim), int(dim / 2))))
+        subgraphs = list(map(lambda x: x ** 2, subgraphs))
+        graph = nx.relabel_nodes(graph, lambda x: x ** 2)
 
-            assert np.allclose(
-                [nx.to_numpy_array(graph.subgraph(s)) for s in subgraphs],
-                [utils.subgraph_adjacency(graph, s) for s in subgraphs],
-            )
+        assert np.allclose(
+            [nx.to_numpy_array(graph.subgraph(s)) for s in subgraphs],
+            [utils.subgraph_adjacency(graph, s) for s in subgraphs],
+        )
 
-    def test_input_bad_nodes(self, graph, dim, monkeypatch):
+    def test_input_bad_nodes(self, graph, dim):
         """Test if function raises a ``ValueError`` if a list of nodes that cannot be contained
         within the graph is given"""
-        with monkeypatch.context() as m:
-            m.setattr(utils, "validate_graph", lambda x: x)
-            nodes = range(dim + 1)
+        nodes = range(dim + 1)
 
-            with pytest.raises(ValueError, match="Must input a list of subgraph"):
-                utils.subgraph_adjacency(graph, nodes)
+        with pytest.raises(ValueError, match="Must input a list of subgraph"):
+            utils.subgraph_adjacency(graph, nodes)
 
 
 @pytest.mark.parametrize("dim", [4, 5, 6])
