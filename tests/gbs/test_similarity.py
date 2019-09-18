@@ -258,7 +258,7 @@ class TestPOrbitMC:
         device has been configured to have zero mean photon number."""
         graph = nx.complete_graph(10)
 
-        assert similarity.p_orbit_mc(graph, [], 0) == 1.0
+        assert similarity.prob_orbit_mc(graph, [], 0) == 1.0
 
 
 class TestProbEventMC:
