@@ -34,9 +34,11 @@ Summary
 Code details
 ^^^^^^^^^^^^
 """
+from collections import Counter
 from typing import Generator, Union
 
 import numpy as np
+from scipy.special import factorial
 
 
 def sample_to_orbit(sample: list) -> list:
@@ -161,6 +163,22 @@ def orbit_to_sample(orbit: list, modes: int) -> list:
     return sample
 
 
+def orbit_cardinality(orbit: list, modes: int) -> int:
+    """Gives the number of samples belonging to the input orbit.
+    **Example usage**:
+    >>> orbit_cardinality([2, 1, 1], 4)
+    12
+    Args:
+        orbit (list[int]): orbit to count number of samples
+        modes (int): number of modes in the sample
+    Returns:
+        int: number of samples in the orbit
+    """
+    sample = list(orbit) + [0] * (modes - len(orbit))
+    counts = list(Counter(sample).values())
+    return int(factorial(modes) / np.prod(factorial(counts)))
+
+
 def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> list:
     """Generates a sample selected uniformly at random from the specified event.
 
@@ -191,13 +209,18 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
             "max_count_per_mode or reducing the number of photons."
         )
 
-    sample = [0] * modes
-    available_modes = list(range(modes))
+    cards = []
+    orbs = []
 
-    for _ in range(photon_number):
-        j = np.random.choice(available_modes)
-        sample[j] += 1
-        if sample[j] == max_count_per_mode:
-            available_modes.remove(j)
+    for orb in orbits(photon_number):
+        if max(orb) <= max_count_per_mode:
+            cards.append(orbit_cardinality(orb, modes))
+            orbs.append(orb)
 
-    return sample
+    norm = sum(cards)
+    prob = [c / norm for c in cards]
+
+    orbit = orbs[np.random.choice(len(prob), p=prob)]
+
+    return orbit_to_sample(orbit, modes)
+
