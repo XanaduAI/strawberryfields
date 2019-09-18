@@ -18,11 +18,11 @@ Unit tests for strawberryfields.gbs.similarity
 import itertools
 from collections import Counter
 
+import networkx as nx
+import numpy as np
 import pytest
 
 from strawberryfields.gbs import similarity
-import networkx as nx
-import numpy as np
 
 pytestmark = pytest.mark.gbs
 
@@ -213,7 +213,7 @@ def test_orbit_cardinality():
 
     calc_cardinalities = {}
     for o, _ in orbits.items():
-        calc_cardinalities[o] = similarity.orbit_cardinality(*o)
+        calc_cardinalities[o] = similarity.orbit_cardinality(list(o[0]), o[1])
 
     assert calc_cardinalities == orbits
 
@@ -247,8 +247,10 @@ class TestPOrbitMC:
         is equal to 1/5, i.e., one over the number of samples in the orbit [1,1,1,1] for 5 modes."""
         graph = nx.complete_graph(5)
         with monkeypatch.context() as m:
-            m.setattr("strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
-                      lambda *args, **kwargs: 0.2)
+            m.setattr(
+                "strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
+                lambda *args, **kwargs: 0.2,
+            )
             tol = 1e-5
 
             assert np.abs(similarity.p_orbit_mc(graph, [1, 1, 1, 1]) - 1.0) < tol
@@ -261,7 +263,8 @@ class TestPOrbitMC:
         assert similarity.p_orbit_mc(graph, [], 0) == 1.0
 
 
-class TestProbEventMC:
+class TestPEventMC:
+    """Tests for the function ``strawberryfields.gbs.similarity.p_event_mc.``"""
 
     def test_prob_vacuum_event(self):
         """Tests if the function gives the right probability for an event with zero photons when
@@ -277,8 +280,10 @@ class TestProbEventMC:
         6 photons, and max 3 photons per mode."""
         graph = nx.complete_graph(6)
         with monkeypatch.context() as m:
-            m.setattr("strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
-                      lambda *args, **kwargs: 1.0/336)
+            m.setattr(
+                "strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
+                lambda *args, **kwargs: 1.0 / 336,
+            )
             tol = 1e-5
 
             assert np.abs(similarity.p_event_mc(graph, 6, 3) - 1.0) < tol
