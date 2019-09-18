@@ -29,65 +29,6 @@ adj_dim_range = range(2, 6)
 
 
 @pytest.mark.parametrize("dim", adj_dim_range)
-class TestValidateGraph:
-    """Tests for the function ``strawberryfields.gbs.graph.utils.validate_graph``"""
-
-    def test_valid_adjacency(self, adj, monkeypatch):
-        """Test if function returns the NetworkX Graph class corresponding to the input adjacency
-        matrix """
-        with monkeypatch.context() as m:
-            m.setattr(utils, "is_undirected", lambda _: True)
-            graph = utils.validate_graph(adj)
-        assert np.allclose(adj, nx.to_numpy_array(graph))
-
-    def test_valid_adjacency_complex_dtype(self, adj, monkeypatch):
-        """Test if function returns the NetworkX Graph class corresponding to the input adjacency
-        matrix when the input dtype is complex """
-        with monkeypatch.context() as m:
-            m.setattr(utils, "is_undirected", lambda _: True)
-            adj = adj.astype(complex)
-            graph = utils.validate_graph(adj)
-        assert np.allclose(adj, nx.to_numpy_array(graph))
-
-    def test_valid_adjacency_int_dtype(self, adj, monkeypatch):
-        """Test if function returns the NetworkX Graph class corresponding to the input adjacency
-        matrix when the input dtype is int """
-        with monkeypatch.context() as m:
-            m.setattr(utils, "is_undirected", lambda _: True)
-            adj = adj.astype(int)
-            graph = utils.validate_graph(adj)
-        assert np.allclose(adj, nx.to_numpy_array(graph))
-
-    def test_invalid_adjacency_nonsymmetric(self, adj, monkeypatch):
-        """Test if function raises a ``ValueError`` for a non-symmetric matrix"""
-        adj[1, 0] = 0
-        with monkeypatch.context() as m:
-            m.setattr(utils, "is_undirected", lambda _: False)
-            with pytest.raises(Exception, match="Input NumPy arrays must be real and symmetric"):
-                utils.validate_graph(adj)
-
-    def test_invalid_adjacency_complex(self, adj, monkeypatch):
-        """Test if function raises a ``ValueError`` for a complex symmetric matrix"""
-        adj = adj * 1j
-        with monkeypatch.context() as m:
-            m.setattr(utils, "is_undirected", lambda _: True)
-            with pytest.raises(Exception, match="Input NumPy arrays must be real and symmetric"):
-                utils.validate_graph(adj)
-
-    def test_valid_graph(self, adj):
-        """Test if function returns the same as input when a NetworkX Graph class is the input"""
-        nx_graph = nx.Graph(adj)
-        graph = utils.validate_graph(nx_graph)
-        assert graph is nx_graph
-
-    def test_invalid_type(self, adj):
-        """Test if function raises a ``TypeError`` when the input is not a NumPy array or
-        NetworkX graph """
-        with pytest.raises(TypeError, match="Graph is not of valid type"):
-            utils.validate_graph(adj.tolist())
-
-
-@pytest.mark.parametrize("dim", adj_dim_range)
 class TestIsUndirected:
     """Tests for the function ``strawberryfields.gbs.graph.utils.is_undirected``"""
 
