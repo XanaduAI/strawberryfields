@@ -262,7 +262,7 @@ class TestPOrbitMC:
 
 
 class TestProbEventMC:
-    """Tests for the function ``strawberryfields.gbs.similarity.p_event_mc.``"""
+    """Tests for the function ``strawberryfields.gbs.similarity.prob_event_mc.``"""
 
     def test_prob_vacuum_event(self):
         """Tests if the function gives the right probability for an event with zero photons when
