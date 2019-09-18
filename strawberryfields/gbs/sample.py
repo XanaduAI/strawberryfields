@@ -49,9 +49,8 @@ Code details
 from typing import Optional
 
 import numpy as np
-import strawberryfields as sf
 
-from strawberryfields.gbs import utils
+import strawberryfields as sf
 
 QUANTUM_BACKENDS = ("gaussian",)
 """tuple[str]: Available quantum backends for sampling."""
@@ -111,7 +110,7 @@ def quantum_sampler(
     """
     backend_options = {**BACKEND_DEFAULTS, **(backend_options or {})}
 
-    if not utils.is_undirected(A):
+    if not np.allclose(A, A.T):
         raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
 
     if samples < 1:
