@@ -286,7 +286,7 @@ def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int 
     **Example usage**:
 
     >>> graph = nx.complete_graph(8)
-    >>> p_orbit_mc(graph, [2, 1, 1])
+    >>> prob_orbit_mc(graph, [2, 1, 1])
     0.03744
 
     Args:
