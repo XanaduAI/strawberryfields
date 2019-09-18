@@ -237,7 +237,7 @@ def test_event_cardinality(photons, max_count, modes, expected):
     assert similarity.event_cardinality(photons, max_count, modes) == expected
 
 
-class TestPOrbitMC:
+class TestProbOrbitMC:
     """Tests for the function ``strawberryfields.gbs.similarity.prob_orbit_mc.``"""
 
     def test_mean_computation_orbit(self, monkeypatch):
