@@ -20,7 +20,7 @@ import numpy as np
 import pytest
 
 import strawberryfields.gbs
-from strawberryfields.gbs import g_sample, subgraph, utils
+from strawberryfields.gbs import g_sample, subgraph
 
 pytestmark = pytest.mark.gbs
 
@@ -138,8 +138,8 @@ subgraphs = [
 
 @pytest.fixture()
 def patch_is_subgraph(monkeypatch):
-    """dummy function for ``utils.is_subgraph``"""
-    monkeypatch.setattr(utils, "is_subgraph", lambda v1, v2: True)
+    """dummy function for ``subgraph.is_subgraph``"""
+    monkeypatch.setattr(subgraph, "is_subgraph", lambda v1, v2: True)
 
 
 @pytest.mark.parametrize("dim", [5])
@@ -230,7 +230,7 @@ class TestGreedyDensity:
         """Test if function raises an ``Exception`` when an element of ``subgraphs`` is not
         contained within nodes of the graph """
         with monkeypatch.context() as m:
-            m.setattr(utils, "is_subgraph", lambda v1, v2: False)
+            m.setattr(subgraph, "is_subgraph", lambda v1, v2: False)
             with pytest.raises(Exception, match="Input is not a valid subgraph"):
                 strawberryfields.gbs.subgraph.greedy_density(
                     subgraphs=[[0, 9]], graph=graph, target=3
@@ -271,7 +271,7 @@ class TestGreedyDegree:
         """Test if function raises an ``Exception`` when an element of ``subgraphs`` is not
         contained within nodes of the graph """
         with monkeypatch.context() as m:
-            m.setattr(utils, "is_subgraph", lambda v1, v2: False)
+            m.setattr(subgraph, "is_subgraph", lambda v1, v2: False)
             with pytest.raises(Exception, match="Input is not a valid subgraph"):
                 strawberryfields.gbs.subgraph.greedy_degree(
                     subgraphs=[[0, 9]], graph=graph, target=3

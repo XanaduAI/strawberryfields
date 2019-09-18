@@ -19,16 +19,9 @@ import numpy as np
 import pytest
 
 import strawberryfields as sf
-from strawberryfields.gbs import sample, utils
+from strawberryfields.gbs import sample
 
 pytestmark = pytest.mark.gbs
-
-
-@pytest.fixture()
-def is_undirected(monkeypatch):
-    """dummy function for ``utils.is_undirected``"""
-    monkeypatch.setattr(utils, "is_undirected", lambda _: True)
-
 
 samples_pnr_nopostselect = np.array(
     [
@@ -54,18 +47,15 @@ sample_threshold_postselect = np.array([[1, 0, 1, 1]])
 adj_dim_range = range(2, 6)
 
 
-@pytest.mark.usefixtures("is_undirected")
 @pytest.mark.parametrize("dim", [4])
 class TestQuantumSampler:
     """Tests for the function ``glassonion.sample.quantum_sampler``"""
 
-    def test_invalid_adjacency(self, adj, monkeypatch):
-        """Test if function raises a ``ValueError`` for a matrix that fails
-        :func:`graph.utils.is_undirected` """
-        with monkeypatch.context() as m:
-            m.setattr(utils, "is_undirected", lambda _: False)
-            with pytest.raises(ValueError, match="Input must be a NumPy array"):
-                sample.quantum_sampler(A=adj, n_mean=1.0)
+    def test_invalid_adjacency(self, dim):
+        """Test if function raises a ``ValueError`` for a matrix that is not symmetric"""
+        with pytest.raises(ValueError, match="Input must be a NumPy array"):
+            adj_asym = np.triu(np.ones((dim, dim)))
+            sample.quantum_sampler(A=adj_asym, n_mean=1.0)
 
     def test_invalid_samples(self, adj, monkeypatch):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
