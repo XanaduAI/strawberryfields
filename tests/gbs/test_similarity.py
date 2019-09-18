@@ -251,7 +251,7 @@ class TestProbOrbitMC:
                 lambda *args, **kwargs: 0.2,
             )
 
-            assert np.allclose(similarity.p_orbit_mc(graph, [1, 1, 1, 1]), 1.0)
+            assert np.allclose(similarity.prob_orbit_mc(graph, [1, 1, 1, 1]), 1.0)
 
     def test_prob_vacuum_orbit(self):
         """Tests if the function gives the right probability for the empty orbit when the GBS
@@ -283,7 +283,7 @@ class TestProbEventMC:
                 lambda *args, **kwargs: 1.0 / 336,
             )
 
-            assert np.allclose(similarity.prob_event_mc(graph, 6, 3) - 1.0)
+            assert np.allclose(similarity.prob_event_mc(graph, 6, 3), 1.0)
 
 
 class TestFeatureVectorSampling:
