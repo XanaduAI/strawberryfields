@@ -192,7 +192,7 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
         list[int]: a sample in the event
     """
     if max_count_per_mode < 0:
-        raise ValueError("Maximum number of photons must be non-negative")
+        raise ValueError("Maximum number of photons per mode must be non-negative")
 
     if max_count_per_mode * modes < photon_number:
         raise ValueError(
