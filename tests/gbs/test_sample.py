@@ -20,17 +20,9 @@ import numpy as np
 import pytest
 
 import strawberryfields as sf
-import strawberryfields.gbs
-from strawberryfields.gbs import sample, utils
+from strawberryfields.gbs import sample
 
 pytestmark = pytest.mark.gbs
-
-
-@pytest.fixture()
-def is_undirected(monkeypatch):
-    """dummy function for ``utils.is_undirected``"""
-    monkeypatch.setattr(utils, "is_undirected", lambda _: True)
-
 
 samples_pnr_nopostselect = np.array(
     [
@@ -56,18 +48,15 @@ sample_threshold_postselect = np.array([[1, 0, 1, 1]])
 adj_dim_range = range(2, 6)
 
 
-@pytest.mark.usefixtures("is_undirected")
 @pytest.mark.parametrize("dim", [4])
 class TestSample:
     """Tests for the function ``strawberryfields.gbs.sample.sample``"""
 
-    def test_invalid_adjacency(self, adj, monkeypatch):
-        """Test if function raises a ``ValueError`` for a matrix that fails
-        :func:`graph.utils.is_undirected` """
-        with monkeypatch.context() as m:
-            m.setattr(utils, "is_undirected", lambda _: False)
-            with pytest.raises(ValueError, match="Input must be a NumPy array"):
-                sample.sample(A=adj, n_mean=1.0)
+    def test_invalid_adjacency(self, dim):
+        """Test if function raises a ``ValueError`` for a matrix that is not symmetric"""
+        with pytest.raises(ValueError, match="Input must be a NumPy array"):
+            adj_asym = np.triu(np.ones((dim, dim)))
+            sample.sample(A=adj_asym, n_mean=1.0)
 
     def test_invalid_samples(self, adj, monkeypatch):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
@@ -396,9 +385,7 @@ def test_subgraphs_invalid_distribution(graph):
     """Tests if function ``sample.subgraphs`` raises a ``ValueError`` for an
     invalid sampling distribution"""
     with pytest.raises(ValueError, match="Invalid distribution selected"):
-        strawberryfields.gbs.sample.subgraphs(
-            graph, nodes=2, samples=10, sample_options={"distribution": ""}
-        )
+        sample.subgraphs(graph, nodes=2, samples=10, sample_options={"distribution": ""})
 
 
 @pytest.mark.parametrize(
@@ -410,7 +397,7 @@ def test_subgraphs_integration(graph, nodes, samples, distribution):
 
     graph = nx.relabel_nodes(graph, lambda x: x ** 2)
     graph_nodes = set(graph.nodes)
-    output_samples = strawberryfields.gbs.sample.subgraphs(
+    output_samples = sample.subgraphs(
         graph=graph, nodes=nodes, samples=samples, sample_options={"distribution": distribution}
     )
 
@@ -451,10 +438,7 @@ class TestToSubgraphs:
     def test_graph(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
         ``quantum_samples``."""
-        assert (
-            strawberryfields.gbs.sample.to_subgraphs(graph, samples=self.quantum_samples)
-            == self.subgraphs
-        )
+        assert sample.to_subgraphs(graph, samples=self.quantum_samples) == self.subgraphs
 
     def test_graph_mapped(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
@@ -467,10 +451,7 @@ class TestToSubgraphs:
             sorted([graph_nodes[i] for i in subgraph]) for subgraph in self.subgraphs
         ]
 
-        assert (
-            strawberryfields.gbs.sample.to_subgraphs(graph, samples=self.quantum_samples)
-            == subgraphs_mapped
-        )
+        assert sample.to_subgraphs(graph, samples=self.quantum_samples) == subgraphs_mapped
 
 
 def test_modes_from_counts():
