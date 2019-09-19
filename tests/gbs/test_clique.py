@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for clique
+Unit tests for strawberryfields.gbs.clique
 """
 # pylint: disable=no-self-use,unused-argument
 import functools
