@@ -170,22 +170,6 @@ def orbit_to_sample(orbit: list, modes: int) -> list:
     return sample
 
 
-def orbit_cardinality(orbit: list, modes: int) -> int:
-    """Gives the number of samples belonging to the input orbit.
-    **Example usage**:
-    >>> orbit_cardinality([2, 1, 1], 4)
-    12
-    Args:
-        orbit (list[int]): orbit to count number of samples
-        modes (int): number of modes in the sample
-    Returns:
-        int: number of samples in the orbit
-    """
-    sample = list(orbit) + [0] * (modes - len(orbit))
-    counts = list(Counter(sample).values())
-    return int(factorial(modes) / np.prod(factorial(counts)))
-
-
 def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> list:
     """Generates a sample selected uniformly at random from the specified event.
 
@@ -289,7 +273,9 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     return cardinality
 
 
-def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
+def prob_orbit_mc(
+    graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000
+) -> float:
     """Gives a Monte Carlo estimate of the probability of a given orbit for a GBS device encoded
     according to the input graph.
 
