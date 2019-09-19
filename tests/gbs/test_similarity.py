@@ -49,9 +49,9 @@ def test_sample_to_orbit(dim):
     """Test if function ``similarity.sample_to_orbit`` correctly returns the original orbit after
     taking all permutations over the orbit. The starting orbits are all orbits for a fixed photon
     number ``dim``."""
-    orbits = all_orbits[dim]
+    orb = all_orbits[dim]
     checks = []
-    for o in orbits:
+    for o in orb:
         sorted_sample = o.copy()
         sorted_sample_len = len(sorted_sample)
         if sorted_sample_len != dim:
@@ -77,9 +77,9 @@ class TestOrbits:
         """Test if function returns all the integer partitions of 5. This test does not
         require ``similarity.orbits`` to return the orbits in any specified order."""
         partition = all_orbits[dim]
-        orbits = similarity.orbits(dim)
+        orb = similarity.orbits(dim)
 
-        assert sorted(partition) == sorted(orbits)
+        assert sorted(partition) == sorted(orb)
 
 
 @pytest.mark.parametrize("dim", [3, 4, 5])
@@ -89,11 +89,11 @@ def test_sample_to_event(dim, max_count_per_mode):
     applied to all orbits with a fixed number of photons ``dim``. This test ensures that orbits
     exceeding the ``max_count_per_mode`` value are attributed the ``None`` event and that orbits
     not exceeding the ``max_count_per_mode`` are attributed the event ``dim``."""
-    orbits = all_orbits[dim]
+    orb = all_orbits[dim]
     target_events = all_events[(dim, max_count_per_mode)]
-    events = [similarity.sample_to_event(o, max_count_per_mode) for o in orbits]
+    ev = [similarity.sample_to_event(o, max_count_per_mode) for o in orb]
 
-    assert events == target_events
+    assert ev == target_events
 
 
 class TestOrbitToSample:
@@ -212,9 +212,6 @@ orbits = [
 def test_orbit_cardinality(orbit, max_photon, expected):
     """Test if function ``strawberryfields.gbs.similarity.orbit_cardinality`` returns the
     correct number of samples for some hard-coded examples."""
-    print('orbit = ', orbit)
-    print('max_photon = ', max_photon)
-    print('expected = ', expected)
 
     assert similarity.orbit_cardinality(list(orbit), max_photon) == expected
 
