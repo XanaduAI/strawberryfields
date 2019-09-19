@@ -76,7 +76,7 @@ from typing import Iterable, Optional, Tuple
 
 import networkx as nx
 
-from strawberryfields.gbs import g_sample, utils
+from strawberryfields.gbs import sample, utils
 from strawberryfields.gbs.sample import BACKEND_DEFAULTS
 from strawberryfields.gbs.utils import graph_type
 
@@ -153,7 +153,7 @@ def random_search(
     """Random search algorithm for finding dense subgraphs of a given size.
 
     The algorithm proceeds by sampling subgraphs according to the
-    :func:`~strawberryfields.gbs.sample.sample_subgraphs`. The resultant subgraphs
+    :func:`~strawberryfields.gbs.sample.subgraphs`. The resultant subgraphs
     are resized using :func:`~strawberryfields.gbs.dense.resize` to
     be of size ``nodes``. The densest subgraph is then selected among all the resultant
     subgraphs. Specified``options`` must be of the form given in :func:`search`.
@@ -171,7 +171,7 @@ def random_search(
     """
     options = {**OPTIONS_DEFAULTS, **(options or {})}
 
-    samples = g_sample.sample_subgraphs(
+    samples = sample.subgraphs(
         graph=graph,
         nodes=nodes,
         samples=iterations,
@@ -199,7 +199,7 @@ OPTIONS_DEFAULTS = {
     "heuristic": {"method": random_search},
     "backend": BACKEND_DEFAULTS,
     "resize": RESIZE_DEFAULTS,
-    "sample": g_sample.SAMPLE_DEFAULTS,
+    "sample": sample.SAMPLE_DEFAULTS,
 }
 """dict[str, dict[str, Any]]: Options for dense subgraph identification heuristics. Composed of a
 dictionary of dictionaries with the first level specifying the option type, selected from keys

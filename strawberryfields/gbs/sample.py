@@ -22,7 +22,10 @@ Sampling functions
 This module provides functionality for generating samples from both a quantum device and the
 uniform distribution.
 
-The :func:`quantum_sampler` function allows users to simulate Gaussian boson sampling (GBS) by
+Gaussian boson sampling (GBS)
+-----------------------------
+
+The :func:`sample` function allows users to simulate Gaussian boson sampling (GBS) by
 choosing a symmetric input matrix to sample from :cite:`bradler2018gaussian`. For a symmetric
 :math:`N \times N` input matrix :math:`A`, corresponding to an undirected graph,
 an :math:`N`-mode GBS device with threshold detectors generates samples that are binary strings
@@ -30,27 +33,41 @@ of length ``N``. Various problems can be encoded in the matrix :math:`A` so that
 samples are informative and can be used as a form of randomness to improve solvers, as outlined
 in Refs. :cite:`arrazola2018using` and :cite:`arrazola2018quantum`.
 
-On the other hand, the :func:`uniform_sampler` function allows users to generate samples where a
-subset of modes are selected using the uniform distribution.
-
-Summary
--------
+On the other hand, the :func:`uniform` function allows users to generate samples where a
+subset of modes are selected using the uniform distribution. A utility function
+:func:`modes_from_counts` is also provided to convert between two ways to represent samples from
+the device.
 
 .. autosummary::
     QUANTUM_BACKENDS
     BACKEND_DEFAULTS
-    quantum_sampler
-    uniform_sampler
-    random_seed
+    sample
+    uniform
+    seed
+    modes_from_counts
+
+Subgraph sampling through GBS
+-----------------------------
+
+This module also provides functionality for sampling of subgraphs from undirected graphs. The
+:func:`subgraphs` function generates raw samples from :mod:`strawberryfields.gbs.sample`
+and converts them to subgraphs using :func:`to_subgraphs`. Sampling can be generated both from
+GBS and by using the uniform distribution.
+
+.. autosummary::
+    SAMPLE_DEFAULTS
+    subgraphs
+    to_subgraphs
 
 Code details
 ^^^^^^^^^^^^
 """
 from typing import Optional
 
+import networkx as nx
 import numpy as np
-import strawberryfields as sf
 
+import strawberryfields as sf
 from strawberryfields.gbs import utils
 
 QUANTUM_BACKENDS = ("gaussian",)
@@ -58,11 +75,11 @@ QUANTUM_BACKENDS = ("gaussian",)
 
 BACKEND_DEFAULTS = {"remote": False, "backend": "gaussian", "threshold": True, "postselect": 0}
 """dict[str, Any]: Dictionary to specify default parameters of options in backend sampling for
-:func:`quantum_sampler`.
+:func:`sample`.
 """
 
 
-def quantum_sampler(
+def sample(
     A: np.ndarray, n_mean: float, samples: int = 1, backend_options: Optional[dict] = None
 ) -> list:
     r"""Generate samples from GBS
@@ -94,7 +111,7 @@ def quantum_sampler(
         key: ``"postselect"``, value: *int*
             Causes samples with a photon number or click number less than the
             specified value to be filtered out. Defaults to ``0`` if unspecified, resulting in no
-            postselection. Note that the number of samples returned in :func:`quantum_sampler` is
+            postselection. Note that the number of samples returned in :func:`sample` is
             still equal to the ``samples`` parameter.
 
     Args:
@@ -186,7 +203,7 @@ def _sample_sf(p: sf.Program, shots: int = 1, backend_options: Optional[dict] = 
     return np.array(eng.run(p, run_options={"shots": shots}).samples)
 
 
-def uniform_sampler(modes: int, sampled_modes: int, samples: int = 1) -> list:
+def uniform(modes: int, sampled_modes: int, samples: int = 1) -> list:
     """Perform classical sampling using the uniform distribution to randomly select a subset of
     modes of a given size.
 
@@ -216,14 +233,142 @@ def uniform_sampler(modes: int, sampled_modes: int, samples: int = 1) -> list:
     return output_samples
 
 
-def random_seed(seed: int = None) -> None:
+def seed(value: Optional[int]) -> None:
     """Seed for random number generators.
 
     Wrapper function for `numpy.random.seed <https://docs.scipy.org/doc/numpy//reference/generated
-    /numpy.random.seed.html>`_ to seed NumPy-based random number generators used in
-    :func:`quantum_sampler` and :func:`uniform_sampler`. This allows for repeatable sampling.
+    /numpy.random.seed.html>`_ to seed all NumPy-based random number generators. This allows for
+    repeatable sampling.
 
     Args:
-        seed (int): random seed; defaults to ``None``
+        value (int): random seed
     """
-    np.random.seed(seed)
+    np.random.seed(value)
+
+
+SAMPLE_DEFAULTS = {"distribution": "gbs", "postselect_ratio": 0.75}
+"""dict[str, Any]: Dictionary to specify default parameters of options in :func:`subgraphs`.
+"""
+
+
+def subgraphs(
+    graph: nx.Graph,
+    nodes: int,
+    samples: int = 1,
+    sample_options: Optional[dict] = None,
+    backend_options: Optional[dict] = None,
+) -> list:
+    """Samples subgraphs from an input graph
+
+    The optional ``sample_options`` argument can be used to specify the type of sampling. It
+    should be a dict that contains any of the following:
+
+    .. glossary::
+
+        key: ``"distribution"``, value: *str*
+            Subgraphs can be sampled according to the following distributions:
+
+            - ``"gbs"``: for generating subgraphs according to the Gaussian boson sampling
+              distribution. In this distribution, subgraphs are sampled with a variable size (
+              default).
+            - ``"uniform"``: for generating subgraphs uniformly at random. When using this
+              distribution, subgraphs are of a fixed size. Note that ``backend_options`` are not
+              used and that remote sampling is unavailable due to the simplicity of the
+              distribution.
+
+        key: ``"postselect_ratio"``, value: *float*
+            Ratio of ``nodes`` used to determine the minimum size of subgraph sampled; defaults
+            to 0.75.
+
+    Args:
+        graph (nx.Graph): the input graph
+        nodes (int): the mean size of subgraph samples
+        samples (int): number of samples
+        sample_options (dict[str, Any]): dictionary specifying options used by :func:`subgraphs`;
+            defaults to :const:`SAMPLE_DEFAULTS`
+        backend_options (dict[str, Any]): dictionary specifying options used by backends during
+            sampling
+
+    Returns:
+        list[list[int]]: a list of length ``samples`` whose elements are subgraphs given by a
+        list of nodes
+    """
+    sample_options = {**SAMPLE_DEFAULTS, **(sample_options or {})}
+
+    distribution = sample_options["distribution"]
+
+    if distribution == "uniform":
+        s = uniform(modes=graph.order(), sampled_modes=nodes, samples=samples)
+    elif distribution == "gbs":
+        postselect = int(sample_options["postselect_ratio"] * nodes)
+        backend_options = {**(backend_options or {}), "postselect": postselect}
+
+        s = sample(
+            A=nx.to_numpy_array(graph),
+            n_mean=nodes,
+            samples=samples,
+            backend_options=backend_options,
+        )
+    else:
+        raise ValueError("Invalid distribution selected")
+
+    return to_subgraphs(graph, s)
+
+
+def to_subgraphs(graph: nx.Graph, samples: list) -> list:
+    """Converts a list of samples to a list of subgraphs.
+
+    Given a list of samples, with each sample of ``len(nodes)`` being a list of zeros and ones,
+    this function returns a list of subgraphs selected by, for each sample, picking the nodes
+    corresponding to ones and creating the induced subgraph. The subgraph is specified as a list
+    of selected nodes. For example, given an input 6-node graph, a sample :math:`[0, 1, 1, 0, 0,
+    1]` is converted to a subgraph :math:`[1, 2, 5]`.
+
+    Args:
+        graph (nx.Graph): the input graph
+        samples (list): a list of samples, each a binary sequence of ``len(nodes)``
+
+    Returns:
+        list[list[int]]: a list of subgraphs, where each subgraph is represented by a list of its
+        nodes
+    """
+
+    graph_nodes = list(graph.nodes)
+    node_number = len(graph_nodes)
+
+    subgraph_samples = [modes_from_counts(s) for s in samples]
+
+    if graph_nodes != list(range(node_number)):
+        return [sorted([graph_nodes[i] for i in s]) for s in subgraph_samples]
+
+    return subgraph_samples
+
+
+def modes_from_counts(s: list) -> list:
+    r"""Convert a sample of photon counts to a list of modes where photons are detected.
+
+    There are two main methods of representing a sample. In the first, the number of photons
+    detected in each mode is specified. In the second, the modes in which each photon was detected
+    are listed. Since there are typically fewer photons than modes, the second method gives a
+    shorter representation.
+
+    This function converts from the first representation to the second. Given an :math:`N` mode
+    sample :math:`s=\{s_{1},s_{2},\ldots,s_{N}\}` of photon counts in each mode with total photon
+    number :math:`k`, this function returns a list of modes :math:`m=\{m_{1},m_{2},\ldots,
+    m_{k}\}` where photons are detected.
+
+    **Example usage:**
+
+    >>> modes_from_counts([0, 1, 0, 1, 2, 0])
+    [1, 3, 4, 4]
+
+    Args:
+       s (list[int]): a sample of photon counts
+
+    Returns:
+        list[int]: a list of modes where photons are detected, sorted in non-decreasing order
+    """
+    modes = []
+    for i, c in enumerate(s):
+        modes += [i] * c
+    return sorted(modes)
