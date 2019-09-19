@@ -230,9 +230,7 @@ class TestGreedyDensity:
         subgraph of the nodes [0, 1, 4] and aiming to grow to 4 nodes. We can see that there are
         two subgraphs of size 4: [0, 1, 2, 4] with 3 edges and [0, 1, 3, 4] with 4 edges,
         so we hence expect the second option as the returned solution."""
-        s = subgraph.greedy_density(
-            subgraphs=[[0, 1, 4]], graph=graph, target=4
-        )[0]
+        s = subgraph.greedy_density(subgraphs=[[0, 1, 4]], graph=graph, target=4)[0]
         assert np.allclose(s, [0, 1, 3, 4])
 
     def test_normal_conditions_shrink(self, graph):
@@ -244,9 +242,7 @@ class TestGreedyDensity:
         the returned solution."""
         adj = ((0, 1, 0, 0, 0), (1, 0, 1, 1, 0), (0, 1, 0, 1, 0), (0, 1, 1, 0, 1), (0, 0, 0, 1, 0))
         graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
-        s = subgraph.greedy_density(
-            subgraphs=[[1, 2, 3, 4]], graph=graph, target=3
-        )[0]
+        s = subgraph.greedy_density(subgraphs=[[1, 2, 3, 4]], graph=graph, target=3)[0]
         assert np.allclose(s, [1, 2, 3])
 
 
@@ -279,9 +275,7 @@ class TestGreedyDegree:
         )
         graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
 
-        s = subgraph.greedy_degree(
-            subgraphs=[[0, 1, 4]], graph=graph, target=4
-        )[0]
+        s = subgraph.greedy_degree(subgraphs=[[0, 1, 4]], graph=graph, target=4)[0]
 
         assert np.allclose(s, [0, 1, 2, 4])
 
@@ -303,7 +297,5 @@ class TestGreedyDegree:
             (1, 0, 0, 0, 0, 0, 0),
         )
         graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
-        s = subgraph.greedy_degree(
-            subgraphs=[[0, 1, 2, 3]], graph=graph, target=3
-        )
+        s = subgraph.greedy_degree(subgraphs=[[0, 1, 2, 3]], graph=graph, target=3)
         assert np.allclose(s, [0, 1, 3])

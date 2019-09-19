@@ -20,7 +20,6 @@ import numpy as np
 import pytest
 
 import strawberryfields as sf
-
 from strawberryfields.gbs import sample
 
 pytestmark = pytest.mark.gbs
@@ -53,21 +52,11 @@ adj_dim_range = range(2, 6)
 class TestSample:
     """Tests for the function ``strawberryfields.gbs.sample.sample``"""
 
-<<<<<<< HEAD
     def test_invalid_adjacency(self, dim):
         """Test if function raises a ``ValueError`` for a matrix that is not symmetric"""
         with pytest.raises(ValueError, match="Input must be a NumPy array"):
             adj_asym = np.triu(np.ones((dim, dim)))
-            sample.quantum_sampler(A=adj_asym, n_mean=1.0)
-=======
-    def test_invalid_adjacency(self, adj, monkeypatch):
-        """Test if function raises a ``ValueError`` for a matrix that fails
-        :func:`graph.utils.is_undirected` """
-        with monkeypatch.context() as m:
-            m.setattr(utils, "is_undirected", lambda _: False)
-            with pytest.raises(ValueError, match="Input must be a NumPy array"):
-                sample.sample(A=adj, n_mean=1.0)
->>>>>>> master
+            sample.sample(A=adj_asym, n_mean=1.0)
 
     def test_invalid_samples(self, adj, monkeypatch):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
@@ -396,9 +385,7 @@ def test_subgraphs_invalid_distribution(graph):
     """Tests if function ``sample.subgraphs`` raises a ``ValueError`` for an
     invalid sampling distribution"""
     with pytest.raises(ValueError, match="Invalid distribution selected"):
-        sample.subgraphs(
-            graph, nodes=2, samples=10, sample_options={"distribution": ""}
-        )
+        sample.subgraphs(graph, nodes=2, samples=10, sample_options={"distribution": ""})
 
 
 @pytest.mark.parametrize(
@@ -451,10 +438,7 @@ class TestToSubgraphs:
     def test_graph(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
         ``quantum_samples``."""
-        assert (
-            sample.to_subgraphs(graph, samples=self.quantum_samples)
-            == self.subgraphs
-        )
+        assert sample.to_subgraphs(graph, samples=self.quantum_samples) == self.subgraphs
 
     def test_graph_mapped(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
@@ -467,10 +451,7 @@ class TestToSubgraphs:
             sorted([graph_nodes[i] for i in subgraph]) for subgraph in self.subgraphs
         ]
 
-        assert (
-            sample.to_subgraphs(graph, samples=self.quantum_samples)
-            == subgraphs_mapped
-        )
+        assert sample.to_subgraphs(graph, samples=self.quantum_samples) == subgraphs_mapped
 
 
 def test_modes_from_counts():
