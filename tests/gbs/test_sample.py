@@ -49,7 +49,7 @@ adj_dim_range = range(2, 6)
 
 @pytest.mark.parametrize("dim", [4])
 class TestQuantumSampler:
-    """Tests for the function ``glassonion.sample.quantum_sampler``"""
+    """Tests for the function ``strawberryfields.gbs.sample.quantum_sampler``"""
 
     def test_invalid_adjacency(self, dim):
         """Test if function raises a ``ValueError`` for a matrix that is not symmetric"""
@@ -177,7 +177,7 @@ class TestQuantumSampler:
 
 @pytest.mark.parametrize("dim", adj_dim_range)
 class TestQuantumSamplerIntegration:
-    """Integration tests for the function ``glassonion.sample.quantum_sampler``"""
+    """Integration tests for the function ``strawberryfields.gbs.sample.quantum_sampler``"""
 
     def test_pnr_nopostselect_integration(self, adj):
         """Integration test to check if function returns samples of correct form, i.e., correct
@@ -268,7 +268,7 @@ class TestQuantumSamplerIntegration:
 
 # pylint: disable=expression-not-assigned,pointless-statement
 class TestSampleSF:
-    """Tests for the function ``glassonion.sample._sample_sf``"""
+    """Tests for the function ``strawberryfields.gbs.sample._sample_sf``"""
 
     def test_invalid_backend(self, monkeypatch):
         """Tests if function raises a ``ValueError`` when an invalid backend is selected"""
@@ -313,7 +313,7 @@ class TestSampleSF:
 
 
 class TestUniformSampler:
-    """Tests for the function ``glassonion.sample.uniform_sampler``"""
+    """Tests for the function ``strawberryfields.gbs.sample.uniform_sampler``"""
 
     def test_insufficient_modes(self):
         """Tests if function returns ``ValueError`` when user specifies a number of ``modes``
@@ -364,7 +364,7 @@ class TestUniformSampler:
 
 @pytest.mark.parametrize("dim", [4])
 def test_random_seed(dim, adj):
-    """Test for the function ``glassonion.sample.random_seed``. Checks that samples are identical
+    """Test for the function ``strawberryfields.gbs.sample.random_seed``. Checks that samples are identical
     after repeated initialization of ``random_seed``."""
 
     sample.random_seed(1968)
@@ -381,3 +381,14 @@ def test_random_seed(dim, adj):
 
     assert np.array_equal(q_s_1, q_s_2)
     assert np.array_equal(u_s_1, u_s_2)
+
+
+def test_modes_from_counts():
+    """Test if the function ``strawberryfields.gbs.sample.modes_from_counts`` returns the correct
+    mode samples when input a set of photon count samples."""
+
+    counts = [[0, 0, 0, 0], [1, 0, 0, 2], [1, 1, 1, 0], [1, 2, 1, 0], [0, 1, 0, 2, 4]]
+
+    modes = [[], [0, 3, 3], [0, 1, 2], [0, 1, 1, 2], [1, 3, 3, 4, 4, 4, 4]]
+
+    assert [sample.modes_from_counts(s) for s in counts] == modes

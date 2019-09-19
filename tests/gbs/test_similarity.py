@@ -18,11 +18,13 @@ Unit tests for strawberryfields.gbs.similarity
 import itertools
 from collections import Counter
 
+import networkx as nx
+import numpy as np
 import pytest
 
 from strawberryfields.gbs import similarity
 
-pytestmark = pytest.mark.apps
+pytestmark = pytest.mark.gbs
 
 all_orbits = {
     3: [[1, 1, 1], [2, 1], [3]],
@@ -47,9 +49,9 @@ def test_sample_to_orbit(dim):
     """Test if function ``similarity.sample_to_orbit`` correctly returns the original orbit after
     taking all permutations over the orbit. The starting orbits are all orbits for a fixed photon
     number ``dim``."""
-    orbits = all_orbits[dim]
+    orb = all_orbits[dim]
     checks = []
-    for o in orbits:
+    for o in orb:
         sorted_sample = o.copy()
         sorted_sample_len = len(sorted_sample)
         if sorted_sample_len != dim:
@@ -75,9 +77,9 @@ class TestOrbits:
         """Test if function returns all the integer partitions of 5. This test does not
         require ``similarity.orbits`` to return the orbits in any specified order."""
         partition = all_orbits[dim]
-        orbits = similarity.orbits(dim)
+        orb = similarity.orbits(dim)
 
-        assert sorted(partition) == sorted(orbits)
+        assert sorted(partition) == sorted(orb)
 
 
 @pytest.mark.parametrize("dim", [3, 4, 5])
@@ -87,15 +89,15 @@ def test_sample_to_event(dim, max_count_per_mode):
     applied to all orbits with a fixed number of photons ``dim``. This test ensures that orbits
     exceeding the ``max_count_per_mode`` value are attributed the ``None`` event and that orbits
     not exceeding the ``max_count_per_mode`` are attributed the event ``dim``."""
-    orbits = all_orbits[dim]
+    orb = all_orbits[dim]
     target_events = all_events[(dim, max_count_per_mode)]
-    events = [similarity.sample_to_event(o, max_count_per_mode) for o in orbits]
+    ev = [similarity.sample_to_event(o, max_count_per_mode) for o in orb]
 
-    assert events == target_events
+    assert ev == target_events
 
 
 class TestOrbitToSample:
-    """Tests for the function ``strawberryfields.apps.graph.similarity.orbit_to_sample``"""
+    """Tests for the function ``strawberryfields.gbs.similarity.orbit_to_sample``"""
 
     def test_low_modes(self):
         """Test if function raises a ``ValueError`` if fed an argument for ``modes`` that does
@@ -143,12 +145,12 @@ class TestOrbitToSample:
 
 
 class TestEventToSample:
-    """Tests for the function ``strawberryfields.apps.graph.similarity.event_to_sample``"""
+    """Tests for the function ``strawberryfields.gbs.similarity.event_to_sample``"""
 
     def test_low_count(self):
-        """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is not positive."""
+        """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is negative."""
         with pytest.raises(ValueError, match="Maximum number of photons"):
-            similarity.event_to_sample(2, 0, 5)
+            similarity.event_to_sample(2, -1, 5)
 
     def test_high_photon(self):
         """Test if function raises a ``ValueError`` if ``photon_number`` is so high that it
@@ -194,6 +196,91 @@ class TestEventToSample:
             m.setattr("numpy.random.choice", lambda x: x[0])
             samp = similarity.event_to_sample(photon_num, count, modes_dim)
         assert samp[0] == count
+
+
+orbits = [
+    [(1, 1, 2), 4, 12],
+    [(1, 1), 4, 6],
+    [(1, 2, 3), 4, 24],
+    [(1, 1, 1, 1), 5, 5],
+    [(1, 1, 2), 5, 30],
+    [(1, 2, 3), 5, 60],
+]
+
+
+@pytest.mark.parametrize("orbit, max_photon, expected", orbits)
+def test_orbit_cardinality(orbit, max_photon, expected):
+    """Test if function ``strawberryfields.gbs.similarity.orbit_cardinality`` returns the
+    correct number of samples for some hard-coded examples."""
+
+    assert similarity.orbit_cardinality(list(orbit), max_photon) == expected
+
+
+events = [
+    [5, 3, 6, 216],
+    [6, 3, 6, 336],
+    [5, 2, 6, 126],
+    [5, 3, 7, 413],
+    [6, 3, 7, 728],
+    [5, 2, 7, 266],
+]
+
+
+@pytest.mark.parametrize("photons, max_count, modes, expected", events)
+def test_event_cardinality(photons, max_count, modes, expected):
+    """Test if function ``strawberryfields.gbs.similarity.event_cardinality`` returns the
+    correct number of samples for some hard-coded examples."""
+
+    assert similarity.event_cardinality(photons, max_count, modes) == expected
+
+
+class TestProbOrbitMC:
+    """Tests for the function ``strawberryfields.gbs.similarity.prob_orbit_mc.``"""
+
+    def test_mean_computation_orbit(self, monkeypatch):
+        """Tests if the calculation of the sample mean is performed correctly. The test
+        monkeypatches the fock_prob function so that the probability is the same for each sample and
+        is equal to 1/5, i.e., one over the number of samples in the orbit [1,1,1,1] for 5 modes."""
+        graph = nx.complete_graph(5)
+        with monkeypatch.context() as m:
+            m.setattr(
+                "strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
+                lambda *args, **kwargs: 0.2,
+            )
+
+            assert np.allclose(similarity.prob_orbit_mc(graph, [1, 1, 1, 1]), 1.0)
+
+    def test_prob_vacuum_orbit(self):
+        """Tests if the function gives the right probability for the empty orbit when the GBS
+        device has been configured to have zero mean photon number."""
+        graph = nx.complete_graph(10)
+
+        assert similarity.prob_orbit_mc(graph, [], 0) == 1.0
+
+
+class TestProbEventMC:
+    """Tests for the function ``strawberryfields.gbs.similarity.prob_event_mc.``"""
+
+    def test_prob_vacuum_event(self):
+        """Tests if the function gives the right probability for an event with zero photons when
+        the GBS device has been configured to have zero mean photon number."""
+        graph = nx.complete_graph(10)
+
+        assert similarity.prob_event_mc(graph, 0, 0, 0) == 1.0
+
+    def test_mean_event(self, monkeypatch):
+        """Tests if the calculation of the sample mean is performed correctly. The test
+        monkeypatches the fock_prob function so that the probability is the same for each sample and
+        is equal to 1/216, i.e., one over the number of samples in the event with 5 modes,
+        6 photons, and max 3 photons per mode."""
+        graph = nx.complete_graph(6)
+        with monkeypatch.context() as m:
+            m.setattr(
+                "strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
+                lambda *args, **kwargs: 1.0 / 336,
+            )
+
+            assert np.allclose(similarity.prob_event_mc(graph, 6, 3), 1.0)
 
 
 class TestFeatureVectorSampling:
