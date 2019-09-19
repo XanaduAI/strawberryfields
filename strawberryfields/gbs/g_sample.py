@@ -15,9 +15,9 @@ r"""
 Graph sampling
 ==============
 
-**Module name:** :mod:`strawberryfields.gbs.sample`
+**Module name:** :mod:`strawberryfields.gbs.g_sample`
 
-.. currentmodule:: strawberryfields.gbs.sample
+.. currentmodule:: strawberryfields.gbs.g_sample
 
 This module provides functionality for sampling of subgraphs from undirected graphs. The
 :func:`sample_subgraphs` function generates raw samples from
@@ -38,7 +38,6 @@ Code details
 from typing import Optional
 
 import networkx as nx
-import numpy as np
 
 from strawberryfields.gbs import sample
 
@@ -80,8 +79,8 @@ def sample_subgraphs(
         graph (nx.Graph): the input graph
         nodes (int): the mean size of subgraph samples
         samples (int): number of samples; defaults to 1
-        sample_options (dict[str, Any]): dictionary specifying options used by ``sample_subgraphs``;
-            defaults to :const:`SAMPLE_DEFAULTS`
+        sample_options (dict[str, Any]): dictionary specifying options used by
+            :func:`sample_subgraphs`; defaults to :const:`SAMPLE_DEFAULTS`
         backend_options (dict[str, Any]): dictionary specifying options used by backends during
             sampling; defaults to ``None``
 
@@ -132,18 +131,7 @@ def to_subgraphs(graph: nx.Graph, samples: list) -> list:
     graph_nodes = list(graph.nodes)
     node_number = len(graph_nodes)
 
-    def to_subgraph(s: list) -> list:
-        """Convert a single sample to a subgraph.
-
-        Args:
-           s (list): a binary sample of ``len(nodes)``
-
-        Returns:
-            list: a subgraph specified by its nodes
-        """
-        return list(np.nonzero(s)[0])
-
-    subgraph_samples = [to_subgraph(s) for s in samples]
+    subgraph_samples = [sample.modes_from_counts(s) for s in samples]
 
     if graph_nodes != list(range(node_number)):
         return [sorted([graph_nodes[i] for i in s]) for s in subgraph_samples]

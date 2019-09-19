@@ -30,6 +30,11 @@ Summary
     orbit_to_sample
     event_to_sample
     orbits
+    orbit_cardinality
+    event_cardinality
+    prob_orbit_mc
+    prob_event_mc
+    feature_vector_sampling
 
 Code details
 ^^^^^^^^^^^^
@@ -37,8 +42,10 @@ Code details
 from collections import Counter
 from typing import Generator, Union
 
+import networkx as nx
 import numpy as np
 from scipy.special import factorial
+import strawberryfields as sf
 
 
 def sample_to_orbit(sample: list) -> list:
@@ -200,8 +207,8 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
     Returns:
         list[int]: a sample in the event
     """
-    if max_count_per_mode < 1:
-        raise ValueError("Maximum number of photons per mode must be equal or greater than 1")
+    if max_count_per_mode < 0:
+        raise ValueError("Maximum number of photons per mode must be non-negative")
 
     if max_count_per_mode * modes < photon_number:
         raise ValueError(
@@ -223,6 +230,176 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
     orbit = orbs[np.random.choice(len(prob), p=prob)]
 
     return orbit_to_sample(orbit, modes)
+
+
+def orbit_cardinality(orbit: list, modes: int) -> int:
+    """Gives the number of samples belonging to the input orbit.
+
+    An orbit has a number of constituting samples, which are given by taking all permutations
+    over the orbit. This function counts how many samples of the given number of modes there are
+    in a given orbit. For example, there are three possible samples in the orbit [2,1,
+    1] with three modes: [1,1,2], [1,2,1], and [2,1,1]. With four modes, there are 12 samples in
+    total.
+
+    **Example usage**:
+
+    >>> orbit_cardinality([2, 1, 1], 4)
+    12
+
+    Args:
+        orbit (list[int]): orbit to count number of samples
+        modes (int): number of modes in the sample
+
+    Returns:
+        int: number of samples in the orbit
+    """
+    sample = orbit + [0] * (modes - len(orbit))
+    counts = list(Counter(sample).values())
+    return int(factorial(modes) / np.prod(factorial(counts)))
+
+
+def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -> int:
+    """Gives the number of samples belonging to the input event.
+
+    An event has a number of constituting samples, which are given by all orbits in the event,
+    then all permutations over the orbit. This function counts how many samples of the given number
+    of modes there are in a given event. For example, for three modes, there are six samples in an
+    event with two photons and a maximum of photons two per mode: [1,1,0], [1,0,1], [0,1,1],[2,0,
+    0],[0,2,0], and [0,0,2].
+
+    **Example usage**:
+
+    >>> event_cardinality(2, 2, 3)
+    728
+
+    Args:
+        photon_number (int): number of photons in the event
+        max_count_per_mode (int): maximum number of photons per mode in the event
+        modes (int): number of modes in the samples
+
+    Returns:
+        int: number of samples in the event
+    """
+    cardinality = 0
+
+    for orb in orbits(photon_number):
+        if max(orb) <= max_count_per_mode:
+            cardinality += orbit_cardinality(orb, modes)
+
+    return cardinality
+
+
+def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
+    """Gives a Monte Carlo estimate of the probability of a given orbit for a GBS device encoded
+    according to the input graph.
+
+    To make this estimate, several samples from the orbit are drawn uniformly at random using
+    :func:`orbit_to_sample`.
+
+    For each sample, this function calculates the probability of observing that sample from a GBS
+    device programmed according to the input graph and mean photon number. The sum of the
+    probabilities is then rescaled according to the cardinality of the orbit and the total number of
+    samples. The estimate is the sample mean of the rescaled probabilities. To make
+    this estimate, several samples from the orbit are drawn uniformly at random using
+    :func:orbit_to_sample.
+
+    **Example usage**:
+
+    >>> graph = nx.complete_graph(8)
+    >>> prob_orbit_mc(graph, [2, 1, 1])
+    0.03744
+
+    Args:
+        graph (nx.Graph): input graph encoded in the GBS device
+        orbit (list[int]): orbit for which to estimate the probability
+        n_mean (float): total mean photon number of the GBS device
+        samples (int): number of samples used in the Monte Carlo estimation
+
+    Returns:
+        float: estimated orbit probability
+    """
+
+    modes = graph.order()
+    photons = sum(orbit)
+    A = nx.to_numpy_array(graph)
+    mean_photon_per_mode = n_mean / float(modes)
+
+    p = sf.Program(modes)
+
+    # pylint: disable=expression-not-assigned
+    with p.context as q:
+        sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
+
+    eng = sf.LocalEngine(backend="gaussian")
+    result = eng.run(p)
+
+    prob = 0
+
+    for _ in range(samples):
+        sample = orbit_to_sample(orbit, modes)
+        prob += result.state.fock_prob(sample, cutoff=photons + 1)
+
+    prob = prob * orbit_cardinality(orbit, modes) / samples
+
+    return prob
+
+
+def prob_event_mc(
+    graph: nx.Graph,
+    photon_number: int,
+    max_count_per_mode: int,
+    n_mean: float = 5,
+    samples: int = 1000,
+) -> float:
+    """Gives a Monte Carlo estimate of the probability of a given event for a GBS device encoded
+    according to the input graph.
+
+    To make this estimate, several samples from the event are drawn uniformly at random. For each
+    sample, we calculate the probability of observing that sample from a GBS programmed according to
+    the input graph and mean photon number. These probabilities are then rescaled according to the
+    cardinality of the event. The estimate is the sample mean of the rescaled probabilities. To make
+    this estimate, several samples from the event are drawn uniformly at random using
+    :func:event_to_sample.
+
+    **Example usage**:
+
+    >>> graph = nx.complete_graph(8)
+    >>> p_event_mc(graph, 4, 2)
+    0.1395
+
+    Args:
+        graph (nx.Graph): input graph encoded in the GBS device
+        photon_number (int): number of photons in the event
+        max_count_per_mode (int): maximum number of photons per mode in the event
+        n_mean (float): total mean photon number of the GBS device
+        samples (int): number of samples used in the Monte Carlo estimation
+
+    Returns:
+        float: the estimated probability
+    """
+
+    modes = graph.order()
+    A = nx.to_numpy_array(graph)
+    mean_photon_per_mode = n_mean / float(modes)
+
+    p = sf.Program(modes)
+
+    # pylint: disable=expression-not-assigned
+    with p.context as q:
+        sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
+
+    eng = sf.LocalEngine(backend="gaussian")
+    result = eng.run(p)
+
+    prob = 0
+
+    for _ in range(samples):
+        sample = event_to_sample(photon_number, max_count_per_mode, modes)
+        prob += result.state.fock_prob(sample, cutoff=photon_number + 1)
+
+    prob = prob * event_cardinality(photon_number, max_count_per_mode, modes) / samples
+
+    return prob
 
 
 def feature_vector_sampling(

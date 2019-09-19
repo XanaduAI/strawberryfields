@@ -14,3 +14,4 @@
 """GBS applications layer"""
 
 import strawberryfields.gbs.clique
+import strawberryfields.gbs.dense
