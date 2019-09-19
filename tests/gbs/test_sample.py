@@ -471,3 +471,15 @@ class TestToSubgraphs:
             strawberryfields.gbs.sample.to_subgraphs(graph, samples=self.quantum_samples)
             == subgraphs_mapped
         )
+
+
+
+def test_modes_from_counts():
+    """Test if the function ``strawberryfields.gbs.sample.modes_from_counts`` returns the correct
+    mode samples when input a set of photon count samples."""
+
+    counts = [[0, 0, 0, 0], [1, 0, 0, 2], [1, 1, 1, 0], [1, 2, 1, 0], [0, 1, 0, 2, 4]]
+
+    modes = [[], [0, 3, 3], [0, 1, 2], [0, 1, 1, 2], [1, 3, 3, 4, 4, 4, 4]]
+
+    assert [sample.modes_from_counts(s) for s in counts] == modes

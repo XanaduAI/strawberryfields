@@ -34,7 +34,9 @@ samples are informative and can be used as a form of randomness to improve solve
 in Refs. :cite:`arrazola2018using` and :cite:`arrazola2018quantum`.
 
 On the other hand, the :func:`uniform` function allows users to generate samples where a
-subset of modes are selected using the uniform distribution.
+subset of modes are selected using the uniform distribution. A utility function
+:func:`modes_from_counts` is also provided to convert between two ways to represent samples from
+the device.
 
 .. autosummary::
     QUANTUM_BACKENDS
@@ -42,6 +44,7 @@ subset of modes are selected using the uniform distribution.
     sample
     uniform
     seed
+    modes_from_counts
 
 Subgraph sampling through GBS
 -----------------------------
@@ -333,20 +336,39 @@ def to_subgraphs(graph: nx.Graph, samples: list) -> list:
     graph_nodes = list(graph.nodes)
     node_number = len(graph_nodes)
 
-    def to_subgraph(s: list) -> list:
-        """Convert a single sample to a subgraph.
-
-        Args:
-           s (list): a binary sample of ``len(nodes)``
-
-        Returns:
-            list: a subgraph specified by its nodes
-        """
-        return list(np.nonzero(s)[0])
-
-    subgraph_samples = [to_subgraph(s) for s in samples]
+    subgraph_samples = [modes_from_counts(s) for s in samples]
 
     if graph_nodes != list(range(node_number)):
         return [sorted([graph_nodes[i] for i in s]) for s in subgraph_samples]
 
     return subgraph_samples
+
+
+def modes_from_counts(s: list) -> list:
+    r"""Convert a sample of photon counts to a list of modes where photons are detected.
+
+    There are two main methods of representing a sample. In the first, the number of photons
+    detected in each mode is specified. In the second, the modes in which each photon was detected
+    are listed. Since there are typically fewer photons than modes, the second method gives a
+    shorter representation.
+
+    This function converts from the first representation to the second. Given an :math:`N` mode
+    sample :math:`s=\{s_{1},s_{2},\ldots,s_{N}\}` of photon counts in each mode with total photon
+    number :math:`k`, this function returns a list of modes :math:`m=\{m_{1},m_{2},\ldots,
+    m_{k}\}` where photons are detected.
+
+    **Example usage:**
+
+    >>> modes_from_counts([0, 1, 0, 1, 2, 0])
+    [1, 3, 4, 4]
+
+    Args:
+       s (list[int]): a sample of photon counts
+
+    Returns:
+        list[int]: a list of modes where photons are detected, sorted in non-decreasing order
+    """
+    modes = []
+    for i, c in enumerate(s):
+        modes += [i] * c
+    return sorted(modes)
