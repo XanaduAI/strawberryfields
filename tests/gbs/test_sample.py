@@ -473,7 +473,6 @@ class TestToSubgraphs:
         )
 
 
-
 def test_modes_from_counts():
     """Test if the function ``strawberryfields.gbs.sample.modes_from_counts`` returns the correct
     mode samples when input a set of photon count samples."""
