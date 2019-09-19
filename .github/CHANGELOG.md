@@ -26,6 +26,8 @@
   and provided implementation of this operation in the Gaussian backend.
   [#152](https://github.com/XanaduAI/strawberryfields/pull/152)
 
+* Adds new integration tests for the Gaussian gates that are not primitive, i.e., P, CX, CZ, and S2. Addresses issue [#171](https://github.com/XanaduAI/strawberryfields/issues/171)
+
 ### API Changes
 
 * The `strawberryfields.ops.Measure` shorthand has been deprecated in favour
