@@ -73,8 +73,6 @@ Code details
 import networkx as nx
 import numpy as np
 
-from strawberryfields.gbs import subgraph as sub
-
 
 def search(clique: list, graph: nx.Graph, iterations, node_select: str = "uniform") -> list:
     """Local search algorithm for identifying large cliques.
@@ -175,7 +173,7 @@ def grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
         list[int]: a new clique subgraph of equal or larger size than the input
     """
 
-    if not sub.is_subgraph(clique, graph):
+    if not set(clique).issubset(graph.nodes):
         raise ValueError("Input is not a valid subgraph")
 
     if not is_clique(graph.subgraph(clique)):
@@ -235,7 +233,7 @@ def swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
            list[int]: a new clique subgraph of equal size as the input
        """
 
-    if not sub.is_subgraph(clique, graph):
+    if not set(clique).issubset(graph.nodes):
         raise ValueError("Input is not a valid subgraph")
 
     if not is_clique(graph.subgraph(clique)):
@@ -283,7 +281,7 @@ def shrink(subgraph: list, graph: nx.Graph) -> list:
         list[int]: a clique of size smaller than or equal to the input subgraph
     """
 
-    if not sub.is_subgraph(subgraph, graph):
+    if not set(subgraph).issubset(graph.nodes):
         raise ValueError("Input is not a valid subgraph")
 
     subgraph = graph.subgraph(subgraph).copy()  # A copy is required to be able to modify the

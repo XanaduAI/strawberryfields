@@ -68,12 +68,6 @@ subgraphs. Resizing functionality is provided by the following functions.
     RESIZE_DEFAULTS
     RESIZE_DICT
 
-Utility functions
------------------
-
-.. autosummary::
-    is_subgraph
-
 Code details
 ^^^^^^^^^^^^
 """
@@ -309,7 +303,7 @@ def greedy_density(
     for s in subgraphs:
         s = set(s)
 
-        if not is_subgraph(s, graph):
+        if not set(s).issubset(graph.nodes):
             raise ValueError("Input is not a valid subgraph")
 
         while len(s) != target:
@@ -367,7 +361,7 @@ def greedy_degree(
     for s in subgraphs:
         s = set(s)
 
-        if not is_subgraph(s, graph):
+        if not set(s).issubset(graph.nodes):
             raise ValueError("Input is not a valid subgraph")
 
         while len(s) != target:
