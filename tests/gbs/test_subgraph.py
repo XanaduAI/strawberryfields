@@ -136,12 +136,6 @@ subgraphs = [
 ]
 
 
-@pytest.fixture()
-def patch_is_subgraph(monkeypatch):
-    """dummy function for ``subgraph.is_subgraph``"""
-    monkeypatch.setattr(subgraph, "is_subgraph", lambda v1, v2: True)
-
-
 @pytest.mark.parametrize("dim", [5])
 class TestResize:
     """Tests for the function ``subgraph.resize``"""
@@ -221,7 +215,6 @@ def test_resize_integration(graph, target, methods):
     assert all(set(sample).issubset(graph_nodes) for sample in resized)
 
 
-@pytest.mark.usefixtures("patch_is_subgraph")
 @pytest.mark.parametrize("dim", [5])
 class TestGreedyDensity:
     """Tests for the function ``subgraph.greedy_density``"""
@@ -229,12 +222,8 @@ class TestGreedyDensity:
     def test_invalid_subgraph(self, graph, monkeypatch):
         """Test if function raises an ``Exception`` when an element of ``subgraphs`` is not
         contained within nodes of the graph """
-        with monkeypatch.context() as m:
-            m.setattr(subgraph, "is_subgraph", lambda v1, v2: False)
-            with pytest.raises(Exception, match="Input is not a valid subgraph"):
-                strawberryfields.gbs.subgraph.greedy_density(
-                    subgraphs=[[0, 9]], graph=graph, target=3
-                )
+        with pytest.raises(Exception, match="Input is not a valid subgraph"):
+            strawberryfields.gbs.subgraph.greedy_density(subgraphs=[[0, 9]], graph=graph, target=3)
 
     def test_normal_conditions_grow(self, graph):
         """Test if function returns correct subgraph under normal conditions, where one needs to
@@ -262,7 +251,6 @@ class TestGreedyDensity:
         assert np.allclose(s, [1, 2, 3])
 
 
-@pytest.mark.usefixtures("patch_is_subgraph")
 @pytest.mark.parametrize("dim", [5])
 class TestGreedyDegree:
     """Tests for the function ``subgraph.greedy_degree``"""
@@ -270,12 +258,8 @@ class TestGreedyDegree:
     def test_invalid_subgraph(self, graph, monkeypatch):
         """Test if function raises an ``Exception`` when an element of ``subgraphs`` is not
         contained within nodes of the graph """
-        with monkeypatch.context() as m:
-            m.setattr(subgraph, "is_subgraph", lambda v1, v2: False)
-            with pytest.raises(Exception, match="Input is not a valid subgraph"):
-                strawberryfields.gbs.subgraph.greedy_degree(
-                    subgraphs=[[0, 9]], graph=graph, target=3
-                )
+        with pytest.raises(Exception, match="Input is not a valid subgraph"):
+            strawberryfields.gbs.subgraph.greedy_degree(subgraphs=[[0, 9]], graph=graph, target=3)
 
     def test_normal_conditions_grow(self, graph):
         """Test if function returns correct subgraph under normal conditions, where one needs to

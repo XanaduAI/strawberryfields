@@ -383,21 +383,3 @@ RESIZE_DICT = {"greedy-density": greedy_density, "greedy-degree": greedy_degree}
 """dict[str, func]: Included methods for resizing subgraphs. The dictionary keys are strings
 describing the method, while the dictionary values are callable functions corresponding to the
 method."""
-
-
-def is_subgraph(subgraph: Iterable, graph: nx.Graph):
-    """Checks if input is a valid subgraph.
-
-    A valid subgraph is a set of nodes that are contained within the nodes of the graph.
-
-    Args:
-        subgraph (iterable): a collection of nodes
-        graph (nx.Graph): the input graph
-
-    Returns:
-        bool: returns ``True`` only if input subgraph is valid
-    """
-    try:
-        return set(subgraph).issubset(graph.nodes)
-    except TypeError:
-        raise TypeError("subgraph and graph.nodes must be iterable")
