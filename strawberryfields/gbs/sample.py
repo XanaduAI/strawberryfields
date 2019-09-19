@@ -79,7 +79,7 @@ BACKEND_DEFAULTS = {"remote": False, "backend": "gaussian", "threshold": True, "
 def sample(
     A: np.ndarray, n_mean: float, samples: int = 1, backend_options: Optional[dict] = None
 ) -> list:
-    r"""Samples subgraphs from an input graph
+    r"""Generate samples from GBS
 
     Perform quantum sampling of adjacency matrix :math:`A` using the Gaussian boson sampling
     algorithm.
@@ -234,8 +234,8 @@ def seed(value: Optional[int]) -> None:
     """Seed for random number generators.
 
     Wrapper function for `numpy.random.seed <https://docs.scipy.org/doc/numpy//reference/generated
-    /numpy.random.seed.html>`_ to seed NumPy-based random number generators used in the GBS
-    applications layer. This allows for repeatable sampling.
+    /numpy.random.seed.html>`_ to seed all NumPy-based random number generators. This allows for
+    repeatable sampling.
 
     Args:
         value (int): random seed
@@ -255,7 +255,7 @@ def subgraphs(
     sample_options: Optional[dict] = None,
     backend_options: Optional[dict] = None,
 ) -> list:
-    """Functionality for sampling subgraphs.
+    """Samples subgraphs from an input graph
 
     The optional ``sample_options`` argument can be used to specify the type of sampling. It
     should be a dict that contains any of the following:
