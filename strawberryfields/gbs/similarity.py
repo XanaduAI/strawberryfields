@@ -270,7 +270,9 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     return cardinality
 
 
-def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
+def prob_orbit_mc(
+    graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000
+) -> float:
     """Gives a Monte Carlo estimate of the probability of a given orbit for a GBS device encoded
     according to the input graph.
 
@@ -430,16 +432,13 @@ def feature_vector_sampling(
     return [count[p] / n_samples for p in event_photon_numbers]
 
 
-def prob_event_mc(graph, photons, max_count_per_mode, n_mean, samples):
-
-    return 1/photons
-
-
-def feature_vector_mc(graph: nx.Graph,
-                      event_photon_numbers: list,
-                      max_count_per_mode: int = 2,
-                      n_mean: int = 5,
-                      samples: int=1000) -> list:
+def feature_vector_mc(
+    graph: nx.Graph,
+    event_photon_numbers: list,
+    max_count_per_mode: int = 2,
+    n_mean: int = 5,
+    samples: int = 1000,
+) -> list:
     r"""Calculates feature vector using a Monte Carlo estimation of event probabilities.
 
     The feature vector is composed of event probabilities :math:`p_{k}` with all events
@@ -455,18 +454,29 @@ def feature_vector_mc(graph: nx.Graph,
 
     **Example usage**:
 
-    >>> feature_vector_mc([2, 4, 6])
-    [0.1, 0.2, 0.0]
+    >>> graph = nx.complete_graph(8)
+    >>> feature_vector_mc(graph, [2, 4, 6], 2)
+    [0.2115, 0.1457, 0.09085]
 
     Args:
-        samples (list[list[int]]): a list of samples
+        graph (nx.Graph): input graph
         event_photon_numbers (list[int]): a list of events described by their total photon number
         max_count_per_mode (int): maximum number of photons per mode for all events
+        n_mean (float): total mean photon number of the GBS device
+        samples (int): number of samples used in the Monte Carlo estimation
 
     Returns:
         list[float]: a feature vector of event probabilities in the same order as
         ``event_photon_numbers``
     """
 
-    return [prob_event_mc(graph, photons, max_count_per_mode, n_mean, samples)
-            for photons in event_photon_numbers]
+    if min(event_photon_numbers) < 0:
+        raise ValueError("Cannot request events with photon number below zero")
+
+    if max_count_per_mode < 1:
+        raise ValueError("Maximum number of photons per mode must be at least one")
+
+    return [
+        prob_event_mc(graph, photons, max_count_per_mode, n_mean, samples)
+        for photons in event_photon_numbers
+    ]
