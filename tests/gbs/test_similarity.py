@@ -183,20 +183,6 @@ class TestEventToSample:
         samp = similarity.event_to_sample(photon_num, count, modes_dim)
         assert max(samp) <= count
 
-    @pytest.mark.parametrize("photon_num", [5, 6])
-    @pytest.mark.parametrize("count", [3, 4])
-    def test_sample_max_count_deterministic(self, photon_num, count, monkeypatch):
-        """Test if function correctly stops adding photons to modes who have reached their
-        maximum count. This test ensures that the maximum count is exceeded in each case by
-        setting ``photon_num > count`` and monkeypatching the random choice to always pick the
-        first element of a list. This should cause the first mode to fill up with ``count``
-        photons."""
-        modes_dim = 10
-        with monkeypatch.context() as m:
-            m.setattr("numpy.random.choice", lambda x: x[0])
-            samp = similarity.event_to_sample(photon_num, count, modes_dim)
-        assert samp[0] == count
-
 
 orbits = [
     [(1, 1, 2), 4, 12],
