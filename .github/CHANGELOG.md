@@ -2,6 +2,10 @@
 
 ### New features
 
+* Fixes bug in `strawberryfields.decompositions.rectangular_symmetric` so its
+  returned phases are all in the interval [0, 2*pi[, and corrects the
+  function docstring.
+
 * Adds in first version of an applications layer aimed at solving problems using
   Gaussian boson sampling. This layer focuses on graph-based problems and
   currently has algorithms for the densest ``k``-subgraph problem.
