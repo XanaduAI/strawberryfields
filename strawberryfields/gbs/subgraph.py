@@ -76,13 +76,12 @@ from typing import Iterable, Optional, Tuple
 
 import networkx as nx
 
-from strawberryfields.gbs import sample, utils
+from strawberryfields.gbs import sample
 from strawberryfields.gbs.sample import BACKEND_DEFAULTS
-from strawberryfields.gbs.utils import graph_type
 
 
 def search(
-    graph: graph_type, nodes: int, iterations: int = 1, options: Optional[dict] = None
+    graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
 ) -> Tuple[float, list]:
     """Find a dense subgraph of a given size.
 
@@ -125,7 +124,7 @@ def search(
               for an example
 
     Args:
-        graph (graph_type): the input graph
+        graph (nx.Graph): the input graph
         nodes (int): the size of desired dense subgraph
         iterations (int): number of iterations to use in algorithm
         options (dict[str, dict[str, Any]]): dict-of-dicts specifying options in different parts
@@ -142,9 +141,7 @@ def search(
     if not callable(method):
         method = METHOD_DICT[method]
 
-    return method(
-        graph=utils.validate_graph(graph), nodes=nodes, iterations=iterations, options=options
-    )
+    return method(graph=graph, nodes=nodes, iterations=iterations, options=options)
 
 
 def random_search(
@@ -153,10 +150,10 @@ def random_search(
     """Random search algorithm for finding dense subgraphs of a given size.
 
     The algorithm proceeds by sampling subgraphs according to the
-    :func:`~strawberryfields.gbs.sample.subgraphs`. The resultant subgraphs
-    are resized using :func:`~strawberryfields.gbs.dense.resize` to
-    be of size ``nodes``. The densest subgraph is then selected among all the resultant
-    subgraphs. Specified``options`` must be of the form given in :func:`search`.
+    :func:`~strawberryfields.gbs.sample.subgraphs` function. The resultant subgraphs
+    are resized using :func:`resize` to be of size ``nodes``. The densest subgraph is then
+    selected among all the resultant subgraphs. Specified``options`` must be of the form given in
+    :func:`search`.
 
     Args:
         graph (nx.Graph): the input graph
@@ -306,7 +303,7 @@ def greedy_density(
     for s in subgraphs:
         s = set(s)
 
-        if not utils.is_subgraph(s, graph):
+        if not set(s).issubset(graph.nodes):
             raise ValueError("Input is not a valid subgraph")
 
         while len(s) != target:
@@ -364,7 +361,7 @@ def greedy_degree(
     for s in subgraphs:
         s = set(s)
 
-        if not utils.is_subgraph(s, graph):
+        if not set(s).issubset(graph.nodes):
             raise ValueError("Input is not a valid subgraph")
 
         while len(s) != target:
