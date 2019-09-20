@@ -45,7 +45,6 @@ from typing import Generator, Union
 import numpy as np
 import networkx as nx
 from scipy.special import factorial
-
 import strawberryfields as sf
 
 
@@ -201,16 +200,20 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
             "max_count_per_mode or reducing the number of photons."
         )
 
-    sample = [0] * modes
-    available_modes = list(range(modes))
+    cards = []
+    orbs = []
 
-    for _ in range(photon_number):
-        j = np.random.choice(available_modes)
-        sample[j] += 1
-        if sample[j] == max_count_per_mode:
-            available_modes.remove(j)
+    for orb in orbits(photon_number):
+        if max(orb) <= max_count_per_mode:
+            cards.append(orbit_cardinality(orb, modes))
+            orbs.append(orb)
 
-    return sample
+    norm = sum(cards)
+    prob = [c / norm for c in cards]
+
+    orbit = orbs[np.random.choice(len(prob), p=prob)]
+
+    return orbit_to_sample(orbit, modes)
 
 
 def orbit_cardinality(orbit: list, modes: int) -> int:
@@ -270,7 +273,9 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     return cardinality
 
 
-def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
+def prob_orbit_mc(
+    graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000
+) -> float:
     """Gives a Monte Carlo estimate of the probability of a given orbit for a GBS device encoded
     according to the input graph.
 
