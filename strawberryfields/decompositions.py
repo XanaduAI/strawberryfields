@@ -463,11 +463,16 @@ def rectangular_symmetric(V, tol=1e-11):
         theta, phi = i[2], i[3]
         external_phase = (phi + alpha - beta) % (2 * np.pi)
         internal_phase = (np.pi + 2.0 * theta) % (2 * np.pi)
+        # repeat modulo operations , otherwise the input unitary
+        # numpy.identity(20) yields an external_phase of exactly 2 * pi
+        external_phase %= (2 * np.pi)
+        internal_phase %= (2 * np.pi)
         new_alpha = beta - theta + np.pi
         new_beta = 0*np.pi - theta + beta
         new_i = [i[0], i[1], internal_phase, external_phase, i[4]]
         new_diags[em], new_diags[en] = np.exp(1j*new_alpha), np.exp(1j*new_beta)
         new_tlist = new_tlist + [new_i]
+
     new_diags = diags * new_diags
 
     return new_tlist, new_diags, None
