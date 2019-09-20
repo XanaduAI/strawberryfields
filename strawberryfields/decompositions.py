@@ -450,8 +450,10 @@ def rectangular_symmetric(V, tol=1e-11):
         tuple[array]: returns a tuple of the form ``(tlist,np.diag(localV), None)``
             where:
 
-            * ``tlist``: list containing ``[n,m,internal_phase,external_phase,n_size]`` of the T unitaries needed
+            * ``tlist``: list containing ``[n, m, internal_phase, external_phase, n_size]`` of the T unitaries needed
             * ``localV``: Diagonal unitary matrix to be applied at the end of circuit
+            * ``None``: the value ``None``, in order to make the return
+              signature identical to the one of :func:`rectangular`.
     """
     tlist, diags, _ = rectangular_phase_end(V, tol)
     new_tlist, new_diags = [], np.ones(len(diags), dtype=diags.dtype)
