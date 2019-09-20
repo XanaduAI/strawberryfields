@@ -324,3 +324,37 @@ class TestFeatureVectorSampling:
             fv = similarity.feature_vector_sampling(samples, event_photon_numbers, 1)
 
         assert fv_true == fv
+
+
+class TestFeatureVectorMC:
+    """Tests for the function ``strawberryfields.apps.graph.similarity.feature_vector_mc``"""
+
+    def test_bad_event_photon_numbers_mc(self):
+        """Test if function raises a ``ValueError`` when input a minimum photon number that is
+        below zero."""
+        with pytest.raises(ValueError, match="Cannot request events with photon number below zero"):
+            graph = nx.complete_graph(4)
+            similarity.feature_vector_mc(graph, [-1, 4], 1)
+
+    def test_bad_max_count_mc(self):
+        """Test if function raises a ``ValueError`` when input a non-positive value for the
+        maximum photon count per mode."""
+        with pytest.raises(ValueError, match="Maximum number of photons per mode must be at least"):
+            graph = nx.complete_graph(4)
+            similarity.feature_vector_mc(graph, [2, 4], 0)
+
+    def test_correct_vector_mc(self, monkeypatch):
+        """Test if function correctly constructs the feature vector. The
+        ``prob_event_mc`` function called within ``feature_vector_mc`` is monkeypatched
+        to return hard-coded outputs that depend only on the photon number in the event."""
+
+        with monkeypatch.context() as m:
+            m.setattr(
+                similarity,
+                "prob_event_mc",
+                lambda graph, photons, max_count, n_mean, samples: 1.0 / photons,
+            )
+            graph = nx.complete_graph(8)
+            fv = similarity.feature_vector_mc(graph, [2, 4, 8], 1)
+
+        assert fv == [0.5, 0.25, 0.125]
