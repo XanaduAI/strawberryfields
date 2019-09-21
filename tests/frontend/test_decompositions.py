@@ -308,6 +308,8 @@ class TestRectangularSymmetricDecomposition:
         tlist, diags, _ = dec.rectangular_symmetric(U)
         qrec = np.identity(nmax)
         for i in tlist:
+            assert i[2] >= 0 and i[2] < 2 * np.pi  # internal phase
+            assert i[3] >= 0 and i[3] < 2 * np.pi  # external phase
             qrec = dec.mach_zehnder(*i) @ qrec
         qrec = np.diag(diags) @ qrec
         assert np.allclose(U, qrec, atol=tol, rtol=0)

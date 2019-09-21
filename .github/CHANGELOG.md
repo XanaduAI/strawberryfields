@@ -73,6 +73,11 @@
 
 ### Bug fixes
 
+* Fixed bug in `strawberryfields.decompositions.rectangular_symmetric` so its
+  returned phases are all in the interval [0, 2*pi), and corrects the
+  function docstring.
+  [#196](https://github.com/XanaduAI/strawberryfields/pull/196)
+
 * When using the `'gbs'` compilation target, the measured registers are now sorted in
   ascending order in the resulting compiled program.
   [#144](https://github.com/XanaduAI/strawberryfields/pull/144)
