@@ -2,11 +2,6 @@
 
 ### New features
 
-* Fixed bug in `strawberryfields.decompositions.rectangular_symmetric` so its
-  returned phases are all in the interval [0, 2*pi), and corrects the
-  function docstring.
-  [#196](https://github.com/XanaduAI/strawberryfields/pull/196)
-
 * Adds in first version of an applications layer aimed at solving problems using
   Gaussian boson sampling. This layer focuses on graph-based problems and
   currently has algorithms for the densest ``k``-subgraph problem.
@@ -77,6 +72,11 @@
   [#160](https://github.com/XanaduAI/strawberryfields/pull/160)
 
 ### Bug fixes
+
+* Fixed bug in `strawberryfields.decompositions.rectangular_symmetric` so its
+  returned phases are all in the interval [0, 2*pi), and corrects the
+  function docstring.
+  [#196](https://github.com/XanaduAI/strawberryfields/pull/196)
 
 * When using the `'gbs'` compilation target, the measured registers are now sorted in
   ascending order in the resulting compiled program.
