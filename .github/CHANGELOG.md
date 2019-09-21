@@ -2,9 +2,10 @@
 
 ### New features
 
-* Fixes bug in `strawberryfields.decompositions.rectangular_symmetric` so its
-  returned phases are all in the interval [0, 2*pi[, and corrects the
+* Fixed bug in `strawberryfields.decompositions.rectangular_symmetric` so its
+  returned phases are all in the interval [0, 2*pi), and corrects the
   function docstring.
+  [#196](https://github.com/XanaduAI/strawberryfields/pull/196)
 
 * Adds in first version of an applications layer aimed at solving problems using
   Gaussian boson sampling. This layer focuses on graph-based problems and
