@@ -26,16 +26,16 @@ class SampleLoader:
 
     dat = scipy.sparse.spmatrix()
     n_samples = 0
+    count = 0
 
     def __iter__(self):
-        self.count = 0
         return self
 
     def __next__(self):
         if self.count < self.n_samples:
-            s = list(self.dat[self.count].toarray()[0])
             self.count += 1
-            return s
+            return self.__getitem__(self.count - 1)
+        self.count = 0
         raise StopIteration
 
     def __getitem__(self, i):
