@@ -11,13 +11,6 @@ Strawberry Fields fits into your workflow.
 If your contribution becomes part of Strawberry Fields, or is highlighted in our Gallery, we will
 send you some exclusive Xanadu Swag™ - including t-shirts, stickers, and more.
 
-**Update**: big announcement! We're excited to launch the Xanadu Quantum Software Competition, with prizes of up
-to $1000 on offer. Submissions close 30th August 2019 — so no excuse not to submit your Strawberry Fields
-contribution, whether its an informative Jupyter notebook, new hardware backend, or a cool research result.
-
-See the [competition website](https://strawberryfields.ai/competition/) or our
-[blog post](https://medium.com/xanaduai/announcing-the-xanadu-quantum-software-competition-bdcd3d6d53a9) for more.
-
 ## How can I get involved in the community?
 
 If you want to contribute but don't know where to start, start by checking out our

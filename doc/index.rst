@@ -163,3 +163,15 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    code/backend.fock
    code/backend.tf
    code/api_client.rst
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Applications Layer
+   :hidden:
+
+   code/gbs/sample
+   code/gbs/subgraph
+   code/gbs/g_sample
+   code/gbs/clique
+   code/gbs/similarity

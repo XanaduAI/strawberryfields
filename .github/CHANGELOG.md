@@ -26,6 +26,8 @@
   and provided implementation of this operation in the Gaussian backend.
   [#152](https://github.com/XanaduAI/strawberryfields/pull/152)
 
+* Adds new integration tests for the Gaussian gates that are not primitive, i.e., P, CX, CZ, and S2. Addresses issue [#171](https://github.com/XanaduAI/strawberryfields/issues/171)
+
 ### API Changes
 
 * The `strawberryfields.ops.Measure` shorthand has been deprecated in favour
@@ -70,6 +72,11 @@
   [#160](https://github.com/XanaduAI/strawberryfields/pull/160)
 
 ### Bug fixes
+
+* Fixed bug in `strawberryfields.decompositions.rectangular_symmetric` so its
+  returned phases are all in the interval [0, 2*pi), and corrects the
+  function docstring.
+  [#196](https://github.com/XanaduAI/strawberryfields/pull/196)
 
 * When using the `'gbs'` compilation target, the measured registers are now sorted in
   ascending order in the resulting compiled program.

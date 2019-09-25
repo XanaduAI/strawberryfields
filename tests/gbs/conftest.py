@@ -18,7 +18,7 @@ import numpy as np
 import networkx as nx
 import pytest
 
-pytestmark = pytest.mark.apps
+pytestmark = pytest.mark.gbs
 
 
 @pytest.fixture

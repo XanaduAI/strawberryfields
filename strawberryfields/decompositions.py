@@ -370,7 +370,7 @@ def rectangular_phase_end(V, tol=1e-11):
 
         # The new parameters required for D',T' st. T^(-1)D = D'T'
         new_theta = theta
-        new_phi = np.fmod((alpha - beta + np.pi), 2*np.pi)
+        new_phi = (alpha - beta + np.pi) % (2 * np.pi)
         new_alpha = beta - phi + np.pi
         new_beta = beta
 
@@ -450,8 +450,10 @@ def rectangular_symmetric(V, tol=1e-11):
         tuple[array]: returns a tuple of the form ``(tlist,np.diag(localV), None)``
             where:
 
-            * ``tlist``: list containing ``[n,m,internal_phase,external_phase,n_size]`` of the T unitaries needed
+            * ``tlist``: list containing ``[n, m, internal_phase, external_phase, n_size]`` of the T unitaries needed
             * ``localV``: Diagonal unitary matrix to be applied at the end of circuit
+            * ``None``: the value ``None``, in order to make the return
+              signature identical to :func:`rectangular`
     """
     tlist, diags, _ = rectangular_phase_end(V, tol)
     new_tlist, new_diags = [], np.ones(len(diags), dtype=diags.dtype)
@@ -459,13 +461,18 @@ def rectangular_symmetric(V, tol=1e-11):
         em, en = int(i[0]), int(i[1])
         alpha, beta = np.angle(new_diags[em]), np.angle(new_diags[en])
         theta, phi = i[2], i[3]
-        external_phase = np.fmod((phi + alpha - beta), 2 * np.pi)
-        internal_phase = np.fmod((np.pi + 2.0 * theta), 2 * np.pi)
+        external_phase = (phi + alpha - beta) % (2 * np.pi)
+        internal_phase = (np.pi + 2.0 * theta) % (2 * np.pi)
+        # repeat modulo operations , otherwise the input unitary
+        # numpy.identity(20) yields an external_phase of exactly 2 * pi
+        external_phase %= (2 * np.pi)
+        internal_phase %= (2 * np.pi)
         new_alpha = beta - theta + np.pi
         new_beta = 0*np.pi - theta + beta
         new_i = [i[0], i[1], internal_phase, external_phase, i[4]]
         new_diags[em], new_diags[en] = np.exp(1j*new_alpha), np.exp(1j*new_beta)
         new_tlist = new_tlist + [new_i]
+
     new_diags = diags * new_diags
 
     return new_tlist, new_diags, None
