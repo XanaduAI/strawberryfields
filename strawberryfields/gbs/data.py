@@ -38,5 +38,15 @@ class SampleLoader:
         self.count = 0
         raise StopIteration
 
-    def __getitem__(self, i):
+    def _elem(self, i):
         return list(self.dat[i].toarray()[0])
+
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            range_tuple = key.indices(self.n_samples)
+            return [self._elem(i) for i in range(range_tuple)]
+
+        if key < 0:
+            key += self.n_samples
+
+        return self._elem(key)
