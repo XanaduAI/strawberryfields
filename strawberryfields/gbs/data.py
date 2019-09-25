@@ -15,6 +15,7 @@
 GBS Datasets
 ============
 """
+import numpy as np
 import pkg_resources
 import scipy.sparse
 
@@ -22,7 +23,7 @@ DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data")
 
 
 class SampleLoader:
-    """To do"""
+    """Base class for loading pre-generated samples."""
 
     dat = scipy.sparse.spmatrix()
     n_samples = 0
@@ -44,9 +45,23 @@ class SampleLoader:
     def __getitem__(self, key):
         if isinstance(key, slice):
             range_tuple = key.indices(self.n_samples)
-            return [self._elem(i) for i in range(range_tuple)]
+            return [self._elem(i) for i in range(*range_tuple)]
 
         if key < 0:
             key += self.n_samples
 
         return self._elem(key)
+
+    def counts(self, axis: int = 1) -> np.ndarray:
+        """Count number of photons or clicks.
+
+        Counts number of photons/clicks in each sample (``axis==1``) or number of photons/clicks
+        in each mode compounded over all samples (``axis=0``).
+
+        Args:
+            axis (int): axis to perform count
+
+        Returns:
+            array: counts from samples
+        """
+        return np.array(self.dat.sum(axis)).flatten()
