@@ -24,7 +24,7 @@ import scipy.sparse
 DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data") + "/"
 
 
-class SampleLoader(metaclass=ABCMeta):
+class Dataset(metaclass=ABCMeta):
     """Base class for loading pre-generated samples."""
 
     _count = 0
@@ -94,7 +94,7 @@ class SampleLoader(metaclass=ABCMeta):
         pass
 
 
-class Planted(SampleLoader):
+class Planted(Dataset):
 
     dat_filename = "planted"
     n_mean = 6
