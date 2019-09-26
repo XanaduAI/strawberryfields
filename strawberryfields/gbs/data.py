@@ -15,28 +15,38 @@
 GBS Datasets
 ============
 """
+from abc import ABCMeta, abstractmethod
+
 import numpy as np
 import pkg_resources
 import scipy.sparse
 
-DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data")
+DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data") + '/'
 
 
-class SampleLoader:
+class SampleLoader(metaclass=ABCMeta):
     """Base class for loading pre-generated samples."""
 
-    dat = scipy.sparse.spmatrix()
-    n_samples = 0
-    count = 0
+    _count = 0
+
+    @property
+    @abstractmethod
+    def dat_filename(self) -> str:
+        pass
+
+    def __init__(self):
+        self.dat = scipy.sparse.load_npz(DATA_PATH + self.dat_filename + ".npz")
+        self.adj = np.load(DATA_PATH + self.dat_filename + "_A.npy")
+        self.n_samples, self.modes = self.dat.shape
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        if self.count < self.n_samples:
-            self.count += 1
-            return self.__getitem__(self.count - 1)
-        self.count = 0
+        if self._count < self.n_samples:
+            self._count += 1
+            return self.__getitem__(self._count - 1)
+        self._count = 0
         raise StopIteration
 
     def _elem(self, i):
@@ -52,7 +62,7 @@ class SampleLoader:
 
         return self._elem(key)
 
-    def counts(self, axis: int = 1) -> np.ndarray:
+    def counts(self, axis: int = 1) -> list:
         """Count number of photons or clicks.
 
         Counts number of photons/clicks in each sample (``axis==1``) or number of photons/clicks
@@ -62,6 +72,29 @@ class SampleLoader:
             axis (int): axis to perform count
 
         Returns:
-            array: counts from samples
+            list: counts from samples
         """
-        return np.array(self.dat.sum(axis)).flatten()
+        return np.array(self.dat.sum(axis)).flatten().tolist()
+
+    @property
+    @abstractmethod
+    def n_mean(self) -> float:
+        pass
+
+    @property
+    @abstractmethod
+    def n_max(self) -> float:
+        pass
+
+    @property
+    @abstractmethod
+    def threshold(self) -> bool:
+        pass
+
+
+class Planted(SampleLoader):
+
+    dat_filename = "planted"
+    n_mean = 6
+    n_max = 14
+    threshold = True
