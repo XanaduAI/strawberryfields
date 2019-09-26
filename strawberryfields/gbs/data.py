@@ -21,7 +21,7 @@ import numpy as np
 import pkg_resources
 import scipy.sparse
 
-DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data") + '/'
+DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data") + "/"
 
 
 class SampleLoader(metaclass=ABCMeta):
@@ -53,7 +53,9 @@ class SampleLoader(metaclass=ABCMeta):
         return list(self.dat[i].toarray()[0])
 
     def __getitem__(self, key):
-        if isinstance(key, slice):
+        if isinstance(key, (slice, tuple)):
+            if isinstance(key, tuple):
+                key = slice(*key)
             range_tuple = key.indices(self.n_samples)
             return [self._elem(i) for i in range(*range_tuple)]
 

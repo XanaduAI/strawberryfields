@@ -14,8 +14,9 @@
 r"""
 Unit tests for strawberryfields.gbs.data
 """
+# pylint: disable=no-self-use
+import numpy as np
 import pytest
-
 import scipy.sparse
 
 from strawberryfields.gbs import data
@@ -25,10 +26,33 @@ datasets_list = [data.Planted]
 
 @pytest.mark.parametrize("datasets", datasets_list)
 class TestSampleLoaders:
-
     @pytest.fixture
     def sample_loader(self, datasets):
         yield datasets()
+
+    patch_samples = [
+        [0, 0, 0, 0],
+        [0, 0, 0, 1],
+        [0, 0, 1, 0],
+        [0, 0, 1, 1],
+        [0, 1, 0, 0],
+        [0, 1, 0, 1],
+        [0, 1, 1, 0],
+        [0, 1, 1, 1],
+        [2, 1, 1, 1],
+        [3, 0, 1, 1],
+    ]
+
+    @pytest.fixture
+    def sample_loader_patched(self, monkeypatch, datasets):
+        def mock_init(_self):
+            _self.dat = scipy.sparse.csr_matrix(self.patch_samples)
+            _self.adj = np.ones((4, 4))
+            _self.n_samples, _self.modes = 10, 4
+
+        with monkeypatch.context() as m:
+            m.setattr(datasets, "__init__", mock_init)
+            yield datasets()
 
     def test_filename(self, sample_loader):
         assert isinstance(sample_loader.dat_filename, str)
@@ -44,41 +68,24 @@ class TestSampleLoaders:
     def test_threshold(self, sample_loader):
         assert isinstance(sample_loader.threshold, bool)
 
+    def test_counts_ax0(self, sample_loader_patched):
+        assert sample_loader_patched.counts(0) == [5, 5, 6, 6]
 
-class TestSampleLoaderBase:
+    def test_counts_ax1(self, sample_loader_patched):
+        assert sample_loader_patched.counts(1) == [0, 1, 1, 2, 1, 2, 2, 3, 5, 5]
 
-    patch_samples = scipy.sparse.csr_matrix([
-        [0, 0, 0, 0],
-        [0, 0, 0, 1],
-        [0, 0, 1, 0],
-        [0, 0, 1, 1],
-        [0, 1, 0, 0],
-        [0, 1, 0, 1],
-        [0, 1, 1, 0],
-        [0, 1, 1, 1],
-    ])
+    def test_iter(self, sample_loader_patched):
+        assert [i for i in sample_loader_patched] == self.patch_samples
 
-    @pytest.fixture
-    def sample_loader(self, monkeypatch):
+    def test_slice(self, sample_loader_patched):
+        assert [i for i in sample_loader_patched[1, 4, 2]] == [
+            self.patch_samples[1],
+            self.patch_samples[3],
+        ]
+        assert [i for i in sample_loader_patched[slice(1, 4, 2)]] == [
+            self.patch_samples[1],
+            self.patch_samples[3],
+        ]
 
-        def mock_init(_self):
-            _self.dat = self.patch_samples
-            _self.n_samples, _self.modes = _self.dat.shape
-            _self.dat_filename = _self.n_max = _self.n_mean = _self.threshold = None
-
-        with monkeypatch.context() as m:
-            m.setattr(data.SampleLoader, "__init__", mock_init)
-            yield data.SampleLoader()
-
-    def test_counts_ax0(self, sample_loader):
-        print("hi")
-        '''c = sample_loader.counts(0)
-        assert len(c) == sample_loader.modes
-        assert min(c) >= 0'''
-
-    '''def test_counts_ax1(self, sample_loader):
-        c = sample_loader.counts(1)
-        assert len(c) == sample_loader.n_samples
-        assert min(c) >= 0'''
-
-
+    def test_negative_getitem(self, sample_loader_patched):
+        assert sample_loader_patched[-1] == self.patch_samples[-1]
