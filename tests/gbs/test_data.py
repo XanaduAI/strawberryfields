@@ -54,7 +54,8 @@ class TestDatasets:
 
         def mock_init(_self):
             """Replacement ``__init__`` for all the datasets in ``DATASETS_LIST``"""
-            _self.dat = scipy.sparse.csr_matrix(self.patch_samples)
+            # pylint: disable=protected-access
+            _self._data = scipy.sparse.csr_matrix(self.patch_samples)
             _self.adj = np.ones((4, 4))
             _self.n_samples, _self.modes = 10, 4
 
@@ -64,7 +65,8 @@ class TestDatasets:
 
     def test_filename(self, dataset):
         """Test if filename is valid string for each dataset"""
-        assert isinstance(dataset._dat_filename, str)
+        # pylint: disable=protected-access
+        assert isinstance(dataset._data_filename, str)
 
     def test_n_mean(self, dataset):
         """Test if mean photon number is valid float or int for each dataset"""

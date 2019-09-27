@@ -19,31 +19,63 @@ GBS Datasets
 
 .. currentmodule:: strawberryfields.gbs.data
 
-This module provides access to pre-calculated datasets of GBS samples generated from a range of
-input graphs. Each dataset corresponds to a set of samples generated from a fixed graph with
-corresponding values for:
+This module provides access to pre-calculated datasets of simulated GBS samples generated from a
+range of input graphs. Each dataset corresponds to a set of samples generated from a fixed graph
+with corresponding values for:
 
 - ``n_mean``: mean number of photons in the GBS device
 - ``n_max``: maximum number of photons allowed in any sample
 -  ``threshold``: flag to indicate whether samples are generated with threshold detection or
    with photon number resolving detectors.
+- ``n_samples``: total number of samples in dataset
+- ``modes``: number of modes in GBS device or, equivalently, number of nodes in graph
 
-Datasets are available as classes. The following are provided:
+Datasets are available as classes. The following graphs and datasets are provided:
 
 - **Planted graph**: A 30-node graph with a dense 10-node subgraph planted inside
   :cite:`arrazola2018using`.
 
+  .. image:: ../../_static/planted.png
+        :align: center
+        :width: 300px
 
-Each dataset has the methods:
+  Provided by the :class:`Planted` Dataset with attributes ``n_mean = 6``, ``n_max = 14``,
+  ``threshold = True``, ``n_samples = 50000``, ``modes = 30``.
 
-.. currentmodule:: strawberryfields.gbs.data.Dataset
+Loading data
+^^^^^^^^^^^^
 
-.. autosummary::
-    n_mean
-    n_max
-    threshold
-    counts
+We use the :class:`Planted` class as an example to show how to interact with the datasets. Datasets
+can be loaded by running:
+
+>>> data = Planted()
+
+Accessing samples from the dataset is then simple:
+
+>>> i = 3
+>>> sample_i = data[i]
+>>> samples = data[:10]
+
+Datasets also contain metadata relevant to the GBS setup:
+
+>>> data.n_mean
+6
+
+>>> data.n_samples
+50000
+
+Counting photons or clicks in each sample is available using the :meth:`Dataset.counts` method:
+
+>>> data.counts()
+[2, 0, 8, 11, ... , 6]
+
+Code details
+^^^^^^^^^^^^
+
+The :class:`Dataset` class provides the base functionality from which all datasets such as
+:class:`Planted` inherit.
 """
+# pylint: disable=unnecessary-pass
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
@@ -54,7 +86,19 @@ DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data") + "/
 
 
 class Dataset(metaclass=ABCMeta):
-    """Base class for loading pre-generated samples."""
+    """Base class for loading datasets of pre-generated samples.
+
+    Attributes:
+        n_mean (float): mean number of photons in the GBS device
+        n_max (float): maximum number of photons allowed in any sample. This number is set to
+            limit the computation time, any sample being simulated that exceeds ``n_max`` will be
+            ignored and cause calculation to skip to the next sample.
+        threshold (bool): flag to indicate whether samples are generated with threshold detection
+            (i.e., detectors of zero or some photons) or with photon number resolving detectors.
+        adj (array): adjacency matrix of graph from which samples were generated
+        n_samples (int): total number of samples in dataset
+        modes (int): number of modes in GBS device or, equivalently, number of nodes in graph
+    """
 
     _count = 0
 
@@ -71,9 +115,9 @@ class Dataset(metaclass=ABCMeta):
     def __init__(self):
         """Instantiating ``Dataset`` causes the ``scipy.sparse.csr_matrix`` of samples and
         ``numpy.ndarray`` adjacency matrix to be loaded."""
-        self.dat = scipy.sparse.load_npz(DATA_PATH + self._data_filename + ".npz")
+        self._data = scipy.sparse.load_npz(DATA_PATH + self._data_filename + ".npz")
         self.adj = np.load(DATA_PATH + self._data_filename + "_A.npy")
-        self.n_samples, self.modes = self.dat.shape
+        self.n_samples, self.modes = self._data.shape
 
     def __iter__(self):
         return self
@@ -87,7 +131,7 @@ class Dataset(metaclass=ABCMeta):
 
     def _elem(self, i):
         """Access the i-th element of the sparse array and output as a list."""
-        return list(self.dat[i].toarray()[0])
+        return list(self._data[i].toarray()[0])
 
     def __getitem__(self, key):
         if isinstance(key, (slice, tuple)):
@@ -105,7 +149,7 @@ class Dataset(metaclass=ABCMeta):
         """Count number of photons or clicks.
 
         Counts number of photons/clicks in each sample (``axis==1``) or number of photons/clicks
-        in each mode compounded over all samples (``axis=0``).
+        in each mode compounded over all samples (``axis==0``).
 
         Args:
             axis (int): axis to perform count
@@ -113,20 +157,19 @@ class Dataset(metaclass=ABCMeta):
         Returns:
             list: counts from samples
         """
-        return np.array(self.dat.sum(axis)).flatten().tolist()
+        return np.array(self._data.sum(axis)).flatten().tolist()
 
     @property
     @abstractmethod
     def n_mean(self) -> float:
-        """float: Mean number of photons in the GBS device."""
+        """float: mean number of photons in the GBS device"""
         pass
 
     @property
     @abstractmethod
     def n_max(self) -> float:
-        """float: Maximum number of photons allowed in any sample.
-
-        This number is set to limit the computation time, any sample being simulated that exceeds ``n_max`` will be ignored
+        """float: maximum number of photons allowed in any sample. This number is set to limit
+        the computation time, any sample being simulated that exceeds ``n_max`` will be ignored
         and cause calculation to skip to the next sample."""
         pass
 
@@ -139,6 +182,16 @@ class Dataset(metaclass=ABCMeta):
 
 
 class Planted(Dataset):
+    """Dataset of samples generated from GBS with an embedded 30-node graph containing a dense
+    10-node subgraph planted inside :cite:`arrazola2018using`.
+
+    Attributes:
+        n_mean = 6
+        n_max = 14
+        threshold = True
+        n_samples = 50000
+        modes = 30
+    """
 
     _data_filename = "planted"
     n_mean = 6
