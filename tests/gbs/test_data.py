@@ -17,7 +17,7 @@ Unit tests for strawberryfields.gbs.data
 # pylint: disable=no-self-use
 import numpy as np
 import pytest
-import scipy.sparse
+import scipy
 
 from strawberryfields.gbs import data
 
@@ -64,7 +64,7 @@ class TestDatasets:
 
     def test_filename(self, dataset):
         """Test if filename is valid string for each dataset"""
-        assert isinstance(dataset.dat_filename, str)
+        assert isinstance(dataset._dat_filename, str)
 
     def test_n_mean(self, dataset):
         """Test if mean photon number is valid float or int for each dataset"""

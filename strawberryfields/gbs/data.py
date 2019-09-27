@@ -11,15 +11,44 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
+r"""
 GBS Datasets
 ============
+
+**Module name:** :mod:`strawberryfields.gbs.data`
+
+.. currentmodule:: strawberryfields.gbs.data
+
+This module provides access to pre-calculated datasets of GBS samples generated from a range of
+input graphs. Each dataset corresponds to a set of samples generated from a fixed graph with
+corresponding values for:
+
+- ``n_mean``: mean number of photons in the GBS device
+- ``n_max``: maximum number of photons allowed in any sample
+-  ``threshold``: flag to indicate whether samples are generated with threshold detection or
+   with photon number resolving detectors.
+
+Datasets are available as classes. The following are provided:
+
+- **Planted graph**: A 30-node graph with a dense 10-node subgraph planted inside
+  :cite:`arrazola2018using`.
+
+
+Each dataset has the methods:
+
+.. currentmodule:: strawberryfields.gbs.data.Dataset
+
+.. autosummary::
+    n_mean
+    n_max
+    threshold
+    counts
 """
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
 import pkg_resources
-import scipy.sparse
+import scipy
 
 DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data") + "/"
 
@@ -31,12 +60,19 @@ class Dataset(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def dat_filename(self) -> str:
+    def _data_filename(self) -> str:
+        """Name of files stored in ``./data/``. Samples should be provided as a
+        ``scipy.sparse.csr_matrix`` saved in ``.npz`` format and the corresponding adjacency
+        matrix should be provided as a ``.npy`` binary. For ``_data_filename = "example"``,
+        the corresponding samples should be stored as ``./data/example.npz`` and the adjacency
+        matrix as ``./data/example_A.npy``."""
         pass
 
     def __init__(self):
-        self.dat = scipy.sparse.load_npz(DATA_PATH + self.dat_filename + ".npz")
-        self.adj = np.load(DATA_PATH + self.dat_filename + "_A.npy")
+        """Instantiating ``Dataset`` causes the ``scipy.sparse.csr_matrix`` of samples and
+        ``numpy.ndarray`` adjacency matrix to be loaded."""
+        self.dat = scipy.sparse.load_npz(DATA_PATH + self._data_filename + ".npz")
+        self.adj = np.load(DATA_PATH + self._data_filename + "_A.npy")
         self.n_samples, self.modes = self.dat.shape
 
     def __iter__(self):
@@ -50,6 +86,7 @@ class Dataset(metaclass=ABCMeta):
         raise StopIteration
 
     def _elem(self, i):
+        """Access the i-th element of the sparse array and output as a list."""
         return list(self.dat[i].toarray()[0])
 
     def __getitem__(self, key):
@@ -81,22 +118,29 @@ class Dataset(metaclass=ABCMeta):
     @property
     @abstractmethod
     def n_mean(self) -> float:
+        """float: Mean number of photons in the GBS device."""
         pass
 
     @property
     @abstractmethod
     def n_max(self) -> float:
+        """float: Maximum number of photons allowed in any sample.
+
+        This number is set to limit the computation time, any sample being simulated that exceeds ``n_max`` will be ignored
+        and cause calculation to skip to the next sample."""
         pass
 
     @property
     @abstractmethod
     def threshold(self) -> bool:
+        """bool: flag to indicate whether samples are generated with threshold detection (i.e.,
+        detectors of zero or some photons) or with photon number resolving detectors."""
         pass
 
 
 class Planted(Dataset):
 
-    dat_filename = "planted"
+    _data_filename = "planted"
     n_mean = 6
     n_max = 14
     threshold = True
