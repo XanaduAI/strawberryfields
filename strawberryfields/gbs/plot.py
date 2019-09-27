@@ -36,7 +36,7 @@ import networkx as nx
 import plotly.graph_objects as go
 
 
-def _node_coords(graph: nx.Graph, l: dict) -> Tuple:
+def _node_coords(graph: nx.Graph, l: dict) -> dict:
     """Provides the coordinates for the graph nodes when given an input graph layout.
 
     Args:
