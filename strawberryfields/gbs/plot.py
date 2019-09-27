@@ -19,11 +19,12 @@ Plotting and visualization
 
 .. currentmodule:: strawberryfields.gbs.plot
 
-This module provides functionality for visualizing GBS outputs as graphs and point processes.
+This module provides functionality for visualizing graphs, subgraphs, and point processes. Graphs
+are plotted using the Kamada-Kawai layout with an aspect ratio of 1:1. The module uses a custom
+Strawberry Fields colour scheme. The standard scheme for graphs uses green nodes and grey edges,
+whereas the scheme for subgraphs uses red nodes and edges.
 
 .. autosummary::
-    _node_coords
-    edge_coords
     plot
     plot_subgraph
 
@@ -37,7 +38,7 @@ import plotly.graph_objects as go
 
 
 def _node_coords(graph: nx.Graph, l: dict) -> Tuple:
-    """ Provides the coordinates for the graph nodes when given an input graph layout.
+    """Converts coordinates for the graph edges for plotting purposes.
 
     Args:
         graph (nx.Graph): input graph
@@ -56,8 +57,8 @@ def _node_coords(graph: nx.Graph, l: dict) -> Tuple:
     return {"x": n_x, "y": n_y}
 
 
-def edge_coords(graph: nx.Graph, l: dict) -> dict:
-    """ Provides the coordinates for the graph edges when given an input graph layout.
+def _edge_coords(graph: nx.Graph, l: dict) -> dict:
+    """Converts coordinates for the graph edges for plotting purposes.
 
         Args:
             graph (nx.Graph): input graph
@@ -108,12 +109,9 @@ subgraph_node_size = 16
 
 
 def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) -> None:
-    """ Creates a plot.ly plot of the input graph.
+    """ Creates a plotly plot of the input graph.
 
-    The graph layout is fixed to be the Kamada-Kawai layout with an aspect ratio of 1:1. The
-    function can plot just the input graph or the graph with a specified subgraph highlighted.
-    The function uses the standard colour theme of green nodes, grey edges, and red highlighted
-    subgraph.
+    This function can plot just the input graph or the graph with a specified subgraph highlighted.
 
     **Example usage**:
         >>> graph = nx.complete_graph(10)
@@ -126,7 +124,7 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
             size (dict): size of the plot
 
         Returns:
-             plot.ly graph object
+             Figure: Plotly figure for graph and optionally highlighted subgraph
         """
 
     s = graph.subgraph(subgraph)
@@ -140,7 +138,7 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
     )
 
     g_edges = go.Scatter(
-        **edge_coords(graph, l),
+        **_edge_coords(graph, l),
         line=dict(width=1, color=graph_edge_colour),
         hoverinfo='none',
         mode='lines'
@@ -160,7 +158,7 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
     if subgraph:
 
         s_edges = go.Scatter(
-            **edge_coords(s, l),
+            **_edge_coords(s, l),
             line=dict(width=2, color=subgraph_edge_colour),
             hoverinfo='none',
             mode='lines'
@@ -184,29 +182,26 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
 
 
 def plot_subgraph(subgraph: nx.Graph, size: float = 500) -> None:
-    """ Creates a plot.ly plot of the input subgraph.
+    """ Creates a plotly plot of the input subgraph.
 
-        The graph layout is fixed to be the Kamada-Kawai layout with an aspect ratio of 1:1.
-        This function uses the subgraph colour theme of red nodes and edges.
+    **Example usage**:
+    >>> graph = nx.complete_graph(10)
+    >>> subgraph = graph.subgraph([0, 1, 2, 3])
+    >>> fig = plot_subgraph(subgraph)
+    >>> fig.show()
 
-        **Example usage**:
-        >>> graph = nx.complete_graph(10)
-        >>> subgraph = graph.subgraph([0, 1, 2, 3])
-        >>> fig = plot_subgraph(subgraph)
-        >>> fig.show()
+        Args:
+            subgraph (nx.Graph): input subgraph
+            size (dict): size of the plot
 
-            Args:
-                subgraph (nx.Graph): input subgraph
-                size (dict): size of the plot
-
-            Returns:
-                 plot.ly graph object
-            """
+        Returns:
+             Figure: Plotly figure for subgraph
+        """
 
     l = nx.kamada_kawai_layout(subgraph)
 
     g_edges = go.Scatter(
-        **edge_coords(subgraph, l),
+        **_edge_coords(subgraph, l),
         line=dict(width=1.5, color=subgraph_edge_colour),
         hoverinfo='none',
         mode='lines'
