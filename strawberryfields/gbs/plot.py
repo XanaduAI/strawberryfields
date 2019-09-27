@@ -122,7 +122,7 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
 
         Args:
             graph (nx.Graph): input graph
-            subgraph (list): list of nodes comprising the subgraph to highlight
+            subgraph (list): optional list of nodes comprising the subgraph to highlight
             size (dict): size of the plot
 
         Returns:
