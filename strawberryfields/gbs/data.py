@@ -24,10 +24,14 @@ range of input graphs. Each dataset corresponds to a set of samples generated fr
 with corresponding values for:
 
 - ``n_mean``: mean number of photons in the GBS device
+
 - ``n_max``: maximum number of photons allowed in any sample
+
 -  ``threshold``: flag to indicate whether samples are generated with threshold detection or
    with photon number resolving detectors.
+
 - ``n_samples``: total number of samples in dataset
+
 - ``modes``: number of modes in GBS device or, equivalently, number of nodes in graph
 
 Datasets are available as classes. The following graphs and datasets are provided:
@@ -52,8 +56,7 @@ can be loaded by running:
 
 Accessing samples from the dataset is then simple:
 
->>> i = 3
->>> sample_i = data[i]
+>>> sample_3 = data[3]
 >>> samples = data[:10]
 
 Datasets also contain metadata relevant to the GBS setup:
@@ -64,7 +67,7 @@ Datasets also contain metadata relevant to the GBS setup:
 >>> data.n_samples
 50000
 
-Counting photons or clicks in each sample is available using the :meth:`Dataset.counts` method:
+The number of photons or clicks in each sample is available using the :meth:`Dataset.counts` method:
 
 >>> data.counts()
 [2, 0, 8, 11, ... , 6]
@@ -78,8 +81,8 @@ The :class:`Dataset` class provides the base functionality from which all datase
 # pylint: disable=unnecessary-pass
 from abc import ABCMeta, abstractmethod
 
-import pkg_resources
 import numpy as np
+import pkg_resources
 import scipy
 
 DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data") + "/"
