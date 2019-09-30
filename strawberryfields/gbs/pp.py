@@ -30,13 +30,10 @@ Code details
 
 import numpy as np
 from scipy.spatial.distance import cdist
-from thewalrus.csamples import (
-    rescale_adjacency_matrix_thermal,
-    generate_thermal_samples
-)
 
-def rbfkernel (R, sigma):
-    """This function generates a radial basis function (RBF) kernel matrix.
+
+def rbfkernel(R, sigma):
+    r"""This function generates a radial basis function (RBF) kernel matrix.
 
     The elements of the RBF kernel are computed as:
     .. math::
@@ -63,5 +60,5 @@ def rbfkernel (R, sigma):
     Returns:
         K (array): the kernel matrix.
     """
-    K = np.exp(-(cdist(R, R))**2/2/sigma**2)
-    return (K)
+    K = np.exp(-(cdist(R, R)) ** 2 / 2 / sigma ** 2)
+    return K
