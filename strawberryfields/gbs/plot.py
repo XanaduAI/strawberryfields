@@ -45,7 +45,7 @@ def _node_coords(graph: nx.Graph, l: dict) -> Tuple:
         l (dict): dictionary of nodes and their respective coordinates
 
     Returns:
-         Tuple: x and y coordinates for each node
+         Dict[str, list]: lists of x and y coordinates accessed as keys of a dictionary
     """
     n_x = []
     n_y = []
@@ -62,7 +62,7 @@ def _edge_coords(graph: nx.Graph, l: dict) -> dict:
 
         Args:
             graph (nx.Graph): input graph
-            l (dict): dictionary of edges and their respective coordinates
+            l (dict): dictionary of nodes and their respective coordinates
 
         Returns:
              dict: x and y coordinates for beginning and end of each edge. `None` is placed as a
