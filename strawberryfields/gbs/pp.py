@@ -22,8 +22,10 @@ This module contains functions for point process utilization.
 
 Summary
 -------
+
 .. autosummary::
     rbskernel
+
 Code details
 ^^^^^^^^^^^^
 """
