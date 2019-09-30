@@ -31,7 +31,7 @@ whereas the scheme for subgraphs uses red nodes and edges.
 Code details
 ^^^^^^^^^^^^
 """
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 import networkx as nx
 
@@ -103,23 +103,29 @@ subgraph_node_size = 16
 
 
 def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) -> None:
-    """ Creates a plotly plot of the input graph.
+    """Creates a plotly plot of the input graph.
 
     This function can plot just the input graph or the graph with a specified subgraph highlighted.
 
     **Example usage**:
-        >>> graph = nx.complete_graph(10)
-        >>> fig = plot(graph, [0, 1, 2, 3])
-        >>> fig.show()
 
-        Args:
-            graph (nx.Graph): input graph
-            subgraph (list): optional list of nodes comprising the subgraph to highlight
-            size (float): size of the plot in pixels, rendered in a square layout
+    >>> graph = nx.complete_graph(10)
+    >>> fig = plot(graph, [0, 1, 2, 3])
+    >>> fig.show()
 
-        Returns:
-             Figure: Plotly figure for graph and optionally highlighted subgraph
-        """
+    .. image:: ../../_static/complete_graph.png
+       :width: 40%
+       :align: center
+       :target: javascript:void(0);
+
+    Args:
+        graph (nx.Graph): input graph
+        subgraph (list): optional list of nodes comprising the subgraph to highlight
+        size (float): size of the plot in pixels, rendered in a square layout
+
+    Returns:
+         Figure: Plotly figure for graph and optionally highlighted subgraph
+    """
     try:
         import plotly.graph_objects as go
     except ImportError:
@@ -135,14 +141,14 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
         **_node_coords(graph, l),
         mode="markers",
         hoverinfo="text",
-        marker=dict(color=graph_node_colour, size=graph_node_size, line_width=2)
+        marker=dict(color=graph_node_colour, size=graph_node_size, line_width=2),
     )
 
     g_edges = go.Scatter(
         **_edge_coords(graph, l),
         line=dict(width=1, color=graph_edge_colour),
         hoverinfo="none",
-        mode="lines"
+        mode="lines",
     )
 
     g_nodes.text = [str(i) for i in graph.nodes()]
@@ -164,14 +170,14 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
             **_edge_coords(s, l),
             line=dict(width=2, color=subgraph_edge_colour),
             hoverinfo="none",
-            mode="lines"
+            mode="lines",
         )
 
         s_nodes = go.Scatter(
             **_node_coords(s, l),
             mode="markers",
             hoverinfo="text",
-            marker=dict(color=subgraph_node_colour, size=subgraph_node_size, line_width=2)
+            marker=dict(color=subgraph_node_colour, size=subgraph_node_size, line_width=2),
         )
 
         s_nodes.text = [str(i) for i in s.nodes()]
@@ -185,21 +191,27 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
 
 
 def plot_subgraph(subgraph: nx.Graph, size: float = 500) -> None:
-    """ Creates a plotly plot of the input subgraph.
+    """Creates a plotly plot of the input subgraph.
 
     **Example usage**:
+
     >>> graph = nx.complete_graph(10)
     >>> subgraph = graph.subgraph([0, 1, 2, 3])
     >>> fig = plot_subgraph(subgraph)
     >>> fig.show()
 
-        Args:
-            subgraph (nx.Graph): input subgraph
-            size (dict): size of the plot
+    .. image:: ../../_static/complete_subgraph.png
+       :width: 40%
+       :align: center
+       :target: javascript:void(0);
 
-        Returns:
-             Figure: Plotly figure for subgraph
-        """
+    Args:
+        subgraph (nx.Graph): input subgraph
+        size (dict): size of the plot
+
+    Returns:
+         Figure: Plotly figure for subgraph
+    """
     try:
         import plotly.graph_objects as go
     except ImportError:
@@ -214,14 +226,14 @@ def plot_subgraph(subgraph: nx.Graph, size: float = 500) -> None:
         **_edge_coords(subgraph, l),
         line=dict(width=1.5, color=subgraph_edge_colour),
         hoverinfo="none",
-        mode="lines"
+        mode="lines",
     )
 
     g_nodes = go.Scatter(
         **_node_coords(subgraph, l),
         mode="markers",
         hoverinfo="text",
-        marker=dict(color=subgraph_node_colour, size=graph_node_size, line_width=2)
+        marker=dict(color=subgraph_node_colour, size=graph_node_size, line_width=2),
     )
 
     g_nodes.text = [str(i) for i in subgraph.nodes()]
