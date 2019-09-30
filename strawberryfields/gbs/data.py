@@ -88,8 +88,8 @@ Code details
 # pylint: disable=unnecessary-pass
 from abc import ABCMeta, abstractmethod
 
-import numpy as np
 import pkg_resources
+import numpy as np
 import scipy
 
 DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data") + "/"
@@ -117,11 +117,10 @@ class Dataset(metaclass=ABCMeta):
     def _data_filename(self) -> str:
         """Base name of files containing the sample data stored in the ``./data/`` directory.
         
-        Samples should be provided as a
-        ``scipy.sparse.csr_matrix`` saved in ``.npz`` format and the corresponding adjacency
-        matrix should be provided as a ``.npy`` binary. For ``_data_filename = "example"``,
-        the corresponding samples should be stored as ``./data/example.npz`` and the adjacency
-        matrix as ``./data/example_A.npy``."""
+        Samples should be provided as a ``scipy.sparse.csr_matrix`` saved in ``.npz`` format and
+        the corresponding adjacency matrix should be provided as a ``.npy`` binary. For
+        ``_data_filename = "example"``, the corresponding samples should be stored as
+        ``./data/example.npz`` and the adjacency matrix as ``./data/example_A.npy``."""
         pass
 
     def __init__(self):
