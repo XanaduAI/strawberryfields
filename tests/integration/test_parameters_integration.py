@@ -11,8 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Integration tests to make sure parameters are correctly evaluated
-before passing them to the backends"""
+"""Integration tests for the parameters.py module."""
 
 import inspect
 import itertools
@@ -35,6 +34,7 @@ scalar_arg_preparations = (
     ops.Catstate,
 )
 
+# Operation subclasses to be tested
 testset = ops.one_args_gates + ops.two_args_gates + ops.channels + scalar_arg_preparations
 
 
@@ -70,7 +70,30 @@ def test_free_parameters(setup_eng, tol):
     assert np.all(eng.backend.is_vacuum(tol))
 
 
-def test_parameters_with_operations(batch_size, setup_eng):
+@pytest.fixture(scope="function")
+def eng_prog_params(batch_size, setup_eng):
+    """Engine and Program instances, and an attached set of Operation parameters."""
+    def func1(x):
+        return abs(2 * x ** 2 - 3 * x + 1)
+
+    def func2(x, y):
+        return abs(2 * x * y - y ** 2 + 0.5)
+
+    eng, prog = setup_eng(2)
+    r = prog.register
+
+    # fixed and different types of measured parameters
+    # (note that some Operations expect nonnegative parameter values)
+    params = [0.14, r[0].par, func1(r[0].par), func2(r[0].par, r[1].par)]
+    if batch_size is not None:
+        # test batched input
+        params.append(np.random.uniform(size=(batch_size,)))
+
+    return eng, prog, params
+
+
+@pytest.mark.parametrize("G", testset)
+def test_parameters_with_operations(eng_prog_params, G):
     """Test all combinations of different types of Parameters with different Operation subclasses.
 
     This test is successful if no exceptions are raised.
@@ -78,28 +101,14 @@ def test_parameters_with_operations(batch_size, setup_eng):
     Some operation/backend combinations forbidden by the CircuitSpecs instance of the backend.
     We catch these exceptions and convert them into warnings.
     """
-    eng, prog = setup_eng(2)
-    r = prog.register
-
-    def func1(x):
-        return abs(2 * x ** 2 - 3 * x + 1)
-
-    def func2(x, y):
-        return abs(2 * x * y - y ** 2 + 0.5)
-
     kwargs = {}
-
-    # test fixed and measured parameters
-    # (note that some Operations expect nonnegative parameter values)
-    params = [0.14, r[0].par, func1(r[0].par), func2(r[0].par, r[1].par)]
-    if batch_size is not None:
-        # test batched input
-        params.append(np.random.uniform(size=(batch_size,)))
+    eng, prog, params = eng_prog_params
 
     def check(G, par):
         """Check an Operation/Parameters combination."""
         # construct the op using the given tuple of Parameters as args
         G = G(*par)
+        assert isinstance(G, ops.Operation)
         with prog.context as r:
             # fake a measurement for speed
             r[0].val = 0.1
@@ -120,17 +129,11 @@ def test_parameters_with_operations(batch_size, setup_eng):
         prog.circuit = []
         eng.reset()
 
-    for G in testset:
-        print(G)
-        sig = inspect.signature(G.__init__)
-        n_args = len(sig.parameters) - 1  # number of parameters __init__ takes, minus self
-        if n_args < 1:
-            warnings.warn(
-                "Unexpected number of args ({}) for {}, check the testset.".format(n_args, G)
-            )
-
-        # shortcut, only test cartesian products up to two parameter types
-        n_args = min(n_args, 2)
-        # check all combinations of Parameter types
-        for p in itertools.product(params, repeat=n_args):
-            check(G, p)
+    sig = inspect.signature(G.__init__)
+    n_args = len(sig.parameters) - 1  # number of parameters __init__ takes, minus self
+    assert n_args >= 1
+    # shortcut, only test cartesian products up to two parameter types
+    n_args = min(n_args, 2)
+    # check all combinations of Parameter types
+    for p in itertools.product(params, repeat=n_args):
+        check(G, p)
