@@ -64,7 +64,7 @@ Datasets also contain metadata relevant to the GBS setup:
 >>> data.n_mean
 6
 
->>> data.n_samples
+>>> len(samples)
 50000
 
 The number of photons or clicks in each sample is available using the :meth:`Dataset.counts` method:
@@ -147,6 +147,9 @@ class Dataset(metaclass=ABCMeta):
             key += self.n_samples
 
         return self._elem(key)
+
+    def __len__(self):
+        return self.n_samples
 
     def counts(self, axis: int = 1) -> list:
         """Count number of photons or clicks.

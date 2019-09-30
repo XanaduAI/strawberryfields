@@ -110,3 +110,7 @@ class TestDatasets:
     def test_negative_getitem(self, dataset_patched):
         """Test if dataset class allows negative indices"""
         assert dataset_patched[-1] == self.patch_samples[-1]
+
+    def test_len(self, dataset):
+        """Test if dataset's ``len`` is equal to the ``n_samples`` attribute."""
+        assert len(dataset) == dataset.n_samples
