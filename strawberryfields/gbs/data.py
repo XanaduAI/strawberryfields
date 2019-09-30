@@ -108,6 +108,8 @@ class Dataset(metaclass=ABCMeta):
         adj (array): adjacency matrix of graph from which samples were generated
         n_samples (int): total number of samples in dataset
         modes (int): number of modes in GBS device or, equivalently, number of nodes in graph
+        data (sparse): raw data of samples from GBS as a `csr sparse array
+            <https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html>`__.
     """
 
     _count = 0
@@ -123,9 +125,9 @@ class Dataset(metaclass=ABCMeta):
         pass
 
     def __init__(self):
-        self._data = scipy.sparse.load_npz(DATA_PATH + self._data_filename + ".npz")
+        self.data = scipy.sparse.load_npz(DATA_PATH + self._data_filename + ".npz")
         self.adj = np.load(DATA_PATH + self._data_filename + "_A.npy")
-        self.n_samples, self.modes = self._data.shape
+        self.n_samples, self.modes = self.data.shape
 
     def __iter__(self):
         return self
@@ -139,7 +141,7 @@ class Dataset(metaclass=ABCMeta):
 
     def _elem(self, i):
         """Access the i-th element of the sparse array and output as a list."""
-        return list(self._data[i].toarray()[0])
+        return list(self.data[i].toarray()[0])
 
     def __getitem__(self, key):
         if isinstance(key, (slice, tuple)):
@@ -168,7 +170,7 @@ class Dataset(metaclass=ABCMeta):
         Returns:
             list: counts from samples
         """
-        return np.array(self._data.sum(axis)).flatten().tolist()
+        return np.array(self.data.sum(axis)).flatten().tolist()
 
     # pylint: disable=missing-docstring
     @property
