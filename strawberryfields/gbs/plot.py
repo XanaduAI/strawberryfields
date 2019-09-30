@@ -34,7 +34,6 @@ Code details
 from typing import Tuple, Optional
 
 import networkx as nx
-import plotly.graph_objects as go
 
 
 def _node_coords(graph: nx.Graph, l: dict) -> Tuple:
@@ -121,6 +120,13 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
         Returns:
              Figure: Plotly figure for graph and optionally highlighted subgraph
         """
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise ImportError("Plotly required for using plot()")
+    except RuntimeError:
+        print("Plotly unable to open display")
+        raise
 
     s = graph.subgraph(subgraph)
     l = nx.kamada_kawai_layout(graph)
@@ -194,6 +200,13 @@ def plot_subgraph(subgraph: nx.Graph, size: float = 500) -> None:
         Returns:
              Figure: Plotly figure for subgraph
         """
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise ImportError("Plotly required for using plot_subgraph()")
+    except RuntimeError:
+        print("Plotly unable to open display")
+        raise
 
     l = nx.kamada_kawai_layout(subgraph)
 
