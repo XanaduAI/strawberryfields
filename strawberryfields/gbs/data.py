@@ -72,11 +72,18 @@ The number of photons or clicks in each sample is available using the :meth:`Dat
 >>> data.counts()
 [2, 0, 8, 11, ... , 6]
 
-Code details
-^^^^^^^^^^^^
+Datasets
+^^^^^^^^
 
 The :class:`Dataset` class provides the base functionality from which all datasets such as
 :class:`Planted` inherit.
+
+.. autosummary::
+    Dataset
+    Planted
+
+Code details
+^^^^^^^^^^^^
 """
 # pylint: disable=unnecessary-pass
 from abc import ABCMeta, abstractmethod
@@ -116,8 +123,6 @@ class Dataset(metaclass=ABCMeta):
         pass
 
     def __init__(self):
-        """Instantiating ``Dataset`` causes the ``scipy.sparse.csr_matrix`` of samples and
-        ``numpy.ndarray`` adjacency matrix to be loaded."""
         self._data = scipy.sparse.load_npz(DATA_PATH + self._data_filename + ".npz")
         self.adj = np.load(DATA_PATH + self._data_filename + "_A.npy")
         self.n_samples, self.modes = self._data.shape
@@ -165,25 +170,22 @@ class Dataset(metaclass=ABCMeta):
         """
         return np.array(self._data.sum(axis)).flatten().tolist()
 
+    # pylint: disable=missing-docstring
     @property
     @abstractmethod
     def n_mean(self) -> float:
-        """float: mean number of photons in the GBS device"""
         pass
 
+    # pylint: disable=missing-docstring
     @property
     @abstractmethod
     def n_max(self) -> float:
-        """float: maximum number of photons allowed in any sample. This number is set to limit
-        the computation time, any sample being simulated that exceeds ``n_max`` will be ignored
-        and cause calculation to skip to the next sample."""
         pass
 
+    # pylint: disable=missing-docstring
     @property
     @abstractmethod
     def threshold(self) -> bool:
-        """bool: flag to indicate whether samples are generated with threshold detection (i.e.,
-        detectors of zero or some photons) or with photon number resolving detectors."""
         pass
 
 
