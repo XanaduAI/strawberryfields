@@ -60,6 +60,7 @@ class TestParameter:
         q = MeasuredParameter(RegRef(0))
 
         assert not par_is_symbolic(r)
+        assert par_is_symbolic(pf.sin(r))
         assert par_is_symbolic(q)
         assert par_is_symbolic(p)
         assert par_is_symbolic(pf.sin(p))
@@ -84,7 +85,7 @@ class TestParameter:
         a = np.array([[0.1, 3, 0], [0.3, 2, 0], [1, 2, 4]])
         assert a.dtype != object
         assert not par_is_symbolic(a)
-
+        assert par_is_symbolic(pf.sin(a))
 
     def test_par_regref_deps(self):
         """RegRef dependencies of parameters."""
@@ -130,6 +131,26 @@ class TestParameter:
         assert str(0.1234567 * d) == '0.1234567*x'
         assert str(np.array([0, 1, -3, 0.987654]) * d) == '[0 1.0*x -3.0*x 0.987654*x]'
         assert str(pf.exp(1 + c) / d ** 2) == 'exp(q[1].par + 1)/x**2'
+
+    def test_par_functions_with_arrays(self):
+        """Parameter functions with array arguments."""
+        a = np.random.rand(2, 2)
+        b = np.random.rand(2, 3)
+        c = np.random.rand(2)
+        d = np.random.rand(2, 2)
+
+        with pytest.raises(ValueError, match="all the arguments must be arrays of the same shape"):
+            pf.beta(a, b)
+        with pytest.raises(ValueError, match="all the arguments must be arrays of the same shape"):
+            pf.beta(a, 1)
+        with pytest.raises(ValueError, match="all the arguments must be arrays of the same shape"):
+            pf.beta(1, a)
+        with pytest.raises(ValueError, match="all the arguments must be arrays of the same shape"):
+            pf.beta(a, c)
+
+        res = pf.beta(a, d)
+        assert res.shape == a.shape
+        assert res.dtype == object
 
     @pytest.mark.parametrize("p", TEST_VALUES)
     def test_par_evaluate(self, p):

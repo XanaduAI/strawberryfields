@@ -144,13 +144,19 @@ import sympy.functions as sf
 def wrap_mathfunc(func):
     """Applies the wrapped sympy function elementwise to numpy arrays.
 
-    Required because the sympy math functions cannot deal with arrays.
+    Required because the sympy math functions cannot deal with numpy arrays.
     We implement no broadcasting; if the first argument is a numpy array, we assume
     all the arguments are arrays of the same shape.
     """
     @functools.wraps(func)
     def wrapper(*args):
-        if isinstance(args[0], np.ndarray):
+        temp = [isinstance(k, np.ndarray) for k in args]
+        if any(temp):
+            if not all(temp):
+                raise ValueError('Parameter functions with array arguments: all the arguments must be arrays of the same shape.')
+            for k in args[1:]:
+                if len(k) != len(args[0]):
+                    raise ValueError('Parameter functions with array arguments: all the arguments must be arrays of the same shape.')
             # apply func elementwise, recursively, on the args
             return np.array([wrapper(*k) for k in zip(*args)])
         return func(*args)
@@ -230,7 +236,11 @@ def par_evaluate(params):
 def par_is_symbolic(p):
     """Returns True iff p is a symbolic Operation parameter instance.
 
-    An array is symbolic if any of its elements are.
+    If a parameter inherits :class:`sympy.Basic` it is symbolic.
+    An object array is symbolic if any of its elements are.
+
+    Note that :data:`parfuncs` functions applied to numerical (non-symbolic) parameters return
+    symbolic parameters.
     """
     if is_object_array(p):
         return any(par_is_symbolic(k) for k in p)
@@ -278,8 +288,6 @@ def par_str(p):
     return '{:.4g}'.format(p)  # scalar parameters
 
 
-
-#class MeasuredParameter(sympy.AtomicExpr):  # something is messed up in Sympy caching, maybe, frontend tests fail depending on their execution order
 class MeasuredParameter(sympy.Symbol):
     """Single measurement result used as an Operation parameter.
 
@@ -327,7 +335,6 @@ class MeasuredParameter(sympy.Symbol):
         if res is None:
             raise ParameterError("{}: trying to use a nonexistent measurement result (e.g., before it has been measured).".format(self))
         return res
-
 
 
 class FreeParameter(sympy.Symbol):

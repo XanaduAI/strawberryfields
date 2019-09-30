@@ -610,6 +610,8 @@ class Channel(Transformation):
     This class provides the base behaviour for non-unitary
     maps and transformations.
     """
+    # TODO decide how all Channels should treat the first parameter p[0]
+    # (see e.g. https://en.wikipedia.org/wiki/C0-semigroup), c.f. p[0] in ops.Gate
 
     def merge(self, other):
         if not self.__class__ == other.__class__:
@@ -1389,11 +1391,11 @@ class CXgate(Gate):
     def _decompose(self, reg, **kwargs):
         s = self.p[0]
         r = pf.asinh(-s/2)
-        #theta = 0.5*pf.atan2(-1.0/pf.cosh(r), -pf.tanh(r))
+        #theta = 0.5 * pf.atan2(-1.0 / pf.cosh(r), -pf.tanh(r))
         # FIXME in sympy 1.4 atan2._eval_evalf() has a bug, it does not work with Symbol._eval_evalf().
-        # This is a partial workaround for s>0. When sympy is fixed (in version 1.5?), go back to using pf.atan2.
-        # If s<0 we would need to add pi/2 to theta, but since s is symbolic at this point, it'd be complicated.
-        theta = 0.5 * pf.atan(1 / pf.sinh(r))
+        # This is a workaround. When sympy is fixed (in version 1.5?), go back to using pf.atan2.
+        # If s<0 we need to add pi/2 to theta.
+        theta = 0.5 * pf.atan(1 / pf.sinh(r)) +pf.Heaviside(-s) * np.pi/2
         return [
             Command(BSgate(theta, 0), reg),
             Command(Sgate(r, 0), reg[0]),
