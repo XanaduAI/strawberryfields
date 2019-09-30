@@ -28,11 +28,11 @@ with corresponding values for:
 - ``n_max``: maximum number of photons allowed in any sample
 
 -  ``threshold``: flag to indicate whether samples are generated with threshold detection or
-   with photon number resolving detectors.
+   with photon-number-resolving detectors.
 
-- ``n_samples``: total number of samples in dataset
+- ``n_samples``: total number of samples in the dataset
 
-- ``modes``: number of modes in GBS device or, equivalently, number of nodes in graph
+- ``modes``: number of modes in the GBS device or, equivalently, number of nodes in the graph
 
 Datasets are available as classes. The following graphs and datasets are provided:
 
@@ -101,13 +101,13 @@ class Dataset(metaclass=ABCMeta):
     Attributes:
         n_mean (float): mean number of photons in the GBS device
         n_max (float): Maximum number of photons allowed in any sample. This number is set to
-            limit the computation time, any sample being simulated that exceeds ``n_max`` will be
-            ignored and cause calculation to skip to the next sample.
+            limit the computation time: any sample being simulated that exceeds ``n_max`` will be
+            ignored and cause the calculation to skip to the next sample.
         threshold (bool): flag to indicate whether samples are generated with threshold detection
-            (i.e., detectors of zero or some photons) or with photon number resolving detectors.
-        adj (array): adjacency matrix of graph from which samples were generated
-        n_samples (int): total number of samples in dataset
-        modes (int): number of modes in GBS device or, equivalently, number of nodes in graph
+            (i.e., detectors of zero or some photons) or with photon-number-resolving detectors.
+        adj (array): adjacency matrix of the graph from which samples were generated
+        n_samples (int): total number of samples in the dataset
+        modes (int): number of modes in the GBS device or, equivalently, number of nodes in graph
         data (sparse): raw data of samples from GBS as a `csr sparse array
             <https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html>`__.
     """
