@@ -64,7 +64,7 @@ Datasets also contain metadata relevant to the GBS setup:
 >>> data.n_mean
 6
 
->>> len(samples)
+>>> len(data)
 50000
 
 The number of photons or clicks in each sample is available using the :meth:`Dataset.counts` method:

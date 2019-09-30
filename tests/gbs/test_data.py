@@ -114,3 +114,18 @@ class TestDatasets:
     def test_len(self, dataset):
         """Test if dataset's ``len`` is equal to the ``n_samples`` attribute."""
         assert len(dataset) == dataset.n_samples
+
+    def test_next(self, dataset_patched):
+        """Test if dataset correctly provides ``next`` until looped through whole dataset and
+        then raises a StopIteration."""
+        counter = 0
+        next_vals = []
+
+        while counter < 10:
+            next_vals.append(next(dataset_patched))
+            counter += 1
+
+        assert next_vals == self.patch_samples
+
+        with pytest.raises(StopIteration):
+            next(dataset_patched)
