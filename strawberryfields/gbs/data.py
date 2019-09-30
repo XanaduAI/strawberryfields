@@ -72,6 +72,8 @@ The number of photons or clicks in each sample is available using the :meth:`Dat
 >>> data.counts()
 [2, 0, 8, 11, ... , 6]
 
+For example, we see that the ``data[3]`` sample had 11 clicks.
+
 Datasets
 ^^^^^^^^
 
