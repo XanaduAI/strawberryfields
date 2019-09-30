@@ -15,18 +15,23 @@ r"""Tests for the the point process functions"""
 
 import pytest
 import numpy as np
-from strawberryfields.gbs.pp import (
-    rbfkernel
-)
+from strawberryfields.gbs.pp import rbfkernel
+
+pytestmark = pytest.mark.gbs
+
 
 def test_rbfkernel():
     r"""Tests that correctness of the kernel matrix generated for a given set of point coordinates"""
 
-    R = np.array([[0, 1],[1, 0],[0, 0],[1, 1]])
-    K = rbfkernel (R, 1.0)
-    Kref = np.array([[1.        , 0.36787944, 0.60653066, 0.60653066],
-                     [0.36787944, 1.        , 0.60653066, 0.60653066],
-                     [0.60653066, 0.60653066, 1.        , 0.36787944],
-                     [0.60653066, 0.60653066, 0.36787944, 1.        ]])
+    R = np.array([[0, 1], [1, 0], [0, 0], [1, 1]])
+    K = rbfkernel(R, 1.0)
+    Kref = np.array(
+        [
+            [1.0, 0.36787944, 0.60653066, 0.60653066],
+            [0.36787944, 1.0, 0.60653066, 0.60653066],
+            [0.60653066, 0.60653066, 1.0, 0.36787944],
+            [0.60653066, 0.60653066, 0.36787944, 1.0],
+        ]
+    )
 
     assert np.allclose(K, Kref)
