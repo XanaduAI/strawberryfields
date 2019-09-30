@@ -45,7 +45,7 @@ def _node_coords(graph: nx.Graph, l: dict) -> Tuple:
         l (dict): dictionary of nodes and their respective coordinates
 
     Returns:
-         Tuple: x and y coordinates for each node
+         Dict[str, list]: lists of x and y coordinates accessed as keys of a dictionary
     """
     n_x = []
     n_y = []
