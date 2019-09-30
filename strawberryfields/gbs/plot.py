@@ -62,7 +62,7 @@ def _edge_coords(graph: nx.Graph, l: dict) -> dict:
 
         Args:
             graph (nx.Graph): input graph
-            l (dict): dictionary of edges and their respective coordinates
+            l (dict): dictionary of nodes and their respective coordinates
 
         Returns:
              dict: x and y coordinates for beginning and end of each edge
