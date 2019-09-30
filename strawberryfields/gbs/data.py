@@ -50,7 +50,7 @@ can be loaded by running:
 
 >>> data = Planted()
 
-Accessing samples from the dataset is then simple:
+Simply use indexing and slicing to access samples from the dataset:
 
 >>> i = 3
 >>> sample_i = data[i]
@@ -90,7 +90,7 @@ class Dataset(metaclass=ABCMeta):
 
     Attributes:
         n_mean (float): mean number of photons in the GBS device
-        n_max (float): maximum number of photons allowed in any sample. This number is set to
+        n_max (float): Maximum number of photons allowed in any sample. This number is set to
             limit the computation time, any sample being simulated that exceeds ``n_max`` will be
             ignored and cause calculation to skip to the next sample.
         threshold (bool): flag to indicate whether samples are generated with threshold detection
@@ -105,7 +105,9 @@ class Dataset(metaclass=ABCMeta):
     @property
     @abstractmethod
     def _data_filename(self) -> str:
-        """Name of files stored in ``./data/``. Samples should be provided as a
+        """Base name of files containing the sample data stored in the ``./data/`` directory.
+        
+        Samples should be provided as a
         ``scipy.sparse.csr_matrix`` saved in ``.npz`` format and the corresponding adjacency
         matrix should be provided as a ``.npy`` binary. For ``_data_filename = "example"``,
         the corresponding samples should be stored as ``./data/example.npz`` and the adjacency
