@@ -65,7 +65,8 @@ def _edge_coords(graph: nx.Graph, l: dict) -> dict:
             l (dict): dictionary of edges and their respective coordinates
 
         Returns:
-             dict: x and y coordinates for beginning and end of each edge
+             dict: x and y coordinates for beginning and end of each edge. `None` is placed as a
+             separator between pairs of nodes/edges.
         """
     e_x = []
     e_y = []
@@ -87,22 +88,14 @@ def _edge_coords(graph: nx.Graph, l: dict) -> dict:
     return {"x": e_x, "y": e_y}
 
 
-web_green1 = '#84ba5b'
-web_green_light1 = '#e0edd6'
-web_green2 = '#3e9651'
-web_red1 = '#d35e60'
-web_red2 = '#cc2529'
-sf_cyan = '#3e9bb7'
-sf_cyan_light = '#6eb4c9'
-sf_lightgreen = '#daf0e9'
-sf_red = '#d35e60'
-sf_grey = '#efefef'
-light_grey = '#CDCDCD'
+GREEN = "#3e9651"
+RED = "#cc2529"
+LIGHT_GREY = "#CDCDCD"
 
-graph_node_colour = web_green2
-graph_edge_colour = light_grey
-subgraph_node_colour = web_red2
-subgraph_edge_colour = web_red2
+graph_node_colour = GREEN
+graph_edge_colour = LIGHT_GREY
+subgraph_node_colour = RED
+subgraph_edge_colour = RED
 
 graph_node_size = 14
 subgraph_node_size = 16
@@ -132,42 +125,44 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
 
     g_nodes = go.Scatter(
         **_node_coords(graph, l),
-        mode='markers',
-        hoverinfo='text',
+        mode="markers",
+        hoverinfo="text",
         marker=dict(color=graph_node_colour, size=graph_node_size, line_width=2)
     )
 
     g_edges = go.Scatter(
         **_edge_coords(graph, l),
         line=dict(width=1, color=graph_edge_colour),
-        hoverinfo='none',
-        mode='lines'
+        hoverinfo="none",
+        mode="lines"
     )
 
     g_nodes.text = [str(i) for i in graph.nodes()]
 
-    layout = go.Layout(showlegend=False, hovermode='closest',
-                       xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                       yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                       margin=dict(b=0, l=0, r=0, t=25),
-                       height=size,
-                       width=size,
-                       plot_bgcolor='#ffffff'
-                       )
+    layout = go.Layout(
+        showlegend=False,
+        hovermode="closest",
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        margin=dict(b=0, l=0, r=0, t=25),
+        height=size,
+        width=size,
+        plot_bgcolor="#ffffff",
+    )
 
     if subgraph:
 
         s_edges = go.Scatter(
             **_edge_coords(s, l),
             line=dict(width=2, color=subgraph_edge_colour),
-            hoverinfo='none',
-            mode='lines'
+            hoverinfo="none",
+            mode="lines"
         )
 
         s_nodes = go.Scatter(
             **_node_coords(s, l),
-            mode='markers',
-            hoverinfo='text',
+            mode="markers",
+            hoverinfo="text",
             marker=dict(color=subgraph_node_colour, size=subgraph_node_size, line_width=2)
         )
 
@@ -203,27 +198,29 @@ def plot_subgraph(subgraph: nx.Graph, size: float = 500) -> None:
     g_edges = go.Scatter(
         **_edge_coords(subgraph, l),
         line=dict(width=1.5, color=subgraph_edge_colour),
-        hoverinfo='none',
-        mode='lines'
+        hoverinfo="none",
+        mode="lines"
     )
 
     g_nodes = go.Scatter(
         **_node_coords(subgraph, l),
-        mode='markers',
-        hoverinfo='text',
+        mode="markers",
+        hoverinfo="text",
         marker=dict(color=subgraph_node_colour, size=graph_node_size, line_width=2)
     )
 
     g_nodes.text = [str(i) for i in subgraph.nodes()]
 
-    layout = go.Layout(showlegend=False, hovermode='closest',
-                       xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                       yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                       margin=dict(b=0, l=0, r=0, t=25),
-                       height=size,
-                       width=size,
-                       plot_bgcolor='#ffffff'
-                      )
+    layout = go.Layout(
+        showlegend=False,
+        hovermode="closest",
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        margin=dict(b=0, l=0, r=0, t=25),
+        height=size,
+        width=size,
+        plot_bgcolor="#ffffff",
+    )
 
     f = go.Figure(data=[g_edges, g_nodes], layout=layout)
 
