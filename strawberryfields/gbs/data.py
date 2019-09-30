@@ -116,7 +116,6 @@ class Dataset(metaclass=ABCMeta):
     @abstractmethod
     def _data_filename(self) -> str:
         """Base name of files containing the sample data stored in the ``./data/`` directory.
-        
         Samples should be provided as a ``scipy.sparse.csr_matrix`` saved in ``.npz`` format and
         the corresponding adjacency matrix should be provided as a ``.npy`` binary. For
         ``_data_filename = "example"``, the corresponding samples should be stored as
