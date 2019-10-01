@@ -29,7 +29,7 @@ class TestNodeCoords:
     """Test for the internal function strawberryfields.gbs.plot._node_coords"""
 
     @pytest.mark.parametrize("dim", [4, 5, 6])
-    def test_node_coords(self, dim):
+    def test_complete_graph(self, dim):
         """Tests that nodes in a complete graph are located in the unit circle when using the
         Kamada-Kawai layout"""
         graph = nx.complete_graph(dim)
@@ -41,12 +41,23 @@ class TestNodeCoords:
 
         assert np.allclose(radii, np.ones(dim), atol=1e-5)
 
+    def test_custom_layout(self):
+        """Tests that nodes in a complete graph are correctly located based on a custom layout"""
+        graph = nx.complete_graph(4)
+        layout = {0: [1, 1], 1: [1, -1], 2: [-1, 1], 3: [-1, -1]}
+        coords = plot._node_coords(graph, layout)
+        x = coords['x']
+        y = coords['y']
+
+        assert x == [1, 1, -1, -1]
+        assert y == [1, -1, 1, -1]
+
 
 class TestEdgeCoords:
     """Test for the internal function strawberryfields.gbs.plot._edge_coords"""
 
     @pytest.mark.parametrize("dim", [4, 5, 6])
-    def test_edge_coords(self, dim):
+    def test_cycle_graph(self, dim):
         """Tests that the length of edges in a circular cycle graph are all of equal length."""
         graph = nx.cycle_graph(dim)
         layout = nx.kamada_kawai_layout(graph)
@@ -57,3 +68,16 @@ class TestEdgeCoords:
         first_dist = np.sqrt((x[0] - x[1]) ** 2 + (y[0] - y[1]) ** 2)
 
         assert np.allclose(dists, first_dist)
+
+    def test_custom_layout(self):
+        """Tests that edges in a complete graph are correctly located based on a custom layout"""
+        graph = nx.complete_graph(2)
+        layout = {0: [1, 1], 1: [-1, -1]}
+        coords = plot._edge_coords(graph, layout)
+        x = coords['x']
+        y = coords['y']
+        print(x)
+        print(y)
+
+        assert x[:2] == [1, -1]
+        assert y[:2] == [1, -1]
