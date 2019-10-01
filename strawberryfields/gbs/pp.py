@@ -14,6 +14,7 @@
 r"""
 Point Processes
 ===============
+
 **Module name:** :mod:`strawberryfields.gbs.pp`
 
 .. currentmodule:: strawberryfields.gbs.pp
@@ -24,7 +25,7 @@ Summary
 -------
 
 .. autosummary::
-    rbskernel
+    rbfkernel
 
 Code details
 ^^^^^^^^^^^^
@@ -34,22 +35,25 @@ import numpy as np
 from scipy.spatial.distance import cdist
 
 
-def rbfkernel(R, sigma):
-    r"""This function generates a radial basis function (RBF) kernel matrix.
+def rbfkernel(R: np.ndarray, sigma: float) -> np.ndarray:
+    r"""Calculate the distance kernel from a set of input points.
 
     The elements of the RBF kernel are computed as:
+
     .. math::
     K_{i,j} = e^{-\|\bf{r}_i-\bf{r}_j\|^2/(2*\sigma^2)},
-    where :math:`\bf{r}_i` is the coordinates of point :math:`i` and :math:`\sigma`
-    is a constant.
+    
+    where :math:`\bf{r}_i` are the coordinates of point :math:`i` and :math:`\sigma`
+    is a kernel parameter that determines the scale of the kernel. Points that are much further than a distance :math: `\sigma` from each other lead to small entries of the kernel matrix, whereas points much closer than :math: `\sigma` generate large entries.
 
     **Example usage:**
+
     >>> R = array([[0, 1],
                    [1, 0],
                    [0, 0],
                    [1, 1]])
     >>> sigma = 1.0
-    >>> rbfkernel (R, sigma)
+    >>> rbfkernel (R, 1.0)
     array([[1.        , 0.36787944, 0.60653066, 0.60653066],
            [0.36787944, 1.        , 0.60653066, 0.60653066],
            [0.60653066, 0.60653066, 1.        , 0.36787944],
@@ -57,7 +61,7 @@ def rbfkernel(R, sigma):
 
     Args:
         R (array): coordinates of the points.
-        sigma (float): a constant.
+        sigma (float): kernel parameter 
 
     Returns:
         K (array): the kernel matrix.
