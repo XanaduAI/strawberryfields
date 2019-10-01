@@ -105,7 +105,8 @@ graph_node_size = 14
 subgraph_node_size = 16
 
 
-def plot_graph(graph: nx.Graph, subgraph: Optional[list] = None, size: int = 500) -> None:
+def plot_graph(graph: nx.Graph, subgraph: Optional[list] = None,
+               size: int = 500) -> None:  # pragma: no cover
     """Creates a plotly plot of the input graph.
 
     This function can plot just the input graph or the graph with a specified subgraph highlighted.
@@ -194,7 +195,7 @@ def plot_graph(graph: nx.Graph, subgraph: Optional[list] = None, size: int = 500
     return f
 
 
-def plot_subgraph(subgraph: nx.Graph, size: int = 500) -> None:
+def plot_subgraph(subgraph: nx.Graph, size: int = 500) -> None:  # pragma: no cover
     """Creates a plotly plot of the input subgraph.
 
     **Example usage**:
