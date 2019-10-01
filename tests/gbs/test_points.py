@@ -15,7 +15,7 @@ r"""Tests for the the point process functions"""
 
 import pytest
 import numpy as np
-from strawberryfields.gbs.pp import rbfkernel
+from strawberryfields.gbs.points import rbfkernel
 
 pytestmark = pytest.mark.gbs
 
