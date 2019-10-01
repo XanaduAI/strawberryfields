@@ -15,9 +15,9 @@ r"""
 Point Processes
 ===============
 
-**Module name:** :mod:`strawberryfields.gbs.pp`
+**Module name:** :mod:`strawberryfields.gbs.points`
 
-.. currentmodule:: strawberryfields.gbs.pp
+.. currentmodule:: strawberryfields.gbs.points
 
 This module provides functions for generating point processes.
 
@@ -25,7 +25,7 @@ Summary
 -------
 
 .. autosummary::
-    rbfkernel
+    kernel
 
 Code details
 ^^^^^^^^^^^^
@@ -35,8 +35,8 @@ import numpy as np
 from scipy.spatial.distance import cdist
 
 
-def rbfkernel(R: np.ndarray, sigma: float) -> np.ndarray:
-    r"""Calculate the distance kernel from a set of input points.
+def kernel(R: np.ndarray, sigma: float) -> np.ndarray:
+    r"""Calculate the kernel matrix from a set of input points.
 
     We use the radial basis function (RBF) kernel which is positive semidefinite when Euclidean
     distances are used. The elements of the RBF kernel are computed as:
@@ -52,14 +52,14 @@ def rbfkernel(R: np.ndarray, sigma: float) -> np.ndarray:
     **Example usage:**
 
     >>> R = np.array([[0, 1], [1, 0], [0, 0], [1, 1]])
-    >>> rbfkernel (R, 1.0)
+    >>> kernel (R, 1.0)
     array([[1., 0.36787944, 0.60653066, 0.60653066],
            [0.36787944, 1., 0.60653066, 0.60653066],
            [0.60653066, 0.60653066, 1., 0.36787944],
            [0.60653066, 0.60653066, 0.36787944, 1.,]])
 
     Args:
-        R (array): coordinates of the points. Rows of this array are the coordinates of the points.
+        R (array): Coordinate matrix. Rows of this array are the coordinates of the points.
         sigma (float): kernel parameter
 
     Returns:
