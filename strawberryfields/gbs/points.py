@@ -42,7 +42,7 @@ def kernel(R: np.ndarray, sigma: float) -> np.ndarray:
     distances are used. The elements of the RBF kernel are computed as:
 
     .. math::
-    K_{i,j} = e^{-\|\bf{r}_i-\bf{r}_j\|^2/(2*\sigma^2)},
+        K_{i,j} = e^{-\|\bf{r}_i-\bf{r}_j\|^2/(2\sigma^2)},
 
     where :math:`\bf{r}_i` are the coordinates of point :math:`i` and :math:`\sigma`
     is a kernel parameter that determines the scale of the kernel. Points that are much further
@@ -65,5 +65,4 @@ def kernel(R: np.ndarray, sigma: float) -> np.ndarray:
     Returns:
         K (array): the kernel matrix
     """
-    K = np.exp(-(scipy.spatial.distance.cdist(R, R)) ** 2 / 2 / sigma ** 2)
-    return K
+    return np.exp(-(scipy.spatial.distance.cdist(R, R)) ** 2 / 2 / sigma ** 2)
