@@ -19,13 +19,16 @@ Plotting and visualization
 
 .. currentmodule:: strawberryfields.gbs.plot
 
-This module provides functionality for visualizing graphs, subgraphs, and point processes. Graphs
-are plotted using the Kamada-Kawai layout with an aspect ratio of 1:1. The module uses a custom
-Strawberry Fields colour scheme. The standard scheme for graphs uses green nodes and grey edges,
-whereas the scheme for subgraphs uses red nodes and edges.
+This module provides functionality for visualizing graphs, subgraphs, and point processes. It
+requires the installation of the plotly library, which is not a dependency of Strawberry
+Fields. Plotly can be installed using 'pip install plotly' or by visiting their installation
+instructions at https://plot.ly/python/getting-started/#installation. Graphs are plotted using
+the Kamada-Kawai layout with an aspect ratio of 1:1. The module uses a custom Strawberry Fields
+colour scheme. The standard scheme for graphs uses green nodes and grey edges, whereas the scheme
+for subgraphs uses red nodes and edges.
 
 .. autosummary::
-    plot
+    plot_graph
     plot_subgraph
 
 Code details
@@ -102,7 +105,7 @@ graph_node_size = 14
 subgraph_node_size = 16
 
 
-def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) -> None:
+def plot_graph(graph: nx.Graph, subgraph: Optional[list] = None, size: int = 500) -> None:
     """Creates a plotly plot of the input graph.
 
     This function can plot just the input graph or the graph with a specified subgraph highlighted.
@@ -110,7 +113,7 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
     **Example usage**:
 
     >>> graph = nx.complete_graph(10)
-    >>> fig = plot(graph, [0, 1, 2, 3])
+    >>> fig = plot_graph(graph, [0, 1, 2, 3])
     >>> fig.show()
 
     .. image:: ../../_static/complete_graph.png
@@ -121,7 +124,7 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
     Args:
         graph (nx.Graph): input graph
         subgraph (list): optional list of nodes comprising the subgraph to highlight
-        size (float): size of the plot in pixels, rendered in a square layout
+        size (int): size of the plot in pixels, rendered in a square layout
 
     Returns:
          Figure: Plotly figure for graph and optionally highlighted subgraph
@@ -129,7 +132,8 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
     try:
         import plotly.graph_objects as go
     except ImportError:
-        raise ImportError("Plotly required for using plot()")
+        raise ImportError("Plotly required for using plot(). Can be installed using pip install "
+                          "plotly or visiting https://plot.ly/python/getting-started/#installation")
     except RuntimeError:
         print("Plotly unable to open display")
         raise
@@ -190,7 +194,7 @@ def plot(graph: nx.Graph, subgraph: Optional[list] = None, size: float = 500) ->
     return f
 
 
-def plot_subgraph(subgraph: nx.Graph, size: float = 500) -> None:
+def plot_subgraph(subgraph: nx.Graph, size: int = 500) -> None:
     """Creates a plotly plot of the input subgraph.
 
     **Example usage**:
