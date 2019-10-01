@@ -37,7 +37,7 @@ import networkx as nx
 
 
 def _node_coords(graph: nx.Graph, l: dict) -> Tuple:
-    """Converts coordinates for the graph edges for plotting purposes.
+    """Converts coordinates for the graph nodes for plotting purposes.
 
     Args:
         graph (nx.Graph): input graph
