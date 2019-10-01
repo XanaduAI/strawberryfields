@@ -174,3 +174,4 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    code/gbs/clique
    code/gbs/similarity
    code/gbs/plot
+   code/gbs/points
