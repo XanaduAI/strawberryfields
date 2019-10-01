@@ -46,8 +46,8 @@ def kernel(R: np.ndarray, sigma: float) -> np.ndarray:
 
     where :math:`\bf{r}_i` are the coordinates of point :math:`i` and :math:`\sigma`
     is a kernel parameter that determines the scale of the kernel. Points that are much further
-    than a distance :math: `\sigma` from each other lead to small entries of the kernel matrix,
-    whereas points much closer than :math: `\sigma` generate large entries.
+    than a distance :math:`\sigma` from each other lead to small entries of the kernel matrix,
+    whereas points much closer than :math:`\sigma` generate large entries.
 
     **Example usage:**
 
