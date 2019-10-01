@@ -32,7 +32,7 @@ Code details
 """
 
 import numpy as np
-from scipy.spatial.distance import cdist
+import scipy
 
 
 def rbfkernel(R: np.ndarray, sigma: float) -> np.ndarray:
@@ -65,5 +65,5 @@ def rbfkernel(R: np.ndarray, sigma: float) -> np.ndarray:
     Returns:
         K (array): the kernel matrix
     """
-    K = np.exp(-(cdist(R, R)) ** 2 / 2 / sigma ** 2)
+    K = np.exp(-(scipy.spatial.distance.cdist(R, R)) ** 2 / 2 / sigma ** 2)
     return K
