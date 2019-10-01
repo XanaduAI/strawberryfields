@@ -1412,8 +1412,10 @@ class CXgate(Gate):
         #theta = 0.5 * pf.atan2(-1.0 / pf.cosh(r), -pf.tanh(r))
         # FIXME in sympy 1.4 atan2._eval_evalf() has a bug, it does not work with Symbol._eval_evalf().
         # This is a workaround. When sympy is fixed (in version 1.5?), go back to using pf.atan2.
-        # If s<0 we need to add pi/2 to theta.
-        theta = 0.5 * pf.atan(1 / pf.sinh(r)) +pf.Heaviside(-s) * np.pi/2
+        # If s<0 we need to add pi/2 to theta. If s==0, we need to avoid division by zero.
+        theta = pf.Piecewise((0.5 * pf.atan(1 / pf.sinh(r)), s > 0),
+                             (-np.pi/4, s == 0),
+                             (0.5 * pf.atan(1 / pf.sinh(r)) +np.pi/2, True))
         return [
             Command(BSgate(theta, 0), reg),
             Command(Sgate(r, 0), reg[0]),
