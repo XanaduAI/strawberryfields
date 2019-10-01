@@ -207,7 +207,7 @@ def plot_subgraph(subgraph: nx.Graph, size: float = 500) -> None:
 
     Args:
         subgraph (nx.Graph): input subgraph
-        size (dict): size of the plot
+        size (int): size of the plot in pixels, rendered in a square layout
 
     Returns:
          Figure: Plotly figure for subgraph
