@@ -42,7 +42,7 @@ def _node_coords(graph: nx.Graph, l: dict) -> Tuple:
     Args:
         graph (nx.Graph): input graph
         l (dict[int, float]): dictionary of nodes and their respective coordinates, can be
-        generated using a NetworkX `layout <https://networkx.github.io/documentation/latest/
+            generated using a NetworkX `layout <https://networkx.github.io/documentation/latest/
         reference/drawing.html#module-networkx.drawing.layout>`__
 
     Returns:
