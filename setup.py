@@ -29,7 +29,7 @@ requirements = [
     "scipy>=1.0.0",
     "networkx>=2.0",
     "quantum-blackbird>=0.2.0",
-    "hafnian>=0.6",
+    "thewalrus>=0.7",
     "toml",
     "appdirs",
 ]
@@ -53,6 +53,7 @@ info = {
         "strawberryfields.backends.tfbackend",
         "strawberryfields.backends.fockbackend",
         "strawberryfields.backends.gaussianbackend",
+        "strawberryfields.gbs"
     ],
     "package_data": {"strawberryfields": ["backends/data/*"]},
     "include_package_data": True,

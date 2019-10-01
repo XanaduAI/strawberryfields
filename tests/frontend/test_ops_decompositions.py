@@ -17,7 +17,7 @@ import pytest
 pytestmark = pytest.mark.frontend
 
 import numpy as np
-from hafnian.quantum import Amat
+from thewalrus.quantum import Amat
 
 import strawberryfields as sf
 from strawberryfields.parameters import par_evaluate

@@ -51,7 +51,7 @@ docs:
 clean-docs:
 	make -C doc clean
 
-test: test-frontend test-gaussian test-fock test-tf batch-test-tf
+test: test-frontend test-gaussian test-fock test-tf batch-test-tf test-gbs
 
 test-%:
 	@echo "Testing $(subst test-,,$@) backend..."
@@ -61,7 +61,7 @@ batch-test-%:
 	@echo "Testing $(subst batch-test-,,$@) backend in batch mode..."
 	export BATCHED=1 && $(PYTHON) $(TESTRUNNER) -m $(subst batch-test-,,"$@")
 
-coverage: coverage-frontend coverage-gaussian coverage-fock coverage-tf batch-coverage-tf
+coverage: coverage-frontend coverage-gaussian coverage-fock coverage-tf batch-coverage-tf coverage-gbs
 
 coverage-%:
 	@echo "Generating coverage report for $(subst coverage-,,$@)..."

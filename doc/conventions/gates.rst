@@ -322,7 +322,7 @@ Controlled-X gate
    The controlled-X gate, also known as the addition gate or the sum gate, is a controlled displacement in position. It is given by
 
    .. math::
-      \text{CX}(s) = \int dx \xket{x}\xbra{x} \otimes D\left(\sqrt{\frac{s x}{2\hbar}}\right) = \exp\left({-i \frac{s}{\hbar} \: \x_1 \otimes \p_2}\right).
+      \text{CX}(s) = \int dx \xket{x}\xbra{x} \otimes D\left(\frac{s x}{\sqrt{2\hbar}}\right) = \exp\left({-i \frac{s}{\hbar} \: \x_1 \otimes \p_2}\right).
 
 .. tip:: *Implemented in Strawberry Fields as a quantum gate by* :class:`strawberryfields.ops.CXgate`
 
@@ -340,7 +340,7 @@ We can also write the action of the addition gate on the canonical operators:
    \text{CX}(s)^\dagger \hat{a}_2 \text{CX}(s) &= \a_2+  \frac{s}{2} (\ad_1 +  \a_1)\\
 
 The addition gate can be decomposed in terms of single mode squeezers and beamsplitter as follows
-:math:`\text{CX}(s) = B(\theta,0) \left(S(r,0) \otimes S(-r,0) \right) B(\frac{\pi}{2}+\theta,0)`
+:math:`\text{CX}(s) = B(\frac{\pi}{2}+\theta,0) \left(S(r,0) \otimes S(-r,0) \right) B(\theta,0)`
 where
 :math:`\sin(2 \theta) = \frac{-1}{\cosh r}, \ \cos(2 \theta)=-\tanh(r), \ \sinh(r) = -\frac{ s}{2}`
 

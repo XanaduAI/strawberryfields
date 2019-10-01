@@ -98,8 +98,6 @@ We welcome contributions - simply fork the Strawberry Fields repository, and the
 
 We also encourage bug reports, suggestions for new features and enhancements, and even links to cool projects or applications built on Strawberry Fields. If your contribution becomes part of Strawberry Fields, or is highlighted in our Gallery, we will send you some exclusive Xanadu Swag™ - including t-shirts, stickers, and more.
 
-Or, submit your Strawberry Fields contribution to the `Xanadu Quantum Software Competition <https://strawberryfields.ai/competition/>`_; there are prizes of up CAD$1000 on offer.
-
 .. raw:: html
 
     <img src="https://i.imgur.com/xSFMt3g.jpg" width="300px"  align="left"> <img src="https://i.imgur.com/dC0U1xG.jpg" width="300px"  align="left">
