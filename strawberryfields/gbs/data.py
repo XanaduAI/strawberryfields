@@ -88,7 +88,7 @@ Code details
 ^^^^^^^^^^^^
 """
 # pylint: disable=unnecessary-pass
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 
 import pkg_resources
 import numpy as np
@@ -97,7 +97,7 @@ import scipy
 DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data") + "/"
 
 
-class Dataset(metaclass=ABCMeta):
+class Dataset(ABC):
     """Base class for loading datasets of pre-generated samples.
 
     Attributes:
@@ -120,9 +120,11 @@ class Dataset(metaclass=ABCMeta):
     @abstractmethod
     def _data_filename(self) -> str:
         """Base name of files containing the sample data stored in the ``./data/`` directory.
+
         Samples should be provided as a ``scipy.sparse.csr_matrix`` saved in ``.npz`` format and
-        the corresponding adjacency matrix should be provided as a ``.npy`` binary. For
-        ``_data_filename = "example"``, the corresponding samples should be stored as
+        the corresponding adjacency matrix should be provided as a ``.npy`` binary.
+
+        For ``_data_filename = "example"``, the corresponding samples should be stored as
         ``./data/example.npz`` and the adjacency matrix as ``./data/example_A.npy``."""
         pass
 
@@ -196,6 +198,8 @@ class Dataset(metaclass=ABCMeta):
 class Planted(Dataset):
     """Dataset of samples generated from GBS with an embedded 30-node graph containing a dense
     10-node subgraph planted inside :cite:`arrazola2018using`.
+
+    The 10-node planted clique is contained within the final 10 nodes of the graph.
 
     Attributes:
         n_mean = 6
