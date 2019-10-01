@@ -46,7 +46,7 @@ def _node_coords(graph: nx.Graph, l: dict) -> Tuple:
         reference/drawing.html#module-networkx.drawing.layout>`__
 
     Returns:
-         Dict[str, list]: lists of x and y coordinates accessed as keys of a dictionary
+         dict[str, list]: lists of x and y coordinates accessed as keys of a dictionary
     """
     n_x = []
     n_y = []
