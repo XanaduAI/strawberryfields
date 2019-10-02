@@ -71,9 +71,19 @@ def kernel(R: np.ndarray, sigma: float) -> np.ndarray:
 
 
 def sample(R: np.ndarray, sigma: float, n_mean: int, n_samples: int) -> np.ndarray:
-    """This function generates permanental point process (PerPP) samples with thermal states.
+    """Sample subsets of points using the permanental point process.
+
+    Points are encoded through a radial basis function kernel, provided in :func:`kernel`,
+    that is a function of the distance between pairs of points. Subsets of points are sampled
+    with probabilities that are proportional to the permanent of the *sub*matrix of the kernel
+    selected by those points.
+
+    This permanental point process is likely to sample points that are clustered together
+    :cite:`soran2019`. It can be realised using a variant of Gaussian boson sampling with thermal
+    states as input.
 
     **Example usage:**
+
     >>> R = np.array([[0, 1], [1, 0], [0, 0],[1, 1]])
     >>> perpp(R, 1.0, 1, 10)
     array([[0, 0, 0, 2],
@@ -98,4 +108,4 @@ def sample(R: np.ndarray, sigma: float, n_mean: int, n_samples: int) -> np.ndarr
     """
     K = kernel(R, sigma)
     ls, O = rescale_adjacency_matrix_thermal(K, n_mean)
-    return np.array(generate_thermal_samples(ls, O, num_samples=ns))
+    return np.array(generate_thermal_samples(ls, O, num_samples=n_samples))
