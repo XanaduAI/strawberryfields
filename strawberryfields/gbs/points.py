@@ -70,7 +70,7 @@ def kernel(R: np.ndarray, sigma: float) -> np.ndarray:
     return np.exp(-(scipy.spatial.distance.cdist(R, R)) ** 2 / 2 / sigma ** 2)
 
 
-def perpp(R: np.ndarray, sigma: float, n_mean: int, ns: int) -> np.ndarray:
+def sample(R: np.ndarray, sigma: float, n_mean: int, n_samples: int) -> np.ndarray:
     """This function generates permanental point process (PerPP) samples with thermal states.
 
     **Example usage:**
