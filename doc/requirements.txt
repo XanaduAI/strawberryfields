@@ -1,4 +1,5 @@
-sphinxcontrib-bibtex
-sphinx-autodoc-typehints
 ipykernel
 nbsphinx
+sphinx-autodoc-typehints
+sphinx-gallery
+sphinxcontrib-bibtex
