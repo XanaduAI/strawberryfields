@@ -15,7 +15,8 @@ r"""Tests for the the point process functions"""
 
 import pytest
 import numpy as np
-from strawberryfields.gbs.points import kernel
+from strawberryfields.gbs.points import kernel, perpp
+
 
 pytestmark = pytest.mark.gbs
 
@@ -35,3 +36,14 @@ def test_kernel():
     )
 
     assert np.allclose(K, Kref)
+
+
+def test_perpp():
+    r"""Tests that the generated samples have the correct dimension"""
+
+    R = np.array([[0, 1], [1, 0], [0, 0], [1, 1]])
+    samples = perpp(R, 1.0, 1, 10)
+    shape = samples.shape
+    shape_ref = (10, 4)
+
+    assert shape == shape_ref
