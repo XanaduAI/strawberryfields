@@ -90,8 +90,8 @@ Code details
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod
 
-import numpy as np
 import pkg_resources
+import numpy as np
 import scipy
 
 DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data") + "/"
