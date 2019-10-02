@@ -21,6 +21,8 @@ import scipy
 
 from strawberryfields.gbs import data
 
+pytestmark = pytest.mark.gbs
+
 DATASETS_LIST = [data.Planted]
 
 
@@ -55,7 +57,7 @@ class TestDatasets:
         def mock_init(_self):
             """Replacement ``__init__`` for all the datasets in ``DATASETS_LIST``"""
             # pylint: disable=protected-access
-            _self._data = scipy.sparse.csr_matrix(self.patch_samples)
+            _self.data = scipy.sparse.csr_matrix(self.patch_samples)
             _self.adj = np.ones((4, 4))
             _self.n_samples, _self.modes = 10, 4
 
