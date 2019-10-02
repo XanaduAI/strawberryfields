@@ -90,8 +90,8 @@ Code details
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod
 
-import pkg_resources
 import numpy as np
+import pkg_resources
 import scipy
 
 DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data") + "/"
@@ -148,16 +148,18 @@ class Dataset(ABC):
         return list(self.data[i].toarray()[0])
 
     def __getitem__(self, key):
-        if isinstance(key, (slice, tuple)):
-            if isinstance(key, tuple):
-                key = slice(*key)
-            range_tuple = key.indices(self.n_samples)
-            return [self._elem(i) for i in range(*range_tuple)]
 
-        if key < 0:
-            key += self.n_samples
+        if not isinstance(key, (slice, tuple, int)):
+            raise TypeError("Dataset indices must be integers, slices, or tuples")
 
-        return self._elem(key)
+        if isinstance(key, int):
+            return self._elem(key + self.n_samples if key < 0 else key)
+
+        if isinstance(key, tuple):
+            key = slice(*key)
+
+        range_tuple = key.indices(self.n_samples)
+        return [self._elem(i) for i in range(*range_tuple)]
 
     def __len__(self):
         return self.n_samples
