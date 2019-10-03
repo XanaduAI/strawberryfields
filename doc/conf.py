@@ -111,7 +111,8 @@ extensions = [
     'sphinxcontrib.bibtex',
     'edit_on_github',
     'sphinx_autodoc_typehints',
-    'nbsphinx'
+    'nbsphinx',
+    'sphinx_gallery.gen_gallery'
 ]
 
 mathjax_path = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
