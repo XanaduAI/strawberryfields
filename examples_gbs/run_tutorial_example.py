@@ -29,3 +29,10 @@ plotly.offline.plot(g_plot, filename="file.html")
 ##############################################################################
 # .. raw:: html
 #     :file: ../../examples_gbs/file.html
+
+g_plot = gbs.plot.plot_graph(graph, [1, 2, 3])
+plotly.offline.plot(g_plot, filename="file2.html")
+
+##############################################################################
+# .. raw:: html
+#     :file: ../../examples_gbs/file2.html
