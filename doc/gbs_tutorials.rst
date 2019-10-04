@@ -1,11 +1,6 @@
-GBS Tutorials
-==============
-
-
-
-The following tutorials introduce the Strawberry Fields apps layer.
-
+Applications layer tutorials
+============================
 
 .. customgalleryitem::
-    :tooltip: Use quantum machine learning to rotate a qubit.
+    :tooltip: To be filled
     :description: :doc:`tutorials/run_tutorial_subgraph`
