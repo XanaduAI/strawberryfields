@@ -18,3 +18,4 @@ doc/tutorials/index.rst
 doc/tutorials/run_*
 doc/tutorials/sg_execution_times.rst
 *.zip
+examples_gbs/*.html
