@@ -28,7 +28,7 @@ with corresponding values for:
 - ``n_max``: maximum number of photons allowed in any sample
 
 -  ``threshold``: flag to indicate whether samples are generated with threshold detection or
-   with photon-number-resolving detectors.
+   with photon-number-resolving detectors
 
 - ``n_samples``: total number of samples in the dataset
 
