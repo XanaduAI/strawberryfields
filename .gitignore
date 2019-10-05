@@ -13,9 +13,5 @@ notebooks/*
 examples/.ipynb_checkpoints/*
 .pytest_cache/*
 pytest/.pytest_cache/
-doc/tutorials/images
-doc/tutorials/index.rst
-doc/tutorials/run_*
-doc/tutorials/sg_execution_times.rst
-*.zip
+doc/tutorials_gbs/*
 examples_gbs/*.html
