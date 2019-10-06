@@ -15,3 +15,5 @@ examples/.ipynb_checkpoints/*
 pytest/.pytest_cache/
 doc/tutorials_gbs/*
 examples_gbs/*.html
+doc/_static/thumbs/*
+!doc/_static/code.png
