@@ -262,7 +262,28 @@ def plot_subgraph(subgraph: nx.Graph, size: int = 500) -> None:  # pragma: no co
     return f
 
 
-def plot_points(R, sample, size: int = 500):
+def plot_points(R, sample, size: int = 500):  # pragma: no cover
+    """Creates a plotly plot of the input points given their coordinates, highlighting an input
+    sample of points.
+
+    **Example usage**:
+
+    >>> R = np.random.normal(0, 1, (50, 50))
+    >>> sample = [1]*10 + [0]*40
+    >>> plot_points(R, sample).show()
+
+    .. image:: ../../_static/normal_pp.png
+       :width: 40%
+       :align: center
+       :target: javascript:void(0);
+
+    Args:
+        subgraph (nx.Graph): input subgraph
+        size (int): size of the plot in pixels, rendered in a square layout
+
+    Returns:
+         Figure: Plotly figure for subgraph
+    """
     try:
         import plotly.graph_objects as go
     except ImportError:
@@ -286,15 +307,15 @@ def plot_points(R, sample, size: int = 500):
     points = go.Scatter(x=R[:, 0], y=R[:, 1],
                         mode="markers",
                         hoverinfo="text",
-                        marker=dict(color='rgba(242, 242, 242, 0.5)', size=30,
+                        marker=dict(color='#F2F2F2', size=30,
                                     line=dict(color='black', width=1.5)))
 
     points.text = [str(i) for i in range(len(R))]
 
     s_x = []
     s_y = []
-    s_comp = [i for i in range(len(sample)) if sample[i] > 0]
-    for i in s_comp:
+    sampled_points = [i for i in range(len(sample)) if sample[i] > 0]
+    for i in sampled_points:
         s_x.append(R[i, 0])
         s_y.append(R[i, 1])
 
@@ -303,29 +324,8 @@ def plot_points(R, sample, size: int = 500):
                       hoverinfo="text",
                       marker=dict(color=RED, size=30, line=dict(color='black', width=1.5)))
 
-    samp.text = [str(i) for i in s_comp]
+    samp.text = [str(i) for i in sampled_points]
 
     f = go.Figure(data=[points, samp], layout=layout)
 
     return f
-
-
-def twod(n=10, m=10):
-    R = []
-    for i in range(0, n):
-        for j in range(0, m):
-            R.append((i, j))
-
-    return np.array(R)
-
-
-import numpy as np
-d = 10
-R = np.random.random((d**2, 2))
-# R = twod(d, d)
-sample = np.zeros(d**2)
-s = np.random.choice(d**2, d, replace=False)
-for i in s:
-    sample[i] = 1
-plot_points(R, sample).show()
-#F2F2F2
