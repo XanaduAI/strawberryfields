@@ -4,9 +4,9 @@ Graph Similarity Tutorial
 =========================
 
 This tutorial looks at how to use GBS to construct a similarity measure between graphs,
-what is known as a graph kernel. Kernels can be applied to graph-based data for machine learning
-tasks such as classification in machine learning using a support vector machine
-:cite:schuld2019quantum.
+what is known as a graph kernel :cite:`schuld2019quantum`. Kernels can be applied to graph-based
+data for machine learning tasks such as classification in machine learning using a support vector
+machine.
 
 Graph data
 ----------
@@ -78,7 +78,7 @@ plotly.offline.plot(plot_mutag_3, filename="MUTAG_3.html")
 #
 # Samples from these graphs can be accessed by indexing:
 
-print(m0[:5])
+print(m0[0])
 
 ##############################################################################
 # Creating a feature vector
@@ -183,7 +183,7 @@ print(similarity.event_cardinality(6, 2, 17))
 # This method can be accessed using the :func:`prob_event_mc` function. The 4-photon event is
 # approximated as:
 
-# print(similarity.prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6))
+print(similarity.prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6))
 
 ##############################################################################
 # The feature vector can then be calculated through Monte Carlo sampling using:
