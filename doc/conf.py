@@ -53,6 +53,7 @@ MOCK_MODULES = [
     'thewalrus.libwalrus',
     'thewalrus.samples',
     'thewalrus.quantum',
+    'thewalrus.csamples',
     ]
 
 np_math_fns = ['abs',
