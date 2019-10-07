@@ -69,127 +69,46 @@ import strawberryfields as sf
 
 
 def sample(
-    A: np.ndarray, n_mean: float, samples: int = 1, backend_options: Optional[dict] = None
+    A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool=True
 ) -> list:
-    r"""Generate samples from GBS
-
-    Perform quantum sampling of adjacency matrix :math:`A` using the Gaussian boson sampling
-    algorithm.
-
-    Sampling can be controlled with the optional ``backend_options`` argument, which should be a
-    dict containing any of the following:
-
-    .. glossary::
-
-        key: ``"remote"``, value: *bool*
-            Performs sampling on a remote server if ``True``. Remote sampling is
-            required for sampling on hardware. If not specified, sampling will be performed locally.
-
-        key: ``"backend"``, value: *str*
-            Requested backend for sampling. Available backends are listed in
-            ``QUANTUM_BACKENDS``, these are:
-
-            - ``"gaussian"``: for simulating the output of a GBS device using the
-              :mod:`strawberryfields.backends.gaussianbackend`
-
-        key: ``"threshold"``, value: *bool*
-            Performs sampling using threshold (on/off click) detectors if ``True``
-            or using photon number resolving detectors if ``False``. Defaults to ``True`` for
-            threshold sampling.
-
-        key: ``"postselect"``, value: *int*
-            Causes samples with a photon number or click number less than the
-            specified value to be filtered out. Defaults to ``0`` if unspecified, resulting in no
-            postselection. Note that the number of samples returned in :func:`sample` is
-            still equal to the ``samples`` parameter.
+    r"""Generate samples from GBS by encoding a symmetric matrix :math:`A`.
 
     Args:
-        A (array): the (real or complex) :math:`N \times N` adjacency matrix to sample from
+        A (array): the :math:`N \times N` symmetric matrix to sample from
         n_mean (float): mean photon number
-        samples (int): number of samples; defaults to 1
-        backend_options (dict[str, Any]): dictionary specifying options used by backends during
-            sampling; defaults to :const:`BACKEND_DEFAULTS`
+        n_samples (int): number of samples
+        threshold (bool): perform GBS with threshold detectors if ``True`` or photon-number
+            resolving detectors if ``False``
 
     Returns:
         list[list[int]]: a list of length ``samples`` whose elements are length :math:`N` lists of
         integers indicating events (e.g., photon numbers or clicks) in each of the :math:`N`
         modes of the detector
     """
-    backend_options = {**BACKEND_DEFAULTS, **(backend_options or {})}
-
     if not np.allclose(A, A.T):
         raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
-
-    if samples < 1:
+    if n_samples < 1:
         raise ValueError("Number of samples must be at least one")
+    if n_mean < 0:
+        raise ValueError("Mean photon number must be non-negative")
 
     nodes = len(A)
+
     p = sf.Program(nodes)
+    eng = sf.LocalEngine(backend="gaussian")
 
     mean_photon_per_mode = n_mean / float(nodes)
 
     # pylint: disable=expression-not-assigned,pointless-statement
     with p.context as q:
         sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
-        sf.ops.Measure | q
-
-    p = p.compile("gbs")
-
-    postselect = backend_options["postselect"]
-    threshold = backend_options["threshold"]
-
-    if postselect == 0:
-        s = _sample_sf(p, shots=samples, backend_options=backend_options)
 
         if threshold:
-            s[s >= 1] = 1
+            sf.ops.MeasureThreshold | q
+        else:
+            sf.ops.MeasureFock | q
 
-        s = s.tolist()
-
-    elif postselect > 0:
-        s = []
-
-        while len(s) < samples:
-            samp = np.array(_sample_sf(p, shots=1, backend_options=backend_options))
-
-            if threshold:
-                samp[samp >= 1] = 1
-
-            counts = np.sum(samp)
-
-            if counts >= postselect:
-                s.append(samp.tolist())
-
-    else:
-        raise ValueError("Can only postselect on nonnegative values")
-
-    return s
-
-
-def _sample_sf(p: sf.Program, shots: int = 1, backend_options: Optional[dict] = None) -> np.ndarray:
-    """Generate samples from Strawberry Fields.
-
-    Args:
-        p (sf.Program): the program to sample from
-        shots (int): the number of samples; defaults to 1
-        backend_options (dict[str, Any]): dictionary specifying options used by backends during
-        sampling; defaults to :const:`BACKEND_DEFAULTS`
-
-    Returns:
-        array: an array of ``len(shots)`` samples, with each sample the result of running a
-        :class:`~strawberryfields.program.Program` specified by ``p``
-    """
-    backend_options = {**BACKEND_DEFAULTS, **(backend_options or {})}
-
-    if not backend_options["backend"] in QUANTUM_BACKENDS:
-        raise ValueError("Invalid backend selected")
-
-    if backend_options["remote"]:
-        raise ValueError("Remote sampling not yet available")
-
-    eng = sf.LocalEngine(backend=backend_options["backend"])
-
-    return np.array(eng.run(p, run_options={"shots": shots}).samples)
+    return eng.run(p, run_options={"shots": n_samples}).samples.tolist()
 
 
 def uniform(modes: int, sampled_modes: int, samples: int = 1) -> list:
