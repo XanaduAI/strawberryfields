@@ -321,7 +321,7 @@ class MeasuredParameter(sympy.Symbol):
 
     def _sympystr(self, printer):
         """"The Sympy printing system uses this method instead of __str__."""
-        return str(self.regref) + '.par'
+        return 'q{}'.format(self.regref.ind)
 
     def _eval_evalf(self, prec):
         """Returns the numeric result of the measurement if it is available.

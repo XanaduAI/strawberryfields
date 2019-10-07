@@ -11,16 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# pylint: disable=no-self-use
+
 r"""Unit tests for the Strawberry Fields decompositions within the ops module"""
 import pytest
-
-pytestmark = pytest.mark.frontend
 
 import numpy as np
 from thewalrus.quantum import Amat
 
 import strawberryfields as sf
-from strawberryfields.parameters import par_evaluate
+from strawberryfields.parameters import par_evaluate, FreeParameter
 from strawberryfields import decompositions as dec
 from strawberryfields.utils import (
     random_interferometer,
@@ -28,6 +29,10 @@ from strawberryfields.utils import (
     random_covariance,
 )
 from strawberryfields import ops
+
+
+pytestmark = pytest.mark.frontend
+
 
 # make the test file deterministic
 np.random.seed(42)
@@ -160,6 +165,18 @@ def _beamsplitter(theta, phi, modes, num_modes):
     return expand(S, modes, num_modes)
 
 
+class TestDecompositions:
+    """Common tests for all Decompositions."""
+
+    @pytest.mark.parametrize("cls", ops.decompositions)
+    def test_symbolic_p0(self, cls):
+        """Decompositions cannot have a symbolic p[0]."""
+
+        x = FreeParameter('x')
+        with pytest.raises(TypeError, match="first parameter of a Decomposition is a square matrix, and cannot be symbolic"):
+            cls(x)
+
+
 class TestInterferometer:
     """Tests for the interferometer quantum operation"""
 
@@ -226,12 +243,12 @@ class TestInterferometer:
 class TestGraphEmbed:
     """Tests for the GraphEmbed quantum operation"""
 
-    def test_identity(self, tol):
+    def test_identity(self):
         """Test that nothing is done if the adjacency matrix is the identity"""
         G = ops.GraphEmbed(np.identity(6))
         assert G.identity
 
-    def test_decomposition(self, hbar, tol):
+    def test_decomposition(self, tol):
         """Test that an graph is correctly decomposed"""
         n = 3
         prog = sf.Program(n)
@@ -297,16 +314,17 @@ class TestGraphEmbed:
         n = 6
         prog = sf.Program(n)
 
-        A = np.array([
-        [0, 1, 0, 0, 1, 1],
-        [1, 0, 1, 0, 1, 1],
-        [0, 1, 0, 1, 1, 0],
-        [0, 0, 1, 0, 1, 0],
-        [1, 1, 1, 1, 0, 1],
-        [1, 1, 0, 0, 1, 0],
-        ]
+        A = np.array(
+            [
+                [0, 1, 0, 0, 1, 1],
+                [1, 0, 1, 0, 1, 1],
+                [0, 1, 0, 1, 1, 0],
+                [0, 0, 1, 0, 1, 0],
+                [1, 1, 1, 1, 0, 1],
+                [1, 1, 0, 0, 1, 0],
+            ]
         )
-        sq, U = dec.graph_embed(A)
+        _, U = dec.graph_embed(A)
         assert not np.allclose(U, np.identity(n))
 
         G = ops.GraphEmbed(A)
@@ -322,9 +340,10 @@ class TestGraphEmbed:
 class TestBipartiteGraphEmbed:
     """Tests for the BipartiteGraphEmbed quantum operation"""
 
-    def test_not_bipartite(self, tol):
+    def test_not_bipartite(self):
         """Test exception raised if the graph is not bipartite"""
-        A = np.array([
+        A = np.array(
+            [
                 [0, 1, 0, 0, 1, 1],
                 [1, 0, 1, 0, 1, 1],
                 [0, 1, 0, 1, 1, 0],
@@ -333,11 +352,11 @@ class TestBipartiteGraphEmbed:
                 [1, 1, 0, 0, 1, 0]
             ]
         )
-
         with pytest.raises(ValueError, match="does not represent a bipartite graph"):
             ops.BipartiteGraphEmbed(A)
 
-        A = np.array([
+        A = np.array(
+            [
                 [0, 0, 0, 0, 1, 1],
                 [0, 0, 0, 0, 1, 1],
                 [0, 0, 0, 1, 1, 0],
@@ -346,11 +365,11 @@ class TestBipartiteGraphEmbed:
                 [1, 1, 0, 0, 0, 0]
             ]
         )
-
         with pytest.raises(ValueError, match="does not represent a bipartite graph"):
             ops.BipartiteGraphEmbed(A)
 
-        A = np.array([
+        A = np.array(
+            [
                 [0, 0, 1, 0, 1, 1],
                 [0, 0, 0, 0, 1, 1],
                 [0, 0, 0, 1, 1, 0],
@@ -359,11 +378,10 @@ class TestBipartiteGraphEmbed:
                 [1, 1, 0, 0, 0, 0]
             ]
         )
-
         with pytest.raises(ValueError, match="does not represent a bipartite graph"):
             ops.BipartiteGraphEmbed(A)
 
-    def test_decomposition(self, hbar, tol):
+    def test_decomposition(self, tol):
         """Test that a graph is correctly decomposed"""
         n = 3
         prog = sf.Program(2*n)
@@ -405,7 +423,7 @@ class TestBipartiteGraphEmbed:
             if isinstance(cmd.op, ops.Interferometer):
                 # check that each unitary only applies to half the modes
                 assert len(modes) == n
-                assert (modes == [0, 1, 2]) or (modes == [3, 4, 5])
+                assert modes in ([0, 1, 2], [3, 4, 5])
 
                 # check matrix is unitary
                 U1 = par_evaluate(cmd.op.p[0])
@@ -439,7 +457,7 @@ class TestBipartiteGraphEmbed:
 class TestGaussianTransform:
     """Tests for the GaussianTransform quantum operation"""
 
-    def test_merge(self, hbar, tol):
+    def test_merge(self, tol):
         """Test that two symplectics merge: S = S2 @ S1"""
         n = 3
         S1 = random_symplectic(n)
@@ -455,7 +473,7 @@ class TestGaussianTransform:
         # two merged symplectics are the same as their product
         assert np.allclose(G1.merge(G2).p[0], S2 @ S1, atol=tol, rtol=0)
 
-    def test_passive(self, tol):
+    def test_passive(self):
         """Test that a passive decomposition is correctly flagged as requiring
         only a single interferometer"""
         G = ops.GaussianTransform(np.identity(6))
@@ -465,7 +483,7 @@ class TestGaussianTransform:
         assert not hasattr(G, "Sq")
         assert not hasattr(G, "U2")
 
-    def test_active(self, tol):
+    def test_active(self):
         """Test that an active decomposition is correctly flagged as requiring
         two interferometers and squeezing"""
         S1 = random_symplectic(3, passive=False)
@@ -476,7 +494,7 @@ class TestGaussianTransform:
         assert hasattr(G, "Sq")
         assert hasattr(G, "U2")
 
-    def test_decomposition_active(self, hbar, tol):
+    def test_decomposition_active(self, tol):
         """Test that an active symplectic is correctly decomposed into
         two interferometers and squeezing"""
         n = 3
@@ -525,7 +543,7 @@ class TestGaussianTransform:
         cov = S @ S.T
         assert np.allclose(cov, S @ S.T, atol=tol, rtol=0)
 
-    def test_decomposition_passive(self, hbar, tol):
+    def test_decomposition_passive(self, tol):
         """Test that a passive symplectic is correctly decomposed into an interferometer"""
         n = 3
         S = random_symplectic(n, passive=True)
@@ -548,7 +566,7 @@ class TestGaussianTransform:
             assert isinstance(cmd.op, ops.Interferometer)
 
             # build up the symplectic transform
-            modes = [i.ind for i in cmd.reg]
+            #modes = [i.ind for i in cmd.reg]
 
             if isinstance(cmd.op, ops.Interferometer):
                 U1 = cmd.op.p[0]
@@ -561,20 +579,20 @@ class TestGaussianTransform:
         cov = S @ S.T
         assert np.allclose(cov, S @ S.T, atol=tol, rtol=0)
 
-    def test_active_on_vacuum(self, hbar, tol):
+    def test_active_on_vacuum(self, tol):
         """Test that an active symplectic applied to a vacuum is
         correctly decomposed into just squeezing and one interferometer"""
         n = 3
         S = random_symplectic(n, passive=False)
 
-        O1, Sq, O2 = dec.bloch_messiah(S)
+        O1, _, _ = dec.bloch_messiah(S)
         X1 = O1[:n, :n]
         P1 = O1[n:, :n]
-        X2 = O2[:n, :n]
-        P2 = O2[n:, :n]
+        #X2 = O2[:n, :n]
+        #P2 = O2[n:, :n]
 
         U1 = X1 + 1j * P1
-        U2 = X2 + 1j * P2
+        #U2 = X2 + 1j * P2
 
         prog = sf.Program(n)
         G = ops.GaussianTransform(S, vacuum=True)
@@ -671,7 +689,7 @@ class TestGaussian:
             assert isinstance(cmd.op, (ops.Vacuum, ops.Thermal, ops.GaussianTransform))
 
             # build up the symplectic transform
-            modes = [i.ind for i in cmd.reg]
+            #modes = [i.ind for i in cmd.reg]
 
             if isinstance(cmd.op, ops.Thermal):
                 cov_init[cmd.reg[0].ind, cmd.reg[0].ind] = (

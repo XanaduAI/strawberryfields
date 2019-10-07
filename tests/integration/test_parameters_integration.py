@@ -106,9 +106,14 @@ def test_parameters_with_operations(eng_prog_params, G):
 
     def check(G, par):
         """Check an Operation/Parameters combination."""
+
         # construct the op using the given tuple of Parameters as args
         G = G(*par)
         assert isinstance(G, ops.Operation)
+
+        # clear the program for reuse
+        prog.locked = False
+        prog.circuit = []
         with prog.context as r:
             # fake a measurement for speed
             r[0].val = 0.1
@@ -123,10 +128,6 @@ def test_parameters_with_operations(eng_prog_params, G):
         except pu.CircuitError as err:
             # record CircuitSpecs-forbidden op/backend combinations here
             warnings.warn(str(err))
-
-        # clear the program for reuse
-        prog.locked = False
-        prog.circuit = []
         eng.reset()
 
     sig = inspect.signature(G.__init__)

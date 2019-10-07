@@ -292,7 +292,7 @@ class TestSFToBlackbirdConversion:
             ops.Zgate(2 * q[0].par) | q[1]
 
         bb = io.to_blackbird(prog)
-        expected = {"op": "Zgate", "modes": [1], "args": ["2*q[0].par"], "kwargs": {}}
+        expected = {"op": "Zgate", "modes": [1], "args": ["2*q0"], "kwargs": {}}
         assert bb.operations[-1] == expected
 
 

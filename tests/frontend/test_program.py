@@ -135,7 +135,7 @@ class TestProgram:
             "New(1)",
             "BSgate(6.283, 1.571) | (q[1], q[2])",
             "MeasureX | (q[1])",
-            "Dgate(q[1].par, 0).H | (q[2])",
+            "Dgate(q1, 0).H | (q[2])",
             "Del | (q[1])",
             "MeasureX | (q[2])",
         ]

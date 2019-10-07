@@ -116,7 +116,7 @@ class TestParameter:
 
         assert par_str(a) == '0.1235'  # rounded to 4 decimals
         assert par_str(b) == '[0.     0.9877]'
-        assert par_str(c) == 'q[1].par'
+        assert par_str(c) == 'q1'
         assert par_str(d) == 'x'
         assert par_str(b * d) == '[0 0.987654*x]'  # not rounded to 4 decimals due to Sympy's internal settings (object array!)
 
@@ -126,11 +126,11 @@ class TestParameter:
         c = MeasuredParameter(RegRef(1))
         d = FreeParameter('x')
 
-        assert str(c) == 'q[1].par'
+        assert str(c) == 'q1'
         assert str(d) == 'x'
         assert str(0.1234567 * d) == '0.1234567*x'
         assert str(np.array([0, 1, -3, 0.987654]) * d) == '[0 1.0*x -3.0*x 0.987654*x]'
-        assert str(pf.exp(1 + c) / d ** 2) == 'exp(q[1].par + 1)/x**2'
+        assert str(pf.exp(1 + c) / d ** 2) == 'exp(q1 + 1)/x**2'
 
     def test_par_functions_with_arrays(self):
         """Parameter functions with array arguments."""
