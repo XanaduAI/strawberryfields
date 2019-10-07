@@ -183,12 +183,13 @@ print(event_cardinality(6, 2, 17))
 # This method can be accessed using the :func:`prob_event_mc` function. The 4-photon event is
 # approximated as:
 
-print(prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6))
+#print(prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6))
 
 ##############################################################################
 # The feature vector can then be calculated through Monte Carlo sampling using:
 
-print(feature_vector_mc(nx.Graph(m0_a), event_photon_numbers=[2, 4, 6], max_count_per_mode=2, n_mean=6))
+#print(feature_vector_mc(nx.Graph(m0_a), event_photon_numbers=[2, 4, 6], max_count_per_mode=2,
+# n_mean=6))
 
 ##############################################################################
 # .. note::

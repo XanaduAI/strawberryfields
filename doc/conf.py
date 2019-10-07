@@ -44,7 +44,7 @@ extensions = [
     'sphinxcontrib.bibtex',
     'edit_on_github',
     'sphinx_autodoc_typehints',
-    'nbsphinx',
+    #'nbsphinx',
     'sphinx_gallery.gen_gallery'
 ]
 
