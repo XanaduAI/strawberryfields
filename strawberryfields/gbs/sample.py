@@ -39,8 +39,6 @@ subset of modes are selected using the uniform distribution. A utility function
 the device.
 
 .. autosummary::
-    QUANTUM_BACKENDS
-    BACKEND_DEFAULTS
     sample
     uniform
     seed
@@ -68,14 +66,6 @@ import networkx as nx
 import numpy as np
 
 import strawberryfields as sf
-
-QUANTUM_BACKENDS = ("gaussian",)
-"""tuple[str]: Available quantum backends for sampling."""
-
-BACKEND_DEFAULTS = {"remote": False, "backend": "gaussian", "threshold": True, "postselect": 0}
-"""dict[str, Any]: Dictionary to specify default parameters of options in backend sampling for
-:func:`sample`.
-"""
 
 
 def sample(
