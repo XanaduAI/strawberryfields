@@ -1,4 +1,4 @@
-# pylint: disable=wrong-import-position,wrong-import-order
+# pylint: disable=wrong-import-position,wrong-import-order,ungrouped-imports
 """
 Graph Similarity Tutorial
 =========================
@@ -97,14 +97,14 @@ print(m0[:5])
 # using the :func:`~.sample_to_orbit` function. For example, the first sample of ``m0`` is ``[0,
 # 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0]`` and has orbit:
 
-from strawberryfields.gbs.similarity import *
+from strawberryfields.gbs import similarity
 
-print(sample_to_orbit(m0[0]))
+print(similarity.sample_to_orbit(m0[0]))
 
 ##############################################################################
 # Other samples can be randomly generated from the ``[1, 1]`` orbit using:
 
-print(orbit_to_sample([1, 1], modes=m0.modes))
+print(similarity.orbit_to_sample([1, 1], modes=m0.modes))
 
 ##############################################################################
 # Orbits provide a useful way to coarse grain the samples from GBS into outcomes that are
@@ -114,7 +114,7 @@ print(orbit_to_sample([1, 1], modes=m0.modes))
 # ``max_count_per_mode``. To understand this, let's look at all of the orbits with a photon
 # number of 5:
 
-print(list(orbits(5)))
+print(list(similarity.orbits(5)))
 
 ##############################################################################
 # All 5-photon samples fall into one of the orbits above. A 5-photon event with
@@ -122,12 +122,12 @@ print(list(orbits(5)))
 # [3, 1, 1], [2, 2, 1], [3, 2]]`` and ignore the orbits ``[[4, 1], [5]]``. For example,
 # the sample ``[0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 0]`` is a 5-photon event:
 
-print(sample_to_event([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 0], 3))
+print(similarity.sample_to_event([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 0], 3))
 
 ##############################################################################
 # Samples with more than ``max_count_per_mode`` in any mode are not counted as part of the event:
 
-print(sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], 3))
+print(similarity.sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], 3))
 
 ##############################################################################
 # Now that we have mastered orbits and events, how can we make a feature vector? It was shown in
@@ -155,7 +155,7 @@ print(sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], 3))
 # For the first method, all one needs to do is generate some GBS samples from the graph of
 # interest and feed through:
 
-print(feature_vector_sampling(m0, event_photon_numbers=[2, 4, 6], max_count_per_mode=2))
+print(similarity.feature_vector_sampling(m0, event_photon_numbers=[2, 4, 6], max_count_per_mode=2))
 
 ##############################################################################
 # For the second method, suppose we want to calculate the event probabilities exactly rather than
@@ -166,7 +166,7 @@ print(feature_vector_sampling(m0, event_photon_numbers=[2, 4, 6], max_count_per_
 # n_{\max}}` really tough is the number of samples the corresponding event contains! For example,
 # the 17-photon event :math:`E_{k=6, n_{\max}=2}` contains the following number of samples:
 
-print(event_cardinality(6, 2, 17))
+print(similarity.event_cardinality(6, 2, 17))
 
 ##############################################################################
 # To avoid calculating a large number of sample probabilities, an alternative for calculating the
@@ -183,12 +183,13 @@ print(event_cardinality(6, 2, 17))
 # This method can be accessed using the :func:`prob_event_mc` function. The 4-photon event is
 # approximated as:
 
-#print(prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6))
+# print(similarity.prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6))
 
 ##############################################################################
 # The feature vector can then be calculated through Monte Carlo sampling using:
 
-#print(feature_vector_mc(nx.Graph(m0_a), event_photon_numbers=[2, 4, 6], max_count_per_mode=2,
+# print(similarity.feature_vector_mc(nx.Graph(m0_a), event_photon_numbers=[2, 4, 6],
+# max_count_per_mode=2,
 # n_mean=6))
 
 ##############################################################################
