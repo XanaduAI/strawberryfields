@@ -14,6 +14,8 @@
 """GBS applications layer"""
 
 import strawberryfields.gbs.clique
+import strawberryfields.gbs.data
+import strawberryfields.gbs.points
 import strawberryfields.gbs.sample
 import strawberryfields.gbs.similarity
 import strawberryfields.gbs.subgraph

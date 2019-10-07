@@ -14,15 +14,14 @@
 r"""
 Unit tests for strawberryfields.gbs.plot
 """
-# pylint: disable=no-self-use,unused-argument,too-many-arguments
-import itertools
-from collections import Counter
-
+# pylint: disable=no-self-use,unused-argument,too-many-arguments,protected-access
 import networkx as nx
 import numpy as np
 import pytest
 
 from strawberryfields.gbs import plot
+
+pytestmark = pytest.mark.gbs
 
 
 class TestNodeCoords:
@@ -35,8 +34,8 @@ class TestNodeCoords:
         graph = nx.complete_graph(dim)
         layout = nx.kamada_kawai_layout(graph)
         coords = plot._node_coords(graph, layout)
-        x = coords['x']
-        y = coords['y']
+        x = coords["x"]
+        y = coords["y"]
         radii = [np.sqrt(x[i] ** 2 + y[i] ** 2) for i in range(dim)]
 
         assert np.allclose(radii, np.ones(dim), atol=1e-5)
@@ -46,8 +45,8 @@ class TestNodeCoords:
         graph = nx.complete_graph(4)
         layout = {0: [1, 1], 1: [1, -1], 2: [-1, 1], 3: [-1, -1]}
         coords = plot._node_coords(graph, layout)
-        x = coords['x']
-        y = coords['y']
+        x = coords["x"]
+        y = coords["y"]
 
         assert x == [1, 1, -1, -1]
         assert y == [1, -1, 1, -1]
@@ -62,9 +61,12 @@ class TestEdgeCoords:
         graph = nx.cycle_graph(dim)
         layout = nx.kamada_kawai_layout(graph)
         coords = plot._edge_coords(graph, layout)
-        x = coords['x']
-        y = coords['y']
-        dists = [np.sqrt((x[3*k] - x[3*k+1]) ** 2 + (y[3*k] - y[3*k+1])**2) for k in range(dim)]
+        x = coords["x"]
+        y = coords["y"]
+        dists = [
+            np.sqrt((x[3 * k] - x[3 * k + 1]) ** 2 + (y[3 * k] - y[3 * k + 1]) ** 2)
+            for k in range(dim)
+        ]
         first_dist = np.sqrt((x[0] - x[1]) ** 2 + (y[0] - y[1]) ** 2)
 
         assert np.allclose(dists, first_dist)
@@ -74,8 +76,8 @@ class TestEdgeCoords:
         graph = nx.complete_graph(2)
         layout = {0: [1, 1], 1: [-1, -1]}
         coords = plot._edge_coords(graph, layout)
-        x = coords['x']
-        y = coords['y']
+        x = coords["x"]
+        y = coords["y"]
         print(x)
         print(y)
 

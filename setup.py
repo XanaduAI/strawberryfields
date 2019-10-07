@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 #!/usr/bin/env python3
 import sys
-import os
+
 from setuptools import setup
 
 # from sphinx.setup_command import BuildDoc
@@ -53,9 +54,9 @@ info = {
         "strawberryfields.backends.tfbackend",
         "strawberryfields.backends.fockbackend",
         "strawberryfields.backends.gaussianbackend",
-        "strawberryfields.gbs"
+        "strawberryfields.gbs",
     ],
-    "package_data": {"strawberryfields": ["backends/data/*"]},
+    "package_data": {"strawberryfields": ["backends/data/*", "gbs/data/*"]},
     "include_package_data": True,
     "description": "Open source library for continuous-variable quantum computation",
     "long_description": open("README.rst", encoding="utf-8").read(),
