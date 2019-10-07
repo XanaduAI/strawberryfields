@@ -101,6 +101,7 @@ def _edge_coords(graph: nx.Graph, l: dict) -> dict:
 GREEN = "#3e9651"
 RED = "#cc2529"
 LIGHT_GREY = "#CDCDCD"
+VERY_LIGHT_GREY = '#F2F2F2'
 
 graph_node_colour = GREEN
 graph_edge_colour = LIGHT_GREY
@@ -112,7 +113,7 @@ subgraph_node_size = 16
 
 
 def plot_graph(
-    graph: nx.Graph, subgraph: Optional[list] = None, size: int = 500
+    graph: nx.Graph, subgraph: Optional[list] = None, plot_size: int = 500
 ) -> None:  # pragma: no cover
     """Creates a Plotly plot of the input graph.
 
@@ -173,8 +174,8 @@ def plot_graph(
         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         margin=dict(b=0, l=0, r=0, t=25),
-        height=size,
-        width=size,
+        height=plot_size,
+        width=plot_size,
         plot_bgcolor="#ffffff",
     )
 
@@ -204,7 +205,7 @@ def plot_graph(
     return f
 
 
-def plot_subgraph(subgraph: nx.Graph, size: int = 500) -> None:  # pragma: no cover
+def plot_subgraph(subgraph: nx.Graph, plot_size: int = 500) -> None:  # pragma: no cover
     """Creates a Plotly plot of the input subgraph.
 
     **Example usage:**
@@ -258,8 +259,8 @@ def plot_subgraph(subgraph: nx.Graph, size: int = 500) -> None:  # pragma: no co
         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         margin=dict(b=0, l=0, r=0, t=25),
-        height=size,
-        width=size,
+        height=plot_size,
+        width=plot_size,
         plot_bgcolor="#ffffff",
     )
 
@@ -268,13 +269,14 @@ def plot_subgraph(subgraph: nx.Graph, size: int = 500) -> None:  # pragma: no co
     return f
 
 
-def plot_points(R: np.ndarray, sample: list, size: int = 500) -> None:  # pragma: no cover
-    """Creates a Plotly plot of the input points given their coordinates, highlighting an input
-    sample of points.
+def plot_points(R: np.ndarray, sample: Optional[list] = None,
+                plot_size: int = 500, point_size: int = 30) -> None:  # pragma: no cover
+    """Creates a Plotly plot of two-dimensional points given their input coordinates. Sampled
+    points can be optionally highlighted among all points.
 
     **Example usage:**
 
-    >>> R = np.random.normal(0, 1, (50, 50))
+    >>> R = np.random.normal(0, 1, (50, 2))
     >>> sample = [1] * 10 + [0] * 40  # select first ten points
     >>> plot_points(R, sample).show()
 
@@ -285,7 +287,7 @@ def plot_points(R: np.ndarray, sample: list, size: int = 500) -> None:  # pragma
 
     Args:
         R (np.array): Coordinate matrix. Rows of this array are the coordinates of the points.
-        sample (list[int]): subset of points to be highlighted, usually obtained from a sample
+        sample (list[int]): optional subset of sampled points to be highlighted
 
     Returns:
          Figure: Plotly figure of points with the sample highlighted
@@ -307,8 +309,8 @@ def plot_points(R: np.ndarray, sample: list, size: int = 500) -> None:  # pragma
         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         margin=dict(b=0, l=0, r=0, t=25),
-        height=size,
-        width=size,
+        height=plot_size,
+        width=plot_size,
         plot_bgcolor="white",
     )
 
@@ -317,29 +319,34 @@ def plot_points(R: np.ndarray, sample: list, size: int = 500) -> None:  # pragma
         y=R[:, 1],
         mode="markers",
         hoverinfo="text",
-        marker=dict(color="#F2F2F2", size=30, line=dict(color="black", width=1.5)),
+        marker=dict(color=VERY_LIGHT_GREY, size=point_size,
+                    line=dict(color="black", width=point_size/20)),
     )
 
     points.text = [str(i) for i in range(len(R))]
 
-    s_x = []
-    s_y = []
-    sampled_points = [i for i in range(len(sample)) if sample[i] > 0]
-    for s in sample:
-        if s > 0:
-        s_x.append(R[i, 0])
-        s_y.append(R[i, 1])
+    if sample:
+        s_x = []
+        s_y = []
+        sampled_points = [i for i in range(len(sample)) if sample[i] > 0]
+        for i in sampled_points:
+            s_x.append(R[i, 0])
+            s_y.append(R[i, 1])
 
-    samp = go.Scatter(
-        x=s_x,
-        y=s_y,
-        mode="markers",
-        hoverinfo="text",
-        marker=dict(color=RED, size=30, line=dict(color="black", width=1.5)),
-    )
+        samp = go.Scatter(
+            x=s_x,
+            y=s_y,
+            mode="markers",
+            hoverinfo="text",
+            marker=dict(color=RED, size=point_size,
+                        line=dict(color="black", width=point_size/20)),
+        )
 
-    samp.text = [str(i) for i in sampled_points]
+        samp.text = [str(i) for i in sampled_points]
 
-    f = go.Figure(data=[points, samp], layout=layout)
+        f = go.Figure(data=[points, samp], layout=layout)
+
+    else:
+        f = go.Figure(data=[points], layout=layout)
 
     return f
