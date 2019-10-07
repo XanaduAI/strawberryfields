@@ -294,7 +294,7 @@ def plot_points(R: np.ndarray, sample: list, size: int = 500) -> None:  # pragma
         import plotly.graph_objects as go
     except ImportError:
         raise ImportError(
-            "Plotly required for using plot(). Can be installed using pip install "
+            "Plotly required for using plot_points(). Can be installed using pip install "
             "plotly or visiting https://plot.ly/python/getting-started/#installation"
         )
     except RuntimeError:
@@ -325,7 +325,8 @@ def plot_points(R: np.ndarray, sample: list, size: int = 500) -> None:  # pragma
     s_x = []
     s_y = []
     sampled_points = [i for i in range(len(sample)) if sample[i] > 0]
-    for i in sampled_points:
+    for s in sample:
+        if s > 0:
         s_x.append(R[i, 0])
         s_y.append(R[i, 1])
 
