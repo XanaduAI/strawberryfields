@@ -280,7 +280,7 @@ class PHat(Dataset):
     <http://iridia.ulb.ac.be/~fmascia/maximum_clique/DIMACS-benchmark>`__ dataset, which is a
     collection of large graphs with cliques that are hard to find. The best known clique of
     this 300-node graph is of size 8 and is composed of nodes: ``[53, 123, 180, 218, 246, 267, 270,
-    286]``. This graph is not visualized due to its size.
+    286]``. This graph is not visualized due to its large size.
 
     Attributes:
         n_mean = 10
