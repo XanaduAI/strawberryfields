@@ -283,7 +283,7 @@ import strawberryfields.decompositions as dec
 from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
 from .program_utils import (Command, RegRef, MergeFailure)
-from .parameters import (par_regref_deps, par_str, par_evaluate, parfuncs as pf)
+from .parameters import (par_regref_deps, par_str, par_evaluate, par_is_symbolic, parfuncs as pf)
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
@@ -560,7 +560,14 @@ class Decomposition(Operation):
     """
     ns = None  # overridden by child classes in __init__
 
+    @staticmethod
+    def _check_p0(p0):
+        """Checks that p0 is not symbolic."""
+        if par_is_symbolic(p0):
+            raise TypeError("The first parameter of a Decomposition is a square matrix, and cannot be symbolic.")
+
     def __init__(self, par, decomp=True):
+        self._check_p0(par[0])
         super().__init__(par)
         self.decomp = decomp
         """bool: If False, try to apply the Decomposition as a single primitive operation
@@ -1412,10 +1419,11 @@ class CXgate(Gate):
         #theta = 0.5 * pf.atan2(-1.0 / pf.cosh(r), -pf.tanh(r))
         # FIXME in sympy 1.4 atan2._eval_evalf() has a bug, it does not work with Symbol._eval_evalf().
         # This is a workaround. When sympy is fixed (in version 1.5?), go back to using pf.atan2.
+        # See https://github.com/sympy/sympy/pull/17469
         # If s<0 we need to add pi/2 to theta. If s==0, we need to avoid division by zero.
-        theta = pf.Piecewise((0.5 * pf.atan(1 / pf.sinh(r)), s > 0),
-                             (-np.pi/4, s == 0),
-                             (0.5 * pf.atan(1 / pf.sinh(r)) +np.pi/2, True))
+        temp = 0.5 * pf.atan(1 / pf.sinh(r))  # NOTE s==0 will cause a division by zero when this is evaluated
+        theta = temp +pf.Heaviside(-s) * np.pi/2
+
         return [
             Command(BSgate(theta, 0), reg),
             Command(Sgate(r, 0), reg[0]),
@@ -1817,6 +1825,7 @@ class BipartiteGraphEmbed(Decomposition):
     """
 
     def __init__(self, A, mean_photon_per_mode=1.0, edges=False, drop_identity=True, tol=1e-6):
+        self._check_p0(A)
         self.mean_photon_per_mode = mean_photon_per_mode
         self.tol = tol
         self.identity = np.all(np.abs(A - np.identity(len(A))) < _decomposition_merge_tol)
@@ -1988,6 +1997,7 @@ class Gaussian(Preparation, Decomposition):
     ns = None
 
     def __init__(self, V, r=None, decomp=True, tol=1e-6):
+        self._check_p0(V)
         # internally we eliminate hbar from the covariance matrix V (or equivalently set hbar=2), but not from the means vector r
         V = V / (sf.hbar / 2)
         self.ns = V.shape[0] // 2

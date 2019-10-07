@@ -141,6 +141,14 @@ import sympy
 import sympy.functions as sf
 
 
+# FIXME Workaround for missing numpy implementation of Heaviside, required by CXgate. Remove when no longer necessary.
+def heaviside(x):
+    """Heaviside step function."""
+    if x <= 0:
+        return 0
+    return 1
+custom_funcs = {'Heaviside': heaviside}
+
 
 def wrap_mathfunc(func):
     """Applies the wrapped sympy function elementwise to numpy arrays.
@@ -185,7 +193,7 @@ def par_evaluate(params):
 
     Any parameters descending from sympy.Basic are evaluated, others are returned as-is.
     Evaluation means that free and measured parameters are replaced by their numeric values.
-    Numpy arrays are evaluated elementwise.
+    Numpy object arrays are evaluated elementwise.
 
     Alternatively, evaluates a single parameter and returns its value.
 
@@ -207,24 +215,9 @@ def par_evaluate(params):
         if not par_is_symbolic(p):
             return p
 
-        #p = p.evalf()  # TODO sympy 1.4 has some bugs which prevent using this for now, workaround below
-        if 0:
-            # build the substitution dict for binding free and measured params
-            d = {}
-            for k in p.atoms(MeasuredParameter, FreeParameter):
-                d[k] = k._eval_evalf(None)
-            p = p.evalf(subs=d)
-            # TODO evalf cannot handle substitutions with arbitrary objects even if p is atomic, hence substituting e.g. numpy arrays or TF classes causes sympy to raise an error
-            # TODO the float() conversion below prevents symbolic params from being passed through, maybe the backend should do float() conversion?
-            if not p.is_real:
-                return complex(p)
-            if p.is_integer:
-                return int(p)
-            return float(p)
-
         # using lambdify we can also substitute np.ndarrays and tf.Tensors for the atoms
         atoms = list(p.atoms(MeasuredParameter, FreeParameter))
-        func = sympy.lambdify(atoms, p, ['numpy'])
+        func = sympy.lambdify(atoms, p, ['numpy', custom_funcs])
         vals = [k._eval_evalf(None) for k in atoms]
         return func(*vals)
 
