@@ -278,8 +278,8 @@ def plot_points(R, sample, size: int = 500):  # pragma: no cover
        :target: javascript:void(0);
 
     Args:
-        subgraph (nx.Graph): input subgraph
-        size (int): size of the plot in pixels, rendered in a square layout
+        R (np.array): Coordinate matrix. Rows of this array are the coordinates of the points.
+        sample (list): subset of points to be highlighted, usually obtained from a sample.
 
     Returns:
          Figure: Plotly figure for subgraph
