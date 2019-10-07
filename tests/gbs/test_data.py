@@ -23,7 +23,15 @@ from strawberryfields.gbs import data
 
 pytestmark = pytest.mark.gbs
 
-DATASETS_LIST = [data.Planted]
+DATASETS_LIST = [
+    data.Planted,
+    data.TaceAs,
+    data.Mutag0,
+    data.Mutag1,
+    data.Mutag2,
+    data.Mutag3,
+    data.PHat,
+]
 
 
 @pytest.mark.parametrize("datasets", DATASETS_LIST)
@@ -131,3 +139,14 @@ class TestDatasets:
 
         with pytest.raises(StopIteration):
             next(dataset_patched)
+
+    def test_adj_dim(self, dataset):
+        """Test if adjacency matrix of dataset is correct dimensions."""
+        n, m = dataset.adj.shape
+
+        assert n == m
+        assert n == dataset.modes
+
+    def test_adj_valid(self, dataset):
+        """Test if adjacency matrix of dataset is symmetric."""
+        assert np.allclose(dataset.adj, dataset.adj.T)
