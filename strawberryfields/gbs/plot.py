@@ -118,7 +118,7 @@ def plot_graph(
 
     This function can plot just the input graph or the graph with a specified subgraph highlighted.
 
-    **Example usage**:
+    **Example usage:**
 
     >>> graph = nx.complete_graph(10)
     >>> fig = plot_graph(graph, [0, 1, 2, 3])
@@ -207,7 +207,7 @@ def plot_graph(
 def plot_subgraph(subgraph: nx.Graph, size: int = 500) -> None:  # pragma: no cover
     """Creates a Plotly plot of the input subgraph.
 
-    **Example usage**:
+    **Example usage:**
 
     >>> graph = nx.complete_graph(10)
     >>> subgraph = graph.subgraph([0, 1, 2, 3])
@@ -272,7 +272,7 @@ def plot_points(R: np.ndarray, sample: list, size: int = 500) -> None:  # pragma
     """Creates a Plotly plot of the input points given their coordinates, highlighting an input
     sample of points.
 
-    **Example usage**:
+    **Example usage:**
 
     >>> R = np.random.normal(0, 1, (50, 50))
     >>> sample = [1]*10 + [0]*40
