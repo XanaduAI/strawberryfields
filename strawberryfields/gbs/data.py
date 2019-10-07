@@ -253,7 +253,8 @@ class TaceAs(Dataset):
     Nodes in this graph correspond to pairs of atoms in a target protein and a pharmaceutical
     molecule. Edges in the graph are added if the distance between both pairs of atoms is very
     close to equal. Cliques in the graph correspond to possible docking configurations of protein
-    and molecule, and the largest clique is the most stable configuration.
+    and molecule, and the largest clique is the most stable configuration. There are multiple
+    maximum-sized cliques of 8 nodes in this graph.
 
     **Graph:**
 
