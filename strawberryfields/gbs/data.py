@@ -315,7 +315,7 @@ class Mutag0(Dataset):
         n_mean = 6
         n_max = 20
         threshold = False
-        n_samples = 60000
+        n_samples = 20000
         modes = 17
     """
 
@@ -344,7 +344,7 @@ class Mutag1(Dataset):
         n_mean = 6
         n_max = 20
         threshold = False
-        n_samples = 60000
+        n_samples = 20000
         modes = 13
     """
 
@@ -373,7 +373,7 @@ class Mutag2(Dataset):
         n_mean = 6
         n_max = 20
         threshold = False
-        n_samples = 60000
+        n_samples = 20000
         modes = 13
     """
 
@@ -402,7 +402,7 @@ class Mutag3(Dataset):
         n_mean = 6
         n_max = 20
         threshold = False
-        n_samples = 60000
+        n_samples = 20000
         modes = 19
     """
 
