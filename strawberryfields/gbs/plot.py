@@ -20,7 +20,7 @@ Plotting and visualization
 .. currentmodule:: strawberryfields.gbs.plot
 
 This module provides functionality for visualizing graphs, subgraphs, and point processes. It
-requires the installation of the plotly library, which is not a dependency of Strawberry
+requires the installation of the Plotly library, which is not a dependency of Strawberry
 Fields. Plotly can be installed using 'pip install plotly' or by visiting their installation
 instructions at https://plot.ly/python/getting-started/#installation. Graphs are plotted using
 the Kamada-Kawai layout with an aspect ratio of 1:1. The module uses a custom Strawberry Fields
@@ -39,6 +39,7 @@ Code details
 from typing import Optional, Tuple
 
 import networkx as nx
+import numpy as np
 
 
 def _node_coords(graph: nx.Graph, l: dict) -> Tuple:
@@ -113,7 +114,7 @@ subgraph_node_size = 16
 def plot_graph(
     graph: nx.Graph, subgraph: Optional[list] = None, size: int = 500
 ) -> None:  # pragma: no cover
-    """Creates a plotly plot of the input graph.
+    """Creates a Plotly plot of the input graph.
 
     This function can plot just the input graph or the graph with a specified subgraph highlighted.
 
@@ -204,7 +205,7 @@ def plot_graph(
 
 
 def plot_subgraph(subgraph: nx.Graph, size: int = 500) -> None:  # pragma: no cover
-    """Creates a plotly plot of the input subgraph.
+    """Creates a Plotly plot of the input subgraph.
 
     **Example usage**:
 
@@ -267,8 +268,8 @@ def plot_subgraph(subgraph: nx.Graph, size: int = 500) -> None:  # pragma: no co
     return f
 
 
-def plot_points(R, sample, size: int = 500):  # pragma: no cover
-    """Creates a plotly plot of the input points given their coordinates, highlighting an input
+def plot_points(R: np.ndarray, sample: list, size: int = 500) -> None:  # pragma: no cover
+    """Creates a Plotly plot of the input points given their coordinates, highlighting an input
     sample of points.
 
     **Example usage**:
