@@ -35,6 +35,7 @@ for subgraphs uses red nodes and edges.
 Code details
 ^^^^^^^^^^^^
 """
+# pylint: disable=import-outside-toplevel
 from typing import Optional, Tuple
 
 import networkx as nx
@@ -109,8 +110,9 @@ graph_node_size = 14
 subgraph_node_size = 16
 
 
-def plot_graph(graph: nx.Graph, subgraph: Optional[list] = None,
-               size: int = 500) -> None:  # pragma: no cover
+def plot_graph(
+    graph: nx.Graph, subgraph: Optional[list] = None, size: int = 500
+) -> None:  # pragma: no cover
     """Creates a plotly plot of the input graph.
 
     This function can plot just the input graph or the graph with a specified subgraph highlighted.
@@ -137,8 +139,10 @@ def plot_graph(graph: nx.Graph, subgraph: Optional[list] = None,
     try:
         import plotly.graph_objects as go
     except ImportError:
-        raise ImportError("Plotly required for using plot(). Can be installed using pip install "
-                          "plotly or visiting https://plot.ly/python/getting-started/#installation")
+        raise ImportError(
+            "Plotly required for using plot(). Can be installed using pip install "
+            "plotly or visiting https://plot.ly/python/getting-started/#installation"
+        )
     except RuntimeError:
         print("Plotly unable to open display")
         raise
@@ -288,8 +292,10 @@ def plot_points(R, sample, size: int = 500):  # pragma: no cover
     try:
         import plotly.graph_objects as go
     except ImportError:
-        raise ImportError("Plotly required for using plot(). Can be installed using pip install "
-                          "plotly or visiting https://plot.ly/python/getting-started/#installation")
+        raise ImportError(
+            "Plotly required for using plot(). Can be installed using pip install "
+            "plotly or visiting https://plot.ly/python/getting-started/#installation"
+        )
     except RuntimeError:
         print("Plotly unable to open display")
         raise
@@ -305,11 +311,13 @@ def plot_points(R, sample, size: int = 500):  # pragma: no cover
         plot_bgcolor="white",
     )
 
-    points = go.Scatter(x=R[:, 0], y=R[:, 1],
-                        mode="markers",
-                        hoverinfo="text",
-                        marker=dict(color='#F2F2F2', size=30,
-                                    line=dict(color='black', width=1.5)))
+    points = go.Scatter(
+        x=R[:, 0],
+        y=R[:, 1],
+        mode="markers",
+        hoverinfo="text",
+        marker=dict(color="#F2F2F2", size=30, line=dict(color="black", width=1.5)),
+    )
 
     points.text = [str(i) for i in range(len(R))]
 
@@ -320,10 +328,13 @@ def plot_points(R, sample, size: int = 500):  # pragma: no cover
         s_x.append(R[i, 0])
         s_y.append(R[i, 1])
 
-    samp = go.Scatter(x=s_x, y=s_y,
-                      mode="markers",
-                      hoverinfo="text",
-                      marker=dict(color=RED, size=30, line=dict(color='black', width=1.5)))
+    samp = go.Scatter(
+        x=s_x,
+        y=s_y,
+        mode="markers",
+        hoverinfo="text",
+        marker=dict(color=RED, size=30, line=dict(color="black", width=1.5)),
+    )
 
     samp.text = [str(i) for i in sampled_points]
 
