@@ -30,6 +30,7 @@ for subgraphs uses red nodes and edges.
 .. autosummary::
     plot_graph
     plot_subgraph
+    plot_points
 
 Code details
 ^^^^^^^^^^^^
