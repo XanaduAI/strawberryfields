@@ -260,3 +260,72 @@ def plot_subgraph(subgraph: nx.Graph, size: int = 500) -> None:  # pragma: no co
     f = go.Figure(data=[g_edges, g_nodes], layout=layout)
 
     return f
+
+
+def plot_points(R, sample, size: int = 500):
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise ImportError("Plotly required for using plot(). Can be installed using pip install "
+                          "plotly or visiting https://plot.ly/python/getting-started/#installation")
+    except RuntimeError:
+        print("Plotly unable to open display")
+        raise
+
+    layout = go.Layout(
+        showlegend=False,
+        hovermode="closest",
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        margin=dict(b=0, l=0, r=0, t=25),
+        height=size,
+        width=size,
+        plot_bgcolor="white",
+    )
+
+    points = go.Scatter(x=R[:, 0], y=R[:, 1],
+                        mode="markers",
+                        hoverinfo="text",
+                        marker=dict(color='rgba(242, 242, 242, 0.5)', size=30,
+                                    line=dict(color='black', width=1.5)))
+
+    points.text = [str(i) for i in range(len(R))]
+
+    s_x = []
+    s_y = []
+    s_comp = [i for i in range(len(sample)) if sample[i] > 0]
+    for i in s_comp:
+        s_x.append(R[i, 0])
+        s_y.append(R[i, 1])
+
+    samp = go.Scatter(x=s_x, y=s_y,
+                      mode="markers",
+                      hoverinfo="text",
+                      marker=dict(color=RED, size=30, line=dict(color='black', width=1.5)))
+
+    samp.text = [str(i) for i in s_comp]
+
+    f = go.Figure(data=[points, samp], layout=layout)
+
+    return f
+
+
+def twod(n=10, m=10):
+    R = []
+    for i in range(0, n):
+        for j in range(0, m):
+            R.append((i, j))
+
+    return np.array(R)
+
+
+import numpy as np
+d = 10
+R = np.random.random((d**2, 2))
+# R = twod(d, d)
+sample = np.zeros(d**2)
+s = np.random.choice(d**2, d, replace=False)
+for i in s:
+    sample[i] = 1
+plot_points(R, sample).show()
+#F2F2F2
