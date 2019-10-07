@@ -275,7 +275,7 @@ def plot_points(R: np.ndarray, sample: list, size: int = 500) -> None:  # pragma
     **Example usage:**
 
     >>> R = np.random.normal(0, 1, (50, 50))
-    >>> sample = [1]*10 + [0]*40
+    >>> sample = [1] * 10 + [0] * 40  # select first ten points
     >>> plot_points(R, sample).show()
 
     .. image:: ../../_static/normal_pp.png
@@ -285,10 +285,10 @@ def plot_points(R: np.ndarray, sample: list, size: int = 500) -> None:  # pragma
 
     Args:
         R (np.array): Coordinate matrix. Rows of this array are the coordinates of the points.
-        sample (list): subset of points to be highlighted, usually obtained from a sample.
+        sample (list[int]): subset of points to be highlighted, usually obtained from a sample
 
     Returns:
-         Figure: Plotly figure for subgraph
+         Figure: Plotly figure of points with the sample highlighted
     """
     try:
         import plotly.graph_objects as go
