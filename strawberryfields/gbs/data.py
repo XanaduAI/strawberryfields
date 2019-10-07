@@ -250,6 +250,11 @@ class Planted(Dataset):
 class TaceAs(Dataset):
     """Binding interaction graph for the TACE-AS complex :cite:`banchi2019molecular`.
 
+    Nodes in this graph correspond to pairs of atoms in a target protein and a pharmaceutical
+    molecule. Edges in the graph are added if the distance between both pairs of atoms is very
+    close to equal. Cliques in the graph correspond to possible docking configurations of protein
+    and molecule, and the largest clique is the most stable configuration.
+
     **Graph:**
 
     .. |tace_as| image:: ../../_static/graphs/TACE-AS.png
