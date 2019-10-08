@@ -38,7 +38,6 @@ represent samples from the device.
 .. autosummary::
     sample
     seed
-    modes_from_counts
 
 Subgraph sampling through GBS
 -----------------------------
@@ -48,6 +47,7 @@ This module also provides functionality for sampling of subgraphs from undirecte
 
 .. autosummary::
     to_subgraphs
+    modes_from_counts
 
 Code details
 ^^^^^^^^^^^^
@@ -114,16 +114,16 @@ def seed(value: Optional[int]) -> None:
 
 
 def to_subgraphs(samples: list, graph: nx.Graph) -> list:
-    """Converts a list of samples to a list of subgraphs.
+    """Converts lists of samples to lists of subgraphs.
 
-    Given a list of samples, with each sample of ``len(nodes)`` being a list of zeros and ones,
+    For a list of samples, with each sample of ``len(nodes)`` being a list of zeros and ones,
     this function returns a list of subgraphs selected by, for each sample, picking the nodes
-    corresponding to ones and creating the induced subgraph. The subgraph is specified as a list
+    with nonzero entries and creating the induced subgraph. The subgraph is specified as a list
     of selected nodes. For example, given an input 6-node graph, a sample :math:`[0, 1, 1, 0, 0,
     1]` is converted to a subgraph :math:`[1, 2, 5]`.
 
     Args:
-        samples (list): a list of samples, each a binary sequence of ``len(nodes)``
+        samples (list[list[int]]): a list of samples
         graph (nx.Graph): the input graph
 
     Returns:
@@ -134,7 +134,7 @@ def to_subgraphs(samples: list, graph: nx.Graph) -> list:
     graph_nodes = list(graph.nodes)
     node_number = len(graph_nodes)
 
-    subgraph_samples = [modes_from_counts(s) for s in samples]
+    subgraph_samples = [list(set(modes_from_counts(s))) for s in samples]
 
     if graph_nodes != list(range(node_number)):
         return [sorted([graph_nodes[i] for i in s]) for s in subgraph_samples]
