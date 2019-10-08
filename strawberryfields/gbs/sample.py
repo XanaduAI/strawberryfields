@@ -49,8 +49,6 @@ and converts them to subgraphs using :func:`to_subgraphs`. Sampling can be gener
 GBS and by using the uniform distribution.
 
 .. autosummary::
-    SAMPLE_DEFAULTS
-    subgraphs
     to_subgraphs
 
 Code details
@@ -115,75 +113,6 @@ def seed(value: Optional[int]) -> None:
         value (int): random seed
     """
     np.random.seed(value)
-
-
-SAMPLE_DEFAULTS = {"distribution": "gbs", "postselect_ratio": 0.75}
-"""dict[str, Any]: Dictionary to specify default parameters of options in :func:`subgraphs`.
-"""
-
-
-def subgraphs(
-    graph: nx.Graph,
-    nodes: int,
-    samples: int = 1,
-    sample_options: Optional[dict] = None,
-    backend_options: Optional[dict] = None,
-) -> list:
-    """Samples subgraphs from an input graph
-
-    The optional ``sample_options`` argument can be used to specify the type of sampling. It
-    should be a dict that contains any of the following:
-
-    .. glossary::
-
-        key: ``"distribution"``, value: *str*
-            Subgraphs can be sampled according to the following distributions:
-
-            - ``"gbs"``: for generating subgraphs according to the Gaussian boson sampling
-              distribution. In this distribution, subgraphs are sampled with a variable size (
-              default).
-            - ``"uniform"``: for generating subgraphs uniformly at random. When using this
-              distribution, subgraphs are of a fixed size. Note that ``backend_options`` are not
-              used and that remote sampling is unavailable due to the simplicity of the
-              distribution.
-
-        key: ``"postselect_ratio"``, value: *float*
-            Ratio of ``nodes`` used to determine the minimum size of subgraph sampled; defaults
-            to 0.75.
-
-    Args:
-        graph (nx.Graph): the input graph
-        nodes (int): the mean size of subgraph samples
-        samples (int): number of samples
-        sample_options (dict[str, Any]): dictionary specifying options used by :func:`subgraphs`;
-            defaults to :const:`SAMPLE_DEFAULTS`
-        backend_options (dict[str, Any]): dictionary specifying options used by backends during
-            sampling
-
-    Returns:
-        list[list[int]]: a list of length ``samples`` whose elements are subgraphs given by a
-        list of nodes
-    """
-    sample_options = {**SAMPLE_DEFAULTS, **(sample_options or {})}
-
-    distribution = sample_options["distribution"]
-
-    if distribution == "uniform":
-        s = uniform(modes=graph.order(), sampled_modes=nodes, samples=samples)
-    elif distribution == "gbs":
-        postselect = int(sample_options["postselect_ratio"] * nodes)
-        backend_options = {**(backend_options or {}), "postselect": postselect}
-
-        s = sample(
-            A=nx.to_numpy_array(graph),
-            n_mean=nodes,
-            samples=samples,
-            backend_options=backend_options,
-        )
-    else:
-        raise ValueError("Invalid distribution selected")
-
-    return to_subgraphs(graph, s)
 
 
 def to_subgraphs(graph: nx.Graph, samples: list) -> list:
