@@ -291,7 +291,7 @@ def plot_points(
         sample (list[int]): optional subset of sampled points to be highlighted
 
     Returns:
-         Figure: Plotly figure of points with the sample highlighted
+         Figure: figure of points with the sample highlighted
     """
     try:
         import plotly.graph_objects as go
