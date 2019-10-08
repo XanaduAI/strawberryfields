@@ -27,27 +27,7 @@ from strawberryfields.gbs import sample
 
 pytestmark = pytest.mark.gbs
 
-samples_pnr_nopostselect = np.array(
-    [
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 1, 1],
-        [1, 1, 0, 0],
-        [2, 1, 3, 4],
-        [2, 0, 1, 3],
-        [0, 0, 0, 0],
-        [1, 2, 1, 0],
-        [0, 0, 0, 0],
-    ]
-)
-
-sample_number = len(samples_pnr_nopostselect)
 integration_sample_number = 2
-
-sample_pnr_postselect = np.array([[2, 0, 1, 3]])
-sample_threshold_postselect = np.array([[1, 0, 1, 1]])
-
 adj_dim_range = range(2, 6)
 
 
@@ -168,31 +148,6 @@ def test_seed(dim, adj):
     q_s_2 = sample.sample(A=adj, n_mean=2, samples=10, backend_options={"threshold": False})
 
     assert np.array_equal(q_s_1, q_s_2)
-
-
-@pytest.mark.parametrize("dim", [6])
-def test_subgraphs_invalid_distribution(graph):
-    """Tests if function ``sample.subgraphs`` raises a ``ValueError`` for an
-    invalid sampling distribution"""
-    with pytest.raises(ValueError, match="Invalid distribution selected"):
-        sample.subgraphs(graph, nodes=2, samples=10, sample_options={"distribution": ""})
-
-
-@pytest.mark.parametrize(
-    "dim, nodes, samples", [(6, 4, integration_sample_number), (8, 4, integration_sample_number)]
-)
-@pytest.mark.parametrize("distribution", ("uniform", "gbs"))
-def test_subgraphs_integration(graph, nodes, samples, distribution):
-    """Integration tests for the function ``sample.subgraphs``"""
-
-    graph = nx.relabel_nodes(graph, lambda x: x ** 2)
-    graph_nodes = set(graph.nodes)
-    output_samples = sample.subgraphs(
-        graph=graph, nodes=nodes, samples=samples, sample_options={"distribution": distribution}
-    )
-
-    assert len(output_samples) == samples
-    assert all(set(sample).issubset(graph_nodes) for sample in output_samples)
 
 
 @pytest.mark.parametrize("dim", [6])
