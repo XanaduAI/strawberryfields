@@ -113,7 +113,7 @@ def seed(value: Optional[int]) -> None:
     np.random.seed(value)
 
 
-def to_subgraphs(graph: nx.Graph, samples: list) -> list:
+def to_subgraphs(samples: list, graph: nx.Graph) -> list:
     """Converts a list of samples to a list of subgraphs.
 
     Given a list of samples, with each sample of ``len(nodes)`` being a list of zeros and ones,
@@ -123,8 +123,8 @@ def to_subgraphs(graph: nx.Graph, samples: list) -> list:
     1]` is converted to a subgraph :math:`[1, 2, 5]`.
 
     Args:
-        graph (nx.Graph): the input graph
         samples (list): a list of samples, each a binary sequence of ``len(nodes)``
+        graph (nx.Graph): the input graph
 
     Returns:
         list[list[int]]: a list of subgraphs, where each subgraph is represented by a list of its

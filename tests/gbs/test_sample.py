@@ -183,7 +183,7 @@ class TestToSubgraphs:
     def test_graph(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
         ``quantum_samples``."""
-        assert sample.to_subgraphs(graph, samples=self.quantum_samples) == self.subgraphs
+        assert sample.to_subgraphs(self.quantum_samples, graph) == self.subgraphs
 
     def test_graph_mapped(self, graph):
         """Test if function returns correctly processed subgraphs given input samples of the list
@@ -196,7 +196,7 @@ class TestToSubgraphs:
             sorted([graph_nodes[i] for i in subgraph]) for subgraph in self.subgraphs
         ]
 
-        assert sample.to_subgraphs(graph, samples=self.quantum_samples) == subgraphs_mapped
+        assert sample.to_subgraphs(self.quantum_samples, graph) == subgraphs_mapped
 
 
 def test_modes_from_counts():
