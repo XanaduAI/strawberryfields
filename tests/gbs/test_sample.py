@@ -208,3 +208,16 @@ def test_modes_from_counts():
     modes = [[], [0, 3, 3], [0, 1, 2], [0, 1, 1, 2], [1, 3, 3, 4, 4, 4, 4]]
 
     assert [sample.modes_from_counts(s) for s in counts] == modes
+
+
+def test_postselect():
+    """Test if the function ``strawberryfields.gbs.sample.postselect`` correctly postselects on
+    minimum number of photons or clicks."""
+    counts_pnr = [[0, 0, 0, 0], [1, 1, 0, 2], [1, 1, 1, 0], [1, 2, 1, 0], [1, 0, 0, 1]]
+    counts_pnr_ps_4 = [[1, 1, 0, 2], [1, 2, 1, 0]]
+
+    counts_threshold = [[0, 0, 0, 0], [1, 1, 0, 1], [1, 1, 1, 0], [1, 1, 1, 0], [1, 0, 0, 1]]
+    counts_threshold_ps_3 = [[1, 1, 0, 1], [1, 1, 1, 0], [1, 1, 1, 0]]
+
+    assert sample.postselect(counts_pnr, 4) == counts_pnr_ps_4
+    assert sample.postselect(counts_threshold, 3) == counts_threshold_ps_3
