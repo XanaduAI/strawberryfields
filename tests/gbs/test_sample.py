@@ -156,101 +156,6 @@ class TestSampleIntegration:
         assert (samples <= 1).all()
 
 
-# pylint: disable=expression-not-assigned,pointless-statement
-class TestSampleSF:
-    """Tests for the function ``strawberryfields.gbs.sample._sample_sf``"""
-
-    def test_invalid_backend(self, monkeypatch):
-        """Tests if function raises a ``ValueError`` when an invalid backend is selected"""
-
-        invalid_backend = ""
-
-        with pytest.raises(ValueError, match="Invalid backend selected"):
-            sample._sample_sf(
-                p=sf.Program(num_subsystems=1),
-                shots=sample_number,
-                backend_options={"remote": False, "backend": invalid_backend},
-            )
-
-    @pytest.mark.parametrize("dim", [4])
-    def test_sample_sf_samples(self, dim, adj, valid_backend):
-        """Tests if function returns samples of correct form, i.e., correct number of samples,
-        correct number of modes, all non-negative integers"""
-
-        p = sf.Program(dim)
-        mean_photon_per_mode = 1.0
-
-        with p.context as q:
-            sf.ops.GraphEmbed(adj, mean_photon_per_mode=mean_photon_per_mode) | q
-            sf.ops.Measure | q
-
-        p = p.compile("gbs")
-
-        samples = sample._sample_sf(
-            p,
-            shots=integration_sample_number,
-            backend_options={"remote": False, "backend": "gaussian"},
-        )
-
-        dims = samples.shape
-
-        assert len(dims) == 2
-        assert dims[0] == integration_sample_number
-        assert dims[1] == len(adj)
-        assert samples.dtype == "int"
-        assert (samples >= 0).all()
-
-
-class TestUniform:
-    """Tests for the function ``strawberryfields.gbs.sample.uniform``"""
-
-    def test_insufficient_modes(self):
-        """Tests if function returns ``ValueError`` when user specifies a number of ``modes``
-        less than 1 """
-        with pytest.raises(ValueError, match="Modes and sampled_modes"):
-            sample.uniform(modes=0, sampled_modes=2, samples=2)
-
-    def test_insufficient_sampled_modes(self):
-        """Tests if function returns ``ValueError`` when user specifies a number of
-        ``sampled_modes`` less than 1 """
-        with pytest.raises(ValueError, match="Modes and sampled_modes"):
-            sample.uniform(modes=2, sampled_modes=0, samples=2)
-
-    def test_sampled_modes_exceeds_modes(self):
-        """Test if function returns ``ValueError`` when user specifies a number of
-        ``sampled_modes`` that exceeds ``modes`` """
-        with pytest.raises(ValueError, match="Modes and sampled_modes"):
-            sample.uniform(modes=2, sampled_modes=3, samples=2)
-
-    def test_insufficient_samples(self):
-        """Test if function returns ``ValueError`` when user specifies a number of samples less
-        than 1 """
-        with pytest.raises(ValueError, match="Number of samples must be greater than zero"):
-            sample.uniform(modes=2, sampled_modes=2, samples=0)
-
-    def test_output_dimensions(self):
-        """Tests if function returns list of correct dimensions"""
-        samples = np.array(sample.uniform(modes=2, sampled_modes=1, samples=3))
-        dims = samples.shape
-        assert len(dims) == 2
-        assert dims[0] == 3
-        assert dims[1] == 2
-
-    def test_output_sampled_modes(self):
-        """Tests if samples from function are only zeros and ones and have a number of ones equal to
-        ``sampled_modes``"""
-        samples = np.array(sample.uniform(modes=2, sampled_modes=1, samples=3))
-
-        only_zero_one = True
-
-        for samp in samples:
-            if not np.allclose(np.unique(samp), [0, 1]):
-                only_zero_one = False
-
-        assert only_zero_one
-        assert np.unique(np.sum(samples, axis=1)) == 1
-
-
 @pytest.mark.parametrize("dim", [4])
 def test_seed(dim, adj):
     """Test for the function ``strawberryfields.gbs.sample.seed``. Checks that samples are identical
@@ -258,14 +163,11 @@ def test_seed(dim, adj):
 
     sample.seed(1968)
     q_s_1 = sample.sample(A=adj, n_mean=2, samples=10, backend_options={"threshold": False})
-    u_s_1 = sample.uniform(modes=dim, sampled_modes=2, samples=10)
 
     sample.seed(1968)
     q_s_2 = sample.sample(A=adj, n_mean=2, samples=10, backend_options={"threshold": False})
-    u_s_2 = sample.uniform(modes=dim, sampled_modes=2, samples=10)
 
     assert np.array_equal(q_s_1, q_s_2)
-    assert np.array_equal(u_s_1, u_s_2)
 
 
 @pytest.mark.parametrize("dim", [6])

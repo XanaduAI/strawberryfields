@@ -19,8 +19,7 @@ Sampling functions
 
 .. currentmodule:: strawberryfields.gbs.sample
 
-This module provides functionality for generating samples from both a quantum device and the
-uniform distribution.
+This module provides functionality for generating samples from GBS.
 
 Gaussian boson sampling (GBS)
 -----------------------------
@@ -33,14 +32,11 @@ of length ``N``. Various problems can be encoded in the matrix :math:`A` so that
 samples are informative and can be used as a form of randomness to improve solvers, as outlined
 in Refs. :cite:`arrazola2018using` and :cite:`arrazola2018quantum`.
 
-On the other hand, the :func:`uniform` function allows users to generate samples where a
-subset of modes are selected using the uniform distribution. A utility function
-:func:`modes_from_counts` is also provided to convert between two ways to represent samples from
-the device.
+A utility function :func:`modes_from_counts` is also provided to convert between two ways to
+represent samples from the device.
 
 .. autosummary::
     sample
-    uniform
     seed
     modes_from_counts
 
@@ -106,36 +102,6 @@ def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = T
             sf.ops.MeasureFock() | q
 
     return eng.run(p, run_options={"shots": n_samples}).samples.tolist()
-
-
-def uniform(modes: int, sampled_modes: int, samples: int = 1) -> list:
-    """Perform classical sampling using the uniform distribution to randomly select a subset of
-    modes of a given size.
-
-    Args:
-        modes (int): number of modes to sample from
-        sampled_modes (int): number of modes to sample
-        samples (int): number of samples; defaults to 1
-
-    Returns:
-        list[list[int]]: a ``len(samples)`` list whose elements are ``len(modes)`` lists which
-        contain zeros and ones. The number of ones is ``samples_modes``, corresponding to the modes
-        selected.
-    """
-
-    if modes < 1 or sampled_modes < 1 or sampled_modes > modes:
-        raise ValueError(
-            "Modes and sampled_modes must be greater than zero and sampled_modes must not exceed "
-            "modes "
-        )
-    if samples < 1:
-        raise ValueError("Number of samples must be greater than zero")
-
-    base_sample = [1] * sampled_modes + [0] * (modes - sampled_modes)
-
-    output_samples = [list(np.random.permutation(base_sample)) for _ in range(samples)]
-
-    return output_samples
 
 
 def seed(value: Optional[int]) -> None:
