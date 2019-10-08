@@ -186,13 +186,9 @@ print(similarity.event_cardinality(6, 2, 17))
 print(similarity.prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6))
 
 ##############################################################################
-# The feature vector can then be calculated through Monte Carlo sampling using:
-
-# print(similarity.feature_vector_mc(nx.Graph(m0_a), event_photon_numbers=[2, 4, 6],
-# max_count_per_mode=2,
-# n_mean=6))
-
-##############################################################################
+# The feature vector can then be calculated through Monte Carlo sampling using
+# :func:`feature_vector_mc`.
+#
 # .. note::
 #     The results of :func:`prob_event_mc` and :func:`feature_vector_mc` are probabilistic and
 #     may vary between runs. Increasing the optional ``samples`` parameter will increase accuracy
@@ -201,3 +197,31 @@ print(similarity.prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6
 # The second method of MC approximation is intended for use in scenarios where it is
 # computationally intensive to pre-calculate a statistically significant dataset of samples from
 # GBS.
+#
+# Machine learning with GBS graph kernels
+# ---------------------------------------
+#
+# We have seen how GBS can be used to provide a mapping of graphs into a feature space. This
+# mapping can be used for machine learning tasks such as classification: by viewing each graph as
+# a point in the high dimensional space, we can use standard approaches from machine learning
+# such as `support vector machines <https://en.wikipedia.org/wiki/Support-vector_machine>`__.
+#
+# Let's build this up a bit more by creating two-dimensional feature vectors of our four MUTAG
+# graphs.
+
+events = [8, 10]
+max_count = 2
+
+f1 = similarity.feature_vector_sampling(m0, events, max_count)
+f2 = similarity.feature_vector_sampling(m1, events, max_count)
+f3 = similarity.feature_vector_sampling(m2, events, max_count)
+f4 = similarity.feature_vector_sampling(m3, events, max_count)
+
+print(f1)
+print(f2)
+print(f3)
+print(f4)
+
+##############################################################################
+# A plot of these points gives:
+
