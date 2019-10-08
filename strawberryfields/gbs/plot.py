@@ -24,8 +24,9 @@ requires the installation of the Plotly library, which is not a dependency of St
 Fields. Plotly can be installed using 'pip install plotly' or by visiting their installation
 instructions at https://plot.ly/python/getting-started/#installation. Graphs are plotted using
 the Kamada-Kawai layout with an aspect ratio of 1:1. The module uses a custom Strawberry Fields
-colour scheme. The standard scheme for graphs uses green nodes and grey edges, whereas the scheme
-for subgraphs uses red nodes and edges.
+colour scheme. The standard scheme for graphs uses green nodes and grey edges, the scheme for
+subgraphs uses red nodes and edges, and the scheme for point processes colors points in light
+grey, highlighting samples in red.
 
 .. autosummary::
     plot_graph
@@ -47,7 +48,7 @@ def _node_coords(graph: nx.Graph, l: dict) -> Tuple:
 
     Args:
         graph (nx.Graph): input graph
-        l (dict[int, float]): dictionary of nodes and their respective coordinates, can be
+        l (dict[int, float]): Dictionary of nodes and their respective coordinates. Can be
             generated using a NetworkX `layout <https://networkx.github.io/documentation/latest/
             reference/drawing.html#module-networkx.drawing.layout>`__
 
@@ -69,14 +70,13 @@ def _edge_coords(graph: nx.Graph, l: dict) -> dict:
 
         Args:
             graph (nx.Graph): input graph
-            l (dict[int, float]): dictionary of nodes and their respective coordinates, can be
+            l (dict[int, float]): Dictionary of nodes and their respective coordinates. Can be
                 generated using a NetworkX `layout <https://networkx.github.io/documentation/latest/
                 reference/drawing.html#module-networkx.drawing.layout>`__
 
         Returns:
              dict[str, list]: lists of x and y coordinates for the beginning and end of each edge.
-             ``None`` is placed as a
-             separator between pairs of nodes/edges.
+             ``None`` is placed as a separator between pairs of nodes/edges.
         """
     e_x = []
     e_y = []
@@ -113,11 +113,10 @@ subgraph_node_size = 16
 
 
 def plot_graph(
-    graph: nx.Graph, subgraph: Optional[list] = None, plot_size: int = 500
-) -> None:  # pragma: no cover
+    graph: nx.Graph, subgraph: Optional[list] = None, plot_size: int = 500):  # pragma: no cover
     """Creates a Plotly plot of the input graph.
 
-    This function can plot just the input graph or the graph with a specified subgraph highlighted.
+    This function can plot the input graph only, or the graph with a specified subgraph highlighted.
 
     **Example usage:**
 
@@ -133,10 +132,10 @@ def plot_graph(
     Args:
         graph (nx.Graph): input graph
         subgraph (list): optional list of nodes comprising the subgraph to highlight
-        size (int): size of the plot in pixels, rendered in a square layout
+        plot_size (int): size of the plot in pixels, rendered in a square layout
 
     Returns:
-         Figure: Plotly figure for graph and optionally highlighted subgraph
+         Figure: figure for graph and optionally highlighted subgraph
     """
     try:
         import plotly.graph_objects as go
@@ -145,9 +144,6 @@ def plot_graph(
             "Plotly required for using plot_graph(). Can be installed using pip install "
             "plotly or visiting https://plot.ly/python/getting-started/#installation"
         )
-    except RuntimeError:
-        print("Plotly unable to open display")
-        raise
 
     s = graph.subgraph(subgraph)
     l = nx.kamada_kawai_layout(graph)
@@ -205,7 +201,7 @@ def plot_graph(
     return f
 
 
-def plot_subgraph(subgraph: nx.Graph, plot_size: int = 500) -> None:  # pragma: no cover
+def plot_subgraph(subgraph: nx.Graph, plot_size: int = 500):  # pragma: no cover
     """Creates a Plotly plot of the input subgraph.
 
     **Example usage:**
@@ -222,18 +218,15 @@ def plot_subgraph(subgraph: nx.Graph, plot_size: int = 500) -> None:  # pragma: 
 
     Args:
         subgraph (nx.Graph): input subgraph
-        size (int): size of the plot in pixels, rendered in a square layout
+        plot_size (int): size of the plot in pixels, rendered in a square layout
 
     Returns:
-         Figure: Plotly figure for subgraph
+         Figure: figure for subgraph
     """
     try:
         import plotly.graph_objects as go
     except ImportError:
         raise ImportError("Plotly required for using plot_subgraph()")
-    except RuntimeError:
-        print("Plotly unable to open display")
-        raise
 
     l = nx.kamada_kawai_layout(subgraph)
 
@@ -270,8 +263,8 @@ def plot_subgraph(subgraph: nx.Graph, plot_size: int = 500) -> None:  # pragma: 
 
 
 def plot_points(
-    R: np.ndarray, sample: Optional[list] = None, plot_size: int = 500, point_size: int = 30
-) -> None:  # pragma: no cover
+    R: np.ndarray, sample: Optional[list] = None, plot_size: int = 500, point_size: float = 30
+):  # pragma: no cover
     """Creates a Plotly plot of two-dimensional points given their input coordinates. Sampled
     points can be optionally highlighted among all points.
 
@@ -289,9 +282,11 @@ def plot_points(
     Args:
         R (np.array): Coordinate matrix. Rows of this array are the coordinates of the points.
         sample (list[int]): optional subset of sampled points to be highlighted
+        plot_size (int): size of the plot in pixels, rendered in a square layout
+        point_size (int): size of the points, specified by its area
 
     Returns:
-         Figure: figure of points with the sample highlighted
+         Figure: figure of points with optionally highlighted sample
     """
     try:
         import plotly.graph_objects as go
@@ -300,9 +295,6 @@ def plot_points(
             "Plotly required for using plot_points(). Can be installed using pip install "
             "plotly or visiting https://plot.ly/python/getting-started/#installation"
         )
-    except RuntimeError:
-        print("Plotly unable to open display")
-        raise
 
     layout = go.Layout(
         showlegend=False,
