@@ -44,9 +44,7 @@ Subgraph sampling through GBS
 -----------------------------
 
 This module also provides functionality for sampling of subgraphs from undirected graphs. The
-:func:`subgraphs` function generates raw samples from :mod:`strawberryfields.gbs.sample`
-and converts them to subgraphs using :func:`to_subgraphs`. Sampling can be generated both from
-GBS and by using the uniform distribution.
+:func:`to_subgraphs` function can be used to convert samples to subgraphs.
 
 .. autosummary::
     to_subgraphs

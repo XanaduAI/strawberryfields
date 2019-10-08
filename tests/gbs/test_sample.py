@@ -142,10 +142,10 @@ def test_seed(dim, adj):
     after repeated initialization of ``seed``."""
 
     sample.seed(1968)
-    q_s_1 = sample.sample(A=adj, n_mean=2, samples=10, backend_options={"threshold": False})
+    q_s_1 = sample.sample(A=adj, n_mean=2, n_samples=10, threshold=False)
 
     sample.seed(1968)
-    q_s_2 = sample.sample(A=adj, n_mean=2, samples=10, backend_options={"threshold": False})
+    q_s_2 = sample.sample(A=adj, n_mean=2, n_samples=10, threshold=False)
 
     assert np.array_equal(q_s_1, q_s_2)
 
