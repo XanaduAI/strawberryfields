@@ -134,10 +134,10 @@ class TestParameter:
 
     def test_par_functions_with_arrays(self):
         """Parameter functions with array arguments."""
-        a = np.random.rand(2, 2)
-        b = np.random.rand(2, 3)
-        c = np.random.rand(2)
-        d = np.random.rand(2, 2)
+        a = np.ones((2, 2))
+        b = np.ones((2, 3))
+        c = np.ones((2,))
+        d = np.ones((2, 2))
 
         with pytest.raises(ValueError, match="all the arguments must be arrays of the same shape"):
             pf.beta(a, b)
