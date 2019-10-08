@@ -114,8 +114,7 @@ class TestSampleIntegration:
         dims = samples.shape
 
         assert len(dims) == 2
-        assert dims[0] == integration_sample_number
-        assert dims[1] == len(adj)
+        assert dims == (integration_sample_number, len(adj))
         assert samples.dtype == "int"
         assert (samples >= 0).all()
 
@@ -129,8 +128,7 @@ class TestSampleIntegration:
         dims = samples.shape
 
         assert len(dims) == 2
-        assert dims[0] == integration_sample_number
-        assert dims[1] == len(adj)
+        assert dims == (integration_sample_number, len(adj))
         assert samples.dtype == "int"
         assert (samples >= 0).all()
         assert (samples <= 1).all()
