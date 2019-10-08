@@ -77,7 +77,6 @@ from typing import Iterable, Optional, Tuple
 import networkx as nx
 
 from strawberryfields.gbs import sample
-from strawberryfields.gbs.sample import BACKEND_DEFAULTS
 
 
 def search(
@@ -194,7 +193,7 @@ RESIZE_DEFAULTS = {"method": "greedy-density"}
 
 OPTIONS_DEFAULTS = {
     "heuristic": {"method": random_search},
-    "backend": BACKEND_DEFAULTS,
+    "backend": {},
     "resize": RESIZE_DEFAULTS,
     "sample": sample.SAMPLE_DEFAULTS,
 }

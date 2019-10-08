@@ -15,6 +15,9 @@ r"""
 Unit tests for strawberryfields.gbs.sample
 """
 # pylint: disable=no-self-use,unused-argument,protected-access
+from unittest import mock
+
+import blackbird
 import networkx as nx
 import numpy as np
 import pytest
@@ -58,138 +61,74 @@ class TestSample:
             adj_asym = np.triu(np.ones((dim, dim)))
             sample.sample(A=adj_asym, n_mean=1.0)
 
-    def test_invalid_samples(self, adj, monkeypatch):
+    def test_invalid_n_samples(self, adj):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
         requested """
         with pytest.raises(ValueError, match="Number of samples must be at least one"):
-            sample.sample(A=adj, n_mean=1.0, samples=0)
+            sample.sample(A=adj, n_mean=1.0, n_samples=0)
 
-    def test_badpostselect(self, adj):
-        """Tests if function raises a ``ValueError`` when a negative value is set for
-        ``postselect`` """
-        with pytest.raises(ValueError, match="Can only postselect on nonnegative values"):
-            sample.sample(
-                A=adj, n_mean=1.0, samples=sample_number, backend_options={"postselect": -1}
-            )
+    def test_invalid_n_mean(self, adj):
+        """Test if function raises a ``ValueError`` when the mean photon number is specified to
+        be negative."""
+        with pytest.raises(ValueError, match="Mean photon number must be non-negative"):
+            sample.sample(A=adj, n_mean=-1.0, n_samples=1)
 
-    @pytest.mark.parametrize("valid_backends", sample.QUANTUM_BACKENDS)
-    def test_pnr_nopostselect(self, adj, monkeypatch, valid_backends):
-        """Test if function returns correct samples with no additional manipulation, i.e.,
-        no postselection or threshold detection """
+    @pytest.mark.parametrize("n_mean", [1, 2, 3])
+    def test_threshold(self, monkeypatch, dim, adj, n_mean):
+        """Test if function correctly creates the SF program for threshold GBS."""
+        mean_photon_per_mode = n_mean / float(dim)
+        p = sf.Program(dim)
 
-        def dummy_sample_sf(*args, **kwargs):
-            """Dummy ``_sample_sf`` function"""
-            return samples_pnr_nopostselect
+        p.append(
+            sf.ops.GraphEmbed(adj, mean_photon_per_mode=mean_photon_per_mode), list(range(dim))
+        )
+        p.append(sf.ops.MeasureThreshold(), list(range(dim)))
 
-        with monkeypatch.context() as m:
-            m.setattr(sample, "_sample_sf", dummy_sample_sf)
-            samples = sample.sample(
-                A=adj,
-                n_mean=1.0,
-                samples=sample_number,
-                backend_options={"backend": valid_backends, "threshold": False, "postselect": 0},
-            )
-
-        assert np.allclose(samples_pnr_nopostselect, samples)
-
-    @pytest.mark.parametrize("valid_backends", sample.QUANTUM_BACKENDS)
-    def test_threshold_nopostselect(self, adj, monkeypatch, valid_backends):
-        """Test if function returns correct samples when threshold detection is used and no
-        postselection on samples. With threshold detection, all non-zero elements of a sample are
-        set to 1. """
-
-        samples_threshold_nopostselect = samples_pnr_nopostselect.copy()
-        samples_threshold_nopostselect[samples_threshold_nopostselect >= 1] = 1
-
-        def dummy_sample_sf(*args, **kwargs):
-            """Dummy ``_sample_sf`` function"""
-            return samples_pnr_nopostselect
+        mock_eng_run = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(sample, "_sample_sf", dummy_sample_sf)
-            samples = np.array(
-                sample.sample(
-                    A=adj,
-                    n_mean=1.0,
-                    samples=sample_number,
-                    backend_options={"backend": valid_backends, "threshold": True, "postselect": 0},
-                )
-            )
+            m.setattr(sf.Engine, "run", mock_eng_run)
+            sample.sample(A=adj, n_mean=1, threshold=True)
+            p_func = mock_eng_run.call_args[0][0]
 
-        assert set(tuple(samples.flatten())) == {0, 1}
-        assert np.allclose(samples, samples_threshold_nopostselect)
+        b = blackbird.dumps(sf.io.to_blackbird(p))
+        b_func = blackbird.dumps(sf.io.to_blackbird(p_func))
 
-    @pytest.mark.parametrize("valid_backends", sample.QUANTUM_BACKENDS)
-    def test_pnr_postselect(self, adj, monkeypatch, valid_backends):
-        """Test if function returns samples when photon-number resolving detection is used and
-        postselection. Postselection only returns samples with a total photon number not less
-        than the parameter specified. """
+        assert b == b_func
 
-        def dummy_sample_sf(*args, **kwargs):
-            """Dummy ``_sample_sf`` function"""
-            return sample_pnr_postselect
+    @pytest.mark.parametrize("n_mean", [1, 2, 3])
+    def test_pnr(self, monkeypatch, dim, adj, n_mean):
+        """Test if function correctly creates the SF program for photon-number resolving GBS."""
+        mean_photon_per_mode = n_mean / float(dim)
+        p = sf.Program(dim)
 
-        with monkeypatch.context() as m:
-            m.setattr(sample, "_sample_sf", dummy_sample_sf)
-            samples = np.array(
-                sample.sample(
-                    A=adj,
-                    n_mean=1.0,
-                    samples=sample_number,
-                    backend_options={
-                        "backend": valid_backends,
-                        "threshold": False,
-                        "postselect": 1,
-                    },
-                )
-            )
+        p.append(
+            sf.ops.GraphEmbed(adj, mean_photon_per_mode=mean_photon_per_mode), list(range(dim))
+        )
+        p.append(sf.ops.MeasureFock(), list(range(dim)))
 
-        samples_target = np.array([sample_pnr_postselect[0] for _ in range(sample_number)])
-
-        assert np.allclose(samples, samples_target)
-
-    @pytest.mark.parametrize("valid_backends", sample.QUANTUM_BACKENDS)
-    def test_threshold_postselect(self, adj, monkeypatch, valid_backends):
-        """Test if function returns samples when threshold detection is used and postselection.
-        With threshold detection, all non-zero elements of a sample are set to 1. Postselection
-        only returns samples with a total click number (number of 1's) not less than the
-        parameter specified. """
-
-        def dummy_sample_sf(*args, **kwargs):
-            """Dummy ``_sample_sf`` function"""
-            return sample_pnr_postselect
+        mock_eng_run = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(sample, "_sample_sf", dummy_sample_sf)
-            samples = np.array(
-                sample.sample(
-                    A=adj,
-                    n_mean=1.0,
-                    samples=sample_number,
-                    backend_options={"backend": valid_backends, "threshold": True, "postselect": 1},
-                )
-            )
+            m.setattr(sf.Engine, "run", mock_eng_run)
+            sample.sample(A=adj, n_mean=1, threshold=False)
+            p_func = mock_eng_run.call_args[0][0]
 
-        samples_target = np.array([sample_pnr_postselect[0] for _ in range(sample_number)])
-        samples_target[samples_target >= 1] = 1
+        b = blackbird.dumps(sf.io.to_blackbird(p))
+        b_func = blackbird.dumps(sf.io.to_blackbird(p_func))
 
-        assert np.allclose(samples, samples_target)
+        assert b == b_func
 
 
 @pytest.mark.parametrize("dim", adj_dim_range)
 class TestSampleIntegration:
     """Integration tests for the function ``strawberryfields.gbs.sample.sample``"""
 
-    def test_pnr_nopostselect_integration(self, adj):
+    def test_pnr_integration(self, adj):
         """Integration test to check if function returns samples of correct form, i.e., correct
         number of samples, correct number of modes, all non-negative integers """
         samples = np.array(
-            sample.sample(
-                A=adj,
-                n_mean=1.0,
-                samples=integration_sample_number,
-                backend_options={"threshold": False, "postselect": 0},
-            )
+            sample.sample(A=adj, n_mean=1.0, n_samples=integration_sample_number, threshold=False)
         )
 
         dims = samples.shape
@@ -200,16 +139,11 @@ class TestSampleIntegration:
         assert samples.dtype == "int"
         assert (samples >= 0).all()
 
-    def test_threshold_nopostselect_integration(self, adj):
+    def test_threshold_integration(self, adj):
         """Integration test to check if function returns samples of correct form, i.e., correct
         number of samples, correct number of modes, all integers of zeros and ones """
         samples = np.array(
-            sample.sample(
-                A=adj,
-                n_mean=1.0,
-                samples=integration_sample_number,
-                backend_options={"threshold": True, "postselect": 0},
-            )
+            sample.sample(A=adj, n_mean=1.0, n_samples=integration_sample_number, threshold=True)
         )
 
         dims = samples.shape
@@ -220,51 +154,6 @@ class TestSampleIntegration:
         assert samples.dtype == "int"
         assert (samples >= 0).all()
         assert (samples <= 1).all()
-
-    def test_pnr_postselect_integration(self, adj):
-        """Integration test to check if function returns samples of correct form, i.e., correct
-        number of samples, correct number of modes, all non-negative integers with total photon
-        number not less than 1 """
-        samples = np.array(
-            sample.sample(
-                A=adj,
-                n_mean=1.0,
-                samples=integration_sample_number,
-                backend_options={"threshold": False, "postselect": 1},
-            )
-        )
-
-        dims = samples.shape
-
-        assert len(dims) == 2
-        assert dims[0] == integration_sample_number
-        assert dims[1] == len(adj)
-        assert samples.dtype == "int"
-        assert (samples >= 0).all()
-        assert (np.sum(samples, axis=1) >= 1).all()
-
-    def test_threshold_postselect_integration(self, adj):
-        """Integration test to check if function returns samples of correct form, i.e., correct
-        number of samples, correct number of modes, all integers of zeros and ones with total
-        click number not less than 1 """
-        samples = np.array(
-            sample.sample(
-                A=adj,
-                n_mean=1.0,
-                samples=integration_sample_number,
-                backend_options={"threshold": True, "postselect": 1},
-            )
-        )
-
-        dims = samples.shape
-
-        assert len(dims) == 2
-        assert dims[0] == integration_sample_number
-        assert dims[1] == len(adj)
-        assert samples.dtype == "int"
-        assert (samples >= 0).all()
-        assert (samples <= 1).all()
-        assert (np.sum(samples, axis=1) >= 1).all()
 
 
 # pylint: disable=expression-not-assigned,pointless-statement
@@ -283,7 +172,6 @@ class TestSampleSF:
                 backend_options={"remote": False, "backend": invalid_backend},
             )
 
-    @pytest.mark.parametrize("valid_backend", sample.QUANTUM_BACKENDS)
     @pytest.mark.parametrize("dim", [4])
     def test_sample_sf_samples(self, dim, adj, valid_backend):
         """Tests if function returns samples of correct form, i.e., correct number of samples,
@@ -301,7 +189,7 @@ class TestSampleSF:
         samples = sample._sample_sf(
             p,
             shots=integration_sample_number,
-            backend_options={"remote": False, "backend": valid_backend},
+            backend_options={"remote": False, "backend": "gaussian"},
         )
 
         dims = samples.shape

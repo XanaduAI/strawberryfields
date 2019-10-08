@@ -68,22 +68,19 @@ import numpy as np
 import strawberryfields as sf
 
 
-def sample(
-    A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool=True
-) -> list:
+def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = True) -> list:
     r"""Generate samples from GBS by encoding a symmetric matrix :math:`A`.
 
     Args:
-        A (array): the :math:`N \times N` symmetric matrix to sample from
+        A (array): the symmetric matrix to sample from
         n_mean (float): mean photon number
         n_samples (int): number of samples
         threshold (bool): perform GBS with threshold detectors if ``True`` or photon-number
             resolving detectors if ``False``
 
     Returns:
-        list[list[int]]: a list of length ``samples`` whose elements are length :math:`N` lists of
-        integers indicating events (e.g., photon numbers or clicks) in each of the :math:`N`
-        modes of the detector
+        list[list[int]]: a list of samples from a simulation of GBS with respect to the input
+        symmetric matrix
     """
     if not np.allclose(A, A.T):
         raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
@@ -104,9 +101,9 @@ def sample(
         sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
 
         if threshold:
-            sf.ops.MeasureThreshold | q
+            sf.ops.MeasureThreshold() | q
         else:
-            sf.ops.MeasureFock | q
+            sf.ops.MeasureFock() | q
 
     return eng.run(p, run_options={"shots": n_samples}).samples.tolist()
 
