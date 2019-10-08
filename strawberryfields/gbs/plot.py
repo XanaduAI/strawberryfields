@@ -101,7 +101,7 @@ def _edge_coords(graph: nx.Graph, l: dict) -> dict:
 GREEN = "#3e9651"
 RED = "#cc2529"
 LIGHT_GREY = "#CDCDCD"
-VERY_LIGHT_GREY = '#F2F2F2'
+VERY_LIGHT_GREY = "#F2F2F2"
 
 graph_node_colour = GREEN
 graph_edge_colour = LIGHT_GREY
@@ -269,8 +269,9 @@ def plot_subgraph(subgraph: nx.Graph, plot_size: int = 500) -> None:  # pragma: 
     return f
 
 
-def plot_points(R: np.ndarray, sample: Optional[list] = None,
-                plot_size: int = 500, point_size: int = 30) -> None:  # pragma: no cover
+def plot_points(
+    R: np.ndarray, sample: Optional[list] = None, plot_size: int = 500, point_size: int = 30
+) -> None:  # pragma: no cover
     """Creates a Plotly plot of two-dimensional points given their input coordinates. Sampled
     points can be optionally highlighted among all points.
 
@@ -319,8 +320,9 @@ def plot_points(R: np.ndarray, sample: Optional[list] = None,
         y=R[:, 1],
         mode="markers",
         hoverinfo="text",
-        marker=dict(color=VERY_LIGHT_GREY, size=point_size,
-                    line=dict(color="black", width=point_size/20)),
+        marker=dict(
+            color=VERY_LIGHT_GREY, size=point_size, line=dict(color="black", width=point_size / 20)
+        ),
     )
 
     points.text = [str(i) for i in range(len(R))]
@@ -338,8 +340,9 @@ def plot_points(R: np.ndarray, sample: Optional[list] = None,
             y=s_y,
             mode="markers",
             hoverinfo="text",
-            marker=dict(color=RED, size=point_size,
-                        line=dict(color="black", width=point_size/20)),
+            marker=dict(
+                color=RED, size=point_size, line=dict(color="black", width=point_size / 20)
+            ),
         )
 
         samp.text = [str(i) for i in sampled_points]
