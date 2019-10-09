@@ -17,7 +17,6 @@ Unit tests for strawberryfields.gbs.sample
 # pylint: disable=no-self-use,unused-argument,protected-access
 from unittest import mock
 
-import blackbird
 import networkx as nx
 import numpy as np
 import pytest
@@ -53,17 +52,8 @@ class TestSample:
         with pytest.raises(ValueError, match="Mean photon number must be non-negative"):
             sample.sample(A=adj, n_mean=-1.0, n_samples=1)
 
-    @pytest.mark.parametrize("n_mean", [1, 2, 3])
-    def test_threshold(self, monkeypatch, dim, adj, n_mean):
+    def test_threshold(self, monkeypatch, adj):
         """Test if function correctly creates the SF program for threshold GBS."""
-        mean_photon_per_mode = n_mean / float(dim)
-        p = sf.Program(dim)
-
-        p.append(
-            sf.ops.GraphEmbed(adj, mean_photon_per_mode=mean_photon_per_mode), list(range(dim))
-        )
-        p.append(sf.ops.MeasureThreshold(), list(range(dim)))
-
         mock_eng_run = mock.MagicMock()
 
         with monkeypatch.context() as m:
@@ -71,22 +61,10 @@ class TestSample:
             sample.sample(A=adj, n_mean=1, threshold=True)
             p_func = mock_eng_run.call_args[0][0]
 
-        b = blackbird.dumps(sf.io.to_blackbird(p))
-        b_func = blackbird.dumps(sf.io.to_blackbird(p_func))
+        assert isinstance(p_func.circuit[-1].op, sf.ops.MeasureThreshold)
 
-        assert b == b_func
-
-    @pytest.mark.parametrize("n_mean", [1, 2, 3])
-    def test_pnr(self, monkeypatch, dim, adj, n_mean):
+    def test_pnr(self, monkeypatch, adj):
         """Test if function correctly creates the SF program for photon-number resolving GBS."""
-        mean_photon_per_mode = n_mean / float(dim)
-        p = sf.Program(dim)
-
-        p.append(
-            sf.ops.GraphEmbed(adj, mean_photon_per_mode=mean_photon_per_mode), list(range(dim))
-        )
-        p.append(sf.ops.MeasureFock(), list(range(dim)))
-
         mock_eng_run = mock.MagicMock()
 
         with monkeypatch.context() as m:
@@ -94,10 +72,7 @@ class TestSample:
             sample.sample(A=adj, n_mean=1, threshold=False)
             p_func = mock_eng_run.call_args[0][0]
 
-        b = blackbird.dumps(sf.io.to_blackbird(p))
-        b_func = blackbird.dumps(sf.io.to_blackbird(p_func))
-
-        assert b == b_func
+        assert isinstance(p_func.circuit[-1].op, sf.ops.MeasureFock)
 
 
 @pytest.mark.parametrize("dim", adj_dim_range)
