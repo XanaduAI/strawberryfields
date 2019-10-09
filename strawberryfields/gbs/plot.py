@@ -97,6 +97,8 @@ def _edge_coords(graph: nx.Graph, l: dict) -> dict:
 
     return {"x": e_x, "y": e_y}
 
+plotly_error = "Plotly required for using this function. It can be installed using pip install " \
+               "plotly or visiting https://plot.ly/python/getting-started/#installation"
 
 GREEN = "#3e9651"
 RED = "#cc2529"
@@ -115,7 +117,7 @@ subgraph_node_size = 16
 def plot_graph(
     graph: nx.Graph, subgraph: Optional[list] = None, plot_size: int = 500
 ):  # pragma: no cover
-    """Creates a Plotly plot of the input graph.
+    """Creates a plot of the input graph.
 
     This function can plot the input graph only, or the graph with a specified subgraph highlighted.
 
@@ -141,10 +143,7 @@ def plot_graph(
     try:
         import plotly.graph_objects as go
     except ImportError:
-        raise ImportError(
-            "Plotly required for using plot_graph(). Can be installed using pip install "
-            "plotly or visiting https://plot.ly/python/getting-started/#installation"
-        )
+        raise ImportError(plotly_error)
 
     s = graph.subgraph(subgraph)
     l = nx.kamada_kawai_layout(graph)
@@ -203,7 +202,7 @@ def plot_graph(
 
 
 def plot_subgraph(subgraph: nx.Graph, plot_size: int = 500):  # pragma: no cover
-    """Creates a Plotly plot of the input subgraph.
+    """Creates a plot of the input subgraph.
 
     **Example usage:**
 
@@ -227,7 +226,7 @@ def plot_subgraph(subgraph: nx.Graph, plot_size: int = 500):  # pragma: no cover
     try:
         import plotly.graph_objects as go
     except ImportError:
-        raise ImportError("Plotly required for using plot_subgraph()")
+        raise ImportError(plotly_error)
 
     l = nx.kamada_kawai_layout(subgraph)
 
@@ -284,7 +283,7 @@ def plot_points(
         R (np.array): Coordinate matrix. Rows of this array are the coordinates of the points.
         sample (list[int]): optional subset of sampled points to be highlighted
         plot_size (int): size of the plot in pixels, rendered in a square layout
-        point_size (int): size of the points, specified by its area
+        point_size (int): size of the points, proportional to its radius
 
     Returns:
          Figure: figure of points with optionally highlighted sample
@@ -292,10 +291,7 @@ def plot_points(
     try:
         import plotly.graph_objects as go
     except ImportError:
-        raise ImportError(
-            "Plotly required for using plot_points(). Can be installed using pip install "
-            "plotly or visiting https://plot.ly/python/getting-started/#installation"
-        )
+        raise ImportError(plotly_error)
 
     layout = go.Layout(
         showlegend=False,
@@ -346,3 +342,7 @@ def plot_points(
         f = go.Figure(data=[points], layout=layout)
 
     return f
+
+graph = nx.complete_graph(10)
+fig = plot_graph(graph, [0, 1, 2, 3])
+fig.show()
