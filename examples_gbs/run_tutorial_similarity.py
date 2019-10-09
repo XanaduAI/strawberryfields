@@ -160,11 +160,11 @@ print(similarity.feature_vector_sampling(m0, event_photon_numbers=[2, 4, 6], max
 ##############################################################################
 # For the second method, suppose we want to calculate the event probabilities exactly rather than
 # through sampling. To do this, we consider the event probability :math:`p_{k, n_{\max}}` as the
-# sum over all sample probabilities in the event. As discussed in the GBS `tutorial
-# <gaussian_boson_tutorial>`, each sample probability is determined by the hafnian of a relevant
-# sub-adjacency matrix. While this is tough to calculate, what makes calculating :math:`p_{k,
-# n_{\max}}` really tough is the number of samples the corresponding event contains! For example,
-# the 17-photon event :math:`E_{k=6, n_{\max}=2}` contains the following number of samples:
+# sum over all sample probabilities in the event. In GBS, each sample probability is determined by
+# the hafnian of a relevant sub-adjacency matrix. While this is tough to calculate, what makes
+# calculating :math:`p_{k, n_{\max}}` really tough is the number of samples the corresponding
+# event contains! For example, the 17-photon event :math:`E_{k=6, n_{\max}=2}` contains the
+# following number of samples:
 
 print(similarity.event_cardinality(6, 2, 17))
 
@@ -180,17 +180,17 @@ print(similarity.event_cardinality(6, 2, 17))
 #
 # with :math:`|E_{k, n_{\max}}|` denoting the cardinality of the event.
 #
-# This method can be accessed using the :func:`prob_event_mc` function. The 4-photon event is
+# This method can be accessed using the :func:`~.prob_event_mc` function. The 4-photon event is
 # approximated as:
 
 print(similarity.prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6))
 
 ##############################################################################
 # The feature vector can then be calculated through Monte Carlo sampling using
-# :func:`feature_vector_mc`.
+# :func:`~.feature_vector_mc`.
 #
 # .. note::
-#     The results of :func:`prob_event_mc` and :func:`feature_vector_mc` are probabilistic and
+#     The results of :func:`~.prob_event_mc` and :func:`~.feature_vector_mc` are probabilistic and
 #     may vary between runs. Increasing the optional ``samples`` parameter will increase accuracy
 #     but slow down calculation.
 #
@@ -204,10 +204,22 @@ print(similarity.prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6
 # We have seen how GBS can be used to provide a mapping of graphs into a feature space. This
 # mapping can be used for machine learning tasks such as classification: by viewing each graph as
 # a point in the high dimensional space, we can use standard approaches from machine learning
-# such as `support vector machines <https://en.wikipedia.org/wiki/Support-vector_machine>`__.
+# such as `support vector machines <https://en.wikipedia.org/wiki/Support-vector_machine>`__ (SVMs).
 #
-# Let's build this up a bit more by creating two-dimensional feature vectors of our four MUTAG
-# graphs.
+# Let's build this up a bit more. The MUTAG dataset we are considering contains not only graphs
+# corresponding to the structure of chemical compounds, but also a *classification* of each
+# compound based upon its mutagenic effect. The four graphs we consider here have classifications:
+#
+# - MUTAG0: Class 1
+# - MUTAG1: Class 0
+# - MUTAG2: Class 0
+# - MUTAG3: Class 1
+
+classes = [1, 0, 0, 1]
+
+##############################################################################
+# Can we use GBS feature vectors to classify these graphs? We start by defining two-dimensional
+# feature vectors:
 
 events = [8, 10]
 max_count = 2
@@ -217,11 +229,151 @@ f2 = similarity.feature_vector_sampling(m1, events, max_count)
 f3 = similarity.feature_vector_sampling(m2, events, max_count)
 f4 = similarity.feature_vector_sampling(m3, events, max_count)
 
-print(f1)
-print(f2)
-print(f3)
-print(f4)
+import numpy as np
+
+R = np.array([f1, f2, f3, f4])
+
+print(R)
 
 ##############################################################################
-# A plot of these points gives:
+# Given our points in the feature space and corresponding classifications, we can use scikit learn
+# to train an SVM:
 
+from sklearn.svm import LinearSVC
+from sklearn.preprocessing import StandardScaler
+
+R_scaled = StandardScaler().fit_transform(R)  # Transform data to zero mean and unit variance
+
+classifier = LinearSVC()
+classifier.fit(R_scaled, classes)
+
+##############################################################################
+# Here, the term "linear" refers to the *kernel* function used to calculate inner products
+# between vectors in the space. We can use a linear SVM because we have already embedded the
+# graphs in a feature space based upon GBS. We can then visualize the trained SVM by plotting the
+# decision boundary with respect to the points:
+
+w = classifier.coef_[0]
+i = classifier.intercept_[0]
+
+m = - w[0] / w[1]  # finding the values for y = mx + b
+b = - i / w[1]
+
+xx = [-1, 1]
+yy = [m * x + b for x in xx]
+
+
+from typing import Optional
+
+GREEN = "#3e9651"
+RED = "#cc2529"
+LIGHT_GREY = "#CDCDCD"
+VERY_LIGHT_GREY = "#F2F2F2"
+
+
+def plot_points(
+    R: np.ndarray, sample: Optional[list] = None, plot_size: int = 500, point_size: float = 30
+):  # pragma: no cover
+    """Creates a Plotly plot of two-dimensional points given their input coordinates. Sampled
+    points can be optionally highlighted among all points.
+
+    **Example usage:**
+
+    >>> R = np.random.normal(0, 1, (50, 2))
+    >>> sample = [1] * 10 + [0] * 40  # select first ten points
+    >>> plot_points(R, sample).show()
+
+    .. image:: ../../_static/normal_pp.png
+       :width: 40%
+       :align: center
+       :target: javascript:void(0);
+
+    Args:
+        R (np.array): Coordinate matrix. Rows of this array are the coordinates of the points.
+        sample (list[int]): optional subset of sampled points to be highlighted
+        plot_size (int): size of the plot in pixels, rendered in a square layout
+        point_size (int): size of the points, specified by its area
+
+    Returns:
+         Figure: figure of points with optionally highlighted sample
+    """
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise ImportError(
+            "Plotly required for using plot_points(). Can be installed using pip install "
+            "plotly or visiting https://plot.ly/python/getting-started/#installation"
+        )
+
+    layout = go.Layout(
+        showlegend=False,
+        hovermode="closest",
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        margin=dict(b=0, l=0, r=0, t=25),
+        height=plot_size,
+        width=plot_size,
+        plot_bgcolor="white",
+    )
+
+    points = go.Scatter(
+        x=R[:, 0],
+        y=R[:, 1],
+        mode="markers",
+        hoverinfo="text",
+        marker=dict(
+            color=VERY_LIGHT_GREY, size=point_size, line=dict(color="black", width=point_size / 20)
+        ),
+    )
+
+    points.text = [str(i) for i in range(len(R))]
+
+    if sample:
+        s_x = []
+        s_y = []
+        sampled_points = [i for i in range(len(sample)) if sample[i] > 0]
+        for i in sampled_points:
+            s_x.append(R[i, 0])
+            s_y.append(R[i, 1])
+
+        samp = go.Scatter(
+            x=s_x,
+            y=s_y,
+            mode="markers",
+            hoverinfo="text",
+            marker=dict(
+                color=RED, size=point_size, line=dict(color="black", width=point_size / 20)
+            ),
+        )
+
+        samp.text = [str(i) for i in sampled_points]
+
+        f = go.Figure(data=[points, samp], layout=layout)
+
+    else:
+        f = go.Figure(data=[points], layout=layout)
+
+    return f
+
+
+# The above function will be deleted
+
+fig = plot_points(R_scaled, classes)
+fig.add_trace(plotly.graph_objects.Scatter(
+    x=xx,
+    y=yy,
+    mode='lines'
+))
+
+plotly.offline.plot(fig, filename="SVM.html")
+
+##############################################################################
+# .. raw:: html
+#     :file: ../../examples_gbs/SVM.html
+#
+# This plot shows the two classes (grey points for class 0 and red points for class 1)
+# successfully separated by the linear hyperplane using the GBS feature space. Moreover,
+# recall that the two MUTAG1 and MUTAG2 graphs of class 0 are actually isomorphic. Reassuringly,
+# their corresponding feature vectors are very similar. In fact, the feature vectors of
+# isomorphic graphs should always be identical :cite:`bradler2018graph` - the small discrepancy
+# in this plot is actually due to the statistical approximation from sampling.
