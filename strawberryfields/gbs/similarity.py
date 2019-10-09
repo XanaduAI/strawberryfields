@@ -42,9 +42,10 @@ Code details
 from collections import Counter
 from typing import Generator, Union
 
-import numpy as np
 import networkx as nx
+import numpy as np
 from scipy.special import factorial
+
 import strawberryfields as sf
 
 
@@ -150,7 +151,7 @@ def orbit_to_sample(orbit: list, modes: int) -> list:
     over the orbit. For a given orbit and number of modes, this function produces a sample
     selected uniformly at random among all samples in the orbit.
 
-    **Example usage**:
+    **Example usage:**
 
     >>> orbit_to_sample([2, 1, 1], 6)
     [0, 1, 2, 0, 1, 0]
@@ -178,7 +179,7 @@ def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> 
     ``max_count_per_mode``. This function produces a sample selected uniformly at random among
     all samples in the event.
 
-    **Example usage**:
+    **Example usage:**
 
     >>> event_to_sample(4, 2, 6)
     [0, 1, 0, 0, 2, 1]
@@ -225,7 +226,7 @@ def orbit_cardinality(orbit: list, modes: int) -> int:
     1] with three modes: [1,1,2], [1,2,1], and [2,1,1]. With four modes, there are 12 samples in
     total.
 
-    **Example usage**:
+    **Example usage:**
 
     >>> orbit_cardinality([2, 1, 1], 4)
     12
@@ -251,7 +252,7 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     event with two photons and a maximum of photons two per mode: [1,1,0], [1,0,1], [0,1,1],[2,0,
     0],[0,2,0], and [0,0,2].
 
-    **Example usage**:
+    **Example usage:**
 
     >>> event_cardinality(2, 2, 3)
     728
@@ -273,9 +274,7 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     return cardinality
 
 
-def prob_orbit_mc(
-    graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000
-) -> float:
+def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
     """Gives a Monte Carlo estimate of the probability of a given orbit for a GBS device encoded
     according to the input graph.
 
@@ -289,7 +288,7 @@ def prob_orbit_mc(
     this estimate, several samples from the orbit are drawn uniformly at random using
     :func:orbit_to_sample.
 
-    **Example usage**:
+    **Example usage:**
 
     >>> graph = nx.complete_graph(8)
     >>> prob_orbit_mc(graph, [2, 1, 1])
@@ -347,7 +346,7 @@ def prob_event_mc(
     this estimate, several samples from the event are drawn uniformly at random using
     :func:event_to_sample.
 
-    **Example usage**:
+    **Example usage:**
 
     >>> graph = nx.complete_graph(8)
     >>> p_event_mc(graph, 4, 2)
@@ -404,7 +403,7 @@ def feature_vector_sampling(
 
     Probabilities are reconstructed by measuring the occurrence of events in the input ``samples``.
 
-    **Example usage**:
+    **Example usage:**
 
     >>> sample.random_seed(1967)
     >>> adj = np.ones((4, 4))
@@ -455,7 +454,7 @@ def feature_vector_mc(
 
     Probabilities are reconstructed using Monte Carlo estimation.
 
-    **Example usage**:
+    **Example usage:**
 
     >>> graph = nx.complete_graph(8)
     >>> feature_vector_mc(graph, [2, 4, 6], 2)
