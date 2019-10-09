@@ -1,4 +1,4 @@
-# pylint: disable=wrong-import-position,wrong-import-order,ungrouped-imports
+# pylint: disable=wrong-import-position,wrong-import-order,ungrouped-imports,invalid-name
 """
 Graph Similarity Tutorial
 =========================
@@ -138,7 +138,8 @@ print(similarity.sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0
 # written as
 #
 # .. math::
-#     f_{\mathbf{k}, n_{\max}} = (p_{k_{1}, n_{\max}}, p_{k_{2}, n_{\max}}, \ldots , p_{k_{K}, n_{\max}}),
+#     f_{\mathbf{k}, n_{\max}} = (p_{k_{1}, n_{\max}}, p_{k_{2}, n_{\max}}, \ldots , p_{k_{K},
+#         n_{\max}}),
 #
 # where :math:`\mathbf{k} := (k_{1}, k_{2}, \ldots , k_{K})` is a list of different total photon
 # numbers.
@@ -256,8 +257,8 @@ classifier.fit(R_scaled, classes)
 w = classifier.coef_[0]
 i = classifier.intercept_[0]
 
-m = - w[0] / w[1]  # finding the values for y = mx + b
-b = - i / w[1]
+m = -w[0] / w[1]  # finding the values for y = mx + b
+b = -i / w[1]
 
 xx = [-1, 1]
 yy = [m * x + b for x in xx]
@@ -359,11 +360,7 @@ def plot_points(
 # The above function will be deleted
 
 fig = plot_points(R_scaled, classes)
-fig.add_trace(plotly.graph_objects.Scatter(
-    x=xx,
-    y=yy,
-    mode='lines'
-))
+fig.add_trace(plotly.graph_objects.Scatter(x=xx, y=yy, mode="lines"))
 
 plotly.offline.plot(fig, filename="SVM.html")
 
