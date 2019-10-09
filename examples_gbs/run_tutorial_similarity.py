@@ -272,8 +272,9 @@ LIGHT_GREY = "#CDCDCD"
 VERY_LIGHT_GREY = "#F2F2F2"
 
 
+# pylint: disable=redefined-outer-name
 def plot_points(
-    R: np.ndarray, sample: Optional[list] = None, plot_size: int = 500, point_size: float = 30
+        R: np.ndarray, sample: Optional[list] = None, plot_size: int = 500, point_size: float = 30
 ):  # pragma: no cover
     """Creates a Plotly plot of two-dimensional points given their input coordinates. Sampled
     points can be optionally highlighted among all points.
@@ -299,7 +300,7 @@ def plot_points(
          Figure: figure of points with optionally highlighted sample
     """
     try:
-        import plotly.graph_objects as go
+        import plotly.graph_objects as go  # pylint: disable=import-outside-toplevel
     except ImportError:
         raise ImportError(
             "Plotly required for using plot_points(). Can be installed using pip install "
@@ -332,6 +333,7 @@ def plot_points(
     if sample:
         s_x = []
         s_y = []
+        # pylint: disable=redefined-outer-name
         sampled_points = [i for i in range(len(sample)) if sample[i] > 0]
         for i in sampled_points:
             s_x.append(R[i, 0])
