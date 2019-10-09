@@ -342,7 +342,3 @@ def plot_points(
         f = go.Figure(data=[points], layout=layout)
 
     return f
-
-graph = nx.complete_graph(10)
-fig = plot_graph(graph, [0, 1, 2, 3])
-fig.show()
