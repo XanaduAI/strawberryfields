@@ -42,7 +42,7 @@ represent samples from the device.
 Subgraph sampling through GBS
 -----------------------------
 
-This module also provides functionality for sampling of subgraphs from undirected graphs. The
+This module also provides functionality for sampling subgraphs from undirected graphs. The
 :func:`to_subgraphs` function can be used to convert samples to subgraphs.
 
 .. autosummary::
@@ -61,7 +61,7 @@ import strawberryfields as sf
 
 
 def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = True) -> list:
-    r"""Generate samples from GBS by encoding a symmetric matrix :math:`A`.
+    r"""Generate samples from GBS encoded with a symmetric matrix :math:`A`.
 
     Args:
         A (array): the symmetric matrix to sample from
