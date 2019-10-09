@@ -20,12 +20,12 @@ The :mod:`~.gbs.data` module provides pre-calculated GBS samples from four graph
 MUTAG dataset. We'll start by loading these sample sets and visualizing the corresponding graphs.
 """
 
-from strawberryfields import gbs
+from strawberryfields.gbs import data, plot, similarity
 
-m0 = gbs.data.Mutag0()
-m1 = gbs.data.Mutag1()
-m2 = gbs.data.Mutag2()
-m3 = gbs.data.Mutag3()
+m0 = data.Mutag0()
+m1 = data.Mutag1()
+m2 = data.Mutag2()
+m3 = data.Mutag3()
 
 ##############################################################################
 # These datasets contain both the adjacency matrix of the graph and the samples generated through
@@ -43,10 +43,10 @@ m3_a = m3.adj
 import networkx as nx
 import plotly
 
-plot_mutag_0 = gbs.plot.plot_graph(nx.Graph(m0_a))
-plot_mutag_1 = gbs.plot.plot_graph(nx.Graph(m1_a))
-plot_mutag_2 = gbs.plot.plot_graph(nx.Graph(m2_a))
-plot_mutag_3 = gbs.plot.plot_graph(nx.Graph(m3_a))
+plot_mutag_0 = plot.plot_graph(nx.Graph(m0_a))
+plot_mutag_1 = plot.plot_graph(nx.Graph(m1_a))
+plot_mutag_2 = plot.plot_graph(nx.Graph(m2_a))
+plot_mutag_3 = plot.plot_graph(nx.Graph(m3_a))
 
 plotly.offline.plot(plot_mutag_0, filename="MUTAG_0.html")
 
@@ -96,8 +96,6 @@ print(m0[0])
 # equivalent under permutation of the modes. A sample can be converted to its corresponding orbit
 # using the :func:`~.sample_to_orbit` function. For example, the first sample of ``m0`` is ``[0,
 # 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0]`` and has orbit:
-
-from strawberryfields.gbs import similarity
 
 print(similarity.sample_to_orbit(m0[0]))
 
@@ -263,105 +261,7 @@ b = -i / w[1]
 xx = [-1, 1]
 yy = [m * x + b for x in xx]
 
-
-from typing import Optional
-
-GREEN = "#3e9651"
-RED = "#cc2529"
-LIGHT_GREY = "#CDCDCD"
-VERY_LIGHT_GREY = "#F2F2F2"
-
-
-# pylint: disable=redefined-outer-name
-def plot_points(
-        R: np.ndarray, sample: Optional[list] = None, plot_size: int = 500, point_size: float = 30
-):  # pragma: no cover
-    """Creates a Plotly plot of two-dimensional points given their input coordinates. Sampled
-    points can be optionally highlighted among all points.
-
-    **Example usage:**
-
-    >>> R = np.random.normal(0, 1, (50, 2))
-    >>> sample = [1] * 10 + [0] * 40  # select first ten points
-    >>> plot_points(R, sample).show()
-
-    .. image:: ../../_static/normal_pp.png
-       :width: 40%
-       :align: center
-       :target: javascript:void(0);
-
-    Args:
-        R (np.array): Coordinate matrix. Rows of this array are the coordinates of the points.
-        sample (list[int]): optional subset of sampled points to be highlighted
-        plot_size (int): size of the plot in pixels, rendered in a square layout
-        point_size (int): size of the points, specified by its area
-
-    Returns:
-         Figure: figure of points with optionally highlighted sample
-    """
-    try:
-        import plotly.graph_objects as go  # pylint: disable=import-outside-toplevel
-    except ImportError:
-        raise ImportError(
-            "Plotly required for using plot_points(). Can be installed using pip install "
-            "plotly or visiting https://plot.ly/python/getting-started/#installation"
-        )
-
-    layout = go.Layout(
-        showlegend=False,
-        hovermode="closest",
-        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        margin=dict(b=0, l=0, r=0, t=25),
-        height=plot_size,
-        width=plot_size,
-        plot_bgcolor="white",
-    )
-
-    points = go.Scatter(
-        x=R[:, 0],
-        y=R[:, 1],
-        mode="markers",
-        hoverinfo="text",
-        marker=dict(
-            color=VERY_LIGHT_GREY, size=point_size, line=dict(color="black", width=point_size / 20)
-        ),
-    )
-
-    points.text = [str(i) for i in range(len(R))]
-
-    if sample:
-        s_x = []
-        s_y = []
-        # pylint: disable=redefined-outer-name
-        sampled_points = [i for i in range(len(sample)) if sample[i] > 0]
-        for i in sampled_points:
-            s_x.append(R[i, 0])
-            s_y.append(R[i, 1])
-
-        samp = go.Scatter(
-            x=s_x,
-            y=s_y,
-            mode="markers",
-            hoverinfo="text",
-            marker=dict(
-                color=RED, size=point_size, line=dict(color="black", width=point_size / 20)
-            ),
-        )
-
-        samp.text = [str(i) for i in sampled_points]
-
-        f = go.Figure(data=[points, samp], layout=layout)
-
-    else:
-        f = go.Figure(data=[points], layout=layout)
-
-    return f
-
-
-# The above function will be deleted
-
-fig = plot_points(R_scaled, classes)
+fig = plot.plot_points(R_scaled, classes)
 fig.add_trace(plotly.graph_objects.Scatter(x=xx, y=yy, mode="lines"))
 
 plotly.offline.plot(fig, filename="SVM.html")
