@@ -110,8 +110,8 @@ class TestRandomSearch:
         optimal_sample = [0, 1, 9, 16]
         graph = nx.relabel_nodes(graph, lambda x: x ** 2)
 
-        def patch_resize(subgraph, graph, sizes):
-            return {sizes[0]: subgraph}
+        def patch_resize(s, graph, sizes):
+            return {sizes[0]: s}
 
         with monkeypatch.context() as m:
             m.setattr(sample, "subgraphs", self.sampler)
@@ -194,4 +194,4 @@ class TestResize:
                 resized = subgraph.resize(s, g, [3])
                 resized_subgraph = resized[3]
                 removed_node = list(set(s) - set(resized_subgraph))[0]
-                assert  removed_node == i
+                assert removed_node == i

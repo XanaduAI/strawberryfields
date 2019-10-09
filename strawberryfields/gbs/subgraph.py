@@ -75,7 +75,7 @@ from strawberryfields.gbs.sample import BACKEND_DEFAULTS
 
 
 def search(
-    graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
+        graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
 ) -> Tuple[float, list]:
     """Find a dense subgraph of a given size.
 
@@ -139,7 +139,7 @@ def search(
 
 
 def random_search(
-    graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
+        graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
 ) -> Tuple[float, list]:
     """Random search algorithm for finding dense subgraphs of a given size.
 
@@ -252,8 +252,9 @@ def resize(subgraph: list, graph: nx.Graph, sizes: Optional[list] = None) -> lis
             grow_nodes = grow_subgraph.nodes()
             complement_nodes = nodes - grow_nodes
 
-            degrees = [(c, graph.subgraph(list(grow_nodes) + [c]).degree()[c]) for c in
-                       complement_nodes]
+            degrees = [
+                (c, graph.subgraph(list(grow_nodes) + [c]).degree()[c]) for c in complement_nodes
+            ]
             np.random.shuffle(degrees)
 
             to_add = max(degrees, key=lambda x: x[1])
