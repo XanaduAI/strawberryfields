@@ -266,7 +266,7 @@ def plot_subgraph(subgraph: nx.Graph, plot_size: int = 500):  # pragma: no cover
 def plot_points(
     R: np.ndarray, sample: Optional[list] = None, plot_size: int = 500, point_size: float = 30
 ):  # pragma: no cover
-    """Creates a Plotly plot of two-dimensional points given their input coordinates. Sampled
+    """Creates a plot of two-dimensional points given their input coordinates. Sampled
     points can be optionally highlighted among all points.
 
     **Example usage:**
