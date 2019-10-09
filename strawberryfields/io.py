@@ -119,6 +119,9 @@ def to_program(bb):
             # create the list of regrefs
             regrefs = [q[i] for i in op["modes"]]
 
+            # FIXME convert symbolic expressions in args containing measured and free parameters to
+            # symbolic expressions containing the corresponding MeasuredParameter and FreeParameter instances.
+
             if 'args' in op:
                 # the gate has arguments
                 gate(*op["args"], **op["kwargs"]) | regrefs #pylint:disable=expression-not-assigned

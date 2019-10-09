@@ -21,6 +21,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields import io
 from strawberryfields.program import Program, CircuitError
+from strawberryfields.parameters import MeasuredParameter, FreeParameter, par_is_symbolic, parfuncs as pf
 
 
 pytestmark = pytest.mark.frontend
@@ -282,18 +283,29 @@ class TestSFToBlackbirdConversion:
         bb = io.to_blackbird(prog)
         assert bb.operations[0] == expected
 
-    # TODO: determine best way to serialize regref transforms
-    def test_regref_func_str(self):
-        """Test a regreftransform with a function string converts properly"""
+    def test_measured_par_str(self):
+        """Test a MeasuredParameter with some transformations converts properly"""
         prog = Program(2)
         with prog.context as q:
             ops.Sgate(0.43) | q[0]
             ops.MeasureX | q[0]
-            ops.Zgate(2 * q[0].par) | q[1]
+            ops.Zgate(2 * pf.sin(q[0].par)) | q[1]
 
         bb = io.to_blackbird(prog)
-        expected = {"op": "Zgate", "modes": [1], "args": ["2*q0"], "kwargs": {}}
+        expected = {"op": "Zgate", "modes": [1], "args": ["2*sin(q0)"], "kwargs": {}}
         assert bb.operations[-1] == expected
+
+    def test_free_par_str(self):
+        """Test a FreeParameter with some transformations converts properly"""
+        prog = Program(2)
+        r, alpha = prog.params('r', 'alpha')
+        with prog.context as q:
+            ops.Sgate(r) | q[0]
+            ops.Zgate(3 * pf.log(-alpha)) | q[1]
+
+        bb = io.to_blackbird(prog)
+        assert bb.operations[0] == {"op": "Sgate", "modes": [0], "args": ['{r}', 0.0], "kwargs": {}}
+        assert bb.operations[1] == {"op": "Zgate", "modes": [1], "args": ['3*log(-{alpha})'], "kwargs": {}}
 
 
 class TestBlackbirdToSFConversion:
@@ -393,6 +405,68 @@ class TestBlackbirdToSFConversion:
         assert prog.circuit[0].op.__class__.__name__ == "Dgate"
         assert prog.circuit[0].op.p[0] == 0.54
         assert prog.circuit[0].reg[0].ind == 0
+
+    @pytest.mark.skip("FIXME enable when strawberryfields.io.to_program is fixed.")
+    def test_gate_measured_par(self):
+        """Test a gate with a MeasuredParameter argument."""
+
+        bb_script = """\
+        name test_program
+        version 1.0
+
+        MeasureX | 0
+        Dgate(q0) | 1
+        Rgate(2*q0) | 2
+        """
+
+        bb = blackbird.loads(bb_script)
+        prog = io.to_program(bb)
+
+        assert len(prog) == 3
+
+        cmd = prog.circuit[1]
+        assert cmd.op.__class__.__name__ == "Dgate"
+        p = cmd.op.p[0]
+        assert isinstance(p, MeasuredParameter)
+        assert p.regref.ind == 0
+        assert cmd.reg[0].ind == 1
+
+        cmd = prog.circuit[2]
+        assert cmd.op.__class__.__name__ == "Rgate"
+        p = cmd.op.p[0]
+        assert par_is_symbolic(p)  # symbolic expression
+        assert cmd.reg[0].ind == 2
+
+    @pytest.mark.skip("FIXME enable when strawberryfields.io.to_program is fixed.")
+    def test_gate_free_par(self):
+        """Test a FreeParameter with some transformations converts properly"""
+
+        bb_script = """\
+        name test_program
+        version 1.0
+
+        Dgate({foo_bar1}) | 0
+        Rgate(1.0 -{ALPHA}) | 0
+        """
+
+        bb = blackbird.loads(bb_script)
+        prog = io.to_program(bb)
+
+        assert prog.free_params.keys() == set(['foo_bar1', 'ALPHA'])
+        assert len(prog) == 2
+
+        cmd = prog.circuit[0]
+        assert cmd.op.__class__.__name__ == "Dgate"
+        p = cmd.op.p[0]
+        assert isinstance(p, FreeParameter)
+        assert p.name == 'foo_bar1'
+        assert cmd.reg[0].ind == 0
+
+        cmd = prog.circuit[1]
+        assert cmd.op.__class__.__name__ == "Rgate"
+        p = cmd.op.p[0]
+        assert par_is_symbolic(p)
+        assert cmd.reg[0].ind == 0
 
     def test_gate_multimode(self):
         """Test multimode gate converts"""

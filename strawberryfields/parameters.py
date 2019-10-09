@@ -306,14 +306,15 @@ class MeasuredParameter(sympy.Symbol):
 
     def __init__(self, regref):
         if not regref.active:
-            # TODO: Maybe we want to delete a mode right after measurement to save comp effort?
-            # The measurement result would still be preserved in the RegRef...
             raise ValueError('Trying to use an inactive RegRef.')
         #: RegRef: the value of the parameter depends on this RegRef, and can only be evaluated after the corresponding subsystem has been measured
         self.regref = regref
 
     def _sympystr(self, printer):
-        """"The Sympy printing system uses this method instead of __str__."""
+        """Blackbird notation.
+
+        The Sympy printing system uses this method instead of __str__.
+        """
         return 'q{}'.format(self.regref.ind)
 
     def _eval_evalf(self, prec):
@@ -344,6 +345,13 @@ class FreeParameter(sympy.Symbol):
         self.val = None
         #: Any: default value of the parameter, used if unbound
         self.default = None
+
+    def _sympystr(self, printer):
+        """Blackbird notation.
+
+        The Sympy printing system uses this method instead of __str__.
+        """
+        return '{{{}}}'.format(self.name)
 
     def _eval_evalf(self, prec):
         """Returns the value of the parameter if it has been bound, or the default value if not.
