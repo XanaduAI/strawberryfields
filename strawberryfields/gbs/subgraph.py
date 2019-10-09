@@ -63,18 +63,14 @@ subgraphs. Resizing functionality is provided by the following functions.
 
 .. autosummary::
     resize
-    greedy_density
-    greedy_degree
-    RESIZE_DEFAULTS
-    RESIZE_DICT
 
 Code details
 ^^^^^^^^^^^^
 """
-import itertools
-from typing import Iterable, Optional, Tuple
+from typing import Optional, Tuple
 
 import networkx as nx
+import numpy as np
 
 from strawberryfields.gbs import sample
 from strawberryfields.gbs.sample import BACKEND_DEFAULTS
@@ -205,181 +201,85 @@ dictionary of options for that type.
 """
 
 
-def resize(
-    subgraphs: Iterable, graph: nx.Graph, target: int, resize_options: Optional[dict] = None
-) -> list:
-    """Resize subgraphs to a given size.
+def resize(subgraph: list, graph: nx.Graph, sizes: Optional[list] = None) -> list:
+    """Resize a subgraph to a range of input sizes.
 
-    This function resizes subgraphs to size ``target``. The resizing method can be fully
-    specified by the optional ``resize_options`` argument, which should be a dict containing any
-    of the following:
+    This function uses a greedy approach to iteratively add or remove nodes one at a time to an
+    input subgraph to reach the range of sizes specified by ``sizes``.
 
-    .. glossary::
+    When growth is required, the algorithm picks individual nodes from the remainder of the graph
+    as candidates to add into the subgraph and picks the node with the highest degree relative to
+    the rest of the subgraph. This results in a graph that is one node larger, and if growth is
+    still required the algorithm performs the above procedure again.
 
-        key: ``"method"``, value: *str* or *callable*
-            Value can be either a string selecting from a range of available methods or a
-            customized callable function. Options include:
-
-            - ``"greedy-density"``: resize subgraphs by iteratively adding/removing nodes that
-              result in the densest subgraph among all candidates (default)
-            - ``"greedy-degree"``: resize subgraphs by iteratively adding/removing nodes that
-              have the highest/lowest degree.
-            - *callable*: accepting ``(subgraphs: list, graph: nx.Graph,
-              target: int, resize_options: dict)`` as arguments and returning a ``list``
-              containing the resized subgraphs as lists of nodes, see :func:`greedy_density` for
-              an example signature
+    When shrinking is required, the algorithm picks individual nodes from within the subgraph to
+    remove, choosing the nodes with lowest degree relative to the subgraph. In both growth and
+    shrink phases, ties for addition/removal with nodes of equal degree are settled by uniform
+    random choice.
 
     Args:
-        subgraphs (iterable[list[int]]): an iterable over subgraphs, where each subgraph is given
-            by a list of nodes
+        subgraph (list[int]): a subgraph specified by a list of nodes
         graph (nx.Graph): the input graph
-        target (int): the target number of nodes (must be larger than 1)
-        resize_options (dict[str, Any]): dictionary specifying options used during resizing;
-            defaults to :const:`RESIZE_DEFAULTS`
+        sizes (list[int]): a list of desired sized for the subgraph to be resized to; defaults to
+            all possible sizes
 
     Returns:
-        list[list[int]]: a list of resized subgraphs, where each subgraph is given by a list of
-        nodes
+        dict[int, list[int]]: a dictionary of different sizes with corresponding subgraph
     """
-    resize_options = {**RESIZE_DEFAULTS, **(resize_options or {})}
+    subgraph = set(subgraph)
+    if not subgraph.issubset(graph.nodes):
+        raise ValueError("Input is not a valid subgraph")
 
-    try:
-        target = int(target)
-    except TypeError:
-        raise TypeError("target must be an integer")
+    nodes = graph.nodes()
+    all_sizes = set(range(len(nodes)))
 
-    if not 2 < target < graph.number_of_nodes():
-        raise ValueError(
-            "target must be greater than two and less than the number of nodes in "
-            "the input graph"
-        )
+    if sizes is None:
+        sizes = all_sizes
+    else:
+        sizes = set(sizes)
 
-    method = resize_options["method"]
-
-    if not callable(method):
-        method = RESIZE_DICT[method]
-
-    return method(subgraphs=subgraphs, graph=graph, target=target, resize_options=resize_options)
-
-
-def greedy_density(
-    subgraphs: Iterable, graph: nx.Graph, target: int, resize_options: Optional[dict] = None
-) -> list:
-    """Method to greedily resize subgraphs based upon density.
-
-    This function uses a greedy approach to iteratively add/remove nodes to an input subgraph.
-    Suppose the input subgraph has :math:`M` nodes. When shrinking, the algorithm considers
-    all :math:`M-1` node subgraphs of the input subgraph, and picks the one with the greatest
-    density. It then considers all :math:`M-2` node subgraphs of the chosen :math:`M-1` node
-    subgraph, and continues until the desired subgraph size has been reached.
-
-    When growing, the algorithm considers all :math:`M+1` node subgraphs of the input graph given by
-    combining the input :math:`M` node subgraph with another node from the remainder of the input
-    graph, and picks the one with the greatest density. It then considers all :math:`M+2` node
-    subgraphs given by combining the chosen :math:`M+1` node subgraph with nodes remaining from
-    the overall graph, and continues until the desired subgraph size has been reached.
-
-    ``resize_options`` is not currently in use in :func:`greedy_density`.
-
-    Args:
-        subgraphs (iterable[list[int]]): an iterable over subgraphs, where each subgraph is given
-            by a list of nodes
-        graph (nx.Graph): the input graph
-        target (int): the target number of nodes in the subgraph (must be larger than 1)
-        resize_options (dict[str, Any]): dictionary specifying options used during resizing;
-            defaults to :const:`RESIZE_DEFAULTS`
-
-    Returns:
-        list[list[int]]: a list of resized subgraphs, where each subgraph is given by a list of
-        nodes
-    """
-    # Note that ``resize_options`` will become non-trivial once randomness is added to methods
-    resize_options = {**RESIZE_DEFAULTS, **(resize_options or {})}
-
-    nodes = graph.nodes
-
-    resized = []
-
-    for s in subgraphs:
-        s = set(s)
-
-        if not set(s).issubset(graph.nodes):
+        if not sizes.issubset(all_sizes):
             raise ValueError("Input is not a valid subgraph")
 
-        while len(s) != target:
-            if len(s) < target:
-                s_candidates = [s | {n} for n in set(nodes) - s]
-            else:
-                s_candidates = list(itertools.combinations(s, len(s) - 1))
+    starting_size = len(subgraph)
+    max_size = max(sizes)
+    min_size = min(sizes)
 
-            _d, s = max((nx.density(graph.subgraph(n)), n) for n in s_candidates)
+    resized = {starting_size: sorted(subgraph)}
 
-        resized.append(sorted(s))
+    if max_size > starting_size:
 
-    return resized
+        grow_subgraph = graph.subgraph(subgraph).copy()
 
+        while grow_subgraph.order() < max_size:
+            grow_nodes = grow_subgraph.nodes()
+            complement_nodes = nodes - grow_nodes
 
-def greedy_degree(
-    subgraphs: Iterable, graph: nx.Graph, target: int, resize_options: Optional[dict] = None
-) -> list:
-    """Method to greedily resize subgraphs based upon vertex degree.
+            degrees = [(c, graph.subgraph(grow_nodes + [c]).degree()[c]) for c in complement_nodes]
+            np.random.shuffle(degrees)
 
-    This function uses a greedy approach to iteratively add/remove nodes to an input subgraph.
-    Suppose the input subgraph has :math:`M` nodes. When shrinking, the algorithm considers
-    all the :math:`M` nodes and removes the one with the lowest degree (number of incident
-    edges). It then repeats the process for the resultant :math:`M-1`-node subgraph,
-    and continues until the desired subgraph size has been reached.
+            to_add = max(degrees, key=lambda x: x[1])
+            grow_subgraph.add_node(to_add[0])
 
-    When growing, the algorithm considers all :math:`N-M` nodes that are within the
-    :math:`N`-node graph but not within the :math:`M` node subgraph, and then picks the node with
-    the highest degree to create an :math:`M+1`-node subgraph. It then considers all
-    :math:`N-M-1` nodes in the complement of the :math:`M+1`-node subgraph and adds the node with
-    the highest degree, continuing until the desired subgraph size has been reached.
+            new_size = grow_subgraph.order()
 
-    ``resize_options`` is not currently in use in :func:`greedy_degree`.
+            if new_size in sizes:
+                resized[new_size] = sorted(grow_subgraph.nodes())
 
-    Args:
-        subgraphs (iterable[list[int]]): an iterable over subgraphs, where each subgraph is given
-            by a list of nodes
-        graph (nx.Graph): the input graph
-        target (int): the target number of nodes in the subgraph (must be
-            larger than 1)
-        resize_options (dict[str, Any]): dictionary specifying options used during resizing;
-            defaults to :const:`RESIZE_DEFAULTS`
+    if min_size < starting_size:
 
-    Returns:
-        list[list[int]]: a list of resized subgraphs, where each subgraph is given by a list of
-        nodes
-    """
-    # Note that ``resize_options`` will become non-trivial once randomness is added to methods
-    resize_options = {**RESIZE_DEFAULTS, **(resize_options or {})}
+        shrink_subgraph = graph.subgraph(subgraph).copy()
 
-    nodes = graph.nodes
+        while shrink_subgraph.order() > min_size:
+            degrees = list(shrink_subgraph.degree())
+            np.random.shuffle(degrees)
 
-    resized = []
+            to_remove = min(degrees, key=lambda x: x[1])
+            shrink_subgraph.remove_node(to_remove[0])
 
-    for s in subgraphs:
-        s = set(s)
+            new_size = shrink_subgraph.order()
 
-        if not set(s).issubset(graph.nodes):
-            raise ValueError("Input is not a valid subgraph")
-
-        while len(s) != target:
-            if len(s) < target:
-                n_candidates = graph.degree(set(nodes) - s)
-                n_opt = max(n_candidates, key=lambda x: x[1])[0]
-                s |= {n_opt}
-            else:
-                n_candidates = graph.degree(s)
-                n_opt = min(n_candidates, key=lambda x: x[1])[0]
-                s -= {n_opt}
-
-        resized.append(sorted(s))
+            if new_size in sizes:
+                resized[new_size] = sorted(shrink_subgraph.nodes())
 
     return resized
-
-
-RESIZE_DICT = {"greedy-density": greedy_density, "greedy-degree": greedy_degree}
-"""dict[str, func]: Included methods for resizing subgraphs. The dictionary keys are strings
-describing the method, while the dictionary values are callable functions corresponding to the
-method."""
