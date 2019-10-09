@@ -164,8 +164,8 @@ print(similarity.feature_vector_sampling(m0, event_photon_numbers=[2, 4, 6], max
 # sum over all sample probabilities in the event. In GBS, each sample probability is determined by
 # the hafnian of a relevant sub-adjacency matrix. While this is tough to calculate, what makes
 # calculating :math:`p_{k, n_{\max}}` really tough is the number of samples the corresponding
-# event contains! For example, the 17-photon event :math:`E_{k=6, n_{\max}=2}` contains the
-# following number of samples:
+# event contains! For example, the 6-photon event over 17 modes :math:`E_{k=6, n_{\max}=2}`
+# contains the following number of samples :
 
 print(similarity.event_cardinality(6, 2, 17))
 
