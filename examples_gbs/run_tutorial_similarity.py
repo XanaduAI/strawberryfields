@@ -118,7 +118,7 @@ print(list(similarity.orbits(5)))
 
 ##############################################################################
 # All 5-photon samples fall into one of the orbits above. A 5-photon event with
-# ``max_count_per_mode = 3`` means that we combine the orbits: ``[[1, 1, 1, 1, 1], [2, 1, 1, 1],
+# ``max_count_per_mode = 3`` means that we include the orbits: ``[[1, 1, 1, 1, 1], [2, 1, 1, 1],
 # [3, 1, 1], [2, 2, 1], [3, 2]]`` and ignore the orbits ``[[4, 1], [5]]``. For example,
 # the sample ``[0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 0]`` is a 5-photon event:
 
