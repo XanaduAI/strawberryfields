@@ -211,11 +211,26 @@ def test_modes_from_counts():
 def test_postselect():
     """Test if the function ``strawberryfields.gbs.sample.postselect`` correctly postselects on
     minimum number of photons or clicks."""
-    counts_pnr = [[0, 0, 0, 0], [1, 1, 0, 2], [1, 1, 1, 0], [1, 2, 1, 0], [1, 0, 0, 1]]
-    counts_pnr_ps_4 = [[1, 1, 0, 2], [1, 2, 1, 0]]
+    counts_pnr = [
+        [0, 0, 0, 0],
+        [1, 1, 0, 2],
+        [1, 1, 1, 0],
+        [1, 2, 1, 0],
+        [1, 0, 0, 1],
+        [5, 0, 0, 0],
+        [1, 2, 1, 2],
+    ]
+    counts_pnr_ps_4_5 = [[1, 1, 0, 2], [1, 2, 1, 0], [5, 0, 0, 0]]
 
-    counts_threshold = [[0, 0, 0, 0], [1, 1, 0, 1], [1, 1, 1, 0], [1, 1, 1, 0], [1, 0, 0, 1]]
-    counts_threshold_ps_3 = [[1, 1, 0, 1], [1, 1, 1, 0], [1, 1, 1, 0]]
+    counts_threshold = [
+        [0, 0, 0, 0],
+        [1, 1, 0, 1],
+        [1, 1, 1, 0],
+        [1, 1, 1, 0],
+        [1, 0, 0, 1],
+        [1, 1, 1, 1],
+    ]
+    counts_threshold_ps_3_3 = [[1, 1, 0, 1], [1, 1, 1, 0], [1, 1, 1, 0]]
 
-    assert sample.postselect(counts_pnr, 4) == counts_pnr_ps_4
-    assert sample.postselect(counts_threshold, 3) == counts_threshold_ps_3
+    assert sample.postselect(counts_pnr, 4, 5) == counts_pnr_ps_4_5
+    assert sample.postselect(counts_threshold, 3, 3) == counts_threshold_ps_3_3

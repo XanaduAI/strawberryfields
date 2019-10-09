@@ -172,14 +172,15 @@ def modes_from_counts(s: list) -> list:
     return sorted(modes)
 
 
-def postselect(samples: list, min_count: int) -> list:
-    """Postselect samples by imposing a minimum number of photons or clicks.
+def postselect(samples: list, min_count: int, max_count: int) -> list:
+    """Postselect samples by imposing a minimum and maximum number of photons or clicks.
 
     Args:
         samples (list[list[int]]): a list of samples
         min_count (int): minimum number of photons or clicks for a sample to be included
+        max_count (int): maximum number of photons or clicks for a sample to be included
 
     Returns:
         list[list[int]]: the postselected samples
     """
-    return [s for s in samples if sum(s) >= min_count]
+    return [s for s in samples if min_count <= sum(s) <= max_count]
