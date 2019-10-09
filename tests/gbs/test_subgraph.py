@@ -15,6 +15,8 @@ r"""
 Unit tests for strawberryfields.gbs.subgraph
 """
 # pylint: disable=no-self-use,unused-argument
+import functools
+
 import networkx as nx
 import numpy as np
 import pytest
@@ -108,194 +110,88 @@ class TestRandomSearch:
         optimal_sample = [0, 1, 9, 16]
         graph = nx.relabel_nodes(graph, lambda x: x ** 2)
 
+        def patch_resize(subgraph, graph, sizes):
+            return {sizes[0]: subgraph}
+
         with monkeypatch.context() as m:
             m.setattr(sample, "subgraphs", self.sampler)
-            # The monkeypatch above is not necessary given the one below, but simply serves to
-            # speed up testing by not requiring a call to ``subgraphs``, which is a
-            # bottleneck
-
-            m.setattr(subgraph, "resize", self.sampler)
+            m.setattr(subgraph, "resize", patch_resize)
 
             result = subgraph.random_search(graph=graph, nodes=4, iterations=10)
 
         assert result == (optimal_density, optimal_sample)
 
 
-subgraphs = [
-    [1, 2, 3, 4, 5],
-    [0, 3],
-    [0, 1, 2, 3, 4, 5],
-    [2, 5],
-    [1, 2, 3],
-    [4, 5],
-    [4, 5],
-    [0, 1, 3, 4, 5],
-    [0, 3],
-    [4, 5],
-]
-
-
-@pytest.mark.parametrize("dim", [5])
 class TestResize:
     """Tests for the function ``subgraph.resize``"""
 
-    def test_target_wrong_type(self, graph):
-        """Test if function raises a ``TypeError`` when incorrect type given for ``target`` """
-        with pytest.raises(TypeError, match="target must be an integer"):
-            subgraph.resize(subgraphs=[[0, 1]], graph=graph, target=[])
+    def test_input_not_subgraph(self):
+        """Test if function raises a ``ValueError`` when input is not a subgraph"""
+        dim = 5
+        with pytest.raises(ValueError, match="Input is not a valid subgraph"):
+            subgraph.resize([dim + 1], nx.complete_graph(dim))
 
-    def test_target_small(self, graph):
-        """Test if function raises a ``ValueError`` when a too small number is given for
-        ``target`` """
-        with pytest.raises(ValueError, match="target must be greater than two and less than"):
-            subgraph.resize(subgraphs=[[0, 1]], graph=graph, target=1)
+    def test_invalid_size(self):
+        """Test if function raises a ``ValueError`` when an invalid size is requested"""
+        dim = 5
+        with pytest.raises(ValueError, match="Requested sizes must be within size range of graph"):
+            subgraph.resize([0, 1], nx.complete_graph(dim), sizes=[-1, dim + 1])
 
-    def test_target_big(self, graph):
-        """Test if function raises a ``ValueError`` when a too large number is given for
-        ``target`` """
-        with pytest.raises(ValueError, match="target must be greater than two and less than"):
-            subgraph.resize(subgraphs=[[0, 1]], graph=graph, target=5)
+    @pytest.mark.parametrize("dim", [5, 6, 7])
+    def test_full_range(self, dim):
+        """Test if function correctly resizes to full range of sizes when the ``sizes`` argument
+        is not specified."""
+        g = nx.complete_graph(dim)
+        resized = subgraph.resize([0, 1, 2], g)
 
-    def test_callable_input(self, graph):
-        """Tests if function returns the correct output given a custom method set by the user"""
-        objective_return = (0, [0])
+        assert set(resized.keys()) == set(range(1, dim))
 
-        def custom_method(*args, **kwargs):
-            """Mockup of custom-method function fed to ``search``"""
-            return objective_return
+        subgraph_sizes = [len(resized[i]) for i in range(1, dim)]
 
-        result = subgraph.resize(
-            subgraphs=[[0, 1]], graph=graph, target=4, resize_options={"method": custom_method}
-        )
+        assert subgraph_sizes == list(range(1, dim))
 
-        assert result == objective_return
+    def test_correct_resize(self):
+        """Test if function correctly resizes on a fixed example where the ideal resizing is
+        known. The example is a lollipop graph of 6 fully connected nodes and 2 nodes on the
+        lollipop stick. An edge between node zero and node ``dim - 1`` (the lollipop node
+        connecting to the stick) is removed and a starting subgraph of nodes ``[2, 3, 4, 5,
+        6]`` is selected. The objective is to add-on 1 and 2 nodes and remove 1 node."""
+        dim = 6
+        g = nx.lollipop_graph(dim, 2)
+        g.remove_edge(0, dim - 1)
 
-    @pytest.mark.parametrize("methods", subgraph.RESIZE_DICT)
-    def test_valid_input(self, graph, monkeypatch, methods):
-        """Tests if function returns the correct output under normal conditions. The resizing
-        method is here monkey patched to return a known result."""
-        objective_return = (0, [0])
+        s = [2, 3, 4, 5, 6]
+        sizes = [4, 6, 7]
 
-        def custom_method(*args, **kwargs):
-            """Mockup of custom-method function fed to ``resize``"""
-            return objective_return
+        ideal = {4: [2, 3, 4, 5], 6: [1, 2, 3, 4, 5, 6], 7: [0, 1, 2, 3, 4, 5, 6]}
+        resized = subgraph.resize(s, g, sizes)
 
-        with monkeypatch.context() as m:
-            m.setattr(subgraph, "RESIZE_DICT", {methods: custom_method})
+        assert ideal == resized
 
-            result = subgraph.resize(
-                subgraphs=[[0, 1]], graph=graph, target=4, resize_options={"method": methods}
-            )
+    def test_tie(self, monkeypatch):
+        """Test if function correctly settles ties with random selection. This test starts with
+        the problem of a 6-dimensional complete graph and a 4-node subgraph, with the objective
+        of shrinking down to 3 nodes. In this case, any of the 4 nodes in the subgraph is an
+        equally good candidate for removal since all nodes have the same degree. The test
+        monkeypatches the ``np.random.shuffle`` function to simply permute the list according to
+        an offset, e.g. for an offset of 2 the list [0, 1, 2, 3] gets permuted to [2, 3, 0,
+        1]. Using this we expect the node to be removed by ``resize`` in this case to have label
+        equal to the offset."""
+        dim = 6
+        g = nx.complete_graph(dim)
+        s = [0, 1, 2, 3]
 
-        assert result == objective_return
+        def permute(l, offset):
+            d = len(l)
+            ll = l.copy()
+            for i in range(d):
+                l[i] = ll[(i + offset) % d]
 
-
-@pytest.mark.parametrize("dim, target", [(6, 4), (8, 5)])
-@pytest.mark.parametrize("methods", subgraph.RESIZE_DICT)
-def test_resize_integration(graph, target, methods):
-    """Test if function returns resized subgraphs of the correct form given an input list of
-    variable sized subgraphs specified by ``subgraphs``. The output should be a list of ``len(
-    10)``, each element containing itself a list corresponding to a subgraph that should be of
-    ``len(target)``. Each element in the subraph list should correspond to a node of the input
-    graph. Note that graph nodes are numbered in this test as [0, 1, 4, 9, ...] (i.e., squares of
-    the usual list) as a simple mapping to explore that the resized subgraph returned is still a
-    valid subgraph."""
-    graph = nx.relabel_nodes(graph, lambda x: x ** 2)
-    graph_nodes = set(graph.nodes)
-    s_relabeled = [(np.array(s) ** 2).tolist() for s in subgraphs]
-    resized = subgraph.resize(
-        subgraphs=s_relabeled, graph=graph, target=target, resize_options={"method": methods}
-    )
-    resized = np.array(resized)
-    dims = resized.shape
-    assert len(dims) == 2
-    assert dims[0] == len(s_relabeled)
-    assert dims[1] == target
-    assert all(set(sample).issubset(graph_nodes) for sample in resized)
-
-
-@pytest.mark.parametrize("dim", [5])
-class TestGreedyDensity:
-    """Tests for the function ``subgraph.greedy_density``"""
-
-    def test_invalid_subgraph(self, graph, monkeypatch):
-        """Test if function raises an ``Exception`` when an element of ``subgraphs`` is not
-        contained within nodes of the graph """
-        with pytest.raises(Exception, match="Input is not a valid subgraph"):
-            subgraph.greedy_density(subgraphs=[[0, 9]], graph=graph, target=3)
-
-    def test_normal_conditions_grow(self, graph):
-        """Test if function returns correct subgraph under normal conditions, where one needs to
-        grow to a larger subgraph.  We consider the 5-node checkerboard graph starting with a
-        subgraph of the nodes [0, 1, 4] and aiming to grow to 4 nodes. We can see that there are
-        two subgraphs of size 4: [0, 1, 2, 4] with 3 edges and [0, 1, 3, 4] with 4 edges,
-        so we hence expect the second option as the returned solution."""
-        s = subgraph.greedy_density(subgraphs=[[0, 1, 4]], graph=graph, target=4)[0]
-        assert np.allclose(s, [0, 1, 3, 4])
-
-    def test_normal_conditions_shrink(self, graph):
-        """Test if function returns correct subgraph under normal conditions, where one needs to
-        shrink to a smaller subgraph. We consider a 5-node graph given by the below adjacency
-        matrix, with a starting subgraph of nodes [1, 2, 3, 4] and the objective to shrink to 3
-        nodes. We can see that there are 4 candidate subgraphs: [1, 2, 3] with 3 edges, and [1,
-        2, 4], [1, 3, 4], and [2, 3, 4] all with 2 edges, so we hence expect the first option as
-        the returned solution."""
-        adj = ((0, 1, 0, 0, 0), (1, 0, 1, 1, 0), (0, 1, 0, 1, 0), (0, 1, 1, 0, 1), (0, 0, 0, 1, 0))
-        graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
-        s = subgraph.greedy_density(subgraphs=[[1, 2, 3, 4]], graph=graph, target=3)[0]
-        assert np.allclose(s, [1, 2, 3])
-
-
-@pytest.mark.parametrize("dim", [5])
-class TestGreedyDegree:
-    """Tests for the function ``subgraph.greedy_degree``"""
-
-    def test_invalid_subgraph(self, graph, monkeypatch):
-        """Test if function raises an ``Exception`` when an element of ``subgraphs`` is not
-        contained within nodes of the graph """
-        with pytest.raises(Exception, match="Input is not a valid subgraph"):
-            subgraph.greedy_degree(subgraphs=[[0, 9]], graph=graph, target=3)
-
-    def test_normal_conditions_grow(self, graph):
-        """Test if function returns correct subgraph under normal conditions, where one needs to
-        grow to a larger subgraph.  We consider the 7-node graph given by the below adjacency
-        matrix starting with a subgraph of the nodes [0, 1, 4] and aiming to grow to 4 nodes. We
-        can see that there are four candidate nodes to add in (corresponding degree shown in
-        brackets): node 2 (degree 4), node 3 (degree 3), node 5 (degree 1) and node 6 (degree 1).
-        Hence, since node 2 has the greatest degree, we expect the returned solution to be
-        [0, 1, 2, 4]."""
-        adj = (
-            (0, 1, 0, 0, 0, 0, 0),
-            (1, 0, 1, 1, 0, 0, 0),
-            (0, 1, 0, 1, 0, 1, 1),
-            (0, 1, 1, 0, 1, 0, 0),
-            (0, 0, 0, 1, 0, 0, 0),
-            (0, 0, 1, 0, 0, 0, 0),
-            (0, 0, 1, 0, 0, 0, 0),
-        )
-        graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
-
-        s = subgraph.greedy_degree(subgraphs=[[0, 1, 4]], graph=graph, target=4)[0]
-
-        assert np.allclose(s, [0, 1, 2, 4])
-
-    def test_normal_conditions_shrink(self, graph):
-        """Test if function returns correct subgraph under normal conditions, where one needs to
-        shrink to a smaller subgraph. We consider the 7-node graph given by the below adjacency
-        matrix starting with a subgraph of the nodes [0, 1, 2, 3] and aiming to shrink to 3
-        nodes. We can see that there are four candidate nodes to remove (corresponding degree
-        shown in brackets): node 0 (degree 3), node 1 (degree 3), node 2 (degree 2) and node 4 (
-        degree 3). Hence, since node 2 has the lowest degree, we expect the returned solution
-        to be [0, 1, 3]."""
-        adj = (
-            (0, 1, 0, 0, 0, 1, 1),
-            (1, 0, 1, 1, 0, 0, 0),
-            (0, 1, 0, 1, 0, 0, 0),
-            (0, 1, 1, 0, 1, 0, 0),
-            (0, 0, 0, 1, 0, 0, 0),
-            (1, 0, 0, 0, 0, 0, 0),
-            (1, 0, 0, 0, 0, 0, 0),
-        )
-        graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
-        s = subgraph.greedy_degree(subgraphs=[[0, 1, 2, 3]], graph=graph, target=3)
-        assert np.allclose(s, [0, 1, 3])
+        for i in range(4):
+            permute_i = functools.partial(permute, offset=i)
+            with monkeypatch.context() as m:
+                m.setattr(np.random, "shuffle", permute_i)
+                resized = subgraph.resize(s, g, [3])
+                resized_subgraph = resized[3]
+                removed_node = list(set(s) - set(resized_subgraph))[0]
+                assert  removed_node == i

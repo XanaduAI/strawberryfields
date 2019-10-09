@@ -15,9 +15,9 @@ r"""
 Dense subgraph identification
 =============================
 
-**Module name:** :mod:`strawberryfields.gbs.dense`
+**Module name:** :mod:`strawberryfields.gbs.subgraph`
 
-.. currentmodule:: strawberryfields.gbs.dense
+.. currentmodule:: strawberryfields.gbs.subgraph
 
 This module provides tools for users to identify dense subgraphs. Current functionality focuses
 on the densest-:math:`k` subgraph problem :cite:`arrazola2018using`, which is NP-hard. This
@@ -43,9 +43,7 @@ Heuristics
 The :func:`search` function provides access to heuristic algorithms for finding
 approximate solutions. At present, random search is the heuristic algorithm provided, accessible
 through the :func:`random_search` function. This algorithm proceeds by randomly generating a set
-of :math:`k` vertex subgraphs and selecting the densest. Sampling of subgraphs can be achieved
-both uniformly at random and also with a quantum sampler programmed to be biased toward
-outputting dense subgraphs.
+of :math:`k` vertex subgraphs and selecting the densest.
 
 .. autosummary::
     search
@@ -59,7 +57,7 @@ Subgraph resizing
 Subgraphs sampled from GBS are not guaranteed to be of size :math:`k`, even if this is the mean
 photon number. On the other hand, the densest-:math:`k` subgraph problem requires graphs of fixed
 size to be considered. This means that heuristic algorithms at some point must resize the sampled
-subgraphs. Resizing functionality is provided by the following functions.
+subgraphs. Resizing functionality is provided by the following function.
 
 .. autosummary::
     resize
@@ -172,7 +170,7 @@ def random_search(
         backend_options=options["backend"],
     )
 
-    samples = resize(subgraphs=samples, graph=graph, target=nodes, resize_options=options["resize"])
+    samples = [resize(s, graph, [nodes])[nodes] for s in samples]
 
     density_and_samples = [(nx.density(graph.subgraph(s)), s) for s in samples]
 
@@ -184,14 +182,10 @@ METHOD_DICT = {"random-search": random_search}
 describing the method, while the dictionary values are callable functions corresponding to the
 method."""
 
-RESIZE_DEFAULTS = {"method": "greedy-density"}
-"""dict[str, Any]: Dictionary to specify default parameters of options for resizing
-"""
-
 OPTIONS_DEFAULTS = {
     "heuristic": {"method": random_search},
     "backend": BACKEND_DEFAULTS,
-    "resize": RESIZE_DEFAULTS,
+    "resize": {},
     "sample": sample.SAMPLE_DEFAULTS,
 }
 """dict[str, dict[str, Any]]: Options for dense subgraph identification heuristics. Composed of a
@@ -221,7 +215,7 @@ def resize(subgraph: list, graph: nx.Graph, sizes: Optional[list] = None) -> lis
         subgraph (list[int]): a subgraph specified by a list of nodes
         graph (nx.Graph): the input graph
         sizes (list[int]): a list of desired sized for the subgraph to be resized to; defaults to
-            all possible sizes
+            all possible nonzero sizes
 
     Returns:
         dict[int, list[int]]: a dictionary of different sizes with corresponding subgraph
@@ -231,7 +225,7 @@ def resize(subgraph: list, graph: nx.Graph, sizes: Optional[list] = None) -> lis
         raise ValueError("Input is not a valid subgraph")
 
     nodes = graph.nodes()
-    all_sizes = set(range(len(nodes)))
+    all_sizes = set(range(1, len(nodes)))
 
     if sizes is None:
         sizes = all_sizes
@@ -239,13 +233,16 @@ def resize(subgraph: list, graph: nx.Graph, sizes: Optional[list] = None) -> lis
         sizes = set(sizes)
 
         if not sizes.issubset(all_sizes):
-            raise ValueError("Input is not a valid subgraph")
+            raise ValueError("Requested sizes must be within size range of graph")
 
     starting_size = len(subgraph)
     max_size = max(sizes)
     min_size = min(sizes)
 
-    resized = {starting_size: sorted(subgraph)}
+    if starting_size in sizes:
+        resized = {starting_size: sorted(subgraph)}
+    else:
+        resized = {}
 
     if max_size > starting_size:
 
@@ -255,7 +252,8 @@ def resize(subgraph: list, graph: nx.Graph, sizes: Optional[list] = None) -> lis
             grow_nodes = grow_subgraph.nodes()
             complement_nodes = nodes - grow_nodes
 
-            degrees = [(c, graph.subgraph(grow_nodes + [c]).degree()[c]) for c in complement_nodes]
+            degrees = [(c, graph.subgraph(list(grow_nodes) + [c]).degree()[c]) for c in
+                       complement_nodes]
             np.random.shuffle(degrees)
 
             to_add = max(degrees, key=lambda x: x[1])
