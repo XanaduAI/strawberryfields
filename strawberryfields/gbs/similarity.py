@@ -277,13 +277,13 @@ def orbit_cardinality(orbit: list, modes: int) -> int:
 def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -> int:
     r"""Gives the number of samples belonging to the input event.
 
-   For example, for three modes, there are six samples in an `E_{k=2, n_{\max}=2}` event: [1, 1,
-   0], [1, 0, 1], [0, 1, 1], [2, 0, 0], [0, 2, 0], and [0, 0, 2].
+    For example, for three modes, there are six samples in an :math:`E_{k=2, n_{\max}=2}` event:
+    [1, 1, 0], [1, 0, 1], [0, 1, 1], [2, 0, 0], [0, 2, 0], and [0, 0, 2].
 
     **Example usage:**
 
     >>> event_cardinality(2, 2, 3)
-    728
+    6
 
     Args:
         photon_number (int): number of photons in the event
@@ -303,8 +303,7 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
 
 
 def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
-    """Gives an MC estimate of the probability of a given orbit for a GBS device encoded
-    according to the input graph.TODO
+    """Gives an MC estimate of the GBS probability of a given orbit according to the input graph.
 
     To make this estimate, several samples from the orbit are drawn uniformly at random using
     :func:`orbit_to_sample`.
@@ -312,9 +311,7 @@ def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int 
     For each sample, this function calculates the probability of observing that sample from a GBS
     device programmed according to the input graph and mean photon number. The sum of the
     probabilities is then rescaled according to the cardinality of the orbit and the total number of
-    samples. The estimate is the sample mean of the rescaled probabilities. To make
-    this estimate, several samples from the orbit are drawn uniformly at random using
-    :func:orbit_to_sample.
+    samples. The estimate is the sample mean of the rescaled probabilities.
 
     **Example usage:**
 
