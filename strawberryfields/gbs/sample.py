@@ -369,5 +369,5 @@ def modes_from_counts(s: list) -> list:
     """
     modes = []
     for i, c in enumerate(s):
-        modes += [i] * c
+        modes += [i] * int(c)
     return sorted(modes)
