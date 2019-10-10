@@ -24,8 +24,9 @@ import networkx as nx
 import plotly
 
 ##############################################################################
-# The adjacency matrix of the TACE-AS graph can be loaded from the data module. We can visualized
-# the graph using the :mod:`~gbs.plot` module:
+# The adjacency matrix of the TACE-AS graph can be loaded from the data module and the
+# graph can be visualized using the :mod:`~gbs.plot` module:
+
 TA = gbs.data.TaceAs()
 A = TA.adj
 TA_graph = nx.Graph(A)
@@ -51,9 +52,9 @@ plotly.offline.plot(clique_0, filename="maximal_clique.html")
 #     :file: ../../examples_gbs/maximal_clique.html
 
 ##############################################################################
-# It's time to use the :mod:`~gbs.clique` module to find larger cliques in the graph. We can make
-# use of the pre-generated samples to post-select outputs with any specific number of clicks. In
-# this tutorial, we'll look at samples with exactly eight clicks, of which there 1,984:
+# We'll now use the :mod:`~gbs.clique` module to find larger cliques in the graph. We can make
+# use of the pre-generated samples to post-select outputs with any specific number of clicks. For
+# this tutorial, we'll look at samples with eight clicks, of which there are a total of 1,984:
 
 TA_subgraphs = gbs.sample.to_subgraphs(TA_graph, TA)
 counts = TA.counts()
