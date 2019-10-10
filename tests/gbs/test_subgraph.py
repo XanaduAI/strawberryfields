@@ -114,7 +114,8 @@ class TestRandomSearch:
             return {sizes[0]: s}
 
         with monkeypatch.context() as m:
-            m.setattr(sample, "subgraphs", self.sampler)
+            m.setattr(sample, "sample", self.sampler)
+            m.setattr(sample, "to_subgraphs", self.sampler)
             m.setattr(subgraph, "resize", patch_resize)
 
             result = subgraph.random_search(graph=graph, nodes=4, iterations=10)
