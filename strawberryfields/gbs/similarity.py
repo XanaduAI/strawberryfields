@@ -19,7 +19,28 @@ Graph similarity
 
 .. currentmodule:: strawberryfields.gbs.similarity
 
-Functionality for calculating feature vectors of graphs using GBS.
+This module provides tools to measure how similar graphs are using GBS. Measuring similarity is
+achieved by mapping GBS samples from each graph to a feature vector and calculating the overlap
+between these vectors.
+
+The functionality here is based upon the research papers: :cite:`bradler2018graph,
+schuld2019quantum,bradler2019duality`.
+
+An accompanying tutorial can be found `here <??>`.
+
+Coarse-graining GBS samples
+---------------------------
+
+GBS feature vectors can be composed of the probabilities of certain events from sampling. These
+events are typically a coarse-grained combination of elementary samples. We consider two coarse
+grainings:
+
+- **Orbits:** Combine all samples that can be made identical under permutation. For example,
+  ``[1, 0, 2, 0]`` and ``[2, 0, 0, 1]`` both belong to the ``[2, 1]`` orbit.
+
+- **Events:** Combine all :math:`k`-photon orbits where the maximum count in any mode does not
+  exceed a fixed value :math:`n_{\max}`. For example, when :math:`n_{\max}=2` orbits ``[2, 1]``,
+  ``[1, 1, 1]`` are part of the 3-photon event but orbit ``[3]`` is not.
 
 Summary
 -------
