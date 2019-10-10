@@ -58,13 +58,25 @@ Creating a feature vector
 
 A feature vector of a graph can be created by choosing a collection of orbits or events and
 evaluating their probabilities with respect to GBS sampling with the embedded graph. These
-probabilities are then selected to be elements of the feature vector.
+probabilities are then selected to be elements of the feature vector. Evaluating the
+probabilities of orbits or events can be achieved through two approaches:
+
+- **Direct sampling:** infer the probability of orbits or events from a set of sample data.
+
+- **Monte Carlo (MC) approximation:** generate samples within a given orbit or event and use them
+  to approximate the probability.
+
+This module provides functions to evaluate the probability of orbits and events through MC
+approximation:
 
 .. autosummary::
     prob_orbit_mc
     prob_event_mc
 
-
+One canonical method of constructing a feature vector is to pick probabilities of events
+:math:`E_{k, n_{\max}}` with photon numbers :math:`k` in a given range. This module allows for
+such feature vectors to be calculated using both the direct sampling and Monte Carlo
+approximation methods:
 
 .. autosummary::
     feature_vector_sampling
@@ -310,7 +322,7 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
 
 def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
     """Gives a Monte Carlo estimate of the probability of a given orbit for a GBS device encoded
-    according to the input graph.
+    according to the input graph.TODO
 
     To make this estimate, several samples from the orbit are drawn uniformly at random using
     :func:`orbit_to_sample`.
@@ -371,7 +383,7 @@ def prob_event_mc(
     samples: int = 1000,
 ) -> float:
     """Gives a Monte Carlo estimate of the probability of a given event for a GBS device encoded
-    according to the input graph.
+    according to the input graph.TODO
 
     To make this estimate, several samples from the event are drawn uniformly at random. For each
     sample, we calculate the probability of observing that sample from a GBS programmed according to
