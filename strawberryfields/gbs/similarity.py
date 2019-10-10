@@ -42,8 +42,7 @@ grainings:
   exceed a fixed value :math:`n_{\max}`. For example, when :math:`n_{\max}=2` orbits ``[2, 1]``,
   ``[1, 1, 1]`` are part of the 3-photon event but orbit ``[3]`` is not.
 
-Summary
--------
+This module provides the following tools for dealing with coarse-grained orbits and events:
 
 .. autosummary::
     sample_to_orbit
@@ -53,9 +52,23 @@ Summary
     orbits
     orbit_cardinality
     event_cardinality
+
+Creating a feature vector
+-------------------------
+
+A feature vector of a graph can be created by choosing a collection of orbits or events and
+evaluating their probabilities with respect to GBS sampling with the embedded graph. These
+probabilities are then selected to be elements of the feature vector.
+
+.. autosummary::
     prob_orbit_mc
     prob_event_mc
+
+
+
+.. autosummary::
     feature_vector_sampling
+    feature_vector_mc
 
 Code details
 ^^^^^^^^^^^^
