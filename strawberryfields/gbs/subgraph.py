@@ -77,11 +77,10 @@ from typing import Iterable, Optional, Tuple
 import networkx as nx
 
 from strawberryfields.gbs import sample
-from strawberryfields.gbs.sample import BACKEND_DEFAULTS
 
 
 def search(
-    graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
+        graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
 ) -> Tuple[float, list]:
     """Find a dense subgraph of a given size.
 
@@ -145,7 +144,7 @@ def search(
 
 
 def random_search(
-    graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
+        graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
 ) -> Tuple[float, list]:
     """Random search algorithm for finding dense subgraphs of a given size.
 
@@ -168,14 +167,10 @@ def random_search(
     """
     options = {**OPTIONS_DEFAULTS, **(options or {})}
 
-    samples = sample.subgraphs(
-        graph=graph,
-        nodes=nodes,
-        samples=iterations,
-        sample_options=options["sample"],
-        backend_options=options["backend"],
+    samples = sample.sample(
+        nx.to_numpy_array(graph), n_mean=nodes, n_samples=iterations, threshold=True
     )
-
+    samples = sample.to_subgraphs(samples, graph)
     samples = resize(subgraphs=samples, graph=graph, target=nodes, resize_options=options["resize"])
 
     density_and_samples = [(nx.density(graph.subgraph(s)), s) for s in samples]
@@ -192,21 +187,16 @@ RESIZE_DEFAULTS = {"method": "greedy-density"}
 """dict[str, Any]: Dictionary to specify default parameters of options for resizing
 """
 
-OPTIONS_DEFAULTS = {
-    "heuristic": {"method": random_search},
-    "backend": BACKEND_DEFAULTS,
-    "resize": RESIZE_DEFAULTS,
-    "sample": sample.SAMPLE_DEFAULTS,
-}
+OPTIONS_DEFAULTS = {"heuristic": {"method": random_search}, "resize": RESIZE_DEFAULTS}
 """dict[str, dict[str, Any]]: Options for dense subgraph identification heuristics. Composed of a
 dictionary of dictionaries with the first level specifying the option type, selected from keys
-``"heuristic"``, ``"backend"``, ``"resize"``, and ``"sample"``, with the corresponding value a
+``"heuristic"`` and ``"resize"``, with the corresponding value a
 dictionary of options for that type.
 """
 
 
 def resize(
-    subgraphs: Iterable, graph: nx.Graph, target: int, resize_options: Optional[dict] = None
+        subgraphs: Iterable, graph: nx.Graph, target: int, resize_options: Optional[dict] = None
 ) -> list:
     """Resize subgraphs to a given size.
 
@@ -263,7 +253,7 @@ def resize(
 
 
 def greedy_density(
-    subgraphs: Iterable, graph: nx.Graph, target: int, resize_options: Optional[dict] = None
+        subgraphs: Iterable, graph: nx.Graph, target: int, resize_options: Optional[dict] = None
 ) -> list:
     """Method to greedily resize subgraphs based upon density.
 
@@ -320,7 +310,7 @@ def greedy_density(
 
 
 def greedy_degree(
-    subgraphs: Iterable, graph: nx.Graph, target: int, resize_options: Optional[dict] = None
+        subgraphs: Iterable, graph: nx.Graph, target: int, resize_options: Optional[dict] = None
 ) -> list:
     """Method to greedily resize subgraphs based upon vertex degree.
 
