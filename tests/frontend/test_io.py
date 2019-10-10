@@ -406,7 +406,7 @@ class TestBlackbirdToSFConversion:
         assert prog.circuit[0].op.p[0] == 0.54
         assert prog.circuit[0].reg[0].ind == 0
 
-    @pytest.mark.skip("FIXME enable when strawberryfields.io.to_program is fixed.")
+    @pytest.mark.skip("FIXME enable when blackbird.program.RegRefTransform is replaced with sympy.Symbol.")
     def test_gate_measured_par(self):
         """Test a gate with a MeasuredParameter argument."""
 
@@ -418,7 +418,6 @@ class TestBlackbirdToSFConversion:
         Dgate(q0) | 1
         Rgate(2*q0) | 2
         """
-
         bb = blackbird.loads(bb_script)
         prog = io.to_program(bb)
 
@@ -437,7 +436,6 @@ class TestBlackbirdToSFConversion:
         assert par_is_symbolic(p)  # symbolic expression
         assert cmd.reg[0].ind == 2
 
-    @pytest.mark.skip("FIXME enable when strawberryfields.io.to_program is fixed.")
     def test_gate_free_par(self):
         """Test a FreeParameter with some transformations converts properly"""
 
@@ -445,27 +443,41 @@ class TestBlackbirdToSFConversion:
         name test_program
         version 1.0
 
-        Dgate({foo_bar1}) | 0
-        Rgate(1.0 -{ALPHA}) | 0
+        Dgate(a=1-{ALPHA}) | 0     # keyword arg, compound expr
+        Rgate(theta={foo_bar1}) | 0  # keyword arg, atomic
+        Dgate({ALPHA}**2) | 0        # positional arg, compound expr
+        Rgate({foo_bar2}) | 0        # positional arg, atomic
         """
-
         bb = blackbird.loads(bb_script)
         prog = io.to_program(bb)
 
-        assert prog.free_params.keys() == set(['foo_bar1', 'ALPHA'])
-        assert len(prog) == 2
+        assert prog.free_params.keys() == set(['foo_bar1', 'foo_bar2', 'ALPHA'])
+        assert len(prog) == 4
 
         cmd = prog.circuit[0]
         assert cmd.op.__class__.__name__ == "Dgate"
         p = cmd.op.p[0]
-        assert isinstance(p, FreeParameter)
-        assert p.name == 'foo_bar1'
+        assert par_is_symbolic(p)
         assert cmd.reg[0].ind == 0
 
         cmd = prog.circuit[1]
         assert cmd.op.__class__.__name__ == "Rgate"
         p = cmd.op.p[0]
+        assert isinstance(p, FreeParameter)
+        assert p.name == 'foo_bar1'
+        assert cmd.reg[0].ind == 0
+
+        cmd = prog.circuit[2]
+        assert cmd.op.__class__.__name__ == "Dgate"
+        p = cmd.op.p[0]
         assert par_is_symbolic(p)
+        assert cmd.reg[0].ind == 0
+
+        cmd = prog.circuit[3]
+        assert cmd.op.__class__.__name__ == "Rgate"
+        p = cmd.op.p[0]
+        assert isinstance(p, FreeParameter)
+        assert p.name == 'foo_bar2'
         assert cmd.reg[0].ind == 0
 
     def test_gate_multimode(self):

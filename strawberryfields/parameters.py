@@ -106,6 +106,7 @@ Functions
 
 .. autosummary::
    par_evaluate
+   par_convert
    par_is_symbolic
    par_regref_deps
    par_str
@@ -239,6 +240,31 @@ def par_is_symbolic(p):
     if is_object_array(p):
         return any(par_is_symbolic(k) for k in p)
     return isinstance(p, sympy.Basic)
+
+
+def par_convert(args, prog):
+    """Convert Blackbird symbolic Operation arguments into their SF counterparts.
+
+    Args:
+        args (Iterable[Any]): Operation arguments
+        prog (Program): program containing the Operations.
+
+    Returns:
+        list[Any]: converted arguments
+    """
+    def do_convert(a):
+        if isinstance(a, sympy.Basic):
+            # substitute SF symbolic parameter objects for Blackbird ones
+            s = {}
+            for k in a.atoms(sympy.Symbol):
+                if k.name[0] == 'q':
+                    s[k] = MeasuredParameter(prog.register[k.name[1]])
+                else:
+                    s[k] = prog.params(k.name)  # free parameter
+            return a.subs(s)
+        return a  # return non-symbols as-is
+
+    return [do_convert(a) for a in args]
 
 
 def par_regref_deps(p):

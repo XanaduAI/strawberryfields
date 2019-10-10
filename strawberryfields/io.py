@@ -37,7 +37,7 @@ import blackbird
 
 from . import ops
 from .program import Program
-from .parameters import par_is_symbolic
+from .parameters import par_is_symbolic, par_convert
 
 
 def to_blackbird(prog, version="1.0"):
@@ -119,12 +119,17 @@ def to_program(bb):
             # create the list of regrefs
             regrefs = [q[i] for i in op["modes"]]
 
-            # FIXME convert symbolic expressions in args containing measured and free parameters to
-            # symbolic expressions containing the corresponding MeasuredParameter and FreeParameter instances.
-
             if 'args' in op:
                 # the gate has arguments
-                gate(*op["args"], **op["kwargs"]) | regrefs #pylint:disable=expression-not-assigned
+                args = op['args']
+                kwargs = op['kwargs']
+
+                # Convert symbolic expressions in args/kwargs containing measured and free parameters to
+                # symbolic expressions containing the corresponding MeasuredParameter and FreeParameter instances.
+                args = par_convert(args, prog)
+                vals = par_convert(kwargs.values(), prog)
+                kwargs = dict(zip(kwargs.keys(), vals))
+                gate(*args, **kwargs) | regrefs  #pylint:disable=expression-not-assigned
             else:
                 # the gate has no arguments
                 gate | regrefs #pylint:disable=expression-not-assigned,pointless-statement
