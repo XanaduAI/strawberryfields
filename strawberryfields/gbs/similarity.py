@@ -303,15 +303,19 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
 
 
 def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
-    """Gives an MC estimate of the GBS probability of a given orbit according to the input graph.
+    r"""Gives an MC estimate of the GBS probability of a given orbit according to the input graph.
 
     To make this estimate, several samples from the orbit are drawn uniformly at random using
-    :func:`orbit_to_sample`.
+    :func:`orbit_to_sample`. Suppose :math:`N` samples :math:`\{S_{1}, S_{2}, \ldots , S_{N}\}` are
+    generated. For each sample, this function calculates the probability :math:`p(S_i)` of
+    observing that sample from a GBS device programmed according to the input graph and mean
+    photon number. The sum of the probabilities is then rescaled according to the cardinality
+    :math:`|O|` of the orbit :math:`O` and the total number of samples:
 
-    For each sample, this function calculates the probability of observing that sample from a GBS
-    device programmed according to the input graph and mean photon number. The sum of the
-    probabilities is then rescaled according to the cardinality of the orbit and the total number of
-    samples. The estimate is the sample mean of the rescaled probabilities.
+    .. math::
+        p(O) \approx \frac{1}{N}\sum_{i=1}^N p(S_i) |O|,
+
+    The sample mean of this sum is an estimate of the rescaled probability :math:`p(O)`.
 
     **Example usage:**
 
@@ -361,20 +365,25 @@ def prob_event_mc(
     n_mean: float = 5,
     samples: int = 1000,
 ) -> float:
-    """Gives an MC estimate of the probability of a given event for a GBS device encoded
-    according to the input graph.TODO
+    r"""Gives an MC estimate of the GBS probability of a given event according to the input graph.
 
-    To make this estimate, several samples from the event are drawn uniformly at random. For each
-    sample, we calculate the probability of observing that sample from a GBS programmed according to
-    the input graph and mean photon number. These probabilities are then rescaled according to the
-    cardinality of the event. The estimate is the sample mean of the rescaled probabilities. To make
-    this estimate, several samples from the event are drawn uniformly at random using
-    :func:event_to_sample.
+    To make this estimate, several samples from the event are drawn uniformly at random using
+    :func:`event_to_sample`. Suppose :math:`N` samples :math:`\{S_{1}, S_{2}, \ldots , S_{N}\}` are
+    generated. For each sample, this function calculates the probability :math:`p(S_i)` of
+    observing that sample from a GBS device programmed according to the input graph and mean
+    photon number. The sum of the probabilities is then rescaled according to the cardinality
+    :math:`|E_{k, n_{\max}}|` of the event :math:`E_{k, n_{\max}}` and the total number of samples:
+
+    .. math::
+        p(E_{k, n_{\max}}) \approx \frac{1}{N}\sum_{i=1}^N p(S_i) |E_{k, n_{\max}}|,
+
+    The sample mean of this sum is an estimate of the rescaled probability :math:`p(E_{k,
+    n_{\max}})`.
 
     **Example usage:**
 
     >>> graph = nx.complete_graph(8)
-    >>> p_event_mc(graph, 4, 2)
+    >>> prob_event_mc(graph, 4, 2)
     0.1395
 
     Args:
@@ -385,7 +394,7 @@ def prob_event_mc(
         samples (int): number of samples used in the Monte Carlo estimation
 
     Returns:
-        float: the estimated probability
+        float: estimated orbit probability
     """
 
     modes = graph.order()
@@ -417,11 +426,12 @@ def feature_vector_sampling(
 ) -> list:
     r"""Calculates feature vector with respect to input samples.
 
-    The feature vector is composed of event probabilities :math:`p_{k}` with all events
-    :math:`E_{k}` having a maximum photon count in each mode of ``max_count_per_mode``. Events
-    are specified by their total photon number :math:`k` and those chosen as part of the feature
-    vector can be specified through :math:`\mathbf{k}` (using the ``event_photon_numbers``
-    argument). The resultant feature vector is
+    The feature vector is composed of event probabilities :math:`p_{E_{k, n_{\max}}}` with all
+    events :math:`E_{k, n_{\max}}` having a maximum photon count :math:`n_{\max}` in each mode of
+    ``max_count_per_mode``.
+
+    Events are selected by ``event_photon_numbers``. If :math:`\mathbf{k}` is the vector of
+    selected events, the resultant feature vector is
 
     .. math::
         f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots)
@@ -430,11 +440,10 @@ def feature_vector_sampling(
 
     **Example usage:**
 
-    >>> sample.random_seed(1967)
-    >>> adj = np.ones((4, 4))
-    >>> samples = sample.quantum_sampler(adj, 6, 10, backend_options={"threshold": False})
+    >>> from strawberryfields.gbs import data
+    >>> samples = data.Mutag0()
     >>> feature_vector_sampling(samples, [2, 4, 6])
-    [0.1, 0.2, 0.0]
+    [0.19035, 0.2047, 0.1539]
 
     Args:
         samples (list[list[int]]): a list of samples
