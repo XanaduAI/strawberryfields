@@ -181,8 +181,8 @@ method."""
 OPTIONS_DEFAULTS = {"heuristic": {"method": random_search}}
 """dict[str, dict[str, Any]]: Options for dense subgraph identification heuristics. Composed of a
 dictionary of dictionaries with the first level specifying the option type, selected from keys
-``"heuristic"`` and ``"resize"``, with the corresponding value a
-dictionary of options for that type.
+``"heuristic"`` and ``"resize"``, with the corresponding value a dictionary of options for that
+type.
 """
 
 
