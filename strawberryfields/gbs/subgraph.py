@@ -71,7 +71,6 @@ import networkx as nx
 import numpy as np
 
 from strawberryfields.gbs import sample
-from strawberryfields.gbs.sample import BACKEND_DEFAULTS
 
 
 def search(
@@ -162,14 +161,11 @@ def random_search(
     """
     options = {**OPTIONS_DEFAULTS, **(options or {})}
 
-    samples = sample.subgraphs(
-        graph=graph,
-        nodes=nodes,
-        samples=iterations,
-        sample_options=options["sample"],
-        backend_options=options["backend"],
+    samples = sample.sample(
+        nx.to_numpy_array(graph), n_mean=nodes, n_samples=iterations, threshold=True
     )
 
+    samples = sample.to_subgraphs(samples, graph)
     samples = [resize(s, graph, [nodes])[nodes] for s in samples]
 
     density_and_samples = [(nx.density(graph.subgraph(s)), s) for s in samples]
@@ -182,15 +178,10 @@ METHOD_DICT = {"random-search": random_search}
 describing the method, while the dictionary values are callable functions corresponding to the
 method."""
 
-OPTIONS_DEFAULTS = {
-    "heuristic": {"method": random_search},
-    "backend": BACKEND_DEFAULTS,
-    "resize": {},
-    "sample": sample.SAMPLE_DEFAULTS,
-}
+OPTIONS_DEFAULTS = {"heuristic": {"method": random_search}}
 """dict[str, dict[str, Any]]: Options for dense subgraph identification heuristics. Composed of a
 dictionary of dictionaries with the first level specifying the option type, selected from keys
-``"heuristic"``, ``"backend"``, ``"resize"``, and ``"sample"``, with the corresponding value a
+``"heuristic"`` and ``"resize"``, with the corresponding value a
 dictionary of options for that type.
 """
 
