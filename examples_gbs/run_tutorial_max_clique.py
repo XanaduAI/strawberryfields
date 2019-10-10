@@ -56,7 +56,7 @@ plotly.offline.plot(clique_0, filename="maximal_clique.html")
 ##############################################################################
 # We'll now use the :mod:`~gbs.clique` module to find larger cliques in the graph. We can make
 # use of the pre-generated samples to post-select outputs with any specific number of clicks. For
-# this tutorial, we'll look at samples with eight clicks, of which there 1,984:
+# this tutorial, we'll look at samples with eight clicks, of which there are a total of 1,984:
 
 TA_subgraphs = gbs.sample.to_subgraphs(TA_graph, TA)
 
