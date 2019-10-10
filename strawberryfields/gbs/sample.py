@@ -37,6 +37,7 @@ represent samples from the device.
 
 .. autosummary::
     sample
+    postselect
     seed
 
 Subgraph sampling through GBS
