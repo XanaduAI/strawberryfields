@@ -19,7 +19,7 @@ kernel matrix.
 from strawberryfields.gbs import points, plot
 
 ##############################################################################
-# We define a space in which the GBS point process patterns are generated. This
+# We define a space where the GBS point process patterns are generated. This
 # space is referred to as the state space and is defined by a set of points. The
 # point process selects a subset of these points in each sample. Here we create
 # a discrete and homogeneous two-dimensional space containing 400 points as our
@@ -30,7 +30,7 @@ R = np.array([(i, j) for i in range(20) for j in range(20)])
 
 ##############################################################################
 # The kernel matrix for the points of this discrete space is constructed using 
-# the :func:`~.kernel` function. The :func:`~.kernel` function uses the *radial
+# the :func:`~.kernel` function, which uses the *radial
 # basis function* (RBF) kernel:
 #
 # .. math::
@@ -70,10 +70,10 @@ import plotly
 # -----------------
 #
 # When the distribution of points in a given space is inhomogenous, GBS point processes typically
-# sample points from the dense regions. This feature can be used to detect high-density outlier 
+# sample points from the densest regions. This feature can be used to detect high-density outlier 
 # points in a data set. In this example, we create two dense clusters and place them in a 
 # two-dimensional space containing evenly-distributed points. The GBS point process samples points 
-# from the dense clusters, with a higher probability.
+# from the dense clusters with a higher probability.
 #
 # We first create the data points.
 
@@ -82,7 +82,7 @@ R = np.concatenate((make_blobs(n_samples=50, centers=[[5, 5], [15, 15]], cluster
                     np.array([(i, j) for i in range(20) for j in range(20)])))
 
 ##############################################################################
-# Then construct the kernel matrix.
+# Then construct the kernel matrix and generate 500 samples
 
 K = points.kernel(R, 1.0)
 
@@ -98,7 +98,7 @@ samples = points.sample(K, 50.0, 500)
 gbs_frequent_points = np.argsort(np.sum(samples, axis=0))[-50:]
 
 ##############################################################################
-# Then we visualize these most frequent points. Majority of the commonly appearing 
+# Then we visualize these most frequent points. The majority of the commonly appearing 
 # points belong to the dense clusters.
 
 #plotly.offline.plot(plot_points(R, [1 if i in gbs_frequent_points else 0 for i in
