@@ -166,7 +166,7 @@ def random_search(
     )
 
     samples = sample.to_subgraphs(samples, graph)
-    samples = [resize(s, graph, [nodes])[nodes] for s in samples]
+    samples = [resize(s, graph, min_size=nodes, max_size=nodes)[nodes] for s in samples]
 
     density_and_samples = [(nx.density(graph.subgraph(s)), s) for s in samples]
 
@@ -186,11 +186,11 @@ type.
 """
 
 
-def resize(subgraph: list, graph: nx.Graph, sizes: Optional[list] = None) -> list:
+def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dict:
     """Resize a subgraph to a range of input sizes.
 
     This function uses a greedy approach to iteratively add or remove nodes one at a time to an
-    input subgraph to reach the range of sizes specified by ``sizes``.
+    input subgraph to reach the range of sizes specified by ``min_size`` and ``max_size``.
 
     When growth is required, the algorithm examines all nodes from the remainder of the graph as
     candidates and adds-in the single node with the highest degree relative to the rest of the
@@ -205,32 +205,27 @@ def resize(subgraph: list, graph: nx.Graph, sizes: Optional[list] = None) -> lis
     Args:
         subgraph (list[int]): a subgraph specified by a list of nodes
         graph (nx.Graph): the input graph
-        sizes (list[int]): a list of desired sizes for the subgraph to be resized to; defaults to
-            all possible nonzero sizes
+        min_size (int): minimum size for subgraph to be resized to
+        max_size (int): maximum size for subgraph to be resized to
 
     Returns:
         dict[int, list[int]]: a dictionary of different sizes with corresponding subgraph
     """
-    subgraph = set(subgraph)
-    if not subgraph.issubset(graph.nodes):
-        raise ValueError("Input is not a valid subgraph")
-
     nodes = graph.nodes()
-    all_sizes = set(range(1, len(nodes)))
+    subgraph = set(subgraph)
 
-    if sizes is None:
-        sizes = all_sizes
-    else:
-        sizes = set(sizes)
-
-        if not sizes.issubset(all_sizes):
-            raise ValueError("Requested sizes must be within size range of graph")
+    if not subgraph.issubset(nodes):
+        raise ValueError("Input is not a valid subgraph")
+    if min_size < 1:
+        raise ValueError("min_size must be at least 1")
+    if max_size >= len(nodes):
+        raise ValueError("max_size must be less than number of nodes in graph")
+    if max_size < min_size:
+        raise ValueError("max_size must not be less than min_size")
 
     starting_size = len(subgraph)
-    max_size = max(sizes)
-    min_size = min(sizes)
 
-    if starting_size in sizes:
+    if min_size <= starting_size <= max_size:
         resized = {starting_size: sorted(subgraph)}
     else:
         resized = {}
@@ -253,7 +248,7 @@ def resize(subgraph: list, graph: nx.Graph, sizes: Optional[list] = None) -> lis
 
             new_size = grow_subgraph.order()
 
-            if new_size in sizes:
+            if min_size <= new_size <= max_size:
                 resized[new_size] = sorted(grow_subgraph.nodes())
 
     if min_size < starting_size:
@@ -269,7 +264,7 @@ def resize(subgraph: list, graph: nx.Graph, sizes: Optional[list] = None) -> lis
 
             new_size = shrink_subgraph.order()
 
-            if new_size in sizes:
+            if min_size <= new_size <= max_size:
                 resized[new_size] = sorted(shrink_subgraph.nodes())
 
     return resized

@@ -110,8 +110,8 @@ class TestRandomSearch:
         optimal_sample = [0, 1, 9, 16]
         graph = nx.relabel_nodes(graph, lambda x: x ** 2)
 
-        def patch_resize(s, graph, sizes):
-            return {sizes[0]: s}
+        def patch_resize(s, graph, min_size, max_size):
+            return {min_size: s}
 
         with monkeypatch.context() as m:
             m.setattr(sample, "sample", self.sampler)
@@ -130,26 +130,42 @@ class TestResize:
         """Test if function raises a ``ValueError`` when input is not a subgraph"""
         dim = 5
         with pytest.raises(ValueError, match="Input is not a valid subgraph"):
-            subgraph.resize([dim + 1], nx.complete_graph(dim))
+            subgraph.resize([dim + 1], nx.complete_graph(dim), 2, 3)
 
-    def test_invalid_size(self):
-        """Test if function raises a ``ValueError`` when an invalid size is requested"""
+    def test_invalid_min_size(self):
+        """Test if function raises a ``ValueError`` when an invalid min_size is requested"""
         dim = 5
-        with pytest.raises(ValueError, match="Requested sizes must be within size range of graph"):
-            subgraph.resize([0, 1], nx.complete_graph(dim), sizes=[-1, dim + 1])
+        with pytest.raises(ValueError, match="min_size must be at least 1"):
+            subgraph.resize([0, 1], nx.complete_graph(dim), 0, 3)
 
-    @pytest.mark.parametrize("dim", [5, 6, 7])
-    def test_full_range(self, dim):
-        """Test if function correctly resizes to full range of sizes when the ``sizes`` argument
-        is not specified."""
+    def test_invalid_max_size(self):
+        """Test if function raises a ``ValueError`` when an invalid max_size is requested"""
+        dim = 5
+        with pytest.raises(ValueError, match="max_size must be less than number of nodes in graph"):
+            subgraph.resize([0, 1], nx.complete_graph(dim), 2, dim)
+
+    def test_invalid_max_vs_min(self):
+        """Test if function raises a ``ValueError`` when max_size is less than min_size"""
+        dim = 5
+        with pytest.raises(ValueError, match="max_size must not be less than min_size"):
+            subgraph.resize([0, 1], nx.complete_graph(dim), 4, 3)
+
+    @pytest.mark.parametrize("dim", [7, 8])
+    @pytest.mark.parametrize(
+        "min_size,max_size",
+        [(1, 4), (1, 5), (2, 6), (1, 6), (4, 6), (1, 2), (1, 1), (3, 3), (5, 5), (1, 3), (3, 6)],
+    )
+    def test_full_range(self, dim, min_size, max_size):
+        """Test if function correctly resizes to full range of requested sizes"""
         g = nx.complete_graph(dim)
-        resized = subgraph.resize([0, 1, 2], g)
+        resized = subgraph.resize([0, 1, 2], g, min_size, max_size)
+        r = range(min_size, max_size + 1)
 
-        assert set(resized.keys()) == set(range(1, dim))
+        assert set(resized.keys()) == set(r)
 
-        subgraph_sizes = [len(resized[i]) for i in range(1, dim)]
+        subgraph_sizes = [len(resized[i]) for i in r]
 
-        assert subgraph_sizes == list(range(1, dim))
+        assert subgraph_sizes == list(r)
 
     def test_correct_resize(self):
         """Test if function correctly resizes on a fixed example where the ideal resizing is
@@ -162,10 +178,16 @@ class TestResize:
         g.remove_edge(0, dim - 1)
 
         s = [2, 3, 4, 5, 6]
-        sizes = [4, 6, 7]
+        min_size = 4
+        max_size = 7
 
-        ideal = {4: [2, 3, 4, 5], 6: [1, 2, 3, 4, 5, 6], 7: [0, 1, 2, 3, 4, 5, 6]}
-        resized = subgraph.resize(s, g, sizes)
+        ideal = {
+            4: [2, 3, 4, 5],
+            5: [2, 3, 4, 5, 6],
+            6: [1, 2, 3, 4, 5, 6],
+            7: [0, 1, 2, 3, 4, 5, 6],
+        }
+        resized = subgraph.resize(s, g, min_size, max_size)
 
         assert ideal == resized
 
@@ -185,14 +207,14 @@ class TestResize:
         def permute(l, offset):
             d = len(l)
             ll = l.copy()
-            for i in range(d):
-                l[i] = ll[(i + offset) % d]
+            for _i in range(d):
+                l[_i] = ll[(_i + offset) % d]
 
         for i in range(4):
             permute_i = functools.partial(permute, offset=i)
             with monkeypatch.context() as m:
                 m.setattr(np.random, "shuffle", permute_i)
-                resized = subgraph.resize(s, g, [3])
+                resized = subgraph.resize(s, g, min_size=3, max_size=3)
                 resized_subgraph = resized[3]
                 removed_node = list(set(s) - set(resized_subgraph))[0]
                 assert removed_node == i
