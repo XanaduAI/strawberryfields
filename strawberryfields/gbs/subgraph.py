@@ -74,7 +74,7 @@ from strawberryfields.gbs import sample
 
 
 def search(
-        graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
+    graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
 ) -> Tuple[float, list]:
     """Find a dense subgraph of a given size.
 
@@ -138,7 +138,7 @@ def search(
 
 
 def random_search(
-        graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
+    graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
 ) -> Tuple[float, list]:
     """Random search algorithm for finding dense subgraphs of a given size.
 
@@ -192,20 +192,20 @@ def resize(subgraph: list, graph: nx.Graph, sizes: Optional[list] = None) -> lis
     This function uses a greedy approach to iteratively add or remove nodes one at a time to an
     input subgraph to reach the range of sizes specified by ``sizes``.
 
-    When growth is required, the algorithm picks individual nodes from the remainder of the graph
-    as candidates to add into the subgraph and picks the node with the highest degree relative to
-    the rest of the subgraph. This results in a graph that is one node larger, and if growth is
-    still required the algorithm performs the above procedure again.
+    When growth is required, the algorithm examines all nodes from the remainder of the graph as
+    candidates and adds-in the single node with the highest degree relative to the rest of the
+    subgraph. This results in a graph that is one node larger,  and if growth is still required
+    the algorithm performs the above procedure again.
 
-    When shrinking is required, the algorithm picks individual nodes from within the subgraph to
-    remove, choosing the nodes with lowest degree relative to the subgraph. In both growth and
-    shrink phases, ties for addition/removal with nodes of equal degree are settled by uniform
-    random choice.
+    When shrinking is required, the algorithm examines all nodes from within the subgraph as
+    candidates and removes the single node with lowest degree relative to the subgraph. In both
+    growth and shrink phases, ties for addition/removal with nodes of equal degree are settled by
+    uniform random choice.
 
     Args:
         subgraph (list[int]): a subgraph specified by a list of nodes
         graph (nx.Graph): the input graph
-        sizes (list[int]): a list of desired sized for the subgraph to be resized to; defaults to
+        sizes (list[int]): a list of desired sizes for the subgraph to be resized to; defaults to
             all possible nonzero sizes
 
     Returns:
