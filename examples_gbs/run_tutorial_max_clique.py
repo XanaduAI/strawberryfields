@@ -56,7 +56,7 @@ plotly.offline.plot(clique_0, filename="maximal_clique.html")
 # use of the pre-generated samples to post-select outputs with any specific number of clicks. For
 # this tutorial, we'll look at samples with eight clicks, of which there are a total of 1,984:
 
-TA_subgraphs = gbs.sample.to_subgraphs(TA_graph, TA)
+TA_subgraphs = gbs.sample.to_subgraphs(TA, TA_graph)
 counts = TA.counts()
 samples = [TA_subgraphs[i] for i in range(len(TA)) if counts[i] == 8]
 print(len(samples))
@@ -127,7 +127,7 @@ plotly.offline.plot(clique, filename="maximum_clique.html")
 
 Phat = gbs.data.PHat()  # Load data
 phat_graph = nx.Graph(Phat.adj)  # Obtain graph
-phat_subgraphs = gbs.sample.to_subgraphs(phat_graph, Phat)  # Convert samples into subgraphs
+phat_subgraphs = gbs.sample.to_subgraphs(Phat, phat_graph)  # Convert samples into subgraphs
 counts = Phat.counts()  # Post-select on samples
 samples = [phat_subgraphs[i] for i in range(len(Phat)) if counts[i] >= 16]
 
