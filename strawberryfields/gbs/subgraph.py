@@ -19,37 +19,13 @@ Dense subgraph identification
 
 .. currentmodule:: strawberryfields.gbs.subgraph
 
-This module provides tools for users to identify dense subgraphs. Current functionality focuses
-on the densest-:math:`k` subgraph problem :cite:`arrazola2018using`, which is NP-hard. This
-problem considers an undirected graph :math:`G = (V, E)` of :math:`N` nodes :math:`V` and a list
-of edges :math:`E`, and sets the objective of finding a :math:`k`-vertex subgraph with the
-greatest density. In this setting, subgraphs :math:`G[S]` are defined by nodes :math:`S \subset
-V` and corresponding edges :math:`E_{S} \subseteq E` that have both endpoints in :math:`S`. The
-density of a subgraph is given by
+This module provides tools for users to idensity dense subgraphs.
 
-.. math:: d(G[S]) = \frac{2 |E_{S}|}{|S|(|S|-1)},
-
-where :math:`|\cdot|` denotes cardinality, and the densest-:math:`k` subgraph problem can be
-written succinctly as
-
-.. math:: {\rm argmax}_{S \in \mathcal{S}_{k}} d(G[S])
-
-with :math:`\mathcal{S}_{k}` the set of all possible :math:`k` node subgraphs. This problem grows
-combinatorially with :math:`{N \choose k}` and is NP-hard in the worst case.
-
-Heuristics
-----------
-
-The :func:`search` function provides access to heuristic algorithms for finding
-approximate solutions. At present, random search is the heuristic algorithm provided, accessible
-through the :func:`random_search` function. This algorithm proceeds by randomly generating a set
-of :math:`k` vertex subgraphs and selecting the densest.
+The :func:`search` function provides a heuristic algorithm for finding dense regions and proceeds
+by greedily resizing input subgraphs and keeping track of the densest found.
 
 .. autosummary::
     search
-    random_search
-    OPTIONS_DEFAULTS
-    METHOD_DICT
 
 Subgraph resizing
 -----------------
@@ -65,125 +41,59 @@ subgraphs. Resizing functionality is provided by the following function.
 Code details
 ^^^^^^^^^^^^
 """
-from typing import Optional, Tuple
-
 import networkx as nx
 import numpy as np
 
-from strawberryfields.gbs import sample
-
 
 def search(
-    graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
-) -> Tuple[float, list]:
-    """Find a dense subgraph of a given size.
+    subgraphs: list, graph: nx.Graph, min_size: int, max_size: int, top_count: int = 10
+) -> dict:
+    """Search for dense subgraphs within an input size range.
 
-    This function returns the densest `node-induced subgraph
-    <http://mathworld.wolfram.com/Vertex-InducedSubgraph.html>`__ of size ``nodes`` after
-    multiple repetitions. It uses heuristic optimization that combines search space exploration
-    with local searching. The heuristic method can be set with the ``options`` argument. Methods
-    can contain stochastic elements, where randomness can come from distributions including GBS.
-
-    All elements of the heuristic can be controlled with the ``options`` argument, which should be a
-    dict-of-dicts where the first level specifies the option type as a string-based key,
-    with corresponding value being a dictionary of options for that type. The option types are:
-
-    - ``"heuristic"``: specifying options used by optimization heuristic; corresponding
-      dictionary of options explained further :ref:`below <heuristic>`
-    - ``"backend"``: specifying options used by backend quantum samplers; corresponding
-      dictionary of options explained further in :mod:`~strawberryfields.gbs.sample`
-    - ``"resize"``: specifying options used by resizing method; corresponding dictionary of
-      options explained further in :mod:`~strawberryfields.gbs.resize`
-    - ``"sample"``: specifying options used in sampling; corresponding dictionary of options
-      explained further in :mod:`~strawberryfields.gbs.sample`
-
-    If unspecified, a default set of options is adopted for a given option type.
-
-    .. _heuristic:
-
-    The options dictionary corresponding to ``"heuristic"`` can contain any of the following:
-
-    .. glossary::
-
-        key: ``"method"``, value: *str* or *callable*
-            Value can be either a string selecting from a range of available methods or a
-            customized callable function. Options include:
-
-            - ``"random-search"``: a simple random search algorithm where many subgraphs are
-              selected and the densest one is chosen (default)
-            - *callable*: accepting ``(graph: nx.Graph, nodes: int, iterations: int, options:
-              dict)`` as arguments and returning ``Tuple[float, list]`` corresponding to the
-              density and list of nodes of the densest subgraph found, see :func:`random_search`
-              for an example
+    For each subgraph, this function resizes to the input range specified by ``min_size`` and
+    ``max_size`` and keeps track of the ``top_count`` number of densest subgraphs identified for
+    each size.
 
     Args:
+        subgraphs (list[list[int]]): a list of subgraphs specified by their nodes
         graph (nx.Graph): the input graph
-        nodes (int): the size of desired dense subgraph
-        iterations (int): number of iterations to use in algorithm
-        options (dict[str, dict[str, Any]]): dict-of-dicts specifying options in different parts
-            of heuristic search algorithm; defaults to :const:`OPTIONS_DEFAULTS`
+        min_size (int): minimum size for subgraph to be resized to
+        max_size (int): maximum size for subgraph to be resized to
+        top_count (int): maximum number of densest subgraphs to keep track of for each size
 
     Returns:
-        tuple[float, list]: the density and list of nodes corresponding to the densest subgraph
-        found
+        dict[int, tuple(float, list[int])]: a dictionary of different sizes, each containing a
+        list of subgraphs reported as a tuple of subgraph density and subgraph nodes
     """
-    options = {**OPTIONS_DEFAULTS, **(options or {})}
+    nodes = graph.nodes()
+    size_range = range(min_size, max_size + 1)
 
-    method = options["heuristic"]["method"]
+    dense = {}
 
-    if not callable(method):
-        method = METHOD_DICT[method]
+    for s in subgraphs:
+        s = set(s)
+        if not s.issubset(nodes):
+            print("List of subgraphs contains an invalid subgraph, continuing")
+            continue
 
-    return method(graph=graph, nodes=nodes, iterations=iterations, options=options)
+        r = resize(s, graph, min_size, max_size)
 
+        for size in size_range:
+            current = dense.get(size, default=[])
 
-def random_search(
-    graph: nx.Graph, nodes: int, iterations: int = 1, options: Optional[dict] = None
-) -> Tuple[float, list]:
-    """Random search algorithm for finding dense subgraphs of a given size.
+            candidate = r.get(size)
+            sub = graph.subgraph(candidate)
+            sub_dens = nx.density(sub)
 
-    The algorithm proceeds by sampling subgraphs according to the
-    :func:`~strawberryfields.gbs.sample.subgraphs` function. The resultant subgraphs
-    are resized using :func:`resize` to be of size ``nodes``. The densest subgraph is then
-    selected among all the resultant subgraphs. Specified``options`` must be of the form given in
-    :func:`search`.
+            if len(current) < top_count:
+                current.append((sub_dens, sub))
+                current.sort()
+            elif sub_dens > min(current):
+                current.append((sub_dens, sub))
+                current.sort()
+                del current[-1]
 
-    Args:
-        graph (nx.Graph): the input graph
-        nodes (int): the size of desired dense subgraph
-        iterations (int): number of iterations to use in algorithm
-        options (dict[str, dict[str, Any]]): dict-of-dicts specifying options in different parts
-            of heuristic search algorithm; defaults to :const:`OPTIONS_DEFAULTS`
-
-    Returns:
-        tuple[float, list]: the density and list of nodes corresponding to the densest subgraph
-        found
-    """
-    options = {**OPTIONS_DEFAULTS, **(options or {})}
-
-    samples = sample.sample(
-        nx.to_numpy_array(graph), n_mean=nodes, n_samples=iterations, threshold=True
-    )
-
-    samples = sample.to_subgraphs(samples, graph)
-    samples = [resize(s, graph, min_size=nodes, max_size=nodes)[nodes] for s in samples]
-
-    density_and_samples = [(nx.density(graph.subgraph(s)), s) for s in samples]
-
-    return max(density_and_samples)
-
-
-METHOD_DICT = {"random-search": random_search}
-"""dict[str, func]: Included methods for finding dense subgraphs. The dictionary keys are strings
-describing the method, while the dictionary values are callable functions corresponding to the
-method."""
-
-OPTIONS_DEFAULTS = {"heuristic": {"method": random_search}}
-"""dict[str, dict[str, Any]]: Options for dense subgraph identification heuristics. Composed of a
-dictionary of dictionaries with the first level specifying the option type, selected from keys
-``"heuristic"`` and ``"resize"``, with the corresponding value a dictionary of options for that
-type.
-"""
+    return dense
 
 
 def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dict:
