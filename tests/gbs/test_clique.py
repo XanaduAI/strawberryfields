@@ -107,7 +107,7 @@ def patch_random_shuffle(x, reverse):
 
 
 @pytest.mark.parametrize("dim", range(4, 10))
-class TestCliqueGrow:
+class TestGrow:
     """Tests for the function ``strawberryfields.clique.grow``"""
 
     def test_grow_maximal(self, dim):
@@ -176,7 +176,7 @@ class TestCliqueGrow:
 
 
 @pytest.mark.parametrize("dim", range(5, 10))
-class TestCliqueSwap:
+class TestSwap:
     """Tests for the function ``strawberryfields.clique.swap``"""
 
     def test_swap(self, dim):
@@ -254,7 +254,7 @@ class TestCliqueSwap:
 
 
 @pytest.mark.parametrize("dim", range(6, 10))
-class TestCliqueShrink:
+class TestShrink:
     """Tests for the function ``clique.shrink``"""
 
     def test_is_output_clique(self, dim):
@@ -378,7 +378,7 @@ class TestC1:
         edge (0, 1) is removed """
         A = nx.complete_graph(dim)
         A.remove_edge(0, 1)
-        S = [i for i in range(1, dim)]
+        S = list(range(1, dim))
         c1 = clique.c_1(S, A)
 
         assert c1 == [(1, 0)]
@@ -387,7 +387,7 @@ class TestC1:
         """Tests that :math:`c_1` set gives a valid clique after swapping """
         A = nx.complete_graph(dim)
         A.remove_edge(0, 1)
-        S = [i for i in range(1, dim)]
+        S = list(range(1, dim))
         c1 = clique.c_1(S, A)
         swap_nodes = c1[0]
         S.remove(swap_nodes[0])
