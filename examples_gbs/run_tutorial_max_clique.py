@@ -24,7 +24,7 @@ import networkx as nx
 import plotly
 
 ##############################################################################
-# The adjacency matrix of the TACE-AS graph can be loaded from the data module and the
+# The adjacency matrix of the TACE-AS graph can be loaded from the ``data`` module and the
 # graph can be visualized using the :mod:`~gbs.plot` module:
 
 TA = gbs.data.TaceAs()
@@ -53,7 +53,7 @@ plotly.offline.plot(clique_0, filename="maximal_clique.html")
 
 ##############################################################################
 # We'll now use the :mod:`~gbs.clique` module to find larger cliques in the graph. We can make
-# use of the pre-generated samples to post-select outputs with any specific number of clicks. For
+# use of the pre-generated samples from the TACE-AS graph in the ``data`` module and post-select samples with a specific number of clicks. For
 # this tutorial, we'll look at samples with eight clicks, of which there are a total of 1,984:
 
 TA_subgraphs = gbs.sample.to_subgraphs(TA, TA_graph)
@@ -69,7 +69,7 @@ GBS_dens = []
 u_dens = []
 
 for s in samples:
-    uniform = list(np.random.choice(24, 8))  # generates uniform sample
+    uniform = list(np.random.choice(24, 8, replace=False))  # generates uniform sample
     GBS_dens.append(nx.density(TA_graph.subgraph(s)))
     u_dens.append(nx.density(TA_graph.subgraph(uniform)))
 
@@ -108,7 +108,7 @@ print('Average clique size = {:.3f}'.format(np.mean(clique_sizes)))
 
 ##############################################################################
 # Wow! Local search is very helpful 🤩. Looking at the cliques we've found, we learn that the largest
-# cliques in the graph have size eight, and there are many of them. Let's take a look at the first
+# identified cliques in the graph have size eight, and there are many of them. Let's take a look at the first
 # one we found
 
 clique = gbs.plot.plot_graph(TA_graph, searched[0])
@@ -119,7 +119,7 @@ plotly.offline.plot(clique, filename="maximum_clique.html")
 #     :file: ../../examples_gbs/maximum_clique.html
 
 ##############################################################################
-# The TACE-AS graph is relatively small, so finding cliques is not particularly difficult. A
+# The TACE-AS graph is relatively small, so finding large cliques is not particularly difficult. A
 # tougher challenge is the 300-node ``p_hat300-1`` random graph from the DIMACS maximum clique
 # dataset. In this section of the tutorial, we'll write a short program that uses GBS samples in
 # combination with local search to identify large cliques in this graph.
