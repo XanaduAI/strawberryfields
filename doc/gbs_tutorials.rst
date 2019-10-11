@@ -2,6 +2,6 @@ Applications layer tutorials
 ============================
 
 .. customgalleryitem::
-    :tooltip: To be filled
-    :description: :doc:`tutorials_gbs/run_tutorial_example`
-    :figure: ./_static/planted.png
+    :tooltip: Sampling
+    :description: :doc:`tutorials_gbs/run_tutorial_sample`
+    :figure: ./_static/thumbs/code.png
