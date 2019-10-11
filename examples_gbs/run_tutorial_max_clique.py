@@ -6,7 +6,7 @@ In this tutorial, we'll explore how to combine GBS samples with local search alg
 find large cliques in graphs. Let's get started!
 
 A clique is a special type of subgraph where all possible connections between nodes are present;
-they are densest possible subgraphs of their size. The maximum clique problem,or max clique for
+they are densest possible subgraphs of their size. The maximum clique problem, or max clique for
 short, asks the question: given a graph :math:`G`, what is the largest clique in the graph?
 Max clique is NP-Hard, so finding the actual biggest clique becomes challenging for
 graphs with many nodes. This is why we need clever algorithms to identify large cliques!
