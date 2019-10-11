@@ -34,7 +34,7 @@ Code details
 
 import numpy as np
 import scipy
-from thewalrus.csamples import rescale_adjacency_matrix_thermal, generate_thermal_samples
+from thewalrus.csamples import generate_thermal_samples, rescale_adjacency_matrix_thermal
 
 
 def kernel(R: np.ndarray, sigma: float) -> np.ndarray:
