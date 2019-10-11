@@ -70,16 +70,34 @@ probabilities of orbits or events can be achieved through two approaches:
   to approximate the probability.
 
 This module provides functions to evaluate the probability of orbits and events through MC
-approximation:
+approximation. For an orbit or event :math:`E`, several samples from :math:`E` are drawn
+uniformly at random using :func:`orbit_to_sample` or :func:`event_to_sample`. Suppose :math:`N`
+samples :math:`\{S_{1}, S_{2}, \ldots , S_{N}\}` are generated. For each sample, this function
+calculates the probability :math:`p(S_i)` of observing that sample from a GBS device programmed
+according to the input graph and mean photon number. The sum of the probabilities is then
+rescaled according to the cardinality :math:`|E|` and the total number of samples:
+
+.. math::
+    p(E) \approx \frac{1}{N}\sum_{i=1}^N p(S_i) |E|,
+
+The sample mean of this sum is an estimate of the rescaled probability :math:`p(E)`.
+
+MC estimation is available through the following functions:
 
 .. autosummary::
     prob_orbit_mc
     prob_event_mc
 
-One canonical method of constructing a feature vector is to pick probabilities of events
-:math:`E_{k, n_{\max}}` with photon numbers :math:`k` in a given range. This module allows for
-such feature vectors to be calculated using both the direct sampling and Monte Carlo
-approximation methods:
+One canonical method of constructing a feature vector is to pick event probabilities
+:math:`p_{E_{k, n_{\max}}}` with all events :math:`E_{k, n_{\max}}` having a maximum photon count
+:math:`n_{\max}` in each mode. If :math:`\mathbf{k}` is the vector of selected events,
+the resultant feature vector is
+
+.. math::
+    f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots)
+
+This module allows for such feature vectors to be calculated using both the direct sampling and
+Monte Carlo approximation methods:
 
 .. autosummary::
     feature_vector_sampling
@@ -306,16 +324,8 @@ def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int 
     r"""Gives an MC estimate of the GBS probability of a given orbit according to the input graph.
 
     To make this estimate, several samples from the orbit are drawn uniformly at random using
-    :func:`orbit_to_sample`. Suppose :math:`N` samples :math:`\{S_{1}, S_{2}, \ldots , S_{N}\}` are
-    generated. For each sample, this function calculates the probability :math:`p(S_i)` of
-    observing that sample from a GBS device programmed according to the input graph and mean
-    photon number. The sum of the probabilities is then rescaled according to the cardinality
-    :math:`|O|` of the orbit :math:`O` and the total number of samples:
-
-    .. math::
-        p(O) \approx \frac{1}{N}\sum_{i=1}^N p(S_i) |O|,
-
-    The sample mean of this sum is an estimate of the rescaled probability :math:`p(O)`.
+    :func:`orbit_to_sample`. The GBS probabilities of these samples are then calculated and the
+    sum is used to create an estimate of the orbit probability.
 
     **Example usage:**
 
@@ -368,17 +378,8 @@ def prob_event_mc(
     r"""Gives an MC estimate of the GBS probability of a given event according to the input graph.
 
     To make this estimate, several samples from the event are drawn uniformly at random using
-    :func:`event_to_sample`. Suppose :math:`N` samples :math:`\{S_{1}, S_{2}, \ldots , S_{N}\}` are
-    generated. For each sample, this function calculates the probability :math:`p(S_i)` of
-    observing that sample from a GBS device programmed according to the input graph and mean
-    photon number. The sum of the probabilities is then rescaled according to the cardinality
-    :math:`|E_{k, n_{\max}}|` of the event :math:`E_{k, n_{\max}}` and the total number of samples:
-
-    .. math::
-        p(E_{k, n_{\max}}) \approx \frac{1}{N}\sum_{i=1}^N p(S_i) |E_{k, n_{\max}}|,
-
-    The sample mean of this sum is an estimate of the rescaled probability :math:`p(E_{k,
-    n_{\max}})`.
+    :func:`event_to_sample`. The GBS probabilities of these samples are then calculated and the
+    sum is used to create an estimate of the event probability.
 
     **Example usage:**
 
@@ -426,15 +427,8 @@ def feature_vector_sampling(
 ) -> list:
     r"""Calculates feature vector with respect to input samples.
 
-    The feature vector is composed of event probabilities :math:`p_{E_{k, n_{\max}}}` with all
-    events :math:`E_{k, n_{\max}}` having a maximum photon count :math:`n_{\max}` in each mode of
-    ``max_count_per_mode``.
-
-    Events are selected by ``event_photon_numbers``. If :math:`\mathbf{k}` is the vector of
-    selected events, the resultant feature vector is
-
-    .. math::
-        f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots)
+    The feature vector is composed of event probabilities with a fixed maximum photon count in
+    each mode but a range of total photon numbers specified by ``event_photon_numbers``.
 
     Probabilities are reconstructed by measuring the occurrence of events in the input ``samples``.
 
@@ -475,16 +469,11 @@ def feature_vector_mc(
     n_mean: float = 5,
     samples: int = 1000,
 ) -> list:
-    r"""Calculates feature vector using MC estimation of event probabilities.
+    r"""Calculates feature vector using MC estimation of event probabilities according to the
+    input graph.
 
-    The feature vector is composed of event probabilities :math:`p_{k}` with all events
-    :math:`E_{k}` having a maximum photon count in each mode of ``max_count_per_mode``. Events
-    are specified by their total photon number :math:`k` and those chosen as part of the feature
-    vector can be specified through :math:`\mathbf{k}` (using the ``event_photon_numbers``
-    argument). The resultant feature vector is
-
-    .. math::
-        f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots)
+    The feature vector is composed of event probabilities with a fixed maximum photon count in
+    each mode but a range of total photon numbers specified by ``event_photon_numbers``.
 
     Probabilities are reconstructed using Monte Carlo estimation.
 
