@@ -1,50 +1,68 @@
-"""
+# pylint: disable=wrong-import-position,wrong-import-order,ungrouped-imports,invalid-name
+r"""
 Point Process Tutorial
 ======================
 
 This tutorial shows how to generate GBS point process samples and use them to detect outlier
 points in a data set. Point processes are models for generating random point patterns and GBS
 devices can be programmed to operate as special types of point processes that generate clustered
-point patterns. GBS point processes belong to a class of point processes in which the probability
-of generating a specific pattern of points depends on matrix functions of a kernel matrix that
-describes the similarity between the points. Matrix functions that appear in GBS point processes
-are typically permanents and hafnians. In this tutorial we use the permanental point process in which
-the probability of observing a pattern of points depends on the permanent of their corresponding
-kernel matrix. 
+random point patterns.
+
+In GBS point processes, the probability of generating a specific pattern of points depends on
+matrix functions of a kernel matrix that describes the similarity between the points. Matrix
+functions that appear in GBS point processes are typically permanents and hafnians. In this
+tutorial, we use the permanental point process in which the probability of observing a pattern of
+points :math:`S` depends on the permanent of their corresponding kernel matrix :math:`K_S` as:
+
+.. math::
+    \mathcal{P}(S) = \frac{1}{\alpha}\text{per}(K_S),
+
+where :math:`\alpha` is a normalization constant.
+
+Let's look at a simple example to better understand the permanental point process.
 """
 
 ##############################################################################
-# First we need to import the :mod:`~.gbs.points` and :mod:`~.gbs.plot` modules.
+# We first import the modules we need:
 
+import numpy as np
+import plotly
+from sklearn.datasets import make_blobs
 from strawberryfields.gbs import points, plot
 
 ##############################################################################
 # We define a space where the GBS point process patterns are generated. This
 # space is referred to as the state space and is defined by a set of points. The
 # point process selects a subset of these points in each sample. Here we create
-# a discrete and homogeneous two-dimensional space containing 400 points as our
-# state space. 
+# a :math:`50\times 50` square grid of points.
 
-import numpy as np
-R = np.array([(i, j) for i in range(20) for j in range(20)])
+R = np.array([(i, j) for i in range(50) for j in range(50)])
 
 ##############################################################################
-# The kernel matrix for the points of this discrete space is constructed using 
-# the :func:`~.kernel` function, which uses the *radial
-# basis function* (RBF) kernel:
+# The rows of R are the coordinates of the points.
+#
+# Next step is to create the kernel matrix for the points of this discrete space. We call
+# the :func:`~.kernel` function which uses the *radial basis function* (RBF) kernel defined as:
 #
 # .. math::
 #     K_{i,j} = e^{-\|\bf{r}_i-\bf{r}_j\|^2/2\sigma^2},
 #
-# where :math:`\bf{r}_i` are the coordinates of point :math:`i` and :math:`\sigma`
-# is a kernel parameter that determines the scale of the kernel. Points that are much further
-# than a distance :math:`\sigma` from each other lead to small entries of the kernel matrix,
-# whereas points much closer than :math:`\sigma` generate large entries. The parameter
-# :math:`\sigma` is set to 1.0 in this example. For kernel matrices that are 
-# positive-semidefinite, there exist efficient quantum-inspired classical algorithms
-# for permanental point process sampling :cite:`jahangiri2019point`. In this tutorial
-# we restrict ourselves to such positive-semidefinite kernels and we use the quantum-inspired
-# classical algorithm for generating the permanental point process samples.
+# where :math:`\bf{r}_i` are the coordinates of point :math:`i` and :math:`\sigma` is a kernel
+# parameter that determines the scale of the kernel.
+#
+# In the RBF kernel, points that are much further than a distance :math:`\sigma` from each other
+# lead to small entries of the kernel matrix, whereas points much closer than :math:`\sigma`
+# generate large entries. Remember that the permanent of a matrix is a sum over the product of
+# some matrix entries. Now consider a specific point pattern in which all points are close to each
+# other. This simply means that their matrix elements have larger entries. Therefore, the
+# submatrix that corresponds to those points has a large permanent and the probability of
+# observing them in a sample is larger.
+#
+# For kernel matrices that are positive-semidefinite, such as the RBF kernel, there exist efficient
+# quantum-inspired classical algorithms for permanental point process sampling
+# :cite:`jahangiri2019point`. In this tutorial we restrict ourselves to positive-semidefinite
+# kernels and we use the quantum-inspired classical algorithm for generating the permanental
+# point process samples. The parameter :math:`\sigma` is set to 1.0 in this example.
 
 K = points.kernel(R, 1.0)
 
@@ -55,54 +73,67 @@ K = points.kernel(R, 1.0)
 samples = points.sample(K, 50.0, 10)
 
 ##############################################################################
-# We visualize the first sample by using the :func:`~.plot_points` function of 
+# We visualize the first sample by using the :func:`~.plot_points` function of
 # the :mod:`~.gbs.plot` module.
 
-import plotly
-#plotly.offline.plot(plot_points(R, samples[0]), filename="Points.html")
+plotly.offline.plot(plot.plot_points(R, samples[0]), filename="Points.html")
 
 ##############################################################################
 # .. raw:: html
 #     :file: ../../examples_gbs/Points.html
 
 ##############################################################################
+# The point patterns generated by the permanental point process have a higher degree of clustering.
+# To illustrate this, compare the permanental point pattern with a pattern generated uniformly
+# at random. We fix the number of points in the random pattern to be equal to the number of
+# points in the permanental point process sample visualized above.
+
+idx = [j for j, e in enumerate(samples[0]) if e != 0]
+random_sample = [1] * len(idx) + [0] * (len(R) - len(idx))
+np.random.shuffle(random_sample)
+
+plotly.offline.plot(plot.plot_points(R, random_sample), filename="Random.html")
+
+##############################################################################
+# .. raw:: html
+#     :file: ../../examples_gbs/Random.html
+
+##############################################################################
 # Outlier Detection
 # -----------------
 #
 # When the distribution of points in a given space is inhomogenous, GBS point processes typically
-# sample points from the densest regions. This feature can be used to detect high-density outlier 
-# points in a data set. In this example, we create two dense clusters and place them in a 
-# two-dimensional space containing evenly-distributed points. The GBS point process samples points 
+# sample points from the densest regions. This feature can be used to detect high-density outlier
+# points in a data set. In this example, we create two dense clusters and place them in a
+# two-dimensional space containing evenly-distributed points. The GBS point process samples points
 # from the dense clusters with a higher probability.
 #
-# We first create the data points.
+# We first create the data points. The clusters have 50 points each and the points have a
+# standard deviation of 1 and are centered at [x = 5, y = 5] and [x = 15, y = 15], respectively.
+# The grid points are arranged in a :math:`20\times 20` square pattern.
 
-from sklearn.datasets import make_blobs
-R = np.concatenate((make_blobs(n_samples=50, centers=[[5, 5], [15, 15]], cluster_std=1)[0],
-                    np.array([(i, j) for i in range(20) for j in range(20)])))
+grid = np.array([(i, j) for i in range(20) for j in range(20)])
+
+cluster = make_blobs(n_samples=50, centers=[[5, 5], [15, 15]], cluster_std=1)[0]
+
+R = np.concatenate((cluster, grid))
 
 ##############################################################################
-# Then construct the kernel matrix and generate 500 samples
+# Then construct the kernel matrix and generate 500 samples.
 
 K = points.kernel(R, 1.0)
-
-##############################################################################
-# And generate 500 samples.
 
 samples = points.sample(K, 50.0, 500)
 
 ##############################################################################
 # We obtain the indices of 50 points that appear most frequently in the GBS point
-# process samples. 
+# process samples and then visualize these most frequent points. The majority of the commonly
+# appearing points belong to the dense clusters.
 
 gbs_frequent_points = np.argsort(np.sum(samples, axis=0))[-50:]
 
-##############################################################################
-# Then we visualize these most frequent points. The majority of the commonly appearing 
-# points belong to the dense clusters.
-
-#plotly.offline.plot(plot_points(R, [1 if i in gbs_frequent_points else 0 for i in
-#                                    range(len(samples[0]))]), filename="Outliers.html")
+plotly.offline.plot(plot.plot_points(R, [1 if i in gbs_frequent_points else 0 for i in
+                                    range(len(samples[0]))]), filename="Outliers.html")
 
 ##############################################################################
 # .. raw:: html
