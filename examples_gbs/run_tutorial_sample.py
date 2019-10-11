@@ -44,9 +44,6 @@ print(s_pnr)
 # and 0 photons were detected in modes 3 and 4. If threshold detectors were used instead,
 # the sample would be: ``[1, 1, 1, 0, 0]``.
 #
-# Note that the :func:`~.gbs.sample.seed` function can be used whenever a repeatable output is
-# desired, but is not required in general.
-#
 # Sampling subgraphs
 # ------------------
 #
@@ -56,7 +53,7 @@ print(s_pnr)
 # that threshold samples can provide enough useful information for a range of applications.
 #
 # The applications layer of Strawberry Fields focuses primarily on solving graph-based problems.
-# In this setting, we typically want to use GBS to sample subgraphs of a graph which are likely
+# In this setting, we typically want to use GBS to sample subgraphs of a graph, which are likely
 # to be dense due to the probability distribution of GBS :cite:`arrazola2018using`. In this case,
 # threshold sampling is enough, since it lets us select nodes of the subgraph. Let's take more of
 # a look at this by using a small fixed graph as an example:
@@ -108,12 +105,14 @@ min_clicks = 3
 max_clicks = 4
 
 s = sample.postselect(s, min_clicks, max_clicks)
-print(len(s))
 
+print(len(s))
+s.append([0, 1, 0, 1, 1, 0])
 
 ##############################################################################
 # As expected, we can see that we have lost some samples. The number of samples that survive this
-# postselection is determined by the mean photon number in GBS.
+# postselection is determined by the mean photon number in GBS. We have also added in our example
+# sample ``[0, 1, 0, 1, 1, 0]`` to ensure that there is at least one for the following.
 #
 # Let's convert our postselected samples to subgraphs:
 
