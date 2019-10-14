@@ -158,6 +158,32 @@ def _update_subgraphs_list(l: list, t: tuple, max_count: int) -> None:
             l.append(t)
 
 
+def _update_dict(d: dict, d_new: dict, max_count: int) -> None:
+    """Updates dictionary ``d`` with subgraph tuples contained in ``d_new``.
+
+    Subgraph tuples are a pair of values: a float specifying the subgraph density and a list of
+    integers specifying the subgraph nodes. Both ``d`` and ``d_new`` are dictionaries over
+    different subgraph sizes. The values of ``d`` are lists of subgraph tuples containing the top
+    densest subgraphs for a given size, with maximum length ``max_count``. The values of
+    ``d_new`` are candidate subgraph tuples that can be the result of resizing an input subgraph
+    over a range using :func:`resize`. We want to add these candidates to the list of subgraph
+    tuples in ``d`` to build up our collection of dense subgraphs.
+
+    Args:
+        d (dict[int, list[tuple[float, list[int]]]]): dictionary of subgraph sizes and
+            corresponding list of subgraph tuples
+        d_new (dict[int, tuple[float, list[int]]]): dictionary of subgraph sizes and corresponding
+        subgraph tuples that are candidates to be added to the list
+        max_count (int):  the maximum length of subgraph tuple list
+
+    Returns:
+        None: this function modifies ``d`` in place
+    """
+    for size, t in d_new.items():
+        l = d.setdefault(size, [t])
+        _update_subgraphs_list(l, t, max_count)
+
+
 def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dict:
     """Resize a subgraph to a range of input sizes.
 
