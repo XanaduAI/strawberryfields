@@ -36,6 +36,10 @@ m1_a = m1.adj
 m2_a = m2.adj
 m3_a = m3.adj
 
+# Samples from these graphs can be accessed by indexing:
+
+print(m0[0])
+
 ##############################################################################
 # We can now plot the four graphs using the :mod:`~gbs.plot` module. To use this module,
 # we need to convert the adjacency matrices into NetworkX Graphs:
@@ -75,10 +79,6 @@ plotly.offline.plot(plot_mutag_3, filename="MUTAG_3.html")
 # By visual inspection, we see that the graphs of ``m1_a`` and ``m2_a`` look very similar. In fact,
 # it turns out that they are *isomorphic* to each other, which means that the graphs can be made
 # identical by permuting their node labels.
-#
-# Samples from these graphs can be accessed by indexing:
-
-print(m0[0])
 
 ##############################################################################
 # Creating a feature vector
@@ -87,7 +87,7 @@ print(m0[0])
 # Following :cite:`schuld2019quantum`, we can create a *feature vector* to describe each graph.
 # These feature vectors contain information about the graphs and can be viewed as a mapping to a
 # high dimensional feature space, a technique often used in machine learning that allows us to
-# find ways of separating points in the space for classification.
+# employ properties of the feature space to separate and classify the vectors.
 #
 # The feature vector of a graph can be composed in a variety of ways. One approach is to built it
 # using statistics from a GBS device configured to sample from the graph, as we now discuss.
@@ -100,7 +100,8 @@ print(m0[0])
 print(similarity.sample_to_orbit(m0[0]))
 
 ##############################################################################
-# Other samples can be randomly generated from the ``[1, 1]`` orbit using:
+# Here, ``[1, 1]`` means that two photons were detected, each in a separate mode. Other samples
+# can be randomly generated from the ``[1, 1]`` orbit using:
 
 print(similarity.orbit_to_sample([1, 1], modes=m0.modes))
 
@@ -129,7 +130,7 @@ print(similarity.sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0
 
 ##############################################################################
 # Now that we have mastered orbits and events, how can we make a feature vector? It was shown in
-# :cite:`schuld2019quantum` that one way of making a feature vector of a graph is to measure the
+# :cite:`schuld2019quantum` that one way of making a feature vector of a graph is through the
 # probabilities of events. Specifically, for a :math:`k` photon event :math:`E_{k, n_{\max}}`
 # with maximum count per mode :math:`n_{\max}` and corresponding probability :math:`p_{k,
 # n_{\max}}:=p_{E_{k, n_{\max}}}(G)` with respect to a graph :math:`G`, a feature vector can be
@@ -151,8 +152,9 @@ print(similarity.sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0
 # 1. Through sampling
 # 2. Using a Monte Carlo estimate of the probability
 #
-# For the first method, all one needs to do is generate some GBS samples from the graph of
-# interest and feed through:
+# In the first method, all one needs to do is generate some GBS samples from the graph of
+# interest and fix the composition of the feature vector. For example, for a feature vector
+# :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}` we use:
 
 print(similarity.feature_vector_sampling(m0, event_photon_numbers=[2, 4, 6], max_count_per_mode=2))
 
@@ -168,11 +170,10 @@ print(similarity.feature_vector_sampling(m0, event_photon_numbers=[2, 4, 6], max
 print(similarity.event_cardinality(6, 2, 17))
 
 ##############################################################################
-# To avoid calculating a large number of sample probabilities, an alternative for calculating the
-# event probability is to perform a Monte Carlo approximation. Here, samples within an event are
-# generated uniformly at random and their resultant probabilities are calculated. If :math:`N`
-# samples :math:`\{S_{1}, S_{2}, \ldots , S_{N}\}` are generated, then the event probability can
-# be approximated as
+# To avoid calculating a large number of sample probabilities, an alternative is to perform a
+# Monte Carlo approximation. Here, samples within an event are generated uniformly at random and
+# their resultant probabilities are calculated. If :math:`N` samples :math:`\{S_{1}, S_{2},
+# \ldots , S_{N}\}` are generated, then the event probability can be approximated as
 #
 # .. math::
 #     p(E_{k, n_{\max}}) \approx \frac{1}{N}\sum_{i=1}^N p(S_i) |E_{k, n_{\max}}|,
@@ -235,8 +236,13 @@ R = np.array([f1, f2, f3, f4])
 print(R)
 
 ##############################################################################
-# Given our points in the feature space and corresponding classifications, we can use scikit learn
-# to train an SVM:
+# The choice of ``events`` composing the feature vectors is arbitrary and we encourage the reader
+# to explore different combinations. Note, however, that odd photon-numbered events have zero
+# probability because ideal GBS only generates and outputs pairs of photons.
+#
+# Given our points in the feature space and corresponding classifications, we can use
+# scikit-learn's `LinearSVC <https://scikit-learn.org/stable/modules/generated/sklearn.svm
+# .LinearSVC.html>`__ as our model to train:
 
 from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
