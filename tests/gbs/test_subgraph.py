@@ -21,106 +21,51 @@ import networkx as nx
 import numpy as np
 import pytest
 
-from strawberryfields.gbs import sample, subgraph
+from strawberryfields.gbs import data, sample, subgraph
 
 pytestmark = pytest.mark.gbs
 
-
-samples_subgraphs = np.array(
-    [
-        [1, 2, 3, 4],
-        [0, 1, 2, 3],
-        [0, 1, 2, 3],
-        [0, 1, 2, 5],
-        [0, 1, 2, 3],
-        [0, 1, 4, 5],
-        [0, 1, 4, 5],
-        [0, 1, 3, 4],
-        [0, 1, 2, 3],
-        [0, 1, 4, 5],
-    ]
-)
+p = data.Planted()
+g = nx.Graph(p.adj)
 
 
-@pytest.mark.parametrize("dim", [5])
-class TestSearch:
+'''class TestSearch:
     """Tests for the function ``subgraph.search``"""
 
-    def test_callable_input(self, adj):
-        """Tests if function returns the correct output given a custom method set by the user"""
-        objective_return = (0, [0])
+    def test_bad_subgraph(self):
+        """Test if function prints a warning when an invalid subgraph is included in
+        ``subgraphs`` and continues on to the next subgraph"""
+        samps = 100
 
-        def custom_method(*args, **kwargs):
-            """Mockup of custom-method function fed to ``search``"""
-            return objective_return
+        s = sample.to_subgraphs(p[:samps], g)
+        s.append([31])  # invalid sample
 
-        result = subgraph.search(
-            graph=adj, nodes=3, iterations=10, options={"heuristic": {"method": custom_method}}
-        )
+        res = subgraph.search(s, g, 10, 20)
+        print(res.keys())'''
 
-        assert result == objective_return
+class TestAddToList:
+    """Tests for the function ``subgraph._add_to_list``"""
 
-    @pytest.mark.parametrize("methods", subgraph.METHOD_DICT)
-    def test_valid_input(self, graph, monkeypatch, methods):
-        """Tests if function returns the correct output under normal conditions. The method is here
-        monkey patched to return a known result."""
-        objective_return = (0, [0])
-
-        def custom_method(*args, **kwargs):
-            """Mockup of custom-method function fed to ``search``"""
-            return objective_return
-
-        with monkeypatch.context() as m:
-            m.setattr(subgraph, "METHOD_DICT", {methods: custom_method})
-
-            result = subgraph.search(
-                graph=graph, nodes=3, iterations=10, options={"heuristic": {"method": methods}}
-            )
-
-        assert result == objective_return
+    l = [(0.09284148990494756, [1, 2, 5, 9]), (0.16013443604938415, [0, 1, 2, 5]), (0.38803386506300297, [0, 2, 3, 6]), (0.4132105226731848, [0, 1, 3, 6]), (0.5587798561345368, [3, 6, 8, 9]), (0.7017410327600858, [
+0, 4, 7, 9]), (0.8360847995330193, [2, 3, 5, 9]), (0.8768364522184167, [0, 1, 4, 8]), (0.9011700496489199, [2, 5, 6, 9]), (0.9183222696574376, [0, 3, 4, 6])]
 
 
-@pytest.mark.parametrize("dim", [5])
-class TestRandomSearch:
-    """Tests for the function ``subgraph.random_search``"""
+    def test_already_contained(self):
+        """Test if function does not act on list if fed a subgraph that is already there"""
+        l = self.l.copy()
+        subgraph._add_to_list(l, [1, 2, 5, 9], 0.09284148990494756, 15)
+        assert l == self.l
 
-    def sampler(self, *args, **kwargs):
-        """Dummy function for sampling subgraphs"""
+    def test_simple_add(self):
+        """Test if function simply adds a new tuple if ``len(l)`` does not exceed ``top_count``"""
+        s = [0, 1, 2, 3]
+        d = 0.7017410327600858
+        l = self.l.copy()
+        l_ideal = sorted(l + [(d, s)])
+        subgraph._add_to_list(l, [0, 1, 2, 3], 0.7017410327600858, 15)
+        assert l_ideal == l
 
-        return (samples_subgraphs ** 2).tolist()
 
-    def test_returns_densest(self, graph, monkeypatch):
-        """Tests if function returns the densest subgraph from a fixed set of subgraph samples. The
-        samples are given by ``samples_subgraphs`` and are defined with respect to the adjacency
-        matrix given below. Note that graph nodes are numbered in this test as [0, 1, 4, 9,
-        ...] (i.e., squares of the usual list) as a simple mapping to explore that the optimised
-        subgraph returned is still a valid subgraph. Among the samples, only one ([0, 1, 9,
-        16]) corresponds to a subgraph that is a complete graph. We therefore expect the return
-        value to be (1.0, [0, 1, 9, 16])."""
-        adj = (
-            (0, 1, 0, 1, 1, 0),
-            (1, 0, 1, 1, 1, 0),
-            (0, 1, 0, 1, 0, 0),
-            (1, 1, 1, 0, 1, 0),
-            (1, 1, 0, 1, 0, 0),
-            (0, 0, 0, 0, 0, 0),
-        )
-        graph = nx.Graph(0.5 * np.array(adj))  # multiply by 0.5 to follow weightings of adj fixture
-        optimal_density = 1.0
-        optimal_sample = [0, 1, 9, 16]
-        graph = nx.relabel_nodes(graph, lambda x: x ** 2)
-
-        def patch_resize(s, graph, min_size, max_size):
-            return {min_size: s}
-
-        with monkeypatch.context() as m:
-            m.setattr(sample, "sample", self.sampler)
-            m.setattr(sample, "to_subgraphs", self.sampler)
-            m.setattr(subgraph, "resize", patch_resize)
-
-            result = subgraph.random_search(graph=graph, nodes=4, iterations=10)
-
-        assert result == (optimal_density, optimal_sample)
 
 
 class TestResize:

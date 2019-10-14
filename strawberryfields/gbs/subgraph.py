@@ -73,27 +73,47 @@ def search(
     for s in subgraphs:
         s = set(s)
         if not s.issubset(nodes):
-            print("List of subgraphs contains an invalid subgraph, continuing")
             continue
 
         r = resize(s, graph, min_size, max_size)
 
-        for size in size_range:
-            current = dense.get(size, default=[])
-
-            candidate = r.get(size)
-            sub = graph.subgraph(candidate)
-            sub_dens = nx.density(sub)
-
-            if len(current) < top_count:
-                current.append((sub_dens, sub))
-                current.sort()
-            elif sub_dens > min(current):
-                current.append((sub_dens, sub))
-                current.sort()
-                del current[-1]
+        _combine_dicts(dense, r, graph, top_count)
 
     return dense
+
+
+def _combine_dicts(main: dict, new: dict, graph: nx.Graph, top_count: int) -> None:
+
+    for size, candidate in new.items():
+        current = main.get(size)
+
+        sub = graph.subgraph(candidate)
+        sub_dens = nx.density(sub)
+
+        if current is None:
+            current = [(sub_dens, candidate)]
+            main[size] = current
+        else:
+            _add_to_list(current, candidate, sub_dens)
+
+
+def _add_candidate_subgraph(l: list, t: tuple, max_count: int) ->
+
+
+def _add_to_list(l: list, subgraph: list, density: float, top_count: int) -> None:
+
+    current_subgraphs = set(tuple(elem[1]) for elem in l)
+    subgraph = sorted(set(subgraph))
+
+    if not {tuple(subgraph)}.issubset(current_subgraphs):
+
+        if len(l) < top_count:
+            l.append((density, subgraph))
+            l.sort()
+        elif density > min(l)[0]:
+            l.append((density, subgraph))
+            l.sort()
+            del l[-1]
 
 
 def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dict:
