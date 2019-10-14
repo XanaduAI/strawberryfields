@@ -26,7 +26,7 @@ import plotly
 
 ##############################################################################
 # The adjacency matrix of the TACE-AS graph can be loaded from the ``data`` module and the
-# graph can be visualized using the :mod:`~gbs.plot` module:
+# graph can be visualized using the :mod:`~.gbs.plot` module:
 
 TA = data.TaceAs()
 A = TA.adj
@@ -73,8 +73,8 @@ for s in samples:
     GBS_dens.append(nx.density(TA_graph.subgraph(s)))
     u_dens.append(nx.density(TA_graph.subgraph(uniform)))
 
-print('GBS mean density = {:.4f}'.format(np.mean(GBS_dens)))
-print('Uniform mean density = {:.4f}'.format(np.mean(u_dens)))
+print("GBS mean density = {:.4f}".format(np.mean(GBS_dens)))
+print("Uniform mean density = {:.4f}".format(np.mean(u_dens)))
 
 ##############################################################################
 # Those look like great GBS samples 💪! To obtain cliques, we shrink the samples by greedily
@@ -88,10 +88,10 @@ print(clique.is_clique(TA_graph.subgraph(shrunk[0])))
 # What is the average clique size? How about the largest and smallest clique size?
 
 clique_sizes = [len(s) for s in shrunk]
-print('First ten clique sizes = ', clique_sizes[:10])
-print('Average clique size = {:.3f}'.format(np.mean(clique_sizes)))
-print('Maximum clique size = ', np.max(clique_sizes))
-print('Minimum clique size = ', np.min(clique_sizes))
+print("First ten clique sizes = ", clique_sizes[:10])
+print("Average clique size = {:.3f}".format(np.mean(clique_sizes)))
+print("Maximum clique size = ", np.max(clique_sizes))
+print("Minimum clique size = ", np.min(clique_sizes))
 
 ##############################################################################
 # Even in the first few samples, we've already identified larger cliques than the 4-node clique
@@ -102,8 +102,8 @@ print('Minimum clique size = ', np.min(clique_sizes))
 
 searched = [clique.search(s, TA_graph, 10) for s in shrunk]
 clique_sizes = [len(s) for s in searched]
-print('First two cliques = ', searched[:2])
-print('Average clique size = {:.3f}'.format(np.mean(clique_sizes)))
+print("First two cliques = ", searched[:2])
+print("Average clique size = {:.3f}".format(np.mean(clique_sizes)))
 
 ##############################################################################
 # Wow! Local search is very helpful, we've found cliques with the maximum size of eight for
@@ -132,7 +132,7 @@ shrunk = [clique.shrink(s, phat_graph) for s in samples]  # Shrink subgraphs to 
 searched = [clique.search(s, phat_graph, 10) for s in shrunk]  # Perform local search
 clique_sizes = [len(s) for s in searched]
 largest_clique = searched[np.argmax(clique_sizes)]  # Identify largest clique found
-print('Largest clique found is = ', largest_clique)
+print("Largest clique found is = ", largest_clique)
 
 ##############################################################################
 # Let's make a plot to take a closer look at the largest clique we found
