@@ -15,7 +15,7 @@ detection used at the output: threshold detection or photon-number resolving (PN
 Threshold detectors are restricted to measuring whether photons have arrived at the detector,
 whereas PNR detectors are able to count the number of photons.
 
-Let's take a look at both types of sample. We can generate samples from a random 5-dimensional
+Let's take a look at both types of sampling methods. We can generate samples from a random 5-dimensional
 symmetric matrix:
 """
 
