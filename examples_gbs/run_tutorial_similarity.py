@@ -4,16 +4,15 @@ Graph Similarity Tutorial
 =========================
 
 This tutorial looks at how to use GBS to construct a similarity measure between graphs,
-what is known as a graph kernel :cite:`schuld2019quantum`. Kernels can be applied to graph-based
-data for machine learning tasks such as classification in machine learning using a support vector
-machine.
+known as a graph kernel :cite:`schuld2019quantum`. Kernels can be applied to graph-based
+data for machine learning tasks such as classification using a support vector machines
 
 Graph data
 ----------
 
 Let's use the MUTAG dataset of graphs for this tutorial
 :cite:`debnath1991structure,kriege2012subgraph`. This is a dataset of 188 different graphs that
-each correspond to the structure of a chemical compound. Our objective is to use GBS samples from
+each correspond to the structure of a chemical compound. Our goal is to use GBS samples from
 these graphs to measure their similarity.
 
 The :mod:`~.gbs.data` module provides pre-calculated GBS samples from four graphs in the
@@ -86,10 +85,10 @@ print(m0[0])
 #
 # Following :cite:`schuld2019quantum`, we can create a *feature vector* to describe each graph.
 # These feature vectors contain information about the graphs and can be viewed as a mapping to a
-# high dimensional feature space, a technique often used in machine learning that allows us to
+# high-dimensional feature space, a technique often used in machine learning that allows us to
 # find ways of separating points in the space for classification.
 #
-# The feature vector of a graph can be composed in a variety of ways. One approach is to built it
+# The feature vector of a graph can be composed in a variety of ways. One approach is to build it
 # using statistics from a GBS device configured to sample from the graph, as we now discuss.
 #
 # We begin by defining the concept of an *orbit*, which contains all the GBS samples that are
@@ -105,9 +104,9 @@ print(similarity.sample_to_orbit(m0[0]))
 print(similarity.orbit_to_sample([1, 1], modes=m0.modes))
 
 ##############################################################################
-# Orbits provide a useful way to coarse grain the samples from GBS into outcomes that are
-# statistically more likely to be observed. However, we are interested in coarse graining further
-# into **events**, which correspond to a combination of orbits with the same photon number such
+# Orbits provide a useful way to coarse-grain the samples from GBS into outcomes that are
+# statistically more likely to be observed. However, we are interested in coarse-graining further
+# into *events*, which correspond to a combination of orbits with the same photon number such
 # that the number of photons counted in each mode does not exceed a fixed value
 # ``max_count_per_mode``. To understand this, let's look at all of the orbits with a photon
 # number of 5:
@@ -148,8 +147,8 @@ print(similarity.sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0
 # We provide two methods for calculating a feature vector of GBS event probabilities in
 # Strawberry Fields:
 #
-# 1. Through sampling
-# 2. Using a Monte Carlo estimate of the probability
+# 1. Through sampling.
+# 2. Using a Monte Carlo estimate of the probability.
 #
 # For the first method, all one needs to do is generate some GBS samples from the graph of
 # interest and feed through:
@@ -161,7 +160,7 @@ print(similarity.feature_vector_sampling(m0, event_photon_numbers=[2, 4, 6], max
 # through sampling. To do this, we consider the event probability :math:`p_{k, n_{\max}}` as the
 # sum over all sample probabilities in the event. In GBS, each sample probability is determined by
 # the hafnian of a relevant sub-adjacency matrix. While this is tough to calculate, what makes
-# calculating :math:`p_{k, n_{\max}}` really tough is the number of samples the corresponding
+# calculating :math:`p_{k, n_{\max}}` really challenging is the number of samples the corresponding
 # event contains! For example, the 6-photon event over 17 modes :math:`E_{k=6, n_{\max}=2}`
 # contains the following number of samples :
 
@@ -170,7 +169,7 @@ print(similarity.event_cardinality(6, 2, 17))
 ##############################################################################
 # To avoid calculating a large number of sample probabilities, an alternative for calculating the
 # event probability is to perform a Monte Carlo approximation. Here, samples within an event are
-# generated uniformly at random and their resultant probabilities are calculated. If :math:`N`
+# selected uniformly at random and their resultant probabilities are calculated. If :math:`N`
 # samples :math:`\{S_{1}, S_{2}, \ldots , S_{N}\}` are generated, then the event probability can
 # be approximated as
 #
@@ -193,7 +192,7 @@ print(similarity.prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6
 #     may vary between runs. Increasing the optional ``samples`` parameter will increase accuracy
 #     but slow down calculation.
 #
-# The second method of MC approximation is intended for use in scenarios where it is
+# The second method of Monte Carlo approximation is intended for use in scenarios where it is
 # computationally intensive to pre-calculate a statistically significant dataset of samples from
 # GBS.
 #
@@ -202,7 +201,7 @@ print(similarity.prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6
 #
 # We have seen how GBS can be used to provide a mapping of graphs into a feature space. This
 # mapping can be used for machine learning tasks such as classification: by viewing each graph as
-# a point in the high dimensional space, we can use standard approaches from machine learning
+# a point in the high-dimensional space, we can use standard approaches from machine learning
 # such as `support vector machines <https://en.wikipedia.org/wiki/Support-vector_machine>`__ (SVMs).
 #
 # Let's build this up a bit more. The MUTAG dataset we are considering contains not only graphs
@@ -249,7 +248,7 @@ classifier.fit(R_scaled, classes)
 ##############################################################################
 # Here, the term "linear" refers to the *kernel* function used to calculate inner products
 # between vectors in the space. We can use a linear SVM because we have already embedded the
-# graphs in a feature space based upon GBS. We can then visualize the trained SVM by plotting the
+# graphs in a feature space based on GBS. We can then visualize the trained SVM by plotting the
 # decision boundary with respect to the points:
 
 w = classifier.coef_[0]
@@ -275,4 +274,4 @@ plotly.offline.plot(fig, filename="SVM.html")
 # recall that the two MUTAG1 and MUTAG2 graphs of class 0 are actually isomorphic. Reassuringly,
 # their corresponding feature vectors are very similar. In fact, the feature vectors of
 # isomorphic graphs should always be identical :cite:`bradler2018graph` - the small discrepancy
-# in this plot is actually due to the statistical approximation from sampling.
+# in this plot is due to the statistical approximation from sampling.
