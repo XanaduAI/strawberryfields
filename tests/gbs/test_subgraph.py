@@ -43,29 +43,6 @@ g = nx.Graph(p.adj)
         res = subgraph.search(s, g, 10, 20)
         print(res.keys())'''
 
-class TestAddToList:
-    """Tests for the function ``subgraph._add_to_list``"""
-
-    l = [(0.09284148990494756, [1, 2, 5, 9]), (0.16013443604938415, [0, 1, 2, 5]), (0.38803386506300297, [0, 2, 3, 6]), (0.4132105226731848, [0, 1, 3, 6]), (0.5587798561345368, [3, 6, 8, 9]), (0.7017410327600858, [
-0, 4, 7, 9]), (0.8360847995330193, [2, 3, 5, 9]), (0.8768364522184167, [0, 1, 4, 8]), (0.9011700496489199, [2, 5, 6, 9]), (0.9183222696574376, [0, 3, 4, 6])]
-
-
-    def test_already_contained(self):
-        """Test if function does not act on list if fed a subgraph that is already there"""
-        l = self.l.copy()
-        subgraph._add_to_list(l, [1, 2, 5, 9], 0.09284148990494756, 15)
-        assert l == self.l
-
-    def test_simple_add(self):
-        """Test if function simply adds a new tuple if ``len(l)`` does not exceed ``top_count``"""
-        s = [0, 1, 2, 3]
-        d = 0.7017410327600858
-        l = self.l.copy()
-        l_ideal = sorted(l + [(d, s)])
-        subgraph._add_to_list(l, [0, 1, 2, 3], 0.7017410327600858, 15)
-        assert l_ideal == l
-
-
 
 class TestUpdateSubgraphsList:
     """Tests for the function ``subgraph._update_subgraphs_list``"""
@@ -157,6 +134,35 @@ class TestUpdateSubgraphsList:
 
         subgraph._update_subgraphs_list(l, self.t_below_min_density, max_count=max_count)
         assert l == self.l
+
+
+def test_update_dict(monkeypatch):
+    """Test if the function ``subgraph._update_dict`` correctly combines a hard-coded dictionary
+    with another dictionary of candidate subgraph tuples."""
+
+    d = {3: [(0.8593365162004337, [1, 4, 6]), (0.7834607649769199, [0, 1, 9]), (0.6514468663852714, [1, 8, 9])],
+         4: [(0.5738321520630872, [1, 5, 7, 9]), (0.4236138075085395, [5, 6, 7, 8])]
+         }
+
+    d_new = {3: (0.4509829558474371, [2, 3, 7]), 4: (0.13609407922395578, [4, 5, 7, 8]),
+             5: (0.7769987961311593, [4, 6, 7, 8, 9])}
+
+    d_ideal = {3: [(0.8593365162004337, [1, 4, 6]), (0.7834607649769199, [0, 1, 9]),
+                   (0.6514468663852714, [1, 8, 9]), (0.4509829558474371, [2, 3, 7])],
+               4: [(0.5738321520630872, [1, 5, 7, 9]), (0.4236138075085395, [5, 6, 7, 8]),
+                   (0.13609407922395578, [4, 5, 7, 8])],
+               5: [(0.7769987961311593, [4, 6, 7, 8, 9])]
+               }
+
+    def patch_update_subgraphs_list(l, t, _max_count):
+        if l != [t]:
+            l.append(t)
+
+    with monkeypatch.context() as m:
+        m.setattr(subgraph, "_update_subgraphs_list", patch_update_subgraphs_list)
+        subgraph._update_dict(d, d_new, max_count=10)
+
+    assert d == d_ideal
 
 
 class TestResize:

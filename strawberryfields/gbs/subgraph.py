@@ -173,8 +173,8 @@ def _update_dict(d: dict, d_new: dict, max_count: int) -> None:
         d (dict[int, list[tuple[float, list[int]]]]): dictionary of subgraph sizes and
             corresponding list of subgraph tuples
         d_new (dict[int, tuple[float, list[int]]]): dictionary of subgraph sizes and corresponding
-        subgraph tuples that are candidates to be added to the list
-        max_count (int):  the maximum length of subgraph tuple list
+            subgraph tuples that are candidates to be added to the list
+        max_count (int):  the maximum length of every subgraph tuple list
 
     Returns:
         None: this function modifies ``d`` in place
