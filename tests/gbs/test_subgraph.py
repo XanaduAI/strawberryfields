@@ -14,7 +14,7 @@
 r"""
 Unit tests for strawberryfields.gbs.subgraph
 """
-# pylint: disable=no-self-use,unused-argument
+# pylint: disable=no-self-use,unused-argument,protected-access,redefined-outer-name
 import functools
 
 import networkx as nx
@@ -25,17 +25,17 @@ from strawberryfields.gbs import data, subgraph
 
 pytestmark = pytest.mark.gbs
 
-p = data.Planted()
-g = nx.Graph(p.adj)
+p_planted = data.Planted()
+g_planted = nx.Graph(p_planted.adj)
 
 
 @pytest.fixture()
 def process_planted(min_size, max_size, max_count, n_samples):
-    samples = p[:n_samples]
+    """Fixture for loading samples from the Planted dataset"""
+    samples = p_planted[:n_samples]
     samples.insert(10, [31])  # include invalid subgraph to test that function simply continues
-    d = subgraph.search(samples, g, min_size, max_size, max_count)
+    d = subgraph.search(samples, g_planted, min_size, max_size, max_count)
     return d
-
 
 
 @pytest.mark.parametrize("min_size", [4, 5])
@@ -59,43 +59,76 @@ class TestSearch:
     def test_ordered(self, process_planted):
         """Test if function always returns dictionary values that are sorted lists in descending
         order"""
-        assert all([all((l == sorted(l, reverse=True), isinstance(l, list))) for l in
-                    process_planted.values()])
+        assert all(
+            [
+                all((l == sorted(l, reverse=True), isinstance(l, list)))
+                for l in process_planted.values()
+            ]
+        )
 
     def test_tuple(self, process_planted):
         """Test if function always returns dictionary values that are lists composed of tuples
         with the first value being a float and the second being a list"""
-        assert all([all((isinstance(t, tuple), isinstance(t[0], float), isinstance(t[1], list),
-                     len(t) ==
-                 2))
-         for l in
-         process_planted.values()
-         for t in l])
+        assert all(
+            [
+                all(
+                    (
+                        isinstance(t, tuple),
+                        isinstance(t[0], float),
+                        isinstance(t[1], list),
+                        len(t) == 2,
+                    )
+                )
+                for l in process_planted.values()
+                for t in l
+            ]
+        )
 
     def test_density(self, process_planted):
         """Test if function returns dictionary values that are lists of tuples where the first
         element is the density of the subgraph specified by the second element"""
-        assert all([t[0] == nx.density(g.subgraph(t[1])) for l in process_planted.values() for t \
-                in l])
+        assert all(
+            [
+                t[0] == nx.density(g_planted.subgraph(t[1]))
+                for l in process_planted.values()
+                for t in l
+            ]
+        )
 
 
 def test_update_dict(monkeypatch):
     """Test if the function ``subgraph._update_dict`` correctly combines a hard-coded dictionary
     with another dictionary of candidate subgraph tuples."""
 
-    d = {3: [(0.8593365162004337, [1, 4, 6]), (0.7834607649769199, [0, 1, 9]), (0.6514468663852714, [1, 8, 9])],
-         4: [(0.5738321520630872, [1, 5, 7, 9]), (0.4236138075085395, [5, 6, 7, 8])]
-         }
+    d = {
+        3: [
+            (0.8593365162004337, [1, 4, 6]),
+            (0.7834607649769199, [0, 1, 9]),
+            (0.6514468663852714, [1, 8, 9]),
+        ],
+        4: [(0.5738321520630872, [1, 5, 7, 9]), (0.4236138075085395, [5, 6, 7, 8])],
+    }
 
-    d_new = {3: (0.4509829558474371, [2, 3, 7]), 4: (0.13609407922395578, [4, 5, 7, 8]),
-             5: (0.7769987961311593, [4, 6, 7, 8, 9])}
+    d_new = {
+        3: (0.4509829558474371, [2, 3, 7]),
+        4: (0.13609407922395578, [4, 5, 7, 8]),
+        5: (0.7769987961311593, [4, 6, 7, 8, 9]),
+    }
 
-    d_ideal = {3: [(0.8593365162004337, [1, 4, 6]), (0.7834607649769199, [0, 1, 9]),
-                   (0.6514468663852714, [1, 8, 9]), (0.4509829558474371, [2, 3, 7])],
-               4: [(0.5738321520630872, [1, 5, 7, 9]), (0.4236138075085395, [5, 6, 7, 8]),
-                   (0.13609407922395578, [4, 5, 7, 8])],
-               5: [(0.7769987961311593, [4, 6, 7, 8, 9])]
-               }
+    d_ideal = {
+        3: [
+            (0.8593365162004337, [1, 4, 6]),
+            (0.7834607649769199, [0, 1, 9]),
+            (0.6514468663852714, [1, 8, 9]),
+            (0.4509829558474371, [2, 3, 7]),
+        ],
+        4: [
+            (0.5738321520630872, [1, 5, 7, 9]),
+            (0.4236138075085395, [5, 6, 7, 8]),
+            (0.13609407922395578, [4, 5, 7, 8]),
+        ],
+        5: [(0.7769987961311593, [4, 6, 7, 8, 9])],
+    }
 
     def patch_update_subgraphs_list(l, t, _max_count):
         if l != [t]:
@@ -111,21 +144,37 @@ def test_update_dict(monkeypatch):
 class TestUpdateSubgraphsList:
     """Tests for the function ``subgraph._update_subgraphs_list``"""
 
-    l = [(0.9183222696574376, [0, 3, 4, 6]), (0.9011700496489199, [2, 5, 6, 9]),
-     (0.8768364522184167, [0, 1, 4, 8]), (0.8360847995330193, [2, 3, 5, 9]),
-     (0.7017410327600858, [0, 4, 7, 9]), (0.5587798561345368, [3, 6, 8, 9]),
-     (0.4132105226731848, [0, 1, 3, 6]), (0.38803386506300297, [0, 2, 3, 6]),
-     (0.16013443604938415, [0, 1, 2, 5]), (0.09284148990494756, [1, 2, 5, 9])]
+    l = [
+        (0.9183222696574376, [0, 3, 4, 6]),
+        (0.9011700496489199, [2, 5, 6, 9]),
+        (0.8768364522184167, [0, 1, 4, 8]),
+        (0.8360847995330193, [2, 3, 5, 9]),
+        (0.7017410327600858, [0, 4, 7, 9]),
+        (0.5587798561345368, [3, 6, 8, 9]),
+        (0.4132105226731848, [0, 1, 3, 6]),
+        (0.38803386506300297, [0, 2, 3, 6]),
+        (0.16013443604938415, [0, 1, 2, 5]),
+        (0.09284148990494756, [1, 2, 5, 9]),
+    ]
 
-    l_shuffled = [(0.4132105226731848, [0, 1, 3, 6]), (0.5587798561345368, [3, 6, 8, 9]),
-                  (0.9183222696574376, [0, 3, 4, 6]), (0.8768364522184167, [0, 1, 4, 8]),
-                  (0.9011700496489199, [2, 5, 6, 9]), (0.38803386506300297, [0, 2, 3, 6]),
-                  (0.16013443604938415, [0, 1, 2, 5]), (0.8360847995330193, [2, 3, 5, 9]),
-                  (0.7017410327600858, [0, 4, 7, 9]), (0.09284148990494756, [1, 2, 5, 9])]
+    l_shuffled = [
+        (0.4132105226731848, [0, 1, 3, 6]),
+        (0.5587798561345368, [3, 6, 8, 9]),
+        (0.9183222696574376, [0, 3, 4, 6]),
+        (0.8768364522184167, [0, 1, 4, 8]),
+        (0.9011700496489199, [2, 5, 6, 9]),
+        (0.38803386506300297, [0, 2, 3, 6]),
+        (0.16013443604938415, [0, 1, 2, 5]),
+        (0.8360847995330193, [2, 3, 5, 9]),
+        (0.7017410327600858, [0, 4, 7, 9]),
+        (0.09284148990494756, [1, 2, 5, 9]),
+    ]
 
-    t_above_min_density = [(0.9744200893790599, [10, 11, 12, 13]),
-             (0.7356617723720428, [14, 15, 16, 17]),
-             (0.1020993710922522, [18, 19, 20, 21])]
+    t_above_min_density = [
+        (0.9744200893790599, [10, 11, 12, 13]),
+        (0.7356617723720428, [14, 15, 16, 17]),
+        (0.1020993710922522, [18, 19, 20, 21]),
+    ]
 
     t_min_density = (0.09284148990494756, [22, 23, 24, 25])
 

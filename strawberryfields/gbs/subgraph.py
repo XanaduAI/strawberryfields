@@ -150,7 +150,7 @@ def _update_subgraphs_list(l: list, t: tuple, max_count: int) -> None:
     """
     t = (t[0], sorted(set(t[1])))
 
-    for d, s in l:
+    for _d, s in l:
         if t[1] == s:
             return None
 
@@ -170,6 +170,8 @@ def _update_subgraphs_list(l: list, t: tuple, max_count: int) -> None:
             del l[-1]
             l.append(t)
             l.sort(reverse=True)
+
+    return None
 
 
 def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dict:
