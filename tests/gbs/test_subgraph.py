@@ -67,6 +67,97 @@ class TestAddToList:
 
 
 
+class TestUpdateSubgraphsList:
+    """Tests for the function ``subgraph._update_subgraphs_list``"""
+
+    l = [(0.9183222696574376, [0, 3, 4, 6]), (0.9011700496489199, [2, 5, 6, 9]),
+     (0.8768364522184167, [0, 1, 4, 8]), (0.8360847995330193, [2, 3, 5, 9]),
+     (0.7017410327600858, [0, 4, 7, 9]), (0.5587798561345368, [3, 6, 8, 9]),
+     (0.4132105226731848, [0, 1, 3, 6]), (0.38803386506300297, [0, 2, 3, 6]),
+     (0.16013443604938415, [0, 1, 2, 5]), (0.09284148990494756, [1, 2, 5, 9])]
+
+    l_shuffled = [(0.4132105226731848, [0, 1, 3, 6]), (0.5587798561345368, [3, 6, 8, 9]),
+                  (0.9183222696574376, [0, 3, 4, 6]), (0.8768364522184167, [0, 1, 4, 8]),
+                  (0.9011700496489199, [2, 5, 6, 9]), (0.38803386506300297, [0, 2, 3, 6]),
+                  (0.16013443604938415, [0, 1, 2, 5]), (0.8360847995330193, [2, 3, 5, 9]),
+                  (0.7017410327600858, [0, 4, 7, 9]), (0.09284148990494756, [1, 2, 5, 9])]
+
+    t_above_min_density = [(0.9744200893790599, [10, 11, 12, 13]),
+             (0.7356617723720428, [14, 15, 16, 17]),
+             (0.1020993710922522, [18, 19, 20, 21])]
+
+    t_min_density = (0.09284148990494756, [22, 23, 24, 25])
+
+    t_below_min_density = (0.05835994410622691, [26, 27, 28, 29])
+
+    @pytest.mark.parametrize("elem", list(range(10)))
+    def test_already_contained(self, elem):
+        """Test if function does not add a subgraph tuple that is already contained in the list"""
+        l = self.l.copy()
+        subgraph._update_subgraphs_list(l, l[elem], max_count=20)
+        assert l == self.l
+
+    def test_add_below_max_count(self):
+        """Test if function adds subgraph tuples whenever len(l) < max_count. This test starts
+        with an empty list and tries to add on elements one at a time from ``l_shuffled``. Since
+        ``max_count = 10`` and ``len(l) = 10``, we expect to be able to build up our list to be
+        equal to ``l``."""
+        l = []
+        for t in self.l_shuffled:
+            subgraph._update_subgraphs_list(l, t, max_count=10)
+
+        assert l == self.l
+
+    def test_add_above_max_count_high_density(self):
+        """Test if function adds subgraph tuples with density exceeding the minimum value of
+        ``l`` even though the length of ``l`` is at its maximum"""
+        max_count = 10
+
+        for t in self.t_above_min_density:
+            l = self.l.copy()
+            l_ideal = sorted(l + [t], reverse=True)
+
+            subgraph._update_subgraphs_list(l, t, max_count=max_count)
+            del l_ideal[-1]
+            assert len(l) == max_count
+            assert l == l_ideal
+
+    def test_add_above_max_count_equal_density(self, monkeypatch):
+        """Test if function randomly adds in a subgraph tuple with density equal to the minimum
+        value of ``l``, even though the length of ``l`` is at its maximum. This test
+        monkeypatches the ``np.random.choice`` call used in the function to decide whether to
+        keep the original subgraph or add in the new one. In one case, ``np.random.choice`` is
+        monkeypatched to leave ``l`` unchanged, and in another case ``np.random.choice`` is
+        monkeypatched to swap the minimum value of ``l`` with ``t_min_density``."""
+        max_count = 10
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", lambda x: 0)
+            l = self.l.copy()
+            subgraph._update_subgraphs_list(l, self.t_min_density, max_count=max_count)
+            assert len(l) == max_count
+            assert l == self.l
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", lambda x: 1)
+            l = self.l.copy()
+            subgraph._update_subgraphs_list(l, self.t_min_density, max_count=max_count)
+
+            l_ideal = self.l.copy()
+            del l_ideal[-1]
+            l_ideal.append(self.t_min_density)
+            assert len(l) == max_count
+            assert l == l_ideal
+
+    def test_add_above_max_count_low_density(self):
+        """Test if function does not add in a subgraph tuple of density lower than the minimum
+        value of ``l`` when the length of ``l`` is at its maximum"""
+        max_count = 10
+        l = self.l.copy()
+
+        subgraph._update_subgraphs_list(l, self.t_below_min_density, max_count=max_count)
+        assert l == self.l
+
 
 class TestResize:
     """Tests for the function ``subgraph.resize``"""

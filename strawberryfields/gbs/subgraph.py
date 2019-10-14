@@ -97,23 +97,65 @@ def _combine_dicts(main: dict, new: dict, graph: nx.Graph, top_count: int) -> No
             _add_to_list(current, candidate, sub_dens)
 
 
-def _add_candidate_subgraph(l: list, t: tuple, max_count: int) ->
+def _update_subgraphs_list(l: list, t: tuple, max_count: int) -> None:
+    """Updates list of top subgraphs with a candidate.
 
+    Here, the list ``l`` to be updated is a list of tuples with each tuple being a pair of
+    values: a float specifying the subgraph density and a list of integers specifying the
+    subgraph nodes. For example, ``l`` may be:
 
-def _add_to_list(l: list, subgraph: list, density: float, top_count: int) -> None:
+    ``[(0.8, [0, 5, 9, 10]), (0.5, [1, 2, 5, 6]), (0.3, [0, 4, 6, 9])]``
 
-    current_subgraphs = set(tuple(elem[1]) for elem in l)
-    subgraph = sorted(set(subgraph))
+    We want to update ``l`` with a candidate tuple ``t``, which should be a pair specifying a
+    subgraph density and corresponding subgraph nodes. For example, we might want to add:
 
-    if not {tuple(subgraph)}.issubset(current_subgraphs):
+    ``(0.4, [1, 4, 9, 10])``
 
-        if len(l) < top_count:
-            l.append((density, subgraph))
-            l.sort()
-        elif density > min(l)[0]:
-            l.append((density, subgraph))
-            l.sort()
+    This function checks:
+
+    - if ``t`` is already an element of ``l``, do nothing (i.e., so that ``l`` never has
+      repetitions)
+
+    - if ``len(l) < max_count``, add ``t``
+
+    - otherwise, if the density of ``t`` exceeds the minimum density of ``l`` , add ``t`` and
+      remove the element with the minimum density
+
+    - otherwise, if the density of ``t`` equals the minimum density of ``l``, flip a coin and
+      randomly swap in ``t`` with the minimum element of ``l``.
+
+    The list ``l`` is also sorted so that its first element is the subgraph with the highest
+    density.
+
+    Args:
+        l (list[tuple[float, list[int]]]): the list of subgraph tuples to be updated
+        t (tuple[float, list[int]): the candidate subgraph tuple
+        max_count (int): the maximum length of ``l``
+
+    Returns:
+        None: this function modifies ``l`` in place
+    """
+    t = (t[0], sorted(set(t[1])))
+
+    for d, s in l:
+        if t[1] == s:
+            return None
+
+    if len(l) < max_count:
+        l.append(t)
+        l.sort(reverse=True)
+        return None
+
+    l_min = l[-1][0]
+
+    if t[0] > l_min:
+        l.append(t)
+        l.sort(reverse=True)
+        del l[-1]
+    elif t[0] == l_min:
+        if np.random.choice(2):
             del l[-1]
+            l.append(t)
 
 
 def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dict:
