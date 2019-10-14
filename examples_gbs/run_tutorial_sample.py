@@ -3,8 +3,8 @@
 Sampling Tutorial
 =================
 
-This tutorial provides a quick guide to generating samples from GBS. This functionality is
-provided in the :mod:`~.gbs.sample` module of the applications layer.
+This tutorial provides a quick guide to generating samples from GBS simulators. This
+functionality is provided in the :mod:`~.gbs.sample` module of the applications layer.
 
 Sampling from GBS
 -----------------
@@ -12,8 +12,8 @@ Sampling from GBS
 A GBS device can be programmed to sample from any symmetric matrix :math:`A`. To sample,
 we must specify both the mean number of photons being generated in the device and the form of
 detection used at the output: threshold detection or photon-number resolving (PNR) detection.
-Threshold detectors are restricted to measuring whether or not one or more photons have arrived
-at the detector, whereas PNR detectors are able to count the number of photons.
+Threshold detectors are restricted to measuring whether photons have arrived at the detector,
+whereas PNR detectors are able to count the number of photons.
 
 Let's take a look at both types of sample. We can generate samples from a random 5-dimensional
 matrix:
