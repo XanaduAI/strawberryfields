@@ -16,7 +16,7 @@ Threshold detectors are restricted to measuring whether or not one or more photo
 at the detector, whereas PNR detectors are able to count the number of photons.
 
 Let's take a look at both types of sample. We can generate samples from a random 5-dimensional
-matrix:
+symmetric matrix:
 """
 
 from strawberryfields.gbs import sample
@@ -26,7 +26,7 @@ modes = 5
 n_mean = 4
 samples = 5
 
-A = np.random.random((modes, modes))
+A = np.random.normal(0, 1, (modes, modes))
 A = A + A.T
 
 s_thresh = sample.sample(A, n_mean, samples, threshold=True)
@@ -53,9 +53,9 @@ print(s_pnr)
 # that threshold samples can provide enough useful information for a range of applications.
 #
 # The applications layer of Strawberry Fields focuses primarily on solving graph-based problems.
-# In this setting, we typically want to use GBS to sample subgraphs of a graph, which are likely
+# In this setting, we typically want to use GBS to sample subgraphs, which are likely
 # to be dense due to the probability distribution of GBS :cite:`arrazola2018using`. In this case,
-# threshold sampling is enough, since it lets us select nodes of the subgraph. Let's take more of
+# threshold sampling is enough, since it lets us select nodes of the subgraph. Let's take
 # a look at this by using a small fixed graph as an example:
 
 from strawberryfields.gbs import plot
@@ -93,8 +93,8 @@ print(s[:5])
 ##############################################################################
 # Each sample in ``s`` is a list of modes with ``1``'s for nodes that have clicked and ``0``'s
 # for nodes that haven't. We want to convert a sample to another representation where the result
-# is a list of modes that have clicked. This list of modes can be used to select a subgraph of
-# the graph. For example, if ``[0, 1, 0, 1, 1, 0]`` is a sample from GBS then ``[1, 3, 4]`` are
+# is a list of modes that have clicked. This list of modes can be used to select a subgraph.
+# For example, if ``[0, 1, 0, 1, 1, 0]`` is a sample from GBS then ``[1, 3, 4]`` are
 # the selected nodes of the corresponding subgraph.
 #
 # However, the number of clicks in GBS is a random variable and we are not always guaranteed to
@@ -110,7 +110,7 @@ print(len(s))
 s.append([0, 1, 0, 1, 1, 0])
 
 ##############################################################################
-# As expected, we can see that we have lost some samples. The number of samples that survive this
+# As expected, we have fewer samples than before. The number of samples that survive this
 # postselection is determined by the mean photon number in GBS. We have also added in our example
 # sample ``[0, 1, 0, 1, 1, 0]`` to ensure that there is at least one for the following.
 #
