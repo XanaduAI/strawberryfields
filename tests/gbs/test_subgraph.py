@@ -21,7 +21,7 @@ import networkx as nx
 import numpy as np
 import pytest
 
-from strawberryfields.gbs import data, sample, subgraph
+from strawberryfields.gbs import data, subgraph
 
 pytestmark = pytest.mark.gbs
 
@@ -29,19 +29,83 @@ p = data.Planted()
 g = nx.Graph(p.adj)
 
 
-'''class TestSearch:
+@pytest.fixture()
+def process_planted(min_size, max_size, max_count, n_samples):
+    samples = p[:n_samples]
+    samples.insert(10, [31])  # include invalid subgraph to test that function simply continues
+    d = subgraph.search(samples, g, min_size, max_size, max_count)
+    return d
+
+
+
+@pytest.mark.parametrize("min_size", [4, 5])
+@pytest.mark.parametrize("max_size", [6, 7])
+@pytest.mark.parametrize("max_count", [2, 4])
+@pytest.mark.parametrize("n_samples", [200])
+@pytest.mark.usefixtures("process_planted")
+class TestSearch:
     """Tests for the function ``subgraph.search``"""
 
-    def test_bad_subgraph(self):
-        """Test if function prints a warning when an invalid subgraph is included in
-        ``subgraphs`` and continues on to the next subgraph"""
-        samps = 100
+    def test_size_range(self, min_size, max_size, process_planted):
+        """Test if function searches the full range of sizes specified by ``min_size`` and
+        ``max_size``"""
+        assert set(process_planted.keys()) == set(range(min_size, max_size + 1))
 
-        s = sample.to_subgraphs(p[:samps], g)
-        s.append([31])  # invalid sample
+    def test_max_count(self, max_count, process_planted):
+        """Test if function only keeps track of at most ``max_count`` subgraphs for each size in
+        the specified range"""
+        assert all([len(l) <= max_count for l in process_planted.values()])
 
-        res = subgraph.search(s, g, 10, 20)
-        print(res.keys())'''
+    def test_ordered(self, process_planted):
+        """Test if function always returns dictionary values that are sorted lists in descending
+        order"""
+        assert all([all((l == sorted(l, reverse=True), isinstance(l, list))) for l in
+                    process_planted.values()])
+
+    def test_tuple(self, process_planted):
+        """Test if function always returns dictionary values that are lists composed of tuples
+        with the first value being a float and the second being a list"""
+        assert all([all((isinstance(t, tuple), isinstance(t[0], float), isinstance(t[1], list),
+                     len(t) ==
+                 2))
+         for l in
+         process_planted.values()
+         for t in l])
+
+    def test_density(self, process_planted):
+        """Test if function returns dictionary values that are lists of tuples where the first
+        element is the density of the subgraph specified by the second element"""
+        assert all([t[0] == nx.density(g.subgraph(t[1])) for l in process_planted.values() for t \
+                in l])
+
+
+def test_update_dict(monkeypatch):
+    """Test if the function ``subgraph._update_dict`` correctly combines a hard-coded dictionary
+    with another dictionary of candidate subgraph tuples."""
+
+    d = {3: [(0.8593365162004337, [1, 4, 6]), (0.7834607649769199, [0, 1, 9]), (0.6514468663852714, [1, 8, 9])],
+         4: [(0.5738321520630872, [1, 5, 7, 9]), (0.4236138075085395, [5, 6, 7, 8])]
+         }
+
+    d_new = {3: (0.4509829558474371, [2, 3, 7]), 4: (0.13609407922395578, [4, 5, 7, 8]),
+             5: (0.7769987961311593, [4, 6, 7, 8, 9])}
+
+    d_ideal = {3: [(0.8593365162004337, [1, 4, 6]), (0.7834607649769199, [0, 1, 9]),
+                   (0.6514468663852714, [1, 8, 9]), (0.4509829558474371, [2, 3, 7])],
+               4: [(0.5738321520630872, [1, 5, 7, 9]), (0.4236138075085395, [5, 6, 7, 8]),
+                   (0.13609407922395578, [4, 5, 7, 8])],
+               5: [(0.7769987961311593, [4, 6, 7, 8, 9])]
+               }
+
+    def patch_update_subgraphs_list(l, t, _max_count):
+        if l != [t]:
+            l.append(t)
+
+    with monkeypatch.context() as m:
+        m.setattr(subgraph, "_update_subgraphs_list", patch_update_subgraphs_list)
+        subgraph._update_dict(d, d_new, max_count=10)
+
+    assert d == d_ideal
 
 
 class TestUpdateSubgraphsList:
@@ -134,35 +198,6 @@ class TestUpdateSubgraphsList:
 
         subgraph._update_subgraphs_list(l, self.t_below_min_density, max_count=max_count)
         assert l == self.l
-
-
-def test_update_dict(monkeypatch):
-    """Test if the function ``subgraph._update_dict`` correctly combines a hard-coded dictionary
-    with another dictionary of candidate subgraph tuples."""
-
-    d = {3: [(0.8593365162004337, [1, 4, 6]), (0.7834607649769199, [0, 1, 9]), (0.6514468663852714, [1, 8, 9])],
-         4: [(0.5738321520630872, [1, 5, 7, 9]), (0.4236138075085395, [5, 6, 7, 8])]
-         }
-
-    d_new = {3: (0.4509829558474371, [2, 3, 7]), 4: (0.13609407922395578, [4, 5, 7, 8]),
-             5: (0.7769987961311593, [4, 6, 7, 8, 9])}
-
-    d_ideal = {3: [(0.8593365162004337, [1, 4, 6]), (0.7834607649769199, [0, 1, 9]),
-                   (0.6514468663852714, [1, 8, 9]), (0.4509829558474371, [2, 3, 7])],
-               4: [(0.5738321520630872, [1, 5, 7, 9]), (0.4236138075085395, [5, 6, 7, 8]),
-                   (0.13609407922395578, [4, 5, 7, 8])],
-               5: [(0.7769987961311593, [4, 6, 7, 8, 9])]
-               }
-
-    def patch_update_subgraphs_list(l, t, _max_count):
-        if l != [t]:
-            l.append(t)
-
-    with monkeypatch.context() as m:
-        m.setattr(subgraph, "_update_subgraphs_list", patch_update_subgraphs_list)
-        subgraph._update_dict(d, d_new, max_count=10)
-
-    assert d == d_ideal
 
 
 class TestResize:

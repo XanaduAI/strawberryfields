@@ -46,28 +46,27 @@ import numpy as np
 
 
 def search(
-    subgraphs: list, graph: nx.Graph, min_size: int, max_size: int, top_count: int = 10
+    subgraphs: list, graph: nx.Graph, min_size: int, max_size: int, max_count: int = 10
 ) -> dict:
     """Search for dense subgraphs within an input size range.
 
-    For each subgraph, this function resizes to the input range specified by ``min_size`` and
-    ``max_size`` and keeps track of the ``top_count`` number of densest subgraphs identified for
-    each size.
+    For each subgraph from ``subgraphs``, this function resizes using :func:`resize` to the input
+    range specified by ``min_size`` and ``max_size``, resulting in a range of differently sized
+    subgraphs. This function loops over all elements of ``subgraphs`` and keeps track of the
+    ``max_count`` number of densest subgraphs identified for each size.
 
     Args:
         subgraphs (list[list[int]]): a list of subgraphs specified by their nodes
         graph (nx.Graph): the input graph
-        min_size (int): minimum size for subgraph to be resized to
-        max_size (int): maximum size for subgraph to be resized to
-        top_count (int): maximum number of densest subgraphs to keep track of for each size
+        min_size (int): minimum size to search for dense subgraphs
+        max_size (int): maximum size to search for dense subgraphs
+        max_count (int): maximum number of densest subgraphs to keep track of for each size
 
     Returns:
-        dict[int, tuple(float, list[int])]: a dictionary of different sizes, each containing a
+        dict[int, list[tuple(float, list[int])]]: a dictionary of different sizes, each containing a
         list of subgraphs reported as a tuple of subgraph density and subgraph nodes
     """
     nodes = graph.nodes()
-    size_range = range(min_size, max_size + 1)
-
     dense = {}
 
     for s in subgraphs:
@@ -75,26 +74,40 @@ def search(
         if not s.issubset(nodes):
             continue
 
-        r = resize(s, graph, min_size, max_size)
+        r = resize(sorted(s), graph, min_size, max_size)
 
-        _combine_dicts(dense, r, graph, top_count)
+        for size, subgraph in r.items():
+            r[size] = (nx.density(graph.subgraph(subgraph)), subgraph)
+
+        _update_dict(dense, r, max_count)
 
     return dense
 
 
-def _combine_dicts(main: dict, new: dict, graph: nx.Graph, top_count: int) -> None:
+def _update_dict(d: dict, d_new: dict, max_count: int) -> None:
+    """Updates dictionary ``d`` with subgraph tuples contained in ``d_new``.
 
-    for size, candidate in new.items():
-        current = main.get(size)
+    Subgraph tuples are a pair of values: a float specifying the subgraph density and a list of
+    integers specifying the subgraph nodes. Both ``d`` and ``d_new`` are dictionaries over
+    different subgraph sizes. The values of ``d`` are lists of subgraph tuples containing the top
+    densest subgraphs for a given size, with maximum length ``max_count``. The values of
+    ``d_new`` are candidate subgraph tuples that can be the result of resizing an input subgraph
+    over a range using :func:`resize`. We want to add these candidates to the list of subgraph
+    tuples in ``d`` to build up our collection of dense subgraphs.
 
-        sub = graph.subgraph(candidate)
-        sub_dens = nx.density(sub)
+    Args:
+        d (dict[int, list[tuple[float, list[int]]]]): dictionary of subgraph sizes and
+            corresponding list of subgraph tuples
+        d_new (dict[int, tuple[float, list[int]]]): dictionary of subgraph sizes and corresponding
+            subgraph tuples that are candidates to be added to the list
+        max_count (int):  the maximum length of every subgraph tuple list
 
-        if current is None:
-            current = [(sub_dens, candidate)]
-            main[size] = current
-        else:
-            _add_to_list(current, candidate, sub_dens)
+    Returns:
+        None: this function modifies ``d`` in place
+    """
+    for size, t in d_new.items():
+        l = d.setdefault(size, [t])
+        _update_subgraphs_list(l, t, max_count)
 
 
 def _update_subgraphs_list(l: list, t: tuple, max_count: int) -> None:
@@ -156,32 +169,7 @@ def _update_subgraphs_list(l: list, t: tuple, max_count: int) -> None:
         if np.random.choice(2):
             del l[-1]
             l.append(t)
-
-
-def _update_dict(d: dict, d_new: dict, max_count: int) -> None:
-    """Updates dictionary ``d`` with subgraph tuples contained in ``d_new``.
-
-    Subgraph tuples are a pair of values: a float specifying the subgraph density and a list of
-    integers specifying the subgraph nodes. Both ``d`` and ``d_new`` are dictionaries over
-    different subgraph sizes. The values of ``d`` are lists of subgraph tuples containing the top
-    densest subgraphs for a given size, with maximum length ``max_count``. The values of
-    ``d_new`` are candidate subgraph tuples that can be the result of resizing an input subgraph
-    over a range using :func:`resize`. We want to add these candidates to the list of subgraph
-    tuples in ``d`` to build up our collection of dense subgraphs.
-
-    Args:
-        d (dict[int, list[tuple[float, list[int]]]]): dictionary of subgraph sizes and
-            corresponding list of subgraph tuples
-        d_new (dict[int, tuple[float, list[int]]]): dictionary of subgraph sizes and corresponding
-            subgraph tuples that are candidates to be added to the list
-        max_count (int):  the maximum length of every subgraph tuple list
-
-    Returns:
-        None: this function modifies ``d`` in place
-    """
-    for size, t in d_new.items():
-        l = d.setdefault(size, [t])
-        _update_subgraphs_list(l, t, max_count)
+            l.sort(reverse=True)
 
 
 def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dict:
