@@ -14,7 +14,9 @@
 r"""
 Unit tests for strawberryfields.gbs.subgraph
 """
-# pylint: disable=no-self-use,unused-argument,protected-access,redefined-outer-name
+# pylint: disable=no-self-use,unused-argument
+# for testing private functions with pylint: disable=protected-access
+# for fixtures with pylint: disable=redefined-outer-name
 import functools
 
 import networkx as nx
@@ -33,7 +35,6 @@ g_planted = nx.Graph(p_planted.adj)
 def process_planted(min_size, max_size, max_count, n_samples):
     """Fixture for loading samples from the Planted dataset"""
     samples = p_planted[:n_samples]
-    samples.insert(10, [31])  # include invalid subgraph to test that function simply continues
     d = subgraph.search(samples, g_planted, min_size, max_size, max_count)
     return d
 

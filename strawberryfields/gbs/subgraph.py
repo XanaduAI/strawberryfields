@@ -63,18 +63,13 @@ def search(
         max_count (int): maximum number of densest subgraphs to keep track of for each size
 
     Returns:
-        dict[int, list[tuple(float, list[int])]]: a dictionary of different sizes, each containing a
+        dict[int, list[tuple[float, list[int]]]]: a dictionary of different sizes, each containing a
         list of subgraphs reported as a tuple of subgraph density and subgraph nodes
     """
-    nodes = graph.nodes()
     dense = {}
 
     for s in subgraphs:
-        s = set(s)
-        if not s.issubset(nodes):
-            continue
-
-        r = resize(sorted(s), graph, min_size, max_size)
+        r = resize(s, graph, min_size, max_size)
 
         for size, subgraph in r.items():
             r[size] = (nx.density(graph.subgraph(subgraph)), subgraph)
