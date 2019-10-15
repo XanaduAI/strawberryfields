@@ -23,7 +23,7 @@ from strawberryfields.gbs import sample
 import numpy as np
 
 modes = 5
-n_mean = 4
+n_mean = 6
 samples = 5
 
 A = np.random.normal(0, 1, (modes, modes))
