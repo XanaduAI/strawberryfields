@@ -13,7 +13,7 @@ Graph data
 ----------
 
 We begin by fixing a dataset of graphs to consider and loading GBS samples from these graphs,
-which will be needed to construct the feature vectors.
+which will be needed in the following.
 
 Let's use the MUTAG dataset of graphs for this tutorial
 :cite:`debnath1991structure,kriege2012subgraph`. This is a dataset of 188 different graphs that
@@ -65,8 +65,8 @@ plotly.offline.plot(plot_mutag_0, filename="MUTAG_0.html")
 # .. raw:: html
 #     :file: ../../examples_gbs/MUTAG_0.html
 # .. note::
-#     The command `plotly.offline.plot` is used to display plots in the documentation. In practice,
-#     you can simply use `plot_mutag_0.show()` to view your graph.
+#     The command ``plotly.offline.plot`` is used to display plots in the documentation. In
+#     practice, you can simply use ``plot_mutag_0.show()`` to view your graph.
 
 plotly.offline.plot(plot_mutag_1, filename="MUTAG_1.html")
 
@@ -153,6 +153,17 @@ print(similarity.sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0
 #
 # where :math:`\mathbf{k} := (k_{1}, k_{2}, \ldots , k_{K})` is a list of different total photon
 # numbers.
+#
+# For example, if :math:`\mathbf{k} := (2, 4, 6)` and :math:`n_{\max} = 2`, we have
+#
+# .. math::
+#     f_{(2, 4, 6), 2} = (p_{2, 2}, p_{4, 2}, p_{6, 2}).
+#
+# In this case, we are interested in the probabilities of events :math:`E_{2, 2}`, :math:`E_{4,
+# 2}`, and :math:`E_{6, 2}`. Suppose we are sampling from a four-mode device and have the samples
+# ``[0, 3, 0, 1]`` and ``[1, 2, 0, 1]``. These samples are part of the orbits ``[3, 1]`` and
+# ``[2, 1, 1]``, respectively. However, ``[3, 1]`` is not part of the :math:`E_{4, 2}` event while
+# ``[2, 1, 1]`` is.
 #
 # Calculating a feature vector
 # ----------------------------
@@ -269,7 +280,7 @@ classifier.fit(R_scaled, classes)
 # Here, the term "linear" refers to the *kernel* function used to calculate inner products
 # between vectors in the space. We can use a linear SVM because we have already embedded the
 # graphs in a feature space based on GBS. We have also rescaled the feature vectors so that they
-# zero mean and unit variance using ``StandardScaler``, a technique
+# zero mean and unit variance using scikit-learn's ``StandardScaler``, a technique
 # `often used <https://scikit-learn.org/stable/modules/preprocessing.html>`__ in machine learning.
 #
 # We can then visualize the trained SVM by plotting the decision boundary with respect to the
