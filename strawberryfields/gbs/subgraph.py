@@ -98,7 +98,7 @@ def _update_dict(d: dict, d_new: dict, max_count: int) -> None:
         max_count (int):  the maximum length of every subgraph tuple list
 
     Returns:
-        None: this function modifies ``d`` in place
+        None: this function modifies the dictionary ``d`` in place
     """
     for size, t in d_new.items():
         l = d.setdefault(size, [t])
