@@ -82,7 +82,11 @@ plotly.offline.plot(plot.plot_graph(graph), filename="random_graph.html")
 # .. raw:: html
 #     :file: ../../examples_gbs/random_graph.html
 #
-# We can sample from this graph through GBS using  the :func:`~.gbs.sample.sample` function:
+# This is a 6-node graph with the nodes ``[0, 1, 4, 5]`` fully connected to each other. We expect
+# to be able to sample dense subgraphs with high probability.
+#
+# Samples can be generated from this graph through GBS using the :func:`~.gbs.sample.sample`
+# function:
 
 n_mean = 4
 samples = 20
