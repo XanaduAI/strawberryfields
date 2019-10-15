@@ -19,36 +19,79 @@ Sampling functions
 
 .. currentmodule:: strawberryfields.gbs.sample
 
-This module provides functionality for generating samples from GBS.
+This module provides functionality for generating samples from GBS through simulation.
 
-Gaussian boson sampling (GBS)
------------------------------
+An accompanying tutorial can be found `here <??>`.
 
-The :func:`sample` function allows users to simulate Gaussian boson sampling (GBS) by
-choosing a symmetric input matrix to sample from :cite:`bradler2018gaussian`. For a symmetric
-:math:`N \times N` input matrix :math:`A`, corresponding to an undirected graph,
-an :math:`N`-mode GBS device with threshold detectors generates samples that are binary strings
-of length ``N``. Various problems can be encoded in the matrix :math:`A` so that the output
-samples are informative and can be used as a form of randomness to improve solvers, as outlined
-in Refs. :cite:`arrazola2018using` and :cite:`arrazola2018quantum`.
+Generating samples
+------------------
 
-A utility function :func:`modes_from_counts` is also provided to convert between two ways to
-represent samples from the device.
+An :math:`M` mode GBS device can be encoded with an :math:`(M \times M)`-dimensional symmetric
+matrix :math:`A` :cite:`bradler2018gaussian`. Running this device results in samples that carry
+relevant information about the encoded matrix :math:`A`. When sampling, one must also specify the
+mean number of photons entering and exiting the device and the form of detection used at the
+output: threshold detection or photon-number resolving (PNR) detection.
+
+The :func:`sample` function provides a simulation of sampling from GBS:
 
 .. autosummary::
     sample
+
+Here, each output sample is an :math:`M`-dimensional list. If threshold detection is used
+(``threshold = True``), each element of a sample is either a zero (denoting no photons detected)
+or a one (denoting one or more photons detected). A one here is conventionally called a "click".
+If photon-number resolving (PNR) detection is used (``threshold = False``) then elements of a
+sample are non-negative integers counting the number of photons detected in each mode.
+
+Samples can be postselected based upon their total number of photons or clicks and the ``numpy``
+random seed used to generate samples can be fixed:
+
+.. autosummary::
     postselect
     seed
 
-Subgraph sampling through GBS
------------------------------
+Generating subgraphs
+--------------------
 
-This module also provides functionality for sampling subgraphs from undirected graphs. The
-:func:`to_subgraphs` function can be used to convert samples to subgraphs.
+There are two forms to represent a sample from a GBS device:
+
+1. In the form returned by :func:`sample`, each sample is a length :math:`M` list of counts in
+   each mode, e.g., the sample ``[2, 1, 2, 0, 1]`` denotes two photons in mode 0,
+   1 photon in mode 1, and so forth.
+
+2. The alternative representation is a list of modes where photons or clicks were observed, e.g.,
+   the above sample can be written alternatively as ``[0, 0, 1, 2, 2, 4]``.
+
+Converting from the former representation to the latter can be achieved with:
+
+.. autosummary::
+    modes_from_counts
+
+Graphs can be encoded into GBS by setting the adjacency matrix to be :math:`A`. Resultant samples
+can then be used to pick out nodes from the graph to form a subgraph. If threshold detection is
+used, any nodes that click are selected as part of the subgraph. For example, if a sample is
+``[1, 1, 1, 0, 1]`` then the corresponding subgraph has nodes ``[0, 1, 2, 4]``. This can be found
+using:
+
+>>> modes_from_counts([1, 1, 1, 0, 1])
+[0, 1, 2, 4]
+
+A collection of GBS samples from a graph, given by :func:`sample` in the first form, can be
+converted to subgraphs using:
 
 .. autosummary::
     to_subgraphs
-    modes_from_counts
+
+A typical workflow would be:
+
+>>> g = nx.erdos_renyi_graph(5, 0.7)
+>>> a = nx.to_numpy_array(g)
+>>> s = sample(a, 3, 4)
+>>> s = to_subgraphs(s, g)
+[[0, 2], [0, 1, 2, 4], [1, 2, 3, 4], [1]]
+
+The subgraphs sampled from GBS are likely to be dense :cite:`arrazola2018using`, motivating their
+use within heuristics for problems such as maximum clique (see :mod:`~.gbs.clique`).
 
 Code details
 ^^^^^^^^^^^^
@@ -62,7 +105,14 @@ import strawberryfields as sf
 
 
 def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = True) -> list:
-    r"""Generate samples from GBS encoded with a symmetric matrix :math:`A`.
+    r"""Generate simulated samples from GBS encoded with a symmetric matrix :math:`A`.
+
+    **Example usage:**
+
+    >>> g = nx.erdos_renyi_graph(5, 0.7)
+    >>> a = nx.to_numpy_array(g)
+    >>> sample(a, 3, 4)
+    [[1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 0, 0, 0], [1, 0, 0, 0, 1]]
 
     Args:
         A (array): the symmetric matrix to sample from
@@ -72,8 +122,7 @@ def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = T
             resolving detectors if ``False``
 
     Returns:
-        list[list[int]]: a list of samples from a simulation of GBS with respect to the input
-        symmetric matrix
+        list[list[int]]: a list of samples from GBS with respect to the input symmetric matrix
     """
     if not np.allclose(A, A.T):
         raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
@@ -101,6 +150,26 @@ def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = T
     return eng.run(p, run_options={"shots": n_samples}).samples.tolist()
 
 
+def postselect(samples: list, min_count: int, max_count: int) -> list:
+    """Postselect samples by imposing a minimum and maximum number of photons or clicks.
+
+    **Example usage:**
+
+    >>> s = [[1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 0, 0, 0], [1, 0, 0, 0, 1]]
+    >>> postselect(s, 2, 4)
+    [[1, 1, 0, 1, 1], [1, 0, 0, 0, 1]]
+
+    Args:
+        samples (list[list[int]]): a list of samples
+        min_count (int): minimum number of photons or clicks for a sample to be included
+        max_count (int): maximum number of photons or clicks for a sample to be included
+
+    Returns:
+        list[list[int]]: the postselected samples
+    """
+    return [s for s in samples if min_count <= sum(s) <= max_count]
+
+
 def seed(value: Optional[int]) -> None:
     """Seed for random number generators.
 
@@ -108,23 +177,66 @@ def seed(value: Optional[int]) -> None:
     /numpy.random.seed.html>`_ to seed all NumPy-based random number generators. This allows for
     repeatable sampling.
 
+    **Example usage:**
+
+    >>> g = nx.erdos_renyi_graph(5, 0.7)
+    >>> a = nx.to_numpy_array(g)
+    >>> seed(1967)
+    >>> sample(a, 3, 4)
+    [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 0, 1, 0, 1], [0, 0, 0, 0, 0]]
+    >>> seed(1967)
+    >>> sample(a, 3, 4)
+    [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 0, 1, 0, 1], [0, 0, 0, 0, 0]]
+
     Args:
         value (int): random seed
     """
     np.random.seed(value)
 
 
-def to_subgraphs(samples: list, graph: nx.Graph) -> list:
-    """Converts lists of samples to lists of subgraphs.
+def modes_from_counts(s: list) -> list:
+    r"""Convert a list of counts to a list of modes where photons or clicks were observed.
 
-    For a list of samples, with each sample of ``len(nodes)`` being a list of zeros and ones,
-    this function returns a list of subgraphs selected by, for each sample, picking the nodes
-    with nonzero entries and creating the induced subgraph. The subgraph is specified as a list
-    of selected nodes. For example, given an input 6-node graph, a sample :math:`[0, 1, 1, 0, 0,
-    1]` is converted to a subgraph :math:`[1, 2, 5]`.
+    Consider an :math:`M`-mode sample :math:`s=\{s_{0},s_{1},\ldots,s_{M-1}\}` of counts in each
+    mode, i.e., so that mode :math:`i` has :math:`s_{i}` photons/clicks. If :math:`k = \sum_{
+    i=0}^{M-1} s_{i}` is the total number of photons or clicks, this function returns a list of
+    modes :math:`m=\{m_{1},m_{2},\ldots, m_{k}\}` where photons or clicks were observed, i.e.,
+    so that photon/click :math:`i` is in mode :math:`m_{i}`. Since there are typically fewer
+    photons than modes, the latter form often gives a shorter representation.
+
+    **Example usage:**
+
+    >>> modes_from_counts([0, 1, 0, 1, 2, 0])
+    [1, 3, 4, 4]
 
     Args:
-        samples (list[list[int]]): a list of samples
+       s (list[int]): a sample of counts
+
+    Returns:
+        list[int]: a list of modes where photons or clicks were observed, sorted in
+        non-decreasing order
+    """
+    modes = []
+    for i, c in enumerate(s):
+        modes += [i] * int(c)
+    return sorted(modes)
+
+
+def to_subgraphs(samples: list, graph: nx.Graph) -> list:
+    """Converts samples to their subgraph representation.
+
+    Input samples are a list of counts that are processed into subgraphs by selecting the nodes
+    where a click occured.
+
+    **Example usage:**
+
+    >>> g = nx.erdos_renyi_graph(5, 0.7)
+    >>> s = [[1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 0, 0, 0], [1, 0, 0, 0, 1]]
+    >>> to_subgraphs(s, g)
+    [[0, 1, 2, 3, 4], [0, 1, 3, 4], [], [0, 4]]
+
+    Args:
+        samples (list[list[int]]): a list of samples, each sample being a list of counts
         graph (nx.Graph): the input graph
 
     Returns:
@@ -141,47 +253,3 @@ def to_subgraphs(samples: list, graph: nx.Graph) -> list:
         return [sorted([graph_nodes[i] for i in s]) for s in subgraph_samples]
 
     return subgraph_samples
-
-
-def modes_from_counts(s: list) -> list:
-    r"""Convert a sample of photon counts to a list of modes where photons are detected.
-
-    There are two main methods of representing a sample. In the first, the number of photons
-    detected in each mode is specified. In the second, the modes in which each photon was detected
-    are listed. Since there are typically fewer photons than modes, the second method gives a
-    shorter representation.
-
-    This function converts from the first representation to the second. Given an :math:`N` mode
-    sample :math:`s=\{s_{1},s_{2},\ldots,s_{N}\}` of photon counts in each mode with total photon
-    number :math:`k`, this function returns a list of modes :math:`m=\{m_{1},m_{2},\ldots,
-    m_{k}\}` where photons are detected.
-
-    **Example usage:**
-
-    >>> modes_from_counts([0, 1, 0, 1, 2, 0])
-    [1, 3, 4, 4]
-
-    Args:
-       s (list[int]): a sample of photon counts
-
-    Returns:
-        list[int]: a list of modes where photons are detected, sorted in non-decreasing order
-    """
-    modes = []
-    for i, c in enumerate(s):
-        modes += [i] * int(c)
-    return sorted(modes)
-
-
-def postselect(samples: list, min_count: int, max_count: int) -> list:
-    """Postselect samples by imposing a minimum and maximum number of photons or clicks.
-
-    Args:
-        samples (list[list[int]]): a list of samples
-        min_count (int): minimum number of photons or clicks for a sample to be included
-        max_count (int): maximum number of photons or clicks for a sample to be included
-
-    Returns:
-        list[list[int]]: the postselected samples
-    """
-    return [s for s in samples if min_count <= sum(s) <= max_count]
