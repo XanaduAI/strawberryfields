@@ -53,9 +53,9 @@ R = np.array([(i, j) for i in range(20) for j in range(20)])
 #
 # In the RBF kernel, points that are much further than a distance :math:`\sigma` from each other
 # lead to small entries of the kernel matrix, whereas points much closer than :math:`\sigma`
-# generate large entries. Remember that the permanent of a matrix is a sum over the product of
+# generate large entries. The permanent of a matrix is a sum over the product of
 # some matrix entries. Now consider a specific point pattern in which all points are close to each
-# other which simply means that their matrix elements have larger entries. Therefore, the
+# other, which simply means that their matrix elements have larger entries. Therefore, the
 # submatrix that corresponds to those points has a large permanent and the probability of
 # observing them in a sample is larger.
 #
@@ -100,7 +100,7 @@ plotly.offline.plot(
 # points from the dense clusters with a higher probability.
 #
 # We first create the data points. The clusters have 20 points each and the points have a
-# standard deviation of 1 and are centered at [x = 5, y = 5] and [x = 15, y = 15], respectively.
+# standard deviation of 1 and are centered at :math:`[x = 5, y = 5]` and :math:`[x = 15, y = 15]`, respectively.
 # The grid points are arranged in a 20 :math:`\times` 20 square pattern.
 
 grid = np.array([(i, j) for i in range(20) for j in range(20)])
