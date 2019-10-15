@@ -20,7 +20,7 @@ Point Processes
 .. currentmodule:: strawberryfields.gbs.points
 
 This module provides functions for building kernel matrices and generating point processes using
-GBS.
+GBS. An accompanying tutorial can be found `here <>`.
 
 Point processes
 ---------------
