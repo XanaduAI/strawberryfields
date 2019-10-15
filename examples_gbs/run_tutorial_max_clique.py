@@ -25,7 +25,7 @@ import networkx as nx
 import plotly
 
 ##############################################################################
-# The adjacency matrix of the TACE-AS graph can be loaded from the ``data`` module and the
+# The adjacency matrix of the TACE-AS graph can be loaded from the :mod:`~.gbs.data` module and the
 # graph can be visualized using the :mod:`~.gbs.plot` module:
 
 TA = data.TaceAs()
