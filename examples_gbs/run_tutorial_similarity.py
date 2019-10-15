@@ -206,10 +206,10 @@ print(similarity.prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6
 # Machine learning with GBS graph kernels
 # ---------------------------------------
 #
-# We have seen how GBS can be used to provide a mapping of graphs into a feature space. This
-# mapping can be used for machine learning tasks such as classification: by viewing each graph as
-# a point in the high-dimensional space, we can use standard approaches from machine learning
-# such as `support vector machines <https://en.wikipedia.org/wiki/Support-vector_machine>`__ (SVMs).
+# The power of feature vectors that embed graphs in a vector space of real numbers is that we can
+# now measure similarities between graphs. This is very useful in machine learning, where similar
+# labels are assigned to graphs that are close to each other. GBS feature vectors therefore give
+# rise to a similarity measure between graphs!
 #
 # Let's build this up a bit more. The MUTAG dataset we are considering contains not only graphs
 # corresponding to the structure of chemical compounds, but also a *label* of each
@@ -223,8 +223,10 @@ print(similarity.prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6
 classes = [1, 0, 0, 1]
 
 ##############################################################################
-# Can we use GBS feature vectors to determine the labels of these graphs? We start by defining two-dimensional
-# feature vectors:
+# We can use GBS feature vectors in a `support vector machine
+# <https://en.wikipedia.org/wiki/Support-vector_machine>`__ (SVM) that finds a separating
+# hyperplane between classes in the feature space. We start by defining two-dimensional feature
+# vectors:
 
 events = [8, 10]
 max_count = 2
@@ -241,9 +243,9 @@ R = np.array([f1, f2, f3, f4])
 print(R)
 
 ##############################################################################
-# The choice of ``events`` composing the feature vectors is arbitrary and we encourage the reader
-# to explore different combinations. Note, however, that odd photon-numbered events have zero
-# probability because ideal GBS only generates and outputs pairs of photons.
+# There is freedom in the choice of ``events`` composing the feature vectors and we encourage the
+# reader to explore different combinations. Note, however, that odd photon-numbered events have
+# zero probability because ideal GBS only generates and outputs pairs of photons.
 #
 # Given our points in the feature space and their target labels, we can use
 # scikit-learn's Support Vector Machine `LinearSVC <https://scikit-learn.org/stable/modules/generated/sklearn.svm
