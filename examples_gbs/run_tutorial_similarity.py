@@ -268,8 +268,12 @@ classifier.fit(R_scaled, classes)
 ##############################################################################
 # Here, the term "linear" refers to the *kernel* function used to calculate inner products
 # between vectors in the space. We can use a linear SVM because we have already embedded the
-# graphs in a feature space based on GBS. We can then visualize the trained SVM by plotting the
-# decision boundary with respect to the points:
+# graphs in a feature space based on GBS. We have also rescaled the feature vectors so that they
+# zero mean and unit variance using ``StandardScaler``, a technique
+# `often used <https://scikit-learn.org/stable/modules/preprocessing.html>`__ in machine learning.
+#
+# We can then visualize the trained SVM by plotting the decision boundary with respect to the
+# points:
 
 w = classifier.coef_[0]
 i = classifier.intercept_[0]
