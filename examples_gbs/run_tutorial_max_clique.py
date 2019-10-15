@@ -57,8 +57,8 @@ plotly.offline.plot(maximal_fig, filename="maximal_clique.html")
 # use of the pre-generated samples from the TACE-AS graph in the :mod:`~.gbs.data` module and post-select samples with a specific number of clicks. For
 # this tutorial, we'll look at samples with eight clicks, of which there are a total of 1,984:
 
-TA_subgraphs = sample.to_subgraphs(TA, TA_graph)
-samples = sample.postselect(TA_subgraphs, 8, 8)
+postselected = sample.postselect(TA, 8, 8)
+samples = sample.to_subgraphs(postselected, TA_graph)
 print(len(samples))
 
 ##############################################################################
@@ -126,8 +126,8 @@ plotly.offline.plot(clique_fig, filename="maximum_clique.html")
 
 Phat = data.PHat()  # Load data
 phat_graph = nx.Graph(Phat.adj)  # Obtain graph
-phat_subgraphs = sample.to_subgraphs(Phat, phat_graph)  # Convert samples into subgraphs
-samples = sample.postselect(phat_subgraphs, 16, 20)  # Post-select on samples
+postselected = sample.postselect(Phat, 16, 20)  # Post-select samples
+samples = sample.to_subgraphs(postselected, phat_graph)  # Convert samples into subgraphs
 shrunk = [clique.shrink(s, phat_graph) for s in samples]  # Shrink subgraphs to cliques
 searched = [clique.search(s, phat_graph, 10) for s in shrunk]  # Perform local search
 clique_sizes = [len(s) for s in searched]
