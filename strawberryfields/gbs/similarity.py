@@ -19,14 +19,14 @@ Graph similarity
 
 .. currentmodule:: strawberryfields.gbs.similarity
 
-This module provides tools to measure how similar graphs are using GBS. Measuring similarity is
-achieved by mapping GBS samples from each graph to a feature vector and calculating the overlap
-between these vectors.
+This module provides the tools to construct graph kernels from GBS. The graph kernel is built by
+mapping GBS samples from each graph to a feature vector. Similarity between graphs can then be
+determined by calculating the overlap between these vectors.
 
 The functionality here is based upon the research papers:
 :cite:`bradler2018graph,schuld2019quantum,bradler2019duality`.
 
-An accompanying tutorial can be found `here <??>`.
+An accompanying tutorial can be found :ref:`here <gbs-sim-tutorial>`.
 
 Coarse-graining GBS samples
 ---------------------------
