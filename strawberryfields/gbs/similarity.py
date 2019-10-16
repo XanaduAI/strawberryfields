@@ -68,8 +68,8 @@ probabilities of orbits or events can be achieved through two approaches:
 - **Monte Carlo approximation:** generate samples within a given orbit or event and use them
   to approximate the probability.
 
-In the direct sampling approach, :math:`N` samples are taken from GBS with the embedded graph and
-the number that fall within a given orbit or event :math:`E` are counted, resulting in the count
+In the direct sampling approach, :math:`N` samples are taken from GBS with the embedded graph.
+The number that fall within a given orbit or event :math:`E` are counted, resulting in the count
 :math:`c_{E}`. The probability :math:`p(E)` of an orbit or event is then approximated as:
 
 .. math::
