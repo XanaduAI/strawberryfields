@@ -23,8 +23,8 @@ Let's take a look!
 Finding dense subgraphs
 -----------------------
 As usual, the first step is to import all required modules. We'll need the :mod:`~.gbs.data`
-module to load pre-generated samples, the :mod:`~.gbs.sample` module to postselect samples, the 
-:mod:`~.gbs.subgraph` module to search for dense subgraphs, and the :mod:`~.gbs.plot` module to 
+module to load pre-generated samples, the :mod:`~.gbs.sample` module to postselect samples, the
+:mod:`~.gbs.subgraph` module to search for dense subgraphs, and the :mod:`~.gbs.plot` module to
 visualize the graphs. We'll also use Plotly for plotting and NetworkX for graph
 operations.
 """
@@ -108,13 +108,3 @@ plotly.offline.plot(densest_16, filename="densest_16.html")
 # :mod:`~.gbs.clique` module could help provide initial subgraphs that can be resized to find larger
 # dense subgraphs. Such methods are hybrid algorithms combining the ability of GBS to sample dense
 # subgraphs with clever classical techniques. Can you think of your own hybrid algorithm?
-
-
-
-
-
-
-
-
-
-
