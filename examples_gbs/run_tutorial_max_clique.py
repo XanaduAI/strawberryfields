@@ -2,7 +2,7 @@
 """
 .. raw:: html
     <head>
-                   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+                   <script src="plotly-latest.min.js"></script>
     </head>
 
 Max Clique Tutorial
