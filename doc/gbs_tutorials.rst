@@ -15,3 +15,8 @@ Applications layer tutorials
     :tooltip: Graph Similarity
     :description: :doc:`tutorials_gbs/run_tutorial_similarity`
     :figure: ./_static/similarity_svm.png
+
+.. customgalleryitem::
+    :tooltip: Point processes
+    :description: :doc:`tutorials_gbs/run_tutorial_points`
+    :figure: ./_static/points.png
