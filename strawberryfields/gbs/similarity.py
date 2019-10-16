@@ -68,28 +68,36 @@ probabilities of orbits or events can be achieved through two approaches:
 - **Monte Carlo approximation:** generate samples within a given orbit or event and use them
   to approximate the probability.
 
-This module provides functions to evaluate the probability of orbits and events through Monte Carlo
-approximation. For an orbit or event :math:`E`, several samples from :math:`E` are drawn
-uniformly at random using :func:`orbit_to_sample` or :func:`event_to_sample`. Suppose :math:`N`
-samples :math:`\{S_{1}, S_{2}, \ldots , S_{N}\}` are generated. For each sample, this function
-calculates the probability :math:`p(S_i)` of observing that sample from a GBS device programmed
-according to the input graph and mean photon number. The sum of the probabilities is then
-rescaled according to the cardinality :math:`|E|` and the total number of samples:
+In the direct sampling approach, :math:`N` samples are taken from GBS with the embedded graph and
+the number that fall within a given orbit or event :math:`E` are counted, resulting in the count
+:math:`c_{E}`. The probability :math:`p(E)` of an orbit or event is then approximated as:
+
+.. math::
+    p(E) \approx \frac{c_{E}}{N}
+
+To perform a Monte Carlo estimation of the probability of an orbit or event :math:`E`,
+several samples from :math:`E` are drawn uniformly at random using :func:`orbit_to_sample` or
+:func:`event_to_sample`. Suppose :math:`N` samples :math:`\{S_{1}, S_{2}, \ldots , S_{N}\}` are
+generated. For each sample, this function calculates the probability :math:`p(S_i)` of observing
+that sample from a GBS device programmed according to the input graph and mean photon number. The
+sum of the probabilities is then rescaled according to the cardinality :math:`|E|` and the total
+number of samples:
 
 .. math::
     p(E) \approx \frac{1}{N}\sum_{i=1}^N p(S_i) |E|,
 
 The sample mean of this sum is an estimate of the rescaled probability :math:`p(E)`.
 
-Monte Carlo estimation is available through the following functions:
+This module provides functions to evaluate the probability of orbits and events through Monte Carlo
+approximation:
 
 .. autosummary::
     prob_orbit_mc
     prob_event_mc
 
 One canonical method of constructing a feature vector is to pick event probabilities
-:math:`p_{E_{k, n_{\max}}}` with all events :math:`E_{k, n_{\max}}` having a maximum photon count
-:math:`n_{\max}` in each mode. If :math:`\mathbf{k}` is the vector of selected events,
+:math:`p_{k} := p_{E_{k, n_{\max}}}` with all events :math:`E_{k, n_{\max}}` having a maximum
+photon count :math:`n_{\max}` in each mode. If :math:`\mathbf{k}` is the vector of selected events,
 the resultant feature vector is
 
 .. math::
