@@ -141,7 +141,6 @@ plotly.offline.plot(largest_fig, filename="largest_clique.html")
 
 ##############################################################################
 # .. raw:: html
-#     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 #     :file: ../../examples_gbs/largest_clique.html
 
 just_largest = plot.plot_subgraph(phat_graph.subgraph(largest_clique))
