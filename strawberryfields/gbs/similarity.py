@@ -37,8 +37,8 @@ grainings:
 
 - **Orbits:** Combine all samples that can be made identical under permutation. Orbits are
   written simply as a sorting of integer photon number samples in non-increasing order with the
-  zeros at the end removed. For example, ``[1, 0, 2, 0]`` and ``[2, 0, 0, 1]`` both belong to the
-  ``[2, 1]`` orbit.
+  zeros at the end removed. For example, ``[1, 1, 2, 0]`` and ``[2, 1, 0, 1]`` both belong to the
+  ``[2, 1, 1]`` orbit.
 
 - **Events:** Combine all :math:`k`-photon orbits where the maximum photon count in any mode does
   not exceed a fixed value :math:`n_{\max}` into an event :math:`E_{k, n_{\max}}`. For example,
@@ -60,7 +60,7 @@ Creating a feature vector
 -------------------------
 
 A feature vector of a graph can be created by choosing a collection of orbits or events and
-evaluating their probabilities with respect to GBS sampling with the embedded graph. These
+evaluating their probabilities with respect to GBS with the embedded graph. These
 probabilities are then selected to be elements of the feature vector. Evaluating the
 probabilities of orbits or events can be achieved through two approaches:
 
@@ -281,8 +281,8 @@ def orbit_cardinality(orbit: list, modes: int) -> int:
     12
 
     Args:
-        orbit (list[int]): orbit to count number of samples contained within
-        modes (int): number of modes in counted samples
+        orbit (list[int]): orbit; we count how many samples are contained in it
+        modes (int): number of modes in the samples
 
     Returns:
         int: number of samples in the orbit
@@ -469,7 +469,7 @@ def feature_vector_mc(
     n_mean: float = 5,
     samples: int = 1000,
 ) -> list:
-    r"""Calculates feature vector using MC estimation of event probabilities according to the
+    r"""Calculates feature vector using Monte Carlo estimation of event probabilities according to the
     input graph.
 
     The feature vector is composed of event probabilities with a fixed maximum photon count in
