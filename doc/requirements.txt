@@ -7,6 +7,7 @@ plotly
 quantum-blackbird
 sklearn
 scipy>=1.0.0
+sklearn
 sphinx-autodoc-typehints
 sphinx-gallery
 sphinxcontrib-bibtex
