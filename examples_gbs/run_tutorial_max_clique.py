@@ -1,5 +1,10 @@
 # pylint: disable=wrong-import-position,wrong-import-order,ungrouped-imports
 """
+.. raw:: html
+    <head>
+                   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    </head>
+
 Max Clique Tutorial
 =========================
 In this tutorial, we'll explore how to combine GBS samples with local search algorithms to
