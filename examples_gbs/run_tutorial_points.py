@@ -102,7 +102,7 @@ plotly.offline.plot(plot_1, filename="Points.html")
 # a higher probability.
 #
 # We first create the data points. The clusters have 50 points each and the points have a
-# standard deviation of 0.3 and are centered at :math:`[x = 2, y = 2]` and :math:`[x = 4,
+# standard deviation of 0.3. The clusters are centered at :math:`[x = 2, y = 2]` and :math:`[x = 4,
 # y = 4]`, respectively. We also add 25 randomly generated points to the data set.
 
 clusters = make_blobs(n_samples=100, centers=[[2, 2], [4, 4]], cluster_std=0.3)[0]
