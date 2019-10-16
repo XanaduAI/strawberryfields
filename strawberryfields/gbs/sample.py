@@ -19,7 +19,7 @@ Sampling functions
 
 .. currentmodule:: strawberryfields.gbs.sample
 
-This module provides functionality for generating samples from GBS through simulation.
+This module provides functionality for generating GBS samples using classical simulators.
 
 An accompanying tutorial can be found `here <??>`.
 
@@ -30,7 +30,7 @@ An :math:`M` mode GBS device can be encoded with an :math:`(M \times M)`-dimensi
 matrix :math:`A` :cite:`bradler2018gaussian`. Running this device results in samples that carry
 relevant information about the encoded matrix :math:`A`. When sampling, one must also specify the
 mean number of photons entering and exiting the device and the form of detection used at the
-output: threshold detection or photon-number resolving (PNR) detection.
+output: threshold detection or photon-number-resolving (PNR) detection.
 
 The :func:`sample` function provides a simulation of sampling from GBS:
 
@@ -39,7 +39,7 @@ The :func:`sample` function provides a simulation of sampling from GBS:
 
 Here, each output sample is an :math:`M`-dimensional list. If threshold detection is used
 (``threshold = True``), each element of a sample is either a zero (denoting no photons detected)
-or a one (denoting one or more photons detected). A one here is conventionally called a "click".
+or a one (denoting one or more photons detected), conventionally called a "click".
 If photon-number resolving (PNR) detection is used (``threshold = False``) then elements of a
 sample are non-negative integers counting the number of photons detected in each mode.
 
