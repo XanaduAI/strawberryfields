@@ -31,9 +31,8 @@ An accompanying tutorial can be found :ref:`here <gbs-sim-tutorial>`.
 Coarse-graining GBS samples
 ---------------------------
 
-GBS feature vectors can be composed of the probabilities of certain events from sampling. These
-events are typically a coarse-grained combination of elementary samples. We consider two coarse
-grainings:
+GBS feature vectors can be composed of probabilities of coarse-grained combinations of elementary
+samples. We consider two coarse grainings:
 
 - **Orbits:** Combine all samples that can be made identical under permutation. Orbits are
   written simply as a sorting of integer photon number samples in non-increasing order with the
@@ -66,10 +65,10 @@ probabilities of orbits or events can be achieved through two approaches:
 
 - **Direct sampling:** infer the probability of orbits or events from a set of sample data.
 
-- **Monte Carlo (MC) approximation:** generate samples within a given orbit or event and use them
+- **Monte Carlo approximation:** generate samples within a given orbit or event and use them
   to approximate the probability.
 
-This module provides functions to evaluate the probability of orbits and events through MC
+This module provides functions to evaluate the probability of orbits and events through Monte Carlo
 approximation. For an orbit or event :math:`E`, several samples from :math:`E` are drawn
 uniformly at random using :func:`orbit_to_sample` or :func:`event_to_sample`. Suppose :math:`N`
 samples :math:`\{S_{1}, S_{2}, \ldots , S_{N}\}` are generated. For each sample, this function
@@ -82,7 +81,7 @@ rescaled according to the cardinality :math:`|E|` and the total number of sample
 
 The sample mean of this sum is an estimate of the rescaled probability :math:`p(E)`.
 
-MC estimation is available through the following functions:
+Monte Carlo estimation is available through the following functions:
 
 .. autosummary::
     prob_orbit_mc
@@ -321,7 +320,7 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
 
 
 def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
-    r"""Gives an MC estimate of the GBS probability of a given orbit according to the input graph.
+    r"""Gives a Monte Carlo estimate of the GBS probability of a given orbit according to the input graph.
 
     To make this estimate, several samples from the orbit are drawn uniformly at random using
     :func:`orbit_to_sample`. The GBS probabilities of these samples are then calculated and the
@@ -375,7 +374,7 @@ def prob_event_mc(
     n_mean: float = 5,
     samples: int = 1000,
 ) -> float:
-    r"""Gives an MC estimate of the GBS probability of a given event according to the input graph.
+    r"""Gives a Monte Carlo estimate of the GBS probability of a given event according to the input graph.
 
     To make this estimate, several samples from the event are drawn uniformly at random using
     :func:`event_to_sample`. The GBS probabilities of these samples are then calculated and the
