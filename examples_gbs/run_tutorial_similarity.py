@@ -65,7 +65,7 @@ plotly.offline.plot(plot_mutag_0, filename="MUTAG_0.html")
 # .. raw:: html
 #     :file: ../../examples_gbs/MUTAG_0.html
 # .. note::
-#     The command ``plotly.offline.plot`` is used to display plots in the documentation. In
+#     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
 #     practice, you can simply use ``plot_mutag_0.show()`` to view your graph.
 
 plotly.offline.plot(plot_mutag_1, filename="MUTAG_1.html")
