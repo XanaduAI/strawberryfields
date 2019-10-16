@@ -26,11 +26,11 @@ An accompanying tutorial can be found `here <??>`.
 Generating samples
 ------------------
 
-An :math:`M` mode GBS device can be encoded with an :math:`(M \times M)`-dimensional symmetric
-matrix :math:`A` :cite:`bradler2018gaussian`. Running this device results in samples that carry
-relevant information about the encoded matrix :math:`A`. When sampling, one must also specify the
-mean number of photons entering and exiting the device and the form of detection used at the
-output: threshold detection or photon-number-resolving (PNR) detection.
+An :math:`M` mode GBS device can be programmed by specifying an :math:`(M \times M)`-dimensional
+symmetric matrix :math:`A` :cite:`bradler2018gaussian`. Running this device results in samples
+that carry relevant information about the encoded matrix :math:`A`. When sampling, one must also
+specify the mean number of photons in the device and the form of detection used at the output:
+threshold detection or photon-number-resolving (PNR) detection.
 
 The :func:`sample` function provides a simulation of sampling from GBS:
 
