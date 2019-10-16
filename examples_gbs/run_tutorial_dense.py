@@ -10,10 +10,10 @@ social networks, correlated assets in a market, or mutually influential proteins
 network. This tutorial studies how GBS can be used to identify dense subgraphs.
 
 Mathematically, this task is known as the `dense subgraph problem
-<https://en.wikipedia.org/wiki/Dense_subgraph>`_. The density of a graph is equal to the number of
-edges in the subgraph divided by the maximum possible number of edges. Identifying the densest
-graph of a given size, known as the densest-*k* subgraph problem, is `NP-Hard
-<https://en.wikipedia.org/wiki/NP-hardness>`_.
+<https://en.wikipedia.org/wiki/Dense_subgraph>`_. The density of a :math:k-node subgraph is equal to
+ the number of its edges divided by the maximum possible number of edges :math:k(k-1)/2.
+Identifying the densest graph of a given size, known as the densest-*k* subgraph problem,
+is `NP-Hard <https://en.wikipedia.org/wiki/NP-hardness>`_.
 
 
 As shown in :cite:`arrazola2018using`, a defining feature of GBS is that when we encode a graph
@@ -26,8 +26,8 @@ Finding dense subgraphs
 As usual, the first step is to import all required modules. We'll need the :mod:`~.gbs.data`
 module to load pre-generated samples, the :mod:`~.gbs.sample` module to postselect samples, the
 :mod:`~.gbs.subgraph` module to search for dense subgraphs, and the :mod:`~.gbs.plot` module to
-visualize the graphs. We'll also use Plotly for plotting and NetworkX for graph
-operations.
+visualize the graphs. We'll also use Plotly which is required for the :mod:`~.gbs.plot` module and
+NetworkX for graph operations.
 """
 from strawberryfields.gbs import data, sample, subgraph, plot
 import plotly
