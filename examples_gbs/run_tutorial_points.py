@@ -9,12 +9,13 @@ devices can be programmed to operate as special types of point processes that ge
 random point patterns :cite:`jahangiri2019point`.
 
 The probability of generating a specific pattern of points in GBS point processes depends on
-matrix functions of a kernel matrix :math:`K` that describes the similarity between the points. Matrix
-functions that appear in GBS point processes are typically
+matrix functions of a kernel matrix :math:`K` that describes the similarity between the points.
+Matrix functions that appear in GBS point processes are typically
 `permanents <https://en.wikipedia.org/wiki/Permanent_(mathematics)>`__ and
-`hafnians <https://the-walrus.readthedocs.io/en/latest/hafnian.html>`__. In this tutorial, we use the permanental point
-process in which the probability of observing a pattern of points :math:`S` depends on the
-permanent of their corresponding kernel submatrix :math:`K_S` as :cite:`jahangiri2019point`:
+`hafnians <https://the-walrus.readthedocs.io/en/latest/hafnian.html>`__. In this tutorial, we use
+the permanental point process in which the probability of observing a pattern of points :math:`S`
+depends on the permanent of their corresponding kernel submatrix :math:`K_S` as
+:cite:`jahangiri2019point`:
 
 .. math::
     \mathcal{P}(S) = \frac{1}{\alpha(S)}\text{per}(K_S),
