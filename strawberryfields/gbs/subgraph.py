@@ -30,9 +30,9 @@ Heuristic
 ---------
 
 The heuristic algorithm provided proceeds as follows. Each starting subgraph :math:`s` is resized
-to a range of sizes :math:`\{k\}_{k=k_{\min}}^{k_{\max}}`, resulting in the resized subgraphs
+to a range of sizes :math:`\{k\}_{k_{\min}}^{k_{\max}}`, resulting in the resized subgraphs
 :math:`s_{k}`. For a given size :math:`k`, a collection of the densest :math:`n` subgraphs
-identified is recorded, meaning that :math:`s_{k}` is added to the collection if it has
+identified is recorded, meaning that :math:`s_{k}` is added to the collection only if it has
 sufficient density.
 
 .. autosummary::
@@ -47,9 +47,8 @@ Subgraph resizing
 
 The key element of the :func:`search` algorithm is the resizing of each subgraph, allowing a
 range of subgraph sizes to be tracked. Resizing proceeds by greedily adding or removing nodes to
-a subgraph one-at-a-time. Node selection is carried out by picking the node in the remainder of
-the graph with the greatest or least degree with respect to to the subgraph, with ties settled
-uniformly at random.
+a subgraph one-at-a-time. Node selection is carried out by picking the node with the greatest
+or least degree with respect to to the subgraph, with ties settled uniformly at random.
 
 .. autosummary::
     resize
