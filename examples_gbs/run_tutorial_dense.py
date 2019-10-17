@@ -18,7 +18,7 @@ is `NP-Hard <https://en.wikipedia.org/wiki/NP-hardness>`__.
 
 As shown in :cite:`arrazola2018using`, a defining feature of GBS is that when we encode a graph
 into a GBS device, it samples dense subgraphs with high probability. This property can be
-used to find dense subgraphs by sampling from a GBS device  and postprocessing the outputs.
+used to find dense subgraphs by sampling from a GBS device and postprocessing the outputs.
 Let's take a look!
 
 Finding dense subgraphs
