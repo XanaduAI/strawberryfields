@@ -19,26 +19,43 @@ Dense subgraph identification
 
 .. currentmodule:: strawberryfields.gbs.subgraph
 
+This module provides tools for users to search for dense subgraphs of a range of different sizes.
+The search heuristic in this module works by resizing a collection of starting subgraphs and
+keeping track of the densest identified. The starting subgraphs can be selected by sampling from
+GBS, resulting in candidates that are likely to be dense :cite:`arrazola2018using`.
+
 An accompanying tutorial can be found :ref:`here <gbs-subgraph-tutorial>`.
 
-This module provides tools for users to identify dense subgraphs.
+Heuristic
+---------
 
-The :func:`search` function provides a heuristic algorithm for finding dense regions and proceeds
-by greedily resizing input subgraphs and keeping track of the densest found.
+The heuristic algorithm provided proceeds as follows. Each starting subgraph :math:`s` is resized
+to a range of sizes :math:`\{k\}_{k=k_{\min}}^{k_{\max}}`, resulting in the resized subgraphs
+:math:`s_{k}`. For a given size :math:`k`, a collection of the densest :math:`n` subgraphs
+identified is recorded, meaning that :math:`s_{k}` is added to the collection if it has
+sufficient density.
 
 .. autosummary::
     search
 
+This algorithm returns a dictionary over the range of sizes specified, with each value being the
+collection of densest-:math:`k` subgraphs. This collection is a list of tuple pairs specifying
+the subgraph density and nodes.
+
 Subgraph resizing
 -----------------
 
-Subgraphs sampled from GBS are not guaranteed to be of size :math:`k`, even if this is the mean
-photon number. On the other hand, the densest-:math:`k` subgraph problem requires graphs of fixed
-size to be considered. This means that heuristic algorithms at some point must resize the sampled
-subgraphs. Resizing functionality is provided by the following function.
+The key element of the :func:`search` algorithm is the resizing of each subgraph, allowing a
+range of subgraph sizes to be tracked. Resizing proceeds by greedily adding or removing nodes to
+a subgraph one-at-a-time. Node selection is carried out by picking the node in the remainder of
+the graph with the greatest or least degree with respect to to the subgraph, with ties settled
+uniformly at random.
 
 .. autosummary::
     resize
+
+This function returns a dictionary over the range of sizes specified, with each value being the
+corresponding resized subgraph.
 
 Code details
 ^^^^^^^^^^^^
