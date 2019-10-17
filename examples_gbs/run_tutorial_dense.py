@@ -53,7 +53,7 @@ samples = sample.to_subgraphs(postselected, pl_graph)
 print(len(samples))
 
 ##############################################################################
-# Not bad! We have more than 2000 samples to play with. The planted subgraph is actually easy to
+# Not bad! We have more than 2000 samples to play with 😎. The planted subgraph is actually easy to
 # identify; it even appears clearly from the force-directed Kamada-Kawai algorithm that is used to
 # plot graphs in Strawberry Fields:
 sub = list(range(20, 30))
@@ -108,4 +108,4 @@ plotly.offline.plot(densest_16, filename="densest_16.html")
 # subgraphs. For example, techniques for finding maximum cliques, included in the
 # :mod:`~.gbs.clique` module could help provide initial subgraphs that can be resized to find larger
 # dense subgraphs. Such methods are hybrid algorithms combining the ability of GBS to sample dense
-# subgraphs with clever classical techniques. Can you think of your own hybrid algorithm?
+# subgraphs with clever classical techniques. Can you think of your own hybrid algorithm? 🤔
