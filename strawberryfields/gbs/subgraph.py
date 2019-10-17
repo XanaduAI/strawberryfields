@@ -19,6 +19,8 @@ Dense subgraph identification
 
 .. currentmodule:: strawberryfields.gbs.subgraph
 
+An accompanying tutorial can be found :ref:`here <gbs-subgraph-tutorial>`.
+
 This module provides tools for users to identify dense subgraphs.
 
 The :func:`search` function provides a heuristic algorithm for finding dense regions and proceeds
