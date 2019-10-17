@@ -21,7 +21,7 @@ Sampling functions
 
 This module provides functionality for generating GBS samples using classical simulators.
 
-An accompanying tutorial can be found `here <??>`.
+An accompanying tutorial can be found :ref:`here <gbs-sample-tutorial>`.
 
 Generating samples
 ------------------
