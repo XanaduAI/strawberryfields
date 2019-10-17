@@ -74,6 +74,20 @@ def search(
     subgraphs. This function loops over all elements of ``subgraphs`` and keeps track of the
     ``max_count`` number of densest subgraphs identified for each size.
 
+    **Example usage:**
+
+    >>> s = data.Planted()
+    >>> g = nx.Graph(s.adj)
+    >>> s = sample.postselect(s, 16, 30)
+    >>> s = sample.to_subgraphs(s, g)
+    >>> search(s, g, 8, 9, max_count=3)
+    {9: [(0.9722222222222222, [21, 22, 23, 24, 25, 26, 27, 28, 29]),
+      (0.9722222222222222, [20, 21, 22, 24, 25, 26, 27, 28, 29]),
+      (0.9444444444444444, [20, 21, 22, 23, 24, 25, 26, 27, 29])],
+     8: [(1.0, [21, 22, 24, 25, 26, 27, 28, 29]),
+      (1.0, [21, 22, 23, 24, 25, 26, 27, 28]),
+      (1.0, [20, 21, 22, 24, 25, 26, 27, 29])]}
+
     Args:
         subgraphs (list[list[int]]): a list of subgraphs specified by their nodes
         graph (nx.Graph): the input graph
@@ -83,7 +97,8 @@ def search(
 
     Returns:
         dict[int, list[tuple[float, list[int]]]]: a dictionary of different sizes, each containing a
-        list of subgraphs reported as a tuple of subgraph density and subgraph nodes
+        list of densest subgraphs reported as a tuple of subgraph density and subgraph nodes,
+        sorted in non-increasing order of density
     """
     dense = {}
 
@@ -196,13 +211,25 @@ def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dic
 
     When growth is required, the algorithm examines all nodes from the remainder of the graph as
     candidates and adds-in the single node with the highest degree relative to the rest of the
-    subgraph. This results in a graph that is one node larger,  and if growth is still required
-    the algorithm performs the above procedure again.
+    subgraph. This results in a graph that is one node larger, and if growth is still required
+    the algorithm performs the procedure again.
 
     When shrinking is required, the algorithm examines all nodes from within the subgraph as
     candidates and removes the single node with lowest degree relative to the subgraph. In both
     growth and shrink phases, ties for addition/removal with nodes of equal degree are settled by
     uniform random choice.
+
+    **Example usage:**
+
+    >>> s = data.Planted()
+    >>> g = nx.Graph(s.adj)
+    >>> s = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+    >>> resize(s, g, 8, 12)
+    {10: [20, 21, 22, 23, 24, 25, 26, 27, 28, 29],
+     11: [11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29],
+     12: [0, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29],
+     9: [20, 21, 22, 24, 25, 26, 27, 28, 29],
+     8: [20, 21, 22, 24, 25, 26, 27, 29]}
 
     Args:
         subgraph (list[int]): a subgraph specified by a list of nodes
