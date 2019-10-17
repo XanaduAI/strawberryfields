@@ -24,6 +24,8 @@ where all nodes are connected to each other. The maximum clique problem is to id
 largest clique in a graph. The problem is NP-Hard in a worst-case setting, which is why it is
 valuable to develop better algorithms to tackle it.
 
+An accompanying tutorial can be found :ref:`here <gbs-clique-tutorial>`.
+
 Heuristics
 ----------
 
