@@ -59,16 +59,18 @@ from thewalrus.csamples import generate_thermal_samples, rescale_adjacency_matri
 def kernel(R: np.ndarray, sigma: float) -> np.ndarray:
     r"""Calculate the kernel matrix from a set of input points.
 
-    We use the radial basis function (RBF) kernel which is positive semidefinite when Euclidean
-    distances are used. The elements of the RBF kernel are computed as:
+    We use the radial basis function (RBF) kernel whose elements are computed as:
 
     .. math::
         K_{i,j} = e^{-\|\bf{r}_i-\bf{r}_j\|^2/(2\sigma^2)},
 
-    where :math:`\bf{r}_i` are the coordinates of point :math:`i` and :math:`\sigma`
-    is a kernel parameter that determines the scale of the kernel. Points that are much further
-    than a distance :math:`\sigma` from each other lead to small entries of the kernel matrix,
-    whereas points much closer than :math:`\sigma` generate large entries.
+    where :math:`\bf{r}_i` are the coordinates of point :math:`i`, :math:`\sigma` is a kernel
+    parameter, and :math:`\|\cdot\|` denotes a choice of norm. The RBF kernel is positive
+    semidefinite when the Euclidean norm is used.
+
+    The kernel parameter :math:`\sigma` is used to define the kernel scale. Points that are much
+    further than :math:`\sigma` from each other lead to small entries of the kernel
+    matrix, whereas points much closer than :math:`\sigma` generate large entries.
 
     **Example usage:**
 
@@ -119,8 +121,8 @@ def sample(K: np.ndarray, n_mean: float, n_samples: int) -> list:
      [0, 0, 0, 0]]
 
     Args:
-        K (array): the kernel matrix
-        n_mean (float): average number of points
+        K (array): the positive semidefinite kernel matrix
+        n_mean (float): average number of points per sample
         n_samples (int): number of samples to be generated
 
     Returns:
