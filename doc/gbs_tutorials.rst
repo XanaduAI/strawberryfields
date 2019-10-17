@@ -7,6 +7,11 @@ Applications layer tutorials
     :figure: ./_static/thumbs/photon.png
 
 .. customgalleryitem::
+    :tooltip: Dense subgraphs
+    :description: :doc:`tutorials_gbs/run_tutorial_dense`
+    :figure: ./_static/dense.png
+
+.. customgalleryitem::
     :tooltip: Max Clique
     :description: :doc:`tutorials_gbs/run_tutorial_max_clique`
     :figure: ./_static/max_clique.png
