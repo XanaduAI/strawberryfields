@@ -5,15 +5,15 @@ Dense Subgraph Tutorial
 
 Graphs can be used to model a wide variety of concepts: social networks, financial markets,
 biological networks, and many others. A common problem of interest is to find subgraphs that
-contain a large number of connections between their nodes. These subgraphs may correspond to communities in
-social networks, correlated assets in a market, or mutually influential proteins in a biological
-network. This tutorial studies how GBS can be used to identify dense subgraphs.
+contain a large number of connections between their nodes. These subgraphs may correspond to
+communities in social networks, correlated assets in a market, or mutually influential proteins
+in a biological network. This tutorial studies how GBS can be used to identify dense subgraphs.
 
 Mathematically, this task is known as the `dense subgraph problem
-<https://en.wikipedia.org/wiki/Dense_subgraph>`_. The density of a :math:k-node subgraph is equal to
- the number of its edges divided by the maximum possible number of edges :math:k(k-1)/2.
-Identifying the densest graph of a given size, known as the densest-*k* subgraph problem,
-is `NP-Hard <https://en.wikipedia.org/wiki/NP-hardness>`_.
+<https://en.wikipedia.org/wiki/Dense_subgraph>`__. The density of a :math:`k`-node subgraph is equal
+to the number of its edges divided by the maximum possible number of edges :math:`k(k-1)/2`.
+Identifying the densest graph of a given size, known as the densest-:math:`k` subgraph problem,
+is `NP-Hard <https://en.wikipedia.org/wiki/NP-hardness>`__.
 
 
 As shown in :cite:`arrazola2018using`, a defining feature of GBS is that when we encode a graph
@@ -54,7 +54,7 @@ print(len(samples))
 
 ##############################################################################
 # Not bad! We have more than 2000 samples to play with. The planted subgraph is actually easy to
-# identify; it evens appears clearly from the force-directed Kamada-Kawai algorithm that is used to
+# identify; it even appears clearly from the force-directed Kamada-Kawai algorithm that is used to
 # plot graphs in Strawberry Fields:
 sub = list(range(20, 30))
 plot_graph = plot.plot_graph(pl_graph, sub)
@@ -71,10 +71,10 @@ plotly.offline.plot(plot_graph, filename="planted.html")
 ##############################################################################
 # A more interesting challenge is to find dense subgraphs of different sizes; it is often
 # useful to identify many high-density subgraphs, not just the densest ones. This is the purpose of
-# the :func:`~.subgraph.search` function in the :mod:`~.gbs.subgraph` module: to identify collections of dense
-# subgraphs for a range of sizes. The output of this function is a dictionary whose keys correspond
-# to subgraph sizes within the specified range. The values in the dictionary are the top subgraphs of
-# that size and their corresponding density.
+# the :func:`~.subgraph.search` function in the :mod:`~.gbs.subgraph` module: to identify
+# collections of dense subgraphs for a range of sizes. The output of this function is a
+# dictionary whose keys correspond to subgraph sizes within the specified range. The values in
+# the dictionary are the top subgraphs of that size and their corresponding density.
 
 dense = subgraph.search(samples, pl_graph, 8, 16, max_count=3)  # we look at top 3 densest subgraphs
 for k in range(8, 17):
