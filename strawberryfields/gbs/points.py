@@ -94,7 +94,7 @@ def kernel(R: np.ndarray, sigma: float) -> np.ndarray:
 def sample(K: np.ndarray, n_mean: float, n_samples: int) -> list:
     """Sample subsets of points using the permanental point process.
 
-    Points are encoded through a radial basis function kernel, provided in :func:`kernel`. Subsets
+    Points can be encoded through a radial basis function kernel, provided in :func:`kernel`. Subsets
     of points are sampled with probabilities that are proportional to the permanent of the
     submatrix of the kernel selected by those points.
 
