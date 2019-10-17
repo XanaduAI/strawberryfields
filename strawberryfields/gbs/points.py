@@ -33,12 +33,12 @@ algorithms.
 Several point processes rely on matrix functions to assign probabilities to different point
 patterns. As shown in Ref. :cite:`jahangiri2019point`, GBS naturally gives rise to a *hafnian*
 point process that employs the `hafnian
-<https://hafnian.readthedocs.io/en/latest/hafnian.html>`_ as the underlying matrix function.
+<https://the-walrus.readthedocs.io/en/latest/hafnian.html>`_ as the underlying matrix function.
 This point process has the central property of generating clustered data points with
 high probability. In this setting, a GBS device is programmed according to a *kernel* matrix that
 encodes information about the similarity between points. When this kernel matrix is positive
-semidefinite, it is possible to map the hafnian point process to a *permanental* point process
-and employ fast classical algorithms to sample from the resulting distribution.
+semidefinite, it is possible to use GBS to implement a *permanental* point process and employ
+fast classical algorithms to sample from the resulting distribution.
 
 Summary
 -------
