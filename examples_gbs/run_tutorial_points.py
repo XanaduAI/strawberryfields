@@ -1,5 +1,7 @@
 # pylint: disable=wrong-import-position,wrong-import-order,ungrouped-imports,invalid-name
 r"""
+.. _gbs-points-tutorial:
+
 Point Process Tutorial
 ======================
 
