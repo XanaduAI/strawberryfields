@@ -28,7 +28,7 @@ be used to select dense subgraphs as a starting seed for heuristic algorithms
 
 An accompanying tutorial can be found :ref:`here <gbs-clique-tutorial>`.
 
-Heuristics
+Algorithm
 ----------
 
 This module provides a variant of the local search heuristics described in
@@ -69,8 +69,8 @@ clique that is not connected to it.
 Using GBS to find a starting clique
 -----------------------------------
 
-Samples from GBS correspond to subgraphs that are likely to be dense. Nevertheless,
-these subgraphs may not be cliques, which is the required input to the :func:`search` algorithm.
+Samples from GBS correspond to subgraphs that are likely to be dense.
+These subgraphs may not be cliques, which is the required input to the :func:`search` algorithm.
 To reconcile this, a subgraph may be shrunk by removing nodes until the remainder forms a
 clique. This can be achieved by selecting the node with the lowest degree relative to the rest of
 subgraph and removing the node, repeating the process until a clique is found.
