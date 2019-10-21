@@ -26,11 +26,11 @@ GBS, resulting in candidates that are likely to be dense :cite:`arrazola2018usin
 
 An accompanying tutorial can be found :ref:`here <gbs-subgraph-tutorial>`.
 
-Heuristic
+Algorithm
 ---------
 
 The heuristic algorithm provided proceeds as follows. Each starting subgraph :math:`s` is resized
-to a range of sizes :math:`\{k\}_{k_{\min}}^{k_{\max}}`, resulting in the resized subgraphs
+to a range of sizes :math:`\{k\}_{k_{\min}}^{k_{\max}}`, resulting in the subgraphs
 :math:`s_{k}`. For a given size :math:`k`, a collection of the densest :math:`n` subgraphs
 identified is recorded, meaning that :math:`s_{k}` is added to the collection only if it has
 sufficient density.
@@ -209,8 +209,8 @@ def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dic
     input subgraph to reach the range of sizes specified by ``min_size`` and ``max_size``.
 
     When growth is required, the algorithm examines all nodes from the remainder of the graph as
-    candidates and adds-in the single node with the highest degree relative to the rest of the
-    subgraph. This results in a graph that is one node larger, and if growth is still required
+    candidates and adds the single node with the highest degree relative to the rest of the
+    subgraph. This results in a graph that is one node larger, and if growth is still required,
     the algorithm performs the procedure again.
 
     When shrinking is required, the algorithm examines all nodes from within the subgraph as
