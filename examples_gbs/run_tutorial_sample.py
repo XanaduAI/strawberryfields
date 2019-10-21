@@ -12,13 +12,14 @@ Sampling from GBS
 -----------------
 
 A GBS device can be programmed to sample from any symmetric matrix :math:`A`. To sample,
-we must specify both the mean number of photons being generated in the device and the form of
+we must specify the mean number of photons being generated in the device and optionally the form of
 detection used at the output: threshold detection or photon-number resolving (PNR) detection.
 Threshold detectors are restricted to measuring whether photons have arrived at the detector,
-whereas PNR detectors are able to count the number of photons.
+whereas PNR detectors are able to count the number of photons. Photon loss can also be specified
+with the ``loss`` argument.
 
-Let's take a look at both types of sampling methods. We can generate samples from a random 5-dimensional
-symmetric matrix:
+Let's take a look at both types of sampling methods. We can generate samples from a random
+5-dimensional symmetric matrix:
 """
 
 from strawberryfields.gbs import sample
