@@ -29,7 +29,7 @@ be used to select dense subgraphs as a starting seed for heuristic algorithms
 An accompanying tutorial can be found :ref:`here <gbs-clique-tutorial>`.
 
 Algorithm
-----------
+---------
 
 This module provides a variant of the local search heuristics described in
 :cite:`pullan2006dynamic` and :cite:`pullan2006phased`. The algorithm proceeds as follows:
