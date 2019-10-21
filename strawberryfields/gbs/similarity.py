@@ -95,6 +95,9 @@ approximation:
     prob_orbit_mc
     prob_event_mc
 
+Similar to the :func:`~.gbs.sample.sample` function, the MC estimators include a ``loss`` argument
+to specify the proportion of photons lost in the simulated GBS device.
+
 One canonical method of constructing a feature vector is to pick event probabilities
 :math:`p_{k} := p_{E_{k, n_{\max}}}` with all events :math:`E_{k, n_{\max}}` having a maximum
 photon count :math:`n_{\max}` in each mode. If :math:`\mathbf{k}` is the vector of selected events,
