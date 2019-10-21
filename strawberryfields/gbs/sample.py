@@ -29,8 +29,8 @@ Generating samples
 An :math:`M` mode GBS device can be programmed by specifying an :math:`(M \times M)`-dimensional
 symmetric matrix :math:`A` :cite:`bradler2018gaussian`. Running this device results in samples
 that carry relevant information about the encoded matrix :math:`A`. When sampling, one must also
-specify the mean number of photons in the device and the form of detection used at the output:
-threshold detection or photon-number-resolving (PNR) detection.
+specify the mean number of photons in the device, the form of detection used at the output:
+threshold detection or photon-number-resolving (PNR) detection, as well as the amount of loss.
 
 The :func:`sample` function provides a simulation of sampling from GBS:
 
@@ -41,7 +41,10 @@ Here, each output sample is an :math:`M`-dimensional list. If threshold detectio
 (``threshold = True``), each element of a sample is either a zero (denoting no photons detected)
 or a one (denoting one or more photons detected), conventionally called a "click".
 If photon-number resolving (PNR) detection is used (``threshold = False``) then elements of a
-sample are non-negative integers counting the number of photons detected in each mode.
+sample are non-negative integers counting the number of photons detected in each mode. The ``loss``
+parameter allows for simulation of photon loss in the device, which is the most common form of
+noise in quantum photonics. Here, ``loss = 0`` describes ideal loss-free GBS, while generally
+``0 <= loss <= 1`` describes the proportion of photons lost while passing through the device.
 
 Samples can be postselected based upon their total number of photons or clicks and the ``numpy``
 random seed used to generate samples can be fixed:
