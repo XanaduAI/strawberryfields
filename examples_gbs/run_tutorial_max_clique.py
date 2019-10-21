@@ -1,5 +1,7 @@
 # pylint: disable=wrong-import-position,wrong-import-order,ungrouped-imports
 """
+.. _gbs-clique-tutorial:
+
 Max Clique Tutorial
 =========================
 In this tutorial, we'll explore how to combine GBS samples with local search algorithms to
