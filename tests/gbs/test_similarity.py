@@ -17,11 +17,13 @@ Unit tests for strawberryfields.gbs.similarity
 # pylint: disable=no-self-use,unused-argument,too-many-arguments
 import itertools
 from collections import Counter
+from unittest import mock
 
 import networkx as nx
 import numpy as np
 import pytest
 
+import strawberryfields as sf
 from strawberryfields.gbs import similarity
 
 pytestmark = pytest.mark.gbs
@@ -243,6 +245,50 @@ class TestProbOrbitMC:
 
         assert similarity.prob_orbit_mc(graph, [], 0) == 1.0
 
+    def test_loss(self, monkeypatch):
+        """Test if function correctly creates the SF program for lossy GBS."""
+        graph = nx.complete_graph(5)
+        mock_eng_run = mock.MagicMock()
+
+        with monkeypatch.context() as m:
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
+            similarity.prob_orbit_mc(graph, [1, 1, 1, 1], samples=1, loss=0.5)
+            p_func = mock_eng_run.call_args[0][0]
+
+        assert isinstance(p_func.circuit[1].op, sf.ops.LossChannel)
+
+    def test_no_loss(self, monkeypatch):
+        """Test if function correctly creates the SF program for GBS without loss."""
+        graph = nx.complete_graph(5)
+        mock_eng_run = mock.MagicMock()
+
+        with monkeypatch.context() as m:
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
+            similarity.prob_orbit_mc(graph, [1, 1, 1, 1], samples=1)
+            p_func = mock_eng_run.call_args[0][0]
+
+        assert not all([isinstance(op, sf.ops.LossChannel) for op in p_func.circuit])
+
+    def test_all_loss(self, monkeypatch):
+        """Test if function samples from the vacuum when maximum loss is applied."""
+        dim = 5
+        graph = nx.complete_graph(dim)
+        mock_eng_run = mock.MagicMock()
+
+        with monkeypatch.context() as m:
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
+            similarity.prob_orbit_mc(graph, [1, 1, 1, 1], samples=1, loss=1)
+            p_func = mock_eng_run.call_args[0][0]
+
+        eng = sf.LocalEngine(backend="gaussian")
+
+        state = eng.run(p_func).state
+        cov = state.cov()
+        disp = state.displacement()
+
+        assert np.allclose(cov, np.eye(2 * dim))
+        assert np.allclose(disp, np.zeros(dim))
+
 
 class TestProbEventMC:
     """Tests for the function ``strawberryfields.gbs.similarity.prob_event_mc.``"""
@@ -267,6 +313,50 @@ class TestProbEventMC:
             )
 
             assert np.allclose(similarity.prob_event_mc(graph, 6, 3), 1.0)
+
+    def test_loss(self, monkeypatch):
+        """Test if function correctly creates the SF program for lossy GBS."""
+        graph = nx.complete_graph(5)
+        mock_eng_run = mock.MagicMock()
+
+        with monkeypatch.context() as m:
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
+            similarity.prob_event_mc(graph, 6, 3, samples=1, loss=0.5)
+            p_func = mock_eng_run.call_args[0][0]
+
+        assert isinstance(p_func.circuit[1].op, sf.ops.LossChannel)
+
+    def test_no_loss(self, monkeypatch):
+        """Test if function correctly creates the SF program for GBS without loss."""
+        graph = nx.complete_graph(5)
+        mock_eng_run = mock.MagicMock()
+
+        with monkeypatch.context() as m:
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
+            similarity.prob_event_mc(graph, 6, 3, samples=1)
+            p_func = mock_eng_run.call_args[0][0]
+
+        assert not all([isinstance(op, sf.ops.LossChannel) for op in p_func.circuit])
+
+    def test_all_loss(self, monkeypatch):
+        """Test if function samples from the vacuum when maximum loss is applied."""
+        dim = 5
+        graph = nx.complete_graph(dim)
+        mock_eng_run = mock.MagicMock()
+
+        with monkeypatch.context() as m:
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
+            similarity.prob_event_mc(graph, 6, 3, samples=1, loss=1)
+            p_func = mock_eng_run.call_args[0][0]
+
+        eng = sf.LocalEngine(backend="gaussian")
+
+        state = eng.run(p_func).state
+        cov = state.cov()
+        disp = state.displacement()
+
+        assert np.allclose(cov, np.eye(2 * dim))
+        assert np.allclose(disp, np.zeros(dim))
 
 
 class TestFeatureVectorSampling:
