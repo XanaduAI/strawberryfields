@@ -104,7 +104,9 @@ import numpy as np
 import strawberryfields as sf
 
 
-def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = True) -> list:
+def sample(
+    A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = True, loss: float = 0
+) -> list:
     r"""Generate simulated samples from GBS encoded with a symmetric matrix :math:`A`.
 
     **Example usage:**
@@ -120,6 +122,8 @@ def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = T
         n_samples (int): number of samples
         threshold (bool): perform GBS with threshold detectors if ``True`` or photon-number
             resolving detectors if ``False``
+        loss (float): fraction of generated photons that are lost while passing through device.
+            Parameter should range from ``loss=0`` (ideal noise-free GBS) to ``loss=1``.
 
     Returns:
         list[list[int]]: a list of samples from GBS with respect to the input symmetric matrix
@@ -130,6 +134,8 @@ def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = T
         raise ValueError("Number of samples must be at least one")
     if n_mean < 0:
         raise ValueError("Mean photon number must be non-negative")
+    if not 0 <= loss <= 1:
+        raise ValueError("Loss parameter must take a value between zero and one")
 
     nodes = len(A)
 
@@ -141,6 +147,10 @@ def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = T
     # pylint: disable=expression-not-assigned,pointless-statement
     with p.context as q:
         sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
+
+        if loss:
+            for _q in q:
+                sf.ops.LossChannel(1 - loss) | _q
 
         if threshold:
             sf.ops.MeasureThreshold() | q
