@@ -327,8 +327,11 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     return cardinality
 
 
-def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
-    r"""Gives a Monte Carlo estimate of the GBS probability of a given orbit according to the input graph.
+def prob_orbit_mc(
+    graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000, loss: float = 0
+) -> float:
+    r"""Gives a Monte Carlo estimate of the GBS probability of a given orbit according to the input
+    graph.
 
     To make this estimate, several samples from the orbit are drawn uniformly at random using
     :func:`orbit_to_sample`. The GBS probabilities of these samples are then calculated and the
@@ -345,6 +348,7 @@ def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int 
         orbit (list[int]): orbit for which to estimate the probability
         n_mean (float): total mean photon number of the GBS device
         samples (int): number of samples used in the Monte Carlo estimation
+        loss (float): fraction of photons lost in GBS
 
     Returns:
         float: estimated orbit probability
@@ -360,6 +364,10 @@ def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int 
     # pylint: disable=expression-not-assigned
     with p.context as q:
         sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
+
+        if loss:
+            for _q in q:
+                sf.ops.LossChannel(1 - loss) | _q
 
     eng = sf.LocalEngine(backend="gaussian")
     result = eng.run(p)
@@ -381,8 +389,10 @@ def prob_event_mc(
     max_count_per_mode: int,
     n_mean: float = 5,
     samples: int = 1000,
+    loss: float = 0,
 ) -> float:
-    r"""Gives a Monte Carlo estimate of the GBS probability of a given event according to the input graph.
+    r"""Gives a Monte Carlo estimate of the GBS probability of a given event according to the input
+    graph.
 
     To make this estimate, several samples from the event are drawn uniformly at random using
     :func:`event_to_sample`. The GBS probabilities of these samples are then calculated and the
@@ -400,6 +410,7 @@ def prob_event_mc(
         max_count_per_mode (int): maximum number of photons per mode in the event
         n_mean (float): total mean photon number of the GBS device
         samples (int): number of samples used in the Monte Carlo estimation
+        loss (float): fraction of photons lost in GBS
 
     Returns:
         float: estimated orbit probability
@@ -414,6 +425,10 @@ def prob_event_mc(
     # pylint: disable=expression-not-assigned
     with p.context as q:
         sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
+
+        if loss:
+            for _q in q:
+                sf.ops.LossChannel(1 - loss) | _q
 
     eng = sf.LocalEngine(backend="gaussian")
     result = eng.run(p)
@@ -475,6 +490,7 @@ def feature_vector_mc(
     max_count_per_mode: int = 2,
     n_mean: float = 5,
     samples: int = 1000,
+    loss: float = 0,
 ) -> list:
     r"""Calculates feature vector using Monte Carlo estimation of event probabilities according to the
     input graph.
@@ -496,6 +512,7 @@ def feature_vector_mc(
         max_count_per_mode (int): maximum number of photons per mode for all events
         n_mean (float): total mean photon number of the GBS device
         samples (int): number of samples used in the Monte Carlo estimation
+        loss (float): fraction of photons lost in GBS
 
     Returns:
         list[float]: a feature vector of event probabilities in the same order as
@@ -509,6 +526,6 @@ def feature_vector_mc(
         raise ValueError("Maximum number of photons per mode must be at least one")
 
     return [
-        prob_event_mc(graph, photons, max_count_per_mode, n_mean, samples)
+        prob_event_mc(graph, photons, max_count_per_mode, n_mean, samples, loss)
         for photons in event_photon_numbers
     ]
