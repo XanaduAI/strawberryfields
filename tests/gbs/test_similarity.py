@@ -428,7 +428,7 @@ class TestFeatureVectorMC:
             m.setattr(
                 similarity,
                 "prob_event_mc",
-                lambda graph, photons, max_count, n_mean, samples: 1.0 / photons,
+                lambda graph, photons, max_count, n_mean, samples, loss: 1.0 / photons,
             )
             graph = nx.complete_graph(8)
             fv = similarity.feature_vector_mc(graph, [2, 4, 8], 1)
