@@ -117,7 +117,7 @@ class TestSample:
         cov = state.cov()
         disp = state.displacement()
 
-        assert np.allclose(cov, np.eye(2 * dim))
+        assert np.allclose(cov, 0.5 * state.hbar * np.eye(2 * dim))
         assert np.allclose(disp, np.zeros(dim))
 
 
