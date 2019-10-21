@@ -108,7 +108,7 @@ import strawberryfields as sf
 
 
 def sample(
-    A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = True, loss: float = 0
+    A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = True, loss: float = 0.0
 ) -> list:
     r"""Generate simulated samples from GBS encoded with a symmetric matrix :math:`A`.
 

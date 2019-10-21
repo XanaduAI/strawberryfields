@@ -328,7 +328,7 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
 
 
 def prob_orbit_mc(
-    graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000, loss: float = 0
+    graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000, loss: float = 0.0
 ) -> float:
     r"""Gives a Monte Carlo estimate of the GBS probability of a given orbit according to the input
     graph.
@@ -389,7 +389,7 @@ def prob_event_mc(
     max_count_per_mode: int,
     n_mean: float = 5,
     samples: int = 1000,
-    loss: float = 0,
+    loss: float = 0.0,
 ) -> float:
     r"""Gives a Monte Carlo estimate of the GBS probability of a given event according to the input
     graph.
@@ -490,7 +490,7 @@ def feature_vector_mc(
     max_count_per_mode: int = 2,
     n_mean: float = 5,
     samples: int = 1000,
-    loss: float = 0,
+    loss: float = 0.0,
 ) -> list:
     r"""Calculates feature vector using Monte Carlo estimation of event probabilities according to the
     input graph.
