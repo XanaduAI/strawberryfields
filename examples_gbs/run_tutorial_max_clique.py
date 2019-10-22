@@ -2,8 +2,9 @@
 """
 .. _gbs-clique-tutorial:
 
-Max Clique Tutorial
-=========================
+Max clique tutorial
+===================
+
 In this tutorial, we'll explore how to combine GBS samples with local search algorithms to
 find large cliques in graphs. Let's get started!
 

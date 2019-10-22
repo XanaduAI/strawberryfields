@@ -2,7 +2,7 @@
 """
 .. _gbs-sample-tutorial:
 
-Sampling Tutorial
+Sampling tutorial
 =================
 
 This tutorial provides a quick guide to generating samples from GBS simulators. This

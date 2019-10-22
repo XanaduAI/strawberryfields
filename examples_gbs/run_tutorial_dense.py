@@ -2,7 +2,7 @@
 """
 .. _gbs-subgraph-tutorial:
 
-Dense Subgraph Tutorial
+Dense subgraph tutorial
 =======================
 
 Graphs can be used to model a wide variety of concepts: social networks, financial markets,

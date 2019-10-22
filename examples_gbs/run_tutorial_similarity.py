@@ -2,7 +2,7 @@
 """
 .. _gbs-sim-tutorial:
 
-Graph Similarity Tutorial
+Graph similarity tutorial
 =========================
 
 This tutorial looks at how to use GBS to construct a similarity measure between graphs,

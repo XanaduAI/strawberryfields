@@ -2,7 +2,7 @@
 r"""
 .. _gbs-points-tutorial:
 
-Point Process Tutorial
+Point process tutorial
 ======================
 
 This tutorial shows how to generate GBS point process samples and use them to detect outlier
