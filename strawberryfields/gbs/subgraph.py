@@ -19,24 +19,42 @@ Dense subgraph identification
 
 .. currentmodule:: strawberryfields.gbs.subgraph
 
-This module provides tools for users to identify dense subgraphs.
+This module provides tools for users to find dense subgraphs of a range of different sizes.
+The search heuristic in this module works by resizing a collection of starting subgraphs and
+keeping track of the densest identified. The starting subgraphs can be selected by sampling from
+GBS, resulting in candidates that are likely to be dense :cite:`arrazola2018using`.
 
-The :func:`search` function provides a heuristic algorithm for finding dense regions and proceeds
-by greedily resizing input subgraphs and keeping track of the densest found.
+An accompanying tutorial can be found :ref:`here <gbs-subgraph-tutorial>`.
+
+Algorithm
+---------
+
+The heuristic algorithm provided proceeds as follows. Each starting subgraph :math:`s` is resized
+to a range of sizes :math:`\{k\}_{k_{\min}}^{k_{\max}}`, resulting in the subgraphs
+:math:`s_{k}`. For a given size :math:`k`, a collection of the densest :math:`n` subgraphs
+identified is recorded, meaning that :math:`s_{k}` is added to the collection only if it has
+sufficient density.
 
 .. autosummary::
     search
 
+This algorithm returns a dictionary over the range of sizes specified, with each value being the
+collection of densest-:math:`k` subgraphs. This collection is a list of tuple pairs specifying
+the subgraph density and nodes.
+
 Subgraph resizing
 -----------------
 
-Subgraphs sampled from GBS are not guaranteed to be of size :math:`k`, even if this is the mean
-photon number. On the other hand, the densest-:math:`k` subgraph problem requires graphs of fixed
-size to be considered. This means that heuristic algorithms at some point must resize the sampled
-subgraphs. Resizing functionality is provided by the following function.
+The key element of the :func:`search` algorithm is the resizing of each subgraph, allowing a
+range of subgraph sizes to be tracked. Resizing proceeds by greedily adding or removing nodes to
+a subgraph one-at-a-time. Node selection is carried out by picking the node with the greatest
+or least degree with respect to to the subgraph, with ties settled uniformly at random.
 
 .. autosummary::
     resize
+
+This function returns a dictionary over the range of sizes specified, with each value being the
+corresponding resized subgraph.
 
 Code details
 ^^^^^^^^^^^^
@@ -55,6 +73,20 @@ def search(
     subgraphs. This function loops over all elements of ``subgraphs`` and keeps track of the
     ``max_count`` number of densest subgraphs identified for each size.
 
+    **Example usage:**
+
+    >>> s = data.Planted()
+    >>> g = nx.Graph(s.adj)
+    >>> s = sample.postselect(s, 16, 30)
+    >>> s = sample.to_subgraphs(s, g)
+    >>> search(s, g, 8, 9, max_count=3)
+    {9: [(0.9722222222222222, [21, 22, 23, 24, 25, 26, 27, 28, 29]),
+      (0.9722222222222222, [20, 21, 22, 24, 25, 26, 27, 28, 29]),
+      (0.9444444444444444, [20, 21, 22, 23, 24, 25, 26, 27, 29])],
+     8: [(1.0, [21, 22, 24, 25, 26, 27, 28, 29]),
+      (1.0, [21, 22, 23, 24, 25, 26, 27, 28]),
+      (1.0, [20, 21, 22, 24, 25, 26, 27, 29])]}
+
     Args:
         subgraphs (list[list[int]]): a list of subgraphs specified by their nodes
         graph (nx.Graph): the input graph
@@ -64,7 +96,8 @@ def search(
 
     Returns:
         dict[int, list[tuple[float, list[int]]]]: a dictionary of different sizes, each containing a
-        list of subgraphs reported as a tuple of subgraph density and subgraph nodes
+        list of densest subgraphs reported as a tuple of subgraph density and subgraph nodes,
+        sorted in non-increasing order of density
     """
     dense = {}
 
@@ -176,14 +209,26 @@ def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dic
     input subgraph to reach the range of sizes specified by ``min_size`` and ``max_size``.
 
     When growth is required, the algorithm examines all nodes from the remainder of the graph as
-    candidates and adds-in the single node with the highest degree relative to the rest of the
-    subgraph. This results in a graph that is one node larger,  and if growth is still required
-    the algorithm performs the above procedure again.
+    candidates and adds the single node with the highest degree relative to the rest of the
+    subgraph. This results in a graph that is one node larger, and if growth is still required,
+    the algorithm performs the procedure again.
 
     When shrinking is required, the algorithm examines all nodes from within the subgraph as
     candidates and removes the single node with lowest degree relative to the subgraph. In both
     growth and shrink phases, ties for addition/removal with nodes of equal degree are settled by
     uniform random choice.
+
+    **Example usage:**
+
+    >>> s = data.Planted()
+    >>> g = nx.Graph(s.adj)
+    >>> s = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+    >>> resize(s, g, 8, 12)
+    {10: [20, 21, 22, 23, 24, 25, 26, 27, 28, 29],
+     11: [11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29],
+     12: [0, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29],
+     9: [20, 21, 22, 24, 25, 26, 27, 28, 29],
+     8: [20, 21, 22, 24, 25, 26, 27, 29]}
 
     Args:
         subgraph (list[int]): a subgraph specified by a list of nodes
