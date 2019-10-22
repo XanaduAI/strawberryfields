@@ -84,7 +84,7 @@ We obtain for the position and momentum operators
 The matrix elements of the displacement operator in the Fock basis were derived by Cahill and Glauber :cite:`cahill1969`:
 
 .. math::
-   \bra{m}\hat D(\alpha) \ket{n}  = \sqrt{\frac{n!}{m!}} \alpha^{m-n} e^{-|\alpha|^2} L_n^{m-n}\left( |\alpha|^2 \right)
+   \bra{m}\hat D(\alpha) \ket{n}  = \sqrt{\frac{n!}{m!}} \alpha^{m-n} e^{-|\alpha|^2/2} L_n^{m-n}\left( |\alpha|^2 \right)
 
 
 where :math:`L_n^{m}(x)` is a generalized Laguerre polynomial :cite:`dlmf`.

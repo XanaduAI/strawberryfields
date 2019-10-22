@@ -121,7 +121,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    op_conventions
    quantum_algorithms
    glossary
-   references
+   zreferences
 
 .. toctree::
    :maxdepth: 2
@@ -172,6 +172,9 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
 
    code/gbs/sample
    code/gbs/subgraph
-   code/gbs/g_sample
    code/gbs/clique
    code/gbs/similarity
+   code/gbs/plot
+   code/gbs/points
+   code/gbs/data
+   gbs_tutorials

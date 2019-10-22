@@ -19,45 +19,79 @@ Sampling functions
 
 .. currentmodule:: strawberryfields.gbs.sample
 
-This module provides functionality for generating samples from both a quantum device and the
-uniform distribution.
+This module provides functionality for generating GBS samples using classical simulators.
 
-Gaussian boson sampling (GBS)
------------------------------
+An accompanying tutorial can be found :ref:`here <gbs-sample-tutorial>`.
 
-The :func:`sample` function allows users to simulate Gaussian boson sampling (GBS) by
-choosing a symmetric input matrix to sample from :cite:`bradler2018gaussian`. For a symmetric
-:math:`N \times N` input matrix :math:`A`, corresponding to an undirected graph,
-an :math:`N`-mode GBS device with threshold detectors generates samples that are binary strings
-of length ``N``. Various problems can be encoded in the matrix :math:`A` so that the output
-samples are informative and can be used as a form of randomness to improve solvers, as outlined
-in Refs. :cite:`arrazola2018using` and :cite:`arrazola2018quantum`.
+Generating samples
+------------------
 
-On the other hand, the :func:`uniform` function allows users to generate samples where a
-subset of modes are selected using the uniform distribution. A utility function
-:func:`modes_from_counts` is also provided to convert between two ways to represent samples from
-the device.
+An :math:`M` mode GBS device can be programmed by specifying an :math:`(M \times M)`-dimensional
+symmetric matrix :math:`A` :cite:`bradler2018gaussian`. Running this device results in samples
+that carry relevant information about the encoded matrix :math:`A`. When sampling, one must also
+specify the mean number of photons in the device and the form of detection used at the output:
+threshold detection or photon-number-resolving (PNR) detection.
+
+The :func:`sample` function provides a simulation of sampling from GBS:
 
 .. autosummary::
-    QUANTUM_BACKENDS
-    BACKEND_DEFAULTS
     sample
-    uniform
+
+Here, each output sample is an :math:`M`-dimensional list. If threshold detection is used
+(``threshold = True``), each element of a sample is either a zero (denoting no photons detected)
+or a one (denoting one or more photons detected), conventionally called a "click".
+If photon-number resolving (PNR) detection is used (``threshold = False``) then elements of a
+sample are non-negative integers counting the number of photons detected in each mode.
+
+Samples can be postselected based upon their total number of photons or clicks and the ``numpy``
+random seed used to generate samples can be fixed:
+
+.. autosummary::
+    postselect
     seed
+
+Generating subgraphs
+--------------------
+
+There are two forms to represent a sample from a GBS device:
+
+1. In the form returned by :func:`sample`, each sample is a length :math:`M` list of counts in
+   each mode, e.g., the sample ``[2, 1, 2, 0, 1]`` denotes two photons in mode 0,
+   1 photon in mode 1, and so forth.
+
+2. The alternative representation is a list of modes where photons or clicks were observed, e.g.,
+   the above sample can be written alternatively as ``[0, 0, 1, 2, 2, 4]``.
+
+Converting from the former representation to the latter can be achieved with:
+
+.. autosummary::
     modes_from_counts
 
-Subgraph sampling through GBS
------------------------------
+Graphs can be encoded into GBS by setting the adjacency matrix to be :math:`A`. Resultant samples
+can then be used to pick out nodes from the graph to form a subgraph. If threshold detection is
+used, any nodes that click are selected as part of the subgraph. For example, if a sample is
+``[1, 1, 1, 0, 1]`` then the corresponding subgraph has nodes ``[0, 1, 2, 4]``. This can be found
+using:
 
-This module also provides functionality for sampling of subgraphs from undirected graphs. The
-:func:`subgraphs` function generates raw samples from :mod:`strawberryfields.gbs.sample`
-and converts them to subgraphs using :func:`to_subgraphs`. Sampling can be generated both from
-GBS and by using the uniform distribution.
+>>> modes_from_counts([1, 1, 1, 0, 1])
+[0, 1, 2, 4]
+
+A collection of GBS samples from a graph, given by :func:`sample` in the first form, can be
+converted to subgraphs using:
 
 .. autosummary::
-    SAMPLE_DEFAULTS
-    subgraphs
     to_subgraphs
+
+A typical workflow would be:
+
+>>> g = nx.erdos_renyi_graph(5, 0.7)
+>>> a = nx.to_numpy_array(g)
+>>> s = sample(a, 3, 4)
+>>> s = to_subgraphs(s, g)
+[[0, 2], [0, 1, 2, 4], [1, 2, 3, 4], [1]]
+
+The subgraphs sampled from GBS are likely to be dense :cite:`arrazola2018using`, motivating their
+use within heuristics for problems such as maximum clique (see :mod:`~.gbs.clique`).
 
 Code details
 ^^^^^^^^^^^^
@@ -69,167 +103,71 @@ import numpy as np
 
 import strawberryfields as sf
 
-QUANTUM_BACKENDS = ("gaussian",)
-"""tuple[str]: Available quantum backends for sampling."""
 
-BACKEND_DEFAULTS = {"remote": False, "backend": "gaussian", "threshold": True, "postselect": 0}
-"""dict[str, Any]: Dictionary to specify default parameters of options in backend sampling for
-:func:`sample`.
-"""
+def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = True) -> list:
+    r"""Generate simulated samples from GBS encoded with a symmetric matrix :math:`A`.
 
+    **Example usage:**
 
-def sample(
-    A: np.ndarray, n_mean: float, samples: int = 1, backend_options: Optional[dict] = None
-) -> list:
-    r"""Generate samples from GBS
-
-    Perform quantum sampling of adjacency matrix :math:`A` using the Gaussian boson sampling
-    algorithm.
-
-    Sampling can be controlled with the optional ``backend_options`` argument, which should be a
-    dict containing any of the following:
-
-    .. glossary::
-
-        key: ``"remote"``, value: *bool*
-            Performs sampling on a remote server if ``True``. Remote sampling is
-            required for sampling on hardware. If not specified, sampling will be performed locally.
-
-        key: ``"backend"``, value: *str*
-            Requested backend for sampling. Available backends are listed in
-            ``QUANTUM_BACKENDS``, these are:
-
-            - ``"gaussian"``: for simulating the output of a GBS device using the
-              :mod:`strawberryfields.backends.gaussianbackend`
-
-        key: ``"threshold"``, value: *bool*
-            Performs sampling using threshold (on/off click) detectors if ``True``
-            or using photon number resolving detectors if ``False``. Defaults to ``True`` for
-            threshold sampling.
-
-        key: ``"postselect"``, value: *int*
-            Causes samples with a photon number or click number less than the
-            specified value to be filtered out. Defaults to ``0`` if unspecified, resulting in no
-            postselection. Note that the number of samples returned in :func:`sample` is
-            still equal to the ``samples`` parameter.
+    >>> g = nx.erdos_renyi_graph(5, 0.7)
+    >>> a = nx.to_numpy_array(g)
+    >>> sample(a, 3, 4)
+    [[1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 0, 0, 0], [1, 0, 0, 0, 1]]
 
     Args:
-        A (array): the (real or complex) :math:`N \times N` adjacency matrix to sample from
+        A (array): the symmetric matrix to sample from
         n_mean (float): mean photon number
-        samples (int): number of samples; defaults to 1
-        backend_options (dict[str, Any]): dictionary specifying options used by backends during
-            sampling; defaults to :const:`BACKEND_DEFAULTS`
+        n_samples (int): number of samples
+        threshold (bool): perform GBS with threshold detectors if ``True`` or photon-number
+            resolving detectors if ``False``
 
     Returns:
-        list[list[int]]: a list of length ``samples`` whose elements are length :math:`N` lists of
-        integers indicating events (e.g., photon numbers or clicks) in each of the :math:`N`
-        modes of the detector
+        list[list[int]]: a list of samples from GBS with respect to the input symmetric matrix
     """
-    backend_options = {**BACKEND_DEFAULTS, **(backend_options or {})}
-
     if not np.allclose(A, A.T):
         raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
-
-    if samples < 1:
+    if n_samples < 1:
         raise ValueError("Number of samples must be at least one")
+    if n_mean < 0:
+        raise ValueError("Mean photon number must be non-negative")
 
     nodes = len(A)
+
     p = sf.Program(nodes)
+    eng = sf.LocalEngine(backend="gaussian")
 
     mean_photon_per_mode = n_mean / float(nodes)
 
     # pylint: disable=expression-not-assigned,pointless-statement
     with p.context as q:
         sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
-        sf.ops.Measure | q
-
-    p = p.compile("gbs")
-
-    postselect = backend_options["postselect"]
-    threshold = backend_options["threshold"]
-
-    if postselect == 0:
-        s = _sample_sf(p, shots=samples, backend_options=backend_options)
 
         if threshold:
-            s[s >= 1] = 1
+            sf.ops.MeasureThreshold() | q
+        else:
+            sf.ops.MeasureFock() | q
 
-        s = s.tolist()
-
-    elif postselect > 0:
-        s = []
-
-        while len(s) < samples:
-            samp = np.array(_sample_sf(p, shots=1, backend_options=backend_options))
-
-            if threshold:
-                samp[samp >= 1] = 1
-
-            counts = np.sum(samp)
-
-            if counts >= postselect:
-                s.append(samp.tolist())
-
-    else:
-        raise ValueError("Can only postselect on nonnegative values")
-
-    return s
+    return eng.run(p, run_options={"shots": n_samples}).samples.tolist()
 
 
-def _sample_sf(p: sf.Program, shots: int = 1, backend_options: Optional[dict] = None) -> np.ndarray:
-    """Generate samples from Strawberry Fields.
+def postselect(samples: list, min_count: int, max_count: int) -> list:
+    """Postselect samples by imposing a minimum and maximum number of photons or clicks.
+
+    **Example usage:**
+
+    >>> s = [[1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 0, 0, 0], [1, 0, 0, 0, 1]]
+    >>> postselect(s, 2, 4)
+    [[1, 1, 0, 1, 1], [1, 0, 0, 0, 1]]
 
     Args:
-        p (sf.Program): the program to sample from
-        shots (int): the number of samples; defaults to 1
-        backend_options (dict[str, Any]): dictionary specifying options used by backends during
-        sampling; defaults to :const:`BACKEND_DEFAULTS`
+        samples (list[list[int]]): a list of samples
+        min_count (int): minimum number of photons or clicks for a sample to be included
+        max_count (int): maximum number of photons or clicks for a sample to be included
 
     Returns:
-        array: an array of ``len(shots)`` samples, with each sample the result of running a
-        :class:`~strawberryfields.program.Program` specified by ``p``
+        list[list[int]]: the postselected samples
     """
-    backend_options = {**BACKEND_DEFAULTS, **(backend_options or {})}
-
-    if not backend_options["backend"] in QUANTUM_BACKENDS:
-        raise ValueError("Invalid backend selected")
-
-    if backend_options["remote"]:
-        raise ValueError("Remote sampling not yet available")
-
-    eng = sf.LocalEngine(backend=backend_options["backend"])
-
-    return np.array(eng.run(p, run_options={"shots": shots}).samples)
-
-
-def uniform(modes: int, sampled_modes: int, samples: int = 1) -> list:
-    """Perform classical sampling using the uniform distribution to randomly select a subset of
-    modes of a given size.
-
-    Args:
-        modes (int): number of modes to sample from
-        sampled_modes (int): number of modes to sample
-        samples (int): number of samples; defaults to 1
-
-    Returns:
-        list[list[int]]: a ``len(samples)`` list whose elements are ``len(modes)`` lists which
-        contain zeros and ones. The number of ones is ``samples_modes``, corresponding to the modes
-        selected.
-    """
-
-    if modes < 1 or sampled_modes < 1 or sampled_modes > modes:
-        raise ValueError(
-            "Modes and sampled_modes must be greater than zero and sampled_modes must not exceed "
-            "modes "
-        )
-    if samples < 1:
-        raise ValueError("Number of samples must be greater than zero")
-
-    base_sample = [1] * sampled_modes + [0] * (modes - sampled_modes)
-
-    output_samples = [list(np.random.permutation(base_sample)) for _ in range(samples)]
-
-    return output_samples
+    return [s for s in samples if min_count <= sum(s) <= max_count]
 
 
 def seed(value: Optional[int]) -> None:
@@ -239,93 +177,67 @@ def seed(value: Optional[int]) -> None:
     /numpy.random.seed.html>`_ to seed all NumPy-based random number generators. This allows for
     repeatable sampling.
 
+    **Example usage:**
+
+    >>> g = nx.erdos_renyi_graph(5, 0.7)
+    >>> a = nx.to_numpy_array(g)
+    >>> seed(1967)
+    >>> sample(a, 3, 4)
+    [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 0, 1, 0, 1], [0, 0, 0, 0, 0]]
+    >>> seed(1967)
+    >>> sample(a, 3, 4)
+    [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 0, 1, 0, 1], [0, 0, 0, 0, 0]]
+
     Args:
         value (int): random seed
     """
     np.random.seed(value)
 
 
-SAMPLE_DEFAULTS = {"distribution": "gbs", "postselect_ratio": 0.75}
-"""dict[str, Any]: Dictionary to specify default parameters of options in :func:`subgraphs`.
-"""
+def modes_from_counts(s: list) -> list:
+    r"""Convert a list of counts to a list of modes where photons or clicks were observed.
 
+    Consider an :math:`M`-mode sample :math:`s=\{s_{0},s_{1},\ldots,s_{M-1}\}` of counts in each
+    mode, i.e., so that mode :math:`i` has :math:`s_{i}` photons/clicks. If :math:`k = \sum_{
+    i=0}^{M-1} s_{i}` is the total number of photons or clicks, this function returns a list of
+    modes :math:`m=\{m_{1},m_{2},\ldots, m_{k}\}` where photons or clicks were observed, i.e.,
+    so that photon/click :math:`i` is in mode :math:`m_{i}`. Since there are typically fewer
+    photons than modes, the latter form often gives a shorter representation.
 
-def subgraphs(
-    graph: nx.Graph,
-    nodes: int,
-    samples: int = 1,
-    sample_options: Optional[dict] = None,
-    backend_options: Optional[dict] = None,
-) -> list:
-    """Samples subgraphs from an input graph
+    **Example usage:**
 
-    The optional ``sample_options`` argument can be used to specify the type of sampling. It
-    should be a dict that contains any of the following:
-
-    .. glossary::
-
-        key: ``"distribution"``, value: *str*
-            Subgraphs can be sampled according to the following distributions:
-
-            - ``"gbs"``: for generating subgraphs according to the Gaussian boson sampling
-              distribution. In this distribution, subgraphs are sampled with a variable size (
-              default).
-            - ``"uniform"``: for generating subgraphs uniformly at random. When using this
-              distribution, subgraphs are of a fixed size. Note that ``backend_options`` are not
-              used and that remote sampling is unavailable due to the simplicity of the
-              distribution.
-
-        key: ``"postselect_ratio"``, value: *float*
-            Ratio of ``nodes`` used to determine the minimum size of subgraph sampled; defaults
-            to 0.75.
+    >>> modes_from_counts([0, 1, 0, 1, 2, 0])
+    [1, 3, 4, 4]
 
     Args:
-        graph (nx.Graph): the input graph
-        nodes (int): the mean size of subgraph samples
-        samples (int): number of samples
-        sample_options (dict[str, Any]): dictionary specifying options used by :func:`subgraphs`;
-            defaults to :const:`SAMPLE_DEFAULTS`
-        backend_options (dict[str, Any]): dictionary specifying options used by backends during
-            sampling
+       s (list[int]): a sample of counts
 
     Returns:
-        list[list[int]]: a list of length ``samples`` whose elements are subgraphs given by a
-        list of nodes
+        list[int]: a list of modes where photons or clicks were observed, sorted in
+        non-decreasing order
     """
-    sample_options = {**SAMPLE_DEFAULTS, **(sample_options or {})}
-
-    distribution = sample_options["distribution"]
-
-    if distribution == "uniform":
-        s = uniform(modes=graph.order(), sampled_modes=nodes, samples=samples)
-    elif distribution == "gbs":
-        postselect = int(sample_options["postselect_ratio"] * nodes)
-        backend_options = {**(backend_options or {}), "postselect": postselect}
-
-        s = sample(
-            A=nx.to_numpy_array(graph),
-            n_mean=nodes,
-            samples=samples,
-            backend_options=backend_options,
-        )
-    else:
-        raise ValueError("Invalid distribution selected")
-
-    return to_subgraphs(graph, s)
+    modes = []
+    for i, c in enumerate(s):
+        modes += [i] * int(c)
+    return sorted(modes)
 
 
-def to_subgraphs(graph: nx.Graph, samples: list) -> list:
-    """Converts a list of samples to a list of subgraphs.
+def to_subgraphs(samples: list, graph: nx.Graph) -> list:
+    """Converts samples to their subgraph representation.
 
-    Given a list of samples, with each sample of ``len(nodes)`` being a list of zeros and ones,
-    this function returns a list of subgraphs selected by, for each sample, picking the nodes
-    corresponding to ones and creating the induced subgraph. The subgraph is specified as a list
-    of selected nodes. For example, given an input 6-node graph, a sample :math:`[0, 1, 1, 0, 0,
-    1]` is converted to a subgraph :math:`[1, 2, 5]`.
+    Input samples are a list of counts that are processed into subgraphs by selecting the nodes
+    where a click occured.
+
+    **Example usage:**
+
+    >>> g = nx.erdos_renyi_graph(5, 0.7)
+    >>> s = [[1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 0, 0, 0], [1, 0, 0, 0, 1]]
+    >>> to_subgraphs(s, g)
+    [[0, 1, 2, 3, 4], [0, 1, 3, 4], [], [0, 4]]
 
     Args:
+        samples (list[list[int]]): a list of samples, each sample being a list of counts
         graph (nx.Graph): the input graph
-        samples (list): a list of samples, each a binary sequence of ``len(nodes)``
 
     Returns:
         list[list[int]]: a list of subgraphs, where each subgraph is represented by a list of its
@@ -335,39 +247,9 @@ def to_subgraphs(graph: nx.Graph, samples: list) -> list:
     graph_nodes = list(graph.nodes)
     node_number = len(graph_nodes)
 
-    subgraph_samples = [modes_from_counts(s) for s in samples]
+    subgraph_samples = [list(set(modes_from_counts(s))) for s in samples]
 
     if graph_nodes != list(range(node_number)):
         return [sorted([graph_nodes[i] for i in s]) for s in subgraph_samples]
 
     return subgraph_samples
-
-
-def modes_from_counts(s: list) -> list:
-    r"""Convert a sample of photon counts to a list of modes where photons are detected.
-
-    There are two main methods of representing a sample. In the first, the number of photons
-    detected in each mode is specified. In the second, the modes in which each photon was detected
-    are listed. Since there are typically fewer photons than modes, the second method gives a
-    shorter representation.
-
-    This function converts from the first representation to the second. Given an :math:`N` mode
-    sample :math:`s=\{s_{1},s_{2},\ldots,s_{N}\}` of photon counts in each mode with total photon
-    number :math:`k`, this function returns a list of modes :math:`m=\{m_{1},m_{2},\ldots,
-    m_{k}\}` where photons are detected.
-
-    **Example usage:**
-
-    >>> modes_from_counts([0, 1, 0, 1, 2, 0])
-    [1, 3, 4, 4]
-
-    Args:
-       s (list[int]): a sample of photon counts
-
-    Returns:
-        list[int]: a list of modes where photons are detected, sorted in non-decreasing order
-    """
-    modes = []
-    for i, c in enumerate(s):
-        modes += [i] * c
-    return sorted(modes)

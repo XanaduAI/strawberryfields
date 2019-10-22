@@ -19,10 +19,32 @@ Graph similarity
 
 .. currentmodule:: strawberryfields.gbs.similarity
 
-Functionality for calculating feature vectors of graphs using GBS.
+This module provides the tools to construct graph kernels from GBS. The graph kernel is built by
+mapping GBS samples from each graph to a feature vector. Similarity between graphs can then be
+determined by calculating the overlap between these vectors.
 
-Summary
--------
+The functionality here is based upon the research papers:
+:cite:`bradler2018graph,schuld2019quantum,bradler2019duality`.
+
+An accompanying tutorial can be found :ref:`here <gbs-sim-tutorial>`.
+
+Coarse-graining GBS samples
+---------------------------
+
+GBS feature vectors can be composed of probabilities of coarse-grained combinations of elementary
+samples. We consider two coarse grainings:
+
+- **Orbits:** Combine all samples that can be made identical under permutation. Orbits are
+  written simply as a sorting of integer photon number samples in non-increasing order with the
+  zeros at the end removed. For example, ``[1, 1, 2, 0]`` and ``[2, 1, 0, 1]`` both belong to the
+  ``[2, 1, 1]`` orbit.
+
+- **Events:** Combine all :math:`k`-photon orbits where the maximum photon count in any mode does
+  not exceed a fixed value :math:`n_{\max}` into an event :math:`E_{k, n_{\max}}`. For example,
+  orbits ``[2, 1]``, ``[1, 1, 1]`` are part of the :math:`E_{k=3, n_{\max}=2}` event, while
+  orbit ``[3]`` is not.
+
+This module provides the following tools for dealing with coarse-grained orbits and events:
 
 .. autosummary::
     sample_to_orbit
@@ -32,9 +54,61 @@ Summary
     orbits
     orbit_cardinality
     event_cardinality
+
+Creating a feature vector
+-------------------------
+
+A feature vector of a graph can be created by choosing a collection of orbits or events and
+evaluating their probabilities with respect to GBS with the embedded graph. These
+probabilities are then selected to be elements of the feature vector. Evaluating the
+probabilities of orbits or events can be achieved through two approaches:
+
+- **Direct sampling:** infer the probability of orbits or events from a set of sample data.
+
+- **Monte Carlo approximation:** generate samples within a given orbit or event and use them
+  to approximate the probability.
+
+In the direct sampling approach, :math:`N` samples are taken from GBS with the embedded graph.
+The number that fall within a given orbit or event :math:`E` are counted, resulting in the count
+:math:`c_{E}`. The probability :math:`p(E)` of an orbit or event is then approximated as:
+
+.. math::
+    p(E) \approx \frac{c_{E}}{N}
+
+To perform a Monte Carlo estimation of the probability of an orbit or event :math:`E`,
+several samples from :math:`E` are drawn uniformly at random using :func:`orbit_to_sample` or
+:func:`event_to_sample`. Suppose :math:`N` samples :math:`\{S_{1}, S_{2}, \ldots , S_{N}\}` are
+generated. For each sample, this function calculates the probability :math:`p(S_i)` of observing
+that sample from a GBS device programmed according to the input graph and mean photon number. The
+sum of the probabilities is then rescaled according to the cardinality :math:`|E|` and the total
+number of samples:
+
+.. math::
+    p(E) \approx \frac{1}{N}\sum_{i=1}^N p(S_i) |E|,
+
+The sample mean of this sum is an estimate of the rescaled probability :math:`p(E)`.
+
+This module provides functions to evaluate the probability of orbits and events through Monte Carlo
+approximation:
+
+.. autosummary::
     prob_orbit_mc
     prob_event_mc
+
+One canonical method of constructing a feature vector is to pick event probabilities
+:math:`p_{k} := p_{E_{k, n_{\max}}}` with all events :math:`E_{k, n_{\max}}` having a maximum
+photon count :math:`n_{\max}` in each mode. If :math:`\mathbf{k}` is the vector of selected events,
+the resultant feature vector is
+
+.. math::
+    f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots)
+
+This module allows for such feature vectors to be calculated using both the direct sampling and
+Monte Carlo approximation methods:
+
+.. autosummary::
     feature_vector_sampling
+    feature_vector_mc
 
 Code details
 ^^^^^^^^^^^^
@@ -42,17 +116,15 @@ Code details
 from collections import Counter
 from typing import Generator, Union
 
-import numpy as np
 import networkx as nx
+import numpy as np
 from scipy.special import factorial
+
 import strawberryfields as sf
 
 
 def sample_to_orbit(sample: list) -> list:
     """Provides the orbit corresponding to a given sample.
-
-    Orbits are simply a sorting of integer photon number samples in non-increasing order with the
-    zeros at the end removed.
 
     **Example usage:**
 
@@ -72,11 +144,8 @@ def sample_to_orbit(sample: list) -> list:
 def sample_to_event(sample: list, max_count_per_mode: int) -> Union[int, None]:
     r"""Provides the event corresponding to a given sample.
 
-    An event is a combination of orbits. For a fixed photon number, orbits are combined into an
-    event if the photon count in any mode does not exceed ``max_count_per_mode``, i.e.,
-    an orbit :math:`o=\{o_{1},o_{2},\ldots\}` with a total photon number :math:`\sum_{i}o_{i}=k`
-    is included in the event :math:`E_{k}` if :math:`\max_{i} \{o_{i}\}` is not larger than
-    ``max_count_per_mode``.
+    For an input ``max_count_per_mode``, events are expressed here simply by the total photon
+    number :math:`k`.
 
     **Example usage:**
 
@@ -94,12 +163,76 @@ def sample_to_event(sample: list, max_count_per_mode: int) -> Union[int, None]:
             attributed the event ``None``.
 
     Returns:
-        list[int]: the orbit of the sample
+        int or None: the event of the sample
     """
     if max(sample) <= max_count_per_mode:
         return sum(sample)
 
     return None
+
+
+def orbit_to_sample(orbit: list, modes: int) -> list:
+    """Generates a sample selected uniformly at random from the specified orbit.
+
+    **Example usage:**
+
+    >>> orbit_to_sample([2, 1, 1], 6)
+    [0, 1, 2, 0, 1, 0]
+
+    Args:
+        orbit (list[int]): orbit to generate a sample from
+        modes (int): number of modes in the sample
+
+    Returns:
+        list[int]: a sample in the orbit
+    """
+    if modes < len(orbit):
+        raise ValueError("Number of modes cannot be smaller than length of orbit")
+
+    sample = orbit + [0] * (modes - len(orbit))
+    np.random.shuffle(sample)
+    return sample
+
+
+def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> list:
+    """Generates a sample selected uniformly at random from the specified event.
+
+    **Example usage:**
+
+    >>> event_to_sample(4, 2, 6)
+    [0, 1, 0, 0, 2, 1]
+
+    Args:
+        photon_number (int): number of photons in the event
+        max_count_per_mode (int): maximum number of photons per mode in the event
+        modes (int): number of modes in the sample
+
+    Returns:
+        list[int]: a sample in the event
+    """
+    if max_count_per_mode < 0:
+        raise ValueError("Maximum number of photons per mode must be non-negative")
+
+    if max_count_per_mode * modes < photon_number:
+        raise ValueError(
+            "No valid samples can be generated. Consider increasing the "
+            "max_count_per_mode or reducing the number of photons."
+        )
+
+    cards = []
+    orbs = []
+
+    for orb in orbits(photon_number):
+        if max(orb) <= max_count_per_mode:
+            cards.append(orbit_cardinality(orb, modes))
+            orbs.append(orb)
+
+    norm = sum(cards)
+    prob = [c / norm for c in cards]
+
+    orbit = orbs[np.random.choice(len(prob), p=prob)]
+
+    return orbit_to_sample(orbit, modes)
 
 
 def orbits(photon_number: int) -> Generator[list, None, None]:
@@ -143,96 +276,20 @@ def orbits(photon_number: int) -> Generator[list, None, None]:
         yield sorted(a[: k + 1], reverse=True)
 
 
-def orbit_to_sample(orbit: list, modes: int) -> list:
-    """Generates a sample selected uniformly at random from the specified orbit.
-
-    An orbit has a number of constituting samples, which are given by taking all permutations
-    over the orbit. For a given orbit and number of modes, this function produces a sample
-    selected uniformly at random among all samples in the orbit.
-
-    **Example usage**:
-
-    >>> orbit_to_sample([2, 1, 1], 6)
-    [0, 1, 2, 0, 1, 0]
-
-    Args:
-        orbit (list[int]): orbit to generate a sample from
-        modes (int): number of modes in the sample
-
-    Returns:
-        list[int]: a sample in the orbit
-    """
-    if modes < len(orbit):
-        raise ValueError("Number of modes cannot be smaller than length of orbit")
-
-    sample = orbit + [0] * (modes - len(orbit))
-    np.random.shuffle(sample)
-    return sample
-
-
-def event_to_sample(photon_number: int, max_count_per_mode: int, modes: int) -> list:
-    """Generates a sample selected uniformly at random from the specified event.
-
-    An event has a number of constituting samples, which are given by combining samples within all
-    orbits with a fixed photon number whose photon count in any mode does not exceed
-    ``max_count_per_mode``. This function produces a sample selected uniformly at random among
-    all samples in the event.
-
-    **Example usage**:
-
-    >>> event_to_sample(4, 2, 6)
-    [0, 1, 0, 0, 2, 1]
-
-    Args:
-        photon_number (int): number of photons in the event
-        max_count_per_mode (int): maximum number of photons per mode in the event
-        modes (int): number of modes in the sample
-
-    Returns:
-        list[int]: a sample in the event
-    """
-    if max_count_per_mode < 0:
-        raise ValueError("Maximum number of photons per mode must be non-negative")
-
-    if max_count_per_mode * modes < photon_number:
-        raise ValueError(
-            "No valid samples can be generated. Consider increasing the "
-            "max_count_per_mode or reducing the number of photons."
-        )
-
-    cards = []
-    orbs = []
-
-    for orb in orbits(photon_number):
-        if max(orb) <= max_count_per_mode:
-            cards.append(orbit_cardinality(orb, modes))
-            orbs.append(orb)
-
-    norm = sum(cards)
-    prob = [c / norm for c in cards]
-
-    orbit = orbs[np.random.choice(len(prob), p=prob)]
-
-    return orbit_to_sample(orbit, modes)
-
-
 def orbit_cardinality(orbit: list, modes: int) -> int:
     """Gives the number of samples belonging to the input orbit.
 
-    An orbit has a number of constituting samples, which are given by taking all permutations
-    over the orbit. This function counts how many samples of the given number of modes there are
-    in a given orbit. For example, there are three possible samples in the orbit [2,1,
-    1] with three modes: [1,1,2], [1,2,1], and [2,1,1]. With four modes, there are 12 samples in
-    total.
+    For example, there are three possible samples in the orbit [2, 1, 1] with three modes: [1, 1,
+    2], [1, 2, 1], and [2, 1, 1]. With four modes, there are 12 samples in total.
 
-    **Example usage**:
+    **Example usage:**
 
     >>> orbit_cardinality([2, 1, 1], 4)
     12
 
     Args:
-        orbit (list[int]): orbit to count number of samples
-        modes (int): number of modes in the sample
+        orbit (list[int]): orbit; we count how many samples are contained in it
+        modes (int): number of modes in the samples
 
     Returns:
         int: number of samples in the orbit
@@ -243,23 +300,20 @@ def orbit_cardinality(orbit: list, modes: int) -> int:
 
 
 def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -> int:
-    """Gives the number of samples belonging to the input event.
+    r"""Gives the number of samples belonging to the input event.
 
-    An event has a number of constituting samples, which are given by all orbits in the event,
-    then all permutations over the orbit. This function counts how many samples of the given number
-    of modes there are in a given event. For example, for three modes, there are six samples in an
-    event with two photons and a maximum of photons two per mode: [1,1,0], [1,0,1], [0,1,1],[2,0,
-    0],[0,2,0], and [0,0,2].
+    For example, for three modes, there are six samples in an :math:`E_{k=2, n_{\max}=2}` event:
+    [1, 1, 0], [1, 0, 1], [0, 1, 1], [2, 0, 0], [0, 2, 0], and [0, 0, 2].
 
-    **Example usage**:
+    **Example usage:**
 
     >>> event_cardinality(2, 2, 3)
-    728
+    6
 
     Args:
         photon_number (int): number of photons in the event
         max_count_per_mode (int): maximum number of photons per mode in the event
-        modes (int): number of modes in the samples
+        modes (int): number of modes in counted samples
 
     Returns:
         int: number of samples in the event
@@ -273,23 +327,14 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     return cardinality
 
 
-def prob_orbit_mc(
-    graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000
-) -> float:
-    """Gives a Monte Carlo estimate of the probability of a given orbit for a GBS device encoded
-    according to the input graph.
+def prob_orbit_mc(graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000) -> float:
+    r"""Gives a Monte Carlo estimate of the GBS probability of a given orbit according to the input graph.
 
     To make this estimate, several samples from the orbit are drawn uniformly at random using
-    :func:`orbit_to_sample`.
+    :func:`orbit_to_sample`. The GBS probabilities of these samples are then calculated and the
+    sum is used to create an estimate of the orbit probability.
 
-    For each sample, this function calculates the probability of observing that sample from a GBS
-    device programmed according to the input graph and mean photon number. The sum of the
-    probabilities is then rescaled according to the cardinality of the orbit and the total number of
-    samples. The estimate is the sample mean of the rescaled probabilities. To make
-    this estimate, several samples from the orbit are drawn uniformly at random using
-    :func:orbit_to_sample.
-
-    **Example usage**:
+    **Example usage:**
 
     >>> graph = nx.complete_graph(8)
     >>> prob_orbit_mc(graph, [2, 1, 1])
@@ -337,20 +382,16 @@ def prob_event_mc(
     n_mean: float = 5,
     samples: int = 1000,
 ) -> float:
-    """Gives a Monte Carlo estimate of the probability of a given event for a GBS device encoded
-    according to the input graph.
+    r"""Gives a Monte Carlo estimate of the GBS probability of a given event according to the input graph.
 
-    To make this estimate, several samples from the event are drawn uniformly at random. For each
-    sample, we calculate the probability of observing that sample from a GBS programmed according to
-    the input graph and mean photon number. These probabilities are then rescaled according to the
-    cardinality of the event. The estimate is the sample mean of the rescaled probabilities. To make
-    this estimate, several samples from the event are drawn uniformly at random using
-    :func:event_to_sample.
+    To make this estimate, several samples from the event are drawn uniformly at random using
+    :func:`event_to_sample`. The GBS probabilities of these samples are then calculated and the
+    sum is used to create an estimate of the event probability.
 
-    **Example usage**:
+    **Example usage:**
 
     >>> graph = nx.complete_graph(8)
-    >>> p_event_mc(graph, 4, 2)
+    >>> prob_event_mc(graph, 4, 2)
     0.1395
 
     Args:
@@ -361,7 +402,7 @@ def prob_event_mc(
         samples (int): number of samples used in the Monte Carlo estimation
 
     Returns:
-        float: the estimated probability
+        float: estimated orbit probability
     """
 
     modes = graph.order()
@@ -393,24 +434,17 @@ def feature_vector_sampling(
 ) -> list:
     r"""Calculates feature vector with respect to input samples.
 
-    The feature vector is composed of event probabilities :math:`p_{k}` with all events
-    :math:`E_{k}` having a maximum photon count in each mode of ``max_count_per_mode``. Events
-    are specified by their total photon number :math:`k` and those chosen as part of the feature
-    vector can be specified through :math:`\mathbf{k}` (using the ``event_photon_numbers``
-    argument). The resultant feature vector is
-
-    .. math::
-        f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots)
+    The feature vector is composed of event probabilities with a fixed maximum photon count in
+    each mode but a range of total photon numbers specified by ``event_photon_numbers``.
 
     Probabilities are reconstructed by measuring the occurrence of events in the input ``samples``.
 
-    **Example usage**:
+    **Example usage:**
 
-    >>> sample.random_seed(1967)
-    >>> adj = np.ones((4, 4))
-    >>> samples = sample.quantum_sampler(adj, 6, 10, backend_options={"threshold": False})
+    >>> from strawberryfields.gbs import data
+    >>> samples = data.Mutag0()
     >>> feature_vector_sampling(samples, [2, 4, 6])
-    [0.1, 0.2, 0.0]
+    [0.19035, 0.2047, 0.1539]
 
     Args:
         samples (list[list[int]]): a list of samples
@@ -442,20 +476,15 @@ def feature_vector_mc(
     n_mean: float = 5,
     samples: int = 1000,
 ) -> list:
-    r"""Calculates feature vector using a Monte Carlo estimation of event probabilities.
+    r"""Calculates feature vector using Monte Carlo estimation of event probabilities according to the
+    input graph.
 
-    The feature vector is composed of event probabilities :math:`p_{k}` with all events
-    :math:`E_{k}` having a maximum photon count in each mode of ``max_count_per_mode``. Events
-    are specified by their total photon number :math:`k` and those chosen as part of the feature
-    vector can be specified through :math:`\mathbf{k}` (using the ``event_photon_numbers``
-    argument). The resultant feature vector is
-
-    .. math::
-        f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots)
+    The feature vector is composed of event probabilities with a fixed maximum photon count in
+    each mode but a range of total photon numbers specified by ``event_photon_numbers``.
 
     Probabilities are reconstructed using Monte Carlo estimation.
 
-    **Example usage**:
+    **Example usage:**
 
     >>> graph = nx.complete_graph(8)
     >>> feature_vector_mc(graph, [2, 4, 6], 2)

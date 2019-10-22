@@ -21,74 +21,7 @@ from unittest.mock import MagicMock, PropertyMock
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('_ext'))
-
-#-------------------------------------------------------------------------
-# Mock out all modules that aren't required for compiling of documentation
-class Mock(MagicMock):
-    __name__ = 'foo'
-
-    @classmethod
-    def __getattr__(cls, name):
-        return MagicMock()
-
-class TypeMock(type):
-    pass
-
-MOCK_MODULES = [
-    'numpy',
-    'numpy.random',
-    'numpy.polynomial.hermite',
-    'numpy.linalg',
-    'scipy',
-    'scipy.special',
-    'scipy.stats',
-    'scipy.linalg',
-    'tensorflow',
-    'networkx',
-    'networkx.algorithms',
-    'numbers',
-    'blackbird',
-    'blackbird.utils',
-    'thewalrus',
-    'thewalrus.libwalrus',
-    'thewalrus.samples',
-    'thewalrus.quantum',
-    ]
-
-np_math_fns = ['abs',
-    'sign',
-    'sin',
-    'cos',
-    'cosh',
-    'tanh',
-    'exp',
-    'log',
-    'sqrt',
-    'arctan',
-    'arctan2',
-    'arcsinh',
-    'arccosh',
-    'matmul',
-    'expand_dims',
-    'squeeze',
-    'transpose',
-    'reshape'
-    ]
-
-mock_math_fn = Mock(__name__='foo')
-mock_fns = {i : mock_math_fn for i in np_math_fns}
-mock_fns.update({"pi": MagicMock(),
-                 "Number": int,
-                 "Tensor": list,
-                 "Variable": list,
-                 # The following line is to 'trick' Strawberry Fields into
-                 # letting Sphinx import the tf backend without TensorFlow being installed.
-                 "__version__": "1.3",
-                 "ndarray": MagicMock})
-
-mock = Mock(**mock_fns)
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath('.')), 'doc'))
 
 # -- General configuration ------------------------------------------------
 
@@ -111,8 +44,13 @@ extensions = [
     'sphinxcontrib.bibtex',
     'edit_on_github',
     'sphinx_autodoc_typehints',
-    'nbsphinx'
+    'nbsphinx',
+    'sphinx_gallery.gen_gallery'
 ]
+
+from glob import glob
+import shutil
+import warnings
 
 mathjax_path = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
 
@@ -123,6 +61,27 @@ nbsphinx_execute = 'never'
 nbsphinx_epilog = """
 .. note:: :download:`Click here <../../{{env.docname}}.ipynb>` to download this gallery page as an interactive Jupyter notebook.
 """
+
+sphinx_gallery_conf = {
+    # path to your example scripts
+    'examples_dirs': '../examples_gbs',
+    # path where to save gallery generated examples
+    'gallery_dirs': 'tutorials_gbs',
+    # execute files that match the following filename pattern,
+    # and skip those that don't. If the following option is not provided,
+    # all example scripts in the 'examples_dirs' folder will be skiped.
+    'filename_pattern': r'run',
+    # first notebook cell in generated Jupyter notebooks
+    'first_notebook_cell': ("# This cell is added by sphinx-gallery\n"
+                            "# It can be customized to whatever you like\n"
+                            "%matplotlib inline"),
+    # thumbnail size
+    'thumbnail_size': (400, 400),
+}
+
+# Remove warnings that occur when generating the the tutorials
+warnings.filterwarnings("ignore", category=UserWarning, message=r"Matplotlib is currently using agg")
+warnings.filterwarnings("ignore", category=FutureWarning, message=r"Passing \(type, 1\) or '1type' as a synonym of type is deprecated.+")
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates', 'xanadu_theme']
@@ -349,97 +308,12 @@ html_theme_options = {
 
     # gallery options
     "github_repo": "XanaduAI/strawberryfields",
-    # "gallery_dirs": sphinx_gallery_conf['gallery_dirs']
+    "gallery_dirs": sphinx_gallery_conf['gallery_dirs']
 }
 
 edit_on_github_project = 'XanaduAI/strawberryfields'
 edit_on_github_branch = 'master/doc'
 
-# -- Options for LaTeX output ---------------------------------------------
-
-latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-    'papersize': 'letterpaper',
-
-# The font size ('10pt', '11pt' or '12pt').
-    'pointsize': '10pt',
-
-# Additional stuff for the LaTeX preamble.
-    'preamble': "\\input{macros}\n",
-
-# Latex figure (float) alignment
-#'figure_align': 'htbp',
-}
-
-latex_additional_files = ['macros.tex']
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
-latex_documents = [
-    (master_doc, 'Strawberryfields.tex', 'Strawberry Fields Documentation',
-     'Xanadu Quantum Technologies Inc.', 'manual'),
-]
-
-# The name of an image file (relative to this directory) to place at the top of
-# the title page.
-#latex_logo = None
-
-# For "manual" documents, if this is true, then toplevel headings are parts,
-# not chapters.
-#latex_use_parts = False
-
-# If true, show page references after internal links.
-#latex_show_pagerefs = False
-
-# If true, show URL addresses after external links.
-#latex_show_urls = False
-
-# Documents to append as an appendix to all manuals.
-#latex_appendices = []
-
-# If false, no module index is generated.
-#latex_domain_indices = True
-
-
-# -- Options for manual page output ---------------------------------------
-
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'strawberryfields', 'Strawberry Fields Documentation',
-     [author], 1)
-]
-
-# If true, show URL addresses after external links.
-#man_show_urls = False
-
-
-# -- Options for Texinfo output -------------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-    (master_doc, 'Strawberryfields', 'Strawberry Fields Documentation',
-     author, 'Strawberryfields', 'One line description of project.',
-     'Miscellaneous'),
-]
-
-# Documents to append as an appendix to all manuals.
-#texinfo_appendices = []
-
-# If false, no module index is generated.
-#texinfo_domain_indices = True
-
-# How to display URL addresses: 'footnote', 'no', or 'inline'.
-#texinfo_show_urls = 'footnote'
-
-# If true, do not generate a @detailmenu in the "Top" node's menu.
-#texinfo_no_detailmenu = False
-
-
-#============================================================
 
 # the order in which autodoc lists the documented members
 autodoc_member_order = 'bysource'
@@ -447,12 +321,11 @@ autodoc_member_order = 'bysource'
 # inheritance_diagram graphviz attributes
 inheritance_node_attrs = dict(color='lightskyblue1', style='filled')
 
-# TEST: latex macros in Sphinx
-#imgmath_latex_preamble = '\\input{macros}\n'  # can not find the file
-imgmath_latex_preamble = ''
-with open('macros.tex', 'r') as f:
-    for macro in f:
-        # used when building latex and pdf versions
-        latex_elements['preamble'] += macro + '\n'
-        # used when building html version
-        imgmath_latex_preamble += macro + '\n'
+
+from custom_directives import IncludeDirective, GalleryItemDirective, CustomGalleryItemDirective
+
+def setup(app):
+    app.add_directive('includenodoc', IncludeDirective)
+    app.add_directive('galleryitem', GalleryItemDirective)
+    app.add_directive('customgalleryitem', CustomGalleryItemDirective)
+    app.add_stylesheet('xanadu_gallery.css')
