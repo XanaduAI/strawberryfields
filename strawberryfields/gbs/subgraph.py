@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Dense subgraph identification
-=============================
+Dense subgraphs
+===============
 
 **Module name:** :mod:`strawberryfields.gbs.subgraph`
 

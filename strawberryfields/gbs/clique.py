@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Maximum Clique
+Maximum clique
 ==============
 
 **Module name:** :mod:`strawberryfields.gbs.clique`

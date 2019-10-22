@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Point Processes
+Point processes
 ===============
 
 **Module name:** :mod:`strawberryfields.gbs.points`
@@ -22,8 +22,8 @@ Point Processes
 This module provides functions for building kernel matrices and generating point processes using
 GBS. An accompanying tutorial can be found :ref:`here <gbs-points-tutorial>`.
 
-Point processes
----------------
+Background
+----------
 
 A point process is a mechanism that randomly generates points among a set of possible outcomes.
 In essence, point processes are statistical models that can replicate the stochastic
