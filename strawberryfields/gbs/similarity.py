@@ -356,6 +356,12 @@ def prob_orbit_mc(
     Returns:
         float: estimated orbit probability
     """
+    if samples < 1:
+        raise ValueError("Number of samples must be at least one")
+    if n_mean < 0:
+        raise ValueError("Mean photon number must be non-negative")
+    if not 0 <= loss <= 1:
+        raise ValueError("Loss parameter must take a value between zero and one")
 
     modes = graph.order()
     photons = sum(orbit)
@@ -418,6 +424,16 @@ def prob_event_mc(
     Returns:
         float: estimated orbit probability
     """
+    if samples < 1:
+        raise ValueError("Number of samples must be at least one")
+    if n_mean < 0:
+        raise ValueError("Mean photon number must be non-negative")
+    if not 0 <= loss <= 1:
+        raise ValueError("Loss parameter must take a value between zero and one")
+    if photon_number < 0:
+        raise ValueError("Photon number must not be below zero")
+    if max_count_per_mode < 0:
+        raise ValueError("Maximum number of photons per mode must be non-negative")
 
     modes = graph.order()
     A = nx.to_numpy_array(graph)
@@ -476,8 +492,8 @@ def feature_vector_sampling(
     if min(event_photon_numbers) < 0:
         raise ValueError("Cannot request events with photon number below zero")
 
-    if max_count_per_mode < 1:
-        raise ValueError("Maximum number of photons per mode must be at least one")
+    if max_count_per_mode < 0:
+        raise ValueError("Maximum number of photons per mode must be non-negative")
 
     n_samples = len(samples)
 
@@ -521,12 +537,16 @@ def feature_vector_mc(
         list[float]: a feature vector of event probabilities in the same order as
         ``event_photon_numbers``
     """
-
+    if samples < 1:
+        raise ValueError("Number of samples must be at least one")
+    if n_mean < 0:
+        raise ValueError("Mean photon number must be non-negative")
+    if not 0 <= loss <= 1:
+        raise ValueError("Loss parameter must take a value between zero and one")
     if min(event_photon_numbers) < 0:
         raise ValueError("Cannot request events with photon number below zero")
-
-    if max_count_per_mode < 1:
-        raise ValueError("Maximum number of photons per mode must be at least one")
+    if max_count_per_mode < 0:
+        raise ValueError("Maximum number of photons per mode must be non-negative")
 
     return [
         prob_event_mc(graph, photons, max_count_per_mode, n_mean, samples, loss)
