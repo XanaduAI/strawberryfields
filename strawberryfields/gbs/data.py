@@ -72,6 +72,8 @@ Each dataset contains a variety of metadata relevant to the sampling:
 
 - ``modes``: number of modes in the GBS device or, equivalently, number of nodes in the graph
 
+Note that datasets are simulated without photon loss.
+
 Loading data
 ^^^^^^^^^^^^
 

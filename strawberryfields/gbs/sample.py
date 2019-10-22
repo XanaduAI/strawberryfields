@@ -29,8 +29,8 @@ Generating samples
 An :math:`M` mode GBS device can be programmed by specifying an :math:`(M \times M)`-dimensional
 symmetric matrix :math:`A` :cite:`bradler2018gaussian`. Running this device results in samples
 that carry relevant information about the encoded matrix :math:`A`. When sampling, one must also
-specify the mean number of photons in the device and the form of detection used at the output:
-threshold detection or photon-number-resolving (PNR) detection.
+specify the mean number of photons in the device, the form of detection used at the output:
+threshold detection or photon-number-resolving (PNR) detection, as well as the amount of loss.
 
 The :func:`sample` function provides a simulation of sampling from GBS:
 
@@ -41,7 +41,10 @@ Here, each output sample is an :math:`M`-dimensional list. If threshold detectio
 (``threshold = True``), each element of a sample is either a zero (denoting no photons detected)
 or a one (denoting one or more photons detected), conventionally called a "click".
 If photon-number resolving (PNR) detection is used (``threshold = False``) then elements of a
-sample are non-negative integers counting the number of photons detected in each mode.
+sample are non-negative integers counting the number of photons detected in each mode. The ``loss``
+parameter allows for simulation of photon loss in the device, which is the most common form of
+noise in quantum photonics. Here, ``loss = 0`` describes ideal loss-free GBS, while generally
+``0 <= loss <= 1`` describes the proportion of photons lost while passing through the device.
 
 Samples can be postselected based upon their total number of photons or clicks and the ``numpy``
 random seed used to generate samples can be fixed:
@@ -104,7 +107,9 @@ import numpy as np
 import strawberryfields as sf
 
 
-def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = True) -> list:
+def sample(
+    A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = True, loss: float = 0.0
+) -> list:
     r"""Generate simulated samples from GBS encoded with a symmetric matrix :math:`A`.
 
     **Example usage:**
@@ -120,6 +125,8 @@ def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = T
         n_samples (int): number of samples
         threshold (bool): perform GBS with threshold detectors if ``True`` or photon-number
             resolving detectors if ``False``
+        loss (float): fraction of generated photons that are lost while passing through device.
+            Parameter should range from ``loss=0`` (ideal noise-free GBS) to ``loss=1``.
 
     Returns:
         list[list[int]]: a list of samples from GBS with respect to the input symmetric matrix
@@ -130,6 +137,8 @@ def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = T
         raise ValueError("Number of samples must be at least one")
     if n_mean < 0:
         raise ValueError("Mean photon number must be non-negative")
+    if not 0 <= loss <= 1:
+        raise ValueError("Loss parameter must take a value between zero and one")
 
     nodes = len(A)
 
@@ -141,6 +150,10 @@ def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = T
     # pylint: disable=expression-not-assigned,pointless-statement
     with p.context as q:
         sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
+
+        if loss:
+            for _q in q:
+                sf.ops.LossChannel(1 - loss) | _q
 
         if threshold:
             sf.ops.MeasureThreshold() | q
