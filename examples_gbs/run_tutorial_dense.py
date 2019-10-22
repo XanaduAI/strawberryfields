@@ -1,5 +1,7 @@
 # pylint: disable=wrong-import-position,wrong-import-order,ungrouped-imports
 """
+.. _gbs-subgraph-tutorial:
+
 Dense Subgraph Tutorial
 =======================
 
