@@ -160,7 +160,12 @@ def sample(
         else:
             sf.ops.MeasureFock() | q
 
-    return eng.run(p, run_options={"shots": n_samples}).samples.tolist()
+    s = eng.run(p, run_options={"shots": n_samples}).samples
+
+    if n_samples == 1:
+        return [s]
+
+    return s.tolist()
 
 
 def postselect(samples: list, min_count: int, max_count: int) -> list:

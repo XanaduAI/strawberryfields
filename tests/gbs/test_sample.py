@@ -26,7 +26,6 @@ from strawberryfields.gbs import sample
 
 pytestmark = pytest.mark.gbs
 
-integration_sample_number = 2
 adj_dim_range = range(2, 6)
 
 
@@ -122,10 +121,11 @@ class TestSample:
 
 
 @pytest.mark.parametrize("dim", adj_dim_range)
+@pytest.mark.parametrize("integration_sample_number", [1, 2])
 class TestSampleIntegration:
     """Integration tests for the function ``strawberryfields.gbs.sample.sample``"""
 
-    def test_pnr_integration(self, adj):
+    def test_pnr_integration(self, adj, integration_sample_number):
         """Integration test to check if function returns samples of correct form, i.e., correct
         number of samples, correct number of modes, all non-negative integers """
         samples = np.array(
@@ -139,7 +139,7 @@ class TestSampleIntegration:
         assert samples.dtype == "int"
         assert (samples >= 0).all()
 
-    def test_threshold_integration(self, adj):
+    def test_threshold_integration(self, adj, integration_sample_number):
         """Integration test to check if function returns samples of correct form, i.e., correct
         number of samples, correct number of modes, all integers of zeros and ones """
         samples = np.array(
