@@ -11,7 +11,5 @@ sklearn
 sphinx-autodoc-typehints
 sphinx-gallery
 sphinxcontrib-bibtex
-tensorflow==1.3
-tensorflow-tensorboard>=0.1.8
 thewalrus>=0.7
 toml
