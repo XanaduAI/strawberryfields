@@ -80,7 +80,7 @@ subgraph and removing the node, repeating the process until a clique is found.
     is_clique
 
 Code details
-^^^^^^^^^^^^
+------------
 """
 import networkx as nx
 import numpy as np

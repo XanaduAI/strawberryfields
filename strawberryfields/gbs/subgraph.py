@@ -57,7 +57,7 @@ This function returns a dictionary over the range of sizes specified, with each 
 corresponding resized subgraph.
 
 Code details
-^^^^^^^^^^^^
+------------
 """
 import networkx as nx
 import numpy as np

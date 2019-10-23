@@ -114,7 +114,7 @@ Monte Carlo approximation methods:
     feature_vector_mc
 
 Code details
-^^^^^^^^^^^^
+------------
 """
 from collections import Counter
 from typing import Generator, Union

@@ -48,7 +48,7 @@ Summary
     sample
 
 Code details
-^^^^^^^^^^^^
+------------
 """
 
 import numpy as np

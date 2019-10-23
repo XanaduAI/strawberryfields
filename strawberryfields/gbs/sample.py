@@ -97,7 +97,7 @@ The subgraphs sampled from GBS are likely to be dense :cite:`arrazola2018using`,
 use within heuristics for problems such as maximum clique (see :mod:`~.gbs.clique`).
 
 Code details
-^^^^^^^^^^^^
+------------
 """
 from typing import Optional
 

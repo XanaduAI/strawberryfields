@@ -75,7 +75,7 @@ Each dataset contains a variety of metadata relevant to the sampling:
 Note that datasets are simulated without photon loss.
 
 Loading data
-^^^^^^^^^^^^
+------------
 
 We use the :class:`Planted` class as an example to show how to interact with the datasets. Datasets
 can be loaded by running:
@@ -103,7 +103,7 @@ The number of photons or clicks in each sample is available using the :meth:`Dat
 For example, we see that the ``data[3]`` sample has 11 clicks.
 
 Code details
-^^^^^^^^^^^^
+------------
 """
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod

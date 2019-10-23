@@ -34,7 +34,7 @@ grey, highlighting samples in red.
     plot_points
 
 Code details
-^^^^^^^^^^^^
+------------
 """
 # pylint: disable=import-outside-toplevel
 from typing import Optional, Tuple
