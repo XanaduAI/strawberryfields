@@ -146,7 +146,6 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: int = 500):  # pragm
     except ImportError:
         raise ImportError(plotly_error)
 
-    s = g.subgraph(s)
     l = nx.kamada_kawai_layout(g)
 
     g_nodes = go.Scatter(
@@ -176,7 +175,8 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: int = 500):  # pragm
         plot_bgcolor="#ffffff",
     )
 
-    if s:
+    if s is not None:
+        s = g.subgraph(s)
 
         s_edges = go.Scatter(
             **_edge_coords(s, l),
