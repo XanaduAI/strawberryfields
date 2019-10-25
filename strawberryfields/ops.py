@@ -1422,7 +1422,7 @@ class CXgate(Gate):
         # See https://github.com/sympy/sympy/pull/17469
         # If s<0 we need to add pi/2 to theta. If s==0, we need to avoid division by zero.
         temp = 0.5 * pf.atan(1 / pf.sinh(r))  # NOTE s==0 will cause a division by zero when this is evaluated
-        theta = temp +pf.Heaviside(-s) * np.pi/2
+        theta = temp -pf.Heaviside(-s) * np.pi/2
 
         return [
             Command(BSgate(theta, 0), reg),

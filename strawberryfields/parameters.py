@@ -258,7 +258,7 @@ def par_convert(args, prog):
             s = {}
             for k in a.atoms(sympy.Symbol):
                 if k.name[0] == 'q':
-                    s[k] = MeasuredParameter(prog.register[k.name[1]])
+                    s[k] = MeasuredParameter(prog.register[int(k.name[1:])])
                 else:
                     s[k] = prog.params(k.name)  # free parameter
             return a.subs(s)
