@@ -554,7 +554,7 @@ class TestDecompositionsGaussianGates:
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
-    @pytest.mark.parametrize('s', np.linspace(-0.5, 0.6, 5))  # FIXME include 0 in testset
+    @pytest.mark.parametrize('s', np.linspace(-0.5, 0.6, 5))  # FIXME include 0 in testset when CXgate._decompose is fixed so that it can handle s=0
     def test_CXgate_decomp_equal(self, setup_eng, s, tol):
         """Tests that the CXgate gives the same transformation as its decomposition."""
         eng, prog = setup_eng(2)
@@ -575,7 +575,7 @@ class TestDecompositionsGaussianGates:
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
-    @pytest.mark.parametrize('s', np.linspace(-0.5, 0.6, 5))  # FIXME include 0 in testset
+    @pytest.mark.parametrize('s', np.linspace(-0.5, 0.6, 5))  # FIXME include 0 in testset when CXgate._decompose is fixed so that it can handle s=0
     def test_CZgate_decomp_equal(self, setup_eng, s, tol):
         """Tests that the CZgate gives the same transformation as its decomposition."""
         eng, prog = setup_eng(2)
