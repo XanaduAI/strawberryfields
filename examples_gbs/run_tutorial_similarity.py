@@ -56,10 +56,10 @@ print(m0[0])
 import networkx as nx
 import plotly
 
-plot_mutag_0 = plot.plot_graph(nx.Graph(m0_a))
-plot_mutag_1 = plot.plot_graph(nx.Graph(m1_a))
-plot_mutag_2 = plot.plot_graph(nx.Graph(m2_a))
-plot_mutag_3 = plot.plot_graph(nx.Graph(m3_a))
+plot_mutag_0 = plot.graph(nx.Graph(m0_a))
+plot_mutag_1 = plot.graph(nx.Graph(m1_a))
+plot_mutag_2 = plot.graph(nx.Graph(m2_a))
+plot_mutag_3 = plot.graph(nx.Graph(m3_a))
 
 plotly.offline.plot(plot_mutag_0, filename="MUTAG_0.html")
 
@@ -297,7 +297,7 @@ b = -i / w[1]
 xx = [-1, 1]
 yy = [m * x + b for x in xx]
 
-fig = plot.plot_points(R_scaled, classes)
+fig = plot.points(R_scaled, classes)
 fig.add_trace(plotly.graph_objects.Scatter(x=xx, y=yy, mode="lines"))
 
 plotly.offline.plot(fig, filename="SVM.html")

@@ -79,7 +79,7 @@ adj = np.array(
 
 graph = nx.Graph(adj)
 
-plotly.offline.plot(plot.plot_graph(graph), filename="random_graph.html")
+plotly.offline.plot(plot.graph(graph), filename="random_graph.html")
 
 ##############################################################################
 # .. raw:: html
@@ -131,7 +131,7 @@ print(subgraphs)
 ##############################################################################
 # We can take a look at one of the sampled subgraphs:
 
-plotly.offline.plot(plot.plot_graph(graph, subgraphs[0]), filename="subgraph.html")
+plotly.offline.plot(plot.graph(graph, subgraphs[0]), filename="subgraph.html")
 
 ##############################################################################
 # .. raw:: html

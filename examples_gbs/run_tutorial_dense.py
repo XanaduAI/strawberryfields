@@ -59,7 +59,7 @@ print(len(samples))
 # identify; it even appears clearly from the force-directed Kamada-Kawai algorithm that is used to
 # plot graphs in Strawberry Fields:
 sub = list(range(20, 30))
-plot_graph = plot.plot_graph(pl_graph, sub)
+plot_graph = plot.graph(pl_graph, sub)
 plotly.offline.plot(plot_graph, filename="planted.html")
 
 ##############################################################################
@@ -68,7 +68,7 @@ plotly.offline.plot(plot_graph, filename="planted.html")
 #
 # .. note::
 #     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
-#     practice, you can simply use ``plot_graph.show()`` to view the graph.
+#     practice, you can simply use ``graph.show()`` to view the graph.
 
 ##############################################################################
 # A more interesting challenge is to find dense subgraphs of different sizes; it is often
@@ -90,8 +90,8 @@ for k in range(8, 17):
 # maximum density of 1, while larger subgraphs are less dense. Let's see what the smallest and
 # largest subgraphs look like:
 
-densest_8 = plot.plot_graph(pl_graph, dense[8][0][1])
-densest_16 = plot.plot_graph(pl_graph, dense[12][0][1])
+densest_8 = plot.graph(pl_graph, dense[8][0][1])
+densest_16 = plot.graph(pl_graph, dense[12][0][1])
 
 plotly.offline.plot(densest_8, filename="densest_8.html")
 
