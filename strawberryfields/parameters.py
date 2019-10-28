@@ -101,7 +101,7 @@ from .program_utils import (RegRef, RegRefTransform)
 
 try:
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=FutureWarning)
+        warnings.filterwarnings("ignore", category=FutureWarning, message=r"Passing \(type, 1\) or")
         import tensorflow as tf
     _tf_classes = (tf.Tensor, tf.Variable)
 except ImportError:
