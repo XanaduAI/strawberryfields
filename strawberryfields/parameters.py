@@ -91,6 +91,7 @@ Code details
 
 """
 import numbers
+import warnings
 
 from unittest import mock
 import numpy as np
@@ -99,7 +100,9 @@ from .program_utils import (RegRef, RegRefTransform)
 
 
 try:
-    import tensorflow as tf
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=FutureWarning)
+        import tensorflow as tf
     _tf_classes = (tf.Tensor, tf.Variable)
 except ImportError:
     tf = mock.MagicMock()
