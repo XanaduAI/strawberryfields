@@ -78,12 +78,17 @@ adj = np.array(
 )
 
 graph = nx.Graph(adj)
+plot_graph = plot.graph(graph)
 
-plotly.offline.plot(plot.graph(graph), filename="random_graph.html")
+plotly.offline.plot(plot_graph, filename="random_graph.html")
 
 ##############################################################################
 # .. raw:: html
 #     :file: ../../examples_gbs/random_graph.html
+#
+# .. note::
+#     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
+#     practice, you can simply use ``plot_graph.show()`` to view your graph.
 #
 # This is a 6-node graph with the nodes ``[0, 1, 4, 5]`` fully connected to each other. We expect
 # to be able to sample dense subgraphs with high probability.
