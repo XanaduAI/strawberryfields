@@ -122,11 +122,14 @@ Summary
 Code details
 ^^^^^^^^^^^^
 """
+from typing import Tuple
 
 import numpy as np
 
 
-def gbs_params(w: np.ndarray, wp: np.ndarray, Ud: np.ndarray, d: np.ndarray) -> np.ndarray:
+def gbs_params(
+    w: np.ndarray, wp: np.ndarray, Ud: np.ndarray, d: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""Converts molecular information input to Gaussian gate parameters.
 
     We first construct diagonal matrices :math:`\Omega` and :math:`\Omega'` from square roots of
