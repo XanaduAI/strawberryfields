@@ -106,7 +106,6 @@ import networkx as nx
 import numpy as np
 
 import strawberryfields as sf
-from strawberryfields.ops import *
 
 
 def sample(
@@ -275,8 +274,9 @@ def to_subgraphs(samples: list, graph: nx.Graph) -> list:
     return subgraph_samples
 
 
-def gaussian(Up: np.ndarray, S: np.ndarray, U: np.ndarray, alpha: np.ndarray,
-             n_samples: int) -> np.ndarray:
+def gaussian(
+    Up: np.ndarray, S: np.ndarray, U: np.ndarray, alpha: np.ndarray, n_samples: int
+) -> np.ndarray:
     r"""Generate simulated samples from GBS encoded with Gaussian gate parameters.
 
     **Example usage:**
@@ -298,17 +298,18 @@ def gaussian(Up: np.ndarray, S: np.ndarray, U: np.ndarray, alpha: np.ndarray,
     gbs = sf.Program(n_modes)
     det = sf.ops.MeasureFock()
 
+    # pylint: disable=expression-not-assigned,pointless-statement
     with gbs.context as q:
 
-        Interferometer(Up) | q
+        sf.ops.Interferometer(Up) | q
 
         for i in range(n_modes):
-            Sgate(S[i]) | q[i]
+            sf.ops.Sgate(S[i]) | q[i]
 
-        Interferometer(U) | q
+        sf.ops.Interferometer(U) | q
 
         for i in range(n_modes):
-            Dgate(alpha[i]) | q[i]
+            sf.ops.Dgate(alpha[i]) | q[i]
 
         det | q
 
