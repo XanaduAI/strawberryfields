@@ -36,6 +36,7 @@ The :func:`sample` function provides a simulation of sampling from GBS:
 
 .. autosummary::
     sample
+    gaussian
 
 Here, each output sample is an :math:`M`-dimensional list. If threshold detection is used
 (``threshold = True``), each element of a sample is either a zero (denoting no photons detected)
@@ -105,6 +106,7 @@ import networkx as nx
 import numpy as np
 
 import strawberryfields as sf
+from strawberryfields.ops import *
 
 
 def sample(
@@ -271,3 +273,45 @@ def to_subgraphs(samples: list, graph: nx.Graph) -> list:
         return [sorted([graph_nodes[i] for i in s]) for s in subgraph_samples]
 
     return subgraph_samples
+
+
+def gaussian(Up: np.ndarray, S: np.ndarray, U: np.ndarray, alpha: np.ndarray,
+             n_samples: int) -> np.ndarray:
+    r"""Generate simulated samples from GBS encoded with Gaussian gate parameters.
+
+    **Example usage:**
+
+    Args:
+        Up (array): interferometer matrix
+        S (array): squeezing parameters
+        U (array): interferometer matrix
+        alpha (array): displacement parameters
+        n_samples (int): number of samples to be generated
+
+    Returns:
+        samples (array): GBS samples
+
+    """
+    n_modes = len(alpha)
+
+    eng = sf.LocalEngine(backend="gaussian")
+    gbs = sf.Program(n_modes)
+    det = sf.ops.MeasureFock()
+
+    with gbs.context as q:
+
+        Interferometer(Up) | q
+
+        for i in range(n_modes):
+            Sgate(S[i]) | q[i]
+
+        Interferometer(U) | q
+
+        for i in range(n_modes):
+            Dgate(alpha[i]) | q[i]
+
+        det | q
+
+    samples = eng.run(gbs, run_options={"shots": n_samples})
+
+    return samples
