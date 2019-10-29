@@ -194,6 +194,18 @@ def save(f, prog):
             fid.close()
 
 
+def loads(s):
+    """Load a quantum program from a string.
+
+    Args:
+        s (str): string containing the Blackbird circuit
+    Returns:
+        prog (Program): Strawberry Fields program
+
+    """
+    bb = blackbird.loads(s)
+    return to_program(bb)
+
 def load(f):
     """Load a quantum program from a Blackbird .xbb file.
 
@@ -229,5 +241,4 @@ def load(f):
             fid.close()
 
     # load blackbird program
-    bb = blackbird.loads(bb_str)
-    return to_program(bb)
+    return loads(bb_str)

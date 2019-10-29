@@ -658,3 +658,7 @@ class TestLoad:
 
         # check loaded program is the same as expected
         self.assert_programs_equal(res, prog)
+
+    def test_loads(self, prog):
+        """Test loading a program from a string"""
+        self.assert_programs_equal(io.loads(test_prog_not_compiled), prog)
