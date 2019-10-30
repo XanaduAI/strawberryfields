@@ -83,7 +83,7 @@ In order to obtain :math:`J` we need to construct diagonal matrices :math:`\Omeg
 :math:`\omega` and :math:`\omega'`, respectively. Then :math:`J` is obtained as
 
 .. math::
-    J = \Omega' Ud \Omega^{-1},
+    J = \Omega' U \Omega^{-1},
 
 where
 
