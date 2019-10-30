@@ -44,7 +44,7 @@ def energies(samples: list, wp: np.ndarray) -> list:
 
     **Example usage:**
 
-    >>> samples = np.array([[1, 1, 0], [1, 0, 2]])
+    >>> samples = [[1, 1, 0], [1, 0, 2]]
     >>> wp = np.array([700.0, 600.0, 500.0])
     >>> energies(samples, wp)
     [1300.0, 1700.0]
