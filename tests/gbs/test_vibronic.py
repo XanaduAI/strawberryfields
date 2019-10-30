@@ -41,9 +41,9 @@ class TestGBSParams:
     )
     d = np.array([0.2254, 0.1469, 1.5599, -0.3784, 0.4553, -0.3439, 0.0618])
 
-    Up, S, U, alpha = vibronic.gbs_params(w, wp, Ud, d)
+    U1, S, U2, alpha = vibronic.gbs_params(w, wp, Ud, d)
 
-    @pytest.mark.parametrize("unitary", [Up, U])
+    @pytest.mark.parametrize("unitary", [U1, U2])
     def test_unitary(self, unitary):
         """Test if function outputs the interferometer unitaries that are valid unitaries,
         i.e., satisfying U U^dag = I"""
@@ -63,6 +63,6 @@ class TestGBSParams:
         """Test if function returns interferometer unitary and squeezing parameters that
         correctly reconstruct the input Duschinsky matrix"""
         sigma = np.diag(np.exp(self.S))
-        J = self.Up @ sigma @ self.U
-        U = np.diag(self.wp ** -0.5) @ J @ np.diag(self.w ** 0.5)
-        assert np.allclose(U, self.Ud)
+        J = self.U1 @ sigma @ self.U2
+        U2 = np.diag(self.wp ** -0.5) @ J @ np.diag(self.w ** 0.5)
+        assert np.allclose(U2, self.U1)
