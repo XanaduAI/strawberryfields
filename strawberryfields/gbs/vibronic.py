@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Vibronic Spectra
+Vibronic spectra
 ================
 
 **Module name:** :mod:`strawberryfields.gbs.vibronic`
@@ -22,7 +22,7 @@ Vibronic Spectra
 This module contains functions for computing molecular vibronic spectra using GBS.
 An accompanying tutorial can be found :ref:`here <>`.
 
-Vibronic Spectroscopy
+Vibronic spectroscopy
 ---------------------
 
 In vibronic spectroscopy, incoming light excites a molecule to higher electronic and
@@ -38,7 +38,7 @@ device can be programmed with quantum chemical information of a given molecule t
 samples that can be processed to obtain the molecular Franck-Condon profile. In this ADR, we plan
 the type of molecular information that should be used as input for computing molecular vibronic
 spectra with Strawberry Fields. Theoretical background on computing vibronic spectra using GBS
-can be found :ref:`here <>`.
+can be found in :cite:`quesada2019franck`.
 
 According to the Franck-Condon approximation, the probability of an electronically allowed
 vibronic transition is given by a Franck-Condon factor as
@@ -73,14 +73,14 @@ The Doktorov operator can be written in terms of displacement (:math:`D_\alpha`)
 .. math::
     U_{Dok} = C_L \Sigma C_R^t D_\alpha.
 
-The squeezing and rotation operators are obtained by singular value decomposition of a matrix
+The squeezing and interferometer operators are obtained by singular value decomposition of a matrix
 :math:`J` as
 
 .. math::
     J = C_L \Sigma C_R^t.
 
 In order to obtain :math:`J` we need to construct diagonal matrices :math:`\Omega` and
-:math:`\Omega'` from square roots of the ground state and excited state normal mode frequencies,
+:math:`\Omega'` from the square roots of the ground state and excited state normal mode frequencies,
 :math:`\omega` and :math:`\omega'`, respectively. Then :math:`J` is obtained as
 
 .. math::
@@ -93,8 +93,8 @@ where
 
     \Omega' = diag (\sqrt{\omega_1'},...,\sqrt{\omega_k'})
 
-and :math:`U` is a molecular coordinate transformation known as the Duschinsky matrix which is
-obtained from the normal mode coordinates of the ground and excited states, :math:`q` and
+and :math:`U` is a molecular coordinate transformation known as the Duschinsky matrix which
+relates the normal mode coordinates of the ground and excited states, :math:`q` and
 :math:`q'` respectively, as
 
 .. math::
@@ -130,7 +130,7 @@ import numpy as np
 def gbs_params(
     w: np.ndarray, wp: np.ndarray, Ud: np.ndarray, d: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    r"""Converts molecular information input to Gaussian gate parameters.
+    r"""Converts molecular information to GBS gate parameters.
 
     We first construct diagonal matrices :math:`\Omega` and :math:`\Omega'` from square roots of
     the ground state and excited state normal mode frequencies, :math:`\omega` and :math:`\omega'`,
@@ -213,7 +213,7 @@ def gbs_params(
         d (array): Duschinsky displacement vector corrected with wp
 
     Returns:
-        Up (array): interferometer matrix
+        U2 (array): second interferometer unitary
         S (array): squeezing parameters
         U (array): interferometer matrix
         alpha (array): displacement parameters
