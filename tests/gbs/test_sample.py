@@ -40,7 +40,7 @@ U1 = np.array(
     ]
 )
 
-S = np.array([0.09721339, 0.07017918, 0.02083469, -0.05974357, -0.07487845, -0.1119975, -0.1866708])
+r = np.array([0.09721339, 0.07017918, 0.02083469, -0.05974357, -0.07487845, -0.1119975, -0.1866708])
 
 U2 = np.array(
     [
@@ -58,7 +58,7 @@ alpha = np.array(
     [0.15938187, 0.10387399, 1.10301587, -0.26756921, 0.32194572, -0.24317402, 0.0436992]
 )
 
-p = [U1, S, U2, alpha]
+p = [U1, r, U2, alpha]
 
 
 @pytest.mark.parametrize("dim", [4])
@@ -294,13 +294,13 @@ class TestGaussian:
 
     def test_invalid_n_samples(self):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
-        requested """
+        requested."""
         with pytest.raises(ValueError, match="Number of samples must be at least one"):
             sample.gaussian(*p, -1)
 
     def test_invalid_loss(self):
         """Test if function raises a ``ValueError`` when the loss parameter is specified outside
-        of range"""
+        of range."""
         with pytest.raises(ValueError, match="Loss parameter must take a value between zero and"):
             sample.gaussian(*p, 1, loss=2)
 
@@ -350,7 +350,7 @@ class TestGaussian:
 def test_gaussian_integration(integration_sample_number):
     """Integration test for the function ``strawberryfields.gbs.sample.gaussian`` to check if
     it returns samples of correct form, i.e., correct number of samples, correct number of
-    modes, all non-negative integers """
+    modes, all non-negative integers."""
     samples = np.array(sample.gaussian(*p, n_samples=integration_sample_number))
 
     dims = samples.shape
