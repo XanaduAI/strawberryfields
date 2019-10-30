@@ -53,16 +53,15 @@ random seed used to generate samples can be fixed:
     postselect
     seed
 
-More generally, a GBS device performs photon counting or threshold measurements on arbitrary
-:ref:`Gaussian states <gaussian_states>`. Any pure Gaussian state can be created by applying the
-following set of gates to the vacuum:
+More generally, a GBS device acts on arbitrary :ref:`Gaussian states <gaussian_states>`. Any pure
+Gaussian state can be created by applying the following set of gates to the vacuum:
 
 #. interferometer :math:`U'` (using :class:`~.ops.Interferometer`)
 #. squeezing :math:`S` on all modes (using :class:`~.ops.Sgate`)
 #. another interferometer :math:`U` (using :class:`~.ops.Interferometer`)
 #. displacement :math:`D` on all modes (using :class:`~.ops.Dgate`)
 
-This is followed by either PNR or threshold detection. The :func:`gaussian` function
+This can be followed by PNR detection. The :func:`gaussian` function
 allows users to sample from arbitrary pure Gaussian states using the above decomposition.
 
 .. autosummary::
@@ -114,6 +113,7 @@ use within heuristics for problems such as maximum clique (see :mod:`~.gbs.cliqu
 Code details
 ^^^^^^^^^^^^
 """
+import warnings
 from typing import Optional
 
 import networkx as nx
@@ -294,7 +294,6 @@ def gaussian(
     U: np.ndarray,
     alpha: np.ndarray,
     n_samples: int,
-    threshold: bool = False,
     loss: float = 0.0,
 ) -> list:
     r"""Generate simulated samples from pure Gaussian states.
@@ -312,8 +311,6 @@ def gaussian(
         U (array): second interferometer unitary matrix
         alpha (array): displacement parameters
         n_samples (int): number of samples to be generated
-        threshold (bool): perform GBS with threshold detectors if ``True`` or photon-number
-            resolving detectors if ``False``
         loss (float): fraction of generated photons that are lost while passing through device.
             Parameter should range from ``loss=0`` (ideal noise-free GBS) to ``loss=1``.
 
@@ -349,12 +346,11 @@ def gaussian(
             for _q in q:
                 sf.ops.LossChannel(1 - loss) | _q
 
-        if threshold:
-            sf.ops.MeasureThreshold() | q
-        else:
-            sf.ops.MeasureFock() | q
+        sf.ops.MeasureFock() | q
 
-    s = eng.run(gbs, run_options={"shots": n_samples}).samples
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message="Cannot simulate non-")
+        s = eng.run(gbs, run_options={"shots": n_samples}).samples
 
     if n_samples == 1:
         return [s]

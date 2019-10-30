@@ -304,28 +304,6 @@ class TestGaussian:
         with pytest.raises(ValueError, match="Loss parameter must take a value between zero and"):
             sample.gaussian(*p, 1, loss=2)
 
-    def test_threshold(self, monkeypatch):
-        """Test if function correctly creates the SF program for threshold GBS."""
-        mock_eng_run = mock.MagicMock()
-
-        with monkeypatch.context() as m:
-            m.setattr(sf.Engine, "run", mock_eng_run)
-            sample.gaussian(*p, 1, threshold=True)
-            p_func = mock_eng_run.call_args[0][0]
-
-        assert isinstance(p_func.circuit[-1].op, sf.ops.MeasureThreshold)
-
-    def test_pnr(self, monkeypatch):
-        """Test if function correctly creates the SF program for photon-number resolving GBS."""
-        mock_eng_run = mock.MagicMock()
-
-        with monkeypatch.context() as m:
-            m.setattr(sf.Engine, "run", mock_eng_run)
-            sample.gaussian(*p, 1, threshold=False)
-            p_func = mock_eng_run.call_args[0][0]
-
-        assert isinstance(p_func.circuit[-1].op, sf.ops.MeasureFock)
-
     def test_loss(self, monkeypatch):
         """Test if function correctly creates the SF program for lossy GBS."""
         mock_eng_run = mock.MagicMock()
@@ -369,32 +347,15 @@ class TestGaussian:
 
 
 @pytest.mark.parametrize("integration_sample_number", [1, 2])
-class TestGaussianIntegration:
-    """Integration tests for the function ``strawberryfields.gbs.sample.gaussian``"""
+def test_gaussian_integration(integration_sample_number):
+    """Integration test for the function ``strawberryfields.gbs.sample.gaussian`` to check if
+    it returns samples of correct form, i.e., correct number of samples, correct number of
+    modes, all non-negative integers """
+    samples = np.array(sample.gaussian(*p, n_samples=integration_sample_number))
 
-    def test_pnr_integration(self, integration_sample_number):
-        """Integration test to check if function returns samples of correct form, i.e., correct
-        number of samples, correct number of modes, all non-negative integers """
-        samples = np.array(
-            sample.gaussian(*p, n_samples=integration_sample_number, threshold=False)
-        )
+    dims = samples.shape
 
-        dims = samples.shape
-
-        assert len(dims) == 2
-        assert dims == (integration_sample_number, len(alpha))
-        assert samples.dtype == "int"
-        assert (samples >= 0).all()
-
-    def test_threshold_integration(self, integration_sample_number):
-        """Integration test to check if function returns samples of correct form, i.e., correct
-        number of samples, correct number of modes, all integers of zeros and ones """
-        samples = np.array(sample.gaussian(*p, n_samples=integration_sample_number, threshold=True))
-
-        dims = samples.shape
-
-        assert len(dims) == 2
-        assert dims == (integration_sample_number, len(alpha))
-        assert samples.dtype == "int"
-        assert (samples >= 0).all()
-        assert (samples <= 1).all()
+    assert len(dims) == 2
+    assert dims == (integration_sample_number, len(alpha))
+    assert samples.dtype == "int"
+    assert (samples >= 0).all()
