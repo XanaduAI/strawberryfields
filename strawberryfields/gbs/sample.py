@@ -53,13 +53,17 @@ random seed used to generate samples can be fixed:
     postselect
     seed
 
+.. _decomposition:
+
 More generally, a GBS device acts on arbitrary :ref:`Gaussian states <gaussian_states>`. Any pure
 Gaussian state can be created by applying the following set of gates to the vacuum:
 
 #. interferometer :math:`U_{1}` (using :class:`~.ops.Interferometer`)
-#. squeezing :math:`S` on all modes (using :class:`~.ops.Sgate`)
+#. squeezing :math:`S_{\mathbf{r}}` on all modes with parameters :math:`\mathbf{r}` (using
+   :class:`~.ops.Sgate`)
 #. another interferometer :math:`U_{2}` (using :class:`~.ops.Interferometer`)
-#. displacement :math:`D` on all modes (using :class:`~.ops.Dgate`)
+#. displacement :math:`D_{\boldsymbol{\alpha}}` on all modes with parameters
+   :math:`\boldsymbol{\alpha}` (using :class:`~.ops.Dgate`)
 
 This can be followed by PNR detection. The :func:`gaussian` function
 allows users to sample from arbitrary pure Gaussian states using the above decomposition.
@@ -290,7 +294,7 @@ def to_subgraphs(samples: list, graph: nx.Graph) -> list:
 
 def gaussian(
     U1: np.ndarray,
-    S: np.ndarray,
+    r: np.ndarray,
     U2: np.ndarray,
     alpha: np.ndarray,
     n_samples: int,
@@ -301,17 +305,17 @@ def gaussian(
     The pure Gaussian states are prepared by applying the following gates to the vacuum:
 
     #. Interferometer ``U1``
-    #. Squeezing on all modes with parameters ``S``
+    #. Squeezing on all modes with parameters ``r``
     #. Interferometer ``U2``
     #. Displacement on all modes with parameters ``alpha``
 
     Note that, since the gates are applied to the vacuum, the first interferometer has no effect.
     It is nevertheless included so that the inputs to this function follow a standard decomposition
-    of Gaussian unitaries.
+    of Gaussian unitaries shown :ref:`above <decomposition>`.
 
     Args:
         U1 (array): first interferometer unitary matrix
-        S (array): squeezing parameters
+        r (array): squeezing parameters
         U2 (array): second interferometer unitary matrix
         alpha (array): displacement parameters
         n_samples (int): number of samples to be generated
@@ -339,7 +343,7 @@ def gaussian(
         sf.ops.Interferometer(U1) | q
 
         for i in range(n_modes):
-            sf.ops.Sgate(S[i]) | q[i]
+            sf.ops.Sgate(r[i]) | q[i]
 
         sf.ops.Interferometer(U2) | q
 
