@@ -47,6 +47,9 @@ print(s_pnr)
 # 1 photons were detected in modes 1 and 2, and 0 photons were detected in modes 3 and 4. If
 # threshold detectors were used instead, the sample would be: ``[1, 1, 1, 0, 0]``.
 #
+# A more general :func:`~.gbs.sample.gaussian` function allows for sampling from arbitrary pure
+# Gaussian states.
+#
 # Sampling subgraphs
 # ------------------
 #
