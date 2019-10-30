@@ -36,7 +36,6 @@ The :func:`sample` function provides a simulation of sampling from GBS:
 
 .. autosummary::
     sample
-    gaussian
 
 Here, each output sample is an :math:`M`-dimensional list. If threshold detection is used
 (``threshold = True``), each element of a sample is either a zero (denoting no photons detected)
@@ -53,6 +52,20 @@ random seed used to generate samples can be fixed:
 .. autosummary::
     postselect
     seed
+
+More generally, a GBS device performs photon counting or threshold measurements on arbitrary
+:ref:`Gaussian states <gaussian_states>`. Pure Gaussian states can be constructed using only
+Gaussian gates acting on the vacuum. One decomposition is to apply:
+
+#. interferometer :math:`U_1` (using :class:`~.ops.Interferometer`)
+#. squeezing :math:`S` on all modes (using :class:`~.ops.Sgate`)
+#. another interferometer :math:`U_2` (using :class:`~.ops.Interferometer`)
+#. displacement :math:`D` on all modes (using :class:`~.ops.Dgate`)
+
+This is followed by either PNR or threshold detection in GBS. The
+
+.. autosummary::
+    gaussian
 
 Generating subgraphs
 --------------------
@@ -275,8 +288,14 @@ def to_subgraphs(samples: list, graph: nx.Graph) -> list:
 
 
 def gaussian(
-    Up: np.ndarray, S: np.ndarray, U: np.ndarray, alpha: np.ndarray, n_samples: int
-) -> np.ndarray:
+    Up: np.ndarray,
+    S: np.ndarray,
+    U: np.ndarray,
+    alpha: np.ndarray,
+    n_samples: int,
+    threshold: bool = False,
+    loss: float = 0.0,
+) -> list:
     r"""Generate simulated samples from GBS encoded with Gaussian gate parameters.
 
     **Example usage:**
@@ -292,11 +311,15 @@ def gaussian(
         samples (array): GBS samples
 
     """
+    if n_samples < 1:
+        raise ValueError("Number of samples must be at least one")
+    if not 0 <= loss <= 1:
+        raise ValueError("Loss parameter must take a value between zero and one")
+
     n_modes = len(alpha)
 
     eng = sf.LocalEngine(backend="gaussian")
     gbs = sf.Program(n_modes)
-    det = sf.ops.MeasureFock()
 
     # pylint: disable=expression-not-assigned,pointless-statement
     with gbs.context as q:
@@ -311,8 +334,18 @@ def gaussian(
         for i in range(n_modes):
             sf.ops.Dgate(alpha[i]) | q[i]
 
-        det | q
+        if loss:
+            for _q in q:
+                sf.ops.LossChannel(1 - loss) | _q
 
-    samples = eng.run(gbs, run_options={"shots": n_samples})
+        if threshold:
+            sf.ops.MeasureThreshold() | q
+        else:
+            sf.ops.MeasureFock() | q
 
-    return samples
+    s = eng.run(gbs, run_options={"shots": n_samples}).samples
+
+    if n_samples == 1:
+        return [s]
+
+    return s.tolist()
