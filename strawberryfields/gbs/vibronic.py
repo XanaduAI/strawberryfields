@@ -182,10 +182,8 @@ def gbs_params(
         d (array): Duschinsky displacement vector corrected with wp
 
     Returns:
-        U1 (array): first interferometer unitary
-        S (array): squeezing parameters
-        U2 (array): second interferometer unitary
-        alpha (array): displacement parameters
+        tuple[array, array, array, array]: the first interferometer unitary, the squeezing
+        parameters, the second interferometer unitary, and finally the displacement parameters
     """
     Wi = np.diag(w ** -0.5)
     Wp = np.diag(wp ** 0.5)
