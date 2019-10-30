@@ -305,6 +305,10 @@ def gaussian(
     #. Interferometer ``U2``
     #. Displacement on all modes with parameters ``alpha``
 
+    Note that, since the gates are applied to the vacuum, the first interferometer has no effect.
+    It is nevertheless included so that the inputs to this function follow a standard decomposition
+    of Gaussian unitaries.
+
     Args:
         U1 (array): first interferometer unitary matrix
         S (array): squeezing parameters
