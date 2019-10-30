@@ -67,23 +67,24 @@ Designing a GBS device with such molecular parameters allows obtaining the Franc
 of the molecule which can be used to construct the molecular vibronic spectra.
 
 The Doktorov operator can be written in terms of displacement (:math:`D_\alpha`), squeezing
-(:math:`\Sigma`) and interferometer (:math:`U2, U1`) operators as
+(:math:`\Sigma_{r}`) and interferometer (:math:`U_{2}, U_{1}`) operators as
 
 .. math::
-    U_{Dok} = D_\alpha U2 \Sigma U1.
+    U_{Dok} = D_\alpha U_{2} \Sigma_{r} U_{1}.
 
 The squeezing and interferometer operators are obtained by singular value decomposition of a matrix
 :math:`J` as
 
 .. math::
-    J = U2 \Sigma U1.
+    J = U_{2} \Sigma_{r} U_{1},
 
+with the squeezing parameters :math:`r` determined by the natural log of the diagonal matrix.
 In order to obtain :math:`J` we need to construct diagonal matrices :math:`\Omega` and
 :math:`\Omega'` from the square roots of the ground state and excited state normal mode frequencies,
 :math:`\omega` and :math:`\omega'`, respectively. Then :math:`J` is obtained as
 
 .. math::
-    J = \Omega' U \Omega^{-1},
+    J = \Omega' U_{d} \Omega^{-1},
 
 where
 
@@ -92,12 +93,12 @@ where
 
     \Omega' = diag (\sqrt{\omega_1'},...,\sqrt{\omega_k'})
 
-and :math:`U` is a molecular coordinate transformation known as the Duschinsky matrix which
+and :math:`U_{d}` is a molecular coordinate transformation known as the Duschinsky matrix which
 relates the normal mode coordinates of the ground and excited states, :math:`q` and
 :math:`q'` respectively, as
 
 .. math::
-    q' = Uq + d.
+    q' = U_{d}q + d.
 
 The displacement parameter :math:`d` is related to the structural changes of a molecule upon
 vibronic excitation and is related to the displacement parameter :math:`\alpha` as
@@ -141,39 +142,7 @@ def gbs_params(
     >>>               [-0.0413, -0.0342, -0.4004, 0.7636, -0.1036, 0.4838, 0.0941],
     >>>               [0.0908, -0.0418, -0.0907, 0.3151, -0.5900, -0.7193, 0.1304],
     >>>               [-0.0325, 0.0050, -0.0206, 0.0694, -0.2018, 0.0173, -0.9759]])
-    >>> gbs_params(w, wp, Ud, delta)
-    (array([[-0.07012006,  0.14489772,  0.17593463,  0.02431155, -0.63151781,
-              0.61230046,  0.41087368],
-            [ 0.5618538 , -0.09931968,  0.04562272,  0.02158822,  0.35700706,
-              0.6614837 , -0.326946  ],
-            [-0.16560687, -0.7608465 , -0.25644606, -0.54317241, -0.12822903,
-              0.12809274, -0.00597384],
-            [ 0.01788782,  0.60430409, -0.19831443, -0.73270964, -0.06393682,
-              0.03376894, -0.23038293],
-            [ 0.78640978, -0.11133936,  0.03160537, -0.09188782, -0.43483738,
-             -0.4018141 ,  0.09582698],
-            [-0.13664887, -0.11196486,  0.86353995, -0.19608061, -0.12313513,
-             -0.08639263, -0.40251231],
-            [-0.12060103, -0.01169781, -0.33937036,  0.34662981, -0.49895371,
-              0.03257453, -0.70709135]]),
-     array([ 0.09721339,  0.07017918,  0.02083469, -0.05974357, -0.07487845,
-            -0.1119975 , -0.1866708 ]),
-     array([[-0.07985219,  0.66041032, -0.19389188,  0.01340832,  0.70312675,
-             -0.1208423 , -0.10352726],
-            [ 0.19216669, -0.12470466, -0.81320519,  0.52045174, -0.1066017 ,
-             -0.06300751, -0.00376173],
-            [ 0.60838109,  0.0835063 , -0.14958816, -0.34291399,  0.06239828,
-              0.68753918, -0.07955415],
-            [ 0.63690134, -0.03047939,  0.46585565,  0.50545897,  0.21194805,
-             -0.20422433,  0.18516987],
-            [ 0.34556293,  0.22562207, -0.1999159 , -0.50280235, -0.25510781,
-             -0.55793978,  0.40065893],
-            [-0.03377431, -0.66280536, -0.14740447, -0.25725325,  0.6145946 ,
-             -0.07128058,  0.29804963],
-            [-0.24570365,  0.22402764,  0.003273  ,  0.19204683, -0.05125235,
-              0.3881131 ,  0.83623564]]),
-     array([ 0.15938187,  0.10387399,  1.10301587, -0.26756921,  0.32194572,
-            -0.24317402,  0.0436992 ]))
+    >>> p = gbs_params(w, wp, Ud, delta)
 
     Args:
         w (array): normal mode frequencies of the electronic ground state (:math:`\text{cm}^{-1}`)
@@ -182,8 +151,9 @@ def gbs_params(
         d (array): Duschinsky displacement vector corrected with wp
 
     Returns:
-        tuple[array, array, array, array]: the first interferometer unitary, the squeezing
-        parameters, the second interferometer unitary, and finally the displacement parameters
+        tuple[array, array, array, array]: the first interferometer unitary :math:`U_{1}`,
+        the squeezing parameters :math:`r`, the second interferometer unitary :math:`U_{2}`,
+        and finally the displacement parameters :math:`\alpha`
     """
     Wi = np.diag(w ** -0.5)
     Wp = np.diag(wp ** 0.5)
