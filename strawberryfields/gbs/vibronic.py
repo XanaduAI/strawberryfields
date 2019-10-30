@@ -20,7 +20,6 @@ Vibronic spectra
 .. currentmodule:: strawberryfields.gbs.vibronic
 
 This module contains functions for computing molecular vibronic spectra using GBS.
-An accompanying tutorial can be found :ref:`here <>`.
 
 Vibronic spectroscopy
 ---------------------
@@ -109,7 +108,6 @@ In general, all the GBS parameters can be derived from the previously computed e
 geometries, vibrational frequencies and normal coordinates of the molecule in its (electronic)
 ground and excited states.
 
-
 Summary
 -------
 
@@ -133,7 +131,6 @@ def gbs_params(
 
     >>> w = np.array([3765.2386, 3088.1826, 1825.1799, 1416.9512, 1326.4684, 1137.0490, 629.7144])
     >>> wp = np.array([3629.9472, 3064.9143, 1566.4602, 1399.6554, 1215.3421, 1190.9077, 496.2845])
-    >>> delta = np.array([0.2254, 0.1469, 1.5599, -0.3784, 0.4553, -0.3439, 0.0618])
     >>> Ud = np.array([[0.9934, 0.0144, 0.0153, 0.0268, 0.0638, 0.0751, -0.0428],
     >>>               [-0.0149, 0.9931, 0.0742, 0.0769, -0.0361, -0.0025, 0.0173],
     >>>               [-0.0119, -0.0916, 0.8423, 0.1799, -0.3857, 0.3074, 0.0801],
@@ -141,6 +138,7 @@ def gbs_params(
     >>>               [-0.0413, -0.0342, -0.4004, 0.7636, -0.1036, 0.4838, 0.0941],
     >>>               [0.0908, -0.0418, -0.0907, 0.3151, -0.5900, -0.7193, 0.1304],
     >>>               [-0.0325, 0.0050, -0.0206, 0.0694, -0.2018, 0.0173, -0.9759]])
+    >>> d = np.array([0.2254, 0.1469, 1.5599, -0.3784, 0.4553, -0.3439, 0.0618])
     >>> gbs_params(w, wp, Ud, delta)
     (array([[-0.07012006,  0.14489772,  0.17593463,  0.02431155, -0.63151781,
               0.61230046,  0.41087368],
@@ -182,9 +180,9 @@ def gbs_params(
         d (array): Duschinsky displacement vector corrected with wp
 
     Returns:
-        U1 (array): first interferometer unitary
+        U1 (array): first interferometer unitary matrix
         S (array): squeezing parameters
-        U2 (array): second interferometer unitary
+        U2 (array): second interferometer unitary matrix
         alpha (array): displacement parameters
     """
     Wi = np.diag(w ** -0.5)
