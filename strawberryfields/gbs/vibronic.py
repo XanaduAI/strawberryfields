@@ -39,22 +39,22 @@ Code details
 import numpy as np
 
 
-def energies(samples: np.ndarray, wp: np.ndarray) -> np.ndarray:
-    r"""Computes the energy of GBS samples in :math:`\text{cm}^{-1}` unit.
+def energies(samples: list, wp: np.ndarray) -> list:
+    r"""Computes the energy of each GBS sample in units of :math:`\text{cm}^{-1}`.
 
     **Example usage:**
 
     >>> samples = np.array([[1, 1, 0], [1, 0, 2]])
     >>> wp = np.array([700.0, 600.0, 500.0])
     >>> energies(samples, wp)
-        [1300.0, 1700.0]
+    [1300.0, 1700.0]
 
     Args:
         samples (array): GBS samples
-        wp (array): normal mode frequencies in :math:`\text{cm}^{-1}`
+        wp (array): normal mode frequencies in units of :math:`\text{cm}^{-1}`
 
     Returns:
-        E (list): list of GBS sample energies in :math:`\text{cm}^{-1}`
+        E (list[int]): list of GBS sample energies in units of :math:`\text{cm}^{-1}`
     """
     E = []
     for sample in samples:
