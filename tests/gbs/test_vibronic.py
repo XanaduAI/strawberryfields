@@ -63,6 +63,6 @@ class TestGBSParams:
         """Test if function returns interferometer unitary and squeezing parameters that
         correctly reconstruct the input Duschinsky matrix"""
         sigma = np.diag(np.exp(self.S))
-        J = self.U1 @ sigma @ self.U2
-        U2 = np.diag(self.wp ** -0.5) @ J @ np.diag(self.w ** 0.5)
-        assert np.allclose(U2, self.U1)
+        J = self.U2 @ sigma @ self.U1
+        Ud = np.diag(self.wp ** -0.5) @ J @ np.diag(self.w ** 0.5)
+        assert np.allclose(Ud, self.Ud)
