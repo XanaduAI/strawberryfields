@@ -36,15 +36,16 @@ Code details
 ^^^^^^^^^^^^
 """
 
+from typing import Union
 import numpy as np
 
 
-def energies(samples: list, wp: np.ndarray) -> list:
+def energies(samples: list, wp: np.ndarray) -> Union[list, float]:
     r"""Computes the energy of each GBS sample in units of :math:`\text{cm}^{-1}`.
 
     **Example usage:**
 
-    >>> samples = np.array([[1, 1, 0], [1, 0, 2]])
+    >>> samples = [[1, 1, 0], [1, 0, 2]]
     >>> wp = np.array([700.0, 600.0, 500.0])
     >>> energies(samples, wp)
     [1300.0, 1700.0]
@@ -56,4 +57,7 @@ def energies(samples: list, wp: np.ndarray) -> list:
     Returns:
         E (list[int]): list of GBS sample energies in units of :math:`\text{cm}^{-1}`
     """
+    if not isinstance(samples[0], list):
+        return np.dot(samples, wp)
+
     return [np.dot(s, wp) for s in samples]
