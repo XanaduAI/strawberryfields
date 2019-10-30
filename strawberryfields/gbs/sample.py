@@ -289,9 +289,9 @@ def to_subgraphs(samples: list, graph: nx.Graph) -> list:
 
 
 def gaussian(
-    Up: np.ndarray,
+    U1: np.ndarray,
     S: np.ndarray,
-    U: np.ndarray,
+    U2: np.ndarray,
     alpha: np.ndarray,
     n_samples: int,
     loss: float = 0.0,
@@ -300,15 +300,15 @@ def gaussian(
 
     The pure Gaussian states are prepared by applying the following gates to the vacuum:
 
-    #. Interferometer ``Up``
+    #. Interferometer ``U1``
     #. Squeezing on all modes with parameters ``S``
-    #. Interferometer ``U``
+    #. Interferometer ``U2``
     #. Displacement on all modes with parameters ``alpha``
 
     Args:
-        Up (array): first interferometer unitary matrix
+        U1 (array): first interferometer unitary matrix
         S (array): squeezing parameters
-        U (array): second interferometer unitary matrix
+        U2 (array): second interferometer unitary matrix
         alpha (array): displacement parameters
         n_samples (int): number of samples to be generated
         loss (float): fraction of generated photons that are lost while passing through device.
@@ -332,12 +332,12 @@ def gaussian(
 
         # this interferometer has no action, but is kept to follow the decomposition given in the
         # docstring
-        sf.ops.Interferometer(Up) | q
+        sf.ops.Interferometer(U1) | q
 
         for i in range(n_modes):
             sf.ops.Sgate(S[i]) | q[i]
 
-        sf.ops.Interferometer(U) | q
+        sf.ops.Interferometer(U2) | q
 
         for i in range(n_modes):
             sf.ops.Dgate(alpha[i]) | q[i]
