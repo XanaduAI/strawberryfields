@@ -19,6 +19,7 @@ from numpy.linalg import multi_dot
 from scipy.linalg import block_diag
 
 from strawberryfields.program_utils import CircuitError, Command, group_operations
+from strawberryfields.parameters import par_evaluate
 import strawberryfields.ops as ops
 
 from .circuit_specs import CircuitSpecs
@@ -141,7 +142,7 @@ class Chip0Specs(CircuitSpecs):
                 # Note: this is done separately on modes [0, 1]
                 # and modes [2, 3]
                 modes = [i.ind for i in cmd.reg]
-                params = [i.x for i in cmd.op.p]
+                params = par_evaluate(cmd.op.p)
                 U = np.identity(self.modes // 2, dtype=np.complex128)
 
                 if isinstance(cmd.op, ops.Rgate):
