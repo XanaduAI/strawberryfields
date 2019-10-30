@@ -56,9 +56,9 @@ random seed used to generate samples can be fixed:
 More generally, a GBS device acts on arbitrary :ref:`Gaussian states <gaussian_states>`. Any pure
 Gaussian state can be created by applying the following set of gates to the vacuum:
 
-#. interferometer :math:`U'` (using :class:`~.ops.Interferometer`)
+#. interferometer :math:`U_{1}` (using :class:`~.ops.Interferometer`)
 #. squeezing :math:`S` on all modes (using :class:`~.ops.Sgate`)
-#. another interferometer :math:`U` (using :class:`~.ops.Interferometer`)
+#. another interferometer :math:`U_{2}` (using :class:`~.ops.Interferometer`)
 #. displacement :math:`D` on all modes (using :class:`~.ops.Dgate`)
 
 This can be followed by PNR detection. The :func:`gaussian` function
