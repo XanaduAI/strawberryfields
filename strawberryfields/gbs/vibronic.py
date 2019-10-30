@@ -56,8 +56,4 @@ def energies(samples: list, wp: np.ndarray) -> list:
     Returns:
         E (list[int]): list of GBS sample energies in units of :math:`\text{cm}^{-1}`
     """
-    E = []
-    for sample in samples:
-        e = sum(sample * wp)
-        E.append(e)
-    return E
+    return [np.dot(s, wp) for s in samples]
