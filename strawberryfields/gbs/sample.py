@@ -54,15 +54,16 @@ random seed used to generate samples can be fixed:
     seed
 
 More generally, a GBS device performs photon counting or threshold measurements on arbitrary
-:ref:`Gaussian states <gaussian_states>`. Pure Gaussian states can be constructed using only
-Gaussian gates acting on the vacuum. One decomposition is to apply:
+:ref:`Gaussian states <gaussian_states>`. Any pure Gaussian state can be created by applying the
+following set of gates to the vacuum:
 
-#. interferometer :math:`U_1` (using :class:`~.ops.Interferometer`)
+#. interferometer :math:`U'` (using :class:`~.ops.Interferometer`)
 #. squeezing :math:`S` on all modes (using :class:`~.ops.Sgate`)
-#. another interferometer :math:`U_2` (using :class:`~.ops.Interferometer`)
+#. another interferometer :math:`U` (using :class:`~.ops.Interferometer`)
 #. displacement :math:`D` on all modes (using :class:`~.ops.Dgate`)
 
-This is followed by either PNR or threshold detection in GBS. The
+This is followed by either PNR or threshold detection. The :func:`gaussian` function
+allows users to sample from arbitrary pure Gaussian states using the above decomposition.
 
 .. autosummary::
     gaussian
@@ -296,20 +297,28 @@ def gaussian(
     threshold: bool = False,
     loss: float = 0.0,
 ) -> list:
-    r"""Generate simulated samples from GBS encoded with Gaussian gate parameters.
+    r"""Generate simulated samples from pure Gaussian states.
 
-    **Example usage:**
+    The pure Gaussian states are prepared by applying the following gates to the vacuum:
+
+    #. Interferometer ``Up``
+    #. Squeezing on all modes with parameters ``S``
+    #. Interferometer ``U``
+    #. Displacement on all modes with parameters ``alpha``
 
     Args:
-        Up (array): interferometer matrix
+        Up (array): first interferometer unitary matrix
         S (array): squeezing parameters
-        U (array): interferometer matrix
+        U (array): second interferometer unitary matrix
         alpha (array): displacement parameters
         n_samples (int): number of samples to be generated
+        threshold (bool): perform GBS with threshold detectors if ``True`` or photon-number
+            resolving detectors if ``False``
+        loss (float): fraction of generated photons that are lost while passing through device.
+            Parameter should range from ``loss=0`` (ideal noise-free GBS) to ``loss=1``.
 
     Returns:
-        samples (array): GBS samples
-
+        list[list[int]]: a list of samples from GBS
     """
     if n_samples < 1:
         raise ValueError("Number of samples must be at least one")
@@ -324,6 +333,8 @@ def gaussian(
     # pylint: disable=expression-not-assigned,pointless-statement
     with gbs.context as q:
 
+        # this interferometer has no action, but is kept to follow the decomposition given in the
+        # docstring
         sf.ops.Interferometer(Up) | q
 
         for i in range(n_modes):
