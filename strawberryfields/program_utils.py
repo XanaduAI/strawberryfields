@@ -17,13 +17,14 @@ Quantum program utilities. Module docs in program.py.
 """
 
 from collections.abc import Sequence
-import functools
 
 import networkx as nx
 
+from .parameters import MeasuredParameter
 
-__all__ = ['Program_current_context', '_convert', 'RegRefError', 'CircuitError', 'MergeFailure',
-           'Command', 'RegRef', 'RegRefTransform',
+
+__all__ = ['Program_current_context', 'RegRefError', 'CircuitError', 'MergeFailure',
+           'Command', 'RegRef',
            'list_to_grid', 'grid_to_DAG', 'DAG_to_list', 'list_to_DAG', 'group_operations', 'optimize_circuit']
 
 
@@ -32,34 +33,6 @@ Program_current_context = None
 here to avoid cyclic imports."""
 # todo: Avoid issues with Program contexts and threading,
 # cf. _pydecimal.py in the python standard distribution.
-
-
-def _convert(func):
-    r"""Decorator for converting user defined functions to a :class:`RegRefTransform`.
-
-    This allows classical processing of measured qumodes values.
-
-    Example usage:
-
-    .. code-block:: python
-
-        @convert
-        def F(x):
-            # some classical processing of x
-            return f(x)
-
-        with prog.context as q:
-            MeasureX       | q[0]
-            Dgate(F(q[0])) | q[1]
-
-    Args:
-        func (function): function to be converted to a :class:`RegRefTransform`.
-    """
-    @functools.wraps(func)
-    def wrapper(*args):
-        "Unused docstring."
-        return RegRefTransform(args, func)
-    return wrapper
 
 
 class RegRefError(IndexError):
@@ -73,7 +46,7 @@ class CircuitError(RuntimeError):
     """Exception raised by :class:`.Program` when it encounters an illegal
     operation in the quantum circuit.
 
-    E.g., trying to use a measurement result before it is available.
+    E.g., trying to use an Operation type that is unsupported by the current compilation target.
     """
 
 
@@ -130,9 +103,9 @@ class Command:
     def get_dependencies(self):
         """Subsystems the command depends on.
 
-        Combination of ``self.reg`` and ``self.op.extra_deps``.
+        Combination of ``self.reg`` and ``self.op.measurement_deps``.
 
-        .. note:: ``extra_deps`` are used to ensure that the measurement
+        .. note:: ``measurement_deps`` are used to ensure that the measurement
             happens before the result is used, but this is a bit too strict:
             two gates depending on the same measurement result but otherwise
             acting on different subsystems should commute.
@@ -140,7 +113,7 @@ class Command:
         Returns:
             set[RegRef]: set of subsystems the command depends on
         """
-        deps = self.op.extra_deps | set(self.reg)
+        deps = self.op.measurement_deps | set(self.reg)
         return deps
 
 
@@ -186,87 +159,21 @@ class RegRef:
         Compares the index and the activity state of the two RegRefs, the val field does not matter.
         NOTE: Affects the hashability of RegRefs, see also :meth:`__hash__`.
         """
+        if other.__class__ != self.__class__:
+            print('---------------          regref.__eq__: compared reqref to ', other.__class__)
+            return False
         return self.ind == other.ind and self.active == other.active
 
-
-class RegRefTransform:
-    """Represents a scalar function of one or more register references.
-
-    A RegRefTransform instance, given as a parameter to a
-    :class:`~strawberryfields.ops.Operation` constructor, represents
-    a dependence of the Operation on classical information obtained by
-    measuring one or more subsystems.
-
-    Used for deferred measurements, i.e., using a measurement's value
-    symbolically in defining a gate before the numeric value of that
-    measurement is available.
-
-    Args:
-        r (Sequence[RegRef]): register references that act as parameters for the function
-        func (None, function): Scalar function that takes the values of the
-            register references in r as parameters. None is equivalent to the identity
-            transformation lambda x: x.
-        func_str (str): an optional argument containing the string representation of the function.
-            This is useful if a lambda function is passed to the RegRefTransform, which would otherwise
-            show in the program queue as ``RegRefTransform(q[0], <lambda>)``.
-    """
-    # pylint: disable=too-few-public-methods
-
-    def __init__(self, refs, func=None, func_str=None):
-        # into a list of regrefs
-        if isinstance(refs, RegRef):
-            refs = [refs]
-
-        if any([not r.active for r in refs]):
-            # todo allow this if the regref already has a measurement result in it.
-            # Maybe we want to delete a mode after measurement to save comp effort.
-            raise ValueError('Trying to use inactive RegRefs.')
-
-        #: list[RegRef]: register references that act as parameters for the function
-        self.regrefs = refs
-        self.func = func   #: None, function: the transformation itself, returns a scalar
-        self.func_str = func_str
-
-        if func is None and len(refs) > 1:
-            raise ValueError('Identity transformation only takes one parameter.')
-
-    def __str__(self):
-        """Print the RegRefTransform using Blackbird syntax."""
-        temp = [str(r) for r in self.regrefs]
-        rr = ', '.join(temp)
-
-        if len(temp) > 1:
-            rr = '[' + rr + ']'
-
-        if self.func is None:
-            return 'RR({})'.format(rr)
-
-        if self.func_str is None:
-            return 'RR({}, {})'.format(rr, self.func.__name__)
-
-        return 'RR({}, {})'.format(rr, self.func_str)
-
-    def __format__(self, format_spec):
-        return self.__str__()  # pragma: no cover
-
-    def __eq__(self, other):
-        "Not equal to anything."
-        return False
-
-    def evaluate(self):
-        """Evaluates the numeric value of the function if all the measurement values are available.
+    @property
+    def par(self):
+        """Convert the RegRef into a measured parameter.
 
         Returns:
-            Number: function value
+            MeasuredParameter: measured parameter linked to this RegRef
         """
-        temp = [r.val for r in self.regrefs]
-        if any(v is None for v in temp):
-            # NOTE: "if None in temp" causes an error if temp contains arrays,
-            # since it uses the == comparison in addition to "is"
-            raise CircuitError("Trying to use a nonexistent measurement result (e.g., before it has been measured).")
-        if self.func is None:
-            return temp[0]
-        return self.func(*temp)
+        return MeasuredParameter(self)
+
+
 
 
 # =================

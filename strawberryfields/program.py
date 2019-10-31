@@ -48,6 +48,8 @@ Program methods
    optimize
    print
    draw_circuit
+   params
+   bind_params
 
 The following are internal Program methods. In most cases the user should not
 call these directly.
@@ -73,7 +75,6 @@ Helper classes
 .. autosummary::
    Command
    RegRef
-   RegRefTransform
 
 
 Utility functions
@@ -144,7 +145,7 @@ import strawberryfields.circuitdrawer as sfcd
 import strawberryfields.circuitspecs as specs
 import strawberryfields.program_utils as pu
 from .program_utils import Command, RegRef, CircuitError, RegRefError
-
+from .parameters import FreeParameter, ParameterError
 
 class Program:
     """Represents a quantum circuit.
@@ -191,7 +192,8 @@ class Program:
         self._target = None
         #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
-
+        #: dict[str, Parameter]: free circuit parameters owned by this Program
+        self.free_params = {}
         self.run_options = {}
         """dict[str, Any]: dictionary of default run options, to be passed to the engine upon
         execution of the program. Note that if the ``run_options`` dictionary is passed
@@ -437,7 +439,7 @@ class Program:
         # test that the target subsystem references are ok
         reg = self._test_regrefs(reg)
         # also test possible Parameter-related dependencies
-        self._test_regrefs(op.extra_deps)
+        self._test_regrefs(op.measurement_deps)
         for rr in reg:
             # it's used now
             self.unused_indices.discard(rr.ind)
@@ -448,6 +450,7 @@ class Program:
         """Create a copy of the Program, linked to the original.
 
         Both the original and the copy are :meth:`locked <lock>`, since they share their RegRefs.
+        FreeParameters are also shared.
 
         Returns:
             Program: a copy of the Program
@@ -585,3 +588,51 @@ class Program:
             compiled, otherwise None
         """
         return self._target
+
+    def params(self, *args):
+        """Create and access free circuit parameters.
+
+        Returns the named free parameters. If a parameter does not exist yet, it is created and returned.
+
+        Args:
+            *args (tuple[str]): name(s) of the free parameters to access
+
+        Returns:
+            FreeParameter, list[FreeParameter]: requested parameter(s)
+        """
+        ret = []
+        for a in args:
+            if not isinstance(a, str):
+                raise TypeError('Parameter names must be strings.')
+
+            if a not in self.free_params:
+                if self.locked:
+                    raise CircuitError('The Program is locked, no more free parameters can be created.')
+                p = FreeParameter(a)
+                self.free_params[a] = p
+            else:
+                p = self.free_params[a]
+            ret.append(p)
+
+        if len(ret) == 1:
+            return ret[0]
+        return ret
+
+    def bind_params(self, binding):
+        """Binds the free parameters of the program to the given values.
+
+        Args:
+            binding (dict[Union[str, FreeParameter], Any]): mapping from parameter names (or the
+                parameters themselves) to parameter values
+
+        Raises:
+            ParameterError: tried to bind an unknown parameter
+        """
+        for k, v in binding.items():
+            temp = self.free_params.get(k)  # it's a name
+            if temp:
+                temp.val = v
+            elif k in self.free_params.values():  # it's a parameter
+                k.val = v
+            else:
+                raise ParameterError("Unknown free parameter '{}'".format(k))
