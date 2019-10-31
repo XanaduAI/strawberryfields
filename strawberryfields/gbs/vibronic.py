@@ -179,11 +179,13 @@ def energies(samples: list, wp: np.ndarray) -> Union[list, float]:
     [1300.0, 1700.0]
 
     Args:
-        samples (array): GBS samples
+        samples (list[list[int]] or list[int]): a list of samples from GBS, or alternatively a
+            single sample
         wp (array): normal mode frequencies in units of :math:`\text{cm}^{-1}`
 
     Returns:
-        E (list[int]): list of GBS sample energies in units of :math:`\text{cm}^{-1}`
+        list[float] or float: list of GBS sample energies in units of :math:`\text{cm}^{-1}`, or
+        a single sample energy if only one sample is input
     """
     if not isinstance(samples[0], list):
         return np.dot(samples, wp)
