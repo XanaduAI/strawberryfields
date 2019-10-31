@@ -27,9 +27,11 @@ from strawberryfields import configuration
 
 PROMPTS = {
     "hostname": "Please enter the hostname of the server to connect to: [{}] ",
+    "port": "Please enter the port number to connect with: [{}] ",
+    "use_ssl": "Should the client attempt to connect over SSL? [Y/n] ",
     "authentication_token": "Please enter the authentication token to use when connecting: [{}] ",
     "save": "Would you like to save these settings to a local cofiguration file in the current "
-    "directory? [Y/n] ",
+    "directory? [y/N] ",
 }
 
 if __name__ == "__main__":
@@ -67,6 +69,8 @@ if __name__ == "__main__":
             input(PROMPTS["authentication_token"].format(config.api["authentication_token"]))
             or config.api["authentication_token"]
         )
+        port = input(PROMPTS["port"].format(config.api["port"])) or config.api["port"]
+        use_ssl = input(PROMPTS["use_ssl"]).upper() == "Y"
         save = input(PROMPTS["save"]).upper() == "Y"
 
         if not save:
@@ -79,6 +83,8 @@ if __name__ == "__main__":
 
             config.api["hostname"] = hostname
             config.api["authentication_token"] = authentication_token
+            config.api["port"] = port
+            config.api["use_ssl"] = use_ssl
             config.save("config.toml")
         sys.exit()
     elif args.hello:

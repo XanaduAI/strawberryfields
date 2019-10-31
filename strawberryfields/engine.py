@@ -520,6 +520,7 @@ class StarshipEngine(BaseEngine):
         job = Job(client=self.client)
         job.manager.create(circuit=job_content)
         self.jobs.append(job)
+        print("Job {} is sent to server.".format(job.id.value))
         return job
 
     def _run_program(self, program, **kwargs):
