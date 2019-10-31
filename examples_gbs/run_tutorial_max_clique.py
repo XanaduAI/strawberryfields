@@ -33,7 +33,7 @@ import plotly
 TA = data.TaceAs()
 A = TA.adj
 TA_graph = nx.Graph(A)
-graph_fig = plot.plot_graph(TA_graph)
+graph_fig = plot.graph(TA_graph)
 plotly.offline.plot(graph_fig, filename="TACE-AS.html")
 
 ##############################################################################
@@ -47,7 +47,7 @@ plotly.offline.plot(graph_fig, filename="TACE-AS.html")
 # not contained inside another clique:
 
 maximal_clique = [4, 11, 12, 18]
-maximal_fig = plot.plot_graph(TA_graph, maximal_clique)
+maximal_fig = plot.graph(TA_graph, maximal_clique)
 plotly.offline.plot(maximal_fig, filename="maximal_clique.html")
 
 ##############################################################################
@@ -111,7 +111,7 @@ print("Average clique size = {:.3f}".format(np.mean(clique_sizes)))
 # Wow! Local search is very helpful, we've found cliques with the maximum size of eight for
 # essentially all samples 🤩.  Let's take a look at the first clique we found
 
-clique_fig = plot.plot_graph(TA_graph, searched[0])
+clique_fig = plot.graph(TA_graph, searched[0])
 plotly.offline.plot(clique_fig, filename="maximum_clique.html")
 
 ##############################################################################
@@ -138,14 +138,14 @@ print("Largest clique found is = ", largest_clique)
 
 ##############################################################################
 # Let's make a plot to take a closer look at the largest clique we found
-largest_fig = plot.plot_graph(phat_graph, largest_clique)
+largest_fig = plot.graph(phat_graph, largest_clique)
 plotly.offline.plot(largest_fig, filename="largest_clique.html")
 
 ##############################################################################
 # .. raw:: html
 #     :file: ../../examples_gbs/largest_clique.html
 
-just_largest = plot.plot_subgraph(phat_graph.subgraph(largest_clique))
+just_largest = plot.subgraph(phat_graph.subgraph(largest_clique))
 plotly.offline.plot(just_largest, filename="just_largest.html")
 
 ##############################################################################

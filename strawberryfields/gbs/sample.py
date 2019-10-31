@@ -29,8 +29,8 @@ Generating samples
 An :math:`M` mode GBS device can be programmed by specifying an :math:`(M \times M)`-dimensional
 symmetric matrix :math:`A` :cite:`bradler2018gaussian`. Running this device results in samples
 that carry relevant information about the encoded matrix :math:`A`. When sampling, one must also
-specify the mean number of photons in the device and the form of detection used at the output:
-threshold detection or photon-number-resolving (PNR) detection.
+specify the mean number of photons in the device, the form of detection used at the output:
+threshold detection or photon-number-resolving (PNR) detection, as well as the amount of loss.
 
 The :func:`sample` function provides a simulation of sampling from GBS:
 
@@ -41,7 +41,10 @@ Here, each output sample is an :math:`M`-dimensional list. If threshold detectio
 (``threshold = True``), each element of a sample is either a zero (denoting no photons detected)
 or a one (denoting one or more photons detected), conventionally called a "click".
 If photon-number resolving (PNR) detection is used (``threshold = False``) then elements of a
-sample are non-negative integers counting the number of photons detected in each mode.
+sample are non-negative integers counting the number of photons detected in each mode. The ``loss``
+parameter allows for simulation of photon loss in the device, which is the most common form of
+noise in quantum photonics. Here, ``loss = 0`` describes ideal loss-free GBS, while generally
+``0 <= loss <= 1`` describes the proportion of photons lost while passing through the device.
 
 Samples can be postselected based upon their total number of photons or clicks and the ``numpy``
 random seed used to generate samples can be fixed:
@@ -49,6 +52,24 @@ random seed used to generate samples can be fixed:
 .. autosummary::
     postselect
     seed
+
+.. _decomposition:
+
+More generally, a GBS device acts on arbitrary :ref:`Gaussian states <gaussian_states>`. Any pure
+Gaussian state can be created by applying the following set of gates to the vacuum:
+
+#. interferometer :math:`U_{1}` (using :class:`~.ops.Interferometer`)
+#. squeezing :math:`S_{\mathbf{r}}` on all modes with parameters :math:`\mathbf{r}` (using
+   :class:`~.ops.Sgate`)
+#. another interferometer :math:`U_{2}` (using :class:`~.ops.Interferometer`)
+#. displacement :math:`D_{\boldsymbol{\alpha}}` on all modes with parameters
+   :math:`\boldsymbol{\alpha}` (using :class:`~.ops.Dgate`)
+
+This can be followed by PNR detection. The :func:`gaussian` function
+allows users to sample from arbitrary pure Gaussian states using the above decomposition.
+
+.. autosummary::
+    gaussian
 
 Generating subgraphs
 --------------------
@@ -96,6 +117,7 @@ use within heuristics for problems such as maximum clique (see :mod:`~.gbs.cliqu
 Code details
 ^^^^^^^^^^^^
 """
+import warnings
 from typing import Optional
 
 import networkx as nx
@@ -104,7 +126,9 @@ import numpy as np
 import strawberryfields as sf
 
 
-def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = True) -> list:
+def sample(
+    A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = True, loss: float = 0.0
+) -> list:
     r"""Generate simulated samples from GBS encoded with a symmetric matrix :math:`A`.
 
     **Example usage:**
@@ -120,6 +144,8 @@ def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = T
         n_samples (int): number of samples
         threshold (bool): perform GBS with threshold detectors if ``True`` or photon-number
             resolving detectors if ``False``
+        loss (float): fraction of generated photons that are lost while passing through device.
+            Parameter should range from ``loss=0`` (ideal noise-free GBS) to ``loss=1``.
 
     Returns:
         list[list[int]]: a list of samples from GBS with respect to the input symmetric matrix
@@ -130,6 +156,8 @@ def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = T
         raise ValueError("Number of samples must be at least one")
     if n_mean < 0:
         raise ValueError("Mean photon number must be non-negative")
+    if not 0 <= loss <= 1:
+        raise ValueError("Loss parameter must take a value between zero and one")
 
     nodes = len(A)
 
@@ -142,12 +170,21 @@ def sample(A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = T
     with p.context as q:
         sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
 
+        if loss:
+            for _q in q:
+                sf.ops.LossChannel(1 - loss) | _q
+
         if threshold:
             sf.ops.MeasureThreshold() | q
         else:
             sf.ops.MeasureFock() | q
 
-    return eng.run(p, run_options={"shots": n_samples}).samples.tolist()
+    s = eng.run(p, run_options={"shots": n_samples}).samples
+
+    if n_samples == 1:
+        return [s]
+
+    return s.tolist()
 
 
 def postselect(samples: list, min_count: int, max_count: int) -> list:
@@ -253,3 +290,77 @@ def to_subgraphs(samples: list, graph: nx.Graph) -> list:
         return [sorted([graph_nodes[i] for i in s]) for s in subgraph_samples]
 
     return subgraph_samples
+
+
+def gaussian(
+    U1: np.ndarray,
+    r: np.ndarray,
+    U2: np.ndarray,
+    alpha: np.ndarray,
+    n_samples: int,
+    loss: float = 0.0,
+) -> list:
+    r"""Generate simulated samples from pure Gaussian states.
+
+    The pure Gaussian states are prepared by applying the following gates to the vacuum:
+
+    #. Interferometer ``U1``
+    #. Squeezing on all modes with parameters ``r``
+    #. Interferometer ``U2``
+    #. Displacement on all modes with parameters ``alpha``
+
+    Note that, since the gates are applied to the vacuum, the first interferometer has no effect.
+    It is nevertheless included so that the inputs to this function follow a standard decomposition
+    of Gaussian unitaries shown :ref:`above <decomposition>`.
+
+    Args:
+        U1 (array): first interferometer unitary matrix
+        r (array): squeezing parameters
+        U2 (array): second interferometer unitary matrix
+        alpha (array): displacement parameters
+        n_samples (int): number of samples to be generated
+        loss (float): fraction of generated photons that are lost while passing through device.
+            Parameter should range from ``loss=0`` (ideal noise-free GBS) to ``loss=1``.
+
+    Returns:
+        list[list[int]]: a list of samples from GBS
+    """
+    if n_samples < 1:
+        raise ValueError("Number of samples must be at least one")
+    if not 0 <= loss <= 1:
+        raise ValueError("Loss parameter must take a value between zero and one")
+
+    n_modes = len(alpha)
+
+    eng = sf.LocalEngine(backend="gaussian")
+    gbs = sf.Program(n_modes)
+
+    # pylint: disable=expression-not-assigned,pointless-statement
+    with gbs.context as q:
+
+        # this interferometer has no action, but is kept to follow the decomposition given in the
+        # docstring
+        sf.ops.Interferometer(U1) | q
+
+        for i in range(n_modes):
+            sf.ops.Sgate(r[i]) | q[i]
+
+        sf.ops.Interferometer(U2) | q
+
+        for i in range(n_modes):
+            sf.ops.Dgate(alpha[i]) | q[i]
+
+        if loss:
+            for _q in q:
+                sf.ops.LossChannel(1 - loss) | _q
+
+        sf.ops.MeasureFock() | q
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message="Cannot simulate non-")
+        s = eng.run(gbs, run_options={"shots": n_samples}).samples
+
+    if n_samples == 1:
+        return [s]
+
+    return s.tolist()

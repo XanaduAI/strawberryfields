@@ -240,9 +240,10 @@ class TestStarshipEngine:
         monkeypatch.setattr(starship_engine, "_queue_job", lambda job_content: mock_job)
 
         some_params = {"param": MagicMock()}
-        result = starship_engine._run_program(program, **some_params)
+        result = starship_engine._run_program(program, args={}, compile_options={}, **some_params)
 
-        mock__get_blackbird.assert_called_once_with(program=program, param=some_params["param"])
+        mock__get_blackbird.assert_called_once_with(program=program, param=some_params["param"],
+                args={}, compile_options={})
 
         assert result == mock_job.result.result.value
 
@@ -286,7 +287,8 @@ class TestStarshipEngine:
         monkeypatch.setattr("strawberryfields.engine.Result", outputs.result)
         monkeypatch.setattr(starship_engine, "backend", inputs.mock_backend)
 
-        result = starship_engine._run(inputs.program, shots=inputs.shots)
+        result = starship_engine._run(inputs.program, shots=inputs.shots, args={},
+                compile_options={})
 
         assert starship_engine.backend_name in starship_engine.HARDWARE_BACKENDS
         inputs.program.compile.assert_called_once_with(starship_engine.backend.circuit_spec)
@@ -312,7 +314,8 @@ class TestStarshipEngine:
 
         starship_engine.run(inputs.program, inputs.shots, **inputs.params)
         mock__run.assert_called_once_with(
-            inputs.program, shots=inputs.shots, param=inputs.params["param"]
+            inputs.program, shots=inputs.shots, param=inputs.params["param"], args={},
+            compile_options={}
         )
 
     def test_engine_with_mocked_api_client_sample_job(self, monkeypatch):

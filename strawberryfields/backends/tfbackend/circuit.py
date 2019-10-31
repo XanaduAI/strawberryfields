@@ -48,12 +48,10 @@ class Circuit:
          using the Fock representation with given cutoff_dim.
          The state of the modes is manipulated by calling the various methods."""
     # pylint: disable=too-many-instance-attributes,too-many-public-methods
-    def __init__(self, graph, num_modes, cutoff_dim, pure=True, batch_size=None):
+    def __init__(self, graph, num_modes, cutoff_dim, pure, batch_size):
         self._graph = None # will be set when reset is called below, but reset needs something to compare to
-        self._batch_size = batch_size
-        self._batched = False if batch_size is None else True
         self._hbar = 2
-        self.reset(pure, graph, num_subsystems=num_modes, cutoff_dim=cutoff_dim)
+        self.reset(graph=graph, num_subsystems=num_modes, pure=pure, cutoff_dim=cutoff_dim, batch_size=batch_size)
 
     def _make_vac_states(self, cutoff_dim):
         """Make vacuum state tensors for the underlying graph"""
@@ -192,34 +190,47 @@ class Circuit:
         self._update_state(new_state)
         self._num_modes += num_modes
 
-    def reset(self, pure=True, graph=None, num_subsystems=None, cutoff_dim=None):
+    def reset(self, **kwargs):
         r"""
         Resets the state of the circuit to have all modes in vacuum.
-        For all the parameters, None means unchanged.
+        If a keyword arg is not present, the corresponding parameter is unchanged.
 
-        Args:
-            pure (bool): if True, the reset circuit will represent its state as a pure state. If False, the representation will be mixed.
+        Keyword Args:
             graph (tf.Graph): the underlying graph (and any associated attributes) is replaced with this supplied graph. If None, the same underlying
               graph (and all its defined operations) will be kept.
             num_subsystems (int): sets the number of modes in the reset circuit.
+            pure (bool): if True, the reset circuit will represent its state as a pure state. If False, the representation will be mixed.
             cutoff_dim (int): new Fock space cutoff dimension to use.
+            batch_size (None, int): None means no batching. An integer value >= 2 sets the batch size to use.
         """
-        if pure is not None:
+        if 'pure' in kwargs:
+            pure = kwargs['pure']
             if not isinstance(pure, bool):
                 raise ValueError("Argument 'pure' must be either True or False")
             self._state_is_pure = pure
 
-        if num_subsystems is not None:
-            if not isinstance(num_subsystems, int):
+        if 'num_subsystems' in kwargs:
+            ns = kwargs['num_subsystems']
+            if not isinstance(ns, int):
                 raise ValueError("Argument 'num_subsystems' must be a positive integer")
-            self._num_modes = num_subsystems
+            self._num_modes = ns
 
-        if cutoff_dim is not None:
+        if 'cutoff_dim' in kwargs:
+            cutoff_dim = kwargs['cutoff_dim']
             if not isinstance(cutoff_dim, int) or cutoff_dim < 1:
                 raise ValueError("Argument 'cutoff_dim' must be a positive integer")
             self._cutoff_dim = cutoff_dim
 
-        if graph is not None:
+        if 'batch_size' in kwargs:
+            batch_size = kwargs['batch_size']
+            if batch_size is not None:
+                if not isinstance(batch_size, int) or batch_size < 2:
+                    raise ValueError("Argument 'batch_size' must be either None or an integer > 1")
+            self._batch_size = batch_size
+            self._batched = (batch_size is not None)
+
+        if 'graph' in kwargs:
+            graph = kwargs['graph']
             if not isinstance(graph, tf.Graph):
                 raise ValueError("Argument 'graph' must be a tf.Graph")
             if graph != self._graph:

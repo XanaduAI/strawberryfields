@@ -21,6 +21,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields import io
 from strawberryfields.program import Program, CircuitError
+from strawberryfields.parameters import MeasuredParameter, FreeParameter, par_is_symbolic, parfuncs as pf
 
 
 pytestmark = pytest.mark.frontend
@@ -292,32 +293,29 @@ class TestSFToBlackbirdConversion:
         bb = io.to_blackbird(prog)
         assert bb.operations[0] == expected
 
-    # TODO: determine best way to serialize regref transforms
-    # def test_regref_func_str(self):
-    #     """Test a regreftransform with a function string converts properly"""
-    #     prog = Program(2)
-
-    #     with prog.context as q:
-    #         ops.Sgate(0.43) | q[0]
-    #         ops.MeasureX | q[0]
-    #         ops.Zgate(ops.RR(q[0], lambda x: 2 * x, func_str="2*q0")) | q[1]
-
-    #     bb = io.to_blackbird(prog)
-    #     expected = {"op": "Zgate", "modes": [1], "args": ["2*q0"], "kwargs": {}}
-
-    #     assert bb.operations[-1] == expected
-
-    def test_regref_no_func_str(self):
-        """Test a regreftransform with no function string raises exception"""
+    def test_measured_par_str(self):
+        """Test a MeasuredParameter with some transformations converts properly"""
         prog = Program(2)
-
         with prog.context as q:
             ops.Sgate(0.43) | q[0]
             ops.MeasureX | q[0]
-            ops.Zgate(ops.RR(q[0], lambda x: 2 * x)) | q[1]
+            ops.Zgate(2 * pf.sin(q[0].par)) | q[1]
 
-        with pytest.raises(ValueError, match="not supported by Blackbird"):
-            io.to_blackbird(prog)
+        bb = io.to_blackbird(prog)
+        expected = {"op": "Zgate", "modes": [1], "args": ["2*sin(q0)"], "kwargs": {}}
+        assert bb.operations[-1] == expected
+
+    def test_free_par_str(self):
+        """Test a FreeParameter with some transformations converts properly"""
+        prog = Program(2)
+        r, alpha = prog.params('r', 'alpha')
+        with prog.context as q:
+            ops.Sgate(r) | q[0]
+            ops.Zgate(3 * pf.log(-alpha)) | q[1]
+
+        bb = io.to_blackbird(prog)
+        assert bb.operations[0] == {"op": "Sgate", "modes": [0], "args": ['{r}', 0.0], "kwargs": {}}
+        assert bb.operations[1] == {"op": "Zgate", "modes": [1], "args": ['3*log(-{alpha})'], "kwargs": {}}
 
 
 class TestBlackbirdToSFConversion:
@@ -396,8 +394,8 @@ class TestBlackbirdToSFConversion:
 
         assert len(prog) == 1
         assert prog.circuit[0].op.__class__.__name__ == "Sgate"
-        assert prog.circuit[0].op.p[0].x == 0.54
-        assert prog.circuit[0].op.p[1].x == 0.12
+        assert prog.circuit[0].op.p[0] == 0.54
+        assert prog.circuit[0].op.p[1] == 0.12
         assert prog.circuit[0].reg[0].ind == 0
 
     def test_gate_kwarg(self):
@@ -415,8 +413,82 @@ class TestBlackbirdToSFConversion:
 
         assert len(prog) == 1
         assert prog.circuit[0].op.__class__.__name__ == "Dgate"
-        assert prog.circuit[0].op.p[0].x == 0.54
+        assert prog.circuit[0].op.p[0] == 0.54
         assert prog.circuit[0].reg[0].ind == 0
+
+    @pytest.mark.skip("FIXME enable when blackbird.program.RegRefTransform is replaced with sympy.Symbol.")
+    def test_gate_measured_par(self):
+        """Test a gate with a MeasuredParameter argument."""
+
+        bb_script = """\
+        name test_program
+        version 1.0
+
+        MeasureX | 0
+        Dgate(q0) | 1
+        Rgate(2*q0) | 2
+        """
+        bb = blackbird.loads(bb_script)
+        prog = io.to_program(bb)
+
+        assert len(prog) == 3
+
+        cmd = prog.circuit[1]
+        assert cmd.op.__class__.__name__ == "Dgate"
+        p = cmd.op.p[0]
+        assert isinstance(p, MeasuredParameter)
+        assert p.regref.ind == 0
+        assert cmd.reg[0].ind == 1
+
+        cmd = prog.circuit[2]
+        assert cmd.op.__class__.__name__ == "Rgate"
+        p = cmd.op.p[0]
+        assert par_is_symbolic(p)  # symbolic expression
+        assert cmd.reg[0].ind == 2
+
+    def test_gate_free_par(self):
+        """Test a FreeParameter with some transformations converts properly"""
+
+        bb_script = """\
+        name test_program
+        version 1.0
+
+        Dgate(a=1-{ALPHA}) | 0     # keyword arg, compound expr
+        Rgate(theta={foo_bar1}) | 0  # keyword arg, atomic
+        Dgate({ALPHA}**2) | 0        # positional arg, compound expr
+        Rgate({foo_bar2}) | 0        # positional arg, atomic
+        """
+        bb = blackbird.loads(bb_script)
+        prog = io.to_program(bb)
+
+        assert prog.free_params.keys() == set(['foo_bar1', 'foo_bar2', 'ALPHA'])
+        assert len(prog) == 4
+
+        cmd = prog.circuit[0]
+        assert cmd.op.__class__.__name__ == "Dgate"
+        p = cmd.op.p[0]
+        assert par_is_symbolic(p)
+        assert cmd.reg[0].ind == 0
+
+        cmd = prog.circuit[1]
+        assert cmd.op.__class__.__name__ == "Rgate"
+        p = cmd.op.p[0]
+        assert isinstance(p, FreeParameter)
+        assert p.name == 'foo_bar1'
+        assert cmd.reg[0].ind == 0
+
+        cmd = prog.circuit[2]
+        assert cmd.op.__class__.__name__ == "Dgate"
+        p = cmd.op.p[0]
+        assert par_is_symbolic(p)
+        assert cmd.reg[0].ind == 0
+
+        cmd = prog.circuit[3]
+        assert cmd.op.__class__.__name__ == "Rgate"
+        p = cmd.op.p[0]
+        assert isinstance(p, FreeParameter)
+        assert p.name == 'foo_bar2'
+        assert cmd.reg[0].ind == 0
 
     def test_gate_multimode(self):
         """Test multimode gate converts"""
@@ -433,8 +505,8 @@ class TestBlackbirdToSFConversion:
 
         assert len(prog) == 1
         assert prog.circuit[0].op.__class__.__name__ == "BSgate"
-        assert prog.circuit[0].op.p[0].x == 0.54
-        assert prog.circuit[0].op.p[1].x == np.pi
+        assert prog.circuit[0].op.p[0] == 0.54
+        assert prog.circuit[0].op.p[1] == np.pi
         assert prog.circuit[0].reg[0].ind == 0
         assert prog.circuit[0].reg[1].ind == 2
 
@@ -473,7 +545,7 @@ class DummyResults:
     """Dummy results object"""
 
 
-def dummy_run(self, program, compile_options=None, **eng_run_options):
+def dummy_run(self, program, args, compile_options=None, **eng_run_options):
     """A dummy run function, that when called returns a dummy
     results object, with run options available as an attribute.
     This allows run_options to be returned and inspected after calling eng.run
@@ -620,7 +692,7 @@ class TestLoad:
             assert cmd1.op.__class__.__name__ == cmd2.op.__class__.__name__
             assert cmd1.reg[0].ind == cmd2.reg[0].ind
             if cmd1.op.p:
-                assert np.all(cmd1.op.p[0].x == cmd2.op.p[0].x)
+                assert np.all(cmd1.op.p[0] == cmd2.op.p[0])
 
     def test_load_filename_path_object(self, prog, tmpdir):
         """Test loading a program using a path object"""

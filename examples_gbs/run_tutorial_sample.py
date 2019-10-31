@@ -12,13 +12,14 @@ Sampling from GBS
 -----------------
 
 A GBS device can be programmed to sample from any symmetric matrix :math:`A`. To sample,
-we must specify both the mean number of photons being generated in the device and the form of
+we must specify the mean number of photons being generated in the device and optionally the form of
 detection used at the output: threshold detection or photon-number resolving (PNR) detection.
 Threshold detectors are restricted to measuring whether photons have arrived at the detector,
-whereas PNR detectors are able to count the number of photons.
+whereas PNR detectors are able to count the number of photons. Photon loss can also be specified
+with the ``loss`` argument.
 
-Let's take a look at both types of sampling methods. We can generate samples from a random 5-dimensional
-symmetric matrix:
+Let's take a look at both types of sampling methods. We can generate samples from a random
+5-dimensional symmetric matrix:
 """
 
 from strawberryfields.gbs import sample
@@ -45,6 +46,9 @@ print(s_pnr)
 # suppose a PNR sample is ``[2, 1, 1, 0, 0]``, meaning that 2 photons were detected in mode 0,
 # 1 photons were detected in modes 1 and 2, and 0 photons were detected in modes 3 and 4. If
 # threshold detectors were used instead, the sample would be: ``[1, 1, 1, 0, 0]``.
+#
+# A more general :func:`~.gbs.sample.gaussian` function allows for sampling from arbitrary pure
+# Gaussian states.
 #
 # Sampling subgraphs
 # ------------------
@@ -78,7 +82,7 @@ adj = np.array(
 
 graph = nx.Graph(adj)
 
-plotly.offline.plot(plot.plot_graph(graph), filename="random_graph.html")
+plotly.offline.plot(plot.graph(graph), filename="random_graph.html")
 
 ##############################################################################
 # .. raw:: html
@@ -130,7 +134,7 @@ print(subgraphs)
 ##############################################################################
 # We can take a look at one of the sampled subgraphs:
 
-plotly.offline.plot(plot.plot_graph(graph, subgraphs[0]), filename="subgraph.html")
+plotly.offline.plot(plot.graph(graph, subgraphs[0]), filename="subgraph.html")
 
 ##############################################################################
 # .. raw:: html
