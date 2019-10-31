@@ -66,3 +66,22 @@ class TestGBSParams:
         J = self.U2 @ sigma @ self.U1
         Ud = np.diag(self.wp ** -0.5) @ J @ np.diag(self.w ** 0.5)
         assert np.allclose(Ud, self.Ud)
+
+
+wp = np.array([700.0, 600.0, 500.0])
+
+S1 = [[1, 1, 0], [1, 0, 2]]
+E1 = [1300.0, 1700.0]
+
+S2 = [[1, 1, 0]]
+E2 = [1300.0]
+
+S3 = [1, 1, 0]
+E3 = 1300.0
+
+
+@pytest.mark.parametrize("sample, sample_energy", [(S1, E1), (S2, E2), (S3, E3)])
+def test_energies(sample, sample_energy):
+    r"""Tests the correctness of the energies generated for GBS samples in
+    ``strawberryfields.gbs.vibronic.energies``."""
+    assert np.allclose(vibronic.energies(sample, wp), sample_energy)
