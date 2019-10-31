@@ -533,9 +533,9 @@ class Program:
         if "shots" in kwargs:
             compiled.run_options["shots"] = kwargs["shots"]
 
+        compiled.backend_options = {}
         backend_options_keys = ("cutoff_dim",)
         if set(kwargs.keys()) & set(backend_options_keys):
-            compiled.backend_options = {}
             for key in backend_options_keys:
                 if key in kwargs:
                     compiled.backend_options[key] = kwargs[key]

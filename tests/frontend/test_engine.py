@@ -46,7 +46,7 @@ def starship_engine(monkeypatch):
     """
     mock_api_client = MagicMock()
     monkeypatch.setattr("strawberryfields.engine.APIClient", mock_api_client)
-    engine = StarshipEngine(polling_delay_seconds=0)
+    engine = StarshipEngine("chip0", polling_delay_seconds=0)
     return engine
 
 
@@ -178,7 +178,7 @@ class TestStarshipEngine:
         """
         mock_api_client = MagicMock()
         monkeypatch.setattr("strawberryfields.engine.APIClient", mock_api_client)
-        engine = StarshipEngine()
+        engine = StarshipEngine("chip0")
         assert engine.client == mock_api_client()
         assert engine.jobs == []
 
@@ -282,7 +282,6 @@ class TestStarshipEngine:
         methods = MagicMock()
 
         monkeypatch.setattr(starship_engine, "backend_name", str(inputs.mock_backend))
-        monkeypatch.setattr(starship_engine, "HARDWARE_BACKENDS", [str(inputs.mock_backend)])
         monkeypatch.setattr(starship_engine, "_run_program", methods._run_program)
         monkeypatch.setattr("strawberryfields.engine.Result", outputs.result)
         monkeypatch.setattr(starship_engine, "backend", inputs.mock_backend)
@@ -290,7 +289,6 @@ class TestStarshipEngine:
         result = starship_engine._run(inputs.program, shots=inputs.shots, args={},
                 compile_options={})
 
-        assert starship_engine.backend_name in starship_engine.HARDWARE_BACKENDS
         inputs.program.compile.assert_called_once_with(starship_engine.backend.circuit_spec)
         mock_compiled_program = inputs.program.compile(starship_engine.backend_name)
         mock_compiled_program.lock.assert_called_once()
@@ -328,7 +326,7 @@ class TestStarshipEngine:
         # NOTE: this is currently more of an integration test, currently a WIP / under development.
 
         api_client_params = {"hostname": "localhost"}
-        engine = StarshipEngine(polling_delay_seconds=0, **api_client_params)
+        engine = StarshipEngine("chip0", polling_delay_seconds=0, **api_client_params)
 
         # We don't want to actually send any requests, though we should make sure POST was called
         mock_api_client_post = MagicMock()
