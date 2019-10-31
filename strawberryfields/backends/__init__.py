@@ -28,8 +28,9 @@ __all__ = [
     "Chip0Backend",
 ]
 
-supported_backends = {b.short_name: b for b in (BaseBackend, GaussianBackend, FockBackend,
-    Chip0Backend)}
+supported_backends = {
+    b.short_name: b for b in (BaseBackend, GaussianBackend, FockBackend, Chip0Backend)
+}
 
 
 def load_backend(name):
