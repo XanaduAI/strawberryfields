@@ -345,7 +345,7 @@ class Program:
         for r in refs:
             # mark the RegRef as deleted
             r.active = False
-            #self.reg_refs[r.ind].active = False
+            # self.reg_refs[r.ind].active = False
         # NOTE: deleted indices are *not* removed from self.unused_indices
 
     def lock(self):
@@ -530,8 +530,14 @@ class Program:
         if "shots" in kwargs:
             compiled.run_options["shots"] = kwargs["shots"]
 
-        return compiled
+        backend_options_keys = ("cutoff_dim",)
+        if set(kwargs.keys()) & set(backend_options_keys):
+            compiled.backend_options = {}
+            for key in backend_options_keys:
+                if key in kwargs:
+                    compiled.backend_options[key] = kwargs[key]
 
+        return compiled
 
     def optimize(self):
         """Simplify and optimize the program.
@@ -549,7 +555,6 @@ class Program:
         opt = self._linked_copy()
         opt.circuit = pu.optimize_circuit(self.circuit)
         return opt
-
 
     def draw_circuit(self, tex_dir='./circuit_tex', write_to_file=True):
         r"""Draw the circuit using the Qcircuit :math:`\LaTeX` package.

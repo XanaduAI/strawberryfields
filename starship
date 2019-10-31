@@ -105,8 +105,8 @@ if __name__ == "__main__":
                 str(response.status_code), response.content))
             sys.exit(1)
 
-    eng = StarshipEngine()
     program = load(args.input)
+    eng = StarshipEngine(program.target)
     result = eng.run(program)
 
     if result and result.samples is not None:

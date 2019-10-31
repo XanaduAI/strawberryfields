@@ -156,6 +156,8 @@ class BaseEngine(abc.ABC):
         backend_options (Dict[str, Any]): keyword arguments for the backend
     """
 
+    REMOTE = False
+
     def __init__(self, backend, backend_options=None):
         if backend_options is None:
             backend_options = {}
@@ -296,13 +298,13 @@ class BaseEngine(abc.ABC):
                 p = p.compile(target, **compile_options)
             p.lock()
 
-            if self.backend_name in getattr(self, "HARDWARE_BACKENDS", []):
+            if self.REMOTE:
                 self.samples = self._run_program(p, **kwargs)
             else:
                 self._run_program(p, **kwargs)
                 shots = kwargs.get("shots", 1)
                 self.samples = [
-                    _broadcast_nones(p.reg_refs[k].val, kwargs["shots"]) for k in sorted(p.reg_refs)
+                    _broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)
                 ]
                 self.run_progs.append(p)
 
@@ -448,18 +450,18 @@ class StarshipEngine(BaseEngine):
         backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
     """
 
-    HARDWARE_BACKENDS = ("chip0",)
+    # This engine will execute jobs remotely.
+    REMOTE = True
 
-    def __init__(self, polling_delay_seconds=1, **kwargs):
-        # Only chip0 backend supported initially.
-        backend = "chip0"
+    def __init__(self, backend, polling_delay_seconds=1, **kwargs):
         super().__init__(backend)
 
-        # todo: move this into backend class
-        class Chip0Backend(BaseBackend):
-            circuit_spec = "chip0"
-
-        self.backend = Chip0Backend()
+        if isinstance(backend, str):
+            self.backend_name = backend
+            self.backend = load_backend(backend)
+        elif isinstance(backend, BaseBackend):
+            self.backend_name = backend.short_name
+            self.backend = backend
 
         api_client_params = {k: v for k, v in kwargs.items() if k in DEFAULT_CONFIG["api"].keys()}
         self.client = APIClient(**api_client_params)
@@ -500,7 +502,7 @@ class StarshipEngine(BaseEngine):
 
         # TODO: This is potentially not needed here
         bb._target["name"] = self.backend_name
-        bb._target["options"] = {"shots": shots}
+        bb._target["options"] = {"shots": shots, **program.backend_options}
         return bb
 
     def _queue_job(self, job_content):
