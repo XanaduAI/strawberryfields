@@ -52,7 +52,8 @@ class GaussianUnitary(CircuitSpecs):
         # multi mode gates
         "BSgate",
         "S2gate",
-        "Interferometer",  # Note that interferometer is accepted as a primitive
+        "Interferometer", # Note that interferometer is accepted as a primitive
+        "GaussianTransform", # Note that GaussianTransform is accepted as a primitive
     }
 
     decompositions = {
@@ -126,6 +127,10 @@ class GaussianUnitary(CircuitSpecs):
                 elif name == "Interferometer":
                     S = expand(
                         interferometer(params[0]), [dict_indices[mode] for mode in modes], nmodes
+                    )
+                elif name == "GaussianTransform":
+                    S = expand(
+                        params[0], [dict_indices[mode] for mode in modes], nmodes
                     )
                 Snet = S @ Snet
                 rnet = S @ rnet
