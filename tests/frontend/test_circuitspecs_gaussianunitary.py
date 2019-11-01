@@ -47,6 +47,7 @@ def random_params(size, sq_bound, disp_bound):
 @pytest.mark.parametrize("depth", [1, 3, 6])
 @pytest.mark.parametrize("width", [5, 10, 15])
 def test_gaussian_program(depth, width):
+    """Tests that a circuit and its compiled version produce the same Gaussian state"""
     eng = sf.LocalEngine(backend="gaussian")
     eng1 = sf.LocalEngine(backend="gaussian")
     circuit = sf.Program(width)
@@ -72,6 +73,7 @@ def test_gaussian_program(depth, width):
 @pytest.mark.parametrize("depth", [1, 2, 3])
 @pytest.mark.parametrize("width", [5, 10])
 def test_symplectic_composition(depth, width):
+    """Tests that symplectic operations are composed correctly"""
     eng = sf.LocalEngine(backend="gaussian")
     eng1 = sf.LocalEngine(backend="gaussian")
     circuit = sf.Program(width)
@@ -84,23 +86,24 @@ def test_symplectic_composition(depth, width):
     compiled_circuit = circuit.compile("gaussian_unitary")
     assert np.allclose(compiled_circuit.circuit[0].op.p[0].x, Snet)
 
+
 @pytest.mark.parametrize("depth", [1, 2, 3])
-def test_modes_subset():
+def test_modes_subset(depth):
+    """Tests that the compiler recognizes which modes are not being modified"""
+
     width = 10
     eng = sf.LocalEngine(backend="gaussian")
     eng1 = sf.LocalEngine(backend="gaussian")
-    gbs = sf.Program(width)
-    indices = (1,4,2,6,7)
+    circuit = sf.Program(width)
+    indices = (1, 4, 2, 6, 7)
     active_modes = len(indices)
     with circuit.context as q:
         for _ in range(depth):
-            U, s, V, alphas = random_params(active_modes, 2.0 / depth, 1.0)
-            ops.Interferometer(U) | q
-            for i in range(width):
-                ops.Sgate(s[i]) | q[i]
-            ops.Interferometer(V) | q
-            for i in range(width):
-                ops.Dgate(alphas[i]) | q[i]
+            U, s, V, _ = random_params(active_modes, 2.0 / depth, 1.0)
+            ops.Interferometer(U) | tuple(q[i] for i in indices)
+            for i, index in enumerate(indices):
+                ops.Sgate(s[i]) | q[index]
+            ops.Interferometer(V) | tuple(q[i] for i in indices)
     compiled_circuit = circuit.compile("gaussian_unitary")
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
@@ -109,3 +112,6 @@ def test_modes_subset():
     mean1 = eng1.run(compiled_circuit).state.means()
     assert np.allclose(cv, cv1)
     assert np.allclose(mean, mean1)
+    assert len(compiled_circuit.circuit[0].reg) == 5
+    indices = [compiled_circuit.circuit[0].reg[i].ind for i in range(5)]
+    assert indices == sorted(list(indices))
