@@ -15,8 +15,8 @@
 
 import numpy as np
 from strawberryfields.program_utils import Command
-from thewalrus.symplectic import expand_vector, expand, rotation, squeezing, two_mode_squeezing, interferometer
 from strawberryfields import ops
+from thewalrus.symplectic import expand_vector, expand, rotation, squeezing, two_mode_squeezing, interferometer
 from .circuit_specs import CircuitSpecs
 
 class GaussianUnitary(CircuitSpecs):
@@ -91,7 +91,7 @@ class GaussianUnitary(CircuitSpecs):
         for operations in seq:
             modes = [modes_label.ind for modes_label in operations.reg]
             used_modes.append(modes)
-
+        # pylint: disable=consider-using-set-comprehension
         used_modes = list(set([item for sublist in used_modes for item in sublist]))
 
         dict_indices = {used_modes[i]: i for i in range(len(used_modes))}
