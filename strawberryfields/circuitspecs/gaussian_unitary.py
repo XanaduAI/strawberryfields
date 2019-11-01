@@ -12,15 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Circuit specifications for the Gaussian simulator backend."""
-from .circuit_specs import CircuitSpecs
-from strawberryfields.program_utils import Command
-import numpy as np
-from .matrices import *
-from strawberryfields import ops
-class GaussianUnitary(CircuitSpecs):
-    """Circuit specifications for the Gaussian backend."""
 
-    short_name = 'gaussian_unitary'
+import numpy as np
+from strawberryfields.program_utils import Command
+from thewalrus.symplectic import expand_vector, expand, rotation, squeezing, two_mode_squeezing, interferometer
+from strawberryfields import ops
+from .circuit_specs import CircuitSpecs
+
+class GaussianUnitary(CircuitSpecs):
+    """Circuit specifications for the Gaussian Unitary compiler"""
+
+    short_name = "gaussian_unitary"
     modes = None
     local = True
     remote = True
@@ -32,17 +34,17 @@ class GaussianUnitary(CircuitSpecs):
         "_New_modes",
         "_Delete",
         # state preparations
-        #"Vacuum",
-        #"Coherent",
-        #"Squeezed",
-        #"DisplacedSqueezed",
-        #"Thermal",
-        #"Gaussian",
+        # "Vacuum",
+        # "Coherent",
+        # "Squeezed",
+        # "DisplacedSqueezed",
+        # "Thermal",
+        # "Gaussian",
         # measurements
-        #"MeasureHomodyne",
-        #"MeasureHeterodyne",
-        #"MeasureFock",
-        #"MeasureThreshold",
+        # "MeasureHomodyne",
+        # "MeasureHeterodyne",
+        # "MeasureFock",
+        # "MeasureThreshold",
         # single mode gates
         "Dgate",
         "Sgate",
@@ -50,11 +52,11 @@ class GaussianUnitary(CircuitSpecs):
         # multi mode gates
         "BSgate",
         "S2gate",
-        "Interferometer", #Note that interferometer is accepted as a primitive
+        "Interferometer",  # Note that interferometer is accepted as a primitive
     }
 
     decompositions = {
-        #"Interferometer": {},
+        # "Interferometer": {},
         "GraphEmbed": {},
         "BipartiteGraphEmbed": {},
         "GaussianTransform": {},
@@ -68,9 +70,8 @@ class GaussianUnitary(CircuitSpecs):
         "Fouriergate": {},
     }
 
-
     def compile(self, seq, registers):
-        """Try to arrange a quantum circuit into a the canonical Symplectic form.
+        """Try to arrange a quantum circuit into the canonical Symplectic form.
 
         This method checks whether the circuit can be implemented as a sequence of Gaussian operations.
         If the answer is yes it arranges them in the canonical order with displacement at the end.
@@ -82,65 +83,65 @@ class GaussianUnitary(CircuitSpecs):
         Returns:
             List[Command]: modified circuit
         Raises:
-            CircuitError: the circuit does not correspond to GBS
+            CircuitError: the circuit does not correspond to a Gaussian unitary
         """
-        #[print(ops.op) for ops in seq]
-        indices = [i.ind for i in registers]
-        indices.sort()
-        dict_indices = {indices[i]:i for i in range(len(indices))}
 
-        nmodes = len(indices)
+        # Check which modes are actually being used
+        used_modes = []
+        for operations in seq:
+            modes = [modes_label.ind for modes_label in operations.reg]
+            used_modes.append(modes)
+
+        used_modes = list(set([item for sublist in used_modes for item in sublist]))
+
+        dict_indices = {used_modes[i]: i for i in range(len(used_modes))}
+        nmodes = len(used_modes)
+
+        # This is the identity transformation in phase-space, multiply by the identity and add zero
         Snet = np.identity(2 * nmodes)
         rnet = np.zeros(2 * nmodes)
 
+        # Now we will go through each operation in the sequence `seq` and apply it in quadrature space
+        # We will keep track of the net transforation in the Symplectic matrix `Snet` and the quadrature
+        # vector `rnet`.
         for operations in seq:
             name = operations.op.__class__.__name__
             params = [i.x for i in operations.op.p]
-            modes = [thing.ind for thing in operations.reg]
-
-            if name == 'Dgate':
-                rnet = rnet+expand_vector(params[0]*(np.exp(1j*params[1])), dict_indices[modes[0]], nmodes)
+            modes = [modes_label.ind for modes_label in operations.reg]
+            if name == "Dgate":
+                rnet = rnet + expand_vector(
+                    params[0] * (np.exp(1j * params[1])), dict_indices[modes[0]], nmodes
+                )
             else:
-                if name == 'Rgate':
+                if name == "Rgate":
                     S = expand(rotation(params[0]), dict_indices[modes[0]], nmodes)
-                elif name == 'Sgate':
+                elif name == "Sgate":
                     S = expand(squeezing(params[0], params[1]), dict_indices[modes[0]], nmodes)
-                elif name == 'S2gate':
-                    S = expand(two_mode_squeezing(params[0], params[1]), [dict_indices[modes[0]], dict_indices[modes[1]]], nmodes)
-                elif name == 'Interferometer':
-                    S = expand(interferometer(params[0]), [dict_indices[mode] for mode in modes], nmodes)
+                elif name == "S2gate":
+                    S = expand(
+                        two_mode_squeezing(params[0], params[1]),
+                        [dict_indices[modes[0]], dict_indices[modes[1]]],
+                        nmodes,
+                    )
+                elif name == "Interferometer":
+                    S = expand(
+                        interferometer(params[0]), [dict_indices[mode] for mode in modes], nmodes
+                    )
                 Snet = S @ Snet
                 rnet = S @ rnet
-        #A = [Command(ops.GaussianTransform(Snet), indices)]
-        A = [Command(ops.GaussianTransform(Snet), sorted(list(registers), key=lambda x: x.ind))]
-        return A
-        """
-        A, B, C = group_operations(seq, lambda x: isinstance(x, ops.MeasureFock))
 
-        # C should be empty
-        if C:
-            raise CircuitError('Operations following the Fock measurements.')
-
-        # A should only contain Gaussian operations
-        # (but this is already guaranteed by group_operations() and our primitive set)
-
-        # without Fock measurements GBS is pointless
-        if not B:
-            raise CircuitError('GBS circuits must contain Fock measurements.')
-
-        # there should be only Fock measurements in B
-        measured = set()
-        for cmd in B:
-            if not isinstance(cmd.op, ops.MeasureFock):
-                raise CircuitError('The Fock measurements are not consecutive.')
-
-            # combine the Fock measurements
-            temp = set(cmd.reg)
-            if measured & temp:
-                raise CircuitError('Measuring the same mode more than once.')
-            measured |= temp
-
-        # replace B with a single Fock measurement
-        B = [Command(ops.MeasureFock(), sorted(list(measured), key=lambda x: x.ind))]
-        return super().compile(A + B, registers)
-        """
+        # Having obtained the net displacement we simply convert it into complex notation
+        alphas = 0.5 * (rnet[0:nmodes] + 1j * rnet[nmodes : 2 * nmodes])
+        # And now we just pass the net transformation as a big Symplectic operation plus displacements
+        ord_reg = [r for r in list(registers) if r.ind in used_modes]
+        ord_reg = sorted(list(ord_reg), key=lambda x: x.ind)
+        if np.allclose(Snet, np.identity(2 * nmodes)):
+            A = []
+        else:
+            A = [Command(ops.GaussianTransform(Snet), ord_reg)]
+        B = [
+            Command(ops.Dgate(alphas[i]), ord_reg[i])
+            for i in range(len(ord_reg))
+            if not np.allclose(alphas[i], 0.0)
+        ]
+        return A + B
