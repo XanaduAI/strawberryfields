@@ -83,3 +83,29 @@ def test_symplectic_composition(depth, width):
             ops.GaussianTransform(S) | q
     compiled_circuit = circuit.compile("gaussian_unitary")
     assert np.allclose(compiled_circuit.circuit[0].op.p[0].x, Snet)
+
+@pytest.mark.parametrize("depth", [1, 2, 3])
+def test_modes_subset():
+    width = 10
+    eng = sf.LocalEngine(backend="gaussian")
+    eng1 = sf.LocalEngine(backend="gaussian")
+    gbs = sf.Program(width)
+    indices = (1,4,2,6,7)
+    active_modes = len(indices)
+    with circuit.context as q:
+        for _ in range(depth):
+            U, s, V, alphas = random_params(active_modes, 2.0 / depth, 1.0)
+            ops.Interferometer(U) | q
+            for i in range(width):
+                ops.Sgate(s[i]) | q[i]
+            ops.Interferometer(V) | q
+            for i in range(width):
+                ops.Dgate(alphas[i]) | q[i]
+    compiled_circuit = circuit.compile("gaussian_unitary")
+    cv = eng.run(circuit).state.cov()
+    mean = eng.run(circuit).state.means()
+
+    cv1 = eng1.run(compiled_circuit).state.cov()
+    mean1 = eng1.run(compiled_circuit).state.means()
+    assert np.allclose(cv, cv1)
+    assert np.allclose(mean, mean1)
