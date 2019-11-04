@@ -1187,7 +1187,7 @@ class Xgate(Gate):
 
     def _decompose(self, reg, **kwargs):
         # into a displacement
-        z = self.p[0] / sqrt(2 * sf.hbar)
+        z = self.p[0] / np.sqrt(2 * sf.hbar)
         return [
             Command(Dgate(z, 0), reg)
         ]
@@ -1209,7 +1209,7 @@ class Zgate(Gate):
 
     def _decompose(self, reg, **kwargs):
         # into a displacement
-        z = self.p[0] * 1j/sqrt(2 * sf.hbar)
+        z = self.p[0] * 1j/np.sqrt(2 * sf.hbar)
         return [
             Command(Dgate(z, 0), reg)
         ]
