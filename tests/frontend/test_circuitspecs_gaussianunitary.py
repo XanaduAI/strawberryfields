@@ -89,7 +89,7 @@ def test_symplectic_composition(depth, width):
 
 @pytest.mark.parametrize("depth", [1, 2, 3])
 def test_modes_subset(depth):
-    """Tests that the compiler recognizes which modes are not being modified"""
+    """Tests that the compiler recognizes which modes are not being modified and acts accordingly"""
 
     width = 10
     eng = sf.LocalEngine(backend="gaussian")
