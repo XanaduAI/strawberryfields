@@ -53,6 +53,24 @@ random seed used to generate samples can be fixed:
     postselect
     seed
 
+.. _decomposition:
+
+More generally, a GBS device acts on arbitrary :ref:`Gaussian states <gaussian_states>`. Any pure
+Gaussian state can be created by applying the following set of gates to the vacuum:
+
+#. interferometer :math:`U_{1}` (using :class:`~.ops.Interferometer`)
+#. squeezing :math:`S_{\mathbf{r}}` on all modes with parameters :math:`\mathbf{r}` (using
+   :class:`~.ops.Sgate`)
+#. another interferometer :math:`U_{2}` (using :class:`~.ops.Interferometer`)
+#. displacement :math:`D_{\boldsymbol{\alpha}}` on all modes with parameters
+   :math:`\boldsymbol{\alpha}` (using :class:`~.ops.Dgate`)
+
+This can be followed by PNR detection. The :func:`gaussian` function
+allows users to sample from arbitrary pure Gaussian states using the above decomposition.
+
+.. autosummary::
+    gaussian
+
 Generating subgraphs
 --------------------
 
@@ -99,6 +117,7 @@ use within heuristics for problems such as maximum clique (see :mod:`~.gbs.cliqu
 Code details
 ^^^^^^^^^^^^
 """
+import warnings
 from typing import Optional
 
 import networkx as nx
@@ -160,7 +179,9 @@ def sample(
         else:
             sf.ops.MeasureFock() | q
 
-    s = eng.run(p, run_options={"shots": n_samples}).samples
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message="Cannot simulate non-")
+        s = eng.run(p, run_options={"shots": n_samples}).samples
 
     if n_samples == 1:
         return [s]
@@ -271,3 +292,77 @@ def to_subgraphs(samples: list, graph: nx.Graph) -> list:
         return [sorted([graph_nodes[i] for i in s]) for s in subgraph_samples]
 
     return subgraph_samples
+
+
+def gaussian(
+    U1: np.ndarray,
+    r: np.ndarray,
+    U2: np.ndarray,
+    alpha: np.ndarray,
+    n_samples: int,
+    loss: float = 0.0,
+) -> list:
+    r"""Generate simulated samples from pure Gaussian states.
+
+    The pure Gaussian states are prepared by applying the following gates to the vacuum:
+
+    #. Interferometer ``U1``
+    #. Squeezing on all modes with parameters ``r``
+    #. Interferometer ``U2``
+    #. Displacement on all modes with parameters ``alpha``
+
+    Note that, since the gates are applied to the vacuum, the first interferometer has no effect.
+    It is nevertheless included so that the inputs to this function follow a standard decomposition
+    of Gaussian unitaries shown :ref:`above <decomposition>`.
+
+    Args:
+        U1 (array): first interferometer unitary matrix
+        r (array): squeezing parameters
+        U2 (array): second interferometer unitary matrix
+        alpha (array): displacement parameters
+        n_samples (int): number of samples to be generated
+        loss (float): fraction of generated photons that are lost while passing through device.
+            Parameter should range from ``loss=0`` (ideal noise-free GBS) to ``loss=1``.
+
+    Returns:
+        list[list[int]]: a list of samples from GBS
+    """
+    if n_samples < 1:
+        raise ValueError("Number of samples must be at least one")
+    if not 0 <= loss <= 1:
+        raise ValueError("Loss parameter must take a value between zero and one")
+
+    n_modes = len(alpha)
+
+    eng = sf.LocalEngine(backend="gaussian")
+    gbs = sf.Program(n_modes)
+
+    # pylint: disable=expression-not-assigned,pointless-statement
+    with gbs.context as q:
+
+        # this interferometer has no action, but is kept to follow the decomposition given in the
+        # docstring
+        sf.ops.Interferometer(U1) | q
+
+        for i in range(n_modes):
+            sf.ops.Sgate(r[i]) | q[i]
+
+        sf.ops.Interferometer(U2) | q
+
+        for i in range(n_modes):
+            sf.ops.Dgate(alpha[i]) | q[i]
+
+        if loss:
+            for _q in q:
+                sf.ops.LossChannel(1 - loss) | _q
+
+        sf.ops.MeasureFock() | q
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message="Cannot simulate non-")
+        s = eng.run(gbs, run_options={"shots": n_samples}).samples
+
+    if n_samples == 1:
+        return [s]
+
+    return s.tolist()

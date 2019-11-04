@@ -97,12 +97,13 @@ class TestOneModeSymbolic:
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
         tf_params = {'session': sess, 'feed_dict': {a: 0.0}}
+
         eng, prog = setup_eng(1)
-
+        x = prog.params('a')  # free parameter
         with prog.context as q:
-            Dgate(a) | q
+            Dgate(x) | q
 
-        state = eng.run(prog, run_options=tf_params).state
+        state = eng.run(prog, args={'a': a}, run_options=tf_params).state
 
         if state.is_pure:
             k = state.ket()

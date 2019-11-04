@@ -23,6 +23,7 @@ import blackbird
 import strawberryfields as sf
 import strawberryfields.ops as ops
 
+from strawberryfields.parameters import par_evaluate
 from strawberryfields.program_utils import CircuitError, list_to_DAG
 from strawberryfields.io import to_program
 from strawberryfields.utils import random_interferometer
@@ -70,7 +71,7 @@ def program_equivalence(prog1, prog2, compare_params=True, atol=1e-6, rtol=0):
 
         # add node attributes to store the operation name and parameters
         name_mapping = {i: n.op.__class__.__name__ for i, n in enumerate(G.nodes())}
-        parameter_mapping = {i: [j.x for j in n.op.p] for i, n in enumerate(G.nodes())}
+        parameter_mapping = {i: par_evaluate(n.op.p) for i, n in enumerate(G.nodes())}
 
         # CXgate and BSgate are not symmetric wrt to permuting the order of the two
         # modes it acts on; i.e., the order of the wires matter
@@ -85,7 +86,7 @@ def program_equivalence(prog1, prog2, compare_params=True, atol=1e-6, rtol=0):
                     wire_mapping[i] = [j.ind for j in n.reg]
 
             elif n.op.__class__.__name__ == "BSgate":
-                if np.allclose([j.x % np.pi for j in n.op.p], [np.pi/4, np.pi/2]):
+                if np.allclose([j % np.pi for j in par_evaluate(n.op.p)], [np.pi/4, np.pi/2]):
                     # if the beamsplitter is *symmetric*, then the order of the
                     # wires does not matter.
                     wire_mapping[i] = 0
