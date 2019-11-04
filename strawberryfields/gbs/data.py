@@ -90,9 +90,7 @@ Each dataset contains a variety of metadata relevant to the sampling:
   <https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html>`__
 
 Graph and molecule datasets also contain some specific data, such as the graph adjacency matrix
-of the input molecular information.
-
-Note that datasets are simulated without photon loss.
+or the input molecular information. Note that datasets are simulated without photon loss.
 
 Loading data
 ------------
