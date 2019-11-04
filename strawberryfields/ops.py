@@ -1226,10 +1226,12 @@ class Xgate(Gate):
     def __init__(self, x):
         super().__init__([x])
 
-    def _apply(self, reg, backend, **kwargs):
+    def _decompose(self, reg, **kwargs):
+        # into a displacement
         z = self.p[0] / sqrt(2 * sf.hbar)
-        backend.displacement(z.x, *reg)
-
+        return [
+            Command(Dgate(z, 0), reg)
+        ]
 
 class Zgate(Gate):
     r"""Momentum :ref:`displacement <displacement>` gate.
@@ -1244,10 +1246,12 @@ class Zgate(Gate):
     def __init__(self, p):
         super().__init__([p])
 
-    def _apply(self, reg, backend, **kwargs):
+    def _decompose(self, reg, **kwargs):
+        # into a displacement
         z = self.p[0] * 1j/sqrt(2 * sf.hbar)
-        backend.displacement(z.x, *reg)
-
+        return [
+            Command(Dgate(z, 0), reg)
+        ]
 
 class Sgate(Gate):
     r"""Phase space :ref:`squeezing <squeezing>` gate.
@@ -1526,9 +1530,12 @@ class Fouriergate(Gate):
     def __init__(self):
         super().__init__([pi/2])
 
-    def _apply(self, reg, backend, **kwargs):
-        p = _unwrap(self.p)
-        backend.rotation(p[0], *reg)
+    def _decompose(self, reg, **kwargs):
+        # into a rotation
+        theta = np.pi/2
+        return [
+            Command(Rgate(z, 0), reg)
+        ]
 
     def __str__(self):
         """String representation for the gate."""
