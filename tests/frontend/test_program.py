@@ -23,6 +23,7 @@ import strawberryfields as sf
 
 from strawberryfields import program
 from strawberryfields import ops
+from strawberryfields.parameters import ParameterError, FreeParameter
 from strawberryfields.circuitspecs.circuit_specs import CircuitSpecs
 
 
@@ -119,7 +120,7 @@ class TestProgram:
             charlie, = ops.New(1)
             BS | (bob, charlie)
             ops.MeasureX | bob
-            ops.Dgate(bob).H | charlie
+            ops.Dgate(bob.par).H | charlie
             ops.Del | bob
             ops.MeasureX | charlie
 
@@ -134,7 +135,7 @@ class TestProgram:
             "New(1)",
             "BSgate(6.283, 1.571) | (q[1], q[2])",
             "MeasureX | (q[1])",
-            "Dgate(RR(q[1]), 0).H | (q[2])",
+            "Dgate(q1, 0).H | (q[2])",
             "Del | (q[1])",
             "MeasureX | (q[2])",
         ]
@@ -146,6 +147,60 @@ class TestProgram:
         res = []
         eng.print_applied(print_fn)
         assert res == ["Run 0:"] + expected
+
+    def test_params(self, prog):
+        """Creating and retrieving free parameters."""
+        assert not prog.free_params  # no free params to start with
+
+        with pytest.raises(TypeError, match='Parameter names must be strings.'):
+            prog.params(1)
+
+        # creating
+        x = prog.params('a')
+        assert isinstance(x, FreeParameter)
+        assert x.name == 'a'
+        assert len(prog.free_params) == 1
+
+        # retrieving
+        y = prog.params('a')
+        assert y is x
+        assert len(prog.free_params) == 1
+
+        with pytest.raises(TypeError, match='Parameter names must be strings.'):
+            prog.params(x)
+
+        # creating/retrieving multiple
+        names = ('foo', 'bar', 'a')
+        pars = prog.params(*names)
+        assert isinstance(pars, list)
+        for n, p in zip(names, pars):
+            assert isinstance(p, FreeParameter)
+            assert p.name == n
+        assert pars[2] is x  # still the same parameter
+        assert len(prog.free_params) == 3
+
+        # once the program is locked only retrieval is possible
+        prog.lock()
+        with pytest.raises(program.CircuitError, match='The Program is locked, no more free parameters can be created.'):
+            w = prog.params('www')
+        w = prog.params('a')
+        assert w is x
+
+    def test_bind_params(self, prog):
+        """Binding free parameters."""
+
+        with pytest.raises(ParameterError, match='Unknown free parameter'):
+            prog.bind_params({'x': 0})
+
+        x, y = prog.params('x', 'y')
+        # bind some params using parameter name
+        prog.bind_params({'x': 1.0})
+        assert x.val == 1.0
+        assert y.val is None
+        # bind using the parameter itself
+        prog.bind_params({x: 2.0})
+        assert x.val == 2.0
+        assert y.val is None
 
 
 class TestRegRefs:
@@ -186,8 +241,8 @@ class TestRegRefs:
     def test_invalid_measurement(self, eng, prog):
         """Cannot use a measurement before it exists."""
         with prog.context as q:
-            ops.Dgate(q[0]) | q[1]
-        with pytest.raises(program.CircuitError, match="nonexistent measurement result"):
+            ops.Dgate(q[0].par) | q[1]
+        with pytest.raises(ParameterError, match="nonexistent measurement result"):
             eng.run(prog)
 
     def test_invalid_regref(self, prog):

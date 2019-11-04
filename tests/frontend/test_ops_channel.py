@@ -23,7 +23,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.program_utils import MergeFailure
 from strawberryfields import utils
-from strawberryfields.parameters import Parameter
+
 
 # make test deterministic
 np.random.seed(42)
@@ -40,7 +40,7 @@ class TestChannelBasics:
         for optional parameters)"""
         G = ops.LossChannel(a)
         merged = G.merge(ops.LossChannel(b))
-        assert np.allclose(merged.p[0].x, a * b, atol=tol, rtol=0)
+        assert np.allclose(merged.p[0], a * b, atol=tol, rtol=0)
 
     def test_loss_merging_identity(self, tol):
         """test the merging of two Loss channels such that
@@ -53,7 +53,7 @@ class TestChannelBasics:
         """test the merging of two Loss channels with same nbar"""
         G = ops.ThermalLossChannel(a, c)
         merged = G.merge(ops.ThermalLossChannel(b, c))
-        assert np.allclose(merged.p[0].x, a * b, atol=tol, rtol=0)
+        assert np.allclose(merged.p[0], a * b, atol=tol, rtol=0)
 
     def test_thermalloss_merging_different_nbar(self, tol):
         """test the merging of two Loss channels with same nbar raises exception"""

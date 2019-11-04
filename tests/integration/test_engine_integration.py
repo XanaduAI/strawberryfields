@@ -126,17 +126,19 @@ class TestProperExecution:
 
     # TODO: Some of these tests should probably check *something* after execution
 
-    def test_regref_transform(self, setup_eng):
-        """Test circuit with regref transforms doesn't raise any errors"""
+    def test_measured_parameter(self, setup_eng):
+        """Test that a circuit with measured parameters executes successfully."""
         eng, prog = setup_eng(2)
 
         with prog.context as q:
             ops.MeasureX | q[0]
-            ops.Sgate(q[0]) | q[1]
+            ops.Sgate(q[0].par) | q[1]
             # symbolic hermitian conjugate together with register reference
-            ops.Dgate(q[0]).H | q[1]
-            ops.Sgate(ops.RR(q[0], lambda x: x ** 2)) | q[1]
-            ops.Dgate(ops.RR(q[0], lambda x: -x)).H | q[1]
+            ops.Dgate(q[0].par).H | q[1]
+            # algebraic transformation
+            ops.Sgate(q[0].par ** 2) | q[1]
+            # algebraic transformation and h.c.
+            ops.Dgate(-q[0].par).H | q[1]
 
         eng.run(prog)
 

@@ -213,7 +213,7 @@ class BaseEngine(abc.ABC):
             list[Command]: commands that were applied to the backend
         """
 
-    def _run(self, program, *, compile_options=None, **kwargs):
+    def _run(self, program, *, args, compile_options, **kwargs):
         """Execute the given programs by sending them to the backend.
 
         If multiple Programs are given they will be executed sequentially as
@@ -230,7 +230,8 @@ class BaseEngine(abc.ABC):
 
         Args:
             program (Program, Sequence[Program]): quantum programs to run
-            compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+            args (Dict[str, Any]): values for the free parameters in the program(s) (if any)
+            compile_options (Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
 
         The ``kwargs`` keyword arguments are passed to the backend API calls via :meth:`Operation.apply`.
 
@@ -243,8 +244,6 @@ class BaseEngine(abc.ABC):
             if val is None and dim > 1:
                 return [None] * dim
             return val
-
-        compile_options = compile_options or {}
 
         if not isinstance(program, Sequence):
             program = [program]
@@ -268,6 +267,9 @@ class BaseEngine(abc.ABC):
                 # We cannot copy from prev directly because it could be used in more than one engine.
                 for k, v in enumerate(self.samples):
                     p.reg_refs[k].val = v
+
+            # bind free parameters to their values
+            p.bind_params(args)
 
             # if the program hasn't been compiled for this backend, do it now
             target = self.backend.circuit_spec
@@ -312,11 +314,8 @@ class LocalEngine(BaseEngine):
         return self.__class__.__name__ + '({})'.format(self.backend_name)
 
     def reset(self, backend_options=None):
-        if backend_options is None:
-            backend_options = {}
-
+        backend_options = backend_options or {}
         super().reset(backend_options)
-        self.backend_options.pop('batch_size', None)  # HACK to make tests work for now
         self.backend.reset(**self.backend_options)
         # TODO should backend.reset and backend.begin_circuit be combined?
 
@@ -338,13 +337,14 @@ class LocalEngine(BaseEngine):
                 raise NotImplementedError('The operation {} has not been implemented in {} for the arguments {}.'.format(cmd.op, self.backend, kwargs)) from None
         return applied
 
-    def run(self, program, *, compile_options=None, run_options=None):
+    def run(self, program, *, args=None, compile_options=None, run_options=None):
         """Execute the given programs by sending them to the backend.
 
         Extends :meth:`BaseEngine._run`.
 
         Args:
             program (Program, Sequence[Program]): quantum programs to run
+            args (dict[str, Any]): values for the free parameters in the program(s) (if any)
             compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
             run_options (None, Dict[str, Any]): keyword arguments that are needed by the backend during execution
                 e.g., in :meth:`Operation.apply` or :meth:`.BaseBackend.state`
@@ -365,6 +365,7 @@ class LocalEngine(BaseEngine):
             feed_dict (dict[str, Any]): TensorFlow feed dictionary, used when evaluating returned measurement results
                 and state. TF backend only.
         """
+        args = args or {}
         compile_options = compile_options or {}
         temp_run_options = {}
 
@@ -386,7 +387,7 @@ class LocalEngine(BaseEngine):
         eng_run_keys = ["eval", "session", "feed_dict", "shots"]
         eng_run_options = {key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys}
 
-        result = super()._run(program, compile_options=compile_options, **eng_run_options)
+        result = super()._run(program, args=args, compile_options=compile_options, **eng_run_options)
 
         modes = temp_run_options["modes"]
 
