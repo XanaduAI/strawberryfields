@@ -86,6 +86,12 @@ Each dataset contains a variety of metadata relevant to the sampling:
 
 - ``modes``: number of modes in the GBS device or, equivalently, number of nodes in the graph
 
+- ``data``: the raw data accessible as a SciPy `csr sparse array
+  <https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html>`__
+
+Graph and molecule datasets also contain some specific data, such as the graph adjacency matrix
+of the input molecular information.
+
 Note that datasets are simulated without photon loss.
 
 Loading data
@@ -119,6 +125,7 @@ For example, we see that the ``data[3]`` sample has 11 clicks.
 Code details
 ^^^^^^^^^^^^
 """
+import pickle
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod
 
@@ -218,6 +225,7 @@ class Dataset(ABC):
         pass
 
 
+# pylint: disable=abstract-method
 class GraphDataset(Dataset, ABC):
     """Class for loading datasets of pre-generated samples from graphs.
 
@@ -418,4 +426,36 @@ class Mutag3(GraphDataset):
 
     _data_filename = "MUTAG_3"
     n_mean = 6
+    threshold = False
+
+
+# pylint: disable=abstract-method
+class MoleculeDataset(Dataset, ABC):
+    """Class for loading datasets of pre-generated samples from molecules.
+
+    Attributes:
+        w (array): normal mode frequencies of the electronic ground state (:math:`\text{cm}^{-1}`)
+        wp (array): normal mode frequencies of the electronic excited state (:math:`\text{cm}^{-1}`)
+        Ud (array): Duschinsky matrix
+        d (array): Duschinsky displacement vector corrected with wp
+    """
+
+    def __init__(self):
+        super().__init__()
+        with open(DATA_PATH + self._data_filename + ".pkl", "rb") as f:
+            self.w, self.wp, self.Ud, self.d = pickle.load(f)
+
+
+class Formic(MoleculeDataset):
+    """Formic acid.
+
+    Attributes:
+        n_mean = 1.56
+        threshold = False
+        n_samples = 13128
+        modes = 7
+    """
+
+    _data_filename = "formic"
+    n_mean = 1.56
     threshold = False
