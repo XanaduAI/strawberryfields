@@ -1184,20 +1184,15 @@ class Xgate(Gate):
     def __init__(self, x):
         super().__init__([x])
 
-<<<<<<< HEAD
+
     def _decompose(self, reg, **kwargs):
         # into a displacement
         z = self.p[0] / sqrt(2 * sf.hbar)
         return [
             Command(Dgate(z, 0), reg)
         ]
-=======
-    def _apply(self, reg, backend, **kwargs):
-        p = par_evaluate(self.p)
-        z = p[0] / np.sqrt(2 * sf.hbar)
-        backend.displacement(z, *reg)
 
->>>>>>> master
+
 
 class Zgate(Gate):
     r"""Momentum :ref:`displacement <displacement>` gate.
@@ -1212,20 +1207,13 @@ class Zgate(Gate):
     def __init__(self, p):
         super().__init__([p])
 
-<<<<<<< HEAD
     def _decompose(self, reg, **kwargs):
         # into a displacement
         z = self.p[0] * 1j/sqrt(2 * sf.hbar)
         return [
             Command(Dgate(z, 0), reg)
         ]
-=======
-    def _apply(self, reg, backend, **kwargs):
-        p = par_evaluate(self.p)
-        z = p[0] * 1j / np.sqrt(2 * sf.hbar)
-        backend.displacement(z, *reg)
 
->>>>>>> master
 
 class Sgate(Gate):
     r"""Phase space :ref:`squeezing <squeezing>` gate.
