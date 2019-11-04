@@ -1502,7 +1502,7 @@ class Fouriergate(Gate):
         # into a rotation
         theta = np.pi/2
         return [
-            Command(Rgate(z, 0), reg)
+            Command(Rgate(theta, 0), reg)
         ]
 
     def __str__(self):
