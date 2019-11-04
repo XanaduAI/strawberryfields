@@ -79,8 +79,6 @@ Each dataset contains a variety of metadata relevant to the sampling:
 
 - ``n_mean``: mean number of photons in the GBS device
 
-- ``n_max``: maximum number of photons allowed in any sample
-
 -  ``threshold``: flag to indicate whether samples are generated with threshold detection or
    with photon-number-resolving detectors
 
@@ -136,9 +134,6 @@ class Dataset(ABC):
 
     Attributes:
         n_mean (float): mean number of photons in the GBS device
-        n_max (float): Maximum number of photons allowed in any sample. This number is set to
-            limit the computation time: any sample being simulated that exceeds ``n_max`` will be
-            ignored and cause the calculation to skip to the next sample.
         threshold (bool): flag to indicate whether samples are generated with threshold detection
             (i.e., detectors of zero or some photons) or with photon-number-resolving detectors.
         adj (array): adjacency matrix of the graph from which samples were generated
@@ -221,12 +216,6 @@ class Dataset(ABC):
     # pylint: disable=missing-docstring
     @property
     @abstractmethod
-    def n_max(self) -> float:
-        pass
-
-    # pylint: disable=missing-docstring
-    @property
-    @abstractmethod
     def threshold(self) -> bool:
         pass
 
@@ -253,7 +242,6 @@ class Planted(Dataset):
 
     Attributes:
         n_mean = 8
-        n_max = 20
         threshold = True
         n_samples = 50000
         modes = 30
@@ -261,7 +249,6 @@ class Planted(Dataset):
 
     _data_filename = "planted"
     n_mean = 8
-    n_max = 20
     threshold = True
 
 
@@ -285,7 +272,6 @@ class TaceAs(Dataset):
 
     Attributes:
         n_mean = 8
-        n_max = 20
         threshold = True
         n_samples = 50000
         modes = 24
@@ -293,7 +279,6 @@ class TaceAs(Dataset):
 
     _data_filename = "TACE-AS"
     n_mean = 8
-    n_max = 20
     threshold = True
 
 
@@ -308,7 +293,6 @@ class PHat(Dataset):
 
     Attributes:
         n_mean = 10
-        n_max = 20
         threshold = True
         n_samples = 50000
         modes = 300
@@ -316,7 +300,6 @@ class PHat(Dataset):
 
     _data_filename = "p_hat300-1"
     n_mean = 10
-    n_max = 20
     threshold = True
 
 
@@ -337,7 +320,6 @@ class Mutag0(Dataset):
 
     Attributes:
         n_mean = 6
-        n_max = 20
         threshold = False
         n_samples = 20000
         modes = 17
@@ -345,7 +327,6 @@ class Mutag0(Dataset):
 
     _data_filename = "MUTAG_0"
     n_mean = 6
-    n_max = 20
     threshold = False
 
 
@@ -366,7 +347,6 @@ class Mutag1(Dataset):
 
     Attributes:
         n_mean = 6
-        n_max = 20
         threshold = False
         n_samples = 20000
         modes = 13
@@ -374,7 +354,6 @@ class Mutag1(Dataset):
 
     _data_filename = "MUTAG_1"
     n_mean = 6
-    n_max = 20
     threshold = False
 
 
@@ -395,7 +374,6 @@ class Mutag2(Dataset):
 
     Attributes:
         n_mean = 6
-        n_max = 20
         threshold = False
         n_samples = 20000
         modes = 13
@@ -403,7 +381,6 @@ class Mutag2(Dataset):
 
     _data_filename = "MUTAG_2"
     n_mean = 6
-    n_max = 20
     threshold = False
 
 
@@ -424,7 +401,6 @@ class Mutag3(Dataset):
 
     Attributes:
         n_mean = 6
-        n_max = 20
         threshold = False
         n_samples = 20000
         modes = 19
@@ -432,5 +408,4 @@ class Mutag3(Dataset):
 
     _data_filename = "MUTAG_3"
     n_mean = 6
-    n_max = 20
     threshold = False
