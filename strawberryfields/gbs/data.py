@@ -136,7 +136,6 @@ class Dataset(ABC):
         n_mean (float): mean number of photons in the GBS device
         threshold (bool): flag to indicate whether samples are generated with threshold detection
             (i.e., detectors of zero or some photons) or with photon-number-resolving detectors.
-        adj (array): adjacency matrix of the graph from which samples were generated
         n_samples (int): total number of samples in the dataset
         modes (int): number of modes in the GBS device or, equivalently, number of nodes in graph
         data (sparse): raw data of samples from GBS as a `csr sparse array
@@ -159,7 +158,6 @@ class Dataset(ABC):
 
     def __init__(self):
         self.data = scipy.sparse.load_npz(DATA_PATH + self._data_filename + ".npz")
-        self.adj = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_A.npz").toarray()
         self.n_samples, self.modes = self.data.shape
 
     def __iter__(self):
@@ -220,7 +218,19 @@ class Dataset(ABC):
         pass
 
 
-class Planted(Dataset):
+class GraphDataset(Dataset, ABC):
+    """Class for loading datasets of pre-generated samples from graphs.
+
+    Attributes:
+        adj (array): adjacency matrix of the graph from which samples were generated
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.adj = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_A.npz").toarray()
+
+
+class Planted(GraphDataset):
     """A random 30-node graph containing a dense 10-node subgraph planted inside
     :cite:`arrazola2018using`.
 
@@ -252,7 +262,7 @@ class Planted(Dataset):
     threshold = True
 
 
-class TaceAs(Dataset):
+class TaceAs(GraphDataset):
     """Binding interaction graph for the TACE-AS complex :cite:`banchi2019molecular`.
 
     Nodes in this graph correspond to pairs of atoms in a target protein and a pharmaceutical
@@ -282,7 +292,7 @@ class TaceAs(Dataset):
     threshold = True
 
 
-class PHat(Dataset):
+class PHat(GraphDataset):
     """Random graph created using the p-hat generator of :cite:`gendreau1993solving`.
 
     This graph is the ``p_hat300-1`` graph of the `DIMACS
@@ -303,7 +313,7 @@ class PHat(Dataset):
     threshold = True
 
 
-class Mutag0(Dataset):
+class Mutag0(GraphDataset):
     """First graph of the MUTAG dataset.
 
     The MUTAG dataset is from :cite:`debnath1991structure,kriege2012subgraph` and is available
@@ -330,7 +340,7 @@ class Mutag0(Dataset):
     threshold = False
 
 
-class Mutag1(Dataset):
+class Mutag1(GraphDataset):
     """Second graph of the MUTAG dataset.
 
     The MUTAG dataset is from :cite:`debnath1991structure,kriege2012subgraph` and is available
@@ -357,7 +367,7 @@ class Mutag1(Dataset):
     threshold = False
 
 
-class Mutag2(Dataset):
+class Mutag2(GraphDataset):
     """Third graph of the MUTAG dataset.
 
     The MUTAG dataset is from :cite:`debnath1991structure,kriege2012subgraph` and is available
@@ -384,7 +394,7 @@ class Mutag2(Dataset):
     threshold = False
 
 
-class Mutag3(Dataset):
+class Mutag3(GraphDataset):
     """Fourth graph of the MUTAG dataset.
 
     The MUTAG dataset is from :cite:`debnath1991structure,kriege2012subgraph` and is available

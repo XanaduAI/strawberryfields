@@ -23,7 +23,7 @@ from strawberryfields.gbs import data
 
 pytestmark = pytest.mark.gbs
 
-DATASETS_LIST = [
+GRAPH_DATASETS_LIST = [
     data.Planted,
     data.TaceAs,
     data.Mutag0,
@@ -32,6 +32,10 @@ DATASETS_LIST = [
     data.Mutag3,
     data.PHat,
 ]
+
+MOLECULE_DATASETS_LIST = []
+
+DATASETS_LIST = GRAPH_DATASETS_LIST + MOLECULE_DATASETS_LIST
 
 
 @pytest.mark.parametrize("datasets", DATASETS_LIST)
@@ -66,7 +70,6 @@ class TestDatasets:
             """Replacement ``__init__`` for all the datasets in ``DATASETS_LIST``"""
             # pylint: disable=protected-access
             _self.data = scipy.sparse.csr_matrix(self.patch_samples)
-            _self.adj = np.ones((4, 4))
             _self.n_samples, _self.modes = 10, 4
 
         with monkeypatch.context() as m:
@@ -82,11 +85,6 @@ class TestDatasets:
         """Test if mean photon number is valid float or int for each dataset"""
         assert isinstance(dataset.n_mean, (float, int))
         assert dataset.n_mean >= 0
-
-    def test_n_max(self, dataset):
-        """Test if maximum photon number is valid float or int for each dataset"""
-        assert isinstance(dataset.n_max, (float, int))
-        assert dataset.n_max >= 0
 
     def test_threshold(self, dataset):
         """Test if threshold flag is valid bool for each dataset"""
@@ -139,6 +137,15 @@ class TestDatasets:
 
         with pytest.raises(StopIteration):
             next(dataset_patched)
+
+
+@pytest.mark.parametrize("datasets", GRAPH_DATASETS_LIST)
+class TestGraphDatasets:
+
+    @pytest.fixture
+    def dataset(self, datasets):
+        """Fixture for loading each of the datasets in ``GRAPH_DATASETS_LIST``"""
+        yield datasets()
 
     def test_adj_dim(self, dataset):
         """Test if adjacency matrix of dataset is correct dimensions."""
