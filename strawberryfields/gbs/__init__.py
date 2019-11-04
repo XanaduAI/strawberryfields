@@ -20,3 +20,4 @@ import strawberryfields.gbs.points
 import strawberryfields.gbs.sample
 import strawberryfields.gbs.similarity
 import strawberryfields.gbs.subgraph
+import strawberryfields.gbs.vibronic
