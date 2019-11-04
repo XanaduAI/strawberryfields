@@ -179,7 +179,9 @@ def sample(
         else:
             sf.ops.MeasureFock() | q
 
-    s = eng.run(p, run_options={"shots": n_samples}).samples
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message="Cannot simulate non-")
+        s = eng.run(p, run_options={"shots": n_samples}).samples
 
     if n_samples == 1:
         return [s]
