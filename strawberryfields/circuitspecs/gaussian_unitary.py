@@ -16,7 +16,7 @@
 import numpy as np
 from strawberryfields.program_utils import Command
 from strawberryfields import ops
-from thewalrus.symplectic import expand_vector, expand, rotation, squeezing, two_mode_squeezing, interferometer
+from thewalrus.symplectic import expand_vector, expand, rotation, squeezing, two_mode_squeezing, interferometer, beam_splitter
 from .circuit_specs import CircuitSpecs
 
 class GaussianUnitary(CircuitSpecs):
@@ -66,8 +66,8 @@ class GaussianUnitary(CircuitSpecs):
         "CXgate": {},
         "CZgate": {},
         "MZgate": {},
-        "Xgate": {},
-        "Zgate": {},
+        #"Xgate": {},
+        #"Zgate": {},
         "Fouriergate": {},
     }
 
@@ -132,6 +132,10 @@ class GaussianUnitary(CircuitSpecs):
                     S = expand(
                         params[0], [dict_indices[mode] for mode in modes], nmodes
                     )
+                elif name == "BSgate":
+                    S = expand(beam_splitter(params[0], params[1]), [dict_indices[modes[0]], dict_indices[modes[1]]], nmodes)
+                else:
+                    raise CircuitError("The circuit contains a non-primitive Gaussian gate or a non-Gaussian gate.")
                 Snet = S @ Snet
                 rnet = S @ rnet
 

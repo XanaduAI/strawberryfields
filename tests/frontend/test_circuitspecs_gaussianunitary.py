@@ -115,3 +115,34 @@ def test_modes_subset(depth):
     assert len(compiled_circuit.circuit[0].reg) == 5
     indices = [compiled_circuit.circuit[0].reg[i].ind for i in range(5)]
     assert indices == sorted(list(indices))
+
+
+def test_non_primitive_gates():
+    """Tests that the compiler is able to compile a number of non-primitive Gaussian gates"""
+
+    width = 6
+    eng = sf.LocalEngine(backend="gaussian")
+    eng1 = sf.LocalEngine(backend="gaussian")
+    circuit = sf.Program(width)
+    A = np.random.rand(width, width) + 1j * np.random.rand(width, width)
+    A = A + A.T
+    valsA = np.linalg.svd(A, compute_uv=False)
+    A = A / np.max(valsA)
+    B = np.random.rand(width // 2, width // 2) + 1j * np.random.rand(width // 2, width // 2)
+    valsB = np.linalg.svd(B, compute_uv=False)
+    B = B / valsB
+    B = np.block([[0 * B, B], [B.T, 0 * B]])
+    with circuit.context as q:
+        ops.GraphEmbed(A) | q
+        ops.BipartiteGraphEmbed(B) | q
+        ops.Pgate(0.1) | q[1]
+        ops.CXgate(0.2) | (q[0], q[1])
+        ops.MZgate(0.4, 0.5) | (q[2], q[3])
+    compiled_circuit = circuit.compile("gaussian_unitary")
+    cv = eng.run(circuit).state.cov()
+    mean = eng.run(circuit).state.means()
+
+    cv1 = eng1.run(compiled_circuit).state.cov()
+    mean1 = eng1.run(compiled_circuit).state.means()
+    assert np.allclose(cv, cv1)
+    assert np.allclose(mean, mean1)
