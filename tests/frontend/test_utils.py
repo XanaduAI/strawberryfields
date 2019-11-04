@@ -21,7 +21,7 @@ from numpy.polynomial.hermite import hermval as H
 from scipy.special import factorial as fac
 
 import strawberryfields as sf
-from strawberryfields.program_utils import RegRef, RegRefTransform
+from strawberryfields.program_utils import RegRef
 from strawberryfields.ops import Sgate, BSgate, LossChannel, MeasureX, Squeezed
 import strawberryfields.utils as utils
 
@@ -47,81 +47,6 @@ def prog():
     """Program fixture."""
     return sf.Program(2)
 
-
-class TestConvertFunctions:
-    """Unit tests for convert utility functions"""
-
-    def test_neg(self, rr):
-        """Test that the neg function creates a regref transform that negates"""
-        a = 0.4532
-        rrt = utils.neg(rr)
-
-        assert isinstance(rrt, RegRefTransform)
-        assert rrt.func(a) == -a
-
-    def test_mag(self, rr):
-        """Test that the neg function creates a regref transform that negates"""
-        x = 0.574
-        y = -0.6543
-        rrt = utils.mag(rr)
-
-        assert isinstance(rrt, RegRefTransform)
-        assert rrt.func(x + 1j * y) == np.abs(x + 1j * y)
-
-    def test_phase(self, rr):
-        """Test that the neg function creates a regref transform that negates"""
-        x = 0.574
-        y = -0.6543
-        rrt = utils.phase(rr)
-
-        assert isinstance(rrt, RegRefTransform)
-        assert rrt.func(x + 1j * y) == np.angle(x + 1j * y)
-
-    def test_scale(self, rr):
-        """Test that the neg function creates a regref transform that negates"""
-        a = 0.574
-        x = -0.6543
-        rrt = utils.scale(rr, a)
-
-        assert isinstance(rrt, RegRefTransform)
-        assert rrt.func(x) == a * x
-
-    def test_shift(self, rr):
-        """Test that the neg function creates a regref transform that negates"""
-        a = 0.574
-        x = -0.6543
-        rrt = utils.shift(rr, a)
-
-        assert isinstance(rrt, RegRefTransform)
-        assert rrt.func(x) == a + x
-
-    def test_scale_shift(self, rr):
-        """Test that the neg function creates a regref transform that negates"""
-        a = 0.574
-        b = -0.6543
-        x = 0.4321
-        rrt = utils.scale_shift(rr, a, b)
-
-        assert isinstance(rrt, RegRefTransform)
-        assert rrt.func(x) == a * x + b
-
-    def test_power_positive_frac(self, rr):
-        """Test that the neg function creates a regref transform that negates"""
-        a = 0.574
-        x = 0.6543
-        rrt = utils.power(rr, a)
-
-        assert isinstance(rrt, RegRefTransform)
-        assert rrt.func(x) == x ** a
-
-    def test_power_negative_int(self, rr):
-        """Test that the neg function creates a regref transform that negates"""
-        a = -3
-        x = 0.6543
-        rrt = utils.power(rr, a)
-
-        assert isinstance(rrt, RegRefTransform)
-        assert rrt.func(x) == x ** a
 
 
 # ===================================================================================
@@ -493,13 +418,13 @@ class TestOperation:
         # check first queue op is Sgate(rval)
         assert isinstance(prog.circuit[0].op, Sgate)
         assert prog.circuit[0].reg == [q[0]]
-        assert prog.circuit[0].op.p[0].x == rval
+        assert prog.circuit[0].op.p[0] == rval
 
         # check second queue op is BSgate(thetaval, phival)
         assert isinstance(prog.circuit[1].op, BSgate)
         assert prog.circuit[1].reg == list(q)
-        assert prog.circuit[1].op.p[0].x == thetaval
-        assert prog.circuit[1].op.p[1].x == phival
+        assert prog.circuit[1].op.p[0] == thetaval
+        assert prog.circuit[1].op.p[1] == phival
 
     def test_multimode_wrong_num_modes_apply_operation(self, prog):
         """Test exceptions raised when applying an operation to
@@ -534,7 +459,7 @@ class TestOperation:
         # check first queue op is Sgate(rval)
         assert isinstance(prog.circuit[0].op, Sgate)
         assert prog.circuit[0].reg == [q[0]]
-        assert prog.circuit[0].op.p[0].x == rval
+        assert prog.circuit[0].op.p[0] == rval
 
     def test_multimode_args_apply_operation(self, prog):
         """Test applying an operation to multiple modes"""
@@ -560,13 +485,13 @@ class TestOperation:
         # check first queue op is Sgate(rval)
         assert isinstance(prog.circuit[0].op, Sgate)
         assert prog.circuit[0].reg == [q[0]]
-        assert prog.circuit[0].op.p[0].x == rval
+        assert prog.circuit[0].op.p[0] == rval
 
         # check second queue op is BSgate(thetaval, phival)
         assert isinstance(prog.circuit[1].op, BSgate)
         assert prog.circuit[1].reg == list(q)
-        assert prog.circuit[1].op.p[0].x == thetaval
-        assert prog.circuit[1].op.p[1].x == phival
+        assert prog.circuit[1].op.p[0] == thetaval
+        assert prog.circuit[1].op.p[1] == phival
 
 
 # ===================================================================================
