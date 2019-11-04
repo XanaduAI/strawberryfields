@@ -123,7 +123,6 @@ For example, we see that the ``data[3]`` sample has 11 clicks.
 Code details
 ^^^^^^^^^^^^
 """
-import pickle
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod
 
@@ -440,8 +439,10 @@ class MoleculeDataset(Dataset, ABC):
 
     def __init__(self):
         super().__init__()
-        with open(DATA_PATH + self._data_filename + ".pkl", "rb") as f:
-            self.w, self.wp, self.Ud, self.d = pickle.load(f)
+        self.w = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_w.npz").toarray()[0]
+        self.wp = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_wp.npz").toarray()[0]
+        self.Ud = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_Ud.npz").toarray()
+        self.d = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_d.npz").toarray()[0]
 
 
 class Formic(MoleculeDataset):
