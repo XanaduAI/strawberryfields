@@ -71,7 +71,7 @@ class GaussianUnitary(CircuitSpecs):
         #"Zgate": {},
         "Fouriergate": {},
     }
-
+    #pylint: disable=too-many-branches
     def compile(self, seq, registers):
         """Try to arrange a quantum circuit into the canonical Symplectic form.
 
@@ -115,7 +115,6 @@ class GaussianUnitary(CircuitSpecs):
                     params[0] * (np.exp(1j * params[1])), dict_indices[modes[0]], nmodes
                 )
             else:
-                #pylint" disable=too-many-branches
                 if name == "Rgate":
                     S = expand(rotation(params[0]), dict_indices[modes[0]], nmodes)
                 elif name == "Sgate":
