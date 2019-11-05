@@ -90,6 +90,10 @@ plotly.offline.plot(plot_1, filename="Points.html")
 ##############################################################################
 # .. raw:: html
 #     :file: ../../examples_gbs/Points.html
+#
+# .. note::
+#     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
+#     practice, you can simply use ``plot_1.show()`` to view your graph.
 
 ##############################################################################
 # Outlier Detection

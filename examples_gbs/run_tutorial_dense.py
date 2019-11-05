@@ -68,7 +68,7 @@ plotly.offline.plot(plot_graph, filename="planted.html")
 #
 # .. note::
 #     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
-#     practice, you can simply use ``graph.show()`` to view the graph.
+#     practice, you can simply use ``plot_graph.show()`` to view the graph.
 
 ##############################################################################
 # A more interesting challenge is to find dense subgraphs of different sizes; it is often

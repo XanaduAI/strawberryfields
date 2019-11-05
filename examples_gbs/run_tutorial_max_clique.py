@@ -33,12 +33,16 @@ import plotly
 TA = data.TaceAs()
 A = TA.adj
 TA_graph = nx.Graph(A)
-graph_fig = plot.graph(TA_graph)
-plotly.offline.plot(graph_fig, filename="TACE-AS.html")
+plot_graph = plot.graph(TA_graph)
+plotly.offline.plot(plot_graph, filename="TACE-AS.html")
 
 ##############################################################################
 # .. raw:: html
 #     :file: ../../examples_gbs/TACE-AS.html
+#
+# .. note::
+#     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
+#     practice, you can simply use ``plot_graph.show()`` to view your graph.
 
 ##############################################################################
 # Can you spot any cliques in the graph? It's not so easy using only your eyes! The TACE-AS graph
