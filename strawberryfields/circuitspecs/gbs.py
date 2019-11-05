@@ -45,8 +45,8 @@ class GBSSpecs(GaussianSpecs):
         "ThermalLossChannel",
         # single mode gates
         "Dgate",
-        "Xgate",
-        "Zgate",
+        #"Xgate",
+        #"Zgate",
         "Sgate",
         "Rgate",
         "Fouriergate",
@@ -56,7 +56,8 @@ class GBSSpecs(GaussianSpecs):
         "Xgate": {},
         "Zgate": {},
         "Fouriergate": {},
-    }
+        "S2gate":{}
+,    }
 
     def compile(self, seq, registers):
         """Try to arrange a quantum circuit into a form suitable for Gaussian boson sampling.
