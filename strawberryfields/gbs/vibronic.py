@@ -181,7 +181,7 @@ def gbs_params(
 
     if T < 0:
         raise ValueError("Temperature must be zero or positive")
-    elif T > 0:
+    if T > 0:
         t = np.arctanh(np.exp(-0.5 * h * (w * c * 100) / k / T))
     else:
         t = np.zeros(len(w))
