@@ -41,7 +41,16 @@ class TestGBSParams:
     )
     d = np.array([0.2254, 0.1469, 1.5599, -0.3784, 0.4553, -0.3439, 0.0618])
 
-    U1, S, U2, alpha = vibronic.gbs_params(w, wp, Ud, d)
+    T = 300.0
+
+    t = np.array([1.19894657e-04, 6.07995705e-04, 1.25672831e-02, 3.34594410e-02, 4.15755027e-02,
+                  6.55350936e-02, 2.24605404e-01])
+
+    c = 299792458
+    h = 6.62607015e-34
+    k = 1.380649e-23
+
+    U1, S, U2, alpha, t = vibronic.gbs_params(w, wp, Ud, d, T)
 
     @pytest.mark.parametrize("unitary", [U1, U2])
     def test_unitary(self, unitary):
@@ -67,6 +76,16 @@ class TestGBSParams:
         Ud = np.diag(self.wp ** -0.5) @ J @ np.diag(self.w ** 0.5)
         assert np.allclose(Ud, self.Ud)
 
+    def test_invalid_temperature(self):
+        """Test if function raises a ``ValueError`` when a negative temperature is given."""
+        with pytest.raises(ValueError, match="Temperature must be zero or positive"):
+            vibronic.gbs_params(self.w, self.wp, self.Ud, self.d, -1)
+
+    def test_twomode(self):
+        """Test if function returns two-mode squeezing parameters that correctly reconstruct the
+        input normal mode frequencies."""
+        w = -0.02 * self.k * self.T / self.h / self.c * np.log(np.tanh(self.t))
+        assert np.allclose(w, self.w)
 
 wp = np.array([700.0, 600.0, 500.0])
 

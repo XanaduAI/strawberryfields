@@ -109,6 +109,20 @@ In general, all the GBS parameters can be derived from the previously computed e
 geometries, vibrational frequencies and normal coordinates of the molecule in its (electronic)
 ground and excited states.
 
+It is noted  that finite temperature FCPs can be obtained with a GBS setup explained in the
+following. First, 2N two-mode squeezed vacuum states are prepared and the first :math:`N` modes
+are treated with the same GBS operations explained for the zero K case, while the second
+:math:`N` modes are directly sent for photon number measurement. Then, the number of photons
+measured in the pairs of first and second :math:`N` modes, :math:`m_k` and :math:`n_k`,
+respectively are used to determine the transition frequencies and compute the finite temperature
+FCP. The Gaussian gate parameters for the first :math:`N` modes are obtained for a given molecule
+with the same procedure explained for the zero Kelvin case and the two-mode squeezing parameters
+(:math:`t_i`) are obtained according to the distribution of phonons in the ground electronic state
+vibrational levels according to a Boltzmann distribution with Boltzmann factor:
+
+.. math::
+    \tanh^2 (t_i) = \exp(-\hbar \omega_i/k_B T).
+
 Summary
 -------
 
@@ -125,8 +139,8 @@ import numpy as np
 
 
 def gbs_params(
-    w: np.ndarray, wp: np.ndarray, Ud: np.ndarray, d: np.ndarray
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    w: np.ndarray, wp: np.ndarray, Ud: np.ndarray, d: np.ndarray, T: float
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""Converts molecular information to GBS gate parameters.
 
     **Example usage:**
@@ -145,27 +159,37 @@ def gbs_params(
     >>>     ]
     >>> )
     >>> d = np.array([0.2254, 0.1469, 1.5599, -0.3784, 0.4553, -0.3439, 0.0618])
-    >>> p = gbs_params(w, wp, Ud, d)
+    >>> T = 0.0
+    >>> p = gbs_params(w, wp, Ud, d, T)
 
     Args:
         w (array): normal mode frequencies of the electronic ground state (:math:`\text{cm}^{-1}`)
         wp (array): normal mode frequencies of the electronic excited state (:math:`\text{cm}^{-1}`)
         Ud (array): Duschinsky matrix
         d (array): Duschinsky displacement vector corrected with wp
+        T (float): temperature
 
     Returns:
-        tuple[array, array, array, array]: the first interferometer unitary matrix :math:`U_{1}`,
-        the squeezing parameters :math:`r`, the second interferometer unitary matrix :math:`U_{2}`,
-        and finally the displacement parameters :math:`\alpha`
+        tuple[array, array, array, array, array]: the first interferometer unitary matrix
+        :math:`U_{1}`, the squeezing parameters :math:`r`, the second interferometer unitary
+        matrix :math:`U_{2}`, the displacement parameters :math:`\alpha`, and finally the
+        two-mode squeezing parameters :math:`t`
     """
-    Wi = np.diag(w ** -0.5)
-    Wp = np.diag(wp ** 0.5)
-    J = Wp @ Ud @ Wi
+    c = 299792458
+    h = 6.62607015e-34
+    k = 1.380649e-23
 
-    U2, s, U1 = np.linalg.svd(J)
+    if T < 0:
+        raise ValueError("Temperature must be zero or positive")
+    elif T > 0:
+        t = np.arctanh(np.exp(-0.5 * h * (w * c * 100) / k / T))
+    else:
+        t = np.zeros(len(w))
+
+    U2, s, U1 = np.linalg.svd(np.diag(wp ** 0.5) @ Ud @ np.diag(w ** -0.5))
     alpha = d / np.sqrt(2)
 
-    return U1, np.log(s), U2, alpha
+    return U1, np.log(s), U2, alpha, t
 
 
 def energies(samples: list, wp: np.ndarray) -> Union[list, float]:
