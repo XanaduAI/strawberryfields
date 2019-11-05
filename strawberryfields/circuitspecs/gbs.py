@@ -52,6 +52,11 @@ class GBSSpecs(GaussianSpecs):
         "Fouriergate",
         "BSgate"
     }
+    decompositions = {
+        "Xgate": {},
+        "Zgate": {},
+        "Fouriergate": {},
+    }
 
     def compile(self, seq, registers):
         """Try to arrange a quantum circuit into a form suitable for Gaussian boson sampling.
