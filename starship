@@ -28,10 +28,10 @@ from strawberryfields import configuration
 PROMPTS = {
     "hostname": "Please enter the hostname of the server to connect to: [{}] ",
     "port": "Please enter the port number to connect with: [{}] ",
-    "use_ssl": "Should the client attempt to connect over SSL? [Y/n] ",
+    "use_ssl": "Should the client attempt to connect over SSL? [{}] ",
     "authentication_token": "Please enter the authentication token to use when connecting: [{}] ",
     "save": "Would you like to save these settings to a local cofiguration file in the current "
-    "directory? [y/N] ",
+    "directory? [{}] ",
 }
 
 if __name__ == "__main__":
@@ -70,11 +70,11 @@ if __name__ == "__main__":
             or config.api["authentication_token"]
         )
         port = input(PROMPTS["port"].format(config.api["port"])) or config.api["port"]
-        use_ssl = input(PROMPTS["use_ssl"]).upper() == "Y"
-        save = input(PROMPTS["save"]).upper() == "Y"
+        use_ssl = input(PROMPTS["use_ssl"].format("y" if config.api["use_ssl"] else "n")).upper() == "Y"
+        save = input(PROMPTS["save"].format("y" if config.api["use_ssl"] else "n")).upper() == "Y"
 
         if not save:
-            sys.stdout.write("Not writing configuration to file...")
+            sys.stdout.write("Not writing configuration to file...\n")
         else:
             if not os.path.isfile("config.toml"):
                 sys.stdout.write("Writing configuration file to current working directory...\n")
