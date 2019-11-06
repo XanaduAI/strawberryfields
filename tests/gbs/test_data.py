@@ -200,8 +200,12 @@ class TestMoleculeDatasets:
 
     def test_w_non_negative(self, dataset):
         """Test if w is non-negative"""
-        assert all(dataset.w > 0)
+        assert all(dataset.w >= 0)
 
     def test_wp_non_negative(self, dataset):
         """Test if wp is non-negative"""
-        assert all(dataset.wp > 0)
+        assert all(dataset.wp >= 0)
+
+    def test_T_non_negative(self, dataset):
+        """Test if T is non-negative"""
+        assert dataset.T >= 0
