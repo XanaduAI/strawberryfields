@@ -84,8 +84,9 @@ class TestGBSParams:
     def test_twomode(self):
         """Test if function returns two-mode squeezing parameters that correctly reconstruct the
         input normal mode frequencies."""
-        w = -0.02 * self.k * self.T / self.h / self.c * np.log(np.tanh(self.t))
+        w = - self.k * self.T / (0.5 * h * w * c * 100) * np.log(np.tanh(self.t))
         assert np.allclose(w, self.w)
+
 
 wp = np.array([700.0, 600.0, 500.0])
 
