@@ -77,7 +77,7 @@ The :class:`Dataset` class provides the base functionality from which all datase
 
 Each dataset contains a variety of metadata relevant to the sampling:
 
-- ``n_mean``: mean number of photons in the GBS device
+- ``n_mean``: theoretical mean number of photons in the GBS device
 
 -  ``threshold``: flag to indicate whether samples are generated with threshold detection or
    with photon-number-resolving detectors
@@ -451,7 +451,7 @@ class Formic(MoleculeDataset):
     Attributes:
         n_mean = 1.56
         threshold = False
-        n_samples = 13128
+        n_samples = 100000
         modes = 7
     """
 
