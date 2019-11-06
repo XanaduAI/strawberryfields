@@ -171,6 +171,15 @@ class BaseEngine(abc.ABC):
         #: List[List[Number]]: latest measurement results, shape == (modes, shots)
         self.samples = None
 
+        if isinstance(backend, str):
+            self.backend_name = backend
+            self.backend = load_backend(backend)
+        elif isinstance(backend, BaseBackend):
+            self.backend_name = backend.short_name
+            self.backend = backend
+        else:
+            raise TypeError("backend must be a string or a BaseBackend instance.")
+
     @abc.abstractmethod
     def __str__(self):
         """String representation."""
@@ -331,16 +340,6 @@ class LocalEngine(BaseEngine):
         backend_options = backend_options or {}
         super().__init__(backend, backend_options)
 
-        if isinstance(backend, str):
-            self.backend_name = backend
-            #: BaseBackend: backend for executing the quantum circuit
-            self.backend = load_backend(backend)
-        elif isinstance(backend, BaseBackend):
-            self.backend_name = backend.short_name
-            self.backend = backend
-        else:
-            raise TypeError("backend must be a string or a BaseBackend instance.")
-
     def __str__(self):
         return self.__class__.__name__ + "({})".format(self.backend_name)
 
@@ -449,6 +448,8 @@ class StarshipEngine(BaseEngine):
 
     Args:
         backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
+        polling_delay_seconds (int): the number of seconds to wait between queries when polling for
+            job results
     """
 
     # This engine will execute jobs remotely.
@@ -456,13 +457,6 @@ class StarshipEngine(BaseEngine):
 
     def __init__(self, backend, polling_delay_seconds=1, **kwargs):
         super().__init__(backend)
-
-        if isinstance(backend, str):
-            self.backend_name = backend
-            self.backend = load_backend(backend)
-        elif isinstance(backend, BaseBackend):
-            self.backend_name = backend.short_name
-            self.backend = backend
 
         api_client_params = {k: v for k, v in kwargs.items() if k in DEFAULT_CONFIG["api"].keys()}
         self.client = APIClient(**api_client_params)
