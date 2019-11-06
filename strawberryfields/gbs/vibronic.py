@@ -121,7 +121,9 @@ with the same procedure explained for the zero Kelvin case and the two-mode sque
 vibrational levels according to a Boltzmann distribution with Boltzmann factor:
 
 .. math::
-    \tanh^2 (t_i) = \exp(-\hbar \omega_i/k_B T).
+    \tanh^2 (t_i) = \exp(-\hbar \omega_i/k_B T),
+
+where :math:`\omega` is the angular frequency.
 
 Summary
 -------
@@ -134,6 +136,8 @@ Code details
 ^^^^^^^^^^^^
 """
 from typing import Tuple, Union
+
+from scipy.constants import c, h, k
 
 import numpy as np
 
@@ -159,37 +163,32 @@ def gbs_params(
     >>>     ]
     >>> )
     >>> d = np.array([0.2254, 0.1469, 1.5599, -0.3784, 0.4553, -0.3439, 0.0618])
-    >>> T = 0.0
-    >>> p = gbs_params(w, wp, Ud, d, T)
+    >>> p = gbs_params(w, wp, Ud, d)
 
     Args:
-        w (array): normal mode frequencies of the electronic ground state (:math:`\mbox{cm}^{-1}`)
-        wp (array): normal mode frequencies of the electronic excited state (:math:`\mbox{cm}^{-1}`)
+        w (array): normal mode frequencies of the initial electronic state (:math:`\mbox{cm}^{-1}`)
+        wp (array): normal mode frequencies of the final electronic state (:math:`\mbox{cm}^{-1}`)
         Ud (array): Duschinsky matrix
         d (array): Duschinsky displacement vector corrected with wp
         T (float): temperature (Kelvin)
 
     Returns:
-        tuple[array, array, array, array, array]: the first interferometer unitary matrix
-        :math:`U_{1}`, the squeezing parameters :math:`r`, the second interferometer unitary
-        matrix :math:`U_{2}`, the displacement parameters :math:`\alpha`, and finally the
-        two-mode squeezing parameters :math:`t`
+        tuple[array, array, array, array, array]: the two-mode squeezing parameters :math:`t`,
+        the first interferometer unitary matrix :math:`U_{1}`, the squeezing parameters
+        :math:`r`, the second interferometer unitary matrix :math:`U_{2}`, and the displacement
+        parameters :math:`\alpha`
     """
-    c = 299792458
-    h = 6.62607015e-34
-    k = 1.380649e-23
-
     if T < 0:
         raise ValueError("Temperature must be zero or positive")
     if T > 0:
-        t = np.arctanh(np.exp(-0.5 * h * (w * c * 100) / k / T))
+        t = np.arctanh(np.exp(-0.5 * h * (w * c * 100) / (k * T)))
     else:
         t = np.zeros(len(w))
 
     U2, s, U1 = np.linalg.svd(np.diag(wp ** 0.5) @ Ud @ np.diag(w ** -0.5))
     alpha = d / np.sqrt(2)
 
-    return U1, np.log(s), U2, alpha, t
+    return t, U1, np.log(s), U2, alpha
 
 
 def energies(samples: list, wp: np.ndarray) -> Union[list, float]:
