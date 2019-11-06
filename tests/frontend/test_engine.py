@@ -181,6 +181,7 @@ class TestStarshipEngine:
         engine = StarshipEngine("chip0")
         assert engine.client == mock_api_client()
         assert engine.jobs == []
+        assert engine.REMOTE == True
 
     def test_reset(self, starship_engine):
         """
