@@ -109,16 +109,16 @@ In general, all the GBS parameters can be derived from the previously computed e
 geometries, vibrational frequencies and normal coordinates of the molecule in its (electronic)
 ground and excited states.
 
-It is noted that finite temperature FCPs can be obtained with a GBS setup explained in the
-following. First, :math:`2N` two-mode squeezed vacuum states are prepared and the first :math:`N` modes
-are treated with the same GBS operations explained for the zero Kelvin case, while the second
-:math:`N` modes are directly sent for photon number measurement. Then, the number of photons
-measured in the pairs of first and second :math:`N` modes, :math:`m_k` and :math:`n_k`,
-respectively are used to determine the transition frequencies and compute the finite temperature
+Finite temperature FCPs can also be obtained using a GBS setup.
+following. First, :math:`N` two-mode squeezed vacuum states are prepared and the first :math:`N` modes
+are treated with the same GBS operations explained for the zero Kelvin case. The second
+:math:`N` modes are directly sent for photon number measurement. The number of photons
+measured in the first and second modes, :math:`m_k` and :math:`n_k`,
+respectively, are used to determine the transition frequencies and compute the finite temperature
 FCP. The Gaussian gate parameters for the first :math:`N` modes are obtained for a given molecule
-with the same procedure explained for the zero Kelvin case and the two-mode squeezing parameters
-(:math:`t_i`) are obtained according to the distribution of phonons in the electronic ground state
-vibrational levels according to a Boltzmann distribution with Boltzmann factor:
+with the same procedure explained for the zero Kelvin case, and the two-mode squeezing parameters
+(:math:`t_i`) are obtained according to the distribution of phonons in the vibrational levels of the
+electronic ground state according to a Boltzmann distribution with Boltzmann factor:
 
 .. math::
     \tanh^2 (t_i) = \exp(-\hbar \omega_i/k_B T),
