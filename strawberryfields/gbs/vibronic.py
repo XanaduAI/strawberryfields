@@ -194,26 +194,28 @@ def gbs_params(
     return t, U1, np.log(s), U2, alpha
 
 
-def energies(samples: list, wp: np.ndarray) -> Union[list, float]:
+def energies(samples: list, w: np.ndarray, wp: np.ndarray) -> Union[list, float]:
     r"""Computes the energy of each GBS sample in units of :math:`\text{cm}^{-1}`.
 
     **Example usage:**
 
-    >>> samples = [[1, 1, 0], [1, 0, 2]]
+    >>> samples = [[1, 1, 0, 0, 0, 0], [1, 2, 0, 0, 1, 1]]
+    >>> w  = np.array([300.0, 200.0, 100.0])
     >>> wp = np.array([700.0, 600.0, 500.0])
     >>> energies(samples, wp)
-    [1300.0, 1700.0]
+    [1300.0, 1600.0]
 
     Args:
         samples (list[list[int]] or list[int]): a list of samples from GBS, or alternatively a
             single sample
-        wp (array): normal mode frequencies in units of :math:`\text{cm}^{-1}`
+        w (array): normal mode frequencies of initial state in units of :math:`\text{cm}^{-1}`
+        wp (array): normal mode frequencies of final state in units of :math:`\text{cm}^{-1}`
 
     Returns:
         list[float] or float: list of GBS sample energies in units of :math:`\text{cm}^{-1}`, or
         a single sample energy if only one sample is input
     """
     if not isinstance(samples[0], list):
-        return np.dot(samples, wp)
+        return np.dot(samples[:len(samples)//2], wp) - np.dot(samples[len(samples)//2:], w)
 
-    return [np.dot(s, wp) for s in samples]
+    return [np.dot(s[:len(s)//2], wp) - np.dot(s[len(s)//2:], w) for s in samples]

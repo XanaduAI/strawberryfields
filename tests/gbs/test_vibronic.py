@@ -88,20 +88,21 @@ class TestGBSParams:
         assert np.all(t == 0)
 
 
+w  = np.array([300.0, 200.0, 100.0])
 wp = np.array([700.0, 600.0, 500.0])
 
-S1 = [[1, 1, 0], [1, 0, 2]]
-E1 = [1300.0, 1700.0]
+S1 = [[1, 1, 0, 0, 0, 0], [1, 2, 0, 0, 1, 1]]
+E1 = [1300.0, 1600.0]
 
-S2 = [[1, 1, 0]]
-E2 = [1300.0]
+S2 = [[1, 2, 0, 0, 1, 1]]
+E2 = [1600.0]
 
-S3 = [1, 1, 0]
-E3 = 1300.0
+S3 = [1, 2, 0, 0, 1, 1]
+E3 = 1600.0
 
 
 @pytest.mark.parametrize("sample, sample_energy", [(S1, E1), (S2, E2), (S3, E3)])
 def test_energies(sample, sample_energy):
     r"""Tests the correctness of the energies generated for GBS samples in
     ``strawberryfields.gbs.vibronic.energies``."""
-    assert np.allclose(vibronic.energies(sample, wp), sample_energy)
+    assert np.allclose(vibronic.energies(sample, w, wp), sample_energy)
