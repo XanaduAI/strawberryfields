@@ -45,8 +45,6 @@ class GBSSpecs(GaussianSpecs):
         "ThermalLossChannel",
         # single mode gates
         "Dgate",
-        #"Xgate",
-        #"Zgate",
         "Sgate",
         "Rgate",
         "Fouriergate",
