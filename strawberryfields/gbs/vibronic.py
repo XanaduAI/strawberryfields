@@ -116,7 +116,7 @@ are treated with the same GBS operations explained for the zero Kelvin case. The
 measured in the first and second modes, :math:`m_k` and :math:`n_k`,
 respectively, are used to determine the transition frequencies and compute the finite temperature
 FCP. The Gaussian gate parameters for the first :math:`N` modes are obtained for a given molecule
-with the same procedure explained for the zero Kelvin case, and the two-mode squeezing parameters
+with the same procedure explained for the zero Kelvin case. The two-mode squeezing parameters
 (:math:`t_i`) are obtained according to the distribution of phonons in the vibrational levels of the
 electronic ground state according to a Boltzmann distribution with Boltzmann factor:
 
