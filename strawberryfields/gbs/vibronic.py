@@ -97,13 +97,16 @@ relates the normal mode coordinates of the ground and excited states, :math:`q` 
 :math:`q'` respectively, as
 
 .. math::
-    q' = U_{d}q + d.
+    q' = U_{d}q + D.
 
-The displacement parameter :math:`d` is related to the structural changes of a molecule upon
+The displacement parameter :math:`D` is related to the structural changes of a molecule upon
 vibronic excitation and is related to the displacement parameter :math:`\alpha` as
 
 .. math::
-    \alpha = d / \sqrt{2}.
+    \alpha = d / \sqrt{2},
+
+.. math::
+    d = D \sqrt{2\pi\nu/\hbar}.
 
 In general, all the GBS parameters can be derived from the previously computed equilibrium
 geometries, vibrational frequencies and normal coordinates of the molecule in its (electronic)
