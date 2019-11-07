@@ -69,7 +69,7 @@ class GaussianUnitary(CircuitSpecs):
         "MZgate": {},
         #"Xgate": {},
         #"Zgate": {},
-        "Fouriergate": {},
+        #"Fouriergate": {},
     }
     #pylint: disable=too-many-branches
     def compile(self, seq, registers):
