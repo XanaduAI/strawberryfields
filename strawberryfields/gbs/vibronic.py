@@ -97,17 +97,36 @@ relates the normal mode coordinates of the ground and excited states, :math:`q` 
 :math:`q'` respectively, as
 
 .. math::
-    q' = U_{d}q + d.
+    q' = U_{d}q + D.
 
-The displacement parameter :math:`d` is related to the structural changes of a molecule upon
+The displacement parameter :math:`D` is related to the structural changes of a molecule upon
 vibronic excitation and is related to the displacement parameter :math:`\alpha` as
 
 .. math::
-    \alpha = d / \sqrt{2}.
+    \alpha = d / \sqrt{2},
+
+.. math::
+    d = D \sqrt{2\pi\nu/\hbar}.
 
 In general, all the GBS parameters can be derived from the previously computed equilibrium
 geometries, vibrational frequencies and normal coordinates of the molecule in its (electronic)
 ground and excited states.
+
+Finite temperature FCPs can also be obtained using a GBS setup.
+First, :math:`N` two-mode squeezed vacuum states are prepared and the first :math:`N` modes
+are treated with the same GBS operations explained for the zero Kelvin case. The second
+:math:`N` modes are directly sent for photon number measurement. The number of photons
+measured in the first and second modes, :math:`m_k` and :math:`n_k`,
+respectively, are used to determine the transition frequencies and compute the finite temperature
+FCP. The Gaussian gate parameters for the first :math:`N` modes are obtained for a given molecule
+with the same procedure explained for the zero Kelvin case. The two-mode squeezing parameters
+(:math:`t_i`) are obtained according to the distribution of phonons in the vibrational levels of the
+electronic ground state according to a Boltzmann distribution with Boltzmann factor:
+
+.. math::
+    \tanh^2 (t_i) = \exp(-\hbar \omega_i/k_B T),
+
+where :math:`\omega` is the angular frequency.
 
 Summary
 -------
@@ -121,12 +140,14 @@ Code details
 """
 from typing import Tuple, Union
 
+from scipy.constants import c, h, k
+
 import numpy as np
 
 
 def gbs_params(
-    w: np.ndarray, wp: np.ndarray, Ud: np.ndarray, d: np.ndarray
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    w: np.ndarray, wp: np.ndarray, Ud: np.ndarray, d: np.ndarray, T: float = 0
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""Converts molecular information to GBS gate parameters.
 
     **Example usage:**
@@ -148,24 +169,29 @@ def gbs_params(
     >>> p = gbs_params(w, wp, Ud, d)
 
     Args:
-        w (array): normal mode frequencies of the electronic ground state (:math:`\text{cm}^{-1}`)
-        wp (array): normal mode frequencies of the electronic excited state (:math:`\text{cm}^{-1}`)
+        w (array): normal mode frequencies of the initial electronic state (:math:`\mbox{cm}^{-1}`)
+        wp (array): normal mode frequencies of the final electronic state (:math:`\mbox{cm}^{-1}`)
         Ud (array): Duschinsky matrix
         d (array): Duschinsky displacement vector corrected with wp
+        T (float): temperature (Kelvin)
 
     Returns:
-        tuple[array, array, array, array]: the first interferometer unitary matrix :math:`U_{1}`,
-        the squeezing parameters :math:`r`, the second interferometer unitary matrix :math:`U_{2}`,
-        and finally the displacement parameters :math:`\alpha`
+        tuple[array, array, array, array, array]: the two-mode squeezing parameters :math:`t`,
+        the first interferometer unitary matrix :math:`U_{1}`, the squeezing parameters
+        :math:`r`, the second interferometer unitary matrix :math:`U_{2}`, and the displacement
+        parameters :math:`\alpha`
     """
-    Wi = np.diag(w ** -0.5)
-    Wp = np.diag(wp ** 0.5)
-    J = Wp @ Ud @ Wi
+    if T < 0:
+        raise ValueError("Temperature must be zero or positive")
+    if T > 0:
+        t = np.arctanh(np.exp(-0.5 * h * (w * c * 100) / (k * T)))
+    else:
+        t = np.zeros(len(w))
 
-    U2, s, U1 = np.linalg.svd(J)
+    U2, s, U1 = np.linalg.svd(np.diag(wp ** 0.5) @ Ud @ np.diag(w ** -0.5))
     alpha = d / np.sqrt(2)
 
-    return U1, np.log(s), U2, alpha
+    return t, U1, np.log(s), U2, alpha
 
 
 def energies(samples: list, wp: np.ndarray) -> Union[list, float]:

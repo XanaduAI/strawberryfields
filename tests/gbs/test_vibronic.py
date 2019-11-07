@@ -17,6 +17,8 @@ Tests for strawberryfields.gbs.vibronic
 import numpy as np
 import pytest
 
+from scipy.constants import c, h, k
+
 from strawberryfields.gbs import vibronic
 
 pytestmark = pytest.mark.gbs
@@ -41,7 +43,9 @@ class TestGBSParams:
     )
     d = np.array([0.2254, 0.1469, 1.5599, -0.3784, 0.4553, -0.3439, 0.0618])
 
-    U1, S, U2, alpha = vibronic.gbs_params(w, wp, Ud, d)
+    T = 300.0
+
+    t, U1, S, U2, alpha = vibronic.gbs_params(w, wp, Ud, d, T)
 
     @pytest.mark.parametrize("unitary", [U1, U2])
     def test_unitary(self, unitary):
@@ -66,6 +70,22 @@ class TestGBSParams:
         J = self.U2 @ sigma @ self.U1
         Ud = np.diag(self.wp ** -0.5) @ J @ np.diag(self.w ** 0.5)
         assert np.allclose(Ud, self.Ud)
+
+    def test_invalid_temperature(self):
+        """Test if function raises a ``ValueError`` when a negative temperature is given."""
+        with pytest.raises(ValueError, match="Temperature must be zero or positive"):
+            vibronic.gbs_params(self.w, self.wp, self.Ud, self.d, -1)
+
+    def test_twomode(self):
+        """Test if function returns two-mode squeezing parameters that correctly reconstruct the
+        input normal mode frequencies."""
+        w = -k * self.T / (0.5 * h * c * 100) * np.log(np.tanh(self.t))
+        assert np.allclose(w, self.w)
+
+    def test_zero_temperature(self):
+        """Test if function returns zero two-mode squeezing parameters when temperature is zero."""
+        t, _, _, _, _ = vibronic.gbs_params(self.w, self.wp, self.Ud, self.d, 0.0)
+        assert np.all(t == 0)
 
 
 wp = np.array([700.0, 600.0, 500.0])
