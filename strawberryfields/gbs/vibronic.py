@@ -110,7 +110,7 @@ geometries, vibrational frequencies and normal coordinates of the molecule in it
 ground and excited states.
 
 Finite temperature FCPs can also be obtained using a GBS setup.
-following. First, :math:`N` two-mode squeezed vacuum states are prepared and the first :math:`N` modes
+First, :math:`N` two-mode squeezed vacuum states are prepared and the first :math:`N` modes
 are treated with the same GBS operations explained for the zero Kelvin case. The second
 :math:`N` modes are directly sent for photon number measurement. The number of photons
 measured in the first and second modes, :math:`m_k` and :math:`n_k`,
