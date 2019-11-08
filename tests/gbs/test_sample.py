@@ -28,6 +28,8 @@ pytestmark = pytest.mark.gbs
 
 adj_dim_range = range(2, 6)
 
+t = np.array([0., 0., 0., 0., 0., 0., 0.])
+
 U1 = np.array(
     [
         [-0.07985219, 0.66041032, -0.19389188, 0.01340832, 0.70312675, -0.1208423, -0.10352726],
@@ -58,7 +60,7 @@ alpha = np.array(
     [0.15938187, 0.10387399, 1.10301587, -0.26756921, 0.32194572, -0.24317402, 0.0436992]
 )
 
-p = [U1, r, U2, alpha]
+p = [t, U1, r, U2, alpha]
 
 
 @pytest.mark.parametrize("dim", [4])
@@ -289,20 +291,20 @@ def test_postselect():
     assert sample.postselect(counts_threshold, 3, 3) == counts_threshold_ps_3_3
 
 
-class TestGaussian:
-    """Tests for the function ``strawberryfields.gbs.sample.gaussian``"""
+class TestVibronic:
+    """Tests for the function ``strawberryfields.gbs.sample.vibronic``"""
 
     def test_invalid_n_samples(self):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
         requested."""
         with pytest.raises(ValueError, match="Number of samples must be at least one"):
-            sample.gaussian(*p, -1)
+            sample.vibronic(*p, -1)
 
     def test_invalid_loss(self):
         """Test if function raises a ``ValueError`` when the loss parameter is specified outside
         of range."""
         with pytest.raises(ValueError, match="Loss parameter must take a value between zero and"):
-            sample.gaussian(*p, 1, loss=2)
+            sample.vibronic(*p, 1, loss=2)
 
     def test_loss(self, monkeypatch):
         """Test if function correctly creates the SF program for lossy GBS."""
@@ -310,7 +312,7 @@ class TestGaussian:
 
         with monkeypatch.context() as m:
             m.setattr(sf.Engine, "run", mock_eng_run)
-            sample.gaussian(*p, 1, loss=0.5)
+            sample.vibronic(*p, 1, loss=0.5)
             p_func = mock_eng_run.call_args[0][0]
 
         assert isinstance(p_func.circuit[-2].op, sf.ops.LossChannel)
@@ -321,7 +323,7 @@ class TestGaussian:
 
         with monkeypatch.context() as m:
             m.setattr(sf.Engine, "run", mock_eng_run)
-            sample.gaussian(*p, 1)
+            sample.vibronic(*p, 1)
             p_func = mock_eng_run.call_args[0][0]
 
         assert not all([isinstance(op, sf.ops.LossChannel) for op in p_func.circuit])
@@ -333,7 +335,7 @@ class TestGaussian:
 
         with monkeypatch.context() as m:
             m.setattr(sf.Engine, "run", mock_eng_run)
-            sample.gaussian(*p, 1, loss=1)
+            sample.vibronic(*p, 1, loss=1)
             p_func = mock_eng_run.call_args[0][0]
 
         eng = sf.LocalEngine(backend="gaussian")
@@ -347,15 +349,15 @@ class TestGaussian:
 
 
 @pytest.mark.parametrize("integration_sample_number", [1, 2])
-def test_gaussian_integration(integration_sample_number):
-    """Integration test for the function ``strawberryfields.gbs.sample.gaussian`` to check if
+def test_vibronic_integration(integration_sample_number):
+    """Integration test for the function ``strawberryfields.gbs.sample.vibronic`` to check if
     it returns samples of correct form, i.e., correct number of samples, correct number of
     modes, all non-negative integers."""
-    samples = np.array(sample.gaussian(*p, n_samples=integration_sample_number))
+    samples = np.array(sample.vibronic(*p, n_samples=integration_sample_number))
 
     dims = samples.shape
 
     assert len(dims) == 2
-    assert dims == (integration_sample_number, len(alpha))
+    assert dims == (integration_sample_number, len(alpha) * 2)
     assert samples.dtype == "int"
     assert (samples >= 0).all()
