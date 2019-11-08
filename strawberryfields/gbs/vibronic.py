@@ -196,7 +196,7 @@ def gbs_params(
 
 def energies(samples: list, w: np.ndarray, wp: np.ndarray) -> Union[list, float]:
     r"""Computes the energy of each GBS sample in units of :math:`\text{cm}^{-1}`. The energy
-    will be computed as :math:`\sum_{k=1}^{N}m_k\omega'_k - \sum_{k=N+1}^{2N}n_k\omega_k`.
+    is :math:`E = \sum_{k=1}^{N}m_k\omega'_k - \sum_{k=N+1}^{2N}n_k\omega_k`.
 
     **Example usage:**
 
