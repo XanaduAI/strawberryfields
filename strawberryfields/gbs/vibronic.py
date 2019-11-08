@@ -195,14 +195,15 @@ def gbs_params(
 
 
 def energies(samples: list, w: np.ndarray, wp: np.ndarray) -> Union[list, float]:
-    r"""Computes the energy of each GBS sample in units of :math:`\text{cm}^{-1}`.
+    r"""Computes the energy of each GBS sample in units of :math:`\text{cm}^{-1}`. The energy
+    will be computed as :math:`\sum_{k=1}^{N}m_k\omega'_k - \sum_{k=N+1}^{2N}n_k\omega_k`.
 
     **Example usage:**
 
     >>> samples = [[1, 1, 0, 0, 0, 0], [1, 2, 0, 0, 1, 1]]
     >>> w  = np.array([300.0, 200.0, 100.0])
     >>> wp = np.array([700.0, 600.0, 500.0])
-    >>> energies(samples, wp)
+    >>> energies(samples, w, wp)
     [1300.0, 1600.0]
 
     Args:
