@@ -55,7 +55,7 @@ random seed used to generate samples can be fixed:
 
 .. _decomposition:
 
-The :func:`vibronic` function allows users to sample from Gaussian states for computing molecular
+The :func:`vibronic` function allows users to sample Gaussian states for computing molecular
 vibronic spectra.
 
 .. autosummary::
@@ -297,7 +297,7 @@ def vibronic(
 
     This function applies two procedures for generating samples depending on the temperature at
     which the vibronic spectra is computed. In the finite temperature procedure, 2N vacuum modes
-    are prepared with N being the number of normal modes in the molecule and the first and
+    are prepared with N being the number of normal modes in the molecule. The first and
     second N modes correspond to the normal modes of the final and initial electronic states,
     respectively. These 2N modes are treated with two-mode squeezing gates and then the following
     gates are applied to the first N modes:
