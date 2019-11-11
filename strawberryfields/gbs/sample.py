@@ -299,8 +299,11 @@ def vibronic(
     which the vibronic spectra is computed. In the finite temperature procedure, 2N vacuum modes
     are prepared with N being the number of normal modes in the molecule. The first and
     second N modes correspond to the normal modes of the final and initial electronic states,
-    respectively. These 2N modes are treated with two-mode squeezing gates and then the following
-    gates are applied to the first N modes:
+    respectively. These 2N modes are treated with two-mode squeezing gates:
+
+    #. Two-mode squeezing on all 2N modes with parameters ``t``
+
+    and then the following gates are applied to the first N modes:
 
     #. Interferometer ``U1``
     #. Squeezing on all N modes with parameters ``r``
@@ -313,7 +316,9 @@ def vibronic(
     applied to N vacuum states and then the number of photons in each mode is measured. This
     makes the zero temperature sampling significantly faster than the finite temperature one.
     However, to keep the sizes of the samples consistent and temperature independent, we add N
-    zeros to the end of each zero temperature sample at the very end of this function.
+    zeros to the end of each zero temperature sample at the very end of this function. A sampling
+    example is provided in the following for formic acid where t, U1, S, U2, and alpha
+    parameters have been obtained by using the ``vibronic.gbs_params`` function.
 
     **Example usage:**
 
@@ -327,30 +332,27 @@ def vibronic(
 >>>     [0.34556293, 0.22562207, -0.1999159, -0.50280235, -0.25510781, -0.55793978, 0.40065893],
 >>>     [-0.03377431, -0.66280536, -0.14740447, -0.25725325, 0.6145946, -0.07128058, 0.29804963],
 >>>     [-0.24570365, 0.22402764, 0.003273, 0.19204683, -0.05125235, 0.3881131, 0.83623564],
->>>     ]
->>> )
+>>>     ])
 
 >>> r = np.array(
->>>     [0.09721339, 0.07017918, 0.02083469, -0.05974357, -0.07487845, -0.1119975, -0.1866708]
->>> )
+>>>     [0.09721339, 0.07017918, 0.02083469, -0.05974357, -0.07487845, -0.1119975, -0.1866708])
 
 >>> U2 = np.array(
->>>     [
->>>     [-0.07012006, 0.14489772, 0.17593463, 0.02431155, -0.63151781, 0.61230046, 0.41087368],
+>>>     [[-0.07012006, 0.14489772, 0.17593463, 0.02431155, -0.63151781, 0.61230046, 0.41087368],
 >>>     [0.5618538, -0.09931968, 0.04562272, 0.02158822, 0.35700706, 0.6614837, -0.326946],
 >>>     [-0.16560687, -0.7608465, -0.25644606, -0.54317241, -0.12822903, 0.12809274, -0.00597384],
 >>>     [0.01788782, 0.60430409, -0.19831443, -0.73270964, -0.06393682, 0.03376894, -0.23038293],
 >>>     [0.78640978, -0.11133936, 0.03160537, -0.09188782, -0.43483738, -0.4018141, 0.09582698],
 >>>     [-0.13664887, -0.11196486, 0.86353995, -0.19608061, -0.12313513, -0.08639263, -0.40251231],
 >>>     [-0.12060103, -0.01169781, -0.33937036, 0.34662981, -0.49895371, 0.03257453, -0.70709135],
->>>     ]
->>> )
+>>>     ])
 
 >>> alpha = np.array(
->>>     [0.15938187, 0.10387399, 1.10301587, -0.26756921, 0.32194572, -0.24317402, 0.0436992]
->>> )
-[[0, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
- [0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+>>>     [0.15938187, 0.10387399, 1.10301587, -0.26756921, 0.32194572, -0.24317402, 0.0436992])
+
+>>> vibronic(t, U1, S, U2, alpha, 2, 0.0)
+[[0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+ [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
     Args:
         t (array): two-mode squeezing parameters
@@ -430,11 +432,10 @@ def vibronic(
 
     # end circuit
 
-    if n_samples == 1:
-        if np.all(t == 0):
-            s = np.pad(s, (0, n_modes), constant_values=(0)).tolist()
-        return [s]
-    if np.all(t == 0):
-        s = np.pad(s, ((0, 0), (0, n_modes)))
+    s = np.array(s).tolist() # convert all generated samples to list
 
-    return s.tolist()
+    if n_samples == 1:
+        s = [s]
+    if np.all(t == 0):
+        s = np.pad(s, ((0, 0), (0, n_modes))).tolist()
+    return s
