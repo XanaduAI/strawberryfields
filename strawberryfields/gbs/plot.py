@@ -346,11 +346,6 @@ def points(
     return f
 
 
-LIGHT_BLUE = "#94cecf"
-
-BAR_COLOUR = LIGHT_BLUE
-
-
 def spectrum(energies: list):  # pragma: no cover
     """Plots a spectrum based on input sampled energies.
 
