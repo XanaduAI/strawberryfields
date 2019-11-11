@@ -343,3 +343,51 @@ def points(
         f = go.Figure(data=[p], layout=layout)
 
     return f
+
+
+LIGHT_BLUE = "#94cecf"
+
+BAR_COLOUR = LIGHT_BLUE
+
+
+def spectrum(energies: list, bins: Optional[int] = 0):  # pragma: no cover
+    """Plots a spectrum based on input sampled energies.
+
+    Args:
+        energies (list[float]): a list of sampled energies
+        bins (int): maximum number of bins. If zero, the number of bins is decided automatically
+            by Plotly.
+
+    Returns:
+         Figure: spectrum in the form of a histogram of energies
+    """
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise ImportError(plotly_error)
+
+    h = go.Histogram(x=energies, nbinsx=bins, marker={"color": BAR_COLOUR})
+
+    text_font = dict(color="black", family="Times New Roman")
+    axis_style = dict(
+        titlefont_size=30,
+        tickfont=text_font,
+        tickfont_size=20,
+        showline=True,
+        linecolor="black",
+        mirror=True,
+    )
+
+    layout = go.Layout(
+        yaxis=dict(
+            title={"text": "Counts", "font": text_font}, **axis_style, gridcolor=VERY_LIGHT_GREY
+        ),
+        xaxis=dict(title={"text": "Energy (cm<sup>-1</sup>)", "font": text_font}, **axis_style),
+        plot_bgcolor="white",
+        margin=dict(t=25),
+        bargap=0.04,
+    )
+
+    f = go.Figure(h, layout=layout)
+
+    return f
