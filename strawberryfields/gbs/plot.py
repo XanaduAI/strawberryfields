@@ -349,7 +349,7 @@ def points(
 def spectrum(
     energies: list, gamma: float = 100.0, xmin: float = None, xmax: float = None
 ):  # pragma: no cover
-    """Plots a spectrum based on input sampled energies.
+    """Plots a vibronic spectrum based on input sampled energies.
 
     Args:
         energies (list[float]): a list of sampled energies
@@ -365,19 +365,18 @@ def spectrum(
     except ImportError:
         raise ImportError(plotly_error)
 
+    emin = min(energies)
+    emax = max(energies)
     if xmin is None:
-        xmin = min(energies) - 1000.0
+        xmin = emin - 0.1 * (emax - emin)
     if xmax is None:
-        xmax = max(energies) + 1000.0
-
-    bins = int(max(energies) - min(energies)) // 5
-    bar_width = (max(energies) - min(energies)) * 0.005
+        xmax = emax + 0.1 * (emax - emin)
+    bins = int(emax - emin) // 5
+    bar_width = (emax - emin) * 0.005
     line_width = 3.0
 
     h = np.histogram(energies, bins)
-
     X = np.linspace(xmin, xmax, int(xmax-xmin))
-
     L = 0
     for e in energies:
         L += (gamma / 2)**2 / ((X - e)**2 + (gamma / 2)**2)
@@ -411,7 +410,6 @@ def spectrum(
         x=X,
         y=L,
         mode='lines',
-        name='f(x)',
         line=dict(color=GREEN, width=line_width))
 
     f = go.Figure([bars, line], layout=layout)
