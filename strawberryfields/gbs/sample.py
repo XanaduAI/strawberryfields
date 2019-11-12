@@ -293,37 +293,25 @@ def vibronic(
     n_samples: int,
     loss: float = 0.0,
 ) -> list:
-    r"""Generate samples for computing vibronic spectra.
+    r"""Generate samples for computing vibronic spectra. The following gates are applied to
+    :math:`2N` vacuum states:
 
-    This function applies two procedures for generating samples depending on the temperature at
-    which the vibronic spectra is computed. In the finite temperature procedure, 2N vacuum modes
-    are prepared with N being the number of normal modes in the molecule. The first and
-    second N modes correspond to the normal modes of the final and initial electronic states,
-    respectively. These 2N modes are treated with two-mode squeezing gates:
+    1. Two-mode squeezing on all :math:`2N` modes with parameters ``t``
+    2. Interferometer ``U1`` on the first :math:`N` modes
+    3. Squeezing on the first :math:`N` modes with parameters ``r``
+    4. Interferometer ``U2`` on the first :math:`N` modes
+    5. Displacement on the first :math:`N` modes with parameters ``alpha``
 
-    #. Two-mode squeezing on all 2N modes with parameters ``t``
-
-    and then the following gates are applied to the first N modes:
-
-    #. Interferometer ``U1``
-    #. Squeezing on all N modes with parameters ``r``
-    #. Interferometer ``U2``
-    #. Displacement on all N modes with parameters ``alpha``
-
-    In the last step, the number of photons in each of the 2N modes is measured.
-
-    In the zero temperature case, only N modes are considered. The four gates mentioned above are
-    applied to N vacuum states and then the number of photons in each mode is measured. This
-    makes the zero temperature sampling significantly faster than the finite temperature one.
-    However, to keep the sizes of the samples consistent and temperature independent, we add N
-    zeros to the end of each zero temperature sample at the very end of this function. A sampling
-    example is provided in the following for formic acid where t, U1, S, U2, and alpha
-    parameters have been obtained by using the ``vibronic.gbs_params`` function.
+    Finally, the number of photons in each of the :math:`2N` modes is measured. In special
+    cases that all of the two-mode squeezing parameters ``t`` are zero, only :math:`N` modes are
+    considered. In this case, the gates 2-5 mentioned above are applied to :math:`N` vacuum states
+    and then the number of photons in each mode is measured. A sampling example is provided in the
+    following for formic acid where ``t``, ``U1``, ``S``, ``U2``, and ``alpha`` parameters have
+    been obtained by using the ``vibronic.gbs_params`` function.
 
     **Example usage:**
 
 >>> t = np.array([0., 0., 0., 0., 0., 0., 0.])
-
 >>> U1 = np.array(
 >>>     [[-0.07985219, 0.66041032, -0.19389188, 0.01340832, 0.70312675, -0.1208423, -0.10352726],
 >>>     [0.19216669, -0.12470466, -0.81320519, 0.52045174, -0.1066017, -0.06300751, -0.00376173],
@@ -331,12 +319,9 @@ def vibronic(
 >>>     [0.63690134, -0.03047939, 0.46585565, 0.50545897, 0.21194805, -0.20422433, 0.18516987],
 >>>     [0.34556293, 0.22562207, -0.1999159, -0.50280235, -0.25510781, -0.55793978, 0.40065893],
 >>>     [-0.03377431, -0.66280536, -0.14740447, -0.25725325, 0.6145946, -0.07128058, 0.29804963],
->>>     [-0.24570365, 0.22402764, 0.003273, 0.19204683, -0.05125235, 0.3881131, 0.83623564],
->>>     ])
-
+>>>     [-0.24570365, 0.22402764, 0.003273, 0.19204683, -0.05125235, 0.3881131, 0.83623564]])
 >>> r = np.array(
 >>>     [0.09721339, 0.07017918, 0.02083469, -0.05974357, -0.07487845, -0.1119975, -0.1866708])
-
 >>> U2 = np.array(
 >>>     [[-0.07012006, 0.14489772, 0.17593463, 0.02431155, -0.63151781, 0.61230046, 0.41087368],
 >>>     [0.5618538, -0.09931968, 0.04562272, 0.02158822, 0.35700706, 0.6614837, -0.326946],
@@ -344,12 +329,9 @@ def vibronic(
 >>>     [0.01788782, 0.60430409, -0.19831443, -0.73270964, -0.06393682, 0.03376894, -0.23038293],
 >>>     [0.78640978, -0.11133936, 0.03160537, -0.09188782, -0.43483738, -0.4018141, 0.09582698],
 >>>     [-0.13664887, -0.11196486, 0.86353995, -0.19608061, -0.12313513, -0.08639263, -0.40251231],
->>>     [-0.12060103, -0.01169781, -0.33937036, 0.34662981, -0.49895371, 0.03257453, -0.70709135],
->>>     ])
-
+>>>     [-0.12060103, -0.01169781, -0.33937036, 0.34662981, -0.49895371, 0.03257453, -0.70709135]])
 >>> alpha = np.array(
 >>>     [0.15938187, 0.10387399, 1.10301587, -0.26756921, 0.32194572, -0.24317402, 0.0436992])
-
 >>> vibronic(t, U1, S, U2, alpha, 2, 0.0)
 [[0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
  [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
@@ -374,68 +356,45 @@ def vibronic(
 
     n_modes = len(t)
 
-    # initialize engine
-
     eng = sf.LocalEngine(backend="gaussian")
 
-    # initialize program objects
-
-    if np.all(t != 0):
+    if np.any(t != 0):
         gbs = sf.Program(n_modes * 2)
     else:
         gbs = sf.Program(n_modes)
 
-    # start circuit
     # pylint: disable=expression-not-assigned,pointless-statement
     with gbs.context as q:
 
-        # two-mode squeezing gates
-
-        if np.all(t != 0):
+        if np.any(t != 0):
             for i in range(n_modes):
                 sf.ops.S2gate(t[i]) | (q[i], q[i + n_modes])
 
-        # first interferometer
-
         sf.ops.Interferometer(U1) | q[:n_modes]
-
-        # squeezing gates
 
         for i in range(n_modes):
             sf.ops.Sgate(r[i]) | q[i]
 
-        # second interferometer
-
         sf.ops.Interferometer(U2) | q[:n_modes]
-
-        # displacement gates
 
         for i in range(n_modes):
             sf.ops.Dgate(alpha[i]) | q[i]
 
-        # apply loss
-
         if loss:
             for _q in q:
                 sf.ops.LossChannel(1 - loss) | _q
-
-        # measurement
 
         sf.ops.MeasureFock() | q
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning, message="Cannot simulate non-")
 
-        # run the engine and generate samples
-
         s = eng.run(gbs, run_options={"shots": n_samples}).samples
-
-    # end circuit
 
     s = np.array(s).tolist() # convert all generated samples to list
 
     if n_samples == 1:
         s = [s]
-    if np.all(t == 0):
+    if np.any(t == 0):
         s = np.pad(s, ((0, 0), (0, n_modes))).tolist()
     return s

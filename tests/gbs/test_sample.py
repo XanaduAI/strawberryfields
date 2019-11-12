@@ -28,7 +28,9 @@ pytestmark = pytest.mark.gbs
 
 adj_dim_range = range(2, 6)
 
-t = np.array([0., 0., 0., 0., 0., 0., 0.])
+t0 = np.array([0., 0., 0., 0., 0., 0., 0.])
+
+t1 = np.array([0.01095008, 0.02466257, 0.11257409, 0.18496601, 0.20673787, 0.26162544, 0.51007465])
 
 U1 = np.array(
     [
@@ -60,7 +62,9 @@ alpha = np.array(
     [0.15938187, 0.10387399, 1.10301587, -0.26756921, 0.32194572, -0.24317402, 0.0436992]
 )
 
-p = [t, U1, r, U2, alpha]
+p0 = [t0, U1, r, U2, alpha]
+
+p1 = [t1, U1, r, U2, alpha]
 
 
 @pytest.mark.parametrize("dim", [4])
@@ -290,23 +294,23 @@ def test_postselect():
     assert sample.postselect(counts_pnr, 4, 5) == counts_pnr_ps_4_5
     assert sample.postselect(counts_threshold, 3, 3) == counts_threshold_ps_3_3
 
-
+@pytest.mark.parametrize("p", [p0, p1])
 class TestVibronic:
     """Tests for the function ``strawberryfields.gbs.sample.vibronic``"""
 
-    def test_invalid_n_samples(self):
+    def test_invalid_n_samples(self, p):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
         requested."""
         with pytest.raises(ValueError, match="Number of samples must be at least one"):
             sample.vibronic(*p, -1)
 
-    def test_invalid_loss(self):
+    def test_invalid_loss(self, p):
         """Test if function raises a ``ValueError`` when the loss parameter is specified outside
         of range."""
         with pytest.raises(ValueError, match="Loss parameter must take a value between zero and"):
             sample.vibronic(*p, 1, loss=2)
 
-    def test_loss(self, monkeypatch):
+    def test_loss(self, monkeypatch, p):
         """Test if function correctly creates the SF program for lossy GBS."""
         mock_eng_run = mock.MagicMock()
 
@@ -317,7 +321,7 @@ class TestVibronic:
 
         assert isinstance(p_func.circuit[-2].op, sf.ops.LossChannel)
 
-    def test_no_loss(self, monkeypatch):
+    def test_no_loss(self, monkeypatch, p):
         """Test if function correctly creates the SF program for GBS without loss."""
         mock_eng_run = mock.MagicMock()
 
@@ -328,28 +332,31 @@ class TestVibronic:
 
         assert not all([isinstance(op, sf.ops.LossChannel) for op in p_func.circuit])
 
-    def test_all_loss(self, monkeypatch):
-        """Test if function samples from the vacuum when maximum loss is applied."""
-        dim = len(alpha)
-        mock_eng_run = mock.MagicMock()
+    def test_all_loss(self, monkeypatch, p):
+        """Test if function samples from the vacuum when maximum loss is applied. This test is
+        only done for the zero temperature case"""
+        if p == 'p0':
+            dim = len(alpha)
+            mock_eng_run = mock.MagicMock()
 
-        with monkeypatch.context() as m:
-            m.setattr(sf.Engine, "run", mock_eng_run)
-            sample.vibronic(*p, 1, loss=1)
-            p_func = mock_eng_run.call_args[0][0]
+            with monkeypatch.context() as m:
+                m.setattr(sf.Engine, "run", mock_eng_run)
+                sample.vibronic(*p, 1, loss=1)
+                p_func = mock_eng_run.call_args[0][0]
 
-        eng = sf.LocalEngine(backend="gaussian")
+            eng = sf.LocalEngine(backend="gaussian")
 
-        state = eng.run(p_func).state
-        cov = state.cov()
-        disp = state.displacement()
+            state = eng.run(p_func).state
+            cov = state.cov()
+            disp = state.displacement()
 
-        assert np.allclose(cov, 0.5 * state.hbar * np.eye(2 * dim))
-        assert np.allclose(disp, np.zeros(dim))
+            assert np.allclose(cov, 0.5 * state.hbar * np.eye(2 * dim))
+            assert np.allclose(disp, np.zeros(dim))
 
 
+@pytest.mark.parametrize("p", [p0, p1])
 @pytest.mark.parametrize("integration_sample_number", [1, 2])
-def test_vibronic_integration(integration_sample_number):
+def test_vibronic_integration(p, integration_sample_number):
     """Integration test for the function ``strawberryfields.gbs.sample.vibronic`` to check if
     it returns samples of correct form, i.e., correct number of samples, correct number of
     modes, all non-negative integers."""
