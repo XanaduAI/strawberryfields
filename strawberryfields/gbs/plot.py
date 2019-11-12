@@ -105,7 +105,7 @@ plotly_error = (
 
 GREEN = "#3e9651"
 RED = "#cc2529"
-GREY = "#5E5E5E"
+GREY = "#737373"
 LIGHT_GREY = "#CDCDCD"
 VERY_LIGHT_GREY = "#F2F2F2"
 
@@ -346,29 +346,37 @@ def points(
     return f
 
 
-def spectrum(energies: list):  # pragma: no cover
+def spectrum(
+    energies: list, gamma: float = 100.0, xmin: float = None, xmax: float = None
+):  # pragma: no cover
     """Plots a spectrum based on input sampled energies.
 
     Args:
         energies (list[float]): a list of sampled energies
+        gamma (float): parameter specifying the width of the Lorentzian function
+        xmin (float): minimum limit of the x axis
+        xmax (float): maximum limit of the x axis
 
     Returns:
-         Figure: spectrum in the form of a histogram of energies
+         Figure: spectrum in the form of a histogram of energies with a Lorentzian-function curve
     """
     try:
         import plotly.graph_objects as go
     except ImportError:
         raise ImportError(plotly_error)
 
-    Xmin = min(energies) - 1000.0
-    Xmax = max(energies) + 1000.0
-    bins = int(max(energies) - min(energies))
-    gamma = 100.0
+    if xmin is None:
+        xmin = min(energies) - 1000.0
+    if xmax is None:
+        xmax = max(energies) + 1000.0
+
+    bins = int(max(energies) - min(energies)) // 5
     bar_width = (max(energies) - min(energies)) * 0.005
+    line_width = 3.0
 
     h = np.histogram(energies, bins)
 
-    X = np.linspace(Xmin, Xmax, int(Xmax-Xmin))
+    X = np.linspace(xmin, xmax, int(xmax-xmin))
 
     L = 0
     for e in energies:
@@ -386,8 +394,7 @@ def spectrum(energies: list):  # pragma: no cover
 
     layout = go.Layout(
         yaxis=dict(
-            title={"text": "Counts", "font": text_font}, **axis_style, gridcolor=VERY_LIGHT_GREY,
-            rangemode='tozero'),
+            title={"text": "Counts", "font": text_font}, **axis_style, rangemode='tozero'),
         xaxis=dict(title={"text": "Energy (cm<sup>-1</sup>)", "font": text_font}, **axis_style),
         plot_bgcolor="white",
         margin=dict(t=25),
@@ -405,7 +412,7 @@ def spectrum(energies: list):  # pragma: no cover
         y=L,
         mode='lines',
         name='f(x)',
-        line=dict(color=GREEN, width=3))
+        line=dict(color=GREEN, width=line_width))
 
     f = go.Figure([bars, line], layout=layout)
 
