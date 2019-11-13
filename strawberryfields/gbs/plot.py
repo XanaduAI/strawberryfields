@@ -360,13 +360,12 @@ def spectrum(
     Returns:
          Figure: spectrum in the form of a histogram of energies with a Lorentzian-function curve
     """
+    if len(energies) < 2:
+        raise ValueError("Number of sampled energies must be at least two")
     try:
         import plotly.graph_objects as go
     except ImportError:
         raise ImportError(plotly_error)
-
-    if len(energies) < 2:
-        raise ValueError("Number of sampled energies must be at least two")
 
     emin = min(energies)
     emax = max(energies)
