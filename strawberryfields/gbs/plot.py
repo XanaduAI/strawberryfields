@@ -365,6 +365,9 @@ def spectrum(
     except ImportError:
         raise ImportError(plotly_error)
 
+    if len(energies) < 2:
+        raise ValueError("Number of sampled energies must be at least two")
+
     emin = min(energies)
     emax = max(energies)
     if xmin is None:
