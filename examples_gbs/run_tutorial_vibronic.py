@@ -30,7 +30,7 @@ vibrational modes are transformed when the molecule changes from a ground to exc
 state. At zero temperature, all initial modes are in the vibrational ground state. At finite
 temperature, other vibrational states are also populated.
 
-In the GBS algorithm for computing vibronic spectra :cite:`huh2019boson`, these parameters
+In the GBS algorithm for computing vibronic spectra :cite:`Huh_2015`, these parameters
 are sufficient to determine the configuration of a GBS device. As opposed to other applications
 that involve only single-mode squeezing and linear interferometry, for vibronic spectra we
 prepare a Gaussian state using the following sequence of operations: two-mode squeezing, linear
@@ -41,7 +41,7 @@ obtain the GBS squeezing, interferometer, and displacement parameters from the i
 parameters listed above. In this tutorial, we study the vibronic spectrum of
 `formic acid <https://en.wikipedia.org/wiki/Formic_acid>`_, which can be well approximated by
 looking at only a few vibrational modes. Its chemical parameters, obtained from
-:cite:`huh2019boson`, are listed below. They are then mapped to GBS parameters using the function
+:cite:`Huh_2015`, are listed below. They are then mapped to GBS parameters using the function
 :func:`~.gbs_params:
 """
 from strawberryfields.gbs import vibronic
@@ -119,7 +119,8 @@ e = vibronic.energies(fa_samples, w, wp)
 # plot.spectrum(e)
 
 ##############################################################################
-# Let's compare with a plot of the actual experimental spectrum of formic acid:
+# Let's compare with a plot of the actual experimental spectrum of formic acid, taken from
+#:cite:`Huh_2015`
 
 
 ##############################################################################
