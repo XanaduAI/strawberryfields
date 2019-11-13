@@ -381,7 +381,7 @@ def spectrum(
     for e in energies:
         L += (gamma / 2)**2 / ((X - e)**2 + (gamma / 2)**2)
 
-    text_font = dict(color="black", family="Times New Roman")
+    text_font = dict(color="black", family="Computer Modern")
 
     axis_style = dict(
         titlefont_size=30,
