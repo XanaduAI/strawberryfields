@@ -73,7 +73,7 @@ import numpy as np
 
 
 def gbs_params(
-    w: np.ndarray, wp: np.ndarray, Ud: np.ndarray, d: np.ndarray, T: float = 0
+    w: np.ndarray, wp: np.ndarray, Ud: np.ndarray, delta: np.ndarray, T: float = 0
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""Converts molecular information to GBS gate parameters.
 
@@ -92,14 +92,15 @@ def gbs_params(
     >>>         [-0.0325, 0.0050, -0.0206, 0.0694, -0.2018, 0.0173, -0.9759],
     >>>     ]
     >>> )
-    >>> d = np.array([0.2254, 0.1469, 1.5599, -0.3784, 0.4553, -0.3439, 0.0618])
-    >>> p = gbs_params(w, wp, Ud, d)
+    >>> delta = np.array([0.2254, 0.1469, 1.5599, -0.3784, 0.4553, -0.3439, 0.0618])
+    >>> p = gbs_params(w, wp, Ud, delta)
 
     Args:
         w (array): normal mode frequencies of the initial electronic state (:math:`\mbox{cm}^{-1}`)
         wp (array): normal mode frequencies of the final electronic state (:math:`\mbox{cm}^{-1}`)
         Ud (array): Duschinsky matrix
-        d (array): Duschinsky displacement vector
+        delta (array): Displacement vector, with entries :math:`delta_i=\sqrt{
+        \omega_i/\hbar}d_i`, and :math:`d` is the Duschinsky displacement
         T (float): temperature (Kelvin)
 
     Returns:
@@ -116,7 +117,7 @@ def gbs_params(
         t = np.zeros(len(w))
 
     U2, s, U1 = np.linalg.svd(np.diag(wp ** 0.5) @ Ud @ np.diag(w ** -0.5))
-    alpha = d / np.sqrt(2)
+    alpha = delta / np.sqrt(2)
 
     return t, U1, np.log(s), U2, alpha
 
