@@ -17,6 +17,8 @@ Tests for strawberryfields.gbs.vibronic
 import numpy as np
 import pytest
 
+from scipy.constants import c, h, k
+
 from strawberryfields.gbs import vibronic
 
 pytestmark = pytest.mark.gbs
@@ -41,7 +43,9 @@ class TestGBSParams:
     )
     d = np.array([0.2254, 0.1469, 1.5599, -0.3784, 0.4553, -0.3439, 0.0618])
 
-    U1, S, U2, alpha = vibronic.gbs_params(w, wp, Ud, d)
+    T = 300.0
+
+    t, U1, S, U2, alpha = vibronic.gbs_params(w, wp, Ud, d, T)
 
     @pytest.mark.parametrize("unitary", [U1, U2])
     def test_unitary(self, unitary):
@@ -67,21 +71,38 @@ class TestGBSParams:
         Ud = np.diag(self.wp ** -0.5) @ J @ np.diag(self.w ** 0.5)
         assert np.allclose(Ud, self.Ud)
 
+    def test_invalid_temperature(self):
+        """Test if function raises a ``ValueError`` when a negative temperature is given."""
+        with pytest.raises(ValueError, match="Temperature must be zero or positive"):
+            vibronic.gbs_params(self.w, self.wp, self.Ud, self.d, -1)
 
+    def test_twomode(self):
+        """Test if function returns two-mode squeezing parameters that correctly reconstruct the
+        input normal mode frequencies."""
+        w = -k * self.T / (0.5 * h * c * 100) * np.log(np.tanh(self.t))
+        assert np.allclose(w, self.w)
+
+    def test_zero_temperature(self):
+        """Test if function returns zero two-mode squeezing parameters when temperature is zero."""
+        t, _, _, _, _ = vibronic.gbs_params(self.w, self.wp, self.Ud, self.d, 0.0)
+        assert np.all(t == 0)
+
+
+w  = np.array([300.0, 200.0, 100.0])
 wp = np.array([700.0, 600.0, 500.0])
 
-S1 = [[1, 1, 0], [1, 0, 2]]
-E1 = [1300.0, 1700.0]
+S1 = [[1, 1, 0, 0, 0, 0], [1, 2, 0, 0, 1, 1]]
+E1 = [1300.0, 1600.0]
 
-S2 = [[1, 1, 0]]
-E2 = [1300.0]
+S2 = [[1, 2, 0, 0, 1, 1]]
+E2 = [1600.0]
 
-S3 = [1, 1, 0]
-E3 = 1300.0
+S3 = [1, 2, 0, 0, 1, 1]
+E3 = 1600.0
 
 
 @pytest.mark.parametrize("sample, sample_energy", [(S1, E1), (S2, E2), (S3, E3)])
 def test_energies(sample, sample_energy):
     r"""Tests the correctness of the energies generated for GBS samples in
     ``strawberryfields.gbs.vibronic.energies``."""
-    assert np.allclose(vibronic.energies(sample, wp), sample_energy)
+    assert np.allclose(vibronic.energies(sample, w, wp), sample_energy)

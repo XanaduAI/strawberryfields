@@ -105,6 +105,7 @@ plotly_error = (
 
 GREEN = "#3e9651"
 RED = "#cc2529"
+GREY = "#737373"
 LIGHT_GREY = "#CDCDCD"
 VERY_LIGHT_GREY = "#F2F2F2"
 
@@ -341,5 +342,78 @@ def points(
 
     else:
         f = go.Figure(data=[p], layout=layout)
+
+    return f
+
+
+def spectrum(
+    energies: list, gamma: float = 100.0, xmin: float = None, xmax: float = None
+):  # pragma: no cover
+    """Plots a vibronic spectrum based on input sampled energies.
+
+    Args:
+        energies (list[float]): a list of sampled energies
+        gamma (float): parameter specifying the width of the Lorentzian function
+        xmin (float): minimum limit of the x axis
+        xmax (float): maximum limit of the x axis
+
+    Returns:
+         Figure: spectrum in the form of a histogram of energies with a Lorentzian-function curve
+    """
+    if len(energies) < 2:
+        raise ValueError("Number of sampled energies must be at least two")
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise ImportError(plotly_error)
+
+    emin = min(energies)
+    emax = max(energies)
+    if xmin is None:
+        xmin = emin - 0.1 * (emax - emin)
+    if xmax is None:
+        xmax = emax + 0.1 * (emax - emin)
+    bins = int(emax - emin) // 5
+    bar_width = (emax - emin) * 0.005
+    line_width = 3.0
+
+    h = np.histogram(energies, bins)
+    X = np.linspace(xmin, xmax, int(xmax-xmin))
+    L = 0
+    for e in energies:
+        L += (gamma / 2)**2 / ((X - e)**2 + (gamma / 2)**2)
+
+    text_font = dict(color="black", family="Computer Modern")
+
+    axis_style = dict(
+        titlefont_size=30,
+        tickfont=text_font,
+        tickfont_size=20,
+        showline=True,
+        linecolor="black",
+        mirror=True)
+
+    layout = go.Layout(
+        yaxis=dict(
+            title={"text": "Counts", "font": text_font}, **axis_style, rangemode='tozero'),
+        xaxis=dict(title={"text": "Energy (cm<sup>-1</sup>)", "font": text_font}, **axis_style),
+        plot_bgcolor="white",
+        margin=dict(t=25),
+        bargap=0.04,
+        showlegend=False)
+
+    bars = go.Bar(
+        x=h[1].tolist(),
+        y=h[0].tolist(),
+        width=bar_width,
+        marker=dict(color=GREY))
+
+    line = go.Scatter(
+        x=X,
+        y=L,
+        mode='lines',
+        line=dict(color=GREEN, width=line_width))
+
+    f = go.Figure([bars, line], layout=layout)
 
     return f

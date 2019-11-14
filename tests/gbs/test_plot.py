@@ -83,3 +83,10 @@ class TestEdgeCoords:
 
         assert x[:2] == [1, -1]
         assert y[:2] == [1, -1]
+
+
+def test_spectrum_invalid_energies():
+    """Test if function `plot.spectrum` raises a ``ValueError`` when the number of sampled energies
+    is less than two"""
+    with pytest.raises(ValueError, match="Number of sampled energies must be at least two"):
+        plot.spectrum([1000.0])
