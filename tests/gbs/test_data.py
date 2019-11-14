@@ -196,7 +196,7 @@ class TestMoleculeDatasets:
         w, wp, Ud, delta = dataset.w, dataset.wp, dataset.Ud, dataset.delta
         dim = w.shape[0]
 
-        assert wp.shape[0] == dim and Ud.shape[0] == dim and delta.shape[0] == dim
+        assert wp.shape[0] == dim and Ud.shape == (dim, dim) and delta.shape[0] == dim
 
     def test_w_non_negative(self, dataset):
         """Test if w is non-negative"""
