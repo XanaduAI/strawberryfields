@@ -374,7 +374,7 @@ def spectrum(
     if xmax is None:
         xmax = emax + 0.1 * (emax - emin)
     bins = int(emax - emin) // 5
-    bar_width = (emax - emin) * 0.005
+    bar_width = (xmax - xmin) * 0.005
     line_width = 3.0
 
     h = np.histogram(energies, bins)
@@ -396,7 +396,9 @@ def spectrum(
     layout = go.Layout(
         yaxis=dict(
             title={"text": "Counts", "font": text_font}, **axis_style, rangemode='tozero'),
-        xaxis=dict(title={"text": "Energy (cm<sup>-1</sup>)", "font": text_font}, **axis_style),
+        xaxis=dict(
+            title={"text": "Energy (cm<sup>-1</sup>)", "font": text_font}, **axis_style,
+            range=[xmin, xmax]),
         plot_bgcolor="white",
         margin=dict(t=25),
         bargap=0.04,
