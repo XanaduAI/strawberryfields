@@ -434,7 +434,7 @@ class Mutag3(GraphDataset):
 
 # pylint: disable=abstract-method
 class MoleculeDataset(Dataset, ABC):
-    """Class for loading datasets of pre-generated samples from molecules.
+    r"""Class for loading datasets of pre-generated samples from molecules.
 
     Attributes:
         w (array): normal mode frequencies of the electronic ground state (:math:`\mbox{cm}^{-1}`)
