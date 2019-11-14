@@ -463,7 +463,7 @@ class MoleculeDataset(Dataset, ABC):
 class Formic(MoleculeDataset):
     """Zero temperature formic acid.
 
-    The molecular parameters are obtained from Ref. :cite:`Huh_2015`.
+    The molecular parameters are obtained from Ref. :cite:`huh2015boson`.
 
     **Molecule:**
 
