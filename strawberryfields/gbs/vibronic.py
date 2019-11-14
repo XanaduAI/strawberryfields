@@ -21,7 +21,7 @@ Vibronic spectra
 
 This module contains functions used for computing molecular vibronic spectra with GBS. In vibronic
 spectroscopy, incoming light simultaneously excites a molecule to higher electronic and
-vibrational states. The difference in the energies of the ground and excited states
+vibrational states. The difference in the energies of the initial and final states
 determines the frequency of the photons that are absorbed by the molecule. The probability of
 the transition between two specific vibrational states are referred to as Franck-Condon factors
 (FCFs). They determine the intensity of absorption peaks in a vibronic spectrum. A GBS
