@@ -173,30 +173,30 @@ class TestMoleculeDatasets:
 
     def test_w_dims(self, dataset):
         """Test if w has correct shape"""
-        w, _, _, _ = dataset.w, dataset.wp, dataset.Ud, dataset.d
+        w, _, _, _ = dataset.w, dataset.wp, dataset.Ud, dataset.delta
         assert w.shape == (dataset.modes // 2,)
 
     def test_wp_dims(self, dataset):
         """Test if wp has correct shape"""
-        _, wp, _, _ = dataset.w, dataset.wp, dataset.Ud, dataset.d
+        _, wp, _, _ = dataset.w, dataset.wp, dataset.Ud, dataset.delta
         assert wp.shape == (dataset.modes // 2,)
 
     def test_Ud_dims(self, dataset):
         """Test if Ud has correct shape"""
-        _, _, Ud, _ = dataset.w, dataset.wp, dataset.Ud, dataset.d
+        _, _, Ud, _ = dataset.w, dataset.wp, dataset.Ud, dataset.delta
         assert Ud.shape == (dataset.modes // 2, dataset.modes // 2)
 
-    def test_d_dims(self, dataset):
-        """Test if d has correct shape"""
-        _, _, _, d = dataset.w, dataset.wp, dataset.Ud, dataset.d
-        assert d.shape == (dataset.modes // 2,)
+    def test_delta_dims(self, dataset):
+        """Test if delta has correct shape"""
+        _, _, _, delta = dataset.w, dataset.wp, dataset.Ud, dataset.delta
+        assert delta.shape == (dataset.modes // 2,)
 
     def test_uniform_dims(self, dataset):
         """Test if overall dimension is correct"""
-        w, wp, Ud, d = dataset.w, dataset.wp, dataset.Ud, dataset.d
+        w, wp, Ud, delta = dataset.w, dataset.wp, dataset.Ud, dataset.delta
         dim = w.shape[0]
 
-        assert wp.shape[0] == dim and Ud.shape[0] == dim and d.shape[0] == dim
+        assert wp.shape[0] == dim and Ud.shape[0] == dim and delta.shape[0] == dim
 
     def test_w_non_negative(self, dataset):
         """Test if w is non-negative"""

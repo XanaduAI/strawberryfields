@@ -440,7 +440,7 @@ class MoleculeDataset(Dataset, ABC):
         w (array): normal mode frequencies of the electronic ground state (:math:`\mbox{cm}^{-1}`)
         wp (array): normal mode frequencies of the electronic excited state (:math:`\mbox{cm}^{-1}`)
         Ud (array): Duschinsky matrix
-        d (array): Duschinsky displacement vector corrected with wp
+        delta (array): Duschinsky displacement vector
         T (float): temperature (Kelvin)
     """
 
@@ -449,7 +449,9 @@ class MoleculeDataset(Dataset, ABC):
         self.w = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_w.npz").toarray()[0]
         self.wp = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_wp.npz").toarray()[0]
         self.Ud = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_Ud.npz").toarray()
-        self.d = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_d.npz").toarray()[0]
+        self.delta = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_delta.npz").toarray(
+
+        )[0]
 
     # pylint: disable=missing-docstring
     @property
