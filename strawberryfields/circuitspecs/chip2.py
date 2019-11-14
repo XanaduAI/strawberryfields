@@ -26,11 +26,11 @@ from .circuit_specs import CircuitSpecs
 from .gbs import GBSSpecs
 
 
-class Chip0Specs(CircuitSpecs):
+class Chip2Specs(CircuitSpecs):
     """Circuit specifications for the chip0 class of circuits."""
 
-    short_name = "chip0"
-    modes = 4
+    short_name = "chip2"
+    modes = 8
     remote = True
     local = True
     interactive = False
@@ -44,34 +44,95 @@ class Chip0Specs(CircuitSpecs):
 
     circuit = textwrap.dedent(
         """\
-        name template_2x2_chip0
+        name template_4x2_chip2
         version 1.0
-        target chip0 (shots=10)
+        target chip2 (shots=1)
 
-        # for n spatial degrees, first n signal modes, then n idler modes, phase zero
-        S2gate({squeezing_amplitude_0}, 0.0) | [0, 2]
-        S2gate({squeezing_amplitude_1}, 0.0) | [1, 3]
+        # for n spatial degrees, first n signal modes, then n idler modes, all phases zero
+        S2gate({squeezing_amplitude_0}, 0.0) | [0, 4]
+        S2gate({squeezing_amplitude_1}, 0.0) | [1, 5]
+        S2gate({squeezing_amplitude_2}, 0.0) | [2, 6]
+        S2gate({squeezing_amplitude_3}, 0.0) | [3, 7]
 
-        # standard 2x2 interferometer for the signal modes (the lower ones in frequency)
-        Rgate({external_phase_0}) | [0]
+        # standard 4x4 interferometer for the signal modes (the lower ones in frequency)
+        # even phase indices correspond to external Mach-Zehnder interferometer phases
+        # odd phase indices correspond to internal Mach-Zehnder interferometer phases
+        # MZI_0
+        Rgate({phase_0}) | [0]
         BSgate(pi/4, pi/2) | [0, 1]
-        Rgate({internal_phase_0}) | [0]
+        Rgate({phase_1}) | [0]
         BSgate(pi/4, pi/2) | [0, 1]
-
-        #duplicate the interferometer for the idler modes (the higher ones in frequency)
-        Rgate({external_phase_0}) | [2]
+        # MZI_1
+        Rgate({phase_2}) | [2]
         BSgate(pi/4, pi/2) | [2, 3]
-        Rgate({internal_phase_0}) | [2]
+        Rgate({phase_3}) | [2]
         BSgate(pi/4, pi/2) | [2, 3]
+        # MZI_2
+        Rgate({phase_4}) | [1]
+        BSgate(pi/4, pi/2) | [1, 2]
+        Rgate({phase_5}) | [1]
+        BSgate(pi/4, pi/2) | [1, 2]
+        # MZI_3
+        Rgate({phase_6}) | [0]
+        BSgate(pi/4, pi/2) | [0, 1]
+        Rgate({phase_7}) | [0]
+        BSgate(pi/4, pi/2) | [0, 1]
+        # MZI_4
+        Rgate({phase_8}) | [2]
+        BSgate(pi/4, pi/2) | [2, 3]
+        Rgate({phase_9}) | [2]
+        BSgate(pi/4, pi/2) | [2, 3]
+        # MZI_5
+        Rgate({phase_10}) | [1]
+        BSgate(pi/4, pi/2) | [1, 2]
+        Rgate({phase_11}) | [1]
+        BSgate(pi/4, pi/2) | [1, 2]
 
-        # final local phases
-        Rgate({final_phase_0}) | 0
-        Rgate({final_phase_1}) | 1
-        Rgate({final_phase_2}) | 2
-        Rgate({final_phase_3}) | 3
+        # duplicate the interferometer for the idler modes (the higher ones in frequency)
+        # MZI_0
+        Rgate({phase_0}) | [4]
+        BSgate(pi/4, pi/2) | [4, 5]
+        Rgate({phase_1}) | [4]
+        BSgate(pi/4, pi/2) | [4, 5]
+        # MZI_1
+        Rgate({phase_2}) | [6]
+        BSgate(pi/4, pi/2) | [6, 7]
+        Rgate({phase_3}) | [6]
+        BSgate(pi/4, pi/2) | [6, 7]
+        # MZI_2
+        Rgate({phase_4}) | [5]
+        BSgate(pi/4, pi/2) | [5, 6]
+        Rgate({phase_5}) | [5]
+        BSgate(pi/4, pi/2) | [5, 6]
+        # MZI_3
+        Rgate({phase_6}) | [4]
+        BSgate(pi/4, pi/2) | [4, 5]
+        Rgate({phase_7}) | [4]
+        BSgate(pi/4, pi/2) | [4, 5]
+        # MZI_4
+        Rgate({phase_8}) | [6]
+        BSgate(pi/4, pi/2) | [6, 7]
+        Rgate({phase_9}) | [6]
+        BSgate(pi/4, pi/2) | [6, 7]
+        # MZI_5
+        Rgate({phase_10}) | [5]
+        BSgate(pi/4, pi/2) | [5, 6]
+        Rgate({phase_11}) | [5]
+        BSgate(pi/4, pi/2) | [5, 6]
 
-        # Measurement in Fock basis
-        MeasureFock() | [0, 1, 2, 3]
+        # add final dummy phases to allow mapping any unitary to this template (these do not
+        # affect the photon number measurement)
+        Rgate({final_phase_0}) | [0]
+        Rgate({final_phase_1}) | [1]
+        Rgate({final_phase_2}) | [2]
+        Rgate({final_phase_3}) | [3]
+        Rgate({final_phase_4}) | [4]
+        Rgate({final_phase_5}) | [5]
+        Rgate({final_phase_6}) | [6]
+        Rgate({final_phase_7}) | [7]
+
+        # measurement in Fock basis
+        MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7]
         """
     )
 
@@ -112,8 +173,10 @@ class Chip0Specs(CircuitSpecs):
         # --------------------------------------------
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
 
+        print([o.op for o in A])
+
         if A:
-            raise CircuitError("Circuits must start with two S2gates.")
+            raise CircuitError("Circuits must start with four S2gates.")
 
         # get circuit registers
         regrefs = {q for cmd in B for q in cmd.reg}
@@ -125,11 +188,11 @@ class Chip0Specs(CircuitSpecs):
         # -------------------------------------------------------------
         A, B, C = group_operations(seq, lambda x: isinstance(x, (ops.Rgate, ops.BSgate)))
 
-        # begin unitary lists for mode [0, 1] and modes [2, 3] with
+        # begin unitary lists for mode [0, 1, 2, 3] and modes [4, 5, 6, 7] with
         # two identity matrices. This is because multi_dot requires
         # at least two matrices in the list.
-        U_list01 = [np.identity(self.modes // 2, dtype=np.complex128)] * 2
-        U_list23 = [np.identity(self.modes // 2, dtype=np.complex128)] * 2
+        U_list0 = [np.identity(self.modes // 2, dtype=np.complex128)] * 2
+        U_list4 = [np.identity(self.modes // 2, dtype=np.complex128)] * 2
 
         if not B:
             # no interferometer was applied
@@ -139,15 +202,15 @@ class Chip0Specs(CircuitSpecs):
             for cmd in B:
                 # calculate the unitary matrix representing each
                 # rotation gate and each beamsplitter
-                # Note: this is done separately on modes [0, 1]
-                # and modes [2, 3]
+                # Note: this is done separately on modes [0, 1, 2, 3]
+                # and modes [4, 5, 6, 7]
                 modes = [i.ind for i in cmd.reg]
                 params = par_evaluate(cmd.op.p)
                 U = np.identity(self.modes // 2, dtype=np.complex128)
 
                 if isinstance(cmd.op, ops.Rgate):
                     m = modes[0]
-                    U[m % 2, m % 2] = np.exp(1j * params[0])
+                    U[m % 4, m % 4] = np.exp(1j * params[0])
 
                 elif isinstance(cmd.op, ops.BSgate):
                     m, n = modes
@@ -155,37 +218,37 @@ class Chip0Specs(CircuitSpecs):
                     t = np.cos(params[0])
                     r = np.exp(1j * params[1]) * np.sin(params[0])
 
-                    U[m % 2, m % 2] = t
-                    U[m % 2, n % 2] = -np.conj(r)
-                    U[n % 2, m % 2] = r
-                    U[n % 2, n % 2] = t
+                    U[m % 4, m % 4] = t
+                    U[m % 4, n % 4] = -np.conj(r)
+                    U[n % 4, m % 4] = r
+                    U[n % 4, n % 4] = t
 
-                if set(modes).issubset({0, 1}):
-                    U_list01.insert(0, U)
-                elif set(modes).issubset({2, 3}):
-                    U_list23.insert(0, U)
+                if set(modes).issubset({0, 1, 2, 3}):
+                    U_list0.insert(0, U)
+                elif set(modes).issubset({4, 5, 6, 7}):
+                    U_list4.insert(0, U)
                 else:
                     raise CircuitError(
-                        "Unitary must be applied separately to modes [0, 1] and modes [2, 3]."
+                        "Unitary must be applied separately to modes [0, 1, 2, 3] and modes [4, 5, 6, 7]."
                     )
 
         # multiply all unitaries together, to get the final
         # unitary representation on modes [0, 1] and [2, 3].
-        U01 = multi_dot(U_list01)
-        U23 = multi_dot(U_list23)
+        U0 = multi_dot(U_list0)
+        U4 = multi_dot(U_list4)
 
         # check unitaries are equal
-        if not np.allclose(U01, U23):
+        if not np.allclose(U0, U4):
             raise CircuitError(
-                "Interferometer on modes [0, 1] must be identical to interferometer on modes [2, 3]."
+                "Interferometer on modes [0, 1, 2, 3] must be identical to interferometer on modes [4, 5, 6, 7]."
             )
 
-        U = block_diag(U01, U23)
+        U = block_diag(U0, U4)
 
         # replace B with an interferometer
         B = [
-            Command(ops.Interferometer(U01), registers[:2]),
-            Command(ops.Interferometer(U23), registers[2:]),
+            Command(ops.Interferometer(U0), registers[:4]),
+            Command(ops.Interferometer(U4), registers[4:]),
         ]
 
         # decompose the interferometer, using Mach-Zehnder interferometers

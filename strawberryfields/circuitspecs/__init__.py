@@ -83,13 +83,14 @@ Code details
 """
 from .circuit_specs import CircuitSpecs
 from .chip0 import Chip0Specs
+from .chip2 import Chip2Specs
 from .fock import FockSpecs
 from .gaussian import GaussianSpecs
 from .gbs import GBSSpecs
 from .tensorflow import TFSpecs
 
 
-specs = (Chip0Specs, FockSpecs, GaussianSpecs, GBSSpecs, TFSpecs)
+specs = (Chip0Specs, Chip2Specs, FockSpecs, GaussianSpecs, GBSSpecs, TFSpecs)
 
 circuit_db = {c.short_name: c for c in specs}
 """dict[str, ~strawberryfields.circuitspecs.CircuitSpecs]: Map from circuit family short name to the corresponding class."""
