@@ -461,13 +461,22 @@ class MoleculeDataset(Dataset, ABC):
 class Formic(MoleculeDataset):
     """Zero temperature formic acid.
 
-    TODO Cite sources for w, wp, Ud, d + include visualisation
+    The molecular parameters are from :cite:`Huh_2015`.
+
+    **Molecule:**
+
+    .. |formic| image:: ../../_static/formic.png
+        :align: middle
+        :width: 250px
+        :target: javascript:void(0);
+
+    |formic|
 
     Attributes:
         n_mean = 1.56
         threshold = False
-        n_samples = 100000
-        modes = 7
+        n_samples = 20000
+        modes = 14
         T = 0
     """
 
