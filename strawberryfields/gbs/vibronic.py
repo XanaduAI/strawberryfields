@@ -19,120 +19,47 @@ Vibronic spectra
 
 .. currentmodule:: strawberryfields.gbs.vibronic
 
-This module contains functions for computing molecular vibronic spectra using GBS.
+This module contains functions used for computing molecular vibronic spectra with GBS. In vibronic
+spectroscopy, incoming light simultaneously excites a molecule to higher electronic and
+vibrational states. The difference in the energies of the initial and final states
+determines the frequency of the photons that are absorbed by the molecule. The probability of
+the transition between two specific vibrational states are referred to as Franck-Condon factors
+(FCFs). They determine the intensity of absorption peaks in a vibronic spectrum. A GBS
+device can be programmed to provide samples that can be processed to obtain the molecular
+vibronic spectra. Theoretical background on computing vibronic spectra using GBS can be found in
+:cite:`huh2015boson` and :cite:`quesada2019franck`.
 
-Vibronic spectroscopy
----------------------
+GBS parameters
+--------------
 
-In vibronic spectroscopy, incoming light excites a molecule to higher electronic and
-vibrational states simultaneously. The difference in the energies of the ground and excited states
-determines the frequency of the photons that are absorbed by the molecule during the excitation.
-The probability of the transition between two specific vibrational states, for an allowed
-electronic transition, depends on the absolute square of the overlap integral between the
-vibrational wave functions of the initial and the final states. These overlap integrals are
-referred to as Franck-Condon factors (FCFs) and determine the intensity of absorption peaks in a
-vibronic spectrum. The number of possible vibronic transitions in a molecule is usually large and
-computing all the possible Franck-Condon factors is computationally expensive. However, a GBS
-device can be programmed with quantum chemical information of a given molecule to provide output
-samples that can be processed to obtain the molecular Franck-Condon profile. Theoretical background
-on computing vibronic spectra using GBS can be found in :cite:`quesada2019franck` and
-:cite:`huh2015boson`.
-
-According to the Franck-Condon approximation, the probability of an electronically allowed
-vibronic transition is given by a Franck-Condon factor as
-
-.. math::
-    FCF = \left | \left \langle \phi' | \phi \right \rangle \right | ^ 2,
-
-where :math:`|\phi\rangle` and :math:`|{\phi}\rangle'` are the vibrational wave functions of the
-ground and excited electronic states, respectively. The vibrational quanta states corresponding to
-these ground and excited states, :math:`|\mathbf{n}\rangle` and :math:`|\mathbf{m'}\rangle`
-respectively, are related to each other via a Doktorov transformation as
-:math:`|\mathbf{m'}\rangle = U_{Dok} |\mathbf{n}\rangle` where :math:`U_{Dok}` is known as the
-Doktorov operator. These vibrational quanta states can also be constructed from their
-corresponding vacuum states by applying creation operators. Starting from the ground state of a
-molecule at 0 K, which corresponds to the vacuum of ground state vibrational excitations
-:math:`| \mathbf{0} \rangle`, the Franck-Condon factors can be written as:
+The Franck-Condon factor is given by:
 
 .. math::
     FCF = \left | \left \langle \mathbf{m} |U_{Dok}| \mathbf{0} \right \rangle \right | ^ 2,
 
-where the sate :math:`| \mathbf{m} \rangle = | m_1,...m_k \rangle` contains information to obtain
-the transition energy that corresponds to the FCF through counting the number of vibrational quanta
-:math:`m` in :math:`k` modes. This is equivalent to the probability of observing output patterns
-of a GBS apparatus constructed according to :math:`U_{Dok}`. The Doktorov operator contains
-parameters that should be obtained from quantum chemistry calculations for a given molecule.
-Designing a GBS device with such molecular parameters allows obtaining the Franck-Condon profile
-of the molecule which can be used to construct the molecular vibronic spectra.
-
-The Doktorov operator can be written in terms of displacement (:math:`D_\alpha`), squeezing
-(:math:`\Sigma_{r}`) and interferometer (:math:`U_{2}, U_{1}`) operators as
+where :math:`|\mathbf{m'}\rangle=|m_1, m_2, \ldots, m_k\rangle` is the state of :math:`k`
+vibrational modes with :math:`m_i` excitations in the :math:`i`-th mode, and :math:`U_{Dok}` is
+known as the Doktorov operator. The Doktorov operator can be written in terms of displacement
+:math:`D_\alpha`, squeezing :math:`\Sigma_{r}`, and interferometer :math:`U_{2}, U_{1}` operators as
 
 .. math::
     U_{Dok} = D_\alpha U_{2} \Sigma_{r} U_{1}.
 
-The squeezing and interferometer operators are obtained by singular value decomposition of a matrix
-:math:`J` as
-
-.. math::
-    J = U_{2} \Sigma_{r} U_{1},
-
-with the squeezing parameters :math:`r` determined by the natural log of the diagonal matrix.
-In order to obtain :math:`J` we need to construct diagonal matrices :math:`\Omega` and
-:math:`\Omega'` from the square roots of the ground state and excited state normal mode frequencies,
-:math:`\omega` and :math:`\omega'`, respectively. Then :math:`J` is obtained as
-
-.. math::
-    J = \Omega' U_{d} \Omega^{-1},
-
-where
-
-.. math::
-    \Omega = diag (\sqrt{\omega_1},...,\sqrt{\omega_k})
-
-    \Omega' = diag (\sqrt{\omega_1'},...,\sqrt{\omega_k'})
-
-and :math:`U_{d}` is a molecular coordinate transformation known as the Duschinsky matrix which
-relates the normal mode coordinates of the ground and excited states, :math:`q` and
-:math:`q'` respectively, as
-
-.. math::
-    q' = U_{d}q + D.
-
-The displacement parameter :math:`D` is related to the structural changes of a molecule upon
-vibronic excitation and is related to the displacement parameter :math:`\alpha` as
-
-.. math::
-    \alpha = d / \sqrt{2},
-
-.. math::
-    d = D \sqrt{2\pi\nu/\hbar}.
-
-In general, all the GBS parameters can be derived from the previously computed equilibrium
-geometries, vibrational frequencies and normal coordinates of the molecule in its (electronic)
-ground and excited states.
-
-Finite temperature FCPs can also be obtained using a GBS setup.
-First, :math:`N` two-mode squeezed vacuum states are prepared and the first :math:`N` modes
-are treated with the same GBS operations explained for the zero Kelvin case. The second
-:math:`N` modes are directly sent for photon number measurement. The number of photons
-measured in the first and second modes, :math:`m_k` and :math:`n_k`,
-respectively, are used to determine the transition frequencies and compute the finite temperature
-FCP. The Gaussian gate parameters for the first :math:`N` modes are obtained for a given molecule
-with the same procedure explained for the zero Kelvin case. The two-mode squeezing parameters
-(:math:`t_i`) are obtained according to the distribution of phonons in the vibrational levels of the
-electronic ground state according to a Boltzmann distribution with Boltzmann factor:
-
-.. math::
-    \tanh^2 (t_i) = \exp(-\hbar \omega_i/k_B T),
-
-where :math:`\omega` is the angular frequency.
-
-Summary
--------
+Additionally, to account for molecules at finite temperature, the GBS algorithm employs two-mode
+squeezing with parameters :math:`t` determined by the temperature of the molecule. The function
+:func:`gbs_params` transforms chemical parameters, namely vibrational frequencies, displacement
+vector and Duschinsky matrix, to the required GBS parameters.
 
 .. autosummary::
     gbs_params
+
+Energies from samples
+---------------------
+In the GBS algorithm for vibronic spectra, samples are identified with transition energies. The
+most frequently sampled energies correspond to peaks of the vibronic spectrum. The function
+:func:`energies` converts samples to energies.
+
+.. autosummary::
     energies
 
 Code details
@@ -146,7 +73,7 @@ import numpy as np
 
 
 def gbs_params(
-    w: np.ndarray, wp: np.ndarray, Ud: np.ndarray, d: np.ndarray, T: float = 0
+    w: np.ndarray, wp: np.ndarray, Ud: np.ndarray, delta: np.ndarray, T: float = 0
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     r"""Converts molecular information to GBS gate parameters.
 
@@ -165,14 +92,15 @@ def gbs_params(
     >>>         [-0.0325, 0.0050, -0.0206, 0.0694, -0.2018, 0.0173, -0.9759],
     >>>     ]
     >>> )
-    >>> d = np.array([0.2254, 0.1469, 1.5599, -0.3784, 0.4553, -0.3439, 0.0618])
-    >>> p = gbs_params(w, wp, Ud, d)
+    >>> delta = np.array([0.2254, 0.1469, 1.5599, -0.3784, 0.4553, -0.3439, 0.0618])
+    >>> p = gbs_params(w, wp, Ud, delta)
 
     Args:
         w (array): normal mode frequencies of the initial electronic state (:math:`\mbox{cm}^{-1}`)
         wp (array): normal mode frequencies of the final electronic state (:math:`\mbox{cm}^{-1}`)
         Ud (array): Duschinsky matrix
-        d (array): Duschinsky displacement vector corrected with wp
+        delta (array): Displacement vector, with entries :math:`delta_i=\sqrt{
+        \omega_i/\hbar}d_i`, and :math:`d` is the Duschinsky displacement
         T (float): temperature (Kelvin)
 
     Returns:
@@ -189,14 +117,14 @@ def gbs_params(
         t = np.zeros(len(w))
 
     U2, s, U1 = np.linalg.svd(np.diag(wp ** 0.5) @ Ud @ np.diag(w ** -0.5))
-    alpha = d / np.sqrt(2)
+    alpha = delta / np.sqrt(2)
 
     return t, U1, np.log(s), U2, alpha
 
 
 def energies(samples: list, w: np.ndarray, wp: np.ndarray) -> Union[list, float]:
-    r"""Computes the energy of each GBS sample in units of :math:`\text{cm}^{-1}`. The energy
-    is :math:`E = \sum_{k=1}^{N}m_k\omega'_k - \sum_{k=N+1}^{2N}n_k\omega_k`.
+    r"""Computes the energy :math:`E = \sum_{k=1}^{N}m_k\omega'_k - \sum_{k=N+1}^{2N}n_k\omega_k`
+    of each GBS sample in units of :math:`\text{cm}^{-1}`.
 
     **Example usage:**
 
