@@ -74,7 +74,7 @@ t, U1, r, U2, alpha = vibronic.gbs_params(w, wp, Ud, delta, T)  # GBS parameters
 # The function :func:`~.energies` can be used to compute the energies for a set of samples:
 
 e = vibronic.energies(formic, w, wp)
-print(np.around(e[:2], 4))  # precision of 4 decimals
+print(np.around(e[:2], 4))  # 4 decimal precision
 
 ##############################################################################
 # Once the GBS parameters have been obtained, it is straightforward to run the GBS algorithm: we
@@ -86,9 +86,10 @@ print(np.around(e[:2], 4))  # precision of 4 decimals
 
 from strawberryfields.gbs import sample, plot
 import plotly
-nr_samples = 100
-s = sample.gaussian(t, U1, r, U2, alpha, nr_samples)
-spectrum = plot.spectrum(e)
+nr_samples = 10
+s = sample.vibronic(t, U1, r, U2, alpha, nr_samples)
+e = vibronic.energies(s, w, wp)
+spectrum = plot.spectrum(e, xmin=-500, xmax=9000)
 plotly.offline.plot(spectrum, filename="spectrum.html")
 
 ##############################################################################
@@ -102,13 +103,17 @@ plotly.offline.plot(spectrum, filename="spectrum.html")
 ##############################################################################
 # The bars in the plot are the histogram of energies, while the curve surrounding them is a
 # Lorentzian broadening of the spectrum, which better represents the observations from an actual
-# experiment. Of course, 💯 samples are not enough to accurately reconstruct the vibronic
+# experiment. Of course, 10 samples are not quite enough to accurately reconstruct the vibronic
 # spectrum. Let's instead use the 20,000 pre-generated samples from the :mod:`~.gbs.data`
 # module:
 
 e = vibronic.energies(formic, w, wp)
-full_spectrum = plot.spectrum(e)
+full_spectrum = plot.spectrum(e, xmin=-500, xmax=9000)
 plotly.offline.plot(full_spectrum, filename="full_spectrum.html")
+
+##############################################################################
+# .. raw:: html
+#     :file: ../../examples_gbs/full_spectrum.html
 
 ##############################################################################
 # Formic acid is a sufficiently small molecule that its vibronic spectrum
