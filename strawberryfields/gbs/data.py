@@ -61,8 +61,9 @@ For graph similarity, we provide:
 Molecules
 ---------
 
-Using the :mod:`~.gbs.vibronic` module, GBS data has been generated for formic acid at zero
-temperature. The GBS samples can be used to recover the vibronic spectrum of the molecule.
+Using the :mod:`~.gbs.vibronic` module and :func:`~.gbs.sample.vibronic` function, GBS data has been
+generated for formic acid at zero temperature. The GBS samples can be used to recover the
+vibronic spectrum of the molecule.
 
 .. autosummary::
     Formic
@@ -440,7 +441,8 @@ class MoleculeDataset(Dataset, ABC):
         w (array): normal mode frequencies of the electronic ground state (:math:`\mbox{cm}^{-1}`)
         wp (array): normal mode frequencies of the electronic excited state (:math:`\mbox{cm}^{-1}`)
         Ud (array): Duschinsky matrix
-        delta (array): Duschinsky displacement vector
+        delta (array): Displacement vector, with entries :math:`delta_i=\sqrt{
+        \omega_i/\hbar}d_i`, and :math:`d` is the Duschinsky displacement
         T (float): temperature (Kelvin)
     """
 
