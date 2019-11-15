@@ -6,27 +6,25 @@ Vibronic Spectra Tutorial
 =========================
 In this tutorial, we study how GBS can be used to compute vibronic spectra. So let's start from
 the beginning: what is a vibronic spectrum? Molecules absorb light at frequencies that
-depend on the allowed energy transitions between different molecular configurations. These
-transitions can be determined by the configuration of the electrons in the molecule and, crucially,
-also by its *vibrational* degrees of freedom. In this case the absorption lines that represent
-the frequencies at which light is more strongly absorbed by the molecule are referred to
-as the *vibronic* spectrum.
+depend on the allowed energy transitions between different molecular states. These transitions
+can be determined by the state of the electrons in the molecule and, crucially,
+also by its *vibrational* degrees of freedom. In this case, the absorption lines that represent
+the frequencies at which light is more strongly absorbed are referred to as the *vibronic* spectrum.
 
-It is possible to determine vibronic spectra by running clever and careful experiments.
+It is possible to determine vibronic spectra by running clever and careful spectroscopy experiments.
 However, this can be slow and expensive, in which case it is valuable to predict vibronic spectra
 using theoretical calculations. To model vibronic transitions, it is common to focus on only a few
 relevant parameters:
 
 1. :math:`\Omega`: diagonal matrix whose entries are the square-roots of the frequencies of the
-vibrational modes of the electronic *initial* state.
+normal modes of the electronic *initial* state.
 2. :math:`\Omega'`: diagonal matrix whose entries are the square-roots of the frequencies of the
-vibrational modes of the electronic *final* state.
+normal modes of the electronic *final* state.
 3. :math:`U_\text{D}`: Duschinsky matrix.
-4. :math:`d`: displacement vector.
+4. :math:`delta`: displacement vector.
 5. :math:`T`: temperature.
 
-The vibrational mode frequencies determine the energies of the different molecular
-configurations. The Duschinsky matrix and displacement vector encode information regarding how
+The Duschinsky matrix and displacement vector encode information regarding how
 vibrational modes are transformed when the molecule changes from the initial to final electronic
 state. At zero temperature, all initial modes are in the vibrational ground state. At finite
 temperature, other vibrational states are also populated.
@@ -40,9 +38,8 @@ and displacements.
 The function :func:`~.gbs_params` of the :mod:`~.gbs.vibronic` module can be
 used to obtain the squeezing, interferometer, and displacement parameters from the input
 chemical parameters listed above. In this tutorial, we study the vibronic spectrum of
-`formic acid <https://en.wikipedia.org/wiki/Formic_acid>`_ 🐜, which can be well approximated by
-looking at only a few vibrational modes. Its chemical parameters, obtained from
-:cite:`huh2015boson`, are listed below.
+`formic acid <https://en.wikipedia.org/wiki/Formic_acid>`_ 🐜. Its chemical parameters, obtained
+from :cite:`huh2015boson`,can be found in the :mod:`~gbs.data` module. We start by loading them:
 """
 from strawberryfields.gbs import vibronic, data
 import numpy as np
