@@ -201,8 +201,6 @@ class Chip2Specs(CircuitSpecs):
             for cmd in B:
                 # calculate the unitary matrix representing each
                 # rotation gate and each beamsplitter
-                # Note: this is done separately on modes [0, 1, 2, 3]
-                # and modes [4, 5, 6, 7]
                 modes = [i.ind for i in cmd.reg]
                 params = par_evaluate(cmd.op.p)
                 U = np.identity(self.modes // 2, dtype=np.complex128)
