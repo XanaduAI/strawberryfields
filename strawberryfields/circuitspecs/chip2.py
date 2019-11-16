@@ -27,7 +27,7 @@ from .gbs import GBSSpecs
 
 
 class Chip2Specs(CircuitSpecs):
-    """Circuit specifications for the chip0 class of circuits."""
+    """Circuit specifications for the chip2 class of circuits."""
 
     short_name = "chip2"
     modes = 8
@@ -137,7 +137,7 @@ class Chip2Specs(CircuitSpecs):
     )
 
     def compile(self, seq, registers):
-        """Try to arrange a quantum circuit into a form suitable for Chip0.
+        """Try to arrange a quantum circuit into a form suitable for Chip2.
 
         Args:
             seq (Sequence[Command]): quantum circuit to modify
@@ -145,7 +145,7 @@ class Chip2Specs(CircuitSpecs):
         Returns:
             List[Command]: modified circuit
         Raises:
-            CircuitError: the circuit does not correspond to Chip0
+            CircuitError: the circuit does not correspond to Chip2
         """
         # pylint: disable=too-many-statements,too-many-branches
         # First, check if provided sequence matches the circuit template.
@@ -173,7 +173,6 @@ class Chip2Specs(CircuitSpecs):
         # --------------------------------------------
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
 
-        print([o.op for o in A])
 
         if A:
             raise CircuitError("Circuits must start with four S2gates.")

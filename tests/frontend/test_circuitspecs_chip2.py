@@ -135,8 +135,8 @@ class DummyCircuit(CircuitSpecs):
     decompositions = {"Interferometer": {}, "MZgate": {}}
 
 
-class TestChip0Compilation:
-    """Tests for compilation using the Chip0 circuit specification"""
+class TestChip2Compilation:
+    """Tests for compilation using the Chip2 circuit specification"""
 
     def test_exact_template(self, tol):
         """Test compilation works for the exact circuit"""
@@ -305,7 +305,8 @@ class TestChip0Compilation:
         assert program_equivalence(res, expected, atol=tol)
 
     def test_interferometers(self, tol):
-        """Test interferometers correctly decompose to MZ gates"""
+        """Test that the compilation correctly decomposes the interferometer using
+        the rectangular_symmetric mesh (which decomposes to MZ gates)"""
         prog = sf.Program(8)
         U = random_interferometer(4)
 
@@ -366,7 +367,6 @@ class TestChip0Compilation:
             ops.S2gate(0.5, 0) | (q[2], q[6])
             ops.S2gate(0.5, 0) | (q[3], q[7])
             ops.Interferometer(U) | q
-            ops.BSgate() | (q[2], q[3])
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="must be applied separately"):
