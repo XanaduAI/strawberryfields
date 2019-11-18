@@ -37,7 +37,7 @@ The Franck-Condon factor is given by:
 .. math::
     FCF = \left | \left \langle \mathbf{m} |U_{Dok}| \mathbf{0} \right \rangle \right | ^ 2,
 
-where :math:`|\mathbf{m'}\rangle=|m_1, m_2, \ldots, m_k\rangle` is the state of :math:`k`
+where :math:`|\mathbf{m}\rangle=|m_1, m_2, \ldots, m_k\rangle` is the state of :math:`k`
 vibrational modes with :math:`m_i` excitations in the :math:`i`-th mode, and :math:`U_{Dok}` is
 known as the Doktorov operator. The Doktorov operator can be written in terms of displacement
 :math:`D_\alpha`, squeezing :math:`\Sigma_{r}`, and interferometer :math:`U_{2}, U_{1}` operators as
@@ -79,21 +79,13 @@ def gbs_params(
 
     **Example usage:**
 
-    >>> w = np.array([3765.2386, 3088.1826, 1825.1799, 1416.9512, 1326.4684, 1137.0490, 629.7144])
-    >>> wp = np.array([3629.9472, 3064.9143, 1566.4602, 1399.6554, 1215.3421, 1190.9077, 496.2845])
-    >>> Ud = np.array(
-    >>>     [
-    >>>         [0.9934, 0.0144, 0.0153, 0.0268, 0.0638, 0.0751, -0.0428],
-    >>>         [-0.0149, 0.9931, 0.0742, 0.0769, -0.0361, -0.0025, 0.0173],
-    >>>         [-0.0119, -0.0916, 0.8423, 0.1799, -0.3857, 0.3074, 0.0801],
-    >>>         [0.0381, 0.0409, -0.3403, -0.5231, -0.6679, 0.3848, 0.1142],
-    >>>         [-0.0413, -0.0342, -0.4004, 0.7636, -0.1036, 0.4838, 0.0941],
-    >>>         [0.0908, -0.0418, -0.0907, 0.3151, -0.5900, -0.7193, 0.1304],
-    >>>         [-0.0325, 0.0050, -0.0206, 0.0694, -0.2018, 0.0173, -0.9759],
-    >>>     ]
-    >>> )
-    >>> delta = np.array([0.2254, 0.1469, 1.5599, -0.3784, 0.4553, -0.3439, 0.0618])
-    >>> p = gbs_params(w, wp, Ud, delta)
+    >>> formic = data.Formic()
+    >>> w = formic.w  # ground state frequencies
+    >>> wp = formic.wp  # excited state frequencies
+    >>> Ud = formic.Ud  # Duschinsky matrix
+    >>> delta = formic.delta  # displacement vector
+    >>> T = 0  # temperature
+    >>> p = gbs_params(w, wp, Ud, delta, T)
 
     Args:
         w (array): normal mode frequencies of the initial electronic state (:math:`\mbox{cm}^{-1}`)
