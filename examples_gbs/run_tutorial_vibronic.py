@@ -6,7 +6,7 @@ Vibronic Spectra Tutorial
 =========================
 In this tutorial, we study how GBS can be used to compute vibronic spectra. So let's start from
 the beginning: what is a vibronic spectrum? Molecules absorb light at frequencies that
-depend on the allowed energy transitions between different molecular states. These transitions
+depend on the allowed energy transitions between different states. These transitions
 can be determined by the state of the electrons in the molecule and, crucially,
 also by its *vibrational* degrees of freedom. In this case, the absorption lines that represent
 the frequencies at which light is more strongly absorbed are referred to as the *vibronic* spectrum.
