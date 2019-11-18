@@ -21,9 +21,10 @@
   and provided implementation of this operation in the Gaussian backend.
   [#152](https://github.com/XanaduAI/strawberryfields/pull/152)
 
-* Added new integration tests for the Gaussian gates that are not primitive,
-  i.e., P, CX, CZ, and S2.
-  [#173](https://github.com/XanaduAI/strawberryfields/pull/173)
+* Programs can now have free parameters/arguments which are only bound to
+  numerical values when the Program is executed, by supplying the actual
+  argument values to the `Engine.run` method.
+  [#163](https://github.com/XanaduAI/strawberryfields/pull/163)
 
 ### API Changes
 
@@ -60,6 +61,14 @@
   be passed the program registers, as compilation may sometimes require this.
   [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
 
+* Parameter class is replaced by `MeasuredParameter` and `FreeParameter`, both inheriting from
+  `sympy.Symbol`. Fixed numeric parameters are handled by the built-in Python numeric
+  classes and numpy arrays.
+  [#163](https://github.com/XanaduAI/strawberryfields/pull/163)
+
+* `Parameter`, `RegRefTransform` and `convert` are removed.
+  [#163](https://github.com/XanaduAI/strawberryfields/pull/163)
+
 ### Improvements
 
 * Photon-counting measurements can now be done in the Gaussian backend for states with nonzero displacement.
@@ -67,6 +76,10 @@
 
 * Added a new test for the cubic phase gate
   [#160](https://github.com/XanaduAI/strawberryfields/pull/160)
+
+* Added new integration tests for the Gaussian gates that are not primitive,
+  i.e., P, CX, CZ, and S2.
+  [#173](https://github.com/XanaduAI/strawberryfields/pull/173)
 
 ### Bug fixes
 
