@@ -128,6 +128,3 @@ plotly.offline.plot(full_spectrum, filename="full_spectrum.html")
 # quickly becomes intractable, for much the same reason that simulating GBS cannot be done
 # efficiently with classical devices. Photonic quantum computing therefore holds the potential to
 # enable new computational capabilities in this area of quantum chemistry ⚛️.
-
-
-
