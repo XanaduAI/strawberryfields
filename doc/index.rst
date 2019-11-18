@@ -169,6 +169,8 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    :caption: Applications Layer
    :hidden:
 
+   gbs_intro
+   gbs_tutorials
    code/gbs/sample
    code/gbs/subgraph
    code/gbs/clique
@@ -177,4 +179,4 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    code/gbs/points
    code/gbs/data
    code/gbs/vibronic
-   gbs_tutorials
+
