@@ -1,11 +1,6 @@
-# Release 0.12.0-dev
+# Release 0.11.2
 
 ### New features
-
-* Adds in first version of an applications layer aimed at solving problems using
-  Gaussian boson sampling. This layer focuses on graph-based problems and
-  currently has algorithms for the densest ``k``-subgraph problem.
-  [#164](https://github.com/XanaduAI/strawberryfields/pull/164)
 
 * Adds the MZgate to ops.py, representing a Mach-Zehnder interferometer. This is
   not a primitive of the existing simulator backends; rather, `_decompose()` is
@@ -26,7 +21,9 @@
   and provided implementation of this operation in the Gaussian backend.
   [#152](https://github.com/XanaduAI/strawberryfields/pull/152)
 
-* Adds new integration tests for the Gaussian gates that are not primitive, i.e., P, CX, CZ, and S2. Addresses issue [#171](https://github.com/XanaduAI/strawberryfields/issues/171)
+* Added new integration tests for the Gaussian gates that are not primitive,
+  i.e., P, CX, CZ, and S2.
+  [#173](https://github.com/XanaduAI/strawberryfields/pull/173)
 
 ### API Changes
 
@@ -67,7 +64,7 @@
 
 * Photon-counting measurements can now be done in the Gaussian backend for states with nonzero displacement.
   [#154](https://github.com/XanaduAI/strawberryfields/pull/154)
-  
+
 * Added a new test for the cubic phase gate
   [#160](https://github.com/XanaduAI/strawberryfields/pull/160)
 
@@ -85,12 +82,12 @@
 * Fixed typo in the Gaussian Boson Sampling example notebook.
   [#133](https://github.com/XanaduAI/strawberryfields/pull/133)
 
-* Fixed a bug in the function `smeanxp` of the Gaussian Backend simulator. 
+* Fixed a bug in the function `smeanxp` of the Gaussian Backend simulator.
   [#154](https://github.com/XanaduAI/strawberryfields/pull/154)
-  
+
 * Clarified description of matrices that are accepted by graph embed operation.
   [#147](https://github.com/XanaduAI/strawberryfields/pull/147)
-  
+
 * Fixed typos in the documentation of the CX gate and BSgate
   [#166](https://github.com/XanaduAI/strawberryfields/pull/166)
   [#167](https://github.com/XanaduAI/strawberryfields/pull/167)
