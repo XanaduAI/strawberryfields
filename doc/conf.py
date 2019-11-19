@@ -45,7 +45,7 @@ extensions = [
     'edit_on_github',
     'sphinx_autodoc_typehints',
     'nbsphinx',
-    # 'sphinx_gallery.gen_gallery'
+    'sphinx_gallery.gen_gallery'
 ]
 
 from glob import glob
@@ -62,22 +62,22 @@ nbsphinx_epilog = """
 .. note:: :download:`Click here <../../{{env.docname}}.ipynb>` to download this gallery page as an interactive Jupyter notebook.
 """
 
-# sphinx_gallery_conf = {
-#     # path to your example scripts
-#     'examples_dirs': '../examples_gbs',
-#     # path where to save gallery generated examples
-#     'gallery_dirs': 'tutorials_gbs',
-#     # execute files that match the following filename pattern,
-#     # and skip those that don't. If the following option is not provided,
-#     # all example scripts in the 'examples_dirs' folder will be skiped.
-#     'filename_pattern': r'run',
-#     # first notebook cell in generated Jupyter notebooks
-#     'first_notebook_cell': ("# This cell is added by sphinx-gallery\n"
-#                             "# It can be customized to whatever you like\n"
-#                             "%matplotlib inline"),
-#     # thumbnail size
-#     'thumbnail_size': (400, 400),
-# }
+sphinx_gallery_conf = {
+    # path to your example scripts
+    'examples_dirs': '../examples_gbs',
+    # path where to save gallery generated examples
+    'gallery_dirs': 'tutorials_gbs',
+    # execute files that match the following filename pattern,
+    # and skip those that don't. If the following option is not provided,
+    # all example scripts in the 'examples_dirs' folder will be skiped.
+    'filename_pattern': r'run',
+    # first notebook cell in generated Jupyter notebooks
+    'first_notebook_cell': ("# This cell is added by sphinx-gallery\n"
+                            "# It can be customized to whatever you like\n"
+                            "%matplotlib inline"),
+    # thumbnail size
+    'thumbnail_size': (400, 400),
+}
 
 # Remove warnings that occur when generating the the tutorials
 warnings.filterwarnings("ignore", category=UserWarning, message=r"Matplotlib is currently using agg")
@@ -307,8 +307,8 @@ html_theme_options = {
     "download_button": "#b13a59",
 
     # gallery options
-    # "github_repo": "XanaduAI/strawberryfields",
-    # "gallery_dirs": sphinx_gallery_conf['gallery_dirs']
+    "github_repo": "XanaduAI/strawberryfields",
+    "gallery_dirs": sphinx_gallery_conf['gallery_dirs']
 }
 
 edit_on_github_project = 'XanaduAI/strawberryfields'
@@ -324,8 +324,8 @@ inheritance_node_attrs = dict(color='lightskyblue1', style='filled')
 
 from custom_directives import IncludeDirective, GalleryItemDirective, CustomGalleryItemDirective
 
-# def setup(app):
-#     app.add_directive('includenodoc', IncludeDirective)
-#     app.add_directive('galleryitem', GalleryItemDirective)
-#     app.add_directive('customgalleryitem', CustomGalleryItemDirective)
-#     app.add_stylesheet('xanadu_gallery.css')
+def setup(app):
+    app.add_directive('includenodoc', IncludeDirective)
+    app.add_directive('galleryitem', GalleryItemDirective)
+    app.add_directive('customgalleryitem', CustomGalleryItemDirective)
+    app.add_stylesheet('xanadu_gallery.css')
