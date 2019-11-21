@@ -23,11 +23,7 @@ from thewalrus.quantum import Amat
 import strawberryfields as sf
 from strawberryfields.parameters import par_evaluate, FreeParameter
 from strawberryfields import decompositions as dec
-from strawberryfields.utils import (
-    random_interferometer,
-    random_symplectic,
-    random_covariance,
-)
+from strawberryfields.utils import random_interferometer, random_symplectic, random_covariance
 from strawberryfields import ops
 
 
@@ -172,8 +168,11 @@ class TestDecompositions:
     def test_symbolic_p0(self, cls):
         """Decompositions cannot have a symbolic p[0]."""
 
-        x = FreeParameter('x')
-        with pytest.raises(TypeError, match="first parameter of a Decomposition is a square matrix, and cannot be symbolic"):
+        x = FreeParameter("x")
+        with pytest.raises(
+            TypeError,
+            match="first parameter of a Decomposition is a square matrix, and cannot be symbolic",
+        ):
             cls(x)
 
 
@@ -270,9 +269,7 @@ class TestGraphEmbed:
         # calculating the resulting decomposed symplectic
         for cmd in cmds:
             # all operations should be BSgates, Rgates, or Sgates
-            assert isinstance(
-                cmd.op, (ops.Interferometer, ops.BSgate, ops.Rgate, ops.Sgate)
-            )
+            assert isinstance(cmd.op, (ops.Interferometer, ops.BSgate, ops.Rgate, ops.Sgate))
 
             # build up the symplectic transform
             modes = [i.ind for i in cmd.reg]
@@ -288,9 +285,7 @@ class TestGraphEmbed:
 
             if isinstance(cmd.op, ops.Interferometer):
                 U1 = cmd.op.p[0]
-                S_U = np.vstack(
-                    [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
-                )
+                S_U = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
                 S = S_U @ S
 
         # the resulting covariance state
@@ -349,7 +344,7 @@ class TestBipartiteGraphEmbed:
                 [0, 1, 0, 1, 1, 0],
                 [0, 0, 1, 0, 1, 0],
                 [1, 1, 1, 1, 0, 1],
-                [1, 1, 0, 0, 1, 0]
+                [1, 1, 0, 0, 1, 0],
             ]
         )
         with pytest.raises(ValueError, match="does not represent a bipartite graph"):
@@ -362,7 +357,7 @@ class TestBipartiteGraphEmbed:
                 [0, 0, 0, 1, 1, 0],
                 [0, 0, 0, 0, 0, 0],
                 [1, 1, 0, 0, 0, 0],
-                [1, 1, 0, 0, 0, 0]
+                [1, 1, 0, 0, 0, 0],
             ]
         )
         with pytest.raises(ValueError, match="does not represent a bipartite graph"):
@@ -375,7 +370,7 @@ class TestBipartiteGraphEmbed:
                 [0, 0, 0, 1, 1, 0],
                 [0, 0, 1, 0, 0, 0],
                 [1, 1, 1, 0, 0, 0],
-                [1, 1, 0, 0, 0, 0]
+                [1, 1, 0, 0, 0, 0],
             ]
         )
         with pytest.raises(ValueError, match="does not represent a bipartite graph"):
@@ -384,9 +379,9 @@ class TestBipartiteGraphEmbed:
     def test_decomposition(self, tol):
         """Test that a graph is correctly decomposed"""
         n = 3
-        prog = sf.Program(2*n)
+        prog = sf.Program(2 * n)
 
-        A = np.zeros([2*n, 2*n])
+        A = np.zeros([2 * n, 2 * n])
         B = np.random.random([n, n])
 
         A[:n, n:] = B
@@ -402,9 +397,7 @@ class TestBipartiteGraphEmbed:
         # calculating the resulting decomposed symplectic
         for cmd in cmds:
             # all operations should be BSgates, Rgates, or S2gates
-            assert isinstance(
-                cmd.op, (ops.Interferometer, ops.S2gate)
-            )
+            assert isinstance(cmd.op, (ops.Interferometer, ops.S2gate))
 
             # build up the symplectic transform
             modes = [i.ind for i in cmd.reg]
@@ -418,7 +411,7 @@ class TestBipartiteGraphEmbed:
                 assert -r in sq
                 assert phi == 0
 
-                S = _two_mode_squeezing(r, phi, modes, 2*n) @ S
+                S = _two_mode_squeezing(r, phi, modes, 2 * n) @ S
 
             if isinstance(cmd.op, ops.Interferometer):
                 # check that each unitary only applies to half the modes
@@ -435,15 +428,13 @@ class TestBipartiteGraphEmbed:
                     assert modes[0] == 3
                     assert np.allclose(U1, V, atol=tol, rtol=0)
 
-                S_U = np.vstack(
-                    [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
-                )
+                S_U = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
 
-                S = expand(S_U, modes, 2*n) @ S
+                S = expand(S_U, modes, 2 * n) @ S
 
         # the resulting covariance state
         cov = S @ S.T
-        A_res = Amat(cov)[:2*n, :2*n]
+        A_res = Amat(cov)[: 2 * n, : 2 * n]
 
         # The bottom right corner of A_res should be identical to A,
         # up to some constant scaling factor. Check if the ratio
@@ -534,9 +525,7 @@ class TestGaussianTransform:
 
             if isinstance(cmd.op, ops.Interferometer):
                 U1 = cmd.op.p[0]
-                S_U = np.vstack(
-                    [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
-                )
+                S_U = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
                 S = S_U @ S
 
         # the resulting covariance state
@@ -566,13 +555,11 @@ class TestGaussianTransform:
             assert isinstance(cmd.op, ops.Interferometer)
 
             # build up the symplectic transform
-            #modes = [i.ind for i in cmd.reg]
+            # modes = [i.ind for i in cmd.reg]
 
             if isinstance(cmd.op, ops.Interferometer):
                 U1 = cmd.op.p[0]
-                S_U = np.vstack(
-                    [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
-                )
+                S_U = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
                 S = S_U @ S
 
         # the resulting covariance state
@@ -588,11 +575,11 @@ class TestGaussianTransform:
         O1, _, _ = dec.bloch_messiah(S)
         X1 = O1[:n, :n]
         P1 = O1[n:, :n]
-        #X2 = O2[:n, :n]
-        #P2 = O2[n:, :n]
+        # X2 = O2[:n, :n]
+        # P2 = O2[n:, :n]
 
         U1 = X1 + 1j * P1
-        #U2 = X2 + 1j * P2
+        # U2 = X2 + 1j * P2
 
         prog = sf.Program(n)
         G = ops.GaussianTransform(S, vacuum=True)
@@ -616,9 +603,7 @@ class TestGaussianTransform:
 
             if isinstance(cmd.op, ops.Interferometer):
                 U1 = cmd.op.p[0]
-                S_U = np.vstack(
-                    [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
-                )
+                S_U = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
                 S = S_U @ S
 
         # the resulting covariance state
@@ -635,8 +620,8 @@ class TestGaussian:
         n = 3
         V1 = random_covariance(n, pure=False, hbar=hbar)
         V2 = random_covariance(n, pure=True, hbar=hbar)
-        r1 = np.random.randn(2*n)
-        r2 = np.random.randn(2*n)
+        r1 = np.random.randn(2 * n)
+        r2 = np.random.randn(2 * n)
 
         G1 = ops.Gaussian(V1, r1)
         G2 = ops.Gaussian(V2, r2)
@@ -663,6 +648,7 @@ class TestGaussian:
 
         class DummyBackend:
             """Dummy backend class"""
+
             def prepare_gaussian_state(*args):
                 """Raises a syntax error when called"""
                 raise SyntaxError
@@ -689,15 +675,11 @@ class TestGaussian:
             assert isinstance(cmd.op, (ops.Vacuum, ops.Thermal, ops.GaussianTransform))
 
             # build up the symplectic transform
-            #modes = [i.ind for i in cmd.reg]
+            # modes = [i.ind for i in cmd.reg]
 
             if isinstance(cmd.op, ops.Thermal):
-                cov_init[cmd.reg[0].ind, cmd.reg[0].ind] = (
-                    (2 * cmd.op.p[0] + 1) * hbar / 2
-                )
-                cov_init[cmd.reg[0].ind + n, cmd.reg[0].ind + n] = (
-                    (2 * cmd.op.p[0] + 1) * hbar / 2
-                )
+                cov_init[cmd.reg[0].ind, cmd.reg[0].ind] = (2 * cmd.op.p[0] + 1) * hbar / 2
+                cov_init[cmd.reg[0].ind + n, cmd.reg[0].ind + n] = (2 * cmd.op.p[0] + 1) * hbar / 2
 
             if isinstance(cmd.op, ops.GaussianTransform):
                 S = cmd.op.p[0] @ S
@@ -791,8 +773,10 @@ class TestGaussian:
             assert np.allclose(cmd.op.p[0], sq_r[1], atol=tol, rtol=0)
             assert np.allclose(cmd.op.p[1], 0, atol=tol, rtol=0)
 
+
 class TestDisplacements:
     """Test that special purpose displacement gates X and Z act as expected"""
+
     def test_Xgate_decomposition(self, hbar, tol):
         """Test that the X gate is correctly decomposed into a displacement gate"""
         n = 1
@@ -810,15 +794,17 @@ class TestDisplacements:
         n = 1
         prog = sf.Program(n)
         p = 0.7
-        alpha = 1j* p / np.sqrt(2 * hbar)
+        alpha = 1j * p / np.sqrt(2 * hbar)
         Z = ops.Zgate(p)
         cmds = Z.decompose(prog.register)
         assert isinstance(cmds[0].op, ops.Dgate)
         assert np.allclose(cmds[0].op.p[0], alpha, atol=tol, rtol=0)
         assert np.allclose(cmds[0].op.p[1], 0, atol=tol, rtol=0)
 
+
 class TestRotation:
     """Test that special purpose rotation gates are correctly decomposed"""
+
     def test_Fourier_decomposition(self, hbar, tol):
         """Test that Fourier is correctly decomposed"""
         n = 1
@@ -826,4 +812,4 @@ class TestRotation:
         F = ops.Fourier
         cmds = F.decompose(prog.register)
         assert isinstance(cmds[0].op, ops.Rgate)
-        assert np.allclose(cmds[0].op.p[0], np.pi/2, atol=tol, rtol=0)
+        assert np.allclose(cmds[0].op.p[0], np.pi / 2, atol=tol, rtol=0)
