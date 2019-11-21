@@ -790,3 +790,29 @@ class TestGaussian:
             assert isinstance(cmd.op, ops.Squeezed)
             assert np.allclose(cmd.op.p[0], sq_r[1], atol=tol, rtol=0)
             assert np.allclose(cmd.op.p[1], 0, atol=tol, rtol=0)
+
+class TestDisplacements:
+    """Test that special purpose displacement gates X and Z act as expected"""
+    def test_Xgate_decomposition(self, hbar, tol):
+        """Test that the X gate is correctly decomposed into a displacement gate"""
+        n = 1
+        prog = sf.Program(n)
+        x = 0.7
+        alpha = x / np.sqrt(2 * hbar)
+        X = ops.Xgate(x)
+        cmds = X.decompose(prog.register)
+        assert isinstance(cmds[0].op, ops.Dgate)
+        assert np.allclose(cmds[0].op.p[0], alpha, atol=tol, rtol=0)
+        assert np.allclose(cmds[0].op.p[1], 0, atol=tol, rtol=0)
+
+    def test_Zgate_decomposition(self, hbar, tol):
+        """Test that the Z gate is correctly decomposed into a displacement gate"""
+        n = 1
+        prog = sf.Program(n)
+        p = 0.7
+        alpha = 1j* p / np.sqrt(2 * hbar)
+        Z = ops.Zgate(p)
+        cmds = Z.decompose(prog.register)
+        assert isinstance(cmds[0].op, ops.Dgate)
+        assert np.allclose(cmds[0].op.p[0], alpha, atol=tol, rtol=0)
+        assert np.allclose(cmds[0].op.p[1], 0, atol=tol, rtol=0)
