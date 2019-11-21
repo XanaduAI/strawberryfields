@@ -816,3 +816,14 @@ class TestDisplacements:
         assert isinstance(cmds[0].op, ops.Dgate)
         assert np.allclose(cmds[0].op.p[0], alpha, atol=tol, rtol=0)
         assert np.allclose(cmds[0].op.p[1], 0, atol=tol, rtol=0)
+
+class TestRotation:
+    """Test that special purpose rotation gates are correctly decomposed"""
+    def test_Fourier_decomposition(self, hbar, tol):
+        """Test that Fourier is correctly decomposed"""
+        n = 1
+        prog = sf.Program(n)
+        F = ops.Fourier
+        cmds = F.decompose(prog.register)
+        assert isinstance(cmds[0].op, ops.Rgate)
+        assert np.allclose(cmds[0].op.p[0], np.pi/2, atol=tol, rtol=0)
