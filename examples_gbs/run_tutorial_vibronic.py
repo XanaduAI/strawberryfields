@@ -118,7 +118,7 @@ plotly.offline.plot(full_spectrum, filename="full_spectrum.html")
 # Ref. :cite:`huh2015boson`, shown below:
 
 ##############################################################################
-# .. image:: formic_spec.png
+# .. image:: ../../_static/formic_spec.png
 #    :width: 740px
 
 ##############################################################################
