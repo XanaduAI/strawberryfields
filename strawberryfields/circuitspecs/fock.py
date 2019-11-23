@@ -46,13 +46,10 @@ class FockSpecs(CircuitSpecs):
         "LossChannel",
         # single mode gates
         "Dgate",
-        "Xgate",
-        "Zgate",
         "Sgate",
         "Rgate",
         "Vgate",
         "Kgate",
-        "Fouriergate",
         "BSgate",
         "CKgate",
     }
@@ -68,4 +65,7 @@ class FockSpecs(CircuitSpecs):
         "CXgate": {},
         "CZgate": {},
         "MZgate": {},
+        "Xgate": {},
+        "Zgate": {},
+        "Fouriergate": {},
     }

@@ -46,11 +46,8 @@ class GaussianSpecs(CircuitSpecs):
         "ThermalLossChannel",
         # single mode gates
         "Dgate",
-        "Xgate",
-        "Zgate",
         "Sgate",
         "Rgate",
-        "Fouriergate",
         "BSgate",
     }
 
@@ -65,4 +62,7 @@ class GaussianSpecs(CircuitSpecs):
         "CXgate": {},
         "CZgate": {},
         "MZgate": {},
+        "Xgate": {},
+        "Zgate": {},
+        "Fouriergate": {},
     }
