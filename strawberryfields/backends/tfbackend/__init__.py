@@ -186,13 +186,13 @@ def excepthook(type, value, traceback):
     print(value)
 
 
-if not (tf_available and tf_version[:3] == "1.3"):
-    sys.excepthook = excepthook
+# if not (tf_available and tf_version[:3] == "1.3"):
+#     sys.excepthook = excepthook
 
-    if sys.version_info[1] > 6:
-        raise ImportError(tf_info_python)
+#     if sys.version_info[1] > 6:
+#         raise ImportError(tf_info_python)
 
-    raise ImportError(tf_info)
+#     raise ImportError(tf_info)
 
 
 from .backend import TFBackend
