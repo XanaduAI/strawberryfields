@@ -10,7 +10,7 @@ the allowed transitions between different electronic states. These electronic tr
 can be accompanied by changes in the vibrational energy of the molecules. In this case, the
 absorption lines that represent the frequencies at which light is more strongly absorbed are
 referred to as the *vibronic* spectrum. The term *vibronic* refers to the simultaneous vibrational
-and electronic transitions of a molecule upon absorption of light. 
+and electronic transitions of a molecule upon absorption of light.
 
 It is possible to determine vibronic spectra by running clever and careful spectroscopy experiments.
 However, this can be slow and expensive, in which case it is valuable to predict vibronic spectra
