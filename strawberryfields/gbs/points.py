@@ -26,7 +26,7 @@ Point processes
 ---------------
 
 A point process is a mechanism that randomly generates points among a set of possible outcomes.
-In essence, point processes are statistical models that can replicate the stochastic
+Point processes are statistical models that can replicate the stochastic
 properties of natural phenomena, or be used as subroutines in statistical and machine learning
 algorithms.
 
