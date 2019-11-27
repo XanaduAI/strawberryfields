@@ -441,7 +441,7 @@ class MoleculeDataset(Dataset, ABC):
         w (array): normal mode frequencies of the electronic ground state (:math:`\mbox{cm}^{-1}`)
         wp (array): normal mode frequencies of the electronic excited state (:math:`\mbox{cm}^{-1}`)
         Ud (array): Duschinsky matrix
-        delta (array): Displacement vector, with entries :math:`\delta_i=\sqrt{\omega_i/\hbar}d_i`,
+        delta (array): Displacement vector, with entries :math:`\delta_i=\sqrt{\omega'_i/\hbar}d_i`,
            and :math:`d_i` is the Duschinsky displacement
         T (float): temperature (Kelvin)
     """

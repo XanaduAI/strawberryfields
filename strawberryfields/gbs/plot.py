@@ -371,7 +371,7 @@ def spectrum(
         xmax (float): maximum limit of the x axis
 
     Returns:
-         Figure: spectrum in the form of a histogram of energies with a Lorentzian-function curve
+         Figure: spectrum in the form of a histogram of energies with a Lorentzian-like curve
     """
     if len(energies) < 2:
         raise ValueError("Number of sampled energies must be at least two")

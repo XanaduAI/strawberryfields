@@ -94,8 +94,8 @@ def gbs_params(
         wp (array): normal mode frequencies of the final electronic state in units of
             :math:`\mbox{cm}^{-1}`
         Ud (array): Duschinsky matrix
-        delta (array): Displacement vector, with entries :math:`\delta_i=\sqrt{\omega_i/\hbar}d_i`,
-            and :math:`d_i` is the Duschinsky displacement
+        delta (array): Displacement vector, with entries :math:`\delta_i=\sqrt{\omega'_i/\hbar}d_i`,
+            and :math:`d` is the Duschinsky displacement
         T (float): temperature (Kelvin)
 
     Returns:
