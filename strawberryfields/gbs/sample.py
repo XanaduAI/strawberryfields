@@ -308,7 +308,6 @@ def vibronic(
 
     **Example usage:**
 
->>> from strawberryfields.gbs import data, vibronic
 >>> formic = data.Formic()
 >>> w = formic.w
 >>> wp = formic.wp
@@ -316,7 +315,7 @@ def vibronic(
 >>> delta = formic.delta
 >>> T = 0
 >>> t, U1, r, U2, alpha = vibronic.gbs_params(w, wp, Ud, delta, T)
->>> vibronic(t, U1, r, U2, alpha, 2, 0.0)
+>>> sample.vibronic(t, U1, r, U2, alpha, 2, 0.0)
 [[0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
  [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
