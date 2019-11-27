@@ -84,7 +84,7 @@ def test_symplectic_composition(depth, width):
             Snet = S @ Snet
             ops.GaussianTransform(S) | q
     compiled_circuit = circuit.compile("gaussian_unitary")
-    assert np.allclose(compiled_circuit.circuit[0].op.p[0].x, Snet)
+    assert np.allclose(compiled_circuit.circuit[0].op.p[0], Snet)
 
 
 @pytest.mark.parametrize("depth", [1, 2, 3])
@@ -138,6 +138,9 @@ def test_non_primitive_gates():
         ops.Pgate(0.1) | q[1]
         ops.CXgate(0.2) | (q[0], q[1])
         ops.MZgate(0.4, 0.5) | (q[2], q[3])
+        ops.Fourier | q[0]
+        ops.Xgate(0.4) | q[1]
+        ops.Zgate(0.5) | q[3]
     compiled_circuit = circuit.compile("gaussian_unitary")
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()

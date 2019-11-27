@@ -17,6 +17,7 @@ import numpy as np
 from strawberryfields.program_utils import Command
 from strawberryfields import ops
 from strawberryfields.program_utils import CircuitError
+from strawberryfields.parameters import par_evaluate
 from thewalrus.symplectic import expand_vector, expand, rotation, squeezing, two_mode_squeezing, interferometer, beam_splitter
 from .circuit_specs import CircuitSpecs
 
@@ -67,9 +68,9 @@ class GaussianUnitary(CircuitSpecs):
         "CXgate": {},
         "CZgate": {},
         "MZgate": {},
-        #"Xgate": {},
-        #"Zgate": {},
-        #"Fouriergate": {},
+        "Xgate": {},
+        "Zgate": {},
+        "Fouriergate": {},
     }
     #pylint: disable=too-many-branches
     def compile(self, seq, registers):
@@ -108,7 +109,8 @@ class GaussianUnitary(CircuitSpecs):
         # vector `rnet`.
         for operations in seq:
             name = operations.op.__class__.__name__
-            params = [i.x for i in operations.op.p]
+            #params = [i.x for i in operations.op.p]
+            params = par_evaluate(operations.op.p)
             modes = [modes_label.ind for modes_label in operations.reg]
             if name == "Dgate":
                 rnet = rnet + expand_vector(
