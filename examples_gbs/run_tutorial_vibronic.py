@@ -114,16 +114,16 @@ plotly.offline.plot(full_spectrum, filename="full_spectrum.html")
 #     :file: ../../examples_gbs/full_spectrum.html
 
 ##############################################################################
-# |
+#
 # We can compare this prediction with an actual experimental spectrum, obtained from Fig. 3 in
 # Ref. :cite:`huh2015boson`, shown below:
 
 ##############################################################################
-# .. image:: ../../_static/formic_spec.png
+# .. image:: ../_static/formic_spec.png
 #    :width: 740px
 
 ##############################################################################
-# |
+#
 # The agreement is remarkable! Formic acid is a small molecule, which means that its vibronic
 # spectrum can be computed using classical computers. However, for larger molecules, this task
 # quickly becomes intractable, for much the same reason that simulating GBS cannot be done
