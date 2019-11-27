@@ -29,9 +29,9 @@ subgraphs uses red nodes and edges, and the scheme for point processes colors po
 grey, highlighting samples in red.
 
 .. autosummary::
-    plot_graph
-    plot_subgraph
-    plot_points
+    graph
+    subgraph
+    points
 
 Code details
 ^^^^^^^^^^^^
@@ -43,11 +43,11 @@ import networkx as nx
 import numpy as np
 
 
-def _node_coords(graph: nx.Graph, l: dict) -> Tuple:
+def _node_coords(g: nx.Graph, l: dict) -> Tuple:
     """Converts coordinates for the graph nodes for plotting purposes.
 
     Args:
-        graph (nx.Graph): input graph
+        g (nx.Graph): input graph
         l (dict[int, float]): Dictionary of nodes and their respective coordinates. Can be
             generated using a NetworkX `layout <https://networkx.github.io/documentation/latest/
             reference/drawing.html#module-networkx.drawing.layout>`__
@@ -58,18 +58,18 @@ def _node_coords(graph: nx.Graph, l: dict) -> Tuple:
     n_x = []
     n_y = []
 
-    for n in graph.nodes():
+    for n in g.nodes():
         n_x.append(l[n][0])
         n_y.append(l[n][1])
 
     return {"x": n_x, "y": n_y}
 
 
-def _edge_coords(graph: nx.Graph, l: dict) -> dict:
+def _edge_coords(g: nx.Graph, l: dict) -> dict:
     """Converts coordinates for the graph edges for plotting purposes.
 
         Args:
-            graph (nx.Graph): input graph
+            g (nx.Graph): input graph
             l (dict[int, float]): Dictionary of nodes and their respective coordinates. Can be
                 generated using a NetworkX `layout <https://networkx.github.io/documentation/latest/
                 reference/drawing.html#module-networkx.drawing.layout>`__
@@ -81,7 +81,7 @@ def _edge_coords(graph: nx.Graph, l: dict) -> dict:
     e_x = []
     e_y = []
 
-    for e in graph.edges():
+    for e in g.edges():
 
         start_x, start_y = l[e[0]]
         end_x, end_y = l[e[1]]
@@ -97,11 +97,15 @@ def _edge_coords(graph: nx.Graph, l: dict) -> dict:
 
     return {"x": e_x, "y": e_y}
 
-plotly_error = "Plotly required for using this function. It can be installed using pip install " \
-               "plotly or visiting https://plot.ly/python/getting-started/#installation"
+
+plotly_error = (
+    "Plotly required for using this function. It can be installed using pip install "
+    "plotly or visiting https://plot.ly/python/getting-started/#installation"
+)
 
 GREEN = "#3e9651"
 RED = "#cc2529"
+GREY = "#737373"
 LIGHT_GREY = "#CDCDCD"
 VERY_LIGHT_GREY = "#F2F2F2"
 
@@ -114,9 +118,7 @@ graph_node_size = 14
 subgraph_node_size = 16
 
 
-def plot_graph(
-    graph: nx.Graph, subgraph: Optional[list] = None, plot_size: int = 500
-):  # pragma: no cover
+def graph(g: nx.Graph, s: Optional[list] = None, plot_size: int = 500):  # pragma: no cover
     """Creates a plot of the input graph.
 
     This function can plot the input graph only, or the graph with a specified subgraph highlighted.
@@ -124,7 +126,7 @@ def plot_graph(
     **Example usage:**
 
     >>> graph = nx.complete_graph(10)
-    >>> fig = plot_graph(graph, [0, 1, 2, 3])
+    >>> fig = graph(graph, [0, 1, 2, 3])
     >>> fig.show()
 
     .. image:: ../../_static/complete_graph.png
@@ -133,8 +135,8 @@ def plot_graph(
        :target: javascript:void(0);
 
     Args:
-        graph (nx.Graph): input graph
-        subgraph (list): optional list of nodes comprising the subgraph to highlight
+        g (nx.Graph): input graph
+        s (list): optional list of nodes comprising the subgraph to highlight
         plot_size (int): size of the plot in pixels, rendered in a square layout
 
     Returns:
@@ -145,24 +147,23 @@ def plot_graph(
     except ImportError:
         raise ImportError(plotly_error)
 
-    s = graph.subgraph(subgraph)
-    l = nx.kamada_kawai_layout(graph)
+    l = nx.kamada_kawai_layout(g)
 
     g_nodes = go.Scatter(
-        **_node_coords(graph, l),
+        **_node_coords(g, l),
         mode="markers",
         hoverinfo="text",
         marker=dict(color=graph_node_colour, size=graph_node_size, line_width=2),
     )
 
     g_edges = go.Scatter(
-        **_edge_coords(graph, l),
+        **_edge_coords(g, l),
         line=dict(width=1, color=graph_edge_colour),
         hoverinfo="none",
         mode="lines",
     )
 
-    g_nodes.text = [str(i) for i in graph.nodes()]
+    g_nodes.text = [str(i) for i in g.nodes()]
 
     layout = go.Layout(
         showlegend=False,
@@ -175,7 +176,8 @@ def plot_graph(
         plot_bgcolor="#ffffff",
     )
 
-    if subgraph:
+    if s is not None:
+        s = g.subgraph(s)
 
         s_edges = go.Scatter(
             **_edge_coords(s, l),
@@ -201,14 +203,14 @@ def plot_graph(
     return f
 
 
-def plot_subgraph(subgraph: nx.Graph, plot_size: int = 500):  # pragma: no cover
+def subgraph(s: nx.Graph, plot_size: int = 500):  # pragma: no cover
     """Creates a plot of the input subgraph.
 
     **Example usage:**
 
     >>> graph = nx.complete_graph(10)
     >>> subgraph = graph.subgraph([0, 1, 2, 3])
-    >>> fig = plot_subgraph(subgraph)
+    >>> fig = subgraph(subgraph)
     >>> fig.show()
 
     .. image:: ../../_static/complete_subgraph.png
@@ -217,7 +219,7 @@ def plot_subgraph(subgraph: nx.Graph, plot_size: int = 500):  # pragma: no cover
        :target: javascript:void(0);
 
     Args:
-        subgraph (nx.Graph): input subgraph
+        s (nx.Graph): input subgraph
         plot_size (int): size of the plot in pixels, rendered in a square layout
 
     Returns:
@@ -228,23 +230,23 @@ def plot_subgraph(subgraph: nx.Graph, plot_size: int = 500):  # pragma: no cover
     except ImportError:
         raise ImportError(plotly_error)
 
-    l = nx.kamada_kawai_layout(subgraph)
+    l = nx.kamada_kawai_layout(s)
 
     g_edges = go.Scatter(
-        **_edge_coords(subgraph, l),
+        **_edge_coords(s, l),
         line=dict(width=1.5, color=subgraph_edge_colour),
         hoverinfo="none",
         mode="lines",
     )
 
     g_nodes = go.Scatter(
-        **_node_coords(subgraph, l),
+        **_node_coords(s, l),
         mode="markers",
         hoverinfo="text",
         marker=dict(color=subgraph_node_colour, size=graph_node_size, line_width=2),
     )
 
-    g_nodes.text = [str(i) for i in subgraph.nodes()]
+    g_nodes.text = [str(i) for i in s.nodes()]
 
     layout = go.Layout(
         showlegend=False,
@@ -262,7 +264,7 @@ def plot_subgraph(subgraph: nx.Graph, plot_size: int = 500):  # pragma: no cover
     return f
 
 
-def plot_points(
+def points(
     R: np.ndarray, sample: Optional[list] = None, plot_size: int = 500, point_size: float = 30
 ):  # pragma: no cover
     """Creates a plot of two-dimensional points given their input coordinates. Sampled
@@ -272,7 +274,7 @@ def plot_points(
 
     >>> R = np.random.normal(0, 1, (50, 2))
     >>> sample = [1] * 10 + [0] * 40  # select first ten points
-    >>> plot_points(R, sample).show()
+    >>> points(R, sample).show()
 
     .. image:: ../../_static/normal_pp.png
        :width: 40%
@@ -304,7 +306,7 @@ def plot_points(
         plot_bgcolor="white",
     )
 
-    points = go.Scatter(
+    p = go.Scatter(
         x=R[:, 0],
         y=R[:, 1],
         mode="markers",
@@ -314,7 +316,7 @@ def plot_points(
         ),
     )
 
-    points.text = [str(i) for i in range(len(R))]
+    p.text = [str(i) for i in range(len(R))]
 
     if sample:
         s_x = []
@@ -336,9 +338,84 @@ def plot_points(
 
         samp.text = [str(i) for i in sampled_points]
 
-        f = go.Figure(data=[points, samp], layout=layout)
+        f = go.Figure(data=[p, samp], layout=layout)
 
     else:
-        f = go.Figure(data=[points], layout=layout)
+        f = go.Figure(data=[p], layout=layout)
+
+    return f
+
+
+def spectrum(
+    energies: list, gamma: float = 100.0, xmin: float = None, xmax: float = None
+):  # pragma: no cover
+    """Plots a vibronic spectrum based on input sampled energies.
+
+    Args:
+        energies (list[float]): a list of sampled energies
+        gamma (float): parameter specifying the width of the Lorentzian function
+        xmin (float): minimum limit of the x axis
+        xmax (float): maximum limit of the x axis
+
+    Returns:
+         Figure: spectrum in the form of a histogram of energies with a Lorentzian-function curve
+    """
+    if len(energies) < 2:
+        raise ValueError("Number of sampled energies must be at least two")
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise ImportError(plotly_error)
+
+    emin = min(energies)
+    emax = max(energies)
+    if xmin is None:
+        xmin = emin - 0.1 * (emax - emin)
+    if xmax is None:
+        xmax = emax + 0.1 * (emax - emin)
+    bins = int(emax - emin) // 5
+    bar_width = (xmax - xmin) * 0.005
+    line_width = 3.0
+
+    h = np.histogram(energies, bins)
+    X = np.linspace(xmin, xmax, int(xmax-xmin))
+    L = 0
+    for e in energies:
+        L += (gamma / 2)**2 / ((X - e)**2 + (gamma / 2)**2)
+
+    text_font = dict(color="black", family="Computer Modern")
+
+    axis_style = dict(
+        titlefont_size=30,
+        tickfont=text_font,
+        tickfont_size=20,
+        showline=True,
+        linecolor="black",
+        mirror=True)
+
+    layout = go.Layout(
+        yaxis=dict(
+            title={"text": "Counts", "font": text_font}, **axis_style, rangemode='tozero'),
+        xaxis=dict(
+            title={"text": "Energy (cm<sup>-1</sup>)", "font": text_font}, **axis_style,
+            range=[xmin, xmax]),
+        plot_bgcolor="white",
+        margin=dict(t=25),
+        bargap=0.04,
+        showlegend=False)
+
+    bars = go.Bar(
+        x=h[1].tolist(),
+        y=h[0].tolist(),
+        width=bar_width,
+        marker=dict(color=GREY))
+
+    line = go.Scatter(
+        x=X,
+        y=L,
+        mode='lines',
+        line=dict(color=GREEN, width=line_width))
+
+    f = go.Figure([bars, line], layout=layout)
 
     return f

@@ -19,7 +19,26 @@ Point Processes
 
 .. currentmodule:: strawberryfields.gbs.points
 
-This module provides functions for generating point processes.
+This module provides functions for building kernel matrices and generating point processes using
+GBS. An accompanying tutorial can be found :ref:`here <gbs-points-tutorial>`.
+
+Point processes
+---------------
+
+A point process is a mechanism that randomly generates points among a set of possible outcomes.
+In essence, point processes are statistical models that can replicate the stochastic
+properties of natural phenomena, or be used as subroutines in statistical and machine learning
+algorithms.
+
+Several point processes rely on matrix functions to assign probabilities to different point
+patterns. As shown in Ref. :cite:`jahangiri2019point`, GBS naturally gives rise to a *hafnian*
+point process that employs the `hafnian
+<https://the-walrus.readthedocs.io/en/latest/hafnian.html>`_ as the underlying matrix function.
+This point process has the central property of generating clustered data points with
+high probability. In this setting, a GBS device is programmed according to a *kernel* matrix that
+encodes information about the similarity between points. When this kernel matrix is positive
+semidefinite, it is possible to use GBS to implement a *permanental* point process and employ
+fast classical algorithms to sample from the resulting distribution.
 
 Summary
 -------
@@ -40,16 +59,18 @@ from thewalrus.csamples import generate_thermal_samples, rescale_adjacency_matri
 def kernel(R: np.ndarray, sigma: float) -> np.ndarray:
     r"""Calculate the kernel matrix from a set of input points.
 
-    We use the radial basis function (RBF) kernel which is positive semidefinite when Euclidean
-    distances are used. The elements of the RBF kernel are computed as:
+    We use the radial basis function (RBF) kernel whose elements are computed as:
 
     .. math::
         K_{i,j} = e^{-\|\bf{r}_i-\bf{r}_j\|^2/(2\sigma^2)},
 
-    where :math:`\bf{r}_i` are the coordinates of point :math:`i` and :math:`\sigma`
-    is a kernel parameter that determines the scale of the kernel. Points that are much further
-    than a distance :math:`\sigma` from each other lead to small entries of the kernel matrix,
-    whereas points much closer than :math:`\sigma` generate large entries.
+    where :math:`\bf{r}_i` are the coordinates of point :math:`i`, :math:`\sigma` is a kernel
+    parameter, and :math:`\|\cdot\|` denotes a choice of norm. The RBF kernel is positive
+    semidefinite when the Euclidean norm is used.
+
+    The kernel parameter :math:`\sigma` is used to define the kernel scale. Points that are much
+    further than :math:`\sigma` from each other lead to small entries of the kernel
+    matrix, whereas points much closer than :math:`\sigma` generate large entries.
 
     **Example usage:**
 
@@ -73,13 +94,12 @@ def kernel(R: np.ndarray, sigma: float) -> np.ndarray:
 def sample(K: np.ndarray, n_mean: float, n_samples: int) -> list:
     """Sample subsets of points using the permanental point process.
 
-    Points are encoded through a radial basis function kernel, provided in :func:`kernel`,
-    that is a function of the distance between pairs of points. Subsets of points are sampled
-    with probabilities that are proportional to the permanent of the *sub*matrix of the kernel
-    selected by those points.
+    Points can be encoded through a radial basis function kernel, provided in :func:`kernel`. Subsets
+    of points are sampled with probabilities that are proportional to the permanent of the
+    submatrix of the kernel selected by those points.
 
     This permanental point process is likely to sample points that are clustered together
-    :cite:`jahangiri2019point`. It can be realised using a variant of Gaussian boson sampling
+    :cite:`jahangiri2019point`. It can be realized using a variant of Gaussian boson sampling
     with thermal states as input.
 
     **Example usage:**
@@ -101,8 +121,8 @@ def sample(K: np.ndarray, n_mean: float, n_samples: int) -> list:
      [0, 0, 0, 0]]
 
     Args:
-        K (array): the kernel matrix
-        n_mean (float): average number of points
+        K (array): the positive semidefinite kernel matrix
+        n_mean (float): average number of points per sample
         n_samples (int): number of samples to be generated
 
     Returns:

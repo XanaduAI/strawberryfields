@@ -22,13 +22,17 @@ Maximum Clique
 This module provides tools for users to identify large cliques in graphs. A clique is a subgraph
 where all nodes are connected to each other. The maximum clique problem is to identify the
 largest clique in a graph. The problem is NP-Hard in a worst-case setting, which is why it is
-valuable to develop better algorithms to tackle it.
+valuable to develop better algorithms to tackle it. It has been shown that samples from GBS can
+be used to select dense subgraphs as a starting seed for heuristic algorithms
+:cite:`banchi2019molecular`.
 
-Heuristics
-----------
+An accompanying tutorial can be found :ref:`here <gbs-clique-tutorial>`.
 
-The heuristic provided is a local search algorithm from :cite:`pullan2006dynamic` and
-:cite:`pullan2006phased` that proceeds as follows:
+Algorithm
+---------
+
+This module provides a variant of the local search heuristics described in
+:cite:`pullan2006dynamic` and :cite:`pullan2006phased`. The algorithm proceeds as follows:
 
 #. A small clique in the graph is identified. The initial clique can be a single node, or it can
    be obtained by shrinking a random subgraph, for example obtained from GBS.
@@ -41,31 +45,39 @@ more growth or swaps are possible.
 .. autosummary::
     search
 
-Clique resizing
----------------
+Clique growth and swapping
+--------------------------
 
-Clique resizing can be used in heuristic algorithms to explore the search space. This module
-provides functionality for growing cliques (see :func:`grow`) and for swapping nodes
-within a clique to locally explore the search spare (see :func:`swap`).
-
-Subgraphs sampled from GBS are not guaranteed to be cliques. On the other hand, heuristic
-algorithms for finding the maximum clique often need to start with a candidate clique. This
-module allows non-clique subgraphs to be shrunk to cliques with the :func:`shrink` function.
+A clique can be grown by evaluating the set :math:`C_0` of nodes in the remainder of the graph that
+are connected to all nodes in the clique. A single node from :math:`C_0` is selected and added to
+the clique. This process is repeated until :math:`C_0` becomes empty.
 
 .. autosummary::
     grow
-    swap
-    shrink
+    c_0
 
-Clique utility functions
-------------------------
-
-The following are utility functions for calculating properties of cliques.
+Searching the local space around a clique can be achieved by swapping a node from the clique with a
+node in the remainder of the graph. The first step is to evaluate the set :math:`C_1` of nodes in
+the remainder of the graph that are connected to *all but one* of the nodes in the current
+clique. A swap is then performed by adding the node into the clique and removing the node in the
+clique that is not connected to it.
 
 .. autosummary::
-    is_clique
-    c_0
+    swap
     c_1
+
+Using GBS to find a starting clique
+-----------------------------------
+
+Samples from GBS correspond to subgraphs that are likely to be dense.
+These subgraphs may not be cliques, which is the required input to the :func:`search` algorithm.
+To reconcile this, a subgraph may be shrunk by removing nodes until the remainder forms a
+clique. This can be achieved by selecting the node with the lowest degree relative to the rest of
+subgraph and removing the node, repeating the process until a clique is found.
+
+.. autosummary::
+    shrink
+    is_clique
 
 Code details
 ^^^^^^^^^^^^
@@ -109,7 +121,7 @@ def search(clique: list, graph: nx.Graph, iterations, node_select: str = "unifor
     **Example usage:**
 
     >>> graph = nx.lollipop_graph(4, 1)
-    >>> graph.add_edge(4, 2)
+    >>> graph.add_edge(2, 4)
     >>> clique = [3, 4]
     >>> search(clique, graph, iterations=10)
     [0, 1, 2, 3]
@@ -123,7 +135,7 @@ def search(clique: list, graph: nx.Graph, iterations, node_select: str = "unifor
             Defaults to ``"uniform"``
 
     Returns:
-       list[int]: the largest cliques found by the algorithm
+       list[int]: the largest clique found by the algorithm
     """
     if iterations < 1:
         raise ValueError("Number of iterations must be a positive int")
@@ -225,12 +237,12 @@ def swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
-        node_select (str): method of selecting nodes from :math:`C_0` during growth. Can be either
+        node_select (str): method of selecting nodes from :math:`C_1` during growth. Can be either
             ``"uniform"`` for uniform random selection or ``"degree"`` for degree-based selection.
             Defaults to ``"uniform"``.
 
-       Returns:
-           list[int]: a new clique subgraph of equal size as the input
+    Returns:
+        list[int]: a new clique subgraph of equal size as the input
        """
 
     if not set(clique).issubset(graph.nodes):
@@ -263,7 +275,7 @@ def shrink(subgraph: list, graph: nx.Graph) -> list:
     """Shrinks an input subgraph until it forms a clique.
 
     Proceeds by removing nodes in the input subgraph one at a time until the result is a clique
-    that satisfies :func:`is_clique`. Upon each iteration,this function selects the node with
+    that satisfies :func:`is_clique`. Upon each iteration, this function selects the node with
     lowest degree relative to the subgraph and removes it.
 
     **Example usage:**
@@ -375,7 +387,7 @@ def c_1(clique: list, graph: nx.Graph):
         graph (nx.Graph): the input graph
 
     Returns:
-       list[tuple(int)]: A list of tuples. The first node in the tuple is the node in the clique
+       list[tuple[int]]: A list of tuples. The first node in the tuple is the node in the clique
        and the second node is the outside node it can be swapped with.
    """
     if not is_clique(graph.subgraph(clique)):

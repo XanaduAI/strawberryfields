@@ -109,6 +109,8 @@ the :math:`\x` quadrature, :math:`\x\ket{x}=x\ket{x}`, with
 more general family of CV states, the **Gaussian states**, which we now
 introduce.
 
+.. _gaussian_states:
+
 Gaussian states
 ~~~~~~~~~~~~~~~
 

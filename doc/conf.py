@@ -77,6 +77,7 @@ sphinx_gallery_conf = {
                             "%matplotlib inline"),
     # thumbnail size
     'thumbnail_size': (400, 400),
+    'capture_repr': (),
 }
 
 # Remove warnings that occur when generating the the tutorials
