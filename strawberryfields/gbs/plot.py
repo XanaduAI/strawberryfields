@@ -19,19 +19,17 @@ Plotting and visualization
 
 .. currentmodule:: strawberryfields.gbs.plot
 
-This module provides functionality for visualizing graphs, subgraphs, and point processes. It
+This module provides functionality for visualizing graphs, subgraphs, point processes,
+and vibronic spectra. It
 requires the installation of the Plotly library, which is not a dependency of Strawberry
-Fields. Plotly can be installed using 'pip install plotly' or by visiting their installation
-instructions at https://plot.ly/python/getting-started/#installation. Graphs are plotted using
-the Kamada-Kawai layout with an aspect ratio of 1:1. The module uses a custom Strawberry Fields
-colour scheme. The standard scheme for graphs uses green nodes and grey edges, the scheme for
-subgraphs uses red nodes and edges, and the scheme for point processes colors points in light
-grey, highlighting samples in red.
+Fields. Plotly can be installed using ``pip install plotly`` or by visiting their `installation
+instructions <https://plot.ly/python/getting-started/#installation>`__.
 
 .. autosummary::
     graph
     subgraph
     points
+    spectrum
 
 Code details
 ^^^^^^^^^^^^
@@ -122,6 +120,7 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: int = 500):  # pragm
     """Creates a plot of the input graph.
 
     This function can plot the input graph only, or the graph with a specified subgraph highlighted.
+    Graphs are plotted using the Kamada-Kawai layout with an aspect ratio of 1:1.
 
     **Example usage:**
 
@@ -205,6 +204,8 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: int = 500):  # pragm
 
 def subgraph(s: nx.Graph, plot_size: int = 500):  # pragma: no cover
     """Creates a plot of the input subgraph.
+
+    Subgraphs are plotted using the Kamada-Kawai layout with an aspect ratio of 1:1.
 
     **Example usage:**
 
@@ -397,10 +398,10 @@ def spectrum(
     line_width = 3.0
 
     h = np.histogram(energies, bins)
-    X = np.linspace(xmin, xmax, int(xmax-xmin))
+    X = np.linspace(xmin, xmax, int(xmax - xmin))
     L = 0
     for e in energies:
-        L += (gamma / 2)**2 / ((X - e)**2 + (gamma / 2)**2)
+        L += (gamma / 2) ** 2 / ((X - e) ** 2 + (gamma / 2) ** 2)
 
     text_font = dict(color="black", family="Computer Modern")
 
@@ -410,30 +411,25 @@ def spectrum(
         tickfont_size=20,
         showline=True,
         linecolor="black",
-        mirror=True)
+        mirror=True,
+    )
 
     layout = go.Layout(
-        yaxis=dict(
-            title={"text": "Counts", "font": text_font}, **axis_style, rangemode='tozero'),
+        yaxis=dict(title={"text": "Counts", "font": text_font}, **axis_style, rangemode="tozero"),
         xaxis=dict(
-            title={"text": "Energy (cm<sup>-1</sup>)", "font": text_font}, **axis_style,
-            range=[xmin, xmax]),
+            title={"text": "Energy (cm<sup>-1</sup>)", "font": text_font},
+            **axis_style,
+            range=[xmin, xmax],
+        ),
         plot_bgcolor="white",
         margin=dict(t=25),
         bargap=0.04,
-        showlegend=False)
+        showlegend=False,
+    )
 
-    bars = go.Bar(
-        x=h[1].tolist(),
-        y=h[0].tolist(),
-        width=bar_width,
-        marker=dict(color=GREY))
+    bars = go.Bar(x=h[1].tolist(), y=h[0].tolist(), width=bar_width, marker=dict(color=GREY))
 
-    line = go.Scatter(
-        x=X,
-        y=L,
-        mode='lines',
-        line=dict(color=GREEN, width=line_width))
+    line = go.Scatter(x=X, y=L, mode="lines", line=dict(color=GREEN, width=line_width))
 
     f = go.Figure([bars, line], layout=layout)
 

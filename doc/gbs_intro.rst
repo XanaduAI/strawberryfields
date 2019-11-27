@@ -1,7 +1,6 @@
 Introduction to GBS
 ===================
 
-
 Gaussian Boson Sampling (GBS) is a special-purpose model of photonic quantum computation, first
 introduced in Ref. :cite:`hamilton2017`. In its most general form, GBS consists of preparing a
 multi-mode Gaussian state and measuring it in the Fock basis. It differs from universal photonic
@@ -12,7 +11,7 @@ Applications of GBS aim to harness the computational power unique to GBS to perf
 
 GBS offers great versatility in the scope of problems that it can encode. This led to the appearance
 of several GBS algorithms with applications to quantum chemistry :cite:`huh2015boson`,
- graph optimization :cite:`arrazola2018using`:cite:`bradler2018gaussian`, molecular
+graph optimization :cite:`arrazola2018using`:cite:`bradler2018gaussian`, molecular
 docking :cite:`banchi2019molecular`, graph similarity :cite:`bradler2018graph`
 :cite:`schuld2019quantum`:cite:`bradler2019duality`, and point processes :cite:`jahangiri2019point`.
 The GBS applications layer is built with the goal of providing users with the capability to
@@ -105,8 +104,9 @@ with :math:`k = \sum_{i}s_{i}`.
 
 The GBS applications layer includes functions for sampling from GBS devices that are programmed
 in this manner. It also includes a function for sampling more general Gaussian states, which
-are useful for applications to quantum chemistry.
+are useful for applications to quantum chemistry. These functions are located in the
+:mod:`~.gbs.sample` module.
 
 GBS algorithms work by choosing a clever way of encoding problems into a GBS device and
 generating many samples, which are then be post-processed by classical techniques. The
-applications layer contains a dedicated module for each of the known GBS algorithms:
+applications layer contains a dedicated module for each of the known GBS algorithms.
