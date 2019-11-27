@@ -354,20 +354,13 @@ def spectrum(
 
     **Example usage:**
 
-    >>> from strawberryfields.gbs import vibronic, data
     >>> formic = data.Formic()
-    >>> w = formic.w
-    >>> wp = formic.wp
-    >>> Ud = formic.Ud
-    >>> delta = formic.delta
-    >>> T = 0
-    >>> t, U1, r, U2, alpha = vibronic.gbs_params(w, wp, Ud, delta, T)
-    >>> e = vibronic.energies(formic, w, wp)
+    >>> e = vibronic.energies(formic, formic.w, formic.wp)
     >>> full_spectrum = spectrum(e, xmin=-1000, xmax=8000)
     >>> full_spectrum.show()
 
     .. image:: ../../_static/formic_spectrum.png
-       :width: 40%
+       :width: 50%
        :align: center
        :target: javascript:void(0);
 

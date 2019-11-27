@@ -308,16 +308,16 @@ def vibronic(
 
     **Example usage:**
 
->>> formic = data.Formic()
->>> w = formic.w
->>> wp = formic.wp
->>> Ud = formic.Ud
->>> delta = formic.delta
->>> T = 0
->>> t, U1, r, U2, alpha = vibronic.gbs_params(w, wp, Ud, delta, T)
->>> sample.vibronic(t, U1, r, U2, alpha, 2, 0.0)
-[[0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
- [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+    >>> formic = data.Formic()
+    >>> w = formic.w
+    >>> wp = formic.wp
+    >>> Ud = formic.Ud
+    >>> delta = formic.delta
+    >>> T = 0
+    >>> t, U1, r, U2, alpha = vibronic.gbs_params(w, wp, Ud, delta, T)
+    >>> sample.vibronic(t, U1, r, U2, alpha, 2, 0.0)
+    [[0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+     [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
     Args:
         t (array): two-mode squeezing parameters

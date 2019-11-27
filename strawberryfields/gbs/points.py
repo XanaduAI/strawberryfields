@@ -25,7 +25,8 @@ GBS. An accompanying tutorial can be found :ref:`here <gbs-points-tutorial>`.
 Point processes
 ---------------
 
-A point process is a mechanism that randomly generates points among a set of possible outcomes.
+A point process is a mechanism that generates random point patterns among a set of possible
+outcomes.
 Point processes are statistical models that can replicate the stochastic
 properties of natural phenomena, or be used as subroutines in statistical and machine learning
 algorithms.
