@@ -351,7 +351,7 @@ def spectrum(
 ):  # pragma: no cover
     """Plots a vibronic spectrum based on input sampled energies.
 
-        **Example usage:**
+    **Example usage:**
 
     >>> from strawberryfields.gbs import vibronic, data
     >>> formic = data.Formic()
