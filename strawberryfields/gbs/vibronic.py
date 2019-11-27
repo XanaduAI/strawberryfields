@@ -95,7 +95,7 @@ def gbs_params(
             :math:`\mbox{cm}^{-1}`
         Ud (array): Duschinsky matrix
         delta (array): Displacement vector, with entries :math:`\delta_i=\sqrt{\omega'_i/\hbar}d_i`,
-            and :math:`d` is the Duschinsky displacement
+            and :math:`d_i` is the Duschinsky displacement
         T (float): temperature (Kelvin)
 
     Returns:
