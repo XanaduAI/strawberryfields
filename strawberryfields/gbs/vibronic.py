@@ -32,23 +32,24 @@ vibronic spectra. Theoretical background on computing vibronic spectra using GBS
 GBS parameters
 --------------
 
-The Franck-Condon factor is given by:
+The Franck-Condon factor is given by
 
 .. math::
-    FCF = \left | \left \langle \mathbf{m} |U_{Dok}| \mathbf{0} \right \rangle \right | ^ 2,
+    FCF = \left | \left \langle \mathbf{m} |U_{Dok}| \mathbf{n} \right \rangle \right | ^ 2,
 
-where :math:`|\mathbf{m}\rangle=|m_1, m_2, \ldots, m_k\rangle` is the state of :math:`k`
-vibrational modes with :math:`m_i` excitations in the :math:`i`-th mode, and :math:`U_{Dok}` is
-known as the Doktorov operator. The Doktorov operator can be written in terms of displacement
-:math:`D_\alpha`, squeezing :math:`\Sigma_{r}`, and interferometer :math:`U_{2}, U_{1}` operators as
+where :math:`|\mathbf{m}\rangle` and :math:`|\mathbf{n}\rangle` are the final and initial states,
+respectively, and :math:`U_{Dok}` is known as the Doktorov operator which can be written in terms
+of displacement :math:`D_\alpha`, squeezing :math:`\Sigma_{r}`, and interferometer :math:`U_{1},
+U_{2}` operators as
 
 .. math::
     U_{Dok} = D_\alpha U_{2} \Sigma_{r} U_{1}.
 
-Additionally, to account for molecules at finite temperature, the GBS algorithm employs two-mode
-squeezing with parameters :math:`t` determined by the temperature of the molecule. The function
-:func:`gbs_params` transforms chemical parameters, namely vibrational frequencies, displacement
-vector and Duschinsky matrix, to the required GBS parameters.
+A GBS device can be programmed with the :math:`U_{Dok}` operator obtained for a given molecule. The
+function :func:`gbs_params` transforms molecular parameters, namely vibrational frequencies,
+displacement vector and Duschinsky matrix, to the required GBS parameters. Additionally, this
+function computes two-mode squeezing parameters :math:`t`, from the molecule's temperature, which
+are required by the GBS algorithm to compute vibronic spectra for molecules at finite temperature.
 
 .. autosummary::
     gbs_params
@@ -88,17 +89,19 @@ def gbs_params(
     >>> p = gbs_params(w, wp, Ud, delta, T)
 
     Args:
-        w (array): normal mode frequencies of the initial electronic state (:math:`\mbox{cm}^{-1}`)
-        wp (array): normal mode frequencies of the final electronic state (:math:`\mbox{cm}^{-1}`)
+        w (array): normal mode frequencies of the initial electronic state in units of
+            :math:`\mbox{cm}^{-1}`
+        wp (array): normal mode frequencies of the final electronic state in units of
+            :math:`\mbox{cm}^{-1}`
         Ud (array): Duschinsky matrix
-        delta (array): Displacement vector, with entries :math:`delta_i=\sqrt{
-        \omega_i/\hbar}d_i`, and :math:`d` is the Duschinsky displacement
+        delta (array): Displacement vector, with entries :math:`\delta_i=\sqrt{\omega_i/\hbar}d_i`,
+            and :math:`d_i` is the Duschinsky displacement
         T (float): temperature (Kelvin)
 
     Returns:
         tuple[array, array, array, array, array]: the two-mode squeezing parameters :math:`t`,
-        the first interferometer unitary matrix :math:`U_{1}`, the squeezing parameters
-        :math:`r`, the second interferometer unitary matrix :math:`U_{2}`, and the displacement
+        the first interferometer unitary matrix :math:`U_{1}`, the squeezing parameters :math:`r`,
+        the second interferometer unitary matrix :math:`U_{2}`, and the displacement
         parameters :math:`\alpha`
     """
     if T < 0:
