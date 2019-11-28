@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Tests for strawberryfields.gbs.vibronic
+Tests for strawberryfields.apps.vibronic
 """
 import numpy as np
 import pytest
 
 from scipy.constants import c, h, k
 
-from strawberryfields.gbs import vibronic
+from strawberryfields.apps import vibronic
 
-pytestmark = pytest.mark.gbs
+pytestmark = pytest.mark.apps
 
 
 class TestGBSParams:
-    """Tests for the function ``strawberryfields.gbs.vibronic.gbs_params``"""
+    """Tests for the function ``strawberryfields.apps.vibronic.gbs_params``"""
 
     dim = 7
     w = np.array([3765.2386, 3088.1826, 1825.1799, 1416.9512, 1326.4684, 1137.0490, 629.7144])
@@ -104,5 +104,5 @@ E3 = 1600.0
 @pytest.mark.parametrize("sample, sample_energy", [(S1, E1), (S2, E2), (S3, E3)])
 def test_energies(sample, sample_energy):
     r"""Tests the correctness of the energies generated for GBS samples in
-    ``strawberryfields.gbs.vibronic.energies``."""
+    ``strawberryfields.apps.vibronic.energies``."""
     assert np.allclose(vibronic.energies(sample, w, wp), sample_energy)

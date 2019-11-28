@@ -15,16 +15,16 @@ r"""
 Dense subgraph identification
 =============================
 
-**Module name:** :mod:`strawberryfields.gbs.subgraph`
+**Module name:** :mod:`strawberryfields.apps.subgraph`
 
-.. currentmodule:: strawberryfields.gbs.subgraph
+.. currentmodule:: strawberryfields.apps.subgraph
 
 This module provides tools for users to find dense subgraphs of different sizes.
 The search heuristic in this module works by resizing a collection of starting subgraphs and
 keeping track of the densest identified. The starting subgraphs can be selected by sampling from
 GBS, resulting in candidates that are likely to be dense :cite:`arrazola2018using`.
 
-An accompanying tutorial can be found :ref:`here <gbs-subgraph-tutorial>`.
+An accompanying tutorial can be found :ref:`here <apps-subgraph-tutorial>`.
 
 Algorithm
 ---------

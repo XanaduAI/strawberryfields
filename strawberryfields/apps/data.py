@@ -15,9 +15,9 @@ r"""
 GBS Datasets
 ============
 
-**Module name:** :mod:`strawberryfields.gbs.data`
+**Module name:** :mod:`strawberryfields.apps.data`
 
-.. currentmodule:: strawberryfields.gbs.data
+.. currentmodule:: strawberryfields.apps.data
 
 This module provides access to pre-calculated datasets of simulated GBS samples.
 
@@ -61,7 +61,7 @@ For graph similarity, we provide:
 Molecules
 ---------
 
-Using the :mod:`~.gbs.vibronic` module and :func:`~.gbs.sample.vibronic` function, GBS data has been
+Using the :mod:`~.apps.vibronic` module and :func:`~.apps.sample.vibronic` function, GBS data has been
 generated for formic acid at zero temperature. The GBS samples can be used to recover the
 vibronic spectrum of the molecule.
 
@@ -137,7 +137,7 @@ import pkg_resources
 import numpy as np
 import scipy
 
-DATA_PATH = pkg_resources.resource_filename("strawberryfields", "gbs/data") + "/"
+DATA_PATH = pkg_resources.resource_filename("strawberryfields", "apps/data") + "/"
 
 
 class Dataset(ABC):

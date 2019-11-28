@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.gbs.data
+Unit tests for strawberryfields.apps.data
 """
 # pylint: disable=no-self-use
 import numpy as np
 import pytest
 import scipy
 
-from strawberryfields.gbs import data
+from strawberryfields.apps import data
 
-pytestmark = pytest.mark.gbs
+pytestmark = pytest.mark.apps
 
 GRAPH_DATASETS_LIST = [
     data.Planted,

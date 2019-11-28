@@ -21,14 +21,14 @@ are of interest in determining how the molecule interacts with the protein.
 
 The first step is to import the Strawberry Fields GBS module and external dependencies:
 """
-from strawberryfields.gbs import data, plot, sample, clique
+from strawberryfields.apps import data, plot, sample, clique
 import numpy as np
 import networkx as nx
 import plotly
 
 ##############################################################################
-# The adjacency matrix of the TACE-AS graph can be loaded from the :mod:`~.gbs.data` module and the
-# graph can be visualized using the :mod:`~.gbs.plot` module:
+# The adjacency matrix of the TACE-AS graph can be loaded from the :mod:`~.apps.data` module and the
+# graph can be visualized using the :mod:`~.apps.plot` module:
 
 TA = data.TaceAs()
 A = TA.adj
@@ -59,8 +59,8 @@ plotly.offline.plot(maximal_fig, filename="maximal_clique.html")
 #     :file: ../../examples_gbs/maximal_clique.html
 
 ##############################################################################
-# We'll now use the :mod:`~.gbs.clique` module to find larger cliques in the graph. We can make
-# use of the pre-generated samples from the TACE-AS graph in the :mod:`~.gbs.data` module and post-select samples with a specific number of clicks. For
+# We'll now use the :mod:`~.apps.clique` module to find larger cliques in the graph. We can make
+# use of the pre-generated samples from the TACE-AS graph in the :mod:`~.apps.data` module and post-select samples with a specific number of clicks. For
 # this tutorial, we'll look at samples with eight clicks, of which there are a total of 1,984:
 
 postselected = sample.postselect(TA, 8, 8)

@@ -15,9 +15,9 @@ r"""
 Vibronic spectra
 ================
 
-**Module name:** :mod:`strawberryfields.gbs.vibronic`
+**Module name:** :mod:`strawberryfields.apps.vibronic`
 
-.. currentmodule:: strawberryfields.gbs.vibronic
+.. currentmodule:: strawberryfields.apps.vibronic
 
 This module contains functions used for computing molecular vibronic spectra with GBS. In vibronic
 spectroscopy, incoming light simultaneously excites a molecule to higher electronic and

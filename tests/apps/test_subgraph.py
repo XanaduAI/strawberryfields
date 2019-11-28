@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.gbs.subgraph
+Unit tests for strawberryfields.apps.subgraph
 """
 # pylint: disable=no-self-use,unused-argument
 # for testing private functions with pylint: disable=protected-access
@@ -23,9 +23,9 @@ import networkx as nx
 import numpy as np
 import pytest
 
-from strawberryfields.gbs import data, subgraph
+from strawberryfields.apps import data, subgraph
 
-pytestmark = pytest.mark.gbs
+pytestmark = pytest.mark.apps
 
 p_planted = data.Planted()
 g_planted = nx.Graph(p_planted.adj)

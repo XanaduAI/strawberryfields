@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.gbs.clique
+Unit tests for strawberryfields.apps.clique
 """
 # pylint: disable=no-self-use,unused-argument
 import functools
@@ -21,9 +21,9 @@ import networkx as nx
 import numpy as np
 import pytest
 
-from strawberryfields.gbs import clique
+from strawberryfields.apps import clique
 
-pytestmark = pytest.mark.gbs
+pytestmark = pytest.mark.apps
 
 
 def patch_random_choice(x, element):
@@ -321,7 +321,7 @@ class TestShrink:
 
 @pytest.mark.parametrize("dim", range(2, 10))
 class TestIsClique:
-    """Tests for the function `strawberryfields.gbs.clique.is_clique` """
+    """Tests for the function `strawberryfields.apps.clique.is_clique` """
 
     def test_no_false_negatives(self, dim):
         """Tests that cliques are labelled as such"""

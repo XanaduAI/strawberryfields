@@ -15,9 +15,9 @@ r"""
 Plotting and visualization
 ==========================
 
-**Module name:** :mod:`strawberryfields.gbs.plot`
+**Module name:** :mod:`strawberryfields.apps.plot`
 
-.. currentmodule:: strawberryfields.gbs.plot
+.. currentmodule:: strawberryfields.apps.plot
 
 This module provides functionality for visualizing graphs, subgraphs, point processes,
 and vibronic spectra. It

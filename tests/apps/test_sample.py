@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.gbs.sample
+Unit tests for strawberryfields.apps.sample
 """
 # pylint: disable=no-self-use,unused-argument,protected-access
 from unittest import mock
@@ -22,9 +22,9 @@ import numpy as np
 import pytest
 
 import strawberryfields as sf
-from strawberryfields.gbs import sample
+from strawberryfields.apps import sample
 
-pytestmark = pytest.mark.gbs
+pytestmark = pytest.mark.apps
 
 adj_dim_range = range(2, 6)
 
@@ -69,7 +69,7 @@ p1 = [t1, U1, r, U2, alpha]
 
 @pytest.mark.parametrize("dim", [4])
 class TestSample:
-    """Tests for the function ``strawberryfields.gbs.sample.sample``"""
+    """Tests for the function ``strawberryfields.apps.sample.sample``"""
 
     def test_invalid_adjacency(self, dim):
         """Test if function raises a ``ValueError`` for a matrix that is not symmetric"""
@@ -161,7 +161,7 @@ class TestSample:
 @pytest.mark.parametrize("dim", adj_dim_range)
 @pytest.mark.parametrize("integration_sample_number", [1, 2])
 class TestSampleIntegration:
-    """Integration tests for the function ``strawberryfields.gbs.sample.sample``"""
+    """Integration tests for the function ``strawberryfields.apps.sample.sample``"""
 
     def test_pnr_integration(self, adj, integration_sample_number):
         """Integration test to check if function returns samples of correct form, i.e., correct
@@ -195,7 +195,7 @@ class TestSampleIntegration:
 
 @pytest.mark.parametrize("dim", [4])
 def test_seed(dim, adj):
-    """Test for the function ``strawberryfields.gbs.sample.seed``. Checks that samples are identical
+    """Test for the function ``strawberryfields.apps.sample.seed``. Checks that samples are identical
     after repeated initialization of ``seed``."""
 
     sample.seed(1968)
@@ -257,7 +257,7 @@ class TestToSubgraphs:
 
 
 def test_modes_from_counts():
-    """Test if the function ``strawberryfields.gbs.sample.modes_from_counts`` returns the correct
+    """Test if the function ``strawberryfields.apps.sample.modes_from_counts`` returns the correct
     mode samples when input a set of photon count samples."""
 
     counts = [[0, 0, 0, 0], [1.0, 0.0, 0.0, 2.0], [1, 1, 1, 0], [1, 2, 1, 0], [0, 1, 0, 2, 4]]
@@ -268,7 +268,7 @@ def test_modes_from_counts():
 
 
 def test_postselect():
-    """Test if the function ``strawberryfields.gbs.sample.postselect`` correctly postselects on
+    """Test if the function ``strawberryfields.apps.sample.postselect`` correctly postselects on
     minimum number of photons or clicks."""
     counts_pnr = [
         [0, 0, 0, 0],
@@ -296,7 +296,7 @@ def test_postselect():
 
 @pytest.mark.parametrize("p", [p0, p1])
 class TestVibronic:
-    """Tests for the function ``strawberryfields.gbs.sample.vibronic``"""
+    """Tests for the function ``strawberryfields.apps.sample.vibronic``"""
 
     def test_invalid_n_samples(self, p):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
@@ -357,7 +357,7 @@ class TestVibronic:
 @pytest.mark.parametrize("p", [p0, p1])
 @pytest.mark.parametrize("integration_sample_number", [1, 2])
 def test_vibronic_integration(p, integration_sample_number):
-    """Integration test for the function ``strawberryfields.gbs.sample.vibronic`` to check if
+    """Integration test for the function ``strawberryfields.apps.sample.vibronic`` to check if
     it returns samples of correct form, i.e., correct number of samples, correct number of
     modes, all non-negative integers."""
     samples = np.array(sample.vibronic(*p, n_samples=integration_sample_number))

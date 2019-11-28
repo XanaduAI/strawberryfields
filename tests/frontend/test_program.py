@@ -633,7 +633,7 @@ class TestGBS:
             ops.Rgate(1.0)  | q[0]
 
         with pytest.raises(program.CircuitError, match="Operations following the Fock measurements."):
-            prog.compile('gbs')
+            prog.compile('apps')
 
     def test_GBS_compile_no_fock_meas(self):
         """Tests that GBS compilation fails when no fock measurements are made."""
@@ -643,7 +643,7 @@ class TestGBS:
             ops.Sgate(-0.5) | q[1]
 
         with pytest.raises(program.CircuitError, match="GBS circuits must contain Fock measurements."):
-            prog.compile('gbs')
+            prog.compile('apps')
 
     def test_GBS_compile_nonconsec_measurefock(self):
         """Tests that GBS compilation fails when Fock measurements are made with an intervening gate."""
@@ -656,7 +656,7 @@ class TestGBS:
             ops.MeasureFock() | q[1]
 
         with pytest.raises(program.CircuitError, match="The Fock measurements are not consecutive."):
-            prog.compile('gbs')
+            prog.compile('apps')
 
     def test_GBS_compile_measure_same_twice(self):
         """Tests that GBS compilation fails when the same mode is measured more than once."""
@@ -667,7 +667,7 @@ class TestGBS:
             ops.MeasureFock() | q
 
         with pytest.raises(program.CircuitError, match="Measuring the same mode more than once."):
-            prog.compile('gbs')
+            prog.compile('apps')
 
     def test_GBS_success(self):
         """GBS check passes."""
@@ -680,7 +680,7 @@ class TestGBS:
             ops.Rgate(-1.0) | q[1]
             ops.MeasureFock() | q[1]
 
-        prog = prog.compile('gbs')
+        prog = prog.compile('apps')
         assert len(prog) == 4
         last_cmd = prog.circuit[-1]
         assert isinstance(last_cmd.op, ops.MeasureFock)
@@ -697,7 +697,7 @@ class TestGBS:
             ops.BSgate(0.54, -0.12) | (q[0], q[1])
             ops.MeasureFock() | (q[0], q[3], q[2], q[1])
 
-        prog = prog.compile("gbs")
+        prog = prog.compile("apps")
         last_cmd = prog.circuit[-1]
         assert isinstance(last_cmd.op, ops.MeasureFock)
         assert [x.ind for x in last_cmd.reg] == list(range(4))

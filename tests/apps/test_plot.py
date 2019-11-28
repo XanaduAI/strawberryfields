@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.gbs.plot
+Unit tests for strawberryfields.apps.plot
 """
 # pylint: disable=no-self-use,unused-argument,too-many-arguments,protected-access
 import networkx as nx
 import numpy as np
 import pytest
 
-from strawberryfields.gbs import plot
+from strawberryfields.apps import plot
 
-pytestmark = pytest.mark.gbs
+pytestmark = pytest.mark.apps
 
 
 class TestNodeCoords:
-    """Test for the internal function strawberryfields.gbs.plot._node_coords"""
+    """Test for the internal function strawberryfields.apps.plot._node_coords"""
 
     @pytest.mark.parametrize("dim", [4, 5, 6])
     def test_complete_graph(self, dim):
@@ -53,7 +53,7 @@ class TestNodeCoords:
 
 
 class TestEdgeCoords:
-    """Test for the internal function strawberryfields.gbs.plot._edge_coords"""
+    """Test for the internal function strawberryfields.apps.plot._edge_coords"""
 
     @pytest.mark.parametrize("dim", [4, 5, 6])
     def test_cycle_graph(self, dim):

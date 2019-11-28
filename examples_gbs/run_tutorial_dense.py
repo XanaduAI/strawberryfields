@@ -25,13 +25,13 @@ Let's take a look!
 
 Finding dense subgraphs
 -----------------------
-As usual, the first step is to import all required modules. We'll need the :mod:`~.gbs.data`
-module to load pre-generated samples, the :mod:`~.gbs.sample` module to postselect samples, the
-:mod:`~.gbs.subgraph` module to search for dense subgraphs, and the :mod:`~.gbs.plot` module to
-visualize the graphs. We'll also use Plotly which is required for the :mod:`~.gbs.plot` module and
+As usual, the first step is to import all required modules. We'll need the :mod:`~.apps.data`
+module to load pre-generated samples, the :mod:`~.apps.sample` module to postselect samples, the
+:mod:`~.apps.subgraph` module to search for dense subgraphs, and the :mod:`~.apps.plot` module to
+visualize the graphs. We'll also use Plotly which is required for the :mod:`~.apps.plot` module and
 NetworkX for graph operations.
 """
-from strawberryfields.gbs import data, sample, subgraph, plot
+from strawberryfields.apps import data, sample, subgraph, plot
 import plotly
 import networkx as nx
 
@@ -45,7 +45,7 @@ import networkx as nx
 # densest of its size, its nodes have a lower average degree than the nodes in the rest of the
 # graph.
 #
-# The :mod:`~.gbs.data` module has pre-generated GBS samples from this graph. Let's load them,
+# The :mod:`~.apps.data` module has pre-generated GBS samples from this graph. Let's load them,
 # postselect on samples with a large number of clicks, and convert them to subgraphs:
 
 planted = data.Planted()
@@ -73,7 +73,7 @@ plotly.offline.plot(plot_graph, filename="planted.html")
 ##############################################################################
 # A more interesting challenge is to find dense subgraphs of different sizes; it is often
 # useful to identify many high-density subgraphs, not just the densest ones. This is the purpose of
-# the :func:`~.subgraph.search` function in the :mod:`~.gbs.subgraph` module: to identify
+# the :func:`~.subgraph.search` function in the :mod:`~.apps.subgraph` module: to identify
 # collections of dense subgraphs for a range of sizes. The output of this function is a
 # dictionary whose keys correspond to subgraph sizes within the specified range. The values in
 # the dictionary are the top subgraphs of that size and their corresponding density.
@@ -108,6 +108,6 @@ plotly.offline.plot(densest_16, filename="densest_16.html")
 ##############################################################################
 # In principle there are different methods to postprocess GBS outputs to identify dense
 # subgraphs. For example, techniques for finding maximum cliques, included in the
-# :mod:`~.gbs.clique` module could help provide initial subgraphs that can be resized to find larger
+# :mod:`~.apps.clique` module could help provide initial subgraphs that can be resized to find larger
 # dense subgraphs. Such methods are hybrid algorithms combining the ability of GBS to sample dense
 # subgraphs with clever classical techniques. Can you think of your own hybrid algorithm? 🤔

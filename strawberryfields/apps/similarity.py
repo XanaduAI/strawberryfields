@@ -15,9 +15,9 @@ r"""
 Graph similarity
 ================
 
-**Module name:** :mod:`strawberryfields.gbs.similarity`
+**Module name:** :mod:`strawberryfields.apps.similarity`
 
-.. currentmodule:: strawberryfields.gbs.similarity
+.. currentmodule:: strawberryfields.apps.similarity
 
 This module provides the tools to construct graph kernels from GBS. The graph kernel is built by
 mapping GBS samples from each graph to a feature vector. Similarity between graphs can then be
@@ -26,7 +26,7 @@ determined by calculating the overlap between these vectors.
 The functionality here is based upon the research papers:
 :cite:`bradler2018graph,schuld2019quantum,bradler2019duality`.
 
-An accompanying tutorial can be found :ref:`here <gbs-sim-tutorial>`.
+An accompanying tutorial can be found :ref:`here <apps-sim-tutorial>`.
 
 Coarse-graining GBS samples
 ---------------------------
@@ -95,7 +95,7 @@ approximation:
     prob_orbit_mc
     prob_event_mc
 
-Similar to the :func:`~.gbs.sample.sample` function, the MC estimators include a ``loss`` argument
+Similar to the :func:`~.apps.sample.sample` function, the MC estimators include a ``loss`` argument
 to specify the proportion of photons lost in the simulated GBS device.
 
 One canonical method of constructing a feature vector is to pick event probabilities
@@ -475,7 +475,7 @@ def feature_vector_sampling(
 
     **Example usage:**
 
-    >>> from strawberryfields.gbs import data
+    >>> from strawberryfields.apps import data
     >>> samples = data.Mutag0()
     >>> feature_vector_sampling(samples, [2, 4, 6])
     [0.19035, 0.2047, 0.1539]

@@ -11,13 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""GBS applications layer"""
+"""SF applications layer"""
 
-import strawberryfields.gbs.clique
-import strawberryfields.gbs.data
-import strawberryfields.gbs.plot
-import strawberryfields.gbs.points
-import strawberryfields.gbs.sample
-import strawberryfields.gbs.similarity
-import strawberryfields.gbs.subgraph
-import strawberryfields.gbs.vibronic
+import strawberryfields.apps.clique
+import strawberryfields.apps.data
+import strawberryfields.apps.plot
+import strawberryfields.apps.points
+import strawberryfields.apps.sample
+import strawberryfields.apps.similarity
+import strawberryfields.apps.subgraph
+import strawberryfields.apps.vibronic

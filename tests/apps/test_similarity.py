@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.gbs.similarity
+Unit tests for strawberryfields.apps.similarity
 """
 # pylint: disable=no-self-use,unused-argument,too-many-arguments
 import itertools
@@ -24,9 +24,9 @@ import numpy as np
 import pytest
 
 import strawberryfields as sf
-from strawberryfields.gbs import similarity
+from strawberryfields.apps import similarity
 
-pytestmark = pytest.mark.gbs
+pytestmark = pytest.mark.apps
 
 all_orbits = {
     3: [[1, 1, 1], [2, 1], [3]],
@@ -65,7 +65,7 @@ def test_sample_to_orbit(dim):
 
 @pytest.mark.parametrize("dim", [3, 4, 5])
 class TestOrbits:
-    """Tests for the function ``strawberryfields.gbs.similarity.orbits``"""
+    """Tests for the function ``strawberryfields.apps.similarity.orbits``"""
 
     def test_orbit_sum(self, dim):
         """Test if function generates orbits that are lists that sum to ``dim``."""
@@ -99,7 +99,7 @@ def test_sample_to_event(dim, max_count_per_mode):
 
 
 class TestOrbitToSample:
-    """Tests for the function ``strawberryfields.gbs.similarity.orbit_to_sample``"""
+    """Tests for the function ``strawberryfields.apps.similarity.orbit_to_sample``"""
 
     def test_low_modes(self):
         """Test if function raises a ``ValueError`` if fed an argument for ``modes`` that does
@@ -147,7 +147,7 @@ class TestOrbitToSample:
 
 
 class TestEventToSample:
-    """Tests for the function ``strawberryfields.gbs.similarity.event_to_sample``"""
+    """Tests for the function ``strawberryfields.apps.similarity.event_to_sample``"""
 
     def test_low_count(self):
         """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is negative."""
@@ -198,7 +198,7 @@ orbits = [
 
 @pytest.mark.parametrize("orbit, max_photon, expected", orbits)
 def test_orbit_cardinality(orbit, max_photon, expected):
-    """Test if function ``strawberryfields.gbs.similarity.orbit_cardinality`` returns the
+    """Test if function ``strawberryfields.apps.similarity.orbit_cardinality`` returns the
     correct number of samples for some hard-coded examples."""
 
     assert similarity.orbit_cardinality(list(orbit), max_photon) == expected
@@ -216,14 +216,14 @@ events = [
 
 @pytest.mark.parametrize("photons, max_count, modes, expected", events)
 def test_event_cardinality(photons, max_count, modes, expected):
-    """Test if function ``strawberryfields.gbs.similarity.event_cardinality`` returns the
+    """Test if function ``strawberryfields.apps.similarity.event_cardinality`` returns the
     correct number of samples for some hard-coded examples."""
 
     assert similarity.event_cardinality(photons, max_count, modes) == expected
 
 
 class TestProbOrbitMC:
-    """Tests for the function ``strawberryfields.gbs.similarity.prob_orbit_mc.``"""
+    """Tests for the function ``strawberryfields.apps.similarity.prob_orbit_mc.``"""
 
     def test_invalid_samples(self):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
@@ -312,7 +312,7 @@ class TestProbOrbitMC:
 
 
 class TestProbEventMC:
-    """Tests for the function ``strawberryfields.gbs.similarity.prob_event_mc.``"""
+    """Tests for the function ``strawberryfields.apps.similarity.prob_event_mc.``"""
 
     def test_invalid_samples(self):
         """Test if function raises a ``ValueError`` when a number of samples less than one is

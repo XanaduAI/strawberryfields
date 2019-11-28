@@ -15,10 +15,10 @@ r"""Tests for the the point process functions"""
 
 import pytest
 import numpy as np
-from strawberryfields.gbs.points import kernel, sample
+from strawberryfields.apps.points import kernel, sample
 
 
-pytestmark = pytest.mark.gbs
+pytestmark = pytest.mark.apps
 
 
 def test_kernel():

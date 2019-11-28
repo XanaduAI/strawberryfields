@@ -6,7 +6,7 @@ Sampling Tutorial
 =================
 
 This tutorial provides a quick guide to generating samples from GBS simulators. This
-functionality is provided in the :mod:`~.gbs.sample` module of the applications layer.
+functionality is provided in the :mod:`~.apps.sample` module of the applications layer.
 
 Sampling from GBS
 -----------------
@@ -22,7 +22,7 @@ Let's take a look at both types of sampling methods. We can generate samples fro
 5-dimensional symmetric matrix:
 """
 
-from strawberryfields.gbs import sample
+from strawberryfields.apps import sample
 import numpy as np
 
 modes = 5
@@ -47,7 +47,7 @@ print(s_pnr)
 # 1 photons were detected in modes 1 and 2, and 0 photons were detected in modes 3 and 4. If
 # threshold detectors were used instead, the sample would be: ``[1, 1, 1, 0, 0]``.
 #
-# A more general :func:`~.gbs.sample.gaussian` function allows for sampling from arbitrary pure
+# A more general :func:`~.apps.sample.gaussian` function allows for sampling from arbitrary pure
 # Gaussian states.
 #
 # Sampling subgraphs
@@ -65,7 +65,7 @@ print(s_pnr)
 # threshold sampling is enough, since it lets us select nodes of the subgraph. Let's take
 # a look at this by using a small fixed graph as an example:
 
-from strawberryfields.gbs import plot
+from strawberryfields.apps import plot
 import networkx as nx
 import plotly
 
@@ -96,7 +96,7 @@ plotly.offline.plot(plot_graph, filename="random_graph.html")
 # This is a 6-node graph with the nodes ``[0, 1, 4, 5]`` fully connected to each other. We expect
 # to be able to sample dense subgraphs with high probability.
 #
-# Samples can be generated from this graph through GBS using the :func:`~.gbs.sample.sample`
+# Samples can be generated from this graph through GBS using the :func:`~.apps.sample.sample`
 # function:
 
 n_mean = 4
@@ -115,7 +115,7 @@ print(s[:5])
 #
 # However, the number of clicks in GBS is a random variable and we are not always guaranteed to
 # have enough clicks in a sample for the resultant subgraph to be of interest. We can filter out
-# the uninteresting samples using the :func:`~.gbs.sample.postselect` function:
+# the uninteresting samples using the :func:`~.apps.sample.postselect` function:
 
 min_clicks = 3
 max_clicks = 4
@@ -154,4 +154,4 @@ plotly.offline.plot(plot.graph(graph, subgraphs[0]), filename="subgraph.html")
 #       detectors. After all, we are using a classical algorithm to simulate a quantum process!
 #       To help users get to grips with the applications layer as quickly as possible,
 #       we have provided datasets of pre-calculated GBS samples. These datasets are available in
-#       the :mod:`~.gbs.data` module.
+#       the :mod:`~.apps.data` module.

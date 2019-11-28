@@ -15,13 +15,13 @@ r"""
 Sampling functions
 ==================
 
-**Module name:** :mod:`strawberryfields.gbs.sample`
+**Module name:** :mod:`strawberryfields.apps.sample`
 
-.. currentmodule:: strawberryfields.gbs.sample
+.. currentmodule:: strawberryfields.apps.sample
 
 This module provides functionality for generating GBS samples using classical simulators.
 
-An accompanying tutorial can be found :ref:`here <gbs-sample-tutorial>`.
+An accompanying tutorial can be found :ref:`here <apps-sample-tutorial>`.
 
 Generating samples
 ------------------
@@ -102,7 +102,7 @@ A typical workflow would be:
 [[0, 2], [0, 1, 2, 4], [1, 2, 3, 4], [1]]
 
 The subgraphs sampled from GBS are likely to be dense :cite:`arrazola2018using`, motivating their
-use within heuristics for problems such as maximum clique (see :mod:`~.gbs.clique`).
+use within heuristics for problems such as maximum clique (see :mod:`~.apps.clique`).
 
 Code details
 ^^^^^^^^^^^^

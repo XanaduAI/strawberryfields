@@ -15,12 +15,12 @@ r"""
 Point Processes
 ===============
 
-**Module name:** :mod:`strawberryfields.gbs.points`
+**Module name:** :mod:`strawberryfields.apps.points`
 
-.. currentmodule:: strawberryfields.gbs.points
+.. currentmodule:: strawberryfields.apps.points
 
 This module provides functions for building kernel matrices and generating point processes using
-GBS. An accompanying tutorial can be found :ref:`here <gbs-points-tutorial>`.
+GBS. An accompanying tutorial can be found :ref:`here <apps-points-tutorial>`.
 
 Point processes
 ---------------

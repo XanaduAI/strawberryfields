@@ -36,13 +36,13 @@ that involve only single-mode squeezing and linear interferometry, in vibronic s
 prepare a Gaussian state using two-mode squeezing, linear interferometry, single-mode squeezing,
 and displacements.
 
-The function :func:`~.gbs_params` of the :mod:`~.gbs.vibronic` module can be
+The function :func:`~.gbs_params` of the :mod:`~.apps.vibronic` module can be
 used to obtain the squeezing, interferometer, and displacement parameters from the input
 chemical parameters listed above. In this tutorial, we study the vibronic spectrum of
 `formic acid <https://en.wikipedia.org/wiki/Formic_acid>`_ 🐜. Its chemical parameters, obtained
-from :cite:`huh2015boson`, can be found in the :mod:`~gbs.data` module:
+from :cite:`huh2015boson`, can be found in the :mod:`~apps.data` module:
 """
-from strawberryfields.gbs import vibronic, data
+from strawberryfields.apps import vibronic, data
 import numpy as np
 formic = data.Formic()
 w = formic.w  # ground state frequencies
@@ -78,12 +78,12 @@ print(np.around(e[:5], 4))  # 4 decimal precision
 ##############################################################################
 # Once the GBS parameters have been obtained, it is straightforward to run the GBS algorithm: we
 # generate many samples, compute their energies, and make a histogram of the observed energies.
-# The :mod:`~.gbs.sample` module contains the function :func:`~.vibronic`, which is tailored for use
-# in vibronic spectra applications. Similarly, the :mod:`~.gbs.plot` module includes a :func:`~.spectrum`
+# The :mod:`~.apps.sample` module contains the function :func:`~.vibronic`, which is tailored for use
+# in vibronic spectra applications. Similarly, the :mod:`~.apps.plot` module includes a :func:`~.spectrum`
 # function that generates the vibronic spectrum from the GBS samples. Let's see how this is done for
 # just a few samples:
 
-from strawberryfields.gbs import sample, plot
+from strawberryfields.apps import sample, plot
 import plotly
 nr_samples = 10
 s = sample.vibronic(t, U1, r, U2, alpha, nr_samples)
@@ -103,7 +103,7 @@ plotly.offline.plot(spectrum, filename="spectrum.html")
 # The bars in the plot are the histogram of energies. The curve surrounding them is a Lorentzian
 # broadening of the spectrum, which better represents the observations from an actual experiment.
 # Of course, 10 samples are not enough to accurately reconstruct the vibronic spectrum. Let's
-# instead use the 20,000 pre-generated samples from the :mod:`~.gbs.data` module.
+# instead use the 20,000 pre-generated samples from the :mod:`~.apps.data` module.
 
 e = vibronic.energies(formic, w, wp)
 full_spectrum = plot.spectrum(e, xmin=-1000, xmax=8000)
