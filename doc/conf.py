@@ -23,6 +23,17 @@ sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath('.')), 'doc'))
 
+
+class Mock(MagicMock):
+    __name__ = 'foo'
+
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+sys.modules["tensorflow"] = Mock(__version__="1.3")
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
