@@ -21,8 +21,7 @@ Maximum Clique
 
 This module provides tools for users to identify large cliques in graphs. A clique is a subgraph
 where all nodes are connected to each other. The maximum clique problem is to identify the
-largest clique in a graph. The problem is NP-Hard in a worst-case setting, which is why it is
-valuable to develop better algorithms to tackle it. It has been shown that samples from GBS can
+largest clique in a graph. It has been shown that samples from GBS can
 be used to select dense subgraphs as a starting seed for heuristic algorithms
 :cite:`banchi2019molecular`.
 
