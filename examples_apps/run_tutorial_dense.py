@@ -64,7 +64,7 @@ plotly.offline.plot(plot_graph, filename="planted.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/planted.html
+#     :file: ../../examples_apps/planted.html
 #
 # .. note::
 #     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
@@ -97,13 +97,13 @@ plotly.offline.plot(densest_8, filename="densest_8.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/densest_8.html
+#     :file: ../../examples_apps/densest_8.html
 
 plotly.offline.plot(densest_16, filename="densest_16.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/densest_16.html
+#     :file: ../../examples_apps/densest_16.html
 
 ##############################################################################
 # In principle there are different methods to postprocess GBS outputs to identify dense

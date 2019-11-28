@@ -38,7 +38,7 @@ plotly.offline.plot(plot_graph, filename="TACE-AS.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/TACE-AS.html
+#     :file: ../../examples_apps/TACE-AS.html
 #
 # .. note::
 #     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
@@ -56,7 +56,7 @@ plotly.offline.plot(maximal_fig, filename="maximal_clique.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/maximal_clique.html
+#     :file: ../../examples_apps/maximal_clique.html
 
 ##############################################################################
 # We'll now use the :mod:`~.apps.clique` module to find larger cliques in the graph. We can make
@@ -120,7 +120,7 @@ plotly.offline.plot(clique_fig, filename="maximum_clique.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/maximum_clique.html
+#     :file: ../../examples_apps/maximum_clique.html
 
 ##############################################################################
 # The TACE-AS graph is relatively small, so finding large cliques is not particularly difficult. A
@@ -147,14 +147,14 @@ plotly.offline.plot(largest_fig, filename="largest_clique.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/largest_clique.html
+#     :file: ../../examples_apps/largest_clique.html
 
 just_largest = plot.subgraph(phat_graph.subgraph(largest_clique))
 plotly.offline.plot(just_largest, filename="just_largest.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/just_largest.html
+#     :file: ../../examples_apps/just_largest.html
 
 ##############################################################################
 # The ``p_hat300-1`` graph has several maximum cliques of size eight,

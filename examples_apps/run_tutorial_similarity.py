@@ -65,7 +65,7 @@ plotly.offline.plot(plot_mutag_0, filename="MUTAG_0.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/MUTAG_0.html
+#     :file: ../../examples_apps/MUTAG_0.html
 #
 # .. note::
 #     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
@@ -75,19 +75,19 @@ plotly.offline.plot(plot_mutag_1, filename="MUTAG_1.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/MUTAG_1.html
+#     :file: ../../examples_apps/MUTAG_1.html
 
 plotly.offline.plot(plot_mutag_2, filename="MUTAG_2.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/MUTAG_2.html
+#     :file: ../../examples_apps/MUTAG_2.html
 
 plotly.offline.plot(plot_mutag_3, filename="MUTAG_3.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/MUTAG_3.html
+#     :file: ../../examples_apps/MUTAG_3.html
 #
 # The graphs of ``m1_a`` and ``m2_a`` look very similar. In fact,
 # it turns out that they are *isomorphic* to each other, which means that the graphs can be made
@@ -305,7 +305,7 @@ plotly.offline.plot(fig, filename="SVM.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/SVM.html
+#     :file: ../../examples_apps/SVM.html
 #
 # This plot shows the two classes (grey points for class 0 and red points for class 1)
 # successfully separated by the linear hyperplane using the GBS feature space. Moreover,

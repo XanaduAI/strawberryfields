@@ -87,7 +87,7 @@ plotly.offline.plot(plot_graph, filename="random_graph.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/random_graph.html
+#     :file: ../../examples_apps/random_graph.html
 #
 # .. note::
 #     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
@@ -143,7 +143,7 @@ plotly.offline.plot(plot.graph(graph, subgraphs[0]), filename="subgraph.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/subgraph.html
+#     :file: ../../examples_apps/subgraph.html
 #
 # These sampled subgraphs act as the starting point for some of the applications made available
 # in Strawberry Fields, including the maximum clique and dense subgraph identification problems.

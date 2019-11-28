@@ -89,7 +89,7 @@ plotly.offline.plot(plot_1, filename="Points.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/Points.html
+#     :file: ../../examples_apps/Points.html
 #
 # .. note::
 #     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
@@ -140,7 +140,7 @@ plotly.offline.plot(plot_2, filename="Outliers.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/Outliers.html
+#     :file: ../../examples_apps/Outliers.html
 
 ##############################################################################
 # The two-dimensional examples considered here can be easily extended to higher dimensions. The

@@ -93,7 +93,7 @@ plotly.offline.plot(spectrum, filename="spectrum.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/spectrum.html
+#     :file: ../../examples_apps/spectrum.html
 #
 # .. note::
 #     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
@@ -111,7 +111,7 @@ plotly.offline.plot(full_spectrum, filename="full_spectrum.html")
 
 ##############################################################################
 # .. raw:: html
-#     :file: ../../examples_gbs/full_spectrum.html
+#     :file: ../../examples_apps/full_spectrum.html
 
 ##############################################################################
 #
