@@ -1,6 +1,6 @@
 # pylint: disable=wrong-import-position,wrong-import-order,ungrouped-imports
 r"""
-.. _gbs-vibronic-tutorial:
+.. _apps-vibronic-tutorial:
 
 Vibronic Spectra Tutorial
 =========================

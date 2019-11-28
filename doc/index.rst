@@ -169,7 +169,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    :caption: Applications Layer
    :hidden:
 
-   apps_intro
+   gbs_intro
    apps_tutorials
    code/apps/sample
    code/apps/subgraph

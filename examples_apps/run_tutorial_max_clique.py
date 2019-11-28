@@ -1,6 +1,6 @@
 # pylint: disable=wrong-import-position,wrong-import-order,ungrouped-imports
 """
-.. _gbs-clique-tutorial:
+.. _apps-clique-tutorial:
 
 Max Clique Tutorial
 =========================
