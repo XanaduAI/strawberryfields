@@ -5,16 +5,17 @@ r"""
 Vibronic Spectra Tutorial
 =========================
 In this tutorial, we study how GBS can be used to compute vibronic spectra. So let's start from
-the beginning: what is a vibronic spectrum? Molecules absorb light at frequencies that
-depend on the allowed energy transitions between different states. These transitions
-can be determined by the state of the electrons in the molecule and, crucially,
-also by its *vibrational* degrees of freedom. In this case, the absorption lines that represent
-the frequencies at which light is more strongly absorbed are referred to as the *vibronic* spectrum.
+the beginning: what is a vibronic spectrum? Molecules absorb light at frequencies that depend on
+the allowed transitions between different electronic states. These electronic transitions
+can be accompanied by changes in the vibrational energy of the molecules. In this case, the
+absorption lines that represent the frequencies at which light is more strongly absorbed are
+referred to as the *vibronic* spectrum. The term *vibronic* refers to the simultaneous vibrational
+and electronic transitions of a molecule upon absorption of light.
 
 It is possible to determine vibronic spectra by running clever and careful spectroscopy experiments.
 However, this can be slow and expensive, in which case it is valuable to predict vibronic spectra
-using theoretical calculations. To model vibronic transitions, it is common to focus on only a few
-relevant parameters:
+using theoretical calculations. To model molecular vibronic transitions with GBS, we need only a few
+relevant molecular parameters:
 
 #. :math:`\Omega`: diagonal matrix whose entries are the square-roots of the frequencies of the
    normal modes of the electronic *initial* state.
@@ -29,7 +30,7 @@ vibrational modes are transformed when the molecule changes from the initial to 
 state. At zero temperature, all initial modes are in the vibrational ground state. At finite
 temperature, other vibrational states are also populated.
 
-In the GBS algorithm for computing vibronic spectra :cite:`huh2015boson`, these parameters
+In the GBS algorithm for computing vibronic spectra :cite:`huh2015boson`, these chemical parameters
 are sufficient to determine the configuration of a GBS device. As opposed to other applications
 that involve only single-mode squeezing and linear interferometry, in vibronic spectra we
 prepare a Gaussian state using two-mode squeezing, linear interferometry, single-mode squeezing,
@@ -66,10 +67,10 @@ t, U1, r, U2, alpha = vibronic.gbs_params(w, wp, Ud, delta, T)
 # parameters, and `alpha` is a vector of displacements.
 #
 # Photons detected at the output of the GBS device correspond to a specific transition energy.
-# The GBS algorithm for vibronic spectra works because the device is programmed in such a way that
-# the energies that are sampled with high probability are the peaks of the vibronic spectrum.
-# The function :func:`~.energies` can be used to compute the energies for a set of samples. In
-# this case we show the energy of the first five samples:
+# The GBS algorithm for vibronic spectra works because the programmed device provides samples
+# in such a way that the energies that are sampled with high probability are the peaks of the
+# vibronic spectrum. The function :func:`~.energies` can be used to compute the energies for
+# a set of samples. In this case we show the energy of the first five samples:
 
 e = vibronic.energies(formic, w, wp)
 print(np.around(e[:5], 4))  # 4 decimal precision
@@ -113,16 +114,16 @@ plotly.offline.plot(full_spectrum, filename="full_spectrum.html")
 #     :file: ../../examples_gbs/full_spectrum.html
 
 ##############################################################################
-# |
+#
 # We can compare this prediction with an actual experimental spectrum, obtained from Fig. 3 in
 # Ref. :cite:`huh2015boson`, shown below:
 
 ##############################################################################
-# .. image:: ../../_static/formic_spec.png
+# .. image:: ../_static/formic_spec.png
 #    :width: 740px
 
 ##############################################################################
-# |
+#
 # The agreement is remarkable! Formic acid is a small molecule, which means that its vibronic
 # spectrum can be computed using classical computers. However, for larger molecules, this task
 # quickly becomes intractable, for much the same reason that simulating GBS cannot be done

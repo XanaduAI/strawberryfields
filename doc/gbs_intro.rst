@@ -1,25 +1,23 @@
 Introduction to GBS
 ===================
 
-
 Gaussian Boson Sampling (GBS) is a special-purpose model of photonic quantum computation, first
 introduced in Ref. :cite:`hamilton2017`. In its most general form, GBS consists of preparing a
 multi-mode Gaussian state and measuring it in the Fock basis. It differs from universal photonic
-circuits simply because it does not employ non-Gaussian gates and it restricts measurements to the
+circuits only because it does not employ non-Gaussian gates and it restricts measurements to the
 Fock basis. In general, the output distribution of a GBS device cannot be simulated
 in polynomial time with classical computers :cite:`aaronson2013`:cite:`hamilton2017`.
 Applications of GBS aim to harness the computational power unique to GBS to perform useful tasks.
 
-After inception of GBS, it was quickly realized that it offers significant versatility in the
-scope of problems that can be encoded. This led to the appearance of several GBS algorithms with
-applications to quantum chemistry :cite:`huh2015boson`, graph optimization
-:cite:`arrazola2018using`:cite:`bradler2018gaussian`, molecular
+GBS offers great versatility in the scope of problems that it can encode. This led to the appearance
+of several GBS algorithms with applications to quantum chemistry :cite:`huh2015boson`,
+graph optimization :cite:`arrazola2018using`:cite:`bradler2018gaussian`, molecular
 docking :cite:`banchi2019molecular`, graph similarity :cite:`bradler2018graph`
 :cite:`schuld2019quantum`:cite:`bradler2019duality`, and point processes :cite:`jahangiri2019point`.
 The GBS applications layer is built with the goal of providing users with the capability to
-implement GBS algorithms using only a few lines of code. Programming the GBS device, generating
-samples, and classical post-processing of the outputs are taken care of automatically by built-in
-functions.
+implement these GBS algorithms using only a few lines of code. Programming the GBS device,
+generating samples, and classical post-processing of the outputs are taken care of automatically by
+built-in functions.
 
 The GBS distribution
 --------------------
@@ -57,7 +55,7 @@ When the state is pure, the matrix :math:`\mathbf{\mathcal{A}}` can be written a
     s_1!\ldots s_m!},
 
 where :math:`\mathbf{A}` is an arbitrary symmetric matrix with eigenvalues bounded between
-:math:`-1` and :math:`1`. Therefore, besides encoding Gaussian states and gates into a GBS
+:math:`-1` and :math:`1`. Therefore, besides encoding Gaussian states into a GBS
 device, it is also possible to encode symmetric matrices :math:`\mathbf{A}`. Notably, these may
 include adjacency matrices of graphs, and kernel matrices.
 
@@ -106,7 +104,8 @@ with :math:`k = \sum_{i}s_{i}`.
 
 The GBS applications layer includes functions for sampling from GBS devices that are programmed
 in this manner. It also includes a function for sampling more general Gaussian states, which
-are useful for applications to quantum chemistry.
+are useful for applications to quantum chemistry. These functions can be found in the
+:mod:`~.gbs.sample` module.
 
 GBS algorithms work by choosing a clever way of encoding problems into a GBS device and
 generating many samples, which are then be post-processed by classical techniques. The

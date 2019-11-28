@@ -73,7 +73,7 @@ The number that fall within a given orbit or event :math:`E` are counted, result
 :math:`c_{E}`. The probability :math:`p(E)` of an orbit or event is then approximated as:
 
 .. math::
-    p(E) \approx \frac{c_{E}}{N}
+    p(E) \approx \frac{c_{E}}{N}.
 
 To perform a Monte Carlo estimation of the probability of an orbit or event :math:`E`,
 several samples from :math:`E` are drawn uniformly at random using :func:`orbit_to_sample` or
@@ -84,7 +84,7 @@ sum of the probabilities is then rescaled according to the cardinality :math:`|E
 number of samples:
 
 .. math::
-    p(E) \approx \frac{1}{N}\sum_{i=1}^N p(S_i) |E|,
+    p(E) \approx \frac{1}{N}\sum_{i=1}^N p(S_i) |E|.
 
 The sample mean of this sum is an estimate of the rescaled probability :math:`p(E)`.
 
@@ -104,7 +104,7 @@ photon count :math:`n_{\max}` in each mode. If :math:`\mathbf{k}` is the vector 
 the resultant feature vector is
 
 .. math::
-    f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots)
+    f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots).
 
 This module allows for such feature vectors to be calculated using both the direct sampling and
 Monte Carlo approximation methods:
