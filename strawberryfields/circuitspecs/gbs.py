@@ -22,7 +22,7 @@ from .gaussian import GaussianSpecs
 class GBSSpecs(GaussianSpecs):
     """Circuit specifications for the general GBS class of circuits."""
 
-    short_name = 'apps'
+    short_name = 'gbs'
     primitives = {
         # meta operations
         "All",
