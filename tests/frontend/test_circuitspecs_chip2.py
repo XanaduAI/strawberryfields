@@ -142,10 +142,10 @@ class TestChip2Compilation:
         """Test compilation works for the exact circuit"""
         bb = blackbird.loads(Chip2Specs.circuit)
         bb = bb(
-            squeezing_amplitude_0=0.43,
-            squeezing_amplitude_1=0.65,
-            squeezing_amplitude_2=0.543,
-            squeezing_amplitude_3=0.665,
+            squeezing_amplitude_0=1,
+            squeezing_amplitude_1=1,
+            squeezing_amplitude_2=1,
+            squeezing_amplitude_3=1,
             phase_0=0,
             phase_1=1,
             phase_2=2,
@@ -179,10 +179,10 @@ class TestChip2Compilation:
         U = random_interferometer(4)
 
         with prog.context as q:
-            ops.S2gate(0.5) | (q[0], q[4])
-            ops.S2gate(0.5) | (q[1], q[5])
-            ops.S2gate(0.5) | (q[2], q[6])
-            ops.S2gate(0.5) | (q[3], q[7])
+            ops.S2gate(1) | (q[0], q[4])
+            ops.S2gate(1) | (q[1], q[5])
+            ops.S2gate(1) | (q[2], q[6])
+            ops.S2gate(1) | (q[3], q[7])
             ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
             ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
             ops.MeasureFock() | (q[0], q[1])
@@ -190,8 +190,8 @@ class TestChip2Compilation:
         with pytest.raises(CircuitError, match="All modes must be measured"):
             res = prog.compile("chip2")
 
-    def test_no_s2gates(self):
-        """Test exceptions raised if no S2gates are present"""
+    def test_no_s2gates(self, tol):
+        """Test identity S2gates are inserted"""
         prog = sf.Program(8)
         U = random_interferometer(4)
 
@@ -200,19 +200,58 @@ class TestChip2Compilation:
             ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
             ops.MeasureFock() | q
 
-        with pytest.raises(CircuitError, match="must start with four S2gates"):
-            res = prog.compile("chip2")
+        expected = sf.Program(8)
 
-    def test_incorrect_s2gates(self):
+        with expected.context as q:
+            ops.S2gate(0) | (q[0], q[4])
+            ops.S2gate(0) | (q[1], q[5])
+            ops.S2gate(0) | (q[2], q[6])
+            ops.S2gate(0) | (q[3], q[7])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
+            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.MeasureFock() | q
+
+        res = prog.compile("chip2")
+        expected = expected.compile("chip2")
+        assert program_equivalence(res, expected, atol=tol)
+
+    def test_missing_s2gates(self, tol):
+        """Test identity S2gates are inserted"""
+        prog = sf.Program(8)
+        U = random_interferometer(4)
+
+        with prog.context as q:
+            ops.S2gate(1) | (q[1], q[5])
+            ops.S2gate(1) | (q[3], q[7])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
+            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.MeasureFock() | q
+
+        expected = sf.Program(8)
+
+        with expected.context as q:
+            ops.S2gate(0) | (q[0], q[4])
+            ops.S2gate(1) | (q[1], q[5])
+            ops.S2gate(0) | (q[2], q[6])
+            ops.S2gate(1) | (q[3], q[7])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
+            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.MeasureFock() | q
+
+        res = prog.compile("chip2")
+        expected = expected.compile("chip2")
+        assert program_equivalence(res, expected, atol=tol)
+
+    def test_incorrect_s2gate_modes(self):
         """Test exceptions raised if S2gates do not appear on correct modes"""
         prog = sf.Program(8)
         U = random_interferometer(4)
 
         with prog.context as q:
-            ops.S2gate(0.5) | (q[0], q[1])
-            ops.S2gate(0.5) | (q[2], q[3])
-            ops.S2gate(0.5) | (q[4], q[5])
-            ops.S2gate(0.5) | (q[4], q[6])
+            ops.S2gate(1) | (q[0], q[1])
+            ops.S2gate(1) | (q[2], q[3])
+            ops.S2gate(1) | (q[4], q[5])
+            ops.S2gate(1) | (q[4], q[6])
             ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
             ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
             ops.MeasureFock() | q
@@ -220,25 +259,42 @@ class TestChip2Compilation:
         with pytest.raises(CircuitError, match="S2gates do not appear on the correct modes"):
             res = prog.compile("chip2")
 
+    def test_incorrect_s2gate_params(self):
+        """Test exceptions raised if S2gates have illegal parameters"""
+        prog = sf.Program(8)
+        U = random_interferometer(4)
+
+        with prog.context as q:
+            ops.S2gate(1) | (q[0], q[4])
+            ops.S2gate(0) | (q[1], q[5])
+            ops.S2gate(1) | (q[2], q[6])
+            ops.S2gate(1.1) | (q[3], q[7])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
+            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.MeasureFock() | q
+
+        with pytest.raises(CircuitError, match=r"Incorrect squeezing value\(s\) \(r, phi\)={\(1.1, 0.0\)}"):
+            res = prog.compile("chip2")
+
     def test_no_unitary(self, tol):
         """Test compilation works with no unitary provided"""
         prog = sf.Program(8)
 
         with prog.context as q:
-            ops.S2gate(0.5) | (q[0], q[4])
-            ops.S2gate(0.5) | (q[1], q[5])
-            ops.S2gate(0.5) | (q[2], q[6])
-            ops.S2gate(0.5) | (q[3], q[7])
+            ops.S2gate(1) | (q[0], q[4])
+            ops.S2gate(1) | (q[1], q[5])
+            ops.S2gate(1) | (q[2], q[6])
+            ops.S2gate(1) | (q[3], q[7])
             ops.MeasureFock() | q
 
         res = prog.compile("chip2")
         expected = sf.Program(8)
 
         with expected.context as q:
-            ops.S2gate(0.5, 0) | (q[0], q[4])
-            ops.S2gate(0.5, 0) | (q[1], q[5])
-            ops.S2gate(0.5, 0) | (q[2], q[6])
-            ops.S2gate(0.5, 0) | (q[3], q[7])
+            ops.S2gate(1, 0) | (q[0], q[4])
+            ops.S2gate(1, 0) | (q[1], q[5])
+            ops.S2gate(1, 0) | (q[2], q[6])
+            ops.S2gate(1, 0) | (q[3], q[7])
 
             # corresponds to an identity on modes [0, 1, 2, 3]
             ops.Rgate(0) | (q[0])
@@ -311,10 +367,10 @@ class TestChip2Compilation:
         U = random_interferometer(4)
 
         with prog.context as q:
-            ops.S2gate(0.5, 0) | (q[0], q[4])
-            ops.S2gate(0.5, 0) | (q[1], q[5])
-            ops.S2gate(0.5, 0) | (q[2], q[6])
-            ops.S2gate(0.5, 0) | (q[3], q[7])
+            ops.S2gate(1, 0) | (q[0], q[4])
+            ops.S2gate(1, 0) | (q[1], q[5])
+            ops.S2gate(1, 0) | (q[2], q[6])
+            ops.S2gate(1, 0) | (q[3], q[7])
             ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
             ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
             ops.MeasureFock() | q
@@ -324,10 +380,10 @@ class TestChip2Compilation:
         expected = sf.Program(8)
 
         with expected.context as q:
-            ops.S2gate(0.5, 0) | (q[0], q[4])
-            ops.S2gate(0.5, 0) | (q[1], q[5])
-            ops.S2gate(0.5, 0) | (q[2], q[6])
-            ops.S2gate(0.5, 0) | (q[3], q[7])
+            ops.S2gate(1, 0) | (q[0], q[4])
+            ops.S2gate(1, 0) | (q[1], q[5])
+            ops.S2gate(1, 0) | (q[2], q[6])
+            ops.S2gate(1, 0) | (q[3], q[7])
             ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[0], q[1], q[2], q[3])
             ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[4], q[5], q[6], q[7])
             ops.MeasureFock() | q
@@ -343,10 +399,10 @@ class TestChip2Compilation:
         U = random_interferometer(4)
 
         with prog.context as q:
-            ops.S2gate(0.5, 0) | (q[0], q[4])
-            ops.S2gate(0.5, 0) | (q[1], q[5])
-            ops.S2gate(0.5, 0) | (q[2], q[6])
-            ops.S2gate(0.5, 0) | (q[3], q[7])
+            ops.S2gate(1, 0) | (q[0], q[4])
+            ops.S2gate(1, 0) | (q[1], q[5])
+            ops.S2gate(1, 0) | (q[2], q[6])
+            ops.S2gate(1, 0) | (q[3], q[7])
             ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
             ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
             ops.BSgate() | (q[2], q[3])
@@ -362,10 +418,10 @@ class TestChip2Compilation:
         U = random_interferometer(8)
 
         with prog.context as q:
-            ops.S2gate(0.5, 0) | (q[0], q[4])
-            ops.S2gate(0.5, 0) | (q[1], q[5])
-            ops.S2gate(0.5, 0) | (q[2], q[6])
-            ops.S2gate(0.5, 0) | (q[3], q[7])
+            ops.S2gate(1, 0) | (q[0], q[4])
+            ops.S2gate(1, 0) | (q[1], q[5])
+            ops.S2gate(1, 0) | (q[2], q[6])
+            ops.S2gate(1, 0) | (q[3], q[7])
             ops.Interferometer(U) | q
             ops.MeasureFock() | q
 

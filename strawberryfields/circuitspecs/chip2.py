@@ -148,17 +148,6 @@ class Chip2Specs(CircuitSpecs):
             CircuitError: the circuit does not correspond to Chip2
         """
         # pylint: disable=too-many-statements,too-many-branches
-        # First, check if provided sequence matches the circuit template.
-        # This will avoid superfluous compilation if the user is using the
-        # template directly.
-        try:
-            seq = super().compile(seq, registers)
-        except CircuitError:
-            # failed topology check. Continue to more general
-            # compilation below.
-            pass
-        else:
-            return seq
 
         # first do general GBS compilation to make sure
         # Fock measurements are correct
@@ -173,15 +162,49 @@ class Chip2Specs(CircuitSpecs):
         # --------------------------------------------
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
 
+        regrefs = set()
 
-        if A:
-            raise CircuitError("Circuits must start with four S2gates.")
+        if B:
+            # get set of circuit registers as a tuple for each S2gate
+            regrefs = {(cmd.reg[0].ind, cmd.reg[1].ind) for cmd in B}
 
-        # get circuit registers
-        regrefs = {q for cmd in B for q in cmd.reg}
+        # the set of allowed mode-tuples the S2gates must have
+        allowed_modes = set(zip(range(0, 4), range(4, 8)))
 
-        if len(regrefs) != self.modes:
+        if not regrefs.issubset(allowed_modes):
             raise CircuitError("S2gates do not appear on the correct modes.")
+
+        # ensure provided S2gates all have the allowed squeezing values
+        # TODO: update to correct values
+        # TODO: at some point, this should be changed to a range?
+        allowed_sq_value = {(0.0, 0.0), (1.0, 0.0)}
+        sq_params = {(float(cmd.op.p[0]), float(cmd.op.p[1])) for cmd in B}
+
+        if not sq_params.issubset(allowed_sq_value):
+            wrong_params = sq_params - allowed_sq_value
+            raise CircuitError(
+                "Incorrect squeezing value(s) (r, phi)={}. Allowed squeezing "
+                "value(s) are (r, phi)={}.".format(wrong_params, allowed_sq_value)
+            )
+
+        # determine which modes do not have input S2gates specified
+        missing = allowed_modes - regrefs
+
+        for i, j in missing:
+            # insert S2gates with 0 squeezing
+            seq.insert(0, Command(ops.S2gate(0, 0), [registers[i], registers[j]]))
+
+        # Check if matches the circuit template
+        # --------------------------------------------
+        # This will avoid superfluous unitary compilation.
+        try:
+            seq = super().compile(seq, registers)
+        except CircuitError:
+            # failed topology check. Continue to more general
+            # compilation below.
+            pass
+        else:
+            return seq
 
         # Compile the unitary: combine and then decompose all unitaries
         # -------------------------------------------------------------
