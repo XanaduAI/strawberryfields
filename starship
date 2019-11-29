@@ -27,9 +27,11 @@ from strawberryfields import configuration
 
 PROMPTS = {
     "hostname": "Please enter the hostname of the server to connect to: [{}] ",
+    "port": "Please enter the port number to connect with: [{}] ",
+    "use_ssl": "Should the client attempt to connect over SSL? [{}] ",
     "authentication_token": "Please enter the authentication token to use when connecting: [{}] ",
     "save": "Would you like to save these settings to a local cofiguration file in the current "
-    "directory? [Y/n] ",
+    "directory? [{}] ",
 }
 
 if __name__ == "__main__":
@@ -67,10 +69,12 @@ if __name__ == "__main__":
             input(PROMPTS["authentication_token"].format(config.api["authentication_token"]))
             or config.api["authentication_token"]
         )
-        save = input(PROMPTS["save"]).upper() == "Y"
+        port = input(PROMPTS["port"].format(config.api["port"])) or config.api["port"]
+        use_ssl = input(PROMPTS["use_ssl"].format("y" if config.api["use_ssl"] else "n")).upper() == "Y"
+        save = input(PROMPTS["save"].format("y" if config.api["use_ssl"] else "n")).upper() == "Y"
 
         if not save:
-            sys.stdout.write("Not writing configuration to file...")
+            sys.stdout.write("Not writing configuration to file...\n")
         else:
             if not os.path.isfile("config.toml"):
                 sys.stdout.write("Writing configuration file to current working directory...\n")
@@ -79,6 +83,8 @@ if __name__ == "__main__":
 
             config.api["hostname"] = hostname
             config.api["authentication_token"] = authentication_token
+            config.api["port"] = port
+            config.api["use_ssl"] = use_ssl
             config.save("config.toml")
         sys.exit()
     elif args.hello:
@@ -105,8 +111,8 @@ if __name__ == "__main__":
                 str(response.status_code), response.content))
             sys.exit(1)
 
-    eng = StarshipEngine()
     program = load(args.input)
+    eng = StarshipEngine(program.target)
     result = eng.run(program)
 
     if result and result.samples is not None:

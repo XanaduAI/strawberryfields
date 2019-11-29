@@ -47,6 +47,7 @@ EXPECTED_CONFIG = {
         "hostname": "localhost",
         "use_ssl": True,
         "debug": False,
+        "port": 443,
     }
 }
 

@@ -166,6 +166,8 @@ class APIClient:
 
         self.HOSTNAME = self._config["hostname"]
         self.BASE_URL = "{}://{}".format("https" if self.USE_SSL else "http", self.HOSTNAME)
+        if self._config["port"] != 443:
+            self.BASE_URL = "{}:{}".format(self.BASE_URL, self._config["port"])
         self.AUTHENTICATION_TOKEN = self._config["authentication_token"]
         self.HEADERS = {"User-Agent": self.USER_AGENT}
         self.DEBUG = self._config["debug"]

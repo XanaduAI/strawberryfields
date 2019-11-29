@@ -96,7 +96,12 @@ log.getLogger()
 
 
 DEFAULT_CONFIG = {
-    "api": {"authentication_token": "", "hostname": "localhost", "use_ssl": True, "debug": False}
+    "api": {
+        "authentication_token": "",
+        "hostname": "localhost",
+        "use_ssl": True,
+        "port": 443,
+        "debug": False}
 }
 
 BOOLEAN_KEYS = ("debug", "use_ssl")

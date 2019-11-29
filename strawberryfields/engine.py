@@ -156,6 +156,8 @@ class BaseEngine(abc.ABC):
         backend_options (Dict[str, Any]): keyword arguments for the backend
     """
 
+    REMOTE = False
+
     def __init__(self, backend, backend_options=None):
         if backend_options is None:
             backend_options = {}
@@ -168,6 +170,15 @@ class BaseEngine(abc.ABC):
         self.run_progs = []
         #: List[List[Number]]: latest measurement results, shape == (modes, shots)
         self.samples = None
+
+        if isinstance(backend, str):
+            self.backend_name = backend
+            self.backend = load_backend(backend)
+        elif isinstance(backend, BaseBackend):
+            self.backend_name = backend.short_name
+            self.backend = backend
+        else:
+            raise TypeError("backend must be a string or a BaseBackend instance.")
 
     @abc.abstractmethod
     def __str__(self):
@@ -298,13 +309,13 @@ class BaseEngine(abc.ABC):
                 p = p.compile(target, **compile_options)
             p.lock()
 
-            if self.backend_name in getattr(self, "HARDWARE_BACKENDS", []):
+            if self.REMOTE:
                 self.samples = self._run_program(p, **kwargs)
             else:
                 self._run_program(p, **kwargs)
                 shots = kwargs.get("shots", 1)
                 self.samples = [
-                    _broadcast_nones(p.reg_refs[k].val, kwargs["shots"]) for k in sorted(p.reg_refs)
+                    _broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)
                 ]
                 self.run_progs.append(p)
 
@@ -328,16 +339,6 @@ class LocalEngine(BaseEngine):
     def __init__(self, backend, *, backend_options=None):
         backend_options = backend_options or {}
         super().__init__(backend, backend_options)
-
-        if isinstance(backend, str):
-            self.backend_name = backend
-            #: BaseBackend: backend for executing the quantum circuit
-            self.backend = load_backend(backend)
-        elif isinstance(backend, BaseBackend):
-            self.backend_name = backend.short_name
-            self.backend = backend
-        else:
-            raise TypeError("backend must be a string or a BaseBackend instance.")
 
     def __str__(self):
         return self.__class__.__name__ + "({})".format(self.backend_name)
@@ -447,20 +448,15 @@ class StarshipEngine(BaseEngine):
 
     Args:
         backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
+        polling_delay_seconds (int): the number of seconds to wait between queries when polling for
+            job results
     """
 
-    HARDWARE_BACKENDS = ("chip0",)
+    # This engine will execute jobs remotely.
+    REMOTE = True
 
-    def __init__(self, polling_delay_seconds=1, **kwargs):
-        # Only chip0 backend supported initially.
-        backend = "chip0"
+    def __init__(self, backend, polling_delay_seconds=1, **kwargs):
         super().__init__(backend)
-
-        # todo: move this into backend class
-        class Chip0Backend(BaseBackend):
-            circuit_spec = "chip0"
-
-        self.backend = Chip0Backend()
 
         api_client_params = {k: v for k, v in kwargs.items() if k in DEFAULT_CONFIG["api"].keys()}
         self.client = APIClient(**api_client_params)
@@ -501,7 +497,7 @@ class StarshipEngine(BaseEngine):
 
         # TODO: This is potentially not needed here
         bb._target["name"] = self.backend_name
-        bb._target["options"] = {"shots": shots}
+        bb._target["options"] = {"shots": shots, **program.backend_options}
         return bb
 
     def _queue_job(self, job_content):
@@ -518,6 +514,7 @@ class StarshipEngine(BaseEngine):
         job = Job(client=self.client)
         job.manager.create(circuit=job_content)
         self.jobs.append(job)
+        print("Job {} is sent to server.".format(job.id.value))
         return job
 
     def _run_program(self, program, **kwargs):
