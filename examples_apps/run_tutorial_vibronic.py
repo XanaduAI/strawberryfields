@@ -78,10 +78,10 @@ print(np.around(e[:5], 4))  # 4 decimal precision
 ##############################################################################
 # Once the GBS parameters have been obtained, it is straightforward to run the GBS algorithm: we
 # generate many samples, compute their energies, and make a histogram of the observed energies.
-# The :mod:`~.apps.sample` module contains the function :func:`~.vibronic`, which is tailored for use
-# in vibronic spectra applications. Similarly, the :mod:`~.apps.plot` module includes a :func:`~.spectrum`
-# function that generates the vibronic spectrum from the GBS samples. Let's see how this is done for
-# just a few samples:
+# The :mod:`~.apps.sample` module contains the function :func:`~.vibronic`, which is tailored for
+# use in vibronic spectra applications. Similarly, the :mod:`~.apps.plot` module includes a
+# :func:`~.spectrum` function that generates the vibronic spectrum from the GBS samples. Let's
+# see how this is done for just a few samples:
 
 from strawberryfields.apps import sample, plot
 import plotly

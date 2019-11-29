@@ -61,8 +61,8 @@ For graph similarity, we provide:
 Molecules
 ---------
 
-Using the :mod:`~.apps.vibronic` module and :func:`~.apps.sample.vibronic` function, GBS data has been
-generated for formic acid at zero temperature. The GBS samples can be used to recover the
+Using the :mod:`~.apps.vibronic` module and :func:`~.apps.sample.vibronic` function, GBS data has
+been generated for formic acid at zero temperature. The GBS samples can be used to recover the
 vibronic spectrum of the molecule.
 
 .. autosummary::

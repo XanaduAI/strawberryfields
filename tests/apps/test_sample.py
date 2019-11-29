@@ -195,8 +195,8 @@ class TestSampleIntegration:
 
 @pytest.mark.parametrize("dim", [4])
 def test_seed(dim, adj):
-    """Test for the function ``strawberryfields.apps.sample.seed``. Checks that samples are identical
-    after repeated initialization of ``seed``."""
+    """Test for the function ``strawberryfields.apps.sample.seed``. Checks that samples are
+    identical after repeated initialization of ``seed``."""
 
     sample.seed(1968)
     q_s_1 = sample.sample(A=adj, n_mean=2, n_samples=10, threshold=False)

@@ -60,8 +60,9 @@ plotly.offline.plot(maximal_fig, filename="maximal_clique.html")
 
 ##############################################################################
 # We'll now use the :mod:`~.apps.clique` module to find larger cliques in the graph. We can make
-# use of the pre-generated samples from the TACE-AS graph in the :mod:`~.apps.data` module and post-select samples with a specific number of clicks. For
-# this tutorial, we'll look at samples with eight clicks, of which there are a total of 1,984:
+# use of the pre-generated samples from the TACE-AS graph in the :mod:`~.apps.data` module and
+# post-select samples with a specific number of clicks. For this tutorial, we'll look at samples
+# with eight clicks, of which there are a total of 1,984:
 
 postselected = sample.postselect(TA, 8, 8)
 samples = sample.to_subgraphs(postselected, TA_graph)

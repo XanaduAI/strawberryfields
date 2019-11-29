@@ -108,6 +108,7 @@ plotly.offline.plot(densest_16, filename="densest_16.html")
 ##############################################################################
 # In principle there are different methods to postprocess GBS outputs to identify dense
 # subgraphs. For example, techniques for finding maximum cliques, included in the
-# :mod:`~.apps.clique` module could help provide initial subgraphs that can be resized to find larger
-# dense subgraphs. Such methods are hybrid algorithms combining the ability of GBS to sample dense
-# subgraphs with clever classical techniques. Can you think of your own hybrid algorithm? 🤔
+# :mod:`~.apps.clique` module could help provide initial subgraphs that can be resized to find
+# larger dense subgraphs. Such methods are hybrid algorithms combining the ability of GBS to
+# sample dense subgraphs with clever classical techniques. Can you think of your own hybrid
+# algorithm? 🤔
