@@ -251,7 +251,7 @@ class TestChip2Compilation:
             ops.S2gate(1) | (q[0], q[1])
             ops.S2gate(1) | (q[2], q[3])
             ops.S2gate(1) | (q[4], q[5])
-            ops.S2gate(1) | (q[4], q[6])
+            ops.S2gate(1) | (q[7], q[6])
             ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
             ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
             ops.MeasureFock() | q
@@ -274,6 +274,21 @@ class TestChip2Compilation:
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match=r"Incorrect squeezing value\(s\) \(r, phi\)={\(1.1, 0.0\)}"):
+            res = prog.compile("chip2")
+
+    def test_s2gate_repeated_modes(self):
+        """Test exceptions raised if S2gates are repeated"""
+        prog = sf.Program(8)
+        U = random_interferometer(4)
+
+        with prog.context as q:
+            ops.S2gate(1) | (q[0], q[4])
+            ops.S2gate(1) | (q[0], q[4])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
+            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.MeasureFock() | q
+
+        with pytest.raises(CircuitError, match="incompatible topology."):
             res = prog.compile("chip2")
 
     def test_no_unitary(self, tol):
