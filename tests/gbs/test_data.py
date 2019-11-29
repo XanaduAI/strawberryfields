@@ -23,7 +23,7 @@ from strawberryfields.gbs import data
 
 pytestmark = pytest.mark.gbs
 
-DATASETS_LIST = [
+GRAPH_DATASETS_LIST = [
     data.Planted,
     data.TaceAs,
     data.Mutag0,
@@ -32,6 +32,10 @@ DATASETS_LIST = [
     data.Mutag3,
     data.PHat,
 ]
+
+MOLECULE_DATASETS_LIST = [data.Formic]
+
+DATASETS_LIST = GRAPH_DATASETS_LIST + MOLECULE_DATASETS_LIST
 
 
 @pytest.mark.parametrize("datasets", DATASETS_LIST)
@@ -66,7 +70,6 @@ class TestDatasets:
             """Replacement ``__init__`` for all the datasets in ``DATASETS_LIST``"""
             # pylint: disable=protected-access
             _self.data = scipy.sparse.csr_matrix(self.patch_samples)
-            _self.adj = np.ones((4, 4))
             _self.n_samples, _self.modes = 10, 4
 
         with monkeypatch.context() as m:
@@ -83,11 +86,6 @@ class TestDatasets:
         assert isinstance(dataset.n_mean, (float, int))
         assert dataset.n_mean >= 0
 
-    def test_n_max(self, dataset):
-        """Test if maximum photon number is valid float or int for each dataset"""
-        assert isinstance(dataset.n_max, (float, int))
-        assert dataset.n_max >= 0
-
     def test_threshold(self, dataset):
         """Test if threshold flag is valid bool for each dataset"""
         assert isinstance(dataset.threshold, bool)
@@ -102,10 +100,12 @@ class TestDatasets:
         ``axis==1``. The samples are patched to the fixed ``patch_samples`` list."""
         assert dataset_patched.counts(1) == [0, 1, 1, 2, 1, 2, 2, 3, 5, 5]
 
+    # pylint: disable=unnecessary-comprehension
     def test_iter(self, dataset_patched):
         """Test if dataset class allows correct iteration over itself"""
         assert [i for i in dataset_patched] == self.patch_samples
 
+    # pylint: disable=unnecessary-comprehension
     def test_slice(self, dataset_patched):
         """Test if dataset class allows correct slicing over items"""
         assert [i for i in dataset_patched[1, 4, 2]] == [
@@ -140,6 +140,16 @@ class TestDatasets:
         with pytest.raises(StopIteration):
             next(dataset_patched)
 
+
+@pytest.mark.parametrize("datasets", GRAPH_DATASETS_LIST)
+class TestGraphDatasets:
+    """Tests for the ``MoleculeDataset`` class"""
+
+    @pytest.fixture
+    def dataset(self, datasets):
+        """Fixture for loading each of the datasets in ``GRAPH_DATASETS_LIST``"""
+        yield datasets()
+
     def test_adj_dim(self, dataset):
         """Test if adjacency matrix of dataset is correct dimensions."""
         n, m = dataset.adj.shape
@@ -150,3 +160,52 @@ class TestDatasets:
     def test_adj_valid(self, dataset):
         """Test if adjacency matrix of dataset is symmetric."""
         assert np.allclose(dataset.adj, dataset.adj.T)
+
+
+@pytest.mark.parametrize("datasets", MOLECULE_DATASETS_LIST)
+class TestMoleculeDatasets:
+    """Tests for the ``MoleculeDataset`` class"""
+
+    @pytest.fixture
+    def dataset(self, datasets):
+        """Fixture for loading each of the datasets in ``MOLECULE_DATASETS_LIST``"""
+        yield datasets()
+
+    def test_w_dims(self, dataset):
+        """Test if w has correct shape"""
+        w, _, _, _ = dataset.w, dataset.wp, dataset.Ud, dataset.delta
+        assert w.shape == (dataset.modes // 2,)
+
+    def test_wp_dims(self, dataset):
+        """Test if wp has correct shape"""
+        _, wp, _, _ = dataset.w, dataset.wp, dataset.Ud, dataset.delta
+        assert wp.shape == (dataset.modes // 2,)
+
+    def test_Ud_dims(self, dataset):
+        """Test if Ud has correct shape"""
+        _, _, Ud, _ = dataset.w, dataset.wp, dataset.Ud, dataset.delta
+        assert Ud.shape == (dataset.modes // 2, dataset.modes // 2)
+
+    def test_delta_dims(self, dataset):
+        """Test if delta has correct shape"""
+        _, _, _, delta = dataset.w, dataset.wp, dataset.Ud, dataset.delta
+        assert delta.shape == (dataset.modes // 2,)
+
+    def test_uniform_dims(self, dataset):
+        """Test if overall dimension is correct"""
+        w, wp, Ud, delta = dataset.w, dataset.wp, dataset.Ud, dataset.delta
+        dim = w.shape[0]
+
+        assert wp.shape[0] == dim and Ud.shape == (dim, dim) and delta.shape[0] == dim
+
+    def test_w_non_negative(self, dataset):
+        """Test if w is non-negative"""
+        assert all(dataset.w >= 0)
+
+    def test_wp_non_negative(self, dataset):
+        """Test if wp is non-negative"""
+        assert all(dataset.wp >= 0)
+
+    def test_T_non_negative(self, dataset):
+        """Test if T is non-negative"""
+        assert dataset.T >= 0

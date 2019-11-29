@@ -19,9 +19,13 @@ GBS Datasets
 
 .. currentmodule:: strawberryfields.gbs.data
 
-This module provides access to pre-calculated datasets of simulated GBS samples generated from
-graphs. We have generated datasets from a range of graphs, with each graph having a target
-application in mind.
+This module provides access to pre-calculated datasets of simulated GBS samples.
+
+Graphs
+------
+
+We have generated datasets from a range of graphs, with each graph having a target application in
+mind.
 
 For dense subgraph and maximum clique identification, we provide:
 
@@ -54,6 +58,19 @@ For graph similarity, we provide:
 | **MUTAG_2** | **MUTAG_3** |
 +-------------+-------------+
 
+Molecules
+---------
+
+Using the :mod:`~.gbs.vibronic` module and :func:`~.gbs.sample.vibronic` function, GBS data has been
+generated for formic acid at zero temperature. The GBS samples can be used to recover the
+vibronic spectrum of the molecule.
+
+.. autosummary::
+    Formic
+
+Dataset
+-------
+
 The :class:`Dataset` class provides the base functionality from which all datasets inherit.
 
 .. autosummary::
@@ -61,9 +78,7 @@ The :class:`Dataset` class provides the base functionality from which all datase
 
 Each dataset contains a variety of metadata relevant to the sampling:
 
-- ``n_mean``: mean number of photons in the GBS device
-
-- ``n_max``: maximum number of photons allowed in any sample
+- ``n_mean``: theoretical mean number of photons in the GBS device
 
 -  ``threshold``: flag to indicate whether samples are generated with threshold detection or
    with photon-number-resolving detectors
@@ -72,10 +87,20 @@ Each dataset contains a variety of metadata relevant to the sampling:
 
 - ``modes``: number of modes in the GBS device or, equivalently, number of nodes in the graph
 
+- ``data``: the raw data accessible as a SciPy `csr sparse array
+  <https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html>`__
+
+Graph and molecule datasets also contain some specific data, such as the graph adjacency matrix
+or the input molecular information.
+
+.. autosummary::
+    GraphDataset
+    MoleculeDataset
+
 Note that datasets are simulated without photon loss.
 
 Loading data
-^^^^^^^^^^^^
+------------
 
 We use the :class:`Planted` class as an example to show how to interact with the datasets. Datasets
 can be loaded by running:
@@ -120,12 +145,8 @@ class Dataset(ABC):
 
     Attributes:
         n_mean (float): mean number of photons in the GBS device
-        n_max (float): Maximum number of photons allowed in any sample. This number is set to
-            limit the computation time: any sample being simulated that exceeds ``n_max`` will be
-            ignored and cause the calculation to skip to the next sample.
         threshold (bool): flag to indicate whether samples are generated with threshold detection
             (i.e., detectors of zero or some photons) or with photon-number-resolving detectors.
-        adj (array): adjacency matrix of the graph from which samples were generated
         n_samples (int): total number of samples in the dataset
         modes (int): number of modes in the GBS device or, equivalently, number of nodes in graph
         data (sparse): raw data of samples from GBS as a `csr sparse array
@@ -148,7 +169,6 @@ class Dataset(ABC):
 
     def __init__(self):
         self.data = scipy.sparse.load_npz(DATA_PATH + self._data_filename + ".npz")
-        self.adj = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_A.npz").toarray()
         self.n_samples, self.modes = self.data.shape
 
     def __iter__(self):
@@ -205,17 +225,24 @@ class Dataset(ABC):
     # pylint: disable=missing-docstring
     @property
     @abstractmethod
-    def n_max(self) -> float:
-        pass
-
-    # pylint: disable=missing-docstring
-    @property
-    @abstractmethod
     def threshold(self) -> bool:
         pass
 
 
-class Planted(Dataset):
+# pylint: disable=abstract-method
+class GraphDataset(Dataset, ABC):
+    """Class for loading datasets of pre-generated samples from graphs.
+
+    Attributes:
+        adj (array): adjacency matrix of the graph from which samples were generated
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.adj = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_A.npz").toarray()
+
+
+class Planted(GraphDataset):
     """A random 30-node graph containing a dense 10-node subgraph planted inside
     :cite:`arrazola2018using`.
 
@@ -237,7 +264,6 @@ class Planted(Dataset):
 
     Attributes:
         n_mean = 8
-        n_max = 20
         threshold = True
         n_samples = 50000
         modes = 30
@@ -245,11 +271,10 @@ class Planted(Dataset):
 
     _data_filename = "planted"
     n_mean = 8
-    n_max = 20
     threshold = True
 
 
-class TaceAs(Dataset):
+class TaceAs(GraphDataset):
     """Binding interaction graph for the TACE-AS complex :cite:`banchi2019molecular`.
 
     Nodes in this graph correspond to pairs of atoms in a target protein and a pharmaceutical
@@ -269,7 +294,6 @@ class TaceAs(Dataset):
 
     Attributes:
         n_mean = 8
-        n_max = 20
         threshold = True
         n_samples = 50000
         modes = 24
@@ -277,11 +301,10 @@ class TaceAs(Dataset):
 
     _data_filename = "TACE-AS"
     n_mean = 8
-    n_max = 20
     threshold = True
 
 
-class PHat(Dataset):
+class PHat(GraphDataset):
     """Random graph created using the p-hat generator of :cite:`gendreau1993solving`.
 
     This graph is the ``p_hat300-1`` graph of the `DIMACS
@@ -292,7 +315,6 @@ class PHat(Dataset):
 
     Attributes:
         n_mean = 10
-        n_max = 20
         threshold = True
         n_samples = 50000
         modes = 300
@@ -300,11 +322,10 @@ class PHat(Dataset):
 
     _data_filename = "p_hat300-1"
     n_mean = 10
-    n_max = 20
     threshold = True
 
 
-class Mutag0(Dataset):
+class Mutag0(GraphDataset):
     """First graph of the MUTAG dataset.
 
     The MUTAG dataset is from :cite:`debnath1991structure,kriege2012subgraph` and is available
@@ -321,7 +342,6 @@ class Mutag0(Dataset):
 
     Attributes:
         n_mean = 6
-        n_max = 20
         threshold = False
         n_samples = 20000
         modes = 17
@@ -329,11 +349,10 @@ class Mutag0(Dataset):
 
     _data_filename = "MUTAG_0"
     n_mean = 6
-    n_max = 20
     threshold = False
 
 
-class Mutag1(Dataset):
+class Mutag1(GraphDataset):
     """Second graph of the MUTAG dataset.
 
     The MUTAG dataset is from :cite:`debnath1991structure,kriege2012subgraph` and is available
@@ -350,7 +369,6 @@ class Mutag1(Dataset):
 
     Attributes:
         n_mean = 6
-        n_max = 20
         threshold = False
         n_samples = 20000
         modes = 13
@@ -358,11 +376,10 @@ class Mutag1(Dataset):
 
     _data_filename = "MUTAG_1"
     n_mean = 6
-    n_max = 20
     threshold = False
 
 
-class Mutag2(Dataset):
+class Mutag2(GraphDataset):
     """Third graph of the MUTAG dataset.
 
     The MUTAG dataset is from :cite:`debnath1991structure,kriege2012subgraph` and is available
@@ -379,7 +396,6 @@ class Mutag2(Dataset):
 
     Attributes:
         n_mean = 6
-        n_max = 20
         threshold = False
         n_samples = 20000
         modes = 13
@@ -387,11 +403,10 @@ class Mutag2(Dataset):
 
     _data_filename = "MUTAG_2"
     n_mean = 6
-    n_max = 20
     threshold = False
 
 
-class Mutag3(Dataset):
+class Mutag3(GraphDataset):
     """Fourth graph of the MUTAG dataset.
 
     The MUTAG dataset is from :cite:`debnath1991structure,kriege2012subgraph` and is available
@@ -408,7 +423,6 @@ class Mutag3(Dataset):
 
     Attributes:
         n_mean = 6
-        n_max = 20
         threshold = False
         n_samples = 20000
         modes = 19
@@ -416,5 +430,61 @@ class Mutag3(Dataset):
 
     _data_filename = "MUTAG_3"
     n_mean = 6
-    n_max = 20
     threshold = False
+
+
+# pylint: disable=abstract-method
+class MoleculeDataset(Dataset, ABC):
+    r"""Class for loading datasets of pre-generated samples from molecules.
+
+    Attributes:
+        w (array): normal mode frequencies of the electronic ground state (:math:`\mbox{cm}^{-1}`)
+        wp (array): normal mode frequencies of the electronic excited state (:math:`\mbox{cm}^{-1}`)
+        Ud (array): Duschinsky matrix
+        delta (array): Displacement vector, with entries :math:`\delta_i=\sqrt{\omega'_i/\hbar}d_i`,
+           and :math:`d_i` is the Duschinsky displacement
+        T (float): temperature (Kelvin)
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.w = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_w.npz").toarray()[0]
+        self.wp = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_wp.npz").toarray()[0]
+        self.Ud = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_Ud.npz").toarray()
+        self.delta = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_delta.npz").toarray(
+
+        )[0]
+
+    # pylint: disable=missing-docstring
+    @property
+    @abstractmethod
+    def T(self) -> bool:
+        pass
+
+
+class Formic(MoleculeDataset):
+    """Zero temperature formic acid.
+
+    The molecular parameters are obtained from Ref. :cite:`huh2015boson`.
+
+    **Molecule:**
+
+    .. |formic| image:: ../../_static/formic.png
+        :align: middle
+        :width: 250px
+        :target: javascript:void(0);
+
+    |formic|
+
+    Attributes:
+        n_mean = 1.56
+        threshold = False
+        n_samples = 20000
+        modes = 14
+        T = 0
+    """
+
+    _data_filename = "formic"
+    n_mean = 1.56
+    threshold = False
+    T = 0
