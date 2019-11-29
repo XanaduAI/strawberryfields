@@ -40,7 +40,7 @@ The function :func:`~.gbs_params` of the :mod:`~.apps.vibronic` module can be
 used to obtain the squeezing, interferometer, and displacement parameters from the input
 chemical parameters listed above. In this tutorial, we study the vibronic spectrum of
 `formic acid <https://en.wikipedia.org/wiki/Formic_acid>`_ 🐜. Its chemical parameters, obtained
-from :cite:`huh2015boson`, can be found in the :mod:`~apps.data` module:
+from :cite:`huh2015boson`, can be found in the :mod:`~.apps.data` module:
 """
 from strawberryfields.apps import vibronic, data
 import numpy as np
@@ -80,8 +80,8 @@ print(np.around(e[:5], 4))  # 4 decimal precision
 # generate many samples, compute their energies, and make a histogram of the observed energies.
 # The :mod:`~.apps.sample` module contains the function :func:`~.vibronic`, which is tailored for
 # use in vibronic spectra applications. Similarly, the :mod:`~.apps.plot` module includes a
-# :func:`~.spectrum` function that generates the vibronic spectrum from the GBS samples. Let's
-# see how this is done for just a few samples:
+# :func:`~.spectrum` function that generates the vibronic spectrum from the GBS samples. Let's see
+# how this is done for just a few samples:
 
 from strawberryfields.apps import sample, plot
 import plotly
