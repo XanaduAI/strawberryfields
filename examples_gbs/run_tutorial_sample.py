@@ -47,6 +47,9 @@ print(s_pnr)
 # 1 photons were detected in modes 1 and 2, and 0 photons were detected in modes 3 and 4. If
 # threshold detectors were used instead, the sample would be: ``[1, 1, 1, 0, 0]``.
 #
+# A more general :func:`~.gbs.sample.gaussian` function allows for sampling from arbitrary pure
+# Gaussian states.
+#
 # Sampling subgraphs
 # ------------------
 #
@@ -78,12 +81,17 @@ adj = np.array(
 )
 
 graph = nx.Graph(adj)
+plot_graph = plot.graph(graph)
 
-plotly.offline.plot(plot.graph(graph), filename="random_graph.html")
+plotly.offline.plot(plot_graph, filename="random_graph.html")
 
 ##############################################################################
 # .. raw:: html
 #     :file: ../../examples_gbs/random_graph.html
+#
+# .. note::
+#     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
+#     practice, you can simply use ``plot_graph.show()`` to view your graph.
 #
 # This is a 6-node graph with the nodes ``[0, 1, 4, 5]`` fully connected to each other. We expect
 # to be able to sample dense subgraphs with high probability.

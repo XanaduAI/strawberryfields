@@ -13,7 +13,7 @@ in a biological network. This tutorial studies how GBS can be used to identify d
 
 Mathematically, this task is known as the `dense subgraph problem
 <https://en.wikipedia.org/wiki/Dense_subgraph>`__. The density of a :math:`k`-node subgraph is equal
-to the number of its edges divided by the maximum possible number of edges :math:`k(k-1)/2`.
+to the number of its edges divided by the maximum possible number of edges.
 Identifying the densest graph of a given size, known as the densest-:math:`k` subgraph problem,
 is `NP-Hard <https://en.wikipedia.org/wiki/NP-hardness>`__.
 
@@ -68,7 +68,7 @@ plotly.offline.plot(plot_graph, filename="planted.html")
 #
 # .. note::
 #     The command ``plotly.offline.plot()`` is used to display plots in the documentation. In
-#     practice, you can simply use ``graph.show()`` to view the graph.
+#     practice, you can simply use ``plot_graph.show()`` to view the graph.
 
 ##############################################################################
 # A more interesting challenge is to find dense subgraphs of different sizes; it is often

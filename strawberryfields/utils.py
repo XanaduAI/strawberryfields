@@ -24,33 +24,6 @@ This module defines and implements several utility functions and language extens
 StrawberryFields.
 
 
-Classical processing functions
-------------------------------
-
-These functions provide common mathematical operations that may be required for
-classical processing of measured modes input to other gates. They may be used
-as follows:
-
-.. code-block:: python
-
-    MeasureX | q[0]
-    Xgate(scale(q[0], sqrt(0.5))) | q[1]
-
-Available classical processing functions include:
-
-.. autosummary::
-    neg
-    mag
-    phase
-    scale
-    shift
-    scale_shift
-    power
-
-If more advanced classical processing is required, custom classical processing
-functions can be created using the :func:`strawberryfields.convert` decorator.
-
-
 NumPy state functions
 ---------------------
 
@@ -141,115 +114,9 @@ import scipy as sp
 from scipy.special import factorial as fac
 
 from .engine import LocalEngine
-from .program_utils import _convert, Command
+from .program_utils import Command
 from .ops import Gate, Channel, Ket
 
-
-# ------------------------------------------------------------------------
-# RegRef convert functions                                              |
-# ------------------------------------------------------------------------
-
-
-@_convert
-def neg(x):
-    r"""Negates a measured value.
-
-    Args:
-        x (RegRef): mode that has been previously measured
-    """
-    return -x
-
-
-@_convert
-def mag(x):
-    r"""Returns the magnitude :math:`|z|` of a measured value.
-
-    Args:
-        x (RegRef): mode that has been previously measured
-    """
-    return np.abs(x)
-
-
-@_convert
-def phase(x):
-    r"""Returns the phase :math:`\phi` of a measured value :math:`z=re^{i\phi}`.
-
-    Args:
-        x (RegRef): mode that has been previously measured
-    """
-    return np.angle(x)
-
-
-def scale(x, a):
-    r"""Scales the measured value by factor ``a``.
-
-    Args:
-        x (RegRef): mode that has been previously measured
-        a (float): scaling factor
-    """
-
-    @_convert
-    def rrt(x):
-        """RegRefTransform function"""
-        return a * x
-
-    return rrt(x)
-
-
-def shift(x, b):
-    r"""Shifts the measured value by factor ``b``.
-
-    Args:
-        x (RegRef): mode that has been previously measured
-        b (float): shifting factor
-    """
-
-    @_convert
-    def rrt(x):
-        """RegRefTransform function"""
-        return b + x
-
-    return rrt(x)
-
-
-def scale_shift(x, a, b):
-    r"""Scales the measured value by factor ``a`` then shifts the result by ``b``.
-
-    .. math:: u' = au + b
-
-    Args:
-        x (RegRef): mode that has been previously measured
-        a (float): scaling factor
-        b (float): shifting factor
-    """
-
-    @_convert
-    def rrt(x):
-        """RegRefTransform function"""
-        return a * x + b
-
-    return rrt(x)
-
-
-def power(x, a):
-    r"""Raises the measured value to power ``a``.
-
-    Args:
-        x (RegRef): mode that has been previously measured
-        a (float): the exponent of x; note that ``a`` can be
-            negative and fractional
-    """
-    if a < 0:
-        tmp = float(a)
-    else:
-        tmp = a
-
-    @_convert
-    def rrt(x):
-        """RegRefTransform function"""
-        return np.power(x, tmp)
-
-    return rrt(x)
 
 
 # ------------------------------------------------------------------------

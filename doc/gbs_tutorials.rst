@@ -25,3 +25,8 @@ Applications layer tutorials
     :tooltip: Point processes
     :description: :doc:`tutorials_gbs/run_tutorial_points`
     :figure: ./_static/points.png
+
+.. customgalleryitem::
+    :tooltip: Vibronic spectra
+    :description: :doc:`tutorials_gbs/run_tutorial_vibronic`
+    :figure: ./_static/thumbs/spectrum.png

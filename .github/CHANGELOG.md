@@ -7,6 +7,22 @@
   currently has algorithms for the densest ``k``-subgraph problem.
   [#164](https://github.com/XanaduAI/strawberryfields/pull/164)
 
+### API Changes
+
+### Improvements
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.11.2
+
+### New features
+
 * Adds the MZgate to ops.py, representing a Mach-Zehnder interferometer. This is
   not a primitive of the existing simulator backends; rather, `_decompose()` is
   defined, decomposing it into an external phase shift, two 50-50 beamsplitters,
@@ -26,7 +42,10 @@
   and provided implementation of this operation in the Gaussian backend.
   [#152](https://github.com/XanaduAI/strawberryfields/pull/152)
 
-* Adds new integration tests for the Gaussian gates that are not primitive, i.e., P, CX, CZ, and S2. Addresses issue [#171](https://github.com/XanaduAI/strawberryfields/issues/171)
+* Programs can now have free parameters/arguments which are only bound to
+  numerical values when the Program is executed, by supplying the actual
+  argument values to the `Engine.run` method.
+  [#163](https://github.com/XanaduAI/strawberryfields/pull/163)
 
 ### API Changes
 
@@ -63,13 +82,25 @@
   be passed the program registers, as compilation may sometimes require this.
   [#127](https://github.com/XanaduAI/strawberryfields/pull/127)
 
+* Parameter class is replaced by `MeasuredParameter` and `FreeParameter`, both inheriting from
+  `sympy.Symbol`. Fixed numeric parameters are handled by the built-in Python numeric
+  classes and numpy arrays.
+  [#163](https://github.com/XanaduAI/strawberryfields/pull/163)
+
+* `Parameter`, `RegRefTransform` and `convert` are removed.
+  [#163](https://github.com/XanaduAI/strawberryfields/pull/163)
+
 ### Improvements
 
 * Photon-counting measurements can now be done in the Gaussian backend for states with nonzero displacement.
   [#154](https://github.com/XanaduAI/strawberryfields/pull/154)
-  
+
 * Added a new test for the cubic phase gate
   [#160](https://github.com/XanaduAI/strawberryfields/pull/160)
+
+* Added new integration tests for the Gaussian gates that are not primitive,
+  i.e., P, CX, CZ, and S2.
+  [#173](https://github.com/XanaduAI/strawberryfields/pull/173)
 
 ### Bug fixes
 
@@ -85,12 +116,12 @@
 * Fixed typo in the Gaussian Boson Sampling example notebook.
   [#133](https://github.com/XanaduAI/strawberryfields/pull/133)
 
-* Fixed a bug in the function `smeanxp` of the Gaussian Backend simulator. 
+* Fixed a bug in the function `smeanxp` of the Gaussian Backend simulator.
   [#154](https://github.com/XanaduAI/strawberryfields/pull/154)
-  
+
 * Clarified description of matrices that are accepted by graph embed operation.
   [#147](https://github.com/XanaduAI/strawberryfields/pull/147)
-  
+
 * Fixed typos in the documentation of the CX gate and BSgate
   [#166](https://github.com/XanaduAI/strawberryfields/pull/166)
   [#167](https://github.com/XanaduAI/strawberryfields/pull/167)

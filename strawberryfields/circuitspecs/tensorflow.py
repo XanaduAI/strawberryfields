@@ -46,8 +46,6 @@ class TFSpecs(CircuitSpecs):
         "LossChannel",
         # single mode gates
         "Dgate",
-        "Xgate",
-        "Zgate",
         "Sgate",
         "Rgate",
         "Vgate",
@@ -68,4 +66,7 @@ class TFSpecs(CircuitSpecs):
         "CXgate": {},
         "CZgate": {},
         "MZgate": {},
+        "Xgate": {},
+        "Zgate": {},
+        "Fouriergate": {},
     }
