@@ -35,6 +35,8 @@ class Chip2Specs(CircuitSpecs):
     local = True
     interactive = False
 
+    sq_amplitude = 1
+
     primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate"}
     decompositions = {
         "Interferometer": {"mesh": "rectangular_symmetric", "drop_identity": False},
@@ -175,9 +177,7 @@ class Chip2Specs(CircuitSpecs):
             raise CircuitError("S2gates do not appear on the correct modes.")
 
         # ensure provided S2gates all have the allowed squeezing values
-        # TODO: update to correct values
-        # TODO: at some point, this should be changed to a range?
-        allowed_sq_value = {(0.0, 0.0), (1.0, 0.0)}
+        allowed_sq_value = {(0.0, 0.0), (self.sq_amplitude, 0.0)}
         sq_params = {(float(cmd.op.p[0]), float(cmd.op.p[1])) for cmd in B}
 
         if not sq_params.issubset(allowed_sq_value):
