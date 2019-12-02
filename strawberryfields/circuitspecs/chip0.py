@@ -33,7 +33,7 @@ class Chip0Specs(CircuitSpecs):
     modes = 4
     remote = True
     local = True
-    interactive = True
+    interactive = False
 
     primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate"}
     decompositions = {
