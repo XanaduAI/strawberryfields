@@ -75,9 +75,9 @@ nbsphinx_epilog = """
 
 sphinx_gallery_conf = {
     # path to your example scripts
-    'examples_dirs': '../examples_gbs',
+    'examples_dirs': '../examples_apps',
     # path where to save gallery generated examples
-    'gallery_dirs': 'tutorials_gbs',
+    'gallery_dirs': 'tutorials_apps',
     # execute files that match the following filename pattern,
     # and skip those that don't. If the following option is not provided,
     # all example scripts in the 'examples_dirs' folder will be skiped.
