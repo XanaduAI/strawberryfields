@@ -16,7 +16,7 @@
 from .base import BaseBackend, BaseFock, BaseGaussian, ModeMap
 from .gaussianbackend import GaussianBackend
 from .fockbackend import FockBackend
-from .chip0backend import Chip0Backend
+
 
 __all__ = [
     "BaseBackend",
@@ -24,18 +24,20 @@ __all__ = [
     "BaseGaussian",
     "FockBackend",
     "GaussianBackend",
-    "TFBackend",
-    "Chip0Backend",
+    "TFBackend"
 ]
 
-supported_backends = {
-    b.short_name: b for b in (BaseBackend, GaussianBackend, FockBackend, Chip0Backend)
+
+virtual_backends = ["chip0", "chip2"]
+
+local_backends = {
+    b.short_name: b for b in (BaseBackend, GaussianBackend, FockBackend)
 }
 
 
 def load_backend(name):
     """Loads the specified backend by mapping a string
-    to the backend type, via the ``supported_backends``
+    to the backend type, via the ``local_backends``
     dictionary. Note that this function is used by the
     frontend only, and should not be user-facing.
     """
@@ -46,8 +48,17 @@ def load_backend(name):
 
         return TFBackend()
 
-    if name in supported_backends:
-        backend = supported_backends[name]()
+    if name in virtual_backends:
+        # Backend is a remote device/simulator, that has a
+        # defined circuit spec, but no local backend class.
+        # By convention, the short name and corresponding
+        # circuit spec are the same.
+        backend_attrs = {"short_name": name, "circuit_spec": name}
+        backend_class = type(name, (BaseBackend,), backend_attrs)
+        return backend_class()
+
+    if name in local_backends:
+        backend = local_backends[name]()
         return backend
 
     raise ValueError("Backend '{}' is not supported.".format(name))
