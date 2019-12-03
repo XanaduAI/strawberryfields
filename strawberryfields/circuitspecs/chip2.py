@@ -18,6 +18,7 @@ import numpy as np
 from numpy.linalg import multi_dot
 from scipy.linalg import block_diag
 
+from strawberryfields.decompositions import mach_zehnder
 from strawberryfields.program_utils import CircuitError, Command, group_operations
 from strawberryfields.parameters import par_evaluate
 import strawberryfields.ops as ops
@@ -37,11 +38,10 @@ class Chip2Specs(CircuitSpecs):
 
     sq_amplitude = 1
 
-    primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate"}
+    primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate", "MZgate"}
     decompositions = {
         "Interferometer": {"mesh": "rectangular_symmetric", "drop_identity": False},
-        "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False},
-        "MZgate": {},
+        "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False}
     }
 
     circuit = textwrap.dedent(
@@ -59,68 +59,20 @@ class Chip2Specs(CircuitSpecs):
         # standard 4x4 interferometer for the signal modes (the lower ones in frequency)
         # even phase indices correspond to external Mach-Zehnder interferometer phases
         # odd phase indices correspond to internal Mach-Zehnder interferometer phases
-        # MZI_0
-        Rgate({phase_0}) | [0]
-        BSgate(pi/4, pi/2) | [0, 1]
-        Rgate({phase_1}) | [0]
-        BSgate(pi/4, pi/2) | [0, 1]
-        # MZI_1
-        Rgate({phase_2}) | [2]
-        BSgate(pi/4, pi/2) | [2, 3]
-        Rgate({phase_3}) | [2]
-        BSgate(pi/4, pi/2) | [2, 3]
-        # MZI_2
-        Rgate({phase_4}) | [1]
-        BSgate(pi/4, pi/2) | [1, 2]
-        Rgate({phase_5}) | [1]
-        BSgate(pi/4, pi/2) | [1, 2]
-        # MZI_3
-        Rgate({phase_6}) | [0]
-        BSgate(pi/4, pi/2) | [0, 1]
-        Rgate({phase_7}) | [0]
-        BSgate(pi/4, pi/2) | [0, 1]
-        # MZI_4
-        Rgate({phase_8}) | [2]
-        BSgate(pi/4, pi/2) | [2, 3]
-        Rgate({phase_9}) | [2]
-        BSgate(pi/4, pi/2) | [2, 3]
-        # MZI_5
-        Rgate({phase_10}) | [1]
-        BSgate(pi/4, pi/2) | [1, 2]
-        Rgate({phase_11}) | [1]
-        BSgate(pi/4, pi/2) | [1, 2]
+        MZgate({phase_0}, {phase_1}) | [0, 1]
+        MZgate({phase_2}, {phase_3}) | [2, 3]
+        MZgate({phase_4}, {phase_5}) | [1, 2]
+        MZgate({phase_6}, {phase_7}) | [0, 1]
+        MZgate({phase_8}, {phase_9}) | [2, 3]
+        MZgate({phase_10}, {phase_11}) | [1, 2]
 
         # duplicate the interferometer for the idler modes (the higher ones in frequency)
-        # MZI_0
-        Rgate({phase_0}) | [4]
-        BSgate(pi/4, pi/2) | [4, 5]
-        Rgate({phase_1}) | [4]
-        BSgate(pi/4, pi/2) | [4, 5]
-        # MZI_1
-        Rgate({phase_2}) | [6]
-        BSgate(pi/4, pi/2) | [6, 7]
-        Rgate({phase_3}) | [6]
-        BSgate(pi/4, pi/2) | [6, 7]
-        # MZI_2
-        Rgate({phase_4}) | [5]
-        BSgate(pi/4, pi/2) | [5, 6]
-        Rgate({phase_5}) | [5]
-        BSgate(pi/4, pi/2) | [5, 6]
-        # MZI_3
-        Rgate({phase_6}) | [4]
-        BSgate(pi/4, pi/2) | [4, 5]
-        Rgate({phase_7}) | [4]
-        BSgate(pi/4, pi/2) | [4, 5]
-        # MZI_4
-        Rgate({phase_8}) | [6]
-        BSgate(pi/4, pi/2) | [6, 7]
-        Rgate({phase_9}) | [6]
-        BSgate(pi/4, pi/2) | [6, 7]
-        # MZI_5
-        Rgate({phase_10}) | [5]
-        BSgate(pi/4, pi/2) | [5, 6]
-        Rgate({phase_11}) | [5]
-        BSgate(pi/4, pi/2) | [5, 6]
+        MZgate({phase_0}, {phase_1}) | [4, 5]
+        MZgate({phase_2}, {phase_3}) | [6, 7]
+        MZgate({phase_4}, {phase_5}) | [5, 6]
+        MZgate({phase_6}, {phase_7}) | [4, 5]
+        MZgate({phase_8}, {phase_9}) | [6, 7]
+        MZgate({phase_10}, {phase_11}) | [5, 6]
 
         # add final dummy phases to allow mapping any unitary to this template (these do not
         # affect the photon number measurement)
@@ -208,7 +160,7 @@ class Chip2Specs(CircuitSpecs):
 
         # Compile the unitary: combine and then decompose all unitaries
         # -------------------------------------------------------------
-        A, B, C = group_operations(seq, lambda x: isinstance(x, (ops.Rgate, ops.BSgate)))
+        A, B, C = group_operations(seq, lambda x: isinstance(x, (ops.Rgate, ops.BSgate, ops.MZgate)))
 
         # begin unitary lists for mode [0, 1, 2, 3] and modes [4, 5, 6, 7] with
         # two identity matrices. This is because multi_dot requires
@@ -231,6 +183,10 @@ class Chip2Specs(CircuitSpecs):
                 if isinstance(cmd.op, ops.Rgate):
                     m = modes[0]
                     U[m % 4, m % 4] = np.exp(1j * params[0])
+
+                elif isinstance(cmd.op, ops.MZgate):
+                    m, n = modes
+                    U = mach_zehnder(m % 4, n % 4, params[0], params[1], self.modes // 2)
 
                 elif isinstance(cmd.op, ops.BSgate):
                     m, n = modes

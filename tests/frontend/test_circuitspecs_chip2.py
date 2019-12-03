@@ -134,8 +134,8 @@ class DummyCircuit(CircuitSpecs):
     remote = False
     local = True
     interactive = True
-    primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate"}
-    decompositions = {"Interferometer": {}, "MZgate": {}}
+    primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate", "MZgate"}
+    decompositions = {"Interferometer": {}}
 
 
 class TestChip2Compilation:
@@ -296,6 +296,29 @@ class TestChip2Compilation:
         with pytest.raises(CircuitError, match="incompatible topology."):
             res = prog.compile("chip2")
 
+    def test_mzgate(self):
+        """Test that combinations of MZgates, Rgates, and BSgates
+        correctly compile."""
+        prog = sf.Program(8)
+        U = random_interferometer(4)
+
+        def unitary(q):
+            ops.MZgate(0.5, 0.1) | (q[0], q[1])
+            ops.BSgate(0.1, 0.2) | (q[1], q[2])
+            ops.Rgate(0.4) | q[0]
+
+        with prog.context as q:
+            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
+            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[5])
+            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[6])
+            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
+
+            unitary(q[:4])
+            unitary(q[4:])
+            ops.MeasureFock() | q
+
+        res = prog.compile("chip2")
+
     def test_no_unitary(self, tol):
         """Test compilation works with no unitary provided"""
         prog = sf.Program(8)
@@ -317,60 +340,24 @@ class TestChip2Compilation:
             ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
 
             # corresponds to an identity on modes [0, 1, 2, 3]
-            ops.Rgate(0) | (q[0])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[0], q[1])
-            ops.Rgate(0) | (q[0])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[0], q[1])
-            ops.Rgate(0) | (q[2])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[2], q[3])
-            ops.Rgate(0) | (q[2])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[2], q[3])
-            ops.Rgate(np.pi) | (q[1])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[1], q[2])
-            ops.Rgate(np.pi) | (q[1])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[1], q[2])
-            ops.Rgate(0) | (q[0])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[0], q[1])
-            ops.Rgate(0) | (q[0])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[0], q[1])
-            ops.Rgate(0) | (q[2])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[2], q[3])
-            ops.Rgate(0) | (q[2])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[2], q[3])
-            ops.Rgate(0) | (q[1])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[1], q[2])
-            ops.Rgate(np.pi) | (q[1])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[1], q[2])
+            ops.MZgate(0, 0) | (q[0], q[1])
+            ops.MZgate(0, 0) | (q[2], q[3])
+            ops.MZgate(np.pi, np.pi) | (q[1], q[2])
+            ops.MZgate(0, 0) | (q[0], q[1])
+            ops.MZgate(0, 0) | (q[2], q[3])
+            ops.MZgate(0, np.pi) | (q[1], q[2])
             ops.Rgate(np.pi) | (q[0])
             ops.Rgate(0) | (q[1])
             ops.Rgate(np.pi) | (q[2])
             ops.Rgate(-np.pi) | (q[3])
 
             # corresponds to an identity on modes [4, 5, 6, 7]
-            ops.Rgate(0) | (q[4])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[4], q[5])
-            ops.Rgate(0) | (q[4])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[4], q[5])
-            ops.Rgate(0) | (q[6])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[6], q[7])
-            ops.Rgate(0) | (q[6])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[6], q[7])
-            ops.Rgate(np.pi) | (q[5])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[5], q[6])
-            ops.Rgate(np.pi) | (q[5])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[5], q[6])
-            ops.Rgate(0) | (q[4])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[4], q[5])
-            ops.Rgate(0) | (q[4])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[4], q[5])
-            ops.Rgate(0) | (q[6])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[6], q[7])
-            ops.Rgate(0) | (q[6])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[6], q[7])
-            ops.Rgate(0) | (q[5])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[5], q[6])
-            ops.Rgate(np.pi) | (q[5])
-            ops.BSgate(np.pi / 4, np.pi / 2) | (q[5], q[6])
+            ops.MZgate(0, 0) | (q[4], q[5])
+            ops.MZgate(0, 0) | (q[6], q[7])
+            ops.MZgate(np.pi, np.pi) | (q[5], q[6])
+            ops.MZgate(0, 0) | (q[4], q[5])
+            ops.MZgate(0, 0) | (q[6], q[7])
+            ops.MZgate(0, np.pi) | (q[5], q[6])
             ops.Rgate(np.pi) | (q[4])
             ops.Rgate(0) | (q[5])
             ops.Rgate(np.pi) | (q[6])
