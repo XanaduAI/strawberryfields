@@ -13,7 +13,7 @@ notebooks/*
 examples/.ipynb_checkpoints/*
 .pytest_cache/*
 pytest/.pytest_cache/
-doc/tutorials_gbs/*
-examples_gbs/*.html
+doc/tutorials_apps/*
+examples_apps/*.html
 doc/_static/thumbs/*
 !doc/_static/code.png
