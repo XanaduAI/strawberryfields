@@ -89,6 +89,7 @@ if __name__ == "__main__":
         sys.exit()
     elif args.hello:
         client = APIClient()
+        client.BASE_URL = "https://platform.strawberryfields.ai/healthz"
         try:
             response = client.get("")
         except Exception as e:
