@@ -130,7 +130,7 @@ class Chip2Specs(CircuitSpecs):
 
         # ensure provided S2gates all have the allowed squeezing values
         allowed_sq_value = {(0.0, 0.0), (self.sq_amplitude, 0.0)}
-        sq_params = {(float(cmd.op.p[0]), float(cmd.op.p[1])) for cmd in B}
+        sq_params = {(float(np.round(cmd.op.p[0], 3)), float(cmd.op.p[1])) for cmd in B}
 
         if not sq_params.issubset(allowed_sq_value):
             wrong_params = sq_params - allowed_sq_value
