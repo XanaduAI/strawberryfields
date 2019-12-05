@@ -128,7 +128,7 @@ The number of photons or clicks in each sample is available using the :meth:`Dat
 For example, we see that the ``data[3]`` sample has 11 clicks.
 
 Code details
-------------
+^^^^^^^^^^^^
 """
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod

@@ -32,7 +32,7 @@ instructions <https://plot.ly/python/getting-started/#installation>`__.
     spectrum
 
 Code details
-------------
+^^^^^^^^^^^^
 """
 # pylint: disable=import-outside-toplevel
 from typing import Optional, Tuple
