@@ -47,7 +47,7 @@ R = np.array([(i, j) for i in range(20) for j in range(20)])
 # The rows of R are the coordinates of the points.
 #
 # Next step is to create the kernel matrix for the points of this discrete space. We call
-# the :func:`~.kernel` function which uses the *radial basis function* (RBF) kernel defined as:
+# the :func:`~.rbf_kernel` function which uses the *radial basis function* (RBF) kernel defined as:
 #
 # .. math::
 #     K_{i,j} = e^{-\|\bf{r}_i-\bf{r}_j\|^2/2\sigma^2},
@@ -70,7 +70,7 @@ R = np.array([(i, j) for i in range(20) for j in range(20)])
 #
 # Let's construct the RBF kernel with the parameter :math:`\sigma` set to 2.5.
 
-K = points.kernel(R, 2.5)
+K = points.rbf_kernel(R, 2.5)
 
 ##############################################################################
 # We generate 10 samples with an average number of 50 points per sample by calling
@@ -120,7 +120,7 @@ R = np.concatenate((clusters, noise))
 ##############################################################################
 # Then construct the kernel matrix and generate 10000 samples.
 
-K = points.kernel(R, 1.0)
+K = points.rbf_kernel(R, 1.0)
 
 samples = points.sample(K, 10.0, 10000)
 
