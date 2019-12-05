@@ -63,11 +63,11 @@ Top-level functions
 Code details
 ~~~~~~~~~~~~
 """
-from .engine import (Engine, LocalEngine)
-from .io import save, load
-from .program import Program
-from ._version import __version__
 from . import apps
+from ._version import __version__
+from .engine import Engine, LocalEngine
+from .io import load, save
+from .program import Program
 
 __all__ = ["Engine", "LocalEngine", "Program", "version", "save", "load", "about", "cite"]
 
