@@ -23,6 +23,17 @@ sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath('.')), 'doc'))
 
+
+class Mock(MagicMock):
+    __name__ = 'foo'
+
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+sys.modules["tensorflow"] = Mock(__version__="1.3")
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -64,9 +75,9 @@ nbsphinx_epilog = """
 
 sphinx_gallery_conf = {
     # path to your example scripts
-    'examples_dirs': '../examples_gbs',
+    'examples_dirs': '../examples_apps',
     # path where to save gallery generated examples
-    'gallery_dirs': 'tutorials_gbs',
+    'gallery_dirs': 'tutorials_apps',
     # execute files that match the following filename pattern,
     # and skip those that don't. If the following option is not provided,
     # all example scripts in the 'examples_dirs' folder will be skiped.
@@ -77,6 +88,7 @@ sphinx_gallery_conf = {
                             "%matplotlib inline"),
     # thumbnail size
     'thumbnail_size': (400, 400),
+    'capture_repr': (),
 }
 
 # Remove warnings that occur when generating the the tutorials

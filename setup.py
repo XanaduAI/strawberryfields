@@ -11,19 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import os
-#!/usr/bin/env python3
 import sys
 
 from setuptools import setup
 
-# from sphinx.setup_command import BuildDoc
 
 with open("strawberryfields/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
-# cmdclass = {'build_docs': BuildDoc}
 
 requirements = [
     "numpy>=1.16.3",
@@ -35,28 +31,23 @@ requirements = [
     "appdirs",
 ]
 
-# extra_requirements = [
-#     "tf": ["tensorflow>=1.3.0,<1.7"],
-#     "tf_gpu": ["tensorflow-gpu>=1.3.0,<1.7"]
-# ]
-
 info = {
     "name": "StrawberryFields",
     "version": version,
     "maintainer": "Xanadu Inc.",
-    "maintainer_email": "nathan@xanadu.ai",
+    "maintainer_email": "software@xanadu.ai",
     "url": "https://github.com/XanaduAI/StrawberryFields",
     "license": "Apache License 2.0",
     "packages": [
         "strawberryfields",
         "strawberryfields.circuitspecs",
+        "strawberryfields.apps",
         "strawberryfields.backends",
         "strawberryfields.backends.tfbackend",
         "strawberryfields.backends.fockbackend",
         "strawberryfields.backends.gaussianbackend",
-        "strawberryfields.gbs",
     ],
-    "package_data": {"strawberryfields": ["backends/data/*", "gbs/data/*"]},
+    "package_data": {"strawberryfields": ["backends/data/*", "apps/data/*"]},
     "include_package_data": True,
     "description": "Open source library for continuous-variable quantum computation",
     "long_description": open("README.rst", encoding="utf-8").read(),

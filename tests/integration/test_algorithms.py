@@ -18,7 +18,7 @@ import numpy as np
 
 import strawberryfields as sf
 from strawberryfields.ops import *
-from strawberryfields.utils import scale
+
 
 @pytest.mark.parametrize('cutoff', [10], indirect=True)  # override default cutoff fixture
 def test_teleportation_fidelity(setup_eng, pure):
@@ -41,8 +41,8 @@ def test_teleportation_fidelity(setup_eng, pure):
         BS | (q[0], q[1])
         MeasureHomodyne(0, select=0.07) | q[0]
         MeasureHomodyne(np.pi / 2, select=0.1) | q[1]
-        Xgate(scale(q[0], s)) | q[2]
-        Zgate(scale(q[1], s)) | q[2]
+        Xgate(s * q[0].par) | q[2]
+        Zgate(s * q[1].par) | q[2]
 
     state = eng.run(prog).state
     fidelity = state.fidelity_coherent([0, 0, alpha])
@@ -228,8 +228,8 @@ class TestGaussianCloning:
         BSgate() | (q[1], q[2])
         MeasureX | q[1]
         MeasureP | q[2]
-        Xgate(scale(q[1], np.sqrt(2))) | q[0]
-        Zgate(scale(q[2], np.sqrt(2))) | q[0]
+        Xgate(q[1].par * np.sqrt(2)) | q[0]
+        Zgate(q[2].par * np.sqrt(2)) | q[0]
         BSgate() | (q[0], q[3])
 
     def test_identical_output(self, setup_eng, tol):

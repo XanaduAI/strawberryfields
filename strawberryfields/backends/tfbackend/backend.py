@@ -128,14 +128,14 @@ class TFBackend(BaseFock):
                 If False, then the circuit is reset to its initial state, but ops that
                 have already been declared are still accessible.
         """
-        hard = kwargs.get('hard', True)
+        hard = kwargs.pop('hard', True)
         if hard:
             tf.reset_default_graph()
             self._graph = tf.get_default_graph()
 
         with tf.name_scope('Reset'):
             self._modemap.reset()
-            self.circuit.reset(pure, graph=self._graph, num_subsystems=self._init_modes, **kwargs)
+            self.circuit.reset(graph=self._graph, num_subsystems=self._init_modes, pure=pure, **kwargs)
 
     def get_cutoff_dim(self):
         return self.circuit.cutoff_dim

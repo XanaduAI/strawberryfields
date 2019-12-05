@@ -1,2 +1,2 @@
 .. automodule:: strawberryfields
-   :members: version, convert, about, cite
+   :members: version, about, cite
