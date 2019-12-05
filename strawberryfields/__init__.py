@@ -86,12 +86,13 @@ def version():
     return __version__
 
 
-def about():  # pylint: disable=import-outside-toplevel
+def about():
     """About box for Strawberry Fields.
 
     Prints the installed version numbers for SF and its dependencies,
     and some system info. Please include this information in bug reports.
     """
+    # pylint: disable=import-outside-toplevel
     import sys
     import platform
     import os
