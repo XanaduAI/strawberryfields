@@ -22,7 +22,8 @@ pytestmark = pytest.mark.apps
 
 
 def test_rbf_kernel():
-    r"""Tests the correctness of the rbf_kernel matrix generated for a given set of point coordinates"""
+    r"""Tests the correctness of the RBF kernel matrix generated for a given set of point
+    coordinates"""
 
     R = np.array([[0, 1], [1, 0], [0, 0], [1, 1]])
     K = rbf_kernel(R, 1.0)
