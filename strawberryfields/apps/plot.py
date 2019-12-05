@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Plotting and visualization
-==========================
+Plotting
+========
 
 **Module name:** :mod:`strawberryfields.apps.plot`
 
