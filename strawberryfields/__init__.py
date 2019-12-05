@@ -67,7 +67,7 @@ from .engine import (Engine, LocalEngine)
 from .io import save, load
 from .program import Program
 from ._version import __version__
-import strawberryfields.apps
+from . import apps
 
 __all__ = ["Engine", "LocalEngine", "Program", "version", "save", "load", "about", "cite"]
 
@@ -86,7 +86,7 @@ def version():
     return __version__
 
 
-def about():
+def about():  # pylint: disable=import-outside-toplevel
     """About box for Strawberry Fields.
 
     Prints the installed version numbers for SF and its dependencies,
