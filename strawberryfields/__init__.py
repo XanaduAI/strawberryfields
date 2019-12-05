@@ -67,6 +67,7 @@ from .engine import (Engine, LocalEngine)
 from .io import save, load
 from .program import Program
 from ._version import __version__
+import strawberryfields.apps
 
 __all__ = ["Engine", "LocalEngine", "Program", "version", "save", "load", "about", "cite"]
 
