@@ -119,20 +119,16 @@ class TFBackend(BaseFock):
 
         Keyword Args:
             cutoff_dim (int): new Hilbert space truncation dimension
-            hard (bool): Whether to reset the underlying TensorFlow graph.
-                If True (default), then resets the underlying tensor graph as well.
-                If False, then the circuit is reset to its initial state, but ops that
-                have already been declared are still accessible.
         """
 
         with tf.name_scope('Reset'):
             self._modemap.reset()
             self.circuit.reset(num_subsystems=self._init_modes, pure=pure, **kwargs)
 
-    def get_cutoff_dim(self):
+    def get_cutoff_dim(self): # TODO: why not a property?
         return self.circuit.cutoff_dim
 
-    def get_modes(self):
+    def get_modes(self): # TODO: why not a property?
         # pylint: disable=protected-access
         return [i for i, j in enumerate(self._modemap._map) if j is not None]
 
@@ -225,9 +221,6 @@ class TFBackend(BaseFock):
         See :meth:`.BaseBackend.state`.
 
         Keyword Args:
-            session (tf.Session): TensorFlow session
-            feed_dict (Dict): Dictionary containing the desired numerical values for Tensors
-                for numerically evaluating the state. Used with ``session``.
 
         Returns:
             FockStateTF: state description
@@ -283,9 +276,6 @@ class TFBackend(BaseFock):
         See :meth:`.BaseFock.measure_fock`.
 
         Keyword Args:
-            session (tf.Session): TensorFlow session
-            feed_dict (Dict): Dictionary containing the desired numerical values for Tensors
-                for numerically evaluating the measurement results. Used with ``session``.
 
         Returns:
             tuple[int] or tuple[Tensor]: measurement outcomes
@@ -304,9 +294,6 @@ class TFBackend(BaseFock):
         See :meth:`.BaseBackend.measure_homodyne`.
 
         Keyword Args:
-            session (tf.Session): TensorFlow session
-            feed_dict (Dict): Dictionary containing the desired numerical values for Tensors
-                for numerically evaluating the measurement results. Used with ``session``.
             num_bins (int): Number of equally spaced bins for the probability distribution function
                 (pdf) simulating the homodyne measurement (default: 100000).
             max (float): The pdf is discretized onto the 1D grid [-max,max] (default: 10).
@@ -325,7 +312,6 @@ class TFBackend(BaseFock):
     def is_vacuum(self, tol=0.0, **kwargs):
         vac_elem = self.circuit.vacuum_element()
         return np.abs(vac_elem-1) <= tol
-        
 
     def del_mode(self, modes):
         with tf.name_scope('Del_mode'):
