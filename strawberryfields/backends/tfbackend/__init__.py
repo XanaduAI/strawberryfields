@@ -163,20 +163,20 @@ pip install tensorflow
 
 tf_info_python = """\
 To use Strawberry Fields with TensorFlow support, version 2.x of TensorFlow is required.
+
+Note that TensorFlow version 2.x is only supported on Python versions 3.5, 3.6 and 3.7.
+To continue using TensorFlow with Strawberry Fields, you will need to install one of these.
+
+The recommended method is to install Anaconda3:
+
+https://www.anaconda.com/download
+
+Once installed, you can then create a Python (say) 3.7 Conda environment:
+
+conda create --name sf_tensorflow_env python=3.7
+conda activate sf_tensorflow_env
+pip install strawberryfields tensorflow
 """
-# Note that TensorFlow version 2.0+ is only supported on Python versions
-# newer than or equal to 3.5. To continue using TensorFlow with Strawberry Fields,
-# you will need to install at least Python 3.5.
-
-# The recommended method is to install Anaconda3:
-
-# https://www.anaconda.com/download
-
-# Once installed, you can then create a Python 3.6 Conda environment:
-
-# conda create --name sf_tensorflow_env python=3.6
-# conda activate sf_tensorflow_env
-# pip install strawberryfields tensorflow==1.3
 
 
 
@@ -189,8 +189,8 @@ def excepthook(type, value, traceback):
 if not (tf_available and tf_version[:2] == "2."):
     sys.excepthook = excepthook
 
-    # if sys.version_info[1] > 6:
-    #     raise ImportError(tf_info_python)
+    if sys.version_info[1] not in {5, 6, 7}:
+        raise ImportError(tf_info_python)
 
     raise ImportError(tf_info)
 

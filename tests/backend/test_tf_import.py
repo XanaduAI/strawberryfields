@@ -44,15 +44,15 @@ class TestBackendImport:
             with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
                 reload(sf.backends.tfbackend)
 
-    # def test_incorrect_python_version(self, monkeypatch):
-    #     """Test that an exception is raised if the version
-    #     of Python installed is > 3.6"""
-    #     with monkeypatch.context() as m:
-    #         m.setattr("sys.version_info", (3, 8, 1))
-    #         m.setattr(tensorflow, "__version__", "1.12.2")
+    def test_incorrect_python_version(self, monkeypatch):
+        """Test that an exception is raised if the version
+        of Python installed is 3.5, 3.6 or 3.7"""
+        with monkeypatch.context() as m:
+            m.setattr("sys.version_info", (3, 8, 1))
+            m.setattr(tensorflow, "__version__", "1.12.2")
 
-    #         with pytest.raises(ImportError, match="you will need to install Python 3.6"):
-    #             reload(sf.backends.tfbackend)
+            with pytest.raises(ImportError, match="only supported on Python versions 3.5, 3.6 and 3.7"):
+                reload(sf.backends.tfbackend)
 
     @pytest.mark.skipif(tf_available, reason="Test only works if TF not installed")
     def test_tensorflow_not_installed(self, monkeypatch):
@@ -71,7 +71,7 @@ class TestFrontendImport:
 
     def test_incorrect_tf_version(self, monkeypatch):
         """Test that an exception is raised if the version
-        of TensorFlow installed is not version 1.x"""
+        of TensorFlow installed is version 2.x"""
         with monkeypatch.context() as m:
             # force Python check to pass
             m.setattr("sys.version_info", (3, 6, 3))
@@ -81,16 +81,16 @@ class TestFrontendImport:
                 reload(sf.backends.tfbackend)
                 sf.LocalEngine('tf')
 
-    # def test_incorrect_python_version(self, monkeypatch):
-    #     """Test that an exception is raised if the version
-    #     of Python installed is > 3.6"""
-    #     with monkeypatch.context() as m:
-    #         m.setattr("sys.version_info", (3, 8, 1))
-    #         m.setattr(tensorflow, "__version__", "1.12.2")
+    def test_incorrect_python_version(self, monkeypatch):
+        """Test that an exception is raised if the version
+        of Python installed is > 3.6"""
+        with monkeypatch.context() as m:
+            m.setattr("sys.version_info", (3, 4, 0))
+            m.setattr(tensorflow, "__version__", "1.12.2")
 
-    #         with pytest.raises(ImportError, match="you will need to install Python 3.6"):
-    #             reload(sf.backends.tfbackend)
-    #             sf.LocalEngine('tf')
+            with pytest.raises(ImportError, match="only supported on Python versions 3.5, 3.6 and 3.7"):
+                reload(sf.backends.tfbackend)
+                sf.LocalEngine('tf')
 
     @pytest.mark.skipif(tf_available, reason="Test only works if TF not installed")
     def test_tensorflow_not_installed(self, monkeypatch):
