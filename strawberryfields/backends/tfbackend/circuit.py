@@ -31,7 +31,6 @@ Contents
 """
 # pylint: disable=too-many-arguments,too-many-statements,too-many-branches,protected-access,attribute-defined-outside-init
 
-import numbers
 from itertools import product
 from string import ascii_lowercase as indices
 
@@ -194,8 +193,6 @@ class Circuit:
         If a keyword arg is not present, the corresponding parameter is unchanged.
 
         Keyword Args:
-            graph (tf.Graph): the underlying graph (and any associated attributes) is replaced with this supplied graph. If None, the same underlying
-              graph (and all its defined operations) will be kept.
             num_subsystems (int): sets the number of modes in the reset circuit.
             pure (bool): if True, the reset circuit will represent its state as a pure state. If False, the representation will be mixed.
             cutoff_dim (int): new Fock space cutoff dimension to use.
@@ -227,13 +224,6 @@ class Circuit:
             self._batch_size = batch_size
             self._batched = (batch_size is not None)
 
-        # if 'graph' in kwargs:
-        #     graph = kwargs['graph']
-        #     if not isinstance(graph, tf.Graph):
-        #         raise ValueError("Argument 'graph' must be a tf.Graph")
-        #     if graph != self._graph:
-        #         self._graph = graph
-        #         ops.get_prefac_tensor.cache_clear() # clear any cached tensors that may live on old graph
         self._state_history = []
         self._cache = {}
 
@@ -466,8 +456,7 @@ class Circuit:
         Args:
             modes (Sequence[int]): which modes to measure (in increasing order).
             select (Sequence[int]): user-specified measurement value (used instead of random sampling)
-            **kwargs: can be used to pass a session or a feed_dict. Otherwise a temporary session
-            and no feed_dict will be used.
+            **kwargs:
 
         Returns:
             A list with the Fock number measurement results for each mode.
@@ -658,8 +647,7 @@ class Circuit:
                 phi (float): phase angle of quadrature to measure
                 mode (int): which mode to measure.
                 select (float): user-specified measurement value (used instead of random sampling)
-                **kwargs: can be used to pass a session or a feed_dict. Otherwise a temporary session
-                and no feed_dict will be used.
+                **kwargs:
 
         Returns:
             The measured value (or a list of measured values when running in batch mode).
@@ -829,11 +817,6 @@ class Circuit:
     def hbar(self):
         """Returns the value of hbar circuit is initialised with"""
         return self._hbar
-
-    # @property
-    # def graph(self):
-    #     """Returns the computational graph"""
-    #     return self._graph
 
     @property
     def batched(self):
