@@ -154,30 +154,30 @@ else:
 
 
 tf_info = """\
-To use Strawberry Fields with TensorFlow support, version 1.3 of TensorFlow is required.
+To use Strawberry Fields with TensorFlow support, version 2.x of TensorFlow is required.
 This can be installed as follows:
 
-pip install tensorflow==1.3
+pip install tensorflow
 """
 
 
 tf_info_python = """\
-To use Strawberry Fields with TensorFlow support, version 1.3 of TensorFlow is required.
-
-Note that TensorFlow version 1.3 is only supported on Python versions
-less than or equal to 3.6. To continue using TensorFlow with Strawberry Fields,
-you will need to install Python 3.6.
-
-The recommended method is to install Anaconda3:
-
-https://www.anaconda.com/download
-
-Once installed, you can then create a Python 3.6 Conda environment:
-
-conda create --name sf_tensorflow_env python=3.6
-conda activate sf_tensorflow_env
-pip install strawberryfields tensorflow==1.3
+To use Strawberry Fields with TensorFlow support, version 2.x of TensorFlow is required.
 """
+# Note that TensorFlow version 2.0+ is only supported on Python versions
+# newer than or equal to 3.5. To continue using TensorFlow with Strawberry Fields,
+# you will need to install at least Python 3.5.
+
+# The recommended method is to install Anaconda3:
+
+# https://www.anaconda.com/download
+
+# Once installed, you can then create a Python 3.6 Conda environment:
+
+# conda create --name sf_tensorflow_env python=3.6
+# conda activate sf_tensorflow_env
+# pip install strawberryfields tensorflow==1.3
+
 
 
 def excepthook(type, value, traceback):
@@ -186,13 +186,13 @@ def excepthook(type, value, traceback):
     print(value)
 
 
-# if not (tf_available and tf_version[:3] == "1.3"):
-#     sys.excepthook = excepthook
+if not (tf_available and tf_version[:2] == "2."):
+    sys.excepthook = excepthook
 
-#     if sys.version_info[1] > 6:
-#         raise ImportError(tf_info_python)
+    # if sys.version_info[1] > 6:
+    #     raise ImportError(tf_info_python)
 
-#     raise ImportError(tf_info)
+    raise ImportError(tf_info)
 
 
 from .backend import TFBackend
