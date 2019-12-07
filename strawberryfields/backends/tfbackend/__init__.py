@@ -111,9 +111,6 @@ returned by the Tensorflow backend. It extends :class:`~.BaseFockState` with add
 unique to the Tensorflow backend. The primary difference between this class and the Base Fock state
 is that its methods and attributes can return either numerical or symbolic values.
 
-The default representation (numerical or symbolic)
-is set when creating the state: :code:`state = eng.run('backend', eval=True/False)`. The representation can also be specified on a per-use basis when calling a method, e.g., :code:`state.mean_photon(eval=True/False)`. Along with the boolean :code:`eval`, acceptable keyword arguments are :code:`session` (a Tensorflow Session object) and :code:`feed_dict` (a dictionary mapping Tensorflow objects to numerical values). These will be used when evaluating any Tensors.
-
 .. currentmodule:: strawberryfields.backends.tfbackend.states.FockStateTF
 
 .. autosummary::
