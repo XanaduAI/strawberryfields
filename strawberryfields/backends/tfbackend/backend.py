@@ -32,7 +32,7 @@ class TFBackend(BaseFock):
     short_name = 'tf'
     circuit_spec = 'tf'
 
-    def __init__(self, graph=None):
+    def __init__(self):
         """Initialize a TFBackend object.
 
         Args:
@@ -42,10 +42,6 @@ class TFBackend(BaseFock):
         self._supported["mixed_states"] = True
         self._supported["batched"] = True
         self._supported["symbolic"] = True
-        if graph is None:
-            self._graph = tf.get_default_graph()
-        else:
-            self._graph = graph
         self._init_modes = None  #: int: initial number of modes in the circuit
         self._modemap = None     #: Modemap: maps external mode indices to internal ones
         self.circuit = None      #: ~.tfbackend.circuit.Circuit: representation of the simulated quantum state
@@ -104,7 +100,7 @@ class TFBackend(BaseFock):
 
         with tf.name_scope('Begin_circuit'):
             self._modemap = ModeMap(num_subsystems)
-            circuit = Circuit(self._graph, num_subsystems, cutoff_dim, pure, batch_size)
+            circuit = Circuit(num_subsystems, cutoff_dim, pure, batch_size)
 
         self._init_modes = num_subsystems
         self.circuit = circuit
@@ -128,14 +124,10 @@ class TFBackend(BaseFock):
                 If False, then the circuit is reset to its initial state, but ops that
                 have already been declared are still accessible.
         """
-        hard = kwargs.pop('hard', True)
-        if hard:
-            tf.reset_default_graph()
-            self._graph = tf.get_default_graph()
 
         with tf.name_scope('Reset'):
             self._modemap.reset()
-            self.circuit.reset(graph=self._graph, num_subsystems=self._init_modes, pure=pure, **kwargs)
+            self.circuit.reset(num_subsystems=self._init_modes, pure=pure, **kwargs)
 
     def get_cutoff_dim(self):
         return self.circuit.cutoff_dim
@@ -277,18 +269,12 @@ class TFBackend(BaseFock):
                 mode_permutation = np.argsort(np.argsort(modes))
                 reduced_state = reorder_modes(reduced_state, mode_permutation, reduced_state_pure, batched)
 
-            evaluate_results, session, feed_dict, close_session = _check_for_eval(kwargs)
-            if evaluate_results:
-                s = session.run(reduced_state, feed_dict=feed_dict)
-                if close_session:
-                    session.close()
-            else:
-                s = reduced_state
+            s = reduced_state
 
             modenames = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
             state_ = FockStateTF(s, len(modes), pure, self.circuit.cutoff_dim,
-                                 graph=self._graph, batched=batched,
-                                 mode_names=modenames, eval=evaluate_results)
+                                 batched=batched,
+                                 mode_names=modenames)
         return state_
 
     def measure_fock(self, modes, shots=1, select=None, **kwargs):
@@ -337,18 +323,9 @@ class TFBackend(BaseFock):
         return meas
 
     def is_vacuum(self, tol=0.0, **kwargs):
-        with tf.name_scope('Is_vacuum'):
-            with self.circuit.graph.as_default():
-                vac_elem = self.circuit.vacuum_element()
-                if "eval" in kwargs and kwargs["eval"] is False:
-                    v = vac_elem
-                else:
-                    sess = tf.Session()
-                    v = sess.run(vac_elem)
-                    sess.close()
-
-            result = np.abs(v-1) <= tol
-        return result
+        vac_elem = self.circuit.vacuum_element()
+        return np.abs(vac_elem-1) <= tol
+        
 
     def del_mode(self, modes):
         with tf.name_scope('Del_mode'):
@@ -362,13 +339,3 @@ class TFBackend(BaseFock):
         with tf.name_scope('Add_mode'):
             self.circuit.add_mode(n)
             self._modemap.add(n)
-
-    @property
-    def graph(self):
-        """
-        Get the Tensorflow Graph object where the current quantum circuit is defined.
-
-        Returns:
-            tf.Graph: the circuit's graph
-        """
-        return self._graph
