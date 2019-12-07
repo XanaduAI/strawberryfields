@@ -48,7 +48,7 @@ eng_backend_params = [
 ]
 
 
-if tf_available and tf.__version__[:3] == "1.3":
+if tf_available and tf.__version__[:3] == "2.0":
     from strawberryfields.backends.tfbackend import TFBackend
 
     backend_params.append(pytest.param(TFBackend, marks=pytest.mark.tf))
