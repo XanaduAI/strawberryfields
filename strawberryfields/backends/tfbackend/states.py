@@ -97,8 +97,8 @@ class FockStateTF2batched(BaseFockState):
         phi_arr = np.exp(1j*N*phi)
 
         rho = phi_arr[None, :]*self.reduced_dm(mode)*np.conj(phi_arr[:, None])
-        avg = tf.real(tf.linalg.diag_part(rho, k=1))@a
-        avg2 = (1 + 2*N@tf.real(tf.linalg.diag_part(rho)) + 2*a2@tf.real(tf.linalg.diag_part(rho, k=2)))/4
+        avg = tf.math.real(tf.linalg.diag_part(rho, k=1))@a
+        avg2 = (1 + 2*N@tf.math.real(tf.linalg.diag_part(rho)) + 2*a2@tf.math.real(tf.linalg.diag_part(rho, k=2)))/4
 
         return avg, avg2 - avg**2
 
@@ -185,12 +185,12 @@ class FockStateTF(BaseFockState):
             s = tf.expand_dims(s, 0) # insert fake batch dimension
         if self.is_pure:
             flat_state = tf.reshape(s, [-1, self.cutoff_dim ** self.num_modes])
-            tr = tf.reduce_sum(flat_state * tf.conj(flat_state), 1)
+            tr = tf.reduce_sum(flat_state * tf.math.conj(flat_state), 1)
         else:
             # hack because tensorflow einsum doesn't allow partial trace
             tr = s
             for _ in range(self.num_modes):
-                tr = tf.trace(tr)
+                tr = tf.linalg.trace(tr)
         if not self.batched:
             tr = tf.squeeze(tr, 0) # drop fake batch dimension
 
@@ -233,7 +233,7 @@ class FockStateTF(BaseFockState):
         if not self.batched:
             prob = tf.squeeze(prob, 0)  # drop fake batch dimension
 
-        prob = tf.real(prob)
+        prob = tf.math.real(prob)
         prob = tf.identity(prob, name="fock_prob")
 
         return prob
@@ -264,18 +264,18 @@ class FockStateTF(BaseFockState):
         if self.is_pure:
             probs = tf.abs(state) ** 2
         else:
-            # convert to index scheme compatible with tf.diag_part
+            # convert to index scheme compatible with tf.linalg.diag_part
             rng = np.arange(1, 2 * self.num_modes + 1, 2)
             perm = np.concatenate([[0], rng, rng + 1])
             perm_state = tf.transpose(state, perm)
-            probs = tf.map_fn(tf.diag_part, perm_state) # diag_part doesn't work with batches, need to use map_fn
+            probs = tf.map_fn(tf.linalg.tensor_diag_part, perm_state) # diag_part doesn't work with batches, need to use map_fn
 
         if not self.batched:
             probs = tf.squeeze(probs, 0)  # drop fake batch dimension
 
         probs = tf.identity(probs, name="all_fock_probs")
 
-        return probs
+        return probs.numpy()
 
     def fidelity(self, other_state, mode, **kwargs):
         r"""
@@ -297,11 +297,11 @@ class FockStateTF(BaseFockState):
             other_state = tf.expand_dims(other_state, 0) # add batch dimension for state
 
         other_state = tf.cast(other_state, def_type)
-        state_dm = tf.einsum('bi,bj->bij', tf.conj(other_state), other_state)
+        state_dm = tf.einsum('bi,bj->bij', tf.math.conj(other_state), other_state)
         flat_state_dm = tf.reshape(state_dm, [1, -1])
         flat_rho = tf.reshape(rho, [-1, self.cutoff_dim ** 2])
 
-        f = tf.real(tf.reduce_sum(flat_rho * flat_state_dm, axis=1)) # implements a batched tr(rho|s><s|)
+        f = tf.math.real(tf.reduce_sum(flat_rho * flat_state_dm, axis=1)) # implements a batched tr(rho|s><s|)
 
         if not self.batched:
             f = tf.squeeze(f, 0) # drop fake batch dimension
@@ -372,7 +372,7 @@ class FockStateTF(BaseFockState):
         """
         mode_size = 1 if self.is_pure else 2
         if self.batched:
-            vac_elem = tf.real(tf.reshape(self.data, [-1, self.cutoff_dim ** (self.num_modes * mode_size)])[:, 0])
+            vac_elem = tf.math.real(tf.reshape(self.data, [-1, self.cutoff_dim ** (self.num_modes * mode_size)])[:, 0])
         else:
             vac_elem = tf.abs(tf.reshape(self.data, [-1])[0]) ** 2
 
@@ -451,7 +451,7 @@ class FockStateTF(BaseFockState):
         a, ad = ladder_ops(larger_cutoff)
         x = np.sqrt(self._hbar / 2.) * (a + ad)
         x = tf.expand_dims(tf.cast(x, def_type), 0) # add batch dimension to x
-        quad = tf.conj(R) @ x @ R
+        quad = tf.math.conj(R) @ x @ R
         quad2 = (quad @ quad)[:, :self.cutoff_dim, :self.cutoff_dim]
         quad = quad[:, :self.cutoff_dim, :self.cutoff_dim] # drop highest dimension; remaining array gives correct truncated x**2
 
@@ -462,8 +462,8 @@ class FockStateTF(BaseFockState):
         flat_quad = tf.reshape(quad, [1, self.cutoff_dim ** 2])
         flat_quad2 = tf.reshape(quad2, [1, self.cutoff_dim ** 2])
 
-        e = tf.real(tf.reduce_sum(flat_rho * flat_quad, axis=1)) # implements a batched tr(rho * x)
-        e2 = tf.real(tf.reduce_sum(flat_rho * flat_quad2, axis=1)) # implements a batched tr(rho * x ** 2)
+        e = tf.math.real(tf.reduce_sum(flat_rho * flat_quad, axis=1)) # implements a batched tr(rho * x)
+        e2 = tf.math.real(tf.reduce_sum(flat_rho * flat_quad2, axis=1)) # implements a batched tr(rho * x ** 2)
         v = e2 - e ** 2
 
         if not self.batched:
@@ -496,8 +496,8 @@ class FockStateTF(BaseFockState):
 
         flat_rho = tf.reshape(rho, [-1, self.cutoff_dim ** 2])
 
-        nbar = tf.real(tf.reduce_sum(flat_rho * flat_n, axis=1)) # implements a batched tr(rho * n)
-        nbarSq = tf.real(tf.reduce_sum(flat_rho * flat_n**2, axis=1)) # implements a batched tr(rho * n^2)
+        nbar = tf.math.real(tf.reduce_sum(flat_rho * flat_n, axis=1)) # implements a batched tr(rho * n)
+        nbarSq = tf.math.real(tf.reduce_sum(flat_rho * flat_n**2, axis=1)) # implements a batched tr(rho * n^2)
         var = nbarSq - nbar**2
 
         if not self.batched:
@@ -547,7 +547,7 @@ class FockStateTF(BaseFockState):
             right_str = [batch_index] + [free_indices[i] for i in range(1, 2 * self.num_modes, 2)]
             out_str = [batch_index] + [free_indices[: 2 * self.num_modes]]
             einstr = ''.join(left_str + [','] + right_str + ['->'] + out_str)
-            s = tf.einsum(einstr, ket, tf.conj(ket))
+            s = tf.einsum(einstr, ket, tf.math.conj(ket))
         else:
             s = tf.identity(self.data, name="density_matrix")
 
