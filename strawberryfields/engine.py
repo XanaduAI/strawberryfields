@@ -358,12 +358,6 @@ class LocalEngine(BaseEngine):
             shots (int): number of times the program measurement evaluation is repeated
             modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
                 ``None`` returns all the modes (default). An empty sequence means no state object is returned.
-            eval (bool): If False, the backend returns unevaluated tf.Tensors instead of
-                numbers/arrays for returned measurement results and state (default: True). TF backend only.
-            session (tf.Session): TensorFlow session, used when evaluating returned measurement results and state.
-                TF backend only.
-            feed_dict (dict[str, Any]): TensorFlow feed dictionary, used when evaluating returned measurement results
-                and state. TF backend only.
         """
         args = args or {}
         compile_options = compile_options or {}
@@ -384,7 +378,7 @@ class LocalEngine(BaseEngine):
         temp_run_options.setdefault('modes', None)
 
         # avoid unexpected keys being sent to Operations
-        eng_run_keys = ["eval", "session", "feed_dict", "shots"]
+        eng_run_keys = ["shots"] #NOTE: used to contain "session", "feed_dict" and "eval" (from TF 1.x)
         eng_run_options = {key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys}
 
         result = super()._run(program, args=args, compile_options=compile_options, **eng_run_options)
