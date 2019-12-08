@@ -331,7 +331,7 @@ class TestExtractUnitary:
         expected = np.diag(np.exp(1j * kappa * np.arange(cutoff) ** 2))
 
         if isinstance(U, tf.Tensor):
-            U = tf.Session().run(U)
+            U = U.numpy()
 
         assert np.allclose(U, expected, atol=tol, rtol=0)
 
@@ -349,7 +349,7 @@ class TestExtractUnitary:
         expected = sq_U(r, phi, cutoff)
 
         if isinstance(U, tf.Tensor):
-            U = tf.Session().run(U)
+            U = U.numpy()
 
         assert np.allclose(U, expected, atol=tol, rtol=0)
 
@@ -364,7 +364,7 @@ class TestExtractUnitary:
         expected = disp_U(alpha, cutoff)
 
         if isinstance(U, tf.Tensor):
-            U = tf.Session().run(U)
+            U = U.numpy()
 
         assert np.allclose(U, expected, atol=tol, rtol=0)
 
@@ -380,7 +380,7 @@ class TestExtractUnitary:
         expected = bs_U(np.cos(theta), np.sin(theta), phi, cutoff)
 
         if isinstance(U, tf.Tensor):
-            U = tf.Session().run(U)
+            U = U.numpy()
 
         assert np.allclose(U, expected, atol=tol, rtol=0)
 
@@ -406,19 +406,16 @@ class TestExtractUnitary:
         U = utils.extract_unitary(prog, cutoff_dim=cutoff, backend=eng_ref.backend_name)
 
         if isinstance(U, tf.Tensor):
-            with tf.Session() as sess:
-                sess.run(tf.global_variables_initializer())
-                in_state = tf.constant(initial_state.reshape([-1]), dtype=tf.complex64)
-                final_state = sess.run(tf.einsum("ab,b", U, in_state))
-        else:
-            final_state = U @ initial_state
+            U = U.numpy()
+        
+        final_state = U @ initial_state
 
         expected_state = eng_ref.run([p0, prog]).state.ket()
+        
         assert np.allclose(final_state, expected_state, atol=tol, rtol=0)
 
     def test_extract_arbitrary_unitary_two_modes_vectorized(
-        self, setup_eng, cutoff, batch_size, tol
-    ):
+            self, setup_eng, cutoff, batch_size, tol):
         """Test that arbitrary unitary extraction works for 2 mode when vectorized"""
         bsize = 1
         if batch_size is not None:
@@ -451,15 +448,15 @@ class TestExtractUnitary:
         )
 
         if isinstance(U, tf.Tensor):
-            final_state = tf.Session().run(
-                tf.einsum("ab,b", U, tf.constant(initial_state.reshape([-1])))
-            )
-            final_state = np.tile(final_state, bsize)
-        else:
-            final_state = U @ initial_state.reshape([-1])
+            U = U.numpy()
 
-        expected_state = eng_ref.run([p0, prog]).state.ket().reshape([-1])
-        assert np.allclose(final_state, expected_state, atol=tol, rtol=0)
+        final_state = U @ initial_state.reshape([-1])
+        expected_state = eng_ref.run([p0, prog]).state.ket()
+        
+        if isinstance(expected_state, tf.Tensor):
+            expected_state = expected_state.numpy()
+
+        assert np.allclose(final_state, expected_state.reshape([-1]), atol=tol, rtol=0)
 
     def test_extract_arbitrary_unitary_two_modes_not_vectorized(
         self, setup_eng, cutoff, tol
