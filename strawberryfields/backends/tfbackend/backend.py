@@ -23,7 +23,7 @@ import tensorflow as tf
 
 from strawberryfields.backends import BaseFock, ModeMap
 from .circuit import Circuit
-from .ops import _check_for_eval, mixed, partial_trace, reorder_modes
+from .ops import mixed, partial_trace, reorder_modes
 from .states import FockStateTF
 
 class TFBackend(BaseFock):
