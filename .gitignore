@@ -17,3 +17,4 @@ doc/tutorials_gbs/*
 examples_gbs/*.html
 doc/_static/thumbs/*
 !doc/_static/code.png
+.vscode/settings.json
