@@ -380,9 +380,9 @@ class Circuit:
         """
         z = tf.cast(z, ops.def_type)
         r = tf.abs(z)
-        x = tf.real(z)
-        y = tf.imag(z)
-        theta = tf.atan2(y, x)
+        x = tf.math.real(z)
+        y = tf.math.imag(z)
+        theta = tf.math.atan2(y, x)
         r = self._maybe_batch(r)
         theta = self._maybe_batch(theta)
         self._check_incompatible_batches(r, theta)
@@ -533,7 +533,7 @@ class Circuit:
                 # in this case, measure directly on the pure state
                 probs = tf.abs(self._state) ** 2
                 logprobs = tf.math.log(probs)
-                sample = tf.multinomial(tf.reshape(logprobs, [batch_size, -1]), 1)
+                sample = tf.random.categorical(tf.reshape(logprobs, [batch_size, -1]), 1)
                 sample_tensor = tf.squeeze(sample)
             else:
                 # otherwise, trace out unmeasured modes and sample using diagonal of reduced state
@@ -561,9 +561,9 @@ class Circuit:
                     diag_indices = [self._batch_size] + diag_indices
                 diag_tensor = tf.reshape(reduced_state_reshuffled, diag_indices)
                 diag_entries = tf.linalg.diag_part(diag_tensor)
-                # hack so we can use tf.multinomial for sampling
+                # hack so we can use tf.random.categorical for sampling
                 logprobs = tf.math.log(tf.cast(diag_entries, tf.float64))
-                sample = tf.multinomial(tf.reshape(logprobs, [batch_size, -1]), 1)
+                sample = tf.random.categorical(tf.reshape(logprobs, [batch_size, -1]), 1)
                 # sample is a single integer; we need to convert it to the corresponding [n0,n1,n2,...]
                 sample_tensor = tf.squeeze(sample)
 
@@ -599,7 +599,7 @@ class Circuit:
                 r = conditional_state
                 for _ in range(self._num_modes - num_reduced_state_modes - 1):
                     r = ops.partial_trace(r, 0, False, self._batched)
-                norm = tf.trace(r)
+                norm = tf.linalg.trace(r)
 
             # for broadcasting
             norm_reshape = [1] * len(conditional_state.shape[batch_offset:])
@@ -731,9 +731,9 @@ class Circuit:
                                     * tf.exp(- x ** 2) \
                                     * (q_tensor[1] - q_tensor[0]) # Delta_q for normalization (only works if the bins are equally spaced)
 
-            # use tf.multinomial to sample
-            logprobs = tf.log(rho_dist)
-            samples_idx = tf.multinomial(logprobs, 1)
+            # use tf.random.categorical to sample
+            logprobs = tf.math.log(rho_dist)
+            samples_idx = tf.random.categorical(logprobs, 1)
             homodyne_sample = tf.gather(q_tensor, samples_idx)
             homodyne_sample = tf.squeeze(homodyne_sample)
 
@@ -764,7 +764,7 @@ class Circuit:
                 r = conditional_state
                 for _ in range(self._num_modes - 2):
                     r = ops.partial_trace(r, 0, False, self._batched)
-                norm = tf.trace(r)
+                norm = tf.linalg.trace(r)
 
             # for broadcasting
             norm_reshape = [1] * len(conditional_state.shape[batch_offset:])
