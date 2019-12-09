@@ -301,10 +301,7 @@ html_theme_options = {
 
     # Set the name of the project to appear in the left sidebar.
     "project_nav_name": "Strawberry Fields",
-    "project_logo": "_static/strawberry_fields.png",
     "touch_icon": "_static/logo_new.png",
-    "touch_icon_small": "_static/logo_new_small.png",
-    "large_toc": True,
 
     # Set GA account ID to enable tracking
     "google_analytics_account": "UA-116279123-2",

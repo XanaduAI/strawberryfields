@@ -30,3 +30,11 @@ Applications layer tutorials
     :tooltip: Vibronic spectra
     :description: :doc:`tutorials_apps/run_tutorial_vibronic`
     :figure: ./_static/thumbs/spectrum.png
+
+
+.. raw:: html
+
+    <div style='clear:both'></div>
+    <script type="text/javascript">
+        $("#right-column" ).removeClass("card");
+    </script>
