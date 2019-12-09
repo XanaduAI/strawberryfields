@@ -180,3 +180,9 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    code/apps/plot
    code/apps/data
 
+
+.. raw:: html
+
+    <script type="text/javascript">
+        $("#right-column" ).removeClass("card");
+    </script>
