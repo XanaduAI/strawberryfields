@@ -48,7 +48,6 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
-    # 'sphinx.ext.imgmath',
     'sphinx.ext.napoleon',
     'sphinx.ext.inheritance_diagram',
     'sphinx.ext.viewcode',
@@ -63,7 +62,7 @@ from glob import glob
 import shutil
 import warnings
 
-mathjax_path = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+mathjax_path = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
 
 # nbsphinx settings
 
@@ -72,6 +71,7 @@ nbsphinx_execute = 'never'
 nbsphinx_epilog = """
 .. note:: :download:`Click here <../../{{env.docname}}.ipynb>` to download this gallery page as an interactive Jupyter notebook.
 """
+nbsphinx_requirejs_path = ""
 
 sphinx_gallery_conf = {
     # path to your example scripts
