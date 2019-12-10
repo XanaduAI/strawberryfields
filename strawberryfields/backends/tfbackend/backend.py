@@ -34,9 +34,6 @@ class TFBackend(BaseFock):
 
     def __init__(self):
         """Initialize a TFBackend object.
-
-        Args:
-            graph (tf.Graph): optional Tensorflow Graph object where circuit should be defined
         """
         super().__init__()
         self._supported["mixed_states"] = True
