@@ -1,5 +1,0 @@
-\Qcircuit @C=1.5em @R=1em {
-     \lstick{q_0:~\ket{\psi}~} & \qw & \multigate{1}{BS}  & \meter & \control\cw\cwx[2] & \rstick{\hspace{-0.8cm}\ket{x}\bra{x}=m_1}\\
-     \lstick{q_1:~\ket{0}_p} & \multigate{1}{BS} & \ghost{BS} & \meter & \cw& \control\cw\cwx[1] &  \rstick{\hspace{-0.6cm}\ket{p}\bra{p}=m_2}\\
-     \lstick{q_2:~\ket{0}_x} & \ghost{BS} & \qw & \qw & \gate{X} & \gate{Z} & \qw &\rstick{\hspace{-0.5cm}\ket{\psi}}
-}
