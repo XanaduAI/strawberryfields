@@ -17,6 +17,12 @@ assets in a market, or mutually influential proteins in a biological network.
     :description: :doc:`../tutorials_apps/run_tutorial_dense`
     :figure: ../_static/dense.png
 
+
+.. raw:: html
+
+    <div style='clear:both'></div>
+
+
 Maximum clique
 --------------
 
@@ -29,6 +35,11 @@ short, asks the question: given a graph :math:`G`, what is the largest clique in
     :description: :doc:`../tutorials_apps/run_tutorial_max_clique`
     :figure: ../_static/max_clique.png
 
+
+.. raw:: html
+
+    <div style='clear:both'></div>
+
 Graph similarity
 ----------------
 
@@ -40,3 +51,8 @@ such as classification using a support vector machine.
     :tooltip: Graphs similarity
     :description: :doc:`../tutorials_apps/run_tutorial_similarity`
     :figure: ../_static/similarity_svm.png
+
+
+.. raw:: html
+
+    <div style='clear:both'></div>
