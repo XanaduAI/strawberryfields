@@ -1,0 +1,2 @@
+.. automodule:: strawberryfields.ops
+   :members:
