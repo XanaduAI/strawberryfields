@@ -1,0 +1,14 @@
+appdirs
+ipykernel
+nbsphinx
+networkx>=2.0
+numpy>=1.16.3
+plotly
+quantum-blackbird
+scipy>=1.0.0
+sklearn
+sphinx-autodoc-typehints
+sphinx-gallery
+sphinxcontrib-bibtex==0.4.2
+thewalrus>=0.7
+toml

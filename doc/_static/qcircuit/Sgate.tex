@@ -1,0 +1,16 @@
+\documentclass[11pt]{article}
+\input{Qcircuit}
+\renewcommand{\Qcircuit}[1][0em]{\xymatrix @*=<#1>}
+\newcommand{\Rgate}{\Qcircuit @C=0.5em @R=.7em {& \gate{R} & \qw}}
+\newcommand{\Dgate}{\Qcircuit @C=0.5em @R=.7em {& \gate{D} & \qw}}
+\newcommand{\Sgate}{\Qcircuit @C=0.5em @R=.7em {& \gate{S} & \qw}}
+\newcommand{\BSgate}{\Qcircuit @C=0.5em @R=.7em {
+& \multigate{1}{BS} & \qw \\
+& \ghost{BS}& \qw 
+}}
+\newcommand{\Vgate}{\Qcircuit @C=0.5em @R=.7em {& \gate{V} & \qw}}
+
+\begin{document}
+\Sgate
+\thispagestyle{empty} % make sure no other junk shows up
+\end{document}

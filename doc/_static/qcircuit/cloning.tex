@@ -1,0 +1,12 @@
+\begin{picture}(100,100)
+\put(0,0){
+\Qcircuit @C=1.5em @R=1em {
+	\lstick{q_0:~\ket{\alpha_0}} &  \multigate{1}{BS} &\qw & \gate{X} & \gate{Z} &\multigate{3}{BS}& \qw&\rstick{\hspace{-0.5cm}\ket{\alpha'}_1}\\
+	\lstick{q_1:~\ket{0}} &\ghost{BS} & \multigate{1}{BS} &  \meter  \cwx[-1] &  \\
+	\lstick{q_2:~\ket{0}} & \qw & \ghost{BS} &\meter  & \control\cw\cwx[-2] &\\
+	\lstick{q_3:~\ket{0}} & \qw & \qw & \qw & \qw & \ghost{BS} & \qw &\rstick{\hspace{-0.5cm}\ket{\alpha'}_3}
+}
+}
+\put(81,-20){\footnotesize$\hat{x}$}
+\put(81,-41){\footnotesize$\hat{p}$}
+\end{picture}
