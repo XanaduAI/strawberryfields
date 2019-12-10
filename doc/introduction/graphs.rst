@@ -39,20 +39,3 @@ short, asks the question: given a graph :math:`G`, what is the largest clique in
 .. raw:: html
 
     <div style='clear:both'></div>
-
-Graph similarity
-----------------
-
-GBS can be used to construct a similarity measure between graphs, known as a graph kernel
-:cite:`schuld2019quantum`. Kernels can be applied to graph-based data for machine learning tasks
-such as classification using a support vector machine.
-
-.. customgalleryitem::
-    :tooltip: Graphs similarity
-    :description: :doc:`../tutorials_apps/run_tutorial_similarity`
-    :figure: ../_static/similarity_svm.png
-
-
-.. raw:: html
-
-    <div style='clear:both'></div>
