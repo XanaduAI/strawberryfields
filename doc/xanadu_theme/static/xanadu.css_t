@@ -1204,12 +1204,14 @@ div.topic.contents > ul > li {
 .admonition.note,
 .admonition.hint {
   border-left-color: #31708f;
-  background-color: #dae1f0;
+  /*background-color: #dae1f0;*/
+  background-color: #eaffe4;
 }
 
 .admonition.note .admonition-title,
 .admonition.hint .admonition-title {
-  color: #31708f;
+  /*color: #31708f;*/
+  color: #318f4d;
 }
 
 .admonition-todo {
