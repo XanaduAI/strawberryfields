@@ -17,5 +17,7 @@ doc/tutorials_apps/*
 examples_apps/*.html
 doc/_static/thumbs/*
 !doc/_static/code.png
-.vscode/settings.json
+.vscode
 .ipynb_checkpoints
+Pipfile
+Pipfile.lock
