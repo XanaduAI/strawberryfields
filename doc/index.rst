@@ -123,10 +123,22 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
 
 .. toctree::
    :maxdepth: 1
+   :caption: Using Strawberry Fields
+   :hidden:
+
+   introduction/installing
+   introduction/introduction
+   introduction/graphs
+   introduction/ml
+   introduction/chemistry
+   introduction/sampling
+   introduction/tutorials
+
+.. toctree::
+   :maxdepth: 1
    :caption: Getting started
    :hidden:
 
-   installing
    gallery/gallery
    research
 

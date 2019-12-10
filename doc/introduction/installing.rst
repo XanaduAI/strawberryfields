@@ -1,7 +1,7 @@
 .. _installation:
 
-Installation and downloads
-#################################
+Install
+#######
 
 .. .. include:: ../README.rst
    :start-line: 6
