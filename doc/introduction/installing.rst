@@ -61,7 +61,7 @@ Installation
     <div class="container <!--mt-5 pt-5-->" id="main-column">
         <div class="text-center">
             <!--<h1>Install StrawberryFields</h1>-->
-            <p class="lead grey-text w-responsive mx-auto">PennyLane supports Python 3.5 or newer.</p>
+            <p class="lead grey-text w-responsive mx-auto">Strawberry Fields supports Python 3.5 or newer.</p>
             <p class="lead grey-text w-responsive mx-auto mb-5">If you currently do not have Python 3 installed, we recommend <a href="https://www.anaconda.com/download/">Anaconda for Python 3</a>, a distributed version of Python packaged for scientific computation.</p>
         </div>
 
@@ -83,16 +83,16 @@ Installation
             <div class="tab-pane in show active" id="stable" role="tabpanel">
                 <pre>
                     <code class="bash">
-    # install the latest released version of PennyLane
-    pip install pennylane --upgrade
+    # install the latest released version of Strawberry Fields
+    pip install strawberryfields --upgrade
                     </code>
                 </pre>
             </div>
             <div class="tab-pane slide" id="preview" role="tabpanel">
                 <pre>
                     <code class="bash">
-    # install the latest development version of PennyLane
-    pip install git+https://github.com/XanaduAI/pennylane.git#egg=pennylane
+    # install the latest development version of Strawberry Fields
+    pip install git+https://github.com/XanaduAI/strawberryfields.git#egg=strawberryfields
                     </code>
                 </pre>
             </div>
@@ -100,8 +100,8 @@ Installation
                 <pre>
                     <code class="bash">
     # download and install the latest source code from GitHub
-    git clone https://github.com/XanaduAI/pennylane.git
-    cd pennylane
+    git clone https://github.com/XanaduAI/strawberryfields.git
+    cd strawberryfields
     pip install -e .
                     </code>
                 </pre>
