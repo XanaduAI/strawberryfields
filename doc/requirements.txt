@@ -1,5 +1,6 @@
 appdirs
 ipykernel
+sphinx==2.2.2
 nbsphinx
 networkx>=2.0
 numpy>=1.16.3

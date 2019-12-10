@@ -38,6 +38,24 @@ optical circuits.
 .. raw:: html
 
     <h2 style="margin-top:0px;">Features</h2>
+    <style>
+        #right-column.card {
+            box-shadow: none!important;
+        }
+        #right-column.card:hover {
+            box-shadow: none!important;
+        }
+        .breadcrumb {
+            display: none;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .footer-relations {
+            border-top: 0px;
+        }
+    </style>
 
 .. image:: _static/code.png
     :align: left
@@ -144,6 +162,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    code/program
    code/engine
    code/ops
+   code/parameters
    code/io
    code/circuitspecs
    code/decompositions
@@ -168,11 +187,13 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    :caption: Applications Layer
    :hidden:
 
-   code/gbs/sample
-   code/gbs/subgraph
-   code/gbs/clique
-   code/gbs/similarity
-   code/gbs/plot
-   code/gbs/points
-   code/gbs/data
-   gbs_tutorials
+   gbs_intro
+   apps_tutorials
+   code/apps/sample
+   code/apps/subgraph
+   code/apps/clique
+   code/apps/similarity
+   code/apps/points
+   code/apps/vibronic
+   code/apps/plot
+   code/apps/data
