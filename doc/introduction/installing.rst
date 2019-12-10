@@ -1,7 +1,7 @@
 .. _installation:
 
 Install
-#######
+=======
 
 .. .. include:: ../README.rst
    :start-line: 6
