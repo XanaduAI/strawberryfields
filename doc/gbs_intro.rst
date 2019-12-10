@@ -105,7 +105,7 @@ with :math:`k = \sum_{i}s_{i}`.
 The GBS applications layer includes functions for sampling from GBS devices that are programmed
 in this manner. It also includes a function for sampling more general Gaussian states, which
 are useful for applications to quantum chemistry. These functions can be found in the
-:mod:`~.gbs.sample` module.
+:mod:`~.apps.sample` module.
 
 GBS algorithms work by choosing a clever way of encoding problems into a GBS device and
 generating many samples, which are then be post-processed by classical techniques. The

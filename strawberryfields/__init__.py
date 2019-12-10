@@ -63,10 +63,11 @@ Top-level functions
 Code details
 ~~~~~~~~~~~~
 """
-from .engine import (Engine, LocalEngine)
-from .io import save, load
-from .program import Program
+from . import apps
 from ._version import __version__
+from .engine import Engine, LocalEngine
+from .io import load, save
+from .program import Program
 
 __all__ = ["Engine", "LocalEngine", "Program", "version", "save", "load", "about", "cite"]
 
@@ -91,6 +92,7 @@ def about():
     Prints the installed version numbers for SF and its dependencies,
     and some system info. Please include this information in bug reports.
     """
+    # pylint: disable=import-outside-toplevel
     import sys
     import platform
     import os
