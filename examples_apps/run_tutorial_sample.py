@@ -2,11 +2,11 @@
 """
 .. _apps-sample-tutorial:
 
-Sampling Tutorial
-=================
+Sampling
+========
 
-This tutorial provides a quick guide to generating samples from GBS simulators. This
-functionality is provided in the :mod:`~.apps.sample` module of the applications layer.
+Quantum devices provide a natural source of programmable randomness, useful for a range of tasks
+from network analysis to chemistry.
 
 Sampling from GBS
 -----------------
@@ -17,6 +17,8 @@ detection used at the output: threshold detection or photon-number resolving (PN
 Threshold detectors are restricted to measuring whether photons have arrived at the detector,
 whereas PNR detectors are able to count the number of photons. Photon loss can also be specified
 with the ``loss`` argument.
+
+Sampling functionality is provided in the :mod:`~.apps.sample` module of the applications layer.
 
 Let's take a look at both types of sampling methods. We can generate samples from a random
 5-dimensional symmetric matrix:
