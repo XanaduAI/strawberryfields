@@ -31,3 +31,7 @@ preference towards both diversity :cite:`kulesza2012determinantal` and similarit
     :tooltip: Point processes
     :description: :doc:`../tutorials_apps/run_tutorial_points`
     :figure: ../_static/points.png
+
+.. raw:: html
+
+    <div style='clear:both'></div>
