@@ -11,7 +11,46 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""This module provides tools for users to find dense subgraphs of different sizes.
+r"""
+Dense subgraphs
+---------------
+
+**Module name:** :mod:`strawberryfields.apps.subgraph`
+
+.. currentmodule:: strawberryfields.apps.subgraph
+
+A common problem of interest is to find subgraphs that contain a large number of connections
+between their nodes. These subgraphs may correspond to communities in social networks, correlated
+assets in a market, or mutually influential proteins in a biological network.
+
+This module provides tools for users to find dense subgraphs of different sizes.
+The search heuristic in this module works by resizing a collection of starting subgraphs and
+keeping track of the densest identified. The starting subgraphs can be selected by sampling from
+GBS, resulting in candidates that are likely to be dense :cite:`arrazola2018using`.
+
+Algorithm
+^^^^^^^^^
+
+The heuristic algorithm provided proceeds as follows. Each starting subgraph :math:`s` is resized
+to a range of sizes :math:`\{k\}_{k_{\min}}^{k_{\max}}`, resulting in the subgraphs
+:math:`s_{k}`. For a given size :math:`k`, a collection of the densest :math:`n` subgraphs
+identified is recorded, meaning that :math:`s_{k}` is added to the collection only if it has
+sufficient density.
+
+This algorithm returns a dictionary over the range of sizes specified, with each value being the
+collection of densest-:math:`k` subgraphs. This collection is a list of tuple pairs specifying
+the subgraph density and nodes.
+
+Subgraph resizing
+^^^^^^^^^^^^^^^^^
+
+The key element of the :func:`search` algorithm is the resizing of each subgraph, allowing a
+range of subgraph sizes to be tracked. Resizing proceeds by greedily adding or removing nodes to
+a subgraph one-at-a-time. Node selection is carried out by picking the node with the greatest
+or least degree with respect to to the subgraph, with ties settled uniformly at random.
+
+This function returns a dictionary over the range of sizes specified, with each value being the
+corresponding resized subgraph.
 """
 import networkx as nx
 import numpy as np

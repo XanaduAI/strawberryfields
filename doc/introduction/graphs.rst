@@ -20,11 +20,14 @@ Graphs and networking
 
 Many problems of practical relevance can be stated in terms of a graph or network. For example,
 graphs can be used to model financial markets, biological networks, and social networks. Graphs are
-composed of a collection of interconnected nodes. Let's take a financial network as an example.
-Suppose you want to transfer some money internationally. Your bank might do this by transferring
-the currency through a number of intermediary banks before it gets to its destination. This
-transaction describes a path on a payment network, where banks represent nodes on the graph which
-are connected if a pair of banks can perform a transfer.
+composed of a collection of interconnected nodes.
+
+Let's take a financial network as an example. Suppose you want to transfer some money
+internationally. Your bank might do this by transferring the currency through a number of
+intermediary banks before it gets to its destination. This transaction describes a path on a
+payment network, where banks represent nodes on the graph which are connected if a pair of banks
+can perform a transfer. One problem a bank may look to solve is to find the shortest path through
+the network to minimize transaction costs.
 
 Strawberry Fields provides tools for solving a range of graph-based problems.
 
