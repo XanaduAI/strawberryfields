@@ -12,23 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Blackbird I/O
-=============
-
 This module contains functions for loading and saving Strawberry
 Fields :class:`~.Program` objects from/to Blackbird scripts.
-
-Summary
--------
-
-.. autosummary::
-    to_blackbird
-    to_program
-    save
-    load
-
-Code details
-~~~~~~~~~~~~
 """
 # pylint: disable=protected-access,too-many-nested-blocks
 import os

@@ -12,15 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-.. _gates:
-
-Quantum operations
-===================
-
-**Module name:** :mod:`strawberryfields.ops`
-
-.. currentmodule:: strawberryfields.ops
-
 .. note::
 
     In the :mod:`strawberryfields.ops` API we use the convention :math:`\hbar=2` by default, however
@@ -31,6 +22,9 @@ Quantum operations
 This module defines and implements the Python-embedded quantum programming language
 for continuous-variable (CV) quantum systems.
 The syntax is modeled after ProjectQ :cite:`projectq2016`.
+
+Details
+-------
 
 Quantum operations (state preparation, unitary gates, measurements, channels) act on
 register objects using the following syntax:
@@ -116,124 +110,6 @@ There are six kinds of :class:`Operation` objects:
   Examples of objects that are supported by decompositions include covariance matrices,
   interferometers, and symplectic transformations.
 
-Hierarchy for operations
-------------------------
-
-.. inheritance-diagram:: strawberryfields.ops
-   :parts: 1
-
-
-Base classes
-------------
-
-The abstract base class hierarchy exists to provide the correct semantics for the actual operations that inherit them.
-
-.. autosummary::
-    Operation
-    Preparation
-    Transformation
-    Gate
-    Channel
-    Measurement
-    Decomposition
-    MetaOperation
-
-
-Operation class
----------------
-
-All Operations have the following methods.
-
-.. currentmodule:: strawberryfields.ops.Operation
-
-.. autosummary::
-    __str__
-    __or__
-    merge
-    decompose
-    apply
-    _apply
-
-.. currentmodule:: strawberryfields.ops
-
-
-State preparation
------------------
-
-.. autosummary::
-    Vacuum
-    Coherent
-    Squeezed
-    DisplacedSqueezed
-    Thermal
-    Fock
-    Catstate
-    Ket
-    DensityMatrix
-    Gaussian
-
-Measurements
-------------
-
-.. autosummary::
-    MeasureFock
-    MeasureThreshold
-    MeasureHomodyne
-    MeasureHeterodyne
-
-
-Channels
------------
-
-.. autosummary::
-    LossChannel
-    ThermalLossChannel
-
-
-Decompositions
---------------
-
-.. autosummary::
-    Interferometer
-    GraphEmbed
-    BipartiteGraphEmbed
-    GaussianTransform
-    Gaussian
-
-
-Single-mode gates
------------------
-
-.. autosummary::
-    Dgate
-    Xgate
-    Zgate
-    Sgate
-    Rgate
-    Pgate
-    Vgate
-    Fouriergate
-
-Two-mode gates
---------------
-
-.. autosummary::
-    BSgate
-    MZgate
-    S2gate
-    CXgate
-    CZgate
-    CKgate
-
-Meta-operations
----------------
-
-.. autosummary::
-    All
-    _New_modes
-    _Delete
-
-
 Operations shortcuts
 ---------------------
 
@@ -260,10 +136,6 @@ this is to provide shorthands for operations that accept no arguments, as well a
 ``MeasureP``             :class:`~.MeasureHomodyne` (:math:`\phi=\pi/2`), :math:`p` quadrature measurement
 ``MeasureHD``            :class:`~.MeasureHeterodyne`
 ======================   =================================================================================
-
-
-Code details
-~~~~~~~~~~~~
 
 """
 from collections.abc import Sequence
@@ -2107,7 +1979,7 @@ MeasureHD = MeasureHeterodyne()
 
 Fourier = Fouriergate()
 
-shorthands = ['New', 'Del', 'Vac', 'Measure', 'MeasureX', 'MeasureP', 'MeasureHD', 'Fourier', 'All']
+shorthands = ['New', 'Del', 'Vac', 'MeasureX', 'MeasureP', 'MeasureHD', 'Fourier', 'All']
 
 #=======================================================================
 # here we list different classes of operations for unit testing purposes
@@ -2131,48 +2003,3 @@ decompositions = (Interferometer, BipartiteGraphEmbed, GraphEmbed, GaussianTrans
 # exported symbols
 
 __all__ = [cls.__name__ for cls in gates + channels + state_preparations + measurements + decompositions] + shorthands
-
-
-#=======================================================================
-# Module wrapper for deprecating shorthands
-
-
-class Wrapper(types.ModuleType):
-    """Wrapper class to modify the module level
-    attribute lookup.
-
-    This allows module attributes to be deprecated.
-
-    Current list of deprecated attributes:
-
-    * ``Measure``: instead use ``MeasureFock``
-
-    .. note::
-
-        With Python 3.7+, there is new support for a module-level
-        ``__getattr__`` function, which should enable this functionality
-        without needing to modify ``sys.modules``.
-    """
-    deprecation_map = {"Measure": "MeasureFock"}
-
-    def __init__(self, mod):
-        self.mod = mod
-        self.__dict__.update(mod.__dict__)
-        super().__init__("strawberryfields.ops", doc=sys.modules[__name__].__doc__)
-
-    def __getattr__(self, name):
-        if name in self.deprecation_map:
-            new_name = self.deprecation_map[name]
-
-            warnings.warn("The shorthand '{}' has been deprecated, "
-                          "please use '{}()' instead.".format(name, new_name))
-
-            return getattr(self.mod, new_name)()
-
-        return getattr(self.mod, name)
-
-    def __dir__(self):
-        return __all__
-
-
-sys.modules[__name__] = Wrapper(sys.modules[__name__])
