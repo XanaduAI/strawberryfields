@@ -1,2 +1,0 @@
-.. automodule:: strawberryfields.decompositions
-   :members:

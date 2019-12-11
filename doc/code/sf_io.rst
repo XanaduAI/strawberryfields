@@ -6,5 +6,4 @@ sf.io
 .. automodapi:: strawberryfields.io
     :no-heading:
     :include-all-objects:
-    :skip: Program, ops, par_is_symbolic, par_convert
-
+    :skip: Program, par_is_symbolic, par_convert

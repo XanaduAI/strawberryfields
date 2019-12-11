@@ -1518,7 +1518,7 @@ class Interferometer(Decomposition):
       :cite:`clements2016`, resulting in a *rectangular* array of
       :math:`M(M-1)/2` beamsplitters:
 
-      .. figure:: ../_static/clements.png
+      .. figure:: ../../_static/clements.png
           :align: center
           :width: 30%
           :target: javascript:void(0);
@@ -1534,7 +1534,7 @@ class Interferometer(Decomposition):
     * ``mesh='triangular'``: uses the scheme described in :cite:`reck1994`,
       resulting in a *triangular* array of :math:`M(M-1)/2` beamsplitters:
 
-      .. figure:: ../_static/reck.png
+      .. figure:: ../../_static/reck.png
           :align: center
           :width: 30%
           :target: javascript:void(0);

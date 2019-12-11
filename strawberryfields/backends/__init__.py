@@ -11,7 +11,50 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This module loads the required backend classes"""
+"""This package contains the modules that make up the
+Strawberry Fields backends. This includes photonic simulators,
+shared numerical operations, and states objects returned by
+statevector simulators.
+
+Simulator backends
+------------------
+
+.. currentmodule:: strawberryfields.backends
+.. autosummary::
+    :toctree: api
+
+    BaseBackend
+    BaseFock
+    BaseGaussian
+    FockBackend
+    GaussianBackend
+    ~tfbackend.TFBackend
+
+.. _state_class:
+
+Statevector objects
+-------------------
+
+.. currentmodule:: strawberryfields.backends
+.. autosummary::
+    :toctree: api
+
+    ~states.BaseState
+    ~states.BaseGaussianState
+    ~states.BaseFockState
+    ~gaussianbackend.states.GaussianState
+    ~tfbackend.states.FockStateTF
+
+Utility modules
+---------------
+
+.. currentmodule:: strawberryfields.backends
+.. autosummary::
+    :toctree: api
+
+    shared_ops
+
+"""
 
 from .base import BaseBackend, BaseFock, BaseGaussian, ModeMap
 from .gaussianbackend import GaussianBackend

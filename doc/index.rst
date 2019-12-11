@@ -132,7 +132,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    introduction/ml
    introduction/chemistry
    tutorials_apps/run_tutorial_sample
-   introduction/tutorials
+   introduction/photonics
 
 .. toctree::
    :maxdepth: 1
@@ -148,12 +148,16 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
 
    code/sf
    code/sf_apps
+   code/sf_backends
    code/sf_circuitspecs
+   code/sf_circuitdrawer
+   code/sf_decompositions
    code/sf_engine
    code/sf_io
    code/sf_ops
    code/sf_program_utils
    code/sf_parameters
+   code/sf_utils
 
 .. toctree::
    :maxdepth: 1
@@ -185,28 +189,6 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    Boson sampling & the permanent <tutorials/tutorial_boson_sampling>
    Gaussian boson sampling & the hafnian <tutorials/tutorial_gaussian_boson_sampling>
    Optimization & machine learning <tutorials/tutorial_machine_learning>
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Strawberry Fields API
-   :hidden:
-
-   code/decompositions
-   code/utils
-   code/circuitdrawer
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Backend API
-   :hidden:
-
-   code/backend
-   code/backend.states
-   code/backend.gaussian
-   code/backend.fock
-   code/backend.tf
-
 
 .. toctree::
    :maxdepth: 2
