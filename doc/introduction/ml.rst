@@ -1,3 +1,5 @@
+.. _ml-intro:
+
 Machine learning
 ================
 

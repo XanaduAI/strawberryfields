@@ -1,10 +1,14 @@
+.. _chemistry-intro:
+
 Chemistry
 =========
 
 Quantum computers are naturally suited to simulating chemical systems, where processes and
 interactions on the atomic level are **governed by quantum mechanics**. One use-case for photonic
 devices is to study **how materials absorb light** at different frequencies. These absorption
-spectra can be useful for tasks such as solar cell optimization or in pharmaceuticals.
+spectra can be useful for tasks such as solar cell optimization or in pharmaceuticals. Strawberry
+Fields allows you to reconstruct absorption spectra simply by inputting chemical properties of
+the molecule being considered.
 
 .. customgalleryitem::
     :tooltip: Vibronic spectra
