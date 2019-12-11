@@ -5,7 +5,7 @@
 Sampling
 ========
 
-*Technical details are available in the API documentation:* :mod:`strawberryfields.apps.sample`
+*Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.sample`
 
 Quantum computers are probabilistic and a common task is to take samples. Strawberry Fields
 can be used to construct quantum photonic circuits and sample from them using a variety of
