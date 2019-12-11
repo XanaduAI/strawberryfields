@@ -11,65 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
-Execution engine
-================
-
-**Module name:** :mod:`strawberryfields.engine`
-
-.. currentmodule:: strawberryfields.engine
-
 This module implements :class:`BaseEngine` and its subclasses that are responsible for
 communicating quantum programs represented by :class:`.Program` objects
 to a backend that could be e.g., a simulator or a hardware quantum processor.
 One can think of each BaseEngine instance as a separate quantum computation.
-
-A typical use looks like
-
-.. include:: example_use.rst
-
-
-Classes
--------
-
-.. autosummary::
-   BaseEngine
-   LocalEngine
-   Result
-
-
-LocalEngine methods
--------------------
-
-.. currentmodule:: strawberryfields.engine.LocalEngine
-
-.. autosummary::
-   run
-   print_applied
-   reset
-
-..
-    The following are internal BaseEngine methods. In most cases the user should not
-    call these directly.
-    .. autosummary::
-       _init_backend
-       _run_program
-       _run
-
-
-.. currentmodule:: strawberryfields.engine
-
-Exceptions
-----------
-
-.. autosummary::
-   ~strawberryfields.backends.base.NotApplicableError
-
-
-Code details
-~~~~~~~~~~~~
-
 """
 
 import abc

@@ -12,13 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Dense subgraphs
----------------
-
-**Module name:** :mod:`strawberryfields.apps.subgraph`
-
-.. currentmodule:: strawberryfields.apps.subgraph
-
 A common problem of interest is to find subgraphs that contain a large number of connections
 between their nodes. These subgraphs may correspond to communities in social networks, correlated
 assets in a market, or mutually influential proteins in a biological network.

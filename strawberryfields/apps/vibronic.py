@@ -12,13 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Vibronic spectra
-================
-
-**Module name:** :mod:`strawberryfields.apps.vibronic`
-
-.. currentmodule:: strawberryfields.apps.vibronic
-
 This module contains functions used for computing molecular vibronic spectra with GBS. In vibronic
 spectroscopy, incoming light simultaneously excites a molecule to higher electronic and
 vibrational states. The difference in the energies of the initial and final states
@@ -51,20 +44,11 @@ displacement vector and Duschinsky matrix, to the required GBS parameters. Addit
 function computes two-mode squeezing parameters :math:`t`, from the molecule's temperature, which
 are required by the GBS algorithm to compute vibronic spectra for molecules at finite temperature.
 
-.. autosummary::
-    gbs_params
-
 Energies from samples
 ---------------------
 In the GBS algorithm for vibronic spectra, samples are identified with transition energies. The
 most frequently sampled energies correspond to peaks of the vibronic spectrum. The function
 :func:`energies` converts samples to energies.
-
-.. autosummary::
-    energies
-
-Code details
-^^^^^^^^^^^^
 """
 from typing import Tuple, Union
 

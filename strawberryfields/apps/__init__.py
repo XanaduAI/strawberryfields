@@ -19,6 +19,13 @@ Strawberry Fields application layer.
     :toctree: api
 
 	clique
+	data
+	plot
+	points
+	sample
+	similarity
+	subgraph
+	vibronic
 """
 
 import strawberryfields.apps.clique
