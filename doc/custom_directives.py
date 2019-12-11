@@ -157,7 +157,7 @@ GALLERY_TEMPLATE = """
 
 .. only:: html
 
-    .. figure:: {thumbnail}
+    .. figure:: /{thumbnail}
 
         {description}
 
@@ -171,7 +171,7 @@ class CustomGalleryItemDirective(Directive):
     """Create a sphinx gallery style thumbnail.
 
     tooltip and figure are self explanatory. Description could be a link to
-    a document like in below example. 
+    a document like in below example.
 
     Example usage:
 

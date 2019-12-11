@@ -11,75 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""
-Maximum Clique
-==============
-
-**Module name:** :mod:`strawberryfields.apps.clique`
-
-.. currentmodule:: strawberryfields.apps.clique
-
-This module provides tools for users to identify large cliques in graphs. A clique is a subgraph
-where all nodes are connected to each other. The maximum clique problem is to identify the
-largest clique in a graph. It has been shown that samples from GBS can
-be used to select dense subgraphs as a starting seed for heuristic algorithms
-:cite:`banchi2019molecular`.
-
-An accompanying tutorial can be found :ref:`here <apps-clique-tutorial>`.
-
-Algorithm
----------
-
-This module provides a variant of the local search heuristics described in
-:cite:`pullan2006dynamic` and :cite:`pullan2006phased`. The algorithm proceeds as follows:
-
-#. A small clique in the graph is identified. The initial clique can be a single node, or it can
-   be obtained by shrinking a random subgraph, for example obtained from GBS.
-#. The clique is grown as much as possible by adding nodes connected to all nodes in the clique.
-#. When no more growth is possible, a node in the clique is swapped with a node outside of it.
-
-Steps 2-3 are repeated until a pre-determined number of steps have been completed, or until no
-more growth or swaps are possible.
-
-.. autosummary::
-    search
-
-Clique growth and swapping
---------------------------
-
-A clique can be grown by evaluating the set :math:`C_0` of nodes in the remainder of the graph that
-are connected to all nodes in the clique. A single node from :math:`C_0` is selected and added to
-the clique. This process is repeated until :math:`C_0` becomes empty.
-
-.. autosummary::
-    grow
-    c_0
-
-Searching the local space around a clique can be achieved by swapping a node from the clique with a
-node in the remainder of the graph. The first step is to evaluate the set :math:`C_1` of nodes in
-the remainder of the graph that are connected to *all but one* of the nodes in the current
-clique. A swap is then performed by adding the node into the clique and removing the node in the
-clique that is not connected to it.
-
-.. autosummary::
-    swap
-    c_1
-
-Using GBS to find a starting clique
------------------------------------
-
-Samples from GBS correspond to subgraphs that are likely to be dense.
-These subgraphs may not be cliques, which is the required input to the :func:`search` algorithm.
-To reconcile this, a subgraph may be shrunk by removing nodes until the remainder forms a
-clique. This can be achieved by selecting the node with the lowest degree relative to the rest of
-subgraph and removing the node, repeating the process until a clique is found.
-
-.. autosummary::
-    shrink
-    is_clique
-
-Code details
-^^^^^^^^^^^^
+r"""This module provides tools for users to identify large cliques in graphs.
 """
 import networkx as nx
 import numpy as np
