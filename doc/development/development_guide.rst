@@ -177,3 +177,112 @@ To build the HTML documentation, go to the top-level directory and run
     make docs
 
 The documentation can then be found in the :file:`doc/_build/html/` directory.
+
+
+Adding a new module to the docs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are several steps to adding a new module to the documentation:
+
+1. Make sure your module has a one-to-two line module docstring, that summarizes
+   what the module purpose is, and what it contains.
+
+2. Add a file ``doc/code/sf_module_name.rst``, that contains the following:
+
+   .. literalinclude:: example_module_rst.txt
+       :language: rest
+
+3. Add ``code/sf_module_name`` to the table of contents at the bottom of ``doc/index.rst``.
+
+
+Adding a new package to the docs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Adding a new subpackage to the documentation requires a slightly different process than
+a module:
+
+1. Make sure your package ``__init__.py`` file has a one-to-two line module docstring,
+   that summarizes what the package purpose is, and what it contains.
+
+2. At the bottom of the ``__init__.py`` docstring, add an autosummary table that contains
+   all modules in your package:
+
+   .. literalinclude:: example_module_autosummary.txt
+       :language: rest
+
+   All modules should also contain a module docstring that summarizes the module.
+
+3. Add a file ``doc/code/sf_package_name.rst``, that contains the following:
+
+   .. literalinclude:: example_package_rst.txt
+       :language: rest
+
+4. Add ``code/sf_package_name`` to the table of contents at the bottom of ``doc/index.rst``.
+
+
+Submitting a pull request
+-------------------------
+
+Before submitting a pull request, please make sure the following is done:
+
+* **All new features must include a unit test.** If you've fixed a bug or added
+  code that should be tested, add a test to the ``tests`` directory.
+
+  Strawberry Fields uses pytest for testing; common fixtures can be found in the ``tests/conftest.py``
+  file.
+
+* **All new functions and code must be clearly commented and documented.**
+
+  Have a look through the source code at some of the existing function docstrings---
+  the easiest approach is to simply copy an existing docstring and modify it as appropriate.
+
+  If you do make documentation changes, make sure that the docs build and render correctly by
+  running ``make docs``.
+
+* **Ensure that the test suite passes**, by running ``make test``.
+
+* **Make sure the modified code in the pull request conforms to the PEP8 coding standard.**
+
+  The Strawberry Fields source code conforms to `PEP8 standards <https://www.python.org/dev/peps/pep-0008/>`_.
+  Before submitting the PR, you can autoformat your code changes using the
+  `Black <https://github.com/psf/black>`_ Python autoformatter, with max-line length set to 100:
+
+  .. code-block:: bash
+
+      black -l 100 strawberryfields/path/to/modified/file.py
+
+  We check all of our code against `Pylint <https://www.pylint.org/>`_ for errors.
+  To lint modified files, simply ``pip install pylint``, and then from the source code
+  directory, run
+
+  .. code-block:: bash
+
+      pylint strawberryfields/path/to/modified/file.py
+
+
+When ready, submit your fork as a `pull request <https://help.github.com/articles/about-pull-requests>`_
+to the Strawberry Fields repository, filling out the pull request template. This template is added
+automatically to the comment box when you create a new issue.
+
+* When describing the pull request, please include as much detail as possible
+  regarding the changes made/new features added/performance improvements. If including any
+  bug fixes, mention the issue numbers associated with the bugs.
+
+* Once you have submitted the pull request, three things will automatically occur:
+
+  - The **test suite** will automatically run on `Travis CI <https://travis-ci.org/XanaduAI/strawberryfields>`_
+    to ensure that all tests continue to pass.
+
+  - Once the test suite is finished, a **code coverage report** will be generated on
+    `Codecov <https://codecov.io/gh/XanaduAI/strawberryfields>`_. This will calculate the percentage
+    of Strawberry Fields covered by the test suite, to ensure that all new code additions
+    are adequately tested.
+
+  - Finally, the **code quality** is calculated by
+    `Codefactor <https://app.codacy.com/app/XanaduAI/strawberryfields/dashboard>`_,
+    to ensure all new code additions adhere to our code quality standards.
+
+Based on these reports, we may ask you to make small changes to your branch before
+merging the pull request into the master branch. Alternatively, you can also
+`grant us permission to make changes to your pull request branch
+<https://help.github.com/articles/allowing-changes-to-a-pull-request-branch-created-from-a-fork/>`_.

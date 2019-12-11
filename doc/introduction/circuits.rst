@@ -1,87 +1,112 @@
 Quantum photonic circuits
 =========================
 
+.. raw:: html
+
+  <style>
+    #right-column.card {
+      box-shadow: none!important;
+    }
+    #right-column.card:hover {
+      box-shadow: none!important;
+    }
+  </style>
+
 
 .. toctree::
 	:maxdepth: 1
 
-	photonics/states
-	photonics/glossary
+	circuits/states
+	circuits/glossary
+
+Creating a quantum program
+--------------------------
+
+
+Quantum operations
+------------------
+
+
+Embedding states and graphs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Simulating your program
+-----------------------
+
+
+Compilation
+-----------
+
 
 Tutorials
 ---------
 
+Check out some cool applications of Strawberry Fields in the tutorial gallery below.
+These include tutorials that have contributed by the awesome Strawberry Fields
+community, and curated by the Strawberry Fields team 🍓.
+
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    /tutorials/blackbird
    Basic tutorial: teleportation </tutorials/tutorial_teleportation>
    Measurements and post-selection </tutorials/tutorial_post_selection>
    Boson sampling & the permanent </tutorials/tutorial_boson_sampling>
    Gaussian boson sampling & the hafnian </tutorials/tutorial_gaussian_boson_sampling>
+   /gallery/minimizing_correlations/minimizing_correlations.ipynb
+   /gallery/state_learner/StateLearning.ipynb
+   /gallery/gate_synthesis/GateSynthesis.ipynb
+   /gallery/scattershot-boson-sampling/scattershot-bs.ipynb
+   /gallery/gate_visualisation/GateVisualisation.ipynb
 
+.. customgalleryitem::
+    :tooltip: Building photonic quantum circuits
+    :description: :doc:`/tutorials/blackbird`
 
-Notebook gallery
-----------------
+.. customgalleryitem::
+    :tooltip: Quantum teleportation
+    :description: :doc:`Basic tutorial: teleportation </tutorials/tutorial_teleportation>`
 
-Check out some cool applications of Strawberry Fields in the gallery below. Notebooks in the gallery have been contributed by the awesome Strawberry Fields community, and curated by the Strawberry Fields team 🍓.
+.. customgalleryitem::
+    :tooltip: Making photonic measurements
+    :description: :doc:`Measurements and post-selection </tutorials/tutorial_post_selection>`
 
-.. Add the location of your Jupyter notebook below!
+.. customgalleryitem::
+    :tooltip: Create a BS circuit
+    :description: :doc:`Boson sampling & the permanent </tutorials/tutorial_boson_sampling>`
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-   :titlesonly:
+.. customgalleryitem::
+    :tooltip: Create a GBS circuit
+    :description: :doc:`Gaussian boson sampling & the hafnian </tutorials/tutorial_gaussian_boson_sampling>`
 
-   ../gallery/minimizing_correlations/minimizing_correlations.ipynb
-   ../gallery/state_learner/StateLearning.ipynb
-   ../gallery/gate_synthesis/GateSynthesis.ipynb
-   ../gallery/scattershot-boson-sampling/scattershot-bs.ipynb
-   ../gallery/gate_visualisation/GateVisualisation.ipynb
+.. customgalleryitem::
+    :tooltip: Minimizing correlations
+    :description: :doc:`/gallery/minimizing_correlations/minimizing_correlations`
+    :figure: /gallery/minimizing_correlations/minimizing_correlations.gif
 
+.. customgalleryitem::
+    :tooltip: Quantum state learning
+    :description: :doc:`/gallery/state_learner/StateLearning`
+    :figure: /gallery/state_learner/StateLearning.gif
 
-.. Copy the template below in order to create a link to your notebook, and a thumbnail.
+.. customgalleryitem::
+    :tooltip: Gate synthesis
+    :description: :doc:`/gallery/gate_synthesis/GateSynthesis`
+    :figure: /gallery/gate_synthesis/GateSynthesis.gif
 
-.. _Minimizing correlations: ../gallery/minimizing_correlations/minimizing_correlations.html
-.. |mc| image:: ../gallery/minimizing_correlations/thumbnail.gif
-   :width: 260px
-   :align: middle
-   :target: ../gallery/minimizing_correlations/minimizing_correlations.html
+.. customgalleryitem::
+    :tooltip: Scattershot boson sampling
+    :description: :doc:`/gallery/scattershot-boson-sampling/scattershot-bs`
+    :figure: /gallery/scattershot-boson-sampling/scattershot-bs.gif
 
-.. _Quantum state learning: ../gallery/state_learner/StateLearning.html
-.. |sl| image:: ../gallery/state_learner/thumbnail.gif
-   :width: 260px
-   :align: middle
-   :target: ../gallery/state_learner/StateLearning.html
+.. customgalleryitem::
+    :tooltip: Photonic gate visualization
+    :description: :doc:`/gallery/gate_visualisation/GateVisualisation`
+    :figure: /gallery/gate_visualisation/GateVisualisation.gif
 
-.. _Gate synthesis: ../gallery/gate_synthesis/GateSynthesis.html
-.. |gs| image:: ../gallery/gate_synthesis/thumbnail.gif
-   :width: 260px
-   :align: middle
-   :target: ../gallery/gate_synthesis/GateSynthesis.html
+.. raw:: html
 
-.. _Scattershot boson sampling: ../gallery/scattershot-boson-sampling/scattershot-bs.html
-.. |sbs| image:: ../gallery/scattershot-boson-sampling/thumbnail.gif
-   :width: 260px
-   :align: middle
-   :target: ../gallery/scattershot-boson-sampling/scattershot-bs.html
-
-.. _Gate visualization: ../gallery/gate_visualisation/GateVisualisation.html
-.. |gv| image:: ../gallery/gate_visualisation/thumbnail.gif
-   :width: 260px
-   :align: middle
-   :target: ../gallery/gate_visualisation/GateVisualisation.html
-
-.. Add your thumbnail to the table in the Gallery!
-
-.. rst-class:: gallery-table
-
-+-------------------------------+-------------------------------+------------------------------+
-| |mc|                          | |sl|                          |   |gs|                       |
-|                               |                               |                              |
-| `Minimizing correlations`_    | `Quantum state learning`_     |   `Gate synthesis`_          |
-+-------------------------------+-------------------------------+------------------------------+
-| |gv|                          | |sbs|                         |                              |
-|                               |                               |                              |
-| `Gate visualization`_         | `Scattershot boson sampling`_ |                              |
-+-------------------------------+-------------------------------+------------------------------+
+    <div style='clear:both'></div>
+    <br>

@@ -33,6 +33,14 @@ simulation, and hardware execution of these **variational circuits** is handled 
 Strawberry Fields focuses on providing the functionality for using near-term quantum photonic
 devices for machine learning. Take a look below to see what you can do!
 
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   ../tutorials_apps/run_tutorial_similarity
+   ../tutorials_apps/run_tutorial_points
+   /tutorials/tutorial_machine_learning
+
 .. customgalleryitem::
     :tooltip: Graphs similarity
     :description: :doc:`Graph similarity and classification <../tutorials_apps/run_tutorial_similarity>`
@@ -42,6 +50,10 @@ devices for machine learning. Take a look below to see what you can do!
     :tooltip: Point processes
     :description: :doc:`Point process sampling <../tutorials_apps/run_tutorial_points>`
     :figure: ../_static/points.png
+
+.. customgalleryitem::
+    :tooltip: Optimization and machine learning with TensorFlow
+    :description: :doc:`Optimization and machine learning with TensorFlow </tutorials/tutorial_machine_learning>`
 
 .. raw:: html
 

@@ -6,7 +6,7 @@ Strawberry Fields
     :width: 100%
     :target: javascript:void(0);
 
-.. |photon| image:: gallery/state_learner/thumbnail.gif
+.. |photon| image:: gallery/state_learner/StateLearning.gif
     :align: middle
     :width: 250px
     :target: javascript:void(0);
@@ -132,7 +132,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    introduction/ml
    introduction/chemistry
    tutorials_apps/run_tutorial_sample
-   introduction/photonics
+   introduction/circuits
    zreferences
 
 .. toctree::

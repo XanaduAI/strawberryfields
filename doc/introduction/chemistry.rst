@@ -3,6 +3,23 @@
 Chemistry
 =========
 
+.. raw:: html
+
+	<style>
+		.sphx-glr-thumbcontainer {
+			float: center;
+			margin-top: 20px;
+			margin-right: 50px;
+            margin-bottom: 20px;
+		}
+        #right-column.card {
+            box-shadow: none!important;
+        }
+        #right-column.card:hover {
+            box-shadow: none!important;
+        }
+	</style>
+
 Quantum computers are naturally suited to simulating chemical systems, where processes and
 interactions on the atomic level are **governed by quantum mechanics**. One use-case for photonic
 devices is to study **how materials absorb light** at different frequencies. These absorption
