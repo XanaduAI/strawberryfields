@@ -126,7 +126,6 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    :caption: Using Strawberry Fields
    :hidden:
 
-   introduction/installing
    introduction/introduction
    introduction/graphs
    introduction/ml
