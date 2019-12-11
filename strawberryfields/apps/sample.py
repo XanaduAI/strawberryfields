@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
+*For further details on using this module, see:* :ref:`apps-sample-tutorial`
+
 This module provides functionality for generating GBS samples using classical simulators.
 
 An accompanying tutorial can be found :ref:`here <apps-sample-tutorial>`.

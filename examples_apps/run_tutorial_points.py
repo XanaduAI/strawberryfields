@@ -5,6 +5,8 @@ r"""
 Point Process Tutorial
 ======================
 
+*Technical details are available in the API documentation:* :mod:`strawberryfields.apps.points`
+
 This tutorial shows how to generate GBS point process samples and use them to detect outlier
 points in a data set. Point processes are models for generating random point patterns and GBS
 devices can be programmed to operate as special types of point processes that generate clustered

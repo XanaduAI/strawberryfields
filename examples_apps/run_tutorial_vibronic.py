@@ -4,6 +4,9 @@ r"""
 
 Vibronic Spectra Tutorial
 =========================
+
+*Technical details are available in the API documentation:* :mod:`strawberryfields.apps.vibronic`
+
 In this tutorial, we study how GBS can be used to compute vibronic spectra. So let's start from
 the beginning: what is a vibronic spectrum? Molecules absorb light at frequencies that depend on
 the allowed transitions between different electronic states. These electronic transitions

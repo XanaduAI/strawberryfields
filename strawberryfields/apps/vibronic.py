@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
+*For further details on using this module, see:* :ref:`apps-vibronic-tutorial`
+
 This module contains functions used for computing molecular vibronic spectra with GBS. In vibronic
 spectroscopy, incoming light simultaneously excites a molecule to higher electronic and
 vibrational states. The difference in the energies of the initial and final states

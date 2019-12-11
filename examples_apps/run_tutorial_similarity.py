@@ -5,6 +5,8 @@
 Graph Similarity Tutorial
 =========================
 
+*Technical details are available in the API documentation:* :mod:`strawberryfields.apps.similarity`
+
 This tutorial looks at how to use GBS to construct a similarity measure between graphs,
 known as a graph kernel :cite:`schuld2019quantum`. Kernels can be applied to graph-based
 data for machine learning tasks such as classification using a support vector machine.
