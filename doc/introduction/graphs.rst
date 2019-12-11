@@ -1,3 +1,5 @@
+.. _graphs-intro:
+
 Graphs and networking
 =====================
 
