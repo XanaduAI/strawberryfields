@@ -1,4 +1,4 @@
-{{ fullname | replace("pennylane", "qml") }}
+{{ fullname | replace("strawberryfields", "sf") }}
 {{ underline }}
 
 .. autoclass:: {{ fullname }}

@@ -10,6 +10,12 @@ Graphs and networking
 			margin-right: 0;
 			margin-left: 20px;
 		}
+        #right-column.card {
+            box-shadow: none!important;
+        }
+        #right-column.card:hover {
+            box-shadow: none!important;
+        }
 	</style>
 
 Graphs can be used to model a wide variety of concepts: social networks, financial markets,
@@ -26,7 +32,7 @@ Dense subgraphs
 .. customgalleryitem::
     :tooltip: Dense subgraphs
     :description: :doc:`../tutorials_apps/run_tutorial_dense`
-    :figure: figures/dense.png
+    :figure: ../_static/dense.png
 
 A common problem of interest is to find subgraphs that contain a large number of connections
 between their nodes. These subgraphs may correspond to communities in social networks, correlated
@@ -82,7 +88,7 @@ Maximum clique
 .. customgalleryitem::
     :tooltip: Maximum clique
     :description: :doc:`../tutorials_apps/run_tutorial_max_clique`
-    :figure: figures/max_clique.png
+    :figure: ../_static/max_clique.png
 
 A clique is a special type of subgraph where all possible connections between nodes are present;
 they are densest possible subgraphs of their size. The maximum clique problem, or max clique for
