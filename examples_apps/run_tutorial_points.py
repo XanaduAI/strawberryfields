@@ -5,7 +5,7 @@ r"""
 Point processes
 ===============
 
-*Technical details are available in the API documentation:* :mod:`strawberryfields.apps.points`
+*Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.points`
 
 This section shows how to generate GBS point process samples and use them to detect outlier
 points in a data set. Point processes are models for generating random point patterns and GBS

@@ -5,7 +5,7 @@
 Maximum Clique
 ==============
 
-*Technical details are available in the API documentation:* :mod:`strawberryfields.apps.clique`
+*Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.clique`
 
 Here we'll explore how to combine GBS samples with local search algorithms to find large cliques
 in graphs. Let's get started!

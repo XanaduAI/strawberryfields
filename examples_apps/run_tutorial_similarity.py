@@ -5,7 +5,7 @@
 Graph similarity
 ================
 
-*Technical details are available in the API documentation:* :mod:`strawberryfields.apps.similarity`
+*Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.similarity`
 
 This page looks at how to use GBS to construct a similarity measure between graphs,
 known as a graph kernel :cite:`schuld2019quantum`. Kernels can be applied to graph-based
