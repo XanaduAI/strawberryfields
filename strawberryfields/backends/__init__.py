@@ -16,8 +16,8 @@ Strawberry Fields backends. This includes photonic simulators,
 shared numerical operations, and states objects returned by
 statevector simulators.
 
-Simulator backends
-------------------
+Statevector simulator backends
+------------------------------
 
 .. currentmodule:: strawberryfields.backends
 .. autosummary::
@@ -39,9 +39,9 @@ Statevector objects
 .. autosummary::
     :toctree: api
 
-    ~states.BaseState
-    ~states.BaseGaussianState
-    ~states.BaseFockState
+    BaseState
+    BaseGaussianState
+    BaseFockState
     ~gaussianbackend.states.GaussianState
     ~tfbackend.states.FockStateTF
 
@@ -53,12 +53,12 @@ Utility modules
     :toctree: api
 
     shared_ops
-
 """
 
 from .base import BaseBackend, BaseFock, BaseGaussian, ModeMap
 from .gaussianbackend import GaussianBackend
 from .fockbackend import FockBackend
+from .states import BaseState, BaseGaussianState, BaseFockState
 
 __all__ = [
     "BaseBackend",
@@ -67,6 +67,9 @@ __all__ = [
     "FockBackend",
     "GaussianBackend",
     "TFBackend",
+    "BaseState",
+    "BaseFockState",
+    "BaseGaussianState"
 ]
 
 supported_backends = {b.short_name: b for b in (BaseBackend, GaussianBackend, FockBackend)}

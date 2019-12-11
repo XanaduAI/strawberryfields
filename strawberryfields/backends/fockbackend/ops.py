@@ -11,78 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-"""
-Miscellaneous Fock backend operations
-======================================
-
-.. currentmodule:: strawberryfields.backends.fockbackend.ops
-
-Conventions
-----------------------
-Density matrices and unitaries are both stored as stacked matrices --
-that is, the kets and bras of subsystems are grouped together.
-
-Utilities
-----------------------
-
-.. autosummary::
-     genOfRange
-     genOfTuple
-     indexRange
-     index
-     unIndex
-     sliceExp
-     abssqr
-     dagger
-     mix
-     diagonal
-     trace
-     partial_trace
-     tensor
-     project_reset
-
-Matrix multiplication
-----------------------
-
-.. autosummary::
-     apply_gate_BLAS
-     apply_gate_einsum
-
-Gates
-----------------------
-
-.. autosummary::
-     a
-     displacement
-     squeezing
-     phase
-     beamsplitter
-     addition
-     controlledPhase
-     projector
-     proj
-     multimode_projector
-     multimode_proj
-
-State vectors
-----------------------
-
-.. autosummary::
-     vacuumState
-     vacuumStateMixed
-     fockState
-     coherentState
-     squeezedState
-     squeezedCoherentState
-
-Channels
-----------------------
-
-.. autosummary::
-     lossChanel
-
-"""
+"""Miscellaneous Fock backend operations"""
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals
 
