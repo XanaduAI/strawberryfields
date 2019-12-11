@@ -13,10 +13,6 @@
 # limitations under the License.
 """
 .. _code:
-
-Overview
-==================
-
 .. image:: ../_static/sfcomponents.svg
     :align: center
     :width: 90%
@@ -25,43 +21,8 @@ Overview
 |
 
 The Strawberry Fields codebase includes a number of complementary components.
-These can be separated into frontend components
+These can be separated into frontend components, applications layer,
 and backend components (all found within the :file:`strawberryfields.backends` submodule).
-
-Software components
--------------------
-
-**Frontend:**
-
-* Quantum programs: :mod:`strawberryfields.program`
-* Quantum execution and compilation engine: :mod:`strawberryfields.engine`
-* Quantum operations: :mod:`strawberryfields.ops`
-* Input/output functions: :mod:`strawberryfields.io`
-* Circuit specifications: :mod:`strawberryfields.circuitspecs`
-* Decompositions: :mod:`strawberryfields.decompositions`
-* Utilities: :mod:`strawberryfields.utils`
-* Circuit drawer: :mod:`strawberryfields.circuitdrawer`
-
-**Backend:**
-
-* Backend API: :mod:`strawberryfields.backends.base`
-* Quantum states: :mod:`strawberryfields.backends.states`
-* Fock simulator backend: :mod:`strawberryfields.backends.fockbackend`
-* Gaussian simulator backend: :mod:`strawberryfields.backends.gaussianbackend`
-* Tensorflow simulator backend: :mod:`strawberryfields.backends.tfbackend`
-
-Top-level functions
--------------------
-
-.. currentmodule: strawberryfields
-
-.. autosummary::
-   about
-   cite
-   version
-
-Code details
-~~~~~~~~~~~~
 """
 from . import apps
 from ._version import __version__

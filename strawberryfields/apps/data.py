@@ -12,13 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-GBS Datasets
-============
-
-**Module name:** :mod:`strawberryfields.apps.data`
-
-.. currentmodule:: strawberryfields.apps.data
-
 This module provides access to pre-calculated datasets of simulated GBS samples.
 
 Graphs
@@ -29,11 +22,6 @@ mind.
 
 For dense subgraph and maximum clique identification, we provide:
 
-.. autosummary::
-    Planted
-    TaceAs
-    PHat
-
 +---------------+---------------+
 |   |planted|   |    |tace_as|  |
 |               |               |
@@ -41,12 +29,6 @@ For dense subgraph and maximum clique identification, we provide:
 +---------------+---------------+
 
 For graph similarity, we provide:
-
-.. autosummary::
-    Mutag0
-    Mutag1
-    Mutag2
-    Mutag3
 
 +-------------+-------------+
 |  |mutag_0|  |  |mutag_1|  |
@@ -65,16 +47,10 @@ Using the :mod:`~.apps.vibronic` module and :func:`~.apps.sample.vibronic` funct
 been generated for formic acid at zero temperature. The GBS samples can be used to recover the
 vibronic spectrum of the molecule.
 
-.. autosummary::
-    Formic
-
 Dataset
 -------
 
 The :class:`Dataset` class provides the base functionality from which all datasets inherit.
-
-.. autosummary::
-    Dataset
 
 Each dataset contains a variety of metadata relevant to the sampling:
 
@@ -92,10 +68,6 @@ Each dataset contains a variety of metadata relevant to the sampling:
 
 Graph and molecule datasets also contain some specific data, such as the graph adjacency matrix
 or the input molecular information.
-
-.. autosummary::
-    GraphDataset
-    MoleculeDataset
 
 Note that datasets are simulated without photon loss.
 
@@ -126,9 +98,6 @@ The number of photons or clicks in each sample is available using the :meth:`Dat
 [2, 0, 8, 11, ... , 6]
 
 For example, we see that the ``data[3]`` sample has 11 clicks.
-
-Code details
-^^^^^^^^^^^^
 """
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod
