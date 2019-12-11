@@ -133,6 +133,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    introduction/chemistry
    tutorials_apps/run_tutorial_sample
    introduction/photonics
+   zreferences
 
 .. toctree::
    :maxdepth: 1
@@ -140,6 +141,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    :hidden:
 
    development/development_guide
+   development/research
 
 .. toctree::
    :maxdepth: 1
@@ -158,42 +160,3 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    code/sf_program_utils
    code/sf_parameters
    code/sf_utils
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Getting started
-   :hidden:
-
-   gallery/gallery
-   research
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Continuous-variable quantum computing
-   :hidden:
-
-   introduction
-   op_conventions
-   quantum_algorithms
-   glossary
-   zreferences
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Strawberry Fields Tutorials
-   :hidden:
-
-   tutorials/blackbird
-   Basic tutorial: teleportation <tutorials/tutorial_teleportation>
-   Measurements and post-selection <tutorials/tutorial_post_selection>
-   Boson sampling & the permanent <tutorials/tutorial_boson_sampling>
-   Gaussian boson sampling & the hafnian <tutorials/tutorial_gaussian_boson_sampling>
-   Optimization & machine learning <tutorials/tutorial_machine_learning>
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Applications Layer
-   :hidden:
-
-   gbs_intro
-   apps_tutorials

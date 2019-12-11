@@ -242,23 +242,23 @@ A number of fundamental CV gates are presented in the following table:
 | .. centered:: | .. centered::                                                                            | .. centered::                                                       |
 |   Gate        |   Unitary                                                                                |  Symbol                                                             |
 +===============+==========================================================================================+=====================================================================+
-| Displacement  | .. centered::                                                                            | .. image:: _static/Dgate.svg                                        |
+| Displacement  | .. centered::                                                                            | .. image:: /_static/Dgate.svg                                       |
 |               |   :math:`D_i(\alpha)=\exp{(\alpha\ad_i - \alpha^*\a_i)}`                                 |   :align: center                                                    |
 |               |                                                                                          |   :target: javascript:void(0);                                      |
 +---------------+------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
-| Rotation      | .. centered::                                                                            | .. image:: _static/Rgate.svg                                        |
+| Rotation      | .. centered::                                                                            | .. image:: /_static/Rgate.svg                                       |
 |               |   :math:`R_i(\phi)=\exp{(i\phi\hat{n}_i)}`                                               |   :align: center                                                    |
 |               |                                                                                          |   :target: javascript:void(0);                                      |
 +---------------+------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
-| Squeezing     | .. centered::                                                                            | .. image:: _static/Sgate.svg                                        |
+| Squeezing     | .. centered::                                                                            | .. image:: /_static/Sgate.svg                                       |
 |               |   :math:`S_i(z)=\exp{(\frac{1}{2}(z^* \a_i^2 - z \a_i^{\dagger 2}))}`                    |   :align: center                                                    |
 |               |                                                                                          |   :target: javascript:void(0);                                      |
 +---------------+------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
-| Beamsplitter  | .. centered::                                                                            | .. image:: _static/BSgate.svg                                       |
+| Beamsplitter  | .. centered::                                                                            | .. image:: /_static/BSgate.svg                                      |
 |               |   :math:`BS_{i,j}(\theta,\phi)=\exp{(\theta(e^{i\phi}\ad_i\a_j - e^{-i\phi}\a_i\ad_j))}` |   :align: center                                                    |
 |               |                                                                                          |   :target: javascript:void(0);                                      |
 +---------------+------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
-| Cubic Phase   | .. centered::                                                                            | .. image:: _static/Vgate.svg                                        |
+| Cubic Phase   | .. centered::                                                                            | .. image:: /_static/Vgate.svg                                       |
 |               |   :math:`V_i(\gamma)=\exp{(i\frac{\gamma}{6}\x_i^3)}`                                    |   :align: center                                                    |
 |               |                                                                                          |   :target: javascript:void(0);                                      |
 +---------------+------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
