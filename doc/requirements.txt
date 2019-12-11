@@ -9,6 +9,8 @@ quantum-blackbird
 scipy>=1.0.0
 sklearn
 sphinx-autodoc-typehints
+sphinx-copybutton
+sphinx-automodapi
 sphinx-gallery
 sphinxcontrib-bibtex==0.4.2
 thewalrus>=0.7

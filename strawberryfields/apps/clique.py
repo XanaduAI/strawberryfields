@@ -12,13 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Maximum clique
---------------
-
-**Module name:** :mod:`strawberryfields.apps.clique`
-
-.. currentmodule:: strawberryfields.apps.clique
-
 A clique is a special type of subgraph where all possible connections between nodes are present;
 they are densest possible subgraphs of their size. The maximum clique problem, or max clique for
 short, asks the question: given a graph :math:`G`, what is the largest clique in the graph?

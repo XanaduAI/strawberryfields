@@ -55,12 +55,20 @@ extensions = [
     'edit_on_github',
     'sphinx_autodoc_typehints',
     'nbsphinx',
-    'sphinx_gallery.gen_gallery'
+    'sphinx_gallery.gen_gallery',
+    "sphinx.ext.intersphinx",
+    "sphinx_automodapi.automodapi",
+    'sphinx_copybutton'
 ]
 
 from glob import glob
 import shutil
 import warnings
+
+autosummary_generate = True
+autosummary_imported_members = False
+automodapi_toctreedirnm = "code/api"
+automodsumm_inherited_members = True
 
 mathjax_path = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
 
