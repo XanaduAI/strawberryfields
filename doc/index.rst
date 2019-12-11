@@ -143,6 +143,13 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
 
 .. toctree::
    :maxdepth: 1
+   :caption: API
+   :hidden:
+
+   code/sf_apps
+
+.. toctree::
+   :maxdepth: 1
    :caption: Getting started
    :hidden:
 
@@ -210,7 +217,6 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    apps_tutorials
    code/apps/sample
    code/apps/subgraph
-   code/apps/clique
    code/apps/similarity
    code/apps/points
    code/apps/vibronic
