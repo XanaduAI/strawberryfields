@@ -12,12 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-<<<<<<< HEAD
-.. _apps_dense_subgraphs:
-
-A common problem of interest is to find subgraphs that contain a large number of connections
-between their nodes. These subgraphs may correspond to communities in social networks, correlated
-assets in a market, or mutually influential proteins in a biological network.
+*For further details on using this module, see:* :ref:`apps-subgraph-tutorial`
 
 This module provides tools for users to find dense subgraphs of different sizes.
 The search heuristic in this module works by resizing a collection of starting subgraphs and
