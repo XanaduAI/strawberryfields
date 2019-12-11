@@ -31,29 +31,10 @@ may look to tackle is to find suspicious payment patterns in the network.
 
 Take a look below to see some of the graph-based problems that photonic quantum devices can solve!
 
-Dense subgraphs
----------------
-
-It is often of interest to find areas of a network that are highly connected. These connected
-regions may be communities in social networks, correlated assets in a market, or mutually
-influential proteins in a biological network. This task is known as the dense subgraph problem,
-which can naturally be solved by quantum photonics.
-
 .. customgalleryitem::
     :tooltip: Dense subgraphs
     :description: :doc:`Dense subgraph problems <../tutorials_apps/run_tutorial_dense>`
     :figure: ../_static/dense.png
-
-.. raw:: html
-
-    <div style='clear:both'></div>
-
-Maximum clique
---------------
-
-A clique is a region of a graph in which all the nodes are connected to each other. There can be
-many cliques in a graph, but finding the largest one is computationally challenging. We provide
-tools in Strawberry Fields to help harness quantum photonics for finding larger cliques.
 
 .. customgalleryitem::
     :tooltip: Maximum clique
