@@ -5,10 +5,10 @@ Graphs and networking
 
 	<style>
 		.sphx-glr-thumbcontainer {
-			float: right;
-			margin-top: -20px;
-			margin-right: 0;
-			margin-left: 20px;
+			float: center;
+			margin-top: 20px;
+			margin-right: 50px;
+            margin-bottom: 20px;
 		}
         #right-column.card {
             box-shadow: none!important;
@@ -41,7 +41,7 @@ which can naturally be solved by quantum photonics.
 
 .. customgalleryitem::
     :tooltip: Dense subgraphs
-    :description: :doc:`../tutorials_apps/run_tutorial_dense`
+    :description: :doc:`Dense subgraph problems <../tutorials_apps/run_tutorial_dense>`
     :figure: ../_static/dense.png
 
 .. raw:: html
@@ -57,7 +57,7 @@ tools in Strawberry Fields to help harness quantum photonics for finding larger 
 
 .. customgalleryitem::
     :tooltip: Maximum clique
-    :description: :doc:`../tutorials_apps/run_tutorial_max_clique`
+    :description: :doc:`Max clique problems <../tutorials_apps/run_tutorial_max_clique>`
     :figure: ../_static/max_clique.png
 
 .. raw:: html
