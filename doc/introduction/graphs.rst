@@ -26,25 +26,16 @@ Let's take a financial network as an example. Suppose you want to transfer some 
 internationally. Your bank might do this by transferring the currency through a number of
 intermediary banks before it gets to its destination. This transaction describes a path on a
 payment network, where banks represent nodes on the graph which are connected if a pair of banks
-can perform a transfer. One problem a bank may look to solve is to find the shortest path through
-the network to minimize transaction costs.
+can perform a transfer. One problem a bank may look to tackle is to find suspicious payment
+patterns in the network.
 
-Strawberry Fields provides tools for solving a range of graph-based problems.
-
-Dense subgraphs
----------------
+Strawberry Fields provides tools for solving graph-based problems. Take a look below to find out
+what you can do!
 
 .. customgalleryitem::
     :tooltip: Dense subgraphs
     :description: :doc:`../tutorials_apps/run_tutorial_dense`
     :figure: ../_static/dense.png
-
-.. raw:: html
-
-    <div style='clear:both'></div>
-
-Maximum clique
---------------
 
 .. customgalleryitem::
     :tooltip: Maximum clique
