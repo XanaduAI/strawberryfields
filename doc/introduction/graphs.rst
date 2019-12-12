@@ -24,12 +24,11 @@ Strawberry Fields provides tools for solving **graph** or **network-based** prob
 problems of practical relevance can be stated in terms of a graph. For example, graphs can be
 used to model **financial markets**, **biological networks**, and **social networks**.
 
-Graphs are composed of a collection of interconnected nodes. Let's take a financial network as an
-example. Suppose you want to transfer some money internationally. Your bank might do this by
-transferring the currency through a number of intermediary banks before it gets to its
-destination. This transaction describes a path on a payment network, where banks represent nodes
-on the graph which are connected if a pair of banks can perform a transfer. One problem a bank
-may look to tackle is to find suspicious payment patterns in the network.
+Graphs are composed of a collection of interconnected nodes. One task often carried out is to
+search for **clusters** in a graph: regions with a high level of connectivity. These subgraphs may
+correspond to **communities in social networks**, **correlated assets in a market**, or
+**mutually influential proteins** in a biological network. Finding these clusters in large graphs
+can be tough, but photonic quantum computers can help.
 
 Take a look below to see some of the graph-based problems that photonic quantum devices can
 help solve!
