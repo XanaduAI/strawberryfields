@@ -8,7 +8,9 @@ Point processes
 *Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.points`
 
 This section shows how to generate GBS point process samples and use them to detect outlier
-points in a data set. Point processes are models for generating random point patterns and GBS
+points in a data set. Point processes are models for generating random point patterns and can be
+useful in machine learning, providing a source of randomness with
+preference towards both diversity :cite:`kulesza2012determinantal` and similarity in data. GBS
 devices can be programmed to operate as special types of point processes that generate clustered
 random point patterns :cite:`jahangiri2019point`.
 

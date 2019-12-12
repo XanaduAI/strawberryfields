@@ -67,18 +67,22 @@ community, and curated by the Strawberry Fields team 🍓.
 .. customgalleryitem::
     :tooltip: Quantum teleportation
     :description: :doc:`Basic tutorial: teleportation </tutorials/tutorial_teleportation>`
+    :figure: /_static/teleport.png
 
 .. customgalleryitem::
     :tooltip: Making photonic measurements
     :description: :doc:`Measurements and post-selection </tutorials/tutorial_post_selection>`
+    :figure: /_static/bs_measure.png
 
 .. customgalleryitem::
     :tooltip: Create a BS circuit
     :description: :doc:`Boson sampling & the permanent </tutorials/tutorial_boson_sampling>`
+    :figure: /_static/boson_sampling_ex.png
 
 .. customgalleryitem::
     :tooltip: Create a GBS circuit
     :description: :doc:`Gaussian boson sampling & the hafnian </tutorials/tutorial_gaussian_boson_sampling>`
+    :figure: /_static/gaussian_boson_sampling.png
 
 .. customgalleryitem::
     :tooltip: Minimizing correlations

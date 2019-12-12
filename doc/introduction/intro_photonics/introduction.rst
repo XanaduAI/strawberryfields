@@ -9,8 +9,6 @@
 Introduction
 =============================================
 
-.. sectionauthor:: Nathan Killoran <nathan@xanadu.ai>
-
 Many physical systems are intrinsically continuous, with light being the
 prototypical example. Such systems reside in an infinite-dimensional
 Hilbert space, offering a paradigm for quantum computation which is

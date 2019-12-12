@@ -6,8 +6,6 @@ Quantum algorithms
 .. role:: html(raw)
    :format: html
 
-.. sectionauthor:: Josh Izaac <josh@xanadu.ai>
-
 Quantum information and quantum computation are, by nature, very highly interdisciplinary fields; while the underlying framework is built upon concepts in quantum mechanics, its applications are far-reaching, with real world applications ranging from network analysis and cryptography, to biochemistry and communication theory.
 
 Here we will discuss several continuous-variable (CV) quantum algorithm examples that can be run with Strawberry Fields.
