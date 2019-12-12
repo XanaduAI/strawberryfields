@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-This module provides tools for users to identify large cliques in graphs.
+Tools for users to identify large cliques in graphs.
 
 A clique is a subgraph where all nodes are connected to each other. The maximum clique problem is
 to identify the largest clique in a graph. It has been shown that samples from GBS can be used to

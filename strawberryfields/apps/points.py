@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-This module provides functions for building kernel matrices and generating point processes using
-GBS.
+Tools for building kernel matrices and generating point processes using GBS.
 
 .. seealso::
 
