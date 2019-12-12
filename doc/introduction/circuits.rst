@@ -1,5 +1,5 @@
-Quantum photonic circuits
-=========================
+Circuits
+========
 
 .. raw:: html
 
@@ -16,7 +16,6 @@ Quantum photonic circuits
 .. toctree::
 	:maxdepth: 1
 
-	circuits/states
 	circuits/glossary
 
 Creating a quantum program

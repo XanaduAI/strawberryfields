@@ -12,17 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-.. _code:
+The Strawberry Fields codebase includes a number of complementary components.
+These can be separated into frontend components, applications layer,
+and backend components (all found within the :file:`strawberryfields.backends` submodule).
+
 .. image:: ../_static/sfcomponents.svg
     :align: center
     :width: 90%
     :target: javascript:void(0);
-
-|
-
-The Strawberry Fields codebase includes a number of complementary components.
-These can be separated into frontend components, applications layer,
-and backend components (all found within the :file:`strawberryfields.backends` submodule).
 """
 from . import apps
 from ._version import __version__

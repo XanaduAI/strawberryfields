@@ -75,6 +75,7 @@ thumbnail with its default link Background color */
   z-index: 98;
   width: 220px;
   bottom: 52%;
+  display: none;
 }
 .sphx-glr-thumbcontainer[tooltip]:hover:before {
   border: solid;
@@ -85,6 +86,7 @@ thumbnail with its default link Background color */
   left: 85%;
   position: absolute;
   z-index: 99;
+  display: none;
 }
 
 .highlight-pytb pre {

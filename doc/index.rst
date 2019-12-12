@@ -209,6 +209,8 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    introduction/chemistry
    tutorials_apps/run_tutorial_sample
    introduction/circuits
+   introduction/ops
+   introduction/states
    zreferences
 
 .. toctree::
