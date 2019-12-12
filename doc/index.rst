@@ -147,7 +147,7 @@ Check out the :doc:`/introduction/installing` page to get Strawberry Fields up a
 
 Users interested in applications of photonic quantum computers should check out the :ref:`graph optimization <graphs-intro>`, :ref:`machine learning <ml-intro>` and :ref:`chemistry <chemistry-intro>` pages. Those wanting to dig deeper into the design of circuits can head to the :doc:`/introduction/circuits` page.
 
-|
+Developers can head to the :doc:`/development/development_guide` to see how they can contribute to Strawberry Fields.
 
 How to cite
 ===========
