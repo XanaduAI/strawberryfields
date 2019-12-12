@@ -143,24 +143,15 @@ Strawberry Fields Documentation
 
 ..
 
-* A **full-stack** quantum software platform, implemented in Python specifically targeted to the CV model
+* Includes **quantum computer simulators** implemented using **NumPy** and **Tensorflow**—with built-in quantum compilation
 
 ..
 
-* Quantum circuits are written using the easy-to-use and intuitive **Blackbird quantum programming language**
+* Future releases will to target experimental backends, including **photonic quantum computing chips**
 
 ..
 
 * Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows anyone to run a quantum computing simulation via **drag and drop**
-
-..
-
-* Includes **quantum computer simulators** implemented using **NumPy** and **Tensorflow** - these built-in quantum compiler tools convert and optimize Blackbird code for classical simulation
-
-.. * Includes a **quantum machine learning toolbox**, built on top of the Tensorflow backend
-
-* Future releases will aim to target experimental backends, including **photonic quantum computing chips**
-
 
 Getting started
 ===============
