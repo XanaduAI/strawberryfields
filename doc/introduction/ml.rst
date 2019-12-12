@@ -50,6 +50,7 @@ devices for machine learning. Take a look below to see what you can do!
 .. customgalleryitem::
     :tooltip: Optimization and machine learning with TensorFlow
     :description: :doc:`Optimization and machine learning with TensorFlow </tutorials/tutorial_machine_learning>`
+    :figure: ../_static/TF.png
 
 .. raw:: html
 

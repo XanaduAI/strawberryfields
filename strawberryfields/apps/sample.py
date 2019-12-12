@@ -14,8 +14,6 @@
 r"""
 Functionality for generating GBS samples using classical simulators.
 
-An accompanying tutorial can be found :ref:`here <apps-sample-tutorial>`.
-
 .. seealso::
 
     :ref:`apps-sample-tutorial`
