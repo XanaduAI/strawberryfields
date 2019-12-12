@@ -3,31 +3,53 @@ Circuits
 
 .. raw:: html
 
-  <style>
-    #right-column.card {
-      box-shadow: none!important;
-    }
-    #right-column.card:hover {
-      box-shadow: none!important;
-    }
-  </style>
+    <style>
+        #right-column.card {
+            box-shadow: none!important;
+        }
+        #right-column.card:hover {
+            box-shadow: none!important;
+        }
+    </style>
 
 
 .. toctree::
-	:maxdepth: 1
+    :maxdepth: 1
 
-	circuits/glossary
+    circuits/glossary
 
 Creating a quantum program
 --------------------------
 
+To construct a photonic quantum circuit in Strawberry Fields, a :class:`~.Program` object
+must be created, and operations applied.
 
-Quantum operations
-------------------
+.. code-block:: python3
 
+    import strawberryfields as sf
+    from strawberryfields import ops
 
-Embedding states and graphs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    # create a 3 mode quantum program
+    prog = sf.program(3)
+
+    with prog.context as q:
+        ops.Sgate(0.54) | q[0]
+        ops.BSgate(0.43, 0.1) | (q[1], q[2])
+
+Here, we are creating a 3 mode program, and applying a :class:`~.Sgate` and
+a :class:`~.BSgate` to various modes. Constructing quantum circuits always follows
+the same structure as the above example; in particular,
+
+* A ``with`` statement is used to populate the program with quantum operations.
+
+* ``Program.context`` is used within the ``with`` statement to return ``q``,
+  a representation of the quantum registers (qumodes or modes).
+
+* Quantum operations are applied to the modes of the program using the syntax
+  
+  .. code-block:: python3
+
+      ops.GateName(arg1, arg2) | (q[i], q[j], ...)
 
 
 Simulating your program
@@ -38,78 +60,6 @@ Compilation
 -----------
 
 
-Tutorials
----------
+Glossary
+--------
 
-Check out some cool applications of Strawberry Fields in the tutorial gallery below.
-These include tutorials that have contributed by the awesome Strawberry Fields
-community, and curated by the Strawberry Fields team 🍓.
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   /tutorials/blackbird
-   Basic tutorial: teleportation </tutorials/tutorial_teleportation>
-   Measurements and post-selection </tutorials/tutorial_post_selection>
-   Boson sampling & the permanent </tutorials/tutorial_boson_sampling>
-   Gaussian boson sampling & the hafnian </tutorials/tutorial_gaussian_boson_sampling>
-   /gallery/minimizing_correlations/minimizing_correlations.ipynb
-   /gallery/state_learner/StateLearning.ipynb
-   /gallery/gate_synthesis/GateSynthesis.ipynb
-   /gallery/scattershot-boson-sampling/scattershot-bs.ipynb
-   /gallery/gate_visualisation/GateVisualisation.ipynb
-
-.. customgalleryitem::
-    :tooltip: Building photonic quantum circuits
-    :description: :doc:`/tutorials/blackbird`
-
-.. customgalleryitem::
-    :tooltip: Quantum teleportation
-    :description: :doc:`Basic tutorial: teleportation </tutorials/tutorial_teleportation>`
-    :figure: /_static/teleport.png
-
-.. customgalleryitem::
-    :tooltip: Making photonic measurements
-    :description: :doc:`Measurements and post-selection </tutorials/tutorial_post_selection>`
-    :figure: /_static/bs_measure.png
-
-.. customgalleryitem::
-    :tooltip: Create a BS circuit
-    :description: :doc:`Boson sampling & the permanent </tutorials/tutorial_boson_sampling>`
-    :figure: /_static/boson_sampling_ex.png
-
-.. customgalleryitem::
-    :tooltip: Create a GBS circuit
-    :description: :doc:`Gaussian boson sampling & the hafnian </tutorials/tutorial_gaussian_boson_sampling>`
-    :figure: /_static/gaussian_boson_sampling.png
-
-.. customgalleryitem::
-    :tooltip: Minimizing correlations
-    :description: :doc:`/gallery/minimizing_correlations/minimizing_correlations`
-    :figure: /gallery/minimizing_correlations/minimizing_correlations.gif
-
-.. customgalleryitem::
-    :tooltip: Quantum state learning
-    :description: :doc:`/gallery/state_learner/StateLearning`
-    :figure: /gallery/state_learner/StateLearning.gif
-
-.. customgalleryitem::
-    :tooltip: Gate synthesis
-    :description: :doc:`/gallery/gate_synthesis/GateSynthesis`
-    :figure: /gallery/gate_synthesis/GateSynthesis.gif
-
-.. customgalleryitem::
-    :tooltip: Scattershot boson sampling
-    :description: :doc:`/gallery/scattershot-boson-sampling/scattershot-bs`
-    :figure: /gallery/scattershot-boson-sampling/scattershot-bs.gif
-
-.. customgalleryitem::
-    :tooltip: Photonic gate visualization
-    :description: :doc:`/gallery/gate_visualisation/GateVisualisation`
-    :figure: /gallery/gate_visualisation/GateVisualisation.gif
-
-.. raw:: html
-
-    <div style='clear:both'></div>
-    <br>
