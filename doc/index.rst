@@ -1,5 +1,89 @@
-Strawberry Fields
-#################
+Strawberry Fields Documentation
+###############################
+
+.. rst-class:: lead grey-text ml-2
+
+:Release: |release|
+
+.. raw:: html
+
+    <style>
+        #right-column.card {
+            box-shadow: none!important;
+        }
+        #right-column.card:hover {
+            box-shadow: none!important;
+        }
+        .breadcrumb {
+            display: none;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .footer-relations {
+            border-top: 0px;
+        }
+    </style>
+    <div class="container mt-2 mb-2">
+        <p class="lead grey-text">
+            Strawberry Fields is a full-stack Python library for designing, optimizing, and
+            utilizing photonic quantum computers.
+        </p>
+        <div class="row mt-3">
+            <div class="col-lg-4 mb-2 adlign-items-stretch">
+                <a href="introduction/introduction.html">
+                    <div class="card rounded-lg" style="height:100%;">
+                        <div class="d-flex">
+                            <div>
+                                <h3 class="card-title pl-3 mt-4">
+                                Using SF
+                                </h3>
+                                <p class="mb-3 grey-text px-3">
+                                    Learn how to interact with a photonic quantum computer <i class="fas fa-angle-double-right"></i>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-4 mb-2 align-items-stretch">
+                <a href="development/development_guide.html">
+                <div class="card rounded-lg" style="height:100%;">
+                    <div class="d-flex">
+                        <div>
+                            <h3 class="card-title pl-3 mt-4">
+                            Developing
+                            </h3>
+                            <p class="mb-3 grey-text px-3">How you can contribute to Strawberry Fields <i class="fas fa-angle-double-right"></i></p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            </div>
+            <div class="col-lg-4 mb-2 align-items-stretch">
+                <a href="code/sf.html">
+                <div class="card rounded-lg" style="height:100%;">
+                    <div class="d-flex">
+                        <div>
+                            <h3 class="card-title pl-3 mt-4">
+                            API
+                            </h3>
+                            <p class="mb-3 grey-text px-3">Explore the Strawberry Fields API <i class="fas fa-angle-double-right"></i></p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+
 
 .. |circuit| image:: _static/gate_teleport_ex.svg
     :align: middle
@@ -20,13 +104,6 @@ Strawberry Fields
     :align: middle
     :width: 300px
     :target: javascript:void(0);
-
-:Release: |release|
-:Date: |today|
-
-Strawberry Fields is a full-stack Python library for designing,
-simulating, and optimizing continuous variable (CV) quantum
-optical circuits.
 
 .. rst-class:: gallery-table
 
