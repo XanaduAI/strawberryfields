@@ -97,6 +97,10 @@ h5 {
 
 /*=============================================================================*/
 
+#sf-logo {
+  width: 250px;
+}
+
 /* Navbar */
 .navbar {
     box-shadow: -1px 14px 30px -20px rgba(0,0,0,0.3);
@@ -325,6 +329,14 @@ pre {
 /*=============================================================================*/
 
 /* Responsiveness */
+
+
+@media screen and (max-width: 560px) {
+  #sf-logo {
+    width: 180px;
+  }
+}
+
 @media screen and (max-width:768px) {
     body {
         padding: 0px;
