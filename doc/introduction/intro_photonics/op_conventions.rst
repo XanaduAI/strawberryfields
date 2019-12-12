@@ -4,10 +4,6 @@
 Conventions and formulas
 ========================
 
-.. sectionauthor:: Nicolás Quesada <nicolas@xanadu.ai>, Ville Bergholm, Josh Izaac
-
-|
-
     "The nice thing about standards is that you have so many to choose from." - Tanenbaum :cite:`tanenbaum2002computer`
 
 In this section, we provide the definitions of various quantum operations used by Strawberry Fields, as well as introduce specific conventions chosen. We'll also provide some more technical details relating to the various operations.

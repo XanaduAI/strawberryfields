@@ -6,8 +6,6 @@
 Measurements and |ps| tutorial
 ##############################
 
-.. sectionauthor:: Josh Izaac <josh@xanadu.ai>
-
 .. role:: html(raw)
    :format: html
 

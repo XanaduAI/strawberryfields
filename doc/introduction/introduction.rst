@@ -49,7 +49,7 @@ controllable gates. This architecture realizes an algorithm known as **Gaussian 
 optimization <graphs-intro>`, :ref:`machine learning <ml-intro>` and :ref:`chemistry calculations
 <chemistry-intro>`.
 
-A GBS device can be programmed to embed any symmetric matrix. Read this section for further
+A GBS device can be programmed to embed any symmetric matrix. Read more for further
 details on GBS without needing to dive deeper into quantum computing!
 
 .. raw:: html
@@ -72,14 +72,14 @@ Photonic quantum computers
     :description: javascript:void(0);
     :figure: /_static/thumbs/photon.png
 
-Photonic quantum systems are described by a slightly different model to that of qubits. The basic
+Photonic quantum systems are described by a slightly different model than qubits. The basic
 elements of a photonic system are **qumodes**, each of which can be described by a superposition
 over different numbers of photons. This model leads to a different set of quantum gates and
 measurements. In the long term, the photonic and qubit-based approaches **will be able to run the
 same set of established quantum algorithms**. On the other hand, near-term photonic and qubit
-systems are expected to have their own strengths and weaknesses.
+systems will excel at their own specific tasks.
 
-Read this section to get to grips with the photonic model of quantum computing and see how it
+Read more to get to grips with the photonic model of quantum computing and see how it
 contrasts with the qubit model.
 
 .. raw:: html
@@ -132,7 +132,7 @@ Conventions and formulas
     :figure: /_static/x_p.png
     :size: 500 200
 
-Describing a quantum system requires a number of conventions to be fixed, including the infamous
+Describing a quantum system requires a number of conventions to be fixed, including the
 value of Planck's constant :math:`\hbar` (we set :math:`\hbar=2` by default)!
 
 This section

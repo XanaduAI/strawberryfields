@@ -3,8 +3,6 @@
 Quantum teleportation tutorial
 ##############################
 
-.. sectionauthor:: Josh Izaac <josh@xanadu.ai>
-
 .. note:: This tutorial is also available in the form of an interactive Jupter Notebook :download:`QuantumTeleportation.ipynb <../../examples/QuantumTeleportation.ipynb>`
 
 To see how to construct and simulate a simple continuous-variable (CV) quantum circuit in Strawberry Fields, let's consider the case of **state teleportation** (see the respective section on the :ref:`quantum algorithms <state_teleportation>` page for a more technical discussion).

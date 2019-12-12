@@ -3,8 +3,6 @@
 Optimization & machine learning tutorial
 ########################################
 
-.. sectionauthor:: Nathan Killoran <nathan@xanadu.ai>
-
 .. note:: This is a more advanced tutorial for users who already have an understanding of Strawberry Fields, e.g., those who have completed the initial :ref:`teleportation tutorial <tutorial>`. Some basic knowledge of `Tensorflow <https://www.tensorflow.org/>`_ is also helpful.
 
 In this tutorial, we show how the user can carry out optimization and machine learning on quantum circuits in Strawberry Fields. This functionality is provided via the Tensorflow simulator backend. By leveraging Tensorflow, we have

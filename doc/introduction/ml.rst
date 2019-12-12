@@ -20,15 +20,11 @@ Machine learning
         }
 	</style>
 
-Combining quantum devices with machine learning can unlock additional performance. This can be in
-the form of **shorter training times** or **increased predictive power**. Quantum machine
-learning is an exciting and rapidly-growing field with multiple approaches to integrating quantum
-systems into the existing toolchain.
-
-One hybrid approach is to treat quantum circuits as an analogue of a neural network, providing a
-machine learning model by controlling parameters of fixed gates in the circuit. Design,
-simulation, and hardware execution of these **variational circuits** is handled by Xanadu's
-`PennyLane package <https://pennylane.ai/>`__.
+Quantum machine learning is an exciting and rapidly-growing field with multiple approaches to
+integrating quantum systems into the existing toolchain. One hybrid approach is to treat quantum
+circuits as an analogue of a neural network, providing a machine learning model by controlling
+parameters of fixed gates in the circuit. Design, simulation, and hardware execution of these
+**variational circuits** is handled by Xanadu's `PennyLane package <https://pennylane.ai/>`__.
 
 Strawberry Fields focuses on providing the functionality for using near-term quantum photonic
 devices for machine learning. Take a look below to see what you can do!
