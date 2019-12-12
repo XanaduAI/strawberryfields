@@ -1,6 +1,6 @@
-qml.package_name
-================
+sf.package_name
+===============
 
 .. rubric:: Modules
 
-.. automodule:: pennylane.package_name
+.. automodule:: strawberryfields.package_name
