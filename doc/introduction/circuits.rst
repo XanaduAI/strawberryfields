@@ -171,3 +171,29 @@ into canonical Gaussian boson sampling form.
 .. code-block:: python3
 
     prog2 = prog.compile('gbs')
+
+
+Tutorials
+---------
+
+For more details and guides on creating and simulating photonic quantum
+circuits, see the following tutorials.
+
+.. customgalleryitem::
+    :tooltip: Building photonic quantum circuits
+    :description: :doc:`/tutorials/blackbird`
+
+.. customgalleryitem::
+    :tooltip: Quantum teleportation
+    :description: :doc:`Basic tutorial: teleportation </tutorials/tutorial_teleportation>`
+    :figure: /_static/teleport.png
+
+.. customgalleryitem::
+    :tooltip: Making photonic measurements
+    :description: :doc:`Measurements and post-selection </tutorials/tutorial_post_selection>`
+    :figure: /_static/bs_measure.png
+
+.. raw:: html
+
+        <div style='clear:both'></div>
+        <br>
