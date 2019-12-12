@@ -10,7 +10,7 @@ when using Strawberry Fields.
 Near-term device
 ----------------
 
-.. figure:: ../_static/GBS.svg
+.. figure:: ../_static/GBS.png
     :align: center
     :width: 70%
     :target: javascript:void(0);
@@ -69,7 +69,7 @@ contrasts with the qubit model.
 Quantum algorithms
 ------------------
 
-.. figure:: ../_static/cloning.svg
+.. figure:: ../_static/cloning.png
     :align: center
     :width: 50%
     :target: javascript:void(0);
