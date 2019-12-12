@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-*For further details on using this module, see:* :ref:`apps-sim-tutorial`
+This module provides the tools to construct graph kernels from GBS.
 
-This module provides the tools to construct graph kernels from GBS. The graph kernel is built by
-mapping GBS samples from each graph to a feature vector. Similarity between graphs can then be
-determined by calculating the overlap between these vectors.
+The graph kernel is built by mapping GBS samples from each graph to a feature vector. Similarity
+between graphs can then be determined by calculating the overlap between these vectors.
 
 The functionality here is based upon the research papers:
 :cite:`bradler2018graph,schuld2019quantum,bradler2019duality`.
 
-An accompanying tutorial can be found :ref:`here <apps-sim-tutorial>`.
+.. seealso::
+
+    :ref:`apps-sim-tutorial`
 
 Coarse-graining GBS samples
 ---------------------------

@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-*For further details on using this module, see:* :ref:`apps-clique-tutorial`
+This module provides tools for users to identify large cliques in graphs.
 
-A clique is a special type of subgraph where all possible connections between nodes are present;
-they are densest possible subgraphs of their size. The maximum clique problem, or max clique for
-short, asks the question: given a graph :math:`G`, what is the largest clique in the graph?
+A clique is a subgraph where all nodes are connected to each other. The maximum clique problem is
+to identify the largest clique in a graph. It has been shown that samples from GBS can be used to
+select dense subgraphs as a starting seed for heuristic algorithms :cite:`banchi2019molecular`.
 
-This module provides tools for users to identify large cliques in graphs. A clique is a subgraph
-where all nodes are connected to each other. The maximum clique problem is to identify the
-largest clique in a graph. It has been shown that samples from GBS can
-be used to select dense subgraphs as a starting seed for heuristic algorithms
-:cite:`banchi2019molecular`.
+.. seealso::
+
+    :ref:`apps-clique-tutorial`
 
 Algorithm
 ^^^^^^^^^

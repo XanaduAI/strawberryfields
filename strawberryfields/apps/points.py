@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-*For further details on using this module, see:* :ref:`apps-points-tutorial`
-
 This module provides functions for building kernel matrices and generating point processes using
-GBS. An accompanying tutorial can be found :ref:`here <apps-points-tutorial>`.
+GBS.
+
+.. seealso::
+
+    :ref:`apps-points-tutorial`
 
 Point processes
 ---------------

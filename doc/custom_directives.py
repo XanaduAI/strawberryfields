@@ -91,13 +91,14 @@ class GalleryItemDirective(Directive):
     .. galleryitem:: intermediate/char_rnn_generation_tutorial.py
         :figure: _static/img/char_rnn_generation.png
         :intro: Put your custom intro here.
+        :size: put image size here
 
     If figure is specified, a thumbnail will be made out of it and stored in
     _static/thumbs. Therefore, consider _static/thumbs as a 'built' directory.
     """
 
     required_arguments = 1
-    optional_arguments = 0
+    optional_arguments = 1
     final_argument_whitespace = True
     option_spec = {'figure': directives.unchanged,
                    'intro': directives.unchanged}
@@ -133,8 +134,12 @@ class GalleryItemDirective(Directive):
                 except OSError:
                     pass
 
+                x, y = (400, 280)
+                if 'size' in self.options:
+                    x, y = self.options['size'].split(" ")
+
                 sphinx_gallery.gen_rst.scale_image(figname, save_figname,
-                                                   400, 280)
+                                                   x, y)
                 # replace figure in rst with simple regex
                 thumbnail_rst = re.sub(r'..\sfigure::\s.*\.png',
                                        '.. figure:: /{}'.format(save_figname),
@@ -179,17 +184,19 @@ class CustomGalleryItemDirective(Directive):
         :tooltip: I am writing this tutorial to focus specifically on NLP for people who have never written code in any deep learning framework
         :figure: /_static/img/thumbnails/babel.jpg
         :description: :doc:`/beginner/deep_learning_nlp_tutorial`
+        :size: put image size here
 
     If figure is specified, a thumbnail will be made out of it and stored in
     _static/thumbs. Therefore, consider _static/thumbs as a 'built' directory.
     """
 
     required_arguments = 0
-    optional_arguments = 0
+    optional_arguments = 1
     final_argument_whitespace = True
     option_spec = {'tooltip': directives.unchanged,
                    'figure': directives.unchanged,
-                   'description': directives.unchanged}
+                   'description': directives.unchanged,
+                   'size': directives.unchanged}
 
     has_content = False
     add_index = False
@@ -211,7 +218,11 @@ class CustomGalleryItemDirective(Directive):
                 except FileExistsError:
                     pass
 
-                sphinx_gallery.gen_rst.scale_image(figname, thumbnail, 400, 280)
+                x, y = (400, 280)
+                if 'size' in self.options:
+                    x, y = self.options['size'].split(" ")
+
+                sphinx_gallery.gen_rst.scale_image(figname, thumbnail, int(x), int(y))
             else:
                 thumbnail = '_static/thumbs/code.png'
 
