@@ -22,6 +22,16 @@ mind.
 
 For dense subgraph and maximum clique identification, we provide:
 
+.. |planted| image:: ../../_static/graphs/planted.png
+    :align: middle
+    :width: 250px
+    :target: javascript:void(0);
+
+.. |tace_as| image:: ../../_static/graphs/TACE-AS.png
+    :align: middle
+    :width: 250px
+    :target: javascript:void(0);
+
 +---------------+---------------+
 |   |planted|   |    |tace_as|  |
 |               |               |
@@ -29,6 +39,26 @@ For dense subgraph and maximum clique identification, we provide:
 +---------------+---------------+
 
 For graph similarity, we provide:
+
+.. |mutag_0| image:: ../../_static/graphs/MUTAG_0.png
+    :align: middle
+    :width: 250px
+    :target: javascript:void(0);
+
+.. |mutag_1| image:: ../../_static/graphs/MUTAG_1.png
+    :align: middle
+    :width: 250px
+    :target: javascript:void(0);
+
+.. |mutag_2| image:: ../../_static/graphs/MUTAG_2.png
+    :align: middle
+    :width: 250px
+    :target: javascript:void(0);
+
+.. |mutag_3| image:: ../../_static/graphs/MUTAG_3.png
+    :align: middle
+    :width: 250px
+    :target: javascript:void(0);
 
 +-------------+-------------+
 |  |mutag_0|  |  |mutag_1|  |
