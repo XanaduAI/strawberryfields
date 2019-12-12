@@ -25,11 +25,19 @@ Strawberry Fields Documentation
             border-top: 0px;
         }
     </style>
-    <div class="container mt-2 mb-2">
+    <div class="row container-fluid">
+      <div class="col-lg-4 col-12 align-middle mb-2 text-center">
+          <img src="_static/laptop.png" class="img-fluid" alt="Responsive image" style="width:100%; max-width: 300px;"></img>
+      </div>
+      <div class="col-lg-8 col-12 align-middle mb-2">
         <p class="lead grey-text">
             Strawberry Fields is a full-stack Python library for designing, optimizing, and
             utilizing photonic quantum computers.
         </p>
+      </div>
+    </div>
+    <div style='clear:both'></div>
+    <div class="container mt-2 mb-2">
         <div class="row mt-3">
             <div class="col-lg-4 mb-2 adlign-items-stretch">
                 <a href="introduction/introduction.html">
@@ -79,39 +87,6 @@ Strawberry Fields Documentation
     </div>
 
 
-
-
-
-
-
-
-.. |circuit| image:: _static/gate_teleport_ex.svg
-    :align: middle
-    :width: 100%
-    :target: javascript:void(0);
-
-.. |photon| image:: gallery/state_learner/StateLearning.gif
-    :align: middle
-    :width: 250px
-    :target: javascript:void(0);
-
-.. |NOON| image:: _static/NOON.png
-    :align: middle
-    :width: 250px
-    :target: javascript:void(0);
-
-.. |SFI| image:: _static/laptop.png
-    :align: middle
-    :width: 300px
-    :target: javascript:void(0);
-
-.. rst-class:: gallery-table
-
-+-----------------+-----------+-----------------+
-| |photon|        |  |SFI|    |  |NOON|         |
-+-----------------+-----------+-----------------+
-
-
 .. raw:: html
 
     <h2 style="margin-top:0px;">Features</h2>
@@ -134,9 +109,11 @@ Strawberry Fields Documentation
         }
     </style>
 
-.. image:: _static/code.png
-    :align: left
-    :width: 320px
+
+
+.. image:: gallery/state_learner/StateLearning.gif
+    :align: right
+    :width: 300px
     :target: javascript:void(0);
 
 * An open-source software architecture for **photonic quantum computing**
@@ -155,6 +132,12 @@ Strawberry Fields Documentation
 
 Getting started
 ===============
+
+
+.. image:: _static/NOON.png
+    :align: left
+    :width: 250px
+    :target: javascript:void(0);
 
 To see Strawberry Fields in action immediately, try out our `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web application. Prepare your initial states, drag and drop gates, and watch your simulation run in real time right in your web browser. Then, check out our :ref:`gallery <gallery>` to see how Strawberry Fields is being used to explore interesting problems and cutting edge research in photonics and quantum computing.
 
