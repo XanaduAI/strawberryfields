@@ -105,11 +105,8 @@ Quantum algorithms
     :size: 293 93
 
 Photonic quantum algorithms have been established for a number of protocols, including
-**teleportation**, **Hamiltonian simulation** and **quantum neural networks**.
-
-This section covers
-the technical details of these quantum algorithms and shows how they can be implemented in
-Strawberry Fields.
+**teleportation**, **Hamiltonian simulation** and **quantum neural networks**. This section
+covers the technical details of these quantum algorithms.
 
 .. raw:: html
 
