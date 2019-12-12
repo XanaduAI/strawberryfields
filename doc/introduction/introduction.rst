@@ -4,13 +4,40 @@ Introduction to quantum photonics
 .. role:: html(raw)
    :format: html
 
+.. raw:: html
+
+    <style>
+    .figure img {
+      position: relative;
+      float: right;
+    }
+    .sphx-glr-thumbcontainer {
+      float: right;
+      margin-left: 30px;
+      box-shadow: none;
+      min-height: unset;
+    }
+    .sphx-glr-thumbcontainer:hover {
+      box-shadow: none;
+    }
+    .sphx-glr-thumbcontainer .caption {
+      display: none;
+    }
+    .sphx-glr-thumbcontainer .figure {
+      width: 200px;
+    }
+    .sphx-glr-thumbcontainer img {
+      width: 100%;
+    }
+    </style>
+
 Use this section to gain an understanding of photonic quantum computing and as a reference guide
 when using Strawberry Fields.
 
 Near-term device
 ----------------
 
-.. figure:: ../_static/gbs.svg
+.. figure:: /_static/gbs.svg
     :align: center
     :width: 70%
     :target: javascript:void(0);
@@ -39,10 +66,10 @@ details on GBS without needing to dive deeper into quantum computing!
 Photonic quantum computers
 --------------------------
 
-.. figure:: ../_static/thumbs/photon.png
-    :align: center
-    :width: 40%
-    :target: javascript:void(0);
+.. customgalleryitem::
+    :tooltip: a photon
+    :description: javascript:void(0);
+    :figure: /_static/thumbs/photon.png
 
 Photonic quantum systems are described by a slightly different model to that of qubits. The basic
 elements of a photonic system are **qumodes**, each of which can be described by a superposition
@@ -69,10 +96,10 @@ contrasts with the qubit model.
 Quantum algorithms
 ------------------
 
-.. figure:: ../_static/cloning.svg
-    :align: center
-    :width: 50%
-    :target: javascript:void(0);
+.. customgalleryitem::
+    :tooltip: a photon
+    :description: javascript:void(0);
+    :figure: /_static/thumbs/cloning.png
 
 Photonic quantum algorithms have been established for a number of protocols, including
 **teleportation**, **Hamiltonian simulation** and **quantum neural networks**. This section covers
@@ -94,10 +121,10 @@ Strawberry Fields.
 Conventions and formulas
 ------------------------
 
-.. figure:: ../_static/x_p.png
-    :align: center
-    :width: 30%
-    :target: javascript:void(0);
+.. customgalleryitem::
+    :tooltip: a photon
+    :description: javascript:void(0);
+    :figure: /_static/x_p.png
 
 Describing a quantum system requires a number of conventions to be fixed, including the infamous
 value of Planck's constant :math:`\hbar` (we set :math:`\hbar=2` by default)! This section
