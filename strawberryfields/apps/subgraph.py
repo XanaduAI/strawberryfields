@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-This module provides tools for users to find dense subgraphs of different sizes.
+Tools for users to find dense subgraphs of different sizes.
 
 The search heuristic in this module works by resizing a collection of starting subgraphs and
 keeping track of the densest identified. The starting subgraphs can be selected by sampling from

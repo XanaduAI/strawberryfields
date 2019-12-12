@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-This module provides access to pre-calculated datasets of simulated GBS samples.
+Pre-calculated datasets of simulated GBS samples.
 
 Graphs
 ------
