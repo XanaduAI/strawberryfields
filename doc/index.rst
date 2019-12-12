@@ -120,11 +120,15 @@ Strawberry Fields Documentation
 
 ..
 
-* Includes **quantum computer simulators** implemented using **NumPy** and **Tensorflow**—with built-in quantum compilation
+* Includes high-level functions for **solving practical problems** including **graph and network optimization**, **machine learning** and **chemistry**.
 
 ..
 
-* Future releases will to target experimental backends, including **photonic quantum computing chips**
+* Includes **quantum simulators** implemented using **NumPy** and **Tensorflow**—with built-in quantum compilation
+
+..
+
+* Future releases will target experimental backends, including **photonic quantum computing chips**
 
 ..
 
