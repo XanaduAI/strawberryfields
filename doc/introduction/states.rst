@@ -1,16 +1,37 @@
 States
 ======
 
-In Strawberry Fields, the statevector simulators return ``state`` objects,
+In Strawberry Fields, the statevector simulator backends return ``state`` objects,
 which provide useful information and processing of the quantum state of
-the system. These methods may differ depending on the backend, but there
-are a few that are implemented for all backends.
+the system. For example, consider the following program:
 
-.. note::
-    In the following, keyword arguments are denoted ``**kwargs``, and allow additional
-    options to be passed to the underlying State class - these are documented where
-    available. For more details on relevant keyword arguments, please
-    consult the backend documentation directly.
+.. code-block:: python3
+
+    prog = sf.Program(3)
+
+    with prog.context as q:
+        ops.Sgate(0.54) | q[0]
+        ops.Sgate(0.54) | q[1]
+        ops.Sgate(0.54) | q[2]
+        ops.BSgate(0.43, 0.1) | (q[0], q[2])
+        ops.BSgate(0.43, 0.1) | (q[1], q[2])
+
+    eng = sf.Engine("fock", backend_options={"cutoff_dim": 10})
+    result = eng.run(prog)
+    state = result.state
+
+By executing this program on a local simulator backend, we can use the state
+object to determine the trace, return the density matrix, and calculate particular
+Fock basis state probabilities:
+
+>>> state.trace()
+0.9989783190545866
+>>> rho = state.dm()
+>>> state.fock_prob([0, 0, 2])
+0.07933909728557098
+
+These methods may differ depending on the backend, but there
+are a few that are implemented for all backends.
 
 Common methods and attributes
 -----------------------------

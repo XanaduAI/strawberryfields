@@ -44,6 +44,9 @@ must be created, and operations applied.
 
     with prog.context as q:
         ops.Sgate(0.54) | q[0]
+        ops.Sgate(0.54) | q[1]
+        ops.Sgate(0.54) | q[2]
+        ops.BSgate(0.43, 0.1) | (q[0], q[2])
         ops.BSgate(0.43, 0.1) | (q[1], q[2])
         ops.MeasureFock() | q
 
@@ -116,7 +119,7 @@ selected backend via :meth:`~.Engine.run`:
 
 .. code-block:: python3
 
-    result = eng.run(prog, run_options={shots=2})
+    result = eng.run(prog)
 
 Execution results
 -----------------
@@ -143,13 +146,16 @@ for accessing the results of your program execution:
   .. code-block:: pycon
 
       >>> results.samples
-      [[0, 1, 2]
-      [[1, 0, 0]
+      [0, 0, 2]
 
 .. seealso::
 
     Visit the :doc:`states` page to see an overview of available quantum state methods.
 
+
+.. note::
+
+    Measured modes will always be returned to the vacuum state.
 
 .. warning::
 
