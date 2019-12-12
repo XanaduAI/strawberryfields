@@ -143,13 +143,11 @@ Getting started
     :width: 250px
     :target: javascript:void(0);
 
-To see Strawberry Fields in action immediately, try out our `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web application. Prepare your initial states, drag and drop gates, and watch your simulation run in real time right in your web browser. Then, check out our :ref:`gallery <gallery>` to see how Strawberry Fields is being used to explore interesting problems and cutting edge research in photonics and quantum computing.
+Check out the :doc:`/introduction/installing` page to get Strawberry Fields up and running, then jump over to the :doc:`/introduction/tutorials` to see what you can do.
 
-To get Strawberry Fields installed and running on your system, begin at the :ref:`download and installation guide <installation>`. Then, familiarize yourself with the framework of :ref:`continuous-variable quantum computation <introduction>`, the :ref:`conventions <conventions>` used by Strawberry Fields, and check out some important and interesting continuous-variable :ref:`quantum algorithms <algorithms>`.
+Users interested in applications of photonic quantum computers should check out the :ref:`graph optimization <graphs-intro>`, :ref:`machine learning <ml-intro>` and :ref:`chemistry <chemistry-intro>` pages. Those wanting to dig deeper into the design of circuits can head to the :doc:`/introduction/circuits` page.
 
-For getting started with writing your own Strawberry Fields code, have a look at the :ref:`quantum teleportation tutorial <tutorial>` - this beginner's tutorial breaks down an example Strawberry Fields program for implementing state teleportation. More advanced tutorials also provided include :ref:`boson sampling <boson_tutorial>`, :ref:`gaussian boson sampling <gaussian_boson_tutorial>`, and :ref:`machine learning <machine_learning_tutorial>`.
-
-Finally, detailed documentation on the :ref:`Strawberry fields API <code>` is provided, for full details on available quantum operations, arguments, and backends.
+|
 
 How to cite
 ===========
