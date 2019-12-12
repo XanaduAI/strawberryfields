@@ -1,6 +1,17 @@
 Tutorials
 =========
 
+.. raw:: html
+
+    <style>
+        #right-column.card {
+            box-shadow: none!important;
+        }
+        #right-column.card:hover {
+            box-shadow: none!important;
+        }
+    </style>
+
 Check out some cool applications of Strawberry Fields in the tutorial gallery below.
 These include tutorials that have contributed by the awesome Strawberry Fields
 community, and curated by the Strawberry Fields team 🍓.
@@ -37,7 +48,7 @@ Applications
 .. customgalleryitem::
     :tooltip: Vibronic spectra
     :description: :doc:`../tutorials_apps/run_tutorial_sample`
-    :figure: ../_static/thumbs/spectrum.png
+    :figure: ../_static/thumbs/photon.png
 
 .. raw:: html
 
@@ -47,6 +58,22 @@ Applications
 
 Algorithms
 ----------
+
+.. toctree::
+    :hidden:
+    :maxdepth: 1
+
+    /tutorials/blackbird
+    /tutorials/tutorial_teleportation
+    /tutorials/tutorial_post_selection
+    /tutorials/tutorial_boson_sampling
+    /tutorials/tutorial_gaussian_boson_sampling
+    /tutorials/tutorial_machine_learning
+    /gallery/minimizing_correlations/minimizing_correlations
+    /gallery/state_learner/StateLearning
+    /gallery/gate_synthesis/GateSynthesis
+    /gallery/scattershot-boson-sampling/scattershot-bs
+    /gallery/gate_visualisation/GateVisualisation
 
 .. customgalleryitem::
     :tooltip: Building photonic quantum circuits
