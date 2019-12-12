@@ -10,7 +10,7 @@ when using Strawberry Fields.
 Near-term device
 ----------------
 
-.. figure:: ../_static/gbs.svg
+.. figure:: ../_static/GBS.svg
     :align: center
     :width: 70%
     :target: javascript:void(0);
