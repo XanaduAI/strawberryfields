@@ -13,10 +13,11 @@
 # limitations under the License.
 r"""
 This module provides functionality for visualizing graphs, subgraphs, point processes,
-and vibronic spectra. It
-requires the installation of the Plotly library, which is not a dependency of Strawberry
-Fields. Plotly can be installed using ``pip install plotly`` or by visiting their `installation
-instructions <https://plot.ly/python/getting-started/#installation>`__.
+and vibronic spectra.
+
+Visualization requires installation of the Plotly library, which is not a dependency of
+Strawberry Fields. Plotly can be installed using ``pip install plotly`` or by visiting their
+`installation instructions <https://plot.ly/python/getting-started/#installation>`__.
 """
 # pylint: disable=import-outside-toplevel
 from typing import Optional, Tuple

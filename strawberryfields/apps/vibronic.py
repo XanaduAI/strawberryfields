@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-*For further details on using this module, see:* :ref:`apps-vibronic-tutorial`
+This module contains functions used for computing molecular vibronic spectra with GBS.
 
-This module contains functions used for computing molecular vibronic spectra with GBS. In vibronic
-spectroscopy, incoming light simultaneously excites a molecule to higher electronic and
+In vibronic spectroscopy, incoming light simultaneously excites a molecule to higher electronic and
 vibrational states. The difference in the energies of the initial and final states
 determines the frequency of the photons that are absorbed by the molecule. The probability of
 the transition between two specific vibrational states are referred to as Franck-Condon factors
@@ -23,6 +22,10 @@ the transition between two specific vibrational states are referred to as Franck
 device can be programmed to provide samples that can be processed to obtain the molecular
 vibronic spectra. Theoretical background on computing vibronic spectra using GBS can be found in
 :cite:`huh2015boson` and :cite:`quesada2019franck`.
+
+.. seealso::
+
+    :ref:`apps-vibronic-tutorial`
 
 GBS parameters
 --------------
