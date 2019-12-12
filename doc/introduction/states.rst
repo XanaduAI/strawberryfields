@@ -1,7 +1,5 @@
-.. _state_class:
-
-State objects
-=============
+States
+======
 
 In Strawberry Fields, the statevector simulators return ``state`` objects,
 which provide useful information and processing of the quantum state of
