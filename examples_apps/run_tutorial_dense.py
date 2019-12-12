@@ -5,7 +5,7 @@
 Dense Subgraphs
 ===============
 
-*Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.dense`
+*Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.subgraph`
 
 Graphs can be used to model a wide variety of concepts: social networks, financial markets,
 biological networks, and many others. A common problem of interest is to find subgraphs that
