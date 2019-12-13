@@ -1,24 +1,9 @@
 # pylint: disable=invalid-name,no-member,wrong-import-position,wrong-import-order,ungrouped-imports
 """
-.. _apps-sample-tutorial:
-
-Sampling
-========
+Sampling from GBS
+=================
 
 *Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.sample`
-
-Quantum computers are probabilistic and a common task is to take samples. Strawberry Fields
-can be used to construct quantum photonic circuits and sample from them using a variety of
-different measurements.
-
-Gaussian boson sampling (GBS) is a photonic algorithm that can be realized using near-term
-devices. Samples from this device can used for :ref:`graph optimization <graphs-intro>`,
-:ref:`machine learning <ml-intro>` and :ref:`chemistry calculations <chemistry-intro>`.
-Strawberry Fields provides high-level tools for embedding problems into GBS without needing to
-worry about designing a quantum circuit.
-
-Sampling from GBS
------------------
 
 A GBS device can be programmed to sample from any symmetric matrix :math:`A`. To sample,
 we must specify the mean number of photons being generated in the device and optionally the form of
