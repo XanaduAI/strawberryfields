@@ -26,8 +26,8 @@ circuits as an analogue of a neural network, providing a machine learning model 
 parameters of fixed gates in the circuit. Design, simulation, and hardware execution of these
 **variational circuits** is handled by Xanadu's `PennyLane package <https://pennylane.ai/>`__.
 
-Strawberry Fields focuses on providing the functionality for using near-term quantum photonic
-devices for machine learning. Take a look below to see what you can do!
+Strawberry Fields focuses on providing the functionality for using quantum photonic devices for
+machine learning. Take a look below to see what you can do!
 
 .. toctree::
    :maxdepth: 1

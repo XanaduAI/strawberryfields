@@ -27,7 +27,7 @@ Let's take a look!
 
 Finding dense subgraphs
 -----------------------
-As usual, the first step is to import all required modules. We'll need the :mod:`~.apps.data`
+The first step is to import all required modules. We'll need the :mod:`~.apps.data`
 module to load pre-generated samples, the :mod:`~.apps.sample` module to postselect samples, the
 :mod:`~.apps.subgraph` module to search for dense subgraphs, and the :mod:`~.apps.plot` module to
 visualize the graphs. We'll also use Plotly which is required for the :mod:`~.apps.plot` module and
