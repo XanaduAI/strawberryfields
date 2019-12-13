@@ -7,3 +7,4 @@ quantum-blackbird
 thewalrus>=0.7
 toml
 appdirs
+plotly==4.4.1
