@@ -346,4 +346,6 @@ class LocalEngine(BaseEngine):
         return result
 
 
-Engine = LocalEngine  # alias for backwards compatibility
+class Engine(LocalEngine):
+    # alias for backwards compatibility
+    __doc__ = LocalEngine.__doc__

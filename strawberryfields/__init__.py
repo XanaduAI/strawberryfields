@@ -45,10 +45,28 @@ def version():
 
 
 def about():
-    """About box for Strawberry Fields.
+    """Strawberry Fields information.
 
     Prints the installed version numbers for SF and its dependencies,
     and some system info. Please include this information in bug reports.
+
+    **Example:**
+
+    .. code-block:: pycon
+
+        >>> sf.about()
+        Strawberry Fields: a Python library for continuous-variable quantum circuits.
+        Copyright 2018-2019 Xanadu Quantum Technologies Inc.
+
+        Python version:            3.6.8
+        Platform info:             Linux-5.0.0-36-generic-x86_64-with-debian-buster-sid
+        Installation path:         /home/josh/Dropbox/Work/Xanadu/sf_cloud/strawberryfields
+        Strawberry Fields version: 0.12.0-dev
+        Numpy version:             1.17.4
+        Scipy version:             1.3.0
+        The Walrus version:           0.10.0-dev
+        Blackbird version:         0.2.1
+        TensorFlow version:        2.0.0
     """
     # pylint: disable=import-outside-toplevel
     import sys
@@ -84,7 +102,22 @@ def about():
 def cite():
     """Prints the BibTeX citation for Strawberry Fields.
 
-    BibTex code for reference :cite:`strawberryfields`.
+    **Example:**
+
+    .. code-block:: pycon
+
+        >>> sf.cite()
+        @article{strawberryfields,
+            title = {{S}trawberry {F}ields: A Software Platform for Photonic Quantum Computing},
+            author = {Killoran, Nathan and Izaac, Josh and Quesada, Nicol{'{a}}s and Bergholm, Ville and Amy, Matthew and Weedbrook, Christian},
+            journal = {Quantum},
+            volume = {3},
+            pages = {129},
+            year = {2019},
+            doi = {10.22331/q-2019-03-11-129},
+            archivePrefix = {arXiv},
+            eprint = {1804.03159},
+        }
     """
     citation = """@article{strawberryfields,
     title = {{S}trawberry {F}ields: A Software Platform for Photonic Quantum Computing},
