@@ -35,6 +35,10 @@ optical circuits.
 Features
 ========
 
+.. raw:: html
+
+    <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/doc_restructure/doc/gallery/state_learner/StateLearning.gif" width="300px"  align="right">
+
 * An open-source software architecture for **photonic quantum computing**
 
 * Includes high-level functions for **solving practical problems** including **graph and network optimization**, **machine learning** and **chemistry**.
