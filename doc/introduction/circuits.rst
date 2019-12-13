@@ -56,7 +56,7 @@ must be created, and operations applied.
         ops.BSgate(0.43, 0.1) | (q[1], q[2])
         ops.MeasureFock() | q
 
-Here, we are creating a 3 mode program, and applying a :class:`~.Sgate` and
+Here, we are creating a 3-mode program, and applying a :class:`~.Sgate` and
 a :class:`~.BSgate` to various modes. Constructing quantum circuits always follows
 the same structure as the above example; in particular,
 
@@ -104,7 +104,7 @@ backend options. Available backends include:
   This backend represents the quantum state
   and operations via the Fock basis, so can represent all possible CV states and
   operations. However numerical error is also introduced due to truncation of the Fock
-  space, and consume more memory.
+  space—increasing the cutoff results in higher accuracy at a cost of increased memory consumption.
 
 * The ``'gaussian'`` backend, written in NumPy.
 
