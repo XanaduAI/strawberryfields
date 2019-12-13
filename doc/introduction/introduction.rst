@@ -37,7 +37,7 @@ Introduction
     :width: 250px
     :target: javascript:void(0);
 
-Follow the `installation <_static/install.html>`_ page to get Strawberry Fields up and running, then jump over to the :doc:`/introduction/tutorials` to see what you can do.
+Follow the `installation <../_static/install.html>`_ page to get Strawberry Fields up and running, then jump over to the :doc:`/introduction/tutorials` to see what you can do.
 
 Users interested in applications of photonic quantum computers should check out the :doc:`/introduction/graphs`, :doc:`/introduction/ml` and :doc:`/introduction/chemistry` pages. Those wanting to dig deeper into the design of circuits can head to the :doc:`/introduction/circuits` page.
 
@@ -59,9 +59,9 @@ Near-term device
 
 The near-term device available for photonic quantum computing has a fixed architecture with
 controllable gates. This architecture realizes an algorithm known as **Gaussian boson sampling**
-(GBS), which can be **programmed to solve a range of practical tasks** such as :ref:`graph
-optimization <graphs-intro>`, :ref:`machine learning <ml-intro>` and :ref:`chemistry calculations
-<chemistry-intro>`.
+(GBS), which can be **programmed to solve a range of practical tasks** in :ref:`graphs
+and networking <graphs-intro>`, :ref:`machine learning <ml-intro>` and
+:ref:`chemistry <chemistry-intro>`.
 
 A GBS device can be programmed to embed any symmetric matrix. Read more for further
 details on GBS without needing to dive deeper into quantum computing!
