@@ -1,11 +1,12 @@
 .. _machine_learning_tutorial:
 
-Optimization & machine learning tutorial
-########################################
+Optimization & machine learning
+###############################
 
-.. note:: This is a more advanced tutorial for users who already have an understanding of Strawberry Fields, e.g., those who have completed the initial :ref:`teleportation tutorial <tutorial>`. Some basic knowledge of `Tensorflow <https://www.tensorflow.org/>`_ is also helpful.
+.. note:: The content in this page is suited to more advanced users who already have an understanding of Strawberry Fields, e.g., those who have completed the :ref:`teleportation tutorial <tutorial>`. Some basic knowledge of `Tensorflow <https://www.tensorflow.org/>`_ is also helpful.
 
-In this tutorial, we show how the user can carry out optimization and machine learning on quantum circuits in Strawberry Fields. This functionality is provided via the Tensorflow simulator backend. By leveraging Tensorflow, we have
+In this page, we show how the user can carry out optimization and machine learning on quantum
+circuits in Strawberry Fields. This functionality is provided via the Tensorflow simulator backend. By leveraging Tensorflow, we have
 access to a number of additional funtionalities, including GPU integration, automatic gradient computation, built-in optimization algorithms, and other machine learning tools.
 
 Basic functionality
