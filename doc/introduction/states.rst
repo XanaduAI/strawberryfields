@@ -1,3 +1,6 @@
+.. role:: html(raw)
+   :format: html
+
 States
 ======
 
@@ -36,7 +39,9 @@ are a few that are implemented for all backends.
 Common methods and attributes
 -----------------------------
 
-.. currentmodule:: strawberryfields.backends.states.BaseState
+.. currentmodule:: strawberryfields.backends.BaseState
+
+:html:`<div class="summary-table">`
 
 .. autosummary::
     data
@@ -55,6 +60,8 @@ Common methods and attributes
     quad_expectation
     poly_quad_expectation
 
+:html:`</div>`
+
 
 Gaussian states
 ---------------
@@ -64,6 +71,8 @@ Backend that represent the quantum state using the Gaussian formalism
 with the following methods and attributes.
 
 .. currentmodule:: strawberryfields.backends.gaussianbackend.states.GaussianState
+
+:html:`<div class="summary-table">`
 
 .. autosummary::
     means
@@ -80,6 +89,8 @@ with the following methods and attributes.
     fidelity_vacuum
     fidelity_coherent
 
+:html:`</div>`
+
 
 Fock states
 -----------
@@ -88,7 +99,9 @@ Backend that represent the quantum state in the Fock basis
 (such as the ``fock`` or ``tf`` backends) will return a ``FockState``
 object.
 
-.. currentmodule:: strawberryfields.backends.states.BaseFockState
+.. currentmodule:: strawberryfields.backends.BaseFockState
+
+:html:`<div class="summary-table">`
 
 .. autosummary::
     cutoff_dim
@@ -96,3 +109,5 @@ object.
     dm
     trace
     all_fock_probs
+
+:html:`</div>`

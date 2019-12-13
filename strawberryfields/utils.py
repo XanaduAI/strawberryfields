@@ -16,7 +16,7 @@ This module defines and implements several utility functions and language extens
 StrawberryFields. These include:
 
 
-* NumPy state functions
+* **NumPy state functions**
 
   These functions allow the calculation of various quantum states in either the Fock
   basis (a one-dimensional array indexed by Fock state) or the Gaussian basis (returning
@@ -26,18 +26,18 @@ StrawberryFields. These include:
   These are useful for generating states for use in calculating the fidelity of simulations.
 
 
-* Random functions
+* **Random functions**
 
   These functions generate random numbers and matrices corresponding to various
   quantum states and operations.
 
-* Decorators
+* **Decorators**
 
   The :class:`~.strawberryfields.utils.operation` decorator allows functions
   containing quantum operations acting on a qumode to be used as an
   operation itself within a :class:`.Program` context.
 
-* Program functions
+* **Program functions**
 
   These functions act on :class:`.Program` instances, returning
   or extracting information from the quantum circuit.

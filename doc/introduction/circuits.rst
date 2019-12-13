@@ -4,12 +4,18 @@ Circuits
 .. raw:: html
 
     <style>
-        #right-column.card {
-            box-shadow: none!important;
-        }
-        #right-column.card:hover {
-            box-shadow: none!important;
-        }
+      .sphx-glr-thumbcontainer {
+        float: center;
+        margin-top: 20px;
+        margin-right: 50px;
+              margin-bottom: 20px;
+      }
+          #right-column.card {
+              box-shadow: none!important;
+          }
+          #right-column.card:hover {
+              box-shadow: none!important;
+          }
     </style>
 
 
@@ -179,8 +185,8 @@ into canonical Gaussian boson sampling form.
     prog2 = prog.compile('gbs')
 
 
-Tutorials
----------
+Related tutorials
+-----------------
 
 For more details and guides on creating and simulating photonic quantum
 circuits, see the following tutorials.

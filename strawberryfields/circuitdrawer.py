@@ -15,23 +15,6 @@ r"""
 A Strawberry Fields module that provides an object-oriented interface for building
 quantum circuit representations of continuous-variable circuits using the
 :math:`\LaTeX` `Qcircuit package <https://ctan.org/pkg/qcircuit>`_.
-
-The drawing of the following Xanadu supported operations are currently supported:
-
-.. rst-class:: docstable
-
-+-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|     Gate type     |                                                                            Supported gates                                                                             |
-+===================+========================================================================================================================================================================+
-| Single mode gates | :class:`~.Dgate`, :class:`~.Xgate`, :class:`~.Zgate`, :class:`~.Sgate`, :class:`~.Rgate`, :class:`~.Pgate`, :class:`~.Vgate`, :class:`~.Kgate`, :class:`~.Fouriergate` |
-+-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Two mode gates    | :class:`~.BSgate`, :class:`~.S2gate`, :class:`~.CXgate`, :class:`~.CZgate`, :class:`~.CKgate`                                                                          |
-+-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-
-.. note::
-
-    Measurement operations :class:`~.MeasureHomodyne`, :class:`~.MeasureHeterodyne`,
-    and :class:`~.MeasureFock` are not currently supported.
 """
 import datetime
 import os

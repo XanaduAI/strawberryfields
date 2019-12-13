@@ -1,6 +1,5 @@
 .. _conventions:
 
-========================
 Conventions and formulas
 ========================
 

@@ -143,7 +143,7 @@ Getting started
     :width: 250px
     :target: javascript:void(0);
 
-Check out the :doc:`/introduction/installing` page to get Strawberry Fields up and running, then jump over to the :doc:`/introduction/tutorials` to see what you can do.
+Check out the `installation <_static/install.html>`_ page to get Strawberry Fields up and running, then jump over to the :doc:`/introduction/tutorials` to see what you can do.
 
 Users interested in applications of photonic quantum computers should check out the :ref:`graph optimization <graphs-intro>`, :ref:`machine learning <ml-intro>` and :ref:`chemistry <chemistry-intro>` pages. Those wanting to dig deeper into the design of circuits can head to the :doc:`/introduction/circuits` page.
 

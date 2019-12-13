@@ -561,6 +561,24 @@ class Program:
         This will generate the LaTeX code required to draw the quantum circuit
         diagram corresponding to the Program.
 
+
+        The drawing of the following Xanadu supported operations are currently supported:
+
+        .. rst-class:: docstable
+
+        +-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        |     Gate type     |                                                                            Supported gates                                                                             |
+        +===================+========================================================================================================================================================================+
+        | Single mode gates | :class:`~.Dgate`, :class:`~.Xgate`, :class:`~.Zgate`, :class:`~.Sgate`, :class:`~.Rgate`, :class:`~.Pgate`, :class:`~.Vgate`, :class:`~.Kgate`, :class:`~.Fouriergate` |
+        +-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | Two mode gates    | :class:`~.BSgate`, :class:`~.S2gate`, :class:`~.CXgate`, :class:`~.CZgate`, :class:`~.CKgate`                                                                          |
+        +-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+        .. note::
+
+            Measurement operations :class:`~.MeasureHomodyne`, :class:`~.MeasureHeterodyne`,
+            and :class:`~.MeasureFock` are not currently supported.
+
         Args:
             tex_dir (str): relative directory for latex document output
             write_to_file (bool): if False, no output file is created
