@@ -87,29 +87,8 @@ Strawberry Fields Documentation
     </div>
 
 
-.. raw:: html
-
-    <h2 style="margin-top:0px;">Features</h2>
-    <style>
-        #right-column.card {
-            box-shadow: none!important;
-        }
-        #right-column.card:hover {
-            box-shadow: none!important;
-        }
-        .breadcrumb {
-            display: none;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        .footer-relations {
-            border-top: 0px;
-        }
-    </style>
-
-
+Features
+========
 
 .. image:: gallery/state_learner/StateLearning.gif
     :align: right
@@ -124,7 +103,7 @@ Strawberry Fields Documentation
 
 ..
 
-* Includes **quantum simulators** implemented using **NumPy** and **Tensorflow**—with built-in quantum compilation
+* Includes **quantum simulators** implemented using **NumPy** and **TensorFlow**—with built-in quantum compilation
 
 ..
 
@@ -143,9 +122,9 @@ Getting started
     :width: 250px
     :target: javascript:void(0);
 
-Check out the `installation <_static/install.html>`_ page to get Strawberry Fields up and running, then jump over to the :doc:`/introduction/tutorials` to see what you can do.
+Follow the `installation <_static/install.html>`_ page to get Strawberry Fields up and running, then jump over to the :doc:`/introduction/tutorials` to see what you can do.
 
-Users interested in applications of photonic quantum computers should check out the :ref:`graph optimization <graphs-intro>`, :ref:`machine learning <ml-intro>` and :ref:`chemistry <chemistry-intro>` pages. Those wanting to dig deeper into the design of circuits can head to the :doc:`/introduction/circuits` page.
+Users interested in applications of photonic quantum computers should check out the :doc:`/introduction/graphs`, :doc:`/introduction/ml` and :doc:`/introduction/chemistry` pages. Those wanting to dig deeper into the design of circuits can head to the :doc:`/introduction/circuits` page.
 
 Developers can head to the :doc:`/development/development_guide` to see how they can contribute to Strawberry Fields.
 
