@@ -38,3 +38,9 @@ problems into GBS without needing to worry about designing a quantum circuit.
 .. raw:: html
 
     <div style='clear:both'></div>
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   data

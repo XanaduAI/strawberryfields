@@ -18,12 +18,12 @@ Graphs
 For :ref:`dense subgraph <apps-subgraph-tutorial>` and
 :ref:`maximum clique <apps-clique-tutorial>` identification, we provide:
 
-.. |planted| image:: ../../_static/graphs/planted.png
+.. |planted| image:: /_static/graphs/planted.png
     :align: middle
     :width: 250px
     :target: javascript:void(0);
 
-.. |tace_as| image:: ../../_static/graphs/TACE-AS.png
+.. |tace_as| image:: /_static/graphs/TACE-AS.png
     :align: middle
     :width: 250px
     :target: javascript:void(0);
@@ -42,22 +42,22 @@ For :ref:`dense subgraph <apps-subgraph-tutorial>` and
 
 For :ref:`graph similarity <apps-sim-tutorial>`, we provide:
 
-.. |mutag_0| image:: ../../_static/graphs/MUTAG_0.png
+.. |mutag_0| image:: /_static/graphs/MUTAG_0.png
     :align: middle
     :width: 250px
     :target: javascript:void(0);
 
-.. |mutag_1| image:: ../../_static/graphs/MUTAG_1.png
+.. |mutag_1| image:: /_static/graphs/MUTAG_1.png
     :align: middle
     :width: 250px
     :target: javascript:void(0);
 
-.. |mutag_2| image:: ../../_static/graphs/MUTAG_2.png
+.. |mutag_2| image:: /_static/graphs/MUTAG_2.png
     :align: middle
     :width: 250px
     :target: javascript:void(0);
 
-.. |mutag_3| image:: ../../_static/graphs/MUTAG_3.png
+.. |mutag_3| image:: /_static/graphs/MUTAG_3.png
     :align: middle
     :width: 250px
     :target: javascript:void(0);
