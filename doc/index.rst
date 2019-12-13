@@ -113,21 +113,6 @@ Features
 
 * Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows anyone to run a quantum computing simulation via **drag and drop**
 
-Getting started
-===============
-
-
-.. image:: _static/NOON.png
-    :align: left
-    :width: 250px
-    :target: javascript:void(0);
-
-Follow the `installation <_static/install.html>`_ page to get Strawberry Fields up and running, then jump over to the :doc:`/introduction/tutorials` to see what you can do.
-
-Users interested in applications of photonic quantum computers should check out the :doc:`/introduction/graphs`, :doc:`/introduction/ml` and :doc:`/introduction/chemistry` pages. Those wanting to dig deeper into the design of circuits can head to the :doc:`/introduction/circuits` page.
-
-Developers can head to the :doc:`/development/development_guide` to see how they can contribute to Strawberry Fields.
-
 How to cite
 ===========
 

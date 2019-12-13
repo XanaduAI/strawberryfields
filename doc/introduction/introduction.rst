@@ -1,5 +1,5 @@
-Introduction to quantum photonics
-=================================
+Introduction
+============
 
 .. role:: html(raw)
    :format: html
@@ -32,11 +32,25 @@ Introduction to quantum photonics
     }
     </style>
 
-Use this section to gain an understanding of photonic quantum computing and as a reference guide
-when using Strawberry Fields.
+.. image:: /_static/NOON.png
+    :align: left
+    :width: 250px
+    :target: javascript:void(0);
+
+Follow the `installation <_static/install.html>`_ page to get Strawberry Fields up and running, then jump over to the :doc:`/introduction/tutorials` to see what you can do.
+
+Users interested in applications of photonic quantum computers should check out the :doc:`/introduction/graphs`, :doc:`/introduction/ml` and :doc:`/introduction/chemistry` pages. Those wanting to dig deeper into the design of circuits can head to the :doc:`/introduction/circuits` page.
+
+Developers can head to the :doc:`/development/development_guide` to see how they can contribute to Strawberry Fields.
+
+Understanding quantum photonics
+-------------------------------
+
+The following pages can be used to gain an understanding of photonic quantum computing and as a
+reference guide when using Strawberry Fields.
 
 Near-term device
-----------------
+################
 
 .. customgalleryitem::
     :tooltip: a photon
@@ -65,7 +79,7 @@ details on GBS without needing to dive deeper into quantum computing!
    intro_photonics/gbs_intro
 
 Photonic quantum computers
---------------------------
+##########################
 
 .. customgalleryitem::
     :tooltip: a photon
@@ -95,7 +109,7 @@ contrasts with the qubit model.
    intro_photonics/introduction
 
 Quantum algorithms
-------------------
+##################
 
 
 .. customgalleryitem::
@@ -121,7 +135,7 @@ covers the technical details of these quantum algorithms.
    intro_photonics/quantum_algorithms
 
 Conventions and formulas
-------------------------
+########################
 
 .. customgalleryitem::
     :tooltip: a photon
