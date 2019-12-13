@@ -41,8 +41,9 @@ from .states import GaussianState
 
 
 class GaussianBackend(BaseGaussian):
-    r"""The :class:`~.GaussianBackend` implements a simulation of quantum optical circuits
-    using the Gaussian formalism.
+    r"""The GaussianBackend implements a simulation of quantum optical circuits
+    in NumPy using the Gaussian formalism, returning a :class:`~.GaussianState`
+    state object.
 
     The primary component of the GaussianBackend is a
     :attr:`~.GaussianModes` object which is used to simulate a multi-mode quantum optical system.

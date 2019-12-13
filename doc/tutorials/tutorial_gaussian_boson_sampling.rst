@@ -53,7 +53,7 @@ A couple of things to note in this particular example:
 ..
 
 
-3. Unlike the :ref:`boson sampling tutorial <boson_tutorial>`, the lack of Fock states means we can now use the :ref:`gaussian_backend`, indicated with the argument ``'gaussian'``, along with a 4-mode register. The Gaussian backend is perfectly suited for simulation of Gaussian boson sampling, as all initial states are Gaussian, and all the required operators transform Gaussian states to other Gaussian states.
+3. Unlike the :ref:`boson sampling tutorial <boson_tutorial>`, the lack of Fock states means we can now use the Numpy-based ``'gaussian'`` backend, along with a 4-mode register. The Gaussian backend is perfectly suited for simulation of Gaussian boson sampling, as all initial states are Gaussian, and all the required operators transform Gaussian states to other Gaussian states.
 
 ..
 
@@ -199,6 +199,6 @@ They Strawberry Field simulation results agree (with almost negligible numerical
 
     Repeat this tutorial with
 
-    1. A Fock backend such as :ref:`numpy_backend`, instead of the Gaussian backend.
+    1. A Fock backend such as ``'fock'`` instead of the Gaussian backend.
     2. Different beamsplitter and rotation parameters.
     3. Input states with *differing* squeezed values :math:`r_i`. You will need to modify the code to take into account the fact that the output covariance matrix determinant must now be calculated.

@@ -27,8 +27,9 @@ indices = string.ascii_lowercase
 
 
 class FockBackend(BaseFock):
-    r"""The :class:`FockBackend` object implements a simulation of quantum optical circuits using
-    `NumPy <http://www.numpy.org/>`_.
+    r"""Implements a simulation of quantum optical circuits in a truncated
+    Fock basis using NumPy, returning a :class:`~.BaseFock`
+    state object.
 
     The primary component of the FockBackend is a
     :attr:`~.FockBackend.circuit` object which is used to simulate a multi-mode quantum optical system. The

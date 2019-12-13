@@ -1,5 +1,7 @@
 # pylint: disable=invalid-name,no-member,wrong-import-position,wrong-import-order,ungrouped-imports
 """
+.. _apps-sample-tutorial:
+
 Sampling from GBS
 =================
 

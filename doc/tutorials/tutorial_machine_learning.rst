@@ -25,7 +25,7 @@ As usual, we can initialize a Strawberry Fields program:
 Replacing numbers with Tensors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a circuit contains only numerical parameters, the :ref:`tensorflow_backend` works the same as the other backends. However, with the Tensorflow backend, we have the additional option to use Tensorflow objects (e.g., :code:`tf.Variable`, :code:`tf.constant`, :code:`tf.placeholder`, or :code:`tf.Tensor`) for the parameters of Blackbird states, gates, and measurements.
+When a circuit contains only numerical parameters, the TensorFlow backend works the same as the other backends. However, with the Tensorflow backend, we have the additional option to use Tensorflow objects (e.g., :code:`tf.Variable`, :code:`tf.constant`, :code:`tf.placeholder`, or :code:`tf.Tensor`) for the parameters of Blackbird states, gates, and measurements.
 
 .. code-block:: python
 

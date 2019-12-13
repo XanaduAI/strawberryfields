@@ -104,7 +104,7 @@ test suite for a particular component by running
     make test-[component]
 
 where ``[component]`` should be replaced with either ``frontend`` for the Strawberry Fields
-frontend UI, ``apps`` for the applications layer, or one of the :ref:`backend <backends>`
+frontend UI, ``apps`` for the applications layer, or one of the :doc:`backends </code/sf_backends>`
 you would like to test (``fock``, ``tf``, or ``gaussian``).
 
 Pytest can accept a boolean logic string specifying exactly which tests to run,

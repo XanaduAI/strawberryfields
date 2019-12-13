@@ -16,24 +16,43 @@ Strawberry Fields backends. This includes photonic simulators,
 shared numerical operations, and states objects returned by
 statevector simulators.
 
-Statevector simulator backends
-------------------------------
+Local statevector simulators
+----------------------------
+
+Below are all available local statevector backends currently
+provided by Strawberry Fields. These simulators all run locally,
+provide access to the state after simulation, and the state is
+preserved between engine runs.
 
 .. currentmodule:: strawberryfields.backends
 .. autosummary::
     :toctree: api
 
-    BaseBackend
-    BaseFock
-    BaseGaussian
     FockBackend
     GaussianBackend
     ~tfbackend.TFBackend
 
-.. _state_class:
+.. raw:: html
 
-Statevector objects
--------------------
+    <div style="display: none;">
+
+.. currentmodule:: strawberryfields.backends
+.. autosummary::
+    :toctree: api
+
+    BaseFockState
+    ~gaussianbackend.states.GaussianState
+    ~tfbackend.states.FockStateTF
+
+.. raw:: html
+
+    </div>
+
+Backend API
+-----------
+
+A list of the abstract base classes that define the
+statevector backend API
 
 .. currentmodule:: strawberryfields.backends
 .. autosummary::
@@ -41,12 +60,15 @@ Statevector objects
 
     BaseState
     BaseGaussianState
-    BaseFockState
-    ~gaussianbackend.states.GaussianState
-    ~tfbackend.states.FockStateTF
+    BaseBackend
+    BaseFock
+    BaseGaussian
 
 Utility modules
 ---------------
+
+The following utility modules are provided for
+backend development.
 
 .. currentmodule:: strawberryfields.backends
 .. autosummary::
