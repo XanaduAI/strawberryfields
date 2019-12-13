@@ -120,7 +120,7 @@ covers the technical details of these quantum algorithms.
 
    intro_photonics/quantum_algorithms
 
-Conventions and formulae
+Conventions and formulas
 ------------------------
 
 .. customgalleryitem::
@@ -132,9 +132,8 @@ Conventions and formulae
 Describing a quantum system requires a number of conventions to be fixed, including the
 value of Planck's constant :math:`\hbar` (we set :math:`\hbar=2` by default).
 
-This section
-details formulae and constants used throughout Strawberry Fields and can be used for reference
-when constructing quantum circuits.
+This section details formulas and constants used throughout Strawberry Fields and can be used for
+reference when constructing quantum circuits.
 
 .. raw:: html
 
