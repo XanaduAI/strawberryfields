@@ -877,6 +877,7 @@ border-radius: 7px;
   padding: 20px 40px 0 40px;
   border-radius: 0px;
   border-top: 1px solid lightgray;
+  margin-top: 80px;
 }
 
 .footer-relations > .pull-left {
