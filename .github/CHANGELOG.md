@@ -3,7 +3,7 @@
 ### New features
 
 * A new applications layer, allowing users to interface samples generated from near-term photonic
-  devices with problems of practical interest. This `apps` component is consists of the following
+  devices with problems of practical interest. This `apps` component consists of the following
   modules:
   
   - The `apps.sample` module, for encoding graphs and molecules into Gaussian boson sampling
