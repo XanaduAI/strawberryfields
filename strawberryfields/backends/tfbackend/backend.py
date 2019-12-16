@@ -30,6 +30,7 @@ class TFBackend(BaseFock):
     r"""Implements a simulation of quantum optical circuits in a truncated
     Fock basis using `TensorFlow <http://www.numpy.org/>`_, returning a :class:`~.FockStateTF`
     state object.
+    """
 
     short_name = 'tf'
     circuit_spec = 'tf'
