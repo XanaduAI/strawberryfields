@@ -127,10 +127,10 @@ Individual test modules are run by invoking pytest directly from the command lin
 
 .. note:: **Adding tests to Strawberry Fields**
 
-    The ``tests`` folder is organised into three subfolders: ``backend`` for tests that
+    The ``tests`` folder is organised into four subfolders: ``backend`` for tests that
     only import a Strawberry Fields backend, ``frontend`` for tests that import the Strawberry
-    Fields UI but do not make use of a backend, and ``integration`` for tests that test
-    integration of the frontend and backends.
+    Fields UI but do not make use of a backend, ``integration`` for tests that test
+    integration of the frontend and backends, and ``apps`` for tests of the applications layer.
 
     When writing new tests, make sure to mark what components it tests. For a backend test,
     you can use the ``backends`` mark, which accepts the names of the backends:
@@ -161,22 +161,20 @@ file, as well as the line numbers of any lines missing test coverage.
 Documentation
 -------------
 
-To build the documentation, the following additional packages are required:
+Additional packages are required to build the documentation, as specified in
+``doc/requirements.txt``. These packages can be installed using:
 
-* `Sphinx <http://sphinx-doc.org/>`_ >=2.2.2
-* `graphviz <http://graphviz.org/>`_ >=2.38
-* `sphinxcontrib-bibtex <https://sphinxcontrib-bibtex.readthedocs.io/en/latest/>`_ == 0.4.2
-* `sphinx-automodapi <https://github.com/astropy/sphinx-automodapi>`_
+.. code-block:: bash
 
-These can all be installed via ``pip``.
+    pip install -r doc/requirements.txt
 
-To build the HTML documentation, go to the top-level directory and run
+from within the top-level directory. To then build the HTML documentation, run
 
 .. code-block:: bash
 
     make docs
 
-The documentation can then be found in the :file:`doc/_build/html/` directory.
+The documentation can be found in the :file:`doc/_build/html/` directory.
 
 
 Adding a new module to the docs

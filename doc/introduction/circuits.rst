@@ -167,8 +167,8 @@ for accessing the results of your program execution:
 
     To avoid significant numerical error when working with Fock backends, ensure that
     the trace of your program after simulation remains reasonably close to 1,
-    by calling :meth:`state.trace() <.BaseFockState.trace>`. If it is :math:`\leq1`, you will need
-    to increase the cutoff dimension.
+    by calling :meth:`state.trace() <.BaseFockState.trace>`. If the trace is much less than 1, you
+    will need to increase the cutoff dimension.
 
 
 Compilation

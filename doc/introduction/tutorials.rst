@@ -13,7 +13,7 @@ Tutorials
     </style>
 
 Check out some cool applications of Strawberry Fields in the tutorial gallery below.
-These include tutorials that have contributed by the awesome Strawberry Fields
+These include tutorials that have been contributed by the awesome Strawberry Fields
 community, and curated by the Strawberry Fields team 🍓.
 
 Applications

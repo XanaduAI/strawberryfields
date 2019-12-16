@@ -48,7 +48,7 @@ Sometimes, it might take us a couple of hours to reply - please be patient!
 External resources
 ------------------
 
-In addition to the notebooks in the gallery, below are some external web resources that use or highlight Strawberry Fields.
+Below are some external web resources that use or highlight Strawberry Fields.
 
 .. Add your external blog post/application/GitHub page below!
 

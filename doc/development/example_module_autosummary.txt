@@ -1,4 +1,4 @@
-.. currentmodule:: pennylane.package_name
+.. currentmodule:: strawberryfields.package_name
 .. autosummary::
    :toctree: api
 
