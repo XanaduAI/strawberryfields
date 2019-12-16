@@ -12,20 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Circuit specifications
-======================
-
-**Module name:** :mod:`strawberryfields.circuitspecs`
-
-.. currentmodule:: strawberryfields.circuitspecs
-
 This subpackage implements the :class:`CircuitSpecs` class, an abstract base class
 used to define classes or families of quantum circuits, e.g., circuits that can be executed on particular
 hardware or simulator backends.
 
-The information in the ``CircuitSpecs`` instances is used by :meth:`.Program.compile` to validate and
-compile quantum programs. By querying the ``CircuitSpecs`` class representing the requested compilation
-target, ``Program.compile`` can
+The information in the :class:`CircuitSpecs` instances is used by :meth:`.Program.compile` to validate and
+compile quantum programs. By querying the :class:`CircuitSpecs` class representing the requested compilation
+target, :meth:`.Program.compile` can
 
 1. **Validate** that the Program has the correct number of modes, and consists
    of valid quantum operations in the correct topology for the targeted circuit class.
@@ -37,49 +30,11 @@ Note that the compilation process is not perfect and can provide false negatives
 failure by raising a :class:`.CircuitError` even if the Program theoretically is equivalent to a
 circuit that belongs in the target circuit class.
 
-
-Data members
-------------
-
-.. autosummary::
-   circuit_db
-
 The circuit class database :attr:`circuit_db` is a dictionary mapping the circuit family
 short name to the corresponding CircuitSpecs instance.
 In particular, for each backend supported by Strawberry Fields the database contains a
 corresponding CircuitSpecs instance with the same short name, used to validate Programs to be
 executed on that backend.
-
-
-.. currentmodule:: strawberryfields.circuitspecs.circuit_specs
-
-Classes
--------
-
-.. autosummary::
-   CircuitSpecs
-
-
-CircuitSpecs methods
---------------------
-
-.. currentmodule:: strawberryfields.circuitspecs.circuit_specs.CircuitSpecs
-
-.. autosummary::
-   modes
-   local
-   remote
-   interactive
-   primitives
-   decompositions
-   parameter_ranges
-   graph
-   circuit
-   compile
-
-
-Code details
-~~~~~~~~~~~~
 """
 from .circuit_specs import CircuitSpecs
 from .chip0 import Chip0Specs
@@ -94,4 +49,4 @@ specs = (Chip0Specs, FockSpecs, GaussianSpecs, GBSSpecs, TFSpecs)
 circuit_db = {c.short_name: c for c in specs}
 """dict[str, ~strawberryfields.circuitspecs.CircuitSpecs]: Map from circuit family short name to the corresponding class."""
 
-__all__ = ["circuit_db", "CircuitSpecs"]
+__all__ = ["circuit_db", "CircuitSpecs"] + [i.__name__ for i in specs]

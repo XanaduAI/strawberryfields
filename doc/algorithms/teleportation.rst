@@ -65,8 +65,6 @@ Some important notes:
 
 * Infinite squeezed vacuum states are not physically realizable; preparing the states with a squeezing factor of :math:`|r|=2` (:math:`\sim 18\text{dB}`) is a reasonable approximation.
 
-* The function :func:`~.scale` can be imported from :mod:`strawberryfields.utils`, and allows classical processing on the measured register value; in this case, multiplying it by the correctional factor :math:`\sqrt{2}`. Other simple classical processing functions are available in the ``utils`` module; however if more advanced classical processing is required, custom classical processing functions can be created using the :func:`strawberryfields.convert` decorator.
-
 * :meth:`~strawberryfields.ops.BSgate` accepts two arguments, ``theta`` and ``phi``. A variable storing the value of :math:`\pi` is used for setting these parameters - in Python, this can be imported from NumPy,
 
   .. code-block:: python

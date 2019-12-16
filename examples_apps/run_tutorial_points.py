@@ -2,11 +2,15 @@
 r"""
 .. _apps-points-tutorial:
 
-Point Process Tutorial
-======================
+Point processes
+===============
 
-This tutorial shows how to generate GBS point process samples and use them to detect outlier
-points in a data set. Point processes are models for generating random point patterns and GBS
+*Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.points`
+
+This section shows how to generate GBS point process samples and use them to detect outlier
+points in a data set. Point processes are models for generating random point patterns and can be
+useful in machine learning, providing a source of randomness with
+preference towards both diversity :cite:`kulesza2012determinantal` and similarity in data. GBS
 devices can be programmed to operate as special types of point processes that generate clustered
 random point patterns :cite:`jahangiri2019point`.
 
@@ -14,8 +18,8 @@ The probability of generating a specific pattern of points in GBS point processe
 matrix functions of a kernel matrix :math:`K` that describes the similarity between the points.
 Matrix functions that appear in GBS point processes are typically
 `permanents <https://en.wikipedia.org/wiki/Permanent_(mathematics)>`__ and
-`hafnians <https://the-walrus.readthedocs.io/en/latest/hafnian.html>`__. In this tutorial, we use
-the permanental point process in which the probability of observing a pattern of points :math:`S`
+`hafnians <https://the-walrus.readthedocs.io/en/latest/hafnian.html>`__. Here we use
+the permanental point process, in which the probability of observing a pattern of points :math:`S`
 depends on the permanent of their corresponding kernel submatrix :math:`K_S` as
 :cite:`jahangiri2019point`:
 
@@ -28,7 +32,7 @@ of points. Let's look at a simple example to better understand the permanental p
 
 ##############################################################################
 # We first import the modules we need. Note that the :mod:`~.apps.points` module has most of
-# the core functionalities for this tutorial.
+# the core functionalities exploring point processes.
 
 import numpy as np
 import plotly

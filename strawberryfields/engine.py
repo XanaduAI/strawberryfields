@@ -11,65 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
-Execution engine
-================
-
-**Module name:** :mod:`strawberryfields.engine`
-
-.. currentmodule:: strawberryfields.engine
-
 This module implements :class:`BaseEngine` and its subclasses that are responsible for
 communicating quantum programs represented by :class:`.Program` objects
 to a backend that could be e.g., a simulator or a hardware quantum processor.
 One can think of each BaseEngine instance as a separate quantum computation.
-
-A typical use looks like
-
-.. include:: example_use.rst
-
-
-Classes
--------
-
-.. autosummary::
-   BaseEngine
-   LocalEngine
-   Result
-
-
-LocalEngine methods
--------------------
-
-.. currentmodule:: strawberryfields.engine.LocalEngine
-
-.. autosummary::
-   run
-   print_applied
-   reset
-
-..
-    The following are internal BaseEngine methods. In most cases the user should not
-    call these directly.
-    .. autosummary::
-       _init_backend
-       _run_program
-       _run
-
-
-.. currentmodule:: strawberryfields.engine
-
-Exceptions
-----------
-
-.. autosummary::
-   ~strawberryfields.backends.base.NotApplicableError
-
-
-Code details
-~~~~~~~~~~~~
-
 """
 
 import abc
@@ -83,8 +29,45 @@ from .backends.base import (NotApplicableError, BaseBackend)
 class Result:
     """Result of a quantum computation.
 
-    Represents the results of the execution of a quantum program.
-    Returned by :meth:`.BaseEngine.run`.
+    Represents the results of the execution of a quantum program
+    returned by the :meth:`.LocalEngine.run` method.
+
+    The returned :class:`~Result` object provides several useful properties
+    for accessing the results of your program execution:
+
+    * ``results.state``: The quantum state object contains details and methods
+      for manipulation of the final circuit state. Not available for remote
+      backends. See :doc:`/introduction/states` for more information regarding available
+      state methods.
+
+    * ``results.samples``: Measurement samples from any measurements performed.
+
+    **Example:**
+
+    The following examples run an existing Strawberry Fields
+    quantum :class:`~.Program` on the Gaussian engine to get
+    a results object.
+
+    Using this results object, the measurement samples
+    can be returned, as well as quantum state information.
+
+    >>> eng = sf.Engine("gaussian")
+    >>> results = eng.run(prog)
+    >>> print(results)
+    Result: 3 subsystems
+        state: <GaussianState: num_modes=3, pure=True, hbar=2>
+        samples: [0, 0, 0]
+    >>> results.samples
+    [0, 0, 0]
+    >>> results.state.is_pure()
+    True
+
+    .. note::
+
+        Only local simulators will return a state object. Remote
+        simulators and hardware backends will return
+        measurement samples  (:attr:`Result.samples`),
+        but the return value of ``Result.state`` will be ``None``.
     """
     def __init__(self, samples):
         self._state = None
@@ -115,12 +98,15 @@ class Result:
         The quantum state object contains details and methods
         for manipulation of the final circuit state.
 
+        See :doc:`/introduction/states` for more information regarding available
+        state methods.
+
         .. note::
 
             Only local simulators will return a state object. Remote
             simulators and hardware backends will return
-            :attr:`measurement samples <Result.samples>`,
-            but the return value of ``state`` will be ``None``.
+            measurement samples (:attr:`Result.samples`),
+            but the return value of ``Result.state`` will be ``None``.
 
         Returns:
             BaseState: quantum state returned from program execution
@@ -133,7 +119,7 @@ class Result:
 
 
 class BaseEngine(abc.ABC):
-    r"""ABC for quantum program executor engines.
+    r"""Abstract base class for quantum program executor engines.
 
     Args:
         backend (str): backend short name
@@ -164,14 +150,45 @@ class BaseEngine(abc.ABC):
 
         * The original number of modes is restored.
         * All modes are reset to the vacuum state.
-        * All RegRefs of previously run Programs are cleared of measured values.
+        * All registers of previously run Programs are cleared of measured values.
         * List of previously run Progams is cleared.
 
-        Note that the reset does nothing to any Program objects in existence, beyond erasing the measured values.
+        Note that the reset does nothing to any Program objects in existence, beyond
+        erasing the measured values.
+
+        **Example:**
+
+        .. code-block:: python
+
+            # create a program
+            prog = sf.Program(3)
+
+            with prog.context as q:
+                ops.Sgate(0.543) | q[1]
+                ops.BSgate(0.6, 0.1) | (q[2], q[0])
+
+            # create an engine
+            eng = sf.Engine("gaussian")
+
+        Running the engine with the above program will
+        modify the state of the statevector simulator:
+
+        >>> eng.run(prog)
+        >>> eng.backend.is_vacuum()
+        False
+
+        Resetting the engine will return the backend simulator
+        to the vacuum state:
+
+        >>> eng.reset()
+        >>> eng.backend.is_vacuum()
+        True
+
+        .. note:: The ``reset()`` method only applies to statevector backends.
 
         Args:
-           backend_options (Dict[str, Any]): keyword arguments for the backend,
-              updating (overriding) old values
+            backend_options (Dict[str, Any]): keyword arguments for the backend,
+                updating (overriding) old values
         """
         self.backend_options.update(backend_options)
         for p in self.run_progs:
@@ -182,9 +199,61 @@ class BaseEngine(abc.ABC):
     def print_applied(self, print_fn=print):
         """Print all the Programs run since the backend was initialized.
 
-        This will be blank until the first call to :meth:`run`. The output may
-        differ compared to :meth:`Program.print`, due to command decompositions
-        and optimizations made by :meth:`run`.
+        This will be blank until the first call to :meth:`~.LocalEngine.run`. The output may
+        differ compared to :meth:`.Program.print`, due to backend-specific
+        device compilation performed by :meth:`~.LocalEngine.run`.
+
+        **Example:**
+
+        .. code-block:: python
+
+            # create a program
+            prog = sf.Program(2)
+
+            with prog.context as q:
+                ops.S2gate(0.543) | (q[0], q[1])
+
+            # create an engine
+            eng = sf.Engine("gaussian")
+
+        Initially, the engine will have applied no operations:
+
+        >>> eng.print_applied()
+        None
+
+        After running the engine, we can now see the quantum
+        operations that were applied:
+
+        >>> eng.run(prog)
+        >>> eng.print_applied()
+        Run 0:
+        BSgate(0.7854, 0) | (q[0], q[1])
+        Sgate(0.543, 0) | (q[0])
+        Sgate(0.543, 0).H | (q[1])
+        BSgate(0.7854, 0).H | (q[0], q[1])
+
+        Note that the :class:`~.S2gate` has been decomposed into
+        single-mode squeezers and beamsplitters, which are supported
+        by the ``'gaussian'`` backend.
+
+        Subsequent program runs can also be viewed:
+
+        .. code-block:: python
+
+            # a second program
+            prog2 = sf.Program(2)
+            with prog2.context as q:
+                ops.S2gate(0.543) | (q[0], q[1])
+
+        >>> eng.run(prog2)
+        >>> eng.print_applied()
+        Run 0:
+        BSgate(0.7854, 0) | (q[0], q[1])
+        Sgate(0.543, 0) | (q[0])
+        Sgate(0.543, 0).H | (q[1])
+        BSgate(0.7854, 0).H | (q[0], q[1])
+        Run 1:
+        Dgate(0.06, 0) | (q[0])
 
         Args:
             print_fn (function): optional custom function to use for string printing.
@@ -289,8 +358,32 @@ class BaseEngine(abc.ABC):
 class LocalEngine(BaseEngine):
     """Local quantum program executor engine.
 
-    Executes :class:`.Program` instances on the chosen local backend, and makes
-    the results available via :class:`.Result`.
+    The Strawberry Fields engine is used to execute :class:`.Program` instances
+    on the chosen local backend, and makes the results available via :class:`.Result`.
+
+    **Example:**
+
+    The following example creates a Strawberry Fields
+    quantum :class:`~.Program` and runs it using an engine.
+
+    .. code-block:: python
+
+        # create a program
+        prog = sf.Program(2)
+
+        with prog.context as q:
+            ops.S2gate(0.543) | (q[0], q[1])
+
+    We initialize the engine with the name of the local backend,
+    and can pass optional backend options.
+
+    >>> eng = sf.Engine("fock", backend_options={"cutoff_dim": 5})
+
+    The :meth:`~.LocalEngine.run` method is used to execute quantum
+    programs on the attached backend, and returns a :class:`.Result`
+    object containing the results of the execution.
+
+    >>> results = eng.run(prog)
 
     Args:
         backend (str, BaseBackend): short name of the backend, or a pre-constructed backend instance
@@ -338,9 +431,7 @@ class LocalEngine(BaseEngine):
         return applied
 
     def run(self, program, *, args=None, compile_options=None, run_options=None):
-        """Execute the given programs by sending them to the backend.
-
-        Extends :meth:`BaseEngine._run`.
+        """Execute quantum programs by sending them to the backend.
 
         Args:
             program (Program, Sequence[Program]): quantum programs to run
@@ -400,4 +491,6 @@ class LocalEngine(BaseEngine):
         return result
 
 
-Engine = LocalEngine  # alias for backwards compatibility
+class Engine(LocalEngine):
+    # alias for backwards compatibility
+    __doc__ = LocalEngine.__doc__

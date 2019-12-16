@@ -2,9 +2,12 @@
 r"""
 .. _apps-vibronic-tutorial:
 
-Vibronic Spectra Tutorial
-=========================
-In this tutorial, we study how GBS can be used to compute vibronic spectra. So let's start from
+Vibronic spectra
+================
+
+*Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.vibronic`
+
+Here we study how GBS can be used to compute vibronic spectra. So let's start from
 the beginning: what is a vibronic spectrum? Molecules absorb light at frequencies that depend on
 the allowed transitions between different electronic states. These electronic transitions
 can be accompanied by changes in the vibrational energy of the molecules. In this case, the
@@ -38,7 +41,7 @@ and displacements.
 
 The function :func:`~.gbs_params` of the :mod:`~.apps.vibronic` module can be
 used to obtain the squeezing, interferometer, and displacement parameters from the input
-chemical parameters listed above. In this tutorial, we study the vibronic spectrum of
+chemical parameters listed above. In this page, we study the vibronic spectrum of
 `formic acid <https://en.wikipedia.org/wiki/Formic_acid>`_ 🐜. Its chemical parameters, obtained
 from :cite:`huh2015boson`, can be found in the :mod:`~.apps.data` module:
 """

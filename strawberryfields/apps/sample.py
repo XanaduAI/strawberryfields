@@ -12,16 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Sampling functions
-==================
+Functionality for generating GBS samples using classical simulators.
 
-**Module name:** :mod:`strawberryfields.apps.sample`
+.. seealso::
 
-.. currentmodule:: strawberryfields.apps.sample
-
-This module provides functionality for generating GBS samples using classical simulators.
-
-An accompanying tutorial can be found :ref:`here <apps-sample-tutorial>`.
+    :ref:`apps-sample-tutorial`
 
 Generating samples
 ------------------
@@ -32,10 +27,7 @@ that carry relevant information about the encoded matrix :math:`A`. When samplin
 specify the mean number of photons in the device, the form of detection used at the output:
 threshold detection or photon-number-resolving (PNR) detection, as well as the amount of loss.
 
-The :func:`sample` function provides a simulation of sampling from GBS:
-
-.. autosummary::
-    sample
+The :func:`sample` function provides a simulation of sampling from GBS.
 
 Here, each output sample is an :math:`M`-dimensional list. If threshold detection is used
 (``threshold = True``), each element of a sample is either a zero (denoting no photons detected)
@@ -47,19 +39,10 @@ noise in quantum photonics. Here, ``loss = 0`` describes ideal loss-free GBS, wh
 ``0 <= loss <= 1`` describes the proportion of photons lost while passing through the device.
 
 Samples can be postselected based upon their total number of photons or clicks and the ``numpy``
-random seed used to generate samples can be fixed:
-
-.. autosummary::
-    postselect
-    seed
-
-.. _decomposition:
+random seed used to generate samples can be fixed.
 
 The :func:`vibronic` function allows users to sample Gaussian states for computing molecular
 vibronic spectra.
-
-.. autosummary::
-    vibronic
 
 Generating subgraphs
 --------------------
@@ -103,9 +86,6 @@ A typical workflow would be:
 
 The subgraphs sampled from GBS are likely to be dense :cite:`arrazola2018using`, motivating their
 use within heuristics for problems such as maximum clique (see :mod:`~.apps.clique`).
-
-Code details
-^^^^^^^^^^^^
 """
 import warnings
 from typing import Optional

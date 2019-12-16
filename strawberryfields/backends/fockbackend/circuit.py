@@ -11,24 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-"""
-Fock backend proper
-======================
-
-Contains most of the code for managing the simulator state and offloading
-operations to the utilities in ops.
-
-Hyperlinks: :class:`Circuit`
-
-.. currentmodule:: strawberryfields.backends.fockbackend.circuit
-
-Contents
-----------------------
-.. autosummary::
-     Circuit
-
-"""
+"""Fock backend proper"""
 # pylint: disable=too-many-arguments,len-as-condition,attribute-defined-outside-init
 # pylint: disable=too-many-branches,too-many-locals,too-many-public-methods
 
