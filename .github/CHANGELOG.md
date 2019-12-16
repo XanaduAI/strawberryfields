@@ -3,24 +3,24 @@
 ### New features
 
 * A new applications layer, allowing users to interface samples generated from near-term photonic
-  devices with problems of practical interest. This `apps` component consists of the following
+  devices with problems of practical interest. The `apps` package consists of the following
   modules:
-  
+
   - The `apps.sample` module, for encoding graphs and molecules into Gaussian boson sampling
     (GBS) and generating corresponding samples.
-    
+
   - The `apps.subgraph` module, providing a heuristic algorithm for finding dense subgraphs from GBS
     samples.
-    
+
   - The `apps.clique` module, providing tools to convert subgraphs sampled from GBS into cliques and
     a heuristic to search for larger cliques.
-  
+
   - The `apps.similarity` module, allowing users to embed graphs into high-dimensional feature
     spaces using GBS to provide measures of similarity for tasks such as machine learning.
-    
+
   - The `apps.points` module, allowing users to sample subsets of points according to a new
     permanental point process that can be generated from a GBS device.
-    
+
   - The `apps.vibronic` module, providing functionality to construct the vibronic absorption
     spectrum of a molecule from GBS samples.
 
