@@ -16,10 +16,11 @@
     a heuristic to search for larger cliques.
 
   - The `apps.similarity` module, allowing users to embed graphs into high-dimensional feature
-    spaces using GBS. Resulting feature vectors provide measures of graph similarity for machine learning tasks.
+    spaces using GBS. Resulting feature vectors provide measures of graph similarity for machine
+    learning tasks.
 
   - The `apps.points` module, allowing users to sample subsets of points according to new
-    point process that can be generated from a GBS device.
+    point processes that can be generated from a GBS device.
 
   - The `apps.vibronic` module, providing functionality to construct the vibronic absorption
     spectrum of a molecule from GBS samples.
