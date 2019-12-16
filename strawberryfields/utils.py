@@ -418,7 +418,7 @@ def random_interferometer(N, real=False):
         array: random :math:`N\times N` unitary distributed with the Haar measure
     """
     if real:
-        z = randn(N, N)
+        z = np.random.randn(N, N)
     else:
         z = randnc(N, N) / np.sqrt(2.0)
     q, r = sp.linalg.qr(z)
