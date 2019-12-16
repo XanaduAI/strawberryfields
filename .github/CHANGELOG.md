@@ -1,21 +1,26 @@
-# Release 0.12.0-dev
+# Release 0.12.0
 
 ### New features
 
-* Adds in first version of an applications layer aimed at solving problems using
-  Gaussian boson sampling. This layer focuses on graph-based problems and
-  currently has algorithms for the densest ``k``-subgraph problem.
-  [#164](https://github.com/XanaduAI/strawberryfields/pull/164)
-
-### API Changes
+* Application layer details. Should list all new functionality
+  and modules.
 
 ### Improvements
 
-### Bug fixes
+* The documentation was improved and refactored. Changes include:
+
+  - A brand new theme, now matching PennyLane
+    [#262](https://github.com/XanaduAI/strawberryfields/pull/262)
+
+  - The documentation has been restructured to make it
+    easier to navigate
+    [#266](https://github.com/XanaduAI/strawberryfields/pull/266)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Juan Miguel Arrazola, Thomas R. Bromley, Josh Izaac, Soran Jahangiri
 
 ---
 
