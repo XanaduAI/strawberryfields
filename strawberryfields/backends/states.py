@@ -623,18 +623,19 @@ class BaseFockState(BaseState):
         return W / (self._hbar)
 
     def p_quad_values(self, mode, xvec, pvec):
-        wigner = wigner(mode, xvec, pvec)
+
+        W = BaseFockState.wigner(mode, xvec, pvec)
         y = []
         for i in range(0, len(xvec)):
-            res = simps([wigner[i][k] for k in range(0, len(xvec))], xvec)
+            res = simps([W[i][k] for k in range(0, len(xvec))], xvec)
             y.append(res)
         return np.array(y)
 
     def x_quad_values(self, mode, xvec, pvec):
-        wigner = wigner(mode, xvec, pvec)
+        W = BaseFockState.wigner(mode, xvec, pvec)
         y = []
         for i in range(0, len(pvec)):
-            res = simps([wigner[k][i] for k in range(0, len(pvec))], pvec)
+            res = simps([W[k][i] for k in range(0, len(pvec))], pvec)
             y.append(res)
         return np.array(y)
 
