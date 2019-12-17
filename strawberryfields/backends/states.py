@@ -24,6 +24,7 @@ import numpy as np
 from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
+from scipy.integrate import simps
 
 import strawberryfields as sf
 from .shared_ops import rotation_matrix as _R
@@ -620,6 +621,22 @@ class BaseFockState(BaseState):
                 W += 2 * np.real(rho[m, n] * Wlist[n])
 
         return W / (self._hbar)
+
+    def p_quad_values(self, mode, xvec, pvec):
+        wigner = wigner(mode, xvec, pvec)
+        y = []
+        for i in range(0, len(xvec)):
+            res = simps([wigner[i][k] for k in range(0, len(xvec))], xvec)
+            y.append(res)
+        return np.array(y)
+
+    def x_quad_values(self, mode, xvec, pvec):
+        wigner = wigner(mode, xvec, pvec)
+        y = []
+        for i in range(0, len(pvec)):
+            res = simps([wigner[k][i] for k in range(0, len(pvec))], pvec)
+            y.append(res)
+        return np.array(y)
 
     def quad_expectation(self, mode, phi=0, **kwargs):
         a = np.diag(np.sqrt(np.arange(1, self._cutoff+5)), 1)
