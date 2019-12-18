@@ -309,6 +309,48 @@ class BaseState(abc.ABC):
         """
         raise NotImplementedError
 
+    def p_quad_values(self, mode, xvec, pvec):
+
+        r"""Calculates the discretized p-quadrature probability distribution of the specified mode.
+
+        Args:
+            mode (int): the mode to calculate the p-quadrature probability values of
+            xvec (array): array of discretized :math:`x` quadrature values
+            pvec (array): array of discretized :math:`p` quadrature values
+
+        Returns:
+            array: 1D array of size len(pvec), containing reduced p-quadrature
+            probability values for a specified range of x and p.
+        """
+
+        W = self.wigner(mode, xvec, pvec)
+        y = []
+        for i in range(0, len(pvec)):
+            res = simps(W[i, :len(xvec)], xvec)
+            y.append(res)
+        return np.array(y)
+
+    def x_quad_values(self, mode, xvec, pvec):
+
+        r"""Calculates the discretized x-quadrature probability distribution of the specified mode.
+
+        Args:
+            mode (int): the mode to calculate the x-quadrature probability values of
+            xvec (array): array of discretized :math:`x` quadrature values
+            pvec (array): array of discretized :math:`p` quadrature values
+
+        Returns:
+            array: 1D array of size len(xvec), containing reduced x-quadrature
+            probability values for a specified range of x and p.
+        """
+
+        W = self.wigner(mode, xvec, pvec)
+        y = []
+        for i in range(0, len(xvec)):
+            res = simps([W[ :len(pvec), i], pvec)
+            y.append(res)
+        return np.array(y)
+
 
 class BaseFockState(BaseState):
     r"""Class for the representation of quantum states in the Fock basis.
@@ -621,23 +663,6 @@ class BaseFockState(BaseState):
                 W += 2 * np.real(rho[m, n] * Wlist[n])
 
         return W / (self._hbar)
-
-    def p_quad_values(self, mode, xvec, pvec):
-
-        W = self.wigner(mode, xvec, pvec)
-        y = []
-        for i in range(0, len(xvec)):
-            res = simps(W[i, :len(xvec)], xvec)
-            y.append(res)
-        return np.array(y)
-
-    def x_quad_values(self, mode, xvec, pvec):
-        W = self.wigner(mode, xvec, pvec)
-        y = []
-        for i in range(0, len(pvec)):
-            res = simps([W[k][i] for k in range(0, len(pvec))], pvec)
-            y.append(res)
-        return np.array(y)
 
     def quad_expectation(self, mode, phi=0, **kwargs):
         a = np.diag(np.sqrt(np.arange(1, self._cutoff+5)), 1)
