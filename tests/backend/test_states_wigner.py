@@ -163,11 +163,13 @@ def coherent_state_quad(setup_backend, hbar, tol):
     p_vals = state.p_quad_values(0, XVEC, XVEC)
 
     #Exact probability distribution
-    def exact(a):
+    def x_exact(a):
         return np.sqrt(1/(np.pi * hbar)) * np.exp(-1*((a - 1)**2)/hbar)
+    def p_exact(a):
+        return np.sqrt(1 / (np.pi * hbar)) * np.exp(-1 * (a ** 2) / hbar)
 
-    exact_x = np.array([exact(x) for x in XVEC])
-    exact_p = np.array([exact(p) for p in XVEC])
+    exact_x = np.array([x_exact(x) for x in XVEC])
+    exact_p = np.array([p_exact(p) for p in XVEC])
 
     assert np.allclose(x_vals, exact_x, atol=0.01, rtol=0)
     assert np.allclose(p_vals, exact_p, atol=0.01, rtol=0)
