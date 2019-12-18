@@ -164,7 +164,7 @@ def coherent_state_quad(setup_backend, hbar, tol):
 
     #Exact probability distribution
     def x_exact(a):
-        return np.sqrt(1/(np.pi * hbar)) * np.exp(-1*((a - 1)**2)/hbar)
+        return np.sqrt(1/(np.pi * hbar)) * np.exp(-1*((a - np.sqrt(2 * hbar))**2)/hbar)
     def p_exact(a):
         return np.sqrt(1 / (np.pi * hbar)) * np.exp(-1 * (a ** 2) / hbar)
 
