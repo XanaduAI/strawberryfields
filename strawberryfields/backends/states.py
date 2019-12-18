@@ -627,7 +627,7 @@ class BaseFockState(BaseState):
         W = self.wigner(mode, xvec, pvec)
         y = []
         for i in range(0, len(xvec)):
-            res = simps([W[i][k] for k in range(0, len(xvec))], xvec)
+            res = simps(W[i, :len(xvec)], xvec)
             y.append(res)
         return np.array(y)
 
