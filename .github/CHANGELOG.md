@@ -1,3 +1,22 @@
+# Release 0.13.0-dev
+
+### New features
+
+* Adds the `x_quad_values` and `p_quad_values` functions. This allows calculation of x and p quadrature
+  probability distributions by integrating across the Wigner function.
+
+### Improvements
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Jack Ceroni
+
+---
+
 # Release 0.12.0
 
 ### New features
