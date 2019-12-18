@@ -347,7 +347,7 @@ class BaseState(abc.ABC):
         W = self.wigner(mode, xvec, pvec)
         y = []
         for i in range(0, len(xvec)):
-            res = simps([W[ :len(pvec), i], pvec)
+            res = simps(W[:len(pvec), i], pvec)
             y.append(res)
         return np.array(y)
 
