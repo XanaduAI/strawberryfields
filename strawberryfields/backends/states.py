@@ -632,7 +632,7 @@ class BaseFockState(BaseState):
         return np.array(y)
 
     def x_quad_values(self, mode, xvec, pvec):
-        W = BaseFockState.wigner(mode, xvec, pvec)
+        W = self.wigner(mode, xvec, pvec)
         y = []
         for i in range(0, len(pvec)):
             res = simps([W[k][i] for k in range(0, len(pvec))], pvec)
