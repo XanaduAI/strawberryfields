@@ -108,3 +108,66 @@ def test_two_mode_squeezed(setup_backend, hbar, tol):
 
     assert np.allclose(W0, W0exact, atol=0.01, rtol=0)
     assert np.allclose(W1, W1exact, atol=0.01, rtol=0)
+
+def fock_1_state_quad(setup_backend, hbar, tol):
+    """Test the quadrature probability distribution
+    functions for the |1> Fock state"""
+    backend = setup_backend(1)
+    backend.prepare_fock_state(1, 0)
+
+    state = backend.state()
+
+    x_vals = state.x_quad_values(0, XVEC, XVEC)
+    p_vals = state.p_quad_values(0, XVEC, XVEC)
+
+    #Exact probability distribution
+    def exact(a):
+        return 0.5 * np.sqrt(1/(np.pi * hbar)) * np.exp(-1*(a**2)/hbar) * (4/hbar)*(a**2)
+
+    exact_x = np.array([exact(x) for x in XVEC])
+    exact_p = np.array([exact(p) for p in XVEC])
+
+    assert np.allclose(x_vals, exact_x, atol=0.01, rtol=0)
+    assert np.allclose(p_vals, exact_p, atol=0.01, rtol=0)
+
+def vacuum_state_quad(setup_backend, hbar, tol):
+    """Test the quadrature probability distribution
+    functions for the vacuum state"""
+    backend = setup_backend(1)
+    backend.prepare_vacuum_state(0)
+
+    state = backend.state()
+
+    x_vals = state.x_quad_values(0, XVEC, XVEC)
+    p_vals = state.p_quad_values(0, XVEC, XVEC)
+
+    #Exact probability distribution
+    def exact(a):
+        return np.sqrt(1/(np.pi * hbar)) * np.exp(-1*(a**2)/hbar)
+
+    exact_x = np.array([exact(x) for x in XVEC])
+    exact_p = np.array([exact(p) for p in XVEC])
+
+    assert np.allclose(x_vals, exact_x, atol=0.01, rtol=0)
+    assert np.allclose(p_vals, exact_p, atol=0.01, rtol=0)
+
+def coherent_state_quad(setup_backend, hbar, tol):
+    """Test the quadrature probability distribution
+    functions for the coherent state with alpha = 1"""
+    backend = setup_backend(1)
+    backend.prepare_coherent_state(1, 0)
+
+    state = backend.state()
+
+    x_vals = state.x_quad_values(0, XVEC, XVEC)
+    p_vals = state.p_quad_values(0, XVEC, XVEC)
+
+    #Exact probability distribution
+    def exact(a):
+        return np.sqrt(1/(np.pi * hbar)) * np.exp(-1*((a - 1)**2)/hbar)
+
+    exact_x = np.array([exact(x) for x in XVEC])
+    exact_p = np.array([exact(p) for p in XVEC])
+
+    assert np.allclose(x_vals, exact_x, atol=0.01, rtol=0)
+    assert np.allclose(p_vals, exact_p, atol=0.01, rtol=0)
