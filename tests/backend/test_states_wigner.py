@@ -127,8 +127,8 @@ def fock_1_state_quad(setup_backend, hbar, tol):
     exact_x = np.array([exact(x) for x in XVEC])
     exact_p = np.array([exact(p) for p in XVEC])
 
-    assert np.allclose(x_vals, exact_x, atol=0.01, rtol=0)
-    assert np.allclose(p_vals, exact_p, atol=0.01, rtol=0)
+    assert np.allclose(x_vals, exact_x, atol=tol, rtol=0)
+    assert np.allclose(p_vals, exact_p, atol=tol, rtol=0)
 
 def vacuum_state_quad(setup_backend, hbar, tol):
     """Test the quadrature probability distribution
@@ -148,8 +148,8 @@ def vacuum_state_quad(setup_backend, hbar, tol):
     exact_x = np.array([exact(x) for x in XVEC])
     exact_p = np.array([exact(p) for p in XVEC])
 
-    assert np.allclose(x_vals, exact_x, atol=0.01, rtol=0)
-    assert np.allclose(p_vals, exact_p, atol=0.01, rtol=0)
+    assert np.allclose(x_vals, exact_x, atol=tol, rtol=0)
+    assert np.allclose(p_vals, exact_p, atol=tol, rtol=0)
 
 def coherent_state_quad(setup_backend, hbar, tol):
     """Test the quadrature probability distribution
@@ -164,12 +164,12 @@ def coherent_state_quad(setup_backend, hbar, tol):
 
     #Exact probability distribution
     def x_exact(a):
-        return np.sqrt(1/(np.pi * hbar)) * np.exp(-1*((a - np.sqrt(2 * hbar))**2)/hbar)
+        return np.sqrt(1/(np.pi * hbar)) * np.exp(-1*((a - 0.5 * np.sqrt(2 * hbar))**2)/hbar)
     def p_exact(a):
         return np.sqrt(1 / (np.pi * hbar)) * np.exp(-1 * (a ** 2) / hbar)
 
     exact_x = np.array([x_exact(x) for x in XVEC])
     exact_p = np.array([p_exact(p) for p in XVEC])
 
-    assert np.allclose(x_vals, exact_x, atol=0.01, rtol=0)
-    assert np.allclose(p_vals, exact_p, atol=0.01, rtol=0)
+    assert np.allclose(x_vals, exact_x, atol=tol, rtol=0)
+    assert np.allclose(p_vals, exact_p, atol=tol, rtol=0)
