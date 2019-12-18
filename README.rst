@@ -110,10 +110,11 @@ Authors
 
 Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook.
 
-If you are doing research using Strawberry Fields, please cite `our paper <https://quantum-journal.org/papers/q-2019-03-11-129/>`_:
+If you are doing research using Strawberry Fields, please cite our papers:
 
-  Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook. "Strawberry Fields: A Software Platform for Photonic Quantum Computing", Quantum, 3, 129 (2019).
+  Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook. "Strawberry Fields: A Software Platform for Photonic Quantum Computing", `Quantum, 3, 129 <https://quantum-journal.org/papers/q-2019-03-11-129/>`__ (2019).
 
+  Thomas R. Bromley, Juan Miguel Arrazola, Soran Jahangiri, Josh Izaac, Nicolás Quesada, Alain Delgado Gran, Maria Schuld, Jeremy Swinarton, Zeid Zabaneh, and Nathan Killoran. "Applications of Near-Term Photonic Quantum Computers: Software and Algorithms", `arxiv:1912.07634 <https://arxiv.org/abs/1912.07634>`__ (2019).
 
 Support
 =======
