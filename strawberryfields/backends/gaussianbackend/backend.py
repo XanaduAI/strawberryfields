@@ -41,7 +41,32 @@ from .states import GaussianState
 
 
 class GaussianBackend(BaseGaussian):
-    """Gaussian backend implementation"""
+    r"""The GaussianBackend implements a simulation of quantum optical circuits
+    in NumPy using the Gaussian formalism, returning a :class:`~.GaussianState`
+    state object.
+
+    The primary component of the GaussianBackend is a
+    :attr:`~.GaussianModes` object which is used to simulate a multi-mode quantum optical system.
+    :class:`~.GaussianBackend` provides the basic API-compatible interface to the simulator, while the
+    :attr:`~.GaussianModes` object actually carries out the mathematical simulation.
+
+    The :attr:`GaussianModes` simulators maintain an internal covariance matrix & vector of means
+    representation of a multi-mode quantum optical system.
+
+    Note that unlike commonly used covariance matrix representations we encode our state in two complex
+    matrices :math:`N` and :math:`M` that are defined as follows
+    :math:`N_{i,j} = \langle a^\dagger _i a_j \rangle`
+    :math:`M_{i,j} = \langle a _i a_j \rangle`
+    and a vector of means :math:`\alpha_i =\langle a_i \rangle`.
+
+    .. 
+        .. currentmodule:: strawberryfields.backends.gaussianbackend
+        .. autosummary::
+            :toctree: api
+
+            ~gaussiancircuit.GaussianModes
+            ~ops
+    """
 
     short_name = "gaussian"
     circuit_spec = "gaussian"

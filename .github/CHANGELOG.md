@@ -1,13 +1,6 @@
-# Release 0.12.0-dev
+# Release 0.13.0-dev
 
 ### New features
-
-* Adds in first version of an applications layer aimed at solving problems using
-  Gaussian boson sampling. This layer focuses on graph-based problems and
-  currently has algorithms for the densest ``k``-subgraph problem.
-  [#164](https://github.com/XanaduAI/strawberryfields/pull/164)
-
-### API Changes
 
 ### Improvements
 
@@ -16,6 +9,52 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.12.0
+
+### New features
+
+* A new applications layer, allowing users to interface samples generated from near-term photonic
+  devices with problems of practical interest. The `apps` package consists of the following
+  modules:
+
+  - The `apps.sample` module, for encoding graphs and molecules into Gaussian boson sampling
+    (GBS) and generating corresponding samples.
+
+  - The `apps.subgraph` module, providing a heuristic algorithm for finding dense subgraphs from GBS
+    samples.
+
+  - The `apps.clique` module, providing tools to convert subgraphs sampled from GBS into cliques and
+    a heuristic to search for larger cliques.
+
+  - The `apps.similarity` module, allowing users to embed graphs into high-dimensional feature
+    spaces using GBS. Resulting feature vectors provide measures of graph similarity for machine
+    learning tasks.
+
+  - The `apps.points` module, allowing users to sample subsets of points according to new
+    point processes that can be generated from a GBS device.
+
+  - The `apps.vibronic` module, providing functionality to construct the vibronic absorption
+    spectrum of a molecule from GBS samples.
+
+### Improvements
+
+* The documentation was improved and refactored. Changes include:
+
+  - A brand new theme, now matching PennyLane
+    [#262](https://github.com/XanaduAI/strawberryfields/pull/262)
+
+  - The documentation has been restructured to make it
+    easier to navigate
+    [#266](https://github.com/XanaduAI/strawberryfields/pull/266)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Juan Miguel Arrazola, Tom Bromley, Josh Izaac, Soran Jahangiri, Nicolás Quesada
 
 ---
 
@@ -437,4 +476,3 @@ Initial public release.
 This release contains contributions from:
 
 Nathan Killoran, Josh Izaac, Nicolás Quesada, Matthew Amy, and Ville Bergholm.
-

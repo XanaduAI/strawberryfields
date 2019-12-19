@@ -12,15 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Quantum operation parameters
-============================
-
-**Module name:** :mod:`strawberryfields.parameters`
-
-.. currentmodule:: strawberryfields.parameters
-
 The classes in this module represent parameters passed to the
-quantum operations represented by :class:`.Operation` subclasses.
+quantum operations represented by :class:`~.Operation` subclasses.
 
 Parameter types
 ---------------
@@ -97,39 +90,6 @@ What we cannot do at the moment:
 * Use anything except integers and RegRefs (or Sequences thereof) as the subsystem argument
   for the :meth:`~ops.Operation.__or__` method.
   Technically we could allow any parameters that evaluate into an integer.
-
-
-Functions
----------
-
-.. currentmodule:: strawberryfields.parameters
-
-.. autosummary::
-   par_evaluate
-   par_convert
-   par_is_symbolic
-   par_regref_deps
-   par_str
-
-
-Parameter classes
------------------
-
-.. autosummary::
-   MeasuredParameter
-   FreeParameter
-
-
-Exceptions
-----------
-
-.. autosummary::
-   ParameterError
-
-
-Code details
-~~~~~~~~~~~~
-
 """
 # pylint: disable=too-many-ancestors,unused-argument,protected-access
 
@@ -148,6 +108,7 @@ def heaviside(x):
     if x <= 0:
         return 0
     return 1
+
 custom_funcs = {'Heaviside': heaviside}
 
 

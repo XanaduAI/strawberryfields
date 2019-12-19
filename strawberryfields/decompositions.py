@@ -12,35 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Matrix decompositions
-=====================
-
-**Module name:** :mod:`strawberryfields.decompositions`
-
-.. currentmodule:: strawberryfields.decompositions
-
-This module implements common shared matrix decompositions that are used to perform gate decompositions.
-
-
-Functions
----------
-
-.. autosummary::
-   takagi
-   graph_embed
-   rectangular
-   rectangular_phase_end
-   rectangular_symmetric
-   triangular
-   williamson
-   bloch_messiah
-   covmat_to_hamil
-   hamil_to_covmat
-
-
-Code details
-~~~~~~~~~~~~
-
+This module implements common shared matrix decompositions that are
+used to perform gate decompositions.
 """
 
 from itertools import groupby

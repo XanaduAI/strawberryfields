@@ -22,7 +22,7 @@ with open("strawberryfields/_version.py") as f:
 
 
 requirements = [
-    "numpy>=1.16.3",
+    "numpy>=1.17.4",
     "scipy>=1.0.0",
     "networkx>=2.0",
     "quantum-blackbird>=0.2.0",
@@ -41,13 +41,13 @@ info = {
     "packages": [
         "strawberryfields",
         "strawberryfields.circuitspecs",
-        "strawberryfields.gbs",
+        "strawberryfields.apps",
         "strawberryfields.backends",
         "strawberryfields.backends.tfbackend",
         "strawberryfields.backends.fockbackend",
         "strawberryfields.backends.gaussianbackend",
     ],
-    "package_data": {"strawberryfields": ["backends/data/*", "gbs/data/*"]},
+    "package_data": {"strawberryfields": ["backends/data/*", "apps/data/*"]},
     "include_package_data": True,
     "description": "Open source library for continuous-variable quantum computation",
     "long_description": open("README.rst", encoding="utf-8").read(),

@@ -12,259 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-.. _gates:
-
-Quantum operations
-===================
-
-**Module name:** :mod:`strawberryfields.ops`
-
-.. currentmodule:: strawberryfields.ops
-
-.. note::
-
-    In the :mod:`strawberryfields.ops` API we use the convention :math:`\hbar=2` by default, however
-    this can be changed using the global variable :py:data:`strawberryfields.hbar`.
-
-    See :ref:`conventions` for more details.
-
 This module defines and implements the Python-embedded quantum programming language
 for continuous-variable (CV) quantum systems.
 The syntax is modeled after ProjectQ :cite:`projectq2016`.
-
-Quantum operations (state preparation, unitary gates, measurements, channels) act on
-register objects using the following syntax:
-
-.. code-block:: python
-
-    prog = sf.Program(3)
-    with prog.context as q:
-        G(params) | q
-        F(params) | (q[1], q[6], q[2])
-
-Here :samp:`prog` is an instance of :class:`strawberryfields.program.Program`
-which defines the context where the commands are stored.
-Within each command, the part on the left is an :class:`Operation` instance,
-quite typically a constructor call for the requested operation class with the relevant parameters.
-The vertical bar calls the :func:`__or__` method of the :class:`Operation` object,
-with the part on the right as the parameter. The part on the right is a single
-:class:`strawberryfields.engine.RegRef` object or, for multi-mode gates, a sequence of them.
-It is of course also possible to construct gates separately and reuse them several times::
-
-    R = Rgate(s)
-    with prog.context as q:
-        R   | q
-        Xgate(t) | q
-        R.H | q
-
-
-There are six kinds of :class:`Operation` objects:
-
-* :class:`Preparation` operations only manipulate the register state::
-
-    with prog.context as q:
-        Vac | q[0]
-        All(Coherent(0.4, 0.2)) | (q[1], q[2])
-
-* Transformations such as :class:`Gate` and :class:`Channel` operations only manipulate the register state::
-
-    with prog.context as q:
-        Dgate(0.3)   | q[0]
-        BSgate(-0.5) | q[0:2]
-
-* :class:`Measurement` operations manipulate the register state and produce classical information.
-  The information is directly available only after the program has been run up to the point of measurement::
-
-    with prog.context as (alice, bob):
-        MeasureFock() | alice
-
-    eng = sf.LocalEngine(backend='fock')
-    eng.run(prog)
-    print(alice.val)
-
-  Alternatively one may use a symbolic reference to the register containing the measurement result
-  by supplying registers as the argument to an :class:`Operation`, in which case the measurement may be deferred,
-  i.e., we may symbolically use the measurement result before it exists::
-
-    with prog.context as (alice, bob):
-        MeasureFock()    | alice
-        Dgate(alice.par) | bob
-
-  One may also use classical algebraic post-processing on the measurement result, to be applied
-  before using it as the argument to another :class:`Operation`::
-
-    with prog.context as q:
-        MeasureFock()        | q[0]
-        Dgate(q[0].par ** 2) | q[1]
-
-* Modes can be created and deleted during program execution using the
-  function :func:`New` and the pre-constructed object :py:data:`Del`.
-  Behind the scenes they utilize the meta-operations :class:`_New_modes` and :class:`_Delete`::
-
-    with prog.context as (alice,):
-        Sgate(1)    | alice
-        bob, charlie = New(2)
-        BSgate(0.5) | (alice, bob)
-        CXgate(1)   | (alice, charlie)
-        Del         | alice
-        S2gate(0.4) | (charlie, bob)
-
-* Finally, :class:`Decomposition` operations are a special case, and can act as
-  either transformations *or* state preparation, depending on the decomposition used.
-  Decompositions calculate the required elementary :class:`Gate` and/or :class:`Preparation`
-  objects and parameters in order to decompose specific transformations or states.
-  Examples of objects that are supported by decompositions include covariance matrices,
-  interferometers, and symplectic transformations.
-
-Hierarchy for operations
-------------------------
-
-.. inheritance-diagram:: strawberryfields.ops
-   :parts: 1
-
-
-Base classes
-------------
-
-The abstract base class hierarchy exists to provide the correct semantics for the actual operations that inherit them.
-
-.. autosummary::
-    Operation
-    Preparation
-    Transformation
-    Gate
-    Channel
-    Measurement
-    Decomposition
-    MetaOperation
-
-
-Operation class
----------------
-
-All Operations have the following methods.
-
-.. currentmodule:: strawberryfields.ops.Operation
-
-.. autosummary::
-    __str__
-    __or__
-    merge
-    decompose
-    apply
-    _apply
-
-.. currentmodule:: strawberryfields.ops
-
-
-State preparation
------------------
-
-.. autosummary::
-    Vacuum
-    Coherent
-    Squeezed
-    DisplacedSqueezed
-    Thermal
-    Fock
-    Catstate
-    Ket
-    DensityMatrix
-    Gaussian
-
-Measurements
-------------
-
-.. autosummary::
-    MeasureFock
-    MeasureThreshold
-    MeasureHomodyne
-    MeasureHeterodyne
-
-
-Channels
------------
-
-.. autosummary::
-    LossChannel
-    ThermalLossChannel
-
-
-Decompositions
---------------
-
-.. autosummary::
-    Interferometer
-    GraphEmbed
-    BipartiteGraphEmbed
-    GaussianTransform
-    Gaussian
-
-
-Single-mode gates
------------------
-
-.. autosummary::
-    Dgate
-    Xgate
-    Zgate
-    Sgate
-    Rgate
-    Pgate
-    Vgate
-    Fouriergate
-
-Two-mode gates
---------------
-
-.. autosummary::
-    BSgate
-    MZgate
-    S2gate
-    CXgate
-    CZgate
-    CKgate
-
-Meta-operations
----------------
-
-.. autosummary::
-    All
-    _New_modes
-    _Delete
-
-
-Operations shortcuts
----------------------
-
-Several of the operation classes described below come with variables that point to pre-constructed instances;
-this is to provide shorthands for operations that accept no arguments, as well as for common variants of operations that do.
-
-.. raw:: html
-
-    <style>
-      .widetable {
-         width:100%;
-      }
-    </style>
-
-.. rst-class:: longtable widetable
-
-======================   =================================================================================
-**Shorthand variable**   **Operation**
-``New``                  :class:`~._New_modes`
-``Del``                  :class:`~._Delete`
-``Vac``                  :class:`~.Vacuum`
-``Fourier``              :class:`~.Fouriergate`
-``MeasureX``             :class:`~.MeasureHomodyne` (:math:`\phi=0`), :math:`x` quadrature measurement
-``MeasureP``             :class:`~.MeasureHomodyne` (:math:`\phi=\pi/2`), :math:`p` quadrature measurement
-``MeasureHD``            :class:`~.MeasureHeterodyne`
-======================   =================================================================================
-
-
-Code details
-~~~~~~~~~~~~
-
 """
 from collections.abc import Sequence
 import copy
@@ -1646,7 +1396,7 @@ class Interferometer(Decomposition):
       :cite:`clements2016`, resulting in a *rectangular* array of
       :math:`M(M-1)/2` beamsplitters:
 
-      .. figure:: ../_static/clements.png
+      .. figure:: ../../_static/clements.png
           :align: center
           :width: 30%
           :target: javascript:void(0);
@@ -1662,7 +1412,7 @@ class Interferometer(Decomposition):
     * ``mesh='triangular'``: uses the scheme described in :cite:`reck1994`,
       resulting in a *triangular* array of :math:`M(M-1)/2` beamsplitters:
 
-      .. figure:: ../_static/reck.png
+      .. figure:: ../../_static/reck.png
           :align: center
           :width: 30%
           :target: javascript:void(0);
@@ -2107,7 +1857,7 @@ MeasureHD = MeasureHeterodyne()
 
 Fourier = Fouriergate()
 
-shorthands = ['New', 'Del', 'Vac', 'Measure', 'MeasureX', 'MeasureP', 'MeasureHD', 'Fourier', 'All']
+shorthands = ['New', 'Del', 'Vac', 'MeasureX', 'MeasureP', 'MeasureHD', 'Fourier', 'All']
 
 #=======================================================================
 # here we list different classes of operations for unit testing purposes
@@ -2131,48 +1881,3 @@ decompositions = (Interferometer, BipartiteGraphEmbed, GraphEmbed, GaussianTrans
 # exported symbols
 
 __all__ = [cls.__name__ for cls in gates + channels + state_preparations + measurements + decompositions] + shorthands
-
-
-#=======================================================================
-# Module wrapper for deprecating shorthands
-
-
-class Wrapper(types.ModuleType):
-    """Wrapper class to modify the module level
-    attribute lookup.
-
-    This allows module attributes to be deprecated.
-
-    Current list of deprecated attributes:
-
-    * ``Measure``: instead use ``MeasureFock``
-
-    .. note::
-
-        With Python 3.7+, there is new support for a module-level
-        ``__getattr__`` function, which should enable this functionality
-        without needing to modify ``sys.modules``.
-    """
-    deprecation_map = {"Measure": "MeasureFock"}
-
-    def __init__(self, mod):
-        self.mod = mod
-        self.__dict__.update(mod.__dict__)
-        super().__init__("strawberryfields.ops", doc=sys.modules[__name__].__doc__)
-
-    def __getattr__(self, name):
-        if name in self.deprecation_map:
-            new_name = self.deprecation_map[name]
-
-            warnings.warn("The shorthand '{}' has been deprecated, "
-                          "please use '{}()' instead.".format(name, new_name))
-
-            return getattr(self.mod, new_name)()
-
-        return getattr(self.mod, name)
-
-    def __dir__(self):
-        return __all__
-
-
-sys.modules[__name__] = Wrapper(sys.modules[__name__])

@@ -30,12 +30,12 @@ with teleportation.context as q:
 
     # Bob conditionally displaces his mode
     # based on Alice's measurement result
-    Xgate(scale(psi, sqrt(2))) | bob
-    Zgate(scale(alice, sqrt(2))) | bob
+    Xgate(psi.par*sqrt(2)) | bob
+    Zgate(alice.par*sqrt(2)) | bob
     # end circuit
 
 results = eng.run(teleportation)
 # view Bob's output state and fidelity
-print(q[0].val, q[1].val)
+print(results.samples)
 print(results.state.displacement([2]))
 print(results.state.fidelity_coherent([0, 0, 1+0.5j]))
