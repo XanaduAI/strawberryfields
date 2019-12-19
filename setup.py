@@ -26,7 +26,7 @@ requirements = [
     "scipy>=1.0.0",
     "networkx>=2.0",
     "quantum-blackbird>=0.2.0",
-    "thewalrus>=0.7",
+    "thewalrus>=0.10",
     "toml",
     "appdirs",
 ]
