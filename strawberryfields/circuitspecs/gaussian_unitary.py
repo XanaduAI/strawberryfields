@@ -46,6 +46,7 @@ class GaussianUnitary(CircuitSpecs):
                 Dgate(1.0+2.0j) | q[0]
                 Rgate(0.3) | q[0]
                 Sgate(0.6, 1.0) | q[0]
+
             compiled_circuit = circuit.compile("gaussian_unitary")
 
         We can now print the compiled circuit:
