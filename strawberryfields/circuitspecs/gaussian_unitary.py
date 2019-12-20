@@ -93,7 +93,6 @@ class GaussianUnitary(CircuitSpecs):
         # vector `rnet`.
         for operations in seq:
             name = operations.op.__class__.__name__
-            #params = [i.x for i in operations.op.p]
             params = par_evaluate(operations.op.p)
             modes = [modes_label.ind for modes_label in operations.reg]
             if name == "Dgate":
