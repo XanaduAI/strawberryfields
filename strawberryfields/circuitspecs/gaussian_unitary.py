@@ -35,18 +35,6 @@ class GaussianUnitary(CircuitSpecs):
         "All",
         "_New_modes",
         "_Delete",
-        # state preparations
-        # "Vacuum",
-        # "Coherent",
-        # "Squeezed",
-        # "DisplacedSqueezed",
-        # "Thermal",
-        # "Gaussian",
-        # measurements
-        # "MeasureHomodyne",
-        # "MeasureHeterodyne",
-        # "MeasureFock",
-        # "MeasureThreshold",
         # single mode gates
         "Dgate",
         "Sgate",
@@ -59,10 +47,8 @@ class GaussianUnitary(CircuitSpecs):
     }
 
     decompositions = {
-        # "Interferometer": {},
         "GraphEmbed": {},
         "BipartiteGraphEmbed": {},
-        "GaussianTransform": {},
         "Gaussian": {},
         "Pgate": {},
         "CXgate": {},
@@ -137,8 +123,6 @@ class GaussianUnitary(CircuitSpecs):
                     )
                 elif name == "BSgate":
                     S = expand(beam_splitter(params[0], params[1]), [dict_indices[modes[0]], dict_indices[modes[1]]], nmodes)
-                else:
-                    raise CircuitError("The circuit contains a non-primitive Gaussian gate or a non-Gaussian gate.")
                 Snet = S @ Snet
                 rnet = S @ rnet
 

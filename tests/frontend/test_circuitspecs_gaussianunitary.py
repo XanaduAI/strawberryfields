@@ -149,3 +149,26 @@ def test_non_primitive_gates():
     mean1 = eng1.run(compiled_circuit).state.means()
     assert np.allclose(cv, cv1)
     assert np.allclose(mean, mean1)
+
+
+
+@pytest.mark.parametrize("depth", [1, 3, 6])
+@pytest.mark.parametrize("width", [5, 10, 15])
+def test_displacements_only(depth, width):
+    """Tests that a circuit and its compiled version produce the same Gaussian state"""
+    eng = sf.LocalEngine(backend="gaussian")
+    eng1 = sf.LocalEngine(backend="gaussian")
+    circuit = sf.Program(width)
+    with circuit.context as q:
+        for _ in range(depth):
+            alphas = np.random.rand(width)+1j*np.random.rand(width)
+            for i in range(width):
+                ops.Dgate(alphas[i]) | q[i]
+    compiled_circuit = circuit.compile("gaussian_unitary")
+    cv = eng.run(circuit).state.cov()
+    mean = eng.run(circuit).state.means()
+
+    cv1 = eng1.run(compiled_circuit).state.cov()
+    mean1 = eng1.run(compiled_circuit).state.means()
+    assert np.allclose(cv, cv1)
+    assert np.allclose(mean, mean1)

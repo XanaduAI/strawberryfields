@@ -377,7 +377,8 @@ def random_symplectic(N, passive=False, block_diag=False, scale=1.0):
 
     The squeezing parameters :math:`r` for active transformations are randomly
     sampled from the standard normal distribution, while passive transformations
-    are randomly sampled from the Haar measure.
+    are randomly sampled from the Haar measure. Note that for the Symplectic
+    group there is no notion of Haar measure since this is group is not compact.
 
     Args:
         N (int): number of modes
