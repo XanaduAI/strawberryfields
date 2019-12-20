@@ -16,7 +16,6 @@
 import numpy as np
 from strawberryfields.program_utils import Command
 from strawberryfields import ops
-from strawberryfields.program_utils import CircuitError
 from strawberryfields.parameters import par_evaluate
 from thewalrus.symplectic import expand_vector, expand, rotation, squeezing, two_mode_squeezing, interferometer, beam_splitter
 from .circuit_specs import CircuitSpecs
