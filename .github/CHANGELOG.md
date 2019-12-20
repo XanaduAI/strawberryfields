@@ -10,8 +10,9 @@
 
 ### Bug fixes
 
-* Fix installation issue with incorrect minimum version number for `thewalrus` in `setup.py`
+* Fix installation issue with incorrect minimum version number for `thewalrus`
   [#272](https://github.com/XanaduAI/strawberryfields/pull/272)
+  [#277](https://github.com/XanaduAI/strawberryfields/pull/277)
 
 * Correct URL for image in `README`
   [#273](https://github.com/XanaduAI/strawberryfields/pull/273)
