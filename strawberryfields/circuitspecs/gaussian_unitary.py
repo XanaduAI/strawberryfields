@@ -22,12 +22,10 @@ from .circuit_specs import CircuitSpecs
 
 class GaussianUnitary(CircuitSpecs):
     """Compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form.
-    
     This compile specification checks whether the circuit can be implemented as a sequence of
     Gaussian operations. If so, it arranges them in the canonical order with displacement at the end.
     After compilation, the circuit will consist of at most two operations, a :class:`~.GaussianTransform`
     and a :class:`~.Dgate`.
-    
     This compiler can be accessed by calling :meth:`.Program.compile` with `'gaussian_unitary'` specified.
 
         **Example:**
