@@ -21,7 +21,36 @@ from thewalrus.symplectic import expand_vector, expand, rotation, squeezing, two
 from .circuit_specs import CircuitSpecs
 
 class GaussianUnitary(CircuitSpecs):
-    """Circuit specifications for the Gaussian Unitary compiler"""
+    """Circuit specifications for the Gaussian Unitary compiler
+
+        **Example:**
+
+        The following strawberryfield command sequence:
+        .. code-block:: python3
+
+            from strawberryfields.ops import Xgate, Zgate, Sgate, Dgate, Rgate
+            import strawberryfields as sf
+
+            circuit = sf.Program(1)
+            with circuit.context as q:
+                Xgate(0.4) | q[0]
+                Zgate(0.5) | q[0]
+                Sgate(0.6) | q[0]
+                Dgate(1.0+2.0j) | q[0]
+                Rgate(0.3) | q[0]
+                Sgate(0.6, 1.0) | q[0]
+            compiled_circuit = circuit.compile("gaussian_unitary")
+
+        We can now print the compiled circuit:
+
+        >>> compiled_circuit.print()
+        GaussianTransform([[ 0.3543 -1.3857]
+                           [-0.0328  2.9508]]) | (q[0])
+        Dgate(-1.151+3.91j, 0) | (q[0])
+
+        will produce a compiled circuit consisting of one GaussianTransform and one Dgate
+
+    """
 
     short_name = "gaussian_unitary"
     modes = None

@@ -155,7 +155,8 @@ def test_non_primitive_gates():
 @pytest.mark.parametrize("depth", [1, 3, 6])
 @pytest.mark.parametrize("width", [5, 10, 15])
 def test_displacements_only(depth, width):
-    """Tests that a circuit and its compiled version produce the same Gaussian state"""
+    """Tests that a circuit and its compiled version produce
+    the same Gaussian state when there are only displacements"""
     eng = sf.LocalEngine(backend="gaussian")
     eng1 = sf.LocalEngine(backend="gaussian")
     circuit = sf.Program(width)
