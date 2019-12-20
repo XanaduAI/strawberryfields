@@ -372,7 +372,7 @@ def random_covariance(N, hbar=2, pure=False, block_diag=False):
     return S @ Vth @ S.T
 
 
-def random_symplectic(N, passive=False, block_diag=False):
+def random_symplectic(N, passive=False, block_diag=False, scale=1.0):
     r"""Random symplectic matrix representing a Gaussian transformation.
 
     The squeezing parameters :math:`r` for active transformations are randomly
@@ -387,6 +387,9 @@ def random_symplectic(N, passive=False, block_diag=False):
         block_diag (bool): If True, uses passive Gaussian transformations that are orthogonal
             instead of unitary. This implies that the positions :math:`q` do not mix with
             the momenta :math:`p` and thus the symplectic operator is block diagonal
+        scale (float): Sets the scale of the random values used as squeezing parameters.
+            They will range from 0 to :math:`\sqrt{2}`*scale
+
     Returns:
         array: random :math:`2N\times 2N` symplectic matrix
     """
@@ -399,7 +402,7 @@ def random_symplectic(N, passive=False, block_diag=False):
     U = random_interferometer(N, real=block_diag)
     P = np.vstack([np.hstack([U.real, -U.imag]), np.hstack([U.imag, U.real])])
 
-    r = np.abs(randnc(N))
+    r = scale * np.abs(randnc(N))
     Sq = np.diag(np.concatenate([np.exp(-r), np.exp(r)]))
 
     return O @ Sq @ P

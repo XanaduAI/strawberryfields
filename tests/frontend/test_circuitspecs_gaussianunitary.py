@@ -71,7 +71,7 @@ def test_gaussian_program(depth, width):
 
 
 @pytest.mark.parametrize("depth", [1, 2, 3])
-@pytest.mark.parametrize("width", [2, 4])
+@pytest.mark.parametrize("width", [5, 10])
 def test_symplectic_composition(depth, width):
     """Tests that symplectic operations are composed correctly"""
     eng = sf.LocalEngine(backend="gaussian")
@@ -80,7 +80,7 @@ def test_symplectic_composition(depth, width):
     Snet = np.identity(2 * width)
     with circuit.context as q:
         for _ in range(depth):
-            S = random_symplectic(width)
+            S = random_symplectic(width, scale = 0.2)
             Snet = S @ Snet
             ops.GaussianTransform(S) | q
     compiled_circuit = circuit.compile("gaussian_unitary")
