@@ -71,7 +71,7 @@ def test_gaussian_program(depth, width):
 
 
 @pytest.mark.parametrize("depth", [1, 2, 3])
-@pytest.mark.parametrize("width", [5, 10])
+@pytest.mark.parametrize("width", [2, 4])
 def test_symplectic_composition(depth, width):
     """Tests that symplectic operations are composed correctly"""
     eng = sf.LocalEngine(backend="gaussian")
