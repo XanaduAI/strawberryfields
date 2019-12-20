@@ -81,6 +81,7 @@ class GaussianUnitary(CircuitSpecs):
         # pylint: disable=consider-using-set-comprehension
         used_modes = list(set([item for sublist in used_modes for item in sublist]))
 
+        # dictionary mapping the used modes to consecutive non-negative integers
         dict_indices = {used_modes[i]: i for i in range(len(used_modes))}
         nmodes = len(used_modes)
 
