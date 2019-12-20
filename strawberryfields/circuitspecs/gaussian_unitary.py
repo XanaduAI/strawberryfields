@@ -49,7 +49,8 @@ class GaussianUnitary(CircuitSpecs):
 
             compiled_circuit = circuit.compile("gaussian_unitary")
 
-        We can now print the compiled circuit:
+        We can now print the compiled circuit, consisting of one
+        :class:`~.GaussianTransform` and one :class:`~.Dgate`:
 
         >>> compiled_circuit.print()
         GaussianTransform([[ 0.3543 -1.3857]
