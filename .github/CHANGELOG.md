@@ -2,6 +2,10 @@
 
 ### New features
 
+* A new `gaussian_unitary` circuitspec that can be used to compile any sequency of Gaussian
+  transformations into a single `GaussianTransform` gate and a sequence of single mode `Dgate`s.
+  [#238](https://github.com/XanaduAI/strawberryfields/pull/238)
+
 ### Improvements
 
 ### Bug fixes
