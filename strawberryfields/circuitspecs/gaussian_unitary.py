@@ -64,7 +64,6 @@ class GaussianUnitary(CircuitSpecs):
         This method checks whether the circuit can be implemented as a sequence of Gaussian operations.
         If the answer is yes it arranges them in the canonical order with displacement at the end.
 
-
         Args:
             seq (Sequence[Command]): quantum circuit to modify
             registers (Sequence[RegRefs]): quantum registers
