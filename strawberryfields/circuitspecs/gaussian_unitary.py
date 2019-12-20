@@ -32,7 +32,8 @@ class GaussianUnitary(CircuitSpecs):
 
         **Example:**
 
-        The following strawberryfield command sequence:
+        Consider the following Strawberry Fields program, compiled using the `'gaussian_unitary'` compiler:
+
         .. code-block:: python3
 
             from strawberryfields.ops import Xgate, Zgate, Sgate, Dgate, Rgate
@@ -56,8 +57,6 @@ class GaussianUnitary(CircuitSpecs):
         GaussianTransform([[ 0.3543 -1.3857]
                            [-0.0328  2.9508]]) | (q[0])
         Dgate(-1.151+3.91j, 0) | (q[0])
-
-        will produce a compiled circuit consisting of one GaussianTransform and one Dgate
 
     """
 
