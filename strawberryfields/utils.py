@@ -389,7 +389,7 @@ def random_symplectic(N, passive=False, block_diag=False, scale=1.0):
             instead of unitary. This implies that the positions :math:`q` do not mix with
             the momenta :math:`p` and thus the symplectic operator is block diagonal
         scale (float): Sets the scale of the random values used as squeezing parameters.
-            They will range from 0 to :math:`\sqrt{2}`*scale
+            They will range from 0 to :math:`\sqrt{2}\texttt{scale}`
 
     Returns:
         array: random :math:`2N\times 2N` symplectic matrix
