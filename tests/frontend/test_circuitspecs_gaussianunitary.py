@@ -22,7 +22,7 @@ from strawberryfields.utils import random_symplectic
 
 pytestmark = pytest.mark.frontend
 
-np.random.seed(137)
+np.random.seed(42)
 
 
 def random_params(size, sq_bound, disp_bound):
@@ -127,10 +127,10 @@ def test_non_primitive_gates():
     A = np.random.rand(width, width) + 1j * np.random.rand(width, width)
     A = A + A.T
     valsA = np.linalg.svd(A, compute_uv=False)
-    A = A / np.max(valsA)
+    A = A / 2 * np.max(valsA)
     B = np.random.rand(width // 2, width // 2) + 1j * np.random.rand(width // 2, width // 2)
     valsB = np.linalg.svd(B, compute_uv=False)
-    B = B / valsB
+    B = B / 2 * valsB
     B = np.block([[0 * B, B], [B.T, 0 * B]])
     with circuit.context as q:
         ops.GraphEmbed(A) | q
