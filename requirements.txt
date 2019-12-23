@@ -4,7 +4,7 @@ scipy>=1.0.0
 tensorflow==1.3
 tensorflow-tensorboard>=0.1.8
 quantum-blackbird>=0.2.0
-thewalrus>=0.9
+thewalrus>=0.10
 toml
 appdirs
 plotly==4.4.1
