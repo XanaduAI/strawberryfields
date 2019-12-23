@@ -1,4 +1,4 @@
-# Release 0.13.0-dev
+# Release 0.12.1
 
 ### New features
 
@@ -8,11 +8,20 @@
 
 ### Improvements
 
+* Add new Strawberry Fields applications paper to documentation
+  [#274](https://github.com/XanaduAI/strawberryfields/pull/274)
+
+* Update figure for GBS device in documentation
+  [#275](https://github.com/XanaduAI/strawberryfields/pull/275)
+
 ### Bug fixes
 
-### Contributors
+* Fix installation issue with incorrect minimum version number for `thewalrus`
+  [#272](https://github.com/XanaduAI/strawberryfields/pull/272)
+  [#277](https://github.com/XanaduAI/strawberryfields/pull/277)
 
-This release contains contributions from (in alphabetical order):
+* Correct URL for image in `README`
+  [#273](https://github.com/XanaduAI/strawberryfields/pull/273)
 
 ---
 
