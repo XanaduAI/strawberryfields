@@ -1,4 +1,4 @@
-# Release 0.13.0-dev
+# Release 0.12.1
 
 ### New features
 
@@ -6,15 +6,32 @@
   probability distributions by integrating across the Wigner function.
   [#270](https://github.com/XanaduAI/strawberryfields/pull/270)
 
+* A new `gaussian_unitary` circuitspec that can be used to compile any sequency of Gaussian
+  transformations into a single `GaussianTransform` gate and a sequence of single mode `Dgate`s.
+  [#238](https://github.com/XanaduAI/strawberryfields/pull/238)
+
 ### Improvements
 
+* Add new Strawberry Fields applications paper to documentation
+  [#274](https://github.com/XanaduAI/strawberryfields/pull/274)
+
+* Update figure for GBS device in documentation
+  [#275](https://github.com/XanaduAI/strawberryfields/pull/275)
+
 ### Bug fixes
+
+* Fix installation issue with incorrect minimum version number for `thewalrus`
+  [#272](https://github.com/XanaduAI/strawberryfields/pull/272)
+  [#277](https://github.com/XanaduAI/strawberryfields/pull/277)
+
+* Correct URL for image in `README`
+  [#273](https://github.com/XanaduAI/strawberryfields/pull/273)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Jack Ceroni
+Jack Ceroni, Nicolás Quesada
 
 ---
 
