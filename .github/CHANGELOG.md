@@ -23,6 +23,9 @@
 * Correct URL for image in `README`
   [#273](https://github.com/XanaduAI/strawberryfields/pull/273)
 
+* Add applications data to `MANIFEST.in`
+  [#278](https://github.com/XanaduAI/strawberryfields/pull/278)
+
 ---
 
 # Release 0.12.0
