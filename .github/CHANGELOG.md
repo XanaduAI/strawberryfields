@@ -1,10 +1,27 @@
-# Release 0.12.1
+# Release 0.13.0-dev
 
 ### New features
 
-* Adds the `x_quad_values` and `p_quad_values` functions. This allows calculation of x and p quadrature
+* Adds the `x_quad_values` and `p_quad_values` methods to the `state` class.
+  This allows calculation of x and p quadrature
   probability distributions by integrating across the Wigner function.
   [#270](https://github.com/XanaduAI/strawberryfields/pull/270)
+  
+### Improvements
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Jack Ceroni
+
+---
+
+# Release 0.12.1
+
+### New features
 
 * A new `gaussian_unitary` circuitspec that can be used to compile any sequency of Gaussian
   transformations into a single `GaussianTransform` gate and a sequence of single mode `Dgate`s.
@@ -26,12 +43,15 @@
 
 * Correct URL for image in `README`
   [#273](https://github.com/XanaduAI/strawberryfields/pull/273)
+ 
+* Add applications data to `MANIFEST.in`
+  [#278](https://github.com/XanaduAI/strawberryfields/pull/278)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Jack Ceroni, Nicolás Quesada
+Ville Bergholm, Tom Bromley, Nicolás Quesada, Paul Tan
 
 ---
 
