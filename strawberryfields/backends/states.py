@@ -24,6 +24,7 @@ import numpy as np
 from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
+from scipy.integrate import simps
 
 import strawberryfields as sf
 from .shared_ops import rotation_matrix as _R
@@ -307,6 +308,48 @@ class BaseState(abc.ABC):
             tuple (float, float): expectation value and variance
         """
         raise NotImplementedError
+
+    def p_quad_values(self, mode, xvec, pvec):
+
+        r"""Calculates the discretized p-quadrature probability distribution of the specified mode.
+
+        Args:
+            mode (int): the mode to calculate the p-quadrature probability values of
+            xvec (array): array of discretized :math:`x` quadrature values
+            pvec (array): array of discretized :math:`p` quadrature values
+
+        Returns:
+            array: 1D array of size len(pvec), containing reduced p-quadrature
+            probability values for a specified range of x and p.
+        """
+
+        W = self.wigner(mode, xvec, pvec)
+        y = []
+        for i in range(0, len(pvec)):
+            res = simps(W[i, :len(xvec)], xvec)
+            y.append(res)
+        return np.array(y)
+
+    def x_quad_values(self, mode, xvec, pvec):
+
+        r"""Calculates the discretized x-quadrature probability distribution of the specified mode.
+
+        Args:
+            mode (int): the mode to calculate the x-quadrature probability values of
+            xvec (array): array of discretized :math:`x` quadrature values
+            pvec (array): array of discretized :math:`p` quadrature values
+
+        Returns:
+            array: 1D array of size len(xvec), containing reduced x-quadrature
+            probability values for a specified range of x and p.
+        """
+
+        W = self.wigner(mode, xvec, pvec)
+        y = []
+        for i in range(0, len(xvec)):
+            res = simps(W[:len(pvec), i], pvec)
+            y.append(res)
+        return np.array(y)
 
 
 class BaseFockState(BaseState):
