@@ -341,10 +341,11 @@ autodoc_member_order = 'bysource'
 inheritance_node_attrs = dict(color='lightskyblue1', style='filled')
 
 
-from custom_directives import IncludeDirective, GalleryItemDirective, CustomGalleryItemDirective
+from custom_directives import IncludeDirective, GalleryItemDirective, CustomGalleryItemDirective, DetailsDirective
 
 def setup(app):
     app.add_directive('includenodoc', IncludeDirective)
     app.add_directive('galleryitem', GalleryItemDirective)
     app.add_directive('customgalleryitem', CustomGalleryItemDirective)
+    app.add_directive('details', DetailsDirective)
     app.add_stylesheet('xanadu_gallery.css')
