@@ -18,8 +18,6 @@ The syntax is modeled after ProjectQ :cite:`projectq2016`.
 """
 from collections.abc import Sequence
 import copy
-import types
-import sys
 import warnings
 
 import numpy as np
@@ -37,6 +35,7 @@ from .parameters import (par_regref_deps, par_str, par_evaluate, par_is_symbolic
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
+# pylint: disable=arguments-differ  # Measurement._apply introduces the "shots" argument
 
 # numerical tolerances
 _decomposition_merge_tol = 1e-13
@@ -369,7 +368,7 @@ class Channel(Transformation):
     maps and transformations.
     """
     # TODO decide how all Channels should treat the first parameter p[0]
-    # (see e.g. https://en.wikipedia.org/wiki/C0-semigroup), c.f. p[0] in ops.Gate
+    # (see e.g. https://en.wikipedia.org/wiki/C0-semigroup), cf. p[0] in ops.Gate
 
     def merge(self, other):
         if not self.__class__ == other.__class__:
