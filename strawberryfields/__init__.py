@@ -64,7 +64,7 @@ def about():
         Strawberry Fields version: 0.12.0-dev
         Numpy version:             1.17.4
         Scipy version:             1.3.0
-        The Walrus version:           0.10.0-dev
+        The Walrus version:        0.10.0-dev
         Blackbird version:         0.2.1
         TensorFlow version:        2.0.0
     """
@@ -74,6 +74,8 @@ def about():
     import os
     import numpy
     import scipy
+    import sympy
+    import networkx
     import thewalrus
     import blackbird
 
@@ -87,7 +89,9 @@ def about():
     print('Strawberry Fields version: {}'.format(__version__))
     print('Numpy version:             {}'.format(numpy.__version__))
     print('Scipy version:             {}'.format(scipy.__version__))
-    print('The Walrus version:           {}'.format(thewalrus.__version__))
+    print('SymPy version:             {}'.format(sympy.__version__))
+    print('NetworkX version:          {}'.format(networkx.__version__))
+    print('The Walrus version:        {}'.format(thewalrus.__version__))
     print('Blackbird version:         {}'.format(blackbird.__version__))
 
     try:
