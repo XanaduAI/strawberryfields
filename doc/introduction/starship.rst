@@ -1,7 +1,7 @@
 .. _starship:
 
-Running Jobs with StarshipEngine
-################################
+StarshipEngine
+##############
 
 .. sectionauthor:: Zeid Zabaneh <zeid@xanadu.ai>
 

@@ -13,14 +13,6 @@
 # limitations under the License.
 
 """
-APIClient library
-=================
-
-**Module name:** :mod:`strawberryfields.api_client`
-
-.. currentmodule:: strawberryfields.api_client
-
-
 This module provides a thin client that communicates with the Xanadu Platform API over the HTTP
 protocol, based on the requests module. It also provides helper classes to facilitate interacting
 with this API via the Resource subclasses, as well as the ResourceManager wrapper around APIClient
@@ -63,16 +55,6 @@ A typical use looks like this:
         job.result.reload()  # Reloads the JobResult object from the API
 
         job.manager.get(1536)  # Fetches job 1536 from the server and updates the instance
-
-Classes
--------
-
-.. autosummary::
-   APIClient
-   Resource
-   ResourceManager
-   Field
-   Job
 """
 
 

@@ -14,4 +14,4 @@ sf.engine
 .. automodapi:: strawberryfields.engine
     :no-heading:
     :include-all-objects:
-    :skip: Engine, Sequence, stack, shape, load_backend, NotApplicableError, BaseBackend
+    :skip: Engine, Sequence, stack, shape, load_backend, NotApplicableError, BaseBackend, sleep, APIClient, Job, JobNotQueuedError,JobExecutionError,to_blackbird,DEFAULT_CONFIG
