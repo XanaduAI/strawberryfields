@@ -1,0 +1,9 @@
+sf.module_name
+==============
+
+.. currentmodule:: strawberryfields.module_name
+
+.. automodapi:: strawberryfields.module_name
+    :no-heading:
+    :include-all-objects:
+    :skip: <Place objects that shouldn't be documented here>

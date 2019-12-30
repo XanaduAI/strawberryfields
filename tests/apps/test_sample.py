@@ -100,7 +100,7 @@ class TestSample:
         mock_eng_run = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(sf.Engine, "run", mock_eng_run)
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
             sample.sample(A=adj, n_mean=1, threshold=True)
             p_func = mock_eng_run.call_args[0][0]
 
@@ -111,7 +111,7 @@ class TestSample:
         mock_eng_run = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(sf.Engine, "run", mock_eng_run)
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
             sample.sample(A=adj, n_mean=1, threshold=False)
             p_func = mock_eng_run.call_args[0][0]
 
@@ -122,7 +122,7 @@ class TestSample:
         mock_eng_run = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(sf.Engine, "run", mock_eng_run)
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
             sample.sample(A=adj, n_mean=1, threshold=False, loss=0.5)
             p_func = mock_eng_run.call_args[0][0]
 
@@ -133,7 +133,7 @@ class TestSample:
         mock_eng_run = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(sf.Engine, "run", mock_eng_run)
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
             sample.sample(A=adj, n_mean=1, threshold=False)
             p_func = mock_eng_run.call_args[0][0]
 
@@ -144,7 +144,7 @@ class TestSample:
         mock_eng_run = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(sf.Engine, "run", mock_eng_run)
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
             sample.sample(A=adj, n_mean=1, threshold=False, loss=1)
             p_func = mock_eng_run.call_args[0][0]
 
@@ -315,7 +315,7 @@ class TestVibronic:
         mock_eng_run = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(sf.Engine, "run", mock_eng_run)
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
             sample.vibronic(*p, 1, loss=0.5)
             p_func = mock_eng_run.call_args[0][0]
 
@@ -326,7 +326,7 @@ class TestVibronic:
         mock_eng_run = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(sf.Engine, "run", mock_eng_run)
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
             sample.vibronic(*p, 1)
             p_func = mock_eng_run.call_args[0][0]
 
@@ -340,7 +340,7 @@ class TestVibronic:
             mock_eng_run = mock.MagicMock()
 
             with monkeypatch.context() as m:
-                m.setattr(sf.Engine, "run", mock_eng_run)
+                m.setattr(sf.LocalEngine, "run", mock_eng_run)
                 sample.vibronic(*p, 1, loss=1)
                 p_func = mock_eng_run.call_args[0][0]
 

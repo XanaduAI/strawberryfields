@@ -12,21 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Graph similarity
-================
+Tools to construct graph kernels from GBS.
 
-**Module name:** :mod:`strawberryfields.apps.similarity`
-
-.. currentmodule:: strawberryfields.apps.similarity
-
-This module provides the tools to construct graph kernels from GBS. The graph kernel is built by
-mapping GBS samples from each graph to a feature vector. Similarity between graphs can then be
-determined by calculating the overlap between these vectors.
+The graph kernel is built by mapping GBS samples from each graph to a feature vector. Similarity
+between graphs can then be determined by calculating the overlap between these vectors.
 
 The functionality here is based upon the research papers:
 :cite:`bradler2018graph,schuld2019quantum,bradler2019duality`.
 
-An accompanying tutorial can be found :ref:`here <apps-sim-tutorial>`.
+.. seealso::
+
+    :ref:`apps-sim-tutorial`
 
 Coarse-graining GBS samples
 ---------------------------
@@ -44,16 +40,7 @@ samples. We consider two coarse grainings:
   orbits ``[2, 1]``, ``[1, 1, 1]`` are part of the :math:`E_{k=3, n_{\max}=2}` event, while
   orbit ``[3]`` is not.
 
-This module provides the following tools for dealing with coarse-grained orbits and events:
-
-.. autosummary::
-    sample_to_orbit
-    sample_to_event
-    orbit_to_sample
-    event_to_sample
-    orbits
-    orbit_cardinality
-    event_cardinality
+This module provides the following tools for dealing with coarse-grained orbits and events.
 
 Creating a feature vector
 -------------------------
@@ -89,11 +76,7 @@ number of samples:
 The sample mean of this sum is an estimate of the rescaled probability :math:`p(E)`.
 
 This module provides functions to evaluate the probability of orbits and events through Monte Carlo
-approximation:
-
-.. autosummary::
-    prob_orbit_mc
-    prob_event_mc
+approximation.
 
 Similar to the :func:`~.apps.sample.sample` function, the MC estimators include a ``loss`` argument
 to specify the proportion of photons lost in the simulated GBS device.
@@ -107,14 +90,7 @@ the resultant feature vector is
     f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots).
 
 This module allows for such feature vectors to be calculated using both the direct sampling and
-Monte Carlo approximation methods:
-
-.. autosummary::
-    feature_vector_sampling
-    feature_vector_mc
-
-Code details
-^^^^^^^^^^^^
+Monte Carlo approximation methods.
 """
 from collections import Counter
 from typing import Generator, Union

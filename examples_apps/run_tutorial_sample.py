@@ -2,14 +2,10 @@
 """
 .. _apps-sample-tutorial:
 
-Sampling Tutorial
+Sampling from GBS
 =================
 
-This tutorial provides a quick guide to generating samples from GBS simulators. This
-functionality is provided in the :mod:`~.apps.sample` module of the applications layer.
-
-Sampling from GBS
------------------
+*Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.sample`
 
 A GBS device can be programmed to sample from any symmetric matrix :math:`A`. To sample,
 we must specify the mean number of photons being generated in the device and optionally the form of
@@ -17,6 +13,8 @@ detection used at the output: threshold detection or photon-number resolving (PN
 Threshold detectors are restricted to measuring whether photons have arrived at the detector,
 whereas PNR detectors are able to count the number of photons. Photon loss can also be specified
 with the ``loss`` argument.
+
+Sampling functionality is provided in the :mod:`~.apps.sample` module.
 
 Let's take a look at both types of sampling methods. We can generate samples from a random
 5-dimensional symmetric matrix:
@@ -59,11 +57,11 @@ print(s_pnr)
 # and it turns out that threshold samples can provide enough useful information for a range of
 # applications.
 #
-# The applications layer of Strawberry Fields focuses primarily on solving graph-based problems.
-# In this setting, we typically want to use GBS to sample subgraphs, which are likely
-# to be dense due to the probability distribution of GBS :cite:`arrazola2018using`. In this case,
-# threshold sampling is enough, since it lets us select nodes of the subgraph. Let's take
-# a look at this by using a small fixed graph as an example:
+# Strawberry Fields provides tools for solving graph-based problems. In this setting,
+# we typically want to use GBS to sample subgraphs, which are likely to be dense due to the
+# probability distribution of GBS :cite:`arrazola2018using`. In this case, threshold sampling
+# is enough, since it lets us select nodes of the subgraph. Let's take a look at this by using a
+# small fixed graph as an example:
 
 from strawberryfields.apps import plot
 import networkx as nx
@@ -147,11 +145,10 @@ plotly.offline.plot(plot.graph(graph, subgraphs[0]), filename="subgraph.html")
 #
 # These sampled subgraphs act as the starting point for some of the applications made available
 # in Strawberry Fields, including the maximum clique and dense subgraph identification problems.
-# Go and check out the other tutorials in the applications layer to see what you can do with GBS!
 #
 # .. note::
 #       Simulating GBS can be computationally intensive when using both threshold and PNR
 #       detectors. After all, we are using a classical algorithm to simulate a quantum process!
-#       To help users get to grips with the applications layer as quickly as possible,
-#       we have provided datasets of pre-calculated GBS samples. These datasets are available in
-#       the :mod:`~.apps.data` module.
+#       To help users get to grips with the applications of Strawberry Fields as quickly as
+#       possible, we have provided datasets of pre-calculated GBS samples. These datasets are
+#       available in the :mod:`~.apps.data` module.

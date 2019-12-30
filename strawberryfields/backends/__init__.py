@@ -11,11 +11,76 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This module loads the required backend classes"""
+"""This package contains the modules that make up the
+Strawberry Fields backends. This includes photonic simulators,
+shared numerical operations, and states objects returned by
+statevector simulators.
+
+Local statevector simulators
+----------------------------
+
+Below are all available local statevector backends currently
+provided by Strawberry Fields. These simulators all run locally,
+provide access to the state after simulation, and the state is
+preserved between engine runs.
+
+.. currentmodule:: strawberryfields.backends
+.. autosummary::
+    :toctree: api
+
+    FockBackend
+    GaussianBackend
+    ~tfbackend.TFBackend
+
+.. raw:: html
+
+    <div style="display: none;">
+
+.. currentmodule:: strawberryfields.backends
+.. autosummary::
+    :toctree: api
+
+    BaseFockState
+    ~gaussianbackend.states.GaussianState
+    ~tfbackend.states.FockStateTF
+
+.. raw:: html
+
+    </div>
+
+Backend API
+-----------
+
+A list of the abstract base classes that define the
+statevector backend API
+
+.. currentmodule:: strawberryfields.backends
+.. autosummary::
+    :toctree: api
+
+    BaseState
+    BaseGaussianState
+    BaseBackend
+    BaseFock
+    BaseGaussian
+
+Utility modules
+---------------
+
+The following utility modules are provided for
+backend development.
+
+.. currentmodule:: strawberryfields.backends
+.. autosummary::
+    :toctree: api
+
+    shared_ops
+"""
 
 from .base import BaseBackend, BaseFock, BaseGaussian, ModeMap
 from .gaussianbackend import GaussianBackend
 from .fockbackend import FockBackend
+from .states import BaseState, BaseGaussianState, BaseFockState
 
 
 __all__ = [
@@ -24,7 +89,10 @@ __all__ = [
     "BaseGaussian",
     "FockBackend",
     "GaussianBackend",
-    "TFBackend"
+    "TFBackend",
+    "BaseState",
+    "BaseFockState",
+    "BaseGaussianState"
 ]
 
 

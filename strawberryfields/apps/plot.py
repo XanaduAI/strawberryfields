@@ -12,27 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Plotting and visualization
-==========================
+Tools for visualizing graphs, subgraphs, point processes, and vibronic spectra.
 
-**Module name:** :mod:`strawberryfields.apps.plot`
-
-.. currentmodule:: strawberryfields.apps.plot
-
-This module provides functionality for visualizing graphs, subgraphs, point processes,
-and vibronic spectra. It
-requires the installation of the Plotly library, which is not a dependency of Strawberry
-Fields. Plotly can be installed using ``pip install plotly`` or by visiting their `installation
-instructions <https://plot.ly/python/getting-started/#installation>`__.
-
-.. autosummary::
-    graph
-    subgraph
-    points
-    spectrum
-
-Code details
-^^^^^^^^^^^^
+Visualization requires installation of the Plotly library, which is not a dependency of
+Strawberry Fields. Plotly can be installed using ``pip install plotly`` or by visiting their
+`installation instructions <https://plot.ly/python/getting-started/#installation>`__.
 """
 # pylint: disable=import-outside-toplevel
 from typing import Optional, Tuple
@@ -116,7 +100,7 @@ graph_node_size = 14
 subgraph_node_size = 16
 
 
-def graph(g: nx.Graph, s: Optional[list] = None, plot_size: int = 500):  # pragma: no cover
+def graph(g: nx.Graph, s: Optional[list] = None, plot_size: Tuple = (500, 500)):  # pragma: no cover
     """Creates a plot of the input graph.
 
     This function can plot the input graph only, or the graph with a specified subgraph highlighted.
@@ -125,7 +109,7 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: int = 500):  # pragm
     **Example usage:**
 
     >>> graph = nx.complete_graph(10)
-    >>> fig = graph(graph, [0, 1, 2, 3])
+    >>> fig = plot.graph(graph, [0, 1, 2, 3])
     >>> fig.show()
 
     .. image:: ../../_static/complete_graph.png
@@ -136,7 +120,8 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: int = 500):  # pragm
     Args:
         g (nx.Graph): input graph
         s (list): optional list of nodes comprising the subgraph to highlight
-        plot_size (int): size of the plot in pixels, rendered in a square layout
+        plot_size (int): size of the plot in pixels, given as a pair of integers ``(x_size,
+            y_size)``
 
     Returns:
          Figure: figure for graph and optionally highlighted subgraph
@@ -170,8 +155,8 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: int = 500):  # pragm
         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         margin=dict(b=0, l=0, r=0, t=25),
-        height=plot_size,
-        width=plot_size,
+        height=plot_size[1],
+        width=plot_size[0],
         plot_bgcolor="#ffffff",
     )
 
@@ -202,7 +187,7 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: int = 500):  # pragm
     return f
 
 
-def subgraph(s: nx.Graph, plot_size: int = 500):  # pragma: no cover
+def subgraph(s: nx.Graph, plot_size: Tuple = (500, 500)):  # pragma: no cover
     """Creates a plot of the input subgraph.
 
     Subgraphs are plotted using the Kamada-Kawai layout with an aspect ratio of 1:1.
@@ -211,7 +196,7 @@ def subgraph(s: nx.Graph, plot_size: int = 500):  # pragma: no cover
 
     >>> graph = nx.complete_graph(10)
     >>> subgraph = graph.subgraph([0, 1, 2, 3])
-    >>> fig = subgraph(subgraph)
+    >>> fig = plot.subgraph(subgraph)
     >>> fig.show()
 
     .. image:: ../../_static/complete_subgraph.png
@@ -221,7 +206,8 @@ def subgraph(s: nx.Graph, plot_size: int = 500):  # pragma: no cover
 
     Args:
         s (nx.Graph): input subgraph
-        plot_size (int): size of the plot in pixels, rendered in a square layout
+        plot_size (int): size of the plot in pixels, given as a pair of integers ``(x_size,
+            y_size)``
 
     Returns:
          Figure: figure for subgraph
@@ -255,8 +241,8 @@ def subgraph(s: nx.Graph, plot_size: int = 500):  # pragma: no cover
         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         margin=dict(b=0, l=0, r=0, t=25),
-        height=plot_size,
-        width=plot_size,
+        height=plot_size[1],
+        width=plot_size[0],
         plot_bgcolor="#ffffff",
     )
 
@@ -266,7 +252,10 @@ def subgraph(s: nx.Graph, plot_size: int = 500):  # pragma: no cover
 
 
 def points(
-    R: np.ndarray, sample: Optional[list] = None, plot_size: int = 500, point_size: float = 30
+    R: np.ndarray,
+    sample: Optional[list] = None,
+    plot_size: Tuple = (500, 500),
+    point_size: float = 30,
 ):  # pragma: no cover
     """Creates a plot of two-dimensional points given their input coordinates. Sampled
     points can be optionally highlighted among all points.
@@ -275,7 +264,7 @@ def points(
 
     >>> R = np.random.normal(0, 1, (50, 2))
     >>> sample = [1] * 10 + [0] * 40  # select first ten points
-    >>> points(R, sample).show()
+    >>> plot.points(R, sample).show()
 
     .. image:: ../../_static/normal_pp.png
        :width: 40%
@@ -285,7 +274,8 @@ def points(
     Args:
         R (np.array): Coordinate matrix. Rows of this array are the coordinates of the points.
         sample (list[int]): optional subset of sampled points to be highlighted
-        plot_size (int): size of the plot in pixels, rendered in a square layout
+        plot_size (int): size of the plot in pixels, given as a pair of integers ``(x_size,
+            y_size)``
         point_size (int): size of the points, proportional to its radius
 
     Returns:
@@ -302,8 +292,8 @@ def points(
         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         margin=dict(b=0, l=0, r=0, t=25),
-        height=plot_size,
-        width=plot_size,
+        height=plot_size[1],
+        width=plot_size[0],
         plot_bgcolor="white",
     )
 
@@ -356,7 +346,7 @@ def spectrum(
 
     >>> formic = data.Formic()
     >>> e = vibronic.energies(formic, formic.w, formic.wp)
-    >>> full_spectrum = spectrum(e, xmin=-1000, xmax=8000)
+    >>> full_spectrum = plot.spectrum(e, xmin=-1000, xmax=8000)
     >>> full_spectrum.show()
 
     .. image:: ../../_static/formic_spectrum.png

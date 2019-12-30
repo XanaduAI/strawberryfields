@@ -11,9 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
-Quantum program utilities. Module docs in program.py.
+This module contains various utility classes and functions used
+within the :class:`~.Program` class.
 """
 
 from collections.abc import Sequence

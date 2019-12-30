@@ -48,7 +48,6 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
-    # 'sphinx.ext.imgmath',
     'sphinx.ext.napoleon',
     'sphinx.ext.inheritance_diagram',
     'sphinx.ext.viewcode',
@@ -56,14 +55,24 @@ extensions = [
     'edit_on_github',
     'sphinx_autodoc_typehints',
     'nbsphinx',
-    'sphinx_gallery.gen_gallery'
+    'sphinx_gallery.gen_gallery',
+    "sphinx.ext.intersphinx",
+    "sphinx_automodapi.automodapi",
+    'sphinx_copybutton'
 ]
 
 from glob import glob
 import shutil
 import warnings
 
-mathjax_path = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+autosummary_generate = True
+autosummary_imported_members = False
+automodapi_toctreedirnm = "code/api"
+automodsumm_inherited_members = True
+
+add_module_names = False
+
+mathjax_path = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
 
 # nbsphinx settings
 
@@ -72,6 +81,7 @@ nbsphinx_execute = 'never'
 nbsphinx_epilog = """
 .. note:: :download:`Click here <../../{{env.docname}}.ipynb>` to download this gallery page as an interactive Jupyter notebook.
 """
+nbsphinx_requirejs_path = ""
 
 sphinx_gallery_conf = {
     # path to your example scripts
@@ -301,10 +311,7 @@ html_theme_options = {
 
     # Set the name of the project to appear in the left sidebar.
     "project_nav_name": "Strawberry Fields",
-    "project_logo": "_static/strawberry_fields.png",
     "touch_icon": "_static/logo_new.png",
-    "touch_icon_small": "_static/logo_new_small.png",
-    "large_toc": True,
 
     # Set GA account ID to enable tracking
     "google_analytics_account": "UA-116279123-2",

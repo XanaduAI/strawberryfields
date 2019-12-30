@@ -17,3 +17,4 @@ doc/tutorials_apps/*
 examples_apps/*.html
 doc/_static/thumbs/*
 !doc/_static/code.png
+doc/code/api/*

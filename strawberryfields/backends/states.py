@@ -11,105 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 r"""
-.. _state_class:
-
-Quantum states API
-========================================================
-
-**Module name:** :mod:`strawberryfields.backends.states`
-
-.. currentmodule:: strawberryfields.backends.states
-
-This module provides classes which represent the quantum state
+This module provides abstract base classes which represent the quantum state
 returned by a simulator backend via :class:`.Engine`.
-
-
-Base quantum state
--------------------------------
-
-An abstract base class for the representation of quantum states. This class should not be instantiated on its
-own, instead all states will be represented by one of the inheriting subclasses.
-
-This class contains all methods that should be supported by all
-inheriting classes.
-
-.. note::
-    In the following, keyword arguments are denoted ``**kwargs``, and allow additional
-    options to be passed to the underlying State class - these are documented where
-    available. For more details on relevant keyword arguments, please
-    consult the backend documentation directly.
-
-.. currentmodule:: strawberryfields.backends.states.BaseState
-
-.. autosummary::
-    data
-    hbar
-    is_pure
-    num_modes
-    mode_names
-    mode_indices
-    reduced_dm
-    fock_prob
-    mean_photon
-    fidelity
-    fidelity_vacuum
-    fidelity_coherent
-    wigner
-    quad_expectation
-    poly_quad_expectation
-
-
-Base Gaussian state
--------------------------------
-
-Class for the representation of quantum states using the Gaussian formalism.
-This class extends the class :class:`~.BaseState` with additional methods
-unique to Gaussian states.
-
-Note that backends using the Gaussian state representation may extend this class with
-additional methods particular to the backend, for example :class:`~.GaussianState`
-in the :ref:`gaussian_backend`.
-
-.. currentmodule:: strawberryfields.backends.states.BaseGaussianState
-
-.. autosummary::
-    means
-    cov
-    reduced_gaussian
-    is_coherent
-    is_squeezed
-    displacement
-    squeezing
-
-
-Base Fock state
--------------------------------
-
-Class for the representation of quantum states in the Fock basis.
-This class extends the class :class:`~.BaseState` with additional methods
-unique to states in the Fock-basis representation.
-
-Note that backends using Fock-basis representation may extend this class with
-additional methods particular to the backend, for example :class:`~.FockStateTF`
-in the :ref:`Tensorflow_backend`.
-
-.. currentmodule:: strawberryfields.backends.states.BaseFockState
-
-.. autosummary::
-    cutoff_dim
-    ket
-    dm
-    trace
-    all_fock_probs
-
-.. currentmodule:: strawberryfields.backends.states
-
-
-Code details
-~~~~~~~~~~~~
-
 """
 import abc
 import string
@@ -120,6 +24,7 @@ import numpy as np
 from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
+from scipy.integrate import simps
 
 import strawberryfields as sf
 from .shared_ops import rotation_matrix as _R
@@ -403,6 +308,48 @@ class BaseState(abc.ABC):
             tuple (float, float): expectation value and variance
         """
         raise NotImplementedError
+
+    def p_quad_values(self, mode, xvec, pvec):
+
+        r"""Calculates the discretized p-quadrature probability distribution of the specified mode.
+
+        Args:
+            mode (int): the mode to calculate the p-quadrature probability values of
+            xvec (array): array of discretized :math:`x` quadrature values
+            pvec (array): array of discretized :math:`p` quadrature values
+
+        Returns:
+            array: 1D array of size len(pvec), containing reduced p-quadrature
+            probability values for a specified range of x and p.
+        """
+
+        W = self.wigner(mode, xvec, pvec)
+        y = []
+        for i in range(0, len(pvec)):
+            res = simps(W[i, :len(xvec)], xvec)
+            y.append(res)
+        return np.array(y)
+
+    def x_quad_values(self, mode, xvec, pvec):
+
+        r"""Calculates the discretized x-quadrature probability distribution of the specified mode.
+
+        Args:
+            mode (int): the mode to calculate the x-quadrature probability values of
+            xvec (array): array of discretized :math:`x` quadrature values
+            pvec (array): array of discretized :math:`p` quadrature values
+
+        Returns:
+            array: 1D array of size len(xvec), containing reduced x-quadrature
+            probability values for a specified range of x and p.
+        """
+
+        W = self.wigner(mode, xvec, pvec)
+        y = []
+        for i in range(0, len(xvec)):
+            res = simps(W[:len(pvec), i], pvec)
+            y.append(res)
+        return np.array(y)
 
 
 class BaseFockState(BaseState):
