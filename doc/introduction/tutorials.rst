@@ -133,3 +133,22 @@ Algorithms
 
         <div style='clear:both'></div>
         <br>
+
+Demo
+----
+
+.. toctree::
+    :hidden:
+    :maxdepth: 1
+
+    /introduction/starship
+
+.. customgalleryitem::
+    :tooltip: StarshipEngine
+    :description: :doc:`/introduction/starship`
+    :figure: /gallery/gate_visualisation/GateVisualisation.gif
+
+.. raw:: html
+
+        <div style='clear:both'></div>
+        <br>

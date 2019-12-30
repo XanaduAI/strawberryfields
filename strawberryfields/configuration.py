@@ -12,79 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Configuration
-=============
-
-**Module name:** :mod:`strawberryfields.configuration`
-
-.. currentmodule:: strawberryfields.configuration
-
 This module contains the :class:`Configuration` class, which is used to
 load, store, save, and modify configuration options for Strawberry Fields.
-
-Behaviour
---------
-
-On first import, Strawberry Fields attempts to load the configuration file `config.toml`, by
-scanning the following three directories in order of preference:
-
-1. The current directory
-2. The path stored in the environment variable ``SF_CONF``
-3. The default user configuration directory:
-
-   * On Linux: ``~/.config/strawberryfields``
-   * On Windows: ``~C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields``
-   * On MacOS: ``~/Library/Application\ Support/strawberryfields``
-
-If no configuration file is found, a warning message will be displayed in the logs,
-and all device parameters will need to be passed as keyword arguments when
-loading the device.
-
-The user can access the initialized configuration via `strawberryfields.config`, view the
-loaded configuration filepath, print the configurations options, access and modify
-them via keys, and save/load new configuration files.
-
-Configuration files
--------------------
-
-The configuration file `config.toml` uses the `TOML standard <https://github.com/toml-lang/toml>`_,
-and has the following format:
-
-.. code-block:: toml
-
-    [api]
-    # Options for the Strawberry Fields Cloud API
-    authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
-    hostname = "localhost"
-    use_ssl = true
-
-Summary of options
-------------------
-
-SF_API_USE_SSL:
-    Whether to use SSL or not when connecting to the API. True or False.
-SF_API_HOSTNAME:
-    The hostname of the server to connect to. Defaults to localhost. Must be one of the allowed
-    hosts.
-SF_API_AUTHENTICATION_TOKEN:
-    The authentication token to use when connecting to the API. Will be sent with every request in
-    the header.
-
-Summary of methods
-------------------
-
-.. currentmodule:: strawberryfields.configuration.Configuration
-
-.. autosummary::
-    path
-    load
-    save
-
-Code details
-~~~~~~~~~~~~
-
-.. currentmodule:: strawberryfields.configuration
-
 """
 import os
 import logging as log
