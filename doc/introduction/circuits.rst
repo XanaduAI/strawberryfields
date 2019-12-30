@@ -45,7 +45,7 @@ must be created, and operations applied.
     import strawberryfields as sf
     from strawberryfields import ops
 
-    # create a 3 mode quantum program
+    # create a 3-mode quantum program
     prog = sf.Program(3)
 
     with prog.context as q:
@@ -70,6 +70,10 @@ the same structure as the above example; in particular,
   .. code-block:: python3
 
       ops.GateName(arg1, arg2) | (q[i], q[j], ...)
+
+  where ``ops.GateName`` is a quantum operation, ``arg1, arg2`` are its parameters,
+  and the right-hand side of the vertical bar lists the qumode(s) on which the operation
+  will act.
 
 .. note::
 
@@ -169,6 +173,50 @@ for accessing the results of your program execution:
     the trace of your program after simulation remains reasonably close to 1,
     by calling :meth:`state.trace() <.BaseFockState.trace>`. If the trace is much less than 1, you
     will need to increase the cutoff dimension.
+
+
+Symbolic parameters
+-------------------
+
+The quantum operations can take both numerical and symbolic parameters. The latter fall into two types:
+
+* **Measured parameters**: Certain quantum programs require that
+  operations can be conditioned on measurement results obtained during the execution of the
+  program. In this case the parameter value is not known until the measurement is made
+  (or simulated). The latest measurement result of qumode ``i`` is referred to as ``q[i].par``.
+
+* **Free parameters**: A *parametrized circuit template* is a program that
+  depends on a number of free parameters. These parameters are bound to new fixed
+  values each time the program is executed.
+  The free parameters are created accessed using the :meth:`Program.params` method.
+
+The symbolic parameters can be combined and transformed using basic algebraic operations and
+common mathematical functions in the ``strawberryfields.parameters.parfuncs`` namespace.
+
+.. code-block:: python3
+
+    import strawberryfields as sf
+    from strawberryfields import ops
+    from strawberryfields.parameters import parfuncs as pf
+
+    # create a 2-mode quantum program
+    prog = sf.Program(2)
+
+    # create a free parameter named 'a'
+    a = prog.params('a')
+
+    # define the program
+    with prog.context as q:
+        ops.Dgate(a ** 2)    | q[0]  # free parameter
+        ops.MeasureX         | q[0]  # measure qumode 0, the result is used in the next operation
+        ops.Sgate(1 - pf.sin(q[0].par)) | q[1]  # measured parameter
+        ops.MeasureFock()    | q[1]
+
+    # intialize the Fock backend
+    eng = sf.Engine('fock', backend_options={'cutoff_dim': 5})
+
+    # run the program, with the free parameter 'a' bound to the value 0.9
+    result = eng.run(prog, args={'a': 0.9})
 
 
 Compilation

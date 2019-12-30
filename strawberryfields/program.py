@@ -13,90 +13,7 @@
 # limitations under the License.
 
 """
-Quantum programs
-================
-
-**Module name:** :mod:`strawberryfields.program`
-
-.. currentmodule:: strawberryfields.program
-
 This module implements the :class:`Program` class which acts as a representation for quantum circuits.
-The Program object also acts as a context for defining the quantum circuit using the Python-embedded Blackbird syntax.
-
-A typical use looks like
-
-.. include:: example_use.rst
-
-The Program objects keep track of the state of the quantum register they act on, using a dictionary of :class:`RegRef` objects.
-The currently active register references can be accessed using the :meth:`~Program.register` method.
-
-
-Program methods
----------------
-
-.. currentmodule:: strawberryfields.program.Program
-
-.. autosummary::
-   context
-   register
-   num_subsystems
-   __len__
-   can_follow
-   append
-   lock
-   compile
-   optimize
-   print
-   draw_circuit
-   params
-   bind_params
-
-The following are internal Program methods. In most cases the user should not
-call these directly.
-
-.. autosummary::
-   __enter__
-   __exit__
-   _clear_regrefs
-   _add_subsystems
-   _delete_subsystems
-   _index_to_regref
-   _test_regrefs
-   _linked_copy
-
-
-**Module name:** :mod:`strawberryfields.program_utils`
-
-.. currentmodule:: strawberryfields.program_utils
-
-Helper classes
---------------
-
-.. autosummary::
-   Command
-   RegRef
-
-
-Utility functions
------------------
-
-.. autosummary::
-   list_to_grid
-   grid_to_DAG
-   list_to_DAG
-   DAG_to_list
-   group_operations
-   optimize_circuit
-
-
-Exceptions
-----------
-
-.. autosummary::
-   MergeFailure
-   CircuitError
-   RegRefError
-
 
 Quantum circuit representation
 ------------------------------
@@ -124,14 +41,6 @@ Three different (but equivalent) representations of the circuit are used.
 
 The three representations can be converted to each other
 using the functions :func:`list_to_grid`, :func:`grid_to_DAG` and :func:`DAG_to_list`.
-
-
-.. currentmodule:: strawberryfields.program
-
-
-Code details
-~~~~~~~~~~~~
-
 """
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
@@ -157,7 +66,7 @@ class Program:
     * appending :doc:`/introduction/ops` to the program.
 
     Within the context, operations are appended to the program using the
-    syntax
+    Python-embedded Blackbird syntax
 
     .. code-block:: python3
 
@@ -201,6 +110,9 @@ class Program:
             ops.BSgate(0.43, 0.1) | (q[0], q[2])
             ops.BSgate(0.43, 0.1) | (q[1], q[2])
             ops.MeasureFock() | q
+
+    The program objects keep track of the state of the quantum register they act on, using a dictionary of :class:`RegRef` objects.
+    The currently active register references can be accessed using the :meth:`~Program.register` method.
 
     Args:
         num_subsystems (int, Program): Initial number of modes (subsystems) in the quantum register.
