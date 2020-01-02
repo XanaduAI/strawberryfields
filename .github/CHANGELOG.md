@@ -11,6 +11,9 @@
 
 ### Bug fixes
 
+* Symbolic Operation parameters are now compatible with TensorFlow 2.0 objects.
+  [#282](https://github.com/XanaduAI/strawberryfields/pull/282)
+
 * Added `sympy>=1.5` to the list of dependencies.
   Removed the `sympy.functions.atan2` workaround now that SymPy has been fixed.
   [#280](https://github.com/XanaduAI/strawberryfields/pull/280)
