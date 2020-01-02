@@ -102,15 +102,6 @@ import sympy
 import sympy.functions as sf
 
 
-# FIXME Workaround for missing numpy implementation of Heaviside, required by CXgate. Remove when no longer necessary.
-def heaviside(x):
-    """Heaviside step function."""
-    if x <= 0:
-        return 0
-    return 1
-
-custom_funcs = {'Heaviside': heaviside}
-
 
 def wrap_mathfunc(func):
     """Applies the wrapped sympy function elementwise to numpy arrays.
@@ -179,7 +170,7 @@ def par_evaluate(params):
 
         # using lambdify we can also substitute np.ndarrays and tf.Tensors for the atoms
         atoms = list(p.atoms(MeasuredParameter, FreeParameter))
-        func = sympy.lambdify(atoms, p, ['numpy', custom_funcs])
+        func = sympy.lambdify(atoms, p, ['numpy'])
         vals = [k._eval_evalf(None) for k in atoms]
         return func(*vals)
 
