@@ -90,20 +90,22 @@ class TestOneModeSymbolic:
         val = q[0].val
         assert isinstance(val, tf.Tensor)
 
+    @pytest.mark.xfail(reason="Symbolic parameter system only works with TensorFlow 2 objects", raises=AttributeError, strict=True)
     def test_eng_run_with_session_and_feed_dict(self, setup_eng, batch_size, cutoff, tol):
         """Tests whether passing a tf Session and feed_dict
         through `eng.run` leads to proper numerical simulation."""
-        a = tf.Variable(0.5)
+        tf_a = tf.Variable(0.5)
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
-        tf_params = {'session': sess, 'feed_dict': {a: 0.0}}
+        tf_params = {'session': sess, 'feed_dict': {tf_a: 0.0}}
 
+        # NOTE this test worked before because the phase was zero, we only needed working arithmetic in that case
         eng, prog = setup_eng(1)
         x = prog.params('a')  # free parameter
         with prog.context as q:
-            Dgate(x) | q
+            Dgate(x, 1.3) | q
 
-        state = eng.run(prog, args={'a': a}, run_options=tf_params).state
+        state = eng.run(prog, args={'a': tf_a}, run_options=tf_params).state
 
         if state.is_pure:
             k = state.ket()
