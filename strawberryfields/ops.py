@@ -18,8 +18,6 @@ The syntax is modeled after ProjectQ :cite:`projectq2016`.
 """
 from collections.abc import Sequence
 import copy
-import types
-import sys
 import warnings
 
 import numpy as np
@@ -37,6 +35,7 @@ from .parameters import (par_regref_deps, par_str, par_evaluate, par_is_symbolic
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
+# pylint: disable=arguments-differ  # Measurement._apply introduces the "shots" argument
 
 # numerical tolerances
 _decomposition_merge_tol = 1e-13
@@ -369,7 +368,7 @@ class Channel(Transformation):
     maps and transformations.
     """
     # TODO decide how all Channels should treat the first parameter p[0]
-    # (see e.g. https://en.wikipedia.org/wiki/C0-semigroup), c.f. p[0] in ops.Gate
+    # (see e.g. https://en.wikipedia.org/wiki/C0-semigroup), cf. p[0] in ops.Gate
 
     def merge(self, other):
         if not self.__class__ == other.__class__:
@@ -1172,14 +1171,7 @@ class CXgate(Gate):
     def _decompose(self, reg, **kwargs):
         s = self.p[0]
         r = pf.asinh(-s/2)
-        #theta = 0.5 * pf.atan2(-1.0 / pf.cosh(r), -pf.tanh(r))
-        # FIXME in sympy 1.4 atan2._eval_evalf() has a bug, it does not work with Symbol._eval_evalf().
-        # This is a workaround. When sympy is fixed (in version 1.5?), go back to using pf.atan2.
-        # See https://github.com/sympy/sympy/pull/17469
-        # If s<0 we need to add pi/2 to theta. If s==0, we need to avoid division by zero.
-        temp = 0.5 * pf.atan(1 / pf.sinh(r))  # NOTE s==0 will cause a division by zero when this is evaluated
-        theta = temp -pf.Heaviside(-s) * np.pi/2
-
+        theta = 0.5 * pf.atan2(-1.0 / pf.cosh(r), -pf.tanh(r))
         return [
             Command(BSgate(theta, 0), reg),
             Command(Sgate(r, 0), reg[0]),

@@ -6,16 +6,20 @@
   This allows calculation of x and p quadrature
   probability distributions by integrating across the Wigner function.
   [#270](https://github.com/XanaduAI/strawberryfields/pull/270)
-  
+
 ### Improvements
 
 ### Bug fixes
+
+* Added `sympy>=1.5` to the list of dependencies.
+  Removed the `sympy.functions.atan2` workaround now that SymPy has been fixed.
+  [#280](https://github.com/XanaduAI/strawberryfields/pull/280)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Jack Ceroni
+Ville Bergholm, Jack Ceroni
 
 ---
 
@@ -43,7 +47,7 @@ Jack Ceroni
 
 * Correct URL for image in `README`
   [#273](https://github.com/XanaduAI/strawberryfields/pull/273)
- 
+
 * Add applications data to `MANIFEST.in`
   [#278](https://github.com/XanaduAI/strawberryfields/pull/278)
 
