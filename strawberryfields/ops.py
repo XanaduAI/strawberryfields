@@ -2324,7 +2324,7 @@ class BipartiteGraphEmbed(Decomposition):
 
     .. math:: A = \begin{bmatrix}0 & B \\ B^T & 0\end{bmatrix}
 
-    where :math:`B` is a :math:N/2\times N/2` matrix representing the (weighted)
+    where :math:`B` is a :math:`N/2\times N/2` matrix representing the (weighted)
     edges between the vertex set.
 
     This operation decomposes an adjacency matrix into a sequence of two
