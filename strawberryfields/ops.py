@@ -18,8 +18,6 @@ The syntax is modeled after ProjectQ :cite:`projectq2016`.
 """
 from collections.abc import Sequence
 import copy
-import types
-import sys
 import warnings
 
 import numpy as np
