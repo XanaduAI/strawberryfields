@@ -33,6 +33,7 @@ else:
         pytestmark = pytest.mark.skip("Test only runs with TensorFlow 1.3")
 
 from strawberryfields.ops import Dgate, MeasureX
+import strawberryfields.parameters
 
 
 ALPHA = 0.5
@@ -95,17 +96,24 @@ class TestOneModeSymbolic:
         """Tests whether passing a tf Session and feed_dict
         through `eng.run` leads to proper numerical simulation."""
         tf_a = tf.Variable(0.5)
+        tf_phi = tf.Variable(0.7)
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
-        tf_params = {'session': sess, 'feed_dict': {tf_a: 0.0}}
+        tf_params = {'session': sess, 'feed_dict': {tf_a: 0.0, tf_phi: 1.0}}
 
-        # NOTE this test worked before because the phase was zero, we only needed working arithmetic in that case
+        # NOTE this test worked before because the phase was a number, we only needed working tf.Tensor arithmetic in that case.
+        # Now also the pf.exp function has to work on tf.Tensors.
         eng, prog = setup_eng(1)
-        x = prog.params('a')  # free parameter
+        x, y = prog.params('a', 'phi')  # free parameters
         with prog.context as q:
-            Dgate(x, 1.3) | q
+            Dgate(x, y) | q
 
-        state = eng.run(prog, args={'a': tf_a}, run_options=tf_params).state
+        # use TF to evaluate symbolic parameter expressions
+        strawberryfields.parameters.par_evaluate.lambdify_printer = ['tensorflow']
+        state = eng.run(prog, args={'a': tf_a, 'phi': tf_phi}, run_options=tf_params).state
+
+        # restore the default
+        strawberryfields.parameters.par_evaluate.lambdify_printer = ['numpy']
 
         if state.is_pure:
             k = state.ket()

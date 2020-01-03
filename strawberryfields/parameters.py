@@ -170,7 +170,7 @@ def par_evaluate(params):
 
         # using lambdify we can also substitute np.ndarrays and tf.Tensors for the atoms
         atoms = list(p.atoms(MeasuredParameter, FreeParameter))
-        func = sympy.lambdify(atoms, p, ['numpy'])
+        func = sympy.lambdify(atoms, p, par_evaluate.lambdify_printer)
         vals = [k._eval_evalf(None) for k in atoms]
         return func(*vals)
 
@@ -178,6 +178,9 @@ def par_evaluate(params):
     if scalar:
         return ret[0]
     return ret
+
+# default printer for lambdify to use (we also use 'tensorflow' for TF objects)
+par_evaluate.lambdify_printer = ['numpy']
 
 
 def par_is_symbolic(p):
