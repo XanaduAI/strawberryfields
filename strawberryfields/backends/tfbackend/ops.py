@@ -37,7 +37,7 @@ from scipy.special import binom, factorial
 
 from strawberryfields.backends.shared_ops import generate_bs_factors, load_bs_factors, save_bs_factors, squeeze_parity
 
-def_type = tf.complex64 #NOTE: what if a user wants higher accuracy?
+def_type = tf.complex64
 max_num_indices = len(indices)
 
 ###################################################################
@@ -69,7 +69,7 @@ def mixed(pure_state, batched=False):
         eqn_lhs = batch_index + bra_indices + "," + batch_index + ket_indices
         eqn_rhs = "".join(bdx + kdx for bdx, kdx in zip(bra_indices, ket_indices))
         eqn = eqn_lhs + "->" + batch_index + eqn_rhs
-        mixed_state = tf.einsum(eqn, pure_state, tf.math.conj(pure_state))
+        mixed_state = tf.einsum(eqn, pure_state, tf.conj(pure_state))
     if not batched:
         mixed_state = tf.squeeze(mixed_state, 0) # drop fake batch dimension
     return mixed_state
@@ -84,8 +84,8 @@ def unravel_index(ind, tensor_shape):
     """
     ind = tf.expand_dims(tf.cast(ind, tf.int64), 0)
     tensor_shape = tf.expand_dims(tf.cast(tensor_shape, tf.int64), 1)
-    strides = tf.math.cumprod(tensor_shape, reverse=True)
-    strides_shifted = tf.math.cumprod(tensor_shape, exclusive=True, reverse=True)
+    strides = tf.cumprod(tensor_shape, reverse=True)
+    strides_shifted = tf.cumprod(tensor_shape, exclusive=True, reverse=True)
     unraveled_coords = (ind % strides) // strides_shifted
     return tf.transpose(unraveled_coords)
 
@@ -147,11 +147,11 @@ def squeezer_matrix(r, theta, D, batched=False):
     k_terms = signs * \
                         tf.pow(tf.sinh(r) / 2, mask * (n + m - 2 * k) / 2) * mask / \
                         tf.pow(tf.cosh(r), (n + m + 1) / 2) * \
-                        tf.exp(0.5 * tf.math.lgamma(tf.cast(m + 1, tf.float64)) + \
-                               0.5 * tf.math.lgamma(tf.cast(n + 1, tf.float64)) - \
-                               tf.math.lgamma(tf.cast(k + 1, tf.float64)) -
-                               tf.math.lgamma(tf.cast((m - k) / 2 + 1, tf.float64)) - \
-                               tf.math.lgamma(tf.cast((n - k) / 2 + 1, tf.float64))
+                        tf.exp(0.5 * tf.lgamma(tf.cast(m + 1, tf.float64)) + \
+                               0.5 * tf.lgamma(tf.cast(n + 1, tf.float64)) - \
+                               tf.lgamma(tf.cast(k + 1, tf.float64)) -
+                               tf.lgamma(tf.cast((m - k) / 2 + 1, tf.float64)) - \
+                               tf.lgamma(tf.cast((n - k) / 2 + 1, tf.float64))
                               )
     output = tf.reduce_sum(phase * tf.cast(k_terms, def_type), axis=-1)
 
@@ -172,7 +172,7 @@ def phase_shifter_matrix(theta, D, batched=False):
     diag = [tf.exp(1j * theta * k) for k in np.arange(D, dtype=np.complex64)]
     if batched:
         diag = tf.stack(diag, axis=1)
-    diag_matrix = tf.linalg.set_diag(zero_matrix, diag)
+    diag_matrix = tf.matrix_set_diag(zero_matrix, diag)
     return diag_matrix
 
 def kerr_interaction_matrix(kappa, D, batched=False):
@@ -180,7 +180,7 @@ def kerr_interaction_matrix(kappa, D, batched=False):
     coeffs = [tf.exp(1j * kappa * n ** 2) for n in range(D)]
     if batched:
         coeffs = tf.stack(coeffs, axis=1)
-    output = tf.linalg.diag(coeffs)
+    output = tf.matrix_diag(coeffs)
     return output
 
 def cross_kerr_interaction_matrix(kappa, D, batched=False):
@@ -188,7 +188,7 @@ def cross_kerr_interaction_matrix(kappa, D, batched=False):
     coeffs = [tf.exp(1j * kappa * n1 * n2) for n1 in range(D) for n2 in range(D)]
     if batched:
         coeffs = tf.stack(coeffs, axis=1)
-    output = tf.linalg.diag(coeffs)
+    output = tf.matrix_diag(coeffs)
     if batched:
         output = tf.transpose(tf.reshape(output, [-1] + [D]*4), [0, 1, 3, 2, 4])
     else:
@@ -204,14 +204,14 @@ def cubic_phase_matrix(gamma, D, hbar, batched=False, method="self_adjoint_eig")
         x3 = tf.expand_dims(x3, 0)
         gamma = tf.reshape(gamma, [-1, 1, 1])
     H0 = gamma / (3 * hbar) * x3
-    lambdas, U = tf.linalg.eigh(H0)
+    lambdas, U = tf.self_adjoint_eig(H0)
     transpose_list = [1, 0]
     if batched:
         transpose_list = [0, 2, 1]
     if method == "self_adjoint_eig":
         # This seems to work as long as the matrix has dimension 18x18 or smaller
         # For larger matrices, Tensorflow returns the error: 'Self-adjoint eigen decomposition was not successful.'
-        V = U @ tf.linalg.diag(tf.exp(1j * lambdas)) @ tf.math.conj(tf.transpose(U, transpose_list))
+        V = U @ tf.matrix_diag(tf.exp(1j * lambdas)) @ tf.conj(tf.transpose(U, transpose_list))
     # below version works for matrices larger than 18x18, but
     # expm was not added until TF v1.5, while
     # as of TF v1.5, gradient of expm is not implemented
@@ -272,11 +272,11 @@ def displacement_matrix(alpha, D, batched=False):
         idxs = batchify_indices(idxs, batch_size)
         signs = signs * batch_size
     sign_lower_diag = tf.cast(tf.SparseTensor(idxs, signs, dense_shape), tf.float32)
-    sign_matrix = tf.sparse.add(eye_diag, sign_lower_diag)
-    sign_matrix = tf.cast(tf.sparse.to_dense(sign_matrix), def_type)
+    sign_matrix = tf.sparse_add(eye_diag, sign_lower_diag)
+    sign_matrix = tf.cast(tf.sparse_tensor_to_dense(sign_matrix), def_type)
     lower_diag = tf.scatter_nd(idxs, tf.reshape(values, [-1]), dense_shape)
     E = tf.cast(tf.eye(D), def_type) + lower_diag
-    E_prime = tf.math.conj(E) * sign_matrix
+    E_prime = tf.conj(E) * sign_matrix
     if batched:
         eqn = 'aik,ajk->aij' # pylint: disable=bad-whitespace
     else:
@@ -295,7 +295,7 @@ def beamsplitter_matrix(t, r, D, batched=False, save=False, directory=None):
     r = tf.cast(tf.reshape(r, [-1, 1, 1, 1, 1, 1]), def_type)
     mag_t = tf.cast(t, tf.float32)
     mag_r = tf.abs(r)
-    phase_r = tf.atan2(tf.math.imag(r), tf.math.real(r))
+    phase_r = tf.atan2(tf.imag(r), tf.real(r))
 
     rng = tf.range(D, dtype=tf.float32)
     N = tf.reshape(rng, [1, -1, 1, 1, 1, 1])
@@ -316,11 +316,11 @@ def beamsplitter_matrix(t, r, D, batched=False, save=False, directory=None):
     # load parameter-independent prefactors
     prefac = get_prefac_tensor(D, directory, save)
 
-    # if prefac.graph != phase.graph:
-    #     # if cached prefactors live on another graph, we'll have to reload them into this graph.
-    #     # In future versions, if 'copy_variable_to_graph' comes out of contrib, consider using that
-    #     get_prefac_tensor.cache_clear()
-    #     prefac = get_prefac_tensor(D, directory, save)
+    if prefac.graph != phase.graph:
+        # if cached prefactors live on another graph, we'll have to reload them into this graph.
+        # In future versions, if 'copy_variable_to_graph' comes out of contrib, consider using that
+        get_prefac_tensor.cache_clear()
+        prefac = get_prefac_tensor(D, directory, save)
 
     BS_matrix = tf.reduce_sum(phase * powers * prefac, -1)
 
@@ -355,7 +355,7 @@ def fock_state(n, D, pure=True, batched=False):
 
 def coherent_state(alpha, D, pure=True, batched=False):
     """creates a single mode input coherent state"""
-    coh = tf.stack([tf.exp(-0.5 * tf.math.conj(alpha) * alpha) * _numer_safe_power(alpha, n) / tf.cast(np.sqrt(factorial(n)), def_type) for n in range(D)], axis=-1)
+    coh = tf.stack([tf.exp(-0.5 * tf.conj(alpha) * alpha) * _numer_safe_power(alpha, n) / tf.cast(np.sqrt(factorial(n)), def_type) for n in range(D)], axis=-1)
     if not pure:
         coh = mixed(coh, batched)
     return coh
@@ -379,10 +379,10 @@ def displaced_squeezed(alpha, r, phi, D, pure=True, batched=False, eps=1e-12):
     tanh = tf.tanh(r)
 
     # create Hermite polynomials
-    gamma = alpha * cosh + tf.math.conj(alpha) * phase * sinh
+    gamma = alpha * cosh + tf.conj(alpha) * phase * sinh
     hermite_arg = gamma / tf.sqrt(phase * tf.sinh(2 * r))
 
-    prefactor = tf.expand_dims(tf.exp(-0.5 * alpha * tf.math.conj(alpha) - 0.5 * tf.math.conj(alpha) ** 2 * phase * tanh), -1)
+    prefactor = tf.expand_dims(tf.exp(-0.5 * alpha * tf.conj(alpha) - 0.5 * tf.conj(alpha) ** 2 * phase * tanh), -1)
     coeff = tf.stack([_numer_safe_power(0.5 * phase * tanh, n / 2.) / tf.sqrt(factorial(n) * cosh)
                       for n in range(D)], axis=-1)
     hermite_terms = tf.stack([tf.cast(H(n, hermite_arg), def_type) for n in range(D)], axis=-1)
@@ -398,7 +398,7 @@ def thermal_state(nbar, D):
     """
     nbar = tf.cast(nbar, def_type)
     coeffs = tf.stack([_numer_safe_power(nbar, n) / _numer_safe_power(nbar + 1, n + 1) for n in range(D)], axis=-1)
-    thermal = tf.linalg.diag(coeffs)
+    thermal = tf.matrix_diag(coeffs)
     return thermal
 
 ###################################################################
@@ -445,7 +445,7 @@ def single_mode_gate(matrix, mode, in_modes, pure=True, batched=False):
     einsum_inputs = [matrix, in_modes]
     if not pure:
         transposed_axis = [0, 2, 1] if batched else [1, 0]
-        einsum_inputs.append(tf.transpose(tf.math.conj(matrix), transposed_axis))
+        einsum_inputs.append(tf.transpose(tf.conj(matrix), transposed_axis))
     output = tf.einsum(eqn, *einsum_inputs)
     return output
 
@@ -527,7 +527,7 @@ def two_mode_gate(matrix, mode1, mode2, in_modes, pure=True, batched=False):
                     transpose_list = [0, 2, 1, 4, 3]
                 else:
                     transpose_list = [1, 0, 3, 2]
-                einsum_inputs.append(tf.math.conj(tf.transpose(matrix, transpose_list)))
+                einsum_inputs.append(tf.conj(tf.transpose(matrix, transpose_list)))
             output = tf.einsum(eqn, *einsum_inputs)
             return output
 
@@ -670,7 +670,7 @@ def combine_single_modes(modes_list, batched=False):
         einsum_inputs = []
         for idx, mode in enumerate(modes_list):
             if dims[idx] == 1:
-                new_inputs = [mode, tf.math.conj(mode)]
+                new_inputs = [mode, tf.conj(mode)]
             elif dims[idx] == 2:
                 new_inputs = [mode]
             einsum_inputs += new_inputs
@@ -849,7 +849,7 @@ def partial_trace(system, mode, state_is_pure, batched=False):
     indices_list = [m for m in range(batch_offset + 2 * num_modes)]
     dim_list = indices_list[ : batch_offset + 2 * mode] + indices_list[batch_offset + 2 * (mode + 1):] + indices_list[batch_offset + 2 * mode: batch_offset + 2 * (mode + 1)]
     permuted_sys = tf.transpose(system, dim_list)
-    reduced_state = tf.linalg.trace(permuted_sys)
+    reduced_state = tf.trace(permuted_sys)
     return reduced_state
 
 def reduced_density_matrix(system, mode, state_is_pure, batched=False):
@@ -903,7 +903,7 @@ def conditional_state(system, projector, mode, state_is_pure, batched=False):
     eqn_lhs = ",".join([state_lhs, projector_lhs])
     eqn_rhs = batch_index + free_mode_indices
     eqn = eqn_lhs + '->' + eqn_rhs
-    einsum_args = [system, tf.math.conj(projector)]
+    einsum_args = [system, tf.conj(projector)]
     if not state_is_pure:
         einsum_args.append(projector)
     cond_state = tf.einsum(eqn, *einsum_args)
@@ -921,7 +921,7 @@ def ladder_ops(D):
     updates = [np.sqrt(i) for i in range(1, D)]
     shape = [D, D]
     a = tf.scatter_nd(ind, updates, shape)
-    ad = tf.transpose(tf.math.conj(a), [1, 0])
+    ad = tf.transpose(tf.conj(a), [1, 0])
     return a, ad
 
 def H(n, x):
@@ -940,3 +940,29 @@ def H_n_plus_1(H_n, H_n_m1, n, x):
 ###################################################################
 
 # Helper functions
+
+def _check_for_eval(kwargs):
+    """
+    Helper function to check keyword arguments for user-supplied information about how numerical evaluation should proceed,
+    what session to use, and what the feed dictionary should be.
+    """
+    if "feed_dict" in kwargs:
+        feed_dict = kwargs["feed_dict"]
+    else:
+        feed_dict = {}
+    if "session" in kwargs:
+        # evaluate tensors in supplied session
+        session = kwargs["session"]
+        evaluate_results = True
+        close_session = False
+    elif "eval" in kwargs and kwargs["eval"] is False:
+        # don't evaluate tensors
+        session = None
+        evaluate_results = False
+        close_session = False
+    else:
+        # evaluate tensors in temporary session
+        session = tf.Session()
+        evaluate_results = True
+        close_session = True
+    return evaluate_results, session, feed_dict, close_session
