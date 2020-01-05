@@ -172,7 +172,7 @@ def test_merge_measured_pars():
         ops.MeasureX | q[0]
         mpar = q[0].par  # measured parameter
         D = ops.Dgate(mpar)
-        F = ops.Dgate(1.0)
+        F = ops.Dgate(1)
         G = ops.Dgate(mpar, 0.1)  # different p[1]
 
     # mp gates that are the inverse of each other
