@@ -111,9 +111,6 @@ returned by the Tensorflow backend. It extends :class:`~.BaseFockState` with add
 unique to the Tensorflow backend. The primary difference between this class and the Base Fock state
 is that its methods and attributes can return either numerical or symbolic values.
 
-The default representation (numerical or symbolic)
-is set when creating the state: :code:`state = eng.run('backend', eval=True/False)`. The representation can also be specified on a per-use basis when calling a method, e.g., :code:`state.mean_photon(eval=True/False)`. Along with the boolean :code:`eval`, acceptable keyword arguments are :code:`session` (a Tensorflow Session object) and :code:`feed_dict` (a dictionary mapping Tensorflow objects to numerical values). These will be used when evaluating any Tensors.
-
 .. currentmodule:: strawberryfields.backends.tfbackend.states.FockStateTF
 
 .. autosummary::
@@ -154,30 +151,30 @@ else:
 
 
 tf_info = """\
-To use Strawberry Fields with TensorFlow support, version 1.3 of TensorFlow is required.
+To use Strawberry Fields with TensorFlow support, version 2.x of TensorFlow is required.
 This can be installed as follows:
 
-pip install tensorflow==1.3
+pip install tensorflow
 """
 
 
 tf_info_python = """\
-To use Strawberry Fields with TensorFlow support, version 1.3 of TensorFlow is required.
+To use Strawberry Fields with TensorFlow support, version 2.x of TensorFlow is required.
 
-Note that TensorFlow version 1.3 is only supported on Python versions
-less than or equal to 3.6. To continue using TensorFlow with Strawberry Fields,
-you will need to install Python 3.6.
+Note that TensorFlow version 2.x is only supported on Python versions 3.5, 3.6 and 3.7.
+To continue using TensorFlow with Strawberry Fields, you will need to install one of these.
 
 The recommended method is to install Anaconda3:
 
 https://www.anaconda.com/download
 
-Once installed, you can then create a Python 3.6 Conda environment:
+Once installed, you can then create a Python (say) 3.7 Conda environment:
 
-conda create --name sf_tensorflow_env python=3.6
+conda create --name sf_tensorflow_env python=3.7
 conda activate sf_tensorflow_env
-pip install strawberryfields tensorflow==1.3
+pip install strawberryfields tensorflow
 """
+
 
 
 def excepthook(type, value, traceback):
@@ -186,10 +183,10 @@ def excepthook(type, value, traceback):
     print(value)
 
 
-if not (tf_available and tf_version[:3] == "1.3"):
+if not (tf_available and tf_version[:2] == "2."):
     sys.excepthook = excepthook
 
-    if sys.version_info[1] > 6:
+    if sys.version_info[1] not in {5, 6, 7}:
         raise ImportError(tf_info_python)
 
     raise ImportError(tf_info)
