@@ -2,7 +2,7 @@ networkx>=2.0
 numpy>=1.16.3
 scipy>=1.0.0
 tensorflow>=2.0
-tensorflow-tensorboard>=0.1.8
+tensorboard>=2.0
 quantum-blackbird
 thewalrus>=0.7
 toml
