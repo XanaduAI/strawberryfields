@@ -113,7 +113,7 @@ def get_prefac_tensor(D, directory, save):
 def squeezed_vacuum_vector(r, theta, D, batched=False, eps=1e-32):
     """returns the ket representing a single mode squeezed vacuum state"""
     if batched:
-        batch_size = r.shape[0].value
+        batch_size = r.shape[0]
     r = tf.cast(r, def_type)
     theta = tf.cast(theta, def_type)
     c1 = tf.cast(tf.stack([tf.sqrt(1 / tf.cosh(r)) * np.sqrt(factorial(k)) / factorial(k / 2.) for k in range(0, D, 2)], axis=-1), def_type)
@@ -163,7 +163,7 @@ def squeezer_matrix(r, theta, D, batched=False):
 def phase_shifter_matrix(theta, D, batched=False):
     """creates the single mode phase shifter matrix"""
     if batched:
-        batch_size = theta.shape[0].value
+        batch_size = theta.shape[0]
     theta = tf.cast(theta, def_type)
     shape = [D, D]
     if batched:
@@ -253,7 +253,7 @@ def loss_superop(T, D, batched=False):
 def displacement_matrix(alpha, D, batched=False):
     """creates the single mode displacement matrix"""
     if batched:
-        batch_size = alpha.shape[0].value
+        batch_size = alpha.shape[0]
     alpha = tf.cast(alpha, def_type)
     idxs = [(j, k) for j in range(D) for k in range(j)]
     values = [alpha ** (j-k) * tf.cast(tf.sqrt(binom(j, k) / factorial(j-k)), def_type)
@@ -738,7 +738,7 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
             #revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
             revised_modes = tf.tensordot(tf.expand_dims(reduced_state, 0), tf.expand_dims(replacement, 0), axes=[[0], [0]])
         else:
-            batch_size = reduced_state.shape[0].value
+            batch_size = reduced_state.shape[0]
             #todo: remove the hack in the line below and enabled the line with axes=0 instead, if ever we change the dependency of SF to tensorflow>=1.6
             #revised_modes = tf.stack([tf.tensordot(reduced_state[b], replacement[b], axes=0) for b in range(batch_size)])
             revised_modes = tf.stack([tf.tensordot(tf.expand_dims(reduced_state[b], 0), tf.expand_dims(replacement[b], 0), axes=[[0], [0]]) for b in range(batch_size)])
