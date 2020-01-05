@@ -316,6 +316,7 @@ def beamsplitter_matrix(t, r, D, batched=False, save=False, directory=None):
     # load parameter-independent prefactors
     prefac = get_prefac_tensor(D, directory, save)
 
+    # NOTE: I don't think this is necessary anymore in TF2, but to avoid issues 
     # if prefac.graph != phase.graph:
     #     # if cached prefactors live on another graph, we'll have to reload them into this graph.
     #     # In future versions, if 'copy_variable_to_graph' comes out of contrib, consider using that

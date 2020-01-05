@@ -93,7 +93,6 @@ vectors, they must have the same dimension as the declared batch size of the und
    thermal_loss
    measure_homodyne
    measure_fock
-   graph
 
 
 Code details
@@ -128,7 +127,6 @@ is that its methods and attributes can return either numerical or symbolic value
    mean_photon
    batched
    cutoff_dim
-   graph
 
 
 Code details
