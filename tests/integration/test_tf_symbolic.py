@@ -14,13 +14,9 @@
 r"""
 Tests for the various Tensorflow-specific symbolic options of the frontend/backend.
 """
-# pylint: disable=expression-not-assigned,too-many-public-methods,pointless-statement
+# pylint: disable=expression-not-assigned,too-many-public-methods,pointless-statement,no-self-use
 
 import pytest
-
-# this test file is only supported by the TF backend
-pytestmark = pytest.mark.backends("tf")
-
 import numpy as np
 from scipy.special import factorial
 
@@ -34,6 +30,10 @@ else:
 
 from strawberryfields.ops import Dgate, MeasureX
 import strawberryfields.parameters
+
+
+# this test file is only supported by the TF backend
+pytestmark = pytest.mark.backends("tf")
 
 
 ALPHA = 0.5
@@ -109,11 +109,12 @@ class TestOneModeSymbolic:
             Dgate(x, y) | q
 
         # use TF to evaluate symbolic parameter expressions
-        strawberryfields.parameters.par_evaluate.lambdify_printer = ['tensorflow']
-        state = eng.run(prog, args={'a': tf_a, 'phi': tf_phi}, run_options=tf_params).state
-
-        # restore the default
-        strawberryfields.parameters.par_evaluate.lambdify_printer = ['numpy']
+        try:
+            strawberryfields.parameters.par_evaluate.lambdify_printer = ['tensorflow']
+            state = eng.run(prog, args={'a': tf_a, 'phi': tf_phi}, run_options=tf_params).state
+        finally:
+            # restore the default
+            strawberryfields.parameters.par_evaluate.lambdify_printer = ['numpy']
 
         if state.is_pure:
             k = state.ket()
