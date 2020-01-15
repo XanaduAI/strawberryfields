@@ -125,7 +125,7 @@ def wrap_mathfunc(func):
     return wrapper
 
 #: SimpleNamespace: Namespace of mathematical functions for manipulating Parameters. Consists of all :mod:`sympy.functions` public members, which we wrap with :func:`wrap_mathfunc`.
-parfuncs = types.SimpleNamespace(**{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != '_'})
+par_funcs = types.SimpleNamespace(**{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != '_'})
 
 
 
@@ -162,6 +162,7 @@ def par_evaluate(params):
         params = [params]
 
     def do_evaluate(p):
+        """Evaluates a single parameter."""
         if is_object_array(p):
             return np.array([do_evaluate(k) for k in p])
 
@@ -170,17 +171,19 @@ def par_evaluate(params):
 
         # using lambdify we can also substitute np.ndarrays and tf.Tensors for the atoms
         atoms = list(p.atoms(MeasuredParameter, FreeParameter))
-        func = sympy.lambdify(atoms, p, par_evaluate.lambdify_printer)
+        # evaluate the atoms of the expression
         vals = [k._eval_evalf(None) for k in atoms]
+        # use the tensorflow printer if any of the symbolic parameter values are TF objects
+        # (we do it like this to avoid importing tensorflow if it's not needed)
+        is_tf = (type(v).__module__.startswith('tensorflow') for v in vals)
+        printer = 'tensorflow' if any(is_tf) else 'numpy'
+        func = sympy.lambdify(atoms, p, printer)
         return func(*vals)
 
     ret = list(map(do_evaluate, params))
     if scalar:
         return ret[0]
     return ret
-
-# default printer for lambdify to use (we also use 'tensorflow' for TF objects)
-par_evaluate.lambdify_printer = ['numpy']
 
 
 def par_is_symbolic(p):
@@ -189,7 +192,7 @@ def par_is_symbolic(p):
     If a parameter inherits :class:`sympy.Basic` it is symbolic.
     An object array is symbolic if any of its elements are.
 
-    Note that :data:`parfuncs` functions applied to numerical (non-symbolic) parameters return
+    Note that :data:`strawberryfields.math` functions applied to numerical (non-symbolic) parameters return
     symbolic parameters.
     """
     if is_object_array(p):
@@ -314,7 +317,7 @@ class MeasuredParameter(sympy.Symbol):
 
 
 class FreeParameter(sympy.Symbol):
-    """Symbolic Operation parameter.
+    """Named symbolic Operation parameter.
 
     Args:
         name (str): name of the free parameter

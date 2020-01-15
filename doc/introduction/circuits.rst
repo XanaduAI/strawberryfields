@@ -25,7 +25,7 @@ Circuits
 
     circuits/glossary
 
-In Strawberry Fields, photonic quantum circuits are represented as :class:`~.Program`
+In Strawberry Fields, photonic quantum circuits are represented as :class:`~strawberryfields.Program`
 objects. By creating a program, quantum operations can be applied, measurements performed,
 and the program can then be simulated using the various Strawberry Fields backends.
 
@@ -37,7 +37,7 @@ and the program can then be simulated using the various Strawberry Fields backen
 Creating a quantum program
 --------------------------
 
-To construct a photonic quantum circuit in Strawberry Fields, a :class:`~.Program` object
+To construct a photonic quantum circuit in Strawberry Fields, a :class:`~strawberryfields.Program` object
 must be created, and operations applied.
 
 .. code-block:: python3
@@ -77,8 +77,8 @@ the same structure as the above example; in particular,
 
 .. note::
 
-    The contents of a program can be viewed by calling :meth:`.Program.print` method,
-    or output as a qcircuit :math:`\LaTeX{}` document by using the :meth:`.Program.draw_circuit`
+    The contents of a program can be viewed by calling the :meth:`~strawberryfields.Program.print` method,
+    or output as a qcircuit :math:`\LaTeX{}` document by using the :meth:`~strawberryfields.Program.draw_circuit`
     method.
 
 .. seealso::
@@ -178,26 +178,27 @@ for accessing the results of your program execution:
 Symbolic parameters
 -------------------
 
-The quantum operations can take both numerical and symbolic parameters. The latter fall into two types:
+The quantum operations can take both numerical and symbolic parameters.
+The latter fall into two types:
 
-* **Measured parameters**: Certain quantum programs require that
+* **Measured parameters**: Certain quantum programs (e.g. quantum teleportation) require that
   operations can be conditioned on measurement results obtained during the execution of the
   program. In this case the parameter value is not known until the measurement is made
-  (or simulated). The latest measurement result of qumode ``i`` is referred to as ``q[i].par``.
+  (or simulated). The latest measurement result of qumode ``i`` is available via ``q[i].par``.
 
 * **Free parameters**: A *parametrized circuit template* is a program that
-  depends on a number of free parameters. These parameters are bound to new fixed
+  depends on a number of free parameters. These parameters can be bound to new fixed
   values each time the program is executed.
-  The free parameters are created accessed using the :meth:`Program.params` method.
+  The free parameters are created and accessed using the
+  :meth:`~strawberryfields.Program.params` method.
 
-The symbolic parameters can be combined and transformed using basic algebraic operations and
-common mathematical functions in the ``strawberryfields.parameters.parfuncs`` namespace.
+The symbolic parameters can be combined and transformed using basic algebraic operations, and
+the mathematical functions in the :data:`strawberryfields.math` namespace.
 
 .. code-block:: python3
 
     import strawberryfields as sf
     from strawberryfields import ops
-    from strawberryfields.parameters import parfuncs as pf
 
     # create a 2-mode quantum program
     prog = sf.Program(2)
@@ -209,7 +210,7 @@ common mathematical functions in the ``strawberryfields.parameters.parfuncs`` na
     with prog.context as q:
         ops.Dgate(a ** 2)    | q[0]  # free parameter
         ops.MeasureX         | q[0]  # measure qumode 0, the result is used in the next operation
-        ops.Sgate(1 - pf.sin(q[0].par)) | q[1]  # measured parameter
+        ops.Sgate(1 - sf.math.sin(q[0].par)) | q[1]  # measured parameter
         ops.MeasureFock()    | q[1]
 
     # intialize the Fock backend
@@ -222,7 +223,7 @@ common mathematical functions in the ``strawberryfields.parameters.parfuncs`` na
 Compilation
 -----------
 
-The :class:`~.Program` object also provides *compilation* methods, that
+The :class:`~strawberryfields.Program` object also provides *compilation* methods, that
 automatically transform your circuit into an *equivalent* circuit with
 a particular layout or topology. For example, the ``gbs`` compile target will
 compile a circuit consisting of Gaussian operations and Fock measurements

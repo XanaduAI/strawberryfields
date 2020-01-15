@@ -102,19 +102,14 @@ class TestOneModeSymbolic:
         tf_params = {'session': sess, 'feed_dict': {tf_a: 0.0, tf_phi: 1.0}}
 
         # NOTE this test worked before because the phase was a number, we only needed working tf.Tensor arithmetic in that case.
-        # Now also the pf.exp function has to work on tf.Tensors.
+        # Now also the exp function has to work on tf.Tensors.
         eng, prog = setup_eng(1)
         x, y = prog.params('a', 'phi')  # free parameters
         with prog.context as q:
             Dgate(x, y) | q
 
         # use TF to evaluate symbolic parameter expressions
-        try:
-            strawberryfields.parameters.par_evaluate.lambdify_printer = ['tensorflow']
-            state = eng.run(prog, args={'a': tf_a, 'phi': tf_phi}, run_options=tf_params).state
-        finally:
-            # restore the default
-            strawberryfields.parameters.par_evaluate.lambdify_printer = ['numpy']
+        state = eng.run(prog, args={'a': tf_a, 'phi': tf_phi}, run_options=tf_params).state
 
         if state.is_pure:
             k = state.ket()
