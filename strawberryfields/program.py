@@ -111,7 +111,6 @@ class Program:
             ops.BSgate(0.43, 0.1) | (q[1], q[2])
             ops.MeasureFock() | q
 
-    The program objects keep track of the state of the quantum register they act on, using a dictionary of :class:`RegRef` objects.
     The currently active register references can be accessed using the :meth:`~Program.register` method.
 
     Args:
@@ -140,6 +139,7 @@ class Program:
         """
 
         # create subsystem references
+        # Program keeps track of the state of the quantum register using a dictionary of :class:`RegRef` objects.
         if isinstance(num_subsystems, numbers.Integral):
             #: int: initial number of subsystems
             self.init_num_subsystems = num_subsystems
