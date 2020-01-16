@@ -127,6 +127,8 @@ class APIClient:
 
     DEFAULT_HOSTNAME = "localhost"
 
+    RESULTS_TYPE = "application/x.numpy"
+
     def __init__(self, **kwargs):
         """
         Initialize the API client with various parameters.
@@ -219,6 +221,9 @@ class APIClient:
             raise TypeError("Unexpected or unsupported method provided")
 
         params["headers"] = self.HEADERS
+
+        if params["url"].endswith("result"):
+            params["headers"]["Content-Type"] = "application/x.numpy"
 
         try:
             response = method(**params)
