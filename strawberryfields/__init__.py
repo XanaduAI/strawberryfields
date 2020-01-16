@@ -26,6 +26,7 @@ from ._version import __version__
 from .engine import Engine, LocalEngine
 from .io import load, save
 from .program import Program
+from .parameters import par_funcs as math
 
 __all__ = ["Engine", "LocalEngine", "Program", "version", "save", "load", "about", "cite"]
 
@@ -56,7 +57,7 @@ def about():
 
         >>> sf.about()
         Strawberry Fields: a Python library for continuous-variable quantum circuits.
-        Copyright 2018-2019 Xanadu Quantum Technologies Inc.
+        Copyright 2018-2020 Xanadu Quantum Technologies Inc.
 
         Python version:            3.6.8
         Platform info:             Linux-5.0.0-36-generic-x86_64-with-debian-buster-sid
@@ -64,7 +65,9 @@ def about():
         Strawberry Fields version: 0.12.0-dev
         Numpy version:             1.17.4
         Scipy version:             1.3.0
-        The Walrus version:        0.10.0-dev
+        Sympy version:             1.5
+        NetworkX version:          2.4
+        The Walrus version:        0.10.0
         Blackbird version:         0.2.1
         TensorFlow version:        2.0.0
     """
@@ -81,7 +84,7 @@ def about():
 
     # a QuTiP-style infobox
     print('\nStrawberry Fields: a Python library for continuous-variable quantum circuits.')
-    print('Copyright 2018-2019 Xanadu Quantum Technologies Inc.\n')
+    print('Copyright 2018-2020 Xanadu Quantum Technologies Inc.\n')
 
     print('Python version:            {}.{}.{}'.format(*sys.version_info[0:3]))
     print('Platform info:             {}'.format(platform.platform()))

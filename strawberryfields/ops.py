@@ -23,7 +23,7 @@ import warnings
 import numpy as np
 
 from scipy.linalg import block_diag
-from scipy.special import factorial as fac
+import scipy.special as ssp
 
 import strawberryfields as sf
 import strawberryfields.program_utils as pu
@@ -31,7 +31,7 @@ import strawberryfields.decompositions as dec
 from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
 from .program_utils import (Command, RegRef, MergeFailure)
-from .parameters import (par_regref_deps, par_str, par_evaluate, par_is_symbolic, parfuncs as pf)
+from .parameters import (par_regref_deps, par_str, par_evaluate, par_is_symbolic, par_funcs as pf)
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
@@ -533,8 +533,8 @@ class Coherent(Preparation):
         super().__init__([a, p])
 
     def _apply(self, reg, backend, **kwargs):
-        p = par_evaluate(self.p)
-        z = p[0] * np.exp(1j * p[1])
+        p = self.p[0] * pf.exp(1j * self.p[1])
+        z = par_evaluate(p)
         backend.prepare_coherent_state(z, *reg)
 
 
@@ -625,21 +625,20 @@ class Catstate(Preparation):
         super().__init__([alpha, p])
 
     def _apply(self, reg, backend, **kwargs):
-        p = par_evaluate(self.p)
-        alpha = p[0]
-        phi = np.pi * p[1]
+        alpha = self.p[0]
+        phi = np.pi * self.p[1]
         D = backend.get_cutoff_dim()
         l = np.arange(D)[:, np.newaxis]
 
         # normalization constant
-        temp = np.exp(-0.5 * np.abs(alpha)**2)
-        N = temp / np.sqrt(2*(1 + np.cos(phi) * temp**4))
+        temp = pf.exp(-0.5 * pf.Abs(alpha)**2)
+        N = temp / pf.sqrt(2*(1 + pf.cos(phi) * temp**4))
 
         # coherent states
-        c1 = (alpha ** l) / np.sqrt(fac(l))
-        c2 = ((-alpha) ** l) / np.sqrt(fac(l))
+        c1 = (alpha ** l) / np.sqrt(ssp.factorial(l))
+        c2 = ((-alpha) ** l) / np.sqrt(ssp.factorial(l))
         # add them up with a relative phase
-        ket = (c1 + np.exp(1j*phi) * c2) * N
+        ket = (c1 + pf.exp(1j*phi) * c2) * N
 
         # in order to support broadcasting, the batch axis has been located at last axis, but backend expects it up as first axis
         ket = np.transpose(ket)
@@ -647,6 +646,8 @@ class Catstate(Preparation):
         # drop dummy batch axis if it is not necessary
         ket = np.squeeze(ket)
 
+        # evaluate the array (elementwise)
+        ket = par_evaluate(ket)
         backend.prepare_ket_state(ket, *reg)
 
 
@@ -915,8 +916,8 @@ class Dgate(Gate):
         super().__init__([a, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        p = par_evaluate(self.p)
-        z = p[0] * np.exp(1j * p[1])
+        p = self.p[0] * pf.exp(1j * self.p[1])
+        z = par_evaluate(p)
         backend.displacement(z, *reg)
 
 
@@ -981,8 +982,8 @@ class Sgate(Gate):
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        p = par_evaluate(self.p)
-        z = p[0] * np.exp(1j * p[1])
+        p = self.p[0] * pf.exp(1j * self.p[1])
+        z = par_evaluate(p)
         backend.squeeze(z, *reg)
 
 
@@ -1088,10 +1089,10 @@ class BSgate(Gate):
         super().__init__([theta, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        p = par_evaluate(self.p)
-        t = np.cos(p[0])
-        r = np.sin(p[0]) * np.exp(1j * p[1])
-        backend.beamsplitter(t, r, *reg)
+        t = pf.cos(self.p[0])
+        r = pf.sin(self.p[0]) * pf.exp(1j * self.p[1])
+        p = par_evaluate([t, r])
+        backend.beamsplitter(*p, *reg)
 
 
 class MZgate(Gate):
