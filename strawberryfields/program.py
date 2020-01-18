@@ -39,8 +39,12 @@ Three different (but equivalent) representations of the circuit are used.
   is empty, that is, consuming it in a topological order.
   Note that a topological order is not always unique, there may be several equivalent topological orders.
 
+.. currentmodule:: strawberryfields.program_utils
+
 The three representations can be converted to each other
 using the functions :func:`list_to_grid`, :func:`grid_to_DAG` and :func:`DAG_to_list`.
+
+.. currentmodule:: strawberryfields.program
 """
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
@@ -55,6 +59,11 @@ import strawberryfields.circuitspecs as specs
 import strawberryfields.program_utils as pu
 from .program_utils import Command, RegRef, CircuitError, RegRefError
 from .parameters import FreeParameter, ParameterError
+
+
+
+__all__ = ["Program"]
+
 
 
 class Program:

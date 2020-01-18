@@ -20,6 +20,26 @@ and backend components (all found within the :file:`strawberryfields.backends` s
     :align: center
     :width: 90%
     :target: javascript:void(0);
+
+
+.. currentmodule:: strawberryfields
+
+Classes
+-------
+
+.. autosummary::
+   ~strawberryfields.program.Program
+   ~strawberryfields.engine.Engine
+
+Functions
+---------
+
+.. autosummary::
+   version
+   about
+   cite
+   ~strawberryfields.io.save
+   ~strawberryfields.io.load
 """
 from . import apps
 from ._version import __version__

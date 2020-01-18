@@ -25,7 +25,7 @@ Circuits
 
     circuits/glossary
 
-In Strawberry Fields, photonic quantum circuits are represented as :class:`~strawberryfields.Program`
+In Strawberry Fields, photonic quantum circuits are represented as :class:`.Program`
 objects. By creating a program, quantum operations can be applied, measurements performed,
 and the program can then be simulated using the various Strawberry Fields backends.
 
@@ -37,7 +37,7 @@ and the program can then be simulated using the various Strawberry Fields backen
 Creating a quantum program
 --------------------------
 
-To construct a photonic quantum circuit in Strawberry Fields, a :class:`~strawberryfields.Program` object
+To construct a photonic quantum circuit in Strawberry Fields, a :class:`.Program` object
 must be created, and operations applied.
 
 .. code-block:: python3
@@ -56,13 +56,13 @@ must be created, and operations applied.
         ops.BSgate(0.43, 0.1) | (q[1], q[2])
         ops.MeasureFock() | q
 
-Here, we are creating a 3-mode program, and applying a :class:`~.Sgate` and
-a :class:`~.BSgate` to various modes. Constructing quantum circuits always follows
+Here, we are creating a 3-mode program, and applying a :class:`.Sgate` and
+a :class:`.BSgate` to various modes. Constructing quantum circuits always follows
 the same structure as the above example; in particular,
 
 * A ``with`` statement is used to populate the program with quantum operations.
 
-* ``Program.context`` is used within the ``with`` statement to return ``q``,
+* :attr:`Program.context` is used within the ``with`` statement to return ``q``,
   a representation of the quantum registers (qumodes or modes).
 
 * Quantum operations are applied to the modes of the program using the syntax
@@ -77,8 +77,8 @@ the same structure as the above example; in particular,
 
 .. note::
 
-    The contents of a program can be viewed by calling the :meth:`~strawberryfields.Program.print` method,
-    or output as a qcircuit :math:`\LaTeX{}` document by using the :meth:`~strawberryfields.Program.draw_circuit`
+    The contents of a program can be viewed by calling the :meth:`.Program.print` method,
+    or output as a qcircuit :math:`\LaTeX{}` document by using the :meth:`.Program.draw_circuit`
     method.
 
 .. seealso::
@@ -100,7 +100,7 @@ which is responsible for executing the program on a specified backend
     # Fock cutoff dimension (truncation) of 5
     eng = sf.Engine("fock", backend_options={"cutoff_dim": 5})
 
-:class:`~.Engine` accepts two arguments, the backend name, and a dictionary of
+:class:`.Engine` accepts two arguments, the backend name, and a dictionary of
 backend options. Available backends include:
 
 * The ``'fock'`` backend, written in NumPy.
@@ -125,7 +125,7 @@ backend options. Available backends include:
   using TensorFlow.
 
 Once the engine has been initialized, the quantum program can be executed on the
-selected backend via :meth:`~.Engine.run`:
+selected backend via :meth:`.Engine.run`:
 
 .. code-block:: python3
 
@@ -134,10 +134,10 @@ selected backend via :meth:`~.Engine.run`:
 Execution results
 -----------------
 
-The returned :class:`~Result` object provides several useful properties
+The returned :class:`.Result` object provides several useful properties
 for accessing the results of your program execution:
 
-* ``results.state``: The quantum state object contains details and methods
+* :attr:`.Result.state`: The quantum state object contains details and methods
   for manipulation of the final circuit state. Not available for remote
   backends.
 
@@ -151,7 +151,7 @@ for accessing the results of your program execution:
       >>> state.dm().shape # density matrix
       [5, 5, 5]
 
-* ``results.samples``: Measurement samples from any measurements performed.
+* :attr:`.Result.samples`: Measurement samples from any measurements performed.
 
   .. code-block:: pycon
 
@@ -190,7 +190,7 @@ The latter fall into two types:
   depends on a number of free parameters. These parameters can be bound to new fixed
   values each time the program is executed.
   The free parameters are created and accessed using the
-  :meth:`~strawberryfields.Program.params` method.
+  :meth:`.Program.params` method.
 
 The symbolic parameters can be combined and transformed using basic algebraic operations, and
 the mathematical functions in the :data:`strawberryfields.math` namespace.
@@ -223,8 +223,8 @@ the mathematical functions in the :data:`strawberryfields.math` namespace.
 Compilation
 -----------
 
-The :class:`~strawberryfields.Program` object also provides *compilation* methods, that
-automatically transform your circuit into an *equivalent* circuit with
+The :class:`.Program` object also provides the :meth:`.Program.compile` method that
+automatically transforms your circuit into an :term:`equivalent circuit` with
 a particular layout or topology. For example, the ``gbs`` compile target will
 compile a circuit consisting of Gaussian operations and Fock measurements
 into canonical Gaussian boson sampling form.

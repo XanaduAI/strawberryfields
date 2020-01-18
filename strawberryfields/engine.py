@@ -19,11 +19,17 @@ One can think of each BaseEngine instance as a separate quantum computation.
 """
 
 import abc
-from collections.abc import Sequence
-from numpy import stack, shape
+import collections.abc
+
+import numpy as np
 
 from .backends import load_backend
 from .backends.base import (NotApplicableError, BaseBackend)
+
+
+
+__all__ = ["Result", "BaseEngine", "LocalEngine", "Engine"]
+
 
 
 class Result:
@@ -73,8 +79,8 @@ class Result:
         self._state = None
 
         # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
-        if len(shape(samples)) > 1:
-            samples = stack(samples, 1)
+        if len(np.shape(samples)) > 1:
+            samples = np.stack(samples, 1)
         self._samples = samples
 
     @property
@@ -314,7 +320,7 @@ class BaseEngine(abc.ABC):
                 return [None] * dim
             return val
 
-        if not isinstance(program, Sequence):
+        if not isinstance(program, collections.abc.Sequence):
             program = [program]
 
         kwargs.setdefault("shots", 1)
@@ -460,7 +466,7 @@ class LocalEngine(BaseEngine):
         compile_options = compile_options or {}
         temp_run_options = {}
 
-        if isinstance(program, Sequence):
+        if isinstance(program, collections.abc.Sequence):
             # succesively update all run option defaults.
             # the run options of successive programs
             # overwrite the run options of previous programs
