@@ -13,12 +13,12 @@
 # limitations under the License.
 
 """
-This module implements the :class:`Program` class which acts as a representation for quantum circuits.
+This module implements the :class:`.Program` class which acts as a representation for quantum circuits.
 
 Quantum circuit representation
 ------------------------------
 
-The :class:`Command` instances in the circuit form a
+The :class:`.Command` instances in the circuit form a
 `strict partially ordered set <http://en.wikipedia.org/wiki/Partially_ordered_set#Strict_and_non-strict_partial_orders>`_
 in the sense that the order in which the operations have to be executed is usually not completely fixed.
 For example, operations acting on different subsystems always commute with each other.
@@ -62,7 +62,8 @@ from .parameters import FreeParameter, ParameterError
 
 
 
-__all__ = ["Program"]
+# for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
+__all__ = []
 
 
 

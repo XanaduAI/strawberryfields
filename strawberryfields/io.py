@@ -25,6 +25,10 @@ import strawberryfields.parameters as sfpar
 from . import ops
 
 
+# for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
+__all__ = ['to_blackbird', 'to_program', 'loads']
+
+
 
 def to_blackbird(prog, version="1.0"):
     """Convert a Strawberry Fields Program to a Blackbird Program.

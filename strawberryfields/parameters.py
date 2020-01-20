@@ -124,9 +124,11 @@ def wrap_mathfunc(func):
         return func(*args)
     return wrapper
 
-#: SimpleNamespace: Namespace of mathematical functions for manipulating Parameters. Consists of all :mod:`sympy.functions` public members, which we wrap with :func:`wrap_mathfunc`.
-par_funcs = types.SimpleNamespace(**{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != '_'})
 
+par_funcs = types.SimpleNamespace(**{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != '_'})
+"""SimpleNamespace: Namespace of mathematical functions for manipulating Parameters.
+Consists of all :mod:`sympy.functions` public members, which we wrap with :func:`wrap_mathfunc`.
+"""
 
 
 class ParameterError(RuntimeError):

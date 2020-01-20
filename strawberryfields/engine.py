@@ -27,8 +27,8 @@ from .backends import load_backend
 from .backends.base import (NotApplicableError, BaseBackend)
 
 
-
-__all__ = ["Result", "BaseEngine", "LocalEngine", "Engine"]
+# for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
+__all__ = ["Result", "BaseEngine", "LocalEngine"]
 
 
 

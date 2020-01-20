@@ -3,5 +3,6 @@ sf
 
 .. currentmodule:: strawberryfields
 
-.. automodule:: strawberryfields
-   :members: about, cite, version
+.. automodapi:: strawberryfields
+   :no-heading:
+   :include-all-objects:

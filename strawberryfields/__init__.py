@@ -20,26 +20,6 @@ and backend components (all found within the :mod:`strawberryfields.backends` su
     :align: center
     :width: 90%
     :target: javascript:void(0);
-
-
-Classes
--------
-
-.. autosummary::
-   ~strawberryfields.program.Program
-   ~strawberryfields.engine.Engine
-
-Functions
----------
-
-.. autosummary::
-   version
-   about
-   cite
-   ~strawberryfields.io.save
-   ~strawberryfields.io.load
-
-----
 """
 from . import apps
 from ._version import __version__
@@ -48,7 +28,7 @@ from .io import load, save
 from .program import Program
 from .parameters import par_funcs as math
 
-__all__ = ["Engine", "LocalEngine", "Program", "version", "save", "load", "about", "cite"]
+__all__ = ["Engine", "Program", "version", "save", "load", "about", "cite"]
 
 
 #: float: numerical value of hbar for the frontend (in the implicit units of position * momentum)
