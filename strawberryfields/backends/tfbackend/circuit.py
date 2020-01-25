@@ -647,7 +647,6 @@ class Circuit:
                 phi (float): phase angle of quadrature to measure
                 mode (int): which mode to measure.
                 select (float): user-specified measurement value (used instead of random sampling)
-                **kwargs:
 
         Returns:
             The measured value (or a list of measured values when running in batch mode).
