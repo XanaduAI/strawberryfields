@@ -166,7 +166,7 @@ The recommended method is to install Anaconda3:
 
 https://www.anaconda.com/download
 
-Once installed, you can then create a Python (say) 3.7 Conda environment:
+Once installed, you can then create a Python 3.7 Conda environment:
 
 conda create --name sf_tensorflow_env python=3.7
 conda activate sf_tensorflow_env
