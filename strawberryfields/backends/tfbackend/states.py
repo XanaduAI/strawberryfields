@@ -47,7 +47,6 @@ class FockStateTF(BaseFockState):
         Computes the trace of the state. May be numerical or symbolic.
 
         Args:
-            **kwargs: Optional keyword arguments. (Unused)
 
         Returns:
             float/Tensor: the numerical value, or an unevaluated Tensor object, for the trace.
@@ -74,7 +73,6 @@ class FockStateTF(BaseFockState):
 
         Args:
             n (Sequence[int]): the Fock state :math:`\ket{\vec{n}}` that we want to measure the probability of
-            **kwargs: Optional keyword arguments. (Unused)
 
         Returns:
             float/Tensor: the numerical values, or an unevaluated Tensor object, for the Fock-state probabilities.
@@ -123,7 +121,6 @@ class FockStateTF(BaseFockState):
             probs[0,2,3]
 
         Args:
-            **kwargs: Optional keyword arguments. (Unused)
 
         Returns:
             array/Tensor: the numerical values, or an unevaluated Tensor object, for the Fock-basis probabilities.
@@ -156,7 +153,6 @@ class FockStateTF(BaseFockState):
         Args:
             other_state (array): state vector (ket) to compute the fidelity with respect to
             mode (int): which subsystem to use for the fidelity computation
-            **kwargs: Optional keyword arguments. (Unused)
 
         Returns:
             float/Tensor: the numerical value, or an unevaluated Tensor object, for the fidelity.
@@ -188,7 +184,6 @@ class FockStateTF(BaseFockState):
 
         Args:
             alpha_list (Sequence[complex]): list of coherence parameter values, one for each mode
-            **kwargs: Optional keyword arguments. (Unused)
 
         Returns:
             float/Tensor: the numerical value, or an unevaluated Tensor object, for the fidelity :math:`\bra{\vec{\alpha}}\rho\ket{\vec{\alpha}}`.
@@ -236,7 +231,6 @@ class FockStateTF(BaseFockState):
         Compute the fidelity of the state with the vacuum state. May be numerical or symbolic.
 
         Args:
-            **kwargs: Optional keyword arguments. (Unused)
 
         Returns:
             float/Tensor: the numerical value, or an unevaluated Tensor object, for the fidelity :math:`\bra{\vec{0}}\rho\ket{\vec{0}}`.
@@ -258,7 +252,6 @@ class FockStateTF(BaseFockState):
 
         Args:
             tol: numerical tolerance. If the state has fidelity with vacuum within tol, then this method returns True.
-            **kwargs: Optional keyword arguments. (Unused)
 
         Returns:
             bool/Tensor: the boolean value, or an unevaluated Tensor object, for whether the state is in vacuum.
@@ -274,7 +267,6 @@ class FockStateTF(BaseFockState):
         Args:
             modes (int or Sequence[int]): specifies the mode(s) to return the reduced
                                 density matrix for.
-            **kwargs: Optional keyword arguments. (Unused)
 
         Returns:
             array/Tensor: the numerical value, or an unevaluated Tensor object, for the density matrix.
@@ -305,7 +297,6 @@ class FockStateTF(BaseFockState):
         Args:
             mode (int): which subsystem to take the expectation value of
             phi (float): rotation angle for the quadrature operator
-            **kwargs: Optional keyword arguments. (Unused)
 
         Returns:
                 float/Tensor: the numerical value, or an unevaluated Tensor object, for the expectation value
@@ -353,7 +344,6 @@ class FockStateTF(BaseFockState):
 
         Args:
             mode (int): which subsystem to take the mean photon number of
-            **kwargs: Optional keyword arguments. (Unused)
 
         Returns:
             tuple(float/Tensor): tuple containing the numerical value, or an unevaluated Tensor object, for the mean photon number and variance.
@@ -386,7 +376,6 @@ class FockStateTF(BaseFockState):
         Computes the ket representation of the state. May be numerical or symbolic.
 
         Args:
-            **kwargs: Optional keyword arguments. (Unused)
 
         Returns:
             array/Tensor: the numerical value, or an unevaluated Tensor object, for the ket.
@@ -402,7 +391,6 @@ class FockStateTF(BaseFockState):
         Computes the density matrix representation of the state. May be numerical or symbolic.
 
         Args:
-            **kwargs: Optional keyword arguments. (Unused)
 
         Returns:
             array/Tensor: the numerical value, or an unevaluated Tensor object, for the density matrix.
@@ -499,8 +487,6 @@ class FockStateTF(BaseFockState):
             phi (float): quadrature angle, clockwise from the positive :math:`x` axis. If provided,
                 the vector of quadrature operators :math:`\mathbf{r}` is first rotated
                 by angle :math:`\phi` in the phase space.
-
-            **kwargs: Optional keyword arguments. (Unused)
 
         Returns:
             tuple (float, float): expectation value and variance
