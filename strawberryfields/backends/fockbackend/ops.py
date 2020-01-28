@@ -28,6 +28,7 @@ from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
 from strawberryfields.backends import shared_ops as so
+from thewalrus.fock_gradients import Dgate, Sgate, BSgate
 
 
 def_type = np.complex128
@@ -339,44 +340,26 @@ def a(trunc):
 def displacement(alpha, trunc):
     r"""The displacement operator :math:`D(\alpha)`.
 
+    Uses the Dgate operation in thewalrus to calculate the displacement.
+
     Args:
             alpha (complex): the displacement
             trunc (int): the Fock cutoff
     """
-    # pylint: disable=duplicate-code
-    if alpha == 0:
-        # return the identity
-        ret = np.eye(trunc, dtype=def_type)
-    else:
-        # generate the broadcasted index arrays
-        dim_array = np.arange(trunc)
-        N = dim_array.reshape((-1, 1, 1))
-        n = dim_array.reshape((1, -1, 1))
-        i = dim_array.reshape((1, 1, -1))
 
-        j = n-i
-        k = N-i
+    r = np.abs(alpha)
+    theta = np.angle(alpha)
 
-        # the prefactors are only calculated if
-        # i<=min(n,N). This is equivalent to k>=0, j>=0
-        mask = np.logical_and(k >= 0, j >= 0)
-        denom = fac(j)*fac(k)*fac(n-j)
-        num = sqrt(fac(N)*fac(n))
-
-        # the numpy.divide is to avoid division by 0 errors
-        # (these are removed by the following mask anyway)
-        prefactor = np.divide(num, denom, where=denom != 0)
-        prefactor = np.where(mask, prefactor, 0)
-
-        # sum over i
-        ret = exp(-0.5 * abssqr(alpha)) * np.sum(alpha**k * (np.conj(-alpha)**j) * prefactor, axis=-1)
+    ret, _, _ = Dgate(r, theta, cutoff=trunc)
 
     return ret
 
 
 @functools.lru_cache()
-def squeezing(r, theta, trunc, save=False, directory=None):
+def squeezing(r, theta, trunc):
     r"""The squeezing operator :math:`S(re^{i\theta})`.
+
+    Uses the Sgate operation in thewalrus to calculate the squeezing.
 
     Args:
             r (float): the magnitude of the squeezing in the
@@ -384,33 +367,8 @@ def squeezing(r, theta, trunc, save=False, directory=None):
             theta (float): the squeezing angle
             trunc (int): the Fock cutoff
     """
-    # pylint: disable=duplicate-code
-    if r == 0:
-        # return the identity
-        ret = np.eye(trunc, dtype=def_type)
-    else:
-        # broadcast the index arrays
-        dim_array = np.arange(trunc)
-        N = dim_array.reshape((-1, 1, 1))
-        n = dim_array.reshape((1, -1, 1))
-        k = dim_array.reshape((1, 1, -1))
 
-        try:
-            prefac = so.load_squeeze_factors(trunc, directory)
-        except FileNotFoundError:
-            prefac = so.generate_squeeze_factors(trunc)
-            if save:
-                so.save_bs_factors(prefac, directory)
-
-        # we only perform the sum when n+N is divisible by 2
-        # in which case we sum 0 <= k <= min(N,n)
-        # mask = np.logical_and((n+N)%2 == 0, k <= np.minimum(N, n))
-        mask = np.logical_and((n+N)%2 == 0, k <= np.minimum(N, n))
-
-        # perform the summation over k
-        scale = mask * np.power(sinh(r)/2, mask*(N+n-2*k)/2) / (cosh(r)**((N+n+1)/2))
-        ph = exp(1j*theta*(N-n)/2)
-        ret = np.sum(scale*ph*prefac, axis=-1)
+    ret, _, _ = Sgate(r, theta, cutoff=trunc)
 
     return ret
 
