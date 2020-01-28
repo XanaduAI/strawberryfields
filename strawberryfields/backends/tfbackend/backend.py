@@ -307,8 +307,9 @@ class TFBackend(BaseFock):
         return meas
 
     def is_vacuum(self, tol=0.0, **kwargs):
-        vac_elem = self.circuit.vacuum_element()
-        return np.abs(vac_elem-1) <= tol
+        with tf.name_scope('Is_vacuum'):
+            vac_elem = self.circuit.vacuum_element()
+            return np.abs(vac_elem-1) <= tol
 
     def del_mode(self, modes):
         with tf.name_scope('Del_mode'):

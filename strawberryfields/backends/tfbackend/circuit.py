@@ -456,10 +456,9 @@ class Circuit:
         Args:
             modes (Sequence[int]): which modes to measure (in increasing order).
             select (Sequence[int]): user-specified measurement value (used instead of random sampling)
-            **kwargs:
 
         Returns:
-            A list with the Fock number measurement results for each mode.
+            tuple[int]: A list with the Fock number measurement results for each mode.
         """
         # allow integer (non-list) arguments
         # not part of the API, but provided for convenience
@@ -649,7 +648,7 @@ class Circuit:
                 select (float): user-specified measurement value (used instead of random sampling)
 
         Returns:
-            The measured value (or a list of measured values when running in batch mode).
+            [(float)]: The measured value (or a list of measured values when running in batch mode).
         """
 
         if not isinstance(mode, int):
