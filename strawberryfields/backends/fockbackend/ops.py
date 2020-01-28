@@ -28,7 +28,7 @@ from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
 from strawberryfields.backends import shared_ops as so
-from thewalrus.fock_gradients import Dgate, Sgate
+from thewalrus.fock_gradients import Dgate, Sgate, BSgate
 
 
 def_type = np.complex128
@@ -443,6 +443,11 @@ def beamsplitter(t, r, phi, trunc, save=False, directory=None):
 
     BS = np.sum(exp(-1j*(pi+phi)*(n-N)) * T * R * prefac[:trunc,:trunc,:trunc,:trunc,:trunc], axis=-1)
     BS = BS.swapaxes(0, 1).swapaxes(2, 3)
+
+    theta = np.arccos(t)
+    BS_tw, _, _ = BSgate(theta, phi, cutoff=trunc)
+
+    print(np.linalg.norm(BS - BS_tw))
 
     return BS
 
