@@ -35,7 +35,7 @@ class TestBackendImport:
 
     def test_incorrect_tf_version(self, monkeypatch):
         """Test that an exception is raised if the version
-        of TensorFlow installed is not version 1.x"""
+        of TensorFlow installed is not version 2.x"""
         with monkeypatch.context() as m:
             # force Python check to pass
             m.setattr("sys.version_info", (3, 6, 3))
