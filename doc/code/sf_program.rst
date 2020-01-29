@@ -8,7 +8,7 @@ sf.program
     Unless you are a Strawberry Fields developer, you likely do not need
     to use these classes directly.
 
-    See the :class:`~strawberryfields.Program` class for
+    See the :class:`.Program` class for
     details on Strawberry Fields programs.
 
 

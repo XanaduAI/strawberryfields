@@ -13,12 +13,12 @@
 # limitations under the License.
 
 """
-This module implements the :class:`Program` class which acts as a representation for quantum circuits.
+This module implements the :class:`.Program` class which acts as a representation for quantum circuits.
 
 Quantum circuit representation
 ------------------------------
 
-The :class:`Command` instances in the circuit form a
+The :class:`.Command` instances in the circuit form a
 `strict partially ordered set <http://en.wikipedia.org/wiki/Partially_ordered_set#Strict_and_non-strict_partial_orders>`_
 in the sense that the order in which the operations have to be executed is usually not completely fixed.
 For example, operations acting on different subsystems always commute with each other.
@@ -39,8 +39,12 @@ Three different (but equivalent) representations of the circuit are used.
   is empty, that is, consuming it in a topological order.
   Note that a topological order is not always unique, there may be several equivalent topological orders.
 
+.. currentmodule:: strawberryfields.program_utils
+
 The three representations can be converted to each other
 using the functions :func:`list_to_grid`, :func:`grid_to_DAG` and :func:`DAG_to_list`.
+
+.. currentmodule:: strawberryfields.program
 """
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
@@ -55,6 +59,12 @@ import strawberryfields.circuitspecs as specs
 import strawberryfields.program_utils as pu
 from .program_utils import Command, RegRef, CircuitError, RegRefError
 from .parameters import FreeParameter, ParameterError
+
+
+
+# for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
+__all__ = []
+
 
 
 class Program:
