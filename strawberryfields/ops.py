@@ -1140,6 +1140,11 @@ class S2gate(Gate):
     def __init__(self, r, phi=0.):
         super().__init__([r, phi])
 
+    def _apply(self, reg, backend, **kwargs):
+        p = self.p[0] * pf.exp(1j * self.p[1])
+        z = par_evaluate(p)
+        backend.two_mode_sqeezing(z, *reg)
+
     def _decompose(self, reg, **kwargs):
         # two opposite squeezers sandwiched between 50% beamsplitters
         S = Sgate(self.p[0], self.p[1])
