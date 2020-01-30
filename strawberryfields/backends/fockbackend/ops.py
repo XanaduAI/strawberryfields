@@ -28,6 +28,7 @@ from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
 from strawberryfields.backends import shared_ops as so
+from thewalrus.fock_gradients import S2gate
 
 
 def_type = np.complex128
@@ -411,6 +412,22 @@ def squeezing(r, theta, trunc, save=False, directory=None):
         scale = mask * np.power(sinh(r)/2, mask*(N+n-2*k)/2) / (cosh(r)**((N+n+1)/2))
         ph = exp(1j*theta*(N-n)/2)
         ret = np.sum(scale*ph*prefac, axis=-1)
+
+    return ret
+
+
+@functools.lru_cache()
+def two_mode_sqeezing(r, theta, trunc):
+    r"""The two-mode squeezing operator :math:`S_2(re^{i\theta})`.
+
+    Args:
+            r (float): two-mode squeezing magnitude
+            theta (float): two-mode squeezing phase
+            trunc (int): Fock ladder cutoff
+    """
+    ret, _, _ = S2gate(r, theta, cutoff=trunc)
+
+    ret = np.transpose(ret, [0, 2, 1, 3])
 
     return ret
 
