@@ -21,7 +21,7 @@ import string
 from itertools import product
 
 import numpy as np
-from numpy import (pi, sqrt, sinh, cosh, tanh, array, exp)
+from numpy import (sqrt, sinh, cosh, tanh, array, exp)
 from numpy.polynomial.hermite import hermval as H
 
 from scipy.special import factorial as fac
@@ -417,7 +417,7 @@ def phase(theta, trunc):
 
 
 @functools.lru_cache()
-def beamsplitter(t, r, phi, trunc, save=False, directory=None):
+def beamsplitter(t, r, phi, trunc):
     r"""
     The beamsplitter :math:`B(cos^{-1} t, phi)`.
     """
