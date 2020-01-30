@@ -422,32 +422,10 @@ def beamsplitter(t, r, phi, trunc, save=False, directory=None):
     The beamsplitter :math:`B(cos^{-1} t, phi)`.
     """
     # pylint: disable=bad-whitespace
-    try:
-        prefac = so.load_bs_factors(trunc, directory)
-    except FileNotFoundError:
-        prefac = so.generate_bs_factors(trunc)
-        if save:
-            so.save_bs_factors(prefac, directory)
-
-    dim_array = np.arange(trunc)
-    N = dim_array.reshape((-1, 1, 1, 1, 1))
-    n = dim_array.reshape((1, -1, 1, 1, 1))
-    M = dim_array.reshape((1, 1, -1, 1, 1))
-    k = dim_array.reshape((1, 1, 1, 1, -1))
-
-    tpwr = M-n+2*k
-    rpwr = n+N-2*k
-
-    T = np.power(t, tpwr) if t != 0 else np.where(tpwr != 0, 0, 1)
-    R = np.power(r, rpwr) if r != 0 else np.where(rpwr != 0, 0, 1)
-
-    BS = np.sum(exp(-1j*(pi+phi)*(n-N)) * T * R * prefac[:trunc,:trunc,:trunc,:trunc,:trunc], axis=-1)
-    BS = BS.swapaxes(0, 1).swapaxes(2, 3)
 
     theta = np.arccos(t)
     BS_tw, _, _ = BSgate(theta, phi, cutoff=trunc)
 
-    print("this is the difference", np.linalg.norm(BS - BS_tw.transpose((0,2,1,3))))
     return BS_tw.transpose((0,2,1,3))
 
 
