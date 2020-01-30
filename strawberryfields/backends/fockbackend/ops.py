@@ -421,9 +421,9 @@ def two_mode_squeezing(r, theta, trunc):
     r"""The two-mode squeezing operator :math:`S_2(re^{i\theta})`.
 
     Args:
-            r (float): two-mode squeezing magnitude
-            theta (float): two-mode squeezing phase
-            trunc (int): Fock ladder cutoff
+        r (float): two-mode squeezing magnitude
+        theta (float): two-mode squeezing phase
+        trunc (int): Fock ladder cutoff
     """
     ret, _, _ = S2gate(r, theta, cutoff=trunc)
 

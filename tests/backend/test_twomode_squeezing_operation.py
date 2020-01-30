@@ -29,7 +29,16 @@ MAG = np.linspace(0.0, 0.2, 5, endpoint=False)
 
 
 def get_amplitude(k, r, p):
-    """ Get amplitude for two mode squeezing operation"""
+    """ Get amplitude for two mode squeezing operation
+
+    Args:
+        k (tuple): fock state numbers for two modes
+        r (float): two-mode squeezing magnitude
+        p (float): two-mode squeezing phase
+
+    Returns:
+        float: the two-mode squeezed vacuum amplitude
+    """
     if k[0] == k[1]:
         tmsv = (np.exp(1j * p) * np.tanh(r)) ** k[0] / np.cosh(r)
         return tmsv
