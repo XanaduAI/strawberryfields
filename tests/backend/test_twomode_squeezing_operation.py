@@ -51,7 +51,7 @@ class TestTwomodeSqueezing:
 
     @pytest.mark.parametrize("r", MAG)
     @pytest.mark.parametrize("p", PHASE)
-    def test_two_mode_squeezing(self, setup_backend, r, p, cutoff, tol):
+    def test_two_mode_squeezing(self, setup_backend, r, p, cutoff, pure, tol):
         r""" Test two-mode squeezing on vacuum-state for both pure states and
         mixed states with the amplitude given by
         :math: `\delta_{kl} \frac{e^{in\phi} \tanh^n{r}}{\cosh{r}}`
@@ -63,7 +63,7 @@ class TestTwomodeSqueezing:
 
         state = backend.state()
 
-        if state.is_pure:
+        if pure:
             for k in it.product(range(cutoff), repeat=2):
                 tmsv = get_amplitude(k, r, p)
                 assert np.allclose(state.data[k], tmsv, atol=tol, rtol=0)
