@@ -45,7 +45,7 @@ class TestTwomodeSqueezing:
     def test_two_mode_squeezing(self, setup_backend, r, p, cutoff, tol):
         r""" Test two-mode squeezing on vacuum-state for both pure states and
         mixed states with the amplitude given by
-        :math: `\delta_{kl} \frac{e^{in\phi} \tanh^n{r}}{\cosh{r}}`
+	        :math:`\delta_{kl} \frac{e^{in\phi} \tanh^n{r}}{\cosh{r}}`
         """
         z = r * np.exp(1j * p)
 
