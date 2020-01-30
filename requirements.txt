@@ -3,7 +3,7 @@ scipy>=1.0.0
 sympy>=1.5
 networkx>=2.0
 quantum-blackbird>=0.2.0
-thewalrus>=0.10
+https://s3.amazonaws.com/xanadu-wheels/thewalrus-0.11.0.dev0+20200129152745-cp36-cp36m-manylinux1_x86_64.whl#sha256=aa7700e936a39203c96c0ad432275bb22a591b6d6848848192a4b36c195d5b5a
 toml
 appdirs
 tensorflow==1.3
