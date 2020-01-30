@@ -322,6 +322,12 @@ class Circuit():
         """
         self._apply_gate(ops.squeezing(r, theta, self._trunc), [mode])
 
+    def two_mode_squeeze(self, r, theta, mode1, mode2):
+        """
+        Applies a two-mode squeezing gate.
+        """
+        self._apply_gate(ops.two_mode_sqeezing(r, theta, self._trunc), [mode1, mode2])
+
     def kerr_interaction(self, kappa, mode):
         """
         Applies a Kerr interaction gate.
