@@ -56,11 +56,8 @@ class TestTwomodeSqueezing:
 
         if state.is_pure:
             for k in it.product(range(cutoff), repeat=2):
-                if k[0] == k[1]:
-                    tmsv = get_amplitude(k, r, p)
-                    assert np.allclose(state.data[k], tmsv, atol=tol, rtol=0)
-                else:
-                    assert np.allclose(state.data[k], 0, atol=tol, rtol=0)
+                tmsv = get_amplitude(k, r, p)
+                assert np.allclose(state.data[k], tmsv, atol=tol, rtol=0)
         else:
             for k in it.product(range(cutoff), repeat=2):
                 for l in it.product(range(cutoff), repeat=2):
