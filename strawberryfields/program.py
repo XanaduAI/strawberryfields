@@ -13,95 +13,12 @@
 # limitations under the License.
 
 """
-Quantum programs
-================
-
-**Module name:** :mod:`strawberryfields.program`
-
-.. currentmodule:: strawberryfields.program
-
-This module implements the :class:`Program` class which acts as a representation for quantum circuits.
-The Program object also acts as a context for defining the quantum circuit using the Python-embedded Blackbird syntax.
-
-A typical use looks like
-
-.. include:: example_use.rst
-
-The Program objects keep track of the state of the quantum register they act on, using a dictionary of :class:`RegRef` objects.
-The currently active register references can be accessed using the :meth:`~Program.register` method.
-
-
-Program methods
----------------
-
-.. currentmodule:: strawberryfields.program.Program
-
-.. autosummary::
-   context
-   register
-   num_subsystems
-   __len__
-   can_follow
-   append
-   lock
-   compile
-   optimize
-   print
-   draw_circuit
-   params
-   bind_params
-
-The following are internal Program methods. In most cases the user should not
-call these directly.
-
-.. autosummary::
-   __enter__
-   __exit__
-   _clear_regrefs
-   _add_subsystems
-   _delete_subsystems
-   _index_to_regref
-   _test_regrefs
-   _linked_copy
-
-
-**Module name:** :mod:`strawberryfields.program_utils`
-
-.. currentmodule:: strawberryfields.program_utils
-
-Helper classes
---------------
-
-.. autosummary::
-   Command
-   RegRef
-
-
-Utility functions
------------------
-
-.. autosummary::
-   list_to_grid
-   grid_to_DAG
-   list_to_DAG
-   DAG_to_list
-   group_operations
-   optimize_circuit
-
-
-Exceptions
-----------
-
-.. autosummary::
-   MergeFailure
-   CircuitError
-   RegRefError
-
+This module implements the :class:`.Program` class which acts as a representation for quantum circuits.
 
 Quantum circuit representation
 ------------------------------
 
-The :class:`Command` instances in the circuit form a
+The :class:`.Command` instances in the circuit form a
 `strict partially ordered set <http://en.wikipedia.org/wiki/Partially_ordered_set#Strict_and_non-strict_partial_orders>`_
 in the sense that the order in which the operations have to be executed is usually not completely fixed.
 For example, operations acting on different subsystems always commute with each other.
@@ -122,16 +39,12 @@ Three different (but equivalent) representations of the circuit are used.
   is empty, that is, consuming it in a topological order.
   Note that a topological order is not always unique, there may be several equivalent topological orders.
 
+.. currentmodule:: strawberryfields.program_utils
+
 The three representations can be converted to each other
 using the functions :func:`list_to_grid`, :func:`grid_to_DAG` and :func:`DAG_to_list`.
 
-
 .. currentmodule:: strawberryfields.program
-
-
-Code details
-~~~~~~~~~~~~
-
 """
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
@@ -147,6 +60,11 @@ import strawberryfields.program_utils as pu
 from .program_utils import Command, RegRef, CircuitError, RegRefError
 from .parameters import FreeParameter, ParameterError
 
+
+# for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
+__all__ = []
+
+
 class Program:
     """Represents a photonic quantum circuit.
 
@@ -156,7 +74,7 @@ class Program:
     * appending :doc:`/introduction/ops` to the program.
 
     Within the context, operations are appended to the program using the
-    syntax
+    Python-embedded Blackbird syntax
 
     .. code-block:: python3
 
@@ -201,6 +119,8 @@ class Program:
             ops.BSgate(0.43, 0.1) | (q[1], q[2])
             ops.MeasureFock() | q
 
+    The currently active register references can be accessed using the :meth:`~Program.register` method.
+
     Args:
         num_subsystems (int, Program): Initial number of modes (subsystems) in the quantum register.
             Alternatively, another Program instance from which to inherit the register state.
@@ -227,6 +147,7 @@ class Program:
         """
 
         # create subsystem references
+        # Program keeps track of the state of the quantum register using a dictionary of :class:`RegRef` objects.
         if isinstance(num_subsystems, numbers.Integral):
             #: int: initial number of subsystems
             self.init_num_subsystems = num_subsystems

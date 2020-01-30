@@ -93,7 +93,7 @@ What we cannot do at the moment:
 """
 # pylint: disable=too-many-ancestors,unused-argument,protected-access
 
-from collections.abc import Sequence
+import collections.abc
 import functools
 import types
 
@@ -102,21 +102,12 @@ import sympy
 import sympy.functions as sf
 
 
-# FIXME Workaround for missing numpy implementation of Heaviside, required by CXgate. Remove when no longer necessary.
-def heaviside(x):
-    """Heaviside step function."""
-    if x <= 0:
-        return 0
-    return 1
-
-custom_funcs = {'Heaviside': heaviside}
-
 
 def wrap_mathfunc(func):
-    """Applies the wrapped sympy function elementwise to numpy arrays.
+    """Applies the wrapped sympy function elementwise to NumPy arrays.
 
-    Required because the sympy math functions cannot deal with numpy arrays.
-    We implement no broadcasting; if the first argument is a numpy array, we assume
+    Required because the sympy math functions cannot deal with NumPy arrays.
+    We implement no broadcasting; if the first argument is a NumPy array, we assume
     all the arguments are arrays of the same shape.
     """
     @functools.wraps(func)
@@ -133,9 +124,11 @@ def wrap_mathfunc(func):
         return func(*args)
     return wrapper
 
-#: SimpleNamespace: Namespace of mathematical functions for manipulating Parameters. Consists of all :mod:`sympy.functions` public members, which we wrap with :func:`wrap_mathfunc`.
-parfuncs = types.SimpleNamespace(**{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != '_'})
 
+par_funcs = types.SimpleNamespace(**{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != '_'})
+"""SimpleNamespace: Namespace of mathematical functions for manipulating Parameters.
+Consists of all :mod:`sympy.functions` public members, which we wrap with :func:`wrap_mathfunc`.
+"""
 
 
 class ParameterError(RuntimeError):
@@ -146,16 +139,23 @@ class ParameterError(RuntimeError):
 
 
 def is_object_array(p):
-    """Returns True iff p is an object array."""
+    """Returns True iff p is an object array.
+
+    Args:
+        p (Any): object to be checked
+
+    Returns:
+        bool: True iff p is a NumPy object array
+    """
     return isinstance(p, np.ndarray) and p.dtype == object
 
 
 def par_evaluate(params):
     """Evaluate an Operation parameter sequence.
 
-    Any parameters descending from sympy.Basic are evaluated, others are returned as-is.
+    Any parameters descending from :class:`sympy.Basic` are evaluated, others are returned as-is.
     Evaluation means that free and measured parameters are replaced by their numeric values.
-    Numpy object arrays are evaluated elementwise.
+    NumPy object arrays are evaluated elementwise.
 
     Alternatively, evaluates a single parameter and returns its value.
 
@@ -166,11 +166,12 @@ def par_evaluate(params):
         list[Any]: evaluated parameters
     """
     scalar = False
-    if not isinstance(params, Sequence):
+    if not isinstance(params, collections.abc.Sequence):
         scalar = True
         params = [params]
 
     def do_evaluate(p):
+        """Evaluates a single parameter."""
         if is_object_array(p):
             return np.array([do_evaluate(k) for k in p])
 
@@ -179,8 +180,13 @@ def par_evaluate(params):
 
         # using lambdify we can also substitute np.ndarrays and tf.Tensors for the atoms
         atoms = list(p.atoms(MeasuredParameter, FreeParameter))
-        func = sympy.lambdify(atoms, p, ['numpy', custom_funcs])
+        # evaluate the atoms of the expression
         vals = [k._eval_evalf(None) for k in atoms]
+        # use the tensorflow printer if any of the symbolic parameter values are TF objects
+        # (we do it like this to avoid importing tensorflow if it's not needed)
+        is_tf = (type(v).__module__.startswith('tensorflow') for v in vals)
+        printer = 'tensorflow' if any(is_tf) else 'numpy'
+        func = sympy.lambdify(atoms, p, printer)
         return func(*vals)
 
     ret = list(map(do_evaluate, params))
@@ -193,9 +199,10 @@ def par_is_symbolic(p):
     """Returns True iff p is a symbolic Operation parameter instance.
 
     If a parameter inherits :class:`sympy.Basic` it is symbolic.
-    An object array is symbolic if any of its elements are.
+    A NumPy object array is symbolic if any of its elements are.
+    All other objects are considered not symbolic parameters.
 
-    Note that :data:`parfuncs` functions applied to numerical (non-symbolic) parameters return
+    Note that :data:`strawberryfields.math` functions applied to numerical (non-symbolic) parameters return
     symbolic parameters.
     """
     if is_object_array(p):
@@ -320,7 +327,7 @@ class MeasuredParameter(sympy.Symbol):
 
 
 class FreeParameter(sympy.Symbol):
-    """Symbolic Operation parameter.
+    """Named symbolic Operation parameter.
 
     Args:
         name (str): name of the free parameter

@@ -21,7 +21,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields import io
 from strawberryfields.program import Program, CircuitError
-from strawberryfields.parameters import MeasuredParameter, FreeParameter, par_is_symbolic, parfuncs as pf
+from strawberryfields.parameters import MeasuredParameter, FreeParameter, par_is_symbolic, par_funcs as pf
 
 
 pytestmark = pytest.mark.frontend

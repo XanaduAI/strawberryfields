@@ -20,9 +20,14 @@ import os
 
 import blackbird
 
+import strawberryfields.program as sfp
+import strawberryfields.parameters as sfpar
 from . import ops
-from .program import Program
-from .parameters import par_is_symbolic, par_convert
+
+
+# for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
+__all__ = ['to_blackbird', 'to_program', 'loads']
+
 
 
 def to_blackbird(prog, version="1.0"):
@@ -64,7 +69,7 @@ def to_blackbird(prog, version="1.0"):
 
         else:
             for a in cmd.op.p:
-                if par_is_symbolic(a):
+                if sfpar.par_is_symbolic(a):
                     # SymPy object, convert to string
                     a = str(a)
                 op["args"].append(a)
@@ -89,7 +94,7 @@ def to_program(bb):
         # to initialize the Program object with.
         raise ValueError("Blackbird program contains no quantum operations!")
 
-    prog = Program(max(bb.modes)+1, name=bb.name)
+    prog = sfp.Program(max(bb.modes)+1, name=bb.name)
 
     # append the quantum operations
     with prog.context as q:
@@ -115,8 +120,8 @@ def to_program(bb):
 
                 # Convert symbolic expressions in args/kwargs containing measured and free parameters to
                 # symbolic expressions containing the corresponding MeasuredParameter and FreeParameter instances.
-                args = par_convert(args, prog)
-                vals = par_convert(kwargs.values(), prog)
+                args = sfpar.par_convert(args, prog)
+                vals = sfpar.par_convert(kwargs.values(), prog)
                 kwargs = dict(zip(kwargs.keys(), vals))
                 gate(*args, **kwargs) | regrefs  #pylint:disable=expression-not-assigned
             else:

@@ -18,9 +18,10 @@ to a backend that could be e.g., a simulator or a hardware quantum processor.
 One can think of each BaseEngine instance as a separate quantum computation.
 """
 import abc
-from collections.abc import Sequence
-from numpy import stack, shape
-from time import sleep
+import collections.abc
+import time
+
+import numpy as np
 
 from .backends import load_backend
 from .backends.base import (NotApplicableError, BaseBackend)
@@ -32,6 +33,11 @@ from strawberryfields.configuration import DEFAULT_CONFIG
 
 class OneJobAtATimeError(Exception):
     """Raised when a user attempts to execute more than one job on the same engine instance."""
+
+
+# for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
+__all__ = ["Result", "BaseEngine", "LocalEngine"]
+
 
 
 class Result:
@@ -82,8 +88,8 @@ class Result:
         self._state = None
 
         # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
-        if len(shape(samples)) > 1:
-            samples = stack(samples, 1)
+        if len(np.shape(samples)) > 1:
+            samples = np.stack(samples, 1)
         self._samples = samples
 
     @property
@@ -337,7 +343,7 @@ class BaseEngine(abc.ABC):
                 return [None] * dim
             return val
 
-        if not isinstance(program, Sequence):
+        if not isinstance(program, collections.abc.Sequence):
             program = [program]
 
         kwargs.setdefault("shots", 1)
@@ -491,12 +497,13 @@ class LocalEngine(BaseEngine):
         compile_options = compile_options or {}
         temp_run_options = {}
 
-        if isinstance(program, Sequence):
+        if isinstance(program, collections.abc.Sequence):
             # succesively update all run option defaults.
             # the run options of successive programs
             # overwrite the run options of previous programs
             # in the list
-            [temp_run_options.update(p.run_options) for p in program]
+            for p in program:
+                temp_run_options.update(p.run_options)
         else:
             # single program to execute
             temp_run_options.update(program.run_options)
@@ -633,7 +640,7 @@ class StarshipEngine(BaseEngine):
         try:
             while not job.is_failed and not job.is_complete:
                 job.reload()
-                sleep(self.polling_delay_seconds)
+                time.sleep(self.polling_delay_seconds)
         except KeyboardInterrupt:
             if job.id:
                 print("Job {} is queued in the background.".format(job.id.value))
@@ -679,5 +686,6 @@ class StarshipEngine(BaseEngine):
 
 
 class Engine(LocalEngine):
+    """dummy"""
     # alias for backwards compatibility
     __doc__ = LocalEngine.__doc__
