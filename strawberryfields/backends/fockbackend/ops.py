@@ -447,9 +447,8 @@ def beamsplitter(t, r, phi, trunc, save=False, directory=None):
     theta = np.arccos(t)
     BS_tw, _, _ = BSgate(theta, phi, cutoff=trunc)
 
-    print(np.linalg.norm(BS - BS_tw))
-
-    return BS
+    print("this is the difference", np.linalg.norm(BS - BS_tw.transpose((0,2,1,3))))
+    return BS_tw.transpose((0,2,1,3))
 
 
 @functools.lru_cache()
