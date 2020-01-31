@@ -144,7 +144,7 @@ class FockStateTF(BaseFockState):
 
         probs = tf.identity(probs, name="all_fock_probs")
 
-        return probs.numpy()
+        return probs
 
     def fidelity(self, other_state, mode, **kwargs):
         r"""
