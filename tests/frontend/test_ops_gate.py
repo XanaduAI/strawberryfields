@@ -172,7 +172,7 @@ def test_merge_measured_pars():
         ops.MeasureX | q[0]
         mpar = q[0].par  # measured parameter
         D = ops.Dgate(mpar)
-        F = ops.Dgate(1)
+        F = ops.Dgate(1.0)
         G = ops.Dgate(mpar, 0.1)  # different p[1]
 
     # mp gates that are the inverse of each other
@@ -180,10 +180,10 @@ def test_merge_measured_pars():
     assert merged is None
 
     # combining measured and fixed parameters
-    assert F.merge(D).p[0] == mpar + 1
-    assert F.merge(D.H).p[0] == -mpar + 1
-    assert D.merge(F).p[0] == mpar + 1
-    assert D.merge(F.H).p[0] == mpar - 1
+    assert F.merge(D).p[0] == mpar + 1.0
+    assert F.merge(D.H).p[0] == -mpar + 1.0
+    assert D.merge(F).p[0] == mpar + 1.0
+    assert D.merge(F.H).p[0] == mpar - 1.0
 
     # gates that have different p[1] parameters
     with pytest.raises(MergeFailure, match="Don't know how to merge these gates."):
