@@ -456,11 +456,12 @@ class TestExtractUnitary:
         if isinstance(expected_state, tf.Tensor):
             expected_state = expected_state.numpy()
 
-        if bsize >= 2:
-            for exp_state in expected_state:
-                assert np.allclose(final_state, exp_state.reshape([-1]), atol=tol, rtol=0)
-        else:
-            assert np.allclose(final_state, expected_state.reshape([-1]), atol=tol, rtol=0)
+        # if bsize >= 2:
+        #     for exp_state in expected_state:
+        #         assert np.allclose(final_state, exp_state.reshape([-1]), atol=tol, rtol=0)
+        # else:
+        #     assert np.allclose(final_state, expected_state.reshape([-1]), atol=tol, rtol=0)
+        assert np.allclose(final_state, expected_state.reshape([-1]), atol=tol, rtol=0)
 
     def test_extract_arbitrary_unitary_two_modes_not_vectorized(
         self, setup_eng, cutoff, tol

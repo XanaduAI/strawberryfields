@@ -378,7 +378,7 @@ class LocalEngine(BaseEngine):
         temp_run_options.setdefault('modes', None)
 
         # avoid unexpected keys being sent to Operations
-        eng_run_keys = ["shots"] #NOTE: used to contain "session", "feed_dict" and "eval" (from TF 1.x)
+        eng_run_keys = ["shots"]
         eng_run_options = {key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys}
 
         result = super()._run(program, args=args, compile_options=compile_options, **eng_run_options)
