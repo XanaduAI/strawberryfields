@@ -794,7 +794,7 @@ class Circuit:
 
             self._update_state(new_state)
 
-        return meas_result
+        return meas_result.numpy()
 
     @property
     def num_modes(self):
