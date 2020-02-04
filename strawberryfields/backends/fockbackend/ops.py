@@ -252,7 +252,7 @@ def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
 
         return np.transpose(ret, untranspose_list)
 
-    # otherwise, if state is mixed
+    # otherwise, the state is mixed
     if n == 1:
         return np.dot(mat, np.dot(state, dagger(mat)))
 
