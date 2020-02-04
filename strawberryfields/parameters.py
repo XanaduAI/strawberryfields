@@ -93,7 +93,7 @@ What we cannot do at the moment:
 """
 # pylint: disable=too-many-ancestors,unused-argument,protected-access
 
-from collections.abc import Sequence
+import collections.abc
 import functools
 import types
 
@@ -104,10 +104,10 @@ import sympy.functions as sf
 
 
 def wrap_mathfunc(func):
-    """Applies the wrapped sympy function elementwise to numpy arrays.
+    """Applies the wrapped sympy function elementwise to NumPy arrays.
 
-    Required because the sympy math functions cannot deal with numpy arrays.
-    We implement no broadcasting; if the first argument is a numpy array, we assume
+    Required because the sympy math functions cannot deal with NumPy arrays.
+    We implement no broadcasting; if the first argument is a NumPy array, we assume
     all the arguments are arrays of the same shape.
     """
     @functools.wraps(func)
@@ -124,9 +124,11 @@ def wrap_mathfunc(func):
         return func(*args)
     return wrapper
 
-#: SimpleNamespace: Namespace of mathematical functions for manipulating Parameters. Consists of all :mod:`sympy.functions` public members, which we wrap with :func:`wrap_mathfunc`.
-par_funcs = types.SimpleNamespace(**{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != '_'})
 
+par_funcs = types.SimpleNamespace(**{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != '_'})
+"""SimpleNamespace: Namespace of mathematical functions for manipulating Parameters.
+Consists of all :mod:`sympy.functions` public members, which we wrap with :func:`wrap_mathfunc`.
+"""
 
 
 class ParameterError(RuntimeError):
@@ -137,16 +139,23 @@ class ParameterError(RuntimeError):
 
 
 def is_object_array(p):
-    """Returns True iff p is an object array."""
+    """Returns True iff p is an object array.
+
+    Args:
+        p (Any): object to be checked
+
+    Returns:
+        bool: True iff p is a NumPy object array
+    """
     return isinstance(p, np.ndarray) and p.dtype == object
 
 
 def par_evaluate(params):
     """Evaluate an Operation parameter sequence.
 
-    Any parameters descending from sympy.Basic are evaluated, others are returned as-is.
+    Any parameters descending from :class:`sympy.Basic` are evaluated, others are returned as-is.
     Evaluation means that free and measured parameters are replaced by their numeric values.
-    Numpy object arrays are evaluated elementwise.
+    NumPy object arrays are evaluated elementwise.
 
     Alternatively, evaluates a single parameter and returns its value.
 
@@ -157,7 +166,7 @@ def par_evaluate(params):
         list[Any]: evaluated parameters
     """
     scalar = False
-    if not isinstance(params, Sequence):
+    if not isinstance(params, collections.abc.Sequence):
         scalar = True
         params = [params]
 
@@ -190,7 +199,8 @@ def par_is_symbolic(p):
     """Returns True iff p is a symbolic Operation parameter instance.
 
     If a parameter inherits :class:`sympy.Basic` it is symbolic.
-    An object array is symbolic if any of its elements are.
+    A NumPy object array is symbolic if any of its elements are.
+    All other objects are considered not symbolic parameters.
 
     Note that :data:`strawberryfields.math` functions applied to numerical (non-symbolic) parameters return
     symbolic parameters.

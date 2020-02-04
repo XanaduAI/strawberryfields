@@ -168,6 +168,9 @@ class FockBackend(BaseFock):
     def squeeze(self, z, mode):
         self.circuit.squeeze(abs(z), phase(z), self._remap_modes(mode))
 
+    def two_mode_squeeze(self, z, mode1, mode2):
+        self.circuit.two_mode_squeeze(abs(z), phase(z), self._remap_modes(mode1), self._remap_modes(mode2))
+
     def beamsplitter(self, t, r, mode1, mode2):
         if isinstance(t, complex):
             raise ValueError("Beamsplitter transmittivity t must be a float.")

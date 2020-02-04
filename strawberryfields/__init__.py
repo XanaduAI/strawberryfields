@@ -14,7 +14,7 @@
 """
 The Strawberry Fields codebase includes a number of complementary components.
 These can be separated into frontend components, applications layer,
-and backend components (all found within the :file:`strawberryfields.backends` submodule).
+and backend components (all found within the :mod:`strawberryfields.backends` submodule).
 
 .. image:: ../_static/sfcomponents.svg
     :align: center
@@ -28,7 +28,7 @@ from .io import load, save
 from .program import Program
 from .parameters import par_funcs as math
 
-__all__ = ["Engine", "LocalEngine", "Program", "version", "save", "load", "about", "cite"]
+__all__ = ["Engine", "Program", "version", "save", "load", "about", "cite"]
 
 
 #: float: numerical value of hbar for the frontend (in the implicit units of position * momentum)
