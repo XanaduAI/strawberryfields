@@ -17,6 +17,10 @@
 * Added `sympy>=1.5` to the list of dependencies.
   Removed the `sympy.functions.atan2` workaround now that SymPy has been fixed.
   [#280](https://github.com/XanaduAI/strawberryfields/pull/280)
+  
+* Removed two unnecessary else statements that pylint complained about.
+  [#290](https://github.com/XanaduAI/strawberryfields/pull/290)
+  
 
 ### Contributors
 
