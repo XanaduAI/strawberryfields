@@ -301,7 +301,7 @@ def apply_gate_einsum(mat, state, pure, modes, n, trunc):
         einstring = ''.join(left_str + [','] + right_str + ['->'] + out_str)
         return np.einsum(einstring, mat, state)
 
-    # otherwise, if state is mixed
+    # otherwise, the state is mixed
     if n == 1:
         return np.dot(mat, np.dot(state, dagger(mat)))
 
