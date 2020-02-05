@@ -12,6 +12,10 @@
   through decomposition, using The Walrus for fast computation.
   [#289](https://github.com/XanaduAI/strawberryfields/pull/289)
 
+* Added The Walrus implementations for the displacement, squeezing and beamsplitter 
+  operations to improve speed.
+  [#287](https://github.com/XanaduAI/strawberryfields/pull/287)
+
 ### Bug fixes
 
 * Symbolic Operation parameters are now compatible with TensorFlow 2.0 objects.

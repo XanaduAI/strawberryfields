@@ -21,14 +21,13 @@ import string
 from itertools import product
 
 import numpy as np
-from numpy import (pi, sqrt, sinh, cosh, tanh, array, exp)
+from numpy import (sqrt, sinh, cosh, tanh, array, exp)
 from numpy.polynomial.hermite import hermval as H
 
 from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
-from strawberryfields.backends import shared_ops as so
-from thewalrus.fock_gradients import S2gate
+from thewalrus.fock_gradients import Dgate, Sgate, S2gate, BSgate
 
 
 def_type = np.complex128
@@ -341,44 +340,30 @@ def a(trunc):
 def displacement(alpha, trunc):
     r"""The displacement operator :math:`D(\alpha)`.
 
+    Uses the `Dgate operation from The Walrus`_ to calculate the displacement.
+
+    .. _`Dgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.Dgate.html
+
     Args:
             alpha (complex): the displacement
             trunc (int): the Fock cutoff
     """
-    # pylint: disable=duplicate-code
-    if alpha == 0:
-        # return the identity
-        ret = np.eye(trunc, dtype=def_type)
-    else:
-        # generate the broadcasted index arrays
-        dim_array = np.arange(trunc)
-        N = dim_array.reshape((-1, 1, 1))
-        n = dim_array.reshape((1, -1, 1))
-        i = dim_array.reshape((1, 1, -1))
 
-        j = n-i
-        k = N-i
+    r = np.abs(alpha)
+    theta = np.angle(alpha)
 
-        # the prefactors are only calculated if
-        # i<=min(n,N). This is equivalent to k>=0, j>=0
-        mask = np.logical_and(k >= 0, j >= 0)
-        denom = fac(j)*fac(k)*fac(n-j)
-        num = sqrt(fac(N)*fac(n))
-
-        # the numpy.divide is to avoid division by 0 errors
-        # (these are removed by the following mask anyway)
-        prefactor = np.divide(num, denom, where=denom != 0)
-        prefactor = np.where(mask, prefactor, 0)
-
-        # sum over i
-        ret = exp(-0.5 * abssqr(alpha)) * np.sum(alpha**k * (np.conj(-alpha)**j) * prefactor, axis=-1)
+    ret, _, _ = Dgate(r, theta, cutoff=trunc)
 
     return ret
 
 
 @functools.lru_cache()
-def squeezing(r, theta, trunc, save=False, directory=None):
+def squeezing(r, theta, trunc):
     r"""The squeezing operator :math:`S(re^{i\theta})`.
+
+    Uses the `Sgate operation from The Walrus`_ to calculate the squeezing.
+
+    .. _`Sgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.Sgate.html
 
     Args:
             r (float): the magnitude of the squeezing in the
@@ -386,33 +371,8 @@ def squeezing(r, theta, trunc, save=False, directory=None):
             theta (float): the squeezing angle
             trunc (int): the Fock cutoff
     """
-    # pylint: disable=duplicate-code
-    if r == 0:
-        # return the identity
-        ret = np.eye(trunc, dtype=def_type)
-    else:
-        # broadcast the index arrays
-        dim_array = np.arange(trunc)
-        N = dim_array.reshape((-1, 1, 1))
-        n = dim_array.reshape((1, -1, 1))
-        k = dim_array.reshape((1, 1, -1))
 
-        try:
-            prefac = so.load_squeeze_factors(trunc, directory)
-        except FileNotFoundError:
-            prefac = so.generate_squeeze_factors(trunc)
-            if save:
-                so.save_bs_factors(prefac, directory)
-
-        # we only perform the sum when n+N is divisible by 2
-        # in which case we sum 0 <= k <= min(N,n)
-        # mask = np.logical_and((n+N)%2 == 0, k <= np.minimum(N, n))
-        mask = np.logical_and((n+N)%2 == 0, k <= np.minimum(N, n))
-
-        # perform the summation over k
-        scale = mask * np.power(sinh(r)/2, mask*(N+n-2*k)/2) / (cosh(r)**((N+n+1)/2))
-        ph = exp(1j*theta*(N-n)/2)
-        ret = np.sum(scale*ph*prefac, axis=-1)
+    ret, _, _ = Sgate(r, theta, cutoff=trunc)
 
     return ret
 
@@ -477,34 +437,20 @@ def phase(theta, trunc):
 
 
 @functools.lru_cache()
-def beamsplitter(t, r, phi, trunc, save=False, directory=None):
-    r"""
-    The beamsplitter :math:`B(cos^{-1} t, phi)`.
+def beamsplitter(t, r, phi, trunc):
+    r""" The beamsplitter :math:`B(cos^{-1} t, phi)`.
+
+    Uses the `BSgate operation from The Walrus`_ to calculate the beamsplitter.
+
+    .. _`BSgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.BSgate.html
     """
     # pylint: disable=bad-whitespace
-    try:
-        prefac = so.load_bs_factors(trunc, directory)
-    except FileNotFoundError:
-        prefac = so.generate_bs_factors(trunc)
-        if save:
-            so.save_bs_factors(prefac, directory)
 
-    dim_array = np.arange(trunc)
-    N = dim_array.reshape((-1, 1, 1, 1, 1))
-    n = dim_array.reshape((1, -1, 1, 1, 1))
-    M = dim_array.reshape((1, 1, -1, 1, 1))
-    k = dim_array.reshape((1, 1, 1, 1, -1))
+    theta = np.arccos(t)
+    BS_tw, _, _ = BSgate(theta, phi, cutoff=trunc)
 
-    tpwr = M-n+2*k
-    rpwr = n+N-2*k
-
-    T = np.power(t, tpwr) if t != 0 else np.where(tpwr != 0, 0, 1)
-    R = np.power(r, rpwr) if r != 0 else np.where(rpwr != 0, 0, 1)
-
-    BS = np.sum(exp(-1j*(pi+phi)*(n-N)) * T * R * prefac[:trunc,:trunc,:trunc,:trunc,:trunc], axis=-1)
-    BS = BS.swapaxes(0, 1).swapaxes(2, 3)
-
-    return BS
+    # TODO: Transpose needed because of different conventions in SF and The Walrus. Remove when The Walrus is updated.
+    return BS_tw.transpose((0,2,1,3))
 
 
 @functools.lru_cache()
