@@ -252,27 +252,28 @@ def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
             untranspose_list[transpose_list[i]] = i
 
         return np.transpose(ret, untranspose_list)
-    else:
-        if n == 1:
-            return np.dot(mat, np.dot(state, dagger(mat)))
 
-        # Transpose the state into the following form:
-        # |psi><psi||mode[0]>|mode[1]>...|mode[n]><mode[0]|<mode[1]|...<mode[n]|
-        transpose_list = [i for i in range(n*2) if not i//2 in modes]
-        transpose_list = transpose_list + [2*i for i in modes] + [2*i + 1 for i in modes]
-        view = np.transpose(state, transpose_list)
+    # otherwise, the state is mixed
+    if n == 1:
+        return np.dot(mat, np.dot(state, dagger(mat)))
 
-        # Apply matrix to each substate
-        ret = np.zeros([trunc for i in range(n*2)], dtype=def_type)
-        for i in product(*([range(trunc) for j in range((n - size)*2)])):
-            ret[i] = np.dot(matview, np.dot(view[i].reshape((dim, dim)), dagger(matview))).reshape(stshape + stshape)
+    # Transpose the state into the following form:
+    # |psi><psi||mode[0]>|mode[1]>...|mode[n]><mode[0]|<mode[1]|...<mode[n]|
+    transpose_list = [i for i in range(n*2) if not i//2 in modes]
+    transpose_list = transpose_list + [2*i for i in modes] + [2*i + 1 for i in modes]
+    view = np.transpose(state, transpose_list)
 
-        # "untranspose" the return matrix ret
-        untranspose_list = [0] * len(transpose_list)
-        for i in range(len(transpose_list)): # pylint: disable=consider-using-enumerate
-            untranspose_list[transpose_list[i]] = i
+    # Apply matrix to each substate
+    ret = np.zeros([trunc for i in range(n*2)], dtype=def_type)
+    for i in product(*([range(trunc) for j in range((n - size)*2)])):
+        ret[i] = np.dot(matview, np.dot(view[i].reshape((dim, dim)), dagger(matview))).reshape(stshape + stshape)
 
-        return np.transpose(ret, untranspose_list)
+    # "untranspose" the return matrix ret
+    untranspose_list = [0] * len(transpose_list)
+    for i in range(len(transpose_list)): # pylint: disable=consider-using-enumerate
+        untranspose_list[transpose_list[i]] = i
+
+    return np.transpose(ret, untranspose_list)
 
 
 def apply_gate_einsum(mat, state, pure, modes, n, trunc):
@@ -300,22 +301,22 @@ def apply_gate_einsum(mat, state, pure, modes, n, trunc):
 
         einstring = ''.join(left_str + [','] + right_str + ['->'] + out_str)
         return np.einsum(einstring, mat, state)
-    else:
 
-        if n == 1:
-            return np.dot(mat, np.dot(state, dagger(mat)))
+    # otherwise, the state is mixed
+    if n == 1:
+        return np.dot(mat, np.dot(state, dagger(mat)))
 
-        in_str = indices[:n*2]
+    in_str = indices[:n*2]
 
-        j = genOfRange(n*2)
-        out_str = ''.join([indices[n*2 + next(j)] if i//2 in modes else indices[i] for i in range(n*2)])
+    j = genOfRange(n*2)
+    out_str = ''.join([indices[n*2 + next(j)] if i//2 in modes else indices[i] for i in range(n*2)])
 
-        j = genOfRange(size*2)
-        left_str = ''.join([out_str[modes[i//2]*2] if (i%2) == 0 else in_str[modes[i//2]*2] for i in range(size*2)])
-        right_str = ''.join([out_str[modes[i//2]*2 + 1] if (i%2) == 0 else in_str[modes[i//2]*2 + 1] for i in range(size*2)])
+    j = genOfRange(size*2)
+    left_str = ''.join([out_str[modes[i//2]*2] if (i%2) == 0 else in_str[modes[i//2]*2] for i in range(size*2)])
+    right_str = ''.join([out_str[modes[i//2]*2 + 1] if (i%2) == 0 else in_str[modes[i//2]*2 + 1] for i in range(size*2)])
 
-        einstring = ''.join([left_str, ',', in_str, ',', right_str, '->', out_str])
-        return np.einsum(einstring, mat, state, mat.conj())
+    einstring = ''.join([left_str, ',', in_str, ',', right_str, '->', out_str])
+    return np.einsum(einstring, mat, state, mat.conj())
 
 
 # ============================================
