@@ -448,6 +448,7 @@ def beamsplitter(t, r, phi, trunc):
     theta = np.arccos(t)
     BS_tw, _, _ = BSgate(theta, phi, cutoff=trunc)
 
+    # TODO: Transpose needed because of different conventions in SF and The Walrus. Remove when The Walrus is updated.
     return BS_tw.transpose((0,2,1,3))
 
 
