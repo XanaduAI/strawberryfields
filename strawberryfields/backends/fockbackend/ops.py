@@ -27,7 +27,7 @@ from numpy.polynomial.hermite import hermval as H
 from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
-from thewalrus.fock_gradients import Dgate, Sgate, BSgate
+from thewalrus.fock_gradients import Dgate, Sgate, S2gate, BSgate
 
 
 def_type = np.complex128
@@ -372,6 +372,22 @@ def squeezing(r, theta, trunc):
     """
 
     ret, _, _ = Sgate(r, theta, cutoff=trunc)
+
+    return ret
+
+
+@functools.lru_cache()
+def two_mode_squeezing(r, theta, trunc):
+    r"""The two-mode squeezing operator :math:`S_2(re^{i\theta})`.
+
+    Args:
+        r (float): two-mode squeezing magnitude
+        theta (float): two-mode squeezing phase
+        trunc (int): Fock ladder cutoff
+    """
+    ret, _, _ = S2gate(r, theta, cutoff=trunc)
+
+    ret = np.transpose(ret, [0, 2, 1, 3])
 
     return ret
 

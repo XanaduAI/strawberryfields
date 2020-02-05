@@ -8,6 +8,9 @@
   [#270](https://github.com/XanaduAI/strawberryfields/pull/270)
 
 ### Improvements
+* Added two-mode squeezed operation support as a primitive, rather than simply
+  through decomposition, using The Walrus for fast computation.
+  [#289](https://github.com/XanaduAI/strawberryfields/pull/289)
 
 * Added The Walrus implementations for the displacement, squeezing and beamsplitter 
   operations to improve speed.
