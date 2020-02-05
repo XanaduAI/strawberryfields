@@ -339,7 +339,9 @@ def a(trunc):
 def displacement(alpha, trunc):
     r"""The displacement operator :math:`D(\alpha)`.
 
-    Uses the Dgate operation in thewalrus to calculate the displacement.
+    Uses the `Dgate operation from The Walrus`_ to calculate the displacement.
+
+    .. _`Dgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.Dgate.html
 
     Args:
             alpha (complex): the displacement
@@ -358,7 +360,9 @@ def displacement(alpha, trunc):
 def squeezing(r, theta, trunc):
     r"""The squeezing operator :math:`S(re^{i\theta})`.
 
-    Uses the Sgate operation in thewalrus to calculate the squeezing.
+    Uses the `Sgate operation from The Walrus`_ to calculate the squeezing.
+
+    .. _`Sgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.Sgate.html
 
     Args:
             r (float): the magnitude of the squeezing in the
@@ -417,8 +421,11 @@ def phase(theta, trunc):
 
 @functools.lru_cache()
 def beamsplitter(t, r, phi, trunc):
-    r"""
-    The beamsplitter :math:`B(cos^{-1} t, phi)`.
+    r""" The beamsplitter :math:`B(cos^{-1} t, phi)`.
+
+    Uses the `BSgate operation from The Walrus`_ to calculate the beamsplitter.
+
+    .. _`BSgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.BSgate.html
     """
     # pylint: disable=bad-whitespace
 
