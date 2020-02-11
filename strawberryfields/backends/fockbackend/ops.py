@@ -27,6 +27,8 @@ from numpy.polynomial.hermite import hermval as H
 from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
+from numba import jit
+
 from thewalrus.fock_gradients import Dgate, Sgate, S2gate, BSgate
 
 
@@ -316,6 +318,109 @@ def apply_gate_einsum(mat, state, pure, modes, n, trunc):
 
     einstring = ''.join([left_str, ',', in_str, ',', right_str, '->', out_str])
     return np.einsum(einstring, mat, state, mat.conj())
+
+
+def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
+    """Applies a two-mode gate to a state
+
+    Applies the two-mode gate to the state using custom tensor contractions and
+    the numba compiler for faster application.
+
+    Args:
+        mat (ndarray): The BS operator to be applied to the state
+        state (ndarray): The state that the BS is applied to
+        pure (bool): If the state is pure or mixed
+        modes (list[int]): A list of modes to which the BS is applied
+        n (int): The total number of modes
+        trunc (int): The Hilbert space truncation/cutoff
+        gate (str): the gate which should be called (BSgate, S2gate)
+
+    Returns:
+        ndarray: State where the two-mode operation has been applied
+    """
+    if pure:
+        t1 = modes[0]
+        t2 = modes[1]
+
+        # put the ket-values in front to be operated on in the apply function
+        switch_list_1 = np.arange(n)
+        switch_list_2 = np.arange(n)
+        switch_list_1[[0, t1]] = switch_list_1[[t1, 0]]
+        switch_list_2[[1, t2]] = switch_list_2[[t2, 1]]
+
+        state = state.transpose(switch_list_1)
+        state = state.transpose(switch_list_2)
+
+        if gate == "BSgate":
+            state = _apply_BS(mat, state, trunc)
+        elif gate == "S2gate":
+            state = _apply_S2(mat, state, trunc)
+        else:
+            raise NotImplementedError
+
+        state = state.transpose(switch_list_2)
+        ret = state.transpose(switch_list_1)
+    else:
+        t1 = 2 * modes[0]
+        t2 = 2 * modes[1]
+
+        # put the ket-values in front to be operated on in the apply function
+        switch_list_1 = np.arange(2 * n)
+        switch_list_2 = np.arange(2 * n)
+        switch_list_1[[0, 1, t1, t1+1]] = switch_list_1[[t1, t1+1, 0, 1]]
+        switch_list_2[[0, 1, t2, t2+1]] = switch_list_2[[t2, t2+1, 0, 1]]
+
+
+        # put bra-values to the left, and ket-values to the right (ignoring values not operated on)
+        transpose_list = np.arange(2 * n)
+        transpose_list[[t1+1, t2]] = transpose_list[[t2, t1+1]]
+
+        state = state.transpose(transpose_list)
+        state = state.transpose(switch_list_1)
+
+        if gate == "BSgate":
+            state = _apply_BS(mat, state, trunc)
+            state = state.transpose(switch_list_1)
+
+            state = state.transpose(switch_list_2)
+            state = _apply_BS(mat.conj(), state, trunc)
+
+        elif gate == "S2gate":
+            state = _apply_S2(mat, state, trunc)
+            state = state.transpose(switch_list_1)
+
+            state = state.transpose(switch_list_2)
+            state = _apply_S2(mat.conj(), state, trunc)
+
+        else:
+            raise NotImplementedError
+
+        state = state.transpose(switch_list_2)
+        ret = state.transpose(transpose_list)
+
+    return ret
+
+
+@jit(nopython=True)
+def _apply_BS(mat, state, trunc):
+    """Applies the BS gate to the first bra in state"""
+    ret = np.zeros_like(state, dtype=np.complex128)
+    for i in range(trunc):
+        for j in range(trunc):
+            for k in range(max(1+i+j-trunc, 0), min(i+j, trunc-1) + 1):
+                ret[i, j] += mat[i, k, j, i+j-k] * state[k, i+j-k]
+    return ret
+
+
+@jit(nopython=True)
+def _apply_S2(mat, state, trunc):
+    """Applies the S2 gate to the first bra in state"""
+    ret = np.zeros_like(state, dtype=np.complex128)
+    for i in range(trunc):
+        for j in range(trunc):
+            for k in range(max(i-j, 0), trunc + min(i-j, 0)):
+                ret[i, k] += mat[i, j, k, k + j-i] * state[j, k + j-i]
+    return ret
 
 
 # ============================================
