@@ -21,6 +21,8 @@ where \hat{a}, \hat{b} are the photon creation operators of the two modes
 Equivalently, we have t:=\cos(\theta) (t assumed real) and r:=\exp{i\phi}\sin(\theta)
 """
 
+import itertools as it
+
 import pytest
 
 import numpy as np
@@ -102,7 +104,7 @@ class TestFockRepresentation:
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS[1:])
     @pytest.mark.parametrize("r_phi", PHASE_R)
     def test_coherent_vacuum_interfered_fock_elements(
-        self, setup_backend, mag_alpha, t, r_phi, cutoff, pure, tol
+            self, setup_backend, mag_alpha, t, r_phi, cutoff, pure, tol
     ):
         r"""Tests if a range of beamsplitter output states (formed from a coherent state interfering with vacuum)
             have the correct Fock basis elements.
@@ -151,3 +153,55 @@ class TestFockRepresentation:
             )
 
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0)
+
+
+@pytest.mark.backends("fock")
+class TestModeSubsets:
+    """Tests on mode subsets using the Fock basis representation."""
+
+    @pytest.mark.parametrize("t", T_VALUES)
+    @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS[1:])
+    @pytest.mark.parametrize("r_phi", PHASE_R)
+    def test_beamsplitter_on_mode_subset(
+            self, setup_backend, mag_alpha, t, r_phi, cutoff, pure, tol
+    ):
+        """Tests that apply the BS on different mode subsets."""
+
+        phase_alpha = np.pi / 5
+        alpha = mag_alpha * np.exp(1j * phase_alpha)
+        r = np.exp(1j * r_phi) * np.sqrt(1.0 - np.abs(t) ** 2)
+
+        n_modes = 4
+        for modes in it.combinations(range(n_modes), 2):
+            backend = setup_backend(n_modes)
+
+            backend.displacement(alpha, modes[0])
+            backend.beamsplitter(t, r, *modes)
+            state = backend.state()
+
+            alpha_outA = t * alpha
+            alpha_outB = r * alpha
+
+            n = np.arange(cutoff)
+            ref_stateA = (
+                np.exp(-0.5 * np.abs(alpha_outA) ** 2)
+                * alpha_outA ** n
+                / np.sqrt(factorial(n))
+            )
+            ref_stateB = (
+                np.exp(-0.5 * np.abs(alpha_outB) ** 2)
+                * alpha_outB ** n
+                / np.sqrt(factorial(n))
+            )
+
+            numer_state = state.reduced_dm(list(modes))
+
+            ref_state = np.einsum(
+                "i,j,k,l->ijkl",
+                ref_stateA,
+                np.conj(ref_stateA),
+                ref_stateB,
+                np.conj(ref_stateB),
+            )
+
+            assert np.allclose(numer_state, ref_state, atol=tol, rtol=0)
