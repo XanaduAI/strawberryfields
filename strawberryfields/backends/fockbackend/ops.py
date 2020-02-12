@@ -223,6 +223,7 @@ def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
     einsum doesn't actually use BLAS but rather a c implementation. In theory
     if reshaping is efficient this should be faster.
     """
+    # pylint: disable=too-many-branches
 
     size = len(modes)
     dim = trunc**size
