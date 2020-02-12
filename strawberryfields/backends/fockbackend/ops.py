@@ -224,6 +224,12 @@ def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
     if reshaping is efficient this should be faster.
     """
 
+    # checks if mat is diagonal
+    if mat.ndim == 2:
+        diag = np.all(mat == np.diag(np.diagonal(mat)))
+    else:
+        diag = False
+
     size = len(modes)
     dim = trunc**size
     stshape = [trunc for i in range(size)]
@@ -235,6 +241,9 @@ def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
 
     if pure:
         if n == 1:
+            if diag:
+                mat_diag = mat.diagonal()
+                return np.multiply(mat_diag, state)
             return np.dot(mat, state)
 
         # Transpose the state into the following form:
@@ -245,7 +254,10 @@ def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
         # Apply matrix to each substate
         ret = np.zeros([trunc for i in range(n)], dtype=def_type)
         for i in product(*([range(trunc) for j in range(n - size)])):
-            ret[i] = np.dot(matview, view[i].ravel()).reshape(stshape)
+            if diag:
+                ret[i] = np.multiply(matview.diagonal(), view[i].ravel()).reshape(stshape)
+            else:
+                ret[i] = np.dot(matview, view[i].ravel()).reshape(stshape)
 
         # "untranspose" the return matrix ret
         untranspose_list = [0] * len(transpose_list)
@@ -256,6 +268,9 @@ def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
 
     # otherwise, the state is mixed
     if n == 1:
+        if diag:
+            mat_diag = mat.diagonal().reshape(-1, 1)
+            return np.multiply(mat_diag, np.multiply(state, dagger(mat_diag)))
         return np.dot(mat, np.dot(state, dagger(mat)))
 
     # Transpose the state into the following form:
@@ -267,7 +282,11 @@ def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
     # Apply matrix to each substate
     ret = np.zeros([trunc for i in range(n*2)], dtype=def_type)
     for i in product(*([range(trunc) for j in range((n - size)*2)])):
-        ret[i] = np.dot(matview, np.dot(view[i].reshape((dim, dim)), dagger(matview))).reshape(stshape + stshape)
+        if diag:
+            mat_diag = mat.diagonal().reshape(-1, 1)
+            ret[i] = np.multiply(mat_diag, np.multiply(view[i].reshape((dim, dim)), dagger(mat_diag))).reshape(stshape + stshape)
+        else:
+            ret[i] = np.dot(matview, np.dot(view[i].reshape((dim, dim)), dagger(matview))).reshape(stshape + stshape)
 
     # "untranspose" the return matrix ret
     untranspose_list = [0] * len(transpose_list)
