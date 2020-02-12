@@ -253,7 +253,8 @@ def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
         ret = np.zeros([trunc for i in range(n)], dtype=def_type)
         for i in product(*([range(trunc) for j in range(n - size)])):
             if diag:
-                ret[i] = np.multiply(matview.diagonal(), view[i].ravel()).reshape(stshape)
+                mat_diag = matview.diagonal()
+                ret[i] = np.multiply(mat_diag, view[i].ravel()).reshape(stshape)
             else:
                 ret[i] = np.dot(matview, view[i].ravel()).reshape(stshape)
 
@@ -281,7 +282,7 @@ def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
     ret = np.zeros([trunc for i in range(n*2)], dtype=def_type)
     for i in product(*([range(trunc) for j in range((n - size)*2)])):
         if diag:
-            mat_diag = mat.diagonal().reshape(-1, 1)
+            mat_diag = matview.diagonal().reshape(-1, 1)
             ret[i] = np.multiply(mat_diag, np.multiply(view[i].reshape((dim, dim)), dagger(mat_diag))).reshape(stshape + stshape)
         else:
             ret[i] = np.dot(matview, np.dot(view[i].reshape((dim, dim)), dagger(matview))).reshape(stshape + stshape)
