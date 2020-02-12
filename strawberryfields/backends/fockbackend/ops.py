@@ -224,12 +224,6 @@ def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
     if reshaping is efficient this should be faster.
     """
 
-    # checks if mat is diagonal
-    if mat.ndim == 2:
-        diag = np.all(mat == np.diag(np.diagonal(mat)))
-    else:
-        diag = False
-
     size = len(modes)
     dim = trunc**size
     stshape = [trunc for i in range(size)]
@@ -238,6 +232,9 @@ def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
     # |m1><m1| |m2><m2| ... |mn><mn| -> |m1>|m2>...|mn><m1|<m2|...<mn|
     transpose_list = [2*i for i in range(size)] + [2*i + 1 for i in range(size)]
     matview = np.transpose(mat, transpose_list).reshape((dim, dim))
+
+    # checks if matview is diagonal and, if so, use faster contractions
+    diag = np.all(matview == np.diag(np.diagonal(matview)))
 
     if pure:
         if n == 1:
