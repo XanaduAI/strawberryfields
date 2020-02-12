@@ -15,6 +15,10 @@
 * Added The Walrus implementations for the displacement, squeezing and beamsplitter 
   operations to improve speed.
   [#287](https://github.com/XanaduAI/strawberryfields/pull/287)
+  
+* Added custom tensor contractions for the beamsplitter and the two-mode squeeze
+  gate as well as faster application of diagonal gate matrices.
+  [#292](https://github.com/XanaduAI/strawberryfields/pull/292)
 
 ### Bug fixes
 
