@@ -355,7 +355,7 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
             are used. Options are ``"BSgate"`` and ``"S2gate"``.
 
     Returns:
-        ndarray: State where the two-mode operation has been applied
+        array[complex]: state after application of the two-mode operation
     """
     if pure:
         t1 = modes[0]
