@@ -342,7 +342,8 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
     """Applies a two-mode gate to a state.
 
     Applies the specified two-mode gate to the state using custom tensor contractions and
-    the Numba compiler for faster application.
+    the Numba compiler for faster application. Currently, only the beamsplitter and the
+    two-mode squeeze gate are supported.
 
     Args:
         mat (array[complex]): The numeric operator to be applied to the state, of shape `[trunc]*(2*n)`
@@ -361,7 +362,9 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
         t1 = modes[0]
         t2 = modes[1]
 
-        # put the ket-values in front to be operated on in the apply function
+        # moves the modes on which the gate should be applied to the
+        # front indices of the state, for mode 1 and 2 respectively
+        # e.g. from [i1, i2, i3] --> [i2, i3, i1] if the gate is applied to modes 2 and 3
         switch_list_1 = np.arange(n)
         switch_list_2 = np.arange(n)
         switch_list_1[[0, t1]] = switch_list_1[[t1, 0]]
@@ -376,7 +379,7 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
             state = _apply_S2(mat, state, trunc)
         else:
             raise NotImplementedError("Currently, selection rules are only implemented for the BSgate "
-                                      "and the S2gate. The {} gate is not supported".format(gate)")
+                                      "and the S2gate. The {} gate is not supported".format(gate))
 
         state = state.transpose(switch_list_2)
         ret = state.transpose(switch_list_1)
@@ -384,14 +387,18 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
         t1 = 2 * modes[0]
         t2 = 2 * modes[1]
 
-        # put the ket-values in front to be operated on in the apply function
+        # moves the modes on which the gate should be applied to the
+        # front indices of the state, for mode 1 and 2 respectively
+        # e.g. from [i1, j1, i2, j2, i3, j3] --> [i2, j2, i3, j3, i1, j1] 
+        # if the gate is applied to modes 2 and 3
         switch_list_1 = np.arange(2 * n)
         switch_list_2 = np.arange(2 * n)
         switch_list_1[[0, 1, t1, t1+1]] = switch_list_1[[t1, t1+1, 0, 1]]
         switch_list_2[[0, 1, t2, t2+1]] = switch_list_2[[t2, t2+1, 0, 1]]
 
-
-        # put bra-values to the left, and ket-values to the right (ignoring values not operated on)
+        # puts the modes on which the gate should be applied together
+        # e.g. from [i2, j2, i3, j3, i1, j1] --> [i2, i3, j2, j3, i1, j1]
+        # if the gate is applied to modes 2 and 3 (which are already switched to the first two modes)
         transpose_list = np.arange(2 * n)
         transpose_list[[t1+1, t2]] = transpose_list[[t2, t1+1]]
 
@@ -423,7 +430,26 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
 
 @jit(nopython=True)
 def _apply_BS(mat, state, trunc):
-    """Applies the BS gate to the first bra in state"""
+    r"""Applies the BS gate to the first bra in state.
+
+    The beamsplitter matrix elements :math:`B_{ij}^{kl}` satisfy the selection
+    rules
+
+    .. math::
+        B_{ij}^{kl} \propto \delta_{i+j}^{k+l}
+
+    This implies that one can contract pure states (without loss of generality
+    we assume only two modes) using one less loop as follows:
+
+    .. math::
+        c'_{i, j} = \sum\limits_{k = \text{max}(1+i+j-n, 0)}
+                   ^{\text{min}(i+j, n-1) + 1}
+        B_{ik}^{j, i+j-k} c_{k, i+j-k}
+
+    where :math:`c_{kl}` is the tensor representing the two mode state and
+    :math:`n` is the cutoff in Fock space. Similarly for a mixed state it is
+    possible to do the update of the state using two less summations.
+    """
     ret = np.zeros_like(state, dtype=np.complex128)
     for i in range(trunc):
         for j in range(trunc):
@@ -434,7 +460,25 @@ def _apply_BS(mat, state, trunc):
 
 @jit(nopython=True)
 def _apply_S2(mat, state, trunc):
-    """Applies the S2 gate to the first bra in state"""
+    r"""Applies the S2 gate to the first bra in state.
+
+    The two-mode squeeze matrix elements :math:`T_{ij}^{kl}` satisfy the selection
+    rules
+
+    .. math::
+        T_{ij}^{kl} \propto \delta_{i-j}^{k-l}
+
+    This implies that one can contract pure states (without loss of generality
+    we assume only two modes) using one less loop as follows:
+
+    .. math::
+        c'_{i, k} = \sum\limits_{k = \text{max}(i-j, 0)}^{\text{min}(i-j, 0) + n}
+        T_{ij}^{k, k+j-i} c_{j, k+j-i}
+
+    where :math:`c_{jl}` is the tensor representing the two mode state and
+    :math:`n` is the cutoff in Fock space. Similarly for a mixed state it is
+    possible to do the update of the state using two less summations.
+    """
     ret = np.zeros_like(state, dtype=np.complex128)
     for i in range(trunc):
         for j in range(trunc):
