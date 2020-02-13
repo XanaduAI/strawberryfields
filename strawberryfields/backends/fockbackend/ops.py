@@ -351,7 +351,8 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
         modes (list[int]): the list of modes to which the operator is applied on
         n (int): The total number of modes
         trunc (int): The Hilbert space truncation/cutoff
-        gate (str): the gate which should be called (BSgate, S2gate)
+        gate (str): The gate that is being applied. This argument determines the selection rules that
+            are used. Options are ``"BSgate"`` and ``"S2gate"``.
 
     Returns:
         ndarray: State where the two-mode operation has been applied
