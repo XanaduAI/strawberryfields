@@ -347,7 +347,7 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
     Args:
         mat (array[complex]): The numeric operator to be applied to the state, of shape `[trunc]*(2*n)`
         state (array[complex]): The state that the operator is applied to
-        pure (bool): If the state is pure or mixed
+        pure (bool): whether the state is pure or mixed
         modes (list[int]): A list of modes to which the BS is applied
         n (int): The total number of modes
         trunc (int): The Hilbert space truncation/cutoff
