@@ -358,6 +358,9 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
     Returns:
         array[complex]: state after application of the two-mode operation
     """
+    # the transpositions below are necessary for using the jitted apply-gate
+    # functions by moving and grouping the modes on which the gate is applied
+    # to the front indices, since the other modes can then simply be ignored
     if pure:
         t1 = modes[0]
         t2 = modes[1]
