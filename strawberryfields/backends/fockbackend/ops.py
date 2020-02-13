@@ -345,7 +345,7 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
     the Numba compiler for faster application.
 
     Args:
-        mat (ndarray): The BS operator to be applied to the state
+        mat (array[complex]): The numeric operator to be applied to the state, of shape `[trunc]*(2*n)`
         state (ndarray): The state that the BS is applied to
         pure (bool): If the state is pure or mixed
         modes (list[int]): A list of modes to which the BS is applied
