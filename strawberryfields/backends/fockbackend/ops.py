@@ -420,7 +420,8 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
             state = _apply_S2(mat.conj(), state, trunc)
 
         else:
-            raise NotImplementedError
+            raise NotImplementedError("Currently, selection rules are only implemented for the BSgate "
+                                      "and the S2gate. The {} gate is not supported".format(gate))
 
         state = state.transpose(switch_list_2)
         ret = state.transpose(transpose_list)
