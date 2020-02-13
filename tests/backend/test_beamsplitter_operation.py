@@ -165,7 +165,7 @@ class TestModeSubsets:
     def test_beamsplitter_on_mode_subset(
             self, setup_backend, mag_alpha, t, r_phi, cutoff, pure, tol
     ):
-        """Tests that apply the BS on different mode subsets."""
+        """Tests applying the beamsplitter on different mode subsets."""
 
         phase_alpha = np.pi / 5
         alpha = mag_alpha * np.exp(1j * phase_alpha)
