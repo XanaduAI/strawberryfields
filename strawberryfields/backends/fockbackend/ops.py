@@ -342,7 +342,7 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
     """Applies a two-mode gate to a state.
 
     Applies the specified two-mode gate to the state using custom tensor contractions and
-    the numba compiler for faster application.
+    the Numba compiler for faster application.
 
     Args:
         mat (ndarray): The BS operator to be applied to the state
