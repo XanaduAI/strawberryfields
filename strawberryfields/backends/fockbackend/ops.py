@@ -389,7 +389,7 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
 
         # moves the modes on which the gate should be applied to the
         # front indices of the state, for mode 1 and 2 respectively
-        # e.g. from [i1, j1, i2, j2, i3, j3] --> [i2, j2, i3, j3, i1, j1] 
+        # e.g. from [i1, j1, i2, j2, i3, j3] --> [i2, j2, i3, j3, i1, j1]
         # if the gate is applied to modes 2 and 3
         switch_list_1 = np.arange(2 * n)
         switch_list_2 = np.arange(2 * n)
