@@ -428,8 +428,9 @@ def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
     return ret
 
 
+# ignored in covtest (doesn't work well with the jit decorator)
 @jit(nopython=True)
-def _apply_BS(mat, state, trunc):
+def _apply_BS(mat, state, trunc):  # pragma: no cover
     r"""Applies the BS gate to the first bra in state.
 
     The beamsplitter matrix elements :math:`B_{ij}^{kl}` satisfy the selection
@@ -458,8 +459,9 @@ def _apply_BS(mat, state, trunc):
     return ret
 
 
+# ignored in covtest (doesn't work well with the jit decorator)
 @jit(nopython=True)
-def _apply_S2(mat, state, trunc):
+def _apply_S2(mat, state, trunc):  # pragma: no cover
     r"""Applies the S2 gate to the first bra in state.
 
     The two-mode squeeze matrix elements :math:`T_{ij}^{kl}` satisfy the selection
