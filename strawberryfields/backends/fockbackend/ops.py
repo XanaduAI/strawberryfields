@@ -341,7 +341,7 @@ def apply_gate_einsum(mat, state, pure, modes, n, trunc):
 def apply_twomode_gate(mat, state, pure, modes, n, trunc, gate="BSgate"):
     """Applies a two-mode gate to a state.
 
-    Applies the two-mode gate to the state using custom tensor contractions and
+    Applies the specified two-mode gate to the state using custom tensor contractions and
     the numba compiler for faster application.
 
     Args:
