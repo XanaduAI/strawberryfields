@@ -26,6 +26,7 @@ import numpy as np
 
 PHASE = np.linspace(0, 2 * np.pi, 3, endpoint=False)
 MAG = np.linspace(0.0, 0.2, 5, endpoint=False)
+MODES = list(it.combinations(range(4), 2))
 
 
 def get_amplitude(k, r, p):
@@ -78,24 +79,24 @@ class TestTwomodeSqueezing:
 
     @pytest.mark.parametrize("r", MAG)
     @pytest.mark.parametrize("p", PHASE)
-    def test_squeezing_on_mode_subset(self, setup_backend, r, p, cutoff, pure, tol):
+    @pytest.mark.parametrize("modes", MODES)
+    def test_squeezing_on_mode_subset(self, setup_backend, r, p, modes, cutoff, pure, tol):
         r""" Test two-mode squeezing on vacuum-state for both pure states and
         mixed states on different mode subsets with the amplitude given by
 	        :math:`\delta_{kl} \frac{e^{in\phi} \tanh^n{r}}{\cosh{r}}`
         """
         z = r * np.exp(1j * p)
-        n_modes = 4
-        for modes in it.combinations(range(n_modes), 2):
-            backend = setup_backend(n_modes)
-            backend.two_mode_squeeze(z, *modes)
 
-            state = backend.state()
+        backend = setup_backend(4)
+        backend.two_mode_squeeze(z, *modes)
 
-            state_data = state.reduced_dm(list(modes))
+        state = backend.state()
 
-            for k in it.product(range(cutoff), repeat=2):
-                for l in it.product(range(cutoff), repeat=2):
-                    t = (k[0], l[0], k[1], l[1])
-                    tmsv2 = get_amplitude(k, r, p) * np.conj(get_amplitude(l, r, p))
+        state_data = state.reduced_dm(list(modes))
 
-                    assert np.allclose(state_data[t], tmsv2, atol=tol, rtol=0)
+        for k in it.product(range(cutoff), repeat=2):
+            for l in it.product(range(cutoff), repeat=2):
+                t = (k[0], l[0], k[1], l[1])
+                tmsv2 = get_amplitude(k, r, p) * np.conj(get_amplitude(l, r, p))
+
+                assert np.allclose(state_data[t], tmsv2, atol=tol, rtol=0)

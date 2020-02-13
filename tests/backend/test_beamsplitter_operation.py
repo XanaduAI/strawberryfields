@@ -33,6 +33,7 @@ T_VALUES = np.linspace(-0.2, 1.0, 3)
 PHASE_R = np.linspace(0, 2 * np.pi, 3, endpoint=False)
 ALPHA = 0.1
 MAG_ALPHAS = np.linspace(0.0, ALPHA, 3)
+MODES = list(it.combinations(range(4), 2))
 
 
 class TestRepresentationIndependent:
@@ -162,8 +163,9 @@ class TestModeSubsets:
     @pytest.mark.parametrize("t", T_VALUES)
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS[1:])
     @pytest.mark.parametrize("r_phi", PHASE_R)
+    @pytest.mark.parametrize("modes", MODES)
     def test_beamsplitter_on_mode_subset(
-            self, setup_backend, mag_alpha, t, r_phi, cutoff, pure, tol
+            self, setup_backend, mag_alpha, t, r_phi, modes, cutoff, tol
     ):
         """Tests applying the beamsplitter on different mode subsets."""
 
@@ -171,37 +173,35 @@ class TestModeSubsets:
         alpha = mag_alpha * np.exp(1j * phase_alpha)
         r = np.exp(1j * r_phi) * np.sqrt(1.0 - np.abs(t) ** 2)
 
-        n_modes = 4
-        for modes in it.combinations(range(n_modes), 2):
-            backend = setup_backend(n_modes)
+        backend = setup_backend(4)
 
-            backend.displacement(alpha, modes[0])
-            backend.beamsplitter(t, r, *modes)
-            state = backend.state()
+        backend.displacement(alpha, modes[0])
+        backend.beamsplitter(t, r, *modes)
+        state = backend.state()
 
-            alpha_outA = t * alpha
-            alpha_outB = r * alpha
+        alpha_outA = t * alpha
+        alpha_outB = r * alpha
 
-            n = np.arange(cutoff)
-            ref_stateA = (
-                np.exp(-0.5 * np.abs(alpha_outA) ** 2)
-                * alpha_outA ** n
-                / np.sqrt(factorial(n))
-            )
-            ref_stateB = (
-                np.exp(-0.5 * np.abs(alpha_outB) ** 2)
-                * alpha_outB ** n
-                / np.sqrt(factorial(n))
-            )
+        n = np.arange(cutoff)
+        ref_stateA = (
+            np.exp(-0.5 * np.abs(alpha_outA) ** 2)
+            * alpha_outA ** n
+            / np.sqrt(factorial(n))
+        )
+        ref_stateB = (
+            np.exp(-0.5 * np.abs(alpha_outB) ** 2)
+            * alpha_outB ** n
+            / np.sqrt(factorial(n))
+        )
 
-            numer_state = state.reduced_dm(list(modes))
+        numer_state = state.reduced_dm(list(modes))
 
-            ref_state = np.einsum(
-                "i,j,k,l->ijkl",
-                ref_stateA,
-                np.conj(ref_stateA),
-                ref_stateB,
-                np.conj(ref_stateB),
-            )
+        ref_state = np.einsum(
+            "i,j,k,l->ijkl",
+            ref_stateA,
+            np.conj(ref_stateA),
+            ref_stateB,
+            np.conj(ref_stateB),
+        )
 
-            assert np.allclose(numer_state, ref_state, atol=tol, rtol=0)
+        assert np.allclose(numer_state, ref_state, atol=tol, rtol=0)
