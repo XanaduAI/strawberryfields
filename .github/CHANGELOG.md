@@ -19,6 +19,10 @@
 * Added custom tensor contractions for the beamsplitter and the two-mode squeeze
   gate as well as faster application of diagonal gate matrices.
   [#292](https://github.com/XanaduAI/strawberryfields/pull/292)
+  
+* Moved apply-gate functions to `Circuit` class, and removed `apply_gate_einsum` and
+  `Circuits._apply_gate`, since they were no longer used.
+  [#293](https://github.com/XanaduAI/strawberryfields/pull/293/)
 
 ### Bug fixes
 
