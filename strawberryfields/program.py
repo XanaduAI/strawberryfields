@@ -83,7 +83,7 @@ class Program:
         ops.GateName(arg1, arg2, ...) | (q[i], q[j], ...)
 
     where ``ops.GateName`` is a valid quantum operation, and ``q`` is a list
-    of the programs quantum modes.
+    of the program's quantum modes.
     All operations are appended to the program in the order they are
     listed within the context.
 
