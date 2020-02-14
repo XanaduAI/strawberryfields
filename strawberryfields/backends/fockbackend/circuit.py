@@ -124,7 +124,7 @@ class Circuit():
         if reshaping is efficient this should be faster.
 
         Args:
-            mat (array[complex]): The numeric operator to be applied to the state, of shape `[trunc]*(2*n)`
+            mat (array[complex]): The numeric operator to be applied to the state, of shape ``[trunc]*(2*n)``
             modes (list[int]): The list of modes to which the operator is applied on
 
         Keyword args:
