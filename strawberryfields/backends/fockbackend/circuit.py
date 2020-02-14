@@ -150,7 +150,7 @@ class Circuit():
         transpose_list = [2*i for i in range(size)] + [2*i + 1 for i in range(size)]
         matview = np.transpose(mat, transpose_list).reshape((dim, dim))
 
-        # checks if matview is diagonal and, if so, use faster contractions
+        # checks if matview is diagonal (for example, Kerr/rotation gates) and, if so, use faster contractions
         diag = np.all(matview == np.diag(np.diagonal(matview)))
 
         if pure:
