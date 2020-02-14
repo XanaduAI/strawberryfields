@@ -23,6 +23,7 @@ from itertools import product
 import numpy as np
 from numpy import sqrt, pi
 from scipy.special import factorial as bang
+from numba.typed import List
 
 from . import ops
 
@@ -314,7 +315,14 @@ class Circuit():
         """
         Applies a beamsplitter.
         """
-        self._apply_gate(ops.beamsplitter(t, r, phi, self._trunc), [mode1, mode2])
+        mat = ops.beamsplitter(t, r, phi, self._trunc)
+
+        modes = List()
+        modes.append(mode1)
+        modes.append(mode2)
+
+        args = [mat, self._state, self._pure, modes, self._num_modes, self._trunc]
+        self._state = ops.apply_twomode_gate(*args, gate="BSgate")
 
     def squeeze(self, r, theta, mode):
         """
@@ -326,7 +334,15 @@ class Circuit():
         """
         Applies a two-mode squeezing gate.
         """
-        self._apply_gate(ops.two_mode_squeezing(r, theta, self._trunc), [mode1, mode2])
+        # self._apply_gate(ops.two_mode_squeezing(r, theta, self._trunc), [mode1, mode2])
+        mat = ops.two_mode_squeezing(r, theta, self._trunc)
+
+        modes = List()
+        modes.append(mode1)
+        modes.append(mode2)
+
+        args = [mat, self._state, self._pure, modes, self._num_modes, self._trunc]
+        self._state = ops.apply_twomode_gate(*args, gate="S2gate")
 
     def kerr_interaction(self, kappa, mode):
         """
