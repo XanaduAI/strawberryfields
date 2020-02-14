@@ -19,16 +19,20 @@ One can think of each BaseEngine instance as a separate quantum computation.
 """
 import abc
 import collections.abc
+from datetime import datetime
+import enum
+import json
+import requests
 import time
+from urllib.parse import urljoin
 
 import numpy as np
 
 from .backends import load_backend
-from .backends.base import (NotApplicableError, BaseBackend)
+from .backends.base import NotApplicableError, BaseBackend
 
-from strawberryfields.api_client import APIClient, Job, JobNotQueuedError, JobExecutionError
+from strawberryfields.configuration import Configuration
 from strawberryfields.io import to_blackbird
-from strawberryfields.configuration import DEFAULT_CONFIG
 
 
 class OneJobAtATimeError(Exception):
@@ -37,7 +41,6 @@ class OneJobAtATimeError(Exception):
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = ["Result", "BaseEngine", "LocalEngine"]
-
 
 
 class Result:
@@ -88,8 +91,9 @@ class Result:
         self._state = None
 
         # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
+        # TODO adjust the format as specified in the ADR
         if len(np.shape(samples)) > 1:
-            samples = np.stack(samples, 1)
+            samples = np.vstack(samples)
         self._samples = samples
 
     @property
@@ -126,6 +130,7 @@ class Result:
         Returns:
             BaseState: quantum state returned from program execution
         """
+        # TODO raise error if called for remote job
         return self._state
 
     def __str__(self):
@@ -351,7 +356,9 @@ class BaseEngine(abc.ABC):
         # signatures of methods in Operations to remain cleaner, since only
         # Measurements need to know about shots
 
-        prev = self.run_progs[-1] if self.run_progs else None  # previous program segment
+        prev = (
+            self.run_progs[-1] if self.run_progs else None
+        )  # previous program segment
         for p in program:
             if prev is None:
                 # initialize the backend
@@ -360,7 +367,9 @@ class BaseEngine(abc.ABC):
                 # there was a previous program segment
                 if not p.can_follow(prev):
                     raise RuntimeError(
-                        "Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name)
+                        "Register mismatch: program {}, '{}'.".format(
+                            len(self.run_progs), p.name
+                        )
                     )
 
                 # Copy the latest measured values in the RegRefs of p.
@@ -384,7 +393,8 @@ class BaseEngine(abc.ABC):
                 self._run_program(p, **kwargs)
                 shots = kwargs.get("shots", 1)
                 self.samples = [
-                    _broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)
+                    _broadcast_nones(p.reg_refs[k].val, shots)
+                    for k in sorted(p.reg_refs)
                 ]
                 self.run_progs.append(p)
 
@@ -456,7 +466,9 @@ class LocalEngine(BaseEngine):
             except NotApplicableError:
                 # command is not applicable to the current backend type
                 raise NotApplicableError(
-                    "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
+                    "The operation {} cannot be used with {}.".format(
+                        cmd.op, self.backend
+                    )
                 ) from None
             except NotImplementedError:
                 # command not directly supported by backend API
@@ -518,7 +530,9 @@ class LocalEngine(BaseEngine):
             key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys
         }
 
-        result = super()._run(program, args=args, compile_options=compile_options, **eng_run_options)
+        result = super()._run(
+            program, args=args, compile_options=compile_options, **eng_run_options
+        )
 
         modes = temp_run_options["modes"]
 
@@ -531,161 +545,427 @@ class LocalEngine(BaseEngine):
         return result
 
 
-class StarshipEngine(BaseEngine):
+class InvalidEngineTargetError(Exception):
+    """Raised when an invalid engine target is provided.
     """
-    Starship quantum program executor engine.
 
-    Executes :class:`.Program` instances on the chosen remote backend, and makes
-    the results available via :class:`.Result`.
+
+class IncompleteJobError(Exception):
+    """Raised when an invalid action is performed on an incomplete job.
+    """
+
+
+class CreateJobRequestError(Exception):
+    """Raised when a request to create a job fails.
+    """
+
+
+class GetAllJobsRequestError(Exception):
+    """Raised when a request to get all jobs fails.
+    """
+
+
+class GetJobRequestError(Exception):
+    """Raised when a request to get a job fails.
+    """
+
+
+class GetJobResultRequestError(Exception):
+    """Raised when a request to get a job result fails.
+    """
+
+
+class GetJobCircuitRequestError(Exception):
+    """Raised when a request to get a job circuit fails.
+    """
+
+
+class CancelJobRequestError(Exception):
+    """Raised when a request to cancel a job fails.
+    """
+
+
+class RefreshTerminalJobError(Exception):
+    """Raised when attempting to refresh a completed, failed, or cancelled job."""
+
+
+class CancelTerminalJobError(Exception):
+    """Raised when attempting to cancel a completed, failed, or cancelled job."""
+
+
+class StarshipEngine:
+    """A quantum program executor engine that that provides a simple interface for
+    running remote jobs in a synchronous or asynchronous manner.
+
+    **Example:**
+
+    The following example instantiates a `StarshipEngine` with default configuration, and
+    runs jobs both synchronously and asynchronously.
+
+    .. code-block:: python
+
+        engine = StarshipEngine("chip2")
+
+        # Run a job synchronously
+        job = engine.run(program, shots=1)
+        # (Engine blocks until job is complete)
+        job.status  # JobStatus.COMPLETE
+        job.result  # [[0, 1, 0, 2, 1, 0, 0, 0]]
+
+        # Run a job synchronously, but cancel it before it is completed
+        job = engine.run(program, shots=1)
+        ^C # KeyboardInterrupt cancels the job
+        job.status  # "cancelled"
+        job.result  # JobCancelledError
+
+        # Run a job asynchronously
+        job = engine.run_async(program, shots=1)
+        job.status  # "queued"
+        job.result  # RefreshTerminalJobError
+        # (After some time...)
+        job.refresh()
+        job.status  # "complete"
+        job.result  # [[0, 1, 0, 2, 1, 0, 0, 0]]
 
     Args:
-        backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
-        polling_delay_seconds (int): the number of seconds to wait between queries when polling for
-            job results
+        target (str): the target backend
+        connection (Connection): a connection to the remote job execution platform
     """
 
-    # This engine will execute jobs remotely.
-    REMOTE = True
+    POLLING_INTERVAL_SECONDS = 1
+    VALID_TARGETS = ("chip2",)
 
-    def __init__(self, backend, polling_delay_seconds=1, **kwargs):
-        super().__init__(backend)
-
-        api_client_params = {k: v for k, v in kwargs.items() if k in DEFAULT_CONFIG["api"].keys()}
-        self.client = APIClient(**api_client_params)
-        self.polling_delay_seconds = polling_delay_seconds
-        self.jobs = []
-
-    def __str__(self):
-        return self.__class__.__name__ + "({})".format(self.backend_name)
-
-    def _init_backend(self, *args):
-        """
-        TODO: This does not do anything right now.
-        """
-        # Do nothing for now...
-        pass
-
-    def reset(self):
-        """
-        Reset must be called in order to submit a new job. This clears the job queue as well as
-        any ran Programs.
-        """
-        super().reset(backend_options={})
-        self.jobs.clear()
-
-    def _get_blackbird(self, shots, program):
-        """
-        Returns a Blackbird object to be sent later to the server when creating a job.
-        Assumes the current backend as the target.
-
-        Args:
-            shots (int): the number of shots
-            program (Program): program to be converted to Blackbird code
-
-        Returns:
-            blackbird.BlackbirdProgram
-        """
-        bb = to_blackbird(program, version="1.0")
-
-        # TODO: This is potentially not needed here
-        bb._target["name"] = self.backend_name
-        bb._target["options"] = {"shots": shots, **program.backend_options}
-        return bb
-
-    def _queue_job(self, job_content):
-        """
-        Create a Job instance based on job_content, and send the job to the API. Append to list
-        of jobs.
-
-        Args:
-            job_content (str): the Blackbird code to execute
-
-        Returns:
-            (strawberryfields.api_client.Job): a Job instance referencing the queued job
-        """
-        job = Job(client=self.client)
-        job.manager.create(circuit=job_content)
-        self.jobs.append(job)
-        print("Job {} is sent to server.".format(job.id.value))
-        return job
-
-    def _run_program(self, program, **kwargs):
-        """
-        Given a compiled program, gets the blackbird circuit code and creates (or resumes) a job
-        via the API. If the job is completed, returns the job result.
-
-        A queued job can be interrupted by a ``KeyboardInterrupt`` event, at which point if the
-        job ID was retrieved from the server, the job will be accessible via
-        :meth:`~.Starship.jobs`.
-
-        Args:
-            program (strawberryfields.program.Program): program to be executed remotely
-
-        Returns:
-            (list): a list representing the result samples
-
-        Raises:
-            Exception: In case a job could not be submitted or completed.
-            TypeError: In case a job is already queued and a user is trying to submit a new job.
-        """
-        if self.jobs:
-            raise OneJobAtATimeError(
-                "A job is already queued. Please reset the engine and try again."
+    def __init__(self, target, connection=None):
+        if target not in self.VALID_TARGETS:
+            raise InvalidEngineTargetError("Invalid engine target: {}".format(target))
+        if connection is None:
+            # TODO use the global config once implemented
+            config = Configuration().api
+            connection = Connection(
+                token=config["authentication_token"],
+                host=config["hostname"],
+                port=config["port"],
+                use_ssl=config["use_ssl"],
             )
 
-        kwargs.update(program.run_options)
-        job_content = self._get_blackbird(program=program, **kwargs).serialize()
-        job = self._queue_job(job_content)
+        self._target = target
+        self._connection = connection
 
-        try:
-            while not job.is_failed and not job.is_complete:
-                job.reload()
-                time.sleep(self.polling_delay_seconds)
-        except KeyboardInterrupt:
-            if job.id:
-                print("Job {} is queued in the background.".format(job.id.value))
-            else:
-                self.reset()
-                raise JobNotQueuedError("Job was not sent to server. Please try again.")
-
-        # Job either failed or is complete - in either case, clear the job queue so that the engine is
-        # ready for future jobs.
-        self.reset()
-
-        if job.is_failed:
-            message = str(job.manager.http_response_data["meta"])
-            raise JobExecutionError(message)
-        elif job.is_complete:
-            job.result.manager.get()
-            return job.result.result.value
-
-    def run(self, program, shots=1, **kwargs):
-        """Compile the given program and execute it by queuing a job in the Starship.
-
-        For the :class:`Program` instance given as input, the following happens:
-
-        * The Program instance is compiled for the target backend.
-        * The compiled program is sent as a job to the Starship
-        * The measurement results of each subsystem (if any) are stored in the :attr:`~.BaseEngine.samples`.
-        * The compiled program is appended to self.run_progs.
-        * The queued or completed jobs are appended to self.jobs.
-
-        Finally, the result of the computation is returned.
-
-        Args:
-            program (Program, Sequence[Program]): quantum programs to run
-            shots (int): number of times the program measurement evaluation is repeated
-
-        The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
+    @property
+    def target(self):
+        """The target backend used by the engine.
 
         Returns:
-            Result: results of the computation
+            str: the target backend used by the engine
         """
+        return self._target
 
-        return super()._run(program, args={}, compile_options={}, shots=shots, **kwargs)
+    @property
+    def connection(self):
+        """Returns the connection object used by the engine.
+
+        Returns:
+            strawberryfields.engine.Connection: the connection object used by the engine
+        """
+        return self._connection
+
+    def run(self, program, shots=1):
+        """Runs a remote job synchronously. 
+
+        In this synchronous mode, the engine blocks until the job is completed, failed, or
+        cancelled, at which point the `Job` is returned.
+
+        Args:
+            program (Program): the quantum circuit
+            shots (int): the number of shots for which to run the job
+
+        Returns:
+            Job: the resulting remote job
+        """
+        job = self.run_async(program)
+        try:
+            # TODO worth setting a timeout here?
+            while True:
+                job.refresh()
+                if job.status in (JobStatus.COMPLETE, JobStatus.FAILED):
+                    return job
+                time.sleep(self.POLLING_INTERVAL_SECONDS)
+        except KeyboardInterrupt:
+            self._connection.cancel_job(job_id)
+            job.status = JobStatus.CANCELLED
+            return job
+
+    def run_async(self, program, shots=1):
+        """Runs a remote job asynchronously.
+
+        In this asynchronous mode, a `Job` is returned immediately, and the user can
+        manually refresh the status of the job.
+
+        Args:
+            program (Program): the quantum circuit
+            shots (int): the number of shots for which to run the job
+
+        Returns:
+            Job: the created remote job
+        """
+        bb = to_blackbird(program)
+        bb._target["name"] = self._target
+        bb._target["options"] = {"shots": shots}
+        # bb._target["options"] = {"shots": shots, **program.backend_options}
+        return self._connection.create_job(bb.serialize())
+
+
+class Connection:
+    """Manages remote connections to the remote job execution platform and exposes
+    advanced job operations.
+
+    For basic usage, it is not necessary to manually instantiate this object; the user
+    is encouraged to use the higher-level interface provided by `StarshipEngine`.
+
+    Args:
+        TODO
+    """
+
+    # TODO adjust this
+    MAX_JOBS_REQUESTED = 100
+    JOB_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+    USER_AGENT = "strawberryfields-client/0.1"
+
+    def __init__(
+        self, token, host=None, port=None, use_ssl=None, debug=None,
+    ):
+        # TODO use `read_config` when implemented
+        # e.g. read_config(host="abc", port=123)
+
+        self._token = token
+        self._host = host
+        self._port = port
+        self._use_ssl = use_ssl
+        # TODO what is this used for?
+        self._debug = debug
+
+    @property
+    def token(self):
+        return self._token
+
+    @property
+    def host(self):
+        return self._host
+
+    @property
+    def port(self):
+        return self._port
+
+    @property
+    def use_ssl(self):
+        return self._use_ssl
+
+    @property
+    def debug(self):
+        return self._debug
+
+    @property
+    def base_url(self):
+        return "http{}://{}:{}".format(
+            "s" if self.use_ssl else "", self.host, self.port
+        )
+
+    # TODO think about using serializers for the request wrappers - future PR maybe?
+
+    def create_job(self, circuit):
+        response = self._post("/jobs", data=json.dumps({"circuit": circuit}))
+        if response.status_code == 201:
+            return Job(
+                id_=response.json()["id"],
+                status=JobStatus(response.json()["status"]),
+                connection=self,
+            )
+        raise CreateJobRequestError(self._request_error_message(response))
+
+    def get_all_jobs(self, after=datetime(1970, 1, 1)):
+        # TODO figure out how to handle pagination from the user's perspective (if at all)
+        # TODO tentative until corresponding feature on platform side is finalized
+        response = self._get("/jobs?page[size]={}".format(self.MAX_JOBS_REQUESTED))
+        if response.status_code == 200:
+            return [
+                Job(id_=info["id"], status=info["status"], connection=self)
+                for info in response.json()["data"]
+                if datetime.strptime(info["created_at"], self.JOB_TIMESTAMP_FORMAT)
+                > after
+            ]
+        raise GetAllJobsRequestError(self._request_error_message(response))
+
+    def get_job(self, job_id):
+        response = self._get("/jobs/{}".format(job_id))
+        if response.status_code == 200:
+            return Job(
+                id_=response.json()["id"],
+                status=JobStatus(response.json()["status"]),
+                connection=self,
+            )
+        raise GetJobRequestError(self._request_error_message(response))
+
+    def get_job_status(self, job_id):
+        return JobStatus(self.get_job(job_id).status)
+
+    def get_job_result(self, job_id):
+        # TODO get numpy here?
+        response = self._get("/jobs/{}/result".format(job_id))
+        if response.status_code == 200:
+            return Result(response.json()["result"])
+        raise GetJobResultRequestError(self._request_error_message(response))
+
+    # TODO is this necessary?
+    def get_job_circuit(self, job_id):
+        response = self._get("/jobs/{}/circuit".format(job_id))
+        if response.status_code == 200:
+            return response.json()["circuit"]
+        raise GetJobCircuitRequestError(self._request_error_message(response))
+
+    def cancel_job(self, job_id):
+        response = self._patch(
+            "/jobs/{}".format(job_id), body={"status", JobStatus.CANCELLED.value}
+        )
+        if response.status_code == 204:
+            return True
+        raise CancelJobRequestError(self._request_error_message(response))
+
+    def _get(self, path, **kwargs):
+        return self._request(RequestMethod.GET, path, **kwargs)
+
+    def _post(self, path, **kwargs):
+        return self._request(RequestMethod.POST, path, **kwargs)
+
+    def _patch(self, path, **kwargs):
+        return self._request(RequestMethod.PATCH, path, **kwargs)
+
+    def _request(self, method, path, **kwargs):
+        return getattr(requests, method.value)(
+            urljoin(self.base_url, path),
+            headers={"Authorization": self.token, "User-Agent": self.USER_AGENT},
+            **kwargs
+        )
+
+    def _request_error_message(self, response):
+        body = response.json()
+        return "{} ({}): {}".format(
+            body.get("status_code", ""), body.get("code", ""), body.get("detail", "")
+        )
+
+
+class RequestMethod(enum.Enum):
+    """Defines the valid request methods for messages sent to the remote job platform.
+    """
+    GET = "get"
+    POST = "post"
+    PATCH = "patch"
+
+
+class Job:
+    """Represents a remote job that can be queried for its status or result.
+
+    This object should not be instantiated directly, but returned by an `Engine` or
+    `Connection` when a job is run.
+
+    Args:
+        id_ (str): the job UUID 
+        status (JobStatus): the job status
+        connection (Connection): the connection over which the job is managed
+    """
+
+    def __init__(self, id_, status, connection):
+        self._id = id_
+        self._status = status
+        self._connection = connection
+
+        # TODO need this?
+        self._circuit = None
+        self._result = None
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def status(self):
+        return self._status
+
+    @property
+    def result(self):
+        """The job result.
+
+        This is only defined for complete jobs, and raises a `JobNotCompleteError` for
+        any other status.
+
+        Returns:
+            Result: the result
+        """
+        if self.status != JobStatus.COMPLETE:
+            raise JobNotCompleteError(
+                "The result is undefined for jobs that are not complete "
+                "(current status: {})".format(self.status.value)
+            )
+        return self._result
+
+    def refresh(self):
+        """Refreshes the status of the job, along with the job result if the job is
+        newly completed.
+        """
+        if self.status.is_terminal:
+            raise RefreshTerminalJobError(
+                "A {} job cannot be refreshed".format(self.status.value)
+            )
+        self._status = self._connection.get_job_status(self.id)
+        if self._status == JobStatus.COMPLETE:
+            self._result = self._connection.get_job_result(self.id)
+
+    def cancel(self):
+        """Cancels the job.
+
+        Only a non-terminal (open or queued job) can be cancelled; a
+        `CancelTerminalJobError` is raised otherwise.
+        """
+        if self.status.is_terminal:
+            raise CancelTerminalJobError(
+                "A {} job cannot be cancelled".format(self.status.value)
+            )
+        self._connection.cancel_job(self.id)
+
+
+class JobStatus(enum.Enum):
+    """Represents the status of a remote job.
+
+    This class maps a set of job statuses to the string representations returned by the
+    remote platform.
+    """
+
+    OPEN = "open"
+    QUEUED = "queued"
+    CANCELLED = "cancelled"
+    COMPLETE = "complete"
+    FAILED = "failed"
+
+    def __repr__(self):
+        return self.value
+
+    def __str__(self):
+        return self.value
+
+    @property
+    def is_terminal(self):
+        """Checks if this status represents a final and immutable state.
+
+        This method is generally used to determine if an operation is valid for a given
+        status.
+
+        Returns:
+            bool: True if the job is terminal, and False otherwise
+        """
+        return self in (JobStatus.CANCELLED, JobStatus.COMPLETE, JobStatus.FAILED)
 
 
 class Engine(LocalEngine):
     """dummy"""
+
     # alias for backwards compatibility
     __doc__ = LocalEngine.__doc__
