@@ -114,13 +114,26 @@ class Circuit():
             self._state = ops.vacuumStateMixed(self._num_modes, self._trunc)
 
     def apply_gate_BLAS(self, mat, modes, **kwargs):
-        """
+        """Applies a specified gate to the state.
+
         Gate application based on custom indexing and matrix multiplication.
         Assumes the input matrix has shape (out1, in1, ...).
 
         This implementation uses indexing and BLAS. As per stack overflow,
         einsum doesn't actually use BLAS but rather a c implementation. In theory
         if reshaping is efficient this should be faster.
+
+        Args:
+            mat (array[complex]): The numeric operator to be applied to the state, of shape `[trunc]*(2*n)`
+            modes (list[int]): The list of modes to which the operator is applied on
+
+        Keyword args:
+            state (array[complex]): The state that the operator is applied to
+            pure (bool): Whether the state is pure or mixed
+            n (int): The total number of modes
+
+        Returns:
+            array[complex]: The state after application of the two-mode operation
         """
         # pylint: disable=too-many-branches
 
@@ -198,7 +211,7 @@ class Circuit():
         return np.transpose(ret, untranspose_list)
 
     def apply_twomode_gate(self, mat, modes, gate="BSgate"):
-        """Applies a two-mode gate to a state.
+        """Applies a two-mode gate to the state.
 
         Applies the specified two-mode gate to the state using custom tensor contractions and
         the Numba compiler for faster application. Currently, only the beamsplitter and the
@@ -206,17 +219,12 @@ class Circuit():
 
         Args:
             mat (array[complex]): The numeric operator to be applied to the state, of shape `[trunc]*(2*n)`
-            modes (list[int]): the list of modes to which the operator is applied on
+            modes (list[int]): The list of modes to which the operator is applied on
             gate (str): The gate that is being applied. This argument determines the selection rules that
                 are used. Options are ``"BSgate"`` and ``"S2gate"``.
 
-        Keyword args:
-            state (array[complex]): The state that the operator is applied to
-            pure (bool): whether the state is pure or mixed
-            n (int): The total number of modes
-
         Returns:
-            array[complex]: state after application of the two-mode operation
+            array[complex]: The state after application of the two-mode operation
         """
         if self._pure:
             t1 = modes[0]
