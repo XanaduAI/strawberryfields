@@ -55,6 +55,78 @@ class ConfigurationError(Exception):
     """Exception used for configuration errors"""
 
 
+_user_config_dir = user_config_dir("strawberryfields", "Xanadu")
+_env_config_dir = os.environ.get("SF_CONF", "")
+
+# This function will be used by the Connection object
+def read_config(name="config.toml", **kwargs):
+    _name = name
+
+    # Search the current directory, the directory under environment
+    # variable SF_CONF, and default user config directory, in that order.
+    directories = [os.getcwd(), _env_config_dir, _user_config_dir]
+    for directory in directories:
+        _filepath = os.path.join(directory, _name)
+        try:
+            config = load_config_file.load(_filepath)
+        except FileNotFoundError:
+            log.info("No Strawberry Fields configuration file found.")
+            config = False
+
+    if config:
+        self.update_config()
+    else:
+        log.info("No Strawberry Fields configuration file found.")
+        # TODO: add logic for parsing from environmental variables
+
+# This function will be user-facing
+# calling on the save_config function
+def write_config_file(name="config.toml", path=_user_config_dir, **kwargs):
+
+    # TODO: create a config object similar to DEFAULT_CONFIG
+    save_config_file(path, config)
+
+def update_config(_config):
+    """Updates the configuration from either a loaded configuration
+    file, or from an environment variable.
+
+    The environment variable takes precedence."""
+    for section, section_config in _config.items():
+        env_prefix = "SF_{}_".format(section.upper())
+
+        for key in section_config:
+            # Environment variables take precedence
+            env = env_prefix + key.upper()
+
+            if env in os.environ:
+                # Update from environment variable
+                _config[section][key] = parse_environment_variable(env, os.environ[env])
+            elif _config_file and key in _config_file[section]:
+                # Update from configuration file
+                _config[section][key] = _config_file[section][key]
+    return _config
+
+def load_config_file(filepath):
+    """Load a configuration file.
+
+    Args:
+        filepath (str): path to the configuration file
+    """
+    with open(filepath, "r") as f:
+        _config_file = toml.load(f)
+
+    return _config_file
+
+def save_config_file(filepath, config):
+    """Save a configuration file.
+
+    Args:
+        filepath (str): path to the configuration file
+        config (dict of str: dict of str: Union[boolean, str, float])
+    """
+    with open(filepath, "w") as f:
+        toml.dump(config, f)
+
 class Configuration:
     """Configuration class.
 
