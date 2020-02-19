@@ -86,6 +86,22 @@ A typical workflow would be:
 
 The subgraphs sampled from GBS are likely to be dense :cite:`arrazola2018using`, motivating their
 use within heuristics for problems such as maximum clique (see :mod:`~.apps.clique`).
+
+Including node weights
+----------------------
+
+Some graphs are composed of nodes with weights. These node weights can correspond to relevant
+information in an optimization problem and it is desirable to encode them into GBS along with the
+graph's adjacency matrix. One canonical approach to doing this is to use the ``WAW`` encoding
+:cite:`banchi2019molecular`, which rescales the adjacency matrix according to:
+
+.. math::
+
+    A \rightarrow WAW,
+
+with :math:`W` the diagonal matrix formed by the weighted nodes. The rescaled adjacency matrix
+can be passed to :func:`sample`, resulting in a bias toward sampling subgraphs with a large
+product of node weights. :func:`waw_matrix`
 """
 import warnings
 from typing import Optional
@@ -235,7 +251,7 @@ def to_subgraphs(samples: list, graph: nx.Graph) -> list:
     """Converts samples to their subgraph representation.
 
     Input samples are a list of counts that are processed into subgraphs by selecting the nodes
-    where a click occured.
+    where a click occurred.
 
     **Example usage:**
 
@@ -364,7 +380,7 @@ def vibronic(
 
 
 def waw_matrix(A: np.ndarray, w: np.ndarray) -> np.ndarray:
-    """Rescale adjacency matrix to account for node weights.
+    r"""Rescale adjacency matrix to account for node weights.
 
     Given a graph with adjacency matrix :math:`A` and a vector :math:`w` of weighted nodes,
     this function rescales the adjacency matrix according to:
@@ -394,9 +410,9 @@ def waw_matrix(A: np.ndarray, w: np.ndarray) -> np.ndarray:
     """
     if not np.allclose(A, A.T):
         raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
+
     w_s = w.shape
     dim = len(A)
-
     w_check = (len(w_s) == 1 and w_s[0] == dim) or (
         len(w_s) == 2 and sorted(np.unique(w_s)) == [1, dim]
     )  # Check if the vector has one dimension or is a two-dimensional row or column vector
