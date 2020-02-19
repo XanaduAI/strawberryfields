@@ -109,7 +109,7 @@ class TestStarshipEngine:
 
     def test_run_cancelled(self, config, prog, monkeypatch):
         server = MockServer()
-        # TODO how to test keyboard interrupt for cancel?
+        # TODO
 
     def test_run_async(self):
         server = MockServer()
@@ -147,26 +147,16 @@ class TestConnection:
             connection.create_job("circuit")
 
     def test_get_all_jobs(self, connection, monkeypatch):
+        jobs = [
+            {
+                "id": str(i),
+                "status": JobStatus.COMPLETE,
+                "created_at": "2020-01-{:02d}T12:34:56.123456Z".format(i),
+            }
+            for i in range(1, 10)
+        ]
         monkeypatch.setattr(
-            Connection,
-            "_get",
-            mock_return(
-                mock_response(
-                    200,
-                    {
-                        "data": [
-                            {
-                                "id": str(i),
-                                "status": JobStatus.COMPLETE,
-                                "created_at": "2020-01-{:02d}T12:34:56.123456Z".format(
-                                    i
-                                ),
-                            }
-                            for i in range(1, 10)
-                        ]
-                    },
-                )
-            ),
+            Connection, "_get", mock_return(mock_response(200, {"data": jobs})),
         )
 
         jobs = connection.get_all_jobs(after=datetime(2020, 1, 5))

@@ -630,7 +630,8 @@ class StarshipEngine:
 
     Args:
         target (str): the target backend
-        connection (Connection): a connection to the remote job execution platform
+        connection (strawberryfields.engine.Connection): a connection to the remote job
+                                                         execution platform
     """
 
     POLLING_INTERVAL_SECONDS = 1
@@ -681,7 +682,7 @@ class StarshipEngine:
             shots (int): the number of shots for which to run the job
 
         Returns:
-            Job: the resulting remote job
+            strawberryfields.engine.Job: the resulting remote job
         """
         job = self.run_async(program)
         try:
@@ -707,7 +708,7 @@ class StarshipEngine:
             shots (int): the number of shots for which to run the job
 
         Returns:
-            Job: the created remote job
+            strawberryfields.engine.Job: the created remote job
         """
         bb = to_blackbird(program)
         bb._target["name"] = self._target
@@ -774,6 +775,14 @@ class Connection:
     # TODO think about using serializers for the request wrappers - future PR maybe?
 
     def create_job(self, circuit):
+        """Creates a job with the given circuit.
+
+        Args:
+            circuit (str): the serialized Blackbird program
+
+        Returns:
+            strawberryfields.engine.Job: the created job
+        """
         response = self._post("/jobs", data=json.dumps({"circuit": circuit}))
         if response.status_code == 201:
             return Job(
@@ -784,6 +793,15 @@ class Connection:
         raise CreateJobRequestError(self._request_error_message(response))
 
     def get_all_jobs(self, after=datetime(1970, 1, 1)):
+        """Gets all jobs created by the user, optionally filtered by datetime.
+
+        Args:
+            after (datetime.datetime): if provided, only jobs more recent than `after`
+                                       are returned
+
+        Returns:
+            List[strawberryfields.engine.Job]: the jobs
+        """
         # TODO figure out how to handle pagination from the user's perspective (if at all)
         # TODO tentative until corresponding feature on platform side is finalized
         response = self._get("/jobs?page[size]={}".format(self.MAX_JOBS_REQUESTED))
@@ -797,6 +815,14 @@ class Connection:
         raise GetAllJobsRequestError(self._request_error_message(response))
 
     def get_job(self, job_id):
+        """Gets a job.
+
+        Args:
+            job_id (str): the job UUID
+
+        Returns:
+            strawberryfields.engine.Job: the job
+        """
         response = self._get("/jobs/{}".format(job_id))
         if response.status_code == 200:
             return Job(
@@ -807,9 +833,25 @@ class Connection:
         raise GetJobRequestError(self._request_error_message(response))
 
     def get_job_status(self, job_id):
+        """Returns the status of a job.
+
+        Args:
+            job_id (str): the job UUID
+
+        Returns:
+            strawberryfields.engine.JobStatus: the job status
+        """
         return JobStatus(self.get_job(job_id).status)
 
     def get_job_result(self, job_id):
+        """Returns the result of a job.
+
+        Args:
+            job_id (str): the job UUID
+
+        Returns:
+            strawberryfields.engine.Result: the job result
+        """
         # TODO get numpy here?
         response = self._get("/jobs/{}/result".format(job_id))
         if response.status_code == 200:
@@ -824,11 +866,16 @@ class Connection:
         raise GetJobCircuitRequestError(self._request_error_message(response))
 
     def cancel_job(self, job_id):
+        """Cancels a job.
+
+        Args:
+            job_id (str): the job UUID
+        """
         response = self._patch(
             "/jobs/{}".format(job_id), body={"status", JobStatus.CANCELLED.value}
         )
         if response.status_code == 204:
-            return True
+            return
         raise CancelJobRequestError(self._request_error_message(response))
 
     def _get(self, path, **kwargs):
@@ -857,6 +904,7 @@ class Connection:
 class RequestMethod(enum.Enum):
     """Defines the valid request methods for messages sent to the remote job platform.
     """
+
     GET = "get"
     POST = "post"
     PATCH = "patch"
@@ -870,8 +918,9 @@ class Job:
 
     Args:
         id_ (str): the job UUID 
-        status (JobStatus): the job status
-        connection (Connection): the connection over which the job is managed
+        status (strawberryfields.engine.JobStatus): the job status
+        connection (strawberryfields.engine.Connection): the connection over which the
+                                                         job is managed
     """
 
     def __init__(self, id_, status, connection):
@@ -899,7 +948,7 @@ class Job:
         any other status.
 
         Returns:
-            Result: the result
+            strawberryfields.engine.Result: the result
         """
         if self.status != JobStatus.COMPLETE:
             raise JobNotCompleteError(
@@ -911,6 +960,9 @@ class Job:
     def refresh(self):
         """Refreshes the status of the job, along with the job result if the job is
         newly completed.
+
+        Only a non-terminal (open or queued job) can be refreshed; a
+        `RefreshTerminalJobError` is raised otherwise.
         """
         if self.status.is_terminal:
             raise RefreshTerminalJobError(
