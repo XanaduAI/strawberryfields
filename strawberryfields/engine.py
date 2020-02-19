@@ -608,16 +608,13 @@ class StarshipEngine:
         engine = StarshipEngine("chip2")
 
         # Run a job synchronously
-        job = engine.run(program, shots=1)
+        result = engine.run(program, shots=1)
         # (Engine blocks until job is complete)
-        job.status  # JobStatus.COMPLETE
-        job.result  # [[0, 1, 0, 2, 1, 0, 0, 0]]
+        result  # [[0, 1, 0, 2, 1, 0, 0, 0]]
 
         # Run a job synchronously, but cancel it before it is completed
-        job = engine.run(program, shots=1)
+        _ = engine.run(program, shots=1)
         ^C # KeyboardInterrupt cancels the job
-        job.status  # "cancelled"
-        job.result  # JobCancelledError
 
         # Run a job asynchronously
         job = engine.run_async(program, shots=1)
@@ -682,7 +679,7 @@ class StarshipEngine:
             shots (int): the number of shots for which to run the job
 
         Returns:
-            strawberryfields.engine.Job: the resulting remote job
+            strawberryfields.engine.Result: the job result
         """
         job = self.run_async(program)
         try:
@@ -690,12 +687,11 @@ class StarshipEngine:
             while True:
                 job.refresh()
                 if job.status in (JobStatus.COMPLETE, JobStatus.FAILED):
-                    return job
+                    return job.result
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             self._connection.cancel_job(job_id)
-            job.status = JobStatus.CANCELLED
-            return job
+            return
 
     def run_async(self, program, shots=1):
         """Runs a remote job asynchronously.
@@ -704,7 +700,7 @@ class StarshipEngine:
         manually refresh the status of the job.
 
         Args:
-            program (Program): the quantum circuit
+            program (strawberryfields.Program): the quantum circuit
             shots (int): the number of shots for which to run the job
 
         Returns:

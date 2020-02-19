@@ -102,10 +102,9 @@ class TestStarshipEngine:
         monkeypatch.setattr(Connection, "get_job_result", mock_return(Result(result)))
 
         engine = StarshipEngine("chip2", connection=Connection(config))
-        job = engine.run(prog)
+        job_result = engine.run(prog)
 
-        assert job.status == JobStatus.COMPLETE
-        assert job.result.samples.T.tolist() == result
+        assert job_result.samples.T.tolist() == result
 
     def test_run_cancelled(self, config, prog, monkeypatch):
         server = MockServer()
