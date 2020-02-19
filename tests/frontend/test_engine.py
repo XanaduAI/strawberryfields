@@ -69,7 +69,17 @@ def config():
     return Configuration()
 
 
-# TODO should mock an actual http server here (e.g. with `http.server`)
+@pytest.fixture
+def connection(config):
+    return Connection(
+        token=config.api["authentication_token"],
+        host=config.api["hostname"],
+        port=config.api["port"],
+        use_ssl=config.api["use_ssl"],
+    )
+
+
+# TODO explore mocking an actual http server here (e.g. with `http.server`)
 class MockServer:
     # Fake a job processing delay
     REQUESTS_BEFORE_COMPLETE = 3
@@ -87,16 +97,14 @@ class MockServer:
 
 
 class TestStarshipEngine:
-    def test_run_complete(self, config, prog, monkeypatch):
+    def test_run_complete(self, connection, prog, monkeypatch):
         id_, result_expected = "123", [[1, 2], [3, 4]]
 
         server = MockServer()
         monkeypatch.setattr(
             Connection,
             "create_job",
-            mock_return(
-                Job(id_=id_, status=JobStatus.OPEN, connection=Connection(config))
-            ),
+            mock_return(Job(id_=id_, status=JobStatus.OPEN, connection=connection)),
         )
         monkeypatch.setattr(Connection, "get_job_status", server.get_job_status)
         monkeypatch.setattr(
@@ -105,7 +113,7 @@ class TestStarshipEngine:
             mock_return(Result(result_expected, is_stateful=False)),
         )
 
-        engine = StarshipEngine("chip2", connection=Connection(config))
+        engine = StarshipEngine("chip2", connection=connection)
         result = engine.run(prog)
 
         assert result.samples.T.tolist() == result_expected
@@ -113,25 +121,41 @@ class TestStarshipEngine:
         with pytest.raises(AttributeError):
             result.state
 
-    def test_run_cancelled(self, config, prog, monkeypatch):
+    def test_run_cancelled(self, connection, prog, monkeypatch):
         server = MockServer()
         # TODO
 
-    def test_run_async(self):
+    def test_run_async(self, connection, prog, monkeypatch):
+        id_, result_expected = "123", [[1, 2], [3, 4]]
+
         server = MockServer()
-        # TODO
+        monkeypatch.setattr(
+            Connection,
+            "create_job",
+            mock_return(Job(id_=id_, status=JobStatus.OPEN, connection=connection)),
+        )
+        monkeypatch.setattr(Connection, "get_job_status", server.get_job_status)
+        monkeypatch.setattr(
+            Connection,
+            "get_job_result",
+            mock_return(Result(result_expected, is_stateful=False)),
+        )
+
+        engine = StarshipEngine("chip2", connection=connection)
+        job = engine.run_async(prog)
+        job.status == JobStatus.OPEN
+
+        for _ in range(server.REQUESTS_BEFORE_COMPLETE):
+            job.refresh()
+
+        assert job.status == JobStatus.COMPLETE
+        assert job.result.samples.T.tolist() == result_expected
+
+        with pytest.raises(AttributeError):
+            job.result.state
 
 
 class TestConnection:
-    @pytest.fixture
-    def connection(self, config):
-        return Connection(
-            token=config.api["authentication_token"],
-            host=config.api["hostname"],
-            port=config.api["port"],
-            use_ssl=config.api["use_ssl"],
-        )
-
     def test_create_job(self, connection, monkeypatch):
         id_, status = "123", JobStatus.QUEUED
 
