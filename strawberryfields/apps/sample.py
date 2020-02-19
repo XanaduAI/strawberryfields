@@ -361,3 +361,47 @@ def vibronic(
     if np.any(t == 0):
         s = np.pad(s, ((0, 0), (0, n_modes))).tolist()
     return s
+
+
+def waw_matrix(A: np.ndarray, w: np.ndarray) -> np.ndarray:
+    """Rescale adjacency matrix to account for node weights.
+
+    Given a graph with adjacency matrix :math:`A` and a vector :math:`w` of weighted nodes,
+    this function rescales the adjacency matrix according to:
+
+    .. math::
+
+        A \rightarrow WAW,
+
+    with :math:`W` the diagonal matrix formed by the weighted nodes. This encoding can be used to
+    add a bias in GBS toward selecting subgraphs with a large product of node weights
+    :cite:`banchi2019molecular`. The resulting matrix can be passed to :func:`sample`.
+
+    **Example usage:**
+
+    >>> g = nx.erdos_renyi_graph(5, 0.7)
+    >>> a = nx.to_numpy_array(g)
+    >>> w = [1, 1, 3, 1, 0.5]
+    >>> a = waw_matrix(a, w)
+    >>> sample(a, 3, 4)
+
+    Args:
+        A (array): adjacency matrix to rescale
+        w (array): vector of real node weights
+
+    Returns:
+        array: matrix rescaled according to the WAW encoding
+    """
+    if not np.allclose(A, A.T):
+        raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
+    w_s = w.shape
+    dim = len(A)
+
+    w_check = (len(w_s) == 1 and w_s[0] == dim) or (
+        len(w_s) == 2 and sorted(np.unique(w_s)) == [1, dim]
+    )  # Check if the vector has one dimension or is a two-dimensional row or column vector
+
+    if not w_check:
+        raise ValueError("Vector of node weights must be a row or column vector")
+
+    return (w * A).T * w
