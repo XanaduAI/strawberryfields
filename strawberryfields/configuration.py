@@ -55,16 +55,43 @@ class ConfigurationError(Exception):
     """Exception used for configuration errors"""
 
 
-_user_config_dir = user_config_dir("strawberryfields", "Xanadu")
-_env_config_dir = os.environ.get("SF_CONF", "")
-
 # This function will be used by the Connection object
-def read_config(name="config.toml", **kwargs):
+def load_config(name="config.toml", **kwargs):
     _name = name
+
+    _config = create_config_object(**kwargs)
+
+    _config = update_from_config_file(_config)
+    _config = update_from_environmental_variables(_config)
+
+
+def create_config_object(**kwargs):
+    authentication_token = kwargs.get("authentication_token", "")
+    hostname = kwargs.get("hostname", "localhost")
+    use_ssl = kwargs.get("use_ssl", True)
+    port = kwargs.get("port", 443)
+    debug = kwargs.get("debug", False)
+
+    config = {
+        "api": {
+            "authentication_token": authentication_token,
+            "hostname": hostname,
+            "use_ssl": use_ssl,
+            "port": port,
+            "debug": debug
+            }
+    }
+    return config
+
+def update_from_config_file(config):
+
+    current_dir = os.getcwd()
+    env_config_dir = os.environ.get("SF_CONF", "")
+    user_config_dir = user_config_dir("strawberryfields", "Xanadu")
 
     # Search the current directory, the directory under environment
     # variable SF_CONF, and default user config directory, in that order.
-    directories = [os.getcwd(), _env_config_dir, _user_config_dir]
+    directories = [current_dir, env_config_dir, user_config_dir]
     for directory in directories:
         _filepath = os.path.join(directory, _name)
         try:
@@ -79,8 +106,11 @@ def read_config(name="config.toml", **kwargs):
         log.info("No Strawberry Fields configuration file found.")
         # TODO: add logic for parsing from environmental variables
 
-# This function will be user-facing
-# calling on the save_config function
+    return config
+
+def update_from_environmental_variables(_config):
+
+# calling on the write_config_file function
 def write_config_file(name="config.toml", path=_user_config_dir, **kwargs):
 
     # TODO: create a config object similar to DEFAULT_CONFIG
@@ -222,3 +252,5 @@ class Configuration:
         """
         with open(filepath, "w") as f:
             toml.dump(self._config, f)
+
+configuration = load_config()

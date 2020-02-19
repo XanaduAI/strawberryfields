@@ -74,6 +74,8 @@ class TestConfiguration:
     def test_loading_env_variable(self, tmpdir):
         """Test that the default configuration file can be loaded
         via an environment variable."""
+        # TODO: This test does not work if there is already a configuration
+        # file in place
         filename = tmpdir.join("config.toml")
 
         with open(filename, "w") as f:
@@ -88,6 +90,14 @@ class TestConfiguration:
     def test_loading_absolute_path(self, tmpdir, monkeypatch):
         """Test that the default configuration file can be loaded
         via an absolute path."""
+        # TODO: Some state seems to be left hereThis test does not work if
+        # there is already a configuration file in place
+        # {'api': {'authentication_token': '071cdcce-9241-4965-93af-4a4dbc739135',
+        # 'hostname': 'localhost', 'use_ssl': True, 'port': '443', 'debug': False}}
+        # {'api': {'authentication_token': '071cdcce-9241-4965-93af-4a4dbc739135',
+        # 'hostname': 'localhost', 'use_ssl': True, 'debug': False, 'port': 443}}
+
+        # config._config seems to output a string at times
         filename = os.path.abspath(tmpdir.join("config.toml"))
 
         with open(filename, "w") as f:
@@ -96,6 +106,7 @@ class TestConfiguration:
         os.environ["SF_CONF"] = ""
         config = conf.Configuration(name=str(filename))
 
+        print(config._config, EXPECTED_CONFIG)
         assert config._config == EXPECTED_CONFIG
         assert config.path == filename
 
