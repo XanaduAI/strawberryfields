@@ -596,6 +596,10 @@ class CancelTerminalJobError(Exception):
     """Raised when attempting to cancel a completed, failed, or cancelled job."""
 
 
+class PingFailedError(Exception):
+    """Raised when a ping request to a remote backend is unsuccessful."""
+
+
 class StarshipEngine:
     """A quantum program executor engine that that provides a simple interface for
     running remote jobs in a synchronous or asynchronous manner.
@@ -690,9 +694,10 @@ class StarshipEngine:
                 job.refresh()
                 if job.status in (JobStatus.COMPLETE, JobStatus.FAILED):
                     return job.result
+                print(job.status)
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt:
-            self._connection.cancel_job(job_id)
+            self._connection.cancel_job(job.id)
             return
 
     def run_async(self, program, shots=1):
@@ -870,11 +875,22 @@ class Connection:
             job_id (str): the job UUID
         """
         response = self._patch(
-            "/jobs/{}".format(job_id), body={"status", JobStatus.CANCELLED.value}
+            "/jobs/{}".format(job_id), data={"status", JobStatus.CANCELLED.value}
         )
         if response.status_code == 204:
             return
         raise CancelJobRequestError(self._request_error_message(response))
+
+    def ping(self):
+        """Tests the connection to the remote backend.
+
+        Returns:
+            bool: True if the connection is successful, and False otherwise
+        """
+        response = self._get("/healthz")
+        if response.status_code == 200:
+            return
+        raise PingFailedError(self._request_error_message(response))
 
     def _get(self, path, **kwargs):
         return self._request(RequestMethod.GET, path, **kwargs)
