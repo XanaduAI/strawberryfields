@@ -46,8 +46,8 @@ __all__ = ["Result", "BaseEngine", "LocalEngine"]
 class Result:
     """Result of a quantum computation.
 
-    Represents the results of the execution of a quantum program
-    returned by the :meth:`.LocalEngine.run` method.
+    Represents the results of the execution of a quantum program on a local or
+    remote backend.
 
     The returned :class:`~Result` object provides several useful properties
     for accessing the results of your program execution:
@@ -87,8 +87,9 @@ class Result:
         but the return value of ``Result.state`` will be ``None``.
     """
 
-    def __init__(self, samples):
+    def __init__(self, samples, is_stateful=True):
         self._state = None
+        self._is_stateful = is_stateful
 
         # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
         if len(np.shape(samples)) > 1:
@@ -131,7 +132,8 @@ class Result:
         Returns:
             BaseState: quantum state returned from program execution
         """
-        # TODO raise error if called for remote job
+        if not self._is_stateful:
+            raise AttributeError("The state is undefined for a stateless computation.")
         return self._state
 
     def __str__(self):
@@ -851,7 +853,7 @@ class Connection:
         # TODO get numpy here?
         response = self._get("/jobs/{}/result".format(job_id))
         if response.status_code == 200:
-            return Result(response.json()["result"])
+            return Result(response.json()["result"], is_stateful=False)
         raise GetJobResultRequestError(self._request_error_message(response))
 
     # TODO is this necessary?

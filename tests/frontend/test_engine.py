@@ -88,7 +88,7 @@ class MockServer:
 
 class TestStarshipEngine:
     def test_run_complete(self, config, prog, monkeypatch):
-        id_, result = "123", [[1, 2], [3, 4]]
+        id_, result_expected = "123", [[1, 2], [3, 4]]
 
         server = MockServer()
         monkeypatch.setattr(
@@ -99,12 +99,19 @@ class TestStarshipEngine:
             ),
         )
         monkeypatch.setattr(Connection, "get_job_status", server.get_job_status)
-        monkeypatch.setattr(Connection, "get_job_result", mock_return(Result(result)))
+        monkeypatch.setattr(
+            Connection,
+            "get_job_result",
+            mock_return(Result(result_expected, is_stateful=False)),
+        )
 
         engine = StarshipEngine("chip2", connection=Connection(config))
-        job_result = engine.run(prog)
+        result = engine.run(prog)
 
-        assert job_result.samples.T.tolist() == result
+        assert result.samples.T.tolist() == result_expected
+
+        with pytest.raises(AttributeError):
+            result.state
 
     def test_run_cancelled(self, config, prog, monkeypatch):
         server = MockServer()
