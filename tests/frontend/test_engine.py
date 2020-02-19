@@ -105,7 +105,7 @@ class TestStarshipEngine:
         job = engine.run(prog)
 
         assert job.status == JobStatus.COMPLETE
-        assert job.result.samples.tolist() == result
+        assert job.result.samples.T.tolist() == result
 
     def test_run_cancelled(self, config, prog, monkeypatch):
         server = MockServer()
@@ -227,7 +227,7 @@ class TestConnection:
 
         result = connection.get_job_result("123")
 
-        assert result.samples.tolist() == result_samples
+        assert result.samples.T.tolist() == result_samples
 
     def test_get_job_result_error(self, connection, monkeypatch):
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))

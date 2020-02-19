@@ -91,9 +91,10 @@ class Result:
         self._state = None
 
         # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
-        # TODO adjust the format as specified in the ADR
         if len(np.shape(samples)) > 1:
-            samples = np.vstack(samples)
+            samples = np.stack(samples, 1)
+            # TODO what shape should this have exactly?
+            # samples = np.vstack(samples)
         self._samples = samples
 
     @property
