@@ -156,6 +156,54 @@ class TestGrow:
 
         assert c1 != c2
 
+    def test_grow_maximal_weight(self, dim):
+        """Test if function grows to expected maximal graph when node weight-based node selection is
+        used. The chosen graph is a fully connected graph where the final three nodes have
+        subsequently been disconnected from each other, but remain connected to all the other
+        nodes. We then start from the clique composed of all but the final three nodes and seek
+        to grow. In this construction, we can add just one of the final three nodes. This test
+        gives the final node the largest weight, so we expect that one to be added."""
+        graph = nx.complete_graph(dim)
+        s = graph.subgraph([dim - 3, dim - 2, dim - 1])
+        for e in s.edges():
+            graph.remove_edge(*e)
+
+        s = set(range(dim - 3))
+        weights = list(range(dim))
+        target = s | {dim - 1}
+        assert set(clique.grow(s, graph, node_select=weights)) == target
+
+    def test_grow_maximal_weight_tie(self, dim, monkeypatch):
+        """Test if function grows using randomness to break ties during node weight-based node
+        selection. The chosen graph is a fully connected graph where the final three nodes have
+        subsequently been disconnected from each other, but remain connected to all the other
+        nodes. We then start from the clique composed of all but the final three nodes and seek
+        to grow. In this construction, we can add just one of the final three nodes. This test
+        gives the every node the same weight, so we expect that they should be selected randomly
+        with equal probability. This test monkeypatches the ``np.random.choice`` call to
+        guarantee that one of the nodes is picked during one run of ``grow`` and the another node
+        is picked during the next run."""
+        graph = nx.complete_graph(dim)
+        s = graph.subgraph([dim - 3, dim - 2, dim - 1])
+        for e in s.edges():
+            graph.remove_edge(*e)
+
+        s = set(range(dim - 3))
+        weights = [1 for _ in range(dim)]
+
+        patch_random_choice_1 = functools.partial(patch_random_choice, element=0)
+        patch_random_choice_2 = functools.partial(patch_random_choice, element=1)
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_1)
+            c1 = clique.grow(s, graph, node_select=weights)
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_2)
+            c2 = clique.grow(s, graph, node_select=weights)
+
+        assert c1 != c2
+
     def test_input_not_clique(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
         with pytest.raises(ValueError, match="Input subgraph is not a clique"):
@@ -231,6 +279,51 @@ class TestSwap:
         with monkeypatch.context() as m:
             m.setattr(np.random, "choice", patch_random_choice_2)
             c2 = clique.swap(s, graph, node_select="degree")
+
+        assert c1 != c2
+
+    def test_swap_weight(self, dim):
+        """Test if function performs correct swap operation when node weight-based node selection is
+        used. The input graph is a complete graph with the ``(dim - 1, dim - 3)`` and
+        ``(dim - 2, dim - 4)`` edges removed. The starting clique is the first ``dim - 2`` nodes.
+        This results in two candidate swap pairs: ``(dim - 1, dim - 3)`` and ``(dim - 2, dim - 4)``.
+        Since node ``dim - 1`` has the largest weight, we expect to swap that in by removing node
+        ``dim - 3``."""
+        graph = nx.complete_graph(dim)
+        graph.remove_edge(dim - 1, dim - 3)
+        graph.remove_edge(dim - 2, dim - 4)
+        s = list(range(dim - 2))
+        weights = list(range(dim))
+        result = set(clique.swap(s, graph, node_select=weights))
+        expected = set(range(dim - 3)) | {dim - 1}
+        assert result == expected
+
+    def test_swap_weight_tie(self, dim, monkeypatch):
+        """Test if function performs correct swap operation using randomness to break ties during
+        degree-based node selection. The input graph is a complete graph with the ``(dim - 1,
+        dim - 3)`` and ``(dim - 2, dim - 4)`` edges removed. The starting clique is the first
+        ``dim - 2`` nodes. This results in two candidate swap pairs: ``(dim - 1, dim - 3)`` and
+        ``(dim - 2, dim - 4)``. This test gives the every node the same weight, so we expect that
+        either pair should be selected randomly with equal probability. This test monkeypatches
+        the ``np.random.choice`` call to guarantee that one of the nodes is picked during one run
+        of ``swap`` and the another node is picked during the next run.
+        """
+        graph = nx.complete_graph(dim)
+        graph.remove_edge(dim - 1, dim - 3)
+        graph.remove_edge(dim - 2, dim - 4)
+        s = list(range(dim - 2))
+        weights = [1 for _ in range(dim)]
+
+        patch_random_choice_1 = functools.partial(patch_random_choice, element=0)
+        patch_random_choice_2 = functools.partial(patch_random_choice, element=1)
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_1)
+            c1 = clique.swap(s, graph, node_select=weights)
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_2)
+            c2 = clique.swap(s, graph, node_select=weights)
 
         assert c1 != c2
 

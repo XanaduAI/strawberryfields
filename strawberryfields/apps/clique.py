@@ -60,6 +60,8 @@ until the remainder forms a clique. This can be achieved by selecting the node w
 degree relative to the rest of subgraph and removing the node, repeating the process until a
 clique is found.
 """
+from typing import Union
+
 import networkx as nx
 import numpy as np
 
@@ -129,7 +131,9 @@ def search(clique: list, graph: nx.Graph, iterations, node_select: str = "unifor
     return search(swapped, graph, iterations, node_select)
 
 
-def grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
+def grow(
+    clique: list, graph: nx.Graph, node_select: Union[str, np.ndarray, list] = "uniform"
+) -> list:
     """Iteratively adds new nodes to the input clique to generate a larger clique.
 
     Each iteration involves calculating the set :math:`C_0` (provided by the function
@@ -141,9 +145,13 @@ def grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
 
     Whenever there are multiple nodes within :math:`C_0`, one must choose which node to add to
     the growing clique. This function allows a method of choosing nodes to be set with the
-    ``node_select`` argument, with node selection based on uniform randomness and node degree
-    supported. Degree-based node selection involves picking the node with the greatest degree,
-    with ties settled by uniform random choice.
+    ``node_select`` argument, which can be any of the following:
+
+    - ``"uniform"``: randomly choose a node from the candidates;
+    - ``"degree"``: choose the node from the candidates with the greatest degree, settling ties
+      by uniform random choice;
+    - A list or array: specifying the node weights of the graph, resulting in choosing the node
+      from the candidates with the greatest weight, settling ties by uniform random choice.
 
     **Example usage:**
 
@@ -155,9 +163,8 @@ def grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
-        node_select (str): method of selecting nodes from :math:`C_0` during growth. Can be either
-            ``"uniform"`` for uniform random selection or ``"degree"`` for degree-based selection.
-            Defaults to ``"uniform"``.
+        node_select (str): method of selecting nodes from :math:`C_0` during growth. Can be
+            ``"uniform"`` (default), ``"degree"``, or a numpy array or list.
 
     Returns:
         list[int]: a new clique subgraph of equal or larger size than the input
@@ -168,6 +175,12 @@ def grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
 
     if not is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
+
+    if isinstance(node_select, (list, np.ndarray)):
+        if len(node_select) != graph.number_of_nodes():
+            raise ValueError("Number of node weights must match number of nodes")
+        w = {n: node_select[i] for i, n in enumerate(graph.nodes)}
+        node_select = "weight"
 
     clique = set(clique)
     _c_0 = c_0(clique, graph)
@@ -180,6 +193,11 @@ def grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
             to_add_index = np.random.choice(np.where(degrees == degrees.max())[0])
             to_add = _c_0[to_add_index]
             clique.add(to_add)
+        elif node_select == "weight":
+            weights = np.array([w[n] for n in _c_0])
+            to_add_index = np.random.choice(np.where(weights == weights.max())[0])
+            to_add = _c_0[to_add_index]
+            clique.add(to_add)
         else:
             raise ValueError("Node selection method not recognized")
 
@@ -188,7 +206,9 @@ def grow(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
     return sorted(clique)
 
 
-def swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
+def swap(
+    clique: list, graph: nx.Graph, node_select: Union[str, np.ndarray, list] = "uniform"
+) -> list:
     """If possible, generates a new clique by swapping a node in the input clique with a node
     outside the clique.
 
@@ -200,9 +220,13 @@ def swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
 
     Whenever there are multiple nodes within :math:`C_1`, one must choose which node to add to
     the growing clique. This function allows a method of choosing nodes to be set with the
-    ``node_select`` argument, with node selection based on uniform randomness and node degree
-    supported. Degree-based node selection involves picking the node with the greatest degree,
-    with ties settled by uniform random choice.
+    ``node_select`` argument, which can be any of the following:
+
+    - ``"uniform"``: randomly choose a node from the candidates;
+    - ``"degree"``: choose the node from the candidates with the greatest degree, settling ties
+      by uniform random choice;
+    - A list or array: specifying the node weights of the graph, resulting in choosing the node
+      from the candidates with the greatest weight, settling ties by uniform random choice.
 
     **Example usage:**
 
@@ -215,19 +239,24 @@ def swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
-        node_select (str): method of selecting nodes from :math:`C_1` during growth. Can be either
-            ``"uniform"`` for uniform random selection or ``"degree"`` for degree-based selection.
-            Defaults to ``"uniform"``.
+        node_select (str): method of selecting nodes from :math:`C_0` during growth. Can be
+            ``"uniform"`` (default), ``"degree"``, or a numpy array or list.
 
     Returns:
         list[int]: a new clique subgraph of equal size as the input
-       """
+    """
 
     if not set(clique).issubset(graph.nodes):
         raise ValueError("Input is not a valid subgraph")
 
     if not is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
+
+    if isinstance(node_select, (list, np.ndarray)):
+        if len(node_select) != graph.number_of_nodes():
+            raise ValueError("Number of node weights must match number of nodes")
+        w = {n: node_select[i] for i, n in enumerate(graph.nodes)}
+        node_select = "weight"
 
     clique = set(clique)
     _c_1 = c_1(clique, graph)
@@ -238,6 +267,10 @@ def swap(clique: list, graph: nx.Graph, node_select: str = "uniform") -> list:
             swap_nodes = _c_1[swap_index]
         elif node_select == "degree":
             degrees = np.array([graph.degree(n[1]) for n in _c_1])
+            to_swap_index = np.random.choice(np.where(degrees == degrees.max())[0])
+            swap_nodes = _c_1[to_swap_index]
+        elif node_select == "weight":
+            degrees = np.array([w[n[1]] for n in _c_1])
             to_swap_index = np.random.choice(np.where(degrees == degrees.max())[0])
             swap_nodes = _c_1[to_swap_index]
         else:
