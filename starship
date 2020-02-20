@@ -41,18 +41,13 @@ if __name__ == "__main__":
         "-o",
         help="where to output the result of the program - outputs to stdout by default",
     )
-    parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="returns a pdb shell after executing the program",
-    )
 
     args = parser.parse_args()
 
     connection = Connection(
         token=args.token,
         host="platform.strawberryfields.ai",
-        port="443",
+        port=443,
         use_ssl=True,
         debug=False,
     )
@@ -77,6 +72,3 @@ if __name__ == "__main__":
                 file.write(str(result.samples.T))
         else:
             sys.stdout.write(str(result.samples.T))
-
-    if args.debug:
-        pdb.set_trace()

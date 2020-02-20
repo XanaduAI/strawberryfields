@@ -22,17 +22,16 @@ import collections.abc
 from datetime import datetime
 import enum
 import json
-import requests
 import time
 from urllib.parse import urljoin
 
 import numpy as np
-
-from .backends import load_backend
-from .backends.base import NotApplicableError, BaseBackend
+import requests
 
 from strawberryfields.configuration import Configuration
 from strawberryfields.io import to_blackbird
+from .backends import load_backend
+from .backends.base import NotApplicableError, BaseBackend
 
 
 class OneJobAtATimeError(Exception):
@@ -94,8 +93,6 @@ class Result:
         # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
         if len(np.shape(samples)) > 1:
             samples = np.stack(samples, 1)
-            # TODO what shape should this have exactly?
-            # samples = np.vstack(samples)
         self._samples = samples
 
     @property
@@ -578,11 +575,6 @@ class GetJobResultRequestError(Exception):
     """
 
 
-class GetJobCircuitRequestError(Exception):
-    """Raised when a request to get a job circuit fails.
-    """
-
-
 class CancelJobRequestError(Exception):
     """Raised when a request to cancel a job fails.
     """
@@ -594,6 +586,10 @@ class RefreshTerminalJobError(Exception):
 
 class CancelTerminalJobError(Exception):
     """Raised when attempting to cancel a completed, failed, or cancelled job."""
+
+
+class ResultOfIncompleteJobError(Exception):
+    """Raised when attempting to access the result of an incomplete job."""
 
 
 class PingFailedError(Exception):
@@ -644,7 +640,7 @@ class StarshipEngine:
         if target not in self.VALID_TARGETS:
             raise InvalidEngineTargetError("Invalid engine target: {}".format(target))
         if connection is None:
-            # TODO use the global config once implemented
+            # TODO update this when config is implemented
             config = Configuration().api
             connection = Connection(
                 token=config["authentication_token"],
@@ -675,7 +671,7 @@ class StarshipEngine:
         return self._connection
 
     def run(self, program, shots=1):
-        """Runs a remote job synchronously. 
+        """Runs a remote job synchronously.
 
         In this synchronous mode, the engine blocks until the job is completed, failed, or
         cancelled, at which point the `Job` is returned.
@@ -687,7 +683,7 @@ class StarshipEngine:
         Returns:
             strawberryfields.engine.Result: the job result
         """
-        job = self.run_async(program)
+        job = self.run_async(program, shots)
         try:
             # TODO worth setting a timeout here?
             while True:
@@ -698,7 +694,6 @@ class StarshipEngine:
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             self._connection.cancel_job(job.id)
-            return
 
     def run_async(self, program, shots=1):
         """Runs a remote job asynchronously.
@@ -714,9 +709,10 @@ class StarshipEngine:
             strawberryfields.engine.Job: the created remote job
         """
         bb = to_blackbird(program)
-        bb._target["name"] = self._target
+        # pylint: disable=protected-access
+        bb._target["name"] = self.target
+        # pylint: disable=protected-access
         bb._target["options"] = {"shots": shots}
-        # bb._target["options"] = {"shots": shots, **program.backend_options}
         return self._connection.create_job(bb.serialize())
 
 
@@ -734,11 +730,8 @@ class Connection:
     # TODO adjust this
     MAX_JOBS_REQUESTED = 100
     JOB_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
-    USER_AGENT = "strawberryfields-client/0.1"
 
-    def __init__(
-        self, token, host=None, port=None, use_ssl=None, debug=None,
-    ):
+    def __init__(self, token, host=None, port=None, use_ssl=None):
         # TODO use `read_config` when implemented
         # e.g. read_config(host="abc", port=123)
 
@@ -746,31 +739,50 @@ class Connection:
         self._host = host
         self._port = port
         self._use_ssl = use_ssl
-        # TODO what is this used for?
-        self._debug = debug
 
     @property
     def token(self):
+        """The API authentication token.
+
+        Returns:
+            str: the API token
+        """
         return self._token
 
     @property
     def host(self):
+        """The host for the remote backend.
+
+        Returns:
+            str: the hostname
+        """
         return self._host
 
     @property
     def port(self):
+        """The port to connect to on the remote host.
+
+        Returns:
+            int: the port number
+        """
         return self._port
 
     @property
     def use_ssl(self):
+        """Whether to use SSL for the connection.
+
+        Returns:
+            bool: True if SSL should be used, and False otherwise
+        """
         return self._use_ssl
 
     @property
-    def debug(self):
-        return self._debug
-
-    @property
     def base_url(self):
+        """The base URL used for the connection.
+
+        Returns:
+            str: the base url
+        """
         return "http{}://{}:{}".format(
             "s" if self.use_ssl else "", self.host, self.port
         )
@@ -799,8 +811,8 @@ class Connection:
         """Gets all jobs created by the user, optionally filtered by datetime.
 
         Args:
-            after (datetime.datetime): if provided, only jobs more recent than `after`
-                                       are returned
+            after (datetime.datetime): if provided, only jobs more recently created
+                                       then `after` are returned
 
         Returns:
             List[strawberryfields.engine.Job]: the jobs
@@ -861,13 +873,6 @@ class Connection:
             return Result(response.json()["result"], is_stateful=False)
         raise GetJobResultRequestError(self._request_error_message(response))
 
-    # TODO is this necessary?
-    def get_job_circuit(self, job_id):
-        response = self._get("/jobs/{}/circuit".format(job_id))
-        if response.status_code == 200:
-            return response.json()["circuit"]
-        raise GetJobCircuitRequestError(self._request_error_message(response))
-
     def cancel_job(self, job_id):
         """Cancels a job.
 
@@ -904,11 +909,12 @@ class Connection:
     def _request(self, method, path, **kwargs):
         return getattr(requests, method.value)(
             urljoin(self.base_url, path),
-            headers={"Authorization": self.token, "User-Agent": self.USER_AGENT},
+            headers={"Authorization": self.token},
             **kwargs
         )
 
-    def _request_error_message(self, response):
+    @staticmethod
+    def _request_error_message(response):
         body = response.json()
         return "{} ({}): {}".format(
             body.get("status_code", ""), body.get("code", ""), body.get("detail", "")
@@ -931,7 +937,7 @@ class Job:
     `Connection` when a job is run.
 
     Args:
-        id_ (str): the job UUID 
+        id_ (str): the job UUID
         status (strawberryfields.engine.JobStatus): the job status
         connection (strawberryfields.engine.Connection): the connection over which the
                                                          job is managed
@@ -942,30 +948,38 @@ class Job:
         self._status = status
         self._connection = connection
 
-        # TODO need this?
-        self._circuit = None
         self._result = None
 
     @property
     def id(self):
+        """The job UUID.
+
+        Returns:
+            str: the job UUID
+        """
         return self._id
 
     @property
     def status(self):
+        """The job status.
+
+        Returns:
+            strawberryfields.engine.JobStatus: the job status
+        """
         return self._status
 
     @property
     def result(self):
         """The job result.
 
-        This is only defined for complete jobs, and raises a `JobNotCompleteError` for
-        any other status.
+        This is only defined for complete jobs, and raises a `ResultOfIncompleteJobError`
+        for any other status.
 
         Returns:
             strawberryfields.engine.Result: the result
         """
         if self.status != JobStatus.COMPLETE:
-            raise JobNotCompleteError(
+            raise ResultOfIncompleteJobError(
                 "The result is undefined for jobs that are not complete "
                 "(current status: {})".format(self.status.value)
             )
