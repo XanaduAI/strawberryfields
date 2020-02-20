@@ -397,10 +397,10 @@ def waw_matrix(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
 
     >>> g = nx.erdos_renyi_graph(5, 0.7)
     >>> a = nx.to_numpy_array(g)
-    >>> w = [1, 1, 3, 1, 0.5]
+    >>> w = [10, 1, 0, 1, 1]
     >>> a = waw_matrix(a, w)
     >>> sample(a, 3, 4)
-    [[0, 0, 0, 0, 0], [1, 0, 0, 0, 1], [0, 0, 0, 0, 0], [0, 1, 1, 1, 1]]
+    [[1, 1, 0, 1, 0], [1, 1, 0, 1, 0], [1, 1, 0, 0, 0], [1, 1, 0, 1, 0]]
 
     Args:
         A (array): adjacency matrix to rescale
