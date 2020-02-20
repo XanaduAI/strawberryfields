@@ -222,6 +222,14 @@ class TestGrow:
         with pytest.raises(ValueError, match="Input is not a valid subgraph"):
             clique.grow([dim + 1], nx.empty_graph(dim))
 
+    def test_bad_weights(self, dim, graph):
+        """Test if function raises a ``ValueError`` when a vector of node weights input to
+        ``node_select`` is not of the same dimension as the input graph."""
+        s = [0, 1]
+        w = np.ones(dim - 1)
+        with pytest.raises(ValueError, match="Number of node weights must match number of nodes"):
+            clique.grow(s, graph, node_select=w)
+
 
 @pytest.mark.parametrize("dim", range(5, 10))
 class TestSwap:
@@ -344,6 +352,14 @@ class TestSwap:
         s = [0]
         with pytest.raises(ValueError, match="Node selection method not recognized"):
             clique.swap(s, graph, node_select="")
+
+    def test_bad_weights(self, dim, graph):
+        """Test if function raises a ``ValueError`` when a vector of node weights input to
+        ``node_select`` is not of the same dimension as the input graph."""
+        s = [0, 1]
+        w = np.ones(dim - 1)
+        with pytest.raises(ValueError, match="Number of node weights must match number of nodes"):
+            clique.swap(s, graph, node_select=w)
 
 
 @pytest.mark.parametrize("dim", range(6, 10))
