@@ -404,7 +404,16 @@ class TestWawMatrix:
             adj_asym = np.triu(np.ones((4, 4)))
             sample.sample(A=adj_asym, n_mean=1.0)
 
-    @pytest.mark.parametrize("dim", [3, 4, 5])
+    @pytest.mark.parametrize("inst", zip(adjs, wvecs, resc_adjs))
+    def test_valid_w(self, inst):
+        """Test if function returns the correct answer on some pre-calculated instances."""
+        assert np.allclose(sample.waw_matrix(inst[0], inst[1]), inst[2])
+
+
+@pytest.mark.parametrize("dim", [3, 4, 5])
+class TestProcessW:
+    """Tests for the function ``strawberryfields.apps.sample._process_w``"""
+
     def test_invalid_w(self, dim, adj):
         """Test if function raises a ``ValueError`` for a weight vector that is not valid."""
         # Create different candidate invalid weight vectors
@@ -416,29 +425,28 @@ class TestWawMatrix:
             np.ones((1, dim, 1)),
         ]
         with pytest.raises(ValueError, match="Vector of node weights must be a row or column"):
-            _ = [sample.waw_matrix(adj, w) for w in w]
+            _ = [sample._process_w(adj, w) for w in w]
 
-    @pytest.mark.parametrize("inst", zip(adjs, wvecs, resc_adjs))
-    def test_valid_w(self, inst):
-        """Test if function returns the correct answer on some pre-calculated instances."""
-        assert np.allclose(sample.waw_matrix(inst[0], inst[1]), inst[2])
+    def test_valid_w(self, dim, adj):
+        """Test if function returns the correct weight vector"""
+        w = np.ones((dim,))
+        assert np.allclose(sample._process_w(adj, w), w)
 
-    @pytest.mark.parametrize("inst", zip(adjs, wvecs, resc_adjs))
-    def test_valid_w_list(self, inst):
-        """Test if function returns the correct answer on some pre-calculated instances,
-        with w input as a list."""
-        assert np.allclose(sample.waw_matrix(inst[0], list(inst[1])), inst[2])
+    def test_valid_w_row(self, dim, adj):
+        """Test if function returns the correct weight vector when input as a two-dimensional
+        row vector"""
+        w = np.ones((dim,))
+        wp = np.expand_dims(w, 0)
+        assert np.allclose(sample._process_w(adj, wp), w)
 
-    @pytest.mark.parametrize("inst", zip(adjs, wvecs, resc_adjs))
-    def test_valid_w_row(self, inst):
-        """Test if function returns the correct answer on some pre-calculated instances,
-        with w a 2-dimensional numpy row vector."""
-        i = np.expand_dims(inst[1], 0)
-        assert np.allclose(sample.waw_matrix(inst[0], i), inst[2])
+    def test_valid_w_column(self, dim, adj):
+        """Test if function returns the correct weight vector when input as a two-dimensional
+        column vector"""
+        w = np.ones((dim,))
+        wp = np.expand_dims(w, 1)
+        assert np.allclose(sample._process_w(adj, wp), w)
 
-    @pytest.mark.parametrize("inst", zip(adjs, wvecs, resc_adjs))
-    def test_valid_w_column(self, inst):
-        """Test if function returns the correct answer on some pre-calculated instances,
-        with w a 2-dimensional numpy column vector."""
-        i = np.expand_dims(inst[1], 1)
-        assert np.allclose(sample.waw_matrix(inst[0], i), inst[2])
+    def test_valid_w_list(self, dim, adj):
+        """Test if function returns the correct weight vector when input as a list"""
+        w = list(np.ones((dim,)))
+        assert np.allclose(sample._process_w(adj, w), w)

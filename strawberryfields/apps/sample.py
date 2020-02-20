@@ -412,6 +412,21 @@ def waw_matrix(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
     if not np.allclose(A, A.T):
         raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
 
+    w = _process_w(A, w)
+
+    return (w * A).T * w
+
+
+def _process_w(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
+    """Ensure correct form of weight vector.
+
+        Args:
+            A (array): adjacency matrix, used to fix dimension
+            w (array or list): weight vector to be processed
+
+        Returns:
+            array: the weight vector as a numpy array
+        """
     if isinstance(w, list):
         w = np.array(w)
 
@@ -425,4 +440,4 @@ def waw_matrix(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
     if not w_check:
         raise ValueError("Vector of node weights must be a row or column vector")
 
-    return (w * A).T * w
+    return w.flatten()
