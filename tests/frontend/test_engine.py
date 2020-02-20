@@ -21,9 +21,10 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.engine import (
     Connection,
-    RequestFailedError,
+    InvalidJobOperationError,
     Job,
     JobStatus,
+    RequestFailedError,
     Result,
     StarshipEngine,
 )
@@ -84,71 +85,51 @@ class MockServer:
         )
 
 
-class TestStarshipEngine:
-    """Tests for the `StarshipEngine` class."""
+class TestResult:
+    """Tests for the ``Result`` class."""
 
-    def test_run_complete(self, connection, prog, monkeypatch):
-        """Tests a successful synchronous job execution."""
-        id_, result_expected = "123", [[1, 2], [3, 4]]
-
-        server = MockServer()
-        monkeypatch.setattr(
-            Connection,
-            "create_job",
-            mock_return(Job(id_=id_, status=JobStatus.OPEN, connection=connection)),
-        )
-        monkeypatch.setattr(Connection, "get_job_status", server.get_job_status)
-        monkeypatch.setattr(
-            Connection,
-            "get_job_result",
-            mock_return(Result(result_expected, is_stateful=False)),
-        )
-
-        engine = StarshipEngine("chip2", connection=connection)
-        result = engine.run(prog)
-
-        assert result.samples.T.tolist() == result_expected
+    def stateless_result_raises_on_state_access(self):
+        result = Result([[1, 2], [3, 4]], is_stateful=False)
 
         with pytest.raises(AttributeError):
             _ = result.state
 
-    def test_run_cancelled(self):
-        """Tests a manual cancellation of synchronous job execution."""
-        # TODO
 
-    def test_run_async(self, connection, prog, monkeypatch):
-        """Tests a successful asynchronous job execution."""
-        id_, result_expected = "123", [[1, 2], [3, 4]]
+class TestJob:
+    """Tests for the ``Job`` class."""
 
-        server = MockServer()
-        monkeypatch.setattr(
-            Connection,
-            "create_job",
-            mock_return(Job(id_=id_, status=JobStatus.OPEN, connection=connection)),
-        )
-        monkeypatch.setattr(Connection, "get_job_status", server.get_job_status)
-        monkeypatch.setattr(
-            Connection,
-            "get_job_result",
-            mock_return(Result(result_expected, is_stateful=False)),
-        )
-
-        engine = StarshipEngine("chip2", connection=connection)
-        job = engine.run_async(prog)
-        assert job.status == JobStatus.OPEN
-
-        for _ in range(server.REQUESTS_BEFORE_COMPLETE):
-            job.refresh()
-
-        assert job.status == JobStatus.COMPLETE
-        assert job.result.samples.T.tolist() == result_expected
+    def incomplete_job_raises_on_result_access(self):
+        job = Job("abc", status=JobStatus.QUEUED)
 
         with pytest.raises(AttributeError):
-            _ = job.result.state
+            _ = job.result
+
+    def terminal_job_raises_on_refresh(self):
+        job = Job("abc", status=JobStatus.COMPLETE)
+
+        with pytest.raises(InvalidJobOperationError):
+            job.refresh()
+
+    def terminal_job_raises_on_cancel(self):
+        job = Job("abc", status=JobStatus.COMPLETE)
+
+        with pytest.raises(InvalidJobOperationError):
+            job.cancel()
 
 
 class TestConnection:
-    """Tests for the `Connection` class."""
+    """Tests for the ``Connection`` class."""
+
+    def test_init(self):
+        token, host, port, use_ssl = "token", "host", 123, True
+        connection = Connection(token, host, port, use_ssl)
+
+        assert connection.token == token
+        assert connection.host == host
+        assert connection.port == port
+        assert connection.use_ssl == use_ssl
+
+        assert connection.base_url == "https://host:123"
 
     def test_create_job(self, connection, monkeypatch):
         """Tests a successful job creation flow."""
@@ -258,3 +239,89 @@ class TestConnection:
 
         with pytest.raises(RequestFailedError):
             connection.get_job_result("123")
+
+    def test_cancel_job(self, connection, monkeypatch):
+        """Tests a successful job cancellation request."""
+        monkeypatch.setattr(Connection, "_patch", mock_return(mock_response(204, {})))
+
+        connection.cancel_job("123")
+
+    def test_cancel_job_error(self, connection, monkeypatch):
+        """Tests a successful job cancellation request."""
+        monkeypatch.setattr(Connection, "_patch", mock_return(mock_response(404, {})))
+
+        with pytest.raises(RequestFailedError):
+            connection.cancel_job("123")
+
+    def test_ping_success(self, connection, monkeypatch):
+        monkeypatch.setattr(Connection, "_get", mock_return(mock_response(200, {})))
+
+        assert connection.ping()
+
+    def test_ping_failure(self, connection, monkeypatch):
+        monkeypatch.setattr(Connection, "_get", mock_return(mock_response(500, {})))
+
+        assert not connection.ping()
+
+
+class TestStarshipEngine:
+    """Tests for the ``StarshipEngine`` class."""
+
+    def test_run_complete(self, connection, prog, monkeypatch):
+        """Tests a successful synchronous job execution."""
+        id_, result_expected = "123", [[1, 2], [3, 4]]
+
+        server = MockServer()
+        monkeypatch.setattr(
+            Connection,
+            "create_job",
+            mock_return(Job(id_=id_, status=JobStatus.OPEN, connection=connection)),
+        )
+        monkeypatch.setattr(Connection, "get_job_status", server.get_job_status)
+        monkeypatch.setattr(
+            Connection,
+            "get_job_result",
+            mock_return(Result(result_expected, is_stateful=False)),
+        )
+
+        engine = StarshipEngine("chip2", connection=connection)
+        result = engine.run(prog)
+
+        assert result.samples.T.tolist() == result_expected
+
+        with pytest.raises(AttributeError):
+            _ = result.state
+
+    def test_run_cancelled(self):
+        """Tests a manual cancellation of synchronous job execution."""
+        # TODO
+
+    def test_run_async(self, connection, prog, monkeypatch):
+        """Tests a successful asynchronous job execution."""
+        id_, result_expected = "123", [[1, 2], [3, 4]]
+
+        server = MockServer()
+        monkeypatch.setattr(
+            Connection,
+            "create_job",
+            mock_return(Job(id_=id_, status=JobStatus.OPEN, connection=connection)),
+        )
+        monkeypatch.setattr(Connection, "get_job_status", server.get_job_status)
+        monkeypatch.setattr(
+            Connection,
+            "get_job_result",
+            mock_return(Result(result_expected, is_stateful=False)),
+        )
+
+        engine = StarshipEngine("chip2", connection=connection)
+        job = engine.run_async(prog)
+        assert job.status == JobStatus.OPEN
+
+        for _ in range(server.REQUESTS_BEFORE_COMPLETE):
+            job.refresh()
+
+        assert job.status == JobStatus.COMPLETE
+        assert job.result.samples.T.tolist() == result_expected
+
+        with pytest.raises(AttributeError):
+            _ = job.result.state

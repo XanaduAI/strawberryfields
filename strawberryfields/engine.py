@@ -852,9 +852,7 @@ class Connection:
             bool: ``True`` if the connection is successful, and ``False`` otherwise
         """
         response = self._get("/healthz")
-        if response.status_code == 200:
-            return True
-        return False
+        return response.status_code == 200
 
     def _get(self, path: str, **kwargs) -> requests.Response:
         return self._request(RequestMethod.GET, path, **kwargs)
@@ -980,9 +978,7 @@ class StarshipEngine:
                 if job.status == JobStatus.COMPLETE:
                     return job.result
                 if job.status == JobStatus.FAILED:
-                    raise JobFailedError(
-                        "The computation failed on the remote platform; please try again."
-                    )
+                    raise JobFailedError("The computation failed; please try again.")
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             self._connection.cancel_job(job.id)
