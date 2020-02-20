@@ -400,6 +400,7 @@ def waw_matrix(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
     >>> w = [1, 1, 3, 1, 0.5]
     >>> a = waw_matrix(a, w)
     >>> sample(a, 3, 4)
+    [[0, 0, 0, 0, 0], [1, 0, 0, 0, 1], [0, 0, 0, 0, 0], [0, 1, 1, 1, 1]]
 
     Args:
         A (array): adjacency matrix to rescale
