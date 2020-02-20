@@ -412,16 +412,16 @@ def waw_matrix(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
     if not np.allclose(A, A.T):
         raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
 
-    w = _process_w(A, w)
+    w = _process_w(len(A), w)
 
     return (w * A).T * w
 
 
-def _process_w(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
+def _process_w(dim: int, w: Union[np.ndarray, list]) -> np.ndarray:
     """Ensure correct form of weight vector.
 
         Args:
-            A (array): adjacency matrix, used to fix dimension
+            dim (int): dimension of graph
             w (array or list): weight vector to be processed
 
         Returns:
@@ -431,7 +431,6 @@ def _process_w(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
         w = np.array(w)
 
     w_s = w.shape
-    dim = len(A)
 
     w_check = (len(w_s) == 1 and w_s[0] == dim) or (
         len(w_s) == 2 and sorted(np.unique(w_s)) == [1, dim]
