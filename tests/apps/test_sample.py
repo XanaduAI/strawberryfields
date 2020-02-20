@@ -409,44 +409,8 @@ class TestWawMatrix:
         """Test if function returns the correct answer on some pre-calculated instances."""
         assert np.allclose(sample.waw_matrix(inst[0], inst[1]), inst[2])
 
-
-@pytest.mark.parametrize("dim", [3, 4, 5])
-class TestProcessW:
-    """Tests for the function ``strawberryfields.apps.sample._process_w``"""
-
-    def test_invalid_w(self, dim):
-        """Test if function raises a ``ValueError`` for a weight vector that is not valid."""
-        # Create different candidate invalid weight vectors
-        w = [
-            np.ones((dim - 1,)),
-            np.ones((1, dim - 1)),
-            np.ones((dim - 1, 1)),
-            np.ones((2, dim)),
-            np.ones((1, dim, 1)),
-        ]
-        with pytest.raises(ValueError, match="Vector of node weights must be a row or column"):
-            _ = [sample._process_w(dim, w) for w in w]
-
-    def test_valid_w(self, dim):
-        """Test if function returns the correct weight vector"""
-        w = np.ones((dim,))
-        assert np.allclose(sample._process_w(dim, w), w)
-
-    def test_valid_w_row(self, dim):
-        """Test if function returns the correct weight vector when input as a two-dimensional
-        row vector"""
-        w = np.ones((dim,))
-        wp = np.expand_dims(w, 0)
-        assert np.allclose(sample._process_w(dim, wp), w)
-
-    def test_valid_w_column(self, dim):
-        """Test if function returns the correct weight vector when input as a two-dimensional
-        column vector"""
-        w = np.ones((dim,))
-        wp = np.expand_dims(w, 1)
-        assert np.allclose(sample._process_w(dim, wp), w)
-
-    def test_valid_w_list(self, dim):
-        """Test if function returns the correct weight vector when input as a list"""
-        w = list(np.ones((dim,)))
-        assert np.allclose(sample._process_w(dim, w), w)
+    @pytest.mark.parametrize("inst", zip(adjs, wvecs, resc_adjs))
+    def test_valid_w_list(self, inst):
+        """Test if function returns the correct answer on some pre-calculated instances,
+        when w is a list"""
+        assert np.allclose(sample.waw_matrix(inst[0], list(inst[1])), inst[2])

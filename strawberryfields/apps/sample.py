@@ -99,9 +99,9 @@ graph's adjacency matrix. One canonical approach to doing this is to use the ``W
 
     A \rightarrow WAW,
 
-with :math:`W` the diagonal matrix formed by the weighted nodes. The rescaled adjacency matrix
-can be passed to :func:`sample`, resulting in a bias toward sampling subgraphs with a large
-product of node weights. :func:`waw_matrix`
+with :math:`W=w_{i}\delta_{ij}` the diagonal matrix formed by the weighted nodes :math:`w_{i}`. The
+rescaled adjacency matrix can be passed to :func:`sample`, resulting in a distribution that
+increases the probability of observing a node proportionally to its weight.
 """
 import warnings
 from typing import Optional, Union
@@ -383,15 +383,15 @@ def waw_matrix(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
     r"""Rescale adjacency matrix to account for node weights.
 
     Given a graph with adjacency matrix :math:`A` and a vector :math:`w` of weighted nodes,
-    this function rescales the adjacency matrix according to:
+    this function rescales the adjacency matrix according to :cite:`banchi2019molecular`:
 
     .. math::
 
         A \rightarrow WAW,
 
-    with :math:`W` the diagonal matrix formed by the weighted nodes. This encoding can be used to
-    add a bias in GBS toward selecting subgraphs with a large product of node weights
-    :cite:`banchi2019molecular`. The resulting matrix can be passed to :func:`sample`.
+    with :math:`W=w_{i}\delta_{ij}` the diagonal matrix formed by the weighted nodes :math:`w_{i}`.
+    The rescaled adjacency matrix can be passed to :func:`sample`, resulting in a distribution that
+    increases the probability of observing a node proportionally to its weight.
 
     **Example usage:**
 
@@ -412,31 +412,7 @@ def waw_matrix(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
     if not np.allclose(A, A.T):
         raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
 
-    w = _process_w(len(A), w)
-
-    return (w * A).T * w
-
-
-def _process_w(dim: int, w: Union[np.ndarray, list]) -> np.ndarray:
-    """Ensure correct form of weight vector.
-
-        Args:
-            dim (int): dimension of graph
-            w (array or list): weight vector to be processed
-
-        Returns:
-            array: the weight vector as a numpy array
-        """
     if isinstance(w, list):
         w = np.array(w)
 
-    w_s = w.shape
-
-    w_check = (len(w_s) == 1 and w_s[0] == dim) or (
-        len(w_s) == 2 and sorted(np.unique(w_s)) == [1, dim]
-    )  # Check if the vector has one dimension or is a two-dimensional row or column vector
-
-    if not w_check:
-        raise ValueError("Vector of node weights must be a row or column vector")
-
-    return w.flatten()
+    return (w * A).T * w
