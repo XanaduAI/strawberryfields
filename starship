@@ -33,7 +33,9 @@ if __name__ == "__main__":
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--input", "-i", help="the xbb file to run")
-    group.add_argument("--hello", action="store_true", help="test the API connection")
+    group.add_argument(
+        "--ping", "-p", action="store_true", help="test the API connection"
+    )
     parser.add_argument(
         "--output",
         "-o",
@@ -55,7 +57,7 @@ if __name__ == "__main__":
         debug=False,
     )
 
-    if args.hello:
+    if args.ping:
         try:
             connection.ping()
             sys.stdout.write("You have successfully authenticated to the platform!\n")
@@ -70,7 +72,7 @@ if __name__ == "__main__":
     result = eng.run(program)
 
     if result and result.samples is not None:
-        if hasattr(args, "output"):
+        if args.output:
             with open(args.output, "w") as file:
                 file.write(str(result.samples.T))
         else:
