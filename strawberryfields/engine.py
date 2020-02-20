@@ -549,6 +549,10 @@ class InvalidJobOperationError(Exception):
     """Raised when an invalid operation is performed on a job."""
 
 
+class JobFailedError(Exception):
+    """Raised when a remote job enters a 'failed' status."""
+
+
 class StarshipEngine:
     """A quantum program executor engine that that provides a simple interface for
     running remote jobs in a synchronous or asynchronous manner.
@@ -568,7 +572,7 @@ class StarshipEngine:
         result  # [[0, 1, 0, 2, 1, 0, 0, 0]]
 
         # Run a job synchronously, but cancel it before it is completed
-        _ = engine.run(program, shots=1)
+        result = engine.run(program, shots=1)
         ^C # KeyboardInterrupt cancels the job
 
         # Run a job asynchronously
@@ -591,7 +595,11 @@ class StarshipEngine:
 
     def __init__(self, target, connection=None):
         if target not in self.VALID_TARGETS:
-            raise ValueError("Invalid engine target: {}".format(target))
+            raise ValueError(
+                "Invalid engine target: {} (valid targets: {})".format(
+                    target, self.VALID_TARGETS
+                )
+            )
         if connection is None:
             # TODO use `load_config` when implemented
             config = DEFAULT_CONFIG["api"]
@@ -616,7 +624,7 @@ class StarshipEngine:
 
     @property
     def connection(self):
-        """Returns the connection object used by the engine.
+        """The connection object used by the engine.
 
         Returns:
             strawberryfields.engine.Connection: the connection object used by the engine
@@ -627,7 +635,7 @@ class StarshipEngine:
         """Runs a remote job synchronously.
 
         In this synchronous mode, the engine blocks until the job is completed, failed, or
-        cancelled, at which point the `Job` is returned.
+        cancelled, at which point the result is returned.
 
         Args:
             program (Program): the quantum circuit
@@ -640,8 +648,12 @@ class StarshipEngine:
         try:
             while True:
                 job.refresh()
-                if job.status in (JobStatus.COMPLETE, JobStatus.FAILED):
+                if job.status == JobStatus.COMPLETE:
                     return job.result
+                if job.status == JobStatus.FAILED:
+                    raise JobFailedError(
+                        "The computation failed on the remote platform; please try again."
+                    )
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             self._connection.cancel_job(job.id)
@@ -684,7 +696,9 @@ class Connection:
     MAX_JOBS_REQUESTED = 100
     JOB_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
-    def __init__(self, token, host="platform.strawberryfields.ai", port=443, use_ssl=True):
+    def __init__(
+        self, token, host="platform.strawberryfields.ai", port=443, use_ssl=True
+    ):
         self._token = token
         self._host = host
         self._port = port
@@ -753,7 +767,9 @@ class Connection:
                 status=JobStatus(response.json()["status"]),
                 connection=self,
             )
-        raise RequestFailedError(self._request_error_message(response))
+        raise RequestFailedError(
+            "Job creation failed: {}".format(self._request_error_message(response))
+        )
 
     def get_all_jobs(self, after=datetime(1970, 1, 1)):
         """Gets all jobs created by the user, optionally filtered by datetime.

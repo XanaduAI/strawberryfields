@@ -50,20 +50,15 @@ if __name__ == "__main__":
     )
 
     if args.ping:
-        try:
-            connection.ping()
-            sys.stdout.write("You have successfully authenticated to the platform!\n")
-            sys.exit()
-        # pylint: disable=broad-except
-        except Exception as e:
-            sys.stderr.write("Could not connect to server:\n{}\n".format(e))
-            sys.exit(1)
+        connection.ping()
+        sys.stdout.write("You have successfully authenticated to the platform!\n")
+        sys.exit()
 
     program = load(args.input)
 
     eng = StarshipEngine("chip2", connection)
-    sys.stdout.write("Computing...")
-    result = eng.run(program)
+    sys.stdout.write("Computing...\n")
+    result = eng.run(program, shots=5)
 
     if result and result.samples is not None:
         if args.output:
