@@ -14,11 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""A simple command-line interface for computing quantum programs on the Xanadu cloud
+platform.
+"""
 
-import os
 import sys
 import argparse
-import pdb
 
 from strawberryfields.engine import StarshipEngine, Connection
 from strawberryfields.io import load
@@ -26,7 +27,7 @@ from strawberryfields.io import load
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="run a blackbird script on StarshipEngine"
+        description="run a blackbird script on the Xanadu cloud platform"
     )
     parser.add_argument(
         "--token", "-t", help="the API authentication token", required=True
@@ -45,11 +46,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     connection = Connection(
-        token=args.token,
-        host="platform.strawberryfields.ai",
-        port=443,
-        use_ssl=True,
-        debug=False,
+        token=args.token, host="platform.strawberryfields.ai", port=443, use_ssl=True,
     )
 
     if args.ping:
@@ -57,6 +54,7 @@ if __name__ == "__main__":
             connection.ping()
             sys.stdout.write("You have successfully authenticated to the platform!\n")
             sys.exit()
+        # pylint: disable=broad-except
         except Exception as e:
             sys.stderr.write("Could not connect to server:\n{}\n".format(e))
             sys.exit(1)

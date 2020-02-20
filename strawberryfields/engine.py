@@ -28,7 +28,7 @@ from urllib.parse import urljoin
 import numpy as np
 import requests
 
-from strawberryfields.configuration import Configuration
+from strawberryfields.configuration import DEFAULT_CONFIG
 from strawberryfields.io import to_blackbird
 from .backends import load_backend
 from .backends.base import NotApplicableError, BaseBackend
@@ -546,38 +546,31 @@ class LocalEngine(BaseEngine):
 
 
 class InvalidEngineTargetError(Exception):
-    """Raised when an invalid engine target is provided.
-    """
+    """Raised when an invalid engine target is provided."""
 
 
 class IncompleteJobError(Exception):
-    """Raised when an invalid action is performed on an incomplete job.
-    """
+    """Raised when an invalid action is performed on an incomplete job."""
 
 
 class CreateJobRequestError(Exception):
-    """Raised when a request to create a job fails.
-    """
+    """Raised when a request to create a job fails."""
 
 
 class GetAllJobsRequestError(Exception):
-    """Raised when a request to get all jobs fails.
-    """
+    """Raised when a request to get all jobs fails."""
 
 
 class GetJobRequestError(Exception):
-    """Raised when a request to get a job fails.
-    """
+    """Raised when a request to get a job fails."""
 
 
 class GetJobResultRequestError(Exception):
-    """Raised when a request to get a job result fails.
-    """
+    """Raised when a request to get a job result fails."""
 
 
 class CancelJobRequestError(Exception):
-    """Raised when a request to cancel a job fails.
-    """
+    """Raised when a request to cancel a job fails."""
 
 
 class RefreshTerminalJobError(Exception):
@@ -640,8 +633,8 @@ class StarshipEngine:
         if target not in self.VALID_TARGETS:
             raise InvalidEngineTargetError("Invalid engine target: {}".format(target))
         if connection is None:
-            # TODO update this when config is implemented
-            config = Configuration().api
+            # TODO use `load_config` when implemented
+            config = DEFAULT_CONFIG["api"]
             connection = Connection(
                 token=config["authentication_token"],
                 host=config["hostname"],
@@ -685,12 +678,10 @@ class StarshipEngine:
         """
         job = self.run_async(program, shots)
         try:
-            # TODO worth setting a timeout here?
             while True:
                 job.refresh()
                 if job.status in (JobStatus.COMPLETE, JobStatus.FAILED):
                     return job.result
-                print(job.status)
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             self._connection.cancel_job(job.id)
@@ -724,17 +715,18 @@ class Connection:
     is encouraged to use the higher-level interface provided by `StarshipEngine`.
 
     Args:
-        TODO
+        token (str): the API authentication token
+        host (str): the hostname of the remote platform
+        port (int): the port to connect to on the remote host
+        use_ssl (bool): whether to use SSL for the connection
     """
 
-    # TODO adjust this
     MAX_JOBS_REQUESTED = 100
     JOB_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
-    def __init__(self, token, host=None, port=None, use_ssl=None):
-        # TODO use `read_config` when implemented
-        # e.g. read_config(host="abc", port=123)
-
+    def __init__(
+        self, token, host="platform.strawberryfields.ai", port=443, use_ssl=True
+    ):
         self._token = token
         self._host = host
         self._port = port
@@ -751,7 +743,7 @@ class Connection:
 
     @property
     def host(self):
-        """The host for the remote backend.
+        """The host for the remote platform.
 
         Returns:
             str: the hostname
@@ -787,8 +779,6 @@ class Connection:
             "s" if self.use_ssl else "", self.host, self.port
         )
 
-    # TODO think about using serializers for the request wrappers - future PR maybe?
-
     def create_job(self, circuit):
         """Creates a job with the given circuit.
 
@@ -817,8 +807,6 @@ class Connection:
         Returns:
             List[strawberryfields.engine.Job]: the jobs
         """
-        # TODO figure out how to handle pagination from the user's perspective (if at all)
-        # TODO tentative until corresponding feature on platform side is finalized
         response = self._get("/jobs?page[size]={}".format(self.MAX_JOBS_REQUESTED))
         if response.status_code == 200:
             return [
@@ -867,7 +855,6 @@ class Connection:
         Returns:
             strawberryfields.engine.Result: the job result
         """
-        # TODO get numpy here?
         response = self._get("/jobs/{}/result".format(job_id))
         if response.status_code == 200:
             return Result(response.json()["result"], is_stateful=False)
@@ -922,8 +909,7 @@ class Connection:
 
 
 class RequestMethod(enum.Enum):
-    """Defines the valid request methods for messages sent to the remote job platform.
-    """
+    """Defines the valid request methods for messages sent to the remote job platform."""
 
     GET = "get"
     POST = "post"
