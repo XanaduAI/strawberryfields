@@ -13,81 +13,75 @@
 # limitations under the License.
 r"""Unit tests for engine.py"""
 from datetime import datetime
+from unittest.mock import MagicMock
 
 import pytest
-from unittest.mock import MagicMock, call
 
 import strawberryfields as sf
 from strawberryfields import ops
-from strawberryfields.backends.base import BaseBackend
-
-from strawberryfields.configuration import Configuration
 from strawberryfields.engine import (
     StarshipEngine,
     Connection,
     Job,
     JobStatus,
     Result,
-    InvalidEngineTargetError,
-    IncompleteJobError,
     CreateJobRequestError,
     GetAllJobsRequestError,
     GetJobRequestError,
     GetJobResultRequestError,
-    GetJobCircuitRequestError,
-    CancelJobRequestError,
-    RefreshTerminalJobError,
-    CancelTerminalJobError,
 )
 
 pytestmark = pytest.mark.frontend
 
+# pylint: disable=redefined-outer-name,no-self-use
 
 @pytest.fixture
-def prog(backend):
-    """Program fixture."""
-    prog = sf.Program(2)
-    with prog.context as q:
+def prog():
+    """A simple program for testing purposes.
+    """
+    program = sf.Program(2)
+    with program.context as q:
+        # pylint: disable=expression-not-assigned
         ops.Dgate(0.5) | q[0]
-    return prog
+    return program
+
+
+@pytest.fixture
+def connection():
+    """A mock connection object.
+    """
+    return Connection(token="token", host="host", port=123, use_ssl=True)
 
 
 def mock_return(return_value):
+    """A helper function for defining a mock function that returns the given value for
+    any arguments.
+    """
     return lambda *args, **kwargs: return_value
 
 
 def mock_response(status_code, json_return_value):
+    """A helper function for defining a mock response from the remote platform.
+    """
     response = MagicMock()
     response.status_code = status_code
     response.json.return_value = json_return_value
     return response
 
 
-@pytest.fixture
-def config():
-    # TODO anything to do here?
-    return Configuration()
-
-
-@pytest.fixture
-def connection(config):
-    return Connection(
-        token=config.api["authentication_token"],
-        host=config.api["hostname"],
-        port=config.api["port"],
-        use_ssl=config.api["use_ssl"],
-    )
-
-
-# TODO explore mocking an actual http server here (e.g. with `http.server`)
 class MockServer:
-    # Fake a job processing delay
+    """A mock platform server that fakes a processing delay by counting requests.
+    """
+
     REQUESTS_BEFORE_COMPLETE = 3
 
     def __init__(self):
         self.request_count = 0
 
     def get_job_status(self, _id):
+        """Returns a 'queued' job status until the number of requests exceeds a defined
+        threshold, beyond which a 'complete' job status is returned.
+        """
         self.request_count += 1
         return (
             JobStatus.COMPLETE
@@ -97,7 +91,12 @@ class MockServer:
 
 
 class TestStarshipEngine:
+    """Tests for the `StarshipEngine` class.
+    """
+
     def test_run_complete(self, connection, prog, monkeypatch):
+        """Tests a successful synchronous job execution.
+        """
         id_, result_expected = "123", [[1, 2], [3, 4]]
 
         server = MockServer()
@@ -119,13 +118,16 @@ class TestStarshipEngine:
         assert result.samples.T.tolist() == result_expected
 
         with pytest.raises(AttributeError):
-            result.state
+            _ = result.state
 
-    def test_run_cancelled(self, connection, prog, monkeypatch):
-        server = MockServer()
+    def test_run_cancelled(self):
+        """Tests a manual cancellation of synchronous job execution.
+        """
         # TODO
 
     def test_run_async(self, connection, prog, monkeypatch):
+        """Tests a successful asynchronous job execution.
+        """
         id_, result_expected = "123", [[1, 2], [3, 4]]
 
         server = MockServer()
@@ -143,7 +145,7 @@ class TestStarshipEngine:
 
         engine = StarshipEngine("chip2", connection=connection)
         job = engine.run_async(prog)
-        job.status == JobStatus.OPEN
+        assert job.status == JobStatus.OPEN
 
         for _ in range(server.REQUESTS_BEFORE_COMPLETE):
             job.refresh()
@@ -152,11 +154,16 @@ class TestStarshipEngine:
         assert job.result.samples.T.tolist() == result_expected
 
         with pytest.raises(AttributeError):
-            job.result.state
+            _ = job.result.state
 
 
 class TestConnection:
+    """Tests for the `Connection` class.
+    """
+
     def test_create_job(self, connection, monkeypatch):
+        """Tests a successful job creation flow.
+        """
         id_, status = "123", JobStatus.QUEUED
 
         monkeypatch.setattr(
@@ -171,12 +178,16 @@ class TestConnection:
         assert job.status == status
 
     def test_create_job_error(self, connection, monkeypatch):
+        """Tests a failed job creation flow.
+        """
         monkeypatch.setattr(Connection, "_post", mock_return(mock_response(400, {})))
 
         with pytest.raises(CreateJobRequestError):
             connection.create_job("circuit")
 
     def test_get_all_jobs(self, connection, monkeypatch):
+        """Tests a successful job list retrieval.
+        """
         jobs = [
             {
                 "id": str(i),
@@ -194,12 +205,16 @@ class TestConnection:
         assert [job.id for job in jobs] == [str(i) for i in range(5, 10)]
 
     def test_get_all_jobs_error(self, connection, monkeypatch):
+        """Tests a failed job list retrieval.
+        """
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
 
         with pytest.raises(GetAllJobsRequestError):
             connection.get_all_jobs()
 
     def test_get_job(self, connection, monkeypatch):
+        """Tests a successful job retrieval.
+        """
         id_, status = "123", JobStatus.COMPLETE
 
         monkeypatch.setattr(
@@ -214,12 +229,16 @@ class TestConnection:
         assert job.status == status
 
     def test_get_job_error(self, connection, monkeypatch):
+        """Tests a failed job retrieval.
+        """
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
 
         with pytest.raises(GetJobRequestError):
             connection.get_job("123")
 
     def test_get_job_status(self, connection, monkeypatch):
+        """Tests a successful job status retrieval.
+        """
         id_, status = "123", JobStatus.COMPLETE
 
         monkeypatch.setattr(
@@ -231,12 +250,16 @@ class TestConnection:
         assert connection.get_job_status(id_) == status
 
     def test_get_job_status_error(self, connection, monkeypatch):
+        """Tests a failed job status retrieval.
+        """
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
 
         with pytest.raises(GetJobRequestError):
             connection.get_job_status("123")
 
     def test_get_job_result(self, connection, monkeypatch):
+        """Tests a successful job result retrieval.
+        """
         result_samples = [[1, 2], [3, 4]]
 
         monkeypatch.setattr(
@@ -250,6 +273,8 @@ class TestConnection:
         assert result.samples.T.tolist() == result_samples
 
     def test_get_job_result_error(self, connection, monkeypatch):
+        """Tests a failed job result retrieval.
+        """
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
 
         with pytest.raises(GetJobResultRequestError):
