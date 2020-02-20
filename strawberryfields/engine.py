@@ -578,7 +578,7 @@ class JobStatus(enum.Enum):
     def is_terminal(self) -> bool:
         """Checks if this status represents a final and immutable state.
 
-        This method is generally used to determine if an operation is valid for a given
+        This method is primarily used to determine if an operation is valid for a given
         status.
 
         Returns:
@@ -694,6 +694,8 @@ class Connection:
     MAX_JOBS_REQUESTED = 100
     JOB_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
+    # pylint: disable=bad-continuation
+    # See: https://github.com/PyCQA/pylint/issues/289
     def __init__(
         self, token, host="platform.strawberryfields.ai", port=443, use_ssl=True
     ):
@@ -959,7 +961,7 @@ class StarshipEngine:
     def run(self, program: Program, shots: int = 1) -> Optional[Result]:
         """Runs a remote job synchronously.
 
-        In this synchronous mode, the engine blocks until the job is completed, failed, or
+        In the synchronous mode, the engine blocks until the job is completed, failed, or
         cancelled. If the job completes successfully, the result is returned; if the job
         fails or is cancelled, ``None`` is returned.
 
@@ -986,8 +988,8 @@ class StarshipEngine:
     def run_async(self, program: Program, shots: int = 1) -> Job:
         """Runs a remote job asynchronously.
 
-        In this asynchronous mode, a `Job` is returned immediately, and the user can
-        manually refresh the status of the job.
+        In the asynchronous mode, a `Job` is returned immediately, and the user can
+        manually refresh the status and result of the job.
 
         Args:
             program (strawberryfields.Program): the quantum circuit
