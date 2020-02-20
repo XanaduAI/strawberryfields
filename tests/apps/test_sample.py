@@ -28,7 +28,7 @@ pytestmark = pytest.mark.apps
 
 adj_dim_range = range(2, 6)
 
-t0 = np.array([0., 0., 0., 0., 0., 0., 0.])
+t0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
 t1 = np.array([0.01095008, 0.02466257, 0.11257409, 0.18496601, 0.20673787, 0.26162544, 0.51007465])
 
@@ -294,6 +294,7 @@ def test_postselect():
     assert sample.postselect(counts_pnr, 4, 5) == counts_pnr_ps_4_5
     assert sample.postselect(counts_threshold, 3, 3) == counts_threshold_ps_3_3
 
+
 @pytest.mark.parametrize("p", [p0, p1])
 class TestVibronic:
     """Tests for the function ``strawberryfields.apps.sample.vibronic``"""
@@ -335,7 +336,7 @@ class TestVibronic:
     def test_all_loss(self, monkeypatch, p):
         """Test if function samples from the vacuum when maximum loss is applied. This test is
         only done for the zero temperature case"""
-        if p == 'p0':
+        if p == "p0":
             dim = len(alpha)
             mock_eng_run = mock.MagicMock()
 
@@ -368,3 +369,76 @@ def test_vibronic_integration(p, integration_sample_number):
     assert dims == (integration_sample_number, len(alpha) * 2)
     assert samples.dtype == "int"
     assert (samples >= 0).all()
+
+
+class TestWawMatrix:
+    """Tests for the function ``strawberryfields.apps.sample.waw_matrix``"""
+
+    adjs = [
+        np.array(
+            [[0, 1, 0, 1, 1], [1, 0, 0, 1, 1], [0, 0, 0, 1, 0], [1, 1, 1, 0, 1], [1, 1, 0, 1, 0]]
+        ),
+        np.array([[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 1, 0]]),
+        np.array([[0, 1, 2], [1, 0, 0.5], [2, 0.5, 0]]),
+    ]
+
+    wvecs = [np.array([1, 1, 3, 1, 0.5]), np.array([1, -2, 3, -4]), np.array([0, 0.5, 4])]
+
+    resc_adjs = [
+        np.array(
+            [
+                [0, 1, 0, 1, 0.5],
+                [1, 0, 0, 1, 0.5],
+                [0, 0, 0, 3, 0],
+                [1, 1, 3, 0, 0.5],
+                [0.5, 0.5, 0, 0.5, 0],
+            ]
+        ),
+        np.array([[0, -2, 0, -4], [-2, 0, -6, 0], [0, -6, 0, -12], [-4, 0, -12, 0]]),
+        np.array([[0, 0, 0], [0, 0, 1], [0, 1, 0]]),
+    ]
+
+    def test_invalid_adjacency(self):
+        """Test if function raises a ``ValueError`` for a matrix that is not symmetric."""
+        with pytest.raises(ValueError, match="Input must be a NumPy array"):
+            adj_asym = np.triu(np.ones((4, 4)))
+            sample.sample(A=adj_asym, n_mean=1.0)
+
+    @pytest.mark.parametrize("dim", [3, 4, 5])
+    def test_invalid_w(self, dim, adj):
+        """Test if function raises a ``ValueError`` for a weight vector that is not valid."""
+        # Create different candidate invalid weight vectors
+        w = [
+            np.ones((dim - 1,)),
+            np.ones((1, dim - 1)),
+            np.ones((dim - 1, 1)),
+            np.ones((2, dim)),
+            np.ones((1, dim, 1)),
+        ]
+        with pytest.raises(ValueError, match="Vector of node weights must be a row or column"):
+            _ = [sample.waw_matrix(adj, w) for w in w]
+
+    @pytest.mark.parametrize("inst", zip(adjs, wvecs, resc_adjs))
+    def test_valid_w(self, inst):
+        """Test if function returns the correct answer on some pre-calculated instances."""
+        assert np.allclose(sample.waw_matrix(inst[0], inst[1]), inst[2])
+
+    @pytest.mark.parametrize("inst", zip(adjs, wvecs, resc_adjs))
+    def test_valid_w_list(self, inst):
+        """Test if function returns the correct answer on some pre-calculated instances,
+        with w input as a list."""
+        assert np.allclose(sample.waw_matrix(inst[0], list(inst[1])), inst[2])
+
+    @pytest.mark.parametrize("inst", zip(adjs, wvecs, resc_adjs))
+    def test_valid_w_row(self, inst):
+        """Test if function returns the correct answer on some pre-calculated instances,
+        with w a 2-dimensional numpy row vector."""
+        i = np.expand_dims(inst[1], 0)
+        assert np.allclose(sample.waw_matrix(inst[0], i), inst[2])
+
+    @pytest.mark.parametrize("inst", zip(adjs, wvecs, resc_adjs))
+    def test_valid_w_column(self, inst):
+        """Test if function returns the correct answer on some pre-calculated instances,
+        with w a 2-dimensional numpy column vector."""
+        i = np.expand_dims(inst[1], 1)
+        assert np.allclose(sample.waw_matrix(inst[0], i), inst[2])

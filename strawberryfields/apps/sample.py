@@ -104,7 +104,7 @@ can be passed to :func:`sample`, resulting in a bias toward sampling subgraphs w
 product of node weights. :func:`waw_matrix`
 """
 import warnings
-from typing import Optional
+from typing import Optional, Union
 
 import networkx as nx
 import numpy as np
@@ -379,7 +379,7 @@ def vibronic(
     return s
 
 
-def waw_matrix(A: np.ndarray, w: np.ndarray) -> np.ndarray:
+def waw_matrix(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
     r"""Rescale adjacency matrix to account for node weights.
 
     Given a graph with adjacency matrix :math:`A` and a vector :math:`w` of weighted nodes,
@@ -403,7 +403,7 @@ def waw_matrix(A: np.ndarray, w: np.ndarray) -> np.ndarray:
 
     Args:
         A (array): adjacency matrix to rescale
-        w (array): vector of real node weights
+        w (array or list): vector of real node weights
 
     Returns:
         array: matrix rescaled according to the WAW encoding
@@ -411,8 +411,12 @@ def waw_matrix(A: np.ndarray, w: np.ndarray) -> np.ndarray:
     if not np.allclose(A, A.T):
         raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
 
+    if isinstance(w, list):
+        w = np.array(w)
+
     w_s = w.shape
     dim = len(A)
+
     w_check = (len(w_s) == 1 and w_s[0] == dim) or (
         len(w_s) == 2 and sorted(np.unique(w_s)) == [1, dim]
     )  # Check if the vector has one dimension or is a two-dimensional row or column vector
