@@ -21,7 +21,7 @@ platform.
 import sys
 import argparse
 
-from strawberryfields.engine import StarshipEngine, Connection
+from strawberryfields.engine import StarshipEngine, Connection, JobFailedError
 from strawberryfields.io import load
 
 
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     eng = StarshipEngine("chip2", connection)
     sys.stdout.write("Computing...\n")
-    result = eng.run(program, shots=5)
+    result = eng.run(program, shots=1)
 
     if result and result.samples is not None:
         if args.output:

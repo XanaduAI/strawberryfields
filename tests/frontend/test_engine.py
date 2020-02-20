@@ -173,7 +173,7 @@ class TestConnection:
             connection.create_job("circuit")
 
     def test_get_all_jobs(self, connection, monkeypatch):
-        """Tests a successful job list retrieval."""
+        """Tests a successful job list request."""
         jobs = [
             {
                 "id": str(i),
@@ -191,14 +191,14 @@ class TestConnection:
         assert [job.id for job in jobs] == [str(i) for i in range(5, 10)]
 
     def test_get_all_jobs_error(self, connection, monkeypatch):
-        """Tests a failed job list retrieval."""
+        """Tests a failed job list request."""
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
 
         with pytest.raises(RequestFailedError):
             connection.get_all_jobs()
 
     def test_get_job(self, connection, monkeypatch):
-        """Tests a successful job retrieval."""
+        """Tests a successful job request."""
         id_, status = "123", JobStatus.COMPLETE
 
         monkeypatch.setattr(
@@ -213,14 +213,14 @@ class TestConnection:
         assert job.status == status
 
     def test_get_job_error(self, connection, monkeypatch):
-        """Tests a failed job retrieval."""
+        """Tests a failed job request."""
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
 
         with pytest.raises(RequestFailedError):
             connection.get_job("123")
 
     def test_get_job_status(self, connection, monkeypatch):
-        """Tests a successful job status retrieval."""
+        """Tests a successful job status request."""
         id_, status = "123", JobStatus.COMPLETE
 
         monkeypatch.setattr(
@@ -232,14 +232,14 @@ class TestConnection:
         assert connection.get_job_status(id_) == status
 
     def test_get_job_status_error(self, connection, monkeypatch):
-        """Tests a failed job status retrieval."""
+        """Tests a failed job status request."""
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
 
         with pytest.raises(RequestFailedError):
             connection.get_job_status("123")
 
     def test_get_job_result(self, connection, monkeypatch):
-        """Tests a successful job result retrieval."""
+        """Tests a successful job result request."""
         result_samples = [[1, 2], [3, 4]]
 
         monkeypatch.setattr(
@@ -253,7 +253,7 @@ class TestConnection:
         assert result.samples.T.tolist() == result_samples
 
     def test_get_job_result_error(self, connection, monkeypatch):
-        """Tests a failed job result retrieval."""
+        """Tests a failed job result request."""
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
 
         with pytest.raises(RequestFailedError):
