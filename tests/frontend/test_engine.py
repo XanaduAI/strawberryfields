@@ -20,15 +20,12 @@ import pytest
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.engine import (
-    StarshipEngine,
     Connection,
+    RequestFailedError,
     Job,
     JobStatus,
     Result,
-    CreateJobRequestError,
-    GetAllJobsRequestError,
-    GetJobRequestError,
-    GetJobResultRequestError,
+    StarshipEngine,
 )
 
 pytestmark = pytest.mark.frontend
@@ -172,7 +169,7 @@ class TestConnection:
         """Tests a failed job creation flow."""
         monkeypatch.setattr(Connection, "_post", mock_return(mock_response(400, {})))
 
-        with pytest.raises(CreateJobRequestError):
+        with pytest.raises(RequestFailedError):
             connection.create_job("circuit")
 
     def test_get_all_jobs(self, connection, monkeypatch):
@@ -197,7 +194,7 @@ class TestConnection:
         """Tests a failed job list retrieval."""
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
 
-        with pytest.raises(GetAllJobsRequestError):
+        with pytest.raises(RequestFailedError):
             connection.get_all_jobs()
 
     def test_get_job(self, connection, monkeypatch):
@@ -219,7 +216,7 @@ class TestConnection:
         """Tests a failed job retrieval."""
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
 
-        with pytest.raises(GetJobRequestError):
+        with pytest.raises(RequestFailedError):
             connection.get_job("123")
 
     def test_get_job_status(self, connection, monkeypatch):
@@ -238,7 +235,7 @@ class TestConnection:
         """Tests a failed job status retrieval."""
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
 
-        with pytest.raises(GetJobRequestError):
+        with pytest.raises(RequestFailedError):
             connection.get_job_status("123")
 
     def test_get_job_result(self, connection, monkeypatch):
@@ -259,5 +256,5 @@ class TestConnection:
         """Tests a failed job result retrieval."""
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
 
-        with pytest.raises(GetJobResultRequestError):
+        with pytest.raises(RequestFailedError):
             connection.get_job_result("123")

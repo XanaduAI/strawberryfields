@@ -34,10 +34,6 @@ from .backends import load_backend
 from .backends.base import NotApplicableError, BaseBackend
 
 
-class OneJobAtATimeError(Exception):
-    """Raised when a user attempts to execute more than one job on the same engine instance."""
-
-
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = ["Result", "BaseEngine", "LocalEngine"]
 
@@ -545,48 +541,12 @@ class LocalEngine(BaseEngine):
         return result
 
 
-class InvalidEngineTargetError(Exception):
-    """Raised when an invalid engine target is provided."""
+class RequestFailedError(Exception):
+    """Raised when a request to the remote platform returns an error response."""
 
 
-class IncompleteJobError(Exception):
-    """Raised when an invalid action is performed on an incomplete job."""
-
-
-class CreateJobRequestError(Exception):
-    """Raised when a request to create a job fails."""
-
-
-class GetAllJobsRequestError(Exception):
-    """Raised when a request to get all jobs fails."""
-
-
-class GetJobRequestError(Exception):
-    """Raised when a request to get a job fails."""
-
-
-class GetJobResultRequestError(Exception):
-    """Raised when a request to get a job result fails."""
-
-
-class CancelJobRequestError(Exception):
-    """Raised when a request to cancel a job fails."""
-
-
-class RefreshTerminalJobError(Exception):
-    """Raised when attempting to refresh a completed, failed, or cancelled job."""
-
-
-class CancelTerminalJobError(Exception):
-    """Raised when attempting to cancel a completed, failed, or cancelled job."""
-
-
-class ResultOfIncompleteJobError(Exception):
-    """Raised when attempting to access the result of an incomplete job."""
-
-
-class PingFailedError(Exception):
-    """Raised when a ping request to a remote backend is unsuccessful."""
+class InvalidJobOperationError(Exception):
+    """Raised when an invalid operation is performed on a job."""
 
 
 class StarshipEngine:
@@ -614,7 +574,7 @@ class StarshipEngine:
         # Run a job asynchronously
         job = engine.run_async(program, shots=1)
         job.status  # "queued"
-        job.result  # RefreshTerminalJobError
+        job.result  # InvalidJobOperationError
         # (After some time...)
         job.refresh()
         job.status  # "complete"
@@ -631,7 +591,7 @@ class StarshipEngine:
 
     def __init__(self, target, connection=None):
         if target not in self.VALID_TARGETS:
-            raise InvalidEngineTargetError("Invalid engine target: {}".format(target))
+            raise ValueError("Invalid engine target: {}".format(target))
         if connection is None:
             # TODO use `load_config` when implemented
             config = DEFAULT_CONFIG["api"]
@@ -724,9 +684,7 @@ class Connection:
     MAX_JOBS_REQUESTED = 100
     JOB_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
-    def __init__(
-        self, token, host="platform.strawberryfields.ai", port=443, use_ssl=True
-    ):
+    def __init__(self, token, host="platform.strawberryfields.ai", port=443, use_ssl=True):
         self._token = token
         self._host = host
         self._port = port
@@ -737,7 +695,7 @@ class Connection:
         """The API authentication token.
 
         Returns:
-            str: the API token
+            str: the authentication token
         """
         return self._token
 
@@ -773,7 +731,7 @@ class Connection:
         """The base URL used for the connection.
 
         Returns:
-            str: the base url
+            str: the base URL
         """
         return "http{}://{}:{}".format(
             "s" if self.use_ssl else "", self.host, self.port
@@ -795,7 +753,7 @@ class Connection:
                 status=JobStatus(response.json()["status"]),
                 connection=self,
             )
-        raise CreateJobRequestError(self._request_error_message(response))
+        raise RequestFailedError(self._request_error_message(response))
 
     def get_all_jobs(self, after=datetime(1970, 1, 1)):
         """Gets all jobs created by the user, optionally filtered by datetime.
@@ -815,7 +773,7 @@ class Connection:
                 if datetime.strptime(info["created_at"], self.JOB_TIMESTAMP_FORMAT)
                 > after
             ]
-        raise GetAllJobsRequestError(self._request_error_message(response))
+        raise RequestFailedError(self._request_error_message(response))
 
     def get_job(self, job_id):
         """Gets a job.
@@ -833,7 +791,7 @@ class Connection:
                 status=JobStatus(response.json()["status"]),
                 connection=self,
             )
-        raise GetJobRequestError(self._request_error_message(response))
+        raise RequestFailedError(self._request_error_message(response))
 
     def get_job_status(self, job_id):
         """Returns the status of a job.
@@ -858,7 +816,7 @@ class Connection:
         response = self._get("/jobs/{}/result".format(job_id))
         if response.status_code == 200:
             return Result(response.json()["result"], is_stateful=False)
-        raise GetJobResultRequestError(self._request_error_message(response))
+        raise RequestFailedError(self._request_error_message(response))
 
     def cancel_job(self, job_id):
         """Cancels a job.
@@ -871,7 +829,7 @@ class Connection:
         )
         if response.status_code == 204:
             return
-        raise CancelJobRequestError(self._request_error_message(response))
+        raise RequestFailedError(self._request_error_message(response))
 
     def ping(self):
         """Tests the connection to the remote backend.
@@ -882,7 +840,7 @@ class Connection:
         response = self._get("/healthz")
         if response.status_code == 200:
             return
-        raise PingFailedError(self._request_error_message(response))
+        raise RequestFailedError(self._request_error_message(response))
 
     def _get(self, path, **kwargs):
         return self._request(RequestMethod.GET, path, **kwargs)
@@ -958,14 +916,14 @@ class Job:
     def result(self):
         """The job result.
 
-        This is only defined for complete jobs, and raises a `ResultOfIncompleteJobError`
-        for any other status.
+        This is only defined for complete jobs, and raises an exception for any other
+        status.
 
         Returns:
             strawberryfields.engine.Result: the result
         """
         if self.status != JobStatus.COMPLETE:
-            raise ResultOfIncompleteJobError(
+            raise AttributeError(
                 "The result is undefined for jobs that are not complete "
                 "(current status: {})".format(self.status.value)
             )
@@ -975,11 +933,11 @@ class Job:
         """Refreshes the status of the job, along with the job result if the job is
         newly completed.
 
-        Only a non-terminal (open or queued job) can be refreshed; a
-        `RefreshTerminalJobError` is raised otherwise.
+        Only a non-terminal (open or queued job) can be refreshed; an exception is
+        raised otherwise.
         """
         if self.status.is_terminal:
-            raise RefreshTerminalJobError(
+            raise InvalidJobOperationError(
                 "A {} job cannot be refreshed".format(self.status.value)
             )
         self._status = self._connection.get_job_status(self.id)
@@ -989,11 +947,11 @@ class Job:
     def cancel(self):
         """Cancels the job.
 
-        Only a non-terminal (open or queued job) can be cancelled; a
-        `CancelTerminalJobError` is raised otherwise.
+        Only a non-terminal (open or queued job) can be cancelled; an exception is
+        raised otherwise.
         """
         if self.status.is_terminal:
-            raise CancelTerminalJobError(
+            raise InvalidJobOperationError(
                 "A {} job cannot be cancelled".format(self.status.value)
             )
         self._connection.cancel_job(self.id)

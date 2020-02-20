@@ -62,6 +62,7 @@ if __name__ == "__main__":
     program = load(args.input)
 
     eng = StarshipEngine("chip2", connection)
+    sys.stdout.write("Computing...")
     result = eng.run(program)
 
     if result and result.samples is not None:
