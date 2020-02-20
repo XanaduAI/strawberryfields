@@ -19,11 +19,11 @@ One can think of each BaseEngine instance as a separate quantum computation.
 """
 import abc
 import collections.abc
-from datetime import datetime
 import enum
 import json
 import time
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 from urllib.parse import urljoin
 
 import numpy as np
@@ -31,9 +31,10 @@ import requests
 
 from strawberryfields.configuration import DEFAULT_CONFIG
 from strawberryfields.io import to_blackbird
-from .backends import load_backend
-from .backends.base import NotApplicableError, BaseBackend
+from strawberryfields.program import Program
 
+from .backends import load_backend
+from .backends.base import BaseBackend, NotApplicableError
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = ["Result", "BaseEngine", "LocalEngine", "Connection"]
@@ -554,6 +555,331 @@ class JobFailedError(Exception):
     """Raised when a remote job enters a 'failed' status."""
 
 
+class JobStatus(enum.Enum):
+    """Represents the status of a remote job.
+
+    This class maps a set of job statuses to the string representations returned by the
+    remote platform.
+    """
+
+    OPEN = "open"
+    QUEUED = "queued"
+    CANCELLED = "cancelled"
+    COMPLETE = "complete"
+    FAILED = "failed"
+
+    def __repr__(self) -> str:
+        return self.value
+
+    def __str__(self) -> str:
+        return self.value
+
+    @property
+    def is_terminal(self) -> bool:
+        """Checks if this status represents a final and immutable state.
+
+        This method is generally used to determine if an operation is valid for a given
+        status.
+
+        Returns:
+            bool: ``True`` if the job is terminal, and ``False`` otherwise
+        """
+        return self in (JobStatus.CANCELLED, JobStatus.COMPLETE, JobStatus.FAILED)
+
+
+class Job:
+    """Represents a remote job that can be queried for its status or result.
+
+    This object should not be instantiated directly, but returned by an `Engine` or
+    `Connection` when a job is run.
+
+    Args:
+        id_ (str): the job ID
+        status (strawberryfields.engine.JobStatus): the job status
+        connection (strawberryfields.engine.Connection): the connection over which the
+            job is managed
+    """
+
+    def __init__(self, id_: str, status: JobStatus, connection: "Connection"):
+        self._id = id_
+        self._status = status
+        self._connection = connection
+        self._result = None
+
+    @property
+    def id(self) -> str:
+        """The job ID.
+
+        Returns:
+            str: the job ID
+        """
+        return self._id
+
+    @property
+    def status(self) -> JobStatus:
+        """The job status.
+
+        Returns:
+            strawberryfields.engine.JobStatus: the job status
+        """
+        return self._status
+
+    @property
+    def result(self) -> Result:
+        """The job result.
+
+        This is only defined for complete jobs, and raises an exception for any other
+        status.
+
+        Returns:
+            strawberryfields.engine.Result: the result
+        """
+        if self.status != JobStatus.COMPLETE:
+            raise AttributeError(
+                "The result is undefined for jobs that are not complete "
+                "(current status: {})".format(self.status.value)
+            )
+        return self._result
+
+    def refresh(self):
+        """Refreshes the status of the job, along with the job result if the job is
+        newly completed.
+
+        Only a non-terminal (open or queued job) can be refreshed; an exception is
+        raised otherwise.
+        """
+        if self.status.is_terminal:
+            raise InvalidJobOperationError(
+                "A {} job cannot be refreshed".format(self.status.value)
+            )
+        self._status = self._connection.get_job_status(self.id)
+        if self._status == JobStatus.COMPLETE:
+            self._result = self._connection.get_job_result(self.id)
+
+    def cancel(self):
+        """Cancels the job.
+
+        Only a non-terminal (open or queued job) can be cancelled; an exception is
+        raised otherwise.
+        """
+        if self.status.is_terminal:
+            raise InvalidJobOperationError(
+                "A {} job cannot be cancelled".format(self.status.value)
+            )
+        self._connection.cancel_job(self.id)
+
+
+class RequestMethod(enum.Enum):
+    """Defines the valid request methods for messages sent to the remote job platform."""
+
+    GET = "get"
+    POST = "post"
+    PATCH = "patch"
+
+
+class Connection:
+    """Manages remote connections to the remote job execution platform and exposes
+    advanced job operations.
+
+    For basic usage, it is not necessary to manually instantiate this object; the user
+    is encouraged to use the higher-level interface provided by :class:`~StarshipEngine`.
+
+    Args:
+        token (str): the API authentication token
+        host (str): the hostname of the remote platform
+        port (int): the port to connect to on the remote host
+        use_ssl (bool): whether to use SSL for the connection
+    """
+
+    MAX_JOBS_REQUESTED = 100
+    JOB_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+
+    def __init__(
+        self, token, host="platform.strawberryfields.ai", port=443, use_ssl=True
+    ):
+        self._token = token
+        self._host = host
+        self._port = port
+        self._use_ssl = use_ssl
+
+    @property
+    def token(self) -> str:
+        """The API authentication token.
+
+        Returns:
+            str: the authentication token
+        """
+        return self._token
+
+    @property
+    def host(self) -> str:
+        """The host for the remote platform.
+
+        Returns:
+            str: the hostname
+        """
+        return self._host
+
+    @property
+    def port(self) -> int:
+        """The port to connect to on the remote host.
+
+        Returns:
+            int: the port number
+        """
+        return self._port
+
+    @property
+    def use_ssl(self) -> bool:
+        """Whether to use SSL for the connection.
+
+        Returns:
+            bool: ``True`` if SSL should be used, and ``False`` otherwise
+        """
+        return self._use_ssl
+
+    @property
+    def base_url(self) -> str:
+        """The base URL used for the connection.
+
+        Returns:
+            str: the base URL
+        """
+        return "http{}://{}:{}".format(
+            "s" if self.use_ssl else "", self.host, self.port
+        )
+
+    def create_job(self, circuit: str) -> Job:
+        """Creates a job with the given circuit.
+
+        Args:
+            circuit (str): the serialized Blackbird program
+
+        Returns:
+            strawberryfields.engine.Job: the created job
+        """
+        response = self._post("/jobs", data=json.dumps({"circuit": circuit}))
+        if response.status_code == 201:
+            return Job(
+                id_=response.json()["id"],
+                status=JobStatus(response.json()["status"]),
+                connection=self,
+            )
+        raise RequestFailedError(
+            "Job creation failed: {}".format(self._request_error_message(response))
+        )
+
+    def get_all_jobs(self, after: datetime = datetime(1970, 1, 1)) -> List[Job]:
+        """Gets all jobs created by the user, optionally filtered by datetime.
+
+        Args:
+            after (datetime.datetime): if provided, only jobs more recently created
+                                       then ``after`` are returned
+
+        Returns:
+            List[strawberryfields.engine.Job]: the jobs
+        """
+        response = self._get("/jobs?page[size]={}".format(self.MAX_JOBS_REQUESTED))
+        if response.status_code == 200:
+            return [
+                Job(id_=info["id"], status=info["status"], connection=self)
+                for info in response.json()["data"]
+                if datetime.strptime(info["created_at"], self.JOB_TIMESTAMP_FORMAT)
+                > after
+            ]
+        raise RequestFailedError(self._request_error_message(response))
+
+    def get_job(self, job_id: str) -> Job:
+        """Gets a job.
+
+        Args:
+            job_id (str): the job ID
+
+        Returns:
+            strawberryfields.engine.Job: the job
+        """
+        response = self._get("/jobs/{}".format(job_id))
+        if response.status_code == 200:
+            return Job(
+                id_=response.json()["id"],
+                status=JobStatus(response.json()["status"]),
+                connection=self,
+            )
+        raise RequestFailedError(self._request_error_message(response))
+
+    def get_job_status(self, job_id: str) -> JobStatus:
+        """Returns the status of a job.
+
+        Args:
+            job_id (str): the job ID
+
+        Returns:
+            strawberryfields.engine.JobStatus: the job status
+        """
+        return JobStatus(self.get_job(job_id).status)
+
+    def get_job_result(self, job_id: str) -> Result:
+        """Returns the result of a job.
+
+        Args:
+            job_id (str): the job ID
+
+        Returns:
+            strawberryfields.engine.Result: the job result
+        """
+        response = self._get("/jobs/{}/result".format(job_id))
+        if response.status_code == 200:
+            return Result(response.json()["result"], is_stateful=False)
+        raise RequestFailedError(self._request_error_message(response))
+
+    def cancel_job(self, job_id: str):
+        """Cancels a job.
+
+        Args:
+            job_id (str): the job ID
+        """
+        response = self._patch(
+            "/jobs/{}".format(job_id), data={"status", JobStatus.CANCELLED.value}
+        )
+        if response.status_code == 204:
+            return
+        raise RequestFailedError(self._request_error_message(response))
+
+    def ping(self) -> bool:
+        """Tests the connection to the remote backend.
+
+        Returns:
+            bool: ``True`` if the connection is successful, and ``False`` otherwise
+        """
+        response = self._get("/healthz")
+        if response.status_code == 200:
+            return True
+        return False
+
+    def _get(self, path: str, **kwargs) -> requests.Response:
+        return self._request(RequestMethod.GET, path, **kwargs)
+
+    def _post(self, path: str, **kwargs) -> requests.Response:
+        return self._request(RequestMethod.POST, path, **kwargs)
+
+    def _patch(self, path: str, **kwargs) -> requests.Response:
+        return self._request(RequestMethod.PATCH, path, **kwargs)
+
+    def _request(self, method: RequestMethod, path: str, **kwargs) -> requests.Response:
+        return getattr(requests, method.value)(
+            urljoin(self.base_url, path),
+            headers={"Authorization": self.token},
+            **kwargs
+        )
+
+    @staticmethod
+    def _request_error_message(response: requests.Response) -> str:
+        body = response.json()
+        return "{} ({}): {}".format(
+            body.get("status_code", ""), body.get("code", ""), body.get("detail", "")
+        )
+
+
 class StarshipEngine:
     """A quantum program executor engine that that provides a simple interface for
     running remote jobs in a synchronous or asynchronous manner.
@@ -680,333 +1006,6 @@ class StarshipEngine:
         # pylint: disable=protected-access
         bb._target["options"] = {"shots": shots}
         return self._connection.create_job(bb.serialize())
-
-
-class Connection:
-    """Manages remote connections to the remote job execution platform and exposes
-    advanced job operations.
-
-    For basic usage, it is not necessary to manually instantiate this object; the user
-    is encouraged to use the higher-level interface provided by :class:`~StarshipEngine`.
-
-    Args:
-        token (str): the API authentication token
-        host (str): the hostname of the remote platform
-        port (int): the port to connect to on the remote host
-        use_ssl (bool): whether to use SSL for the connection
-    """
-
-    MAX_JOBS_REQUESTED = 100
-    JOB_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
-
-    def __init__(
-        self, token, host="platform.strawberryfields.ai", port=443, use_ssl=True
-    ):
-        self._token = token
-        self._host = host
-        self._port = port
-        self._use_ssl = use_ssl
-
-    @property
-    def token(self) -> str:
-        """The API authentication token.
-
-        Returns:
-            str: the authentication token
-        """
-        return self._token
-
-    @property
-    def host(self) -> str:
-        """The host for the remote platform.
-
-        Returns:
-            str: the hostname
-        """
-        return self._host
-
-    @property
-    def port(self) -> int:
-        """The port to connect to on the remote host.
-
-        Returns:
-            int: the port number
-        """
-        return self._port
-
-    @property
-    def use_ssl(self) -> bool:
-        """Whether to use SSL for the connection.
-
-        Returns:
-            bool: ``True`` if SSL should be used, and ``False`` otherwise
-        """
-        return self._use_ssl
-
-    @property
-    def base_url(self) -> str:
-        """The base URL used for the connection.
-
-        Returns:
-            str: the base URL
-        """
-        return "http{}://{}:{}".format(
-            "s" if self.use_ssl else "", self.host, self.port
-        )
-
-    def create_job(self, circuit: str) -> Job:
-        """Creates a job with the given circuit.
-
-        Args:
-            circuit (str): the serialized Blackbird program
-
-        Returns:
-            strawberryfields.engine.Job: the created job
-        """
-        response = self._post("/jobs", data=json.dumps({"circuit": circuit}))
-        if response.status_code == 201:
-            return Job(
-                id_=response.json()["id"],
-                status=JobStatus(response.json()["status"]),
-                connection=self,
-            )
-        raise RequestFailedError(
-            "Job creation failed: {}".format(self._request_error_message(response))
-        )
-
-    def get_all_jobs(
-        self, after: datetime.datetime = datetime(1970, 1, 1)
-    ) -> List[Job]:
-        """Gets all jobs created by the user, optionally filtered by datetime.
-
-        Args:
-            after (datetime.datetime): if provided, only jobs more recently created
-                                       then ``after`` are returned
-
-        Returns:
-            List[strawberryfields.engine.Job]: the jobs
-        """
-        response = self._get("/jobs?page[size]={}".format(self.MAX_JOBS_REQUESTED))
-        if response.status_code == 200:
-            return [
-                Job(id_=info["id"], status=info["status"], connection=self)
-                for info in response.json()["data"]
-                if datetime.strptime(info["created_at"], self.JOB_TIMESTAMP_FORMAT)
-                > after
-            ]
-        raise RequestFailedError(self._request_error_message(response))
-
-    def get_job(self, job_id: str) -> Job:
-        """Gets a job.
-
-        Args:
-            job_id (str): the job ID
-
-        Returns:
-            strawberryfields.engine.Job: the job
-        """
-        response = self._get("/jobs/{}".format(job_id))
-        if response.status_code == 200:
-            return Job(
-                id_=response.json()["id"],
-                status=JobStatus(response.json()["status"]),
-                connection=self,
-            )
-        raise RequestFailedError(self._request_error_message(response))
-
-    def get_job_status(self, job_id: str) -> JobStatus:
-        """Returns the status of a job.
-
-        Args:
-            job_id (str): the job ID
-
-        Returns:
-            strawberryfields.engine.JobStatus: the job status
-        """
-        return JobStatus(self.get_job(job_id).status)
-
-    def get_job_result(self, job_id: str) -> Result:
-        """Returns the result of a job.
-
-        Args:
-            job_id (str): the job ID
-
-        Returns:
-            strawberryfields.engine.Result: the job result
-        """
-        response = self._get("/jobs/{}/result".format(job_id))
-        if response.status_code == 200:
-            return Result(response.json()["result"], is_stateful=False)
-        raise RequestFailedError(self._request_error_message(response))
-
-    def cancel_job(self, job_id: str):
-        """Cancels a job.
-
-        Args:
-            job_id (str): the job ID
-        """
-        response = self._patch(
-            "/jobs/{}".format(job_id), data={"status", JobStatus.CANCELLED.value}
-        )
-        if response.status_code == 204:
-            return
-        raise RequestFailedError(self._request_error_message(response))
-
-    def ping(self) -> bool:
-        """Tests the connection to the remote backend.
-
-        Returns:
-            bool: ``True`` if the connection is successful, and ``False`` otherwise
-        """
-        response = self._get("/healthz")
-        if response.status_code == 200:
-            return True
-        return False
-
-    def _get(self, path: str, **kwargs) -> requests.Response:
-        return self._request(RequestMethod.GET, path, **kwargs)
-
-    def _post(self, path: str, **kwargs) -> requests.Response:
-        return self._request(RequestMethod.POST, path, **kwargs)
-
-    def _patch(self, path: str, **kwargs) -> requests.Response:
-        return self._request(RequestMethod.PATCH, path, **kwargs)
-
-    def _request(self, method: RequestMethod, path: str, **kwargs) -> requests.Response:
-        return getattr(requests, method.value)(
-            urljoin(self.base_url, path),
-            headers={"Authorization": self.token},
-            **kwargs
-        )
-
-    @staticmethod
-    def _request_error_message(response: requests.Response) -> str:
-        body = response.json()
-        return "{} ({}): {}".format(
-            body.get("status_code", ""), body.get("code", ""), body.get("detail", "")
-        )
-
-
-class RequestMethod(enum.Enum):
-    """Defines the valid request methods for messages sent to the remote job platform."""
-
-    GET = "get"
-    POST = "post"
-    PATCH = "patch"
-
-
-class Job:
-    """Represents a remote job that can be queried for its status or result.
-
-    This object should not be instantiated directly, but returned by an `Engine` or
-    `Connection` when a job is run.
-
-    Args:
-        id_ (str): the job ID
-        status (strawberryfields.engine.JobStatus): the job status
-        connection (strawberryfields.engine.Connection): the connection over which the
-                                                         job is managed
-    """
-
-    def __init__(self, id_: str, status: JobStatus, connection: Connection):
-        self._id = id_
-        self._status = status
-        self._connection = connection
-        self._result = None
-
-    @property
-    def id(self) -> str:
-        """The job ID.
-
-        Returns:
-            str: the job ID
-        """
-        return self._id
-
-    @property
-    def status(self) -> JobStatus:
-        """The job status.
-
-        Returns:
-            strawberryfields.engine.JobStatus: the job status
-        """
-        return self._status
-
-    @property
-    def result(self) -> Result:
-        """The job result.
-
-        This is only defined for complete jobs, and raises an exception for any other
-        status.
-
-        Returns:
-            strawberryfields.engine.Result: the result
-        """
-        if self.status != JobStatus.COMPLETE:
-            raise AttributeError(
-                "The result is undefined for jobs that are not complete "
-                "(current status: {})".format(self.status.value)
-            )
-        return self._result
-
-    def refresh(self):
-        """Refreshes the status of the job, along with the job result if the job is
-        newly completed.
-
-        Only a non-terminal (open or queued job) can be refreshed; an exception is
-        raised otherwise.
-        """
-        if self.status.is_terminal:
-            raise InvalidJobOperationError(
-                "A {} job cannot be refreshed".format(self.status.value)
-            )
-        self._status = self._connection.get_job_status(self.id)
-        if self._status == JobStatus.COMPLETE:
-            self._result = self._connection.get_job_result(self.id)
-
-    def cancel(self):
-        """Cancels the job.
-
-        Only a non-terminal (open or queued job) can be cancelled; an exception is
-        raised otherwise.
-        """
-        if self.status.is_terminal:
-            raise InvalidJobOperationError(
-                "A {} job cannot be cancelled".format(self.status.value)
-            )
-        self._connection.cancel_job(self.id)
-
-
-class JobStatus(enum.Enum):
-    """Represents the status of a remote job.
-
-    This class maps a set of job statuses to the string representations returned by the
-    remote platform.
-    """
-
-    OPEN = "open"
-    QUEUED = "queued"
-    CANCELLED = "cancelled"
-    COMPLETE = "complete"
-    FAILED = "failed"
-
-    def __repr__(self) -> str:
-        return self.value
-
-    def __str__(self) -> str:
-        return self.value
-
-    @property
-    def is_terminal(self) -> bool:
-        """Checks if this status represents a final and immutable state.
-
-        This method is generally used to determine if an operation is valid for a given
-        status.
-
-        Returns:
-            bool: ``True`` if the job is terminal, and ``False`` otherwise
-        """
-        return self in (JobStatus.CANCELLED, JobStatus.COMPLETE, JobStatus.FAILED)
 
 
 class Engine(LocalEngine):
