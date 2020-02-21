@@ -836,7 +836,7 @@ class Connection:
         if response.status_code == 200:
             # Read the numpy binary data in the payload into memory
             with io.BytesIO() as buf:
-                buf.write(response.body)
+                buf.write(response.content)
                 buf.seek(0)
                 samples = np.load(buf)
             return Result(samples, is_stateful=False)

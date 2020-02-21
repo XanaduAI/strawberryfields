@@ -66,7 +66,7 @@ def mock_response(status_code, json_body=None, binary_body=None):
     if json_body:
         response.json.return_value = json_body
     if binary_body:
-        response.body = binary_body
+        response.content = binary_body
     return response
 
 

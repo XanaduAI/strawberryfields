@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""A standalone command-line interface for computing quantum programs on the Xanadu
-cloud platform.
+"""A standalone command-line interface for computing quantum programs on a remote
+backend.
 """
 
 import sys
@@ -26,9 +26,7 @@ from strawberryfields.io import load
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="run a blackbird script on the Xanadu cloud platform"
-    )
+    parser = argparse.ArgumentParser(description="run a blackbird script")
     parser.add_argument(
         "--token", "-t", help="the API authentication token", required=True
     )
@@ -45,9 +43,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    connection = Connection(
-        token=args.token, host="platform.strawberryfields.ai", port=443, use_ssl=True,
-    )
+    connection = Connection(token=args.token)
 
     if args.ping:
         connection.ping()
@@ -63,6 +59,6 @@ if __name__ == "__main__":
     if result and result.samples is not None:
         if args.output:
             with open(args.output, "w") as file:
-                file.write(str(result.samples.T))
+                file.write(str(result.samples))
         else:
-            sys.stdout.write(str(result.samples.T))
+            sys.stdout.write(str(result.samples))
