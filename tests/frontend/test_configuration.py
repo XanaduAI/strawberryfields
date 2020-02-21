@@ -33,6 +33,7 @@ authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
 hostname = "localhost"
 use_ssl = true
 debug = false
+port = 443
 """
 
 TEST_FILE_ONE_VALUE = """\
@@ -55,37 +56,99 @@ EXPECTED_CONFIG = {
 class TestConfiguration:
     """Tests for the configuration class"""
 
-    def test_loading_current_directory(self, tmpdir, monkeypatch):
-        """Test that the default configuration file can be loaded
-        from the current directory."""
+    def test_create_config_object(self):
+        assert conf.create_config_object(authentication_token="071cdcce-9241-4965-93af-4a4dbc739135") == EXPECTED_CONFIG
+
+    def test_load_config_file(self, tmpdir, monkeypatch):
         filename = tmpdir.join("config.toml")
 
         with open(filename, "w") as f:
             f.write(TEST_FILE)
+
+        config_file = conf.load_config_file(filepath=filename)
+
+        assert config_file == EXPECTED_CONFIG
+
+    def test_loading_current_directory(self, tmpdir, monkeypatch):
+        """Test that the default configuration file is loaded from the current
+        directory, if found."""
+        filename = "config.toml"
 
         with monkeypatch.context() as m:
-            m.setattr(os, "getcwd", lambda: str(tmpdir))
-            os.environ["SF_CONF"] = ""
-            config = conf.Configuration()
+            m.setattr(os, "getcwd", lambda: tmpdir)
+            m.setattr(conf, "load_config_file", lambda filepath: filepath)
+            config_file = conf.look_for_config_file(filename=filename)
 
-        assert config._config == EXPECTED_CONFIG
-        assert config.path == filename
+        assert config_file == tmpdir.join(filename)
 
-    def test_loading_env_variable(self, tmpdir):
-        """Test that the default configuration file can be loaded
-        via an environment variable."""
-        # TODO: This test does not work if there is already a configuration
-        # file in place
-        filename = tmpdir.join("config.toml")
+    def test_loading_env_variable(self, tmpdir, monkeypatch):
+        """Test that the correct configuration file is found using the correct
+        environmental variable.
 
-        with open(filename, "w") as f:
-            f.write(TEST_FILE)
+        This is a test case for when there is no configuration file in the
+        current directory."""
 
-        os.environ["SF_CONF"] = str(tmpdir)
-        config = conf.Configuration()
+        filename = "config.toml"
 
-        assert config._config == EXPECTED_CONFIG
-        assert config.path == filename
+        def raise_wrapper(ex):
+            raise ex
+
+        with monkeypatch.context() as m:
+            m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
+            m.setattr(os.environ, "get", lambda x, y: tmpdir if x=="SF_CONF" else "NoConfigFileHere")
+            m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
+
+            # Need to mock the module specific function
+            # m.setattr(conf, "user_config_dir", lambda *args: "NotTheFileName")
+            # os.environ["SF_CONF"] = lambda: FileNotFoundError
+            config_file = conf.look_for_config_file(filename=filename)
+        assert config_file == tmpdir.join("config.toml")
+
+    def test_loading_user_config_dir(self, tmpdir, monkeypatch):
+        """Test that the correct configuration file is found using the correct
+        argument to the user_config_dir function.
+
+        This is a test case for when there is no configuration file:
+        -in the current directory or
+        -in the directory contained in the corresponding environmental
+        variable."""
+        filename = "config.toml"
+
+        def raise_wrapper(ex):
+            raise ex
+
+        with monkeypatch.context() as m:
+            m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
+            m.setattr(os.environ, "get", lambda *args: "NoConfigFileHere")
+            m.setattr(conf, "user_config_dir", lambda x, *args: tmpdir if x=="strawberryfields" else "NoConfigFileHere")
+            m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
+
+            config_file = conf.look_for_config_file(filename=filename)
+        assert config_file == tmpdir.join("config.toml")
+
+    def test_no_config_file_found_returns_none(self, tmpdir, monkeypatch):
+        """Test that the the look_for_config_file returns None if the
+        configuration file is nowhere to be found.
+
+        This is a test case for when there is no configuration file:
+        -in the current directory or
+        -in the directory contained in the corresponding environmental
+        variable
+        -in the user_config_dir directory of Strawberry Fields."""
+        filename = "config.toml"
+
+        def raise_wrapper(ex):
+            raise ex
+
+        with monkeypatch.context() as m:
+            m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
+            m.setattr(os.environ, "get", lambda *args: "NoConfigFileHere")
+            m.setattr(conf, "user_config_dir", lambda *args: "NoConfigFileHere")
+            m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
+
+            config_file = conf.look_for_config_file(filename=filename)
+
+        assert config_file is None
 
     def test_loading_absolute_path(self, tmpdir, monkeypatch):
         """Test that the default configuration file can be loaded
@@ -106,7 +169,6 @@ class TestConfiguration:
         os.environ["SF_CONF"] = ""
         config = conf.Configuration(name=str(filename))
 
-        print(config._config, EXPECTED_CONFIG)
         assert config._config == EXPECTED_CONFIG
         assert config.path == filename
 
