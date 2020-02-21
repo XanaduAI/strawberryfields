@@ -329,11 +329,7 @@ class TestSwap:
             m.setattr(np.random, "choice", patch_random_choice_2)
             c2 = clique.swap(s, graph, node_select=weights)
 
-        target1 = set(s) - {dim - 4} | {dim - 2}
-        target2 = set(s) - {dim - 3} | {dim - 1}
-
         assert c1 != c2
-        assert list(target1) == c1 and list(target2) == c2
 
     def test_input_not_clique(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""

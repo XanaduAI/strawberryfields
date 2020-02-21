@@ -273,7 +273,7 @@ def swap(
         node_select = "weight"
 
     clique = set(clique)
-    _c_1 = sorted(c_1(clique, graph))
+    _c_1 = c_1(clique, graph)
 
     if _c_1:
         if node_select == "uniform":
