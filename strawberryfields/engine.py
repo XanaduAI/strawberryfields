@@ -569,12 +569,6 @@ class JobStatus(enum.Enum):
     COMPLETE = "complete"
     FAILED = "failed"
 
-    def __repr__(self) -> str:
-        return self.value
-
-    def __str__(self) -> str:
-        return self.value
-
     @property
     def is_terminal(self) -> bool:
         """Checks if this status represents a final and immutable state.
@@ -667,6 +661,14 @@ class Job:
             )
         self._connection.cancel_job(self.id)
 
+    def __repr__(self):
+        return "<{}: id={}, status={}>".format(
+            self.__class__.__name__, self.id, self.status.value
+        )
+
+    def __str__(self):
+        return self.__repr__()
+
 
 class RequestMethod(enum.Enum):
     """Defines the valid request methods for messages sent to the remote platform."""
@@ -678,10 +680,32 @@ class RequestMethod(enum.Enum):
 
 class Connection:
     """Manages remote connections to the remote job execution platform and exposes
-    advanced job operations.
+    various job operations.
 
     For basic usage, it is not necessary to manually instantiate this object; the user
     is encouraged to use the higher-level interface provided by :class:`~StarshipEngine`.
+
+    **Example:**
+
+    The following example instantiates a :class:`~Connection` for a given API
+    authentication token, tests the connection, and makes requests for a single or
+    multiple jobs.
+
+    .. code-block:: python
+
+        connection = Connection(token="abc")
+
+        # Ping the remote server
+        success = connection.ping()
+        # True if successful, or False if cannot connect or not authenticated
+
+        # Get all jobs submitted for this token
+        jobs = connection.get_all_jobs()
+        jobs  # [<Job: id=d177cbf5-1816-4779-802f-cef2c117dc1a, ...>, ...]
+
+        # Get a specific job by ID
+        job = connection.get_job("59a1c0b1-c6a7-4f9b-ae37-0ac5eec9c413")
+        job  # <Job: id=59a1c0b1-c6a7-4f9b-ae37-0ac5eec9c413, ...>
 
     Args:
         token (str): the API authentication token
@@ -904,6 +928,14 @@ class Connection:
             body.get("status_code", ""), body.get("code", ""), body.get("detail", "")
         )
 
+    def __repr__(self):
+        return "<{}: token={}, host={}>".format(
+            self.__class__.__name__, self.token, self.host
+        )
+
+    def __str__(self):
+        return self.__repr__()
+
 
 class StarshipEngine:
     """A quantum program executor engine that that provides a simple interface for
@@ -921,7 +953,7 @@ class StarshipEngine:
         # Run a job synchronously
         result = engine.run(program, shots=1)
         # (Engine blocks until job is complete)
-        result  # [[0, 1, 0, 2, 1, 0, 0, 0]]
+        result  # [[0 1 0 2 1 0 0 0]]
 
         # Run a job synchronously, but cancel it before it is completed
         result = engine.run(program, shots=1)
@@ -929,12 +961,12 @@ class StarshipEngine:
 
         # Run a job asynchronously
         job = engine.run_async(program, shots=1)
-        job.status  # "queued"
+        job.status  # <JobStatus.QUEUED: 'queued'>
         job.result  # InvalidJobOperationError
         # (After some time...)
         job.refresh()
-        job.status  # "complete"
-        job.result  # [[0, 1, 0, 2, 1, 0, 0, 0]]
+        job.status  # <JobStatus.COMPLETE: 'complete'>
+        job.result  # [[0 1 0 2 1 0 0 0]]
 
     Args:
         target (str): the target backend
@@ -1029,6 +1061,14 @@ class StarshipEngine:
         # pylint: disable=protected-access
         bb._target["options"] = {"shots": shots}
         return self._connection.create_job(bb.serialize())
+
+    def __repr__(self):
+        return "<{}: target={}, connection={}>".format(
+            self.__class__.__name__, self.target, self.connection
+        )
+
+    def __str__(self):
+        return self.__repr__()
 
 
 class Engine(LocalEngine):

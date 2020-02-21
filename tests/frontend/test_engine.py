@@ -52,17 +52,6 @@ def prog(backend):
     return prog
 
 
-@pytest.fixture
-def starship_engine(monkeypatch):
-    """
-    Create a reusable StarshipEngine fixture without a real APIClient.
-    """
-    mock_api_client = MagicMock()
-    monkeypatch.setattr("strawberryfields.engine.APIClient", mock_api_client)
-    engine = StarshipEngine("chip0", polling_delay_seconds=0)
-    return engine
-
-
 class TestEngine:
     """Test basic engine functionality"""
 
@@ -449,10 +438,6 @@ class TestStarshipEngine:
 
         with pytest.raises(AttributeError):
             _ = result.state
-
-    def test_run_cancelled(self):
-        """Tests a manual cancellation of synchronous job execution."""
-        # TODO
 
     def test_run_async(self, connection, prog, monkeypatch):
         """Tests a successful asynchronous job execution."""
