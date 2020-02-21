@@ -351,6 +351,8 @@ def shrink(
         elif node_select == "weight":
             weights = np.array([w[degrees[n][0]] for n in degrees_min])
             to_remove_index = np.random.choice(np.where(weights == weights.min())[0])
+        else:
+            raise ValueError("Node selection method not recognized")
 
         to_remove = degrees[to_remove_index][0]
         subgraph.remove_node(to_remove)

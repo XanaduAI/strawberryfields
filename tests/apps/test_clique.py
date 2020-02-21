@@ -473,6 +473,14 @@ class TestShrink:
         with pytest.raises(ValueError, match="Number of node weights must match number of nodes"):
             clique.shrink(s, graph, node_select=w)
 
+    def test_bad_node_select(self, dim):
+        """Tests if function raises a ``ValueError`` when input an invalid ``node_select``
+        argument"""
+        graph = nx.barbell_graph(dim, 0)
+        s = list(range(2 * dim))
+        with pytest.raises(ValueError, match="Node selection method not recognized"):
+            clique.shrink(s, graph, node_select="")
+
 
 @pytest.mark.parametrize("dim", range(2, 10))
 class TestIsClique:
