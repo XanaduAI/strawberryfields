@@ -237,7 +237,7 @@ def swap(
     the growing clique. This function allows a method of choosing nodes to be set with the
     ``node_select`` argument, which can be any of the following:
 
-    - ``"uniform"`` (default): uniform randomly choose a node from the candidates;
+    - ``"uniform"`` (default): choose a node from the candidates uniformly at random;
     - ``"degree"``: choose the node from the candidates with the greatest degree, settling ties
       by uniform random choice;
     - A list or array: specifying the node weights of the graph, resulting in choosing the node
@@ -310,7 +310,7 @@ def shrink(
     the subgraph. The method of selecting which of these nodes to remove is specified by the
     ``node_select`` argument, which can be either:
 
-    - ``"uniform"`` (default): uniform randomly choose a node from the candidates;
+    - ``"uniform"`` (default): choose a node from the candidates uniformly at random;
     - A list or array: specifying the node weights of the graph, resulting in choosing the node
       from the candidates with the lowest weight, settling ties by uniform random choice.
 
