@@ -583,7 +583,7 @@ class JobStatus(enum.Enum):
         status.
 
         Returns:
-            bool: ``True`` if the job is terminal, and ``False`` otherwise
+            bool: ``True`` if the job status is terminal, and ``False`` otherwise
         """
         return self in (JobStatus.CANCELLED, JobStatus.COMPLETE, JobStatus.FAILED)
 
@@ -591,8 +591,8 @@ class JobStatus(enum.Enum):
 class Job:
     """Represents a remote job that can be queried for its status or result.
 
-    This object should not be instantiated directly, but returned by an `Engine` or
-    `Connection` when a job is run.
+    This object should typically not be instantiated directly, but returned by an
+    `Engine` or `Connection` when a job is run.
 
     Args:
         id_ (str): the job ID
@@ -633,7 +633,7 @@ class Job:
         status.
 
         Returns:
-            strawberryfields.engine.Result: the result
+            strawberryfields.engine.Result: the job result
         """
         if self.status != JobStatus.COMPLETE:
             raise AttributeError(
@@ -646,8 +646,7 @@ class Job:
         """Refreshes the status of the job, along with the job result if the job is
         newly completed.
 
-        Only a non-terminal (open or queued job) can be refreshed; an exception is
-        raised otherwise.
+        Only an open or queued job can be refreshed; an exception is raised otherwise.
         """
         if self.status.is_terminal:
             raise InvalidJobOperationError(
@@ -660,8 +659,7 @@ class Job:
     def cancel(self):
         """Cancels the job.
 
-        Only a non-terminal (open or queued job) can be cancelled; an exception is
-        raised otherwise.
+        Only an open or queued job can be cancelled; an exception is raised otherwise.
         """
         if self.status.is_terminal:
             raise InvalidJobOperationError(
@@ -671,7 +669,7 @@ class Job:
 
 
 class RequestMethod(enum.Enum):
-    """Defines the valid request methods for messages sent to the remote job platform."""
+    """Defines the valid request methods for messages sent to the remote platform."""
 
     GET = "get"
     POST = "post"
@@ -698,7 +696,11 @@ class Connection:
     # pylint: disable=bad-continuation
     # See: https://github.com/PyCQA/pylint/issues/289
     def __init__(
-        self, token, host="platform.strawberryfields.ai", port=443, use_ssl=True
+        self,
+        token: str,
+        host: str = "platform.strawberryfields.ai",
+        port: int = 443,
+        use_ssl: bool = True,
     ):
         self._token = token
         self._host = host
@@ -769,15 +771,17 @@ class Connection:
                 connection=self,
             )
         raise RequestFailedError(
-            "Job creation failed: {}".format(self._request_error_message(response))
+            "Job creation failed: {}".format(self._format_error_message(response))
         )
 
-    def get_all_jobs(self, after: datetime = datetime(1970, 1, 1)) -> List[Job]:
-        """Gets all jobs created by the user, optionally filtered by datetime.
+    def get_jobs(self, after: datetime = datetime(1970, 1, 1)) -> List[Job]:
+        """Gets a list of jobs created by the user, optionally filtered by datetime.
+
+        A maximum of the 100 most recent jobs are returned.
 
         Args:
             after (datetime.datetime): if provided, only jobs more recently created
-                                       then ``after`` are returned
+                then ``after`` are returned
 
         Returns:
             List[strawberryfields.engine.Job]: the jobs
@@ -790,7 +794,7 @@ class Connection:
                 if datetime.strptime(info["created_at"], self.JOB_TIMESTAMP_FORMAT)
                 > after
             ]
-        raise RequestFailedError(self._request_error_message(response))
+        raise RequestFailedError(self._format_error_message(response))
 
     def get_job(self, job_id: str) -> Job:
         """Gets a job.
@@ -808,7 +812,7 @@ class Connection:
                 status=JobStatus(response.json()["status"]),
                 connection=self,
             )
-        raise RequestFailedError(self._request_error_message(response))
+        raise RequestFailedError(self._format_error_message(response))
 
     def get_job_status(self, job_id: str) -> JobStatus:
         """Returns the status of a job.
@@ -840,10 +844,11 @@ class Connection:
                 buf.seek(0)
                 samples = np.load(buf)
 
-            # NOTE To maintain consistency with other SF components for now, transpose
-            #      the result array from (shots, modes) to (modes, shots)
+            # NOTE To maintain consistency with other components for now, transpose
+            #      the received result array from (shots, modes) to (modes, shots),
+            #      which allows us to keep the logic in `Result.samples` unchanged
             return Result(samples.T, is_stateful=False)
-        raise RequestFailedError(self._request_error_message(response))
+        raise RequestFailedError(self._format_error_message(response))
 
     def cancel_job(self, job_id: str):
         """Cancels a job.
@@ -856,7 +861,7 @@ class Connection:
         )
         if response.status_code == 204:
             return
-        raise RequestFailedError(self._request_error_message(response))
+        raise RequestFailedError(self._format_error_message(response))
 
     def ping(self) -> bool:
         """Tests the connection to the remote backend.
@@ -867,17 +872,23 @@ class Connection:
         response = self._get("/healthz")
         return response.status_code == 200
 
-    def _get(self, path: str, headers: Dict = None, **kwargs) -> requests.Response:
+    def _get(
+        self, path: str, headers: Dict[str, str] = None, **kwargs
+    ) -> requests.Response:
         return self._request(RequestMethod.GET, path, headers, **kwargs)
 
-    def _post(self, path: str, headers: Dict = None, **kwargs) -> requests.Response:
+    def _post(
+        self, path: str, headers: Dict[str, str] = None, **kwargs
+    ) -> requests.Response:
         return self._request(RequestMethod.POST, path, headers, **kwargs)
 
-    def _patch(self, path: str, headers: Dict = None, **kwargs) -> requests.Response:
+    def _patch(
+        self, path: str, headers: Dict[str, str] = None, **kwargs
+    ) -> requests.Response:
         return self._request(RequestMethod.PATCH, path, headers, **kwargs)
 
     def _request(
-        self, method: RequestMethod, path: str, headers: Dict = None, **kwargs
+        self, method: RequestMethod, path: str, headers: Dict[str, str] = None, **kwargs
     ) -> requests.Response:
         headers = {} if headers is None else headers
         return getattr(requests, method.value)(
@@ -887,7 +898,7 @@ class Connection:
         )
 
     @staticmethod
-    def _request_error_message(response: requests.Response) -> str:
+    def _format_error_message(response: requests.Response) -> str:
         body = response.json()
         return "{} ({}): {}".format(
             body.get("status_code", ""), body.get("code", ""), body.get("detail", "")
