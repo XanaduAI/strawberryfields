@@ -39,12 +39,13 @@ Subgraph resizing
 ^^^^^^^^^^^^^^^^^
 
 The key element of the :func:`search` algorithm is the resizing of each subgraph, allowing a
-range of subgraph sizes to be tracked. Resizing proceeds by greedily adding or removing nodes to
-a subgraph one-at-a-time. Node selection is carried out by picking the node with the greatest
-or least degree with respect to to the subgraph. This function returns a dictionary over the
-range of sizes specified, with each value being the corresponding resized subgraph.
+range of subgraph sizes to be tracked. Resizing proceeds in the :func:`resize` function by greedily
+adding or removing nodes to a subgraph one-at-a-time. Node selection is carried out by picking
+the node with the greatest or least degree with respect to the subgraph. This function returns a
+dictionary over the range of sizes specified, with each value being the corresponding resized
+subgraph.
 
-Whenever there are multiple candidate nodes with the same density, there must be a choice of
+Whenever there are multiple candidate nodes with the same degree, there must be a choice of
 which node to add or remove. The supported choices are:
 
 - Select among candidate nodes uniformly at random;
@@ -78,7 +79,8 @@ def search(
 
     - ``"uniform"`` (default): uniform randomly choose a node from the candidates;
     - A list or array: specifying the node weights of the graph, resulting in choosing the node
-      from the candidates with the lowest weight, settling ties by uniform random choice.
+      from the candidates with the highest weight (when growing) and lowest weight (when shrinking),
+      settling ties by uniform random choice.
 
     **Example usage:**
 
@@ -238,7 +240,8 @@ def resize(
 
     - ``"uniform"`` (default): uniform randomly choose a node from the candidates;
     - A list or array: specifying the node weights of the graph, resulting in choosing the node
-      from the candidates with the lowest weight, settling ties by uniform random choice.
+      from the candidates with the highest weight (when growing) and lowest weight (when shrinking),
+      settling ties by uniform random choice.
 
     **Example usage:**
 
