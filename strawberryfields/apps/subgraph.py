@@ -262,14 +262,19 @@ def resize(
             grow_nodes = grow_subgraph.nodes()
             complement_nodes = nodes - grow_nodes
 
-            degrees = [
-                (c, graph.subgraph(list(grow_nodes) + [c]).degree()[c]) for c in complement_nodes
-            ]
-            np.random.shuffle(degrees)
+            degrees = np.array(
+                [(c, graph.subgraph(list(grow_nodes) + [c]).degree()[c]) for c in complement_nodes]
+            )
+            degrees_max = np.argwhere(degrees[:, 1] == degrees[:, 1].max()).flatten()
 
-            to_add = max(degrees, key=lambda x: x[1])
-            grow_subgraph.add_node(to_add[0])
+            if node_select == "uniform":
+                to_add_index = np.random.choice(degrees_max)
+            elif node_select == "weight":
+                weights = np.array([w[degrees[n][0]] for n in degrees_max])
+                to_add_index = np.random.choice(np.where(weights == weights.max())[0])
 
+            to_add = degrees[to_add_index][0]
+            grow_subgraph.add_node(to_add)
             new_size = grow_subgraph.order()
 
             if min_size <= new_size <= max_size:
