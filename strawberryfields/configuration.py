@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -67,7 +67,7 @@ def load_config(filename="config.toml", **kwargs):
     else:
         log.info("No Strawberry Fields configuration file found.")
 
-    update_from_environmental_variables(config)
+    update_from_environment_variables(config)
 
     return config
 
@@ -118,7 +118,7 @@ def update_with_other_config(config, other_config):
                 # Update from configuration file
                 config[section][key] = other_config[section][key]
 
-def update_from_environmental_variables(config):
+def update_from_environment_variables(config):
     for section, sectionconfig in config.items():
         env_prefix = "SF_{}_".format(section.upper())
         for key in sectionconfig:

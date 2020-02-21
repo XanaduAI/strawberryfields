@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@ import logging
 import pytest
 
 import toml
-
-from unittest.mock import MagicMock
 
 from strawberryfields import configuration as conf
 
@@ -79,6 +77,29 @@ class TestConfiguration:
 
         assert config_file == EXPECTED_CONFIG
 
+class TestLoadConfig:
+
+    def test_not_found_warning(self, caplog):
+        """Test that a warning is raised if no configuration file found."""
+
+        conf.load_config(filename='NotAFileName')
+        assert "No Strawberry Fields configuration file found." in caplog.text
+
+    def test_check_call_order(self, monkeypatch):
+
+        def mock_look_for_config_in_file(*args, **kwargs):
+            call_history.append(2)
+            return "NotNone"
+
+        call_history = []
+        with monkeypatch.context() as m:
+            m.setattr(conf, "create_config_object", lambda *args: call_history.append(1))
+            m.setattr(conf, "look_for_config_in_file", mock_look_for_config_in_file)
+            m.setattr(conf, "update_with_other_config", lambda *args, **kwargs: call_history.append(3))
+            m.setattr(conf, "update_from_environment_variables", lambda *args: call_history.append(4))
+            conf.load_config()
+        assert call_history == [1,2,3,4]
+
 class TestLookForConfigInFile:
 
     def test_loading_current_directory(self, tmpdir, monkeypatch):
@@ -95,7 +116,7 @@ class TestLookForConfigInFile:
 
     def test_loading_env_variable(self, tmpdir, monkeypatch):
         """Test that the correct configuration file is found using the correct
-        environmental variable.
+        environment variable.
 
         This is a test case for when there is no configuration file in the
         current directory."""
@@ -122,7 +143,7 @@ class TestLookForConfigInFile:
 
         This is a test case for when there is no configuration file:
         -in the current directory or
-        -in the directory contained in the corresponding environmental
+        -in the directory contained in the corresponding environment
         variable."""
         filename = "config.toml"
 
@@ -144,7 +165,7 @@ class TestLookForConfigInFile:
 
         This is a test case for when there is no configuration file:
         -in the current directory or
-        -in the directory contained in the corresponding environmental
+        -in the directory contained in the corresponding environment
         variable
         -in the user_config_dir directory of Strawberry Fields."""
         filename = "config.toml"
@@ -212,7 +233,7 @@ class TestLookForConfigInFile:
             assert config["api"][specific_key] == "PlaceHolder"
             assert all(v != "PlaceHolder" for k, v in config["api"].items() if k != specific_key)
 
-environmental_variables = [
+environment_variables = [
                     "SF_API_AUTHENTICATION_TOKEN",
                     "SF_API_HOSTNAME",
                     "SF_API_USE_SSL",
@@ -222,23 +243,23 @@ environmental_variables = [
 
 class TestUpdateFromEnvironmentalVariables:
 
-    def test_all_environmental_variables_defined(self):
+    def test_all_environment_variables_defined(self):
 
-        for key in environmental_variables:
+        for key in environment_variables:
             os.environ[key] = "PlaceHolder"
 
         config = conf.create_config_object()
         assert not any(v == "PlaceHolder" for k, v in config["api"].items())
 
-        conf.update_from_environmental_variables(config)
+        conf.update_from_environment_variables(config)
         assert all(v == "PlaceHolder" for k, v in config["api"].items())
-
+    def test_one_environment_variable_defined(self, specific_env_var, specific_key):
         # Tear-down
-        for key in environmental_variables:
+        for key in environment_variables:
             del os.environ[key]
             assert key not in os.environ
 
-    environmental_variables_with_keys = [
+    environment_variables_with_keys = [
                     ("SF_API_AUTHENTICATION_TOKEN","authentication_token"),
                     ("SF_API_HOSTNAME","hostname"),
                     ("SF_API_USE_SSL","use_ssl"),
@@ -246,15 +267,22 @@ class TestUpdateFromEnvironmentalVariables:
                     ("SF_API_PORT","port")
                     ]
 
-    @pytest.mark.parametrize("specific_env_var, specific_key", environmental_variables_with_keys)
-    def test_one_environmental_variables_defined(self, specific_env_var, specific_key):
+    @pytest.mark.parametrize("specific_env_var, specific_key", environment_variables_with_keys)
+    def test_one_environment_variable_defined(self, specific_env_var, specific_key):
+        # Making sure that no environment variable was defined previously
+        for key in environment_variables:
+            if key in os.environ:
+                del os.environ[key]
+                assert key not in os.environ
+
         os.environ[specific_env_var] = "PlaceHolder"
 
         config = conf.create_config_object()
         assert not any(v == "PlaceHolder" for k, v in config["api"].items())
 
-        conf.update_from_environmental_variables(config)
+        conf.update_from_environment_variables(config)
         assert config["api"][specific_key] == "PlaceHolder"
+
         assert all(v != "PlaceHolder" for k, v in config["api"].items() if k != specific_key)
 
         # Tear-down
@@ -275,6 +303,5 @@ class TestUpdateFromEnvironmentalVariables:
         assert conf.parse_environment_variable("some_boolean", "0") is False
         assert conf.parse_environment_variable("some_boolean", 0) is False
 
-        something_else = MagicMock()
-        assert conf.parse_environment_variable("not_a_boolean", something_else) == something_else
+        assert conf.parse_environment_variable("not_a_boolean","something_else") == "something_else"
 
