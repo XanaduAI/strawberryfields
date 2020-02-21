@@ -363,7 +363,7 @@ class TestResize:
                 removed_node = list(set(s) - set(resized_subgraph))[0]
                 assert removed_node == i
 
-    @pytest.mark.parametrize("dim", range(4, 10))
+    @pytest.mark.parametrize("dim", range(4, 8))
     def test_correct_resize_weight(self, dim):
         """Test if function correctly resizes on a fixed example where the ideal resizing is
         known and node-weight based selection is used to settle ties. The example is a complete
@@ -381,3 +381,34 @@ class TestResize:
         resized = subgraph.resize(s, g, min_size, max_size, node_select=w)
 
         assert ideal == resized
+
+    @pytest.mark.parametrize("dim", range(4, 8))
+    @pytest.mark.parametrize("elem", [0, 1])
+    def test_weight_and_degree_ties(self, dim, monkeypatch, elem):
+        """Test if function correctly resizes on a fixed example where the ideal resizing is
+        known and node-weight based selection is used to settle ties, but with all node weights
+        equal so that they must be settled uniformly at random. The example is a complete
+        graph with a starting subgraph of the first ``dim - 2`` nodes. The task is to resize to
+        one node smaller and larger. This test monkeypatches the ``np.random.choice`` call used in
+        the function so that instead it returns a fixed element. This element is set to 0 or 1 in
+        the test, resulting in different nodes being added and removed from the starting
+        subgraph."""
+        g = nx.complete_graph(dim)
+        s = list(range(dim - 2))
+        min_size = dim - 3
+        max_size = dim - 1
+        w = [1] * dim
+
+        def choice(x, element):
+            if isinstance(x, int):
+                return element
+            return x[element]
+
+        choice_elem = functools.partial(choice, element=elem)
+
+        ideal = {dim - 2: s, dim - 1: s + [dim - 2 + elem], dim - 3: list(set(s) - {elem})}
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", choice_elem)
+            resized = subgraph.resize(s, g, min_size, max_size, node_select=w)
+
+        assert resized == ideal
