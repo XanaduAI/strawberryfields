@@ -11,6 +11,7 @@
   with node weights using the WAW encoding and input node weights into search algorithms in the
   `subgraph` module.
   [295](https://github.com/XanaduAI/strawberryfields/pull/295)
+  [297](https://github.com/XanaduAI/strawberryfields/pull/297)
 
 ### Improvements
 * Added two-mode squeezed operation support as a primitive, rather than simply
