@@ -362,3 +362,22 @@ class TestResize:
                 resized_subgraph = resized[3]
                 removed_node = list(set(s) - set(resized_subgraph))[0]
                 assert removed_node == i
+
+    @pytest.mark.parametrize("dim", range(4, 10))
+    def test_correct_resize_weight(self, dim):
+        """Test if function correctly resizes on a fixed example where the ideal resizing is
+        known and node-weight based selection is used to settle ties. The example is a complete
+        graph with a starting subgraph of the first ``dim - 2`` nodes. The task is to resize to
+        one node smaller and larger. The nodes weights are monotonically increasing with node
+        label. In the shrink step, the 0 node should be removed. In the grow step, the ``dim -
+        1`` node should be added."""
+        g = nx.complete_graph(dim)
+        s = list(range(dim - 2))
+        min_size = dim - 3
+        max_size = dim - 1
+        w = list(range(dim))
+
+        ideal = {dim - 2: s, dim - 1: s + [dim - 1], dim - 3: list(range(1, dim - 2))}
+        resized = subgraph.resize(s, g, min_size, max_size, node_select=w)
+
+        assert ideal == resized
