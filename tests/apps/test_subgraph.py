@@ -29,13 +29,14 @@ pytestmark = pytest.mark.apps
 
 p_planted = data.Planted()
 g_planted = nx.Graph(p_planted.adj)
+planted_weights = list(range(p_planted.modes))
 
 
 @pytest.fixture()
-def process_planted(min_size, max_size, max_count, n_samples):
+def process_planted(min_size, max_size, max_count, n_samples, node_select):
     """Fixture for loading samples from the Planted dataset"""
     samples = p_planted[:n_samples]
-    d = subgraph.search(samples, g_planted, min_size, max_size, max_count)
+    d = subgraph.search(samples, g_planted, min_size, max_size, max_count, node_select)
     return d
 
 
@@ -43,6 +44,7 @@ def process_planted(min_size, max_size, max_count, n_samples):
 @pytest.mark.parametrize("max_size", [6, 7])
 @pytest.mark.parametrize("max_count", [2, 4])
 @pytest.mark.parametrize("n_samples", [200])
+@pytest.mark.parametrize("node_select", ["uniform", planted_weights])
 @pytest.mark.usefixtures("process_planted")
 class TestSearch:
     """Tests for the function ``subgraph.search``"""
