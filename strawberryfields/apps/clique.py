@@ -66,7 +66,9 @@ import networkx as nx
 import numpy as np
 
 
-def search(clique: list, graph: nx.Graph, iterations, node_select: str = "uniform") -> list:
+def search(
+    clique: list, graph: nx.Graph, iterations, node_select: Union[str, np.ndarray, list] = "uniform"
+) -> list:
     """Local search algorithm for identifying large cliques.
 
     This function implements a version of the local search algorithm given in
@@ -88,9 +90,13 @@ def search(clique: list, graph: nx.Graph, iterations, node_select: str = "unifor
 
     Whenever the sets :math:`C_0` and :math:`C_1` used during growth and swapping have more than
     one element, there must be a choice of which node to add or swap. This choice is specified
-    with the ``node_select`` argument, with node selection based on uniform randomness and node
-    degree supported. Degree-based node selection involves picking the node with the greatest
-    degree, with ties settled by uniform random choice.
+    with the ``node_select`` argument, which can be any of the following:
+
+    - ``"uniform"`` (default): uniform randomly choose a node from the candidates;
+    - ``"degree"``: choose the node from the candidates with the greatest degree, settling ties
+      by uniform random choice;
+    - A list or array: specifying the node weights of the graph, resulting in choosing the node
+      from the candidates with the greatest weight, settling ties by uniform random choice.
 
     **Stopping**
 
