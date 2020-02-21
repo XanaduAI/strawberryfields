@@ -245,21 +245,7 @@ def resize(
     """
     nodes = graph.nodes()
     subgraph = set(subgraph)
-
-    if not subgraph.issubset(nodes):
-        raise ValueError("Input is not a valid subgraph")
-    if min_size < 1:
-        raise ValueError("min_size must be at least 1")
-    if max_size >= len(nodes):
-        raise ValueError("max_size must be less than number of nodes in graph")
-    if max_size < min_size:
-        raise ValueError("max_size must not be less than min_size")
-
-    if isinstance(node_select, (list, np.ndarray)):
-        if len(node_select) != graph.number_of_nodes():
-            raise ValueError("Number of node weights must match number of nodes")
-        w = {n: node_select[i] for i, n in enumerate(graph.nodes)}
-        node_select = "weight"
+    node_select, w = _validate_inputs(subgraph, graph, min_size, max_size, node_select)
 
     starting_size = len(subgraph)
 
@@ -302,8 +288,6 @@ def resize(
             elif node_select == "weight":
                 weights = np.array([w[degrees[n][0]] for n in degrees_min])
                 to_remove_index = np.random.choice(np.where(weights == weights.min())[0])
-            else:
-                raise ValueError("Node selection method not recognized")
 
             to_remove = degrees[to_remove_index][0]
             shrink_subgraph.remove_node(to_remove)
@@ -314,3 +298,33 @@ def resize(
                 resized[new_size] = sorted(shrink_subgraph.nodes())
 
     return resized
+
+
+def _validate_inputs(
+    subgraph: set,
+    graph: nx.Graph,
+    min_size: int,
+    max_size: int,
+    node_select: Union[str, np.ndarray, list] = "uniform",
+):
+    """Input validation for the ``resize`` function."""
+    if not subgraph.issubset(graph.nodes()):
+        raise ValueError("Input is not a valid subgraph")
+    if min_size < 1:
+        raise ValueError("min_size must be at least 1")
+    if max_size >= len(graph.nodes()):
+        raise ValueError("max_size must be less than number of nodes in graph")
+    if max_size < min_size:
+        raise ValueError("max_size must not be less than min_size")
+
+    if isinstance(node_select, (list, np.ndarray)):
+        if len(node_select) != graph.number_of_nodes():
+            raise ValueError("Number of node weights must match number of nodes")
+        w = {n: node_select[i] for i, n in enumerate(graph.nodes)}
+        node_select = "weight"
+    else:
+        w = {n: 1 for i, n in enumerate(graph.nodes)}
+        if node_select != "uniform":
+            raise ValueError("Node selection method not recognized")
+
+    return node_select, w

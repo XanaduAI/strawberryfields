@@ -250,32 +250,51 @@ class TestUpdateSubgraphsList:
         assert l == self.l
 
 
-class TestResize:
-    """Tests for the function ``subgraph.resize``"""
+class TestValidate:
+    """Tests for the function ``subgraph._validate_inputs``"""
 
     def test_input_not_subgraph(self):
         """Test if function raises a ``ValueError`` when input is not a subgraph"""
         dim = 5
         with pytest.raises(ValueError, match="Input is not a valid subgraph"):
-            subgraph.resize([dim + 1], nx.complete_graph(dim), 2, 3)
+            subgraph._validate_inputs({dim + 1}, nx.complete_graph(dim), 2, 3)
 
     def test_invalid_min_size(self):
         """Test if function raises a ``ValueError`` when an invalid min_size is requested"""
         dim = 5
         with pytest.raises(ValueError, match="min_size must be at least 1"):
-            subgraph.resize([0, 1], nx.complete_graph(dim), 0, 3)
+            subgraph._validate_inputs({0, 1}, nx.complete_graph(dim), 0, 3)
 
     def test_invalid_max_size(self):
         """Test if function raises a ``ValueError`` when an invalid max_size is requested"""
         dim = 5
         with pytest.raises(ValueError, match="max_size must be less than number of nodes in graph"):
-            subgraph.resize([0, 1], nx.complete_graph(dim), 2, dim)
+            subgraph._validate_inputs({0, 1}, nx.complete_graph(dim), 2, dim)
 
     def test_invalid_max_vs_min(self):
         """Test if function raises a ``ValueError`` when max_size is less than min_size"""
         dim = 5
         with pytest.raises(ValueError, match="max_size must not be less than min_size"):
-            subgraph.resize([0, 1], nx.complete_graph(dim), 4, 3)
+            subgraph._validate_inputs({0, 1}, nx.complete_graph(dim), 4, 3)
+
+    def test_bad_weights(self):
+        """Test if function raises a ``ValueError`` when a vector of node weights input to
+        ``node_select`` is not of the same dimension as the input graph."""
+        dim = 5
+        w = [1] * (dim - 1)
+        with pytest.raises(ValueError, match="Number of node weights must match number of nodes"):
+            subgraph._validate_inputs({0, 1}, nx.complete_graph(dim), 2, 3, node_select=w)
+
+    def test_bad_node_select(self):
+        """Tests if function raises a ``ValueError`` when input an invalid ``node_select``
+        argument"""
+        dim = 5
+        with pytest.raises(ValueError, match="Node selection method not recognized"):
+            subgraph._validate_inputs({0, 1}, nx.complete_graph(dim), 2, 3, node_select="")
+
+
+class TestResize:
+    """Tests for the function ``subgraph.resize``"""
 
     @pytest.mark.parametrize("dim", [7, 8])
     @pytest.mark.parametrize(
