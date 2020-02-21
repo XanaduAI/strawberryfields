@@ -150,7 +150,7 @@ class TestGrow:
         assert c1 != c2
 
     def test_grow_maximal_weight(self, dim):
-        """Test if function grows to expected maximal graph when node weight-based node selection is
+        """Test if function grows to expected maximal graph when weight-based node selection is
         used. The chosen graph is a fully connected graph where the final three nodes have
         subsequently been disconnected from each other, but remain connected to all the other
         nodes. We then start from the clique composed of all but the final three nodes and seek
@@ -167,7 +167,7 @@ class TestGrow:
         assert set(clique.grow(s, graph, node_select=weights)) == target
 
     def test_grow_maximal_weight_tie(self, dim, monkeypatch):
-        """Test if function grows using randomness to break ties during node weight-based node
+        """Test if function grows using randomness to break ties during weight-based node
         selection. The chosen graph is a fully connected graph where the final three nodes have
         subsequently been disconnected from each other, but remain connected to all the other
         nodes. We then start from the clique composed of all but the final three nodes and seek
@@ -287,7 +287,7 @@ class TestSwap:
         assert c1 != c2
 
     def test_swap_weight(self, dim):
-        """Test if function performs correct swap operation when node weight-based node selection is
+        """Test if function performs correct swap operation when weight-based node selection is
         used. The input graph is a complete graph with the ``(dim - 1, dim - 3)`` and
         ``(dim - 2, dim - 4)`` edges removed. The starting clique is the first ``dim - 2`` nodes.
         This results in two candidate swap pairs: ``(dim - 1, dim - 3)`` and ``(dim - 2, dim - 4)``.
