@@ -8,7 +8,8 @@
   [#270](https://github.com/XanaduAI/strawberryfields/pull/270)
 
 * Adds support in the applications layer for node-weighted graphs. Users can sample from graphs
-  with node weights using the WAW encoding.
+  with node weights using the WAW encoding and input node weights into search algorithms in the
+  `subgraph` module.
   [295](https://github.com/XanaduAI/strawberryfields/pull/295)
 
 ### Improvements
