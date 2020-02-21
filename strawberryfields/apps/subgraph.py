@@ -77,7 +77,7 @@ def search(
     equal degree to add to or remove from the subgraph. The method of selecting the node is
     specified by the ``node_select`` argument, which can be either:
 
-    - ``"uniform"`` (default): uniform randomly choose a node from the candidates;
+    - ``"uniform"`` (default): choose a node from the candidates uniformly at random;
     - A list or array: specifying the node weights of the graph, resulting in choosing the node
       from the candidates with the highest weight (when growing) and lowest weight (when shrinking),
       settling ties by uniform random choice.
@@ -238,7 +238,7 @@ def resize(
     add to or remove from the subgraph. The method of selecting the node is specified by the
     ``node_select`` argument, which can be either:
 
-    - ``"uniform"`` (default): uniform randomly choose a node from the candidates;
+    - ``"uniform"`` (default): choose a node from the candidates uniformly at random;
     - A list or array: specifying the node weights of the graph, resulting in choosing the node
       from the candidates with the highest weight (when growing) and lowest weight (when shrinking),
       settling ties by uniform random choice.
