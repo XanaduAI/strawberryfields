@@ -688,8 +688,8 @@ class Connection:
     **Example:**
 
     The following example instantiates a :class:`~Connection` for a given API
-    authentication token, tests the connection, and makes requests for a single or
-    multiple jobs.
+    authentication token, tests the connection, submits a new job, and makes requests
+    for a single or multiple existing jobs.
 
     .. code-block:: python
 
@@ -698,6 +698,10 @@ class Connection:
         # Ping the remote server
         success = connection.ping()
         # True if successful, or False if cannot connect or not authenticated
+
+        # Submit a new job
+        job = connection.create_job("chip2", program, shots=123)
+        job  # <Job: id=d177cbf5-1816-4779-802f-cef2c117dc1a, ...>
 
         # Get all jobs submitted for this token
         jobs = connection.get_all_jobs()
@@ -778,15 +782,25 @@ class Connection:
             "s" if self.use_ssl else "", self.host, self.port
         )
 
-    def create_job(self, circuit: str) -> Job:
+    def create_job(self, target: str, program: Program, shots: int) -> Job:
         """Creates a job with the given circuit.
 
         Args:
-            circuit (str): the serialized Blackbird program
+            target (str): the target device
+            program (strawberryfields.Program): the quantum circuit
+            shots (int): the number of shots
 
         Returns:
             strawberryfields.engine.Job: the created job
         """
+        # Serialize a blackbird circuit for network transmission
+        bb = to_blackbird(program)
+        # pylint: disable=protected-access
+        bb._target["name"] = target
+        # pylint: disable=protected-access
+        bb._target["options"] = {"shots": shots}
+        circuit = bb.serialize()
+
         response = self._post("/jobs", data=json.dumps({"circuit": circuit}))
         if response.status_code == 201:
             return Job(
@@ -969,7 +983,7 @@ class StarshipEngine:
         job.result  # [[0 1 0 2 1 0 0 0]]
 
     Args:
-        target (str): the target backend
+        target (str): the target device
         connection (strawberryfields.engine.Connection): a connection to the remote job
             execution platform
     """
@@ -999,10 +1013,10 @@ class StarshipEngine:
 
     @property
     def target(self) -> str:
-        """The target backend used by the engine.
+        """The target device used by the engine.
 
         Returns:
-            str: the target backend used by the engine
+            str: the target device used by the engine
         """
         return self._target
 
@@ -1055,12 +1069,7 @@ class StarshipEngine:
         Returns:
             strawberryfields.engine.Job: the created remote job
         """
-        bb = to_blackbird(program)
-        # pylint: disable=protected-access
-        bb._target["name"] = self.target
-        # pylint: disable=protected-access
-        bb._target["options"] = {"shots": shots}
-        return self._connection.create_job(bb.serialize())
+        return self._connection.create_job(self.target, program, shots)
 
     def __repr__(self):
         return "<{}: target={}, connection={}>".format(

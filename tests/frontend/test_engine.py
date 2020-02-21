@@ -272,7 +272,7 @@ class TestConnection:
 
         assert connection.base_url == "https://host:123"
 
-    def test_create_job(self, connection, monkeypatch):
+    def test_create_job(self, prog, connection, monkeypatch):
         """Tests a successful job creation flow."""
         id_, status = "123", JobStatus.QUEUED
 
@@ -282,17 +282,17 @@ class TestConnection:
             mock_return(mock_response(201, {"id": id_, "status": status})),
         )
 
-        job = connection.create_job("circuit")
+        job = connection.create_job("chip2", prog, 1)
 
         assert job.id == id_
         assert job.status == status
 
-    def test_create_job_error(self, connection, monkeypatch):
+    def test_create_job_error(self, prog, connection, monkeypatch):
         """Tests a failed job creation flow."""
         monkeypatch.setattr(Connection, "_post", mock_return(mock_response(400, {})))
 
         with pytest.raises(RequestFailedError):
-            connection.create_job("circuit")
+            connection.create_job("chip2", prog, 1)
 
     def test_get_all_jobs(self, connection, monkeypatch):
         """Tests a successful job list request."""
