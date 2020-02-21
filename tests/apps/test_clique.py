@@ -329,7 +329,11 @@ class TestSwap:
             m.setattr(np.random, "choice", patch_random_choice_2)
             c2 = clique.swap(s, graph, node_select=weights)
 
+        target1 = set(s) - {dim - 4} | {dim - 2}
+        target2 = set(s) - {dim - 3} | {dim - 1}
+
         assert c1 != c2
+        assert list(target1) == c1 and list(target2) == c2
 
     def test_input_not_clique(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
@@ -464,6 +468,14 @@ class TestShrink:
 
         assert c1 != c2
         assert c1 == target1 and c2 == target2
+
+    def test_bad_weights(self, dim, graph):
+        """Test if function raises a ``ValueError`` when a vector of node weights input to
+        ``node_select`` is not of the same dimension as the input graph."""
+        s = [0, 1]
+        w = np.ones(dim - 1)
+        with pytest.raises(ValueError, match="Number of node weights must match number of nodes"):
+            clique.shrink(s, graph, node_select=w)
 
 
 @pytest.mark.parametrize("dim", range(2, 10))
