@@ -53,9 +53,10 @@ clique that is not connected to it. This is provided with the :func:`swap` funct
 Whenever the sets :math:`C_0` and :math:`C_1` used during growth and swapping have more than
 one element, there must be a choice of which node to add or swap. The supported choices are:
 
-- Select among candidates uniformly at random;
-- Select the candidate with the greatest degree, settling remaining ties uniformly at random;
-- Select the candidate with the greatest node weight, settling remaining ties uniformly at random.
+- Select among candidate nodes uniformly at random;
+- Select the candidate node with the greatest degree, settling remaining ties uniformly at random;
+- Select the candidate node with the greatest node weight, settling remaining ties uniformly at
+  random.
 
 Using GBS to find a starting clique
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -196,7 +197,7 @@ def grow(
         node_select = "weight"
 
     clique = set(clique)
-    _c_0 = c_0(clique, graph)
+    _c_0 = sorted(c_0(clique, graph))
 
     while _c_0:
         if node_select == "uniform":
@@ -214,7 +215,7 @@ def grow(
         else:
             raise ValueError("Node selection method not recognized")
 
-        _c_0 = c_0(clique, graph)
+        _c_0 = sorted(c_0(clique, graph))
 
     return sorted(clique)
 
@@ -252,8 +253,8 @@ def swap(
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
-        node_select (str, list or array): method of selecting nodes from :math:`C_0` during growth.
-            Can be ``"uniform"`` (default), ``"degree"``, or a numpy array or list.
+        node_select (str, list or array): method of selecting incoming nodes from :math:`C_1`
+            during swapping. Can be ``"uniform"`` (default), ``"degree"``, or a numpy array or list.
 
     Returns:
         list[int]: a new clique subgraph of equal size as the input

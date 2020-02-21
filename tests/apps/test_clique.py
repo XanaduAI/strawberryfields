@@ -172,10 +172,10 @@ class TestGrow:
         subsequently been disconnected from each other, but remain connected to all the other
         nodes. We then start from the clique composed of all but the final three nodes and seek
         to grow. In this construction, we can add just one of the final three nodes. This test
-        gives the every node the same weight, so we expect that they should be selected randomly
-        with equal probability. This test monkeypatches the ``np.random.choice`` call to
-        guarantee that one of the nodes is picked during one run of ``grow`` and the another node
-        is picked during the next run."""
+        gives every node the same weight, so we expect that they should be selected randomly with
+        equal probability. This test monkeypatches the ``np.random.choice`` call to guarantee
+        that one of the nodes is picked during one run of ``grow`` and the another node is picked
+        during the next run."""
         graph = nx.complete_graph(dim)
         s = graph.subgraph([dim - 3, dim - 2, dim - 1])
         for e in s.edges():
@@ -195,7 +195,10 @@ class TestGrow:
             m.setattr(np.random, "choice", patch_random_choice_2)
             c2 = clique.grow(s, graph, node_select=weights)
 
+        target1 = list(s | {dim - 3})
+        target2 = list(s | {dim - 2})
         assert c1 != c2
+        assert target1 == c1 and target2 == c2
 
     def test_input_not_clique(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
