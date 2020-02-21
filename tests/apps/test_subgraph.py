@@ -323,24 +323,22 @@ class TestResize:
         the problem of a 6-dimensional complete graph and a 4-node subgraph, with the objective
         of shrinking down to 3 nodes. In this case, any of the 4 nodes in the subgraph is an
         equally good candidate for removal since all nodes have the same degree. The test
-        monkeypatches the ``np.random.shuffle`` function to simply permute the list according to
-        an offset, e.g. for an offset of 2 the list [0, 1, 2, 3] gets permuted to [2, 3, 0,
-        1]. Using this we expect the node to be removed by ``resize`` in this case to have label
-        equal to the offset."""
+        monkeypatches the ``np.random.choice`` function to simply choose a fixed element,
+        e.g. the element 2 of the list [0, 1, 2, 3] will be 2. Using this we expect the node to
+        be removed by ``resize`` in this case to have label equal to the element."""
         dim = 6
         g = nx.complete_graph(dim)
         s = [0, 1, 2, 3]
 
-        def permute(l, offset):
-            d = len(l)
-            ll = l.copy()
-            for _i in range(d):
-                l[_i] = ll[(_i + offset) % d]
+        def choice(x, element):
+            if isinstance(x, int):
+                return element
+            return x[element]
 
         for i in range(4):
-            permute_i = functools.partial(permute, offset=i)
+            choice_i = functools.partial(choice, element=i)
             with monkeypatch.context() as m:
-                m.setattr(np.random, "shuffle", permute_i)
+                m.setattr(np.random, "choice", choice_i)
                 resized = subgraph.resize(s, g, min_size=3, max_size=3)
                 resized_subgraph = resized[3]
                 removed_node = list(set(s) - set(resized_subgraph))[0]

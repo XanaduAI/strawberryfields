@@ -46,6 +46,8 @@ or least degree with respect to to the subgraph, with ties settled uniformly at 
 This function returns a dictionary over the range of sizes specified, with each value being the
 corresponding resized subgraph.
 """
+from typing import Union
+
 import networkx as nx
 import numpy as np
 
@@ -189,7 +191,13 @@ def _update_subgraphs_list(l: list, t: tuple, max_count: int) -> None:
     return
 
 
-def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dict:
+def resize(
+    subgraph: list,
+    graph: nx.Graph,
+    min_size: int,
+    max_size: int,
+    node_select: Union[str, np.ndarray, list] = "uniform",
+) -> dict:
     """Resize a subgraph to a range of input sizes.
 
     This function uses a greedy approach to iteratively add or remove nodes one at a time to an
@@ -201,9 +209,15 @@ def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dic
     the algorithm performs the procedure again.
 
     When shrinking is required, the algorithm examines all nodes from within the subgraph as
-    candidates and removes the single node with lowest degree relative to the subgraph. In both
-    growth and shrink phases, ties for addition/removal with nodes of equal degree are settled by
-    uniform random choice.
+    candidates and removes the single node with lowest degree relative to the subgraph.
+
+    In both growth and shrink phases, there may be multiple candidate nodes with equal degree to
+    add to or remove from the subgraph. The method of selecting the node is specified by the
+    ``node_select`` argument, which can be either:
+
+    - ``"uniform"`` (default): uniform randomly choose a node from the candidates;
+    - A list or array: specifying the node weights of the graph, resulting in choosing the node
+      from the candidates with the lowest weight, settling ties by uniform random choice.
 
     **Example usage:**
 
@@ -222,6 +236,9 @@ def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dic
         graph (nx.Graph): the input graph
         min_size (int): minimum size for subgraph to be resized to
         max_size (int): maximum size for subgraph to be resized to
+        node_select (str, list or array): method of settling ties when more than one node of
+            equal degree can be added/removed. Can be ``"uniform"`` (default), or a numpy array or
+            list.
 
     Returns:
         dict[int, list[int]]: a dictionary of different sizes with corresponding subgraph
@@ -237,6 +254,12 @@ def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dic
         raise ValueError("max_size must be less than number of nodes in graph")
     if max_size < min_size:
         raise ValueError("max_size must not be less than min_size")
+
+    if isinstance(node_select, (list, np.ndarray)):
+        if len(node_select) != graph.number_of_nodes():
+            raise ValueError("Number of node weights must match number of nodes")
+        w = {n: node_select[i] for i, n in enumerate(graph.nodes)}
+        node_select = "weight"
 
     starting_size = len(subgraph)
 
@@ -271,11 +294,19 @@ def resize(subgraph: list, graph: nx.Graph, min_size: int, max_size: int) -> dic
         shrink_subgraph = graph.subgraph(subgraph).copy()
 
         while shrink_subgraph.order() > min_size:
-            degrees = list(shrink_subgraph.degree())
-            np.random.shuffle(degrees)
+            degrees = np.array(shrink_subgraph.degree)
+            degrees_min = np.argwhere(degrees[:, 1] == degrees[:, 1].min()).flatten()
 
-            to_remove = min(degrees, key=lambda x: x[1])
-            shrink_subgraph.remove_node(to_remove[0])
+            if node_select == "uniform":
+                to_remove_index = np.random.choice(degrees_min)
+            elif node_select == "weight":
+                weights = np.array([w[degrees[n][0]] for n in degrees_min])
+                to_remove_index = np.random.choice(np.where(weights == weights.min())[0])
+            else:
+                raise ValueError("Node selection method not recognized")
+
+            to_remove = degrees[to_remove_index][0]
+            shrink_subgraph.remove_node(to_remove)
 
             new_size = shrink_subgraph.order()
 
