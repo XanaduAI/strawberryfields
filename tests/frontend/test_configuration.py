@@ -25,6 +25,7 @@ from strawberryfields import configuration as conf
 pytestmark = pytest.mark.frontend
 logging.getLogger().setLevel(1)
 
+authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
 
 TEST_FILE = """\
 [api]
@@ -53,21 +54,32 @@ EXPECTED_CONFIG = {
 }
 
 
+class TestCreteConfigObject:
+    def test_empty_config_object(self):
+        config = conf.create_config_object(authentication_token="",
+                                  hostname="",
+                                  use_ssl="",
+                                  debug="",
+                                  port="")
+
+        assert all(value=="" for value in config["api"].values())
+    def test_config_object_with_authentication_token(self):
+        assert conf.create_config_object(authentication_token="071cdcce-9241-4965-93af-4a4dbc739135") == EXPECTED_CONFIG
+
 class TestConfiguration:
     """Tests for the configuration class"""
 
-    def test_create_config_object(self):
-        assert conf.create_config_object(authentication_token="071cdcce-9241-4965-93af-4a4dbc739135") == EXPECTED_CONFIG
-
-    def test_load_config_file(self, tmpdir, monkeypatch):
+    def test_parse_config_file(self, tmpdir, monkeypatch):
         filename = tmpdir.join("config.toml")
 
         with open(filename, "w") as f:
             f.write(TEST_FILE)
 
-        config_file = conf.load_config_file(filepath=filename)
+        config_file = conf.parse_config_file(filepath=filename)
 
         assert config_file == EXPECTED_CONFIG
+
+class TestLookForConfigInFile:
 
     def test_loading_current_directory(self, tmpdir, monkeypatch):
         """Test that the default configuration file is loaded from the current
@@ -76,8 +88,8 @@ class TestConfiguration:
 
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: tmpdir)
-            m.setattr(conf, "load_config_file", lambda filepath: filepath)
-            config_file = conf.look_for_config_file(filename=filename)
+            m.setattr(conf, "parse_config_file", lambda filepath: filepath)
+            config_file = conf.look_for_config_in_file(filename=filename)
 
         assert config_file == tmpdir.join(filename)
 
@@ -96,12 +108,12 @@ class TestConfiguration:
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
             m.setattr(os.environ, "get", lambda x, y: tmpdir if x=="SF_CONF" else "NoConfigFileHere")
-            m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
+            m.setattr(conf, "parse_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
 
             # Need to mock the module specific function
             # m.setattr(conf, "user_config_dir", lambda *args: "NotTheFileName")
             # os.environ["SF_CONF"] = lambda: FileNotFoundError
-            config_file = conf.look_for_config_file(filename=filename)
+            config_file = conf.look_for_config_in_file(filename=filename)
         assert config_file == tmpdir.join("config.toml")
 
     def test_loading_user_config_dir(self, tmpdir, monkeypatch):
@@ -121,13 +133,13 @@ class TestConfiguration:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
             m.setattr(os.environ, "get", lambda *args: "NoConfigFileHere")
             m.setattr(conf, "user_config_dir", lambda x, *args: tmpdir if x=="strawberryfields" else "NoConfigFileHere")
-            m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
+            m.setattr(conf, "parse_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
 
-            config_file = conf.look_for_config_file(filename=filename)
+            config_file = conf.look_for_config_in_file(filename=filename)
         assert config_file == tmpdir.join("config.toml")
 
     def test_no_config_file_found_returns_none(self, tmpdir, monkeypatch):
-        """Test that the the look_for_config_file returns None if the
+        """Test that the the look_for_config_in_file returns None if the
         configuration file is nowhere to be found.
 
         This is a test case for when there is no configuration file:
@@ -144,80 +156,110 @@ class TestConfiguration:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
             m.setattr(os.environ, "get", lambda *args: "NoConfigFileHere")
             m.setattr(conf, "user_config_dir", lambda *args: "NoConfigFileHere")
-            m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
+            m.setattr(conf, "parse_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
 
-            config_file = conf.look_for_config_file(filename=filename)
+            config_file = conf.look_for_config_in_file(filename=filename)
 
         assert config_file is None
 
-    def test_loading_absolute_path(self, tmpdir, monkeypatch):
-        """Test that the default configuration file can be loaded
-        via an absolute path."""
-        # TODO: Some state seems to be left hereThis test does not work if
-        # there is already a configuration file in place
-        # {'api': {'authentication_token': '071cdcce-9241-4965-93af-4a4dbc739135',
-        # 'hostname': 'localhost', 'use_ssl': True, 'port': '443', 'debug': False}}
-        # {'api': {'authentication_token': '071cdcce-9241-4965-93af-4a4dbc739135',
-        # 'hostname': 'localhost', 'use_ssl': True, 'debug': False, 'port': 443}}
+    class TestUpdateWithOtherConfig:
 
-        # config._config seems to output a string at times
-        filename = os.path.abspath(tmpdir.join("config.toml"))
+        def test_update_entire_config(self):
+            config = conf.create_config_object()
+            assert config["api"]["authentication_token"] == ""
 
-        with open(filename, "w") as f:
-            f.write(TEST_FILE)
+            conf.update_with_other_config(config, EXPECTED_CONFIG)
+            assert config == EXPECTED_CONFIG
 
-        os.environ["SF_CONF"] = ""
-        config = conf.Configuration(name=str(filename))
+        ONLY_AUTH_CONFIG = {
+                    "api": {
+                            "authentication_token": "PlaceHolder",
+                                                                }
+                        }
 
-        assert config._config == EXPECTED_CONFIG
-        assert config.path == filename
+        ONLY_HOST_CONFIG = {
+                            "api": {
+                                        "hostname": "PlaceHolder",
+                                    }
+                        }
 
-    def test_not_found_warning(self, caplog):
-        """Test that a warning is raised if no configuration file found."""
+        ONLY_SSL_CONFIG = {
+                    "api": {
+                            "use_ssl": "PlaceHolder",
+                                                                }
+        }
 
-        conf.Configuration(name="noconfig")
-        assert "No Strawberry Fields configuration file found." in caplog.text
+        ONLY_DEBUG_CONFIG = {
+                    "api": {
+                            "debug": "PlaceHolder",
+                                                                }
+        }
 
-    def test_save(self, tmpdir):
-        """Test saving a configuration file."""
-        filename = str(tmpdir.join("test_config.toml"))
-        config = conf.Configuration()
+        ONLY_PORT_CONFIG = {
+                "api": {"port": "PlaceHolder"}
+        }
 
-        # make a change
-        config._config["api"]["hostname"] = "https://6.4.2.4"
-        config.save(filename)
+        @pytest.mark.parametrize("specific_key, config_to_update_with", [("authentication_token",ONLY_AUTH_CONFIG),
+                                                            ("hostname",ONLY_HOST_CONFIG),
+                                                            ("use_ssl",ONLY_SSL_CONFIG),
+                                                            ("debug",ONLY_DEBUG_CONFIG),
+                                                            ("port",ONLY_PORT_CONFIG)])
+        def test_update_only_one_item_in_section(self, specific_key, config_to_update_with):
+            config = conf.create_config_object()
+            assert config["api"][specific_key] != "PlaceHolder"
 
-        result = toml.load(filename)
-        assert config._config == result
+            conf.update_with_other_config(config, config_to_update_with)
+            assert config["api"][specific_key] == "PlaceHolder"
+            assert all(v != "PlaceHolder" for k, v in config["api"].items() if k != specific_key)
 
-    def test_attribute_loading(self):
-        """Test attributes automatically get the correct section key"""
-        config = conf.Configuration()
-        assert config.api == config._config["api"]
+environmental_variables = [
+                    "SF_API_AUTHENTICATION_TOKEN",
+                    "SF_API_HOSTNAME",
+                    "SF_API_USE_SSL",
+                    "SF_API_DEBUG",
+                    "SF_API_PORT"
+                    ]
 
-    def test_failed_attribute_loading(self):
-        """Test an exception is raised if key does not exist"""
-        config = conf.Configuration()
-        with pytest.raises(
-            conf.ConfigurationError, match="Unknown Strawberry Fields configuration section"
-        ):
-            config.test
+class TestUpdateFromEnvironmentalVariables:
 
-    def test_env_vars_take_precedence(self, tmpdir):
-        """Test that if a configuration file and an environment
-        variable is set, that the environment variable takes
-        precedence."""
-        filename = tmpdir.join("config.toml")
+    def test_all_environmental_variables_defined(self):
 
-        with open(filename, "w") as f:
-            f.write(TEST_FILE)
+        for key in environmental_variables:
+            os.environ[key] = "PlaceHolder"
 
-        host = "https://6.4.2.4"
+        config = conf.create_config_object()
+        assert not any(v == "PlaceHolder" for k, v in config["api"].items())
 
-        os.environ["SF_API_HOSTNAME"] = host
-        config = conf.Configuration(str(filename))
+        conf.update_from_environmental_variables(config)
+        assert all(v == "PlaceHolder" for k, v in config["api"].items())
 
-        assert config.api["hostname"] == host
+        # Tear-down
+        for key in environmental_variables:
+            del os.environ[key]
+            assert key not in os.environ
+
+    environmental_variables_with_keys = [
+                    ("SF_API_AUTHENTICATION_TOKEN","authentication_token"),
+                    ("SF_API_HOSTNAME","hostname"),
+                    ("SF_API_USE_SSL","use_ssl"),
+                    ("SF_API_DEBUG","debug"),
+                    ("SF_API_PORT","port")
+                    ]
+
+    @pytest.mark.parametrize("specific_env_var, specific_key", environmental_variables_with_keys)
+    def test_one_environmental_variables_defined(self, specific_env_var, specific_key):
+        os.environ[specific_env_var] = "PlaceHolder"
+
+        config = conf.create_config_object()
+        assert not any(v == "PlaceHolder" for k, v in config["api"].items())
+
+        conf.update_from_environmental_variables(config)
+        assert config["api"][specific_key] == "PlaceHolder"
+        assert all(v != "PlaceHolder" for k, v in config["api"].items() if k != specific_key)
+
+        # Tear-down
+        del os.environ[specific_env_var]
+        assert specific_env_var not in os.environ
 
     def test_parse_environment_variable(self, monkeypatch):
         monkeypatch.setattr(conf, "BOOLEAN_KEYS", ("some_boolean",))
@@ -236,17 +278,3 @@ class TestConfiguration:
         something_else = MagicMock()
         assert conf.parse_environment_variable("not_a_boolean", something_else) == something_else
 
-    def test_update_config_with_limited_config_file(self, tmpdir, monkeypatch):
-        """
-        This test asserts that the given a config file that only provides a single
-        value, the rest of the configuration values are filled in using defaults.
-        """
-        filename = tmpdir.join("config.toml")
-
-        with open(filename, "w") as f:
-            f.write(TEST_FILE_ONE_VALUE)
-
-        config = conf.Configuration(str(filename))
-        assert config.api["hostname"] == conf.DEFAULT_CONFIG["api"]["hostname"]
-        assert config.api["use_ssl"] == conf.DEFAULT_CONFIG["api"]["use_ssl"]
-        assert config.api["authentication_token"] == "071cdcce-9241-4965-93af-4a4dbc739135"

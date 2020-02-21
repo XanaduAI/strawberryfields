@@ -60,20 +60,20 @@ def load_config(filename="config.toml", **kwargs):
 
     config = create_config_object(**kwargs)
 
-    config_file = look_for_config_file(filename=filename)
+    parsed_config = look_for_config_in_file(filename=filename)
 
-    if config_file is not None:
-        config = update_config_from_config_file(config, config_file)
+    if parsed_config is not None:
+        update_with_other_config(config, other_config=parsed_config)
     else:
         log.info("No Strawberry Fields configuration file found.")
 
-    config = update_config_from_environmental_variables(config)
+    update_from_environmental_variables(config)
 
     return config
 
-def create_config_object(**kwargs):
-    print('kwargs in create_config_object', kwargs)
-    authentication_token = kwargs.get("authentication_token", "")
+def create_config_object(authentication_token="", **kwargs):
+    """
+    contains the recognized options for configuration."""
     hostname = kwargs.get("hostname", "localhost")
     use_ssl = kwargs.get("use_ssl", True)
     port = kwargs.get("port", 443)
@@ -90,18 +90,7 @@ def create_config_object(**kwargs):
     }
     return config
 
-def update_config_from_config_file(config, config_file):
-
-    # Here an example for sectionconfig is api
-    for section, sectionconfig in config.items():
-        for key in sectionconfig:
-            if key in config_file[section]:
-                # Update from configuration file
-                config[section][key] = config_file[section][key]
-
-    return config
-
-def look_for_config_file(filename="config.toml"):
+def look_for_config_in_file(filename="config.toml"):
     # Search the current directory, the directory under environment
     # variable SF_CONF, and default user config directory, in that order.
     current_dir = os.getcwd()
@@ -112,15 +101,24 @@ def look_for_config_file(filename="config.toml"):
     for directory in directories:
         filepath = os.path.join(directory, filename)
         try:
-            config_file = load_config_file(filepath)
+            parsed_config = parse_config_file(filepath)
             break
         except FileNotFoundError:
-            config_file = None
+            parsed_config = None
 
     # TODO: maybe we need a merge here?
-    return config_file
+    return parsed_config
 
-def update_config_from_environmental_variables(config):
+def update_with_other_config(config, other_config):
+
+    # Here an example for sectionconfig is api
+    for section, sectionconfig in config.items():
+        for key in sectionconfig:
+            if key in other_config[section]:
+                # Update from configuration file
+                config[section][key] = other_config[section][key]
+
+def update_from_environmental_variables(config):
     for section, sectionconfig in config.items():
         env_prefix = "SF_{}_".format(section.upper())
         for key in sectionconfig:
@@ -128,14 +126,14 @@ def update_config_from_environmental_variables(config):
             if env in os.environ:
                 config[section][key] = parse_environment_variable(env, os.environ[env])
 
-def load_config_file(filepath):
+def parse_config_file(filepath):
     """Load a configuration file.
 
     Args:
         filepath (str): path to the configuration file
     """
     with open(filepath, "r") as f:
-        config_file = toml.load(f)
-    return config_file
+        config_from_file = toml.load(f)
+    return config_from_file
 
-#configuration = load_config()
+configuration = load_config()
