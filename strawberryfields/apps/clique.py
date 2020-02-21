@@ -50,6 +50,13 @@ the remainder of the graph that are connected to *all but one* of the nodes in t
 clique. A swap is then performed by adding the node into the clique and removing the node in the
 clique that is not connected to it. This is provided with the :func:`swap` function.
 
+Whenever the sets :math:`C_0` and :math:`C_1` used during growth and swapping have more than
+one element, there must be a choice of which node to add or swap. The supported choices are:
+
+- Select among candidates uniformly at random;
+- Select the candidate with the greatest degree, settling remaining ties uniformly at random;
+- Select the candidate with the greatest node weight, settling remaining ties uniformly at random.
+
 Using GBS to find a starting clique
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
