@@ -89,9 +89,6 @@ class Result:
         self._state = None
         self._is_stateful = is_stateful
 
-        # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
-        if len(np.shape(samples)) > 1:
-            samples = np.stack(samples, 1)
         self._samples = samples
 
     @property
@@ -159,7 +156,7 @@ class BaseEngine(abc.ABC):
         self.backend_options = backend_options.copy()  # dict is mutable
         #: List[Program]: list of Programs that have been run
         self.run_progs = []
-        #: List[List[Number]]: latest measurement results, shape == (modes, shots)
+        #: List[List[Number]]: latest measurement results, shape == (shots, modes)
         self.samples = None
 
         if isinstance(backend, str):
@@ -400,7 +397,7 @@ class BaseEngine(abc.ABC):
             prev = p
 
         if self.samples is not None:
-            return Result(self.samples.copy())
+            return Result(np.array(self.samples).T)
 
 
 class LocalEngine(BaseEngine):
@@ -882,10 +879,7 @@ class Connection:
                 buf.seek(0)
                 samples = np.load(buf)
 
-            # NOTE To maintain consistency with other components for now, transpose
-            #      the received result array from (shots, modes) to (modes, shots),
-            #      which allows us to keep the logic in `Result.samples` unchanged
-            return Result(samples.T, is_stateful=False)
+            return Result(samples, is_stateful=False)
         raise RequestFailedError(self._format_error_message(response))
 
     def cancel_job(self, job_id: str):
