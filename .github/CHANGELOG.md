@@ -7,6 +7,10 @@
   probability distributions by integrating across the Wigner function.
   [#270](https://github.com/XanaduAI/strawberryfields/pull/270)
 
+* Adds support in the applications layer for node-weighted graphs. Users can sample from graphs
+  with node weights using the WAW encoding.
+  [295](https://github.com/XanaduAI/strawberryfields/pull/295)
+
 ### Improvements
 * Added two-mode squeezed operation support as a primitive, rather than simply
   through decomposition, using The Walrus for fast computation.
