@@ -774,7 +774,7 @@ class Connection:
             "Job creation failed: {}".format(self._format_error_message(response))
         )
 
-    def get_jobs(self, after: datetime = datetime(1970, 1, 1)) -> List[Job]:
+    def get_all_jobs(self, after: datetime = datetime(1970, 1, 1)) -> List[Job]:
         """Gets a list of jobs created by the user, optionally filtered by datetime.
 
         A maximum of the 100 most recent jobs are returned.
