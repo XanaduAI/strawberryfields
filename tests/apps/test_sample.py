@@ -400,8 +400,8 @@ class TestWawMatrix:
 
     def test_invalid_adjacency(self):
         """Test if function raises a ``ValueError`` for a matrix that is not symmetric."""
+        adj_asym = np.triu(np.ones((4, 4)))
         with pytest.raises(ValueError, match="Input must be a NumPy array"):
-            adj_asym = np.triu(np.ones((4, 4)))
             sample.sample(A=adj_asym, n_mean=1.0)
 
     @pytest.mark.parametrize("inst", zip(adjs, wvecs, resc_adjs))

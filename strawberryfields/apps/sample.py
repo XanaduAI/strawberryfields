@@ -92,7 +92,7 @@ Including node weights
 
 Some graphs are composed of nodes with weights. These weights can correspond to relevant
 information in an optimization problem and it is desirable to encode them into GBS along with the
-graph's adjacency matrix. One canonical approach to doing this is to use the ``WAW`` encoding
+graph's adjacency matrix. One canonical approach to doing this is to use the :math:`WAW` encoding
 :cite:`banchi2019molecular`, which rescales the adjacency matrix according to:
 
 .. math::
@@ -397,10 +397,22 @@ def waw_matrix(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
 
     >>> g = nx.erdos_renyi_graph(5, 0.7)
     >>> a = nx.to_numpy_array(g)
+    >>> a
+    array([[0., 1., 1., 1., 1.],
+           [1., 0., 1., 1., 1.],
+           [1., 1., 0., 1., 0.],
+           [1., 1., 1., 0., 0.],
+           [1., 1., 0., 0., 0.]])
     >>> w = [10, 1, 0, 1, 1]
     >>> a = waw_matrix(a, w)
+    >>> a
+    array([[ 0., 10.,  0., 10., 10.],
+           [10.,  0.,  0.,  1.,  1.],
+           [ 0.,  0.,  0.,  0.,  0.],
+           [10.,  1.,  0.,  0.,  0.],
+           [10.,  1.,  0.,  0.,  0.]])
     >>> sample(a, 3, 4)
-    [[1, 1, 0, 1, 0], [1, 1, 0, 1, 0], [1, 1, 0, 0, 0], [1, 1, 0, 1, 0]]
+    [[1, 0, 0, 1, 1], [1, 1, 0, 0, 0], [1, 1, 0, 1, 1], [1, 0, 0, 1, 0]]
 
     Args:
         A (array): adjacency matrix to rescale
