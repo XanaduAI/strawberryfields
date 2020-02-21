@@ -41,10 +41,15 @@ Subgraph resizing
 The key element of the :func:`search` algorithm is the resizing of each subgraph, allowing a
 range of subgraph sizes to be tracked. Resizing proceeds by greedily adding or removing nodes to
 a subgraph one-at-a-time. Node selection is carried out by picking the node with the greatest
-or least degree with respect to to the subgraph, with ties settled uniformly at random.
+or least degree with respect to to the subgraph. This function returns a dictionary over the
+range of sizes specified, with each value being the corresponding resized subgraph.
 
-This function returns a dictionary over the range of sizes specified, with each value being the
-corresponding resized subgraph.
+Whenever there are multiple candidate nodes with the same density, there must be a choice of
+which node to add or remove. The supported choices are:
+
+- Select among candidate nodes uniformly at random;
+- Select the candidate node with the greatest node weight, settling remaining ties uniformly at
+  random.
 """
 from typing import Union
 
@@ -53,7 +58,12 @@ import numpy as np
 
 
 def search(
-    subgraphs: list, graph: nx.Graph, min_size: int, max_size: int, max_count: int = 10
+    subgraphs: list,
+    graph: nx.Graph,
+    min_size: int,
+    max_size: int,
+    max_count: int = 10,
+    node_select: Union[str, np.ndarray, list] = "uniform",
 ) -> dict:
     """Search for dense subgraphs within an input size range.
 
@@ -61,6 +71,14 @@ def search(
     range specified by ``min_size`` and ``max_size``, resulting in a range of differently sized
     subgraphs. This function loops over all elements of ``subgraphs`` and keeps track of the
     ``max_count`` number of densest subgraphs identified for each size.
+
+    In both growth and shrink phases of :func:`resize`, there may be multiple candidate nodes with
+    equal degree to add to or remove from the subgraph. The method of selecting the node is
+    specified by the ``node_select`` argument, which can be either:
+
+    - ``"uniform"`` (default): uniform randomly choose a node from the candidates;
+    - A list or array: specifying the node weights of the graph, resulting in choosing the node
+      from the candidates with the lowest weight, settling ties by uniform random choice.
 
     **Example usage:**
 
@@ -82,6 +100,9 @@ def search(
         min_size (int): minimum size to search for dense subgraphs
         max_size (int): maximum size to search for dense subgraphs
         max_count (int): maximum number of densest subgraphs to keep track of for each size
+        node_select (str, list or array): method of settling ties when more than one node of
+            equal degree can be added/removed. Can be ``"uniform"`` (default), or a numpy array or
+            list.
 
     Returns:
         dict[int, list[tuple[float, list[int]]]]: a dictionary of different sizes, each containing a
@@ -91,7 +112,7 @@ def search(
     dense = {}
 
     for s in subgraphs:
-        r = resize(s, graph, min_size, max_size)
+        r = resize(s, graph, min_size, max_size, node_select)
 
         for size, subgraph in r.items():
             r[size] = (nx.density(graph.subgraph(subgraph)), subgraph)
