@@ -13,8 +13,10 @@
 # limitations under the License.
 r"""Unit tests for engine.py"""
 from datetime import datetime
+import io
 from unittest.mock import MagicMock
 
+import numpy as np
 import pytest
 
 import strawberryfields as sf
@@ -57,11 +59,14 @@ def mock_return(return_value):
     return lambda *args, **kwargs: return_value
 
 
-def mock_response(status_code, json_return_value):
-    """A helper function for defining a mock response from the remote platform."""
+def mock_response(status_code, json_body=None, binary_body=None):
+    """A helper function for creating a mock response with a JSON or binary body."""
     response = MagicMock()
     response.status_code = status_code
-    response.json.return_value = json_return_value
+    if json_body:
+        response.json.return_value = json_body
+    if binary_body:
+        response.body = binary_body
     return response
 
 
@@ -89,6 +94,8 @@ class TestResult:
     """Tests for the ``Result`` class."""
 
     def stateless_result_raises_on_state_access(self):
+        """Tests that `result.state` raises an error for a stateless result.
+        """
         result = Result([[1, 2], [3, 4]], is_stateful=False)
 
         with pytest.raises(AttributeError):
@@ -99,19 +106,24 @@ class TestJob:
     """Tests for the ``Job`` class."""
 
     def incomplete_job_raises_on_result_access(self):
-        job = Job("abc", status=JobStatus.QUEUED)
+        """Tests that `job.result` raises an error for an incomplete job."""
+        job = Job("abc", status=JobStatus.QUEUED, connection=Connection)
 
         with pytest.raises(AttributeError):
             _ = job.result
 
     def terminal_job_raises_on_refresh(self):
-        job = Job("abc", status=JobStatus.COMPLETE)
+        """Tests that `job.refresh()` raises an error for a complete, failed, or
+        cancelled job."""
+        job = Job("abc", status=JobStatus.COMPLETE, connection=Connection)
 
         with pytest.raises(InvalidJobOperationError):
             job.refresh()
 
     def terminal_job_raises_on_cancel(self):
-        job = Job("abc", status=JobStatus.COMPLETE)
+        """Tests that `job.cancel()` raises an error for a complete, failed, or
+        aleady cancelled job."""
+        job = Job("abc", status=JobStatus.COMPLETE, connection=Connection)
 
         with pytest.raises(InvalidJobOperationError):
             job.cancel()
@@ -121,6 +133,7 @@ class TestConnection:
     """Tests for the ``Connection`` class."""
 
     def test_init(self):
+        """Tests that a ``Connection`` is initialized correctly."""
         token, host, port, use_ssl = "token", "host", 123, True
         connection = Connection(token, host, port, use_ssl)
 
@@ -221,17 +234,20 @@ class TestConnection:
 
     def test_get_job_result(self, connection, monkeypatch):
         """Tests a successful job result request."""
-        result_samples = [[1, 2], [3, 4]]
+        result_samples = np.array([[1, 2], [3, 4]], dtype=np.int8)
 
-        monkeypatch.setattr(
-            Connection,
-            "_get",
-            mock_return(mock_response(200, {"result": result_samples})),
-        )
+        with io.BytesIO() as buf:
+            np.save(buf, result_samples)
+            buf.seek(0)
+            monkeypatch.setattr(
+                Connection,
+                "_get",
+                mock_return(mock_response(200, binary_body=buf.getvalue())),
+            )
 
         result = connection.get_job_result("123")
 
-        assert result.samples.T.tolist() == result_samples
+        assert np.array_equal(result.samples, result_samples)
 
     def test_get_job_result_error(self, connection, monkeypatch):
         """Tests a failed job result request."""
@@ -244,6 +260,7 @@ class TestConnection:
         """Tests a successful job cancellation request."""
         monkeypatch.setattr(Connection, "_patch", mock_return(mock_response(204, {})))
 
+        # A successful cancellation does not raise an exception
         connection.cancel_job("123")
 
     def test_cancel_job_error(self, connection, monkeypatch):
@@ -254,11 +271,13 @@ class TestConnection:
             connection.cancel_job("123")
 
     def test_ping_success(self, connection, monkeypatch):
+        """Tests a successful ping to the remote host."""
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(200, {})))
 
         assert connection.ping()
 
     def test_ping_failure(self, connection, monkeypatch):
+        """Tests a failed ping to the remote host."""
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(500, {})))
 
         assert not connection.ping()
@@ -269,7 +288,7 @@ class TestStarshipEngine:
 
     def test_run_complete(self, connection, prog, monkeypatch):
         """Tests a successful synchronous job execution."""
-        id_, result_expected = "123", [[1, 2], [3, 4]]
+        id_, result_expected = "123", np.array([[1, 2], [3, 4]], dtype=np.int8)
 
         server = MockServer()
         monkeypatch.setattr(
@@ -287,7 +306,7 @@ class TestStarshipEngine:
         engine = StarshipEngine("chip2", connection=connection)
         result = engine.run(prog)
 
-        assert result.samples.T.tolist() == result_expected
+        assert np.array_equal(result.samples, result_expected)
 
         with pytest.raises(AttributeError):
             _ = result.state
@@ -298,7 +317,7 @@ class TestStarshipEngine:
 
     def test_run_async(self, connection, prog, monkeypatch):
         """Tests a successful asynchronous job execution."""
-        id_, result_expected = "123", [[1, 2], [3, 4]]
+        id_, result_expected = "123", np.array([[1, 2], [3, 4]], dtype=np.int8)
 
         server = MockServer()
         monkeypatch.setattr(
@@ -321,7 +340,7 @@ class TestStarshipEngine:
             job.refresh()
 
         assert job.status == JobStatus.COMPLETE
-        assert job.result.samples.T.tolist() == result_expected
+        assert np.array_equal(job.result.samples, result_expected)
 
         with pytest.raises(AttributeError):
             _ = job.result.state

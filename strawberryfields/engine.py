@@ -20,10 +20,11 @@ One can think of each BaseEngine instance as a separate quantum computation.
 import abc
 import collections.abc
 import enum
+import io
 import json
 import time
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 from urllib.parse import urljoin
 
 import numpy as np
@@ -89,8 +90,8 @@ class Result:
         self._is_stateful = is_stateful
 
         # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
-        if len(np.shape(samples)) > 1:
-            samples = np.stack(samples, 1)
+        # if len(np.shape(samples)) > 1:
+        # samples = np.stack(samples, 1)
         self._samples = samples
 
     @property
@@ -829,9 +830,16 @@ class Connection:
         Returns:
             strawberryfields.engine.Result: the job result
         """
-        response = self._get("/jobs/{}/result".format(job_id))
+        response = self._get(
+            "/jobs/{}/result".format(job_id), {"Accept": "application/x-numpy"},
+        )
         if response.status_code == 200:
-            return Result(response.json()["result"], is_stateful=False)
+            # Read the numpy binary data in the payload into memory
+            with io.BytesIO() as buf:
+                buf.write(response.body)
+                buf.seek(0)
+                samples = np.load(buf)
+            return Result(samples, is_stateful=False)
         raise RequestFailedError(self._request_error_message(response))
 
     def cancel_job(self, job_id: str):
@@ -856,19 +864,22 @@ class Connection:
         response = self._get("/healthz")
         return response.status_code == 200
 
-    def _get(self, path: str, **kwargs) -> requests.Response:
-        return self._request(RequestMethod.GET, path, **kwargs)
+    def _get(self, path: str, headers: Dict = None, **kwargs) -> requests.Response:
+        return self._request(RequestMethod.GET, path, headers, **kwargs)
 
-    def _post(self, path: str, **kwargs) -> requests.Response:
-        return self._request(RequestMethod.POST, path, **kwargs)
+    def _post(self, path: str, headers: Dict = None, **kwargs) -> requests.Response:
+        return self._request(RequestMethod.POST, path, headers, **kwargs)
 
-    def _patch(self, path: str, **kwargs) -> requests.Response:
-        return self._request(RequestMethod.PATCH, path, **kwargs)
+    def _patch(self, path: str, headers: Dict = None, **kwargs) -> requests.Response:
+        return self._request(RequestMethod.PATCH, path, headers, **kwargs)
 
-    def _request(self, method: RequestMethod, path: str, **kwargs) -> requests.Response:
+    def _request(
+        self, method: RequestMethod, path: str, headers: Dict = None, **kwargs
+    ) -> requests.Response:
+        headers = {} if headers is None else headers
         return getattr(requests, method.value)(
             urljoin(self.base_url, path),
-            headers={"Authorization": self.token},
+            headers={"Authorization": self.token, **headers},
             **kwargs
         )
 
