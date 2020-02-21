@@ -306,7 +306,7 @@ class TestStarshipEngine:
         engine = StarshipEngine("chip2", connection=connection)
         result = engine.run(prog)
 
-        assert np.array_equal(result.samples, result_expected)
+        assert np.array_equal(result.samples.T, result_expected)
 
         with pytest.raises(AttributeError):
             _ = result.state
@@ -340,7 +340,7 @@ class TestStarshipEngine:
             job.refresh()
 
         assert job.status == JobStatus.COMPLETE
-        assert np.array_equal(job.result.samples, result_expected)
+        assert np.array_equal(job.result.samples.T, result_expected)
 
         with pytest.raises(AttributeError):
             _ = job.result.state

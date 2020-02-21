@@ -90,8 +90,8 @@ class Result:
         self._is_stateful = is_stateful
 
         # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
-        # if len(np.shape(samples)) > 1:
-        # samples = np.stack(samples, 1)
+        if len(np.shape(samples)) > 1:
+            samples = np.stack(samples, 1)
         self._samples = samples
 
     @property
@@ -839,7 +839,10 @@ class Connection:
                 buf.write(response.content)
                 buf.seek(0)
                 samples = np.load(buf)
-            return Result(samples, is_stateful=False)
+
+            # NOTE To maintain consistency with other SF components for now, transpose
+            #      the result array from (shots, modes) to (modes, shots)
+            return Result(samples.T, is_stateful=False)
         raise RequestFailedError(self._request_error_message(response))
 
     def cancel_job(self, job_id: str):
