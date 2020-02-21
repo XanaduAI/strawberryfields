@@ -99,13 +99,6 @@ class TestLocalSearch:
         assert result == [0, 1, 2, 3]
 
 
-def patch_random_shuffle(x, reverse):
-    """Dummy function for ``np.random.shuffle`` to make output deterministic. This dummy function
-    reverses ``x`` in place if ``reverse == True`` and does nothing otherwise."""
-    if reverse:
-        x.reverse()
-
-
 @pytest.mark.parametrize("dim", range(4, 10))
 class TestGrow:
     """Tests for the function ``strawberryfields.clique.grow``"""
@@ -411,21 +404,63 @@ class TestShrink:
         wheel. Since the function uses randomness in node selection when there is a tie (which
         occurs in the case of the wheel graph), the resultant shrunk cliques are expected to be
         different each time ``shrink`` is run. This function monkeypatches the
-        ``np.random.shuffle`` call so that different nodes are removed during each run."""
+        ``np.random.choice`` call so that different nodes are removed during each run."""
         graph = nx.wheel_graph(dim)
         subgraph = graph.nodes()  # subgraph is the entire graph
 
-        patch_random_shuffle_1 = functools.partial(patch_random_shuffle, reverse=False)
-        patch_random_shuffle_2 = functools.partial(patch_random_shuffle, reverse=True)
+        patch_random_choice_1 = functools.partial(patch_random_choice, element=0)
+        patch_random_choice_2 = functools.partial(patch_random_choice, element=1)
 
         with monkeypatch.context() as m:
-            m.setattr(np.random, "shuffle", patch_random_shuffle_1)
+            m.setattr(np.random, "choice", patch_random_choice_1)
             c1 = clique.shrink(subgraph, graph)
         with monkeypatch.context() as m:
-            m.setattr(np.random, "shuffle", patch_random_shuffle_2)
+            m.setattr(np.random, "choice", patch_random_choice_2)
             c2 = clique.shrink(subgraph, graph)
 
         assert c1 != c2
+
+    def test_weight_based_ties(self, dim):
+        """Test that the function returns the correct clique when using weight-based node
+        selection to settle ties. The starting graph is a barbell graph and the subgraph is taken
+        to be the whole graph. The weights of the first clique in the barbell are set to be less
+        than the weights of the second, so that we expect the function to return the second
+        clique."""
+        graph = nx.barbell_graph(dim, 0)
+        subgraph = graph.nodes()
+        weights = [1] * dim + [2] * dim
+
+        c = clique.shrink(subgraph, graph, node_select=weights)
+        assert c == list(range(dim, 2 * dim))
+
+    def test_weight_and_degree_ties(self, dim, monkeypatch):
+        """Test that the function settles ties at random when node-weight based node selection is
+        used but there is still a tie, i.e., nodes with equal weight. The starting graph is a
+        complete graph with one edge removed between the first two nodes, and the subgraph is
+        taken to be the whole graph. All nodes have equal weight. In this problem, the function
+        can either remove the first or second node to make a clique. Either node should be
+        removed at random, and this test monkeypatches the ``np.random.choice`` call to ensure
+        both eventualities occur."""
+        graph = nx.complete_graph(dim)
+        subgraph = graph.nodes()
+        graph.remove_edge(0, 1)
+        weights = [1] * dim
+
+        patch_random_choice_1 = functools.partial(patch_random_choice, element=0)
+        patch_random_choice_2 = functools.partial(patch_random_choice, element=1)
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_1)
+            c1 = clique.shrink(subgraph, graph, node_select=weights)
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_2)
+            c2 = clique.shrink(subgraph, graph, node_select=weights)
+
+        target1 = list(range(1, dim))
+        target2 = [0] + list(range(2, dim))
+
+        assert c1 != c2
+        assert c1 == target1 and c2 == target2
 
 
 @pytest.mark.parametrize("dim", range(2, 10))

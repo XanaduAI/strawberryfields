@@ -147,7 +147,7 @@ def grow(
     the growing clique. This function allows a method of choosing nodes to be set with the
     ``node_select`` argument, which can be any of the following:
 
-    - ``"uniform"``: randomly choose a node from the candidates;
+    - ``"uniform"`` (default): uniform randomly choose a node from the candidates;
     - ``"degree"``: choose the node from the candidates with the greatest degree, settling ties
       by uniform random choice;
     - A list or array: specifying the node weights of the graph, resulting in choosing the node
@@ -163,8 +163,8 @@ def grow(
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
-        node_select (str): method of selecting nodes from :math:`C_0` during growth. Can be
-            ``"uniform"`` (default), ``"degree"``, or a numpy array or list.
+        node_select (str, list or array): method of selecting nodes from :math:`C_0` during
+            growth. Can be ``"uniform"`` (default), ``"degree"``, or a numpy array or list.
 
     Returns:
         list[int]: a new clique subgraph of equal or larger size than the input
@@ -222,7 +222,7 @@ def swap(
     the growing clique. This function allows a method of choosing nodes to be set with the
     ``node_select`` argument, which can be any of the following:
 
-    - ``"uniform"``: randomly choose a node from the candidates;
+    - ``"uniform"`` (default): uniform randomly choose a node from the candidates;
     - ``"degree"``: choose the node from the candidates with the greatest degree, settling ties
       by uniform random choice;
     - A list or array: specifying the node weights of the graph, resulting in choosing the node
@@ -239,8 +239,8 @@ def swap(
     Args:
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
-        node_select (str): method of selecting nodes from :math:`C_0` during growth. Can be
-            ``"uniform"`` (default), ``"degree"``, or a numpy array or list.
+        node_select (str, list or array): method of selecting nodes from :math:`C_0` during growth.
+            Can be ``"uniform"`` (default), ``"degree"``, or a numpy array or list.
 
     Returns:
         list[int]: a new clique subgraph of equal size as the input
@@ -270,8 +270,8 @@ def swap(
             to_swap_index = np.random.choice(np.where(degrees == degrees.max())[0])
             swap_nodes = _c_1[to_swap_index]
         elif node_select == "weight":
-            degrees = np.array([w[n[1]] for n in _c_1])
-            to_swap_index = np.random.choice(np.where(degrees == degrees.max())[0])
+            weights = np.array([w[n[1]] for n in _c_1])
+            to_swap_index = np.random.choice(np.where(weights == weights.max())[0])
             swap_nodes = _c_1[to_swap_index]
         else:
             raise ValueError("Node selection method not recognized")
@@ -282,12 +282,22 @@ def swap(
     return sorted(clique)
 
 
-def shrink(subgraph: list, graph: nx.Graph) -> list:
+def shrink(
+    subgraph: list, graph: nx.Graph, node_select: Union[str, np.ndarray, list] = "uniform"
+) -> list:
     """Shrinks an input subgraph until it forms a clique.
 
     Proceeds by removing nodes in the input subgraph one at a time until the result is a clique
     that satisfies :func:`is_clique`. Upon each iteration, this function selects the node with
     lowest degree relative to the subgraph and removes it.
+
+    In some instances, there may be multiple nodes of minimum degree as candidates to remove from
+    the subgraph. The method of selecting which of these nodes to remove is specified by the
+    ``node_select`` argument, which can be either:
+
+    - ``"uniform"`` (default): uniform randomly choose a node from the candidates;
+    - A list or array: specifying the node weights of the graph, resulting in choosing the node
+      from the candidates with the lowest weight, settling ties by uniform random choice.
 
     **Example usage:**
 
@@ -299,6 +309,8 @@ def shrink(subgraph: list, graph: nx.Graph) -> list:
     Args:
         subgraph (list[int]): a subgraph specified by a list of nodes
         graph (nx.Graph): the input graph
+        node_select (str, list or array): method of settling ties when more than one node of
+            equal degree can be removed. Can be ``"uniform"`` (default), or a numpy array or list.
 
     Returns:
         list[int]: a clique of size smaller than or equal to the input subgraph
@@ -307,16 +319,27 @@ def shrink(subgraph: list, graph: nx.Graph) -> list:
     if not set(subgraph).issubset(graph.nodes):
         raise ValueError("Input is not a valid subgraph")
 
+    if isinstance(node_select, (list, np.ndarray)):
+        if len(node_select) != graph.number_of_nodes():
+            raise ValueError("Number of node weights must match number of nodes")
+        w = {n: node_select[i] for i, n in enumerate(graph.nodes)}
+        node_select = "weight"
+
     subgraph = graph.subgraph(subgraph).copy()  # A copy is required to be able to modify the
     # structure of the subgraph (https://networkx.github.io/documentation/stable/reference/classes/generated/networkx.Graph.subgraph.html)
 
     while not is_clique(subgraph):
-        degrees = list(subgraph.degree())
-        np.random.shuffle(degrees)  # used to make sure selection of node with lowest degree is not
-        # deterministic in case of a tie (https://docs.python.org/3/library/functions.html#min)
+        degrees = np.array(subgraph.degree)
+        degrees_min = np.argwhere(degrees[:, 1] == degrees[:, 1].min()).flatten()
 
-        to_remove = min(degrees, key=lambda x: x[1])
-        subgraph.remove_node(to_remove[0])
+        if node_select == "uniform":
+            to_remove_index = np.random.choice(degrees_min)
+        elif node_select == "weight":
+            weights = np.array([w[degrees[n][0]] for n in degrees_min])
+            to_remove_index = np.random.choice(np.where(weights == weights.min())[0])
+
+        to_remove = degrees[to_remove_index][0]
+        subgraph.remove_node(to_remove)
 
     return sorted(subgraph.nodes())
 
