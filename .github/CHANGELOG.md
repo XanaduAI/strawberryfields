@@ -19,6 +19,11 @@
 * Added custom tensor contractions for the beamsplitter and the two-mode squeeze
   gate as well as faster application of diagonal gate matrices.
   [#292](https://github.com/XanaduAI/strawberryfields/pull/292)
+  
+* Unified backend results returned from running simulators and added checks for
+  using batching, post-selection and feed-fowarding together with multiple
+  shots, which now raises an error.
+  [#300](https://github.com/XanaduAI/strawberryfields/pull/300)
 
 ### Bug fixes
 
