@@ -15,8 +15,8 @@ r"""
 This module contains the :class:`Configuration` class, which is used to
 load, store, save, and modify configuration options for Strawberry Fields.
 """
-import os
 import logging as log
+import os
 
 import toml
 from appdirs import user_config_dir
@@ -28,7 +28,6 @@ class ConfigurationError(Exception):
     """Exception used for configuration errors"""
 
 
-# TODO: somehow store the latest configuration path that was used
 def load_config(filename="config.toml", **kwargs):
     """Load configuration from keyword arguments, configuration file or
     environment variables.
@@ -58,7 +57,7 @@ def load_config(filename="config.toml", **kwargs):
     """
     config = create_config_object()
 
-    parsed_config = look_for_config_in_file(filename=filename)
+    parsed_config, _ = look_for_config_in_file(filename=filename)
 
     if parsed_config is not None:
         update_with_other_config(config, other_config=parsed_config)
@@ -116,9 +115,10 @@ def look_for_config_in_file(filename="config.toml"):
     .. note::
 
         The following directories are checked (in the following order):
-        -The current working directory
-        -The directory specified by the environment variable SF_CONF (if specified)
-        -The user configuration directory (if specified)
+
+        * The current working directory
+        * The directory specified by the environment variable SF_CONF (if specified)
+        * The user configuration directory (if specified)
 
     Keyword arguments:
         filename (str): the configuration file to look for
@@ -141,9 +141,9 @@ def look_for_config_in_file(filename="config.toml"):
             parsed_config = load_config_file(filepath)
             break
         except FileNotFoundError:
-            parsed_config = None
+            parsed_config, filepath = None, None
 
-    return parsed_config
+    return parsed_config, filepath
 
 def load_config_file(filepath):
     """Load a configuration object from a TOML formatted file.
@@ -185,18 +185,19 @@ def update_from_environment_variables(config):
     .. note::
 
         Currently the following environment variables are checked:
-        -SF_API_AUTHENTICATION_TOKEN
-        -SF_API_HOSTNAME
-        -SF_API_USE_SSL
-        -SF_API_DEBUG
-        -SF_API_PORT
+
+        * SF_API_AUTHENTICATION_TOKEN
+        * SF_API_HOSTNAME
+        * SF_API_USE_SSL
+        * SF_API_DEBUG
+        * SF_API_PORT
 
     Args:
         config (dict of str: (dict of str: Union[str, bool, int])): the
             configuration to be updated
     Returns:
         dict of str: (dict of str: Union[str, bool, int])): the updated
-            configuration
+        configuration
     """
     for section, sectionconfig in config.items():
         env_prefix = "SF_{}_".format(section.upper())
@@ -226,14 +227,17 @@ def parse_environment_variable(key, value):
     if key in BOOLEAN_KEYS:
         if value in trues:
             return True
-        elif value in falses:
+
+        if value in falses:
             return False
-        else:
-            raise ValueError("Boolean could not be parsed")
-    elif key in INTEGER_KEYS:
+
+        raise ValueError("Boolean could not be parsed")
+
+    if key in INTEGER_KEYS:
         return int(value)
 
     return value
 
 DEFAULT_CONFIG = create_config_object()
 configuration = load_config()
+config_file_path = look_for_config_in_file()[1]
