@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -812,7 +812,6 @@ class Connection:
             "Job creation failed: {}".format(self._format_error_message(response))
         )
 
-    # TODO this is not deployed on the platform side yet
     def get_all_jobs(self, after: datetime = datetime(1970, 1, 1)) -> List[Job]:
         """Gets a list of jobs created by the user, optionally filtered by datetime.
 
@@ -825,15 +824,16 @@ class Connection:
         Returns:
             List[strawberryfields.engine.Job]: the jobs
         """
-        response = self._get("/jobs?size={}".format(self.MAX_JOBS_REQUESTED))
-        if response.status_code == 200:
-            return [
-                Job(id_=info["id"], status=info["status"], connection=self)
-                for info in response.json()["data"]
-                if datetime.strptime(info["created_at"], self.JOB_TIMESTAMP_FORMAT)
-                > after
-            ]
-        raise RequestFailedError(self._format_error_message(response))
+        # response = self._get("/jobs?size={}".format(self.MAX_JOBS_REQUESTED))
+        # if response.status_code == 200:
+            # return [
+                # Job(id_=info["id"], status=info["status"], connection=self)
+                # for info in response.json()["data"]
+                # if datetime.strptime(info["created_at"], self.JOB_TIMESTAMP_FORMAT)
+                # > after
+            # ]
+        # raise RequestFailedError(self._format_error_message(response))
+        raise NotImplementedError("This feature is not yet implemented")
 
     def get_job(self, job_id: str) -> Job:
         """Gets a job.

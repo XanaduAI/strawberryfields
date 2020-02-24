@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ from strawberryfields.engine import (
 
 pytestmark = pytest.mark.frontend
 
-# pylint: disable=redefined-outer-name,no-self-use
+# pylint: disable=redefined-outer-name,no-self-use,bad-continuation,expression-not-assigned,pointless-statement
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def eng(backend):
 
 
 @pytest.fixture
-def prog(backend):
+def prog():
     """Program fixture."""
     prog = sf.Program(2)
     with prog.context as q:
@@ -65,7 +65,7 @@ class TestEngine:
         with pytest.raises(
             TypeError, match="backend must be a string or a BaseBackend instance"
         ):
-            eng = sf.LocalEngine(0)
+            _ = sf.LocalEngine(0)
 
 
 class TestEngineProgramInteraction:
@@ -294,6 +294,7 @@ class TestConnection:
         with pytest.raises(RequestFailedError):
             connection.create_job("chip2", prog, 1)
 
+    @pytest.mark.skip(reason="method not yet implemented")
     def test_get_all_jobs(self, connection, monkeypatch):
         """Tests a successful job list request."""
         jobs = [
@@ -312,6 +313,7 @@ class TestConnection:
 
         assert [job.id for job in jobs] == [str(i) for i in range(5, 10)]
 
+    @pytest.mark.skip(reason="method not yet implemented")
     def test_get_all_jobs_error(self, connection, monkeypatch):
         """Tests a failed job list request."""
         monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
