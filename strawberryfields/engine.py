@@ -89,6 +89,9 @@ class Result:
         self._state = None
         self._is_stateful = is_stateful
 
+        # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
+        if len(np.shape(samples)) > 1:
+            samples = np.stack(samples, 1)
         self._samples = samples
 
     @property
@@ -397,7 +400,7 @@ class BaseEngine(abc.ABC):
             prev = p
 
         if self.samples is not None:
-            return Result(np.array(self.samples).T)
+            return Result(self.samples.copy())
 
 
 class LocalEngine(BaseEngine):
@@ -809,6 +812,7 @@ class Connection:
             "Job creation failed: {}".format(self._format_error_message(response))
         )
 
+    # TODO this is not deployed on the platform side yet
     def get_all_jobs(self, after: datetime = datetime(1970, 1, 1)) -> List[Job]:
         """Gets a list of jobs created by the user, optionally filtered by datetime.
 
@@ -821,7 +825,7 @@ class Connection:
         Returns:
             List[strawberryfields.engine.Job]: the jobs
         """
-        response = self._get("/jobs?page[size]={}".format(self.MAX_JOBS_REQUESTED))
+        response = self._get("/jobs?size={}".format(self.MAX_JOBS_REQUESTED))
         if response.status_code == 200:
             return [
                 Job(id_=info["id"], status=info["status"], connection=self)

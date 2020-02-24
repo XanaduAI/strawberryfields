@@ -375,7 +375,7 @@ class TestConnection:
 
         result = connection.get_job_result("123")
 
-        assert np.array_equal(result.samples, result_samples)
+        assert np.array_equal(result.samples.T, result_samples)
 
     def test_get_job_result_error(self, connection, monkeypatch):
         """Tests a failed job result request."""
@@ -434,7 +434,7 @@ class TestStarshipEngine:
         engine = StarshipEngine("chip2", connection=connection)
         result = engine.run(prog)
 
-        assert np.array_equal(result.samples, result_expected)
+        assert np.array_equal(result.samples.T, result_expected)
 
         with pytest.raises(AttributeError):
             _ = result.state
@@ -464,7 +464,7 @@ class TestStarshipEngine:
             job.refresh()
 
         assert job.status == JobStatus.COMPLETE
-        assert np.array_equal(job.result.samples, result_expected)
+        assert np.array_equal(job.result.samples.T, result_expected)
 
         with pytest.raises(AttributeError):
             _ = job.result.state
