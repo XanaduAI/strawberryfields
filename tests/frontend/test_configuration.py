@@ -235,7 +235,7 @@ class TestLookForConfigInFile:
         assert config_file == tmpdir.join("config.toml")
 
     def test_no_config_file_found_returns_none(self, tmpdir, monkeypatch):
-        """Test that the the look_for_config_in_file returns None if the
+        """Test that the look_for_config_in_file returns None if the
         configuration file is nowhere to be found.
 
         This is a test case for when there is no configuration file:
