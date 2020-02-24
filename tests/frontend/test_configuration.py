@@ -77,6 +77,7 @@ def tear_down_all_env_var_defs():
             assert key not in os.environ
 
 class TestLoadConfig:
+    """Tests for the load_config function."""
 
     def test_not_found_warning(self, caplog):
         """Test that a warning is raised if no configuration file found."""
@@ -176,6 +177,7 @@ class TestCreateConfigObject:
                                         debug=True,
                                         port=56) == OTHER_EXPECTED_CONFIG
 class TestLookForConfigInFile:
+    """Tests for the look_for_config_in_file function."""
 
     def test_loading_current_directory(self, tmpdir, monkeypatch):
         """Test that the default configuration file is loaded from the current
@@ -258,10 +260,8 @@ class TestLookForConfigInFile:
 
         assert config_file is None
 
-class TestLoadConfiguration:
-    """Tests for the configuration class"""
-
     def test_load_config_file(self, tmpdir, monkeypatch):
+        """Tests that configuration is loaded correctly from a TOML file."""
         filename = tmpdir.join("config.toml")
 
         with open(filename, "w") as f:
@@ -271,57 +271,59 @@ class TestLoadConfiguration:
 
         assert config_file == EXPECTED_CONFIG
 
-
 class TestUpdateWithOtherConfig:
+    """Tests for the update_with_other_config function."""
 
-        def test_update_entire_config(self):
-            config = conf.create_config_object()
-            assert config["api"]["authentication_token"] == ""
+    def test_update_entire_config(self):
+        """Tests that the entire configuration object is updated."""
 
-            conf.update_with_other_config(config, EXPECTED_CONFIG)
-            assert config == EXPECTED_CONFIG
+        config = conf.create_config_object()
+        assert config["api"]["authentication_token"] == ""
 
-        ONLY_AUTH_CONFIG = {
-                    "api": {
-                            "authentication_token": "PlaceHolder",
-                                                                }
-                        }
+        conf.update_with_other_config(config, EXPECTED_CONFIG)
+        assert config == EXPECTED_CONFIG
 
-        ONLY_HOST_CONFIG = {
-                            "api": {
-                                        "hostname": "PlaceHolder",
-                                    }
-                        }
+    ONLY_AUTH_CONFIG = {
+                "api": {
+                        "authentication_token": "PlaceHolder",
+                                                            }
+                    }
 
-        ONLY_SSL_CONFIG = {
-                    "api": {
-                            "use_ssl": "PlaceHolder",
-                                                                }
-        }
+    ONLY_HOST_CONFIG = {
+                        "api": {
+                                    "hostname": "PlaceHolder",
+                                }
+                    }
 
-        ONLY_DEBUG_CONFIG = {
-                    "api": {
-                            "debug": "PlaceHolder",
-                                                                }
-        }
+    ONLY_SSL_CONFIG = {
+                "api": {
+                        "use_ssl": "PlaceHolder",
+                                                            }
+    }
 
-        ONLY_PORT_CONFIG = {
-                "api": {"port": "PlaceHolder"}
-        }
+    ONLY_DEBUG_CONFIG = {
+                "api": {
+                        "debug": "PlaceHolder",
+                                                            }
+    }
 
-        @pytest.mark.parametrize("specific_key, config_to_update_with", [("authentication_token",ONLY_AUTH_CONFIG),
-                                                            ("hostname",ONLY_HOST_CONFIG),
-                                                            ("use_ssl",ONLY_SSL_CONFIG),
-                                                            ("debug",ONLY_DEBUG_CONFIG),
-                                                            ("port",ONLY_PORT_CONFIG)])
-        def test_update_only_one_item_in_section(self, specific_key, config_to_update_with):
-            config = conf.create_config_object()
-            assert config["api"][specific_key] != "PlaceHolder"
+    ONLY_PORT_CONFIG = {
+            "api": {"port": "PlaceHolder"}
+    }
 
-            conf.update_with_other_config(config, config_to_update_with)
-            assert config["api"][specific_key] == "PlaceHolder"
-            assert all(v != "PlaceHolder" for k, v in config["api"].items() if k != specific_key)
+    @pytest.mark.parametrize("specific_key, config_to_update_with", [("authentication_token",ONLY_AUTH_CONFIG),
+                                                        ("hostname",ONLY_HOST_CONFIG),
+                                                        ("use_ssl",ONLY_SSL_CONFIG),
+                                                        ("debug",ONLY_DEBUG_CONFIG),
+                                                        ("port",ONLY_PORT_CONFIG)])
+    def test_update_only_one_item_in_section(self, specific_key, config_to_update_with):
+        """Tests that only one item is updated in the configuration object is updated."""
+        config = conf.create_config_object()
+        assert config["api"][specific_key] != "PlaceHolder"
 
+        conf.update_with_other_config(config, config_to_update_with)
+        assert config["api"][specific_key] == "PlaceHolder"
+        assert all(v != "PlaceHolder" for k, v in config["api"].items() if k != specific_key)
 
 
 value_mapping = [
@@ -341,8 +343,11 @@ parsed_values_mapping = {
                         }
 
 class TestUpdateFromEnvironmentalVariables:
+    """Tests for the update_from_environment_variables function."""
 
     def test_all_environment_variables_defined(self):
+        """Tests that the configuration object is updated correctly when all
+        the environment variables are defined."""
 
         for key, value in value_mapping:
             os.environ[key] = value
@@ -367,6 +372,8 @@ class TestUpdateFromEnvironmentalVariables:
 
     @pytest.mark.parametrize("env_var, key, value", environment_variables_with_keys_and_values)
     def test_one_environment_variable_defined(self, env_var, key, value):
+        """Tests that the configuration object is updated correctly when only
+        one environment variable is defined."""
 
         tear_down_all_env_var_defs()
         os.environ[env_var] = value
@@ -387,6 +394,8 @@ class TestUpdateFromEnvironmentalVariables:
         assert env_var not in os.environ
 
     def test_parse_environment_variable_boolean(self, monkeypatch):
+        """Tests that boolean values can be parsed correctly from environment
+        variables."""
         monkeypatch.setattr(conf, "BOOLEAN_KEYS", ("some_boolean",))
         assert conf.parse_environment_variable("some_boolean", "true") is True
         assert conf.parse_environment_variable("some_boolean", "True") is True
@@ -403,6 +412,9 @@ class TestUpdateFromEnvironmentalVariables:
         assert conf.parse_environment_variable("not_a_boolean","something_else") == "something_else"
 
     def test_parse_environment_variable_integer(self, monkeypatch):
+        """Tests that integer values can be parsed correctly from environment
+        variables."""
+
         monkeypatch.setattr(conf, "INTEGER_KEYS", ("some_integer",))
         assert conf.parse_environment_variable("some_integer", "123") == 123
         assert conf.parse_environment_variable("not_an_integer","something_else") == "something_else"
