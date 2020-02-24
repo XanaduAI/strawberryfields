@@ -51,9 +51,21 @@ EXPECTED_CONFIG = {
     }
 }
 
+OTHER_EXPECTED_CONFIG = {
+    "api": {
+        "authentication_token": "071cdcce-9241-4965-93af-4a4dbc739135",
+        "hostname": "SomeHost",
+        "use_ssl": False,
+        "debug": True,
+        "port": 56,
+    }
+}
 
 class TestCreteConfigObject:
+    """Test the creation of a configuration object"""
+
     def test_empty_config_object(self):
+        """Test that an empty configuration object can be created."""
         config = conf.create_config_object(authentication_token="",
                                   hostname="",
                                   use_ssl="",
@@ -61,8 +73,20 @@ class TestCreteConfigObject:
                                   port="")
 
         assert all(value=="" for value in config["api"].values())
+
     def test_config_object_with_authentication_token(self):
+        """Test that passing only the authentication token creates the expected
+        configuration object."""
         assert conf.create_config_object(authentication_token="071cdcce-9241-4965-93af-4a4dbc739135") == EXPECTED_CONFIG
+
+    def test_config_object_every_keyword_argument(self):
+        """Test that passing only the authentication token creates the expected
+        configuration object."""
+        assert conf.create_config_object(authentication_token="071cdcce-9241-4965-93af-4a4dbc739135",
+                                        hostname="SomeHost",
+                                        use_ssl=False,
+                                        debug=True,
+                                        port=56) == OTHER_EXPECTED_CONFIG
 
 class TestConfiguration:
     """Tests for the configuration class"""
