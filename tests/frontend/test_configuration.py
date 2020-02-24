@@ -187,7 +187,7 @@ class TestLookForConfigInFile:
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: tmpdir)
             m.setattr(conf, "load_config_file", lambda filepath: filepath)
-            config_file = conf.look_for_config_in_file(filename=filename)
+            config_file, _ = conf.look_for_config_in_file(filename=filename)
 
         assert config_file == tmpdir.join(filename)
 
@@ -207,9 +207,9 @@ class TestLookForConfigInFile:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
             m.setattr(os.environ, "get", lambda x, y: tmpdir if x=="SF_CONF" else "NoConfigFileHere")
             m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
-            # m.setattr(conf, "user_config_dir", lambda *args: "NotTheFileName")
+            m.setattr(conf, "user_config_dir", lambda *args: "NotTheFileName")
 
-            config_file = conf.look_for_config_in_file(filename=filename)
+            config_file, _ = conf.look_for_config_in_file(filename=filename)
         assert config_file == tmpdir.join("config.toml")
 
     def test_loading_user_config_dir(self, tmpdir, monkeypatch):
@@ -231,7 +231,7 @@ class TestLookForConfigInFile:
             m.setattr(conf, "user_config_dir", lambda x, *args: tmpdir if x=="strawberryfields" else "NoConfigFileHere")
             m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
 
-            config_file = conf.look_for_config_in_file(filename=filename)
+            config_file, _ = conf.look_for_config_in_file(filename=filename)
         assert config_file == tmpdir.join("config.toml")
 
     def test_no_config_file_found_returns_none(self, tmpdir, monkeypatch):
@@ -256,7 +256,7 @@ class TestLookForConfigInFile:
 
             config_file = conf.look_for_config_in_file(filename=filename)
 
-        assert config_file is None
+        assert config_file == (None, None)
 
     def test_load_config_file(self, tmpdir, monkeypatch):
         """Tests that configuration is loaded correctly from a TOML file."""
