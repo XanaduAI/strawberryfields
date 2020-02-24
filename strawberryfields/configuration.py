@@ -43,13 +43,30 @@ def load_config(filename="config.toml", **kwargs):
     """Load configuration from keyword arguments, configuration file or
     environment variables.
 
-    Args:
-        filename (str): the name of the configuration file to look for
+    .. note::
+
+        The configuration object (that is a nested dictionary) would be created based
+        on the following (order defines the importance, going from most
+        important to least important):
+
+        1. keyword arguments passed to ``load_config``
+        2. data contained in environmental variables (if any)
+        3. data contained in a configuration file (if exists)
 
     Keyword arguments:
+        filename (str): the name of the configuration file to look for
+        authentication_token (str): the token to be used for user
+            authentication
+        hostname (str): the name of the host to connect to
+        use_ssl (bool): specifies if requests should be sent using SSL
+        port (int): the port to be used when connecting to the remote service
+        debug (bool): determines if the debugging mode is requested
 
+    Returns:
+        dict of str: (dict of str: Union[str, bool, int]): the configuration
+            object
     """
-    config = create_config_object(**kwargs)
+    config = create_config_object()
 
     parsed_config = look_for_config_in_file(filename=filename)
 
@@ -59,6 +76,9 @@ def load_config(filename="config.toml", **kwargs):
         log.info("No Strawberry Fields configuration file found.")
 
     update_from_environment_variables(config)
+
+    config_from_keyword_arguments = {"api": kwargs}
+    update_with_other_config(config, other_config=config_from_keyword_arguments)
 
     return config
 
@@ -193,10 +213,11 @@ def update_from_environment_variables(config):
         for key in sectionconfig:
             env = env_prefix + key.upper()
             if env in os.environ:
-                config[section][key] = parse_environment_variable(env, os.environ[env])
+                config[section][key] = parse_environment_variable(key, os.environ[env])
 
 
 BOOLEAN_KEYS = ("debug", "use_ssl")
+INTEGER_KEYS = ("port")
 
 def parse_environment_variable(key, value):
     """Parse a value stored in an environment variable.
@@ -219,8 +240,10 @@ def parse_environment_variable(key, value):
             return False
         else:
             raise ValueError("Boolean could not be parsed")
-    else:
-        return value
+    elif key in INTEGER_KEYS:
+        return int(value)
+
+    return value
 
 DEFAULT_CONFIG = create_config_object()
 configuration = load_config()

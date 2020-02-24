@@ -31,8 +31,8 @@ TEST_FILE = """\
 authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
 hostname = "localhost"
 use_ssl = true
-debug = false
 port = 443
+debug = false
 """
 
 TEST_FILE_ONE_VALUE = """\
@@ -46,22 +46,110 @@ EXPECTED_CONFIG = {
         "authentication_token": "071cdcce-9241-4965-93af-4a4dbc739135",
         "hostname": "localhost",
         "use_ssl": True,
-        "debug": False,
         "port": 443,
+        "debug": False,
     }
 }
 
 OTHER_EXPECTED_CONFIG = {
     "api": {
-        "authentication_token": "071cdcce-9241-4965-93af-4a4dbc739135",
+        "authentication_token": "SomeAuth",
         "hostname": "SomeHost",
         "use_ssl": False,
-        "debug": True,
         "port": 56,
+        "debug": True,
     }
 }
 
-class TestCreteConfigObject:
+environment_variables = [
+                    "SF_API_AUTHENTICATION_TOKEN",
+                    "SF_API_HOSTNAME",
+                    "SF_API_USE_SSL",
+                    "SF_API_DEBUG",
+                    "SF_API_PORT"
+                    ]
+
+def tear_down_all_env_var_defs():
+    """Making sure that no environment variables are defined after."""
+    for key in environment_variables:
+        if key in os.environ:
+            del os.environ[key]
+            assert key not in os.environ
+
+class TestLoadConfig:
+
+    def test_not_found_warning(self, caplog):
+        """Test that a warning is raised if no configuration file found."""
+
+        conf.load_config(filename='NotAFileName')
+        assert "No Strawberry Fields configuration file found." in caplog.text
+
+    def test_keywords_take_precedence_over_everything(self, monkeypatch, tmpdir):
+        """Test that the keyword arguments passed to load_config take
+        precedence over data in environment variables or data in a
+        configuration file."""
+
+        filename = tmpdir.join("config.toml")
+
+        with open(filename, "w") as f:
+            f.write(TEST_FILE)
+
+        os.environ["SF_API_AUTHENTICATION_TOKEN"] = "NotOurAuth"
+        os.environ["SF_API_HOSTNAME"] = "NotOurHost"
+        os.environ["SF_API_USE_SSL"] = "True"
+        os.environ["SF_API_DEBUG"] = "False"
+        os.environ["SF_API_PORT"] = "42"
+
+        with monkeypatch.context() as m:
+            m.setattr(os, "getcwd", lambda: tmpdir)
+            configuration = conf.load_config(authentication_token="SomeAuth",
+                                            hostname="SomeHost",
+                                            use_ssl=False,
+                                            debug=True,
+                                            port=56
+                                            )
+
+        assert configuration == OTHER_EXPECTED_CONFIG
+
+    def test_environment_variables_take_precedence_over_conf_file(self, monkeypatch, tmpdir):
+        """Test that the data in environment variables precedence over data in
+        a configuration file."""
+
+        filename = tmpdir.join("config.toml")
+
+        with open(filename, "w") as f:
+            f.write(TEST_FILE)
+
+        os.environ["SF_API_AUTHENTICATION_TOKEN"] = "SomeAuth"
+        os.environ["SF_API_HOSTNAME"] = "SomeHost"
+        os.environ["SF_API_USE_SSL"] = "False"
+        os.environ["SF_API_DEBUG"] = "True"
+        os.environ["SF_API_PORT"] = "56"
+
+        with monkeypatch.context() as m:
+            m.setattr(os, "getcwd", lambda: tmpdir)
+            configuration = conf.load_config()
+
+        assert configuration == OTHER_EXPECTED_CONFIG
+
+        tear_down_all_env_var_defs()
+
+    def test_conf_file_loads_well(self, monkeypatch, tmpdir):
+        """Test that the data in environment variables precedence over data in
+        a configuration file."""
+
+        filename = tmpdir.join("config.toml")
+
+        with open(filename, "w") as f:
+            f.write(TEST_FILE)
+
+        with monkeypatch.context() as m:
+            m.setattr(os, "getcwd", lambda: tmpdir)
+            configuration = conf.load_config()
+
+        assert configuration == EXPECTED_CONFIG
+
+class TestCreateConfigObject:
     """Test the creation of a configuration object"""
 
     def test_empty_config_object(self):
@@ -80,50 +168,13 @@ class TestCreteConfigObject:
         assert conf.create_config_object(authentication_token="071cdcce-9241-4965-93af-4a4dbc739135") == EXPECTED_CONFIG
 
     def test_config_object_every_keyword_argument(self):
-        """Test that passing only the authentication token creates the expected
+        """Test that passing every keyword argument creates the expected
         configuration object."""
-        assert conf.create_config_object(authentication_token="071cdcce-9241-4965-93af-4a4dbc739135",
+        assert conf.create_config_object(authentication_token="SomeAuth",
                                         hostname="SomeHost",
                                         use_ssl=False,
                                         debug=True,
                                         port=56) == OTHER_EXPECTED_CONFIG
-
-class TestConfiguration:
-    """Tests for the configuration class"""
-
-    def test_load_config_file(self, tmpdir, monkeypatch):
-        filename = tmpdir.join("config.toml")
-
-        with open(filename, "w") as f:
-            f.write(TEST_FILE)
-
-        config_file = conf.load_config_file(filepath=filename)
-
-        assert config_file == EXPECTED_CONFIG
-
-class TestLoadConfig:
-
-    def test_not_found_warning(self, caplog):
-        """Test that a warning is raised if no configuration file found."""
-
-        conf.load_config(filename='NotAFileName')
-        assert "No Strawberry Fields configuration file found." in caplog.text
-
-    def test_check_call_order(self, monkeypatch):
-
-        def mock_look_for_config_in_file(*args, **kwargs):
-            call_history.append(2)
-            return "NotNone"
-
-        call_history = []
-        with monkeypatch.context() as m:
-            m.setattr(conf, "create_config_object", lambda *args: call_history.append(1))
-            m.setattr(conf, "look_for_config_in_file", mock_look_for_config_in_file)
-            m.setattr(conf, "update_with_other_config", lambda *args, **kwargs: call_history.append(3))
-            m.setattr(conf, "update_from_environment_variables", lambda *args: call_history.append(4))
-            conf.load_config()
-        assert call_history == [1,2,3,4]
-
 class TestLookForConfigInFile:
 
     def test_loading_current_directory(self, tmpdir, monkeypatch):
@@ -207,7 +258,21 @@ class TestLookForConfigInFile:
 
         assert config_file is None
 
-    class TestUpdateWithOtherConfig:
+class TestLoadConfiguration:
+    """Tests for the configuration class"""
+
+    def test_load_config_file(self, tmpdir, monkeypatch):
+        filename = tmpdir.join("config.toml")
+
+        with open(filename, "w") as f:
+            f.write(TEST_FILE)
+
+        config_file = conf.load_config_file(filepath=filename)
+
+        assert config_file == EXPECTED_CONFIG
+
+
+class TestUpdateWithOtherConfig:
 
         def test_update_entire_config(self):
             config = conf.create_config_object()
@@ -257,63 +322,71 @@ class TestLookForConfigInFile:
             assert config["api"][specific_key] == "PlaceHolder"
             assert all(v != "PlaceHolder" for k, v in config["api"].items() if k != specific_key)
 
-environment_variables = [
-                    "SF_API_AUTHENTICATION_TOKEN",
-                    "SF_API_HOSTNAME",
-                    "SF_API_USE_SSL",
-                    "SF_API_DEBUG",
-                    "SF_API_PORT"
-                    ]
+
+
+value_mapping = [
+                ("SF_API_AUTHENTICATION_TOKEN","SomeAuth"),
+                ("SF_API_HOSTNAME","SomeHost"),
+                ("SF_API_USE_SSL","False"),
+                ("SF_API_PORT","56"),
+                ("SF_API_DEBUG","True")
+                ]
+
+parsed_values_mapping = {
+                "SF_API_AUTHENTICATION_TOKEN": "SomeAuth",
+                "SF_API_HOSTNAME": "SomeHost",
+                "SF_API_USE_SSL": False,
+                "SF_API_PORT": 56,
+                "SF_API_DEBUG": True,
+                        }
 
 class TestUpdateFromEnvironmentalVariables:
 
     def test_all_environment_variables_defined(self):
 
-        for key in environment_variables:
-            os.environ[key] = "PlaceHolder"
+        for key, value in value_mapping:
+            os.environ[key] = value
 
         config = conf.create_config_object()
-        assert not any(v == "PlaceHolder" for k, v in config["api"].items())
+        for v, parsed_value in zip(config["api"].values(), parsed_values_mapping.values()):
+            assert v != parsed_value
 
         conf.update_from_environment_variables(config)
-        assert all(v == "PlaceHolder" for k, v in config["api"].items())
-    def test_one_environment_variable_defined(self, specific_env_var, specific_key):
-        # Tear-down
-        for key in environment_variables:
-            del os.environ[key]
-            assert key not in os.environ
+        for v, parsed_value in zip(config["api"].values(), parsed_values_mapping.values()):
+            assert v == parsed_value
 
-    environment_variables_with_keys = [
-                    ("SF_API_AUTHENTICATION_TOKEN","authentication_token"),
-                    ("SF_API_HOSTNAME","hostname"),
-                    ("SF_API_USE_SSL","use_ssl"),
-                    ("SF_API_DEBUG","debug"),
-                    ("SF_API_PORT","port")
+        tear_down_all_env_var_defs()
+
+    environment_variables_with_keys_and_values = [
+                    ("SF_API_AUTHENTICATION_TOKEN","authentication_token","SomeAuth"),
+                    ("SF_API_HOSTNAME","hostname","SomeHost"),
+                    ("SF_API_USE_SSL","use_ssl","False"),
+                    ("SF_API_PORT","port", "56"),
+                    ("SF_API_DEBUG","debug","True")
                     ]
 
-    @pytest.mark.parametrize("specific_env_var, specific_key", environment_variables_with_keys)
-    def test_one_environment_variable_defined(self, specific_env_var, specific_key):
-        # Making sure that no environment variable was defined previously
-        for key in environment_variables:
-            if key in os.environ:
-                del os.environ[key]
-                assert key not in os.environ
+    @pytest.mark.parametrize("env_var, key, value", environment_variables_with_keys_and_values)
+    def test_one_environment_variable_defined(self, env_var, key, value):
 
-        os.environ[specific_env_var] = "PlaceHolder"
+        tear_down_all_env_var_defs()
+        os.environ[env_var] = value
 
         config = conf.create_config_object()
-        assert not any(v == "PlaceHolder" for k, v in config["api"].items())
+        for v, parsed_value in zip(config["api"].values(), parsed_values_mapping.values()):
+            assert v != parsed_value
 
         conf.update_from_environment_variables(config)
-        assert config["api"][specific_key] == "PlaceHolder"
+        assert config["api"][key] == parsed_values_mapping[env_var]
 
-        assert all(v != "PlaceHolder" for k, v in config["api"].items() if k != specific_key)
+        for v, (key, parsed_value) in zip(config["api"].values(), parsed_values_mapping.items()):
+            if key != env_var:
+                assert v != parsed_value
 
         # Tear-down
-        del os.environ[specific_env_var]
-        assert specific_env_var not in os.environ
+        del os.environ[env_var]
+        assert env_var not in os.environ
 
-    def test_parse_environment_variable(self, monkeypatch):
+    def test_parse_environment_variable_boolean(self, monkeypatch):
         monkeypatch.setattr(conf, "BOOLEAN_KEYS", ("some_boolean",))
         assert conf.parse_environment_variable("some_boolean", "true") is True
         assert conf.parse_environment_variable("some_boolean", "True") is True
@@ -328,4 +401,9 @@ class TestUpdateFromEnvironmentalVariables:
         assert conf.parse_environment_variable("some_boolean", 0) is False
 
         assert conf.parse_environment_variable("not_a_boolean","something_else") == "something_else"
+
+    def test_parse_environment_variable_integer(self, monkeypatch):
+        monkeypatch.setattr(conf, "INTEGER_KEYS", ("some_integer",))
+        assert conf.parse_environment_variable("some_integer", "123") == 123
+        assert conf.parse_environment_variable("not_an_integer","something_else") == "something_else"
 
