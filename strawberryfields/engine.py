@@ -159,7 +159,7 @@ class BaseEngine(abc.ABC):
         self.backend_options = backend_options.copy()  # dict is mutable
         #: List[Program]: list of Programs that have been run
         self.run_progs = []
-        #: List[List[Number]]: latest measurement results, shape == (shots, modes)
+        #: List[List[Number]]: latest measurement results, shape == (modes, shots)
         self.samples = None
 
         if isinstance(backend, str):

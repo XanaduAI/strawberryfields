@@ -59,6 +59,6 @@ if __name__ == "__main__":
     if result and result.samples is not None:
         if args.output:
             with open(args.output, "w") as file:
-                file.write(str(result.samples))
+                file.write(str(result.samples.T))
         else:
-            sys.stdout.write(str(result.samples))
+            sys.stdout.write(str(result.samples.T))
