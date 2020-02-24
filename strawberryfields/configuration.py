@@ -24,16 +24,6 @@ from appdirs import user_config_dir
 log.getLogger()
 
 
-DEFAULT_CONFIG = {
-    "api": {
-        "authentication_token": "",
-        "hostname": "localhost",
-        "use_ssl": True,
-        "port": 443,
-        "debug": False}
-}
-
-
 class ConfigurationError(Exception):
     """Exception used for configuration errors"""
 
