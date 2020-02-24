@@ -271,6 +271,21 @@ class TestLookForConfigInFile:
 
         assert config_file == EXPECTED_CONFIG
 
+    def test_loading_absolute_path(self, tmpdir, monkeypatch):
+        """Test that the default configuration file can be loaded
+        via an absolute path."""
+        filename = os.path.abspath(tmpdir.join("config.toml"))
+
+
+        with open(filename, "w") as f:
+            f.write(TEST_FILE)
+
+
+        os.environ["SF_CONF"] = ""
+        config_file = conf.load_config_file(filepath=filename)
+
+        assert config_file == EXPECTED_CONFIG
+
 class TestUpdateWithOtherConfig:
     """Tests for the update_with_other_config function."""
 

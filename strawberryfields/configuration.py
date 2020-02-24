@@ -146,7 +146,7 @@ def look_for_config_in_file(filename="config.toml"):
     return parsed_config
 
 def load_config_file(filepath):
-    """Load a configuration from a TOML formatted file.
+    """Load a configuration object from a TOML formatted file.
 
     Args:
         filepath (str): path to the configuration file
