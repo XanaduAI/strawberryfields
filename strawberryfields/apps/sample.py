@@ -153,9 +153,6 @@ def sample(
         warnings.filterwarnings("ignore", category=UserWarning, message="Cannot simulate non-")
         s = eng.run(p, run_options={"shots": n_samples}).samples
 
-    if n_samples == 1:
-        return [s]
-
     return s.tolist()
 
 
@@ -356,8 +353,6 @@ def vibronic(
 
     s = np.array(s).tolist()  # convert all generated samples to list
 
-    if n_samples == 1:
-        s = [s]
     if np.any(t == 0):
         s = np.pad(s, ((0, 0), (0, n_modes))).tolist()
     return s
