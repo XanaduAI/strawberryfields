@@ -474,10 +474,12 @@ class LocalEngine(BaseEngine):
             # the run options of successive programs
             # overwrite the run options of previous programs
             # in the list
+            program_lst = program
             for p in program:
                 temp_run_options.update(p.run_options)
         else:
             # single program to execute
+            program_lst = [program]
             temp_run_options.update(program.run_options)
 
         temp_run_options.update(run_options or {})
@@ -493,15 +495,16 @@ class LocalEngine(BaseEngine):
             raise NotImplementedError("Batching cannot be used together with multiple shots.")
 
         # check that post-selection and feed-forwarding is not used together with shots > 1
-        for c in program.circuit:
-            try:
-                if c.op.select and eng_run_options["shots"] > 1:
-                    raise NotImplementedError("Post-selection cannot be used together with multiple shots.")
-            except AttributeError:
-                pass
+        for p in program_lst:
+            for c in p.circuit:
+                try:
+                    if c.op.select and eng_run_options["shots"] > 1:
+                        raise NotImplementedError("Post-selection cannot be used together with multiple shots.")
+                except AttributeError:
+                    pass
 
-            if c.op.measurement_deps and eng_run_options["shots"] > 1:
-                raise NotImplementedError("Feed-forwarding of measurements cannot be used together with multiple shots.")
+                if c.op.measurement_deps and eng_run_options["shots"] > 1:
+                    raise NotImplementedError("Feed-forwarding of measurements cannot be used together with multiple shots.")
 
         result = super()._run(program, args=args, compile_options=compile_options, **eng_run_options)
 
