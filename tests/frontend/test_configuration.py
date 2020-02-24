@@ -136,8 +136,8 @@ class TestLoadConfig:
         tear_down_all_env_var_defs()
 
     def test_conf_file_loads_well(self, monkeypatch, tmpdir):
-        """Test that the data in environment variables precedence over data in
-        a configuration file."""
+        """Test that the load_config function loads a configuration from a TOML
+        file correctly."""
 
         filename = tmpdir.join("config.toml")
 
@@ -193,7 +193,7 @@ class TestLookForConfigInFile:
 
     def test_loading_env_variable(self, tmpdir, monkeypatch):
         """Test that the correct configuration file is found using the correct
-        environment variable.
+        environment variable (SF_CONF).
 
         This is a test case for when there is no configuration file in the
         current directory."""
@@ -207,10 +207,8 @@ class TestLookForConfigInFile:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
             m.setattr(os.environ, "get", lambda x, y: tmpdir if x=="SF_CONF" else "NoConfigFileHere")
             m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
-
-            # Need to mock the module specific function
             # m.setattr(conf, "user_config_dir", lambda *args: "NotTheFileName")
-            # os.environ["SF_CONF"] = lambda: FileNotFoundError
+
             config_file = conf.look_for_config_in_file(filename=filename)
         assert config_file == tmpdir.join("config.toml")
 
