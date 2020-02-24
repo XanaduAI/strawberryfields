@@ -89,9 +89,6 @@ class Result:
         self._state = None
         self._is_stateful = is_stateful
 
-        # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
-        if len(np.shape(samples)) > 1:
-            samples = np.stack(samples, 1)
         self._samples = samples
 
     @property
@@ -400,7 +397,7 @@ class BaseEngine(abc.ABC):
             prev = p
 
         if self.samples is not None:
-            return Result(self.samples.copy())
+            return Result(np.array(self.samples).T)
 
 
 class LocalEngine(BaseEngine):
