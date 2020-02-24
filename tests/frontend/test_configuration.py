@@ -297,31 +297,23 @@ class TestUpdateWithOtherConfig:
         assert config == EXPECTED_CONFIG
 
     ONLY_AUTH_CONFIG = {
-                "api": {
-                        "authentication_token": "PlaceHolder",
-                                                            }
-                    }
+                "api": {"authentication_token": "PlaceHolder"}
+    }
 
     ONLY_HOST_CONFIG = {
-                        "api": {
-                                    "hostname": "PlaceHolder",
-                                }
-                    }
+                "api": {"hostname": "PlaceHolder",}
+    }
 
     ONLY_SSL_CONFIG = {
-                "api": {
-                        "use_ssl": "PlaceHolder",
-                                                            }
+                "api": {"use_ssl": "PlaceHolder"}
     }
 
     ONLY_DEBUG_CONFIG = {
-                "api": {
-                        "debug": "PlaceHolder",
-                                                            }
+                "api": {"debug": "PlaceHolder"}
     }
 
     ONLY_PORT_CONFIG = {
-            "api": {"port": "PlaceHolder"}
+                "api": {"port": "PlaceHolder"}
     }
 
     @pytest.mark.parametrize("specific_key, config_to_update_with", [("authentication_token",ONLY_AUTH_CONFIG),
@@ -337,7 +329,6 @@ class TestUpdateWithOtherConfig:
         conf.update_with_other_config(config, config_to_update_with)
         assert config["api"][specific_key] == "PlaceHolder"
         assert all(v != "PlaceHolder" for k, v in config["api"].items() if k != specific_key)
-
 
 value_mapping = [
                 ("SF_API_AUTHENTICATION_TOKEN","SomeAuth"),
