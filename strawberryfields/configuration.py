@@ -34,7 +34,7 @@ def load_config(filename="config.toml", **kwargs):
 
     .. note::
 
-        The configuration object (that is a nested dictionary) would be created based
+        The configuration object (a nested dictionary) will be created based
         on the following (order defines the importance, going from most
         important to least important):
 
@@ -75,7 +75,7 @@ def create_config_object(authentication_token="", **kwargs):
     """Create a configuration object that stores configuration related data
     organized into sections.
 
-    Currently API related configuration options are defined. This function
+    Currently API-related configuration options are defined. This function
     takes into consideration only pre-defined options.
 
     If called without passing any keyword arguments, then a default

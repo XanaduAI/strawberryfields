@@ -235,7 +235,7 @@ class TestLookForConfigInFile:
         assert config_file == tmpdir.join("config.toml")
 
     def test_no_config_file_found_returns_none(self, tmpdir, monkeypatch):
-        """Test that the the look_for_config_in_file returns None if the
+        """Test that the look_for_config_in_file returns None if the
         configuration file is nowhere to be found.
 
         This is a test case for when there is no configuration file:
@@ -322,7 +322,7 @@ class TestUpdateWithOtherConfig:
                                                         ("debug",ONLY_DEBUG_CONFIG),
                                                         ("port",ONLY_PORT_CONFIG)])
     def test_update_only_one_item_in_section(self, specific_key, config_to_update_with):
-        """Tests that only one item is updated in the configuration object is updated."""
+        """Tests that only one item in the configuration object is updated."""
         config = conf.create_config_object()
         assert config["api"][specific_key] != "PlaceHolder"
 
