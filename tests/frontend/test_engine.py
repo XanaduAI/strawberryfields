@@ -34,6 +34,18 @@ def prog(backend):
         ops.Dgate(0.5) | q[0]
     return prog
 
+batch_engines = [
+    sf.Engine('gaussian', backend_options={"batch_size": 2, "cutoff_dim": 6}),
+    sf.Engine('fock', backend_options={"batch_size": 2, "cutoff_dim": 6}),
+    sf.Engine('tf', backend_options={"batch_size": 2, "cutoff_dim": 6})
+]
+
+engines = [
+    sf.Engine('gaussian', backend_options={"cutoff_dim": 6}),
+    sf.Engine('fock', backend_options={"cutoff_dim": 6}),
+    sf.Engine('tf', backend_options={"cutoff_dim": 6})
+]
+
 
 class TestEngine:
     """Test basic engine functionality"""
@@ -156,3 +168,40 @@ class TestEngineProgramInteraction:
         eng.reset()
         eng.run([p1, p2])
         assert inspect() == expected2
+
+
+class TestMultipleShotsErrors:
+    """Test if errors are raised correctly when using multiple shots."""
+
+    @pytest.mark.parametrize("meng", batch_engines)
+    def test_batching_error(self, meng, prog):
+        """Check that correct error is raised with batching and shots > 1."""
+        with pytest.raises(NotImplementedError) as excinfo:
+            meng.run(prog, run_options={"shots": 2})
+
+        assert "Batching" in str(excinfo.value)
+
+    @pytest.mark.parametrize("meng", engines)
+    def test_postselection_error(self, meng):
+        """Check that correct error is raised with post-selection and shots > 1."""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.MeasureFock(select=0) | q[0]
+
+        with pytest.raises(NotImplementedError) as excinfo:
+            meng.run(prog, run_options={"shots": 2})
+
+        assert "Post-selection" in str(excinfo.value)
+
+    @pytest.mark.parametrize("meng", engines)
+    def test_feedforward_error(self, meng):
+        """Check that correct error is raised with feed-forwarding and shots > 1."""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.MeasureFock() | q[0]
+            ops.Dgate(q[0].par) | q[1]
+
+        with pytest.raises(NotImplementedError) as excinfo:
+            meng.run(prog, run_options={"shots": 2})
+
+        assert "Feed-forwarding" in str(excinfo.value)
