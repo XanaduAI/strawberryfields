@@ -52,7 +52,7 @@ def load_config(filename="config.toml", **kwargs):
         debug (bool): determines if the debugging mode is requested
 
     Returns:
-        dict of str: (dict of str: Union[str, bool, int]): the configuration
+        dict[str, dict[str, Union[str, bool, int]]]: the configuration
             object
     """
     config = create_config_object()
@@ -90,7 +90,7 @@ def create_config_object(authentication_token="", **kwargs):
         debug (bool): determines if the debugging mode is requested
 
     Returns:
-        dict of str: (dict of str: Union[str, bool, int]): the configuration
+        dict[str, dict[str, Union[str, bool, int]]]: the configuration
             object
     """
     hostname = kwargs.get("hostname", "localhost")
@@ -124,7 +124,7 @@ def look_for_config_in_file(filename="config.toml"):
         filename (str): the configuration file to look for
 
     Returns:
-         dict of str: (dict of str: Union[str, bool, int]) or None: the
+         dict[str, dict[str, Union[str, bool, int]]] or None: the
              configuration object that was loaded
     """
 
@@ -152,7 +152,7 @@ def load_config_file(filepath):
         filepath (str): path to the configuration file
 
     Returns:
-         dict of str: (dict of str: Union[str, bool, int]): the configuration
+         dict[str, dict[str, Union[str, bool, int]]]: the configuration
             object that was loaded
     """
     with open(filepath, "r") as f:
@@ -163,13 +163,13 @@ def update_with_other_config(config, other_config):
     """Updates the current configuration object with another one.
 
     Args:
-        config (dict of str: (dict of str: Union[str, bool, int])): the
+        config (dict[str, dict[str, Union[str, bool, int]]]): the
             configuration to be updated
-        other_config (dict of str: (dict of str: Union[str, bool, int])): the
+        other_config (dict[str, dict[str, Union[str, bool, int]]]): the
             configuration used for updating
 
     Returns:
-        dict of str: (dict of str: Union[str, bool, int])): the updated
+        dict[str, dict[str, Union[str, bool, int]]]): the updated
             configuration
     """
     # Here an example for sectionconfig is API
@@ -193,10 +193,10 @@ def update_from_environment_variables(config):
         * SF_API_PORT
 
     Args:
-        config (dict of str: (dict of str: Union[str, bool, int])): the
+        config (dict[str, dict[str, Union[str, bool, int]]]): the
             configuration to be updated
     Returns:
-        dict of str: (dict of str: Union[str, bool, int])): the updated
+        dict[str, dict[str, Union[str, bool, int]]]): the updated
         configuration
     """
     for section, sectionconfig in config.items():
