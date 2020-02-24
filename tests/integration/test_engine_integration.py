@@ -116,13 +116,13 @@ class TestProperExecution:
 
         res = eng.run(prog, run_options=None)
         # one entry for each mode
-        assert len(res.samples) == 2
+        assert len(res.samples[0]) == 2
         # the same samples can also be found in the regrefs
-        assert [r.val for r in prog.register] == res.samples
+        assert [r.val for r in prog.register] == res.samples[0].tolist()
         # first mode was measured
         assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
         # second mode was not measured
-        assert res.samples[1] is None
+        assert res.samples[0][1] is None
 
     # TODO: Some of these tests should probably check *something* after execution
 

@@ -312,25 +312,31 @@ class TestVibronic:
 
     def test_loss(self, monkeypatch, p):
         """Test if function correctly creates the SF program for lossy GBS."""
-        mock_eng_run = mock.MagicMock()
+        def save_hist(*args, **kwargs):
+            call_history.append(args[1])
+            return sf.engine.Result
 
+        call_history = []
         with monkeypatch.context() as m:
-            m.setattr(sf.LocalEngine, "run", mock_eng_run)
+            m.setattr(sf.engine.Result, "samples", np.array([[0]]))
+            m.setattr(sf.LocalEngine, "run", save_hist)
             sample.vibronic(*p, 1, loss=0.5)
-            p_func = mock_eng_run.call_args[0][0]
 
-        assert isinstance(p_func.circuit[-2].op, sf.ops.LossChannel)
+        assert isinstance(call_history[0].circuit[-2].op, sf.ops.LossChannel)
 
     def test_no_loss(self, monkeypatch, p):
         """Test if function correctly creates the SF program for GBS without loss."""
-        mock_eng_run = mock.MagicMock()
+        def save_hist(*args, **kwargs):
+            call_history.append(args[1])
+            return sf.engine.Result
 
+        call_history = []
         with monkeypatch.context() as m:
-            m.setattr(sf.LocalEngine, "run", mock_eng_run)
+            m.setattr(sf.engine.Result, "samples", np.array([[0]]))
+            m.setattr(sf.LocalEngine, "run", save_hist)
             sample.vibronic(*p, 1)
-            p_func = mock_eng_run.call_args[0][0]
 
-        assert not all([isinstance(op, sf.ops.LossChannel) for op in p_func.circuit])
+        assert not all([isinstance(op, sf.ops.LossChannel) for op in call_history[0].circuit])
 
     def test_all_loss(self, monkeypatch, p):
         """Test if function samples from the vacuum when maximum loss is applied. This test is
