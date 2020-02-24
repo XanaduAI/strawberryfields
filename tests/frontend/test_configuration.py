@@ -113,7 +113,7 @@ class TestLoadConfig:
         assert configuration == OTHER_EXPECTED_CONFIG
 
     def test_environment_variables_take_precedence_over_conf_file(self, monkeypatch, tmpdir):
-        """Test that the data in environment variables precedence over data in
+        """Test that the data in environment variables take precedence over data in
         a configuration file."""
 
         filename = tmpdir.join("config.toml")
@@ -431,4 +431,3 @@ class TestUpdateFromEnvironmentalVariables:
         monkeypatch.setattr(conf, "INTEGER_KEYS", ("some_integer",))
         assert conf.parse_environment_variable("some_integer", "123") == 123
         assert conf.parse_environment_variable("not_an_integer","something_else") == "something_else"
-
