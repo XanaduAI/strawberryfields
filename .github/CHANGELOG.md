@@ -7,6 +7,10 @@
   probability distributions by integrating across the Wigner function.
   [#270](https://github.com/XanaduAI/strawberryfields/pull/270)
 
+* Adds support in the applications layer for node-weighted graphs. Users can sample from graphs
+  with node weights using the WAW encoding.
+  [295](https://github.com/XanaduAI/strawberryfields/pull/295)
+
 ### Improvements
 * Added two-mode squeezed operation support as a primitive, rather than simply
   through decomposition, using The Walrus for fast computation.
@@ -19,6 +23,15 @@
 * Added custom tensor contractions for the beamsplitter and the two-mode squeeze
   gate as well as faster application of diagonal gate matrices.
   [#292](https://github.com/XanaduAI/strawberryfields/pull/292)
+  
+* Moved apply-gate functions to `Circuit` class, and removed `apply_gate_einsum` and
+  `Circuits._apply_gate`, since they were no longer used.
+  [#293](https://github.com/XanaduAI/strawberryfields/pull/293/)
+  
+* Unified backend results returned from running simulators and added checks for
+  using batching, post-selection and feed-fowarding together with multiple
+  shots, which now raises an error.
+  [#300](https://github.com/XanaduAI/strawberryfields/pull/300)
 
 ### Bug fixes
 
