@@ -67,13 +67,13 @@ class TestCreteConfigObject:
 class TestConfiguration:
     """Tests for the configuration class"""
 
-    def test_parse_config_file(self, tmpdir, monkeypatch):
+    def test_load_config_file(self, tmpdir, monkeypatch):
         filename = tmpdir.join("config.toml")
 
         with open(filename, "w") as f:
             f.write(TEST_FILE)
 
-        config_file = conf.parse_config_file(filepath=filename)
+        config_file = conf.load_config_file(filepath=filename)
 
         assert config_file == EXPECTED_CONFIG
 
@@ -109,7 +109,7 @@ class TestLookForConfigInFile:
 
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: tmpdir)
-            m.setattr(conf, "parse_config_file", lambda filepath: filepath)
+            m.setattr(conf, "load_config_file", lambda filepath: filepath)
             config_file = conf.look_for_config_in_file(filename=filename)
 
         assert config_file == tmpdir.join(filename)
@@ -129,7 +129,7 @@ class TestLookForConfigInFile:
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
             m.setattr(os.environ, "get", lambda x, y: tmpdir if x=="SF_CONF" else "NoConfigFileHere")
-            m.setattr(conf, "parse_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
+            m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
 
             # Need to mock the module specific function
             # m.setattr(conf, "user_config_dir", lambda *args: "NotTheFileName")
@@ -154,7 +154,7 @@ class TestLookForConfigInFile:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
             m.setattr(os.environ, "get", lambda *args: "NoConfigFileHere")
             m.setattr(conf, "user_config_dir", lambda x, *args: tmpdir if x=="strawberryfields" else "NoConfigFileHere")
-            m.setattr(conf, "parse_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
+            m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
 
             config_file = conf.look_for_config_in_file(filename=filename)
         assert config_file == tmpdir.join("config.toml")
@@ -177,7 +177,7 @@ class TestLookForConfigInFile:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
             m.setattr(os.environ, "get", lambda *args: "NoConfigFileHere")
             m.setattr(conf, "user_config_dir", lambda *args: "NoConfigFileHere")
-            m.setattr(conf, "parse_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
+            m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
 
             config_file = conf.look_for_config_in_file(filename=filename)
 

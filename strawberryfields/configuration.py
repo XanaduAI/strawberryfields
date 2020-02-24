@@ -33,31 +33,22 @@ DEFAULT_CONFIG = {
         "debug": False}
 }
 
-BOOLEAN_KEYS = ("debug", "use_ssl")
-
-
-def parse_environment_variable(key, value):
-    trues = (True, "true", "True", "TRUE", "1", 1)
-    falses = (False, "false", "False", "FALSE", "0", 0)
-
-    if key in BOOLEAN_KEYS:
-        if value in trues:
-            return True
-        elif value in falses:
-            return False
-        else:
-            raise ValueError("Boolean could not be parsed")
-    else:
-        return value
-
 
 class ConfigurationError(Exception):
     """Exception used for configuration errors"""
 
 
-# This function will be used by the Connection object
+# TODO: somehow store the latest configuration path that was used
 def load_config(filename="config.toml", **kwargs):
+    """Load configuration from keyword arguments, configuration file or
+    environment variables.
 
+    Args:
+        filename (str): the name of the configuration file to look for
+
+    Keyword arguments:
+
+    """
     config = create_config_object(**kwargs)
 
     parsed_config = look_for_config_in_file(filename=filename)
@@ -72,8 +63,27 @@ def load_config(filename="config.toml", **kwargs):
     return config
 
 def create_config_object(authentication_token="", **kwargs):
+    """Create a configuration object that stores configuration related data
+    organized into sections.
+
+    Currently API related configuration options are defined. This function
+    takes into consideration only pre-defined options.
+
+    If called without passing any keyword arguments, then a default
+    configuration object is created.
+
+    Keyword arguments:
+        authentication_token (str): the token to be used for user
+            authentication
+        hostname (str): the name of the host to connect to
+        use_ssl (bool): specifies if requests should be sent using SSL
+        port (int): the port to be used when connecting to the remote service
+        debug (bool): determines if the debugging mode is requested
+
+    Returns:
+        dict of str: (dict of str: Union[str, bool, int]): the configuration
+            object
     """
-    contains the recognized options for configuration."""
     hostname = kwargs.get("hostname", "localhost")
     use_ssl = kwargs.get("use_ssl", True)
     port = kwargs.get("port", 443)
@@ -84,13 +94,30 @@ def create_config_object(authentication_token="", **kwargs):
             "authentication_token": authentication_token,
             "hostname": hostname,
             "use_ssl": use_ssl,
-            "debug": debug,
-            "port": port
+            "port": port,
+            "debug": debug
             }
     }
     return config
 
 def look_for_config_in_file(filename="config.toml"):
+    """Looks for the first configuration file to be found at certain paths.
+
+    .. note::
+
+        The following directories are checked (in the following order):
+        -The current working directory
+        -The directory specified by the environment variable SF_CONF (if specified)
+        -The user configuration directory (if specified)
+
+    Keyword arguments:
+        filename (str): the configuration file to look for
+
+    Returns:
+         dict of str: (dict of str: Union[str, bool, int]) or None: the
+             configuration object that was loaded
+    """
+
     # Search the current directory, the directory under environment
     # variable SF_CONF, and default user config directory, in that order.
     current_dir = os.getcwd()
@@ -101,24 +128,66 @@ def look_for_config_in_file(filename="config.toml"):
     for directory in directories:
         filepath = os.path.join(directory, filename)
         try:
-            parsed_config = parse_config_file(filepath)
+            parsed_config = load_config_file(filepath)
             break
         except FileNotFoundError:
             parsed_config = None
 
-    # TODO: maybe we need a merge here?
     return parsed_config
 
-def update_with_other_config(config, other_config):
+def load_config_file(filepath):
+    """Load a configuration from a TOML formatted file.
 
-    # Here an example for sectionconfig is api
+    Args:
+        filepath (str): path to the configuration file
+
+    Returns:
+         dict of str: (dict of str: Union[str, bool, int]): the configuration
+            object that was loaded
+    """
+    with open(filepath, "r") as f:
+        config_from_file = toml.load(f)
+    return config_from_file
+
+def update_with_other_config(config, other_config):
+    """Updates the current configuration object with another one.
+
+    Args:
+        config (dict of str: (dict of str: Union[str, bool, int])): the
+            configuration to be updated
+        other_config (dict of str: (dict of str: Union[str, bool, int])): the
+            configuration used for updating
+
+    Returns:
+        dict of str: (dict of str: Union[str, bool, int])): the updated
+            configuration
+    """
+    # Here an example for sectionconfig is API
     for section, sectionconfig in config.items():
         for key in sectionconfig:
             if key in other_config[section]:
-                # Update from configuration file
                 config[section][key] = other_config[section][key]
 
 def update_from_environment_variables(config):
+    """Updates the current configuration object from data stored in environment
+    variables.
+
+    .. note::
+
+        Currently the following environment variables are checked:
+        -SF_API_AUTHENTICATION_TOKEN
+        -SF_API_HOSTNAME
+        -SF_API_USE_SSL
+        -SF_API_DEBUG
+        -SF_API_PORT
+
+    Args:
+        config (dict of str: (dict of str: Union[str, bool, int])): the
+            configuration to be updated
+    Returns:
+        dict of str: (dict of str: Union[str, bool, int])): the updated
+            configuration
+    """
     for section, sectionconfig in config.items():
         env_prefix = "SF_{}_".format(section.upper())
         for key in sectionconfig:
@@ -126,14 +195,32 @@ def update_from_environment_variables(config):
             if env in os.environ:
                 config[section][key] = parse_environment_variable(env, os.environ[env])
 
-def parse_config_file(filepath):
-    """Load a configuration file.
+
+BOOLEAN_KEYS = ("debug", "use_ssl")
+
+def parse_environment_variable(key, value):
+    """Parse a value stored in an environment variable.
 
     Args:
-        filepath (str): path to the configuration file
-    """
-    with open(filepath, "r") as f:
-        config_from_file = toml.load(f)
-    return config_from_file
+        key (str): the name of the environment variable
+        value (Union[str, bool, int]): the value obtained from the environment
+            variable
 
+    Returns:
+        [str, bool, int]: the parsed value
+    """
+    trues = (True, "true", "True", "TRUE", "1", 1)
+    falses = (False, "false", "False", "FALSE", "0", 0)
+
+    if key in BOOLEAN_KEYS:
+        if value in trues:
+            return True
+        elif value in falses:
+            return False
+        else:
+            raise ValueError("Boolean could not be parsed")
+    else:
+        return value
+
+DEFAULT_CONFIG = create_config_object()
 configuration = load_config()
