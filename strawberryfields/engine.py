@@ -488,6 +488,21 @@ class LocalEngine(BaseEngine):
         eng_run_keys = ["eval", "session", "feed_dict", "shots"]
         eng_run_options = {key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys}
 
+        # check that batching is not used together with shots > 1
+        if self.backend_options.get("batch_size", 0) and eng_run_options["shots"] > 1:
+            raise NotImplementedError("Batching cannot be used together with multiple shots.")
+
+        # check that post-selection and feed-forwarding is not used together with shots > 1
+        for c in program.circuit:
+            try:
+                if c.op.select and eng_run_options["shots"] > 1:
+                    raise NotImplementedError("Post-selection cannot be used together with multiple shots.")
+            except AttributeError:
+                pass
+
+            if c.op.measurement_deps and eng_run_options["shots"] > 1:
+                raise NotImplementedError("Feed-forwarding of measurements cannot be used together with multiple shots.")
+
         result = super()._run(program, args=args, compile_options=compile_options, **eng_run_options)
 
         modes = temp_run_options["modes"]
