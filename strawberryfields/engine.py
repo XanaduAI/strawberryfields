@@ -566,7 +566,7 @@ class JobStatus(enum.Enum):
     OPEN = "open"
     QUEUED = "queued"
     CANCELLED = "cancelled"
-    COMPLETE = "complete"
+    COMPLETED = "complete"
     FAILED = "failed"
 
     @property
@@ -579,7 +579,7 @@ class JobStatus(enum.Enum):
         Returns:
             bool: ``True`` if the job status is final, and ``False`` otherwise
         """
-        return self in (JobStatus.CANCELLED, JobStatus.COMPLETE, JobStatus.FAILED)
+        return self in (JobStatus.CANCELLED, JobStatus.COMPLETED, JobStatus.FAILED)
 
 
 class Job:
@@ -623,15 +623,15 @@ class Job:
     def result(self) -> Result:
         """The job result.
 
-        This is only defined for complete jobs, and raises an exception for any other
+        This is only defined for completed jobs, and raises an exception for any other
         status.
 
         Returns:
             strawberryfields.engine.Result: the job result
         """
-        if self.status != JobStatus.COMPLETE:
+        if self.status != JobStatus.COMPLETED:
             raise AttributeError(
-                "The result is undefined for jobs that are not complete "
+                "The result is undefined for jobs that are not completed "
                 "(current status: {})".format(self.status.value)
             )
         return self._result
@@ -647,7 +647,7 @@ class Job:
                 "A {} job cannot be refreshed".format(self.status.value)
             )
         self._status = self._connection.get_job_status(self.id)
-        if self._status == JobStatus.COMPLETE:
+        if self._status == JobStatus.COMPLETED:
             self._result = self._connection.get_job_result(self.id)
 
     def cancel(self):
@@ -929,7 +929,7 @@ class StarshipEngine:
 
         # Run a job synchronously
         result = engine.run(program, shots=1)
-        # (Engine blocks until job is complete)
+        # (Engine blocks until job is completed)
         result  # [[0 1 0 2 1 0 0 0]]
 
         # Run a job synchronously, but cancel it before it is completed
@@ -942,7 +942,7 @@ class StarshipEngine:
         job.result  # InvalidJobOperationError
         # (After some time...)
         job.refresh()
-        job.status  # <JobStatus.COMPLETE: 'complete'>
+        job.status  # <JobStatus.COMPLETED: 'complete'>
         job.result  # [[0 1 0 2 1 0 0 0]]
 
     Args:
@@ -1011,7 +1011,7 @@ class StarshipEngine:
         try:
             while True:
                 job.refresh()
-                if job.status == JobStatus.COMPLETE:
+                if job.status == JobStatus.COMPLETED:
                     return job.result
                 if job.status == JobStatus.FAILED:
                     raise JobFailedError("The computation failed; please try again.")

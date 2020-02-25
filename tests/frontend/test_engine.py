@@ -202,7 +202,7 @@ def mock_response(status_code, json_body=None, binary_body=None):
 class MockServer:
     """A mock platform server that fakes a processing delay by counting requests."""
 
-    REQUESTS_BEFORE_COMPLETE = 3
+    REQUESTS_BEFORE_COMPLETED = 3
 
     def __init__(self):
         self.request_count = 0
@@ -213,8 +213,8 @@ class MockServer:
         """
         self.request_count += 1
         return (
-            JobStatus.COMPLETE
-            if self.request_count >= self.REQUESTS_BEFORE_COMPLETE
+            JobStatus.COMPLETED
+            if self.request_count >= self.REQUESTS_BEFORE_COMPLETED
             else JobStatus.QUEUED
         )
 
@@ -244,7 +244,7 @@ class TestJob:
     def final_job_raises_on_refresh(self):
         """Tests that `job.refresh()` raises an error for a complete, failed, or
         cancelled job."""
-        job = Job("abc", status=JobStatus.COMPLETE, connection=Connection)
+        job = Job("abc", status=JobStatus.COMPLETED, connection=Connection)
 
         with pytest.raises(InvalidJobOperationError):
             job.refresh()
@@ -252,7 +252,7 @@ class TestJob:
     def final_job_raises_on_cancel(self):
         """Tests that `job.cancel()` raises an error for a complete, failed, or
         aleady cancelled job."""
-        job = Job("abc", status=JobStatus.COMPLETE, connection=Connection)
+        job = Job("abc", status=JobStatus.COMPLETED, connection=Connection)
 
         with pytest.raises(InvalidJobOperationError):
             job.cancel()
@@ -301,7 +301,7 @@ class TestConnection:
         jobs = [
             {
                 "id": str(i),
-                "status": JobStatus.COMPLETE,
+                "status": JobStatus.COMPLETED,
                 "created_at": "2020-01-{:02d}T12:34:56.123456Z".format(i),
             }
             for i in range(1, 10)
@@ -324,7 +324,7 @@ class TestConnection:
 
     def test_get_job(self, connection, monkeypatch):
         """Tests a successful job request."""
-        id_, status = "123", JobStatus.COMPLETE
+        id_, status = "123", JobStatus.COMPLETED
 
         monkeypatch.setattr(
             requests,
@@ -346,7 +346,7 @@ class TestConnection:
 
     def test_get_job_status(self, connection, monkeypatch):
         """Tests a successful job status request."""
-        id_, status = "123", JobStatus.COMPLETE
+        id_, status = "123", JobStatus.COMPLETED
 
         monkeypatch.setattr(
             requests,
@@ -463,10 +463,10 @@ class TestStarshipEngine:
         job = engine.run_async(prog)
         assert job.status == JobStatus.OPEN
 
-        for _ in range(server.REQUESTS_BEFORE_COMPLETE):
+        for _ in range(server.REQUESTS_BEFORE_COMPLETED):
             job.refresh()
 
-        assert job.status == JobStatus.COMPLETE
+        assert job.status == JobStatus.COMPLETED
         assert np.array_equal(job.result.samples.T, result_expected)
 
         with pytest.raises(AttributeError):
