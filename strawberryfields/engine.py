@@ -570,14 +570,14 @@ class JobStatus(enum.Enum):
     FAILED = "failed"
 
     @property
-    def is_terminal(self) -> bool:
+    def is_final(self) -> bool:
         """Checks if this status represents a final and immutable state.
 
         This method is primarily used to determine if an operation is valid for a given
         status.
 
         Returns:
-            bool: ``True`` if the job status is terminal, and ``False`` otherwise
+            bool: ``True`` if the job status is final, and ``False`` otherwise
         """
         return self in (JobStatus.CANCELLED, JobStatus.COMPLETE, JobStatus.FAILED)
 
@@ -642,7 +642,7 @@ class Job:
 
         Only an open or queued job can be refreshed; an exception is raised otherwise.
         """
-        if self.status.is_terminal:
+        if self.status.is_final:
             raise InvalidJobOperationError(
                 "A {} job cannot be refreshed".format(self.status.value)
             )
@@ -655,7 +655,7 @@ class Job:
 
         Only an open or queued job can be cancelled; an exception is raised otherwise.
         """
-        if self.status.is_terminal:
+        if self.status.is_final:
             raise InvalidJobOperationError(
                 "A {} job cannot be cancelled".format(self.status.value)
             )
