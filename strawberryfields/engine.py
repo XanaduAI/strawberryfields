@@ -670,14 +670,6 @@ class Job:
         return self.__repr__()
 
 
-class RequestMethod(enum.Enum):
-    """Defines the valid request methods for messages sent to the remote platform."""
-
-    GET = "get"
-    POST = "post"
-    PATCH = "patch"
-
-
 class Connection:
     """Manages remote connections to the remote job execution platform and exposes
     various job operations.
@@ -735,6 +727,11 @@ class Connection:
         self._port = port
         self._use_ssl = use_ssl
 
+        self._base_url = "http{}://{}:{}".format(
+            "s" if self.use_ssl else "", self.host, self.port
+        )
+        self._headers = {"Authorization": self.token}
+
     @property
     def token(self) -> str:
         """The API authentication token.
@@ -771,17 +768,6 @@ class Connection:
         """
         return self._use_ssl
 
-    @property
-    def base_url(self) -> str:
-        """The base URL used for the connection.
-
-        Returns:
-            str: the base URL
-        """
-        return "http{}://{}:{}".format(
-            "s" if self.use_ssl else "", self.host, self.port
-        )
-
     def create_job(self, target: str, program: Program, shots: int) -> Job:
         """Creates a job with the given circuit.
 
@@ -801,7 +787,12 @@ class Connection:
         bb._target["options"] = {"shots": shots}
         circuit = bb.serialize()
 
-        response = self._post("/jobs", data=json.dumps({"circuit": circuit}))
+        path = "/jobs"
+        response = requests.post(
+            self._url(path),
+            headers=self._headers,
+            data=json.dumps({"circuit": circuit}),
+        )
         if response.status_code == 201:
             return Job(
                 id_=response.json()["id"],
@@ -824,15 +815,6 @@ class Connection:
         Returns:
             List[strawberryfields.engine.Job]: the jobs
         """
-        # response = self._get("/jobs?size={}".format(self.MAX_JOBS_REQUESTED))
-        # if response.status_code == 200:
-            # return [
-                # Job(id_=info["id"], status=info["status"], connection=self)
-                # for info in response.json()["data"]
-                # if datetime.strptime(info["created_at"], self.JOB_TIMESTAMP_FORMAT)
-                # > after
-            # ]
-        # raise RequestFailedError(self._format_error_message(response))
         raise NotImplementedError("This feature is not yet implemented")
 
     def get_job(self, job_id: str) -> Job:
@@ -844,7 +826,8 @@ class Connection:
         Returns:
             strawberryfields.engine.Job: the job
         """
-        response = self._get("/jobs/{}".format(job_id))
+        path = "/jobs/{}".format(job_id)
+        response = requests.get(self._url(path), headers=self._headers)
         if response.status_code == 200:
             return Job(
                 id_=response.json()["id"],
@@ -873,8 +856,9 @@ class Connection:
         Returns:
             strawberryfields.engine.Result: the job result
         """
-        response = self._get(
-            "/jobs/{}/result".format(job_id), {"Accept": "application/x-numpy"},
+        path = "/jobs/{}/result".format(job_id)
+        response = requests.get(
+            self._url(path), headers={"Accept": "application/x-numpy", **self._headers},
         )
         if response.status_code == 200:
             # Read the numpy binary data in the payload into memory
@@ -891,8 +875,11 @@ class Connection:
         Args:
             job_id (str): the job ID
         """
-        response = self._patch(
-            "/jobs/{}".format(job_id), data={"status", JobStatus.CANCELLED.value}
+        path = "/jobs/{}".format(job_id)
+        response = requests.patch(
+            self._url(path),
+            headers=self._headers,
+            data={"status", JobStatus.CANCELLED.value},
         )
         if response.status_code == 204:
             return
@@ -904,34 +891,12 @@ class Connection:
         Returns:
             bool: ``True`` if the connection is successful, and ``False`` otherwise
         """
-        response = self._get("/healthz")
+        path = "/healthz"
+        response = requests.get(self._url(path), headers=self._headers)
         return response.status_code == 200
 
-    def _get(
-        self, path: str, headers: Dict[str, str] = None, **kwargs
-    ) -> requests.Response:
-        return self._request(RequestMethod.GET, path, headers, **kwargs)
-
-    def _post(
-        self, path: str, headers: Dict[str, str] = None, **kwargs
-    ) -> requests.Response:
-        return self._request(RequestMethod.POST, path, headers, **kwargs)
-
-    def _patch(
-        self, path: str, headers: Dict[str, str] = None, **kwargs
-    ) -> requests.Response:
-        return self._request(RequestMethod.PATCH, path, headers, **kwargs)
-
-    def _request(
-        self, method: RequestMethod, path: str, headers: Dict[str, str] = None, **kwargs
-    ) -> requests.Response:
-        headers = {} if headers is None else headers
-        request = getattr(requests, method.value)
-        return request(
-            urljoin(self.base_url, path),
-            headers={"Authorization": self.token, **headers},
-            **kwargs
-        )
+    def _url(self, path: str) -> str:
+        return self._base_url + path
 
     @staticmethod
     def _format_error_message(response: requests.Response) -> str:

@@ -18,6 +18,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
+import requests
 
 import strawberryfields as sf
 from strawberryfields import ops
@@ -240,7 +241,7 @@ class TestJob:
         with pytest.raises(AttributeError):
             _ = job.result
 
-    def terminal_job_raises_on_refresh(self):
+    def final_job_raises_on_refresh(self):
         """Tests that `job.refresh()` raises an error for a complete, failed, or
         cancelled job."""
         job = Job("abc", status=JobStatus.COMPLETE, connection=Connection)
@@ -248,7 +249,7 @@ class TestJob:
         with pytest.raises(InvalidJobOperationError):
             job.refresh()
 
-    def terminal_job_raises_on_cancel(self):
+    def final_job_raises_on_cancel(self):
         """Tests that `job.cancel()` raises an error for a complete, failed, or
         aleady cancelled job."""
         job = Job("abc", status=JobStatus.COMPLETE, connection=Connection)
@@ -270,15 +271,15 @@ class TestConnection:
         assert connection.port == port
         assert connection.use_ssl == use_ssl
 
-        assert connection.base_url == "https://host:123"
+        assert connection._url("/abc") == "https://host:123/abc"
 
     def test_create_job(self, prog, connection, monkeypatch):
         """Tests a successful job creation flow."""
         id_, status = "123", JobStatus.QUEUED
 
         monkeypatch.setattr(
-            Connection,
-            "_post",
+            requests,
+            "post",
             mock_return(mock_response(201, {"id": id_, "status": status})),
         )
 
@@ -289,7 +290,7 @@ class TestConnection:
 
     def test_create_job_error(self, prog, connection, monkeypatch):
         """Tests a failed job creation flow."""
-        monkeypatch.setattr(Connection, "_post", mock_return(mock_response(400, {})))
+        monkeypatch.setattr(requests, "post", mock_return(mock_response(400, {})))
 
         with pytest.raises(RequestFailedError):
             connection.create_job("chip2", prog, 1)
@@ -306,7 +307,7 @@ class TestConnection:
             for i in range(1, 10)
         ]
         monkeypatch.setattr(
-            Connection, "_get", mock_return(mock_response(200, {"data": jobs})),
+            requests, "get", mock_return(mock_response(200, {"data": jobs})),
         )
 
         jobs = connection.get_all_jobs(after=datetime(2020, 1, 5))
@@ -316,7 +317,7 @@ class TestConnection:
     @pytest.mark.skip(reason="method not yet implemented")
     def test_get_all_jobs_error(self, connection, monkeypatch):
         """Tests a failed job list request."""
-        monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
+        monkeypatch.setattr(requests, "get", mock_return(mock_response(404, {})))
 
         with pytest.raises(RequestFailedError):
             connection.get_all_jobs()
@@ -326,8 +327,8 @@ class TestConnection:
         id_, status = "123", JobStatus.COMPLETE
 
         monkeypatch.setattr(
-            Connection,
-            "_get",
+            requests,
+            "get",
             mock_return(mock_response(200, {"id": id_, "status": status.value})),
         )
 
@@ -338,7 +339,7 @@ class TestConnection:
 
     def test_get_job_error(self, connection, monkeypatch):
         """Tests a failed job request."""
-        monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
+        monkeypatch.setattr(requests, "get", mock_return(mock_response(404, {})))
 
         with pytest.raises(RequestFailedError):
             connection.get_job("123")
@@ -348,8 +349,8 @@ class TestConnection:
         id_, status = "123", JobStatus.COMPLETE
 
         monkeypatch.setattr(
-            Connection,
-            "_get",
+            requests,
+            "get",
             mock_return(mock_response(200, {"id": id_, "status": status.value})),
         )
 
@@ -357,7 +358,7 @@ class TestConnection:
 
     def test_get_job_status_error(self, connection, monkeypatch):
         """Tests a failed job status request."""
-        monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
+        monkeypatch.setattr(requests, "get", mock_return(mock_response(404, {})))
 
         with pytest.raises(RequestFailedError):
             connection.get_job_status("123")
@@ -370,8 +371,8 @@ class TestConnection:
             np.save(buf, result_samples)
             buf.seek(0)
             monkeypatch.setattr(
-                Connection,
-                "_get",
+                requests,
+                "get",
                 mock_return(mock_response(200, binary_body=buf.getvalue())),
             )
 
@@ -381,34 +382,34 @@ class TestConnection:
 
     def test_get_job_result_error(self, connection, monkeypatch):
         """Tests a failed job result request."""
-        monkeypatch.setattr(Connection, "_get", mock_return(mock_response(404, {})))
+        monkeypatch.setattr(requests, "get", mock_return(mock_response(404, {})))
 
         with pytest.raises(RequestFailedError):
             connection.get_job_result("123")
 
     def test_cancel_job(self, connection, monkeypatch):
         """Tests a successful job cancellation request."""
-        monkeypatch.setattr(Connection, "_patch", mock_return(mock_response(204, {})))
+        monkeypatch.setattr(requests, "patch", mock_return(mock_response(204, {})))
 
         # A successful cancellation does not raise an exception
         connection.cancel_job("123")
 
     def test_cancel_job_error(self, connection, monkeypatch):
         """Tests a successful job cancellation request."""
-        monkeypatch.setattr(Connection, "_patch", mock_return(mock_response(404, {})))
+        monkeypatch.setattr(requests, "patch", mock_return(mock_response(404, {})))
 
         with pytest.raises(RequestFailedError):
             connection.cancel_job("123")
 
     def test_ping_success(self, connection, monkeypatch):
         """Tests a successful ping to the remote host."""
-        monkeypatch.setattr(Connection, "_get", mock_return(mock_response(200, {})))
+        monkeypatch.setattr(requests, "get", mock_return(mock_response(200, {})))
 
         assert connection.ping()
 
     def test_ping_failure(self, connection, monkeypatch):
         """Tests a failed ping to the remote host."""
-        monkeypatch.setattr(Connection, "_get", mock_return(mock_response(500, {})))
+        monkeypatch.setattr(requests, "get", mock_return(mock_response(500, {})))
 
         assert not connection.ping()
 
