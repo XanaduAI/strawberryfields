@@ -176,10 +176,9 @@ class TestMultipleShotsErrors:
     @pytest.mark.parametrize("meng", batch_engines)
     def test_batching_error(self, meng, prog):
         """Check that correct error is raised with batching and shots > 1."""
-        with pytest.raises(NotImplementedError) as excinfo:
+        with pytest.raises(NotImplementedError,
+                           match="Batching cannot be used together with multiple shots."):
             meng.run(prog, run_options={"shots": 2})
-
-        assert "Batching" in str(excinfo.value)
 
     @pytest.mark.parametrize("meng", engines)
     def test_postselection_error(self, meng):
@@ -188,10 +187,9 @@ class TestMultipleShotsErrors:
         with prog.context as q:
             ops.MeasureFock(select=0) | q[0]
 
-        with pytest.raises(NotImplementedError) as excinfo:
+        with pytest.raises(NotImplementedError,
+                           match="Post-selection cannot be used together with multiple shots."):
             meng.run(prog, run_options={"shots": 2})
-
-        assert "Post-selection" in str(excinfo.value)
 
     @pytest.mark.parametrize("meng", engines)
     def test_feedforward_error(self, meng):
@@ -201,7 +199,6 @@ class TestMultipleShotsErrors:
             ops.MeasureFock() | q[0]
             ops.Dgate(q[0].par) | q[1]
 
-        with pytest.raises(NotImplementedError) as excinfo:
+        with pytest.raises(NotImplementedError,
+                           match="Feed-forwarding of measurements cannot be used together with multiple shots."):
             meng.run(prog, run_options={"shots": 2})
-
-        assert "Feed-forwarding" in str(excinfo.value)
