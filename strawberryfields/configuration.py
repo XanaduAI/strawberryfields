@@ -75,8 +75,8 @@ def create_config_object(authentication_token="", **kwargs):
     """Create a configuration object that stores configuration related data
     organized into sections.
 
-    Currently API-related configuration options are defined. This function
-    takes into consideration only pre-defined options.
+    The configuration object contains API-related configuration options. This
+    function takes into consideration only pre-defined options.
 
     If called without passing any keyword arguments, then a default
     configuration object is created.
@@ -172,7 +172,7 @@ def update_with_other_config(config, other_config):
         dict[str, dict[str, Union[str, bool, int]]]): the updated
             configuration
     """
-    # Here an example for sectionconfig is API
+    # Here an example for section is API
     for section, sectionconfig in config.items():
         for key in sectionconfig:
             if key in other_config[section]:
