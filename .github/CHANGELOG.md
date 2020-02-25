@@ -29,6 +29,11 @@
 * Moved apply-gate functions to `Circuit` class, and removed `apply_gate_einsum` and
   `Circuits._apply_gate`, since they were no longer used.
   [#293](https://github.com/XanaduAI/strawberryfields/pull/293/)
+  
+* Unified backend results returned from running simulators and added checks for
+  using batching, post-selection and feed-fowarding together with multiple
+  shots, which now raises an error.
+  [#300](https://github.com/XanaduAI/strawberryfields/pull/300)
 
 ### Bug fixes
 
