@@ -8,6 +8,21 @@
   [#270](https://github.com/XanaduAI/strawberryfields/pull/270)
 
 ### Improvements
+* Added two-mode squeezed operation support as a primitive, rather than simply
+  through decomposition, using The Walrus for fast computation.
+  [#289](https://github.com/XanaduAI/strawberryfields/pull/289)
+
+* Added The Walrus implementations for the displacement, squeezing and beamsplitter 
+  operations to improve speed.
+  [#287](https://github.com/XanaduAI/strawberryfields/pull/287)
+  
+* Added custom tensor contractions for the beamsplitter and the two-mode squeeze
+  gate as well as faster application of diagonal gate matrices.
+  [#292](https://github.com/XanaduAI/strawberryfields/pull/292)
+  
+* Moved apply-gate functions to `Circuit` class, and removed `apply_gate_einsum` and
+  `Circuits._apply_gate`, since they were no longer used.
+  [#293](https://github.com/XanaduAI/strawberryfields/pull/293/)
 
 ### Bug fixes
 
@@ -17,12 +32,16 @@
 * Added `sympy>=1.5` to the list of dependencies.
   Removed the `sympy.functions.atan2` workaround now that SymPy has been fixed.
   [#280](https://github.com/XanaduAI/strawberryfields/pull/280)
+  
+* Removed two unnecessary else statements that pylint complained about.
+  [#290](https://github.com/XanaduAI/strawberryfields/pull/290)
+  
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Ville Bergholm, Jack Ceroni
+Ville Bergholm, Jack Ceroni, Theodor Isacsson
 
 ---
 
