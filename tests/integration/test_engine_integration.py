@@ -313,14 +313,19 @@ class TestProperExecution:
 
     # TODO: when ``shots`` is incorporated into other backends, delete this test
     @pytest.mark.backends("tf", "fock")
-    def test_measurefock_shots_exception(self, setup_eng):
+    def test_measurefock_shots_exception(self, setup_eng, batch_size):
         shots = 5
         eng, p1 = setup_eng(3)
         with p1.context as q:
             ops.MeasureFock() | q
 
         backend_name = eng.backend.__str__()
-        with pytest.raises(NotImplementedError,
-                           match=r"""(Measure|MeasureFock) has not been implemented in {} """
-                                  """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
-            eng.run(p1, run_options={"shots": shots}).samples
+        if batch_size:
+            with pytest.raises(NotImplementedError,
+                               match="Batching cannot be used together with multiple shots."):
+                eng.run(p1, run_options={"shots": shots}).samples
+        else:
+            with pytest.raises(NotImplementedError,
+                               match=r"""(Measure|MeasureFock) has not been implemented in {} """
+                               """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
+                eng.run(p1, run_options={"shots": shots}).samples
