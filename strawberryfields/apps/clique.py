@@ -161,7 +161,6 @@ def grow(
     ``node_select`` argument, which can be any of the following:
 
     - ``"uniform"`` (default): choose a node from the candidates uniformly at random;
-
     - ``"degree"``: choose the node from the candidates with the greatest degree, settling ties
       by uniform random choice;
     - A list or array: specifying the node weights of the graph, resulting in choosing the node
