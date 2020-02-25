@@ -42,6 +42,10 @@ a = 0.1234
 b = -0.543
 c = 0.312
 
+@property
+def batched(batch_size):
+    """Checks if session is batched."""
+    return bool(batch_size)
 
 @pytest.mark.parametrize("name,expected", eng_backend_params)
 def test_load_backend(name, expected, cutoff):
@@ -312,20 +316,16 @@ class TestProperExecution:
         assert all(s is None for s in samples[:, 2])
 
     # TODO: when ``shots`` is incorporated into other backends, delete this test
+    @pytest.mark.skipif(batched, reason="Test only runs for non-batched backends")
     @pytest.mark.backends("tf", "fock")
-    def test_measurefock_shots_exception(self, setup_eng, batch_size):
+    def test_measurefock_shots_exception(self, setup_eng):
         shots = 5
         eng, p1 = setup_eng(3)
         with p1.context as q:
             ops.MeasureFock() | q
 
         backend_name = eng.backend.__str__()
-        if batch_size:
-            with pytest.raises(NotImplementedError,
-                               match="Batching cannot be used together with multiple shots."):
-                eng.run(p1, run_options={"shots": shots}).samples
-        else:
-            with pytest.raises(NotImplementedError,
-                               match=r"""(Measure|MeasureFock) has not been implemented in {} """
-                               """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
-                eng.run(p1, run_options={"shots": shots}).samples
+        with pytest.raises(NotImplementedError,
+                            match=r"""(Measure|MeasureFock) has not been implemented in {} """
+                            """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
+            eng.run(p1, run_options={"shots": shots}).samples
