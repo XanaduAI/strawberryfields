@@ -56,7 +56,7 @@ def load_config(filename="config.toml", **kwargs):
     Returns:
         dict[str, dict[str, Union[str, bool, int]]]: the configuration
     """
-    config = create_config_object()
+    config = create_config()
 
     config_filepath = get_config_filepath(filename=filename)
 
@@ -73,7 +73,7 @@ def load_config(filename="config.toml", **kwargs):
 
     return config
 
-def create_config_object(authentication_token="", **kwargs):
+def create_config(authentication_token="", **kwargs):
     """Create a configuration object that stores configuration related data
     organized into sections.
 
@@ -232,6 +232,6 @@ def parse_environment_variable(key, value):
 
     return value
 
-DEFAULT_CONFIG = create_config_object()
+DEFAULT_CONFIG = create_config()
 configuration = load_config()
 config_filepath = get_config_filepath()

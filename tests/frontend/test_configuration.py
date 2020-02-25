@@ -155,7 +155,7 @@ class TestCreateConfigObject:
 
     def test_empty_config_object(self):
         """Test that an empty configuration object can be created."""
-        config = conf.create_config_object(authentication_token="",
+        config = conf.create_config(authentication_token="",
                                   hostname="",
                                   use_ssl="",
                                   debug="",
@@ -166,12 +166,12 @@ class TestCreateConfigObject:
     def test_config_object_with_authentication_token(self):
         """Test that passing only the authentication token creates the expected
         configuration object."""
-        assert conf.create_config_object(authentication_token="071cdcce-9241-4965-93af-4a4dbc739135") == EXPECTED_CONFIG
+        assert conf.create_config(authentication_token="071cdcce-9241-4965-93af-4a4dbc739135") == EXPECTED_CONFIG
 
     def test_config_object_every_keyword_argument(self):
         """Test that passing every keyword argument creates the expected
         configuration object."""
-        assert conf.create_config_object(authentication_token="SomeAuth",
+        assert conf.create_config(authentication_token="SomeAuth",
                                         hostname="SomeHost",
                                         use_ssl=False,
                                         debug=True,
@@ -306,7 +306,7 @@ class TestUpdateConfig:
     def test_update_entire_config(self):
         """Tests that the entire configuration object is updated."""
 
-        config = conf.create_config_object()
+        config = conf.create_config()
         assert config["api"]["authentication_token"] == ""
 
         conf.update_config(config, EXPECTED_CONFIG)
@@ -339,7 +339,7 @@ class TestUpdateConfig:
                                                         ("port",ONLY_PORT_CONFIG)])
     def test_update_only_one_item_in_section(self, specific_key, config_to_update_with):
         """Tests that only one item in the configuration object is updated."""
-        config = conf.create_config_object()
+        config = conf.create_config()
         assert config["api"][specific_key] != "PlaceHolder"
 
         conf.update_config(config, config_to_update_with)
@@ -372,7 +372,7 @@ class TestUpdateFromEnvironmentalVariables:
         for key, value in value_mapping:
             os.environ[key] = value
 
-        config = conf.create_config_object()
+        config = conf.create_config()
         for v, parsed_value in zip(config["api"].values(), parsed_values_mapping.values()):
             assert v != parsed_value
 
@@ -398,7 +398,7 @@ class TestUpdateFromEnvironmentalVariables:
         tear_down_all_env_var_defs()
         os.environ[env_var] = value
 
-        config = conf.create_config_object()
+        config = conf.create_config()
         for v, parsed_value in zip(config["api"].values(), parsed_values_mapping.values()):
             assert v != parsed_value
 
