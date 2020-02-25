@@ -176,22 +176,26 @@ class TestCreateConfigObject:
                                         use_ssl=False,
                                         debug=True,
                                         port=56) == OTHER_EXPECTED_CONFIG
-class TestLookForConfigInFile:
-    """Tests for the load_config_file_if_found function."""
+class TestGetConfigFilepath:
+    """Tests for the get_config_filepath function."""
 
-    def test_loading_current_directory(self, tmpdir, monkeypatch):
+    def test_current_directory(self, tmpdir, monkeypatch):
         """Test that the default configuration file is loaded from the current
         directory, if found."""
         filename = "config.toml"
 
+        path_to_write_file = tmpdir.join(filename)
+
+        with open(path_to_write_file, "w") as f:
+            f.write(TEST_FILE)
+
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: tmpdir)
-            m.setattr(conf, "load_config_file", lambda filepath: filepath)
-            config_file, _ = conf.load_config_file_if_found(filename=filename)
+            config_filepath = conf.get_config_filepath(filename=filename)
 
-        assert config_file == tmpdir.join(filename)
+        assert config_filepath == tmpdir.join(filename)
 
-    def test_loading_env_variable(self, tmpdir, monkeypatch):
+    def test_env_variable(self, tmpdir, monkeypatch):
         """Test that the correct configuration file is found using the correct
         environment variable (SF_CONF).
 
@@ -200,19 +204,24 @@ class TestLookForConfigInFile:
 
         filename = "config.toml"
 
+        path_to_write_file = tmpdir.join(filename)
+
+        with open(path_to_write_file, "w") as f:
+            f.write(TEST_FILE)
+
         def raise_wrapper(ex):
             raise ex
 
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
             m.setattr(os.environ, "get", lambda x, y: tmpdir if x=="SF_CONF" else "NoConfigFileHere")
-            m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
             m.setattr(conf, "user_config_dir", lambda *args: "NotTheFileName")
 
-            config_file, _ = conf.load_config_file_if_found(filename=filename)
-        assert config_file == tmpdir.join("config.toml")
+            config_filepath = conf.get_config_filepath(filename=filename)
 
-    def test_loading_user_config_dir(self, tmpdir, monkeypatch):
+        assert config_filepath == tmpdir.join("config.toml")
+
+    def test_user_config_dir(self, tmpdir, monkeypatch):
         """Test that the correct configuration file is found using the correct
         argument to the user_config_dir function.
 
@@ -222,6 +231,11 @@ class TestLookForConfigInFile:
         variable."""
         filename = "config.toml"
 
+        path_to_write_file = tmpdir.join(filename)
+
+        with open(path_to_write_file, "w") as f:
+            f.write(TEST_FILE)
+
         def raise_wrapper(ex):
             raise ex
 
@@ -229,13 +243,13 @@ class TestLookForConfigInFile:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
             m.setattr(os.environ, "get", lambda *args: "NoConfigFileHere")
             m.setattr(conf, "user_config_dir", lambda x, *args: tmpdir if x=="strawberryfields" else "NoConfigFileHere")
-            m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
 
-            config_file, _ = conf.load_config_file_if_found(filename=filename)
-        assert config_file == tmpdir.join("config.toml")
+            config_filepath = conf.get_config_filepath(filename=filename)
+
+        assert config_filepath == tmpdir.join("config.toml")
 
     def test_no_config_file_found_returns_none(self, tmpdir, monkeypatch):
-        """Test that the load_config_file_if_found returns None if the
+        """Test that the get_config_filepath returns None if the
         configuration file is nowhere to be found.
 
         This is a test case for when there is no configuration file:
@@ -252,11 +266,13 @@ class TestLookForConfigInFile:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
             m.setattr(os.environ, "get", lambda *args: "NoConfigFileHere")
             m.setattr(conf, "user_config_dir", lambda *args: "NoConfigFileHere")
-            m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
 
-            config_file = conf.load_config_file_if_found(filename=filename)
+            config_filepath = conf.get_config_filepath(filename=filename)
 
-        assert config_file == (None, None)
+        assert config_filepath is None
+
+class TestLoadConfigFile:
+    """Tests the load_config_file function."""
 
     def test_load_config_file(self, tmpdir, monkeypatch):
         """Tests that configuration is loaded correctly from a TOML file."""
@@ -265,9 +281,9 @@ class TestLookForConfigInFile:
         with open(filename, "w") as f:
             f.write(TEST_FILE)
 
-        config_file = conf.load_config_file(filepath=filename)
+        loaded_config = conf.load_config_file(filepath=filename)
 
-        assert config_file == EXPECTED_CONFIG
+        assert loaded_config == EXPECTED_CONFIG
 
     def test_loading_absolute_path(self, tmpdir, monkeypatch):
         """Test that the default configuration file can be loaded
@@ -280,12 +296,12 @@ class TestLookForConfigInFile:
 
 
         os.environ["SF_CONF"] = ""
-        config_file = conf.load_config_file(filepath=filename)
+        loaded_config = conf.load_config_file(filepath=filename)
 
-        assert config_file == EXPECTED_CONFIG
+        assert loaded_config == EXPECTED_CONFIG
 
-class TestUpdateWithOtherConfig:
-    """Tests for the update_with_other_config function."""
+class TestUpdateConfig:
+    """Tests for the update_config function."""
 
     def test_update_entire_config(self):
         """Tests that the entire configuration object is updated."""
@@ -293,7 +309,7 @@ class TestUpdateWithOtherConfig:
         config = conf.create_config_object()
         assert config["api"]["authentication_token"] == ""
 
-        conf.update_with_other_config(config, EXPECTED_CONFIG)
+        conf.update_config(config, EXPECTED_CONFIG)
         assert config == EXPECTED_CONFIG
 
     ONLY_AUTH_CONFIG = {
@@ -326,7 +342,7 @@ class TestUpdateWithOtherConfig:
         config = conf.create_config_object()
         assert config["api"][specific_key] != "PlaceHolder"
 
-        conf.update_with_other_config(config, config_to_update_with)
+        conf.update_config(config, config_to_update_with)
         assert config["api"][specific_key] == "PlaceHolder"
         assert all(v != "PlaceHolder" for k, v in config["api"].items() if k != specific_key)
 
