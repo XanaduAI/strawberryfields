@@ -399,7 +399,7 @@ class TestConnection:
         connection.cancel_job("123")
 
     def test_cancel_job_error(self, connection, monkeypatch):
-        """Tests a successful job cancellation request."""
+        """Tests a failed job cancellation request."""
         monkeypatch.setattr(requests, "patch", mock_return(MockResponse(404, {})))
 
         with pytest.raises(RequestFailedError):
