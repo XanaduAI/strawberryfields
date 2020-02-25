@@ -124,9 +124,8 @@ def search(
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
         iterations (int): number of steps in the algorithm
-        node_select (str): method of selecting nodes during swap and growth. Can be either
-            ``"uniform"`` for uniform random selection or ``"degree"`` for degree-based selection.
-            Defaults to ``"uniform"``
+        node_select (str, list or array): method of selecting nodes during swap and growth. Can
+            be ``"uniform"`` (default), ``"degree"``, or a numpy array or list.
 
     Returns:
        list[int]: the largest clique found by the algorithm
