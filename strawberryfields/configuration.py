@@ -184,7 +184,7 @@ def update_from_environment_variables(config):
 
     .. note::
 
-        Currently the following environment variables are checked:
+        The following environment variables are checked:
 
         * SF_API_AUTHENTICATION_TOKEN
         * SF_API_HOSTNAME
