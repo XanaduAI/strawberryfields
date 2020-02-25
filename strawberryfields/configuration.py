@@ -23,6 +23,8 @@ from appdirs import user_config_dir
 
 log.getLogger()
 
+BOOLEAN_KEYS = {"debug": False, "use_ssl": True}
+INTEGER_KEYS = {"port": 443}
 
 class ConfigurationError(Exception):
     """Exception used for configuration errors"""
@@ -34,9 +36,9 @@ def load_config(filename="config.toml", **kwargs):
 
     .. note::
 
-        The configuration object (a nested dictionary) will be created based
-        on the following (order defines the importance, going from most
-        important to least important):
+        The configuration dictionary will be created based on the following
+        (order defines the importance, going from most important to least
+        important):
 
         1. keyword arguments passed to ``load_config``
         2. data contained in environmental variables (if any)
@@ -53,11 +55,10 @@ def load_config(filename="config.toml", **kwargs):
 
     Returns:
         dict[str, dict[str, Union[str, bool, int]]]: the configuration
-            object
     """
     config = create_config_object()
 
-    parsed_config, _ = look_for_config_in_file(filename=filename)
+    parsed_config, _ = load_config_file_if_found(filename=filename)
 
     if parsed_config is not None:
         update_with_other_config(config, other_config=parsed_config)
@@ -94,9 +95,9 @@ def create_config_object(authentication_token="", **kwargs):
             object
     """
     hostname = kwargs.get("hostname", "localhost")
-    use_ssl = kwargs.get("use_ssl", True)
-    port = kwargs.get("port", 443)
-    debug = kwargs.get("debug", False)
+    use_ssl = kwargs.get("use_ssl", BOOLEAN_KEYS["use_ssl"])
+    port = kwargs.get("port", INTEGER_KEYS["port"])
+    debug = kwargs.get("debug", BOOLEAN_KEYS["debug"])
 
     config = {
         "api": {
@@ -109,8 +110,9 @@ def create_config_object(authentication_token="", **kwargs):
     }
     return config
 
-def look_for_config_in_file(filename="config.toml"):
-    """Looks for the first configuration file to be found at certain paths.
+def load_config_file_if_found(filename="config.toml"):
+    """Loads the first configuration file found from the defined configuration
+    directories.
 
     .. note::
 
@@ -124,12 +126,9 @@ def look_for_config_in_file(filename="config.toml"):
         filename (str): the configuration file to look for
 
     Returns:
-         dict[str, dict[str, Union[str, bool, int]]] or None: the
-             configuration object that was loaded
+         (Union[dict[str, dict[str, Union[str, bool, int]]], None], str): the
+             configuration object that was loaded and the path to the file
     """
-
-    # Search the current directory, the directory under environment
-    # variable SF_CONF, and default user config directory, in that order.
     current_dir = os.getcwd()
     sf_env_config_dir = os.environ.get("SF_CONF", "")
     sf_user_config_dir = user_config_dir("strawberryfields", "Xanadu")
@@ -206,10 +205,6 @@ def update_from_environment_variables(config):
             if env in os.environ:
                 config[section][key] = parse_environment_variable(key, os.environ[env])
 
-
-BOOLEAN_KEYS = ("debug", "use_ssl")
-INTEGER_KEYS = ("port")
-
 def parse_environment_variable(key, value):
     """Parse a value stored in an environment variable.
 
@@ -240,4 +235,4 @@ def parse_environment_variable(key, value):
 
 DEFAULT_CONFIG = create_config_object()
 configuration = load_config()
-config_file_path = look_for_config_in_file()[1]
+config_file_path = load_config_file_if_found()[1]

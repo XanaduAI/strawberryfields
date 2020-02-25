@@ -177,7 +177,7 @@ class TestCreateConfigObject:
                                         debug=True,
                                         port=56) == OTHER_EXPECTED_CONFIG
 class TestLookForConfigInFile:
-    """Tests for the look_for_config_in_file function."""
+    """Tests for the load_config_file_if_found function."""
 
     def test_loading_current_directory(self, tmpdir, monkeypatch):
         """Test that the default configuration file is loaded from the current
@@ -187,7 +187,7 @@ class TestLookForConfigInFile:
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: tmpdir)
             m.setattr(conf, "load_config_file", lambda filepath: filepath)
-            config_file, _ = conf.look_for_config_in_file(filename=filename)
+            config_file, _ = conf.load_config_file_if_found(filename=filename)
 
         assert config_file == tmpdir.join(filename)
 
@@ -209,7 +209,7 @@ class TestLookForConfigInFile:
             m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
             m.setattr(conf, "user_config_dir", lambda *args: "NotTheFileName")
 
-            config_file, _ = conf.look_for_config_in_file(filename=filename)
+            config_file, _ = conf.load_config_file_if_found(filename=filename)
         assert config_file == tmpdir.join("config.toml")
 
     def test_loading_user_config_dir(self, tmpdir, monkeypatch):
@@ -231,11 +231,11 @@ class TestLookForConfigInFile:
             m.setattr(conf, "user_config_dir", lambda x, *args: tmpdir if x=="strawberryfields" else "NoConfigFileHere")
             m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
 
-            config_file, _ = conf.look_for_config_in_file(filename=filename)
+            config_file, _ = conf.load_config_file_if_found(filename=filename)
         assert config_file == tmpdir.join("config.toml")
 
     def test_no_config_file_found_returns_none(self, tmpdir, monkeypatch):
-        """Test that the look_for_config_in_file returns None if the
+        """Test that the load_config_file_if_found returns None if the
         configuration file is nowhere to be found.
 
         This is a test case for when there is no configuration file:
@@ -254,7 +254,7 @@ class TestLookForConfigInFile:
             m.setattr(conf, "user_config_dir", lambda *args: "NoConfigFileHere")
             m.setattr(conf, "load_config_file", lambda filepath: raise_wrapper(FileNotFoundError()) if "NoConfigFileHere" in filepath else filepath)
 
-            config_file = conf.look_for_config_in_file(filename=filename)
+            config_file = conf.load_config_file_if_found(filename=filename)
 
         assert config_file == (None, None)
 
