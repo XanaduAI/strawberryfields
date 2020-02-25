@@ -298,6 +298,12 @@ class TestValidate:
 class TestResize:
     """Tests for the function ``subgraph.resize``"""
 
+    def choice(self, x, element):
+        """For patching numpy random choice to return a fixed element."""
+        if isinstance(x, int):
+            return element
+        return x[element]
+
     @pytest.mark.parametrize("dim", [7, 8])
     @pytest.mark.parametrize(
         "min_size,max_size",
@@ -351,13 +357,8 @@ class TestResize:
         g = nx.complete_graph(dim)
         s = [0, 1, 2, 3]
 
-        def choice(x, element):
-            if isinstance(x, int):
-                return element
-            return x[element]
-
         for i in range(4):
-            choice_i = functools.partial(choice, element=i)
+            choice_i = functools.partial(self.choice, element=i)
             with monkeypatch.context() as m:
                 m.setattr(np.random, "choice", choice_i)
                 resized = subgraph.resize(s, g, min_size=3, max_size=3)
@@ -401,12 +402,7 @@ class TestResize:
         max_size = dim - 1
         w = [1] * dim
 
-        def choice(x, element):
-            if isinstance(x, int):
-                return element
-            return x[element]
-
-        choice_elem = functools.partial(choice, element=elem)
+        choice_elem = functools.partial(self.choice, element=elem)
 
         ideal = {dim - 2: s, dim - 1: s + [dim - 2 + elem], dim - 3: list(set(s) - {elem})}
         with monkeypatch.context() as m:

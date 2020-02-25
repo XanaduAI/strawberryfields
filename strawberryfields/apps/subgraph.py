@@ -52,7 +52,7 @@ which node to add or remove. The supported choices are:
 - Select the candidate node with the greatest node weight, settling remaining ties uniformly at
   random.
 """
-from typing import Union
+from typing import Tuple, Union
 
 import networkx as nx
 import numpy as np
@@ -80,7 +80,7 @@ def search(
     - ``"uniform"`` (default): choose a node from the candidates uniformly at random;
     - A list or array: specifying the node weights of the graph, resulting in choosing the node
       from the candidates with the highest weight (when growing) and lowest weight (when shrinking),
-      settling ties by uniform random choice.
+      settling remaining ties by uniform random choice.
 
     **Example usage:**
 
@@ -104,7 +104,7 @@ def search(
         max_count (int): maximum number of densest subgraphs to keep track of for each size
         node_select (str, list or array): method of settling ties when more than one node of
             equal degree can be added/removed. Can be ``"uniform"`` (default), or a numpy array or
-            list.
+            list containing node weights.
 
     Returns:
         dict[int, list[tuple[float, list[int]]]]: a dictionary of different sizes, each containing a
@@ -241,7 +241,7 @@ def resize(
     - ``"uniform"`` (default): choose a node from the candidates uniformly at random;
     - A list or array: specifying the node weights of the graph, resulting in choosing the node
       from the candidates with the highest weight (when growing) and lowest weight (when shrinking),
-      settling ties by uniform random choice.
+      settling remaining ties by uniform random choice.
 
     **Example usage:**
 
@@ -262,7 +262,7 @@ def resize(
         max_size (int): maximum size for subgraph to be resized to
         node_select (str, list or array): method of settling ties when more than one node of
             equal degree can be added/removed. Can be ``"uniform"`` (default), or a numpy array or
-            list.
+            list containing node weights.
 
     Returns:
         dict[int, list[int]]: a dictionary of different sizes with corresponding subgraph
@@ -335,8 +335,31 @@ def _validate_inputs(
     min_size: int,
     max_size: int,
     node_select: Union[str, np.ndarray, list] = "uniform",
-):
-    """Input validation for the ``resize`` function."""
+) -> Tuple:
+    """Validates input for the ``resize`` function.
+
+    This function checks:
+        - if ``subgraph`` is a valid subgraph of ``graph``;
+        - if ``min_size`` and ``max_size`` are sensible numbers;
+        - if ``node_select`` is either ``"uniform"`` or a numpy array or list;
+        - if, when ``node_select`` is a numpy array or list, that it is the correct size and that
+          ``node_select`` is changed to ``"weight"``.
+
+    This function returns the updated ``node_select`` and a dictionary mapping nodes to their
+    corresponding weights (weights default to unity if not specified).
+
+    Args:
+        subgraph (list[int]): a subgraph specified by a list of nodes
+        graph (nx.Graph): the input graph
+        min_size (int): minimum size for subgraph to be resized to
+        max_size (int): maximum size for subgraph to be resized to
+        node_select (str, list or array): method of settling ties when more than one node of
+            equal degree can be added/removed. Can be ``"uniform"`` (default), or a numpy array or
+            list containing node weights.
+
+    Returns:
+        tuple[str, dict]: the updated ``node_select`` and a dictionary of node weights
+    """
     if not subgraph.issubset(graph.nodes()):
         raise ValueError("Input is not a valid subgraph")
     if min_size < 1:
