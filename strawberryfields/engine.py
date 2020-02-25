@@ -926,7 +926,8 @@ class Connection:
         self, method: RequestMethod, path: str, headers: Dict[str, str] = None, **kwargs
     ) -> requests.Response:
         headers = {} if headers is None else headers
-        return getattr(requests, method.value)(
+        request = getattr(requests, method.value)
+        return request(
             urljoin(self.base_url, path),
             headers={"Authorization": self.token, **headers},
             **kwargs
