@@ -1,3 +1,4 @@
+
 # Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,13 +70,6 @@ environment_variables = [
                     "SF_API_PORT"
                     ]
 
-def tear_down_all_env_var_defs():
-    """Making sure that no environment variables are defined after."""
-    for key in environment_variables:
-        if key in os.environ:
-            del os.environ[key]
-            assert key not in os.environ
-
 class TestLoadConfig:
     """Tests for the load_config function."""
 
@@ -95,13 +89,13 @@ class TestLoadConfig:
         with open(filename, "w") as f:
             f.write(TEST_FILE)
 
-        os.environ["SF_API_AUTHENTICATION_TOKEN"] = "NotOurAuth"
-        os.environ["SF_API_HOSTNAME"] = "NotOurHost"
-        os.environ["SF_API_USE_SSL"] = "True"
-        os.environ["SF_API_DEBUG"] = "False"
-        os.environ["SF_API_PORT"] = "42"
-
         with monkeypatch.context() as m:
+            m.setenv("SF_API_AUTHENTICATION_TOKEN", "NotOurAuth")
+            m.setenv("SF_API_HOSTNAME", "NotOurHost")
+            m.setenv("SF_API_USE_SSL", "True")
+            m.setenv("SF_API_DEBUG", "False")
+            m.setenv("SF_API_PORT", "42")
+
             m.setattr(os, "getcwd", lambda: tmpdir)
             configuration = conf.load_config(authentication_token="SomeAuth",
                                             hostname="SomeHost",
@@ -121,19 +115,18 @@ class TestLoadConfig:
         with open(filename, "w") as f:
             f.write(TEST_FILE)
 
-        os.environ["SF_API_AUTHENTICATION_TOKEN"] = "SomeAuth"
-        os.environ["SF_API_HOSTNAME"] = "SomeHost"
-        os.environ["SF_API_USE_SSL"] = "False"
-        os.environ["SF_API_DEBUG"] = "True"
-        os.environ["SF_API_PORT"] = "56"
-
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: tmpdir)
+
+            m.setenv("SF_API_AUTHENTICATION_TOKEN", "SomeAuth")
+            m.setenv("SF_API_HOSTNAME", "SomeHost")
+            m.setenv("SF_API_USE_SSL", "False")
+            m.setenv("SF_API_DEBUG", "True")
+            m.setenv("SF_API_PORT", "56")
+
             configuration = conf.load_config()
 
         assert configuration == OTHER_EXPECTED_CONFIG
-
-        tear_down_all_env_var_defs()
 
     def test_conf_file_loads_well(self, monkeypatch, tmpdir):
         """Test that the load_config function loads a configuration from a TOML
@@ -214,7 +207,7 @@ class TestGetConfigFilepath:
 
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
-            m.setattr(os.environ, "get", lambda x, y: tmpdir if x=="SF_CONF" else "NoConfigFileHere")
+            m.setenv("SF_CONF", tmpdir)
             m.setattr(conf, "user_config_dir", lambda *args: "NotTheFileName")
 
             config_filepath = conf.get_config_filepath(filename=filename)
@@ -241,7 +234,7 @@ class TestGetConfigFilepath:
 
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
-            m.setattr(os.environ, "get", lambda *args: "NoConfigFileHere")
+            m.setenv("SF_CONF", "NoConfigFileHere")
             m.setattr(conf, "user_config_dir", lambda x, *args: tmpdir if x=="strawberryfields" else "NoConfigFileHere")
 
             config_filepath = conf.get_config_filepath(filename=filename)
@@ -264,7 +257,7 @@ class TestGetConfigFilepath:
 
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
-            m.setattr(os.environ, "get", lambda *args: "NoConfigFileHere")
+            m.setenv("SF_CONF", "NoConfigFileHere")
             m.setattr(conf, "user_config_dir", lambda *args: "NoConfigFileHere")
 
             config_filepath = conf.get_config_filepath(filename=filename)
@@ -294,9 +287,9 @@ class TestLoadConfigFile:
         with open(filename, "w") as f:
             f.write(TEST_FILE)
 
-
-        os.environ["SF_CONF"] = ""
-        loaded_config = conf.load_config_file(filepath=filename)
+        with monkeypatch.context() as m:
+            m.setenv("SF_CONF", "")
+            loaded_config = conf.load_config_file(filepath=filename)
 
         assert loaded_config == EXPECTED_CONFIG
 
@@ -365,22 +358,22 @@ parsed_values_mapping = {
 class TestUpdateFromEnvironmentalVariables:
     """Tests for the update_from_environment_variables function."""
 
-    def test_all_environment_variables_defined(self):
+    def test_all_environment_variables_defined(self, monkeypatch):
         """Tests that the configuration object is updated correctly when all
         the environment variables are defined."""
 
-        for key, value in value_mapping:
-            os.environ[key] = value
+        with monkeypatch.context() as m:
+            for env_var, value in value_mapping:
+                m.setenv(env_var, value)
 
-        config = conf.create_config()
-        for v, parsed_value in zip(config["api"].values(), parsed_values_mapping.values()):
-            assert v != parsed_value
+            config = conf.create_config()
+            for v, parsed_value in zip(config["api"].values(), parsed_values_mapping.values()):
+                assert v != parsed_value
 
-        conf.update_from_environment_variables(config)
-        for v, parsed_value in zip(config["api"].values(), parsed_values_mapping.values()):
-            assert v == parsed_value
+            conf.update_from_environment_variables(config)
+            for v, parsed_value in zip(config["api"].values(), parsed_values_mapping.values()):
+                assert v == parsed_value
 
-        tear_down_all_env_var_defs()
 
     environment_variables_with_keys_and_values = [
                     ("SF_API_AUTHENTICATION_TOKEN","authentication_token","SomeAuth"),
@@ -391,27 +384,23 @@ class TestUpdateFromEnvironmentalVariables:
                     ]
 
     @pytest.mark.parametrize("env_var, key, value", environment_variables_with_keys_and_values)
-    def test_one_environment_variable_defined(self, env_var, key, value):
+    def test_one_environment_variable_defined(self, env_var, key, value, monkeypatch):
         """Tests that the configuration object is updated correctly when only
         one environment variable is defined."""
 
-        tear_down_all_env_var_defs()
-        os.environ[env_var] = value
+        with monkeypatch.context() as m:
+            m.setenv(env_var, value)
 
-        config = conf.create_config()
-        for v, parsed_value in zip(config["api"].values(), parsed_values_mapping.values()):
-            assert v != parsed_value
-
-        conf.update_from_environment_variables(config)
-        assert config["api"][key] == parsed_values_mapping[env_var]
-
-        for v, (key, parsed_value) in zip(config["api"].values(), parsed_values_mapping.items()):
-            if key != env_var:
+            config = conf.create_config()
+            for v, parsed_value in zip(config["api"].values(), parsed_values_mapping.values()):
                 assert v != parsed_value
 
-        # Tear-down
-        del os.environ[env_var]
-        assert env_var not in os.environ
+            conf.update_from_environment_variables(config)
+            assert config["api"][key] == parsed_values_mapping[env_var]
+
+            for v, (key, parsed_value) in zip(config["api"].values(), parsed_values_mapping.items()):
+                if key != env_var:
+                    assert v != parsed_value
 
     def test_parse_environment_variable_boolean(self, monkeypatch):
         """Tests that boolean values can be parsed correctly from environment
