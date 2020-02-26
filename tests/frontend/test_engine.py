@@ -317,6 +317,7 @@ class TestStarshipEngine:
             compile_options={}
         )
 
+    @pytest.mark.xfail
     def test_engine_with_mocked_api_client_sample_job(self, monkeypatch):
         """
         This is an integration test that tests and actual program being submitted to a mock API, and
