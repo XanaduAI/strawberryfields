@@ -42,7 +42,7 @@
 
 * Fixed a bug in the `MZgate`, where the internal and external phases were
   in the wrong order in both the docstring and the argument list. The new
-  signature is `MZgate(phase_in, phase_ex)`, matching the existing hardware
+  signature is `MZgate(phase_in, phase_ex)`, matching the existing `rectangular_symmetric`
   decomposition.
   [(#301)](https://github.com/XanaduAI/strawberryfields/pull/301)
 
