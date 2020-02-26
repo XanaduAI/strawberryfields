@@ -409,11 +409,9 @@ DEFAULT_KWARGS = {
 class TestStoreAccount:
     """Tests for the store_account function."""
 
-    def test_config_created_locally(self, monkeypatch, tmpdir):
+    def test_config_created_locally(self, monkeypatch, test_filename, tmpdir):
         """Tests that a configuration file was created in the current
         directory."""
-
-        test_filename = "test_config.toml"
 
         call_history = []
         with monkeypatch.context() as m:
@@ -425,11 +423,9 @@ class TestStoreAccount:
         assert call_history[0][0] == EXPECTED_CONFIG
         assert call_history[0][1] == tmpdir.join(test_filename)
 
-    def test_global_config_created(self, monkeypatch, tmpdir):
+    def test_global_config_created(self, monkeypatch, test_filename, tmpdir):
         """Tests that a configuration file was created in the user
         configuration directory for Strawberry Fields."""
-
-        test_filename = "test_config.toml"
 
         call_history = []
         with monkeypatch.context() as m:
@@ -441,11 +437,9 @@ class TestStoreAccount:
         assert call_history[0][0] == EXPECTED_CONFIG
         assert call_history[0][1] == tmpdir.join(test_filename)
 
-    def test_location_not_recognized_error(self, monkeypatch, tmpdir):
+    def test_location_not_recognized_error(self, monkeypatch, test_filename, tmpdir):
         """Tests that an error is raised if the configuration file is supposed
         to be created in an unrecognized directory."""
-
-        test_filename = "test_config.toml"
 
         with pytest.raises(
                 conf.ConfigurationError,
@@ -456,9 +450,8 @@ class TestStoreAccount:
 class TestSaveConfigToFile:
     """Tests for the store_account function."""
 
-    def test_correct(self, tmpdir):
+    def test_correct(self, test_filename, tmpdir):
         """Test saving a configuration file."""
-        test_filename = "test_config.toml"
         filepath = str(tmpdir.join(test_filename))
 
         conf.save_config_to_file(OTHER_EXPECTED_CONFIG, filepath)
@@ -466,10 +459,9 @@ class TestSaveConfigToFile:
         result = toml.load(filepath)
         assert result == OTHER_EXPECTED_CONFIG
 
-    def test_file_already_existed(self, tmpdir):
+    def test_file_already_existed(self, test_filename, tmpdir):
         """Test saving a configuration file even if the file already
         existed."""
-        test_filename = "test_config.toml"
         filepath = str(tmpdir.join(test_filename))
 
         with open(filepath, "w") as f:
