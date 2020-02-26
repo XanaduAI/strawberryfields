@@ -57,7 +57,7 @@ Configuration options
 Store your account
 ------------------
 
-Using the :func:`~.store_account` function, a configuration file can be created easily. It only requires specifying the authentication token. Apart from that, optional configuration options can be passed as keyword arguments.
+Using the :func:`~.store_account` function, a configuration file can be created easily. It only requires specifying the authentication token. Apart from that, further configuration options can be passed as keyword arguments.
 
 Configure for the current SF project
 ************************************
@@ -71,7 +71,7 @@ The following is an example for using ``store_account`` with defaults:
 
 where ``"MyToken"`` contains the user specific authentication token.
 
-It is advised to execute this code snippet **only once** per configuration in the same directory where the SF project can be found. It should also be separated from any other Strawberry Fields scripts. Using the default options it will store the account in the *current working directory* by creating a ``config.toml`` file.
+It is advised to execute this code snippet **only once** per configuration. This should be done in the same directory where the SF project can be found, separately from executing any other Strawberry Fields scripts. Using the default options it will store the account in the *current working directory* by creating a ``config.toml`` file.
 
 Configure for every SF project
 ******************************

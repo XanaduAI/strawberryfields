@@ -442,8 +442,8 @@ class TestStoreAccount:
         assert call_history[0][1] == tmpdir.join(test_filename)
 
     def test_location_not_recognized_error(self, monkeypatch, tmpdir):
-        """Tests that a configuration file was created in the user
-        configuration directory for Strawberry Fields."""
+        """Tests that an error is raised if the configuration file is supposed
+        to be created in an unrecognized directory."""
 
         test_filename = "test_config.toml"
 
@@ -467,7 +467,8 @@ class TestSaveConfigToFile:
         assert result == OTHER_EXPECTED_CONFIG
 
     def test_file_already_existed(self, tmpdir):
-        """Test saving a configuration file even if the file already existed."""
+        """Test saving a configuration file even if the file already
+        existed."""
         test_filename = "test_config.toml"
         filepath = str(tmpdir.join(test_filename))
 
