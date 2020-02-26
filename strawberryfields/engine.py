@@ -19,6 +19,7 @@ One can think of each BaseEngine instance as a separate quantum computation.
 """
 import abc
 import collections.abc
+import logging
 import time
 from typing import Optional
 
@@ -31,6 +32,8 @@ from .backends.base import BaseBackend, NotApplicableError
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = ["BaseEngine", "LocalEngine"]
+
+log = logging.getLogger(__name__)
 
 
 class BaseEngine(abc.ABC):
@@ -541,7 +544,11 @@ class StarshipEngine:
                 if job.status == JobStatus.COMPLETED:
                     return job.result
                 if job.status == JobStatus.FAILED:
-                    raise JobFailedError("The computation failed; please try again.")
+                    log.warning(
+                        "The remote job failed due to an internal server error; "
+                        "please try again."
+                    )
+                    return None
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             self._connection.cancel_job(job.id)
