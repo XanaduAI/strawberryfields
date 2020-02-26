@@ -52,6 +52,7 @@ class FockSpecs(CircuitSpecs):
         "Kgate",
         "BSgate",
         "CKgate",
+        "S2gate",
     }
 
     decompositions = {
@@ -61,7 +62,6 @@ class FockSpecs(CircuitSpecs):
         "GaussianTransform": {},
         "Gaussian": {},
         "Pgate": {},
-        "S2gate": {},
         "CXgate": {},
         "CZgate": {},
         "MZgate": {},

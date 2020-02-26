@@ -23,14 +23,14 @@ import time
 from typing import Optional
 
 from strawberryfields.api import Connection, Job, JobStatus, Result
-from strawberryfields.configuration import DEFAULT_CONFIG
+from strawberryfields.configuration import load_config
 from strawberryfields.program import Program
 
 from .backends import load_backend
 from .backends.base import BaseBackend, NotApplicableError
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
-__all__ = ["Result", "BaseEngine", "LocalEngine", "Connection"]
+__all__ = ["BaseEngine", "LocalEngine"]
 
 
 class BaseEngine(abc.ABC):
@@ -490,8 +490,7 @@ class StarshipEngine:
                 )
             )
         if connection is None:
-            # TODO use `load_config` when implemented
-            config = DEFAULT_CONFIG["api"]
+            config = load_config()["api"]
             connection = Connection(
                 token=config["authentication_token"],
                 host=config["hostname"],

@@ -18,3 +18,5 @@ TODO
 from .connection import Connection, RequestFailedError
 from .job import Job, JobStatus, InvalidJobOperationError
 from .result import Result
+
+__all__ = ["Result"]
