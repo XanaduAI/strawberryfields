@@ -149,9 +149,24 @@ class TestConnection:
         with pytest.raises(RequestFailedError, match="Failed to get job"):
             connection.get_job_status("123")
 
-    def test_get_job_result(self, connection, monkeypatch):
+    @pytest.mark.parametrize(
+        "result_dtype",
+        [
+            np.int8,
+            np.int16,
+            np.int32,
+            np.int64,
+            np.uint8,
+            np.uint16,
+            np.uint32,
+            np.uint64,
+            np.float32,
+            np.float64,
+        ],
+    )
+    def test_get_job_result(self, connection, result_dtype, monkeypatch):
         """Tests a successful job result request."""
-        result_samples = np.array([[1, 2], [3, 4]], dtype=np.int8)
+        result_samples = np.array([[1, 2], [3, 4]], dtype=result_dtype)
 
         with io.BytesIO() as buf:
             np.save(buf, result_samples)
