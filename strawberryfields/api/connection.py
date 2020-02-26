@@ -162,7 +162,7 @@ class Connection:
                 connection=self,
             )
         raise RequestFailedError(
-            "Job creation failed: {}".format(self._format_error_message(response))
+            "Failed to create job: {}".format(self._format_error_message(response))
         )
 
     def get_all_jobs(self, after: datetime = datetime(1970, 1, 1)) -> List[Job]:
@@ -196,7 +196,9 @@ class Connection:
                 status=JobStatus(response.json()["status"]),
                 connection=self,
             )
-        raise RequestFailedError(self._format_error_message(response))
+        raise RequestFailedError(
+            "Failed to get job: {}".format(self._format_error_message(response))
+        )
 
     def get_job_status(self, job_id: str) -> JobStatus:
         """Returns the status of a job.
@@ -229,7 +231,9 @@ class Connection:
                 buf.seek(0)
                 samples = np.load(buf)
             return Result(samples, is_stateful=False)
-        raise RequestFailedError(self._format_error_message(response))
+        raise RequestFailedError(
+            "Failed to get job result: {}".format(self._format_error_message(response))
+        )
 
     def cancel_job(self, job_id: str):
         """Cancels a job.
@@ -245,7 +249,9 @@ class Connection:
         )
         if response.status_code == 204:
             return
-        raise RequestFailedError(self._format_error_message(response))
+        raise RequestFailedError(
+            "Failed to cancel job: {}".format(self._format_error_message(response))
+        )
 
     def ping(self) -> bool:
         """Tests the connection to the remote backend.

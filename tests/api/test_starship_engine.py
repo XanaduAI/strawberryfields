@@ -73,7 +73,9 @@ class TestStarshipEngine:
 
         assert np.array_equal(result.samples.T, np.array([[1, 2], [3, 4]]))
 
-        with pytest.raises(AttributeError):
+        with pytest.raises(
+            AttributeError, match="The state is undefined for a stateless computation."
+        ):
             _ = result.state
 
     def test_run_async(self, connection, prog, job_to_complete):
@@ -89,5 +91,7 @@ class TestStarshipEngine:
         assert job.status == JobStatus.COMPLETED
         assert np.array_equal(job.result.samples.T, np.array([[1, 2], [3, 4]]))
 
-        with pytest.raises(AttributeError):
+        with pytest.raises(
+            AttributeError, match="The state is undefined for a stateless computation."
+        ):
             _ = job.result.state

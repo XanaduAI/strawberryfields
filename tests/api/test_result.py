@@ -25,5 +25,5 @@ class TestResult:
         """
         result = Result([[1, 2], [3, 4]], is_stateful=False)
 
-        with pytest.raises(AttributeError):
+        with pytest.raises(AttributeError, match="The state is undefined for a stateless computation."):
             _ = result.state
