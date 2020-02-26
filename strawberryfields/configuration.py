@@ -25,7 +25,6 @@ Configuration options
         * **hostname (str)** (*optional*): the name of the host to connect to
         * **use_ssl (bool)** (*optional*): specifies if requests should be sent using SSL
         * **port (int)** (*optional*): the port to be used when connecting to the remote service
-        * **debug (bool)** (*optional*): determines if the debugging mode is requested
 
 Environment variables
 *********************
@@ -37,7 +36,6 @@ Environment variables
     * SF_API_AUTHENTICATION_TOKEN
     * SF_API_HOSTNAME
     * SF_API_USE_SSL
-    * SF_API_DEBUG
     * SF_API_PORT
 """
 import logging as log
@@ -54,11 +52,10 @@ DEFAULT_CONFIG_SPEC = {
         "hostname": (str, "localhost"),
         "use_ssl": (bool, True),
         "port": (int, 443),
-        "debug": (bool, False),
     }
 }
 
-BOOLEAN_KEYS = {"debug", "use_ssl"}
+BOOLEAN_KEYS = {"use_ssl"}
 INTEGER_KEYS = {"port"}
 
 class ConfigurationError(Exception):
@@ -126,7 +123,6 @@ def create_config(authentication_token="", **kwargs):
     hostname = kwargs.get("hostname", "localhost")
     use_ssl = kwargs.get("use_ssl", DEFAULT_CONFIG_SPEC["api"]["use_ssl"][1])
     port = kwargs.get("port", DEFAULT_CONFIG_SPEC["api"]["port"][1])
-    debug = kwargs.get("debug",DEFAULT_CONFIG_SPEC["api"]["debug"][1])
 
     config = {
         "api": {
@@ -134,7 +130,6 @@ def create_config(authentication_token="", **kwargs):
             "hostname": hostname,
             "use_ssl": use_ssl,
             "port": port,
-            "debug": debug
             }
     }
     return config

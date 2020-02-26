@@ -32,7 +32,6 @@ authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
 hostname = "localhost"
 use_ssl = true
 port = 443
-debug = false
 """
 
 TEST_FILE_ONE_VALUE = """\
@@ -47,7 +46,6 @@ EXPECTED_CONFIG = {
         "hostname": "localhost",
         "use_ssl": True,
         "port": 443,
-        "debug": False,
     }
 }
 
@@ -57,7 +55,6 @@ OTHER_EXPECTED_CONFIG = {
         "hostname": "SomeHost",
         "use_ssl": False,
         "port": 56,
-        "debug": True,
     }
 }
 
@@ -99,7 +96,6 @@ class TestLoadConfig:
             configuration = conf.load_config(authentication_token="SomeAuth",
                                             hostname="SomeHost",
                                             use_ssl=False,
-                                            debug=True,
                                             port=56
                                             )
 
@@ -150,7 +146,6 @@ class TestCreateConfigObject:
         config = conf.create_config(authentication_token="",
                                   hostname="",
                                   use_ssl="",
-                                  debug="",
                                   port="")
 
         assert all(value=="" for value in config["api"].values())
@@ -166,7 +161,6 @@ class TestCreateConfigObject:
         assert conf.create_config(authentication_token="SomeAuth",
                                         hostname="SomeHost",
                                         use_ssl=False,
-                                        debug=True,
                                         port=56) == OTHER_EXPECTED_CONFIG
 class TestGetConfigFilepath:
     """Tests for the get_config_filepath function."""
@@ -315,7 +309,6 @@ class TestKeepValidOptions:
                                     "hostname": "localhost",
                                     "use_ssl": True,
                                     "port": 443,
-                                    "debug": False,
                                     }
         assert conf.keep_valid_options(section_config_only_valid) == EXPECTED_CONFIG["api"]
 
@@ -360,7 +353,6 @@ class TestUpdateFromEnvironmentalVariables:
                     ("SF_API_HOSTNAME","hostname","SomeHost"),
                     ("SF_API_USE_SSL","use_ssl","False"),
                     ("SF_API_PORT","port", "56"),
-                    ("SF_API_DEBUG","debug","True")
                     ]
 
     @pytest.mark.parametrize("env_var, key, value", environment_variables_with_keys_and_values)
