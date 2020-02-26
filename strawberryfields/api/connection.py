@@ -22,6 +22,7 @@ from typing import List
 import numpy as np
 import requests
 
+from strawberryfields.configuration import DEFAULT_CONFIG
 from strawberryfields.io import to_blackbird
 from strawberryfields.program import Program
 from .job import Job, JobStatus
@@ -80,9 +81,9 @@ class Connection:
     def __init__(
         self,
         token: str,
-        host: str = "platform.strawberryfields.ai",
-        port: int = 443,
-        use_ssl: bool = True,
+        host: str = DEFAULT_CONFIG["api"]["hostname"],
+        port: int = DEFAULT_CONFIG["api"]["port"],
+        use_ssl: bool = DEFAULT_CONFIG["api"]["use_ssl"],
     ):
         self._token = token
         self._host = host
