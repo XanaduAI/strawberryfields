@@ -15,8 +15,11 @@
 TODO
 """
 import enum
+import logging
 
 from .result import Result
+
+log = logging.getLogger(__name__)
 
 
 class InvalidJobOperationError(Exception):
@@ -110,9 +113,8 @@ class Job:
         Only an open or queued job can be refreshed; an exception is raised otherwise.
         """
         if self.status.is_final:
-            raise InvalidJobOperationError(
-                "A {} job cannot be refreshed".format(self.status.value)
-            )
+            log.warning("A {} job cannot be refreshed".format(self.status.value))
+            return
         self._status = self._connection.get_job_status(self.id)
         if self._status == JobStatus.COMPLETED:
             self._result = self._connection.get_job_result(self.id)

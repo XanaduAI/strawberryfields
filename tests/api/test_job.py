@@ -30,16 +30,6 @@ class TestJob:
         ):
             _ = job.result
 
-    def test_final_job_raises_on_refresh(self, connection):
-        """Tests that `job.refresh()` raises an error for a complete, failed, or
-        cancelled job."""
-        job = Job("abc", status=JobStatus.COMPLETED, connection=connection)
-
-        with pytest.raises(
-            InvalidJobOperationError, match="A complete job cannot be refreshed"
-        ):
-            job.refresh()
-
     def test_final_job_raises_on_cancel(self, connection):
         """Tests that `job.cancel()` raises an error for a complete, failed, or
         aleady cancelled job."""
