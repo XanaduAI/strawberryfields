@@ -36,12 +36,29 @@ class TestJob:
         ):
             job.result
 
-    def test_final_job_raises_on_cancel(self, connection):
-        """Tests that `job.cancel()` raises an error for a complete, failed, or
-        aleady cancelled job."""
+    def test_completed_job_raises_on_cancel_request(self, connection):
+        """Tests that `job.cancel()` raises an error for a completed job."""
+        job = Job("abc", status=JobStatus.COMPLETED, connection=connection)
+
+        with pytest.raises(
+            InvalidJobOperationError, match="A complete job cannot be cancelled"
+        ):
+            job.cancel()
+
+    def test_failed_job_raises_on_cancel_request(self, connection):
+        """Tests that `job.cancel()` raises an error for a failed job."""
         job = Job("abc", status=JobStatus.FAILED, connection=connection)
 
         with pytest.raises(
             InvalidJobOperationError, match="A failed job cannot be cancelled"
+        ):
+            job.cancel()
+
+    def test_cancelled_job_raises_on_cancel_request(self, connection):
+        """Tests that `job.cancel()` raises an error for a completed job."""
+        job = Job("abc", status=JobStatus.CANCELLED, connection=connection)
+
+        with pytest.raises(
+            InvalidJobOperationError, match="A cancelled job cannot be cancelled"
         ):
             job.cancel()
