@@ -350,8 +350,6 @@ class TestStarshipEngine:
 
         prog = sf.Program(8)
 
-        sqz0 = 1.0
-        sqz1 = 1.0
         phi0 = 0.574
         phi1 = 1.33
         pi = 3.14
