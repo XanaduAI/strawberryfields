@@ -221,14 +221,17 @@ def parse_environment_variable(key, value):
 def store_account(authentication_token, filename="config.toml", create_locally=True, **kwargs):
     """Stores an account in a configuration file.
 
+    The configuration file is created either in the current working direct
+    (locally) or in the user configuration directory (globally).
+
     Args:
         authentication_token (str): the authentication token to use when
-            connecting to the API, which  will be sent with every request in
-            the header
+            connecting to the API, it will be sent with every request in the
+            header
 
     Kwargs:
         create_locally (bool): determines if the configuration file should be
-            saved locally or globally (to the user configuration directory)
+            saved locally or globally
         filename (str): the name of the configuration file to look for
 
         Configuration options are detailed in

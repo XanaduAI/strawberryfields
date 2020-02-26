@@ -53,3 +53,18 @@ Configuration options
 **port (int)** (*optional*)
     The port to be used when connecting to the remote service.
     Corresponding environment variable: ``SF_API_PORT``
+
+Store your account
+------------------
+
+Using the :func:`configuration.store_account` function, a configuration file can be created easily. It only requires specifying the authentication token. Apart from that, optional configuration options can be passed as keyword arguments.
+
+The following is an example for using `store_account` with defaults:
+
+.. code::
+
+    import strawberryfields as sf
+    my_token = "MyToken"
+    sf.store_account(my_token)
+
+It is advised to execute this code snippet **only once** per configuration, separately from any other Strawberry Fields scripts. Using the default options it will store the account in the current working directory by creating a `config.toml` file.

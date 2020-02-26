@@ -444,16 +444,28 @@ class TestStoreAccount:
 class TestSaveConfigToFile:
     """Tests for the store_account function."""
 
-    def test_save(self, tmpdir):
+    def test_correct(self, tmpdir):
         """Test saving a configuration file."""
         test_filename = "test_config.toml"
         filepath = str(tmpdir.join(test_filename))
 
-        config = EXPECTED_CONFIG
-
-        # make a change	
-        config["api"]["hostname"] = "https://6.4.2.4"	
-        conf.save_config_to_file(config, filepath)
+        conf.save_config_to_file(OTHER_EXPECTED_CONFIG, filepath)
 
         result = toml.load(filepath)
-        assert config == result
+        assert result == OTHER_EXPECTED_CONFIG
+
+    def test_file_already_existed(self, tmpdir):
+        """Test saving a configuration file even if the file already existed."""
+        test_filename = "test_config.toml"
+        filepath = str(tmpdir.join(test_filename))
+
+        with open(filepath, "w") as f:
+            f.write(TEST_FILE)
+
+        result_for_existing_file = toml.load(filepath)
+        assert result_for_existing_file == EXPECTED_CONFIG
+
+        conf.save_config_to_file(OTHER_EXPECTED_CONFIG, filepath)
+
+        result_for_new_file = toml.load(filepath)
+        assert result_for_new_file == OTHER_EXPECTED_CONFIG
