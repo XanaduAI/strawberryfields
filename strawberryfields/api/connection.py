@@ -17,6 +17,7 @@ TODO
 from datetime import datetime
 import io
 import json
+import logging
 from typing import List
 
 import numpy as np
@@ -27,6 +28,8 @@ from strawberryfields.io import to_blackbird
 from strawberryfields.program import Program
 from .job import Job, JobStatus
 from .result import Result
+
+log = logging.getLogger(__name__)
 
 
 class RequestFailedError(Exception):
@@ -84,11 +87,13 @@ class Connection:
         host: str = DEFAULT_CONFIG["api"]["hostname"],
         port: int = DEFAULT_CONFIG["api"]["port"],
         use_ssl: bool = DEFAULT_CONFIG["api"]["use_ssl"],
+        verbose: bool = False,
     ):
         self._token = token
         self._host = host
         self._port = port
         self._use_ssl = use_ssl
+        self._verbose = verbose
 
         self._base_url = "http{}://{}:{}".format(
             "s" if self.use_ssl else "", self.host, self.port
@@ -157,6 +162,8 @@ class Connection:
             data=json.dumps({"circuit": circuit}),
         )
         if response.status_code == 201:
+            if self._verbose:
+                log.info("The job was successfully submitted.")
             return Job(
                 id_=response.json()["id"],
                 status=JobStatus(response.json()["status"]),
@@ -249,6 +256,8 @@ class Connection:
             data={"status", JobStatus.CANCELLED.value},
         )
         if response.status_code == 204:
+            if self._verbose:
+                log.info("The job was successfully cancelled.")
             return
         raise RequestFailedError(
             "Failed to cancel job: {}".format(self._format_error_message(response))
