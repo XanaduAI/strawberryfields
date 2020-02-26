@@ -15,28 +15,11 @@ r"""
 This module contains the :class:`Configuration` class, which is used to
 load, store, save, and modify configuration options for Strawberry Fields.
 
-Configuration options
-*********************
+.. warning::
 
-.. note::
-    The following configuration options are taken into consideration:
+    Details on the configuration options can be found at
+    :doc:`/introduction/configuration`.
 
-        * **authentication_token (str)** (*required*): the token used for user authentication
-        * **hostname (str)** (*optional*): the name of the host to connect to
-        * **use_ssl (bool)** (*optional*): specifies if requests should be sent using SSL
-        * **port (int)** (*optional*): the port to be used when connecting to the remote service
-
-Environment variables
-*********************
-
-.. note::
-
-    When loading the configuration, the following environment variables are checked:
-
-    * SF_API_AUTHENTICATION_TOKEN
-    * SF_API_HOSTNAME
-    * SF_API_USE_SSL
-    * SF_API_PORT
 """
 import logging as log
 import os
@@ -80,7 +63,7 @@ def load_config(filename="config.toml", **kwargs):
         filename (str): the name of the configuration file to look for
 
         Furthermore configuration options as detailed in
-        :mod:`strawberryfields.configuration`
+        :doc:`/introduction/configuration`
 
     Returns:
         dict[str, dict[str, Union[str, bool, int]]]: the configuration
@@ -114,7 +97,7 @@ def create_config(authentication_token="", **kwargs):
     configuration object is created.
 
     Kwargs:
-        Configuration options as detailed in :mod:`strawberryfields.configuration`
+        Configuration options as detailed in :doc:`/introduction/configuration`
 
     Returns:
         dict[str, dict[str, Union[str, bool, int]]]: the configuration
