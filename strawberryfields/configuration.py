@@ -157,8 +157,6 @@ def get_config_filepath(filename="config.toml"):
         if os.path.exists(filepath):
             return filepath
 
-    return None
-
 def load_config_file(filepath):
     """Load a configuration object from a TOML formatted file.
 
