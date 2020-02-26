@@ -2,9 +2,9 @@ numpy>=1.17.4
 scipy>=1.0.0
 sympy>=1.5
 networkx>=2.0
-quantum-blackbird>=0.2.0
+quantum-blackbird==0.2.3
 python-dateutil==2.8.0
-thewalrus>=0.10
+https://xanadu-wheels.s3.amazonaws.com/thewalrus-0.11.0.dev0%2B20200129152745-cp36-cp36m-manylinux1_x86_64.whl
 toml
 appdirs
 requests==2.22.0

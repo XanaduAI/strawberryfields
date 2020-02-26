@@ -21,13 +21,13 @@ import string
 from itertools import product
 
 import numpy as np
-from numpy import (pi, sqrt, sinh, cosh, tanh, array, exp)
+from numpy import (sqrt, sinh, cosh, tanh, array, exp)
 from numpy.polynomial.hermite import hermval as H
 
 from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
-from strawberryfields.backends import shared_ops as so
+from thewalrus.fock_gradients import Dgate, Sgate, S2gate, BSgate
 
 
 def_type = np.complex128
@@ -208,117 +208,6 @@ def project_reset(modes, x, state, pure, n, trunc):
 
 # ============================================
 #
-# Matrix multiplication
-#
-# ============================================
-
-def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
-    """
-    Gate application based on custom indexing and matrix multiplication.
-    Assumes the input matrix has shape (out1, in1, ...).
-
-    This implementation uses indexing and BLAS. As per stack overflow,
-    einsum doesn't actually use BLAS but rather a c implementation. In theory
-    if reshaping is efficient this should be faster.
-    """
-
-    size = len(modes)
-    dim = trunc**size
-    stshape = [trunc for i in range(size)]
-
-    # Apply the following matrix transposition:
-    # |m1><m1| |m2><m2| ... |mn><mn| -> |m1>|m2>...|mn><m1|<m2|...<mn|
-    transpose_list = [2*i for i in range(size)] + [2*i + 1 for i in range(size)]
-    matview = np.transpose(mat, transpose_list).reshape((dim, dim))
-
-    if pure:
-        if n == 1:
-            return np.dot(mat, state)
-
-        # Transpose the state into the following form:
-        # |psi> |mode[0]> |mode[1]> ... |mode[n]>
-        transpose_list = [i for i in range(n) if not i in modes] + modes
-        view = np.transpose(state, transpose_list)
-
-        # Apply matrix to each substate
-        ret = np.zeros([trunc for i in range(n)], dtype=def_type)
-        for i in product(*([range(trunc) for j in range(n - size)])):
-            ret[i] = np.dot(matview, view[i].ravel()).reshape(stshape)
-
-        # "untranspose" the return matrix ret
-        untranspose_list = [0] * len(transpose_list)
-        for i in range(len(transpose_list)): # pylint: disable=consider-using-enumerate
-            untranspose_list[transpose_list[i]] = i
-
-        return np.transpose(ret, untranspose_list)
-    else:
-        if n == 1:
-            return np.dot(mat, np.dot(state, dagger(mat)))
-
-        # Transpose the state into the following form:
-        # |psi><psi||mode[0]>|mode[1]>...|mode[n]><mode[0]|<mode[1]|...<mode[n]|
-        transpose_list = [i for i in range(n*2) if not i//2 in modes]
-        transpose_list = transpose_list + [2*i for i in modes] + [2*i + 1 for i in modes]
-        view = np.transpose(state, transpose_list)
-
-        # Apply matrix to each substate
-        ret = np.zeros([trunc for i in range(n*2)], dtype=def_type)
-        for i in product(*([range(trunc) for j in range((n - size)*2)])):
-            ret[i] = np.dot(matview, np.dot(view[i].reshape((dim, dim)), dagger(matview))).reshape(stshape + stshape)
-
-        # "untranspose" the return matrix ret
-        untranspose_list = [0] * len(transpose_list)
-        for i in range(len(transpose_list)): # pylint: disable=consider-using-enumerate
-            untranspose_list[transpose_list[i]] = i
-
-        return np.transpose(ret, untranspose_list)
-
-
-def apply_gate_einsum(mat, state, pure, modes, n, trunc):
-    """
-    Gate application based on einsum.
-    Assumes the input matrix has shape (out1, in1, ...)
-    """
-    # pylint: disable=unused-argument
-
-    size = len(modes)
-
-    if pure:
-        if n == 1:
-            return np.dot(mat, state)
-
-        left_str = [indices[:size*2]]
-
-        j = genOfRange(size)
-        right_str = [indices[2*next(j) + 1] if i in modes else indices[size*2 + i] \
-            for i in range(n)]
-
-        j = genOfRange(size)
-        out_str = [indices[2*next(j)] if i in modes else indices[size*2 + i] \
-            for i in range(n)]
-
-        einstring = ''.join(left_str + [','] + right_str + ['->'] + out_str)
-        return np.einsum(einstring, mat, state)
-    else:
-
-        if n == 1:
-            return np.dot(mat, np.dot(state, dagger(mat)))
-
-        in_str = indices[:n*2]
-
-        j = genOfRange(n*2)
-        out_str = ''.join([indices[n*2 + next(j)] if i//2 in modes else indices[i] for i in range(n*2)])
-
-        j = genOfRange(size*2)
-        left_str = ''.join([out_str[modes[i//2]*2] if (i%2) == 0 else in_str[modes[i//2]*2] for i in range(size*2)])
-        right_str = ''.join([out_str[modes[i//2]*2 + 1] if (i%2) == 0 else in_str[modes[i//2]*2 + 1] for i in range(size*2)])
-
-        einstring = ''.join([left_str, ',', in_str, ',', right_str, '->', out_str])
-        return np.einsum(einstring, mat, state, mat.conj())
-
-
-# ============================================
-#
 # Gates
 #
 # ============================================
@@ -339,44 +228,30 @@ def a(trunc):
 def displacement(alpha, trunc):
     r"""The displacement operator :math:`D(\alpha)`.
 
+    Uses the `Dgate operation from The Walrus`_ to calculate the displacement.
+
+    .. _`Dgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.Dgate.html
+
     Args:
             alpha (complex): the displacement
             trunc (int): the Fock cutoff
     """
-    # pylint: disable=duplicate-code
-    if alpha == 0:
-        # return the identity
-        ret = np.eye(trunc, dtype=def_type)
-    else:
-        # generate the broadcasted index arrays
-        dim_array = np.arange(trunc)
-        N = dim_array.reshape((-1, 1, 1))
-        n = dim_array.reshape((1, -1, 1))
-        i = dim_array.reshape((1, 1, -1))
 
-        j = n-i
-        k = N-i
+    r = np.abs(alpha)
+    theta = np.angle(alpha)
 
-        # the prefactors are only calculated if
-        # i<=min(n,N). This is equivalent to k>=0, j>=0
-        mask = np.logical_and(k >= 0, j >= 0)
-        denom = fac(j)*fac(k)*fac(n-j)
-        num = sqrt(fac(N)*fac(n))
-
-        # the numpy.divide is to avoid division by 0 errors
-        # (these are removed by the following mask anyway)
-        prefactor = np.divide(num, denom, where=denom != 0)
-        prefactor = np.where(mask, prefactor, 0)
-
-        # sum over i
-        ret = exp(-0.5 * abssqr(alpha)) * np.sum(alpha**k * (np.conj(-alpha)**j) * prefactor, axis=-1)
+    ret, _, _ = Dgate(r, theta, cutoff=trunc)
 
     return ret
 
 
 @functools.lru_cache()
-def squeezing(r, theta, trunc, save=False, directory=None):
+def squeezing(r, theta, trunc):
     r"""The squeezing operator :math:`S(re^{i\theta})`.
+
+    Uses the `Sgate operation from The Walrus`_ to calculate the squeezing.
+
+    .. _`Sgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.Sgate.html
 
     Args:
             r (float): the magnitude of the squeezing in the
@@ -384,33 +259,24 @@ def squeezing(r, theta, trunc, save=False, directory=None):
             theta (float): the squeezing angle
             trunc (int): the Fock cutoff
     """
-    # pylint: disable=duplicate-code
-    if r == 0:
-        # return the identity
-        ret = np.eye(trunc, dtype=def_type)
-    else:
-        # broadcast the index arrays
-        dim_array = np.arange(trunc)
-        N = dim_array.reshape((-1, 1, 1))
-        n = dim_array.reshape((1, -1, 1))
-        k = dim_array.reshape((1, 1, -1))
 
-        try:
-            prefac = so.load_squeeze_factors(trunc, directory)
-        except FileNotFoundError:
-            prefac = so.generate_squeeze_factors(trunc)
-            if save:
-                so.save_bs_factors(prefac, directory)
+    ret, _, _ = Sgate(r, theta, cutoff=trunc)
 
-        # we only perform the sum when n+N is divisible by 2
-        # in which case we sum 0 <= k <= min(N,n)
-        # mask = np.logical_and((n+N)%2 == 0, k <= np.minimum(N, n))
-        mask = np.logical_and((n+N)%2 == 0, k <= np.minimum(N, n))
+    return ret
 
-        # perform the summation over k
-        scale = mask * np.power(sinh(r)/2, mask*(N+n-2*k)/2) / (cosh(r)**((N+n+1)/2))
-        ph = exp(1j*theta*(N-n)/2)
-        ret = np.sum(scale*ph*prefac, axis=-1)
+
+@functools.lru_cache()
+def two_mode_squeezing(r, theta, trunc):
+    r"""The two-mode squeezing operator :math:`S_2(re^{i\theta})`.
+
+    Args:
+        r (float): two-mode squeezing magnitude
+        theta (float): two-mode squeezing phase
+        trunc (int): Fock ladder cutoff
+    """
+    ret, _, _ = S2gate(r, theta, cutoff=trunc)
+
+    ret = np.transpose(ret, [0, 2, 1, 3])
 
     return ret
 
@@ -459,34 +325,20 @@ def phase(theta, trunc):
 
 
 @functools.lru_cache()
-def beamsplitter(t, r, phi, trunc, save=False, directory=None):
-    r"""
-    The beamsplitter :math:`B(cos^{-1} t, phi)`.
+def beamsplitter(t, r, phi, trunc):
+    r""" The beamsplitter :math:`B(cos^{-1} t, phi)`.
+
+    Uses the `BSgate operation from The Walrus`_ to calculate the beamsplitter.
+
+    .. _`BSgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.BSgate.html
     """
     # pylint: disable=bad-whitespace
-    try:
-        prefac = so.load_bs_factors(trunc, directory)
-    except FileNotFoundError:
-        prefac = so.generate_bs_factors(trunc)
-        if save:
-            so.save_bs_factors(prefac, directory)
 
-    dim_array = np.arange(trunc)
-    N = dim_array.reshape((-1, 1, 1, 1, 1))
-    n = dim_array.reshape((1, -1, 1, 1, 1))
-    M = dim_array.reshape((1, 1, -1, 1, 1))
-    k = dim_array.reshape((1, 1, 1, 1, -1))
+    theta = np.arccos(t)
+    BS_tw, _, _ = BSgate(theta, phi, cutoff=trunc)
 
-    tpwr = M-n+2*k
-    rpwr = n+N-2*k
-
-    T = np.power(t, tpwr) if t != 0 else np.where(tpwr != 0, 0, 1)
-    R = np.power(r, rpwr) if r != 0 else np.where(rpwr != 0, 0, 1)
-
-    BS = np.sum(exp(-1j*(pi+phi)*(n-N)) * T * R * prefac[:trunc,:trunc,:trunc,:trunc,:trunc], axis=-1)
-    BS = BS.swapaxes(0, 1).swapaxes(2, 3)
-
-    return BS
+    # TODO: Transpose needed because of different conventions in SF and The Walrus. Remove when The Walrus is updated.
+    return BS_tw.transpose((0,2,1,3))
 
 
 @functools.lru_cache()
