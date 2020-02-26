@@ -513,20 +513,12 @@ class StarshipEngine:
 
     @property
     def target(self) -> str:
-        """The target device used by the engine.
-
-        Returns:
-            str: the target device used by the engine
-        """
+        """The target device used by the engine."""
         return self._target
 
     @property
     def connection(self) -> Connection:
-        """The connection object used by the engine.
-
-        Returns:
-            strawberryfields.engine.Connection: the connection object used by the engine
-        """
+        """The connection object used by the engine."""
         return self._connection
 
     def run(self, program: Program, shots: int = 1) -> Optional[Result]:

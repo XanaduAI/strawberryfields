@@ -21,6 +21,7 @@ from strawberryfields.api import Connection
 
 # pylint: disable=expression-not-assigned
 
+
 @pytest.fixture
 def prog():
     """Program fixture."""

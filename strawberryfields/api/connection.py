@@ -97,38 +97,22 @@ class Connection:
 
     @property
     def token(self) -> str:
-        """The API authentication token.
-
-        Returns:
-            str: the authentication token
-        """
+        """The API authentication token."""
         return self._token
 
     @property
     def host(self) -> str:
-        """The host for the remote platform.
-
-        Returns:
-            str: the hostname
-        """
+        """The host for the remote platform."""
         return self._host
 
     @property
     def port(self) -> int:
-        """The port to connect to on the remote host.
-
-        Returns:
-            int: the port number
-        """
+        """The port to connect to on the remote host."""
         return self._port
 
     @property
     def use_ssl(self) -> bool:
-        """Whether to use SSL for the connection.
-
-        Returns:
-            bool: ``True`` if SSL should be used, and ``False`` otherwise
-        """
+        """Whether to use SSL for the connection."""
         return self._use_ssl
 
     def create_job(self, target: str, program: Program, shots: int) -> Job:

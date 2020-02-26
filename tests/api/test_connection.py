@@ -85,7 +85,7 @@ class TestConnection:
         with pytest.raises(RequestFailedError, match="Failed to create job"):
             connection.create_job("chip2", prog, 1)
 
-    @pytest.mark.skip(reason="method not yet implemented")
+    @pytest.mark.xfail(reason="method not yet implemented")
     def test_get_all_jobs(self, connection, monkeypatch):
         """Tests a successful job list request."""
         jobs = [
@@ -104,7 +104,7 @@ class TestConnection:
 
         assert [job.id for job in jobs] == [str(i) for i in range(5, 10)]
 
-    @pytest.mark.skip(reason="method not yet implemented")
+    @pytest.mark.xfail(reason="method not yet implemented")
     def test_get_all_jobs_error(self, connection, monkeypatch):
         """Tests a failed job list request."""
         monkeypatch.setattr(requests, "get", mock_return(MockResponse(404, {})))
