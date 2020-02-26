@@ -36,7 +36,7 @@ class Result:
     **Example:**
 
     The following example runs an existing Strawberry Fields
-    quantum :class:`~.Program` on the Gaussian engine to get
+    quantum :class:`~.Program` on the Gaussian backend to get
     a results object.
 
     Using this results object, the measurement samples
