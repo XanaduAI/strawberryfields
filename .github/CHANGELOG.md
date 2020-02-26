@@ -9,6 +9,11 @@
 
 ### Improvements
 
+* Replaced the `Configuration` class with the `load_config` and auxiliary
+  functions to load configuration from keyword arguments, environment variables
+  and configuration file.
+  [#298](https://github.com/XanaduAI/strawberryfields/pull/298)
+
 ### Bug fixes
 
 * Symbolic Operation parameters are now compatible with TensorFlow 2.0 objects.
@@ -22,7 +27,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ville Bergholm, Jack Ceroni
+Ville Bergholm, Jack Ceroni, Antal Száva
 
 ---
 
