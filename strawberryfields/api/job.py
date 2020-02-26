@@ -113,7 +113,7 @@ class Job:
         Only an open or queued job can be refreshed; an exception is raised otherwise.
         """
         if self.status.is_final:
-            log.warning("A {} job cannot be refreshed".format(self.status.value))
+            log.warning("A %s job cannot be refreshed", self.status.value)
             return
         self._status = self._connection.get_job_status(self.id)
         if self._status == JobStatus.COMPLETED:

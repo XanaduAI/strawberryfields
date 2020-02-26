@@ -41,33 +41,31 @@ class Connection:
     various job operations.
 
     For basic usage, it is not necessary to manually instantiate this object; the user
-    is encouraged to use the higher-level interface provided by :class:`~StarshipEngine`.
+    is encouraged to use the higher-level interface provided by
+    :class:`~strawberryfields.engine.StarshipEngine`.
 
     **Example:**
 
-    The following example instantiates a :class:`~Connection` for a given API
-    authentication token, tests the connection, submits a new job, and makes requests
-    for a single or multiple existing jobs.
+    The following example instantiates a :class:`~strawberryfields.api.Connection` for a
+    given API authentication token, tests the connection, submits a new job, and
+    retrieves an existing job.
 
-    .. code-block:: python
-
-        connection = Connection(token="abc")
-
-        # Ping the remote server
-        success = connection.ping()
-        # True if successful, or False if cannot connect or not authenticated
-
-        # Submit a new job
-        job = connection.create_job("chip2", program, shots=123)
-        job  # <Job: id=d177cbf5-1816-4779-802f-cef2c117dc1a, ...>
-
-        # Get all jobs submitted for this token
-        jobs = connection.get_all_jobs()
-        jobs  # [<Job: id=d177cbf5-1816-4779-802f-cef2c117dc1a, ...>, ...]
-
-        # Get a specific job by ID
-        job = connection.get_job("59a1c0b1-c6a7-4f9b-ae37-0ac5eec9c413")
-        job  # <Job: id=59a1c0b1-c6a7-4f9b-ae37-0ac5eec9c413, ...>
+    >>> connection = Connection(token="abc")
+    >>> success = connection.ping() # `True` if successful, `False` if the connection fails
+    >>> job = connection.create_job("chip2", program, shots=123)
+    >>> job
+    <Job: id=d177cbf5-1816-4779-802f-cef2c117dc1a, ...>
+    >>> job.status
+    <JobStatus.QUEUED: 'queued'>
+    >>> job.result
+    AttributeError
+    >>> job = connection.get_job(known_job_id)
+    >>> job
+    <Job: id=59a1c0b1-c6a7-4f9b-ae37-0ac5eec9c413, ...>
+    >>> job.status
+    <JobStatus.COMPLETED: 'complete'>
+    >>> job.result
+    [[0 1 0 2 1 0 0 0]]
 
     Args:
         token (str): the API authentication token
@@ -76,11 +74,7 @@ class Connection:
         use_ssl (bool): whether to use SSL for the connection
     """
 
-    MAX_JOBS_REQUESTED = 100
-    JOB_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
-
     # pylint: disable=bad-continuation
-    # See: https://github.com/PyCQA/pylint/issues/289
     def __init__(
         self,
         token: str,
@@ -175,8 +169,6 @@ class Connection:
 
     def get_all_jobs(self, after: datetime = datetime(1970, 1, 1)) -> List[Job]:
         """Gets a list of jobs created by the user, optionally filtered by datetime.
-
-        A maximum of the 100 most recent jobs are returned.
 
         Args:
             after (datetime.datetime): if provided, only jobs more recently created

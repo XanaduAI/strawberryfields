@@ -451,30 +451,37 @@ class StarshipEngine:
 
     **Example:**
 
-    The following example instantiates an engine with the default configuration, and
+    The following examples instantiate an engine with the default configuration, and
     runs jobs both synchronously and asynchronously.
 
-    .. code-block:: python
+    Run a job synchronously:
 
-        engine = StarshipEngine("chip2")
+    >>> engine = StarshipEngine("chip2")
+    >>> result = engine.run(program, shots=1) # blocking call
+    >>> result
+    [[0 1 0 2 1 0 0 0]]
 
-        # Run a job synchronously
-        result = engine.run(program, shots=1)
-        # (Engine blocks until job is completed)
-        result  # [[0 1 0 2 1 0 0 0]]
+    Run a job synchronously, but cancel it before it is completed using a keyboard
+    interrupt (`ctrl+c`):
 
-        # Run a job synchronously, but cancel it before it is completed
-        result = engine.run(program, shots=1)
-        ^C # KeyboardInterrupt cancels the job
+    >>> result = engine.run(program, shots=1)
+    ^C---------------------------------------------------------------------------
+    KeyboardInterrupt                         Traceback (most recent call last)
+    <ipython-input-4-f1a1495c6d9c> in <module>()
+    ----> 1 time.sleep(10)
 
-        # Run a job asynchronously
-        job = engine.run_async(program, shots=1)
-        job.status  # <JobStatus.QUEUED: 'queued'>
-        job.result  # InvalidJobOperationError
-        # (After some time...)
-        job.refresh()
-        job.status  # <JobStatus.COMPLETED: 'complete'>
-        job.result  # [[0 1 0 2 1 0 0 0]]
+    Run a job asynchronously:
+
+    >>> job = engine.run_async(program, shots=1)
+    >>> job.status
+    <JobStatus.QUEUED: 'queued'>
+    >>> job.result
+    InvalidJobOperationError
+    >>> job.refresh()
+    >>> job.status
+    <JobStatus.COMPLETED: 'complete'>
+    >>> job.result
+    [[0 1 0 2 1 0 0 0]]
 
     Args:
         target (str): the target device
