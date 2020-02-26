@@ -229,7 +229,7 @@ def store_account(authentication_token, filename="config.toml", location="local"
 
     Args:
         authentication_token (str): the authentication token to use when
-            connecting to the API, it will be sent with every request in the
+            connecting to the API; it will be sent with every request in the
             header
 
     Kwargs:
