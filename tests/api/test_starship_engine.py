@@ -100,4 +100,4 @@ class TestStarshipEngine:
         with pytest.raises(
             AttributeError, match="The state is undefined for a stateless computation."
         ):
-            _ = job.result.state
+            job.result.state
