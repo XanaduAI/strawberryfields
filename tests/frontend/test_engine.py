@@ -21,16 +21,17 @@ import requests
 
 import strawberryfields as sf
 from strawberryfields import ops
-from strawberryfields.backends.base import BaseBackend
-from strawberryfields.engine import (
+from strawberryfields.api import (
     Connection,
-    InvalidJobOperationError,
     Job,
     JobStatus,
     RequestFailedError,
     Result,
-    StarshipEngine,
+    InvalidJobOperationError,
+    RequestFailedError,
 )
+from strawberryfields.backends.base import BaseBackend
+from strawberryfields.engine import StarshipEngine
 
 pytestmark = pytest.mark.frontend
 
