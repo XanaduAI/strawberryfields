@@ -14,10 +14,9 @@
 """
 TODO
 """
-
-from strawberryfields.program import Program
-from .result import Result
 import enum
+
+from .result import Result
 
 
 class InvalidJobOperationError(Exception):

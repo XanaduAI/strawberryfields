@@ -19,21 +19,12 @@ One can think of each BaseEngine instance as a separate quantum computation.
 """
 import abc
 import collections.abc
-import enum
-import io
-import json
 import time
-from datetime import datetime
-from typing import Dict, List, Optional
-from urllib.parse import urljoin
+from typing import Optional
 
-import numpy as np
-import requests
-
-from strawberryfields.configuration import DEFAULT_CONFIG
-from strawberryfields.io import to_blackbird
-from strawberryfields.program import Program
 from strawberryfields.api import Connection, Job, JobStatus, Result
+from strawberryfields.configuration import DEFAULT_CONFIG
+from strawberryfields.program import Program
 
 from .backends import load_backend
 from .backends.base import BaseBackend, NotApplicableError

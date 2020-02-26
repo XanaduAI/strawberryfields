@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     eng = StarshipEngine("chip2", connection)
     sys.stdout.write("Computing...\n")
-    result = eng.run(program, shots=1)
+    result = eng.run(program)
 
     if result and result.samples is not None:
         if args.output:
