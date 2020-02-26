@@ -103,7 +103,7 @@ def search(
         max_size (int): maximum size to search for dense subgraphs
         max_count (int): maximum number of densest subgraphs to keep track of for each size
         node_select (str, list or array): method of settling ties when more than one node of
-            equal degree can be added/removed. Can be ``"uniform"`` (default), or a numpy array or
+            equal degree can be added/removed. Can be ``"uniform"`` (default), or a NumPy array or
             list containing node weights.
 
     Returns:
@@ -261,7 +261,7 @@ def resize(
         min_size (int): minimum size for subgraph to be resized to
         max_size (int): maximum size for subgraph to be resized to
         node_select (str, list or array): method of settling ties when more than one node of
-            equal degree can be added/removed. Can be ``"uniform"`` (default), or a numpy array or
+            equal degree can be added/removed. Can be ``"uniform"`` (default), or a NumPy array or
             list containing node weights.
 
     Returns:
@@ -341,8 +341,8 @@ def _validate_inputs(
     This function checks:
         - if ``subgraph`` is a valid subgraph of ``graph``;
         - if ``min_size`` and ``max_size`` are sensible numbers;
-        - if ``node_select`` is either ``"uniform"`` or a numpy array or list;
-        - if, when ``node_select`` is a numpy array or list, that it is the correct size and that
+        - if ``node_select`` is either ``"uniform"`` or a NumPy array or list;
+        - if, when ``node_select`` is a NumPy array or list, that it is the correct size and that
           ``node_select`` is changed to ``"weight"``.
 
     This function returns the updated ``node_select`` and a dictionary mapping nodes to their
@@ -354,7 +354,7 @@ def _validate_inputs(
         min_size (int): minimum size for subgraph to be resized to
         max_size (int): maximum size for subgraph to be resized to
         node_select (str, list or array): method of settling ties when more than one node of
-            equal degree can be added/removed. Can be ``"uniform"`` (default), or a numpy array or
+            equal degree can be added/removed. Can be ``"uniform"`` (default), or a NumPy array or
             list containing node weights.
 
     Returns:
