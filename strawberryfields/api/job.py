@@ -45,6 +45,9 @@ class JobStatus(enum.Enum):
 
         This method is primarily used to determine if an operation is valid for a given
         status.
+
+        Returns:
+            bool
         """
         return self in (JobStatus.CANCELLED, JobStatus.COMPLETED, JobStatus.FAILED)
 
@@ -70,12 +73,20 @@ class Job:
 
     @property
     def id(self) -> str:
-        """The job ID."""
+        """The job ID.
+
+        Returns:
+            str
+        """
         return self._id
 
     @property
     def status(self) -> JobStatus:
-        """The job status."""
+        """The job status.
+
+        Returns:
+            strawberryfields.api.JobStatus
+        """
         return self._status
 
     @property
@@ -84,6 +95,9 @@ class Job:
 
         This is only defined for completed jobs, and raises an exception for any other
         status.
+
+        Returns:
+            strawberryfields.api.Result
         """
         if self.status != JobStatus.COMPLETED:
             raise AttributeError(
