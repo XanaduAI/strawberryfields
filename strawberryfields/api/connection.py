@@ -246,7 +246,7 @@ class Connection:
         response = requests.patch(
             self._url(path),
             headers=self._headers,
-            data={"status", JobStatus.CANCELLED.value},
+            data={"status": JobStatus.CANCELLED.value},
         )
         if response.status_code == 204:
             if self._verbose:

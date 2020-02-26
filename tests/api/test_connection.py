@@ -200,7 +200,15 @@ class TestConnection:
 
     def test_cancel_job(self, connection, monkeypatch):
         """Tests a successful job cancellation request."""
-        monkeypatch.setattr(requests, "patch", mock_return(MockResponse(204, {})))
+        # A custom `mock_return` that checks for expected arguments
+        def _mock_return(return_value):
+            def function(*args, **kwargs):
+                assert kwargs.get("data") == {"status": "cancelled"}
+                return return_value
+
+            return function
+
+        monkeypatch.setattr(requests, "patch", _mock_return(MockResponse(204, {})))
 
         # A successful cancellation does not raise an exception
         connection.cancel_job("123")
