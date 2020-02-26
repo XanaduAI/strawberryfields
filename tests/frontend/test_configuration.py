@@ -441,6 +441,18 @@ class TestStoreAccount:
         assert call_history[0][0] == EXPECTED_CONFIG
         assert call_history[0][1] == tmpdir.join(test_filename)
 
+    def test_location_not_recognized_error(self, monkeypatch, tmpdir):
+        """Tests that a configuration file was created in the user
+        configuration directory for Strawberry Fields."""
+
+        test_filename = "test_config.toml"
+
+        with pytest.raises(
+                conf.ConfigurationError,
+                match="This location is not recognized.",
+        ):
+            conf.store_account(authentication_token, filename=test_filename, location="UNRECOGNIZED_LOCATION", **DEFAULT_KWARGS)
+
 class TestSaveConfigToFile:
     """Tests for the store_account function."""
 

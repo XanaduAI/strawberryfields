@@ -242,6 +242,8 @@ def store_account(authentication_token, filename="config.toml", location="local"
         directory = os.getcwd()
     elif location == "user_config":
         directory = user_config_dir("strawberryfields", "Xanadu")
+    else:
+        raise ConfigurationError("This location is not recognized.")
 
     filepath = os.path.join(directory, filename)
 
