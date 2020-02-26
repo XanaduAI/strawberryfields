@@ -69,7 +69,7 @@ The following is an example for using ``store_account`` with defaults:
     import strawberryfields as sf
     sf.store_account("MyToken")
 
-where ``"MyToken"`` contains the user specific authentication token.
+where ``"MyToken"`` contains the user-specific authentication token.
 
 It is advised to execute this code snippet **only once** per configuration. This should be done in the same directory where the SF project can be found, separately from executing any other Strawberry Fields scripts. Using the default options it will store the account in the *current working directory* by creating a ``config.toml`` file.
 
