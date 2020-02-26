@@ -224,12 +224,12 @@ def store_account(authentication_token, filename="config.toml", location="local"
     """Stores an account in a configuration file.
 
     The configuration file can be created in the following locations:
-       - current working directory (local)
-       - user configuration directory (user_config)
+       - current working directory ("local")
+       - user configuration directory ("user_config")
 
     Args:
         authentication_token (str): the authentication token to use when
-            connecting to the API, it will be sent with every request in the
+            connecting to the API; it will be sent with every request in the
             header
 
     Kwargs:
