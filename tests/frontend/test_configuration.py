@@ -1,4 +1,3 @@
-
 # Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -293,51 +292,32 @@ class TestLoadConfigFile:
 
         assert loaded_config == EXPECTED_CONFIG
 
-class TestUpdateConfig:
-    """Tests for the update_config function."""
+class TestKeepValidOptions:
 
-    def test_update_entire_config(self):
-        """Tests that the entire configuration object is updated."""
+    def test_only_invalid_options(self):
+        section_config_with_invalid_options = {'NotValid1': 1,
+                                               'NotValid2': 2,
+                                               'NotValid3': 3
+                                              }
+        assert conf.keep_valid_options(section_config_with_invalid_options) == {}
 
-        config = conf.create_config()
-        assert config["api"]["authentication_token"] == ""
+    def test_valid_and_invalid_options(self):
+        section_config_with_invalid_options = { 'authentication_token': 'MyToken',
+                                                'NotValid1': 1,
+                                               'NotValid2': 2,
+                                               'NotValid3': 3
+                                              }
+        assert conf.keep_valid_options(section_config_with_invalid_options) == {'authentication_token': 'MyToken'}
 
-        conf.update_config(config, EXPECTED_CONFIG)
-        assert config == EXPECTED_CONFIG
-
-    ONLY_AUTH_CONFIG = {
-                "api": {"authentication_token": "PlaceHolder"}
-    }
-
-    ONLY_HOST_CONFIG = {
-                "api": {"hostname": "PlaceHolder",}
-    }
-
-    ONLY_SSL_CONFIG = {
-                "api": {"use_ssl": "PlaceHolder"}
-    }
-
-    ONLY_DEBUG_CONFIG = {
-                "api": {"debug": "PlaceHolder"}
-    }
-
-    ONLY_PORT_CONFIG = {
-                "api": {"port": "PlaceHolder"}
-    }
-
-    @pytest.mark.parametrize("specific_key, config_to_update_with", [("authentication_token",ONLY_AUTH_CONFIG),
-                                                        ("hostname",ONLY_HOST_CONFIG),
-                                                        ("use_ssl",ONLY_SSL_CONFIG),
-                                                        ("debug",ONLY_DEBUG_CONFIG),
-                                                        ("port",ONLY_PORT_CONFIG)])
-    def test_update_only_one_item_in_section(self, specific_key, config_to_update_with):
-        """Tests that only one item in the configuration object is updated."""
-        config = conf.create_config()
-        assert config["api"][specific_key] != "PlaceHolder"
-
-        conf.update_config(config, config_to_update_with)
-        assert config["api"][specific_key] == "PlaceHolder"
-        assert all(v != "PlaceHolder" for k, v in config["api"].items() if k != specific_key)
+    def test_only_valid_options(self):
+        section_config_only_valid = {
+                                    "authentication_token": "071cdcce-9241-4965-93af-4a4dbc739135",
+                                    "hostname": "localhost",
+                                    "use_ssl": True,
+                                    "port": 443,
+                                    "debug": False,
+                                    }
+        assert conf.keep_valid_options(section_config_only_valid) == EXPECTED_CONFIG["api"]
 
 value_mapping = [
                 ("SF_API_AUTHENTICATION_TOKEN","SomeAuth"),

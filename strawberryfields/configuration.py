@@ -84,14 +84,15 @@ def load_config(filename="config.toml", **kwargs):
 
     if config_filepath is not None:
         loaded_config = load_config_file(config_filepath)
-        update_config(config, other_config=loaded_config)
+        valid_api_options = keep_valid_options(loaded_config["api"])
+        config["api"].update(valid_api_options)
     else:
         log.info("No Strawberry Fields configuration file found.")
 
     update_from_environment_variables(config)
 
-    config_from_keyword_arguments = {"api": kwargs}
-    update_config(config, other_config=config_from_keyword_arguments)
+    valid_kwargs_config = keep_valid_options(kwargs)
+    config["api"].update(valid_kwargs_config)
 
     return config
 
@@ -171,25 +172,18 @@ def load_config_file(filepath):
         config_from_file = toml.load(f)
     return config_from_file
 
-def update_config(config, other_config):
-    """Updates the current configuration object with another one.
-
-    This function assumes that other_config is a valid configuration
-    dictionary.
+def keep_valid_options(sectionconfig):
+    """Filters the valid options in a section of a configuration dictionary.
 
     Args:
-        config (dict[str, dict[str, Union[str, bool, int]]]): the
-            configuration to be updated
-        other_config (dict[str, dict[str, Union[str, bool, int]]]): the
-            configuration used for updating
+        sectionconfig (dict[str, Union[str, bool, int]]): the section of the
+            configuration to check
 
     Returns:
-        dict[str, dict[str, Union[str, bool, int]]]): the updated
+        dict[str, Union[str, bool, int]]: the keep section of the
             configuration
     """
-    # Here an example for section is API
-    for section in config.keys():
-        config[section].update(other_config[section])
+    return {k: v for k, v in sectionconfig.items() if k in VALID_KEYS}
 
 def update_from_environment_variables(config):
     """Updates the current configuration object from data stored in environment
@@ -239,6 +233,7 @@ def parse_environment_variable(key, value):
 
     return value
 
+VALID_KEYS = set(create_config()["api"].keys())
 DEFAULT_CONFIG = create_config()
 configuration = load_config()
 config_filepath = get_config_filepath()
