@@ -22,17 +22,11 @@ import pytest
 import requests
 
 from strawberryfields.api import Connection, JobStatus, RequestFailedError
+from .conftest import mock_return
 
-# pylint: disable=no-self-use
+# pylint: disable=no-self-use,unused-argument
 
 pytestmark = pytest.mark.api
-
-
-def mock_return(return_value):
-    """A helper function for defining a mock function that returns the given value for
-    any arguments.
-    """
-    return lambda *args, **kwargs: return_value
 
 
 class MockResponse:

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Test fixtures for strawberryfields.api tests
+Test fixtures and shared functions for strawberryfields.api tests
 """
 import pytest
 
@@ -34,3 +34,10 @@ def prog():
 def connection():
     """A mock connection object."""
     return Connection(token="token", host="host", port=123, use_ssl=True)
+
+
+def mock_return(return_value):
+    """A helper function for defining a mock function that returns the given value for
+    any arguments.
+    """
+    return lambda *args, **kwargs: return_value

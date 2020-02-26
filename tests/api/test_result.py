@@ -18,7 +18,7 @@ import pytest
 
 from strawberryfields.api import Result
 
-# pylint: disable=bad-continuation,no-self-use
+# pylint: disable=bad-continuation,no-self-use,pointless-statement
 
 pytestmark = pytest.mark.api
 

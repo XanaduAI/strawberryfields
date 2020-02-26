@@ -19,17 +19,11 @@ import pytest
 
 from strawberryfields.api import Connection, Job, JobStatus, Result
 from strawberryfields.engine import StarshipEngine
+from .conftest import mock_return
 
-# pylint: disable=bad-continuation,unused-argument,no-self-use,redefined-outer-name
+# pylint: disable=bad-continuation,unused-argument,no-self-use,redefined-outer-name,pointless-statement
 
 pytestmark = pytest.mark.api
-
-
-def mock_return(return_value):
-    """A helper function for defining a mock function that returns the given value for
-    any arguments.
-    """
-    return lambda *args, **kwargs: return_value
 
 
 class MockServer:
