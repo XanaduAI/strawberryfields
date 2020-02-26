@@ -82,7 +82,7 @@ class TestStarshipEngine:
         with pytest.raises(
             AttributeError, match="The state is undefined for a stateless computation."
         ):
-            _ = result.state
+            result.state
 
     def test_run_async(self, connection, prog, job_to_complete):
         """Tests a successful asynchronous job execution."""
