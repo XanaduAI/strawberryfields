@@ -385,7 +385,7 @@ class TestUpdateFromEnvironmentalVariables:
     def test_parse_environment_variable_boolean(self, monkeypatch):
         """Tests that boolean values can be parsed correctly from environment
         variables."""
-        monkeypatch.setattr(conf, "BOOLEAN_KEYS", ("some_boolean",))
+        monkeypatch.setattr(conf, "DEFAULT_CONFIG_SPEC", {"api": {"some_boolean": (bool, True)}})
         assert conf.parse_environment_variable("some_boolean", "true") is True
         assert conf.parse_environment_variable("some_boolean", "True") is True
         assert conf.parse_environment_variable("some_boolean", "TRUE") is True
@@ -398,12 +398,9 @@ class TestUpdateFromEnvironmentalVariables:
         assert conf.parse_environment_variable("some_boolean", "0") is False
         assert conf.parse_environment_variable("some_boolean", 0) is False
 
-        assert conf.parse_environment_variable("not_a_boolean","something_else") == "something_else"
-
     def test_parse_environment_variable_integer(self, monkeypatch):
         """Tests that integer values can be parsed correctly from environment
         variables."""
 
-        monkeypatch.setattr(conf, "INTEGER_KEYS", ("some_integer",))
+        monkeypatch.setattr(conf, "DEFAULT_CONFIG_SPEC", {"api": {"some_integer": (int, 123)}})
         assert conf.parse_environment_variable("some_integer", "123") == 123
-        assert conf.parse_environment_variable("not_an_integer","something_else") == "something_else"

@@ -48,8 +48,18 @@ from appdirs import user_config_dir
 
 log.getLogger()
 
-BOOLEAN_KEYS = {"debug": False, "use_ssl": True}
-INTEGER_KEYS = {"port": 443}
+DEFAULT_CONFIG_SPEC = {
+   "api": {
+        "authentication_token": (str, ""),
+        "hostname": (str, "localhost"),
+        "use_ssl": (bool, True),
+        "port": (int, 443),
+        "debug": (bool, False),
+    }
+}
+
+BOOLEAN_KEYS = {"debug", "use_ssl"}
+INTEGER_KEYS = {"port"}
 
 class ConfigurationError(Exception):
     """Exception used for configuration errors"""
@@ -114,9 +124,9 @@ def create_config(authentication_token="", **kwargs):
             object
     """
     hostname = kwargs.get("hostname", "localhost")
-    use_ssl = kwargs.get("use_ssl", BOOLEAN_KEYS["use_ssl"])
-    port = kwargs.get("port", INTEGER_KEYS["port"])
-    debug = kwargs.get("debug", BOOLEAN_KEYS["debug"])
+    use_ssl = kwargs.get("use_ssl", DEFAULT_CONFIG_SPEC["api"]["use_ssl"][1])
+    port = kwargs.get("port", DEFAULT_CONFIG_SPEC["api"]["port"][1])
+    debug = kwargs.get("debug",DEFAULT_CONFIG_SPEC["api"]["debug"][1])
 
     config = {
         "api": {
@@ -219,7 +229,7 @@ def parse_environment_variable(key, value):
     trues = (True, "true", "True", "TRUE", "1", 1)
     falses = (False, "false", "False", "FALSE", "0", 0)
 
-    if key in BOOLEAN_KEYS:
+    if DEFAULT_CONFIG_SPEC["api"][key][0] is bool:
         if value in trues:
             return True
 
@@ -228,7 +238,7 @@ def parse_environment_variable(key, value):
 
         raise ValueError("Boolean could not be parsed")
 
-    if key in INTEGER_KEYS:
+    if DEFAULT_CONFIG_SPEC["api"][key][0] is int:
         return int(value)
 
     return value
