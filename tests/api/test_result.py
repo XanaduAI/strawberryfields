@@ -34,4 +34,4 @@ class TestResult:
         with pytest.raises(
             AttributeError, match="The state is undefined for a stateless computation."
         ):
-            _ = result.state
+            result.state
