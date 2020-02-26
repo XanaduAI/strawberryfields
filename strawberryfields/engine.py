@@ -70,9 +70,9 @@ class Result:
     >>> print(results)
     Result: 3 subsystems
         state: <GaussianState: num_modes=3, pure=True, hbar=2>
-        samples: [0, 0, 0]
+        samples: [[0, 0, 0]]
     >>> results.samples
-    [0, 0, 0]
+    np.array([[0, 0, 0]])
     >>> results.state.is_pure()
     True
 
@@ -87,8 +87,11 @@ class Result:
     def __init__(self, samples):
         self._state = None
 
-        # ``samples`` arrives as a list of arrays, need to convert here to a multidimensional array
-        if len(np.shape(samples)) > 1:
+        # samples arrives as either a list of arrays (for shots > 1) or a list (for shots = 1)
+        # need to be converted to a multidimensional array with shape (shots, modes)
+        if np.ndim(samples) == 1:
+            samples = np.array([samples])
+        else:
             samples = np.stack(samples, 1)
         self._samples = samples
 
@@ -96,9 +99,9 @@ class Result:
     def samples(self):
         """Measurement samples.
 
-        Returned measurement samples will have shape ``(modes,)``. If multiple
-        shots are requested during execution, the returned measurement samples
-        will instead have shape ``(shots, modes)``.
+        Returned measurement samples will have shape ``(shots, modes)``. If a
+        single shot is requested during execution, the returned measurement
+        sample will have shape ``(1, modes)``.
 
         Returns:
             array[array[float, int]]: measurement samples returned from
@@ -502,10 +505,12 @@ class LocalEngine(BaseEngine):
             # the run options of successive programs
             # overwrite the run options of previous programs
             # in the list
+            program_lst = program
             for p in program:
                 temp_run_options.update(p.run_options)
         else:
             # single program to execute
+            program_lst = [program]
             temp_run_options.update(program.run_options)
 
         temp_run_options.update(run_options or {})
@@ -517,6 +522,22 @@ class LocalEngine(BaseEngine):
         eng_run_options = {
             key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys
         }
+
+        # check that batching is not used together with shots > 1
+        if self.backend_options.get("batch_size", 0) and eng_run_options["shots"] > 1:
+            raise NotImplementedError("Batching cannot be used together with multiple shots.")
+
+        # check that post-selection and feed-forwarding is not used together with shots > 1
+        for p in program_lst:
+            for c in p.circuit:
+                try:
+                    if c.op.select and eng_run_options["shots"] > 1:
+                        raise NotImplementedError("Post-selection cannot be used together with multiple shots.")
+                except AttributeError:
+                    pass
+
+                if c.op.measurement_deps and eng_run_options["shots"] > 1:
+                    raise NotImplementedError("Feed-forwarding of measurements cannot be used together with multiple shots.")
 
         result = super()._run(program, args=args, compile_options=compile_options, **eng_run_options)
 
