@@ -559,6 +559,7 @@ class StarshipEngine:
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             self._connection.cancel_job(job.id)
+            return None
 
     def run_async(self, program: Program, shots: int = 1) -> Job:
         """Runs a remote job asynchronously.

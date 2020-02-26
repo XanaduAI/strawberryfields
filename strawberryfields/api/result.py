@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-TODO
+This module provides a class that represents the result of a quantum computation.
 """
 import numpy as np
 

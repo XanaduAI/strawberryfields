@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-TODO
+This module provides classes for interfacing with program execution jobs on a remote backend.
 """
 import enum
 import logging
@@ -110,7 +110,7 @@ class Job:
         """Refreshes the status of the job, along with the job result if the job is
         newly completed.
 
-        Only an open or queued job can be refreshed; an exception is raised otherwise.
+        Refreshing only has an effect for open or queued jobs.
         """
         if self.status.is_final:
             log.warning("A %s job cannot be refreshed", self.status.value)

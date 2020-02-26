@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-TODO
+This package contains the modules for the low-level Strawberry Fields program
+execution API. The :class:`~strawberryfields.api.Connection` class mediates
+the network connection to, and exposes operations provided by, a remote program
+execution backend. The :class:`~strawberryfields.api.Job` and
+:class:`~strawberryfields.api.Result` classes provide interfaces for managing
+program execution jobs and job results respectively.
 """
 
 from .connection import Connection, RequestFailedError
 from .job import Job, JobStatus, InvalidJobOperationError
 from .result import Result
-
-__all__ = ["Result"]
