@@ -1022,7 +1022,7 @@ class StarshipEngine:
     def run_async(self, program: Program, shots: int = 1) -> Job:
         """Runs a remote job asynchronously.
 
-        In the asynchronous mode, a `Job` is returned immediately, and the user can
+        In the asynchronous mode, a ``Job`` is returned immediately, and the user can
         manually refresh the status and result of the job.
 
         Args:
