@@ -34,7 +34,7 @@ class TestJob:
             AttributeError,
             match="The result is undefined for jobs that are not completed",
         ):
-            _ = job.result
+            job.result
 
     def test_final_job_raises_on_cancel(self, connection):
         """Tests that `job.cancel()` raises an error for a complete, failed, or
