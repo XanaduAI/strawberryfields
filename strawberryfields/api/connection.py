@@ -26,6 +26,7 @@ import requests
 from strawberryfields.configuration import DEFAULT_CONFIG
 from strawberryfields.io import to_blackbird
 from strawberryfields.program import Program
+
 from .job import Job, JobStatus
 from .result import Result
 

@@ -11,20 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Test fixtures for strawberryfield.api"""
+"""
+Test fixtures for strawberryfields.api tests
+"""
 import pytest
 
 from strawberryfields import Program, ops
 from strawberryfields.api import Connection
 
+# pylint: disable=expression-not-assigned
 
 @pytest.fixture
 def prog():
     """Program fixture."""
-    prog = Program(2)
-    with prog.context as q:
+    program = Program(2)
+    with program.context as q:
         ops.Dgate(0.5) | q[0]
-    return prog
+    return program
 
 
 @pytest.fixture

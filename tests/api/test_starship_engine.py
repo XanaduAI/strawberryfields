@@ -20,6 +20,8 @@ import pytest
 from strawberryfields.api import Connection, Job, JobStatus, Result
 from strawberryfields.engine import StarshipEngine
 
+# pylint: disable=bad-continuation,unused-argument,no-self-use,redefined-outer-name
+
 pytestmark = pytest.mark.api
 
 

@@ -14,6 +14,7 @@
 """
 Unit tests for strawberryfields.api.connection
 """
+from datetime import datetime
 import io
 
 import numpy as np
@@ -21,6 +22,8 @@ import pytest
 import requests
 
 from strawberryfields.api import Connection, JobStatus, RequestFailedError
+
+# pylint: disable=no-self-use
 
 pytestmark = pytest.mark.api
 
@@ -41,10 +44,12 @@ class MockResponse:
         self.binary_body = binary_body
 
     def json(self):
+        """Mocks the ``requests.Response.json()`` method."""
         return self.json_body
 
     @property
     def content(self):
+        """Mocks the ``requests.Response.content`` property."""
         return self.binary_body
 
 
@@ -61,6 +66,7 @@ class TestConnection:
         assert connection.port == port
         assert connection.use_ssl == use_ssl
 
+        # pylint: disable=protected-access
         assert connection._url("/abc") == "https://host:123/abc"
 
     def test_create_job(self, prog, connection, monkeypatch):
