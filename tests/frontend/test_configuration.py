@@ -420,7 +420,7 @@ class TestStoreAccount:
             m.setattr(os, "getcwd", lambda: tmpdir)
             m.setattr(conf, "user_config_dir", lambda *args: "NotTheCorrectDir")
             m.setattr(conf, "save_config_to_file", lambda a, b: call_history.append((a, b)))
-            conf.store_account(authentication_token, filename=test_filename, create_locally=True, **DEFAULT_KWARGS)
+            conf.store_account(authentication_token, filename=test_filename, location="local", **DEFAULT_KWARGS)
 
         assert call_history[0][0] == EXPECTED_CONFIG
         assert call_history[0][1] == tmpdir.join(test_filename)
@@ -436,7 +436,7 @@ class TestStoreAccount:
             m.setattr(os, "getcwd", lambda: "NotTheCorrectDir")
             m.setattr(conf, "user_config_dir", lambda *args: tmpdir)
             m.setattr(conf, "save_config_to_file", lambda a, b: call_history.append((a, b)))
-            conf.store_account(authentication_token, filename=test_filename, create_locally=False, **DEFAULT_KWARGS)
+            conf.store_account(authentication_token, filename=test_filename, location="user_config", **DEFAULT_KWARGS)
 
         assert call_history[0][0] == EXPECTED_CONFIG
         assert call_history[0][1] == tmpdir.join(test_filename)

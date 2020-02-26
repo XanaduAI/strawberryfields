@@ -36,7 +36,7 @@ and has the following format:
     port = 443
 
 Configuration options
-*********************
+---------------------
 
 **authentication_token (str)** (*required*)
     The authentication token to use when connecting to the API. Will be sent with every request in
@@ -57,14 +57,30 @@ Configuration options
 Store your account
 ------------------
 
-Using the :func:`configuration.store_account` function, a configuration file can be created easily. It only requires specifying the authentication token. Apart from that, optional configuration options can be passed as keyword arguments.
+Using the :func:`~.store_account` function, a configuration file can be created easily. It only requires specifying the authentication token. Apart from that, optional configuration options can be passed as keyword arguments.
 
-The following is an example for using `store_account` with defaults:
+Configure for the current SF project
+************************************
 
-.. code::
+The following is an example for using ``store_account`` with defaults:
+
+.. code-block:: python
 
     import strawberryfields as sf
-    my_token = "MyToken"
-    sf.store_account(my_token)
+    sf.store_account("MyToken")
 
-It is advised to execute this code snippet **only once** per configuration, separately from any other Strawberry Fields scripts. Using the default options it will store the account in the current working directory by creating a `config.toml` file.
+where ``"MyToken"`` contains the user specific authentication token.
+
+It is advised to execute this code snippet **only once** per configuration in the same directory where the SF project can be found. It should also be separated from any other Strawberry Fields scripts. Using the default options it will store the account in the *current working directory* by creating a ``config.toml`` file.
+
+Configure for every SF project
+******************************
+
+The following code snippet can be used to create a configuration file for *every Strawberry Fields project*.
+
+.. code-block:: python
+
+    import strawberryfields as sf
+    sf.store_account("MyToken", location="user_config")
+
+where ``"MyToken"`` is the user specific authentication token.
