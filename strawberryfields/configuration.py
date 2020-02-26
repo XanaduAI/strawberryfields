@@ -19,7 +19,7 @@ Configuration options
 *********************
 
 .. note::
-    The following configuration options are taken into consideration:
+    The following configuration options are available:```
 
         * **authentication_token (str)** (*required*): the token used for user authentication
         * **hostname (str)** (*optional*): the name of the host to connect to
