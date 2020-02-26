@@ -62,7 +62,7 @@ def load_config(filename="config.toml", **kwargs):
     Kwargs:
         filename (str): the name of the configuration file to look for
 
-        Configuration options are detailed in
+        Additional configuration options are detailed in
         :doc:`/introduction/configuration`
 
     Returns:
