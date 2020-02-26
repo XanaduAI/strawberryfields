@@ -46,7 +46,7 @@ def starship_engine(monkeypatch):
     """
     mock_api_client = MagicMock()
     monkeypatch.setattr("strawberryfields.engine.APIClient", mock_api_client)
-    engine = StarshipEngine("chip0", polling_delay_seconds=0)
+    engine = StarshipEngine("chip2", polling_delay_seconds=0)
     return engine
 
 
@@ -178,7 +178,7 @@ class TestStarshipEngine:
         """
         mock_api_client = MagicMock()
         monkeypatch.setattr("strawberryfields.engine.APIClient", mock_api_client)
-        engine = StarshipEngine("chip0")
+        engine = StarshipEngine("chip2")
         assert engine.client == mock_api_client()
         assert engine.jobs == []
         assert engine.REMOTE == True
@@ -327,7 +327,7 @@ class TestStarshipEngine:
         # NOTE: this is currently more of an integration test, currently a WIP / under development.
 
         api_client_params = {"hostname": "localhost"}
-        engine = StarshipEngine("chip0", polling_delay_seconds=0, **api_client_params)
+        engine = StarshipEngine("chip2", polling_delay_seconds=0, **api_client_params)
 
         # We don't want to actually send any requests, though we should make sure POST was called
         mock_api_client_post = MagicMock()
@@ -348,7 +348,7 @@ class TestStarshipEngine:
         monkeypatch.setattr(APIClient, "post", mock_api_client_post)
         monkeypatch.setattr(APIClient, "get", mock_get)
 
-        prog = sf.Program(4)
+        prog = sf.Program(8)
 
         sqz0 = 1.0
         sqz1 = 1.0
@@ -357,16 +357,14 @@ class TestStarshipEngine:
         pi = 3.14
 
         with prog.context as q:
-            ops.S2gate(sqz0, 0.0) | (q[0], q[2])
-            ops.S2gate(sqz1, 0.0) | (q[1], q[3])
+            ops.S2gate(1, 0) | (q[0], q[4])
+            ops.S2gate(1, 0) | (q[1], q[5])
+            ops.S2gate(1, 0) | (q[2], q[6])
+            ops.S2gate(1, 0) | (q[3], q[7])
             ops.Rgate(phi0) | q[0]
             ops.BSgate(pi / 4, pi / 2) | (q[0], q[1])
-            ops.Rgate(phi1) | q[0]
-            ops.BSgate(pi / 4, pi / 2) | (q[0], q[1])
-            ops.Rgate(phi0) | q[2]
-            ops.BSgate(pi / 4, pi / 2) | (q[2], q[3])
-            ops.Rgate(phi1) | q[2]
-            ops.BSgate(pi / 4, pi / 2) | (q[2], q[3])
+            ops.Rgate(phi0) | q[4]
+            ops.BSgate(pi / 4, pi / 2) | (q[4], q[5])
             ops.MeasureFock() | q
 
         engine.run(prog)
