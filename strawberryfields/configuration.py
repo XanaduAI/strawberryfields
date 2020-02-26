@@ -225,7 +225,7 @@ def store_account(authentication_token, filename="config.toml", location="local"
 
     The configuration file can be created in the following locations:
        - current working directory ("local")
-       - user configuration directory (user_config)
+       - user configuration directory ("user_config")
 
     Args:
         authentication_token (str): the authentication token to use when
