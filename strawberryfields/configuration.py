@@ -14,6 +14,31 @@
 r"""
 This module contains the :class:`Configuration` class, which is used to
 load, store, save, and modify configuration options for Strawberry Fields.
+
+Configuration options
+*********************
+
+.. note::
+    The following configuration options are taken into consideration:
+
+        * **authentication_token (str)** (*required*): the token used for user authentication
+        * **hostname (str)** (*optional*): the name of the host to connect to
+        * **use_ssl (bool)** (*optional*): specifies if requests should be sent using SSL
+        * **port (int)** (*optional*): the port to be used when connecting to the remote service
+        * **debug (bool)** (*optional*): determines if the debugging mode is requested
+
+Environment variables
+*********************
+
+.. note::
+
+    When loading the configuration, the following environment variables are checked:
+
+    * SF_API_AUTHENTICATION_TOKEN
+    * SF_API_HOSTNAME
+    * SF_API_USE_SSL
+    * SF_API_DEBUG
+    * SF_API_PORT
 """
 import logging as log
 import os
@@ -44,14 +69,11 @@ def load_config(filename="config.toml", **kwargs):
         2. data contained in environmental variables (if any)
         3. data contained in a configuration file (if exists)
 
-    Keyword arguments:
+    Kwargs:
         filename (str): the name of the configuration file to look for
-        authentication_token (str): the token to be used for user
-            authentication
-        hostname (str): the name of the host to connect to
-        use_ssl (bool): specifies if requests should be sent using SSL
-        port (int): the port to be used when connecting to the remote service
-        debug (bool): determines if the debugging mode is requested
+
+        Furthermore configuration options as detailed in
+        :mod:`strawberryfields.configuration`
 
     Returns:
         dict[str, dict[str, Union[str, bool, int]]]: the configuration
@@ -83,13 +105,8 @@ def create_config(authentication_token="", **kwargs):
     If called without passing any keyword arguments, then a default
     configuration object is created.
 
-    Keyword arguments:
-        authentication_token (str): the token to be used for user
-            authentication
-        hostname (str): the name of the host to connect to
-        use_ssl (bool): specifies if requests should be sent using SSL
-        port (int): the port to be used when connecting to the remote service
-        debug (bool): determines if the debugging mode is requested
+    Kwargs:
+        Configuration options as detailed in :mod:`strawberryfields.configuration`
 
     Returns:
         dict[str, dict[str, Union[str, bool, int]]]: the configuration
@@ -123,7 +140,7 @@ def get_config_filepath(filename="config.toml"):
         * The directory specified by the environment variable SF_CONF (if specified)
         * The user configuration directory (if specified)
 
-    Keyword arguments:
+    Kwargs:
         filename (str): the configuration file to look for
 
     Returns:
@@ -180,15 +197,7 @@ def update_from_environment_variables(config):
     """Updates the current configuration object from data stored in environment
     variables.
 
-    .. note::
-
-        The following environment variables are checked:
-
-        * SF_API_AUTHENTICATION_TOKEN
-        * SF_API_HOSTNAME
-        * SF_API_USE_SSL
-        * SF_API_DEBUG
-        * SF_API_PORT
+    The list of environment variables can be found at :mod:`strawberryfields.configuration`
 
     Args:
         config (dict[str, dict[str, Union[str, bool, int]]]): the
