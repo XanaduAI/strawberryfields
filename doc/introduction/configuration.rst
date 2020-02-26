@@ -71,12 +71,16 @@ The following is an example for using ``store_account`` with defaults:
 
 where ``"MyToken"`` contains the user-specific authentication token.
 
-It is advised to execute this code snippet **only once**, separately from executing any other Strawberry Fields scripts. Using the default options it will store the account in the *current working directory* by creating a ``config.toml`` file.
+It is advised to execute this code snippet **only once**, separately any other Python scripts.
+
+.. note::
+
+    Using the default options will store the account in the *Strawberry Fields configuration directory* by creating a ``config.toml`` file.
 
 Configuration for a project
 ***************************
 
-The following code snippet can be run in the *working directory* of a Strawberry Fields project to create a configuration file for *only* for this project.
+The following code snippet can be run in the *same directory* of a Python script or Jupyter Notebook that uses Strawberry Fields to create a configuration file *only for this project*:
 
 .. code-block:: python
 
