@@ -39,7 +39,7 @@ class Result:
     quantum :class:`~.Program` on the Gaussian backend to get
     a ``Result`` object.
 
-    Using this results object, the measurement samples
+    Using this ``Result`` object, the measurement samples
     can be returned, as well as quantum state information.
 
     >>> eng = sf.Engine("gaussian")
