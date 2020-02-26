@@ -17,7 +17,7 @@ load, store, save, and modify configuration options for Strawberry Fields.
 
 .. warning::
 
-    Details on the configuration options can be found at
+    The following configuration options are available:
     :doc:`/introduction/configuration`.
 
 """
@@ -62,7 +62,7 @@ def load_config(filename="config.toml", **kwargs):
     Kwargs:
         filename (str): the name of the configuration file to look for
 
-        Furthermore configuration options as detailed in
+        Configuration options are detailed in
         :doc:`/introduction/configuration`
 
     Returns:
