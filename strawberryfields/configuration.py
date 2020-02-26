@@ -220,12 +220,12 @@ def parse_environment_variable(key, value):
 
     return value
 
-def store_account(authentication_token, filename="config.toml", location="local", **kwargs):
+def store_account(authentication_token, filename="config.toml", location="user_config", **kwargs):
     """Stores an account in a configuration file.
 
     The configuration file can be created in the following locations:
-       - current working directory ("local")
        - user configuration directory ("user_config")
+       - current working directory ("local")
 
     Args:
         authentication_token (str): the authentication token to use when
@@ -240,10 +240,10 @@ def store_account(authentication_token, filename="config.toml", location="local"
         Configuration options are detailed in
         :doc:`/introduction/configuration`
     """
-    if location == "local":
-        directory = os.getcwd()
-    elif location == "user_config":
+    if location == "user_config":
         directory = user_config_dir("strawberryfields", "Xanadu")
+    elif location == "local":
+        directory = os.getcwd()
     else:
         raise ConfigurationError("This location is not recognized.")
 
