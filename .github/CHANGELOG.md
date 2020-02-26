@@ -9,9 +9,10 @@
 
 * Adds support in the applications layer for node-weighted graphs. Users can sample from graphs
   with node weights using the WAW encoding and input node weights into search algorithms in the
-  `clique` module.
+  `clique` and `subgraph` modules.
   [295](https://github.com/XanaduAI/strawberryfields/pull/295)
   [296](https://github.com/XanaduAI/strawberryfields/pull/296)
+  [297](https://github.com/XanaduAI/strawberryfields/pull/297)
 
 ### Improvements
 * Added two-mode squeezed operation support as a primitive, rather than simply

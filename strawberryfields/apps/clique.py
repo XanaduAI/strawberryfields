@@ -125,7 +125,7 @@ def search(
         graph (nx.Graph): the input graph
         iterations (int): number of steps in the algorithm
         node_select (str, list or array): method of selecting nodes during swap and growth. Can
-            be ``"uniform"`` (default), ``"degree"``, or a numpy array or list.
+            be ``"uniform"`` (default), ``"degree"``, or a NumPy array or list.
 
     Returns:
        list[int]: the largest clique found by the algorithm
@@ -177,7 +177,7 @@ def grow(
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
         node_select (str, list or array): method of selecting nodes from :math:`C_0` during
-            growth. Can be ``"uniform"`` (default), ``"degree"``, or a numpy array or list.
+            growth. Can be ``"uniform"`` (default), ``"degree"``, or a NumPy array or list.
 
     Returns:
         list[int]: a new clique subgraph of equal or larger size than the input
@@ -253,7 +253,7 @@ def swap(
         clique (list[int]): a subgraph specified by a list of nodes; the subgraph must be a clique
         graph (nx.Graph): the input graph
         node_select (str, list or array): method of selecting incoming nodes from :math:`C_1`
-            during swapping. Can be ``"uniform"`` (default), ``"degree"``, or a numpy array or list.
+            during swapping. Can be ``"uniform"`` (default), ``"degree"``, or a NumPy array or list.
 
     Returns:
         list[int]: a new clique subgraph of equal size as the input
@@ -323,7 +323,7 @@ def shrink(
         subgraph (list[int]): a subgraph specified by a list of nodes
         graph (nx.Graph): the input graph
         node_select (str, list or array): method of settling ties when more than one node of
-            equal degree can be removed. Can be ``"uniform"`` (default), or a numpy array or list.
+            equal degree can be removed. Can be ``"uniform"`` (default), or a NumPy array or list.
 
     Returns:
         list[int]: a clique of size smaller than or equal to the input subgraph
