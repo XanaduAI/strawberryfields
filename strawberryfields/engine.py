@@ -555,7 +555,7 @@ class StarshipEngine:
                         "The remote job failed due to an internal server error; "
                         "please try again."
                     )
-                    return None
+                    return
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             self._connection.cancel_job(job.id)
