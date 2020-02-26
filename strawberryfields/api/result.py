@@ -37,7 +37,7 @@ class Result:
 
     The following example runs an existing Strawberry Fields
     quantum :class:`~.Program` on the Gaussian backend to get
-    a results object.
+    a ``Result`` object.
 
     Using this results object, the measurement samples
     can be returned, as well as quantum state information.
