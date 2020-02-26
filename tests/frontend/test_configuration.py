@@ -409,34 +409,51 @@ DEFAULT_KWARGS = {
 class TestStoreAccount:
     """Tests for the store_account function."""
 
-    def test_config_created_locally(self):
+    def test_config_created_locally(self, monkeypatch, tmpdir):
         """Tests that a configuration file was created in the current
         directory."""
 
         test_filename = "test_config.toml"
 
+        call_history = []
+        with monkeypatch.context() as m:
+            m.setattr(os, "getcwd", lambda: tmpdir)
+            m.setattr(conf, "user_config_dir", lambda *args: "NotTheCorrectDir")
+            m.setattr(conf, "save_config_to_file", lambda a, b: call_history.append((a, b)))
+            conf.store_account(authentication_token, filename=test_filename, create_locally=True, **DEFAULT_KWARGS)
 
+        assert call_history[0][0] == EXPECTED_CONFIG
+        assert call_history[0][1] == tmpdir.join(test_filename)
+
+    def test_global_config_created(self, monkeypatch, tmpdir):
+        """Tests that a configuration file was created in the user
+        configuration directory for Strawberry Fields."""
+
+        test_filename = "test_config.toml"
 
         call_history = []
-        m.setattr(os, "getcwd", lambda: tmpdir)
-        m.setattr(conf, "save_config_to_file", lambda a, b: call_history.append((a, b)))
-        conf.store_account(authentication_token, filename=test_filename, create_locally=True, **DEFAULT_KWARGS)
+        with monkeypatch.context() as m:
+            m.setattr(os, "getcwd", lambda: "NotTheCorrectDir")
+            m.setattr(conf, "user_config_dir", lambda *args: tmpdir)
+            m.setattr(conf, "save_config_to_file", lambda a, b: call_history.append((a, b)))
+            conf.store_account(authentication_token, filename=test_filename, create_locally=False, **DEFAULT_KWARGS)
 
-        assert call_history[0] == DEFAULT_CONFIG
-        assert call_history[0] == tmpdir.join(test_filename)
+        assert call_history[0][0] == EXPECTED_CONFIG
+        assert call_history[0][1] == tmpdir.join(test_filename)
 
 class TestSaveConfigToFile:
     """Tests for the store_account function."""
 
     def test_save(self, tmpdir):
         """Test saving a configuration file."""
-        filename = str(tmpdir.join("test_config.toml"))	
+        test_filename = "test_config.toml"
+        filepath = str(tmpdir.join(test_filename))
 
         config = EXPECTED_CONFIG
 
         # make a change	
         config["api"]["hostname"] = "https://6.4.2.4"	
-        conf.save_config_to_file(filename)
+        conf.save_config_to_file(config, filepath)
 
-        result = toml.load(filename)	
+        result = toml.load(filepath)
         assert config == result

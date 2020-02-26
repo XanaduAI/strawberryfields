@@ -222,7 +222,9 @@ def store_account(authentication_token, filename="config.toml", create_locally=T
     """Stores an account in a configuration file.
 
     Args:
-        authentication_token (str): 
+        authentication_token (str): the authentication token to use when
+            connecting to the API, which  will be sent with every request in
+            the header
 
     Kwargs:
         create_locally (bool): determines if the configuration file should be
@@ -239,7 +241,7 @@ def store_account(authentication_token, filename="config.toml", create_locally=T
 
     filepath = os.path.join(directory, filename)
 
-    config = create_config_object(authentication_token=authentication_token, **kwargs)
+    config = create_config(authentication_token=authentication_token, **kwargs)
     save_config_to_file(config, filepath)
 
 def save_config_to_file(config, filepath):
