@@ -218,6 +218,41 @@ def parse_environment_variable(key, value):
 
     return value
 
+def store_account(authentication_token, filename="config.toml", create_locally=True, **kwargs):
+    """Stores an account in a configuration file.
+
+    Args:
+        authentication_token (str): 
+
+    Kwargs:
+        create_locally (bool): determines if the configuration file should be
+            saved locally or globally (to the user configuration directory)
+        filename (str): the name of the configuration file to look for
+
+        Configuration options are detailed in
+        :doc:`/introduction/configuration`
+    """
+    if create_locally:
+        directory = os.getcwd()
+    else:
+        directory = user_config_dir("strawberryfields", "Xanadu")
+
+    filepath = os.path.join(directory, filename)
+
+    config = create_config_object(authentication_token=authentication_token, **kwargs)
+    save_config_to_file(config, filepath)
+
+def save_config_to_file(config, filepath):
+    """Saves a configuration to a TOML file.
+
+    Args:
+        config (dict[str, dict[str, Union[str, bool, int]]]): the
+            configuration to be saved
+        filepath (str): path to the configuration file
+    """
+    with open(filepath, "w") as f:
+        toml.dump(config, f)
+
 VALID_KEYS = set(create_config()["api"].keys())
 DEFAULT_CONFIG = create_config()
 configuration = load_config()

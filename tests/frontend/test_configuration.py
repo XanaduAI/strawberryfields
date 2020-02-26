@@ -396,3 +396,47 @@ class TestUpdateFromEnvironmentalVariables:
 
         monkeypatch.setattr(conf, "DEFAULT_CONFIG_SPEC", {"api": {"some_integer": (int, 123)}})
         assert conf.parse_environment_variable("some_integer", "123") == 123
+
+DEFAULT_KWARGS = {
+        "api": {
+            "authentication_token": "071cdcce-9241-4965-93af-4a4dbc739135",
+            "hostname": "localhost",
+            "use_ssl": True,
+            "port": 443,
+                }
+        }
+
+class TestStoreAccount:
+    """Tests for the store_account function."""
+
+    def test_config_created_locally(self):
+        """Tests that a configuration file was created in the current
+        directory."""
+
+        test_filename = "test_config.toml"
+
+
+
+        call_history = []
+        m.setattr(os, "getcwd", lambda: tmpdir)
+        m.setattr(conf, "save_config_to_file", lambda a, b: call_history.append((a, b)))
+        conf.store_account(authentication_token, filename=test_filename, create_locally=True, **DEFAULT_KWARGS)
+
+        assert call_history[0] == DEFAULT_CONFIG
+        assert call_history[0] == tmpdir.join(test_filename)
+
+class TestSaveConfigToFile:
+    """Tests for the store_account function."""
+
+    def test_save(self, tmpdir):
+        """Test saving a configuration file."""
+        filename = str(tmpdir.join("test_config.toml"))	
+
+        config = EXPECTED_CONFIG
+
+        # make a change	
+        config["api"]["hostname"] = "https://6.4.2.4"	
+        conf.save_config_to_file(filename)
+
+        result = toml.load(filename)	
+        assert config == result
