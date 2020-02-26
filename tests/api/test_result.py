@@ -16,6 +16,8 @@ import pytest
 
 from strawberryfields.api import Result
 
+pytestmark = pytest.mark.api
+
 
 class TestResult:
     """Tests for the ``Result`` class."""
@@ -25,5 +27,7 @@ class TestResult:
         """
         result = Result([[1, 2], [3, 4]], is_stateful=False)
 
-        with pytest.raises(AttributeError, match="The state is undefined for a stateless computation."):
+        with pytest.raises(
+            AttributeError, match="The state is undefined for a stateless computation."
+        ):
             _ = result.state

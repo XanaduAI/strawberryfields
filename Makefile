@@ -33,11 +33,13 @@ dist:
 .PHONY : clean
 clean:
 	rm -rf strawberryfields/__pycache__
+	rm -rf strawberryfields/api/__pycache__
 	rm -rf strawberryfields/backends/__pycache__
 	rm -rf strawberryfields/backends/fockbackend/__pycache__
 	rm -rf strawberryfields/backends/tfbackend/__pycache__
 	rm -rf strawberryfields/backends/gaussianbackend/__pycache__
 	rm -rf tests/__pycache__
+	rm -rf tests/api/__pycache__
 	rm -rf tests/backend/__pycache__
 	rm -rf tests/frontend/__pycache__
 	rm -rf tests/integration/__pycache__

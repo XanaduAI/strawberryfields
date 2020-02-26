@@ -20,6 +20,8 @@ import requests
 
 from strawberryfields.api import Connection, JobStatus, RequestFailedError
 
+pytestmark = pytest.mark.api
+
 
 def mock_return(return_value):
     """A helper function for defining a mock function that returns the given value for

@@ -16,6 +16,8 @@ import pytest
 
 from strawberryfields.api import InvalidJobOperationError, Job, JobStatus
 
+pytestmark = pytest.mark.api
+
 
 class TestJob:
     """Tests for the ``Job`` class."""

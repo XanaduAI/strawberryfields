@@ -18,6 +18,8 @@ import pytest
 from strawberryfields.api import Connection, Job, JobStatus, Result
 from strawberryfields.engine import StarshipEngine
 
+pytestmark = pytest.mark.api
+
 
 def mock_return(return_value):
     """A helper function for defining a mock function that returns the given value for
