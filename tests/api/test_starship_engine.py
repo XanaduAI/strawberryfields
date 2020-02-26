@@ -46,60 +46,48 @@ class MockServer:
         )
 
 
+@pytest.fixture
+def job_to_complete(connection, monkeypatch):
+    """Mocks a remote job that is completed after a certain number of requests."""
+    monkeypatch.setattr(
+        Connection,
+        "create_job",
+        mock_return(Job(id_="123", status=JobStatus.OPEN, connection=connection)),
+    )
+    server = MockServer()
+    monkeypatch.setattr(Connection, "get_job_status", server.get_job_status)
+    monkeypatch.setattr(
+        Connection,
+        "get_job_result",
+        mock_return(Result([[1, 2], [3, 4]], is_stateful=False)),
+    )
+
+
 class TestStarshipEngine:
     """Tests for the ``StarshipEngine`` class."""
 
-    def test_run_complete(self, connection, prog, monkeypatch):
+    def test_run_complete(self, connection, prog, job_to_complete):
         """Tests a successful synchronous job execution."""
-        id_, result_expected = "123", np.array([[1, 2], [3, 4]], dtype=np.int8)
-
-        server = MockServer()
-        monkeypatch.setattr(
-            Connection,
-            "create_job",
-            mock_return(Job(id_=id_, status=JobStatus.OPEN, connection=connection)),
-        )
-        monkeypatch.setattr(Connection, "get_job_status", server.get_job_status)
-        monkeypatch.setattr(
-            Connection,
-            "get_job_result",
-            mock_return(Result(result_expected, is_stateful=False)),
-        )
-
         engine = StarshipEngine("chip2", connection=connection)
         result = engine.run(prog)
 
-        assert np.array_equal(result.samples.T, result_expected)
+        assert np.array_equal(result.samples.T, np.array([[1, 2], [3, 4]]))
 
         with pytest.raises(AttributeError):
             _ = result.state
 
-    def test_run_async(self, connection, prog, monkeypatch):
+    def test_run_async(self, connection, prog, job_to_complete):
         """Tests a successful asynchronous job execution."""
-        id_, result_expected = "123", np.array([[1, 2], [3, 4]], dtype=np.int8)
-
-        server = MockServer()
-        monkeypatch.setattr(
-            Connection,
-            "create_job",
-            mock_return(Job(id_=id_, status=JobStatus.OPEN, connection=connection)),
-        )
-        monkeypatch.setattr(Connection, "get_job_status", server.get_job_status)
-        monkeypatch.setattr(
-            Connection,
-            "get_job_result",
-            mock_return(Result(result_expected, is_stateful=False)),
-        )
 
         engine = StarshipEngine("chip2", connection=connection)
         job = engine.run_async(prog)
         assert job.status == JobStatus.OPEN
 
-        for _ in range(server.REQUESTS_BEFORE_COMPLETED):
+        for _ in range(MockServer.REQUESTS_BEFORE_COMPLETED):
             job.refresh()
 
         assert job.status == JobStatus.COMPLETED
-        assert np.array_equal(job.result.samples.T, result_expected)
+        assert np.array_equal(job.result.samples.T, np.array([[1, 2], [3, 4]]))
 
         with pytest.raises(AttributeError):
             _ = job.result.state
