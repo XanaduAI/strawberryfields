@@ -30,12 +30,12 @@ from appdirs import user_config_dir
 log.getLogger()
 
 DEFAULT_CONFIG_SPEC = {
-   "api": {
+    "api": {
         "authentication_token": (str, ""),
         "hostname": (str, "localhost"),
         "use_ssl": (bool, True),
         "port": (int, 443),
-    }
+        }
 }
 
 class ConfigurationError(Exception):
@@ -67,10 +67,10 @@ def load_config(filename="config.toml", **kwargs):
     """
     config = create_config()
 
-    config_filepath = get_config_filepath(filename=filename)
+    filepath = get_config_filepath(filename=filename)
 
-    if config_filepath is not None:
-        loaded_config = load_config_file(config_filepath)
+    if filepath is not None:
+        loaded_config = load_config_file(filepath)
         valid_api_options = keep_valid_options(loaded_config["api"])
         config["api"].update(valid_api_options)
     else:
@@ -142,6 +142,8 @@ def get_config_filepath(filename="config.toml"):
         filepath = os.path.join(directory, filename)
         if os.path.exists(filepath):
             return filepath
+
+    return None
 
 def load_config_file(filepath):
     """Load a configuration object from a TOML formatted file.
