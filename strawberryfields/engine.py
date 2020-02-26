@@ -461,15 +461,6 @@ class StarshipEngine:
     >>> result
     [[0 1 0 2 1 0 0 0]]
 
-    Run a job synchronously, but cancel it before it is completed using a keyboard
-    interrupt (`ctrl+c`):
-
-    >>> result = engine.run(program, shots=1)
-    ^C---------------------------------------------------------------------------
-    KeyboardInterrupt                         Traceback (most recent call last)
-    <ipython-input-4-f1a1495c6d9c> in <module>()
-    ----> 1 time.sleep(10)
-
     Run a job asynchronously:
 
     >>> job = engine.run_async(program, shots=1)
@@ -525,7 +516,9 @@ class StarshipEngine:
         """Runs a remote job synchronously.
 
         In the synchronous mode, the engine blocks until the job is completed, failed, or
-        cancelled. If the job completes successfully, the result is returned; if the job
+        cancelled. A job in progress can be cancelled with a keyboard interrupt (`ctrl+c`).
+
+        If the job completes successfully, the result is returned; if the job
         fails or is cancelled, ``None`` is returned.
 
         Args:
