@@ -1100,7 +1100,7 @@ class MZgate(Gate):
 
     .. math::
 
-        \mathrm{MZ}(\phi_{ex}, \phi_{in}) = BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
+        \mathrm{MZ}(\phi_{in}, \phi_{ex}) = BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
             (R(\phi_{in})\otimes I) BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
             (R(\phi_{ex})\otimes I)
 
@@ -1116,9 +1116,9 @@ class MZgate(Gate):
     def _decompose(self, reg, **kwargs):
         # into local phase shifts and two 50-50 beamsplitters
         return [
-            Command(Rgate(self.p[0]), reg[0]),
-            Command(BSgate(np.pi/4, np.pi/2), reg),
             Command(Rgate(self.p[1]), reg[0]),
+            Command(BSgate(np.pi/4, np.pi/2), reg),
+            Command(Rgate(self.p[0]), reg[0]),
             Command(BSgate(np.pi/4, np.pi/2), reg)
         ]
 
@@ -1472,7 +1472,7 @@ class Interferometer(Decomposition):
 
                 if "symmetric" in mesh:
                     # Mach-Zehnder interferometers
-                    cmds.append(Command(MZgate(np.mod(phi, 2*np.pi), np.mod(theta, 2*np.pi)), (reg[n], reg[m])))
+                    cmds.append(Command(MZgate(np.mod(theta, 2*np.pi), np.mod(phi, 2*np.pi)), (reg[n], reg[m])))
 
                 else:
                     # Clements style beamsplitters
