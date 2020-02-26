@@ -558,7 +558,7 @@ class StarshipEngine:
         """Runs a remote job asynchronously.
 
         In the asynchronous mode, a ``Job`` object is returned immediately, and the user can
-        manually refresh the status and result of the job.
+        manually refresh the status and check for updated results of the job.
 
         Args:
             program (strawberryfields.Program): the quantum circuit
