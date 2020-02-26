@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-This module contains the :class:`Configuration` class, which is used to
-load, store, save, and modify configuration options for Strawberry Fields.
+This module contains functions used to load, store, save, and modify
+configuration options for Strawberry Fields.
 
 .. warning::
 
-    The following configuration options are available:
-    :doc:`/introduction/configuration`.
+    See more details regarding Strawberry Fields configuration and available
+    configuration options on the :doc:`/introduction/configuration` page.
 
 """
 import logging as log
@@ -37,9 +37,6 @@ DEFAULT_CONFIG_SPEC = {
         "port": (int, 443),
     }
 }
-
-BOOLEAN_KEYS = {"use_ssl"}
-INTEGER_KEYS = {"port"}
 
 class ConfigurationError(Exception):
     """Exception used for configuration errors"""

@@ -35,27 +35,21 @@ and has the following format:
     use_ssl = true
     port = 443
 
-Summary of options
-------------------
-
-Keyword arguments
-*****************
-
-    **authentication_token (str)** (*required*)
-        The authentication token to use when connecting to the API. Will be sent with every request in
-        the header.
-    **hostname (str)** (*optional*)
-        The hostname of the server to connect to. Defaults to localhost. Must be one of the allowed
-        hosts.
-    **use_ssl (bool)** (*optional*)
-        Whether to use SSL or not when connecting to the API. True or False.
-    **port (int)** (*optional*)
-        The port to be used when connecting to the remote service.
-
-Environment variables
+Configuration options
 *********************
 
-* SF_API_AUTHENTICATION_TOKEN
-* SF_API_HOSTNAME
-* SF_API_USE_SSL
-* SF_API_PORT
+**authentication_token (str)** (*required*)
+    The authentication token to use when connecting to the API. Will be sent with every request in
+    the header. Corresponding environment variable: ``SF_API_AUTHENTICATION_TOKEN``
+
+**hostname (str)** (*optional*)
+    The hostname of the server to connect to. Defaults to ``localhost``. Must be one of the allowed
+    hosts. Corresponding environment variable: ``SF_API_HOSTNAME``
+
+**use_ssl (bool)** (*optional*)
+    Whether to use SSL or not when connecting to the API. True or False.
+    Corresponding environment variable: ``SF_API_USE_SSL``
+
+**port (int)** (*optional*)
+    The port to be used when connecting to the remote service.
+    Corresponding environment variable: ``SF_API_PORT``
