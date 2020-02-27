@@ -86,7 +86,7 @@ configuration file *only for this project*:
 
 .. warning::
 
-    It is advised to execute this code snippet **separately** from any other
+    It is advised to call `store_account` **separately** from any other
     Python code, such that the authentication token is not shared accidentally.
 
 To check out more detailed examples visit the :func:`~.store_account`
