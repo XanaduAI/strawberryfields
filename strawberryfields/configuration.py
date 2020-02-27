@@ -240,9 +240,8 @@ def store_account(authentication_token, filename="config.toml", location="user_c
      for maintaining per-project configuration settings.
 
     Args:
-        authentication_token (str): the authentication token to use when
-            connecting to the API; it will be sent with every request in the
-            header
+        authentication_token (str): API token for authentication to the Xanadu Cloud platform.
+            This is required for submitting remote jobs using :class:`~.StarshipEngine`.
 
     Kwargs:
         location (str): determines where the configuration file should be saved
