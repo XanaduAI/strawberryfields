@@ -468,7 +468,7 @@ class LocalEngine(BaseEngine):
 
 
 class StarshipEngine:
-    """A quantum program executor engine that that provides a simple interface for
+    """A quantum program executor engine that provides a simple interface for
     running remote jobs in a blocking or non-blocking manner.
 
     **Example:**
