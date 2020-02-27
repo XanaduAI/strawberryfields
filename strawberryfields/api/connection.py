@@ -23,7 +23,7 @@ from typing import List
 import numpy as np
 import requests
 
-from strawberryfields.configuration import DEFAULT_CONFIG
+from strawberryfields.configuration import configuration
 from strawberryfields.io import to_blackbird
 from strawberryfields.program import Program
 
@@ -78,10 +78,10 @@ class Connection:
     # pylint: disable=bad-continuation
     def __init__(
         self,
-        token: str,
-        host: str = DEFAULT_CONFIG["api"]["hostname"],
-        port: int = DEFAULT_CONFIG["api"]["port"],
-        use_ssl: bool = DEFAULT_CONFIG["api"]["use_ssl"],
+        token: str = configuration["api"]["authentication_token"],
+        host: str = configuration["api"]["hostname"],
+        port: int = configuration["api"]["port"],
+        use_ssl: bool = configuration["api"]["use_ssl"],
         verbose: bool = False,
     ):
         self._token = token
