@@ -82,10 +82,9 @@ In these examples ``"MyToken"`` contains the user-specific authentication token.
     Python code, such that the authentication token is not shared or committed
     accidentally.
 
-There might be cases when you would like to have a configuration different from the
-the default. The following code snippet can be run in the *same directory* of a
+The following code snippet can be run in the *same directory* of a
 Python script or Jupyter Notebook that uses Strawberry Fields to create a
-configuration file *only for this project*:
+configuration file locally:
 
 .. code-block:: python
 
