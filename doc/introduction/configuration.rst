@@ -39,12 +39,14 @@ Configuration options
 ---------------------
 
 **authentication_token (str)** (*required*)
-    The authentication token to use when connecting to the API. Will be sent with every request in
-    the header. Corresponding environment variable: ``SF_API_AUTHENTICATION_TOKEN``
+    API token for authentication to the Xanadu Cloud platform. This is required
+    for submitting remote jobs using :class:`~.StarshipEngine`. Corresponding
+    environment variable: ``SF_API_AUTHENTICATION_TOKEN``
 
 **hostname (str)** (*optional*)
-    The hostname of the server to connect to. Defaults to ``localhost``. Must be one of the allowed
-    hosts. Corresponding environment variable: ``SF_API_HOSTNAME``
+    The hostname of the server to connect to. Defaults to ``localhost``. Must
+    be one of the allowed hosts. Corresponding environment variable:
+    ``SF_API_HOSTNAME``
 
 **use_ssl (bool)** (*optional*)
     Whether to use SSL or not when connecting to the API. True or False.
@@ -57,7 +59,8 @@ Configuration options
 Store your account
 ------------------
 
-Using the :func:`~.store_account` function, a configuration file can be created easily. It only requires specifying the authentication token.
+Using the :func:`~.store_account` function, a configuration file can be created
+easily. It only requires specifying the authentication token.
 
 In these examples ``"MyToken"`` contains the user-specific authentication token.
 
@@ -68,9 +71,13 @@ In these examples ``"MyToken"`` contains the user-specific authentication token.
 
 .. note::
 
-    Using the default options will store the account in the *Strawberry Fields configuration directory* by creating a ``config.toml`` file.
+    By default, the account is stored in a ``config.toml`` file located in the
+    *Strawberry Fields configuration directory*.
 
-There might be cases when you would like to have a configuration different to the default. The following code snippet can be run in the *same directory* of a Python script or Jupyter Notebook that uses Strawberry Fields to create a configuration file *only for this project*:
+There might be cases when you would like to have a configuration different from the
+the default. The following code snippet can be run in the *same directory* of a
+Python script or Jupyter Notebook that uses Strawberry Fields to create a
+configuration file *only for this project*:
 
 .. code-block:: python
 
@@ -79,6 +86,8 @@ There might be cases when you would like to have a configuration different to th
 
 .. warning::
 
-    It is advised to execute this code snippet **separately** from any other Python code, such that the authentication token is not shared accidentally.
+    It is advised to execute this code snippet **separately** from any other
+    Python code, such that the authentication token is not shared accidentally.
 
-To check out more detailed examples visit the :func:`~.store_account` documentation.
+To check out more detailed examples visit the :func:`~.store_account`
+documentation.
