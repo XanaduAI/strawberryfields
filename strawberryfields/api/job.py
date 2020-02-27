@@ -122,7 +122,7 @@ class Job:
         if self._status.is_final:
             log.warning("A %s job cannot be refreshed", self._status.value)
             return
-        self._status = self._connection.get_job_status(self.id)
+        self._status = JobStatus(self._connection.get_job_status(self.id))
         if self._status == JobStatus.COMPLETED:
             self._result = self._connection.get_job_result(self.id)
 
