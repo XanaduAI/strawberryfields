@@ -221,7 +221,7 @@ def parse_environment_variable(key, value):
     return value
 
 def store_account(authentication_token, filename="config.toml", location="user_config", **kwargs):
-    r"""Configure Strawberry Fields for access to the Xanadu cloud platform by
+    r"""Configure Strawberry Fields for access to the Xanadu Cloud platform by
     saving your account credentials.
 
     The configuration file can be created in the following locations:
