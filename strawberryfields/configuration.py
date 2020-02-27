@@ -245,11 +245,10 @@ def store_account(authentication_token, filename="config.toml", location="user_c
 
     Kwargs:
         location (str): determines where the configuration file should be saved
-
         filename (str): the name of the configuration file to look for
 
-        Configuration options are detailed in
-        :doc:`/introduction/configuration`
+Additional configuration options are detailed in :doc:`/introduction/configuration` and can be passed
+as keyword arguments.
     """
     if location == "user_config":
         directory = user_config_dir("strawberryfields", "Xanadu")
