@@ -410,10 +410,12 @@ class LocalEngine(BaseEngine):
             # the run options of successive programs
             # overwrite the run options of previous programs
             # in the list
+            program_lst = program
             for p in program:
                 temp_run_options.update(p.run_options)
         else:
             # single program to execute
+            program_lst = [program]
             temp_run_options.update(program.run_options)
 
         temp_run_options.update(run_options or {})
@@ -429,6 +431,23 @@ class LocalEngine(BaseEngine):
         result = super()._run(
             program, args=args, compile_options=compile_options, **eng_run_options
         )
+        # check that batching is not used together with shots > 1
+        if self.backend_options.get("batch_size", 0) and eng_run_options["shots"] > 1:
+            raise NotImplementedError("Batching cannot be used together with multiple shots.")
+
+        # check that post-selection and feed-forwarding is not used together with shots > 1
+        for p in program_lst:
+            for c in p.circuit:
+                try:
+                    if c.op.select and eng_run_options["shots"] > 1:
+                        raise NotImplementedError("Post-selection cannot be used together with multiple shots.")
+                except AttributeError:
+                    pass
+
+                if c.op.measurement_deps and eng_run_options["shots"] > 1:
+                    raise NotImplementedError("Feed-forwarding of measurements cannot be used together with multiple shots.")
+
+        result = super()._run(program, args=args, compile_options=compile_options, **eng_run_options)
 
         modes = temp_run_options["modes"]
 
@@ -548,7 +567,7 @@ class StarshipEngine:
                         "The remote job failed due to an internal server error; "
                         "please try again."
                     )
-                    return
+                    return None
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             self._connection.cancel_job(job.id)

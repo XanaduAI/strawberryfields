@@ -99,13 +99,6 @@ class TestLocalSearch:
         assert result == [0, 1, 2, 3]
 
 
-def patch_random_shuffle(x, reverse):
-    """Dummy function for ``np.random.shuffle`` to make output deterministic. This dummy function
-    reverses ``x`` in place if ``reverse == True`` and does nothing otherwise."""
-    if reverse:
-        x.reverse()
-
-
 @pytest.mark.parametrize("dim", range(4, 10))
 class TestGrow:
     """Tests for the function ``strawberryfields.clique.grow``"""
@@ -156,6 +149,57 @@ class TestGrow:
 
         assert c1 != c2
 
+    def test_grow_maximal_weight(self, dim):
+        """Test if function grows to expected maximal graph when weight-based node selection is
+        used. The chosen graph is a fully connected graph where the final three nodes have
+        subsequently been disconnected from each other, but remain connected to all the other
+        nodes. We then start from the clique composed of all but the final three nodes and seek
+        to grow. In this construction, we can add just one of the final three nodes. This test
+        gives the final node the largest weight, so we expect that one to be added."""
+        graph = nx.complete_graph(dim)
+        s = graph.subgraph([dim - 3, dim - 2, dim - 1])
+        for e in s.edges():
+            graph.remove_edge(*e)
+
+        s = set(range(dim - 3))
+        weights = list(range(dim))
+        target = s | {dim - 1}
+        assert set(clique.grow(s, graph, node_select=weights)) == target
+
+    def test_grow_maximal_weight_tie(self, dim, monkeypatch):
+        """Test if function grows using randomness to break ties during weight-based node
+        selection. The chosen graph is a fully connected graph where the final three nodes have
+        subsequently been disconnected from each other, but remain connected to all the other
+        nodes. We then start from the clique composed of all but the final three nodes and seek
+        to grow. In this construction, we can add just one of the final three nodes. This test
+        gives every node the same weight, so we expect that they should be selected randomly with
+        equal probability. This test monkeypatches the ``np.random.choice`` call to guarantee
+        that one of the nodes is picked during one run of ``grow`` and the another node is picked
+        during the next run."""
+        graph = nx.complete_graph(dim)
+        s = graph.subgraph([dim - 3, dim - 2, dim - 1])
+        for e in s.edges():
+            graph.remove_edge(*e)
+
+        s = set(range(dim - 3))
+        weights = [1 for _ in range(dim)]
+
+        patch_random_choice_1 = functools.partial(patch_random_choice, element=0)
+        patch_random_choice_2 = functools.partial(patch_random_choice, element=1)
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_1)
+            c1 = clique.grow(s, graph, node_select=weights)
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_2)
+            c2 = clique.grow(s, graph, node_select=weights)
+
+        target1 = list(s | {dim - 3})
+        target2 = list(s | {dim - 2})
+        assert c1 != c2
+        assert target1 == c1 and target2 == c2
+
     def test_input_not_clique(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
         with pytest.raises(ValueError, match="Input subgraph is not a clique"):
@@ -173,6 +217,14 @@ class TestGrow:
         """Test if function raises a ``ValueError`` when input is not a subgraph"""
         with pytest.raises(ValueError, match="Input is not a valid subgraph"):
             clique.grow([dim + 1], nx.empty_graph(dim))
+
+    def test_bad_weights(self, dim, graph):
+        """Test if function raises a ``ValueError`` when a vector of node weights input to
+        ``node_select`` is not of the same dimension as the input graph."""
+        s = [0, 1]
+        w = np.ones(dim - 1)
+        with pytest.raises(ValueError, match="Number of node weights must match number of nodes"):
+            clique.grow(s, graph, node_select=w)
 
 
 @pytest.mark.parametrize("dim", range(5, 10))
@@ -234,6 +286,51 @@ class TestSwap:
 
         assert c1 != c2
 
+    def test_swap_weight(self, dim):
+        """Test if function performs correct swap operation when weight-based node selection is
+        used. The input graph is a complete graph with the ``(dim - 1, dim - 3)`` and
+        ``(dim - 2, dim - 4)`` edges removed. The starting clique is the first ``dim - 2`` nodes.
+        This results in two candidate swap pairs: ``(dim - 1, dim - 3)`` and ``(dim - 2, dim - 4)``.
+        Since node ``dim - 1`` has the largest weight, we expect to swap that in by removing node
+        ``dim - 3``."""
+        graph = nx.complete_graph(dim)
+        graph.remove_edge(dim - 1, dim - 3)
+        graph.remove_edge(dim - 2, dim - 4)
+        s = list(range(dim - 2))
+        weights = list(range(dim))
+        result = set(clique.swap(s, graph, node_select=weights))
+        expected = set(range(dim - 3)) | {dim - 1}
+        assert result == expected
+
+    def test_swap_weight_tie(self, dim, monkeypatch):
+        """Test if function performs correct swap operation using randomness to break ties during
+        degree-based node selection. The input graph is a complete graph with the ``(dim - 1,
+        dim - 3)`` and ``(dim - 2, dim - 4)`` edges removed. The starting clique is the first
+        ``dim - 2`` nodes. This results in two candidate swap pairs: ``(dim - 1, dim - 3)`` and
+        ``(dim - 2, dim - 4)``. This test gives the every node the same weight, so we expect that
+        either pair should be selected randomly with equal probability. This test monkeypatches
+        the ``np.random.choice`` call to guarantee that one of the nodes is picked during one run
+        of ``swap`` and the another node is picked during the next run.
+        """
+        graph = nx.complete_graph(dim)
+        graph.remove_edge(dim - 1, dim - 3)
+        graph.remove_edge(dim - 2, dim - 4)
+        s = list(range(dim - 2))
+        weights = [1 for _ in range(dim)]
+
+        patch_random_choice_1 = functools.partial(patch_random_choice, element=0)
+        patch_random_choice_2 = functools.partial(patch_random_choice, element=1)
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_1)
+            c1 = clique.swap(s, graph, node_select=weights)
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_2)
+            c2 = clique.swap(s, graph, node_select=weights)
+
+        assert c1 != c2
+
     def test_input_not_clique(self, dim):
         """Tests if function raises a ``ValueError`` when input is not a clique"""
         with pytest.raises(ValueError, match="Input subgraph is not a clique"):
@@ -251,6 +348,14 @@ class TestSwap:
         s = [0]
         with pytest.raises(ValueError, match="Node selection method not recognized"):
             clique.swap(s, graph, node_select="")
+
+    def test_bad_weights(self, dim, graph):
+        """Test if function raises a ``ValueError`` when a vector of node weights input to
+        ``node_select`` is not of the same dimension as the input graph."""
+        s = [0, 1]
+        w = np.ones(dim - 1)
+        with pytest.raises(ValueError, match="Number of node weights must match number of nodes"):
+            clique.swap(s, graph, node_select=w)
 
 
 @pytest.mark.parametrize("dim", range(6, 10))
@@ -302,21 +407,79 @@ class TestShrink:
         wheel. Since the function uses randomness in node selection when there is a tie (which
         occurs in the case of the wheel graph), the resultant shrunk cliques are expected to be
         different each time ``shrink`` is run. This function monkeypatches the
-        ``np.random.shuffle`` call so that different nodes are removed during each run."""
+        ``np.random.choice`` call so that different nodes are removed during each run."""
         graph = nx.wheel_graph(dim)
         subgraph = graph.nodes()  # subgraph is the entire graph
 
-        patch_random_shuffle_1 = functools.partial(patch_random_shuffle, reverse=False)
-        patch_random_shuffle_2 = functools.partial(patch_random_shuffle, reverse=True)
+        patch_random_choice_1 = functools.partial(patch_random_choice, element=0)
+        patch_random_choice_2 = functools.partial(patch_random_choice, element=1)
 
         with monkeypatch.context() as m:
-            m.setattr(np.random, "shuffle", patch_random_shuffle_1)
+            m.setattr(np.random, "choice", patch_random_choice_1)
             c1 = clique.shrink(subgraph, graph)
         with monkeypatch.context() as m:
-            m.setattr(np.random, "shuffle", patch_random_shuffle_2)
+            m.setattr(np.random, "choice", patch_random_choice_2)
             c2 = clique.shrink(subgraph, graph)
 
         assert c1 != c2
+
+    def test_weight_based_ties(self, dim):
+        """Test that the function returns the correct clique when using weight-based node
+        selection to settle ties. The starting graph is a barbell graph and the subgraph is taken
+        to be the whole graph. The weights of the first clique in the barbell are set to be less
+        than the weights of the second, so that we expect the function to return the second
+        clique."""
+        graph = nx.barbell_graph(dim, 0)
+        subgraph = graph.nodes()
+        weights = [1] * dim + [2] * dim
+
+        c = clique.shrink(subgraph, graph, node_select=weights)
+        assert c == list(range(dim, 2 * dim))
+
+    def test_weight_and_degree_ties(self, dim, monkeypatch):
+        """Test that the function settles ties at random when node-weight based node selection is
+        used but there is still a tie, i.e., nodes with equal weight. The starting graph is a
+        complete graph with one edge removed between the first two nodes, and the subgraph is
+        taken to be the whole graph. All nodes have equal weight. In this problem, the function
+        can either remove the first or second node to make a clique. Either node should be
+        removed at random, and this test monkeypatches the ``np.random.choice`` call to ensure
+        both eventualities occur."""
+        graph = nx.complete_graph(dim)
+        subgraph = graph.nodes()
+        graph.remove_edge(0, 1)
+        weights = [1] * dim
+
+        patch_random_choice_1 = functools.partial(patch_random_choice, element=0)
+        patch_random_choice_2 = functools.partial(patch_random_choice, element=1)
+
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_1)
+            c1 = clique.shrink(subgraph, graph, node_select=weights)
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", patch_random_choice_2)
+            c2 = clique.shrink(subgraph, graph, node_select=weights)
+
+        target1 = list(range(1, dim))
+        target2 = [0] + list(range(2, dim))
+
+        assert c1 != c2
+        assert c1 == target1 and c2 == target2
+
+    def test_bad_weights(self, dim, graph):
+        """Test if function raises a ``ValueError`` when a vector of node weights input to
+        ``node_select`` is not of the same dimension as the input graph."""
+        s = [0, 1]
+        w = np.ones(dim - 1)
+        with pytest.raises(ValueError, match="Number of node weights must match number of nodes"):
+            clique.shrink(s, graph, node_select=w)
+
+    def test_bad_node_select(self, dim):
+        """Tests if function raises a ``ValueError`` when input an invalid ``node_select``
+        argument"""
+        graph = nx.barbell_graph(dim, 0)
+        s = list(range(2 * dim))
+        with pytest.raises(ValueError, match="Node selection method not recognized"):
+            clique.shrink(s, graph, node_select="")
 
 
 @pytest.mark.parametrize("dim", range(2, 10))

@@ -8,8 +8,11 @@
   [#270](https://github.com/XanaduAI/strawberryfields/pull/270)
 
 * Adds support in the applications layer for node-weighted graphs. Users can sample from graphs
-  with node weights using the WAW encoding.
-  [295](https://github.com/XanaduAI/strawberryfields/pull/295)
+  with node weights using the WAW encoding and input node weights into search algorithms in the
+  `clique` and `subgraph` modules.
+  [#295](https://github.com/XanaduAI/strawberryfields/pull/295)
+  [#296](https://github.com/XanaduAI/strawberryfields/pull/296)
+  [#297](https://github.com/XanaduAI/strawberryfields/pull/297)
 
 ### Improvements
 * Added two-mode squeezed operation support as a primitive, rather than simply
@@ -27,6 +30,11 @@
 * Moved apply-gate functions to `Circuit` class, and removed `apply_gate_einsum` and
   `Circuits._apply_gate`, since they were no longer used.
   [#293](https://github.com/XanaduAI/strawberryfields/pull/293/)
+  
+* Unified backend results returned from running simulators and added checks for
+  using batching, post-selection and feed-fowarding together with multiple
+  shots, which now raises an error.
+  [#300](https://github.com/XanaduAI/strawberryfields/pull/300)
 
 * Replaced the `Configuration` class with the `load_config` and auxiliary
   functions to load configuration from keyword arguments, environment variables
