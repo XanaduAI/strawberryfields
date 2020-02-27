@@ -21,7 +21,8 @@ backend.
 import sys
 import argparse
 
-from strawberryfields.engine import StarshipEngine, Connection, JobFailedError
+from strawberryfields.api import Connection
+from strawberryfields.engine import StarshipEngine
 from strawberryfields.io import load
 
 
