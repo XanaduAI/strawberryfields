@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     program = load(args.input)
 
-    eng = StarshipEngine("chip2", connection)
+    eng = StarshipEngine(program.target, connection)
     sys.stdout.write("Executing program on remote hardware...\n")
     result = eng.run(program)
 
