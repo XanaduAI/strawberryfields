@@ -47,18 +47,6 @@ eng_backend_params = [
     pytest.param("gaussian", marks=pytest.mark.gaussian),
 ]
 
-TEST_FILENAME = "test_config.toml"
-
-@pytest.fixture(scope="function")
-def test_filename():
-    """Using a test filename for the tests."""
-    return TEST_FILENAME
-
-@pytest.fixture(scope="function")
-def test_filepath(tmpdir):
-    """Using a test filepath for the tests."""
-    return tmpdir.join(TEST_FILENAME)
-
 if tf_available and tf.__version__[:3] == "1.3":
     from strawberryfields.backends.tfbackend import TFBackend
 

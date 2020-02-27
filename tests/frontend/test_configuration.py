@@ -75,11 +75,11 @@ class TestLoadConfig:
         conf.load_config(filename='NotAFileName')
         assert "No Strawberry Fields configuration file found." in caplog.text
 
-    def test_keywords_take_precedence_over_everything(self, monkeypatch, tmpdir, test_filepath):
+    def test_keywords_take_precedence_over_everything(self, monkeypatch, tmpdir):
         """Test that the keyword arguments passed to load_config take
         precedence over data in environment variables or data in a
         configuration file."""
-        with open(test_filepath, "w") as f:
+        with open(tmpdir.join("test_config.toml"), "w") as f:
             f.write(TEST_FILE)
 
         with monkeypatch.context() as m:
@@ -98,10 +98,10 @@ class TestLoadConfig:
 
         assert configuration == OTHER_EXPECTED_CONFIG
 
-    def test_environment_variables_take_precedence_over_conf_file(self, monkeypatch, tmpdir, test_filepath):
+    def test_environment_variables_take_precedence_over_conf_file(self, monkeypatch, tmpdir):
         """Test that the data in environment variables take precedence over data in
         a configuration file."""
-        with open(test_filepath, "w") as f:
+        with open(tmpdir.join("test_config.toml"), "w") as f:
             f.write(TEST_FILE)
 
         with monkeypatch.context() as m:
@@ -117,11 +117,11 @@ class TestLoadConfig:
 
         assert configuration == OTHER_EXPECTED_CONFIG
 
-    def test_conf_file_loads_well(self, monkeypatch, tmpdir, test_filepath):
+    def test_conf_file_loads_well(self, monkeypatch, tmpdir):
         """Test that the load_config function loads a configuration from a TOML
         file correctly."""
 
-        filename = test_filepath
+        filename = tmpdir.join("config.toml")
 
         with open(filename, "w") as f:
             f.write(TEST_FILE)
@@ -175,13 +175,13 @@ class TestGetConfigFilepath:
 
         assert config_filepath == tmpdir.join(filename)
 
-    def test_env_variable(self, monkeypatch, tmpdir, test_filename, test_filepath):
+    def test_env_variable(self, monkeypatch, tmpdir):
         """Test that the correct configuration file is found using the correct
         environment variable (SF_CONF).
 
         This is a test case for when there is no configuration file in the
         current directory."""
-        with open(test_filepath, "w") as f:
+        with open(tmpdir.join("config.toml"), "w") as f:
             f.write(TEST_FILE)
 
         def raise_wrapper(ex):
@@ -192,11 +192,11 @@ class TestGetConfigFilepath:
             m.setenv("SF_CONF", str(tmpdir))
             m.setattr(conf, "user_config_dir", lambda *args: "NotTheFileName")
 
-            config_filepath = conf.get_config_filepath(filename=test_filename)
+            config_filepath = conf.get_config_filepath(filename="config.toml")
 
-        assert config_filepath == test_filepath
+        assert config_filepath == tmpdir.join("config.toml")
 
-    def test_user_config_dir(self, monkeypatch, tmpdir, test_filename, test_filepath):
+    def test_user_config_dir(self, monkeypatch, tmpdir):
         """Test that the correct configuration file is found using the correct
         argument to the user_config_dir function.
 
@@ -204,7 +204,7 @@ class TestGetConfigFilepath:
         -in the current directory or
         -in the directory contained in the corresponding environment
         variable."""
-        with open(test_filepath, "w") as f:
+        with open(tmpdir.join("config.toml"), "w") as f:
             f.write(TEST_FILE)
 
         def raise_wrapper(ex):
@@ -215,11 +215,11 @@ class TestGetConfigFilepath:
             m.setenv("SF_CONF", "NoConfigFileHere")
             m.setattr(conf, "user_config_dir", lambda x, *args: tmpdir if x=="strawberryfields" else "NoConfigFileHere")
 
-            config_filepath = conf.get_config_filepath(filename=test_filename)
+            config_filepath = conf.get_config_filepath(filename="config.toml")
 
-        assert config_filepath == test_filepath
+        assert config_filepath == tmpdir.join("config.toml")
 
-    def test_no_config_file_found_returns_none(self, monkeypatch, tmpdir, test_filename):
+    def test_no_config_file_found_returns_none(self, monkeypatch, tmpdir):
         """Test that the get_config_filepath returns None if the
         configuration file is nowhere to be found.
 
@@ -236,16 +236,16 @@ class TestGetConfigFilepath:
             m.setenv("SF_CONF", "NoConfigFileHere")
             m.setattr(conf, "user_config_dir", lambda *args: "NoConfigFileHere")
 
-            config_filepath = conf.get_config_filepath(filename=test_filename)
+            config_filepath = conf.get_config_filepath(filename="config.toml")
 
         assert config_filepath is None
 
 class TestLoadConfigFile:
     """Tests the load_config_file function."""
 
-    def test_load_config_file(self, monkeypatch, tmpdir, test_filename, test_filepath):
+    def test_load_config_file(self, monkeypatch, tmpdir):
         """Tests that configuration is loaded correctly from a TOML file."""
-        filename = test_filepath
+        filename = tmpdir.join("test_config.toml")
 
         with open(filename, "w") as f:
             f.write(TEST_FILE)
@@ -254,10 +254,10 @@ class TestLoadConfigFile:
 
         assert loaded_config == EXPECTED_CONFIG
 
-    def test_loading_absolute_path(self, monkeypatch, tmpdir, test_filename, test_filepath):
+    def test_loading_absolute_path(self, monkeypatch, tmpdir):
         """Test that the default configuration file can be loaded
         via an absolute path."""
-        filename = os.path.abspath(test_filepath)
+        filename = tmpdir.join("test_config.toml")
 
 
         with open(filename, "w") as f:
@@ -407,7 +407,7 @@ def mock_create_config(authentication_token="", **kwargs):
 class TestStoreAccount:
     """Tests for the store_account function."""
 
-    def test_config_created_locally(self, monkeypatch, tmpdir, test_filename):
+    def test_config_created_locally(self, monkeypatch, tmpdir):
         """Tests that a configuration file was created in the current
         directory."""
         mock_save_config_file = MockSaveConfigToFile()
@@ -420,12 +420,12 @@ class TestStoreAccount:
             m.setattr(conf, "user_config_dir", lambda *args: "NotTheCorrectDir")
             m.setattr(conf, "create_config", mock_create_config)
             m.setattr(conf, "save_config_to_file", lambda a, b: mock_save_config_file.update(a, b))
-            conf.store_account(authentication_token, filename=test_filename, location="local", **DEFAULT_KWARGS)
+            conf.store_account(authentication_token, filename="config.toml", location="local", **DEFAULT_KWARGS)
 
         assert mock_save_config_file.config  == EXPECTED_CONFIG
-        assert mock_save_config_file.path  == tmpdir.join(test_filename)
+        assert mock_save_config_file.path  == tmpdir.join("config.toml")
 
-    def test_global_config_created(self, monkeypatch, tmpdir, test_filename):
+    def test_global_config_created(self, monkeypatch, tmpdir):
         """Tests that a configuration file was created in the user
         configuration directory for Strawberry Fields."""
         mock_save_config_file = MockSaveConfigToFile()
@@ -438,12 +438,12 @@ class TestStoreAccount:
             m.setattr(conf, "user_config_dir", lambda *args: tmpdir)
             m.setattr(conf, "create_config", mock_create_config)
             m.setattr(conf, "save_config_to_file", lambda a, b: mock_save_config_file.update(a, b))
-            conf.store_account(authentication_token, filename=test_filename, location="user_config", **DEFAULT_KWARGS)
+            conf.store_account(authentication_token, filename="config.toml", location="user_config", **DEFAULT_KWARGS)
 
         assert mock_save_config_file.config  == EXPECTED_CONFIG
-        assert mock_save_config_file.path  == tmpdir.join(test_filename)
+        assert mock_save_config_file.path  == tmpdir.join("config.toml")
 
-    def test_location_not_recognized_error(self, monkeypatch, tmpdir, test_filename):
+    def test_location_not_recognized_error(self, monkeypatch, tmpdir):
         """Tests that an error is raised if the configuration file is supposed
         to be created in an unrecognized directory."""
 
@@ -451,19 +451,19 @@ class TestStoreAccount:
                 conf.ConfigurationError,
                 match="This location is not recognized.",
         ):
-            conf.store_account(authentication_token, filename=test_filename, location="UNRECOGNIZED_LOCATION", **DEFAULT_KWARGS)
+            conf.store_account(authentication_token, filename="config.toml", location="UNRECOGNIZED_LOCATION", **DEFAULT_KWARGS)
 
-    def test_non_existing_directory_does_not_raise_file_not_found_error(self, monkeypatch, tmpdir, test_filename):
+    def test_non_existing_directory_does_not_raise_file_not_found_error(self, monkeypatch, tmpdir):
         """Tests that an error is raised if the configuration file is supposed
         to be created in non-existing directory when using user_config_dir and
         if os.makedirs does not create the directory."""
 
         with monkeypatch.context() as m:
             m.setattr(conf, "user_config_dir", lambda *args: tmpdir.join("new_dir"))
-            conf.store_account(authentication_token, filename=test_filename, location="user_config", **DEFAULT_KWARGS)
+            conf.store_account(authentication_token, filename="config.toml", location="user_config", **DEFAULT_KWARGS)
 
 
-    def test_non_existing_directory_without_makedirs_raises_error(self, monkeypatch, tmpdir, test_filename):
+    def test_non_existing_directory_without_makedirs_raises_error(self, monkeypatch, tmpdir):
         """Tests that an error is raised if the configuration file is supposed
         to be created in non-existing directory when using user_config_dir and
         if os.makedirs does not create the directory."""
@@ -475,7 +475,7 @@ class TestStoreAccount:
                     FileNotFoundError,
                     match="No such file or directory",
             ):
-                conf.store_account(authentication_token, filename=test_filename, location="user_config", **DEFAULT_KWARGS)
+                conf.store_account(authentication_token, filename="config.toml", location="user_config", **DEFAULT_KWARGS)
 
 class TestStoreAccountIntegration:
     """Integration tests for the store_account function.
@@ -484,68 +484,68 @@ class TestStoreAccountIntegration:
     directory.
     """
 
-    def test_local(self, monkeypatch, tmpdir, test_filename):
+    def test_local(self, monkeypatch, tmpdir):
         """Tests that the functions integrate correctly when storing account
         locally."""
 
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: tmpdir)
-            conf.store_account(authentication_token, filename=test_filename, location="local", **DEFAULT_KWARGS)
+            conf.store_account(authentication_token, filename="config.toml", location="local", **DEFAULT_KWARGS)
 
-        filepath = tmpdir.join(test_filename)
+        filepath = tmpdir.join("config.toml")
         result = toml.load(filepath)
         assert result == EXPECTED_CONFIG
 
-    def test_global(self, monkeypatch, tmpdir, test_filename):
+    def test_global(self, monkeypatch, tmpdir):
         """Tests that the functions integrate correctly when storing account
         globally."""
 
         with monkeypatch.context() as m:
             m.setattr(conf, "user_config_dir", lambda *args: tmpdir)
-            conf.store_account(authentication_token, filename=test_filename, location="user_config", **DEFAULT_KWARGS)
+            conf.store_account(authentication_token, filename="config.toml", location="user_config", **DEFAULT_KWARGS)
 
-        filepath = tmpdir.join(test_filename)
+        filepath = tmpdir.join("config.toml")
         result = toml.load(filepath)
         assert result == EXPECTED_CONFIG
 
-    def test_directory_is_created(self, monkeypatch, tmpdir, test_filename):
+    def test_directory_is_created(self, monkeypatch, tmpdir):
 
         recursive_dir = tmpdir.join(".new_dir")
         with monkeypatch.context() as m:
             m.setattr(conf, "user_config_dir", lambda *args: recursive_dir)
-            conf.store_account(authentication_token, filename=test_filename, location="user_config", **DEFAULT_KWARGS)
+            conf.store_account(authentication_token, filename="config.toml", location="user_config", **DEFAULT_KWARGS)
 
-        filepath = os.path.join(recursive_dir, test_filename)
+        filepath = os.path.join(recursive_dir, "config.toml")
         result = toml.load(filepath)
         assert result == EXPECTED_CONFIG
 
-    def test_nested_directory_is_created(self, monkeypatch, tmpdir, test_filename):
+    def test_nested_directory_is_created(self, monkeypatch, tmpdir):
 
         recursive_dir = tmpdir.join(".new_dir", "new_dir_again")
         with monkeypatch.context() as m:
             m.setattr(conf, "user_config_dir", lambda *args: recursive_dir)
-            conf.store_account(authentication_token, filename=test_filename, location="user_config", **DEFAULT_KWARGS)
+            conf.store_account(authentication_token, filename="config.toml", location="user_config", **DEFAULT_KWARGS)
 
-        filepath = os.path.join(recursive_dir, test_filename)
+        filepath = os.path.join(recursive_dir, "config.toml")
         result = toml.load(filepath)
         assert result == EXPECTED_CONFIG
 
 class TestSaveConfigToFile:
     """Tests for the store_account function."""
 
-    def test_correct(self, tmpdir, test_filename):
+    def test_correct(self, tmpdir):
         """Test saving a configuration file."""
-        filepath = str(tmpdir.join(test_filename))
+        filepath = str(tmpdir.join("config.toml"))
 
         conf.save_config_to_file(OTHER_EXPECTED_CONFIG, filepath)
 
         result = toml.load(filepath)
         assert result == OTHER_EXPECTED_CONFIG
 
-    def test_file_already_existed(self, tmpdir, test_filename):
+    def test_file_already_existed(self, tmpdir):
         """Test saving a configuration file even if the file already
         existed."""
-        filepath = str(tmpdir.join(test_filename))
+        filepath = str(tmpdir.join("config.toml"))
 
         with open(filepath, "w") as f:
             f.write(TEST_FILE)
