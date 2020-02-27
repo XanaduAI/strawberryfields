@@ -221,7 +221,7 @@ def parse_environment_variable(key, value):
     return value
 
 def store_account(authentication_token, filename="config.toml", location="user_config", **kwargs):
-    """Stores an account in a configuration file.
+    r"""Stores an account in a configuration file.
 
     The configuration file can be created in the following locations:
      
@@ -247,8 +247,8 @@ def store_account(authentication_token, filename="config.toml", location="user_c
         location (str): determines where the configuration file should be saved
         filename (str): the name of the configuration file to look for
 
-Additional configuration options are detailed in :doc:`/introduction/configuration` and can be passed
-as keyword arguments.
+    Additional configuration options are detailed in :doc:`/introduction/configuration` and can be passed
+    as keyword arguments.
     """
     if location == "user_config":
         directory = user_config_dir("strawberryfields", "Xanadu")
