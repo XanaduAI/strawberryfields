@@ -75,9 +75,7 @@ class Result:
     def samples(self):
         """Measurement samples.
 
-        Returned measurement samples will have shape ``(modes,)``. If multiple
-        shots are requested during execution, the returned measurement samples
-        will instead have shape ``(shots, modes)``.
+        Returned measurement samples will have shape ``(shots, modes)``.
 
         Returns:
             array[array[float, int]]: measurement samples returned from
