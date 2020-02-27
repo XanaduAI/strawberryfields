@@ -189,7 +189,7 @@ class TestGetConfigFilepath:
 
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: "NoConfigFileHere")
-            m.setenv("SF_CONF", tmpdir)
+            m.setenv("SF_CONF", str(tmpdir))
             m.setattr(conf, "user_config_dir", lambda *args: "NotTheFileName")
 
             config_filepath = conf.get_config_filepath(filename=test_filename)
@@ -453,6 +453,30 @@ class TestStoreAccount:
         ):
             conf.store_account(authentication_token, filename=test_filename, location="UNRECOGNIZED_LOCATION", **DEFAULT_KWARGS)
 
+    def test_non_existing_directory_does_not_raise_file_not_found_error(self, monkeypatch, tmpdir, test_filename):
+        """Tests that an error is raised if the configuration file is supposed
+        to be created in non-existing directory when using user_config_dir and
+        if os.makedirs does not create the directory."""
+
+        with monkeypatch.context() as m:
+            m.setattr(conf, "user_config_dir", lambda *args: tmpdir.join("new_dir"))
+            conf.store_account(authentication_token, filename=test_filename, location="user_config", **DEFAULT_KWARGS)
+
+
+    def test_non_existing_directory_without_makedirs_raises_error(self, monkeypatch, tmpdir, test_filename):
+        """Tests that an error is raised if the configuration file is supposed
+        to be created in non-existing directory when using user_config_dir and
+        if os.makedirs does not create the directory."""
+
+        with monkeypatch.context() as m:
+            m.setattr(os, "makedirs", lambda a, **kwargs: None)
+            m.setattr(conf, "user_config_dir", lambda *args: tmpdir.join("new_dir"))
+            with pytest.raises(
+                    FileNotFoundError,
+                    match="No such file or directory",
+            ):
+                conf.store_account(authentication_token, filename=test_filename, location="user_config", **DEFAULT_KWARGS)
+
 class TestStoreAccountIntegration:
     """Integration tests for the store_account function.
 
@@ -481,6 +505,28 @@ class TestStoreAccountIntegration:
             conf.store_account(authentication_token, filename=test_filename, location="user_config", **DEFAULT_KWARGS)
 
         filepath = tmpdir.join(test_filename)
+        result = toml.load(filepath)
+        assert result == EXPECTED_CONFIG
+
+    def test_directory_is_created(self, monkeypatch, tmpdir, test_filename):
+
+        recursive_dir = tmpdir.join(".new_dir")
+        with monkeypatch.context() as m:
+            m.setattr(conf, "user_config_dir", lambda *args: recursive_dir)
+            conf.store_account(authentication_token, filename=test_filename, location="user_config", **DEFAULT_KWARGS)
+
+        filepath = os.path.join(recursive_dir, test_filename)
+        result = toml.load(filepath)
+        assert result == EXPECTED_CONFIG
+
+    def test_nested_directory_is_created(self, monkeypatch, tmpdir, test_filename):
+
+        recursive_dir = tmpdir.join(".new_dir", "new_dir_again")
+        with monkeypatch.context() as m:
+            m.setattr(conf, "user_config_dir", lambda *args: recursive_dir)
+            conf.store_account(authentication_token, filename=test_filename, location="user_config", **DEFAULT_KWARGS)
+
+        filepath = os.path.join(recursive_dir, test_filename)
         result = toml.load(filepath)
         assert result == EXPECTED_CONFIG
 

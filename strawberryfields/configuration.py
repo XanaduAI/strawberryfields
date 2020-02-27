@@ -254,8 +254,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
         directory = user_config_dir("strawberryfields", "Xanadu")
 
         # Create target Directory if it doesn't exist
-        if not os.path.exists(directory):
-            os.mkdir(directory)
+        os.makedirs(directory, exist_ok=True)
     elif location == "local":
         directory = os.getcwd()
     else:
