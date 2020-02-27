@@ -59,7 +59,7 @@ def job_to_complete(connection, monkeypatch):
     monkeypatch.setattr(
         Connection,
         "get_job_result",
-        mock_return(Result([[1, 2], [3, 4]], is_stateful=False)),
+        mock_return(Result(np.array([[1, 2], [3, 4]]), is_stateful=False)),
     )
 
 
@@ -71,7 +71,7 @@ class TestStarshipEngine:
         engine = StarshipEngine("chip2", connection=connection)
         result = engine.run(prog)
 
-        assert np.array_equal(result.samples.T, np.array([[1, 2], [3, 4]]))
+        assert np.array_equal(result.samples, np.array([[1, 2], [3, 4]]))
 
         with pytest.raises(
             AttributeError, match="The state is undefined for a stateless computation."
@@ -89,7 +89,7 @@ class TestStarshipEngine:
             job.refresh()
 
         assert job.status == JobStatus.COMPLETED
-        assert np.array_equal(job.result.samples.T, np.array([[1, 2], [3, 4]]))
+        assert np.array_equal(job.result.samples, np.array([[1, 2], [3, 4]]))
 
         with pytest.raises(
             AttributeError, match="The state is undefined for a stateless computation."

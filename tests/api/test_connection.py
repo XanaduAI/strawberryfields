@@ -183,7 +183,7 @@ class TestConnection:
 
         result = connection.get_job_result("123")
 
-        assert np.array_equal(result.samples.T, result_samples)
+        assert np.array_equal(result.samples, result_samples)
 
     def test_get_job_result_error(self, connection, monkeypatch):
         """Tests a failed job result request."""

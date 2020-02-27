@@ -65,12 +65,10 @@ class Result:
         self._state = None
         self._is_stateful = is_stateful
 
-        # samples arrives as either a list of arrays (for shots > 1) or a list (for shots = 1)
-        # need to be converted to a multidimensional array with shape (shots, modes)
+        # samples arrives as either a 2-D array (for shots > 1) or a 1-D array (for shots = 1)
+        # the latter needs to be converted to a 2-D array with shape (shots, modes)
         if np.ndim(samples) == 1:
             samples = np.array([samples])
-        else:
-            samples = np.stack(samples, 1)
         self._samples = samples
 
     @property

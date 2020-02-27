@@ -23,6 +23,8 @@ import logging
 import time
 from typing import Optional
 
+import numpy as np
+
 from strawberryfields.api import Connection, Job, JobStatus, Result
 from strawberryfields.configuration import load_config
 from strawberryfields.program import Program
@@ -297,7 +299,7 @@ class BaseEngine(abc.ABC):
             prev = p
 
         if self.samples is not None:
-            return Result(self.samples.copy())
+            return Result(np.array(self.samples).T)
 
 
 class LocalEngine(BaseEngine):
@@ -428,9 +430,6 @@ class LocalEngine(BaseEngine):
             key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys
         }
 
-        result = super()._run(
-            program, args=args, compile_options=compile_options, **eng_run_options
-        )
         # check that batching is not used together with shots > 1
         if self.backend_options.get("batch_size", 0) and eng_run_options["shots"] > 1:
             raise NotImplementedError(
