@@ -474,7 +474,7 @@ class StarshipEngine:
     **Example:**
 
     The following examples instantiate an engine with the default configuration, and
-    runs both blocking and non-blocking jobs.
+    run both blocking and non-blocking jobs.
 
     Run a blocking job:
 
