@@ -76,7 +76,7 @@ class TestConnection:
         job = connection.create_job("chip2", prog, 1)
 
         assert job.id == id_
-        assert job.status == status
+        assert job.status == status.value
 
     def test_create_job_error(self, prog, connection, monkeypatch):
         """Tests a failed job creation flow."""
@@ -125,7 +125,7 @@ class TestConnection:
         job = connection.get_job(id_)
 
         assert job.id == id_
-        assert job.status == status
+        assert job.status == status.value
 
     def test_get_job_error(self, connection, monkeypatch):
         """Tests a failed job request."""
@@ -144,7 +144,7 @@ class TestConnection:
             mock_return(MockResponse(200, {"id": id_, "status": status.value})),
         )
 
-        assert connection.get_job_status(id_) == status
+        assert connection.get_job_status(id_) == status.value
 
     def test_get_job_status_error(self, connection, monkeypatch):
         """Tests a failed job status request."""

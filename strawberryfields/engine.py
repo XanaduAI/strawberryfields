@@ -25,7 +25,7 @@ from typing import Optional
 
 import numpy as np
 
-from strawberryfields.api import Connection, Job, JobStatus, Result
+from strawberryfields.api import Connection, Job, Result
 from strawberryfields.configuration import load_config
 from strawberryfields.program import Program
 
@@ -487,12 +487,12 @@ class StarshipEngine:
 
     >>> job = engine.run_async(program, shots=1)
     >>> job.status
-    <JobStatus: queued>
+    "queued"
     >>> job.result
     InvalidJobOperationError
     >>> job.refresh()
     >>> job.status
-    <JobStatus: complete>
+    "complete"
     >>> job.result
     [[0 1 0 2 1 0 0 0]]
 
@@ -563,9 +563,9 @@ class StarshipEngine:
         try:
             while True:
                 job.refresh()
-                if job.status == JobStatus.COMPLETED:
+                if job.status == "complete":
                     return job.result
-                if job.status == JobStatus.FAILED:
+                if job.status == "failed":
                     log.warning(
                         "The remote job failed due to an internal server error; "
                         "please try again."

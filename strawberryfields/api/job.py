@@ -87,13 +87,13 @@ class Job:
         return self._id
 
     @property
-    def status(self) -> JobStatus:
+    def status(self) -> str:
         """The job status.
 
         Returns:
-            strawberryfields.api.JobStatus
+            str
         """
-        return self._status
+        return self._status.value
 
     @property
     def result(self) -> Result:
@@ -105,10 +105,10 @@ class Job:
         Returns:
             strawberryfields.api.Result
         """
-        if self.status != JobStatus.COMPLETED:
+        if self._status != JobStatus.COMPLETED:
             raise AttributeError(
                 "The result is undefined for jobs that are not completed "
-                "(current status: {})".format(self.status.value)
+                "(current status: {})".format(self._status.value)
             )
         return self._result
 
@@ -118,8 +118,8 @@ class Job:
 
         Refreshing only has an effect for open or queued jobs.
         """
-        if self.status.is_final:
-            log.warning("A %s job cannot be refreshed", self.status.value)
+        if self._status.is_final:
+            log.warning("A %s job cannot be refreshed", self._status.value)
             return
         self._status = self._connection.get_job_status(self.id)
         if self._status == JobStatus.COMPLETED:
@@ -130,15 +130,15 @@ class Job:
 
         Only an open or queued job can be cancelled; an exception is raised otherwise.
         """
-        if self.status.is_final:
+        if self._status.is_final:
             raise InvalidJobOperationError(
-                "A {} job cannot be cancelled".format(self.status.value)
+                "A {} job cannot be cancelled".format(self._status.value)
             )
         self._connection.cancel_job(self.id)
 
     def __repr__(self):
         return "<{}: id={}, status={}>".format(
-            self.__class__.__name__, self.id, self.status.value
+            self.__class__.__name__, self.id, self._status.value
         )
 
     def __str__(self):

@@ -83,12 +83,12 @@ class TestStarshipEngine:
 
         engine = StarshipEngine("chip2", connection=connection)
         job = engine.run_async(prog)
-        assert job.status == JobStatus.OPEN
+        assert job.status == JobStatus.OPEN.value
 
         for _ in range(MockServer.REQUESTS_BEFORE_COMPLETED):
             job.refresh()
 
-        assert job.status == JobStatus.COMPLETED
+        assert job.status == JobStatus.COMPLETED.value
         assert np.array_equal(job.result.samples, np.array([[1, 2], [3, 4]]))
 
         with pytest.raises(
