@@ -84,10 +84,10 @@ configuration file *only for this project*:
     import strawberryfields as sf
     sf.store_account("MyToken", location="local")
 
-.. warning::
-
-    It is advised to call `store_account` **separately** from any other
-    Python code, such that the authentication token is not shared accidentally.
-
 To check out more detailed examples visit the :func:`~.store_account`
 documentation.
+
+.. warning::
+
+    It is advised to call ``store_account`` **separately** from any other
+    Python code, such that the authentication token is not shared accidentally.
