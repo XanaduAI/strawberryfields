@@ -498,7 +498,7 @@ class StarshipEngine:
 
     Args:
         target (str): the target device
-        connection (strawberryfields.engine.Connection): a connection to the remote job
+        connection (strawberryfields.api.Connection): a connection to the remote job
             execution platform
     """
 
@@ -556,7 +556,7 @@ class StarshipEngine:
             shots (int): the number of shots for which to run the job
 
         Returns:
-            [strawberryfields.engine.Result, None]: the job result if successful, and
+            [strawberryfields.api.Result, None]: the job result if successful, and
                 ``None`` otherwise
         """
         job = self.run_async(program, shots)
