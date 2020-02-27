@@ -51,6 +51,12 @@ class JobStatus(enum.Enum):
         """
         return self in (JobStatus.CANCELLED, JobStatus.COMPLETED, JobStatus.FAILED)
 
+    def __repr__(self) -> str:
+        return "<JobStatus: {}>".format(self.value)
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
 
 class Job:
     """Represents a remote job that can be queried for its status or result.

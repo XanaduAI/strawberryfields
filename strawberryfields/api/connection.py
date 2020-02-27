@@ -57,14 +57,14 @@ class Connection:
     >>> job
     <Job: id=d177cbf5-1816-4779-802f-cef2c117dc1a, ...>
     >>> job.status
-    <JobStatus.QUEUED: 'queued'>
+    <JobStatus: queued>
     >>> job.result
     AttributeError
     >>> job = connection.get_job(known_job_id)
     >>> job
     <Job: id=59a1c0b1-c6a7-4f9b-ae37-0ac5eec9c413, ...>
     >>> job.status
-    <JobStatus.COMPLETED: 'complete'>
+    <JobStatus: complete>
     >>> job.result
     [[0 1 0 2 1 0 0 0]]
 

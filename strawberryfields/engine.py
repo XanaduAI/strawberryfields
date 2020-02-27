@@ -487,12 +487,12 @@ class StarshipEngine:
 
     >>> job = engine.run_async(program, shots=1)
     >>> job.status
-    <JobStatus.QUEUED: 'queued'>
+    <JobStatus: queued>
     >>> job.result
     InvalidJobOperationError
     >>> job.refresh()
     >>> job.status
-    <JobStatus.COMPLETED: 'complete'>
+    <JobStatus: complete>
     >>> job.result
     [[0 1 0 2 1 0 0 0]]
 
