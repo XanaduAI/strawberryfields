@@ -57,8 +57,8 @@ class Chip2Specs(CircuitSpecs):
         S2gate({squeezing_amplitude_3}, 0.0) | [3, 7]
 
         # standard 4x4 interferometer for the signal modes (the lower ones in frequency)
-        # even phase indices correspond to external Mach-Zehnder interferometer phases
-        # odd phase indices correspond to internal Mach-Zehnder interferometer phases
+        # even phase indices correspond to internal Mach-Zehnder interferometer phases
+        # odd phase indices correspond to external Mach-Zehnder interferometer phases
         MZgate({phase_0}, {phase_1}) | [0, 1]
         MZgate({phase_2}, {phase_3}) | [2, 3]
         MZgate({phase_4}, {phase_5}) | [1, 2]
