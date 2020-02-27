@@ -57,34 +57,28 @@ Configuration options
 Store your account
 ------------------
 
-Using the :func:`~.store_account` function, a configuration file can be created easily. It only requires specifying the authentication token. Apart from that, further configuration options can be passed as keyword arguments.
+Using the :func:`~.store_account` function, a configuration file can be created easily. It only requires specifying the authentication token.
 
-Default configuration
-*********************
-
-The following is an example for using ``store_account`` with defaults:
+In these examples ``"MyToken"`` contains the user-specific authentication token.
 
 .. code-block:: python
 
     import strawberryfields as sf
     sf.store_account("MyToken")
 
-where ``"MyToken"`` contains the user-specific authentication token.
-
-It is advised to execute this code snippet **only once**, separately from any other Python scripts.
-
 .. note::
 
     Using the default options will store the account in the *Strawberry Fields configuration directory* by creating a ``config.toml`` file.
 
-Configuration for a project
-***************************
-
-The following code snippet can be run in the *same directory* of a Python script or Jupyter Notebook that uses Strawberry Fields to create a configuration file *only for this project*:
+There might be cases when you would like to have a configuration different to the default. The following code snippet can be run in the *same directory* of a Python script or Jupyter Notebook that uses Strawberry Fields to create a configuration file *only for this project*:
 
 .. code-block:: python
 
     import strawberryfields as sf
     sf.store_account("MyToken", location="local")
 
-where ``"MyToken"`` is the user specific authentication token.
+.. warning::
+
+    It is advised to execute this code snippet **separately** from any other Python code, such that the authentication token is not shared accidentally.
+
+To check out more detailed examples visit the :func:`~.store_account` documentation.
