@@ -43,7 +43,7 @@ class Connection:
 
     For basic usage, it is not necessary to manually instantiate this object; the user
     is encouraged to use the higher-level interface provided by
-    :class:`~strawberryfields.engine.StarshipEngine`.
+    :class:`~strawberryfields.StarshipEngine`.
 
     **Example:**
 
@@ -140,7 +140,7 @@ class Connection:
             shots (int): the number of shots
 
         Returns:
-            strawberryfields.engine.Job: the created job
+            strawberryfields.api.Job: the created job
         """
         # Serialize a blackbird circuit for network transmission
         bb = to_blackbird(program)
@@ -176,7 +176,7 @@ class Connection:
                 then ``after`` are returned
 
         Returns:
-            List[strawberryfields.engine.Job]: the jobs
+            List[strawberryfields.api.Job]: the jobs
         """
         raise NotImplementedError("This feature is not yet implemented")
 
@@ -187,7 +187,7 @@ class Connection:
             job_id (str): the job ID
 
         Returns:
-            strawberryfields.engine.Job: the job
+            strawberryfields.api.Job: the job
         """
         path = "/jobs/{}".format(job_id)
         response = requests.get(self._url(path), headers=self._headers)
@@ -219,7 +219,7 @@ class Connection:
             job_id (str): the job ID
 
         Returns:
-            strawberryfields.engine.Result: the job result
+            strawberryfields.api.Result: the job result
         """
         path = "/jobs/{}/result".format(job_id)
         response = requests.get(

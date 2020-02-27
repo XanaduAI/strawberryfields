@@ -587,7 +587,7 @@ class StarshipEngine:
             shots (int): the number of shots for which to run the job
 
         Returns:
-            strawberryfields.engine.Job: the created remote job
+            strawberryfields.api.Job: the created remote job
         """
         return self._connection.create_job(self.target, program, shots)
 
