@@ -221,7 +221,8 @@ def parse_environment_variable(key, value):
     return value
 
 def store_account(authentication_token, filename="config.toml", location="user_config", **kwargs):
-    r"""Stores an account in a configuration file.
+    r"""Configure Strawberry Fields for access to the Xanadu cloud platform by
+    saving your account credentials.
 
     The configuration file can be created in the following locations:
      
@@ -238,6 +239,47 @@ def store_account(authentication_token, filename="config.toml", location="user_c
      user configuration directory, no matter the working directory. However, if there exists a configuration
      file in the *local* working directory, this takes precedence. The ``"local"`` option is therefore useful
      for maintaining per-project configuration settings.
+
+    **Examples:**
+
+    In these examples ``"MyToken"`` contains the user-specific authentication
+    token.
+
+    >>> import strawberryfields as sf
+    >>> sf.store_account("MyToken")
+
+    Creating the following ``"config.toml"`` file:
+
+    .. code-block:: toml
+
+        [api]
+        authentication_token = "MyToken"
+        hostname = "localhost"
+        use_ssl = true
+        port = 443
+
+    You can also create the configuration file locally (in the **current
+    working directory**) the following way:
+
+    >>> import strawberryfields as sf
+    >>> sf.store_account("MyToken", location="local")
+
+    Each of the configuration options (check out the
+    :doc:`/introduction/configuration` page for a list of options) can be
+    passed as further keyword arguments as well:
+
+    >>> import strawberryfields as sf
+    >>> sf.store_account("MyToken", location="local", hostname="MyHost", use_ssl=False, port=123)
+
+    Creating the following ``"config.toml"`` file in the **current working directory**:
+
+    .. code-block:: toml
+
+        [api]
+        authentication_token = "MyToken"
+        hostname = "MyHost"
+        use_ssl = false
+        port = 123
 
     Args:
         authentication_token (str): API token for authentication to the Xanadu Cloud platform.
