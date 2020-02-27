@@ -59,8 +59,9 @@ Configuration options
 Store your account
 ------------------
 
-Using the :func:`~.store_account` function, a configuration file can be created
-easily. It only requires specifying the authentication token.
+Using the :func:`~.store_account` function, a configuration file containing your Xanadu Cloud credentials
+can be created easily. By default, this configuration file is saved *globally*, and will be used every time
+a remote job is submitted.
 
 In these examples ``"MyToken"`` contains the user-specific authentication token.
 
