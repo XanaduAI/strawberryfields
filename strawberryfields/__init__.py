@@ -27,6 +27,7 @@ from .engine import Engine, LocalEngine, StarshipEngine
 from .io import load, save
 from .program import Program
 from .parameters import par_funcs as math
+from .configuration import store_account
 
 
 __all__ = ["Engine", "StarshipEngine", "Program", "version", "save", "load", "about", "cite"]
