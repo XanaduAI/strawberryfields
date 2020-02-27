@@ -181,7 +181,12 @@ class TestGetConfigFilepath:
 
         This is a test case for when there is no configuration file in the
         current directory."""
-        with open(tmpdir.join("config.toml"), "w") as f:
+
+        filename = "config.toml"	
+
+        path_to_write_file = tmpdir.join(filename)	
+
+        with open(path_to_write_file, "w") as f:
             f.write(TEST_FILE)
 
         def raise_wrapper(ex):
@@ -455,8 +460,8 @@ class TestStoreAccount:
 
     def test_non_existing_directory_does_not_raise_file_not_found_error(self, monkeypatch, tmpdir):
         """Tests that an error is raised if the configuration file is supposed
-        to be created in non-existing directory when using user_config_dir and
-        if os.makedirs does not create the directory."""
+        to be created in a non-existing directory when using user_config_dir
+        and if os.makedirs does not create the directory."""
 
         with monkeypatch.context() as m:
             m.setattr(conf, "user_config_dir", lambda *args: tmpdir.join("new_dir"))
@@ -465,8 +470,8 @@ class TestStoreAccount:
 
     def test_non_existing_directory_without_makedirs_raises_error(self, monkeypatch, tmpdir):
         """Tests that an error is raised if the configuration file is supposed
-        to be created in non-existing directory when using user_config_dir and
-        if os.makedirs does not create the directory."""
+        to be created in a non-existing directory when using user_config_dir
+        and if os.makedirs does not create the directory."""
 
         with monkeypatch.context() as m:
             m.setattr(os, "makedirs", lambda a, **kwargs: None)
@@ -480,8 +485,8 @@ class TestStoreAccount:
 class TestStoreAccountIntegration:
     """Integration tests for the store_account function.
 
-    Mocking takes place only such that writing can be done in the temporary
-    directory.
+    Mocking takes place only such that writing can be done in pytest's
+    temporary directory.
     """
 
     def test_local(self, monkeypatch, tmpdir):
