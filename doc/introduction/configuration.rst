@@ -79,7 +79,8 @@ In these examples ``"MyToken"`` contains the user-specific authentication token.
     Typically, a user should only ever have to execute this code snippet once, when
     initially configurating their system to connect to the Xanadu cloud platform.
     It is advised to call ``store_account`` **separately** from any other
-    Python code, such that the authentication token is not shared accidentally.
+    Python code, such that the authentication token is not shared or committed
+    accidentally.
 
 There might be cases when you would like to have a configuration different from the
 the default. The following code snippet can be run in the *same directory* of a
