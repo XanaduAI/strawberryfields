@@ -447,21 +447,21 @@ class JobFailedError(Exception):
 
 class StarshipEngine:
     """A quantum program executor engine that that provides a simple interface for
-    running remote jobs in a synchronous or asynchronous manner.
+    running remote jobs in a blocking or non-blocking manner.
 
     **Example:**
 
     The following examples instantiate an engine with the default configuration, and
-    runs jobs both synchronously and asynchronously.
+    runs both blocking and non-blocking jobs.
 
-    Run a job synchronously:
+    Run a blocking job:
 
     >>> engine = StarshipEngine("chip2")
     >>> result = engine.run(program, shots=1) # blocking call
     >>> result
     [[0 1 0 2 1 0 0 0]]
 
-    Run a job asynchronously:
+    Run a non-blocking job:
 
     >>> job = engine.run_async(program, shots=1)
     >>> job.status
@@ -521,9 +521,9 @@ class StarshipEngine:
         return self._connection
 
     def run(self, program: Program, shots: int = 1) -> Optional[Result]:
-        """Runs a remote job synchronously.
+        """Runs a blocking job.
 
-        In the synchronous mode, the engine blocks until the job is completed, failed, or
+        In the blocking mode, the engine blocks until the job is completed, failed, or
         cancelled. A job in progress can be cancelled with a keyboard interrupt (`ctrl+c`).
 
         If the job completes successfully, the result is returned; if the job
@@ -555,9 +555,9 @@ class StarshipEngine:
             return None
 
     def run_async(self, program: Program, shots: int = 1) -> Job:
-        """Runs a remote job asynchronously.
+        """Runs a non-blocking remote job.
 
-        In the asynchronous mode, a ``Job`` object is returned immediately, and the user can
+        In the non-blocking mode, a ``Job`` object is returned immediately, and the user can
         manually refresh the status and check for updated results of the job.
 
         Args:

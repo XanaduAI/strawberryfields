@@ -67,7 +67,7 @@ class TestStarshipEngine:
     """Tests for the ``StarshipEngine`` class."""
 
     def test_run_complete(self, connection, prog, job_to_complete):
-        """Tests a successful synchronous job execution."""
+        """Tests a successful blocking job execution."""
         engine = StarshipEngine("chip2", connection=connection)
         result = engine.run(prog)
 
@@ -79,7 +79,7 @@ class TestStarshipEngine:
             result.state
 
     def test_run_async(self, connection, prog, job_to_complete):
-        """Tests a successful asynchronous job execution."""
+        """Tests a successful non-blocking job execution."""
 
         engine = StarshipEngine("chip2", connection=connection)
         job = engine.run_async(prog)
