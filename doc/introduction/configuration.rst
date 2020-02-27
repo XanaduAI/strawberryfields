@@ -71,7 +71,7 @@ The following is an example for using ``store_account`` with defaults:
 
 where ``"MyToken"`` contains the user-specific authentication token.
 
-It is advised to execute this code snippet **only once**, separately any other Python scripts.
+It is advised to execute this code snippet **only once**, separately from any other Python scripts.
 
 .. note::
 
