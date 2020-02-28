@@ -28,9 +28,6 @@ from strawberryfields.io import load
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="run a blackbird script")
-    parser.add_argument(
-        "--token", "-t", help="the API authentication token", required=True
-    )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--input", "-i", help="the xbb file to run")
     group.add_argument(
@@ -44,8 +41,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    connection = Connection(token=args.token)
-
     if args.ping:
         connection.ping()
         sys.stdout.write("You have successfully authenticated to the platform!\n")
@@ -53,7 +48,7 @@ if __name__ == "__main__":
 
     program = load(args.input)
 
-    eng = StarshipEngine(program.target, connection)
+    eng = StarshipEngine(program.target)
     sys.stdout.write("Executing program on remote hardware...\n")
     result = eng.run(program)
 

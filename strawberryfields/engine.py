@@ -505,22 +505,13 @@ class StarshipEngine:
     POLLING_INTERVAL_SECONDS = 1
     VALID_TARGETS = ("chip2",)
 
-    def __init__(self, target: str, connection: Connection = None):
+    def __init__(self, target: str, connection: Connection = Connection()):
         if target not in self.VALID_TARGETS:
             raise ValueError(
                 "Invalid engine target: {} (valid targets: {})".format(
                     target, self.VALID_TARGETS
                 )
             )
-        if connection is None:
-            config = load_config()["api"]
-            connection = Connection(
-                token=config["authentication_token"],
-                host=config["hostname"],
-                port=config["port"],
-                use_ssl=config["use_ssl"],
-            )
-
         self._target = target
         self._connection = connection
 
