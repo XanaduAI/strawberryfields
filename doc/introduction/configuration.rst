@@ -29,7 +29,7 @@ and has the following format:
 .. code-block:: toml
 
     [api]
-    # Options for the Strawberry Fields Cloud API
+    # Options for the Strawberry Fields cloud API
     authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
     hostname = "localhost"
     use_ssl = true
@@ -39,7 +39,7 @@ Configuration options
 ---------------------
 
 **authentication_token (str)** (*required*)
-    API token for authentication to the Xanadu Cloud platform. This is required
+    API token for authentication to the Xanadu cloud platform. This is required
     for submitting remote jobs using :class:`~.StarshipEngine`. Corresponding
     environment variable: ``SF_API_AUTHENTICATION_TOKEN``
 
@@ -59,11 +59,11 @@ Configuration options
 Store your account
 ------------------
 
-Using the :func:`~.store_account` function, a configuration file containing your Xanadu Cloud credentials
+Using the :func:`~.store_account` function, a configuration file containing your Xanadu cloud credentials
 can be created easily. By default, this configuration file is saved *globally*, and will be used every time
 a remote job is submitted.
 
-In these examples ``"MyToken"`` contains the user-specific authentication token.
+In these examples ``"MyToken"`` contains the authentication token.
 
 .. code-block:: python
 
@@ -77,7 +77,7 @@ In these examples ``"MyToken"`` contains the user-specific authentication token.
 
 .. warning::
     Typically, a user should only ever have to execute this code snippet once, when
-    initially configurating their system to connect to the Xanadu Cloud platform.
+    initially configurating their system to connect to the Xanadu cloud platform.
     It is advised to call ``store_account`` **separately** from any other
     Python code, such that the authentication token is not shared or committed
     accidentally.

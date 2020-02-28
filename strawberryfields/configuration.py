@@ -221,7 +221,7 @@ def parse_environment_variable(key, value):
     return value
 
 def store_account(authentication_token, filename="config.toml", location="user_config", **kwargs):
-    r"""Configure Strawberry Fields for access to the Xanadu Cloud platform by
+    r"""Configure Strawberry Fields for access to the Xanadu cloud platform by
     saving your account credentials.
 
     The configuration file can be created in the following locations:
@@ -245,7 +245,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
     In these examples ``"MyToken"`` contains the user-specific authentication
     token.
 
-    The access to the Xanadu Cloud can be configured simply by running the
+    The access to the Xanadu cloud can be configured simply by running the
     following Python code:
 
     >>> import strawberryfields as sf
@@ -285,7 +285,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
         port = 123
 
     Args:
-        authentication_token (str): API token for authentication to the Xanadu Cloud platform.
+        authentication_token (str): API token for authentication to the Xanadu cloud platform.
             This is required for submitting remote jobs using :class:`~.StarshipEngine`.
 
     Kwargs:
