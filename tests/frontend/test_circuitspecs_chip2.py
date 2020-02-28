@@ -414,8 +414,9 @@ class TestChip2Compilation:
 
         assert np.allclose(O, expected, atol=tol)
 
-    def test_mz_gate(self, tol):
-        """Test that the Mach-Zehnder gate compiles to give the correct unitary"""
+    def test_mz_gate_standard(self, tol):
+        """Test that the Mach-Zehnder gate compiles to give the correct unitary
+        for some specific standard parameters"""
         prog = sf.Program(8)
 
         with prog.context as q:
@@ -446,6 +447,48 @@ class TestChip2Compilation:
              [0,  0, -1, -0],
              [0,  0, -0, 1]]
         )
+        expected = block_diag(expected, expected)
+
+        assert np.allclose(U, expected, atol=tol)
+
+    @pytest.mark.parametrize("theta1", np.linspace(0, 2*np.pi-0.2, 7))
+    @pytest.mark.parametrize("phi1", np.linspace(0, 2*np.pi-0.1, 7))
+    def test_mz_gate_non_standard(self, theta1, phi1, tol):
+        """Test that the Mach-Zehnder gate compiles to give the correct unitary
+        for a variety of non-standard angles"""
+        prog = sf.Program(8)
+
+        theta2 = np.pi/13
+        phi2 = 3*np.pi/7
+
+        with prog.context as q:
+            ops.MZgate(theta1, phi1) | (q[0], q[1])
+            ops.MZgate(theta2, phi2) | (q[2], q[3])
+            ops.MZgate(theta1, phi1) | (q[4], q[5])
+            ops.MZgate(theta2, phi2) | (q[6], q[7])
+            ops.MeasureFock() | q
+
+        # compile the program using the chip2 spec
+        res = prog.compile("chip2")
+
+        # remove the Fock measurements
+        res.circuit = res.circuit[:-1]
+
+        # extract the Gaussian symplectic matrix
+        O = res.compile("gaussian_unitary").circuit[0].op.p[0]
+
+        # By construction, we know that the symplectic matrix is
+        # passive, and so represents a unitary matrix
+        U = O[:8, :8] + 1j*O[8:, :8]
+
+        # the constructed program should implement the following
+        # unitary matrix
+        expected = np.array([
+            [(np.exp(1j * phi1) * (-1 + np.exp(1j * theta1))) / 2.0, 0.5j * (1 + np.exp(1j * theta1)), 0, 0],
+            [0.5j * np.exp(1j * phi1) * (1 + np.exp(1j * theta1)), (1 - np.exp(1j * theta1)) / 2.0, 0, 0],
+            [0, 0, (np.exp(1j * phi2) * (-1 + np.exp(1j * theta2))) / 2.0, 0.5j * (1 + np.exp(1j * theta2))],
+            [0, 0, 0.5j * np.exp(1j * phi2) * (1 + np.exp(1j * theta2)), (1 - np.exp(1j * theta2)) / 2.0],
+        ])
         expected = block_diag(expected, expected)
 
         assert np.allclose(U, expected, atol=tol)
