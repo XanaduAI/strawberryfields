@@ -63,7 +63,7 @@ Using the :func:`~.store_account` function, a configuration file containing your
 will be created. By default, this configuration file is saved *globally*, and will be used every time
 a remote job is submitted.
 
-In these examples ``"MyToken"`` contains the user-specific authentication token.
+In these examples ``"MyToken"`` should be replaced with a valid authentication token.
 
 .. code-block:: python
 
