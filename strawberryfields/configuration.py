@@ -226,8 +226,8 @@ def store_account(authentication_token, filename="config.toml", location="user_c
 
     The configuration file can be created in the following locations:
      
-     - A global user configuration directory ("user_config")
-     - The current working directory ("local")
+    - A global user configuration directory (``"user_config"``)
+    - The current working directory (``"local"``)
      
      This global user configuration directory differs depending on the operating system:
      
@@ -242,13 +242,11 @@ def store_account(authentication_token, filename="config.toml", location="user_c
 
     **Examples:**
 
-    In these examples ``"MyToken"`` contains the user-specific authentication
+    In these examples ``"MyToken"`` should be replaced with a valid authentication
     token.
 
-    The access to the Xanadu cloud can be configured simply by running the
-    following Python code:
+    Access to the Xanadu cloud can be configured as follows:
 
-    >>> import strawberryfields as sf
     >>> sf.store_account("MyToken")
 
     This creates the following ``"config.toml"`` file:
@@ -268,7 +266,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
     >>> sf.store_account("MyToken", location="local")
 
     Each of the configuration options can be passed as further keyword
-    arguments as well (check out the :doc:`/introduction/configuration` page
+    arguments as well (see the :doc:`/introduction/configuration` page
     for a list of options):
 
     >>> import strawberryfields as sf

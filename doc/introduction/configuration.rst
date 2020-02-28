@@ -60,10 +60,10 @@ Store your account
 ------------------
 
 Using the :func:`~.store_account` function, a configuration file containing your Xanadu cloud credentials
-can be created easily. By default, this configuration file is saved *globally*, and will be used every time
+will be created. By default, this configuration file is saved *globally*, and will be used every time
 a remote job is submitted.
 
-In these examples ``"MyToken"`` contains the authentication token.
+In these examples ``"MyToken"`` should be replaced with a valid authentication token.
 
 .. code-block:: python
 
@@ -76,11 +76,12 @@ In these examples ``"MyToken"`` contains the authentication token.
     *Strawberry Fields configuration directory*.
 
 .. warning::
-    Typically, a user should only ever have to execute this code snippet once, when
-    initially configurating their system to connect to the Xanadu cloud platform.
-    It is advised to call ``store_account`` **separately** from any other
-    Python code, such that the authentication token is not shared or committed
-    accidentally.
+
+    The ``store_account`` function only needs to be executed once, when
+    initially configuring your system to connect to the Xanadu cloud platform.
+    
+    Take care not to share or publicly commit your authentication token, as it provides
+    full access to your account.
 
 The following code snippet can be run to create a configuration file locally in
 the *same directory* of a Python script or Jupyter Notebook that uses
@@ -91,6 +92,5 @@ Strawberry Fields:
     import strawberryfields as sf
     sf.store_account("MyToken", location="local")
 
-To check out more detailed examples visit the :func:`~.store_account`
+For more detailed examples, visit the :func:`~.store_account`
 documentation.
-
