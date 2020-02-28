@@ -242,7 +242,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
 
     **Examples:**
 
-    In these examples ``"MyToken"`` contains the user-specific authentication
+    In these examples ``"MyToken"`` should be replaced with a valid authentication
     token.
 
     Access to the Xanadu cloud can be configured as follows:
