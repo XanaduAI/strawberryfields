@@ -26,7 +26,6 @@ from typing import Optional
 import numpy as np
 
 from strawberryfields.api import Connection, Job, Result
-from strawberryfields.configuration import load_config
 from strawberryfields.program import Program
 
 from .backends import load_backend
