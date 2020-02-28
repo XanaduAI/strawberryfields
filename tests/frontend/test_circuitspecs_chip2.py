@@ -17,6 +17,7 @@ import textwrap
 import pytest
 import numpy as np
 import networkx as nx
+from scipy.linalg import block_diag
 
 import blackbird
 
@@ -36,6 +37,33 @@ np.random.seed(42)
 
 SQ_AMPLITUDE = 1
 """float: the allowed squeezing amplitude"""
+
+
+def TMS(r, phi):
+    """Two-mode squeezing.
+
+    Args:
+        r (float): squeezing magnitude
+        phi (float): rotation parameter
+
+    Returns:
+        array: symplectic transformation matrix
+    """
+    cp = np.cos(phi)
+    sp = np.sin(phi)
+    ch = np.cosh(r)
+    sh = np.sinh(r)
+
+    S = np.array(
+        [
+            [ch, cp * sh, 0, sp * sh],
+            [cp * sh, ch, sp * sh, 0],
+            [0, sp * sh, ch, -cp * sh],
+            [sp * sh, 0, -cp * sh, ch],
+        ]
+    )
+
+    return S
 
 
 def program_equivalence(prog1, prog2, compare_params=True, atol=1e-6, rtol=0):
@@ -296,7 +324,7 @@ class TestChip2Compilation:
         with pytest.raises(CircuitError, match="incompatible topology."):
             res = prog.compile("chip2")
 
-    def test_mzgate(self):
+    def test_gates_compile(self):
         """Test that combinations of MZgates, Rgates, and BSgates
         correctly compile."""
         prog = sf.Program(8)
@@ -345,7 +373,7 @@ class TestChip2Compilation:
             ops.MZgate(np.pi, np.pi) | (q[1], q[2])
             ops.MZgate(0, 0) | (q[0], q[1])
             ops.MZgate(0, 0) | (q[2], q[3])
-            ops.MZgate(0, np.pi) | (q[1], q[2])
+            ops.MZgate(np.pi, 0) | (q[1], q[2])
             ops.Rgate(np.pi) | (q[0])
             ops.Rgate(0) | (q[1])
             ops.Rgate(np.pi) | (q[2])
@@ -357,7 +385,7 @@ class TestChip2Compilation:
             ops.MZgate(np.pi, np.pi) | (q[5], q[6])
             ops.MZgate(0, 0) | (q[4], q[5])
             ops.MZgate(0, 0) | (q[6], q[7])
-            ops.MZgate(0, np.pi) | (q[5], q[6])
+            ops.MZgate(np.pi, 0) | (q[5], q[6])
             ops.Rgate(np.pi) | (q[4])
             ops.Rgate(0) | (q[5])
             ops.Rgate(np.pi) | (q[6])
@@ -366,6 +394,105 @@ class TestChip2Compilation:
             ops.MeasureFock() | q
 
         assert program_equivalence(res, expected, atol=tol)
+
+        # double check that the applied symplectic is correct
+
+        # remove the Fock measurements
+        res.circuit = res.circuit[:-1]
+
+        # extract the Gaussian symplectic matrix
+        O = res.compile("gaussian_unitary").circuit[0].op.p[0]
+
+        # construct the expected symplectic matrix corresponding
+        # to just the initial two mode squeeze gates
+        S = TMS(SQ_AMPLITUDE, 0)
+
+        expected = np.zeros([2*8, 2*8])
+        idx = np.arange(2*8).reshape(4, 4).T
+        for i in idx:
+            expected[i.reshape(-1, 1), i.reshape(1, -1)] = S
+
+        assert np.allclose(O, expected, atol=tol)
+
+    def test_mz_gate_standard(self, tol):
+        """Test that the Mach-Zehnder gate compiles to give the correct unitary
+        for some specific standard parameters"""
+        prog = sf.Program(8)
+
+        with prog.context as q:
+            ops.MZgate(np.pi/2, np.pi) | (q[0], q[1])
+            ops.MZgate(np.pi, 0) | (q[2], q[3])
+            ops.MZgate(np.pi/2, np.pi) | (q[4], q[5])
+            ops.MZgate(np.pi, 0) | (q[6], q[7])
+            ops.MeasureFock() | q
+
+        # compile the program using the chip2 spec
+        res = prog.compile("chip2")
+
+        # remove the Fock measurements
+        res.circuit = res.circuit[:-1]
+
+        # extract the Gaussian symplectic matrix
+        O = res.compile("gaussian_unitary").circuit[0].op.p[0]
+
+        # By construction, we know that the symplectic matrix is
+        # passive, and so represents a unitary matrix
+        U = O[:8, :8] + 1j*O[8:, :8]
+
+        # the constructed program should implement the following
+        # unitary matrix
+        expected = np.array(
+            [[0.5-0.5j, -0.5+0.5j, 0, 0],
+             [0.5-0.5j, 0.5-0.5j, 0, 0],
+             [0,  0, -1, -0],
+             [0,  0, -0, 1]]
+        )
+        expected = block_diag(expected, expected)
+
+        assert np.allclose(U, expected, atol=tol)
+
+    @pytest.mark.parametrize("theta1", np.linspace(0, 2*np.pi-0.2, 7))
+    @pytest.mark.parametrize("phi1", np.linspace(0, 2*np.pi-0.1, 7))
+    def test_mz_gate_non_standard(self, theta1, phi1, tol):
+        """Test that the Mach-Zehnder gate compiles to give the correct unitary
+        for a variety of non-standard angles"""
+        prog = sf.Program(8)
+
+        theta2 = np.pi/13
+        phi2 = 3*np.pi/7
+
+        with prog.context as q:
+            ops.MZgate(theta1, phi1) | (q[0], q[1])
+            ops.MZgate(theta2, phi2) | (q[2], q[3])
+            ops.MZgate(theta1, phi1) | (q[4], q[5])
+            ops.MZgate(theta2, phi2) | (q[6], q[7])
+            ops.MeasureFock() | q
+
+        # compile the program using the chip2 spec
+        res = prog.compile("chip2")
+
+        # remove the Fock measurements
+        res.circuit = res.circuit[:-1]
+
+        # extract the Gaussian symplectic matrix
+        O = res.compile("gaussian_unitary").circuit[0].op.p[0]
+
+        # By construction, we know that the symplectic matrix is
+        # passive, and so represents a unitary matrix
+        U = O[:8, :8] + 1j*O[8:, :8]
+
+        # the constructed program should implement the following
+        # unitary matrix
+        expected = np.array([
+            [(np.exp(1j * phi1) * (-1 + np.exp(1j * theta1))) / 2.0, 0.5j * (1 + np.exp(1j * theta1)), 0, 0],
+            [0.5j * np.exp(1j * phi1) * (1 + np.exp(1j * theta1)), (1 - np.exp(1j * theta1)) / 2.0, 0, 0],
+            [0, 0, (np.exp(1j * phi2) * (-1 + np.exp(1j * theta2))) / 2.0, 0.5j * (1 + np.exp(1j * theta2))],
+            [0, 0, 0.5j * np.exp(1j * phi2) * (1 + np.exp(1j * theta2)), (1 - np.exp(1j * theta2)) / 2.0],
+        ])
+        expected = block_diag(expected, expected)
+
+        assert np.allclose(U, expected, atol=tol)
+
 
     def test_interferometers(self, tol):
         """Test that the compilation correctly decomposes the interferometer using
