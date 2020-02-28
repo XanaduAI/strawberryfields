@@ -47,9 +47,9 @@ class Result:
     >>> print(results)
     Result: 3 subsystems
         state: <GaussianState: num_modes=3, pure=True, hbar=2>
-        samples: [0, 0, 0]
+        samples: [[0, 0, 0]]
     >>> results.samples
-    [0, 0, 0]
+    np.array([[0, 0, 0]])
     >>> results.state.is_pure()
     True
 
