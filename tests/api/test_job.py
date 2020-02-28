@@ -31,8 +31,7 @@ class TestJob:
         job = Job("abc", status=JobStatus.QUEUED, connection=connection)
 
         with pytest.raises(
-            AttributeError,
-            match="The result is undefined for jobs that are not completed",
+            AttributeError, match="The result is undefined for jobs that are not completed",
         ):
             job.result
 
@@ -40,25 +39,19 @@ class TestJob:
         """Tests that `job.cancel()` raises an error for a completed job."""
         job = Job("abc", status=JobStatus.COMPLETED, connection=connection)
 
-        with pytest.raises(
-            InvalidJobOperationError, match="A complete job cannot be cancelled"
-        ):
+        with pytest.raises(InvalidJobOperationError, match="A complete job cannot be cancelled"):
             job.cancel()
 
     def test_failed_job_raises_on_cancel_request(self, connection):
         """Tests that `job.cancel()` raises an error for a failed job."""
         job = Job("abc", status=JobStatus.FAILED, connection=connection)
 
-        with pytest.raises(
-            InvalidJobOperationError, match="A failed job cannot be cancelled"
-        ):
+        with pytest.raises(InvalidJobOperationError, match="A failed job cannot be cancelled"):
             job.cancel()
 
     def test_cancelled_job_raises_on_cancel_request(self, connection):
         """Tests that `job.cancel()` raises an error for a completed job."""
         job = Job("abc", status=JobStatus.CANCELLED, connection=connection)
 
-        with pytest.raises(
-            InvalidJobOperationError, match="A cancelled job cannot be cancelled"
-        ):
+        with pytest.raises(InvalidJobOperationError, match="A cancelled job cannot be cancelled"):
             job.cancel()

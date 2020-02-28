@@ -68,9 +68,7 @@ class TestConnection:
         id_, status = "123", JobStatus.QUEUED
 
         monkeypatch.setattr(
-            requests,
-            "post",
-            mock_return(MockResponse(201, {"id": id_, "status": status})),
+            requests, "post", mock_return(MockResponse(201, {"id": id_, "status": status})),
         )
 
         job = connection.create_job("chip2", prog, 1)
@@ -117,9 +115,7 @@ class TestConnection:
         id_, status = "123", JobStatus.COMPLETED
 
         monkeypatch.setattr(
-            requests,
-            "get",
-            mock_return(MockResponse(200, {"id": id_, "status": status.value})),
+            requests, "get", mock_return(MockResponse(200, {"id": id_, "status": status.value})),
         )
 
         job = connection.get_job(id_)
@@ -139,9 +135,7 @@ class TestConnection:
         id_, status = "123", JobStatus.COMPLETED
 
         monkeypatch.setattr(
-            requests,
-            "get",
-            mock_return(MockResponse(200, {"id": id_, "status": status.value})),
+            requests, "get", mock_return(MockResponse(200, {"id": id_, "status": status.value})),
         )
 
         assert connection.get_job_status(id_) == status.value
@@ -176,9 +170,7 @@ class TestConnection:
             np.save(buf, result_samples)
             buf.seek(0)
             monkeypatch.setattr(
-                requests,
-                "get",
-                mock_return(MockResponse(200, binary_body=buf.getvalue())),
+                requests, "get", mock_return(MockResponse(200, binary_body=buf.getvalue())),
             )
 
         result = connection.get_job_result("123")

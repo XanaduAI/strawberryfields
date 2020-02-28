@@ -93,9 +93,7 @@ class Connection:
         self._use_ssl = use_ssl
         self._verbose = verbose
 
-        self._base_url = "http{}://{}:{}".format(
-            "s" if self.use_ssl else "", self.host, self.port
-        )
+        self._base_url = "http{}://{}:{}".format("s" if self.use_ssl else "", self.host, self.port)
         self._headers = {"Authorization": self.token}
 
     @property
@@ -155,9 +153,7 @@ class Connection:
 
         path = "/jobs"
         response = requests.post(
-            self._url(path),
-            headers=self._headers,
-            data=json.dumps({"circuit": circuit}),
+            self._url(path), headers=self._headers, data=json.dumps({"circuit": circuit}),
         )
         if response.status_code == 201:
             if self._verbose:
@@ -247,9 +243,7 @@ class Connection:
         """
         path = "/jobs/{}".format(job_id)
         response = requests.patch(
-            self._url(path),
-            headers=self._headers,
-            data={"status": JobStatus.CANCELLED.value},
+            self._url(path), headers=self._headers, data={"status": JobStatus.CANCELLED.value},
         )
         if response.status_code == 204:
             if self._verbose:
@@ -280,9 +274,7 @@ class Connection:
         )
 
     def __repr__(self):
-        return "<{}: token={}, host={}>".format(
-            self.__class__.__name__, self.token, self.host
-        )
+        return "<{}: token={}, host={}>".format(self.__class__.__name__, self.token, self.host)
 
     def __str__(self):
         return self.__repr__()

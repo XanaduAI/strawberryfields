@@ -138,9 +138,7 @@ class Job:
         self._connection.cancel_job(self.id)
 
     def __repr__(self):
-        return "<{}: id={}, status={}>".format(
-            self.__class__.__name__, self.id, self._status.value
-        )
+        return "<{}: id={}, status={}>".format(self.__class__.__name__, self.id, self._status.value)
 
     def __str__(self):
         return self.__repr__()

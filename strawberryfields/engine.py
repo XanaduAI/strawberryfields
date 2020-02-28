@@ -254,9 +254,7 @@ class BaseEngine(abc.ABC):
         # signatures of methods in Operations to remain cleaner, since only
         # Measurements need to know about shots
 
-        prev = (
-            self.run_progs[-1] if self.run_progs else None
-        )  # previous program segment
+        prev = self.run_progs[-1] if self.run_progs else None  # previous program segment
         for p in program:
             if prev is None:
                 # initialize the backend
@@ -265,9 +263,7 @@ class BaseEngine(abc.ABC):
                 # there was a previous program segment
                 if not p.can_follow(prev):
                     raise RuntimeError(
-                        "Register mismatch: program {}, '{}'.".format(
-                            len(self.run_progs), p.name
-                        )
+                        "Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name)
                     )
 
                 # Copy the latest measured values in the RegRefs of p.
@@ -291,8 +287,7 @@ class BaseEngine(abc.ABC):
                 self._run_program(p, **kwargs)
                 shots = kwargs.get("shots", 1)
                 self.samples = [
-                    _broadcast_nones(p.reg_refs[k].val, shots)
-                    for k in sorted(p.reg_refs)
+                    _broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)
                 ]
                 self.run_progs.append(p)
 
@@ -364,9 +359,7 @@ class LocalEngine(BaseEngine):
             except NotApplicableError:
                 # command is not applicable to the current backend type
                 raise NotApplicableError(
-                    "The operation {} cannot be used with {}.".format(
-                        cmd.op, self.backend
-                    )
+                    "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
                 ) from None
             except NotImplementedError:
                 # command not directly supported by backend API
@@ -432,9 +425,7 @@ class LocalEngine(BaseEngine):
 
         # check that batching is not used together with shots > 1
         if self.backend_options.get("batch_size", 0) and eng_run_options["shots"] > 1:
-            raise NotImplementedError(
-                "Batching cannot be used together with multiple shots."
-            )
+            raise NotImplementedError("Batching cannot be used together with multiple shots.")
 
         # check that post-selection and feed-forwarding is not used together with shots > 1
         for p in program_lst:
@@ -508,9 +499,7 @@ class StarshipEngine:
     def __init__(self, target: str, connection: Connection = Connection()):
         if target not in self.VALID_TARGETS:
             raise ValueError(
-                "Invalid engine target: {} (valid targets: {})".format(
-                    target, self.VALID_TARGETS
-                )
+                "Invalid engine target: {} (valid targets: {})".format(target, self.VALID_TARGETS)
             )
         self._target = target
         self._connection = connection
