@@ -226,8 +226,8 @@ def store_account(authentication_token, filename="config.toml", location="user_c
 
     The configuration file can be created in the following locations:
      
-     - A global user configuration directory ("user_config")
-     - The current working directory ("local")
+    - A global user configuration directory (``"user_config"``)
+    - The current working directory (``"local"``)
      
      This global user configuration directory differs depending on the operating system:
      
