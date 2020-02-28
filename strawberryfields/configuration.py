@@ -245,8 +245,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
     In these examples ``"MyToken"`` contains the user-specific authentication
     token.
 
-    The access to the Xanadu Cloud can be configured simply by running the
-    following Python code:
+    Access to the Xanadu cloud can be configured as follows:
 
     >>> import strawberryfields as sf
     >>> sf.store_account("MyToken")
