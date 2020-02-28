@@ -12,6 +12,10 @@
   [295](https://github.com/XanaduAI/strawberryfields/pull/295)
 
 ### Improvements
+* Added the `store_account` user convenience function that helps with
+  configuring access to the Xanadu cloud platform.
+  [#306](https://github.com/XanaduAI/strawberryfields/pull/306)
+
 * Added two-mode squeezed operation support as a primitive, rather than simply
   through decomposition, using The Walrus for fast computation.
   [#289](https://github.com/XanaduAI/strawberryfields/pull/289)
