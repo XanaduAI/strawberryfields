@@ -60,7 +60,7 @@ Store your account
 ------------------
 
 Using the :func:`~.store_account` function, a configuration file containing your Xanadu Cloud credentials
-can be created easily. By default, this configuration file is saved *globally*, and will be used every time
+will be created. By default, this configuration file is saved *globally*, and will be used every time
 a remote job is submitted.
 
 In these examples ``"MyToken"`` contains the user-specific authentication token.
@@ -93,4 +93,3 @@ Strawberry Fields:
 
 To check out more detailed examples visit the :func:`~.store_account`
 documentation.
-
