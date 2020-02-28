@@ -247,7 +247,6 @@ def store_account(authentication_token, filename="config.toml", location="user_c
 
     Access to the Xanadu cloud can be configured as follows:
 
-    >>> import strawberryfields as sf
     >>> sf.store_account("MyToken")
 
     This creates the following ``"config.toml"`` file:
