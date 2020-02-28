@@ -79,7 +79,7 @@ In these examples ``"MyToken"`` should be replaced with a valid authentication t
 
     The ``store_account`` function only needs to be executed once, when
     initially configuring your system to connect to the Xanadu cloud platform.
-    
+
     Take care not to share or publicly commit your authentication token, as it provides
     full access to your account.
 

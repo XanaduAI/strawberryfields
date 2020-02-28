@@ -182,9 +182,9 @@ class TestGetConfigFilepath:
         This is a test case for when there is no configuration file in the
         current directory."""
 
-        filename = "config.toml"	
+        filename = "config.toml"
 
-        path_to_write_file = tmpdir.join(filename)	
+        path_to_write_file = tmpdir.join(filename)
 
         with open(path_to_write_file, "w") as f:
             f.write(TEST_FILE)

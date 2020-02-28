@@ -225,16 +225,16 @@ def store_account(authentication_token, filename="config.toml", location="user_c
     saving your account credentials.
 
     The configuration file can be created in the following locations:
-     
+
     - A global user configuration directory (``"user_config"``)
     - The current working directory (``"local"``)
-     
+
      This global user configuration directory differs depending on the operating system:
-     
+
      * On Linux: ``~/.config/strawberryfields``
      * On Windows: ``~C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields``
      * On MacOS: ``~/Library/Application Support/strawberryfields``
-     
+
      By default, Strawberry Fields will load the configuration and account credentials from the global
      user configuration directory, no matter the working directory. However, if there exists a configuration
      file in the *local* working directory, this takes precedence. The ``"local"`` option is therefore useful
