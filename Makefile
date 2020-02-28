@@ -33,11 +33,13 @@ dist:
 .PHONY : clean
 clean:
 	rm -rf strawberryfields/__pycache__
+	rm -rf strawberryfields/api/__pycache__
 	rm -rf strawberryfields/backends/__pycache__
 	rm -rf strawberryfields/backends/fockbackend/__pycache__
 	rm -rf strawberryfields/backends/tfbackend/__pycache__
 	rm -rf strawberryfields/backends/gaussianbackend/__pycache__
 	rm -rf tests/__pycache__
+	rm -rf tests/api/__pycache__
 	rm -rf tests/backend/__pycache__
 	rm -rf tests/frontend/__pycache__
 	rm -rf tests/integration/__pycache__
@@ -51,7 +53,7 @@ docs:
 clean-docs:
 	make -C doc clean
 
-test: test-frontend test-gaussian test-fock test-tf batch-test-tf test-apps
+test: test-frontend test-gaussian test-fock test-tf batch-test-tf test-apps test-api
 
 test-%:
 	@echo "Testing $(subst test-,,$@) backend..."
@@ -61,7 +63,7 @@ batch-test-%:
 	@echo "Testing $(subst batch-test-,,$@) backend in batch mode..."
 	export BATCHED=1 && $(PYTHON) $(TESTRUNNER) -m $(subst batch-test-,,"$@")
 
-coverage: coverage-frontend coverage-gaussian coverage-fock coverage-tf batch-coverage-tf coverage-apps
+coverage: coverage-frontend coverage-gaussian coverage-fock coverage-tf batch-coverage-tf coverage-apps coverage-api
 
 coverage-%:
 	@echo "Generating coverage report for $(subst coverage-,,$@)..."

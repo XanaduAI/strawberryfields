@@ -14,114 +14,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""A standalone command-line interface for computing quantum programs on a remote
+backend.
+"""
 
-import os
 import sys
 import argparse
-import pdb
 
+from strawberryfields.api import Connection
 from strawberryfields.engine import StarshipEngine
-from strawberryfields.api_client import APIClient
 from strawberryfields.io import load
-from strawberryfields import configuration
 
-PROMPTS = {
-    "hostname": "Please enter the hostname of the server to connect to: [{}] ",
-    "port": "Please enter the port number to connect with: [{}] ",
-    "use_ssl": "Should the client attempt to connect over SSL? [{}] ",
-    "authentication_token": "Please enter the authentication token to use when connecting: [{}] ",
-    "save": "Would you like to save these settings to a local cofiguration file in the current "
-    "directory? [{}] ",
-}
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="run a blackbird script on StarshipEngine")
+    parser = argparse.ArgumentParser(description="run a blackbird script")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--input", "-i", help="the xbb file to run")
+    group.add_argument(
+        "--ping", "-p", action="store_true", help="test the API connection"
+    )
     parser.add_argument(
         "--output",
         "-o",
         help="where to output the result of the program - outputs to stdout by default",
     )
-    parser.add_argument(
-        "--debug", action="store_true", help="returns a pdb shell after executing the program"
-    )
-    group.add_argument(
-        "--reconfigure",
-        action="store_true",
-        help="an interactive tool to reconfigure the API connection before executing the program",
-    )
-    group.add_argument(
-        "--hello",
-        action="store_true",
-        help="test the API connection",
-    )
 
     args = parser.parse_args()
 
-    if args.reconfigure:
-        config = configuration.Configuration()
-
-        hostname = (
-            input(PROMPTS["hostname"].format(config.api["hostname"])) or config.api["hostname"]
-        )
-        authentication_token = (
-            input(PROMPTS["authentication_token"].format(config.api["authentication_token"]))
-            or config.api["authentication_token"]
-        )
-        port = input(PROMPTS["port"].format(config.api["port"])) or config.api["port"]
-        use_ssl = input(PROMPTS["use_ssl"].format("y" if config.api["use_ssl"] else "n")).upper() == "Y"
-        save = input(PROMPTS["save"].format("y" if config.api["use_ssl"] else "n")).upper() == "Y"
-
-        if not save:
-            sys.stdout.write("Not writing configuration to file...\n")
-        else:
-            if not os.path.isfile("config.toml"):
-                sys.stdout.write("Writing configuration file to current working directory...\n")
-            else:
-                sys.stdout.write("Updating configuration in current working directory...\n")
-
-            config.api["hostname"] = hostname
-            config.api["authentication_token"] = authentication_token
-            config.api["port"] = port
-            config.api["use_ssl"] = use_ssl
-            config.save("config.toml")
+    if args.ping:
+        connection.ping()
+        sys.stdout.write("You have successfully authenticated to the platform!\n")
         sys.exit()
-    elif args.hello:
-        client = APIClient()
-        client.BASE_URL = "https://platform.strawberryfields.ai/healthz"
-        try:
-            response = client.get("")
-        except Exception as e:
-            sys.stderr.write("Could not connect to server:\n{}\n".format(e))
-            sys.exit(1)
-
-        if response.status_code == 200:
-            sys.stdout.write("You have successfully authenticated to the platform!\n")
-            sys.exit()
-        elif response.status_code in (401, 403):
-            if not client.AUTHENTICATION_TOKEN:
-                sys.stderr.write("Could not authenticate -- no token provided\n")
-            else:
-                sys.stderr.write(
-                    "Could not authenticate with token {} - please try again\n".format(
-                        client.AUTHENTICATION_TOKEN))
-            sys.exit(1)
-        else:
-            sys.stderr.write("Could not connect to server: {}, {}\n".format(
-                str(response.status_code), response.content))
-            sys.exit(1)
 
     program = load(args.input)
+
     eng = StarshipEngine(program.target)
+    sys.stdout.write("Executing program on remote hardware...\n")
     result = eng.run(program)
 
     if result and result.samples is not None:
-        if hasattr(args, "output"):
+        if args.output:
             with open(args.output, "w") as file:
-                file.write(str(result.samples.T))
+                file.write(str(result.samples))
         else:
-            sys.stdout.write(str(result.samples.T))
-
-    if args.debug:
-        pdb.set_trace()
+            sys.stdout.write(str(result.samples))

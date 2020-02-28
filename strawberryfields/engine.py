@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,123 +19,22 @@ One can think of each BaseEngine instance as a separate quantum computation.
 """
 import abc
 import collections.abc
+import logging
 import time
+from typing import Optional
 
 import numpy as np
 
+from strawberryfields.api import Connection, Job, Result
+from strawberryfields.program import Program
+
 from .backends import load_backend
-from .backends.base import (NotApplicableError, BaseBackend)
-
-from strawberryfields.api_client import APIClient, Job, JobNotQueuedError, JobExecutionError
-from strawberryfields.io import to_blackbird
-from strawberryfields.configuration import DEFAULT_CONFIG
-
-
-class OneJobAtATimeError(Exception):
-    """Raised when a user attempts to execute more than one job on the same engine instance."""
-
+from .backends.base import BaseBackend, NotApplicableError
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
-__all__ = ["Result", "BaseEngine", "LocalEngine"]
+__all__ = ["BaseEngine", "LocalEngine"]
 
-
-
-class Result:
-    """Result of a quantum computation.
-
-    Represents the results of the execution of a quantum program
-    returned by the :meth:`.LocalEngine.run` method.
-
-    The returned :class:`~Result` object provides several useful properties
-    for accessing the results of your program execution:
-
-    * ``results.state``: The quantum state object contains details and methods
-      for manipulation of the final circuit state. Not available for remote
-      backends. See :doc:`/introduction/states` for more information regarding available
-      state methods.
-
-    * ``results.samples``: Measurement samples from any measurements performed.
-
-    **Example:**
-
-    The following examples run an existing Strawberry Fields
-    quantum :class:`~.Program` on the Gaussian engine to get
-    a results object.
-
-    Using this results object, the measurement samples
-    can be returned, as well as quantum state information.
-
-    >>> eng = sf.Engine("gaussian")
-    >>> results = eng.run(prog)
-    >>> print(results)
-    Result: 3 subsystems
-        state: <GaussianState: num_modes=3, pure=True, hbar=2>
-        samples: [[0, 0, 0]]
-    >>> results.samples
-    np.array([[0, 0, 0]])
-    >>> results.state.is_pure()
-    True
-
-    .. note::
-
-        Only local simulators will return a state object. Remote
-        simulators and hardware backends will return
-        measurement samples  (:attr:`Result.samples`),
-        but the return value of ``Result.state`` will be ``None``.
-    """
-
-    def __init__(self, samples):
-        self._state = None
-
-        # samples arrives as either a list of arrays (for shots > 1) or a list (for shots = 1)
-        # need to be converted to a multidimensional array with shape (shots, modes)
-        if np.ndim(samples) == 1:
-            samples = np.array([samples])
-        else:
-            samples = np.stack(samples, 1)
-        self._samples = samples
-
-    @property
-    def samples(self):
-        """Measurement samples.
-
-        Returned measurement samples will have shape ``(shots, modes)``. If a
-        single shot is requested during execution, the returned measurement
-        sample will have shape ``(1, modes)``.
-
-        Returns:
-            array[array[float, int]]: measurement samples returned from
-            program execution
-        """
-        return self._samples
-
-    @property
-    def state(self):
-        """The quantum state object.
-
-        The quantum state object contains details and methods
-        for manipulation of the final circuit state.
-
-        See :doc:`/introduction/states` for more information regarding available
-        state methods.
-
-        .. note::
-
-            Only local simulators will return a state object. Remote
-            simulators and hardware backends will return
-            measurement samples (:attr:`Result.samples`),
-            but the return value of ``Result.state`` will be ``None``.
-
-        Returns:
-            BaseState: quantum state returned from program execution
-        """
-        return self._state
-
-    def __str__(self):
-        """String representation."""
-        return "Result: {} subsystems, state: {}\n samples: {}".format(
-            len(self.samples), self.state, self.samples
-        )
+log = logging.getLogger(__name__)
 
 
 class BaseEngine(abc.ABC):
@@ -394,7 +293,7 @@ class BaseEngine(abc.ABC):
             prev = p
 
         if self.samples is not None:
-            return Result(self.samples.copy())
+            return Result(np.array(self.samples).T)
 
 
 class LocalEngine(BaseEngine):
@@ -532,14 +431,20 @@ class LocalEngine(BaseEngine):
             for c in p.circuit:
                 try:
                     if c.op.select and eng_run_options["shots"] > 1:
-                        raise NotImplementedError("Post-selection cannot be used together with multiple shots.")
+                        raise NotImplementedError(
+                            "Post-selection cannot be used together with multiple shots."
+                        )
                 except AttributeError:
                     pass
 
                 if c.op.measurement_deps and eng_run_options["shots"] > 1:
-                    raise NotImplementedError("Feed-forwarding of measurements cannot be used together with multiple shots.")
+                    raise NotImplementedError(
+                        "Feed-forwarding of measurements cannot be used together with multiple shots."
+                    )
 
-        result = super()._run(program, args=args, compile_options=compile_options, **eng_run_options)
+        result = super()._run(
+            program, args=args, compile_options=compile_options, **eng_run_options
+        )
 
         modes = temp_run_options["modes"]
 
@@ -552,161 +457,130 @@ class LocalEngine(BaseEngine):
         return result
 
 
-class StarshipEngine(BaseEngine):
-    """
-    Starship quantum program executor engine.
+class StarshipEngine:
+    """A quantum program executor engine that provides a simple interface for
+    running remote jobs in a blocking or non-blocking manner.
 
-    Executes :class:`.Program` instances on the chosen remote backend, and makes
-    the results available via :class:`.Result`.
+    **Example:**
+
+    The following examples instantiate an engine with the default configuration, and
+    run both blocking and non-blocking jobs.
+
+    Run a blocking job:
+
+    >>> engine = StarshipEngine("chip2")
+    >>> result = engine.run(program, shots=1) # blocking call
+    >>> result
+    [[0 1 0 2 1 0 0 0]]
+
+    Run a non-blocking job:
+
+    >>> job = engine.run_async(program, shots=1)
+    >>> job.status
+    "queued"
+    >>> job.result
+    InvalidJobOperationError
+    >>> job.refresh()
+    >>> job.status
+    "complete"
+    >>> job.result
+    [[0 1 0 2 1 0 0 0]]
 
     Args:
-        backend (str, BaseBackend): name of the backend, or a pre-constructed backend instance
-        polling_delay_seconds (int): the number of seconds to wait between queries when polling for
-            job results
+        target (str): the target device
+        connection (strawberryfields.api.Connection): a connection to the remote job
+            execution platform
     """
 
-    # This engine will execute jobs remotely.
-    REMOTE = True
+    POLLING_INTERVAL_SECONDS = 1
+    VALID_TARGETS = ("chip2",)
 
-    def __init__(self, backend, polling_delay_seconds=1, **kwargs):
-        super().__init__(backend)
+    def __init__(self, target: str, connection: Connection = Connection()):
+        if target not in self.VALID_TARGETS:
+            raise ValueError(
+                "Invalid engine target: {} (valid targets: {})".format(target, self.VALID_TARGETS)
+            )
+        self._target = target
+        self._connection = connection
 
-        api_client_params = {k: v for k, v in kwargs.items() if k in DEFAULT_CONFIG["api"].keys()}
-        self.client = APIClient(**api_client_params)
-        self.polling_delay_seconds = polling_delay_seconds
-        self.jobs = []
+    @property
+    def target(self) -> str:
+        """The target device used by the engine.
+
+        Returns:
+            str: the name of the target
+        """
+        return self._target
+
+    @property
+    def connection(self) -> Connection:
+        """The connection object used by the engine.
+
+        Returns:
+            strawberryfields.api.Connection
+        """
+        return self._connection
+
+    def run(self, program: Program, shots: int = 1) -> Optional[Result]:
+        """Runs a blocking job.
+
+        In the blocking mode, the engine blocks until the job is completed, failed, or
+        cancelled. A job in progress can be cancelled with a keyboard interrupt (`ctrl+c`).
+
+        If the job completes successfully, the result is returned; if the job
+        fails or is cancelled, ``None`` is returned.
+
+        Args:
+            program (strawberryfields.Program): the quantum circuit
+            shots (int): the number of shots for which to run the job
+
+        Returns:
+            [strawberryfields.api.Result, None]: the job result if successful, and
+                ``None`` otherwise
+        """
+        job = self.run_async(program, shots)
+        try:
+            while True:
+                job.refresh()
+                if job.status == "complete":
+                    return job.result
+                if job.status == "failed":
+                    log.warning(
+                        "The remote job failed due to an internal server error; "
+                        "please try again."
+                    )
+                    return None
+                time.sleep(self.POLLING_INTERVAL_SECONDS)
+        except KeyboardInterrupt:
+            self._connection.cancel_job(job.id)
+            return None
+
+    def run_async(self, program: Program, shots: int = 1) -> Job:
+        """Runs a non-blocking remote job.
+
+        In the non-blocking mode, a ``Job`` object is returned immediately, and the user can
+        manually refresh the status and check for updated results of the job.
+
+        Args:
+            program (strawberryfields.Program): the quantum circuit
+            shots (int): the number of shots for which to run the job
+
+        Returns:
+            strawberryfields.api.Job: the created remote job
+        """
+        return self._connection.create_job(self.target, program, shots)
+
+    def __repr__(self):
+        return "<{}: target={}, connection={}>".format(
+            self.__class__.__name__, self.target, self.connection
+        )
 
     def __str__(self):
-        return self.__class__.__name__ + "({})".format(self.backend_name)
-
-    def _init_backend(self, *args):
-        """
-        TODO: This does not do anything right now.
-        """
-        # Do nothing for now...
-        pass
-
-    def reset(self):
-        """
-        Reset must be called in order to submit a new job. This clears the job queue as well as
-        any ran Programs.
-        """
-        super().reset(backend_options={})
-        self.jobs.clear()
-
-    def _get_blackbird(self, shots, program):
-        """
-        Returns a Blackbird object to be sent later to the server when creating a job.
-        Assumes the current backend as the target.
-
-        Args:
-            shots (int): the number of shots
-            program (Program): program to be converted to Blackbird code
-
-        Returns:
-            blackbird.BlackbirdProgram
-        """
-        bb = to_blackbird(program, version="1.0")
-
-        # TODO: This is potentially not needed here
-        bb._target["name"] = self.backend_name
-        bb._target["options"] = {"shots": shots, **program.backend_options}
-        return bb
-
-    def _queue_job(self, job_content):
-        """
-        Create a Job instance based on job_content, and send the job to the API. Append to list
-        of jobs.
-
-        Args:
-            job_content (str): the Blackbird code to execute
-
-        Returns:
-            (strawberryfields.api_client.Job): a Job instance referencing the queued job
-        """
-        job = Job(client=self.client)
-        job.manager.create(circuit=job_content)
-        self.jobs.append(job)
-        print("Job {} is sent to server.".format(job.id.value))
-        return job
-
-    def _run_program(self, program, **kwargs):
-        """
-        Given a compiled program, gets the blackbird circuit code and creates (or resumes) a job
-        via the API. If the job is completed, returns the job result.
-
-        A queued job can be interrupted by a ``KeyboardInterrupt`` event, at which point if the
-        job ID was retrieved from the server, the job will be accessible via
-        :meth:`~.Starship.jobs`.
-
-        Args:
-            program (strawberryfields.program.Program): program to be executed remotely
-
-        Returns:
-            (list): a list representing the result samples
-
-        Raises:
-            Exception: In case a job could not be submitted or completed.
-            TypeError: In case a job is already queued and a user is trying to submit a new job.
-        """
-        if self.jobs:
-            raise OneJobAtATimeError(
-                "A job is already queued. Please reset the engine and try again."
-            )
-
-        kwargs.update(program.run_options)
-        job_content = self._get_blackbird(program=program, **kwargs).serialize()
-        job = self._queue_job(job_content)
-
-        try:
-            while not job.is_failed and not job.is_complete:
-                job.reload()
-                time.sleep(self.polling_delay_seconds)
-        except KeyboardInterrupt:
-            if job.id:
-                print("Job {} is queued in the background.".format(job.id.value))
-            else:
-                self.reset()
-                raise JobNotQueuedError("Job was not sent to server. Please try again.")
-
-        # Job either failed or is complete - in either case, clear the job queue so that the engine is
-        # ready for future jobs.
-        self.reset()
-
-        if job.is_failed:
-            message = str(job.manager.http_response_data["meta"])
-            raise JobExecutionError(message)
-        elif job.is_complete:
-            job.result.manager.get()
-            return job.result.result.value
-
-    def run(self, program, shots=1, **kwargs):
-        """Compile the given program and execute it by queuing a job in the Starship.
-
-        For the :class:`Program` instance given as input, the following happens:
-
-        * The Program instance is compiled for the target backend.
-        * The compiled program is sent as a job to the Starship
-        * The measurement results of each subsystem (if any) are stored in the :attr:`~.BaseEngine.samples`.
-        * The compiled program is appended to self.run_progs.
-        * The queued or completed jobs are appended to self.jobs.
-
-        Finally, the result of the computation is returned.
-
-        Args:
-            program (Program, Sequence[Program]): quantum programs to run
-            shots (int): number of times the program measurement evaluation is repeated
-
-        The ``kwargs`` keyword arguments are passed to :meth:`_run_program`.
-
-        Returns:
-            Result: results of the computation
-        """
-
-        return super()._run(program, args={}, compile_options={}, shots=shots, **kwargs)
+        return self.__repr__()
 
 
 class Engine(LocalEngine):
     """dummy"""
+
     # alias for backwards compatibility
     __doc__ = LocalEngine.__doc__

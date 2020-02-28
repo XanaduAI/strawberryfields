@@ -45,6 +45,10 @@
   and configuration file.
   [#298](https://github.com/XanaduAI/strawberryfields/pull/298)
 
+* Refactored the existing `StarshipEngine` to use a new `Connection`/`Job` API
+  and updated the `starship` CLI to use the new interface.
+  [#294](https://github.com/XanaduAI/strawberryfields/pull/294)
+
 ### Bug fixes
 
 * Symbolic Operation parameters are now compatible with TensorFlow 2.0 objects.
