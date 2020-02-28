@@ -59,7 +59,10 @@ class Connection:
     >>> job.status
     "queued"
     >>> job.result
-    AttributeError
+    AttributeError                            Traceback (most recent call last)
+    <ipython-input-12-d54011f90b17> in <module>
+    ...
+    AttributeError: The result is undefined for jobs that are not completed (current status: queued)
     >>> job = connection.get_job(known_job_id)
     >>> job
     <Job: id=59a1c0b1-c6a7-4f9b-ae37-0ac5eec9c413, ...>
