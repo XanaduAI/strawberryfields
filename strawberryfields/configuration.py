@@ -35,8 +35,9 @@ DEFAULT_CONFIG_SPEC = {
         "hostname": (str, "localhost"),
         "use_ssl": (bool, True),
         "port": (int, 443),
-        }
+    }
 }
+
 
 class ConfigurationError(Exception):
     """Exception used for configuration errors"""
@@ -83,6 +84,7 @@ def load_config(filename="config.toml", **kwargs):
 
     return config
 
+
 def create_config(authentication_token="", **kwargs):
     """Create a configuration object that stores configuration related data
     organized into sections.
@@ -110,9 +112,10 @@ def create_config(authentication_token="", **kwargs):
             "hostname": hostname,
             "use_ssl": use_ssl,
             "port": port,
-            }
+        }
     }
     return config
+
 
 def get_config_filepath(filename="config.toml"):
     """Get the filepath of the first configuration file found from the defined
@@ -145,6 +148,7 @@ def get_config_filepath(filename="config.toml"):
 
     return None
 
+
 def load_config_file(filepath):
     """Load a configuration object from a TOML formatted file.
 
@@ -159,6 +163,7 @@ def load_config_file(filepath):
         config_from_file = toml.load(f)
     return config_from_file
 
+
 def keep_valid_options(sectionconfig):
     """Filters the valid options in a section of a configuration dictionary.
 
@@ -171,6 +176,7 @@ def keep_valid_options(sectionconfig):
             configuration
     """
     return {k: v for k, v in sectionconfig.items() if k in VALID_KEYS}
+
 
 def update_from_environment_variables(config):
     """Updates the current configuration object from data stored in environment
@@ -191,6 +197,7 @@ def update_from_environment_variables(config):
             env = env_prefix + key.upper()
             if env in os.environ:
                 config[section][key] = parse_environment_variable(key, os.environ[env])
+
 
 def parse_environment_variable(key, value):
     """Parse a value stored in an environment variable.
@@ -219,6 +226,7 @@ def parse_environment_variable(key, value):
         return int(value)
 
     return value
+
 
 def store_account(authentication_token, filename="config.toml", location="user_config", **kwargs):
     r"""Configure Strawberry Fields for access to the Xanadu cloud platform by
@@ -308,6 +316,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
     config = create_config(authentication_token=authentication_token, **kwargs)
     save_config_to_file(config, filepath)
 
+
 def save_config_to_file(config, filepath):
     """Saves a configuration to a TOML file.
 
@@ -318,6 +327,7 @@ def save_config_to_file(config, filepath):
     """
     with open(filepath, "w") as f:
         toml.dump(config, f)
+
 
 VALID_KEYS = set(create_config()["api"].keys())
 DEFAULT_CONFIG = create_config()

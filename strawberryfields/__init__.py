@@ -23,12 +23,11 @@ and backend components (all found within the :mod:`strawberryfields.backends` su
 """
 from . import apps
 from ._version import __version__
+from .configuration import store_account
 from .engine import Engine, LocalEngine, StarshipEngine
 from .io import load, save
-from .program import Program
 from .parameters import par_funcs as math
-from .configuration import store_account
-
+from .program import Program
 
 __all__ = ["Engine", "StarshipEngine", "Program", "version", "save", "load", "about", "cite"]
 
