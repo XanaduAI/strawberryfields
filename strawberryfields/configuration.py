@@ -30,13 +30,14 @@ from appdirs import user_config_dir
 log.getLogger()
 
 DEFAULT_CONFIG_SPEC = {
-   "api": {
+    "api": {
         "authentication_token": (str, ""),
         "hostname": (str, "localhost"),
         "use_ssl": (bool, True),
         "port": (int, 443),
     }
 }
+
 
 class ConfigurationError(Exception):
     """Exception used for configuration errors"""
@@ -67,10 +68,10 @@ def load_config(filename="config.toml", **kwargs):
     """
     config = create_config()
 
-    config_filepath = get_config_filepath(filename=filename)
+    filepath = get_config_filepath(filename=filename)
 
-    if config_filepath is not None:
-        loaded_config = load_config_file(config_filepath)
+    if filepath is not None:
+        loaded_config = load_config_file(filepath)
         valid_api_options = keep_valid_options(loaded_config["api"])
         config["api"].update(valid_api_options)
     else:
@@ -82,6 +83,7 @@ def load_config(filename="config.toml", **kwargs):
     config["api"].update(valid_kwargs_config)
 
     return config
+
 
 def create_config(authentication_token="", **kwargs):
     """Create a configuration object that stores configuration related data
@@ -110,9 +112,10 @@ def create_config(authentication_token="", **kwargs):
             "hostname": hostname,
             "use_ssl": use_ssl,
             "port": port,
-            }
+        }
     }
     return config
+
 
 def get_config_filepath(filename="config.toml"):
     """Get the filepath of the first configuration file found from the defined
@@ -143,6 +146,9 @@ def get_config_filepath(filename="config.toml"):
         if os.path.exists(filepath):
             return filepath
 
+    return None
+
+
 def load_config_file(filepath):
     """Load a configuration object from a TOML formatted file.
 
@@ -157,6 +163,7 @@ def load_config_file(filepath):
         config_from_file = toml.load(f)
     return config_from_file
 
+
 def keep_valid_options(sectionconfig):
     """Filters the valid options in a section of a configuration dictionary.
 
@@ -169,6 +176,7 @@ def keep_valid_options(sectionconfig):
             configuration
     """
     return {k: v for k, v in sectionconfig.items() if k in VALID_KEYS}
+
 
 def update_from_environment_variables(config):
     """Updates the current configuration object from data stored in environment
@@ -189,6 +197,7 @@ def update_from_environment_variables(config):
             env = env_prefix + key.upper()
             if env in os.environ:
                 config[section][key] = parse_environment_variable(key, os.environ[env])
+
 
 def parse_environment_variable(key, value):
     """Parse a value stored in an environment variable.
@@ -217,6 +226,108 @@ def parse_environment_variable(key, value):
         return int(value)
 
     return value
+
+
+def store_account(authentication_token, filename="config.toml", location="user_config", **kwargs):
+    r"""Configure Strawberry Fields for access to the Xanadu cloud platform by
+    saving your account credentials.
+
+    The configuration file can be created in the following locations:
+
+    - A global user configuration directory (``"user_config"``)
+    - The current working directory (``"local"``)
+
+     This global user configuration directory differs depending on the operating system:
+
+     * On Linux: ``~/.config/strawberryfields``
+     * On Windows: ``~C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields``
+     * On MacOS: ``~/Library/Application Support/strawberryfields``
+
+     By default, Strawberry Fields will load the configuration and account credentials from the global
+     user configuration directory, no matter the working directory. However, if there exists a configuration
+     file in the *local* working directory, this takes precedence. The ``"local"`` option is therefore useful
+     for maintaining per-project configuration settings.
+
+    **Examples:**
+
+    In these examples ``"MyToken"`` should be replaced with a valid authentication
+    token.
+
+    Access to the Xanadu cloud can be configured as follows:
+
+    >>> sf.store_account("MyToken")
+
+    This creates the following ``"config.toml"`` file:
+
+    .. code-block:: toml
+
+        [api]
+        authentication_token = "MyToken"
+        hostname = "localhost"
+        use_ssl = true
+        port = 443
+
+    You can also create the configuration file locally (in the **current
+    working directory**) the following way:
+
+    >>> import strawberryfields as sf
+    >>> sf.store_account("MyToken", location="local")
+
+    Each of the configuration options can be passed as further keyword
+    arguments as well (see the :doc:`/introduction/configuration` page
+    for a list of options):
+
+    >>> import strawberryfields as sf
+    >>> sf.store_account("MyToken", location="local", hostname="MyHost", use_ssl=False, port=123)
+
+    This creates the following ``"config.toml"`` file in the **current working directory**:
+
+    .. code-block:: toml
+
+        [api]
+        authentication_token = "MyToken"
+        hostname = "MyHost"
+        use_ssl = false
+        port = 123
+
+    Args:
+        authentication_token (str): API token for authentication to the Xanadu cloud platform.
+            This is required for submitting remote jobs using :class:`~.StarshipEngine`.
+
+    Kwargs:
+        location (str): determines where the configuration file should be saved
+        filename (str): the name of the configuration file to look for
+
+    Additional configuration options are detailed in :doc:`/introduction/configuration` and can be passed
+    as keyword arguments.
+    """
+    if location == "user_config":
+        directory = user_config_dir("strawberryfields", "Xanadu")
+
+        # Create target Directory if it doesn't exist
+        os.makedirs(directory, exist_ok=True)
+    elif location == "local":
+        directory = os.getcwd()
+    else:
+        raise ConfigurationError("This location is not recognized.")
+
+    filepath = os.path.join(directory, filename)
+
+    config = create_config(authentication_token=authentication_token, **kwargs)
+    save_config_to_file(config, filepath)
+
+
+def save_config_to_file(config, filepath):
+    """Saves a configuration to a TOML file.
+
+    Args:
+        config (dict[str, dict[str, Union[str, bool, int]]]): the
+            configuration to be saved
+        filepath (str): path to the configuration file
+    """
+    with open(filepath, "w") as f:
+        toml.dump(config, f)
+
 
 VALID_KEYS = set(create_config()["api"].keys())
 DEFAULT_CONFIG = create_config()
