@@ -268,7 +268,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
     >>> sf.store_account("MyToken", location="local")
 
     Each of the configuration options can be passed as further keyword
-    arguments as well (check out the :doc:`/introduction/configuration` page
+    arguments as well (see the :doc:`/introduction/configuration` page
     for a list of options):
 
     >>> import strawberryfields as sf
