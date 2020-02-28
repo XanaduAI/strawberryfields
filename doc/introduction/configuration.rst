@@ -76,11 +76,12 @@ In these examples ``"MyToken"`` contains the user-specific authentication token.
     *Strawberry Fields configuration directory*.
 
 .. warning::
-    Typically, a user should only ever have to execute this code snippet once, when
-    initially configurating their system to connect to the Xanadu Cloud platform.
-    It is advised to call ``store_account`` **separately** from any other
-    Python code, such that the authentication token is not shared or committed
-    accidentally.
+
+    The ``store_account`` function only needs to be executed once, when
+    initially configuring your system to connect to the Xanadu cloud platform.
+    
+    Take care not to share or publicly commit your authentication token, as it provides
+    full access to your account.
 
 The following code snippet can be run to create a configuration file locally in
 the *same directory* of a Python script or Jupyter Notebook that uses
