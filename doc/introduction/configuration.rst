@@ -92,5 +92,5 @@ Strawberry Fields:
     import strawberryfields as sf
     sf.store_account("MyToken", location="local")
 
-To check out more detailed examples visit the :func:`~.store_account`
+For more detailed examples, visit the :func:`~.store_account`
 documentation.
