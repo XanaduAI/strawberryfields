@@ -278,3 +278,5 @@ class Connection:
 
     def __str__(self):
         return self.__repr__()
+
+connection = Connection()
