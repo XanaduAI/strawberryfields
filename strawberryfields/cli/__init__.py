@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright 2019 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,8 +24,7 @@ from strawberryfields.api.connection import connection
 from strawberryfields.engine import StarshipEngine
 from strawberryfields.io import load
 
-
-if __name__ == "__main__":
+def command_line_interface():
     parser = argparse.ArgumentParser(description="run a blackbird script")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--input", "-i", help="the xbb file to run")
