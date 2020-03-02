@@ -25,6 +25,19 @@ from strawberryfields.engine import StarshipEngine
 from strawberryfields.io import load
 
 def command_line_interface():
+
+    args = parse_arguments()
+    ping(args.ping)
+    run_program(args.input, args.output)
+
+
+def ping(args_ping):
+    if args_ping:
+        connection.ping()
+        sys.stdout.write("You have successfully authenticated to the platform!\n")
+        sys.exit()
+
+def parse_arguments():
     parser = argparse.ArgumentParser(description="run a blackbird script")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--input", "-i", help="the xbb file to run")
@@ -37,14 +50,10 @@ def command_line_interface():
         help="where to output the result of the program - outputs to stdout by default",
     )
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    if args.ping:
-        connection.ping()
-        sys.stdout.write("You have successfully authenticated to the platform!\n")
-        sys.exit()
-
-    program = load(args.input)
+def run_program(args_input, args_output=None):
+    program = load(args_input)
 
     eng = StarshipEngine(program.target)
     sys.stdout.write("Executing program on remote hardware...\n")
@@ -52,7 +61,8 @@ def command_line_interface():
 
     if result and result.samples is not None:
         if args.output:
-            with open(args.output, "w") as file:
+            with open(args_output, "w") as file:
                 file.write(str(result.samples))
         else:
             sys.stdout.write(str(result.samples))
+

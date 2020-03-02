@@ -23,27 +23,12 @@ import numpy as np
 import pytest
 
 from strawberryfields.apps import clique
-import strawberryfields as sf
+from strawberryfields.cli import command_line_interface
 
 import sys
-from os.path import expanduser, join
 
-# use expanduser to locate its home dir and join bin and candy module paths
-starship_module_path =  join(expanduser("~"), "xanadu", "strawberryfields", "starship")
-
-# load the module without .py extension
-starship = imp.load_source("starship", starship_module_path)
-sys.path.extend(['~/xanadu/strawberryfields'])
-import starship
 
 pytestmark = pytest.mark.cli
-
-@pytest.fixture
-def run(testdir):
-    def do_run(*args):
-        args = ["pyconv"] + list(args)
-        return testdir._run(*args)
-    return do_run
 
 class TestStarshipCli:
     """Tests for the Strawberry Fields command line interface."""
@@ -58,9 +43,8 @@ class TestStarshipCli:
             def ping(self):
                 self.ping = "SuccessfulPing" 
 
-        print(dir(starship))
         with monkeypatch.context() as m:
             mock_connection = MockConnection()
-            m.setattr("starship", "connection", mock_connection)
+            m.setattr("argparse.ArgumentParser", "parse_args", mock_connection)
             os.system("starship --ping")
             assert mock_connection.ping == "SuccessfulPing"
