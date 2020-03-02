@@ -29,6 +29,7 @@ requirements = [
     "quantum-blackbird>=0.2.0",
     "python-dateutil>=2.8.0",
     "thewalrus>=0.10",
+    "numba",
     "toml",
     "appdirs",
     "requests>=2.22.0",
