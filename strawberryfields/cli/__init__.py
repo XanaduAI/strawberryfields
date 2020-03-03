@@ -24,7 +24,7 @@ from strawberryfields.api.connection import connection
 from strawberryfields.engine import StarshipEngine
 from strawberryfields.io import load
 
-def command_line_interface():
+def main():
 
     args = parse_arguments()
     ping(args.ping)
