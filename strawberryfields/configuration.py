@@ -32,7 +32,7 @@ log.getLogger()
 DEFAULT_CONFIG_SPEC = {
     "api": {
         "authentication_token": (str, ""),
-        "hostname": (str, "platform.xanadu.ai"),
+        "hostname": (str, "platform.strawberryfields.ai"),
         "use_ssl": (bool, True),
         "port": (int, 443),
     }
@@ -263,7 +263,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
 
         [api]
         authentication_token = "MyToken"
-        hostname = "platform.xanadu.ai"
+        hostname = "platform.strawberryfields.ai"
         use_ssl = true
         port = 443
 
