@@ -29,7 +29,7 @@ TEST_FILE = """\
 [api]
 # Options for the Strawberry Fields Cloud API
 authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
-hostname = "platform.xanadu.ai"
+hostname = "platform.strawberryfields.ai"
 use_ssl = true
 port = 443
 """
@@ -43,7 +43,7 @@ authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
 EXPECTED_CONFIG = {
     "api": {
         "authentication_token": "071cdcce-9241-4965-93af-4a4dbc739135",
-        "hostname": "platform.xanadu.ai",
+        "hostname": "platform.strawberryfields.ai",
         "use_ssl": True,
         "port": 443,
     }
@@ -303,7 +303,7 @@ class TestKeepValidOptions:
     def test_only_valid_options(self):
         section_config_only_valid = {
             "authentication_token": "071cdcce-9241-4965-93af-4a4dbc739135",
-            "hostname": "platform.xanadu.ai",
+            "hostname": "platform.strawberryfields.ai",
             "use_ssl": True,
             "port": 443,
         }
@@ -398,7 +398,7 @@ class TestUpdateFromEnvironmentalVariables:
         assert conf.parse_environment_variable("some_integer", "123") == 123
 
 
-DEFAULT_KWARGS = {"hostname": "platform.xanadu.ai", "use_ssl": True, "port": 443}
+DEFAULT_KWARGS = {"hostname": "platform.strawberryfields.ai", "use_ssl": True, "port": 443}
 
 
 class MockSaveConfigToFile:
