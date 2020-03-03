@@ -18,7 +18,7 @@ working directory. A typical file looks like this:
 .. code-block:: toml
 
     [api]
-    hostname = "platform.strawberryfields.ai"
+    hostname = "platform.xanadu.ai"
     authentication_token = "ElUFm3O6m6q1DXPmpi5g4hWEhYHXFxBc"
 
 You can generate this file interactively by using the ``starship`` command as follows, answering the questions in the prompts.
@@ -26,7 +26,7 @@ You can generate this file interactively by using the ``starship`` command as fo
 .. code-block:: text
 
     $ starship --reconfigure
-    Please enter the hostname of the server to connect to: [localhost] platform.strawberryfields.ai
+    Please enter the hostname of the server to connect to: [localhost] platform.xanadu.ai
     Please enter the authentication token to use when connecting: [] ElUFm3O6m6q1DXPmpi5g4hWEhYHXFxBc
     Would you like to save these settings to a local cofiguration file in the current directory? [Y/n] y
     Writing configuration file to current working directory...
