@@ -31,7 +31,7 @@ and has the following format:
     [api]
     # Options for the Strawberry Fields cloud API
     authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
-    hostname = "localhost"
+    hostname = "platform.xanadu.ai"
     use_ssl = true
     port = 443
 
@@ -44,7 +44,7 @@ Configuration options
     environment variable: ``SF_API_AUTHENTICATION_TOKEN``
 
 **hostname (str)** (*optional*)
-    The hostname of the server to connect to. Defaults to ``localhost``. Must
+    The hostname of the server to connect to. Defaults to ``platform.xanadu.ai``. Must
     be one of the allowed hosts. Corresponding environment variable:
     ``SF_API_HOSTNAME``
 
