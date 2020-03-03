@@ -19,7 +19,7 @@ import numpy as np
 import strawberryfields as sf
 from strawberryfields.ops import *
 
-
+@pytest.mark.xfail
 @pytest.mark.parametrize('cutoff', [10], indirect=True)  # override default cutoff fixture
 def test_teleportation_fidelity(setup_eng, pure):
     """Test that teleportation of a coherent state has high fidelity"""
