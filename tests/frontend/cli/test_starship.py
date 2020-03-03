@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.clique
+Unit tests for the Strawberry Fields command line interface.
 """
 # pylint: disable=no-self-use,unused-argument
 import os
@@ -23,25 +23,30 @@ import numpy as np
 import pytest
 
 from strawberryfields.apps import clique
-from strawberryfields.cli import command_line_interface
+from strawberryfields.cli import main
 
 import sys
 
 
 pytestmark = pytest.mark.cli
 
-class TestStarshipCli:
-    """Tests for the Strawberry Fields command line interface."""
-    
+class MockConnection:
+    def __init__(self):
+        self.ping = None
+
+    def ping(self):
+        self.ping = "SuccessfulPing" 
+
+class TestPing:
+
+    def test_correct(self, monkeypatch):
+
+        mock_connection = MockConnection()
+        with monkeypatch.context() as m:
+            m.setattr("strawberryfields.cli", "connection", mock_connection)
+
+class TestParseArguments:
     def test_ping(self, monkeypatch):
-
-        class MockConnection:
-
-            def __init__(self):
-                self.ping = None
-
-            def ping(self):
-                self.ping = "SuccessfulPing" 
 
         with monkeypatch.context() as m:
             mock_connection = MockConnection()
