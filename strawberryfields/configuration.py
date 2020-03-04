@@ -32,7 +32,7 @@ log.getLogger()
 DEFAULT_CONFIG_SPEC = {
     "api": {
         "authentication_token": (str, ""),
-        "hostname": (str, "localhost"),
+        "hostname": (str, "platform.strawberryfields.ai"),
         "use_ssl": (bool, True),
         "port": (int, 443),
     }
@@ -102,7 +102,7 @@ def create_config(authentication_token="", **kwargs):
         dict[str, dict[str, Union[str, bool, int]]]: the configuration
             object
     """
-    hostname = kwargs.get("hostname", "localhost")
+    hostname = kwargs.get("hostname", DEFAULT_CONFIG_SPEC["api"]["hostname"][1])
     use_ssl = kwargs.get("use_ssl", DEFAULT_CONFIG_SPEC["api"]["use_ssl"][1])
     port = kwargs.get("port", DEFAULT_CONFIG_SPEC["api"]["port"][1])
 
@@ -263,7 +263,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
 
         [api]
         authentication_token = "MyToken"
-        hostname = "localhost"
+        hostname = "platform.strawberryfields.ai"
         use_ssl = true
         port = 443
 
