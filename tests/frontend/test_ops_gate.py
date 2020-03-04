@@ -180,10 +180,10 @@ def test_merge_measured_pars():
     assert merged is None
 
     # combining measured and fixed parameters
-    assert F.merge(D).p[0] == mpar + 1
-    assert F.merge(D.H).p[0] == -mpar + 1
-    assert D.merge(F).p[0] == mpar + 1
-    assert D.merge(F.H).p[0] == mpar - 1
+    assert F.merge(D).p[0] == mpar + 1.0
+    assert F.merge(D.H).p[0] == -mpar + 1.0
+    assert D.merge(F).p[0] == mpar + 1.0
+    assert D.merge(F.H).p[0] == mpar - 1.0
 
     # gates that have different p[1] parameters
     with pytest.raises(MergeFailure, match="Don't know how to merge these gates."):

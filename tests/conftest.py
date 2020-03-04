@@ -48,7 +48,7 @@ eng_backend_params = [
 ]
 
 
-if tf_available and tf.__version__[:3] == "1.3":
+if tf_available and tf.__version__[:2] == "2.":
     from strawberryfields.backends.tfbackend import TFBackend
 
     backend_params.append(pytest.param(TFBackend, marks=pytest.mark.tf))
@@ -142,7 +142,7 @@ def backend(monkeypatch):
 def print_fixtures(cutoff, hbar, batch_size):
     """Print the test configuration at the beginning of the session"""
     print(
-        "FIXTURES: cutoff = {}, hbar = {}, batch_size = {}".format(
+        "FIXTURES: cutoff = {}, pure = {}, hbar = {}, batch_size = {}".format(
             cutoff, hbar, pure, batch_size
         )
     )
