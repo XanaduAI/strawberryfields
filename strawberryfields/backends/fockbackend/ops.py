@@ -99,7 +99,7 @@ from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
 from strawberryfields.backends import shared_ops as so
-
+from thewalrus import Ggate_jit
 
 def_type = np.complex128
 indices = string.ascii_lowercase
@@ -444,6 +444,18 @@ def displacement(alpha, trunc):
 
     return ret
 
+@functools.lru_cache()
+def singlemode_gaussian(phi, w, z, trunc):
+    """The single mode Gaussian operator
+
+    Args:
+        phi (float): phase angle :math:`\phi`
+        w (complex): displacement parameter :math:`w`
+        z (complex): squeezing parameter :math:`z`
+        trunc (int): the Fock cutoff
+    """
+    return Ggate_jit(phi, w, z, trunc, dtype=def_type)
+    
 
 @functools.lru_cache()
 def squeezing(r, theta, trunc, save=False, directory=None):
