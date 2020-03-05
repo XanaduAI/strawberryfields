@@ -364,7 +364,7 @@ class LocalEngine(BaseEngine):
         temp_run_options = {}
 
         if isinstance(program, Sequence):
-            # succesively update all run option defaults.
+            # successively update all run option defaults.
             # the run options of successive programs
             # overwrite the run options of previous programs
             # in the list
