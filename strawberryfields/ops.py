@@ -205,6 +205,7 @@ Single-mode gates
 -----------------
 
 .. autosummary::
+    Ggate
     Dgate
     Xgate
     Zgate
@@ -1162,7 +1163,7 @@ class Ggate(Gate):
         z (complex): squeezing parameter :math:`z`
     """
 
-    def __init__(self, a, phi=0.):
+    def __init__(self, phi, w, z):
         super().__init__([phi, w, z])
 
     def _apply(self, reg, backend, **kwargs):

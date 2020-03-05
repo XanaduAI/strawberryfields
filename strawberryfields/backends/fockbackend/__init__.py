@@ -73,6 +73,7 @@ FockBackend methods
    prepare_dm_state
    rotation
    displacement
+   singlemode_gaussian
    squeeze
    beamsplitter
    cubic_phase

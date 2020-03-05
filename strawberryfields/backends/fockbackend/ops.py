@@ -57,6 +57,7 @@ Gates
      displacement
      squeezing
      phase
+     singlemode_gaussian
      beamsplitter
      addition
      controlledPhase
@@ -99,7 +100,7 @@ from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
 from strawberryfields.backends import shared_ops as so
-from thewalrus import Ggate_jit
+from thewalrus.fock_gradients import Ggate_jit
 
 def_type = np.complex128
 indices = string.ascii_lowercase
