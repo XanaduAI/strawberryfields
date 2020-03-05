@@ -233,7 +233,10 @@ def nullTi(m, n, U):
     if nmax != mmax:
         raise ValueError("U must be a square matrix")
 
-    if U[m, n+1] == 0:
+    if (U[m, n+1] == 0 and U[m, n] == 0):
+        thetar = 0
+        phir = 0
+    elif U[m, n+1] == 0:
         thetar = np.pi/2
         phir = 0
     else:
@@ -251,7 +254,10 @@ def nullT(n, m, U):
     if nmax != mmax:
         raise ValueError("U must be a square matrix")
 
-    if U[n-1, m] == 0:
+    if (U[n-1, m] == 0 and U[n, m] == 0):
+        thetar = 0
+        phir = 0
+    elif U[n-1, m] == 0:
         thetar = np.pi/2
         phir = 0
     else:
