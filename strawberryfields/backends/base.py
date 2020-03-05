@@ -410,6 +410,17 @@ class BaseBackend:
             mode (int): which mode to apply the displacement to
         """
         raise NotImplementedError
+    
+    def singlemode_gaussian(self, phi, w, z, mode):
+        """Apply the single mode Gaussian operation to the specified mode.
+
+        Args:
+            phi (float): phase rotation
+            w (complex): displacement parameter
+            z (complex): squeezing parameter
+            mode (int): which mode to apply the squeeze to
+        """
+        raise NotImplementedError
 
     def squeeze(self, z, mode):
         """Apply the squeezing operation to the specified mode.

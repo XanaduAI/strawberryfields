@@ -374,6 +374,16 @@ class Circuit:
         new_state = ops.displacement(alpha, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched)
         self._update_state(new_state)
 
+    def singlemode_gaussian(self, phi, w, z, mode):
+        """
+        Apply the single mode Gaussian operator to the specified mode.
+        """
+        phi = self._maybe_batch(phi)
+        w = self._maybe_batch(w)
+        z = self._maybe_batch(z)
+        new_state = ops.singlemode_gaussian(phi, w, z, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched)
+        self._update_state(new_state)
+
     def squeeze(self, z, mode):
         """
         Apply the single-mode squeezing operator to the specified mode.

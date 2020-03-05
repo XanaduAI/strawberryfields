@@ -339,6 +339,12 @@ class Circuit():
         """
         self._apply_gate(ops.squeezing(r, theta, self._trunc), [mode])
 
+    def singlemode_gaussian(self, phi, w, z, mode):
+        """
+        Applies a single mode gaussian gate.
+        """
+        self._apply_gate(ops.singlemode_gaussian(phi, w, z, self._trunc), [mode])
+
     def kerr_interaction(self, kappa, mode):
         """
         Applies a Kerr interaction gate.

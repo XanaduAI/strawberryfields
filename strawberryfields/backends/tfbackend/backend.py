@@ -182,6 +182,11 @@ class TFBackend(BaseFock):
             remapped_mode = self._remap_modes(mode)
             self.circuit.squeeze(z, remapped_mode)
 
+    def singlemode_gaussian(self, phi, w, z, mode):
+        with tf.name_scope('1mode Gaussian'):
+            remapped_mode = self._remap_modes(mode)
+            self.circuit.singlemode_gaussian(phi, w, z, remapped_mode)
+
     def beamsplitter(self, t, r, mode1, mode2):
         with tf.name_scope('Beamsplitter'):
             if isinstance(t, complex):
