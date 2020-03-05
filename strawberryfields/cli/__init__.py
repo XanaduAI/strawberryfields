@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,26 +23,37 @@ from strawberryfields.api import Connection
 from strawberryfields.api.connection import connection
 from strawberryfields.engine import StarshipEngine
 from strawberryfields.io import load
+from strawberryfields.configuration import store_account, configuration
 
 def main():
-
+    # TODO
+    """: """
     args = parse_arguments()
-    ping(args.ping)
+
+    if args.ping:
+        ping()
+    elif args.token:
+        configure_token(args.token)
+    elif args.configure:
+        configure_everything()
+
     run_program(args.input, args.output)
 
-
-def ping(args_ping):
-    if args_ping:
-        connection.ping()
-        sys.stdout.write("You have successfully authenticated to the platform!\n")
-        sys.exit()
-
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="run a blackbird script")
+    # TODO
+    parser = argparse.ArgumentParser(description="These are common options when working on the Xanadu cloud platform.")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--input", "-i", help="the xbb file to run")
+    # TODO: add --configure option
+    # TODO: add --token option
+    group.add_argument("--input", "-i", help="Path for the blackbird (.xbb) file to run.")
     group.add_argument(
         "--ping", "-p", action="store_true", help="test the API connection"
+    )
+    group.add_argument(
+        "--token", "-t", action="store_true", help="configure the token of the API connection"
+    )
+    group.add_argument(
+        "--configure", "-c", action="store_true", help="configure every detail of the API connection"
     )
     parser.add_argument(
         "--output",
@@ -52,7 +63,35 @@ def parse_arguments():
 
     return parser.parse_args()
 
+def configure_token(authentication_token):
+    store_account(authentication_token=authentication_token)
+
+def configure_everything():
+
+    default_config = configuration
+
+    authentication_token = (
+        input(PROMPTS["authentication_token"].format(default_config["authentication_token"]))
+        or default_config["authentication_token"]
+    )
+    hostname = (
+        input(PROMPTS["hostname"].format(default_config["hostname"])) or default_config["hostname"]
+    )
+
+    use_ssl = input(PROMPTS["use_ssl"].format("y" if default_config["use_ssl"] else "n")).upper() == "Y"
+
+    port = input(PROMPTS["port"].format(default_config["port"])) or default_config["port"]
+
+    store_account(authentication_token=authentication_token, hostname=hostname, use_ssl=use_ssl, port=port)
+
+def ping():
+    # TODO
+        connection.ping()
+        sys.stdout.write("You have successfully authenticated to the platform!\n")
+        sys.exit()
+
 def run_program(args_input, args_output=None):
+    # TODO
     program = load(args_input)
 
     eng = StarshipEngine(program.target)

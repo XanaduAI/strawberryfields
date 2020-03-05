@@ -23,7 +23,7 @@ import numpy as np
 import pytest
 
 from strawberryfields.apps import clique
-from strawberryfields.cli import main
+from strawberryfields import cli as cli
 
 import sys
 
@@ -31,25 +31,50 @@ import sys
 pytestmark = pytest.mark.cli
 
 class MockConnection:
+    # TODO
     def __init__(self):
-        self.ping = None
+        self.pinging = None
 
     def ping(self):
-        self.ping = "SuccessfulPing" 
+        self.pinging = "SuccessfulPing"
 
-class TestPing:
+class MockSysStdout:
+    # TODO
 
-    def test_correct(self, monkeypatch):
+    def __init__(self):
+        self.write_output = None
 
-        mock_connection = MockConnection()
-        with monkeypatch.context() as m:
-            m.setattr("strawberryfields.cli", "connection", mock_connection)
+    def write(self, message):
+        self.write_output = message
 
 class TestParseArguments:
+    # TODO
     def test_ping(self, monkeypatch):
+        # TODO
 
         with monkeypatch.context() as m:
             mock_connection = MockConnection()
             m.setattr("argparse.ArgumentParser", "parse_args", mock_connection)
             os.system("starship --ping")
             assert mock_connection.ping == "SuccessfulPing"
+
+class TestPing:
+    # TODO
+
+    def test_correct(self, monkeypatch):
+        # TODO
+
+        with monkeypatch.context() as m:
+            mock_connection = MockConnection()
+            mock_sys_stdout = MockSysStdout()
+
+            m.setattr(cli, "connection", mock_connection)
+            m.setattr(sys, "stdout", mock_sys_stdout)
+
+            assert mock_connection.pinging is None
+
+            with pytest.raises(SystemExit):
+                cli.ping()
+                assert mock_sys_stdout.write_output == "You have successfully authenticated to the platform!\n"
+                assert mock_connection.pinging == "SuccessfulPing"
+
