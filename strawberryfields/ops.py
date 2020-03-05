@@ -704,6 +704,18 @@ class Gate(Transformation):
         Returns:
             None: Gates do not return anything, return value is None
         """
+        if isinstance(self, Ggate):
+            if np.allclose([np.abs(p) for p in self.p], 0):
+            # identity, no need to apply
+                return
+
+            original_p = self.p[:]
+            if self.dagger:
+                self.p = [-p for p in original_p]
+            temp = [rr.ind for rr in reg]
+            self._apply(temp, backend, **kwargs)
+            self.p = original_p
+
         z = self.p[0]
         # if z represents a batch of parameters, then all of these
         # must be zero to skip calling backend
@@ -2140,7 +2152,8 @@ zero_args_gates = (Fouriergate,)
 one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate,
                   Kgate, CXgate, CZgate, CKgate)
 two_args_gates = (Dgate, Sgate, BSgate, MZgate, S2gate)
-gates = zero_args_gates + one_args_gates + two_args_gates
+gaussian_gates = (Ggate,)
+gates = zero_args_gates + one_args_gates + two_args_gates + gaussian_gates
 
 channels = (LossChannel, ThermalLossChannel)
 
