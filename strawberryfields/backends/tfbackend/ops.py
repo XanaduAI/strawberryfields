@@ -185,10 +185,14 @@ def kerr_interaction_matrix(kappa, D, batched=False):
     return output
 
 @tf.custom_gradient
-def singlemode_gaussian_matrix(phi, w, z, D, batched=False, dtype=def_type):
+def singlemode_gaussian_matrix(phi, w, z, D, batched=False, dtype=def_type.as_numpy_dtype):
     """creates the single mode Gaussian interaction matrix"""
-    gate = Ggate_jit(phiR.numpy(), w.numpy(), z.numpy(), cutoff, dtype=dtype)
-    Jphi, Jw, Jwc, Jz, Jzc = Ggate_gradients(phiR.numpy(), w.numpy(), z.numpy(), gate)
+    phi = phi.numpy()
+    w = w.numpy()
+    z = z.numpy()
+
+    gate = Ggate_jit(phi, w, z, D, dtype=dtype)
+    Jphi, Jw, Jwc, Jz, Jzc = Ggate_gradients(phi, w, z, gate)
                 
     def grad(dy):
         grad_phi = tf.cast(tf.math.real(tf.reduce_sum(dy*Jphi)), dtype=dtype)
