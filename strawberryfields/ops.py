@@ -1145,6 +1145,29 @@ class ThermalLossChannel(Channel):
 # Unitary gates
 # ====================================================================
 
+class Ggate(Gate):
+    r"""Phase space :ref:`gaussian <gaussian>` gate.
+
+    .. math::
+       G(\phi, w, z) = R(phi)D(w)S(z)
+
+    where :math:`R(\phi)` is a rotation gate, :math:`D(w)` is a displacement gate and 
+    :math:`S(z)` is a squeezing gate. 
+
+    The gate is parameterized with three numbers (one real, two complex).
+
+    Args:
+        phi (float): phase angle :math:`\phi`
+        w (complex): displacement parameter :math:`w`
+        z (complex): squeezing parameter :math:`z`
+    """
+
+    def __init__(self, a, phi=0.):
+        super().__init__([phi, w, z])
+
+    def _apply(self, reg, backend, **kwargs):
+        p = par_evaluate(self.p)
+        backend.singlemode_gaussian(p[0], p[1], p[2], *reg)
 
 class Dgate(Gate):
     r"""Phase space :ref:`displacement <displacement>` gate.
