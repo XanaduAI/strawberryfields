@@ -45,6 +45,7 @@ class FockSpecs(CircuitSpecs):
         # channels
         "LossChannel",
         # single mode gates
+        "Ggate",
         "Dgate",
         "Sgate",
         "Rgate",

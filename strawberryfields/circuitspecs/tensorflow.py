@@ -45,6 +45,7 @@ class TFSpecs(CircuitSpecs):
         # channels
         "LossChannel",
         # single mode gates
+        "Ggate",
         "Dgate",
         "Sgate",
         "Rgate",
