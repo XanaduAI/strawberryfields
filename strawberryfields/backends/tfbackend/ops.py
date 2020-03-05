@@ -36,6 +36,7 @@ import numpy as np
 from scipy.special import binom, factorial
 
 from strawberryfields.backends.shared_ops import generate_bs_factors, load_bs_factors, save_bs_factors, squeeze_parity
+from thewalrus.fock_gradients import Ggate_jit, Ggate_gradients
 
 def_type = tf.complex64 #NOTE: what if a user wants higher accuracy?
 max_num_indices = len(indices)
@@ -182,6 +183,19 @@ def kerr_interaction_matrix(kappa, D, batched=False):
         coeffs = tf.stack(coeffs, axis=1)
     output = tf.linalg.diag(coeffs)
     return output
+
+@tf.custom_gradient
+def singlemode_gaussian_matrix(phi, w, z, D, batched=False, dtype=def_type):
+    gate = Ggate_jit(phiR.numpy(), w.numpy(), z.numpy(), cutoff, dtype=dtype)
+    Jphi, Jw, Jwc, Jz, Jzc = Ggate_gradients(phiR.numpy(), w.numpy(), z.numpy(), gate)
+                
+    def grad(dy):
+        grad_phi = tf.cast(tf.math.real(tf.reduce_sum(dy*Jphi)), dtype=dtype)
+        grad_w = tf.reduce_sum(dy*Jw) + tf.reduce_sum(tf.math.conj(dy)*Jwc)
+        grad_z = tf.reduce_sum(dy*Jz) + tf.reduce_sum(tf.math.conj(dy)*Jzc)
+        return grad_phi, grad_w, grad_z, None
+    
+    return gate, grad
 
 def cross_kerr_interaction_matrix(kappa, D, batched=False):
     """creates the two mode cross-Kerr interaction matrix"""
@@ -586,6 +600,12 @@ def squeezer(r, theta, mode, in_modes, D, pure=True, batched=False):
 def kerr_interaction(kappa, mode, in_modes, D, pure=True, batched=False):
     """returns Kerr unitary matrix on specified input modes"""
     matrix = kerr_interaction_matrix(kappa, D, batched)
+    output = single_mode_gate(matrix, mode, in_modes, pure, batched)
+    return output
+
+def singlemode_gaussian(phi, w, z, mode, in_modes, D, pure=True, batched=False):
+    """returns gaussian unitary matrix on specified input modes"""
+    matrix = singlemode_gaussian_matrix(phi, w, z, D, batched=batched)
     output = single_mode_gate(matrix, mode, in_modes, pure, batched)
     return output
 
