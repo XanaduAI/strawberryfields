@@ -17,6 +17,7 @@ Unit tests for the Strawberry Fields command line interface.
 # pylint: disable=no-self-use,unused-argument
 import os
 import functools
+import argparse
 
 import networkx as nx
 import numpy as np
@@ -30,6 +31,54 @@ import sys
 
 pytestmark = pytest.mark.cli
 
+class TestParseArguments:
+    # TODO
+    def test_ping(self):
+        # TODO
+
+        parser = cli.create_parser()
+        args = parser.parse_args(['--ping'])
+        assert args.ping
+
+    def test_input(self):
+        # TODO
+
+        parser = cli.create_parser()
+        args = parser.parse_args(['--input', 'SomePath'])
+        assert args.input == 'SomePath'
+
+    def test_output(self):
+        # TODO
+
+        parser = cli.create_parser()
+        args = parser.parse_args(['--input', 'SomeInputPath', '--output', 'SomeOutputPath'])
+        assert args.input == 'SomeInputPath'
+        assert args.output == 'SomeOutputPath'
+
+    grouped_argument_options = [
+                                ('--ping',),
+                                ('--token', 'SomeAuth'),
+                                ('--configure',),
+                                ('--input', 'SomePath')
+                                ]
+
+    # Output of a programatic matching of every possible pair (without
+    # repetition):
+    # list(itertools.combinations(grouped_argument_options, r=2))
+    combination_of_grouped = [(('--ping',), ('--token', 'SomeAuth')),
+                             (('--ping',), ('--configure',)),
+                             (('--ping',), ('--input', 'SomePath')),
+                             (('--token', 'SomeAuth'), ('--configure',)),
+                             (('--token', 'SomeAuth'), ('--input', 'SomePath')),
+                             (('--configure',), ('--input', 'SomePath'))]
+
+    @pytest.mark.parametrize('option1, option2', combination_of_grouped)
+    def test_error_mutually_exclusive_group(self, option1, option2):
+        parser = cli.create_parser()
+        with pytest.raises(SystemExit, match='2'):
+            with pytest.raises(argparse.ArgumentError, match='not allowed with argument'):
+                args = parser.parse_args([*option1, *option2])
+
 class MockConnection:
     # TODO
     def __init__(self):
@@ -42,21 +91,11 @@ class MockSysStdout:
     # TODO
 
     def __init__(self):
-        self.write_output = None
+        self.write_output = []
 
     def write(self, message):
         self.write_output = message
 
-class TestParseArguments:
-    # TODO
-    def test_ping(self, monkeypatch):
-        # TODO
-
-        with monkeypatch.context() as m:
-            mock_connection = MockConnection()
-            m.setattr("argparse.ArgumentParser", "parse_args", mock_connection)
-            os.system("starship --ping")
-            assert mock_connection.ping == "SuccessfulPing"
 
 class TestPing:
     # TODO
@@ -77,4 +116,20 @@ class TestPing:
                 cli.ping()
                 assert mock_sys_stdout.write_output == "You have successfully authenticated to the platform!\n"
                 assert mock_connection.pinging == "SuccessfulPing"
+
+
+
+#class TestConfigureEverything:
+
+
+
+class TestRunProgram:
+
+    def test_correct_arguments(self, monkeypatch):
+
+        mocked_stdout = MockSysStdout()
+        with monkeypatch.context() as m:
+            m.setattr(cli.StarshipEngine, "__init__", lambda: None)
+            m.setattr(sys, "stdout", mocked_stdout)
+
 

@@ -28,40 +28,68 @@ from strawberryfields.configuration import store_account, configuration
 def main():
     # TODO
     """: """
-    args = parse_arguments()
+    parser = create_parser()
+    args = parser.parse_args()
+    run_command(args)
 
+def create_parser():
+    # TODO
+    parser = argparse.ArgumentParser(description="These are common options when working on the Xanadu cloud platform.")
+    group = parser.add_mutually_exclusive_group(required=True)
+    # TODO: add --configure option
+    # TODO: add --token option
+    group.add_argument(
+        "--ping", "-p", action="store_true", help=""
+    )
+    group.add_argument("--input", "-i", help="Path for the blackbird (.xbb) file to run.")
+
+    subparsers = parser.add_subparsers()
+    configure_parser = subparsers.add_parser('configure', help='configure the API connection')
+
+    configure_parser.add_argument(
+        "--token", "-t", help="configure the token of the API connection"
+    )
+    configure_parser.add_argument(
+        "--host", "-ho", help="configure the token of the API connection"
+    )
+    configure_parser.add_argument(
+        "--port", "-p", help="configure the token of the API connection"
+    )
+    configure_parser.add_argument(
+        "--ssl", "-s", action="store_true", help="configure the token of the API connection"
+    )
+
+    configure_parser.add_argument(
+        "--local", "-l", action="store_true", help="configure the token of the API connection"
+    )
+
+    ping_parser = subparsers.add_parser('ping', help='test the API connection')
+    script_parser = subparsers.add_parser('input', help='configure the API connection')
+    script_parser.add_argument(
+        "--output",
+        "-o",
+        help="where to output the result of the program - outputs to stdout by default",
+    )
+
+    return parser
+
+def run_command(args):
     if args.ping:
         ping()
     elif args.token:
         configure_token(args.token)
     elif args.configure:
         configure_everything()
+    # elif args.reconfigure:
+    #    reconfigure_everything()
 
-    run_program(args.input, args.output)
+    run_blackbird_script(args.input, args.output)
 
-def parse_arguments():
+def ping():
     # TODO
-    parser = argparse.ArgumentParser(description="These are common options when working on the Xanadu cloud platform.")
-    group = parser.add_mutually_exclusive_group(required=True)
-    # TODO: add --configure option
-    # TODO: add --token option
-    group.add_argument("--input", "-i", help="Path for the blackbird (.xbb) file to run.")
-    group.add_argument(
-        "--ping", "-p", action="store_true", help="test the API connection"
-    )
-    group.add_argument(
-        "--token", "-t", action="store_true", help="configure the token of the API connection"
-    )
-    group.add_argument(
-        "--configure", "-c", action="store_true", help="configure every detail of the API connection"
-    )
-    parser.add_argument(
-        "--output",
-        "-o",
-        help="where to output the result of the program - outputs to stdout by default",
-    )
-
-    return parser.parse_args()
+        connection.ping()
+        sys.stdout.write("You have successfully authenticated to the platform!\n")
+        sys.exit()
 
 def configure_token(authentication_token):
     store_account(authentication_token=authentication_token)
@@ -84,13 +112,7 @@ def configure_everything():
 
     store_account(authentication_token=authentication_token, hostname=hostname, use_ssl=use_ssl, port=port)
 
-def ping():
-    # TODO
-        connection.ping()
-        sys.stdout.write("You have successfully authenticated to the platform!\n")
-        sys.exit()
-
-def run_program(args_input, args_output=None):
+def run_blackbird_script(args_input, args_output=None):
     # TODO
     program = load(args_input)
 
