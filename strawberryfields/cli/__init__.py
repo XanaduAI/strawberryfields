@@ -30,67 +30,70 @@ def main():
     """: """
     parser = create_parser()
     args = parser.parse_args()
-    run_command(args)
+
+    if args.ping:
+        ping()
+    elif hasattr(args, 'func'):
+        args.func(args)
+    else:
+        parser.print_help()
 
 def create_parser():
     # TODO
-    parser = argparse.ArgumentParser(description="These are common options when working on the Xanadu cloud platform.")
-    group = parser.add_mutually_exclusive_group(required=True)
-    # TODO: add --configure option
-    # TODO: add --token option
-    group.add_argument(
-        "--ping", "-p", action="store_true", help=""
-    )
+    parser = argparse.ArgumentParser(usage='starship <command> [<args>]', description="These are common options when working on the Xanadu cloud platform.")
 
-    subparsers = parser.add_subparsers()
+    # Setting a title for the general options (requires setting a private
+    # attribute)
+    parser._optionals.title = 'General Options'
+
+    subparsers = parser.add_subparsers(title='Commands')
     configure_parser = subparsers.add_parser('configure', help='configure the API connection')
+    configure_parser.set_defaults(func=configure)
 
     configure_parser.add_argument(
-        "--token", "-t", help="configure the token of the API connection"
+        "--token", "-t", type=str, help="configure the token of the API connection"
     )
-    configure_parser.add_argument(
-        "--host", "-ho", help="configure the token of the API connection"
-    )
-    configure_parser.add_argument(
-        "--port", "-p", help="configure the token of the API connection"
-    )
-    configure_parser.add_argument(
-        "--ssl", "-s", action="store_true", help="configure the token of the API connection"
-    )
-
     configure_parser.add_argument(
         "--local", "-l", action="store_true", help="configure the token of the API connection"
     )
 
     script_parser = subparsers.add_parser('input', help='configure the API connection')
+    script_parser.set_defaults(func=run_blackbird_script)
     script_parser.add_argument(
         "--output",
         "-o",
         help="where to output the result of the program - outputs to stdout by default",
     )
+    # TODO: add --configure option
+    # TODO: add --token option
+    parser.add_argument(
+        "--ping", "-p", action="store_true", help=""
+    )
 
     return parser
 
-def run_command(args):
-    if args.ping:
-        ping()
-    elif args.token:
-        configure_token(args.token)
-    elif args.configure:
-        configure_everything()
+def configure(args):
+    print(args)
+    if args.token:
+        kwargs = {'authentication_token': args.token}
+    else:
+        kwargs = configure_everything()
+
+    if args.local:
+        store_account(**kwargs, location="local")
+    else:
+        store_account(**kwargs)
+
     # elif args.reconfigure:
     #    reconfigure_everything()
 
-    run_blackbird_script(args.input, args.output)
+    # run_blackbird_script(args.input, args.output)
 
 def ping():
     # TODO
         connection.ping()
         sys.stdout.write("You have successfully authenticated to the platform!\n")
         sys.exit()
-
-def configure_token(authentication_token):
-    store_account(authentication_token=authentication_token)
 
 def configure_everything():
 
@@ -108,7 +111,8 @@ def configure_everything():
 
     port = input(PROMPTS["port"].format(default_config["port"])) or default_config["port"]
 
-    store_account(authentication_token=authentication_token, hostname=hostname, use_ssl=use_ssl, port=port)
+    kwargs = {'authentication_token': authentication_token, 'hostname': hostname, 'use_ssl': use_ssl, 'port': port}
+    return kwargs
 
 def run_blackbird_script(args_input, args_output=None):
     # TODO
