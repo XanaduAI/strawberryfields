@@ -41,7 +41,6 @@ def create_parser():
     group.add_argument(
         "--ping", "-p", action="store_true", help=""
     )
-    group.add_argument("--input", "-i", help="Path for the blackbird (.xbb) file to run.")
 
     subparsers = parser.add_subparsers()
     configure_parser = subparsers.add_parser('configure', help='configure the API connection')
@@ -63,7 +62,6 @@ def create_parser():
         "--local", "-l", action="store_true", help="configure the token of the API connection"
     )
 
-    ping_parser = subparsers.add_parser('ping', help='test the API connection')
     script_parser = subparsers.add_parser('input', help='configure the API connection')
     script_parser.add_argument(
         "--output",
