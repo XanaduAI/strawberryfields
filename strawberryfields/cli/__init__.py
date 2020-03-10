@@ -159,8 +159,8 @@ def configure_everything():
     )
 
     if not authentication_token:
-        # Raise and error if the authentication token was not supplied
-        raise ConfigurationError("No authentication token was provided.")
+        sys.stdout.write("No authentication token was provided, please configure again.")
+        sys.exit()
 
     hostname = (
         input(PROMPTS["hostname"].format(default_config["hostname"])) or default_config["hostname"]
@@ -179,7 +179,6 @@ def configure_everything():
         "port": port,
     }
     return kwargs
-
 
 def run_blackbird_script(args):
     """Run a blackbird script.

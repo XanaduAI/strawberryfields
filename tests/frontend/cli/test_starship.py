@@ -260,13 +260,17 @@ def mock_input(arg):
 
 class TestConfigureEverything:
 
-    def test_no_auth_config_error_by_default(self, monkeypatch):
-        """Test that by default the configure_everything function raises an
-        error as no authentication token is supplied."""
+    def test_no_auth_exit_with_message(self, monkeypatch):
+        """Test that by default the configure_everything function exits with a
+        relevant message."""
         with monkeypatch.context() as m:
             m.setattr(builtins, "input", lambda *args: False)
-            with pytest.raises(ConfigurationError, match="No authentication token"):
+            mocked_stdout = MockSysStdout()
+            m.setattr(sys, "stdout", mocked_stdout)
+            with pytest.raises(SystemExit):
                 cli.configure_everything()
+
+            mocked_stdout.write_output == "No authentication token was provided, please configure again."
 
     def test_auth_correct(self, monkeypatch):
         """Test that by default the configure_everything function works
