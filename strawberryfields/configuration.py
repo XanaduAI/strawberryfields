@@ -14,12 +14,6 @@
 r"""
 This module contains functions used to load, store, save, and modify
 configuration options for Strawberry Fields.
-
-.. warning::
-
-    See more details regarding Strawberry Fields configuration and available
-    configuration options on the :doc:`/introduction/configuration` page.
-
 """
 import logging as log
 import os
