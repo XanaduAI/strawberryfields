@@ -254,7 +254,7 @@ def nullT(n, m, U):
     if nmax != mmax:
         raise ValueError("U must be a square matrix")
 
-    if (U[n-1, m] == 0 and U[n, m] == 0):
+    if U[n, m] == 0:
         thetar = 0
         phir = 0
     elif U[n-1, m] == 0:
