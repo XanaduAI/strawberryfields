@@ -57,7 +57,7 @@ def create_parser():
         "--local", "-l", action="store_true", help="create the configure for the project"
     )
 
-    script_parser = subparsers.add_parser('input', help='run a blackbird script')
+    script_parser = subparsers.add_parser('run', help='run a blackbird script')
     script_parser.set_defaults(func=run_blackbird_script)
     script_parser.add_argument(
         "--output",
@@ -116,9 +116,9 @@ def configure_everything():
     kwargs = {'authentication_token': authentication_token, 'hostname': hostname, 'use_ssl': use_ssl, 'port': port}
     return kwargs
 
-def run_blackbird_script(args_input, args_output=None):
+def run_blackbird_script(args_run, args_output=None):
     # TODO
-    program = load(args_input)
+    program = load(args_run)
 
     eng = StarshipEngine(program.target)
     sys.stdout.write("Executing program on remote hardware...\n")

@@ -40,18 +40,18 @@ class TestParseArguments:
         args = parser.parse_args(['--ping'])
         assert args.ping
 
-    def test_input(self):
+    def test_run(self):
         # TODO
 
         parser = cli.create_parser()
-        args = parser.parse_args(['--input', 'SomePath'])
+        args = parser.parse_args(['--run', 'SomePath'])
         assert args.input == 'SomePath'
 
     def test_output(self):
         # TODO
 
         parser = cli.create_parser()
-        args = parser.parse_args(['--input', 'SomeInputPath', '--output', 'SomeOutputPath'])
+        args = parser.parse_args(['run', 'SomeInputPath', '--output', 'SomeOutputPath'])
         assert args.input == 'SomeInputPath'
         assert args.output == 'SomeOutputPath'
 
@@ -59,7 +59,7 @@ class TestParseArguments:
                                 ('--ping',),
                                 ('--token', 'SomeAuth'),
                                 ('--configure',),
-                                ('--input', 'SomePath')
+                                ('run', 'SomePath')
                                 ]
 
     # Output of a programatic matching of every possible pair (without
@@ -67,10 +67,10 @@ class TestParseArguments:
     # list(itertools.combinations(grouped_argument_options, r=2))
     combination_of_grouped = [(('--ping',), ('--token', 'SomeAuth')),
                              (('--ping',), ('--configure',)),
-                             (('--ping',), ('--input', 'SomePath')),
+                             (('--ping',), ('run', 'SomePath')),
                              (('--token', 'SomeAuth'), ('--configure',)),
-                             (('--token', 'SomeAuth'), ('--input', 'SomePath')),
-                             (('--configure',), ('--input', 'SomePath'))]
+                             (('--token', 'SomeAuth'), ('run', 'SomePath')),
+                             (('--configure',), ('run', 'SomePath'))]
 
     @pytest.mark.parametrize('option1, option2', combination_of_grouped)
     def test_error_mutually_exclusive_group(self, option1, option2):
