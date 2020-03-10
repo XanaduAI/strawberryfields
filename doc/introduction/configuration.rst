@@ -67,7 +67,6 @@ In these examples ``"MyToken"`` should be replaced with a valid authentication t
 
 .. code-block:: python
 
-    import strawberryfields as sf
     sf.store_account("MyToken")
 
 .. note::
@@ -89,7 +88,6 @@ Strawberry Fields:
 
 .. code-block:: python
 
-    import strawberryfields as sf
     sf.store_account("MyToken", location="local")
 
 For more detailed examples, visit the :func:`~.store_account`

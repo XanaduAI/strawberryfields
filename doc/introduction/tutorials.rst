@@ -134,8 +134,8 @@ Algorithms
         <div style='clear:both'></div>
         <br>
 
-Demo
-----
+Hardware
+--------
 
 .. toctree::
     :hidden:

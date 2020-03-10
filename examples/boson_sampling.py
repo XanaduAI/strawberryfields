@@ -6,21 +6,12 @@ from strawberryfields.ops import *
 eng = sf.Engine(backend="fock", backend_options={"cutoff_dim": 7})
 boson_sampling = sf.Program(4)
 
-import numpy as np
-U = np.array(
-    [[ 0.2195-0.2565j,  0.6111+0.5242j, -0.1027+0.4745j, -0.0273+0.0373j],
-     [ 0.4513+0.6026j,  0.457 +0.0123j,  0.1316-0.4504j,  0.0353-0.0532j],
-     [ 0.0387+0.4927j, -0.0192-0.3218j, -0.2408+0.5244j, -0.4584+0.3296j],
-     [-0.1566+0.2246j,  0.11  -0.1638j, -0.4212+0.1836j,  0.8188+0.068j ]])
-
 with boson_sampling.context as q:
     # prepare the input fock states
     Fock(1) | q[0]
     Fock(1) | q[1]
     Vac     | q[2]
     Fock(1) | q[3]
-
-    Interferometer(U) | q
 
     # rotation gates
     Rgate(0.5719) | q[0]

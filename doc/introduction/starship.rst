@@ -3,8 +3,6 @@
 StarshipEngine
 ##############
 
-.. sectionauthor:: Zeid Zabaneh <zeid@xanadu.ai>
-
 In this section, we provide a tutorial of the **StarshipEngine**, an engine used to connect to the Xanadu
 cloud platform and execute jobs remotely (e.g., on a quantum chip).
 
@@ -12,33 +10,32 @@ Configuring StarshipEngine
 --------------------------
 
 Before using StarshipEngine, you need to configure the hostname and authentication token that will provide
-you access to the API. The easiest way is to create a configuration file named ``config.toml`` in your
-working directory. A typical file looks like this:
+you access to the API. This can be done in one of two ways:
 
-.. code-block:: toml
+1. By using the :func:`~.store_account` function to store your account credentials:
 
-    [api]
-    hostname = "platform.strawberryfields.ai"
-    authentication_token = "ElUFm3O6m6q1DXPmpi5g4hWEhYHXFxBc"
+   >>> sf.store_account("my_api_token")
 
-You can generate this file interactively by using the ``starship`` command as follows, answering the questions in the prompts.
+2. By using the Starship command line interface to configure Strawberry Fields with your
+   account credentials:
 
-.. code-block:: text
+   >>> starship configure --token my_api_token
 
-    $ starship --reconfigure
-    Please enter the hostname of the server to connect to: [localhost] platform.strawberryfields.ai
-    Please enter the authentication token to use when connecting: [] ElUFm3O6m6q1DXPmpi5g4hWEhYHXFxBc
-    Would you like to save these settings to a local cofiguration file in the current directory? [Y/n] y
-    Writing configuration file to current working directory...
+In both of the above code snippets, ``my_api_token`` should be replaced with your personal
+API token! For more details on configuring Strawberry Fields for cloud access, including
+creating local per-project configuration files, see the :doc:`/introduction/configuration`
+quickstart guide.
 
+To test that your account credentials correctly authenticate against the cloud platform,
+you can use the ``ping`` command, from within Strawberry Fields,
 
-To test connectivity, you can use the following command:
+>>> sf.cli.ping()
+You have successfully authenticated to the platform!
 
-.. code-block:: text
+or via the command line:
 
-    $ starship --hello
-    You have successfully authenticated to the platform!
-
+>>> starship --ping
+You have successfully authenticated to the platform!
 
 .. _first_program:
 
@@ -140,7 +137,7 @@ To execute this file from the command line, use the ``starship`` command as foll
 
 .. code-block:: console
 
-    starship --input test.xbb --output out.txt
+    starship run test.xbb --output out.txt
 
 After executing the above command, the result will be stored in ``out.txt`` in the current working directory.
 You can also omit the ``--output`` parameter to print the result to the screen.
