@@ -20,7 +20,6 @@ import sys
 import argparse
 
 from strawberryfields.api import Connection
-from strawberryfields.api.connection import connection
 from strawberryfields.engine import StarshipEngine
 from strawberryfields.io import load
 from strawberryfields.configuration import store_account, create_config, ConfigurationError
@@ -121,8 +120,10 @@ def configure(args):
 
 def ping():
     """Tests the connection to the remote backend."""
-    connection.ping()
-    sys.stdout.write("You have successfully authenticated to the platform!\n")
+    if Connection().ping():
+        sys.stdout.write("You have successfully authenticated to the platform!\n")
+    else:
+        sys.stdout.write("There was a problem when authenticating to the platform!\n")
     sys.exit()
 
 def configure_everything():
