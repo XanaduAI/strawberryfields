@@ -47,27 +47,27 @@ def create_parser():
     parser._optionals.title = 'General Options'
 
     subparsers = parser.add_subparsers(title='Commands')
-    configure_parser = subparsers.add_parser('configure', help='configure the API connection')
+    configure_parser = subparsers.add_parser('configure', help='configure each detail of the API connection')
     configure_parser.set_defaults(func=configure)
 
     configure_parser.add_argument(
-        "--token", "-t", type=str, help="configure the token of the API connection"
+        "--token", "-t", type=str, help="configure the token of the API connection and use defaults"
     )
     configure_parser.add_argument(
-        "--local", "-l", action="store_true", help="configure the token of the API connection"
+        "--local", "-l", action="store_true", help="create the configure for the project"
     )
 
-    script_parser = subparsers.add_parser('input', help='configure the API connection')
+    script_parser = subparsers.add_parser('input', help='run a blackbird script')
     script_parser.set_defaults(func=run_blackbird_script)
     script_parser.add_argument(
         "--output",
         "-o",
-        help="where to output the result of the program - outputs to stdout by default",
+        help="specify the path to output the result of the program (stdout by default)",
     )
     # TODO: add --configure option
     # TODO: add --token option
     parser.add_argument(
-        "--ping", "-p", action="store_true", help=""
+        "--ping", "-p", action="store_true", help="tests the connection to the remote backend"
     )
 
     return parser
@@ -90,10 +90,12 @@ def configure(args):
     # run_blackbird_script(args.input, args.output)
 
 def ping():
-    # TODO
-        connection.ping()
-        sys.stdout.write("You have successfully authenticated to the platform!\n")
-        sys.exit()
+    """Tests the connection to the remote backend.
+    """
+# TODO
+    connection.ping()
+    sys.stdout.write("You have successfully authenticated to the platform!\n")
+    sys.exit()
 
 def configure_everything():
 
