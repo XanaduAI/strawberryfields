@@ -24,11 +24,11 @@ import numpy as np
 import pytest
 
 from strawberryfields.apps import clique
-from strawberryfields.configuration import store_account
+from strawberryfields.configuration import store_account, ConfigurationError
 from strawberryfields import cli as cli
 
 import sys
-
+import builtins
 
 pytestmark = pytest.mark.cli
 
@@ -39,7 +39,7 @@ class TestMain:
         parser = cli.create_parser()
         args = parser.parse_args(['--ping'])
         assert args.ping
- 
+
 class TestCreateParser:
     """Tests for creating a parser object."""
 
@@ -238,12 +238,60 @@ class TestPing:
                 assert mock_sys_stdout.write_output == "There was a problem when authenticating to the platform!\n"
                 assert mock_connection.pinging == "SuccessfulPing"
 
+# Keys are adjusted to the prompt message displayed to the user
+MOCK_PROMPTS = {
+        "token": "MyAuth",
+        "hostname": "MyHost",
+        "port": 123,
+        "SSL": "n",
+}
+
+EXPECTED_KWARGS_FOR_PROMPTS = {
+    "authentication_token": "MyAuth",
+    "hostname": "MyHost",
+    "port": 123,
+    "use_ssl": False,
+}
+
+def mock_input(arg):
+    option = {k: v for k, v in MOCK_PROMPTS.items() if k in arg}
+    if option and len(option) == 1:
+        return list(option.values())[0]
+
 class TestConfigureEverything:
 
-    def test_default_config_correct(self):
+    def test_no_auth_config_error_by_default(self, monkeypatch):
+        """Test that by default the configure_everything function raises an
+        error as no authentication token is supplied."""
         with monkeypatch.context() as m:
-            m.setattr(input, lambda: False)
-            cli.configure_everything()
+            m.setattr(builtins, "input", lambda *args: False)
+            with pytest.raises(ConfigurationError, match="No authentication token"):
+                cli.configure_everything()
+
+    def test_auth_correct(self, monkeypatch):
+        """Test that by default the configure_everything function works
+        correctly, once the authentication token is passed."""
+        with monkeypatch.context() as m:
+            auth_prompt = "Please enter the authentication token"
+            default_config = cli.create_config()["api"]
+            default_auth = "SomeAuth"
+            default_config['authentication_token'] = default_auth
+
+            m.setattr(builtins, "input", lambda arg: default_auth if (auth_prompt in arg) else "")
+            assert cli.configure_everything() == default_config
+
+    def test_correct_inputs(self, monkeypatch):
+        """Test that the configure_everything function returns a dictionary
+        based on the inputs, when each configuration detail was inputted."""
+        with monkeypatch.context() as m:
+
+            auth_prompt = "Please enter the authentication token"
+            default_config = cli.create_config()["api"]
+            default_auth = "SomeAuth"
+            default_config['authentication_token'] = default_auth
+
+            m.setattr(builtins, "input", mock_input)
+            assert cli.configure_everything() == EXPECTED_KWARGS_FOR_PROMPTS
 
 class TestRunProgram:
 

@@ -26,12 +26,10 @@ from strawberryfields.configuration import store_account, create_config, Configu
 
 
 PROMPTS = {
+    "authentication_token": "Please enter the authentication token to use when connecting: [{}] ",
     "hostname": "Please enter the hostname of the server to connect to: [{}] ",
     "port": "Please enter the port number to connect with: [{}] ",
     "use_ssl": "Should the client attempt to connect over SSL? [{}] ",
-    "authentication_token": "Please enter the authentication token to use when connecting: [{}] ",
-    "save": "Would you like to save these settings to a local cofiguration file in the current "
-    "directory? [{}] ",
 }
 
 
@@ -158,10 +156,10 @@ def configure_everything():
 
     authentication_token = (
         input(PROMPTS["authentication_token"].format(default_config["authentication_token"]))
-        or default_config["authentication_token"]
     )
 
     if not authentication_token:
+        # Raise and error if the authentication token was not supplied
         raise ConfigurationError("No authentication token was provided.")
 
     hostname = (
