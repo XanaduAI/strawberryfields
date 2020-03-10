@@ -142,7 +142,7 @@ def configure_everything():
         or default_config["authentication_token"]
     )
 
-    if authentication_token == "":
+    if not authentication_token:
         raise ConfigurationError("No authentication token was provided.")
 
     hostname = (
