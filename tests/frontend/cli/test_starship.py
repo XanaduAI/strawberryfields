@@ -31,7 +31,7 @@ import sys
 
 pytestmark = pytest.mark.cli
 
-class TestParseArguments:
+class TestCreateParser:
     # TODO
     def test_ping(self):
         # TODO
@@ -44,7 +44,7 @@ class TestParseArguments:
         # TODO
 
         parser = cli.create_parser()
-        args = parser.parse_args(['--run', 'SomePath'])
+        args = parser.parse_args(['run', 'SomePath'])
         assert args.input == 'SomePath'
 
     def test_output(self):
@@ -104,10 +104,9 @@ class TestPing:
         # TODO
 
         with monkeypatch.context() as m:
-            mock_connection = MockConnection()
             mock_sys_stdout = MockSysStdout()
 
-            m.setattr(cli, "connection", mock_connection)
+            m.setattr(cli, "Connection", MockConnection)
             m.setattr(sys, "stdout", mock_sys_stdout)
 
             assert mock_connection.pinging is None

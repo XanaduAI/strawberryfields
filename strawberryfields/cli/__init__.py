@@ -52,10 +52,12 @@ def main():
         parser.print_help()
 
 def create_parser():
-    """Creates a parser to process the commands and arguments passed to the command line interface.
+    """Creates a parser to process the commands and arguments passed to the
+    command line interface.
 
     Returns:
-        ArgumentParser: an argument parser object that defines the related options
+        ArgumentParser: an argument parser object that defines the related
+            options
     """
     parser = argparse.ArgumentParser(usage='starship <command> [<args>]', description="These are common options when working on the Xanadu cloud platform.")
 
