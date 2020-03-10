@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Integration tests for the utils.py module"""
-import pytest
 
+# pylint: disable=pointless-statement,expression-not-assigned,no-self-use
+
+import pytest
 import numpy as np
 
 try:
@@ -30,6 +32,7 @@ import strawberryfields.utils as utils
 from strawberryfields.backends.fockbackend.ops import squeezing as sq_U
 from strawberryfields.backends.fockbackend.ops import displacement as disp_U
 from strawberryfields.backends.fockbackend.ops import beamsplitter as bs_U
+
 
 ALPHA = np.linspace(-0.15, 0.2, 4) + np.linspace(-0.2, 0.1, 4) * 1j
 R = np.linspace(0, 0.21, 4)
@@ -110,6 +113,7 @@ class TestInitialStatesAgreeGaussian:
 
 @pytest.fixture
 def bsize(batch_size):
+    """Utility fixture for handling both batched and non-batched modes."""
     return 1 if batch_size is None else batch_size
 
 
@@ -142,8 +146,6 @@ class TestInitialStatesAgreeFock:
         """Test coherent function matches Fock backends"""
         eng, prog = setup_eng(1)
         a = 0.32 + 0.1j
-        r = 0.112
-        phi = 0.123
 
         with prog.context as q:
             ops.Dgate(a) | q[0]
@@ -206,7 +208,7 @@ class TestInitialStatesAgreeFock:
 
         assert np.allclose(expected, ket, atol=tol, rtol=0)
 
-    def test_fock_state(self, setup_eng, hbar, cutoff, bsize, pure, tol):
+    def test_fock_state(self, setup_eng, cutoff, bsize, pure, tol):
         """Test fock state function matches Fock backends"""
         eng, prog = setup_eng(1)
         n = 2
@@ -225,7 +227,7 @@ class TestInitialStatesAgreeFock:
 
         assert np.allclose(expected, ket, atol=tol, rtol=0)
 
-    def test_cat_state(self, setup_eng, hbar, cutoff, bsize, pure, tol):
+    def test_cat_state(self, setup_eng, cutoff, bsize, pure, tol):
         """Test cat state function matches Fock backends"""
         eng, prog = setup_eng(1)
         a = 0.32 + 0.1j
@@ -254,11 +256,13 @@ class TestInitialStatesAgreeFock:
 
 @utils.operation(1)
 def prepare_state(v1, q):
+    """Single-mode state preparation."""
     ops.Dgate(v1) | q
 
 
 @utils.operation(2)
 def entangle_states(q):
+    """Two-mode entangled state preparation."""
     ops.Sgate(-2) | q[0]
     ops.Sgate(2) | q[1]
     ops.BSgate(np.pi / 4, 0) | (q[0], q[1])
@@ -272,7 +276,6 @@ class TestTeleportationOperationTest:
     def test_teleportation_fidelity(self, setup_eng):
         """Test teleportation algorithm gives correct fid when using operations"""
         eng, prog = setup_eng(3)
-        tol = 0.1
         with prog.context as q:
             prepare_state(0.5 + 0.2j) | q[0]
             entangle_states() | (q[1], q[2])
@@ -312,6 +315,7 @@ class TestTeleportationOperationTest:
 
 @pytest.fixture
 def backend_name(setup_backend_pars):
+    """The name of the currently tested backend."""
     return setup_backend_pars[0]
 
 
@@ -415,7 +419,8 @@ class TestExtractUnitary:
         assert np.allclose(final_state, expected_state, atol=tol, rtol=0)
 
     def test_extract_arbitrary_unitary_two_modes_vectorized(
-            self, setup_eng, cutoff, batch_size, tol):
+            self, setup_eng, cutoff, batch_size, tol
+    ):
         """Test that arbitrary unitary extraction works for 2 mode when vectorized"""
         bsize = 1
         if batch_size is not None:
@@ -464,7 +469,7 @@ class TestExtractUnitary:
         
 
     def test_extract_arbitrary_unitary_two_modes_not_vectorized(
-        self, setup_eng, cutoff, tol
+            self, setup_eng, cutoff, tol
     ):
         """Test that arbitrary unitary extraction works for 2 mode"""
         S = ops.Sgate(0.4, -1.2)
@@ -635,9 +640,7 @@ class TestExtractChannelTwoMode:
 
         assert np.allclose(final_rho, rho, atol=tol, rtol=0)
 
-    def test_extract_liouville_channel_vectorize(
-        self, setup_two_mode_circuit, cutoff, tol
-    ):
+    def test_extract_liouville_channel_vectorize(self, setup_two_mode_circuit, cutoff, tol):
         """Test that Liouville channel extraction works for 2 mode vectorized"""
         prog, rho, initial_state = setup_two_mode_circuit
         rho = np.einsum("abcd->acbd", rho).reshape(cutoff ** 2, cutoff ** 2)

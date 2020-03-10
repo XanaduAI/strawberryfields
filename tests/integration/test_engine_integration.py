@@ -43,6 +43,10 @@ a = 0.1234
 b = -0.543
 c = 0.312
 
+@property
+def batched(batch_size):
+    """Checks if session is batched."""
+    return bool(batch_size)
 
 @pytest.mark.parametrize("name,expected", eng_backend_params)
 def test_load_backend(name, expected, cutoff):
@@ -117,16 +121,16 @@ class TestProperExecution:
 
         res = eng.run(prog, run_options=None)
         # one entry for each mode
-        assert len(res.samples) == 2
+        assert len(res.samples[0]) == 2
         # the same samples can also be found in the regrefs
-        assert [r.val for r in prog.register] == res.samples
+        assert [r.val for r in prog.register] == res.samples[0].tolist()
         # first mode was measured
         if eng.backend_name == 'tf':
             assert isinstance(res.samples[0], tf.Tensor)
         else:
             assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
         # second mode was not measured
-        assert res.samples[1] is None
+        assert res.samples[0][1] is None
 
     # TODO: Some of these tests should probably check *something* after execution
 
@@ -316,6 +320,7 @@ class TestProperExecution:
         assert all(s is None for s in samples[:, 2])
 
     # TODO: when ``shots`` is incorporated into other backends, delete this test
+    @pytest.mark.skipif(batched, reason="Test only runs for non-batched backends")
     @pytest.mark.backends("tf", "fock")
     def test_measurefock_shots_exception(self, setup_eng):
         shots = 5
@@ -325,6 +330,6 @@ class TestProperExecution:
 
         backend_name = eng.backend.__str__()
         with pytest.raises(NotImplementedError,
-                           match=r"""(Measure|MeasureFock) has not been implemented in {} """
-                                  """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
+                            match=r"""(Measure|MeasureFock) has not been implemented in {} """
+                            """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
             eng.run(p1, run_options={"shots": shots}).samples

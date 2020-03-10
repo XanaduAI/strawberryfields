@@ -12,270 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-.. _gates:
-
-Quantum operations
-===================
-
-**Module name:** :mod:`strawberryfields.ops`
-
-.. currentmodule:: strawberryfields.ops
-
-.. note::
-
-    In the :mod:`strawberryfields.ops` API we use the convention :math:`\hbar=2` by default, however
-    this can be changed using the global variable :py:data:`strawberryfields.hbar`.
-
-    See :ref:`conventions` for more details.
-
 This module defines and implements the Python-embedded quantum programming language
 for continuous-variable (CV) quantum systems.
 The syntax is modeled after ProjectQ :cite:`projectq2016`.
-
-Quantum operations (state preparation, unitary gates, measurements, channels) act on
-register objects using the following syntax:
-
-.. code-block:: python
-
-    prog = sf.Program(3)
-    with prog.context as q:
-        G(params) | q
-        F(params) | (q[1], q[6], q[2])
-
-Here :samp:`prog` is an instance of :class:`strawberryfields.program.Program`
-which defines the context where the commands are stored.
-Within each command, the part on the left is an :class:`Operation` instance,
-quite typically a constructor call for the requested operation class with the relevant parameters.
-The vertical bar calls the :func:`__or__` method of the :class:`Operation` object,
-with the part on the right as the parameter. The part on the right is a single
-:class:`strawberryfields.engine.RegRef` object or, for multi-mode gates, a sequence of them.
-It is of course also possible to construct gates separately and reuse them several times::
-
-    R = Rgate(s)
-    with prog.context as q:
-        R   | q
-        Xgate(t) | q
-        R.H | q
-
-
-There are six kinds of :class:`Operation` objects:
-
-* :class:`Preparation` operations only manipulate the register state::
-
-    with prog.context as q:
-        Vac | q[0]
-        All(Coherent(0.4, 0.2)) | (q[1], q[2])
-
-* Transformations such as :class:`Gate` and :class:`Channel` operations only manipulate the register state::
-
-    with prog.context as q:
-        Dgate(0.3)   | q[0]
-        BSgate(-0.5) | q[0:2]
-
-* :class:`Measurement` operations manipulate the register state and produce classical information.
-  The information is directly available only after the program has been run up to the point of measurement::
-
-    with prog.context as (alice, bob):
-        MeasureFock() | alice
-
-    eng = sf.LocalEngine(backend='fock')
-    eng.run(prog)
-    print(alice.val)
-
-  Alternatively one may use a symbolic reference to the register containing the measurement result
-  by supplying registers as the argument to an :class:`Operation`, in which case the measurement may be deferred,
-  i.e., we may symbolically use the measurement result before it exists::
-
-    with prog.context as (alice, bob):
-        MeasureFock()    | alice
-        Dgate(alice.par) | bob
-
-  One may also use classical algebraic post-processing on the measurement result, to be applied
-  before using it as the argument to another :class:`Operation`::
-
-    with prog.context as q:
-        MeasureFock()        | q[0]
-        Dgate(q[0].par ** 2) | q[1]
-
-* Modes can be created and deleted during program execution using the
-  function :func:`New` and the pre-constructed object :py:data:`Del`.
-  Behind the scenes they utilize the meta-operations :class:`_New_modes` and :class:`_Delete`::
-
-    with prog.context as (alice,):
-        Sgate(1)    | alice
-        bob, charlie = New(2)
-        BSgate(0.5) | (alice, bob)
-        CXgate(1)   | (alice, charlie)
-        Del         | alice
-        S2gate(0.4) | (charlie, bob)
-
-* Finally, :class:`Decomposition` operations are a special case, and can act as
-  either transformations *or* state preparation, depending on the decomposition used.
-  Decompositions calculate the required elementary :class:`Gate` and/or :class:`Preparation`
-  objects and parameters in order to decompose specific transformations or states.
-  Examples of objects that are supported by decompositions include covariance matrices,
-  interferometers, and symplectic transformations.
-
-Hierarchy for operations
-------------------------
-
-.. inheritance-diagram:: strawberryfields.ops
-   :parts: 1
-
-
-Base classes
-------------
-
-The abstract base class hierarchy exists to provide the correct semantics for the actual operations that inherit them.
-
-.. autosummary::
-    Operation
-    Preparation
-    Transformation
-    Gate
-    Channel
-    Measurement
-    Decomposition
-    MetaOperation
-
-
-Operation class
----------------
-
-All Operations have the following methods.
-
-.. currentmodule:: strawberryfields.ops.Operation
-
-.. autosummary::
-    __str__
-    __or__
-    merge
-    decompose
-    apply
-    _apply
-
-.. currentmodule:: strawberryfields.ops
-
-
-State preparation
------------------
-
-.. autosummary::
-    Vacuum
-    Coherent
-    Squeezed
-    DisplacedSqueezed
-    Thermal
-    Fock
-    Catstate
-    Ket
-    DensityMatrix
-    Gaussian
-
-Measurements
-------------
-
-.. autosummary::
-    MeasureFock
-    MeasureThreshold
-    MeasureHomodyne
-    MeasureHeterodyne
-
-
-Channels
------------
-
-.. autosummary::
-    LossChannel
-    ThermalLossChannel
-
-
-Decompositions
---------------
-
-.. autosummary::
-    Interferometer
-    GraphEmbed
-    BipartiteGraphEmbed
-    GaussianTransform
-    Gaussian
-
-
-Single-mode gates
------------------
-
-.. autosummary::
-    Dgate
-    Xgate
-    Zgate
-    Sgate
-    Rgate
-    Pgate
-    Vgate
-    Fouriergate
-
-Two-mode gates
---------------
-
-.. autosummary::
-    BSgate
-    MZgate
-    S2gate
-    CXgate
-    CZgate
-    CKgate
-
-Meta-operations
----------------
-
-.. autosummary::
-    All
-    _New_modes
-    _Delete
-
-
-Operations shortcuts
----------------------
-
-Several of the operation classes described below come with variables that point to pre-constructed instances;
-this is to provide shorthands for operations that accept no arguments, as well as for common variants of operations that do.
-
-.. raw:: html
-
-    <style>
-      .widetable {
-         width:100%;
-      }
-    </style>
-
-.. rst-class:: longtable widetable
-
-======================   =================================================================================
-**Shorthand variable**   **Operation**
-``New``                  :class:`~._New_modes`
-``Del``                  :class:`~._Delete`
-``Vac``                  :class:`~.Vacuum`
-``Fourier``              :class:`~.Fouriergate`
-``MeasureX``             :class:`~.MeasureHomodyne` (:math:`\phi=0`), :math:`x` quadrature measurement
-``MeasureP``             :class:`~.MeasureHomodyne` (:math:`\phi=\pi/2`), :math:`p` quadrature measurement
-``MeasureHD``            :class:`~.MeasureHeterodyne`
-======================   =================================================================================
-
-
-Code details
-~~~~~~~~~~~~
-
 """
 from collections.abc import Sequence
 import copy
-import types
-import sys
 import warnings
 
 import numpy as np
 
 from scipy.linalg import block_diag
-from scipy.special import factorial as fac
+import scipy.special as ssp
 
 import strawberryfields as sf
 import strawberryfields.program_utils as pu
@@ -283,10 +31,11 @@ import strawberryfields.decompositions as dec
 from .backends.states import BaseFockState, BaseGaussianState
 from .backends.shared_ops import changebasis
 from .program_utils import (Command, RegRef, MergeFailure)
-from .parameters import (par_regref_deps, par_str, par_evaluate, par_is_symbolic, parfuncs as pf)
+from .parameters import (par_regref_deps, par_str, par_evaluate, par_is_symbolic, par_funcs as pf)
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
+# pylint: disable=arguments-differ  # Measurement._apply introduces the "shots" argument
 
 # numerical tolerances
 _decomposition_merge_tol = 1e-13
@@ -619,7 +368,7 @@ class Channel(Transformation):
     maps and transformations.
     """
     # TODO decide how all Channels should treat the first parameter p[0]
-    # (see e.g. https://en.wikipedia.org/wiki/C0-semigroup), c.f. p[0] in ops.Gate
+    # (see e.g. https://en.wikipedia.org/wiki/C0-semigroup), cf. p[0] in ops.Gate
 
     def merge(self, other):
         if not self.__class__ == other.__class__:
@@ -784,8 +533,8 @@ class Coherent(Preparation):
         super().__init__([a, p])
 
     def _apply(self, reg, backend, **kwargs):
-        p = par_evaluate(self.p)
-        z = p[0] * np.exp(1j * p[1])
+        p = self.p[0] * pf.exp(1j * self.p[1])
+        z = par_evaluate(p)
         backend.prepare_coherent_state(z, *reg)
 
 
@@ -876,21 +625,20 @@ class Catstate(Preparation):
         super().__init__([alpha, p])
 
     def _apply(self, reg, backend, **kwargs):
-        p = par_evaluate(self.p)
-        alpha = p[0]
-        phi = np.pi * p[1]
+        alpha = self.p[0]
+        phi = np.pi * self.p[1]
         D = backend.get_cutoff_dim()
         l = np.arange(D)[:, np.newaxis]
 
         # normalization constant
-        temp = np.exp(-0.5 * np.abs(alpha)**2)
-        N = temp / np.sqrt(2*(1 + np.cos(phi) * temp**4))
+        temp = pf.exp(-0.5 * pf.Abs(alpha)**2)
+        N = temp / pf.sqrt(2*(1 + pf.cos(phi) * temp**4))
 
         # coherent states
-        c1 = (alpha ** l) / np.sqrt(fac(l))
-        c2 = ((-alpha) ** l) / np.sqrt(fac(l))
+        c1 = (alpha ** l) / np.sqrt(ssp.factorial(l))
+        c2 = ((-alpha) ** l) / np.sqrt(ssp.factorial(l))
         # add them up with a relative phase
-        ket = (c1 + np.exp(1j*phi) * c2) * N
+        ket = (c1 + pf.exp(1j*phi) * c2) * N
 
         # in order to support broadcasting, the batch axis has been located at last axis, but backend expects it up as first axis
         ket = np.transpose(ket)
@@ -898,6 +646,8 @@ class Catstate(Preparation):
         # drop dummy batch axis if it is not necessary
         ket = np.squeeze(ket)
 
+        # evaluate the array (elementwise)
+        ket = par_evaluate(ket)
         backend.prepare_ket_state(ket, *reg)
 
 
@@ -1166,8 +916,8 @@ class Dgate(Gate):
         super().__init__([a, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        p = par_evaluate(self.p)
-        z = p[0] * np.exp(1j * p[1])
+        p = self.p[0] * pf.exp(1j * self.p[1])
+        z = par_evaluate(p)
         backend.displacement(z, *reg)
 
 
@@ -1232,8 +982,8 @@ class Sgate(Gate):
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        p = par_evaluate(self.p)
-        z = p[0] * np.exp(1j * p[1])
+        p = self.p[0] * pf.exp(1j * self.p[1])
+        z = par_evaluate(p)
         backend.squeeze(z, *reg)
 
 
@@ -1339,10 +1089,10 @@ class BSgate(Gate):
         super().__init__([theta, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        p = par_evaluate(self.p)
-        t = np.cos(p[0])
-        r = np.sin(p[0]) * np.exp(1j * p[1])
-        backend.beamsplitter(t, r, *reg)
+        t = pf.cos(self.p[0])
+        r = pf.sin(self.p[0]) * pf.exp(1j * self.p[1])
+        p = par_evaluate([t, r])
+        backend.beamsplitter(*p, *reg)
 
 
 class MZgate(Gate):
@@ -1390,6 +1140,11 @@ class S2gate(Gate):
     def __init__(self, r, phi=0.):
         super().__init__([r, phi])
 
+    def _apply(self, reg, backend, **kwargs):
+        p = self.p[0] * pf.exp(1j * self.p[1])
+        z = par_evaluate(p)
+        backend.two_mode_squeeze(z, *reg)
+
     def _decompose(self, reg, **kwargs):
         # two opposite squeezers sandwiched between 50% beamsplitters
         S = Sgate(self.p[0], self.p[1])
@@ -1422,14 +1177,7 @@ class CXgate(Gate):
     def _decompose(self, reg, **kwargs):
         s = self.p[0]
         r = pf.asinh(-s/2)
-        #theta = 0.5 * pf.atan2(-1.0 / pf.cosh(r), -pf.tanh(r))
-        # FIXME in sympy 1.4 atan2._eval_evalf() has a bug, it does not work with Symbol._eval_evalf().
-        # This is a workaround. When sympy is fixed (in version 1.5?), go back to using pf.atan2.
-        # See https://github.com/sympy/sympy/pull/17469
-        # If s<0 we need to add pi/2 to theta. If s==0, we need to avoid division by zero.
-        temp = 0.5 * pf.atan(1 / pf.sinh(r))  # NOTE s==0 will cause a division by zero when this is evaluated
-        theta = temp -pf.Heaviside(-s) * np.pi/2
-
+        theta = 0.5 * pf.atan2(-1.0 / pf.cosh(r), -pf.tanh(r))
         return [
             Command(BSgate(theta, 0), reg),
             Command(Sgate(r, 0), reg[0]),
@@ -1646,7 +1394,7 @@ class Interferometer(Decomposition):
       :cite:`clements2016`, resulting in a *rectangular* array of
       :math:`M(M-1)/2` beamsplitters:
 
-      .. figure:: ../_static/clements.png
+      .. figure:: ../../_static/clements.png
           :align: center
           :width: 30%
           :target: javascript:void(0);
@@ -1662,7 +1410,7 @@ class Interferometer(Decomposition):
     * ``mesh='triangular'``: uses the scheme described in :cite:`reck1994`,
       resulting in a *triangular* array of :math:`M(M-1)/2` beamsplitters:
 
-      .. figure:: ../_static/reck.png
+      .. figure:: ../../_static/reck.png
           :align: center
           :width: 30%
           :target: javascript:void(0);
@@ -2107,7 +1855,7 @@ MeasureHD = MeasureHeterodyne()
 
 Fourier = Fouriergate()
 
-shorthands = ['New', 'Del', 'Vac', 'Measure', 'MeasureX', 'MeasureP', 'MeasureHD', 'Fourier', 'All']
+shorthands = ['New', 'Del', 'Vac', 'MeasureX', 'MeasureP', 'MeasureHD', 'Fourier', 'All']
 
 #=======================================================================
 # here we list different classes of operations for unit testing purposes
@@ -2131,48 +1879,3 @@ decompositions = (Interferometer, BipartiteGraphEmbed, GraphEmbed, GaussianTrans
 # exported symbols
 
 __all__ = [cls.__name__ for cls in gates + channels + state_preparations + measurements + decompositions] + shorthands
-
-
-#=======================================================================
-# Module wrapper for deprecating shorthands
-
-
-class Wrapper(types.ModuleType):
-    """Wrapper class to modify the module level
-    attribute lookup.
-
-    This allows module attributes to be deprecated.
-
-    Current list of deprecated attributes:
-
-    * ``Measure``: instead use ``MeasureFock``
-
-    .. note::
-
-        With Python 3.7+, there is new support for a module-level
-        ``__getattr__`` function, which should enable this functionality
-        without needing to modify ``sys.modules``.
-    """
-    deprecation_map = {"Measure": "MeasureFock"}
-
-    def __init__(self, mod):
-        self.mod = mod
-        self.__dict__.update(mod.__dict__)
-        super().__init__("strawberryfields.ops", doc=sys.modules[__name__].__doc__)
-
-    def __getattr__(self, name):
-        if name in self.deprecation_map:
-            new_name = self.deprecation_map[name]
-
-            warnings.warn("The shorthand '{}' has been deprecated, "
-                          "please use '{}()' instead.".format(name, new_name))
-
-            return getattr(self.mod, new_name)()
-
-        return getattr(self.mod, name)
-
-    def __dir__(self):
-        return __all__
-
-
-sys.modules[__name__] = Wrapper(sys.modules[__name__])

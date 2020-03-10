@@ -12,15 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Point Processes
-===============
+Tools for building kernel matrices and generating point processes using GBS.
 
-**Module name:** :mod:`strawberryfields.apps.points`
+.. seealso::
 
-.. currentmodule:: strawberryfields.apps.points
-
-This module provides functions for building kernel matrices and generating point processes using
-GBS. An accompanying tutorial can be found :ref:`here <apps-points-tutorial>`.
+    :ref:`apps-points-tutorial`
 
 Point processes
 ---------------
@@ -51,16 +47,6 @@ where :math:`\bf{r}_i` are the coordinates of point :math:`i`, :math:`\sigma` is
 parameter, and :math:`\|\cdot\|` denotes a choice of norm. The RBF kernel is positive
 semidefinite when the Euclidean norm is used, as is the case for the provided :func:`rbf_kernel`
 function.
-
-Summary
--------
-
-.. autosummary::
-    rbf_kernel
-    sample
-
-Code details
-^^^^^^^^^^^^
 """
 
 import numpy as np

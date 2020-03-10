@@ -1,9 +1,11 @@
-networkx>=2.0
-numpy>=1.16.3
-scipy>=1.0.0
+numpy>=1.17.4
+sympy>=1.5
 tensorflow>=2.0
 tensorboard>=2.0
-quantum-blackbird
-thewalrus>=0.7
+quantum-blackbird>=0.2.0
+thewalrus>=0.11
 toml
 appdirs
+networkx>=2.0
+numba>=0.48.0
+plotly==4.4.1

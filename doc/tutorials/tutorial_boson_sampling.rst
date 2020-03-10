@@ -3,8 +3,6 @@
 Boson sampling tutorial
 #######################
 
-.. sectionauthor:: Josh Izaac <josh@xanadu.ai>
-
 .. role:: html(raw)
    :format: html
 
@@ -56,7 +54,7 @@ A couple of things to note in this particular example:
 
 ..
 
-5. As only Fock backends support boson sampling, we are using the :ref:`numpy_backend`, indicated with the argument ``'fock'``, along with a 4 mode register and a Fock state truncation/cutoff dimension of 7 (i.e., all information of quantum amplitudes of Fock states :math:`\ket{n}`, :math:`n\geq 7`, is discarded).
+5. As only Fock backends support boson sampling, we are using the NumPy ``'fock'`` backend, indicated with the argument ``'fock'``, along with a 4 mode register and a Fock state truncation/cutoff dimension of 7 (i.e., all information of quantum amplitudes of Fock states :math:`\ket{n}`, :math:`n\geq 7`, is discarded).
 
 ..
 

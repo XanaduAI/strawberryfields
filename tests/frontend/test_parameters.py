@@ -18,7 +18,7 @@ import numpy as np
 
 #import strawberryfields as sf
 from strawberryfields.parameters import (par_is_symbolic, par_regref_deps, par_str, par_evaluate,
-                                         MeasuredParameter, FreeParameter, parfuncs as pf,
+                                         MeasuredParameter, FreeParameter, par_funcs as pf,
                                          ParameterError)
 from strawberryfields.program_utils import RegRef
 

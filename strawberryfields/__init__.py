@@ -12,64 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-.. _code:
-
-Overview
-==================
+The Strawberry Fields codebase includes a number of complementary components.
+These can be separated into frontend components, applications layer,
+and backend components (all found within the :mod:`strawberryfields.backends` submodule).
 
 .. image:: ../_static/sfcomponents.svg
     :align: center
     :width: 90%
     :target: javascript:void(0);
-
-|
-
-The Strawberry Fields codebase includes a number of complementary components.
-These can be separated into frontend components
-and backend components (all found within the :file:`strawberryfields.backends` submodule).
-
-Software components
--------------------
-
-**Frontend:**
-
-* Quantum programs: :mod:`strawberryfields.program`
-* Quantum execution and compilation engine: :mod:`strawberryfields.engine`
-* Quantum operations: :mod:`strawberryfields.ops`
-* Input/output functions: :mod:`strawberryfields.io`
-* Circuit specifications: :mod:`strawberryfields.circuitspecs`
-* Decompositions: :mod:`strawberryfields.decompositions`
-* Utilities: :mod:`strawberryfields.utils`
-* Circuit drawer: :mod:`strawberryfields.circuitdrawer`
-
-**Backend:**
-
-* Backend API: :mod:`strawberryfields.backends.base`
-* Quantum states: :mod:`strawberryfields.backends.states`
-* Fock simulator backend: :mod:`strawberryfields.backends.fockbackend`
-* Gaussian simulator backend: :mod:`strawberryfields.backends.gaussianbackend`
-* Tensorflow simulator backend: :mod:`strawberryfields.backends.tfbackend`
-
-Top-level functions
--------------------
-
-.. currentmodule: strawberryfields
-
-.. autosummary::
-   about
-   cite
-   version
-
-Code details
-~~~~~~~~~~~~
 """
 from . import apps
 from ._version import __version__
 from .engine import Engine, LocalEngine
 from .io import load, save
 from .program import Program
+from .parameters import par_funcs as math
 
-__all__ = ["Engine", "LocalEngine", "Program", "version", "save", "load", "about", "cite"]
+__all__ = ["Engine", "Program", "version", "save", "load", "about", "cite"]
 
 
 #: float: numerical value of hbar for the frontend (in the implicit units of position * momentum)
@@ -87,10 +46,30 @@ def version():
 
 
 def about():
-    """About box for Strawberry Fields.
+    """Strawberry Fields information.
 
     Prints the installed version numbers for SF and its dependencies,
     and some system info. Please include this information in bug reports.
+
+    **Example:**
+
+    .. code-block:: pycon
+
+        >>> sf.about()
+        Strawberry Fields: a Python library for continuous-variable quantum circuits.
+        Copyright 2018-2020 Xanadu Quantum Technologies Inc.
+
+        Python version:            3.6.8
+        Platform info:             Linux-5.0.0-36-generic-x86_64-with-debian-buster-sid
+        Installation path:         /home/josh/Dropbox/Work/Xanadu/sf_cloud/strawberryfields
+        Strawberry Fields version: 0.12.0-dev
+        Numpy version:             1.17.4
+        Scipy version:             1.3.0
+        Sympy version:             1.5
+        NetworkX version:          2.4
+        The Walrus version:        0.10.0
+        Blackbird version:         0.2.1
+        TensorFlow version:        2.0.0
     """
     # pylint: disable=import-outside-toplevel
     import sys
@@ -98,12 +77,14 @@ def about():
     import os
     import numpy
     import scipy
+    import sympy
+    import networkx
     import thewalrus
     import blackbird
 
     # a QuTiP-style infobox
     print('\nStrawberry Fields: a Python library for continuous-variable quantum circuits.')
-    print('Copyright 2018-2019 Xanadu Quantum Technologies Inc.\n')
+    print('Copyright 2018-2020 Xanadu Quantum Technologies Inc.\n')
 
     print('Python version:            {}.{}.{}'.format(*sys.version_info[0:3]))
     print('Platform info:             {}'.format(platform.platform()))
@@ -111,7 +92,9 @@ def about():
     print('Strawberry Fields version: {}'.format(__version__))
     print('Numpy version:             {}'.format(numpy.__version__))
     print('Scipy version:             {}'.format(scipy.__version__))
-    print('The Walrus version:           {}'.format(thewalrus.__version__))
+    print('SymPy version:             {}'.format(sympy.__version__))
+    print('NetworkX version:          {}'.format(networkx.__version__))
+    print('The Walrus version:        {}'.format(thewalrus.__version__))
     print('Blackbird version:         {}'.format(blackbird.__version__))
 
     try:
@@ -126,7 +109,22 @@ def about():
 def cite():
     """Prints the BibTeX citation for Strawberry Fields.
 
-    BibTex code for reference :cite:`strawberryfields`.
+    **Example:**
+
+    .. code-block:: pycon
+
+        >>> sf.cite()
+        @article{strawberryfields,
+            title = {{S}trawberry {F}ields: A Software Platform for Photonic Quantum Computing},
+            author = {Killoran, Nathan and Izaac, Josh and Quesada, Nicol{'{a}}s and Bergholm, Ville and Amy, Matthew and Weedbrook, Christian},
+            journal = {Quantum},
+            volume = {3},
+            pages = {129},
+            year = {2019},
+            doi = {10.22331/q-2019-03-11-129},
+            archivePrefix = {arXiv},
+            eprint = {1804.03159},
+        }
     """
     citation = """@article{strawberryfields,
     title = {{S}trawberry {F}ields: A Software Platform for Photonic Quantum Computing},

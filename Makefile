@@ -11,9 +11,9 @@ help:
 	@echo "  clean              to delete all temporary, cache, and build files"
 	@echo "  clean-docs         to delete all built documentation"
 	@echo "  test               to run the test suite for entire codebase"
-	@echo "  test-[component]   to run the test suite for frontend, fock, tf, or gaussian"
+	@echo "  test-[component]   to run the test suite for frontend, fock, tf, gaussian or apps"
 	@echo "  coverage           to generate a coverage report for entire codebase"
-	@echo "  coverage-[backend] to generate a coverage report for frontend, fock, tf, or gaussian"
+	@echo "  coverage-[backend] to generate a coverage report for frontend, fock, tf, gaussian or apps"
 
 .PHONY: install
 install:

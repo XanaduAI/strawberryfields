@@ -2,9 +2,9 @@
 <nav class="navbar navbar-expand-lg navbar-light white sticky-top">
 
   <!-- Navbar brand -->
-  <a class="navbar-brand" href="https://strawberryfields.readthedocs.io">
+  <a class="navbar-brand" href="{{ pathto('index.html', 1) }}">
     <img class="pr-1" src="{{ pathto('_static/xanadu_x.png', 1) }}" width="28px"></img>
-    <img src="{{ pathto('_static/strawberry_fields.png', 1) }}" width="250px"></img>
+    <img id="sf-logo" src="{{ pathto('_static/strawberry_fields.png', 1) }}"></img>
   </a>
 
   <!-- Collapse button -->
@@ -25,11 +25,15 @@
     <!-- Links -->
     <ul class="navbar-nav mr-auto">
       <li class="nav-item">
+        <a class="nav-link" href="{{ pathto('_static/install.html', 1) }}">Install
+        </a>
+      </li>
+      <li class="nav-item">
         <a class="nav-link" href="https://strawberryfields.ai">Interactive
         </a>
       </li>
       <li class="nav-item active">
-        <a class="nav-link" href="https://strawberryfields.readthedocs.io">Documentation</a>
+        <a class="nav-link" href="{{ pathto('index.html', 1) }}">Documentation</a>
           <span class="sr-only">(current)</span>
       </li>
     </ul>
@@ -42,7 +46,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="https://arxiv.org/abs/1804.03159">
+        <a class="nav-link" href="https://quantum-journal.org/papers/q-2019-03-11-129/">
           <i class="fab fas fa-book"></i> Paper
         </a>
       </li>

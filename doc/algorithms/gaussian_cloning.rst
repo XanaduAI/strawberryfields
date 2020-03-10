@@ -126,7 +126,7 @@ After constructing the circuit and running the engine,
    :start-at: results =
    :end-at: ])
 
-you can call the :ref:`state method <state_class>` :meth:`~.BaseState.fidelity_coherent`
+you can call the :doc:`state method </introduction/states>` :meth:`~.BaseState.fidelity_coherent`
 
 .. literalinclude:: ../../examples/gaussian_cloning.py
    :language: python
@@ -135,7 +135,7 @@ you can call the :ref:`state method <state_class>` :meth:`~.BaseState.fidelity_c
 
 to calculate the fidelity of the cloned output compared to the input coherent state :math:`\alpha=0.7+1.2j`. (Note that we take the square root since the method is returning the fidelity of both modes multiplied).
 
-Alternatively, if using the :ref:`gaussian_backend` as we are in this example, you can also use :meth:`~.BaseGaussianState.displacement` to return the displacements of the cloned states:
+Alternatively, if using the ``'gaussian'`` backend as we are in this example, you can also use :meth:`~.BaseGaussianState.displacement` to return the displacements of the cloned states:
 
 .. literalinclude:: ../../examples/gaussian_cloning.py
    :language: python
