@@ -23,11 +23,25 @@ from strawberryfields.api import Connection
 from strawberryfields.api.connection import connection
 from strawberryfields.engine import StarshipEngine
 from strawberryfields.io import load
-from strawberryfields.configuration import store_account, configuration
+from strawberryfields.configuration import store_account, create_config, ConfigurationError
+
+
+PROMPTS = {
+    "hostname": "Please enter the hostname of the server to connect to: [{}] ",
+    "port": "Please enter the port number to connect with: [{}] ",
+    "use_ssl": "Should the client attempt to connect over SSL? [{}] ",
+    "authentication_token": "Please enter the authentication token to use when connecting: [{}] ",
+    "save": "Would you like to save these settings to a local cofiguration file in the current "
+    "directory? [{}] ",
+}
 
 def main():
-    # TODO
-    """: """
+    """The Xanadu cloud platform command line interface.
+
+    Commands:
+        * run
+        * configure
+    """
     parser = create_parser()
     args = parser.parse_args()
 
@@ -39,7 +53,11 @@ def main():
         parser.print_help()
 
 def create_parser():
-    # TODO
+    """Creates a parser to process the commands and arguments passed to the command line interface.
+
+    Returns:
+        ArgumentParser: an argument parser object that defines the related options
+    """
     parser = argparse.ArgumentParser(usage='starship <command> [<args>]', description="These are common options when working on the Xanadu cloud platform.")
 
     # Setting a title for the general options (requires setting a private
@@ -47,33 +65,50 @@ def create_parser():
     parser._optionals.title = 'General Options'
 
     subparsers = parser.add_subparsers(title='Commands')
-    configure_parser = subparsers.add_parser('configure', help='configure each detail of the API connection')
+    configure_parser = subparsers.add_parser('configure', help='Configure each detail of the API connection.')
     configure_parser.set_defaults(func=configure)
 
     configure_parser.add_argument(
-        "--token", "-t", type=str, help="configure the token of the API connection and use defaults"
+        "--token", "-t", type=str, help="Configure only the token by using defaults for other options."
     )
     configure_parser.add_argument(
-        "--local", "-l", action="store_true", help="create the configure for the project"
+        "--local", "-l", action="store_true", help="Create the configure for the project."
     )
 
-    script_parser = subparsers.add_parser('run', help='run a blackbird script')
-    script_parser.set_defaults(func=run_blackbird_script)
-    script_parser.add_argument(
+    run_parser = subparsers.add_parser('run', help='Run a blackbird script.')
+    run_parser.add_argument(
+        "input",
+        type=str,
+        help="The input blackbird script to run.",
+    )
+    run_parser.set_defaults(func=run_blackbird_script)
+    run_parser.add_argument(
         "--output",
         "-o",
-        help="specify the path to output the result of the program (stdout by default)",
+        help="Path to the output file, where the results of the program will be written (stdout by default).",
     )
-    # TODO: add --configure option
-    # TODO: add --token option
     parser.add_argument(
-        "--ping", "-p", action="store_true", help="tests the connection to the remote backend"
+        "--ping", "-p", action="store_true", help="Tests the connection to the remote backend."
     )
 
     return parser
 
 def configure(args):
-    print(args)
+    """An auxiliary function for configuring the API connection to the Xanadu
+    cloud platform.
+
+    Supports configuration by:
+    * only specifying the token and using default configuration options;
+    * specifying every configuration option one by one.
+
+    Related arguments:
+    * token: the authentication token to use
+    * local: whether or not to create the configuration file locally
+
+    Args:
+        args (ArgumentParser): arguments that were specified on the command
+            line stored as attributes in an argument parser object
+    """
     if args.token:
         kwargs = {'authentication_token': args.token}
     else:
@@ -84,41 +119,61 @@ def configure(args):
     else:
         store_account(**kwargs)
 
-    # elif args.reconfigure:
-    #    reconfigure_everything()
-
-    # run_blackbird_script(args.input, args.output)
-
 def ping():
-    """Tests the connection to the remote backend.
-    """
-# TODO
+    """Tests the connection to the remote backend."""
     connection.ping()
     sys.stdout.write("You have successfully authenticated to the platform!\n")
     sys.exit()
 
 def configure_everything():
+    """Provides an interactive selection wizard on the command line to
+    configure every option for the API connection.
 
-    default_config = configuration
+    Default configuration options are provided as defaults to the user.
+    Configuration options as detailed in :doc:`/introduction/configuration`.
+
+    Returns:
+        dict[str, Union[str, bool, int]]: the configuration options
+    """
+    default_config = create_config()["api"]
 
     authentication_token = (
         input(PROMPTS["authentication_token"].format(default_config["authentication_token"]))
         or default_config["authentication_token"]
     )
+
+    if authentication_token == "":
+        raise ConfigurationError("No authentication token was provided.")
+
     hostname = (
         input(PROMPTS["hostname"].format(default_config["hostname"])) or default_config["hostname"]
     )
 
-    use_ssl = input(PROMPTS["use_ssl"].format("y" if default_config["use_ssl"] else "n")).upper() == "Y"
+    ssl_default = "y" if default_config["use_ssl"] else "n"
+    ssl_input = input(PROMPTS["use_ssl"].format(ssl_default)) or ssl_default
+    use_ssl = ssl_input.upper() == "Y"
 
     port = input(PROMPTS["port"].format(default_config["port"])) or default_config["port"]
 
     kwargs = {'authentication_token': authentication_token, 'hostname': hostname, 'use_ssl': use_ssl, 'port': port}
     return kwargs
 
-def run_blackbird_script(args_run, args_output=None):
-    # TODO
-    program = load(args_run)
+def run_blackbird_script(args):
+    """Run a blackbird script.
+
+    Related arguments:
+    * input: the input blackbird script to be run
+    * output: the output file to store the results in (optional)
+
+    Args:
+        args (ArgumentParser): arguments that were specified on the command
+            line stored as attributes in an argument parser object
+    """
+    try:
+        program = load(args.input)
+    except FileNotFoundError:
+        sys.stdout.write("The {} blackbird script was not found.".format(args.input))
+        sys.exit()
 
     eng = StarshipEngine(program.target)
     sys.stdout.write("Executing program on remote hardware...\n")
@@ -130,4 +185,3 @@ def run_blackbird_script(args_run, args_output=None):
                 file.write(str(result.samples))
         else:
             sys.stdout.write(str(result.samples))
-
