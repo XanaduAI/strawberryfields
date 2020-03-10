@@ -129,22 +129,71 @@ class MockStoreAccount:
     def __init__(self):
         self.kwargs = None
 
-    def store_account(self, kwargs):
+    def store_account(self, **kwargs):
         self.kwargs = kwargs
+
+EXPECTED_KWARGS = {
+    "authentication_token": "",
+    "hostname": "platform.strawberryfields.ai",
+    "use_ssl": True,
+    "port": 443,
+}
 
 class TestConfigure:
 
-    def test_token(self):
+    def test_token(self, monkeypatch):
         with monkeypatch.context() as m:
             mock_store_account = MockStoreAccount()
             m.setattr(cli, "store_account", mock_store_account.store_account)
+
             args = MockArgs()
             args.token = "SomeToken"
+
             cli.configure(args)
             assert mock_store_account.kwargs == {"authentication_token": "SomeToken"}
 
+    def test_configure_everything(self, monkeypatch):
+        with monkeypatch.context() as m:
+            mock_store_account = MockStoreAccount()
+            m.setattr(cli, "configure_everything", lambda: cli.create_config()["api"])
+            m.setattr(cli, "store_account", mock_store_account.store_account)
+
+            args = MockArgs()
+            args.token = False
+
+            cli.configure(args)
+            assert mock_store_account.kwargs == EXPECTED_KWARGS
+
+    def test_token_local(self, monkeypatch):
+        with monkeypatch.context() as m:
+            mock_store_account = MockStoreAccount()
+            m.setattr(cli, "store_account", mock_store_account.store_account)
+
+            args = MockArgs()
+            args.token = "SomeToken"
+            args.local = True
+
+            cli.configure(args)
+            assert mock_store_account.kwargs == {"authentication_token": "SomeToken", "location": "local"}
+
+    def test_configure_everything_local(self, monkeypatch):
+        with monkeypatch.context() as m:
+            mock_store_account = MockStoreAccount()
+            m.setattr(cli, "configure_everything", lambda: cli.create_config()["api"])
+            m.setattr(cli, "store_account", mock_store_account.store_account)
+
+            args = MockArgs()
+            args.token = False
+            args.local = True
+
+            cli.configure(args)
+            EXPECTED_KWARGS["location"] = "local"
+
+            assert mock_store_account.kwargs == EXPECTED_KWARGS
+
 class MockConnection:
-    # TODO
+    """A mock Connection class used for testing."""
+
     def __init__(self):
         self.pinging = None
 
@@ -152,14 +201,13 @@ class MockConnection:
         self.pinging = "SuccessfulPing"
 
 class MockSysStdout:
-    # TODO
+    """A mock class used for mocking the sys.stdout object while testing."""
 
     def __init__(self):
         self.write_output = []
 
     def write(self, message):
         self.write_output = message
-
 
 class TestPing:
     """Tests for the pinging mechanism of the CLI."""
@@ -190,9 +238,12 @@ class TestPing:
                 assert mock_sys_stdout.write_output == "There was a problem when authenticating to the platform!\n"
                 assert mock_connection.pinging == "SuccessfulPing"
 
-#class TestConfigureEverything:
+class TestConfigureEverything:
 
-
+    def test_default_config_correct(self):
+        with monkeypatch.context() as m:
+            m.setattr(input, lambda: False)
+            cli.configure_everything()
 
 class TestRunProgram:
 
