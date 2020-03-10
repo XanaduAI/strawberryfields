@@ -120,12 +120,17 @@ class TestCreateParser:
         assert args.output == 'SomeOutputPath'
 
 class MockArgs:
-    # TODO
+    """A mock class used for mocking the args that are parsed from the command
+    line."""
+
     def __init__(self):
         self.token = None
         self.local = None
 
 class MockStoreAccount:
+    """A mock class used for capturing the arguments with which the store_account
+    function is being called."""
+
     def __init__(self):
         self.kwargs = None
 
@@ -297,13 +302,12 @@ class TestConfigureEverything:
             m.setattr(builtins, "input", mock_input)
             assert cli.configure_everything() == EXPECTED_KWARGS_FOR_PROMPTS
 
-class TestRunProgram:
+class TestRunBlackbirdScript:
 
-    def test_correct_arguments(self, monkeypatch):
-
+    def test_exit_if_file_not_found(self, monkeypatch):
         mocked_stdout = MockSysStdout()
         with monkeypatch.context() as m:
-            m.setattr(cli.StarshipEngine, "__init__", lambda: None)
+            m.setattr(cli, "load", lambda: raise FileNotFoundError)
+            "The {} blackbird script was not found.".format(args.input)"
             m.setattr(sys, "stdout", mocked_stdout)
-
 
