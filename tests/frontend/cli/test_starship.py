@@ -126,6 +126,8 @@ class MockArgs:
     def __init__(self):
         self.token = None
         self.local = None
+        self.input = None
+        self.output = None
 
 class MockStoreAccount:
     """A mock class used for capturing the arguments with which the store_account
@@ -302,12 +304,130 @@ class TestConfigureEverything:
             m.setattr(builtins, "input", mock_input)
             assert cli.configure_everything() == EXPECTED_KWARGS_FOR_PROMPTS
 
+class MockProgram:
+
+    def __init__(self, result=None):
+
+        self.target = "chip2"
+
+        class Result:
+            def __init__(self):
+                self.samples = result
+
+        if result is not None:
+            self.result = Result()
+        else:
+            self.result = None
+
+class MockStarshipEngine:
+
+    def __init__(self, target):
+        self.result = None
+        self.target = target
+
+    def run(self, program):
+        if program:
+            self.result = program.result
+
+class MockWriteScriptResults:
+    """A mock class used for capturing the arguments with which the
+    write_script_results function is being called."""
+
+    def __init__(self):
+        self.called = False
+        self.output = None
+
+    def write_script_results(self, output):
+        self.called = True
+        self.output = output
+
+TEST_SCRIPT = """\
+name template_1x2_chip0     # Name of the program
+version 1.0                 # Blackbird version number
+target chip2 (shots = 50)   # This program will run on chip2 for 50 shots
+
+# Define the interferometer phase values
+float phi0 = 0.574
+float phi1 = 1.33
+MZgate(phi0, phi1) | [0, 1]
+MZgate(phi0, phi1) | [4, 5]
+
+# Perform a photon number counting measurement
+MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7]
+"""
+
+
 class TestRunBlackbirdScript:
 
     def test_exit_if_file_not_found(self, monkeypatch):
         mocked_stdout = MockSysStdout()
+        mocked_program = MockProgram()
+        mocked_args = MockArgs()
+
+        def mock_load(arg):
+            raise FileNotFoundError
+
         with monkeypatch.context() as m:
-            m.setattr(cli, "load", lambda: raise FileNotFoundError)
-            "The {} blackbird script was not found.".format(args.input)"
+            m.setattr(cli, "load", mock_load)
+            m.setattr(sys, "stdout", mocked_stdout)
+            with pytest.raises(SystemExit):
+                cli.run_blackbird_script(mocked_args)
+
+            assert "blackbird script was not found" in mocked_stdout.write_output
+
+    def test_result_is_none(self, monkeypatch):
+        mocked_stdout = MockSysStdout()
+        mocked_program = MockProgram()
+        mocked_args = MockArgs()
+        mocked_write_script_results = MockWriteScriptResults()
+
+        with monkeypatch.context() as m:
+            m.setattr(cli, "load", lambda arg: mocked_program)
+            m.setattr(cli, "StarshipEngine", MockStarshipEngine)
+            m.setattr(cli, "write_script_results", mocked_write_script_results.write_script_results)
             m.setattr(sys, "stdout", mocked_stdout)
 
+            cli.run_blackbird_script(mocked_args)
+            assert "Executing program on remote hardware..." in mocked_stdout.write_output
+
+            # Check that the write_script_results function was not called
+            assert not mocked_write_script_results.called
+
+    def test_integration_std_out(self, tmpdir, monkeypatch):
+
+        filepath = tmpdir.join("test_config.toml")
+
+        with open(filepath, "w") as f:
+            f.write(TEST_SCRIPT)
+
+        mocked_args = MockArgs()
+        mocked_args.input = filepath
+
+        mocked_stdout = MockSysStdout()
+
+        with monkeypatch.context() as m:
+            m.setattr(cli, "StarshipEngine", MockStarshipEngine)
+            m.setattr(sys, "stdout", mocked_stdout)
+            cli.run_blackbird_script(mocked_args)
+            assert mocked_stdout.write_output == TEST_SCRIPT
+
+class TestWriteScriptResults:
+    def test_write_to_file(self, tmpdir):
+        some_samples = [1,2,3,4,5]
+        filepath = tmpdir.join("test_config.toml")
+
+        cli.write_script_results(some_samples, output_file=filepath)
+
+        with open(filepath, "r") as f:
+            content = f.read()
+
+        assert content == str(some_samples)
+
+    def test_write_to_std_out(self, monkeypatch):
+        mocked_stdout = MockSysStdout()
+        some_samples = [1,2,3,4,5]
+
+        with monkeypatch.context() as m:
+            m.setattr(sys, "stdout", mocked_stdout)
+            cli.write_script_results(some_samples)
+            mocked_stdout.write_output = str(some_samples)

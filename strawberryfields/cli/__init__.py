@@ -202,8 +202,17 @@ def run_blackbird_script(args):
     result = eng.run(program)
 
     if result and result.samples is not None:
-        if args.output:
-            with open(args_output, "w") as file:
-                file.write(str(result.samples))
-        else:
-            sys.stdout.write(str(result.samples))
+        write_script_results(result.samples, output_file=args.output)
+
+def write_script_results(samples, output_file=None):
+    """Write the results of the script either to a file or to the standard output.
+
+    Args:
+        samples (array[float]): array of samples
+        output_file (str or None): the path to the output file, None if no output was defined
+    """
+    if output_file:
+        with open(output_file, "w") as file:
+            file.write(str(samples))
+    else:
+        sys.stdout.write(str(samples))
