@@ -170,7 +170,7 @@ We can now execute our quantum program ``prog`` on the engine via the :func:`Eng
 
 .. code-block:: python
 
-    result = eng.run(prog, run_options={shots=1, modes=None}, compile_options={})
+    result = eng.run(prog, run_options={"shots":1, "modes":None}, compile_options={})
 
 The :meth:`eng.run <strawberryfields.LocalEngine.run>` method accepts the arguments:
 
@@ -239,7 +239,7 @@ Once the engine has been run, we can extract results of measurements and the qua
 
 .. code-block:: pycon
 
-    >>> results.samples
+    >>> result.samples
     [2.9645296452964534, -2.9465294652946525, None]
 
 If a mode has not been measured, this attribute simply returns ``None``.
