@@ -24,6 +24,7 @@ import numpy as np
 import pytest
 
 from strawberryfields.apps import clique
+from strawberryfields.configuration import store_account
 from strawberryfields import cli as cli
 
 import sys
@@ -38,7 +39,7 @@ class TestMain:
         parser = cli.create_parser()
         args = parser.parse_args(['--ping'])
         assert args.ping
-
+ 
 class TestCreateParser:
     """Tests for creating a parser object."""
 
@@ -117,6 +118,30 @@ class TestCreateParser:
         assert args.func is cli.run_blackbird_script
         assert args.input == 'SomeInputPath'
         assert args.output == 'SomeOutputPath'
+
+class MockArgs:
+    # TODO
+    def __init__(self):
+        self.token = None
+        self.local = None
+
+class MockStoreAccount:
+    def __init__(self):
+        self.kwargs = None
+
+    def store_account(self, kwargs):
+        self.kwargs = kwargs
+
+class TestConfigure:
+
+    def test_token(self):
+        with monkeypatch.context() as m:
+            mock_store_account = MockStoreAccount()
+            m.setattr(cli, "store_account", mock_store_account.store_account)
+            args = MockArgs()
+            args.token = "SomeToken"
+            cli.configure(args)
+            assert mock_store_account.kwargs == {"authentication_token": "SomeToken"}
 
 class MockConnection:
     # TODO
