@@ -31,8 +31,7 @@ import sys
 
 pytestmark = pytest.mark.cli
 
-class TestCreateParser:
-    # TODO
+class TestMain:
     def test_ping(self):
         # TODO
 
@@ -40,44 +39,84 @@ class TestCreateParser:
         args = parser.parse_args(['--ping'])
         assert args.ping
 
-    def test_run(self):
-        # TODO
+class TestCreateParser:
+    """Tests for creating a parser object."""
 
+    def test_general_details(self):
+        """Test the general details of the parser created."""
+        parser = cli.create_parser()
+        parser._optionals.title = "General Options"
+        parser.usage="starship <command> [<args>]",
+        parser.description="These are common options when working on the Xanadu cloud platform."
+        assert parser.add_help
+
+    @pytest.mark.parametrize("option", ['--ping', '-p'])
+    def test_ping(self, option):
+        """Test that specifying --ping to the CLI sets the correct attribute."""
+        parser = cli.create_parser()
+
+        args = parser.parse_args([option])
+        assert args.ping
+
+    @pytest.mark.parametrize("token_option", ['--token', '-t'])
+    def test_configure_token(self, token_option):
+        """Test that specifying configure, --token and passing an argument to
+        the CLI sets the correct attribute."""
+        parser = cli.create_parser()
+
+        args = parser.parse_args(['configure', token_option, 'SomeToken'])
+        assert args.func is cli.configure
+        assert args.token == 'SomeToken'
+        assert not args.local
+
+    def test_configure_everything(self):
+        """Test that specifying configure, --local to the CLI sets the correct
+        attribute."""
+        parser = cli.create_parser()
+        args = parser.parse_args(['configure'])
+
+        assert args.func is cli.configure
+        assert not args.local
+
+    @pytest.mark.parametrize("token_option", ['--token', '-t'])
+    @pytest.mark.parametrize("local_option", ['--local', '-l'])
+    def test_configure_token_locally(self, token_option, local_option):
+        """Test that specifying configure, --token, --local and passing an argument to
+        the CLI sets the correct attribute."""
+        parser = cli.create_parser()
+
+        args = parser.parse_args(['configure', token_option, 'SomeToken', local_option])
+        assert args.func is cli.configure
+        assert args.token == 'SomeToken'
+
+    @pytest.mark.parametrize("option", ['--local', '-l'])
+    def test_configure_everything_locally(self, option):
+        """Test that specifying configure, --local to the CLI sets the correct
+        attribute."""
+        parser = cli.create_parser()
+        args = parser.parse_args(['configure', option])
+
+        assert args.func is cli.configure
+        assert args.local
+
+    def test_run(self):
+        """Test that specifying input and passing an argument to the CLI sets
+        the correct attribute."""
         parser = cli.create_parser()
         args = parser.parse_args(['run', 'SomePath'])
+
+        assert args.func is cli.run_blackbird_script
         assert args.input == 'SomePath'
 
     def test_output(self):
-        # TODO
-
+        """Test that specifying input, --output and passing the arguments to
+        the CLI sets the correct attributes."""
         parser = cli.create_parser()
         args = parser.parse_args(['run', 'SomeInputPath', '--output', 'SomeOutputPath'])
+
+        assert args.func is cli.run_blackbird_script
         assert args.input == 'SomeInputPath'
         assert args.output == 'SomeOutputPath'
-
-    grouped_argument_options = [
-                                ('--ping',),
-                                ('--token', 'SomeAuth'),
-                                ('--configure',),
-                                ('run', 'SomePath')
-                                ]
-
-    # Output of a programatic matching of every possible pair (without
-    # repetition):
-    # list(itertools.combinations(grouped_argument_options, r=2))
-    combination_of_grouped = [(('--ping',), ('--token', 'SomeAuth')),
-                             (('--ping',), ('--configure',)),
-                             (('--ping',), ('run', 'SomePath')),
-                             (('--token', 'SomeAuth'), ('--configure',)),
-                             (('--token', 'SomeAuth'), ('run', 'SomePath')),
-                             (('--configure',), ('run', 'SomePath'))]
-
-    @pytest.mark.parametrize('option1, option2', combination_of_grouped)
-    def test_error_mutually_exclusive_group(self, option1, option2):
-        parser = cli.create_parser()
-        with pytest.raises(SystemExit, match='2'):
-            with pytest.raises(argparse.ArgumentError, match='not allowed with argument'):
-                args = parser.parse_args([*option1, *option2])
 
 class MockConnection:
     # TODO
@@ -98,25 +137,33 @@ class MockSysStdout:
 
 
 class TestPing:
-    # TODO
+    """Tests for the pinging mechanism of the CLI."""
 
-    def test_correct(self, monkeypatch):
-        # TODO
-
+    def test_success(self, monkeypatch):
+        """Test that pinging was successful."""
         with monkeypatch.context() as m:
             mock_sys_stdout = MockSysStdout()
 
             m.setattr(cli, "Connection", MockConnection)
             m.setattr(sys, "stdout", mock_sys_stdout)
 
-            assert mock_connection.pinging is None
-
             with pytest.raises(SystemExit):
                 cli.ping()
                 assert mock_sys_stdout.write_output == "You have successfully authenticated to the platform!\n"
                 assert mock_connection.pinging == "SuccessfulPing"
 
+    def test_fail(self, monkeypatch):
+        """Test that pinging failed."""
+        with monkeypatch.context() as m:
+            mock_sys_stdout = MockSysStdout()
 
+            m.setattr(cli, "Connection", MockConnection)
+            m.setattr(sys, "stdout", mock_sys_stdout)
+
+            with pytest.raises(SystemExit):
+                cli.ping()
+                assert mock_sys_stdout.write_output == "There was a problem when authenticating to the platform!\n"
+                assert mock_connection.pinging == "SuccessfulPing"
 
 #class TestConfigureEverything:
 

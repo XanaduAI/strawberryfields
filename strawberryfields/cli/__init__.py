@@ -34,6 +34,7 @@ PROMPTS = {
     "directory? [{}] ",
 }
 
+
 def main():
     """The Xanadu cloud platform command line interface.
 
@@ -46,7 +47,7 @@ def main():
 
     if args.ping:
         ping()
-    elif hasattr(args, 'func'):
+    elif hasattr(args, "func"):
         args.func(args)
     else:
         parser.print_help()
@@ -59,28 +60,43 @@ def create_parser():
         ArgumentParser: an argument parser object that defines the related
             options
     """
-    parser = argparse.ArgumentParser(usage='starship <command> [<args>]', description="These are common options when working on the Xanadu cloud platform.")
+    parser = argparse.ArgumentParser(
+        usage="starship <command> [<args>]",
+        description="These are common options when working on the Xanadu cloud platform.",
+    )
 
     # Setting a title for the general options (requires setting a private
     # attribute)
-    parser._optionals.title = 'General Options'
+    parser._optionals.title = "General Options"
 
-    subparsers = parser.add_subparsers(title='Commands')
-    configure_parser = subparsers.add_parser('configure', help='Configure each detail of the API connection.')
+    # Adding the pinging general option
+    parser.add_argument(
+        "--ping", "-p", action="store_true", help="Tests the connection to the remote backend."
+    )
+
+    # Adding subparsers configure and input
+    subparsers = parser.add_subparsers(title="Commands")
+
+    # Adding the configure subparser
+    configure_parser = subparsers.add_parser(
+        "configure", help="Configure each detail of the API connection."
+    )
     configure_parser.set_defaults(func=configure)
 
     configure_parser.add_argument(
-        "--token", "-t", type=str, help="Configure only the token by using defaults for other options."
+        "--token",
+        "-t",
+        type=str,
+        help="Configure only the token by using defaults for other options.",
     )
     configure_parser.add_argument(
         "--local", "-l", action="store_true", help="Create the configure for the project."
     )
 
-    run_parser = subparsers.add_parser('run', help='Run a blackbird script.')
+    # Adding the input subparser
+    run_parser = subparsers.add_parser("run", help="Run a blackbird script.")
     run_parser.add_argument(
-        "input",
-        type=str,
-        help="The input blackbird script to run.",
+        "input", type=str, help="The input blackbird script to run.",
     )
     run_parser.set_defaults(func=run_blackbird_script)
     run_parser.add_argument(
@@ -88,11 +104,9 @@ def create_parser():
         "-o",
         help="Path to the output file, where the results of the program will be written (stdout by default).",
     )
-    parser.add_argument(
-        "--ping", "-p", action="store_true", help="Tests the connection to the remote backend."
-    )
 
     return parser
+
 
 def configure(args):
     """An auxiliary function for configuring the API connection to the Xanadu
@@ -111,7 +125,7 @@ def configure(args):
             line stored as attributes in an argument parser object
     """
     if args.token:
-        kwargs = {'authentication_token': args.token}
+        kwargs = {"authentication_token": args.token}
     else:
         kwargs = configure_everything()
 
@@ -120,6 +134,7 @@ def configure(args):
     else:
         store_account(**kwargs)
 
+
 def ping():
     """Tests the connection to the remote backend."""
     if Connection().ping():
@@ -127,6 +142,7 @@ def ping():
     else:
         sys.stdout.write("There was a problem when authenticating to the platform!\n")
     sys.exit()
+
 
 def configure_everything():
     """Provides an interactive selection wizard on the command line to
@@ -158,8 +174,14 @@ def configure_everything():
 
     port = input(PROMPTS["port"].format(default_config["port"])) or default_config["port"]
 
-    kwargs = {'authentication_token': authentication_token, 'hostname': hostname, 'use_ssl': use_ssl, 'port': port}
+    kwargs = {
+        "authentication_token": authentication_token,
+        "hostname": hostname,
+        "use_ssl": use_ssl,
+        "port": port,
+    }
     return kwargs
+
 
 def run_blackbird_script(args):
     """Run a blackbird script.
