@@ -233,7 +233,7 @@ def nullTi(m, n, U):
     if nmax != mmax:
         raise ValueError("U must be a square matrix")
 
-    if (U[m, n+1] == 0 and U[m, n] == 0):
+    if U[m, n] == 0:
         thetar = 0
         phir = 0
     elif U[m, n+1] == 0:
