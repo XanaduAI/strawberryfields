@@ -15,5 +15,6 @@ examples/.ipynb_checkpoints/*
 pytest/.pytest_cache/
 examples_apps/*.html
 doc/_static/thumbs/*
+doc/tutorials_apps/*
 !doc/_static/code.png
 doc/code/api/*
