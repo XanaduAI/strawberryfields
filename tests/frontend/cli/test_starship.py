@@ -31,7 +31,7 @@ from strawberryfields import cli as cli
 import sys
 import builtins
 
-pytestmark = pytest.mark.cli
+pytestmark = pytest.mark.frontend
 
 class TestCreateParser:
     """Tests for creating a parser object."""
