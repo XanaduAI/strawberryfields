@@ -242,7 +242,7 @@ def load(f):
 
     Args:
         f (Union[file, str, pathlib.Path]): File or filename from which
-            the data is loaded. If file is a string or Path, value with the
+            the data is loaded. If file is a string or Path, a value with the
             .xbb extension is expected.
 
     Returns:
