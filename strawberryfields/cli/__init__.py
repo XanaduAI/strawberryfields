@@ -85,7 +85,7 @@ def create_parser():
         "--token",
         "-t",
         type=str,
-        help="Configure only the token by using defaults for other options.",
+        help="Configure Strawberry Fields with your Xanadu cloud platform API token.",
     )
     configure_parser.add_argument(
         "--local", "-l", action="store_true", help="Create the configure for the project."
