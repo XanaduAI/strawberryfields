@@ -37,8 +37,9 @@ def main():
     """The Xanadu cloud platform command line interface.
 
     Commands:
-        * run
-        * configure
+    
+    * run
+    * configure
     """
     parser = create_parser()
     args = parser.parse_args()
