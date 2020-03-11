@@ -128,7 +128,7 @@ def configure(args):
     The following is the easiest way to configure the connection to the cloud platform.
 
     Here we show how the ``starship configure --token MYAUTH`` command can create a
-    configuration. It is worth noting that `MYAUTH` stands for the
+    configuration. It is worth noting that ``MYAUTH`` stands for the
     authentication token. Once done, we have a look at the newly created
     configuration file.
 
