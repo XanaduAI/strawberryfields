@@ -193,7 +193,7 @@ def singlemode_gaussian_matrix(phi, w, z, D, batched=False, dtype=def_type.as_nu
                 
     def grad(dy):
         Jphi, Jw, Jwc, Jz, Jzc = tf.numpy_function(Ggate_gradients, [phi, w, z, gate], dtype)
-        grad_phi = tf.math.real(tf.reduce_sum(dy*Jphi))#tf.cast(tf.math.real(tf.reduce_sum(dy*Jphi)), dtype=dtype)
+        grad_phi = -tf.math.real(tf.reduce_sum(dy*Jphi))
         grad_w = tf.reduce_sum(dy*Jw) + tf.reduce_sum(tf.math.conj(dy)*Jwc)
         grad_z = tf.reduce_sum(dy*Jz) + tf.reduce_sum(tf.math.conj(dy)*Jzc)
         return grad_phi, grad_w, grad_z, None
