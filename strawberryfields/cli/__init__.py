@@ -136,8 +136,8 @@ def configure(args):
 
     .. code-block:: bash
 
-        $starship configure --token MYAUTH
-        $cat  ~/.config/strawberryfields/config.toml
+        $ starship configure --token MYAUTH
+        $ cat  ~/.config/strawberryfields/config.toml
         [api]
         authentication_token = "MYAUTH"
         hostname = "platform.strawberryfields.ai"
