@@ -29,10 +29,25 @@ from strawberryfields.io import load
 def main():
     """The Xanadu cloud platform command line interface.
 
-    Commands:
-    
-    * run
-    * configure
+    **Example:**
+
+    The following is a simple example on getting the help message of the cloud platform command line interface. It details each of the options available.
+
+    .. code-block:: bash
+
+        $starship
+        usage: starship <command> [<args>]
+
+        These are common options when working on the Xanadu cloud platform.
+
+        General Options:
+          -h, --help       show this help message and exit
+          --ping, -p       Tests the connection to the remote backend.
+
+        Commands:
+          {configure,run}
+            configure      Configure each detail of the API connection.
+            run            Run a blackbird script.
     """
     parser = create_parser()
     args = parser.parse_args()
@@ -101,18 +116,56 @@ def create_parser():
 
 
 def configure(args):
-    """An auxiliary function for configuring the API connection to the Xanadu
+    r"""An auxiliary function for configuring the API connection to the Xanadu
     cloud platform.
 
     Can be used to simply save the authentication token with default
     configuration options. Alternatively, a wizard is provided for full
     configurability.
 
-    Flags:
-    
-    * ``--token``: The authentication token to use.
-    * ``--local``: Whether or not to create the configuration file locally in the current directory.
+    **Example:**
+
+    The following is the easiest way to configure the connection to the cloud platform.
+
+    Here we show how the `starship configure --token MYAUTH` command can create a
+    configuration. It is worth noting that `MYAUTH` stands for the
+    authentication token. Once done, we have a look at the newly created
+    configuration file.
+
+    Example run in a Linux based operating system:
+
+    .. code-block:: bash
+
+        $starship configure --token MYAUTH
+        $cat  ~/.config/strawberryfields/config.toml
+        [api]
+        authentication_token = "MYAUTH"
+        hostname = "platform.strawberryfields.ai"
+        use_ssl = true
+        port = 443
+
+    The same example run on a Windows operating system:
+
+    .. code-block:: powershell
+
+        $starship configure --token MYAUTH
+        $cat C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
+        [api]
+        authentication_token = "MYAUTH"
+        hostname = "platform.strawberryfields.ai"
+        use_ssl = true
+        port = 443
+
+    For more advanced configuration options see the :func:`~.configuration_wizard` page.
+
+    **Flags:**
+
+        * ``--token``: The authentication token to use.
+        * ``--local``: Whether or not to create the configuration file locally in the current directory.
       If not provided, the configuration file will be saved in the users configuration directory.
+
+      See more details regarding Strawberry Fields configuration and available
+      configuration options on the :doc:`/introduction/configuration` page.
 
     Args:
         args (ArgumentParser): arguments that were specified on the command
@@ -136,11 +189,50 @@ def ping():
         sys.stdout.write("There was a problem when authenticating to the platform!\n")
 
 def configuration_wizard():
-    """Provides an interactive selection wizard on the command line to
+    r"""Provides an interactive selection wizard on the command line to
     configure every option for the API connection.
 
     Default configuration options are provided as defaults to the user.
     Configuration options as detailed in :doc:`/introduction/configuration`.
+
+    **Example:**
+
+    Here we show how the interactive wizard can be used to configure each API
+    option. Once done, we have a look at the newly created configuration file.
+
+    Example run in a Linux based operating system:
+
+    .. code-block:: bash
+
+        $starship configure
+        Please enter the authentication token to use when connecting: [] MYAUTH
+        Please enter the hostname of the server to connect to: [platform.strawberryfields.ai] MYHOST
+        Should the client attempt to connect over SSL? [y] N
+        Please enter the port number to connect with: [443] 12345
+
+        $cat  ~/.config/strawberryfields/config.toml
+        [api]
+        authentication_token = "MYAUTH"
+        hostname = "MYHOST"
+        use_ssl = false
+        port = "12345"
+
+    The same example run on a Windows operating system:
+
+    .. code-block:: powershell
+
+        $starship configure
+        Please enter the authentication token to use when connecting: [] MYAUTH
+        Please enter the hostname of the server to connect to: [platform.strawberryfields.ai] MYHOST
+        Should the client attempt to connect over SSL? [y] N
+        Please enter the port number to connect with: [443] 12345
+
+        $cat C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
+        [api]
+        authentication_token = "MYAUTH"
+        hostname = "MYHOST"
+        use_ssl = false
+        port = "12345"
 
     Returns:
         dict[str, Union[str, bool, int]]: the configuration options
