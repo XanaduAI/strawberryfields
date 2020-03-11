@@ -17,7 +17,7 @@
 <h3>Improvements</h3>
 
 * Refactored the `starship` CLI and added unit tests.
-  [#312](https://github.com/XanaduAI/strawberryfields/pull/312)
+  [(312)](https://github.com/XanaduAI/strawberryfields/pull/312)
 
 * Added the `store_account` user convenience function that helps with
   configuring access to the Xanadu cloud platform.
