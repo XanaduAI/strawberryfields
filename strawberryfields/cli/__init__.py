@@ -88,7 +88,7 @@ def create_parser():
         help="Configure Strawberry Fields with your Xanadu cloud platform API token.",
     )
     configure_parser.add_argument(
-        "--local", "-l", action="store_true", help="Create the configure for the project."
+        "--local", "-l", action="store_true", help="Create a local configuration file in the current directory."
     )
 
     # Adding the input subparser
