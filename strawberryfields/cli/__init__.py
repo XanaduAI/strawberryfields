@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""A standalone command-line interface for computing quantum programs on a remote
-backend.
+"""A standalone command-line interface for configuring Strawberry Fields and connecting
+to the Xanadu cloud platform.
 """
 
 import argparse
@@ -37,8 +37,9 @@ def main():
     """The Xanadu cloud platform command line interface.
 
     Commands:
-        * run
-        * configure
+    
+    * run
+    * configure
     """
     parser = create_parser()
     args = parser.parse_args()
@@ -56,7 +57,7 @@ def create_parser():
 
     Returns:
         ArgumentParser: an argument parser object that defines the related
-            options
+        options
     """
     parser = argparse.ArgumentParser(
         usage="starship <command> [<args>]",
@@ -85,10 +86,10 @@ def create_parser():
         "--token",
         "-t",
         type=str,
-        help="Configure only the token by using defaults for other options.",
+        help="Configure Strawberry Fields with your Xanadu cloud platform API token.",
     )
     configure_parser.add_argument(
-        "--local", "-l", action="store_true", help="Create the configure for the project."
+        "--local", "-l", action="store_true", help="Create a local configuration file in the current directory."
     )
 
     # Adding the input subparser
@@ -114,9 +115,11 @@ def configure(args):
     configuration options. Alternatively, a wizard is provided for full
     configurability.
 
-    Related arguments:
-    * token: the authentication token to use
-    * local: whether or not to create the configuration file locally
+    Flags:
+    
+    * ``--token``: The authentication token to use.
+    * ``--local``: Whether or not to create the configuration file locally in the current directory.
+      If not provided, the configuration file will be saved in the users configuration directory.
 
     Args:
         args (ArgumentParser): arguments that were specified on the command
