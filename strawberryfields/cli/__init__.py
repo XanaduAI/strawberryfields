@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""A standalone command-line interface for computing quantum programs on a remote
-backend.
+"""A standalone command-line interface for configuring Strawberry Fields and connecting
+to the Xanadu cloud platform.
 """
 
 import sys
