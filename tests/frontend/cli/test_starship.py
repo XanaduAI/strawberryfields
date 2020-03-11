@@ -276,14 +276,15 @@ class TestConfigureEverything:
     def test_no_auth_exit_with_message(self, monkeypatch):
         """Test that by default the configuration_wizard function exits with a
         relevant message."""
+        mocked_stdout = MockSysStdout()
+
         with monkeypatch.context() as m:
             m.setattr(builtins, "input", lambda *args: False)
-            mocked_stdout = MockSysStdout()
             m.setattr(sys, "stdout", mocked_stdout)
             with pytest.raises(SystemExit):
                 cli.configuration_wizard()
 
-            mocked_stdout.write_output == "No authentication token was provided, please configure again."
+        mocked_stdout.write_output == "No authentication token was provided, please configure again."
 
     def test_auth_correct(self, monkeypatch):
         """Test that by default the configuration_wizard function works
@@ -387,7 +388,7 @@ class TestRunBlackbirdScript:
             with pytest.raises(SystemExit):
                 cli.run_blackbird_script(mocked_args)
 
-            assert "blackbird script was not found" in mocked_stdout.write_output
+        assert "blackbird script was not found" in mocked_stdout.write_output
 
     def test_result_is_none(self, monkeypatch):
         """Tests that the write_script_results function is not called if the
