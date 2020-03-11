@@ -148,8 +148,8 @@ def configure(args):
 
     .. code-block:: powershell
 
-        $starship configure --token MYAUTH
-        $cat C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
+        $ starship configure --token MYAUTH
+        $ cat C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
         [api]
         authentication_token = "MYAUTH"
         hostname = "platform.strawberryfields.ai"
