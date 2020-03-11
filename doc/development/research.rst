@@ -1,7 +1,7 @@
 .. _research:
 
 Research and contribution
-===============================
+=========================
 
 Research
 ---------------
@@ -34,15 +34,7 @@ If you are having issues, please let us know by posting the issue on our Github 
 
 To chat directly with the team designing and building Strawberry Fields, as well as members of our
 community - ranging from professors of quantum physics, to students, to those just interested in being a
-part of a rapidly growing industry - you can join our `Slack channel <https://u.strawberryfields.ai/slack>`_.
-
-Available channels:
-
-* ``#strawberryfields``: For general discussion regarding Strawberry Fields
-* ``#sf_projects``: For discussion of research ideas and projects built on Strawberry Fields
-* ``#sf_bugs``: For discussion of any bugs and issues you run into using Strawberry Fields
-* ``#sf_interactive``: For discussion relating to the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web application
-* ``#sf_docs``: For discussion of the Strawberry Fields `documentation <https://strawberryfields.readthedocs.io>`_
+part of a rapidly growing industry - you can join our `discussion forum <https://discuss.pennylane.ai>`_ and `Slack channel <https://u.strawberryfields.ai/slack>`_.
 
 Sometimes, it might take us a couple of hours to reply - please be patient!
 

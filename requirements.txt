@@ -5,7 +5,7 @@ sympy>=1.5
 networkx>=2.0
 quantum-blackbird==0.2.3
 python-dateutil==2.8.0
-https://xanadu-wheels.s3.amazonaws.com/thewalrus-0.11.0.dev0%2B20200226135924-cp36-cp36m-manylinux1_x86_64.whl
+thewalrus>=0.11
 numba>=0.48.0
 toml
 appdirs

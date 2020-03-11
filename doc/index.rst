@@ -128,7 +128,9 @@ Support
 - **Source Code:** https://github.com/XanaduAI/strawberryfields
 - **Issue Tracker:** https://github.com/XanaduAI/strawberryfields/issues
 
-If you are having issues, please let us know by posting the issue on our Github issue tracker, or by joining our `Strawberry Fields Slack channel <https://u.strawberryfields.ai/slack>`_.
+If you are having issues, please let us know by posting the issue on our Github issue tracker.
+
+To chat directly with the team designing and building Strawberry Fields, as well as members of our community — ranging from quantum computing researchers, to students, to those just interested in being a part of a rapidly growing industry — you can join our `discussion forum <https://discuss.pennylane.ai>`_ and `Slack channel <https://u.strawberryfields.ai/slack>`_.
 
 For more details on contributing or performing research with Strawberry Fields, please see
 :ref:`research`.
@@ -164,6 +166,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
 
    development/development_guide
    development/research
+   development/release_notes.md
 
 .. toctree::
    :maxdepth: 1

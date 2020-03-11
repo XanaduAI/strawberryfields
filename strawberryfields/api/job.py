@@ -72,7 +72,7 @@ class Job:
             job is managed
     """
 
-    def __init__(self, id_: str, status: JobStatus, connection: "Connection"):
+    def __init__(self, id_: str, status: JobStatus, connection):
         self._id = id_
         self._status = status
         self._connection = connection
