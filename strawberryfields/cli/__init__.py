@@ -115,9 +115,11 @@ def configure(args):
     * only specifying the token and using default configuration options;
     * specifying every configuration option one by one.
 
-    Related arguments:
-    * token: the authentication token to use
-    * local: whether or not to create the configuration file locally
+    Flags:
+    
+    * ``--token``: The authentication token to use.
+    * ``--local``: Whether or not to create the configuration file locally in the current directory.
+      If not provided, the configuration file will be saved in the users configuration directory.
 
     Args:
         args (ArgumentParser): arguments that were specified on the command
