@@ -68,7 +68,6 @@ def create_parser():
         options
     """
     parser = argparse.ArgumentParser(
-        usage="starship <command> [<args>]",
         description="These are common options when working on the Xanadu cloud platform.",
     )
 
