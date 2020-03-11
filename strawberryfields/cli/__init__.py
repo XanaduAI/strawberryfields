@@ -46,6 +46,7 @@ def main():
 
     if args.ping:
         ping()
+        sys.exit()
     elif hasattr(args, "func"):
         args.func(args)
     else:
@@ -128,13 +129,12 @@ def configure(args):
     if args.token:
         kwargs = {"authentication_token": args.token}
     else:
-        kwargs = configure_everything()
+        kwargs = configuration_wizard()
 
     if args.local:
         store_account(**kwargs, location="local")
     else:
         store_account(**kwargs)
-
 
 def ping():
     """Tests the connection to the remote backend."""
@@ -142,10 +142,8 @@ def ping():
         sys.stdout.write("You have successfully authenticated to the platform!\n")
     else:
         sys.stdout.write("There was a problem when authenticating to the platform!\n")
-    sys.exit()
 
-
-def configure_everything():
+def configuration_wizard():
     """Provides an interactive selection wizard on the command line to
     configure every option for the API connection.
 

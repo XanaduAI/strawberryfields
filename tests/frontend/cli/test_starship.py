@@ -63,7 +63,7 @@ class TestCreateParser:
         assert args.token == 'SomeToken'
         assert not args.local
 
-    def test_configure_everything(self):
+    def test_configuration_wizard(self):
         """Test that specifying configure, --local to the CLI sets the correct
         attribute."""
         parser = cli.create_parser()
@@ -84,7 +84,7 @@ class TestCreateParser:
         assert args.token == 'SomeToken'
 
     @pytest.mark.parametrize("option", ['--local', '-l'])
-    def test_configure_everything_locally(self, option):
+    def test_configuration_wizard_locally(self, option):
         """Test that specifying configure, --local to the CLI sets the correct
         attribute."""
         parser = cli.create_parser()
@@ -156,12 +156,12 @@ class TestConfigure:
             cli.configure(args)
             assert mock_store_account.kwargs == {"authentication_token": "SomeToken"}
 
-    def test_configure_everything(self, monkeypatch):
+    def test_configuration_wizard(self, monkeypatch):
         """Tests that if no token was given as a command line argument then
-        configuration takes place using the configure_everything function."""
+        configuration takes place using the configuration_wizard function."""
         with monkeypatch.context() as m:
             mock_store_account = MockStoreAccount()
-            m.setattr(cli, "configure_everything", lambda: cli.create_config()["api"])
+            m.setattr(cli, "configuration_wizard", lambda: cli.create_config()["api"])
             m.setattr(cli, "store_account", mock_store_account.store_account)
 
             args = MockArgs()
@@ -185,13 +185,13 @@ class TestConfigure:
             cli.configure(args)
             assert mock_store_account.kwargs == {"authentication_token": "SomeToken", "location": "local"}
 
-    def test_configure_everything_local(self, monkeypatch):
+    def test_configuration_wizard_local(self, monkeypatch):
         """Tests that if no token was given as a command line argument and
         local configuration was specified then configuration takes place using
-        the configure_everything function."""
+        the configuration_wizard function."""
         with monkeypatch.context() as m:
             mock_store_account = MockStoreAccount()
-            m.setattr(cli, "configure_everything", lambda: cli.create_config()["api"])
+            m.setattr(cli, "configuration_wizard", lambda: cli.create_config()["api"])
             m.setattr(cli, "store_account", mock_store_account.store_account)
 
             args = MockArgs()
@@ -203,14 +203,17 @@ class TestConfigure:
 
             assert mock_store_account.kwargs == EXPECTED_KWARGS
 
-class MockConnection:
-    """A mock Connection class used for testing."""
-
-    def __init__(self):
-        self.pinging = None
+class MockSuccessfulConnection:
+    """A Connection class mocking a successful establishment of connection."""
 
     def ping(self):
-        self.pinging = "SuccessfulPing"
+        return True
+
+class MockFailedConnection:
+    """A Connection class mocking a failed establishment of connection."""
+
+    def ping(self):
+        return False
 
 class MockSysStdout:
     """A mock class used for mocking the sys.stdout object while testing."""
@@ -229,26 +232,22 @@ class TestPing:
         with monkeypatch.context() as m:
             mock_sys_stdout = MockSysStdout()
 
-            m.setattr(cli, "Connection", MockConnection)
+            m.setattr(cli, "Connection", MockSuccessfulConnection)
             m.setattr(sys, "stdout", mock_sys_stdout)
 
-            with pytest.raises(SystemExit):
-                cli.ping()
-                assert mock_sys_stdout.write_output == "You have successfully authenticated to the platform!\n"
-                assert mock_connection.pinging == "SuccessfulPing"
+            cli.ping()
+            assert mock_sys_stdout.write_output == "You have successfully authenticated to the platform!\n"
 
     def test_fail(self, monkeypatch):
         """Test that pinging failed."""
         with monkeypatch.context() as m:
             mock_sys_stdout = MockSysStdout()
 
-            m.setattr(cli, "Connection", MockConnection)
+            m.setattr(cli, "Connection", MockFailedConnection)
             m.setattr(sys, "stdout", mock_sys_stdout)
 
-            with pytest.raises(SystemExit):
-                cli.ping()
-                assert mock_sys_stdout.write_output == "There was a problem when authenticating to the platform!\n"
-                assert mock_connection.pinging == "SuccessfulPing"
+            cli.ping()
+            assert mock_sys_stdout.write_output == "There was a problem when authenticating to the platform!\n"
 
 # Keys are adjusted to the prompt message displayed to the user
 MOCK_PROMPTS = {
@@ -272,22 +271,22 @@ def mock_input(arg):
         return list(option.values())[0]
 
 class TestConfigureEverything:
-    """Unit tests for the configure_everything function."""
+    """Unit tests for the configuration_wizard function."""
 
     def test_no_auth_exit_with_message(self, monkeypatch):
-        """Test that by default the configure_everything function exits with a
+        """Test that by default the configuration_wizard function exits with a
         relevant message."""
         with monkeypatch.context() as m:
             m.setattr(builtins, "input", lambda *args: False)
             mocked_stdout = MockSysStdout()
             m.setattr(sys, "stdout", mocked_stdout)
             with pytest.raises(SystemExit):
-                cli.configure_everything()
+                cli.configuration_wizard()
 
             mocked_stdout.write_output == "No authentication token was provided, please configure again."
 
     def test_auth_correct(self, monkeypatch):
-        """Test that by default the configure_everything function works
+        """Test that by default the configuration_wizard function works
         correctly, once the authentication token is passed."""
         with monkeypatch.context() as m:
             auth_prompt = "Please enter the authentication token"
@@ -296,10 +295,10 @@ class TestConfigureEverything:
             default_config['authentication_token'] = default_auth
 
             m.setattr(builtins, "input", lambda arg: default_auth if (auth_prompt in arg) else "")
-            assert cli.configure_everything() == default_config
+            assert cli.configuration_wizard() == default_config
 
     def test_correct_inputs(self, monkeypatch):
-        """Test that the configure_everything function returns a dictionary
+        """Test that the configuration_wizard function returns a dictionary
         based on the inputs, when each configuration detail was inputted."""
         with monkeypatch.context() as m:
 
@@ -309,7 +308,7 @@ class TestConfigureEverything:
             default_config['authentication_token'] = default_auth
 
             m.setattr(builtins, "input", mock_input)
-            assert cli.configure_everything() == EXPECTED_KWARGS_FOR_PROMPTS
+            assert cli.configuration_wizard() == EXPECTED_KWARGS_FOR_PROMPTS
 
 class MockProgram:
     """A mock class used for capturing the arguments with which the
