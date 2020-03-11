@@ -46,7 +46,6 @@ def main():
 
     if args.ping:
         ping()
-        sys.exit()
     elif hasattr(args, "func"):
         args.func(args)
     else:
