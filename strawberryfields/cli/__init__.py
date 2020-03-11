@@ -35,7 +35,7 @@ def main():
 
     .. code-block:: bash
 
-        $starship
+        $ starship
         usage: starship <command> [<args>]
 
         These are common options when working on the Xanadu cloud platform.
