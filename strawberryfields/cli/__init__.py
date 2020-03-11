@@ -293,6 +293,9 @@ def run_blackbird_script(args):
 
     if result and result.samples is not None:
         write_script_results(result.samples, output_file=args.output)
+    else:
+        sys.stdout.write("Ooops! Something went wrong with obtaining the results. Please check the Blackbird script specified and the connection to the remote engine.")
+        sys.exit()
 
 def write_script_results(samples, output_file=None):
     """Write the results of the script either to a file or to the standard output.
