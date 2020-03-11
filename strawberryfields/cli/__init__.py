@@ -110,9 +110,9 @@ def configure(args):
     """An auxiliary function for configuring the API connection to the Xanadu
     cloud platform.
 
-    Supports configuration by:
-    * only specifying the token and using default configuration options;
-    * specifying every configuration option one by one.
+    Can be used to simply save the authentication token with default
+    configuration options. Alternatively, a wizard is provided for full
+    configurability.
 
     Related arguments:
     * token: the authentication token to use
