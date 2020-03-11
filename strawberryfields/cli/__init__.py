@@ -16,14 +16,14 @@
 backend.
 """
 
-import sys
 import argparse
+import sys
 
 from strawberryfields.api import Connection
+from strawberryfields.configuration import (ConfigurationError, create_config,
+                                            store_account)
 from strawberryfields.engine import StarshipEngine
 from strawberryfields.io import load
-from strawberryfields.configuration import store_account, create_config, ConfigurationError
-
 
 PROMPTS = {
     "authentication_token": "Please enter the authentication token to use when connecting: [{}] ",
