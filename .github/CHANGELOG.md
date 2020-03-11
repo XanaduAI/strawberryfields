@@ -57,7 +57,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ville Bergholm, Jack Ceroni, Theodor Isacsson
+Ville Bergholm, Jack Ceroni, Theodor Isacsson, Shreya P Kumar
 
 ---
 
