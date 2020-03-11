@@ -56,7 +56,7 @@ def create_parser():
 
     Returns:
         ArgumentParser: an argument parser object that defines the related
-            options
+        options
     """
     parser = argparse.ArgumentParser(
         usage="starship <command> [<args>]",
