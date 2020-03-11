@@ -35,6 +35,10 @@
   using batching, post-selection and feed-fowarding together with multiple
   shots, which now raises an error.
   [#300](https://github.com/XanaduAI/strawberryfields/pull/300)
+  
+* Modified the decomposition to ensure that identity-like unitaries are implemented 
+  with no swaps.
+  [#311](https://github.com/XanaduAI/strawberryfields/pull/311)
 
 ### Bug fixes
 
@@ -53,7 +57,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ville Bergholm, Jack Ceroni, Theodor Isacsson
+Ville Bergholm, Jack Ceroni, Theodor Isacsson, Shreya P Kumar
 
 ---
 
