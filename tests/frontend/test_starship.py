@@ -303,18 +303,10 @@ class MockProgram:
     """A mock class used for capturing the arguments with which the
     the Program class is instantiated."""
 
-    def __init__(self, result=None):
+    def __init__(self):
 
         self.target = "chip2"
-
-        class Result:
-            def __init__(self):
-                self.samples = result
-
-        if result is not None:
-            self.result = Result()
-        else:
-            self.result = None
+        self.result = None
 
 class MockStarshipEngine:
     """A mock class used for capturing the arguments with which the
@@ -326,7 +318,7 @@ class MockStarshipEngine:
 
     def run(self, program):
         if program:
-            self.result = program.result
+            return program.result
 
 class MockWriteScriptResults:
     """A mock class used for capturing the arguments with which the
@@ -389,7 +381,8 @@ class TestRunBlackbirdScript:
             m.setattr(cli, "StarshipEngine", MockStarshipEngine)
             m.setattr(cli, "write_script_results", mocked_write_script_results.write_script_results)
 
-            cli.run_blackbird_script(mocked_args)
+            with pytest.raises(SystemExit):
+                cli.run_blackbird_script(mocked_args)
 
         out, _ = capsys.readouterr()
         assert "Executing program on remote hardware..." in out
@@ -432,7 +425,7 @@ class TestRunBlackbirdScriptIntegration:
             m.setattr(cli, "StarshipEngine", MockStarshipEngineIntegration)
             cli.run_blackbird_script(mocked_args)
 
-        out, _ = capsys.readouterr()
+        out, err = capsys.readouterr()
 
         execution_message = "Executing program on remote hardware...\n"
 
