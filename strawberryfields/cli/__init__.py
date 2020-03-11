@@ -25,13 +25,6 @@ from strawberryfields.configuration import (ConfigurationError, create_config,
 from strawberryfields.engine import StarshipEngine
 from strawberryfields.io import load
 
-PROMPTS = {
-    "authentication_token": "Please enter the authentication token to use when connecting: [{}] ",
-    "hostname": "Please enter the hostname of the server to connect to: [{}] ",
-    "port": "Please enter the port number to connect with: [{}] ",
-    "use_ssl": "Should the client attempt to connect over SSL? [{}] ",
-}
-
 
 def main():
     """The Xanadu cloud platform command line interface.
@@ -154,8 +147,13 @@ def configuration_wizard():
     """
     default_config = create_config()["api"]
 
+    # Getting default values that can be used for as messages when getting inputs
+    hostname_default = default_config["hostname"]
+    ssl_default = "y" if default_config["use_ssl"] else "n"
+    port_default = default_config["port"]
+
     authentication_token = (
-        input(PROMPTS["authentication_token"].format(default_config["authentication_token"]))
+        input("Please enter the authentication token to use when connecting: [] ")
     )
 
     if not authentication_token:
@@ -163,14 +161,13 @@ def configuration_wizard():
         sys.exit()
 
     hostname = (
-        input(PROMPTS["hostname"].format(default_config["hostname"])) or default_config["hostname"]
+        input("Please enter the hostname of the server to connect to: [{}] ".format(hostname_default)) or hostname_default
     )
 
-    ssl_default = "y" if default_config["use_ssl"] else "n"
-    ssl_input = input(PROMPTS["use_ssl"].format(ssl_default)) or ssl_default
+    ssl_input = input("Should the client attempt to connect over SSL? [{}] ".format(ssl_default)) or ssl_default
     use_ssl = ssl_input.upper() == "Y"
 
-    port = input(PROMPTS["port"].format(default_config["port"])) or default_config["port"]
+    port = input("Please enter the port number to connect with: [{}] ".format(port_default)) or port_default
 
     kwargs = {
         "authentication_token": authentication_token,
