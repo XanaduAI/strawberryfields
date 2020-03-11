@@ -271,7 +271,8 @@ class TestConfigureEverything:
                 cli.configuration_wizard()
 
             out, _ = capsys.readouterr()
-        out == "No authentication token was provided, please configure again."
+
+        assert out == "No authentication token was provided, please configure again."
 
     def test_auth_correct(self, monkeypatch):
         """Test that by default the configuration_wizard function works
