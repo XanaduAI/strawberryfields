@@ -103,7 +103,7 @@ def create_parser():
     # Adding the input subparser
     run_parser = subparsers.add_parser("run", help="Run a blackbird script.")
     run_parser.add_argument(
-        "input", type=str, help="The input blackbird script to run.",
+        "input", type=str, help="The filename or path to the blackbird script to run.",
     )
     run_parser.set_defaults(func=run_blackbird_script)
     run_parser.add_argument(
