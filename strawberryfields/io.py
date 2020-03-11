@@ -241,10 +241,9 @@ def load(f):
     MeasureFock | (q[0], q[1], q[2])
 
     Args:
-        f (Union[file, str, pathlib.Path]): File or filename to which
-            the data is saved. If file is a file-object, then the filename
-            is unchanged. If file is a string or Path, a .xbb extension will
-            be appended to the file name if it does not already have one.
+        f (Union[file, str, pathlib.Path]): File or filename from which
+            the data is loaded. If file is a string or Path, a value with the
+            .xbb extension is expected.
 
     Returns:
         prog (Program): Strawberry Fields program
