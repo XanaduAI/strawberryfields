@@ -215,39 +215,28 @@ class MockFailedConnection:
     def ping(self):
         return False
 
-class MockSysStdout:
-    """A mock class used for mocking the sys.stdout object while testing."""
-
-    def __init__(self):
-        self.write_output = []
-
-    def write(self, message):
-        self.write_output = message
-
 class TestPing:
     """Tests for the pinging mechanism of the CLI."""
 
-    def test_success(self, monkeypatch):
+    def test_success(self, monkeypatch, capsys):
         """Test that pinging was successful."""
         with monkeypatch.context() as m:
-            mock_sys_stdout = MockSysStdout()
-
             m.setattr(cli, "Connection", MockSuccessfulConnection)
-            m.setattr(sys, "stdout", mock_sys_stdout)
-
             cli.ping()
-            assert mock_sys_stdout.write_output == "You have successfully authenticated to the platform!\n"
 
-    def test_fail(self, monkeypatch):
+        out, _ = capsys.readouterr()
+        assert out == "You have successfully authenticated to the platform!\n"
+
+    def test_fail(self, monkeypatch, capsys):
         """Test that pinging failed."""
         with monkeypatch.context() as m:
-            mock_sys_stdout = MockSysStdout()
-
             m.setattr(cli, "Connection", MockFailedConnection)
-            m.setattr(sys, "stdout", mock_sys_stdout)
+            out, _ = capsys.readouterr()
 
             cli.ping()
-            assert mock_sys_stdout.write_output == "There was a problem when authenticating to the platform!\n"
+
+        out, _ = capsys.readouterr()
+        assert out == "There was a problem when authenticating to the platform!\n"
 
 # Keys are adjusted to the prompt message displayed to the user
 MOCK_PROMPTS = {
@@ -273,18 +262,16 @@ def mock_input(arg):
 class TestConfigureEverything:
     """Unit tests for the configuration_wizard function."""
 
-    def test_no_auth_exit_with_message(self, monkeypatch):
+    def test_no_auth_exit_with_message(self, monkeypatch, capsys):
         """Test that by default the configuration_wizard function exits with a
         relevant message."""
-        mocked_stdout = MockSysStdout()
-
         with monkeypatch.context() as m:
             m.setattr(builtins, "input", lambda *args: False)
-            m.setattr(sys, "stdout", mocked_stdout)
             with pytest.raises(SystemExit):
                 cli.configuration_wizard()
 
-        mocked_stdout.write_output == "No authentication token was provided, please configure again."
+            out, _ = capsys.readouterr()
+        out == "No authentication token was provided, please configure again."
 
     def test_auth_correct(self, monkeypatch):
         """Test that by default the configuration_wizard function works
@@ -371,11 +358,9 @@ MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7]
 class TestRunBlackbirdScript:
     """Unit tests for the run_blackbird_script function."""
 
-    def test_exit_if_file_not_found(self, monkeypatch):
+    def test_exit_if_file_not_found(self, monkeypatch, capsys):
         """Tests that if the input script file was not found then a system exit
         occurs along with a message being outputted."""
-
-        mocked_stdout = MockSysStdout()
         mocked_program = MockProgram()
         mocked_args = MockArgs()
 
@@ -384,16 +369,16 @@ class TestRunBlackbirdScript:
 
         with monkeypatch.context() as m:
             m.setattr(cli, "load", mock_load)
-            m.setattr(sys, "stdout", mocked_stdout)
+
             with pytest.raises(SystemExit):
                 cli.run_blackbird_script(mocked_args)
 
-        assert "blackbird script was not found" in mocked_stdout.write_output
+        out, _ = capsys.readouterr()
+        assert "blackbird script was not found" in out
 
-    def test_result_is_none(self, monkeypatch):
+    def test_result_is_none(self, monkeypatch, capsys):
         """Tests that the write_script_results function is not called if the
         results from the run method of the engine returned a None."""
-        mocked_stdout = MockSysStdout()
         mocked_program = MockProgram()
         mocked_args = MockArgs()
         mocked_write_script_results = MockWriteScriptResults()
@@ -402,13 +387,14 @@ class TestRunBlackbirdScript:
             m.setattr(cli, "load", lambda arg: mocked_program)
             m.setattr(cli, "StarshipEngine", MockStarshipEngine)
             m.setattr(cli, "write_script_results", mocked_write_script_results.write_script_results)
-            m.setattr(sys, "stdout", mocked_stdout)
 
             cli.run_blackbird_script(mocked_args)
-            assert "Executing program on remote hardware..." in mocked_stdout.write_output
 
-            # Check that the write_script_results function was not called
-            assert not mocked_write_script_results.called
+        out, _ = capsys.readouterr()
+        assert "Executing program on remote hardware..." in out
+
+        # Check that the write_script_results function was not called
+        assert not mocked_write_script_results.called
 
 test_samples = [1,2,3,4]
 
@@ -429,7 +415,7 @@ class TestRunBlackbirdScriptIntegration:
     """Tests for the run_blackbird_script function that integrate multiple
     components."""
 
-    def test_integration_std_out(self, tmpdir, monkeypatch):
+    def test_integration_std_out(self, tmpdir, monkeypatch, capsys):
         """Tests that a blackbird script was loaded and samples were written to
         the standard output using the run_blackbird_script function."""
 
@@ -441,16 +427,18 @@ class TestRunBlackbirdScriptIntegration:
         mocked_args = MockArgs()
         mocked_args.input = filepath
 
-        mocked_stdout = MockSysStdout()
-
         with monkeypatch.context() as m:
             m.setattr(cli, "StarshipEngine", MockStarshipEngineIntegration)
-            m.setattr(sys, "stdout", mocked_stdout)
             cli.run_blackbird_script(mocked_args)
 
-        assert mocked_stdout.write_output == str(Result(test_samples).samples)
+        out, _ = capsys.readouterr()
 
-    def test_integration_file(self, tmpdir, monkeypatch):
+        execution_message = "Executing program on remote hardware...\n"
+
+        outputs = execution_message + str(Result(test_samples).samples)
+        assert outputs == out
+
+    def test_integration_file(self, tmpdir, monkeypatch, capsys):
         """Tests that a blackbird script was loaded and samples were written to
         the specified output file using the run_blackbird_script function."""
 
@@ -461,20 +449,19 @@ class TestRunBlackbirdScriptIntegration:
 
         mocked_args = MockArgs()
         mocked_args.input = filepath
-        mocked_stdout = MockSysStdout()
 
         out_filepath = tmpdir.join("test_script.xbb")
         mocked_args.output = out_filepath
 
         with monkeypatch.context() as m:
             m.setattr(cli, "StarshipEngine", MockStarshipEngineIntegration)
-            m.setattr(sys, "stdout", mocked_stdout)
             cli.run_blackbird_script(mocked_args)
 
         with open(filepath, "r") as f:
             results_from_file = f.read()
 
-        assert mocked_stdout.write_output == "Executing program on remote hardware...\n"
+        out, _ = capsys.readouterr()
+        assert out == "Executing program on remote hardware...\n"
         assert results_from_file == str(Result(test_samples).samples)
 
 class TestWriteScriptResults:
@@ -493,14 +480,13 @@ class TestWriteScriptResults:
 
         assert results_from_file == str(some_samples)
 
-    def test_write_to_std_out(self, monkeypatch):
+    def test_write_to_std_out(self, monkeypatch, capsys):
         """Tests that the write_script_results function writes to the standard
         output correctly."""
-        mocked_stdout = MockSysStdout()
         some_samples = [1,2,3,4,5]
 
         with monkeypatch.context() as m:
-            m.setattr(sys, "stdout", mocked_stdout)
             cli.write_script_results(some_samples)
 
-        assert mocked_stdout.write_output == str(some_samples)
+        out, _ = capsys.readouterr()
+        assert out == str(some_samples)
