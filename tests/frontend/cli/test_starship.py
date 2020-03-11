@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import networkx as nx
 import numpy as np
 import pytest
 
+from strawberryfields.api import Result
 from strawberryfields.apps import clique
 from strawberryfields.configuration import store_account, ConfigurationError
 from strawberryfields import cli as cli
@@ -31,14 +32,6 @@ import sys
 import builtins
 
 pytestmark = pytest.mark.cli
-
-class TestMain:
-    def test_ping(self):
-        # TODO
-
-        parser = cli.create_parser()
-        args = parser.parse_args(['--ping'])
-        assert args.ping
 
 class TestCreateParser:
     """Tests for creating a parser object."""
@@ -147,8 +140,12 @@ EXPECTED_KWARGS = {
 }
 
 class TestConfigure:
+    """Unit tests for the configure function checking that the lines of
+    execution is correct."""
 
     def test_token(self, monkeypatch):
+        """Tests that if a token was given as a command line argument then
+        configuration takes place accordingly."""
         with monkeypatch.context() as m:
             mock_store_account = MockStoreAccount()
             m.setattr(cli, "store_account", mock_store_account.store_account)
@@ -160,6 +157,8 @@ class TestConfigure:
             assert mock_store_account.kwargs == {"authentication_token": "SomeToken"}
 
     def test_configure_everything(self, monkeypatch):
+        """Tests that if no token was given as a command line argument then
+        configuration takes place using the configure_everything function."""
         with monkeypatch.context() as m:
             mock_store_account = MockStoreAccount()
             m.setattr(cli, "configure_everything", lambda: cli.create_config()["api"])
@@ -172,6 +171,9 @@ class TestConfigure:
             assert mock_store_account.kwargs == EXPECTED_KWARGS
 
     def test_token_local(self, monkeypatch):
+        """Tests that if a token was given as a command line argument and
+        local configuration was specified then configuration takes place
+        accordingly."""
         with monkeypatch.context() as m:
             mock_store_account = MockStoreAccount()
             m.setattr(cli, "store_account", mock_store_account.store_account)
@@ -184,6 +186,9 @@ class TestConfigure:
             assert mock_store_account.kwargs == {"authentication_token": "SomeToken", "location": "local"}
 
     def test_configure_everything_local(self, monkeypatch):
+        """Tests that if no token was given as a command line argument and
+        local configuration was specified then configuration takes place using
+        the configure_everything function."""
         with monkeypatch.context() as m:
             mock_store_account = MockStoreAccount()
             m.setattr(cli, "configure_everything", lambda: cli.create_config()["api"])
@@ -261,11 +266,13 @@ EXPECTED_KWARGS_FOR_PROMPTS = {
 }
 
 def mock_input(arg):
+    """A mock function that substitutes the built-in input function."""
     option = {k: v for k, v in MOCK_PROMPTS.items() if k in arg}
     if option and len(option) == 1:
         return list(option.values())[0]
 
 class TestConfigureEverything:
+    """Unit tests for the configure_everything function."""
 
     def test_no_auth_exit_with_message(self, monkeypatch):
         """Test that by default the configure_everything function exits with a
@@ -305,6 +312,8 @@ class TestConfigureEverything:
             assert cli.configure_everything() == EXPECTED_KWARGS_FOR_PROMPTS
 
 class MockProgram:
+    """A mock class used for capturing the arguments with which the
+    the Program class is instantiated."""
 
     def __init__(self, result=None):
 
@@ -320,6 +329,8 @@ class MockProgram:
             self.result = None
 
 class MockStarshipEngine:
+    """A mock class used for capturing the arguments with which the
+    the StarshipEngine class is instantiated and its run method is called."""
 
     def __init__(self, target):
         self.result = None
@@ -358,8 +369,12 @@ MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7]
 
 
 class TestRunBlackbirdScript:
+    """Unit tests for the run_blackbird_script function."""
 
     def test_exit_if_file_not_found(self, monkeypatch):
+        """Tests that if the input script file was not found then a system exit
+        occurs along with a message being outputted."""
+
         mocked_stdout = MockSysStdout()
         mocked_program = MockProgram()
         mocked_args = MockArgs()
@@ -376,6 +391,8 @@ class TestRunBlackbirdScript:
             assert "blackbird script was not found" in mocked_stdout.write_output
 
     def test_result_is_none(self, monkeypatch):
+        """Tests that the write_script_results function is not called if the
+        results from the run method of the engine returned a None."""
         mocked_stdout = MockSysStdout()
         mocked_program = MockProgram()
         mocked_args = MockArgs()
@@ -393,9 +410,30 @@ class TestRunBlackbirdScript:
             # Check that the write_script_results function was not called
             assert not mocked_write_script_results.called
 
-    def test_integration_std_out(self, tmpdir, monkeypatch):
+test_samples = [1,2,3,4]
 
-        filepath = tmpdir.join("test_config.toml")
+class MockStarshipEngineIntegration:
+    """A mock class used for capturing the arguments with which the
+    the StarshipEngine class is instantiated and its run method is called when
+    multiple components are tested."""
+
+    def __init__(self, target):
+        self.result = None
+        self.target = target
+
+    def run(self, program):
+        if program:
+            return Result(test_samples)
+
+class TestRunBlackbirdScriptIntegration:
+    """Tests for the run_blackbird_script function that integrate multiple
+    components."""
+
+    def test_integration_std_out(self, tmpdir, monkeypatch):
+        """Tests that a blackbird script was loaded and samples were written to
+        the standard output using the run_blackbird_script function."""
+
+        filepath = tmpdir.join("test_script.xbb")
 
         with open(filepath, "w") as f:
             f.write(TEST_SCRIPT)
@@ -406,28 +444,63 @@ class TestRunBlackbirdScript:
         mocked_stdout = MockSysStdout()
 
         with monkeypatch.context() as m:
-            m.setattr(cli, "StarshipEngine", MockStarshipEngine)
+            m.setattr(cli, "StarshipEngine", MockStarshipEngineIntegration)
             m.setattr(sys, "stdout", mocked_stdout)
             cli.run_blackbird_script(mocked_args)
-            assert mocked_stdout.write_output == TEST_SCRIPT
+
+        assert mocked_stdout.write_output == str(Result(test_samples).samples)
+
+    def test_integration_file(self, tmpdir, monkeypatch):
+        """Tests that a blackbird script was loaded and samples were written to
+        the specified output file using the run_blackbird_script function."""
+
+        filepath = tmpdir.join("test_script.xbb")
+
+        with open(filepath, "w") as f:
+            f.write(TEST_SCRIPT)
+
+        mocked_args = MockArgs()
+        mocked_args.input = filepath
+        mocked_stdout = MockSysStdout()
+
+        out_filepath = tmpdir.join("test_script.xbb")
+        mocked_args.output = out_filepath
+
+        with monkeypatch.context() as m:
+            m.setattr(cli, "StarshipEngine", MockStarshipEngineIntegration)
+            m.setattr(sys, "stdout", mocked_stdout)
+            cli.run_blackbird_script(mocked_args)
+
+        with open(filepath, "r") as f:
+            results_from_file = f.read()
+
+        assert mocked_stdout.write_output == "Executing program on remote hardware...\n"
+        assert results_from_file == str(Result(test_samples).samples)
 
 class TestWriteScriptResults:
+    """Tests for the write_script_results function."""
+
     def test_write_to_file(self, tmpdir):
+        """Tests that the write_script_results function writes to file
+        correctly."""
         some_samples = [1,2,3,4,5]
-        filepath = tmpdir.join("test_config.toml")
+        filepath = tmpdir.join("test_script.xbb")
 
         cli.write_script_results(some_samples, output_file=filepath)
 
         with open(filepath, "r") as f:
-            content = f.read()
+            results_from_file = f.read()
 
-        assert content == str(some_samples)
+        assert results_from_file == str(some_samples)
 
     def test_write_to_std_out(self, monkeypatch):
+        """Tests that the write_script_results function writes to the standard
+        output correctly."""
         mocked_stdout = MockSysStdout()
         some_samples = [1,2,3,4,5]
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdout", mocked_stdout)
             cli.write_script_results(some_samples)
-            mocked_stdout.write_output = str(some_samples)
+
+        assert mocked_stdout.write_output == str(some_samples)

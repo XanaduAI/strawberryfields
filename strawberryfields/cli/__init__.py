@@ -198,6 +198,7 @@ def run_blackbird_script(args):
         sys.exit()
 
     eng = StarshipEngine(program.target)
+
     sys.stdout.write("Executing program on remote hardware...\n")
     result = eng.run(program)
 
