@@ -3,17 +3,23 @@ import strawberryfields as sf
 from strawberryfields.ops import *
 import tensorflow as tf
 
+raise NotImplementedError('This example is unavailable until SF supports TensorFlow 2.0.')
+
+
 # initialize engine and program objects
 eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": 7})
 circuit = sf.Program(1)
 
-alpha = tf.Variable(0.1)
-with circuit.context as q:
-    Dgate(alpha) | q[0]
-results = eng.run(circuit, run_options={"eval": False})
+tf_alpha = tf.Variable(0.1)
+tf_phi = tf.Variable(0.1)
 
-# loss is probability for the Fock state n=1
-prob = results.state.fock_prob([1])
+alpha, phi = circuit.params('alpha', 'phi')
+with circuit.context as q:
+    Dgate(alpha, phi) | q[0]
+results = eng.run(circuit, args={'alpha': tf_alpha, 'phi': tf_phi}, run_options={"eval": False})
+
+# loss is probability for the coherent state |alpha=1>
+prob = results.state.fidelity_coherent([1.0])
 loss = -prob  # negative sign to maximize prob
 
 # Set up optimization

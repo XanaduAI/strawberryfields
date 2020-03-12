@@ -13,95 +13,12 @@
 # limitations under the License.
 
 """
-Quantum programs
-================
-
-**Module name:** :mod:`strawberryfields.program`
-
-.. currentmodule:: strawberryfields.program
-
-This module implements the :class:`Program` class which acts as a representation for quantum circuits.
-The Program object also acts as a context for defining the quantum circuit using the Python-embedded Blackbird syntax.
-
-A typical use looks like
-
-.. include:: example_use.rst
-
-The Program objects keep track of the state of the quantum register they act on, using a dictionary of :class:`RegRef` objects.
-The currently active register references can be accessed using the :meth:`~Program.register` method.
-
-
-Program methods
----------------
-
-.. currentmodule:: strawberryfields.program.Program
-
-.. autosummary::
-   context
-   register
-   num_subsystems
-   __len__
-   can_follow
-   append
-   lock
-   compile
-   optimize
-   print
-   draw_circuit
-   params
-   bind_params
-
-The following are internal Program methods. In most cases the user should not
-call these directly.
-
-.. autosummary::
-   __enter__
-   __exit__
-   _clear_regrefs
-   _add_subsystems
-   _delete_subsystems
-   _index_to_regref
-   _test_regrefs
-   _linked_copy
-
-
-**Module name:** :mod:`strawberryfields.program_utils`
-
-.. currentmodule:: strawberryfields.program_utils
-
-Helper classes
---------------
-
-.. autosummary::
-   Command
-   RegRef
-
-
-Utility functions
------------------
-
-.. autosummary::
-   list_to_grid
-   grid_to_DAG
-   list_to_DAG
-   DAG_to_list
-   group_operations
-   optimize_circuit
-
-
-Exceptions
-----------
-
-.. autosummary::
-   MergeFailure
-   CircuitError
-   RegRefError
-
+This module implements the :class:`.Program` class which acts as a representation for quantum circuits.
 
 Quantum circuit representation
 ------------------------------
 
-The :class:`Command` instances in the circuit form a
+The :class:`.Command` instances in the circuit form a
 `strict partially ordered set <http://en.wikipedia.org/wiki/Partially_ordered_set#Strict_and_non-strict_partial_orders>`_
 in the sense that the order in which the operations have to be executed is usually not completely fixed.
 For example, operations acting on different subsystems always commute with each other.
@@ -122,16 +39,12 @@ Three different (but equivalent) representations of the circuit are used.
   is empty, that is, consuming it in a topological order.
   Note that a topological order is not always unique, there may be several equivalent topological orders.
 
+.. currentmodule:: strawberryfields.program_utils
+
 The three representations can be converted to each other
 using the functions :func:`list_to_grid`, :func:`grid_to_DAG` and :func:`DAG_to_list`.
 
-
 .. currentmodule:: strawberryfields.program
-
-
-Code details
-~~~~~~~~~~~~
-
 """
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
@@ -148,37 +61,70 @@ from .program_utils import Command, RegRef, CircuitError, RegRefError
 from .parameters import FreeParameter, ParameterError
 
 
+
+# for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
+__all__ = []
+
+
+
 class Program:
-    """Represents a quantum circuit.
+    """Represents a photonic quantum circuit.
 
-    A quantum circuit is a set of quantum operations applied in a specific order
-    to a set of subsystems (represented by wires in the circuit diagram) of the quantum register.
-    The Program class represents a quantum circuit in general as a directed acyclic graph (DAG)
-    whose nodes are :class:`Command` instances, and each (directed) edge in the graph
-    corresponds to a specific wire along which the two associated Commands are connected.
+    The program class provides a context manager for:
 
-    Program instances also act as context managers (and the context itself) for inputting
-    quantum circuits using a :code:`with` block and :class:`Operation` instances.
-    The contexts may not be nested.
+    * accessing the quantum register associated with the program, and
+    * appending :doc:`/introduction/ops` to the program.
 
-    The quantum circuit is inputted by using the :meth:`~strawberryfields.ops.Operation.__or__`
-    methods of the quantum operations, which call the :meth:`append` method of the Program.
-    :meth:`append` checks that the register references are valid and then
-    adds a new :class:`.Command` instance to the Program.
+    Within the context, operations are appended to the program using the
+    Python-embedded Blackbird syntax
 
-    The ``New`` and ``Del`` operations modify the quantum register itself by adding
-    and deleting subsystems. The Program keeps track of these changes (using
-    :class:`RegRef` instances that represent the register)
-    as they are appended to it in order to be able to report register
-    reference errors as soon as they happen.
+    .. code-block:: python3
 
-    Program `p2` can be run after Program `p1` if the RegRef state at the end of `p1` matches the
-    RegRef state at the start of `p2`. This can be enforced by constructing `p2` as an explicit
-    successor of `p1`, in which case the regrefs are copied over.
-    When a Program is run or it obtains a successor, it is locked and no more Commands can be appended to it.
+        ops.GateName(arg1, arg2, ...) | (q[i], q[j], ...)
+
+    where ``ops.GateName`` is a valid quantum operation, and ``q`` is a list
+    of the programs quantum modes.
+    All operations are appended to the program in the order they are
+    listed within the context.
+
+    In addition, some 'meta-operations' (such as :func:`~.New` and :attr:`~.Del`)
+    are provided to modify the programs quantum register itself by adding
+    and deleting subsystems.
+
+    .. note::
+
+        Two programs can be run successively on the same engine if and only if
+        the number of registers at the end of the first program matches the
+        number of modes at the beginning of the second program.
+
+        This can be enforced by constructing the second program as an explicit
+        successor of the first, in which case the registers are directly copied over.
+
+        When a Program is run or it obtains a successor, it is locked and no more
+        operations can be appended to it.
+
+    **Example:**
+
+    .. code-block:: python3
+
+        import strawberryfields as sf
+        from strawberryfields import ops
+
+        # create a 3 mode quantum program
+        prog = sf.Program(3)
+
+        with prog.context as q:
+            ops.Sgate(0.54) | q[0]
+            ops.Sgate(0.54) | q[1]
+            ops.Sgate(0.54) | q[2]
+            ops.BSgate(0.43, 0.1) | (q[0], q[2])
+            ops.BSgate(0.43, 0.1) | (q[1], q[2])
+            ops.MeasureFock() | q
+
+    The currently active register references can be accessed using the :meth:`~Program.register` method.
 
     Args:
-        num_subsystems (int, Program): Initial number of subsystems in the quantum register.
+        num_subsystems (int, Program): Initial number of modes (subsystems) in the quantum register.
             Alternatively, another Program instance from which to inherit the register state.
         name (str): program name (optional)
     """
@@ -203,6 +149,7 @@ class Program:
         """
 
         # create subsystem references
+        # Program keeps track of the state of the quantum register using a dictionary of :class:`RegRef` objects.
         if isinstance(num_subsystems, numbers.Integral):
             #: int: initial number of subsystems
             self.init_num_subsystems = num_subsystems
@@ -245,6 +192,29 @@ class Program:
     def print(self, print_fn=print):
         """Print the program contents using Blackbird syntax.
 
+        **Example:**
+
+        .. code-block:: python
+
+            # create a 3 mode quantum program
+            prog = sf.Program(3)
+
+            with prog.context as q:
+                ops.Sgate(0.54) | q[0]
+                ops.Sgate(0.54) | q[1]
+                ops.Sgate(0.54) | q[2]
+                ops.BSgate(0.43, 0.1) | (q[0], q[2])
+                ops.BSgate(0.43, 0.1) | (q[1], q[2])
+                ops.MeasureFock() | q
+
+        >>> prog.print()
+        Sgate(0.54, 0) | (q[0])
+        Sgate(0.54, 0) | (q[1])
+        Sgate(0.54, 0) | (q[2])
+        BSgate(0.43, 0.1) | (q[0], q[2])
+        BSgate(0.43, 0.1) | (q[1], q[2])
+        MeasureFock | (q[0], q[1], q[2])
+
         Args:
             print_fn (function): optional custom function to use for string printing
         """
@@ -280,7 +250,7 @@ class Program:
     # =================================================
     @property
     def register(self):
-        """Return symbolic references to all the currently valid register subsystems.
+        """Return a tuple of all the currently valid quantum modes.
 
         Returns:
             tuple[RegRef]: valid subsystem references
@@ -289,7 +259,7 @@ class Program:
 
     @property
     def num_subsystems(self):
-        """Return the current number of valid register subsystems.
+        """Return the current number of valid quantum modes.
 
         Returns:
             int: number of currently valid register subsystems
@@ -466,21 +436,26 @@ class Program:
         return p
 
     def compile(self, target, **kwargs):
-        """Compile the program targeting the given circuit template.
+        """Compile the program targeting the given circuit specification.
 
-        Validates the program against the given target, making sure all the Operations
-        used are accepted by the target template.
+        Validates the program against the given target, making sure all the
+        :doc:`/introduction/ops` used are accepted by the target specification.
+
         Additionally, depending on the target, the compilation may modify the quantum circuit
         into an equivalent circuit, e.g., by decomposing certain gates into sequences
         of simpler gates, or optimizing the gate ordering using commutation rules.
 
-        The returned compiled Program shares its :class:`RegRefs <RegRef>` with the original,
-        which makes it easier to access the measurement results, but also necessitates the
-        :meth:`locking <lock>` of both the compiled program and the original to make sure the
-        RegRef state remains consistent.
+        **Example:**
+
+        The ``gbs`` compile target will
+        compile a circuit consisting of Gaussian operations and Fock measurements
+        into canonical Gaussian boson sampling form.
+
+        >>> prog2 = prog.compile('gbs')
 
         Args:
-            target (str, ~strawberryfields.circuitspecs.CircuitSpecs): short name of the target circuit specification, or the specification object itself
+            target (str, ~strawberryfields.circuitspecs.CircuitSpecs): short name of the target
+                circuit specification, or the specification object itself
 
         Keyword Args:
             optimize (bool): If True, try to optimize the program by merging and canceling gates.
@@ -560,6 +535,24 @@ class Program:
 
         This will generate the LaTeX code required to draw the quantum circuit
         diagram corresponding to the Program.
+
+
+        The drawing of the following Xanadu supported operations are currently supported:
+
+        .. rst-class:: docstable
+
+        +-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        |     Gate type     |                                                                            Supported gates                                                                             |
+        +===================+========================================================================================================================================================================+
+        | Single mode gates | :class:`~.Dgate`, :class:`~.Xgate`, :class:`~.Zgate`, :class:`~.Sgate`, :class:`~.Rgate`, :class:`~.Pgate`, :class:`~.Vgate`, :class:`~.Kgate`, :class:`~.Fouriergate` |
+        +-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | Two mode gates    | :class:`~.BSgate`, :class:`~.S2gate`, :class:`~.CXgate`, :class:`~.CZgate`, :class:`~.CKgate`                                                                          |
+        +-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+        .. note::
+
+            Measurement operations :class:`~.MeasureHomodyne`, :class:`~.MeasureHeterodyne`,
+            and :class:`~.MeasureFock` are not currently supported.
 
         Args:
             tex_dir (str): relative directory for latex document output

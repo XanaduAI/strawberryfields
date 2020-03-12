@@ -3,8 +3,6 @@
 Quantum teleportation tutorial
 ##############################
 
-.. sectionauthor:: Josh Izaac <josh@xanadu.ai>
-
 .. note:: This tutorial is also available in the form of an interactive Jupter Notebook :download:`QuantumTeleportation.ipynb <../../examples/QuantumTeleportation.ipynb>`
 
 To see how to construct and simulate a simple continuous-variable (CV) quantum circuit in Strawberry Fields, let's consider the case of **state teleportation** (see the respective section on the :ref:`quantum algorithms <state_teleportation>` page for a more technical discussion).
@@ -19,7 +17,6 @@ To start with, create a new text file with name :file:`teleport.py`, and open it
     #!/usr/bin/env python3
     import strawberryfields as sf
     from strawberryfields.ops import *
-    from strawberryfields.utils import scale
     from numpy import pi, sqrt
 
 The first import statement imports Strawberry Fields as ``sf``, allowing us to access the engine and backends. The second import statement imports all available CV gates into the global namespace, while the third import imports a prebuilt classical processing function from :mod:`strawberryfields.utils`, a module containing Strawberry Fields utilities and extensions. Finally, we import :math:`\pi` and the square root from ``NumPy`` so that we can pass angle parameters to gates such as beamsplitters, and perform some custom classical processing.
@@ -85,10 +82,6 @@ to teleport the coherent state :math:`\ket{\alpha}` where :math:`\alpha=1+0.5i`:
 
 .. code-block:: python
 
-    @sf.convert
-    def custom(x):
-        return -x*sqrt(2)
-
     with prog.context as q:
         # prepare initial states
         Coherent(1+0.5j) | q[0]
@@ -106,8 +99,8 @@ to teleport the coherent state :math:`\ket{\alpha}` where :math:`\alpha=1+0.5i`:
 
         # Displacement gates conditioned on
         # the measurements
-        Xgate(scale(q[0], sqrt(2))) | q[2]
-        Zgate(custom(q[1])) | q[2]
+        Xgate(sqrt(2) * q[0].par) | q[2]
+        Zgate(sqrt(2) * q[1].par) | q[2]
 
 A couple of things to note here:
 
@@ -132,7 +125,7 @@ A couple of things to note here:
 
 ..
 
-* **The results of measured modes are passed to gates simply by passing the measured mode as an argument.** In order to perform additional classical processing to the measured mode, we can use the basic classical processing functions available in :mod:`strawberryfields.utils`; here we used the :func:`~.scale` function. In addition, we use the :func:`~strawberryfields.convert` decorator that we imported earlier to do more complicated classical processing, by converting our user-defined function, ``custom(x)``, to one that accepts quantum registers as arguments.
+* **The results of measured modes are passed to gates simply by passing the measured mode as an argument.** In order to perform additional classical processing to the measured mode ``q[i]``, and use the result to control a subsequent quantum operation, we can use the ``q[i].par`` attribute within the operation argument.
 
 .. note:: By choosing a different phase for the 50-50 beamsplitter, that is, ``BSgate(pi/4,0)``, we can avoid having to negate the :class:`Zgate` correction! However, for the purposes of this tutorial, we will continue to use the currently defined beamsplitter so as to show how the :func:`~.convert` decorator works.
 
@@ -152,8 +145,6 @@ where
   This argument is *required* when creating the engine.
 
 * ``backend_options`` is a dictionary containing options specific to the chosen backend.
-
-  For more details on the technical differences between the backends, see :ref:`backends`.
 
 
 Let's choose the Fock backend for this particular example. Since we are working in the Fock basis, we must also specify the Fock basis *cutoff dimension*; let's choose ``cutoff_dim=15``, such that a state :math:`\ket{\psi}` has approximation
@@ -181,20 +172,21 @@ We can now execute our quantum program ``prog`` on the engine via the :func:`Eng
 
     result = eng.run(prog, run_options={shots=1, modes=None}, compile_options={})
 
-The :meth:`eng.run <.LocalEngine.run>` method accepts the arguments:
+The :meth:`eng.run <strawberryfields.LocalEngine.run>` method accepts the arguments:
 
-.. 
+..
 
-* ``program``: The :class:`~.Program` to execute. 
+* ``program``: The :class:`~.Program` to execute.
 
 ..
 
 * ``run_options``: A dictionary of keyword arguments to be passed to the backend when it prepares the returned measurement results and quantum state from a simulator backend. The available options depend on the backend in use; common arguments include:
 
-    - ``shots``: A positive integer that specifies the number of times the program measurement evaluation is to be repeated. 
-    - ``modes``: An optional list of integers that specifies which modes we wish the backend to return for the quantum state. If the state is a mixed state represented by a density matrix, then the backend will automatically perform a partial trace to return only the modes specified. Note that this only affects the returned state object---all modes remain in the backend circuit.
+  - ``shots``: A positive integer that specifies the number of times the program measurement evaluation is to be repeated.
 
-    - ``eval``, ``session``, and ``feed_dict``: These are special keyword arguments used by the TensorFlow backend. See the :ref:`machine_learning_tutorial` for details about what these are used for. 
+  - ``modes``: An optional list of integers that specifies which modes we wish the backend to return for the quantum state. If the state is a mixed state represented by a density matrix, then the backend will automatically perform a partial trace to return only the modes specified. Note that this only affects the returned state object---all modes remain in the backend circuit.
+
+  - ``eval``, ``session``, and ``feed_dict``: These are special keyword arguments used by the TensorFlow backend. See the :ref:`machine_learning_tutorial` for details about what these are used for.
 
 ..
 
@@ -231,7 +223,7 @@ for accessing the results of your program execution:
   return a state object. Remote simulators and hardware backends will return
   :attr:`measurement samples <~.Result.samples>`, but the return value of ``state`` will be ``None``.
 
-  Depending on backend used, the state returned might be a :class:`~.BaseFockState`, which represents the state using the Fock/number basis, or might be a :class:`~.BaseGaussianState`, which represents the state using Gaussian representation, as a vector of means and a covariance matrix. Many methods are provided for state manipulation, see :ref:`state_class` for more details.
+  Depending on backend used, the state returned might be a :class:`~.BaseFockState`, which represents the state using the Fock/number basis, or might be a :class:`~.BaseGaussianState`, which represents the state using Gaussian representation, as a vector of means and a covariance matrix. Many methods are provided for state manipulation, see :doc:`/introduction/states` for more details.
 
 ..
 
@@ -349,14 +341,9 @@ Full program
     #!/usr/bin/env python3
     import strawberryfields as sf
     from strawberryfields.ops import *
-    from strawberryfields.utils import scale
     from numpy import pi, sqrt
 
     prog = sf.Program(3)
-
-    @sf.convert
-    def custom(x):
-        return -x*sqrt(2)
 
     with prog.context as q:
         # prepare initial states
@@ -375,8 +362,8 @@ Full program
 
         # Displacement gates conditioned on
         # the measurements
-        Xgate(scale(q[0], sqrt(2))) | q[2]
-        Zgate(custom(q[1])) | q[2]
+        Xgate(sqrt(2) * q[0].par) | q[2]
+        Zgate(sqrt(2) * q[1].par) | q[2]
 
     eng = sf.Engine('fock', backend_options={'cutoff_dim': 15})
     result = eng.run(prog)

@@ -62,6 +62,10 @@ body {
   border: 0px;
 }
 
+#sf-logo {
+  width: 250px;
+}
+
 a.headerlink {
   visibility: hidden;
   color: #ddd;
@@ -873,6 +877,7 @@ border-radius: 7px;
   padding: 20px 40px 0 40px;
   border-radius: 0px;
   border-top: 1px solid lightgray;
+  margin-top: 80px;
 }
 
 .footer-relations > .pull-left {
@@ -1244,6 +1249,7 @@ div.body p.centered {
 div.seealso {
   background-color: #ffc;
   border: 1px solid #ff6;
+  padding: 20px 10px 0 20px;
 }
 
 
@@ -1685,6 +1691,11 @@ footer.page-footer .footer-copyright {
   .sphx-glr-thumbcontainer .figure {
     margin: 0px!important;
   }
+
+  #sf-logo {
+    width: 180px;
+  }
+
 }
 
 @media screen and (max-width: 768px) {

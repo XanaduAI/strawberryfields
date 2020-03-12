@@ -6,8 +6,6 @@
 Measurements and |ps| tutorial
 ##############################
 
-.. sectionauthor:: Josh Izaac <josh@xanadu.ai>
-
 .. role:: html(raw)
    :format: html
 
@@ -147,7 +145,7 @@ Since we are post-selecting a measurement of 0 photons in mode ``q[0]``, we expe
     This check is provided for convenience, but the user should always be aware of post-selecting on zero-probability events. The current implementation of homodyne measurements in the Fock backend *does not* currently perform this check.
 
 Example
----------
+-------
 
 Consider the following circuit:
 
@@ -176,7 +174,7 @@ We can simulate this conditional displacement using post-selection. Utilizing th
     with prog.context as q:
     with eng:
         S2gate(1)                    | (q[0], q[1])
-        MeasureHomodyne(0,select=1)  | q[0]
+        MeasureHomodyne(0, select=1)  | q[0]
 
     state = eng.run('gaussian').state
 
@@ -193,7 +191,7 @@ The :math:`x` quadrature displacement of the second mode is conditional to the p
 
 
 Measurement control and processing
-=============================================
+==================================
 
 In addition to the features already explored above, Strawberry Fields also allows the measurement results of qumodes to be used as subsequent gate parameters. This is simple and intuitive as well - simply pass the register referencing the measured mode as the gate argument, for example like
 
@@ -221,100 +219,12 @@ Note that, the return type of the measurement determines the parameter type, pot
 Classical processing
 ---------------------
 
-Sometimes, additional classical processing needs to be performed on the measured value before using it as a gate parameter; Strawberry Fields provides some simple classical processing functions (known as **register transforms**) in the module :mod:`strawberryfields.utils`:
+Sometimes, additional classical processing needs to be performed on the measured value before using it as a gate parameter; Strawberry Fields provides the ability to perform simple classical processing.
 
-.. rst-class:: docstable
+These only need to be used when passing a measured mode value as a gate parameter. For example, if we wish to perform a Fock measurement on a mode, and then use the measured value to perform a controlled displacement on other modes, we could do the following:
 
-+-------------------------------------------+------------------------------------------------------------------+
-|       Classical Processing function       |                           Description                            |
-+===========================================+==================================================================+
-| :func:`neg(q) <.neg>`                     | Negates the measured mode value, returns :math:`-q`              |
-+-------------------------------------------+------------------------------------------------------------------+
-| :func:`mag(q) <.mag>`                     | Returns the magnitude :math:`|q|` of a measured mode value.      |
-+-------------------------------------------+------------------------------------------------------------------+
-| :func:`phase(q) <.phase>`                 | Returns the phase :math:`\phi` of a complex measured mode value  |
-+-------------------------------------------+------------------------------------------------------------------+
-| :func:`scale(q,a) <.scale>`               | Returns :math:`aq`                                               |
-+-------------------------------------------+------------------------------------------------------------------+
-| :func:`shift(q,b) <.shift>`               | Returns :math:`q+b`                                              |
-+-------------------------------------------+------------------------------------------------------------------+
-| :func:`scale_shift(q,a,b) <.scale_shift>` | Returns :math:`aq+b`                                             |
-+-------------------------------------------+------------------------------------------------------------------+
-| :func:`power(q,a) <.power>`               | Returns :math:`q^a`. :math:`a` can be negative and/or fractional |
-+-------------------------------------------+------------------------------------------------------------------+
-
-These only need to be used when passing a measured mode value as a gate parameter. For example, if we wish to perform a Heterodyne measurement on a mode, and then use the measured **phase** to perform a controlled beamsplitter on other modes, we could do the following:
-
-``MeasureHD | q[0]``
-
-``BSgate(phase(q[0]), 0) | (q[1],q[2])``
-
-In this particular example, we are casting the complex-valued Heterodyne measurement to a real value using the ``phase`` classical processing function, allowing us to pass it as a beamsplitter parameter.
-
-
-User-defined processing functions
------------------------------------
-
-If you need a classical processing function beyond the basic ones provided in the :mod:`strawberryfields.utils` module, you can use the :func:`strawberryfields.convert` decorator to create your own. For example, consider the case where you might need to take the *logarithm* of a measured value, but only within a certain range, and use this as a subsequent gate parameter.
-
-.. code-block:: python3
-
-    import numpy as np
-    import strawberryfields as sf
-    from strawberryfields.ops import *
-
-    @sf.convert
-    def log(q):
-        if 0.5<q<1:
-            return np.log(q)
-        else:
-            return q
-
-    prog = sf.Program(2)
+.. code-block:: python
 
     with prog.context as q:
-        MeasureX      | q[0]
-        Xgate(log(q)) | q[1]
-
-By using the ``@sf.convert`` decorator directly above our user-defined custom processing function ``log(q)``, we convert this function into a register transform that can be applied directly to a measured mode as a gate parameter.
-
-:html:`<div class="aside admonition" id="aside1"><a data-toggle="collapse" data-parent="#aside1" href="#content1" class="collapsed"><p class="first admonition-title">Advanced: RegRefTransforms (click to expand) <i class="fas fa-chevron-circle-down"></i></p></a><div id="content1" class="collapse" data-parent="#aside1" style="height: 0px;">`
-
-
-Under the hood, the convert decorator is converting the user-defined processing function to a :class:`~.RegRefTransform` instance, which is how the Strawberry Fields engine understands transformations on qumodes. While it is always advised to use the built in classical processing functions, or the :func:`strawberryfields.convert` decorator for custom functions, the more advanced :class:`~.RegRefTransform` class can be used when more functionality is needed, for example processing functions on multiple qumodes.
-
-The ``RegRefTransform`` is initialised as follows:
-
-``RR([q[0],q[1],...], func(q0,q1,...))``
-
-where the first argument is a sequence of :math:`n` qumodes, and the second argument is an :math:`n` argument function, with each argument corresponding to a qumode.
-
-For example, the above user defined ``log`` function can be rewritten using an explicit ``RegRefTransform``:
-
-.. code-block:: python3
-
-    def log(q):
-        if 0.5<q<1:
-            return np.log(q)
-        else:
-            return q
-
-    prog = sf.Program(2)
-
-    with prog.context as q:
-        MeasureX      | q[0]
-        Xgate(RR(q[0],log)) | q[1]
-
-However, ``RegRefTransform`` allows for more flexibility, by allowing us to define a classical processing function that acts on multiple qubits. For example, we can combine two Homodyne measurement results to form a single complex argument for a displacement gate:
-
-
-.. code-block:: python3
-
-    prog = sf.Program(3)
-
-    with prog.context as q:
-        MeasureX      | q[0]
-        MeasureP      | q[1]
-        Dgate(RR([q[0],q[1]], lambda q0,q1: q0+1j*q1)) | q[2]
-
-:html:`</div></div>`
+        MeasureFock()        | q[0]
+        Dgate(q[0].par ** 2) | q[1]

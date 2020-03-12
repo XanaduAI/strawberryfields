@@ -29,13 +29,14 @@ pytestmark = pytest.mark.apps
 
 p_planted = data.Planted()
 g_planted = nx.Graph(p_planted.adj)
+planted_weights = list(range(p_planted.modes))
 
 
 @pytest.fixture()
-def process_planted(min_size, max_size, max_count, n_samples):
+def process_planted(min_size, max_size, max_count, n_samples, node_select):
     """Fixture for loading samples from the Planted dataset"""
     samples = p_planted[:n_samples]
-    d = subgraph.search(samples, g_planted, min_size, max_size, max_count)
+    d = subgraph.search(samples, g_planted, min_size, max_size, max_count, node_select)
     return d
 
 
@@ -43,6 +44,7 @@ def process_planted(min_size, max_size, max_count, n_samples):
 @pytest.mark.parametrize("max_size", [6, 7])
 @pytest.mark.parametrize("max_count", [2, 4])
 @pytest.mark.parametrize("n_samples", [200])
+@pytest.mark.parametrize("node_select", ["uniform", planted_weights])
 @pytest.mark.usefixtures("process_planted")
 class TestSearch:
     """Tests for the function ``subgraph.search``"""
@@ -250,32 +252,57 @@ class TestUpdateSubgraphsList:
         assert l == self.l
 
 
-class TestResize:
-    """Tests for the function ``subgraph.resize``"""
+class TestValidate:
+    """Tests for the function ``subgraph._validate_inputs``"""
 
     def test_input_not_subgraph(self):
         """Test if function raises a ``ValueError`` when input is not a subgraph"""
         dim = 5
         with pytest.raises(ValueError, match="Input is not a valid subgraph"):
-            subgraph.resize([dim + 1], nx.complete_graph(dim), 2, 3)
+            subgraph._validate_inputs({dim + 1}, nx.complete_graph(dim), 2, 3)
 
     def test_invalid_min_size(self):
         """Test if function raises a ``ValueError`` when an invalid min_size is requested"""
         dim = 5
         with pytest.raises(ValueError, match="min_size must be at least 1"):
-            subgraph.resize([0, 1], nx.complete_graph(dim), 0, 3)
+            subgraph._validate_inputs({0, 1}, nx.complete_graph(dim), 0, 3)
 
     def test_invalid_max_size(self):
         """Test if function raises a ``ValueError`` when an invalid max_size is requested"""
         dim = 5
         with pytest.raises(ValueError, match="max_size must be less than number of nodes in graph"):
-            subgraph.resize([0, 1], nx.complete_graph(dim), 2, dim)
+            subgraph._validate_inputs({0, 1}, nx.complete_graph(dim), 2, dim)
 
     def test_invalid_max_vs_min(self):
         """Test if function raises a ``ValueError`` when max_size is less than min_size"""
         dim = 5
         with pytest.raises(ValueError, match="max_size must not be less than min_size"):
-            subgraph.resize([0, 1], nx.complete_graph(dim), 4, 3)
+            subgraph._validate_inputs({0, 1}, nx.complete_graph(dim), 4, 3)
+
+    def test_bad_weights(self):
+        """Test if function raises a ``ValueError`` when a vector of node weights input to
+        ``node_select`` is not of the same dimension as the input graph."""
+        dim = 5
+        w = [1] * (dim - 1)
+        with pytest.raises(ValueError, match="Number of node weights must match number of nodes"):
+            subgraph._validate_inputs({0, 1}, nx.complete_graph(dim), 2, 3, node_select=w)
+
+    def test_bad_node_select(self):
+        """Tests if function raises a ``ValueError`` when input an invalid ``node_select``
+        argument"""
+        dim = 5
+        with pytest.raises(ValueError, match="Node selection method not recognized"):
+            subgraph._validate_inputs({0, 1}, nx.complete_graph(dim), 2, 3, node_select="")
+
+
+class TestResize:
+    """Tests for the function ``subgraph.resize``"""
+
+    def choice(self, x, element):
+        """For patching numpy random choice to return a fixed element."""
+        if isinstance(x, int):
+            return element
+        return x[element]
 
     @pytest.mark.parametrize("dim", [7, 8])
     @pytest.mark.parametrize(
@@ -323,25 +350,63 @@ class TestResize:
         the problem of a 6-dimensional complete graph and a 4-node subgraph, with the objective
         of shrinking down to 3 nodes. In this case, any of the 4 nodes in the subgraph is an
         equally good candidate for removal since all nodes have the same degree. The test
-        monkeypatches the ``np.random.shuffle`` function to simply permute the list according to
-        an offset, e.g. for an offset of 2 the list [0, 1, 2, 3] gets permuted to [2, 3, 0,
-        1]. Using this we expect the node to be removed by ``resize`` in this case to have label
-        equal to the offset."""
+        monkeypatches the ``np.random.choice`` function to simply choose a fixed element,
+        e.g. the element 2 of the list [0, 1, 2, 3] will be 2. Using this we expect the node to
+        be removed by ``resize`` in this case to have label equal to the element."""
         dim = 6
         g = nx.complete_graph(dim)
         s = [0, 1, 2, 3]
 
-        def permute(l, offset):
-            d = len(l)
-            ll = l.copy()
-            for _i in range(d):
-                l[_i] = ll[(_i + offset) % d]
-
         for i in range(4):
-            permute_i = functools.partial(permute, offset=i)
+            choice_i = functools.partial(self.choice, element=i)
             with monkeypatch.context() as m:
-                m.setattr(np.random, "shuffle", permute_i)
+                m.setattr(np.random, "choice", choice_i)
                 resized = subgraph.resize(s, g, min_size=3, max_size=3)
                 resized_subgraph = resized[3]
                 removed_node = list(set(s) - set(resized_subgraph))[0]
                 assert removed_node == i
+
+    @pytest.mark.parametrize("dim", range(4, 8))
+    def test_correct_resize_weight(self, dim):
+        """Test if function correctly resizes on a fixed example where the ideal resizing is
+        known and node-weight based selection is used to settle ties. The example is a complete
+        graph with a starting subgraph of the first ``dim - 2`` nodes. The task is to resize to
+        one node smaller and larger. The nodes weights are monotonically increasing with node
+        label. In the shrink step, the 0 node should be removed. In the grow step, the ``dim -
+        1`` node should be added."""
+        g = nx.complete_graph(dim)
+        s = list(range(dim - 2))
+        min_size = dim - 3
+        max_size = dim - 1
+        w = list(range(dim))
+
+        ideal = {dim - 2: s, dim - 1: s + [dim - 1], dim - 3: list(range(1, dim - 2))}
+        resized = subgraph.resize(s, g, min_size, max_size, node_select=w)
+
+        assert ideal == resized
+
+    @pytest.mark.parametrize("dim", range(4, 8))
+    @pytest.mark.parametrize("elem", [0, 1])
+    def test_weight_and_degree_ties(self, dim, monkeypatch, elem):
+        """Test if function correctly resizes on a fixed example where the ideal resizing is
+        known and node-weight based selection is used to settle ties, but with all node weights
+        equal so that they must be settled uniformly at random. The example is a complete
+        graph with a starting subgraph of the first ``dim - 2`` nodes. The task is to resize to
+        one node smaller and larger. This test monkeypatches the ``np.random.choice`` call used in
+        the function so that instead it returns a fixed element. This element is set to 0 or 1 in
+        the test, resulting in different nodes being added and removed from the starting
+        subgraph."""
+        g = nx.complete_graph(dim)
+        s = list(range(dim - 2))
+        min_size = dim - 3
+        max_size = dim - 1
+        w = [1] * dim
+
+        choice_elem = functools.partial(self.choice, element=elem)
+
+        ideal = {dim - 2: s, dim - 1: s + [dim - 2 + elem], dim - 3: list(set(s) - {elem})}
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "choice", choice_elem)
+            resized = subgraph.resize(s, g, min_size, max_size, node_select=w)
+
+        assert resized == ideal

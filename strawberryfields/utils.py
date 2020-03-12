@@ -11,92 +11,36 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
-Utilities
-=========
-
-**Module name:**  :mod:`strawberryfields.utils`
-
-.. currentmodule:: strawberryfields.utils
-
 This module defines and implements several utility functions and language extensions that complement
-StrawberryFields.
+StrawberryFields. These include:
 
 
-NumPy state functions
----------------------
+* **NumPy state functions**
 
-These functions allow the calculation of various quantum states in either the Fock
-basis (a one-dimensional array indexed by Fock state) or the Gaussian basis (returning
-a vector of means and covariance matrix). These state calculations are NOT done in the
-simulators, but rather in NumPy.
+  These functions allow the calculation of various quantum states in either the Fock
+  basis (a one-dimensional array indexed by Fock state) or the Gaussian basis (returning
+  a vector of means and covariance matrix). These state calculations are NOT done in the
+  simulators, but rather in NumPy.
 
-These are useful for generating states for use in calculating the fidelity of simulations.
-
-.. autosummary::
-   squeezed_cov
-   vacuum_state
-   coherent_state
-   squeezed_state
-   displaced_squeezed_state
-   fock_state
-   cat_state
+  These are useful for generating states for use in calculating the fidelity of simulations.
 
 
-Random functions
-----------------
+* **Random functions**
 
-These functions generate random numbers and matrices corresponding to various
-quantum states and operations.
+  These functions generate random numbers and matrices corresponding to various
+  quantum states and operations.
 
-.. autosummary::
-   randnc
-   random_covariance
-   random_symplectic
-   random_interferometer
+* **Decorators**
 
+  The :class:`~.strawberryfields.utils.operation` decorator allows functions
+  containing quantum operations acting on a qumode to be used as an
+  operation itself within a :class:`.Program` context.
 
-Decorators
-----------
+* **Program functions**
 
-The :class:`~.strawberryfields.utils.operation` decorator allows functions containing quantum operations
-acting on a qumode to be used as an operation itself within a :class:`.Program` context.
-
-.. autosummary::
-   operation
-
-
-Program functions
------------------
-
-These functions act on :class:`.Program` instances, returning
-or extracting information from the quantum circuit.
-
-For example, these might be used as follows:
-
-.. code-block:: python
-
-    prog = sf.Program(2)
-    with prog.context as q:
-        BSgate(0.543, 0.123) | (q[0], q[1])
-
-    U = extract_unitary(prog, cutoff_dim=10)
-
-In this example, ``U`` is a unitary array representing the quantum circuit `prog`
-in the Fock basis (here, a single beamsplitter).
-
-
-.. autosummary::
-    is_unitary
-    is_channel
-    extract_unitary
-    extract_channel
-
-
-Code details
-~~~~~~~~~~~~
-
+  These functions act on :class:`.Program` instances, returning
+  or extracting information from the quantum circuit.
 """
 import collections
 import copy
@@ -108,7 +52,6 @@ except ImportError:
     tf_available = False
 
 import numpy as np
-from numpy.random import randn
 from numpy.polynomial.hermite import hermval
 import scipy as sp
 from scipy.special import factorial as fac
@@ -400,7 +343,7 @@ def cat_state(a, p=0, fock_dim=5):
 
 def randnc(*arg):
     """Normally distributed array of random complex numbers."""
-    return randn(*arg) + 1j * randn(*arg)
+    return np.random.randn(*arg) + 1j * np.random.randn(*arg)
 
 
 def random_covariance(N, hbar=2, pure=False, block_diag=False):
@@ -429,12 +372,13 @@ def random_covariance(N, hbar=2, pure=False, block_diag=False):
     return S @ Vth @ S.T
 
 
-def random_symplectic(N, passive=False, block_diag=False):
+def random_symplectic(N, passive=False, block_diag=False, scale=1.0):
     r"""Random symplectic matrix representing a Gaussian transformation.
 
     The squeezing parameters :math:`r` for active transformations are randomly
     sampled from the standard normal distribution, while passive transformations
-    are randomly sampled from the Haar measure.
+    are randomly sampled from the Haar measure. Note that for the Symplectic
+    group there is no notion of Haar measure since this is group is not compact.
 
     Args:
         N (int): number of modes
@@ -444,6 +388,9 @@ def random_symplectic(N, passive=False, block_diag=False):
         block_diag (bool): If True, uses passive Gaussian transformations that are orthogonal
             instead of unitary. This implies that the positions :math:`q` do not mix with
             the momenta :math:`p` and thus the symplectic operator is block diagonal
+        scale (float): Sets the scale of the random values used as squeezing parameters.
+            They will range from 0 to :math:`\sqrt{2}\texttt{scale}`
+
     Returns:
         array: random :math:`2N\times 2N` symplectic matrix
     """
@@ -456,7 +403,7 @@ def random_symplectic(N, passive=False, block_diag=False):
     U = random_interferometer(N, real=block_diag)
     P = np.vstack([np.hstack([U.real, -U.imag]), np.hstack([U.imag, U.real])])
 
-    r = np.abs(randnc(N))
+    r = scale * np.abs(randnc(N))
     Sq = np.diag(np.concatenate([np.exp(-r), np.exp(r)]))
 
     return O @ Sq @ P
@@ -475,7 +422,7 @@ def random_interferometer(N, real=False):
         array: random :math:`N\times N` unitary distributed with the Haar measure
     """
     if real:
-        z = randn(N, N)
+        z = np.random.randn(N, N)
     else:
         z = randnc(N, N) / np.sqrt(2.0)
     q, r = sp.linalg.qr(z)
@@ -788,10 +735,11 @@ def extract_unitary(prog, cutoff_dim: int, vectorize_modes: bool = False, backen
       indices correspond to output-input pairs of the same mode.
 
 
-    Example:
-        This shows the Hong-Ou-Mandel effect by extracting the unitary of a 50/50 beamsplitter, and then
-        computing the output given by one photon at each input (notice the order of the indices: :math:`[out_1, in_1, out_2, in_2,\dots]`).
-        The result tells us that the two photons always emerge together from a random output port and never one per port.
+    **Example:**
+
+    This shows the Hong-Ou-Mandel effect by extracting the unitary of a 50/50 beamsplitter, and then
+    computing the output given by one photon at each input (notice the order of the indices: :math:`[out_1, in_1, out_2, in_2,\dots]`).
+    The result tells us that the two photons always emerge together from a random output port and never one per port.
 
     >>> prog = sf.Program(num_subsystems=2)
     >>> with prog.context as q:

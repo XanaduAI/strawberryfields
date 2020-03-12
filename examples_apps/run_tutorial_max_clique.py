@@ -2,10 +2,13 @@
 """
 .. _apps-clique-tutorial:
 
-Max Clique Tutorial
-=========================
-In this tutorial, we'll explore how to combine GBS samples with local search algorithms to
-find large cliques in graphs. Let's get started!
+Maximum Clique
+==============
+
+*Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.clique`
+
+Here we'll explore how to combine GBS samples with local search algorithms to find large cliques
+in graphs. Let's get started!
 
 A clique is a special type of subgraph where all possible connections between nodes are present;
 they are densest possible subgraphs of their size. The maximum clique problem, or max clique for
@@ -19,7 +22,7 @@ is the *binding interaction graph* representing the spatial compatibility of ato
 protein-molecule complex. Cliques in this graph correspond to stable docking configurations, which
 are of interest in determining how the molecule interacts with the protein.
 
-The first step is to import the Strawberry Fields GBS module and external dependencies:
+The first step is to import the Strawberry Fields ``apps`` module and external dependencies:
 """
 from strawberryfields.apps import data, plot, sample, clique
 import numpy as np
@@ -61,8 +64,8 @@ plotly.offline.plot(maximal_fig, filename="maximal_clique.html")
 ##############################################################################
 # We'll now use the :mod:`~.apps.clique` module to find larger cliques in the graph. We can make
 # use of the pre-generated samples from the TACE-AS graph in the :mod:`~.apps.data` module and
-# post-select samples with a specific number of clicks. For this tutorial, we'll look at samples
-# with eight clicks, of which there are a total of 1,984:
+# post-select samples with a specific number of clicks. Here we'll look at samples with eight
+# clicks, of which there are a total of 1,984:
 
 postselected = sample.postselect(TA, 8, 8)
 samples = sample.to_subgraphs(postselected, TA_graph)
@@ -127,9 +130,8 @@ plotly.offline.plot(clique_fig, filename="maximum_clique.html")
 # The TACE-AS graph is relatively small, so finding large cliques is not particularly difficult. A
 # tougher challenge is the 300-node ``p_hat300-1`` random graph from the `DIMACS
 # <http://iridia.ulb.ac.be/~fmascia/maximum_clique/DIMACS-benchmark>`_ maximum clique
-# dataset. In this section of the tutorial, we'll write a short program that uses GBS samples in
-# combination with local search to identify large cliques in this graph.
-#
+# dataset. In this section, we'll write a short program that uses GBS samples in combination with
+# local search to identify large cliques in this graph.
 
 Phat = data.PHat()  # Load data
 phat_graph = nx.Graph(Phat.adj)  # Obtain graph

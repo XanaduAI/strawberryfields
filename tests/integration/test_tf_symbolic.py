@@ -14,13 +14,9 @@
 r"""
 Tests for the various Tensorflow-specific symbolic options of the frontend/backend.
 """
-# pylint: disable=expression-not-assigned,too-many-public-methods,pointless-statement
+# pylint: disable=expression-not-assigned,too-many-public-methods,pointless-statement,no-self-use
 
 import pytest
-
-# this test file is only supported by the TF backend
-pytestmark = pytest.mark.backends("tf")
-
 import numpy as np
 from scipy.special import factorial
 
@@ -33,6 +29,11 @@ else:
         pytestmark = pytest.mark.skip("Test only runs with TensorFlow 1.3")
 
 from strawberryfields.ops import Dgate, MeasureX
+import strawberryfields.parameters
+
+
+# this test file is only supported by the TF backend
+pytestmark = pytest.mark.backends("tf")
 
 
 ALPHA = 0.5
@@ -90,20 +91,25 @@ class TestOneModeSymbolic:
         val = q[0].val
         assert isinstance(val, tf.Tensor)
 
+    @pytest.mark.xfail(reason="Symbolic parameter system only works with TensorFlow 2 objects", raises=AttributeError, strict=True)
     def test_eng_run_with_session_and_feed_dict(self, setup_eng, batch_size, cutoff, tol):
         """Tests whether passing a tf Session and feed_dict
         through `eng.run` leads to proper numerical simulation."""
-        a = tf.Variable(0.5)
+        tf_a = tf.Variable(0.5)
+        tf_phi = tf.Variable(0.7)
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
-        tf_params = {'session': sess, 'feed_dict': {a: 0.0}}
+        tf_params = {'session': sess, 'feed_dict': {tf_a: 0.0, tf_phi: 1.0}}
 
+        # NOTE this test worked before because the phase was a number, we only needed working tf.Tensor arithmetic in that case.
+        # Now also the exp function has to work on tf.Tensors.
         eng, prog = setup_eng(1)
-        x = prog.params('a')  # free parameter
+        x, y = prog.params('a', 'phi')  # free parameters
         with prog.context as q:
-            Dgate(x) | q
+            Dgate(x, y) | q
 
-        state = eng.run(prog, args={'a': a}, run_options=tf_params).state
+        # use TF to evaluate symbolic parameter expressions
+        state = eng.run(prog, args={'a': tf_a, 'phi': tf_phi}, run_options=tf_params).state
 
         if state.is_pure:
             k = state.ket()

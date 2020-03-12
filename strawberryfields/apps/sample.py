@@ -12,16 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Sampling functions
-==================
+Functionality for generating GBS samples using classical simulators.
 
-**Module name:** :mod:`strawberryfields.apps.sample`
+.. seealso::
 
-.. currentmodule:: strawberryfields.apps.sample
-
-This module provides functionality for generating GBS samples using classical simulators.
-
-An accompanying tutorial can be found :ref:`here <apps-sample-tutorial>`.
+    :ref:`apps-sample-tutorial`
 
 Generating samples
 ------------------
@@ -32,10 +27,7 @@ that carry relevant information about the encoded matrix :math:`A`. When samplin
 specify the mean number of photons in the device, the form of detection used at the output:
 threshold detection or photon-number-resolving (PNR) detection, as well as the amount of loss.
 
-The :func:`sample` function provides a simulation of sampling from GBS:
-
-.. autosummary::
-    sample
+The :func:`sample` function provides a simulation of sampling from GBS.
 
 Here, each output sample is an :math:`M`-dimensional list. If threshold detection is used
 (``threshold = True``), each element of a sample is either a zero (denoting no photons detected)
@@ -47,19 +39,10 @@ noise in quantum photonics. Here, ``loss = 0`` describes ideal loss-free GBS, wh
 ``0 <= loss <= 1`` describes the proportion of photons lost while passing through the device.
 
 Samples can be postselected based upon their total number of photons or clicks and the ``numpy``
-random seed used to generate samples can be fixed:
-
-.. autosummary::
-    postselect
-    seed
-
-.. _decomposition:
+random seed used to generate samples can be fixed.
 
 The :func:`vibronic` function allows users to sample Gaussian states for computing molecular
 vibronic spectra.
-
-.. autosummary::
-    vibronic
 
 Generating subgraphs
 --------------------
@@ -104,11 +87,24 @@ A typical workflow would be:
 The subgraphs sampled from GBS are likely to be dense :cite:`arrazola2018using`, motivating their
 use within heuristics for problems such as maximum clique (see :mod:`~.apps.clique`).
 
-Code details
-^^^^^^^^^^^^
+Including node weights
+----------------------
+
+Some graphs are composed of nodes with weights. These weights can correspond to relevant
+information in an optimization problem and it is desirable to encode them into GBS along with the
+graph's adjacency matrix. One canonical approach to doing this is to use the :math:`WAW` encoding
+:cite:`banchi2019molecular`, which rescales the adjacency matrix according to:
+
+.. math::
+
+    A \rightarrow WAW,
+
+with :math:`W=w_{i}\delta_{ij}` the diagonal matrix formed by the weighted nodes :math:`w_{i}`. The
+rescaled adjacency matrix can be passed to :func:`sample`, resulting in a distribution that
+increases the probability of observing a node proportionally to its weight.
 """
 import warnings
-from typing import Optional
+from typing import Optional, Union
 
 import networkx as nx
 import numpy as np
@@ -172,9 +168,6 @@ def sample(
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning, message="Cannot simulate non-")
         s = eng.run(p, run_options={"shots": n_samples}).samples
-
-    if n_samples == 1:
-        return [s]
 
     return s.tolist()
 
@@ -255,7 +248,7 @@ def to_subgraphs(samples: list, graph: nx.Graph) -> list:
     """Converts samples to their subgraph representation.
 
     Input samples are a list of counts that are processed into subgraphs by selecting the nodes
-    where a click occured.
+    where a click occurred.
 
     **Example usage:**
 
@@ -376,8 +369,57 @@ def vibronic(
 
     s = np.array(s).tolist()  # convert all generated samples to list
 
-    if n_samples == 1:
-        s = [s]
     if np.any(t == 0):
         s = np.pad(s, ((0, 0), (0, n_modes))).tolist()
     return s
+
+
+def waw_matrix(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
+    r"""Rescale adjacency matrix to account for node weights.
+
+    Given a graph with adjacency matrix :math:`A` and a vector :math:`w` of weighted nodes,
+    this function rescales the adjacency matrix according to :cite:`banchi2019molecular`:
+
+    .. math::
+
+        A \rightarrow WAW,
+
+    with :math:`W=w_{i}\delta_{ij}` the diagonal matrix formed by the weighted nodes :math:`w_{i}`.
+    The rescaled adjacency matrix can be passed to :func:`sample`, resulting in a distribution that
+    increases the probability of observing a node proportionally to its weight.
+
+    **Example usage:**
+
+    >>> g = nx.erdos_renyi_graph(5, 0.7)
+    >>> a = nx.to_numpy_array(g)
+    >>> a
+    array([[0., 1., 1., 1., 1.],
+           [1., 0., 1., 1., 1.],
+           [1., 1., 0., 1., 0.],
+           [1., 1., 1., 0., 0.],
+           [1., 1., 0., 0., 0.]])
+    >>> w = [10, 1, 0, 1, 1]
+    >>> a = waw_matrix(a, w)
+    >>> a
+    array([[ 0., 10.,  0., 10., 10.],
+           [10.,  0.,  0.,  1.,  1.],
+           [ 0.,  0.,  0.,  0.,  0.],
+           [10.,  1.,  0.,  0.,  0.],
+           [10.,  1.,  0.,  0.,  0.]])
+    >>> sample(a, 3, 4)
+    [[1, 0, 0, 1, 1], [1, 1, 0, 0, 0], [1, 1, 0, 1, 1], [1, 0, 0, 1, 0]]
+
+    Args:
+        A (array): adjacency matrix to rescale
+        w (array or list): vector of real node weights
+
+    Returns:
+        array: matrix rescaled according to the WAW encoding
+    """
+    if not np.allclose(A, A.T):
+        raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
+
+    if isinstance(w, list):
+        w = np.array(w)
+
+    return (w * A).T * w
