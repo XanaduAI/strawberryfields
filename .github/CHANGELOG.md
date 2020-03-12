@@ -16,6 +16,9 @@
 
 <h3>Improvements</h3>
 
+* Refactored the `starship` CLI and added unit tests.
+  [(312)](https://github.com/XanaduAI/strawberryfields/pull/312)
+
 * Added the `store_account` user convenience function that helps with
   configuring access to the Xanadu cloud platform.
   [(306)](https://github.com/XanaduAI/strawberryfields/pull/306)
@@ -46,6 +49,10 @@
   and configuration file.
   [(298)](https://github.com/XanaduAI/strawberryfields/pull/298)
 
+* Modified the rectangular decomposition to ensure that identity-like
+  unitaries are implemented with no swaps.
+  [#311](https://github.com/XanaduAI/strawberryfields/pull/311)
+
 * Refactored the existing `StarshipEngine` to use a new `Connection`/`Job` API
   and updated the `starship` CLI to use the new interface.
   [(294)](https://github.com/XanaduAI/strawberryfields/pull/294)
@@ -73,7 +80,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ville Bergholm, Jack Ceroni, Theodor Isacsson, Antal Száva, Paul Tan
+Ville Bergholm, Jack Ceroni, Theodor Isacsson, Shreya P Kumar, Antal Száva, Paul Tan
 
 
 # Release 0.12.1 (current release)

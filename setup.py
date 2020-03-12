@@ -47,6 +47,7 @@ info = {
         "strawberryfields",
         "strawberryfields.circuitspecs",
         "strawberryfields.apps",
+        "strawberryfields.cli",
         "strawberryfields.backends",
         "strawberryfields.backends.tfbackend",
         "strawberryfields.backends.fockbackend",
@@ -54,6 +55,11 @@ info = {
     ],
     "package_data": {"strawberryfields": ["backends/data/*", "apps/data/*"]},
     "include_package_data": True,
+    "entry_points" : {
+        'console_scripts': [
+            'starship=strawberryfields.cli:main'
+        ]
+    },
     "description": "Open source library for continuous-variable quantum computation",
     "long_description": open("README.rst", encoding="utf-8").read(),
     "provides": ["strawberryfields"],
@@ -62,7 +68,6 @@ info = {
     "command_options": {
         "build_sphinx": {"version": ("setup.py", version), "release": ("setup.py", version)}
     },
-    "scripts": ["starship"],
 }
 
 classifiers = [
