@@ -62,7 +62,7 @@ class Job:
     """Represents a remote job that can be queried for its status or result.
 
     This object should typically not be instantiated directly, but returned by an
-    :class:`strawberryfields.StarshipEngine` or :class:`strawberryfields.api.Connection`
+    :class:`strawberryfields.RemoteEngine` or :class:`strawberryfields.api.Connection`
     when a job is run.
 
     Args:

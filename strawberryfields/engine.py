@@ -457,7 +457,7 @@ class LocalEngine(BaseEngine):
         return result
 
 
-class StarshipEngine:
+class RemoteEngine:
     """A quantum program executor engine that provides a simple interface for
     running remote jobs in a blocking or non-blocking manner.
 
@@ -468,7 +468,7 @@ class StarshipEngine:
 
     Run a blocking job:
 
-    >>> engine = StarshipEngine("chip2")
+    >>> engine = RemoteEngine("chip2")
     >>> result = engine.run(program, shots=1) # blocking call
     >>> result
     [[0 1 0 2 1 0 0 0]]

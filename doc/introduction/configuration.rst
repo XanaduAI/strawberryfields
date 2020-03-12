@@ -40,7 +40,7 @@ Configuration options
 
 **authentication_token (str)** (*required*)
     API token for authentication to the Xanadu cloud platform. This is required
-    for submitting remote jobs using :class:`~.StarshipEngine`. Corresponding
+    for submitting remote jobs using :class:`~.RemoteEngine`. Corresponding
     environment variable: ``SF_API_AUTHENTICATION_TOKEN``
 
 **hostname (str)** (*optional*)

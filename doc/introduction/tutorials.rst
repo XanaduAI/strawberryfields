@@ -165,11 +165,11 @@ Hardware
     :hidden:
     :maxdepth: 1
 
-    /introduction/starship
+    /introduction/remote
 
 .. customgalleryitem::
-    :tooltip: StarshipEngine
-    :description: :doc:`/introduction/starship`
+    :tooltip: RemoteEngine
+    :description: :doc:`/introduction/remote`
     :figure: /gallery/gate_visualisation/GateVisualisation.gif
 
 .. raw:: html

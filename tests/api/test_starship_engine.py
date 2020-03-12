@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for strawberryfields.engine.StarshipEngine
+Unit tests for strawberryfields.engine.RemoteEngine
 """
 import numpy as np
 import pytest
 
 from strawberryfields.api import Connection, Job, JobStatus, Result
-from strawberryfields.engine import StarshipEngine
+from strawberryfields.engine import RemoteEngine
 from .conftest import mock_return
 
 # pylint: disable=bad-continuation,unused-argument,no-self-use,redefined-outer-name,pointless-statement
@@ -63,12 +63,12 @@ def job_to_complete(connection, monkeypatch):
     )
 
 
-class TestStarshipEngine:
-    """Tests for the ``StarshipEngine`` class."""
+class TestRemoteEngine:
+    """Tests for the ``RemoteEngine`` class."""
 
     def test_run_complete(self, connection, prog, job_to_complete):
         """Tests a successful blocking job execution."""
-        engine = StarshipEngine("chip2", connection=connection)
+        engine = RemoteEngine("chip2", connection=connection)
         result = engine.run(prog)
 
         assert np.array_equal(result.samples, np.array([[1, 2], [3, 4]]))
@@ -81,7 +81,7 @@ class TestStarshipEngine:
     def test_run_async(self, connection, prog, job_to_complete):
         """Tests a successful non-blocking job execution."""
 
-        engine = StarshipEngine("chip2", connection=connection)
+        engine = RemoteEngine("chip2", connection=connection)
         job = engine.run_async(prog)
         assert job.status == JobStatus.OPEN.value
 
