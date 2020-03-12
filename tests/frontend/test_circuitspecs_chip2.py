@@ -359,7 +359,6 @@ class TestChip2Compilation:
             ops.MeasureFock() | q
 
         res = prog.compile("chip2")
-        res.print()
         expected = sf.Program(8)
 
         with expected.context as q:
