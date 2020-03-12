@@ -372,7 +372,7 @@ class TestChip2Compilation:
             # This can be easily seen from below by noting that:
             # MZ(pi, pi) = R(0) = I
             # MZ(pi, 0) @ MZ(pi, 0) = I
-            # R(pi) @ MZ(pi, 0) = I
+            # [R(pi) \otimes I] @ MZ(pi, 0) = I
             ops.MZgate(np.pi, 0) | (q[0], q[1])
             ops.MZgate(np.pi, 0) | (q[2], q[3])
             ops.MZgate(np.pi, np.pi) | (q[1], q[2])
