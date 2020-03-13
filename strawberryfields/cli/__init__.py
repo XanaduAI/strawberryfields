@@ -36,7 +36,7 @@ def main():
     .. code-block:: bash
 
         $ starship
-        usage: starship <command> [<args>]
+        usage: starship [-h] [--ping] {configure,run} ...
 
         These are common options when working on the Xanadu cloud platform.
 

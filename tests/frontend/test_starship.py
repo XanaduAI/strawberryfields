@@ -39,9 +39,8 @@ class TestCreateParser:
     def test_general_details(self):
         """Test the general details of the parser created."""
         parser = cli.create_parser()
-        parser._optionals.title = "General Options"
-        parser.usage="starship <command> [<args>]",
-        parser.description="These are common options when working on the Xanadu cloud platform."
+        assert parser._optionals.title == "General Options"
+        assert parser.description == "These are common options when working on the Xanadu cloud platform."
         assert parser.add_help
 
     @pytest.mark.parametrize("option", ['--ping', '-p'])
