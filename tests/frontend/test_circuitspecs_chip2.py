@@ -368,28 +368,32 @@ class TestChip2Compilation:
             ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
 
             # corresponds to an identity on modes [0, 1, 2, 3]
-            ops.MZgate(0, 0) | (q[0], q[1])
-            ops.MZgate(0, 0) | (q[2], q[3])
+            # This can be easily seen from below by noting that:
+            # MZ(pi, pi) = R(0) = I
+            # MZ(pi, 0) @ MZ(pi, 0) = I
+            # [R(pi) \otimes I] @ MZ(pi, 0) = I
+            ops.MZgate(np.pi, 0) | (q[0], q[1])
+            ops.MZgate(np.pi, 0) | (q[2], q[3])
             ops.MZgate(np.pi, np.pi) | (q[1], q[2])
-            ops.MZgate(0, 0) | (q[0], q[1])
-            ops.MZgate(0, 0) | (q[2], q[3])
-            ops.MZgate(np.pi, 0) | (q[1], q[2])
+            ops.MZgate(np.pi, np.pi) | (q[0], q[1])
+            ops.MZgate(np.pi, 0) | (q[2], q[3])
+            ops.MZgate(np.pi, np.pi) | (q[1], q[2])
             ops.Rgate(np.pi) | (q[0])
             ops.Rgate(0) | (q[1])
-            ops.Rgate(np.pi) | (q[2])
-            ops.Rgate(-np.pi) | (q[3])
+            ops.Rgate(0) | (q[2])
+            ops.Rgate(0) | (q[3])
 
             # corresponds to an identity on modes [4, 5, 6, 7]
-            ops.MZgate(0, 0) | (q[4], q[5])
-            ops.MZgate(0, 0) | (q[6], q[7])
+            ops.MZgate(np.pi, 0) | (q[4], q[5])
+            ops.MZgate(np.pi, 0) | (q[6], q[7])
             ops.MZgate(np.pi, np.pi) | (q[5], q[6])
-            ops.MZgate(0, 0) | (q[4], q[5])
-            ops.MZgate(0, 0) | (q[6], q[7])
-            ops.MZgate(np.pi, 0) | (q[5], q[6])
+            ops.MZgate(np.pi, np.pi) | (q[4], q[5])
+            ops.MZgate(np.pi, 0) | (q[6], q[7])
+            ops.MZgate(np.pi, np.pi) | (q[5], q[6])
             ops.Rgate(np.pi) | (q[4])
             ops.Rgate(0) | (q[5])
-            ops.Rgate(np.pi) | (q[6])
-            ops.Rgate(-np.pi) | (q[7])
+            ops.Rgate(0) | (q[6])
+            ops.Rgate(0) | (q[7])
 
             ops.MeasureFock() | q
 

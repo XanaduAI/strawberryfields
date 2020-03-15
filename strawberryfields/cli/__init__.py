@@ -22,7 +22,7 @@ import sys
 from strawberryfields.api import Connection
 from strawberryfields.configuration import (ConfigurationError, create_config,
                                             store_account)
-from strawberryfields.engine import StarshipEngine
+from strawberryfields.engine import RemoteEngine
 from strawberryfields.io import load
 
 
@@ -35,8 +35,8 @@ def main():
 
     .. code-block:: bash
 
-        $ starship
-        usage: starship <command> [<args>]
+        $ sf
+        usage: sf <command> [<args>]
 
         These are common options when working on the Xanadu cloud platform.
 
@@ -126,7 +126,7 @@ def configure(args):
 
     The following is the easiest way to configure the connection to the cloud platform.
 
-    Here we show how the ``starship configure --token MYAUTH`` command can create a
+    Here we show how the ``sf configure --token MYAUTH`` command can create a
     configuration. It is worth noting that ``MYAUTH`` stands for the
     authentication token. Once done, we have a look at the newly created
     configuration file.
@@ -135,7 +135,7 @@ def configure(args):
 
     .. code-block:: bash
 
-        $ starship configure --token MYAUTH
+        $ sf configure --token MYAUTH
         $ cat  ~/.config/strawberryfields/config.toml
         [api]
         authentication_token = "MYAUTH"
@@ -147,7 +147,7 @@ def configure(args):
 
     .. code-block:: powershell
 
-        $ starship configure --token MYAUTH
+        $ sf configure --token MYAUTH
         $ cat C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
         [api]
         authentication_token = "MYAUTH"
@@ -203,7 +203,7 @@ def configuration_wizard():
 
     .. code-block:: bash
 
-        $starship configure
+        $ sf configure
         Please enter the authentication token to use when connecting: [] MYAUTH
         Please enter the hostname of the server to connect to: [platform.strawberryfields.ai] MYHOST
         Should the client attempt to connect over SSL? [y] N
@@ -220,7 +220,7 @@ def configuration_wizard():
 
     .. code-block:: powershell
 
-        $starship configure
+        $ sf configure
         Please enter the authentication token to use when connecting: [] MYAUTH
         Please enter the hostname of the server to connect to: [platform.strawberryfields.ai] MYHOST
         Should the client attempt to connect over SSL? [y] N
@@ -285,7 +285,7 @@ def run_blackbird_script(args):
         sys.stdout.write("The {} blackbird script was not found.".format(args.input))
         sys.exit()
 
-    eng = StarshipEngine(program.target)
+    eng = RemoteEngine(program.target)
 
     sys.stdout.write("Executing program on remote hardware...\n")
     result = eng.run(program)
