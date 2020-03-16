@@ -1,25 +1,25 @@
 .. _starship:
 
-StarshipEngine
-##############
+Xanadu cloud platform
+#####################
 
-In this section, we provide a tutorial of the **StarshipEngine**, an engine used to connect to the Xanadu
+In this section, we provide a tutorial of the **RemoteEngine**, an engine used to connect to the Xanadu
 cloud platform and execute jobs remotely (e.g., on a quantum chip).
 
-Configuring StarshipEngine
---------------------------
+Configuring the RemoteEngine
+----------------------------
 
-Before using StarshipEngine, you need to configure the hostname and authentication token that will provide
+Before using the RemoteEngine, you need to configure the hostname and authentication token that will provide
 you access to the API. This can be done in one of two ways:
 
 1. By using the :func:`~.store_account` function to store your account credentials:
 
    >>> sf.store_account("my_api_token")
 
-2. By using the Starship command line interface to configure Strawberry Fields with your
+2. By using the ``sf`` command line interface to configure Strawberry Fields with your
    account credentials:
 
-   >>> starship configure --token my_api_token
+   >>> sf configure --token my_api_token
 
 In both of the above code snippets, ``my_api_token`` should be replaced with your personal
 API token! For more details on configuring Strawberry Fields for cloud access, including
@@ -34,7 +34,7 @@ You have successfully authenticated to the platform!
 
 or via the command line:
 
->>> starship --ping
+>>> sf --ping
 You have successfully authenticated to the platform!
 
 .. _first_program:
@@ -42,7 +42,7 @@ You have successfully authenticated to the platform!
 Submitting a Blackbird script
 -----------------------------
 
-The easiest way to execute a program using StarshipEngine is to create a Blackbird script (an ``xbb`` file)
+The easiest way to execute a program using the RemoteEngine is to create a Blackbird script (an ``xbb`` file)
 and place it in your current working directory.
 
 For this example, consider the following Blackbird script, which represents a quantum program that matches
@@ -121,10 +121,10 @@ To execute this file using Python, you can use a code block like this:
 
 .. code-block:: python3
 
-    from strawberryfields import StarshipEngine
+    from strawberryfields import RemoteEngine
     from strawberryfields.io import load
 
-    eng = StarshipEngine("chip2")
+    eng = RemoteEngine("chip2")
     prog = load("test.xbb")
     result = eng.run(prog)
     print(result.samples)
@@ -133,11 +133,11 @@ To execute this file using Python, you can use a code block like this:
 Executing your Blackbird script from the command line
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To execute this file from the command line, use the ``starship`` command as follows:
+To execute this file from the command line, use the ``sf`` command as follows:
 
 .. code-block:: console
 
-    starship run test.xbb --output out.txt
+    sf run test.xbb --output out.txt
 
 After executing the above command, the result will be stored in ``out.txt`` in the current working directory.
 You can also omit the ``--output`` parameter to print the result to the screen.
@@ -155,7 +155,7 @@ circuit to the chip.
 
     import strawberryfields as sf
     from strawberryfields import ops
-    from strawberryfields import StarshipEngine
+    from strawberryfields import RemoteEngine
     from strawberryfields.utils import random_interferometer
 
 We choose a random 4x4 interferometer
@@ -197,7 +197,7 @@ Next we create the program
 We create the engine. The engine is in charge of compiling and executing
 programs on the remote device.
 
->>> eng = StarshipEngine("chip2")
+>>> eng = RemoteEngine("chip2")
 
 We run the engine by calling ``eng.run``, and pass it the program we
 want to run.
@@ -311,14 +311,14 @@ For example, consider the following Blackbird script:
 
 **Note:** You may use ``random_interferometer`` to generate arbitrary random unitaries.
 
-This program will execute following the same steps as above; ``StarshipEngine`` will automatically
+This program will execute following the same steps as above; ``RemoteEngine`` will automatically
 compile the program to match the layout of the chip.
 
 You may wish to view the compiled program; this can be easily done in Python using
 the ``Program.compile`` method:
 
 
->>> from strawberryfields import StarshipEngine
+>>> from strawberryfields import RemoteEngine
 >>> from strawberryfields.io import load
 >>> prog = load("test.xbb")
 >>> prog = prog.compile("chip2")
