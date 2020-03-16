@@ -19,7 +19,9 @@ you access to the API. This can be done in one of two ways:
 2. By using the ``sf`` command line interface to configure Strawberry Fields with your
    account credentials:
 
-   >>> sf configure --token my_api_token
+   .. code-block:: bash
+
+       $ sf configure --token my_api_token
 
 In both of the above code snippets, ``my_api_token`` should be replaced with your personal
 API token! For more details on configuring Strawberry Fields for cloud access, including
@@ -34,8 +36,10 @@ You have successfully authenticated to the platform!
 
 or via the command line:
 
->>> sf --ping
-You have successfully authenticated to the platform!
+.. code-block:: bash
+
+    $ sf --ping
+    You have successfully authenticated to the platform!
 
 .. _first_program:
 
