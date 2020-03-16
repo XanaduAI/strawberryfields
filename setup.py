@@ -14,7 +14,7 @@
 import os
 import sys
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 with open("strawberryfields/_version.py") as f:
@@ -43,16 +43,7 @@ info = {
     "maintainer_email": "software@xanadu.ai",
     "url": "https://github.com/XanaduAI/StrawberryFields",
     "license": "Apache License 2.0",
-    "packages": [
-        "strawberryfields",
-        "strawberryfields.circuitspecs",
-        "strawberryfields.apps",
-        "strawberryfields.cli",
-        "strawberryfields.backends",
-        "strawberryfields.backends.tfbackend",
-        "strawberryfields.backends.fockbackend",
-        "strawberryfields.backends.gaussianbackend",
-    ],
+    "packages": find_packages(where="."),
     "package_data": {"strawberryfields": ["backends/data/*", "apps/data/*"]},
     "include_package_data": True,
     "entry_points" : {
