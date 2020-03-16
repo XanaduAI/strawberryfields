@@ -2,72 +2,131 @@
 
 <h3>New features since last release</h3>
 
+* Adds initial support for the Xanadu cloud platform.
+  [(#101)](https://github.com/XanaduAI/strawberryfields/pull/101)
+  [(#148)](https://github.com/XanaduAI/strawberryfields/pull/148)
+  [(#294)](https://github.com/XanaduAI/strawberryfields/pull/294)
+
+  Jobs can now be submitted to the Xanadu cloud platform to be run
+  on supported hardware using the new `RemoteEngine`:
+
+  ```python
+  from strawberryfields import RemoteEngine
+  from strawberryfields import ops
+  from strawberryfields.utils import random_interferometer
+
+  eng = RemoteEngine("chip2", token="AUTHENTICATION_TOKEN")
+  prog = sf.Program(8)
+
+  U = random_interferometer(4)
+
+  with prog.context as q:
+      ops.S2gate(1.0) | (q[0], q[4])
+      ops.S2gate(1.0) | (q[1], q[5])
+      ops.S2gate(1.0) | (q[2], q[6])
+      ops.S2gate(1.0) | (q[3], q[7])
+
+      ops.Interferometer(U) | q[:4]
+      ops.Interferometer(U) | q[4:]
+
+  result = eng.run(prog)
+  ```
+
+  For more details, see the
+  [Xanadu cloud platform](https://strawberryfields.readthedocs.io/en/latest/introduction/remote.html)
+  tutorial.
+
+* Significantly speeds up the Fock backend of Strawberry Fields,
+  through a variety of changes:
+
+  - The Fock backend now uses The Walrus high performance implementations of
+    the displacement, squeezing, two-mode squeezing, and beamsplitter operations.
+    [(#287)](https://github.com/XanaduAI/strawberryfields/pull/287)
+    [(#289)](https://github.com/XanaduAI/strawberryfields/pull/289)
+
+  - Custom tensor contractions which make use of symmetry relations for the beamsplitter
+    and the two-mode squeeze gate have been added, as well as more efficient contractions
+    for diagonal operations in the Fock basis.
+    [(#292)](https://github.com/XanaduAI/strawberryfields/pull/292)
+
+* New `sf` command line program for configuring Strawberry Fields for access
+  with the Xanadu cloud platform, as well as submitting and executing jobs from the
+  command line.
+  [(#146)](https://github.com/XanaduAI/strawberryfields/pull/146)
+  [(#312)](https://github.com/XanaduAI/strawberryfields/pull/312)
+
+  The new Strawberry Fields command line program `sf` provides several utilities
+  including:
+
+  * `sf configure [--token] [--local]`: configure the connection to the cloud platform
+
+  * `sf run input [--output FILE]`: submit and execute quantum programs from the command line
+
+  * `sf --ping`: verify your connection to the Xanadu cloud platform.
+
+  For more details, see the
+  [documentation](https://strawberryfields.readthedocs.io/en/stable/code/sf_cli.html)
+
+* New configuration functions to load configuration from
+  keyword arguments, environment variables, and configuration files.
+  [(#298)](https://github.com/XanaduAI/strawberryfields/pull/298)
+  [(#306)](https://github.com/XanaduAI/strawberryfields/pull/306)
+
+  This includes the ability to automatically store Xanadu cloud platform
+  credentials in a configuration file using the new function
+
+  ```python
+  sf.store_account("AUTHENTICATION_TOKEN")
+  ```
+
+  as well as from the command line,
+
+  ```bash
+  $ sf configure --token AUTHENTICATION_TOKEN
+  ```
+
+  Configuration files can be saved globally, or locally on a per-project basis.
+  For more details, see the
+  [configuration documentation](https://strawberryfields.readthedocs.io/en/stable/introduction/configuration.html)
+
 * Adds the `x_quad_values` and `p_quad_values` methods to the `state` class.
   This allows calculation of x and p quadrature
   probability distributions by integrating across the Wigner function.
-  [(270)](https://github.com/XanaduAI/strawberryfields/pull/270)
+  [(#270)](https://github.com/XanaduAI/strawberryfields/pull/270)
 
 * Adds support in the applications layer for node-weighted graphs. Users can sample from graphs
   with node weights using the WAW encoding and input node weights into search algorithms in the
   `clique` and `subgraph` modules.
-  [(295)](https://github.com/XanaduAI/strawberryfields/pull/295)
-  [(296)](https://github.com/XanaduAI/strawberryfields/pull/296)
-  [(297)](https://github.com/XanaduAI/strawberryfields/pull/297)
+  [(#295)](https://github.com/XanaduAI/strawberryfields/pull/295)
+  [(#296)](https://github.com/XanaduAI/strawberryfields/pull/296)
+  [(#297)](https://github.com/XanaduAI/strawberryfields/pull/297)
 
 <h3>Improvements</h3>
 
-* Refactored the `starship` CLI and added unit tests.
-  [(312)](https://github.com/XanaduAI/strawberryfields/pull/312)
+* Moved Fock backend apply-gate functions to `Circuit` class, and removed
+  `apply_gate_einsum` and `Circuits._apply_gate`, since they were no longer used.
+  [(#293)](https://github.com/XanaduAI/strawberryfields/pull/293/)
 
-* Added the `store_account` user convenience function that helps with
-  configuring access to the Xanadu cloud platform.
-  [(306)](https://github.com/XanaduAI/strawberryfields/pull/306)
-
-* Added two-mode squeezed operation support as a primitive, rather than simply
-  through decomposition, using The Walrus for fast computation.
-  [(289)](https://github.com/XanaduAI/strawberryfields/pull/289)
-
-* Added The Walrus implementations for the displacement, squeezing and beamsplitter
-  operations to improve speed.
-  [(287)](https://github.com/XanaduAI/strawberryfields/pull/287)
-
-* Added custom tensor contractions for the beamsplitter and the two-mode squeeze
-  gate as well as faster application of diagonal gate matrices.
-  [(292)](https://github.com/XanaduAI/strawberryfields/pull/292)
-
-* Moved apply-gate functions to `Circuit` class, and removed `apply_gate_einsum` and
-  `Circuits._apply_gate`, since they were no longer used.
-  [(293)](https://github.com/XanaduAI/strawberryfields/pull/293/)
-
-* Unified backend results returned from running simulators and added checks for
-  using batching, post-selection and feed-fowarding together with multiple
-  shots, which now raises an error.
-  [(300)](https://github.com/XanaduAI/strawberryfields/pull/300)
-
-* Replaced the `Configuration` class with the `load_config` and auxiliary
-  functions to load configuration from keyword arguments, environment variables
-  and configuration file.
-  [(298)](https://github.com/XanaduAI/strawberryfields/pull/298)
+* Results returned from all backends now have a unified type and shape.
+  In addition, attempting to use batching, post-selection and feed-foward together
+  with multiple shots now raises an error.
+  [(#300)](https://github.com/XanaduAI/strawberryfields/pull/300)
 
 * Modified the rectangular decomposition to ensure that identity-like
   unitaries are implemented with no swaps.
   [#311](https://github.com/XanaduAI/strawberryfields/pull/311)
 
-* Refactored the existing `StarshipEngine` to use a new `Connection`/`Job` API
-  and updated the `starship` CLI to use the new interface.
-  [(294)](https://github.com/XanaduAI/strawberryfields/pull/294)
-
 <h3>Bug fixes</h3>
 
 * Symbolic Operation parameters are now compatible with TensorFlow 2.0 objects.
-  [(282)](https://github.com/XanaduAI/strawberryfields/pull/282)
+  [(#282)](https://github.com/XanaduAI/strawberryfields/pull/282)
 
 * Added `sympy>=1.5` to the list of dependencies.
   Removed the `sympy.functions.atan2` workaround now that SymPy has been fixed.
-  [(280)](https://github.com/XanaduAI/strawberryfields/pull/280)
+  [(#280)](https://github.com/XanaduAI/strawberryfields/pull/280)
 
 * Removed two unnecessary else statements that pylint complained about.
-  [(290)](https://github.com/XanaduAI/strawberryfields/pull/290)
+  [(#290)](https://github.com/XanaduAI/strawberryfields/pull/290)
 
 * Fixed a bug in the `MZgate`, where the internal and external phases were
   in the wrong order in both the docstring and the argument list. The new
@@ -75,12 +134,12 @@
   decomposition.
   [(#301)](https://github.com/XanaduAI/strawberryfields/pull/301)
 
-
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Ville Bergholm, Jack Ceroni, Theodor Isacsson, Shreya P Kumar, Antal Száva, Paul Tan
+Ville Bergholm, Tom Bromley, Jack Ceroni, Theodor Isacsson, Josh Izaac, Shreya P Kumar,
+Nicolás Quesada, Jeremy Swinarton, Antal Száva, Paul Tan, Zeid Zabaneh
 
 
 # Release 0.12.1 (current release)
@@ -89,27 +148,27 @@ Ville Bergholm, Jack Ceroni, Theodor Isacsson, Shreya P Kumar, Antal Száva, Pau
 
 * A new `gaussian_unitary` circuitspec that can be used to compile any sequency of Gaussian
   transformations into a single `GaussianTransform` gate and a sequence of single mode `Dgate`s.
-  [(238)](https://github.com/XanaduAI/strawberryfields/pull/238)
+  [(#238)](https://github.com/XanaduAI/strawberryfields/pull/238)
 
 <h3>Improvements</h3>
 
 * Add new Strawberry Fields applications paper to documentation
-  [(274)](https://github.com/XanaduAI/strawberryfields/pull/274)
+  [(#274)](https://github.com/XanaduAI/strawberryfields/pull/274)
 
 * Update figure for GBS device in documentation
-  [(275)](https://github.com/XanaduAI/strawberryfields/pull/275)
+  [(#275)](https://github.com/XanaduAI/strawberryfields/pull/275)
 
 <h3>Bug fixes</h3>
 
 * Fix installation issue with incorrect minimum version number for `thewalrus`
-  [(272)](https://github.com/XanaduAI/strawberryfields/pull/272)
-  [(277)](https://github.com/XanaduAI/strawberryfields/pull/277)
+  [(#272)](https://github.com/XanaduAI/strawberryfields/pull/272)
+  [(#277)](https://github.com/XanaduAI/strawberryfields/pull/277)
 
 * Correct URL for image in `README`
-  [(273)](https://github.com/XanaduAI/strawberryfields/pull/273)
+  [(#273)](https://github.com/XanaduAI/strawberryfields/pull/273)
 
 * Add applications data to `MANIFEST.in`
-  [(278)](https://github.com/XanaduAI/strawberryfields/pull/278)
+  [(#278)](https://github.com/XanaduAI/strawberryfields/pull/278)
 
 <h3>Contributors</h3>
 
@@ -150,11 +209,11 @@ Ville Bergholm, Tom Bromley, Nicolás Quesada, Paul Tan
 * The documentation was improved and refactored. Changes include:
 
   - A brand new theme, now matching PennyLane
-    [(262)](https://github.com/XanaduAI/strawberryfields/pull/262)
+    [(#262)](https://github.com/XanaduAI/strawberryfields/pull/262)
 
   - The documentation has been restructured to make it
     easier to navigate
-    [(266)](https://github.com/XanaduAI/strawberryfields/pull/266)
+    [(#266)](https://github.com/XanaduAI/strawberryfields/pull/266)
 
 <h3>Contributors</h3>
 
@@ -171,12 +230,12 @@ Juan Miguel Arrazola, Tom Bromley, Josh Izaac, Soran Jahangiri, Nicolás Quesada
   not a primitive of the existing simulator backends; rather, `_decompose()` is
   defined, decomposing it into an external phase shift, two 50-50 beamsplitters,
   and an internal phase shift.
-  [(127)](https://github.com/XanaduAI/strawberryfields/pull/127)
+  [(#127)](https://github.com/XanaduAI/strawberryfields/pull/127)
 
 * The `Chip0Spec` circuit class now defines a `compile` method, allowing
   arbitrary unitaries comprised of `{Interferometer, BSgate, Rgate, MZgate}`
   operations to be validated and compiled to match the topology of chip0.
-  [(127)](https://github.com/XanaduAI/strawberryfields/pull/127)
+  [(#127)](https://github.com/XanaduAI/strawberryfields/pull/127)
 
 * `strawberryfields.ops.BipartiteGraphEmbed` quantum decomposition now added,
   allowing a bipartite graph to be embedded on a device that allows for
@@ -184,21 +243,21 @@ Juan Miguel Arrazola, Tom Bromley, Josh Izaac, Soran Jahangiri, Nicolás Quesada
 
 * Added threshold measurements, via the new operation `MeasureThreshold`,
   and provided implementation of this operation in the Gaussian backend.
-  [(152)](https://github.com/XanaduAI/strawberryfields/pull/152)
+  [(#152)](https://github.com/XanaduAI/strawberryfields/pull/152)
 
 * Programs can now have free parameters/arguments which are only bound to
   numerical values when the Program is executed, by supplying the actual
   argument values to the `Engine.run` method.
-  [(163)](https://github.com/XanaduAI/strawberryfields/pull/163)
+  [(#163)](https://github.com/XanaduAI/strawberryfields/pull/163)
 
 <h3>API Changes</h3>
 
 * The `strawberryfields.ops.Measure` shorthand has been deprecated in favour
   of `strawberryfields.ops.MeasureFock()`.
-  [(145)](https://github.com/XanaduAI/strawberryfields/pull/145)
+  [(#145)](https://github.com/XanaduAI/strawberryfields/pull/145)
 
 * Several changes to the `strawberryfields.decompositions` module:
-  [(127)](https://github.com/XanaduAI/strawberryfields/pull/127)
+  [(#127)](https://github.com/XanaduAI/strawberryfields/pull/127)
 
   - The name `clements` has been replaced with `rectangular` to
     correspond with the shape of the resulting decomposition.
@@ -208,7 +267,7 @@ Juan Miguel Arrazola, Tom Bromley, Josh Izaac, Soran Jahangiri, Nicolás Quesada
     `(tlist, diag, tilist)`, so they can easily be swapped.
 
 * Several changes to `ops.Interferometer`:
-  [(127)](https://github.com/XanaduAI/strawberryfields/pull/127)
+  [(#127)](https://github.com/XanaduAI/strawberryfields/pull/127)
 
   - The calculation of the ops.Interferometer decomposition has been moved from
     `__init__` to `_decompose()`, allowing the interferometer decomposition type
@@ -224,52 +283,52 @@ Juan Miguel Arrazola, Tom Bromley, Josh Izaac, Soran Jahangiri, Nicolás Quesada
 * Moves the `Program.compile_seq` method to `CircuitSpecs.decompose`. This allows it
   to be accessed from the `CircuitSpec.compile` method. Furthermore, it now must also
   be passed the program registers, as compilation may sometimes require this.
-  [(127)](https://github.com/XanaduAI/strawberryfields/pull/127)
+  [(#127)](https://github.com/XanaduAI/strawberryfields/pull/127)
 
 * Parameter class is replaced by `MeasuredParameter` and `FreeParameter`, both inheriting from
   `sympy.Symbol`. Fixed numeric parameters are handled by the built-in Python numeric
   classes and numpy arrays.
-  [(163)](https://github.com/XanaduAI/strawberryfields/pull/163)
+  [(#163)](https://github.com/XanaduAI/strawberryfields/pull/163)
 
 * `Parameter`, `RegRefTransform` and `convert` are removed.
-  [(163)](https://github.com/XanaduAI/strawberryfields/pull/163)
+  [(#163)](https://github.com/XanaduAI/strawberryfields/pull/163)
 
 <h3>Improvements</h3>
 
 * Photon-counting measurements can now be done in the Gaussian backend for states with nonzero displacement.
-  [(154)](https://github.com/XanaduAI/strawberryfields/pull/154)
+  [(#154)](https://github.com/XanaduAI/strawberryfields/pull/154)
 
 * Added a new test for the cubic phase gate
-  [(160)](https://github.com/XanaduAI/strawberryfields/pull/160)
+  [(#160)](https://github.com/XanaduAI/strawberryfields/pull/160)
 
 * Added new integration tests for the Gaussian gates that are not primitive,
   i.e., P, CX, CZ, and S2.
-  [(173)](https://github.com/XanaduAI/strawberryfields/pull/173)
+  [(#173)](https://github.com/XanaduAI/strawberryfields/pull/173)
 
 <h3>Bug fixes</h3>
 
 * Fixed bug in `strawberryfields.decompositions.rectangular_symmetric` so its
   returned phases are all in the interval [0, 2*pi), and corrects the
   function docstring.
-  [(196)](https://github.com/XanaduAI/strawberryfields/pull/196)
+  [(#196)](https://github.com/XanaduAI/strawberryfields/pull/196)
 
 * When using the `'gbs'` compilation target, the measured registers are now sorted in
   ascending order in the resulting compiled program.
-  [(144)](https://github.com/XanaduAI/strawberryfields/pull/144)
+  [(#144)](https://github.com/XanaduAI/strawberryfields/pull/144)
 
 * Fixed typo in the Gaussian Boson Sampling example notebook.
-  [(133)](https://github.com/XanaduAI/strawberryfields/pull/133)
+  [(#133)](https://github.com/XanaduAI/strawberryfields/pull/133)
 
 * Fixed a bug in the function `smeanxp` of the Gaussian Backend simulator.
-  [(154)](https://github.com/XanaduAI/strawberryfields/pull/154)
+  [(#154)](https://github.com/XanaduAI/strawberryfields/pull/154)
 
 * Clarified description of matrices that are accepted by graph embed operation.
-  [(147)](https://github.com/XanaduAI/strawberryfields/pull/147)
+  [(#147)](https://github.com/XanaduAI/strawberryfields/pull/147)
 
 * Fixed typos in the documentation of the CX gate and BSgate
-  [(166)](https://github.com/XanaduAI/strawberryfields/pull/166)
-  [(167)](https://github.com/XanaduAI/strawberryfields/pull/167)
-  [(169)](https://github.com/XanaduAI/strawberryfields/pull/169)
+  [(#166)](https://github.com/XanaduAI/strawberryfields/pull/166)
+  [(#167)](https://github.com/XanaduAI/strawberryfields/pull/167)
+  [(#169)](https://github.com/XanaduAI/strawberryfields/pull/169)
 
 
 # Release 0.11.1
@@ -278,14 +337,14 @@ Juan Miguel Arrazola, Tom Bromley, Josh Izaac, Soran Jahangiri, Nicolás Quesada
 
 * Added the `circuit_spec` attribute to `BaseBackend` to denote which CircuitSpecs class
   should be used to validate programs for each backend
-  [(125)](https://github.com/XanaduAI/strawberryfields/pull/125).
+  [(#125)](https://github.com/XanaduAI/strawberryfields/pull/125).
 
 * Removed the `return_state` keyword argument from `LocalEngine.run()`. Now no state
   object is returned if `modes==[]`.
-  [(126)](https://github.com/XanaduAI/strawberryfields/pull/126)
+  [(#126)](https://github.com/XanaduAI/strawberryfields/pull/126)
 
 * Fixed a typo in the boson sampling tutorial.
-  [(133)](https://github.com/XanaduAI/strawberryfields/pull/133)
+  [(#133)](https://github.com/XanaduAI/strawberryfields/pull/133)
 
 <h3>Bug fixes</h3>
 
@@ -295,21 +354,21 @@ Juan Miguel Arrazola, Tom Bromley, Josh Izaac, Soran Jahangiri, Nicolás Quesada
   within the program.
   This fixes a bug where shots specified in Blackbird scripts were not being
   passed to `eng.run`.
-  [(130)](https://github.com/XanaduAI/strawberryfields/pull/130)
+  [(#130)](https://github.com/XanaduAI/strawberryfields/pull/130)
 
 * Removes `ModuleNotFoundError` from the codebase, replacing all occurrences
   with `ImportError`. Since `ModuleNotFoundError` was only introduced in
   Python 3.6+, this fixes a bug where Strawberry Fields was not importable
   on Python 3.5
-  [(124)](https://github.com/XanaduAI/strawberryfields/pull/124).
+  [(#124)](https://github.com/XanaduAI/strawberryfields/pull/124).
 
 * Updates the Chip0 template to use `MeasureFock() | [0, 1, 2, 3]`, which will
   allow correct fock measurement behaviour when simulated on the Gaussian backend
-  [(124)](https://github.com/XanaduAI/strawberryfields/pull/124).
+  [(#124)](https://github.com/XanaduAI/strawberryfields/pull/124).
 
 * Fixed a bug in the `GraphEmbed` op, which was not correctly determining when a
   unitary was the identity
-  [(128)](https://github.com/XanaduAI/strawberryfields/pull/128).
+  [(#128)](https://github.com/XanaduAI/strawberryfields/pull/128).
 
 
 # Release 0.11.0
