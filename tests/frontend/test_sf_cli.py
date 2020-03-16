@@ -307,9 +307,9 @@ class MockProgram:
         self.target = "chip2"
         self.result = None
 
-class MockStarshipEngine:
+class MockRemoteEngine:
     """A mock class used for capturing the arguments with which the
-    the StarshipEngine class is instantiated and its run method is called."""
+    the RemoteEngine class is instantiated and its run method is called."""
 
     def __init__(self, target):
         self.result = None
@@ -377,7 +377,7 @@ class TestRunBlackbirdScript:
 
         with monkeypatch.context() as m:
             m.setattr(cli, "load", lambda arg: mocked_program)
-            m.setattr(cli, "StarshipEngine", MockStarshipEngine)
+            m.setattr(cli, "RemoteEngine", MockRemoteEngine)
             m.setattr(cli, "write_script_results", mocked_write_script_results.write_script_results)
 
             with pytest.raises(SystemExit):
@@ -391,9 +391,9 @@ class TestRunBlackbirdScript:
 
 test_samples = [1,2,3,4]
 
-class MockStarshipEngineIntegration:
+class MockRemoteEngineIntegration:
     """A mock class used for capturing the arguments with which the
-    the StarshipEngine class is instantiated and its run method is called when
+    the RemoteEngine class is instantiated and its run method is called when
     multiple components are tested."""
 
     def __init__(self, target):
@@ -421,7 +421,7 @@ class TestRunBlackbirdScriptIntegration:
         mocked_args.input = filepath
 
         with monkeypatch.context() as m:
-            m.setattr(cli, "StarshipEngine", MockStarshipEngineIntegration)
+            m.setattr(cli, "RemoteEngine", MockRemoteEngineIntegration)
             cli.run_blackbird_script(mocked_args)
 
         out, err = capsys.readouterr()
@@ -447,7 +447,7 @@ class TestRunBlackbirdScriptIntegration:
         mocked_args.output = out_filepath
 
         with monkeypatch.context() as m:
-            m.setattr(cli, "StarshipEngine", MockStarshipEngineIntegration)
+            m.setattr(cli, "RemoteEngine", MockRemoteEngineIntegration)
             cli.run_blackbird_script(mocked_args)
 
         with open(filepath, "r") as f:

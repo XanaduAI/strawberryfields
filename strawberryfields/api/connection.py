@@ -43,7 +43,7 @@ class Connection:
 
     For basic usage, it is not necessary to manually instantiate this object; the user
     is encouraged to use the higher-level interface provided by
-    :class:`~strawberryfields.StarshipEngine`.
+    :class:`~strawberryfields.RemoteEngine`.
 
     **Example:**
 
