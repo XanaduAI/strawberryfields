@@ -74,15 +74,18 @@ Example run in a Linux based operating system:
 
 The same example run on a Windows operating system:
 
-.. code-block:: powershell
+.. code-block::  ps1con
 
-    $ sf configure
+
+    C:\>  sf configure
+
     Please enter the authentication token to use when connecting: [] MYAUTH
     Please enter the hostname of the server to connect to: [platform.strawberryfields.ai] MYHOST
     Should the client attempt to connect over SSL? [y] N
     Please enter the port number to connect with: [443] 12345
 
-    $ cat C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
+    C:\>  cat C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
+
     [api]
     authentication_token = "MYAUTH"
     hostname = "MYHOST"

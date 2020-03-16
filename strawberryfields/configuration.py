@@ -79,7 +79,7 @@ def load_config(filename="config.toml", **kwargs):
     return config
 
 
-def create_config(authentication_token="", **kwargs):
+def create_config(authentication_token=None, **kwargs):
     """Create a configuration object that stores configuration related data
     organized into sections.
 
@@ -96,6 +96,7 @@ def create_config(authentication_token="", **kwargs):
         dict[str, dict[str, Union[str, bool, int]]]: the configuration
             object
     """
+    authentication_token = authentication_token or ""
     hostname = kwargs.get("hostname", DEFAULT_CONFIG_SPEC["api"]["hostname"][1])
     use_ssl = kwargs.get("use_ssl", DEFAULT_CONFIG_SPEC["api"]["use_ssl"][1])
     port = kwargs.get("port", DEFAULT_CONFIG_SPEC["api"]["port"][1])
@@ -244,19 +245,19 @@ def store_account(authentication_token, filename="config.toml", location="user_c
 
     **Examples:**
 
-    In these examples ``"MyToken"`` should be replaced with a valid authentication
+    In these examples ``"MYAUTH"`` should be replaced with a valid authentication
     token.
 
     Access to the Xanadu cloud can be configured as follows:
 
-    >>> sf.store_account("MyToken")
+    >>> sf.store_account("MYAUTH")
 
     This creates the following ``"config.toml"`` file:
 
     .. code-block:: toml
 
         [api]
-        authentication_token = "MyToken"
+        authentication_token = "MYAUTH"
         hostname = "platform.strawberryfields.ai"
         use_ssl = true
         port = 443
@@ -265,21 +266,21 @@ def store_account(authentication_token, filename="config.toml", location="user_c
     working directory**) the following way:
 
     >>> import strawberryfields as sf
-    >>> sf.store_account("MyToken", location="local")
+    >>> sf.store_account("MYAUTH", location="local")
 
     Each of the configuration options can be passed as further keyword
     arguments as well (see the :doc:`/introduction/configuration` page
     for a list of options):
 
     >>> import strawberryfields as sf
-    >>> sf.store_account("MyToken", location="local", hostname="MyHost", use_ssl=False, port=123)
+    >>> sf.store_account("MYAUTH", location="local", hostname="MyHost", use_ssl=False, port=123)
 
     This creates the following ``"config.toml"`` file in the **current working directory**:
 
     .. code-block:: toml
 
         [api]
-        authentication_token = "MyToken"
+        authentication_token = "MYAUTH"
         hostname = "MyHost"
         use_ssl = false
         port = 123

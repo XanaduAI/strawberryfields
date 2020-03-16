@@ -16,7 +16,7 @@ can be done using several methods:
 
   or the :func:`~.store_account` function,
 
-  >>> sf.store_account("MyToken")
+  >>> sf.store_account("MYAUTH")
 
   to create a configuration file containing your credentials. This is the recommended approach.
 
@@ -41,7 +41,7 @@ including:
 
 * ``sf configure [--token] [--local]``: configure the connection to the cloud platform
 
-* ``sf run input [--output FILE]``: submit and execute quantum programs from the command line
+* ``sf run INFILE [--output OUTFILE]``: submit and execute quantum programs from the command line
 
 * ``sf --ping``: verify your connection to the Xanadu cloud platform.
 
