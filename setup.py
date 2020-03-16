@@ -57,7 +57,7 @@ info = {
     "include_package_data": True,
     "entry_points" : {
         'console_scripts': [
-            'starship=strawberryfields.cli:main'
+            'sf=strawberryfields.cli:main'
         ]
     },
     "description": "Open source library for continuous-variable quantum computation",

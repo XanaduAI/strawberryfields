@@ -22,7 +22,7 @@ import sys
 from strawberryfields.api import Connection
 from strawberryfields.configuration import (ConfigurationError, create_config,
                                             store_account)
-from strawberryfields.engine import StarshipEngine
+from strawberryfields.engine import RemoteEngine
 from strawberryfields.io import load
 
 
@@ -31,12 +31,13 @@ def main():
 
     **Example:**
 
-    The following is a simple example on getting the help message of the cloud platform command line interface. It details each of the options available.
+    The following is a simple example on getting the help message of the cloud platform command
+    line interface. It details each of the options available.
 
     .. code-block:: bash
 
-        $ starship
-        usage: starship [-h] [--ping] {configure,run} ...
+        $ sf
+        usage: sf [-h] [--ping] {configure,run} ...
 
         See below for available options and commands for working with the Xanadu cloud platform.
 
@@ -122,49 +123,8 @@ def configure(args):
     configuration options. Alternatively, a wizard is provided for full
     configurability.
 
-    **Example:**
-
-    The following is the easiest way to configure the connection to the cloud platform.
-
-    Here we show how the ``starship configure --token MYAUTH`` command can create a
-    configuration. It is worth noting that ``MYAUTH`` stands for the
-    authentication token. Once done, we have a look at the newly created
-    configuration file.
-
-    Example run in a Linux based operating system:
-
-    .. code-block:: bash
-
-        $ starship configure --token MYAUTH
-        $ cat  ~/.config/strawberryfields/config.toml
-        [api]
-        authentication_token = "MYAUTH"
-        hostname = "platform.strawberryfields.ai"
-        use_ssl = true
-        port = 443
-
-    The same example run on a Windows operating system:
-
-    .. code-block:: powershell
-
-        $ starship configure --token MYAUTH
-        $ cat C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
-        [api]
-        authentication_token = "MYAUTH"
-        hostname = "platform.strawberryfields.ai"
-        use_ssl = true
-        port = 443
-
-    For more advanced configuration options see the :func:`~.configuration_wizard` page.
-
-    **Flags:**
-
-        * ``--token``: The authentication token to use.
-        * ``--local``: Whether or not to create the configuration file locally in the current directory.
-      If not provided, the configuration file will be saved in the users configuration directory.
-
-      See more details regarding Strawberry Fields configuration and available
-      configuration options on the :doc:`/introduction/configuration` page.
+    See more details regarding Strawberry Fields configuration and available
+    configuration options on the :doc:`/introduction/configuration` page.
 
     Args:
         args (ArgumentParser): arguments that were specified on the command
@@ -193,45 +153,6 @@ def configuration_wizard():
 
     Default configuration options are provided as defaults to the user.
     Configuration options as detailed in :doc:`/introduction/configuration`.
-
-    **Example:**
-
-    Here we show how the interactive wizard can be used to configure each API
-    option. Once done, we have a look at the newly created configuration file.
-
-    Example run in a Linux based operating system:
-
-    .. code-block:: bash
-
-        $starship configure
-        Please enter the authentication token to use when connecting: [] MYAUTH
-        Please enter the hostname of the server to connect to: [platform.strawberryfields.ai] MYHOST
-        Should the client attempt to connect over SSL? [y] N
-        Please enter the port number to connect with: [443] 12345
-
-        $cat  ~/.config/strawberryfields/config.toml
-        [api]
-        authentication_token = "MYAUTH"
-        hostname = "MYHOST"
-        use_ssl = false
-        port = "12345"
-
-    The same example run on a Windows operating system:
-
-    .. code-block:: powershell
-
-        $starship configure
-        Please enter the authentication token to use when connecting: [] MYAUTH
-        Please enter the hostname of the server to connect to: [platform.strawberryfields.ai] MYHOST
-        Should the client attempt to connect over SSL? [y] N
-        Please enter the port number to connect with: [443] 12345
-
-        $cat C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
-        [api]
-        authentication_token = "MYAUTH"
-        hostname = "MYHOST"
-        use_ssl = false
-        port = "12345"
 
     Returns:
         dict[str, Union[str, bool, int]]: the configuration options
@@ -285,7 +206,7 @@ def run_blackbird_script(args):
         sys.stdout.write("The {} blackbird script was not found.".format(args.input))
         sys.exit()
 
-    eng = StarshipEngine(program.target)
+    eng = RemoteEngine(program.target)
 
     sys.stdout.write("Executing program on remote hardware...\n")
     result = eng.run(program)
