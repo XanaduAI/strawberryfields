@@ -36,9 +36,9 @@ def main():
     .. code-block:: bash
 
         $ sf
-        usage: sf <command> [<args>]
+        usage: starship [-h] [--ping] {configure,run} ...
 
-        These are common options when working on the Xanadu cloud platform.
+        See below for available options and commands for working with the Xanadu cloud platform.
 
         General Options:
           -h, --help       show this help message and exit
@@ -68,7 +68,7 @@ def create_parser():
         options
     """
     parser = argparse.ArgumentParser(
-        description="These are common options when working on the Xanadu cloud platform.",
+        description="See below for available options and commands for working with the Xanadu cloud platform.",
     )
 
     # Setting a title for the general options (requires setting a private
