@@ -49,6 +49,8 @@
     for diagonal operations in the Fock basis.
     [(#292)](https://github.com/XanaduAI/strawberryfields/pull/292)
 
+<br>
+
 * New `sf` command line program for configuring Strawberry Fields for access
   with the Xanadu cloud platform, as well as submitting and executing jobs from the
   command line.
@@ -65,7 +67,7 @@
   * `sf --ping`: verify your connection to the Xanadu cloud platform.
 
   For more details, see the
-  [documentation](https://strawberryfields.readthedocs.io/en/stable/code/sf_cli.html)
+  [documentation](https://strawberryfields.readthedocs.io/en/stable/code/sf_cli.html).
 
 * New configuration functions to load configuration from
   keyword arguments, environment variables, and configuration files.
