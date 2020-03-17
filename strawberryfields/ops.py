@@ -1168,7 +1168,12 @@ class S2gate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-        z = par_evaluate(p, dtype=np.complex128)
+
+        if self.p[1] != 0:
+            z = par_evaluate(p, dtype=np.complex128)
+        else:
+            z = par_evaluate(p)
+
         backend.two_mode_squeeze(z, *reg)
 
     def _decompose(self, reg, **kwargs):
