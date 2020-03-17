@@ -17,7 +17,7 @@ matrix:
     - env: BATCHED=1 OPTIONS="tf and mixed"
 install:
   - pip install -r requirements.txt
-  - pip install wheel codecov pytest==5.3 pytest-cov --upgrade
+  - pip install wheel codecov pytest pytest-cov --upgrade
   - python3 setup.py bdist_wheel
   - pip install dist/StrawberryFields*.whl
 script:

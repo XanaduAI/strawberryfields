@@ -76,7 +76,7 @@ For more advanced configuration options see the :func:`~.configuration_wizard` p
 * ``--token``: The authentication token to use.
 * ``--local``: Whether or not to create the configuration file locally in the current directory.
 
-If not provided, the configuration file will be saved in the users configuration directory.
+If not provided, the configuration file will be saved in the user's configuration directory.
 
 
 Configuration files

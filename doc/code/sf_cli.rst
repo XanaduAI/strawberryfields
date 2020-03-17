@@ -45,7 +45,7 @@ Using the ``sf configure`` command to create a configuration file on Windows:
 * ``--token``: The authentication token to use.
 * ``--local``: Whether or not to create the configuration file locally in the current directory.
 
-If not provided, the configuration file will be saved in the users configuration directory.
+If not provided, the configuration file will be saved in the user's configuration directory.
 
 Configuration wizard
 ~~~~~~~~~~~~~~~~~~~~
@@ -55,7 +55,7 @@ For more advanced configuration options, the configuration wizard can be used.
 Here we show how the interactive wizard can be used to configure each API
 option. Once done, we have a look at the newly created configuration file.
 
-Example run in a Linux based operating system:
+Example run in a Linux-based operating system:
 
 .. code-block:: bash
 

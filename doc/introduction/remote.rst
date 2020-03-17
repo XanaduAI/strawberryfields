@@ -29,7 +29,7 @@ creating local per-project configuration files, see the :doc:`/introduction/conf
 quickstart guide.
 
 To test that your account credentials correctly authenticate against the cloud platform,
-you can use the ``ping`` command, from within Strawberry Fields,
+you can use the :func:`~.ping` command, from within Strawberry Fields,
 
 >>> sf.cli.ping()
 You have successfully authenticated to the platform!
@@ -55,7 +55,7 @@ file as ``test.xbb`` in our current working directory:
 
 .. code-block:: python
 
-    name template_4x2_chip0     # Name of the program
+    name template_4x2_chip2     # Name of the program
     version 1.0                 # Blackbird version number
     target chip2 (shots = 100)   # This program will run on chip2 for 50 shots
 
@@ -258,13 +258,13 @@ Program compilation
 In addition to using the program template above, which directly matches the physical
 layout of the hardware device, you can apply any four-mode interferometer to the pairs of modes.
 
-Primitive gates supported by chip2 include any combination of:
+Primitive gates supported by ``chip2`` include any combination of:
 
-* `General beamsplitters <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.BSgate.html>`_ (``ops.BSgate``),
+* `General beamsplitters <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.BSgate.html>`_ (:class:`~.ops.BSgate`),
 
-* `Mach-Zehnder interfomerters <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.MZgate.html>`_ (``ops.MZgate``), or
+* `Mach-Zehnder interfomerters <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.MZgate.html>`_ (:class:`~.ops.MZgate`), or
 
-* `rotations/phase shifts <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.Rgate.html>`_ (``ops.Rgate``).
+* `rotations/phase shifts <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.Rgate.html>`_ (:class:`~.ops.Rgate`).
 
 Furthermore, several automatic decompositions are supported:
 
@@ -275,7 +275,7 @@ Furthermore, several automatic decompositions are supported:
 * You can use :class:`~.ops.BipartiteGraphEmbed` to embed a bipartite graph on
   the GBS chip. Note, however, that the decomposed squeezing values depends on the graph
   structure, so only bipartite graphs that result in equal squeezing on all
-  modes can currently be executed on chip2.
+  modes can currently be executed on ``chip2``.
 
 For example, consider the following Blackbird script:
 
@@ -313,9 +313,9 @@ For example, consider the following Blackbird script:
     MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7]
 
 
-**Note:** You may use ``random_interferometer`` to generate arbitrary random unitaries.
+**Note:** You may use :func:`~.random_interferometer` to generate arbitrary random unitaries.
 
-This program will execute following the same steps as above; ``RemoteEngine`` will automatically
+This program will execute following the same steps as above; :class:`~.RemoteEngine` will automatically
 compile the program to match the layout of the chip.
 
 You may wish to view the compiled program; this can be easily done in Python using
@@ -353,7 +353,7 @@ Rgate(1.902) | (q[0])
 Rgate(-1.173) | (q[5])
 MeasureFock | (q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7])
 
-and even saved as a new Blackbird script using the ``io.save`` function:
+and even saved as a new Blackbird script using the :func:`~.io.save` function:
 
 >>> from strawberryfields.io import save
 >>> save("test_compiled.xbb", prog)

@@ -15,6 +15,7 @@
   from strawberryfields import ops
   from strawberryfields.utils import random_interferometer
 
+  # replace AUTHENTICATION_TOKEN with your Xanadu cloud token
   eng = RemoteEngine("chip2", token="AUTHENTICATION_TOKEN")
   prog = sf.Program(8)
 
@@ -33,7 +34,7 @@
   ```
 
   For more details, see the
-  [Xanadu cloud platform](https://strawberryfields.readthedocs.io/en/latest/introduction/remote.html)
+  [Xanadu cloud platform](https://strawberryfields.readthedocs.io/en/stable/introduction/remote.html)
   tutorial.
 
 * Significantly speeds up the Fock backend of Strawberry Fields,
