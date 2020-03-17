@@ -535,7 +535,7 @@ class Coherent(Preparation):
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
 
-        if self.p[1] != 0:
+        if np.any(self.p[1] != 0):
             z = par_evaluate(p, dtype=np.complex128)
         else:
             z = par_evaluate(p)
@@ -652,7 +652,7 @@ class Catstate(Preparation):
         ket = np.squeeze(ket)
 
         # evaluate the array (elementwise)
-        if self.p[1] != 0:
+        if np.any(self.p[1] != 0):
             ket = par_evaluate(ket, dtype=np.complex128)
         else:
             ket = par_evaluate(ket)
@@ -927,7 +927,10 @@ class Dgate(Gate):
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
 
-        if self.p[1] != 0:
+        print(p)
+        print(self.p[1])
+
+        if np.any(self.p[1] != 0):
             z = par_evaluate(p, dtype=np.complex128)
         else:
             z = par_evaluate(p)
@@ -973,9 +976,9 @@ class Zgate(Gate):
 
     def _decompose(self, reg, **kwargs):
         # into a displacement
-        z = self.p[0] * 1j/np.sqrt(2 * sf.hbar)
+        z = self.p[0] / np.sqrt(2 * sf.hbar)
         return [
-            Command(Dgate(z, 0), reg)
+            Command(Dgate(z, np.pi/2), reg)
         ]
 
 
@@ -998,7 +1001,9 @@ class Sgate(Gate):
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
 
-        if self.p[1] != 0:
+        print(self.p[1])
+
+        if np.any(self.p[1] != 0):
             z = par_evaluate(p, dtype=np.complex128)
         else:
             z = par_evaluate(p)
@@ -1113,7 +1118,7 @@ class BSgate(Gate):
 
         t = par_evaluate(t)
 
-        if self.p[1] != 0:
+        if np.any(self.p[1] != 0):
             r = par_evaluate(r, dtype=np.complex128)
         else:
             r = par_evaluate(r)
@@ -1169,7 +1174,7 @@ class S2gate(Gate):
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
 
-        if self.p[1] != 0:
+        if np.any(self.p[1] != 0):
             z = par_evaluate(p, dtype=np.complex128)
         else:
             z = par_evaluate(p)
