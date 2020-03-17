@@ -794,7 +794,7 @@ class Circuit:
 
             self._update_state(new_state)
 
-        return tf.cast(meas_result, dtype=tf.complex64)
+        return tf.cast(meas_result, dtype=ops.def_type)
 
     @property
     def num_modes(self):
