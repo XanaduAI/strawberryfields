@@ -126,7 +126,7 @@ class TestProperExecution:
         assert [r.val for r in prog.register] == res.samples[0].tolist()
         # first mode was measured
         if eng.backend_name == 'tf':
-            assert isinstance(res.samples[0], tf.Tensor)
+            assert isinstance(res.samples[0][0], tf.Tensor)
         else:
             assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
         # second mode was not measured
