@@ -534,7 +534,7 @@ class Coherent(Preparation):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-        z = par_evaluate(p)
+        z = par_evaluate(p, dtype=np.complex128)
         backend.prepare_coherent_state(z, *reg)
 
 
@@ -647,7 +647,7 @@ class Catstate(Preparation):
         ket = np.squeeze(ket)
 
         # evaluate the array (elementwise)
-        ket = par_evaluate(ket)
+        ket = par_evaluate(ket, dtype=np.complex128)
         backend.prepare_ket_state(ket, *reg)
 
 
@@ -917,7 +917,7 @@ class Dgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-        z = par_evaluate(p)
+        z = par_evaluate(p, dtype=np.complex128)
         backend.displacement(z, *reg)
 
 
@@ -983,7 +983,7 @@ class Sgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-        z = par_evaluate(p)
+        z = par_evaluate(p, dtype=np.complex128)
         backend.squeeze(z, *reg)
 
 
@@ -1091,8 +1091,9 @@ class BSgate(Gate):
     def _apply(self, reg, backend, **kwargs):
         t = pf.cos(self.p[0])
         r = pf.sin(self.p[0]) * pf.exp(1j * self.p[1])
-        p = par_evaluate([t, r])
-        backend.beamsplitter(*p, *reg)
+        t = par_evaluate(t)
+        r = par_evaluate(r, dtype=np.complex128)
+        backend.beamsplitter(t, r, *reg)
 
 
 class MZgate(Gate):
@@ -1142,7 +1143,7 @@ class S2gate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-        z = par_evaluate(p)
+        z = par_evaluate(p, dtype=np.complex128)
         backend.two_mode_squeeze(z, *reg)
 
     def _decompose(self, reg, **kwargs):

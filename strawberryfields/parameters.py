@@ -150,7 +150,7 @@ def is_object_array(p):
     return isinstance(p, np.ndarray) and p.dtype == object
 
 
-def par_evaluate(params):
+def par_evaluate(params, dtype=None):
     """Evaluate an Operation parameter sequence.
 
     Any parameters descending from :class:`sympy.Basic` are evaluated, others are returned as-is.
@@ -161,6 +161,9 @@ def par_evaluate(params):
 
     Args:
         params (Sequence[Any]): parameters to evaluate
+        dtype (np.dtype): NumPy data type to optionally cast parameters
+            to *before* evaluating the symbolic expression. If the parameter
+            is a TensorFlow tensor, the corresponding TensorFlow dtype is used.
 
     Returns:
         list[Any]: evaluated parameters
@@ -187,6 +190,17 @@ def par_evaluate(params):
         is_tf = (type(v).__module__.startswith('tensorflow') for v in vals)
         printer = 'tensorflow' if any(is_tf) else 'numpy'
         func = sympy.lambdify(atoms, p, printer)
+
+        if dtype is not None:
+            # cast the input values
+            if printer == "tensorflow":
+                import tensorflow as tf
+
+                tfdtype = tf.as_dtype(dtype)
+                vals = [tf.cast(v, dtype=tfdtype) for v in vals]
+            else:
+                vals = [dtype(v) for v in vals]
+
         return func(*vals)
 
     ret = list(map(do_evaluate, params))
