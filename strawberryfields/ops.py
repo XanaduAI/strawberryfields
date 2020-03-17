@@ -927,9 +927,6 @@ class Dgate(Gate):
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
 
-        print(p)
-        print(self.p[1])
-
         if np.any(self.p[1] != 0):
             z = par_evaluate(p, dtype=np.complex128)
         else:
@@ -1000,8 +997,6 @@ class Sgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-
-        print(self.p[1])
 
         if np.any(self.p[1] != 0):
             z = par_evaluate(p, dtype=np.complex128)
