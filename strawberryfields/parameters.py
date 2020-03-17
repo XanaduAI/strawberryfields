@@ -191,6 +191,7 @@ def par_evaluate(params, dtype=None):
         printer = 'tensorflow' if any(is_tf) else 'numpy'
         func = sympy.lambdify(atoms, p, printer)
 
+        print(vals)
         if dtype is not None:
             # cast the input values
             if printer == "tensorflow":
@@ -201,6 +202,7 @@ def par_evaluate(params, dtype=None):
             else:
                 vals = [dtype(v) for v in vals]
 
+        print(vals)
         return func(*vals)
 
     ret = list(map(do_evaluate, params))
