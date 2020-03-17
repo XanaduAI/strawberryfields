@@ -260,11 +260,11 @@ layout of the hardware device, you can apply any four-mode interferometer to the
 
 Primitive gates supported by chip2 include any combination of:
 
-* `General beamsplitters <https://strawberryfields.readthedocs.io/en/stable/code/ops.html#strawberryfields.ops.BSgate>`_ (``ops.BSgate``),
+* `General beamsplitters <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.BSgate.html>`_ (``ops.BSgate``),
 
-* `Mach-Zehnder interfomerters <https://strawberryfields.readthedocs.io/en/stable/code/ops.html#strawberryfields.ops.MZgate>`_ (``ops.MZgate``), or
+* `Mach-Zehnder interfomerters <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.MZgate.html>`_ (``ops.MZgate``), or
 
-* `rotations/phase shifts <https://strawberryfields.readthedocs.io/en/stable/code/ops.html#strawberryfields.ops.Rgate>`_ (``ops.Rgate``).
+* `rotations/phase shifts <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.Rgate.html>`_ (``ops.Rgate``).
 
 Furthermore, several automatic decompositions are supported:
 
