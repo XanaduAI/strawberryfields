@@ -98,7 +98,8 @@
   [(#270)](https://github.com/XanaduAI/strawberryfields/pull/270)
 
 * Adds support in the applications layer for node-weighted graphs. Users can sample from graphs
-  with node weights using the WAW encoding:
+  with node weights using the WAW encoding that rescales an adjacency matrix `A` to `WAW` with `W`
+  a diagonal matrix of node weights:
   [(#295)](https://github.com/XanaduAI/strawberryfields/pull/295)
    
   ```python
