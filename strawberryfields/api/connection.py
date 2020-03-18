@@ -52,7 +52,7 @@ class Connection:
     retrieves an existing job.
 
     >>> connection = Connection(token="abc")
-    >>> success = connection.ping() # `True` if successful, `False` if the connection fails
+    >>> success = connection.ping()  # `True` if successful, `False` if the connection fails
     >>> job = connection.create_job("chip2", program, shots=123)
     >>> job
     <Job: id=d177cbf5-1816-4779-802f-cef2c117dc1a, ...>

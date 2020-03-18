@@ -130,7 +130,7 @@ Support
 
 If you are having issues, please let us know by posting the issue on our Github issue tracker.
 
-To chat directly with the team designing and building Strawberry Fields, as well as members of our community — ranging from quantum computing researchers, to students, to those just interested in being a part of a rapidly growing industry — you can join our `discussion forum <https://discuss.pennylane.ai>`_ and `Slack channel <https://u.strawberryfields.ai/slack>`_.
+To chat directly with the team designing and building Strawberry Fields, as well as members of our community—ranging from quantum computing researchers, to students, to those just interested in being a part of a rapidly growing industry—you can join our `discussion forum <https://discuss.pennylane.ai>`_ and `Slack channel <https://u.strawberryfields.ai/slack>`_.
 
 For more details on contributing or performing research with Strawberry Fields, please see
 :ref:`research`.

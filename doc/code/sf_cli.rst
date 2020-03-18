@@ -10,7 +10,8 @@ including:
 
 * ``sf run input [--output FILE]``: submit and execute quantum programs from the command line
 
-* ``sf --ping``: verify your connection to the Xanadu cloud platform.
+* ``sf --ping``: verify your connection to the Xanadu cloud platform
+
 
 
 Configure
@@ -42,8 +43,10 @@ Using the ``sf configure`` command to create a configuration file on Windows:
 
 **Flags:**
 
-* ``--token``: The authentication token to use.
-* ``--local``: Whether or not to create the configuration file locally in the current directory.
+* ``--token``: the authentication token to use
+
+* ``--local``: whether or not to create the configuration file locally in the current directory
+
 
 If not provided, the configuration file will be saved in the user's configuration directory.
 

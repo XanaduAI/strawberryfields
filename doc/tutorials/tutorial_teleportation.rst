@@ -168,7 +168,7 @@ in our truncated Fock basis. We now have all the parameters ready to initialize 
 
 We can now execute our quantum program ``prog`` on the engine via the :func:`Engine.run` method:
 
-.. code-block:: python
+.. code-block:: python3
 
     result = eng.run(prog, run_options={"shots":1, "modes":None}, compile_options={})
 
@@ -240,7 +240,7 @@ Once the engine has been run, we can extract results of measurements and the qua
 .. code-block:: pycon
 
     >>> result.samples
-    [2.9645296452964534, -2.9465294652946525, None]
+    [[2.9645296452964534, -2.9465294652946525, None]]
 
 If a mode has not been measured, this attribute simply returns ``None``.
 

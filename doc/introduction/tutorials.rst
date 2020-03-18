@@ -130,7 +130,7 @@ Optimization and machine learning
 
     We are currently making some huge changes to the TensorFlow backend
     of Strawberry Fields, including upcoming TensorFlow 2.0 support. As a result,
-    this tutorial currently is unavailable. Please bear with us as we finish off the
+    the tutorials in this section are currently not supported. Please bear with us as we finish off the
     work on our new TensorFlow backend!
 
 .. customgalleryitem::

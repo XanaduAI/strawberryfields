@@ -73,8 +73,8 @@ For more advanced configuration options see the :func:`~.configuration_wizard` p
 
 **Flags:**
 
-* ``--token``: The authentication token to use.
-* ``--local``: Whether or not to create the configuration file locally in the current directory.
+* ``--token``: the authentication token to use
+* ``--local``: whether or not to create the configuration file locally in the current directory
 
 If not provided, the configuration file will be saved in the user's configuration directory.
 
@@ -91,7 +91,7 @@ scanning the following three directories in order of preference:
 3. The default user configuration directory:
 
    * On Linux: ``~/.config/strawberryfields``
-   * On Windows: ``~C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields``
+   * On Windows: ``C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields``
    * On MacOS: ``~/Library/Application\ Support/strawberryfields``
 
 The configuration file ``config.toml`` uses the `TOML standard <https://github.com/toml-lang/toml>`_,

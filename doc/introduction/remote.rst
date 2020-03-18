@@ -53,11 +53,11 @@ For this example, consider the following Blackbird script, which represents a qu
 exactly the gate layout of the ``chip2`` photonic hardware device. We will save the following
 file as ``test.xbb`` in our current working directory:
 
-.. code-block:: python
+.. code-block:: python3
 
     name template_4x2_chip2     # Name of the program
     version 1.0                 # Blackbird version number
-    target chip2 (shots = 100)   # This program will run on chip2 for 50 shots
+    target chip2 (shots = 100)   # This program will run on chip2 for 100 shots
 
     # define the squeezing amplitude
     float r = 1.0
@@ -243,7 +243,7 @@ We can convert the samples into counts using the following function:
           bitstrings = [tuple(i) for i in samples]
           return {k:v for k, v in Counter(bitstrings).items()}
 
->>> samples = np.array([[0, 2],[1, 0],[0, 1],[0, 0],[0, 0],[2, 0],[0, 1],[0, 1]])
+>>> samples = np.array([[0, 2], [1, 0], [0, 1], [0, 0], [0, 0], [2, 0], [0, 1], [0, 1]])
 >>> counts = count(samples)
 >>> print(counts)
 {(0, 2): 1, (1, 0): 1, (0, 1): 3, (0, 0): 2, (2, 0): 1}
@@ -279,11 +279,11 @@ Furthermore, several automatic decompositions are supported:
 
 For example, consider the following Blackbird script:
 
-.. code-block:: python
+.. code-block:: python3
 
     name compilation_example  # Name of the program
     version 1.0               # Blackbird version number
-    target chip2 (shots=100)   # This program will run on chip0 for 50 shots
+    target chip2 (shots=100)   # This program will run on chip0 for 100 shots
 
     # Define a unitary matrix
     complex array U[4, 4] =
@@ -319,7 +319,7 @@ This program will execute following the same steps as above; :class:`~.RemoteEng
 compile the program to match the layout of the chip.
 
 You may wish to view the compiled program; this can be easily done in Python using
-the ``Program.compile`` method:
+the ``Program.print`` method:
 
 
 >>> from strawberryfields import RemoteEngine
@@ -353,7 +353,7 @@ Rgate(1.902) | (q[0])
 Rgate(-1.173) | (q[5])
 MeasureFock | (q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7])
 
-and even saved as a new Blackbird script using the :func:`~.io.save` function:
+The compiled program can be saved as a new Blackbird script using the :func:`~.io.save` function:
 
 >>> from strawberryfields.io import save
 >>> save("test_compiled.xbb", prog)
@@ -409,7 +409,7 @@ values are of the form :math:`\{d, 0\}`.
 
     # the following mean photon number per mode
     # quantity is set to ensure that the singular values
-    # are scaled such that all squeezers have value 1
+    # are scaled such that all Sgates have value squeezing value r=1
     m = 0.345274461385554870545
 
     with prog.context as q:

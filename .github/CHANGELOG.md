@@ -2,7 +2,7 @@
 
 <h3>New features since last release</h3>
 
-* Adds initial support for the Xanadu cloud platform.
+* Adds initial support for the Xanadu's photonic quantum hardware.
   [(#101)](https://github.com/XanaduAI/strawberryfields/pull/101)
   [(#148)](https://github.com/XanaduAI/strawberryfields/pull/148)
   [(#294)](https://github.com/XanaduAI/strawberryfields/pull/294)
@@ -15,7 +15,7 @@
   from strawberryfields import ops
   from strawberryfields.utils import random_interferometer
 
-  # replace AUTHENTICATION_TOKEN with your Xanadu cloud token
+  # replace AUTHENTICATION_TOKEN with your Xanadu cloud access token
   eng = RemoteEngine("chip2", token="AUTHENTICATION_TOKEN")
   prog = sf.Program(8)
 
@@ -53,7 +53,7 @@
 <br>
 
 * New `sf` command line program for configuring Strawberry Fields for access
-  with the Xanadu cloud platform, as well as submitting and executing jobs from the
+  to the Xanadu cloud platform, as well as submitting and executing jobs from the
   command line.
   [(#146)](https://github.com/XanaduAI/strawberryfields/pull/146)
   [(#312)](https://github.com/XanaduAI/strawberryfields/pull/312)
@@ -65,7 +65,7 @@
 
   * `sf run input [--output FILE]`: submit and execute quantum programs from the command line
 
-  * `sf --ping`: verify your connection to the Xanadu cloud platform.
+  * `sf --ping`: verify your connection to the Xanadu cloud platform
 
   For more details, see the
   [documentation](https://strawberryfields.readthedocs.io/en/stable/code/sf_cli.html).
@@ -117,7 +117,7 @@
 
 * Modified the rectangular decomposition to ensure that identity-like
   unitaries are implemented with no swaps.
-  [#311](https://github.com/XanaduAI/strawberryfields/pull/311)
+  [(#311)](https://github.com/XanaduAI/strawberryfields/pull/311)
 
 <h3>Bug fixes</h3>
 
@@ -141,7 +141,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ville Bergholm, Tom Bromley, Jack Ceroni, Theodor Isacsson, Josh Izaac, Shreya P Kumar,
+Ville Bergholm, Tom Bromley, Jack Ceroni, Theodor Isacsson, Josh Izaac, Nathan Killoran, Shreya P Kumar,
 Nicolás Quesada, Jeremy Swinarton, Antal Száva, Paul Tan, Zeid Zabaneh
 
 

@@ -51,7 +51,7 @@ def load_config(filename="config.toml", **kwargs):
         2. data contained in environmental variables (if any)
         3. data contained in a configuration file (if exists)
 
-    Kwargs:
+    Keyword Args:
         filename (str): the name of the configuration file to look for
 
         Additional configuration options are detailed in
@@ -89,7 +89,7 @@ def create_config(authentication_token=None, **kwargs):
     If called without passing any keyword arguments, then a default
     configuration object is created.
 
-    Kwargs:
+    Keyword Args:
         Configuration options as detailed in :doc:`/introduction/configuration`
 
     Returns:
@@ -124,7 +124,7 @@ def get_config_filepath(filename="config.toml"):
         * The directory specified by the environment variable SF_CONF (if specified)
         * The user configuration directory (if specified)
 
-    Kwargs:
+    Keyword Args:
         filename (str): the configuration file to look for
 
     Returns:
@@ -235,7 +235,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
     This global user configuration directory differs depending on the operating system:
 
     * On Linux: ``~/.config/strawberryfields``
-    * On Windows: ``~C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields``
+    * On Windows: ``C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields``
     * On MacOS: ``~/Library/Application Support/strawberryfields``
 
     By default, Strawberry Fields will load the configuration and account credentials from the global
@@ -289,7 +289,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
         authentication_token (str): API token for authentication to the Xanadu cloud platform.
             This is required for submitting remote jobs using :class:`~.RemoteEngine`.
 
-    Kwargs:
+    Keyword Args:
         location (str): determines where the configuration file should be saved
         filename (str): the name of the configuration file to look for
 
