@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Circuit class specification for the chip2 class of circuits."""
+"""Circuit class specification for the X8 class of circuits."""
 import textwrap
 
 import numpy as np
@@ -27,10 +27,10 @@ from .circuit_specs import CircuitSpecs
 from .gbs import GBSSpecs
 
 
-class Chip2Specs(CircuitSpecs):
-    """Circuit specifications for the chip2 class of circuits."""
+class X8Specs(CircuitSpecs):
+    """Circuit specifications for the X8 class of circuits."""
 
-    short_name = "chip2"
+    short_name = "X8"
     modes = 8
     remote = True
     local = True
@@ -46,9 +46,9 @@ class Chip2Specs(CircuitSpecs):
 
     circuit = textwrap.dedent(
         """\
-        name template_4x2_chip2
+        name template_4x2_X8
         version 1.0
-        target chip2 (shots=1)
+        target X8 (shots=1)
 
         # for n spatial degrees, first n signal modes, then n idler modes, all phases zero
         S2gate({squeezing_amplitude_0}, 0.0) | [0, 4]
@@ -91,7 +91,7 @@ class Chip2Specs(CircuitSpecs):
     )
 
     def compile(self, seq, registers):
-        """Try to arrange a quantum circuit into a form suitable for Chip2.
+        """Try to arrange a quantum circuit into a form suitable for X8.
 
         Args:
             seq (Sequence[Command]): quantum circuit to modify
@@ -99,7 +99,7 @@ class Chip2Specs(CircuitSpecs):
         Returns:
             List[Command]: modified circuit
         Raises:
-            CircuitError: the circuit does not correspond to Chip2
+            CircuitError: the circuit does not correspond to X8
         """
         # pylint: disable=too-many-statements,too-many-branches
 
@@ -234,3 +234,7 @@ class Chip2Specs(CircuitSpecs):
         # ---------------------------------
         seq = super().compile(A + B + C, registers)
         return seq
+
+
+class X8_01(X8Specs):
+    short_name = "X8_01"
