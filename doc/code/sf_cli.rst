@@ -8,10 +8,9 @@ including:
 
 * ``sf configure [--token] [--local]``: configure the connection to the cloud platform
 
-* ``sf run input [--output FILE]``: submit and execute quantum programs from the command line
+* ``sf run INFILE [--output FILE]``: submit and execute quantum programs from the command line
 
 * ``sf --ping``: verify your connection to the Xanadu cloud platform
-
 
 
 Configure
@@ -21,22 +20,22 @@ Using the ``sf configure`` command to create a configuration file on Linux:
 
 .. code-block:: bash
 
-    $ sf configure --token MYAUTH
+    $ sf configure --token AUTHENTICATION_TOKEN
     $ cat  ~/.config/strawberryfields/config.toml
     [api]
-    authentication_token = "MYAUTH"
+    authentication_token = "AUTHENTICATION_TOKEN"
     hostname = "platform.strawberryfields.ai"
     use_ssl = true
     port = 443
 
 Using the ``sf configure`` command to create a configuration file on Windows:
 
-.. code-block:: ps1con
+.. code-block:: doscon
 
-    C:\> sf configure --token MYAUTH
-    C:\> cat C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
+    C:\> sf configure --token AUTHENTICATION_TOKEN
+    C:\> type C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
     [api]
-    authentication_token = "MYAUTH"
+    authentication_token = "AUTHENTICATION_TOKEN"
     hostname = "platform.strawberryfields.ai"
     use_ssl = true
     port = 443
@@ -63,34 +62,33 @@ Example run in a Linux-based operating system:
 .. code-block:: bash
 
     $ sf configure
-    Please enter the authentication token to use when connecting: [] MYAUTH
+    Please enter the authentication token to use when connecting: [] AUTHENTICATION_TOKEN
     Please enter the hostname of the server to connect to: [platform.strawberryfields.ai] MYHOST
     Should the client attempt to connect over SSL? [y] N
     Please enter the port number to connect with: [443] 12345
 
-    $cat  ~/.config/strawberryfields/config.toml
+    $ cat  ~/.config/strawberryfields/config.toml
     [api]
-    authentication_token = "MYAUTH"
+    authentication_token = "AUTHENTICATION_TOKEN"
     hostname = "MYHOST"
     use_ssl = false
     port = "12345"
 
 The same example run on a Windows operating system:
 
-.. code-block::  ps1con
+.. code-block::  doscon
 
+    C:\> sf configure
 
-    C:\>  sf configure
-
-    Please enter the authentication token to use when connecting: [] MYAUTH
+    Please enter the authentication token to use when connecting: [] AUTHENTICATION_TOKEN
     Please enter the hostname of the server to connect to: [platform.strawberryfields.ai] MYHOST
     Should the client attempt to connect over SSL? [y] N
     Please enter the port number to connect with: [443] 12345
 
-    C:\>  cat C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
+    C:\> type C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
 
     [api]
-    authentication_token = "MYAUTH"
+    authentication_token = "AUTHENTICATION_TOKEN"
     hostname = "MYHOST"
     use_ssl = false
     port = "12345"
