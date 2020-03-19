@@ -166,7 +166,7 @@ class DummyCircuit(CircuitSpecs):
     decompositions = {"Interferometer": {}}
 
 
-class TestX82Compilation:
+class TestX8Compilation:
     """Tests for compilation using the X8 circuit specification"""
 
     def test_exact_template(self, tol):
