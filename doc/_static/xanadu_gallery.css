@@ -227,7 +227,8 @@ p.sphx-glr-signature a.reference.external {
 
 
 .sphx-glr-download-link-note.admonition.note,
-.reference.download.internal,
+.sphx-glr-download,
+.sphx-glr-footer,
 .sphx-glr-signature {
   display: none;
 }

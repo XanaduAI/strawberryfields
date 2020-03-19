@@ -209,7 +209,6 @@ def setup_eng(setup_backend_pars):  # pylint: disable=redefined-outer-name
 
     return _setup_eng
 
-
 def pytest_runtest_setup(item):
     """Automatically skip tests if they are marked for only certain backends"""
     if tf_available:

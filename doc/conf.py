@@ -58,8 +58,11 @@ extensions = [
     'sphinx_gallery.gen_gallery',
     "sphinx.ext.intersphinx",
     "sphinx_automodapi.automodapi",
-    'sphinx_copybutton'
+    'sphinx_copybutton',
+    "m2r"
 ]
+
+source_suffix = ['.rst', '.md']
 
 from glob import glob
 import shutil
