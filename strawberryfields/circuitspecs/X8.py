@@ -237,4 +237,6 @@ class X8Specs(CircuitSpecs):
 
 
 class X8_01(X8Specs):
+    """Circuit specifications for the X8_01 class of circuits."""
+
     short_name = "X8_01"
