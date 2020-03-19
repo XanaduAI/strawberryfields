@@ -110,6 +110,16 @@ class TestSFToBlackbirdConversion:
         assert bb.version == "1.0"
         assert bb.target["name"] == "gaussian"
 
+    def test_metadata_run_options(self):
+        """Test run options correctly converts"""
+        prog = Program(4, name="test_program")
+        bb = io.to_blackbird(prog.compile("gaussian", shots=1024))
+
+        assert bb.name == "test_program"
+        assert bb.version == "1.0"
+        assert bb.target["name"] == "gaussian"
+        assert bb.target["options"] == {"shots": 1024}
+
     def test_gate_noarg(self):
         """Test gate with no argument converts"""
         # create a test program

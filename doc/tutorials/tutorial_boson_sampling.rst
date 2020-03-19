@@ -162,6 +162,90 @@ We find that
         -0.1566+0.2246i & 0.1100-0.1638i & -0.4212+0.1836i & 0.8188+0.068i
     \end{matrix}\right]
 
+
+.. note::
+
+    While we have done it by hand, Strawberry Fields also supports a Gaussian unitary
+    compiler, that allows us to compile our program into a single Gaussian unitary.
+
+    Note that we must create a new program without the initial Fock states,
+    as the Gaussian unitary compiler only works with *Gaussian operations*.
+    Compiling the program:
+
+    >>> prog_unitary = sf.Program(4)
+    >>> prog_unitary.circuit = boson_sampling.circuit[4:]
+    >>> prog_compiled = prog_unitary.compile("gaussian_unitary")
+
+    Printing ``prog_compiled``, we see it now consists of a single
+    :class:`~.GaussianTransform` operation, consisting of a single
+    symplectic matrix:
+
+    >>> prog_compiled.print()
+    GaussianTransform([[ 0.2195  0.6111 -0.1027 -0.0273  0.2565 -0.5242 -0.4745 -0.0373]
+     [ 0.4513  0.457   0.1316  0.0353 -0.6026 -0.0123  0.4504  0.0532]
+     [ 0.0387 -0.0192 -0.2408 -0.4584 -0.4927  0.3218 -0.5244 -0.3296]
+     [-0.1566  0.11   -0.4212  0.8188 -0.2246  0.1638 -0.1836 -0.068 ]
+     [-0.2565  0.5242  0.4745  0.0373  0.2195  0.6111 -0.1027 -0.0273]
+     [ 0.6026  0.0123 -0.4504 -0.0532  0.4513  0.457   0.1316  0.0353]
+     [ 0.4927 -0.3218  0.5244  0.3296  0.0387 -0.0192 -0.2408 -0.4584]
+     [ 0.2246 -0.1638  0.1836  0.068  -0.1566  0.11   -0.4212  0.8188]]) | (q[0], q[1], q[2], q[3])
+
+    We can easily extract this symplectic matrix, and rewrite it as a unitary
+    matrix:
+
+    >>> S = prog_compiled.circuit[0].op.p[0]
+    >>> U = S[:4, :4] + 1j*S[4:, :4]
+    >>> U
+    [[ 0.2195-0.2565j,  0.6111+0.5242j, -0.1027+0.4745j, -0.0273+0.0373j],
+     [ 0.4513+0.6026j,  0.457 +0.0123j,  0.1316-0.4504j,  0.0353-0.0532j],
+     [ 0.0387+0.4927j, -0.0192-0.3218j, -0.2408+0.5244j, -0.4584+0.3296j],
+     [-0.1566+0.2246j,  0.11  -0.1638j, -0.4212+0.1836j,  0.8188+0.068j ]]
+
+    which agrees with the result above.
+
+.. note::
+
+    Strawberry Fields supports the :class:`~.Interferometer` operation, which
+    allows numeric unitary matrices to be directly embedded in programs and
+    decomposed into beamsplitters and rotation gates:
+
+    .. code-block:: python3
+
+        boson_sampling = sf.Program(4)
+
+        with boson_sampling.context as q:
+            # prepare the input fock states
+            Fock(1) | q[0]
+            Fock(1) | q[1]
+            Vac     | q[2]
+            Fock(1) | q[3]
+
+            Interferometer(U) | q
+
+    Compiling this for the Fock backend, and printing the result:
+
+    >>> boson_sampling.compile("fock").print()
+    Fock(1) | (q[0])
+    Fock(1) | (q[1])
+    Vac | (q[2])
+    Fock(1) | (q[3])
+    Rgate(-3.124) | (q[0])
+    BSgate(0.9465, 0) | (q[0], q[1])
+    Rgate(2.724) | (q[2])
+    BSgate(0.09485, 0) | (q[2], q[3])
+    Rgate(-0.9705) | (q[1])
+    BSgate(0.7263, 0) | (q[1], q[2])
+    Rgate(-1.788) | (q[0])
+    BSgate(0.8246, 0) | (q[0], q[1])
+    Rgate(-0.9397) | (q[0])
+    Rgate(2.93) | (q[1])
+    Rgate(3.133) | (q[2])
+    Rgate(0.07904) | (q[3])
+    BSgate(-0.533, 0) | (q[2], q[3])
+    Rgate(2.45) | (q[2])
+    BSgate(-0.03962, 0) | (q[1], q[2])
+    Rgate(2.508) | (q[1])
+
 Analysis
 =========
 
@@ -207,21 +291,21 @@ Comparing this to the result from Strawberry Fields, we can see that they only d
 
 They agree with almost negligable error! This is due to the high accuracy of the Fock backend, despite the Fock state truncation/cutoff.
 
-    This close result stands for any other output Fock state measurement that preserves the photon number, for example:
+This close result stands for any other output Fock state measurement that preserves the photon number, for example:
 
-    * :math:`\ket{3,0,0,0}\bra{3,0,0,0}`:
+* :math:`\ket{3,0,0,0}\bra{3,0,0,0}`:
 
-    >>> probs[3,0,0,0]
-    0.00094584833471324822
-    >>> np.abs(perm(U[:,[0,1,3]][[0,0,0]]))**2 / 6
-    0.00094584833471324887
+>>> probs[3,0,0,0]
+0.00094584833471324822
+>>> np.abs(perm(U[:,[0,1,3]][[0,0,0]]))**2 / 6
+0.00094584833471324887
 
-    * :math:`\ket{1,1,0,1}\bra{1,1,0,1}`:
+* :math:`\ket{1,1,0,1}\bra{1,1,0,1}`:
 
-    >>> probs[1,1,0,1]
-    0.17468916048563926
-    >>> np.abs(perm(U[:,[0,1,3]][[0,1,3]]))**2 / 1
-    0.17468916048563934
+>>> probs[1,1,0,1]
+0.17468916048563926
+>>> np.abs(perm(U[:,[0,1,3]][[0,1,3]]))**2 / 1
+0.17468916048563934
 
 
 .. note::

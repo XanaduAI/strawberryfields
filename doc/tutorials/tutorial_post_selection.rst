@@ -172,11 +172,10 @@ We can simulate this conditional displacement using post-selection. Utilizing th
     eng = sf.Engine("gaussian")
 
     with prog.context as q:
-    with eng:
         S2gate(1)                    | (q[0], q[1])
         MeasureHomodyne(0, select=1)  | q[0]
 
-    state = eng.run('gaussian').state
+    state = eng.run(prog).state
 
 To check the displacement of the second output mode, we can use the :meth:`~.BaseGaussianState.reduced_gaussian` state method to extract the vector of means and the covariance matrix:
 

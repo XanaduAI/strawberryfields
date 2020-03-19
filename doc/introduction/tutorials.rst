@@ -100,6 +100,40 @@ Algorithms
     :figure: /_static/gaussian_boson_sampling.png
 
 .. customgalleryitem::
+    :tooltip: Scattershot boson sampling
+    :description: :doc:`/gallery/scattershot-boson-sampling/scattershot-bs`
+    :figure: /gallery/scattershot-boson-sampling/scattershot-bs.gif
+
+.. customgalleryitem::
+    :tooltip: Photonic gate visualization
+    :description: :doc:`/gallery/gate_visualisation/GateVisualisation`
+    :figure: /gallery/gate_visualisation/GateVisualisation.gif
+
+.. raw:: html
+
+        <div style='clear:both'></div>
+        <br>
+
+
+Optimization and machine learning
+---------------------------------
+
+.. toctree::
+    :hidden:
+    :maxdepth: 1
+
+    /tutorials/tutorial_machine_learning
+    /gallery/minimizing_correlations/minimizing_correlations
+    /gallery/state_learner/StateLearning
+
+.. warning::
+
+    We are currently making some huge changes to the TensorFlow backend
+    of Strawberry Fields, including upcoming TensorFlow 2.0 support. As a result,
+    the tutorials in this section are currently not supported. Please bear with us as we finish off the
+    work on our new TensorFlow backend!
+
+.. customgalleryitem::
     :tooltip: Optimization and machine learning with TensorFlow
     :description: :doc:`Optimization and machine learning with TensorFlow </tutorials/tutorial_machine_learning>`
     :figure: ../_static/TF.png
@@ -119,14 +153,23 @@ Algorithms
     :description: :doc:`/gallery/gate_synthesis/GateSynthesis`
     :figure: /gallery/gate_synthesis/GateSynthesis.gif
 
-.. customgalleryitem::
-    :tooltip: Scattershot boson sampling
-    :description: :doc:`/gallery/scattershot-boson-sampling/scattershot-bs`
-    :figure: /gallery/scattershot-boson-sampling/scattershot-bs.gif
+.. raw:: html
+
+        <div style='clear:both'></div>
+        <br>
+
+Hardware
+--------
+
+.. toctree::
+    :hidden:
+    :maxdepth: 1
+
+    /introduction/remote
 
 .. customgalleryitem::
-    :tooltip: Photonic gate visualization
-    :description: :doc:`/gallery/gate_visualisation/GateVisualisation`
+    :tooltip: RemoteEngine
+    :description: :doc:`/introduction/remote`
     :figure: /gallery/gate_visualisation/GateVisualisation.gif
 
 .. raw:: html

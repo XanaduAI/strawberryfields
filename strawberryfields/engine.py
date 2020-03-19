@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,114 +17,24 @@ communicating quantum programs represented by :class:`.Program` objects
 to a backend that could be e.g., a simulator or a hardware quantum processor.
 One can think of each BaseEngine instance as a separate quantum computation.
 """
-
 import abc
 import collections.abc
+import logging
+import time
+from typing import Optional
 
 import numpy as np
 
-from .backends import load_backend
-from .backends.base import (NotApplicableError, BaseBackend)
+from strawberryfields.api import Connection, Job, Result
+from strawberryfields.program import Program
 
+from .backends import load_backend
+from .backends.base import BaseBackend, NotApplicableError
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
-__all__ = ["Result", "BaseEngine", "LocalEngine"]
+__all__ = ["BaseEngine", "LocalEngine"]
 
-
-
-class Result:
-    """Result of a quantum computation.
-
-    Represents the results of the execution of a quantum program
-    returned by the :meth:`.LocalEngine.run` method.
-
-    The returned :class:`~Result` object provides several useful properties
-    for accessing the results of your program execution:
-
-    * ``results.state``: The quantum state object contains details and methods
-      for manipulation of the final circuit state. Not available for remote
-      backends. See :doc:`/introduction/states` for more information regarding available
-      state methods.
-
-    * ``results.samples``: Measurement samples from any measurements performed.
-
-    **Example:**
-
-    The following examples run an existing Strawberry Fields
-    quantum :class:`~.Program` on the Gaussian engine to get
-    a results object.
-
-    Using this results object, the measurement samples
-    can be returned, as well as quantum state information.
-
-    >>> eng = sf.Engine("gaussian")
-    >>> results = eng.run(prog)
-    >>> print(results)
-    Result: 3 subsystems
-        state: <GaussianState: num_modes=3, pure=True, hbar=2>
-        samples: [[0, 0, 0]]
-    >>> results.samples
-    np.array([[0, 0, 0]])
-    >>> results.state.is_pure()
-    True
-
-    .. note::
-
-        Only local simulators will return a state object. Remote
-        simulators and hardware backends will return
-        measurement samples  (:attr:`Result.samples`),
-        but the return value of ``Result.state`` will be ``None``.
-    """
-    def __init__(self, samples):
-        self._state = None
-
-        # samples arrives as either a list of arrays (for shots > 1) or a list (for shots = 1)
-        # need to be converted to a multidimensional array with shape (shots, modes)
-        if np.ndim(samples) == 1:
-            samples = np.array([samples])
-        else:
-            samples = np.stack(samples, 1)
-        self._samples = samples
-
-    @property
-    def samples(self):
-        """Measurement samples.
-
-        Returned measurement samples will have shape ``(shots, modes)``. If a
-        single shot is requested during execution, the returned measurement
-        sample will have shape ``(1, modes)``.
-
-        Returns:
-            array[array[float, int]]: measurement samples returned from
-            program execution
-        """
-        return self._samples
-
-    @property
-    def state(self):
-        """The quantum state object.
-
-        The quantum state object contains details and methods
-        for manipulation of the final circuit state.
-
-        See :doc:`/introduction/states` for more information regarding available
-        state methods.
-
-        .. note::
-
-            Only local simulators will return a state object. Remote
-            simulators and hardware backends will return
-            measurement samples (:attr:`Result.samples`),
-            but the return value of ``Result.state`` will be ``None``.
-
-        Returns:
-            BaseState: quantum state returned from program execution
-        """
-        return self._state
-
-    def __str__(self):
-        """String representation."""
-        return 'Result: {} subsystems, state: {}\n samples: {}'.format(len(self.samples), self.state, self.samples)
+log = logging.getLogger(__name__)
 
 
 class BaseEngine(abc.ABC):
@@ -134,6 +44,9 @@ class BaseEngine(abc.ABC):
         backend (str): backend short name
         backend_options (Dict[str, Any]): keyword arguments for the backend
     """
+
+    REMOTE = False
+
     def __init__(self, backend, backend_options=None):
         if backend_options is None:
             backend_options = {}
@@ -146,6 +59,15 @@ class BaseEngine(abc.ABC):
         self.run_progs = []
         #: List[List[Number]]: latest measurement results, shape == (modes, shots)
         self.samples = None
+
+        if isinstance(backend, str):
+            self.backend_name = backend
+            self.backend = load_backend(backend)
+        elif isinstance(backend, BaseBackend):
+            self.backend_name = backend.short_name
+            self.backend = backend
+        else:
+            raise TypeError("backend must be a string or a BaseBackend instance.")
 
     @abc.abstractmethod
     def __str__(self):
@@ -268,7 +190,7 @@ class BaseEngine(abc.ABC):
             print_fn (function): optional custom function to use for string printing.
         """
         for k, r in enumerate(self.run_progs):
-            print_fn('Run {}:'.format(k))
+            print_fn("Run {}:".format(k))
             r.print(print_fn)
 
     @abc.abstractmethod
@@ -339,10 +261,13 @@ class BaseEngine(abc.ABC):
             else:
                 # there was a previous program segment
                 if not p.can_follow(prev):
-                    raise RuntimeError("Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name))
+                    raise RuntimeError(
+                        "Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name)
+                    )
 
                 # Copy the latest measured values in the RegRefs of p.
-                # We cannot copy from prev directly because it could be used in more than one engine.
+                # We cannot copy from prev directly because it could be used in more than one
+                # engine.
                 for k, v in enumerate(self.samples):
                     p.reg_refs[k].val = v
 
@@ -355,13 +280,20 @@ class BaseEngine(abc.ABC):
                 p = p.compile(target, **compile_options)
             p.lock()
 
-            self._run_program(p, **kwargs)
-            self.run_progs.append(p)
-            # store the latest measurement results
-            self.samples = [_broadcast_nones(p.reg_refs[k].val, kwargs["shots"]) for k in sorted(p.reg_refs)]
+            if self.REMOTE:
+                self.samples = self._run_program(p, **kwargs)
+            else:
+                self._run_program(p, **kwargs)
+                shots = kwargs.get("shots", 1)
+                self.samples = [
+                    _broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)
+                ]
+                self.run_progs.append(p)
+
             prev = p
 
-        return Result(self.samples.copy())
+        if self.samples is not None:
+            return Result(np.array(self.samples).T)
 
 
 class LocalEngine(BaseEngine):
@@ -398,22 +330,13 @@ class LocalEngine(BaseEngine):
         backend (str, BaseBackend): short name of the backend, or a pre-constructed backend instance
         backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
+
     def __init__(self, backend, *, backend_options=None):
         backend_options = backend_options or {}
         super().__init__(backend, backend_options)
 
-        if isinstance(backend, str):
-            self.backend_name = backend
-            #: BaseBackend: backend for executing the quantum circuit
-            self.backend = load_backend(backend)
-        elif isinstance(backend, BaseBackend):
-            self.backend_name = backend.short_name
-            self.backend = backend
-        else:
-            raise TypeError('backend must be a string or a BaseBackend instance.')
-
     def __str__(self):
-        return self.__class__.__name__ + '({})'.format(self.backend_name)
+        return self.__class__.__name__ + "({})".format(self.backend_name)
 
     def reset(self, backend_options=None):
         backend_options = backend_options or {}
@@ -429,14 +352,21 @@ class LocalEngine(BaseEngine):
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend
-                cmd.op.apply(cmd.reg, self.backend, **kwargs)  # NOTE we could also handle storing measured vals here
+                # NOTE we could also handle storing measured vals here
+                cmd.op.apply(cmd.reg, self.backend, **kwargs)
                 applied.append(cmd)
             except NotApplicableError:
                 # command is not applicable to the current backend type
-                raise NotApplicableError('The operation {} cannot be used with {}.'.format(cmd.op, self.backend)) from None
+                raise NotApplicableError(
+                    "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
+                ) from None
             except NotImplementedError:
                 # command not directly supported by backend API
-                raise NotImplementedError('The operation {} has not been implemented in {} for the arguments {}.'.format(cmd.op, self.backend, kwargs)) from None
+                raise NotImplementedError(
+                    "The operation {} has not been implemented in {} for the arguments {}.".format(
+                        cmd.op, self.backend, kwargs
+                    )
+                ) from None
         return applied
 
     def run(self, program, *, args=None, compile_options=None, run_options=None):
@@ -478,11 +408,13 @@ class LocalEngine(BaseEngine):
 
         temp_run_options.update(run_options or {})
         temp_run_options.setdefault("shots", 1)
-        temp_run_options.setdefault('modes', None)
+        temp_run_options.setdefault("modes", None)
 
         # avoid unexpected keys being sent to Operations
-        eng_run_keys = ["shots"]
-        eng_run_options = {key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys}
+        eng_run_keys = ["eval", "session", "feed_dict", "shots"]
+        eng_run_options = {
+            key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys
+        }
 
         # check that batching is not used together with shots > 1
         if self.backend_options.get("batch_size", 0) and eng_run_options["shots"] > 1:
@@ -493,14 +425,20 @@ class LocalEngine(BaseEngine):
             for c in p.circuit:
                 try:
                     if c.op.select and eng_run_options["shots"] > 1:
-                        raise NotImplementedError("Post-selection cannot be used together with multiple shots.")
+                        raise NotImplementedError(
+                            "Post-selection cannot be used together with multiple shots."
+                        )
                 except AttributeError:
                     pass
 
                 if c.op.measurement_deps and eng_run_options["shots"] > 1:
-                    raise NotImplementedError("Feed-forwarding of measurements cannot be used together with multiple shots.")
+                    raise NotImplementedError(
+                        "Feed-forwarding of measurements cannot be used together with multiple shots."
+                    )
 
-        result = super()._run(program, args=args, compile_options=compile_options, **eng_run_options)
+        result = super()._run(
+            program, args=args, compile_options=compile_options, **eng_run_options
+        )
 
         modes = temp_run_options["modes"]
 
@@ -513,7 +451,130 @@ class LocalEngine(BaseEngine):
         return result
 
 
+class RemoteEngine:
+    """A quantum program executor engine that provides a simple interface for
+    running remote jobs in a blocking or non-blocking manner.
+
+    **Example:**
+
+    The following examples instantiate an engine with the default configuration, and
+    run both blocking and non-blocking jobs.
+
+    Run a blocking job:
+
+    >>> engine = RemoteEngine("chip2")
+    >>> result = engine.run(program, shots=1) # blocking call
+    >>> result
+    [[0 1 0 2 1 0 0 0]]
+
+    Run a non-blocking job:
+
+    >>> job = engine.run_async(program, shots=1)
+    >>> job.status
+    "queued"
+    >>> job.result
+    InvalidJobOperationError
+    >>> job.refresh()
+    >>> job.status
+    "complete"
+    >>> job.result
+    [[0 1 0 2 1 0 0 0]]
+
+    Args:
+        target (str): the target device
+        connection (strawberryfields.api.Connection): a connection to the remote job
+            execution platform
+    """
+
+    POLLING_INTERVAL_SECONDS = 1
+    VALID_TARGETS = ("chip2",)
+
+    def __init__(self, target: str, connection: Connection = Connection()):
+        if target not in self.VALID_TARGETS:
+            raise ValueError(
+                "Invalid engine target: {} (valid targets: {})".format(target, self.VALID_TARGETS)
+            )
+        self._target = target
+        self._connection = connection
+
+    @property
+    def target(self) -> str:
+        """The target device used by the engine.
+
+        Returns:
+            str: the name of the target
+        """
+        return self._target
+
+    @property
+    def connection(self) -> Connection:
+        """The connection object used by the engine.
+
+        Returns:
+            strawberryfields.api.Connection
+        """
+        return self._connection
+
+    def run(self, program: Program, shots: int = 1) -> Optional[Result]:
+        """Runs a blocking job.
+
+        In the blocking mode, the engine blocks until the job is completed, failed, or
+        cancelled. A job in progress can be cancelled with a keyboard interrupt (`ctrl+c`).
+
+        If the job completes successfully, the result is returned; if the job
+        fails or is cancelled, ``None`` is returned.
+
+        Args:
+            program (strawberryfields.Program): the quantum circuit
+            shots (int): the number of shots for which to run the job
+
+        Returns:
+            [strawberryfields.api.Result, None]: the job result if successful, and
+                ``None`` otherwise
+        """
+        job = self.run_async(program, shots)
+        try:
+            while True:
+                job.refresh()
+                if job.status == "complete":
+                    return job.result
+                if job.status == "failed":
+                    log.warning(
+                        "The remote job failed due to an internal server error; "
+                        "please try again."
+                    )
+                    return None
+                time.sleep(self.POLLING_INTERVAL_SECONDS)
+        except KeyboardInterrupt:
+            self._connection.cancel_job(job.id)
+            return None
+
+    def run_async(self, program: Program, shots: int = 1) -> Job:
+        """Runs a non-blocking remote job.
+
+        In the non-blocking mode, a ``Job`` object is returned immediately, and the user can
+        manually refresh the status and check for updated results of the job.
+
+        Args:
+            program (strawberryfields.Program): the quantum circuit
+            shots (int): the number of shots for which to run the job
+
+        Returns:
+            strawberryfields.api.Job: the created remote job
+        """
+        return self._connection.create_job(self.target, program, shots)
+
+    def __repr__(self):
+        return "<{}: target={}, connection={}>".format(
+            self.__class__.__name__, self.target, self.connection
+        )
+
+    def __str__(self):
+        return self.__repr__()
+
+
 class Engine(LocalEngine):
     """dummy"""
+
     # alias for backwards compatibility
     __doc__ = LocalEngine.__doc__

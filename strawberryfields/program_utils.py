@@ -35,12 +35,12 @@ here to avoid cyclic imports."""
 # cf. _pydecimal.py in the python standard distribution.
 
 
-
 class RegRefError(IndexError):
     """Exception raised by :class:`.Program` when it encounters an invalid register reference.
 
     E.g., trying to apply a gate to a nonexistent or deleted subsystem.
     """
+
 
 class CircuitError(RuntimeError):
     """Exception raised by :class:`.Program` when it encounters an illegal
@@ -48,6 +48,7 @@ class CircuitError(RuntimeError):
 
     E.g., trying to use an Operation type that is unsupported by the current compilation target.
     """
+
 
 class MergeFailure(RuntimeError):
     """Exception raised by :meth:`strawberryfields.ops.Operation.merge` when an
@@ -81,12 +82,18 @@ class Command:
         self.reg = reg
 
     def __str__(self):
-        """Print the command using Blackbird syntax."""
-        temp = str(self.op)
+        """
+        Return a string containing the command in Blackbird syntax.
+        """
+
+        operation = str(self.op)
         if self.op.ns == 0:
             # op takes no subsystems as parameters, do not print anything more
-            return temp
-        return '{} | ({})'.format(temp, ", ".join([str(rr) for rr in self.reg]))
+            code = operation
+        else:
+            subsystems = ", ".join([str(r) for r in self.reg])
+            code = "{} | ({})".format(operation, subsystems)
+        return code
 
     def __lt__(self, other):
         # Needed as a tiebreaker for NetworkX lexicographical_topological_sort()
