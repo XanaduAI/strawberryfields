@@ -104,7 +104,7 @@ def program_equivalence(prog1, prog2, compare_params=True, atol=1e-6, rtol=0):
         name_mapping = {i: n.op.__class__.__name__ for i, n in enumerate(G.nodes())}
         parameter_mapping = {i: par_evaluate(n.op.p) for i, n in enumerate(G.nodes())}
 
-        # CXgate and BSgate are not symmetric wrt to permuting the order of the two
+        # CXgate and BSgate are not symmetric wrt permuting the order of the two
         # modes it acts on; i.e., the order of the wires matter
         wire_mapping = {}
         for i, n in enumerate(G.nodes()):

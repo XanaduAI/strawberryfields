@@ -389,7 +389,7 @@ class TestRunBlackbirdScript:
         # Check that the write_script_results function was not called
         assert not mocked_write_script_results.called
 
-test_samples = [1,2,3,4]
+test_samples = [1, 2, 3, 4]
 
 class MockRemoteEngineIntegration:
     """A mock class used for capturing the arguments with which the
@@ -463,7 +463,7 @@ class TestWriteScriptResults:
     def test_write_to_file(self, tmpdir):
         """Tests that the write_script_results function writes to file
         correctly."""
-        some_samples = [1,2,3,4,5]
+        some_samples = [1, 2, 3, 4, 5]
         filepath = tmpdir.join("test_script.xbb")
 
         cli.write_script_results(some_samples, output_file=filepath)
@@ -476,7 +476,7 @@ class TestWriteScriptResults:
     def test_write_to_std_out(self, monkeypatch, capsys):
         """Tests that the write_script_results function writes to the standard
         output correctly."""
-        some_samples = [1,2,3,4,5]
+        some_samples = [1, 2, 3, 4, 5]
 
         with monkeypatch.context() as m:
             cli.write_script_results(some_samples)

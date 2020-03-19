@@ -409,7 +409,7 @@ values are of the form :math:`\{d, 0\}`.
 
     # the following mean photon number per mode
     # quantity is set to ensure that the singular values
-    # are scaled such that all Sgates have value squeezing value r=1
+    # are scaled such that all Sgates have squeezing value r=1
     m = 0.345274461385554870545
 
     with prog.context as q:
