@@ -96,7 +96,7 @@ __all__ = [
 ]
 
 
-virtual_backends = ["chip0", "chip2"]
+virtual_backends = ["chip2"]
 
 local_backends = {
     b.short_name: b for b in (BaseBackend, GaussianBackend, FockBackend)

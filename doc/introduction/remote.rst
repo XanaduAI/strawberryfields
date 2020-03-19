@@ -283,7 +283,7 @@ For example, consider the following Blackbird script:
 
     name compilation_example  # Name of the program
     version 1.0               # Blackbird version number
-    target chip2 (shots=100)   # This program will run on chip0 for 100 shots
+    target chip2 (shots=100)   # This program will run on chip2 for 100 shots
 
     # Define a unitary matrix
     complex array U[4, 4] =
