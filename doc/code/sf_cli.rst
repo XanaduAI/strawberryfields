@@ -18,7 +18,7 @@ Configure
 
 Using the ``sf configure`` command to create a configuration file on Linux:
 
-.. code-block:: bash
+.. code-block:: console
 
     $ sf configure --token AUTHENTICATION_TOKEN
     $ cat  ~/.config/strawberryfields/config.toml
@@ -40,17 +40,24 @@ Using the ``sf configure`` command to create a configuration file on Windows:
     use_ssl = true
     port = 443
 
+In both the above examples, replace ``AUTHENTICATION_TOKEN`` above with your
+Xanadu cloud access token.
+
 **Flags:**
 
 * ``--token``: the authentication token to use
 
 * ``--local``: whether or not to create the configuration file locally in the current directory
 
-
 If not provided, the configuration file will be saved in the user's configuration directory.
 
+.. seealso::
+
+    :doc:`Configuration options </code/sf_configuration>`
+
+
 Configuration wizard
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 For more advanced configuration options, the configuration wizard can be used.
 
@@ -59,7 +66,7 @@ option. Once done, we have a look at the newly created configuration file.
 
 Example run in a Linux-based operating system:
 
-.. code-block:: bash
+.. code-block:: console
 
     $ sf configure
     Please enter the authentication token to use when connecting: [] AUTHENTICATION_TOKEN
@@ -93,15 +100,17 @@ The same example run on a Windows operating system:
     use_ssl = false
     port = "12345"
 
+
 Testing your connection
 -----------------------
 
 To test that your account credentials correctly authenticate against the cloud platform, the ``ping`` flag can be used:
 
-.. code-block:: bash
+.. code-block:: console
 
     $ sf --ping
     You have successfully authenticated to the platform!
+
 
 Submitting jobs
 ---------------
@@ -111,14 +120,15 @@ line program can be used:
 
 .. code-block:: console
 
-    sf run test.xbb --output out.txt
+    $ sf run test.xbb --output out.txt
 
 After executing the above command, the result will be stored in ``out.txt``
 in the current working directory.
 You can also omit the ``--output`` parameter to print the result to the screen.
 
-Functions
----------
+
+Code details
+------------
 
 .. warning::
 

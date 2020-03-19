@@ -52,10 +52,9 @@ def load_config(filename="config.toml", **kwargs):
         3. data contained in a configuration file (if exists)
 
     Keyword Args:
-        filename (str): the name of the configuration file to look for
-
-        Additional configuration options are detailed in
-        :doc:`/introduction/configuration`
+        filename (str): the name of the configuration file to look for.
+            Additional configuration options are detailed in
+            :doc:`/code/sf_configuration`
 
     Returns:
         dict[str, dict[str, Union[str, bool, int]]]: the configuration
@@ -90,7 +89,7 @@ def create_config(authentication_token=None, **kwargs):
     configuration object is created.
 
     Keyword Args:
-        Configuration options as detailed in :doc:`/introduction/configuration`
+        Configuration options as detailed in :doc:`/code/sf_configuration`
 
     Returns:
         dict[str, dict[str, Union[str, bool, int]]]: the configuration
@@ -269,7 +268,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
     >>> sf.store_account("MYAUTH", location="local")
 
     Each of the configuration options can be passed as further keyword
-    arguments as well (see the :doc:`/introduction/configuration` page
+    arguments as well (see the :doc:`/code/sf_configuration` page
     for a list of options):
 
     >>> import strawberryfields as sf
@@ -293,7 +292,7 @@ def store_account(authentication_token, filename="config.toml", location="user_c
         location (str): determines where the configuration file should be saved
         filename (str): the name of the configuration file to look for
 
-    Additional configuration options are detailed in :doc:`/introduction/configuration` and can be passed
+    Additional configuration options are detailed in :doc:`/code/sf_configuration` and can be passed
     as keyword arguments.
     """
     if location == "user_config":
