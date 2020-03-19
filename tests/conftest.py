@@ -47,7 +47,6 @@ eng_backend_params = [
     pytest.param("gaussian", marks=pytest.mark.gaussian),
 ]
 
-
 if tf_available and tf.__version__[:3] == "1.3":
     from strawberryfields.backends.tfbackend import TFBackend
 
@@ -208,7 +207,6 @@ def setup_eng(setup_backend_pars):  # pylint: disable=redefined-outer-name
         return eng, prog
 
     return _setup_eng
-
 
 def pytest_runtest_setup(item):
     """Automatically skip tests if they are marked for only certain backends"""

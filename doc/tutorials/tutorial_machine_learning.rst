@@ -3,6 +3,8 @@
 Optimization & machine learning
 ###############################
 
+.. warning:: We are currently making some huge changes to the TensorFlow backend of Strawberry Fields, including upcoming TensorFlow 2.0 support. As a result, this tutorial currently not working. Please bare with us as we finish off the work on our new TensorFlow backend!
+
 .. note:: The content in this page is suited to more advanced users who already have an understanding of Strawberry Fields, e.g., those who have completed the :ref:`teleportation tutorial <tutorial>`. Some basic knowledge of `Tensorflow <https://www.tensorflow.org/>`_ is also helpful.
 
 In this page, we show how the user can carry out optimization and machine learning on quantum

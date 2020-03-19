@@ -61,10 +61,8 @@ from .program_utils import Command, RegRef, CircuitError, RegRefError
 from .parameters import FreeParameter, ParameterError
 
 
-
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = []
-
 
 
 class Program:
@@ -136,7 +134,7 @@ class Program:
         #: bool: if True, no more Commands can be appended to the Program
         self.locked = False
         #: str, None: for compiled Programs, the short name of the target CircuitSpecs template, otherwise None
-        self.target = None
+        self._target = None
         #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
         #: dict[str, Parameter]: free circuit parameters owned by this Program
@@ -318,7 +316,7 @@ class Program:
         for r in refs:
             # mark the RegRef as deleted
             r.active = False
-            #self.reg_refs[r.ind].active = False
+            # self.reg_refs[r.ind].active = False
         # NOTE: deleted indices are *not* removed from self.unused_indices
 
     def lock(self):
@@ -502,15 +500,18 @@ class Program:
         # create the compiled Program
         compiled = self._linked_copy()
         compiled.circuit = seq
-        compiled.target = target
+        compiled._target = target
 
         # get run options of compiled program
         # for the moment, shots is the only supported run option.
         if "shots" in kwargs:
             compiled.run_options["shots"] = kwargs["shots"]
 
-        return compiled
+        compiled.backend_options = {}
+        if "cutoff_dim" in kwargs:
+            compiled.backend_options["cutoff_dim"] = kwargs["cutoff_dim"]
 
+        return compiled
 
     def optimize(self):
         """Simplify and optimize the program.
@@ -528,7 +529,6 @@ class Program:
         opt = self._linked_copy()
         opt.circuit = pu.optimize_circuit(self.circuit)
         return opt
-
 
     def draw_circuit(self, tex_dir='./circuit_tex', write_to_file=True):
         r"""Draw the circuit using the Qcircuit :math:`\LaTeX` package.
@@ -571,6 +571,17 @@ class Program:
 
         return [document, tex]
 
+    @property
+    def target(self):
+        """The target specification the program has been compiled against.
+
+        If the program has not been compiled, this will return ``None``.
+
+        Returns:
+            str or None: the short name of the target CircuitSpecs template if
+            compiled, otherwise None
+        """
+        return self._target
 
     def params(self, *args):
         """Create and access free circuit parameters.
