@@ -18,7 +18,7 @@ from datetime import datetime
 import io
 import json
 import logging
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import requests
