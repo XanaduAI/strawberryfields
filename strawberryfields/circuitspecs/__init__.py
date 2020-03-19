@@ -38,6 +38,7 @@ executed on that backend.
 """
 from .circuit_specs import CircuitSpecs
 from .chip2 import Chip2Specs
+from .X12 import X12_01, X12_02
 from .fock import FockSpecs
 from .gaussian import GaussianSpecs
 from .gbs import GBSSpecs
