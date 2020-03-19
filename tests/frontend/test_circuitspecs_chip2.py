@@ -430,7 +430,7 @@ class TestX8Compilation:
             ops.MZgate(np.pi, 0) | (q[6], q[7])
             ops.MeasureFock() | q
 
-        # compile the program using the X8 spec
+        # compile the program using the X8_01 spec
         res = prog.compile("X8_01")
 
         # remove the Fock measurements
@@ -472,7 +472,7 @@ class TestX8Compilation:
             ops.MZgate(theta2, phi2) | (q[6], q[7])
             ops.MeasureFock() | q
 
-        # compile the program using the X8 spec
+        # compile the program using the X8_01 spec
         res = prog.compile("X8_01")
 
         # remove the Fock measurements
