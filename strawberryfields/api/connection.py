@@ -30,6 +30,8 @@ from strawberryfields.program import Program
 from .job import Job, JobStatus
 from .result import Result
 
+# pylint: disable=bad-continuation,protected-access
+
 log = logging.getLogger(__name__)
 
 
@@ -78,7 +80,6 @@ class Connection:
         use_ssl (bool): whether to use SSL for the connection
     """
 
-    # pylint: disable=bad-continuation
     def __init__(
         self,
         token: str = configuration["api"]["authentication_token"],
@@ -132,7 +133,7 @@ class Connection:
         """
         return self._use_ssl
 
-    def create_job(self, target: str, program: Program, shots: int) -> Job:
+    def create_job(self, target: str, program: Program, shots: Optional[int] = None) -> Job:
         """Creates a job with the given circuit.
 
         Args:
@@ -145,10 +146,9 @@ class Connection:
         """
         # Serialize a blackbird circuit for network transmission
         bb = to_blackbird(program)
-        # pylint: disable=protected-access
         bb._target["name"] = target
-        # pylint: disable=protected-access
-        bb._target["options"] = {"shots": shots}
+        if shots is not None:
+            bb._target["options"] = {"shots": shots}
         circuit = bb.serialize()
 
         path = "/jobs"
