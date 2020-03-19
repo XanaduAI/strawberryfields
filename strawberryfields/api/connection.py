@@ -139,7 +139,8 @@ class Connection:
         Args:
             target (str): the target device
             program (strawberryfields.Program): the quantum circuit
-            shots (int): the number of shots
+            shots (int): The number of shots for which to run the program. If provided,
+                overrides the value stored in the given ``program``.
 
         Returns:
             strawberryfields.api.Job: the created job

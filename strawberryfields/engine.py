@@ -532,7 +532,8 @@ class RemoteEngine:
 
         Args:
             program (strawberryfields.Program): the quantum circuit
-            shots (int): the number of shots for which to run the job
+            shots (Optional[int]): The number of shots for which to run the job. If this
+                argument is not provided, the shots are derived from the given ``program``.
 
         Returns:
             [strawberryfields.api.Result, None]: the job result if successful, and
@@ -563,7 +564,8 @@ class RemoteEngine:
 
         Args:
             program (strawberryfields.Program): the quantum circuit
-            shots (int): the number of shots for which to run the job
+            shots (Optional[int]): The number of shots for which to run the job. If this
+                argument is not provided, the shots are derived from the given ``program``.
 
         Returns:
             strawberryfields.api.Job: the created remote job
