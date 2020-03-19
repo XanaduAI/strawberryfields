@@ -28,7 +28,7 @@ from strawberryfields.parameters import par_evaluate
 from strawberryfields.program_utils import CircuitError, list_to_DAG
 from strawberryfields.io import to_program
 from strawberryfields.utils import random_interferometer
-from strawberryfields.circuitspecs.X8 import X8Specs, CircuitSpecs
+from strawberryfields.circuitspecs.X8 import X8_01, CircuitSpecs
 
 
 pytestmark = pytest.mark.frontend
@@ -167,11 +167,11 @@ class DummyCircuit(CircuitSpecs):
 
 
 class TestX8Compilation:
-    """Tests for compilation using the X8 circuit specification"""
+    """Tests for compilation using the X8_01 circuit specification"""
 
     def test_exact_template(self, tol):
         """Test compilation works for the exact circuit"""
-        bb = blackbird.loads(X8Specs.circuit)
+        bb = blackbird.loads(X8_01.circuit)
         bb = bb(
             squeezing_amplitude_0=SQ_AMPLITUDE,
             squeezing_amplitude_1=SQ_AMPLITUDE,
