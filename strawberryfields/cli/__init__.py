@@ -34,7 +34,7 @@ def main():
     The following is a simple example on getting the help message of the cloud platform command
     line interface. It details each of the options available.
 
-    .. code-block:: bash
+    .. code-block:: console
 
         $ sf
         usage: sf [-h] [--ping] {configure,run} ...
