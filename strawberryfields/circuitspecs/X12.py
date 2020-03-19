@@ -27,7 +27,7 @@ from .circuit_specs import CircuitSpecs
 from .gbs import GBSSpecs
 
 
-class ChipX12Specs(CircuitSpecs):
+class X12Specs(CircuitSpecs):
     """Circuit specifications for the X12 class of circuits."""
 
     short_name = "X12"
@@ -263,11 +263,11 @@ class ChipX12Specs(CircuitSpecs):
         seq = super().compile(A + B + C, registers)
         return seq
 
-class X12_1(ChipX12Specs):
+class X12_01(X12):
 
-    short_name = "'X12_01"
+    short_name = "X12_01"
 
-class X12_2(ChipX12Specs):
+class X12_02(X12):
 
     short_name = "X12_02"
 

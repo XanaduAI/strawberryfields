@@ -44,7 +44,7 @@ from .gbs import GBSSpecs
 from .tensorflow import TFSpecs
 from .gaussian_unitary import GaussianUnitary
 
-specs = (Chip2Specs, FockSpecs, GaussianSpecs, GBSSpecs, TFSpecs, GaussianUnitary)
+specs = (Chip2Specs, X12_01, X12_02, FockSpecs, GaussianSpecs, GBSSpecs, TFSpecs, GaussianUnitary)
 
 circuit_db = {c.short_name: c for c in specs}
 """dict[str, ~strawberryfields.circuitspecs.CircuitSpecs]: Map from circuit family short name to the corresponding class."""
