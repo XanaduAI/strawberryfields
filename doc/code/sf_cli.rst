@@ -86,14 +86,12 @@ The same example run on a Windows operating system:
 .. code-block::  doscon
 
     C:\> sf configure
-
     Please enter the authentication token to use when connecting: [] AUTHENTICATION_TOKEN
     Please enter the hostname of the server to connect to: [platform.strawberryfields.ai] MYHOST
     Should the client attempt to connect over SSL? [y] N
     Please enter the port number to connect with: [443] 12345
 
     C:\> type C:\Users\USERNAME\AppData\Local\Xanadu\strawberryfields\config.toml
-
     [api]
     authentication_token = "AUTHENTICATION_TOKEN"
     hostname = "MYHOST"

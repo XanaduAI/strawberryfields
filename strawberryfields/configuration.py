@@ -120,7 +120,7 @@ def get_config_filepath(filename="config.toml"):
         The following directories are checked (in the following order):
 
         * The current working directory
-        * The directory specified by the environment variable SF_CONF (if specified)
+        * The directory specified by the environment variable ``SF_CONF`` (if specified)
         * The user configuration directory (if specified)
 
     Keyword Args:
@@ -244,19 +244,19 @@ def store_account(authentication_token, filename="config.toml", location="user_c
 
     **Examples:**
 
-    In these examples ``"MYAUTH"`` should be replaced with a valid authentication
+    In these examples ``"AUTHENTICATION_TOKEN"`` should be replaced with a valid authentication
     token.
 
     Access to the Xanadu cloud can be configured as follows:
 
-    >>> sf.store_account("MYAUTH")
+    >>> sf.store_account("AUTHENTICATION_TOKEN")
 
     This creates the following ``"config.toml"`` file:
 
     .. code-block:: toml
 
         [api]
-        authentication_token = "MYAUTH"
+        authentication_token = "AUTHENTICATION_TOKEN"
         hostname = "platform.strawberryfields.ai"
         use_ssl = true
         port = 443
@@ -265,21 +265,21 @@ def store_account(authentication_token, filename="config.toml", location="user_c
     working directory**) the following way:
 
     >>> import strawberryfields as sf
-    >>> sf.store_account("MYAUTH", location="local")
+    >>> sf.store_account("AUTHENTICATION_TOKEN", location="local")
 
     Each of the configuration options can be passed as further keyword
     arguments as well (see the :doc:`/code/sf_configuration` page
     for a list of options):
 
     >>> import strawberryfields as sf
-    >>> sf.store_account("MYAUTH", location="local", hostname="MyHost", use_ssl=False, port=123)
+    >>> sf.store_account("AUTHENTICATION_TOKEN", location="local", hostname="MyHost", use_ssl=False, port=123)
 
     This creates the following ``"config.toml"`` file in the **current working directory**:
 
     .. code-block:: toml
 
         [api]
-        authentication_token = "MYAUTH"
+        authentication_token = "AUTHENTICATION_TOKEN"
         hostname = "MyHost"
         use_ssl = false
         port = 123
