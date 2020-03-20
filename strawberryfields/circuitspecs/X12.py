@@ -26,6 +26,85 @@ import strawberryfields.ops as ops
 from .circuit_specs import CircuitSpecs
 from .gbs import GBSSpecs
 
+from functools import partial
+
+# Supporting multiple string formatting, such that the target can be replaced
+# first followed by squeezing amplitude and phase values
+DEFAULT_CIRCUIT = textwrap.dedent(
+    """\
+    name template_6x2_X12
+    version 1.0
+    target {target} (shots=1)
+
+    # for n spatial degrees, first n signal modes, then n idler modes, all phases zero
+    S2gate({{squeezing_amplitude_0}}, 0.0) | [0, 6]
+    S2gate({{squeezing_amplitude_1}}, 0.0) | [1, 7]
+    S2gate({{squeezing_amplitude_2}}, 0.0) | [2, 8]
+    S2gate({{squeezing_amplitude_3}}, 0.0) | [3, 9]
+    S2gate({{squeezing_amplitude_4}}, 0.0) | [4, 10]
+    S2gate({{squeezing_amplitude_5}}, 0.0) | [5, 11]
+
+    # standard 6x6 interferometer for the signal modes (the lower ones in frequency)
+    # even phase indices correspond to internal Mach-Zehnder interferometer phases
+    # odd phase indices correspond to external Mach-Zehnder interferometer phases
+    MZgate({{phase_0}}, {{phase_1}}) | [0, 1]
+    MZgate({{phase_2}}, {{phase_3}}) | [2, 3]
+    MZgate({{phase_4}}, {{phase_5}}) | [4, 5]
+    MZgate({{phase_6}}, {{phase_7}}) | [1, 2]
+    MZgate({{phase_8}}, {{phase_9}}) | [3, 4]
+
+    MZgate({{phase_10}}, {{phase_11}}) | [0, 1]
+
+    MZgate({{phase_12}}, {{phase_13}}) | [2, 3]
+    MZgate({{phase_14}}, {{phase_15}}) | [4, 5]
+    MZgate({{phase_16}}, {{phase_17}}) | [1, 2]
+    MZgate({{phase_18}}, {{phase_19}}) | [3, 4]
+
+    MZgate({{phase_20}}, {{phase_21}}) | [0, 1]
+    MZgate({{phase_22}}, {{phase_23}}) | [2, 3]
+    MZgate({{phase_24}}, {{phase_25}}) | [4, 5]
+    MZgate({{phase_26}}, {{phase_27}}) | [1, 2]
+    MZgate({{phase_28}}, {{phase_29}}) | [3, 4]
+
+    # duplicate the interferometer for the idler modes (the higher ones in frequency)
+    MZgate({{phase_0}}, {{phase_1}}) | [6, 7]
+    MZgate({{phase_2}}, {{phase_3}}) | [8, 9]
+    MZgate({{phase_4}}, {{phase_5}}) | [10, 11]
+    MZgate({{phase_6}}, {{phase_7}}) | [7, 8]
+    MZgate({{phase_8}}, {{phase_9}}) | [9, 10]
+
+    MZgate({{phase_10}}, {{phase_11}}) | [6, 7]
+    MZgate({{phase_12}}, {{phase_13}}) | [8, 9]
+    MZgate({{phase_14}}, {{phase_15}}) | [10, 11]
+    MZgate({{phase_16}}, {{phase_17}}) | [7, 8]
+    MZgate({{phase_18}}, {{phase_19}}) | [9, 10]
+
+    MZgate({{phase_20}}, {{phase_21}}) | [6, 7]
+    MZgate({{phase_22}}, {{phase_23}}) | [8, 9]
+    MZgate({{phase_24}}, {{phase_25}}) | [10, 11]
+    MZgate({{phase_26}}, {{phase_27}}) | [7, 8]
+    MZgate({{phase_28}}, {{phase_29}}) | [9, 10]
+
+    # add final dummy phases to allow mapping any unitary to this template (these do not
+    # affect the photon number measurement)
+    Rgate({{final_phase_0}}) | [0]
+    Rgate({{final_phase_1}}) | [1]
+    Rgate({{final_phase_2}}) | [2]
+    Rgate({{final_phase_3}}) | [3]
+    Rgate({{final_phase_4}}) | [4]
+    Rgate({{final_phase_5}}) | [5]
+    Rgate({{final_phase_6}}) | [6]
+    Rgate({{final_phase_7}}) | [7]
+    Rgate({{final_phase_8}}) | [8]
+    Rgate({{final_phase_9}}) | [9]
+    Rgate({{final_phase_10}}) | [10]
+    Rgate({{final_phase_11}}) | [11]
+
+    # measurement in Fock basis
+    MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    """
+)
+
 
 class X12(CircuitSpecs):
     """Circuit specifications for the X12 class of circuits."""
@@ -35,6 +114,7 @@ class X12(CircuitSpecs):
     remote = True
     local = True
     interactive = False
+    circuit = DEFAULT_CIRCUIT.format(target=short_name)
 
     sq_amplitude = 1
 
@@ -43,80 +123,6 @@ class X12(CircuitSpecs):
         "Interferometer": {"mesh": "rectangular_symmetric", "drop_identity": False},
         "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False}
     }
-
-    circuit = textwrap.dedent(
-        """\
-        name template_6x2_X12
-        version 1.0
-        target X12 (shots=1)
-
-        # for n spatial degrees, first n signal modes, then n idler modes, all phases zero
-        S2gate({squeezing_amplitude_0}, 0.0) | [0, 6]
-        S2gate({squeezing_amplitude_1}, 0.0) | [1, 7]
-        S2gate({squeezing_amplitude_2}, 0.0) | [2, 8]
-        S2gate({squeezing_amplitude_3}, 0.0) | [3, 9]
-        S2gate({squeezing_amplitude_4}, 0.0) | [4, 10]
-        S2gate({squeezing_amplitude_5}, 0.0) | [5, 11]
-
-        # standard 6x6 interferometer for the signal modes (the lower ones in frequency)
-        # even phase indices correspond to internal Mach-Zehnder interferometer phases
-        # odd phase indices correspond to external Mach-Zehnder interferometer phases
-        MZgate({phase_0}, {phase_1}) | [0, 1]
-        MZgate({phase_2}, {phase_3}) | [2, 3]
-        MZgate({phase_4}, {phase_5}) | [4, 5]
-        MZgate({phase_6}, {phase_7}) | [1, 2]
-        MZgate({phase_8}, {phase_9}) | [3, 4]
-
-        MZgate({phase_10}, {phase_11}) | [0, 1]
-        MZgate({phase_12}, {phase_13}) | [2, 3]
-        MZgate({phase_14}, {phase_15}) | [4, 5]
-        MZgate({phase_16}, {phase_17}) | [1, 2]
-        MZgate({phase_18}, {phase_19}) | [3, 4]
-
-        MZgate({phase_20}, {phase_21}) | [0, 1]
-        MZgate({phase_22}, {phase_23}) | [2, 3]
-        MZgate({phase_24}, {phase_25}) | [4, 5]
-        MZgate({phase_26}, {phase_27}) | [1, 2]
-        MZgate({phase_28}, {phase_29}) | [3, 4]
-
-        # duplicate the interferometer for the idler modes (the higher ones in frequency)
-        MZgate({phase_0}, {phase_1}) | [6, 7]
-        MZgate({phase_2}, {phase_3}) | [8, 9]
-        MZgate({phase_4}, {phase_5}) | [10, 11]
-        MZgate({phase_6}, {phase_7}) | [7, 8]
-        MZgate({phase_8}, {phase_9}) | [9, 10]
-
-        MZgate({phase_10}, {phase_11}) | [6, 7]
-        MZgate({phase_12}, {phase_13}) | [8, 9]
-        MZgate({phase_14}, {phase_15}) | [10, 11]
-        MZgate({phase_16}, {phase_17}) | [7, 8]
-        MZgate({phase_18}, {phase_19}) | [9, 10]
-
-        MZgate({phase_20}, {phase_21}) | [6, 7]
-        MZgate({phase_22}, {phase_23}) | [8, 9]
-        MZgate({phase_24}, {phase_25}) | [10, 11]
-        MZgate({phase_26}, {phase_27}) | [7, 8]
-        MZgate({phase_28}, {phase_29}) | [9, 10]
-
-        # add final dummy phases to allow mapping any unitary to this template (these do not
-        # affect the photon number measurement)
-        Rgate({final_phase_0}) | [0]
-        Rgate({final_phase_1}) | [1]
-        Rgate({final_phase_2}) | [2]
-        Rgate({final_phase_3}) | [3]
-        Rgate({final_phase_4}) | [4]
-        Rgate({final_phase_5}) | [5]
-        Rgate({final_phase_6}) | [6]
-        Rgate({final_phase_7}) | [7]
-        Rgate({final_phase_8}) | [8]
-        Rgate({final_phase_9}) | [9]
-        Rgate({final_phase_10}) | [10]
-        Rgate({final_phase_11}) | [11]
-
-        # measurement in Fock basis
-        MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        """
-    )
 
     def compile(self, seq, registers):
         """Try to arrange a quantum circuit into a form suitable for X12.
@@ -267,8 +273,10 @@ class X12_01(X12):
     """Circuit specifications for the first X12 chip."""
 
     short_name = "X12_01"
+    circuit = DEFAULT_CIRCUIT.format(target=short_name)
 
 class X12_02(X12):
     """Circuit specifications for the second X12 chip."""
 
     short_name = "X12_02"
+    circuit = DEFAULT_CIRCUIT.format(target=short_name)
