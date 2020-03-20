@@ -27,10 +27,10 @@ from .circuit_specs import CircuitSpecs
 from .gbs import GBSSpecs
 
 
-class X8Specs(CircuitSpecs):
+class X8_01(CircuitSpecs):
     """Circuit specifications for the X8 class of circuits."""
 
-    short_name = "X8"
+    short_name = "X8_01"
     modes = 8
     remote = True
     local = True
@@ -48,7 +48,7 @@ class X8Specs(CircuitSpecs):
         """\
         name template_4x2_X8
         version 1.0
-        target X8 (shots=1)
+        target X8_01 (shots=1)
 
         # for n spatial degrees, first n signal modes, then n idler modes, all phases zero
         S2gate({squeezing_amplitude_0}, 0.0) | [0, 4]
@@ -234,9 +234,3 @@ class X8Specs(CircuitSpecs):
         # ---------------------------------
         seq = super().compile(A + B + C, registers)
         return seq
-
-
-class X8_01(X8Specs):
-    """Circuit specifications for the X8_01 class of circuits."""
-
-    short_name = "X8_01"
