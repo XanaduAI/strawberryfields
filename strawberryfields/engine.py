@@ -521,7 +521,7 @@ class RemoteEngine:
         """
         return self._connection
 
-    def run(self, program: Program, shots: int = 1) -> Optional[Result]:
+    def run(self, program: Program, shots: Optional[int] = None) -> Optional[Result]:
         """Runs a blocking job.
 
         In the blocking mode, the engine blocks until the job is completed, failed, or
@@ -532,7 +532,8 @@ class RemoteEngine:
 
         Args:
             program (strawberryfields.Program): the quantum circuit
-            shots (int): the number of shots for which to run the job
+            shots (Optional[int]): The number of shots for which to run the job. If this
+                argument is not provided, the shots are derived from the given ``program``.
 
         Returns:
             [strawberryfields.api.Result, None]: the job result if successful, and
@@ -555,7 +556,7 @@ class RemoteEngine:
             self._connection.cancel_job(job.id)
             return None
 
-    def run_async(self, program: Program, shots: int = 1) -> Job:
+    def run_async(self, program: Program, shots: Optional[int] = None) -> Job:
         """Runs a non-blocking remote job.
 
         In the non-blocking mode, a ``Job`` object is returned immediately, and the user can
@@ -563,7 +564,8 @@ class RemoteEngine:
 
         Args:
             program (strawberryfields.Program): the quantum circuit
-            shots (int): the number of shots for which to run the job
+            shots (Optional[int]): The number of shots for which to run the job. If this
+                argument is not provided, the shots are derived from the given ``program``.
 
         Returns:
             strawberryfields.api.Job: the created remote job

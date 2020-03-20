@@ -168,6 +168,10 @@
   decomposition.
   [(#301)](https://github.com/XanaduAI/strawberryfields/pull/301)
 
+* Updated the relevant methods in `RemoteEngine` and `Connection` to derive `shots`
+  from the Blackbird script or `Program` if not explicitly specified.
+  [(#327)](https://github.com/XanaduAI/strawberryfields/pull/327)
+
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
