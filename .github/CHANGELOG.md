@@ -97,39 +97,38 @@
   probability distributions by integrating across the Wigner function.
   [(#270)](https://github.com/XanaduAI/strawberryfields/pull/270)
 
-* Adds support in the applications layer for node-weighted graphs. Users can sample from graphs
-  with node weights using the WAW encoding that rescales an adjacency matrix `A` to `WAW` with `W`
-  a diagonal matrix of node weights:
-  [(#295)](https://github.com/XanaduAI/strawberryfields/pull/295)
-   
+* Adds support in the applications layer for node-weighted graphs.
+
+  Sample from graphs with node weights using a special-purpose encoding
+  [(#295)](https://github.com/XanaduAI/strawberryfields/pull/295):
+
   ```python
   from strawberryfields.apps import sample
-  import networkx as nx
-  import numpy as np
 
-  np.random.seed(1968)
-
-  g = nx.erdos_renyi_graph(20, 0.6, seed=1968)
+  # generate a random graph
+  g = nx.erdos_renyi_graph(20, 0.6)
   a = nx.to_numpy_array(g)
+
+  # define node weights
+  # and encode into the adjacency matrix
   w = [i for i in range(20)]
-
   a = sample.waw_matrix(a, w)
-  s = sample.sample(a, n_mean=10, n_samples=10)
 
+  s = sample.sample(a, n_mean=10, n_samples=10)
   s = sample.postselect(s, min_count=4, max_count=20)
   s = sample.to_subgraphs(s, g)
   ```
-  
-  Node weights can be input to search algorithms in the `clique` and `subgraph` modules:
+
+  Node weights can be input to search algorithms in the `clique` and `subgraph` modules
   [(#296)](https://github.com/XanaduAI/strawberryfields/pull/296)
-  [(#297)](https://github.com/XanaduAI/strawberryfields/pull/297)
-  
+  [(#297)](https://github.com/XanaduAI/strawberryfields/pull/297):
+
   ```python
   from strawberryfields.apps import clique
   c = [clique.shrink(s_, g, node_select=w) for s_ in s]
   [clique.search(c_, g, iterations=10, node_select=w) for c_ in c]
   ```
-  
+
   ```python
   from strawberryfields.apps import subgraph
   subgraph.search(s, g, min_size=5, max_size=8, node_select=w)
