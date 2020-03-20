@@ -3,6 +3,8 @@ sf.configuration
 
 .. currentmodule:: strawberryfields.configuration
 
+This module contains functionality for configuring Strawberry Fields.
+
 
 Configuration files
 -------------------

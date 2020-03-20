@@ -11,7 +11,7 @@ Configuring your account
 Before using the Xanadu cloud platform, you will need to configure your credentials. This
 can be done using several methods:
 
-* **Configuration file (recommended)**. Use the Strawberry Fields :func:`~.store_account` function,
+* **Configuration file (recommended)**. Use the Strawberry Fields :func:`~.store_account` function from within Python or a Jupyter notebook,
 
   >>> sf.store_account("AUTHENTICATION_TOKEN")
 
@@ -23,6 +23,12 @@ can be done using several methods:
 
   to store a configuration file containing your credentials. Replace
   ``AUTHENTICATION_TOKEN`` above with your Xanadu cloud access token.
+
+  .. note::
+
+      The above configuration file need only be created once. Once created,
+      Strawberry Fields will automatically load the stored authentication
+      credentials.
 
 * **Environment variables**. Set the ``SF_API_AUTHENTICATION_TOKEN`` environment variable
   with your API token.
