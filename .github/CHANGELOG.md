@@ -99,18 +99,18 @@
 
 * Adds support in the applications layer for node-weighted graphs.
 
-  Sample from graphs with node weights using special-purpose encodings
+  Sample from graphs with node weights using a special-purpose encoding
   [(#295)](https://github.com/XanaduAI/strawberryfields/pull/295):
 
   ```python
   from strawberryfields.apps import sample
 
   # generate a random graph
-  g = nx.erdos_renyi_graph(20, 0.6, seed=1968)
+  g = nx.erdos_renyi_graph(20, 0.6)
   a = nx.to_numpy_array(g)
 
-  # add weights to the adjacency matrix
-  # via the WAW encoding
+  # define node weights
+  # and encode into the adjacency matrix
   w = [i for i in range(20)]
   a = sample.waw_matrix(a, w)
 
