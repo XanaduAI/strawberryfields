@@ -29,6 +29,7 @@ from strawberryfields.program_utils import CircuitError, list_to_DAG
 from strawberryfields.io import to_program
 from strawberryfields.utils import random_interferometer
 from strawberryfields.circuitspecs.X12 import X12, X12_01, X12_02, CircuitSpecs
+from strawberryfields.circuitspecs.gaussian_unitary import GaussianUnitary
 
 
 pytestmark = pytest.mark.frontend
@@ -467,9 +468,7 @@ class TestX12Compilation:
 
             ops.MeasureFock() | q
 
-        assert program_equivalence(res, expected, atol=tol)
-
-        # double check that the applied symplectic is correct
+        # Check that the applied symplectic is correct
 
         # remove the Fock measurements
         res.circuit = res.circuit[:-1]
@@ -482,9 +481,11 @@ class TestX12Compilation:
         S = TMS(SQ_AMPLITUDE, 0)
 
         expected = np.zeros([2*12, 2*12])
-        idx = np.arange(2*12).reshape(6, 6).T
-        for i in idx:
-            expected[i.reshape(-1, 1), i.reshape(1, -1)] = S
+        l = 12 // 2
+        ch = np.cosh(SQ_AMPLITUDE) * np.identity(l)
+        sh = np.sinh(SQ_AMPLITUDE) * np.identity(l)
+        zh = np.zeros([l, l])
+        expected = np.block([[ch, sh, zh, zh], [sh, ch, zh, zh], [zh, zh, ch, -sh], [zh, zh, -sh, ch]])
 
         assert np.allclose(O, expected, atol=tol)
 
@@ -498,9 +499,11 @@ class TestX12Compilation:
             ops.MZgate(np.pi, 0) | (q[2], q[3])
             ops.MZgate(np.pi/2, np.pi) | (q[4], q[5])
             ops.MZgate(np.pi, 0) | (q[6], q[7])
+            ops.MZgate(np.pi/2, np.pi) | (q[8], q[9])
+            ops.MZgate(np.pi, 0) | (q[10], q[11])
             ops.MeasureFock() | q
 
-        # compile the program using the chip2 spec
+        # compile the program using the chip spec
         res = prog.compile(chip.short_name)
 
         # remove the Fock measurements
@@ -511,7 +514,7 @@ class TestX12Compilation:
 
         # By construction, we know that the symplectic matrix is
         # passive, and so represents a unitary matrix
-        U = O[:8, :8] + 1j*O[8:, :8]
+        U = O[:12, :12] + 1j*O[12:, :12]
 
         # the constructed program should implement the following
         # unitary matrix
@@ -521,7 +524,7 @@ class TestX12Compilation:
              [0,  0, -1, -0],
              [0,  0, -0, 1]]
         )
-        expected = block_diag(expected, expected)
+        expected = block_diag(expected, expected, expected)
 
         assert np.allclose(U, expected, atol=tol)
 
@@ -542,7 +545,7 @@ class TestX12Compilation:
             ops.MZgate(theta2, phi2) | (q[6], q[7])
             ops.MeasureFock() | q
 
-        # compile the program using the chip2 spec
+        # compile the program using the chip spec
         res = prog.compile(chip.short_name)
 
         # remove the Fock measurements
