@@ -12,14 +12,19 @@ covered include:
 * Managing submitted jobs,
 * Compiling quantum programs for specific quantum chip architectures,
 * Saving and running Blackbird scripts, our assembly language for quantum photonic hardware, and
-* Embedding and sampling from graphs on photonic chips,
+* Embedding and sampling from graphs on photonic chips.
+
+.. warning::
+
+    An authentication token is required to access the Xanadu cloud platform. In the
+    following, replace ``AUTHENTICATION_TOKEN`` with your personal API token.
 
 Configuring your credentials
 ----------------------------
 
 Before using the :class:`~.RemoteEngine` for the first time, we need to configure
 Strawberry Fields with an authentication token that provides you access to the Xanadu
-cloud platform. We can do this by using the :func:`~.store_account` function (make
+cloud platform. We can do this by using the :func:`~.store_account` function from within Python (make
 sure to replace ``AUTHENTICATION_TOKEN`` with your personal API token!)
 
 >>> import strawberryfields as sf
@@ -30,7 +35,7 @@ your account details will be stored to disk, and automatically loaded from now
 on.
 
 To test that your account credentials correctly authenticate against the cloud platform,
-you can use the :func:`~.ping` command, from within Strawberry Fields,
+you can use the :func:`~.ping` command,
 
 >>> sf.cli.ping()
 You have successfully authenticated to the platform!
@@ -57,7 +62,7 @@ Executing jobs
 In this section, we will use Strawberry Fields to submit a simple
 circuit to the chip.
 
-First, we import NumPy, Strawberry Fields, as well as the remote engine.
+First, we import NumPy and Strawberry Fields, including the remote engine.
 
 .. code-block:: python3
 
@@ -70,13 +75,13 @@ First, we import NumPy, Strawberry Fields, as well as the remote engine.
 We will be submitting a job to run on the chip ``X8_01``. This is an 8 mode chip,
 with the following restrictions:
 
-* The initial states are two-mode squeezed states (:class:`~.S2gate`), applied in a cascade.
+* The initial states are two-mode squeezed states (:class:`~.S2gate`). We call modes 0 to 3 the
+  *signal modes* and modes 4 to 7 the *idler modes*. Two mode squeezing is between the pairs
+  of modes: (0, 4), (1, 5), (2, 6), (3, 7).
 
 * Any arbitrary :math:`4\times 4` unitary (consisting of :class:`~.BSgate`, :class:`~.MZgate`,
-  :class:`~.Rgate`, and :class:`~.Interferometer` operations) can then be applied on the
-  *signal modes*, modes 0 to 3.
-
-* The *same* unitary must also be applied to the *idler modes*, modes 4 to 7.
+  :class:`~.Rgate`, and :class:`~.Interferometer` operations) can be applied identically 
+  on both the signal and idler modes.
 
 * Finally, the chip terminates with photon-number resolving measurements (:class:`~.MeasureFock`).
 
@@ -91,7 +96,7 @@ array([[-0.13879438-0.47517904j,-0.29303954-0.47264099j,-0.43951987+0.12977568j,
 [ 0.42212573-0.53182417j, -0.2642572 +0.50625182j, 0.19448705+0.28321781j,  0.30281396-0.05582391j],
 [ 0.43097587-0.30288974j, 0.07419772-0.21155126j, 0.28335618-0.13633175j, -0.75113453+0.09580304j]])
 
-Next we create the 8 mode quantum program:
+Next we create the 8-mode quantum program:
 
 .. code-block:: python3
 
@@ -119,7 +124,7 @@ Next we create the 8 mode quantum program:
         ops.MeasureFock() | q
 
 Finally, we create the engine. Similarly to the :class:`~.LocalEngine`, the :class:`~.RemoteEngine`
-is in charge of compiling and executing programs, however differs in that the program will be
+is in charge of compiling and executing programs, however it differs in that the program will be
 executed on *remote* devices, rather than on local simulators.
 
 >>> eng = RemoteEngine("X8_01")
@@ -171,7 +176,7 @@ counts:
 
 .. note::
 
-    The :func:`~.operation` decorator allows you to create your own Strawberry Fields
+    The :class:`~.operation` decorator allows you to create your own Strawberry Fields
     operation. This can make it easier to ensure that the same unitary is always
     applied to the signal and idler modes.
 
@@ -183,29 +188,32 @@ counts:
         def unitary(q):
             ops.Interferometer(U) | q
             ops.BSgate(0.543, 0.123) | (q[2], q[0])
+            ops.Rgate(0.453) | q[1]
+            ops.MZgate(0.65, -0.54) | (q[2], q[3])
 
         prog = sf.Program(8)
 
         with prog.context as q:
             ops.S2gate(1.0) | (q[0], q[4])
             ops.S2gate(1.0) | (q[1], q[5])
-            ops.S2gate(1.0) | (q[2], q[6])
             ops.S2gate(1.0) | (q[3], q[7])
 
             unitary() | q[:4]
             unitary() | q[4:]
+ 
+            ops.MeasureFock() | q
 
-    Refer to the :func:`~.operation` documentation for more details.
+    Refer to the :class:`~.operation` documentation for more details.
 
 Managing submitted jobs
 -----------------------
 
-In the above example, ``eng.run()`` is a **blocking** method; Python will wait until
+In the above example, :meth:`RemoteEngine.run` is a **blocking** method; Python will wait until
 the job result has been returned from the cloud before further lines
 will execute.
 
 **Non-blocking jobs** can also be submitted using the :meth:`eng.run_async() <~.RemoteEngine.run_async>` method. Unlike ``eng.run()``, this method returns a :class:`~.Job`
-object that can be queried to get the jobs status.
+object that can be queried to get the job's status.
 
 >>> job = engine.run_async(program, shots=1)
 >>> job.id
@@ -233,8 +241,8 @@ Finally, an incomplete job can be *cancelled* by calling :meth:`job.cancel() <~.
 Hardware compilation
 --------------------
 
-When creating a quantum program to run on hardware, Strawberry Fields allows any
-combination of the following gates when constructing the unitary to be applied:
+When creating a quantum program to run on hardware, Strawberry Fields can compile
+any collection of the following gates into a multi-mode unitary:
 
 * `General beamsplitters <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.BSgate.html>`_ (:class:`~.ops.BSgate`),
 
@@ -251,7 +259,7 @@ Furthermore, several automatic decompositions are supported:
 * You can use :class:`~.ops.BipartiteGraphEmbed` to embed a bipartite graph on
   the GBS chip. Note, however, that the decomposed squeezing values depends on the graph
   structure, so only bipartite graphs that result in equal squeezing on all
-  modes can currently be executed on currently available chips.
+  modes can be executed on currently available chips.
 
 Before sending the program to the cloud platform to be executed, however, Strawberry Fields
 must **compile** the program to match the physical architecture or layout of the photonic chip.
@@ -377,12 +385,12 @@ i.e., those with adjacency matrices
 
 where :math:`B` represents the edges between the two sets of
 vertices in the graph. However, the devices are currently restricted
-to bipartite graphs such that the singular values form the set :math:`\{0, d\}`
+to bipartite graphs with equally sized partitions, such that the singular values form the set :math:`\{0, d\}`
 for some real value :math:`d`.
 
 Here, we will
 consider a `complete bipartite graph <https://en.wikipedia.org/wiki/Complete_bipartite_graph>`_,
-since the singular values are of the form :math:`\{d, 0\}`.
+since the singular values are of the form :math:`\{0, d\}`.
 
 .. code-block:: python3
 
