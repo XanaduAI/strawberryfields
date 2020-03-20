@@ -71,7 +71,7 @@ class TestConnection:
             requests, "post", mock_return(MockResponse(201, {"id": id_, "status": status})),
         )
 
-        job = connection.create_job("chip2", prog, 1)
+        job = connection.create_job("X8_01", prog, 1)
 
         assert job.id == id_
         assert job.status == status.value
@@ -81,7 +81,7 @@ class TestConnection:
         monkeypatch.setattr(requests, "post", mock_return(MockResponse(400, {})))
 
         with pytest.raises(RequestFailedError, match="Failed to create job"):
-            connection.create_job("chip2", prog, 1)
+            connection.create_job("X8_01", prog, 1)
 
     @pytest.mark.xfail(reason="method not yet implemented")
     def test_get_all_jobs(self, connection, monkeypatch):

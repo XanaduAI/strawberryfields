@@ -468,7 +468,7 @@ class RemoteEngine:
 
     Run a blocking job:
 
-    >>> engine = RemoteEngine("chip2")
+    >>> engine = RemoteEngine("X8_01")
     >>> result = engine.run(program, shots=1) # blocking call
     >>> result
     [[0 1 0 2 1 0 0 0]]
@@ -493,7 +493,7 @@ class RemoteEngine:
     """
 
     POLLING_INTERVAL_SECONDS = 1
-    VALID_TARGETS = ("chip2",)
+    VALID_TARGETS = ("X8_01",)
 
     def __init__(self, target: str, connection: Connection = Connection()):
         if target not in self.VALID_TARGETS:
