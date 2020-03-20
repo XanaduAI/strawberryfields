@@ -33,7 +33,7 @@ can be done using several methods:
 .. seealso::
 
     For more details on configuring Strawberry Fields for cloud access, including
-    creating local per-project configuration files, see the :doc:`Advanced configuration options </code/sf_configuration>`, and :func:`~.store_account` function.
+    creating local per-project configuration files, see the :doc:`configuration </code/sf_configuration>` module and :func:`~.store_account` function.
 
 
 Verifying your connection

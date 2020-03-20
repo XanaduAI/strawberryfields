@@ -47,9 +47,9 @@ Xanadu cloud access token.
 
 * ``--token``: the authentication token to use
 
-* ``--local``: whether or not to create the configuration file locally in the current directory
+* ``--local``: causes the configuration file to be created locally in the current directory
 
-If not provided, the configuration file will be saved in the user's configuration directory.
+If ``--local`` is not provided, the configuration file will be saved in the user's configuration directory.
 
 .. seealso::
 

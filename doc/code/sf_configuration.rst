@@ -12,7 +12,7 @@ the configuration file ``config.toml``, by
 scanning the following three directories in order of preference:
 
 1. The current directory
-2. The path stored in the environment variable ``SF_CONF``
+2. The path stored in the environment variable ``SF_CONF`` (if specified)
 3. The default user configuration directory:
 
    * On Linux: ``~/.config/strawberryfields``
@@ -46,12 +46,12 @@ Configuration options
     *Corresponding environment variable:* ``SF_API_HOSTNAME``
 
 **use_ssl (bool)** (*optional*)
-    Whether to use SSL or not when connecting to the API. True or False.
+    Whether to use SSL or not when connecting to the API. ``true`` or ``false``. Defaults to ``true``.
 
     *Corresponding environment variable:* ``SF_API_USE_SSL``
 
 **port (int)** (*optional*)
-    The port to be used when connecting to the remote service.
+    The port to be used when connecting to the remote service. Defaults to 443.
 
     *Corresponding environment variable:* ``SF_API_PORT``
 
