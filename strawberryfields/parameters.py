@@ -161,8 +161,8 @@ def par_evaluate(params, dtype=None):
 
     Args:
         params (Sequence[Any]): parameters to evaluate
-        dtype (np.dtype): NumPy data type to optionally cast parameters
-            to *before* evaluating the symbolic expression. If the parameter
+        dtype (None, np.dtype): NumPy data type to optionally cast atomic symbols
+            to *before* evaluating the parameter expression. If the atom
             is a TensorFlow tensor, the corresponding TensorFlow dtype is used.
 
     Returns:
