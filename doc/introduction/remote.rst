@@ -14,19 +14,18 @@ you access to the API. This can be done in one of two ways:
 
 1. By using the :func:`~.store_account` function to store your account credentials:
 
-   >>> sf.store_account("my_api_token")
+   >>> sf.store_account("AUTHENTICATION_TOKEN")
 
 2. By using the ``sf`` command line interface to configure Strawberry Fields with your
    account credentials:
 
    .. code-block:: bash
 
-       $ sf configure --token my_api_token
+       $ sf configure --token AUTHENTICATION_TOKEN
 
-In both of the above code snippets, ``my_api_token`` should be replaced with your personal
-API token! For more details on configuring Strawberry Fields for cloud access, including
-creating local per-project configuration files, see the :doc:`/introduction/configuration`
-quickstart guide.
+In both of the above code snippets, ``AUTHENTICATION_TOKEN`` should be replaced with your personal
+API token. For more details on configuring Strawberry Fields for cloud access,
+see the :doc:`/introduction/cloud_platform` quickstart guide.
 
 To test that your account credentials correctly authenticate against the cloud platform,
 you can use the :func:`~.ping` command, from within Strawberry Fields,
