@@ -129,8 +129,8 @@ executed on *remote* devices, rather than on local simulators.
 
 >>> eng = RemoteEngine("X8_01")
 
-We run the engine by calling ``eng.run``, and pass it the program we
-want to run.
+We can now run the program by calling ``eng.run``, and passing the program to be executed
+as well as additional runtime options.
 
 >>> results = eng.run(prog, shots=20)
 >>> results.samples
@@ -200,7 +200,7 @@ counts:
 
             unitary() | q[:4]
             unitary() | q[4:]
- 
+
             ops.MeasureFock() | q
 
     Refer to the :class:`~.operation` documentation for more details.
@@ -208,12 +208,14 @@ counts:
 Managing submitted jobs
 -----------------------
 
-In the above example, :meth:`RemoteEngine.run` is a **blocking** method; Python will wait until
+In the above example, :meth:`eng.run <.RemoteEngine.run>` is a **blocking** method; Python will wait until
 the job result has been returned from the cloud before further lines
 will execute.
 
-**Non-blocking jobs** can also be submitted using the :meth:`eng.run_async() <~.RemoteEngine.run_async>` method. Unlike ``eng.run()``, this method returns a :class:`~.Job`
-object that can be queried to get the job's status.
+Jobs can also be submitted using the **non-blocking** :meth:`eng.run_async() <.RemoteEngine.run_async>`
+method. Unlike ``eng.run()``, which returns a :class:`~.Results` object once the computation is
+complete, this method instead returns a :class:`~.Job` object directly that can be queried
+to get the job's status.
 
 >>> job = engine.run_async(program, shots=1)
 >>> job.id
@@ -235,7 +237,7 @@ checked:
 >>> job.result
 [[0 1 0 2 1 0 0 0]]
 
-Finally, an incomplete job can be *cancelled* by calling :meth:`job.cancel() <~.Job.cancel>`.
+Finally, an incomplete job can be *cancelled* by calling :meth:`job.cancel() <.Job.cancel>`.
 
 
 Hardware compilation
@@ -257,9 +259,13 @@ Furthermore, several automatic decompositions are supported:
   This performs a rectangular decomposition using Mach-Zehnder interferometers.
 
 * You can use :class:`~.ops.BipartiteGraphEmbed` to embed a bipartite graph on
-  the GBS chip. Note, however, that the decomposed squeezing values depend on the graph
-  structure, so only bipartite graphs that result in equal squeezing on all
-  modes can be executed on currently available chips.
+  the photonic chip.
+
+  .. warning::
+
+      Decomposed squeezing values depend on the graph
+      structure, so only bipartite graphs that result in equal squeezing on all
+      modes can be executed on currently available chips.
 
 Before sending the program to the cloud platform to be executed, however, Strawberry Fields
 must **compile** the program to match the physical architecture or layout of the photonic chip.
