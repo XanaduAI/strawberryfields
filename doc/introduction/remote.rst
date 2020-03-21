@@ -24,7 +24,7 @@ you access to the API. This can be done in one of two ways:
        $ sf configure --token AUTHENTICATION_TOKEN
 
 In both of the above code snippets, ``AUTHENTICATION_TOKEN`` should be replaced with your personal
-API token! For more details on configuring Strawberry Fields for cloud access,
+API token. For more details on configuring Strawberry Fields for cloud access,
 see the :doc:`/introduction/cloud_platform` quickstart guide.
 
 To test that your account credentials correctly authenticate against the cloud platform,

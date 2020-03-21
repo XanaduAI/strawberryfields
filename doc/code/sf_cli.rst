@@ -8,7 +8,7 @@ including:
 
 * ``sf configure [--token] [--local]``: configure the connection to the cloud platform
 
-* ``sf run INFILE [--output FILE]``: submit and execute quantum programs from the command line
+* ``sf run INFILE [--output FILE]``: submit and execute Blackbird scripts containing quantum programs from the command line
 
 * ``sf --ping``: verify your connection to the Xanadu cloud platform
 
