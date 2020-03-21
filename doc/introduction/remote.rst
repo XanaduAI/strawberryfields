@@ -11,7 +11,7 @@ covered include:
 * Using the :class:`~.RemoteEngine` to execute jobs remotely (e.g., on a quantum chip),
 * Managing submitted jobs,
 * Compiling quantum programs for specific quantum chip architectures,
-* Saving and running Blackbird scripts, our assembly language for quantum photonic hardware, and
+* Saving and running Blackbird scripts, an assembly language for quantum photonic hardware, and
 * Embedding and sampling from graphs on photonic chips.
 
 .. warning::
@@ -124,7 +124,7 @@ Next we create the 8-mode quantum program:
         ops.MeasureFock() | q
 
 Finally, we create the engine. Similarly to the :class:`~.LocalEngine`, the :class:`~.RemoteEngine`
-is in charge of compiling and executing programs, however it differs in that the program will be
+is in charge of compiling and executing programs. However, it differs in that the program will be
 executed on *remote* devices, rather than on local simulators.
 
 >>> eng = RemoteEngine("X8_01")
@@ -156,14 +156,14 @@ array([[0, 0, 1, 0, 1, 0, 1, 0],
        [2, 0, 1, 0, 1, 0, 0, 0]])
 
 The samples returned correspond to 20 measurements (or shots) of the 8 mode quantum program
-above. While the majority of modes have measured zero photons, we can see that a couple have
+above. Some modes have measured zero photons, and others have
 detected single photons, with a few even detecting 2 or 3.
 
 By taking the average of the returned array along the shots axis, we can estimate the
 mean photon number of each mode:
 
 >>> np.mean(results.samples, axis=0)
-array([0.4 , 0.1 , 0.15, 0.05, 0.3 , 0.3 , 0.45, 0.35])
+array([0.4, 0.1, 0.15, 0.05, 0.3, 0.3, 0.45, 0.35])
 
 We can also use the Python collections module to convert the samples into
 counts:
@@ -257,7 +257,7 @@ Furthermore, several automatic decompositions are supported:
   This performs a rectangular decomposition using Mach-Zehnder interferometers.
 
 * You can use :class:`~.ops.BipartiteGraphEmbed` to embed a bipartite graph on
-  the GBS chip. Note, however, that the decomposed squeezing values depends on the graph
+  the GBS chip. Note, however, that the decomposed squeezing values depend on the graph
   structure, so only bipartite graphs that result in equal squeezing on all
   modes can be executed on currently available chips.
 
@@ -304,7 +304,7 @@ Working with Blackbird scripts
 ------------------------------
 
 When submitting quantum programs to be executed remotely, they are communicated to
-the cloud platform using Blackbird --- a quantum photonic assembly language.
+the cloud platform using Blackbird---a quantum photonic assembly language.
 Strawberry Fields also supports exporting programs directly as Blackbird scripts
 (an ``xbb`` file); Blackbird scripts can then be submitted to be executed via the
 Strawberry Fields :doc:`command line interface </code/sf_cli>`.
@@ -314,8 +314,8 @@ current directory, via the :func:`~.save` function:
 
 >>> sf.save("program1.xbb", prog)
 
-This produces the following Blackbird script, where comments have been added
-for clarity:
+This produces the following Blackbird script (comments have been added
+for clarity):
 
 .. code-block:: python3
 
@@ -369,7 +369,7 @@ After executing the above command, the result will be stored in ``out.txt`` in t
 current working directory. You can also omit the ``--output`` parameter to print the
 result to the screen.
 
-Furthermore, saved Blackbird scripts can be imported as a Strawberry Fields program
+Furthermore, saved Blackbird scripts can be imported as Strawberry Fields programs
 using the :func:`~.load` function:
 
 >>> prog = load("test.xbb")
