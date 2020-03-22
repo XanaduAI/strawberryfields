@@ -447,7 +447,7 @@ restriction on the singular values, an error message will be raised on
 compilation:
 
 >>> B = np.array([[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 1, 1], [1, 0, 1, 0]])
->>> A = np.block([[0*B, B], [B.T, 0*B]])
+>>> A = np.block([[np.zeros_like(B), B], [B.T, np.zeros_like(B)]])
 >>> prog = sf.Program(8)
 >>> with prog.context as q:
 ...     ops.BipartiteGraphEmbed(A, mean_photon_per_mode=1) | q
