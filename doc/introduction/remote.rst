@@ -208,7 +208,7 @@ counts:
 Managing submitted jobs
 -----------------------
 
-In the above example, :meth:`eng.run <.RemoteEngine.run>` is a **blocking** method; Python will wait until
+In the above example, :meth:`eng.run() <.RemoteEngine.run>` is a **blocking** method; Python will wait until
 the job result has been returned from the cloud before further lines
 will execute.
 
