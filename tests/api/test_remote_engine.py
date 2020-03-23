@@ -68,7 +68,7 @@ class TestRemoteEngine:
 
     def test_run_complete(self, connection, prog, job_to_complete):
         """Tests a successful blocking job execution."""
-        engine = RemoteEngine("chip2", connection=connection)
+        engine = RemoteEngine("X8_01", connection=connection)
         result = engine.run(prog)
 
         assert np.array_equal(result.samples, np.array([[1, 2], [3, 4]]))
@@ -81,7 +81,7 @@ class TestRemoteEngine:
     def test_run_async(self, connection, prog, job_to_complete):
         """Tests a successful non-blocking job execution."""
 
-        engine = RemoteEngine("chip2", connection=connection)
+        engine = RemoteEngine("X8_01", connection=connection)
         job = engine.run_async(prog)
         assert job.status == JobStatus.OPEN.value
 

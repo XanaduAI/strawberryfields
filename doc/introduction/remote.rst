@@ -14,19 +14,18 @@ you access to the API. This can be done in one of two ways:
 
 1. By using the :func:`~.store_account` function to store your account credentials:
 
-   >>> sf.store_account("my_api_token")
+   >>> sf.store_account("AUTHENTICATION_TOKEN")
 
 2. By using the ``sf`` command line interface to configure Strawberry Fields with your
    account credentials:
 
    .. code-block:: bash
 
-       $ sf configure --token my_api_token
+       $ sf configure --token AUTHENTICATION_TOKEN
 
-In both of the above code snippets, ``my_api_token`` should be replaced with your personal
-API token! For more details on configuring Strawberry Fields for cloud access, including
-creating local per-project configuration files, see the :doc:`/introduction/configuration`
-quickstart guide.
+In both of the above code snippets, ``AUTHENTICATION_TOKEN`` should be replaced with your personal
+API token. For more details on configuring Strawberry Fields for cloud access,
+see the :doc:`/introduction/cloud_platform` quickstart guide.
 
 To test that your account credentials correctly authenticate against the cloud platform,
 you can use the :func:`~.ping` command, from within Strawberry Fields,
@@ -50,14 +49,14 @@ The easiest way to execute a program using the RemoteEngine is to create a Black
 and place it in your current working directory.
 
 For this example, consider the following Blackbird script, which represents a quantum program that matches
-exactly the gate layout of the ``chip2`` photonic hardware device. We will save the following
+exactly the gate layout of the ``X8_01`` photonic hardware device. We will save the following
 file as ``test.xbb`` in our current working directory:
 
 .. code-block:: python3
 
-    name template_4x2_chip2     # Name of the program
+    name template_4x2_X8_01     # Name of the program
     version 1.0                 # Blackbird version number
-    target chip2 (shots = 100)   # This program will run on chip2 for 100 shots
+    target X8_01 (shots = 100)   # This program will run on X8_01 for 100 shots
 
     # define the squeezing amplitude
     float r = 1.0
@@ -128,7 +127,7 @@ To execute this file using Python, you can use a code block like this:
     from strawberryfields import RemoteEngine
     from strawberryfields.io import load
 
-    eng = RemoteEngine("chip2")
+    eng = RemoteEngine("X8_01")
     prog = load("test.xbb")
     result = eng.run(prog)
     print(result.samples)
@@ -201,7 +200,7 @@ Next we create the program
 We create the engine. The engine is in charge of compiling and executing
 programs on the remote device.
 
->>> eng = RemoteEngine("chip2")
+>>> eng = RemoteEngine("X8_01")
 
 We run the engine by calling ``eng.run``, and pass it the program we
 want to run.
@@ -258,7 +257,7 @@ Program compilation
 In addition to using the program template above, which directly matches the physical
 layout of the hardware device, you can apply any four-mode interferometer to the pairs of modes.
 
-Primitive gates supported by ``chip2`` include any combination of:
+Primitive gates supported by ``X8_01`` include any combination of:
 
 * `General beamsplitters <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.BSgate.html>`_ (:class:`~.ops.BSgate`),
 
@@ -275,7 +274,7 @@ Furthermore, several automatic decompositions are supported:
 * You can use :class:`~.ops.BipartiteGraphEmbed` to embed a bipartite graph on
   the GBS chip. Note, however, that the decomposed squeezing values depends on the graph
   structure, so only bipartite graphs that result in equal squeezing on all
-  modes can currently be executed on ``chip2``.
+  modes can currently be executed on ``X8_01``.
 
 For example, consider the following Blackbird script:
 
@@ -283,7 +282,7 @@ For example, consider the following Blackbird script:
 
     name compilation_example  # Name of the program
     version 1.0               # Blackbird version number
-    target chip2 (shots=100)   # This program will run on chip0 for 100 shots
+    target X8_01 (shots=100)   # This program will run on X8_01 for 100 shots
 
     # Define a unitary matrix
     complex array U[4, 4] =
@@ -325,7 +324,7 @@ the ``Program.print`` method:
 >>> from strawberryfields import RemoteEngine
 >>> from strawberryfields.io import load
 >>> prog = load("test.xbb")
->>> prog = prog.compile("chip2")
+>>> prog = prog.compile("X8_01")
 >>> prog.print()
 S2gate(1, 0) | (q[0], q[4])
 S2gate(1, 0) | (q[3], q[7])
@@ -417,7 +416,7 @@ values are of the form :math:`\{d, 0\}`.
         ops.MeasureFock() | q
 
 
->>> prog.compile("chip2").print()
+>>> prog.compile("X8_01").print()
 S2gate(1, 0) | (q[0], q[4])
 S2gate(0, 0) | (q[3], q[7])
 S2gate(0, 0) | (q[2], q[6])
@@ -468,7 +467,7 @@ the case:
 0.8180954232791715,
 1.3361892276414615}
 
-The program will fail to compile for chip2:
+The program will fail to compile for X8_01:
 
 .. code-block:: python3
 
@@ -478,7 +477,7 @@ The program will fail to compile for chip2:
         ops.BipartiteGraphEmbed(A, mean_photon_per_mode=1) | q
         ops.MeasureFock() | q
 
-    prog.compile("chip2").print()
+    prog.compile("X8_01").print()
 
 .. code-block:: bash
 
@@ -489,7 +488,7 @@ The program will fail to compile for chip2:
     <ipython-input-23-f713320d8c3b> in <module>
           5     ops.MeasureFock() | q
           6
-    ----> 7 prog.compile("chip2").print()
+    ----> 7 prog.compile("X8_01").print()
 
 
     ~/Dropbox/Work/Xanadu/sf_cloud/strawberryfields/program.py in compile(self, target, **kwargs)
@@ -500,7 +499,7 @@ The program will fail to compile for chip2:
         526         # create the compiled Program
 
 
-    ~/Dropbox/Work/Xanadu/sf_cloud/strawberryfields/circuitspecs/chip2.py in compile(self, seq, registers)
+    ~/Dropbox/Work/Xanadu/sf_cloud/strawberryfields/circuitspecs/X8_01.py in compile(self, seq, registers)
         137             raise CircuitError(
         138                 "Incorrect squeezing value(s) (r, phi)={}. Allowed squeezing "
     --> 139                 "value(s) are (r, phi)={}.".format(wrong_params, allowed_sq_value)

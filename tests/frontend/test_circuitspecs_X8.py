@@ -28,7 +28,7 @@ from strawberryfields.parameters import par_evaluate
 from strawberryfields.program_utils import CircuitError, list_to_DAG
 from strawberryfields.io import to_program
 from strawberryfields.utils import random_interferometer
-from strawberryfields.circuitspecs.chip2 import Chip2Specs, CircuitSpecs
+from strawberryfields.circuitspecs.X8 import X8_01, CircuitSpecs
 
 
 pytestmark = pytest.mark.frontend
@@ -166,12 +166,12 @@ class DummyCircuit(CircuitSpecs):
     decompositions = {"Interferometer": {}}
 
 
-class TestChip2Compilation:
-    """Tests for compilation using the Chip2 circuit specification"""
+class TestX8Compilation:
+    """Tests for compilation using the X8_01 circuit specification"""
 
     def test_exact_template(self, tol):
         """Test compilation works for the exact circuit"""
-        bb = blackbird.loads(Chip2Specs.circuit)
+        bb = blackbird.loads(X8_01.circuit)
         bb = bb(
             squeezing_amplitude_0=SQ_AMPLITUDE,
             squeezing_amplitude_1=SQ_AMPLITUDE,
@@ -200,7 +200,7 @@ class TestChip2Compilation:
         )
 
         expected = to_program(bb)
-        res = expected.compile("chip2")
+        res = expected.compile("X8_01")
 
         assert program_equivalence(res, expected, atol=tol)
 
@@ -219,7 +219,7 @@ class TestChip2Compilation:
             ops.MeasureFock() | (q[0], q[1])
 
         with pytest.raises(CircuitError, match="All modes must be measured"):
-            res = prog.compile("chip2")
+            res = prog.compile("X8_01")
 
     def test_no_s2gates(self, tol):
         """Test identity S2gates are inserted when no S2gates
@@ -243,8 +243,8 @@ class TestChip2Compilation:
             ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
             ops.MeasureFock() | q
 
-        res = prog.compile("chip2")
-        expected = expected.compile("chip2")
+        res = prog.compile("X8_01")
+        expected = expected.compile("X8_01")
         assert program_equivalence(res, expected, atol=tol)
 
     def test_missing_s2gates(self, tol):
@@ -271,8 +271,8 @@ class TestChip2Compilation:
             ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
             ops.MeasureFock() | q
 
-        res = prog.compile("chip2")
-        expected = expected.compile("chip2")
+        res = prog.compile("X8_01")
+        expected = expected.compile("X8_01")
         assert program_equivalence(res, expected, atol=tol)
 
     def test_incorrect_s2gate_modes(self):
@@ -290,7 +290,7 @@ class TestChip2Compilation:
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="S2gates do not appear on the correct modes"):
-            res = prog.compile("chip2")
+            res = prog.compile("X8_01")
 
     def test_incorrect_s2gate_params(self):
         """Test exceptions raised if S2gates have illegal parameters"""
@@ -307,7 +307,7 @@ class TestChip2Compilation:
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match=r"Incorrect squeezing value\(s\) \(r, phi\)={\(1.1, 0.0\)}"):
-            res = prog.compile("chip2")
+            res = prog.compile("X8_01")
 
     def test_s2gate_repeated_modes(self):
         """Test exceptions raised if S2gates are repeated"""
@@ -322,7 +322,7 @@ class TestChip2Compilation:
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="incompatible topology."):
-            res = prog.compile("chip2")
+            res = prog.compile("X8_01")
 
     def test_gates_compile(self):
         """Test that combinations of MZgates, Rgates, and BSgates
@@ -345,7 +345,7 @@ class TestChip2Compilation:
             unitary(q[4:])
             ops.MeasureFock() | q
 
-        res = prog.compile("chip2")
+        res = prog.compile("X8_01")
 
     def test_no_unitary(self, tol):
         """Test compilation works with no unitary provided"""
@@ -358,7 +358,7 @@ class TestChip2Compilation:
             ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
             ops.MeasureFock() | q
 
-        res = prog.compile("chip2")
+        res = prog.compile("X8_01")
         expected = sf.Program(8)
 
         with expected.context as q:
@@ -430,8 +430,8 @@ class TestChip2Compilation:
             ops.MZgate(np.pi, 0) | (q[6], q[7])
             ops.MeasureFock() | q
 
-        # compile the program using the chip2 spec
-        res = prog.compile("chip2")
+        # compile the program using the X8_01 spec
+        res = prog.compile("X8_01")
 
         # remove the Fock measurements
         res.circuit = res.circuit[:-1]
@@ -472,8 +472,8 @@ class TestChip2Compilation:
             ops.MZgate(theta2, phi2) | (q[6], q[7])
             ops.MeasureFock() | q
 
-        # compile the program using the chip2 spec
-        res = prog.compile("chip2")
+        # compile the program using the X8_01 spec
+        res = prog.compile("X8_01")
 
         # remove the Fock measurements
         res.circuit = res.circuit[:-1]
@@ -513,7 +513,7 @@ class TestChip2Compilation:
             ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
             ops.MeasureFock() | q
 
-        res = prog.compile("chip2")
+        res = prog.compile("X8_01")
 
         expected = sf.Program(8)
 
@@ -547,7 +547,7 @@ class TestChip2Compilation:
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="must be identical to interferometer"):
-            res = prog.compile("chip2")
+            res = prog.compile("X8_01")
 
     def test_unitary_too_large(self):
         """Test exception raised if the unitary is applied to more
@@ -564,4 +564,4 @@ class TestChip2Compilation:
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="must be applied separately"):
-            res = prog.compile("chip2")
+            res = prog.compile("X8_01")
