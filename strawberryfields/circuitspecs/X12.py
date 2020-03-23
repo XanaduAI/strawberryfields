@@ -271,14 +271,14 @@ class X12Specs(CircuitSpecs):
         return seq
 
 
-class X12_01(X12):
+class X12_01(X12Specs):
     """Circuit specifications for the first X12 chip."""
 
     short_name = "X12_01"
     circuit = DEFAULT_CIRCUIT.format(target=short_name)
 
 
-class X12_02(X12):
+class X12_02(X12Specs):
     """Circuit specifications for the second X12 chip."""
 
     short_name = "X12_02"

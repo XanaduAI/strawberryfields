@@ -28,7 +28,7 @@ from strawberryfields.parameters import par_evaluate
 from strawberryfields.program_utils import CircuitError, list_to_DAG
 from strawberryfields.io import to_program
 from strawberryfields.utils import random_interferometer
-from strawberryfields.circuitspecs.X12 import X12, X12_01, X12_02, CircuitSpecs
+from strawberryfields.circuitspecs.X12 import X12_01, X12_02, CircuitSpecs
 from strawberryfields.circuitspecs.gaussian_unitary import GaussianUnitary
 
 
