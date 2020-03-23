@@ -35,7 +35,7 @@ class X8Specs(CircuitSpecs, abc.ABC):
     local = True
     interactive = False
 
-    sq_amplitude = 1
+    sq_amplitude = 1.0
 
     primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate", "MZgate"}
     decompositions = {

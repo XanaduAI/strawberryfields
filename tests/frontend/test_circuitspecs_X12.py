@@ -159,7 +159,7 @@ class DummyCircuit(CircuitSpecs):
     """Dummy circuit used to instantiate
     the abstract base class"""
 
-    modes = 8
+    modes = 12
     remote = False
     local = True
     interactive = True
@@ -379,7 +379,6 @@ class TestX12Compilation:
             ops.S2gate(SQ_AMPLITUDE) | (q[3], q[9])
             ops.S2gate(SQ_AMPLITUDE) | (q[4], q[10])
             ops.S2gate(SQ_AMPLITUDE) | (q[5], q[11])
-            
             unitary(q[:6])
             unitary(q[6:])
             ops.MeasureFock() | q
@@ -489,88 +488,6 @@ class TestX12Compilation:
 
         assert np.allclose(O, expected, atol=tol)
 
-    def test_mz_gate_standard(self, chip, tol):
-        """Test that the Mach-Zehnder gate compiles to give the correct unitary
-        for some specific standard parameters"""
-        prog = sf.Program(12)
-
-        with prog.context as q:
-            ops.MZgate(np.pi/2, np.pi) | (q[0], q[1])
-            ops.MZgate(np.pi, 0) | (q[2], q[3])
-            ops.MZgate(np.pi/2, np.pi) | (q[4], q[5])
-            ops.MZgate(np.pi, 0) | (q[6], q[7])
-            ops.MZgate(np.pi/2, np.pi) | (q[8], q[9])
-            ops.MZgate(np.pi, 0) | (q[10], q[11])
-            ops.MeasureFock() | q
-
-        # compile the program using the chip spec
-        res = prog.compile(chip.short_name)
-
-        # remove the Fock measurements
-        res.circuit = res.circuit[:-1]
-
-        # extract the Gaussian symplectic matrix
-        O = res.compile("gaussian_unitary").circuit[0].op.p[0]
-
-        # By construction, we know that the symplectic matrix is
-        # passive, and so represents a unitary matrix
-        U = O[:12, :12] + 1j*O[12:, :12]
-
-        # the constructed program should implement the following
-        # unitary matrix
-        expected = np.array(
-            [[0.5-0.5j, -0.5+0.5j, 0, 0],
-             [0.5-0.5j, 0.5-0.5j, 0, 0],
-             [0,  0, -1, -0],
-             [0,  0, -0, 1]]
-        )
-        expected = block_diag(expected, expected, expected)
-
-        assert np.allclose(U, expected, atol=tol)
-
-    @pytest.mark.parametrize("theta1", np.linspace(0, 2*np.pi-0.2, 7))
-    @pytest.mark.parametrize("phi1", np.linspace(0, 2*np.pi-0.1, 7))
-    def test_mz_gate_non_standard(self, chip, theta1, phi1, tol):
-        """Test that the Mach-Zehnder gate compiles to give the correct unitary
-        for a variety of non-standard angles"""
-        prog = sf.Program(12)
-
-        theta2 = np.pi/13
-        phi2 = 3*np.pi/7
-
-        with prog.context as q:
-            ops.MZgate(theta1, phi1) | (q[0], q[1])
-            ops.MZgate(theta2, phi2) | (q[2], q[3])
-            ops.MZgate(theta1, phi1) | (q[4], q[5])
-            ops.MZgate(theta2, phi2) | (q[6], q[7])
-            ops.MeasureFock() | q
-
-        # compile the program using the chip spec
-        res = prog.compile(chip.short_name)
-
-        # remove the Fock measurements
-        res.circuit = res.circuit[:-1]
-
-        # extract the Gaussian symplectic matrix
-        O = res.compile("gaussian_unitary").circuit[0].op.p[0]
-
-        # By construction, we know that the symplectic matrix is
-        # passive, and so represents a unitary matrix
-        U = O[:8, :8] + 1j*O[8:, :8]
-
-        # the constructed program should implement the following
-        # unitary matrix
-        expected = np.array([
-            [(np.exp(1j * phi1) * (-1 + np.exp(1j * theta1))) / 2.0, 0.5j * (1 + np.exp(1j * theta1)), 0, 0],
-            [0.5j * np.exp(1j * phi1) * (1 + np.exp(1j * theta1)), (1 - np.exp(1j * theta1)) / 2.0, 0, 0],
-            [0, 0, (np.exp(1j * phi2) * (-1 + np.exp(1j * theta2))) / 2.0, 0.5j * (1 + np.exp(1j * theta2))],
-            [0, 0, 0.5j * np.exp(1j * phi2) * (1 + np.exp(1j * theta2)), (1 - np.exp(1j * theta2)) / 2.0],
-        ])
-        expected = block_diag(expected, expected)
-
-        assert np.allclose(U, expected, atol=tol)
-
-
     def test_interferometers(self, chip, tol):
         """Test that the compilation correctly decomposes the interferometer using
         the rectangular_symmetric mesh"""
@@ -578,12 +495,14 @@ class TestX12Compilation:
         U = random_interferometer(6)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[6])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[7])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[8])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[9])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[4], q[10])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[5], q[11])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3], q[4], q[5])
+            ops.Interferometer(U) | (q[6], q[7], q[8], q[9], q[10], q[11])
             ops.MeasureFock() | q
 
         res = prog.compile(chip.short_name)
@@ -591,12 +510,11 @@ class TestX12Compilation:
         expected = sf.Program(12)
 
         with expected.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
-            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[4], q[5], q[6], q[7])
+            for i, j in np.arange(12).reshape(2, -1).T:
+                ops.S2gate(SQ_AMPLITUDE, 0) | (q[i], q[j])
+
+            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[0], q[1], q[2], q[3], q[4], q[5])
+            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[6], q[7], q[8], q[9], q[10], q[11])
             ops.MeasureFock() | q
 
         expected = expected.compile(DummyCircuit())
@@ -610,12 +528,11 @@ class TestX12Compilation:
         U = random_interferometer(6)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i, j in np.arange(12).reshape(2, -1).T:
+                ops.S2gate(SQ_AMPLITUDE, 0) | (q[i], q[j])
+
+            ops.Interferometer(U) | q[:6]
+            ops.Interferometer(U) | q[6:]
             ops.BSgate() | (q[2], q[3])
             ops.MeasureFock() | q
 
@@ -629,10 +546,8 @@ class TestX12Compilation:
         U = random_interferometer(12)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
+            for i, j in np.arange(12).reshape(2, -1).T:
+                ops.S2gate(SQ_AMPLITUDE, 0) | (q[i], q[j])
             ops.Interferometer(U) | q
             ops.MeasureFock() | q
 

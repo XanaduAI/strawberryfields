@@ -115,7 +115,7 @@ class X12(CircuitSpecs):
     interactive = False
     circuit = DEFAULT_CIRCUIT.format(target=short_name)
 
-    sq_amplitude = 1
+    sq_amplitude = 1.0
 
     primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate", "MZgate"}
     decompositions = {
