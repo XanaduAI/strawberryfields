@@ -18,6 +18,9 @@ covered include:
 
     An authentication token is required to access the Xanadu cloud platform. In the
     following, replace ``AUTHENTICATION_TOKEN`` with your personal API token.
+    
+    If you do not have an authentication token, you can request hardware access via email
+    at sf@xanadu.ai.
 
 Configuring your credentials
 ----------------------------
@@ -213,7 +216,7 @@ the job result has been returned from the cloud before further lines
 will execute.
 
 Jobs can also be submitted using the **non-blocking** :meth:`eng.run_async() <.RemoteEngine.run_async>`
-method. Unlike ``eng.run()``, which returns a :class:`~.Results` object once the computation is
+method. Unlike :meth:`eng.run() <.RemoteEngine.run>`, which returns a :class:`~.Results` object once the computation is
 complete, this method instead returns a :class:`~.Job` object directly that can be queried
 to get the job's status.
 
