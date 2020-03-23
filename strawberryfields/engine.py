@@ -493,7 +493,7 @@ class RemoteEngine:
     """
 
     POLLING_INTERVAL_SECONDS = 1
-    VALID_TARGETS = ("X8_01",)
+    VALID_TARGETS = ("X8_01", "X12_01", "X12_02")
 
     def __init__(self, target: str, connection: Connection = Connection()):
         if target not in self.VALID_TARGETS:
