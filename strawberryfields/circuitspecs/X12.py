@@ -26,7 +26,6 @@ import strawberryfields.ops as ops
 from .circuit_specs import CircuitSpecs
 from .gbs import GBSSpecs
 
-from functools import partial
 
 # Supporting multiple string formatting, such that the target can be replaced
 # first followed by squeezing amplitude and phase values
@@ -121,7 +120,7 @@ class X12(CircuitSpecs):
     primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate", "MZgate"}
     decompositions = {
         "Interferometer": {"mesh": "rectangular_symmetric", "drop_identity": False},
-        "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False}
+        "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False},
     }
 
     def compile(self, seq, registers):
@@ -194,7 +193,9 @@ class X12(CircuitSpecs):
 
         # Compile the unitary: combine and then decompose all unitaries
         # -------------------------------------------------------------
-        A, B, C = group_operations(seq, lambda x: isinstance(x, (ops.Rgate, ops.BSgate, ops.MZgate)))
+        A, B, C = group_operations(
+            seq, lambda x: isinstance(x, (ops.Rgate, ops.BSgate, ops.MZgate))
+        )
 
         # begin unitary lists for mode [0, 1, 2, 3, 4, 5] and modes [6, 7, 8, 9, 10, 11]
         # with two identity matrices. This is because multi_dot requires at
@@ -269,11 +270,13 @@ class X12(CircuitSpecs):
         seq = super().compile(A + B + C, registers)
         return seq
 
+
 class X12_01(X12):
     """Circuit specifications for the first X12 chip."""
 
     short_name = "X12_01"
     circuit = DEFAULT_CIRCUIT.format(target=short_name)
+
 
 class X12_02(X12):
     """Circuit specifications for the second X12 chip."""
