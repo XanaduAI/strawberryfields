@@ -105,7 +105,7 @@ DEFAULT_CIRCUIT = textwrap.dedent(
 )
 
 
-class X12(CircuitSpecs):
+class X12Specs(CircuitSpecs):
     """Circuit specifications for the X12 class of circuits."""
 
     short_name = "X12"
