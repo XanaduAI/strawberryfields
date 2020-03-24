@@ -1,156 +1,70 @@
 .. _starship:
 
-Xanadu cloud platform
-#####################
+Executing programs on photonic hardware
+=======================================
 
-In this section, we provide a tutorial of the **RemoteEngine**, an engine used to connect to the Xanadu
-cloud platform and execute jobs remotely (e.g., on a quantum chip).
+In this tutorial, we demonstrate how Strawberry Fields can execute
+quantum programs on remote photonic hardware, via the Xanadu cloud platform. Topics
+covered include:
 
-Configuring the RemoteEngine
+* Configuring Strawberry Fields to access the cloud platform,
+* Using the :class:`~.RemoteEngine` to execute jobs remotely (e.g., on a quantum chip),
+* Managing submitted jobs,
+* Compiling quantum programs for specific quantum chip architectures,
+* Saving and running Blackbird scripts, an assembly language for quantum photonic hardware, and
+* Embedding and sampling from graphs on photonic chips.
+
+.. warning::
+
+    An authentication token is required to access the Xanadu cloud platform. In the
+    following, replace ``AUTHENTICATION_TOKEN`` with your personal API token.
+
+    If you do not have an authentication token, you can request hardware access via email
+    at sf@xanadu.ai.
+
+Configuring your credentials
 ----------------------------
 
-Before using the RemoteEngine, you need to configure the hostname and authentication token that will provide
-you access to the API. This can be done in one of two ways:
+Before using the :class:`~.RemoteEngine` for the first time, we need to configure
+Strawberry Fields with an authentication token that provides you access to the Xanadu
+cloud platform. We can do this by using the :func:`~.store_account` function from within Python:
 
-1. By using the :func:`~.store_account` function to store your account credentials:
+>>> import strawberryfields as sf
+>>> sf.store_account("AUTHENTICATION_TOKEN")
 
-   >>> sf.store_account("AUTHENTICATION_TOKEN")
-
-2. By using the ``sf`` command line interface to configure Strawberry Fields with your
-   account credentials:
-
-   .. code-block:: bash
-
-       $ sf configure --token AUTHENTICATION_TOKEN
-
-In both of the above code snippets, ``AUTHENTICATION_TOKEN`` should be replaced with your personal
-API token. For more details on configuring Strawberry Fields for cloud access,
-see the :doc:`/introduction/cloud_platform` quickstart guide.
+This only needs to be executed the first time configuring Strawberry Fields;
+your account details will be stored to disk, and automatically loaded from now
+on.
 
 To test that your account credentials correctly authenticate against the cloud platform,
-you can use the :func:`~.ping` command, from within Strawberry Fields,
+you can use the :func:`~.ping` command,
 
 >>> sf.cli.ping()
 You have successfully authenticated to the platform!
 
-or via the command line:
+.. note::
 
-.. code-block:: bash
+    Strawberry Fields also provides a command line interface for configuring
+    access to the cloud platform and for submitting jobs:
 
-    $ sf --ping
-    You have successfully authenticated to the platform!
+    .. code-block:: console
 
-.. _first_program:
+        $ sf configure --token AUTHENTICATION_TOKEN
+        $ sf --ping
+        You have successfully authenticated to the platform!
 
-Submitting a Blackbird script
------------------------------
-
-The easiest way to execute a program using the RemoteEngine is to create a Blackbird script (an ``xbb`` file)
-and place it in your current working directory.
-
-For this example, consider the following Blackbird script, which represents a quantum program that matches
-exactly the gate layout of the ``X8_01`` photonic hardware device. We will save the following
-file as ``test.xbb`` in our current working directory:
-
-.. code-block:: python3
-
-    name template_4x2_X8_01     # Name of the program
-    version 1.0                 # Blackbird version number
-    target X8_01 (shots = 100)   # This program will run on X8_01 for 100 shots
-
-    # define the squeezing amplitude
-    float r = 1.0
-
-    # Define the interferometer phase values
-    float phi0 = 0.574
-    float phi1 = 1.33
-    float phi2 = 0.654
-    float phi3 = -2.3
-    float phi4 = 0.065
-    float phi5 = 0.654
-    float phi6 = 1.23
-    float phi7 = -1.63
-    float phi8 = 0.065
-    float phi9 = 0.654
-    float phi10 = 1.23
-    float phi11 = -1.63
-
-    # Initial states are two-mode squeezed states
-    S2gate(r, 0.0) | [0, 4]
-    S2gate(r, 0.0) | [1, 5]
-    S2gate(r, 0.0) | [2, 6]
-    S2gate(r, 0.0) | [3, 7]
-
-    # A standard four-mode interferometer is applied
-    # to the signal modes (the ones lower in frequency)
-    MZgate(phi0, phi1) | [0, 1]
-    MZgate(phi2, phi3) | [2, 3]
-    MZgate(phi4, phi5) | [1, 2]
-    MZgate(phi6, phi7) | [0, 1]
-    MZgate(phi8, phi9) | [2, 3]
-    MZgate(phi10, phi11) | [1, 2]
-
-    # final local phases
-    Rgate(0.765)  | [0]
-    Rgate(-0.123) | [1]
-    Rgate(0.654)  | [2]
-    Rgate(-0.651) | [3]
-
-    # The 4x4 interferometer above is duplicated
-    # for the idler modes (the ones higher in frequency)
-    MZgate(phi0, phi1) | [4, 5]
-    MZgate(phi2, phi3) | [6, 7]
-    MZgate(phi4, phi5) | [5, 6]
-    MZgate(phi6, phi7) | [4, 5]
-    MZgate(phi8, phi9) | [6, 7]
-    MZgate(phi10, phi11) | [5, 6]
-
-    # final local phases
-    Rgate(0.765)  | [4]
-    Rgate(-0.123) | [5]
-    Rgate(0.654)  | [6]
-    Rgate(-0.651) | [7]
-
-    # Perform a photon number counting measurement
-    MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7]
-
-After you have created your Blackbird script, you can execute it using the command line, or using a Python shell.
+For more details on configuring Strawberry Fields for cloud access, including
+using the command line interface, see the :doc:`/introduction/photonic_hardware`
+quickstart guide.
 
 
-Executing your Blackbird script using Python
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-To execute this file using Python, you can use a code block like this:
-
-.. code-block:: python3
-
-    from strawberryfields import RemoteEngine
-    from strawberryfields.io import load
-
-    eng = RemoteEngine("X8_01")
-    prog = load("test.xbb")
-    result = eng.run(prog)
-    print(result.samples)
-
-
-Executing your Blackbird script from the command line
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-To execute this file from the command line, use the ``sf`` command as follows:
-
-.. code-block:: console
-
-    sf run test.xbb --output out.txt
-
-After executing the above command, the result will be stored in ``out.txt`` in the current working directory.
-You can also omit the ``--output`` parameter to print the result to the screen.
-
-
-Submitting via Strawberry Fields
---------------------------------
+Executing jobs
+--------------
 
 In this section, we will use Strawberry Fields to submit a simple
 circuit to the chip.
+
+First, we import NumPy and Strawberry Fields, including the remote engine.
 
 .. code-block:: python3
 
@@ -159,10 +73,24 @@ circuit to the chip.
     import strawberryfields as sf
     from strawberryfields import ops
     from strawberryfields import RemoteEngine
-    from strawberryfields.utils import random_interferometer
 
-We choose a random 4x4 interferometer
+We will be submitting a job to run on the chip ``X8_01``. This is an 8 mode chip,
+with the following restrictions:
 
+* The initial states are two-mode squeezed states (:class:`~.S2gate`). We call modes 0 to 3 the
+  *signal modes* and modes 4 to 7 the *idler modes*. Two mode squeezing is between the pairs
+  of modes: (0, 4), (1, 5), (2, 6), (3, 7).
+
+* Any arbitrary :math:`4\times 4` unitary (consisting of :class:`~.BSgate`, :class:`~.MZgate`,
+  :class:`~.Rgate`, and :class:`~.Interferometer` operations) can be applied identically 
+  on both the signal and idler modes.
+
+* Finally, the chip terminates with photon-number resolving measurements (:class:`~.MeasureFock`).
+
+Lets use the :func:`~.random_interferometer` function to generate a random :math:`4\times 4`
+unitary:
+
+>>> from strawberryfields.utils import random_interferometer
 >>> U = random_interferometer(4)
 >>> print(U)
 array([[-0.13879438-0.47517904j,-0.29303954-0.47264099j,-0.43951987+0.12977568j, -0.03496718-0.48418713j],
@@ -170,11 +98,11 @@ array([[-0.13879438-0.47517904j,-0.29303954-0.47264099j,-0.43951987+0.12977568j,
 [ 0.42212573-0.53182417j, -0.2642572 +0.50625182j, 0.19448705+0.28321781j,  0.30281396-0.05582391j],
 [ 0.43097587-0.30288974j, 0.07419772-0.21155126j, 0.28335618-0.13633175j, -0.75113453+0.09580304j]])
 
-Next we create the program
+Next we create the 8-mode quantum program:
 
 .. code-block:: python3
 
-    prog = sf.Program(8)
+    prog = sf.Program(8, name="remote_job1")
 
     with prog.context as q:
         # Initial squeezed states
@@ -197,17 +125,17 @@ Next we create the program
 
         ops.MeasureFock() | q
 
-We create the engine. The engine is in charge of compiling and executing
-programs on the remote device.
+Finally, we create the engine. Similarly to the :class:`~.LocalEngine`, the :class:`~.RemoteEngine`
+is in charge of compiling and executing programs. However, it differs in that the program will be
+executed on *remote* devices, rather than on local simulators.
 
 >>> eng = RemoteEngine("X8_01")
 
-We run the engine by calling ``eng.run``, and pass it the program we
-want to run.
+We can now run the program by calling ``eng.run``, and passing the program to be executed
+as well as additional runtime options.
 
 >>> results = eng.run(prog, shots=20)
-Job e6ead866-04c9-4d48-ba28-680e8639fc41 is sent to server.
->>> results.samples.T
+>>> results.samples
 array([[0, 0, 1, 0, 1, 0, 1, 0],
        [0, 0, 0, 0, 0, 0, 0, 0],
        [0, 0, 0, 0, 0, 0, 0, 2],
@@ -228,40 +156,101 @@ array([[0, 0, 1, 0, 1, 0, 1, 0],
        [0, 0, 0, 0, 0, 1, 0, 0],
        [0, 0, 1, 1, 0, 2, 1, 2],
        [2, 0, 1, 0, 1, 0, 0, 0]])
->>> np.mean(results.samples.T, axis=0)
-array([0.4 , 0.1 , 0.15, 0.05, 0.3 , 0.3 , 0.45, 0.35])
 
+The samples returned correspond to 20 measurements (or shots) of the 8 mode quantum program
+above. Some modes have measured zero photons, and others have
+detected single photons, with a few even detecting 2 or 3.
 
-We can convert the samples into counts using the following function:
+By taking the average of the returned array along the shots axis, we can estimate the
+mean photon number of each mode:
 
-.. code-block:: python3
+>>> np.mean(results.samples, axis=0)
+array([0.4, 0.1, 0.15, 0.05, 0.3, 0.3, 0.45, 0.35])
 
-     from collections import Counter
+We can also use the Python collections module to convert the samples into
+counts:
 
-     def count(samples):
-          bitstrings = [tuple(i) for i in samples]
-          return {k:v for k, v in Counter(bitstrings).items()}
-
->>> samples = np.array([[0, 2], [1, 0], [0, 1], [0, 0], [0, 0], [2, 0], [0, 1], [0, 1]])
->>> counts = count(samples)
->>> print(counts)
-{(0, 2): 1, (1, 0): 1, (0, 1): 3, (0, 0): 2, (2, 0): 1}
->>> counts[(0, 0)]
+>>> from collections import Counter
+>>> bitstrings = [tuple(i) for i in results.samples]
+>>> counts = {k:v for k, v in Counter(bitstrings).items()}
+>>> counts[(0, 0, 0, 0, 0, 0, 0)]
 2
 
-.. _compilation:
+.. note::
 
-Program compilation
--------------------
+    The :class:`~.operation` decorator allows you to create your own Strawberry Fields
+    operation. This can make it easier to ensure that the same unitary is always
+    applied to the signal and idler modes.
 
-In addition to using the program template above, which directly matches the physical
-layout of the hardware device, you can apply any four-mode interferometer to the pairs of modes.
+    .. code-block:: python3
 
-Primitive gates supported by ``X8_01`` include any combination of:
+        from strawberryfields.utils import operation
+
+        @operation(4)
+        def unitary(q):
+            ops.Interferometer(U) | q
+            ops.BSgate(0.543, 0.123) | (q[2], q[0])
+            ops.Rgate(0.453) | q[1]
+            ops.MZgate(0.65, -0.54) | (q[2], q[3])
+
+        prog = sf.Program(8)
+
+        with prog.context as q:
+            ops.S2gate(1.0) | (q[0], q[4])
+            ops.S2gate(1.0) | (q[1], q[5])
+            ops.S2gate(1.0) | (q[3], q[7])
+
+            unitary() | q[:4]
+            unitary() | q[4:]
+
+            ops.MeasureFock() | q
+
+    Refer to the :class:`~.operation` documentation for more details.
+
+Managing submitted jobs
+-----------------------
+
+In the above example, :meth:`eng.run() <.RemoteEngine.run>` is a **blocking** method; Python will wait until
+the job result has been returned from the cloud before further lines
+will execute.
+
+Jobs can also be submitted using the **non-blocking** :meth:`eng.run_async() <.RemoteEngine.run_async>`
+method. Unlike :meth:`eng.run() <.RemoteEngine.run>`, which returns a :class:`~.Results` object once the computation is
+complete, this method instead returns a :class:`~.Job` object directly that can be queried
+to get the job's status.
+
+>>> job = engine.run_async(program, shots=1)
+>>> job.id
+"e6ead866-04c9-4d48-ba28-680e8639fc41"
+>>> job.status
+"queued"
+
+If the job result is not yet available, an ``InvalidJobOperationError`` will be raised:
+
+>>> job.result
+InvalidJobOperationError
+
+To check when the results are ready, the job can be refreshed, and the status
+checked:
+
+>>> job.refresh()
+>>> job.status
+"complete"
+>>> job.result
+[[0 1 0 2 1 0 0 0]]
+
+Finally, an incomplete job can be *cancelled* by calling :meth:`job.cancel() <.Job.cancel>`.
+
+
+Hardware compilation
+--------------------
+
+When creating a quantum program to run on hardware, Strawberry Fields can compile
+any collection of the following gates into a multi-mode unitary:
 
 * `General beamsplitters <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.BSgate.html>`_ (:class:`~.ops.BSgate`),
 
-* `Mach-Zehnder interfomerters <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.MZgate.html>`_ (:class:`~.ops.MZgate`), or
+* `Mach-Zehnder interferometers <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.MZgate.html>`_ (:class:`~.ops.MZgate`), or
 
 * `rotations/phase shifts <https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.ops.Rgate.html>`_ (:class:`~.ops.Rgate`).
 
@@ -272,60 +261,23 @@ Furthermore, several automatic decompositions are supported:
   This performs a rectangular decomposition using Mach-Zehnder interferometers.
 
 * You can use :class:`~.ops.BipartiteGraphEmbed` to embed a bipartite graph on
-  the GBS chip. Note, however, that the decomposed squeezing values depends on the graph
-  structure, so only bipartite graphs that result in equal squeezing on all
-  modes can currently be executed on ``X8_01``.
+  the photonic chip.
 
-For example, consider the following Blackbird script:
+  .. warning::
 
-.. code-block:: python3
+      Decomposed squeezing values depend on the graph
+      structure, so only bipartite graphs that result in equal squeezing on all
+      modes can be executed on currently available chips.
 
-    name compilation_example  # Name of the program
-    version 1.0               # Blackbird version number
-    target X8_01 (shots=100)   # This program will run on X8_01 for 100 shots
+Before sending the program to the cloud platform to be executed, however, Strawberry Fields
+must **compile** the program to match the physical architecture or layout of the photonic chip.
+This happens implicitly when using the remote engine, however we can use the :meth:`~.Program.compile`
+method to explicitly compile the program for a specific chip.
 
-    # Define a unitary matrix
-    complex array U[4, 4] =
-         0.09980516-0.78971535j,  0.53374613+0.07984545j, -0.21161788+0.10047649j, -0.01337026-0.14167555j
-         -0.12759979-0.00425289j,  0.14089156+0.40091225j, 0.31942372-0.21453252j, -0.79775306+0.13657774j
-         -0.18224807+0.30281836j,  0.26930442-0.04644871j, -0.46045639-0.55359506j, -0.0737605-0.52580999j
-         0.19903677-0.43076659j, -0.50320649-0.44750373j, -0.01617065-0.52755812j, -0.19729219+0.06200712j
+For example, lets compile the program we created in the previous section:
 
-    # Initial states are two-mode squeezed states
-    S2gate(1.0, 0.0) | [0, 4]
-    S2gate(1.0, 0.0) | [1, 5]
-    S2gate(1.0, 0.0) | [2, 6]
-    S2gate(1.0, 0.0) | [3, 7]
-
-    # Apply the unitary matrix above to
-    # the first pair of modes, as well
-    # as a beamsplitter
-    Interferometer(U) | [0, 1, 2, 3]
-    BSgate(0.543, -0.123) | [0, 1]
-
-    # Duplicate the above unitary for
-    # the second pair of modes
-    Interferometer(U) | [4, 5, 6, 7]
-    BSgate(0.543, -0.123) | [4, 5]
-
-    # Perform a PNR measurement in the Fock basis
-    MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7]
-
-
-**Note:** You may use :func:`~.random_interferometer` to generate arbitrary random unitaries.
-
-This program will execute following the same steps as above; :class:`~.RemoteEngine` will automatically
-compile the program to match the layout of the chip.
-
-You may wish to view the compiled program; this can be easily done in Python using
-the ``Program.print`` method:
-
-
->>> from strawberryfields import RemoteEngine
->>> from strawberryfields.io import load
->>> prog = load("test.xbb")
->>> prog = prog.compile("X8_01")
->>> prog.print()
+>>> prog_compiled = prog.compile("X8_01")
+>>> prog_compiled.print()
 S2gate(1, 0) | (q[0], q[4])
 S2gate(1, 0) | (q[3], q[7])
 S2gate(1, 0) | (q[2], q[6])
@@ -352,52 +304,101 @@ Rgate(1.902) | (q[0])
 Rgate(-1.173) | (q[5])
 MeasureFock | (q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7])
 
-The compiled program can be saved as a new Blackbird script using the :func:`~.io.save` function:
-
->>> from strawberryfields.io import save
->>> save("test_compiled.xbb", prog)
+While equivalent to the uncompiled program, we can now see the low-level hardware
+operations that are applied on the physical chip.
 
 
-Tips and tricks
----------------
+Working with Blackbird scripts
+------------------------------
+
+When submitting quantum programs to be executed remotely, they are communicated to
+the cloud platform using Blackbird---a quantum photonic assembly language.
+Strawberry Fields also supports exporting programs directly as Blackbird scripts
+(an ``xbb`` file); Blackbird scripts can then be submitted to be executed via the
+Strawberry Fields :doc:`command line interface </code/sf_cli>`.
+
+For example, lets save our program above as a Blackbird script in the
+current directory, via the :func:`~.save` function:
+
+>>> sf.save("program1.xbb", prog)
+
+This produces the following Blackbird script (comments have been added
+for clarity):
 
 .. code-block:: python3
 
-    from strawberryfields.utils import operation
+    name remote_job1
+    version 1.0
+    target X8_01 (shots = 20)
 
-We can define an operation to make it easier to apply the same unitary
-to both signal and idler modes.
+    complex array A0[4, 4] =
+        -0.13879438-0.47517904j, -0.29303954-0.47264099j, -0.43951987+0.12977568j, -0.03496718-0.48418713j
+        0.06065372-0.11292765j, 0.54733962+0.1215551j, -0.50721513+0.56195975j, -0.15923161+0.26606674j
+        0.42212573-0.53182417j, -0.2642572+0.50625182j, 0.19448705+0.28321781j, 0.30281396-0.05582391j
+        0.43097587-0.30288974j, 0.07419772-0.21155126j, 0.28335618-0.13633175j, -0.75113453+0.09580304j
 
-.. code-block:: python3
+    complex array A1[4, 4] =
+        -0.13879438-0.47517904j, -0.29303954-0.47264099j, -0.43951987+0.12977568j, -0.03496718-0.48418713j
+        0.06065372-0.11292765j, 0.54733962+0.1215551j, -0.50721513+0.56195975j, -0.15923161+0.26606674j
+        0.42212573-0.53182417j, -0.2642572+0.50625182j, 0.19448705+0.28321781j, 0.30281396-0.05582391j
+        0.43097587-0.30288974j, 0.07419772-0.21155126j, 0.28335618-0.13633175j, -0.75113453+0.09580304j
 
-    @operation(4)
-    def unitary(q):
-        ops.Interferometer(U) | q
-        ops.BSgate(0.543, 0.123) | (q[2], q[0])
+    # Initial states are two-mode squeezed states
+    S2gate(1.0, 0.0) | [0, 4]
+    S2gate(1.0, 0.0) | [1, 5]
+    S2gate(1.0, 0.0) | [3, 7]
 
-    prog = sf.Program(8)
+    # Apply the unitary matrix above to
+    # the first pair of modes, as well
+    # as a beamsplitter
+    Interferometer(A0) | [0, 1, 2, 3]
+    BSgate(0.543, 0.123) | [2, 0]
+    Rgate(0.453) | 1
+    MZgate(0.65, -0.54) | [2, 3]
 
-    with prog.context as q:
-        ops.S2gate(1.0) | (q[0], q[4])
-        ops.S2gate(1.0) | (q[1], q[5])
-        ops.S2gate(1.0) | (q[2], q[6])
-        ops.S2gate(1.0) | (q[3], q[7])
+    # Duplicate the above unitary for
+    # the second pair of modes
+    Interferometer(A1) | [4, 5, 6, 7]
+    BSgate(0.543, 0.123) | [6, 4]
+    Rgate(0.453) | 5
+    MZgate(0.65, -0.54) | [6, 7]
 
-        unitary() | q[:4]
-        unitary() | q[4:]
+    # Perform a PNR measurement in the Fock basis
+    MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7]
+
+After you have created your Blackbird script, either by exporting it from
+Strawberry Fields or writing it by hand, it can be remotely executed using the command line,
+
+.. code-block:: console
+
+    $ sf run program1.xbb --output out.txt
+
+After executing the above command, the result will be stored in ``out.txt`` in the
+current working directory. You can also omit the ``--output`` parameter to print the
+result to the screen.
+
+Furthermore, saved Blackbird scripts can be imported as Strawberry Fields programs
+using the :func:`~.load` function:
+
+>>> prog = load("test.xbb")
 
 
 Embedding bipartite graphs
 --------------------------
 
-We can embed bipartite graphs, with the restriction that the singular
-values form the set :math:`\{0, d\}` for some real value :math:`d`.
+The currently available hardware devices support embedding bipartite graphs,
+i.e., those with adjacency matrices
 
-The matrix :math:`B` represents the edges between the two sets of
-vertices in the graph, and :math:`A` is the full adjacency matrix
-:math:`A = \begin{bmatrix}0 & B\\ B^T & 0\end{bmatrix}`. Here, we will
-consider a complete bipartite graph, since we know that the singular
-values are of the form :math:`\{d, 0\}`.
+.. math:: A = \begin{bmatrix}0 & B\\ B^T & 0\end{bmatrix}
+
+where :math:`B` represents the edges between the two sets of
+vertices in the graph. However, the devices are currently restricted
+to bipartite graphs with equally sized partitions, such that the singular values form the set :math:`\{0, d\}`
+for some real value :math:`d`.
+
+Here, we will
+consider a `complete bipartite graph <https://en.wikipedia.org/wiki/Complete_bipartite_graph>`_,
+since the singular values are of the form :math:`\{0, d\}`.
 
 .. code-block:: python3
 
@@ -416,7 +417,7 @@ values are of the form :math:`\{d, 0\}`.
         ops.MeasureFock() | q
 
 
->>> prog.compile("X8_01").print()
+>>> prog.compile("chip2").print()
 S2gate(1, 0) | (q[0], q[4])
 S2gate(0, 0) | (q[3], q[7])
 S2gate(0, 0) | (q[2], q[6])
@@ -443,68 +444,15 @@ Rgate(-0.8273) | (q[0])
 Rgate(-2.51) | (q[5])
 MeasureFock | (q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7])
 
-The squeezing values required to embed this bipartite graph are given by
-the following relation:
-
->>> from thewalrus.quantum import find_scaling_adjacency_matrix
->>> c = find_scaling_adjacency_matrix(A, 2*4*0.345274461385554870545)
->>> set(np.arctanh(np.linalg.svd(c*A)[1]))
-{0.0, 1.0000000000000002}
-
-Note that the above squeezing values must be of the form :math:`\{0,1\}`
-to be embedded on the chip. Consider a bipartite graph where this is not
-the case:
+If the bipartite graph to be embedded does not satisfy the aforementioned
+restriction on the singular values, an error message will be raised on
+compilation:
 
 >>> B = np.array([[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 1, 1], [1, 0, 1, 0]])
->>> A = np.block([[0*B, B], [B.T, 0*B]])
->>> c = find_scaling_adjacency_matrix(A, 2*4*1)
->>> set(np.arctanh(np.linalg.svd(c*A)[1]))
-{0.0,
-3.2937343775007984e-32,
-0.17674864137317442,
-0.17674864137317453,
-0.8180954232791708,
-0.8180954232791715,
-1.3361892276414615}
-
-The program will fail to compile for X8_01:
-
-.. code-block:: python3
-
-    prog = sf.Program(8)
-
-    with prog.context as q:
-        ops.BipartiteGraphEmbed(A, mean_photon_per_mode=1) | q
-        ops.MeasureFock() | q
-
-    prog.compile("X8_01").print()
-
-.. code-block:: bash
-
-    ---------------------------------------------------------------------------
-
-    CircuitError                              Traceback (most recent call last)
-
-    <ipython-input-23-f713320d8c3b> in <module>
-          5     ops.MeasureFock() | q
-          6
-    ----> 7 prog.compile("X8_01").print()
-
-
-    ~/Dropbox/Work/Xanadu/sf_cloud/strawberryfields/program.py in compile(self, target, **kwargs)
-        522         # does the circuit spec  have its own compilation method?
-        523         if db.compile is not None:
-    --> 524             seq = db.compile(seq, self.register)
-        525
-        526         # create the compiled Program
-
-
-    ~/Dropbox/Work/Xanadu/sf_cloud/strawberryfields/circuitspecs/X8_01.py in compile(self, seq, registers)
-        137             raise CircuitError(
-        138                 "Incorrect squeezing value(s) (r, phi)={}. Allowed squeezing "
-    --> 139                 "value(s) are (r, phi)={}.".format(wrong_params, allowed_sq_value)
-        140             )
-        141
-
-
-    CircuitError: Incorrect squeezing value(s) (r, phi)={(1.336, 0.0), (0.177, 0.0), (0.818, 0.0)}. Allowed squeezing value(s) are (r, phi)={(1, 0.0), (0.0, 0.0)}.
+>>> A = np.block([[np.zeros_like(B), B], [B.T, np.zeros_like(B)]])
+>>> prog = sf.Program(8)
+>>> with prog.context as q:
+...     ops.BipartiteGraphEmbed(A, mean_photon_per_mode=1) | q
+...     ops.MeasureFock() | q
+CircuitError: Incorrect squeezing value(s) (r, phi)={(1.336, 0.0), (0.177, 0.0), (0.818, 0.0)}.
+Allowed squeezing value(s) are (r, phi)={(1.0, 0.0), (0.0, 0.0)}.

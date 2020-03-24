@@ -170,7 +170,7 @@ Hardware
 .. customgalleryitem::
     :tooltip: RemoteEngine
     :description: :doc:`/introduction/remote`
-    :figure: /gallery/gate_visualisation/GateVisualisation.gif
+    :figure: /_static/chip.png
 
 .. raw:: html
 
