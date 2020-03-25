@@ -165,11 +165,11 @@ Hardware
     :hidden:
     :maxdepth: 1
 
-    /introduction/remote
+    /tutorials/tutorial_X8
 
 .. customgalleryitem::
-    :tooltip: RemoteEngine
-    :description: :doc:`/introduction/remote`
+    :tooltip: Submit quantum jobs to the X8 photonic chip
+    :description: :doc:`/tutorials/tutorial_X8`
     :figure: /_static/chip.png
 
 .. raw:: html

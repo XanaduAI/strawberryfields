@@ -4,6 +4,13 @@ Photonic hardware
 Using Strawberry Fields, you can submit quantum programs
 to be executed on photonic hardware using the Xanadu cloud platform.
 
+.. warning::
+
+    An authentication token is required to access the Xanadu cloud platform. In the
+    following, replace ``AUTHENTICATION_TOKEN`` with your personal API token.
+
+    If you do not have an authentication token, you can request hardware access via email
+    at sf@xanadu.ai.
 
 Configuring your account
 ------------------------
@@ -71,7 +78,42 @@ photonic hardware:
 
 >>> eng = sf.RemoteEngine("chip_name")
 >>> result = eng.run(prog)
->>> print(result.samples)
+
+In the above example, :meth:`eng.run() <.RemoteEngine.run>` is a **blocking** method;
+Python will wait until the job result has been returned from the cloud before further lines
+will execute.
+
+Jobs can also be submitted using the **non-blocking** :meth:`eng.run_async() <.RemoteEngine.run_async>`
+method. Unlike :meth:`eng.run() <.RemoteEngine.run>`, which returns a :class:`~.Results` object once the computation is
+complete, this method instead returns a :class:`~.Job` object directly that can be queried
+to get the job's status.
+
+>>> job = engine.run_async(prog, shots=3)
+>>> job.status
+"queued"
+>>> job.refresh()
+>>> job.status
+"complete"
+>>> result = job.result
+>>> result.samples
+array([[0, 0, 1, 0, 1, 0, 1, 0],
+       [0, 0, 0, 0, 0, 0, 0, 0],
+       [0, 0, 0, 0, 0, 0, 0, 2]])
+
+Job objects have the following properties and methods:
+
+:html:`<div class="summary-table">`
+
+.. currentmodule:: strawberryfields.api.job.Job
+
+.. autosummary::
+    id
+    status
+    result
+    refresh
+    cancel
+
+:html:`</div>`
 
 Alternatively, if you have your quantum program available as a Blackbird script,
 you can submit the Blackbird script file to be executed remotely using
@@ -91,8 +133,8 @@ For more details on submitting jobs to photonic hardware, check out the followin
 tutorials.
 
 .. customgalleryitem::
-    :tooltip: RemoteEngine
-    :description: :doc:`/introduction/remote`
+    :tooltip: Submit quantum jobs to the X8 photonic chip
+    :description: :doc:`/tutorials/tutorial_X8`
     :figure: /_static/chip.png
 
 .. raw:: html

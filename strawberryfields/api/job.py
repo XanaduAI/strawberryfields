@@ -89,7 +89,8 @@ class Job:
 
     @property
     def status(self) -> str:
-        """The job status.
+        """Returns the current job status, with possible values including ``"open"``,
+        ``"queued"``, ``"cancelled"``, ``"complete"``, and ``"failed"``.
 
         Returns:
             str
@@ -98,7 +99,7 @@ class Job:
 
     @property
     def result(self) -> Result:
-        """The job result.
+        """Returns the :class:`~.Result` of a completed job.
 
         This is only defined for completed jobs, and raises an exception for any other
         status.
@@ -114,10 +115,8 @@ class Job:
         return self._result
 
     def refresh(self):
-        """Refreshes the status of the job, along with the job result if the job is
-        newly completed.
-
-        Refreshing only has an effect for open or queued jobs.
+        """Refreshes the status of an open or queued job,
+        along with the job result if the job is newly completed.
         """
         if self._status.is_final:
             log.warning("A %s job cannot be refreshed", self._status.value)
@@ -127,7 +126,7 @@ class Job:
             self._result = self._connection.get_job_result(self.id)
 
     def cancel(self):
-        """Cancels the job.
+        """Cancels an open or queued job.
 
         Only an open or queued job can be cancelled; an exception is raised otherwise.
         """

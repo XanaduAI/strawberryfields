@@ -1,18 +1,17 @@
 .. _starship:
 
-Executing programs on photonic hardware
-=======================================
+Executing programs on the X8 device
+===================================
 
 In this tutorial, we demonstrate how Strawberry Fields can execute
-quantum programs on remote photonic hardware, via the Xanadu cloud platform. Topics
+quantum programs on the remote photonic X8 device, via the Xanadu cloud platform. Topics
 covered include:
 
 * Configuring Strawberry Fields to access the cloud platform,
-* Using the :class:`~.RemoteEngine` to execute jobs remotely (e.g., on a quantum chip),
-* Managing submitted jobs,
+* Using the :class:`~.RemoteEngine` to execute jobs remotely on chip ``X8_01``,
 * Compiling quantum programs for specific quantum chip architectures,
 * Saving and running Blackbird scripts, an assembly language for quantum photonic hardware, and
-* Embedding and sampling from graphs on photonic chips.
+* Embedding and sampling from bipartite graphs on ``X8_01``.
 
 .. warning::
 
@@ -57,6 +56,22 @@ For more details on configuring Strawberry Fields for cloud access, including
 using the command line interface, see the :doc:`/introduction/photonic_hardware`
 quickstart guide.
 
+Device details
+--------------
+
+Below, we will be submitting a job to run on the chip ``X8_01``. This is an 8 mode chip,
+with the following restrictions:
+
+* The initial states are two-mode squeezed states (:class:`~.S2gate`). We call modes 0 to 3 the
+  *signal modes* and modes 4 to 7 the *idler modes*. Two mode squeezing is between the pairs
+  of modes: (0, 4), (1, 5), (2, 6), (3, 7).
+
+* Any arbitrary :math:`4\times 4` unitary (consisting of :class:`~.BSgate`, :class:`~.MZgate`,
+  :class:`~.Rgate`, and :class:`~.Interferometer` operations) can be applied identically
+  on both the signal and idler modes.
+
+* Finally, the chip terminates with photon-number resolving measurements (:class:`~.MeasureFock`).
+
 
 Executing jobs
 --------------
@@ -73,19 +88,6 @@ First, we import NumPy and Strawberry Fields, including the remote engine.
     import strawberryfields as sf
     from strawberryfields import ops
     from strawberryfields import RemoteEngine
-
-We will be submitting a job to run on the chip ``X8_01``. This is an 8 mode chip,
-with the following restrictions:
-
-* The initial states are two-mode squeezed states (:class:`~.S2gate`). We call modes 0 to 3 the
-  *signal modes* and modes 4 to 7 the *idler modes*. Two mode squeezing is between the pairs
-  of modes: (0, 4), (1, 5), (2, 6), (3, 7).
-
-* Any arbitrary :math:`4\times 4` unitary (consisting of :class:`~.BSgate`, :class:`~.MZgate`,
-  :class:`~.Rgate`, and :class:`~.Interferometer` operations) can be applied identically 
-  on both the signal and idler modes.
-
-* Finally, the chip terminates with photon-number resolving measurements (:class:`~.MeasureFock`).
 
 Lets use the :func:`~.random_interferometer` function to generate a random :math:`4\times 4`
 unitary:
@@ -176,6 +178,51 @@ counts:
 >>> counts[(0, 0, 0, 0, 0, 0, 0)]
 2
 
+Job management
+~~~~~~~~~~~~~~
+
+Above, when we called ``eng.run()``, we had to wait for the
+remote device to execute the program and the result to be returned before we could
+continue executing code. That is, ``eng.run()`` is a **blocking** method.
+
+Sometimes, however, it is useful to submit the program
+and continue performing computation locally, every now and again checking to see
+if the job is complete and the results are ready. This is possible with
+the **non-blocking** :meth:`eng.run_async() <.RemoteEngine.run_async>` method:
+
+>>> job = engine.run_async(program, shots=100)
+
+This method is complete as soon as the job has been submitted; no need to wait for
+the job to move through the queue, execute, and for the results to be returned.
+
+Unlike ``eng.run()``, it returns a :class:`~.Job` instance, which allows us to
+check the status of our submitted job:
+
+>>> job.id
+"e6ead866-04c9-4d48-ba28-680e8639fc41"
+>>> job.status
+"queued"
+
+When the job result is ready, it is available via the ``result`` property.
+If the job result is not yet available, however, an ``InvalidJobOperationError``
+will be raised:
+
+>>> job.result
+InvalidJobOperationError
+
+To check when the results are ready, the job can be refreshed, and the status
+checked:
+
+>>> job.refresh()
+>>> job.status
+"complete"
+>>> result = job.result
+>>> result.samples.shape
+(100, 8)
+
+Finally, an incomplete job can be *cancelled* by calling :meth:`job.cancel() <.Job.cancel>`.
+
+
 .. note::
 
     The :class:`~.operation` decorator allows you to create your own Strawberry Fields
@@ -207,41 +254,6 @@ counts:
 
     Refer to the :class:`~.operation` documentation for more details.
 
-Managing submitted jobs
------------------------
-
-In the above example, :meth:`eng.run() <.RemoteEngine.run>` is a **blocking** method; Python will wait until
-the job result has been returned from the cloud before further lines
-will execute.
-
-Jobs can also be submitted using the **non-blocking** :meth:`eng.run_async() <.RemoteEngine.run_async>`
-method. Unlike :meth:`eng.run() <.RemoteEngine.run>`, which returns a :class:`~.Results` object once the computation is
-complete, this method instead returns a :class:`~.Job` object directly that can be queried
-to get the job's status.
-
->>> job = engine.run_async(program, shots=1)
->>> job.id
-"e6ead866-04c9-4d48-ba28-680e8639fc41"
->>> job.status
-"queued"
-
-If the job result is not yet available, an ``InvalidJobOperationError`` will be raised:
-
->>> job.result
-InvalidJobOperationError
-
-To check when the results are ready, the job can be refreshed, and the status
-checked:
-
->>> job.refresh()
->>> job.status
-"complete"
->>> job.result
-[[0 1 0 2 1 0 0 0]]
-
-Finally, an incomplete job can be *cancelled* by calling :meth:`job.cancel() <.Job.cancel>`.
-
-
 Hardware compilation
 --------------------
 
@@ -261,16 +273,16 @@ Furthermore, several automatic decompositions are supported:
   This performs a rectangular decomposition using Mach-Zehnder interferometers.
 
 * You can use :class:`~.ops.BipartiteGraphEmbed` to embed a bipartite graph on
-  the photonic chip.
+  the photonic device.
 
   .. warning::
 
       Decomposed squeezing values depend on the graph
       structure, so only bipartite graphs that result in equal squeezing on all
-      modes can be executed on currently available chips.
+      modes can be executed on ``X8_01`` chips.
 
 Before sending the program to the cloud platform to be executed, however, Strawberry Fields
-must **compile** the program to match the physical architecture or layout of the photonic chip.
+must **compile** the program to match the physical architecture or layout of the photonic chip, in this case ``X8_01``.
 This happens implicitly when using the remote engine, however we can use the :meth:`~.Program.compile`
 method to explicitly compile the program for a specific chip.
 
@@ -317,13 +329,9 @@ Strawberry Fields also supports exporting programs directly as Blackbird scripts
 (an ``xbb`` file); Blackbird scripts can then be submitted to be executed via the
 Strawberry Fields :doc:`command line interface </code/sf_cli>`.
 
-For example, lets save our program above as a Blackbird script in the
-current directory, via the :func:`~.save` function:
-
->>> sf.save("program1.xbb", prog)
-
-This produces the following Blackbird script (comments have been added
-for clarity):
+For example, lets consider a Blackbird script
+:download:`examples/example_job_X8.xbb <../../examples/example_job_X8.xbb>`
+representing the same quantum program we constructed above:
 
 .. code-block:: python3
 
@@ -331,13 +339,7 @@ for clarity):
     version 1.0
     target X8_01 (shots = 20)
 
-    complex array A0[4, 4] =
-        -0.13879438-0.47517904j, -0.29303954-0.47264099j, -0.43951987+0.12977568j, -0.03496718-0.48418713j
-        0.06065372-0.11292765j, 0.54733962+0.1215551j, -0.50721513+0.56195975j, -0.15923161+0.26606674j
-        0.42212573-0.53182417j, -0.2642572+0.50625182j, 0.19448705+0.28321781j, 0.30281396-0.05582391j
-        0.43097587-0.30288974j, 0.07419772-0.21155126j, 0.28335618-0.13633175j, -0.75113453+0.09580304j
-
-    complex array A1[4, 4] =
+    complex array U[4, 4] =
         -0.13879438-0.47517904j, -0.29303954-0.47264099j, -0.43951987+0.12977568j, -0.03496718-0.48418713j
         0.06065372-0.11292765j, 0.54733962+0.1215551j, -0.50721513+0.56195975j, -0.15923161+0.26606674j
         0.42212573-0.53182417j, -0.2642572+0.50625182j, 0.19448705+0.28321781j, 0.30281396-0.05582391j
@@ -351,14 +353,14 @@ for clarity):
     # Apply the unitary matrix above to
     # the first pair of modes, as well
     # as a beamsplitter
-    Interferometer(A0) | [0, 1, 2, 3]
+    Interferometer(U) | [0, 1, 2, 3]
     BSgate(0.543, 0.123) | [2, 0]
     Rgate(0.453) | 1
     MZgate(0.65, -0.54) | [2, 3]
 
     # Duplicate the above unitary for
     # the second pair of modes
-    Interferometer(A1) | [4, 5, 6, 7]
+    Interferometer(U) | [4, 5, 6, 7]
     BSgate(0.543, 0.123) | [6, 4]
     Rgate(0.453) | 5
     MZgate(0.65, -0.54) | [6, 7]
@@ -366,8 +368,7 @@ for clarity):
     # Perform a PNR measurement in the Fock basis
     MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7]
 
-After you have created your Blackbird script, either by exporting it from
-Strawberry Fields or writing it by hand, it can be remotely executed using the command line,
+The above Blackbird script can be remotely executed using the command line,
 
 .. code-block:: console
 
@@ -377,16 +378,23 @@ After executing the above command, the result will be stored in ``out.txt`` in t
 current working directory. You can also omit the ``--output`` parameter to print the
 result to the screen.
 
-Furthermore, saved Blackbird scripts can be imported as Strawberry Fields programs
-using the :func:`~.load` function:
+.. note::
 
->>> prog = load("test.xbb")
+    Saved Blackbird scripts can be imported as Strawberry Fields programs
+    using the :func:`~.load` function:
+
+    >>> prog = load("test.xbb")
+
+    Strawberry Fields programs can also be exported as Blackbird scripts
+    using :func:`~.save`:
+
+    >>> sf.save("program1.xbb", prog)
 
 
 Embedding bipartite graphs
 --------------------------
 
-The currently available hardware devices support embedding bipartite graphs,
+The X-series of devices support embedding bipartite graphs,
 i.e., those with adjacency matrices
 
 .. math:: A = \begin{bmatrix}0 & B\\ B^T & 0\end{bmatrix}
@@ -417,7 +425,7 @@ since the singular values are of the form :math:`\{0, d\}`.
         ops.MeasureFock() | q
 
 
->>> prog.compile("chip2").print()
+>>> prog.compile("X8_01").print()
 S2gate(1, 0) | (q[0], q[4])
 S2gate(0, 0) | (q[3], q[7])
 S2gate(0, 0) | (q[2], q[6])
