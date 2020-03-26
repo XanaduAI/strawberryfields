@@ -16,7 +16,6 @@ This module provides an interface to a remote program execution backend.
 """
 from datetime import datetime
 import io
-import json
 import logging
 from typing import List, Optional
 
