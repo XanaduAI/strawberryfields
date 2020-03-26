@@ -67,15 +67,15 @@ Below, we will be submitting a job to run on the chip ``X8_01``.
   *signal modes* and modes 4 to 7 the *idler modes*. Two-mode squeezing is between the pairs
   of modes: (0, 4), (1, 5), (2, 6), (3, 7).
 
-At this point, only the parameters :code:`r=1`, :code:`phi=0` are allowed for the two-mode
-squeezing gates between any pair of signal and idler modes. Eventually, a range of
-squeezing amplitudes :code:`r` will be supported.
-
 * Any arbitrary :math:`4\times 4` unitary (consisting of :class:`~.BSgate`, :class:`~.MZgate`,
   :class:`~.Rgate`, and :class:`~.Interferometer` operations) can be applied identically
   on both the signal and idler modes.
 
 * Finally, the chip terminates with photon-number resolving measurements (:class:`~.MeasureFock`).
+
+At this point, only the parameters :code:`r=1`, :code:`phi=0` are allowed for the two-mode
+squeezing gates between any pair of signal and idler modes. Eventually, a range of
+squeezing amplitudes :code:`r` will be supported.
 
 .. note::
 
