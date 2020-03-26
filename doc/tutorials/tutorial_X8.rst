@@ -59,12 +59,16 @@ quickstart guide.
 Device details
 --------------
 
-Below, we will be submitting a job to run on the chip ``X8_01``. This is an 8 mode chip,
+Below, we will be submitting a job to run on the chip ``X8_01``. This is an 8-mode chip,
 with the following restrictions:
 
 * The initial states are two-mode squeezed states (:class:`~.S2gate`). We call modes 0 to 3 the
-  *signal modes* and modes 4 to 7 the *idler modes*. Two mode squeezing is between the pairs
+  *signal modes* and modes 4 to 7 the *idler modes*. Two-mode squeezing is between the pairs
   of modes: (0, 4), (1, 5), (2, 6), (3, 7).
+
+At this point, only the parameters :code:`r=1`, :code:`phi=0` are allowed for the two-mode 
+squeezing gates between any pair of signal and idler modes. Eventually, a range of 
+squeezing amplitudes :code:`r` will be supported.   
 
 * Any arbitrary :math:`4\times 4` unitary (consisting of :class:`~.BSgate`, :class:`~.MZgate`,
   :class:`~.Rgate`, and :class:`~.Interferometer` operations) can be applied identically
@@ -192,9 +196,6 @@ the **non-blocking** :meth:`eng.run_async() <.RemoteEngine.run_async>` method:
 
 >>> job = engine.run_async(program, shots=100)
 
-This method is complete as soon as the job has been submitted; no need to wait for
-the job to move through the queue, execute, and for the results to be returned.
-
 Unlike ``eng.run()``, it returns a :class:`~.Job` instance, which allows us to
 check the status of our submitted job:
 
@@ -279,7 +280,7 @@ Furthermore, several automatic decompositions are supported:
 
       Decomposed squeezing values depend on the graph
       structure, so only bipartite graphs that result in equal squeezing on all
-      modes can be executed on ``X8_01`` chips.
+      modes can be executed on ``X8`` chips.
 
 Before sending the program to the cloud platform to be executed, however, Strawberry Fields
 must **compile** the program to match the physical architecture or layout of the photonic chip, in this case ``X8_01``.
@@ -394,7 +395,7 @@ result to the screen.
 Embedding bipartite graphs
 --------------------------
 
-The X-series of devices support embedding bipartite graphs,
+The X8 device class supports embedding bipartite graphs,
 i.e., those with adjacency matrices
 
 .. math:: A = \begin{bmatrix}0 & B\\ B^T & 0\end{bmatrix}
