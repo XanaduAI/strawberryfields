@@ -4,7 +4,7 @@ Executing programs on X8 devices
 ================================
 
 In this tutorial, we demonstrate how Strawberry Fields can execute
-quantum programs on the remote photonic X8 family of devices, via the Xanadu cloud platform. Topics
+quantum programs on the X8 family of remote photonic devices, via the Xanadu cloud platform. Topics
 covered include:
 
 * Configuring Strawberry Fields to access the cloud platform,
