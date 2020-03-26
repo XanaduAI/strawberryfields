@@ -1,10 +1,10 @@
 .. _starship:
 
-Executing programs on the X8 device
-===================================
+Executing programs on X8 devices
+================================
 
 In this tutorial, we demonstrate how Strawberry Fields can execute
-quantum programs on the remote photonic X8 device, via the Xanadu cloud platform. Topics
+quantum programs on the remote photonic X8 family of devices, via the Xanadu cloud platform. Topics
 covered include:
 
 * Configuring Strawberry Fields to access the cloud platform,
@@ -59,16 +59,17 @@ quickstart guide.
 Device details
 --------------
 
-Below, we will be submitting a job to run on the chip ``X8_01``. This is an 8-mode chip,
-with the following restrictions:
+Below, we will be submitting a job to run on the chip ``X8_01``.
+
+``X8_01`` is an 8-mode chip, with the following restrictions:
 
 * The initial states are two-mode squeezed states (:class:`~.S2gate`). We call modes 0 to 3 the
   *signal modes* and modes 4 to 7 the *idler modes*. Two-mode squeezing is between the pairs
   of modes: (0, 4), (1, 5), (2, 6), (3, 7).
 
-At this point, only the parameters :code:`r=1`, :code:`phi=0` are allowed for the two-mode 
-squeezing gates between any pair of signal and idler modes. Eventually, a range of 
-squeezing amplitudes :code:`r` will be supported.   
+At this point, only the parameters :code:`r=1`, :code:`phi=0` are allowed for the two-mode
+squeezing gates between any pair of signal and idler modes. Eventually, a range of
+squeezing amplitudes :code:`r` will be supported.
 
 * Any arbitrary :math:`4\times 4` unitary (consisting of :class:`~.BSgate`, :class:`~.MZgate`,
   :class:`~.Rgate`, and :class:`~.Interferometer` operations) can be applied identically
@@ -76,6 +77,37 @@ squeezing amplitudes :code:`r` will be supported.
 
 * Finally, the chip terminates with photon-number resolving measurements (:class:`~.MeasureFock`).
 
+.. note::
+
+    **What's in a name?**
+
+    The name of the photonic chip, ``X8_01``, provides several clues to the underlying
+    chip structure and architecture.
+
+    At Xanadu, photonic devices are named using the nomenclature ``AM_YY``, where:
+
+    * ``M`` is the **mode number**, the number of modes available on the chip. ``X8_01``
+      has 8 available modes.
+
+    * ``A`` is the **architecture number.** This chip belongs to the ``X``-series of photonic
+      devices. Devices in this series are characterized by the following properties:
+
+      - The available modes :math:`M` are divided into two main groups, signal modes
+        (numbered :math:`[0, M/2-1]`) and idler modes (numbered :math:`[M/2, M-1]`).
+
+      - Initial two-mode squeezed states entangle the signal modes and the idler modes
+        in a 'cascade'; entangled mode pairs are :math:`[(0, M/2), (1, M/2+1), \dots, (M/2-1, M-1)]`.
+
+      - An arbitrary :math:`M/2\times M/2` unitary can then be applied to both the signal and idler modes.
+
+      - Finally, the modes terminate with photon-number resolving detectors.
+
+    * ``YY`` is the **chip ID**. It specifies a particular chip instance chosen for executing the jobs.
+      While all chips in the same series have the same architecture, specific chips may be characterized
+      by hardware imperfections, including loss and gate fidelity.
+
+    While ``X8`` is used here to specify *any* chip in the ``X8``-series (including ``X8_01``), when
+    submitting remote jobs, a specific chip ID must be chosen.
 
 Executing jobs
 --------------
@@ -182,6 +214,37 @@ counts:
 >>> counts[(0, 0, 0, 0, 0, 0, 0)]
 2
 
+.. note::
+
+    The :class:`~.operation` decorator allows you to create your own Strawberry Fields
+    operation. This can make it easier to ensure that the same unitary is always
+    applied to the signal and idler modes.
+
+    .. code-block:: python3
+
+        from strawberryfields.utils import operation
+
+        @operation(4)
+        def unitary(q):
+            ops.Interferometer(U) | q
+            ops.BSgate(0.543, 0.123) | (q[2], q[0])
+            ops.Rgate(0.453) | q[1]
+            ops.MZgate(0.65, -0.54) | (q[2], q[3])
+
+        prog = sf.Program(8)
+
+        with prog.context as q:
+            ops.S2gate(1.0) | (q[0], q[4])
+            ops.S2gate(1.0) | (q[1], q[5])
+            ops.S2gate(1.0) | (q[3], q[7])
+
+            unitary() | q[:4]
+            unitary() | q[4:]
+
+            ops.MeasureFock() | q
+
+    Refer to the :class:`~.operation` documentation for more details.
+
 Job management
 ~~~~~~~~~~~~~~
 
@@ -222,38 +285,6 @@ checked:
 (100, 8)
 
 Finally, an incomplete job can be *cancelled* by calling :meth:`job.cancel() <.Job.cancel>`.
-
-
-.. note::
-
-    The :class:`~.operation` decorator allows you to create your own Strawberry Fields
-    operation. This can make it easier to ensure that the same unitary is always
-    applied to the signal and idler modes.
-
-    .. code-block:: python3
-
-        from strawberryfields.utils import operation
-
-        @operation(4)
-        def unitary(q):
-            ops.Interferometer(U) | q
-            ops.BSgate(0.543, 0.123) | (q[2], q[0])
-            ops.Rgate(0.453) | q[1]
-            ops.MZgate(0.65, -0.54) | (q[2], q[3])
-
-        prog = sf.Program(8)
-
-        with prog.context as q:
-            ops.S2gate(1.0) | (q[0], q[4])
-            ops.S2gate(1.0) | (q[1], q[5])
-            ops.S2gate(1.0) | (q[3], q[7])
-
-            unitary() | q[:4]
-            unitary() | q[4:]
-
-            ops.MeasureFock() | q
-
-    Refer to the :class:`~.operation` documentation for more details.
 
 Hardware compilation
 --------------------
