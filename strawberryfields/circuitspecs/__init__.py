@@ -48,6 +48,11 @@ from .gaussian_unitary import GaussianUnitary
 specs = (X8_01, X12_01, X12_02, FockSpecs, GaussianSpecs, GBSSpecs, TFSpecs, GaussianUnitary)
 
 circuit_db = {c.short_name: c for c in specs}
-"""dict[str, ~strawberryfields.circuitspecs.CircuitSpecs]: Map from circuit family short name to the corresponding class."""
+"""dict[str, ~strawberryfields.circuitspecs.CircuitSpecs]: Map from circuit
+family short name to the corresponding class."""
+
+# update the circuit database with default values for each chip series
+circuit_db["X8"] = X8_01
+circuit_db["X12"] = X12_01
 
 __all__ = ["circuit_db", "CircuitSpecs"] + [i.__name__ for i in specs]
