@@ -8,10 +8,10 @@ quantum programs on the X8 family of remote photonic devices, via the Xanadu clo
 covered include:
 
 * Configuring Strawberry Fields to access the cloud platform,
-* Using the :class:`~.RemoteEngine` to execute jobs remotely on chip ``X8_01``,
+* Using the :class:`~.RemoteEngine` to execute jobs remotely on ``X8``,
 * Compiling quantum programs for specific quantum chip architectures,
 * Saving and running Blackbird scripts, an assembly language for quantum photonic hardware, and
-* Embedding and sampling from bipartite graphs on ``X8_01``.
+* Embedding and sampling from bipartite graphs on ``X8``.
 
 .. warning::
 
@@ -59,9 +59,10 @@ quickstart guide.
 Device details
 --------------
 
-Below, we will be submitting a job to run on the chip ``X8_01``.
+Below, we will be submitting a job to run on the chip ``X8``.
 
-``X8_01`` is an 8-mode chip, with the following restrictions:
+``X8`` is an 8-mode chip, with the following restrictions:
+
 
 * The initial states are two-mode squeezed states (:class:`~.S2gate`). We call modes 0 to 3 the
   *signal modes* and modes 4 to 7 the *idler modes*. Two-mode squeezing is between the pairs
@@ -73,41 +74,14 @@ Below, we will be submitting a job to run on the chip ``X8_01``.
 
 * Finally, the chip terminates with photon-number resolving measurements (:class:`~.MeasureFock`).
 
+.. figure:: /_static/X8.svg
+    :align: center
+    :width: 70%
+    :target: javascript:void(0);
+
 At this point, only the parameters :code:`r=1`, :code:`phi=0` are allowed for the two-mode
 squeezing gates between any pair of signal and idler modes. Eventually, a range of
 squeezing amplitudes :code:`r` will be supported.
-
-.. note::
-
-    **What's in a name?**
-
-    The name of the photonic chip, ``X8_01``, provides several clues to the underlying
-    chip structure and architecture.
-
-    At Xanadu, photonic devices are named using the nomenclature ``AM_YY``, where:
-
-    * ``M`` is the **mode number**, the number of modes available on the chip. ``X8_01``
-      has 8 available modes.
-
-    * ``A`` is the **architecture number.** This chip belongs to the ``X``-series of photonic
-      devices. Devices in this series are characterized by the following properties:
-
-      - The available modes :math:`M` are divided into two main groups, signal modes
-        (numbered :math:`[0, M/2-1]`) and idler modes (numbered :math:`[M/2, M-1]`).
-
-      - Initial two-mode squeezed states entangle the signal modes and the idler modes
-        in a 'cascade'; entangled mode pairs are :math:`[(0, M/2), (1, M/2+1), \dots, (M/2-1, M-1)]`.
-
-      - An arbitrary :math:`M/2\times M/2` unitary can then be applied to both the signal and idler modes.
-
-      - Finally, the modes terminate with photon-number resolving detectors.
-
-    * ``YY`` is the **chip ID**. It specifies a particular chip instance chosen for executing the jobs.
-      While all chips in the same series have the same architecture, specific chips may be characterized
-      by hardware imperfections, including loss and gate fidelity.
-
-    While ``X8`` is used here to specify *any* chip in the ``X8``-series (including ``X8_01``), when
-    submitting remote jobs, a specific chip ID must be chosen.
 
 Executing jobs
 --------------
@@ -167,7 +141,10 @@ Finally, we create the engine. Similarly to the :class:`~.LocalEngine`, the :cla
 is in charge of compiling and executing programs. However, it differs in that the program will be
 executed on *remote* devices, rather than on local simulators.
 
->>> eng = RemoteEngine("X8_01")
+Below, we create a remote engine to submit and execute quantum programs
+on the ``X8`` photonic device.
+
+>>> eng = RemoteEngine("X8")
 
 We can now run the program by calling ``eng.run``, and passing the program to be executed
 as well as additional runtime options.
@@ -314,13 +291,13 @@ Furthermore, several automatic decompositions are supported:
       modes can be executed on ``X8`` chips.
 
 Before sending the program to the cloud platform to be executed, however, Strawberry Fields
-must **compile** the program to match the physical architecture or layout of the photonic chip, in this case ``X8_01``.
+must **compile** the program to match the physical architecture or layout of the photonic chip, in this case ``X8``.
 This happens implicitly when using the remote engine, however we can use the :meth:`~.Program.compile`
 method to explicitly compile the program for a specific chip.
 
 For example, lets compile the program we created in the previous section:
 
->>> prog_compiled = prog.compile("X8_01")
+>>> prog_compiled = prog.compile("X8")
 >>> prog_compiled.print()
 S2gate(1, 0) | (q[0], q[4])
 S2gate(1, 0) | (q[3], q[7])
@@ -369,7 +346,7 @@ representing the same quantum program we constructed above:
 
     name remote_job1
     version 1.0
-    target X8_01 (shots = 20)
+    target X8 (shots = 20)
 
     complex array U[4, 4] =
         -0.13879438-0.47517904j, -0.29303954-0.47264099j, -0.43951987+0.12977568j, -0.03496718-0.48418713j
@@ -457,7 +434,7 @@ since the singular values are of the form :math:`\{0, d\}`.
         ops.MeasureFock() | q
 
 
->>> prog.compile("X8_01").print()
+>>> prog.compile("X8").print()
 S2gate(1, 0) | (q[0], q[4])
 S2gate(0, 0) | (q[3], q[7])
 S2gate(0, 0) | (q[2], q[6])
@@ -496,3 +473,43 @@ compilation:
 ...     ops.MeasureFock() | q
 CircuitError: Incorrect squeezing value(s) (r, phi)={(1.336, 0.0), (0.177, 0.0), (0.818, 0.0)}.
 Allowed squeezing value(s) are (r, phi)={(1.0, 0.0), (0.0, 0.0)}.
+
+
+Appendix
+--------
+
+.. note::
+
+    **What's in a name?**
+
+    ``X8``, rather than being a single hardware chip, corresponds to a family
+    of physical devices, with individual names including ``X8_01``.
+
+    The name of each photonic chip, ``X8_01``, provides several clues to the underlying
+    chip structure and architecture.
+
+    At Xanadu, photonic devices are named using the nomenclature ``AM_YY``, where:
+
+    * ``M`` is the **mode number**, the number of modes available on the chip. ``X8_01``
+      has 8 available modes.
+
+    * ``A`` is the **architecture number.** This chip belongs to the ``X``-series of photonic
+      devices. Devices in this series are characterized by the following properties:
+
+      - The available modes :math:`M` are divided into two main groups, signal modes
+        (numbered :math:`[0, M/2-1]`) and idler modes (numbered :math:`[M/2, M-1]`).
+
+      - Initial two-mode squeezed states entangle the signal modes and the idler modes
+        in a 'cascade'; entangled mode pairs are :math:`[(0, M/2), (1, M/2+1), \dots, (M/2-1, M-1)]`.
+
+      - An arbitrary :math:`M/2\times M/2` unitary can then be applied to both the signal and idler modes.
+
+      - Finally, the modes terminate with photon-number resolving detectors.
+
+    * ``YY`` is the **chip ID**. It specifies a particular chip instance chosen for executing the jobs.
+      While all chips in the same series have the same architecture, specific chips may be characterized
+      by hardware imperfections, including loss and gate fidelity.
+
+    While ``X8`` is used here to specify *any* chip in the ``X8``-series (including ``X8_01``),
+    you may also specify a specific chip ID (such as ``X8_01``) during program compilation
+    and execution.
