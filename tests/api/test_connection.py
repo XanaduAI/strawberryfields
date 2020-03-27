@@ -189,7 +189,7 @@ class TestConnection:
         # A custom `mock_return` that checks for expected arguments
         def _mock_return(return_value):
             def function(*args, **kwargs):
-                assert kwargs.get("data") == {"status": "cancelled"}
+                assert kwargs.get("json") == {"status": "cancelled"}
                 return return_value
 
             return function
