@@ -481,6 +481,7 @@ class RemoteEngine:
         target (str): the target device
         connection (strawberryfields.api.Connection): a connection to the remote job
             execution platform
+        backend_options (Dict[str, Any]): keyword arguments for the backend
     """
 
     POLLING_INTERVAL_SECONDS = 1
