@@ -133,14 +133,14 @@ class Connection:
         """
         return self._use_ssl
 
-    def create_job(self, target: str, program: Program, shots: Optional[int] = None) -> Job:
+    def create_job(self, target: str, program: Program, run_options: dict = None) -> Job:
         """Creates a job with the given circuit.
 
         Args:
             target (str): the target device
             program (strawberryfields.Program): the quantum circuit
-            shots (int): The number of shots for which to run the program. If provided,
-                overrides the value stored in the given ``program``.
+            run_options (Dict[str, Any]): Runtime arguments for the program execution.
+                If provided, overrides the value stored in the given ``program``.
 
         Returns:
             strawberryfields.api.Job: the created job
@@ -148,8 +148,13 @@ class Connection:
         # Serialize a blackbird circuit for network transmission
         bb = to_blackbird(program)
         bb._target["name"] = target
-        if shots is not None:
-            bb._target["options"] = {"shots": shots}
+
+        # update the run options if provided
+        final_run_options = {}
+        final_run_options.update(program.run_options)
+        final_run_options.update(run_options or {})
+        bb._target["options"] = final_run_options
+
         circuit = bb.serialize()
 
         path = "/jobs"

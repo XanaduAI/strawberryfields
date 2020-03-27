@@ -49,7 +49,10 @@ def to_blackbird(prog, version="1.0"):
 
         # set the run options
         if prog.run_options:
-            bb._target["options"] = prog.run_options
+            bb._target["options"].update(prog.run_options)
+
+        if prog.backend_options:
+            bb._target["options"].update(prog.backend_options)
 
     # fill in the quantum circuit
     for cmd in prog.circuit:

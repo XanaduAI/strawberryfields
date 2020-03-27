@@ -45,8 +45,6 @@ class BaseEngine(abc.ABC):
         backend_options (Dict[str, Any]): keyword arguments for the backend
     """
 
-    REMOTE = False
-
     def __init__(self, backend, backend_options=None):
         if backend_options is None:
             backend_options = {}
@@ -280,15 +278,12 @@ class BaseEngine(abc.ABC):
                 p = p.compile(target, **compile_options)
             p.lock()
 
-            if self.REMOTE:
-                self.samples = self._run_program(p, **kwargs)
-            else:
-                self._run_program(p, **kwargs)
-                shots = kwargs.get("shots", 1)
-                self.samples = [
-                    _broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)
-                ]
-                self.run_progs.append(p)
+            self._run_program(p, **kwargs)
+            shots = kwargs.get("shots", 1)
+            self.samples = [
+                _broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)
+            ]
+            self.run_progs.append(p)
 
             prev = p
 
@@ -369,20 +364,16 @@ class LocalEngine(BaseEngine):
                 ) from None
         return applied
 
-    def run(self, program, *, args=None, compile_options=None, run_options=None):
+    def run(self, program, *, args=None, compile_options=None, **run_options):
         """Execute quantum programs by sending them to the backend.
 
         Args:
             program (Program, Sequence[Program]): quantum programs to run
             args (dict[str, Any]): values for the free parameters in the program(s) (if any)
             compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
-            run_options (None, Dict[str, Any]): keyword arguments that are needed by the backend during execution
-                e.g., in :meth:`Operation.apply` or :meth:`.BaseBackend.state`
 
         Returns:
             Result: results of the computation
-
-        ``run_options`` can contain the following:
 
         Keyword Args:
             shots (int): number of times the program measurement evaluation is repeated
@@ -494,14 +485,16 @@ class RemoteEngine:
 
     POLLING_INTERVAL_SECONDS = 1
     VALID_TARGETS = ("X8_01", "X12_01", "X12_02")
+    DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_01"}
 
-    def __init__(self, target: str, connection: Connection = Connection()):
+    def __init__(self, target: str, connection: Connection = Connection(), backend_options: dict = None):
         if target not in self.VALID_TARGETS:
             raise ValueError(
                 "Invalid engine target: {} (valid targets: {})".format(target, self.VALID_TARGETS)
             )
         self._target = target
         self._connection = connection
+        self._backend_options = backend_options or {}
 
     @property
     def target(self) -> str:
@@ -521,7 +514,7 @@ class RemoteEngine:
         """
         return self._connection
 
-    def run(self, program: Program, shots: Optional[int] = None) -> Optional[Result]:
+    def run(self, program: Program, *, compile_options=None, **run_options) -> Optional[Result]:
         """Runs a blocking job.
 
         In the blocking mode, the engine blocks until the job is completed, failed, or
@@ -532,6 +525,8 @@ class RemoteEngine:
 
         Args:
             program (strawberryfields.Program): the quantum circuit
+
+        Keyword Args:
             shots (Optional[int]): The number of shots for which to run the job. If this
                 argument is not provided, the shots are derived from the given ``program``.
 
@@ -539,7 +534,7 @@ class RemoteEngine:
             [strawberryfields.api.Result, None]: the job result if successful, and
                 ``None`` otherwise
         """
-        job = self.run_async(program, shots)
+        job = self.run_async(program, compile_options=compile_options, **run_options)
         try:
             while True:
                 job.refresh()
@@ -556,7 +551,7 @@ class RemoteEngine:
             self._connection.cancel_job(job.id)
             return None
 
-    def run_async(self, program: Program, shots: Optional[int] = None) -> Job:
+    def run_async(self, program: Program, *, compile_options=None, **run_options) -> Job:
         """Runs a non-blocking remote job.
 
         In the non-blocking mode, a ``Job`` object is returned immediately, and the user can
@@ -564,13 +559,32 @@ class RemoteEngine:
 
         Args:
             program (strawberryfields.Program): the quantum circuit
+            compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+
+        Keyword Args:
             shots (Optional[int]): The number of shots for which to run the job. If this
                 argument is not provided, the shots are derived from the given ``program``.
 
         Returns:
             strawberryfields.api.Job: the created remote job
         """
-        return self._connection.create_job(self.target, program, shots)
+        # get the specific chip to submit the program to
+        # TODO: this should be provided by the chip API, rather
+        # than built-in to Strawberry Fields.
+        target = self.DEFAULT_TARGETS.get(self.target, self.target)
+        compile_options = compile_options or {}
+        run_options = run_options.update(self._backend_options)
+
+        if program.target is None or (program.target.split("_")[0] != target.split("_")[0]):
+            # Program is either:
+            #
+            # * uncompiled (program.target is None)
+            # * compiled to a different chip family to the engine target
+            #
+            # In both cases, recompile the program to match the intended target.
+            program = program.compile(target, **compile_options)
+
+        return self._connection.create_job(target, program, run_options)
 
     def __repr__(self):
         return "<{}: target={}, connection={}>".format(

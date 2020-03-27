@@ -180,7 +180,7 @@ class TestMultipleShotsErrors:
         with pytest.raises(
             NotImplementedError, match="Batching cannot be used together with multiple shots."
         ):
-            meng.run(prog, run_options={"shots": 2})
+            meng.run(prog, **{"shots": 2})
 
     @pytest.mark.parametrize("meng", engines)
     def test_postselection_error(self, meng):
@@ -192,7 +192,7 @@ class TestMultipleShotsErrors:
         with pytest.raises(
             NotImplementedError, match="Post-selection cannot be used together with multiple shots."
         ):
-            meng.run(prog, run_options={"shots": 2})
+            meng.run(prog, **{"shots": 2})
 
     @pytest.mark.parametrize("meng", engines)
     def test_feedforward_error(self, meng):
@@ -206,4 +206,4 @@ class TestMultipleShotsErrors:
             NotImplementedError,
             match="Feed-forwarding of measurements cannot be used together with multiple shots.",
         ):
-            meng.run(prog, run_options={"shots": 2})
+            meng.run(prog, **{"shots": 2})

@@ -142,6 +142,6 @@ class TestPostselection:
             ops.Coherent(alpha) | q[0]
             ops.MeasureFock() | q[0]
         state = eng.run(prog).state
-        samples = np.array(eng.run(prog, run_options={"shots": shots})).flatten()
+        samples = np.array(eng.run(prog, shots=shots)).flatten()
 
         assert not np.all(samples == np.zeros_like(samples, dtype=int))
