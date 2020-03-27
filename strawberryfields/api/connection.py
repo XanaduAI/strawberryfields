@@ -16,7 +16,6 @@ This module provides an interface to a remote program execution backend.
 """
 from datetime import datetime
 import io
-import json
 import logging
 from typing import List, Optional
 
@@ -154,7 +153,7 @@ class Connection:
 
         path = "/jobs"
         response = requests.post(
-            self._url(path), headers=self._headers, data=json.dumps({"circuit": circuit}),
+            self._url(path), headers=self._headers, json={"circuit": circuit},
         )
         if response.status_code == 201:
             if self._verbose:
@@ -244,7 +243,7 @@ class Connection:
         """
         path = "/jobs/{}".format(job_id)
         response = requests.patch(
-            self._url(path), headers=self._headers, data={"status": JobStatus.CANCELLED.value},
+            self._url(path), headers=self._headers, json={"status": JobStatus.CANCELLED.value},
         )
         if response.status_code == 204:
             if self._verbose:
