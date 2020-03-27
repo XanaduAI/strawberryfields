@@ -123,8 +123,6 @@ class X12Specs(CircuitSpecs):
         "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False},
     }
 
-    circuit = X12_CIRCUIT.format(target=short_name)
-
     def compile(self, seq, registers):
         """Try to arrange a quantum circuit into a form suitable for X12.
 
