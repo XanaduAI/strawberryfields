@@ -170,7 +170,7 @@ We can now execute our quantum program ``prog`` on the engine via the :func:`Eng
 
 .. code-block:: python3
 
-    result = eng.run(prog, run_options={"shots":1, "modes":None}, compile_options={})
+    result = eng.run(prog, shots=1, modes=None, compile_options={})
 
 The :meth:`eng.run <strawberryfields.LocalEngine.run>` method accepts the arguments:
 
