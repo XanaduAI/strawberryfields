@@ -485,30 +485,6 @@ Appendix
     ``X8``, rather than being a single hardware chip, corresponds to a family
     of physical devices, with individual names including ``X8_01``.
 
-    The name of each photonic chip, ``X8_01``, provides several clues to the underlying
-    chip structure and architecture.
-
-    At Xanadu, photonic devices are named using the nomenclature ``AM_YY``, where:
-
-    * ``M`` is the **mode number**, the number of modes available on the chip. ``X8_01``
-      has 8 available modes.
-
-    * ``A`` is the **architecture number.** This chip belongs to the ``X``-series of photonic
-      devices. Devices in this series are characterized by the following properties:
-
-      - The available modes :math:`M` are divided into two main groups, signal modes
-        (numbered :math:`[0, M/2-1]`) and idler modes (numbered :math:`[M/2, M-1]`).
-
-      - Initial two-mode squeezed states entangle the signal modes and the idler modes
-        in a 'cascade'; entangled mode pairs are :math:`[(0, M/2), (1, M/2+1), \dots, (M/2-1, M-1)]`.
-
-      - An arbitrary :math:`M/2\times M/2` unitary can then be applied to both the signal and idler modes.
-
-      - Finally, the modes terminate with photon-number resolving detectors.
-
-    * ``YY`` is the **chip ID**. It specifies a particular chip instance chosen for executing the jobs.
-      While all chips in the same series have the same architecture, specific chips may be characterized
-      by hardware imperfections, including loss and gate fidelity.
 
     While ``X8`` is used here to specify *any* chip in the ``X8``-series (including ``X8_01``),
     you may also specify a specific chip ID (such as ``X8_01``) during program compilation
