@@ -21,6 +21,18 @@ covered include:
     If you do not have an authentication token, you can request hardware access via email
     at sf@xanadu.ai.
 
+.. note::
+
+    **What's in a name?**
+
+    ``X8``, rather than being a single hardware chip, corresponds to a family
+    of physical devices, with individual names including ``X8_01``.
+
+    While ``X8`` is used here to specify *any* chip in the ``X8`` device class (including ``X8_01``),
+    you may also specify a specific chip ID (such as ``X8_01``) during program compilation
+    and execution.
+
+
 Configuring your credentials
 ----------------------------
 
@@ -59,7 +71,7 @@ quickstart guide.
 Device details
 --------------
 
-Below, we will be submitting a job to run on the chip ``X8``.
+Below, we will be submitting a job to run on ``X8``.
 
 ``X8`` is an 8-mode chip, with the following restrictions:
 
@@ -473,19 +485,3 @@ compilation:
 ...     ops.MeasureFock() | q
 CircuitError: Incorrect squeezing value(s) (r, phi)={(1.336, 0.0), (0.177, 0.0), (0.818, 0.0)}.
 Allowed squeezing value(s) are (r, phi)={(1.0, 0.0), (0.0, 0.0)}.
-
-
-Appendix
---------
-
-.. note::
-
-    **What's in a name?**
-
-    ``X8``, rather than being a single hardware chip, corresponds to a family
-    of physical devices, with individual names including ``X8_01``.
-
-
-    While ``X8`` is used here to specify *any* chip in the ``X8``-series (including ``X8_01``),
-    you may also specify a specific chip ID (such as ``X8_01``) during program compilation
-    and execution.
