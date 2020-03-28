@@ -364,16 +364,13 @@ class LocalEngine(BaseEngine):
                 ) from None
         return applied
 
-    def run(self, program, *, args=None, compile_options=None, **run_options):
+    def run(self, program, *, args=None, compile_options=None, **kwargs):
         """Execute quantum programs by sending them to the backend.
 
         Args:
             program (Program, Sequence[Program]): quantum programs to run
             args (dict[str, Any]): values for the free parameters in the program(s) (if any)
             compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
-
-        Returns:
-            Result: results of the computation
 
         Keyword Args:
             shots (int): number of times the program measurement evaluation is repeated
@@ -385,6 +382,9 @@ class LocalEngine(BaseEngine):
                 TF backend only.
             feed_dict (dict[str, Any]): TensorFlow feed dictionary, used when evaluating returned measurement results
                 and state. TF backend only.
+
+        Returns:
+            Result: results of the computation
         """
         args = args or {}
         compile_options = compile_options or {}
@@ -403,7 +403,7 @@ class LocalEngine(BaseEngine):
             program_lst = [program]
             temp_run_options.update(program.run_options)
 
-        temp_run_options.update(run_options or {})
+        temp_run_options.update(kwargs or {})
         temp_run_options.setdefault("shots", 1)
         temp_run_options.setdefault("modes", None)
 
@@ -489,11 +489,15 @@ class RemoteEngine:
     DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_01"}
 
     def __init__(self, target: str, connection: Connection = Connection(), backend_options: dict = None):
-        if target not in self.VALID_TARGETS:
+        self._target = self.DEFAULT_TARGETS.get(target, target)
+
+        if self._target not in self.VALID_TARGETS:
             raise ValueError(
-                "Invalid engine target: {} (valid targets: {})".format(target, self.VALID_TARGETS)
+                "Invalid engine target: {} (valid targets: {})".format(
+                    target, tuple(self.DEFAULT_TARGETS.keys()) + self.VALID_TARGETS
+                )
             )
-        self._target = target
+
         self._connection = connection
         self._backend_options = backend_options or {}
 
@@ -515,7 +519,7 @@ class RemoteEngine:
         """
         return self._connection
 
-    def run(self, program: Program, *, compile_options=None, **run_options) -> Optional[Result]:
+    def run(self, program: Program, *, compile_options=None, **kwargs) -> Optional[Result]:
         """Runs a blocking job.
 
         In the blocking mode, the engine blocks until the job is completed, failed, or
@@ -533,9 +537,9 @@ class RemoteEngine:
 
         Returns:
             [strawberryfields.api.Result, None]: the job result if successful, and
-                ``None`` otherwise
+            ``None`` otherwise
         """
-        job = self.run_async(program, compile_options=compile_options, **run_options)
+        job = self.run_async(program, compile_options=compile_options, **kwargs)
         try:
             while True:
                 job.refresh()
@@ -552,7 +556,7 @@ class RemoteEngine:
             self._connection.cancel_job(job.id)
             return None
 
-    def run_async(self, program: Program, *, compile_options=None, **run_options) -> Job:
+    def run_async(self, program: Program, *, compile_options=None, **kwargs) -> Job:
         """Runs a non-blocking remote job.
 
         In the non-blocking mode, a ``Job`` object is returned immediately, and the user can
@@ -572,20 +576,19 @@ class RemoteEngine:
         # get the specific chip to submit the program to
         # TODO: this should be provided by the chip API, rather
         # than built-in to Strawberry Fields.
-        target = self.DEFAULT_TARGETS.get(self.target, self.target)
         compile_options = compile_options or {}
-        run_options = run_options.update(self._backend_options)
+        kwargs = kwargs.update(self._backend_options)
 
-        if program.target is None or (program.target.split("_")[0] != target.split("_")[0]):
+        if program.target is None or (program.target.split("_")[0] != self.target.split("_")[0]):
             # Program is either:
             #
             # * uncompiled (program.target is None)
             # * compiled to a different chip family to the engine target
             #
             # In both cases, recompile the program to match the intended target.
-            program = program.compile(target, **compile_options)
+            program = program.compile(self.target, **compile_options)
 
-        return self._connection.create_job(target, program, run_options)
+        return self._connection.create_job(self.target, program, kwargs)
 
     def __repr__(self):
         return "<{}: target={}, connection={}>".format(
