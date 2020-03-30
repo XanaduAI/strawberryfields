@@ -55,7 +55,7 @@ Verifying your connection
 To verify that your account credentials correctly authenticate against the cloud
 platform, the :func:`~.ping` function can be used from within Python,
 
->>> sf.cli.ping()
+>>> sf.ping()
 You have successfully authenticated to the platform!
 
 or the ``ping`` flag can be used on the command line:
