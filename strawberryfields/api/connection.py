@@ -157,9 +157,7 @@ class Connection:
         circuit = bb.serialize()
 
         path = "/jobs"
-        response = requests.post(
-            self._url(path), headers=self._headers, json={"circuit": circuit},
-        )
+        response = requests.post(self._url(path), headers=self._headers, json={"circuit": circuit},)
         if response.status_code == 201:
             if self._verbose:
                 log.info("The job was successfully submitted.")
@@ -274,8 +272,11 @@ class Connection:
     @staticmethod
     def _format_error_message(response: requests.Response) -> str:
         body = response.json()
-        return "{} ({}): {}".format(
-            body.get("status_code", ""), body.get("code", ""), body.get("detail", "")
+        return "{} ({}): {} ({})".format(
+            body.get("status_code", ""),
+            body.get("code", ""),
+            body.get("detail", ""),
+            body.get("meta", ""),
         )
 
     def __repr__(self):
