@@ -95,3 +95,10 @@ class TestRemoteEngine:
             AttributeError, match="The state is undefined for a stateless computation."
         ):
             job.result.state
+
+    def test_device_class_target(self):
+        """Test that the remote engine correctly instantiates itself
+        when provided with a non-specific target"""
+        target = "X8"
+        engine = RemoteEngine(target)
+        assert engine.target == engine.DEFAULT_TARGETS[target]

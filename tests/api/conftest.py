@@ -25,9 +25,11 @@ from strawberryfields.api import Connection
 @pytest.fixture
 def prog():
     """Program fixture."""
-    program = Program(2)
+    program = Program(8)
     with program.context as q:
-        ops.Dgate(0.5) | q[0]
+        ops.Rgate(0.5) | q[0]
+        ops.Rgate(0.5) | q[4]
+        ops.MeasureFock() | q
     return program
 
 

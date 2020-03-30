@@ -73,7 +73,7 @@ class TestOneModeSymbolic:
         with prog.context as q:
             Dgate(0.5) | q
 
-        state = eng.run(prog, run_options=evalf).state
+        state = eng.run(prog, **evalf).state
         state_data = state.data
 
         assert isinstance(state_data, tf.Tensor)
@@ -87,7 +87,7 @@ class TestOneModeSymbolic:
             Dgate(0.5) | q
             MeasureX | q
 
-        eng.run(prog, run_options=evalf)
+        eng.run(prog, **evalf)
         val = q[0].val
         assert isinstance(val, tf.Tensor)
 
@@ -109,7 +109,7 @@ class TestOneModeSymbolic:
             Dgate(x, y) | q
 
         # use TF to evaluate symbolic parameter expressions
-        state = eng.run(prog, args={'a': tf_a, 'phi': tf_phi}, run_options=tf_params).state
+        state = eng.run(prog, args={'a': tf_a, 'phi': tf_phi}, **tf_params).state
 
         if state.is_pure:
             k = state.ket()
@@ -137,7 +137,7 @@ class TestOneModeSymbolic:
         with prog.context as q:
             Dgate(0.5) | q
 
-        state = eng.run(prog, run_options=evalf).state
+        state = eng.run(prog, **evalf).state
         ket = state.ket()
         assert isinstance(ket, tf.Tensor)
 
@@ -180,7 +180,7 @@ class TestOneModeSymbolic:
         with prog.context as q:
             Dgate(0.5) | q
 
-        state = eng.run(prog, run_options=evalf).state
+        state = eng.run(prog, **evalf).state
         dm = state.dm()
         assert isinstance(dm, tf.Tensor)
 
@@ -222,7 +222,7 @@ class TestOneModeSymbolic:
         with prog.context as q:
             Dgate(0.5) | q
 
-        state = eng.run(prog, run_options=evalf).state
+        state = eng.run(prog, **evalf).state
         tr = state.trace()
         assert isinstance(tr, tf.Tensor)
 
@@ -261,7 +261,7 @@ class TestOneModeSymbolic:
         with prog.context as q:
             Dgate(0.5) | q
 
-        state = eng.run(prog, run_options=evalf).state
+        state = eng.run(prog, **evalf).state
         rho = state.reduced_dm([0])
         assert isinstance(rho, tf.Tensor)
 
@@ -297,7 +297,7 @@ class TestOneModeSymbolic:
         with prog.context as q:
             Dgate(0.5) | q
 
-        state = eng.run(prog, run_options=evalf).state
+        state = eng.run(prog, **evalf).state
         fidel_vac = state.fidelity_vacuum()
         assert isinstance(fidel_vac, tf.Tensor)
 
@@ -332,7 +332,7 @@ class TestOneModeSymbolic:
         with prog.context as q:
             Dgate(0.5) | q
 
-        state = eng.run(prog, run_options=evalf).state
+        state = eng.run(prog, **evalf).state
         is_vac = state.is_vacuum()
         assert isinstance(is_vac, tf.Tensor)
 
@@ -367,7 +367,7 @@ class TestOneModeSymbolic:
         with prog.context as q:
             Dgate(ALPHA) | q
 
-        state = eng.run(prog, run_options=evalf).state
+        state = eng.run(prog, **evalf).state
         fidel_coh = state.fidelity_coherent([ALPHA])
         assert isinstance(fidel_coh, tf.Tensor)
 
@@ -406,7 +406,7 @@ class TestOneModeSymbolic:
         with prog.context as q:
             Dgate(ALPHA) | q
 
-        state = eng.run(prog, run_options=evalf).state
+        state = eng.run(prog, **evalf).state
         fidel = state.fidelity(coherent_state(ALPHA, cutoff), 0)
         assert isinstance(fidel, tf.Tensor)
 
@@ -445,7 +445,7 @@ class TestOneModeSymbolic:
         with prog.context as q:
             Dgate(ALPHA) | q
 
-        state = eng.run(prog, run_options=evalf).state
+        state = eng.run(prog, **evalf).state
         e, v = state.quad_expectation(0, 0)
         assert isinstance(e, tf.Tensor)
         assert isinstance(v, tf.Tensor)
@@ -489,7 +489,7 @@ class TestOneModeSymbolic:
         with prog.context as q:
             Dgate(ALPHA) | q
 
-        state = eng.run(prog, run_options=evalf).state
+        state = eng.run(prog, **evalf).state
         nbar, var = state.mean_photon(0)
         assert isinstance(nbar, tf.Tensor)
         assert isinstance(var, tf.Tensor)
@@ -538,7 +538,7 @@ class TestTwoModeSymbolic:
             Dgate(ALPHA) | q[0]
             Dgate(-ALPHA) | q[1]
 
-        state = eng.run(prog, run_options=evalf).state
+        state = eng.run(prog, **evalf).state
         probs = state.all_fock_probs()
         assert isinstance(probs, tf.Tensor)
 
@@ -586,7 +586,7 @@ class TestTwoModeSymbolic:
             Dgate(ALPHA) | q[0]
             Dgate(-ALPHA) | q[1]
 
-        state = eng.run(prog, run_options=evalf).state
+        state = eng.run(prog, **evalf).state
         prob = state.fock_prob([cutoff // 2, cutoff // 2])
         assert isinstance(prob, tf.Tensor)
 

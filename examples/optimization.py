@@ -16,7 +16,7 @@ tf_phi = tf.Variable(0.1)
 alpha, phi = circuit.params('alpha', 'phi')
 with circuit.context as q:
     Dgate(alpha, phi) | q[0]
-results = eng.run(circuit, args={'alpha': tf_alpha, 'phi': tf_phi}, run_options={"eval": False})
+results = eng.run(circuit, args={'alpha': tf_alpha, 'phi': tf_phi}, eval=False})
 
 # loss is probability for the coherent state |alpha=1>
 prob = results.state.fidelity_coherent([1.0])

@@ -29,7 +29,7 @@ from .gbs import GBSSpecs
 
 # Supporting multiple string formatting, such that the target can be replaced
 # first followed by squeezing amplitude and phase values
-DEFAULT_CIRCUIT = textwrap.dedent(
+X12_CIRCUIT = textwrap.dedent(
     """\
     name template_6x2_X12
     version 1.0
@@ -113,7 +113,7 @@ class X12Specs(CircuitSpecs):
     remote = True
     local = True
     interactive = False
-    circuit = DEFAULT_CIRCUIT.format(target=short_name)
+    circuit = X12_CIRCUIT.format(target=short_name)
 
     sq_amplitude = 1.0
 
@@ -275,11 +275,11 @@ class X12_01(X12Specs):
     """Circuit specifications for the first X12 chip."""
 
     short_name = "X12_01"
-    circuit = DEFAULT_CIRCUIT.format(target=short_name)
+    circuit = X12_CIRCUIT.format(target=short_name)
 
 
 class X12_02(X12Specs):
     """Circuit specifications for the second X12 chip."""
 
     short_name = "X12_02"
-    circuit = DEFAULT_CIRCUIT.format(target=short_name)
+    circuit = X12_CIRCUIT.format(target=short_name)
