@@ -109,11 +109,11 @@ class TestRemoteEngine:
         for the intended backend"""
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
 
-        engine = RemoteEngine("X8")
+        engine = RemoteEngine("X8", backend_options={"cutoff_dim": 12})
         _, target, res_prog, run_options = engine.run_async(prog, shots=1234)
 
         assert target == RemoteEngine.DEFAULT_TARGETS["X8"]
-        assert run_options == {"shots": 1234}
+        assert run_options == {"shots": 1234, "cutoff_dim": 12}
 
         # check program is compiled to match the chip template
         expected = prog.compile("X8").circuit
