@@ -109,11 +109,8 @@ class TestRemoteEngine:
         passes all backend and runtime options to the create_job
         method."""
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
-
         engine = RemoteEngine("X8", backend_options={"cutoff_dim": 12})
-        _, target, res_prog, run_options = engine.run_async(prog, shots=1234)
-
-        assert target == RemoteEngine.DEFAULT_TARGETS["X8"]
+        _, _, _, run_options = engine.run_async(prog, shots=1234)
         assert run_options == {"shots": 1234, "cutoff_dim": 12}
 
     def test_compilation(self, prog, monkeypatch):
@@ -122,7 +119,9 @@ class TestRemoteEngine:
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
 
         engine = RemoteEngine("X8")
-        _, target, res_prog, run_options = engine.run_async(prog)
+        _, target, res_prog, _ = engine.run_async(prog)
+
+        assert target == RemoteEngine.DEFAULT_TARGETS["X8"]
 
         # check program is compiled to match the chip template
         expected = prog.compile("X8").circuit
