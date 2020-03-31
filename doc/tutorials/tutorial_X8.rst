@@ -50,7 +50,7 @@ on.
 To test that your account credentials correctly authenticate against the cloud platform,
 you can use the :func:`~.ping` command,
 
->>> sf.cli.ping()
+>>> sf.ping()
 You have successfully authenticated to the platform!
 
 .. note::
