@@ -147,12 +147,7 @@ class Connection:
         # Serialize a blackbird circuit for network transmission
         bb = to_blackbird(program)
         bb._target["name"] = target
-
-        # update the run options if provided
-        final_run_options = {}
-        final_run_options.update(program.run_options)
-        final_run_options.update(run_options or {})
-        bb._target["options"] = final_run_options
+        bb._target["options"] = run_options
 
         circuit = bb.serialize()
 

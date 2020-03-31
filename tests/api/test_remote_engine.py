@@ -70,7 +70,7 @@ class TestRemoteEngine:
     def test_run_complete(self, connection, prog, job_to_complete):
         """Tests a successful blocking job execution."""
         engine = RemoteEngine("X8_01", connection=connection)
-        result = engine.run(prog)
+        result = engine.run(prog, shots=10)
 
         assert np.array_equal(result.samples, np.array([[1, 2], [3, 4]]))
 
@@ -83,7 +83,7 @@ class TestRemoteEngine:
         """Tests a successful non-blocking job execution."""
 
         engine = RemoteEngine("X8_01", connection=connection)
-        job = engine.run_async(prog)
+        job = engine.run_async(prog, shots=10)
         assert job.status == JobStatus.OPEN.value
 
         for _ in range(MockServer.REQUESTS_BEFORE_COMPLETED):
@@ -104,14 +104,40 @@ class TestRemoteEngine:
         engine = RemoteEngine(target)
         assert engine.target == engine.DEFAULT_TARGETS[target]
 
-    def test_run_options(self, prog, monkeypatch):
+    def test_run_options_from_kwargs(self, prog, monkeypatch):
         """Test that the remote engine run_async method correctly
-        passes all backend and runtime options to the create_job
+        passes all keyword argument backend and runtime options to the create_job
         method."""
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
         engine = RemoteEngine("X8", backend_options={"cutoff_dim": 12})
         _, _, _, run_options = engine.run_async(prog, shots=1234)
         assert run_options == {"shots": 1234, "cutoff_dim": 12}
+
+        # run options from keyword arguments overwrite
+        # run options provided by the program object
+        prog = prog.compile("X8", shots=15)
+        _, _, _, run_options = engine.run_async(prog, shots=1234)
+        assert run_options == {"shots": 1234, "cutoff_dim": 12}
+
+    def test_run_options_from_program(self, prog, monkeypatch):
+        """Test that the remote engine run_async method correctly
+        parses runtime options compiled into the program"""
+        monkeypatch.setattr(Connection, "create_job", lambda *args: args)
+        engine = RemoteEngine("X8")
+
+        prog = prog.compile("X8", shots=15)
+        assert prog.run_options == {"shots": 15}
+
+        _, _, _, run_options = engine.run_async(prog)
+        assert run_options == {"shots": 15}
+
+    def test_no_shots(self, prog, connection):
+        """Test that if the number of shots is not provided, an
+        exception is raised"""
+        engine = RemoteEngine("X8", connection=connection)
+
+        with pytest.raises(ValueError, match="Number of shots must be specified"):
+            engine.run_async(prog)
 
     def test_compilation(self, prog, monkeypatch):
         """Test that the remote engine correctly compiles a program
@@ -119,7 +145,7 @@ class TestRemoteEngine:
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
 
         engine = RemoteEngine("X8")
-        _, target, res_prog, _ = engine.run_async(prog)
+        _, target, res_prog, _ = engine.run_async(prog, shots=10)
 
         assert target == RemoteEngine.DEFAULT_TARGETS["X8"]
 

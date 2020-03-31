@@ -588,7 +588,15 @@ class RemoteEngine:
             # In both cases, recompile the program to match the intended target.
             program = program.compile(self.target, **compile_options)
 
-        return self._connection.create_job(self.target, program, kwargs)
+        # update the run options if provided
+        run_options = {}
+        run_options.update(program.run_options)
+        run_options.update(kwargs or {})
+
+        if "shots" not in run_options:
+            raise ValueError("Number of shots must be specified.")
+
+        return self._connection.create_job(self.target, program, run_options)
 
     def __repr__(self):
         return "<{}: target={}, connection={}>".format(
