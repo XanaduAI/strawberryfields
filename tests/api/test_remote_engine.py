@@ -139,6 +139,10 @@ class TestRemoteEngine:
         with pytest.raises(ValueError, match="Number of shots must be specified"):
             engine.run_async(prog)
 
+
+class TestRemoteEngineIntegration:
+    """Integration tests for the remote engine"""
+
     def test_compilation(self, prog, monkeypatch):
         """Test that the remote engine correctly compiles a program
         for the intended backend"""
