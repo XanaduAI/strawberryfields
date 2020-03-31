@@ -19,6 +19,7 @@ import pytest
 
 from strawberryfields.api import Connection, Job, JobStatus, Result
 from strawberryfields.engine import RemoteEngine
+
 from .conftest import mock_return
 
 # pylint: disable=bad-continuation,unused-argument,no-self-use,redefined-outer-name,pointless-statement
@@ -102,3 +103,28 @@ class TestRemoteEngine:
         target = "X8"
         engine = RemoteEngine(target)
         assert engine.target == engine.DEFAULT_TARGETS[target]
+
+    def test_compilation(self, prog, monkeypatch):
+        """Test that the remote engine correctly compiles a program
+        for the intended backend"""
+        monkeypatch.setattr(Connection, "create_job", lambda *args: args)
+
+        engine = RemoteEngine("X8")
+        _, target, res_prog, run_options = engine.run_async(prog, shots=1234)
+
+        assert target == RemoteEngine.DEFAULT_TARGETS["X8"]
+        assert run_options == {"shots": 1234}
+
+        # check program is compiled to match the chip template
+        expected = prog.compile("X8").circuit
+        res = res_prog.circuit
+
+        for cmd1, cmd2 in zip(res, expected):
+            # loop through all commands in res and expected
+
+            # check gates are the same
+            assert type(cmd1.op) is type(cmd2.op)
+            # check modes are the same
+            assert all(i.ind == j.ind for i, j in zip(cmd1.reg, cmd2.reg))
+            # check parameters are the same
+            assert all(p1 == p2 for p1, p2 in zip(cmd1.op.p, cmd2.op.p))
