@@ -104,9 +104,10 @@ class TestRemoteEngine:
         engine = RemoteEngine(target)
         assert engine.target == engine.DEFAULT_TARGETS[target]
 
-    def test_compilation(self, prog, monkeypatch):
-        """Test that the remote engine correctly compiles a program
-        for the intended backend"""
+    def test_run_options(self, prog, monkeypatch):
+        """Test that the remote engine run_async method correctly
+        passes all backend and runtime options to the create_job
+        method."""
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
 
         engine = RemoteEngine("X8", backend_options={"cutoff_dim": 12})
@@ -114,6 +115,14 @@ class TestRemoteEngine:
 
         assert target == RemoteEngine.DEFAULT_TARGETS["X8"]
         assert run_options == {"shots": 1234, "cutoff_dim": 12}
+
+    def test_compilation(self, prog, monkeypatch):
+        """Test that the remote engine correctly compiles a program
+        for the intended backend"""
+        monkeypatch.setattr(Connection, "create_job", lambda *args: args)
+
+        engine = RemoteEngine("X8")
+        _, target, res_prog, run_options = engine.run_async(prog)
 
         # check program is compiled to match the chip template
         expected = prog.compile("X8").circuit
