@@ -219,7 +219,7 @@ Leonhard Neuhaus, Nicolás Quesada, Jeremy Swinarton, Antal Száva, Paul Tan, Ze
 
 This release contains contributions from (in alphabetical order):
 
-Ville Bergholm, Tom Bromley, Nicolás Quesada, Antal Szava, Paul Tan
+Ville Bergholm, Tom Bromley, Nicolás Quesada, Paul Tan
 
 
 # Release 0.12.0
