@@ -1,4 +1,4 @@
-# Release 0.13.0rc0 (development release)
+# Release 0.13.0rc0 (release candidate)
 
 <h3>New features since last release</h3>
 
