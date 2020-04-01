@@ -37,7 +37,7 @@ __all__ = ["BaseEngine", "LocalEngine"]
 
 
 handler = logging.StreamHandler(sys.stdout)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
 
 log = logging.getLogger(__name__)
