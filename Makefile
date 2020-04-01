@@ -52,6 +52,7 @@ docs:
 .PHONY : clean-docs
 clean-docs:
 	make -C doc clean
+	rm -rf doc/code/api
 
 test: test-frontend test-gaussian test-fock test-tf batch-test-tf test-apps test-api
 
