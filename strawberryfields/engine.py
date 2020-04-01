@@ -540,6 +540,7 @@ class RemoteEngine:
             ``None`` otherwise
         """
         job = self.run_async(program, compile_options=compile_options, **kwargs)
+        print("Submitted job {}".format(job.id))
         try:
             while True:
                 job.refresh()
@@ -547,8 +548,12 @@ class RemoteEngine:
                     return job.result
                 if job.status == "failed":
                     log.warning(
-                        "The remote job failed due to an internal server error; "
-                        "please try again."
+                        "The remote job {} failed due to an internal server error; "
+                        "please try again.".format(job.id)
+                    )
+                    print(
+                        "The remote job {} failed due to an internal server error; "
+                        "please try again.".format(job.id)
                     )
                     return None
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
