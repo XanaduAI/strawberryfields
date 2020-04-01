@@ -19,11 +19,13 @@
   on supported hardware using the new `RemoteEngine`:
 
   ```python
+  import strawberryfields as sf
   from strawberryfields import ops
   from strawberryfields.utils import random_interferometer
 
   # replace AUTHENTICATION_TOKEN with your Xanadu cloud access token
-  eng = sf.RemoteEngine("X8", token="AUTHENTICATION_TOKEN")
+  con = sf.api.Connection(token="AUTH_TOKEN")
+  eng = sf.RemoteEngine("X8", connection=con)
   prog = sf.Program(8)
 
   U = random_interferometer(4)
