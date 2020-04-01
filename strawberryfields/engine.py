@@ -20,6 +20,7 @@ One can think of each BaseEngine instance as a separate quantum computation.
 import abc
 import collections.abc
 import logging
+import sys
 import time
 from typing import Optional
 
@@ -34,7 +35,14 @@ from .backends.base import BaseBackend, NotApplicableError
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = ["BaseEngine", "LocalEngine"]
 
+
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
 log = logging.getLogger(__name__)
+log.addHandler(handler)
+log.setLevel(logging.INFO)
 
 
 class BaseEngine(abc.ABC):
@@ -540,7 +548,7 @@ class RemoteEngine:
             ``None`` otherwise
         """
         job = self.run_async(program, compile_options=compile_options, **kwargs)
-        print("Submitted job {}".format(job.id))
+        log.info("Submitted job {}".format(job.id))
         try:
             while True:
                 job.refresh()
@@ -551,11 +559,8 @@ class RemoteEngine:
                         "The remote job {} failed due to an internal server error; "
                         "please try again.".format(job.id)
                     )
-                    print(
-                        "The remote job {} failed due to an internal server error; "
-                        "please try again.".format(job.id)
-                    )
                     return None
+
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             self._connection.cancel_job(job.id)
