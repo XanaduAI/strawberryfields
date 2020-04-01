@@ -20,7 +20,6 @@ One can think of each BaseEngine instance as a separate quantum computation.
 import abc
 import collections.abc
 import logging
-import sys
 import time
 from typing import Optional
 
@@ -36,12 +35,7 @@ from .backends.base import BaseBackend, NotApplicableError
 __all__ = ["BaseEngine", "LocalEngine"]
 
 
-handler = logging.StreamHandler(sys.stdout)
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
-
 log = logging.getLogger(__name__)
-log.addHandler(handler)
 log.setLevel(logging.INFO)
 
 

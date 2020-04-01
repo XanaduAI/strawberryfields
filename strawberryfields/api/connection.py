@@ -85,7 +85,7 @@ class Connection:
         host: str = configuration["api"]["hostname"],
         port: int = configuration["api"]["port"],
         use_ssl: bool = configuration["api"]["use_ssl"],
-        verbose: bool = False,
+        verbose: bool = True,
     ):
         self._token = token
         self._host = host
@@ -154,10 +154,11 @@ class Connection:
         path = "/jobs"
         response = requests.post(self._url(path), headers=self._headers, json={"circuit": circuit},)
         if response.status_code == 201:
+            job_id = response.json()["id"]
             if self._verbose:
-                log.info("The job was successfully submitted.")
+                log.info("Job {} was successfully submitted.".format(job_id))
             return Job(
-                id_=response.json()["id"],
+                id_=job_id,
                 status=JobStatus(response.json()["status"]),
                 connection=self,
             )
