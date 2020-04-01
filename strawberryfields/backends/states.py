@@ -25,6 +25,7 @@ from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
 from scipy.integrate import simps
+from thewalrus.quantum import photon_number_mean, photon_number_covar
 
 import strawberryfields as sf
 from .shared_ops import rotation_matrix as _R
@@ -823,7 +824,7 @@ class BaseFockState(BaseState):
             (float): the expectation value.
         """
         state = self._data #representation of the quantum state either as tensor of probability amplitudes
-        # or as 
+        # or as
         pure = self._pure #if pure or as a tensor of density matrix elements if not pure.
         cutoff = self._cutoff #Fock space cutoff.
         num_modes = self._modes #number of modes in the state.
@@ -833,20 +834,20 @@ class BaseFockState(BaseState):
         if pure is True:
             # state is a tensor of probability amplitudes
             ps = np.abs(state)**2
-            ps = ps.sum(axis = traced_modes)
+            ps = ps.sum(axis=traced_modes)
             for mode in modes:
                 ps = np.tensordot(values, ps, axes=1)
             return ps
-        else:
-            # state is a tensor of density matrix elements in the SF convention
-            ps = state.real
-            traced_modes = list(traced_modes)
-            traced_modes.sort(reverse=True)
-            for mode in traced_modes:
-                ps = np.tensordot(np.identity(cutoff), ps, axes=((0,1),(2*mode,2*mode+1)))
-            for mode in range(len(modes)):
-                ps = np.tensordot(np.diag(values), ps, axes=((0,1),(0,1)))
-            return ps
+
+        # state is a tensor of density matrix elements in the SF convention
+        ps = state.real
+        traced_modes = list(traced_modes)
+        traced_modes.sort(reverse=True)
+        for mode in traced_modes:
+            ps = np.tensordot(np.identity(cutoff), ps, axes=((0, 1), (2 * mode, 2 * mode + 1)))
+        for mode in range(len(modes)):
+            ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
+        return ps
 
 class BaseGaussianState(BaseState):
     r"""Class for the representation of quantum states using the Gaussian formalism.
@@ -1142,6 +1143,28 @@ class BaseGaussianState(BaseState):
         var -= np.sum([np.linalg.det(self._hbar*quad_coeffs[:, m][n]) for m in modes for n in modes])
 
         return mean, var
+
+    def number_expectation(self, modes):
+        """
+        Calculates the expectation value of the product of the number operators of the modes.
+        Args:
+            modes (list): list of modes for which one wants the expectation of the product of their number operator.
+        Return:
+            (float): the expectation value.
+        """
+        mu = self._mu
+        cov = self._cov
+        if len(modes) == 1:
+            return photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
+
+        if len(modes) == 2:
+            ni = photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
+            nj = photon_number_mean(mu, cov, modes[1], hbar=self._hbar)
+            return photon_number_covar(mu, cov, modes[1], modes[0], hbar=self._hbar) + ni * nj
+
+        raise ValueError("number_expectation only supports one or two modes")
+
+
 
     @abc.abstractmethod
     def reduced_dm(self, modes, **kwargs):
