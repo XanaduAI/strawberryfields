@@ -814,6 +814,39 @@ class BaseFockState(BaseState):
 
         return mean, var
 
+    def number_expectation(self, modes):
+        """
+        Calculates the expectation value of the product of the number operators of the modes.
+        Args:
+            modes (list): list of modes for which one wants the expectation of the product of their number operator.
+        Return:
+            (float): the expectation value.
+        """
+        state = self._data #representation of the quantum state either as tensor of probability amplitudes
+        # or as 
+        pure = self._pure #if pure or as a tensor of density matrix elements if not pure.
+        cutoff = self._cutoff #Fock space cutoff.
+        num_modes = self._modes #number of modes in the state.
+
+        values = np.arange(cutoff)
+        traced_modes = tuple(item for item in range(num_modes) if item not in modes)
+        if pure is True:
+            # state is a tensor of probability amplitudes
+            ps = np.abs(state)**2
+            ps = ps.sum(axis = traced_modes)
+            for mode in modes:
+                ps = np.tensordot(values, ps, axes=1)
+            return ps
+        else:
+            # state is a tensor of density matrix elements in the SF convention
+            ps = state.real
+            traced_modes = list(traced_modes)
+            traced_modes.sort(reverse=True)
+            for mode in traced_modes:
+                ps = np.tensordot(np.identity(cutoff), ps, axes=((0,1),(2*mode,2*mode+1)))
+            for mode in range(len(modes)):
+                ps = np.tensordot(np.diag(values), ps, axes=((0,1),(0,1)))
+            return ps
 
 class BaseGaussianState(BaseState):
     r"""Class for the representation of quantum states using the Gaussian formalism.

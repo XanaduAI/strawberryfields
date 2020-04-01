@@ -505,3 +505,39 @@ def hermiteVals(q_mag, num_bins, m_omega_over_hbar, trunc):
         Hvals[i] = 2*x*Hvals[i-1] - 2*(i-1)*Hvals[i-2]
 
     return q_tensor, Hvals
+
+
+def number_expectation(state, pure, cutoff, num_modes, modes):
+    """
+    Calculates the expectation value of the product of the number operators of the modes.
+
+    Args:
+        state (array): representation of the quantum state either as tensor of probability amplitudes
+        if pure or as a tensor of density matrix elements if not pure.
+        pure (boolean): whether the state is pure or not.
+        cutoff (int): Fock space cutoff.
+        num_modes (int): number of modes in the state.
+        modes (list): list of modes for which one wants the expectation of the product of their number operator.
+
+    Return:
+        (float): the expectation value.
+    """
+    values = np.arange(cutoff)
+    traced_modes = tuple(item for item in range(num_modes) if item not in modes)
+    if pure is True:
+        # state is a tensor of probability amplitudes
+        ps = np.abs(state)**2
+        ps = ps.sum(axis = traced_modes)
+        for mode in modes:
+            ps = np.tensordot(values, ps, axes=1)
+        return ps
+    else:
+        # state is a tensor of density matrix elements in the SF convention
+        ps = state.real
+        traced_modes = list(traced_modes)
+        traced_modes.sort(reverse=True)
+        for mode in traced_modes:
+            ps = np.tensordot(np.identity(cutoff), ps, axes=((0,1),(2*mode,2*mode+1)))
+        for mode in range(len(modes)):
+            ps = np.tensordot(np.diag(values), ps, axes=((0,1),(0,1)))
+        return ps
