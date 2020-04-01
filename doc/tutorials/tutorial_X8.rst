@@ -86,7 +86,7 @@ Below, we will be submitting a job to run on ``X8``.
 
 * Finally, the chip terminates with photon-number resolving measurements (:class:`~.MeasureFock`).
 
-.. figure:: /_static/X8.svg
+.. figure:: /_static/X8.png
     :align: center
     :width: 70%
     :target: javascript:void(0);
