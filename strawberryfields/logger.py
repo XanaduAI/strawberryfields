@@ -17,7 +17,7 @@ Fields.
 
 The implementation in this module is based on the solution for logging used in
 the Flask web application framework:
-https://github.com/pallets/flask/blob/353d891561659a754ee92bb5e6576e82be58934a/src/flask/logging.py
+https://github.com/pallets/flask/blob/master/src/flask/logging.py
 """
 
 import logging
