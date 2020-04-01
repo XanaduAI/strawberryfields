@@ -542,7 +542,6 @@ class RemoteEngine:
             ``None`` otherwise
         """
         job = self.run_async(program, compile_options=compile_options, **kwargs)
-        log.info("Submitted job {}".format(job.id))
         try:
             while True:
                 job.refresh()
