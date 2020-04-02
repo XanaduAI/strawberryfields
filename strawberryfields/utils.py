@@ -61,7 +61,6 @@ from .program_utils import Command
 from .ops import Gate, Channel, Ket
 
 
-
 # ------------------------------------------------------------------------
 # State functions - Fock basis and Gaussian basis                |
 # ------------------------------------------------------------------------

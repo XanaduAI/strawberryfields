@@ -22,7 +22,7 @@ from .gaussian import GaussianSpecs
 class GBSSpecs(GaussianSpecs):
     """Circuit specifications for the general GBS class of circuits."""
 
-    short_name = 'gbs'
+    short_name = "gbs"
     primitives = {
         # meta operations
         "All",
@@ -48,14 +48,9 @@ class GBSSpecs(GaussianSpecs):
         "Sgate",
         "Rgate",
         "Fouriergate",
-        "BSgate"
+        "BSgate",
     }
-    decompositions = {
-        "Xgate": {},
-        "Zgate": {},
-        "Fouriergate": {},
-        "S2gate":{}
-,    }
+    decompositions = {"Xgate": {}, "Zgate": {}, "Fouriergate": {}, "S2gate": {}}
 
     def compile(self, seq, registers):
         """Try to arrange a quantum circuit into a form suitable for Gaussian boson sampling.
@@ -79,25 +74,25 @@ class GBSSpecs(GaussianSpecs):
 
         # C should be empty
         if C:
-            raise CircuitError('Operations following the Fock measurements.')
+            raise CircuitError("Operations following the Fock measurements.")
 
         # A should only contain Gaussian operations
         # (but this is already guaranteed by group_operations() and our primitive set)
 
         # without Fock measurements GBS is pointless
         if not B:
-            raise CircuitError('GBS circuits must contain Fock measurements.')
+            raise CircuitError("GBS circuits must contain Fock measurements.")
 
         # there should be only Fock measurements in B
         measured = set()
         for cmd in B:
             if not isinstance(cmd.op, ops.MeasureFock):
-                raise CircuitError('The Fock measurements are not consecutive.')
+                raise CircuitError("The Fock measurements are not consecutive.")
 
             # combine the Fock measurements
             temp = set(cmd.reg)
             if measured & temp:
-                raise CircuitError('Measuring the same mode more than once.')
+                raise CircuitError("Measuring the same mode more than once.")
             measured |= temp
 
         # replace B with a single Fock measurement

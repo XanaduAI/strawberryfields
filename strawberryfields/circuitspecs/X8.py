@@ -78,6 +78,7 @@ X8_CIRCUIT = textwrap.dedent(
 
 class X8Specs(CircuitSpecs):
     """Circuit specifications for the X8 class of circuits."""
+
     short_name = "X8"
     modes = 8
     remote = True
@@ -89,7 +90,7 @@ class X8Specs(CircuitSpecs):
     primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate", "MZgate"}
     decompositions = {
         "Interferometer": {"mesh": "rectangular_symmetric", "drop_identity": False},
-        "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False}
+        "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False},
     }
 
     circuit = X8_CIRCUIT.format(target=short_name)
@@ -164,7 +165,9 @@ class X8Specs(CircuitSpecs):
 
         # Compile the unitary: combine and then decompose all unitaries
         # -------------------------------------------------------------
-        A, B, C = group_operations(seq, lambda x: isinstance(x, (ops.Rgate, ops.BSgate, ops.MZgate)))
+        A, B, C = group_operations(
+            seq, lambda x: isinstance(x, (ops.Rgate, ops.BSgate, ops.MZgate))
+        )
 
         # begin unitary lists for mode [0, 1, 2, 3] and modes [4, 5, 6, 7] with
         # two identity matrices. This is because multi_dot requires
@@ -242,5 +245,6 @@ class X8Specs(CircuitSpecs):
 
 class X8_01(X8Specs):
     """Circuit specifications for the X8_01 class of circuits."""
+
     short_name = "X8_01"
     circuit = X8_CIRCUIT.format(target=short_name)

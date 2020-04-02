@@ -18,7 +18,7 @@ from .circuit_specs import CircuitSpecs
 class TFSpecs(CircuitSpecs):
     """Circuit specifications for the TensorFlow backend."""
 
-    short_name = 'tf'
+    short_name = "tf"
     modes = None
     local = True
     remote = False
