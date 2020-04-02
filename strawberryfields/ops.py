@@ -40,8 +40,8 @@ from .parameters import par_regref_deps, par_str, par_evaluate, par_is_symbolic,
 # numerical tolerances
 _decomposition_merge_tol = 1e-13
 _decomposition_tol = (
-    1e-13
-)  # TODO this tolerance is used for various purposes and is not well-defined
+    1e-13  # TODO this tolerance is used for various purposes and is not well-defined
+)
 
 
 def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
@@ -1698,8 +1698,8 @@ class GaussianTransform(Decomposition):
         super().__init__([S])
         self.ns = S.shape[0] // 2
         self.vacuum = (
-            vacuum
-        )  #: bool: if True, ignore the first unitary matrix when applying the gate
+            vacuum  #: bool: if True, ignore the first unitary matrix when applying the gate
+        )
         N = self.ns  # shorthand
 
         # check if input symplectic is passive (orthogonal)

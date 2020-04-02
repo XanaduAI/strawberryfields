@@ -53,8 +53,8 @@ class TFBackend(BaseFock):
         self._init_modes = None  #: int: initial number of modes in the circuit
         self._modemap = None  #: Modemap: maps external mode indices to internal ones
         self.circuit = (
-            None
-        )  #: ~.tfbackend.circuit.Circuit: representation of the simulated quantum state
+            None  #: ~.tfbackend.circuit.Circuit: representation of the simulated quantum state
+        )
 
     def _remap_modes(self, modes):
         if isinstance(modes, int):

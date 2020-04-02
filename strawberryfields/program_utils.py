@@ -153,9 +153,7 @@ class RegRef:
 
     def __init__(self, ind):
         self.ind = ind  #: int: subsystem index
-        self.val = (
-            None
-        )  #: float, complex: Measurement result. None if the subsystem has not been measured yet.
+        self.val = None  #: float, complex: Measurement result. None if the subsystem has not been measured yet.
         self.active = True  #: bool: True at construction, False after the subsystem is deleted
 
     def __str__(self):
