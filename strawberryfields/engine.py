@@ -36,7 +36,6 @@ __all__ = ["BaseEngine", "LocalEngine"]
 
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 class BaseEngine(abc.ABC):
