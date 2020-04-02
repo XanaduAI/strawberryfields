@@ -32,7 +32,8 @@ def_type = np.complex128
 indices = string.ascii_lowercase
 MAX_MODES = len(indices) - 3
 
-class Circuit():
+
+class Circuit:
     """
     Class implementing a basic simulator for a collection of modes
     in the fock basis.
@@ -79,7 +80,9 @@ class Circuit():
             self._pure = False
 
         if len(kraus_ops) == 0:
-            self._state = np.zeros([self._trunc for i in range(self._num_modes*2)], dtype=ops.def_type)
+            self._state = np.zeros(
+                [self._trunc for i in range(self._num_modes * 2)], dtype=ops.def_type
+            )
         else:
             states = [self.apply_gate_BLAS(k, modes, pure=False) for k in kraus_ops]
             self._state = sum(states)
@@ -142,12 +145,12 @@ class Circuit():
         n = kwargs.get("n", self._num_modes)
 
         size = len(modes)
-        dim = self._trunc**size
+        dim = self._trunc ** size
         stshape = [self._trunc for i in range(size)]
 
         # Apply the following matrix transposition:
         # |m1><m1| |m2><m2| ... |mn><mn| -> |m1>|m2>...|mn><m1|<m2|...<mn|
-        transpose_list = [2*i for i in range(size)] + [2*i + 1 for i in range(size)]
+        transpose_list = [2 * i for i in range(size)] + [2 * i + 1 for i in range(size)]
         matview = np.transpose(mat, transpose_list).reshape((dim, dim))
 
         # checks if matview is diagonal (for example, Kerr/rotation gates) and, if so, use faster contractions
@@ -176,7 +179,7 @@ class Circuit():
 
             # "untranspose" the return matrix ret
             untranspose_list = [0] * len(transpose_list)
-            for i in range(len(transpose_list)): # pylint: disable=consider-using-enumerate
+            for i in range(len(transpose_list)):  # pylint: disable=consider-using-enumerate
                 untranspose_list[transpose_list[i]] = i
 
             return np.transpose(ret, untranspose_list)
@@ -190,22 +193,26 @@ class Circuit():
 
         # Transpose the state into the following form:
         # |psi><psi||mode[0]>|mode[1]>...|mode[n]><mode[0]|<mode[1]|...<mode[n]|
-        transpose_list = [i for i in range(n*2) if not i//2 in modes]
-        transpose_list = transpose_list + [2*i for i in modes] + [2*i + 1 for i in modes]
+        transpose_list = [i for i in range(n * 2) if not i // 2 in modes]
+        transpose_list = transpose_list + [2 * i for i in modes] + [2 * i + 1 for i in modes]
         view = np.transpose(state, transpose_list)
 
         # Apply matrix to each substate
-        ret = np.zeros([self._trunc for i in range(n*2)], dtype=def_type)
-        for i in product(*([range(self._trunc) for j in range((n - size)*2)])):
+        ret = np.zeros([self._trunc for i in range(n * 2)], dtype=def_type)
+        for i in product(*([range(self._trunc) for j in range((n - size) * 2)])):
             if diag:
                 mat_diag = matview.diagonal().reshape(-1, 1)
-                ret[i] = np.multiply(mat_diag, np.multiply(view[i].reshape((dim, dim)), mat_diag.conj().T)).reshape(stshape + stshape)
+                ret[i] = np.multiply(
+                    mat_diag, np.multiply(view[i].reshape((dim, dim)), mat_diag.conj().T)
+                ).reshape(stshape + stshape)
             else:
-                ret[i] = np.dot(matview, np.dot(view[i].reshape((dim, dim)), matview.conj().T)).reshape(stshape + stshape)
+                ret[i] = np.dot(
+                    matview, np.dot(view[i].reshape((dim, dim)), matview.conj().T)
+                ).reshape(stshape + stshape)
 
         # "untranspose" the return matrix ret
         untranspose_list = [0] * len(transpose_list)
-        for i in range(len(transpose_list)): # pylint: disable=consider-using-enumerate
+        for i in range(len(transpose_list)):  # pylint: disable=consider-using-enumerate
             untranspose_list[transpose_list[i]] = i
 
         return np.transpose(ret, untranspose_list)
@@ -246,8 +253,10 @@ class Circuit():
             elif gate == "S2gate":
                 self._state = self._apply_S2(mat, self._state, self._trunc)
             else:
-                raise NotImplementedError("Currently, selection rules are only implemented for the BSgate "
-                                          "and the S2gate. The {} gate is not supported".format(gate))
+                raise NotImplementedError(
+                    "Currently, selection rules are only implemented for the BSgate "
+                    "and the S2gate. The {} gate is not supported".format(gate)
+                )
 
             self._state = self._state.transpose(switch_list_2)
             ret = self._state.transpose(switch_list_1)
@@ -261,14 +270,14 @@ class Circuit():
             # if the gate is applied to modes 2 and 3
             switch_list_1 = np.arange(2 * self._num_modes)
             switch_list_2 = np.arange(2 * self._num_modes)
-            switch_list_1[[0, 1, t1, t1+1]] = switch_list_1[[t1, t1+1, 0, 1]]
-            switch_list_2[[0, 1, t2, t2+1]] = switch_list_2[[t2, t2+1, 0, 1]]
+            switch_list_1[[0, 1, t1, t1 + 1]] = switch_list_1[[t1, t1 + 1, 0, 1]]
+            switch_list_2[[0, 1, t2, t2 + 1]] = switch_list_2[[t2, t2 + 1, 0, 1]]
 
             # puts the modes on which the gate should be applied together
             # e.g. from [i2, j2, i3, j3, i1, j1] --> [i2, i3, j2, j3, i1, j1]
             # if the gate is applied to modes 2 and 3 (which are already switched to the first two modes)
             transpose_list = np.arange(2 * self._num_modes)
-            transpose_list[[t1+1, t2]] = transpose_list[[t2, t1+1]]
+            transpose_list[[t1 + 1, t2]] = transpose_list[[t2, t1 + 1]]
 
             self._state = self._state.transpose(transpose_list)
             self._state = self._state.transpose(switch_list_1)
@@ -322,8 +331,8 @@ class Circuit():
         ret = np.zeros_like(state, dtype=np.complex128)
         for i in range(trunc):
             for j in range(trunc):
-                for k in range(max(1+i+j-trunc, 0), min(i+j, trunc-1) + 1):
-                    ret[i, j] += mat[i, k, j, i+j-k] * state[k, i+j-k]
+                for k in range(max(1 + i + j - trunc, 0), min(i + j, trunc - 1) + 1):
+                    ret[i, j] += mat[i, k, j, i + j - k] * state[k, i + j - k]
         return ret
 
     # ignored in covtest (doesn't work well with the jit decorator)
@@ -352,8 +361,8 @@ class Circuit():
         ret = np.zeros_like(state, dtype=np.complex128)
         for i in range(trunc):
             for j in range(trunc):
-                for k in range(max(i-j, 0), trunc + min(i-j, 0)):
-                    ret[i, k] += mat[i, j, k, k + j-i] * state[j, k + j-i]
+                for k in range(max(i - j, 0), trunc + min(i - j, 0)):
+                    ret[i, k] += mat[i, j, k, k + j - i] * state[j, k + j - i]
         return ret
 
     def norm(self):
@@ -406,16 +415,19 @@ class Circuit():
             modes = [modes]
 
         n_modes = len(modes)
-        pure_shape = tuple([self._trunc]*n_modes)
-        mixed_shape = tuple([self._trunc]*(2*n_modes))
-        pure_shape_as_vector = tuple([self._trunc**n_modes])
-        mixed_shape_as_matrix = tuple([self._trunc**n_modes]*2)
+        pure_shape = tuple([self._trunc] * n_modes)
+        mixed_shape = tuple([self._trunc] * (2 * n_modes))
+        pure_shape_as_vector = tuple([self._trunc ** n_modes])
+        mixed_shape_as_matrix = tuple([self._trunc ** n_modes] * 2)
 
         # Do consistency checks
         if self._checks:
-            if state.shape != pure_shape and state.shape != mixed_shape \
-               and \
-               state.shape != pure_shape_as_vector and state.shape != mixed_shape_as_matrix:
+            if (
+                state.shape != pure_shape
+                and state.shape != mixed_shape
+                and state.shape != pure_shape_as_vector
+                and state.shape != mixed_shape_as_matrix
+            ):
                 raise ValueError("Incorrect shape for state preparation")
             if len(modes) != len(set(modes)):
                 raise ValueError("The specified modes cannot appear multiple times.")
@@ -446,14 +458,16 @@ class Circuit():
             self._state = np.tensordot(reduced_state, state, axes=0)
 
             # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
-        if modes != list(range(self._num_modes-len(modes), self._num_modes)):
+        if modes != list(range(self._num_modes - len(modes), self._num_modes)):
             mode_permutation = [x for x in range(self._num_modes) if x not in modes] + modes
             if self._pure:
                 scale = 1
                 index_permutation = mode_permutation
             else:
                 scale = 2
-                index_permutation = [scale*x+i for x in mode_permutation for i in (0, 1)] #two indices per mode if we have pure states
+                index_permutation = [
+                    scale * x + i for x in mode_permutation for i in (0, 1)
+                ]  # two indices per mode if we have pure states
             index_permutation = np.argsort(index_permutation)
 
             self._state = np.transpose(self._state, index_permutation)
@@ -595,7 +609,7 @@ class Circuit():
             fid = np.abs(self._state.flat[0]) ** 2
         else:
             fid = self._state.flat[0]
-        return np.abs(fid-1) <= tol
+        return np.abs(fid - 1) <= tol
 
     def get_state(self):
         """
@@ -628,8 +642,10 @@ class Circuit():
 
             # make sure modes and select are the same length
             if len(select) != len(modes):
-                raise ValueError("When performing post-selection, the number of "
-                                 "selected values (including None) must match the number of measured modes")
+                raise ValueError(
+                    "When performing post-selection, the number of "
+                    "selected values (including None) must match the number of measured modes"
+                )
 
             # make sure the select values are all integers or nones
             if not all(isinstance(s, int) or s is None for s in select):
@@ -643,7 +659,9 @@ class Circuit():
             select_values = [s for s in select if s is not None]
 
             # project out postselected modes
-            self._state = ops.project_reset(selected, select_values, self._state, self._pure, self._num_modes, self._trunc)
+            self._state = ops.project_reset(
+                selected, select_values, self._state, self._pure, self._num_modes, self._trunc
+            )
 
             if self.norm() == 0:
                 raise ZeroDivisionError("Measurement has zero probability.")
@@ -661,7 +679,7 @@ class Circuit():
             reduced = ops.partial_trace(state, self._num_modes, unmeasured)
             dist = np.ravel(ops.diagonal(reduced, len(measure)).real)
             # kill spurious tiny values (which are sometimes negative)
-            dist = dist * ~np.isclose(dist, 0.)
+            dist = dist * ~np.isclose(dist, 0.0)
 
             # Make a random choice
             if sum(dist) != 1:
@@ -679,7 +697,9 @@ class Circuit():
                 outcome[permutation[i]] = permuted_outcome[i]
 
             # Project the state onto the measurement outcome & reset in vacuum
-            self._state = ops.project_reset(measure, outcome, self._state, self._pure, self._num_modes, self._trunc)
+            self._state = ops.project_reset(
+                measure, outcome, self._state, self._pure, self._num_modes, self._trunc
+            )
 
             if self.norm() == 0:
                 raise ZeroDivisionError("Measurement has zero probability.")
@@ -696,7 +716,7 @@ class Circuit():
         """
         Performs a homodyne measurement on a mode.
         """
-        m_omega_over_hbar = 1/self._hbar
+        m_omega_over_hbar = 1 / self._hbar
 
         # Make sure the state is mixed for reduced density matrix
         if self._pure:
@@ -711,27 +731,31 @@ class Circuit():
             else:
                 raise TypeError("Selected measurement result must be of numeric type.")
         else:
-             # Compute reduced density matrix
+            # Compute reduced density matrix
             unmeasured = [i for i in range(self._num_modes) if not i == mode]
             reduced = ops.partial_trace(state, self._num_modes, unmeasured)
 
             # Rotate to measurement basis
-            reduced = self.apply_gate_BLAS(ops.phase(-phi, self._trunc), [0], state=reduced, pure=False, n=1)
+            reduced = self.apply_gate_BLAS(
+                ops.phase(-phi, self._trunc), [0], state=reduced, pure=False, n=1
+            )
 
             # Create pdf. Same as tf implementation, but using
             # the recursive relation H_0(x) = 1, H_1(x) = 2x, H_{n+1}(x) = 2xH_n(x) - 2nH_{n-1}(x)
-            q_mag = kwargs.get('max', 10)
-            num_bins = kwargs.get('num_bins', 100000)
+            q_mag = kwargs.get("max", 10)
+            num_bins = kwargs.get("num_bins", 100000)
 
             q_tensor, Hvals = ops.hermiteVals(q_mag, num_bins, m_omega_over_hbar, self._trunc)
             H_matrix = np.zeros((self._trunc, self._trunc, num_bins))
             for n, m in product(range(self._trunc), repeat=2):
-                H_matrix[n][m] = 1 / sqrt(2**n * bang(n) * 2**m * bang(m)) * Hvals[n] * Hvals[m]
+                H_matrix[n][m] = 1 / sqrt(2 ** n * bang(n) * 2 ** m * bang(m)) * Hvals[n] * Hvals[m]
             H_terms = np.expand_dims(reduced, -1) * np.expand_dims(H_matrix, 0)
-            rho_dist = np.sum(H_terms, axis=(1, 2)) \
-                                 * (m_omega_over_hbar/pi)**0.5 \
-                                 * np.exp(-m_omega_over_hbar * q_tensor**2) \
-                                 * (q_tensor[1] - q_tensor[0]) # Delta_q for normalization (only works if the bins are equally spaced)
+            rho_dist = (
+                np.sum(H_terms, axis=(1, 2))
+                * (m_omega_over_hbar / pi) ** 0.5
+                * np.exp(-m_omega_over_hbar * q_tensor ** 2)
+                * (q_tensor[1] - q_tensor[0])
+            )  # Delta_q for normalization (only works if the bins are equally spaced)
 
             # Sample from rho_dist. This is a bit different from tensorflow due to how
             # numpy treats multinomial sampling. In particular, numpy returns a
@@ -744,15 +768,21 @@ class Circuit():
             homodyne_sample = q_tensor[sample_idx]
 
         # Project remaining modes into the conditional state
-        inf_squeezed_vac = \
-            np.array([(-0.5)**(n//2) * sqrt(bang(n)) / bang(n//2) if n%2 == 0 else 0.0 + 0.0j \
-                for n in range(self._trunc)], dtype=ops.def_type)
+        inf_squeezed_vac = np.array(
+            [
+                (-0.5) ** (n // 2) * sqrt(bang(n)) / bang(n // 2) if n % 2 == 0 else 0.0 + 0.0j
+                for n in range(self._trunc)
+            ],
+            dtype=ops.def_type,
+        )
         alpha = homodyne_sample * sqrt(m_omega_over_hbar / 2)
 
         composed = np.dot(ops.phase(phi, self._trunc), ops.displacement(alpha, self._trunc))
         eigenstate = self.apply_gate_BLAS(composed, [0], state=inf_squeezed_vac, pure=True, n=1)
 
-        vac_state = np.array([1.0 + 0.0j if i == 0 else 0.0 + 0.0j for i in range(self._trunc)], dtype=ops.def_type)
+        vac_state = np.array(
+            [1.0 + 0.0j if i == 0 else 0.0 + 0.0j for i in range(self._trunc)], dtype=ops.def_type
+        )
         projector = np.outer(vac_state, eigenstate.conj())
 
         self._state = self.apply_gate_BLAS(projector, [mode])

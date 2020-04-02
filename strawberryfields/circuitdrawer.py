@@ -84,7 +84,15 @@ WIRE_TERMINATOR = r"\\" + "\n"
 CIRCUIT_BODY_TERMINATOR = "}\n"
 CIRCUIT_BODY_START = " {" + "\n"
 INIT_DOCUMENT = (
-    DOCUMENT_CLASS + "\n" + EMPTY_PAGESTYLE + "\n" + QCIRCUIT_PACKAGE + "\n" + BEGIN_DOCUMENT + "\n" + CIRCUIT_START
+    DOCUMENT_CLASS
+    + "\n"
+    + EMPTY_PAGESTYLE
+    + "\n"
+    + QCIRCUIT_PACKAGE
+    + "\n"
+    + BEGIN_DOCUMENT
+    + "\n"
+    + CIRCUIT_START
 )
 
 PIPE = "|"
@@ -546,9 +554,7 @@ class Circuit:
     def _apply_spacing(self):
         """Applies wire and operator visual spacing."""
         if self._column_spacing is not None:
-            self._document += Circuit._pad_with_spaces(
-                COLUMN_SPACING.format(self._column_spacing)
-            )
+            self._document += Circuit._pad_with_spaces(COLUMN_SPACING.format(self._column_spacing))
         if self._row_spacing is not None:
             self._document += Circuit._pad_with_spaces(ROW_SPACING.format(self._row_spacing))
 
