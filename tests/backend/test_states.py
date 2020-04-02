@@ -282,7 +282,7 @@ class TestQuadratureExpectations:
 
         assert np.allclose(res.flatten(), res_exact.flatten(), atol=tol, rtol=0)
 
-@pytest.mark.backends("fock", "gaussian")
+#@pytest.mark.backends("fock", "gaussian")
 class TestNumberExpectation:
     """Multimode photon-number expectation value tests"""
 
@@ -330,22 +330,22 @@ class TestNumberExpectation:
 
     def test_number_expectation_two_mode_squeezed(self, setup_backend, tol):
         """Tests the expectation value of photon numbers when there is correlation"""
-        backend = setup_backend(2)
+        backend = setup_backend(3)
         state = backend.state()
         r = 0.2
         phi = 0.0
         backend.prepare_squeezed_state(r, phi, 0)
-        backend.prepare_squeezed_state(-r, phi, 1)
-        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
+        backend.prepare_squeezed_state(-r, phi, 2)
+        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 2)
         state = backend.state()
         nbar = np.sinh(r) ** 2
         assert np.allclose(
-            state.number_expectation([0, 1]), 2 * nbar ** 2 + nbar, atol=tol, rtol=0
+            state.number_expectation([2, 0]), 2 * nbar ** 2 + nbar, atol=tol, rtol=0
         )
         assert np.allclose(state.number_expectation([0]), nbar, atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([1]), nbar, atol=tol, rtol=0)
+        assert np.allclose(state.number_expectation([2]), nbar, atol=tol, rtol=0)
 
-    @pytest.mark.backends("fock")
+    @pytest.mark.backends("fock", "tf")
     def test_number_expectation_four_modes(self, setup_backend, tol):
         """Tests the expectation value of photon numbers when there is correlation"""
         backend = setup_backend(4)
