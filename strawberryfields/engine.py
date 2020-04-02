@@ -27,6 +27,7 @@ import numpy as np
 
 from strawberryfields.api import Connection, Job, Result
 from strawberryfields.program import Program
+from strawberryfields.logger import create_logger
 
 from .backends import load_backend
 from .backends.base import BaseBackend, NotApplicableError
@@ -35,7 +36,7 @@ from .backends.base import BaseBackend, NotApplicableError
 __all__ = ["BaseEngine", "LocalEngine"]
 
 
-log = logging.getLogger(__name__)
+log = create_logger(__name__)
 
 
 class BaseEngine(abc.ABC):
