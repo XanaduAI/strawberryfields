@@ -875,9 +875,6 @@ class BaseFockState(BaseState):
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
 
-        state = (
-            self._data
-        )  # representation of the quantum state either as tensor of probability amplitudes
         cutoff = self._cutoff  # Fock space cutoff.
         num_modes = self._modes  # number of modes in the state.
 
