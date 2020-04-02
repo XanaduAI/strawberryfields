@@ -17,8 +17,17 @@ import numpy as np
 from strawberryfields.program_utils import Command
 from strawberryfields import ops
 from strawberryfields.parameters import par_evaluate
-from thewalrus.symplectic import expand_vector, expand, rotation, squeezing, two_mode_squeezing, interferometer, beam_splitter
+from thewalrus.symplectic import (
+    expand_vector,
+    expand,
+    rotation,
+    squeezing,
+    two_mode_squeezing,
+    interferometer,
+    beam_splitter,
+)
 from .circuit_specs import CircuitSpecs
+
 
 class GaussianUnitary(CircuitSpecs):
     """Compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form.
@@ -77,8 +86,8 @@ class GaussianUnitary(CircuitSpecs):
         # multi mode gates
         "BSgate",
         "S2gate",
-        "Interferometer", # Note that interferometer is accepted as a primitive
-        "GaussianTransform", # Note that GaussianTransform is accepted as a primitive
+        "Interferometer",  # Note that interferometer is accepted as a primitive
+        "GaussianTransform",  # Note that GaussianTransform is accepted as a primitive
     }
 
     decompositions = {
@@ -93,7 +102,7 @@ class GaussianUnitary(CircuitSpecs):
         "Zgate": {},
         "Fouriergate": {},
     }
-    #pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches
     def compile(self, seq, registers):
         """Try to arrange a quantum circuit into the canonical Symplectic form.
 
@@ -152,11 +161,13 @@ class GaussianUnitary(CircuitSpecs):
                         interferometer(params[0]), [dict_indices[mode] for mode in modes], nmodes
                     )
                 elif name == "GaussianTransform":
-                    S = expand(
-                        params[0], [dict_indices[mode] for mode in modes], nmodes
-                    )
+                    S = expand(params[0], [dict_indices[mode] for mode in modes], nmodes)
                 elif name == "BSgate":
-                    S = expand(beam_splitter(params[0], params[1]), [dict_indices[modes[0]], dict_indices[modes[1]]], nmodes)
+                    S = expand(
+                        beam_splitter(params[0], params[1]),
+                        [dict_indices[modes[0]], dict_indices[modes[1]]],
+                        nmodes,
+                    )
                 Snet = S @ Snet
                 rnet = S @ rnet
 
