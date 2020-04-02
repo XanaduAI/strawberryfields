@@ -52,8 +52,8 @@ class Circuit:
     # pylint: disable=too-many-instance-attributes,too-many-public-methods
     def __init__(self, graph, num_modes, cutoff_dim, pure, batch_size):
         self._graph = (
-            None
-        )  # will be set when reset is called below, but reset needs something to compare to
+            None  # will be set when reset is called below, but reset needs something to compare to
+        )
         self._hbar = 2
         self.reset(
             graph=graph,
@@ -878,7 +878,7 @@ class Circuit:
                 rho_dist = (
                     tf.cast(tf.reduce_sum(hermite_terms, axis=[1, 2]), tf.float64)
                     * (m_omega_over_hbar / np.pi) ** 0.5
-                    * tf.exp(-x ** 2)
+                    * tf.exp(-(x ** 2))
                     * (q_tensor[1] - q_tensor[0])
                 )  # Delta_q for normalization (only works if the bins are equally spaced)
 

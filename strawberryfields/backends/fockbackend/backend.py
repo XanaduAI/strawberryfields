@@ -74,8 +74,8 @@ class FockBackend(BaseFock):
         self._init_modes = None  #: int: initial number of modes in the circuit
         self._modemap = None  #: Modemap: maps external mode indices to internal ones
         self.circuit = (
-            None
-        )  #: ~.fockbackend.circuit.Circuit: representation of the simulated quantum state
+            None  #: ~.fockbackend.circuit.Circuit: representation of the simulated quantum state
+        )
 
     def _remap_modes(self, modes):
         if isinstance(modes, int):
