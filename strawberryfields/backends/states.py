@@ -818,6 +818,7 @@ class BaseFockState(BaseState):
     def number_expectation(self, modes):
         """
         Calculates the expectation value of the product of the number operators of the modes.
+
         Args:
             modes (list): list of modes for which one wants the expectation of the product of their number operator.
         Return:
