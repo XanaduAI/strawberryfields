@@ -280,9 +280,7 @@ class BaseEngine(abc.ABC):
 
             self._run_program(p, **kwargs)
             shots = kwargs.get("shots", 1)
-            self.samples = [
-                _broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)
-            ]
+            self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
             self.run_progs.append(p)
 
             prev = p
@@ -482,7 +480,9 @@ class RemoteEngine:
     VALID_TARGETS = ("X8_01", "X12_01", "X12_02")
     DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_01"}
 
-    def __init__(self, target: str, connection: Connection = Connection(), backend_options: dict = None):
+    def __init__(
+        self, target: str, connection: Connection = Connection(), backend_options: dict = None
+    ):
         self._target = self.DEFAULT_TARGETS.get(target, target)
 
         if self._target not in self.VALID_TARGETS:

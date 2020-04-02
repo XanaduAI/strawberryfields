@@ -126,6 +126,7 @@ class Program:
             Alternatively, another Program instance from which to inherit the register state.
         name (str): program name (optional)
     """
+
     def __init__(self, num_subsystems, name=None):
         #: str: program name
         self.name = name
@@ -165,7 +166,9 @@ class Program:
             self.reg_refs = copy.deepcopy(parent.reg_refs)  # independent copy of the RegRefs
             self.unused_indices = copy.copy(parent.unused_indices)
         else:
-            raise TypeError('First argument must be either the number of subsystems or the parent Program.')
+            raise TypeError(
+                "First argument must be either the number of subsystems or the parent Program."
+            )
 
         # save the initial regref state
         #: dict[int, RegRef]: like reg_refs
@@ -236,7 +239,7 @@ class Program:
         if pu.Program_current_context is None:
             pu.Program_current_context = self
         else:
-            raise RuntimeError('Only one Program context can be active at a time.')
+            raise RuntimeError("Only one Program context can be active at a time.")
         return self.register
 
     def __exit__(self, ex_type, ex_value, ex_tb):
@@ -287,13 +290,13 @@ class Program:
             tuple[RegRef]: tuple of the newly added subsystem references
         """
         if self.locked:
-            raise CircuitError('The Program is locked, no new subsystems can be created.')
+            raise CircuitError("The Program is locked, no new subsystems can be created.")
         if not isinstance(n, numbers.Integral) or n < 1:
-            raise ValueError('Number of added subsystems {} is not a positive integer.'.format(n))
+            raise ValueError("Number of added subsystems {} is not a positive integer.".format(n))
 
         first_unassigned_index = len(self.reg_refs)
         # create a list of RegRefs
-        inds = [first_unassigned_index+i for i in range(n)]
+        inds = [first_unassigned_index + i for i in range(n)]
         refs = tuple(RegRef(i) for i in inds)
         # add them to the index map
         for r in refs:
@@ -355,7 +358,7 @@ class Program:
         """
         # index must be found in the dict
         if ind not in self.reg_refs:
-            raise RegRefError('Subsystem {} does not exist.'.format(ind))
+            raise RegRefError("Subsystem {} does not exist.".format(ind))
         return self.reg_refs[ind]
 
     def _test_regrefs(self, reg):
@@ -378,18 +381,18 @@ class Program:
             if isinstance(rr, RegRef):
                 # regref must be found in the dict values (the RegRefs are compared using __eq__, which, since we do not define it, defaults to "is")
                 if rr not in self.reg_refs.values():
-                    raise RegRefError('Unknown RegRef.')
+                    raise RegRefError("Unknown RegRef.")
                 if self.reg_refs[rr.ind] is not rr:
-                    raise RegRefError('RegRef state has become inconsistent.')
+                    raise RegRefError("RegRef state has become inconsistent.")
             elif isinstance(rr, numbers.Integral):
                 rr = self._index_to_regref(rr)
             else:
-                raise RegRefError('Subsystems can only be indexed using integers and RegRefs.')
+                raise RegRefError("Subsystems can only be indexed using integers and RegRefs.")
 
             if not rr.active:
-                raise RegRefError('Subsystem {} has already been deleted.'.format(rr.ind))
+                raise RegRefError("Subsystem {} has already been deleted.".format(rr.ind))
             if rr in temp:
-                raise RegRefError('Trying to act on the same subsystem more than once.')
+                raise RegRefError("Trying to act on the same subsystem more than once.")
             temp.append(rr)
         return temp
 
@@ -403,7 +406,7 @@ class Program:
             list[RegRef]: subsystem list as RegRefs
         """
         if self.locked:
-            raise CircuitError('The Program is locked, no more Commands can be appended to it.')
+            raise CircuitError("The Program is locked, no more Commands can be appended to it.")
 
         # test that the target subsystem references are ok
         reg = self._test_regrefs(reg)
@@ -470,7 +473,11 @@ class Program:
         elif target in specs.circuit_db:
             db = specs.circuit_db[target]()
         else:
-            raise ValueError("Could not find target '{}' in the Strawberry Fields circuit database.".format(target))
+            raise ValueError(
+                "Could not find target '{}' in the Strawberry Fields circuit database.".format(
+                    target
+                )
+            )
 
         if db.modes is not None:
             # subsystems may be created and destroyed, this is total number that has ever existed
@@ -483,14 +490,14 @@ class Program:
 
         seq = db.decompose(self.circuit)
 
-        if kwargs.get('warn_connected', True):
+        if kwargs.get("warn_connected", True):
             DAG = pu.list_to_DAG(seq)
             temp = nx.algorithms.components.number_weakly_connected_components(DAG)
             if temp > 1:
-                warnings.warn('The circuit consists of {} disconnected components.'.format(temp))
+                warnings.warn("The circuit consists of {} disconnected components.".format(temp))
 
         # run optimizations
-        if kwargs.get('optimize', False):
+        if kwargs.get("optimize", False):
             seq = pu.optimize_circuit(seq)
 
         # does the circuit spec  have its own compilation method?
@@ -530,7 +537,7 @@ class Program:
         opt.circuit = pu.optimize_circuit(self.circuit)
         return opt
 
-    def draw_circuit(self, tex_dir='./circuit_tex', write_to_file=True):
+    def draw_circuit(self, tex_dir="./circuit_tex", write_to_file=True):
         r"""Draw the circuit using the Qcircuit :math:`\LaTeX` package.
 
         This will generate the LaTeX code required to draw the quantum circuit
@@ -597,11 +604,13 @@ class Program:
         ret = []
         for a in args:
             if not isinstance(a, str):
-                raise TypeError('Parameter names must be strings.')
+                raise TypeError("Parameter names must be strings.")
 
             if a not in self.free_params:
                 if self.locked:
-                    raise CircuitError('The Program is locked, no more free parameters can be created.')
+                    raise CircuitError(
+                        "The Program is locked, no more free parameters can be created."
+                    )
                 p = FreeParameter(a)
                 self.free_params[a] = p
             else:

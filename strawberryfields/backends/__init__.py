@@ -92,15 +92,13 @@ __all__ = [
     "TFBackend",
     "BaseState",
     "BaseFockState",
-    "BaseGaussianState"
+    "BaseGaussianState",
 ]
 
 
 virtual_backends = ["X8_01"]
 
-local_backends = {
-    b.short_name: b for b in (BaseBackend, GaussianBackend, FockBackend)
-}
+local_backends = {b.short_name: b for b in (BaseBackend, GaussianBackend, FockBackend)}
 
 
 def load_backend(name):

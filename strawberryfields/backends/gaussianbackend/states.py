@@ -32,6 +32,7 @@ class GaussianState(BaseGaussianState):
         mode_names (Sequence): (optional) this argument contains a list providing mode names
             for each mode in the state
     """
+
     def __init__(self, state_data, num_modes, qmat, Amat, mode_names=None):
         # pylint: disable=too-many-arguments
         super().__init__(state_data, num_modes, mode_names)
@@ -53,13 +54,13 @@ class GaussianState(BaseGaussianState):
         Returns:
             array: the reduced density matrix for the specified modes
         """
-        cutoff = kwargs.get('cutoff', 10)
-        mu, cov = self.reduced_gaussian([modes]) # pylint: disable=unused-variable
-        cov = cov * 2/self._hbar
+        cutoff = kwargs.get("cutoff", 10)
+        mu, cov = self.reduced_gaussian([modes])  # pylint: disable=unused-variable
+        cov = cov * 2 / self._hbar
 
         return fock_amplitudes_one_mode(self._alpha[modes], cov, cutoff)
 
-    #==========================================
+    # ==========================================
     # The methods below inherit their docstring
     # from BaseState
 
@@ -67,32 +68,32 @@ class GaussianState(BaseGaussianState):
         if len(n) != self._modes:
             raise ValueError("Fock state must be same length as the number of modes")
 
-        cutoff = kwargs.get('cutoff', 10)
+        cutoff = kwargs.get("cutoff", 10)
         if sum(n) >= cutoff:
-            raise ValueError('Cutoff argument must be larger than the sum of photon numbers')
+            raise ValueError("Cutoff argument must be larger than the sum of photon numbers")
 
         ocp = np.uint8(np.array(n))
 
         # get the vector and means and covariance
         # matrix, and normalize so that hbar=2
-        mu = self.means() * np.sqrt(2/self.hbar)
-        cov = self.cov() * 2/self.hbar
+        mu = self.means() * np.sqrt(2 / self.hbar)
+        cov = self.cov() * 2 / self.hbar
 
         return fock_prob(mu, cov, ocp)
 
     def mean_photon(self, mode, **kwargs):
         mu, cov = self.reduced_gaussian([mode])
-        mean = (np.trace(cov) + mu.T @ mu)/(2*self._hbar) - 1/2
-        var = (np.trace(cov @ cov) + 2*mu.T @ cov @ mu)/(2*self._hbar**2) - 1/4
+        mean = (np.trace(cov) + mu.T @ mu) / (2 * self._hbar) - 1 / 2
+        var = (np.trace(cov @ cov) + 2 * mu.T @ cov @ mu) / (2 * self._hbar ** 2) - 1 / 4
         return mean, var
 
     def fidelity(self, other_state, mode, **kwargs):
-        mu1 = other_state[0] * 2/np.sqrt(2*self._hbar)
-        cov1 = other_state[1] * 2/self._hbar
+        mu1 = other_state[0] * 2 / np.sqrt(2 * self._hbar)
+        cov1 = other_state[1] * 2 / self._hbar
 
         mu2, cov2 = self.reduced_gaussian([mode])
-        mu2 *= 2/np.sqrt(2*self._hbar)
-        cov2 /= self._hbar/2
+        mu2 *= 2 / np.sqrt(2 * self._hbar)
+        cov2 /= self._hbar / 2
 
         return sm_fidelity(mu1, mu2, cov1, cov2)
 
@@ -109,5 +110,5 @@ class GaussianState(BaseGaussianState):
 
         delta = np.concatenate((delta, delta.conj()))
         fac = np.sqrt(np.linalg.det(Qi).real)
-        exp = np.exp(-0.5*np.dot(delta, np.dot(Qi, delta.conj())).real)
-        return fac*exp
+        exp = np.exp(-0.5 * np.dot(delta, np.dot(Qi, delta.conj())).real)
+        return fac * exp
