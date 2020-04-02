@@ -331,7 +331,7 @@ class TestNumberExpectation:
         assert np.allclose(state.number_expectation([1]), nbar, atol=tol, rtol=0)
 
     def test_number_expectation_repeated_modes(self, setup_backend, tol):
-        """Tests that the correct exception is raised when repeated modes"""
+        """Tests that the correct exception is raised for repeated modes"""
         backend = setup_backend(2)
         state = backend.state()
         with pytest.raises(ValueError, match="there can be no duplicates in modes"):
@@ -339,7 +339,7 @@ class TestNumberExpectation:
 
     @pytest.mark.backends("gaussian")
     def test_number_expectation_only_two_modes_gaussian(self, setup_backend, tol):
-        """Tests that the correct exception is raised when repeated modes"""
+        """Tests that the correct exception is raised when there are more than two modes specified for Gaussian states"""
         backend = setup_backend(3)
         state = backend.state()
         with pytest.raises(ValueError, match="number_expectation only supports one or two modes"):

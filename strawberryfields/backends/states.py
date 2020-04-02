@@ -819,14 +819,18 @@ class BaseFockState(BaseState):
         """
         Calculates the expectation value of the product of the number operators of the modes.
 
+        This method computes the analytic expectation value
+        :math:`\langle \hat{n}_{i_0} \hat{n}_{i_1}\dots \hat{n}_{i_{N-1}}\rangle`
+        for a (sub)set of modes `[i_0, i_1, \dots, i_{N-1}]` of the system.
+
         Args:
             modes (list): list of modes for which one wants the expectation of the product of their number operator.
+
         Return:
             (float): the expectation value.
         """
         if len(modes) != len(set(modes)):
             raise ValueError("there can be no duplicates in modes")
-
 
         state = self._data #representation of the quantum state either as tensor of probability amplitudes
         # or as
@@ -840,7 +844,7 @@ class BaseFockState(BaseState):
             # state is a tensor of probability amplitudes
             ps = np.abs(state)**2
             ps = ps.sum(axis=traced_modes)
-            for mode in modes:
+            for _ in modes:
                 ps = np.tensordot(values, ps, axes=1)
             return ps
 
@@ -850,7 +854,7 @@ class BaseFockState(BaseState):
         traced_modes.sort(reverse=True)
         for mode in traced_modes:
             ps = np.tensordot(np.identity(cutoff), ps, axes=((0, 1), (2 * mode, 2 * mode + 1)))
-        for mode in range(len(modes)):
+        for _ in range(len(modes)):
             ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
         return float(ps)
 
@@ -1152,13 +1156,15 @@ class BaseGaussianState(BaseState):
     def number_expectation(self, modes):
         """
         Calculates the expectation value of the product of the number operators of the modes.
+
         Args:
             modes (list): list of modes for which one wants the expectation of the product of their number operator.
+
         Return:
             (float): the expectation value.
         """
         if len(modes) != len(set(modes)):
-            raise ValueError("there can be no duplicates in modes")
+            raise ValueError("There can be no duplicates in the modes specified.")
         mu = self._mu
         cov = self._cov
         if len(modes) == 1:
@@ -1169,7 +1175,7 @@ class BaseGaussianState(BaseState):
             nj = photon_number_mean(mu, cov, modes[1], hbar=self._hbar)
             return photon_number_covar(mu, cov, modes[1], modes[0], hbar=self._hbar) + ni * nj
 
-        raise ValueError("number_expectation only supports one or two modes")
+        raise ValueError("The number_expectation method only supports one or two modes for Gaussian states.")
 
 
 
