@@ -282,7 +282,6 @@ class TestQuadratureExpectations:
 
         assert np.allclose(res.flatten(), res_exact.flatten(), atol=tol, rtol=0)
 
-#@pytest.mark.backends("fock", "gaussian")
 class TestNumberExpectation:
     """Multimode photon-number expectation value tests"""
 
