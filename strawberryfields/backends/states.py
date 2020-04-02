@@ -312,6 +312,56 @@ class BaseState(abc.ABC):
         """
         raise NotImplementedError
 
+    def number_expectation(self, modes):
+        r"""
+        Calculates the expectation value of the product of the number operators of the modes.
+
+        This method computes the analytic expectation value
+        :math:`\langle \hat{n}_{i_0} \hat{n}_{i_1}\dots \hat{n}_{i_{N-1}}\rangle`
+        for a (sub)set of modes :math:`[i_0, i_1, \dots, i_{N-1}]` of the system.
+
+        Args:
+            modes (list): list of modes for which one wants the expectation of the product of their number operator.
+
+        Return:
+            (float): the expectation value.
+
+        **Example**
+
+        Consider the following program:
+
+        .. code-block:: python
+
+            prog = sf.Program(3)
+
+            with prog.context as q:
+                ops.Sgate(0.5) | q[0]
+                ops.Sgate(0.5) | q[1]
+                ops.Sgate(0.5) | q[2]
+                ops.BSgate(np.pi/3, 0.1) |  (q[0], q[1])
+                ops.BSgate(np.pi/3, 0.1) |  (q[1], q[2])
+
+        Executing this on the Fock backend,
+
+        >>> eng = sf.Engine("fock", backend_options={"cutoff_dim": 10})
+        >>> state = eng.run(prog).state
+
+        we can compute the expectation value :math:`\langle \hat{n}_0\hat{n}_2\rangle`:
+
+        >>> state.number_expectation([0, 2])
+        0.07252895071309405
+
+        Executing the same program on the Gaussian backend,
+
+        >>> eng = sf.Engine("gaussian")
+        >>> state = eng.run(prog).state
+        >>> state.number_expectation([0, 2])
+        0.07566984755267293
+
+        .. warning:: This method only supports at most two modes in the Gaussian backend.
+        """
+        raise NotImplementedError
+
     def p_quad_values(self, mode, xvec, pvec):
 
         r"""Calculates the discretized p-quadrature probability distribution of the specified mode.
@@ -834,44 +884,6 @@ class BaseFockState(BaseState):
         return mean, var
 
     def number_expectation(self, modes):
-        r"""
-        Calculates the expectation value of the product of the number operators of the modes.
-
-        This method computes the analytic expectation value
-        :math:`\langle \hat{n}_{i_0} \hat{n}_{i_1}\dots \hat{n}_{i_{N-1}}\rangle`
-        for a (sub)set of modes :math:`[i_0, i_1, \dots, i_{N-1}]` of the system.
-
-        Args:
-            modes (list): list of modes for which one wants the expectation of the product of their number operator.
-
-        Return:
-            (float): the expectation value.
-
-        **Example**
-
-        Consider the following program:
-
-        .. code-block:: python
-
-            prog = sf.Program(3)
-
-            with prog.context as q:
-                ops.Sgate(0.5) | q[0]
-                ops.Sgate(0.5) | q[1]
-                ops.Sgate(0.5) | q[2]
-                ops.BSgate(np.pi/3, 0.1) |  (q[0], q[1])
-                ops.BSgate(np.pi/3, 0.1) |  (q[1], q[2])
-
-        Executing this on the Fock backend,
-
-        >>> eng = sf.Engine("fock", backend_options={"cutoff_dim": 10})
-        >>> state = eng.run(prog).state
-
-        we can compute the expectation value :math:`\langle \hat{n}_0\hat{n}_2\rangle`:
-
-        >>> state.number_expectation([0, 2])
-        0.07252895071309405
-        """
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
 
@@ -1206,42 +1218,6 @@ class BaseGaussianState(BaseState):
         return mean, var
 
     def number_expectation(self, modes):
-        r"""
-        Calculates the expectation value of the product of the number operators of the modes.
-
-        .. warning:: This method only supports at most two modes in the Gaussian backend.
-
-        Args:
-            modes (list): list of modes for which one wants the expectation of the product of their number operator.
-
-        Return:
-            (float): the expectation value.
-
-        **Example**
-
-        Consider the following program:
-
-        .. code-block:: python
-
-            prog = sf.Program(3)
-
-            with prog.context as q:
-                ops.Sgate(0.5) | q[0]
-                ops.Sgate(0.5) | q[1]
-                ops.Sgate(0.5) | q[2]
-                ops.BSgate(np.pi/3, 0.1) |  (q[0], q[1])
-                ops.BSgate(np.pi/3, 0.1) |  (q[1], q[2])
-
-        Executing this on the Fock backend,
-
-        >>> eng = sf.Engine("gaussian")
-        >>> state = eng.run(prog).state
-
-        we can compute the expectation value :math:`\langle \hat{n}_0\hat{n}_2\rangle`:
-
-        >>> state.number_expectation([0, 2])
-        0.07566984755267293
-        """
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
         mu = self._mu
