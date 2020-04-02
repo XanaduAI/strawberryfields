@@ -816,7 +816,7 @@ class BaseFockState(BaseState):
         return mean, var
 
     def number_expectation(self, modes):
-        """
+        r"""
         Calculates the expectation value of the product of the number operators of the modes.
 
         This method computes the analytic expectation value
@@ -828,28 +828,51 @@ class BaseFockState(BaseState):
 
         Return:
             (float): the expectation value.
+
+        **Example**
+
+        Consider the following program:
+
+        .. code-block:: python
+
+            prog = sf.Program(3)
+
+            with prog.context as q:
+                ops.Sgate(0.5) | q[0]
+                ops.Sgate(0.5) | q[1]
+                ops.Sgate(0.5) | q[2]
+                ops.BSgate(np.pi/3, 0.1) |  (q[0], q[1])
+                ops.BSgate(np.pi/3, 0.1) |  (q[1], q[2])
+
+        Executing this on the Fock backend,
+
+        >>> eng = sf.Engine("fock", backend_options={"cutoff_dim": 10})
+        >>> state = eng.run(prog).state
+
+        we can compute the expectation value :math:`\langle \hat{n}_0\hat{n}_2\rangle`:
+
+        >>> state.number_expectation([0, 2])
+        0.07252895071309405
         """
         if len(modes) != len(set(modes)):
-            raise ValueError("there can be no duplicates in modes")
+            raise ValueError("There can be no duplicates in the modes specified.")
 
         state = self._data #representation of the quantum state either as tensor of probability amplitudes
-        # or as
-        pure = self._pure #if pure or as a tensor of density matrix elements if not pure.
         cutoff = self._cutoff #Fock space cutoff.
         num_modes = self._modes #number of modes in the state.
 
         values = np.arange(cutoff)
         traced_modes = tuple(item for item in range(num_modes) if item not in modes)
-        if pure is True:
+        if self.is_pure:
             # state is a tensor of probability amplitudes
-            ps = np.abs(state)**2
+            ps = np.abs(self.ket())**2
             ps = ps.sum(axis=traced_modes)
             for _ in modes:
                 ps = np.tensordot(values, ps, axes=1)
-            return ps
+            return float(ps)
 
         # state is a tensor of density matrix elements in the SF convention
-        ps = state.real
+        ps = np.real(self.dm())
         traced_modes = list(traced_modes)
         traced_modes.sort(reverse=True)
         for mode in traced_modes:
@@ -1154,14 +1177,41 @@ class BaseGaussianState(BaseState):
         return mean, var
 
     def number_expectation(self, modes):
-        """
+        r"""
         Calculates the expectation value of the product of the number operators of the modes.
+
+        .. warning:: This method only supports at most two modes in the Gaussian backend.
 
         Args:
             modes (list): list of modes for which one wants the expectation of the product of their number operator.
 
         Return:
             (float): the expectation value.
+
+        **Example**
+
+        Consider the following program:
+
+        .. code-block:: python
+
+            prog = sf.Program(3)
+
+            with prog.context as q:
+                ops.Sgate(0.5) | q[0]
+                ops.Sgate(0.5) | q[1]
+                ops.Sgate(0.5) | q[2]
+                ops.BSgate(np.pi/3, 0.1) |  (q[0], q[1])
+                ops.BSgate(np.pi/3, 0.1) |  (q[1], q[2])
+
+        Executing this on the Fock backend,
+
+        >>> eng = sf.Engine("gaussian")
+        >>> state = eng.run(prog).state
+
+        we can compute the expectation value :math:`\langle \hat{n}_0\hat{n}_2\rangle`:
+
+        >>> state.number_expectation([0, 2])
+        0.07566984755267293
         """
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")

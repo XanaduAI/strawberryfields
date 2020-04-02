@@ -313,6 +313,21 @@ class TestNumberExpectation:
         assert np.allclose(state.number_expectation([0]), n0, atol=tol, rtol=0)
         assert np.allclose(state.number_expectation([1]), n1, atol=tol, rtol=0)
 
+    def test_number_expectation_repeated_modes(self, setup_backend, tol):
+        """Tests that the correct exception is raised for repeated modes"""
+        backend = setup_backend(2)
+        state = backend.state()
+        with pytest.raises(ValueError, match="There can be no duplicates in the modes specified."):
+            state.number_expectation([0, 0])
+
+    @pytest.mark.backends("gaussian")
+    def test_number_expectation_only_two_modes_gaussian(self, setup_backend, tol):
+        """Tests that the correct exception is raised when there are more than two modes specified for Gaussian states"""
+        backend = setup_backend(3)
+        state = backend.state()
+        with pytest.raises(ValueError, match="The number_expectation method only supports one or two modes for Gaussian states."):
+            state.number_expectation([0, 1, 2])
+
     def test_number_expectation_two_mode_squeezed(self, setup_backend, tol):
         """Tests the expectation value of photon numbers when there is correlation"""
         backend = setup_backend(2)
@@ -330,20 +345,29 @@ class TestNumberExpectation:
         assert np.allclose(state.number_expectation([0]), nbar, atol=tol, rtol=0)
         assert np.allclose(state.number_expectation([1]), nbar, atol=tol, rtol=0)
 
-    def test_number_expectation_repeated_modes(self, setup_backend, tol):
-        """Tests that the correct exception is raised for repeated modes"""
-        backend = setup_backend(2)
+    @pytest.mark.backends("fock")
+    def test_number_expectation_four_modes(self, setup_backend, tol):
+        """Tests the expectation value of photon numbers when there is correlation"""
+        backend = setup_backend(4)
         state = backend.state()
-        with pytest.raises(ValueError, match="there can be no duplicates in modes"):
-            state.number_expectation([0, 0])
+        r = 0.2
+        phi = 0.0
+        backend.prepare_squeezed_state(r, phi, 0)
+        backend.prepare_squeezed_state(-r, phi, 1)
+        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
+        backend.prepare_squeezed_state(r, phi, 2)
+        backend.prepare_squeezed_state(-r, phi, 3)
+        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 2, 3)
 
-    @pytest.mark.backends("gaussian")
-    def test_number_expectation_only_two_modes_gaussian(self, setup_backend, tol):
-        """Tests that the correct exception is raised when there are more than two modes specified for Gaussian states"""
-        backend = setup_backend(3)
         state = backend.state()
-        with pytest.raises(ValueError, match="number_expectation only supports one or two modes"):
-            state.number_expectation([0, 1, 2])
+        nbar = np.sinh(r) ** 2
+        assert np.allclose(
+            state.number_expectation([0, 1, 2, 3]), (2 * nbar ** 2 + nbar) ** 2, atol=tol, rtol=0
+        )
+        assert np.allclose(state.number_expectation([0, 1 ,3]), nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0)
+        assert np.allclose(state.number_expectation([3, 1, 2]), nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0)
+
+
 
 class TestFidelities:
     """Fidelity tests."""
