@@ -839,7 +839,7 @@ class BaseFockState(BaseState):
 
         This method computes the analytic expectation value
         :math:`\langle \hat{n}_{i_0} \hat{n}_{i_1}\dots \hat{n}_{i_{N-1}}\rangle`
-        for a (sub)set of modes `[i_0, i_1, \dots, i_{N-1}]` of the system.
+        for a (sub)set of modes :math:`[i_0, i_1, \dots, i_{N-1}]` of the system.
 
         Args:
             modes (list): list of modes for which one wants the expectation of the product of their number operator.
