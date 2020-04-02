@@ -1,4 +1,4 @@
-# Release 0.13.0-dev (development release)
+# Release 0.13.0.rc0 (release candidate)
 
 <h3>New features since last release</h3>
 
@@ -6,17 +6,26 @@
   [(#101)](https://github.com/XanaduAI/strawberryfields/pull/101)
   [(#148)](https://github.com/XanaduAI/strawberryfields/pull/148)
   [(#294)](https://github.com/XanaduAI/strawberryfields/pull/294)
+  [(#327)](https://github.com/XanaduAI/strawberryfields/pull/327)
+  [(#328)](https://github.com/XanaduAI/strawberryfields/pull/328)
+  [(#329)](https://github.com/XanaduAI/strawberryfields/pull/329)
+  [(#330)](https://github.com/XanaduAI/strawberryfields/pull/330)
+  [(#334)](https://github.com/XanaduAI/strawberryfields/pull/334)
+  [(#336)](https://github.com/XanaduAI/strawberryfields/pull/336)
+  [(#337)](https://github.com/XanaduAI/strawberryfields/pull/337)
+  [(#339)](https://github.com/XanaduAI/strawberryfields/pull/339)
 
   Jobs can now be submitted to the Xanadu cloud platform to be run
   on supported hardware using the new `RemoteEngine`:
 
   ```python
-  from strawberryfields import RemoteEngine
+  import strawberryfields as sf
   from strawberryfields import ops
   from strawberryfields.utils import random_interferometer
 
   # replace AUTHENTICATION_TOKEN with your Xanadu cloud access token
-  eng = RemoteEngine("chip2", token="AUTHENTICATION_TOKEN")
+  con = sf.api.Connection(token="AUTH_TOKEN")
+  eng = sf.RemoteEngine("X8", connection=con)
   prog = sf.Program(8)
 
   U = random_interferometer(4)
@@ -29,13 +38,14 @@
 
       ops.Interferometer(U) | q[:4]
       ops.Interferometer(U) | q[4:]
+      ops.MeasureFock() | q
 
-  result = eng.run(prog)
+  result = eng.run(prog, shots=1000)
   ```
 
   For more details, see the
-  [Xanadu cloud platform](https://strawberryfields.readthedocs.io/en/stable/introduction/remote.html)
-  tutorial.
+  [photonic hardware quickstart](https://strawberryfields.readthedocs.io/en/latest/introduction/photonic_hardware.html)
+  and [tutorial](https://strawberryfields.readthedocs.io/en/latest/tutorials/tutorial_X8.html).
 
 * Significantly speeds up the Fock backend of Strawberry Fields,
   through a variety of changes:
@@ -97,39 +107,38 @@
   probability distributions by integrating across the Wigner function.
   [(#270)](https://github.com/XanaduAI/strawberryfields/pull/270)
 
-* Adds support in the applications layer for node-weighted graphs. Users can sample from graphs
-  with node weights using the WAW encoding that rescales an adjacency matrix `A` to `WAW` with `W`
-  a diagonal matrix of node weights:
-  [(#295)](https://github.com/XanaduAI/strawberryfields/pull/295)
-   
+* Adds support in the applications layer for node-weighted graphs.
+
+  Sample from graphs with node weights using a special-purpose encoding
+  [(#295)](https://github.com/XanaduAI/strawberryfields/pull/295):
+
   ```python
   from strawberryfields.apps import sample
-  import networkx as nx
-  import numpy as np
 
-  np.random.seed(1968)
-
-  g = nx.erdos_renyi_graph(20, 0.6, seed=1968)
+  # generate a random graph
+  g = nx.erdos_renyi_graph(20, 0.6)
   a = nx.to_numpy_array(g)
+
+  # define node weights
+  # and encode into the adjacency matrix
   w = [i for i in range(20)]
-
   a = sample.waw_matrix(a, w)
-  s = sample.sample(a, n_mean=10, n_samples=10)
 
+  s = sample.sample(a, n_mean=10, n_samples=10)
   s = sample.postselect(s, min_count=4, max_count=20)
   s = sample.to_subgraphs(s, g)
   ```
-  
-  Node weights can be input to search algorithms in the `clique` and `subgraph` modules:
+
+  Node weights can be input to search algorithms in the `clique` and `subgraph` modules
   [(#296)](https://github.com/XanaduAI/strawberryfields/pull/296)
-  [(#297)](https://github.com/XanaduAI/strawberryfields/pull/297)
-  
+  [(#297)](https://github.com/XanaduAI/strawberryfields/pull/297):
+
   ```python
   from strawberryfields.apps import clique
   c = [clique.shrink(s_, g, node_select=w) for s_ in s]
   [clique.search(c_, g, iterations=10, node_select=w) for c_ in c]
   ```
-  
+
   ```python
   from strawberryfields.apps import subgraph
   subgraph.search(s, g, min_size=5, max_size=8, node_select=w)
@@ -168,12 +177,16 @@
   decomposition.
   [(#301)](https://github.com/XanaduAI/strawberryfields/pull/301)
 
+* Updated the relevant methods in `RemoteEngine` and `Connection` to derive `shots`
+  from the Blackbird script or `Program` if not explicitly specified.
+  [(#327)](https://github.com/XanaduAI/strawberryfields/pull/327)
+
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
 Ville Bergholm, Tom Bromley, Jack Ceroni, Theodor Isacsson, Josh Izaac, Nathan Killoran, Shreya P Kumar,
-Nicolás Quesada, Jeremy Swinarton, Antal Száva, Paul Tan, Zeid Zabaneh
+Leonhard Neuhaus, Nicolás Quesada, Jeremy Swinarton, Antal Száva, Paul Tan, Zeid Zabaneh.
 
 
 # Release 0.12.1 (current release)

@@ -16,7 +16,6 @@ This module provides an interface to a remote program execution backend.
 """
 from datetime import datetime
 import io
-import json
 import logging
 from typing import List
 
@@ -29,6 +28,8 @@ from strawberryfields.program import Program
 
 from .job import Job, JobStatus
 from .result import Result
+
+# pylint: disable=bad-continuation,protected-access
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class Connection:
 
     >>> connection = Connection(token="abc")
     >>> success = connection.ping()  # `True` if successful, `False` if the connection fails
-    >>> job = connection.create_job("chip2", program, shots=123)
+    >>> job = connection.create_job("chip_name", program, shots=123)
     >>> job
     <Job: id=d177cbf5-1816-4779-802f-cef2c117dc1a, ...>
     >>> job.status
@@ -78,7 +79,6 @@ class Connection:
         use_ssl (bool): whether to use SSL for the connection
     """
 
-    # pylint: disable=bad-continuation
     def __init__(
         self,
         token: str = configuration["api"]["authentication_token"],
@@ -132,29 +132,27 @@ class Connection:
         """
         return self._use_ssl
 
-    def create_job(self, target: str, program: Program, shots: int) -> Job:
+    def create_job(self, target: str, program: Program, run_options: dict = None) -> Job:
         """Creates a job with the given circuit.
 
         Args:
             target (str): the target device
             program (strawberryfields.Program): the quantum circuit
-            shots (int): the number of shots
+            run_options (Dict[str, Any]): Runtime arguments for the program execution.
+                If provided, overrides the value stored in the given ``program``.
 
         Returns:
             strawberryfields.api.Job: the created job
         """
         # Serialize a blackbird circuit for network transmission
         bb = to_blackbird(program)
-        # pylint: disable=protected-access
         bb._target["name"] = target
-        # pylint: disable=protected-access
-        bb._target["options"] = {"shots": shots}
+        bb._target["options"] = run_options
+
         circuit = bb.serialize()
 
         path = "/jobs"
-        response = requests.post(
-            self._url(path), headers=self._headers, data=json.dumps({"circuit": circuit}),
-        )
+        response = requests.post(self._url(path), headers=self._headers, json={"circuit": circuit},)
         if response.status_code == 201:
             if self._verbose:
                 log.info("The job was successfully submitted.")
@@ -243,7 +241,7 @@ class Connection:
         """
         path = "/jobs/{}".format(job_id)
         response = requests.patch(
-            self._url(path), headers=self._headers, data={"status": JobStatus.CANCELLED.value},
+            self._url(path), headers=self._headers, json={"status": JobStatus.CANCELLED.value},
         )
         if response.status_code == 204:
             if self._verbose:
@@ -269,8 +267,11 @@ class Connection:
     @staticmethod
     def _format_error_message(response: requests.Response) -> str:
         body = response.json()
-        return "{} ({}): {}".format(
-            body.get("status_code", ""), body.get("code", ""), body.get("detail", "")
+        return "{} ({}): {} ({})".format(
+            body.get("status_code", ""),
+            body.get("code", ""),
+            body.get("detail", ""),
+            body.get("meta", ""),
         )
 
     def __repr__(self):

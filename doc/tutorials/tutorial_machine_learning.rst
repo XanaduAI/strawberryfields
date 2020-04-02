@@ -70,7 +70,7 @@ To properly evaluate measurement results, we must therefore do a little more wor
     sess.run(tf.global_variables_initializer())
     feed_dict = {phi: 0.0}
 
-    results = eng.run(prog, run_options={"session": sess, "feed_dict": feed_dict})
+    results = eng.run(prog, **{"session": sess, "feed_dict": feed_dict})
 
 This code will execute without error, and both the output results and the register :code:`q` will contain numeric values based on the given value for the angle phi. We can select measurement results at other angles by supplying different values for :code:`phi` in :code:`feed_dict`.
 
@@ -81,7 +81,7 @@ Symbolic computation
 
 Supplying a :code:`Session` and :code:`feed_dict` to :code:`eng.run()` is okay for checking one or two numerical values.
 However, each call of :code:`eng.run()` will create additional redundant nodes in the underlying Tensorflow computational graph.
-A better method is to make the single call :code:`eng.run(prog, run_options={"eval": False})`. This will carry out the computation symbolically but not numerically.
+A better method is to make the single call :code:`eng.run(prog, eval=False)`. This will carry out the computation symbolically but not numerically.
 The results returned by the engine will instead contain *unevaluted Tensors*. These Tensors can be evaluated numerically by running the :code:`tf.Session` and supplying the desired values for any placeholders:
 
 .. code-block:: python
@@ -93,7 +93,7 @@ The results returned by the engine will instead contain *unevaluted Tensors*. Th
         MeasureHomodyne(phi) | q[0]
 
     eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": 7})
-    results = eng.run(prog, run_options={"eval": False})
+    results = eng.run(prog, eval=False)
 
     state_density_matrix = results.state.dm()
     homodyne_meas = results.samples[0]
@@ -141,7 +141,7 @@ It is common in machine learning to process data in *batches*. Strawberry Fields
     with prog.context as q:
         Dgate(tf.Variable([0.1] * batch_size)) | q[0]
 
-    result = eng.run(prog, run_options={"eval": False})
+    result = eng.run(prog, eval=False)
 
 .. note:: The batch size should be static, i.e., not changing over the course of a computation.
 

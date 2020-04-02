@@ -37,16 +37,18 @@ corresponding CircuitSpecs instance with the same short name, used to validate P
 executed on that backend.
 """
 from .circuit_specs import CircuitSpecs
-from .chip2 import Chip2Specs
+from .X8 import X8Specs, X8_01
+from .X12 import X12Specs, X12_01, X12_02
 from .fock import FockSpecs
 from .gaussian import GaussianSpecs
 from .gbs import GBSSpecs
 from .tensorflow import TFSpecs
 from .gaussian_unitary import GaussianUnitary
 
-specs = (Chip2Specs, FockSpecs, GaussianSpecs, GBSSpecs, TFSpecs, GaussianUnitary)
+specs = (X8Specs, X8_01, X12Specs, X12_01, X12_02, FockSpecs, GaussianSpecs, GBSSpecs, TFSpecs, GaussianUnitary)
 
 circuit_db = {c.short_name: c for c in specs}
-"""dict[str, ~strawberryfields.circuitspecs.CircuitSpecs]: Map from circuit family short name to the corresponding class."""
+"""dict[str, ~strawberryfields.circuitspecs.CircuitSpecs]: Map from circuit
+family short name to the corresponding class."""
 
 __all__ = ["circuit_db", "CircuitSpecs"] + [i.__name__ for i in specs]

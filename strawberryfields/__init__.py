@@ -23,6 +23,7 @@ and backend components (all found within the :mod:`strawberryfields.backends` su
 """
 from . import apps
 from ._version import __version__
+from .cli import ping
 from .configuration import store_account
 from .engine import Engine, LocalEngine, RemoteEngine
 from .io import load, save
