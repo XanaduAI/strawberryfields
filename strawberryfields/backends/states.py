@@ -823,6 +823,10 @@ class BaseFockState(BaseState):
         Return:
             (float): the expectation value.
         """
+        if len(modes) != len(set(modes)):
+            raise ValueError("there can be no duplicates in modes")
+
+
         state = self._data #representation of the quantum state either as tensor of probability amplitudes
         # or as
         pure = self._pure #if pure or as a tensor of density matrix elements if not pure.
@@ -847,7 +851,7 @@ class BaseFockState(BaseState):
             ps = np.tensordot(np.identity(cutoff), ps, axes=((0, 1), (2 * mode, 2 * mode + 1)))
         for mode in range(len(modes)):
             ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
-        return ps
+        return float(ps)
 
 class BaseGaussianState(BaseState):
     r"""Class for the representation of quantum states using the Gaussian formalism.
@@ -1152,6 +1156,8 @@ class BaseGaussianState(BaseState):
         Return:
             (float): the expectation value.
         """
+        if len(modes) != len(set(modes)):
+            raise ValueError("there can be no duplicates in modes")
         mu = self._mu
         cov = self._cov
         if len(modes) == 1:
