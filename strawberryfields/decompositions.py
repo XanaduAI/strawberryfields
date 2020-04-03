@@ -61,7 +61,6 @@ def takagi(N, tol=1e-13, rounding=13):
         # And also rearrange the unitary and values so that they are decreasingly ordered
         return np.array(sorted_l), Uc
 
-
     v, l, ws = np.linalg.svd(N)
     w = np.transpose(np.conjugate(ws))
     rl = np.round(l, rounding)
