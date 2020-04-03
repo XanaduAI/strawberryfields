@@ -26,13 +26,14 @@ from scipy.special import binom
 from scipy.special import gammaln as lg
 from scipy.linalg import qr
 
-DATA_PATH = pkg_resources.resource_filename('strawberryfields', 'backends/data')
+DATA_PATH = pkg_resources.resource_filename("strawberryfields", "backends/data")
 def_type = np.complex128
 
 
-#================================+
+# ================================+
 #   Fock space shared operations |
-#================================+
+# ================================+
+
 
 @functools.lru_cache()
 def find_dim_files(regex, D, directory=None, name=""):
@@ -52,16 +53,18 @@ def find_dim_files(regex, D, directory=None, name=""):
         directory = DATA_PATH
     else:
         check_dir = os.path.isdir(directory)
-        if not check_dir: # pragma: no cover
+        if not check_dir:  # pragma: no cover
             raise NotADirectoryError("Directory {} does not exist!".format(directory))
 
     files = [f for f in os.listdir(directory) if re.match(regex, f)]
-    avail_dims = sorted([int(re.findall(r'\d+', f)[0]) for f in files])
+    avail_dims = sorted([int(re.findall(r"\d+", f)[0]) for f in files])
 
-    idx = bisect(avail_dims, D-1)
-    if idx+1 > len(avail_dims):
-        raise FileNotFoundError("File containing {} factors does not exist "
-                                "for dimension {} in directory {}".format(name, D, directory))
+    idx = bisect(avail_dims, D - 1)
+    if idx + 1 > len(avail_dims):
+        raise FileNotFoundError(
+            "File containing {} factors does not exist "
+            "for dimension {} in directory {}".format(name, D, directory)
+        )
 
     return avail_dims[idx], directory
 
@@ -83,15 +86,16 @@ def generate_bs_factors(D):
     Args:
         D (int): generate prefactors for :math:`D` dimensions.
     """
-    prefac = np.zeros([D]*5, dtype=def_type)
+    prefac = np.zeros([D] * 5, dtype=def_type)
 
-    for (N, M, n) in itertools.product(*([range(D)]*3)):
-        m = N+M-n
-        k = np.arange(n+1)
+    for (N, M, n) in itertools.product(*([range(D)] * 3)):
+        m = N + M - n
+        k = np.arange(n + 1)
         if 0 <= m < D:
             # pylint: disable=bad-whitespace
-            prefac[N,n,M,m,:n+1] = (-1.0)**(N-k) \
-                * np.sqrt(binom(n, k)*binom(m, N-k)*binom(N, k)*binom(M, n-k))
+            prefac[N, n, M, m, : n + 1] = (-1.0) ** (N - k) * np.sqrt(
+                binom(n, k) * binom(m, N - k) * binom(N, k) * binom(M, n - k)
+            )
 
     return prefac
 
@@ -118,7 +122,7 @@ def load_bs_factors(D, directory=None):
     load_dim, location = find_dim_files(regex, D, directory=directory, name="beamsplitter")
     filename = "fock_beamsplitter_factors_{}.npz".format(load_dim)
     prefac = sp.sparse.load_npz(os.path.join(location, filename))
-    return np.reshape(prefac.toarray(), [load_dim]*5)
+    return np.reshape(prefac.toarray(), [load_dim] * 5)
 
 
 def save_bs_factors(prefac, directory=None):
@@ -139,13 +143,13 @@ def save_bs_factors(prefac, directory=None):
         directory = DATA_PATH
     else:
         check_dir = os.path.isdir(directory)
-        if not check_dir: # pragma: no cover
+        if not check_dir:  # pragma: no cover
             raise NotADirectoryError("Directory {} does not exist!".format(directory))
 
     D = prefac.shape[0]
-    filename = 'fock_beamsplitter_factors_{}.npz'.format(D)
+    filename = "fock_beamsplitter_factors_{}.npz".format(D)
 
-    prefac_rank2 = np.reshape(prefac, ((D)**4, D), order='C')
+    prefac_rank2 = np.reshape(prefac, ((D) ** 4, D), order="C")
     prefac_sparse = sp.sparse.csc_matrix(prefac_rank2)
 
     sp.sparse.save_npz(os.path.join(directory, filename), prefac_sparse)
@@ -164,7 +168,7 @@ def squeeze_parity(D):
     Args:
         D (numpy.array): generate the prefactors for a Fock truncation of :math:`D`.
     """
-    k = np.int(np.ceil(D/4) * 4)
+    k = np.int(np.ceil(D / 4) * 4)
     v = np.full(k, 1)
     v[1::2] = 0
     v[2::4] = -1
@@ -194,17 +198,21 @@ def generate_squeeze_factors(D):
 
     # we only perform the sum when n+N is divisible by 2
     # in which case we sum 0 <= k <= min(N,n)
-    mask = np.logical_and((n+N)%2 == 0, k <= np.minimum(N, n))
+    mask = np.logical_and((n + N) % 2 == 0, k <= np.minimum(N, n))
 
     # need to use np.power to avoid taking the root of a negative
     # in the numerator (these are discarded by the mask anyway)
     signs = squeeze_parity(D).reshape([D, 1, D])
-    logfac = np.where(mask, 0.5*(lg(n+1) + lg(N+1)) - lg(k+1) - lg((n-k)/2+1) - lg((N-k)/2+1), 0)
+    logfac = np.where(
+        mask,
+        0.5 * (lg(n + 1) + lg(N + 1)) - lg(k + 1) - lg((n - k) / 2 + 1) - lg((N - k) / 2 + 1),
+        0,
+    )
 
     if D <= 600:
-        prefactor = np.exp(logfac, dtype=np.float64)*signs*mask
+        prefactor = np.exp(logfac, dtype=np.float64) * signs * mask
     else:
-        prefactor = np.exp(logfac, dtype=np.float128)*signs*mask
+        prefactor = np.exp(logfac, dtype=np.float128) * signs * mask
 
     return prefactor
 
@@ -231,9 +239,9 @@ def save_squeeze_factors(prefac, directory=None):
             raise NotADirectoryError("Directory {} does not exist!".format(directory))
 
     D = prefac.shape[0]
-    filename = 'fock_squeeze_factors_{}.npz'.format(D)
+    filename = "fock_squeeze_factors_{}.npz".format(D)
 
-    prefac_rank2 = np.reshape(prefac, ((D)**2, D), order='C')
+    prefac_rank2 = np.reshape(prefac, ((D) ** 2, D), order="C")
     prefac_sparse = sp.sparse.csc_matrix(prefac_rank2)
 
     sp.sparse.save_npz(os.path.join(directory, filename), prefac_sparse)
@@ -262,12 +270,13 @@ def load_squeeze_factors(D, directory=None):
     filename = "fock_squeeze_factors_{}.npz".format(load_dim)
     prefac = sp.sparse.load_npz(os.path.join(location, filename))
 
-    return np.reshape(prefac.toarray(), [load_dim]*3)
+    return np.reshape(prefac.toarray(), [load_dim] * 3)
 
 
-#================================+
+# ================================+
 # Phase space shared operations  |
-#================================+
+# ================================+
+
 
 @functools.lru_cache()
 def rotation_matrix(phi):
@@ -278,8 +287,7 @@ def rotation_matrix(phi):
     Returns:
         array: :math:`2\times 2` rotation matrix
     """
-    return np.array([[np.cos(phi), -np.sin(phi)],
-                     [np.sin(phi), np.cos(phi)]])
+    return np.array([[np.cos(phi), -np.sin(phi)], [np.sin(phi), np.cos(phi)]])
 
 
 @functools.lru_cache()
@@ -294,8 +302,9 @@ def sympmat(n):
         array: symplectic matrix
     """
     idm = np.identity(n)
-    omega = np.concatenate((np.concatenate((0*idm, idm), axis=1),
-                            np.concatenate((-idm, 0*idm), axis=1)), axis=0)
+    omega = np.concatenate(
+        (np.concatenate((0 * idm, idm), axis=1), np.concatenate((-idm, 0 * idm), axis=1)), axis=0
+    )
     return omega
 
 
@@ -311,10 +320,10 @@ def changebasis(n):
     Returns:
         array: :math:`2n\times 2n` matrix
     """
-    m = np.zeros((2*n, 2*n))
+    m = np.zeros((2 * n, 2 * n))
     for i in range(n):
-        m[2*i, i] = 1
-        m[2*i+1, i+n] = 1
+        m[2 * i, i] = 1
+        m[2 * i + 1, i + n] = 1
     return m
 
 
@@ -328,9 +337,9 @@ def haar_measure(n):
     Returns:
         array: an nxn random matrix
     """
-    z = (sp.randn(n, n) + 1j*sp.randn(n, n))/np.sqrt(2.0)
+    z = (sp.randn(n, n) + 1j * sp.randn(n, n)) / np.sqrt(2.0)
     q, r = qr(z)
     d = sp.diagonal(r)
-    ph = d/np.abs(d)
+    ph = d / np.abs(d)
     q = np.multiply(q, ph, q)
     return q

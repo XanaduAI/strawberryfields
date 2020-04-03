@@ -152,7 +152,7 @@ class Connection:
         circuit = bb.serialize()
 
         path = "/jobs"
-        response = requests.post(self._url(path), headers=self._headers, json={"circuit": circuit},)
+        response = requests.post(self._url(path), headers=self._headers, json={"circuit": circuit})
         if response.status_code == 201:
             job_id = response.json()["id"]
             if self._verbose:
@@ -217,7 +217,7 @@ class Connection:
         """
         path = "/jobs/{}/result".format(job_id)
         response = requests.get(
-            self._url(path), headers={"Accept": "application/x-numpy", **self._headers},
+            self._url(path), headers={"Accept": "application/x-numpy", **self._headers}
         )
         if response.status_code == 200:
             # Read the numpy binary data in the payload into memory
@@ -238,7 +238,7 @@ class Connection:
         """
         path = "/jobs/{}".format(job_id)
         response = requests.patch(
-            self._url(path), headers=self._headers, json={"status": JobStatus.CANCELLED.value},
+            self._url(path), headers=self._headers, json={"status": JobStatus.CANCELLED.value}
         )
         if response.status_code == 204:
             if self._verbose:

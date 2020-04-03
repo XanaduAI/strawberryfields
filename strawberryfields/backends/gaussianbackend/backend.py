@@ -148,11 +148,14 @@ class GaussianBackend(BaseGaussian):
         """
         if shots != 1:
             if select is not None:
-                raise NotImplementedError("Gaussian backend currently does not support "
-                                          "postselection if shots != 1 for homodyne measurement")
+                raise NotImplementedError(
+                    "Gaussian backend currently does not support "
+                    "postselection if shots != 1 for homodyne measurement"
+                )
 
-            raise NotImplementedError("Gaussian backend currently does not support "
-                                      "shots != 1 for homodyne measurement")
+            raise NotImplementedError(
+                "Gaussian backend currently does not support " "shots != 1 for homodyne measurement"
+            )
 
         # phi is the rotation of the measurement operator, hence the minus
         self.circuit.phase_shift(-phi, mode)
@@ -169,11 +172,15 @@ class GaussianBackend(BaseGaussian):
 
         if shots != 1:
             if select is not None:
-                raise NotImplementedError("Gaussian backend currently does not support "
-                                          "postselection if shots != 1 for heterodyne measurement")
+                raise NotImplementedError(
+                    "Gaussian backend currently does not support "
+                    "postselection if shots != 1 for heterodyne measurement"
+                )
 
-            raise NotImplementedError("Gaussian backend currently does not support "
-                                      "shots != 1 for heterodyne measurement")
+            raise NotImplementedError(
+                "Gaussian backend currently does not support "
+                "shots != 1 for heterodyne measurement"
+            )
 
         if select is None:
             m = identity(2)
@@ -192,9 +199,7 @@ class GaussianBackend(BaseGaussian):
         # make sure number of modes matches shape of r and V
         N = len(modes)
         if len(r) != 2 * N:
-            raise ValueError(
-                "Length of means vector must be twice the number of modes."
-            )
+            raise ValueError("Length of means vector must be twice the number of modes.")
         if V.shape != (2 * N, 2 * N):
             raise ValueError(
                 "Shape of covariance matrix must be [2N, 2N], where N is the number of modes."
@@ -220,10 +225,13 @@ class GaussianBackend(BaseGaussian):
     def measure_fock(self, modes, shots=1, select=None):
         if shots != 1:
             if select is not None:
-                raise NotImplementedError("Gaussian backend currently does not support "
-                                          "postselection")
-            warnings.warn("Cannot simulate non-Gaussian states. "
-                          "Conditional state after Fock measurement has not been updated.")
+                raise NotImplementedError(
+                    "Gaussian backend currently does not support " "postselection"
+                )
+            warnings.warn(
+                "Cannot simulate non-Gaussian states. "
+                "Conditional state after Fock measurement has not been updated."
+            )
 
         mu = self.circuit.mean
         mean = self.circuit.smeanxp()
@@ -245,21 +253,24 @@ class GaussianBackend(BaseGaussian):
             samples = samples.reshape((len(modes),))
         return samples
 
-
     def measure_threshold(self, modes, shots=1, select=None):
         if shots != 1:
             if select is not None:
-                raise NotImplementedError("Gaussian backend currently does not support "
-                                          "postselection")
-            warnings.warn("Cannot simulate non-Gaussian states. "
-                          "Conditional state after Threshold measurement has not been updated.")
+                raise NotImplementedError(
+                    "Gaussian backend currently does not support " "postselection"
+                )
+            warnings.warn(
+                "Cannot simulate non-Gaussian states. "
+                "Conditional state after Threshold measurement has not been updated."
+            )
 
         mu = self.circuit.mean
         cov = self.circuit.scovmatxp()
         # check we are sampling from a gaussian state with zero mean
         if not allclose(mu, zeros_like(mu)):
-            raise NotImplementedError("Threshold measurement is only supported for "
-                                      "Gaussian states with zero mean")
+            raise NotImplementedError(
+                "Threshold measurement is only supported for " "Gaussian states with zero mean"
+            )
         x_idxs = array(modes)
         p_idxs = x_idxs + len(mu)
         modes_idxs = concatenate([x_idxs, p_idxs])
@@ -270,7 +281,6 @@ class GaussianBackend(BaseGaussian):
         if shots == 1:
             samples = samples.reshape((len(modes),))
         return samples
-
 
     def state(self, modes=None, **kwargs):
         """Returns the state of the quantum simulation.
@@ -317,6 +327,4 @@ class GaussianBackend(BaseGaussian):
         else:
             Amat = self.circuit.Amat()
 
-        return GaussianState(
-            (means, covmat), len(modes), qmat, Amat, mode_names=mode_names
-        )
+        return GaussianState((means, covmat), len(modes), qmat, Amat, mode_names=mode_names)

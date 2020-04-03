@@ -28,6 +28,7 @@ class ModeMap:
     """
     Simple internal class for maintaining a map of existing modes.
     """
+
     def __init__(self, num_subsystems):
         self._init = num_subsystems
         #: list[int]: _map[k] is the internal index used by the backend for
@@ -117,7 +118,7 @@ class BaseBackend:
     """Abstract base class for backends."""
 
     #: str: short name of the backend
-    short_name = 'base'
+    short_name = "base"
     #: str, None: Short name of the CircuitSpecs class used to validate Programs for this backend. None if no validation is required.
     circuit_spec = None
 
@@ -449,9 +450,10 @@ class BaseBackend:
         raise NotImplementedError
 
 
-#=============================
+# =============================
 # Fock-basis backends
-#=============================
+# =============================
+
 
 class BaseFock(BaseBackend):
     """Abstract base class for backends capable of Fock state manipulation."""
@@ -519,7 +521,6 @@ class BaseFock(BaseBackend):
         """
         raise NotImplementedError
 
-
     def cubic_phase(self, gamma, mode):
         r"""Apply the cubic phase operation to the specified mode.
 
@@ -584,9 +585,11 @@ class BaseFock(BaseBackend):
         """
         raise NotImplementedError
 
-#==============================
+
+# ==============================
 # Gaussian-formulation backends
-#==============================
+# ==============================
+
 
 class BaseGaussian(BaseBackend):
     """Abstract base class for backends that are only capable of Gaussian state manipulation."""

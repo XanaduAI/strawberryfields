@@ -1,4 +1,4 @@
-# Release 0.13.0-dev (development release)
+# Release 0.13.0.rc0 (release candidate)
 
 <h3>New features since last release</h3>
 
@@ -6,17 +6,26 @@
   [(#101)](https://github.com/XanaduAI/strawberryfields/pull/101)
   [(#148)](https://github.com/XanaduAI/strawberryfields/pull/148)
   [(#294)](https://github.com/XanaduAI/strawberryfields/pull/294)
+  [(#327)](https://github.com/XanaduAI/strawberryfields/pull/327)
+  [(#328)](https://github.com/XanaduAI/strawberryfields/pull/328)
+  [(#329)](https://github.com/XanaduAI/strawberryfields/pull/329)
+  [(#330)](https://github.com/XanaduAI/strawberryfields/pull/330)
+  [(#334)](https://github.com/XanaduAI/strawberryfields/pull/334)
+  [(#336)](https://github.com/XanaduAI/strawberryfields/pull/336)
+  [(#337)](https://github.com/XanaduAI/strawberryfields/pull/337)
+  [(#339)](https://github.com/XanaduAI/strawberryfields/pull/339)
 
   Jobs can now be submitted to the Xanadu cloud platform to be run
   on supported hardware using the new `RemoteEngine`:
 
   ```python
-  from strawberryfields import RemoteEngine
+  import strawberryfields as sf
   from strawberryfields import ops
   from strawberryfields.utils import random_interferometer
 
   # replace AUTHENTICATION_TOKEN with your Xanadu cloud access token
-  eng = RemoteEngine("chip2", token="AUTHENTICATION_TOKEN")
+  con = sf.api.Connection(token="AUTH_TOKEN")
+  eng = sf.RemoteEngine("X8", connection=con)
   prog = sf.Program(8)
 
   U = random_interferometer(4)
@@ -29,13 +38,14 @@
 
       ops.Interferometer(U) | q[:4]
       ops.Interferometer(U) | q[4:]
+      ops.MeasureFock() | q
 
-  result = eng.run(prog)
+  result = eng.run(prog, shots=1000)
   ```
 
   For more details, see the
-  [Xanadu cloud platform](https://strawberryfields.readthedocs.io/en/stable/introduction/remote.html)
-  tutorial.
+  [photonic hardware quickstart](https://strawberryfields.readthedocs.io/en/latest/introduction/photonic_hardware.html)
+  and [tutorial](https://strawberryfields.readthedocs.io/en/latest/tutorials/tutorial_X8.html).
 
 * Significantly speeds up the Fock backend of Strawberry Fields,
   through a variety of changes:
@@ -176,7 +186,7 @@
 This release contains contributions from (in alphabetical order):
 
 Ville Bergholm, Tom Bromley, Jack Ceroni, Theodor Isacsson, Josh Izaac, Nathan Killoran, Shreya P Kumar,
-Nicolás Quesada, Jeremy Swinarton, Antal Száva, Paul Tan, Zeid Zabaneh
+Leonhard Neuhaus, Nicolás Quesada, Jeremy Swinarton, Antal Száva, Paul Tan, Zeid Zabaneh.
 
 
 # Release 0.12.1 (current release)
