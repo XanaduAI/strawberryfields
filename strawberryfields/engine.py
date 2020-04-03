@@ -489,7 +489,7 @@ class RemoteEngine:
     DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_01"}
 
     def __init__(
-        self, target: str, connection: Connection = Connection(), backend_options: dict = None
+        self, target: str, connection: Connection = None, backend_options: dict = None
     ):
         self._target = self.DEFAULT_TARGETS.get(target, target)
 
@@ -500,7 +500,7 @@ class RemoteEngine:
                 )
             )
 
-        self._connection = connection
+        self._connection = connection or Connection()
         self._backend_options = backend_options or {}
 
     @property
