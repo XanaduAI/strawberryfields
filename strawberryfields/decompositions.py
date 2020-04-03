@@ -55,7 +55,7 @@ def takagi(N, tol=1e-13, rounding=13):
     if np.isrealobj(N):
         # If the matrix N is real one can be more clever and use its eigendecomposition
         l, U = np.linalg.eigh(N)
-        vals = np.abs(l)  # This are the Takagi eigenvalues
+        vals = np.abs(l)  # These are the Takagi eigenvalues
         phases = np.sqrt(np.complex128(np.sign(l)))
         Uc = U @ np.diag(phases)  # One needs to readjust the phases
         list_vals = [(vals[i], i) for i in range(len(vals))]
