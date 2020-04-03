@@ -357,6 +357,10 @@ class BaseState(abc.ABC):
         >>> state = eng.run(prog).state
         >>> state.number_expectation([0, 2])
         0.07566984755267293
+        
+        This slight difference in value compared to the result from the Fock backend above
+        is due to the finite Fock basis truncation when using the Fock backend; this can be
+        avoided by increasing the value of ``cutoff_dim``.
 
         .. warning:: This method only supports at most two modes in the Gaussian backend.
         """
