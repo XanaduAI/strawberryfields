@@ -49,6 +49,7 @@ https://github.com/pallets/flask/blob/master/src/flask/logging.py
 import logging
 import sys
 
+
 def has_level_handler(logger):
     """Check if there is a handler in the logging chain that will handle the
     given logger's :meth:`effective level <~logging.Logger.getEffectiveLevel>`.

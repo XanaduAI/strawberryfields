@@ -26,8 +26,8 @@ import numpy as np
 
 from strawberryfields.api import Connection, Job, Result
 from strawberryfields.api.job import FailedJobError
-from strawberryfields.program import Program
 from strawberryfields.logger import create_logger
+from strawberryfields.program import Program
 
 from .backends import load_backend
 from .backends.base import BaseBackend, NotApplicableError

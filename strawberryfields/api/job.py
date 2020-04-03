@@ -16,9 +16,10 @@ This module provides classes for interfacing with program execution jobs on a re
 """
 import enum
 
+from strawberryfields.logger import create_logger
+
 from .result import Result
 
-from strawberryfields.logger import create_logger
 
 class InvalidJobOperationError(Exception):
     """Raised when an invalid operation is performed on a job."""

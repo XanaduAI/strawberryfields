@@ -14,8 +14,8 @@
 """
 This module provides an interface to a remote program execution backend.
 """
-from datetime import datetime
 import io
+from datetime import datetime
 from typing import List
 
 import numpy as np
@@ -23,8 +23,8 @@ import requests
 
 from strawberryfields.configuration import configuration
 from strawberryfields.io import to_blackbird
-from strawberryfields.program import Program
 from strawberryfields.logger import create_logger
+from strawberryfields.program import Program
 
 from .job import Job, JobStatus
 from .result import Result
