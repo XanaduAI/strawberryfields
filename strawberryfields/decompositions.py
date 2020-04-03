@@ -47,9 +47,14 @@ def takagi(N, tol=1e-13, rounding=13):
     if np.linalg.norm(N - np.transpose(N)) >= tol:
         raise ValueError("The input matrix is not symmetric")
 
-    if np.isrealobj(np.real_if_close(N)):
+    N = np.real_if_close(N)
+
+    if np.allclose(N, np.zeros(N.shape)):
+        return np.zeros(n), np.eye(n)
+
+    if np.isrealobj(N):
         # If the matrix N is real one can be more clever and use its eigendecomposition
-        l, U = np.linalg.eigh(np.real_if_close(N))
+        l, U = np.linalg.eigh(N)
         vals = np.abs(l)  # This are the Takagi eigenvalues
         phases = np.sqrt(np.complex128(np.sign(l)))
         Uc = U @ np.diag(phases)  # One needs to readjust the phases
