@@ -148,6 +148,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    :hidden:
 
    introduction/introduction
+   introduction/photonic_hardware
    introduction/graphs
    introduction/ml
    introduction/chemistry
@@ -156,7 +157,6 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    introduction/ops
    introduction/states
    introduction/tutorials
-   introduction/configuration
    zreferences
 
 .. toctree::

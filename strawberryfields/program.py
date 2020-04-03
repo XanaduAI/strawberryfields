@@ -500,7 +500,7 @@ class Program:
         # create the compiled Program
         compiled = self._linked_copy()
         compiled.circuit = seq
-        compiled._target = target
+        compiled._target = db.short_name
 
         # get run options of compiled program
         # for the moment, shots is the only supported run option.

@@ -167,8 +167,7 @@ def sample(
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning, message="Cannot simulate non-")
-        s = eng.run(p, run_options={"shots": n_samples}).samples
-
+        s = eng.run(p, shots=n_samples).samples
     return s.tolist()
 
 
@@ -365,7 +364,7 @@ def vibronic(
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning, message="Cannot simulate non-")
 
-        s = eng.run(gbs, run_options={"shots": n_samples}).samples
+        s = eng.run(gbs, shots=n_samples).samples
 
     s = np.array(s).tolist()  # convert all generated samples to list
 

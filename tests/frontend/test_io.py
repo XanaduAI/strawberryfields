@@ -595,7 +595,7 @@ class TestEngineIntegration:
 
         with monkeypatch.context() as m:
             m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
-            results = eng.run(prog, run_options={"shots": 1000})
+            results = eng.run(prog, shots=1000)
 
         assert results.run_options == {"shots": 1000}
 

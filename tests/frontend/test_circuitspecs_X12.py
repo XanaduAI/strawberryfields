@@ -28,7 +28,8 @@ from strawberryfields.parameters import par_evaluate
 from strawberryfields.program_utils import CircuitError, list_to_DAG
 from strawberryfields.io import to_program
 from strawberryfields.utils import random_interferometer
-from strawberryfields.circuitspecs.chip2 import Chip2Specs, CircuitSpecs
+from strawberryfields.circuitspecs.X12 import X12_01, X12_02, CircuitSpecs
+from strawberryfields.circuitspecs.gaussian_unitary import GaussianUnitary
 
 
 pytestmark = pytest.mark.frontend
@@ -158,25 +159,27 @@ class DummyCircuit(CircuitSpecs):
     """Dummy circuit used to instantiate
     the abstract base class"""
 
-    modes = 8
+    modes = 12
     remote = False
     local = True
     interactive = True
     primitives = {"S2gate", "MeasureFock", "Rgate", "BSgate", "MZgate"}
     decompositions = {"Interferometer": {}}
 
-
-class TestChip2Compilation:
+@pytest.mark.parametrize("chip", [X12_01, X12_02])
+class TestX12Compilation:
     """Tests for compilation using the Chip2 circuit specification"""
 
-    def test_exact_template(self, tol):
+    def test_exact_template(self, chip, tol):
         """Test compilation works for the exact circuit"""
-        bb = blackbird.loads(Chip2Specs.circuit)
+        bb = blackbird.loads(chip.circuit)
         bb = bb(
             squeezing_amplitude_0=SQ_AMPLITUDE,
             squeezing_amplitude_1=SQ_AMPLITUDE,
             squeezing_amplitude_2=SQ_AMPLITUDE,
             squeezing_amplitude_3=SQ_AMPLITUDE,
+            squeezing_amplitude_4=SQ_AMPLITUDE,
+            squeezing_amplitude_5=SQ_AMPLITUDE,
             phase_0=0,
             phase_1=1,
             phase_2=2,
@@ -189,6 +192,24 @@ class TestChip2Compilation:
             phase_9=9,
             phase_10=10,
             phase_11=11,
+            phase_12=12,
+            phase_13=13,
+            phase_14=14,
+            phase_15=15,
+            phase_16=16,
+            phase_17=17,
+            phase_18=18,
+            phase_19=19,
+            phase_20=20,
+            phase_21=21,
+            phase_22=22,
+            phase_23=23,
+            phase_24=24,
+            phase_25=25,
+            phase_26=26,
+            phase_27=27,
+            phase_28=28,
+            phase_29=29,
             final_phase_0=1.24,
             final_phase_1=-0.54,
             final_phase_2=4.12,
@@ -197,138 +218,154 @@ class TestChip2Compilation:
             final_phase_5=-0.54,
             final_phase_6=4.12,
             final_phase_7=0,
+            final_phase_8=1.24,
+            final_phase_9=-0.54,
+            final_phase_10=4.12,
+            final_phase_11=0,
+
         )
 
         expected = to_program(bb)
-        res = expected.compile("chip2")
+        res = expected.compile(chip.short_name)
 
         assert program_equivalence(res, expected, atol=tol)
 
-    def test_not_all_modes_measured(self):
+    def test_not_all_modes_measured(self, chip):
         """Test exceptions raised if not all modes are measured"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(12)
+        U = random_interferometer(6)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[6])
+            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[8])
+            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[9])
+            ops.S2gate(SQ_AMPLITUDE) | (q[4], q[10])
+            ops.S2gate(SQ_AMPLITUDE) | (q[5], q[11])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3], q[4], q[5])
+            ops.Interferometer(U) | (q[6], q[7], q[8], q[9], q[10], q[11])
             ops.MeasureFock() | (q[0], q[1])
 
         with pytest.raises(CircuitError, match="All modes must be measured"):
-            res = prog.compile("chip2")
+            res = prog.compile(chip.short_name)
 
-    def test_no_s2gates(self, tol):
+    def test_no_s2gates(self, chip, tol):
         """Test identity S2gates are inserted when no S2gates
         are provided."""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(12)
+        U = random_interferometer(6)
 
         with prog.context as q:
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3], q[4], q[5])
+            ops.Interferometer(U) | (q[6], q[7], q[8], q[9], q[10], q[11])
             ops.MeasureFock() | q
 
-        expected = sf.Program(8)
+        expected = sf.Program(12)
 
         with expected.context as q:
-            ops.S2gate(0) | (q[0], q[4])
-            ops.S2gate(0) | (q[1], q[5])
-            ops.S2gate(0) | (q[2], q[6])
-            ops.S2gate(0) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.S2gate(0) | (q[0], q[6])
+            ops.S2gate(0) | (q[1], q[7])
+            ops.S2gate(0) | (q[2], q[8])
+            ops.S2gate(0) | (q[3], q[9])
+            ops.S2gate(0) | (q[4], q[10])
+            ops.S2gate(0) | (q[5], q[11])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3], q[4], q[5])
+            ops.Interferometer(U) | (q[6], q[7], q[8], q[9], q[10], q[11])
             ops.MeasureFock() | q
 
-        res = prog.compile("chip2")
-        expected = expected.compile("chip2")
+        res = prog.compile(chip.short_name)
+        expected = expected.compile(chip.short_name)
         assert program_equivalence(res, expected, atol=tol)
 
-    def test_missing_s2gates(self, tol):
+    def test_missing_s2gates(self, chip, tol):
         """Test identity S2gates are inserted when some (but not all)
         S2gates are included."""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(12)
+        U = random_interferometer(6)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[9])
+            ops.S2gate(SQ_AMPLITUDE) | (q[5], q[11])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3], q[4], q[5])
+            ops.Interferometer(U) | (q[6], q[7], q[8], q[9], q[10], q[11])
             ops.MeasureFock() | q
 
-        expected = sf.Program(8)
+        expected = sf.Program(12)
 
         with expected.context as q:
-            ops.S2gate(0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[5])
-            ops.S2gate(0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.S2gate(0) | (q[0], q[6])
+            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[7])
+            ops.S2gate(0) | (q[2], q[8])
+            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[9])
+            ops.S2gate(0) | (q[4], q[10])
+            ops.S2gate(SQ_AMPLITUDE) | (q[5], q[11])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3], q[4], q[5])
+            ops.Interferometer(U) | (q[6], q[7], q[8], q[9], q[10], q[11])
             ops.MeasureFock() | q
 
-        res = prog.compile("chip2")
-        expected = expected.compile("chip2")
+        res = prog.compile(chip.short_name)
+        expected = expected.compile(chip.short_name)
         assert program_equivalence(res, expected, atol=tol)
 
-    def test_incorrect_s2gate_modes(self):
+    def test_incorrect_s2gate_modes(self, chip):
         """Test exceptions raised if S2gates do not appear on correct modes"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(12)
+        U = random_interferometer(6)
 
         with prog.context as q:
             ops.S2gate(SQ_AMPLITUDE) | (q[0], q[1])
             ops.S2gate(SQ_AMPLITUDE) | (q[2], q[3])
-            ops.S2gate(SQ_AMPLITUDE) | (q[4], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[7], q[6])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[4], q[8])
+            ops.S2gate(SQ_AMPLITUDE) | (q[6], q[9])
+            ops.S2gate(SQ_AMPLITUDE) | (q[8], q[10])
+            ops.S2gate(SQ_AMPLITUDE) | (q[10], q[11])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3], q[4], q[5])
+            ops.Interferometer(U) | (q[6], q[7], q[8], q[9], q[10], q[11])
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="S2gates do not appear on the correct modes"):
-            res = prog.compile("chip2")
+            res = prog.compile(chip.short_name)
 
-    def test_incorrect_s2gate_params(self):
+    def test_incorrect_s2gate_params(self, chip):
         """Test exceptions raised if S2gates have illegal parameters"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(12)
+        U = random_interferometer(6)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.S2gate(0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE+0.1) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[6])
+            ops.S2gate(0) | (q[1], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[8])
+            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[9])
+            ops.S2gate(SQ_AMPLITUDE) | (q[4], q[10])
+            ops.S2gate(SQ_AMPLITUDE+0.1) | (q[5], q[11])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3], q[4], q[5])
+            ops.Interferometer(U) | (q[6], q[7], q[8], q[9], q[10], q[11])
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match=r"Incorrect squeezing value\(s\) \(r, phi\)={\(1.1, 0.0\)}"):
-            res = prog.compile("chip2")
+            res = prog.compile(chip.short_name)
 
-    def test_s2gate_repeated_modes(self):
+    def test_s2gate_repeated_modes(self, chip):
         """Test exceptions raised if S2gates are repeated"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(12)
+        U = random_interferometer(6)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[6])
+            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[6])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3], q[4], q[5])
+            ops.Interferometer(U) | (q[6], q[7], q[8], q[9], q[10], q[11])
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="incompatible topology."):
-            res = prog.compile("chip2")
+            res = prog.compile(chip.short_name)
 
-    def test_gates_compile(self):
+    def test_gates_compile(self, chip):
         """Test that combinations of MZgates, Rgates, and BSgates
         correctly compile."""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(12)
+        U = random_interferometer(6)
 
         def unitary(q):
             ops.MZgate(0.5, 0.1) | (q[0], q[1])
@@ -336,70 +373,101 @@ class TestChip2Compilation:
             ops.Rgate(0.4) | q[0]
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
-
-            unitary(q[:4])
-            unitary(q[4:])
+            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[6])
+            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[8])
+            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[9])
+            ops.S2gate(SQ_AMPLITUDE) | (q[4], q[10])
+            ops.S2gate(SQ_AMPLITUDE) | (q[5], q[11])
+            unitary(q[:6])
+            unitary(q[6:])
             ops.MeasureFock() | q
 
-        res = prog.compile("chip2")
+        res = prog.compile(chip.short_name)
 
-    def test_no_unitary(self, tol):
+    def test_no_unitary(self, chip, tol):
         """Test compilation works with no unitary provided"""
-        prog = sf.Program(8)
+        prog = sf.Program(12)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[6])
+            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[8])
+            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[9])
+            ops.S2gate(SQ_AMPLITUDE) | (q[4], q[10])
+            ops.S2gate(SQ_AMPLITUDE) | (q[5], q[11])
             ops.MeasureFock() | q
 
-        res = prog.compile("chip2")
-        expected = sf.Program(8)
+        res = prog.compile(chip.short_name)
+        expected = sf.Program(12)
 
         with expected.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[6])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[7])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[8])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[9])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[4], q[10])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[5], q[11])
 
-            # corresponds to an identity on modes [0, 1, 2, 3]
+            # corresponds to an identity on modes [0, 1, 2, 3, 4, 5]
             # This can be easily seen from below by noting that:
             # MZ(pi, pi) = R(0) = I
             # MZ(pi, 0) @ MZ(pi, 0) = I
             # [R(pi) \otimes I] @ MZ(pi, 0) = I
             ops.MZgate(np.pi, 0) | (q[0], q[1])
             ops.MZgate(np.pi, 0) | (q[2], q[3])
+            ops.MZgate(np.pi, 0) | (q[4], q[5])
             ops.MZgate(np.pi, np.pi) | (q[1], q[2])
-            ops.MZgate(np.pi, np.pi) | (q[0], q[1])
+            ops.MZgate(np.pi, np.pi) | (q[3], q[4])
+
+            ops.MZgate(np.pi, 0) | (q[0], q[1])
             ops.MZgate(np.pi, 0) | (q[2], q[3])
+            ops.MZgate(np.pi, 0) | (q[4], q[5])
             ops.MZgate(np.pi, np.pi) | (q[1], q[2])
+            ops.MZgate(np.pi, np.pi) | (q[3], q[4])
+
+            ops.MZgate(np.pi, 0) | (q[0], q[1])
+            ops.MZgate(np.pi, np.pi) | (q[2], q[3])
+            ops.MZgate(np.pi, np.pi) | (q[4], q[5])
+            ops.MZgate(np.pi, np.pi) | (q[1], q[2])
+            ops.MZgate(np.pi, np.pi) | (q[3], q[4])
+
             ops.Rgate(np.pi) | (q[0])
             ops.Rgate(0) | (q[1])
             ops.Rgate(0) | (q[2])
             ops.Rgate(0) | (q[3])
-
-            # corresponds to an identity on modes [4, 5, 6, 7]
-            ops.MZgate(np.pi, 0) | (q[4], q[5])
-            ops.MZgate(np.pi, 0) | (q[6], q[7])
-            ops.MZgate(np.pi, np.pi) | (q[5], q[6])
-            ops.MZgate(np.pi, np.pi) | (q[4], q[5])
-            ops.MZgate(np.pi, 0) | (q[6], q[7])
-            ops.MZgate(np.pi, np.pi) | (q[5], q[6])
-            ops.Rgate(np.pi) | (q[4])
+            ops.Rgate(0) | (q[4])
             ops.Rgate(0) | (q[5])
-            ops.Rgate(0) | (q[6])
+
+            # corresponds to an identity on modes [6, 7, 8, 9, 10, 11]
+            ops.MZgate(np.pi, 0) | (q[6], q[7])
+            ops.MZgate(np.pi, 0) | (q[8], q[9])
+            ops.MZgate(np.pi, 0) | (q[10], q[11])
+            ops.MZgate(np.pi, np.pi) | (q[7], q[8])
+            ops.MZgate(np.pi, np.pi) | (q[9], q[10])
+
+            ops.MZgate(np.pi, 0) | (q[6], q[7])
+            ops.MZgate(np.pi, 0) | (q[8], q[9])
+            ops.MZgate(np.pi, 0) | (q[10], q[11])
+            ops.MZgate(np.pi, np.pi) | (q[7], q[8])
+            ops.MZgate(np.pi, np.pi) | (q[9], q[10])
+
+            ops.MZgate(np.pi, 0) | (q[6], q[7])
+            ops.MZgate(np.pi, np.pi) | (q[8], q[9])
+            ops.MZgate(np.pi, np.pi) | (q[10], q[11])
+            ops.MZgate(np.pi, np.pi) | (q[7], q[8])
+            ops.MZgate(np.pi, np.pi) | (q[9], q[10])
+
+            ops.Rgate(np.pi) | (q[6])
             ops.Rgate(0) | (q[7])
+            ops.Rgate(0) | (q[8])
+            ops.Rgate(0) | (q[9])
+            ops.Rgate(0) | (q[10])
+            ops.Rgate(0) | (q[11])
 
             ops.MeasureFock() | q
 
-        assert program_equivalence(res, expected, atol=tol)
-
-        # double check that the applied symplectic is correct
+        # Check that the applied symplectic is correct
 
         # remove the Fock measurements
         res.circuit = res.circuit[:-1]
@@ -411,157 +479,77 @@ class TestChip2Compilation:
         # to just the initial two mode squeeze gates
         S = TMS(SQ_AMPLITUDE, 0)
 
-        expected = np.zeros([2*8, 2*8])
-        idx = np.arange(2*8).reshape(4, 4).T
-        for i in idx:
-            expected[i.reshape(-1, 1), i.reshape(1, -1)] = S
+        expected = np.zeros([2*12, 2*12])
+        l = 12 // 2
+        ch = np.cosh(SQ_AMPLITUDE) * np.identity(l)
+        sh = np.sinh(SQ_AMPLITUDE) * np.identity(l)
+        zh = np.zeros([l, l])
+        expected = np.block([[ch, sh, zh, zh], [sh, ch, zh, zh], [zh, zh, ch, -sh], [zh, zh, -sh, ch]])
 
         assert np.allclose(O, expected, atol=tol)
 
-    def test_mz_gate_standard(self, tol):
-        """Test that the Mach-Zehnder gate compiles to give the correct unitary
-        for some specific standard parameters"""
-        prog = sf.Program(8)
-
-        with prog.context as q:
-            ops.MZgate(np.pi/2, np.pi) | (q[0], q[1])
-            ops.MZgate(np.pi, 0) | (q[2], q[3])
-            ops.MZgate(np.pi/2, np.pi) | (q[4], q[5])
-            ops.MZgate(np.pi, 0) | (q[6], q[7])
-            ops.MeasureFock() | q
-
-        # compile the program using the chip2 spec
-        res = prog.compile("chip2")
-
-        # remove the Fock measurements
-        res.circuit = res.circuit[:-1]
-
-        # extract the Gaussian symplectic matrix
-        O = res.compile("gaussian_unitary").circuit[0].op.p[0]
-
-        # By construction, we know that the symplectic matrix is
-        # passive, and so represents a unitary matrix
-        U = O[:8, :8] + 1j*O[8:, :8]
-
-        # the constructed program should implement the following
-        # unitary matrix
-        expected = np.array(
-            [[0.5-0.5j, -0.5+0.5j, 0, 0],
-             [0.5-0.5j, 0.5-0.5j, 0, 0],
-             [0,  0, -1, -0],
-             [0,  0, -0, 1]]
-        )
-        expected = block_diag(expected, expected)
-
-        assert np.allclose(U, expected, atol=tol)
-
-    @pytest.mark.parametrize("theta1", np.linspace(0, 2*np.pi-0.2, 7))
-    @pytest.mark.parametrize("phi1", np.linspace(0, 2*np.pi-0.1, 7))
-    def test_mz_gate_non_standard(self, theta1, phi1, tol):
-        """Test that the Mach-Zehnder gate compiles to give the correct unitary
-        for a variety of non-standard angles"""
-        prog = sf.Program(8)
-
-        theta2 = np.pi/13
-        phi2 = 3*np.pi/7
-
-        with prog.context as q:
-            ops.MZgate(theta1, phi1) | (q[0], q[1])
-            ops.MZgate(theta2, phi2) | (q[2], q[3])
-            ops.MZgate(theta1, phi1) | (q[4], q[5])
-            ops.MZgate(theta2, phi2) | (q[6], q[7])
-            ops.MeasureFock() | q
-
-        # compile the program using the chip2 spec
-        res = prog.compile("chip2")
-
-        # remove the Fock measurements
-        res.circuit = res.circuit[:-1]
-
-        # extract the Gaussian symplectic matrix
-        O = res.compile("gaussian_unitary").circuit[0].op.p[0]
-
-        # By construction, we know that the symplectic matrix is
-        # passive, and so represents a unitary matrix
-        U = O[:8, :8] + 1j*O[8:, :8]
-
-        # the constructed program should implement the following
-        # unitary matrix
-        expected = np.array([
-            [(np.exp(1j * phi1) * (-1 + np.exp(1j * theta1))) / 2.0, 0.5j * (1 + np.exp(1j * theta1)), 0, 0],
-            [0.5j * np.exp(1j * phi1) * (1 + np.exp(1j * theta1)), (1 - np.exp(1j * theta1)) / 2.0, 0, 0],
-            [0, 0, (np.exp(1j * phi2) * (-1 + np.exp(1j * theta2))) / 2.0, 0.5j * (1 + np.exp(1j * theta2))],
-            [0, 0, 0.5j * np.exp(1j * phi2) * (1 + np.exp(1j * theta2)), (1 - np.exp(1j * theta2)) / 2.0],
-        ])
-        expected = block_diag(expected, expected)
-
-        assert np.allclose(U, expected, atol=tol)
-
-
-    def test_interferometers(self, tol):
+    def test_interferometers(self, chip, tol):
         """Test that the compilation correctly decomposes the interferometer using
         the rectangular_symmetric mesh"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(12)
+        U = random_interferometer(6)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[6])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[7])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[8])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[9])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[4], q[10])
+            ops.S2gate(SQ_AMPLITUDE, 0) | (q[5], q[11])
+            ops.Interferometer(U) | (q[0], q[1], q[2], q[3], q[4], q[5])
+            ops.Interferometer(U) | (q[6], q[7], q[8], q[9], q[10], q[11])
             ops.MeasureFock() | q
 
-        res = prog.compile("chip2")
+        res = prog.compile(chip.short_name)
 
-        expected = sf.Program(8)
+        expected = sf.Program(12)
 
         with expected.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
-            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[4], q[5], q[6], q[7])
+            for i, j in np.arange(12).reshape(2, -1).T:
+                ops.S2gate(SQ_AMPLITUDE, 0) | (q[i], q[j])
+
+            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[0], q[1], q[2], q[3], q[4], q[5])
+            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[6], q[7], q[8], q[9], q[10], q[11])
             ops.MeasureFock() | q
 
         expected = expected.compile(DummyCircuit())
 
         assert program_equivalence(res, expected, atol=tol)
 
-    def test_unitaries_do_not_match(self):
+    def test_unitaries_do_not_match(self, chip):
         """Test exception raised if the unitary applied to modes [0, 1, 2, 3] is
         different to the unitary applied to modes [4, 5, 6, 7]"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(12)
+        U = random_interferometer(6)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i, j in np.arange(12).reshape(2, -1).T:
+                ops.S2gate(SQ_AMPLITUDE, 0) | (q[i], q[j])
+
+            ops.Interferometer(U) | q[:6]
+            ops.Interferometer(U) | q[6:]
             ops.BSgate() | (q[2], q[3])
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="must be identical to interferometer"):
-            res = prog.compile("chip2")
+            res = prog.compile(chip.short_name)
 
-    def test_unitary_too_large(self):
+    def test_unitary_too_large(self, chip):
         """Test exception raised if the unitary is applied to more
         than just modes [0, 1, 2, 3] and [4, 5, 6, 7]."""
-        prog = sf.Program(8)
-        U = random_interferometer(8)
+        prog = sf.Program(12)
+        U = random_interferometer(12)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
+            for i, j in np.arange(12).reshape(2, -1).T:
+                ops.S2gate(SQ_AMPLITUDE, 0) | (q[i], q[j])
             ops.Interferometer(U) | q
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="must be applied separately"):
-            res = prog.compile("chip2")
+            res = prog.compile(chip.short_name)

@@ -304,7 +304,7 @@ class MockProgram:
 
     def __init__(self):
 
-        self.target = "chip2"
+        self.target = "X8_01"
         self.result = None
 
 class MockRemoteEngine:
@@ -332,9 +332,9 @@ class MockWriteScriptResults:
         self.output = output
 
 TEST_SCRIPT = """\
-name template_1x2_chip0     # Name of the program
+name template_1x2_X8_01     # Name of the program
 version 1.0                 # Blackbird version number
-target chip2 (shots = 50)   # This program will run on chip2 for 50 shots
+target X8_01 (shots = 50)   # This program will run on X8_01 for 50 shots
 
 # Define the interferometer phase values
 float phi0 = 0.574

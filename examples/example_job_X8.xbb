@@ -1,0 +1,32 @@
+name example_job_X8
+version 1.0
+target X8_01 (shots = 20)
+
+complex array U[4, 4] =
+    -0.13879438-0.47517904j, -0.29303954-0.47264099j, -0.43951987+0.12977568j, -0.03496718-0.48418713j
+    0.06065372-0.11292765j, 0.54733962+0.1215551j, -0.50721513+0.56195975j, -0.15923161+0.26606674j
+    0.42212573-0.53182417j, -0.2642572+0.50625182j, 0.19448705+0.28321781j, 0.30281396-0.05582391j
+    0.43097587-0.30288974j, 0.07419772-0.21155126j, 0.28335618-0.13633175j, -0.75113453+0.09580304j
+
+# Initial states are two-mode squeezed states
+S2gate(1.0, 0.0) | [0, 4]
+S2gate(1.0, 0.0) | [1, 5]
+S2gate(1.0, 0.0) | [3, 7]
+
+# Apply the unitary matrix above to
+# the first pair of modes, as well
+# as a beamsplitter
+Interferometer(U) | [0, 1, 2, 3]
+BSgate(0.543, 0.123) | [2, 0]
+Rgate(0.453) | 1
+MZgate(0.65, -0.54) | [2, 3]
+
+# Duplicate the above unitary for
+# the second pair of modes
+Interferometer(U) | [4, 5, 6, 7]
+BSgate(0.543, 0.123) | [6, 4]
+Rgate(0.453) | 5
+MZgate(0.65, -0.54) | [6, 7]
+
+# Perform a PNR measurement in the Fock basis
+MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7]

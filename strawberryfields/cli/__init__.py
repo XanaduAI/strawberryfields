@@ -34,7 +34,7 @@ def main():
     The following is a simple example on getting the help message of the cloud platform command
     line interface. It details each of the options available.
 
-    .. code-block:: bash
+    .. code-block:: console
 
         $ sf
         usage: sf [-h] [--ping] {configure,run} ...
@@ -124,7 +124,7 @@ def configure(args):
     configurability.
 
     See more details regarding Strawberry Fields configuration and available
-    configuration options on the :doc:`/introduction/configuration` page.
+    configuration options on the :doc:`/code/sf_configuration` page.
 
     Args:
         args (ArgumentParser): arguments that were specified on the command
@@ -152,7 +152,7 @@ def configuration_wizard():
     configure every option for the API connection.
 
     Default configuration options are provided as defaults to the user.
-    Configuration options as detailed in :doc:`/introduction/configuration`.
+    Configuration options are detailed in :doc:`/code/sf_configuration`.
 
     Returns:
         dict[str, Union[str, bool, int]]: the configuration options
