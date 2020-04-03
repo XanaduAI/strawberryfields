@@ -210,3 +210,4 @@ BSD 3-Clause
 ------------
 
 strawberryfields/strawberryfields/logger.py
+strawberryfields/tests/frontend/test_logger.py
