@@ -85,10 +85,11 @@ class Connection:
         use_ssl: bool = configuration["api"]["use_ssl"],
         verbose: bool = True,
     ):
-        self._token = token
-        self._host = host
-        self._port = port
-        self._use_ssl = use_ssl
+        self._configuration = {"api":{}}
+        self._configuration["api"]["authentication_token"] = token
+        self._configuration["api"]["host"] = host
+        self._configuration["api"]["port"] = port
+        self._configuration["api"]["use_ssl"] = use_ssl
         self._verbose = verbose
 
         self._base_url = "http{}://{}:{}".format("s" if self.use_ssl else "", self.host, self.port)
@@ -103,7 +104,7 @@ class Connection:
         Returns:
             str
         """
-        return self._token
+        return self._configuration["api"]["authentication_token"]
 
     @property
     def host(self) -> str:
@@ -112,7 +113,7 @@ class Connection:
         Returns:
             str
         """
-        return self._host
+        return self._configuration["api"]["host"]
 
     @property
     def port(self) -> int:
@@ -121,7 +122,7 @@ class Connection:
         Returns:
             int
         """
-        return self._port
+        return self._configuration["api"]["port"]
 
     @property
     def use_ssl(self) -> bool:
@@ -130,7 +131,7 @@ class Connection:
         Returns:
             bool
         """
-        return self._use_ssl
+        return self._configuration["api"]["use_ssl"]
 
     def create_job(self, target: str, program: Program, run_options: dict = None) -> Job:
         """Creates a job with the given circuit.
@@ -156,7 +157,7 @@ class Connection:
         if response.status_code == 201:
             job_id = response.json()["id"]
             if self._verbose:
-                self.log.info("Job {} was successfully submitted.".format(job_id))
+                self.log.info("Job %s was successfully submitted.", job_id)
             return Job(id_=job_id, status=JobStatus(response.json()["status"]), connection=self,)
         raise RequestFailedError(
             "Failed to create job: {}".format(self._format_error_message(response))
