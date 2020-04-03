@@ -94,6 +94,13 @@ class TestTakagi:
         sq, U = dec.takagi(a)
         assert np.allclose(U @ U.conj().T, np.eye(len(a)))
 
+    def test_zeros(self):
+        """Verify that the Takagi decomposition returns a zero vector and identity matrix when
+        input a matrix of zeros"""
+        dim = 4
+        a = np.zeros((dim, dim))
+        assert dec.takagi(a) == (np.zeros(dim), np.eye(dim))
+
 
 class TestGraphEmbed:
     """graph_embed tests"""
