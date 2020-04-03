@@ -85,7 +85,7 @@ class Connection:
         use_ssl: bool = configuration["api"]["use_ssl"],
         verbose: bool = True,
     ):
-        self._configuration = {"api":{}}
+        self._configuration = {"api": {}}
         self._configuration["api"]["authentication_token"] = token
         self._configuration["api"]["host"] = host
         self._configuration["api"]["port"] = port
