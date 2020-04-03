@@ -47,6 +47,21 @@ def takagi(N, tol=1e-13, rounding=13):
     if np.linalg.norm(N - np.transpose(N)) >= tol:
         raise ValueError("The input matrix is not symmetric")
 
+    if np.isrealobj(np.real_if_close(N)):
+        # If the matrix N is real one can be more clever and use it eigendecomposition
+        l, U = np.linalg.eigh(A)
+        vals = np.abs(l)  # This are the Takagi eigenvalues
+        phases = np.sqrt(np.complex128(np.sign(l)))
+        Uc = U @ np.diag(phases)  # One needs to readjust the phases
+        list_vals = [(vals[i], i) for i in range(len(vals))]
+        list_vals.sort(reverse=True)
+        sorted_l, permutation = zip(*list_vals)
+        permutation = np.array(permutation)
+        Uc = Uc[:, permutation]
+        # And also rearrange the unitary and values so that they are decreasingly ordered
+        return np.array(sorted_l), Uc
+
+
     v, l, ws = np.linalg.svd(N)
     w = np.transpose(np.conjugate(ws))
     rl = np.round(l, rounding)
