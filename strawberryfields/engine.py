@@ -19,13 +19,13 @@ One can think of each BaseEngine instance as a separate quantum computation.
 """
 import abc
 import collections.abc
-import logging
 import time
 from typing import Optional
 
 import numpy as np
 
 from strawberryfields.api import Connection, Job, Result
+from strawberryfields.api.job import FailedJobError
 from strawberryfields.program import Program
 from strawberryfields.logger import create_logger
 
@@ -35,8 +35,6 @@ from .backends.base import BaseBackend, NotApplicableError
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = ["BaseEngine", "LocalEngine"]
 
-
-log = create_logger(__name__)
 
 
 class BaseEngine(abc.ABC):
@@ -59,6 +57,8 @@ class BaseEngine(abc.ABC):
         self.run_progs = []
         #: List[List[Number]]: latest measurement results, shape == (modes, shots)
         self.samples = None
+
+        self.log = create_logger(__name__)
 
         if isinstance(backend, str):
             self.backend_name = backend
@@ -548,16 +548,16 @@ class RemoteEngine:
                 if job.status == "complete":
                     return job.result
                 if job.status == "failed":
-                    log.warning(
-                        "The remote job {} failed due to an internal server error; "
-                        "please try again.".format(job.id)
-                    )
-                    return None
+                    message = "The remote job {} failed due to an internal
+                    server error; please try again.".format(job.id)
+                    self.log.error(message)
+
+                    raise FailedJobError(message)
 
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             self._connection.cancel_job(job.id)
-            return None
+            raise KeyboardInterrupt("The job has been cancelled.")
 
     def run_async(self, program: Program, *, compile_options=None, **kwargs) -> Job:
         """Runs a non-blocking remote job.

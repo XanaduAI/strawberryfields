@@ -20,7 +20,6 @@ from typing import List
 
 import numpy as np
 import requests
-import logging
 
 from strawberryfields.configuration import configuration
 from strawberryfields.io import to_blackbird
@@ -32,7 +31,6 @@ from .result import Result
 
 # pylint: disable=bad-continuation,protected-access
 
-log = create_logger(__name__, level=logging.INFO)
 
 
 class RequestFailedError(Exception):
@@ -97,6 +95,8 @@ class Connection:
         self._base_url = "http{}://{}:{}".format("s" if self.use_ssl else "", self.host, self.port)
         self._headers = {"Authorization": self.token}
 
+        self.log = create_logger(__name__)
+
     @property
     def token(self) -> str:
         """The API authentication token.
@@ -157,7 +157,7 @@ class Connection:
         if response.status_code == 201:
             job_id = response.json()["id"]
             if self._verbose:
-                log.info("Job {} was successfully submitted.".format(job_id))
+                self.log.info("Job {} was successfully submitted.".format(job_id))
             return Job(
                 id_=job_id,
                 status=JobStatus(response.json()["status"]),
@@ -247,7 +247,7 @@ class Connection:
         )
         if response.status_code == 204:
             if self._verbose:
-                log.info("The job was successfully cancelled.")
+                self.log.info("The job was successfully cancelled.")
             return
         raise RequestFailedError(
             "Failed to cancel job: {}".format(self._format_error_message(response))

@@ -15,15 +15,17 @@
 This module provides classes for interfacing with program execution jobs on a remote backend.
 """
 import enum
-import logging
 
 from .result import Result
 
-log = logging.getLogger(__name__)
-
+from strawberryfields.logger import create_logger
 
 class InvalidJobOperationError(Exception):
     """Raised when an invalid operation is performed on a job."""
+
+
+class FailedJobError(Exception):
+    """Raised when a job had a failure on the server side."""
 
 
 class JobStatus(enum.Enum):
@@ -78,6 +80,8 @@ class Job:
         self._connection = connection
         self._result = None
 
+        self.log = create_logger(__name__)
+
     @property
     def id(self) -> str:
         """The job ID.
@@ -119,7 +123,7 @@ class Job:
         along with the job result if the job is newly completed.
         """
         if self._status.is_final:
-            log.warning("A %s job cannot be refreshed", self._status.value)
+            self.log.warning("A %s job cannot be refreshed", self._status.value)
             return
         self._status = JobStatus(self._connection.get_job_status(self.id))
         if self._status == JobStatus.COMPLETED:
