@@ -36,7 +36,6 @@ from .backends.base import BaseBackend, NotApplicableError
 __all__ = ["BaseEngine", "LocalEngine"]
 
 
-
 class BaseEngine(abc.ABC):
     r"""Abstract base class for quantum program executor engines.
 
@@ -488,9 +487,7 @@ class RemoteEngine:
     VALID_TARGETS = ("X8_01", "X12_01", "X12_02")
     DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_01"}
 
-    def __init__(
-        self, target: str, connection: Connection = None, backend_options: dict = None
-    ):
+    def __init__(self, target: str, connection: Connection = None, backend_options: dict = None):
         self._target = self.DEFAULT_TARGETS.get(target, target)
 
         if self._target not in self.VALID_TARGETS:
@@ -548,8 +545,10 @@ class RemoteEngine:
                 if job.status == "complete":
                     return job.result
                 if job.status == "failed":
-                    message = "The remote job {} failed due to an internal"\
+                    message = (
+                        "The remote job {} failed due to an internal"
                         "server error; please try again.".format(job.id)
+                    )
                     self.log.error(message)
 
                     raise FailedJobError(message)

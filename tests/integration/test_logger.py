@@ -37,9 +37,9 @@ class TestLoggerIntegration:
 
             test_file = tmpdir.join("test_file")
             logging.basicConfig(filename=test_file, level=level)
-            logging.debug('A log entry.')
+            logging.debug("A log entry.")
 
-        assert 'A log entry.' in caplog.text
+        assert "A log entry." in caplog.text
 
     @pytest.mark.parametrize("module", modules_contain_logging)
     def test_custom_configuration_after_sf_logger(self, module, tmpdir, caplog):
@@ -52,9 +52,9 @@ class TestLoggerIntegration:
             sf_logger = create_logger(module.__name__)
             test_file = tmpdir.join("test_file")
             logging.basicConfig(filename=test_file, level=level)
-            logging.debug('A log entry.')
+            logging.debug("A log entry.")
 
-        assert 'A log entry.' in caplog.text
+        assert "A log entry." in caplog.text
 
     @pytest.mark.parametrize("module", modules_contain_logging)
     def test_custom_logger_before_sf_logger_with_higher_level(self, module, tmpdir, caplog):
@@ -72,7 +72,6 @@ class TestLoggerIntegration:
             # than the user defined one the value for
             # WARNING is higher than for DEBUG
             sf_logger = create_logger(module.__name__, level=logging.WARNING)
-            logging.debug('A log entry.')
+            logging.debug("A log entry.")
 
-        assert 'A log entry.' in caplog.text
-
+        assert "A log entry." in caplog.text

@@ -32,7 +32,6 @@ from .result import Result
 # pylint: disable=bad-continuation,protected-access
 
 
-
 class RequestFailedError(Exception):
     """Raised when a request to the remote platform returns an error response."""
 
@@ -158,11 +157,7 @@ class Connection:
             job_id = response.json()["id"]
             if self._verbose:
                 self.log.info("Job {} was successfully submitted.".format(job_id))
-            return Job(
-                id_=job_id,
-                status=JobStatus(response.json()["status"]),
-                connection=self,
-            )
+            return Job(id_=job_id, status=JobStatus(response.json()["status"]), connection=self,)
         raise RequestFailedError(
             "Failed to create job: {}".format(self._format_error_message(response))
         )

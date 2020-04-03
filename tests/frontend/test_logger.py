@@ -56,6 +56,7 @@ from strawberryfields.logger import has_level_handler, default_handler, create_l
 
 modules_contain_logging = [job, connection, engine]
 
+
 @pytest.fixture(autouse=True)
 def reset_logging(pytestconfig):
     root_handlers = logging.root.handlers[:]
@@ -71,6 +72,7 @@ def reset_logging(pytestconfig):
 
     if logging_plugin:
         pytestconfig.pluginmanager.register(logging_plugin, "logging-plugin")
+
 
 @pytest.mark.parametrize("module", modules_contain_logging)
 class TestLogger:
@@ -93,7 +95,7 @@ class TestLogger:
         assert not has_level_handler(logger)
 
     def test_create_logger(self, module):
-       """Tests the create_logger function"""
-       logger = create_logger(module.__name__)
-       assert logger.level == logging.DEBUG 
-       assert has_level_handler(logger)
+        """Tests the create_logger function"""
+        logger = create_logger(module.__name__)
+        assert logger.level == logging.DEBUG
+        assert has_level_handler(logger)
