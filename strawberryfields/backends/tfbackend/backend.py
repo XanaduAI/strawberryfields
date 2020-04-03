@@ -26,14 +26,15 @@ from .circuit import Circuit
 from .ops import _check_for_eval, mixed, partial_trace, reorder_modes
 from .states import FockStateTF
 
+
 class TFBackend(BaseFock):
     r"""Implements a simulation of quantum optical circuits in a truncated
     Fock basis using `TensorFlow <http://www.numpy.org/>`_, returning a :class:`~.FockStateTF`
     state object.
     """
 
-    short_name = 'tf'
-    circuit_spec = 'tf'
+    short_name = "tf"
+    circuit_spec = "tf"
 
     def __init__(self, graph=None):
         """Initialize a TFBackend object.
@@ -50,8 +51,10 @@ class TFBackend(BaseFock):
         else:
             self._graph = graph
         self._init_modes = None  #: int: initial number of modes in the circuit
-        self._modemap = None     #: Modemap: maps external mode indices to internal ones
-        self.circuit = None      #: ~.tfbackend.circuit.Circuit: representation of the simulated quantum state
+        self._modemap = None  #: Modemap: maps external mode indices to internal ones
+        self.circuit = (
+            None  #: ~.tfbackend.circuit.Circuit: representation of the simulated quantum state
+        )
 
     def _remap_modes(self, modes):
         if isinstance(modes, int):
@@ -62,7 +65,7 @@ class TFBackend(BaseFock):
         map_ = self._modemap.show()
         submap = [map_[m] for m in modes]
         if not self._modemap.valid(modes) or None in submap:
-            raise ValueError('The specified modes are not valid.')
+            raise ValueError("The specified modes are not valid.")
         remapped_modes = self._modemap.remap(modes)
 
         if was_int:
@@ -89,9 +92,9 @@ class TFBackend(BaseFock):
             pure (bool): If True (default), use a pure state representation (otherwise will use a mixed state representation).
             batch_size (None or int): Size of the batch-axis dimension. If None, no batch-axis will be used.
         """
-        cutoff_dim = kwargs.get('cutoff_dim', None)
-        pure = kwargs.get('pure', True)
-        batch_size = kwargs.get('batch_size', None)
+        cutoff_dim = kwargs.get("cutoff_dim", None)
+        pure = kwargs.get("pure", True)
+        batch_size = kwargs.get("batch_size", None)
 
         if cutoff_dim is None:
             raise ValueError("Argument 'cutoff_dim' must be passed to the Tensorflow backend")
@@ -103,9 +106,11 @@ class TFBackend(BaseFock):
         if not isinstance(pure, bool):
             raise ValueError("Argument 'pure' must be either True or False")
         if batch_size == 1:
-            raise ValueError("batch_size of 1 not supported, please use different batch_size or set batch_size=None")
+            raise ValueError(
+                "batch_size of 1 not supported, please use different batch_size or set batch_size=None"
+            )
 
-        with tf.name_scope('Begin_circuit'):
+        with tf.name_scope("Begin_circuit"):
             self._modemap = ModeMap(num_subsystems)
             circuit = Circuit(self._graph, num_subsystems, cutoff_dim, pure, batch_size)
 
@@ -131,14 +136,16 @@ class TFBackend(BaseFock):
                 If False, then the circuit is reset to its initial state, but ops that
                 have already been declared are still accessible.
         """
-        hard = kwargs.pop('hard', True)
+        hard = kwargs.pop("hard", True)
         if hard:
             tf.reset_default_graph()
             self._graph = tf.get_default_graph()
 
-        with tf.name_scope('Reset'):
+        with tf.name_scope("Reset"):
             self._modemap.reset()
-            self.circuit.reset(graph=self._graph, num_subsystems=self._init_modes, pure=pure, **kwargs)
+            self.circuit.reset(
+                graph=self._graph, num_subsystems=self._init_modes, pure=pure, **kwargs
+            )
 
     def get_cutoff_dim(self):
         return self.circuit.cutoff_dim
@@ -148,60 +155,60 @@ class TFBackend(BaseFock):
         return [i for i, j in enumerate(self._modemap._map) if j is not None]
 
     def prepare_vacuum_state(self, mode):
-        with tf.name_scope('Prepare_vacuum'):
+        with tf.name_scope("Prepare_vacuum"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_vacuum_state(remapped_mode)
 
     def prepare_coherent_state(self, alpha, mode):
-        with tf.name_scope('Prepare_coherent'):
+        with tf.name_scope("Prepare_coherent"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_coherent_state(alpha, remapped_mode)
 
     def prepare_squeezed_state(self, r, phi, mode):
-        with tf.name_scope('Prepare_squeezed'):
+        with tf.name_scope("Prepare_squeezed"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_squeezed_state(r, phi, remapped_mode)
 
     def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
-        with tf.name_scope('Prepare_displaced_squeezed'):
+        with tf.name_scope("Prepare_displaced_squeezed"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_displaced_squeezed_state(alpha, r, phi, remapped_mode)
 
     def prepare_fock_state(self, n, mode):
-        with tf.name_scope('Prepare_fock'):
+        with tf.name_scope("Prepare_fock"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_fock_state(n, remapped_mode)
 
     def prepare_ket_state(self, state, modes):
-        with tf.name_scope('Prepare_state'):
+        with tf.name_scope("Prepare_state"):
             self.circuit.prepare_multimode(state, self._remap_modes(modes), True)
 
     def prepare_dm_state(self, state, modes):
-        with tf.name_scope('Prepare_state'):
+        with tf.name_scope("Prepare_state"):
             self.circuit.prepare_multimode(state, self._remap_modes(modes), False)
 
     def prepare_thermal_state(self, nbar, mode):
-        with tf.name_scope('Prepare_thermal'):
+        with tf.name_scope("Prepare_thermal"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_thermal_state(nbar, remapped_mode)
 
     def rotation(self, phi, mode):
-        with tf.name_scope('Rotation'):
+        with tf.name_scope("Rotation"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.phase_shift(phi, remapped_mode)
 
     def displacement(self, alpha, mode):
-        with tf.name_scope('Displacement'):
+        with tf.name_scope("Displacement"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.displacement(alpha, remapped_mode)
 
     def squeeze(self, z, mode):
-        with tf.name_scope('Squeeze'):
+        with tf.name_scope("Squeeze"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.squeeze(z, remapped_mode)
 
     def beamsplitter(self, t, r, mode1, mode2):
-        with tf.name_scope('Beamsplitter'):
+        with tf.name_scope("Beamsplitter"):
             if isinstance(t, complex):
                 raise ValueError("Beamsplitter transmittivity t must be a float.")
             if isinstance(t, tf.Tensor):
@@ -211,22 +218,22 @@ class TFBackend(BaseFock):
             self.circuit.beamsplitter(t, r, remapped_modes[0], remapped_modes[1])
 
     def loss(self, T, mode):
-        with tf.name_scope('Loss'):
+        with tf.name_scope("Loss"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.loss(T, remapped_mode)
 
     def cubic_phase(self, gamma, mode):
-        with tf.name_scope('Cubic_phase'):
+        with tf.name_scope("Cubic_phase"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.cubic_phase(gamma, remapped_mode)
 
     def kerr_interaction(self, kappa, mode):
-        with tf.name_scope('Kerr_interaction'):
+        with tf.name_scope("Kerr_interaction"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.kerr_interaction(kappa, remapped_mode)
 
     def cross_kerr_interaction(self, kappa, mode1, mode2):
-        with tf.name_scope('Cross-Kerr_interaction'):
+        with tf.name_scope("Cross-Kerr_interaction"):
             remapped_modes = self._remap_modes([mode1, mode2])
             self.circuit.cross_kerr_interaction(kappa, remapped_modes[0], remapped_modes[1])
 
@@ -243,7 +250,7 @@ class TFBackend(BaseFock):
         Returns:
             FockStateTF: state description
         """
-        with tf.name_scope('State'):
+        with tf.name_scope("State"):
             s = self.circuit.state
             pure = self.circuit.state_is_pure
             num_modes = self.circuit.num_modes
@@ -260,7 +267,9 @@ class TFBackend(BaseFock):
                 if len(modes) != len(set(modes)):
                     raise ValueError("The specified modes cannot be duplicated.")
                 if len(modes) > num_modes:
-                    raise ValueError("The number of specified modes cannot be larger than the number of subsystems.")
+                    raise ValueError(
+                        "The number of specified modes cannot be larger than the number of subsystems."
+                    )
 
                 if pure:
                     # convert to mixed state representation
@@ -278,7 +287,9 @@ class TFBackend(BaseFock):
             # unless the modes were requested in order, we need to swap indices around
             if modes != sorted(modes):
                 mode_permutation = np.argsort(np.argsort(modes))
-                reduced_state = reorder_modes(reduced_state, mode_permutation, reduced_state_pure, batched)
+                reduced_state = reorder_modes(
+                    reduced_state, mode_permutation, reduced_state_pure, batched
+                )
 
             evaluate_results, session, feed_dict, close_session = _check_for_eval(kwargs)
             if evaluate_results:
@@ -289,9 +300,16 @@ class TFBackend(BaseFock):
                 s = reduced_state
 
             modenames = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
-            state_ = FockStateTF(s, len(modes), pure, self.circuit.cutoff_dim,
-                                 graph=self._graph, batched=batched,
-                                 mode_names=modenames, eval=evaluate_results)
+            state_ = FockStateTF(
+                s,
+                len(modes),
+                pure,
+                self.circuit.cutoff_dim,
+                graph=self._graph,
+                batched=batched,
+                mode_names=modenames,
+                eval=evaluate_results,
+            )
         return state_
 
     def measure_fock(self, modes, shots=1, select=None, **kwargs):
@@ -308,9 +326,10 @@ class TFBackend(BaseFock):
             tuple[int] or tuple[Tensor]: measurement outcomes
         """
         if shots != 1:
-            raise NotImplementedError("TF backend currently does not support "
-                                      "shots != 1 for Fock measurement")
-        with tf.name_scope('Measure_fock'):
+            raise NotImplementedError(
+                "TF backend currently does not support " "shots != 1 for Fock measurement"
+            )
+        with tf.name_scope("Measure_fock"):
             remapped_modes = self._remap_modes(modes)
             meas = self.circuit.measure_fock(remapped_modes, select=select, **kwargs)
         return meas
@@ -332,15 +351,16 @@ class TFBackend(BaseFock):
             float or tf.Tensor: measurement outcome
         """
         if shots != 1:
-            raise NotImplementedError("TF backend currently does not support "
-                                      "shots != 1 for homodyne measurement")
-        with tf.name_scope('Measure_homodyne'):
+            raise NotImplementedError(
+                "TF backend currently does not support " "shots != 1 for homodyne measurement"
+            )
+        with tf.name_scope("Measure_homodyne"):
             remapped_mode = self._remap_modes(mode)
             meas = self.circuit.measure_homodyne(phi, remapped_mode, select, **kwargs)
         return meas
 
     def is_vacuum(self, tol=0.0, **kwargs):
-        with tf.name_scope('Is_vacuum'):
+        with tf.name_scope("Is_vacuum"):
             with self.circuit.graph.as_default():
                 vac_elem = self.circuit.vacuum_element()
                 if "eval" in kwargs and kwargs["eval"] is False:
@@ -350,11 +370,11 @@ class TFBackend(BaseFock):
                     v = sess.run(vac_elem)
                     sess.close()
 
-            result = np.abs(v-1) <= tol
+            result = np.abs(v - 1) <= tol
         return result
 
     def del_mode(self, modes):
-        with tf.name_scope('Del_mode'):
+        with tf.name_scope("Del_mode"):
             remapped_modes = self._remap_modes(modes)
             if isinstance(remapped_modes, int):
                 remapped_modes = [remapped_modes]
@@ -362,7 +382,7 @@ class TFBackend(BaseFock):
             self._modemap.delete(modes)
 
     def add_mode(self, n=1):
-        with tf.name_scope('Add_mode'):
+        with tf.name_scope("Add_mode"):
             self.circuit.add_mode(n)
             self._modemap.add(n)
 
