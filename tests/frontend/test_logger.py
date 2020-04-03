@@ -99,3 +99,4 @@ class TestLogger:
         logger = create_logger(module.__name__)
         assert logger.level == logging.DEBUG
         assert has_level_handler(logger)
+        assert logger.handlers[0] == default_handler
