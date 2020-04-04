@@ -49,7 +49,7 @@ def takagi(N, tol=1e-13, rounding=13):
 
     N = np.real_if_close(N)
 
-    if np.allclose(N, np.zeros(N.shape)):
+    if np.allclose(N, 0):
         return np.zeros(n), np.eye(n)
 
     if np.isrealobj(N):
