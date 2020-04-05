@@ -57,26 +57,27 @@ from strawberryfields.logger import has_level_handler, default_handler, create_l
 modules_contain_logging = [job, connection, engine]
 
 
-@pytest.fixture(autouse=True)
-def reset_logging(pytestconfig):
-    root_handlers = logging.root.handlers[:]
-    logging.root.handlers = []
-    root_level = logging.root.level
-
-    logging_plugin = pytestconfig.pluginmanager.unregister(name="logging-plugin")
-
-    yield
-
-    logging.root.handlers[:] = root_handlers
-    logging.root.setLevel(root_level)
-
-    if logging_plugin:
-        pytestconfig.pluginmanager.register(logging_plugin, "logging-plugin")
-
-
 @pytest.mark.parametrize("module", modules_contain_logging)
 class TestLogger:
     """Tests for the functions that are used to create a logger"""
+
+    @pytest.fixture(autouse=True)
+    def reset_logging(self, pytestconfig):
+        """Reset the logging specific configurations such as handlers or levels as
+        well as manage pytest's LoggingPlugin."""
+        root_handlers = logging.root.handlers[:]
+        logging.root.handlers = []
+        root_level = logging.root.level
+
+        logging_plugin = pytestconfig.pluginmanager.unregister(name="logging-plugin")
+
+        yield
+
+        logging.root.handlers[:] = root_handlers
+        logging.root.setLevel(root_level)
+
+        if logging_plugin:
+            pytestconfig.pluginmanager.register(logging_plugin, "logging-plugin")
 
     def test_has_level_handler(self, module):
         """Tests the has_level_handler function"""
@@ -100,3 +101,54 @@ class TestLogger:
         assert logger.level == logging.DEBUG
         assert has_level_handler(logger)
         assert logger.handlers[0] == default_handler
+
+class TestLoggerIntegration:
+    """Tests that the SF logger integrates well with user defined logging configurations."""
+
+    def test_custom_configuration_without_sf_logger(self, tmpdir, caplog):
+        """Tests that if there was no SF logger created, custom logging
+        configurations work as expected."""
+
+        level = logging.DEBUG
+        with caplog.at_level(level):
+
+            test_file = tmpdir.join("test_file")
+            logging.basicConfig(filename=test_file, level=level)
+            logging.debug("A log entry.")
+
+        assert "A log entry." in caplog.text
+
+    @pytest.mark.parametrize("module", modules_contain_logging)
+    def test_custom_configuration_after_sf_logger(self, module, tmpdir, caplog):
+        """Tests that even if an SF logger was created, custom logging
+        configurations work as expected."""
+
+        level = logging.DEBUG
+        with caplog.at_level(level):
+
+            sf_logger = create_logger(module.__name__)
+            test_file = tmpdir.join("test_file")
+            logging.basicConfig(filename=test_file, level=level)
+            logging.debug("A log entry.")
+
+        assert "A log entry." in caplog.text
+
+    @pytest.mark.parametrize("module", modules_contain_logging)
+    def test_custom_logger_before_sf_logger_with_higher_level(self, module, tmpdir, caplog):
+        """Tests that a custom logger created before an SF logger will define
+        the level for logging as expected."""
+
+        level = logging.DEBUG
+        with caplog.at_level(level):
+
+            test_file = tmpdir.join("test_file")
+            logging.basicConfig(filename=test_file, level=level)
+            logger = logging.getLogger(module.__name__)
+
+            # Create a logger with a higher level
+            # than the user defined one the value for
+            # WARNING is higher than for DEBUG
+            sf_logger = create_logger(module.__name__, level=logging.WARNING)
+            logging.debug("A log entry.")
+
+        assert "A log entry." in caplog.text
