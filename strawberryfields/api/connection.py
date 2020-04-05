@@ -76,7 +76,7 @@ class Connection:
         port (int): the port to connect to on the remote host
         use_ssl (bool): whether to use SSL for the connection
     """
-
+    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         token: str = configuration["api"]["authentication_token"],
@@ -85,11 +85,10 @@ class Connection:
         use_ssl: bool = configuration["api"]["use_ssl"],
         verbose: bool = True,
     ):
-        self._configuration = {"api": {}}
-        self._configuration["api"]["authentication_token"] = token
-        self._configuration["api"]["host"] = host
-        self._configuration["api"]["port"] = port
-        self._configuration["api"]["use_ssl"] = use_ssl
+        self._token = token
+        self._host = host
+        self._port = port
+        self._use_ssl = use_ssl
         self._verbose = verbose
 
         self._base_url = "http{}://{}:{}".format("s" if self.use_ssl else "", self.host, self.port)
@@ -104,7 +103,7 @@ class Connection:
         Returns:
             str
         """
-        return self._configuration["api"]["authentication_token"]
+        return self._token
 
     @property
     def host(self) -> str:
@@ -113,7 +112,7 @@ class Connection:
         Returns:
             str
         """
-        return self._configuration["api"]["host"]
+        return self._host
 
     @property
     def port(self) -> int:
@@ -122,7 +121,7 @@ class Connection:
         Returns:
             int
         """
-        return self._configuration["api"]["port"]
+        return self._port
 
     @property
     def use_ssl(self) -> bool:
@@ -131,7 +130,7 @@ class Connection:
         Returns:
             bool
         """
-        return self._configuration["api"]["use_ssl"]
+        return self._use_ssl
 
     def create_job(self, target: str, program: Program, run_options: dict = None) -> Job:
         """Creates a job with the given circuit.
