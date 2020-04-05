@@ -136,7 +136,16 @@ class TestLoggerIntegration:
     @pytest.mark.parametrize("module", modules_contain_logging)
     def test_custom_logger_before_sf_logger_with_higher_level(self, module, tmpdir, caplog):
         """Tests that a custom logger created before an SF logger will define
-        the level for logging as expected."""
+        the level for logging as expected and the SF logger does not overwrite
+        the user configuration.
+
+        The logic of the test goes as follows:
+        1. Capturing every logging at DEBUG level within the context
+        2. Manually setting the level for logging for DEBUG level
+        3. Creating an SF logger with level WARNING, that is higher than DEBUG
+        4. Checking that a logging took place and the higher level for the SF
+           logger did not prevent logging
+        """
 
         level = logging.DEBUG
         with caplog.at_level(level):
@@ -145,9 +154,6 @@ class TestLoggerIntegration:
             logging.basicConfig(filename=test_file, level=level)
             logger = logging.getLogger(module.__name__)
 
-            # Create a logger with a higher level
-            # than the user defined one the value for
-            # WARNING is higher than for DEBUG
             sf_logger = create_logger(module.__name__, level=logging.WARNING)
             logging.debug("A log entry.")
 
