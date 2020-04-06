@@ -50,18 +50,21 @@ import logging
 import sys
 
 
-def has_level_handler(logger):
-    """Check if there is a handler in the logging chain that will handle the
-    given logger's :meth:`effective level <~logging.Logger.getEffectiveLevel>`.
+def logging_handler_defined(logger):
+    """Checks if the logger or any of its ancestors has a handler defined.
+
+    The output depends on whether or not propagation was set for the logger.
 
     Args:
         logger (logging.Logger): the logger to check
+
+    Returns:
+        bool: whether or not a handler was defined
     """
-    level = logger.getEffectiveLevel()
     current = logger
 
     while current:
-        if any(handler.level <= level for handler in current.handlers):
+        if current.handlers:
             return True
 
         if not current.propagate:
@@ -77,8 +80,21 @@ formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 default_handler.setFormatter(formatter)
 
 
-def create_logger(name, level=logging.DEBUG):
+def create_logger(name, level=logging.INFO):
     """Get the Strawberry Fields module specific logger and configure it if needed.
+
+    Configuration only takes place if no user configuration was applied to the
+    logger. Therefore, the logger is configured if and only if the following
+    are true:
+    - the logger has WARNING as effective level
+    - the level of the logger was not explicitly set
+    - no handlers were added to the logger
+
+    As the root logger has a WARNING level by default, any module specific
+    logger will inherit the same as effective level.
+
+    The default handler that is used for configuration writes to the standard
+    error stream and uses a datetime and level formatter.
 
     Args:
         name (str): the name of the module for which the logger is being created
@@ -86,10 +102,12 @@ def create_logger(name, level=logging.DEBUG):
     """
     logger = logging.getLogger(name)
 
-    if not logger.level:
-        logger.setLevel(level)
+    effective_level_inherited = logger.getEffectiveLevel() == logging.WARNING
+    level_not_set = not logger.level
+    no_handlers = not logging_handler_defined(logger)
 
-    if not has_level_handler(logger):
+    if effective_level_inherited and level_not_set and no_handlers:
+        logger.setLevel(level)
         logger.addHandler(default_handler)
 
     return logger

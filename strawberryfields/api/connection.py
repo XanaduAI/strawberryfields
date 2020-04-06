@@ -76,6 +76,7 @@ class Connection:
         port (int): the port to connect to on the remote host
         use_ssl (bool): whether to use SSL for the connection
     """
+
     # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
