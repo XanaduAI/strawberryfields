@@ -107,7 +107,6 @@ class TestLogger:
 
         logger.propagate = False
         assert not logging_handler_defined(logger)
-        logger.propagate = True
 
     def test_create_logger(self, module):
         """Tests that the create_logger function returns a logger with the
