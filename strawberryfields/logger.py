@@ -86,9 +86,9 @@ def create_logger(name, level=logging.INFO):
     Configuration only takes place if no user configuration was applied to the
     logger. Therefore, the logger is configured if and only if the following
     are true:
-    - the logger has WARNING as effective level
-    - the level of the logger was not explicitly set
-    - no handlers were added to the logger
+    - the logger has WARNING as effective level,
+    - the level of the logger was not explicitly set,
+    - no handlers were added to the logger.
 
     As the root logger has a WARNING level by default, any module specific
     logger will inherit the same as effective level.
