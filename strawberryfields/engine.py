@@ -542,12 +542,13 @@ class RemoteEngine:
             while True:
                 job.refresh()
                 if job.status == "complete":
-                    self.log.info("The remote job has been completed.")
+                    self.log.info("The remote job %s has been completed.", job.id)
                     return job.result
+
                 if job.status == "failed":
                     message = (
-                        "The remote job {} failed due to an internal"
-                        "server error; please try again.".format(job.id)
+                        "The remote job %s failed due to an internal "
+                        "server error. Please try again." % job.id
                     )
                     self.log.error(message)
 

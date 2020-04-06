@@ -243,7 +243,7 @@ class Connection:
         )
         if response.status_code == 204:
             if self._verbose:
-                self.log.info("The job was successfully cancelled.")
+                self.log.info("The job %s was successfully cancelled.", job_id)
             return
         raise RequestFailedError(
             "Failed to cancel job: {}".format(self._format_error_message(response))
