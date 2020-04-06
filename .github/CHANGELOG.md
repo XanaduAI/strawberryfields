@@ -181,6 +181,8 @@
   from the Blackbird script or `Program` if not explicitly specified.
   [(#327)](https://github.com/XanaduAI/strawberryfields/pull/327)
 
+* Improves the Takagi decomposition, by making explicit use of the eigendecomposition of real symmetric matrices. [(#352)](https://github.com/XanaduAI/strawberryfields/pull/352)
+
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
