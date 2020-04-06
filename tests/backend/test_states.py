@@ -293,16 +293,20 @@ class TestQuadratureExpectations:
 class TestNumberExpectation:
     """Multimode photon-number expectation value tests"""
 
-    def test_number_expectation_vacuum(self, setup_backend, tol):
+    def test_number_expectation_vacuum(self, setup_backend, tol, batch_size):
         """Tests the expectation value of any photon number in vacuum is zero"""
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(2)
         state = backend.state()
         assert np.allclose(state.number_expectation([0, 1]), 0.0, atol=tol, rtol=0)
         assert np.allclose(state.number_expectation([0]), 0.0, atol=tol, rtol=0)
         assert np.allclose(state.number_expectation([1]), 0.0, atol=tol, rtol=0)
 
-    def test_number_expectation_displaced_squeezed(self, setup_backend, tol):
+    def test_number_expectation_displaced_squeezed(self, setup_backend, tol, batch_size):
         """Tests the expectation value of photon numbers when there is no correlation"""
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(2)
         state = backend.state()
         a0 = 0.3 + 0.1 * 1j
@@ -335,8 +339,10 @@ class TestNumberExpectation:
         with pytest.raises(ValueError, match="The number_expectation method only supports one or two modes for Gaussian states."):
             state.number_expectation([0, 1, 2])
 
-    def test_number_expectation_two_mode_squeezed(self, setup_backend, tol):
+    def test_number_expectation_two_mode_squeezed(self, setup_backend, tol, batch_size):
         """Tests the expectation value of photon numbers when there is correlation"""
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(3)
         state = backend.state()
         r = 0.2
@@ -353,8 +359,10 @@ class TestNumberExpectation:
         assert np.allclose(state.number_expectation([2]), nbar, atol=tol, rtol=0)
 
     @pytest.mark.backends("fock", "tf")
-    def test_number_expectation_four_modes(self, setup_backend, tol):
+    def test_number_expectation_four_modes(self, setup_backend, tol, batch_size):
         """Tests the expectation value of photon numbers when there is correlation"""
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(4)
         state = backend.state()
         r = 0.2
