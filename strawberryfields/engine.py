@@ -57,8 +57,6 @@ class BaseEngine(abc.ABC):
         #: List[List[Number]]: latest measurement results, shape == (modes, shots)
         self.samples = None
 
-        self.log = create_logger(__name__)
-
         if isinstance(backend, str):
             self.backend_name = backend
             self.backend = load_backend(backend)
@@ -499,6 +497,7 @@ class RemoteEngine:
 
         self._connection = connection or Connection()
         self._backend_options = backend_options or {}
+        self.log = create_logger(__name__)
 
     @property
     def target(self) -> str:
@@ -543,6 +542,7 @@ class RemoteEngine:
             while True:
                 job.refresh()
                 if job.status == "complete":
+                    self.log.info("The remote job has been completed.")
                     return job.result
                 if job.status == "failed":
                     message = (
