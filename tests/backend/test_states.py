@@ -85,8 +85,10 @@ class TestBackendStateCreation:
 class TestBaseStateMeanPhotonNumber:
     """Tests for the mean photon number method"""
 
-    def test_mean_photon_coherent(self, setup_backend, tol):
+    def test_mean_photon_coherent(self, setup_backend, tol, batch_size):
         """Test that E(n) = |a|^2 and var(n) = |a|^2 for a coherent state"""
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(1)
 
         backend.displacement(a, 0)
