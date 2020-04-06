@@ -16,6 +16,7 @@ import pytest
 
 pytestmark = pytest.mark.frontend
 
+import networkx as nx
 import numpy as np
 import scipy as sp
 from scipy.linalg import qr, block_diag
@@ -83,6 +84,25 @@ class TestTakagi:
         rl, U = dec.takagi(A)
         res = U @ np.diag(rl) @ U.T
         assert np.allclose(res, A, atol=tol, rtol=0)
+
+    def test_real_degenerate(self):
+        """Verify that the Takagi decomposition returns a matrix that is unitary and results in a
+        correct decomposition when input a real but highly degenerate matrix. This test uses the
+        adjacency matrix of a balanced tree graph."""
+        g = nx.balanced_tree(2, 4)
+        a = nx.to_numpy_array(g)
+        rl, U = dec.takagi(a)
+        assert np.allclose(U @ U.conj().T, np.eye(len(a)))
+        assert np.allclose(U @ np.diag(rl) @ U.T, a)
+
+    def test_zeros(self):
+        """Verify that the Takagi decomposition returns a zero vector and identity matrix when
+        input a matrix of zeros"""
+        dim = 4
+        a = np.zeros((dim, dim))
+        rl, U = dec.takagi(a)
+        assert np.allclose(rl, np.zeros(dim))
+        assert np.allclose(U, np.eye(dim))
 
 
 class TestGraphEmbed:
