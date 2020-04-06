@@ -14,9 +14,8 @@
 """
 This module provides an interface to a remote program execution backend.
 """
-from datetime import datetime
 import io
-import logging
+from datetime import datetime
 from typing import List
 
 import numpy as np
@@ -24,14 +23,13 @@ import requests
 
 from strawberryfields.configuration import configuration
 from strawberryfields.io import to_blackbird
+from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
 
 from .job import Job, JobStatus
 from .result import Result
 
 # pylint: disable=bad-continuation,protected-access
-
-log = logging.getLogger(__name__)
 
 
 class RequestFailedError(Exception):
@@ -79,13 +77,14 @@ class Connection:
         use_ssl (bool): whether to use SSL for the connection
     """
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         token: str = configuration["api"]["authentication_token"],
         host: str = configuration["api"]["hostname"],
         port: int = configuration["api"]["port"],
         use_ssl: bool = configuration["api"]["use_ssl"],
-        verbose: bool = False,
+        verbose: bool = True,
     ):
         self._token = token
         self._host = host
@@ -95,6 +94,8 @@ class Connection:
 
         self._base_url = "http{}://{}:{}".format("s" if self.use_ssl else "", self.host, self.port)
         self._headers = {"Authorization": self.token}
+
+        self.log = create_logger(__name__)
 
     @property
     def token(self) -> str:
@@ -154,13 +155,10 @@ class Connection:
         path = "/jobs"
         response = requests.post(self._url(path), headers=self._headers, json={"circuit": circuit})
         if response.status_code == 201:
+            job_id = response.json()["id"]
             if self._verbose:
-                log.info("The job was successfully submitted.")
-            return Job(
-                id_=response.json()["id"],
-                status=JobStatus(response.json()["status"]),
-                connection=self,
-            )
+                self.log.info("Job %s was successfully submitted.", job_id)
+            return Job(id_=job_id, status=JobStatus(response.json()["status"]), connection=self,)
         raise RequestFailedError(
             "Failed to create job: {}".format(self._format_error_message(response))
         )
@@ -245,7 +243,7 @@ class Connection:
         )
         if response.status_code == 204:
             if self._verbose:
-                log.info("The job was successfully cancelled.")
+                self.log.info("The job %s was successfully cancelled.", job_id)
             return
         raise RequestFailedError(
             "Failed to cancel job: {}".format(self._format_error_message(response))

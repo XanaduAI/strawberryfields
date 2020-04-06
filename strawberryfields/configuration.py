@@ -15,13 +15,12 @@ r"""
 This module contains functions used to load, store, save, and modify
 configuration options for Strawberry Fields.
 """
-import logging as log
 import os
 
 import toml
 from appdirs import user_config_dir
 
-log.getLogger()
+from strawberryfields.logger import create_logger
 
 DEFAULT_CONFIG_SPEC = {
     "api": {
@@ -68,6 +67,7 @@ def load_config(filename="config.toml", **kwargs):
         valid_api_options = keep_valid_options(loaded_config["api"])
         config["api"].update(valid_api_options)
     else:
+        log = create_logger(__name__)
         log.info("No Strawberry Fields configuration file found.")
 
     update_from_environment_variables(config)
