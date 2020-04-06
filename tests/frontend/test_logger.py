@@ -90,9 +90,11 @@ class TestLogger:
     """Tests for the functions that are used to create a logger"""
 
     def test_logging_handler_defined(self, module):
-        """Tests that the logging_handler_defined function:
+        """Tests that the logging_handler_defined function works correctly in
+        the following cases:
 
-        1. By default there's no level handler
+        1. When a custom logger was just created and by default has no level
+           handler
         2. Adding a handler to the root logger affects the custom logger
         3. When propagation is set to False, only the handlers of the custom
         logger are checked"""
