@@ -142,6 +142,24 @@ def get_config_filepath(filename="config.toml"):
 
     return None
 
+def active_configs():
+    """Returns the filetpaths for the configuration files that are active. """
+    active_configs = []
+    active = True
+
+    current_dir = os.getcwd()
+    sf_env_config_dir = os.environ.get("SF_CONF", "")
+    sf_user_config_dir = user_config_dir("strawberryfields", "Xanadu")
+
+    directories = [current_dir, sf_env_config_dir, sf_user_config_dir]
+    for directory in directories:
+        filepath = os.path.join(directory, filename)
+        if os.path.exists(filepath):
+            if active:
+                filepath += " (active)"
+            active_configs.append(filepath)
+
+    return active_configs
 
 def load_config_file(filepath):
     """Load a configuration object from a TOML formatted file.
