@@ -144,7 +144,7 @@
   subgraph.search(s, g, min_size=5, max_size=8, node_select=w)
   ```
 
-* Add the method `number_expectation`  that calculates the expectation value of the product of the number operators of a given number of modes. [(348)](https://github.com/XanaduAI/strawberryfields/pull/348/)
+* Adds the method `number_expectation`  that calculates the expectation value of the product of the number operators of a given set of modes. [(348)](https://github.com/XanaduAI/strawberryfields/pull/348/)
   ```python
   prog = sf.Program(3)
   with prog.context as q:
