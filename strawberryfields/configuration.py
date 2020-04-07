@@ -163,13 +163,26 @@ def directories_to_check():
     Returns:
         list: the list of directories to check
     """
+    directories = []
+
     current_dir = os.getcwd()
     sf_env_config_dir = os.environ.get("SF_CONF", "")
     sf_user_config_dir = user_config_dir("strawberryfields", "Xanadu")
-    return [current_dir, sf_env_config_dir, sf_user_config_dir]
+
+    directories.append(current_dir)
+    if sf_env_config_dir != "":
+        directories.append(sf_env_config_dir)
+    directories.append(sf_user_config_dir)
+
+    return directories
 
 def active_configs(filename="config.toml"):
-    """Returns the filetpaths for the configuration files that are active.
+    """Returns the filepaths for existing configuration files and marks the one
+    that is active among them.
+
+    This function relies on the precedence ordering of directories to mark the
+    active configuration.
+
     Returns:
          Union[str]: the filepath to the configuration file or None, if
              no file was found
@@ -184,6 +197,7 @@ def active_configs(filename="config.toml"):
         if os.path.exists(filepath):
             if active:
                 filepath += " (active)"
+                active = False
             active_configs.append(filepath)
 
     return active_configs
