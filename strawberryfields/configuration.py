@@ -64,7 +64,9 @@ def load_config(filename="config.toml", **kwargs):
 
     if filepath is not None:
         loaded_config = load_config_file(filepath)
-        valid_api_options = keep_valid_options(loaded_config["api"])
+        api_config = get_api_section_from_config(loaded_config, filepath)
+
+        valid_api_options = keep_valid_options(api_config)
         config["api"].update(valid_api_options)
     else:
         log = create_logger(__name__)
@@ -77,6 +79,15 @@ def load_config(filename="config.toml", **kwargs):
 
     return config
 
+def get_api_section_from_config(loaded_config, filepath):
+    """Gets the API section from the loaded configuration."""
+    try:
+        return loaded_config["api"]
+    except KeyError:
+        log = create_logger(__name__)
+        log.error("The configuration from the %s file does not "\
+                "contain an \"api\" section.", filepath)
+        raise ConfigurationError()
 
 def create_config(authentication_token=None, **kwargs):
     """Create a configuration object that stores configuration related data
@@ -130,11 +141,7 @@ def get_config_filepath(filename="config.toml"):
          Union[str, None]: the filepath to the configuration file or None, if
              no file was found
     """
-    current_dir = os.getcwd()
-    sf_env_config_dir = os.environ.get("SF_CONF", "")
-    sf_user_config_dir = user_config_dir("strawberryfields", "Xanadu")
-
-    directories = [current_dir, sf_env_config_dir, sf_user_config_dir]
+    directories = directories_to_check()
     for directory in directories:
         filepath = os.path.join(directory, filename)
         if os.path.exists(filepath):
@@ -142,16 +149,36 @@ def get_config_filepath(filename="config.toml"):
 
     return None
 
-def active_configs():
-    """Returns the filetpaths for the configuration files that are active. """
-    active_configs = []
-    active = True
+def directories_to_check():
+    """Returns the list of directories that should be checked for a configuration file.
 
+    .. note::
+
+        The following directories are checked (in the following order):
+
+        * The current working directory
+        * The directory specified by the environment variable ``SF_CONF`` (if specified)
+        * The user configuration directory (if specified)
+
+    Returns:
+        list: the list of directories to check
+    """
     current_dir = os.getcwd()
     sf_env_config_dir = os.environ.get("SF_CONF", "")
     sf_user_config_dir = user_config_dir("strawberryfields", "Xanadu")
+    return [current_dir, sf_env_config_dir, sf_user_config_dir]
 
-    directories = [current_dir, sf_env_config_dir, sf_user_config_dir]
+def active_configs(filename="config.toml"):
+    """Returns the filetpaths for the configuration files that are active.
+    Returns:
+         Union[str]: the filepath to the configuration file or None, if
+             no file was found
+    """
+    active_configs = []
+    active = True
+
+    directories = directories_to_check()
+
     for directory in directories:
         filepath = os.path.join(directory, filename)
         if os.path.exists(filepath):
