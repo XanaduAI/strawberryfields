@@ -144,6 +144,26 @@
   subgraph.search(s, g, min_size=5, max_size=8, node_select=w)
   ```
 
+* Add the method `number_expectation`  that calculates the expectation value of the product of the number operators of a given number of modes. [(348)](https://github.com/XanaduAI/strawberryfields/pull/348/)
+  ```python
+  prog = sf.Program(3)
+  with prog.context as q:
+      ops.Sgate(0.5) | q[0]
+      ops.Sgate(0.5) | q[1]
+      ops.Sgate(0.5) | q[2]
+      ops.BSgate(np.pi/3, 0.1) |  (q[0], q[1])
+      ops.BSgate(np.pi/3, 0.1) |  (q[1], q[2])
+  ```
+  Executing this on the Fock backend,
+  ```python
+  >>> eng = sf.Engine("fock", backend_options={"cutoff_dim": 10})
+  >>> state = eng.run(prog).state
+  ```
+  we can compute the expectation value :math:`\langle \hat{n}_0\hat{n}_2\rangle`:
+  ```python
+  >>> state.number_expectation([0, 2])
+  ```
+
 <h3>Improvements</h3>
 
 * Moved Fock backend apply-gate functions to `Circuit` class, and removed
