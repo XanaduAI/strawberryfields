@@ -5,7 +5,7 @@ from strawberryfields.program_utils import CircuitError, Command, group_operatio
 import strawberryfields.ops as ops
 from .gbs import GBSSpecs
 from .gaussian_unitary import GaussianUnitary
-
+import numpy as np
 
 class XnSpecs(CircuitSpecs):
     """Circuit specifications for the X8 class of circuits."""
@@ -25,7 +25,6 @@ class XnSpecs(CircuitSpecs):
     }
 
     def compile(self, seq, registers):
-        print("hello")
         seq = GBSSpecs().compile(seq, registers)
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.MeasureFock))
 
@@ -34,7 +33,7 @@ class XnSpecs(CircuitSpecs):
 
         tmp_seq = seq[:-1] #This must be the measurements
         meas_seq = seq[-1]
-        seq = GausianUnitary().compile(tmp_seq, registers) + meas_seq
+        seq = GaussianUnitary().compile(tmp_seq, registers) + [meas_seq]
 
         S = seq[0].op.p[0]
         n_modes = len(S)//2
@@ -42,11 +41,13 @@ class XnSpecs(CircuitSpecs):
         hbar = 2
         cov = (hbar/2) * S @ S.T
         A = Amat(cov, hbar=hbar)
-        B = A[:nmodes,:nmodes]
-        B00 = B[:nwg,:nwg]
-        B01 = B[:nwg,nwg:]
-        B10 = B[nwg:,:nwg]
-        B11 = B[nwg:,nwg:]
+        B = A[:n_modes,:n_modes]
+        print(B)
+        B00 = B[:half_n_modes,:half_n_modes]
+        B01 = B[:half_n_modes,half_n_modes:]
+        B10 = B[half_n_modes:,:half_n_modes]
+        B11 = B[half_n_modes:,half_n_modes:]
+
         if not np.allclose(B00,0) or not np.allclose(B11,0):
             raise ValueError('The Gaussian state being prepared does not correspond to a bipartite graph')
         if not np.allclose(B01, B10):
