@@ -170,6 +170,110 @@ class TestLoadConfig:
 
             assert ["First", "Second"] == directories
 
+test_file_name = "test_file.toml"
+default_file_name = "config.toml"
+test_kwargs = [{}, {"filename": test_file_name}]
+
+class TestActiveConfigs:
+    """Test the active_configs function and its auxiliary functions."""
+
+    @pytest.mark.parametrize("kwargs", test_kwargs)
+    def test_get_active_configs_mock_directories(self, monkeypatch, kwargs):
+        """Test that the get_active_configs correctly uses the output of the
+        directories_to_check function."""
+        test_directory = "test_directory_path"
+        test_file_name = kwargs["filename"] if kwargs else default_file_name
+
+        with monkeypatch.context() as m:
+            m.setattr(conf, "directories_to_check", lambda: [test_directory])
+            m.setattr(os.path, "exists", lambda *args: True)
+            active_configs = conf.get_active_configs(**kwargs)
+            assert active_configs == [os.path.join(test_directory, test_file_name)]
+
+    @pytest.mark.parametrize("kwargs", test_kwargs)
+    def test_get_active_configs_integration(self, monkeypatch, tmpdir, kwargs):
+        """Tests that the get_active_configs function integrates well with
+        parts of the directories_to_check function."""
+        test_file_name = kwargs["filename"] if kwargs else default_file_name
+
+        path1 = tmpdir.mkdir("sub1")
+        path2 = tmpdir.mkdir("sub2")
+        path3 = tmpdir.mkdir("sub3")
+
+        file1 = path1.join(test_file_name)
+        file2 = path2.join(test_file_name)
+        file3 = path3.join(test_file_name)
+
+        temporary_files = [file1, file2, file3]
+
+        with monkeypatch.context() as m:
+            m.setattr(os, "getcwd", lambda: path1)
+            m.setenv("SF_CONF", str(path2))
+            m.setattr(conf, "user_config_dir", lambda *args: path3)
+            m.setattr(os.path, "exists", lambda arg: arg in temporary_files)
+            active_configs = conf.get_active_configs(**kwargs)
+            assert active_configs == [file1, file2, file3]
+
+    def test_print_active_configs_single_config(self, capsys):
+        """Checks that the correct message is outputted when a single
+        configuration file was found."""
+        active_configs = ["first_path"]
+        conf.print_active_configs(active_configs, test_file_name)
+
+        captured = capsys.readouterr()
+
+        general_message = "\nThe following Strawberry Fields configuration files were found "\
+                          "with the name \"{}\":\n".format(test_file_name)
+        single_config = "\n* " + active_configs[0] + " (active)\n"
+
+        assert general_message + single_config == captured.out
+
+    def test_print_active_configs_multiple_configs(self, capsys):
+        """Checks that the correct message is outputted for a single
+        configuration file found."""
+        active_configs = ["first_path", "second_path", "third_path"]
+        conf.print_active_configs(active_configs, test_file_name)
+
+        captured = capsys.readouterr()
+
+        general_message = "\nThe following Strawberry Fields configuration files were found "\
+                          "with the name \"{}\":\n".format(test_file_name)
+        first_config = "\n* " + active_configs[0] + " (active)\n"
+        second_config = "* " + active_configs[1] + "\n"
+        third_config = "* " + active_configs[2] + "\n"
+
+        assert general_message + first_config + second_config + third_config == captured.out
+
+    def test_print_active_configs_no_configs(self, capsys):
+        """Checks that the correct message is outputted if no configuration
+        files were found."""
+        conf.print_active_configs([], test_file_name)
+
+        captured = capsys.readouterr()
+
+        general_message = "\nNo Strawberry Fields configuration files were found with the "\
+                          "name \"{}\".\n\n".format(test_file_name)
+
+        assert captured.out == general_message
+
+    def test_print_directories_checked(self, monkeypatch, capsys):
+        """Checks that the correct directories are outputted by
+        print_directories_checked."""
+        temp_dirs = ["first_path", "second_path", "third_path"]
+
+        with monkeypatch.context() as m:
+            m.setattr(conf, "directories_to_check", lambda : temp_dirs)
+            conf.print_directories_checked()
+
+            captured = capsys.readouterr()
+            general_message = "\nThe following directories were checked:\n\n"
+
+            first_dir_msg = "* " + temp_dirs[0] + "\n"
+            second_dir_msg = "* " + temp_dirs[1] + "\n"
+            third_dir_msg = "* " + temp_dirs[2] + "\n"
+
+            assert general_message + first_dir_msg + second_dir_msg + third_dir_msg == captured.out
+
 class TestCreateConfigObject:
     """Test the creation of a configuration object"""
 
