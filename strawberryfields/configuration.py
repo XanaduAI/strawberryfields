@@ -64,7 +64,9 @@ def load_config(filename="config.toml", **kwargs):
 
     if filepath is not None:
         loaded_config = load_config_file(filepath)
-        valid_api_options = keep_valid_options(loaded_config["api"])
+        api_config = get_api_section_safely(loaded_config, filepath)
+
+        valid_api_options = keep_valid_options(api_config)
         config["api"].update(valid_api_options)
     else:
         log = create_logger(__name__)
@@ -76,7 +78,6 @@ def load_config(filename="config.toml", **kwargs):
     config["api"].update(valid_kwargs_config)
 
     return config
-
 
 def create_config(authentication_token=None, **kwargs):
     """Create a configuration object that stores configuration related data
@@ -147,11 +148,7 @@ def get_config_filepath(filename="config.toml"):
          Union[str, None]: the filepath to the configuration file or None, if
              no file was found
     """
-    current_dir = os.getcwd()
-    sf_env_config_dir = os.environ.get("SF_CONF", "")
-    sf_user_config_dir = user_config_dir("strawberryfields", "Xanadu")
-
-    directories = [current_dir, sf_env_config_dir, sf_user_config_dir]
+    directories = directories_to_check()
     for directory in directories:
         filepath = os.path.join(directory, filename)
         if os.path.exists(filepath):
@@ -159,24 +156,34 @@ def get_config_filepath(filename="config.toml"):
 
     return None
 
-def active_configs():
-    """Returns the filetpaths for the configuration files that are active. """
-    active_configs = []
-    active = True
+
+def directories_to_check():
+    """Returns the list of directories that should be checked for a configuration file.
+
+    .. note::
+
+        The following directories are checked (in the following order):
+
+        * The current working directory
+        * The directory specified by the environment variable ``SF_CONF`` (if specified)
+        * The user configuration directory (if specified)
+
+    Returns:
+        list: the list of directories to check
+    """
+    directories = []
 
     current_dir = os.getcwd()
     sf_env_config_dir = os.environ.get("SF_CONF", "")
     sf_user_config_dir = user_config_dir("strawberryfields", "Xanadu")
 
-    directories = [current_dir, sf_env_config_dir, sf_user_config_dir]
-    for directory in directories:
-        filepath = os.path.join(directory, filename)
-        if os.path.exists(filepath):
-            if active:
-                filepath += " (active)"
-            active_configs.append(filepath)
+    directories.append(current_dir)
+    if sf_env_config_dir != "":
+        directories.append(sf_env_config_dir)
+    directories.append(sf_user_config_dir)
 
-    return active_configs
+    return directories
+
 
 def load_config_file(filepath):
     """Load a configuration object from a TOML formatted file.
@@ -191,6 +198,30 @@ def load_config_file(filepath):
     with open(filepath, "r") as f:
         config_from_file = toml.load(f)
     return config_from_file
+
+
+def get_api_section_safely(loaded_config, filepath):
+    """Gets the API section from the loaded configuration.
+
+    Args:
+        loaded_config (dict): the configuration that was loaded from the toml
+            file
+        filepath (str): path to the configuration file
+
+    Returns:
+        dict[str, Union[str, bool, int]]: the api section of the configuration
+
+    Raises:
+        ConfigurationError: if the api section was not defined in the
+            configuration
+    """
+    try:
+        return loaded_config["api"]
+    except KeyError:
+        log = create_logger(__name__)
+        log.error("The configuration from the %s file does not "\
+                "contain an \"api\" section.", filepath)
+        raise ConfigurationError()
 
 
 def keep_valid_options(sectionconfig):
@@ -255,6 +286,33 @@ def parse_environment_variable(key, value):
         return int(value)
 
     return value
+
+
+def active_configs(filename="config.toml"):
+    """Returns the filepaths for existing configuration files and marks the one
+    that is active among them.
+
+    This function relies on the precedence ordering of directories to mark the
+    active configuration.
+
+    Returns:
+         Union[str]: the filepath to the configuration file or None, if
+             no file was found
+    """
+    active_configs = []
+    active = True
+
+    directories = directories_to_check()
+
+    for directory in directories:
+        filepath = os.path.join(directory, filename)
+        if os.path.exists(filepath):
+            if active:
+                filepath += " (active)"
+                active = False
+            active_configs.append(filepath)
+
+    return active_configs
 
 
 def store_account(authentication_token, filename="config.toml", location="user_config", **kwargs):
