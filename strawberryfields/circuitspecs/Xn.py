@@ -1,11 +1,26 @@
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""Circuit class specification for the Xn class of circuits."""
+
+import numpy as np
 from thewalrus.quantum import Amat
 from strawberryfields.decompositions import takagi
-from .circuit_specs import CircuitSpecs
 from strawberryfields.program_utils import CircuitError, Command, group_operations
 import strawberryfields.ops as ops
+from .circuit_specs import CircuitSpecs
 from .gbs import GBSSpecs
 from .gaussian_unitary import GaussianUnitary
-import numpy as np
 
 
 class XnSpecs(CircuitSpecs):
@@ -19,7 +34,7 @@ class XnSpecs(CircuitSpecs):
     sq_amplitude = 1.0
 
     primitives = {"S2gate", "Sgate", "MeasureFock", "Rgate", "BSgate", "MZgate", "Interferometer"}
-
+    # This could be all Gaussian operations except displacement, but OK.
     decompositions = {
         "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False},
     }
@@ -27,6 +42,8 @@ class XnSpecs(CircuitSpecs):
     def compile(self, seq, registers):
         seq = GBSSpecs().compile(seq, registers)  # wonder if this is necessary
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.MeasureFock))
+        if C != []:
+            raise ValueError("There should be no operations after MeasureFock")
 
         if len(B[0].reg) != self.modes:
             raise CircuitError("All modes must be measured.")
