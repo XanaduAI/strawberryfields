@@ -112,21 +112,26 @@ def create_config(authentication_token=None, **kwargs):
     return config
 
 
-def delete_config(filename="config.toml"):
+def delete_config(filename="config.toml", directory=None):
     """Delete a configuration file
 
     Keyword Args:
         filename (str): the configuration file to delete
+        directory (str): the directory of the configuration file if None, use
+            default directory
     """
-    file_path = get_default_config_path(filename)
-    if file_path is not None:
-        os.remove(file_path)
+    if directory is None:
+        file_path = get_default_config_path(filename)
+    else:
+        file_path = os.path.join(directory, filename)
+
+    os.remove(file_path)
 
 
 def reset_config():
     """Delete all active configuration files"""
-    for config in active_configs():
-        delete_config(config)
+    for config in get_active_configs():
+        delete_config(os.path.basename(config), os.path.dirname(config))
 
 
 def get_default_config_path(filename="config.toml"):
