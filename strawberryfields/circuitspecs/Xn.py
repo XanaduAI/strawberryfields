@@ -17,10 +17,9 @@ class XnSpecs(CircuitSpecs):
     interactive = False
     sq_amplitude = 1.0
 
-    primitives = {"S2gate", "Sgate", "MeasureFock", "Rgate", "BSgate", "MZgate"}
+    primitives = {"S2gate", "Sgate", "MeasureFock", "Rgate", "BSgate", "MZgate", "Interferometer"}
 
     decompositions = {
-        "Interferometer": {"mesh": "rectangular_symmetric", "drop_identity": False},
         "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False},
     }
 
@@ -30,11 +29,11 @@ class XnSpecs(CircuitSpecs):
 
         if len(B[0].reg) != self.modes:
             raise CircuitError("All modes must be measured.")
-
+        print([cmd.op for cmd in seq])
         tmp_seq = seq[:-1] #This must be the measurements
-        meas_seq = seq[-1]
-        seq = GaussianUnitary().compile(tmp_seq, registers) + [meas_seq]
-
+        meas_seq = [seq[-1]]
+        seq = GaussianUnitary().compile(tmp_seq, registers) + meas_seq
+        #print(np.round(seq[0].op.p[0],3))
         S = seq[0].op.p[0]
         n_modes = len(S)//2
         half_n_modes = n_modes//2
@@ -42,22 +41,23 @@ class XnSpecs(CircuitSpecs):
         cov = (hbar/2) * S @ S.T
         A = Amat(cov, hbar=hbar)
         B = A[:n_modes,:n_modes]
-        print(B)
         B00 = B[:half_n_modes,:half_n_modes]
         B01 = B[:half_n_modes,half_n_modes:]
         B10 = B[half_n_modes:,:half_n_modes]
         B11 = B[half_n_modes:,half_n_modes:]
-
+        #print(B01)
         if not np.allclose(B00,0) or not np.allclose(B11,0):
             raise ValueError('The Gaussian state being prepared does not correspond to a bipartite graph')
         if not np.allclose(B01, B10):
             raise ValueError('The Gaussian state being prepared does not correspond to a symmetric bipartite graph')
-        sqs, V = takagi(B01)
+        sqs, U = takagi(B01)
+        print(sqs)
+
         sqs = np.arctanh(sqs)
-        atol = 1e-3
-        for s in sqs:
-            if not np.allclose(s, 0, atol=atol, rtol=0) or not np.allclose(s, sq_amplitude, atol=atol, rtol=0):
-                raise ValueError('The squeezing parameters necessary for state preparation are outside the range')
+        #atol = 1e-3
+        #for s in sqs:
+        #    if not np.allclose(s, 0, atol=atol, rtol=0) and not np.allclose(s, self.sq_amplitude, atol=atol, rtol=0):
+        #        raise ValueError('The squeezing parameters necessary for state preparation are outside the range')
 
         # logic to convert back to SF commands that match the chip
         sq_seq = [Command(ops.S2gate(sqs[i]), [registers[i], registers[i+half_n_modes]]) for i in range(half_n_modes)]
