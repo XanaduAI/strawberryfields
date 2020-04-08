@@ -463,5 +463,3 @@ def save_config_to_file(config, filepath):
 
 VALID_KEYS = set(create_config()["api"].keys())
 DEFAULT_CONFIG = create_config()
-configuration = load_config()
-config_filepath = get_default_config_path()
