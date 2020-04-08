@@ -131,6 +131,44 @@ class TestLoadConfig:
 
         assert configuration == EXPECTED_CONFIG
 
+    def test_get_api_section_safely_error(self, monkeypatch, tmpdir, caplog):
+        """Test that the get_api_section_safely function raises an error and
+        logs correctly if there is no api section in the configuration file."""
+        filename = tmpdir.join("config.toml")
+
+        empty_file = ""
+
+        with open(filename, "w") as f:
+            f.write(empty_file)
+
+        with monkeypatch.context() as m:
+            with pytest.raises(conf.ConfigurationError, match=""):
+                m.setattr(os, "getcwd", lambda: tmpdir)
+                configuration = conf.load_config()
+
+        assert "does not contain an \"api\" section" in caplog.text
+
+    def test_directories_to_check_with_sf_conf(self, monkeypatch, tmpdir):
+        """Test that the directories_to_check function returns three
+        directories if the SF_CONF variables is defined."""
+        with monkeypatch.context() as m:
+            m.setattr(os, "getcwd", lambda: "First")
+            m.setenv("SF_CONF", "Second")
+            m.setattr(conf, "user_config_dir", lambda *args: "Third")
+            directories = conf.directories_to_check()
+
+            assert ["First", "Second", "Third"] == directories
+
+    def test_directories_to_check_without_sf_conf(self, monkeypatch, tmpdir):
+        """Test that the directories_to_check function returns two
+        directories if the SF_CONF variables is not defined."""
+        with monkeypatch.context() as m:
+            m.setattr(os, "getcwd", lambda: "First")
+            m.delenv("SF_CONF", raising=False)
+            m.setattr(conf, "user_config_dir", lambda *args: "Second")
+            directories = conf.directories_to_check()
+
+            assert ["First", "Second"] == directories
 
 class TestCreateConfigObject:
     """Test the creation of a configuration object"""
