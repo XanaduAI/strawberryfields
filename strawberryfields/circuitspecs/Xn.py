@@ -7,6 +7,7 @@ from .gbs import GBSSpecs
 from .gaussian_unitary import GaussianUnitary
 import numpy as np
 
+
 class XnSpecs(CircuitSpecs):
     """Circuit specifications for the X8 class of circuits."""
 
@@ -24,42 +25,41 @@ class XnSpecs(CircuitSpecs):
     }
 
     def compile(self, seq, registers):
-        seq = GBSSpecs().compile(seq, registers)
+        seq = GBSSpecs().compile(seq, registers)  # wonder if this is necessary
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.MeasureFock))
 
         if len(B[0].reg) != self.modes:
             raise CircuitError("All modes must be measured.")
-        print([cmd.op for cmd in seq])
-        tmp_seq = seq[:-1] #This must be the measurements
+        tmp_seq = seq[:-1]  # This must be the measurements
         meas_seq = [seq[-1]]
         seq = GaussianUnitary().compile(tmp_seq, registers) + meas_seq
-        #print(np.round(seq[0].op.p[0],3))
         S = seq[0].op.p[0]
-        n_modes = len(S)//2
-        half_n_modes = n_modes//2
+        n_modes = len(S) // 2
+        half_n_modes = n_modes // 2
         hbar = 2
-        cov = (hbar/2) * S @ S.T
+        cov = (hbar / 2) * S @ S.T
         A = Amat(cov, hbar=hbar)
-        B = A[:n_modes,:n_modes]
-        B00 = B[:half_n_modes,:half_n_modes]
-        B01 = B[:half_n_modes,half_n_modes:]
-        B10 = B[half_n_modes:,:half_n_modes]
-        B11 = B[half_n_modes:,half_n_modes:]
-        #print(B01)
-        if not np.allclose(B00,0) or not np.allclose(B11,0):
-            raise ValueError('The Gaussian state being prepared does not correspond to a bipartite graph')
+        B = A[:n_modes, :n_modes]
+        B00 = B[:half_n_modes, :half_n_modes]
+        B01 = B[:half_n_modes, half_n_modes:]
+        B10 = B[half_n_modes:, :half_n_modes]
+        B11 = B[half_n_modes:, half_n_modes:]
+        # print(B01)
+        if not np.allclose(B00, 0) or not np.allclose(B11, 0):
+            raise ValueError("The Gaussian state being prepared does not correspond to a bipartite graph")
         if not np.allclose(B01, B10):
-            raise ValueError('The Gaussian state being prepared does not correspond to a symmetric bipartite graph')
+            raise ValueError("The Gaussian state being prepared does not correspond to a symmetric bipartite graph")
         sqs, U = takagi(B01)
-        print(sqs)
-
         sqs = np.arctanh(sqs)
-        #atol = 1e-3
-        #for s in sqs:
-        #    if not np.allclose(s, 0, atol=atol, rtol=0) and not np.allclose(s, self.sq_amplitude, atol=atol, rtol=0):
-        #        raise ValueError('The squeezing parameters necessary for state preparation are outside the range')
+        atol = 1e-3
+        for s in sqs:
+            if not np.allclose(s, 0, atol=atol, rtol=0) and not np.allclose(s, self.sq_amplitude, atol=atol, rtol=0):
+                raise ValueError("The squeezing parameters necessary for state preparation are outside the range")
 
         # logic to convert back to SF commands that match the chip
-        sq_seq = [Command(ops.S2gate(sqs[i]), [registers[i], registers[i+half_n_modes]]) for i in range(half_n_modes)]
-        unitary_seq = [Command(ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=True), registers[:half_n_modes]),Command(ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=True), registers[half_n_modes:])]
+        sq_seq = [Command(ops.S2gate(sqs[i]), [registers[i], registers[i + half_n_modes]]) for i in range(half_n_modes)]
+        unitary_seq = [
+            Command(ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=True), registers[:half_n_modes],),
+            Command(ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=True), registers[half_n_modes:],),
+        ]
         return sq_seq + unitary_seq + meas_seq
