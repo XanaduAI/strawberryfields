@@ -60,7 +60,7 @@ def load_config(filename="config.toml", **kwargs):
     """
     config = create_config()
 
-    filepath = get_config_filepath(filename=filename)
+    filepath = get_default_config_path(filename=filename)
 
     if filepath is not None:
         loaded_config = load_config_file(filepath)
@@ -70,7 +70,7 @@ def load_config(filename="config.toml", **kwargs):
         config["api"].update(valid_api_options)
     else:
         log = create_logger(__name__)
-        log.info("No Strawberry Fields configuration file found.")
+        log.warning("No Strawberry Fields configuration file found.")
 
     update_from_environment_variables(config)
 
@@ -118,7 +118,7 @@ def delete_config(filename="config.toml"):
     Keyword Args:
         filename (str): the configuration file to delete
     """
-    file_path = get_config_filepath(filename)
+    file_path = get_default_config_path(filename)
     if file_path is not None:
         os.remove(file_path)
 
@@ -129,7 +129,7 @@ def reset_config():
         delete_config(config)
 
 
-def get_config_filepath(filename="config.toml"):
+def get_default_config_path(filename="config.toml"):
     """Get the filepath of the first configuration file found from the defined
     configuration directories (if any).
 
@@ -289,31 +289,71 @@ def parse_environment_variable(key, value):
 
 
 def active_configs(filename="config.toml"):
-    """Returns the filepaths for existing configuration files and marks the one
-    that is active among them.
+    """Prints the filepaths for existing configuration files to the standard
+    output and marks the one that is active.
 
-    This function relies on the precedence ordering of directories to mark the
-    active configuration.
+    This function relies on the precedence ordering of directories to check
+    when marking the active configuration.
+
+    Args:
+        filename (str): the name of the configuration files to look for
+    """
+    active_configs = get_active_configs(filename)
+    print_active_configs(active_configs, filename)
+    print_directories_checked()
+
+def get_active_configs(filename="config.toml"):
+    """
+    Args:
+        filename (str): the name of the configuration files to look for
 
     Returns:
-         Union[str]: the filepath to the configuration file or None, if
-             no file was found
+        list[str]: the filepaths for the active configurations
     """
     active_configs = []
-    active = True
 
     directories = directories_to_check()
 
     for directory in directories:
         filepath = os.path.join(directory, filename)
         if os.path.exists(filepath):
-            if active:
-                filepath += " (active)"
-                active = False
             active_configs.append(filepath)
 
     return active_configs
 
+def print_active_configs(active_configs, filename):
+    """Prints the active configurations found based on the filename specified.
+
+    This function relies on the precedence ordering of directories to mark the
+    active configuration.
+
+    Args:
+        active_configs (list[str]): the filepaths for the active configurations
+        filename (str): the name of the configuration file
+    """
+    if active_configs:
+        active = True
+
+        print("\nThe following Strawberry Fields configuration files were found "
+              "with the name \"{}\":\n".format(filename))
+
+        for config in active_configs:
+            if active:
+                config += " (active)"
+                active = False
+
+            print("* " + config)
+    else:
+        print("\nNo Strawberry Fields configuration files were found with the "
+              "name \"{}\".\n".format(filename))
+
+def print_directories_checked():
+    """Prints the directores that are being checked for a configuration file."""
+    directories = directories_to_check()
+
+    print("\nThe following directories were checked:\n")
+    for directory in directories:
+        print("* " + directory)
 
 def store_account(authentication_token, filename="config.toml", location="user_config", **kwargs):
     r"""Configure Strawberry Fields for access to the Xanadu cloud platform by
@@ -419,4 +459,4 @@ def save_config_to_file(config, filepath):
 VALID_KEYS = set(create_config()["api"].keys())
 DEFAULT_CONFIG = create_config()
 configuration = load_config()
-config_filepath = get_config_filepath()
+config_filepath = get_default_config_path()

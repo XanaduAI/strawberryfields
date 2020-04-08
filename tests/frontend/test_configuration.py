@@ -199,7 +199,7 @@ class TestCreateConfigObject:
 
 
 class TestGetConfigFilepath:
-    """Tests for the get_config_filepath function."""
+    """Tests for the get_default_config_path function."""
 
     def test_current_directory(self, tmpdir, monkeypatch):
         """Test that the default configuration file is loaded from the current
@@ -213,7 +213,7 @@ class TestGetConfigFilepath:
 
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: tmpdir)
-            config_filepath = conf.get_config_filepath(filename=filename)
+            config_filepath = conf.get_default_config_path(filename=filename)
 
         assert config_filepath == tmpdir.join(filename)
 
@@ -239,7 +239,7 @@ class TestGetConfigFilepath:
             m.setenv("SF_CONF", str(tmpdir))
             m.setattr(conf, "user_config_dir", lambda *args: "NotTheFileName")
 
-            config_filepath = conf.get_config_filepath(filename="config.toml")
+            config_filepath = conf.get_default_config_path(filename="config.toml")
 
         assert config_filepath == tmpdir.join("config.toml")
 
@@ -266,12 +266,12 @@ class TestGetConfigFilepath:
                 lambda x, *args: tmpdir if x == "strawberryfields" else "NoConfigFileHere",
             )
 
-            config_filepath = conf.get_config_filepath(filename="config.toml")
+            config_filepath = conf.get_default_config_path(filename="config.toml")
 
         assert config_filepath == tmpdir.join("config.toml")
 
     def test_no_config_file_found_returns_none(self, monkeypatch, tmpdir):
-        """Test that the get_config_filepath returns None if the
+        """Test that the get_default_config_path returns None if the
         configuration file is nowhere to be found.
 
         This is a test case for when there is no configuration file:
@@ -288,7 +288,7 @@ class TestGetConfigFilepath:
             m.setenv("SF_CONF", "NoConfigFileHere")
             m.setattr(conf, "user_config_dir", lambda *args: "NoConfigFileHere")
 
-            config_filepath = conf.get_config_filepath(filename="config.toml")
+            config_filepath = conf.get_default_config_path(filename="config.toml")
 
         assert config_filepath is None
 
