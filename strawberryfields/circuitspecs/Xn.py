@@ -72,7 +72,7 @@ class XnSpecs(CircuitSpecs):
         B01 = B[:half_n_modes, half_n_modes:]
         B10 = B[half_n_modes:, :half_n_modes]
         B11 = B[half_n_modes:, half_n_modes:]
-        # print(B01)
+
         if not np.allclose(B00, 0) or not np.allclose(B11, 0):
             raise ValueError(
                 "The Gaussian state being prepared does not correspond to a bipartite graph"
