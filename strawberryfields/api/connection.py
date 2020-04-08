@@ -21,7 +21,7 @@ from typing import List
 import numpy as np
 import requests
 
-from strawberryfields.configuration import configuration
+from strawberryfields.configuration import load_config
 from strawberryfields.io import to_blackbird
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
@@ -76,20 +76,15 @@ class Connection:
         port (int): the port to connect to on the remote host
         use_ssl (bool): whether to use SSL for the connection
     """
-
     # pylint: disable=too-many-instance-attributes
-    def __init__(
-        self,
-        token: str = configuration["api"]["authentication_token"],
-        host: str = configuration["api"]["hostname"],
-        port: int = configuration["api"]["port"],
-        use_ssl: bool = configuration["api"]["use_ssl"],
-        verbose: bool = True,
-    ):
-        self._token = token
-        self._host = host
-        self._port = port
-        self._use_ssl = use_ssl
+    def __init__( self, token: str = None, host: str = None, port: int = None,
+            use_ssl: bool = None, verbose: bool = True,):
+        default_config = load_config()
+
+        self._token = token or default_config["api"]["authentication_token"]
+        self._host = host or default_config["api"]["hostname"]
+        self._port = port or default_config["api"]["port"]
+        self._use_ssl = use_ssl or default_config["api"]["use_ssl"]
         self._verbose = verbose
 
         self._base_url = "http{}://{}:{}".format("s" if self.use_ssl else "", self.host, self.port)
