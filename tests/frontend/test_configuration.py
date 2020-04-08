@@ -197,6 +197,68 @@ class TestCreateConfigObject:
             == OTHER_EXPECTED_CONFIG
         )
 
+class TestRemoveConfigFile:
+    """Test the removal of configuration files"""
+
+    def test_remove_default_config(self, monkeypatch, tmpdir):
+        """Test removing the default config file; i.e. called without arguments"""
+        filename = tmpdir.join("config.toml")
+        empty_file = ""
+
+        with open(filename, "w") as f:
+            f.write(empty_file)
+
+        with monkeypatch.context() as m:
+            m.setattr(conf, "get_default_config_path", lambda *args: filename)
+
+            assert os.path.exists(filename)
+
+            conf.delete_config()
+
+            assert not os.path.exists(filename)
+
+    def test_remove_config_in_subdirectory(self, tmpdir):
+        """Test removing a config file in a subdirectory"""
+        subdir = tmpdir.join("subdir")
+        filename = subdir.join("new_config.toml")
+        empty_file = ""
+
+        os.mkdir(subdir)
+        with open(filename, "w") as f:
+            f.write(empty_file)
+
+        assert os.path.exists(filename)
+
+        conf.delete_config(filename, directory=subdir)
+
+        assert not os.path.exists(filename)
+
+    def test_reset_config(self, monkeypatch, tmpdir):
+        """Test resetting the configuration by removing current configuration files"""
+        subdir = tmpdir.join("subdir")
+        filename_1 = tmpdir.join("config.toml")
+        filename_2 = subdir.join("config.toml")
+        active_configs = [filename_1, filename_2]
+
+        empty_file = ""
+
+        with open(filename_1, "w") as f:
+            f.write(empty_file)
+
+        os.mkdir(subdir)
+        with open(filename_2, "w") as f:
+            f.write(empty_file)
+
+        with monkeypatch.context() as m:
+            m.setattr(conf, "get_active_configs", lambda *args: active_configs)
+
+            assert os.path.exists(filename_1)
+            assert os.path.exists(filename_2)
+
+            conf.reset_config()
+
+            assert not os.path.exists(filename_1)
+            assert not os.path.exists(filename_2)
 
 class TestGetConfigFilepath:
     """Tests for the get_default_config_path function."""
