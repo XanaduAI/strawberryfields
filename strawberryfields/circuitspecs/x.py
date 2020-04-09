@@ -212,7 +212,7 @@ class XSpecs(CircuitSpecs):
                 )
             )
 
-        if not np.allclose(B01, B10.T):
+        if not np.allclose(B01, B10):
             # Not a symmetric bipartite graph
             raise CircuitError(
                 "The applied unitary on modes {}-{} must be identical to the applied unitary on modes {}-{}.".format(
