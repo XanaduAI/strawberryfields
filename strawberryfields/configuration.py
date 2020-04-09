@@ -131,9 +131,17 @@ def delete_config(filename="config.toml", directory=None):
     os.remove(file_path)
 
 
-def reset_config():
-    """Delete all active configuration files"""
-    for config in get_available_config_paths():
+def reset_config(filename="config.toml"):
+    """Delete all active configuration files
+
+    .. warning::
+        This will delete all configuration files with the specified filename
+        (default ``config.toml``) found in the configuration directories.
+
+    Keyword Args:
+        filename (str): the filename of the configuration files to reset
+    """
+    for config in get_available_config_paths(filename):
         delete_config(os.path.basename(config), os.path.dirname(config))
 
 
