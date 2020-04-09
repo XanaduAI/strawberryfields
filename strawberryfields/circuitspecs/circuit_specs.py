@@ -215,7 +215,7 @@ class CircuitSpecs(abc.ABC):
 
         return seq
 
-    def decompose(self, seq):
+    def decompose(self, seq, primitives=None):
         """Recursively decompose all gates in a given sequence, as allowed
         by the circuit specification.
 
@@ -240,21 +240,26 @@ class CircuitSpecs(abc.ABC):
              :meth:`~.Operation.decompose` recursively.
 
         Args:
-            list[strawberryfields.program_utils.Command]: list of commands to
+            seq (list[strawberryfields.program_utils.Command]): list of commands to
                 be decomposed
+            primitives (set[str]): Set of gate names which should be treated as primitives
+                when decomposing. If not provided, the value of :attr:`~.CircuitSpecs.primitives`
+                will be used.
 
         Returns:
             list[strawberryfields.program_utils.Command]: list of compiled commands
             for the circuit specification
         """
+        primitives = primitives or self.primitives
         compiled = []
+
         for cmd in seq:
             op_name = cmd.op.__class__.__name__
             if op_name in self.decompositions:
                 # target can implement this op decomposed
                 if hasattr(cmd.op, "decomp") and not cmd.op.decomp:
                     # user has requested application of the op as a primitive
-                    if op_name in self.primitives:
+                    if op_name in primitives:
                         compiled.append(cmd)
                         continue
                     else:
@@ -274,7 +279,7 @@ class CircuitSpecs(abc.ABC):
                     # simplify the error message by suppressing the previous exception
                     raise err from None
 
-            elif op_name in self.primitives:
+            elif op_name in primitives:
                 # target can handle the op natively
                 compiled.append(cmd)
 
