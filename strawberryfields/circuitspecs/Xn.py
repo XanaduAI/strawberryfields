@@ -19,10 +19,21 @@ class XnSpecs(CircuitSpecs):
     interactive = False
     sq_amplitude = 1.0
 
-    primitives = {"S2gate", "Sgate", "MeasureFock", "Rgate", "BSgate", "MZgate", "Interferometer"}
+    primitives = {
+        "S2gate",
+        "Sgate",
+        "MeasureFock",
+        "Rgate",
+        "BSgate",
+        "MZgate",
+        "Interferometer",
+    }
 
     decompositions = {
-        "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False},
+        "BipartiteGraphEmbed": {
+            "mesh": "rectangular_symmetric",
+            "drop_identity": False,
+        },
     }
 
     def compile(self, seq, registers):
