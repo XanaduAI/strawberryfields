@@ -227,9 +227,7 @@ def get_api_config(loaded_config, filepath):
         return loaded_config["api"]
     except KeyError:
         log = create_logger(__name__)
-        log.error(
-            "The configuration from the %s file does not contain an \"api\" section.", filepath
-        )
+        log.error('The configuration from the %s file does not contain an "api" section.', filepath)
         raise ConfigurationError
 
 
