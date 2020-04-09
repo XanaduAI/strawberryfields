@@ -125,7 +125,7 @@ class XSpecs(CircuitSpecs):
     """Circuit specifications for the X class of circuits."""
 
     short_name = "X"
-    modes = 8
+    modes = None
     remote = True
     local = True
     interactive = False
@@ -159,7 +159,7 @@ class XSpecs(CircuitSpecs):
         seq = GBSSpecs().compile(seq, registers)
 
         # ensure that all modes are measured
-        if len(seq[-1].reg) != self.modes:
+        if len(seq[-1].reg) != n_modes:
             raise CircuitError("All modes must be measured.")
 
         # Use the GaussianUnitary compiler to compute the symplectic
