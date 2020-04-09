@@ -215,7 +215,7 @@ class CircuitSpecs(abc.ABC):
 
         return seq
 
-    def decompose(self, seq, primitives=None):
+    def decompose(self, seq, primitives=None, decompositions=None):
         """Recursively decompose all gates in a given sequence, as allowed
         by the circuit specification.
 
@@ -245,17 +245,22 @@ class CircuitSpecs(abc.ABC):
             primitives (set[str]): Set of gate names which should be treated as primitives
                 when decomposing. If not provided, the value of :attr:`~.CircuitSpecs.primitives`
                 will be used.
+            decompositions (dict[str, dict]): Keys represent names of Strawberry Fields gates
+                that should be decomposed, with the value corresponding to any keyword arguments
+                that should be passed to the gates ``_decompose`` method. If not provided, the value
+                of :attr:`~.CircuitSpecs.decompositions` is used.
 
         Returns:
             list[strawberryfields.program_utils.Command]: list of compiled commands
             for the circuit specification
         """
         primitives = primitives or self.primitives
+        decompositions = primitives or self.decompositions
         compiled = []
 
         for cmd in seq:
             op_name = cmd.op.__class__.__name__
-            if op_name in self.decompositions:
+            if op_name in decompositions:
                 # target can implement this op decomposed
                 if hasattr(cmd.op, "decomp") and not cmd.op.decomp:
                     # user has requested application of the op as a primitive
@@ -269,10 +274,10 @@ class CircuitSpecs(abc.ABC):
                             )
                         )
                 try:
-                    kwargs = self.decompositions[op_name]
+                    kwargs = decompositions[op_name]
                     temp = cmd.op.decompose(cmd.reg, **kwargs)
                     # now compile the decomposition
-                    temp = self.decompose(temp)
+                    temp = self.decompose(temp, primitives, decompositions)
                     compiled.extend(temp)
                 except NotImplementedError as err:
                     # Operation does not have _decompose() method defined!
