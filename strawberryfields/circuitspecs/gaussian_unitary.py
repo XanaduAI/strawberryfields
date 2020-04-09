@@ -173,9 +173,7 @@ class GaussianUnitary(CircuitSpecs):
                     u = np.exp(1j * params[1])
                     U = 0.5 * np.array([[u * (v - 1), 1j * (1 + v)], [1j * u * (1 + v), 1 - v]])
                     S = expand(
-                        interferometer(U),
-                        [dict_indices[modes[0]], dict_indices[modes[1]]],
-                        nmodes,
+                        interferometer(U), [dict_indices[modes[0]], dict_indices[modes[1]]], nmodes,
                     )
                 Snet = S @ Snet
                 rnet = S @ rnet
