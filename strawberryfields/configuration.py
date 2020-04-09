@@ -212,7 +212,7 @@ def get_api_section_safely(loaded_config, filepath):
     """Gets the API section from the loaded configuration.
 
     Args:
-        loaded_config (dict): the configuration that was loaded from the toml
+        loaded_config (dict): the configuration that was loaded from the TOML config
             file
         filepath (str): path to the configuration file
 
