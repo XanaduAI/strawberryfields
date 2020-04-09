@@ -178,8 +178,8 @@ class TestActiveConfigs:
     """Test the active_configs function and its auxiliary functions."""
 
     @pytest.mark.parametrize("kwargs", test_kwargs)
-    def test_get_active_configs_mock_directories(self, monkeypatch, kwargs):
-        """Test that the get_active_configs correctly uses the output of the
+    def test_get_available_config_paths_mock_directories(self, monkeypatch, kwargs):
+        """Test that the get_available_config_paths correctly uses the output of the
         directories_to_check function."""
         test_directory = "test_directory_path"
         test_file_name = kwargs["filename"] if kwargs else default_file_name
@@ -187,12 +187,12 @@ class TestActiveConfigs:
         with monkeypatch.context() as m:
             m.setattr(conf, "directories_to_check", lambda: [test_directory])
             m.setattr(os.path, "exists", lambda *args: True)
-            active_configs = conf.get_active_configs(**kwargs)
+            active_configs = conf.get_available_config_paths(**kwargs)
             assert active_configs == [os.path.join(test_directory, test_file_name)]
 
     @pytest.mark.parametrize("kwargs", test_kwargs)
-    def test_get_active_configs_integration(self, monkeypatch, tmpdir, kwargs):
-        """Tests that the get_active_configs function integrates well with
+    def test_get_available_config_paths_integration(self, monkeypatch, tmpdir, kwargs):
+        """Tests that the get_available_config_paths function integrates well with
         parts of the directories_to_check function."""
         test_file_name = kwargs["filename"] if kwargs else default_file_name
 
@@ -211,7 +211,7 @@ class TestActiveConfigs:
             m.setenv("SF_CONF", str(path2))
             m.setattr(conf, "user_config_dir", lambda *args: path3)
             m.setattr(os.path, "exists", lambda arg: arg in temporary_files)
-            active_configs = conf.get_active_configs(**kwargs)
+            active_configs = conf.get_available_config_paths(**kwargs)
             assert active_configs == [file1, file2, file3]
 
     def test_print_active_configs_single_config(self, capsys):
@@ -313,7 +313,7 @@ class TestRemoveConfigFile:
             f.write(empty_file)
 
         with monkeypatch.context() as m:
-            m.setattr(conf, "get_default_config_path", lambda *args: filename)
+            m.setattr(conf, "find_config_file", lambda *args: filename)
 
             assert os.path.exists(filename)
 
@@ -354,7 +354,7 @@ class TestRemoveConfigFile:
             f.write(empty_file)
 
         with monkeypatch.context() as m:
-            m.setattr(conf, "get_active_configs", lambda *args: active_configs)
+            m.setattr(conf, "get_available_config_paths", lambda *args: active_configs)
 
             assert os.path.exists(filename_1)
             assert os.path.exists(filename_2)
@@ -365,7 +365,7 @@ class TestRemoveConfigFile:
             assert not os.path.exists(filename_2)
 
 class TestGetConfigFilepath:
-    """Tests for the get_default_config_path function."""
+    """Tests for the find_config_file function."""
 
     def test_current_directory(self, tmpdir, monkeypatch):
         """Test that the default configuration file is loaded from the current
@@ -379,7 +379,7 @@ class TestGetConfigFilepath:
 
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: tmpdir)
-            config_filepath = conf.get_default_config_path(filename=filename)
+            config_filepath = conf.find_config_file(filename=filename)
 
         assert config_filepath == tmpdir.join(filename)
 
@@ -405,7 +405,7 @@ class TestGetConfigFilepath:
             m.setenv("SF_CONF", str(tmpdir))
             m.setattr(conf, "user_config_dir", lambda *args: "NotTheFileName")
 
-            config_filepath = conf.get_default_config_path(filename="config.toml")
+            config_filepath = conf.find_config_file(filename="config.toml")
 
         assert config_filepath == tmpdir.join("config.toml")
 
@@ -432,12 +432,12 @@ class TestGetConfigFilepath:
                 lambda x, *args: tmpdir if x == "strawberryfields" else "NoConfigFileHere",
             )
 
-            config_filepath = conf.get_default_config_path(filename="config.toml")
+            config_filepath = conf.find_config_file(filename="config.toml")
 
         assert config_filepath == tmpdir.join("config.toml")
 
     def test_no_config_file_found_returns_none(self, monkeypatch, tmpdir):
-        """Test that the get_default_config_path returns None if the
+        """Test that the find_config_file returns None if the
         configuration file is nowhere to be found.
 
         This is a test case for when there is no configuration file:
@@ -454,7 +454,7 @@ class TestGetConfigFilepath:
             m.setenv("SF_CONF", "NoConfigFileHere")
             m.setattr(conf, "user_config_dir", lambda *args: "NoConfigFileHere")
 
-            config_filepath = conf.get_default_config_path(filename="config.toml")
+            config_filepath = conf.find_config_file(filename="config.toml")
 
         assert config_filepath is None
 
