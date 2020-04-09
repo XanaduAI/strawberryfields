@@ -214,65 +214,81 @@ class TestActiveConfigs:
             active_configs = conf.get_available_config_paths(**kwargs)
             assert active_configs == [file1, file2, file3]
 
-    def test_print_active_configs_single_config(self, capsys):
+    def test_print_active_configs_single_config(self, capsys, monkeypatch):
         """Checks that the correct message is outputted when a single
         configuration file was found."""
         active_configs = ["first_path"]
-        conf.print_active_configs(active_configs, test_file_name)
-
-        captured = capsys.readouterr()
-
-        general_message = "\nThe following Strawberry Fields configuration files were found "\
-                          "with the name \"{}\":\n".format(test_file_name)
-        single_config = "\n* " + active_configs[0] + " (active)\n"
-
-        assert general_message + single_config == captured.out
-
-    def test_print_active_configs_multiple_configs(self, capsys):
-        """Checks that the correct message is outputted for a single
-        configuration file found."""
-        active_configs = ["first_path", "second_path", "third_path"]
-        conf.print_active_configs(active_configs, test_file_name)
-
-        captured = capsys.readouterr()
-
-        general_message = "\nThe following Strawberry Fields configuration files were found "\
-                          "with the name \"{}\":\n".format(test_file_name)
-        first_config = "\n* " + active_configs[0] + " (active)\n"
-        second_config = "* " + active_configs[1] + "\n"
-        third_config = "* " + active_configs[2] + "\n"
-
-        assert general_message + first_config + second_config + third_config == captured.out
-
-    def test_print_active_configs_no_configs(self, capsys):
-        """Checks that the correct message is outputted if no configuration
-        files were found."""
-        conf.print_active_configs([], test_file_name)
-
-        captured = capsys.readouterr()
-
-        general_message = "\nNo Strawberry Fields configuration files were found with the "\
-                          "name \"{}\".\n\n".format(test_file_name)
-
-        assert captured.out == general_message
-
-    def test_print_directories_checked(self, monkeypatch, capsys):
-        """Checks that the correct directories are outputted by
-        print_directories_checked."""
         temp_dirs = ["first_path", "second_path", "third_path"]
-
         with monkeypatch.context() as m:
-            m.setattr(conf, "directories_to_check", lambda : temp_dirs)
-            conf.print_directories_checked()
+            m.setattr(conf, "directories_to_check", lambda: temp_dirs)
+            m.setattr(conf, "get_available_config_paths", lambda *args: active_configs)
+            conf.active_configs(test_file_name)
 
             captured = capsys.readouterr()
-            general_message = "\nThe following directories were checked:\n\n"
+
+            general_message_1 = "\nThe following Strawberry Fields configuration files were found "\
+                            "with the name \"{}\":\n".format(test_file_name)
+            single_config = "\n* " + active_configs[0] + " (active)\n"
+
+            general_message_2 = "\nThe following directories were checked:\n\n"
 
             first_dir_msg = "* " + temp_dirs[0] + "\n"
             second_dir_msg = "* " + temp_dirs[1] + "\n"
             third_dir_msg = "* " + temp_dirs[2] + "\n"
 
-            assert general_message + first_dir_msg + second_dir_msg + third_dir_msg == captured.out
+            assert captured.out == general_message_1 + single_config +\
+                                   general_message_2 + first_dir_msg + second_dir_msg + third_dir_msg
+
+    def test_print_active_configs_multiple_configs(self, capsys, monkeypatch):
+        """Checks that the correct message is outputted for a single
+        configuration file found."""
+        active_configs = ["first_path", "second_path", "third_path"]
+        temp_dirs = ["first_path", "second_path", "third_path"]
+        with monkeypatch.context() as m:
+            m.setattr(conf, "directories_to_check", lambda: temp_dirs)
+            m.setattr(conf, "get_available_config_paths", lambda *args: active_configs)
+            conf.active_configs(test_file_name)
+
+            captured = capsys.readouterr()
+
+            general_message_1 = "\nThe following Strawberry Fields configuration files were found "\
+                            "with the name \"{}\":\n".format(test_file_name)
+            first_config = "\n* " + active_configs[0] + " (active)\n"
+            second_config = "* " + active_configs[1] + "\n"
+            third_config = "* " + active_configs[2] + "\n"
+
+            general_message_2 = "\nThe following directories were checked:\n\n"
+
+            first_dir_msg = "* " + temp_dirs[0] + "\n"
+            second_dir_msg = "* " + temp_dirs[1] + "\n"
+            third_dir_msg = "* " + temp_dirs[2] + "\n"
+
+            assert captured.out == general_message_1 + first_config + second_config + third_config +\
+                                   general_message_2 + first_dir_msg + second_dir_msg + third_dir_msg
+
+    def test_print_active_configs_no_configs(self, capsys, monkeypatch):
+        """Checks that the correct message is outputted if no configuration
+        files were found."""
+        temp_dirs = ["first_path", "second_path", "third_path"]
+        with monkeypatch.context() as m:
+            m.setattr(conf, "directories_to_check", lambda: temp_dirs)
+            m.setattr(conf, "get_available_config_paths", lambda *args: [])
+            conf.active_configs(test_file_name)
+
+            captured = capsys.readouterr()
+
+            general_message_1 = "\nNo Strawberry Fields configuration files were found with the "\
+                            "name \"{}\".\n\n".format(test_file_name)
+
+            general_message_2 = "\nThe following directories were checked:\n\n"
+
+            first_dir_msg = "* " + temp_dirs[0] + "\n"
+            second_dir_msg = "* " + temp_dirs[1] + "\n"
+            third_dir_msg = "* " + temp_dirs[2] + "\n"
+
+            assert captured.out == general_message_1 +\
+                                   general_message_2 + first_dir_msg + second_dir_msg + third_dir_msg
+
 
 class TestCreateConfigObject:
     """Test the creation of a configuration object"""
