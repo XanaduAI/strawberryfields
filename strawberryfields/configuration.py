@@ -117,7 +117,7 @@ def delete_config(filename="config.toml", directory=None):
     """Delete a configuration file
 
     Keyword Args:
-        filename (str): the configuration file to delete
+        filename (str): the filename of the configuration file to delete
         directory (str): the directory of the configuration file if None, use
             default directory
     """
