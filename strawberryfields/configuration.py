@@ -120,7 +120,7 @@ def delete_config(filename="config.toml", directory=None):
 
     Keyword Args:
         filename (str): the filename of the configuration file to delete
-        directory (str): The directory of the configuration file to delete.
+        directory (str): the directory of the configuration file to delete
             If ``None``, the currently active configuration file is deleted.
     """
     if directory is None:
