@@ -280,7 +280,7 @@ class TestConnectionIntegration:
             assert os.path.exists(file1)
 
             assert a.token == "DummyToken"
-            assert a.host == "DummyToken"
+            assert a.host == "DummyHost"
             assert a.port == 1234
             assert a.use_ssl == False
             conf.delete_config(directory=path1)
