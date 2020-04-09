@@ -60,11 +60,11 @@ def load_config(filename="config.toml", **kwargs):
     """
     config = create_config()
 
-    filepath = get_default_config_path(filename=filename)
+    filepath = find_config_file(filename=filename)
 
     if filepath is not None:
         loaded_config = load_config_file(filepath)
-        api_config = get_api_section_safely(loaded_config, filepath)
+        api_config = get_api_config(loaded_config, filepath)
 
         valid_api_options = keep_valid_options(api_config)
         config["api"].update(valid_api_options)
@@ -124,7 +124,7 @@ def delete_config(filename="config.toml", directory=None):
             If ``None``, the currently active configuration file is deleted.
     """
     if directory is None:
-        file_path = get_default_config_path(filename)
+        file_path = find_config_file(filename)
     else:
         file_path = os.path.join(directory, filename)
 
@@ -133,11 +133,11 @@ def delete_config(filename="config.toml", directory=None):
 
 def reset_config():
     """Delete all active configuration files"""
-    for config in get_active_configs():
+    for config in get_available_config_paths():
         delete_config(os.path.basename(config), os.path.dirname(config))
 
 
-def get_default_config_path(filename="config.toml"):
+def find_config_file(filename="config.toml"):
     """Get the filepath of the first configuration file found from the defined
     configuration directories (if any).
 
@@ -208,7 +208,7 @@ def load_config_file(filepath):
     return config_from_file
 
 
-def get_api_section_safely(loaded_config, filepath):
+def get_api_config(loaded_config, filepath):
     """Gets the API section from the loaded configuration.
 
     Args:
@@ -228,9 +228,9 @@ def get_api_section_safely(loaded_config, filepath):
     except KeyError:
         log = create_logger(__name__)
         log.error(
-            "The configuration from the %s file does not 'contain an \"api\" section.'", filepath
+            "The configuration from the %s file does not contain an \"api\" section.", filepath
         )
-        raise ConfigurationError()
+        raise ConfigurationError
 
 
 def keep_valid_options(sectionconfig):
@@ -307,13 +307,14 @@ def active_configs(filename="config.toml"):
     Args:
         filename (str): the name of the configuration files to look for
     """
-    active_configs_list = get_active_configs(filename)
+    active_configs_list = get_available_config_paths(filename)
     print_active_configs(active_configs_list, filename)
     print_directories_checked()
 
 
-def get_active_configs(filename="config.toml"):
-    """
+def get_available_config_paths(filename="config.toml"):
+    """Get the paths for the configuration files available in Strawberry Fields.
+
     Args:
         filename (str): the name of the configuration files to look for
 
