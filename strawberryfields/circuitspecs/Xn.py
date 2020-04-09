@@ -1,4 +1,5 @@
 from thewalrus.quantum import Amat
+from thewalrus.symplectic import expand
 from strawberryfields.decompositions import takagi
 from .circuit_specs import CircuitSpecs
 from strawberryfields.program_utils import CircuitError, Command, group_operations
@@ -25,6 +26,7 @@ class XnSpecs(CircuitSpecs):
     }
 
     def compile(self, seq, registers):
+        n_modes = len(registers)
         seq = GBSSpecs().compile(seq, registers)
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.MeasureFock))
 
@@ -33,8 +35,12 @@ class XnSpecs(CircuitSpecs):
         tmp_seq = seq[:-1]  # This must be the measurements
         meas_seq = [seq[-1]]
         seq = GaussianUnitary().compile(tmp_seq, registers) + meas_seq
-        S = seq[0].op.p[0]
-        n_modes = len(S) // 2
+        used_modes = [x.ind for x in seq[0].reg]
+        if len(used_modes) == n_modes:
+            S = seq[0].op.p[0]
+        else:
+            S = expand(seq[0].op.p[0], used_modes, n_modes)
+
         half_n_modes = n_modes // 2
         hbar = 2
         cov = (hbar / 2) * S @ S.T
