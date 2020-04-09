@@ -303,8 +303,8 @@ def active_configs(filename="config.toml"):
     Args:
         filename (str): the name of the configuration files to look for
     """
-    active_configs = get_active_configs(filename)
-    print_active_configs(active_configs, filename)
+    active_configs_list = get_active_configs(filename)
+    print_active_configs(active_configs_list, filename)
     print_directories_checked()
 
 def get_active_configs(filename="config.toml"):
@@ -315,34 +315,34 @@ def get_active_configs(filename="config.toml"):
     Returns:
         list[str]: the filepaths for the active configurations
     """
-    active_configs = []
+    active_configs_list = []
 
     directories = directories_to_check()
 
     for directory in directories:
         filepath = os.path.join(directory, filename)
         if os.path.exists(filepath):
-            active_configs.append(filepath)
+            active_configs_list.append(filepath)
 
-    return active_configs
+    return active_configs_list
 
-def print_active_configs(active_configs, filename):
+def print_active_configs(active_configs_list, filename):
     """Prints the active configurations found based on the filename specified.
 
     This function relies on the precedence ordering of directories to mark the
     active configuration.
 
     Args:
-        active_configs (list[str]): the filepaths for the active configurations
+        active_configs_list (list[str]): the filepaths for the active configurations
         filename (str): the name of the configuration file
     """
-    if active_configs:
+    if active_configs_list:
         active = True
 
         print("\nThe following Strawberry Fields configuration files were found "
               "with the name \"{}\":\n".format(filename))
 
-        for config in active_configs:
+        for config in active_configs_list:
             if active:
                 config += " (active)"
                 active = False
