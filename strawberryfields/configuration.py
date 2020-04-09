@@ -114,7 +114,9 @@ def create_config(authentication_token=None, **kwargs):
 
 
 def delete_config(filename="config.toml", directory=None):
-    """Delete a configuration file
+    """Delete a configuration file.
+    
+    If called with no arguments, the currently active configuration file is deleted.
 
     Keyword Args:
         filename (str): the filename of the configuration file to delete
