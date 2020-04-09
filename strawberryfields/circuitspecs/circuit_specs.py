@@ -255,7 +255,7 @@ class CircuitSpecs(abc.ABC):
             for the circuit specification
         """
         primitives = primitives or self.primitives
-        decompositions = primitives or self.decompositions
+        decompositions = decompositions or self.decompositions
         compiled = []
 
         for cmd in seq:
