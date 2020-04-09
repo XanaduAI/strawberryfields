@@ -76,9 +76,16 @@ class Connection:
         port (int): the port to connect to on the remote host
         use_ssl (bool): whether to use SSL for the connection
     """
+
     # pylint: disable=too-many-instance-attributes
-    def __init__( self, token: str = None, host: str = None, port: int = None,
-            use_ssl: bool = None, verbose: bool = True,):
+    def __init__(
+        self,
+        token: str = None,
+        host: str = None,
+        port: int = None,
+        use_ssl: bool = None,
+        verbose: bool = True,
+    ):
         default_config = load_config()
 
         self._token = token or default_config["api"]["authentication_token"]

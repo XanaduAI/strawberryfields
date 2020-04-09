@@ -79,6 +79,7 @@ def load_config(filename="config.toml", **kwargs):
 
     return config
 
+
 def create_config(authentication_token=None, **kwargs):
     """Create a configuration object that stores configuration related data
     organized into sections.
@@ -224,8 +225,9 @@ def get_api_section_safely(loaded_config, filepath):
         return loaded_config["api"]
     except KeyError:
         log = create_logger(__name__)
-        log.error("The configuration from the %s file does not "\
-                "contain an \"api\" section.", filepath)
+        log.error(
+            "The configuration from the %s file does not 'contain an \"api\" section.'", filepath
+        )
         raise ConfigurationError()
 
 
@@ -307,6 +309,7 @@ def active_configs(filename="config.toml"):
     print_active_configs(active_configs_list, filename)
     print_directories_checked()
 
+
 def get_active_configs(filename="config.toml"):
     """
     Args:
@@ -326,6 +329,7 @@ def get_active_configs(filename="config.toml"):
 
     return active_configs_list
 
+
 def print_active_configs(active_configs_list, filename):
     """Prints the active configurations found based on the filename specified.
 
@@ -339,8 +343,10 @@ def print_active_configs(active_configs_list, filename):
     if active_configs_list:
         active = True
 
-        print("\nThe following Strawberry Fields configuration files were found "
-              "with the name \"{}\":\n".format(filename))
+        print(
+            "\nThe following Strawberry Fields configuration files were found "
+            'with the name "{}":\n'.format(filename)
+        )
 
         for config in active_configs_list:
             if active:
@@ -349,8 +355,11 @@ def print_active_configs(active_configs_list, filename):
 
             print("* " + config)
     else:
-        print("\nNo Strawberry Fields configuration files were found with the "
-              "name \"{}\".\n".format(filename))
+        print(
+            "\nNo Strawberry Fields configuration files were found with the "
+            'name "{}".\n'.format(filename)
+        )
+
 
 def print_directories_checked():
     """Prints the directores that are being checked for a configuration file."""
@@ -359,6 +368,7 @@ def print_directories_checked():
     print("\nThe following directories were checked:\n")
     for directory in directories:
         print("* " + directory)
+
 
 def store_account(authentication_token, filename="config.toml", location="user_config", **kwargs):
     r"""Configure Strawberry Fields for access to the Xanadu cloud platform by
