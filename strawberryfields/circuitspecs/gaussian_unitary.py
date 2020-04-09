@@ -176,6 +176,7 @@ class GaussianUnitary(CircuitSpecs):
                         interferometer(U),
                         [dict_indices[modes[0]], dict_indices[modes[1]]],
                         nmodes,
+                    )
                 Snet = S @ Snet
                 rnet = S @ rnet
 
