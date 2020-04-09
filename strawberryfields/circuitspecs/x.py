@@ -72,7 +72,7 @@ class Range:
 
         if self.y < self.x:
             raise ValueError(
-                "Upper bound of the range must be strictly " "larger than the lower bound."
+                "Upper bound of the range must be strictly larger than the lower bound."
             )
 
     def __contains__(self, item):
