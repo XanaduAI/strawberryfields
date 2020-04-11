@@ -24,7 +24,7 @@ and backend components (all found within the :mod:`strawberryfields.backends` su
 from . import apps
 from ._version import __version__
 from .cli import ping
-from .configuration import store_account
+from .configuration import store_account, active_configs, reset_config
 from .engine import Engine, LocalEngine, RemoteEngine
 from .io import load, save
 from .parameters import par_funcs as math
@@ -39,9 +39,10 @@ __all__ = [
     "load",
     "about",
     "cite",
-    "math",
     "ping",
     "store_account",
+    "active_configs",
+    "reset_config"
 ]
 
 
