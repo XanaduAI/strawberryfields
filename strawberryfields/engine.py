@@ -592,7 +592,7 @@ class RemoteEngine:
             self.log.debug(
                 "Compiling program for target %s with compile options %s",
                 self.target,
-                compile_options
+                compile_options,
             )
             program = program.compile(self.target, **compile_options)
 

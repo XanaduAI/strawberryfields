@@ -173,6 +173,7 @@ def load_config(filename="config.toml", logging=True, **kwargs):
 
     if logging:
         from strawberryfields.logger import create_logger
+
         log = create_logger(__name__)
 
     if filepath is not None:
@@ -211,7 +212,7 @@ def load_config(filename="config.toml", logging=True, **kwargs):
     if logging:
         config_details = "Loaded configuration: {}".format(config)
         auth_token = config.get("api", {}).get("authentication_token", "")
-        config_details = config_details.replace(auth_token[5:], "*"*len(auth_token[5:]))
+        config_details = config_details.replace(auth_token[5:], "*" * len(auth_token[5:]))
         log.debug(config_details)
 
     return config
