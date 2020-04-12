@@ -75,12 +75,12 @@ def logging_handler_defined(logger):
     return False
 
 
-default_handler = logging.StreamHandler(sys.stderr)
+output_handler = logging.StreamHandler(sys.stderr)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-default_handler.setFormatter(formatter)
+output_handler.setFormatter(formatter)
 
 
-def create_logger(name, level=logging.INFO):
+def create_logger(name, level=None):
     """Get the Strawberry Fields module specific logger and configure it if needed.
 
     Configuration only takes place if no user configuration was applied to the
@@ -108,7 +108,34 @@ def create_logger(name, level=logging.INFO):
     no_handlers = not logging_handler_defined(logger)
 
     if effective_level_inherited and level_not_set and no_handlers:
-        logger.setLevel(level)
-        logger.addHandler(default_handler)
+        # The root logger should pass all log message levels
+        # to the handlers.
+        logger.setLevel(logging.DEBUG)
+
+        # Import load_config here to avoid a cyclic import
+        # (since the configuration module imports the logger).
+        from strawberryfields.configuration import load_config
+
+        # The load_config function by default logs information.
+        # We need to turn this off here, since the logger has not
+        # been created yet.
+        default_config = load_config(verbose=False)
+        level = level or getattr(logging, default_config["logging"]["level"].upper())
+
+        # Attach the standard output logger,
+        # with the user defined logging level (defaults to INFO)
+        output_handler.setLevel(level)
+        logger.addHandler(output_handler)
+
+        if "logfile" in default_config["logging"]:
+            # Create the file logger
+            file_handler = logging.FileHandler(
+                default_config["logging"]["logfile"], disable_existing_loggers=False
+            )
+            file_handler.setFormatter(formatter)
+
+            # file logger should display all log message levels
+            file_handler.setLevel(logging.DEBUG)
+            logger.addHandler(file_handler)
 
     return logger

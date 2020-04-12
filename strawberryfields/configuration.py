@@ -30,8 +30,27 @@ DEFAULT_CONFIG_SPEC = {
         "hostname": (str, "platform.strawberryfields.ai"),
         "use_ssl": (bool, True),
         "port": (int, 443),
-    }
+    },
+    "logging": {"level": (str, "info"), "logfile": ((str, type(None)), None)},
 }
+"""dict: Nested dictionary representing the allowed configuration
+sections, options, default values, and allowed types for Strawberry
+Fields configurations. For each configuration option key, the
+corresponding value is a length-2 tuple, containing:
+
+* A type or tuple of types, representing the allowed type
+  for that configuration option.
+
+* The default value for that configuration option.
+
+.. note::
+
+    By TOML convention, keys with a default value of ``None``
+    will **not** be present in the generated/loaded configuration
+    file. This is because TOML has no concept of ``NoneType`` or ``Null``,
+    instead, the non-presence of a key indicates that the configuration
+    value is not set.
+"""
 
 
 class ConfigurationError(Exception):
@@ -39,37 +58,66 @@ class ConfigurationError(Exception):
 
 
 def _deep_update(source, overrides):
-    """Update a nested dictionary."""
+    """Recursively update a nested dictionary.
+
+    This function is a generalization of Python's built in
+    ``dict.update`` method, modified to recursively update
+    keys with nested dictionaries.
+    """
     for key, value in overrides.items():
         if isinstance(value, collections.Mapping) and value:
+            # Override value is a non-empty dictionary.
+            # Update the source key with the override dictionary.
             returned = _deep_update(source.get(key, {}), value)
             source[key] = returned
         elif value != {}:
+            # Override value is not an empty dictionary.
             source[key] = overrides[key]
     return source
 
 
 def _generate_config(config_spec, **kwargs):
-    """Generates a configuration, given a configuration specification
-    and optional keyword arguments.
+    """Generates a configuration, given a Strawberry Fields configuration
+    specification.
+
+    See :attr:`~.DEFAULT_CONFIG_SPEC` for an example of a valid configuration
+    specification.
+
+    Optional keyword arguments may be provided to override default values
+    in the cofiguration specification. If the provided override values
+    do not match the expected type defined in the configuration spec,
+    a ``ConfigurationError`` is raised.
+
+    **Example**
+
+    >>> _generate_config(DEFAULT_CONFIG_SPEC, api={"port": 54})
+    {
+        "api": {
+            "authentication_token": "",
+            "hostname": "platform.strawberryfields.ai",
+            "use_ssl": True,
+            "port": 54,
+        }
+    }
 
     Args:
-        config_spec (dict): Nested dictionary representing the
-            configuration specification. Keys in the dictionary
-            represent allowed configuration keys. Corresponding
-            values must be a tuple, with the first element representing
-            the type, and the second representing the default value.
+        config_spec (dict): nested dictionary representing the
+            configuration specification
 
     Keyword Args:
         Provided keyword arguments may overwrite default values of
-        matching (nested) keys.
+        matching keys.
 
     Returns:
         dict: the default configuration defined by the input config spec
+
+    Raises:
+        ConfigurationError: if provided keyword argument overrides do not
+        match the expected type defined in the configuration spec.
     """
     res = {}
     for k, v in config_spec.items():
-        if isinstance(v, tuple) and isinstance(v[0], type):
+        if isinstance(v, tuple):
             # config spec value v represents the allowed type and default value
 
             if k in kwargs:
@@ -82,9 +130,15 @@ def _generate_config(config_spec, **kwargs):
                         )
                     )
 
-                res[k] = kwargs[k]
+                if kwargs[k] is not None:
+                    # Only add the key to the configuration object
+                    # if the provided override is not None.
+                    res[k] = kwargs[k]
             else:
-                res[k] = v[1]
+                if v[1] is not None:
+                    # Only add the key to the configuration object
+                    # if the default value is not None.
+                    res[k] = v[1]
 
         elif isinstance(v, dict):
             # config spec value is a dictionary of more options
@@ -92,7 +146,7 @@ def _generate_config(config_spec, **kwargs):
     return res
 
 
-def load_config(filename="config.toml", **kwargs):
+def load_config(filename="config.toml", verbose=True, **kwargs):
     """Load configuration from keyword arguments, configuration file or
     environment variables.
 
@@ -107,7 +161,8 @@ def load_config(filename="config.toml", **kwargs):
         3. data contained in a configuration file (if exists)
 
     Args:
-        filename (str): the name of the configuration file to look for.
+        filename (str): the name of the configuration file to look for
+        verbose (bool): whether or not to log warnings and errors
 
     Keyword Args:
         Additional configuration options are detailed in
@@ -123,13 +178,15 @@ def load_config(filename="config.toml", **kwargs):
         with open(filepath, "r") as f:
             config = toml.load(f)
 
-        if "api" not in config:
+        if "api" not in config and verbose:
             # Raise a warning if the configuration doesn't contain
             # an API section.
             log = create_logger(__name__)
-            log.warning('The configuration from the %s file does not contain an "api" section.', filepath)
+            log.warning(
+                'The configuration from the %s file does not contain an "api" section.', filepath
+            )
 
-    else:
+    elif verbose:
         config = {}
         log = create_logger(__name__)
         log.warning("No Strawberry Fields configuration file found.")
@@ -138,10 +195,8 @@ def load_config(filename="config.toml", **kwargs):
     update_from_environment_variables(config)
 
     # update the configuration from keyword arguments
-    # NOTE: currently the configuration keyword arguments are specific
-    # only to the API section. Once we have more configuration sections,
-    # they will likely need to be passed via separate keyword arguments.
-    _deep_update(config, {"api": kwargs})
+    for config_section, section_options in kwargs.items():
+        _deep_update(config, {config_section: section_options})
 
     # generate the configuration object by using the defined
     # configuration specification at the top of the file
@@ -436,10 +491,24 @@ def store_account(authentication_token, filename="config.toml", location="user_c
 
     filepath = os.path.join(directory, filename)
 
+    config = {}
+
+    # load the existing config if it already exists
+    if os.path.isfile(filepath):
+        with open(filepath, "r") as f:
+            config = toml.load(f)
+
+    # update the loaded configuration file with the specified
+    # authentication token
+    kwargs.update({"authentication_token": authentication_token})
+
+    # update the loaded configuration with any
+    # provided API options passed as keyword arguments
+    _deep_update(config, {"api": kwargs})
+
     # generate the configuration object by using the defined
     # configuration specification at the top of the file
-    kwargs.update({"authentication_token": authentication_token})
-    config = _generate_config(DEFAULT_CONFIG_SPEC, api=kwargs)
+    config = _generate_config(DEFAULT_CONFIG_SPEC, **config)
 
     with open(filepath, "w") as f:
         toml.dump(config, f)

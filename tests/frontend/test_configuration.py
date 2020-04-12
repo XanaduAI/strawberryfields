@@ -47,7 +47,8 @@ EXPECTED_CONFIG = {
         "hostname": "platform.strawberryfields.ai",
         "use_ssl": True,
         "port": 443,
-    }
+    },
+    'logging': {'level': 'info'}
 }
 
 OTHER_EXPECTED_CONFIG = {
@@ -56,7 +57,8 @@ OTHER_EXPECTED_CONFIG = {
         "hostname": "SomeHost",
         "use_ssl": False,
         "port": 56,
-    }
+    },
+    'logging': {'level': 'info'}
 }
 
 environment_variables = [
@@ -92,9 +94,12 @@ class TestLoadConfig:
             m.setenv("SF_API_PORT", "42")
 
             m.setattr(os, "getcwd", lambda: tmpdir)
-            configuration = conf.load_config(
-                authentication_token="SomeAuth", hostname="SomeHost", use_ssl=False, port=56
-            )
+            configuration = conf.load_config(api={
+                "authentication_token": "SomeAuth",
+                "hostname": "SomeHost",
+                "use_ssl": False,
+                "port": 56
+            })
 
         assert configuration == OTHER_EXPECTED_CONFIG
 

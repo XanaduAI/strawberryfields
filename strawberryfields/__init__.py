@@ -42,7 +42,7 @@ __all__ = [
     "ping",
     "store_account",
     "active_configs",
-    "reset_config"
+    "reset_config",
 ]
 
 
