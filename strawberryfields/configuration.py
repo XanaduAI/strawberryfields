@@ -21,8 +21,6 @@ import os
 import toml
 from appdirs import user_config_dir
 
-from strawberryfields.logger import create_logger
-
 
 DEFAULT_CONFIG_SPEC = {
     "api": {
@@ -146,7 +144,7 @@ def _generate_config(config_spec, **kwargs):
     return res
 
 
-def load_config(filename="config.toml", verbose=True, **kwargs):
+def load_config(filename="config.toml", logging=True, **kwargs):
     """Load configuration from keyword arguments, configuration file or
     environment variables.
 
@@ -162,7 +160,7 @@ def load_config(filename="config.toml", verbose=True, **kwargs):
 
     Args:
         filename (str): the name of the configuration file to look for
-        verbose (bool): whether or not to log warnings and errors
+        logging (bool): whether or not to log details
 
     Keyword Args:
         Additional configuration options are detailed in
@@ -173,23 +171,30 @@ def load_config(filename="config.toml", verbose=True, **kwargs):
     """
     filepath = find_config_file(filename=filename)
 
+    if logging:
+        from strawberryfields.logger import create_logger
+        log = create_logger(__name__)
+
     if filepath is not None:
         # load the configuration file
         with open(filepath, "r") as f:
             config = toml.load(f)
 
-        if "api" not in config and verbose:
+        if logging:
+            log.debug("Configuration file %s loaded", filepath)
+
+        if "api" not in config and logging:
             # Raise a warning if the configuration doesn't contain
             # an API section.
-            log = create_logger(__name__)
             log.warning(
                 'The configuration from the %s file does not contain an "api" section.', filepath
             )
 
-    elif verbose:
+    else:
         config = {}
-        log = create_logger(__name__)
-        log.warning("No Strawberry Fields configuration file found.")
+
+        if logging:
+            log.warning("No Strawberry Fields configuration file found.")
 
     # update the configuration from environment variables
     update_from_environment_variables(config)
@@ -201,6 +206,14 @@ def load_config(filename="config.toml", verbose=True, **kwargs):
     # generate the configuration object by using the defined
     # configuration specification at the top of the file
     config = _generate_config(DEFAULT_CONFIG_SPEC, **config)
+
+    # Log the loaded configuration details, masking out the API key.
+    if logging:
+        config_details = "Loaded configuration: {}".format(config)
+        auth_token = config.get("api", {}).get("authentication_token", "")
+        config_details = config_details.replace(auth_token[5:], "*"*len(auth_token[5:]))
+        log.debug(config_details)
+
     return config
 
 
@@ -515,3 +528,4 @@ def store_account(authentication_token, filename="config.toml", location="user_c
 
 
 DEFAULT_CONFIG = _generate_config(DEFAULT_CONFIG_SPEC)
+SESSION_CONFIG = load_config(logging=False)

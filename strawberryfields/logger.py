@@ -49,6 +49,8 @@ https://github.com/pallets/flask/blob/master/src/flask/logging.py
 import logging
 import sys
 
+from strawberryfields.configuration import SESSION_CONFIG
+
 
 def logging_handler_defined(logger):
     """Checks if the logger or any of its ancestors has a handler defined.
@@ -111,27 +113,16 @@ def create_logger(name, level=None):
         # The root logger should pass all log message levels
         # to the handlers.
         logger.setLevel(logging.DEBUG)
-
-        # Import load_config here to avoid a cyclic import
-        # (since the configuration module imports the logger).
-        from strawberryfields.configuration import load_config
-
-        # The load_config function by default logs information.
-        # We need to turn this off here, since the logger has not
-        # been created yet.
-        default_config = load_config(verbose=False)
-        level = level or getattr(logging, default_config["logging"]["level"].upper())
+        level = level or getattr(logging, SESSION_CONFIG["logging"]["level"].upper())
 
         # Attach the standard output logger,
         # with the user defined logging level (defaults to INFO)
         output_handler.setLevel(level)
         logger.addHandler(output_handler)
 
-        if "logfile" in default_config["logging"]:
+        if "logfile" in SESSION_CONFIG["logging"]:
             # Create the file logger
-            file_handler = logging.FileHandler(
-                default_config["logging"]["logfile"], disable_existing_loggers=False
-            )
+            file_handler = logging.FileHandler(SESSION_CONFIG["logging"]["logfile"])
             file_handler.setFormatter(formatter)
 
             # file logger should display all log message levels

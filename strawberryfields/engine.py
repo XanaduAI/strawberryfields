@@ -589,6 +589,11 @@ class RemoteEngine:
             # * compiled to a different chip family to the engine target
             #
             # In both cases, recompile the program to match the intended target.
+            self.log.debug(
+                "Compiling program for target %s with compile options %s",
+                self.target,
+                compile_options
+            )
             program = program.compile(self.target, **compile_options)
 
         # update the run options if provided

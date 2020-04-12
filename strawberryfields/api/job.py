@@ -129,6 +129,7 @@ class Job:
         self._status = JobStatus(self._connection.get_job_status(self.id))
         if self._status == JobStatus.COMPLETED:
             self._result = self._connection.get_job_result(self.id)
+            self.log.info("Job %s is complete", self.id)
 
     def cancel(self):
         """Cancels an open or queued job.
