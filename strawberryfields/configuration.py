@@ -172,7 +172,9 @@ def load_config(filename="config.toml", logging=True, **kwargs):
     filepath = find_config_file(filename=filename)
 
     if logging:
-        from strawberryfields.logger import create_logger
+        # We import the create_logger function only if logging
+        # has been requested, to avoid circular imports.
+        from strawberryfields.logger import create_logger #pylint: disable=import-outside-toplevel
 
         log = create_logger(__name__)
 
