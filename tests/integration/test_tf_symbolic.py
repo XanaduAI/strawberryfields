@@ -565,7 +565,10 @@ class TestTwoModeSymbolic:
             Dgate(-ALPHA) | q[1]
 
         state = eng.run(prog).state
-        probs = state.all_fock_probs(eval=True).flatten()
+        probs = state.all_fock_probs(eval=True)
+        if eng.backend_name == 'tf':
+            probs = probs.numpy()
+        probs = probs.flatten()
         ref_probs = np.abs(np.outer(coherent_state(ALPHA, cutoff),\
                                     coherent_state(-ALPHA, cutoff))).flatten() ** 2
 
