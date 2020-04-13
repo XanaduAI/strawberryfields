@@ -106,7 +106,6 @@
   well as displaying available configuration files.
   [(#359)](https://github.com/XanaduAI/strawberryfields/pull/359)
 
-
 * Adds the `x_quad_values` and `p_quad_values` methods to the `state` class.
   This allows calculation of x and p quadrature
   probability distributions by integrating across the Wigner function.
