@@ -476,6 +476,190 @@ def rectangular_symmetric(V, tol=1e-11):
     return new_tlist, new_diags, None
 
 
+def BS_mat(theta):
+    r"""Beam splitter matrix as implemented in hardware
+    """
+    mat = np.array([[np.cos(theta), 1j*np.sin(theta)], [1j*np.sin(theta), np.cos(theta)]])
+    return mat
+
+def R(phi):
+    r"""Phase as implemented in hardware
+    """
+    mat = np.array([[np.exp(1j*phi), 0], [0, 1]])
+    return mat
+
+def MZ(m, n, phi_int, phi_ext, nmax):
+    r"""One unit as implemented on the chip. 
+    An external phase followed by a beamsplitter followed by 
+    the internal phase followed by another beamsplitter
+    """
+    theta = np.pi/4
+    BS1 = BS_mat(theta)
+    BS2 = BS_mat(theta)
+    T = BS1 @ R(phi_int) @ BS2 @ R(phi_ext)
+    
+    mat = np.identity(nmax, dtype=np.complex128)
+    mat[m, m] = T[0][0]
+    mat[m, n] = T[0][1]
+    mat[n, m] = T[1][0]
+    mat[n, n] = T[1][1]
+    return mat
+
+
+def MZi(m, n, phi_int, phi_ext, nmax):
+    r"""The inverse MZ matrix."""
+    return np.transpose(np.conj(MZ(m, n, phi_int, phi_ext, nmax)))
+
+def nullMZi(m, n, U):
+    r"""Nullifies element m,n of U using MZi"""
+    (nmax, mmax) = U.shape
+
+    if nmax != mmax:
+        raise ValueError("U must be a square matrix")
+
+    if U[m, n] == 0 :
+        phi_i = np.pi
+        phi_e = 0
+    elif U[m, n+1] == 0:
+        phi_i = 0
+        phi_e = 0
+    else:
+        r = - U[m, n+1] / U[m, n]
+        phi_i = 2*np.arctan(np.abs(r))
+        phi_e = - np.angle(r)
+
+    return [n, n+1, phi_i, phi_e, nmax]
+
+
+def nullMZ(n, m, U):
+    r"""Nullifies element n,m of U using MZ"""
+    (nmax, mmax) = U.shape
+
+    if nmax != mmax:
+        raise ValueError("U must be a square matrix")
+
+    if U[n, m] == 0 :
+        phi_i = np.pi
+        phi_e = 0
+    elif U[n-1, m] == 0:
+        phi_i = 0
+        phi_e = 0
+    else:
+        r = U[n-1, m]/ U[n, m] 
+        phi_i = 2*np.arctan(np.abs(r))
+        phi_e = - np.angle(r)
+
+    return [n-1, n, phi_i, phi_e, nmax]
+
+def rectangular_MZ(V, tol=1e-11):
+    r"""Rectangular decomposition of a unitary matrix, with local
+    phase shifts applied between two interferometers.
+
+    See :ref:`rectangular` or :cite:`clements2016` for more details.
+
+    This function returns a circuit corresponding to an intermediate step in
+    the decomposition as described in Eq. 4 of the article. In this form,
+    the circuit comprises some MZ matrices (as in Eq. 1), then phases on all modes,
+    and more MZ matrices.
+
+    The procedure to construct these matrices is detailed in the supplementary
+    material of the article.
+
+    Args:
+        V (array[complex]): unitary matrix of size n_size
+        tol (float): the tolerance used when checking if the matrix is unitary:
+            :math:`|VV^\dagger-I| \leq` tol
+
+    Returns:
+        tuple[array]: tuple of the form ``(tilist,np.diag(localV),tlist)``
+            where:
+
+            * ``tilist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the MZi unitaries needed
+            * ``tlist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the MZ unitaries needed
+            * ``localV``: Diagonal unitary sitting sandwiched by MZi's and the MZ's
+    """
+    localV = V
+    (nsize, _) = localV.shape
+
+    diffn = np.linalg.norm(V @ V.conj().T - np.identity(nsize))
+    if diffn >= tol:
+        raise ValueError("The input matrix is not unitary")
+
+    tilist = []
+    tlist = []
+    for k, i in enumerate(range(nsize - 2, -1, -1)):
+        if k % 2 == 0:
+            for j in reversed(range(nsize - 1 - i)):
+                tilist.append(nullMZi(i + j + 1, j, localV))
+                tilist[-1][2] %= (2 * np.pi)
+                tilist[-1][3] %= (2 * np.pi)
+                # repeat modulo operations , otherwise the input unitary
+                # numpy.identity(20) yields an external_phase of exactly 2 * pi
+                tilist[-1][2] %= (2 * np.pi)
+                tilist[-1][3] %= (2 * np.pi)
+                localV = localV @ MZi(*tilist[-1])
+        else:
+            for j in range(nsize - 1 - i):
+                tlist.append(nullMZ(i + j + 1, j, localV))
+                tlist[-1][2] %= (2 * np.pi)
+                tlist[-1][3] %= (2 * np.pi)
+                # repeat modulo operations , otherwise the input unitary
+                # numpy.identity(20) yields an external_phase of exactly 2 * pi
+                tlist[-1][2] %= (2 * np.pi)
+                tlist[-1][3] %= (2 * np.pi)
+                localV = MZ(*tlist[-1]) @ localV
+
+    return tilist, np.diag(localV), tlist
+
+def rectangular_phase_end_MZ(V, tol=1e-11):
+    r"""Rectangular decomposition of a unitary matrix, with all
+    local phase shifts placed after the interferometers.
+
+    See :cite:`clements2016` for more details.
+
+    Final step in the decomposition of a given discrete unitary matrix.
+    The output is of the form given in Eq. 5.
+
+    Args:
+        V (array[complex]): unitary matrix of size n_size
+        tol (float): the tolerance used when checking if the matrix is unitary:
+            :math:`|VV^\dagger-I| \leq` tol
+
+    Returns:
+        tuple[array]: returns a tuple of the form ``(tlist, np.diag(localV), None)``
+            where:
+
+            * ``tlist``: list containing ``[n,m,theta,phi,n_size]`` of the MZ unitaries needed
+            * ``localV``: Diagonal unitary matrix to be applied at the end of circuit
+    """
+    tilist, diags, tlist = rectangular_MZ(V, tol)
+    new_tlist, new_diags = tilist.copy(), diags.copy()
+
+    # Push each beamsplitter through the diagonal unitary
+    for i in reversed(tlist):
+        em, en = int(i[0]), int(i[1])
+        alpha, beta = np.angle(new_diags[em]), np.angle(new_diags[en])
+        phi_i, phi_e = i[2], i[3]
+
+        # The new parameters required for D',MZ' st. MZ^(-1)D = D'MZ'
+
+        new_phi_e = (alpha - beta) % (2 * np.pi)
+        new_alpha = (beta - phi_e - phi_i + np.pi) % (2 * np.pi)
+        new_beta = (beta - phi_i + np.pi) % (2 * np.pi)
+        new_phi_i = phi_i % (2 * np.pi)
+        # repeat modulo operations , otherwise the input unitary
+        # numpy.identity(20) yields an external_phase of exactly 2 * pi
+        new_phi_i %= (2 * np.pi)
+        new_phi_e %= (2 * np.pi)
+        
+        new_i = [i[0], i[1], new_phi_i, new_phi_e, i[4]]
+        new_diags[em], new_diags[en] = np.exp(1j*new_alpha), np.exp(1j*new_beta)
+
+        new_tlist = new_tlist + [new_i]
+
+    return new_tlist, new_diags, None
+    
+
 def triangular(V, tol=1e-11):
     r"""Triangular decomposition of a unitary matrix due to Reck et al.
 
