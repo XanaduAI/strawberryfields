@@ -116,6 +116,7 @@ class ModeMap:
 
 class BaseBackend:
     """Abstract base class for backends."""
+
     # pylint: disable=too-many-public-methods
 
     #: str: short name of the backend
