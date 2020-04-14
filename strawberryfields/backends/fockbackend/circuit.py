@@ -764,7 +764,7 @@ class Circuit:
             probs = rho_dist.flatten().real
             probs /= np.sum(probs)
 
-            # Due to numerical error, values in the calculated probability distribution
+            # Due to floating point precision error, values in the calculated probability distribution
             # may have a very small negative value of -epsilon. The following sets
             # these small negative values to 0.
             probs[np.abs(probs) < 1e-16] = 0
