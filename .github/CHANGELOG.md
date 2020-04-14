@@ -102,7 +102,7 @@
   For more details, see the
   [configuration documentation](https://strawberryfields.readthedocs.io/en/stable/introduction/configuration.html)
 
-* Further configuration functions for resetting, deleting configurations, as
+* Adds configuration functions for resetting, deleting configurations, as
   well as displaying available configuration files.
   [(#359)](https://github.com/XanaduAI/strawberryfields/pull/359)
 
