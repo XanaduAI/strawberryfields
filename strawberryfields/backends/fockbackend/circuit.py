@@ -763,6 +763,12 @@ class Circuit:
             # Numpy also does not use the log probabilities
             probs = rho_dist.flatten().real
             probs /= np.sum(probs)
+
+            # Due to numerical error, values in the calculated probability distribution
+            # may have a very small negative value of -epsilon. The following sets
+            # these small negative values to 0.
+            probs[np.abs(probs) < 1e-16] = 0
+
             sample_hist = np.random.multinomial(1, probs)
             sample_idx = list(sample_hist).index(1)
             homodyne_sample = q_tensor[sample_idx]
