@@ -767,7 +767,7 @@ class Circuit:
             # Due to floating point precision error, values in the calculated probability distribution
             # may have a very small negative value of -epsilon. The following sets
             # these small negative values to 0.
-            probs[np.abs(probs) < 1e-16] = 0
+            probs[np.abs(probs) < 1e-10] = 0
 
             sample_hist = np.random.multinomial(1, probs)
             sample_idx = list(sample_hist).index(1)
