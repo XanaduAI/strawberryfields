@@ -95,7 +95,8 @@ def _generate_config(config_spec, **kwargs):
             "hostname": "platform.strawberryfields.ai",
             "use_ssl": True,
             "port": 54,
-        }
+        },
+ 'logging': {'level': 'info'}
     }
 
     Args:
@@ -139,7 +140,7 @@ def _generate_config(config_spec, **kwargs):
                     res[k] = v[1]
 
         elif isinstance(v, dict):
-            # config spec value is a dictionary of more options
+            # config spec value is a configuration section
             res[k] = _generate_config(v, **kwargs.get(k, {}))
     return res
 

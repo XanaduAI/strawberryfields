@@ -58,7 +58,7 @@ OTHER_EXPECTED_CONFIG = {
         "use_ssl": False,
         "port": 56,
     },
-    'logging': {'level': 'info'}
+    "logging": {"level": "info"}
 }
 
 environment_variables = [
