@@ -227,7 +227,7 @@ class Connection:
             with io.BytesIO() as buf:
                 buf.write(response.content)
                 buf.seek(0)
-                samples = np.load(buf)
+                samples = np.load(buf, allow_pickle=False)
             return Result(samples, is_stateful=False)
         raise RequestFailedError(
             "Failed to get job result: {}".format(self._format_error_message(response))

@@ -24,13 +24,26 @@ and backend components (all found within the :mod:`strawberryfields.backends` su
 from . import apps
 from ._version import __version__
 from .cli import ping
-from .configuration import store_account
+from .configuration import store_account, active_configs, reset_config
 from .engine import Engine, LocalEngine, RemoteEngine
 from .io import load, save
 from .parameters import par_funcs as math
 from .program import Program
 
-__all__ = ["Engine", "RemoteEngine", "Program", "version", "save", "load", "about", "cite"]
+__all__ = [
+    "Engine",
+    "RemoteEngine",
+    "Program",
+    "version",
+    "save",
+    "load",
+    "about",
+    "cite",
+    "ping",
+    "store_account",
+    "active_configs",
+    "reset_config",
+]
 
 
 #: float: numerical value of hbar for the frontend (in the implicit units of position * momentum)

@@ -1,4 +1,4 @@
-# Release 0.13.0.rc0 (release candidate)
+# Release 0.13.0 (current release)
 
 <h3>New features since last release</h3>
 
@@ -195,7 +195,7 @@ Ville Bergholm, Tom Bromley, Jack Ceroni, Theodor Isacsson, Josh Izaac, Nathan K
 Leonhard Neuhaus, Nicolás Quesada, Jeremy Swinarton, Antal Száva, Paul Tan, Zeid Zabaneh.
 
 
-# Release 0.12.1 (current release)
+# Release 0.12.1
 
 <h3>New features</h3>
 
