@@ -566,12 +566,10 @@ class TestTwoModeSymbolic:
 
         state = eng.run(prog).state
 
+        probs = state.all_fock_probs()
         if eng.backend_name == 'tf':
-            import tensorflow as tf
-            probs = tf.reshape(state.all_fock_probs(eval=True), [-1])
-        else:
-            probs = state.all_fock_probs(eval=True).flatten()
-
+            probs = probs.numpy()
+        probs = probs.flatten()
         ref_probs = np.abs(np.outer(coherent_state(ALPHA, cutoff),\
                                     coherent_state(-ALPHA, cutoff))).flatten() ** 2
 
