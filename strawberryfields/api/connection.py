@@ -230,7 +230,7 @@ class Connection:
 
                 samples = np.load(buf, allow_pickle=False)
 
-                if samples.dtype.type is np.int8:
+                if np.issubdtype(samples.dtype, np.integer):
                     # Samples represent photon numbers.
                     # Convert to int64, to avoid unexpected behaviour
                     # when users postprocess these samples.
