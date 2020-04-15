@@ -102,7 +102,6 @@ import sympy
 import sympy.functions as sf
 
 
-
 def wrap_mathfunc(func):
     """Applies the wrapped sympy function elementwise to NumPy arrays.
 
@@ -110,22 +109,30 @@ def wrap_mathfunc(func):
     We implement no broadcasting; if the first argument is a NumPy array, we assume
     all the arguments are arrays of the same shape.
     """
+
     @functools.wraps(func)
     def wrapper(*args):
         temp = [isinstance(k, np.ndarray) for k in args]
         if any(temp):
             if not all(temp):
-                raise ValueError('Parameter functions with array arguments: all the arguments must be arrays of the same shape.')
+                raise ValueError(
+                    "Parameter functions with array arguments: all the arguments must be arrays of the same shape."
+                )
             for k in args[1:]:
                 if len(k) != len(args[0]):
-                    raise ValueError('Parameter functions with array arguments: all the arguments must be arrays of the same shape.')
+                    raise ValueError(
+                        "Parameter functions with array arguments: all the arguments must be arrays of the same shape."
+                    )
             # apply func elementwise, recursively, on the args
             return np.array([wrapper(*k) for k in zip(*args)])
         return func(*args)
+
     return wrapper
 
 
-par_funcs = types.SimpleNamespace(**{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != '_'})
+par_funcs = types.SimpleNamespace(
+    **{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != "_"}
+)
 """SimpleNamespace: Namespace of mathematical functions for manipulating Parameters.
 Consists of all :mod:`sympy.functions` public members, which we wrap with :func:`wrap_mathfunc`.
 """
@@ -187,8 +194,8 @@ def par_evaluate(params, dtype=None):
         vals = [k._eval_evalf(None) for k in atoms]
         # use the tensorflow printer if any of the symbolic parameter values are TF objects
         # (we do it like this to avoid importing tensorflow if it's not needed)
-        is_tf = (type(v).__module__.startswith('tensorflow') for v in vals)
-        printer = 'tensorflow' if any(is_tf) else 'numpy'
+        is_tf = (type(v).__module__.startswith("tensorflow") for v in vals)
+        printer = "tensorflow" if any(is_tf) else "numpy"
         func = sympy.lambdify(atoms, p, printer)
 
         if dtype is not None:
@@ -234,12 +241,13 @@ def par_convert(args, prog):
     Returns:
         list[Any]: converted arguments
     """
+
     def do_convert(a):
         if isinstance(a, sympy.Basic):
             # substitute SF symbolic parameter objects for Blackbird ones
             s = {}
             for k in a.atoms(sympy.Symbol):
-                if k.name[0] == 'q':
+                if k.name[0] == "q":
                     s[k] = MeasuredParameter(prog.register[int(k.name[1:])])
                 else:
                     s[k] = prog.params(k.name)  # free parameter
@@ -287,7 +295,7 @@ def par_str(p):
         return str(p)
     if par_is_symbolic(p):
         return str(p)
-    return '{:.4g}'.format(p)  # scalar parameters
+    return "{:.4g}".format(p)  # scalar parameters
 
 
 class MeasuredParameter(sympy.Symbol):
@@ -310,11 +318,11 @@ class MeasuredParameter(sympy.Symbol):
 
     def __new__(cls, regref):
         # sympy.Basic.__new__ wants a name, other arguments must not end up in self._args
-        return super().__new__(cls, 'q'+str(regref.ind))
+        return super().__new__(cls, "q" + str(regref.ind))
 
     def __init__(self, regref):
         if not regref.active:
-            raise ValueError('Trying to use an inactive RegRef.')
+            raise ValueError("Trying to use an inactive RegRef.")
         #: RegRef: the value of the parameter depends on this RegRef, and can only be evaluated after the corresponding subsystem has been measured
         self.regref = regref
 
@@ -323,7 +331,7 @@ class MeasuredParameter(sympy.Symbol):
 
         The Sympy printing system uses this method instead of __str__.
         """
-        return 'q{}'.format(self.regref.ind)
+        return "q{}".format(self.regref.ind)
 
     def _eval_evalf(self, prec):
         """Returns the numeric result of the measurement if it is available.
@@ -336,7 +344,11 @@ class MeasuredParameter(sympy.Symbol):
         """
         res = self.regref.val
         if res is None:
-            raise ParameterError("{}: trying to use a nonexistent measurement result (e.g., before it has been measured).".format(self))
+            raise ParameterError(
+                "{}: trying to use a nonexistent measurement result (e.g., before it has been measured).".format(
+                    self
+                )
+            )
         return res
 
 
@@ -346,6 +358,7 @@ class FreeParameter(sympy.Symbol):
     Args:
         name (str): name of the free parameter
     """
+
     def __init__(self, name):
         #: str: name of the free parameter
         self.name = name
@@ -359,7 +372,7 @@ class FreeParameter(sympy.Symbol):
 
         The Sympy printing system uses this method instead of __str__.
         """
-        return '{{{}}}'.format(self.name)
+        return "{{{}}}".format(self.name)
 
     def _eval_evalf(self, prec):
         """Returns the value of the parameter if it has been bound, or the default value if not.

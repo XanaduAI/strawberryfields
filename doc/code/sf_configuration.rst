@@ -36,6 +36,12 @@ and has the following format:
 Configuration options
 ---------------------
 
+``[api]``
+^^^^^^^^^
+
+Settings for the Xanadu cloud platform.
+
+
 **authentication_token (str)** (*required*)
     API token for authentication to the Xanadu cloud platform. This is required
     for submitting remote jobs using :class:`~.RemoteEngine`.
@@ -67,5 +73,5 @@ Functions
 
 .. automodapi:: strawberryfields.configuration
     :no-heading:
-    :skip: user_config_dir
+    :skip: user_config_dir, store_account, active_configs, reset_config, create_logger
     :no-inheritance-diagram:

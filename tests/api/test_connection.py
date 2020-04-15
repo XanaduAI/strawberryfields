@@ -16,17 +16,37 @@ Unit tests for strawberryfields.api.connection
 """
 from datetime import datetime
 import io
+import os
 
 import numpy as np
 import pytest
 import requests
 
 from strawberryfields.api import Connection, JobStatus, RequestFailedError
+from strawberryfields import configuration as conf
 from .conftest import mock_return
 
 # pylint: disable=no-self-use,unused-argument
 
 pytestmark = pytest.mark.api
+
+TEST_CONFIG_FILE_1 = """\
+[api]
+# Options for the Strawberry Fields Cloud API
+authentication_token = "DummyToken"
+hostname = "DummyHost"
+use_ssl = false
+port = 1234
+"""
+
+TEST_CONFIG_FILE_2 = """\
+[api]
+# Options for the Strawberry Fields Cloud API
+authentication_token = "071cdcce-9241-4965-93af-4a4dbc739135"
+hostname = "platform.strawberryfields.ai"
+use_ssl = true
+port = 443
+"""
 
 
 class MockResponse:
@@ -217,3 +237,58 @@ class TestConnection:
         monkeypatch.setattr(requests, "get", mock_return(MockResponse(500, {})))
 
         assert not connection.ping()
+
+class TestConnectionIntegration:
+    """Integration tests for using instances of the Connection."""
+
+    def test_configuration_deleted_integration(self, monkeypatch, tmpdir):
+        """Check that once two Connection instances indeed differ in their
+        configuration if the configuration is being deleted in the meantime.
+
+        The logic of the test goes as follows:
+        1. Two temporary paths and files are being created
+        2. The directories to be checked are mocked out to the temporary paths
+        3. A connection object is created, using the configuration from the
+        first config
+        4. The first configuration is deleted, leaving the second config as
+        default
+        5. Another connection object is created, using the configuration from the
+        second config
+        6. Checks for the configuration for each Connection instances
+        """
+        test_file_name = "config.toml"
+
+        # Creating the two temporary paths and files
+        path1 = tmpdir.mkdir("sub1")
+        path2 = tmpdir.mkdir("sub2")
+
+        file1 = path1.join(test_file_name)
+        file2 = path2.join(test_file_name)
+
+        with open(file1, "w") as f:
+            f.write(TEST_CONFIG_FILE_1)
+
+        with open(file2, "w") as f:
+            f.write(TEST_CONFIG_FILE_2)
+
+        with monkeypatch.context() as m:
+            m.setattr(os, "getcwd", lambda: path1)
+            m.delenv("SF_CONF", raising=False)
+            m.setattr(conf, "user_config_dir", lambda *args: path2)
+
+            a = Connection()
+            assert os.path.exists(file1)
+
+            assert a.token == "DummyToken"
+            assert a.host == "DummyHost"
+            assert a.port == 1234
+            assert a.use_ssl == False
+            conf.delete_config(directory=path1)
+
+            assert not os.path.exists(file1)
+
+            b = Connection()
+            assert b.token == "071cdcce-9241-4965-93af-4a4dbc739135"
+            assert b.host == "platform.strawberryfields.ai"
+            assert b.port == 443
+            assert b.use_ssl == True

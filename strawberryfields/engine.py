@@ -19,13 +19,14 @@ One can think of each BaseEngine instance as a separate quantum computation.
 """
 import abc
 import collections.abc
-import logging
 import time
 from typing import Optional
 
 import numpy as np
 
 from strawberryfields.api import Connection, Job, Result
+from strawberryfields.api.job import FailedJobError
+from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
 
 from .backends import load_backend
@@ -33,8 +34,6 @@ from .backends.base import BaseBackend, NotApplicableError
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = ["BaseEngine", "LocalEngine"]
-
-log = logging.getLogger(__name__)
 
 
 class BaseEngine(abc.ABC):
@@ -280,9 +279,7 @@ class BaseEngine(abc.ABC):
 
             self._run_program(p, **kwargs)
             shots = kwargs.get("shots", 1)
-            self.samples = [
-                _broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)
-            ]
+            self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
             self.run_progs.append(p)
 
             prev = p
@@ -482,7 +479,7 @@ class RemoteEngine:
     VALID_TARGETS = ("X8_01", "X12_01", "X12_02")
     DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_01"}
 
-    def __init__(self, target: str, connection: Connection = Connection(), backend_options: dict = None):
+    def __init__(self, target: str, connection: Connection = None, backend_options: dict = None):
         self._target = self.DEFAULT_TARGETS.get(target, target)
 
         if self._target not in self.VALID_TARGETS:
@@ -492,8 +489,9 @@ class RemoteEngine:
                 )
             )
 
-        self._connection = connection
+        self._connection = connection or Connection()
         self._backend_options = backend_options or {}
+        self.log = create_logger(__name__)
 
     @property
     def target(self) -> str:
@@ -538,17 +536,22 @@ class RemoteEngine:
             while True:
                 job.refresh()
                 if job.status == "complete":
+                    self.log.info("The remote job %s has been completed.", job.id)
                     return job.result
+
                 if job.status == "failed":
-                    log.warning(
-                        "The remote job failed due to an internal server error; "
-                        "please try again."
+                    message = (
+                        "The remote job %s failed due to an internal "
+                        "server error. Please try again." % job.id
                     )
-                    return None
+                    self.log.error(message)
+
+                    raise FailedJobError(message)
+
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             self._connection.cancel_job(job.id)
-            return None
+            raise KeyboardInterrupt("The job has been cancelled.")
 
     def run_async(self, program: Program, *, compile_options=None, **kwargs) -> Job:
         """Runs a non-blocking remote job.
