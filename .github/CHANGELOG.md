@@ -191,7 +191,7 @@
   [(#364)](https://github.com/XanaduAI/strawberryfields/pull/364)
 
 * Fixed a bug that caused an exception when printing results with no state.
-  [(#368)](https://github.com/XanaduAI/strawberryfields/pull/368)
+  [(#367)](https://github.com/XanaduAI/strawberryfields/pull/367)
 
 * Improves the Takagi decomposition, by making explicit use of the eigendecomposition of real symmetric matrices. [(#352)](https://github.com/XanaduAI/strawberryfields/pull/352)
 
