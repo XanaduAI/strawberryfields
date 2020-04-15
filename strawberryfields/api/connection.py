@@ -227,7 +227,15 @@ class Connection:
             with io.BytesIO() as buf:
                 buf.write(response.content)
                 buf.seek(0)
-                samples = np.load(buf, allow_pickle=False).astype(np.int64)
+
+                samples = np.load(buf, allow_pickle=False)
+
+                if samples.dtype.type is np.int8:
+                    # Samples represent photon numbers.
+                    # Convert to int64, to avoid unexpected behaviour
+                    # when users postprocess these samples.
+                    samples = samples.astype(np.float64)
+
             return Result(samples, is_stateful=False)
         raise RequestFailedError(
             "Failed to get job result: {}".format(self._format_error_message(response))
