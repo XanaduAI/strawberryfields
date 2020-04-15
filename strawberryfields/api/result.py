@@ -107,8 +107,9 @@ class Result:
             raise AttributeError("The state is undefined for a stateless computation.")
         return self._state
 
-    def __str__(self):
+    def __repr__(self):
         """String representation."""
-        return "Result: {} subsystems, state: {}\n samples: {}".format(
-            len(self.samples), self.state, self.samples
+        shots, modes = self.samples.shape
+        return "<Result: num_modes={}, shots={}, contains state={}>".format(
+            modes, shots, self._is_stateful
         )
