@@ -234,7 +234,7 @@ class Connection:
                     # Samples represent photon numbers.
                     # Convert to int64, to avoid unexpected behaviour
                     # when users postprocess these samples.
-                    samples = samples.astype(np.float64)
+                    samples = samples.astype(np.int64)
 
             return Result(samples, is_stateful=False)
         raise RequestFailedError(
