@@ -977,9 +977,7 @@ class Zgate(Gate):
     def _decompose(self, reg, **kwargs):
         # into a displacement
         r = self.p[0] / np.sqrt(2 * sf.hbar)
-        return [
-            Command(Dgate(r, np.pi/2), reg)
-        ]
+        return [Command(Dgate(r, np.pi / 2), reg)]
 
 
 class Sgate(Gate):
