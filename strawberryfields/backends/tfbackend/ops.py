@@ -42,7 +42,7 @@ from strawberryfields.backends.shared_ops import (
     squeeze_parity,
 )
 
-def_type = tf.complex64 #NOTE: what if a user wants higher accuracy?
+def_type = tf.complex64  # NOTE: what if a user wants higher accuracy?
 max_num_indices = len(indices)
 
 ###################################################################
@@ -175,16 +175,22 @@ def squeezer_matrix(r, theta, D, batched=False):
 
     phase = tf.exp(1j * theta * (n - m) / 2)
     signs = squeeze_parity(D).reshape([1, D, 1, D])
-    mask = np.logical_and((m + n) % 2 == 0, k <= np.minimum(m, n)) # kills off terms where the sum index k goes past min(m,n)
-    k_terms = signs * \
-                        tf.pow(tf.sinh(r) / 2, mask * (n + m - 2 * k) / 2) * mask / \
-                        tf.pow(tf.cosh(r), (n + m + 1) / 2) * \
-                        tf.exp(0.5 * tf.math.lgamma(tf.cast(m + 1, tf.float64)) + \
-                               0.5 * tf.math.lgamma(tf.cast(n + 1, tf.float64)) - \
-                               tf.math.lgamma(tf.cast(k + 1, tf.float64)) -
-                               tf.math.lgamma(tf.cast((m - k) / 2 + 1, tf.float64)) - \
-                               tf.math.lgamma(tf.cast((n - k) / 2 + 1, tf.float64))
-                              )
+    mask = np.logical_and(
+        (m + n) % 2 == 0, k <= np.minimum(m, n)
+    )  # kills off terms where the sum index k goes past min(m,n)
+    k_terms = (
+        signs
+        * tf.pow(tf.sinh(r) / 2, mask * (n + m - 2 * k) / 2)
+        * mask
+        / tf.pow(tf.cosh(r), (n + m + 1) / 2)
+        * tf.exp(
+            0.5 * tf.math.lgamma(tf.cast(m + 1, tf.float64))
+            + 0.5 * tf.math.lgamma(tf.cast(n + 1, tf.float64))
+            - tf.math.lgamma(tf.cast(k + 1, tf.float64))
+            - tf.math.lgamma(tf.cast((m - k) / 2 + 1, tf.float64))
+            - tf.math.lgamma(tf.cast((n - k) / 2 + 1, tf.float64))
+        )
+    )
     output = tf.reduce_sum(phase * tf.cast(k_terms, def_type), axis=-1)
 
     if not batched:
@@ -404,7 +410,15 @@ def fock_state(n, D, pure=True, batched=False):
 
 def coherent_state(alpha, D, pure=True, batched=False):
     """creates a single mode input coherent state"""
-    coh = tf.stack([tf.exp(-0.5 * tf.math.conj(alpha) * alpha) * _numer_safe_power(alpha, n) / tf.cast(np.sqrt(factorial(n)), def_type) for n in range(D)], axis=-1)
+    coh = tf.stack(
+        [
+            tf.exp(-0.5 * tf.math.conj(alpha) * alpha)
+            * _numer_safe_power(alpha, n)
+            / tf.cast(np.sqrt(factorial(n)), def_type)
+            for n in range(D)
+        ],
+        axis=-1,
+    )
     if not pure:
         coh = mixed(coh, batched)
     return coh
@@ -435,9 +449,17 @@ def displaced_squeezed(alpha, r, phi, D, pure=True, batched=False, eps=1e-12):
     gamma = alpha * cosh + tf.math.conj(alpha) * phase * sinh
     hermite_arg = gamma / tf.sqrt(phase * tf.sinh(2 * r))
 
-    prefactor = tf.expand_dims(tf.exp(-0.5 * alpha * tf.math.conj(alpha) - 0.5 * tf.math.conj(alpha) ** 2 * phase * tanh), -1)
-    coeff = tf.stack([_numer_safe_power(0.5 * phase * tanh, n / 2.) / tf.sqrt(factorial(n) * cosh)
-                      for n in range(D)], axis=-1)
+    prefactor = tf.expand_dims(
+        tf.exp(-0.5 * alpha * tf.math.conj(alpha) - 0.5 * tf.math.conj(alpha) ** 2 * phase * tanh),
+        -1,
+    )
+    coeff = tf.stack(
+        [
+            _numer_safe_power(0.5 * phase * tanh, n / 2.0) / tf.sqrt(factorial(n) * cosh)
+            for n in range(D)
+        ],
+        axis=-1,
+    )
     hermite_terms = tf.stack([tf.cast(H(n, hermite_arg), def_type) for n in range(D)], axis=-1)
     squeezed_coh = prefactor * coeff * hermite_terms
 
@@ -451,7 +473,9 @@ def thermal_state(nbar, D):
     Note that the batch dimension is determined by argument nbar.
     """
     nbar = tf.cast(nbar, def_type)
-    coeffs = tf.stack([_numer_safe_power(nbar, n) / _numer_safe_power(nbar + 1, n + 1) for n in range(D)], axis=-1)
+    coeffs = tf.stack(
+        [_numer_safe_power(nbar, n) / _numer_safe_power(nbar + 1, n + 1) for n in range(D)], axis=-1
+    )
     thermal = tf.linalg.diag(coeffs)
     return thermal
 
@@ -889,9 +913,18 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
             )
         else:
             batch_size = reduced_state.shape[0]
-            #todo: remove the hack in the line below and enabled the line with axes=0 instead, if ever we change the dependency of SF to tensorflow>=1.6
-            #revised_modes = tf.stack([tf.tensordot(reduced_state[b], replacement[b], axes=0) for b in range(batch_size)])
-            revised_modes = tf.stack([tf.tensordot(tf.expand_dims(reduced_state[b], 0), tf.expand_dims(replacement[b], 0), axes=[[0], [0]]) for b in range(batch_size)])
+            # todo: remove the hack in the line below and enabled the line with axes=0 instead, if ever we change the dependency of SF to tensorflow>=1.6
+            # revised_modes = tf.stack([tf.tensordot(reduced_state[b], replacement[b], axes=0) for b in range(batch_size)])
+            revised_modes = tf.stack(
+                [
+                    tf.tensordot(
+                        tf.expand_dims(reduced_state[b], 0),
+                        tf.expand_dims(replacement[b], 0),
+                        axes=[[0], [0]],
+                    )
+                    for b in range(batch_size)
+                ]
+            )
         revised_modes_pure = False
 
     # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
@@ -1077,7 +1110,7 @@ def conditional_state(system, projector, mode, state_is_pure, batched=False):
         projector_lhs += "," + batch_index + projector_indices[1]
     eqn_lhs = ",".join([state_lhs, projector_lhs])
     eqn_rhs = batch_index + free_mode_indices
-    eqn = eqn_lhs + '->' + eqn_rhs
+    eqn = eqn_lhs + "->" + eqn_rhs
     einsum_args = [system, tf.math.conj(projector)]
     if not state_is_pure:
         einsum_args.append(projector)

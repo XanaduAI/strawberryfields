@@ -174,7 +174,6 @@ pip install strawberryfields tensorflow
 """
 
 
-
 def excepthook(type, value, traceback):
     """Exception hook to suppress superfluous exceptions"""
     # pylint: disable=unused-argument

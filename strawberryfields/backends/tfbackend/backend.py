@@ -130,10 +130,10 @@ class TFBackend(BaseFock):
             self._modemap.reset()
             self.circuit.reset(num_subsystems=self._init_modes, pure=pure, **kwargs)
 
-    def get_cutoff_dim(self): # TODO: why not a property?
+    def get_cutoff_dim(self):  # TODO: why not a property?
         return self.circuit.cutoff_dim
 
-    def get_modes(self): # TODO: why not a property?
+    def get_modes(self):  # TODO: why not a property?
         # pylint: disable=protected-access
         return [i for i, j in enumerate(self._modemap._map) if j is not None]
 
@@ -274,9 +274,9 @@ class TFBackend(BaseFock):
             s = reduced_state
 
             modenames = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
-            state_ = FockStateTF(s, len(modes), pure, self.circuit.cutoff_dim,
-                                 batched=batched,
-                                 mode_names=modenames)
+            state_ = FockStateTF(
+                s, len(modes), pure, self.circuit.cutoff_dim, batched=batched, mode_names=modenames
+            )
         return state_
 
     def measure_fock(self, modes, shots=1, select=None, **kwargs):
@@ -321,9 +321,9 @@ class TFBackend(BaseFock):
         return meas
 
     def is_vacuum(self, tol=0.0, **kwargs):
-        with tf.name_scope('Is_vacuum'):
+        with tf.name_scope("Is_vacuum"):
             vac_elem = self.circuit.vacuum_element()
-            return np.abs(vac_elem-1) <= tol
+            return np.abs(vac_elem - 1) <= tol
 
     def del_mode(self, modes):
         with tf.name_scope("Del_mode"):
