@@ -339,9 +339,9 @@ class MoleculeDataset(Dataset, ABC):
         self.w = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_w.npz").toarray()[0]
         self.wp = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_wp.npz").toarray()[0]
         self.Ud = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_Ud.npz").toarray()
-        self.delta = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_delta.npz").toarray(
-
-        )[0]
+        self.delta = scipy.sparse.load_npz(
+            DATA_PATH + self._data_filename + "_delta.npz"
+        ).toarray()[0]
 
     # pylint: disable=missing-docstring
     @property

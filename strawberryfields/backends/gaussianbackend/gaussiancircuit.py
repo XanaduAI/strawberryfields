@@ -24,6 +24,7 @@ class GaussianModes:
     covariance matrix and a mean vector.
     The modes are initialized in the (multimode) vacuum state,
     The state of the modes is manipulated by calling the various methods."""
+
     # pylint: disable=too-many-public-methods
 
     def __init__(self, num_subsystems):
@@ -54,7 +55,7 @@ class GaussianModes:
 
     def add_mode(self, n=1):
         """add mode to the circuit"""
-        newnlen = self.nlen+n
+        newnlen = self.nlen + n
         newnmat = np.zeros((newnlen, newnlen), dtype=complex)
         newmmat = np.zeros((newnlen, newnlen), dtype=complex)
         newmean = np.zeros(newnlen, dtype=complex)
@@ -108,7 +109,7 @@ class GaussianModes:
 
     def displace(self, beta, i):
         """ Implements a displacement operation by the complex number beta in mode i"""
-        #Update displacement of mode i by the complex amount bet
+        # Update displacement of mode i by the complex amount bet
         if self.active[i] is None:
             raise ValueError("Cannot displace mode, mode does not exist")
 
@@ -119,28 +120,36 @@ class GaussianModes:
         if self.active[k] is None:
             raise ValueError("Cannot squeeze mode, mode does not exist")
 
-        phase = np.exp(1j*phi)
-        phase2 = phase*phase
+        phase = np.exp(1j * phi)
+        phase2 = phase * phase
         sh = np.sinh(r)
         ch = np.cosh(r)
-        sh2 = sh*sh
-        ch2 = ch*ch
-        shch = sh*ch
+        sh2 = sh * sh
+        ch2 = ch * ch
+        shch = sh * ch
         nk = np.copy(self.nmat[k])
         mk = np.copy(self.mmat[k])
 
         alphak = np.copy(self.mean[k])
         # Update displacement of mode k
-        self.mean[k] = alphak*ch-phase*np.conj(alphak)*sh
+        self.mean[k] = alphak * ch - phase * np.conj(alphak) * sh
         # Update covariance matrix elements. Only the k column and row of nmat and mmat need to be updated.
         # First update the diagonal elements
-        self.nmat[k, k] = sh2 - phase*shch*np.conj(mk[k]) - shch*np.conj(phase)*mk[k] + ch2*nk[k] + sh2*nk[k]
-        self.mmat[k, k] = -(phase*shch) + phase2*sh2*np.conj(mk[k]) + ch2*mk[k] - 2*phase*shch*nk[k]
+        self.nmat[k, k] = (
+            sh2
+            - phase * shch * np.conj(mk[k])
+            - shch * np.conj(phase) * mk[k]
+            + ch2 * nk[k]
+            + sh2 * nk[k]
+        )
+        self.mmat[k, k] = (
+            -(phase * shch) + phase2 * sh2 * np.conj(mk[k]) + ch2 * mk[k] - 2 * phase * shch * nk[k]
+        )
 
         # Update the column k
         for l in np.delete(np.arange(self.nlen), k):
-            self.nmat[k, l] = -(sh*np.conj(phase)*mk[l]) + ch*nk[l]
-            self.mmat[k, l] = ch*mk[l] - phase*sh*nk[l]
+            self.nmat[k, l] = -(sh * np.conj(phase) * mk[l]) + ch * nk[l]
+            self.mmat[k, l] = ch * mk[l] - phase * sh * nk[l]
 
         # Update row k
         self.nmat[:, k] = np.conj(self.nmat[k])
@@ -151,19 +160,19 @@ class GaussianModes:
         if self.active[k] is None:
             raise ValueError("Cannot phase shift mode, mode does not exist")
 
-        phase = np.exp(1j*phi)
-        phase2 = phase*phase
+        phase = np.exp(1j * phi)
+        phase2 = phase * phase
         # Update displacement of mode k
-        self.mean[k] = self.mean[k]*phase
+        self.mean[k] = self.mean[k] * phase
 
         # Update covariance matrix elements. Only the k column and row of nmat and mmat need to be updated.
         # First update the diagonal elements
-        self.mmat[k][k] = phase2*self.mmat[k][k]
+        self.mmat[k][k] = phase2 * self.mmat[k][k]
 
         # Update the column k
         for l in np.delete(np.arange(self.nlen), k):
-            self.nmat[k][l] = np.conj(phase)*self.nmat[k][l]
-            self.mmat[k][l] = phase*self.mmat[k][l]
+            self.nmat[k][l] = np.conj(phase) * self.nmat[k][l]
+            self.mmat[k][l] = phase * self.mmat[k][l]
 
         # Update row k
         self.nmat[:, k] = np.conj(self.nmat[k])
@@ -177,13 +186,13 @@ class GaussianModes:
         if k == l:
             raise ValueError("Cannot use the same mode for beamsplitter inputs")
 
-        phase = np.exp(1j*phi)
-        phase2 = phase*phase
+        phase = np.exp(1j * phi)
+        phase2 = phase * phase
         sh = np.sin(theta)
         ch = np.cos(theta)
-        sh2 = sh*sh
-        ch2 = ch*ch
-        shch = sh*ch
+        sh2 = sh * sh
+        ch2 = ch * ch
+        shch = sh * ch
         # alpha1 = self.mean[0]
 
         nk = np.copy(self.nmat[k])
@@ -193,26 +202,39 @@ class GaussianModes:
         # Update displacement of mode k and l
         alphak = np.copy(self.mean[k])
         alphal = np.copy(self.mean[l])
-        self.mean[k] = ch*alphak+phase*sh*alphal
-        self.mean[l] = ch*alphal-np.conj(phase)*sh*alphak
+        self.mean[k] = ch * alphak + phase * sh * alphal
+        self.mean[l] = ch * alphal - np.conj(phase) * sh * alphak
         # Update covariance matrix elements. Only the k and l columns and rows of nmat and mmat need to be updated.
         # First update the (k,k), (k,l), (l,l), and (l,l) elements
-        self.nmat[k][k] = ch2*nk[k] + phase*shch*nk[l] + shch*np.conj(phase)*nl[k] + sh2*nl[l]
-        self.nmat[k][l] = -(shch*np.conj(phase)*nk[k]) + ch2*nk[l] - sh2*np.conj(phase2)*nl[k] + shch*np.conj(phase)*nl[l]
+        self.nmat[k][k] = (
+            ch2 * nk[k] + phase * shch * nk[l] + shch * np.conj(phase) * nl[k] + sh2 * nl[l]
+        )
+        self.nmat[k][l] = (
+            -(shch * np.conj(phase) * nk[k])
+            + ch2 * nk[l]
+            - sh2 * np.conj(phase2) * nl[k]
+            + shch * np.conj(phase) * nl[l]
+        )
         self.nmat[l][k] = np.conj(self.nmat[k][l])
-        self.nmat[l][l] = sh2*nk[k] - phase*shch*nk[l] - shch*np.conj(phase)*nl[k] + ch2*nl[l]
+        self.nmat[l][l] = (
+            sh2 * nk[k] - phase * shch * nk[l] - shch * np.conj(phase) * nl[k] + ch2 * nl[l]
+        )
 
-        self.mmat[k][k] = ch2*mk[k] + 2*phase*shch*ml[k] + phase2*sh2*ml[l]
-        self.mmat[k][l] = -(shch*np.conj(phase)*mk[k]) + ch2*ml[k] - sh2*ml[k] + phase*shch*ml[l]
+        self.mmat[k][k] = ch2 * mk[k] + 2 * phase * shch * ml[k] + phase2 * sh2 * ml[l]
+        self.mmat[k][l] = (
+            -(shch * np.conj(phase) * mk[k]) + ch2 * ml[k] - sh2 * ml[k] + phase * shch * ml[l]
+        )
         self.mmat[l][k] = self.mmat[k][l]
-        self.mmat[l][l] = sh2*np.conj(phase2)*mk[k] - 2*shch*np.conj(phase)*ml[k] + ch2*ml[l]
+        self.mmat[l][l] = (
+            sh2 * np.conj(phase2) * mk[k] - 2 * shch * np.conj(phase) * ml[k] + ch2 * ml[l]
+        )
 
         # Update columns k and l
         for i in np.delete(np.arange(self.nlen), (k, l)):
-            self.nmat[k][i] = ch*nk[i] + sh*np.conj(phase)*nl[i]
-            self.mmat[k][i] = ch*mk[i] + phase*sh*ml[i]
-            self.nmat[l][i] = -(phase*sh*nk[i]) + ch*nl[i]
-            self.mmat[l][i] = -(sh*np.conj(phase)*mk[i]) + ch*ml[i]
+            self.nmat[k][i] = ch * nk[i] + sh * np.conj(phase) * nl[i]
+            self.mmat[k][i] = ch * mk[i] + phase * sh * ml[i]
+            self.nmat[l][i] = -(phase * sh * nk[i]) + ch * nl[i]
+            self.mmat[l][i] = -(sh * np.conj(phase) * mk[i]) + ch * ml[i]
 
         # Update rows k and l
         self.nmat[:, k] = np.conj(self.nmat[k])
@@ -230,11 +252,33 @@ class GaussianModes:
         Said permutation matrix is implemented in the function changebasis(n) where n is
         the number of modes.
         """
-        mm11 = self.nmat+np.transpose(self.nmat)+self.mmat+np.conj(self.mmat)+np.identity(self.nlen)
-        mm12 = 1j*(-np.transpose(self.mmat)+np.transpose(np.conj(self.mmat))+np.transpose(self.nmat)-self.nmat)
-        mm22 = self.nmat+np.transpose(self.nmat)-self.mmat-np.conj(self.mmat)+np.identity(self.nlen)
-        return np.concatenate((np.concatenate((mm11, mm12), axis=1),
-                               np.concatenate((np.transpose(mm12), mm22), axis=1)), axis=0).real
+        mm11 = (
+            self.nmat
+            + np.transpose(self.nmat)
+            + self.mmat
+            + np.conj(self.mmat)
+            + np.identity(self.nlen)
+        )
+        mm12 = 1j * (
+            -np.transpose(self.mmat)
+            + np.transpose(np.conj(self.mmat))
+            + np.transpose(self.nmat)
+            - self.nmat
+        )
+        mm22 = (
+            self.nmat
+            + np.transpose(self.nmat)
+            - self.mmat
+            - np.conj(self.mmat)
+            + np.identity(self.nlen)
+        )
+        return np.concatenate(
+            (
+                np.concatenate((mm11, mm12), axis=1),
+                np.concatenate((np.transpose(mm12), mm22), axis=1),
+            ),
+            axis=0,
+        ).real
 
     def smeanxp(self):
         r"""Constructs and returns the symmetric ordered vector of mean in the xp ordering.
@@ -247,9 +291,9 @@ class GaussianModes:
         the number of modes.
         """
         nmodes = self.nlen
-        r = np.empty(2*nmodes)
-        r[0:nmodes] = 2*self.mean.real
-        r[nmodes:2*nmodes] = 2*self.mean.imag
+        r = np.empty(2 * nmodes)
+        r[0:nmodes] = 2 * self.mean.real
+        r[nmodes : 2 * nmodes] = 2 * self.mean.imag
         return r
 
     def scovmat(self):
@@ -260,10 +304,10 @@ class GaussianModes:
 
     def smean(self):
         r"""the symmetric mean $[q_1,p_1,q_2,p_2,...,q_n,p_n]$"""
-        r = np.empty(2*self.nlen)
+        r = np.empty(2 * self.nlen)
         for i in range(self.nlen):
-            r[2*i] = 2*self.mean[i].real
-            r[2*i+1] = 2*self.mean[i].imag
+            r[2 * i] = 2 * self.mean[i].real
+            r[2 * i + 1] = 2 * self.mean[i].imag
         return r
 
     def fromsmean(self, r, modes=None):
@@ -278,7 +322,7 @@ class GaussianModes:
             mode_list = range(self.nlen)
 
         for idx, mode in enumerate(mode_list):
-            self.mean[mode] = 0.5*(r[2*idx]+1j*r[2*idx+1])
+            self.mean[mode] = 0.5 * (r[2 * idx] + 1j * r[2 * idx + 1])
 
     def fromscovmat(self, V, modes=None):
         r"""Updates the circuit's state when a standard covariance matrix is provided.
@@ -288,11 +332,13 @@ class GaussianModes:
             modes (Sequence): sequence of modes corresponding to the covariance matrix
         """
         if modes is None:
-            n = len(V)//2
+            n = len(V) // 2
             modes = np.arange(self.nlen)
 
             if n != self.nlen:
-                raise ValueError("Covariance matrix is the incorrect size, does not match means vector.")
+                raise ValueError(
+                    "Covariance matrix is the incorrect size, does not match means vector."
+                )
         else:
             n = len(modes)
             modes = np.array(modes)
@@ -304,8 +350,8 @@ class GaussianModes:
         VV = np.dot(np.dot(np.transpose(rotmat), V), rotmat)
 
         A = VV[0:n, 0:n]
-        B = VV[0:n, n:2*n]
-        C = VV[n:2*n, n:2*n]
+        B = VV[0:n, n : 2 * n]
+        C = VV[n : 2 * n, n : 2 * n]
         Bt = np.transpose(B)
 
         if n < self.nlen:
@@ -315,8 +361,8 @@ class GaussianModes:
 
         rows = modes.reshape(-1, 1)
         cols = modes.reshape(1, -1)
-        self.nmat[rows, cols] = 0.25*(A+C+1j*(B-Bt)-2*np.identity(n))
-        self.mmat[rows, cols] = 0.25*(A-C+1j*(B+Bt))
+        self.nmat[rows, cols] = 0.25 * (A + C + 1j * (B - Bt) - 2 * np.identity(n))
+        self.mmat[rows, cols] = 0.25 * (A - C + 1j * (B + Bt))
 
     def qmat(self, modes=None):
         """ Construct the covariance matrix for the Q function"""
@@ -326,9 +372,17 @@ class GaussianModes:
         rows = np.reshape(modes, [-1, 1])
         cols = np.reshape(modes, [1, -1])
 
-        sigmaq = np.concatenate((np.concatenate((self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])), axis=1),
-                                 np.concatenate((self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])), axis=1)),
-                                axis=0)+np.identity(2*len(modes))
+        sigmaq = np.concatenate(
+            (
+                np.concatenate(
+                    (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])), axis=1
+                ),
+                np.concatenate(
+                    (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])), axis=1
+                ),
+            ),
+            axis=0,
+        ) + np.identity(2 * len(modes))
         return sigmaq
 
     def fidelity_coherent(self, alpha, modes=None):
@@ -338,10 +392,12 @@ class GaussianModes:
 
         Q = self.qmat(modes)
         Qi = np.linalg.inv(Q)
-        delta = self.mean[modes]-alpha
+        delta = self.mean[modes] - alpha
 
         delta = np.concatenate((delta, np.conjugate(delta)))
-        return np.sqrt(np.linalg.det(Qi).real)*np.exp(-0.5*np.dot(delta, np.dot(Qi, np.conjugate(delta))).real)
+        return np.sqrt(np.linalg.det(Qi).real) * np.exp(
+            -0.5 * np.dot(delta, np.dot(Qi, np.conjugate(delta))).real
+        )
 
     def fidelity_vacuum(self, modes=None):
         """fidelity of the current state with the vacuum state"""
@@ -354,8 +410,14 @@ class GaussianModes:
     def Amat(self):
         """ Constructs the A matrix from Hamilton's paper"""
         ######### this needs to be conjugated
-        sigmaq = np.concatenate((np.concatenate((np.transpose(self.nmat), self.mmat), axis=1), np.concatenate((np.transpose(np.conjugate(self.mmat)), self.nmat), axis=1)), axis=0)+np.identity(2*self.nlen)
-        return np.dot(ops.xmat(self.nlen), np.identity(2*self.nlen)-np.linalg.inv(sigmaq))
+        sigmaq = np.concatenate(
+            (
+                np.concatenate((np.transpose(self.nmat), self.mmat), axis=1),
+                np.concatenate((np.transpose(np.conjugate(self.mmat)), self.nmat), axis=1),
+            ),
+            axis=0,
+        ) + np.identity(2 * self.nlen)
+        return np.dot(ops.xmat(self.nlen), np.identity(2 * self.nlen) - np.linalg.inv(sigmaq))
 
     def loss(self, T, k):
         r"""Implements a loss channel in mode k by amplitude loss amount \sqrt{T}
@@ -364,15 +426,15 @@ class GaussianModes:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
         sqrtT = np.sqrt(T)
-        self.nmat[k] = sqrtT*self.nmat[k]
-        self.mmat[k] = sqrtT*self.mmat[k]
+        self.nmat[k] = sqrtT * self.nmat[k]
+        self.mmat[k] = sqrtT * self.mmat[k]
 
-        self.nmat[k][k] = sqrtT*self.nmat[k][k]
-        self.mmat[k][k] = sqrtT*self.mmat[k][k]
+        self.nmat[k][k] = sqrtT * self.nmat[k][k]
+        self.mmat[k][k] = sqrtT * self.mmat[k][k]
 
         self.nmat[:, k] = np.conj(self.nmat[k])
         self.mmat[:, k] = self.mmat[k]
-        self.mean[k] = sqrtT*self.mean[k]
+        self.mean[k] = sqrtT * self.mean[k]
 
     def thermal_loss(self, T, nbar, k):
         r""" Implements the thermal loss channel in mode k by amplitude loss amount \sqrt{T}
@@ -382,7 +444,7 @@ class GaussianModes:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
         self.loss(T, k)
-        self.nmat += (1-T)*nbar
+        self.nmat += (1 - T) * nbar
 
     def init_thermal(self, population, mode):
         """ Initializes a state of mode in a thermal state with the given population"""
@@ -392,7 +454,7 @@ class GaussianModes:
     def is_vacuum(self, tol=0.0):
         """ Checks if the state is vacuum by calculating its fidelity with vacuum """
         fid = self.fidelity_vacuum()
-        return np.abs(fid-1) <= tol
+        return np.abs(fid - 1) <= tol
 
     def measure_dyne(self, covmat, indices, shots=1):
         """ Performs the general-dyne measurement specified in covmat, the indices should correspond
@@ -401,17 +463,17 @@ class GaussianModes:
         Quantum Continuous Variables: A Primer of Theoretical Methods
         by Alessio Serafini page 129
         """
-        if covmat.shape != (2*len(indices), 2*len(indices)):
+        if covmat.shape != (2 * len(indices), 2 * len(indices)):
             raise ValueError("Covariance matrix size does not match indices provided")
 
         for i in indices:
             if self.active[i] is None:
                 raise ValueError("Cannot apply homodyne measurement, mode does not exist")
 
-        expind = np.concatenate((2*np.array(indices), 2*np.array(indices)+1))
+        expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
         mp = self.scovmat()
         (A, B, C) = ops.chop_in_blocks(mp, expind)
-        V = A-np.dot(np.dot(B, np.linalg.inv(C+covmat)), np.transpose(B))
+        V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
         V1 = ops.reassemble(V, expind)
         self.fromscovmat(V1)
 
@@ -420,7 +482,7 @@ class GaussianModes:
         vm = np.random.multivariate_normal(vc, C, size=shots)
         # The next line is a hack in that it only updates conditioned on the first samples value
         # should still work if shots = 1
-        va = va+np.dot(np.dot(B, np.linalg.inv(C+covmat)), vm[0]-vc)
+        va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm[0] - vc)
         va = ops.reassemble_vector(va, expind)
         self.fromsmean(va)
         return vm
@@ -428,7 +490,7 @@ class GaussianModes:
     def homodyne(self, n, shots=1, eps=0.0002):
         """ Performs a homodyne measurement by calling measure dyne an giving it the
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
-        covmat = np.diag(np.array([eps**2, 1./eps**2]))
+        covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
         res = self.measure_dyne(covmat, [n], shots=shots)
 
         return res
@@ -437,12 +499,12 @@ class GaussianModes:
         """ Performs a homodyne measurement but postelecting on the value vals for mode n """
         if self.active[n] is None:
             raise ValueError("Cannot apply homodyne measurement, mode does not exist")
-        covmat = np.diag(np.array([eps**2, 1./eps**2]))
+        covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
         indices = [n]
-        expind = np.concatenate((2*np.array(indices), 2*np.array(indices)+1))
+        expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
         mp = self.scovmat()
         (A, B, C) = ops.chop_in_blocks(mp, expind)
-        V = A-np.dot(np.dot(B, np.linalg.inv(C+covmat)), np.transpose(B))
+        V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
         V1 = ops.reassemble(V, expind)
         self.fromscovmat(V1)
 
@@ -450,7 +512,7 @@ class GaussianModes:
         (va, vc) = ops.chop_in_blocks_vector(r, expind)
         vm1 = np.random.normal(vc[1], np.sqrt(C[1][1]))
         vm = np.array([val, vm1])
-        va = va+np.dot(np.dot(B, np.linalg.inv(C+covmat)), vm-vc)
+        va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm - vc)
         va = ops.reassemble_vector(va, expind)
         self.fromsmean(va)
         return val
@@ -462,17 +524,17 @@ class GaussianModes:
 
         covmat = np.identity(2)
         indices = [n]
-        expind = np.concatenate((2*np.array(indices), 2*np.array(indices)+1))
+        expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
         mp = self.scovmat()
         (A, B, C) = ops.chop_in_blocks(mp, expind)
-        V = A-np.dot(np.dot(B, np.linalg.inv(C+covmat)), np.transpose(B))
+        V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
         V1 = ops.reassemble(V, expind)
         self.fromscovmat(V1)
 
         r = self.smean()
         (va, vc) = ops.chop_in_blocks_vector(r, expind)
-        vm = 2.0*np.array([np.real(alpha_val), np.imag(alpha_val)])
-        va = va+np.dot(np.dot(B, np.linalg.inv(C+covmat)), vm-vc)
+        vm = 2.0 * np.array([np.real(alpha_val), np.imag(alpha_val)])
+        va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm - vc)
         va = ops.reassemble_vector(va, expind)
         self.fromsmean(va)
         return alpha_val

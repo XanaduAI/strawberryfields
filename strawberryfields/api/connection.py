@@ -14,24 +14,22 @@
 """
 This module provides an interface to a remote program execution backend.
 """
-from datetime import datetime
 import io
-import logging
+from datetime import datetime
 from typing import List
 
 import numpy as np
 import requests
 
-from strawberryfields.configuration import configuration
+from strawberryfields.configuration import load_config
 from strawberryfields.io import to_blackbird
+from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
 
 from .job import Job, JobStatus
 from .result import Result
 
 # pylint: disable=bad-continuation,protected-access
-
-log = logging.getLogger(__name__)
 
 
 class RequestFailedError(Exception):
@@ -79,22 +77,27 @@ class Connection:
         use_ssl (bool): whether to use SSL for the connection
     """
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
-        token: str = configuration["api"]["authentication_token"],
-        host: str = configuration["api"]["hostname"],
-        port: int = configuration["api"]["port"],
-        use_ssl: bool = configuration["api"]["use_ssl"],
-        verbose: bool = False,
+        token: str = None,
+        host: str = None,
+        port: int = None,
+        use_ssl: bool = None,
+        verbose: bool = True,
     ):
-        self._token = token
-        self._host = host
-        self._port = port
-        self._use_ssl = use_ssl
+        default_config = load_config()
+
+        self._token = token or default_config["api"]["authentication_token"]
+        self._host = host or default_config["api"]["hostname"]
+        self._port = port or default_config["api"]["port"]
+        self._use_ssl = use_ssl or default_config["api"]["use_ssl"]
         self._verbose = verbose
 
         self._base_url = "http{}://{}:{}".format("s" if self.use_ssl else "", self.host, self.port)
         self._headers = {"Authorization": self.token}
+
+        self.log = create_logger(__name__)
 
     @property
     def token(self) -> str:
@@ -152,15 +155,12 @@ class Connection:
         circuit = bb.serialize()
 
         path = "/jobs"
-        response = requests.post(self._url(path), headers=self._headers, json={"circuit": circuit},)
+        response = requests.post(self._url(path), headers=self._headers, json={"circuit": circuit})
         if response.status_code == 201:
+            job_id = response.json()["id"]
             if self._verbose:
-                log.info("The job was successfully submitted.")
-            return Job(
-                id_=response.json()["id"],
-                status=JobStatus(response.json()["status"]),
-                connection=self,
-            )
+                self.log.info("Job %s was successfully submitted.", job_id)
+            return Job(id_=job_id, status=JobStatus(response.json()["status"]), connection=self,)
         raise RequestFailedError(
             "Failed to create job: {}".format(self._format_error_message(response))
         )
@@ -220,14 +220,14 @@ class Connection:
         """
         path = "/jobs/{}/result".format(job_id)
         response = requests.get(
-            self._url(path), headers={"Accept": "application/x-numpy", **self._headers},
+            self._url(path), headers={"Accept": "application/x-numpy", **self._headers}
         )
         if response.status_code == 200:
             # Read the numpy binary data in the payload into memory
             with io.BytesIO() as buf:
                 buf.write(response.content)
                 buf.seek(0)
-                samples = np.load(buf)
+                samples = np.load(buf, allow_pickle=False)
             return Result(samples, is_stateful=False)
         raise RequestFailedError(
             "Failed to get job result: {}".format(self._format_error_message(response))
@@ -241,11 +241,11 @@ class Connection:
         """
         path = "/jobs/{}".format(job_id)
         response = requests.patch(
-            self._url(path), headers=self._headers, json={"status": JobStatus.CANCELLED.value},
+            self._url(path), headers=self._headers, json={"status": JobStatus.CANCELLED.value}
         )
         if response.status_code == 204:
             if self._verbose:
-                log.info("The job was successfully cancelled.")
+                self.log.info("The job %s was successfully cancelled.", job_id)
             return
         raise RequestFailedError(
             "Failed to cancel job: {}".format(self._format_error_message(response))

@@ -1,4 +1,4 @@
-# Release 0.13.0.rc0 (release candidate)
+# Release 0.13.0 (current release)
 
 <h3>New features since last release</h3>
 
@@ -102,6 +102,10 @@
   For more details, see the
   [configuration documentation](https://strawberryfields.readthedocs.io/en/stable/introduction/configuration.html)
 
+* Adds configuration functions for resetting, deleting configurations, as
+  well as displaying available configuration files.
+  [(#359)](https://github.com/XanaduAI/strawberryfields/pull/359)
+
 * Adds the `x_quad_values` and `p_quad_values` methods to the `state` class.
   This allows calculation of x and p quadrature
   probability distributions by integrating across the Wigner function.
@@ -181,6 +185,13 @@
   from the Blackbird script or `Program` if not explicitly specified.
   [(#327)](https://github.com/XanaduAI/strawberryfields/pull/327)
 
+* Fixed a bug in homodyne measurements in the Fock backend, where computed
+  probability values could occasionally include small negative values
+  due to floating point precision error.
+  [(#364)](https://github.com/XanaduAI/strawberryfields/pull/364)
+
+* Improves the Takagi decomposition, by making explicit use of the eigendecomposition of real symmetric matrices. [(#352)](https://github.com/XanaduAI/strawberryfields/pull/352)
+
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
@@ -189,7 +200,7 @@ Ville Bergholm, Tom Bromley, Jack Ceroni, Theodor Isacsson, Josh Izaac, Nathan K
 Leonhard Neuhaus, Nicolás Quesada, Jeremy Swinarton, Antal Száva, Paul Tan, Zeid Zabaneh.
 
 
-# Release 0.12.1 (current release)
+# Release 0.12.1
 
 <h3>New features</h3>
 

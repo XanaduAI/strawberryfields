@@ -1,7 +1,7 @@
 #### Before posting an issue
 
 Search existing GitHub issues to make sure the issue does not already exist:
-https://github.com/xanaduai/stawberryfields/issues
+https://github.com/xanaduai/strawberryfields/issues
 
 If posting a Strawberry Fields issue, delete everything above the dashed line, and fill
 in the template.
@@ -10,7 +10,7 @@ If making a feature request, delete the following template and describe, in deta
 the feature and why it is needed.
 
 For general technical details. check out our documentation:
-https://stawberryfields.readthedocs.io
+https://strawberryfields.readthedocs.io
 
 -------------------------------------------------------------------------------------------------------------
 
@@ -25,7 +25,7 @@ if relevant. You may use the following template below
 
 * *Reproduces how often:* (What percentage of the time does it reproduce?)
 
-* *System information:* (post the output of `import stawberryfields as sf; sf.about()`)
+* *System information:* (post the output of `import strawberryfields as sf; sf.about()`)
 
 #### Source code and tracebacks
 

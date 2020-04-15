@@ -36,7 +36,9 @@ class FockStateTF(BaseFockState):
 
     def __init__(self, state_data, num_modes, pure, cutoff_dim, batched=False, mode_names=None):
         # pylint: disable=too-many-arguments
-        state_data = tf.convert_to_tensor(state_data, name="state_data") # convert everything to a Tensor so we have the option to do symbolic evaluations
+        state_data = tf.convert_to_tensor(
+            state_data, name="state_data"
+        )  # convert everything to a Tensor so we have the option to do symbolic evaluations
         super().__init__(state_data, num_modes, pure, cutoff_dim, mode_names)
         self._batched = batched
         self._str = "<FockStateTF: num_modes={}, cutoff={}, pure={}, batched={}, hbar={}>". \
@@ -290,7 +292,7 @@ class FockStateTF(BaseFockState):
         s = tf.identity(reduced, name="reduced_density_matrix")
         return s
 
-    def quad_expectation(self, mode, phi=0., **kwargs):
+    def quad_expectation(self, mode, phi=0.0, **kwargs):
         r"""
         Compute the expectation value of the quadrature operator :math:`\hat{x}_\phi` for the reduced state on the specified mode. May be numerical or symbolic.
 
@@ -361,7 +363,6 @@ class FockStateTF(BaseFockState):
         nbar = tf.math.real(tf.reduce_sum(flat_rho * flat_n, axis=1)) # implements a batched tr(rho * n)
         nbarSq = tf.math.real(tf.reduce_sum(flat_rho * flat_n**2, axis=1)) # implements a batched tr(rho * n^2)
         var = nbarSq - nbar**2
-
         if not self.batched:
             nbar = tf.squeeze(nbar, 0) # drop fake batch dimension
             var = tf.squeeze(var, 0) # drop fake batch dimension
@@ -446,7 +447,7 @@ class FockStateTF(BaseFockState):
         raise NotImplementedError("Calculation of the Wigner function is currently "
                                   "only supported when batched=False")
 
-    def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs): # pragma: no cover
+    def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):  # pragma: no cover
         r"""The multi-mode expectation values and variance of arbitrary 2nd order polynomials
         of quadrature operators.
 

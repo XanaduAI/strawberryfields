@@ -20,8 +20,7 @@ import argparse
 import sys
 
 from strawberryfields.api import Connection
-from strawberryfields.configuration import (ConfigurationError, create_config,
-                                            store_account)
+from strawberryfields.configuration import ConfigurationError, create_config, store_account
 from strawberryfields.engine import RemoteEngine
 from strawberryfields.io import load
 
@@ -60,6 +59,7 @@ def main():
     else:
         parser.print_help()
 
+
 def create_parser():
     """Creates a parser to process the commands and arguments passed to the
     command line interface.
@@ -69,7 +69,7 @@ def create_parser():
         options
     """
     parser = argparse.ArgumentParser(
-        description="See below for available options and commands for working with the Xanadu cloud platform.",
+        description="See below for available options and commands for working with the Xanadu cloud platform."
     )
 
     # Setting a title for the general options (requires setting a private
@@ -97,13 +97,16 @@ def create_parser():
         help="Configure Strawberry Fields with your Xanadu cloud platform API token.",
     )
     configure_parser.add_argument(
-        "--local", "-l", action="store_true", help="Create a local configuration file in the current directory."
+        "--local",
+        "-l",
+        action="store_true",
+        help="Create a local configuration file in the current directory.",
     )
 
     # Adding the input subparser
     run_parser = subparsers.add_parser("run", help="Run a blackbird script.")
     run_parser.add_argument(
-        "input", type=str, help="The filename or path to the blackbird script to run.",
+        "input", type=str, help="The filename or path to the blackbird script to run."
     )
     run_parser.set_defaults(func=run_blackbird_script)
     run_parser.add_argument(
@@ -140,12 +143,14 @@ def configure(args):
     else:
         store_account(**kwargs)
 
+
 def ping():
     """Tests the connection to the remote backend."""
     if Connection().ping():
         sys.stdout.write("You have successfully authenticated to the platform!\n")
     else:
         sys.stdout.write("There was a problem when authenticating to the platform!\n")
+
 
 def configuration_wizard():
     r"""Provides an interactive selection wizard on the command line to
@@ -164,8 +169,8 @@ def configuration_wizard():
     ssl_default = "y" if default_config["use_ssl"] else "n"
     port_default = default_config["port"]
 
-    authentication_token = (
-        input("Please enter the authentication token to use when connecting: [] ")
+    authentication_token = input(
+        "Please enter the authentication token to use when connecting: [] "
     )
 
     if not authentication_token:
@@ -173,13 +178,22 @@ def configuration_wizard():
         sys.exit()
 
     hostname = (
-        input("Please enter the hostname of the server to connect to: [{}] ".format(hostname_default)) or hostname_default
+        input(
+            "Please enter the hostname of the server to connect to: [{}] ".format(hostname_default)
+        )
+        or hostname_default
     )
 
-    ssl_input = input("Should the client attempt to connect over SSL? [{}] ".format(ssl_default)) or ssl_default
+    ssl_input = (
+        input("Should the client attempt to connect over SSL? [{}] ".format(ssl_default))
+        or ssl_default
+    )
     use_ssl = ssl_input.upper() == "Y"
 
-    port = input("Please enter the port number to connect with: [{}] ".format(port_default)) or port_default
+    port = (
+        input("Please enter the port number to connect with: [{}] ".format(port_default))
+        or port_default
+    )
 
     kwargs = {
         "authentication_token": authentication_token,
@@ -188,6 +202,7 @@ def configuration_wizard():
         "port": port,
     }
     return kwargs
+
 
 def run_blackbird_script(args):
     """Run a blackbird script.
@@ -214,8 +229,11 @@ def run_blackbird_script(args):
     if result and result.samples is not None:
         write_script_results(result.samples, output_file=args.output)
     else:
-        sys.stdout.write("Ooops! Something went wrong with obtaining the results. Please check the Blackbird script specified and the connection to the remote engine.")
+        sys.stdout.write(
+            "Ooops! Something went wrong with obtaining the results. Please check the Blackbird script specified and the connection to the remote engine."
+        )
         sys.exit()
+
 
 def write_script_results(samples, output_file=None):
     """Write the results of the script either to a file or to the standard output.

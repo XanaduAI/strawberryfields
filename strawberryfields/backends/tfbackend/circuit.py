@@ -40,12 +40,14 @@ import tensorflow as tf
 
 from . import ops
 
+
 class Circuit:
     """Base class for representing and operating on a collection of
          CV quantum optics modes in the Fock basis.
          The modes are initialized in the (multimode) vacuum state,
          using the Fock representation with given cutoff_dim.
          The state of the modes is manipulated by calling the various methods."""
+
     # pylint: disable=too-many-instance-attributes,too-many-public-methods
     def __init__(self, num_modes, cutoff_dim, pure, batch_size):
         self._hbar = 2
@@ -78,7 +80,9 @@ class Circuit:
             if mode < 0:
                 raise ValueError("Specified mode number(s) cannot be negative.")
             elif mode >= self._num_modes:
-                raise ValueError("Specified mode number(s) are not compatible with number of modes.")
+                raise ValueError(
+                    "Specified mode number(s) are not compatible with number of modes."
+                )
 
         if len(modes) != len(set(modes)):
             raise ValueError("The specified modes cannot appear multiple times.")
@@ -102,9 +106,11 @@ class Circuit:
 
         num_modes = len(self._state.shape) - batch_offset
         if not self._state_is_pure:
-            num_modes = int(num_modes/2)
+            num_modes = int(num_modes / 2)
 
-        new_state = ops.replace_modes(replacement, modes, self._state, self._state_is_pure, self._batched)
+        new_state = ops.replace_modes(
+            replacement, modes, self._state, self._state_is_pure, self._batched
+        )
         self._update_state(new_state)
 
         # update purity depending on whether we have replaced all modes or a subset
@@ -139,7 +145,7 @@ class Circuit:
             if not self._batched:
                 broadcast_p = p
             else:
-                if len(p.shape) == 0: # pylint: disable=len-as-condition
+                if len(p.shape) == 0:  # pylint: disable=len-as-condition
                     # scalar
                     broadcast_p = np.concatenate([np.expand_dims(p, 0)] * self._batch_size)
                 elif len(p.shape) == 1:
@@ -152,7 +158,11 @@ class Circuit:
                     shape_err = True
 
         if shape_err:
-            raise ValueError("Parameter can be either a scalar or a vector of length {}.".format(self._batch_size))
+            raise ValueError(
+                "Parameter can be either a scalar or a vector of length {}.".format(
+                    self._batch_size
+                )
+            )
         else:
             return broadcast_p
 
@@ -198,31 +208,31 @@ class Circuit:
             cutoff_dim (int): new Fock space cutoff dimension to use.
             batch_size (None, int): None means no batching. An integer value >= 2 sets the batch size to use.
         """
-        if 'pure' in kwargs:
-            pure = kwargs['pure']
+        if "pure" in kwargs:
+            pure = kwargs["pure"]
             if not isinstance(pure, bool):
                 raise ValueError("Argument 'pure' must be either True or False")
             self._state_is_pure = pure
 
-        if 'num_subsystems' in kwargs:
-            ns = kwargs['num_subsystems']
+        if "num_subsystems" in kwargs:
+            ns = kwargs["num_subsystems"]
             if not isinstance(ns, int):
                 raise ValueError("Argument 'num_subsystems' must be a positive integer")
             self._num_modes = ns
 
-        if 'cutoff_dim' in kwargs:
-            cutoff_dim = kwargs['cutoff_dim']
+        if "cutoff_dim" in kwargs:
+            cutoff_dim = kwargs["cutoff_dim"]
             if not isinstance(cutoff_dim, int) or cutoff_dim < 1:
                 raise ValueError("Argument 'cutoff_dim' must be a positive integer")
             self._cutoff_dim = cutoff_dim
 
-        if 'batch_size' in kwargs:
-            batch_size = kwargs['batch_size']
+        if "batch_size" in kwargs:
+            batch_size = kwargs["batch_size"]
             if batch_size is not None:
                 if not isinstance(batch_size, int) or batch_size < 2:
                     raise ValueError("Argument 'batch_size' must be either None or an integer > 1")
             self._batch_size = batch_size
-            self._batched = (batch_size is not None)
+            self._batched = batch_size is not None
 
         self._state_history = []
         self._cache = {}
@@ -323,14 +333,16 @@ class Circuit:
 
             n_modes = len(modes)
             if input_state_is_pure:
-                input_is_batched = (len(state.shape) > n_modes or (len(state.shape) == 2 and state.shape[1] == self._cutoff_dim**n_modes))
+                input_is_batched = len(state.shape) > n_modes or (
+                    len(state.shape) == 2 and state.shape[1] == self._cutoff_dim ** n_modes
+                )
             else:
                 input_is_batched = len(state.shape) % 2 == 1
 
-            pure_shape = tuple([self._cutoff_dim]*n_modes)
-            mixed_shape = tuple([self._cutoff_dim]*(2*n_modes))
-            pure_shape_as_vector = tuple([self._cutoff_dim**n_modes])
-            mixed_shape_as_matrix = tuple([self._cutoff_dim**n_modes]*2)
+            pure_shape = tuple([self._cutoff_dim] * n_modes)
+            mixed_shape = tuple([self._cutoff_dim] * (2 * n_modes))
+            pure_shape_as_vector = tuple([self._cutoff_dim ** n_modes])
+            mixed_shape_as_matrix = tuple([self._cutoff_dim ** n_modes] * 2)
             if input_is_batched:
                 pure_shape = (self._batch_size,) + pure_shape
                 mixed_shape = (self._batch_size,) + mixed_shape
@@ -474,15 +486,19 @@ class Circuit:
             select = np.array(select)
 
         # check for valid 'modes' argument
-        if len(modes) == 0 or len(modes) > self._num_modes or len(modes) != len(set(modes)): #pylint: disable=len-as-condition
+        if (
+            len(modes) == 0 or len(modes) > self._num_modes or len(modes) != len(set(modes))
+        ):  # pylint: disable=len-as-condition
             raise ValueError("Specified modes are not valid.")
         if np.any(modes != sorted(modes)):
             raise ValueError("'modes' must be sorted in increasing order.")
 
         # check for valid 'select' argument
         if select is not None:
-            if np.any(select == None): #pylint: disable=singleton-comparison
-                raise NotImplementedError("Post-selection lists must only contain numerical values.")
+            if np.any(select == None):  # pylint: disable=singleton-comparison
+                raise NotImplementedError(
+                    "Post-selection lists must only contain numerical values."
+                )
             if self._batched:
                 num_meas_modes = len(modes)
                 # in this case, select must either be:
@@ -657,7 +673,7 @@ class Circuit:
             if mode < 0 or mode >= self._num_modes:
                 raise ValueError("Specified modes are not valid.")
 
-        m_omega_over_hbar = 1/self._hbar
+        m_omega_over_hbar = 1 / self._hbar
         if self._state_is_pure:
             mode_size = 1
         else:

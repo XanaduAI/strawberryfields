@@ -18,7 +18,7 @@ from .circuit_specs import CircuitSpecs
 class GaussianSpecs(CircuitSpecs):
     """Circuit specifications for the Gaussian backend."""
 
-    short_name = 'gaussian'
+    short_name = "gaussian"
     modes = None
     local = True
     remote = True

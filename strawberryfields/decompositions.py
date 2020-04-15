@@ -44,8 +44,27 @@ def takagi(N, tol=1e-13, rounding=13):
     (n, m) = N.shape
     if n != m:
         raise ValueError("The input matrix must be square")
-    if np.linalg.norm(N-np.transpose(N)) >= tol:
+    if np.linalg.norm(N - np.transpose(N)) >= tol:
         raise ValueError("The input matrix is not symmetric")
+
+    N = np.real_if_close(N)
+
+    if np.allclose(N, 0):
+        return np.zeros(n), np.eye(n)
+
+    if np.isrealobj(N):
+        # If the matrix N is real one can be more clever and use its eigendecomposition
+        l, U = np.linalg.eigh(N)
+        vals = np.abs(l)  # These are the Takagi eigenvalues
+        phases = np.sqrt(np.complex128([1 if i > 0 else -1 for i in l]))
+        Uc = U @ np.diag(phases)  # One needs to readjust the phases
+        list_vals = [(vals[i], i) for i in range(len(vals))]
+        list_vals.sort(reverse=True)
+        sorted_l, permutation = zip(*list_vals)
+        permutation = np.array(permutation)
+        Uc = Uc[:, permutation]
+        # And also rearrange the unitary and values so that they are decreasingly ordered
+        return np.array(sorted_l), Uc
 
     v, l, ws = np.linalg.svd(N)
     w = np.transpose(np.conjugate(ws))
@@ -61,7 +80,7 @@ def takagi(N, tol=1e-13, rounding=13):
     for k in result:
         for ind, j in enumerate(k):  # pylint: disable=unused-variable
             k[ind] = kk
-            kk = kk+1
+            kk = kk + 1
 
     # Generate the lists with the degenerate column subspaces
     vas = []
@@ -214,9 +233,9 @@ def bipartite_graph_embed(A, mean_photon_per_mode=1.0, rtol=1e-05, atol=1e-08):
 def T(m, n, theta, phi, nmax):
     r"""The Clements T matrix from Eq. 1 of the paper"""
     mat = np.identity(nmax, dtype=np.complex128)
-    mat[m, m] = np.exp(1j*phi)*np.cos(theta)
+    mat[m, m] = np.exp(1j * phi) * np.cos(theta)
     mat[m, n] = -np.sin(theta)
-    mat[n, m] = np.exp(1j*phi)*np.sin(theta)
+    mat[n, m] = np.exp(1j * phi) * np.sin(theta)
     mat[n, n] = np.cos(theta)
     return mat
 
@@ -236,15 +255,15 @@ def nullTi(m, n, U):
     if U[m, n] == 0:
         thetar = 0
         phir = 0
-    elif U[m, n+1] == 0:
-        thetar = np.pi/2
+    elif U[m, n + 1] == 0:
+        thetar = np.pi / 2
         phir = 0
     else:
-        r = U[m, n] / U[m, n+1]
+        r = U[m, n] / U[m, n + 1]
         thetar = np.arctan(np.abs(r))
         phir = np.angle(r)
 
-    return [n, n+1, thetar, phir, nmax]
+    return [n, n + 1, thetar, phir, nmax]
 
 
 def nullT(n, m, U):
@@ -257,15 +276,15 @@ def nullT(n, m, U):
     if U[n, m] == 0:
         thetar = 0
         phir = 0
-    elif U[n-1, m] == 0:
-        thetar = np.pi/2
+    elif U[n - 1, m] == 0:
+        thetar = np.pi / 2
         phir = 0
     else:
-        r = -U[n, m] / U[n-1, m]
+        r = -U[n, m] / U[n - 1, m]
         thetar = np.arctan(np.abs(r))
         phir = np.angle(r)
 
-    return [n-1, n, thetar, phir, nmax]
+    return [n - 1, n, thetar, phir, nmax]
 
 
 def rectangular(V, tol=1e-11):
@@ -304,14 +323,14 @@ def rectangular(V, tol=1e-11):
 
     tilist = []
     tlist = []
-    for k, i in enumerate(range(nsize-2, -1, -1)):
+    for k, i in enumerate(range(nsize - 2, -1, -1)):
         if k % 2 == 0:
-            for j in reversed(range(nsize-1-i)):
-                tilist.append(nullTi(i+j+1, j, localV))
+            for j in reversed(range(nsize - 1 - i)):
+                tilist.append(nullTi(i + j + 1, j, localV))
                 localV = localV @ Ti(*tilist[-1])
         else:
-            for j in range(nsize-1-i):
-                tlist.append(nullT(i+j+1, j, localV))
+            for j in range(nsize - 1 - i):
+                tlist.append(nullT(i + j + 1, j, localV))
                 localV = T(*tlist[-1]) @ localV
 
     return tilist, np.diag(localV), tlist
@@ -354,7 +373,7 @@ def rectangular_phase_end(V, tol=1e-11):
         new_beta = beta
 
         new_i = [i[0], i[1], new_theta, new_phi, i[4]]
-        new_diags[em], new_diags[en] = np.exp(1j*new_alpha), np.exp(1j*new_beta)
+        new_diags[em], new_diags[en] = np.exp(1j * new_alpha), np.exp(1j * new_beta)
 
         new_tlist = new_tlist + [new_i]
 
@@ -444,12 +463,12 @@ def rectangular_symmetric(V, tol=1e-11):
         internal_phase = (np.pi + 2.0 * theta) % (2 * np.pi)
         # repeat modulo operations , otherwise the input unitary
         # numpy.identity(20) yields an external_phase of exactly 2 * pi
-        external_phase %= (2 * np.pi)
-        internal_phase %= (2 * np.pi)
+        external_phase %= 2 * np.pi
+        internal_phase %= 2 * np.pi
         new_alpha = beta - theta + np.pi
-        new_beta = 0*np.pi - theta + beta
+        new_beta = 0 * np.pi - theta + beta
         new_i = [i[0], i[1], internal_phase, external_phase, i[4]]
-        new_diags[em], new_diags[en] = np.exp(1j*new_alpha), np.exp(1j*new_beta)
+        new_diags[em], new_diags[en] = np.exp(1j * new_alpha), np.exp(1j * new_beta)
         new_tlist = new_tlist + [new_i]
 
     new_diags = diags * new_diags
@@ -482,9 +501,9 @@ def triangular(V, tol=1e-11):
         raise ValueError("The input matrix is not unitary")
 
     tlist = []
-    for i in range(nsize-2, -1, -1):
-        for j in range(i+1):
-            tlist.append(nullT(nsize-j-1, nsize-i-2, localV))
+    for i in range(nsize - 2, -1, -1):
+        for j in range(i + 1):
+            tlist.append(nullT(nsize - j - 1, nsize - i - 2, localV))
             localV = T(*tlist[-1]) @ localV
 
     return list(reversed(tlist)), np.diag(localV), None
@@ -516,16 +535,15 @@ def williamson(V, tol=1e-11):
     if n != m:
         raise ValueError("The input matrix is not square")
 
-    diffn = np.linalg.norm(V-np.transpose(V))
+    diffn = np.linalg.norm(V - np.transpose(V))
 
     if diffn >= tol:
         raise ValueError("The input matrix is not symmetric")
 
     if n % 2 != 0:
-        raise ValueError(
-            "The input matrix must have an even number of rows/columns")
+        raise ValueError("The input matrix must have an even number of rows/columns")
 
-    n = n//2
+    n = n // 2
     omega = sympmat(n)
     rotmat = changebasis(n)
     vals = np.linalg.eigvalsh(V)
@@ -547,7 +565,7 @@ def williamson(V, tol=1e-11):
     # go to the ordering x_1, ..., x_n, p_1, ... , p_n
 
     for i in range(n):
-        if s1[2*i, 2*i+1] > 0:
+        if s1[2 * i, 2 * i + 1] > 0:
             seq.append(I)
         else:
             seq.append(X)
@@ -555,10 +573,9 @@ def williamson(V, tol=1e-11):
     p = block_diag(*seq)
     Kt = K @ p
     s1t = p @ s1 @ p
-    dd = np.transpose(rotmat) @ s1t @rotmat
+    dd = np.transpose(rotmat) @ s1t @ rotmat
     Ktt = Kt @ rotmat
-    Db = np.diag([1/dd[i, i+n] for i in range(n)] + [1/dd[i, i+n]
-                                                     for i in range(n)])
+    Db = np.diag([1 / dd[i, i + n] for i in range(n)] + [1 / dd[i, i + n] for i in range(n)])
     S = Mm12 @ Ktt @ sqrtm(Db)
     return Db, np.linalg.inv(S).T
 
@@ -603,24 +620,23 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
     if n != m:
         raise ValueError("The input matrix is not square")
     if n % 2 != 0:
-        raise ValueError(
-            "The input matrix must have an even number of rows/columns")
+        raise ValueError("The input matrix must have an even number of rows/columns")
 
-    n = n//2
+    n = n // 2
     omega = sympmat(n)
     if np.linalg.norm(np.transpose(S) @ omega @ S - omega) >= tol:
         raise ValueError("The input matrix is not symplectic")
 
-    if np.linalg.norm(np.transpose(S) @ S - np.eye(2*n)) >= tol:
+    if np.linalg.norm(np.transpose(S) @ S - np.eye(2 * n)) >= tol:
 
-        u, sigma = polar(S, side='left')
+        u, sigma = polar(S, side="left")
         ss, uss = takagi(sigma, tol=tol, rounding=rounding)
 
         # Apply a permutation matrix so that the squeezers appear in the order
         # s_1,...,s_n, 1/s_1,...1/s_n
-        perm = np.array(list(range(0, n)) + list(reversed(range(n, 2*n))))
+        perm = np.array(list(range(0, n)) + list(reversed(range(n, 2 * n))))
 
-        pmat = np.identity(2*n)[perm, :]
+        pmat = np.identity(2 * n)[perm, :]
         ut = uss @ pmat
 
         # Apply a second permutation matrix to permute s
@@ -641,7 +657,7 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
         u_list, v_list = [], []
 
         for start_i, stop_i in zip(start_is, stop_is):
-            x = qomega[start_i: stop_i, n + start_i: n + stop_i].real
+            x = qomega[start_i:stop_i, n + start_i : n + stop_i].real
             u_svd, _s_svd, v_svd = np.linalg.svd(x)
             u_list = u_list + [u_svd]
             v_list = v_list + [v_svd.T]
@@ -654,8 +670,8 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
 
     else:
         ut1 = S
-        st1 = np.eye(2*n)
-        v1 = np.eye(2*n)
+        st1 = np.eye(2 * n)
+        v1 = np.eye(2 * n)
 
     return ut1.real, st1.real, v1.real
 
@@ -683,10 +699,10 @@ def covmat_to_hamil(V, tol=1e-10):  # pragma: no cover
     (n, m) = V.shape
     if n != m:
         raise ValueError("Input matrix must be square")
-    if np.linalg.norm(V-np.transpose(V)) >= tol:
+    if np.linalg.norm(V - np.transpose(V)) >= tol:
         raise ValueError("The input matrix is not symmetric")
 
-    n = n//2
+    n = n // 2
     omega = sympmat(n)
 
     vals = np.linalg.eigvalsh(V)
@@ -694,9 +710,9 @@ def covmat_to_hamil(V, tol=1e-10):  # pragma: no cover
         if val <= 0:
             raise ValueError("Input matrix is not positive definite")
 
-    W = 1j*V @ omega
+    W = 1j * V @ omega
     l, v = np.linalg.eig(W)
-    H = (1j * omega @ (v @ np.diag(np.arctanh(1.0/l.real)) @ np.linalg.inv(v))).real
+    H = (1j * omega @ (v @ np.diag(np.arctanh(1.0 / l.real)) @ np.linalg.inv(v))).real
 
     return H
 
@@ -719,7 +735,7 @@ def hamil_to_covmat(H, tol=1e-10):  # pragma: no cover
     (n, m) = H.shape
     if n != m:
         raise ValueError("Input matrix must be square")
-    if np.linalg.norm(H-np.transpose(H)) >= tol:
+    if np.linalg.norm(H - np.transpose(H)) >= tol:
         raise ValueError("The input matrix is not symmetric")
 
     vals = np.linalg.eigvalsh(H)
@@ -727,10 +743,10 @@ def hamil_to_covmat(H, tol=1e-10):  # pragma: no cover
         if val <= 0:
             raise ValueError("Input matrix is not positive definite")
 
-    n = n//2
+    n = n // 2
     omega = sympmat(n)
 
-    Wi = 1j*omega @ H
+    Wi = 1j * omega @ H
     l, v = np.linalg.eig(Wi)
-    V = (1j * (v @ np.diag(1.0/np.tanh(l.real)) @ np.linalg.inv(v)) @ omega).real
+    V = (1j * (v @ np.diag(1.0 / np.tanh(l.real)) @ np.linalg.inv(v)) @ omega).real
     return V

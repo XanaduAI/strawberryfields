@@ -21,7 +21,7 @@ import string
 from itertools import product
 
 import numpy as np
-from numpy import (sqrt, sinh, cosh, tanh, array, exp)
+from numpy import sqrt, sinh, cosh, tanh, array, exp
 from numpy.polynomial.hermite import hermval as H
 
 from scipy.special import factorial as fac
@@ -79,14 +79,14 @@ def indexRange(lst, trunc):
 
     for vals in product(*([range(trunc) for x in lst if x is None])):
         gen = genOfTuple(vals)
-        yield [next(gen) if v is None else v for v in lst] #pylint: disable=stop-iteration-return
+        yield [next(gen) if v is None else v for v in lst]  # pylint: disable=stop-iteration-return
 
 
 def index(lst, trunc):
     """
     Converts an n-ary index to a 1-dimensional index.
     """
-    return sum([lst[i] * trunc**(len(lst)-i-1) for i in range(len(lst))])
+    return sum([lst[i] * trunc ** (len(lst) - i - 1) for i in range(len(lst))])
 
 
 def unIndex(i, n, trunc):
@@ -94,7 +94,7 @@ def unIndex(i, n, trunc):
     Converts a 1-dimensional index ``i`` with truncation ``trunc`` and
     number of modes ``n`` to a n-ary index.
     """
-    return [i // trunc**(n - 1 - m) % trunc for m in range(n)]
+    return [i // trunc ** (n - 1 - m) % trunc for m in range(n)]
 
 
 def sliceExp(axes, ind, n):
@@ -108,7 +108,7 @@ def abssqr(z):
     r"""
     Given :math:`z` returns :math:`|z|^2`.
     """
-    return z.real**2 + z.imag**2
+    return z.real ** 2 + z.imag ** 2
 
 
 def dagger(mat):
@@ -124,10 +124,10 @@ def mix(state, n):
     shape of the input state.
     """
 
-    left_str = [indices[i] for i in range(0, 2*n, 2)]
-    right_str = [indices[i] for i in range(1, 2*n, 2)]
-    out_str = [indices[:2*n]]
-    einstr = ''.join(left_str + [','] + right_str + ['->'] + out_str)
+    left_str = [indices[i] for i in range(0, 2 * n, 2)]
+    right_str = [indices[i] for i in range(1, 2 * n, 2)]
+    out_str = [indices[: 2 * n]]
+    einstr = "".join(left_str + [","] + right_str + ["->"] + out_str)
     return np.einsum(einstr, state, state.conj())
 
 
@@ -138,7 +138,7 @@ def diagonal(state, n):
 
     left_str = [indices[i] + indices[i] for i in range(n)]
     out_str = [indices[:n]]
-    einstr = ''.join(left_str + ['->'] + out_str)
+    einstr = "".join(left_str + ["->"] + out_str)
     return np.einsum(einstr, state)
 
 
@@ -148,7 +148,7 @@ def trace(state, n):
     """
 
     left_str = [indices[i] + indices[i] for i in range(n)]
-    einstr = ''.join(left_str)
+    einstr = "".join(left_str)
     return np.einsum(einstr, state)
 
 
@@ -158,9 +158,12 @@ def partial_trace(state, n, modes):
 
     Expects state to be in mixed state form.
     """
-    left_str = [indices[2*i] + indices[2*i] if i in modes else indices[2*i:2*i+2] for i in range(n)]
-    out_str = ['' if i in modes else indices[2*i:2*i+2] for i in range(n)]
-    einstr = ''.join(left_str + ['->'] + out_str)
+    left_str = [
+        indices[2 * i] + indices[2 * i] if i in modes else indices[2 * i : 2 * i + 2]
+        for i in range(n)
+    ]
+    out_str = ["" if i in modes else indices[2 * i : 2 * i + 2] for i in range(n)]
+    einstr = "".join(left_str + ["->"] + out_str)
 
     return np.einsum(einstr, state)
 
@@ -179,7 +182,7 @@ def tensor(u, v, n, pure, pos=None):
         else:
             scale = 2
         for i in range(v.ndim):
-            w = np.rollaxis(w, scale*n + i, scale*pos + i)
+            w = np.rollaxis(w, scale * n + i, scale * pos + i)
 
     return w
 
@@ -194,13 +197,13 @@ def project_reset(modes, x, state, pure, n, trunc):
 
     def intersperse(lst):
         # pylint: disable=missing-docstring
-        return tuple([lst[i//2] for i in range(len(lst)*2)])
+        return tuple([lst[i // 2] for i in range(len(lst) * 2)])
 
     if pure:
         ret = np.zeros([trunc for i in range(n)], dtype=def_type)
         ret[outSlice] = state[inSlice]
     else:
-        ret = np.zeros([trunc for i in range(n*2)], dtype=def_type)
+        ret = np.zeros([trunc for i in range(n * 2)], dtype=def_type)
         ret[intersperse(outSlice)] = state[intersperse(inSlice)]
 
     return ret
@@ -220,7 +223,7 @@ def a(trunc):
     """
     ret = np.zeros((trunc, trunc), dtype=def_type)
     for i in range(1, trunc):
-        ret[i-1][i] = sqrt(i)
+        ret[i - 1][i] = sqrt(i)
     return ret
 
 
@@ -287,7 +290,7 @@ def kerr(kappa, trunc):
     The Kerr interaction :math:`K(\kappa)`.
     """
     n = np.arange(trunc)
-    ret = np.diag(np.exp(1j*kappa*n**2))
+    ret = np.diag(np.exp(1j * kappa * n ** 2))
     return ret
 
 
@@ -298,8 +301,8 @@ def cross_kerr(kappa, trunc):
     """
     n1 = np.arange(trunc)[None, :]
     n2 = np.arange(trunc)[:, None]
-    n1n2 = np.ravel(n1*n2)
-    ret = np.diag(np.exp(1j*kappa*n1n2)).reshape([trunc]*4).swapaxes(1, 2)
+    n1n2 = np.ravel(n1 * n2)
+    ret = np.diag(np.exp(1j * kappa * n1n2)).reshape([trunc] * 4).swapaxes(1, 2)
     return ret
 
 
@@ -309,9 +312,9 @@ def cubicPhase(gamma, hbar, trunc):
     The cubic phase gate :math:`\exp{(i\frac{\gamma}{3\hbar}\hat{x}^3)}`.
     """
     a_ = a(trunc)
-    x = (a_ + np.conj(a_).T) * np.sqrt(hbar/2)
+    x = (a_ + np.conj(a_).T) * np.sqrt(hbar / 2)
     x3 = x @ x @ x
-    ret = matrixExp(1j * gamma / (3*hbar) * x3)
+    ret = matrixExp(1j * gamma / (3 * hbar) * x3)
 
     return ret
 
@@ -321,7 +324,7 @@ def phase(theta, trunc):
     r"""
     The phase gate :math:`R(\theta)`
     """
-    return np.array(np.diag([exp(1j*n*theta) for n in range(trunc)]), dtype=def_type)
+    return np.array(np.diag([exp(1j * n * theta) for n in range(trunc)]), dtype=def_type)
 
 
 @functools.lru_cache()
@@ -338,7 +341,7 @@ def beamsplitter(t, r, phi, trunc):
     BS_tw, _, _ = BSgate(theta, phi, cutoff=trunc)
 
     # TODO: Transpose needed because of different conventions in SF and The Walrus. Remove when The Walrus is updated.
-    return BS_tw.transpose((0,2,1,3))
+    return BS_tw.transpose((0, 2, 1, 3))
 
 
 @functools.lru_cache()
@@ -349,6 +352,7 @@ def proj(i, j, trunc):
     P = np.zeros((trunc, trunc), dtype=def_type)
     P[j][i] = 1.0 + 0.0j
     return P
+
 
 # ============================================
 #
@@ -372,7 +376,7 @@ def vacuumStateMixed(n, trunc):
     The `n`-mode mixed vacuum state :math:`\ket{00\dots 0}\bra{00\dots 0}`
     """
 
-    state = np.zeros([trunc for i in range(n*2)], dtype=def_type)
+    state = np.zeros([trunc for i in range(n * 2)], dtype=def_type)
     state.ravel()[0] = 1.0 + 0.0j
     return state
 
@@ -390,9 +394,11 @@ def coherentState(alpha, trunc):
     r"""
     The coherent state :math:`D(\alpha)\ket{0}`.
     """
+
     def entry(n):
         """coherent summation term"""
-        return alpha**n / sqrt(fac(n))
+        return alpha ** n / sqrt(fac(n))
+
     return exp(-abssqr(alpha) / 2) * array([entry(n) for n in range(trunc)])
 
 
@@ -401,12 +407,13 @@ def squeezedState(r, theta, trunc):
     r"""
     The squeezed state :math:`S(re^{i\theta})`.
     """
+
     def entry(n):
         """squeezed summation term"""
-        return (sqrt(fac(2*n))/(2**n*fac(n))) * (-exp(1j*theta)*tanh(r))**n
+        return (sqrt(fac(2 * n)) / (2 ** n * fac(n))) * (-exp(1j * theta) * tanh(r)) ** n
 
-    vec = array([entry(n//2) if n % 2 == 0 else 0.0 + 0.0j for n in range(trunc)])
-    return sqrt(1/cosh(r)) * vec
+    vec = array([entry(n // 2) if n % 2 == 0 else 0.0 + 0.0j for n in range(trunc)])
+    return sqrt(1 / cosh(r)) * vec
 
 
 @functools.lru_cache()
@@ -466,7 +473,7 @@ def lossChannel(T, trunc):
     The Kraus operators for the loss channel :math:`\mathcal{N}(T)`.
     """
 
-    TToAdaggerA = np.array(np.diag([T**(i/2) for i in range(trunc)]), dtype=def_type)
+    TToAdaggerA = np.array(np.diag([T ** (i / 2) for i in range(trunc)]), dtype=def_type)
 
     def aToN(n):
         """the nth matrix power of the annihilation operator matrix a"""
@@ -474,7 +481,7 @@ def lossChannel(T, trunc):
 
     def E(n):
         """the loss channel amplitudes in the Fock basis"""
-        return ((1-T)/T)**(n/2) * np.dot(aToN(n)/sqrt(fac(n)), TToAdaggerA)
+        return ((1 - T) / T) ** (n / 2) * np.dot(aToN(n) / sqrt(fac(n)), TToAdaggerA)
 
     if T == 0:
         return [proj(i, 0, trunc) for i in range(trunc)]
@@ -500,8 +507,8 @@ def hermiteVals(q_mag, num_bins, m_omega_over_hbar, trunc):
 
     Hvals = [None] * trunc
     Hvals[0] = 1
-    Hvals[1] = 2*x
+    Hvals[1] = 2 * x
     for i in range(2, trunc):
-        Hvals[i] = 2*x*Hvals[i-1] - 2*(i-1)*Hvals[i-2]
+        Hvals[i] = 2 * x * Hvals[i - 1] - 2 * (i - 1) * Hvals[i - 2]
 
     return q_tensor, Hvals
