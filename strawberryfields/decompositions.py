@@ -479,7 +479,11 @@ def rectangular_symmetric(V, tol=1e-11):
 
 
 def BS_mat(theta):
-    r"""Beam splitter matrix as implemented in hardware
+    r"""Beamsplitter matrix as implemented in hardware.
+    
+    Args:
+        theta (float): Transmittivity angle :math:`\theta`. The transmission amplitude of
+            the beamsplitter is :math:`t = \cos(\theta)`.
     """
     mat = np.array([[np.cos(theta), 1j * np.sin(theta)], [1j * np.sin(theta), np.cos(theta)]])
     return mat
