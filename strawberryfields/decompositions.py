@@ -478,45 +478,9 @@ def rectangular_symmetric(V, tol=1e-11):
     return new_tlist, new_diags, None
 
 
-def BS_mat(theta):
-    r"""Beamsplitter matrix as implemented in hardware.
-    
-    Args:
-        theta (float): Transmittivity angle :math:`\theta`. The transmission amplitude of
-            the beamsplitter is :math:`t = \cos(\theta)`.
-    """
-    mat = np.array([[np.cos(theta), 1j * np.sin(theta)], [1j * np.sin(theta), np.cos(theta)]])
-    return mat
-
-
-def R_mat(phi):
-    r"""Phase as implemented in hardware
-    """
-    mat = np.array([[np.exp(1j * phi), 0], [0, 1]])
-    return mat
-
-
-def MZ(m, n, phi_int, phi_ext, nmax):
-    r"""One unit as implemented on the chip.
-    An external phase followed by a beamsplitter followed by
-    the internal phase followed by another beamsplitter
-    """
-    theta = np.pi / 4
-    BS1 = BS_mat(theta)
-    BS2 = BS_mat(theta)
-    temp = BS1 @ R_mat(phi_int) @ BS2 @ R_mat(phi_ext)
-
-    mat = np.identity(nmax, dtype=np.complex128)
-    mat[m, m] = temp[0][0]
-    mat[m, n] = temp[0][1]
-    mat[n, m] = temp[1][0]
-    mat[n, n] = temp[1][1]
-    return mat
-
-
-def MZi(m, n, phi_int, phi_ext, nmax):
-    r"""The inverse MZ matrix."""
-    return np.transpose(np.conj(MZ(m, n, phi_int, phi_ext, nmax)))
+def mach_zehnder_inv(m, n, phi_int, phi_ext, nmax):
+    r"""The inverse of the mach_zehnder matrix."""
+    return np.transpose(np.conj(mach_zehnder(m, n, phi_int, phi_ext, nmax)))
 
 
 def nullMZi(m, n, U):
@@ -607,7 +571,7 @@ def rectangular_MZ(V, tol=1e-11):
                 # numpy.identity(20) yields an external_phase of exactly 2 * pi
                 tilist[-1][2] %= 2 * np.pi
                 tilist[-1][3] %= 2 * np.pi
-                localV = localV @ MZi(*tilist[-1])
+                localV = localV @ mach_zehnder_inv(*tilist[-1])
         else:
             for j in range(nsize - 1 - i):
                 tlist.append(nullMZ(i + j + 1, j, localV))
@@ -617,7 +581,7 @@ def rectangular_MZ(V, tol=1e-11):
                 # numpy.identity(20) yields an external_phase of exactly 2 * pi
                 tlist[-1][2] %= 2 * np.pi
                 tlist[-1][3] %= 2 * np.pi
-                localV = MZ(*tlist[-1]) @ localV
+                localV = mach_zehnder(*tlist[-1]) @ localV
 
     return tilist, np.diag(localV), tlist
 

@@ -305,12 +305,12 @@ class TestRectangularDecomposition:
         qrec = np.identity(n)
 
         for i in tilist:
-            qrec = dec.MZ(*i) @ qrec
+            qrec = dec.mach_zehnder(*i) @ qrec
 
         qrec = np.diag(diags) @ qrec
 
         for i in reversed(tlist):
-            qrec = dec.MZi(*i) @ qrec
+            qrec = dec.mach_zehnder_inv(*i) @ qrec
 
         assert np.allclose(U, qrec, atol=tol, rtol=0)
 
@@ -332,12 +332,12 @@ class TestRectangularDecomposition:
         qrec = np.identity(n)
 
         for i in tilist:
-            qrec = dec.MZ(*i) @ qrec
+            qrec = dec.mach_zehnder(*i) @ qrec
 
         qrec = np.diag(diags) @ qrec
 
         for i in reversed(tlist):
-            qrec = dec.MZi(*i) @ qrec
+            qrec = dec.mach_zehnder_inv(*i) @ qrec
 
         assert np.allclose(U, qrec, atol=tol, rtol=0)
 
@@ -358,7 +358,7 @@ class TestRectangularDecomposition:
         qrec = np.identity(n)
 
         for i in tlist:
-            qrec = dec.MZ(*i) @ qrec
+            qrec = dec.mach_zehnder(*i) @ qrec
 
         qrec = np.diag(diags) @ qrec
 
