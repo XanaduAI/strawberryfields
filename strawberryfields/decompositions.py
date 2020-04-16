@@ -493,20 +493,20 @@ def R_mat(phi):
 
 
 def MZ(m, n, phi_int, phi_ext, nmax):
-    r"""One unit as implemented on the chip. 
-    An external phase followed by a beamsplitter followed by 
+    r"""One unit as implemented on the chip.
+    An external phase followed by a beamsplitter followed by
     the internal phase followed by another beamsplitter
     """
     theta = np.pi / 4
     BS1 = BS_mat(theta)
     BS2 = BS_mat(theta)
-    T = BS1 @ R_mat(phi_int) @ BS2 @ R_mat(phi_ext)
+    temp = BS1 @ R_mat(phi_int) @ BS2 @ R_mat(phi_ext)
 
     mat = np.identity(nmax, dtype=np.complex128)
-    mat[m, m] = T[0][0]
-    mat[m, n] = T[0][1]
-    mat[n, m] = T[1][0]
-    mat[n, n] = T[1][1]
+    mat[m, m] = temp[0][0]
+    mat[m, n] = temp[0][1]
+    mat[n, m] = temp[1][0]
+    mat[n, n] = temp[1][1]
     return mat
 
 
