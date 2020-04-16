@@ -14,6 +14,7 @@
 """
 Unit tests for strawberryfields.api.result
 """
+import numpy as np
 import pytest
 
 from strawberryfields.api import Result
@@ -29,9 +30,27 @@ class TestResult:
     def test_stateless_result_raises_on_state_access(self):
         """Tests that `result.state` raises an error for a stateless result.
         """
-        result = Result([[1, 2], [3, 4]], is_stateful=False)
+        result = Result(np.array([[1, 2], [3, 4]]), is_stateful=False)
 
         with pytest.raises(
             AttributeError, match="The state is undefined for a stateless computation."
         ):
             result.state
+
+    def test_stateless_print(self, capfd):
+        """Test that printing a result object with no state provides the correct output."""
+        result = Result(np.array([[1, 2], [3, 4], [5, 6]]), is_stateful=False)
+        print(result)
+        out, err = capfd.readouterr()
+        assert "modes=2" in out
+        assert "shots=3" in out
+        assert "contains state=False" in out
+
+    def test_state_print(self, capfd):
+        """Test that printing a result object with a state provides the correct output."""
+        result = Result(np.array([[1, 2], [3, 4], [5, 6]]), is_stateful=True)
+        print(result)
+        out, err = capfd.readouterr()
+        assert "modes=2" in out
+        assert "shots=3" in out
+        assert "contains state=True" in out
