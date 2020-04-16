@@ -341,29 +341,6 @@ class TestRectangularDecomposition:
 
         assert np.allclose(U, qrec, atol=tol, rtol=0)
 
-    def test_random_unitary_phase_end_MZ(self, tol):
-        """This test checks the rectangular decomposition with phases at the end.
-
-        A random unitary is drawn from the Haar measure, then is decomposed
-        using Eq. 5 of the rectangular decomposition procedure of Clements et al,
-        i.e., moving all the phases to the end of the interferometer. The
-        resulting beamsplitters are multiplied together. Test passes if the
-        product matches the drawn unitary.
-        """
-        n = 20
-        U = haar_measure(n)
-
-        tlist, diags, _ = dec.rectangular_phase_end_MZ(U)
-
-        qrec = np.identity(n)
-
-        for i in tlist:
-            qrec = dec.mach_zehnder(*i) @ qrec
-
-        qrec = np.diag(diags) @ qrec
-
-        assert np.allclose(U, qrec, atol=tol, rtol=0)
-
 
 class TestRectangularSymmetricDecomposition:
     """Tests for linear interferometer decomposition into rectangular grid of
@@ -410,40 +387,6 @@ class TestRectangularSymmetricDecomposition:
         qrec = np.diag(diags) @ qrec
         assert np.allclose(U, qrec, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize('U', [
-        pytest.param(np.identity(2), id='identity2'),
-        pytest.param(np.identity(2)[::-1], id='antiidentity2'),
-        pytest.param(haar_measure(2), id='random2'),
-        pytest.param(np.identity(4), id='identity4'),
-        pytest.param(np.identity(3)[::-1], id='antiidentity4'),
-        pytest.param(haar_measure(4), id='random4'),
-        pytest.param(np.identity(8), id='identity8'),
-        pytest.param(np.identity(8)[::-1], id='antiidentity8'),
-        pytest.param(haar_measure(8), id='random8'),
-        pytest.param(np.identity(20), id='identity20'),
-        pytest.param(np.identity(20)[::-1], id='antiidentity20'),
-        pytest.param(haar_measure(20), id='random20')
-        ])
-    def test_decomposition(self, U, tol):
-        """This test checks the function :func:`dec.rectangular_symmetric` for
-        various unitary matrices.
-
-        A given unitary (identity or random draw from Haar measure) is
-        decomposed using the function :func:`dec.rectangular_symmetric`
-        and the resulting beamsplitters are multiplied together.
-
-        Test passes if the product matches identity.
-        """
-        nmax, mmax = U.shape
-        assert nmax == mmax
-        tlist, diags, _ = dec.rectangular_phase_end_MZ(U)
-        qrec = np.identity(nmax)
-        for i in tlist:
-            assert i[2] >= 0 and i[2] < 2 * np.pi  # internal phase
-            assert i[3] >= 0 and i[3] < 2 * np.pi  # external phase
-            qrec = dec.mach_zehnder(*i) @ qrec
-        qrec = np.diag(diags) @ qrec
-        assert np.allclose(U, qrec, atol=tol, rtol=0)
 
 class TestTriangularDecomposition:
     """Tests for linear interferometer triangular decomposition"""
