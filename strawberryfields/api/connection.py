@@ -21,7 +21,7 @@ from typing import List
 import numpy as np
 import requests
 
-from strawberryfields.configuration import configuration
+from strawberryfields.configuration import load_config
 from strawberryfields.io import to_blackbird
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
@@ -80,16 +80,18 @@ class Connection:
     # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
-        token: str = configuration["api"]["authentication_token"],
-        host: str = configuration["api"]["hostname"],
-        port: int = configuration["api"]["port"],
-        use_ssl: bool = configuration["api"]["use_ssl"],
+        token: str = None,
+        host: str = None,
+        port: int = None,
+        use_ssl: bool = None,
         verbose: bool = True,
     ):
-        self._token = token
-        self._host = host
-        self._port = port
-        self._use_ssl = use_ssl
+        default_config = load_config()
+
+        self._token = token or default_config["api"]["authentication_token"]
+        self._host = host or default_config["api"]["hostname"]
+        self._port = port or default_config["api"]["port"]
+        self._use_ssl = use_ssl or default_config["api"]["use_ssl"]
         self._verbose = verbose
 
         self._base_url = "http{}://{}:{}".format("s" if self.use_ssl else "", self.host, self.port)
@@ -225,7 +227,15 @@ class Connection:
             with io.BytesIO() as buf:
                 buf.write(response.content)
                 buf.seek(0)
-                samples = np.load(buf)
+
+                samples = np.load(buf, allow_pickle=False)
+
+                if np.issubdtype(samples.dtype, np.integer):
+                    # Samples represent photon numbers.
+                    # Convert to int64, to avoid unexpected behaviour
+                    # when users postprocess these samples.
+                    samples = samples.astype(np.int64)
+
             return Result(samples, is_stateful=False)
         raise RequestFailedError(
             "Failed to get job result: {}".format(self._format_error_message(response))

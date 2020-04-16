@@ -216,7 +216,7 @@ for accessing the results of your program execution:
 
 ..
 
-* ``results.state``: The quantum state object contains details and methods
+* ``result.state``: The quantum state object contains details and methods
   for manipulation of the final circuit state.
 
   Note that only local simulators will
@@ -227,7 +227,7 @@ for accessing the results of your program execution:
 
 ..
 
-* ``results.samples``: Measurement samples from any measurements performed.
+* ``result.samples``: Measurement samples from any measurements performed.
   Returned measurement samples will have shape ``(modes,)``. If multiple
   shots are requested during execution, the returned measurement samples
   will instead have shape ``(shots, modes)``.

@@ -60,15 +60,17 @@ def load_config(filename="config.toml", **kwargs):
     """
     config = create_config()
 
-    filepath = get_config_filepath(filename=filename)
+    filepath = find_config_file(filename=filename)
 
     if filepath is not None:
         loaded_config = load_config_file(filepath)
-        valid_api_options = keep_valid_options(loaded_config["api"])
+        api_config = get_api_config(loaded_config, filepath)
+
+        valid_api_options = keep_valid_options(api_config)
         config["api"].update(valid_api_options)
     else:
         log = create_logger(__name__)
-        log.info("No Strawberry Fields configuration file found.")
+        log.warning("No Strawberry Fields configuration file found.")
 
     update_from_environment_variables(config)
 
@@ -111,7 +113,39 @@ def create_config(authentication_token=None, **kwargs):
     return config
 
 
-def get_config_filepath(filename="config.toml"):
+def delete_config(filename="config.toml", directory=None):
+    """Delete a configuration file.
+
+    If called with no arguments, the currently active configuration file is deleted.
+
+    Keyword Args:
+        filename (str): the filename of the configuration file to delete
+        directory (str): the directory of the configuration file to delete
+            If ``None``, the currently active configuration file is deleted.
+    """
+    if directory is None:
+        file_path = find_config_file(filename)
+    else:
+        file_path = os.path.join(directory, filename)
+
+    os.remove(file_path)
+
+
+def reset_config(filename="config.toml"):
+    """Delete all active configuration files
+
+    .. warning::
+        This will delete all configuration files with the specified filename
+        (default ``config.toml``) found in the configuration directories.
+
+    Keyword Args:
+        filename (str): the filename of the configuration files to reset
+    """
+    for config in get_available_config_paths(filename):
+        delete_config(os.path.basename(config), os.path.dirname(config))
+
+
+def find_config_file(filename="config.toml"):
     """Get the filepath of the first configuration file found from the defined
     configuration directories (if any).
 
@@ -130,17 +164,41 @@ def get_config_filepath(filename="config.toml"):
          Union[str, None]: the filepath to the configuration file or None, if
              no file was found
     """
-    current_dir = os.getcwd()
-    sf_env_config_dir = os.environ.get("SF_CONF", "")
-    sf_user_config_dir = user_config_dir("strawberryfields", "Xanadu")
-
-    directories = [current_dir, sf_env_config_dir, sf_user_config_dir]
+    directories = directories_to_check()
     for directory in directories:
         filepath = os.path.join(directory, filename)
         if os.path.exists(filepath):
             return filepath
 
     return None
+
+
+def directories_to_check():
+    """Returns the list of directories that should be checked for a configuration file.
+
+    .. note::
+
+        The following directories are checked (in the following order):
+
+        * The current working directory
+        * The directory specified by the environment variable ``SF_CONF`` (if specified)
+        * The user configuration directory (if specified)
+
+    Returns:
+        list: the list of directories to check
+    """
+    directories = []
+
+    current_dir = os.getcwd()
+    sf_env_config_dir = os.environ.get("SF_CONF", "")
+    sf_user_config_dir = user_config_dir("strawberryfields", "Xanadu")
+
+    directories.append(current_dir)
+    if sf_env_config_dir != "":
+        directories.append(sf_env_config_dir)
+    directories.append(sf_user_config_dir)
+
+    return directories
 
 
 def load_config_file(filepath):
@@ -156,6 +214,29 @@ def load_config_file(filepath):
     with open(filepath, "r") as f:
         config_from_file = toml.load(f)
     return config_from_file
+
+
+def get_api_config(loaded_config, filepath):
+    """Gets the API section from the loaded configuration.
+
+    Args:
+        loaded_config (dict): the configuration that was loaded from the TOML config
+            file
+        filepath (str): path to the configuration file
+
+    Returns:
+        dict[str, Union[str, bool, int]]: the api section of the configuration
+
+    Raises:
+        ConfigurationError: if the api section was not defined in the
+            configuration
+    """
+    try:
+        return loaded_config["api"]
+    except KeyError:
+        log = create_logger(__name__)
+        log.error('The configuration from the %s file does not contain an "api" section.', filepath)
+        raise ConfigurationError
 
 
 def keep_valid_options(sectionconfig):
@@ -220,6 +301,68 @@ def parse_environment_variable(key, value):
         return int(value)
 
     return value
+
+
+def active_configs(filename="config.toml"):
+    """Prints the filepaths for existing configuration files to the standard
+    output and marks the one that is active.
+
+    This function relies on the precedence ordering of directories to check
+    when marking the active configuration.
+
+    Args:
+        filename (str): the name of the configuration files to look for
+    """
+    active_configs_list = get_available_config_paths(filename)
+
+    # print the active configurations found based on the filename specified
+    if active_configs_list:
+        active = True
+
+        print(
+            "\nThe following Strawberry Fields configuration files were found "
+            'with the name "{}":\n'.format(filename)
+        )
+
+        for config in active_configs_list:
+            if active:
+                config += " (active)"
+                active = False
+
+            print("* " + config)
+    else:
+        print(
+            "\nNo Strawberry Fields configuration files were found with the "
+            'name "{}".\n'.format(filename)
+        )
+
+    # print the directores that are being checked for a configuration file
+    directories = directories_to_check()
+
+    print("\nThe following directories were checked:\n")
+    for directory in directories:
+        print("* " + directory)
+
+
+def get_available_config_paths(filename="config.toml"):
+    """Get the paths for the configuration files available in Strawberry Fields.
+
+    Args:
+        filename (str): the name of the configuration files to look for
+
+    Returns:
+        list[str]: the filepaths for the active configurations
+    """
+    active_configs_list = []
+
+    directories = directories_to_check()
+
+    for directory in directories:
+        filepath = os.path.join(directory, filename)
+        if os.path.exists(filepath):
+            active_configs_list.append(filepath)
+
+    return active_configs_list
 
 
 def store_account(authentication_token, filename="config.toml", location="user_config", **kwargs):
@@ -325,5 +468,3 @@ def save_config_to_file(config, filepath):
 
 VALID_KEYS = set(create_config()["api"].keys())
 DEFAULT_CONFIG = create_config()
-configuration = load_config()
-config_filepath = get_config_filepath()
