@@ -2,11 +2,16 @@
 
 <h3>New features since last release</h3>
 
+* The `tf` backend now supports TensorFlow 2.0.
+  [(#323)](https://github.com/XanaduAI/strawberryfields/pull/323)
+
 <h3>Improvements</h3>
 
 <h3>Bug fixes</h3>
 
 <h3>Contributors</h3>
+
+Josh Izaac, Nathan Killoran, Filippo Miatto.
 
 This release contains contributions from (in alphabetical order):
 
