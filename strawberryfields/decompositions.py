@@ -53,8 +53,7 @@ def takagi(N, tol=1e-13, rounding=13):
         return np.zeros(n), np.eye(n)
 
     if np.isrealobj(N):
-        # If the matrix N is real one can be more clever and use its
-        # eigendecomposition
+        # If the matrix N is real one can be more clever and use its eigendecomposition
         l, U = np.linalg.eigh(N)
         vals = np.abs(l)  # These are the Takagi eigenvalues
         phases = np.sqrt(np.complex128([1 if i > 0 else -1 for i in l]))
@@ -64,8 +63,7 @@ def takagi(N, tol=1e-13, rounding=13):
         sorted_l, permutation = zip(*list_vals)
         permutation = np.array(permutation)
         Uc = Uc[:, permutation]
-        # And also rearrange the unitary and values so that they are
-        # decreasingly ordered
+        # And also rearrange the unitary and values so that they are decreasingly ordered
         return np.array(sorted_l), Uc
 
     v, l, ws = np.linalg.svd(N)
