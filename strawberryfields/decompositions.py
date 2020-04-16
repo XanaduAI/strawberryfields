@@ -53,7 +53,8 @@ def takagi(N, tol=1e-13, rounding=13):
         return np.zeros(n), np.eye(n)
 
     if np.isrealobj(N):
-        # If the matrix N is real one can be more clever and use its eigendecomposition
+        # If the matrix N is real one can be more clever and use its
+        # eigendecomposition
         l, U = np.linalg.eigh(N)
         vals = np.abs(l)  # These are the Takagi eigenvalues
         phases = np.sqrt(np.complex128([1 if i > 0 else -1 for i in l]))
@@ -63,7 +64,8 @@ def takagi(N, tol=1e-13, rounding=13):
         sorted_l, permutation = zip(*list_vals)
         permutation = np.array(permutation)
         Uc = Uc[:, permutation]
-        # And also rearrange the unitary and values so that they are decreasingly ordered
+        # And also rearrange the unitary and values so that they are
+        # decreasingly ordered
         return np.array(sorted_l), Uc
 
     v, l, ws = np.linalg.svd(N)
@@ -373,7 +375,8 @@ def rectangular_phase_end(V, tol=1e-11):
         new_beta = beta
 
         new_i = [i[0], i[1], new_theta, new_phi, i[4]]
-        new_diags[em], new_diags[en] = np.exp(1j * new_alpha), np.exp(1j * new_beta)
+        new_diags[em], new_diags[en] = np.exp(
+            1j * new_alpha), np.exp(1j * new_beta)
 
         new_tlist = new_tlist + [new_i]
 
@@ -468,7 +471,8 @@ def rectangular_symmetric(V, tol=1e-11):
         new_alpha = beta - theta + np.pi
         new_beta = 0 * np.pi - theta + beta
         new_i = [i[0], i[1], internal_phase, external_phase, i[4]]
-        new_diags[em], new_diags[en] = np.exp(1j * new_alpha), np.exp(1j * new_beta)
+        new_diags[em], new_diags[en] = np.exp(
+            1j * new_alpha), np.exp(1j * new_beta)
         new_tlist = new_tlist + [new_i]
 
     new_diags = diags * new_diags
@@ -479,25 +483,28 @@ def rectangular_symmetric(V, tol=1e-11):
 def BS_mat(theta):
     r"""Beam splitter matrix as implemented in hardware
     """
-    mat = np.array([[np.cos(theta), 1j*np.sin(theta)], [1j*np.sin(theta), np.cos(theta)]])
+    mat = np.array([[np.cos(theta), 1j * np.sin(theta)],
+                    [1j * np.sin(theta), np.cos(theta)]])
     return mat
 
-def R(phi):
+
+def R_mat(phi):
     r"""Phase as implemented in hardware
     """
-    mat = np.array([[np.exp(1j*phi), 0], [0, 1]])
+    mat = np.array([[np.exp(1j * phi), 0], [0, 1]])
     return mat
+
 
 def MZ(m, n, phi_int, phi_ext, nmax):
     r"""One unit as implemented on the chip. 
     An external phase followed by a beamsplitter followed by 
     the internal phase followed by another beamsplitter
     """
-    theta = np.pi/4
+    theta = np.pi / 4
     BS1 = BS_mat(theta)
     BS2 = BS_mat(theta)
-    T = BS1 @ R(phi_int) @ BS2 @ R(phi_ext)
-    
+    T = BS1 @ R_mat(phi_int) @ BS2 @ R_mat(phi_ext)
+
     mat = np.identity(nmax, dtype=np.complex128)
     mat[m, m] = T[0][0]
     mat[m, n] = T[0][1]
@@ -510,6 +517,7 @@ def MZi(m, n, phi_int, phi_ext, nmax):
     r"""The inverse MZ matrix."""
     return np.transpose(np.conj(MZ(m, n, phi_int, phi_ext, nmax)))
 
+
 def nullMZi(m, n, U):
     r"""Nullifies element m,n of U using MZi"""
     (nmax, mmax) = U.shape
@@ -517,18 +525,18 @@ def nullMZi(m, n, U):
     if nmax != mmax:
         raise ValueError("U must be a square matrix")
 
-    if U[m, n] == 0 :
+    if U[m, n] == 0:
         phi_i = np.pi
         phi_e = 0
-    elif U[m, n+1] == 0:
+    elif U[m, n + 1] == 0:
         phi_i = 0
         phi_e = 0
     else:
-        r = - U[m, n+1] / U[m, n]
-        phi_i = 2*np.arctan(np.abs(r))
+        r = - U[m, n + 1] / U[m, n]
+        phi_i = 2 * np.arctan(np.abs(r))
         phi_e = - np.angle(r)
 
-    return [n, n+1, phi_i, phi_e, nmax]
+    return [n, n + 1, phi_i, phi_e, nmax]
 
 
 def nullMZ(n, m, U):
@@ -538,18 +546,19 @@ def nullMZ(n, m, U):
     if nmax != mmax:
         raise ValueError("U must be a square matrix")
 
-    if U[n, m] == 0 :
+    if U[n, m] == 0:
         phi_i = np.pi
         phi_e = 0
-    elif U[n-1, m] == 0:
+    elif U[n - 1, m] == 0:
         phi_i = 0
         phi_e = 0
     else:
-        r = U[n-1, m]/ U[n, m] 
-        phi_i = 2*np.arctan(np.abs(r))
+        r = U[n - 1, m] / U[n, m]
+        phi_i = 2 * np.arctan(np.abs(r))
         phi_e = - np.angle(r)
 
-    return [n-1, n, phi_i, phi_e, nmax]
+    return [n - 1, n, phi_i, phi_e, nmax]
+
 
 def rectangular_MZ(V, tol=1e-11):
     r"""Rectangular decomposition of a unitary matrix, with local
@@ -611,6 +620,7 @@ def rectangular_MZ(V, tol=1e-11):
 
     return tilist, np.diag(localV), tlist
 
+
 def rectangular_phase_end_MZ(V, tol=1e-11):
     r"""Rectangular decomposition of a unitary matrix, with all
     local phase shifts placed after the interferometers.
@@ -651,14 +661,15 @@ def rectangular_phase_end_MZ(V, tol=1e-11):
         # numpy.identity(20) yields an external_phase of exactly 2 * pi
         new_phi_i %= (2 * np.pi)
         new_phi_e %= (2 * np.pi)
-        
+
         new_i = [i[0], i[1], new_phi_i, new_phi_e, i[4]]
-        new_diags[em], new_diags[en] = np.exp(1j*new_alpha), np.exp(1j*new_beta)
+        new_diags[em], new_diags[en] = np.exp(
+            1j * new_alpha), np.exp(1j * new_beta)
 
         new_tlist = new_tlist + [new_i]
 
     return new_tlist, new_diags, None
-    
+
 
 def triangular(V, tol=1e-11):
     r"""Triangular decomposition of a unitary matrix due to Reck et al.
@@ -725,7 +736,8 @@ def williamson(V, tol=1e-11):
         raise ValueError("The input matrix is not symmetric")
 
     if n % 2 != 0:
-        raise ValueError("The input matrix must have an even number of rows/columns")
+        raise ValueError(
+            "The input matrix must have an even number of rows/columns")
 
     n = n // 2
     omega = sympmat(n)
@@ -759,7 +771,8 @@ def williamson(V, tol=1e-11):
     s1t = p @ s1 @ p
     dd = np.transpose(rotmat) @ s1t @ rotmat
     Ktt = Kt @ rotmat
-    Db = np.diag([1 / dd[i, i + n] for i in range(n)] + [1 / dd[i, i + n] for i in range(n)])
+    Db = np.diag([1 / dd[i, i + n] for i in range(n)] +
+                 [1 / dd[i, i + n] for i in range(n)])
     S = Mm12 @ Ktt @ sqrtm(Db)
     return Db, np.linalg.inv(S).T
 
@@ -804,7 +817,8 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
     if n != m:
         raise ValueError("The input matrix is not square")
     if n % 2 != 0:
-        raise ValueError("The input matrix must have an even number of rows/columns")
+        raise ValueError(
+            "The input matrix must have an even number of rows/columns")
 
     n = n // 2
     omega = sympmat(n)
@@ -841,7 +855,7 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
         u_list, v_list = [], []
 
         for start_i, stop_i in zip(start_is, stop_is):
-            x = qomega[start_i:stop_i, n + start_i : n + stop_i].real
+            x = qomega[start_i:stop_i, n + start_i: n + stop_i].real
             u_svd, _s_svd, v_svd = np.linalg.svd(x)
             u_list = u_list + [u_svd]
             v_list = v_list + [v_svd.T]
