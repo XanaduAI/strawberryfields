@@ -1,3 +1,22 @@
+# Release 0.14.0-dev0 (development release)
+
+<h3>New features since last release</h3>
+
+* The `tf` backend now supports TensorFlow 2.0.
+  [(#283)](https://github.com/XanaduAI/strawberryfields/pull/283)
+  [(#323)](https://github.com/XanaduAI/strawberryfields/pull/323)
+  [(#361)](https://github.com/XanaduAI/strawberryfields/pull/361)
+
+<h3>Improvements</h3>
+
+<h3>Bug fixes</h3>
+
+<h3>Contributors</h3>
+
+Josh Izaac, Nathan Killoran, Filippo Miatto.
+
+This release contains contributions from (in alphabetical order):
+
 # Release 0.13.0 (current release)
 
 <h3>New features since last release</h3>
@@ -189,6 +208,9 @@
   probability values could occasionally include small negative values
   due to floating point precision error.
   [(#364)](https://github.com/XanaduAI/strawberryfields/pull/364)
+
+* Fixed a bug that caused an exception when printing results with no state.
+  [(#367)](https://github.com/XanaduAI/strawberryfields/pull/367)
 
 * Improves the Takagi decomposition, by making explicit use of the eigendecomposition of real symmetric matrices. [(#352)](https://github.com/XanaduAI/strawberryfields/pull/352)
 
