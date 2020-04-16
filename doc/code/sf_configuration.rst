@@ -100,5 +100,5 @@ Functions
 
 .. automodapi:: strawberryfields.configuration
     :no-heading:
-    :skip: user_config_dir, store_account, active_configs, reset_config, create_logger
+    :skip: user_config_dir, store_account, active_configs, reset_config, create_logger, delete_config
     :no-inheritance-diagram:

@@ -33,11 +33,11 @@ class ModeMap:
         self._init = num_subsystems
         #: list[int]: _map[k] is the internal index used by the backend for
         # computational mode k, or None if the mode has been deleted
-        self._map = [k for k in range(num_subsystems)]
+        self._map = list(range(num_subsystems))
 
     def reset(self):
         """reset the modemap to the initial state"""
-        self._map = [k for k in range(self._init)]
+        self._map = list(range(self._init))
 
     def _single_mode_valid(self, mode):
         if mode is None:
@@ -111,11 +111,13 @@ class ModeMap:
     def add(self, num_modes):
         """Adds a mode"""
         num_active_modes = len([m for m in self._map if m is not None])
-        self._map += [k for k in range(num_active_modes, num_active_modes + num_modes)]
+        self._map += list(range(num_active_modes, num_active_modes + num_modes))
 
 
 class BaseBackend:
     """Abstract base class for backends."""
+
+    # pylint: disable=too-many-public-methods
 
     #: str: short name of the backend
     short_name = "base"
@@ -386,9 +388,10 @@ class BaseBackend:
     def measure_fock(self, modes, shots=1, select=None, **kwargs):
         """Measure the given modes in the Fock basis.
 
-        ..note::
-          When :code:``shots == 1``, updates the current system state to the conditional state of that
-          measurement result. When :code:``shots > 1``, the system state is not updated.
+        .. note::
+          When ``shots == 1``, updates the current system state to the
+          conditional state of that measurement result. When ``shots > 1``, the
+          system state is not updated.
 
         Args:
             modes (Sequence[int]): which modes to measure
