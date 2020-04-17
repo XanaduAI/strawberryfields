@@ -73,14 +73,15 @@ class Job:
         status (strawberryfields.api.JobStatus): the job status
         connection (strawberryfields.api.Connection): the connection over which the
             job is managed
+        meta (dict[str, str]): auxiliary information related to job execution
     """
 
-    def __init__(self, id_: str, status: JobStatus, connection):
+    def __init__(self, id_: str, status: JobStatus, meta: dict, connection):
         self._id = id_
         self._status = status
+        self._meta = meta
         self._connection = connection
         self._result = None
-        self._meta = None
 
         self.log = create_logger(__name__)
 
@@ -122,7 +123,8 @@ class Job:
 
     @property
     def meta(self) -> dict:
-        """Returns a dictionary of meta information on job execution.
+        """Returns a dictionary of auxiliary information on job execution, such as error
+        details.
 
         Returns:
             dict[str, str]
@@ -130,7 +132,7 @@ class Job:
         return self._meta
 
     def refresh(self):
-        """Refreshes the status of an open or queued job,
+        """Refreshes the status and meta information of an open or queued job,
         along with the job result if the job is newly completed.
         """
         if self._status.is_final:
