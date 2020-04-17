@@ -76,12 +76,12 @@ class Job:
         meta (dict[str, str]): auxiliary information related to job execution
     """
 
-    def __init__(self, id_: str, status: JobStatus, meta: dict, connection):
+    def __init__(self, id_: str, status: JobStatus, connection, meta: dict = None):
         self._id = id_
         self._status = status
-        self._meta = meta
         self._connection = connection
         self._result = None
+        self._meta = meta if meta is not None else {}
 
         self.log = create_logger(__name__)
 
