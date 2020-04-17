@@ -80,6 +80,7 @@ class Job:
         self._status = status
         self._connection = connection
         self._result = None
+        self._meta = None
 
         self.log = create_logger(__name__)
 
@@ -119,6 +120,15 @@ class Job:
             )
         return self._result
 
+    @property
+    def meta(self) -> dict:
+        """Returns a dictionary of meta information on job execution.
+
+        Returns:
+            dict[str, str]
+        """
+        return self._meta
+
     def refresh(self):
         """Refreshes the status of an open or queued job,
         along with the job result if the job is newly completed.
@@ -126,7 +136,9 @@ class Job:
         if self._status.is_final:
             self.log.warning("A %s job cannot be refreshed", self._status.value)
             return
-        self._status = JobStatus(self._connection.get_job_status(self.id))
+        job_info = self._connection.get_job(self.id)
+        self._status = JobStatus(job_info.status)
+        self._meta = JobStatus(job_info.meta)
         if self._status == JobStatus.COMPLETED:
             self._result = self._connection.get_job_result(self.id)
 
