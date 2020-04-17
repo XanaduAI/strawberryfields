@@ -45,7 +45,7 @@ Features
 
 * Includes **quantum simulators** implemented using **NumPy** and **TensorFlow**—with built-in quantum compilation
 
-* Future releases will target experimental backends, including **photonic quantum computing chips**
+* Execute algorithms on  **photonic quantum computing chips** via the Xanadu Quantum Cloud.
 
 * Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows anyone to run a quantum computing simulation via **drag and drop**
 
