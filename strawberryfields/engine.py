@@ -548,7 +548,7 @@ class RemoteEngine:
                 if job.status == "failed":
                     message = (
                         "The remote job %s failed due to an internal "
-                        "server error. Please try again. (%s)" % (job.id, job.meta)
+                        "server error. Please try again. %s" % (job.id, job.meta)
                     )
                     self.log.error(message)
 
