@@ -317,8 +317,7 @@ def rectangular(V, tol=1e-11):
     localV = V
     (nsize, _) = localV.shape
 
-    diffn = np.linalg.norm(V @ V.conj().T - np.identity(nsize))
-    if diffn >= tol:
+    if not np.allclose(V @ V.conj().T, np.identity(nsize), atol=tol, rtol=0):
         raise ValueError("The input matrix is not unitary")
 
     tilist = []
@@ -402,7 +401,7 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
 
 def mach_zehnder_inv(m, n, phi_int, phi_ext, nmax):
     r"""The inverse of the mach_zehnder matrix."""
-    return np.transpose(np.conj(mach_zehnder(m, n, phi_int, phi_ext, nmax)))
+    return mach_zehnder(m, n, phi_int, phi_ext, nmax).conj().T
 
 
 def nullMZi(m, n, U):
@@ -477,8 +476,7 @@ def rectangular_MZ(V, tol=1e-11):
     localV = V
     (nsize, _) = localV.shape
 
-    diffn = np.linalg.norm(V @ V.conj().T - np.identity(nsize))
-    if diffn >= tol:
+    if not np.allclose(V @ V.conj().T, np.identity(nsize), atol=tol, rtol=0):
         raise ValueError("The input matrix is not unitary")
 
     tilist = []
@@ -609,8 +607,7 @@ def triangular(V, tol=1e-11):
     localV = V
     (nsize, _) = localV.shape
 
-    diffn = np.linalg.norm(V @ V.conj().T - np.identity(nsize))
-    if diffn >= tol:
+    if not np.allclose(V @ V.conj().T, np.identity(nsize), atol=tol, rtol=0):
         raise ValueError("The input matrix is not unitary")
 
     tlist = []
