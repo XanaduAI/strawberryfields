@@ -295,8 +295,6 @@ class TestRectangularDecomposition:
         Clements et al. and the resulting beamsplitters are multiplied together.
         Test passes if the product matches identity.
         """
-        # TODO: this test currently uses the T and Ti functions used to compute
-        # Clements as the comparison. Probably should be changed.
         n = 20
         U = np.identity(n)
 
@@ -322,8 +320,6 @@ class TestRectangularDecomposition:
         beamsplitters are multiplied together. Test passes if the product
         matches the drawn unitary.
         """
-        # TODO: this test currently uses the T and Ti functions used to compute
-        # Clements as the comparison. Probably should be changed.
         n = 20
         U = haar_measure(n)
 
