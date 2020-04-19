@@ -347,7 +347,6 @@ def rectangular_phase_end(V, tol=1e-11):
     Args:
         V (array[complex]): unitary matrix of size n_size
         tol (float): the tolerance used when checking if the matrix is unitary
-            
     Returns:
         tuple[array]: returns a tuple of the form ``(tlist, np.diag(localV), None)``
             where:
@@ -386,11 +385,10 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
     shifter on mode m, and another symmetric beamsplitter combining modes m
     and n.
 
-    The resulting matrix is 
-    
-    .. math:: 
+    The resulting matrix is
+    .. math::
 
-       M = i e^{i \phi_{i}/2} \left[\begin{matrix}\sin \left( \phi_{i}/2 \right) e^{i \phi_{e}} & \cos \left( \phi_{i}/2 \right) \\ 
+       M = i e^{i \phi_{i}/2} \left[\begin{matrix}\sin \left( \phi_{i}/2 \right) e^{i \phi_{e}} & \cos \left( \phi_{i}/2 \right) \\
        \cos \left( \phi_{i}/2 \right) e^{i \phi_{e}} & - \sin \left( \phi_{i}/2 \right) \end{matrix}\right]
 
     Args:
@@ -401,7 +399,7 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
         nmax (int): maximum number of modes in the circuit
 
     Returns:
-        array: unitary matrix of the effective transformation the series of phaseshifters 
+        array: unitary matrix of the effective transformation the series of phaseshifters
             and beamspliiters.
     """
     Rexternal = np.identity(nmax, dtype=np.complex128)
@@ -430,7 +428,7 @@ def nullMZi(m, n, U):
         U (array): matrix whose m,n element is to be nullified
 
     Returns:
-        list: list containing ``[m, n, internal_phase, external_phase, nmax]`` of the 
+        list: list containing ``[m, n, internal_phase, external_phase, nmax]`` of the
             mach_zehnder_inv unitaries needed
     """
     (nmax, mmax) = U.shape
@@ -461,7 +459,7 @@ def nullMZ(n, m, U):
         U (array): matrix whose m,n element is to be nullified
 
     Returns:
-        list: list containing ``[m, n, internal_phase, external_phase, nmax]`` of the 
+        list: list containing ``[m, n, internal_phase, external_phase, nmax]`` of the
             mach_zehnder unitaries needed
     """
     (nmax, mmax) = U.shape
@@ -488,7 +486,7 @@ def rectangular_MZ(V, tol=1e-11):
     phase shifts applied between two interferometers.
 
     Is similar to :func:`rectangular` except that it uses mach_zehner matrices to null elements of V
-    using the :func:`null_MZ` and :func:`null_MZi` instead of :func:`T` matrices and corresponding :func:`nullT` 
+    using the :func:`null_MZ` and :func:`null_MZi` instead of :func:`T` matrices and corresponding :func:`nullT`
     and :func:`nullTi` functions.
 
     Args:
@@ -540,13 +538,13 @@ def rectangular_symmetric(V, tol=1e-11):
     r"""Decomposition of a unitary into an array of symmetric beamsplitters.
 
     This decomposition starts with the output from :func:`rectangular_MZ`
-    and performs the equivalent of :func:`rectangular_phase_end` by placing all the 
+    and performs the equivalent of :func:`rectangular_phase_end` by placing all the
     local phase shifts after the interferometers.
 
     If the mach_zehnder's are represented as M and the local phase shifts as D, the new
-    parameters to shift the local phases to the end are calculated such that 
+    parameters to shift the local phases to the end are calculated such that
 
-    .. math:: 
+    .. math::
 
        M^{-1} D = D_{\mathrm{new}} M_{\mathrm{new}}
 
