@@ -253,9 +253,11 @@ def nullTi(m, n, U):
         raise ValueError("U must be a square matrix")
 
     if U[m, n] == 0:
+    # no swaps for the identity-like case
         thetar = 0
         phir = 0
     elif U[m, n + 1] == 0:
+    # swap in the divide-by-zero case
         thetar = np.pi / 2
         phir = 0
     else:
@@ -274,9 +276,11 @@ def nullT(n, m, U):
         raise ValueError("U must be a square matrix")
 
     if U[n, m] == 0:
+    # no swaps for the identity-like case
         thetar = 0
         phir = 0
     elif U[n - 1, m] == 0:
+    # swap in the divide-by-zero case
         thetar = np.pi / 2
         phir = 0
     else:
@@ -441,9 +445,11 @@ def nullMZi(m, n, U):
         raise ValueError("U must be a square matrix")
 
     if U[m, n] == 0:
+    # no swaps for the identity-like case
         phi_i = np.pi
         phi_e = 0
     elif U[m, n + 1] == 0:
+    # swap in the divide-by-zero case
         phi_i = 0
         phi_e = 0
     else:
@@ -472,9 +478,11 @@ def nullMZ(n, m, U):
         raise ValueError("U must be a square matrix")
 
     if U[n, m] == 0:
+    # no swaps for the identity-like case
         phi_i = np.pi
         phi_e = 0
     elif U[n - 1, m] == 0:
+    # swap in the divide-by-zero case
         phi_i = 0
         phi_e = 0
     else:
