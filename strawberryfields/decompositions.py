@@ -486,9 +486,9 @@ def rectangular_MZ(V, tol=1e-11):
     r"""Rectangular decomposition of a unitary matrix, with local
     phase shifts applied between two interferometers.
 
-    Is similar to :func:`rectangular` except that it uses mach_zehner matrices to null elements of V
-    using the :func:`null_MZ` and :func:`null_MZi` instead of :func:`T` matrices and corresponding :func:`nullT`
-    and :func:`nullTi` functions.
+    Is similar to :func:`~.rectangular` except that it uses Mach Zehnder matrices to null elements of V
+    using the :func:`~.null_MZ` and :func:`~.null_MZi` instead of :func:`~.T` matrices and corresponding :func:`~.nullT`
+    and :func:`~.nullTi` functions.
 
     Args:
         V (array[complex]): unitary matrix of size n_size
