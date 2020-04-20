@@ -401,7 +401,7 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
 
     Returns:
         array: unitary matrix of the effective transformation the series of phaseshifters
-            and beamspliiters.
+        and beamsplitters.
     """
     Rexternal = np.identity(nmax, dtype=np.complex128)
     Rexternal[m, m] = np.exp(1j * external_phase)
