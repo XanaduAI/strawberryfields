@@ -529,7 +529,7 @@ def rectangular_MZ(V, tol=1e-11):
                 tlist.append(nullMZ(i + j + 1, j, localV))
                 tlist[-1][2] %= 2 * np.pi
                 tlist[-1][3] %= 2 * np.pi
-                # repeat modulo operations , otherwise the input unitary
+                # repeat modulo operations, otherwise the input unitary
                 # numpy.identity(20) yields an external_phase of exactly 2 * pi
                 tlist[-1][2] %= 2 * np.pi
                 tlist[-1][3] %= 2 * np.pi
