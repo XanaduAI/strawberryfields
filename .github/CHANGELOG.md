@@ -31,6 +31,9 @@
 
 <h3>Improvements</h3>
 
+* Add details to the error message for failed remote jobs.
+  [(#370)](https://github.com/XanaduAI/strawberryfields/pull/370)
+
 <h3>Bug fixes</h3>
 
 <h3>Contributors</h3>
