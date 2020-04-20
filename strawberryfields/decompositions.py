@@ -231,7 +231,7 @@ def bipartite_graph_embed(A, mean_photon_per_mode=1.0, rtol=1e-05, atol=1e-08):
 
 
 def T(m, n, theta, phi, nmax):
-    r"""The Clements T matrix from Eq. 1 of the paper"""
+    r"""The Clements T matrix from Eq 1 of the paper"""
     mat = np.identity(nmax, dtype=np.complex128)
     mat[m, m] = np.exp(1j * phi) * np.cos(theta)
     mat[m, n] = -np.sin(theta)
@@ -494,12 +494,12 @@ def rectangular_MZ(V, tol=1e-11):
         tol (float): the tolerance used when checking if the matrix is unitary
 
     Returns:
-        tuple[array]: tuple of the form ``(tilist,np.diag(localV),tlist)``
-            where:
+        tuple[array]: tuple of the form ``(tilist, np.diag(localV), tlist)``
+        where:
 
-            * ``tilist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the ``mach_zehnder_inv`` unitaries needed
-            * ``tlist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the ``mach_zehnder`` unitaries needed
-            * ``localV``: Diagonal unitary sitting sandwiched by ``mach_zehnder_inv``'s and the ``mach_zehnder``'s
+        * ``tilist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the ``mach_zehnder_inv`` unitaries needed
+        * ``tlist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the ``mach_zehnder`` unitaries needed
+        * ``localV``: Diagonal unitary sitting sandwiched by ``mach_zehnder_inv``'s and the ``mach_zehnder``'s
     """
     localV = V
     (nsize, _) = localV.shape
