@@ -104,14 +104,14 @@ def takagi(N, tol=1e-13, rounding=13):
 def graph_embed_deprecated(A, max_mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08):
     r"""Embed a graph into a Gaussian state.
 
-    Note: The default behaviour of graph embedding has been changed; see :func:`graph_embed`. This version is deprecated, but has been kept for consistency.
+    Note: The default behaviour of graph embedding has been changed; see :func:`~.graph_embed`. This version is deprecated, but has been kept for consistency.
 
     Given a graph in terms of a symmetric adjacency matrix
     (in general with arbitrary complex off-diagonal and real diagonal entries),
     returns the squeezing parameters and interferometer necessary for
     creating the Gaussian state whose off-diagonal parts are proportional to that matrix.
 
-    Uses :func:`takagi`.
+    Uses :func:`~.takagi`.
 
     Args:
         A (array[complex]): square, symmetric (weighted) adjacency matrix of the graph
@@ -154,7 +154,7 @@ def graph_embed(A, mean_photon_per_mode=1.0, make_traceless=False, rtol=1e-05, a
     returns the squeezing parameters and interferometer necessary for
     creating the Gaussian state whose off-diagonal parts are proportional to that matrix.
 
-    Uses :func:`takagi`.
+    Uses :func:`~.takagi`.
 
     Args:
         A (array[complex]): square, symmetric (weighted) adjacency matrix of the graph
@@ -197,7 +197,7 @@ def bipartite_graph_embed(A, mean_photon_per_mode=1.0, rtol=1e-05, atol=1e-08):
     returns the two-mode squeezing parameters and interferometers necessary for
     creating the Gaussian state that encodes such adjacency matrix
 
-    Uses :func:`takagi`.
+    Uses :func:`~.takagi`.
 
     Args:
         A (array[complex]): square, (weighted) adjacency matrix of the bipartite graph
@@ -485,9 +485,9 @@ def rectangular_MZ(V, tol=1e-11):
     r"""Rectangular decomposition of a unitary matrix, with local
     phase shifts applied between two interferometers.
 
-    Is similar to :func:`rectangular` except that it uses mach_zehner matrices to null elements of V
-    using the :func:`null_MZ` and :func:`null_MZi` instead of :func:`T` matrices and corresponding :func:`nullT`
-    and :func:`nullTi` functions.
+    Is similar to :func:`~.rectangular` except that it uses mach_zehner matrices to null elements of V
+    using the :func:`~.null_MZ` and :func:`~.null_MZi` instead of :func:`~.T` matrices and corresponding :func:`~.nullT`
+    and :func:`~.nullTi` functions.
 
     Args:
         V (array[complex]): unitary matrix of size n_size
@@ -499,7 +499,7 @@ def rectangular_MZ(V, tol=1e-11):
 
             * ``tilist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the ``mach_zehnder_inv`` unitaries needed
             * ``tlist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the ``mach_zehnder`` unitaries needed
-            * ``localV``: Diagonal unitary sitting sandwiched by ``mach_zehnder_inv``'s and the ``mach_zehnder``'s
+            * ``localV``: diagonal unitary sandwiched between the ``mach_zehnder_inv`` unitaries and the ``mach_zehnder`` unitaries
     """
     localV = V
     (nsize, _) = localV.shape
@@ -537,8 +537,8 @@ def rectangular_MZ(V, tol=1e-11):
 def rectangular_symmetric(V, tol=1e-11):
     r"""Decomposition of a unitary into an array of symmetric beamsplitters.
 
-    This decomposition starts with the output from :func:`rectangular_MZ`
-    and performs the equivalent of :func:`rectangular_phase_end` by placing all the
+    This decomposition starts with the output from :func:`~.rectangular_MZ`
+    and performs the equivalent of :func:`~.rectangular_phase_end` by placing all the
     local phase shifts after the interferometers.
 
     If the mach_zehnder's are represented as M and the local phase shifts as D, the new
@@ -560,7 +560,7 @@ def rectangular_symmetric(V, tol=1e-11):
             * ``tlist``: list containing ``[n, m, internal_phase, external_phase, n_size]`` of the T unitaries needed
             * ``localV``: Diagonal unitary matrix to be applied at the end of circuit
             * ``None``: the value ``None``, in order to make the return
-              signature identical to :func:`rectangular`
+              signature identical to :func:`~.rectangular`
     """
     tilist, diags, tlist = rectangular_MZ(V, tol)
     new_tlist, new_diags = tilist.copy(), diags.copy()
