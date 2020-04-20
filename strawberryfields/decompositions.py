@@ -516,7 +516,7 @@ def rectangular_MZ(V, tol=1e-11):
                 tilist.append(nullMZi(i + j + 1, j, localV))
                 tilist[-1][2] %= 2 * np.pi
                 tilist[-1][3] %= 2 * np.pi
-                # repeat modulo operations , otherwise the input unitary
+                # repeat modulo operations, otherwise the input unitary
                 # numpy.identity(20) yields an external_phase of exactly 2 * pi
                 tilist[-1][2] %= 2 * np.pi
                 tilist[-1][3] %= 2 * np.pi
