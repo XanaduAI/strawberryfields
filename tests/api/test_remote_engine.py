@@ -35,16 +35,17 @@ class MockServer:
     def __init__(self):
         self.request_count = 0
 
-    def get_job_status(self, _id):
+    def get_job(self, _id):
         """Returns a 'queued' job status until the number of requests exceeds a defined
         threshold, beyond which a 'complete' job status is returned.
         """
         self.request_count += 1
-        return (
+        status = (
             JobStatus.COMPLETED
             if self.request_count >= self.REQUESTS_BEFORE_COMPLETED
             else JobStatus.QUEUED
         )
+        return Job(id_="123", status=status, connection=None, meta={"foo": "bar"})
 
 
 @pytest.fixture
@@ -56,7 +57,7 @@ def job_to_complete(connection, monkeypatch):
         mock_return(Job(id_="123", status=JobStatus.OPEN, connection=connection)),
     )
     server = MockServer()
-    monkeypatch.setattr(Connection, "get_job_status", server.get_job_status)
+    monkeypatch.setattr(Connection, "get_job", server.get_job)
     monkeypatch.setattr(
         Connection,
         "get_job_result",
@@ -90,6 +91,7 @@ class TestRemoteEngine:
             job.refresh()
 
         assert job.status == JobStatus.COMPLETED.value
+        assert job.meta == {"foo": "bar"}
         assert np.array_equal(job.result.samples, np.array([[1, 2], [3, 4]]))
 
         with pytest.raises(
