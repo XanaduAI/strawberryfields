@@ -231,7 +231,7 @@ def bipartite_graph_embed(A, mean_photon_per_mode=1.0, rtol=1e-05, atol=1e-08):
 
 
 def T(m, n, theta, phi, nmax):
-    r"""The Clements T matrix from Eq. 1 of the paper"""
+    r"""The Clements T matrix from Eq 1 of the paper"""
     mat = np.identity(nmax, dtype=np.complex128)
     mat[m, m] = np.exp(1j * phi) * np.cos(theta)
     mat[m, n] = -np.sin(theta)
@@ -386,6 +386,7 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
     and n.
 
     The resulting matrix is
+
     .. math::
 
        M = i e^{i \phi_{i}/2} \left[\begin{matrix}\sin \left( \phi_{i}/2 \right) e^{i \phi_{e}} & \cos \left( \phi_{i}/2 \right) \\
@@ -400,7 +401,7 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
 
     Returns:
         array: unitary matrix of the effective transformation the series of phaseshifters
-            and beamspliiters.
+        and beamsplitters.
     """
     Rexternal = np.identity(nmax, dtype=np.complex128)
     Rexternal[m, m] = np.exp(1j * external_phase)
@@ -415,7 +416,10 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
 
 
 def mach_zehnder_inv(m, n, phi_int, phi_ext, nmax):
-    r"""The inverse of the mach_zehnder matrix."""
+    r"""The inverse of the Mach-Zehnder unitary matrix.
+    
+    See :func:`~.mach_zehnder` for more details on the Mach-Zehnder unitary.
+    """
     return mach_zehnder(m, n, phi_int, phi_ext, nmax).conj().T
 
 
@@ -485,7 +489,7 @@ def rectangular_MZ(V, tol=1e-11):
     r"""Rectangular decomposition of a unitary matrix, with local
     phase shifts applied between two interferometers.
 
-    Is similar to :func:`~.rectangular` except that it uses mach_zehner matrices to null elements of V
+    Is similar to :func:`~.rectangular` except that it uses Mach Zehnder matrices to null elements of V
     using the :func:`~.null_MZ` and :func:`~.null_MZi` instead of :func:`~.T` matrices and corresponding :func:`~.nullT`
     and :func:`~.nullTi` functions.
 
@@ -494,12 +498,12 @@ def rectangular_MZ(V, tol=1e-11):
         tol (float): the tolerance used when checking if the matrix is unitary
 
     Returns:
-        tuple[array]: tuple of the form ``(tilist,np.diag(localV),tlist)``
-            where:
+        tuple[array]: tuple of the form ``(tilist, np.diag(localV), tlist)``
+        where:
 
-            * ``tilist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the ``mach_zehnder_inv`` unitaries needed
-            * ``tlist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the ``mach_zehnder`` unitaries needed
-            * ``localV``: diagonal unitary sandwiched between the ``mach_zehnder_inv`` unitaries and the ``mach_zehnder`` unitaries
+        * ``tilist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the ``mach_zehnder_inv`` unitaries needed
+        * ``tlist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the ``mach_zehnder`` unitaries needed
+        * ``localV``: Diagonal unitary sitting sandwiched by ``mach_zehnder_inv``'s and the ``mach_zehnder``'s
     """
     localV = V
     (nsize, _) = localV.shape
@@ -515,7 +519,7 @@ def rectangular_MZ(V, tol=1e-11):
                 tilist.append(nullMZi(i + j + 1, j, localV))
                 tilist[-1][2] %= 2 * np.pi
                 tilist[-1][3] %= 2 * np.pi
-                # repeat modulo operations , otherwise the input unitary
+                # repeat modulo operations, otherwise the input unitary
                 # numpy.identity(20) yields an external_phase of exactly 2 * pi
                 tilist[-1][2] %= 2 * np.pi
                 tilist[-1][3] %= 2 * np.pi
@@ -525,7 +529,7 @@ def rectangular_MZ(V, tol=1e-11):
                 tlist.append(nullMZ(i + j + 1, j, localV))
                 tlist[-1][2] %= 2 * np.pi
                 tlist[-1][3] %= 2 * np.pi
-                # repeat modulo operations , otherwise the input unitary
+                # repeat modulo operations, otherwise the input unitary
                 # numpy.identity(20) yields an external_phase of exactly 2 * pi
                 tlist[-1][2] %= 2 * np.pi
                 tlist[-1][3] %= 2 * np.pi
@@ -541,7 +545,7 @@ def rectangular_symmetric(V, tol=1e-11):
     and performs the equivalent of :func:`~.rectangular_phase_end` by placing all the
     local phase shifts after the interferometers.
 
-    If the mach_zehnder's are represented as M and the local phase shifts as D, the new
+    If the Mach-Zehnder unitaries are represented as M and the local phase shifts as D, the new
     parameters to shift the local phases to the end are calculated such that
 
     .. math::
