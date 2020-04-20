@@ -45,7 +45,7 @@ class MockServer:
             if self.request_count >= self.REQUESTS_BEFORE_COMPLETED
             else JobStatus.QUEUED
         )
-        return Job(id_="123", status=status, connection=None)
+        return Job(id_="123", status=status, connection=None, meta={"foo": "bar"})
 
 
 @pytest.fixture
@@ -91,6 +91,7 @@ class TestRemoteEngine:
             job.refresh()
 
         assert job.status == JobStatus.COMPLETED.value
+        assert job.meta == {"foo": "bar"}
         assert np.array_equal(job.result.samples, np.array([[1, 2], [3, 4]]))
 
         with pytest.raises(
