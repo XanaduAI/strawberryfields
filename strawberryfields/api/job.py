@@ -81,7 +81,7 @@ class Job:
         self._status = status
         self._connection = connection
         self._result = None
-        self._meta = meta if meta is not None else {}
+        self._meta = meta or {}
 
         self.log = create_logger(__name__)
 
