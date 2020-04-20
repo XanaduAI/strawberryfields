@@ -141,6 +141,7 @@ class Job:
         job_info = self._connection.get_job(self.id)
         self._status = JobStatus(job_info.status)
         self._meta = job_info.meta
+        self.log.debug("Job {} metadata: {}".format(self.id, job_info.meta))
         if self._status == JobStatus.COMPLETED:
             self._result = self._connection.get_job_result(self.id)
 
