@@ -542,7 +542,7 @@ def rectangular_symmetric(V, tol=1e-11):
     and performs the equivalent of :func:`~.rectangular_phase_end` by placing all the
     local phase shifts after the interferometers.
 
-    If the mach_zehnder's are represented as M and the local phase shifts as D, the new
+    If the Mach-Zehnder unitaries are represented as M and the local phase shifts as D, the new
     parameters to shift the local phases to the end are calculated such that
 
     .. math::
