@@ -386,6 +386,7 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
     and n.
 
     The resulting matrix is
+
     .. math::
 
        M = i e^{i \phi_{i}/2} \left[\begin{matrix}\sin \left( \phi_{i}/2 \right) e^{i \phi_{e}} & \cos \left( \phi_{i}/2 \right) \\
