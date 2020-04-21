@@ -25,6 +25,7 @@ from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
 from scipy.integrate import simps
+from thewalrus.quantum import photon_number_mean, photon_number_covar
 
 import strawberryfields as sf
 from .shared_ops import rotation_matrix as _R
@@ -308,6 +309,60 @@ class BaseState(abc.ABC):
 
         Returns:
             tuple (float, float): expectation value and variance
+        """
+        raise NotImplementedError
+
+    def number_expectation(self, modes):
+        r"""
+        Calculates the expectation value of the product of the number operators of the modes.
+
+        This method computes the analytic expectation value
+        :math:`\langle \hat{n}_{i_0} \hat{n}_{i_1}\dots \hat{n}_{i_{N-1}}\rangle`
+        for a (sub)set of modes :math:`[i_0, i_1, \dots, i_{N-1}]` of the system.
+
+        Args:
+            modes (list): list of modes for which one wants the expectation of the product of their number operator.
+
+        Return:
+            (float): the expectation value.
+
+        **Example**
+
+        Consider the following program:
+
+        .. code-block:: python
+
+            prog = sf.Program(3)
+
+            with prog.context as q:
+                ops.Sgate(0.5) | q[0]
+                ops.Sgate(0.5) | q[1]
+                ops.Sgate(0.5) | q[2]
+                ops.BSgate(np.pi/3, 0.1) |  (q[0], q[1])
+                ops.BSgate(np.pi/3, 0.1) |  (q[1], q[2])
+
+        Executing this on the Fock backend,
+
+        >>> eng = sf.Engine("fock", backend_options={"cutoff_dim": 10})
+        >>> state = eng.run(prog).state
+
+        we can compute the expectation value :math:`\langle \hat{n}_0\hat{n}_2\rangle`:
+
+        >>> state.number_expectation([0, 2])
+        0.07252895071309405
+
+        Executing the same program on the Gaussian backend,
+
+        >>> eng = sf.Engine("gaussian")
+        >>> state = eng.run(prog).state
+        >>> state.number_expectation([0, 2])
+        0.07566984755267293
+
+        This slight difference in value compared to the result from the Fock backend above
+        is due to the finite Fock basis truncation when using the Fock backend; this can be
+        avoided by increasing the value of ``cutoff_dim``.
+
+        .. warning:: This method only supports at most two modes in the Gaussian backend.
         """
         raise NotImplementedError
 
@@ -832,6 +887,33 @@ class BaseFockState(BaseState):
 
         return mean, var
 
+    def number_expectation(self, modes):
+        if len(modes) != len(set(modes)):
+            raise ValueError("There can be no duplicates in the modes specified.")
+
+        cutoff = self._cutoff  # Fock space cutoff.
+        num_modes = self._modes  # number of modes in the state.
+
+        values = np.arange(cutoff)
+        traced_modes = tuple(item for item in range(num_modes) if item not in modes)
+        if self.is_pure:
+            # state is a tensor of probability amplitudes
+            ps = np.abs(self.ket()) ** 2
+            ps = ps.sum(axis=traced_modes)
+            for _ in modes:
+                ps = np.tensordot(values, ps, axes=1)
+            return float(ps)
+
+        # state is a tensor of density matrix elements in the SF convention
+        ps = np.real(self.dm())
+        traced_modes = list(traced_modes)
+        traced_modes.sort(reverse=True)
+        for mode in traced_modes:
+            ps = np.tensordot(np.identity(cutoff), ps, axes=((0, 1), (2 * mode, 2 * mode + 1)))
+        for _ in range(len(modes)):
+            ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
+        return float(ps)
+
 
 class BaseGaussianState(BaseState):
     r"""Class for the representation of quantum states using the Gaussian formalism.
@@ -1138,6 +1220,23 @@ class BaseGaussianState(BaseState):
         )
 
         return mean, var
+
+    def number_expectation(self, modes):
+        if len(modes) != len(set(modes)):
+            raise ValueError("There can be no duplicates in the modes specified.")
+        mu = self._mu
+        cov = self._cov
+        if len(modes) == 1:
+            return photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
+
+        if len(modes) == 2:
+            ni = photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
+            nj = photon_number_mean(mu, cov, modes[1], hbar=self._hbar)
+            return photon_number_covar(mu, cov, modes[1], modes[0], hbar=self._hbar) + ni * nj
+
+        raise ValueError(
+            "The number_expectation method only supports one or two modes for Gaussian states."
+        )
 
     @abc.abstractmethod
     def reduced_dm(self, modes, **kwargs):
