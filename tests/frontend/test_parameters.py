@@ -23,12 +23,6 @@ from strawberryfields.parameters import (par_is_symbolic, par_regref_deps, par_s
 from strawberryfields.program_utils import RegRef
 
 
-try:
-    import tensorflow as tf
-except (ImportError, ModuleNotFoundError):
-    pass
-
-
 pytestmark = pytest.mark.frontend
 
 
@@ -186,10 +180,12 @@ class TestParameter:
         res = par_evaluate(x, dtype=np.complex128)
         assert res.dtype.type is np.complex128
 
-    @pytest.mark.backends("tf")
     @pytest.mark.parametrize("p", TEST_VALUES)
     def test_par_evaluate_dtype_TF(self, p):
         """Test the TF parameter evaluation works when a dtype is provided"""
+        pytest.importorskip("tensorflow", minversion="2.0")
+        import tensorflow as tf
+
         x = FreeParameter("x")
         x.val = tf.Variable(p)
         res = par_evaluate(x, dtype=np.complex128)
@@ -236,19 +232,26 @@ def mock_run_prog(self, prog, **kwargs):
     the engine queue when running programs."""
     global applied
     for cmd in prog.circuit:
-        cmd.op.apply(cmd.reg, self.backend, **kwargs)
-        applied.append(cmd)
+        try:
+            cmd.op.apply(cmd.reg, self.backend, **kwargs)
+            applied.append(cmd)
+        except NotImplementedError:
+            for c in cmd.op._decompose(cmd.reg, **kwargs):
+                c.op.apply(c.reg, self.backend, **kwargs)
+                applied.append(c)
     return applied
 
 
-@pytest.mark.backends("tf")
 class TestParameterTFIntegration:
     """Test integration of the parameter handling system with
     various gates and TensorFlow."""
+    pytest.importorskip("tensorflow", minversion="2.0")
 
     @pytest.mark.parametrize("gate", [sf.ops.Dgate, sf.ops.Sgate, sf.ops.Coherent])
-    def test_single_mode_gate_complex_phase(self, setup_eng, gate, monkeypatch):
+    def test_single_mode_gate_complex_phase(self, backend, gate, monkeypatch):
         """Test single mode gates with complex phase arguments"""
+        import tensorflow as tf
+
         prog = sf.Program(1)
 
         # create symbolic parameters
@@ -273,7 +276,7 @@ class TestParameterTFIntegration:
 
         with monkeypatch.context() as m:
             m.setattr(sf.LocalEngine, "_run_program", mock_run_prog)
-            eng, _ = setup_eng(1)
+            eng = sf.LocalEngine(backend)
             result = eng.run(prog, args=mapping)
 
         assert isinstance(applied[0].op, gate)
@@ -281,8 +284,9 @@ class TestParameterTFIntegration:
         assert applied[0].op.p[1].val == mapping["phi"]
 
     @pytest.mark.parametrize("gate", [sf.ops.BSgate, sf.ops.S2gate])
-    def test_two_mode_gate_complex_phase(self, setup_eng, gate, monkeypatch):
+    def test_two_mode_gate_complex_phase(self, backend, gate, monkeypatch):
         """Test two mode gates with complex phase arguments"""
+        import tensorflow as tf
         prog = sf.Program(2)
 
         # create symbolic parameters
@@ -307,21 +311,16 @@ class TestParameterTFIntegration:
 
         with monkeypatch.context() as m:
             m.setattr(sf.LocalEngine, "_run_program", mock_run_prog)
-            eng, _ = setup_eng(2)
-
-            # The tensorflow backend doesn't natively support two-mode squeezing.
-            # Here, we mock the tf compiler and the backend to allow this program to run.
-            m.setattr(sf.Program, "compile", lambda self, *args, **kwargs: self)
-            eng.backend.two_mode_squeeze = lambda self, *args: self
-
+            eng = sf.LocalEngine(backend)
             result = eng.run(prog, args=mapping)
 
         assert isinstance(applied[0].op, gate)
         assert applied[0].op.p[0].val == mapping["r"]
         assert applied[0].op.p[1].val == mapping["phi"]
 
-    def test_zgate(self, setup_eng, hbar, monkeypatch):
+    def test_zgate(self, backend, hbar, monkeypatch):
         """Test the momentum displacement gate"""
+        import tensorflow as tf
         prog = sf.Program(1)
 
         # create symbolic parameters
@@ -344,7 +343,7 @@ class TestParameterTFIntegration:
 
         with monkeypatch.context() as m:
             m.setattr(sf.LocalEngine, "_run_program", mock_run_prog)
-            eng, _ = setup_eng(1)
+            eng = sf.LocalEngine(backend)
             result = eng.run(prog, args=mapping)
 
         assert isinstance(applied[0].op, sf.ops.Dgate)
