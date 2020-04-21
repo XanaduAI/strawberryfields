@@ -421,7 +421,6 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
 
 def mach_zehnder_inv(m, n, phi_int, phi_ext, nmax):
     r"""The inverse of the Mach-Zehnder unitary matrix.
-    
     See :func:`~.mach_zehnder` for more details on the Mach-Zehnder unitary.
     """
     return mach_zehnder(m, n, phi_int, phi_ext, nmax).conj().T
