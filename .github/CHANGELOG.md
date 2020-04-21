@@ -2,20 +2,51 @@
 
 <h3>New features since last release</h3>
 
-* The `tf` backend now supports TensorFlow 2.0.
+* The `"tf"` backend now supports TensorFlow 2.0.
   [(#283)](https://github.com/XanaduAI/strawberryfields/pull/283)
   [(#323)](https://github.com/XanaduAI/strawberryfields/pull/323)
   [(#361)](https://github.com/XanaduAI/strawberryfields/pull/361)
 
+* Adds the method `number_expectation`  that calculates the expectation value of the product of the
+  number operators of a given set of modes.
+  [(#348)](https://github.com/XanaduAI/strawberryfields/pull/348/)
+
+  ```python
+  prog = sf.Program(3)
+  with prog.context as q:
+      ops.Sgate(0.5) | q[0]
+      ops.Sgate(0.5) | q[1]
+      ops.Sgate(0.5) | q[2]
+      ops.BSgate(np.pi/3, 0.1) |  (q[0], q[1])
+      ops.BSgate(np.pi/3, 0.1) |  (q[1], q[2])
+  ```
+
+  Executing this on the Fock backend,
+
+  ```python
+  >>> eng = sf.Engine("fock", backend_options={"cutoff_dim": 10})
+  >>> state = eng.run(prog).state
+  ```
+
+  we can compute the expectation value :math:`\langle \hat{n}_0\hat{n}_2\rangle`:
+
+  ```python
+  >>> state.number_expectation([0, 2])
+  ```
+
 <h3>Improvements</h3>
+
+* Add details to the error message for failed remote jobs.
+  [(#370)](https://github.com/XanaduAI/strawberryfields/pull/370)
 
 <h3>Bug fixes</h3>
 
 <h3>Contributors</h3>
 
-Josh Izaac, Nathan Killoran, Filippo Miatto.
-
 This release contains contributions from (in alphabetical order):
+
+Josh Izaac, Nathan Killoran, Filippo Miatto, Nicolás Quesada.
+
 
 # Release 0.13.0 (current release)
 
