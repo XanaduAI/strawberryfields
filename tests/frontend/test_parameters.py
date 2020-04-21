@@ -16,11 +16,17 @@
 import pytest
 import numpy as np
 
-#import strawberryfields as sf
+import strawberryfields as sf
 from strawberryfields.parameters import (par_is_symbolic, par_regref_deps, par_str, par_evaluate,
                                          MeasuredParameter, FreeParameter, par_funcs as pf,
                                          ParameterError)
 from strawberryfields.program_utils import RegRef
+
+
+try:
+    import tensorflow as tf
+except (ImportError, ModuleNotFoundError):
+    pass
 
 
 pytestmark = pytest.mark.frontend
@@ -173,6 +179,23 @@ class TestParameter:
         assert np.all(par_evaluate(x) == p)
 
     @pytest.mark.parametrize("p", TEST_VALUES)
+    def test_par_evaluate_dtype_numpy(self, p):
+        """Test the numpy parameter evaluation works when a dtype is provided"""
+        x = FreeParameter("x")
+        x.val = p
+        res = par_evaluate(x, dtype=np.complex128)
+        assert res.dtype.type is np.complex128
+
+    @pytest.mark.backends("tf")
+    @pytest.mark.parametrize("p", TEST_VALUES)
+    def test_par_evaluate_dtype_TF(self, p):
+        """Test the TF parameter evaluation works when a dtype is provided"""
+        x = FreeParameter("x")
+        x.val = tf.Variable(p)
+        res = par_evaluate(x, dtype=np.complex128)
+        assert res.dtype is tf.complex128
+
+    @pytest.mark.parametrize("p", TEST_VALUES)
     @pytest.mark.parametrize("q", TEST_VALUES)
     def test_parameter_arithmetic(self, p, q):
         """Test parameter arithmetic works as expected,"""
@@ -206,3 +229,124 @@ class TestParameter:
         pp.val = p
         assert par_evaluate(-p) == pytest.approx(-p)
         assert par_evaluate(-pp) == pytest.approx(-p)
+
+
+def mock_run_prog(self, prog, **kwargs):
+    """Mock function that uses a global variable for constructing
+    the engine queue when running programs."""
+    global applied
+    for cmd in prog.circuit:
+        cmd.op.apply(cmd.reg, self.backend, **kwargs)
+        applied.append(cmd)
+    return applied
+
+
+@pytest.mark.backends("tf")
+class TestParameterTFIntegration:
+    """Test integration of the parameter handling system with
+    various gates and TensorFlow."""
+
+    @pytest.mark.parametrize("gate", [sf.ops.Dgate, sf.ops.Sgate, sf.ops.Coherent])
+    def test_single_mode_gate_complex_phase(self, setup_eng, gate, monkeypatch):
+        """Test single mode gates with complex phase arguments"""
+        prog = sf.Program(1)
+
+        # create symbolic parameters
+        r = prog.params('r')
+        phi = prog.params('phi')
+
+        with prog as q:
+            gate(r, phi) | q[0]
+
+        # create numeric values
+        mapping = {'r': tf.Variable(0.1), 'phi': tf.Variable(0.1)}
+        prog.bind_params(mapping)
+
+        # verify bound parameters are correct
+        assert prog.free_params['r'].val is mapping['r']
+        assert prog.free_params['phi'].val is mapping['phi']
+
+        # assert executed program is constructed correctly
+        global applied
+        cmds = []
+        applied = []
+
+        with monkeypatch.context() as m:
+            m.setattr(sf.LocalEngine, "_run_program", mock_run_prog)
+            eng, _ = setup_eng(1)
+            result = eng.run(prog, args=mapping)
+
+        assert isinstance(applied[0].op, gate)
+        assert applied[0].op.p[0].val == mapping["r"]
+        assert applied[0].op.p[1].val == mapping["phi"]
+
+    @pytest.mark.parametrize("gate", [sf.ops.BSgate, sf.ops.S2gate])
+    def test_two_mode_gate_complex_phase(self, setup_eng, gate, monkeypatch):
+        """Test two mode gates with complex phase arguments"""
+        prog = sf.Program(2)
+
+        # create symbolic parameters
+        r = prog.params('r')
+        phi = prog.params('phi')
+
+        with prog as q:
+            gate(r, phi) | q
+
+        # create numeric values
+        mapping = {'r': tf.Variable(0.1), 'phi': tf.Variable(0.1)}
+        prog.bind_params(mapping)
+
+        # verify bound parameters are correct
+        assert prog.free_params['r'].val is mapping['r']
+        assert prog.free_params['phi'].val is mapping['phi']
+
+        # assert executed program is constructed correctly
+        global applied
+        cmds = []
+        applied = []
+
+        with monkeypatch.context() as m:
+            m.setattr(sf.LocalEngine, "_run_program", mock_run_prog)
+            eng, _ = setup_eng(2)
+
+            # The tensorflow backend doesn't natively support two-mode squeezing.
+            # Here, we mock the tf compiler and the backend to allow this program to run.
+            m.setattr(sf.Program, "compile", lambda self, *args, **kwargs: self)
+            eng.backend.two_mode_squeeze = lambda self, *args: self
+
+            result = eng.run(prog, args=mapping)
+
+        assert isinstance(applied[0].op, gate)
+        assert applied[0].op.p[0].val == mapping["r"]
+        assert applied[0].op.p[1].val == mapping["phi"]
+
+    def test_zgate(self, setup_eng, hbar, monkeypatch):
+        """Test the momentum displacement gate"""
+        prog = sf.Program(1)
+
+        # create symbolic parameters
+        p = prog.params('p')
+
+        with prog as q:
+            sf.ops.Zgate(p) | q[0]
+
+        # create numeric values
+        mapping = {'p': tf.Variable(0.1)}
+        prog.bind_params(mapping)
+
+        # verify bound parameters are correct
+        assert prog.free_params['p'].val is mapping['p']
+
+        # assert executed program is constructed correctly
+        global applied
+        cmds = []
+        applied = []
+
+        with monkeypatch.context() as m:
+            m.setattr(sf.LocalEngine, "_run_program", mock_run_prog)
+            eng, _ = setup_eng(1)
+            result = eng.run(prog, args=mapping)
+
+        assert isinstance(applied[0].op, sf.ops.Dgate)
+        assert par_evaluate(applied[0].op.p[0]) == mapping["p"] / np.sqrt(2 * hbar)
+        assert applied[0].op.p[1] == np.pi/2
