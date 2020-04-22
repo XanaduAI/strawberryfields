@@ -799,6 +799,7 @@ class TestDisplacements:
         cmds = Z.decompose(prog.register)
         assert isinstance(cmds[0].op, ops.Dgate)
 
+        assert len(cmds) == 1
         r = cmds[0].op.p[0]
         phi = cmds[0].op.p[1]
         assert np.allclose(r*np.exp(1j*phi), alpha, atol=tol, rtol=0)

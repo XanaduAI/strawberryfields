@@ -280,6 +280,7 @@ class TestParameterTFIntegration:
             result = eng.run(prog, args=mapping)
 
         assert isinstance(applied[0].op, gate)
+        assert len(applied) == 1
         assert applied[0].op.p[0].val == mapping["r"]
         assert applied[0].op.p[1].val == mapping["phi"]
 
