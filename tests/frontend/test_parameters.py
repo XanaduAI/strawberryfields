@@ -241,7 +241,7 @@ def applied_cmds(monkeypatch):
     applied = []
 
     def mock_run_prog(self, prog, **kwargs):
-        """Mock function that uses for extracting
+        """Mock function that is used for extracting
         the engine queue when running programs."""
         for cmd in prog.circuit:
             try:
