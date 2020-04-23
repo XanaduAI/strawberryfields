@@ -1125,7 +1125,7 @@ class S2gate(Gate):
     r""":ref:`Two-mode squeezing <two_mode_squeezing>` gate.
 
     .. math::
-       S_2(z) = \exp\left(z^* ab -z a^\dagger b^\dagger \right) = \exp\left(r (e^{-i\phi} ab -e^{i\phi} a^\dagger b^\dagger \right)
+       S_2(z) = \exp\left(z a^\dagger b^\dagger - z^* ab \right) = \exp\left(r (e^{i\phi} a^\dagger b^\dagger e^{-i\phi} ab ) \right)
 
     where :math:`z = r e^{i\phi}`.
 
