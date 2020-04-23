@@ -565,7 +565,6 @@ class TestTwoModeSymbolic:
             Dgate(-ALPHA) | q[1]
 
         state = eng.run(prog).state
-
         probs = state.all_fock_probs()
         if eng.backend_name == 'tf':
             probs = probs.numpy()
