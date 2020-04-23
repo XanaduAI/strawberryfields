@@ -263,7 +263,7 @@ def applied_cmds(monkeypatch):
 
 class TestParameterTFIntegration:
     """Test integration of the parameter handling system with
-    various gates and TensorFlow."""
+    various gates and TensorFlow"""
     pytest.importorskip("tensorflow", minversion="2.0")
 
     @staticmethod
