@@ -43,6 +43,30 @@ _decomposition_tol = (
     1e-13  # TODO this tolerance is used for various purposes and is not well-defined
 )
 
+# data type to use for complex arrays
+COMPLEX_DTYPE = np.complex128
+
+
+def evaluate_complex_parameter(p, phase):
+    """Convenience function for evaluating symbolic arguments
+    with potentially batched phase parameters.
+
+    Args:
+        p (Any): parameters
+        phase (Any): complex phase of parameter ``p``
+
+    """
+    # We need to check if any value of the phase is non-zero,
+    # as the phase might be batched.
+    if np.any(phase != 0):
+        # There exists a non-zero phase; cast the parameter
+        # to a complex data type when evaluating it.
+        return par_evaluate(p, dtype=COMPLEX_DTYPE)
+
+    # All phases are zero; evaluate the parameter without
+    # any additional casting.
+    return par_evaluate(p)
+
 
 def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
     """User warning formatter"""
@@ -542,12 +566,7 @@ class Coherent(Preparation):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-
-        if np.any(self.p[1] != 0):
-            z = par_evaluate(p, dtype=np.complex128)
-        else:
-            z = par_evaluate(p)
-
+        z = evaluate_complex_parameter(p, self.p[1])
         backend.prepare_coherent_state(z, *reg)
 
 
@@ -657,10 +676,7 @@ class Catstate(Preparation):
         ket = np.squeeze(ket)
 
         # evaluate the array (elementwise)
-        if np.any(self.p[1] != 0):
-            ket = par_evaluate(ket, dtype=np.complex128)
-        else:
-            ket = par_evaluate(ket)
+        ket = evaluate_complex_parameter(ket, self.p[1])
 
         backend.prepare_ket_state(ket, *reg)
 
@@ -933,12 +949,7 @@ class Dgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-
-        if np.any(self.p[1] != 0):
-            z = par_evaluate(p, dtype=np.complex128)
-        else:
-            z = par_evaluate(p)
-
+        z = evaluate_complex_parameter(p, self.p[1])
         backend.displacement(z, *reg)
 
 
@@ -998,12 +1009,7 @@ class Sgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-
-        if np.any(self.p[1] != 0):
-            z = par_evaluate(p, dtype=np.complex128)
-        else:
-            z = par_evaluate(p)
-
+        z = evaluate_complex_parameter(p, self.p[1])
         backend.squeeze(z, *reg)
 
 
@@ -1110,12 +1116,7 @@ class BSgate(Gate):
         r = pf.sin(self.p[0]) * pf.exp(1j * self.p[1])
 
         t = par_evaluate(t)
-
-        if np.any(self.p[1] != 0):
-            r = par_evaluate(r, dtype=np.complex128)
-        else:
-            r = par_evaluate(r)
-
+        r = evaluate_complex_parameter(r, self.p[1])
         backend.beamsplitter(t, r, *reg)
 
 
@@ -1166,12 +1167,7 @@ class S2gate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-
-        if np.any(self.p[1] != 0):
-            z = par_evaluate(p, dtype=np.complex128)
-        else:
-            z = par_evaluate(p)
-
+        z = evaluate_complex_parameter(p, self.p[1])
         backend.two_mode_squeeze(z, *reg)
 
     def _decompose(self, reg, **kwargs):

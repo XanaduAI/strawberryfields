@@ -172,24 +172,26 @@ class TestParameter:
         x.default = 0.0
         assert np.all(par_evaluate(x) == p)
 
+    @pytest.mark.parametrize("dtype", [np.complex128, np.complex64])
     @pytest.mark.parametrize("p", TEST_VALUES)
-    def test_par_evaluate_dtype_numpy(self, p):
+    def test_par_evaluate_dtype_numpy(self, p, dtype):
         """Test the numpy parameter evaluation works when a dtype is provided"""
         x = FreeParameter("x")
         x.val = p
-        res = par_evaluate(x, dtype=np.complex128)
-        assert res.dtype.type is np.complex128
+        res = par_evaluate(x, dtype=dtype)
+        assert res.dtype.type is dtype
 
+    @pytest.mark.parametrize("dtype", [np.complex128, np.complex64])
     @pytest.mark.parametrize("p", TEST_VALUES)
-    def test_par_evaluate_dtype_TF(self, p):
+    def test_par_evaluate_dtype_TF(self, p, dtype):
         """Test the TF parameter evaluation works when a dtype is provided"""
         pytest.importorskip("tensorflow", minversion="2.0")
         import tensorflow as tf
 
         x = FreeParameter("x")
         x.val = tf.Variable(p)
-        res = par_evaluate(x, dtype=np.complex128)
-        assert res.dtype is tf.complex128
+        res = par_evaluate(x, dtype=dtype)
+        assert res.dtype is tf.as_dtype(dtype)
 
     @pytest.mark.parametrize("p", TEST_VALUES)
     @pytest.mark.parametrize("q", TEST_VALUES)
