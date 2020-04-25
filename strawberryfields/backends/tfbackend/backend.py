@@ -130,10 +130,10 @@ class TFBackend(BaseFock):
             self._modemap.reset()
             self.circuit.reset(num_subsystems=self._init_modes, pure=pure, **kwargs)
 
-    def get_cutoff_dim(self):  # TODO: why not a property?
+    def get_cutoff_dim(self):
         return self.circuit.cutoff_dim
 
-    def get_modes(self):  # TODO: why not a property?
+    def get_modes(self):
         # pylint: disable=protected-access
         return [i for i, j in enumerate(self._modemap._map) if j is not None]
 
@@ -224,8 +224,6 @@ class TFBackend(BaseFock):
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
         See :meth:`.BaseBackend.state`.
-
-        Keyword Args:
 
         Returns:
             FockStateTF: state description

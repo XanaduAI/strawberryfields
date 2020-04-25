@@ -4,6 +4,7 @@
 
 * The `"tf"` backend now supports TensorFlow 2.0.
   [(#283)](https://github.com/XanaduAI/strawberryfields/pull/283)
+  [(#320)](https://github.com/XanaduAI/strawberryfields/pull/320)
   [(#323)](https://github.com/XanaduAI/strawberryfields/pull/323)
   [(#361)](https://github.com/XanaduAI/strawberryfields/pull/361)
 

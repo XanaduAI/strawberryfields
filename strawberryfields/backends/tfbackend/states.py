@@ -49,8 +49,6 @@ class FockStateTF(BaseFockState):
         r"""
         Computes the trace of the state. May be numerical or symbolic.
 
-        Args:
-
         Returns:
             float/Tensor: the numerical value, or an unevaluated Tensor object, for the trace.
         """

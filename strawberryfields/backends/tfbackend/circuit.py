@@ -239,7 +239,6 @@ class Circuit:
         self._state_history = []
         self._cache = {}
 
-        # todo vac states only need to be remade if graph or cutoff_dim changes?
         self._make_vac_states(self._cutoff_dim)
         single_mode_vac = self._single_mode_pure_vac if pure else self._single_mode_mixed_vac
         if self._num_modes == 1:
@@ -465,7 +464,6 @@ class Circuit:
         """
         Apply a loss channel  to the specified mode.
         """
-        # in_modes = self._state
         T = tf.cast(T, ops.def_type)
         T = self._maybe_batch(T)
         new_state = ops.loss_channel(
@@ -495,7 +493,7 @@ class Circuit:
             select (Sequence[int]): user-specified measurement value (used instead of random sampling)
 
         Returns:
-            tuple[int]: A list with the Fock number measurement results for each mode.
+            tuple[int]: The Fock number measurement results for each mode.
         """
         # allow integer (non-list) arguments
         # not part of the API, but provided for convenience
@@ -705,7 +703,7 @@ class Circuit:
                 select (float): user-specified measurement value (used instead of random sampling)
 
         Returns:
-            [(float)]: The measured value (or a list of measured values when running in batch mode).
+            float, list[float]: The measured value, or a list of measured values when running in batch mode.
         """
 
         if not isinstance(mode, int):

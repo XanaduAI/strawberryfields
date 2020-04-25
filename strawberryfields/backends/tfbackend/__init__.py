@@ -108,7 +108,7 @@ FockStateTF
 This class represents the quantum state
 returned by the Tensorflow backend. It extends :class:`~.BaseFockState` with additional functionality
 unique to the Tensorflow backend. The primary difference between this class and the Base Fock state
-is that its methods and attributes can return either numerical or symbolic values.
+is that it returns Tensorflow ``Tensor`` objects
 
 .. currentmodule:: strawberryfields.backends.tfbackend.states.FockStateTF
 
