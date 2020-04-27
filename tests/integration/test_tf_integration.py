@@ -301,9 +301,13 @@ class TestTwoModeSymbolic:
 class TestGradient:
     """Integration tests for the gradient computation"""
 
-    def test_displacement_mean_photon_gradient(self, setup_eng, tol):
+    def test_displacement_mean_photon_gradient(self, setup_eng, tol, batch_size):
         """Tests whether the gradient for the mean photon variance
         on a displaced state is correct."""
+        if batch_size is not None:
+            pytest.skip("Cannot calculate gradient in batch mode, as tape.gradient "
+                        "cannot differentiate non-scalar output.")
+
         eng, prog = setup_eng(1)
 
         alpha = prog.params("alpha")
@@ -325,12 +329,16 @@ class TestGradient:
         grad = tape.grad(var, [a])
         assert np.allclose(grad, 2*ALPHA, atol=tol, rtol=0)
 
-    def test_displacement_mean_photon_gradient(self, setup_eng, tol):
+    def test_displacement_mean_photon_gradient(self, setup_eng, tol, batch_size):
         """Tests whether the gradient for the mean photon variance
         on a displaced thermal state is correct:
 
         E(n)=|a|^2+nbar and var(n)=var_th+|a|^2(1+2nbar)
         """
+        if batch_size is not None:
+            pytest.skip("Cannot calculate gradient in batch mode, as tape.gradient "
+                        "cannot differentiate non-scalar output.")
+
         eng, prog = setup_eng(1)
 
         alpha = prog.params("alpha")
@@ -358,11 +366,15 @@ class TestGradient:
         grad_ex = [2 * a * (1 + 2 * n), 2 * n + 1 + 2 * a ** 2]
         assert np.allclose(grad, grad_ex, atol=tol, rtol=0)
 
-    def test_coherent_ket_gradient(self, setup_eng, cutoff, tol, pure):
+    def test_coherent_ket_gradient(self, setup_eng, cutoff, tol, pure, batch_size):
         """Test whether the gradient of the third element (|2>) of the coherent
         state vector is correct."""
         if not pure:
             pytest.skip("Test skipped in mixed state mode")
+
+        if batch_size is not None:
+            pytest.skip("Cannot calculate gradient in batch mode, as tape.gradient "
+                        "cannot differentiate non-scalar output.")
 
         eng, prog = setup_eng(1)
 
@@ -384,9 +396,13 @@ class TestGradient:
         grad_ex = -a * (a**2 - 2) * np.exp(-a**2 / 2) / np.sqrt(2)
         assert np.allclose(grad, grad_ex, atol=tol, rtol=0)
 
-    def test_coherent_dm_gradient(self, setup_eng, cutoff, tol):
+    def test_coherent_dm_gradient(self, setup_eng, cutoff, tol, batch_size):
         """Test whether the gradient of the 3, 3 element of the coherent
         density matrix is correct."""
+        if batch_size is not None:
+            pytest.skip("Cannot calculate gradient in batch mode, as tape.gradient "
+                        "cannot differentiate non-scalar output.")
+
         eng, prog = setup_eng(1)
 
         alpha = prog.params("alpha")
