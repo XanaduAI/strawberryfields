@@ -241,7 +241,7 @@ def cost(weights):
     # the TensorFlow variables.
     mapping = {
         p.name: w
-        for (sf_layer, weights_layer) in zip(sf_params, weights*1.0)
+        for (sf_layer, weights_layer) in zip(sf_params, weights * 1.0)
         for (p, w) in zip(sf_layer, weights_layer)
     }
 
