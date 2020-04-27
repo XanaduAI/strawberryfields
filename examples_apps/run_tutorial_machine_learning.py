@@ -17,7 +17,7 @@ including GPU integration, automatic gradient computation, built-in optimization
 and other machine learning tools.
 
 Basic functionality
-===================
+-------------------
 
 As usual, we can initialize a Strawberry Fields program:
 """
