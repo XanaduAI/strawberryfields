@@ -52,6 +52,11 @@ machine learning. Take a look below to see what you can do!
     :description: :doc:`Optimization and machine learning with TensorFlow </tutorials/tutorial_machine_learning>`
     :figure: ../_static/TF.png
 
+.. customgalleryitem::
+    :tooltip: Quantum state learning
+    :description: :doc:`../tutorials_apps/run_state_learner`
+    :figure: ../_static/StateLearning.gif
+
 .. raw:: html
 
     <div style='clear:both'></div>

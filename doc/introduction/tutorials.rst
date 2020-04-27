@@ -124,7 +124,7 @@ Optimization and machine learning
 
     /tutorials/tutorial_machine_learning
     /gallery/minimizing_correlations/minimizing_correlations
-    /gallery/state_learner/StateLearning
+    ../tutorials_apps/run_state_learner
 
 .. warning::
 
@@ -145,8 +145,8 @@ Optimization and machine learning
 
 .. customgalleryitem::
     :tooltip: Quantum state learning
-    :description: :doc:`/gallery/state_learner/StateLearning`
-    :figure: /gallery/state_learner/StateLearning.gif
+    :description: :doc:`../tutorials_apps/run_state_learner`
+    :figure: /_static/StateLearning.gif
 
 .. customgalleryitem::
     :tooltip: Gate synthesis
