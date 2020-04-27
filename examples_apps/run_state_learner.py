@@ -31,7 +31,7 @@ with respect to some target state.
 .. note::
 
     For more details on the TensorFlow backend in Strawberry Fields, please see
-    :doc:`run_machine_learning`.
+    :ref:`run_machine_learning`.
 
 
 For arbitrary state preparation using optimization, we need to make use
@@ -297,7 +297,7 @@ for i in range(reps):
     gradients = tape.gradient(loss, weights)
     opt.apply_gradients(zip([gradients], [weights]))
 
-    # Prints progress at every 10 reps
+    # Prints progress at every rep
     if i % 1 == 0:
         print("Rep: {} Cost: {:.4f} Fidelity: {:.4f}".format(i, loss, fid))
 
