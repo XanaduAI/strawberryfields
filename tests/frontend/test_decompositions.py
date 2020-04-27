@@ -202,32 +202,6 @@ class TestRectangularDecomposition:
         with pytest.raises(ValueError, match="matrix is not unitary"):
             dec.rectangular(A)
 
-    def test_identity(self, tol):
-        """This test checks the rectangular decomposition for an identity unitary.
-
-        An identity unitary is decomposed via the rectangular decomposition of
-        Clements et al. and the resulting beamsplitters are multiplied together.
-        Test passes if the product matches identity.
-        """
-        # TODO: this test currently uses the T and Ti functions used to compute
-        # Clements as the comparison. Probably should be changed.
-        n = 20
-        U = np.identity(n)
-
-        tilist, diags, tlist = dec.rectangular(U)
-
-        qrec = np.identity(n)
-
-        for i in tilist:
-            qrec = dec.T(*i) @ qrec
-
-        qrec = np.diag(diags) @ qrec
-
-        for i in reversed(tlist):
-            qrec = dec.Ti(*i) @ qrec
-
-        assert np.allclose(U, qrec, atol=tol, rtol=0)
-
     @pytest.mark.parametrize(
         "U",
         [
