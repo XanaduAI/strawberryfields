@@ -35,7 +35,7 @@ machine learning. Take a look below to see what you can do!
 
    ../tutorials_apps/run_tutorial_similarity
    ../tutorials_apps/run_tutorial_points
-   /tutorials/tutorial_machine_learning
+   ../tutorials_apps/run_tutorial_machine_learning
 
 .. customgalleryitem::
     :tooltip: Graphs similarity
@@ -49,7 +49,7 @@ machine learning. Take a look below to see what you can do!
 
 .. customgalleryitem::
     :tooltip: Optimization and machine learning with TensorFlow
-    :description: :doc:`Optimization and machine learning with TensorFlow </tutorials/tutorial_machine_learning>`
+    :description: :doc:`Optimization and machine learning with TensorFlow <../tutorials_apps/run_tutorial_machine_learning>`
     :figure: ../_static/TF.png
 
 .. raw:: html
