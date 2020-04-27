@@ -31,7 +31,7 @@ with respect to some target state.
 .. note::
 
     For more details on the TensorFlow backend in Strawberry Fields, please see
-    :ref:`run_machine_learning`.
+    :ref:`machine_learning_tutorial`.
 
 
 For arbitrary state preparation using optimization, we need to make use

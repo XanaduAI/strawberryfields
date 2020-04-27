@@ -70,7 +70,6 @@ Algorithms
     /tutorials/tutorial_gaussian_boson_sampling
     /tutorials/tutorial_machine_learning
     /gallery/minimizing_correlations/minimizing_correlations
-    /gallery/state_learner/StateLearning
     /gallery/gate_synthesis/GateSynthesis
     /gallery/scattershot-boson-sampling/scattershot-bs
     /gallery/gate_visualisation/GateVisualisation
