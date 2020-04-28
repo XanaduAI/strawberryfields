@@ -142,7 +142,7 @@ Optimization and machine learning
 
 .. customgalleryitem::
     :tooltip: Gate synthesis
-    :description: :doc:`/gallery/gate_synthesis/GateSynthesis`
+    :description: :doc:`../tutorials_apps/run_gate_synthesis`
     :figure: ../_static/GateSynthesis.gif
 
 .. raw:: html
