@@ -326,10 +326,10 @@ class TestGradient:
         assert np.allclose(var, ALPHA**2, atol=tol, rtol=0)
 
         # test the gradient of the variance is correct
-        grad = tape.grad(var, [a])
+        grad = tape.gradient(var, [a])
         assert np.allclose(grad, 2*ALPHA, atol=tol, rtol=0)
 
-    def test_displacement_mean_photon_gradient(self, setup_eng, tol, batch_size):
+    def test_displaced_thermal_mean_photon_gradient(self, setup_eng, tol, batch_size):
         """Tests whether the gradient for the mean photon variance
         on a displaced thermal state is correct:
 
