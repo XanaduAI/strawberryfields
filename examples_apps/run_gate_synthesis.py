@@ -336,21 +336,25 @@ for i in range(reps):
         eng.reset()
 
     # one repetition of the optimization
-    with tf.GradientTape():
-        cost_val, overlaps_val, ket_val = cost(weights)
+    with tf.GradientTape() as tape:
+        loss, overlaps_val, ket_val = cost(weights)
 
     # calculate the mean overlap
     # This gives us an idea of how the optimization is progressing
     mean_overlap_val = np.mean(overlaps_val)
 
     # store cost at each step
-    cost_progress.append(cost_val)
+    cost_progress.append(loss)
     overlap_progress.append(overlaps_val)
+
+    # one repetition of the optimization
+    gradients = tape.gradient(loss, weights)
+    opt.apply_gradients(zip([gradients], [weights]))
 
     # Prints progress at every 100 reps
     if i % 1 == 0:
         # print progress
-        print("Rep: {} Cost: {:.4f} Mean overlap: {:.4f}".format(i, cost_val, mean_overlap_val))
+        print("Rep: {} Cost: {:.4f} Mean overlap: {:.4f}".format(i, loss, mean_overlap_val))
 
 
 ######################################################################
