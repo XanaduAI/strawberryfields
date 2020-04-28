@@ -255,7 +255,7 @@ class TestTwoModeSymbolic:
 
     def test_eval_true_state_all_fock_probs(self, setup_eng, cutoff, batch_size, tol):
         """Tests whether the Fock-basis probabilities of the state return
-        the a Tensor with the correct value."""
+        a Tensor with the correct value."""
         eng, prog = setup_eng(2)
 
         with prog.context as q:
