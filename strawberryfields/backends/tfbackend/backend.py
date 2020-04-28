@@ -29,7 +29,7 @@ from .states import FockStateTF
 
 class TFBackend(BaseFock):
     r"""Implements a simulation of quantum optical circuits in a truncated
-    Fock basis using `TensorFlow <http://www.numpy.org/>`_, returning a :class:`~.FockStateTF`
+    Fock basis using `TensorFlow <http://tensorflow.org/>`_, returning a :class:`~.FockStateTF`
     state object.
     """
 
