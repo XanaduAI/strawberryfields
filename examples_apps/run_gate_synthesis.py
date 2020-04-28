@@ -24,9 +24,9 @@ of variational quantum circuits constructed using Strawberry Fields. In
 this approach, we fix a circuit architecture where the states, gates,
 and/or measurements may have learnable parameters :math:`\vec{\theta}`
 associated with them. We then define a loss function based on the output
-state of this circuit. In this case, we define a loss function such that
-the fidelity of the output state of the variational circuit is maximized
-with respect to some target state.
+state of this circuit. In this case, we define a loss function such that the
+action of the variational quantum circuit is close to some specified target
+unitary.
 
 .. note::
 
@@ -93,6 +93,7 @@ Some other optional hyperparameters include:
    parameters), and *active* parameters (those that introduce or remove
    energy from the system when changed).
 """
+import numpy as np
 
 import strawberryfields as sf
 from strawberryfields.ops import *
@@ -108,7 +109,10 @@ gate_cutoff = 4
 depth = 25
 
 # Number of steps in optimization routine performing gradient descent
-reps = 1000
+reps = 200
+
+# Learning rate
+lr = 0.05
 
 # Standard deviation of initial parameters
 passive_sd = 0.1
@@ -137,27 +141,61 @@ active_sd = 0.001
 import tensorflow as tf
 
 # squeeze gate
-sq_r = tf.Variable(tf.random_normal(shape=[depth], stddev=active_sd))
-sq_phi = tf.Variable(tf.random_normal(shape=[depth], stddev=passive_sd))
+sq_r = tf.random.normal(shape=[depth], stddev=active_sd)
+sq_phi = tf.random.normal(shape=[depth], stddev=passive_sd)
 
 # displacement gate
-d_r = tf.Variable(tf.random_normal(shape=[depth], stddev=active_sd))
-d_phi = tf.Variable(tf.random_normal(shape=[depth], stddev=passive_sd))
+d_r = tf.random.normal(shape=[depth], stddev=active_sd)
+d_phi = tf.random.normal(shape=[depth], stddev=passive_sd)
 
 # rotation gates
-r1 = tf.Variable(tf.random_normal(shape=[depth], stddev=passive_sd))
-r2 = tf.Variable(tf.random_normal(shape=[depth], stddev=passive_sd))
+r1 = tf.random.normal(shape=[depth], stddev=passive_sd)
+r2 = tf.random.normal(shape=[depth], stddev=passive_sd)
 
 # kerr gate
-kappa = tf.Variable(tf.random_normal(shape=[depth], stddev=active_sd))
+kappa = tf.random.normal(shape=[depth], stddev=active_sd)
 
 
 ######################################################################
-# For convenience, we store the TensorFlow variables representing the
-# parameters in a list:
+# For convenience, we store the TensorFlow variables representing the weights as
+# a tensor:
+
+weights = tf.convert_to_tensor([r1, sq_r, sq_phi, r2, d_r, d_phi, kappa])
+weights = tf.Variable(tf.transpose(weights))
+
+######################################################################
+# Since we have a depth of 25 (so 25 layers), and each layer takes
+# 7 different types of parameters, the final shape of our weights
+# array should be :math:`\text{depth}\times 7` or ``(25, 7)``:
+
+print(weights.shape)
+
+
+######################################################################
+# Constructing the circuit
+# ------------------------
+# We can now construct the corresponding single-mode Strawberry Fields program:
 #
 
-params = [r1, sq_r, sq_phi, r2, d_r, d_phi, kappa]
+# Single-mode Strawberry Fields program
+prog = sf.Program(1)
+
+# Create the 7 Strawberry Fields free parameters for each layer
+sf_params = []
+names = ["r1", "sq_r", "sq_phi", "r2", "d_r", "d_phi", "kappa"]
+
+for i in range(depth):
+    # For the ith layer, generate parameter names "r1_i", "sq_r_i", etc.
+    sf_params_names = ["{}_{}".format(n, i) for n in names]
+    # Create the parameters, and append them to our list ``sf_params``.
+    sf_params.append(prog.params(*sf_params_names))
+
+######################################################################
+# ``sf_params`` is now a nested list of shape ``(depth, 7)``, matching
+# the shape of ``weights``.
+
+sf_params = np.array(sf_params)
+print(sf_params.shape)
 
 ######################################################################
 # Now, we can create a function to define the :math:`i`\ th layer, acting
@@ -166,29 +204,14 @@ params = [r1, sq_r, sq_phi, r2, d_r, d_phi, kappa]
 # Strawberry Fields Program context
 
 # layer architecture
+@operation(1)
 def layer(i, q):
-    Rgate(r1[i]) | q
-    Sgate(sq_r[i], sq_phi[i]) | q
-    Rgate(r2[i]) | q
-    Dgate(d_r[i], d_phi[i]) | q
-    Kgate(kappa[i]) | q
-
+    Rgate(sf_params[i][0]) | q
+    Sgate(sf_params[i][1], sf_params[i][2]) | q
+    Rgate(sf_params[i][3]) | q
+    Dgate(sf_params[i][4], sf_params[i][5]) | q
+    Kgate(sf_params[i][6]) | q
     return q
-
-
-######################################################################
-# Constructing the circuit
-# ------------------------
-#
-# Now that we have defined our gate parameters and our layer structure, we
-# can import Strawberry Fields and construct our variational quantum
-# circuit. Note that, to ensure the TensorFlow backend computes the
-# circuit symbolically, we specify ``eval=False``.
-#
-
-import strawberryfields as sf
-from strawberryfields.ops import *
-
 
 ######################################################################
 # We must also specify the input states to the variational quantum circuit
@@ -198,35 +221,14 @@ from strawberryfields.ops import *
 # subspace.
 #
 
-import numpy as np
 in_ket = np.zeros([gate_cutoff, cutoff])
 np.fill_diagonal(in_ket, 1)
-
-# Create program and engine
-prog = sf.Program(1)
-eng = sf.Engine('tf', backend_options={"cutoff_dim": cutoff, "batch_size": gate_cutoff})
 
 # Apply circuit of layers with corresponding depth
 with prog.context as q:
     Ket(in_ket) | q
     for k in range(depth):
         layer(k, q[0])
-
-# Run engine
-state = eng.run(prog, eval=False}).state
-ket = state.ket()
-
-
-######################################################################
-# Here, we use the ``batch_size`` argument to perform the optimization in
-# parallel - each batch calculates the variational quantum circuit acting
-# on a different input Fock state: :math:`U(\vec{\theta}) | n\rangle`.
-#
-# Note that the output state vector is an unevaluated tensor:
-#
-
-ket
-
 
 ######################################################################
 # Performing the optimization
@@ -239,20 +241,22 @@ ket
 # the overlaps in the Fock basis between the target and learnt unitaries
 # via the following cost function:
 #
-# .. math:: C(\vec{\theta}) = \frac{1}{d}\sum_{i=0}^{d-1} \left| \langle i \mid V^\dagger U(\vec{\theta})\mid 0\rangle - 1\right|
+# .. math:: C(\vec{\theta}) = \frac{1}{d}\sum_{i=0}^{d-1} \left| \langle i \mid
+# V^\dagger U(\vec{\theta})\mid 0\rangle - 1\right|
 #
 # where :math:`V` is the target unitary, :math:`U(\vec{\theta})` is the
 # learnt unitary, and :math:`d` is the gate cutoff. Note that this is a
 # generalization of state preparation to more than one input-output
 # relation.
 #
-# For our target unitary, lets use Strawberry Fields to generate a 4x4
+# For our target unitary, let's use Strawberry Fields to generate a 4x4
 # random unitary:
 #
 
 from strawberryfields.utils import random_interferometer
 target_unitary = np.identity(cutoff, dtype=np.complex128)
 target_unitary[:gate_cutoff, :gate_cutoff] = random_interferometer(4)
+print(target_unitary)
 
 
 ######################################################################
@@ -260,11 +264,16 @@ target_unitary[:gate_cutoff, :gate_cutoff] = random_interferometer(4)
 # defining our hyperparameters.
 #
 
+######################################################################
+# Instantiate the Strawberry Fields TensorFlow backend.
+#
+
+eng = sf.Engine('tf', backend_options={"cutoff_dim": cutoff, "batch_size": gate_cutoff})
 
 ######################################################################
-# Using this target state, we calculate the cost function we would like to
-# minimize. We must use TensorFlow functions to manipulate this data, as
-# were are working with symbolic variables!
+# Here, we use the ``batch_size`` argument to perform the optimization in
+# parallel - each batch calculates the variational quantum circuit acting
+# on a different input Fock state: :math:`U(\vec{\theta}) | n\rangle`.
 #
 
 in_state = np.arange(gate_cutoff)
@@ -274,12 +283,31 @@ in_state = np.arange(gate_cutoff)
 target_kets = np.array([target_unitary[:, i] for i in in_state])
 target_kets = tf.constant(target_kets, dtype=tf.complex64)
 
-# overlaps
-overlaps = tf.real(tf.einsum('bi,bi->b', tf.conj(target_kets), ket))
-mean_overlap = tf.reduce_mean(overlaps)
+######################################################################
+# Using this target unitary, we define the cost function we would like to
+# minimize. We must use TensorFlow functions to manipulate this data, as well
+# as a ``GradientTape`` to keep track of the corresponding gradients!
+#
+def cost(weights):
+    # Create a dictionary mapping from the names of the Strawberry Fields
+    # free parameters to the TensorFlow weight values.
+    mapping = {p.name: w for p, w in zip(sf_params.flatten(), tf.reshape(weights, [-1]))}
 
-# cost
-cost = tf.reduce_sum(tf.abs(overlaps - 1))
+    # Run engine
+    state = eng.run(prog, args=mapping).state
+
+    # Extract the statevector
+    ket = state.ket()
+
+    # overlaps
+    overlaps = tf.math.real(tf.einsum('bi,bi->b', tf.math.conj(target_kets), ket))
+    mean_overlap = tf.reduce_mean(overlaps)
+
+    # Objective function to minimize
+    cost = tf.reduce_sum(tf.abs(overlaps - 1))
+
+    return cost, overlaps, ket
+
 
 
 ######################################################################
@@ -289,16 +317,11 @@ cost = tf.reduce_sum(tf.abs(overlaps - 1))
 #
 
 # Using Adam algorithm for optimization
-optimiser = tf.train.AdamOptimizer()
-min_cost = optimiser.minimize(cost)
-
-# Begin TensorFlow session
-session = tf.Session()
-session.run(tf.global_variables_initializer())
+opt = tf.keras.optimizers.Adam(learning_rate=lr)
 
 
 ######################################################################
-# We then loop over all repetitions, storing the best predicted fidelity
+# We then loop over all repetitions, storing the best predicted overlap
 # value.
 #
 
@@ -308,9 +331,13 @@ cost_progress = []
 # Run optimization
 for i in range(reps):
 
+    # reset the engine if it has already been executed
+    if eng.run_progs:
+        eng.reset()
+
     # one repetition of the optimization
-    _, cost_val, overlaps_val, ket_val, params_val = session.run(
-        [min_cost, cost, overlaps, ket, params])
+    with tf.GradientTape():
+        cost_val, overlaps_val, ket_val = cost(weights)
 
     # calculate the mean overlap
     # This gives us an idea of how the optimization is progressing
@@ -321,7 +348,7 @@ for i in range(reps):
     overlap_progress.append(overlaps_val)
 
     # Prints progress at every 100 reps
-    if i % 100 == 0:
+    if i % 1 == 0:
         # print progress
         print("Rep: {} Cost: {:.4f} Mean overlap: {:.4f}".format(i, cost_val, mean_overlap_val))
 
