@@ -7,11 +7,9 @@ preparation results presented in `"Machine learning method for state
 preparation and gate synthesis on photonic quantum
 computers" <https://arxiv.org/abs/1807.10781>`__.
 
-We use the continuous-variable (CV) quantum optical circuit package
-`Strawberry Fields <https://github.com/XanaduAI/strawberryfields>`__,
-and in particular its TensorFlow backend, to perform quantum circuit
-optimization. By leveraging Tensorflow, we have access to a number of
-additional funtionalities, including GPU integration, automatic gradient
+This tutorial uses the TensorFlow backend of Strawberry Fields, giving us access
+to a number of
+additional functionalities including: GPU integration, automatic gradient
 computation, built-in optimization algorithms, and other machine
 learning tools.
 
@@ -19,7 +17,7 @@ Variational quantum circuits
 ----------------------------
 
 A key element of machine learning is optimization. We can use
-Tensorflow's automatic differentiation tools to optimize the parameters
+TensorFlow's automatic differentiation tools to optimize the parameters
 of variational quantum circuits constructed using Strawberry Fields. In
 this approach, we fix a circuit architecture where the states, gates,
 and/or measurements may have learnable parameters :math:`\vec{\theta}`
@@ -76,10 +74,10 @@ First, we must define the **hyperparameters** of our layer structure:
    operations in this truncated Fock space when performing the
    optimization.
 
--  ``depth``: The number of layer ansatz in our variational quantum
+-  ``depth``: The number of layers in our variational quantum
    circuit. As a general rule, increasing the number of layers (and
    thus, the number of parameters we are optimizing over) increases the
-   optimizers chance of finding a reasonable local minimum in the
+   optimizer's chance of finding a reasonable local minimum in the
    optimization landscape.
 
 -  ``reps``: the number of steps in the optimization routine performing
@@ -119,7 +117,8 @@ active_sd = 0.001
 # -----------------------------------------
 #
 # We use TensorFlow to create the variables corresponding to the gate
-# parameters. Note that each variable has shape ``[depth]``, with each
+# parameters. Note that we focus on a single mode circuit where
+# each variable has shape ``(depth,)``, with each
 # individual element representing the gate parameter in layer :math:`i`.
 
 import tensorflow as tf
@@ -158,14 +157,15 @@ prog = sf.Program(1)
 sf_params = []
 names = ["r1", "sq_r", "sq_phi", "r2", "d_r", "d_phi", "kappa"]
 
-for k in range(depth):
-    sf_params_names = ["{}_{}".format(n, k) for n in names]
+for i in range(depth):
+    sf_params_names = ["{}_{}".format(n, i) for n in names]
     sf_params.append(prog.params(*sf_params_names))
 
 ######################################################################
 # Now, we can create a function to define the :math:`i`\ th layer, acting
-# on qumode ``q``. This allows us to simply call this function in a loop
-# later on when we build our circuit.
+# on qumode ``q``. We add the :class:`~.utils.operation` decorator so that the layer can be used
+# as a single operation when constructing our circuit within the usual
+# Strawberry Fields Program context
 
 # layer architecture
 @operation(1)
@@ -262,8 +262,8 @@ def cost(weights):
 
 ######################################################################
 # Now that the cost function is defined, we can define and run the
-# optimization as well as the quantum engine. Below, we choose the Adam
-# optimizer that is built into TensorFlow, as well as instantiating
+# optimization. Below, we choose the Adam
+# optimizer that is built into TensorFlow, and instantiate
 # the Strawberry Fields TensorFlow backend.
 
 opt = tf.keras.optimizers.Adam(learning_rate=lr)
@@ -275,7 +275,6 @@ eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
 
 fid_progress = []
 best_fid = 0
-
 
 for i in range(reps):
     # reset the engine if it has already been executed
@@ -293,7 +292,7 @@ for i in range(reps):
         best_fid = fid.numpy()
         learnt_state = ket.numpy()
 
-    # one repitition of the optimization
+    # one repetition of the optimization
     gradients = tape.gradient(loss, weights)
     opt.apply_gradients(zip([gradients], [weights]))
 
