@@ -4,19 +4,17 @@ Quantum gate synthesis
 
 *Author: Josh Izaac*
 
-This notebook works through the process used to produce the gate
+This demonstration works through the process used to produce the gate
 synthesis results presented in `“Machine learning method for state
 preparation and gate synthesis on photonic quantum
 computers” <https://arxiv.org/abs/1807.10781>`__.
 
-We use the continuous-variable (CV) quantum optical circuit package
-`Strawberry Fields <https://github.com/XanaduAI/strawberryfields>`__,
-and in particular its TensorFlow backend, to perform quantum circuit
-optimization. By leveraging Tensorflow, we have access to a number of
-additional funtionalities, including GPU integration, automatic gradient
-computation, built-in optimization algorithms, and other machine
-learning tools.
-
+We use the continuous-variable (CV) quantum optical circuit package `Strawberry
+Fields <https://github.com/XanaduAI/strawberryfields>`__, and in particular its
+TensorFlow backend, to perform quantum circuit optimization. By leveraging
+TensorFlow, we have access to a number of additional functionalities, including
+GPU integration, automatic gradient computation, built-in optimization
+algorithms, and other machine learning tools.
 """
 
 
@@ -28,7 +26,7 @@ learning tools.
 
 ######################################################################
 # A key element of machine learning is optimization. We can use
-# Tensorflow’s automatic differentiation tools to optimize the parameters
+# TensorFlow’s automatic differentiation tools to optimize the parameters
 # of variational quantum circuits constructed using Strawberry Fields. In
 # this approach, we fix a circuit architecture where the states, gates,
 # and/or measurements may have learnable parameters :math:`\vec{\theta}`
@@ -321,7 +319,7 @@ cost = tf.reduce_sum(tf.abs(overlaps - 1))
 optimiser = tf.train.AdamOptimizer()
 min_cost = optimiser.minimize(cost)
 
-# Begin Tensorflow session
+# Begin TensorFlow session
 session = tf.Session()
 session.run(tf.global_variables_initializer())
 
@@ -460,4 +458,5 @@ np.max(np.abs(params_val[1]))
 # [2] Killoran, N., Bromley, T. R., Arrazola, J. M., Schuld, M., Quesada,
 # N., & Lloyd, S. “Continuous-variable quantum neural networks.” arXiv,
 # 2018. arXiv:1806.06871
-# 
+#
+
