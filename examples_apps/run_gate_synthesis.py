@@ -66,7 +66,6 @@ Here,
    :math:`\mathcal{K}(\kappa_i)=e^{i\kappa_i\hat{n}^2}` of strength
    :math:`\kappa_i`.
 
-
 Hyperparameters
 ---------------
 
@@ -95,6 +94,10 @@ Some other optional hyperparameters include:
    energy from the system when changed).
 """
 
+import strawberryfields as sf
+from strawberryfields.ops import *
+from strawberryfields.utils import operation
+
 # Cutoff dimension
 cutoff = 10
 
@@ -119,17 +122,17 @@ active_sd = 0.001
 # :math:`d\leq D`, where :math:`D` is the overall simulation Fock basis
 # cutoff. As a result, we restrict the gate synthesis optimization to only
 # :math:`d` input-output relations.
-# 
+#
 
 
 ######################################################################
 # The layer parameters :math:`\vec{\theta}`
 # -----------------------------------------
-# 
+#
 # We use TensorFlow to create the variables corresponding to the gate
 # parameters. Note that each variable has shape ``(depth,)``, with each
 # individual element representing the gate parameter in layer :math:`i`.
-# 
+#
 
 import tensorflow as tf
 
@@ -152,7 +155,7 @@ kappa = tf.Variable(tf.random_normal(shape=[depth], stddev=active_sd))
 ######################################################################
 # For convenience, we store the TensorFlow variables representing the
 # parameters in a list:
-# 
+#
 
 params = [r1, sq_r, sq_phi, r2, d_r, d_phi, kappa]
 
@@ -169,19 +172,19 @@ def layer(i, q):
     Rgate(r2[i]) | q
     Dgate(d_r[i], d_phi[i]) | q
     Kgate(kappa[i]) | q
-    
+
     return q
 
 
 ######################################################################
 # Constructing the circuit
 # ------------------------
-# 
+#
 # Now that we have defined our gate parameters and our layer structure, we
 # can import Strawberry Fields and construct our variational quantum
 # circuit. Note that, to ensure the TensorFlow backend computes the
 # circuit symbolically, we specify ``eval=False``.
-# 
+#
 
 import strawberryfields as sf
 from strawberryfields.ops import *
@@ -193,7 +196,7 @@ from strawberryfields.ops import *
 # allowing us to optimize the circuit parameters to learn the target
 # unitary acting on all input Fock states within the :math:`d`-dimensional
 # subspace.
-# 
+#
 
 import numpy as np
 in_ket = np.zeros([gate_cutoff, cutoff])
@@ -218,9 +221,9 @@ ket = state.ket()
 # Here, we use the ``batch_size`` argument to perform the optimization in
 # parallel - each batch calculates the variational quantum circuit acting
 # on a different input Fock state: :math:`U(\vec{\theta}) | n\rangle`.
-# 
+#
 # Note that the output state vector is an unevaluated tensor:
-# 
+#
 
 ket
 
@@ -228,24 +231,24 @@ ket
 ######################################################################
 # Performing the optimization
 # ---------------------------
-# 
+#
 # :math:`\newcommand{ket}[1]{\left|#1\right\rangle}` With the Strawberry
 # Fields TensorFlow backend calculating the resulting state of the circuit
 # symbolically, we can use TensorFlow to optimize the gate parameters to
 # minimize the cost function we specify. With gate synthesis, we minimize
 # the overlaps in the Fock basis between the target and learnt unitaries
 # via the following cost function:
-# 
+#
 # .. math:: C(\vec{\theta}) = \frac{1}{d}\sum_{i=0}^{d-1} \left| \langle i \mid V^\dagger U(\vec{\theta})\mid 0\rangle - 1\right|
-# 
+#
 # where :math:`V` is the target unitary, :math:`U(\vec{\theta})` is the
 # learnt unitary, and :math:`d` is the gate cutoff. Note that this is a
 # generalization of state preparation to more than one input-output
 # relation.
-# 
+#
 # For our target unitary, lets use Strawberry Fields to generate a 4x4
 # random unitary:
-# 
+#
 
 from strawberryfields.utils import random_interferometer
 target_unitary = np.identity(cutoff, dtype=np.complex128)
@@ -255,14 +258,14 @@ target_unitary[:gate_cutoff, :gate_cutoff] = random_interferometer(4)
 ######################################################################
 # This matches the gate cutoff of :math:`d=4` that we chose above when
 # defining our hyperparameters.
-# 
+#
 
 
 ######################################################################
 # Using this target state, we calculate the cost function we would like to
 # minimize. We must use TensorFlow functions to manipulate this data, as
 # were are working with symbolic variables!
-# 
+#
 
 in_state = np.arange(gate_cutoff)
 
@@ -283,7 +286,7 @@ cost = tf.reduce_sum(tf.abs(overlaps - 1))
 # Now that the cost function is defined, we can define and run the
 # optimization. Below, we choose the Adam optimizer that is built into
 # TensorFlow.
-# 
+#
 
 # Using Adam algorithm for optimization
 optimiser = tf.train.AdamOptimizer()
@@ -297,7 +300,7 @@ session.run(tf.global_variables_initializer())
 ######################################################################
 # We then loop over all repetitions, storing the best predicted fidelity
 # value.
-# 
+#
 
 overlap_progress = []
 cost_progress = []
@@ -308,7 +311,7 @@ for i in range(reps):
     # one repetition of the optimization
     _, cost_val, overlaps_val, ket_val, params_val = session.run(
         [min_cost, cost, overlaps, ket, params])
-    
+
     # calculate the mean overlap
     # This gives us an idea of how the optimization is progressing
     mean_overlap_val = np.mean(overlaps_val)
@@ -326,12 +329,12 @@ for i in range(reps):
 ######################################################################
 # Results and visualisation
 # -------------------------
-# 
+#
 
 
 ######################################################################
 # Plotting the cost vs. optimization step:
-# 
+#
 
 from matplotlib import pyplot as plt
 # %matplotlib inline
@@ -347,7 +350,7 @@ plt.xlabel('Step');
 ######################################################################
 # We can use matrix plots to plot the real and imaginary components of the
 # target and learnt unitary.
-# 
+#
 
 learnt_unitary = ket_val.T[:gate_cutoff, :gate_cutoff]
 target_unitary = target_unitary[:gate_cutoff, :gate_cutoff]
@@ -367,24 +370,24 @@ ax[3].set_xlabel(r'$\mathrm{Im}(U)$');
 ######################################################################
 # Process fidelity
 # ----------------
-# 
+#
 
 
 ######################################################################
 # The process fidelity between the two unitaries is defined by
-# 
+#
 # .. math:: F_e  = \left| \left\langle \Psi(V) \mid \Psi(U)\right\rangle\right|^2
-# 
+#
 # where:
-# 
+#
 # -  :math:`\left|\Psi(V)\right\rangle` is the action of :math:`V` on one
 #    half of a maximally entangled state :math:`\left|\phi\right\rangle`:
-# 
+#
 # .. math:: \left|\Psi(V)\right\rangle = (I\otimes V)\left|\phi\right\rangle,
-# 
+#
 # -  :math:`V` is the target unitary,
 # -  :math:`U` the learnt unitary.
-# 
+#
 
 I = np.identity(gate_cutoff)
 phi = I.flatten()/np.sqrt(gate_cutoff)
@@ -398,18 +401,18 @@ np.abs(np.vdot(psiV, psiU))**2
 # Therefore, after 1000 repetitions, the learnt unitary synthesized via a
 # variational quantum circuit has a process fidelity of 95.98% to the
 # target unitary.
-# 
+#
 
 
 ######################################################################
 # Circuit parameters
 # ------------------
-# 
+#
 # We can also query the optimal variational circuit parameters
 # :math:`\vec{\theta}` that resulted in the learnt unitary. For example,
 # to determine the maximum squeezing magnitude in the variational quantum
 # circuit:
-# 
+#
 
 np.max(np.abs(params_val[1]))
 
@@ -417,14 +420,14 @@ np.max(np.abs(params_val[1]))
 ######################################################################
 # References
 # ----------
-# 
+#
 # [1] Juan Miguel Arrazola, Thomas R. Bromley, Josh Izaac, Casey R. Myers,
 # Kamil Brádler, and Nathan Killoran. Machine learning method for state
 # preparation and gate synthesis on photonic quantum computers. `Quantum
 # Science and Technology, 4
 # 024004 <https://iopscience.iop.org/article/10.1088/2058-9565/aaf59e>`__,
 # (2019).
-# 
+#
 # [2] Killoran, N., Bromley, T. R., Arrazola, J. M., Schuld, M., Quesada,
 # N., & Lloyd, S. “Continuous-variable quantum neural networks.” arXiv,
 # 2018. arXiv:1806.06871
