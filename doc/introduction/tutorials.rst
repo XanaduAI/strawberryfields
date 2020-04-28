@@ -70,7 +70,6 @@ Algorithms
     /tutorials/tutorial_gaussian_boson_sampling
     /gallery/minimizing_correlations/minimizing_correlations
     /gallery/state_learner/StateLearning
-    /gallery/gate_synthesis/GateSynthesis
     /gallery/scattershot-boson-sampling/scattershot-bs
     /gallery/gate_visualisation/GateVisualisation
 
@@ -124,6 +123,7 @@ Optimization and machine learning
     ../tutorials_apps/run_tutorial_machine_learning
     /gallery/minimizing_correlations/minimizing_correlations
     /gallery/state_learner/StateLearning
+    ../tutorials_apps/run_gate_synthesis
 
 .. customgalleryitem::
     :tooltip: Optimization and machine learning with TensorFlow
@@ -143,7 +143,7 @@ Optimization and machine learning
 .. customgalleryitem::
     :tooltip: Gate synthesis
     :description: :doc:`/gallery/gate_synthesis/GateSynthesis`
-    :figure: /gallery/gate_synthesis/GateSynthesis.gif
+    :figure: ../_static/GateSynthesis.gif
 
 .. raw:: html
 
