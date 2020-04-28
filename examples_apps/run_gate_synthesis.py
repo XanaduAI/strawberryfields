@@ -9,12 +9,10 @@ synthesis results presented in `“Machine learning method for state
 preparation and gate synthesis on photonic quantum
 computers” <https://arxiv.org/abs/1807.10781>`__.
 
-We use the continuous-variable (CV) quantum optical circuit package `Strawberry
-Fields <https://github.com/XanaduAI/strawberryfields>`__, and in particular its
-TensorFlow backend, to perform quantum circuit optimization. By leveraging
-TensorFlow, we have access to a number of additional functionalities, including
-GPU integration, automatic gradient computation, built-in optimization
-algorithms, and other machine learning tools.
+This tutorial uses the TensorFlow backend of Strawberry Fields, giving us
+access to a number of additional functionalities including: GPU integration,
+automatic gradient computation, built-in optimization algorithms, and other
+machine learning tools.
 """
 
 
@@ -156,7 +154,7 @@ active_sd = 0.001
 # -----------------------------------------
 # 
 # We use TensorFlow to create the variables corresponding to the gate
-# parameters. Note that each variable has shape ``[depth]``, with each
+# parameters. Note that each variable has shape ``(depth,)``, with each
 # individual element representing the gate parameter in layer :math:`i`.
 # 
 
@@ -185,12 +183,11 @@ kappa = tf.Variable(tf.random_normal(shape=[depth], stddev=active_sd))
 
 params = [r1, sq_r, sq_phi, r2, d_r, d_phi, kappa]
 
-
 ######################################################################
 # Now, we can create a function to define the :math:`i`\ th layer, acting
-# on qumode ``q``. This allows us to simply call this function in a loop
-# later on when we build our circuit.
-# 
+# on qumode ``q``. We add the :class:`~.utils.operation` decorator so that the layer can be used
+# as a single operation when constructing our circuit within the usual
+# Strawberry Fields Program context
 
 # layer architecture
 def layer(i, q):
