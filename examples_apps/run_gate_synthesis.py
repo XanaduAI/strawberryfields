@@ -1,4 +1,4 @@
-"""
+r"""
 Quantum gate synthesis
 ======================
 
@@ -13,114 +13,87 @@ This tutorial uses the TensorFlow backend of Strawberry Fields, giving us
 access to a number of additional functionalities including: GPU integration,
 automatic gradient computation, built-in optimization algorithms, and other
 machine learning tools.
+
+
+Variational quantum circuits
+----------------------------
+
+A key element of machine learning is optimization. We can use
+TensorFlow's automatic differentiation tools to optimize the parameters
+of variational quantum circuits constructed using Strawberry Fields. In
+this approach, we fix a circuit architecture where the states, gates,
+and/or measurements may have learnable parameters :math:`\vec{\theta}`
+associated with them. We then define a loss function based on the output
+state of this circuit. In this case, we define a loss function such that
+the fidelity of the output state of the variational circuit is maximized
+with respect to some target state.
+
+.. note::
+
+    For more details on the TensorFlow backend in Strawberry Fields, please see
+    :ref:`machine_learning_tutorial`.
+
+For arbitrary gate synthesis using optimization, we need to make use of
+a quantum circuit with a layer structure that is **universal** - that
+is, by ‘stacking’ the layers, we can guarantee that we can produce *any*
+CV state with at-most polynomial overhead. Therefore, the architecture
+we choose must consist of layers with each layer containing
+parameterized Gaussian *and* non-Gaussian gates. **The non-Gaussian
+gates provide both the nonlinearity and the universality of the model.**
+To this end, we employ the CV quantum neural network architecture
+described below:
+
+.. figure:: https://i.imgur.com/NEsaVIX.png
+   :alt: layer
+
+   layer
+
+Here,
+
+-  :math:`\mathcal{U}_i(\theta_i,\phi_i)` is an N-mode linear optical
+   interferometer composed of two-mode beamsplitters
+   :math:`BS(\theta,\phi)` and single-mode rotation gates
+   :math:`R(\phi)=e^{i\phi\hat{n}}`,
+
+-  :math:`\mathcal{D}(\alpha_i)` are single mode displacements in the
+   phase space by complex value :math:`\alpha_i`,
+
+-  :math:`\mathcal{S}(r_i, \phi_i)` are single mode squeezing operations
+   of magnitude :math:`r_i` and phase :math:`\phi_i`, and
+
+-  :math:`\Phi(\lambda_i)` is a single mode non-Gaussian operation, in
+   this case chosen to be the Kerr interaction
+   :math:`\mathcal{K}(\kappa_i)=e^{i\kappa_i\hat{n}^2}` of strength
+   :math:`\kappa_i`.
+
+
+Hyperparameters
+---------------
+
+First, we must define the **hyperparameters** of our layer structure:
+
+-  ``cutoff``: the simulation Fock space truncation we will use in the
+   optimization. The TensorFlow backend will perform numerical
+   operations in this truncated Fock space when performing the
+   optimization.
+
+-  ``depth``: The number of layers in our variational quantum
+   circuit. As a general rule, increasing the number of layers (and
+   thus, the number of parameters we are optimizing over) increases the
+   optimizer's chance of finding a reasonable local minimum in the
+   optimization landscape.
+
+-  ``reps``: the number of steps in the optimization routine performing
+   gradient descent
+
+Some other optional hyperparameters include:
+
+-  The standard deviation of initial parameters. Note that we make a
+   distinction between the standard deviation of *passive* parameters
+   (those that preserve photon number when changed, such as phase
+   parameters), and *active* parameters (those that introduce or remove
+   energy from the system when changed).
 """
-
-
-######################################################################
-# Variational quantum circuits
-# ----------------------------
-# 
-
-
-######################################################################
-# A key element of machine learning is optimization. We can use
-# TensorFlow’s automatic differentiation tools to optimize the parameters
-# of variational quantum circuits constructed using Strawberry Fields. In
-# this approach, we fix a circuit architecture where the states, gates,
-# and/or measurements may have learnable parameters :math:`\vec{\theta}`
-# associated with them. We then define a loss function based on the output
-# state of this circuit. In this case, we define a loss function such that
-# the action of the variational quantum circuit is close to some specified
-# target unitary. For more details on the TensorFlow backend in Strawberry
-# Fields, please see the `Strawberry Fields
-# documentation <http://strawberryfields.readthedocs.io/en/stable/tutorials/tutorial_machine_learning.html>`__.
-# 
-# For arbitrary gate synthesis using optimization, we need to make use of
-# a quantum circuit with a layer structure that is **universal** - that
-# is, by ‘stacking’ the layers, we can guarantee that we can produce *any*
-# CV state with at-most polynomial overhead. Therefore, the architecture
-# we choose must consist of layers with each layer containing
-# parameterized Gaussian *and* non-Gaussian gates. **The non-Gaussian
-# gates provide both the nonlinearity and the universality of the model.**
-# To this end, we employ the CV quantum neural network architecture
-# described below:
-# 
-# .. figure:: https://i.imgur.com/NEsaVIX.png
-#    :alt: layer
-# 
-#    layer
-# 
-# Here,
-# 
-# -  :math:`\mathcal{U}_i(\theta_i,\phi_i)` is an N-mode linear optical
-#    interferometer composed of two-mode beamsplitters
-#    :math:`BS(\theta,\phi)` and single-mode rotation gates
-#    :math:`R(\phi)=e^{i\phi\hat{n}}`,
-# 
-# -  :math:`\mathcal{D}(\alpha_i)` are single mode displacements in the
-#    phase space by complex value :math:`\alpha_i`,
-# 
-# -  :math:`\mathcal{S}(r_i, \phi_i)` are single mode squeezing operations
-#    of magnitude :math:`r_i` and phase :math:`\phi_i`, and
-# 
-# -  :math:`\Phi(\lambda_i)` is a single mode non-Gaussian operation, in
-#    this case chosen to be the Kerr interaction
-#    :math:`\mathcal{K}(\kappa_i)=e^{i\kappa_i\hat{n}^2}` of strength
-#    :math:`\kappa_i`.
-# 
-# .. raw:: html
-# 
-#    <div class="alert alert-success"
-#    style="border: 0px; border-left: 3px solid #119a68; color: black; background-color: #daf0e9">
-# 
-# .. raw:: html
-# 
-#    <p style="color: #119a68;">
-# 
-# Reference
-# 
-# .. raw:: html
-# 
-#    </p>
-# 
-# Killoran, N., Bromley, T. R., Arrazola, J. M., Schuld, M., Quesada, N.,
-# & Lloyd, S. (2018). “Continuous-variable quantum neural networks.”
-# arXiv:1806.06871.
-# 
-# .. raw:: html
-# 
-#    </div>
-# 
-
-
-######################################################################
-# Hyperparameters
-# ---------------
-# 
-# First, we must define the **hyperparameters** of our layer structure:
-# 
-# -  ``cutoff``: the simulation Fock space truncation we will use in the
-#    optimization. The TensorFlow backend will perform numerical
-#    operations in this truncated Fock space when performing the
-#    optimization.
-# 
-# -  ``depth``: The number of layers in our variational quantum
-#    circuit. As a general rule, increasing the number of layers (and
-#    thus, the number of parameters we are optimizing over) increases the
-#    optimizer's chance of finding a reasonable local minimum in the
-#    optimization landscape.
-# 
-# -  ``reps``: the number of steps in the optimization routine performing
-#    gradient descent
-# 
-# Some other optional hyperparameters include:
-# 
-# -  The standard deviation of initial parameters. Note that we make a
-#    distinction between the standard deviation of *passive* parameters
-#    (those that preserve photon number when changed, such as phase
-#    parameters), and *active* parameters (those that introduce or remove
-#    energy from the system when changed).
-# 
 
 # Cutoff dimension
 cutoff = 10
