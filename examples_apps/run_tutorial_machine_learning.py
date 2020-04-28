@@ -11,11 +11,9 @@ Optimization & machine learning
 	Some basic knowledge of `TensorFlow <https://www.tensorflow.org/>`_ is also helpful.
 
 
-In this page, we show how the user can carry out optimization and machine learning on quantum
+In this demonstration, we show how the user can carry out optimization and machine learning on quantum
 circuits in Strawberry Fields. This functionality is provided via the TensorFlow simulator
-
 backend. By leveraging TensorFlow, we have access to a number of additional functionalities,
-
 including GPU integration, automatic gradient computation, built-in optimization algorithms,
 and other machine learning tools.
 
@@ -37,9 +35,7 @@ prog = sf.Program(2)
 #
 # When a circuit contains only numerical parameters, the TensorFlow backend works the same
 # as the other backends. However, with the TensorFlow backend, we have the additional option
-
 # to use TensorFlow ``tf.Variable`` and ``tf.tensor`` objects for the parameters of Blackbird
-
 # states, gates, and measurements.
 #
 # To construct the circuit to allow for TensorFlow objects, we **must** use **symbolic
@@ -56,16 +52,15 @@ theta_bs, phi_bs = prog.params("theta_bs", "phi_bs")
 
 with prog.context as q:
     # States
-    Coherent(alpha)            | q[0]
+    Coherent(alpha) | q[0]
     # Gates
-    BSgate(theta_bs, phi_bs)   | (q[0], q[1])
+    BSgate(theta_bs, phi_bs) | (q[0], q[1])
     # Measurements
-    MeasureHomodyne(0.0)       | q[0]
+    MeasureHomodyne(0.0) | q[0]
 
 
 ##############################################################################
 # To run a Strawberry Fields simulation with the TensorFlow backend, we need to specify
-
 # ``'tf'`` as the backend argument when initializing the engine:
 
 eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": 7})
@@ -92,11 +87,7 @@ eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": 7})
 # To bind a numerical value to the free parameters, we pass a mapping from parameter
 # name to value using the ``args`` keyword argument when running the engine:
 
-mapping = {
-    "alpha": tf.Variable(0.5),
-    "theta_bs": tf.constant(0.4),
-    "phi_bs": tf.constant(0.0)
-}
+mapping = {"alpha": tf.Variable(0.5), "theta_bs": tf.constant(0.4), "phi_bs": tf.constant(0.0)}
 
 result = eng.run(prog, args=mapping)
 
@@ -158,8 +149,8 @@ print("Gradient:", grad)
 # :math:`\langle \hat{n} \rangle(\alpha) = |\alpha|^2`, and thus, for real-valued
 # :math:`\alpha`, the gradient is given by :math:`\langle \hat{n}\rangle'(\alpha) = 2\alpha`:
 
-print("Exact gradient:", 2*a)
-print("Exact and TensorFlow gradient agree:", np.allclose(grad, 2*a))
+print("Exact gradient:", 2 * a)
+print("Exact and TensorFlow gradient agree:", np.allclose(grad, 2 * a))
 
 ##############################################################################
 # Processing data
@@ -171,7 +162,6 @@ print("Exact and TensorFlow gradient agree:", np.allclose(grad, 2*a))
 #
 # We can also use the ``sf.math`` module to allow arbitrary processing of measurement
 # results within the TensorFlow backend, by manipulating the ``.par`` attribute of
-
 # the measured register. Note that the math functions in ``sf.math`` will be automatically
 # converted to the equivalent TensorFlow ``tf.math`` function:
 
@@ -197,7 +187,7 @@ print("Mean photon number of mode 1:", mean)
 # is the measured Homodyne sample value:
 
 q0 = result.samples[0][0]
-print(np.sin(q0)**2)
+print(np.sin(q0) ** 2)
 
 ##############################################################################
 # Working with batches
@@ -205,7 +195,6 @@ print(np.sin(q0)**2)
 #
 # It is common in machine learning to process data in *batches*. Strawberry Fields supports both
 # unbatched and batched data when using the TensorFlow backend. Unbatched operation is the default
-
 # behaviour (shown above). To enable batched operation, you should provide an extra
 # ``batch_size`` argument within the ``backend_options`` dictionary [#]_, e.g.,
 
@@ -213,7 +202,7 @@ print(np.sin(q0)**2)
 # run simulation in batched-processing mode
 batch_size = 3
 prog = sf.Program(1)
-eng = sf.Engine('tf', backend_options={"cutoff_dim": 15, "batch_size": batch_size})
+eng = sf.Engine("tf", backend_options={"cutoff_dim": 15, "batch_size": batch_size})
 
 x = prog.params("x")
 
@@ -246,7 +235,6 @@ phi = tf.Variable([0.1, 0.33, 0.5])
 # -------------------------------------------------
 #
 # A key element of machine learning is optimization. We can use TensorFlow's automatic differentiation
-
 # tools to optimize the parameters of *variational quantum circuits*. In this approach, we fix a
 # circuit architecture where the states, gates, and/or measurements may have learnable parameters
 # associated with them. We then define a loss function based on the output state of this circuit.
@@ -258,7 +246,8 @@ phi = tf.Variable([0.1, 0.33, 0.5])
 #     to determine which representation is being used.
 #
 # In the example below, we optimize a :class:`~.Dgate` to produce an output with the largest overlap
-# with the Fock state :math:`n=1`.
+# with the Fock state :math:`n=1`. In this example, we compute the loss function imperatively
+# within a gradient tape, and then apply the gradients using the chosen optimizer:
 
 # initialize engine and program objects
 eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": 7})
@@ -267,7 +256,7 @@ circuit = sf.Program(1)
 tf_alpha = tf.Variable(0.1)
 tf_phi = tf.Variable(0.1)
 
-alpha, phi = circuit.params('alpha', 'phi')
+alpha, phi = circuit.params("alpha", "phi")
 
 with circuit.context as q:
     Dgate(alpha, phi) | q[0]
@@ -283,7 +272,7 @@ for step in range(steps):
 
     with tf.GradientTape() as tape:
         # execute the engine
-        results = eng.run(circuit, args={'alpha': tf_alpha, 'phi': tf_phi})
+        results = eng.run(circuit, args={"alpha": tf_alpha, "phi": tf_phi})
         # get the probability of fock state |1>
         prob = results.state.fock_prob([1])
         # negative sign to maximize prob
@@ -291,12 +280,46 @@ for step in range(steps):
 
     gradients = tape.gradient(loss, [tf_alpha, tf_phi])
     opt.apply_gradients(zip(gradients, [tf_alpha, tf_phi]))
-    print("Value at step {}: {}".format(step, prob))
-
+    print("Probability at step {}: {}".format(step, prob))
 
 ##############################################################################
 # After 50 or so iterations, the optimization should converge to the optimal probability value of
 # :math:`e^{-1}\approx 0.3678` at a parameter of :math:`\alpha=1` [#]_.
+#
+# In cases where we want to take advantage of TensorFlow's graph mode,
+# or do not need to extract/accumulate intermediate values used to calculate
+# the cost function, we could also make use of TensorFlow's ``Optimizer().minimize``
+# method, which requires the loss be defined as a function with no arguments:
+
+
+def loss():
+    # reset the engine if it has already been executed
+    if eng.run_progs:
+        eng.reset()
+
+    # execute the engine
+    results = eng.run(circuit, args={"alpha": tf_alpha, "phi": tf_phi})
+    # get the probability of fock state |1>
+    prob = results.state.fock_prob([1])
+    # negative sign to maximize prob
+    return -prob
+
+
+tf_alpha = tf.Variable(0.1)
+tf_phi = tf.Variable(0.1)
+
+
+for step in range(steps):
+    # In eager mode, calling Optimizer.minimize performs a single optimization step,
+    # and automatically updates the parameter values.
+    _ = opt.minimize(loss, [tf_alpha, tf_phi])
+    parameter_vals = [tf_alpha.numpy(), tf_phi.numpy()]
+    print("Parameter values at step {}: {}".format(step, parameter_vals))
+
+
+###############################################################################
+# Other high-level optimization interfaces, such as Keras, may also
+# be used to train models built using the Strawberry Fields TensorFlow backend.
 #
 # .. warning::
 #
@@ -305,9 +328,8 @@ for step in range(steps):
 #     be accomplished by regularizing or using ``tf.clip_by_value`` on the relevant parameters.
 #
 # TensorFlow supports a large set of mathematical and machine learning operations which can be applied to
-
 # a circuit's output state to enable further processing. Examples include ``tf.norm``,
-# ``tf.self_adjoint_eig``, ``tf.svd``, and ``tf.inv`` [#]_.
+# ``tf.linalg.eigh``, ``tf.linalg.svd``, and ``tf.linalg.inv`` [#]_.
 #
 # Exercise: Hong-Ou-Mandel Effect
 # -------------------------------
@@ -322,7 +344,7 @@ for step in range(steps):
 #
 # .. [#] Note that certain operations---in particular, measurements---may not have gradients defined within
 #        TensorFlow. When optimizing via gradient descent, we must be careful to define a circuit which is end-to-end differentiable.
-
+#
 #
 # .. [#] Note that ``batch_size`` should not be set to 1. Instead, use ``batch_size=None``, or just
 #        omit the ``batch_size`` argument.
