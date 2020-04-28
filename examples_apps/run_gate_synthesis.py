@@ -104,10 +104,10 @@ machine learning tools.
 #    operations in this truncated Fock space when performing the
 #    optimization.
 # 
-# -  ``depth``: The number of layer ansatz in our variational quantum
+# -  ``depth``: The number of layers in our variational quantum
 #    circuit. As a general rule, increasing the number of layers (and
 #    thus, the number of parameters we are optimizing over) increases the
-#    optimizers chance of finding a reasonable local minimum in the
+#    optimizer's chance of finding a reasonable local minimum in the
 #    optimization landscape.
 # 
 # -  ``reps``: the number of steps in the optimization routine performing
@@ -332,7 +332,7 @@ cost_progress = []
 # Run optimization
 for i in range(reps):
 
-    # one repitition of the optimization
+    # one repetition of the optimization
     _, cost_val, overlaps_val, ket_val, params_val = session.run(
         [min_cost, cost, overlaps, ket, params])
     
