@@ -242,7 +242,7 @@ with prog.context as q:
 # via the following cost function:
 #
 # .. math:: C(\vec{\theta}) = \frac{1}{d}\sum_{i=0}^{d-1} \left| \langle i \mid
-# V^\dagger U(\vec{\theta})\mid 0\rangle - 1\right|
+# V^\dagger U(\vec{\theta})\mid i\rangle - 1\right|
 #
 # where :math:`V` is the target unitary, :math:`U(\vec{\theta})` is the
 # learnt unitary, and :math:`d` is the gate cutoff. Note that this is a
