@@ -8,11 +8,14 @@ Optimization & machine learning
 
 	The content in this page is suited to more advanced users who already have an understanding
 	of Strawberry Fields, e.g., those who have completed the :ref:`teleportation tutorial <tutorial>`.
-	Some basic knowledge of `Tensorflow <https://www.tensorflow.org/>`_ is also helpful.
+	Some basic knowledge of `TensorFlow <https://www.tensorflow.org/>`_ is also helpful.
+
 
 In this page, we show how the user can carry out optimization and machine learning on quantum
-circuits in Strawberry Fields. This functionality is provided via the Tensorflow simulator
-backend. By leveraging Tensorflow, we have access to a number of additional funtionalities,
+circuits in Strawberry Fields. This functionality is provided via the TensorFlow simulator
+
+backend. By leveraging TensorFlow, we have access to a number of additional functionalities,
+
 including GPU integration, automatic gradient computation, built-in optimization algorithms,
 and other machine learning tools.
 
@@ -33,8 +36,10 @@ prog = sf.Program(2)
 # ------------------------------
 #
 # When a circuit contains only numerical parameters, the TensorFlow backend works the same
-# as the other backends. However, with the Tensorflow backend, we have the additional option
-# to use Tensorflow ``tf.Variable`` and ``tf.tensor`` objects for the parameters of Blackbird
+# as the other backends. However, with the TensorFlow backend, we have the additional option
+
+# to use TensorFlow ``tf.Variable`` and ``tf.tensor`` objects for the parameters of Blackbird
+
 # states, gates, and measurements.
 #
 # To construct the circuit to allow for TensorFlow objects, we **must** use **symbolic
@@ -59,7 +64,8 @@ with prog.context as q:
 
 
 ##############################################################################
-# To run a Strawberry Fields simulation with the Tensorflow backend, we need to specify
+# To run a Strawberry Fields simulation with the TensorFlow backend, we need to specify
+
 # ``'tf'`` as the backend argument when initializing the engine:
 
 eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": 7})
@@ -130,16 +136,20 @@ with prog.context as q:
 a = tf.Variable(0.43)
 
 with tf.GradientTape() as tape:
-    # Here, we pass map our quantum free parameter `alpha`
-    # to our TensorFlow variable `a`.
+    # Here, we map our quantum free parameter `alpha`
+
+    # to our TensorFlow variable `a` and pass it to the engine.
+
     result = eng.run(prog, args={"alpha": a})
     state = result.state
 
-    # Note that all processing, even state-based post-processing,
-    # must be done within the gradient tape!
+    # Note that all processing, including state-based post-processing,
+
+    # must be done within the gradient tape context!
     mean, var = state.mean_photon(0)
 
-# test the gradient of the variance is correct
+# test that the gradient of the mean photon number is correct
+
 grad = tape.gradient(mean, [a])
 print("Gradient:", grad)
 
@@ -160,7 +170,8 @@ print("Exact and TensorFlow gradient agree:", np.allclose(grad, 2*a))
 # from some learnable function like a neural network [#]_.
 #
 # We can also use the ``sf.math`` module to allow arbitrary processing of measurement
-# results within the Tensorflow backend, by manipulating the ``.par`` attribute of
+# results within the TensorFlow backend, by manipulating the ``.par`` attribute of
+
 # the measured register. Note that the math functions in ``sf.math`` will be automatically
 # converted to the equivalent TensorFlow ``tf.math`` function:
 
@@ -193,9 +204,11 @@ print(np.sin(q0)**2)
 # --------------------
 #
 # It is common in machine learning to process data in *batches*. Strawberry Fields supports both
-# unbatched and batched data when using the Tensorflow backend. Unbatched operation is the default
+# unbatched and batched data when using the TensorFlow backend. Unbatched operation is the default
+
 # behaviour (shown above). To enable batched operation, you should provide an extra
-# ``batch_size`` argument [#]_ within the ``backend_options`` dictionary, e.g.,
+# ``batch_size`` argument within the ``backend_options`` dictionary [#]_, e.g.,
+
 
 # run simulation in batched-processing mode
 batch_size = 3
@@ -232,7 +245,8 @@ phi = tf.Variable([0.1, 0.33, 0.5])
 # Example: variational quantum circuit optimization
 # -------------------------------------------------
 #
-# A key element of machine learning is optimization. We can use Tensorflow's automatic differentiation
+# A key element of machine learning is optimization. We can use TensorFlow's automatic differentiation
+
 # tools to optimize the parameters of *variational quantum circuits*. In this approach, we fix a
 # circuit architecture where the states, gates, and/or measurements may have learnable parameters
 # associated with them. We then define a loss function based on the output state of this circuit.
@@ -290,7 +304,8 @@ for step in range(steps):
 #     one should be careful to monitor that the state does not leak out of the given truncation level. This can
 #     be accomplished by regularizing or using ``tf.clip_by_value`` on the relevant parameters.
 #
-# Tensorflow supports a large set of mathematical and machine learning operations which can be applied to
+# TensorFlow supports a large set of mathematical and machine learning operations which can be applied to
+
 # a circuit's output state to enable further processing. Examples include ``tf.norm``,
 # ``tf.self_adjoint_eig``, ``tf.svd``, and ``tf.inv`` [#]_.
 #
@@ -306,7 +321,8 @@ for step in range(steps):
 # .. rubric:: Footnotes
 #
 # .. [#] Note that certain operations---in particular, measurements---may not have gradients defined within
-#        Tensorflow. When optimizing via gradient descent, we must be careful to define a circuit which is end-to-end differentiable.
+#        TensorFlow. When optimizing via gradient descent, we must be careful to define a circuit which is end-to-end differentiable.
+
 #
 # .. [#] Note that ``batch_size`` should not be set to 1. Instead, use ``batch_size=None``, or just
 #        omit the ``batch_size`` argument.
