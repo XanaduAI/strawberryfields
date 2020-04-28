@@ -92,6 +92,8 @@ Some other optional hyperparameters include:
    energy from the system when changed).
 """
 
+import numpy as np
+
 import strawberryfields as sf
 from strawberryfields.ops import *
 from strawberryfields.utils import operation
@@ -150,16 +152,42 @@ kappa = tf.random.normal(shape=[depth], stddev=active_sd)
 weights = tf.convert_to_tensor([r1, sq_r, sq_phi, r2, d_r, d_phi, kappa])
 weights = tf.Variable(tf.transpose(weights))
 
+
+######################################################################
+# Since we have a depth of 15 (so 15 layers), and each layer takes
+# 7 different types of parameters, the final shape of our weights
+# array should be :math:`\text{depth}\times 7` or ``(15, 7)``:
+
+print(weights.shape)
+
+
+######################################################################
+# Constructing the circuit
+# ------------------------
+#
+# We can now construct the corresponding
+# single-mode Strawberry Fields program:
+
 # Single-mode Strawberry Fields program
 prog = sf.Program(1)
 
-# Create the Strawberry Fields free parameters for each layer
+# Create the 7 Strawberry Fields free parameters for each layer
 sf_params = []
 names = ["r1", "sq_r", "sq_phi", "r2", "d_r", "d_phi", "kappa"]
 
 for i in range(depth):
+    # For the ith layer, generate parameter names "r1_i", "sq_r_i", etc.
     sf_params_names = ["{}_{}".format(n, i) for n in names]
+    # Create the parameters, and append them to our list ``sf_params``.
     sf_params.append(prog.params(*sf_params_names))
+
+
+######################################################################
+# ``sf_params`` is now a nested list of shape ``(depth, 7)``, matching
+# the shape of ``weights``.
+
+sf_params = np.array(sf_params)
+print(sf_params.shape)
 
 ######################################################################
 # Now, we can create a function to define the :math:`i`\ th layer, acting
@@ -179,8 +207,6 @@ def layer(i, q):
 
 
 ######################################################################
-# Constructing the circuit
-# ------------------------
 #
 # Now that we have defined our gate parameters and our layer structure, we
 # can construct our variational quantum circuit.
@@ -237,13 +263,9 @@ print(target_state)
 
 
 def cost(weights):
-    # Mapping from the Strawberry Fields free parameters to
-    # the TensorFlow variables.
-    mapping = {
-        p.name: w
-        for (sf_layer, weights_layer) in zip(sf_params, weights * 1.0)
-        for (p, w) in zip(sf_layer, weights_layer)
-    }
+    # Create a dictionary mapping from the names of the Strawberry Fields
+    # free parameters to the TensorFlow weight values.
+    mapping = {p.name: w for p, w in zip(sf_params.flatten(), tf.reshape(weights, [-1]))}
 
     # Run engine
     state = eng.run(prog, args=mapping).state
@@ -260,7 +282,7 @@ def cost(weights):
     return cost, fidelity, ket
 
 
-######################################################################
+#######################################################################
 # Now that the cost function is defined, we can define and run the
 # optimization. Below, we choose the Adam
 # optimizer that is built into TensorFlow, and instantiate
