@@ -172,9 +172,9 @@ weights = tf.convert_to_tensor([r1, sq_r, sq_phi, r2, d_r, d_phi, kappa])
 weights = tf.Variable(tf.transpose(weights))
 
 ######################################################################
-# Since we have a depth of 25 (so 25 layers), and each layer takes
+# Since we have a depth of 20 (so 20 layers), and each layer takes
 # 7 different types of parameters, the final shape of our weights
-# array should be :math:`\text{depth}\times 7` or ``(25, 7)``:
+# array should be :math:`\text{depth}\times 7` or ``(20, 7)``:
 
 print(weights.shape)
 
