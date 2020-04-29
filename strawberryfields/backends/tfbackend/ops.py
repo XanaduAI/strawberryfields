@@ -35,6 +35,11 @@ import tensorflow as tf
 import numpy as np
 from scipy.special import binom, factorial
 
+try:
+    from tensorflow import _einsum_v1 as tf_einsum
+except ImportError:
+    from tensorflow import tf_einsum
+
 from strawberryfields.backends.shared_ops import (
     generate_bs_factors,
     load_bs_factors,
@@ -80,7 +85,7 @@ def mixed(pure_state, batched=False):
         eqn_lhs = batch_index + bra_indices + "," + batch_index + ket_indices
         eqn_rhs = "".join(bdx + kdx for bdx, kdx in zip(bra_indices, ket_indices))
         eqn = eqn_lhs + "->" + batch_index + eqn_rhs
-        mixed_state = tf.einsum(eqn, pure_state, tf.math.conj(pure_state))
+        mixed_state = tf_einsum(eqn, pure_state, tf.math.conj(pure_state))
     if not batched:
         mixed_state = tf.squeeze(mixed_state, 0)  # drop fake batch dimension
     return mixed_state
@@ -331,7 +336,7 @@ def displacement_matrix(alpha, D, batched=False):
     prefactor = tf.expand_dims(
         tf.expand_dims(tf.cast(tf.exp(-0.5 * tf.abs(alpha) ** 2), def_type), -1), -1
     )
-    D_alpha = prefactor * tf.einsum(eqn, E, E_prime)
+    D_alpha = prefactor * tf_einsum(eqn, E, E_prime)
     return D_alpha
 
 
@@ -559,7 +564,7 @@ def single_mode_gate(matrix, mode, in_modes, pure=True, batched=False):
     if not pure:
         transposed_axis = [0, 2, 1] if batched else [1, 0]
         einsum_inputs.append(tf.transpose(tf.math.conj(matrix), transposed_axis))
-    output = tf.einsum(eqn, *einsum_inputs)
+    output = tf_einsum(eqn, *einsum_inputs)
     return output
 
 
@@ -654,7 +659,7 @@ def two_mode_gate(matrix, mode1, mode2, in_modes, pure=True, batched=False):
                 else:
                     transpose_list = [1, 0, 3, 2]
                 einsum_inputs.append(tf.math.conj(tf.transpose(matrix, transpose_list)))
-            output = tf.einsum(eqn, *einsum_inputs)
+            output = tf_einsum(eqn, *einsum_inputs)
             return output
 
 
@@ -708,7 +713,7 @@ def single_mode_superop(superop, mode, in_modes, pure=True, batched=False):
             ]
         )
         eqn = "->".join([eqn_lhs, eqn_rhs])
-        new_state = tf.einsum(eqn, superop, in_modes)
+        new_state = tf_einsum(eqn, superop, in_modes)
         return new_state
 
 
@@ -845,7 +850,7 @@ def combine_single_modes(modes_list, batched=False):
             elif dims[idx] == 2:
                 new_inputs = [mode]
             einsum_inputs += new_inputs
-    combined_modes = tf.einsum(eqn, *einsum_inputs)
+    combined_modes = tf_einsum(eqn, *einsum_inputs)
     return combined_modes
 
 
@@ -1015,7 +1020,7 @@ def insert_state(state, system, state_is_pure, mode=None, batched=False):
         eqn_lhs = batch_index + left_part + right_part + "," + batch_index + middle_part
         eqn_rhs = batch_index + left_part + middle_part + right_part
         eqn = eqn_lhs + "->" + eqn_rhs
-        revised_modes = tf.einsum(eqn, system, state)
+        revised_modes = tf_einsum(eqn, system, state)
 
     return revised_modes
 
@@ -1114,7 +1119,7 @@ def conditional_state(system, projector, mode, state_is_pure, batched=False):
     einsum_args = [system, tf.math.conj(projector)]
     if not state_is_pure:
         einsum_args.append(projector)
-    cond_state = tf.einsum(eqn, *einsum_args)
+    cond_state = tf_einsum(eqn, *einsum_args)
     if not batched:
         cond_state = tf.squeeze(cond_state, 0)  # drop fake batch dimension
     return cond_state
