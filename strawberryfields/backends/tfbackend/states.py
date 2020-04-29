@@ -20,6 +20,7 @@ from scipy.special import factorial
 
 try:
     from tensorflow.python.ops.special_math_ops import _einsum_v1
+
     tf.einsum = _einsum_v1
 except ImportError:
     pass
