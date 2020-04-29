@@ -300,12 +300,12 @@ def cost(weights):
     ket = state.ket()
 
     # overlaps
-    overlaps = tf.math.real(tf.einsum('bi,bi->b', tf.math.conj(target_kets), ket))
+    print(tf.math.conj(target_kets).shape, ket.shape, tf.transpose(ket))
+    overlaps = tf.math.real(tf.matmul(tf.math.conj(target_kets), tf.transpose(ket)))
     mean_overlap = tf.reduce_mean(overlaps)
 
     # Objective function to minimize
     cost = tf.abs(tf.reduce_sum(overlaps - 1))
-
     return cost, overlaps, ket
 
 
