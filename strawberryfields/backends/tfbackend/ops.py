@@ -366,11 +366,8 @@ def fock_state(n, D, pure=True, batched=False):
 
 def coherent_state(r, phi, D, pure=True, batched=False):
     """creates a single mode input coherent state"""
-    alpha = tf.cast(r, def_type)*tf.exp(1j*tf.cast(phi, def_type))
-    coh = tf.stack(
-        [tf.exp(-0.5 * r**2) * _numer_safe_power(alpha, n) / tf.cast(np.sqrt(factorial(n)), def_type) for n in range(D)],
-        axis=-1,
-    )
+    alpha = tf.cast(r, def_type) * tf.exp(1j * tf.cast(phi, def_type))
+    coh = tf.stack([tf.exp(-0.5 * r ** 2) * _numer_safe_power(alpha, n) / tf.cast(np.sqrt(factorial(n)), def_type) for n in range(D)], axis=-1,)
     if not pure:
         coh = mixed(coh, batched)
     return coh
@@ -386,14 +383,14 @@ def squeezed_vacuum(r, theta, D, pure=True, batched=False):
 
 def displaced_squeezed(r_d, phi_d, r_s, phi_s, D, pure=True, batched=False, eps=1e-12):
     """creates a single mode input displaced squeezed state"""
-    alpha = tf.cast(r_d, def_type)*tf.exp(1j*tf.cast(phi_d, def_type))
+    alpha = tf.cast(r_d, def_type) * tf.exp(1j * tf.cast(phi_d, def_type))
     r_s = tf.cast(r_s, def_type) + eps  # to prevent nans if r==0, we add an epsilon (default is miniscule)
     phi_s = tf.cast(phi_s, def_type)
 
-    phase = tf.exp(1j * phi)
-    sinh = tf.sinh(r)
-    cosh = tf.cosh(r)
-    tanh = tf.tanh(r)
+    phase = tf.exp(1j * phi_s)
+    sinh = tf.sinh(r_s)
+    cosh = tf.cosh(r_s)
+    tanh = tf.tanh(r_s)
 
     # create Hermite polynomials
     gamma = alpha * cosh + tf.math.conj(alpha) * phase * sinh

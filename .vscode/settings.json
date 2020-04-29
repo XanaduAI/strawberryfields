@@ -1,0 +1,9 @@
+{
+    "python.pythonPath": "/Users/filippo/.local/share/virtualenvs/strawberryfields-x5ueXqa5/bin/python",
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.pytestEnabled": true
+}
