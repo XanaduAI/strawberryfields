@@ -427,14 +427,16 @@ phi = I.flatten()/np.sqrt(gate_cutoff)
 psiV = np.kron(I, target_unitary) @ phi
 psiU = np.kron(I, learnt_unitary) @ phi
 
-print(np.abs(np.vdot(psiV, psiU))**2)
 
 
 ######################################################################
-# Therefore, after 1000 repetitions, the learnt unitary synthesized via a
-# variational quantum circuit has a process fidelity of 95.98% to the
-# target unitary.
+# Therefore, after 400 repetitions, the learnt unitary synthesized via a
+# variational quantum circuit has the following process fidelity to the target
+# unitary:
 #
+
+print(np.abs(np.vdot(psiV, psiU))**2)
+
 # Circuit parameters
 # ------------------
 #
