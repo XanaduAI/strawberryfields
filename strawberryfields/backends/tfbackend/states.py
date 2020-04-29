@@ -19,9 +19,10 @@ import tensorflow as tf
 from scipy.special import factorial
 
 try:
-    from tensorflow.python.ops.special_math_ops import _einsum_v1 as tf_einsum
+    from tensorflow.python.ops.special_math_ops import _einsum_v1
+    tf.einsum = _einsum_v1
 except ImportError:
-    from tensorflow import einsum as tf_einsum
+    pass
 
 from strawberryfields.backends.states import BaseFockState
 from .ops import def_type, ladder_ops, phase_shifter_matrix, reduced_density_matrix
@@ -173,7 +174,7 @@ class FockStateTF(BaseFockState):
             other_state = tf.expand_dims(other_state, 0)  # add batch dimension for state
 
         other_state = tf.cast(other_state, def_type)
-        state_dm = tf_einsum("bi,bj->bij", tf.math.conj(other_state), other_state)
+        state_dm = tf.einsum("bi,bj->bij", tf.math.conj(other_state), other_state)
         flat_state_dm = tf.reshape(state_dm, [1, -1])
         flat_rho = tf.reshape(rho, [-1, self.cutoff_dim ** 2])
 
@@ -245,7 +246,7 @@ class FockStateTF(BaseFockState):
                 + "->"
                 + batch_index
             )
-            f = tf_einsum(
+            f = tf.einsum(
                 eqn,
                 tf.convert_to_tensor(np.conj(multi_cohs_vec), dtype=def_type),
                 s,
@@ -451,7 +452,7 @@ class FockStateTF(BaseFockState):
             right_str = [batch_index] + [free_indices[i] for i in range(1, 2 * self.num_modes, 2)]
             out_str = [batch_index] + [free_indices[: 2 * self.num_modes]]
             einstr = "".join(left_str + [","] + right_str + ["->"] + out_str)
-            s = tf_einsum(einstr, ket, tf.math.conj(ket))
+            s = tf.einsum(einstr, ket, tf.math.conj(ket))
         else:
             s = tf.identity(self.data, name="density_matrix")
 

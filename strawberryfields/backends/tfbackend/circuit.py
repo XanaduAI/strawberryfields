@@ -39,9 +39,10 @@ from scipy.special import factorial
 import tensorflow as tf
 
 try:
-    from tensorflow.python.ops.special_math_ops import _einsum_v1 as tf_einsum
+    from tensorflow.python.ops.special_math_ops import _einsum_v1
+    tf.einsum = _einsum_v1
 except ImportError:
-    from tensorflow import einsum as tf_einsum
+    pass
 
 from . import ops
 
@@ -65,7 +66,7 @@ class Circuit:
         one = tf.cast([1.0], ops.def_type)
         v = tf.scatter_nd([[0]], one, [cutoff_dim])
         self._single_mode_pure_vac = v
-        self._single_mode_mixed_vac = tf_einsum("i,j->ij", v, v)
+        self._single_mode_mixed_vac = tf.einsum("i,j->ij", v, v)
         if self._batched:
             self._single_mode_pure_vac = tf.stack([self._single_mode_pure_vac] * self._batch_size)
             self._single_mode_mixed_vac = tf.stack([self._single_mode_mixed_vac] * self._batch_size)
@@ -690,7 +691,7 @@ class Circuit:
                     ]
                     cond_ctr += 1
             eqn = eqn_lhs + "->" + batch_index + eqn_rhs
-            new_state = tf_einsum(eqn, meas_modes_vac, normalized_conditional_state)
+            new_state = tf.einsum(eqn, meas_modes_vac, normalized_conditional_state)
 
             self._update_state(new_state)
 
@@ -887,7 +888,7 @@ class Circuit:
                     ]
                     cond_ctr += 1
             eqn = eqn_lhs + "->" + batch_index + eqn_rhs
-            new_state = tf_einsum(eqn, meas_mode_vac, normalized_conditional_state)
+            new_state = tf.einsum(eqn, meas_mode_vac, normalized_conditional_state)
 
             self._update_state(new_state)
 
