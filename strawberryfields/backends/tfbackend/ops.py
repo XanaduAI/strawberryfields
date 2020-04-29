@@ -293,46 +293,31 @@ def loss_superop(T, D, batched=False):
         output = tf.squeeze(output, 0)  # drop artificial batch dimension
     return output
 
+from thewalrus.fock_gradients import displacement as displacement_tw
+from thewalrus.fock_gradients import grad_displacement as grad_displacement_tw
 
-def displacement_matrix(alpha, D, batched=False):
-    """creates the single mode displacement matrix"""
+@tf.custom_gradient
+def single_displacement_matrix(r, phi, D):
+    """creates a single mode displacement matrix"""
+    r = r.numpy()
+    phi = phi.numpy()
+    alpha = r*np.exp(1j*phi)
+    gate = displacement_tw(alpha, D, def_type.as_numpy_dtype)
+
+    def grad(dy):
+        Dz, Dzc = grad_displacement_tw(gate, alpha, def_type.as_numpy_dtype)
+        Dr = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dzc))*np.exp(1j*phi) + tf.reduce_sum(dy*tf.math.conj(Dz))*np.exp(-1j*phi))
+        Dphi = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dzc))*1j*alpha - tf.reduce_sum(dy*tf.math.conj(Dz))*1j*np.conj(alpha))
+        return Dr, Dphi, None
+
+    return gate, grad
+
+def displacement_matrix(r, phi, D, batched=False):
+    """creates a single mode displacement matrix accounting for batching"""
     if batched:
-        batch_size = alpha.shape[0]
-    alpha = tf.cast(alpha, def_type)
-    idxs = [(j, k) for j in range(D) for k in range(j)]
-    values = [
-        alpha ** (j - k) * tf.cast(tf.sqrt(binom(j, k) / factorial(j - k)), def_type)
-        for j in range(D)
-        for k in range(j)
-    ]
-    values = tf.stack(values, axis=-1)
-    dense_shape = [D, D]
-    vals = [1.0] * D
-    ind = [(idx, idx) for idx in range(D)]
-    if batched:
-        dense_shape = [batch_size] + dense_shape
-        vals = vals * batch_size
-        ind = batchify_indices(ind, batch_size)
-    eye_diag = tf.SparseTensor(ind, vals, dense_shape)
-    signs = [(-1) ** (j - k) for j in range(D) for k in range(j)]
-    if batched:
-        idxs = batchify_indices(idxs, batch_size)
-        signs = signs * batch_size
-    sign_lower_diag = tf.cast(tf.SparseTensor(idxs, signs, dense_shape), tf.float32)
-    sign_matrix = tf.sparse.add(eye_diag, sign_lower_diag)
-    sign_matrix = tf.cast(tf.sparse.to_dense(sign_matrix), def_type)
-    lower_diag = tf.scatter_nd(idxs, tf.reshape(values, [-1]), dense_shape)
-    E = tf.cast(tf.eye(D), def_type) + lower_diag
-    E_prime = tf.math.conj(E) * sign_matrix
-    if batched:
-        eqn = "aik,ajk->aij"  # pylint: disable=bad-whitespace
-    else:
-        eqn = "ik,jk->ij"  # pylint: disable=bad-whitespace
-    prefactor = tf.expand_dims(
-        tf.expand_dims(tf.cast(tf.exp(-0.5 * tf.abs(alpha) ** 2), def_type), -1), -1
-    )
-    D_alpha = prefactor * tf.einsum(eqn, E, E_prime)
-    return D_alpha
+        return tf.stack([single_displacement_matrix(r, phi, D) for a in zip([r, phi])])
+    return single_displacement_matrix(r, phi, D)
+
 
 
 def beamsplitter_matrix(t, r, D, batched=False, save=False, directory=None):
