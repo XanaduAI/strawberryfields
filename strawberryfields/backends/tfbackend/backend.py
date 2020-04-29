@@ -180,25 +180,20 @@ class TFBackend(BaseFock):
             remapped_mode = self._remap_modes(mode)
             self.circuit.phase_shift(phi, remapped_mode)
 
-    def displacement(self, alpha, mode):
+    def displacement(self, r, phi, mode):
         with tf.name_scope("Displacement"):
             remapped_mode = self._remap_modes(mode)
-            self.circuit.displacement(alpha, remapped_mode)
+            self.circuit.displacement(r, phi, remapped_mode)
 
-    def squeeze(self, z, mode):
+    def squeeze(self, r, phi, mode):
         with tf.name_scope("Squeeze"):
             remapped_mode = self._remap_modes(mode)
-            self.circuit.squeeze(z, remapped_mode)
+            self.circuit.squeeze(r, phi, remapped_mode)
 
-    def beamsplitter(self, t, r, mode1, mode2):
+    def beamsplitter(self, theta, phi, mode1, mode2):
         with tf.name_scope("Beamsplitter"):
-            if isinstance(t, complex):
-                raise ValueError("Beamsplitter transmittivity t must be a float.")
-            if isinstance(t, tf.Tensor):
-                if t.dtype.is_complex:
-                    raise ValueError("Beamsplitter transmittivity t must be a float.")
             remapped_modes = self._remap_modes([mode1, mode2])
-            self.circuit.beamsplitter(t, r, remapped_modes[0], remapped_modes[1])
+            self.circuit.beamsplitter(theta, phi, remapped_modes[0], remapped_modes[1])
 
     def loss(self, T, mode):
         with tf.name_scope("Loss"):
