@@ -304,7 +304,7 @@ def cost(weights):
     mean_overlap = tf.reduce_mean(overlaps)
 
     # Objective function to minimize
-    cost = tf.reduce_sum(tf.abs(overlaps - 1))
+    cost = tf.abs(tf.reduce_sum(overlaps - 1))
 
     return cost, overlaps, ket
 
@@ -348,6 +348,7 @@ for i in range(reps):
     overlap_progress.append(overlaps_val)
 
     # one repetition of the optimization
+    print(loss, weights)
     gradients = tape.gradient(loss, weights)
     opt.apply_gradients(zip([gradients], [weights]))
 
