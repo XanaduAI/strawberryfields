@@ -52,6 +52,11 @@ machine learning. Take a look below to see what you can do!
     :description: :doc:`Optimization and machine learning with TensorFlow <../tutorials_apps/run_tutorial_machine_learning>`
     :figure: ../_static/TF.png
 
+.. customgalleryitem::
+    :tooltip: Minimizing correlations
+    :description: :doc:`../tutorials_apps/run_minimizing_correlations`
+    :figure: ../_static/minimizing_correlations.gif
+
 .. raw:: html
 
     <div style='clear:both'></div>

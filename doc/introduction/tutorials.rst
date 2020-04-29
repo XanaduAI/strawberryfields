@@ -68,7 +68,6 @@ Algorithms
     /tutorials/tutorial_post_selection
     /tutorials/tutorial_boson_sampling
     /tutorials/tutorial_gaussian_boson_sampling
-    /gallery/minimizing_correlations/minimizing_correlations
     /gallery/state_learner/StateLearning
     /gallery/gate_synthesis/GateSynthesis
     /gallery/scattershot-boson-sampling/scattershot-bs
@@ -122,7 +121,7 @@ Optimization and machine learning
     :maxdepth: 1
 
     ../tutorials_apps/run_tutorial_machine_learning
-    /gallery/minimizing_correlations/minimizing_correlations
+    ../tutorials_apps/run_minimizing_correlations
     /gallery/state_learner/StateLearning
 
 .. customgalleryitem::
@@ -132,8 +131,8 @@ Optimization and machine learning
 
 .. customgalleryitem::
     :tooltip: Minimizing correlations
-    :description: :doc:`/gallery/minimizing_correlations/minimizing_correlations`
-    :figure: /gallery/minimizing_correlations/minimizing_correlations.gif
+    :description: :doc:`../tutorials_apps/run_minimizing_correlations`
+    :figure: ../_static/minimizing_correlations.gif
 
 .. customgalleryitem::
     :tooltip: Quantum state learning
