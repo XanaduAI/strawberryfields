@@ -149,14 +149,14 @@ class FockBackend(BaseFock):
     def prepare_vacuum_state(self, mode):
         self.circuit.prepare_mode_fock(0, self._remap_modes(mode))
 
-    def prepare_coherent_state(self, alpha, mode):
-        self.circuit.prepare_mode_coherent(alpha, self._remap_modes(mode))
+    def prepare_coherent_state(self, r, phi, mode):
+        self.circuit.prepare_mode_coherent(r, phi, self._remap_modes(mode))
 
     def prepare_squeezed_state(self, r, phi, mode):
         self.circuit.prepare_mode_squeezed(r, phi, self._remap_modes(mode))
 
-    def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
-        self.circuit.prepare_mode_displaced_squeezed(alpha, r, phi, self._remap_modes(mode))
+    def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
+        self.circuit.prepare_mode_displaced_squeezed(r_d, phi_d, r_s, phi_s, self._remap_modes(mode))
 
     def prepare_thermal_state(self, nbar, mode):
         self.circuit.prepare_mode_thermal(nbar, self._remap_modes(mode))
@@ -164,22 +164,20 @@ class FockBackend(BaseFock):
     def rotation(self, phi, mode):
         self.circuit.phase_shift(phi, self._remap_modes(mode))
 
-    def displacement(self, alpha, mode):
-        self.circuit.displacement(alpha, self._remap_modes(mode))
+    def displacement(self, r, phi, mode):
+        self.circuit.displacement(r, phi, self._remap_modes(mode))
 
-    def squeeze(self, z, mode):
-        self.circuit.squeeze(abs(z), phase(z), self._remap_modes(mode))
+    def squeeze(self, r, phi, mode):
+        self.circuit.squeeze(r, phi, self._remap_modes(mode))
 
-    def two_mode_squeeze(self, z, mode1, mode2):
+    def two_mode_squeeze(self, r, phi, mode1, mode2):
         self.circuit.two_mode_squeeze(
-            abs(z), phase(z), self._remap_modes(mode1), self._remap_modes(mode2)
+            r, phi, self._remap_modes(mode1), self._remap_modes(mode2)
         )
 
-    def beamsplitter(self, t, r, mode1, mode2):
-        if isinstance(t, complex):
-            raise ValueError("Beamsplitter transmittivity t must be a float.")
+    def beamsplitter(self, theta, phi, mode1, mode2):
         self.circuit.beamsplitter(
-            t, abs(r), phase(r), self._remap_modes(mode1), self._remap_modes(mode2)
+            theta, phi, self._remap_modes(mode1), self._remap_modes(mode2)
         )
 
     def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
