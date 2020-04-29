@@ -949,8 +949,7 @@ class Dgate(Gate):
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        r = self.p[0] 
-        phi = self.p[1]
+        r, phi = par_evaluate(self.p)
         backend.displacement(r, phi, *reg)
 
 
@@ -1009,8 +1008,7 @@ class Sgate(Gate):
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        r = self.p[0] 
-        phi = self.p[1]
+        r, phi = par_evaluate(self.p)
         backend.squeeze(r, phi, *reg)
 
 
@@ -1113,8 +1111,7 @@ class BSgate(Gate):
         super().__init__([theta, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        theta = self.p[0] 
-        phi = self.p[1]
+        theta, phi = par_evaluate(self.p)
         backend.beamsplitter(theta, phi, *reg)
 
 
@@ -1164,8 +1161,7 @@ class S2gate(Gate):
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        r = self.p[0] 
-        phi = self.p[1]
+        r, phi = par_evaluate(self.p)
         backend.two_mode_squeeze(r, phi, *reg)
 
     def _decompose(self, reg, **kwargs):
