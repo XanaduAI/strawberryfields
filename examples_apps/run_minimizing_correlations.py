@@ -28,7 +28,7 @@ Minimizing the amount of correlations
 # :math:`\left|\psi \right\rangle` such that the resulting entanglement is
 # minimized?
 #
-# In our `paper <https://arxiv.org/abs/1805.06868>`__ we showed that if
+# In our `paper <https://journals.aps.org/pra/abstract/10.1103/PhysRevA.98.043813>`__ we showed that if
 # :math:`\theta \ll 1` the optimal state :math:`\left|\phi \right\rangle`,
 # for any input state :math:`\left|\psi \right\rangle`, is always a
 # squeezed state. We furthermore conjectured that this holds for any value
@@ -351,5 +351,5 @@ print("squeezing parameter =", np.arcsinh(np.sqrt(nbar)))
 #
 # [2] Quesada, N., & Brańczyk, A. M. (2018). Gaussian functions are
 # optimal for waveguided nonlinear-quantum-optical processes.
-# *arXiv:1805.06868*.
+# *Physical Review A*, 98, 043813.
 #
