@@ -39,7 +39,7 @@ from scipy.special import factorial
 import tensorflow as tf
 
 try:
-    from tensorflow import _einsum_v1 as tf_einsum
+    from tensorflow.python.ops.special_math_ops import _einsum_v1 as tf_einsum
 except ImportError:
     from tensorflow import einsum as tf_einsum
 

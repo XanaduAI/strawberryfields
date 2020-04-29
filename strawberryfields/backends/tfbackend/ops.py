@@ -36,9 +36,9 @@ import numpy as np
 from scipy.special import binom, factorial
 
 try:
-    from tensorflow import _einsum_v1 as tf_einsum
+    from tensorflow.python.ops.special_math_ops import _einsum_v1 as tf_einsum
 except ImportError:
-    from tensorflow import tf_einsum
+    from tensorflow import einsum as tf_einsum
 
 from strawberryfields.backends.shared_ops import (
     generate_bs_factors,
