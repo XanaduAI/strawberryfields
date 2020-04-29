@@ -296,27 +296,47 @@ def loss_superop(T, D, batched=False):
 from thewalrus.fock_gradients import displacement as displacement_tw
 from thewalrus.fock_gradients import grad_displacement as grad_displacement_tw
 
+# @tf.custom_gradient
+# def single_displacement_matrix(r, phi, D):
+#     """creates a single mode displacement matrix"""
+#     r = r.numpy()
+#     phi = phi.numpy()
+#     alpha = r*np.exp(1j*phi)
+#     gate = displacement_tw(alpha, D, def_type.as_numpy_dtype)
+
+#     def grad(dy):
+#         Dz, Dzc = grad_displacement_tw(gate, alpha, def_type.as_numpy_dtype)
+#         Dr = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dzc))*np.exp(1j*phi) + tf.reduce_sum(dy*tf.math.conj(Dz))*np.exp(-1j*phi))
+#         Dphi = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dzc))*1j*alpha - tf.reduce_sum(dy*tf.math.conj(Dz))*1j*np.conj(alpha))
+#         return Dr, Dphi, None
+
+#     return gate, grad
+
+# def displacement_matrix(r, phi, D, batched=False):
+#     """creates a single mode displacement matrix accounting for batching"""
+#     if batched:
+#         return tf.stack([single_displacement_matrix(r, phi, D) for a in zip([r, phi])])
+#     return single_displacement_matrix(r, phi, D)
+
+
 @tf.custom_gradient
-def single_displacement_matrix(r, phi, D):
+def single_displacement_matrix(alpha, D):
     """creates a single mode displacement matrix"""
-    r = r.numpy()
-    phi = phi.numpy()
-    alpha = r*np.exp(1j*phi)
+    alpha = alpha.numpy()
+    phi = np.angle(alpha)
+
     gate = displacement_tw(alpha, D, def_type.as_numpy_dtype)
 
     def grad(dy):
-        Dz, Dzc = grad_displacement_tw(gate, alpha, def_type.as_numpy_dtype)
-        Dr = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dzc))*np.exp(1j*phi) + tf.reduce_sum(dy*tf.math.conj(Dz))*np.exp(-1j*phi))
-        Dphi = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dzc))*1j*alpha - tf.reduce_sum(dy*tf.math.conj(Dz))*1j*np.conj(alpha))
-        return Dr, Dphi, None
+        return dy
 
     return gate, grad
 
-def displacement_matrix(r, phi, D, batched=False):
+def displacement_matrix(alpha, D, batched=False):
     """creates a single mode displacement matrix accounting for batching"""
     if batched:
-        return tf.stack([single_displacement_matrix(r, phi, D) for a in zip([r, phi])])
-    return single_displacement_matrix(r, phi, D)
+        return tf.stack([single_displacement_matrix(alpha, D) for a in alpha])
+    return tf.convert_to_tensor(single_displacement_matrix(alpha, D))
 
 
 from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
@@ -342,7 +362,7 @@ def beamsplitter_matrix(theta, phi, D, batched=False):
     """creates a single mode displacement matrix accounting for batching"""
     if batched:
         return tf.stack([single_beamsplitter_matrix(theta, phi, D) for a in zip([theta, phi])])
-    return single_beamsplitter_matrix(theta, phi, D)
+    return tf.convert_to_tensor(single_beamsplitter_matrix(theta, phi, D))
 
 
 ###################################################################
