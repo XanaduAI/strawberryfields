@@ -621,9 +621,9 @@ def phase_shifter(theta, mode, in_modes, D, pure=True, batched=False):
     return output
 
 
-def displacement(alpha, mode, in_modes, D, pure=True, batched=False):
+def displacement(r, phi, mode, in_modes, D, pure=True, batched=False):
     """returns displacement unitary matrix on specified input modes"""
-    matrix = displacement_matrix(alpha, D, batched)
+    matrix = displacement_matrix(r, phi, D, batched)
     output = single_mode_gate(matrix, mode, in_modes, pure, batched)
     return output
 
@@ -656,9 +656,9 @@ def cubic_phase(gamma, mode, in_modes, D, hbar=2, pure=True, batched=False, meth
     return output
 
 
-def beamsplitter(t, r, mode1, mode2, in_modes, D, pure=True, batched=False):
+def beamsplitter(theta, phi, mode1, mode2, in_modes, D, pure=True, batched=False):
     """returns beamsplitter unitary matrix on specified input modes"""
-    matrix = beamsplitter_matrix(t, r, D, batched)
+    matrix = beamsplitter_matrix(theta, phi, D, batched)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
     return output
 
