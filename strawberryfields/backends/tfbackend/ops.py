@@ -159,44 +159,28 @@ def squeezed_vacuum_vector(r, theta, D, batched=False, eps=1e-32):
     return output
 
 
-def squeezer_matrix(r, theta, D, batched=False):
-    """creates the single mode squeeze matrix"""
-    r = tf.cast(r, tf.float64)
-    if not batched:
-        r = tf.expand_dims(r, 0)  # introduce artificial batch dimension
-    r = tf.reshape(r, [-1, 1, 1, 1])
-    theta = tf.cast(theta, def_type)
-    theta = tf.reshape(theta, [-1, 1, 1, 1])
+from thewalrus.fock_gradients import squeezing as squeezing_tw
+from thewalrus.fock_gradients import grad_squeezing as grad_squeezing_tw
+@tf.custom_gradient
+def single_squeezing_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
+    """creates a single mode squeezing matrix"""
+    r = r.numpy()
+    phi = phi.numpy()
+    gate = squeezing_tw(r, phi, D, dtype)
 
-    rng = np.arange(D)
-    n = np.reshape(rng, [-1, D, 1, 1])
-    m = np.reshape(rng, [-1, 1, D, 1])
-    k = np.reshape(rng, [-1, 1, 1, D])
+    def grad(dy):
+        Dr, Dphi = grad_squeezing_tw(gate, r, phi)
+        grad_r = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dr)))
+        grad_phi = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dphi)))
+        return grad_r, grad_phi, None
 
-    phase = tf.exp(1j * theta * (n - m) / 2)
-    signs = squeeze_parity(D).reshape([1, D, 1, D])
-    mask = np.logical_and(
-        (m + n) % 2 == 0, k <= np.minimum(m, n)
-    )  # kills off terms where the sum index k goes past min(m,n)
-    k_terms = (
-        signs
-        * tf.pow(tf.sinh(r) / 2, mask * (n + m - 2 * k) / 2)
-        * mask
-        / tf.pow(tf.cosh(r), (n + m + 1) / 2)
-        * tf.exp(
-            0.5 * tf.math.lgamma(tf.cast(m + 1, tf.float64))
-            + 0.5 * tf.math.lgamma(tf.cast(n + 1, tf.float64))
-            - tf.math.lgamma(tf.cast(k + 1, tf.float64))
-            - tf.math.lgamma(tf.cast((m - k) / 2 + 1, tf.float64))
-            - tf.math.lgamma(tf.cast((n - k) / 2 + 1, tf.float64))
-        )
-    )
-    output = tf.reduce_sum(phase * tf.cast(k_terms, def_type), axis=-1)
+    return gate, grad
 
-    if not batched:
-        # remove extra batch dimension
-        output = tf.squeeze(output, 0)
-    return output
+def squeezer_matrix(r, phi, D, batched=False):
+    """creates a single mode squeezing matrix accounting for batching"""
+    if batched:
+        return tf.stack([single_squeezing_matrix(r, phi, D) for a in zip([r, phi])])
+    return single_squeezing_matrix(r, phi, D)
 
 
 def phase_shifter_matrix(theta, D, batched=False):
@@ -295,63 +279,39 @@ def loss_superop(T, D, batched=False):
 
 from thewalrus.fock_gradients import displacement as displacement_tw
 from thewalrus.fock_gradients import grad_displacement as grad_displacement_tw
-
-# @tf.custom_gradient
-# def single_displacement_matrix(r, phi, D):
-#     """creates a single mode displacement matrix"""
-#     r = r.numpy()
-#     phi = phi.numpy()
-#     alpha = r*np.exp(1j*phi)
-#     gate = displacement_tw(alpha, D, def_type.as_numpy_dtype)
-
-#     def grad(dy):
-#         Dz, Dzc = grad_displacement_tw(gate, alpha, def_type.as_numpy_dtype)
-#         Dr = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dzc))*np.exp(1j*phi) + tf.reduce_sum(dy*tf.math.conj(Dz))*np.exp(-1j*phi))
-#         Dphi = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dzc))*1j*alpha - tf.reduce_sum(dy*tf.math.conj(Dz))*1j*np.conj(alpha))
-#         return Dr, Dphi, None
-
-#     return gate, grad
-
-# def displacement_matrix(r, phi, D, batched=False):
-#     """creates a single mode displacement matrix accounting for batching"""
-#     if batched:
-#         return tf.stack([single_displacement_matrix(r, phi, D) for a in zip([r, phi])])
-#     return single_displacement_matrix(r, phi, D)
-
-
 @tf.custom_gradient
-def single_displacement_matrix(alpha, D):
+def single_displacement_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
     """creates a single mode displacement matrix"""
-    alpha = alpha.numpy()
-    phi = np.angle(alpha)
-
-    gate = displacement_tw(alpha, D, def_type.as_numpy_dtype)
+    r = r.numpy()
+    phi = phi.numpy()
+    gate = displacement_tw(r, phi, D, dtype)
 
     def grad(dy):
-        return dy
+        Dr, Dphi = grad_displacement_tw(gate, r, phi)
+        grad_r = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dr)))
+        grad_phi = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dphi)))
+        return grad_r, grad_phi, None
 
     return gate, grad
 
-def displacement_matrix(alpha, D, batched=False):
+def displacement_matrix(r, phi, D, batched=False):
     """creates a single mode displacement matrix accounting for batching"""
     if batched:
-        return tf.stack([single_displacement_matrix(alpha, D) for a in alpha])
-    return tf.convert_to_tensor(single_displacement_matrix(alpha, D))
-
+        return tf.stack([single_displacement_matrix(r, phi, D) for a in zip([r, phi])])
+    return single_displacement_matrix(r, phi, D)
 
 from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
 from thewalrus.fock_gradients import grad_beamsplitter as grad_beamsplitter_tw
-
 @tf.custom_gradient
-def single_beamsplitter_matrix(theta, phi, D):
-    """creates a single mode displacement matrix"""
+def single_beamsplitter_matrix(theta, phi, D, dtype=def_type.as_numpy_dtype):
+    """creates a single mode beamsplitter matrix"""
     theta = theta.numpy()
     phi = phi.numpy()
 
-    gate = beamsplitter_tw(theta, phi, D, def_type.as_numpy_dtype)
+    gate = beamsplitter_tw(theta, phi, D, dtype)
 
     def grad(dy):
-        Dtheta, Dphi = grad_beamsplitter_tw(gate, theta, phi, def_type.as_numpy_dtype)
+        Dtheta, Dphi = grad_beamsplitter_tw(gate, theta, phi)
         grad_theta = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dtheta)))
         grad_phi = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dphi)))
         return grad_theta, grad_phi, None
@@ -359,10 +319,35 @@ def single_beamsplitter_matrix(theta, phi, D):
     return gate, grad
 
 def beamsplitter_matrix(theta, phi, D, batched=False):
-    """creates a single mode displacement matrix accounting for batching"""
+    """creates a single mode beamsplitter matrix accounting for batching"""
     if batched:
         return tf.stack([single_beamsplitter_matrix(theta, phi, D) for a in zip([theta, phi])])
     return tf.convert_to_tensor(single_beamsplitter_matrix(theta, phi, D))
+
+
+from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
+from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
+@tf.custom_gradient
+def single_two_mode_squeezing_matrix(theta, phi, D, dtype=def_type.as_numpy_dtype):
+    """creates a single mode two-mode squeezing matrix"""
+    theta = theta.numpy()
+    phi = phi.numpy()
+
+    gate = two_mode_squeezing_tw(theta, phi, D, dtype)
+
+    def grad(dy):
+        Dtheta, Dphi = grad_two_mode_squeezing_tw(gate, theta, phi)
+        grad_theta = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dtheta)))
+        grad_phi = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dphi)))
+        return grad_theta, grad_phi, None
+
+    return gate, grad
+
+def two_mode_squeezer_matrix(theta, phi, D, batched=False):
+    """creates a single mode two-mode squeezing matrix accounting for batching"""
+    if batched:
+        return tf.stack([single_two_mode_squeezing_matrix(theta, phi, D) for a in zip([theta, phi])])
+    return tf.convert_to_tensor(single_two_mode_squeezing_matrix(theta, phi, D))
 
 
 ###################################################################
@@ -748,6 +733,12 @@ def cubic_phase(
 def beamsplitter(t, r, mode1, mode2, in_modes, D, pure=True, batched=False):
     """returns beamsplitter unitary matrix on specified input modes"""
     matrix = beamsplitter_matrix(t, r, D, batched)
+    output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
+    return output
+
+def two_mode_squeezer(r, theta, mode1, mode2, in_modes, D, pure=True, batched=False):
+    """returns beamsplitter unitary matrix on specified input modes"""
+    matrix = two_mode_squeezer_matrix(r, theta, D, batched)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
     return output
 
