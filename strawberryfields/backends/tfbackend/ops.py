@@ -35,6 +35,15 @@ import tensorflow as tf
 import numpy as np
 from scipy.special import binom, factorial
 
+from thewalrus.fock_gradients import displacement as displacement_tw
+from thewalrus.fock_gradients import grad_displacement as grad_displacement_tw
+from thewalrus.fock_gradients import squeezing as squeezing_tw
+from thewalrus.fock_gradients import grad_squeezing as grad_squeezing_tw
+from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
+from thewalrus.fock_gradients import grad_beamsplitter as grad_beamsplitter_tw
+from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
+from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
+
 from strawberryfields.backends.shared_ops import (
     generate_bs_factors,
     load_bs_factors,
@@ -67,11 +76,7 @@ def mixed(pure_state, batched=False):
     num_modes = len(pure_state.shape) - batch_offset
     max_num = (max_num_indices - batch_offset) // 2
     if num_modes > max_num:
-        raise ValueError(
-            "Converting state from pure to mixed currently only supported for {} modes.".format(
-                max_num
-            )
-        )
+        raise ValueError("Converting state from pure to mixed currently only supported for {} modes.".format(max_num))
     else:
         # eqn: 'abc...xyz,ABC...XYZ->aAbBcC...xXyYzZ' (lowercase belonging to 'bra' side, uppercase belonging to 'ket' side)
         batch_index = indices[:batch_offset]
@@ -132,23 +137,8 @@ def squeezed_vacuum_vector(r, theta, D, batched=False, eps=1e-32):
         batch_size = r.shape[0]
     r = tf.cast(r, def_type)
     theta = tf.cast(theta, def_type)
-    c1 = tf.cast(
-        tf.stack(
-            [
-                tf.sqrt(1 / tf.cosh(r)) * np.sqrt(factorial(k)) / factorial(k / 2.0)
-                for k in range(0, D, 2)
-            ],
-            axis=-1,
-        ),
-        def_type,
-    )
-    c2 = tf.stack(
-        [
-            (-0.5 * tf.exp(1j * theta) * tf.cast(tf.tanh(r + eps), def_type)) ** (k / 2.0)
-            for k in range(0, D, 2)
-        ],
-        axis=-1,
-    )
+    c1 = tf.cast(tf.stack([tf.sqrt(1 / tf.cosh(r)) * np.sqrt(factorial(k)) / factorial(k / 2.0) for k in range(0, D, 2)], axis=-1,), def_type,)
+    c2 = tf.stack([(-0.5 * tf.exp(1j * theta) * tf.cast(tf.tanh(r + eps), def_type)) ** (k / 2.0) for k in range(0, D, 2)], axis=-1,)
     even_coeffs = c1 * c2
     ind = [(k,) for k in np.arange(0, D, 2)]
     shape = [D]
@@ -159,8 +149,6 @@ def squeezed_vacuum_vector(r, theta, D, batched=False, eps=1e-32):
     return output
 
 
-from thewalrus.fock_gradients import squeezing as squeezing_tw
-from thewalrus.fock_gradients import grad_squeezing as grad_squeezing_tw
 @tf.custom_gradient
 def single_squeezing_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
     """creates a single mode squeezing matrix"""
@@ -170,11 +158,12 @@ def single_squeezing_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
 
     def grad(dy):
         Dr, Dphi = grad_squeezing_tw(gate, r, phi)
-        grad_r = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dr)))
-        grad_phi = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dphi)))
+        grad_r = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dr)))
+        grad_phi = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
         return grad_r, grad_phi, None
 
     return gate, grad
+
 
 def squeezer_matrix(r, phi, D, batched=False):
     """creates a single mode squeezing matrix accounting for batching"""
@@ -277,8 +266,7 @@ def loss_superop(T, D, batched=False):
         output = tf.squeeze(output, 0)  # drop artificial batch dimension
     return output
 
-from thewalrus.fock_gradients import displacement as displacement_tw
-from thewalrus.fock_gradients import grad_displacement as grad_displacement_tw
+
 @tf.custom_gradient
 def single_displacement_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
     """creates a single mode displacement matrix"""
@@ -288,11 +276,12 @@ def single_displacement_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
 
     def grad(dy):
         Dr, Dphi = grad_displacement_tw(gate, r, phi)
-        grad_r = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dr)))
-        grad_phi = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dphi)))
+        grad_r = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dr)))
+        grad_phi = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
         return grad_r, grad_phi, None
 
     return gate, grad
+
 
 def displacement_matrix(r, phi, D, batched=False):
     """creates a single mode displacement matrix accounting for batching"""
@@ -300,8 +289,7 @@ def displacement_matrix(r, phi, D, batched=False):
         return tf.stack([single_displacement_matrix(r, phi, D) for a in zip([r, phi])])
     return single_displacement_matrix(r, phi, D)
 
-from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
-from thewalrus.fock_gradients import grad_beamsplitter as grad_beamsplitter_tw
+
 @tf.custom_gradient
 def single_beamsplitter_matrix(theta, phi, D, dtype=def_type.as_numpy_dtype):
     """creates a single mode beamsplitter matrix"""
@@ -312,11 +300,12 @@ def single_beamsplitter_matrix(theta, phi, D, dtype=def_type.as_numpy_dtype):
 
     def grad(dy):
         Dtheta, Dphi = grad_beamsplitter_tw(gate, theta, phi)
-        grad_theta = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dtheta)))
-        grad_phi = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dphi)))
+        grad_theta = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
+        grad_phi = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
         return grad_theta, grad_phi, None
 
     return gate, grad
+
 
 def beamsplitter_matrix(theta, phi, D, batched=False):
     """creates a single mode beamsplitter matrix accounting for batching"""
@@ -325,8 +314,6 @@ def beamsplitter_matrix(theta, phi, D, batched=False):
     return tf.convert_to_tensor(single_beamsplitter_matrix(theta, phi, D))
 
 
-from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
-from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
 @tf.custom_gradient
 def single_two_mode_squeezing_matrix(theta, phi, D, dtype=def_type.as_numpy_dtype):
     """creates a single mode two-mode squeezing matrix"""
@@ -337,11 +324,12 @@ def single_two_mode_squeezing_matrix(theta, phi, D, dtype=def_type.as_numpy_dtyp
 
     def grad(dy):
         Dtheta, Dphi = grad_two_mode_squeezing_tw(gate, theta, phi)
-        grad_theta = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dtheta)))
-        grad_phi = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dphi)))
+        grad_theta = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
+        grad_phi = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
         return grad_theta, grad_phi, None
 
     return gate, grad
+
 
 def two_mode_squeezer_matrix(theta, phi, D, batched=False):
     """creates a single mode two-mode squeezing matrix accounting for batching"""
@@ -379,12 +367,7 @@ def fock_state(n, D, pure=True, batched=False):
 def coherent_state(alpha, D, pure=True, batched=False):
     """creates a single mode input coherent state"""
     coh = tf.stack(
-        [
-            tf.exp(-0.5 * tf.math.conj(alpha) * alpha)
-            * _numer_safe_power(alpha, n)
-            / tf.cast(np.sqrt(factorial(n)), def_type)
-            for n in range(D)
-        ],
+        [tf.exp(-0.5 * tf.math.conj(alpha) * alpha) * _numer_safe_power(alpha, n) / tf.cast(np.sqrt(factorial(n)), def_type) for n in range(D)],
         axis=-1,
     )
     if not pure:
@@ -403,9 +386,7 @@ def squeezed_vacuum(r, theta, D, pure=True, batched=False):
 def displaced_squeezed(alpha, r, phi, D, pure=True, batched=False, eps=1e-12):
     """creates a single mode input displaced squeezed state"""
     alpha = tf.cast(alpha, def_type)
-    r = (
-        tf.cast(r, def_type) + eps
-    )  # to prevent nans if r==0, we add an epsilon (default is miniscule)
+    r = tf.cast(r, def_type) + eps  # to prevent nans if r==0, we add an epsilon (default is miniscule)
     phi = tf.cast(phi, def_type)
 
     phase = tf.exp(1j * phi)
@@ -417,17 +398,8 @@ def displaced_squeezed(alpha, r, phi, D, pure=True, batched=False, eps=1e-12):
     gamma = alpha * cosh + tf.math.conj(alpha) * phase * sinh
     hermite_arg = gamma / tf.sqrt(phase * tf.sinh(2 * r))
 
-    prefactor = tf.expand_dims(
-        tf.exp(-0.5 * alpha * tf.math.conj(alpha) - 0.5 * tf.math.conj(alpha) ** 2 * phase * tanh),
-        -1,
-    )
-    coeff = tf.stack(
-        [
-            _numer_safe_power(0.5 * phase * tanh, n / 2.0) / tf.sqrt(factorial(n) * cosh)
-            for n in range(D)
-        ],
-        axis=-1,
-    )
+    prefactor = tf.expand_dims(tf.exp(-0.5 * alpha * tf.math.conj(alpha) - 0.5 * tf.math.conj(alpha) ** 2 * phase * tanh), -1,)
+    coeff = tf.stack([_numer_safe_power(0.5 * phase * tanh, n / 2.0) / tf.sqrt(factorial(n) * cosh) for n in range(D)], axis=-1,)
     hermite_terms = tf.stack([tf.cast(H(n, hermite_arg), def_type) for n in range(D)], axis=-1)
     squeezed_coh = prefactor * coeff * hermite_terms
 
@@ -441,9 +413,7 @@ def thermal_state(nbar, D):
     Note that the batch dimension is determined by argument nbar.
     """
     nbar = tf.cast(nbar, def_type)
-    coeffs = tf.stack(
-        [_numer_safe_power(nbar, n) / _numer_safe_power(nbar + 1, n + 1) for n in range(D)], axis=-1
-    )
+    coeffs = tf.stack([_numer_safe_power(nbar, n) / _numer_safe_power(nbar + 1, n + 1) for n in range(D)], axis=-1)
     thermal = tf.linalg.diag(coeffs)
     return thermal
 
@@ -477,15 +447,11 @@ def single_mode_gate(matrix, mode, in_modes, pure=True, batched=False):
     if num_modes == 0:
         raise ValueError("'in_modes' must have at least one mode")
     if num_modes > max_len:
-        raise NotImplementedError(
-            "The max number of supported modes for this operation is currently {}".format(max_len)
-        )
+        raise NotImplementedError("The max number of supported modes for this operation is currently {}".format(max_len))
     if mode < 0 or mode >= num_modes:
         raise ValueError("'mode' argument is not compatible with number of in_modes")
     else:
-        other_modes_indices = indices[
-            batch_offset + 2 * mode_size : batch_offset + (1 + num_modes) * mode_size
-        ]
+        other_modes_indices = indices[batch_offset + 2 * mode_size : batch_offset + (1 + num_modes) * mode_size]
         if pure:
             eqn_lhs = "{},{}{}{}{}".format(
                 batch_index + left_gate_str,
@@ -494,14 +460,7 @@ def single_mode_gate(matrix, mode, in_modes, pure=True, batched=False):
                 left_gate_str[1],
                 other_modes_indices[mode * mode_size :],
             )
-            eqn_rhs = "".join(
-                [
-                    batch_index,
-                    other_modes_indices[: mode * mode_size],
-                    left_gate_str[0],
-                    other_modes_indices[mode * mode_size :],
-                ]
-            )
+            eqn_rhs = "".join([batch_index, other_modes_indices[: mode * mode_size], left_gate_str[0], other_modes_indices[mode * mode_size :],])
         else:
             eqn_lhs = "{},{}{}{}{}{},{}".format(
                 batch_index + left_gate_str,
@@ -513,13 +472,7 @@ def single_mode_gate(matrix, mode, in_modes, pure=True, batched=False):
                 batch_index + right_gate_str,
             )
             eqn_rhs = "".join(
-                [
-                    batch_index,
-                    other_modes_indices[: mode * mode_size],
-                    left_gate_str[0],
-                    right_gate_str[1],
-                    other_modes_indices[mode * mode_size :],
-                ]
+                [batch_index, other_modes_indices[: mode * mode_size], left_gate_str[0], right_gate_str[1], other_modes_indices[mode * mode_size :],]
             )
 
     eqn = eqn_lhs + "->" + eqn_rhs
@@ -556,21 +509,14 @@ def two_mode_gate(matrix, mode1, mode2, in_modes, pure=True, batched=False):
     if num_modes == 0:
         raise ValueError("'in_modes' must have at least one mode")
     if num_modes > max_len:
-        raise NotImplementedError(
-            "The max number of supported modes for this operation is currently {}".format(max_len)
-        )
+        raise NotImplementedError("The max number of supported modes for this operation is currently {}".format(max_len))
     else:
         min_mode = min(mode1, mode2)
         max_mode = max(mode1, mode2)
         if min_mode < 0 or max_mode >= num_modes or mode1 == mode2:
             raise ValueError("One or more mode numbers are incompatible")
         else:
-            other_modes_indices = indices[
-                batch_offset
-                + 4 * mode_size : batch_offset
-                + 4 * mode_size
-                + mode_size * (num_modes - 2)
-            ]
+            other_modes_indices = indices[batch_offset + 4 * mode_size : batch_offset + 4 * mode_size + mode_size * (num_modes - 2)]
             # build equation
             if mode1 == min_mode:
                 lhs_min_mode_indices = left_gate_str[1]
@@ -644,9 +590,7 @@ def single_mode_superop(superop, mode, in_modes, pure=True, batched=False):
     else:
         num_modes = (len(in_modes.shape) - batch_offset) // 2
     if num_modes > max_len:
-        raise NotImplementedError(
-            "The max number of supported modes for this operation is currently {}".format(max_len)
-        )
+        raise NotImplementedError("The max number of supported modes for this operation is currently {}".format(max_len))
     else:
         if pure:
             in_modes = mixed(in_modes, batched)
@@ -657,24 +601,8 @@ def single_mode_superop(superop, mode, in_modes, pure=True, batched=False):
         state_indices = indices[batch_offset + 4 : batch_offset + 4 + 2 * num_modes]
         left_unchanged_indices = state_indices[: 2 * mode]
         right_unchanged_indices = state_indices[2 * mode : 2 * (num_modes - 1)]
-        eqn_lhs = ",".join(
-            [
-                batch_index + superop_indices,
-                batch_index
-                + left_unchanged_indices
-                + superop_indices[1:3]
-                + right_unchanged_indices,
-            ]
-        )
-        eqn_rhs = "".join(
-            [
-                batch_index,
-                left_unchanged_indices
-                + superop_indices[0]
-                + superop_indices[3]
-                + right_unchanged_indices,
-            ]
-        )
+        eqn_lhs = ",".join([batch_index + superop_indices, batch_index + left_unchanged_indices + superop_indices[1:3] + right_unchanged_indices,])
+        eqn_rhs = "".join([batch_index, left_unchanged_indices + superop_indices[0] + superop_indices[3] + right_unchanged_indices,])
         eqn = "->".join([eqn_lhs, eqn_rhs])
         new_state = tf.einsum(eqn, superop, in_modes)
         return new_state
@@ -721,9 +649,7 @@ def cross_kerr_interaction(kappa, mode1, mode2, in_modes, D, pure=True, batched=
     return output
 
 
-def cubic_phase(
-    gamma, mode, in_modes, D, hbar=2, pure=True, batched=False, method="self_adjoint_eig"
-):
+def cubic_phase(gamma, mode, in_modes, D, hbar=2, pure=True, batched=False, method="self_adjoint_eig"):
     """returns cubic phase unitary matrix on specified input modes"""
     matrix = cubic_phase_matrix(gamma, D, hbar, batched, method=method)
     output = single_mode_gate(matrix, mode, in_modes, pure, batched)
@@ -735,6 +661,7 @@ def beamsplitter(t, r, mode1, mode2, in_modes, D, pure=True, batched=False):
     matrix = beamsplitter_matrix(t, r, D, batched)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
     return output
+
 
 def two_mode_squeezer(r, theta, mode1, mode2, in_modes, D, pure=True, batched=False):
     """returns beamsplitter unitary matrix on specified input modes"""
@@ -776,11 +703,7 @@ def combine_single_modes(modes_list, batched=False):
         # 'a,b,c,...,x,y,z->abc...xyz'
         max_num = max_num_indices - batch_offset
         if num_modes > max_num:
-            raise NotImplementedError(
-                "The max number of supported modes for this operation with pure states is currently {}".format(
-                    max_num
-                )
-            )
+            raise NotImplementedError("The max number of supported modes for this operation with pure states is currently {}".format(max_num))
         batch_index = indices[:batch_offset]
         out_str = indices[batch_offset : batch_offset + num_modes]
         modes_str = ",".join([batch_index + idx for idx in out_str])
@@ -797,19 +720,12 @@ def combine_single_modes(modes_list, batched=False):
         max_num = (max_num_indices - batch_offset) // 2
         batch_index = indices[:batch_offset]
         if num_modes > max_num:
-            raise NotImplementedError(
-                "The max number of supported modes for this operation with mixed states is currently {}".format(
-                    max_num
-                )
-            )
+            raise NotImplementedError("The max number of supported modes for this operation with mixed states is currently {}".format(max_num))
         mode_idxs = [
-            indices[slice(batch_offset + idx, batch_offset + idx + 2)]
-            for idx in range(0, 2 * num_modes, 2)
+            indices[slice(batch_offset + idx, batch_offset + idx + 2)] for idx in range(0, 2 * num_modes, 2)
         ]  # each mode gets a pair of consecutive indices
         eqn_rhs = batch_index + "".join(mode_idxs)
-        eqn_idxs = [
-            batch_index + m if dims[idx] == 2 else ",".join(m) for idx, m in enumerate(mode_idxs)
-        ]
+        eqn_idxs = [batch_index + m if dims[idx] == 2 else ",".join(m) for idx, m in enumerate(mode_idxs)]
         eqn_lhs = ",".join(eqn_idxs)
         eqn = eqn_lhs + "->" + eqn_rhs
         einsum_inputs = []
@@ -882,22 +798,13 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
         if not batched:
             # todo: remove the hack in the line below and enable the line with axes=0 instead, if ever we change the dependency of SF to tensorflow>=1.6
             # revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
-            revised_modes = tf.tensordot(
-                tf.expand_dims(reduced_state, 0), tf.expand_dims(replacement, 0), axes=[[0], [0]]
-            )
+            revised_modes = tf.tensordot(tf.expand_dims(reduced_state, 0), tf.expand_dims(replacement, 0), axes=[[0], [0]])
         else:
             batch_size = reduced_state.shape[0]
             # todo: remove the hack in the line below and enabled the line with axes=0 instead, if ever we change the dependency of SF to tensorflow>=1.6
             # revised_modes = tf.stack([tf.tensordot(reduced_state[b], replacement[b], axes=0) for b in range(batch_size)])
             revised_modes = tf.stack(
-                [
-                    tf.tensordot(
-                        tf.expand_dims(reduced_state[b], 0),
-                        tf.expand_dims(replacement[b], 0),
-                        axes=[[0], [0]],
-                    )
-                    for b in range(batch_size)
-                ]
+                [tf.tensordot(tf.expand_dims(reduced_state[b], 0), tf.expand_dims(replacement[b], 0), axes=[[0], [0]],) for b in range(batch_size)]
             )
         revised_modes_pure = False
 
@@ -916,9 +823,7 @@ def reorder_modes(state, mode_permutation, pure, batched):
         index_permutation = mode_permutation
     else:
         scale = 2
-        index_permutation = [
-            scale * x + i for x in mode_permutation for i in (0, 1)
-        ]  # two indices per mode if we have pure states
+        index_permutation = [scale * x + i for x in mode_permutation for i in (0, 1)]  # two indices per mode if we have pure states
 
     if batched:
         index_permutation = [0] + [i + 1 for i in index_permutation]
@@ -962,9 +867,7 @@ def insert_state(state, system, state_is_pure, mode=None, batched=False):
         elif len(state.shape) - batch_offset == 2:
             return state
         else:
-            raise ValueError(
-                "'state' must have dim={} or dim={}".format(1 - batch_offset, 2 - batch_offset)
-            )
+            raise ValueError("'state' must have dim={} or dim={}".format(1 - batch_offset, 2 - batch_offset))
     else:
         # modes in system
         if len(state.shape) == batch_offset + 1 and state_is_pure:
@@ -980,12 +883,8 @@ def insert_state(state, system, state_is_pure, mode=None, batched=False):
 
         batch_index = indices[:batch_offset]
         left_part = indices[batch_offset : batch_offset + mode * mode_size]
-        middle_part = indices[
-            batch_offset + mode * mode_size : batch_offset + (mode + 1) * mode_size
-        ]
-        right_part = indices[
-            batch_offset + (mode + 1) * mode_size : batch_offset + (num_modes + 1) * mode_size
-        ]
+        middle_part = indices[batch_offset + mode * mode_size : batch_offset + (mode + 1) * mode_size]
+        right_part = indices[batch_offset + (mode + 1) * mode_size : batch_offset + (num_modes + 1) * mode_size]
         eqn_lhs = batch_index + left_part + right_part + "," + batch_index + middle_part
         eqn_rhs = batch_index + left_part + middle_part + right_part
         eqn = eqn_lhs + "->" + eqn_rhs
@@ -1065,20 +964,13 @@ def conditional_state(system, projector, mode, state_is_pure, batched=False):
     num_modes = (num_indices - batch_offset) // mode_size
     max_num = (max_num_indices - batch_offset) // num_modes
     if num_modes > max_num:
-        raise ValueError(
-            "Conditional state projection currently only supported for {} modes.".format(max_num)
-        )
+        raise ValueError("Conditional state projection currently only supported for {} modes.".format(max_num))
 
     batch_index = indices[:batch_offset]
     mode_indices = indices[batch_offset : batch_offset + num_modes * mode_size]
     projector_indices = mode_indices[:mode_size]
     free_mode_indices = mode_indices[mode_size : num_modes * mode_size]
-    state_lhs = (
-        batch_index
-        + free_mode_indices[: mode * mode_size]
-        + projector_indices
-        + free_mode_indices[mode * mode_size :]
-    )
+    state_lhs = batch_index + free_mode_indices[: mode * mode_size] + projector_indices + free_mode_indices[mode * mode_size :]
     projector_lhs = batch_index + projector_indices[0]
     if mode_size == 2:
         projector_lhs += "," + batch_index + projector_indices[1]
@@ -1115,9 +1007,7 @@ def H(n, x):
     terms = tf.reduce_sum(
         tf.stack(
             [
-                _numer_safe_power(-1, m)
-                / (factorial(m) * factorial(n - 2 * m))
-                * _numer_safe_power(2 * x, n - 2 * m)
+                _numer_safe_power(-1, m) / (factorial(m) * factorial(n - 2 * m)) * _numer_safe_power(2 * x, n - 2 * m)
                 for m in range(int(np.floor(n / 2)) + 1)
             ],
             axis=0,
