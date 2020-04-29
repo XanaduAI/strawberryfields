@@ -101,24 +101,24 @@ class GaussianBackend(BaseGaussian):
     def prepare_vacuum_state(self, mode):
         self.circuit.loss(0.0, mode)
 
-    def prepare_coherent_state(self, alpha, mode):
+    def prepare_coherent_state(self, r, phi, mode):
         self.circuit.loss(0.0, mode)
-        self.circuit.displace(alpha, mode)
+        self.circuit.displace(r, phi, mode)
 
     def prepare_squeezed_state(self, r, phi, mode):
         self.circuit.loss(0.0, mode)
         self.circuit.squeeze(r, phi, mode)
 
-    def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
+    def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
         self.circuit.loss(0.0, mode)
-        self.circuit.squeeze(r, phi, mode)
-        self.circuit.displace(alpha, mode)
+        self.circuit.squeeze(r_s, phi_s, mode)
+        self.circuit.displace(r_d,phi_d, mode)
 
     def rotation(self, phi, mode):
         self.circuit.phase_shift(phi, mode)
 
-    def displacement(self, alpha, mode):
-        self.circuit.displace(alpha, mode)
+    def displacement(self, r, phi, mode):
+        self.circuit.displace(r, phi, mode)
 
     def squeeze(self, z, mode):
         phi = angle(z)
