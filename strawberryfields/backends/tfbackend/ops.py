@@ -319,52 +319,30 @@ def displacement_matrix(r, phi, D, batched=False):
     return single_displacement_matrix(r, phi, D)
 
 
+from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
+from thewalrus.fock_gradients import grad_beamsplitter as grad_beamsplitter_tw
 
-def beamsplitter_matrix(t, r, D, batched=False, save=False, directory=None):
-    """creates the two mode beamsplitter matrix"""
-    if not batched:
-        # put in a fake batch dimension for broadcasting convenience
-        t = tf.expand_dims(t, 0)
-        r = tf.expand_dims(r, 0)
-    t = tf.cast(tf.reshape(t, [-1, 1, 1, 1, 1, 1]), def_type)
-    r = tf.cast(tf.reshape(r, [-1, 1, 1, 1, 1, 1]), def_type)
-    mag_t = tf.cast(t, tf.float32)
-    mag_r = tf.abs(r)
-    phase_r = tf.atan2(tf.math.imag(r), tf.math.real(r))
+@tf.custom_gradient
+def single_beamsplitter_matrix(theta, phi, D):
+    """creates a single mode displacement matrix"""
+    theta = theta.numpy()
+    phi = phi.numpy()
 
-    rng = tf.range(D, dtype=tf.float32)
-    N = tf.reshape(rng, [1, -1, 1, 1, 1, 1])
-    n = tf.reshape(rng, [1, 1, -1, 1, 1, 1])
-    M = tf.reshape(rng, [1, 1, 1, -1, 1, 1])
-    k = tf.reshape(rng, [1, 1, 1, 1, 1, -1])
-    n_minus_k = n - k
-    N_minus_k = N - k
-    M_minus_n_plus_k = M - n + k
-    # need to deal with 0*(-n) for n integer
-    n_minus_k = tf.where(tf.greater(n, k), n_minus_k, tf.zeros_like(n_minus_k))
-    N_minus_k = tf.where(tf.greater(N, k), N_minus_k, tf.zeros_like(N_minus_k))
-    M_minus_n_plus_k = tf.where(
-        tf.greater(M_minus_n_plus_k, 0), M_minus_n_plus_k, tf.zeros_like(M_minus_n_plus_k)
-    )
+    gate = beamsplitter_tw(theta, phi, D, def_type.as_numpy_dtype)
 
-    powers = tf.cast(
-        tf.pow(mag_t, k)
-        * tf.pow(mag_r, n_minus_k)
-        * tf.pow(mag_r, N_minus_k)
-        * tf.pow(mag_t, M_minus_n_plus_k),
-        def_type,
-    )
-    phase = tf.exp(1j * tf.cast(phase_r * (n - N), def_type))
+    def grad(dy):
+        Dtheta, Dphi = grad_beamsplitter_tw(gate, theta, phi, def_type.as_numpy_dtype)
+        grad_theta = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dtheta)))
+        grad_phi = 2*tf.math.real(tf.reduce_sum(dy*tf.math.conj(Dphi)))
+        return grad_theta, grad_phi, None
 
-    # load parameter-independent prefactors
-    prefac = get_prefac_tensor(D, directory, save)
+    return gate, grad
 
-    BS_matrix = tf.reduce_sum(phase * powers * prefac, -1)
-
-    if not batched:
-        # drop artificial batch index
-        BS_matrix = tf.squeeze(BS_matrix, [0])
-    return BS_matrix
+def beamsplitter_matrix(theta, phi, D, batched=False):
+    """creates a single mode displacement matrix accounting for batching"""
+    if batched:
+        return tf.stack([single_beamsplitter_matrix(theta, phi, D) for a in zip([theta, phi])])
+    return single_beamsplitter_matrix(theta, phi, D)
 
 
 ###################################################################
