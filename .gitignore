@@ -18,3 +18,7 @@ doc/_static/thumbs/*
 doc/tutorials_apps/*
 !doc/_static/code.png
 doc/code/api/*
+Pipfile
+Pipfile.lock
+.vscode/
+.ipynb_checkpoints/*
