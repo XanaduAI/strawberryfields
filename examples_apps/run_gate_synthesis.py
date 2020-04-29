@@ -135,8 +135,18 @@ active_sd = 0.001
 
 import tensorflow as tf
 
+# We attempt to import the legacy version of tf.einsum to make sure that no
+# issues arise when computing with complex tensors (this is required due to a
+# known issue in TF version 2.1)
+try:
+    from tensorflow.python.ops.special_math_ops import _einsum_v1
+
+    tf.einsum = _einsum_v1
+except ImportError:
+    pass
+
 # set the random seed
-tf.random.set_seed(42)
+tf.random.set_seed(56)
 
 # squeeze gate
 sq_r = tf.random.normal(shape=[depth], stddev=active_sd)
@@ -297,7 +307,7 @@ def cost(weights):
     ket = state.ket()
 
     # overlaps
-    overlaps = tf.math.real(tf.linalg.tensor_diag_part(tf.matmul(tf.math.conj(target_kets), tf.transpose(ket))))
+    overlaps = tf.math.real(tf.einsum('bi,bi->b', tf.math.conj(target_kets), ket))
     mean_overlap = tf.reduce_mean(overlaps)
 
     # Objective function to minimize
