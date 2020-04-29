@@ -2,8 +2,6 @@ r"""
 Quantum gate synthesis
 ======================
 
-*Author: Josh Izaac*
-
 This demonstration works through the process used to produce the gate
 synthesis results presented in `“Machine learning method for state
 preparation and gate synthesis on photonic quantum
@@ -106,13 +104,13 @@ cutoff = 10
 gate_cutoff = 4
 
 # Number of layers
-depth = 25
+depth = 20
 
 # Number of steps in optimization routine performing gradient descent
-reps = 200
+reps = 400
 
 # Learning rate
-lr = 0.05
+lr = 0.01
 
 # Standard deviation of initial parameters
 passive_sd = 0.1
@@ -127,9 +125,6 @@ active_sd = 0.001
 # cutoff. As a result, we restrict the gate synthesis optimization to only
 # :math:`d` input-output relations.
 #
-
-
-######################################################################
 # The layer parameters :math:`\vec{\theta}`
 # -----------------------------------------
 #
@@ -139,6 +134,9 @@ active_sd = 0.001
 #
 
 import tensorflow as tf
+
+# set the random seed
+tf.random.set_seed(42)
 
 # squeeze gate
 sq_r = tf.random.normal(shape=[depth], stddev=active_sd)
@@ -228,21 +226,23 @@ np.fill_diagonal(in_ket, 1)
 with prog.context as q:
     Ket(in_ket) | q
     for k in range(depth):
-        layer(k, q[0])
+        layer(k) | q[0]
 
 ######################################################################
 # Performing the optimization
 # ---------------------------
 #
-# :math:`\newcommand{ket}[1]{\left|#1\right\rangle}` With the Strawberry
-# Fields TensorFlow backend calculating the resulting state of the circuit
-# symbolically, we can use TensorFlow to optimize the gate parameters to
-# minimize the cost function we specify. With gate synthesis, we minimize
-# the overlaps in the Fock basis between the target and learnt unitaries
-# via the following cost function:
+# :math:`\newcommand{ket}[1]{\left|#1\right\rangle}`
+# With the Strawberry Fields TensorFlow backend calculating the
+# resulting state of the circuit symbolically, we can use TensorFlow to
+# optimize the gate parameters to minimize the cost function we specify.
+# With gate synthesis, we minimize the overlaps in the Fock basis
+# between the target and learnt unitaries via the following cost function:
 #
-# .. math:: C(\vec{\theta}) = \frac{1}{d}\sum_{i=0}^{d-1} \left| \langle i \mid
-# V^\dagger U(\vec{\theta})\mid i\rangle - 1\right|
+# .. math::
+#
+#     C(\vec{\theta}) = \frac{1}{d}\sum_{i=0}^{d-1} \left| \langle i \mid
+#     V^\dagger U(\vec{\theta})\mid i\rangle - 1\right|
 #
 # where :math:`V` is the target unitary, :math:`U(\vec{\theta})` is the
 # learnt unitary, and :math:`d` is the gate cutoff. Note that this is a
@@ -263,10 +263,7 @@ print(target_unitary)
 # This matches the gate cutoff of :math:`d=4` that we chose above when
 # defining our hyperparameters.
 #
-
-######################################################################
-# Instantiate the Strawberry Fields TensorFlow backend.
-#
+# Now, we instantiate the Strawberry Fields TensorFlow backend:
 
 eng = sf.Engine('tf', backend_options={"cutoff_dim": cutoff, "batch_size": gate_cutoff})
 
@@ -300,8 +297,7 @@ def cost(weights):
     ket = state.ket()
 
     # overlaps
-    print(tf.math.conj(target_kets).shape, ket.shape, tf.transpose(ket))
-    overlaps = tf.math.real(tf.matmul(tf.math.conj(target_kets), tf.transpose(ket)))
+    overlaps = tf.math.real(tf.linalg.tensor_diag_part(tf.matmul(tf.math.conj(target_kets), tf.transpose(ket))))
     mean_overlap = tf.reduce_mean(overlaps)
 
     # Objective function to minimize
@@ -348,7 +344,6 @@ for i in range(reps):
     overlap_progress.append(overlaps_val)
 
     # one repetition of the optimization
-    print(loss, weights)
     gradients = tape.gradient(loss, weights)
     opt.apply_gradients(zip([gradients], [weights]))
 
@@ -362,9 +357,6 @@ for i in range(reps):
 # Results and visualisation
 # -------------------------
 #
-
-
-######################################################################
 # Plotting the cost vs. optimization step:
 #
 
@@ -376,7 +368,8 @@ plt.style.use('default')
 
 plt.plot(cost_progress)
 plt.ylabel('Cost')
-plt.xlabel('Step');
+plt.xlabel('Step')
+plt.show()
 
 
 ######################################################################
@@ -384,7 +377,7 @@ plt.xlabel('Step');
 # target and learnt unitary.
 #
 
-learnt_unitary = ket_val.T[:gate_cutoff, :gate_cutoff]
+learnt_unitary = ket_val.numpy().T[:gate_cutoff, :gate_cutoff]
 target_unitary = target_unitary[:gate_cutoff, :gate_cutoff]
 
 fig, ax = plt.subplots(1, 4, figsize=(7, 4))
@@ -396,16 +389,14 @@ ax[3].matshow(learnt_unitary.imag, cmap=plt.get_cmap('Greens'))
 ax[0].set_xlabel(r'$\mathrm{Re}(V)$')
 ax[1].set_xlabel(r'$\mathrm{Im}(V)$')
 ax[2].set_xlabel(r'$\mathrm{Re}(U)$')
-ax[3].set_xlabel(r'$\mathrm{Im}(U)$');
+ax[3].set_xlabel(r'$\mathrm{Im}(U)$')
+fig.show()
 
 
 ######################################################################
 # Process fidelity
 # ----------------
 #
-
-
-######################################################################
 # The process fidelity between the two unitaries is defined by
 #
 # .. math:: F_e  = \left| \left\langle \Psi(V) \mid \Psi(U)\right\rangle\right|^2
@@ -426,7 +417,7 @@ phi = I.flatten()/np.sqrt(gate_cutoff)
 psiV = np.kron(I, target_unitary) @ phi
 psiU = np.kron(I, learnt_unitary) @ phi
 
-np.abs(np.vdot(psiV, psiU))**2
+print(np.abs(np.vdot(psiV, psiU))**2)
 
 
 ######################################################################
@@ -434,9 +425,6 @@ np.abs(np.vdot(psiV, psiU))**2
 # variational quantum circuit has a process fidelity of 95.98% to the
 # target unitary.
 #
-
-
-######################################################################
 # Circuit parameters
 # ------------------
 #
@@ -446,22 +434,22 @@ np.abs(np.vdot(psiV, psiU))**2
 # circuit:
 #
 
-np.max(np.abs(params_val[1]))
+print(np.max(np.abs(weights[:, 0])))
 
 
 ######################################################################
 # References
 # ----------
 #
-# [1] Juan Miguel Arrazola, Thomas R. Bromley, Josh Izaac, Casey R. Myers,
-# Kamil Brádler, and Nathan Killoran. Machine learning method for state
-# preparation and gate synthesis on photonic quantum computers. `Quantum
-# Science and Technology, 4
-# 024004 <https://iopscience.iop.org/article/10.1088/2058-9565/aaf59e>`__,
-# (2019).
+# 1. Juan Miguel Arrazola, Thomas R. Bromley, Josh Izaac, Casey R. Myers,
+#    Kamil Brádler, and Nathan Killoran. Machine learning method for state
+#    preparation and gate synthesis on photonic quantum computers. `Quantum
+#    Science and Technology, 4
+#    024004 <https://iopscience.iop.org/article/10.1088/2058-9565/aaf59e>`__,
+#    (2019).
 #
-# [2] Killoran, N., Bromley, T. R., Arrazola, J. M., Schuld, M., Quesada,
-# N., & Lloyd, S. “Continuous-variable quantum neural networks.” arXiv,
-# 2018. arXiv:1806.06871
-#
-
+# 2. Nathan Killoran, Thomas R. Bromley, Juan Miguel Arrazola, Maria Schuld,
+#    Nicolas Quesada, and Seth Lloyd. Continuous-variable quantum neural networks.
+#    `Physical Review Research, 1(3), 033063.
+#    <https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.1.033063>`__,
+#    (2019).
