@@ -757,13 +757,24 @@ class MeasureFock(Measurement):
 
     ns = None
 
-    def __init__(self, select=None):
+    def __init__(self, dark_counts=None, select=None):
+        self.dark_counts = dark_counts
+
         if select is not None and not isinstance(select, Sequence):
             select = [select]
+
         super().__init__([], select)
 
     def _apply(self, reg, backend, shots=1, **kwargs):
-        return backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
+        samples = backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
+
+        if self.dark_counts is not None:
+            return [
+                [s[i] + np.random.poisson(j) for i, j in enumerate(self.dark_counts)]
+                for s in samples
+            ]
+
+        return samples
 
 
 class MeasureThreshold(Measurement):
