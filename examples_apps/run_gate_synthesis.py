@@ -107,10 +107,10 @@ gate_cutoff = 4
 depth = 20
 
 # Number of steps in optimization routine performing gradient descent
-reps = 400
+reps = 300
 
 # Learning rate
-lr = 0.01
+lr = 0.015
 
 # Standard deviation of initial parameters
 passive_sd = 0.1
@@ -146,7 +146,7 @@ except ImportError:
     pass
 
 # set the random seed
-tf.random.set_seed(56)
+tf.random.set_seed(42)
 
 # squeeze gate
 sq_r = tf.random.normal(shape=[depth], stddev=active_sd)
@@ -430,13 +430,15 @@ psiU = np.kron(I, learnt_unitary) @ phi
 
 
 ######################################################################
-# Therefore, after 400 repetitions, the learnt unitary synthesized via a
+# Therefore, after 300 repetitions, the learnt unitary synthesized via a
 # variational quantum circuit has the following process fidelity to the target
 # unitary:
 #
 
 print(np.abs(np.vdot(psiV, psiU))**2)
 
+
+######################################################################
 # Circuit parameters
 # ------------------
 #
