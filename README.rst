@@ -37,7 +37,7 @@ Features
 
 .. raw:: html
 
-    <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/gallery/state_learner/StateLearning.gif" width="300px"  align="right">
+    <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/_static/StateLearning.gif" width="300px"  align="right">
 
 * An open-source software architecture for **photonic quantum computing**
 
