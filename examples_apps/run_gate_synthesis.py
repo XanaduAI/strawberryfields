@@ -253,9 +253,14 @@ with prog.context as q:
 #
 
 from strawberryfields.utils import random_interferometer
+
+# define unitary up to gate_cutoff
+random_unitary = random_interferometer(gate_cutoff)
+print(random_unitary)
+
+# extend unitary up to cutoff
 target_unitary = np.identity(cutoff, dtype=np.complex128)
-target_unitary[:gate_cutoff, :gate_cutoff] = random_interferometer(4)
-print(target_unitary)
+target_unitary[:gate_cutoff, :gate_cutoff] = random_unitary
 
 
 ######################################################################
