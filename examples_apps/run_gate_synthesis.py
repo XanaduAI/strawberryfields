@@ -3,9 +3,9 @@ Quantum gate synthesis
 ======================
 
 This demonstration works through the process used to produce the gate
-synthesis results presented in `“Machine learning method for state
+synthesis results presented in `"Machine learning method for state
 preparation and gate synthesis on photonic quantum
-computers” <https://arxiv.org/abs/1807.10781>`__.
+computers" <https://arxiv.org/abs/1807.10781>`__.
 
 This tutorial uses the TensorFlow backend of Strawberry Fields, giving us
 access to a number of additional functionalities including: GPU integration,
