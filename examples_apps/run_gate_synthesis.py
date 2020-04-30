@@ -198,7 +198,7 @@ print(sf_params.shape)
 # Now, we can create a function to define the :math:`i`\ th layer, acting
 # on qumode ``q``. We add the :class:`~.utils.operation` decorator so that the layer can be used
 # as a single operation when constructing our circuit within the usual
-# Strawberry Fields Program context
+# Strawberry Fields Program context.
 
 # layer architecture
 @operation(1)
