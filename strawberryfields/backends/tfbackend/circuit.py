@@ -38,6 +38,13 @@ import numpy as np
 from scipy.special import factorial
 import tensorflow as tf
 
+try:
+    from tensorflow.python.ops.special_math_ops import _einsum_v1
+
+    tf.einsum = _einsum_v1
+except ImportError:
+    pass
+
 from . import ops
 
 
