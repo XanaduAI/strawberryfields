@@ -44,8 +44,6 @@ described below:
 .. figure:: https://i.imgur.com/NEsaVIX.png
    :alt: layer
 
-   layer
-
 Here,
 
 -  :math:`\mathcal{U}_i(\theta_i,\phi_i)` is an N-mode linear optical
