@@ -62,6 +62,10 @@ machine learning. Take a look below to see what you can do!
     :description: :doc:`../tutorials_apps/run_state_learner`
     :figure: ../_static/StateLearning.gif
 
+.. customgalleryitem::
+    :tooltip: Quantum gate synthesis
+    :description: :doc:`../tutorials_apps/run_gate_synthesis`
+    :figure: ../_static/GateSynthesis.gif
 
 .. raw:: html
 
