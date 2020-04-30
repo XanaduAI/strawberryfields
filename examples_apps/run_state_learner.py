@@ -146,8 +146,7 @@ kappa = tf.random.normal(shape=[depth], stddev=active_sd)
 
 ######################################################################
 # For convenience, we store the TensorFlow variables representing the
-# weights as a tensor, as well as creating the corresponding
-# single-mode Strawberry Fields program and parameters:
+# weights as a tensor:
 
 weights = tf.convert_to_tensor([r1, sq_r, sq_phi, r2, d_r, d_phi, kappa])
 weights = tf.Variable(tf.transpose(weights))
