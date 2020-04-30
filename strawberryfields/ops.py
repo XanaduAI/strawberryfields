@@ -768,11 +768,16 @@ class MeasureFock(Measurement):
     def _apply(self, reg, backend, shots=1, **kwargs):
         samples = backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
 
+        if isinstance(samples, list):
+            samples = np.array(samples)
+
         if self.dark_counts is not None:
-            return [
-                [s[i] + np.random.poisson(j) for i, j in enumerate(self.dark_counts)]
-                for s in samples
-            ]
+            if len(self.dark_counts) != len(reg):
+                raise ValueError(
+                    "The number of dark counts must be equal to the number of measured modes: "
+                    "{} != {}".format(len(self.dark_counts), len(reg))
+                )
+            samples += np.random.poisson(self.dark_counts, samples.shape)
 
         return samples
 
