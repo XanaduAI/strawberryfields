@@ -445,8 +445,9 @@ print(np.max(np.abs(weights[:, 0])))
 # Further results
 # ---------------
 #
-# Even more refined results can be obtained by increasing the number of
-# repetitions (``reps``) after downloading the tutorial!
+# After downloading the tutorial, even more refined results can be obtained by
+# increasing the number of repetitions (``reps``), changing the depth of the
+# circuit or altering the gate cutoff!
 #
 
 ######################################################################
