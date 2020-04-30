@@ -53,6 +53,7 @@ from strawberryfields.backends.tfbackend.ops import partial_trace
 
 # set the random seed
 tf.random.set_seed(137)
+np.random.seed(42)
 
 
 ######################################################################
@@ -263,9 +264,13 @@ for i in range(reps):
 
 ket_val = phi_var_re.numpy() + phi_var_im.numpy()*1j
 out_rhoB = np.outer(ket_val, ket_val.conj())
+out_rhoB /= np.trace(out_rhoB)
 
 
 ######################################################################
+# Note that the optimization is not guaranteed to keep the state normalized,
+# so we renormalize the minimized state.
+#
 # Next, we can use the following function to plot the Wigner function of
 # this density matrix:
 #
@@ -325,18 +330,18 @@ plt.show()
 # :math:`\ket{\phi}`:
 #
 
-plt.bar(np.arange(cutoff), height=np.abs(ket_val)**2)
+plt.bar(np.arange(cutoff), height=np.diag(out_rhoB).real)
 plt.show()
 
 
 ######################################################################
 # Finally, printing out the mean number of photons
-# :math:`\bar{n} = \left\langle \phi \mid \hat{n} \mid \phi\right\rangle`,
+# :math:`\bar{n} = \left\langle \phi \mid \hat{n} \mid \phi\right\rangle = \text{Tr}(\hat{n}\rho)`,
 # as well as the squeezing magnitude
 # :math:`r=\sinh^{-1}\left(\sqrt{\bar{n}}\right)` of this state:
 #
 
-nbar = ((ket_val.conj()).T @ n_opt @ ket_val).real
+nbar = np.trace(n_opt @ out_rhoB).real
 print("mean number of photons =", nbar)
 print("squeezing parameter =", np.arcsinh(np.sqrt(nbar)))
 

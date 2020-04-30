@@ -237,7 +237,13 @@ with prog.context as q:
 # :math:`U(\vec{\theta})` the unitary operation applied by the variational
 # quantum circuit, and :math:`\ket{\psi_0}=\ket{0}` the initial state.
 #
-# Let's define the target state as the single photon state
+# Let's first instantiate the TensorFlow backend, making sure to pass
+# the Fock basis truncation cutoff.
+
+eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
+
+######################################################################
+# Now let's define the target state as the single photon state
 # :math:`\ket{\psi_t}=\ket{1}`:
 
 import numpy as np
@@ -284,11 +290,9 @@ def cost(weights):
 #######################################################################
 # Now that the cost function is defined, we can define and run the
 # optimization. Below, we choose the Adam
-# optimizer that is built into TensorFlow, and instantiate
-# the Strawberry Fields TensorFlow backend.
+# optimizer that is built into TensorFlow:
 
 opt = tf.keras.optimizers.Adam(learning_rate=lr)
-eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
 
 ######################################################################
 # We then loop over all repetitions, storing the best predicted fidelity
