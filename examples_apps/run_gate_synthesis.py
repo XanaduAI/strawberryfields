@@ -3,9 +3,9 @@ Quantum gate synthesis
 ======================
 
 This demonstration works through the process used to produce the gate
-synthesis results presented in `“Machine learning method for state
+synthesis results presented in `"Machine learning method for state
 preparation and gate synthesis on photonic quantum
-computers” <https://arxiv.org/abs/1807.10781>`__.
+computers" <https://arxiv.org/abs/1807.10781>`__.
 
 This tutorial uses the TensorFlow backend of Strawberry Fields, giving us
 access to a number of additional functionalities including: GPU integration,
@@ -33,7 +33,7 @@ unitary.
 
 For arbitrary gate synthesis using optimization, we need to make use of
 a quantum circuit with a layer structure that is **universal** - that
-is, by ‘stacking’ the layers, we can guarantee that we can produce *any*
+is, by 'stacking' the layers, we can guarantee that we can produce *any*
 CV state with at-most polynomial overhead. Therefore, the architecture
 we choose must consist of layers with each layer containing
 parameterized Gaussian *and* non-Gaussian gates. **The non-Gaussian
@@ -43,8 +43,6 @@ described below:
 
 .. figure:: https://i.imgur.com/NEsaVIX.png
    :alt: layer
-
-   layer
 
 Here,
 
@@ -200,7 +198,7 @@ print(sf_params.shape)
 # Now, we can create a function to define the :math:`i`\ th layer, acting
 # on qumode ``q``. We add the :class:`~.utils.operation` decorator so that the layer can be used
 # as a single operation when constructing our circuit within the usual
-# Strawberry Fields Program context
+# Strawberry Fields Program context.
 
 # layer architecture
 @operation(1)
@@ -255,9 +253,14 @@ with prog.context as q:
 #
 
 from strawberryfields.utils import random_interferometer
+
+# define unitary up to gate_cutoff
+random_unitary = random_interferometer(gate_cutoff)
+print(random_unitary)
+
+# extend unitary up to cutoff
 target_unitary = np.identity(cutoff, dtype=np.complex128)
-target_unitary[:gate_cutoff, :gate_cutoff] = random_interferometer(4)
-print(target_unitary)
+target_unitary[:gate_cutoff, :gate_cutoff] = random_unitary
 
 
 ######################################################################
@@ -375,7 +378,7 @@ plt.show()
 
 ######################################################################
 # We can use matrix plots to plot the real and imaginary components of the
-# target and learnt unitary.
+# target unitary :math:`V` and learnt unitary :math:`U`.
 #
 
 learnt_unitary = ket_val.numpy().T[:gate_cutoff, :gate_cutoff]
