@@ -331,6 +331,7 @@ def phase(theta, trunc):
     """
     return np.array(np.diag([exp(1j * n * theta) for n in range(trunc)]), dtype=def_type)
 
+
 #pylint: disable=unused-argument
 @functools.lru_cache()
 def beamsplitter(t, r, phi, trunc):
