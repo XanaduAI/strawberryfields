@@ -104,13 +104,13 @@ cutoff = 10
 gate_cutoff = 4
 
 # Number of layers
-depth = 20
+depth = 15
 
 # Number of steps in optimization routine performing gradient descent
-reps = 300
+reps = 200
 
 # Learning rate
-lr = 0.015
+lr = 0.025
 
 # Standard deviation of initial parameters
 passive_sd = 0.1
@@ -135,18 +135,9 @@ active_sd = 0.001
 
 import tensorflow as tf
 
-# We attempt to import the legacy version of tf.einsum to make sure that no
-# issues arise when computing with complex tensors (this is required due to a
-# known issue in TF version 2.1)
-try:
-    from tensorflow.python.ops.special_math_ops import _einsum_v1
-
-    tf.einsum = _einsum_v1
-except ImportError:
-    pass
-
 # set the random seed
 tf.random.set_seed(42)
+np.random.seed(42)
 
 # squeeze gate
 sq_r = tf.random.normal(shape=[depth], stddev=active_sd)
@@ -172,9 +163,9 @@ weights = tf.convert_to_tensor([r1, sq_r, sq_phi, r2, d_r, d_phi, kappa])
 weights = tf.Variable(tf.transpose(weights))
 
 ######################################################################
-# Since we have a depth of 20 (so 20 layers), and each layer takes
+# Since we have a depth of 15 (so 15 layers), and each layer takes
 # 7 different types of parameters, the final shape of our weights
-# array should be :math:`\text{depth}\times 7` or ``(20, 7)``:
+# array should be :math:`\text{depth}\times 7` or ``(15, 7)``:
 
 print(weights.shape)
 
@@ -357,7 +348,7 @@ for i in range(reps):
     gradients = tape.gradient(loss, weights)
     opt.apply_gradients(zip([gradients], [weights]))
 
-    # Prints progress at every 100 reps
+    # Prints progress at every rep
     if i % 1 == 0:
         # print progress
         print("Rep: {} Cost: {:.4f} Mean overlap: {:.4f}".format(i, loss, mean_overlap_val))
@@ -430,7 +421,7 @@ psiU = np.kron(I, learnt_unitary) @ phi
 
 
 ######################################################################
-# Therefore, after 300 repetitions, the learnt unitary synthesized via a
+# Therefore, after 200 repetitions, the learnt unitary synthesized via a
 # variational quantum circuit has the following process fidelity to the target
 # unitary:
 #
@@ -450,6 +441,13 @@ print(np.abs(np.vdot(psiV, psiU))**2)
 
 print(np.max(np.abs(weights[:, 0])))
 
+######################################################################
+# Further results
+# ---------------
+#
+# Even more refined results can be obtained by increasing the number of
+# repetitions (``reps``) after downloading the tutorial!
+#
 
 ######################################################################
 # References
