@@ -378,7 +378,7 @@ plt.show()
 
 ######################################################################
 # We can use matrix plots to plot the real and imaginary components of the
-# target and learnt unitary.
+# target unitary :math:`V` and learnt unitary :math:`U`.
 #
 
 learnt_unitary = ket_val.numpy().T[:gate_cutoff, :gate_cutoff]
