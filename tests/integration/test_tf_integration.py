@@ -422,3 +422,25 @@ class TestGradient:
         grad = tape.gradient(res, [a])
         grad_ex = -a ** 3 * (a ** 2 - 2) * np.exp(-a ** 2)
         assert np.allclose(grad, grad_ex, atol=tol, rtol=0)
+
+
+def test_TODO():
+    from tensorflow.python.ops.special_math_ops import _einsum_v1
+    import tensorflow as tf
+    def f1(h):
+        return tf.abs(tf.reduce_sum(tf.matmul(h, h)))
+
+    def f2(h):
+        return tf.abs(tf.reduce_sum(tf.einsum('ab,bc->ac', h, h)))
+
+    def f3(h):
+        return tf.abs(tf.reduce_sum(_einsum_v1('ab,bc->ac', h, h)))
+
+    A = tf.Variable(tf.random.uniform(shape=[2, 2]))
+    B = tf.random.uniform(shape=[2, 2])
+    for f in (f1, f2, f3):
+        with tf.GradientTape() as tape:
+            C = tf.cast(A, dtype=tf.complex64) + 1j * tf.cast(B, dtype=tf.complex64)
+            loss = f(C)
+        grad = tape.gradient(loss, A)
+        print(grad)

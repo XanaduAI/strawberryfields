@@ -35,6 +35,13 @@ import tensorflow as tf
 import numpy as np
 from scipy.special import binom, factorial
 
+try:
+    from tensorflow.python.ops.special_math_ops import _einsum_v1
+
+    tf.einsum = _einsum_v1
+except ImportError:
+    pass
+
 from strawberryfields.backends.shared_ops import (
     generate_bs_factors,
     load_bs_factors,
