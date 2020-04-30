@@ -333,7 +333,7 @@ def phase(theta, trunc):
 
 
 @functools.lru_cache()
-def beamsplitter(t, r, phi, trunc):
+def beamsplitter(t, r, phi, trunc): #pylint: disable=unused-argument
     r""" The beamsplitter :math:`B(cos^{-1} t, phi)`.
 
     Uses the `BSgate operation from The Walrus`_ to calculate the beamsplitter.
