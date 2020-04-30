@@ -27,7 +27,12 @@ from numpy.polynomial.hermite import hermval as H
 from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
-from thewalrus.fock_gradients import displacement, squeezing, two_mode_squeezing, beamsplitter
+from thewalrus.fock_gradients import (
+    displacement as displacement_tw,
+    squeezing as squeezing_tw,
+    two_mode_squeezing as two_mode_squeezing_tw,
+    beamsplitter as beamsplitter_tw,
+)
 
 def_type = np.complex128
 indices = string.ascii_lowercase
@@ -242,7 +247,7 @@ def displacement(alpha, trunc):
     r = np.abs(alpha)
     theta = np.angle(alpha)
 
-    ret = displacement(r, theta, cutoff=trunc)
+    ret = displacement_tw(r, theta, cutoff=trunc)
 
     return ret
 
@@ -262,7 +267,7 @@ def squeezing(r, theta, trunc):
             trunc (int): the Fock cutoff
     """
 
-    ret = squeezing(r, theta, cutoff=trunc)
+    ret = squeezing_tw(r, theta, cutoff=trunc)
 
     return ret
 
@@ -276,7 +281,7 @@ def two_mode_squeezing(r, theta, trunc):
         theta (float): two-mode squeezing phase
         trunc (int): Fock ladder cutoff
     """
-    ret = squeezing(r, theta, cutoff=trunc)
+    ret = two_mode_squeezing_tw(r, theta, cutoff=trunc)
 
     # Transpose needed because of different conventions in SF and The Walrus.
     ret = np.transpose(ret, [0, 2, 1, 3])
@@ -338,7 +343,7 @@ def beamsplitter(t, r, phi, trunc):
     # pylint: disable=bad-whitespace
 
     theta = np.arccos(t)
-    BS_tw = beamsplitter(theta, phi, cutoff=trunc)
+    BS_tw = beamsplitter_tw(theta, phi, cutoff=trunc)
 
     # Transpose needed because of different conventions in SF and The Walrus.
     return BS_tw.transpose((0, 2, 1, 3))
