@@ -33,7 +33,7 @@ unitary.
 
 For arbitrary gate synthesis using optimization, we need to make use of
 a quantum circuit with a layer structure that is **universal** - that
-is, by ‘stacking’ the layers, we can guarantee that we can produce *any*
+is, by 'stacking' the layers, we can guarantee that we can produce *any*
 CV state with at-most polynomial overhead. Therefore, the architecture
 we choose must consist of layers with each layer containing
 parameterized Gaussian *and* non-Gaussian gates. **The non-Gaussian
