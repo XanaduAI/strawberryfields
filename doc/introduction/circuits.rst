@@ -118,11 +118,24 @@ backend options. Available backends include:
   However, it cannot represent non-Gaussian operations and states, with the exception of
   terminal Fock measurements.
 
-* The ``'tf'`` backend, written in TensorFlow 1.3.
+* The ``'tf'`` backend, written in TensorFlow 2.
 
   This backend represents the quantum
   state and operations via the Fock basis, but allows for backpropagation and optimization
   using TensorFlow.
+
+  .. note::
+
+      To instantiate an engine with the TensorFlow backend, TensorFlow 2.0 and above
+      must be installed. In most cases, TensorFlow can be installed via ``pip``:
+
+      .. code-block:: console
+
+          pip install tensorflow
+
+      For more installation details and instructions, please refer to the
+      `TensorFlow documentation <https://www.tensorflow.org/install>`_.
+
 
 Once the engine has been initialized, the quantum program can be executed on the
 selected backend via :meth:`.Engine.run`:

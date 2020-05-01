@@ -140,7 +140,7 @@ remote simulator/hardware device). Engines are initialized as follows:
 
 where
 
-* ``backend``: a string or :class:`~.BaseBackend` object representing the Strawberry Fields backend we wish to use; we have the choice of two Fock backends [#]_, the NumPy based (``'fock'``) and Tensorflow (``'tf'``), and one Gaussian backend [#]_ (``'gaussian'``).
+* ``backend``: a string or :class:`~.BaseBackend` object representing the Strawberry Fields backend we wish to use; we have the choice of two Fock backends [#]_, the NumPy based (``'fock'``) and TensorFlow (``'tf'``), and one Gaussian backend [#]_ (``'gaussian'``).
 
   This argument is *required* when creating the engine.
 

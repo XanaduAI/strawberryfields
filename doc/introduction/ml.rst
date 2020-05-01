@@ -35,7 +35,7 @@ machine learning. Take a look below to see what you can do!
 
    ../tutorials_apps/run_tutorial_similarity
    ../tutorials_apps/run_tutorial_points
-   /tutorials/tutorial_machine_learning
+   ../tutorials_apps/run_tutorial_machine_learning
 
 .. customgalleryitem::
     :tooltip: Graphs similarity
@@ -49,8 +49,23 @@ machine learning. Take a look below to see what you can do!
 
 .. customgalleryitem::
     :tooltip: Optimization and machine learning with TensorFlow
-    :description: :doc:`Optimization and machine learning with TensorFlow </tutorials/tutorial_machine_learning>`
+    :description: :doc:`Optimization and machine learning with TensorFlow <../tutorials_apps/run_tutorial_machine_learning>`
     :figure: ../_static/TF.png
+
+.. customgalleryitem::
+    :tooltip: Minimizing correlations
+    :description: :doc:`../tutorials_apps/run_minimizing_correlations`
+    :figure: ../_static/minimizing_correlations.gif
+
+.. customgalleryitem::
+    :tooltip: Quantum state learning
+    :description: :doc:`../tutorials_apps/run_state_learner`
+    :figure: ../_static/StateLearning.gif
+
+.. customgalleryitem::
+    :tooltip: Quantum gate synthesis
+    :description: :doc:`../tutorials_apps/run_gate_synthesis`
+    :figure: ../_static/GateSynthesis.gif
 
 .. raw:: html
 

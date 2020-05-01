@@ -16,6 +16,7 @@ import numbers
 import pytest
 
 import numpy as np
+import tensorflow as tf
 
 import strawberryfields as sf
 from strawberryfields import ops
@@ -124,7 +125,10 @@ class TestProperExecution:
         # the same samples can also be found in the regrefs
         assert [r.val for r in prog.register] == res.samples[0].tolist()
         # first mode was measured
-        assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
+        if eng.backend_name == 'tf':
+            assert isinstance(res.samples[0][0], tf.Tensor)
+        else:
+            assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
         # second mode was not measured
         assert res.samples[0][1] is None
 

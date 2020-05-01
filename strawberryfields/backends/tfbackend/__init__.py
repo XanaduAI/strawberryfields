@@ -13,9 +13,9 @@
 # limitations under the License.
 
 r"""
-.. _Tensorflow_backend:
+.. _TensorFlow_backend:
 
-Tensorflow simulator backend
+TensorFlow simulator backend
 ##############################
 
 **Module name:** :mod:`strawberryfields.backends.tfbackend`
@@ -23,7 +23,7 @@ Tensorflow simulator backend
 .. currentmodule:: strawberryfields.backends.tfbackend
 
 The :class:`TFBackend` object implements a simulation of quantum optical circuits using
-`Tensorflow <http://www.Tensorflow.org/>`_. The primary component of the TFBackend is a
+`TensorFlow <http://www.TensorFlow.org/>`_. The primary component of the TFBackend is a
 :class:`Circuit` object which is used to simulate a multi-mode quantum optical system. The
 :class:`TFBackend` provides the basic API-compatible interface to the simulator, while the
 :class:`Circuit` object actually carries out the mathematical simulation.
@@ -61,7 +61,7 @@ TFBackend methods
 =================
 
 The parameters supplied for these operations can be either numeric (float, complex) values
-or Tensorflow :class:`Variables`/:class:`Tensors`. The Tensorflow objects can either be scalars or vectors. For
+or TensorFlow :class:`Variables`/:class:`Tensors`. The TensorFlow objects can either be scalars or vectors. For
 vectors, they must have the same dimension as the declared batch size of the underlying circuit.
 
 .. autosummary::
@@ -93,7 +93,6 @@ vectors, they must have the same dimension as the declared batch size of the und
    thermal_loss
    measure_homodyne
    measure_fock
-   graph
 
 
 Code details
@@ -107,12 +106,9 @@ FockStateTF
 .. currentmodule:: strawberryfields.backends.tfbackend.states.FockStateTF
 
 This class represents the quantum state
-returned by the Tensorflow backend. It extends :class:`~.BaseFockState` with additional functionality
-unique to the Tensorflow backend. The primary difference between this class and the Base Fock state
-is that its methods and attributes can return either numerical or symbolic values.
-
-The default representation (numerical or symbolic)
-is set when creating the state: :code:`state = eng.run('backend', eval=True/False)`. The representation can also be specified on a per-use basis when calling a method, e.g., :code:`state.mean_photon(eval=True/False)`. Along with the boolean :code:`eval`, acceptable keyword arguments are :code:`session` (a Tensorflow Session object) and :code:`feed_dict` (a dictionary mapping Tensorflow objects to numerical values). These will be used when evaluating any Tensors.
+returned by the TensorFlow backend. It extends :class:`~.BaseFockState` with additional functionality
+unique to the TensorFlow backend. The primary difference between this class and the Base Fock state
+is that it returns TensorFlow ``Tensor`` objects
 
 .. currentmodule:: strawberryfields.backends.tfbackend.states.FockStateTF
 
@@ -131,7 +127,6 @@ is set when creating the state: :code:`state = eng.run('backend', eval=True/Fals
    mean_photon
    batched
    cutoff_dim
-   graph
 
 
 Code details
@@ -154,29 +149,10 @@ else:
 
 
 tf_info = """\
-To use Strawberry Fields with TensorFlow support, version 1.3 of TensorFlow is required.
+To use Strawberry Fields with TensorFlow support, version 2.x of TensorFlow is required.
 This can be installed as follows:
 
-pip install tensorflow==1.3
-"""
-
-
-tf_info_python = """\
-To use Strawberry Fields with TensorFlow support, version 1.3 of TensorFlow is required.
-
-Note that TensorFlow version 1.3 is only supported on Python versions
-less than or equal to 3.6. To continue using TensorFlow with Strawberry Fields,
-you will need to install Python 3.6.
-
-The recommended method is to install Anaconda3:
-
-https://www.anaconda.com/download
-
-Once installed, you can then create a Python 3.6 Conda environment:
-
-conda create --name sf_tensorflow_env python=3.6
-conda activate sf_tensorflow_env
-pip install strawberryfields tensorflow==1.3
+pip install tensorflow
 """
 
 
@@ -186,11 +162,8 @@ def excepthook(type, value, traceback):
     print(value)
 
 
-if not (tf_available and tf_version[:3] == "1.3"):
+if not (tf_available and tf_version[:2] == "2."):
     sys.excepthook = excepthook
-
-    if sys.version_info[1] > 6:
-        raise ImportError(tf_info_python)
 
     raise ImportError(tf_info)
 
