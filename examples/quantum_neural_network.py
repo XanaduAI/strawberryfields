@@ -12,14 +12,14 @@ from strawberryfields import ops
 
 # define interferometer
 def interferometer(params, q):
-    """Parameterised interferometer acting on N modes.
+    """Parameterised interferometer acting on ``N`` modes.
 
     Args:
-        params (list[float]): list of length max(1, N-1) + (N-1)*N parameters.
+        params (list[float]): list of length ``max(1, N-1) + (N-1)*N`` parameters.
 
-            * The first N(N-1)/2 parameters correspond to the beamsplitter angles
-            * The second N(N-1)/2 parameters correspond to the beamsplitter phases
-            * The final N-1 parameters correspond to local rotation on the first N-1 modes
+            * The first ``N(N-1)/2`` parameters correspond to the beamsplitter angles
+            * The second ``N(N-1)/2`` parameters correspond to the beamsplitter phases
+            * The final ``N-1`` parameters correspond to local rotation on the first N-1 modes
 
         q (list[RegRef]): list of Strawberry Fields quantum registers the interferometer
             is to be applied to
@@ -53,10 +53,10 @@ def interferometer(params, q):
 
 # define layer
 def layer(params, q):
-    """CV quantum neural network layer acting on N modes.
+    """CV quantum neural network layer acting on ``N`` modes.
 
     Args:
-        params (list[float]): list of length 2[max(1, N-1) + N**2 + n] containing
+        params (list[float]): list of length ``2*(max(1, N-1) + N**2 + n)`` containing
             the number of parameters for the layer
         q (list[RegRef]): list of Strawberry Fields quantum registers the layer
             is to be applied to
@@ -87,7 +87,7 @@ def layer(params, q):
 
 def init_weights(modes, layers, active_sd=0.0001, passive_sd=0.1):
     """Initialize a 2D TensorFlow Variable containing normally-distributed
-    random weights for an N mode quantum neural network with L layers.
+    random weights for an ``N`` mode quantum neural network with ``L`` layers.
 
     Args:
         modes (int): the number of modes in the quantum neural network
@@ -101,7 +101,7 @@ def init_weights(modes, layers, active_sd=0.0001, passive_sd=0.1):
 
     Returns:
         tf.Variable[tf.float32]: A TensorFlow Variable of shape
-        ``[layers, 2[max(1, modes-1) + modes**2 + modes]]``, where the Lth
+        ``[layers, 2*(max(1, modes-1) + modes**2 + modes)]``, where the Lth
         row represents the layer parameters for the Lth layer.
     """
     # Number of interferometer parameters:

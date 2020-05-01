@@ -193,7 +193,7 @@ Multiple layers can then be joined into a network using:
         for k in range(num_layers):
             layer(params[k, :], q)
 
-where ``params`` is a real array of size ``[layers, 2[max(1, modes-1) + modes**2 + modes]`` containing
+where ``params`` is a real array of size ``[layers, 2*(max(1, modes-1) + modes**2 + modes)]`` containing
 the weights for the quantum neural network.
 
 .. note::
