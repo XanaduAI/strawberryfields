@@ -82,7 +82,7 @@ The normal lifecycle of an Operation object and its associated parameters is as 
   It evaluates the value of the parameters using :func:`par_evaluate`, and
   may perform additional numeric transformations on them.
   The parameter values are finally passed to the appropriate backend API method.
-  It is up to the backend to either accept NumPy arrays and Tensorflow objects as parameters, or not.
+  It is up to the backend to either accept NumPy arrays and TensorFlow objects as parameters, or not.
 
 
 What we cannot do at the moment:

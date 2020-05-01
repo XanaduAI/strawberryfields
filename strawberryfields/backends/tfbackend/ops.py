@@ -265,7 +265,7 @@ def cubic_phase_matrix(gamma, D, hbar, batched=False, method="self_adjoint_eig")
         transpose_list = [0, 2, 1]
     if method == "self_adjoint_eig":
         # This seems to work as long as the matrix has dimension 18x18 or smaller
-        # For larger matrices, Tensorflow returns the error: 'Self-adjoint eigen decomposition was not successful.'
+        # For larger matrices, TensorFlow returns the error: 'Self-adjoint eigen decomposition was not successful.'
         V = U @ tf.linalg.diag(tf.exp(1j * lambdas)) @ tf.math.conj(tf.transpose(U, transpose_list))
     # below version works for matrices larger than 18x18, but
     # expm was not added until TF v1.5, while

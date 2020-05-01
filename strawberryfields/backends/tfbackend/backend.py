@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Tensorflow backend interface
+TensorFlow backend interface
 ============================
 
 """
@@ -90,7 +90,7 @@ class TFBackend(BaseFock):
         batch_size = kwargs.get("batch_size", None)
 
         if cutoff_dim is None:
-            raise ValueError("Argument 'cutoff_dim' must be passed to the Tensorflow backend")
+            raise ValueError("Argument 'cutoff_dim' must be passed to the TensorFlow backend")
 
         if not isinstance(num_subsystems, int):
             raise ValueError("Argument 'num_subsystems' must be a positive integer")

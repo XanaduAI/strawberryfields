@@ -13,9 +13,9 @@
 # limitations under the License.
 
 r"""
-.. _Tensorflow_backend:
+.. _TensorFlow_backend:
 
-Tensorflow simulator backend
+TensorFlow simulator backend
 ##############################
 
 **Module name:** :mod:`strawberryfields.backends.tfbackend`
@@ -23,7 +23,7 @@ Tensorflow simulator backend
 .. currentmodule:: strawberryfields.backends.tfbackend
 
 The :class:`TFBackend` object implements a simulation of quantum optical circuits using
-`Tensorflow <http://www.Tensorflow.org/>`_. The primary component of the TFBackend is a
+`TensorFlow <http://www.TensorFlow.org/>`_. The primary component of the TFBackend is a
 :class:`Circuit` object which is used to simulate a multi-mode quantum optical system. The
 :class:`TFBackend` provides the basic API-compatible interface to the simulator, while the
 :class:`Circuit` object actually carries out the mathematical simulation.
@@ -61,7 +61,7 @@ TFBackend methods
 =================
 
 The parameters supplied for these operations can be either numeric (float, complex) values
-or Tensorflow :class:`Variables`/:class:`Tensors`. The Tensorflow objects can either be scalars or vectors. For
+or TensorFlow :class:`Variables`/:class:`Tensors`. The TensorFlow objects can either be scalars or vectors. For
 vectors, they must have the same dimension as the declared batch size of the underlying circuit.
 
 .. autosummary::
@@ -106,9 +106,9 @@ FockStateTF
 .. currentmodule:: strawberryfields.backends.tfbackend.states.FockStateTF
 
 This class represents the quantum state
-returned by the Tensorflow backend. It extends :class:`~.BaseFockState` with additional functionality
-unique to the Tensorflow backend. The primary difference between this class and the Base Fock state
-is that it returns Tensorflow ``Tensor`` objects
+returned by the TensorFlow backend. It extends :class:`~.BaseFockState` with additional functionality
+unique to the TensorFlow backend. The primary difference between this class and the Base Fock state
+is that it returns TensorFlow ``Tensor`` objects
 
 .. currentmodule:: strawberryfields.backends.tfbackend.states.FockStateTF
 

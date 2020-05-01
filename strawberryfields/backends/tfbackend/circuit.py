@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Tensorflow backend proper
+TensorFlow backend proper
 ======================
 
 Contains most of the code for managing the simulator state and offloading
