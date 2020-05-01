@@ -138,14 +138,12 @@ a = tf.Variable(0.43)
 
 with tf.GradientTape() as tape:
     # Here, we map our quantum free parameter `alpha`
-
     # to our TensorFlow variable `a` and pass it to the engine.
 
     result = eng.run(prog, args={"alpha": a})
     state = result.state
 
     # Note that all processing, including state-based post-processing,
-
     # must be done within the gradient tape context!
     mean, var = state.mean_photon(0)
 

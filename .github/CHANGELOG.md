@@ -89,7 +89,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Tom Bromley, Josh Izaac, Nathan Killoran, Filippo Miatto, Nicolás Quesada, Antal Száva.
+Tom Bromley, Theodor Isacsson, Josh Izaac, Nathan Killoran, Filippo Miatto, Nicolás Quesada, Antal Száva.
 
 
 # Release 0.13.0 (current release)
