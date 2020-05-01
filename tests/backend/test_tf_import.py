@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for TensorFlow 1.3 version checking"""
+r"""Unit tests for TensorFlow 2.x version checking"""
 from importlib import reload
 import sys
 
@@ -35,23 +35,13 @@ class TestBackendImport:
 
     def test_incorrect_tf_version(self, monkeypatch):
         """Test that an exception is raised if the version
-        of TensorFlow installed is not version 1.3"""
+        of TensorFlow installed is not version 2.x"""
         with monkeypatch.context() as m:
             # force Python check to pass
             m.setattr("sys.version_info", (3, 6, 3))
             m.setattr(tensorflow, "__version__", "1.12.2")
 
-            with pytest.raises(ImportError, match="version 1.3 of TensorFlow is required"):
-                reload(sf.backends.tfbackend)
-
-    def test_incorrect_python_version(self, monkeypatch):
-        """Test that an exception is raised if the version
-        of Python installed is > 3.6"""
-        with monkeypatch.context() as m:
-            m.setattr("sys.version_info", (3, 8, 1))
-            m.setattr(tensorflow, "__version__", "1.12.2")
-
-            with pytest.raises(ImportError, match="you will need to install Python 3.6"):
+            with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
                 reload(sf.backends.tfbackend)
 
     @pytest.mark.skipif(tf_available, reason="Test only works if TF not installed")
@@ -61,7 +51,7 @@ class TestBackendImport:
             # force Python check to pass
             m.setattr("sys.version_info", (3, 6, 3))
 
-            with pytest.raises(ImportError, match="version 1.3 of TensorFlow is required"):
+            with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
                 reload(sf.backends.tfbackend)
 
 
@@ -71,24 +61,13 @@ class TestFrontendImport:
 
     def test_incorrect_tf_version(self, monkeypatch):
         """Test that an exception is raised if the version
-        of TensorFlow installed is not version 1.3"""
+        of TensorFlow installed is not version 2.x"""
         with monkeypatch.context() as m:
             # force Python check to pass
             m.setattr("sys.version_info", (3, 6, 3))
             m.setattr(tensorflow, "__version__", "1.12.2")
 
-            with pytest.raises(ImportError, match="version 1.3 of TensorFlow is required"):
-                reload(sf.backends.tfbackend)
-                sf.LocalEngine('tf')
-
-    def test_incorrect_python_version(self, monkeypatch):
-        """Test that an exception is raised if the version
-        of Python installed is > 3.6"""
-        with monkeypatch.context() as m:
-            m.setattr("sys.version_info", (3, 8, 1))
-            m.setattr(tensorflow, "__version__", "1.12.2")
-
-            with pytest.raises(ImportError, match="you will need to install Python 3.6"):
+            with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
                 reload(sf.backends.tfbackend)
                 sf.LocalEngine('tf')
 
@@ -99,6 +78,6 @@ class TestFrontendImport:
             # force Python check to pass
             m.setattr("sys.version_info", (3, 6, 3))
 
-            with pytest.raises(ImportError, match="version 1.3 of TensorFlow is required"):
+            with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
                 reload(sf.backends.tfbackend)
                 sf.LocalEngine('tf')
