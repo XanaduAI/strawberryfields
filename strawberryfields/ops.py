@@ -941,7 +941,7 @@ class Dgate(Gate):
     or use the polar form :math:`a = r, \phi` and still get the same result.
 
     Args:
-        r (float): displacement amplitude :math:`\alpha`
+        r (float): displacement amplitude :math:`|\alpha|`
         phi (float): displacement angle :math:`\phi`
     """
 
