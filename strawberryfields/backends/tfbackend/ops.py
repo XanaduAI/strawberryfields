@@ -151,7 +151,7 @@ def squeezed_vacuum_vector(r, theta, D, batched=False, eps=1e-32):
 
 @tf.custom_gradient
 def single_squeezing_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
-    """creates a single mode squeezing matrix"""
+    """creates a single-mode squeezing matrix"""
     r = r.numpy()
     phi = phi.numpy()
     gate = squeezing_tw(r, phi, D, dtype)
