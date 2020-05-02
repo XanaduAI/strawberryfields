@@ -119,9 +119,9 @@ Optimization and machine learning
     :maxdepth: 1
 
     ../tutorials_apps/run_tutorial_machine_learning
-    ../tutorials_apps/run_minimizing_correlations
-    ../tutorials_apps/run_state_learner
-    ../tutorials_apps/run_gate_synthesis
+    ../tutorials_apps/minimizing_correlations
+    ../tutorials_apps/state_learner
+    ../tutorials_apps/gate_synthesis
 
 .. customgalleryitem::
     :tooltip: Optimization and machine learning with TensorFlow

@@ -54,17 +54,17 @@ machine learning. Take a look below to see what you can do!
 
 .. customgalleryitem::
     :tooltip: Minimizing correlations
-    :description: :doc:`../tutorials_apps/run_minimizing_correlations`
+    :description: :doc:`../tutorials_apps/minimizing_correlations`
     :figure: ../_static/minimizing_correlations.gif
 
 .. customgalleryitem::
     :tooltip: Quantum state learning
-    :description: :doc:`../tutorials_apps/run_state_learner`
+    :description: :doc:`../tutorials_apps/state_learner`
     :figure: ../_static/StateLearning.gif
 
 .. customgalleryitem::
     :tooltip: Quantum gate synthesis
-    :description: :doc:`../tutorials_apps/run_gate_synthesis`
+    :description: :doc:`../tutorials_apps/gate_synthesis`
     :figure: ../_static/GateSynthesis.gif
 
 .. raw:: html
