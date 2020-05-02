@@ -621,7 +621,7 @@ plt.show()
 
 
 ######################################################################
-# .. image:: /tutorials_apps/images/sphx_glr_run_gate_synthesis_001.png
+# .. image:: /_static/images/sphx_glr_run_gate_synthesis_001.png
 #     :class: sphx-glr-single-img
 
 
@@ -646,7 +646,7 @@ ax[3].set_xlabel(r'$\mathrm{Im}(U)$')
 fig.show()
 
 ######################################################################
-# .. image:: /tutorials_apps/images/sphx_glr_run_gate_synthesis_002.png
+# .. image:: /_static/images/sphx_glr_run_gate_synthesis_002.png
 #     :class: sphx-glr-single-img
 
 ######################################################################

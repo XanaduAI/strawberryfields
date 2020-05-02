@@ -551,7 +551,7 @@ plt.contourf(X, P, np.round(W,3), cmap="PiYG")
 plt.show()
 
 ######################################################################
-# .. image:: /tutorials_apps/images/sphx_glr_run_minimizing_correlations_001.png
+# .. image:: /_static/images/sphx_glr_run_minimizing_correlations_001.png
 #     :class: sphx-glr-single-img
 
 ######################################################################
@@ -565,7 +565,7 @@ plt.show()
 
 
 ######################################################################
-# .. image:: /tutorials_apps/images/sphx_glr_run_minimizing_correlations_002.png
+# .. image:: /_static/images/sphx_glr_run_minimizing_correlations_002.png
 #     :class: sphx-glr-single-img
 
 

@@ -580,7 +580,7 @@ plt.ylabel("Fidelity")
 plt.xlabel("Step")
 
 ######################################################################
-# .. image:: /tutorials_apps/images/sphx_glr_run_state_learner_001.png
+# .. image:: /_static/images/sphx_glr_run_state_learner_001.png
 #     :class: sphx-glr-single-img
 
 ######################################################################
@@ -666,7 +666,7 @@ ax.set_axis_off()
 fig.show()
 
 ######################################################################
-# .. image:: /tutorials_apps/images/sphx_glr_run_state_learner_002.png
+# .. image:: /_static/images/sphx_glr_run_state_learner_002.png
 #     :class: sphx-glr-single-img
 
 ######################################################################
@@ -681,7 +681,7 @@ ax.set_axis_off()
 fig.show()
 
 ######################################################################
-# .. image:: /tutorials_apps/images/sphx_glr_run_state_learner_003.png
+# .. image:: /_static/images/sphx_glr_run_state_learner_003.png
 #     :class: sphx-glr-single-img
 
 
