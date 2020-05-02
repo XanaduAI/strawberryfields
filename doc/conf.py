@@ -32,7 +32,7 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-sys.modules["tensorflow"] = Mock(__version__="1.3")
+sys.modules["tensorflow"] = Mock(__version__="2.0")
 
 # -- General configuration ------------------------------------------------
 
