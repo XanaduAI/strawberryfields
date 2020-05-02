@@ -118,29 +118,29 @@ Optimization and machine learning
     :hidden:
     :maxdepth: 1
 
-    ../tutorials_apps/run_tutorial_machine_learning
+    ../tutorials_apps/machine_learning
     ../tutorials_apps/minimizing_correlations
     ../tutorials_apps/state_learner
     ../tutorials_apps/gate_synthesis
 
 .. customgalleryitem::
     :tooltip: Optimization and machine learning with TensorFlow
-    :description: :doc:`Optimization and machine learning with TensorFlow <../tutorials_apps/run_tutorial_machine_learning>`
+    :description: :doc:`Optimization and machine learning with TensorFlow <../tutorials_apps/machine_learning>`
     :figure: ../_static/TF.png
 
 .. customgalleryitem::
     :tooltip: Minimizing correlations
-    :description: :doc:`../tutorials_apps/run_minimizing_correlations`
+    :description: :doc:`../tutorials_apps/minimizing_correlations`
     :figure: ../_static/minimizing_correlations.gif
 
 .. customgalleryitem::
     :tooltip: Quantum state learning
-    :description: :doc:`../tutorials_apps/run_state_learner`
+    :description: :doc:`../tutorials_apps/state_learner`
     :figure: /_static/StateLearning.gif
 
 .. customgalleryitem::
     :tooltip: Gate synthesis
-    :description: :doc:`../tutorials_apps/run_gate_synthesis`
+    :description: :doc:`../tutorials_apps/gate_synthesis`
     :figure: ../_static/GateSynthesis.gif
 
 .. raw:: html
