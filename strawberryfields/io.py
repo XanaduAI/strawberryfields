@@ -65,6 +65,9 @@ def to_blackbird(prog, version="1.0"):
             if cmd.op.select is not None:
                 op["kwargs"]["select"] = cmd.op.select
 
+            if cmd.op.dark_counts is not None:
+                op["kwargs"]["dark_counts"] = cmd.op.dark_counts
+
             if cmd.op.p:
                 # argument is quadrature phase
                 op["kwargs"]["phi"] = cmd.op.p[0]
