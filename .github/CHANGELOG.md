@@ -1,4 +1,4 @@
-# Release 0.14.0-dev0 (development release)
+# Release 0.14.0 (current release)
 
 <h3>New features since last release</h3>
 
@@ -12,7 +12,6 @@
   [(#374)](https://github.com/XanaduAI/strawberryfields/pull/374)
   [(#375)](https://github.com/XanaduAI/strawberryfields/pull/375)
   [(#377)](https://github.com/XanaduAI/strawberryfields/pull/377)
-
 
   For more details and demonstrations of the new TensorFlow 2.0-compatible backend,
   see our [optimization and machine learning tutorials](https://strawberryfields.readthedocs.io/en/stable/introduction/tutorials.html#optimization-and-machine-learning).
@@ -83,16 +82,19 @@
 * Add details to the error message for failed remote jobs.
   [(#370)](https://github.com/XanaduAI/strawberryfields/pull/370)
 
-<h3>Bug fixes</h3>
+* The required version of The Walrus was increased to version 0.12, for
+  tensor number expectation support.
+  [(#380)](https://github.com/XanaduAI/strawberryfields/pull/380)
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Tom Bromley, Theodor Isacsson, Josh Izaac, Nathan Killoran, Filippo Miatto, Nicolás Quesada, Antal Száva.
+Tom Bromley, Theodor Isacsson, Josh Izaac, Nathan Killoran, Filippo Miatto, Nicolás Quesada,
+Antal Száva, Paul Tan.
 
 
-# Release 0.13.0 (current release)
+# Release 0.13.0
 
 <h3>New features since last release</h3>
 
