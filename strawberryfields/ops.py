@@ -788,6 +788,11 @@ class MeasureFock(Measurement):
     ns = None
 
     def __init__(self, select=None, dark_counts=None):
+        if dark_counts and select:
+            raise NotImplementedError(
+                "Post-selection cannot be used together with dark counts."
+            )
+
         if dark_counts is not None and not isinstance(dark_counts, Sequence):
             dark_counts = [dark_counts]
 
