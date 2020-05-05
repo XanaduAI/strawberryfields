@@ -52,6 +52,21 @@ machine learning. Take a look below to see what you can do!
     :description: :doc:`Optimization and machine learning with TensorFlow <../tutorials_apps/run_tutorial_machine_learning>`
     :figure: ../_static/TF.png
 
+.. customgalleryitem::
+    :tooltip: Minimizing correlations
+    :description: :doc:`../tutorials_apps/run_minimizing_correlations`
+    :figure: ../_static/minimizing_correlations.gif
+
+.. customgalleryitem::
+    :tooltip: Quantum state learning
+    :description: :doc:`../tutorials_apps/run_state_learner`
+    :figure: ../_static/StateLearning.gif
+
+.. customgalleryitem::
+    :tooltip: Quantum gate synthesis
+    :description: :doc:`../tutorials_apps/run_gate_synthesis`
+    :figure: ../_static/GateSynthesis.gif
+
 .. raw:: html
 
     <div style='clear:both'></div>

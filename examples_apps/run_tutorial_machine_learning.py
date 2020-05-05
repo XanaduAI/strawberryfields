@@ -10,6 +10,16 @@ Optimization & machine learning
 	of Strawberry Fields, e.g., those who have completed the :ref:`teleportation tutorial <tutorial>`.
 	Some basic knowledge of `TensorFlow <https://www.tensorflow.org/>`_ is also helpful.
 
+.. note::
+
+    This tutorial requires TensorFlow 2.0 and above. TensorFlow can be installed via ``pip``:
+
+    .. code-block:: console
+
+        pip install tensorflow
+
+    For more installation details and instructions, please refer to the
+    `TensorFlow documentation <https://www.tensorflow.org/install>`_.
 
 In this demonstration, we show how the user can carry out optimization and machine learning on quantum
 circuits in Strawberry Fields. This functionality is provided via the TensorFlow simulator
@@ -128,14 +138,12 @@ a = tf.Variable(0.43)
 
 with tf.GradientTape() as tape:
     # Here, we map our quantum free parameter `alpha`
-
     # to our TensorFlow variable `a` and pass it to the engine.
 
     result = eng.run(prog, args={"alpha": a})
     state = result.state
 
     # Note that all processing, including state-based post-processing,
-
     # must be done within the gradient tape context!
     mean, var = state.mean_photon(0)
 

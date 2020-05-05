@@ -35,6 +35,7 @@ import tensorflow as tf
 import numpy as np
 from scipy.special import binom, factorial
 
+
 from thewalrus.fock_gradients import displacement as displacement_tw
 from thewalrus.fock_gradients import grad_displacement as grad_displacement_tw
 from thewalrus.fock_gradients import squeezing as squeezing_tw
@@ -43,6 +44,19 @@ from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
 from thewalrus.fock_gradients import grad_beamsplitter as grad_beamsplitter_tw
 from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
 from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
+
+# With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
+# the replacement tf.einsum introduced the bug. This try-except block
+# will dynamically patch TensorFlow versions where _einsum_v1 exists, to make it the
+# default einsum implementation.
+#
+# For more details, see https://github.com/tensorflow/tensorflow/issues/37307
+try:
+    from tensorflow.python.ops.special_math_ops import _einsum_v1
+
+    tf.einsum = _einsum_v1
+except ImportError:
+    pass
 
 from strawberryfields.backends.shared_ops import (
     generate_bs_factors,
@@ -225,7 +239,7 @@ def cubic_phase_matrix(gamma, D, hbar, batched=False, method="self_adjoint_eig")
         transpose_list = [0, 2, 1]
     if method == "self_adjoint_eig":
         # This seems to work as long as the matrix has dimension 18x18 or smaller
-        # For larger matrices, Tensorflow returns the error: 'Self-adjoint eigen decomposition was not successful.'
+        # For larger matrices, TensorFlow returns the error: 'Self-adjoint eigen decomposition was not successful.'
         V = U @ tf.linalg.diag(tf.exp(1j * lambdas)) @ tf.math.conj(tf.transpose(U, transpose_list))
     # below version works for matrices larger than 18x18, but
     # expm was not added until TF v1.5, while
