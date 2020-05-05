@@ -86,7 +86,7 @@ for more details, and then check out some of the Strawberry Fields `challenges <
 Authors
 =======
 
-Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook.
+Strawberry Fields is the work of `many contributors <https://github.com/XanaduAI/strawberryfields/graphs/contributors>`_.
 
 If you are doing research using Strawberry Fields, please cite our papers:
 
