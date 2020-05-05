@@ -24,6 +24,16 @@ sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath('.')), 'doc'))
 
 
+class Mock(MagicMock):
+    __name__ = 'foo'
+
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+sys.modules["tensorflow"] = Mock(__version__="2.0")
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -84,7 +94,7 @@ sphinx_gallery_conf = {
     # execute files that match the following filename pattern,
     # and skip those that don't. If the following option is not provided,
     # all example scripts in the 'examples_dirs' folder will be skiped.
-    'filename_pattern': r'run',
+    'filename_pattern': r'/run_',
     # first notebook cell in generated Jupyter notebooks
     'first_notebook_cell': ("# This cell is added by sphinx-gallery\n"
                             "# It can be customized to whatever you like\n"

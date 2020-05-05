@@ -109,11 +109,30 @@ result = eng.run(prog, args=mapping)
 print(result.samples)
 
 ##############################################################################
+# .. rst-class:: sphx-glr-script-out
+#
+#  Out:
+#
+#  .. code-block:: none
+#
+#     [[<tf.Tensor: id=794, shape=(), dtype=complex64, numpy=(2.6271262+0j)>
+#       None]]
+
+##############################################################################
 # We can select measurement results at other angles by supplying different values for
 # ``phi`` in ``mapping``. We can also return and perform processing on the underlying state:
 
 state = result.state
 print("Density matrix element [0,0,1,2]:", state.dm()[0, 0, 1, 2])
+
+##############################################################################
+# .. rst-class:: sphx-glr-script-out
+#
+#  Out:
+#
+#  .. code-block:: none
+#
+#     Density matrix element [0,0,1,2]: tf.Tensor((0.0050359764+0j), shape=(), dtype=complex64)
 
 ##############################################################################
 # Computing gradients
@@ -153,12 +172,31 @@ grad = tape.gradient(mean, [a])
 print("Gradient:", grad)
 
 ##############################################################################
+# .. rst-class:: sphx-glr-script-out
+#
+#  Out:
+#
+#  .. code-block:: none
+#
+#     Gradient: [<tf.Tensor: id=1343, shape=(), dtype=float32, numpy=0.85999966>]
+
+##############################################################################
 # The mean photon number of a displaced state :math:`|\alpha\rangle` is given by
 # :math:`\langle \hat{n} \rangle(\alpha) = |\alpha|^2`, and thus, for real-valued
 # :math:`\alpha`, the gradient is given by :math:`\langle \hat{n}\rangle'(\alpha) = 2\alpha`:
 
 print("Exact gradient:", 2 * a)
 print("Exact and TensorFlow gradient agree:", np.allclose(grad, 2 * a))
+
+##############################################################################
+# .. rst-class:: sphx-glr-script-out
+#
+#  Out:
+#
+#  .. code-block:: none
+#
+#     Exact gradient: tf.Tensor(0.86, shape=(), dtype=float32)
+#     Exact and TensorFlow gradient agree: True
 
 ##############################################################################
 # Processing data
@@ -189,6 +227,16 @@ print("Mean photon number of mode 0:", mean)
 mean, var = result.state.mean_photon(1)
 print("Mean photon number of mode 1:", mean)
 
+##############################################################################
+# .. rst-class:: sphx-glr-script-out
+#
+#  Out:
+#
+#  .. code-block:: none
+#
+#     Measured Homodyne sample from mode 0: tf.Tensor((1.099311+0j), shape=(), dtype=complex64)
+#     Mean photon number of mode 0: tf.Tensor(0.0, shape=(), dtype=float32)
+#     Mean photon number of mode 1: tf.Tensor(0.793553, shape=(), dtype=float32)
 
 ##############################################################################
 # The mean photon number of mode 1 should be given by :math:`\sin(q[0])^2`, where :math:`q[0]`
@@ -196,6 +244,15 @@ print("Mean photon number of mode 1:", mean)
 
 q0 = result.samples[0][0]
 print(np.sin(q0) ** 2)
+
+##############################################################################
+# .. rst-class:: sphx-glr-script-out
+#
+#  Out:
+#
+#  .. code-block:: none
+#
+#     (0.7936931737133115+0j)
 
 ##############################################################################
 # Working with batches
@@ -220,6 +277,16 @@ with prog.context as q:
 x_val = tf.Variable([0.1, 0.2, 0.3])
 result = eng.run(prog, args={"x": x_val})
 print("Mean photon number of mode 0 (batched):", result.state.mean_photon(0)[0])
+
+##############################################################################
+# .. rst-class:: sphx-glr-script-out
+#
+#  Out:
+#
+#  .. code-block:: none
+#
+#     Mean photon number of mode 0 (batched): tf.Tensor([0.09999999 0.19999996 0.30000004], shape=(3,), dtype=float32)
+
 
 ##############################################################################
 # .. note:: The batch size should be static, i.e., not changing over the course of a computation.
@@ -291,6 +358,64 @@ for step in range(steps):
     print("Probability at step {}: {}".format(step, prob))
 
 ##############################################################################
+# .. rst-class:: sphx-glr-script-out
+#
+#  Out:
+#
+#  .. code-block:: none
+#
+#     Probability at step 0: 0.009900497272610664
+#     Probability at step 1: 0.03843098133802414
+#     Probability at step 2: 0.08083382993936539
+#     Probability at step 3: 0.1331305205821991
+#     Probability at step 4: 0.19035020470619202
+#     Probability at step 5: 0.24677760899066925
+#     Probability at step 6: 0.29659587144851685
+#     Probability at step 7: 0.3348417580127716
+#     Probability at step 8: 0.35853680968284607
+#     Probability at step 9: 0.3676064908504486
+#     Probability at step 10: 0.3649454414844513
+#     Probability at step 11: 0.355256587266922
+#     Probability at step 12: 0.3432542383670807
+#     Probability at step 13: 0.3323868215084076
+#     Probability at step 14: 0.32456544041633606
+#     Probability at step 15: 0.32050856947898865
+#     Probability at step 16: 0.3201928436756134
+#     Probability at step 17: 0.3231735825538635
+#     Probability at step 18: 0.3287637233734131
+#     Probability at step 19: 0.3361213207244873
+#     Probability at step 20: 0.3443049192428589
+#     Probability at step 21: 0.3523356020450592
+#     Probability at step 22: 0.3592878580093384
+#     Probability at step 23: 0.364411860704422
+#     Probability at step 24: 0.36726585030555725
+#     Probability at step 25: 0.3678152561187744
+#     Probability at step 26: 0.36645036935806274
+#     Probability at step 27: 0.36389175057411194
+#     Probability at step 28: 0.36100488901138306
+#     Probability at step 29: 0.35858556628227234
+#     Probability at step 30: 0.35718992352485657
+#     Probability at step 31: 0.35705265402793884
+#     Probability at step 32: 0.35809454321861267
+#     Probability at step 33: 0.3599957227706909
+#     Probability at step 34: 0.36230403184890747
+#     Probability at step 35: 0.3645508885383606
+#     Probability at step 36: 0.3663528263568878
+#     Probability at step 37: 0.36747899651527405
+#     Probability at step 38: 0.36787670850753784
+#     Probability at step 39: 0.36765244603157043
+#     Probability at step 40: 0.3670196831226349
+#     Probability at step 41: 0.366233766078949
+#     Probability at step 42: 0.3655299246311188
+#     Probability at step 43: 0.3650795519351959
+#     Probability at step 44: 0.3649670481681824
+#     Probability at step 45: 0.365190327167511
+#     Probability at step 46: 0.3656746745109558
+#     Probability at step 47: 0.36629951000213623
+#     Probability at step 48: 0.36692991852760315
+#     Probability at step 49: 0.3674468994140625
+
+##############################################################################
 # After 50 or so iterations, the optimization should converge to the optimal probability value of
 # :math:`e^{-1}\approx 0.3678` at a parameter of :math:`\alpha=1` [#]_.
 #
@@ -323,6 +448,64 @@ for step in range(steps):
     _ = opt.minimize(loss, [tf_alpha, tf_phi])
     parameter_vals = [tf_alpha.numpy(), tf_phi.numpy()]
     print("Parameter values at step {}: {}".format(step, parameter_vals))
+
+##############################################################################
+# .. rst-class:: sphx-glr-script-out
+#
+#  Out:
+#
+#  .. code-block:: none
+#
+#     Parameter values at step 0: [0.17085811, 0.10000666]
+#     Parameter values at step 1: [0.2653996, 0.10000824]
+#     Parameter values at step 2: [0.3756343, 0.10003564]
+#     Parameter values at step 3: [0.498407, 0.10004087]
+#     Parameter values at step 4: [0.6317963, 0.10005679]
+#     Parameter values at step 5: [0.7733106, 0.10010292]
+#     Parameter values at step 6: [0.91795504, 0.100087106]
+#     Parameter values at step 7: [1.056465, 0.09979849]
+#     Parameter values at step 8: [1.1767575, 0.0995149]
+#     Parameter values at step 9: [1.2695967, 0.099197276]
+#     Parameter values at step 10: [1.3319764, 0.09904715]
+#     Parameter values at step 11: [1.3654184, 0.098881036]
+#     Parameter values at step 12: [1.3732629, 0.098441504]
+#     Parameter values at step 13: [1.3591939, 0.09790572]
+#     Parameter values at step 14: [1.3267639, 0.09771576]
+#     Parameter values at step 15: [1.2793746, 0.09764076]
+#     Parameter values at step 16: [1.2204303, 0.097491466]
+#     Parameter values at step 17: [1.1535465, 0.09737021]
+#     Parameter values at step 18: [1.0827549, 0.09747333]
+#     Parameter values at step 19: [1.0126097, 0.097629994]
+#     Parameter values at step 20: [0.9480358, 0.09750217]
+#     Parameter values at step 21: [0.89378, 0.09736596]
+#     Parameter values at step 22: [0.85358965, 0.09750438]
+#     Parameter values at step 23: [0.8295505, 0.09758021]
+#     Parameter values at step 24: [0.82193875, 0.097489305]
+#     Parameter values at step 25: [0.82952106, 0.09749036]
+#     Parameter values at step 26: [0.85000145, 0.09736506]
+#     Parameter values at step 27: [0.8804064, 0.09721753]
+#     Parameter values at step 28: [0.9173693, 0.09727109]
+#     Parameter values at step 29: [0.957366, 0.09753705]
+#     Parameter values at step 30: [0.99695796, 0.0978495]
+#     Parameter values at step 31: [1.0330576, 0.09814763]
+#     Parameter values at step 32: [1.0631745, 0.09897915]
+#     Parameter values at step 33: [1.0855812, 0.09966516]
+#     Parameter values at step 34: [1.0993629, 0.10014479]
+#     Parameter values at step 35: [1.1043644, 0.10067672]
+#     Parameter values at step 36: [1.1010801, 0.10097134]
+#     Parameter values at step 37: [1.090526, 0.10137434]
+#     Parameter values at step 38: [1.0741205, 0.102029756]
+#     Parameter values at step 39: [1.0535735, 0.10259121]
+#     Parameter values at step 40: [1.0307757, 0.102993794]
+#     Parameter values at step 41: [1.0076759, 0.103460334]
+#     Parameter values at step 42: [0.9861408, 0.10372111]
+#     Parameter values at step 43: [0.967804, 0.10424348]
+#     Parameter values at step 44: [0.9539274, 0.10505462]
+#     Parameter values at step 45: [0.9452985, 0.105316624]
+#     Parameter values at step 46: [0.9421848, 0.10547027]
+#     Parameter values at step 47: [0.94434804, 0.105495274]
+#     Parameter values at step 48: [0.9511101, 0.10539721]
+#     Parameter values at step 49: [0.9614545, 0.1051061]
 
 
 ###############################################################################
