@@ -373,12 +373,6 @@ class LocalEngine(BaseEngine):
             shots (int): number of times the program measurement evaluation is repeated
             modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
                 ``None`` returns all the modes (default). An empty sequence means no state object is returned.
-            eval (bool): If False, the backend returns unevaluated tf.Tensors instead of
-                numbers/arrays for returned measurement results and state (default: True). TF backend only.
-            session (tf.Session): TensorFlow session, used when evaluating returned measurement results and state.
-                TF backend only.
-            feed_dict (dict[str, Any]): TensorFlow feed dictionary, used when evaluating returned measurement results
-                and state. TF backend only.
 
         Returns:
             Result: results of the computation
@@ -547,8 +541,8 @@ class RemoteEngine:
 
                 if job.status == "failed":
                     message = (
-                        "The remote job %s failed due to an internal "
-                        "server error. Please try again." % job.id
+                        "The remote job {} failed due to an internal "
+                        "server error. Please try again. {}".format(job.id, job.meta)
                     )
                     self.log.error(message)
 
