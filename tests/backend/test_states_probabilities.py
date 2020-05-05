@@ -15,6 +15,7 @@ r"""Unit tests for the states.py fock probabilities methods"""
 import pytest
 
 import numpy as np
+import tensorflow as tf
 from scipy.special import factorial as fac
 
 from strawberryfields import backends
@@ -85,8 +86,11 @@ class TestAllFockProbs:
 
         backend.prepare_coherent_state(alpha, 0)
         state = backend.state()
-
-        probs = state.all_fock_probs().flatten()
+        
+        probs = state.all_fock_probs()
+        if isinstance(probs, tf.Tensor):
+            probs = probs.numpy()
+        probs = probs.flatten()
 
         if batch_size is not None:
             ref_probs = np.tile(ref_probs, batch_size)
@@ -121,5 +125,8 @@ class TestAllFockProbs:
 
         for n in range(cutoff):
             for m in range(cutoff):
-                probs = state.all_fock_probs().flatten()
-                assert np.allclose(probs, ref_probs, atol=tol, rtol=0)
+                probs = state.all_fock_probs()
+                if isinstance(probs, tf.Tensor):
+                    probs = probs.numpy()
+                
+                assert np.allclose(probs.flatten(), ref_probs, atol=tol, rtol=0)

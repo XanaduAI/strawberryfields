@@ -90,7 +90,7 @@ Strawberry Fields Documentation
 Features
 ========
 
-.. image:: gallery/state_learner/StateLearning.gif
+.. image:: _static/StateLearning.gif
     :align: right
     :width: 300px
     :target: javascript:void(0);

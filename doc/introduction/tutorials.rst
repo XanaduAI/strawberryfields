@@ -68,10 +68,6 @@ Algorithms
     /tutorials/tutorial_post_selection
     /tutorials/tutorial_boson_sampling
     /tutorials/tutorial_gaussian_boson_sampling
-    /tutorials/tutorial_machine_learning
-    /gallery/minimizing_correlations/minimizing_correlations
-    /gallery/state_learner/StateLearning
-    /gallery/gate_synthesis/GateSynthesis
     /gallery/scattershot-boson-sampling/scattershot-bs
     /gallery/gate_visualisation/GateVisualisation
 
@@ -122,36 +118,30 @@ Optimization and machine learning
     :hidden:
     :maxdepth: 1
 
-    /tutorials/tutorial_machine_learning
-    /gallery/minimizing_correlations/minimizing_correlations
-    /gallery/state_learner/StateLearning
-
-.. warning::
-
-    We are currently making some huge changes to the TensorFlow backend
-    of Strawberry Fields, including upcoming TensorFlow 2.0 support. As a result,
-    the tutorials in this section are currently not supported. Please bear with us as we finish off the
-    work on our new TensorFlow backend!
+    ../tutorials_apps/machine_learning
+    ../tutorials_apps/minimizing_correlations
+    ../tutorials_apps/state_learner
+    ../tutorials_apps/gate_synthesis
 
 .. customgalleryitem::
     :tooltip: Optimization and machine learning with TensorFlow
-    :description: :doc:`Optimization and machine learning with TensorFlow </tutorials/tutorial_machine_learning>`
+    :description: :doc:`Optimization and machine learning with TensorFlow <../tutorials_apps/machine_learning>`
     :figure: ../_static/TF.png
 
 .. customgalleryitem::
     :tooltip: Minimizing correlations
-    :description: :doc:`/gallery/minimizing_correlations/minimizing_correlations`
-    :figure: /gallery/minimizing_correlations/minimizing_correlations.gif
+    :description: :doc:`../tutorials_apps/minimizing_correlations`
+    :figure: ../_static/minimizing_correlations.gif
 
 .. customgalleryitem::
     :tooltip: Quantum state learning
-    :description: :doc:`/gallery/state_learner/StateLearning`
-    :figure: /gallery/state_learner/StateLearning.gif
+    :description: :doc:`../tutorials_apps/state_learner`
+    :figure: /_static/StateLearning.gif
 
 .. customgalleryitem::
     :tooltip: Gate synthesis
-    :description: :doc:`/gallery/gate_synthesis/GateSynthesis`
-    :figure: /gallery/gate_synthesis/GateSynthesis.gif
+    :description: :doc:`../tutorials_apps/gate_synthesis`
+    :figure: ../_static/GateSynthesis.gif
 
 .. raw:: html
 

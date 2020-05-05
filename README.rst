@@ -37,7 +37,7 @@ Features
 
 .. raw:: html
 
-    <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/gallery/state_learner/StateLearning.gif" width="300px"  align="right">
+    <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/_static/StateLearning.gif" width="300px"  align="right">
 
 * An open-source software architecture for **photonic quantum computing**
 
@@ -86,7 +86,7 @@ for more details, and then check out some of the Strawberry Fields `challenges <
 Authors
 =======
 
-Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook.
+Strawberry Fields is the work of `many contributors <https://github.com/XanaduAI/strawberryfields/graphs/contributors>`_.
 
 If you are doing research using Strawberry Fields, please cite our papers:
 
