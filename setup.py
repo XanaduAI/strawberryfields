@@ -28,7 +28,7 @@ requirements = [
     "networkx>=2.0",
     "quantum-blackbird>=0.2.3",
     "python-dateutil>=2.8.0",
-    "thewalrus>=0.11",
+    "thewalrus>=0.12",
     "numba",
     "toml",
     "appdirs",
