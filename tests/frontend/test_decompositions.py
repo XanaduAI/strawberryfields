@@ -34,11 +34,7 @@ def omega(n):
     """Returns the symplectic matrix for n modes"""
     idm = np.identity(n)
     O = np.concatenate(
-        (
-            np.concatenate((0 * idm, idm), axis=1),
-            np.concatenate((-idm, 0 * idm), axis=1),
-        ),
-        axis=0,
+        (np.concatenate((0 * idm, idm), axis=1), np.concatenate((-idm, 0 * idm), axis=1),), axis=0,
     )
     return O
 
@@ -171,9 +167,7 @@ class TestBipartiteGraphEmbed:
     def test_mean_photon(self, tol, make_symmetric):
         """Test that the mean photon number is correct in graph_embed"""
         num_modes = 6
-        A = np.random.random([num_modes, num_modes]) + 1j * np.random.random(
-            [num_modes, num_modes]
-        )
+        A = np.random.random([num_modes, num_modes]) + 1j * np.random.random([num_modes, num_modes])
         if make_symmetric:
             A += A.T
         n_mean = 1.0
@@ -185,13 +179,9 @@ class TestBipartiteGraphEmbed:
     def test_correct_graph(self, tol, make_symmetric):
         """Test that the graph is embeded correctly"""
         num_modes = 3
-        A = np.random.random([num_modes, num_modes]) + 1j * np.random.random(
-            [num_modes, num_modes]
-        )
+        A = np.random.random([num_modes, num_modes]) + 1j * np.random.random([num_modes, num_modes])
         U, l, V = np.linalg.svd(A)
-        new_l = np.array(
-            [np.tanh(np.arcsinh(np.sqrt(i))) for i in range(1, num_modes + 1)]
-        )
+        new_l = np.array([np.tanh(np.arcsinh(np.sqrt(i))) for i in range(1, num_modes + 1)])
         n_mean = 0.5 * (num_modes + 1)
         if make_symmetric:
             At = U @ np.diag(new_l) @ U.T
@@ -212,48 +202,30 @@ class TestRectangularDecomposition:
         with pytest.raises(ValueError, match="matrix is not unitary"):
             dec.rectangular(A)
 
-    def test_identity(self, tol):
-        """This test checks the rectangular decomposition for an identity unitary.
+    @pytest.mark.parametrize(
+        "U",
+        [
+            pytest.param(np.identity(20), id="identity20"),
+            pytest.param(np.identity(20)[::-1], id="antiidentity20"),
+            pytest.param(haar_measure(20), id="random20"),
+        ],
+    )
+    def test_rectangular(self, U, tol):
+        """This test checks the function :func:`dec.rectangular` for
+        various unitary matrices.
 
-        An identity unitary is decomposed via the rectangular decomposition of
-        Clements et al. and the resulting beamsplitters are multiplied together.
-        Test passes if the product matches identity.
+        A given unitary (identity or random draw from Haar measure) is
+        decomposed using the function :func:`dec.rectangular`
+        and the resulting beamsplitters are multiplied together.
+
+        Test passes if the product matches the given unitary.
         """
-        # TODO: this test currently uses the T and Ti functions used to compute
-        # Clements as the comparison. Probably should be changed.
-        n = 20
-        U = np.identity(n)
+        nmax, mmax = U.shape
+        assert nmax == mmax
 
         tilist, diags, tlist = dec.rectangular(U)
 
-        qrec = np.identity(n)
-
-        for i in tilist:
-            qrec = dec.T(*i) @ qrec
-
-        qrec = np.diag(diags) @ qrec
-
-        for i in reversed(tlist):
-            qrec = dec.Ti(*i) @ qrec
-
-        assert np.allclose(U, qrec, atol=tol, rtol=0)
-
-    def test_random_unitary(self, tol):
-        """This test checks the rectangular decomposition for a random unitary.
-
-        A random unitary is drawn from the Haar measure, then is decomposed via
-        the rectangular decomposition of Clements et al., and the resulting
-        beamsplitters are multiplied together. Test passes if the product
-        matches the drawn unitary.
-        """
-        # TODO: this test currently uses the T and Ti functions used to compute
-        # Clements as the comparison. Probably should be changed.
-        n = 20
-        U = haar_measure(n)
-
-        tilist, diags, tlist = dec.rectangular(U)
-
-        qrec = np.identity(n)
+        qrec = np.identity(nmax)
 
         for i in tilist:
             qrec = dec.T(*i) @ qrec
@@ -288,6 +260,41 @@ class TestRectangularDecomposition:
 
         assert np.allclose(U, qrec, atol=tol, rtol=0)
 
+    @pytest.mark.parametrize(
+        "U",
+        [
+            pytest.param(np.identity(20), id="identity20"),
+            pytest.param(np.identity(20)[::-1], id="antiidentity20"),
+            pytest.param(haar_measure(20), id="random20"),
+        ],
+    )
+    def test_rectangular_MZ(self, U, tol):
+        """This test checks the function :func:`dec.rectangular_MZ` for
+        various unitary matrices.
+
+        A given unitary (identity or random draw from Haar measure) is
+        decomposed using the function :func:`dec.rectangular_MZ`
+        and the resulting beamsplitters are multiplied together.
+
+        Test passes if the product matches the given unitary.
+        """
+        nmax, mmax = U.shape
+        assert nmax == mmax
+
+        tilist, diags, tlist = dec.rectangular_MZ(U)
+
+        qrec = np.identity(nmax)
+
+        for i in tilist:
+            qrec = dec.mach_zehnder(*i) @ qrec
+
+        qrec = np.diag(diags) @ qrec
+
+        for i in reversed(tlist):
+            qrec = dec.mach_zehnder_inv(*i) @ qrec
+
+        assert np.allclose(U, qrec, atol=tol, rtol=0)
+
 
 class TestRectangularSymmetricDecomposition:
     """Tests for linear interferometer decomposition into rectangular grid of
@@ -299,20 +306,23 @@ class TestRectangularSymmetricDecomposition:
         with pytest.raises(ValueError, match="matrix is not unitary"):
             dec.rectangular_symmetric(A)
 
-    @pytest.mark.parametrize('U', [
-        pytest.param(np.identity(2), id='identity2'),
-        pytest.param(np.identity(2)[::-1], id='antiidentity2'),
-        pytest.param(haar_measure(2), id='random2'),
-        pytest.param(np.identity(4), id='identity4'),
-        pytest.param(np.identity(3)[::-1], id='antiidentity4'),
-        pytest.param(haar_measure(4), id='random4'),
-        pytest.param(np.identity(8), id='identity8'),
-        pytest.param(np.identity(8)[::-1], id='antiidentity8'),
-        pytest.param(haar_measure(8), id='random8'),
-        pytest.param(np.identity(20), id='identity20'),
-        pytest.param(np.identity(20)[::-1], id='antiidentity20'),
-        pytest.param(haar_measure(20), id='random20')
-        ])
+    @pytest.mark.parametrize(
+        "U",
+        [
+            pytest.param(np.identity(2), id="identity2"),
+            pytest.param(np.identity(2)[::-1], id="antiidentity2"),
+            pytest.param(haar_measure(2), id="random2"),
+            pytest.param(np.identity(4), id="identity4"),
+            pytest.param(np.identity(3)[::-1], id="antiidentity4"),
+            pytest.param(haar_measure(4), id="random4"),
+            pytest.param(np.identity(8), id="identity8"),
+            pytest.param(np.identity(8)[::-1], id="antiidentity8"),
+            pytest.param(haar_measure(8), id="random8"),
+            pytest.param(np.identity(20), id="identity20"),
+            pytest.param(np.identity(20)[::-1], id="antiidentity20"),
+            pytest.param(haar_measure(20), id="random20"),
+        ],
+    )
     def test_decomposition(self, U, tol):
         """This test checks the function :func:`dec.rectangular_symmetric` for
         various unitary matrices.
@@ -321,7 +331,7 @@ class TestRectangularSymmetricDecomposition:
         decomposed using the function :func:`dec.rectangular_symmetric`
         and the resulting beamsplitters are multiplied together.
 
-        Test passes if the product matches identity.
+        Test passes if the product matches the given unitary.
         """
         nmax, mmax = U.shape
         assert nmax == mmax
@@ -412,9 +422,7 @@ class TestWilliamsonDecomposition:
 
             # interferometer 1
             U1 = haar_measure(n)
-            S1 = np.vstack(
-                [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
-            )
+            S1 = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
 
             # squeezing
             r = np.log(0.2 * np.arange(n) + 2)
@@ -422,9 +430,7 @@ class TestWilliamsonDecomposition:
 
             # interferometer 2
             U2 = haar_measure(n)
-            S2 = np.vstack(
-                [np.hstack([U2.real, -U2.imag]), np.hstack([U2.imag, U2.real])]
-            )
+            S2 = np.vstack([np.hstack([U2.real, -U2.imag]), np.hstack([U2.imag, U2.real])])
 
             # final symplectic
             S_final = S2 @ Sq @ S1
@@ -467,9 +473,7 @@ class TestWilliamsonDecomposition:
         """Test that the graph_embed decomposition raises exception if not even number of rows"""
         A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         A += A.T
-        with pytest.raises(
-            ValueError, match="must have an even number of rows/columns"
-        ):
+        with pytest.raises(ValueError, match="must have an even number of rows/columns"):
             dec.williamson(A)
 
     def test_positive_definite_validation(self):
@@ -542,9 +546,7 @@ class TestBlochMessiahDecomposition:
 
             # interferometer 1
             U1 = haar_measure(n)
-            S1 = np.vstack(
-                [np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])]
-            )
+            S1 = np.vstack([np.hstack([U1.real, -U1.imag]), np.hstack([U1.imag, U1.real])])
 
             Sq = np.identity(2 * n)
             if not passive:
@@ -554,9 +556,7 @@ class TestBlochMessiahDecomposition:
 
             # interferometer 2
             U2 = haar_measure(n)
-            S2 = np.vstack(
-                [np.hstack([U2.real, -U2.imag]), np.hstack([U2.imag, U2.real])]
-            )
+            S2 = np.vstack([np.hstack([U2.real, -U2.imag]), np.hstack([U2.imag, U2.real])])
 
             # final symplectic
             S_final = S2 @ Sq @ S1
@@ -584,9 +584,7 @@ class TestBlochMessiahDecomposition:
         """Test raises exception if not even number of rows"""
         A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
         A += A.T
-        with pytest.raises(
-            ValueError, match="must have an even number of rows/columns"
-        ):
+        with pytest.raises(ValueError, match="must have an even number of rows/columns"):
             dec.bloch_messiah(A)
 
     def test_identity(self, tol):

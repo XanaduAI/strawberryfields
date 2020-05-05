@@ -4,6 +4,12 @@
 
 <h3>Improvements</h3>
 
+* Modifies the rectangular interferometer decomposition to make it more
+  efficient for hardware devices. Rather than decomposing the interferometer
+  using Clements :math:`T` matrices, the decomposition now directly produces
+  Mach-Zehnder interferometers corresponding to on-chip phases.
+  [(#363)](https://github.com/XanaduAI/strawberryfields/pull/363)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
@@ -11,6 +17,8 @@
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
+
+Shreya P. Kumar
 
 
 # Release 0.14.0 (current release)
