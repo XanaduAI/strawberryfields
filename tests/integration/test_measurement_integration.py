@@ -218,12 +218,11 @@ class TestDarkCounts:
         eng, prog = setup_eng(2)
         n = [2, 1]
 
-        with pytest.raises(
-                NotImplementedError,
-                match="Post-selection cannot be used together with dark counts",
-            ):
-            with prog.context as q:
-                ops.Fock(n[0]) | q[0]
-                ops.Fock(n[1]) | q[1]
+        with prog.context as q:
+            ops.Fock(n[0]) | q[0]
+            ops.Fock(n[1]) | q[1]
+            with pytest.raises(
+                    NotImplementedError,
+                    match="Post-selection cannot be used together with dark counts",
+                ):
                 ops.MeasureFock(select=1, dark_counts=2) | q
-
