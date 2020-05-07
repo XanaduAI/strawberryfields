@@ -295,8 +295,13 @@ class Measurement(Operation):
     def __str__(self):
         # class name, parameter values, and possibly the select parameter
         temp = super().__str__()
+
         if self.select is not None:
-            temp = temp[:-1] + ", select={})".format(self.select)
+            if not self.p:
+                temp += f"(select={self.select})"
+            else:
+                temp = f"{temp[:-1]}, select={self.select})"
+
         return temp
 
     def merge(self, other):
@@ -782,13 +787,46 @@ class MeasureFock(Measurement):
 
     ns = None
 
-    def __init__(self, select=None):
+    def __init__(self, select=None, dark_counts=None):
+        if dark_counts and select:
+            raise NotImplementedError("Post-selection cannot be used together with dark counts.")
+
+        if dark_counts is not None and not isinstance(dark_counts, Sequence):
+            dark_counts = [dark_counts]
+
         if select is not None and not isinstance(select, Sequence):
             select = [select]
+
+        self.dark_counts = dark_counts
         super().__init__([], select)
 
     def _apply(self, reg, backend, shots=1, **kwargs):
-        return backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
+        samples = backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
+
+        if isinstance(samples, list):
+            samples = np.array(samples)
+
+        if self.dark_counts is not None:
+            if len(self.dark_counts) != len(reg):
+                raise ValueError(
+                    "The number of dark counts must be equal to the number of measured modes: "
+                    "{} != {}".format(len(self.dark_counts), len(reg))
+                )
+            samples += np.random.poisson(self.dark_counts, samples.shape)
+
+        return samples
+
+    def __str__(self):
+        # class name, parameter values, possible select and dark_counts parameters
+        temp = super().__str__()
+
+        if self.dark_counts is not None:
+            if not self.select:
+                temp += f"(dark_counts={self.dark_counts})"
+            else:
+                temp = f"{temp[:-1]}, dark_counts={self.dark_counts})"
+
+        return temp
 
 
 class MeasureThreshold(Measurement):

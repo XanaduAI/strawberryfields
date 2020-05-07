@@ -145,3 +145,84 @@ class TestPostselection:
         samples = np.array(eng.run(prog, shots=shots)).flatten()
 
         assert not np.all(samples == np.zeros_like(samples, dtype=int))
+
+
+class TestDarkCounts:
+    @pytest.mark.backends("fock")
+    @pytest.mark.parametrize("dark_counts", [[4, 2], [3, 0], [0, 6]])
+    def test_fock_darkcounts_two_modes(self, dark_counts, setup_eng, monkeypatch):
+        """Test Fock measurements return expected results with dark counts on all detectors"""
+        with monkeypatch.context() as m:
+            # add the number of dark counts instead of sampling from a poisson distribution
+            m.setattr(np.random, "poisson", lambda dc, shape: dc * np.ones(shape, dtype=int))
+
+            eng, prog = setup_eng(2)
+            n = [2, 1]
+
+            with prog.context as q:
+                ops.Fock(n[0]) | q[0]
+                ops.Fock(n[1]) | q[1]
+                ops.MeasureFock(dark_counts=dark_counts) | q
+
+            eng.run(prog)
+            assert q[0].val == n[0] + dark_counts[0]
+            assert q[1].val == n[1] + dark_counts[1]
+
+    @pytest.mark.backends("fock")
+    @pytest.mark.parametrize("dark_counts", [[4], 6, 0, [0]])
+    def test_fock_darkcounts_single_mode(self, dark_counts, setup_eng, monkeypatch):
+        """Test Fock measurements return expected results with dark counts on one detector"""
+        with monkeypatch.context() as m:
+            m.setattr(np.random, "poisson", lambda dc, shape: dc * np.ones(shape, dtype=int))
+
+            eng, prog = setup_eng(2)
+            n = [2, 1]
+
+            with prog.context as q:
+                ops.Fock(n[0]) | q[0]
+                ops.Fock(n[1]) | q[1]
+                ops.MeasureFock(dark_counts=dark_counts) | q[0]
+                ops.MeasureFock() | q[1]
+
+            eng.run(prog)
+
+            if isinstance(dark_counts, int):
+                dark_counts = [dark_counts]
+
+            assert q[0].val == n[0] + dark_counts[0]
+            assert q[1].val == n[1]
+
+    @pytest.mark.backends("fock")
+    @pytest.mark.parametrize("dark_counts", [[3], 6, [4, 2, 1]])
+    def test_fock_darkcounts_errors(self, dark_counts, setup_eng):
+        """Test Fock measurements errors when applying dark counts to more/less detectors than measured"""
+
+        eng, prog = setup_eng(2)
+        n = [2, 1]
+
+        with prog.context as q:
+            ops.Fock(n[0]) | q[0]
+            ops.Fock(n[1]) | q[1]
+            ops.MeasureFock(dark_counts=dark_counts) | q
+
+        with pytest.raises(
+                ValueError,
+                match="The number of dark counts must be equal to the number of measured modes",
+            ):
+            eng.run(prog)
+
+    @pytest.mark.backends("fock")
+    def test_fock_darkcounts_with_postselection(self, setup_eng):
+        """Test Fock measurements error when using dark counts together with post-selection"""
+
+        eng, prog = setup_eng(2)
+        n = [2, 1]
+
+        with prog.context as q:
+            ops.Fock(n[0]) | q[0]
+            ops.Fock(n[1]) | q[1]
+            with pytest.raises(
+                    NotImplementedError,
+                    match="Post-selection cannot be used together with dark counts",
+                ):
+                ops.MeasureFock(select=1, dark_counts=2) | q

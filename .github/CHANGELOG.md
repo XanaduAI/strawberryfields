@@ -25,6 +25,9 @@ Shreya P. Kumar
 
 <h3>New features since last release</h3>
 
+* Dark counts can now be added to the samples received from photon measurements in the
+  Fock basis (sf.ops.MeasureFock) during a simulation.
+
 * The `"tf"` backend now supports TensorFlow 2.0 and above.
   [(#283)](https://github.com/XanaduAI/strawberryfields/pull/283)
   [(#320)](https://github.com/XanaduAI/strawberryfields/pull/320)

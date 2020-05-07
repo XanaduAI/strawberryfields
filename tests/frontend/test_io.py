@@ -248,6 +248,24 @@ class TestSFToBlackbirdConversion:
 
         assert bb.operations[0] == expected
 
+    def test_measure_darkcounts(self):
+        """Test measurement with dark counts"""
+        # create a test program
+        prog = Program(1)
+
+        with prog.context as q:
+            ops.MeasureFock(dark_counts=2) | q[0]
+
+        bb = io.to_blackbird(prog)
+        expected = {
+            "op": "MeasureFock",
+            "modes": [0],
+            "args": [],
+            "kwargs": {"dark_counts": [2]},
+        }
+
+        assert bb.operations[0] == expected
+
     def test_measure_arg(self):
         """Test measurement with argument converts"""
         # create a test program
