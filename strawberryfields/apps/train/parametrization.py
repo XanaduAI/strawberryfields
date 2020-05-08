@@ -60,7 +60,8 @@ class VGBS:
         self.A_init_scaled = rescale_adjacency(A, n_mean, threshold)
         self.n_modes = len(A)
         self._A_samples = None
-        self._add_A_samples(samples)
+        if samples:
+            self._add_A_samples(samples)
 
     def _W(self, params: np.ndarray) -> np.ndarray:
         """TODO"""
