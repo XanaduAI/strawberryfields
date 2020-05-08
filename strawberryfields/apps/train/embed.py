@@ -1,44 +1,106 @@
-r"""
-Submodule for embedding trainable GBS parameters.
+import numpy as np
 
-Training algorithms that rely on the WAW parametrization, where W is a diagonal matrix of weights
-and A is a symmetric matrix, proceed by updating the weights using gradient descent. This process
-is facilitated when trainable parameters are embedded in the weights, i.e., when the weights
-are functions of the parameters. This ensures that the updated weights lead to valid matrices and
-provides additional flexibility in training strategies.
+r"""
+Submodule for embedding trainable parameters into the GBS distribution.
+
+Training algorithms for GBS distributions rely on the WAW parametrization, where W is a diagonal 
+matrix of weights and A is a symmetric matrix. Trainable parameters are embedded into the GBS 
+distribution by expressing the weights as functions of the parameters. 
 
 This submodule contains methods to implement these embeddings and provides derivatives of the
-weights with respect to the trainable parameters."""
+weights with respect to the trainable parameters. There are two main classes each corresponding 
+to a different embedding. The :class:`~strawberryfields.apps.train.embed.Exp` class is a simple 
+embedding where the weights are exponentials of the trainable parameters. The 
+:class:`~strawberryfields.apps.train.embed.ExpFeatures` class is a more general embedding that 
+makes use of user-defined feature vectors."""
 
 
-class Exp:
+class ExpFeatures:
+    r"""Exponential embedding with feature vectors.
 
-    def weights(self, params):
-        return np.exp(-params)
+    Weights of the W matrix in the WAW parametrization are expressed as exponentials of
+    the inner product between user-specified feature vectors and trainable parameters:
+    `:math: w_i = \exp(-f^{(i)}\cdot\theta)`. Derivatives of the weights with respect to the
+    parameters are straightforward: `:math: \frac{d w_i}{d\theta_k} = -f^{(i)}_k w_i`.
 
-    def derivative(self, params):
-        return -1*self.weights(params)
+    **Example:**
 
+    >>> features = np.array([[0.1, 0.1, 0.1], [0.2, 0.2, 0.2], [0.3, 0.3, 0.3]])
+    >>> embed = ExpFeatures(features)
+    >>> params = np.array([0.1, 0.2, 0.3])
+    >>> embed(params)
+    [0.94176453 0.88692044 0.83527021]
 
-class ExpFeatures(features):
+    Args:
+        features (np.array): Matrix of feature vectors where i-th row is the i-th vector
+    """
 
-    def __init__(self):
+    def __init__(self, features):
+        """"""
         self.features = features
 
-    def weights(self, params):
-        m, d = np.shape(params)
-        for i in range(m):
-            w[i] = np.exp(-np.dot(self.features[i], params[i]))
-        return w
+    def __call__(self, params):
+        """Makes the class callable so it can be used as a function"""
+        return self.weights(params)
 
-    def derivative(self, params):
-        m, d = np.shape(params)
-        w = self.weights(self, params)
-        dw = np.zeros(m, d)
+    def weights(self, params):
+        r"""Computes weights as a function of input parameters.
+
+        Args:
+            params (np.array): trainable parameters
+
+        Returns:
+            np.array: weights
+        """
+        m, d = np.shape(self.features)
+        if d != len(params):
+            raise ValueError("Dimension of parameter vector must be equal to dimension of feature "
+                             "vectors")
+        return np.exp(-self.features @ params)
+
+    def grad(self, params):
+        r"""Computes the Jacobian matrix of weights with respect to input parameters.
+
+        Args:
+            params (np.array): trainable parameters
+
+        Returns:
+            np.array: Jacobian matrix of weights with respect to parameters
+        """
+        m, d = np.shape(self.features)
+        if d != len(params):
+            raise ValueError("Dimension of parameter vector must be equal to dimension of feature "
+                             "vectors")
+        w = self.weights(params)
+        dw = np.zeros((m, d))
         for i in range(m):
-            for j in range(d):
-                dw[i, j] = -self.features[i, j]*w[i]
+            for k in range(d):
+                dw[i, k] = -1*self.features[i, k]*w[i]
         return dw
 
+
+class Exp(ExpFeatures):
+    r"""Simple exponential embedding.
+
+    Weights of the W matrix in the WAW parametrization are expressed as exponentials of trainable
+    parameters: `:math: w_i = \exp(-\theta_i)`. Derivatives of the weights with respect to the
+    parameters are straightforward: `:math: \frac{d w_i}{d\theta_k} = -w_i\delta_{i,k}`.
+
+    **Example:**
+
+    >>> embed = Exp(3)
+    >>> params = np.array([0.1, 0.2, 0.3])
+    >>> embed(params)
+    [0.90483742 0.81873075 0.74081822]
+
+    Args:
+        dim (int): Dimension of the vector of parameters, which is equal to the number of modes
+        in the GBS distribution
+    """
+
+    def __init__(self, dim):
+        """The simple exponential mapping is a special case where the matrix of feature vectors
+        is the identity"""
+        super().__init__(np.eye(dim))
 
 
