@@ -54,8 +54,9 @@ class ExpFeatures:
         """
         m, d = np.shape(self.features)
         if d != len(params):
-            raise ValueError("Dimension of parameter vector must be equal to dimension of feature "
-                             "vectors")
+            raise ValueError(
+                "Dimension of parameter vector must be equal to dimension of feature " "vectors"
+            )
         return np.exp(-self.features @ params)
 
     def grad(self, params):
@@ -69,13 +70,14 @@ class ExpFeatures:
         """
         m, d = np.shape(self.features)
         if d != len(params):
-            raise ValueError("Dimension of parameter vector must be equal to dimension of feature "
-                             "vectors")
+            raise ValueError(
+                "Dimension of parameter vector must be equal to dimension of feature " "vectors"
+            )
         w = self.weights(params)
         dw = np.zeros((m, d))
         for i in range(m):
             for k in range(d):
-                dw[i, k] = -1*self.features[i, k]*w[i]
+                dw[i, k] = -1 * self.features[i, k] * w[i]
         return dw
 
 
@@ -102,5 +104,3 @@ class Exp(ExpFeatures):
         """The simple exponential mapping is a special case where the matrix of feature vectors
         is the identity"""
         super().__init__(np.eye(dim))
-
-
