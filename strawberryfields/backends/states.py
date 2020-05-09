@@ -914,6 +914,29 @@ class BaseFockState(BaseState):
             ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
         return float(ps)
 
+    def parity_expectation(self, mode):
+
+        if type(mode) != int):
+            raise ValueError("Specified mode index must be an integer.")
+
+        cutoff = self._cutoff  # Fock space cutoff.
+        num_modes = self._modes # number of modes in the state.
+        values = np.arange(cutoff)
+
+        if self.is_pure:
+
+            ps = self.all_fock_probs()
+            sum_axes = [i for i in range(0, num_modes)]
+            del sum_axes[mode]
+            ps = np.sum(ps, axis=tuple(sum_axes))
+
+            vals = [(-1)**i for i in values]
+            ev = np.dot(ps, vals)
+            return float(ev)
+
+        else:
+            raise ValueError("Specified mode must be a pure state")
+
 
 class BaseGaussianState(BaseState):
     r"""Class for the representation of quantum states using the Gaussian formalism.

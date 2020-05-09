@@ -382,7 +382,21 @@ class TestNumberExpectation:
         assert np.allclose(state.number_expectation([0, 1 ,3]), nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0)
         assert np.allclose(state.number_expectation([3, 1, 2]), nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0)
 
+    def test_parity_fock(self, setup_backend, tol):
 
+        backend = setup_backend(3)
+        state = backend.state()
+        r = 0.2
+        phi = 0.0
+        n1 = 3
+        n2 = 2
+        backend.prepare_squeezed_state(r, phi, 1)
+        backend.prepare_fock_state(n1, 0)
+        backend.prepare_fock_state(n2, 2)
+        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 1, 2)
+        state = backend.state()
+
+        assert np.allclose(state.parity_expectation(0), -1, atol=tol, rtol=0)
 
 class TestFidelities:
     """Fidelity tests."""
