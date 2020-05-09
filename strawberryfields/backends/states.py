@@ -916,7 +916,7 @@ class BaseFockState(BaseState):
 
     def parity_expectation(self, mode):
 
-        if type(mode) != int):
+        if (type(mode) != int):
             raise ValueError("Specified mode index must be an integer.")
 
         cutoff = self._cutoff  # Fock space cutoff.
