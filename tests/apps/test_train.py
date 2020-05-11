@@ -25,7 +25,6 @@ from thewalrus.quantum import find_scaling_adjacency_matrix_torontonian as resca
 
 # TODO: REMOVE
 class Exp:
-
     def weights(self, params):
         return np.exp(-params)
 
@@ -33,7 +32,7 @@ class Exp:
         return self.weights(params)
 
     def derivative(self, params):
-        return -1*self.weights(params)
+        return -1 * self.weights(params)
 
 
 embedding = Exp()
@@ -64,9 +63,17 @@ def test_rescale_adjacency():
 
 def test_A_to_cov():
     """Test if A_to_cov returns the correct covariance matrix for a simple fixed example"""
-    adj = np.ones((2, 2))
-    cov = train.parametrization.A_to_cov(adj)
-    target = np.array([[-1, -4, -2, -2], [-4, -1, -2, -2], [-2, -2, -1, -4], [-2, -2, -4, -1]]) / 6
+    x = np.sqrt(0.5)
+    A = np.array([[0, x], [x, 0]])
+    cov = train.parametrization.A_to_cov(A)
+    target = np.array(
+        [
+            [1.5, 0.0, 0.0, 1.41421356],
+            [0.0, 1.5, 1.41421356, 0.0],
+            [0.0, 1.41421356, 1.5, 0.0],
+            [1.41421356, 0.0, 0.0, 1.5],
+        ]
+    )
     assert np.allclose(cov, target)
 
 
@@ -99,17 +106,43 @@ class TestVGBS:
     # @pytest.mark.parametrize("threshold", [True, False])
     # def test_generate_samples(self, adj, n_mean, params):
 
-    def test_mean_photons_per_mode(self, adj, n_mean, params, dim):
+    def test_mean_photons_per_mode(self, n_mean, dim):
+        """Test that mean_photons_per_mode is correct when given a simple fully connected
+        adjacency matrix. We expect each mode to have the same mean photon number and for that to
+        add up to n_mean."""
+        adj = np.ones((dim, dim))
+        params = np.zeros(dim)
+        gbs = train.VGBS(adj, n_mean, embedding, False)
+        n_mean_vec = np.round(gbs.mean_photons_per_mode(params), 5)
+
+        assert np.allclose(np.sum(n_mean_vec), n_mean)  # check that the vector sums to n_mean
+        assert len(np.unique(n_mean_vec)) == 1  # check that the vector is constant
+        assert np.allclose(n_mean_vec[0], n_mean / dim)  # check that elements have correct values
+
+    def test_mean_clicks_per_mode(self, n_mean, dim):
+        """Test that mean_clicks_per_mode is correct when given a simple fully connected
+        adjacency matrix. We expect each mode to have the same mean click number and for that to
+        add up to n_mean."""
+        adj = np.ones((dim, dim))
+        params = np.zeros(dim)
         gbs = train.VGBS(adj, n_mean, embedding, True)
+        n_mean_vec = np.round(gbs.mean_clicks_per_mode(params), 5)
 
-        n_mean = gbs.mean_photons_per_mode(params)
+        assert np.allclose(np.sum(n_mean_vec), n_mean)  # check that the vector sums to n_mean
+        assert len(np.unique(n_mean_vec)) == 1  # check that the vector is constant
+        assert np.allclose(n_mean_vec[0], n_mean / dim)  # check that elements have correct values
 
-        cov = train.parametrization.A_to_cov(gbs._A_scaled(params))
-        cov_diag = np.diag(cov)
+    def test_photons_clicks_comparison(self, n_mean, dim):
+        """Test that compares mean_photons_per_mode and mean_clicks_per_mode in the setting of a
+        high mean photon number. Using the fully connected adjacency matrix, we expect elements of
+        n_mean_vec_photon to be above one (there are more photons than modes) and also elements of
+        n_mean_vec_click to be below one (you can never have more clicks on average than one)."""
+        adj = np.ones((dim, dim))
+        params = np.zeros(dim)
+        gbs = train.VGBS(adj, 3 * n_mean, embedding, False)
+        n_mean_vec_photon = np.round(gbs.mean_photons_per_mode(params), 5)
+        n_mean_vec_click = np.round(gbs.mean_clicks_per_mode(params), 5)
 
-        nbar = [0.5 * (cov_diag[k] + cov_diag[k + dim] - 1) for k in range(dim)]
-        targed_n_mean = np.array(nbar)
+        assert n_mean_vec_click[0] < 1
+        assert n_mean_vec_photon[0] > 1
 
-        print(np.sum(targed_n_mean))
-        print(np.sum(n_mean))
-        # assert np.allclose(n_mean, targed_n_mean)

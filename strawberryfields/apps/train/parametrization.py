@@ -33,7 +33,7 @@ def rescale_adjacency(A: np.ndarray, n_mean: float, threshold: bool) -> np.ndarr
 def A_to_cov(A: np.ndarray) -> np.ndarray:
     """TODO"""
     n = len(A)
-    A_big = np.block([[A, 0 * A], [0 * A, A]])
+    A_big = np.block([[A, 0 * A], [0 * A, np.conj(A)]])
     I = np.identity(2 * n)
     X = Xmat(n)
     return np.linalg.inv(I - X @ A_big) - I / 2
@@ -112,16 +112,16 @@ class VGBS:
         """TODO"""
         disp = np.zeros(2 * self.n_modes)
         cov = A_to_cov(self._A_scaled(params))
-        return photon_number_mean_vector(disp, cov)
+        return photon_number_mean_vector(disp, cov, hbar=1)  # TODO: consider hbar=2
 
     def mean_clicks_per_mode(self, params: np.ndarray) -> np.ndarray:
         """TODO"""
         cov = A_to_cov(self._A_scaled(params))
-        Q = Qmat(cov)
+        Q = Qmat(cov, hbar=1)
         m = self.n_modes
         Qks = [[[Q[k, k], Q[k, k + m]], [Q[k + m, k], Q[k + m, k + m]]] for k in range(m)]
         cbar = [1 - np.linalg.det(Qks[k]) ** (-0.5) for k in range(m)]
-        return np.array(cbar)
+        return np.real(np.array(cbar))
 
     def n_mean(self, params: np.ndarray) -> float:
         """TODO"""
