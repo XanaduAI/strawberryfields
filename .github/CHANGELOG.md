@@ -1,8 +1,19 @@
-# Release 0.14.0-dev0 (development release)
+# Release 0.15.0-dev0 (development release)
 
 <h3>New features since last release</h3>
 
 <h3>Improvements</h3>
+
+* Modifies the rectangular interferometer decomposition to make it more
+  efficient for hardware devices. Rather than decomposing the interferometer
+  using Clements :math:`T` matrices, the decomposition now directly produces
+  Mach-Zehnder interferometers corresponding to on-chip phases.
+  [(#363)](https://github.com/XanaduAI/strawberryfields/pull/363)
+
+<h3>Breaking Changes</h3>
+
+* Removes support for Python 3.5.
+  [(#385)](https://github.com/XanaduAI/strawberryfields/pull/385)
 
 <h3>Bug fixes</h3>
 
@@ -10,7 +21,109 @@
 
 This release contains contributions from (in alphabetical order):
 
-# Release 0.13.0 (current release)
+Theodor Isacsson, Shreya P. Kumar
+
+
+# Release 0.14.0 (current release)
+
+<h3>New features since last release</h3>
+
+* Dark counts can now be added to the samples received from photon measurements in the
+  Fock basis (sf.ops.MeasureFock) during a simulation.
+
+* The `"tf"` backend now supports TensorFlow 2.0 and above.
+  [(#283)](https://github.com/XanaduAI/strawberryfields/pull/283)
+  [(#320)](https://github.com/XanaduAI/strawberryfields/pull/320)
+  [(#323)](https://github.com/XanaduAI/strawberryfields/pull/323)
+  [(#361)](https://github.com/XanaduAI/strawberryfields/pull/361)
+  [(#372)](https://github.com/XanaduAI/strawberryfields/pull/372)
+  [(#373)](https://github.com/XanaduAI/strawberryfields/pull/373)
+  [(#374)](https://github.com/XanaduAI/strawberryfields/pull/374)
+  [(#375)](https://github.com/XanaduAI/strawberryfields/pull/375)
+  [(#377)](https://github.com/XanaduAI/strawberryfields/pull/377)
+
+  For more details and demonstrations of the new TensorFlow 2.0-compatible backend,
+  see our [optimization and machine learning tutorials](https://strawberryfields.readthedocs.io/en/stable/introduction/tutorials.html#optimization-and-machine-learning).
+
+  For example, using TensorFlow 2.0 to train a variational photonic
+  circuit:
+
+  ```python
+  eng = sf.Engine(backend="tf", backend_options={"cutoff_dim": 7})
+  prog = sf.Program(1)
+
+  with prog.context as q:
+      # Apply a single mode displacement with free parameters
+      Dgate(prog.params("a"), prog.params("p")) | q[0]
+
+  opt = tf.keras.optimizers.Adam(learning_rate=0.1)
+
+  alpha = tf.Variable(0.1)
+  phi = tf.Variable(0.1)
+
+  for step in range(50):
+      # reset the engine if it has already been executed
+      if eng.run_progs:
+          eng.reset()
+
+      with tf.GradientTape() as tape:
+          # execute the engine
+          results = eng.run(prog, args={'a': alpha, 'p': phi})
+          # get the probability of fock state |1>
+          prob = results.state.fock_prob([1])
+          # negative sign to maximize prob
+          loss = -prob
+
+      gradients = tape.gradient(loss, [alpha, phi])
+      opt.apply_gradients(zip(gradients, [alpha, phi]))
+      print("Value at step {}: {}".format(step, prob))
+  ```
+
+* Adds the method `number_expectation`  that calculates the expectation value of the product of the
+  number operators of a given set of modes.
+  [(#348)](https://github.com/XanaduAI/strawberryfields/pull/348/)
+
+  ```python
+  prog = sf.Program(3)
+  with prog.context as q:
+      ops.Sgate(0.5) | q[0]
+      ops.Sgate(0.5) | q[1]
+      ops.Sgate(0.5) | q[2]
+      ops.BSgate(np.pi/3, 0.1) |  (q[0], q[1])
+      ops.BSgate(np.pi/3, 0.1) |  (q[1], q[2])
+  ```
+
+  Executing this on the Fock backend,
+
+  ```python
+  >>> eng = sf.Engine("fock", backend_options={"cutoff_dim": 10})
+  >>> state = eng.run(prog).state
+  ```
+
+  we can compute the expectation value :math:`\langle \hat{n}_0\hat{n}_2\rangle`:
+
+  ```python
+  >>> state.number_expectation([0, 2])
+  ```
+
+<h3>Improvements</h3>
+
+* Add details to the error message for failed remote jobs.
+  [(#370)](https://github.com/XanaduAI/strawberryfields/pull/370)
+
+* The required version of The Walrus was increased to version 0.12, for
+  tensor number expectation support.
+  [(#380)](https://github.com/XanaduAI/strawberryfields/pull/380)
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Tom Bromley, Theodor Isacsson, Josh Izaac, Nathan Killoran, Filippo Miatto, Nicolás Quesada,
+Antal Száva, Paul Tan.
+
+
+# Release 0.13.0
 
 <h3>New features since last release</h3>
 

@@ -290,7 +290,7 @@ Two-mode squeezing
    :class: defn
 
    .. math::
-      S_2(z) = \exp\left(z \ad_1 \ad_2 - z^* \a_1\a_2 \right) = \exp\left(r (e^{-i\phi} \ad_1\ad_2 -e^{i\phi} \a_1 \a_2 \right)
+      S_2(z) = \exp\left(z \ad_1 \ad_2 - z^* \a_1\a_2 \right) = \exp\left(r (e^{i\phi} \ad_1\ad_2 -e^{-i\phi} \a_1 \a_2 \right)
 
    where :math:`z=r e^{i \phi}` with :math:`r \geq 0` and :math:`\phi \in [0,2 \pi)`.
 

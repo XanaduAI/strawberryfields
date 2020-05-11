@@ -43,6 +43,30 @@ _decomposition_tol = (
     1e-13  # TODO this tolerance is used for various purposes and is not well-defined
 )
 
+# data type to use for complex arrays
+COMPLEX_DTYPE = np.complex128
+
+
+def evaluate_complex_parameter(p, phase):
+    """Convenience function for evaluating symbolic arguments
+    with potentially batched phase parameters.
+
+    Args:
+        p (Any): parameters
+        phase (Any): complex phase of parameter ``p``
+
+    """
+    # We need to check if any value of the phase is non-zero,
+    # as the phase might be batched.
+    if np.any(phase != 0):
+        # There exists a non-zero phase; cast the parameter
+        # to a complex data type when evaluating it.
+        return par_evaluate(p, dtype=COMPLEX_DTYPE)
+
+    # All phases are zero; evaluate the parameter without
+    # any additional casting.
+    return par_evaluate(p)
+
 
 def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
     """User warning formatter"""
@@ -271,8 +295,13 @@ class Measurement(Operation):
     def __str__(self):
         # class name, parameter values, and possibly the select parameter
         temp = super().__str__()
+
         if self.select is not None:
-            temp = temp[:-1] + ", select={})".format(self.select)
+            if not self.p:
+                temp += f"(select={self.select})"
+            else:
+                temp = f"{temp[:-1]}, select={self.select})"
+
         return temp
 
     def merge(self, other):
@@ -542,7 +571,7 @@ class Coherent(Preparation):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-        z = par_evaluate(p)
+        z = evaluate_complex_parameter(p, self.p[1])
         backend.prepare_coherent_state(z, *reg)
 
 
@@ -652,7 +681,8 @@ class Catstate(Preparation):
         ket = np.squeeze(ket)
 
         # evaluate the array (elementwise)
-        ket = par_evaluate(ket)
+        ket = evaluate_complex_parameter(ket, self.p[1])
+
         backend.prepare_ket_state(ket, *reg)
 
 
@@ -757,13 +787,46 @@ class MeasureFock(Measurement):
 
     ns = None
 
-    def __init__(self, select=None):
+    def __init__(self, select=None, dark_counts=None):
+        if dark_counts and select:
+            raise NotImplementedError("Post-selection cannot be used together with dark counts.")
+
+        if dark_counts is not None and not isinstance(dark_counts, Sequence):
+            dark_counts = [dark_counts]
+
         if select is not None and not isinstance(select, Sequence):
             select = [select]
+
+        self.dark_counts = dark_counts
         super().__init__([], select)
 
     def _apply(self, reg, backend, shots=1, **kwargs):
-        return backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
+        samples = backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
+
+        if isinstance(samples, list):
+            samples = np.array(samples)
+
+        if self.dark_counts is not None:
+            if len(self.dark_counts) != len(reg):
+                raise ValueError(
+                    "The number of dark counts must be equal to the number of measured modes: "
+                    "{} != {}".format(len(self.dark_counts), len(reg))
+                )
+            samples += np.random.poisson(self.dark_counts, samples.shape)
+
+        return samples
+
+    def __str__(self):
+        # class name, parameter values, possible select and dark_counts parameters
+        temp = super().__str__()
+
+        if self.dark_counts is not None:
+            if not self.select:
+                temp += f"(dark_counts={self.dark_counts})"
+            else:
+                temp = f"{temp[:-1]}, dark_counts={self.dark_counts})"
+
+        return temp
 
 
 class MeasureThreshold(Measurement):
@@ -924,7 +987,7 @@ class Dgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-        z = par_evaluate(p)
+        z = evaluate_complex_parameter(p, self.p[1])
         backend.displacement(z, *reg)
 
 
@@ -962,8 +1025,8 @@ class Zgate(Gate):
 
     def _decompose(self, reg, **kwargs):
         # into a displacement
-        z = self.p[0] * 1j / np.sqrt(2 * sf.hbar)
-        return [Command(Dgate(z, 0), reg)]
+        r = self.p[0] / np.sqrt(2 * sf.hbar)
+        return [Command(Dgate(r, np.pi / 2), reg)]
 
 
 class Sgate(Gate):
@@ -984,7 +1047,7 @@ class Sgate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-        z = par_evaluate(p)
+        z = evaluate_complex_parameter(p, self.p[1])
         backend.squeeze(z, *reg)
 
 
@@ -1089,8 +1152,10 @@ class BSgate(Gate):
     def _apply(self, reg, backend, **kwargs):
         t = pf.cos(self.p[0])
         r = pf.sin(self.p[0]) * pf.exp(1j * self.p[1])
-        p = par_evaluate([t, r])
-        backend.beamsplitter(*p, *reg)
+
+        t = par_evaluate(t)
+        r = evaluate_complex_parameter(r, self.p[1])
+        backend.beamsplitter(t, r, *reg)
 
 
 class MZgate(Gate):
@@ -1125,7 +1190,7 @@ class S2gate(Gate):
     r""":ref:`Two-mode squeezing <two_mode_squeezing>` gate.
 
     .. math::
-       S_2(z) = \exp\left(z^* ab -z a^\dagger b^\dagger \right) = \exp\left(r (e^{-i\phi} ab -e^{i\phi} a^\dagger b^\dagger \right)
+       S_2(z) = \exp\left(z a^\dagger b^\dagger - z^* ab \right) = \exp\left(r (e^{i\phi} a^\dagger b^\dagger e^{-i\phi} ab ) \right)
 
     where :math:`z = r e^{i\phi}`.
 
@@ -1140,7 +1205,7 @@ class S2gate(Gate):
 
     def _apply(self, reg, backend, **kwargs):
         p = self.p[0] * pf.exp(1j * self.p[1])
-        z = par_evaluate(p)
+        z = evaluate_complex_parameter(p, self.p[1])
         backend.two_mode_squeeze(z, *reg)
 
     def _decompose(self, reg, **kwargs):

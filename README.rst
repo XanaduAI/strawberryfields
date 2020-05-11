@@ -37,15 +37,15 @@ Features
 
 .. raw:: html
 
-    <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/gallery/state_learner/StateLearning.gif" width="300px"  align="right">
+    <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/_static/StateLearning.gif" width="300px"  align="right">
 
 * An open-source software architecture for **photonic quantum computing**
 
-* Includes high-level functions for **solving practical problems** including **graph and network optimization**, **machine learning** and **chemistry**.
+* Execute algorithms on  **photonic quantum computing chips** via the Xanadu Quantum Cloud
+
+* Includes high-level functions for **solving practical problems** including **graph and network optimization**, **machine learning** and **chemistry**
 
 * Includes **quantum simulators** implemented using **NumPy** and **TensorFlow**—with built-in quantum compilation
-
-* Future releases will target experimental backends, including **photonic quantum computing chips**
 
 * Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows anyone to run a quantum computing simulation via **drag and drop**
 
@@ -53,7 +53,7 @@ Features
 Installation
 ============
 
-Strawberry Fields requires Python version 3.5, 3.6, 3.7, or 3.8. Installation of Strawberry Fields, as well as all dependencies, can be done using pip:
+Strawberry Fields requires Python version 3.6, 3.7, or 3.8. Installation of Strawberry Fields, as well as all dependencies, can be done using pip:
 
 .. code-block:: bash
 
@@ -86,7 +86,7 @@ for more details, and then check out some of the Strawberry Fields `challenges <
 Authors
 =======
 
-Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook.
+Strawberry Fields is the work of `many contributors <https://github.com/XanaduAI/strawberryfields/graphs/contributors>`_.
 
 If you are doing research using Strawberry Fields, please cite our papers:
 
