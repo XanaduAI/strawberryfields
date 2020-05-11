@@ -923,17 +923,14 @@ class BaseFockState(BaseState):
         num_modes = self._modes # number of modes in the state.
         values = np.arange(cutoff)
 
-        print(self.is_pure)
-
-        if self.is_pure:
-
-            ps = self.all_fock_probs()
-            sum_axes = list(range(num_modes))
-            del sum_axes[mode]
-            ps = np.sum(ps, axis=tuple(sum_axes))
-            vals = [(-1)**i for i in values]
-            ev = np.dot(ps, vals)
-            return float(ev)
+        ps = self.all_fock_probs()
+        sum_axes = list(range(num_modes))
+        del sum_axes[mode]
+        ps = np.sum(ps, axis=tuple(sum_axes))
+        vals = [(-1)**i for i in values]
+        ev = np.dot(ps, vals)
+        
+        return float(ev)
 
 class BaseGaussianState(BaseState):
     r"""Class for the representation of quantum states using the Gaussian formalism.
