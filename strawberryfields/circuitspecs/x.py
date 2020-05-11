@@ -122,7 +122,11 @@ class Ranges:
 
 
 class XSpecs(CircuitSpecs):
-    """Circuit specifications for the X class of circuits."""
+    """Circuit specifications for the X class of circuits.
+    An important property of this compilation routines is that it is done at the covariance matrix level.
+    This implies that one should not use to compare the interferometers of a given circuit since they may
+    differ by permutations in the unitary and the squeezing parameters.
+    """
 
     short_name = "X"
     modes = None
@@ -228,7 +232,7 @@ class XSpecs(CircuitSpecs):
 
         # ensure provided S2gates all have the allowed squeezing values
         if not all(s in self.allowed_sq_ranges for s in sqs):
-            wrong_sq_values = [s for s in sqs if s not in self.allowed_sq_ranges]
+            wrong_sq_values = [np.round(s, 4) for s in sqs if s not in self.allowed_sq_ranges]
             raise CircuitError(
                 "Incorrect squeezing value(s) r={}. Allowed squeezing "
                 "value(s) are {}.".format(wrong_sq_values, self.allowed_sq_ranges)
