@@ -3,7 +3,7 @@ Submodule for embedding trainable parameters into the GBS distribution.
 
 Training algorithms for GBS distributions rely on the WAW parametrization, where W is a diagonal 
 matrix of weights and A is a symmetric matrix. Trainable parameters are embedded into the GBS 
-distribution by expressing the weights as functions of the parameters. 
+distribution by expressing the weights as functions of the parameters.
 
 This submodule contains methods to implement such embeddings. It also provides derivatives 
 of the weights with respect to the trainable parameters. There are two main classes, each 
@@ -51,7 +51,7 @@ class ExpFeatures:
         Returns:
             np.array: weights
         """
-        m, d = np.shape(self.features)
+        d = np.shape(self.features)[1]
         if d != len(params):
             raise ValueError(
                 "Dimension of parameter vector must be equal to dimension of feature vectors"
@@ -104,3 +104,7 @@ class Exp(ExpFeatures):
         """The simple exponential mapping is a special case where the matrix of feature vectors
         is the identity"""
         super().__init__(np.eye(dim))
+
+x = np.ones((4, 5))
+
+print(np.shape(x)[1])
