@@ -104,7 +104,3 @@ class Exp(ExpFeatures):
         """The simple exponential mapping is a special case where the matrix of feature vectors
         is the identity"""
         super().__init__(np.eye(dim))
-
-x = np.ones((4, 5))
-
-print(np.shape(x)[1])
