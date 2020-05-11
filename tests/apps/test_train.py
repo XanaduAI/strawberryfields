@@ -103,13 +103,12 @@ class TestVGBS:
         assert np.allclose(A_scaled, W @ gbs.A_init_scaled @ W)
         assert not np.allclose(A, A_scaled)
 
-    # @pytest.mark.parametrize("threshold", [True, False])
-    # def test_generate_samples(self, adj, n_mean, params):
+
 
     def test_mean_photons_per_mode(self, n_mean, dim):
         """Test that mean_photons_per_mode is correct when given a simple fully connected
-        adjacency matrix. We expect each mode to have the same mean photon number and for that to
-        add up to n_mean."""
+        adjacency matrix and an identity W. We expect each mode to have the same mean photon number
+        and for that to add up to n_mean."""
         adj = np.ones((dim, dim))
         params = np.zeros(dim)
         gbs = train.VGBS(adj, n_mean, embedding, False)
@@ -121,8 +120,8 @@ class TestVGBS:
 
     def test_mean_clicks_per_mode(self, n_mean, dim):
         """Test that mean_clicks_per_mode is correct when given a simple fully connected
-        adjacency matrix. We expect each mode to have the same mean click number and for that to
-        add up to n_mean."""
+        adjacency matrix and an identity W. We expect each mode to have the same mean click number
+        and for that to add up to n_mean."""
         adj = np.ones((dim, dim))
         params = np.zeros(dim)
         gbs = train.VGBS(adj, n_mean, embedding, True)
@@ -134,9 +133,10 @@ class TestVGBS:
 
     def test_photons_clicks_comparison(self, n_mean, dim):
         """Test that compares mean_photons_per_mode and mean_clicks_per_mode in the setting of a
-        high mean photon number. Using the fully connected adjacency matrix, we expect elements of
-        n_mean_vec_photon to be above one (there are more photons than modes) and also elements of
-        n_mean_vec_click to be below one (you can never have more clicks on average than one)."""
+        high mean photon number. Using the fully connected adjacency matrix and an identity W,
+        we expect elements of n_mean_vec_photon to be above one (there are more photons than
+        modes) and also elements of n_mean_vec_click to be below one (you can never have more
+        clicks on average than one)."""
         adj = np.ones((dim, dim))
         params = np.zeros(dim)
         gbs = train.VGBS(adj, 3 * n_mean, embedding, False)
@@ -146,3 +146,11 @@ class TestVGBS:
         assert n_mean_vec_click[0] < 1
         assert n_mean_vec_photon[0] > 1
 
+    @pytest.mark.parametrize("threshold", [True, False])
+    def test_n_mean(self, adj, n_mean, dim, threshold):
+        """Test that n_mean returns the expected number of photons or clicks when using an
+        identity W, so that we expect the mean number of photons to be equal to the input value
+        of n_mean"""
+        params = np.zeros(dim)
+        gbs = train.VGBS(adj, n_mean, embedding, threshold)
+        assert np.allclose(gbs.n_mean(params), n_mean)
