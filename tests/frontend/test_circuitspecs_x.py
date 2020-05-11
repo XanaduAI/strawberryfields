@@ -476,6 +476,6 @@ class TestXCompilation:
             ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
             ops.Interferometer(U) | q
             ops.MeasureFock() | q
-
+ 
         with pytest.raises(CircuitError, match="The applied unitary cannot mix between the modes"):
             res = prog.compile("X")
