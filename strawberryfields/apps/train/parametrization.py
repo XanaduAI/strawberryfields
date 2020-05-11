@@ -18,10 +18,9 @@ of GBS.
 from typing import Optional
 
 import numpy as np
-from thewalrus.quantum import Qmat, Xmat
+from thewalrus.quantum import Qmat, Xmat, photon_number_mean_vector
 from thewalrus.quantum import find_scaling_adjacency_matrix as rescale
-from thewalrus.quantum import \
-    find_scaling_adjacency_matrix_torontonian as rescale_tor
+from thewalrus.quantum import find_scaling_adjacency_matrix_torontonian as rescale_tor
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 
 
@@ -111,10 +110,9 @@ class VGBS:
 
     def mean_photons_per_mode(self, params: np.ndarray) -> np.ndarray:
         """TODO"""
+        disp = np.zeros(2 * self.n_modes)
         cov = A_to_cov(self._A_scaled(params))
-        cov_diag = np.diag(cov)
-        nbar = [0.5 * (cov_diag[k] + cov_diag[k + self.n_modes] - 1) for k in range(self.n_modes)]
-        return np.array(nbar)
+        return photon_number_mean_vector(disp, cov)
 
     def mean_clicks_per_mode(self, params: np.ndarray) -> np.ndarray:
         """TODO"""
