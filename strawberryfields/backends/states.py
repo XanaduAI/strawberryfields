@@ -25,11 +25,11 @@ from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
 from scipy.integrate import simps
-from thewalrus.quantum import photon_number_mean, photon_number_covar
+#from thewalrus.quantum import photon_number_mean, photon_number_covar
 
 import strawberryfields as sf
-from .shared_ops import rotation_matrix as _R
-from .shared_ops import changebasis
+#from .shared_ops import rotation_matrix as _R
+#from .shared_ops import changebasis
 
 indices = string.ascii_lowercase
 
@@ -913,7 +913,6 @@ class BaseFockState(BaseState):
         for _ in range(len(modes)):
             ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
         return float(ps)
-    
 
     def parity_expectation(self, mode):
 
@@ -924,17 +923,17 @@ class BaseFockState(BaseState):
         num_modes = self._modes # number of modes in the state.
         values = np.arange(cutoff)
 
+        print(self.is_pure)
+
         if self.is_pure:
 
             ps = self.all_fock_probs()
-            sum_axes = range(num_modes)
+            sum_axes = list(range(num_modes))
             del sum_axes[mode]
             ps = np.sum(ps, axis=tuple(sum_axes))
-
             vals = [(-1)**i for i in values]
             ev = np.dot(ps, vals)
             return float(ev)
-
 
 class BaseGaussianState(BaseState):
     r"""Class for the representation of quantum states using the Gaussian formalism.
