@@ -15,30 +15,56 @@ r"""
 Unit tests for strawberryfields.apps.clique
 """
 # pylint: disable=no-self-use,unused-argument
-import functools
-
-import networkx as nx
 import numpy as np
 import pytest
-
 from strawberryfields.apps.train import embed
 
-pytestmark = pytest.mark.apps
-
-feats = [[[0.1, 0.2], [0.2, 0.1]], [[0.1, 0.2, 0.3], [0.3, 0.1, 0.2], [0.2, 0.3, 0.1]],
-         [[0.1, 0.2, 0.3, 0.4], [0.4, 0.1, 0.2, 0.3], [0.3, 0.4, 0.1, 0.2], [0.2, 0.3, 0.4, 0.1]]]
+feats = [
+    [[0.1, 0.2], [0.2, 0.1]],
+    [[0.1, 0.2, 0.3], [0.3, 0.1, 0.2], [0.2, 0.3, 0.1]],
+    [[0.1, 0.2, 0.3, 0.4], [0.4, 0.1, 0.2, 0.3], [0.3, 0.4, 0.1, 0.2], [0.2, 0.3, 0.4, 0.1]],
+]
 feats = np.array([np.array(f) for f in feats])
 
 ps = [[1.0, 2.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0, 4.0]]
 ps = np.array([np.array(p) for p in ps])
 
-weights_f = np.array([np.exp(-feats[i] @ ps[i]) for i in range(3)])
-weights = np.array([np.exp(-ps[i]) for i in range(3)])
+weights_f = np.array(
+    [
+        np.exp(-np.array([0.5, 0.4])),
+        np.exp(-np.array([1.4, 1.1, 1.1])),
+        np.exp(-np.array([3.0, 2.4, 2.2, 2.4])),
+    ]
+)
+weights = np.array(
+    [
+        np.exp(-np.array([1.0, 2.0])),
+        np.exp(-np.array([1.0, 2.0, 3.0])),
+        np.exp(-np.array([1.0, 2.0, 3.0, 4.0])),
+    ]
+)
+
+jacobian_f = np.array([np.zeros((d, d)) for d in range(2, 5)])
+jacobian = np.array([np.zeros((d, d)) for d in range(2, 5)])
+
+for i in range(3):
+    jacobian[i] = -np.diag(weights[i])
+    for j in range(i + 2):
+        for k in range(i + 2):
+            jacobian_f[i][j, k] = -feats[i][j, k] * weights_f[i][j]
 
 
 @pytest.mark.parametrize("dim", range(2, 5))
 class TestExpFeatures:
-    """Tests for the class ``strawberryfields.apps.train.embed.ExpFeatures``"""
+    """Tests for the callable class ``strawberryfields.apps.train.embed.ExpFeatures``"""
+
+    def test_invalid_dim(self, dim):
+        """Tests that a warning is issued if the feature vectors do not have the correct
+        dimension"""
+        with pytest.raises(ValueError, match="Dimension of parameter vector"):
+            features = np.ones((dim, dim + 1))
+            expf = embed.ExpFeatures(features)
+            expf(np.zeros(dim))
 
     def test_zero_params(self, dim):
         """Tests that weights are equal to one when parameters are zero"""
@@ -46,13 +72,6 @@ class TestExpFeatures:
         expf = embed.ExpFeatures(features)
         params = np.zeros(dim)
         assert (expf(params) - np.ones(dim)).all() == 0
-
-    def test_inf_params(self, dim):
-        """Tests that weights are equal to zero when parameters are infinity"""
-        features = np.ones((dim, dim))
-        expf = embed.ExpFeatures(features)
-        params = np.array([float("Inf") for _ in range(dim)])
-        assert (expf(params) - np.zeros(dim)).all() == 0
 
     def test_predefined(self, dim):
         """Tests that weights are computed correctly for pre-defined features and parameters"""
@@ -63,20 +82,43 @@ class TestExpFeatures:
 
 
 @pytest.mark.parametrize("dim", range(2, 5))
+class TestJacobianExpFeatures:
+    """Tests for the method ``strawberryfields.apps.train.embed.ExpFeatures.jacobian``"""
+
+    def test_invalid_dim(self, dim):
+        """Tests that a warning is issued if the feature vectors do not have the correct
+        dimension"""
+        with pytest.raises(ValueError, match="Dimension of parameter vector"):
+            features = np.ones((dim, dim + 1))
+            expf = embed.ExpFeatures(features)
+            expf(np.zeros(dim))
+
+    def test_jacobian_zero_params(self, dim):
+        """Tests that the jacobian is equal to negative identity when parameters are zero"""
+        features = np.ones((dim, dim))
+        params = np.zeros(dim)
+        expf = embed.ExpFeatures(features)
+        g = expf.jacobian(params)
+        assert (-np.ones((dim, dim)) - g).all() == 0
+
+    def test_jacobian_predefined(self, dim):
+        """Tests that the jacobian is computed correctly for pre-defined features and parameters"""
+        k = dim - 2
+        features = feats[k]
+        expf = embed.ExpFeatures(features)
+        g = expf.jacobian(ps[k])
+        assert (g - jacobian_f[k]).all() == 0
+
+
+@pytest.mark.parametrize("dim", range(2, 5))
 class TestExp:
-    """Tests for the class ``strawberryfields.apps.train.embed.Exp``"""
+    """Tests for the callable class ``strawberryfields.apps.train.embed.Exp``"""
 
     def test_zero_params(self, dim):
         """Tests that weights are equal to one when parameters are zero"""
         exp = embed.Exp(dim)
         params = np.zeros(dim)
         assert (exp(params) - np.ones(dim)).all() == 0
-
-    def test_inf_params(self, dim):
-        """Tests that weights are equal to zero when parameters are infinity"""
-        exp = embed.Exp(dim)
-        params = np.array([float("Inf") for _ in range(dim)])
-        assert (exp(params) - np.zeros(dim)).all() == 0
 
     def test_predefined(self, dim):
         """Tests that weights are computed correctly for pre-defined features and parameters"""
@@ -93,3 +135,21 @@ class TestExp:
         exp = embed.Exp(dim)
         assert (expf(ps[k]) - exp(ps[k])).all() == 0
 
+
+@pytest.mark.parametrize("dim", range(2, 5))
+class TestJacobianExp:
+    """Tests for the method ``strawberryfields.apps.train.embed.Exp.jacobian``"""
+
+    def test_jacobian_zero_params(self, dim):
+        """Tests that the jacobian is equal to negative identity when parameters are zero"""
+        params = np.zeros(dim)
+        exp = embed.Exp(dim)
+        g = exp.jacobian(params)
+        assert (-np.ones((dim, dim)) - g).all() == 0
+
+    def test_jacobian_predefined(self, dim):
+        """Tests that the jacobian is computed correctly for pre-defined features and parameters"""
+        k = dim - 2
+        exp = embed.Exp(dim)
+        g = exp.jacobian(ps[k])
+        assert (g - jacobian[k]).all() == 0
