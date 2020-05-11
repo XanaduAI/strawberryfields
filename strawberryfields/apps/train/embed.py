@@ -55,7 +55,6 @@ class ExpFeatures:
         m, d = np.shape(self.features)
         if d != len(params):
             raise ValueError(
-                "Dimension of parameter vector must be equal to dimension of feature " "vectors"
             )
         return np.exp(-self.features @ params)
 
@@ -71,7 +70,7 @@ class ExpFeatures:
         m, d = np.shape(self.features)
         if d != len(params):
             raise ValueError(
-                "Dimension of parameter vector must be equal to dimension of feature " "vectors"
+                "Dimension of parameter vector must be equal to dimension of feature vectors"
             )
         w = self.weights(params)
         dw = np.zeros((m, d))
