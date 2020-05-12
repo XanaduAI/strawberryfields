@@ -24,7 +24,7 @@ feats = [
     [[0.1, 0.2, 0.3], [0.3, 0.1, 0.2], [0.2, 0.3, 0.1]],
     [[0.1, 0.2, 0.3, 0.4], [0.4, 0.1, 0.2, 0.3], [0.3, 0.4, 0.1, 0.2], [0.2, 0.3, 0.4, 0.1]],
 ]
-feats = [np.array(f) for f in feats]
+feats = np.array([np.array(f) for f in feats])
 
 ps = [[1.0, 2.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0, 4.0]]
 ps = np.array([np.array(p) for p in ps])
@@ -78,7 +78,7 @@ class TestExpFeatures:
         k = dim - 2
         features = feats[k]
         expf = embed.ExpFeatures(features)
-        assert (expf(ps[k]) - weights_f[k]).all() == 0
+        assert np.allclose(expf(ps[k]), weights_f[k])
 
 
 @pytest.mark.parametrize("dim", range(2, 5))
@@ -94,12 +94,13 @@ class TestJacobianExpFeatures:
             expf(np.zeros(dim))
 
     def test_jacobian_zero_params(self, dim):
-        """Tests that the jacobian is equal to negative identity when parameters are zero"""
+        """Tests that the jacobian is equal to a matrix with -1 in all entries when parameters are
+        zero"""
         features = np.ones((dim, dim))
         params = np.zeros(dim)
         expf = embed.ExpFeatures(features)
         g = expf.jacobian(params)
-        assert (-np.ones((dim, dim)) - g).all() == 0
+        assert np.allclose(-np.ones((dim, dim)), g)
 
     def test_jacobian_predefined(self, dim):
         """Tests that the jacobian is computed correctly for pre-defined features and parameters"""
@@ -107,7 +108,7 @@ class TestJacobianExpFeatures:
         features = feats[k]
         expf = embed.ExpFeatures(features)
         g = expf.jacobian(ps[k])
-        assert (g - jacobian_f[k]).all() == 0
+        assert np.allclose(g, jacobian_f[k])
 
 
 @pytest.mark.parametrize("dim", range(2, 5))
@@ -118,13 +119,13 @@ class TestExp:
         """Tests that weights are equal to one when parameters are zero"""
         exp = embed.Exp(dim)
         params = np.zeros(dim)
-        assert (exp(params) - np.ones(dim)).all() == 0
+        assert np.allclose(exp(params), np.ones(dim))
 
     def test_predefined(self, dim):
         """Tests that weights are computed correctly for pre-defined features and parameters"""
         k = dim - 2
         exp = embed.Exp(dim)
-        assert (exp(ps[k]) - weights[k]).all() == 0
+        assert np.allclose(exp(ps[k]), weights[k])
 
     def test_identity(self, dim):
         """Tests that weights are computed correctly compared to a general calculation using an
@@ -133,7 +134,7 @@ class TestExp:
         features = np.eye(dim)
         expf = embed.ExpFeatures(features)
         exp = embed.Exp(dim)
-        assert (expf(ps[k]) - exp(ps[k])).all() == 0
+        assert np.allclose(expf(ps[k]), exp(ps[k]))
 
 
 @pytest.mark.parametrize("dim", range(2, 5))
@@ -145,11 +146,11 @@ class TestJacobianExp:
         params = np.zeros(dim)
         exp = embed.Exp(dim)
         g = exp.jacobian(params)
-        assert (-np.ones((dim, dim)) - g).all() == 0
+        assert np.allclose(-1*np.eye(dim), g)
 
     def test_jacobian_predefined(self, dim):
         """Tests that the jacobian is computed correctly for pre-defined features and parameters"""
         k = dim - 2
         exp = embed.Exp(dim)
         g = exp.jacobian(ps[k])
-        assert (g - jacobian[k]).all() == 0
+        assert np.allclose(g, jacobian[k])

@@ -20,10 +20,10 @@ embedded into the GBS distribution by expressing the weights as functions of the
 
 This submodule contains methods to implement such embeddings. It also provides derivatives
 of the weights with respect to the trainable parameters. There are two main classes, each
-corresponding to a different embedding. The :class:`Exp` class
-is a simple embedding where the weights are exponentials of the trainable parameters. The
-:class:`ExpFeatures` class is a more general embedding that
-makes use of user-defined feature vectors."""
+corresponding to a different embedding. The :class:`Exp` class is a simple embedding where the
+weights are exponentials of the trainable parameters. The :class:`ExpFeatures` class is a more
+general embedding that makes use of user-defined feature vectors, which potentially provide more
+flexibility in training strategies."""
 
 import numpy as np
 
@@ -31,8 +31,8 @@ import numpy as np
 class ExpFeatures:
     r"""Exponential embedding with feature vectors.
 
-    Weights of the W matrix in the WAW parametrization are expressed as exponentials of
-    the inner product between user-specified feature vectors and trainable parameters:
+    Weights of the :math:`W` matrix in the :math:`WAW` parametrization are expressed as exponentials
+    of the inner product between user-specified feature vectors and trainable parameters:
     :math:`w_i = \exp(-f^{(i)}\cdot\theta)`. The Jacobian, which encapsulates the derivatives of
     the weights with respect to the parameters can be computed straightforwardly as: :math:`
     \frac{d w_i}{d\theta_k} = -f^{(i)}_k w_i`.
@@ -52,6 +52,7 @@ class ExpFeatures:
     def __init__(self, features):
         """Initializes the class for an input matrix whose rows are feature vectors"""
         self.features = features
+        self.m, self.d = np.shape(features)
 
     def __call__(self, params):
         """Makes the class callable, so it can be used as a function"""
@@ -66,7 +67,7 @@ class ExpFeatures:
         Returns:
             np.array: weights
         """
-        d = np.shape(self.features)[1]
+        d = self.d
         if d != len(params):
             raise ValueError(
                 "Dimension of parameter vector must be equal to dimension of feature vectors"
@@ -83,7 +84,7 @@ class ExpFeatures:
         Returns:
             np.array: Jacobian matrix of weights with respect to parameters
         """
-        m, d = np.shape(self.features)
+        m, d = self.m, self.d
         if d != len(params):
             raise ValueError(
                 "Dimension of parameter vector must be equal to dimension of feature vectors"
@@ -95,9 +96,9 @@ class ExpFeatures:
 class Exp(ExpFeatures):
     r"""Simple exponential embedding.
 
-    Weights of the W matrix in the WAW parametrization are expressed as exponentials of trainable
-    parameters: :math:`w_i = \exp(-\theta_i)`. The Jacobian, which encapsulates the derivatives
-    of the weights with respect to the parameters can be computed straightforwardly as:
+    Weights of the :math:`W` matrix in the :math:`WAW` parametrization are expressed as exponentials
+    of trainable parameters: :math:`w_i = \exp(-\theta_i)`. The Jacobian, which encapsulates the
+    derivatives of the weights with respect to the parameters can be computed straightforwardly as:
     :math:`\frac{d w_i}{d\theta_k} = -w_i\delta_{i,k}`.
 
     **Example usage:**
@@ -117,3 +118,9 @@ class Exp(ExpFeatures):
         """The simple exponential mapping is a special case where the matrix of feature vectors
         is the identity"""
         super().__init__(np.eye(dim))
+
+dim = 4
+params = np.zeros(dim)
+exp = Exp(dim)
+g = exp.jacobian(params)
+print(g)
