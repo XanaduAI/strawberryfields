@@ -20,7 +20,7 @@ class ExpFeatures:
 
     Weights of the W matrix in the WAW parametrization are expressed as exponentials of
     the inner product between user-specified feature vectors and trainable parameters:
-    `:math: w_i = \exp(-f^{(i)}\cdot\theta)`. The Jacobian, which encapsulates the derivatives of
+    :math:`w_i = \exp(-f^{(i)}\cdot\theta)`. The Jacobian, which encapsulates the derivatives of
     the weights with respect to the parameters can be computed straightforwardly as: `:math:
     \frac{d w_i}{d\theta_k} = -f^{(i)}_k w_i`.
 
