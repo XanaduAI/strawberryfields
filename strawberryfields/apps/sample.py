@@ -92,12 +92,12 @@ Including node weights
 
 Some graphs are composed of nodes with weights. These weights can correspond to relevant
 information in an optimization problem and it is desirable to encode them into GBS along with the
-graph's adjacency matrix. One canonical approach to doing this is to use the :math:`WAW` encoding
+graph's adjacency matrix. One canonical approach to doing this is to use the :math:`_WAW` encoding
 :cite:`banchi2019molecular`, which rescales the adjacency matrix according to:
 
 .. math::
 
-    A \rightarrow WAW,
+    A \rightarrow _WAW,
 
 with :math:`W=w_{i}\delta_{ij}` the diagonal matrix formed by the weighted nodes :math:`w_{i}`. The
 rescaled adjacency matrix can be passed to :func:`sample`, resulting in a distribution that
@@ -381,7 +381,7 @@ def waw_matrix(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
 
     .. math::
 
-        A \rightarrow WAW,
+        A \rightarrow _WAW,
 
     with :math:`W=w_{i}\delta_{ij}` the diagonal matrix formed by the weighted nodes :math:`w_{i}`.
     The rescaled adjacency matrix can be passed to :func:`sample`, resulting in a distribution that
@@ -413,7 +413,7 @@ def waw_matrix(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
         w (array or list): vector of real node weights
 
     Returns:
-        array: matrix rescaled according to the WAW encoding
+        array: matrix rescaled according to the _WAW encoding
     """
     if not np.allclose(A, A.T):
         raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")

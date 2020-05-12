@@ -5,6 +5,7 @@ Tools for training variational GBS devices.
     :toctree: api
 
     VGBS
+    parametrization
 """
 from strawberryfields.apps.train.parametrization import VGBS
 import strawberryfields.apps.train.parametrization

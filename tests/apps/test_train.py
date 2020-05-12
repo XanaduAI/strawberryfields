@@ -110,13 +110,13 @@ class TestVGBS:
         gbs = train.VGBS(adj, n_mean, embedding, True)
 
         with monkeypatch.context() as m:
-            m.setattr(thewalrus.samples, "torontonian_sample_state", lambda x, y: 0)
+            m.setattr(thewalrus.samples, "torontonian_sample_state", lambda *args, **kwargs: 0)
             s_threshold = gbs._generate_samples(gbs.A_init_scaled, 10)
 
         gbs.threshold = False
 
         with monkeypatch.context() as m:
-            m.setattr(thewalrus.samples, "hafnian_sample_state", lambda x, y: 1)
+            m.setattr(thewalrus.samples, "hafnian_sample_state", lambda *args, **kwargs: 1)
             s_pnr = gbs._generate_samples(gbs.A_init_scaled, 10)
 
         assert s_threshold == 0
