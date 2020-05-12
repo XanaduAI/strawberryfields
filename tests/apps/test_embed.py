@@ -146,7 +146,7 @@ class TestJacobianExp:
         params = np.zeros(dim)
         exp = embed.Exp(dim)
         g = exp.jacobian(params)
-        assert np.allclose(-1*np.eye(dim), g)
+        assert np.allclose(-1 * np.eye(dim), g)
 
     def test_jacobian_predefined(self, dim):
         """Tests that the jacobian is computed correctly for pre-defined features and parameters"""

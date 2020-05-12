@@ -15,7 +15,7 @@ r"""
 Submodule for embedding trainable parameters into the GBS distribution.
 
 Training algorithms for GBS distributions rely on the :math:`WAW` parametrization, where :math:`W`
-is a diagonal matrix of weights and :math:`A` is a symmetric matrix. Trainable parameters are 
+is a diagonal matrix of weights and :math:`A` is a symmetric matrix. Trainable parameters are
 embedded into the GBS distribution by expressing the weights as functions of the parameters.
 
 This submodule contains methods to implement such embeddings. It also provides derivatives
@@ -41,8 +41,8 @@ class ExpFeatures:
 
     >>> features = np.array([[0.1, 0.1, 0.1], [0.2, 0.2, 0.2], [0.3, 0.3, 0.3]])
     >>> embed = ExpFeatures(features)
-    >>> params = np.array([0.1, 0.2, 0.3])
-    >>> embed(params)
+    >>> parameters = np.array([0.1, 0.2, 0.3])
+    >>> embed(parameters)
     [0.94176453 0.88692044 0.83527021]
 
     Args:
@@ -84,13 +84,13 @@ class ExpFeatures:
         Returns:
             np.array: Jacobian matrix of weights with respect to parameters
         """
-        m, d = self.m, self.d
+        d = self.d
         if d != len(params):
             raise ValueError(
                 "Dimension of parameter vector must be equal to dimension of feature vectors"
             )
         w = self.weights(params)
-        return - self.features * w[:, np.newaxis]
+        return -self.features * w[:, np.newaxis]
 
 
 class Exp(ExpFeatures):
@@ -105,8 +105,8 @@ class Exp(ExpFeatures):
 
     >>> dim = 3
     >>> embed = Exp(dim)
-    >>> params = np.array([0.1, 0.2, 0.3])
-    >>> embed(params)
+    >>> parameters = np.array([0.1, 0.2, 0.3])
+    >>> embed(parameters)
     [0.90483742 0.81873075 0.74081822]
 
     Args:
@@ -118,9 +118,3 @@ class Exp(ExpFeatures):
         """The simple exponential mapping is a special case where the matrix of feature vectors
         is the identity"""
         super().__init__(np.eye(dim))
-
-dim = 4
-params = np.zeros(dim)
-exp = Exp(dim)
-g = exp.jacobian(params)
-print(g)
