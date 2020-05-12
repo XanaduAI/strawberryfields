@@ -21,7 +21,7 @@ import numpy as np
 from thewalrus.quantum import Qmat, Xmat, photon_number_mean_vector
 from thewalrus.quantum import find_scaling_adjacency_matrix as rescale
 from thewalrus.quantum import find_scaling_adjacency_matrix_torontonian as rescale_tor
-from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
+import thewalrus.samples
 
 
 def rescale_adjacency(A: np.ndarray, n_mean: float, threshold: bool) -> np.ndarray:
@@ -58,63 +58,65 @@ class VGBS:
         self.threshold = threshold
         self.A_init_scaled = rescale_adjacency(A, n_mean, threshold)
         self.n_modes = len(A)
-        self._A_samples = None
+        self._A_init_samples = None
         if samples:
-            self._add_A_samples(samples)
+            self._add_A_init_samples(samples)
 
-    def _W(self, params: np.ndarray) -> np.ndarray:
+    def W(self, params: np.ndarray) -> np.ndarray:
         """TODO"""
         return np.diag(self.embedding(params))
 
     @staticmethod
-    def _WAW(A: np.ndarray, W: np.ndarray) -> np.ndarray:
+    def WAW(A: np.ndarray, W: np.ndarray) -> np.ndarray:
         """TODO"""
         return W @ A @ W
 
     def A(self, params: np.ndarray) -> np.ndarray:
         """TODO"""
-        return self._WAW(self.A_init, self._W(params))
+        return self.WAW(self.A_init, self.W(params))
 
     def _A_scaled(self, params: np.ndarray) -> np.ndarray:
         """TODO"""
-        return self._WAW(self.A_init_scaled, self._W(params))
+        return self.WAW(self.A_init_scaled, self.W(params))
 
     def _generate_samples(self, A: np.ndarray, samples: int, **kwargs) -> np.ndarray:
         """TODO"""
         cov = A_to_cov(A)
+
         if self.threshold:
-            samples = torontonian_sample_state(cov, samples, **kwargs)
+            samples = thewalrus.samples.torontonian_sample_state(cov, samples, hbar=1, **kwargs)
         else:
-            samples = hafnian_sample_state(cov, samples, **kwargs)
+            samples = thewalrus.samples.hafnian_sample_state(cov, samples, hbar=1, **kwargs)
         return samples
 
     def generate_samples(self, params: np.ndarray, samples: int, **kwargs) -> np.ndarray:
         """TODO"""
         return self._generate_samples(self._A_scaled(params), samples, **kwargs)
 
-    def _generate_A_samples(self, samples, **kwargs) -> np.ndarray:
+    def _generate_A_init_samples(self, samples, **kwargs) -> np.ndarray:
         """TODO"""
         samples = self._generate_samples(self.A_init_scaled, samples, **kwargs)
         self.add_A_samples(samples)
         return samples
 
-    def _add_A_samples(self, samples: np.ndarray):
+    def _add_A_init_samples(self, samples: np.ndarray):
         """TODO"""
         shape = samples.shape
         if shape[1] != self.n_modes:
             raise ValueError("Must input samples of shape (number, {})".format(self.n_modes))
-        if self._A_samples:
-            self._A_samples = np.vstack([self._A_samples, samples])
-        else:
-            self._A_samples = samples
 
-    def mean_photons_per_mode(self, params: np.ndarray) -> np.ndarray:
+        if self._A_init_samples is None:
+            self._A_init_samples = samples
+        else:
+            self._A_init_samples = np.vstack([self._A_init_samples, samples])
+
+    def mean_photons_by_mode(self, params: np.ndarray) -> np.ndarray:
         """TODO"""
         disp = np.zeros(2 * self.n_modes)
         cov = A_to_cov(self._A_scaled(params))
         return photon_number_mean_vector(disp, cov, hbar=1)  # TODO: consider hbar=2
 
-    def mean_clicks_per_mode(self, params: np.ndarray) -> np.ndarray:
+    def mean_clicks_by_mode(self, params: np.ndarray) -> np.ndarray:
         """TODO"""
         cov = A_to_cov(self._A_scaled(params))
         Q = Qmat(cov, hbar=1)
@@ -126,6 +128,6 @@ class VGBS:
     def n_mean(self, params: np.ndarray) -> float:
         """TODO"""
         if self.threshold:
-            return np.sum(self.mean_clicks_per_mode(params))
+            return np.sum(self.mean_clicks_by_mode(params))
         else:
-            return np.sum(self.mean_photons_per_mode(params))
+            return np.sum(self.mean_photons_by_mode(params))
