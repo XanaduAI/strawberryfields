@@ -127,8 +127,8 @@ class VGBS:
     Args:
         A (array): the input adjacency matrix :math:`A`
         n_mean (float): the initial mean number of clicks or photons
-        embedding: the method of converting from trainable parameters :math:`\theta` to :math:`W(
-        \theta)` #TODO: any update from other PR?
+        embedding: the method of converting from trainable parameters :math:`\theta` to
+            :math:`W(\theta)` #TODO: any update from other PR?
         threshold (bool): determines whether to use GBS in threshold or PNR mode
         samples (array): an optional array of samples from :math:`A` used to speed up gradient
             calculations #TODO: more info
