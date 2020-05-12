@@ -1,3 +1,16 @@
+# Copyright 2020 Xanadu Quantum Technologies Inc.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 r"""
 Submodule for embedding trainable parameters into the GBS distribution.
 
@@ -21,10 +34,10 @@ class ExpFeatures:
     Weights of the W matrix in the WAW parametrization are expressed as exponentials of
     the inner product between user-specified feature vectors and trainable parameters:
     :math:`w_i = \exp(-f^{(i)}\cdot\theta)`. The Jacobian, which encapsulates the derivatives of
-    the weights with respect to the parameters can be computed straightforwardly as: `:math:
+    the weights with respect to the parameters can be computed straightforwardly as: :math:`
     \frac{d w_i}{d\theta_k} = -f^{(i)}_k w_i`.
 
-    **Example:**
+    **Example usage:**
 
     >>> features = np.array([[0.1, 0.1, 0.1], [0.2, 0.2, 0.2], [0.3, 0.3, 0.3]])
     >>> embed = ExpFeatures(features)
@@ -46,8 +59,10 @@ class ExpFeatures:
 
     def weights(self, params):
         r"""Computes weights as a function of input parameters.
+        
         Args:
             params (np.array): trainable parameters
+            
         Returns:
             np.array: weights
         """
@@ -61,8 +76,10 @@ class ExpFeatures:
     def jacobian(self, params):
         r"""Computes the Jacobian matrix of weights with respect to input parameters :math:`J_{
         ij} = \frac{\partial w_i}{\partial \theta_j}`.
+
         Args:
             params (np.array): trainable parameters
+
         Returns:
             np.array: Jacobian matrix of weights with respect to parameters
         """
@@ -72,22 +89,18 @@ class ExpFeatures:
                 "Dimension of parameter vector must be equal to dimension of feature vectors"
             )
         w = self.weights(params)
-        dw = np.zeros((m, d))
-        for i in range(m):
-            for k in range(d):
-                dw[i, k] = -1 * self.features[i, k] * w[i]
-        return dw
+        return - self.features * w[:, np.newaxis]
 
 
 class Exp(ExpFeatures):
     r"""Simple exponential embedding.
 
     Weights of the W matrix in the WAW parametrization are expressed as exponentials of trainable
-    parameters: `:math: w_i = \exp(-\theta_i)`. D The Jacobian, which encapsulates the derivatives
+    parameters: :math:`w_i = \exp(-\theta_i)`. The Jacobian, which encapsulates the derivatives
     of the weights with respect to the parameters can be computed straightforwardly as:
-    `:math: \frac{d w_i}{d\theta_k} = -w_i\delta_{i,k}`.
+    :math:`\frac{d w_i}{d\theta_k} = -w_i\delta_{i,k}`.
 
-    **Example:**
+    **Example usage:**
 
     >>> dim = 3
     >>> embed = Exp(dim)
@@ -97,7 +110,7 @@ class Exp(ExpFeatures):
 
     Args:
         dim (int): Dimension of the vector of parameters, which is equal to the number of modes
-        in the GBS distribution
+            in the GBS distribution
     """
 
     def __init__(self, dim):

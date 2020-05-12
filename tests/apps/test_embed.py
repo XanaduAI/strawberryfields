@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.clique
+Unit tests for strawberryfields.apps.train.embed
 """
 # pylint: disable=no-self-use,unused-argument
 import numpy as np
@@ -24,7 +24,7 @@ feats = [
     [[0.1, 0.2, 0.3], [0.3, 0.1, 0.2], [0.2, 0.3, 0.1]],
     [[0.1, 0.2, 0.3, 0.4], [0.4, 0.1, 0.2, 0.3], [0.3, 0.4, 0.1, 0.2], [0.2, 0.3, 0.4, 0.1]],
 ]
-feats = np.array([np.array(f) for f in feats])
+feats = [np.array(f) for f in feats]
 
 ps = [[1.0, 2.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0, 4.0]]
 ps = np.array([np.array(p) for p in ps])
@@ -56,7 +56,7 @@ for i in range(3):
 
 @pytest.mark.parametrize("dim", range(2, 5))
 class TestExpFeatures:
-    """Tests for the callable class ``strawberryfields.apps.train.embed.ExpFeatures``"""
+    """Tests for the class ``strawberryfields.apps.train.embed.ExpFeatures``"""
 
     def test_invalid_dim(self, dim):
         """Tests that a warning is issued if the feature vectors do not have the correct
@@ -71,7 +71,7 @@ class TestExpFeatures:
         features = np.ones((dim, dim))
         expf = embed.ExpFeatures(features)
         params = np.zeros(dim)
-        assert (expf(params) - np.ones(dim)).all() == 0
+        assert np.allclose(expf(params), np.ones(dim))
 
     def test_predefined(self, dim):
         """Tests that weights are computed correctly for pre-defined features and parameters"""
