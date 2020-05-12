@@ -25,11 +25,11 @@ from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
 from scipy.integrate import simps
-#from thewalrus.quantum import photon_number_mean, photon_number_covar
+from thewalrus.quantum import photon_number_mean, photon_number_covar
 
 import strawberryfields as sf
-#from .shared_ops import rotation_matrix as _R
-#from .shared_ops import changebasis
+from .shared_ops import rotation_matrix as _R
+from .shared_ops import changebasis
 
 indices = string.ascii_lowercase
 
@@ -929,7 +929,7 @@ class BaseFockState(BaseState):
         ps = np.sum(ps, axis=tuple(sum_axes))
         vals = [(-1)**i for i in values]
         ev = np.dot(ps, vals)
-        
+
         return float(ev)
 
 class BaseGaussianState(BaseState):
