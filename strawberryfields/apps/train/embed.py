@@ -7,7 +7,7 @@ embedded into the GBS distribution by expressing the weights as functions of the
 
 This submodule contains methods to implement such embeddings. It also provides derivatives
 of the weights with respect to the trainable parameters. There are two main classes, each
-corresponding to a different embedding. The :class:`~strawberryfields.apps.train.embed.Exp` class
+corresponding to a different embedding. The :class:`Exp` class
 is a simple embedding where the weights are exponentials of the trainable parameters. The
 :class:`~strawberryfields.apps.train.embed.ExpFeatures` class is a more general embedding that
 makes use of user-defined feature vectors."""
