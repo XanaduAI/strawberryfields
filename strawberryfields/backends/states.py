@@ -914,23 +914,38 @@ class BaseFockState(BaseState):
             ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
         return float(ps)
 
-    def parity_expectation(self, mode):
-
-        if (type(mode) != int):
-            raise ValueError("Specified mode index must be an integer.")
+    def diagonal_expectation(self, modes, values):
+        if len(modes) != len(set(modes)):
+            raise ValueError("There can be no duplicates in the modes specified.")
 
         cutoff = self._cutoff  # Fock space cutoff.
-        num_modes = self._modes # number of modes in the state.
-        values = np.arange(cutoff)
+        num_modes = self._modes  # number of modes in the state.
 
-        ps = self.all_fock_probs()
-        sum_axes = list(range(num_modes))
-        del sum_axes[mode]
-        ps = np.sum(ps, axis=tuple(sum_axes))
-        vals = [(-1)**i for i in values]
-        ev = np.dot(ps, vals)
+        traced_modes = tuple(item for item in range(num_modes) if item not in modes)
+        if self.is_pure:
+            # state is a tensor of probability amplitudes
+            ps = np.abs(self.ket()) ** 2
+            ps = ps.sum(axis=traced_modes)
+            for _ in modes:
+                ps = np.tensordot(values, ps, axes=1)
+            return float(ps)
 
-        return float(ev)
+        # state is a tensor of density matrix elements in the SF convention
+        ps = np.real(self.dm())
+        traced_modes = list(traced_modes)
+        traced_modes.sort(reverse=True)
+        for mode in traced_modes:
+            ps = np.tensordot(np.identity(cutoff), ps, axes=((0, 1), (2 * mode, 2 * mode + 1)))
+        for _ in range(len(modes)):
+            ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
+        return float(ps)
+
+    def parity_expectation(self, modes):
+
+        cutoff = self._cutoff
+        values = [(-1)**i for i in np.arange(cutoff)]
+        return self.diagonal_expectation(modes, values)
+
 
 class BaseGaussianState(BaseState):
     r"""Class for the representation of quantum states using the Gaussian formalism.
