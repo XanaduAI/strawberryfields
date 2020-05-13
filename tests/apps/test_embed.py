@@ -19,6 +19,8 @@ import numpy as np
 import pytest
 from strawberryfields.apps.train import embed
 
+pytestmark = pytest.mark.apps
+
 feats = [
     [[0.1, 0.2], [0.2, 0.1]],
     [[0.1, 0.2, 0.3], [0.3, 0.1, 0.2], [0.2, 0.3, 0.1]],
