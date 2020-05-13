@@ -60,10 +60,10 @@ class ExpFeatures:
 
     def weights(self, params):
         r"""Computes weights as a function of input parameters.
-        
+
         Args:
             params (np.array): trainable parameters
-            
+
         Returns:
             np.array: weights
         """
