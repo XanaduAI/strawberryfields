@@ -31,7 +31,7 @@ import numpy as np
 class ExpFeatures:
     r"""Exponential embedding with feature vectors.
 
-    Weights of the :math:`W` matrix in the :math:`WAW` parametrization are expressed as exponentials
+    Weights of the :math:`W` matrix in the :math:`WAW` parametrization are expressed as an exponential
     of the inner product between user-specified feature vectors and trainable parameters:
     :math:`w_i = \exp(-f^{(i)}\cdot\theta)`. The Jacobian, which encapsulates the derivatives of
     the weights with respect to the parameters can be computed straightforwardly as:
@@ -40,7 +40,7 @@ class ExpFeatures:
     **Example usage:**
 
     >>> features = np.array([[0.1, 0.1, 0.1], [0.2, 0.2, 0.2], [0.3, 0.3, 0.3]])
-    >>> embed = ExpFeatures(features)
+    >>> embedding = ExpFeatures(features)
     >>> parameters = np.array([0.1, 0.2, 0.3])
     >>> embed(parameters)
     [0.94176453 0.88692044 0.83527021]
@@ -96,8 +96,8 @@ class ExpFeatures:
 class Exp(ExpFeatures):
     r"""Simple exponential embedding.
 
-    Weights of the :math:`W` matrix in the :math:`WAW` parametrization are expressed as exponentials
-    of trainable parameters: :math:`w_i = \exp(-\theta_i)`. The Jacobian, which encapsulates the
+    Weights of the :math:`W` matrix in the :math:`WAW` parametrization are expressed as an exponential
+    of the trainable parameters: :math:`w_i = \exp(-\theta_i)`. The Jacobian, which encapsulates the
     derivatives of the weights with respect to the parameters can be computed straightforwardly as:
     :math:`\frac{d w_i}{d\theta_k} = -w_i\delta_{i,k}`.
 
