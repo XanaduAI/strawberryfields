@@ -18,10 +18,12 @@ of the GBS probability distribution.
 from typing import Optional
 
 import numpy as np
-from thewalrus.quantum import Qmat, Xmat, photon_number_mean_vector
-from thewalrus.quantum import find_scaling_adjacency_matrix as rescale
-from thewalrus.quantum import find_scaling_adjacency_matrix_torontonian as rescale_tor
 import thewalrus.samples
+from thewalrus.quantum import Qmat, Xmat
+from thewalrus.quantum import find_scaling_adjacency_matrix as rescale
+from thewalrus.quantum import \
+    find_scaling_adjacency_matrix_torontonian as rescale_tor
+from thewalrus.quantum import photon_number_mean_vector
 
 
 def rescale_adjacency(A: np.ndarray, n_mean: float, threshold: bool) -> np.ndarray:
@@ -133,6 +135,7 @@ class VGBS:
         samples (array): an optional array of samples from :math:`A` used to speed up gradient
             calculations #TODO: more info
     """
+
     def __init__(
         self,
         A: np.ndarray,
@@ -296,5 +299,5 @@ class VGBS:
         """
         if self.threshold:
             return np.sum(self.mean_clicks_by_mode(params))
-        else:
-            return np.sum(self.mean_photons_by_mode(params))
+
+        return np.sum(self.mean_photons_by_mode(params))

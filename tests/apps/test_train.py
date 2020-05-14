@@ -14,14 +14,15 @@
 r"""
 Unit tests for strawberryfields.apps.train
 """
-import pytest
-
+# pylint: disable=no-self-use,protected-access,redefined-outer-name
 import numpy as np
+import pytest
 import thewalrus
+from thewalrus.quantum import find_scaling_adjacency_matrix as rescale
+from thewalrus.quantum import \
+    find_scaling_adjacency_matrix_torontonian as rescale_tor
 
 from strawberryfields.apps import train
-from thewalrus.quantum import find_scaling_adjacency_matrix as rescale
-from thewalrus.quantum import find_scaling_adjacency_matrix_torontonian as rescale_tor
 
 pytestmark = pytest.mark.apps
 
