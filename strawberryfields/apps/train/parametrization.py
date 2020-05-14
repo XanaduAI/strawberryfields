@@ -147,12 +147,11 @@ class VGBS:
         if not np.allclose(A, A.T):
             raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
         self.A_init = rescale_adjacency(A, n_mean, threshold)
-        self._A_init_samples = None
+        self.A_init_samples = None
         self.embedding = embedding
         self.threshold = threshold
         self.n_modes = len(A)
-        if samples:
-            self.add_A_init_samples(samples)
+        self.add_A_init_samples(samples)
 
     def W(self, params: np.ndarray) -> np.ndarray:
         r"""Calculate the diagonal matrix of weights :math:`W` that depends on the trainable
@@ -222,8 +221,7 @@ class VGBS:
         return samples
 
     def add_A_init_samples(self, samples: np.ndarray):
-        r"""Add samples of the initial adjacency matrix.
-        # TODO consider a get_A_init_samples
+        r"""Add samples of the initial adjacency matrix to :attr:`A_init_samples`.
 
         .. warning::
 
@@ -238,14 +236,40 @@ class VGBS:
         Args:
             samples (array): samples from the initial adjacency matrix
         """
+        if samples is None:
+            return
+
         shape = samples.shape
         if shape[1] != self.n_modes:
             raise ValueError("Must input samples of shape (number, {})".format(self.n_modes))
 
-        if self._A_init_samples is None:
-            self._A_init_samples = samples
+        if self.A_init_samples is None:
+            self.A_init_samples = samples
         else:
-            self._A_init_samples = np.vstack([self._A_init_samples, samples])
+            self.A_init_samples = np.vstack([self.A_init_samples, samples])
+
+    def get_A_init_samples(self, n_samples: int) -> np.ndarray:
+        """Get samples from the initial adjacency matrix.
+
+        This function checks pre-generated samples in ``A_init_samples``. If there are less than
+        ``n_samples`` stored, more samples are generated and added to ``A_init_samples``.
+
+        Args:
+            n_samples (int): number of samples to get
+
+        Returns:
+            array: samples from the initial adjacency matrix
+        """
+        try:
+            current_n_samples = self.A_init_samples.shape[0]
+        except AttributeError:
+            current_n_samples = 0
+
+        if current_n_samples < n_samples:
+            new_samples = self.generate_samples(self.A_init, n_samples - current_n_samples)
+            self.add_A_init_samples(new_samples)
+
+        return self.A_init_samples[:n_samples]
 
     def mean_photons_by_mode(self, params: np.ndarray) -> np.ndarray:
         r"""Calculate the mean number of photons in each mode when using the trainable parameters

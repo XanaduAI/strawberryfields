@@ -129,16 +129,46 @@ class TestVGBS:
         gbs = train.VGBS(adj, n_mean, embedding, True)
         s = np.ones((2, dim))
         gbs.add_A_init_samples(s)
-        assert np.allclose(gbs._A_init_samples, s)
+        assert np.allclose(gbs.A_init_samples, s)
 
     def test_add_A_init_samples_already_there(self, adj, n_mean, dim):
         """Test that add_A_init_samples correctly adds more samples when some are already there"""
         gbs = train.VGBS(adj, n_mean, embedding, True)
-        gbs._A_init_samples = np.ones((2, dim))
+        gbs.A_init_samples = np.ones((2, dim))
         gbs.add_A_init_samples(np.zeros((2, dim)))
-        assert gbs._A_init_samples.shape == (4, dim)
-        assert np.allclose(gbs._A_init_samples[:2], np.ones((2, dim)))
-        assert np.allclose(gbs._A_init_samples[2:3], np.zeros((2, dim)))
+        assert gbs.A_init_samples.shape == (4, dim)
+        assert np.allclose(gbs.A_init_samples[:2], np.ones((2, dim)))
+        assert np.allclose(gbs.A_init_samples[2:3], np.zeros((2, dim)))
+
+    def test_get_A_init_samples_none_there(self, adj, n_mean, monkeypatch, dim):
+        """Test if get_A_init_samples generates the required samples when none are present in
+        A_init_samples. To speed up sampling, we monkeypatch torontonian_sample_state to always
+        return a numpy array of ones."""
+        gbs = train.VGBS(adj, n_mean, embedding, True)
+        with monkeypatch.context() as m:
+            m.setattr(thewalrus.samples, "torontonian_sample_state", lambda *args, **kwargs:
+            np.ones((args[1], dim)))
+            samples = gbs.get_A_init_samples(1000)
+        assert np.allclose(samples, np.ones((1000, dim)))
+
+    def test_get_A_init_samples_already_there(self, adj, n_mean, monkeypatch, dim):
+        """Test if get_A_init_samples generates the required samples when none are present in
+        A_init_samples. To speed up sampling, we monkeypatch torontonian_sample_state to always
+        return a numpy array of ones."""
+        gbs = train.VGBS(adj, n_mean, embedding, True, np.zeros((200, dim)))
+        with monkeypatch.context() as m:
+            m.setattr(thewalrus.samples, "torontonian_sample_state", lambda *args, **kwargs:
+            np.ones((args[1], dim)))
+            samples = gbs.get_A_init_samples(1000)
+        assert np.allclose(samples[:200], np.zeros((200, dim)))
+        assert np.allclose(samples[200:], np.ones((800, dim)))
+
+    def test_get_A_init_samples_lots_there(self, adj, n_mean, dim):
+        """Test if get_A_init_samples returns a portion of the pre-generated samples if
+        ``n_samples`` is less than the number of samples stored."""
+        gbs = train.VGBS(adj, n_mean, embedding, True, np.zeros((1000, dim)))
+        samples = gbs.get_A_init_samples(200)
+        assert samples.shape == (200, dim)
 
     def test_mean_photons_by_mode(self, n_mean, dim):
         """Test that mean_photons_by_mode is correct when given a simple fully connected
