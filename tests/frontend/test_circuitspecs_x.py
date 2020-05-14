@@ -316,6 +316,7 @@ class TestXCompilation:
             ops.MeasureFock() | q
 
         res = prog.compile("X")
+        assert np.allclose(res.circuit[0].op.p[0], SQ_AMPLITUDE)
 
     def test_gates_compile(self):
         """Test that combinations of MZgates, Rgates, and BSgates
