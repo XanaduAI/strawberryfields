@@ -52,8 +52,8 @@ jacobian = np.array([np.zeros((d, d)) for d in range(2, 5)])
 for i in range(3):
     jacobian[i] = -np.diag(weights[i])
     for j in range(i + 2):
-        for k in range(i + 2):
-            jacobian_f[i][j, k] = -feats[i][j, k] * weights_f[i][j]
+        for m in range(i + 2):
+            jacobian_f[i][j, m] = -feats[i][j, m] * weights_f[i][j]
 
 
 @pytest.mark.parametrize("dim", range(2, 5))

@@ -42,7 +42,7 @@ class ExpFeatures:
     >>> features = np.array([[0.1, 0.1, 0.1], [0.2, 0.2, 0.2], [0.3, 0.3, 0.3]])
     >>> embedding = ExpFeatures(features)
     >>> parameters = np.array([0.1, 0.2, 0.3])
-    >>> embed(parameters)
+    >>> embedding(parameters)
     [0.94176453 0.88692044 0.83527021]
 
     Args:
@@ -67,8 +67,7 @@ class ExpFeatures:
         Returns:
             np.array: weights
         """
-        d = self.d
-        if d != len(params):
+        if self.d != len(params):
             raise ValueError(
                 "Dimension of parameter vector must be equal to dimension of feature vectors"
             )
@@ -84,8 +83,7 @@ class ExpFeatures:
         Returns:
             np.array: Jacobian matrix of weights with respect to parameters
         """
-        d = self.d
-        if d != len(params):
+        if self.d != len(params):
             raise ValueError(
                 "Dimension of parameter vector must be equal to dimension of feature vectors"
             )
@@ -104,9 +102,9 @@ class Exp(ExpFeatures):
     **Example usage:**
 
     >>> dim = 3
-    >>> embed = Exp(dim)
+    >>> embedding = Exp(dim)
     >>> parameters = np.array([0.1, 0.2, 0.3])
-    >>> embed(parameters)
+    >>> embedding(parameters)
     [0.90483742 0.81873075 0.74081822]
 
     Args:
