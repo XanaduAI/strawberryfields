@@ -22,103 +22,10 @@ from strawberryfields.decompositions import takagi
 from strawberryfields.program_utils import CircuitError, Command
 import strawberryfields.ops as ops
 
-from .circuit_specs import CircuitSpecs
+from .circuit_specs import CircuitSpecs, Range, Ranges
 from .gbs import GBSSpecs
 from .gaussian_unitary import GaussianUnitary
 
-
-class Range:
-    """Lightweight class for representing a range of floats.
-
-    **Example**
-
-    >>> x = Range(0.2, 0.5)
-    >>> print(x)
-    0.2≤x≤0.5
-    >>> 0.34 in x
-    True
-    >>> -0.1 in x
-    False
-
-    Note that the upper bound is inclusive:
-    >>> 0.5 in x
-    True
-
-    Leaving off the lower bound corresponds to a range of a single value:
-    >>> x = Range(0.3)
-    >>> 0.3 in x
-    True
-    >>> 0.30001 in x
-    False
-
-
-    Args:
-        x (float): lower bound of the range
-
-    Keyword Args:
-        y (float): Upper bound of the range (inclusive). If not provided,
-            the range will represent the single value ``x``.
-        variable_name (str): the variable name to use when printing
-            the range
-        atol (float): positive float representing the absolute tolerance
-            used when checking if items are within the range
-    """
-
-    def __init__(self, x, y=None, variable_name="x", atol=1e-5):
-        self.x = x
-        self.y = y if y is not None else x
-        self.name = variable_name
-        self.atol = atol
-
-        if self.y < self.x:
-            raise ValueError(
-                "Upper bound of the range must be strictly larger than the lower bound."
-            )
-
-    def __contains__(self, item):
-        return self.x - self.atol <= item <= self.y + self.atol
-
-    def __repr__(self):
-        if self.x == self.y:
-            return "{}={}".format(self.name, self.x)
-
-        return "{}≤{}≤{}".format(self.x, self.name, self.y)
-
-
-class Ranges:
-    """Lightweight class for representing a set of ranges of floats.
-
-    **Example**
-
-    >>> x = Ranges([0], [0.2, 0.55], [1.0])
-    >>> print(x)
-    x=0, 0.2≤x≤0.55, x=1.0
-    >>> test_data = [0, 0.34, 0.1, 1.0]
-    >>> [i in x for i in test_data]
-    [True, True, False, True]
-
-    Args:
-        r1, r2, r3,... (list[float]): Allowed ranges. Lists of size ``(1,)``
-            correspond to a single allowed value, whereas lists of size ``(2,)``
-            correspond to a lower and upper bound (inclusive).
-
-    Keyword Args
-        variable_name (str): the variable name to use when printing
-            the range
-    """
-
-    def __init__(self, *args, variable_name="x"):
-        self.ranges = [Range(*a, variable_name=variable_name) for a in args]
-
-    def __contains__(self, item):
-        for range_ in self.ranges:
-            if item in range_:
-                return True
-
-        return False
-
-    def __repr__(self):
-        return ", ".join([str(i) for i in self.ranges])
 
 
 class XSpecs(CircuitSpecs):
