@@ -106,7 +106,10 @@ class TestVGBS:
 
     def test_generate_samples(self, adj, n_mean, monkeypatch):
         """Test that _generate_samples correctly dispatches between torontonian and hafnian
-        sampling based upon whether threshold=True or threshold=False"""
+        sampling based upon whether threshold=True or threshold=False. This is done by
+        monkeypatching torontonian_sample_state and hafnian_sample_state so that they simply
+        return 0 and 1, respectively, instead of calculating samples. We then check that the
+        returned samples are 0 in threshold mode and 1 when not in threshold mode."""
         gbs = train.VGBS(adj, n_mean, embedding, True)
 
         with monkeypatch.context() as m:
@@ -140,51 +143,51 @@ class TestVGBS:
     def test_add_A_init_samples_already_there(self, adj, n_mean, dim):
         """Test that _add_A_init_samples correctly adds more samples when some are already there"""
         gbs = train.VGBS(adj, n_mean, embedding, True)
-        s = np.ones((2, dim))
-        gbs._A_init_samples = s
-        gbs._add_A_init_samples(s)
+        gbs._A_init_samples = np.ones((2, dim))
+        gbs._add_A_init_samples(np.zeros((2, dim)))
         assert gbs._A_init_samples.shape == (4, dim)
+        assert np.allclose(gbs._A_init_samples[:2], np.ones((2, dim)))
+        assert np.allclose(gbs._A_init_samples[2:3], np.zeros((2, dim)))
 
-    def test_mean_photons_per_mode(self, n_mean, dim):
+    def test_mean_photons_by_mode(self, n_mean, dim):
         """Test that mean_photons_by_mode is correct when given a simple fully connected
         adjacency matrix and an identity W. We expect each mode to have the same mean photon number
         and for that to add up to n_mean."""
         adj = np.ones((dim, dim))
         params = np.zeros(dim)
         gbs = train.VGBS(adj, n_mean, embedding, False)
-        n_mean_vec = np.round(gbs.mean_photons_by_mode(params), 5)
+        n_mean_vec = gbs.mean_photons_by_mode(params)
 
         assert np.allclose(np.sum(n_mean_vec), n_mean)  # check that the vector sums to n_mean
-        assert len(np.unique(n_mean_vec)) == 1  # check that the vector is constant
+        assert np.allclose(n_mean_vec - n_mean_vec[0], np.zeros(dim))  # check that the vector is
+        # constant
         assert np.allclose(n_mean_vec[0], n_mean / dim)  # check that elements have correct values
 
-    def test_mean_clicks_per_mode(self, n_mean, dim):
+    def test_mean_clicks_by_mode(self, n_mean, dim):
         """Test that mean_clicks_by_mode is correct when given a simple fully connected
         adjacency matrix and an identity W. We expect each mode to have the same mean click number
         and for that to add up to n_mean."""
         adj = np.ones((dim, dim))
         params = np.zeros(dim)
         gbs = train.VGBS(adj, n_mean, embedding, True)
-        n_mean_vec = np.round(gbs.mean_clicks_by_mode(params), 5)
+        n_mean_vec = gbs.mean_clicks_by_mode(params)
 
         assert np.allclose(np.sum(n_mean_vec), n_mean)  # check that the vector sums to n_mean
-        assert len(np.unique(n_mean_vec)) == 1  # check that the vector is constant
+        assert np.allclose(n_mean_vec - n_mean_vec[0], np.zeros(dim))  # check that the vector is
+        # constant
         assert np.allclose(n_mean_vec[0], n_mean / dim)  # check that elements have correct values
 
-    def test_photons_clicks_comparison(self, n_mean, dim):
-        """Test that compares mean_photons_by_mode and mean_clicks_by_mode in the setting of a
-        high mean photon number. Using the fully connected adjacency matrix and an identity W,
-        we expect elements of n_mean_vec_photon to be above one (there are more photons than
-        modes) and also elements of n_mean_vec_click to be below one (you can never have more
-        clicks on average than one)."""
-        adj = np.ones((dim, dim))
+    def test_photons_clicks_comparison(self, n_mean, dim, adj):
+        """Test that compares mean_photons_by_mode and mean_clicks_by_mode. We expect elements of
+        n_mean_vec_photon to always be larger than n_mean_vec_click and also for elements of
+        n_mean_vec_click to not exceed one."""
         params = np.zeros(dim)
-        gbs = train.VGBS(adj, 3 * n_mean, embedding, False)
-        n_mean_vec_photon = np.round(gbs.mean_photons_by_mode(params), 5)
-        n_mean_vec_click = np.round(gbs.mean_clicks_by_mode(params), 5)
+        gbs = train.VGBS(adj, n_mean, embedding, False)
+        n_mean_vec_photon = gbs.mean_photons_by_mode(params)
+        n_mean_vec_click = gbs.mean_clicks_by_mode(params)
 
-        assert n_mean_vec_click[0] < 1
-        assert n_mean_vec_photon[0] > 1
+        assert (n_mean_vec_click <= 1).all()
+        assert (n_mean_vec_photon >= n_mean_vec_click).all()
 
     @pytest.mark.parametrize("threshold", [True, False])
     def test_n_mean(self, adj, n_mean, dim, threshold):
