@@ -887,33 +887,6 @@ class BaseFockState(BaseState):
 
         return mean, var
 
-    def number_expectation(self, modes):
-        if len(modes) != len(set(modes)):
-            raise ValueError("There can be no duplicates in the modes specified.")
-
-        cutoff = self._cutoff  # Fock space cutoff.
-        num_modes = self._modes  # number of modes in the state.
-
-        values = np.arange(cutoff)
-        traced_modes = tuple(item for item in range(num_modes) if item not in modes)
-        if self.is_pure:
-            # state is a tensor of probability amplitudes
-            ps = np.abs(self.ket()) ** 2
-            ps = ps.sum(axis=traced_modes)
-            for _ in modes:
-                ps = np.tensordot(values, ps, axes=1)
-            return float(ps)
-
-        # state is a tensor of density matrix elements in the SF convention
-        ps = np.real(self.dm())
-        traced_modes = list(traced_modes)
-        traced_modes.sort(reverse=True)
-        for mode in traced_modes:
-            ps = np.tensordot(np.identity(cutoff), ps, axes=((0, 1), (2 * mode, 2 * mode + 1)))
-        for _ in range(len(modes)):
-            ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
-        return float(ps)
-
     def diagonal_expectation(self, modes, values):
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
@@ -940,12 +913,23 @@ class BaseFockState(BaseState):
             ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
         return float(ps)
 
+    def number_expectation(self, modes):
+        cutoff = self._cutoff
+        values = np.arange(cutoff)
+        return self.diagonal_expectation(modes, values)
+
     def parity_expectation(self, modes):
 
         cutoff = self._cutoff
         values = (-1)**np.arange(cutoff)
         return self.diagonal_expectation(modes, values)
 
+    def quadratic_expectation(self, modes, a, b, c):
+
+        cutoff = self._cutoff
+        ar = np.arange(cutoff)
+        values = a*(ar**2) + b*ar + c
+        return self.diagonal_expectation(modes, values)
 
 class BaseGaussianState(BaseState):
     r"""Class for the representation of quantum states using the Gaussian formalism.
