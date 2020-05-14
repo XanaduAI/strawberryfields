@@ -382,21 +382,76 @@ class TestNumberExpectation:
         assert np.allclose(state.number_expectation([0, 1 ,3]), nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0)
         assert np.allclose(state.number_expectation([3, 1, 2]), nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0)
 
+class TestParityExpectation:
+
     def test_parity_fock(self, setup_backend, tol):
 
-        backend = setup_backend(3)
+        backend = setup_backend(2)
         state = backend.state()
         r = 0.2
         phi = 0.0
         n1 = 3
         n2 = 2
-        backend.prepare_squeezed_state(r, phi, 1)
         backend.prepare_fock_state(n1, 0)
-        backend.prepare_fock_state(n2, 2)
-        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 1, 2)
+        backend.prepare_fock_state(n2, 1)
+        backend.beamsplitter(np.pi/4, 0, 0, 1)
         state = backend.state()
 
-        assert np.allclose(state.parity_expectation(0), -1, atol=tol, rtol=0)
+        assert np.allclose(state.parity_expectation([0]), 0, atol=tol, rtol=0)
+
+    def test_two_mode_fock(self, setup_backend, tol):
+
+        backend = setup_backend(2)
+        state = backend.state()
+        n1 = 3
+        n2 = 5
+        backend.prepare_fock_state(n1, 0)
+        backend.prepare_fock_state(n2, 1)
+        state = backend.state()
+
+        assert np.allclose(state.parity_expectation([0, 1]), 1, atol=tol, rtol=0)
+
+    def test_coherent(self, setup_backend, tol):
+
+        backend = setup_backend(1)
+        state = backend.state()
+        m = 2
+        backend.prepare_coherent_state(2, 0)
+        state = backend.state()
+
+        assert np.allclose(state.partiy_expectation([0]), np.exp(-2*m), atol=tol, rtol=0)
+
+    def test_squeezed(self, setup_backend, tol):
+        backend = setup_backend(1)
+        state = backend.state()
+        r = 2
+        phi = 0
+        backend.prepare_squeezed_state(r, phi, 0)
+        state = backend.state()
+
+        assert np.allclose(state.partiy_expectation([0]), 1, atol=tol, rtol=0)
+
+    def test_two_mode_squeezed(self, setup_backend, tol):
+        backend = setup_backend(2)
+        state = backend.state()
+        r = 2
+        phi = 0
+        backend.beamsplitter(np.pi / 4, 0, 0, 1)
+        backend.prepare_squeezed_state(r, phi, 0)
+        backend.prepare_squeezed_state(-1*r, phi, 1)
+        backend.beamsplitter(np.pi / 4, 0, 0, 1)
+        state = backend.state()
+
+        assert np.allclose(state.partiy_expectation([0, 1]), 1, atol=tol, rtol=0)
+
+    def test_thermal(self, setup_backend, tol):
+        backend = setup_backend(1)
+        state = backend.state()
+        m = 2
+        backend.prepare_thermal_state(m, 0)
+        state = backend.state()
+
+        assert np.allclose(state.parity_expectation([0]), (1/(2*m + 1)), atol=tol, rtol=0)
 
 class TestFidelities:
     """Fidelity tests."""
