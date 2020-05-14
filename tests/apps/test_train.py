@@ -146,8 +146,11 @@ class TestVGBS:
         return a numpy array of ones."""
         gbs = train.VGBS(adj, n_mean, embedding, True)
         with monkeypatch.context() as m:
-            m.setattr(thewalrus.samples, "torontonian_sample_state", lambda *args, **kwargs:
-            np.ones((args[1], dim)))
+            m.setattr(
+                thewalrus.samples,
+                "torontonian_sample_state",
+                lambda *args, **kwargs: np.ones((args[1], dim)),
+            )
             samples = gbs.get_A_init_samples(1000)
         assert np.allclose(samples, np.ones((1000, dim)))
 
@@ -157,8 +160,11 @@ class TestVGBS:
         return a numpy array of ones."""
         gbs = train.VGBS(adj, n_mean, embedding, True, np.zeros((200, dim)))
         with monkeypatch.context() as m:
-            m.setattr(thewalrus.samples, "torontonian_sample_state", lambda *args, **kwargs:
-            np.ones((args[1], dim)))
+            m.setattr(
+                thewalrus.samples,
+                "torontonian_sample_state",
+                lambda *args, **kwargs: np.ones((args[1], dim)),
+            )
             samples = gbs.get_A_init_samples(1000)
         assert np.allclose(samples[:200], np.zeros((200, dim)))
         assert np.allclose(samples[200:], np.ones((800, dim)))
