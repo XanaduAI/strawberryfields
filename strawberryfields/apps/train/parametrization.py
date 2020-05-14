@@ -143,12 +143,11 @@ class VGBS:
     ):
         if not np.allclose(A, A.T):
             raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
-        self.A_init = A
+        self.A_init = rescale_adjacency(A, n_mean, threshold)
+        self._A_init_samples = None
         self.embedding = embedding
         self.threshold = threshold
-        self.A_init_scaled = rescale_adjacency(A, n_mean, threshold)
         self.n_modes = len(A)
-        self._A_init_samples = None
         if samples:
             self._add_A_init_samples(samples)
 
@@ -170,27 +169,14 @@ class VGBS:
         Returns:
             array: the diagonal matrix of weights
         """
-        return np.diag(self.embedding(params))
-
-    @staticmethod
-    def _WAW(A: np.ndarray, W: np.ndarray) -> np.ndarray:
-        """Calculate the :math:`WAW` matrix.
-
-        Args:
-            A (array): the adjacency matrix
-            W (array): the diagonal matrix of weights
-
-        Returns:
-            array: the :math:`WAW` matrix
-        """
-        return W @ A @ W
+        return np.sqrt(np.diag(self.embedding(params)))
 
     def A(self, params: np.ndarray) -> np.ndarray:
         """Calculate the trained adjacency matrix :math:`A(\theta)`.
 
         **Example usage:**
 
-        >>> vgbs.A(params)
+        >>> vgbs.A(params) #TODO UPDATE
         array([[0.        , 0.86070798, 0.93239382, 0.94176453],
                [0.86070798, 0.        , 0.88692044, 0.89583414],
                [0.93239382, 0.88692044, 0.        , 0.97044553],
@@ -202,18 +188,7 @@ class VGBS:
         Returns:
             array: the trained adjacency matrix
         """
-        return self._WAW(self.A_init, self.W(params))
-
-    def _A_scaled(self, params: np.ndarray) -> np.ndarray:
-        """Calculate the trained scaled adjacency matrix :math:`A_{\rm scale}(\theta)`.
-
-        Args:
-            params (array): the trainable parameters :math:`\theta`
-
-        Returns:
-            array: the trained adjacency matrix
-        """
-        return self._WAW(self.A_init_scaled, self.W(params))
+        return self.W(params) @ self.A_init @ self.W(params)
 
     def _generate_samples(self, A: np.ndarray, n_samples: int, **kwargs) -> np.ndarray:
         """Generate GBS samples from a chosen adjacency matrix.
@@ -253,7 +228,7 @@ class VGBS:
         Returns:
             array: the generated samples
         """
-        return self._generate_samples(self._A_scaled(params), n_samples, **kwargs)
+        return self._generate_samples(self.A(params), n_samples, **kwargs)
 
     def _generate_A_init_samples(self, n_samples: int, **kwargs) -> np.ndarray:
         """Generate GBS samples from the initial adjacency matrix.
@@ -273,7 +248,7 @@ class VGBS:
         Returns:
             array: the generated samples
         """
-        samples = self._generate_samples(self.A_init_scaled, n_samples, **kwargs)
+        samples = self._generate_samples(self.A_init, n_samples, **kwargs)
         self.add_A_samples(samples)
         return samples
 
@@ -314,7 +289,7 @@ class VGBS:
             array: a vector giving the mean number of photons in each mode
         """
         disp = np.zeros(2 * self.n_modes)
-        cov = A_to_cov(self._A_scaled(params))
+        cov = A_to_cov(self.A(params))
         return photon_number_mean_vector(disp, cov, hbar=1)  # TODO: consider hbar=2
 
     def mean_clicks_by_mode(self, params: np.ndarray) -> np.ndarray:
@@ -332,7 +307,7 @@ class VGBS:
         Returns:
             array: a vector giving the mean number of clicks in each mode
         """
-        cov = A_to_cov(self._A_scaled(params))
+        cov = A_to_cov(self.A(params))
         Q = Qmat(cov, hbar=1)
         m = self.n_modes
         Qks = [[[Q[k, k], Q[k, k + m]], [Q[k + m, k], Q[k + m, k + m]]] for k in range(m)]

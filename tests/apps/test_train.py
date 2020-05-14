@@ -85,24 +85,13 @@ class TestVGBS:
     """Tests for the class ``train.VGBS``"""
 
     def test_W(self, adj, n_mean, params):
-        """Test that the W method correctly gives the diagonal matrix of embedded parameters"""
+        """Test that the W method correctly gives the diagonal matrix of square root embedded
+        parameters"""
         gbs = train.VGBS(adj, n_mean, embedding, True)
         W = gbs.W(params)
-        assert np.allclose(np.diag(W), embedding(params))  # check that diagonal equals embedding
+        assert np.allclose(np.diag(W) ** 2, embedding(params))  # check that diagonal squared
+        # equals embedding
         assert np.allclose(np.diag(np.diag(W)), W)  # check that matrix is diagonal
-
-    def test_A(self, adj, n_mean, params):
-        """Test that the A and _A_scaled methods correctly return the WAW matrix of the A_init
-        and A_init_scaled adjacency matrices, respectively, and that these outputs are different
-        (due to the scaling)"""
-        gbs = train.VGBS(adj, n_mean, embedding, True)
-        A = gbs.A(params)
-        A_scaled = gbs._A_scaled(params)
-        W = gbs.W(params)
-
-        assert np.allclose(A, W @ adj @ W)
-        assert np.allclose(A_scaled, W @ gbs.A_init_scaled @ W)
-        assert not np.allclose(A, A_scaled)
 
     def test_generate_samples(self, adj, n_mean, monkeypatch):
         """Test that _generate_samples correctly dispatches between torontonian and hafnian
@@ -114,13 +103,13 @@ class TestVGBS:
 
         with monkeypatch.context() as m:
             m.setattr(thewalrus.samples, "torontonian_sample_state", lambda *args, **kwargs: 0)
-            s_threshold = gbs._generate_samples(gbs.A_init_scaled, 10)
+            s_threshold = gbs._generate_samples(gbs.A_init, 10)
 
         gbs.threshold = False
 
         with monkeypatch.context() as m:
             m.setattr(thewalrus.samples, "hafnian_sample_state", lambda *args, **kwargs: 1)
-            s_pnr = gbs._generate_samples(gbs.A_init_scaled, 10)
+            s_pnr = gbs._generate_samples(gbs.A_init, 10)
 
         assert s_threshold == 0
         assert s_pnr == 1
