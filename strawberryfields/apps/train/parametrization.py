@@ -21,8 +21,7 @@ import numpy as np
 import thewalrus.samples
 from thewalrus.quantum import Qmat, Xmat
 from thewalrus.quantum import find_scaling_adjacency_matrix as rescale
-from thewalrus.quantum import \
-    find_scaling_adjacency_matrix_torontonian as rescale_tor
+from thewalrus.quantum import find_scaling_adjacency_matrix_torontonian as rescale_tor
 from thewalrus.quantum import photon_number_mean_vector
 
 
