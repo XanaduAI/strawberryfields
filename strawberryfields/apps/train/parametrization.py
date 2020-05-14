@@ -153,7 +153,7 @@ class VGBS:
             self.add_A_init_samples(samples)
 
     def W(self, params: np.ndarray) -> np.ndarray:
-        """Calculate the diagonal matrix of weights :math:`W` that depends on the trainable
+        r"""Calculate the diagonal matrix of weights :math:`W` that depends on the trainable
         parameters :math:`\theta`.
 
         **Example usage:**
@@ -173,7 +173,7 @@ class VGBS:
         return np.sqrt(np.diag(self.embedding(params)))
 
     def A(self, params: np.ndarray) -> np.ndarray:
-        """Calculate the trained adjacency matrix :math:`A(\theta)`.
+        r"""Calculate the trained adjacency matrix :math:`A(\theta)`.
 
         **Example usage:**
 
@@ -217,19 +217,19 @@ class VGBS:
             samples = thewalrus.samples.hafnian_sample_state(cov, n_samples, hbar=1, **kwargs)
         return samples
 
-    def add_A_init_samples(self, samples: np.ndarray):  # TODO consider a get_A_init_samples
-        """Add samples of the initial adjacency matrix to the internal :attr:`_A_init_samples`
-        attribute.
-
-        **Example usage:**
-
-        >>> samples = np.array([[0, 1, 0, 0], [0, 1, 1, 1]])
-        >>> vgbs.add_A_init_samples(samples)
+    def add_A_init_samples(self, samples: np.ndarray):
+        r"""Add samples of the initial adjacency matrix.
+        # TODO consider a get_A_init_samples
 
         .. warning::
 
             The added samples must be from the *input* adjacency matrix and not the trained one
             :math:`A(\theta)`.
+
+        **Example usage:**
+
+        >>> samples = np.array([[0, 1, 0, 0], [0, 1, 1, 1]])
+        >>> vgbs.add_A_init_samples(samples)
 
         Args:
             samples (array): samples from the initial adjacency matrix
@@ -244,7 +244,7 @@ class VGBS:
             self._A_init_samples = np.vstack([self._A_init_samples, samples])
 
     def mean_photons_by_mode(self, params: np.ndarray) -> np.ndarray:
-        """Calculate the mean number of photons in each mode when using the trainable parameters
+        r"""Calculate the mean number of photons in each mode when using the trainable parameters
         :math:`\theta`.
 
         **Example usage:**
@@ -263,7 +263,7 @@ class VGBS:
         return photon_number_mean_vector(disp, cov, hbar=1)  # TODO: consider hbar=2
 
     def mean_clicks_by_mode(self, params: np.ndarray) -> np.ndarray:
-        """Calculate the mean number of clicks in each mode when using the trainable parameters
+        r"""Calculate the mean number of clicks in each mode when using the trainable parameters
         :math:`\theta`.
 
         **Example usage:**
@@ -285,7 +285,7 @@ class VGBS:
         return np.real(np.array(cbar))
 
     def n_mean(self, params: np.ndarray) -> float:
-        """Calculates the mean number of clicks or photons.
+        r"""Calculates the mean number of clicks or photons.
 
         Evaluates the mean number of clicks or photons of the VGBS system when using the
         trainable parameters :math:`\theta`. The mean number of clicks is returned when
