@@ -120,7 +120,7 @@ class VGBS:
            [0.94176453, 0.89583414, 0.97044553, 0.        ]])
     >>> vgbs.n_mean(params)
     1.8906000271819803
-    >>> vgbs.generate_samples(params, 2)
+    >>> vgbs.generate_samples(vgbs.A(params), 2)
     array([[0, 0, 1, 1],
            [1, 1, 0, 0]])
 
@@ -149,7 +149,7 @@ class VGBS:
         self.threshold = threshold
         self.n_modes = len(A)
         if samples:
-            self._add_A_init_samples(samples)
+            self.add_A_init_samples(samples)
 
     def W(self, params: np.ndarray) -> np.ndarray:
         """Calculate the diagonal matrix of weights :math:`W` that depends on the trainable
@@ -176,7 +176,7 @@ class VGBS:
 
         **Example usage:**
 
-        >>> vgbs.A(params) #TODO UPDATE
+        >>> vgbs.A(params) #TODO UPDATE EXAMPLES
         array([[0.        , 0.86070798, 0.93239382, 0.94176453],
                [0.86070798, 0.        , 0.88692044, 0.89583414],
                [0.93239382, 0.88692044, 0.        , 0.97044553],
@@ -190,8 +190,12 @@ class VGBS:
         """
         return self.W(params) @ self.A_init @ self.W(params)
 
-    def _generate_samples(self, A: np.ndarray, n_samples: int, **kwargs) -> np.ndarray:
-        """Generate GBS samples from a chosen adjacency matrix.
+    def generate_samples(self, A: np.ndarray, n_samples: int, **kwargs) -> np.ndarray:
+        """Generate GBS samples from an input adjacency matrix.
+
+        >>> vgbs.generate_samples(vgbs.A(params), 2)
+        array([[0, 0, 1, 1],
+               [1, 1, 0, 0]])
 
         Args:
             A (array): the adjacency matrix
@@ -204,55 +208,13 @@ class VGBS:
         """
         cov = A_to_cov(A)
 
-        if self.threshold:
+        if self.threshold:  # TODO consider using sf.hbar
             samples = thewalrus.samples.torontonian_sample_state(cov, n_samples, hbar=1, **kwargs)
         else:
             samples = thewalrus.samples.hafnian_sample_state(cov, n_samples, hbar=1, **kwargs)
         return samples
 
-    def generate_samples(self, params: np.ndarray, n_samples: int, **kwargs) -> np.ndarray:
-        """Generate GBS samples from the trained adjacency matrix :math:`A(\theta)`.
-
-        **Example usage:**
-
-        >>> vgbs.generate_samples(params, 2)
-        array([[0, 0, 1, 1],
-               [1, 1, 0, 0]])
-
-        Args:
-            params (array): the trainable parameters :math:`\theta`
-            n_samples (int): the number of GBS samples to generate
-            **kwargs: additional arguments to pass to the sampler from
-                `The Walrus <https://the-walrus.readthedocs.io/en/stable/>`__
-
-        Returns:
-            array: the generated samples
-        """
-        return self._generate_samples(self.A(params), n_samples, **kwargs)
-
-    def _generate_A_init_samples(self, n_samples: int, **kwargs) -> np.ndarray:
-        """Generate GBS samples from the initial adjacency matrix.
-
-        The resulting samples are added to the to the internal :attr:`_A_init_samples` attribute.
-
-        .. warning::
-
-            Samples are generate from the *input* adjacency matrix and not the trained one
-            :math:`A(\theta)`.
-
-        Args:
-            n_samples (int): the number of GBS samples to generate
-            **kwargs: additional arguments to pass to the sampler from
-                `The Walrus <https://the-walrus.readthedocs.io/en/stable/>`__
-
-        Returns:
-            array: the generated samples
-        """
-        samples = self._generate_samples(self.A_init, n_samples, **kwargs)
-        self.add_A_samples(samples)
-        return samples
-
-    def _add_A_init_samples(self, samples: np.ndarray):
+    def add_A_init_samples(self, samples: np.ndarray):  # TODO consider a get_A_init_samples
         """Add samples of the initial adjacency matrix to the internal :attr:`_A_init_samples`
         attribute.
 

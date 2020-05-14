@@ -94,7 +94,7 @@ class TestVGBS:
         assert np.allclose(np.diag(np.diag(W)), W)  # check that matrix is diagonal
 
     def test_generate_samples(self, adj, n_mean, monkeypatch):
-        """Test that _generate_samples correctly dispatches between torontonian and hafnian
+        """Test that generate_samples correctly dispatches between torontonian and hafnian
         sampling based upon whether threshold=True or threshold=False. This is done by
         monkeypatching torontonian_sample_state and hafnian_sample_state so that they simply
         return 0 and 1, respectively, instead of calculating samples. We then check that the
@@ -103,37 +103,37 @@ class TestVGBS:
 
         with monkeypatch.context() as m:
             m.setattr(thewalrus.samples, "torontonian_sample_state", lambda *args, **kwargs: 0)
-            s_threshold = gbs._generate_samples(gbs.A_init, 10)
+            s_threshold = gbs.generate_samples(gbs.A_init, 10)
 
         gbs.threshold = False
 
         with monkeypatch.context() as m:
             m.setattr(thewalrus.samples, "hafnian_sample_state", lambda *args, **kwargs: 1)
-            s_pnr = gbs._generate_samples(gbs.A_init, 10)
+            s_pnr = gbs.generate_samples(gbs.A_init, 10)
 
         assert s_threshold == 0
         assert s_pnr == 1
 
     def test_add_A_init_samples_bad_shape(self, adj, n_mean, dim):
-        """Test that _add_A_init_samples raises a ValueError when input samples of incorrect
+        """Test that add_A_init_samples raises a ValueError when input samples of incorrect
         shape, i.e. of dim + 1 modes"""
         gbs = train.VGBS(adj, n_mean, embedding, True)
         s = np.ones((2, dim + 1))
         with pytest.raises(ValueError, match="Must input samples of shape"):
-            gbs._add_A_init_samples(s)
+            gbs.add_A_init_samples(s)
 
     def test_add_A_init_samples_none_there(self, adj, n_mean, dim):
-        """Test that _add_A_init_samples correctly adds samples"""
+        """Test that add_A_init_samples correctly adds samples"""
         gbs = train.VGBS(adj, n_mean, embedding, True)
         s = np.ones((2, dim))
-        gbs._add_A_init_samples(s)
+        gbs.add_A_init_samples(s)
         assert np.allclose(gbs._A_init_samples, s)
 
     def test_add_A_init_samples_already_there(self, adj, n_mean, dim):
-        """Test that _add_A_init_samples correctly adds more samples when some are already there"""
+        """Test that add_A_init_samples correctly adds more samples when some are already there"""
         gbs = train.VGBS(adj, n_mean, embedding, True)
         gbs._A_init_samples = np.ones((2, dim))
-        gbs._add_A_init_samples(np.zeros((2, dim)))
+        gbs.add_A_init_samples(np.zeros((2, dim)))
         assert gbs._A_init_samples.shape == (4, dim)
         assert np.allclose(gbs._A_init_samples[:2], np.ones((2, dim)))
         assert np.allclose(gbs._A_init_samples[2:3], np.zeros((2, dim)))
@@ -199,7 +199,7 @@ def test_VGBS_integration(adj, params, n_mean, threshold, dim):
     gbs = train.VGBS(adj, n_mean, embedding, threshold)
     A_prime = gbs.A(params)
     n_mean_prime = gbs.n_mean(params)
-    samples = gbs.generate_samples(params, n_samples)
+    samples = gbs.generate_samples(A_prime, n_samples)
     assert A_prime.shape == (dim, dim)
     assert isinstance(n_mean_prime, float)
     assert samples.shape == (n_samples, dim)
