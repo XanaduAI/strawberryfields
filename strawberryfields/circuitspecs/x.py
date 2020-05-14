@@ -24,7 +24,7 @@ from strawberryfields.decompositions import takagi
 from strawberryfields.program_utils import CircuitError, Command
 import strawberryfields.ops as ops
 
-from .circuit_specs import CircuitSpecs, Range, Ranges
+from .circuit_specs import CircuitSpecs, Ranges
 from .gbs import GBSSpecs
 from .gaussian_unitary import GaussianUnitary
 
@@ -163,7 +163,7 @@ class XSpecs(CircuitSpecs):
         )
         U2 = copy.deepcopy(U1)
 
-        for i in range(len(U2)):
-            U2[i].reg = [registers[r.ind+half_n_modes] for r in U2[i].reg]
+        for Ui in U2:
+            Ui.reg = [registers[r.ind+half_n_modes] for r in Ui.reg]
 
         return sq_seq + U1 + U2 + meas_seq
