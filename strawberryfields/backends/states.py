@@ -943,7 +943,7 @@ class BaseFockState(BaseState):
     def parity_expectation(self, modes):
 
         cutoff = self._cutoff
-        values = [(-1)**i for i in np.arange(cutoff)]
+        values = (-1)**np.arange(cutoff)
         return self.diagonal_expectation(modes, values)
 
 
