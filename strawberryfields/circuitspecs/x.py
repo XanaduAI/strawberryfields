@@ -166,10 +166,4 @@ class XSpecs(CircuitSpecs):
         for i in range(len(U2)):
             U2[i].reg = [registers[r.ind+half_n_modes] for r in U2[i].reg]
 
-
-        # Convert the unitary into a sequence of MZgate and Rgate commands on the idler modes
-        #U2 = ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=True)._decompose(
-        #    registers[half_n_modes:]
-        #)
-
         return sq_seq + U1 + U2 + meas_seq

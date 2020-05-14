@@ -179,90 +179,87 @@ class TestXCompilation:
 
         assert program_equivalence(res, expected, atol=tol, compare_params=False)
 
-    def test_not_all_modes_measured(self):
+
+    @pytest.mark.parametrize("num_pairs", [4,5,6,7])
+    def test_not_all_modes_measured(self, num_pairs):
         """Test exceptions raised if not all modes are measured"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
-
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
-            ops.MeasureFock() | (q[0], q[1])
-
+            for i in range(num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
+            ops.MeasureFock() | (q[0], q[num_pairs])
         with pytest.raises(CircuitError, match="All modes must be measured"):
             res = prog.compile("X")
 
-    def test_no_s2gates(self, tol):
+    @pytest.mark.parametrize("num_pairs", [4,5,6,7])
+    def test_no_s2gates(self, num_pairs, tol):
         """Test identity S2gates are inserted when no S2gates
         are provided."""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
 
         with prog.context as q:
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        expected = sf.Program(8)
+        expected = sf.Program(2 * num_pairs)
 
         with expected.context as q:
-            ops.S2gate(0) | (q[0], q[4])
-            ops.S2gate(0) | (q[1], q[5])
-            ops.S2gate(0) | (q[2], q[6])
-            ops.S2gate(0) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i in range(num_pairs):
+                ops.S2gate(0) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
         res = prog.compile("X")
         expected = expected.compile("X")
         assert program_equivalence(res, expected, atol=tol)
 
-    def test_missing_s2gates(self, tol):
+    @pytest.mark.parametrize("num_pairs", [4,5,6,7])
+    def test_missing_s2gates(self, num_pairs, tol):
         """Test identity S2gates are inserted when some (but not all)
         S2gates are included."""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
-
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
+        assert num_pairs > 3
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[num_pairs+1])
+            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[num_pairs+3])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        expected = sf.Program(8)
+        expected = sf.Program(2 * num_pairs)
 
         with expected.context as q:
-            ops.S2gate(0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[5])
-            ops.S2gate(0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[num_pairs+1])
+            ops.S2gate(0) | (q[0], q[num_pairs+0])
+            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[num_pairs+3])
+            ops.S2gate(0) | (q[2], q[num_pairs+2])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
         res = prog.compile("X")
         expected = expected.compile("X")
         assert program_equivalence(res, expected, atol=tol)
 
-    def test_incorrect_s2gate_modes(self):
+    @pytest.mark.parametrize("num_pairs", [4,5,6,7])
+    def test_incorrect_s2gate_modes(self, num_pairs):
         """Test exceptions raised if S2gates do not appear on correct modes"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
-        n_modes = 8
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
+        n_modes = 2 * num_pairs
         half_n_modes = n_modes // 2
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[1])
-            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[3])
-            ops.S2gate(SQ_AMPLITUDE) | (q[4], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[7], q[6])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i in range(num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[2 * i], q[2 * i +1])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="The applied unitary cannot mix between the modes {}-{} and modes {}-{}.".format(
@@ -270,49 +267,54 @@ class TestXCompilation:
                 )):
             res = prog.compile("X")
 
-    def test_incorrect_s2gate_params(self):
+    @pytest.mark.parametrize("num_pairs", [4,5,6,7])
+    def test_incorrect_s2gate_params(self, num_pairs):
         """Test exceptions raised if S2gates have illegal parameters"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
-        wrong_sq_value = [np.round(SQ_AMPLITUDE+0.1, 4)]
-        allowed_sq_ranges = Ranges([0], [1.0], variable_name="r")
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.S2gate(0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE+0.1) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i in range(num_pairs - 1):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+
+            ops.S2gate(SQ_AMPLITUDE+0.1) | (q[num_pairs-1], q[2*num_pairs-1])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match=r"Incorrect squeezing val"):
             res = prog.compile("X")
 
-    def test_s2gate_repeated_modes(self):
+    @pytest.mark.parametrize("num_pairs", [4,5,6,7])
+    def test_s2gate_repeated_modes(self, num_pairs):
         """Test exceptions raised if S2gates are repeated"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
-
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i in range(num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+
+            ops.S2gate(SQ_AMPLITUDE+0.1) | (q[0], q[num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match=r"Incorrect squeezing val"):
             res = prog.compile("X")
 
-    def test_s2gate_repeated_modes_half_squeezing(self):
-        """Test exceptions raised if S2gates are repeated"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+    @pytest.mark.parametrize("num_pairs", [4,5,6,7])
+    def test_s2gate_repeated_modes_half_squeezing(self, num_pairs):
+        """Test that squeezing gates are correctly merged"""
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE/2) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE/2) | (q[0], q[4])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+
+            ops.S2gate(SQ_AMPLITUDE/2) | (q[0], q[0 + num_pairs])
+            for i in range(1, num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+            ops.S2gate(SQ_AMPLITUDE/2) | (q[0], q[0 + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
         res = prog.compile("X")
@@ -412,69 +414,63 @@ class TestXCompilation:
         # Not at the level of symplectic matrices
         assert np.allclose(O @ O.T, expected @ expected.T, atol=tol)
 
-
-    def test_interferometers(self, tol):
+    @pytest.mark.parametrize("num_pairs", [4])
+    def test_interferometers(self, num_pairs, tol):
         """Test that the compilation correctly decomposes the interferometer using
         the rectangular_symmetric mesh"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i in range(0, num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
         res = prog.compile("X")
 
-        expected = sf.Program(8)
+        expected = sf.Program(2 * num_pairs)
 
         with expected.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
-            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[4], q[5], q[6], q[7])
+            for i in range(0, num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
         expected = expected.compile(DummyCircuit())
-
+        # Note that since DummyCircuit() has a hard coded limit of 8 modes we only check for this number
         assert program_equivalence(res, expected, atol=tol, compare_params=False)
 
-    def test_unitaries_do_not_match(self):
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_unitaries_do_not_match(self, num_pairs):
         """Test exception raised if the unitary applied to modes [0, 1, 2, 3] is
         different to the unitary applied to modes [4, 5, 6, 7]"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i in range(0, num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.BSgate() | (q[2], q[3])
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="The applied unitary on modes"):
             res = prog.compile("X")
 
-    def test_unitary_too_large(self):
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_unitary_too_large(self, num_pairs):
         """Test exception raised if the unitary is applied to more
-        than just modes [0, 1, 2, 3] and [4, 5, 6, 7]."""
-        prog = sf.Program(8)
-        U = random_interferometer(8)
+        than just modes [0, 1, 2, 3, ..., num_pairs-1] and [num_pairs, num_pairs+1, ..., 2*num_pairs-1]."""
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(2 * num_pairs)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
+            for i in range(0, num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
             ops.Interferometer(U) | q
             ops.MeasureFock() | q
 
