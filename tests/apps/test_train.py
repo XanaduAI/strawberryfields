@@ -19,8 +19,7 @@ import numpy as np
 import pytest
 import thewalrus
 from thewalrus.quantum import find_scaling_adjacency_matrix as rescale
-from thewalrus.quantum import \
-    find_scaling_adjacency_matrix_torontonian as rescale_tor
+from thewalrus.quantum import find_scaling_adjacency_matrix_torontonian as rescale_tor
 
 from strawberryfields.apps import train
 
@@ -72,10 +71,10 @@ def test_A_to_cov():
     cov = train.parametrization.A_to_cov(A)
     target = np.array(
         [
-            [1.5, 0.0, 0.0, 1.41421356],
-            [0.0, 1.5, 1.41421356, 0.0],
-            [0.0, 1.41421356, 1.5, 0.0],
-            [1.41421356, 0.0, 0.0, 1.5],
+            [3.0, 0.0, 0.0, 2.82842712],
+            [0.0, 3.0, 2.82842712, 0.0],
+            [0.0, 2.82842712, 3.0, 0.0],
+            [2.82842712, 0.0, 0.0, 3.0],
         ]
     )
     assert np.allclose(cov, target)

@@ -24,6 +24,8 @@ from thewalrus.quantum import find_scaling_adjacency_matrix as rescale
 from thewalrus.quantum import find_scaling_adjacency_matrix_torontonian as rescale_tor
 from thewalrus.quantum import photon_number_mean_vector
 
+import strawberryfields as sf
+
 
 def rescale_adjacency(A: np.ndarray, n_mean: float, threshold: bool) -> np.ndarray:
     """Rescale an adjacency matrix so that it can be mapped to GBS.
@@ -80,7 +82,7 @@ def A_to_cov(A: np.ndarray) -> np.ndarray:
     A_big = np.block([[A, 0 * A], [0 * A, np.conj(A)]])
     I = np.identity(2 * n)
     X = Xmat(n)
-    return np.linalg.inv(I - X @ A_big) - I / 2
+    return sf.hbar * (np.linalg.inv(I - X @ A_big) - I / 2)
 
 
 class VGBS:
@@ -211,10 +213,12 @@ class VGBS:
         """
         cov = A_to_cov(A)
 
-        if self.threshold:  # TODO consider using sf.hbar
-            samples = thewalrus.samples.torontonian_sample_state(cov, n_samples, hbar=1, **kwargs)
+        if self.threshold:
+            samples = thewalrus.samples.torontonian_sample_state(
+                cov, n_samples, hbar=sf.hbar, **kwargs
+            )
         else:
-            samples = thewalrus.samples.hafnian_sample_state(cov, n_samples, hbar=1, **kwargs)
+            samples = thewalrus.samples.hafnian_sample_state(cov, n_samples, hbar=sf.hbar, **kwargs)
         return samples
 
     def add_A_init_samples(self, samples: np.ndarray):
@@ -260,7 +264,7 @@ class VGBS:
         """
         disp = np.zeros(2 * self.n_modes)
         cov = A_to_cov(self.A(params))
-        return photon_number_mean_vector(disp, cov, hbar=1)  # TODO: consider hbar=2
+        return photon_number_mean_vector(disp, cov, hbar=sf.hbar)
 
     def mean_clicks_by_mode(self, params: np.ndarray) -> np.ndarray:
         r"""Calculate the mean number of clicks in each mode when using the trainable parameters
@@ -278,7 +282,7 @@ class VGBS:
             array: a vector giving the mean number of clicks in each mode
         """
         cov = A_to_cov(self.A(params))
-        Q = Qmat(cov, hbar=1)
+        Q = Qmat(cov, hbar=sf.hbar)
         m = self.n_modes
         Qks = [[[Q[k, k], Q[k, k + m]], [Q[k + m, k], Q[k + m, k + m]]] for k in range(m)]
         cbar = [1 - np.linalg.det(Qks[k]) ** (-0.5) for k in range(m)]
