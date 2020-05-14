@@ -68,6 +68,17 @@ class TestExpFeatures:
             expf = embed.ExpFeatures(features)
             expf(np.zeros(dim))
 
+    @pytest.mark.parametrize("m", range(2, 5))
+    def test_exp_features_integration(self, dim, m):
+        """Test that ``strawberryfields.apps.train.embed.ExpFeatures`` outputs weights and jacobian
+        of the correct shape"""
+        features = np.ones((m, dim))
+        expf = embed.ExpFeatures(features)
+        features = np.ones(dim)
+
+        assert expf(features).shape == (m,)
+        assert expf.jacobian(features).shape == (m, dim)
+
     def test_zero_params(self, dim):
         """Tests that weights are equal to one when parameters are zero"""
         features = np.ones((dim, dim))
@@ -156,3 +167,12 @@ class TestJacobianExp:
         exp = embed.Exp(dim)
         g = exp.jacobian(ps[k])
         assert np.allclose(g, jacobian[k])
+
+    def test_jacobian_identity(self, dim):
+        """Tests that the jacobian is computed correctly compared to a general calculation using an
+        identity matrix of feature vectors"""
+        k = dim - 2
+        features = np.eye(dim)
+        expf = embed.ExpFeatures(features)
+        exp = embed.Exp(dim)
+        assert np.allclose(expf.jacobian(ps[k]), exp.jacobian(ps[k]))

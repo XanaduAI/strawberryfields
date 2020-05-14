@@ -55,7 +55,6 @@ class ExpFeatures:
         self.m, self.d = np.shape(features)
 
     def __call__(self, params):
-        """Makes an instance of the class callable, so it can be used as a function"""
         return self.weights(params)
 
     def weights(self, params):
