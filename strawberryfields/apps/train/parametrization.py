@@ -83,7 +83,6 @@ def A_to_cov(A: np.ndarray) -> np.ndarray:
     return np.linalg.inv(I - X @ A_big) - I / 2
 
 
-# TODO: update embedding class in type hint
 class VGBS:
     r"""Create a variational GBS model for optimization and machine learning.
 
@@ -105,7 +104,7 @@ class VGBS:
     the mean number of clicks or photons.
 
     The mapping from :math:`\theta` to :math:`W(\theta)` is specified using the ``embedding``
-    argument.
+    argument. TODO mention embedding module
 
     **Example usage:**
 
@@ -115,15 +114,15 @@ class VGBS:
     >>> vgbs = VGBS(A, 3, embedding, threshold=True)
     >>> params = np.array([0.05, 0.1, 0.02, 0.01])
     >>> vgbs.A(params)
-    array([[0.        , 0.86070798, 0.93239382, 0.94176453],
-           [0.86070798, 0.        , 0.88692044, 0.89583414],
-           [0.93239382, 0.88692044, 0.        , 0.97044553],
-           [0.94176453, 0.89583414, 0.97044553, 0.        ]])
+    array([[0.        , 0.30298161, 0.31534653, 0.31692721],
+           [0.30298161, 0.        , 0.30756059, 0.30910225],
+           [0.31534653, 0.30756059, 0.        , 0.32171695],
+           [0.31692721, 0.30910225, 0.32171695, 0.        ]])
     >>> vgbs.n_mean(params)
-    1.8906000271819803
+    2.299036355948707
     >>> vgbs.generate_samples(vgbs.A(params), 2)
-    array([[0, 0, 1, 1],
-           [1, 1, 0, 0]])
+    array([[1, 1, 1, 0],
+           [0, 1, 0, 1]])
 
     Args:
         A (array): the input adjacency matrix :math:`A`
@@ -160,10 +159,10 @@ class VGBS:
         **Example usage:**
 
         >>> vgbs.W(params)
-        array([[0.95122942, 0.        , 0.        , 0.        ],
-               [0.        , 0.90483742, 0.        , 0.        ],
-               [0.        , 0.        , 0.98019867, 0.        ],
-               [0.        , 0.        , 0.        , 0.99004983]])
+        array([[0.97530991, 0.        , 0.        , 0.        ],
+               [0.        , 0.95122942, 0.        , 0.        ],
+               [0.        , 0.        , 0.99004983, 0.        ],
+               [0.        , 0.        , 0.        , 0.99501248]])
 
         Args:
             params (array): the trainable parameters :math:`\theta`
@@ -178,11 +177,11 @@ class VGBS:
 
         **Example usage:**
 
-        >>> vgbs.A(params) #TODO UPDATE EXAMPLES
-        array([[0.        , 0.86070798, 0.93239382, 0.94176453],
-               [0.86070798, 0.        , 0.88692044, 0.89583414],
-               [0.93239382, 0.88692044, 0.        , 0.97044553],
-               [0.94176453, 0.89583414, 0.97044553, 0.        ]])
+        >>> vgbs.A(params)
+        array([[0.        , 0.30298161, 0.31534653, 0.31692721],
+               [0.30298161, 0.        , 0.30756059, 0.30910225],
+               [0.31534653, 0.30756059, 0.        , 0.32171695],
+               [0.31692721, 0.30910225, 0.32171695, 0.        ]])
 
         Args:
             params (array): the trainable parameters :math:`\theta`
@@ -195,9 +194,11 @@ class VGBS:
     def generate_samples(self, A: np.ndarray, n_samples: int, **kwargs) -> np.ndarray:
         """Generate GBS samples from an input adjacency matrix.
 
+        **Example usage:**
+
         >>> vgbs.generate_samples(vgbs.A(params), 2)
-        array([[0, 0, 1, 1],
-               [1, 1, 0, 0]])
+        array([[1, 1, 1, 0],
+               [0, 1, 0, 1]])
 
         Args:
             A (array): the adjacency matrix
@@ -219,6 +220,11 @@ class VGBS:
     def add_A_init_samples(self, samples: np.ndarray):  # TODO consider a get_A_init_samples
         """Add samples of the initial adjacency matrix to the internal :attr:`_A_init_samples`
         attribute.
+
+        **Example usage:**
+
+        >>> samples = np.array([[0, 1, 0, 0], [0, 1, 1, 1]])
+        >>> vgbs.add_A_init_samples(samples)
 
         .. warning::
 
@@ -244,7 +250,7 @@ class VGBS:
         **Example usage:**
 
         >>> vgbs.mean_photons_by_mode(params)
-        array([1.09176888, 1.03067234, 1.12816899, 1.14021221])
+        array([1.87217857, 1.8217392 , 1.90226515, 1.91225543])
 
         Args:
             params (array): the trainable parameters :math:`\theta`
@@ -263,7 +269,7 @@ class VGBS:
         **Example usage:**
 
         >>> vgbs.mean_clicks_by_mode(params)
-        array([0.47149519, 0.4578502 , 0.47935017, 0.48190447])
+        array([0.57419812, 0.5680168 , 0.57781579, 0.57900564])
 
         Args:
             params (array): the trainable parameters :math:`\theta`
@@ -288,7 +294,7 @@ class VGBS:
         **Example usage:**
 
         >>> vgbs.n_mean(params)
-        1.8906000271819803
+        2.299036355948707
 
         Args:
             params (array): the trainable parameters :math:`\theta`
