@@ -388,8 +388,6 @@ class TestParityExpectation:
 
         backend = setup_backend(2)
         state = backend.state()
-        r = 0.2
-        phi = 0.0
         n1 = 3
         n2 = 2
         backend.prepare_fock_state(n1, 0)
@@ -452,6 +450,24 @@ class TestParityExpectation:
         state = backend.state()
 
         assert np.allclose(state.parity_expectation([0]), (1/(2*m + 1)), atol=tol, rtol=0)
+
+class TestQuadraticExpectation:
+
+    def test_parity_fock(self, setup_backend, tol):
+
+        backend = setup_backend(2)
+        state = backend.state()
+        n1 = 3
+        n2 = 2
+        a = 1
+        b = 1
+        c = 1
+        backend.prepare_fock_state(n1, 0)
+        backend.prepare_fock_state(n2, 1)
+        backend.beamsplitter(np.pi/4, 0, 0, 1)
+        state = backend.state()
+
+        assert np.allclose(state.parity_expectation([0]), 2, atol=tol, rtol=0)
 
 class TestFidelities:
     """Fidelity tests."""

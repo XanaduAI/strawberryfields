@@ -888,6 +888,7 @@ class BaseFockState(BaseState):
         return mean, var
 
     def diagonal_expectation(self, modes, values):
+        """Calculates the expectation value of an operator that is diagonal in the number basis"""
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
 
@@ -914,18 +915,19 @@ class BaseFockState(BaseState):
         return float(ps)
 
     def number_expectation(self, modes):
+        """Calculates the expectation value of a product of number operators acting on given modes"""
         cutoff = self._cutoff
         values = np.arange(cutoff)
         return self.diagonal_expectation(modes, values)
 
     def parity_expectation(self, modes):
-
+        """Calculates the expectation value of a product of parity operators acting on given modes"""
         cutoff = self._cutoff
         values = (-1)**np.arange(cutoff)
         return self.diagonal_expectation(modes, values)
 
     def quadratic_expectation(self, modes, a, b, c):
-
+        """Calculates the expectation value of a product of operators of the form aN^2 + bN + c acting on given modes"""
         cutoff = self._cutoff
         ar = np.arange(cutoff)
         values = a*(ar**2) + b*ar + c
