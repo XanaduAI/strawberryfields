@@ -13,7 +13,7 @@
 # limitations under the License.
 r"""
 Contains the :class:`~.VGBS` (variational GBS) class which provides a trainable parametrization
-of GBS.
+of the GBS probability distribution.
 """
 from typing import Optional
 
@@ -90,7 +90,7 @@ class VGBS:
 
     .. math::
 
-        A(\theta) = W(\theta) A W(\theta)
+        A(\theta) = W(\theta) A W(\theta),
 
     with :math:`W` a diagonal matrix of weights that depend on a set of parameters :math:`\theta`.
 
@@ -110,7 +110,7 @@ class VGBS:
 
     >>> g = nx.erdos_renyi_graph(4, 0.7, seed=1967)
     >>> a = nx.to_numpy_array(g)
-    >>> embedding = Exp()  # TODO does this need updating?
+    >>> embedding = Exp(4)  # TODO does this need updating?
     >>> vgbs = VGBS(a, 3, embedding, True)
     >>> params = np.array([0.05, 0.1, 0.02, 0.01])
     >>> vgbs.A(params)
