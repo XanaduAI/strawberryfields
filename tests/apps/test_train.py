@@ -23,6 +23,8 @@ from strawberryfields.apps import train
 from thewalrus.quantum import find_scaling_adjacency_matrix as rescale
 from thewalrus.quantum import find_scaling_adjacency_matrix_torontonian as rescale_tor
 
+pytestmark = pytest.mark.apps
+
 
 # TODO: REMOVE
 class Exp:
