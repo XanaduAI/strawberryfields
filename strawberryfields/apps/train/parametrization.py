@@ -94,8 +94,8 @@ class VGBS:
 
     with :math:`W` a diagonal matrix of weights that depend on a set of parameters :math:`\theta`.
 
-    By varying :math:`\theta`, the distribution of samples from GBS can be preferentially biased
-    towards solving stochastic optimization and unsupervised machine learning problems.
+    By varying :math:`\theta`, the distribution of samples from GBS can be trained to solve
+    stochastic optimization and unsupervised machine learning problems.
 
     The above variational model can be used in both the threshold and PNR modes of GBS, which
     is specified using the ``threshold`` flag. An initial value for the mean number of clicks
@@ -109,9 +109,9 @@ class VGBS:
     **Example usage:**
 
     >>> g = nx.erdos_renyi_graph(4, 0.7, seed=1967)
-    >>> a = nx.to_numpy_array(g)
+    >>> A = nx.to_numpy_array(g)
     >>> embedding = Exp(4)  # TODO does this need updating?
-    >>> vgbs = VGBS(a, 3, embedding, True)
+    >>> vgbs = VGBS(A, 3, embedding, threshold=True)
     >>> params = np.array([0.05, 0.1, 0.02, 0.01])
     >>> vgbs.A(params)
     array([[0.        , 0.86070798, 0.93239382, 0.94176453],
@@ -174,14 +174,14 @@ class VGBS:
 
     @staticmethod
     def _WAW(A: np.ndarray, W: np.ndarray) -> np.ndarray:
-        """Calculate the :math:`_WAW` parametrization.
+        """Calculate the :math:`WAW` matrix.
 
         Args:
             A (array): the adjacency matrix
             W (array): the diagonal matrix of weights
 
         Returns:
-            array: the :math:`_WAW` matrix
+            array: the :math:`WAW` matrix
         """
         return W @ A @ W
 
