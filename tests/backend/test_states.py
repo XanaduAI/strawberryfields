@@ -405,7 +405,7 @@ class TestNumberExpectation:
 
 
 class TestParityExpectation:
-    
+
     @pytest.mark.backends("fock", "tf")
     def test_parity_fock(self, setup_backend, tol):
 
@@ -441,7 +441,7 @@ class TestParityExpectation:
         state = backend.state()
 
         assert np.allclose(
-            state.partiy_expectation([0]), np.exp(-2 * m), atol=tol, rtol=0
+            state.parity_expectation([0]), np.exp(-2 * m), atol=tol, rtol=0
         )
 
     def test_squeezed(self, setup_backend, tol):
@@ -452,7 +452,7 @@ class TestParityExpectation:
         backend.prepare_squeezed_state(r, phi, 0)
         state = backend.state()
 
-        assert np.allclose(state.partiy_expectation([0]), 1, atol=tol, rtol=0)
+        assert np.allclose(state.parity_expectation([0]), 1, atol=tol, rtol=0)
 
     def test_two_mode_squeezed(self, setup_backend, tol):
         backend = setup_backend(2)
@@ -465,7 +465,7 @@ class TestParityExpectation:
         backend.beamsplitter(np.pi / 4, 0, 0, 1)
         state = backend.state()
 
-        assert np.allclose(state.partiy_expectation([0, 1]), 1, atol=tol, rtol=0)
+        assert np.allclose(state.parity_expectation([0, 1]), 1, atol=tol, rtol=0)
 
     def test_thermal(self, setup_backend, tol):
         backend = setup_backend(1)
