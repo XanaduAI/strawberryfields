@@ -407,8 +407,9 @@ class TestNumberExpectation:
 class TestParityExpectation:
 
     @pytest.mark.backends("fock", "tf")
-    def test_parity_fock(self, setup_backend, tol):
-
+    def test_parity_fock(self, setup_backend, tol, batch_size):
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(2)
         state = backend.state()
         n1 = 3
@@ -421,8 +422,9 @@ class TestParityExpectation:
         assert np.allclose(state.parity_expectation([0]), 0, atol=tol, rtol=0)
 
     @pytest.mark.backends("fock", "tf")
-    def test_two_mode_fock(self, setup_backend, tol):
-
+    def test_two_mode_fock(self, setup_backend, tol, batch_size):
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(2)
         state = backend.state()
         n1 = 3
@@ -434,8 +436,9 @@ class TestParityExpectation:
         assert np.allclose(state.parity_expectation([0, 1]), 1, atol=tol, rtol=0)
 
     @pytest.mark.backends("fock", "tf")
-    def test_coherent(self, setup_backend, tol):
-
+    def test_coherent(self, setup_backend, tol, batch_size):
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(1)
         state = backend.state()
         alpha = 0.2
@@ -447,7 +450,9 @@ class TestParityExpectation:
         )
 
     @pytest.mark.backends("fock", "tf")
-    def test_squeezed(self, setup_backend, tol):
+    def test_squeezed(self, setup_backend, tol, batch_size):
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(1)
         state = backend.state()
         r = 0.2
@@ -458,7 +463,9 @@ class TestParityExpectation:
         assert np.allclose(state.parity_expectation([0]), 1, atol=tol, rtol=0)
 
     @pytest.mark.backends("fock", "tf")
-    def test_two_mode_squeezed(self, setup_backend, tol):
+    def test_two_mode_squeezed(self, setup_backend, tol, batch_size):
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(2)
         state = backend.state()
         r = 0.2
@@ -472,7 +479,9 @@ class TestParityExpectation:
         assert np.allclose(state.parity_expectation([0, 1]), 1, atol=tol, rtol=0)
 
     @pytest.mark.backends("fock", "tf")
-    def test_thermal(self, setup_backend, tol):
+    def test_thermal(self, setup_backend, tol, batch_size):
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(1)
         state = backend.state()
         m = 0.2
