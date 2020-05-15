@@ -408,6 +408,7 @@ class TestParityExpectation:
 
     @pytest.mark.backends("fock", "tf")
     def test_parity_fock(self, setup_backend, tol, batch_size):
+        """Tests the parity operator for an even superposition of the first two number states"""
         if batch_size is not None:
             pytest.skip("Does not support batch mode")
         backend = setup_backend(2)
@@ -423,6 +424,7 @@ class TestParityExpectation:
 
     @pytest.mark.backends("fock", "tf")
     def test_two_mode_fock(self, setup_backend, tol, batch_size):
+        """Tests the product of parity operators for two number states"""
         if batch_size is not None:
             pytest.skip("Does not support batch mode")
         backend = setup_backend(2)
@@ -437,6 +439,7 @@ class TestParityExpectation:
 
     @pytest.mark.backends("fock", "tf")
     def test_coherent(self, setup_backend, tol, batch_size):
+        """Tests the parity operator for a coherent state"""
         if batch_size is not None:
             pytest.skip("Does not support batch mode")
         backend = setup_backend(1)
@@ -451,6 +454,7 @@ class TestParityExpectation:
 
     @pytest.mark.backends("fock", "tf")
     def test_squeezed(self, setup_backend, tol, batch_size):
+        """Tests the parity operator for a squeezed state"""
         if batch_size is not None:
             pytest.skip("Does not support batch mode")
         backend = setup_backend(1)
@@ -464,6 +468,7 @@ class TestParityExpectation:
 
     @pytest.mark.backends("fock", "tf")
     def test_two_mode_squeezed(self, setup_backend, tol, batch_size):
+        """Tests the parity operator for a two-mode squeezed state"""
         if batch_size is not None:
             pytest.skip("Does not support batch mode")
         backend = setup_backend(2)
@@ -480,6 +485,7 @@ class TestParityExpectation:
 
     @pytest.mark.backends("fock", "tf")
     def test_thermal(self, setup_backend, tol, batch_size):
+        """Tests the parity operator for a thermal state"""
         if batch_size is not None:
             pytest.skip("Does not support batch mode")
         backend = setup_backend(1)
