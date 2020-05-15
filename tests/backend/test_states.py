@@ -486,8 +486,8 @@ class TestQuadraticExpectation:
 
         backend = setup_backend(2)
         state = backend.state()
-        n1 = 3
-        n2 = 2
+        n1 = 0
+        n2 = 1
         a = 1
         b = 1
         c = 1
