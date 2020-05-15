@@ -69,15 +69,15 @@ class TestExpFeatures:
             expf(np.zeros(dim))
 
     @pytest.mark.parametrize("m", range(2, 5))
-    def test_exp_features_integration(self, dim, m):
-        """Test that ``strawberryfields.apps.train.embed.ExpFeatures`` outputs weights and jacobian
-        of the correct shape"""
+    def test_exp_features_shape(self, dim, m):
+        """Tests that the weights and jacobian have the correct shape for a range of different 
+        sizes for the input features matrix"""
         features = np.ones((m, dim))
         expf = embed.ExpFeatures(features)
-        features = np.ones(dim)
+        params = np.ones(dim)
 
-        assert expf(features).shape == (m,)
-        assert expf.jacobian(features).shape == (m, dim)
+        assert expf(params).shape == (m,)
+        assert expf.jacobian(params).shape == (m, dim)
 
     def test_zero_params(self, dim):
         """Tests that weights are equal to one when parameters are zero"""
