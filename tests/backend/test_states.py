@@ -496,7 +496,7 @@ class TestQuadraticExpectation:
         backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
         state = backend.state()
 
-        assert np.allclose(state.quadratic_expectation([0]), 2, atol=tol, rtol=0)
+        assert np.allclose(state.quadratic_expectation([0], a, b, c), 2, atol=tol, rtol=0)
 
 
 class TestFidelities:
