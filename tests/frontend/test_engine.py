@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +14,13 @@
 r"""Unit tests for engine.py"""
 import pytest
 
-pytestmark = pytest.mark.frontend
-
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.backends.base import BaseBackend
+
+pytestmark = pytest.mark.frontend
+
+# pylint: disable=redefined-outer-name,no-self-use,bad-continuation,expression-not-assigned,pointless-statement
 
 
 @pytest.fixture
@@ -26,13 +28,27 @@ def eng(backend):
     """Engine fixture."""
     return sf.LocalEngine(backend)
 
+
 @pytest.fixture
-def prog(backend):
+def prog():
     """Program fixture."""
     prog = sf.Program(2)
     with prog.context as q:
         ops.Dgate(0.5) | q[0]
     return prog
+
+
+batch_engines = [
+    sf.Engine("gaussian", backend_options={"batch_size": 2, "cutoff_dim": 6}),
+    sf.Engine("fock", backend_options={"batch_size": 2, "cutoff_dim": 6}),
+    sf.Engine("tf", backend_options={"batch_size": 2, "cutoff_dim": 6}),
+]
+
+engines = [
+    sf.Engine("gaussian", backend_options={"cutoff_dim": 6}),
+    sf.Engine("fock", backend_options={"cutoff_dim": 6}),
+    sf.Engine("tf", backend_options={"cutoff_dim": 6}),
+]
 
 
 class TestEngine:
@@ -45,8 +61,8 @@ class TestEngine:
 
     def test_bad_backend(self):
         """Backend must be a string or a BaseBackend instance."""
-        with pytest.raises(TypeError, match='backend must be a string or a BaseBackend instance'):
-            eng = sf.LocalEngine(0)
+        with pytest.raises(TypeError, match="backend must be a string or a BaseBackend instance"):
+            _ = sf.LocalEngine(0)
 
 
 class TestEngineProgramInteraction:
@@ -146,13 +162,48 @@ class TestEngineProgramInteraction:
             ops.Rgate(r) | q[1]
 
         eng.run(p2)
-        expected2 = expected1 + [
-            "Run 1:",
-            "Rgate({}) | (q[1])".format(r),
-        ]
+        expected2 = expected1 + ["Run 1:", "Rgate({}) | (q[1])".format(r)]
         assert inspect() == expected2
 
         # reapply history
         eng.reset()
         eng.run([p1, p2])
         assert inspect() == expected2
+
+
+class TestMultipleShotsErrors:
+    """Test if errors are raised correctly when using multiple shots."""
+
+    @pytest.mark.parametrize("meng", batch_engines)
+    def test_batching_error(self, meng, prog):
+        """Check that correct error is raised with batching and shots > 1."""
+        with pytest.raises(
+            NotImplementedError, match="Batching cannot be used together with multiple shots."
+        ):
+            meng.run(prog, **{"shots": 2})
+
+    @pytest.mark.parametrize("meng", engines)
+    def test_postselection_error(self, meng):
+        """Check that correct error is raised with post-selection and shots > 1."""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.MeasureFock(select=0) | q[0]
+
+        with pytest.raises(
+            NotImplementedError, match="Post-selection cannot be used together with multiple shots."
+        ):
+            meng.run(prog, **{"shots": 2})
+
+    @pytest.mark.parametrize("meng", engines)
+    def test_feedforward_error(self, meng):
+        """Check that correct error is raised with feed-forwarding and shots > 1."""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.MeasureFock() | q[0]
+            ops.Dgate(q[0].par) | q[1]
+
+        with pytest.raises(
+            NotImplementedError,
+            match="Feed-forwarding of measurements cannot be used together with multiple shots.",
+        ):
+            meng.run(prog, **{"shots": 2})

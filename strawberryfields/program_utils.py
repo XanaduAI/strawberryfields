@@ -23,9 +23,20 @@ import networkx as nx
 from .parameters import MeasuredParameter
 
 
-__all__ = ['Program_current_context', 'RegRefError', 'CircuitError', 'MergeFailure',
-           'Command', 'RegRef',
-           'list_to_grid', 'grid_to_DAG', 'DAG_to_list', 'list_to_DAG', 'group_operations', 'optimize_circuit']
+__all__ = [
+    "Program_current_context",
+    "RegRefError",
+    "CircuitError",
+    "MergeFailure",
+    "Command",
+    "RegRef",
+    "list_to_grid",
+    "grid_to_DAG",
+    "DAG_to_list",
+    "list_to_DAG",
+    "group_operations",
+    "optimize_circuit",
+]
 
 
 Program_current_context = None
@@ -35,12 +46,12 @@ here to avoid cyclic imports."""
 # cf. _pydecimal.py in the python standard distribution.
 
 
-
 class RegRefError(IndexError):
     """Exception raised by :class:`.Program` when it encounters an invalid register reference.
 
     E.g., trying to apply a gate to a nonexistent or deleted subsystem.
     """
+
 
 class CircuitError(RuntimeError):
     """Exception raised by :class:`.Program` when it encounters an illegal
@@ -48,6 +59,7 @@ class CircuitError(RuntimeError):
 
     E.g., trying to use an Operation type that is unsupported by the current compilation target.
     """
+
 
 class MergeFailure(RuntimeError):
     """Exception raised by :meth:`strawberryfields.ops.Operation.merge` when an
@@ -68,6 +80,7 @@ class Command:
         reg (Sequence[RegRef]): Subsystems to which the operation is applied.
             Note that the order matters here.
     """
+
     # pylint: disable=too-few-public-methods
 
     def __init__(self, op, reg):
@@ -81,12 +94,18 @@ class Command:
         self.reg = reg
 
     def __str__(self):
-        """Print the command using Blackbird syntax."""
-        temp = str(self.op)
+        """
+        Return a string containing the command in Blackbird syntax.
+        """
+
+        operation = str(self.op)
         if self.op.ns == 0:
             # op takes no subsystems as parameters, do not print anything more
-            return temp
-        return '{} | ({})'.format(temp, ", ".join([str(rr) for rr in self.reg]))
+            code = operation
+        else:
+            subsystems = ", ".join([str(r) for r in self.reg])
+            code = "{} | ({})".format(operation, subsystems)
+        return code
 
     def __lt__(self, other):
         # Needed as a tiebreaker for NetworkX lexicographical_topological_sort()
@@ -129,15 +148,16 @@ class RegRef:
     Args:
         ind (int): index of the register subsystem referred to
     """
+
     # pylint: disable=too-few-public-methods
 
     def __init__(self, ind):
-        self.ind = ind   #: int: subsystem index
+        self.ind = ind  #: int: subsystem index
         self.val = None  #: float, complex: Measurement result. None if the subsystem has not been measured yet.
         self.active = True  #: bool: True at construction, False after the subsystem is deleted
 
     def __str__(self):
-        return 'q[{}]'.format(self.ind)
+        return "q[{}]".format(self.ind)
 
     def __hash__(self):
         """Hashing method.
@@ -153,7 +173,7 @@ class RegRef:
         NOTE: Affects the hashability of RegRefs, see also :meth:`__hash__`.
         """
         if other.__class__ != self.__class__:
-            print('---------------          regref.__eq__: compared reqref to ', other.__class__)
+            print("---------------          regref.__eq__: compared reqref to ", other.__class__)
             return False
         return self.ind == other.ind and self.active == other.active
 
@@ -167,11 +187,10 @@ class RegRef:
         return MeasuredParameter(self)
 
 
-
-
 # =================
 # Utility functions
 # =================
+
 
 def list_to_grid(ls):
     """Transforms a list of Commands to a grid representation.
@@ -212,7 +231,7 @@ def grid_to_DAG(grid):
             DAG.add_node(q[0])
         for i in range(1, len(q)):
             # add the edge between the operations, and the operation nodes themselves
-            DAG.add_edge(q[i-1], q[i])
+            DAG.add_edge(q[i - 1], q[i])
     return DAG
 
 
@@ -328,13 +347,14 @@ def optimize_circuit(seq):
     Returns:
         List[Command]: optimized circuit
     """
+
     def _print_list(i, q, print_fn=print):
         "For debugging."
         # pylint: disable=unreachable
         return
-        print_fn('i: {},  len: {}   '.format(i, len(q)), end='')
+        print_fn("i: {},  len: {}   ".format(i, len(q)), end="")
         for x in q:
-            print_fn(x.op, ', ', end='')
+            print_fn(x.op, ", ", end="")
         print_fn()
 
     grid = list_to_grid(seq)
@@ -346,11 +366,11 @@ def optimize_circuit(seq):
         q = grid[k]
         i = 0  # index along the wire
         _print_list(i, q)
-        while i+1 < len(q):
+        while i + 1 < len(q):
             # at least two operations left to merge on this wire
             try:
                 a = q[i]
-                b = q[i+1]
+                b = q[i + 1]
                 # the ops must have equal size and act on the same wires
                 if a.op.ns == b.op.ns and a.reg == b.reg:
                     if a.op.ns != 1:
@@ -361,7 +381,7 @@ def optimize_circuit(seq):
                         continue
                     op = a.op.merge(b.op)
                     # merge was successful, delete the old ops
-                    del q[i:i+2]
+                    del q[i : i + 2]
                     # insert the merged op (unless it's identity)
                     if op is not None:
                         q.insert(i, Command(op, a.reg))

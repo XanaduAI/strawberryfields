@@ -10,9 +10,9 @@ env:
     - LOGGING=info
 matrix:
   include:
-    - env: OPTIONS="frontend or fock or gaussian or apps"
-    - env: OPTIONS="tf and pure"
-    - env: OPTIONS="tf and mixed"
+    - env: OPTIONS="frontend or apps or api or gaussian"
+    - env: OPTIONS="fock"
+    - env: OPTIONS="tf"
     - env: BATCHED=1 OPTIONS="tf and pure"
     - env: BATCHED=1 OPTIONS="tf and mixed"
 install:

@@ -68,10 +68,6 @@ Algorithms
     /tutorials/tutorial_post_selection
     /tutorials/tutorial_boson_sampling
     /tutorials/tutorial_gaussian_boson_sampling
-    /tutorials/tutorial_machine_learning
-    /gallery/minimizing_correlations/minimizing_correlations
-    /gallery/state_learner/StateLearning
-    /gallery/gate_synthesis/GateSynthesis
     /gallery/scattershot-boson-sampling/scattershot-bs
     /gallery/gate_visualisation/GateVisualisation
 
@@ -100,26 +96,6 @@ Algorithms
     :figure: /_static/gaussian_boson_sampling.png
 
 .. customgalleryitem::
-    :tooltip: Optimization and machine learning with TensorFlow
-    :description: :doc:`Optimization and machine learning with TensorFlow </tutorials/tutorial_machine_learning>`
-    :figure: ../_static/TF.png
-
-.. customgalleryitem::
-    :tooltip: Minimizing correlations
-    :description: :doc:`/gallery/minimizing_correlations/minimizing_correlations`
-    :figure: /gallery/minimizing_correlations/minimizing_correlations.gif
-
-.. customgalleryitem::
-    :tooltip: Quantum state learning
-    :description: :doc:`/gallery/state_learner/StateLearning`
-    :figure: /gallery/state_learner/StateLearning.gif
-
-.. customgalleryitem::
-    :tooltip: Gate synthesis
-    :description: :doc:`/gallery/gate_synthesis/GateSynthesis`
-    :figure: /gallery/gate_synthesis/GateSynthesis.gif
-
-.. customgalleryitem::
     :tooltip: Scattershot boson sampling
     :description: :doc:`/gallery/scattershot-boson-sampling/scattershot-bs`
     :figure: /gallery/scattershot-boson-sampling/scattershot-bs.gif
@@ -128,6 +104,63 @@ Algorithms
     :tooltip: Photonic gate visualization
     :description: :doc:`/gallery/gate_visualisation/GateVisualisation`
     :figure: /gallery/gate_visualisation/GateVisualisation.gif
+
+.. raw:: html
+
+        <div style='clear:both'></div>
+        <br>
+
+
+Optimization and machine learning
+---------------------------------
+
+.. toctree::
+    :hidden:
+    :maxdepth: 1
+
+    ../tutorials_apps/machine_learning
+    ../tutorials_apps/minimizing_correlations
+    ../tutorials_apps/state_learner
+    ../tutorials_apps/gate_synthesis
+
+.. customgalleryitem::
+    :tooltip: Optimization and machine learning with TensorFlow
+    :description: :doc:`Optimization and machine learning with TensorFlow <../tutorials_apps/machine_learning>`
+    :figure: ../_static/TF.png
+
+.. customgalleryitem::
+    :tooltip: Minimizing correlations
+    :description: :doc:`../tutorials_apps/minimizing_correlations`
+    :figure: ../_static/minimizing_correlations.gif
+
+.. customgalleryitem::
+    :tooltip: Quantum state learning
+    :description: :doc:`../tutorials_apps/state_learner`
+    :figure: /_static/StateLearning.gif
+
+.. customgalleryitem::
+    :tooltip: Gate synthesis
+    :description: :doc:`../tutorials_apps/gate_synthesis`
+    :figure: ../_static/GateSynthesis.gif
+
+.. raw:: html
+
+        <div style='clear:both'></div>
+        <br>
+
+Hardware
+--------
+
+.. toctree::
+    :hidden:
+    :maxdepth: 1
+
+    /tutorials/tutorial_X8
+
+.. customgalleryitem::
+    :tooltip: Submit quantum jobs to the X8 photonic chip
+    :description: :doc:`/tutorials/tutorial_X8`
+    :figure: /_static/chip.png
 
 .. raw:: html
 

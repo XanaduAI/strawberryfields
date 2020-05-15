@@ -16,6 +16,7 @@ import numbers
 import pytest
 
 import numpy as np
+import tensorflow as tf
 
 import strawberryfields as sf
 from strawberryfields import ops
@@ -42,6 +43,10 @@ a = 0.1234
 b = -0.543
 c = 0.312
 
+@property
+def batched(batch_size):
+    """Checks if session is batched."""
+    return bool(batch_size)
 
 @pytest.mark.parametrize("name,expected", eng_backend_params)
 def test_load_backend(name, expected, cutoff):
@@ -99,7 +104,7 @@ class TestProperExecution:
     def test_no_return_state(self, setup_eng):
         """Engine returns no state object when none is requested."""
         eng, prog = setup_eng(2)
-        res = eng.run(prog, run_options={"modes": []})
+        res = eng.run(prog, modes=[])
         assert res.state is None
 
     def test_return_state(self, setup_eng):
@@ -114,15 +119,18 @@ class TestProperExecution:
         with prog.context as q:
             ops.MeasureX | q[0]
 
-        res = eng.run(prog, run_options=None)
+        res = eng.run(prog)
         # one entry for each mode
-        assert len(res.samples) == 2
+        assert len(res.samples[0]) == 2
         # the same samples can also be found in the regrefs
-        assert [r.val for r in prog.register] == res.samples
+        assert [r.val for r in prog.register] == res.samples[0].tolist()
         # first mode was measured
-        assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
+        if eng.backend_name == 'tf':
+            assert isinstance(res.samples[0][0], tf.Tensor)
+        else:
+            assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
         # second mode was not measured
-        assert res.samples[1] is None
+        assert res.samples[0][1] is None
 
     # TODO: Some of these tests should probably check *something* after execution
 
@@ -285,7 +293,7 @@ class TestProperExecution:
         eng, p1 = setup_eng(3)
         with p1.context as q:
             ops.MeasureFock() | q
-        samples = eng.run(p1, run_options={"shots": shots}).samples.astype(int)
+        samples = eng.run(p1, shots=shots).samples.astype(int)
         assert samples.shape == (shots, 3)
         assert all(samples[:, 0] == expected)
         assert all(samples[:, 1] == expected)
@@ -295,7 +303,7 @@ class TestProperExecution:
         eng, p2 = setup_eng(3)
         with p2.context as q:
             ops.MeasureFock() | (q[0], q[2])
-        samples = eng.run(p2, run_options={"shots": shots}).samples
+        samples = eng.run(p2, shots=shots).samples
         assert samples.shape == (shots, 3)
         assert all(samples[:, 0].astype(int) == expected)
         assert all(s is None for s in samples[:, 1])
@@ -305,13 +313,14 @@ class TestProperExecution:
         eng, p3 = setup_eng(3)
         with p3.context as q:
             ops.MeasureFock() | q[0]
-        samples = eng.run(p3, run_options={"shots": shots}).samples
+        samples = eng.run(p3, shots=shots).samples
         assert samples.shape == (shots, 3)
         assert all(samples[:, 0].astype(int) == expected)
         assert all(s is None for s in samples[:, 1])
         assert all(s is None for s in samples[:, 2])
 
     # TODO: when ``shots`` is incorporated into other backends, delete this test
+    @pytest.mark.skipif(batched, reason="Test only runs for non-batched backends")
     @pytest.mark.backends("tf", "fock")
     def test_measurefock_shots_exception(self, setup_eng):
         shots = 5
@@ -321,6 +330,6 @@ class TestProperExecution:
 
         backend_name = eng.backend.__str__()
         with pytest.raises(NotImplementedError,
-                           match=r"""(Measure|MeasureFock) has not been implemented in {} """
-                                  """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
-            eng.run(p1, run_options={"shots": shots}).samples
+                            match=r"""(Measure|MeasureFock) has not been implemented in {} """
+                            """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
+            eng.run(p1, shots=shots).samples

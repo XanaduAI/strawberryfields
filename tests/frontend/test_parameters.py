@@ -16,9 +16,9 @@
 import pytest
 import numpy as np
 
-#import strawberryfields as sf
+import strawberryfields as sf
 from strawberryfields.parameters import (par_is_symbolic, par_regref_deps, par_str, par_evaluate,
-                                         MeasuredParameter, FreeParameter, parfuncs as pf,
+                                         MeasuredParameter, FreeParameter, par_funcs as pf,
                                          ParameterError)
 from strawberryfields.program_utils import RegRef
 
@@ -172,6 +172,27 @@ class TestParameter:
         x.default = 0.0
         assert np.all(par_evaluate(x) == p)
 
+    @pytest.mark.parametrize("dtype", [np.complex128, np.complex64])
+    @pytest.mark.parametrize("p", TEST_VALUES)
+    def test_par_evaluate_dtype_numpy(self, p, dtype):
+        """Test the numpy parameter evaluation works when a dtype is provided"""
+        x = FreeParameter("x")
+        x.val = p
+        res = par_evaluate(x, dtype=dtype)
+        assert res.dtype.type is dtype
+
+    @pytest.mark.parametrize("dtype", [np.complex128, np.complex64])
+    @pytest.mark.parametrize("p", TEST_VALUES)
+    def test_par_evaluate_dtype_TF(self, p, dtype):
+        """Test the TF parameter evaluation works when a dtype is provided"""
+        pytest.importorskip("tensorflow", minversion="2.0")
+        import tensorflow as tf
+
+        x = FreeParameter("x")
+        x.val = tf.Variable(p)
+        res = par_evaluate(x, dtype=dtype)
+        assert res.dtype is tf.as_dtype(dtype)
+
     @pytest.mark.parametrize("p", TEST_VALUES)
     @pytest.mark.parametrize("q", TEST_VALUES)
     def test_parameter_arithmetic(self, p, q):
@@ -206,3 +227,125 @@ class TestParameter:
         pp.val = p
         assert par_evaluate(-p) == pytest.approx(-p)
         assert par_evaluate(-pp) == pytest.approx(-p)
+
+
+@pytest.fixture
+def applied_cmds(monkeypatch):
+    """This fixture returns a list that dynamically keeps track
+    of any applied commands within a test.
+
+    Simply include this fixture in a test; any local calls to
+    ``eng.run`` will subsequently be reflected in the fixture.
+
+    Returns:
+        list (Command): commands that were applied to the engine
+    """
+    applied = []
+
+    def mock_run_prog(self, prog, **kwargs):
+        """Mock function that is used for extracting
+        the engine queue when running programs."""
+        for cmd in prog.circuit:
+            try:
+                cmd.op.apply(cmd.reg, self.backend, **kwargs)
+                applied.append(cmd)
+            except NotImplementedError:
+                for c in cmd.op._decompose(cmd.reg, **kwargs):
+                    c.op.apply(c.reg, self.backend, **kwargs)
+                    applied.append(c)
+        return applied
+
+    with monkeypatch.context() as m:
+        m.setattr(sf.LocalEngine, "_run_program", mock_run_prog)
+        yield applied
+
+    # tear down
+    applied = []
+
+
+class TestParameterTFIntegration:
+    """Test integration of the parameter handling system with
+    various gates and TensorFlow"""
+    pytest.importorskip("tensorflow", minversion="2.0")
+
+    @staticmethod
+    def create_program(gate, mapping):
+        """Utility method for constructing a program
+        consisting of a single parametrized gate.
+
+        Args:
+            gate (strawberryfields.ops.Gate): gate to apply to the program
+            mapping (dict[str, Any]): mapping from parameter name to value
+        """
+        prog = sf.Program(gate.ns)
+
+        # create symbolic parameters
+        params = []
+        for param_name in mapping:
+            params.append(prog.params(param_name))
+
+        # construct program
+        with prog as q:
+            gate(*params) | q
+
+        # bind numeric values
+        prog.bind_params(mapping)
+        return prog
+
+    @pytest.mark.parametrize("gate", [sf.ops.Dgate, sf.ops.Sgate, sf.ops.Coherent])
+    def test_single_mode_gate_complex_phase(self, backend, gate, applied_cmds):
+        """Test non-decomposed single mode gates with complex phase arguments."""
+        import tensorflow as tf
+        mapping = {'r': tf.Variable(0.1), 'phi': tf.Variable(0.2)}
+        prog = self.create_program(gate, mapping)
+
+        # verify bound parameters are correct
+        assert prog.free_params['r'].val is mapping['r']
+        assert prog.free_params['phi'].val is mapping['phi']
+
+        # assert executed program is constructed correctly
+        eng = sf.LocalEngine(backend)
+        result = eng.run(prog, args=mapping)
+
+        assert len(applied_cmds) == 1
+        assert isinstance(applied_cmds[0].op, gate)
+        assert applied_cmds[0].op.p[0].val == mapping["r"]
+        assert applied_cmds[0].op.p[1].val == mapping["phi"]
+
+    @pytest.mark.parametrize("gate", [sf.ops.BSgate, sf.ops.S2gate])
+    def test_two_mode_gate_complex_phase(self, backend, gate, applied_cmds):
+        """Test non-decomposed two-mode gates with complex phase arguments."""
+        import tensorflow as tf
+        mapping = {'r': tf.Variable(0.1), 'phi': tf.Variable(0.2)}
+        prog = self.create_program(gate, mapping)
+
+        # verify bound parameters are correct
+        assert prog.free_params['r'].val is mapping['r']
+        assert prog.free_params['phi'].val is mapping['phi']
+
+        # assert executed program is constructed correctly
+        eng = sf.LocalEngine(backend)
+        result = eng.run(prog, args=mapping)
+
+        assert len(applied_cmds) == 1
+        assert isinstance(applied_cmds[0].op, gate)
+        assert applied_cmds[0].op.p[0].val == mapping["r"]
+        assert applied_cmds[0].op.p[1].val == mapping["phi"]
+
+    def test_zgate_decompose(self, backend, hbar, applied_cmds):
+        """Test parameter processing occuring within the Zgate._decompose method."""
+        import tensorflow as tf
+        mapping = {'p': tf.Variable(0.1)}
+        prog = self.create_program(sf.ops.Zgate, mapping)
+
+        # verify bound parameters are correct
+        assert prog.free_params['p'].val is mapping['p']
+
+        # assert executed program is constructed correctly
+        eng = sf.LocalEngine(backend)
+        result = eng.run(prog, args=mapping)
+
+        assert len(applied_cmds) == 1
+        assert isinstance(applied_cmds[0].op, sf.ops.Dgate)
+        assert par_evaluate(applied_cmds[0].op.p[0]) == mapping["p"] / np.sqrt(2 * hbar)
+        assert applied_cmds[0].op.p[1] == np.pi/2

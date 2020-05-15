@@ -11,4 +11,4 @@ sf.parameters
 .. automodapi:: strawberryfields.parameters
     :no-heading:
     :include-all-objects:
-    :skip: Sequence, custom_funcs
+    :no-inherited-members:

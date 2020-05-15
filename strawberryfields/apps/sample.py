@@ -86,9 +86,25 @@ A typical workflow would be:
 
 The subgraphs sampled from GBS are likely to be dense :cite:`arrazola2018using`, motivating their
 use within heuristics for problems such as maximum clique (see :mod:`~.apps.clique`).
+
+Including node weights
+----------------------
+
+Some graphs are composed of nodes with weights. These weights can correspond to relevant
+information in an optimization problem and it is desirable to encode them into GBS along with the
+graph's adjacency matrix. One canonical approach to doing this is to use the :math:`WAW` encoding
+:cite:`banchi2019molecular`, which rescales the adjacency matrix according to:
+
+.. math::
+
+    A \rightarrow WAW,
+
+with :math:`W=w_{i}\delta_{ij}` the diagonal matrix formed by the weighted nodes :math:`w_{i}`. The
+rescaled adjacency matrix can be passed to :func:`sample`, resulting in a distribution that
+increases the probability of observing a node proportionally to its weight.
 """
 import warnings
-from typing import Optional
+from typing import Optional, Union
 
 import networkx as nx
 import numpy as np
@@ -151,11 +167,7 @@ def sample(
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning, message="Cannot simulate non-")
-        s = eng.run(p, run_options={"shots": n_samples}).samples
-
-    if n_samples == 1:
-        return [s]
-
+        s = eng.run(p, shots=n_samples).samples
     return s.tolist()
 
 
@@ -235,7 +247,7 @@ def to_subgraphs(samples: list, graph: nx.Graph) -> list:
     """Converts samples to their subgraph representation.
 
     Input samples are a list of counts that are processed into subgraphs by selecting the nodes
-    where a click occured.
+    where a click occurred.
 
     **Example usage:**
 
@@ -352,12 +364,61 @@ def vibronic(
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning, message="Cannot simulate non-")
 
-        s = eng.run(gbs, run_options={"shots": n_samples}).samples
+        s = eng.run(gbs, shots=n_samples).samples
 
     s = np.array(s).tolist()  # convert all generated samples to list
 
-    if n_samples == 1:
-        s = [s]
     if np.any(t == 0):
         s = np.pad(s, ((0, 0), (0, n_modes))).tolist()
     return s
+
+
+def waw_matrix(A: np.ndarray, w: Union[np.ndarray, list]) -> np.ndarray:
+    r"""Rescale adjacency matrix to account for node weights.
+
+    Given a graph with adjacency matrix :math:`A` and a vector :math:`w` of weighted nodes,
+    this function rescales the adjacency matrix according to :cite:`banchi2019molecular`:
+
+    .. math::
+
+        A \rightarrow WAW,
+
+    with :math:`W=w_{i}\delta_{ij}` the diagonal matrix formed by the weighted nodes :math:`w_{i}`.
+    The rescaled adjacency matrix can be passed to :func:`sample`, resulting in a distribution that
+    increases the probability of observing a node proportionally to its weight.
+
+    **Example usage:**
+
+    >>> g = nx.erdos_renyi_graph(5, 0.7)
+    >>> a = nx.to_numpy_array(g)
+    >>> a
+    array([[0., 1., 1., 1., 1.],
+           [1., 0., 1., 1., 1.],
+           [1., 1., 0., 1., 0.],
+           [1., 1., 1., 0., 0.],
+           [1., 1., 0., 0., 0.]])
+    >>> w = [10, 1, 0, 1, 1]
+    >>> a = waw_matrix(a, w)
+    >>> a
+    array([[ 0., 10.,  0., 10., 10.],
+           [10.,  0.,  0.,  1.,  1.],
+           [ 0.,  0.,  0.,  0.,  0.],
+           [10.,  1.,  0.,  0.,  0.],
+           [10.,  1.,  0.,  0.,  0.]])
+    >>> sample(a, 3, 4)
+    [[1, 0, 0, 1, 1], [1, 1, 0, 0, 0], [1, 1, 0, 1, 1], [1, 0, 0, 1, 0]]
+
+    Args:
+        A (array): adjacency matrix to rescale
+        w (array or list): vector of real node weights
+
+    Returns:
+        array: matrix rescaled according to the WAW encoding
+    """
+    if not np.allclose(A, A.T):
+        raise ValueError("Input must be a NumPy array corresponding to a symmetric matrix")
+
+    if isinstance(w, list):
+        w = np.array(w)
+
+    return (w * A).T * w

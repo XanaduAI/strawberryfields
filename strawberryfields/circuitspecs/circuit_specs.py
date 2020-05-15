@@ -42,7 +42,7 @@ class CircuitSpecs(abc.ABC):
     This information is used e.g., in :meth:`.Program.compile` for validation and compilation.
     """
 
-    short_name = ''
+    short_name = ""
     """str: short name of the circuit class"""
 
     @property
@@ -198,11 +198,11 @@ class CircuitSpecs(abc.ABC):
             # compared, rather than using Command objects.
             mapping = {i: n.op.__class__.__name__ for i, n in enumerate(DAG.nodes())}
             circuit = nx.convert_node_labels_to_integers(DAG)
-            nx.set_node_attributes(circuit, mapping, name='name')
+            nx.set_node_attributes(circuit, mapping, name="name")
 
             def node_match(n1, n2):
                 """Returns True if both nodes have the same name"""
-                return n1['name'] == n2['name']
+                return n1["name"] == n2["name"]
 
             # check if topology matches
             if not nx.is_isomorphic(circuit, self.graph, node_match):
@@ -252,13 +252,17 @@ class CircuitSpecs(abc.ABC):
             op_name = cmd.op.__class__.__name__
             if op_name in self.decompositions:
                 # target can implement this op decomposed
-                if hasattr(cmd.op, 'decomp') and not cmd.op.decomp:
+                if hasattr(cmd.op, "decomp") and not cmd.op.decomp:
                     # user has requested application of the op as a primitive
                     if op_name in self.primitives:
                         compiled.append(cmd)
                         continue
                     else:
-                        raise pu.CircuitError("The operation {} is not a primitive for the target '{}'".format(cmd.op.__class__.__name__, self.short_name))
+                        raise pu.CircuitError(
+                            "The operation {} is not a primitive for the target '{}'".format(
+                                cmd.op.__class__.__name__, self.short_name
+                            )
+                        )
                 try:
                     kwargs = self.decompositions[op_name]
                     temp = cmd.op.decompose(cmd.reg, **kwargs)
@@ -275,6 +279,10 @@ class CircuitSpecs(abc.ABC):
                 compiled.append(cmd)
 
             else:
-                raise pu.CircuitError("The operation {} cannot be used with the target '{}'.".format(cmd.op.__class__.__name__, self.short_name))
+                raise pu.CircuitError(
+                    "The operation {} cannot be used with the target '{}'.".format(
+                        cmd.op.__class__.__name__, self.short_name
+                    )
+                )
 
         return compiled

@@ -14,10 +14,10 @@ with boson_sampling.context as q:
     Fock(1) | q[3]
 
     # rotation gates
-    Rgate(0.5719)
-    Rgate(-1.9782)
-    Rgate(2.0603)
-    Rgate(0.0644)
+    Rgate(0.5719) | q[0]
+    Rgate(-1.9782) | q[1]
+    Rgate(2.0603) | q[2]
+    Rgate(0.0644) | q[3]
 
     # beamsplitter array
     BSgate(0.7804, 0.8578)  | (q[0], q[1])

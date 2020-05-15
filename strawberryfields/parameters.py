@@ -82,7 +82,7 @@ The normal lifecycle of an Operation object and its associated parameters is as 
   It evaluates the value of the parameters using :func:`par_evaluate`, and
   may perform additional numeric transformations on them.
   The parameter values are finally passed to the appropriate backend API method.
-  It is up to the backend to either accept NumPy arrays and Tensorflow objects as parameters, or not.
+  It is up to the backend to either accept NumPy arrays and TensorFlow objects as parameters, or not.
 
 
 What we cannot do at the moment:
@@ -93,7 +93,7 @@ What we cannot do at the moment:
 """
 # pylint: disable=too-many-ancestors,unused-argument,protected-access
 
-from collections.abc import Sequence
+import collections.abc
 import functools
 import types
 
@@ -102,40 +102,40 @@ import sympy
 import sympy.functions as sf
 
 
-# FIXME Workaround for missing numpy implementation of Heaviside, required by CXgate. Remove when no longer necessary.
-def heaviside(x):
-    """Heaviside step function."""
-    if x <= 0:
-        return 0
-    return 1
-
-custom_funcs = {'Heaviside': heaviside}
-
-
 def wrap_mathfunc(func):
-    """Applies the wrapped sympy function elementwise to numpy arrays.
+    """Applies the wrapped sympy function elementwise to NumPy arrays.
 
-    Required because the sympy math functions cannot deal with numpy arrays.
-    We implement no broadcasting; if the first argument is a numpy array, we assume
+    Required because the sympy math functions cannot deal with NumPy arrays.
+    We implement no broadcasting; if the first argument is a NumPy array, we assume
     all the arguments are arrays of the same shape.
     """
+
     @functools.wraps(func)
     def wrapper(*args):
         temp = [isinstance(k, np.ndarray) for k in args]
         if any(temp):
             if not all(temp):
-                raise ValueError('Parameter functions with array arguments: all the arguments must be arrays of the same shape.')
+                raise ValueError(
+                    "Parameter functions with array arguments: all the arguments must be arrays of the same shape."
+                )
             for k in args[1:]:
                 if len(k) != len(args[0]):
-                    raise ValueError('Parameter functions with array arguments: all the arguments must be arrays of the same shape.')
+                    raise ValueError(
+                        "Parameter functions with array arguments: all the arguments must be arrays of the same shape."
+                    )
             # apply func elementwise, recursively, on the args
             return np.array([wrapper(*k) for k in zip(*args)])
         return func(*args)
+
     return wrapper
 
-#: SimpleNamespace: Namespace of mathematical functions for manipulating Parameters. Consists of all :mod:`sympy.functions` public members, which we wrap with :func:`wrap_mathfunc`.
-parfuncs = types.SimpleNamespace(**{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != '_'})
 
+par_funcs = types.SimpleNamespace(
+    **{name: wrap_mathfunc(getattr(sf, name)) for name in dir(sf) if name[0] != "_"}
+)
+"""SimpleNamespace: Namespace of mathematical functions for manipulating Parameters.
+Consists of all :mod:`sympy.functions` public members, which we wrap with :func:`wrap_mathfunc`.
+"""
 
 
 class ParameterError(RuntimeError):
@@ -146,31 +146,43 @@ class ParameterError(RuntimeError):
 
 
 def is_object_array(p):
-    """Returns True iff p is an object array."""
+    """Returns True iff p is an object array.
+
+    Args:
+        p (Any): object to be checked
+
+    Returns:
+        bool: True iff p is a NumPy object array
+    """
     return isinstance(p, np.ndarray) and p.dtype == object
 
 
-def par_evaluate(params):
+def par_evaluate(params, dtype=None):
     """Evaluate an Operation parameter sequence.
 
-    Any parameters descending from sympy.Basic are evaluated, others are returned as-is.
+    Any parameters descending from :class:`sympy.Basic` are evaluated, others are returned as-is.
     Evaluation means that free and measured parameters are replaced by their numeric values.
-    Numpy object arrays are evaluated elementwise.
+    NumPy object arrays are evaluated elementwise.
 
     Alternatively, evaluates a single parameter and returns its value.
 
     Args:
         params (Sequence[Any]): parameters to evaluate
+        dtype (None, np.dtype, tf.dtype): NumPy or TensorFlow datatype to optionally cast atomic symbols
+            to *before* evaluating the parameter expression. Note that if the atom
+            is a TensorFlow tensor, a NumPy datatype can still be passed; ``tensorflow.dtype.as_dtype()``
+            is used to determine the corresponding TensorFlow dtype internally.
 
     Returns:
         list[Any]: evaluated parameters
     """
     scalar = False
-    if not isinstance(params, Sequence):
+    if not isinstance(params, collections.abc.Sequence):
         scalar = True
         params = [params]
 
     def do_evaluate(p):
+        """Evaluates a single parameter."""
         if is_object_array(p):
             return np.array([do_evaluate(k) for k in p])
 
@@ -179,8 +191,24 @@ def par_evaluate(params):
 
         # using lambdify we can also substitute np.ndarrays and tf.Tensors for the atoms
         atoms = list(p.atoms(MeasuredParameter, FreeParameter))
-        func = sympy.lambdify(atoms, p, ['numpy', custom_funcs])
+        # evaluate the atoms of the expression
         vals = [k._eval_evalf(None) for k in atoms]
+        # use the tensorflow printer if any of the symbolic parameter values are TF objects
+        # (we do it like this to avoid importing tensorflow if it's not needed)
+        is_tf = (type(v).__module__.startswith("tensorflow") for v in vals)
+        printer = "tensorflow" if any(is_tf) else "numpy"
+        func = sympy.lambdify(atoms, p, printer)
+
+        if dtype is not None:
+            # cast the input values
+            if printer == "tensorflow":
+                import tensorflow as tf
+
+                tfdtype = tf.as_dtype(dtype)
+                vals = [tf.cast(v, dtype=tfdtype) for v in vals]
+            else:
+                vals = [dtype(v) for v in vals]
+
         return func(*vals)
 
     ret = list(map(do_evaluate, params))
@@ -193,9 +221,10 @@ def par_is_symbolic(p):
     """Returns True iff p is a symbolic Operation parameter instance.
 
     If a parameter inherits :class:`sympy.Basic` it is symbolic.
-    An object array is symbolic if any of its elements are.
+    A NumPy object array is symbolic if any of its elements are.
+    All other objects are considered not symbolic parameters.
 
-    Note that :data:`parfuncs` functions applied to numerical (non-symbolic) parameters return
+    Note that :data:`strawberryfields.math` functions applied to numerical (non-symbolic) parameters return
     symbolic parameters.
     """
     if is_object_array(p):
@@ -213,12 +242,13 @@ def par_convert(args, prog):
     Returns:
         list[Any]: converted arguments
     """
+
     def do_convert(a):
         if isinstance(a, sympy.Basic):
             # substitute SF symbolic parameter objects for Blackbird ones
             s = {}
             for k in a.atoms(sympy.Symbol):
-                if k.name[0] == 'q':
+                if k.name[0] == "q":
                     s[k] = MeasuredParameter(prog.register[int(k.name[1:])])
                 else:
                     s[k] = prog.params(k.name)  # free parameter
@@ -266,7 +296,7 @@ def par_str(p):
         return str(p)
     if par_is_symbolic(p):
         return str(p)
-    return '{:.4g}'.format(p)  # scalar parameters
+    return "{:.4g}".format(p)  # scalar parameters
 
 
 class MeasuredParameter(sympy.Symbol):
@@ -289,11 +319,11 @@ class MeasuredParameter(sympy.Symbol):
 
     def __new__(cls, regref):
         # sympy.Basic.__new__ wants a name, other arguments must not end up in self._args
-        return super().__new__(cls, 'q'+str(regref.ind))
+        return super().__new__(cls, "q" + str(regref.ind))
 
     def __init__(self, regref):
         if not regref.active:
-            raise ValueError('Trying to use an inactive RegRef.')
+            raise ValueError("Trying to use an inactive RegRef.")
         #: RegRef: the value of the parameter depends on this RegRef, and can only be evaluated after the corresponding subsystem has been measured
         self.regref = regref
 
@@ -302,7 +332,7 @@ class MeasuredParameter(sympy.Symbol):
 
         The Sympy printing system uses this method instead of __str__.
         """
-        return 'q{}'.format(self.regref.ind)
+        return "q{}".format(self.regref.ind)
 
     def _eval_evalf(self, prec):
         """Returns the numeric result of the measurement if it is available.
@@ -315,16 +345,21 @@ class MeasuredParameter(sympy.Symbol):
         """
         res = self.regref.val
         if res is None:
-            raise ParameterError("{}: trying to use a nonexistent measurement result (e.g., before it has been measured).".format(self))
+            raise ParameterError(
+                "{}: trying to use a nonexistent measurement result (e.g., before it has been measured).".format(
+                    self
+                )
+            )
         return res
 
 
 class FreeParameter(sympy.Symbol):
-    """Symbolic Operation parameter.
+    """Named symbolic Operation parameter.
 
     Args:
         name (str): name of the free parameter
     """
+
     def __init__(self, name):
         #: str: name of the free parameter
         self.name = name
@@ -338,7 +373,7 @@ class FreeParameter(sympy.Symbol):
 
         The Sympy printing system uses this method instead of __str__.
         """
-        return '{{{}}}'.format(self.name)
+        return "{{{}}}".format(self.name)
 
     def _eval_evalf(self, prec):
         """Returns the value of the parameter if it has been bound, or the default value if not.

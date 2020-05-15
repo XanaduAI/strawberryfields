@@ -21,13 +21,13 @@ import string
 from itertools import product
 
 import numpy as np
-from numpy import (pi, sqrt, sinh, cosh, tanh, array, exp)
+from numpy import sqrt, sinh, cosh, tanh, array, exp
 from numpy.polynomial.hermite import hermval as H
 
 from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
-from strawberryfields.backends import shared_ops as so
+from thewalrus.fock_gradients import Dgate, Sgate, S2gate, BSgate
 
 
 def_type = np.complex128
@@ -79,14 +79,14 @@ def indexRange(lst, trunc):
 
     for vals in product(*([range(trunc) for x in lst if x is None])):
         gen = genOfTuple(vals)
-        yield [next(gen) if v is None else v for v in lst] #pylint: disable=stop-iteration-return
+        yield [next(gen) if v is None else v for v in lst]  # pylint: disable=stop-iteration-return
 
 
 def index(lst, trunc):
     """
     Converts an n-ary index to a 1-dimensional index.
     """
-    return sum([lst[i] * trunc**(len(lst)-i-1) for i in range(len(lst))])
+    return sum([lst[i] * trunc ** (len(lst) - i - 1) for i in range(len(lst))])
 
 
 def unIndex(i, n, trunc):
@@ -94,7 +94,7 @@ def unIndex(i, n, trunc):
     Converts a 1-dimensional index ``i`` with truncation ``trunc`` and
     number of modes ``n`` to a n-ary index.
     """
-    return [i // trunc**(n - 1 - m) % trunc for m in range(n)]
+    return [i // trunc ** (n - 1 - m) % trunc for m in range(n)]
 
 
 def sliceExp(axes, ind, n):
@@ -108,7 +108,7 @@ def abssqr(z):
     r"""
     Given :math:`z` returns :math:`|z|^2`.
     """
-    return z.real**2 + z.imag**2
+    return z.real ** 2 + z.imag ** 2
 
 
 def dagger(mat):
@@ -124,10 +124,10 @@ def mix(state, n):
     shape of the input state.
     """
 
-    left_str = [indices[i] for i in range(0, 2*n, 2)]
-    right_str = [indices[i] for i in range(1, 2*n, 2)]
-    out_str = [indices[:2*n]]
-    einstr = ''.join(left_str + [','] + right_str + ['->'] + out_str)
+    left_str = [indices[i] for i in range(0, 2 * n, 2)]
+    right_str = [indices[i] for i in range(1, 2 * n, 2)]
+    out_str = [indices[: 2 * n]]
+    einstr = "".join(left_str + [","] + right_str + ["->"] + out_str)
     return np.einsum(einstr, state, state.conj())
 
 
@@ -138,7 +138,7 @@ def diagonal(state, n):
 
     left_str = [indices[i] + indices[i] for i in range(n)]
     out_str = [indices[:n]]
-    einstr = ''.join(left_str + ['->'] + out_str)
+    einstr = "".join(left_str + ["->"] + out_str)
     return np.einsum(einstr, state)
 
 
@@ -148,7 +148,7 @@ def trace(state, n):
     """
 
     left_str = [indices[i] + indices[i] for i in range(n)]
-    einstr = ''.join(left_str)
+    einstr = "".join(left_str)
     return np.einsum(einstr, state)
 
 
@@ -158,9 +158,12 @@ def partial_trace(state, n, modes):
 
     Expects state to be in mixed state form.
     """
-    left_str = [indices[2*i] + indices[2*i] if i in modes else indices[2*i:2*i+2] for i in range(n)]
-    out_str = ['' if i in modes else indices[2*i:2*i+2] for i in range(n)]
-    einstr = ''.join(left_str + ['->'] + out_str)
+    left_str = [
+        indices[2 * i] + indices[2 * i] if i in modes else indices[2 * i : 2 * i + 2]
+        for i in range(n)
+    ]
+    out_str = ["" if i in modes else indices[2 * i : 2 * i + 2] for i in range(n)]
+    einstr = "".join(left_str + ["->"] + out_str)
 
     return np.einsum(einstr, state)
 
@@ -179,7 +182,7 @@ def tensor(u, v, n, pure, pos=None):
         else:
             scale = 2
         for i in range(v.ndim):
-            w = np.rollaxis(w, scale*n + i, scale*pos + i)
+            w = np.rollaxis(w, scale * n + i, scale * pos + i)
 
     return w
 
@@ -194,127 +197,16 @@ def project_reset(modes, x, state, pure, n, trunc):
 
     def intersperse(lst):
         # pylint: disable=missing-docstring
-        return tuple([lst[i//2] for i in range(len(lst)*2)])
+        return tuple([lst[i // 2] for i in range(len(lst) * 2)])
 
     if pure:
         ret = np.zeros([trunc for i in range(n)], dtype=def_type)
         ret[outSlice] = state[inSlice]
     else:
-        ret = np.zeros([trunc for i in range(n*2)], dtype=def_type)
+        ret = np.zeros([trunc for i in range(n * 2)], dtype=def_type)
         ret[intersperse(outSlice)] = state[intersperse(inSlice)]
 
     return ret
-
-
-# ============================================
-#
-# Matrix multiplication
-#
-# ============================================
-
-def apply_gate_BLAS(mat, state, pure, modes, n, trunc):
-    """
-    Gate application based on custom indexing and matrix multiplication.
-    Assumes the input matrix has shape (out1, in1, ...).
-
-    This implementation uses indexing and BLAS. As per stack overflow,
-    einsum doesn't actually use BLAS but rather a c implementation. In theory
-    if reshaping is efficient this should be faster.
-    """
-
-    size = len(modes)
-    dim = trunc**size
-    stshape = [trunc for i in range(size)]
-
-    # Apply the following matrix transposition:
-    # |m1><m1| |m2><m2| ... |mn><mn| -> |m1>|m2>...|mn><m1|<m2|...<mn|
-    transpose_list = [2*i for i in range(size)] + [2*i + 1 for i in range(size)]
-    matview = np.transpose(mat, transpose_list).reshape((dim, dim))
-
-    if pure:
-        if n == 1:
-            return np.dot(mat, state)
-
-        # Transpose the state into the following form:
-        # |psi> |mode[0]> |mode[1]> ... |mode[n]>
-        transpose_list = [i for i in range(n) if not i in modes] + modes
-        view = np.transpose(state, transpose_list)
-
-        # Apply matrix to each substate
-        ret = np.zeros([trunc for i in range(n)], dtype=def_type)
-        for i in product(*([range(trunc) for j in range(n - size)])):
-            ret[i] = np.dot(matview, view[i].ravel()).reshape(stshape)
-
-        # "untranspose" the return matrix ret
-        untranspose_list = [0] * len(transpose_list)
-        for i in range(len(transpose_list)): # pylint: disable=consider-using-enumerate
-            untranspose_list[transpose_list[i]] = i
-
-        return np.transpose(ret, untranspose_list)
-    else:
-        if n == 1:
-            return np.dot(mat, np.dot(state, dagger(mat)))
-
-        # Transpose the state into the following form:
-        # |psi><psi||mode[0]>|mode[1]>...|mode[n]><mode[0]|<mode[1]|...<mode[n]|
-        transpose_list = [i for i in range(n*2) if not i//2 in modes]
-        transpose_list = transpose_list + [2*i for i in modes] + [2*i + 1 for i in modes]
-        view = np.transpose(state, transpose_list)
-
-        # Apply matrix to each substate
-        ret = np.zeros([trunc for i in range(n*2)], dtype=def_type)
-        for i in product(*([range(trunc) for j in range((n - size)*2)])):
-            ret[i] = np.dot(matview, np.dot(view[i].reshape((dim, dim)), dagger(matview))).reshape(stshape + stshape)
-
-        # "untranspose" the return matrix ret
-        untranspose_list = [0] * len(transpose_list)
-        for i in range(len(transpose_list)): # pylint: disable=consider-using-enumerate
-            untranspose_list[transpose_list[i]] = i
-
-        return np.transpose(ret, untranspose_list)
-
-
-def apply_gate_einsum(mat, state, pure, modes, n, trunc):
-    """
-    Gate application based on einsum.
-    Assumes the input matrix has shape (out1, in1, ...)
-    """
-    # pylint: disable=unused-argument
-
-    size = len(modes)
-
-    if pure:
-        if n == 1:
-            return np.dot(mat, state)
-
-        left_str = [indices[:size*2]]
-
-        j = genOfRange(size)
-        right_str = [indices[2*next(j) + 1] if i in modes else indices[size*2 + i] \
-            for i in range(n)]
-
-        j = genOfRange(size)
-        out_str = [indices[2*next(j)] if i in modes else indices[size*2 + i] \
-            for i in range(n)]
-
-        einstring = ''.join(left_str + [','] + right_str + ['->'] + out_str)
-        return np.einsum(einstring, mat, state)
-    else:
-
-        if n == 1:
-            return np.dot(mat, np.dot(state, dagger(mat)))
-
-        in_str = indices[:n*2]
-
-        j = genOfRange(n*2)
-        out_str = ''.join([indices[n*2 + next(j)] if i//2 in modes else indices[i] for i in range(n*2)])
-
-        j = genOfRange(size*2)
-        left_str = ''.join([out_str[modes[i//2]*2] if (i%2) == 0 else in_str[modes[i//2]*2] for i in range(size*2)])
-        right_str = ''.join([out_str[modes[i//2]*2 + 1] if (i%2) == 0 else in_str[modes[i//2]*2 + 1] for i in range(size*2)])
-
-        einstring = ''.join([left_str, ',', in_str, ',', right_str, '->', out_str])
-        return np.einsum(einstring, mat, state, mat.conj())
 
 
 # ============================================
@@ -331,7 +223,7 @@ def a(trunc):
     """
     ret = np.zeros((trunc, trunc), dtype=def_type)
     for i in range(1, trunc):
-        ret[i-1][i] = sqrt(i)
+        ret[i - 1][i] = sqrt(i)
     return ret
 
 
@@ -339,44 +231,30 @@ def a(trunc):
 def displacement(alpha, trunc):
     r"""The displacement operator :math:`D(\alpha)`.
 
+    Uses the `Dgate operation from The Walrus`_ to calculate the displacement.
+
+    .. _`Dgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.Dgate.html
+
     Args:
             alpha (complex): the displacement
             trunc (int): the Fock cutoff
     """
-    # pylint: disable=duplicate-code
-    if alpha == 0:
-        # return the identity
-        ret = np.eye(trunc, dtype=def_type)
-    else:
-        # generate the broadcasted index arrays
-        dim_array = np.arange(trunc)
-        N = dim_array.reshape((-1, 1, 1))
-        n = dim_array.reshape((1, -1, 1))
-        i = dim_array.reshape((1, 1, -1))
 
-        j = n-i
-        k = N-i
+    r = np.abs(alpha)
+    theta = np.angle(alpha)
 
-        # the prefactors are only calculated if
-        # i<=min(n,N). This is equivalent to k>=0, j>=0
-        mask = np.logical_and(k >= 0, j >= 0)
-        denom = fac(j)*fac(k)*fac(n-j)
-        num = sqrt(fac(N)*fac(n))
-
-        # the numpy.divide is to avoid division by 0 errors
-        # (these are removed by the following mask anyway)
-        prefactor = np.divide(num, denom, where=denom != 0)
-        prefactor = np.where(mask, prefactor, 0)
-
-        # sum over i
-        ret = exp(-0.5 * abssqr(alpha)) * np.sum(alpha**k * (np.conj(-alpha)**j) * prefactor, axis=-1)
+    ret, _, _ = Dgate(r, theta, cutoff=trunc)
 
     return ret
 
 
 @functools.lru_cache()
-def squeezing(r, theta, trunc, save=False, directory=None):
+def squeezing(r, theta, trunc):
     r"""The squeezing operator :math:`S(re^{i\theta})`.
+
+    Uses the `Sgate operation from The Walrus`_ to calculate the squeezing.
+
+    .. _`Sgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.Sgate.html
 
     Args:
             r (float): the magnitude of the squeezing in the
@@ -384,33 +262,24 @@ def squeezing(r, theta, trunc, save=False, directory=None):
             theta (float): the squeezing angle
             trunc (int): the Fock cutoff
     """
-    # pylint: disable=duplicate-code
-    if r == 0:
-        # return the identity
-        ret = np.eye(trunc, dtype=def_type)
-    else:
-        # broadcast the index arrays
-        dim_array = np.arange(trunc)
-        N = dim_array.reshape((-1, 1, 1))
-        n = dim_array.reshape((1, -1, 1))
-        k = dim_array.reshape((1, 1, -1))
 
-        try:
-            prefac = so.load_squeeze_factors(trunc, directory)
-        except FileNotFoundError:
-            prefac = so.generate_squeeze_factors(trunc)
-            if save:
-                so.save_bs_factors(prefac, directory)
+    ret, _, _ = Sgate(r, theta, cutoff=trunc)
 
-        # we only perform the sum when n+N is divisible by 2
-        # in which case we sum 0 <= k <= min(N,n)
-        # mask = np.logical_and((n+N)%2 == 0, k <= np.minimum(N, n))
-        mask = np.logical_and((n+N)%2 == 0, k <= np.minimum(N, n))
+    return ret
 
-        # perform the summation over k
-        scale = mask * np.power(sinh(r)/2, mask*(N+n-2*k)/2) / (cosh(r)**((N+n+1)/2))
-        ph = exp(1j*theta*(N-n)/2)
-        ret = np.sum(scale*ph*prefac, axis=-1)
+
+@functools.lru_cache()
+def two_mode_squeezing(r, theta, trunc):
+    r"""The two-mode squeezing operator :math:`S_2(re^{i\theta})`.
+
+    Args:
+        r (float): two-mode squeezing magnitude
+        theta (float): two-mode squeezing phase
+        trunc (int): Fock ladder cutoff
+    """
+    ret, _, _ = S2gate(r, theta, cutoff=trunc)
+
+    ret = np.transpose(ret, [0, 2, 1, 3])
 
     return ret
 
@@ -421,7 +290,7 @@ def kerr(kappa, trunc):
     The Kerr interaction :math:`K(\kappa)`.
     """
     n = np.arange(trunc)
-    ret = np.diag(np.exp(1j*kappa*n**2))
+    ret = np.diag(np.exp(1j * kappa * n ** 2))
     return ret
 
 
@@ -432,8 +301,8 @@ def cross_kerr(kappa, trunc):
     """
     n1 = np.arange(trunc)[None, :]
     n2 = np.arange(trunc)[:, None]
-    n1n2 = np.ravel(n1*n2)
-    ret = np.diag(np.exp(1j*kappa*n1n2)).reshape([trunc]*4).swapaxes(1, 2)
+    n1n2 = np.ravel(n1 * n2)
+    ret = np.diag(np.exp(1j * kappa * n1n2)).reshape([trunc] * 4).swapaxes(1, 2)
     return ret
 
 
@@ -443,9 +312,9 @@ def cubicPhase(gamma, hbar, trunc):
     The cubic phase gate :math:`\exp{(i\frac{\gamma}{3\hbar}\hat{x}^3)}`.
     """
     a_ = a(trunc)
-    x = (a_ + np.conj(a_).T) * np.sqrt(hbar/2)
+    x = (a_ + np.conj(a_).T) * np.sqrt(hbar / 2)
     x3 = x @ x @ x
-    ret = matrixExp(1j * gamma / (3*hbar) * x3)
+    ret = matrixExp(1j * gamma / (3 * hbar) * x3)
 
     return ret
 
@@ -455,38 +324,24 @@ def phase(theta, trunc):
     r"""
     The phase gate :math:`R(\theta)`
     """
-    return np.array(np.diag([exp(1j*n*theta) for n in range(trunc)]), dtype=def_type)
+    return np.array(np.diag([exp(1j * n * theta) for n in range(trunc)]), dtype=def_type)
 
 
 @functools.lru_cache()
-def beamsplitter(t, r, phi, trunc, save=False, directory=None):
-    r"""
-    The beamsplitter :math:`B(cos^{-1} t, phi)`.
+def beamsplitter(t, r, phi, trunc):
+    r""" The beamsplitter :math:`B(cos^{-1} t, phi)`.
+
+    Uses the `BSgate operation from The Walrus`_ to calculate the beamsplitter.
+
+    .. _`BSgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.BSgate.html
     """
     # pylint: disable=bad-whitespace
-    try:
-        prefac = so.load_bs_factors(trunc, directory)
-    except FileNotFoundError:
-        prefac = so.generate_bs_factors(trunc)
-        if save:
-            so.save_bs_factors(prefac, directory)
 
-    dim_array = np.arange(trunc)
-    N = dim_array.reshape((-1, 1, 1, 1, 1))
-    n = dim_array.reshape((1, -1, 1, 1, 1))
-    M = dim_array.reshape((1, 1, -1, 1, 1))
-    k = dim_array.reshape((1, 1, 1, 1, -1))
+    theta = np.arccos(t)
+    BS_tw, _, _ = BSgate(theta, phi, cutoff=trunc)
 
-    tpwr = M-n+2*k
-    rpwr = n+N-2*k
-
-    T = np.power(t, tpwr) if t != 0 else np.where(tpwr != 0, 0, 1)
-    R = np.power(r, rpwr) if r != 0 else np.where(rpwr != 0, 0, 1)
-
-    BS = np.sum(exp(-1j*(pi+phi)*(n-N)) * T * R * prefac[:trunc,:trunc,:trunc,:trunc,:trunc], axis=-1)
-    BS = BS.swapaxes(0, 1).swapaxes(2, 3)
-
-    return BS
+    # TODO: Transpose needed because of different conventions in SF and The Walrus. Remove when The Walrus is updated.
+    return BS_tw.transpose((0, 2, 1, 3))
 
 
 @functools.lru_cache()
@@ -497,6 +352,7 @@ def proj(i, j, trunc):
     P = np.zeros((trunc, trunc), dtype=def_type)
     P[j][i] = 1.0 + 0.0j
     return P
+
 
 # ============================================
 #
@@ -520,7 +376,7 @@ def vacuumStateMixed(n, trunc):
     The `n`-mode mixed vacuum state :math:`\ket{00\dots 0}\bra{00\dots 0}`
     """
 
-    state = np.zeros([trunc for i in range(n*2)], dtype=def_type)
+    state = np.zeros([trunc for i in range(n * 2)], dtype=def_type)
     state.ravel()[0] = 1.0 + 0.0j
     return state
 
@@ -538,9 +394,11 @@ def coherentState(alpha, trunc):
     r"""
     The coherent state :math:`D(\alpha)\ket{0}`.
     """
+
     def entry(n):
         """coherent summation term"""
-        return alpha**n / sqrt(fac(n))
+        return alpha ** n / sqrt(fac(n))
+
     return exp(-abssqr(alpha) / 2) * array([entry(n) for n in range(trunc)])
 
 
@@ -549,12 +407,13 @@ def squeezedState(r, theta, trunc):
     r"""
     The squeezed state :math:`S(re^{i\theta})`.
     """
+
     def entry(n):
         """squeezed summation term"""
-        return (sqrt(fac(2*n))/(2**n*fac(n))) * (-exp(1j*theta)*tanh(r))**n
+        return (sqrt(fac(2 * n)) / (2 ** n * fac(n))) * (-exp(1j * theta) * tanh(r)) ** n
 
-    vec = array([entry(n//2) if n % 2 == 0 else 0.0 + 0.0j for n in range(trunc)])
-    return sqrt(1/cosh(r)) * vec
+    vec = array([entry(n // 2) if n % 2 == 0 else 0.0 + 0.0j for n in range(trunc)])
+    return sqrt(1 / cosh(r)) * vec
 
 
 @functools.lru_cache()
@@ -614,7 +473,7 @@ def lossChannel(T, trunc):
     The Kraus operators for the loss channel :math:`\mathcal{N}(T)`.
     """
 
-    TToAdaggerA = np.array(np.diag([T**(i/2) for i in range(trunc)]), dtype=def_type)
+    TToAdaggerA = np.array(np.diag([T ** (i / 2) for i in range(trunc)]), dtype=def_type)
 
     def aToN(n):
         """the nth matrix power of the annihilation operator matrix a"""
@@ -622,7 +481,7 @@ def lossChannel(T, trunc):
 
     def E(n):
         """the loss channel amplitudes in the Fock basis"""
-        return ((1-T)/T)**(n/2) * np.dot(aToN(n)/sqrt(fac(n)), TToAdaggerA)
+        return ((1 - T) / T) ** (n / 2) * np.dot(aToN(n) / sqrt(fac(n)), TToAdaggerA)
 
     if T == 0:
         return [proj(i, 0, trunc) for i in range(trunc)]
@@ -648,8 +507,8 @@ def hermiteVals(q_mag, num_bins, m_omega_over_hbar, trunc):
 
     Hvals = [None] * trunc
     Hvals[0] = 1
-    Hvals[1] = 2*x
+    Hvals[1] = 2 * x
     for i in range(2, trunc):
-        Hvals[i] = 2*x*Hvals[i-1] - 2*(i-1)*Hvals[i-2]
+        Hvals[i] = 2 * x * Hvals[i - 1] - 2 * (i - 1) * Hvals[i - 2]
 
     return q_tensor, Hvals

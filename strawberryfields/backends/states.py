@@ -25,12 +25,14 @@ from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
 from scipy.integrate import simps
+from thewalrus.quantum import photon_number_mean, photon_number_covar
 
 import strawberryfields as sf
 from .shared_ops import rotation_matrix as _R
 from .shared_ops import changebasis
 
 indices = string.ascii_lowercase
+
 
 class BaseState(abc.ABC):
     r"""Abstract base class for the representation of quantum states."""
@@ -43,12 +45,13 @@ class BaseState(abc.ABC):
         self._pure = None
 
         if mode_names is None:
-            self._modemap = {i:"mode {}".format(i) for i in range(num_modes)}
+            self._modemap = {i: "mode {}".format(i) for i in range(num_modes)}
         else:
-            self._modemap = {i:'{}'.format(j) for i, j in zip(range(num_modes), mode_names)}
+            self._modemap = {i: "{}".format(j) for i, j in zip(range(num_modes), mode_names)}
 
         self._str = "<BaseState: num_modes={}, pure={}, hbar={}>".format(
-            self.num_modes, self._pure, self._hbar)
+            self.num_modes, self._pure, self._hbar
+        )
 
     def __str__(self):
         return self._str
@@ -309,6 +312,60 @@ class BaseState(abc.ABC):
         """
         raise NotImplementedError
 
+    def number_expectation(self, modes):
+        r"""
+        Calculates the expectation value of the product of the number operators of the modes.
+
+        This method computes the analytic expectation value
+        :math:`\langle \hat{n}_{i_0} \hat{n}_{i_1}\dots \hat{n}_{i_{N-1}}\rangle`
+        for a (sub)set of modes :math:`[i_0, i_1, \dots, i_{N-1}]` of the system.
+
+        Args:
+            modes (list): list of modes for which one wants the expectation of the product of their number operator.
+
+        Return:
+            (float): the expectation value.
+
+        **Example**
+
+        Consider the following program:
+
+        .. code-block:: python
+
+            prog = sf.Program(3)
+
+            with prog.context as q:
+                ops.Sgate(0.5) | q[0]
+                ops.Sgate(0.5) | q[1]
+                ops.Sgate(0.5) | q[2]
+                ops.BSgate(np.pi/3, 0.1) |  (q[0], q[1])
+                ops.BSgate(np.pi/3, 0.1) |  (q[1], q[2])
+
+        Executing this on the Fock backend,
+
+        >>> eng = sf.Engine("fock", backend_options={"cutoff_dim": 10})
+        >>> state = eng.run(prog).state
+
+        we can compute the expectation value :math:`\langle \hat{n}_0\hat{n}_2\rangle`:
+
+        >>> state.number_expectation([0, 2])
+        0.07252895071309405
+
+        Executing the same program on the Gaussian backend,
+
+        >>> eng = sf.Engine("gaussian")
+        >>> state = eng.run(prog).state
+        >>> state.number_expectation([0, 2])
+        0.07566984755267293
+
+        This slight difference in value compared to the result from the Fock backend above
+        is due to the finite Fock basis truncation when using the Fock backend; this can be
+        avoided by increasing the value of ``cutoff_dim``.
+
+        .. warning:: This method only supports at most two modes in the Gaussian backend.
+        """
+        raise NotImplementedError
+
     def p_quad_values(self, mode, xvec, pvec):
 
         r"""Calculates the discretized p-quadrature probability distribution of the specified mode.
@@ -326,7 +383,7 @@ class BaseState(abc.ABC):
         W = self.wigner(mode, xvec, pvec)
         y = []
         for i in range(0, len(pvec)):
-            res = simps(W[i, :len(xvec)], xvec)
+            res = simps(W[i, : len(xvec)], xvec)
             y.append(res)
         return np.array(y)
 
@@ -347,7 +404,7 @@ class BaseState(abc.ABC):
         W = self.wigner(mode, xvec, pvec)
         y = []
         for i in range(0, len(xvec)):
-            res = simps(W[:len(pvec), i], pvec)
+            res = simps(W[: len(pvec), i], pvec)
             y.append(res)
         return np.array(y)
 
@@ -372,10 +429,11 @@ class BaseFockState(BaseState):
         self._data = state_data
         self._cutoff = cutoff_dim
         self._pure = pure
-        self._basis = 'fock'
+        self._basis = "fock"
 
         self._str = "<FockState: num_modes={}, cutoff={}, pure={}, hbar={}>".format(
-            self.num_modes, self._cutoff, self._pure, self._hbar)
+            self.num_modes, self._cutoff, self._pure, self._hbar
+        )
 
     def __eq__(self, other):
         """Equality operator for BaseFockState.
@@ -422,7 +480,7 @@ class BaseFockState(BaseState):
         if self._pure:
             return self.data
 
-        return None # pragma: no cover
+        return None  # pragma: no cover
 
     def dm(self, **kwargs):
         r"""The numerical density matrix for the quantum state.
@@ -435,7 +493,7 @@ class BaseFockState(BaseState):
             left_str = [indices[i] for i in range(0, 2 * self._modes, 2)]
             right_str = [indices[i] for i in range(1, 2 * self._modes, 2)]
             out_str = [indices[: 2 * self._modes]]
-            einstr = ''.join(left_str + [','] + right_str + ['->'] + out_str)
+            einstr = "".join(left_str + [","] + right_str + ["->"] + out_str)
             rho = np.einsum(einstr, self.ket(), self.ket().conj())
             return rho
 
@@ -457,8 +515,12 @@ class BaseFockState(BaseState):
             return np.vdot(self.ket(), self.ket()).real  # <s|s>
 
         # need some extra steps to trace over multimode matrices
-        eqn_indices = [[indices[idx]] * 2 for idx in range(self._modes)] #doubled indices [['i','i'],['j','j'], ... ]
-        eqn = "".join(chain.from_iterable(eqn_indices)) # flatten indices into a single string 'iijj...'
+        eqn_indices = [
+            [indices[idx]] * 2 for idx in range(self._modes)
+        ]  # doubled indices [['i','i'],['j','j'], ... ]
+        eqn = "".join(
+            chain.from_iterable(eqn_indices)
+        )  # flatten indices into a single string 'iijj...'
         return np.einsum(eqn, self.dm()).real
 
     def all_fock_probs(self, **kwargs):
@@ -478,8 +540,8 @@ class BaseFockState(BaseState):
         """
         # pylint: disable=unused-argument
         if self._pure:
-            s = np.ravel(self.ket()) # into 1D array
-            return np.reshape((s * s.conj()).real, [self._cutoff]*self._modes)
+            s = np.ravel(self.ket())  # into 1D array
+            return np.reshape((s * s.conj()).real, [self._cutoff] * self._modes)
 
         s = self.dm()
         num_axes = len(s.shape)
@@ -489,16 +551,16 @@ class BaseFockState(BaseState):
         transpose_list = evens + odds
         probs = np.diag(np.reshape(np.transpose(s, transpose_list), [flat_size, flat_size])).real
 
-        return np.reshape(probs, [self._cutoff]*self._modes)
+        return np.reshape(probs, [self._cutoff] * self._modes)
 
-    #=====================================================
+    # =====================================================
     # the following methods are overwritten from BaseState
 
     def reduced_dm(self, modes, **kwargs):
         # pylint: disable=unused-argument
         if modes == list(range(self._modes)):
             # reduced state is full state
-            return self.dm() # pragma: no cover
+            return self.dm()  # pragma: no cover
 
         if isinstance(modes, int):
             modes = [modes]
@@ -506,8 +568,9 @@ class BaseFockState(BaseState):
             raise ValueError("The specified modes cannot be duplicated.")
 
         if len(modes) > self._modes:
-            raise ValueError("The number of specified modes cannot "
-                             "be larger than the number of subsystems.")
+            raise ValueError(
+                "The number of specified modes cannot " "be larger than the number of subsystems."
+            )
 
         # reduce rho down to specified subsystems
         keep_indices = indices[: 2 * len(modes)]
@@ -521,7 +584,7 @@ class BaseFockState(BaseState):
                 ind.insert(m, keep_indices[2 * ctr : 2 * (ctr + 1)])
                 ctr += 1
 
-        indStr = ''.join(ind) + '->' + keep_indices
+        indStr = "".join(ind) + "->" + keep_indices
         return np.einsum(indStr, self.dm())
 
     def fock_prob(self, n, **kwargs):
@@ -533,16 +596,16 @@ class BaseFockState(BaseState):
             raise ValueError("Can't get distribution beyond truncation level")
 
         if self._pure:
-            return np.abs(self.ket()[tuple(n)])**2
+            return np.abs(self.ket()[tuple(n)]) ** 2
 
-        return self.dm()[tuple([n[i//2] for i in range(len(n)*2)])].real
+        return self.dm()[tuple([n[i // 2] for i in range(len(n) * 2)])].real
 
     def mean_photon(self, mode, **kwargs):
         # pylint: disable=unused-argument
         n = np.arange(self._cutoff)
         probs = np.diagonal(self.reduced_dm(mode))
-        mean = np.sum(n*probs).real
-        var = np.sum(n**2*probs).real - mean**2
+        mean = np.sum(n * probs).real
+        var = np.sum(n ** 2 * probs).real - mean ** 2
         return mean, var
 
     def fidelity(self, other_state, mode, **kwargs):
@@ -553,10 +616,10 @@ class BaseFockState(BaseState):
             raise Exception("fidelity method can only support up to {} modes".format(max_indices))
 
         left_indices = indices[:mode]
-        eqn_left = "".join([i*2 for i in left_indices])
-        reduced_dm_indices = indices[mode:mode + 2]
-        right_indices = indices[mode + 2:self._modes + 1]
-        eqn_right = "".join([i*2 for i in right_indices])
+        eqn_left = "".join([i * 2 for i in left_indices])
+        reduced_dm_indices = indices[mode : mode + 2]
+        right_indices = indices[mode + 2 : self._modes + 1]
+        eqn_right = "".join([i * 2 for i in right_indices])
         eqn = "".join([eqn_left, reduced_dm_indices, eqn_right]) + "->" + reduced_dm_indices
         rho_reduced = np.einsum(eqn, self.dm())
 
@@ -577,7 +640,7 @@ class BaseFockState(BaseState):
             s = self.dm()
 
         if not hasattr(alpha_list, "__len__"):
-            alpha_list = [alpha_list] # pragma: no cover
+            alpha_list = [alpha_list]  # pragma: no cover
 
         if len(alpha_list) != self._modes:
             raise ValueError("The number of alpha values must match the number of modes.")
@@ -589,16 +652,20 @@ class BaseFockState(BaseState):
         if self._modes == 1:
             multi_cohs_vec = coh(alpha_list[0], self._cutoff)
         else:
-            multi_cohs_list = [coh(alpha_list[idx], dim) for idx, dim in enumerate(s.shape[::mode_size])]
-            eqn = ",".join(indices[:self._modes]) + "->" + indices[:self._modes]
-            multi_cohs_vec = np.einsum(eqn, *multi_cohs_list) # tensor product of specified coherent states
+            multi_cohs_list = [
+                coh(alpha_list[idx], dim) for idx, dim in enumerate(s.shape[::mode_size])
+            ]
+            eqn = ",".join(indices[: self._modes]) + "->" + indices[: self._modes]
+            multi_cohs_vec = np.einsum(
+                eqn, *multi_cohs_list
+            )  # tensor product of specified coherent states
 
         if self.is_pure:
             ovlap = np.vdot(multi_cohs_vec, s)
             return np.abs(ovlap) ** 2
 
-        bra_indices = indices[:2 * self._modes:2]
-        ket_indices = indices[1:2 * self._modes:2]
+        bra_indices = indices[: 2 * self._modes : 2]
+        ket_indices = indices[1 : 2 * self._modes : 2]
         new_eqn_lhs = ",".join([bra_indices, ket_indices])
         new_eqn_rhs = "".join(bra_indices[idx] + ket_indices[idx] for idx in range(self._modes))
         outer_prod_eqn = new_eqn_lhs + "->" + new_eqn_rhs
@@ -630,12 +697,12 @@ class BaseFockState(BaseState):
         """
         rho = self.reduced_dm(mode)
         Q, P = np.meshgrid(xvec, pvec)
-        A = (Q + P * 1.0j) / (2*np.sqrt(self._hbar/2))
+        A = (Q + P * 1.0j) / (2 * np.sqrt(self._hbar / 2))
 
         Wlist = np.array([np.zeros(np.shape(A), dtype=complex) for k in range(self._cutoff)])
 
         # Wigner function for |0><0|
-        Wlist[0] = np.exp(-2.0 * np.abs(A)**2) / np.pi
+        Wlist[0] = np.exp(-2.0 * np.abs(A) ** 2) / np.pi
 
         # W = rho(0,0)W(|0><0|)
         W = np.real(rho[0, 0]) * np.real(Wlist[0])
@@ -647,8 +714,7 @@ class BaseFockState(BaseState):
         for m in range(1, self._cutoff):
             temp = copy(Wlist[m])
             # Wlist[m] = Wigner function for |m><m|
-            Wlist[m] = (2 * np.conj(A) * temp - np.sqrt(m)
-                        * Wlist[m - 1]) / np.sqrt(m)
+            Wlist[m] = (2 * np.conj(A) * temp - np.sqrt(m) * Wlist[m - 1]) / np.sqrt(m)
 
             # W += rho(m,m)W(|m><m|)
             W += np.real(rho[m, m] * Wlist[m])
@@ -665,21 +731,21 @@ class BaseFockState(BaseState):
         return W / (self._hbar)
 
     def quad_expectation(self, mode, phi=0, **kwargs):
-        a = np.diag(np.sqrt(np.arange(1, self._cutoff+5)), 1)
-        x = np.sqrt(self._hbar/2) * (a + a.T)
-        p = -1j * np.sqrt(self._hbar/2) * (a - a.T)
+        a = np.diag(np.sqrt(np.arange(1, self._cutoff + 5)), 1)
+        x = np.sqrt(self._hbar / 2) * (a + a.T)
+        p = -1j * np.sqrt(self._hbar / 2) * (a - a.T)
 
-        xphi = np.cos(phi)*x + np.sin(phi)*p
+        xphi = np.cos(phi) * x + np.sin(phi) * p
         xphisq = np.dot(xphi, xphi)
 
         # truncate down
-        xphi = xphi[:self._cutoff, :self._cutoff]
-        xphisq = xphisq[:self._cutoff, :self._cutoff]
+        xphi = xphi[: self._cutoff, : self._cutoff]
+        xphisq = xphisq[: self._cutoff, : self._cutoff]
 
         rho = self.reduced_dm(mode)
 
         mean = np.trace(np.dot(xphi, rho)).real
-        var = np.trace(np.dot(xphisq, rho)).real - mean**2
+        var = np.trace(np.dot(xphisq, rho)).real - mean ** 2
 
         return mean, var
 
@@ -687,21 +753,21 @@ class BaseFockState(BaseState):
         # pylint: disable=too-many-branches
 
         if A is None:
-            A = np.zeros([2*self._modes, 2*self._modes])
+            A = np.zeros([2 * self._modes, 2 * self._modes])
 
-        if A.shape != (2*self._modes, 2*self._modes):
+        if A.shape != (2 * self._modes, 2 * self._modes):
             raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
 
         if not np.allclose(A.T, A):
             raise ValueError("Matrix of quadratic coefficients A must be symmetric.")
 
         if d is None:
-            linear_coeff = np.zeros([2*self._modes])
+            linear_coeff = np.zeros([2 * self._modes])
         else:
             linear_coeff = d.copy()
-            linear_coeff[self._modes:] = -d[self._modes:]
+            linear_coeff[self._modes :] = -d[self._modes :]
 
-        if linear_coeff.shape != (2*self._modes,):
+        if linear_coeff.shape != (2 * self._modes,):
             raise ValueError("Vector of linear coefficients d must be of length 2N.")
 
         # expand the cutoff dimension in approximating the x and p
@@ -711,13 +777,13 @@ class BaseFockState(BaseState):
 
         # construct the x and p operators
         a = np.diag(np.sqrt(np.arange(1, dim)), 1)
-        x_ = np.sqrt(self._hbar/2) * (a + a.T)
-        p_ = -1j * np.sqrt(self._hbar/2) * (a - a.T)
+        x_ = np.sqrt(self._hbar / 2) * (a + a.T)
+        p_ = -1j * np.sqrt(self._hbar / 2) * (a - a.T)
 
         if phi != 0:
             # rotate the quadrature operators
-            x = np.cos(phi)*x_ - np.sin(phi)*p_
-            p = np.sin(phi)*x_ + np.cos(phi)*p_
+            x = np.cos(phi) * x_ - np.sin(phi) * p_
+            p = np.sin(phi) * x_ + np.cos(phi) * p_
         else:
             x = x_
             p = p_
@@ -725,20 +791,22 @@ class BaseFockState(BaseState):
         def expand_dims(op, n, modes):
             """Expand quadrature operator to act on nth mode"""
             I = np.identity(dim)
-            allowed_indices = zip(indices[:2*modes:2], indices[1:2*modes:2])
-            ind = ','.join(a+b for a, b in allowed_indices)
-            ops = [I]*n + [op] + [I]*(modes-n-1)
+            allowed_indices = zip(indices[: 2 * modes : 2], indices[1 : 2 * modes : 2])
+            ind = ",".join(a + b for a, b in allowed_indices)
+            ops = [I] * n + [op] + [I] * (modes - n - 1)
             # the einsum 'ij,kl,mn->ijklmn' (for 3 modes)
             return np.einsum(ind, *ops)
 
         # determine modes with quadratic expectation values
-        nonzero = np.concatenate([np.mod(A.nonzero()[0], self._modes), np.mod(linear_coeff.nonzero()[0], self._modes)])
+        nonzero = np.concatenate(
+            [np.mod(A.nonzero()[0], self._modes), np.mod(linear_coeff.nonzero()[0], self._modes)]
+        )
         ex_modes = list(set(nonzero))
         num_modes = len(ex_modes)
 
         if not ex_modes:
             # only a constant term was provided
-            return k, 0.
+            return k, 0.0
 
         # There are non-zero elements of A and/or d
         # therefore there are quadratic and/or linear terms.
@@ -747,14 +815,14 @@ class BaseFockState(BaseState):
 
         # generate vector of quadrature operators
         # this array will have shape [2*num_modes] + [dim]*(2*num_modes)
-        r = np.empty([2*num_modes] + [dim]*(2*num_modes), dtype=np.complex128)
+        r = np.empty([2 * num_modes] + [dim] * (2 * num_modes), dtype=np.complex128)
         for n in range(num_modes):
             r[n] = expand_dims(x, n, num_modes)
-            r[num_modes+n] = expand_dims(p, n, num_modes)
+            r[num_modes + n] = expand_dims(p, n, num_modes)
 
         # reduce the size of A so that we only consider modes
         # which we need to calculate the expectation value for
-        rows = ex_modes + [i+self._modes for i in ex_modes]
+        rows = ex_modes + [i + self._modes for i in ex_modes]
         quad_coeffs = A[:, rows][rows]
         quad_coeffs[num_modes:, :num_modes] = -quad_coeffs[num_modes:, :num_modes]
         quad_coeffs[:num_modes, num_modes:] = -quad_coeffs[:num_modes, num_modes:]
@@ -771,13 +839,18 @@ class BaseFockState(BaseState):
         # So, in effect, matrix of quadratic coefficients A acts only on index a,
         # this index is then summed, and then each mode of r, A@r undergoes
         # matrix multiplication
-        ind1 = indices[:2*num_modes+1]
-        ind2 = ind1[0] + ''.join([str(i)+str(j) for i, j in zip(ind1[2::2], indices[2*num_modes+1:3*num_modes+1])])
-        ind3 = ''.join([str(i)+str(j) for i, j in zip(ind1[1::2], ind2[2::2])])
+        ind1 = indices[: 2 * num_modes + 1]
+        ind2 = ind1[0] + "".join(
+            [
+                str(i) + str(j)
+                for i, j in zip(ind1[2::2], indices[2 * num_modes + 1 : 3 * num_modes + 1])
+            ]
+        )
+        ind3 = "".join([str(i) + str(j) for i, j in zip(ind1[1::2], ind2[2::2])])
         ind = "{},{}->{}".format(ind1, ind2, ind3)
 
-        if np.allclose(quad_coeffs, 0.):
-            poly_op = np.zeros([dim]*(2*num_modes), dtype=np.complex128)
+        if np.allclose(quad_coeffs, 0.0):
+            poly_op = np.zeros([dim] * (2 * num_modes), dtype=np.complex128)
         else:
             # Einsum above applied to to r,Ar
             # This einsum sums over all quadrature operators, and also applies matrix
@@ -790,19 +863,19 @@ class BaseFockState(BaseState):
 
         # add constant term
         if k != 0:
-            poly_op += k*expand_dims(np.eye(dim), 0, num_modes)
+            poly_op += k * expand_dims(np.eye(dim), 0, num_modes)
 
         # calculate Op^2
         ind = "{},{}->{}".format(ind1[1:], ind2[1:], ind3)
         poly_op_sq = np.einsum(ind, poly_op, poly_op)
 
         # truncate down
-        sl = tuple([slice(0, self._cutoff)]*(2*num_modes))
+        sl = tuple([slice(0, self._cutoff)] * (2 * num_modes))
         poly_op = poly_op[sl]
         poly_op_sq = poly_op_sq[sl]
 
         ind1 = ind1[:-1]
-        ind2 = ''.join([str(j)+str(i) for i, j in zip(ind1[::2], ind1[1::2])])
+        ind2 = "".join([str(j) + str(i) for i, j in zip(ind1[::2], ind1[1::2])])
         ind = "{},{}".format(ind1, ind2)
 
         # calculate expectation value, Tr(Op @ rho)
@@ -810,9 +883,36 @@ class BaseFockState(BaseState):
         mean = np.einsum(ind, poly_op, rho).real
 
         # calculate variance Tr(Op^2 @ rho) - Tr(Op @ rho)^2
-        var = np.einsum(ind, poly_op_sq, rho).real - mean**2
+        var = np.einsum(ind, poly_op_sq, rho).real - mean ** 2
 
         return mean, var
+
+    def number_expectation(self, modes):
+        if len(modes) != len(set(modes)):
+            raise ValueError("There can be no duplicates in the modes specified.")
+
+        cutoff = self._cutoff  # Fock space cutoff.
+        num_modes = self._modes  # number of modes in the state.
+
+        values = np.arange(cutoff)
+        traced_modes = tuple(item for item in range(num_modes) if item not in modes)
+        if self.is_pure:
+            # state is a tensor of probability amplitudes
+            ps = np.abs(self.ket()) ** 2
+            ps = ps.sum(axis=traced_modes)
+            for _ in modes:
+                ps = np.tensordot(values, ps, axes=1)
+            return float(ps)
+
+        # state is a tensor of density matrix elements in the SF convention
+        ps = np.real(self.dm())
+        traced_modes = list(traced_modes)
+        traced_modes.sort(reverse=True)
+        for mode in traced_modes:
+            ps = np.tensordot(np.identity(cutoff), ps, axes=((0, 1), (2 * mode, 2 * mode + 1)))
+        for _ in range(len(modes)):
+            ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
+        return float(ps)
 
 
 class BaseGaussianState(BaseState):
@@ -830,23 +930,28 @@ class BaseGaussianState(BaseState):
         mode_names (Sequence): (optional) this argument contains a list providing mode names
             for each mode in the state
     """
+
     def __init__(self, state_data, num_modes, mode_names=None):
         super().__init__(num_modes, mode_names)
 
         self._data = state_data
 
         # vector of means and covariance matrix, using frontend x,p scaling
-        self._mu = self._data[0] * np.sqrt(self._hbar/2)
-        self._cov = self._data[1] * (self._hbar/2)
+        self._mu = self._data[0] * np.sqrt(self._hbar / 2)
+        self._cov = self._data[1] * (self._hbar / 2)
         # complex displacements of the Gaussian state
-        self._alpha = self._mu[:self._modes] + 1j*self._mu[self._modes:]
-        self._alpha /= np.sqrt(2*self._hbar)
+        self._alpha = self._mu[: self._modes] + 1j * self._mu[self._modes :]
+        self._alpha /= np.sqrt(2 * self._hbar)
 
-        self._pure = np.abs(np.linalg.det(self._cov) - (self._hbar/2)**(2*self._modes)) < self.EQ_TOLERANCE
+        self._pure = (
+            np.abs(np.linalg.det(self._cov) - (self._hbar / 2) ** (2 * self._modes))
+            < self.EQ_TOLERANCE
+        )
 
-        self._basis = 'gaussian'
+        self._basis = "gaussian"
         self._str = "<GaussianState: num_modes={}, pure={}, hbar={}>".format(
-            self.num_modes, self._pure, self._hbar)
+            self.num_modes, self._pure, self._hbar
+        )
 
     def __eq__(self, other):
         """Equality operator for BaseGaussianState.
@@ -858,15 +963,16 @@ class BaseGaussianState(BaseState):
         Args:
             other (BaseGaussianState): BaseGaussianState to compare against.
         """
-        #pylint: disable=protected-access
+        # pylint: disable=protected-access
         if not isinstance(other, type(self)):
             return False
 
         if self.num_modes != other.num_modes:
             return False
 
-        if np.allclose(self._mu, other._mu, atol=self.EQ_TOLERANCE, rtol=0) and \
-                np.allclose(self._cov, other._cov, atol=self.EQ_TOLERANCE, rtol=0):
+        if np.allclose(self._mu, other._mu, atol=self.EQ_TOLERANCE, rtol=0) and np.allclose(
+            self._cov, other._cov, atol=self.EQ_TOLERANCE, rtol=0
+        ):
             return True
 
         return False
@@ -933,10 +1039,11 @@ class BaseGaussianState(BaseState):
             raise ValueError("The specified modes cannot be duplicated.")
 
         if len(modes) > self._modes:
-            raise ValueError("The number of specified modes cannot "
-                             "be larger than the number of subsystems.")
+            raise ValueError(
+                "The number of specified modes cannot " "be larger than the number of subsystems."
+            )
 
-        ind = np.concatenate([np.array(modes), np.array(modes)+self._modes])
+        ind = np.concatenate([np.array(modes), np.array(modes) + self._modes])
         rows = ind.reshape(-1, 1)
         cols = ind.reshape(1, -1)
 
@@ -955,8 +1062,8 @@ class BaseGaussianState(BaseState):
         Returns:
             bool: True if and only if the state is a coherent state.
         """
-        mu, cov = self.reduced_gaussian([mode]) # pylint: disable=unused-variable
-        cov /= self._hbar/2
+        mu, cov = self.reduced_gaussian([mode])  # pylint: disable=unused-variable
+        cov /= self._hbar / 2
         return np.allclose(cov, np.identity(2), atol=tol, rtol=0)
 
     def displacement(self, modes=None):
@@ -971,7 +1078,7 @@ class BaseGaussianState(BaseState):
         """
         if modes is None:
             modes = list(range(self._modes))
-        elif isinstance(modes, int): # pragma: no cover
+        elif isinstance(modes, int):  # pragma: no cover
             modes = [modes]
 
         return self._alpha[list(modes)]
@@ -986,8 +1093,8 @@ class BaseGaussianState(BaseState):
         Returns:
            bool: True if and only if the state is a squeezed state.
         """
-        mu, cov = self.reduced_gaussian([mode]) # pylint: disable=unused-variable
-        cov /= self._hbar/2
+        mu, cov = self.reduced_gaussian([mode])  # pylint: disable=unused-variable
+        cov /= self._hbar / 2
         return np.any(np.abs(cov - np.identity(2)) > tol)
 
     def squeezing(self, modes=None):
@@ -1002,27 +1109,27 @@ class BaseGaussianState(BaseState):
         """
         if modes is None:
             modes = list(range(self._modes))
-        elif isinstance(modes, int): # pragma: no cover
+        elif isinstance(modes, int):  # pragma: no cover
             modes = [modes]
 
         res = []
         for i in modes:
-            mu, cov = self.reduced_gaussian([i]) # pylint: disable=unused-variable
-            cov /= self._hbar/2
+            mu, cov = self.reduced_gaussian([i])  # pylint: disable=unused-variable
+            cov /= self._hbar / 2
             tr = np.trace(cov)
 
-            r = np.arccosh(tr/2)/2
+            r = np.arccosh(tr / 2) / 2
 
-            if cov[0, 1] == 0.:
+            if cov[0, 1] == 0.0:
                 phi = 0
             else:
-                phi = -np.arcsin(2*cov[0, 1] / np.sqrt((tr-2)*(tr+2)))
+                phi = -np.arcsin(2 * cov[0, 1] / np.sqrt((tr - 2) * (tr + 2)))
 
             res.append((r, phi))
 
         return res
 
-    #=====================================================
+    # =====================================================
     # the following methods are overwritten from BaseState
 
     def wigner(self, mode, xvec, pvec):
@@ -1047,33 +1154,35 @@ class BaseGaussianState(BaseState):
 
     def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
         if A is None:
-            A = np.zeros([2*self._modes, 2*self._modes])
+            A = np.zeros([2 * self._modes, 2 * self._modes])
 
-        if A.shape != (2*self._modes, 2*self._modes):
+        if A.shape != (2 * self._modes, 2 * self._modes):
             raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
 
         if not np.allclose(A.T, A):
             raise ValueError("Matrix of quadratic coefficients A must be symmetric.")
 
         if d is not None:
-            if d.shape != (2*self._modes,):
+            if d.shape != (2 * self._modes,):
                 raise ValueError("Vector of linear coefficients d must be of length 2N.")
         else:
-            d = np.zeros([2*self._modes])
+            d = np.zeros([2 * self._modes])
 
         # determine modes with quadratic expectation values
-        nonzero = np.concatenate([np.mod(A.nonzero()[0], self._modes), np.mod(d.nonzero()[0], self._modes)])
+        nonzero = np.concatenate(
+            [np.mod(A.nonzero()[0], self._modes), np.mod(d.nonzero()[0], self._modes)]
+        )
         ex_modes = list(set(nonzero))
 
         # reduce the size of A so that we only consider modes
         # which we need to calculate the expectation value for
-        rows = ex_modes + [i+self._modes for i in ex_modes]
+        rows = ex_modes + [i + self._modes for i in ex_modes]
         num_modes = len(ex_modes)
         quad_coeffs = A[:, rows][rows]
 
         if not ex_modes:
             # only a constant term was provided
-            return k, 0.
+            return k, 0.0
 
         mu = self._mu
         cov = self._cov
@@ -1082,7 +1191,7 @@ class BaseGaussianState(BaseState):
             # rotate all modes of the covariance matrix and vector of means
             R = _R(phi)
             C = changebasis(self._modes)
-            rot = C.T @ block_diag(*([R]*self._modes)) @ C
+            rot = C.T @ block_diag(*([R] * self._modes)) @ C
 
             mu = rot.T @ mu
             cov = rot.T @ cov @ rot
@@ -1091,7 +1200,7 @@ class BaseGaussianState(BaseState):
         # E[P(r)]_(mu,cov) = E(Q(r+mu)]_(0,cov)
         #                  = E[rT.A.r + rT.(2A.mu+d) + (muT.A.mu+muT.d+cI)]_(0,cov)
         #                  = E[rT.A.r + rT.d' + k']_(0,cov)
-        d2 = 2*A @ mu + d
+        d2 = 2 * A @ mu + d
         k2 = mu.T @ A @ mu + mu.T @ d + k
 
         # expectation value E[P(r)]_{mu=0} = tr(A.cov) + muT.A.mu + muT.d + k|_{mu=0}
@@ -1099,16 +1208,35 @@ class BaseGaussianState(BaseState):
         mean = np.trace(A @ cov) + k2
         # variance Var[P(r)]_{mu=0} = 2tr(A.cov.A.cov) + 4*muT.A.cov.A.mu + dT.cov.d|_{mu=0}
         #                           = 2tr(A.cov.A.cov) + dT.cov.d
-        var = 2*np.trace(A @ cov @ A @ cov) + d2.T @ cov @ d2
+        var = 2 * np.trace(A @ cov @ A @ cov) + d2.T @ cov @ d2
 
         # Correction term to account for incorrect symmetric ordering in the variance.
         # This occurs because Var[S(P(r))] = Var[P(r)] - Σ_{m1, m2} |hbar*A_{(m1, m1+N),(m2, m2+N)}|,
         # where m1, m2 are all possible mode numbers, and N is the total number of modes.
         # Therefore, the correction term is the sum of the determinants of 2x2 submatrices of A.
-        modes = np.arange(2*num_modes).reshape(2, -1).T
-        var -= np.sum([np.linalg.det(self._hbar*quad_coeffs[:, m][n]) for m in modes for n in modes])
+        modes = np.arange(2 * num_modes).reshape(2, -1).T
+        var -= np.sum(
+            [np.linalg.det(self._hbar * quad_coeffs[:, m][n]) for m in modes for n in modes]
+        )
 
         return mean, var
+
+    def number_expectation(self, modes):
+        if len(modes) != len(set(modes)):
+            raise ValueError("There can be no duplicates in the modes specified.")
+        mu = self._mu
+        cov = self._cov
+        if len(modes) == 1:
+            return photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
+
+        if len(modes) == 2:
+            ni = photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
+            nj = photon_number_mean(mu, cov, modes[1], hbar=self._hbar)
+            return photon_number_covar(mu, cov, modes[1], modes[0], hbar=self._hbar) + ni * nj
+
+        raise ValueError(
+            "The number_expectation method only supports one or two modes for Gaussian states."
+        )
 
     @abc.abstractmethod
     def reduced_dm(self, modes, **kwargs):

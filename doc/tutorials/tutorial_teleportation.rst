@@ -140,7 +140,7 @@ remote simulator/hardware device). Engines are initialized as follows:
 
 where
 
-* ``backend``: a string or :class:`~.BaseBackend` object representing the Strawberry Fields backend we wish to use; we have the choice of two Fock backends [#]_, the NumPy based (``'fock'``) and Tensorflow (``'tf'``), and one Gaussian backend [#]_ (``'gaussian'``).
+* ``backend``: a string or :class:`~.BaseBackend` object representing the Strawberry Fields backend we wish to use; we have the choice of two Fock backends [#]_, the NumPy based (``'fock'``) and TensorFlow (``'tf'``), and one Gaussian backend [#]_ (``'gaussian'``).
 
   This argument is *required* when creating the engine.
 
@@ -168,9 +168,9 @@ in our truncated Fock basis. We now have all the parameters ready to initialize 
 
 We can now execute our quantum program ``prog`` on the engine via the :func:`Engine.run` method:
 
-.. code-block:: python
+.. code-block:: python3
 
-    result = eng.run(prog, run_options={shots=1, modes=None}, compile_options={})
+    result = eng.run(prog, shots=1, modes=None, compile_options={})
 
 The :meth:`eng.run <strawberryfields.LocalEngine.run>` method accepts the arguments:
 
@@ -216,7 +216,7 @@ for accessing the results of your program execution:
 
 ..
 
-* ``results.state``: The quantum state object contains details and methods
+* ``result.state``: The quantum state object contains details and methods
   for manipulation of the final circuit state.
 
   Note that only local simulators will
@@ -227,7 +227,7 @@ for accessing the results of your program execution:
 
 ..
 
-* ``results.samples``: Measurement samples from any measurements performed.
+* ``result.samples``: Measurement samples from any measurements performed.
   Returned measurement samples will have shape ``(modes,)``. If multiple
   shots are requested during execution, the returned measurement samples
   will instead have shape ``(shots, modes)``.
@@ -239,8 +239,8 @@ Once the engine has been run, we can extract results of measurements and the qua
 
 .. code-block:: pycon
 
-    >>> results.samples
-    [2.9645296452964534, -2.9465294652946525, None]
+    >>> result.samples
+    [[2.9645296452964534, -2.9465294652946525, None]]
 
 If a mode has not been measured, this attribute simply returns ``None``.
 

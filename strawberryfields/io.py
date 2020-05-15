@@ -20,9 +20,13 @@ import os
 
 import blackbird
 
+import strawberryfields.program as sfp
+import strawberryfields.parameters as sfpar
 from . import ops
-from .program import Program
-from .parameters import par_is_symbolic, par_convert
+
+
+# for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
+__all__ = ["to_blackbird", "to_program", "loads"]
 
 
 def to_blackbird(prog, version="1.0"):
@@ -42,6 +46,13 @@ def to_blackbird(prog, version="1.0"):
         # set the target
         bb._target["name"] = prog.target
 
+        # set the run options
+        if prog.run_options:
+            bb._target["options"].update(prog.run_options)
+
+        if prog.backend_options:
+            bb._target["options"].update(prog.backend_options)
+
     # fill in the quantum circuit
     for cmd in prog.circuit:
         op = {"kwargs": {}, "args": []}
@@ -58,9 +69,14 @@ def to_blackbird(prog, version="1.0"):
                 # argument is quadrature phase
                 op["kwargs"]["phi"] = cmd.op.p[0]
 
+            if op["op"] == "MeasureFock":
+                # special case to take into account 'dark_counts' keyword argument
+                if cmd.op.dark_counts is not None:
+                    op["kwargs"]["dark_counts"] = cmd.op.dark_counts
+
         else:
             for a in cmd.op.p:
-                if par_is_symbolic(a):
+                if sfpar.par_is_symbolic(a):
                     # SymPy object, convert to string
                     a = str(a)
                 op["args"].append(a)
@@ -85,7 +101,7 @@ def to_program(bb):
         # to initialize the Program object with.
         raise ValueError("Blackbird program contains no quantum operations!")
 
-    prog = Program(max(bb.modes)+1, name=bb.name)
+    prog = sfp.Program(max(bb.modes) + 1, name=bb.name)
 
     # append the quantum operations
     with prog.context as q:
@@ -104,20 +120,20 @@ def to_program(bb):
             # create the list of regrefs
             regrefs = [q[i] for i in op["modes"]]
 
-            if 'args' in op:
+            if "args" in op:
                 # the gate has arguments
-                args = op['args']
-                kwargs = op['kwargs']
+                args = op["args"]
+                kwargs = op["kwargs"]
 
                 # Convert symbolic expressions in args/kwargs containing measured and free parameters to
                 # symbolic expressions containing the corresponding MeasuredParameter and FreeParameter instances.
-                args = par_convert(args, prog)
-                vals = par_convert(kwargs.values(), prog)
+                args = sfpar.par_convert(args, prog)
+                vals = sfpar.par_convert(kwargs.values(), prog)
                 kwargs = dict(zip(kwargs.keys(), vals))
-                gate(*args, **kwargs) | regrefs  #pylint:disable=expression-not-assigned
+                gate(*args, **kwargs) | regrefs  # pylint:disable=expression-not-assigned
             else:
                 # the gate has no arguments
-                gate | regrefs #pylint:disable=expression-not-assigned,pointless-statement
+                gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
 
     # compile the program if a compile target is given
     targ = bb.target
@@ -202,6 +218,7 @@ def loads(s):
     bb = blackbird.loads(s)
     return to_program(bb)
 
+
 def load(f):
     """Load a quantum program from a Blackbird .xbb file.
 
@@ -232,10 +249,9 @@ def load(f):
     MeasureFock | (q[0], q[1], q[2])
 
     Args:
-        f (Union[file, str, pathlib.Path]): File or filename to which
-            the data is saved. If file is a file-object, then the filename
-            is unchanged. If file is a string or Path, a .xbb extension will
-            be appended to the file name if it does not already have one.
+        f (Union[file, str, pathlib.Path]): File or filename from which
+            the data is loaded. If file is a string or Path, a value with the
+            .xbb extension is expected.
 
     Returns:
         prog (Program): Strawberry Fields program

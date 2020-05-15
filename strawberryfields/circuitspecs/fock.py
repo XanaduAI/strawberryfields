@@ -18,7 +18,7 @@ from .circuit_specs import CircuitSpecs
 class FockSpecs(CircuitSpecs):
     """Circuit specifications for the Fock backend."""
 
-    short_name = 'fock'
+    short_name = "fock"
     modes = None
     local = True
     remote = True
@@ -52,6 +52,7 @@ class FockSpecs(CircuitSpecs):
         "Kgate",
         "BSgate",
         "CKgate",
+        "S2gate",
     }
 
     decompositions = {
@@ -61,7 +62,6 @@ class FockSpecs(CircuitSpecs):
         "GaussianTransform": {},
         "Gaussian": {},
         "Pgate": {},
-        "S2gate": {},
         "CXgate": {},
         "CZgate": {},
         "MZgate": {},

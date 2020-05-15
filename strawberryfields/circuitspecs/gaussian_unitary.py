@@ -17,45 +17,55 @@ import numpy as np
 from strawberryfields.program_utils import Command
 from strawberryfields import ops
 from strawberryfields.parameters import par_evaluate
-from thewalrus.symplectic import expand_vector, expand, rotation, squeezing, two_mode_squeezing, interferometer, beam_splitter
+from thewalrus.symplectic import (
+    expand_vector,
+    expand,
+    rotation,
+    squeezing,
+    two_mode_squeezing,
+    interferometer,
+    beam_splitter,
+)
 from .circuit_specs import CircuitSpecs
+
 
 class GaussianUnitary(CircuitSpecs):
     """Compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form.
+
     This compile specification checks whether the circuit can be implemented as a sequence of
     Gaussian operations. If so, it arranges them in the canonical order with displacement at the end.
     After compilation, the circuit will consist of at most two operations, a :class:`~.GaussianTransform`
     and a :class:`~.Dgate`.
+
     This compiler can be accessed by calling :meth:`.Program.compile` with `'gaussian_unitary'` specified.
 
-        **Example:**
+    **Example:**
 
-        Consider the following Strawberry Fields program, compiled using the `'gaussian_unitary'` compiler:
+    Consider the following Strawberry Fields program, compiled using the `'gaussian_unitary'` compiler:
 
-        .. code-block:: python3
+    .. code-block:: python3
 
-            from strawberryfields.ops import Xgate, Zgate, Sgate, Dgate, Rgate
-            import strawberryfields as sf
+        from strawberryfields.ops import Xgate, Zgate, Sgate, Dgate, Rgate
+        import strawberryfields as sf
 
-            circuit = sf.Program(1)
-            with circuit.context as q:
-                Xgate(0.4) | q[0]
-                Zgate(0.5) | q[0]
-                Sgate(0.6) | q[0]
-                Dgate(1.0+2.0j) | q[0]
-                Rgate(0.3) | q[0]
-                Sgate(0.6, 1.0) | q[0]
+        circuit = sf.Program(1)
+        with circuit.context as q:
+            Xgate(0.4) | q[0]
+            Zgate(0.5) | q[0]
+            Sgate(0.6) | q[0]
+            Dgate(1.0+2.0j) | q[0]
+            Rgate(0.3) | q[0]
+            Sgate(0.6, 1.0) | q[0]
 
-            compiled_circuit = circuit.compile("gaussian_unitary")
+        compiled_circuit = circuit.compile("gaussian_unitary")
 
-        We can now print the compiled circuit, consisting of one
-        :class:`~.GaussianTransform` and one :class:`~.Dgate`:
+    We can now print the compiled circuit, consisting of one
+    :class:`~.GaussianTransform` and one :class:`~.Dgate`:
 
-        >>> compiled_circuit.print()
-        GaussianTransform([[ 0.3543 -1.3857]
-                           [-0.0328  2.9508]]) | (q[0])
-        Dgate(-1.151+3.91j, 0) | (q[0])
-
+    >>> compiled_circuit.print()
+    GaussianTransform([[ 0.3543 -1.3857]
+                       [-0.0328  2.9508]]) | (q[0])
+    Dgate(-1.151+3.91j, 0) | (q[0])
     """
 
     short_name = "gaussian_unitary"
@@ -76,8 +86,8 @@ class GaussianUnitary(CircuitSpecs):
         # multi mode gates
         "BSgate",
         "S2gate",
-        "Interferometer", # Note that interferometer is accepted as a primitive
-        "GaussianTransform", # Note that GaussianTransform is accepted as a primitive
+        "Interferometer",  # Note that interferometer is accepted as a primitive
+        "GaussianTransform",  # Note that GaussianTransform is accepted as a primitive
     }
 
     decompositions = {
@@ -92,7 +102,7 @@ class GaussianUnitary(CircuitSpecs):
         "Zgate": {},
         "Fouriergate": {},
     }
-    #pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches
     def compile(self, seq, registers):
         """Try to arrange a quantum circuit into the canonical Symplectic form.
 
@@ -151,11 +161,13 @@ class GaussianUnitary(CircuitSpecs):
                         interferometer(params[0]), [dict_indices[mode] for mode in modes], nmodes
                     )
                 elif name == "GaussianTransform":
-                    S = expand(
-                        params[0], [dict_indices[mode] for mode in modes], nmodes
-                    )
+                    S = expand(params[0], [dict_indices[mode] for mode in modes], nmodes)
                 elif name == "BSgate":
-                    S = expand(beam_splitter(params[0], params[1]), [dict_indices[modes[0]], dict_indices[modes[1]]], nmodes)
+                    S = expand(
+                        beam_splitter(params[0], params[1]),
+                        [dict_indices[modes[0]], dict_indices[modes[1]]],
+                        nmodes,
+                    )
                 Snet = S @ Snet
                 rnet = S @ rnet
 

@@ -14,7 +14,7 @@
 import os
 import sys
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 with open("strawberryfields/_version.py") as f:
@@ -24,11 +24,16 @@ with open("strawberryfields/_version.py") as f:
 requirements = [
     "numpy>=1.17.4",
     "scipy>=1.0.0",
+    "sympy>=1.5",
     "networkx>=2.0",
-    "quantum-blackbird>=0.2.0",
-    "thewalrus>=0.10",
+    "quantum-blackbird>=0.2.3",
+    "python-dateutil>=2.8.0",
+    "thewalrus>=0.12",
+    "numba",
     "toml",
     "appdirs",
+    "requests>=2.22.0",
+    "urllib3>=1.25.3",
 ]
 
 info = {
@@ -38,17 +43,14 @@ info = {
     "maintainer_email": "software@xanadu.ai",
     "url": "https://github.com/XanaduAI/StrawberryFields",
     "license": "Apache License 2.0",
-    "packages": [
-        "strawberryfields",
-        "strawberryfields.circuitspecs",
-        "strawberryfields.apps",
-        "strawberryfields.backends",
-        "strawberryfields.backends.tfbackend",
-        "strawberryfields.backends.fockbackend",
-        "strawberryfields.backends.gaussianbackend",
-    ],
+    "packages": find_packages(where="."),
     "package_data": {"strawberryfields": ["backends/data/*", "apps/data/*"]},
     "include_package_data": True,
+    "entry_points" : {
+        'console_scripts': [
+            'sf=strawberryfields.cli:main'
+        ]
+    },
     "description": "Open source library for continuous-variable quantum computation",
     "long_description": open("README.rst", encoding="utf-8").read(),
     "provides": ["strawberryfields"],
@@ -71,9 +73,9 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Scientific/Engineering :: Physics",
 ]

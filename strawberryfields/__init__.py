@@ -14,7 +14,7 @@
 """
 The Strawberry Fields codebase includes a number of complementary components.
 These can be separated into frontend components, applications layer,
-and backend components (all found within the :file:`strawberryfields.backends` submodule).
+and backend components (all found within the :mod:`strawberryfields.backends` submodule).
 
 .. image:: ../_static/sfcomponents.svg
     :align: center
@@ -23,11 +23,28 @@ and backend components (all found within the :file:`strawberryfields.backends` s
 """
 from . import apps
 from ._version import __version__
-from .engine import Engine, LocalEngine
+from .cli import ping
+from .configuration import store_account, active_configs, reset_config, delete_config
+from .engine import Engine, LocalEngine, RemoteEngine
 from .io import load, save
+from .parameters import par_funcs as math
 from .program import Program
 
-__all__ = ["Engine", "LocalEngine", "Program", "version", "save", "load", "about", "cite"]
+__all__ = [
+    "Engine",
+    "RemoteEngine",
+    "Program",
+    "version",
+    "save",
+    "load",
+    "about",
+    "cite",
+    "ping",
+    "store_account",
+    "active_configs",
+    "reset_config",
+    "delete_config",
+]
 
 
 #: float: numerical value of hbar for the frontend (in the implicit units of position * momentum)
@@ -56,7 +73,7 @@ def about():
 
         >>> sf.about()
         Strawberry Fields: a Python library for continuous-variable quantum circuits.
-        Copyright 2018-2019 Xanadu Quantum Technologies Inc.
+        Copyright 2018-2020 Xanadu Quantum Technologies Inc.
 
         Python version:            3.6.8
         Platform info:             Linux-5.0.0-36-generic-x86_64-with-debian-buster-sid
@@ -64,7 +81,9 @@ def about():
         Strawberry Fields version: 0.12.0-dev
         Numpy version:             1.17.4
         Scipy version:             1.3.0
-        The Walrus version:           0.10.0-dev
+        Sympy version:             1.5
+        NetworkX version:          2.4
+        The Walrus version:        0.10.0
         Blackbird version:         0.2.1
         TensorFlow version:        2.0.0
     """
@@ -74,29 +93,34 @@ def about():
     import os
     import numpy
     import scipy
+    import sympy
+    import networkx
     import thewalrus
     import blackbird
 
     # a QuTiP-style infobox
-    print('\nStrawberry Fields: a Python library for continuous-variable quantum circuits.')
-    print('Copyright 2018-2019 Xanadu Quantum Technologies Inc.\n')
+    print("\nStrawberry Fields: a Python library for continuous-variable quantum circuits.")
+    print("Copyright 2018-2020 Xanadu Quantum Technologies Inc.\n")
 
-    print('Python version:            {}.{}.{}'.format(*sys.version_info[0:3]))
-    print('Platform info:             {}'.format(platform.platform()))
-    print('Installation path:         {}'.format(os.path.dirname(__file__)))
-    print('Strawberry Fields version: {}'.format(__version__))
-    print('Numpy version:             {}'.format(numpy.__version__))
-    print('Scipy version:             {}'.format(scipy.__version__))
-    print('The Walrus version:           {}'.format(thewalrus.__version__))
-    print('Blackbird version:         {}'.format(blackbird.__version__))
+    print("Python version:            {}.{}.{}".format(*sys.version_info[0:3]))
+    print("Platform info:             {}".format(platform.platform()))
+    print("Installation path:         {}".format(os.path.dirname(__file__)))
+    print("Strawberry Fields version: {}".format(__version__))
+    print("Numpy version:             {}".format(numpy.__version__))
+    print("Scipy version:             {}".format(scipy.__version__))
+    print("SymPy version:             {}".format(sympy.__version__))
+    print("NetworkX version:          {}".format(networkx.__version__))
+    print("The Walrus version:        {}".format(thewalrus.__version__))
+    print("Blackbird version:         {}".format(blackbird.__version__))
 
     try:
         import tensorflow
+
         tf_version = tensorflow.__version__
     except ImportError:
         tf_version = None
 
-    print('TensorFlow version:        {}'.format(tf_version))
+    print("TensorFlow version:        {}".format(tf_version))
 
 
 def cite():

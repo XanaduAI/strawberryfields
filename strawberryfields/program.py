@@ -13,95 +13,12 @@
 # limitations under the License.
 
 """
-Quantum programs
-================
-
-**Module name:** :mod:`strawberryfields.program`
-
-.. currentmodule:: strawberryfields.program
-
-This module implements the :class:`Program` class which acts as a representation for quantum circuits.
-The Program object also acts as a context for defining the quantum circuit using the Python-embedded Blackbird syntax.
-
-A typical use looks like
-
-.. include:: example_use.rst
-
-The Program objects keep track of the state of the quantum register they act on, using a dictionary of :class:`RegRef` objects.
-The currently active register references can be accessed using the :meth:`~Program.register` method.
-
-
-Program methods
----------------
-
-.. currentmodule:: strawberryfields.program.Program
-
-.. autosummary::
-   context
-   register
-   num_subsystems
-   __len__
-   can_follow
-   append
-   lock
-   compile
-   optimize
-   print
-   draw_circuit
-   params
-   bind_params
-
-The following are internal Program methods. In most cases the user should not
-call these directly.
-
-.. autosummary::
-   __enter__
-   __exit__
-   _clear_regrefs
-   _add_subsystems
-   _delete_subsystems
-   _index_to_regref
-   _test_regrefs
-   _linked_copy
-
-
-**Module name:** :mod:`strawberryfields.program_utils`
-
-.. currentmodule:: strawberryfields.program_utils
-
-Helper classes
---------------
-
-.. autosummary::
-   Command
-   RegRef
-
-
-Utility functions
------------------
-
-.. autosummary::
-   list_to_grid
-   grid_to_DAG
-   list_to_DAG
-   DAG_to_list
-   group_operations
-   optimize_circuit
-
-
-Exceptions
-----------
-
-.. autosummary::
-   MergeFailure
-   CircuitError
-   RegRefError
-
+This module implements the :class:`.Program` class which acts as a representation for quantum circuits.
 
 Quantum circuit representation
 ------------------------------
 
-The :class:`Command` instances in the circuit form a
+The :class:`.Command` instances in the circuit form a
 `strict partially ordered set <http://en.wikipedia.org/wiki/Partially_ordered_set#Strict_and_non-strict_partial_orders>`_
 in the sense that the order in which the operations have to be executed is usually not completely fixed.
 For example, operations acting on different subsystems always commute with each other.
@@ -122,16 +39,12 @@ Three different (but equivalent) representations of the circuit are used.
   is empty, that is, consuming it in a topological order.
   Note that a topological order is not always unique, there may be several equivalent topological orders.
 
+.. currentmodule:: strawberryfields.program_utils
+
 The three representations can be converted to each other
 using the functions :func:`list_to_grid`, :func:`grid_to_DAG` and :func:`DAG_to_list`.
 
-
 .. currentmodule:: strawberryfields.program
-
-
-Code details
-~~~~~~~~~~~~
-
 """
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
@@ -148,6 +61,10 @@ from .program_utils import Command, RegRef, CircuitError, RegRefError
 from .parameters import FreeParameter, ParameterError
 
 
+# for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
+__all__ = []
+
+
 class Program:
     """Represents a photonic quantum circuit.
 
@@ -157,7 +74,7 @@ class Program:
     * appending :doc:`/introduction/ops` to the program.
 
     Within the context, operations are appended to the program using the
-    syntax
+    Python-embedded Blackbird syntax
 
     .. code-block:: python3
 
@@ -202,11 +119,14 @@ class Program:
             ops.BSgate(0.43, 0.1) | (q[1], q[2])
             ops.MeasureFock() | q
 
+    The currently active register references can be accessed using the :meth:`~Program.register` method.
+
     Args:
         num_subsystems (int, Program): Initial number of modes (subsystems) in the quantum register.
             Alternatively, another Program instance from which to inherit the register state.
         name (str): program name (optional)
     """
+
     def __init__(self, num_subsystems, name=None):
         #: str: program name
         self.name = name
@@ -215,7 +135,7 @@ class Program:
         #: bool: if True, no more Commands can be appended to the Program
         self.locked = False
         #: str, None: for compiled Programs, the short name of the target CircuitSpecs template, otherwise None
-        self.target = None
+        self._target = None
         #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
         #: dict[str, Parameter]: free circuit parameters owned by this Program
@@ -228,6 +148,7 @@ class Program:
         """
 
         # create subsystem references
+        # Program keeps track of the state of the quantum register using a dictionary of :class:`RegRef` objects.
         if isinstance(num_subsystems, numbers.Integral):
             #: int: initial number of subsystems
             self.init_num_subsystems = num_subsystems
@@ -245,7 +166,9 @@ class Program:
             self.reg_refs = copy.deepcopy(parent.reg_refs)  # independent copy of the RegRefs
             self.unused_indices = copy.copy(parent.unused_indices)
         else:
-            raise TypeError('First argument must be either the number of subsystems or the parent Program.')
+            raise TypeError(
+                "First argument must be either the number of subsystems or the parent Program."
+            )
 
         # save the initial regref state
         #: dict[int, RegRef]: like reg_refs
@@ -316,7 +239,7 @@ class Program:
         if pu.Program_current_context is None:
             pu.Program_current_context = self
         else:
-            raise RuntimeError('Only one Program context can be active at a time.')
+            raise RuntimeError("Only one Program context can be active at a time.")
         return self.register
 
     def __exit__(self, ex_type, ex_value, ex_tb):
@@ -367,13 +290,13 @@ class Program:
             tuple[RegRef]: tuple of the newly added subsystem references
         """
         if self.locked:
-            raise CircuitError('The Program is locked, no new subsystems can be created.')
+            raise CircuitError("The Program is locked, no new subsystems can be created.")
         if not isinstance(n, numbers.Integral) or n < 1:
-            raise ValueError('Number of added subsystems {} is not a positive integer.'.format(n))
+            raise ValueError("Number of added subsystems {} is not a positive integer.".format(n))
 
         first_unassigned_index = len(self.reg_refs)
         # create a list of RegRefs
-        inds = [first_unassigned_index+i for i in range(n)]
+        inds = [first_unassigned_index + i for i in range(n)]
         refs = tuple(RegRef(i) for i in inds)
         # add them to the index map
         for r in refs:
@@ -396,7 +319,7 @@ class Program:
         for r in refs:
             # mark the RegRef as deleted
             r.active = False
-            #self.reg_refs[r.ind].active = False
+            # self.reg_refs[r.ind].active = False
         # NOTE: deleted indices are *not* removed from self.unused_indices
 
     def lock(self):
@@ -435,7 +358,7 @@ class Program:
         """
         # index must be found in the dict
         if ind not in self.reg_refs:
-            raise RegRefError('Subsystem {} does not exist.'.format(ind))
+            raise RegRefError("Subsystem {} does not exist.".format(ind))
         return self.reg_refs[ind]
 
     def _test_regrefs(self, reg):
@@ -458,18 +381,18 @@ class Program:
             if isinstance(rr, RegRef):
                 # regref must be found in the dict values (the RegRefs are compared using __eq__, which, since we do not define it, defaults to "is")
                 if rr not in self.reg_refs.values():
-                    raise RegRefError('Unknown RegRef.')
+                    raise RegRefError("Unknown RegRef.")
                 if self.reg_refs[rr.ind] is not rr:
-                    raise RegRefError('RegRef state has become inconsistent.')
+                    raise RegRefError("RegRef state has become inconsistent.")
             elif isinstance(rr, numbers.Integral):
                 rr = self._index_to_regref(rr)
             else:
-                raise RegRefError('Subsystems can only be indexed using integers and RegRefs.')
+                raise RegRefError("Subsystems can only be indexed using integers and RegRefs.")
 
             if not rr.active:
-                raise RegRefError('Subsystem {} has already been deleted.'.format(rr.ind))
+                raise RegRefError("Subsystem {} has already been deleted.".format(rr.ind))
             if rr in temp:
-                raise RegRefError('Trying to act on the same subsystem more than once.')
+                raise RegRefError("Trying to act on the same subsystem more than once.")
             temp.append(rr)
         return temp
 
@@ -483,7 +406,7 @@ class Program:
             list[RegRef]: subsystem list as RegRefs
         """
         if self.locked:
-            raise CircuitError('The Program is locked, no more Commands can be appended to it.')
+            raise CircuitError("The Program is locked, no more Commands can be appended to it.")
 
         # test that the target subsystem references are ok
         reg = self._test_regrefs(reg)
@@ -550,7 +473,11 @@ class Program:
         elif target in specs.circuit_db:
             db = specs.circuit_db[target]()
         else:
-            raise ValueError("Could not find target '{}' in the Strawberry Fields circuit database.".format(target))
+            raise ValueError(
+                "Could not find target '{}' in the Strawberry Fields circuit database.".format(
+                    target
+                )
+            )
 
         if db.modes is not None:
             # subsystems may be created and destroyed, this is total number that has ever existed
@@ -563,14 +490,14 @@ class Program:
 
         seq = db.decompose(self.circuit)
 
-        if kwargs.get('warn_connected', True):
+        if kwargs.get("warn_connected", True):
             DAG = pu.list_to_DAG(seq)
             temp = nx.algorithms.components.number_weakly_connected_components(DAG)
             if temp > 1:
-                warnings.warn('The circuit consists of {} disconnected components.'.format(temp))
+                warnings.warn("The circuit consists of {} disconnected components.".format(temp))
 
         # run optimizations
-        if kwargs.get('optimize', False):
+        if kwargs.get("optimize", False):
             seq = pu.optimize_circuit(seq)
 
         # does the circuit spec  have its own compilation method?
@@ -580,15 +507,18 @@ class Program:
         # create the compiled Program
         compiled = self._linked_copy()
         compiled.circuit = seq
-        compiled.target = target
+        compiled._target = db.short_name
 
         # get run options of compiled program
         # for the moment, shots is the only supported run option.
         if "shots" in kwargs:
             compiled.run_options["shots"] = kwargs["shots"]
 
-        return compiled
+        compiled.backend_options = {}
+        if "cutoff_dim" in kwargs:
+            compiled.backend_options["cutoff_dim"] = kwargs["cutoff_dim"]
 
+        return compiled
 
     def optimize(self):
         """Simplify and optimize the program.
@@ -607,8 +537,7 @@ class Program:
         opt.circuit = pu.optimize_circuit(self.circuit)
         return opt
 
-
-    def draw_circuit(self, tex_dir='./circuit_tex', write_to_file=True):
+    def draw_circuit(self, tex_dir="./circuit_tex", write_to_file=True):
         r"""Draw the circuit using the Qcircuit :math:`\LaTeX` package.
 
         This will generate the LaTeX code required to draw the quantum circuit
@@ -649,6 +578,17 @@ class Program:
 
         return [document, tex]
 
+    @property
+    def target(self):
+        """The target specification the program has been compiled against.
+
+        If the program has not been compiled, this will return ``None``.
+
+        Returns:
+            str or None: the short name of the target CircuitSpecs template if
+            compiled, otherwise None
+        """
+        return self._target
 
     def params(self, *args):
         """Create and access free circuit parameters.
@@ -664,11 +604,13 @@ class Program:
         ret = []
         for a in args:
             if not isinstance(a, str):
-                raise TypeError('Parameter names must be strings.')
+                raise TypeError("Parameter names must be strings.")
 
             if a not in self.free_params:
                 if self.locked:
-                    raise CircuitError('The Program is locked, no more free parameters can be created.')
+                    raise CircuitError(
+                        "The Program is locked, no more free parameters can be created."
+                    )
                 p = FreeParameter(a)
                 self.free_params[a] = p
             else:

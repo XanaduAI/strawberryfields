@@ -1,9 +1,8 @@
-#!/usr/bin/env python3
+import numpy as np
+from numpy import pi, sqrt
+
 import strawberryfields as sf
 from strawberryfields.ops import *
-from strawberryfields.utils import scale
-from numpy import pi, sqrt
-import numpy as np
 
 # initialize engine and program objects
 eng = sf.Engine(backend="gaussian")
@@ -21,8 +20,8 @@ with gaussian_cloning.context as q:
     BS | (q[1], q[2])
     MeasureX | q[1]
     MeasureP | q[2]
-    Xgate(scale(q[1], sqrt(2))) | q[0]
-    Zgate(scale(q[2], sqrt(2))) | q[0]
+    Xgate(q[1].par * sqrt(2)) | q[0]
+    Zgate(q[2].par * sqrt(2)) | q[0]
 
     # after the final beamsplitter, modes q[0] and q[3]
     # will contain identical approximate clones of the
@@ -31,7 +30,7 @@ with gaussian_cloning.context as q:
     # end circuit
 
 # run the engine
-results = eng.run(gaussian_cloning, run_options={"modes": [0, 3]})
+results = eng.run(gaussian_cloning, modes=[0, 3])
 
 # return the cloning fidelity
 fidelity = sqrt(results.state.fidelity_coherent([0.7+1.2j, 0.7+1.2j]))
@@ -45,7 +44,7 @@ a = np.empty([reps], dtype=np.complex128)
 
 for i in range(reps):
     eng.reset()
-    results = eng.run(gaussian_cloning, run_options={"modes": [0]})
+    results = eng.run(gaussian_cloning, modes=[0])
     f[i] = results.state.fidelity_coherent([0.7+1.2j])
     a[i] = results.state.displacement()
 

@@ -99,7 +99,7 @@ Squeezing
 
    .. math::
       & S(z) = \exp\left(\frac{1}{2}\left(z^* \a^2-z {\ad}^{2} \right) \right) = \exp\left(\frac{r}{2}\left(e^{-i\phi}\a^2 -e^{i\phi}{\ad}^{2} \right) \right)\\
-      & S^\dagger(z) \a S(z) = \a \cosh(r) -\ad e^{i \phi} \sinh r\\
+      & S^\dagger(z) \a S(z) = \a \cosh(r) -\ad e^{i \phi} \sinh (r)\\
       & S^\dagger(z) \ad S(z) = \ad \cosh(r) -\a e^{-i \phi} \sinh(r)
 
    where :math:`z=r e^{i \phi}` with :math:`r \geq 0` and :math:`\phi \in [0,2 \pi)`.
@@ -290,7 +290,7 @@ Two-mode squeezing
    :class: defn
 
    .. math::
-      S_2(z) = \exp\left(z^* \a_1\a_2 -z \ad_1 \ad_2 \right) = \exp\left(r (e^{-i\phi} \a_1\a_2 -e^{i\phi} \ad_1 \ad_2 \right)
+      S_2(z) = \exp\left(z \ad_1 \ad_2 - z^* \a_1\a_2 \right) = \exp\left(r (e^{i\phi} \ad_1\ad_2 -e^{-i\phi} \a_1 \a_2 \right)
 
    where :math:`z=r e^{i \phi}` with :math:`r \geq 0` and :math:`\phi \in [0,2 \pi)`.
 

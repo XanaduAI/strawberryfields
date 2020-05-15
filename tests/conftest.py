@@ -48,7 +48,7 @@ eng_backend_params = [
 ]
 
 
-if tf_available and tf.__version__[:3] == "1.3":
+if tf_available and tf.__version__[:2] == "2.":
     from strawberryfields.backends.tfbackend import TFBackend
 
     backend_params.append(pytest.param(TFBackend, marks=pytest.mark.tf))
@@ -128,12 +128,14 @@ def backend(monkeypatch):
         m.setattr(dummy_backend, "add_mode", lambda n: None)
         m.setattr(dummy_backend, "del_mode", lambda n: None)
         m.setattr(dummy_backend, "displacement", lambda alpha, modes: None)
+        m.setattr(dummy_backend, "prepare_coherent_state", lambda z, modes: None)
         m.setattr(dummy_backend, "squeeze", lambda r, modes: None)
         m.setattr(dummy_backend, "rotation", lambda r, modes: None)
         m.setattr(dummy_backend, "beamsplitter", lambda t, r, m1, m2: None)
         m.setattr(dummy_backend, "measure_homodyne", lambda phi, modes, select, shots: 5)
         m.setattr(dummy_backend, "state", lambda modes, shots: None)
         m.setattr(dummy_backend, "reset", lambda: None)
+        dummy_backend.two_mode_squeeze = lambda r, phi, modes: None
         dummy_backend.get_cutoff_dim = lambda: 6
         yield dummy_backend
 
@@ -142,7 +144,7 @@ def backend(monkeypatch):
 def print_fixtures(cutoff, hbar, batch_size):
     """Print the test configuration at the beginning of the session"""
     print(
-        "FIXTURES: cutoff = {}, hbar = {}, batch_size = {}".format(
+        "FIXTURES: cutoff = {}, pure = {}, hbar = {}, batch_size = {}".format(
             cutoff, hbar, pure, batch_size
         )
     )
@@ -208,7 +210,6 @@ def setup_eng(setup_backend_pars):  # pylint: disable=redefined-outer-name
         return eng, prog
 
     return _setup_eng
-
 
 def pytest_runtest_setup(item):
     """Automatically skip tests if they are marked for only certain backends"""

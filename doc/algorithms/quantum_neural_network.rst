@@ -185,16 +185,22 @@ Using the above ``interferometer`` function, an :math:`N` mode CV quantum neural
    :start-after: # define layer
    :end-before: # end layer
 
-The variables fed into the gates of the layer are defined as TensorFlow variables. Multiple layers can then be joined into a network using:
+Multiple layers can then be joined into a network using:
 
 .. code-block:: python
 
     with prog.context as q:
+        for k in range(num_layers):
+            layer(params[k, :], q)
 
-        for _ in range(layers):
-            layer(q)
+where ``params`` is a real array of size ``[layers, 2*(max(1, modes-1) + modes**2 + modes)]`` containing
+the weights for the quantum neural network.
 
 .. note::
-    A fully functional Strawberry Fields simulation containing the above Blackbird code for state preparation is included at :download:`examples/quantum_neural_network.py <../../examples/quantum_neural_network.py>`.
 
-Applications of CV quantum neural networks to `state learning <../gallery/state_learner/StateLearning.html>`_ and `gate synthesis <../gallery/gate_synthesis/GateSynthesis.html>`_ can be found in the Strawberry Fields gallery.
+    A fully functional Strawberry Fields optimization example, containing the above Blackbird code to
+    create the quantum neural network, and using TensorFlow to optimize for state preparation,
+    is included at :download:`examples/quantum_neural_network.py <../../examples/quantum_neural_network.py>`.
+
+Applications of CV quantum neural networks to :doc:`state learning </tutorials_apps/state_learner>` and
+:doc:`gate synthesis </tutorials_apps/gate_synthesis>` can be found in the Strawberry Fields tutorials.

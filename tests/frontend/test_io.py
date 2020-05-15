@@ -21,7 +21,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields import io
 from strawberryfields.program import Program, CircuitError
-from strawberryfields.parameters import MeasuredParameter, FreeParameter, par_is_symbolic, parfuncs as pf
+from strawberryfields.parameters import MeasuredParameter, FreeParameter, par_is_symbolic, par_funcs as pf
 
 
 pytestmark = pytest.mark.frontend
@@ -109,6 +109,16 @@ class TestSFToBlackbirdConversion:
         assert bb.name == "test_program"
         assert bb.version == "1.0"
         assert bb.target["name"] == "gaussian"
+
+    def test_metadata_run_options(self):
+        """Test run options correctly converts"""
+        prog = Program(4, name="test_program")
+        bb = io.to_blackbird(prog.compile("gaussian", shots=1024))
+
+        assert bb.name == "test_program"
+        assert bb.version == "1.0"
+        assert bb.target["name"] == "gaussian"
+        assert bb.target["options"] == {"shots": 1024}
 
     def test_gate_noarg(self):
         """Test gate with no argument converts"""
@@ -234,6 +244,24 @@ class TestSFToBlackbirdConversion:
             "modes": [0],
             "args": [],
             "kwargs": {"select": [2]},
+        }
+
+        assert bb.operations[0] == expected
+
+    def test_measure_darkcounts(self):
+        """Test measurement with dark counts"""
+        # create a test program
+        prog = Program(1)
+
+        with prog.context as q:
+            ops.MeasureFock(dark_counts=2) | q[0]
+
+        bb = io.to_blackbird(prog)
+        expected = {
+            "op": "MeasureFock",
+            "modes": [0],
+            "args": [],
+            "kwargs": {"dark_counts": [2]},
         }
 
         assert bb.operations[0] == expected
@@ -585,7 +613,7 @@ class TestEngineIntegration:
 
         with monkeypatch.context() as m:
             m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
-            results = eng.run(prog, run_options={"shots": 1000})
+            results = eng.run(prog, shots=1000)
 
         assert results.run_options == {"shots": 1000}
 
