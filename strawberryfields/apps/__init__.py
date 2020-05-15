@@ -25,6 +25,7 @@ Strawberry Fields application layer.
 	sample
 	similarity
 	subgraph
+	train
 	vibronic
 """
 
@@ -35,4 +36,5 @@ import strawberryfields.apps.points
 import strawberryfields.apps.sample
 import strawberryfields.apps.similarity
 import strawberryfields.apps.subgraph
+import strawberryfields.apps.train
 import strawberryfields.apps.vibronic
