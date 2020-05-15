@@ -6,7 +6,7 @@
   the expectation value of any operator that is diagonal in the number basis.
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
-* Adds `parity_expectation` method as an instance of `diaongal_expectation` for 
+* Adds `parity_expectation` method as an instance of `diagonal_expectation` for 
   the `BaseFockState` class, which returns the expectation value of the parity operator, 
   defined as (-1)^N.
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389) 
