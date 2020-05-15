@@ -436,7 +436,7 @@ class TestParityExpectation:
 
         backend = setup_backend(1)
         state = backend.state()
-        alpha = 2
+        alpha = 0.2
         backend.prepare_coherent_state(alpha, 0)
         state = backend.state()
 
@@ -447,7 +447,7 @@ class TestParityExpectation:
     def test_squeezed(self, setup_backend, tol):
         backend = setup_backend(1)
         state = backend.state()
-        r = 1
+        r = 0.2
         phi = 0
         backend.prepare_squeezed_state(r, phi, 0)
         state = backend.state()
@@ -457,7 +457,7 @@ class TestParityExpectation:
     def test_two_mode_squeezed(self, setup_backend, tol):
         backend = setup_backend(2)
         state = backend.state()
-        r = 2
+        r = 0.2
         phi = 0
         backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
         backend.prepare_squeezed_state(r, phi, 0)
@@ -470,7 +470,7 @@ class TestParityExpectation:
     def test_thermal(self, setup_backend, tol):
         backend = setup_backend(1)
         state = backend.state()
-        m = 2
+        m = 0.2
         backend.prepare_thermal_state(m, 0)
         state = backend.state()
 
@@ -496,7 +496,7 @@ class TestQuadraticExpectation:
         backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
         state = backend.state()
 
-        assert np.allclose(state.parity_expectation([0]), 2, atol=tol, rtol=0)
+        assert np.allclose(state.quadratic_expectation([0]), 2, atol=tol, rtol=0)
 
 
 class TestFidelities:
