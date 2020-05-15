@@ -2,7 +2,7 @@
 
 <h3>New features since last release</h3>
 
-* Adds `diaongal_expectation` method for the `BaseFockState` class, which returns
+* Adds `diagonal_expectation` method for the `BaseFockState` class, which returns
   the expectation value of any operator that is diagonal in the number basis.
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
