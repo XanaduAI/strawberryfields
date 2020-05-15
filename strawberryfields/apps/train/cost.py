@@ -29,23 +29,21 @@ import numpy as np
 
 class KL:
 
-    def __init__(self, data, gbs):
+    def __init__(self, data, vgbs):
         self.data = data
-        self.gbs = gbs
+        self.vgbs = vgbs
         self.nr_samples = len(data)
         self.nr_modes = len(data[0])
 
-    def f_data(self, data, features):
-        """Computes the constant F_D appearing in the gradient formula."""
-        f = np.zeros(len(features))
-        for t in range(self.nr_samples):
-            for i in range(self.nr_modes):  # more elegant way of doing this?
-                f += data[t][i] * features[i]
-        return f/self.nr_samples
+    def mean_n_data(self):
+        return np.sum(self.data, axis=1)/self.nr_samples
 
-    def f_model(self, params, features):
-        mean_photons = self.gbs.mean_photons_by_mode(params).T
-        return mean_photons @ features
+    def grad(self, params):
+        weights = self.vgbs.embedding(params)
+        if vgbs.threshold():
+            n_diff = self.vgbs.mean_clicks_by_mode(params) - self.mean_n_data()
+        else:
+            n_diff = self.vgbs.mean_photons_by_mode(params) - self.mean_n_data()
+        return (n_diff/weights) @ self.vgbs.embedding.jacobian(params)
 
-    def grad(self, params, data, features):
-        return f_model(params, features) - f_data(data, features)
+    # TODO: add evaluate cost function
