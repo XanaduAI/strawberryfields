@@ -415,7 +415,7 @@ class TestParityExpectation:
         n2 = 2
         backend.prepare_fock_state(n1, 0)
         backend.prepare_fock_state(n2, 1)
-        backend.beamsplitter(np.pi / 4, 0, 0, 1)
+        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
         state = backend.state()
 
         assert np.allclose(state.parity_expectation([0]), 0, atol=tol, rtol=0)
@@ -436,18 +436,18 @@ class TestParityExpectation:
 
         backend = setup_backend(1)
         state = backend.state()
-        m = 2
-        backend.prepare_coherent_state(2, 0)
+        alpha = 2
+        backend.prepare_coherent_state(alpha, 0)
         state = backend.state()
 
         assert np.allclose(
-            state.parity_expectation([0]), np.exp(-2 * m), atol=tol, rtol=0
+            state.parity_expectation([0]), np.exp(-2 * (alpha**2)), atol=tol, rtol=0
         )
 
     def test_squeezed(self, setup_backend, tol):
         backend = setup_backend(1)
         state = backend.state()
-        r = 2
+        r = 1
         phi = 0
         backend.prepare_squeezed_state(r, phi, 0)
         state = backend.state()
@@ -459,10 +459,10 @@ class TestParityExpectation:
         state = backend.state()
         r = 2
         phi = 0
-        backend.beamsplitter(np.pi / 4, 0, 0, 1)
+        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
         backend.prepare_squeezed_state(r, phi, 0)
         backend.prepare_squeezed_state(-1 * r, phi, 1)
-        backend.beamsplitter(np.pi / 4, 0, 0, 1)
+        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
         state = backend.state()
 
         assert np.allclose(state.parity_expectation([0, 1]), 1, atol=tol, rtol=0)
@@ -475,7 +475,7 @@ class TestParityExpectation:
         state = backend.state()
 
         assert np.allclose(
-            state.parity_expectation([0]), (1 / (2 * m + 1)), atol=tol, rtol=0
+            state.parity_expectation([0]), (1 / ((2 * m) + 1)), atol=tol, rtol=0
         )
 
 
