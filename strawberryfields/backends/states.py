@@ -926,13 +926,6 @@ class BaseFockState(BaseState):
         values = (-1) ** np.arange(cutoff)
         return self.diagonal_expectation(modes, values)
 
-    def quadratic_expectation(self, modes, a, b, c):
-        """Calculates the expectation value of a product of operators of the form aN^2 + bN + c acting on given modes"""
-        cutoff = self._cutoff
-        ar = np.arange(cutoff)
-        values = a * (ar ** 2) + b * ar + c
-        return self.diagonal_expectation(modes, values)
-
 
 class BaseGaussianState(BaseState):
     r"""Class for the representation of quantum states using the Gaussian formalism.
