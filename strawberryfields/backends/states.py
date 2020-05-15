@@ -40,14 +40,18 @@ class BaseState(abc.ABC):
 
     def __init__(self, num_modes, mode_names=None):
         self._modes = num_modes
-        self._hbar = sf.hbar  # always use the global frontend hbar value for state objects
+        self._hbar = (
+            sf.hbar
+        )  # always use the global frontend hbar value for state objects
         self._data = None
         self._pure = None
 
         if mode_names is None:
             self._modemap = {i: "mode {}".format(i) for i in range(num_modes)}
         else:
-            self._modemap = {i: "{}".format(j) for i, j in zip(range(num_modes), mode_names)}
+            self._modemap = {
+                i: "{}".format(j) for i, j in zip(range(num_modes), mode_names)
+            }
 
         self._str = "<BaseState: num_modes={}, pure={}, hbar={}>".format(
             self.num_modes, self._pure, self._hbar
@@ -549,7 +553,9 @@ class BaseFockState(BaseState):
         odds = [k for k in range(1, num_axes, 2)]
         flat_size = np.prod([s.shape[k] for k in range(0, num_axes, 2)])
         transpose_list = evens + odds
-        probs = np.diag(np.reshape(np.transpose(s, transpose_list), [flat_size, flat_size])).real
+        probs = np.diag(
+            np.reshape(np.transpose(s, transpose_list), [flat_size, flat_size])
+        ).real
 
         return np.reshape(probs, [self._cutoff] * self._modes)
 
@@ -569,7 +575,8 @@ class BaseFockState(BaseState):
 
         if len(modes) > self._modes:
             raise ValueError(
-                "The number of specified modes cannot " "be larger than the number of subsystems."
+                "The number of specified modes cannot "
+                "be larger than the number of subsystems."
             )
 
         # reduce rho down to specified subsystems
@@ -613,14 +620,20 @@ class BaseFockState(BaseState):
         max_indices = len(indices) // 2
 
         if self.num_modes > max_indices:
-            raise Exception("fidelity method can only support up to {} modes".format(max_indices))
+            raise Exception(
+                "fidelity method can only support up to {} modes".format(max_indices)
+            )
 
         left_indices = indices[:mode]
         eqn_left = "".join([i * 2 for i in left_indices])
         reduced_dm_indices = indices[mode : mode + 2]
         right_indices = indices[mode + 2 : self._modes + 1]
         eqn_right = "".join([i * 2 for i in right_indices])
-        eqn = "".join([eqn_left, reduced_dm_indices, eqn_right]) + "->" + reduced_dm_indices
+        eqn = (
+            "".join([eqn_left, reduced_dm_indices, eqn_right])
+            + "->"
+            + reduced_dm_indices
+        )
         rho_reduced = np.einsum(eqn, self.dm())
 
         return np.dot(np.conj(other_state), np.dot(rho_reduced, other_state)).real
@@ -643,17 +656,23 @@ class BaseFockState(BaseState):
             alpha_list = [alpha_list]  # pragma: no cover
 
         if len(alpha_list) != self._modes:
-            raise ValueError("The number of alpha values must match the number of modes.")
+            raise ValueError(
+                "The number of alpha values must match the number of modes."
+            )
 
         coh = lambda a, dim: np.array(
-            [np.exp(-0.5 * np.abs(a) ** 2) * (a) ** n / np.sqrt(factorial(n)) for n in range(dim)]
+            [
+                np.exp(-0.5 * np.abs(a) ** 2) * (a) ** n / np.sqrt(factorial(n))
+                for n in range(dim)
+            ]
         )
 
         if self._modes == 1:
             multi_cohs_vec = coh(alpha_list[0], self._cutoff)
         else:
             multi_cohs_list = [
-                coh(alpha_list[idx], dim) for idx, dim in enumerate(s.shape[::mode_size])
+                coh(alpha_list[idx], dim)
+                for idx, dim in enumerate(s.shape[::mode_size])
             ]
             eqn = ",".join(indices[: self._modes]) + "->" + indices[: self._modes]
             multi_cohs_vec = np.einsum(
@@ -667,9 +686,13 @@ class BaseFockState(BaseState):
         bra_indices = indices[: 2 * self._modes : 2]
         ket_indices = indices[1 : 2 * self._modes : 2]
         new_eqn_lhs = ",".join([bra_indices, ket_indices])
-        new_eqn_rhs = "".join(bra_indices[idx] + ket_indices[idx] for idx in range(self._modes))
+        new_eqn_rhs = "".join(
+            bra_indices[idx] + ket_indices[idx] for idx in range(self._modes)
+        )
         outer_prod_eqn = new_eqn_lhs + "->" + new_eqn_rhs
-        multi_coh_matrix = np.einsum(outer_prod_eqn, multi_cohs_vec, np.conj(multi_cohs_vec))
+        multi_coh_matrix = np.einsum(
+            outer_prod_eqn, multi_cohs_vec, np.conj(multi_cohs_vec)
+        )
 
         return np.vdot(s, multi_coh_matrix).real
 
@@ -699,7 +722,9 @@ class BaseFockState(BaseState):
         Q, P = np.meshgrid(xvec, pvec)
         A = (Q + P * 1.0j) / (2 * np.sqrt(self._hbar / 2))
 
-        Wlist = np.array([np.zeros(np.shape(A), dtype=complex) for k in range(self._cutoff)])
+        Wlist = np.array(
+            [np.zeros(np.shape(A), dtype=complex) for k in range(self._cutoff)]
+        )
 
         # Wigner function for |0><0|
         Wlist[0] = np.exp(-2.0 * np.abs(A) ** 2) / np.pi
@@ -756,7 +781,9 @@ class BaseFockState(BaseState):
             A = np.zeros([2 * self._modes, 2 * self._modes])
 
         if A.shape != (2 * self._modes, 2 * self._modes):
-            raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
+            raise ValueError(
+                "Matrix of quadratic coefficients A must be of size 2Nx2N."
+            )
 
         if not np.allclose(A.T, A):
             raise ValueError("Matrix of quadratic coefficients A must be symmetric.")
@@ -799,7 +826,10 @@ class BaseFockState(BaseState):
 
         # determine modes with quadratic expectation values
         nonzero = np.concatenate(
-            [np.mod(A.nonzero()[0], self._modes), np.mod(linear_coeff.nonzero()[0], self._modes)]
+            [
+                np.mod(A.nonzero()[0], self._modes),
+                np.mod(linear_coeff.nonzero()[0], self._modes),
+            ]
         )
         ex_modes = list(set(nonzero))
         num_modes = len(ex_modes)
@@ -843,7 +873,9 @@ class BaseFockState(BaseState):
         ind2 = ind1[0] + "".join(
             [
                 str(i) + str(j)
-                for i, j in zip(ind1[2::2], indices[2 * num_modes + 1 : 3 * num_modes + 1])
+                for i, j in zip(
+                    ind1[2::2], indices[2 * num_modes + 1 : 3 * num_modes + 1]
+                )
             ]
         )
         ind3 = "".join([str(i) + str(j) for i, j in zip(ind1[1::2], ind2[2::2])])
@@ -909,7 +941,9 @@ class BaseFockState(BaseState):
         traced_modes = list(traced_modes)
         traced_modes.sort(reverse=True)
         for mode in traced_modes:
-            ps = np.tensordot(np.identity(cutoff), ps, axes=((0, 1), (2 * mode, 2 * mode + 1)))
+            ps = np.tensordot(
+                np.identity(cutoff), ps, axes=((0, 1), (2 * mode, 2 * mode + 1))
+            )
         for _ in range(len(modes)):
             ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
         return float(ps)
@@ -923,15 +957,16 @@ class BaseFockState(BaseState):
     def parity_expectation(self, modes):
         """Calculates the expectation value of a product of parity operators acting on given modes"""
         cutoff = self._cutoff
-        values = (-1)**np.arange(cutoff)
+        values = (-1) ** np.arange(cutoff)
         return self.diagonal_expectation(modes, values)
 
     def quadratic_expectation(self, modes, a, b, c):
         """Calculates the expectation value of a product of operators of the form aN^2 + bN + c acting on given modes"""
         cutoff = self._cutoff
         ar = np.arange(cutoff)
-        values = a*(ar**2) + b*ar + c
+        values = a * (ar ** 2) + b * ar + c
         return self.diagonal_expectation(modes, values)
+
 
 class BaseGaussianState(BaseState):
     r"""Class for the representation of quantum states using the Gaussian formalism.
@@ -988,9 +1023,9 @@ class BaseGaussianState(BaseState):
         if self.num_modes != other.num_modes:
             return False
 
-        if np.allclose(self._mu, other._mu, atol=self.EQ_TOLERANCE, rtol=0) and np.allclose(
-            self._cov, other._cov, atol=self.EQ_TOLERANCE, rtol=0
-        ):
+        if np.allclose(
+            self._mu, other._mu, atol=self.EQ_TOLERANCE, rtol=0
+        ) and np.allclose(self._cov, other._cov, atol=self.EQ_TOLERANCE, rtol=0):
             return True
 
         return False
@@ -1058,7 +1093,8 @@ class BaseGaussianState(BaseState):
 
         if len(modes) > self._modes:
             raise ValueError(
-                "The number of specified modes cannot " "be larger than the number of subsystems."
+                "The number of specified modes cannot "
+                "be larger than the number of subsystems."
             )
 
         ind = np.concatenate([np.array(modes), np.array(modes) + self._modes])
@@ -1175,14 +1211,18 @@ class BaseGaussianState(BaseState):
             A = np.zeros([2 * self._modes, 2 * self._modes])
 
         if A.shape != (2 * self._modes, 2 * self._modes):
-            raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
+            raise ValueError(
+                "Matrix of quadratic coefficients A must be of size 2Nx2N."
+            )
 
         if not np.allclose(A.T, A):
             raise ValueError("Matrix of quadratic coefficients A must be symmetric.")
 
         if d is not None:
             if d.shape != (2 * self._modes,):
-                raise ValueError("Vector of linear coefficients d must be of length 2N.")
+                raise ValueError(
+                    "Vector of linear coefficients d must be of length 2N."
+                )
         else:
             d = np.zeros([2 * self._modes])
 
@@ -1234,7 +1274,11 @@ class BaseGaussianState(BaseState):
         # Therefore, the correction term is the sum of the determinants of 2x2 submatrices of A.
         modes = np.arange(2 * num_modes).reshape(2, -1).T
         var -= np.sum(
-            [np.linalg.det(self._hbar * quad_coeffs[:, m][n]) for m in modes for n in modes]
+            [
+                np.linalg.det(self._hbar * quad_coeffs[:, m][n])
+                for m in modes
+                for n in modes
+            ]
         )
 
         return mean, var
@@ -1250,7 +1294,10 @@ class BaseGaussianState(BaseState):
         if len(modes) == 2:
             ni = photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
             nj = photon_number_mean(mu, cov, modes[1], hbar=self._hbar)
-            return photon_number_covar(mu, cov, modes[1], modes[0], hbar=self._hbar) + ni * nj
+            return (
+                photon_number_covar(mu, cov, modes[1], modes[0], hbar=self._hbar)
+                + ni * nj
+            )
 
         raise ValueError(
             "The number_expectation method only supports one or two modes for Gaussian states."

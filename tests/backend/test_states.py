@@ -101,7 +101,7 @@ class TestBaseStateMeanPhotonNumber:
     def test_mean_photon_squeezed(self, setup_backend, tol, batch_size):
         """Test that E(n)=sinh^2(r) and var(n)=2(sinh^2(r)+sinh^4(r)) for a squeezed state"""
         if batch_size is not None:
-        	pytest.skip("Does not support batch mode")
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(1)
 
         r = 0.1
@@ -119,7 +119,7 @@ class TestBaseStateMeanPhotonNumber:
     def test_mean_photon_displaced_squeezed(self, setup_backend, tol, batch_size):
         """Test that E(n) = sinh^2(r)+|a|^2 for a displaced squeezed state"""
         if batch_size is not None:
-        	pytest.skip("Does not support batch mode")
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(1)
 
         nbar = 0.123
@@ -140,7 +140,7 @@ class TestBaseStateMeanPhotonNumber:
     def test_mean_photon_displaced_thermal(self, setup_backend, tol, batch_size):
         """Test that E(n)=|a|^2+nbar and var(n)=var_th+|a|^2(1+2nbar)"""
         if batch_size is not None:
-        	pytest.skip("Does not support batch mode")
+            pytest.skip("Does not support batch mode")
         backend = setup_backend(1)
 
         nbar = 0.123
@@ -290,6 +290,7 @@ class TestQuadratureExpectations:
 
         assert np.allclose(res.flatten(), res_exact.flatten(), atol=tol, rtol=0)
 
+
 class TestNumberExpectation:
     """Multimode photon-number expectation value tests"""
 
@@ -303,7 +304,9 @@ class TestNumberExpectation:
         assert np.allclose(state.number_expectation([0]), 0.0, atol=tol, rtol=0)
         assert np.allclose(state.number_expectation([1]), 0.0, atol=tol, rtol=0)
 
-    def test_number_expectation_displaced_squeezed(self, setup_backend, tol, batch_size):
+    def test_number_expectation_displaced_squeezed(
+        self, setup_backend, tol, batch_size
+    ):
         """Tests the expectation value of photon numbers when there is no correlation"""
         if batch_size is not None:
             pytest.skip("Does not support batch mode")
@@ -328,7 +331,9 @@ class TestNumberExpectation:
         """Tests that the correct exception is raised for repeated modes"""
         backend = setup_backend(2)
         state = backend.state()
-        with pytest.raises(ValueError, match="There can be no duplicates in the modes specified."):
+        with pytest.raises(
+            ValueError, match="There can be no duplicates in the modes specified."
+        ):
             state.number_expectation([0, 0])
 
     @pytest.mark.backends("gaussian")
@@ -336,7 +341,10 @@ class TestNumberExpectation:
         """Tests that the correct exception is raised when there are more than two modes specified for Gaussian states"""
         backend = setup_backend(3)
         state = backend.state()
-        with pytest.raises(ValueError, match="The number_expectation method only supports one or two modes for Gaussian states."):
+        with pytest.raises(
+            ValueError,
+            match="The number_expectation method only supports one or two modes for Gaussian states.",
+        ):
             state.number_expectation([0, 1, 2])
 
     def test_number_expectation_two_mode_squeezed(self, setup_backend, tol, batch_size):
@@ -377,13 +385,28 @@ class TestNumberExpectation:
         state = backend.state()
         nbar = np.sinh(r) ** 2
         assert np.allclose(
-            state.number_expectation([0, 1, 2, 3]), (2 * nbar ** 2 + nbar) ** 2, atol=tol, rtol=0
+            state.number_expectation([0, 1, 2, 3]),
+            (2 * nbar ** 2 + nbar) ** 2,
+            atol=tol,
+            rtol=0,
         )
-        assert np.allclose(state.number_expectation([0, 1 ,3]), nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([3, 1, 2]), nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0)
+        assert np.allclose(
+            state.number_expectation([0, 1, 3]),
+            nbar * (2 * nbar ** 2 + nbar),
+            atol=tol,
+            rtol=0,
+        )
+        assert np.allclose(
+            state.number_expectation([3, 1, 2]),
+            nbar * (2 * nbar ** 2 + nbar),
+            atol=tol,
+            rtol=0,
+        )
+
 
 class TestParityExpectation:
-
+    
+    @pytest.mark.backends("fock", "tf")
     def test_parity_fock(self, setup_backend, tol):
 
         backend = setup_backend(2)
@@ -392,7 +415,7 @@ class TestParityExpectation:
         n2 = 2
         backend.prepare_fock_state(n1, 0)
         backend.prepare_fock_state(n2, 1)
-        backend.beamsplitter(np.pi/4, 0, 0, 1)
+        backend.beamsplitter(np.pi / 4, 0, 0, 1)
         state = backend.state()
 
         assert np.allclose(state.parity_expectation([0]), 0, atol=tol, rtol=0)
@@ -417,7 +440,9 @@ class TestParityExpectation:
         backend.prepare_coherent_state(2, 0)
         state = backend.state()
 
-        assert np.allclose(state.partiy_expectation([0]), np.exp(-2*m), atol=tol, rtol=0)
+        assert np.allclose(
+            state.partiy_expectation([0]), np.exp(-2 * m), atol=tol, rtol=0
+        )
 
     def test_squeezed(self, setup_backend, tol):
         backend = setup_backend(1)
@@ -436,7 +461,7 @@ class TestParityExpectation:
         phi = 0
         backend.beamsplitter(np.pi / 4, 0, 0, 1)
         backend.prepare_squeezed_state(r, phi, 0)
-        backend.prepare_squeezed_state(-1*r, phi, 1)
+        backend.prepare_squeezed_state(-1 * r, phi, 1)
         backend.beamsplitter(np.pi / 4, 0, 0, 1)
         state = backend.state()
 
@@ -449,10 +474,14 @@ class TestParityExpectation:
         backend.prepare_thermal_state(m, 0)
         state = backend.state()
 
-        assert np.allclose(state.parity_expectation([0]), (1/(2*m + 1)), atol=tol, rtol=0)
+        assert np.allclose(
+            state.parity_expectation([0]), (1 / (2 * m + 1)), atol=tol, rtol=0
+        )
+
 
 class TestQuadraticExpectation:
 
+    @pytest.mark.backends("fock", "tf")
     def test_parity_fock(self, setup_backend, tol):
 
         backend = setup_backend(2)
@@ -464,10 +493,11 @@ class TestQuadraticExpectation:
         c = 1
         backend.prepare_fock_state(n1, 0)
         backend.prepare_fock_state(n2, 1)
-        backend.beamsplitter(np.pi/4, 0, 0, 1)
+        backend.beamsplitter(np.pi / 4, 0, 0, 1)
         state = backend.state()
 
         assert np.allclose(state.parity_expectation([0]), 2, atol=tol, rtol=0)
+
 
 class TestFidelities:
     """Fidelity tests."""
@@ -499,7 +529,9 @@ class TestFidelities:
         state = backend.state()
 
         if isinstance(backend, backends.BaseFock):
-            in_state = utils.squeezed_state(r, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
+            in_state = utils.squeezed_state(
+                r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
+            )
         else:
             in_state = utils.squeezed_state(r, phi, basis="gaussian", hbar=hbar)
 
@@ -518,7 +550,9 @@ class TestFidelities:
                 a, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
             )
         else:
-            in_state = utils.displaced_squeezed_state(a, r, phi, basis="gaussian", hbar=hbar)
+            in_state = utils.displaced_squeezed_state(
+                a, r, phi, basis="gaussian", hbar=hbar
+            )
 
         assert np.allclose(state.fidelity(in_state, 0), 1, atol=tol, rtol=0)
         assert np.allclose(state.fidelity(in_state, 1), 1, atol=tol, rtol=0)
