@@ -206,11 +206,20 @@ class TestXCompilation:
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        with pytest.raises(CircuitError, match="There can be no operations before the S2gates."):
-            res = prog.compile("Xstrict")
+        expected = sf.Program(2 * num_pairs)
+
+        with expected.context as q:
+            for i in range(num_pairs):
+                ops.S2gate(0) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
+            ops.MeasureFock() | q
+
         #with pytest.raises(CircuitError, match="There can be no operations before the S2gates."):
-        #expected = expected.compile("Xstrict")
-        #assert program_equivalence(res, expected, atol=tol)
+        res = prog.compile("Xstrict")
+        #with pytest.raises(CircuitError, match="There can be no operations before the S2gates."):
+        expected = expected.compile("Xstrict")
+        assert program_equivalence(res, expected, atol=tol)
 
     @pytest.mark.parametrize("num_pairs", [4,5,6,7])
     def test_missing_s2gates(self, num_pairs, tol):

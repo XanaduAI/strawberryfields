@@ -81,10 +81,14 @@ class XstrictSpecs(CircuitSpecs):
         # Check circuit begins with two mode squeezers
         # --------------------------------------------
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
+        # If there are no two-mode squeezers add squeezers at the beginning with squeezing param equal to zero.
+        if B == []:
+            initS2 = [Command(ops.S2gate(0, 0), [registers[i], registers[i+half_n_modes]]) for i in range(half_n_modes)]
+            seq = initS2 + seq
+            A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
 
         if A != []:
             raise CircuitError("There can be no operations before the S2gates.")
-
 
         regrefs = set()
 
@@ -98,18 +102,6 @@ class XstrictSpecs(CircuitSpecs):
         if not regrefs.issubset(allowed_modes):
             raise CircuitError("S2gates do not appear on the correct modes.")
 
-
-        # ensure provided S2gates all have the allowed squeezing values
-        #allowed_sq_value = {(0.0, 0.0), (self.sq_amplitude, 0.0)}
-        #sq_params = {(float(np.round(cmd.op.p[0], 3)), float(cmd.op.p[1])) for cmd in B}
-
-        #if not sq_params.issubset(allowed_sq_value):
-        #    wrong_params = sq_params - allowed_sq_value
-        #    raise CircuitError(
-        #        "Incorrect squeezing value(s) (r, phi)={}. Allowed squeezing "
-        #        "value(s) are (r, phi)={}.".format(wrong_params, allowed_sq_value)
-        #    )
-
         # determine which modes do not have input S2gates specified
         missing = allowed_modes - regrefs
 
@@ -119,6 +111,7 @@ class XstrictSpecs(CircuitSpecs):
 
         sqs = [cmd.op.p[0] for cmd in B]
 
+        # ensure provided S2gates all have the allowed squeezing values
         if not all(s in self.allowed_sq_ranges for s in sqs):
             wrong_sq_values = [np.round(s, 4) for s in sqs if s not in self.allowed_sq_ranges]
             raise CircuitError(
