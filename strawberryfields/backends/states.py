@@ -799,7 +799,7 @@ class BaseFockState(BaseState):
 
         # determine modes with quadratic expectation values
         nonzero = np.concatenate(
-            [np.mod(A.nonzero()[0], self._modes), np.mod(linear_coeff.nonzero()[0], self._modes)]
+            [np.mod(A.nonzero()[0], self._modes), np.mod(linear_coeff.nonzero()[0], self._modes),]
         )
         ex_modes = list(set(nonzero))
         num_modes = len(ex_modes)
@@ -887,14 +887,14 @@ class BaseFockState(BaseState):
 
         return mean, var
 
-    def number_expectation(self, modes):
+    def diagonal_expectation(self, modes, values):
+        """Calculates the expectation value of an operator that is diagonal in the number basis"""
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
 
         cutoff = self._cutoff  # Fock space cutoff.
         num_modes = self._modes  # number of modes in the state.
 
-        values = np.arange(cutoff)
         traced_modes = tuple(item for item in range(num_modes) if item not in modes)
         if self.is_pure:
             # state is a tensor of probability amplitudes
@@ -913,6 +913,18 @@ class BaseFockState(BaseState):
         for _ in range(len(modes)):
             ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
         return float(ps)
+
+    def number_expectation(self, modes):
+        """Calculates the expectation value of a product of number operators acting on given modes"""
+        cutoff = self._cutoff
+        values = np.arange(cutoff)
+        return self.diagonal_expectation(modes, values)
+
+    def parity_expectation(self, modes):
+        """Calculates the expectation value of a product of parity operators acting on given modes"""
+        cutoff = self._cutoff
+        values = (-1) ** np.arange(cutoff)
+        return self.diagonal_expectation(modes, values)
 
 
 class BaseGaussianState(BaseState):
