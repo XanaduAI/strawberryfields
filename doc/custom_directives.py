@@ -279,6 +279,6 @@ class DetailsDirective(Directive):
         name = self.options.get("name", "Details and conventions")
         rst = DETAILS_TEMPLATE.format(title=name, content="\n".join(self.content))
         string_list = StringList(rst.split('\n'))
-        node = nodes.transition()
+        node = nodes.tbody()
         self.state.nested_parse(string_list, self.content_offset, node)
         return [node]

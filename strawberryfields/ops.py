@@ -2029,7 +2029,7 @@ class Fouriergate(Gate):
             is the case :math:`\phi=\pi/2`; this corresponds to the Fourier gate,
 
             .. math::
-                F = R(\pi/2) = e^{i (\pi/2) \ad \a},
+                F = R(\pi/2) = e^{i (\pi/2) \ad \a}.
 
         The Fourier gate transforms the quadratures as follows:
 
