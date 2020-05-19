@@ -1937,7 +1937,7 @@ class CZgate(Gate):
         It is related to the addition gate by a :doc:`phase space rotation <strawberryfields.ops.Rgate>`
         in the second mode:
 
-        ..math::
+        .. math::
             \text{CZ}(s) = R_{(2)}(\pi/2) \: \text{CX}(s) \: R_{(2)}^\dagger(\pi/2).
 
         In the position basis
