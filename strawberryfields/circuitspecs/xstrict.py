@@ -30,7 +30,6 @@ from .gbs import GBSSpecs
 from .gaussian_unitary import GaussianUnitary
 
 
-
 class XstrictSpecs(CircuitSpecs):
     """Circuit specifications for the X class of circuits.
 
@@ -58,7 +57,10 @@ class XstrictSpecs(CircuitSpecs):
     }
 
     decompositions = {
-        "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False},
+        "BipartiteGraphEmbed": {
+            "mesh": "rectangular_symmetric",
+            "drop_identity": False,
+        },
     }
 
     def compile(self, seq, registers, strict=False):
@@ -67,7 +69,9 @@ class XstrictSpecs(CircuitSpecs):
 
         # Number of modes must be even
         if n_modes % 2 != 0:
-            raise CircuitError("The X series only supports programs with an even number of modes.")
+            raise CircuitError(
+                "The X series only supports programs with an even number of modes."
+            )
         half_n_modes = n_modes // 2
         # Call the GBS compiler to do basic measurement validation.
         # The GBS compiler also merges multiple measurement commands
@@ -83,7 +87,10 @@ class XstrictSpecs(CircuitSpecs):
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
         # If there are no two-mode squeezers add squeezers at the beginning with squeezing param equal to zero.
         if B == []:
-            initS2 = [Command(ops.S2gate(0, 0), [registers[i], registers[i+half_n_modes]]) for i in range(half_n_modes)]
+            initS2 = [
+                Command(ops.S2gate(0, 0), [registers[i], registers[i + half_n_modes]])
+                for i in range(half_n_modes)
+            ]
             seq = initS2 + seq
             A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
 
@@ -113,7 +120,9 @@ class XstrictSpecs(CircuitSpecs):
 
         # ensure provided S2gates all have the allowed squeezing values
         if not all(s in self.allowed_sq_ranges for s in sqs):
-            wrong_sq_values = [np.round(s, 4) for s in sqs if s not in self.allowed_sq_ranges]
+            wrong_sq_values = [
+                np.round(s, 4) for s in sqs if s not in self.allowed_sq_ranges
+            ]
             raise CircuitError(
                 "Incorrect squeezing value(s) r={}. Allowed squeezing "
                 "value(s) are {}.".format(wrong_sq_values, self.allowed_sq_ranges)
@@ -139,7 +148,9 @@ class XstrictSpecs(CircuitSpecs):
             used_modes = [x.ind for x in seq[0].reg]
 
         if not np.allclose(S @ S.T, np.identity(len(S))):
-            raise CircuitError("The operations after squeezing do not correspond to an interferometer.")
+            raise CircuitError(
+                "The operations after squeezing do not correspond to an interferometer."
+            )
 
         if len(used_modes) != n_modes:
             # The symplectic transformation acts on a subset of
@@ -148,7 +159,7 @@ class XstrictSpecs(CircuitSpecs):
             # simply extract the computed symplectic matrix
             S = expand(seq[0].op.p[0], used_modes, n_modes)
 
-        U = S[:n_modes, :n_modes] - 1j*S[:n_modes, n_modes:]
+        U = S[:n_modes, :n_modes] - 1j * S[:n_modes, n_modes:]
         U11 = U[:half_n_modes, :half_n_modes]
         U12 = U[:half_n_modes, half_n_modes:]
         U21 = U[half_n_modes:, :half_n_modes]
@@ -168,12 +179,12 @@ class XstrictSpecs(CircuitSpecs):
                     0, half_n_modes - 1, half_n_modes, n_modes - 1
                 )
             )
-        U1 = ops.Interferometer(U11, mesh="rectangular_symmetric", drop_identity=True)._decompose(
-            registers[:half_n_modes]
-        )
+        U1 = ops.Interferometer(
+            U11, mesh="rectangular_symmetric", drop_identity=True
+        )._decompose(registers[:half_n_modes])
         U2 = copy.deepcopy(U1)
 
         for Ui in U2:
-            Ui.reg = [registers[r.ind+half_n_modes] for r in Ui.reg]
+            Ui.reg = [registers[r.ind + half_n_modes] for r in Ui.reg]
 
         return B + U1 + U2 + meas_seq
