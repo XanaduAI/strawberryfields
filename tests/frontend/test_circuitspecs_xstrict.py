@@ -195,7 +195,7 @@ class TestXCompilation:
             res = prog.compile("Xstrict")
 
     @pytest.mark.parametrize("num_pairs", [4,5,6,7])
-    def test_no_s2gates_bananas(self, num_pairs, tol):
+    def test_no_s2gates(self, num_pairs, tol):
         """Test identity S2gates are inserted when no S2gates
         are provided."""
         prog = sf.Program(2 * num_pairs)
