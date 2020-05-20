@@ -131,7 +131,6 @@ class TestVGBS:
         W = gbs.W(params)
         assert np.allclose(np.diag(W) ** 2, embedding(params))  # check that diagonal squared
         # equals embedding
-        assert np.allclose(np.diag(np.diag(W)), W)  # check that matrix is diagonal
 
     def test_generate_samples(self, adj, n_mean, monkeypatch):
         """Test that generate_samples correctly dispatches between torontonian and hafnian
