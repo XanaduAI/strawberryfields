@@ -24,21 +24,9 @@ from thewalrus.quantum import find_scaling_adjacency_matrix as rescale
 from thewalrus.quantum import find_scaling_adjacency_matrix_torontonian as rescale_tor
 
 from strawberryfields.apps import train
+from strawberryfields.apps.train.embed import Exp
 
 pytestmark = pytest.mark.apps
-
-
-# TODO: REMOVE
-class Exp:
-    def weights(self, params):
-        return np.exp(-params)
-
-    def __call__(self, params):
-        return self.weights(params)
-
-    def derivative(self, params):
-        return -1 * self.weights(params)
-
 
 embedding = Exp()
 
