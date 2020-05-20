@@ -53,7 +53,7 @@ Features
 Installation
 ============
 
-Strawberry Fields requires Python version 3.5, 3.6, 3.7, or 3.8. Installation of Strawberry Fields, as well as all dependencies, can be done using pip:
+Strawberry Fields requires Python version 3.6, 3.7, or 3.8. Installation of Strawberry Fields, as well as all dependencies, can be done using pip:
 
 .. code-block:: bash
 
