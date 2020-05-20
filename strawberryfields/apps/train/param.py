@@ -162,13 +162,15 @@ class VGBS:
     the mean number of clicks or photons.
 
     The mapping from :math:`\theta` to :math:`W(\theta)` is specified using the ``embedding``
-    argument. TODO mention embedding module
+    argument. An embedding from the :mod:`~.apps.train.embed` module such as
+    :class:`~.apps.train.embed.Exp` must be used, which uses the simple embedding
+    :math:`W(\theta) = \exp(-\theta)`.
 
     **Example usage:**
 
     >>> g = nx.erdos_renyi_graph(4, 0.7, seed=1967)
     >>> A = nx.to_numpy_array(g)
-    >>> embedding = Exp(4)  # TODO does this need updating?
+    >>> embedding = train.embed.Exp(4)
     >>> vgbs = VGBS(A, 3, embedding, threshold=True)
     >>> params = np.array([0.05, 0.1, 0.02, 0.01])
     >>> vgbs.A(params)
@@ -186,10 +188,11 @@ class VGBS:
         A (array): the input adjacency matrix :math:`A`
         n_mean (float): the initial mean number of clicks or photons
         embedding: the method of converting from trainable parameters :math:`\theta` to
-            :math:`W(\theta)` #TODO: any update from other PR?
+            :math:`W(\theta)`. Must be an embedding instance from the :mod:`~.apps.train.embed`
+            module.
         threshold (bool): determines whether to use GBS in threshold or PNR mode
         samples (array): an optional array of samples from :math:`A` used to speed up gradient
-            calculations #TODO: more info
+            calculations
     """
 
     def __init__(
