@@ -71,10 +71,7 @@ def _Omat(A: np.ndarray) -> np.ndarray:
     Returns:
         array: the :math:`O` matrix of :math:`A`
     """
-    n = len(A)
-    A_big = np.block([[A, 0 * A], [0 * A, np.conj(A)]])
-    X = Xmat(n)
-    return X @ A_big
+    return np.block([[np.zeros_like(A), np.conj(A)], [A, np.zeros_like(A)]])
 
 
 def prob_click(A: np.ndarray, sample: np.ndarray):
