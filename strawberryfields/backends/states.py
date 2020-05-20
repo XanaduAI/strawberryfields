@@ -25,9 +25,11 @@ from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
 from scipy.integrate import simps
+
 from thewalrus.quantum import photon_number_mean, photon_number_covar
 
 import strawberryfields as sf
+
 from .shared_ops import rotation_matrix as _R
 from .shared_ops import changebasis
 
@@ -1249,6 +1251,19 @@ class BaseGaussianState(BaseState):
         raise ValueError(
             "The number_expectation method only supports one or two modes for Gaussian states."
         )
+
+    def parity_expectation(self, modes):
+        """Calculates the expectation value of a product of parity operators acting on given modes"""
+        if len(modes) != len(set(modes)):
+            raise ValueError("There can be no duplicates in the modes specified.")
+
+        mu = self._mu
+        cov = self._cov
+        new = mu @ (np.linalg.inv(cov) @ mu)
+        num = np.exp(-(0.5) * new)
+        new_num = ((self.hbar / 2) ** len(modes)) * num / (np.sqrt(np.linalg.det(cov)))
+
+        return new_num
 
     @abc.abstractmethod
     def reduced_dm(self, modes, **kwargs):
