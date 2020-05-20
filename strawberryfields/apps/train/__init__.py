@@ -8,8 +8,8 @@ Tools for training variational GBS devices.
 
     embed
     VGBS
-    parametrization
+    param
 """
-from strawberryfields.apps.train.parametrization import VGBS
-import strawberryfields.apps.train.parametrization
+from strawberryfields.apps.train.param import VGBS
+import strawberryfields.apps.train.param
 import strawberryfields.apps.train.embed

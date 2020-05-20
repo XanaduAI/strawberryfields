@@ -50,14 +50,14 @@ def params(dim):
 
 
 def test_rescale_adjacency():
-    """Test for the ``train.parametrization.rescale_adjacency`` function. We find the rescaled
+    """Test for the ``train.param.rescale_adjacency`` function. We find the rescaled
     adjacency matrix when using threshold and PNR detection and check that: (i) the two matrices
     are not the same, (ii) they are rescaled by the correct factor."""
     adj = np.ones((10, 10))
     n_mean = 5
 
-    r1 = train.parametrization.rescale_adjacency(adj, n_mean, True)
-    r2 = train.parametrization.rescale_adjacency(adj, n_mean, False)
+    r1 = train.param.rescale_adjacency(adj, n_mean, True)
+    r2 = train.param.rescale_adjacency(adj, n_mean, False)
     s1 = rescale_tor(adj, n_mean)
     s2 = rescale(adj, n_mean)
 
@@ -67,7 +67,7 @@ def test_rescale_adjacency():
 
 
 def test_prob_click():
-    """Test for the ``train.parametrization.prob_click`` function. For a simple 4 mode system,
+    """Test for the ``train.param.prob_click`` function. For a simple 4 mode system,
     we generate the full probability distribution and check that it sums to one as well as that
     individual probabilities are between 0 and 1. We then focus on probabilities for samples that
     have two clicks and assert that they are all equal, as expected since our input adjacency
@@ -75,9 +75,9 @@ def test_prob_click():
     """
     dim = 4
     A = np.ones((dim, dim))
-    A_scale = train.parametrization.rescale_adjacency(A, 3, True)
+    A_scale = train.param.rescale_adjacency(A, 3, True)
     s = list(itertools.product([0, 1], repeat=dim))
-    p = np.array([train.parametrization.prob_click(A_scale, s_) for s_ in s])
+    p = np.array([train.param.prob_click(A_scale, s_) for s_ in s])
     p_two_clicks = np.array([p[i] for i, s_ in enumerate(s) if sum(s_) == 2])
     assert np.allclose(np.sum(p), 1)  # check that distribution sums to one
     assert (p <= 1).all() and (p >= 0).all()
@@ -85,7 +85,7 @@ def test_prob_click():
 
 
 def test_prob_photon_sample():
-    """Test for the ``train.parametrization.prob_photon_sample`` function. For a simple 4 mode
+    """Test for the ``train.param.prob_photon_sample`` function. For a simple 4 mode
     system, we generate the probability distribution up to two photons and check that it sums to
     less than one as well as that individual probabilities are between 0 and 1. We then focus on
     probabilities for samples in the orbit [1, 1] and assert that they are all equal, as expected
@@ -93,9 +93,9 @@ def test_prob_photon_sample():
     """
     dim = 4
     A = np.ones((dim, dim))
-    A_scale = train.parametrization.rescale_adjacency(A, 3, False)
+    A_scale = train.param.rescale_adjacency(A, 3, False)
     s = list(itertools.product(range(3), repeat=dim))
-    p = np.array([train.parametrization.prob_photon_sample(A_scale, s_) for s_ in s])
+    p = np.array([train.param.prob_photon_sample(A_scale, s_) for s_ in s])
     p_two_clicks = np.array([p[i] for i, s_ in enumerate(s) if sum(s_) == 2 and max(s_) == 1])
     assert np.sum(p) <= 1
     assert (p <= 1).all() and (p >= 0).all()
@@ -106,7 +106,7 @@ def test_A_to_cov():
     """Test if A_to_cov returns the correct covariance matrix for a simple fixed example"""
     x = np.sqrt(0.5)
     A = np.array([[0, x], [x, 0]])
-    cov = train.parametrization.A_to_cov(A)
+    cov = train.param.A_to_cov(A)
     target = np.array(
         [
             [3.0, 0.0, 0.0, 2.82842712],
@@ -224,7 +224,7 @@ class TestVGBS:
         sample = np.zeros(dim)
         p = gbs.prob_sample(params, sample)
 
-        O = train.parametrization._Omat(gbs.A(params))
+        O = train.param._Omat(gbs.A(params))
         scale = np.sqrt(np.linalg.det(np.identity(2 * dim) - O))
 
         assert np.allclose(scale, p)
