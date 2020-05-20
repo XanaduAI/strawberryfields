@@ -7,5 +7,7 @@ Tools for training variational GBS devices.
     :toctree: api
 
     embed
+    Stochastic
 """
 import strawberryfields.apps.train.embed
+from strawberryfields.apps.train.cost import Stochastic
