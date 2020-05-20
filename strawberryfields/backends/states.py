@@ -887,23 +887,17 @@ class BaseFockState(BaseState):
 
         return mean, var
 
-    def diagonal_expectation(self, modes, values):
-        """Calculates the expectation value of an operator that is diagonal in the number basis"""
-        if len(modes) != len(set(modes)):
-            raise ValueError("There can be no duplicates in the modes specified.")
+    def _diagonal_expectation_pure(self, modes, values):
+        """Calculates the expectation value of an operator that is diagonal in
+        the number basis for a pure state"""
+        # state is a tensor of probability amplitudes
+        ps = np.abs(self.ket()) ** 2
+        ps = ps.sum(axis=modes)
+        for _ in modes:
+            ps = np.tensordot(values, ps, axes=1)
+        return float(ps)
 
-        cutoff = self._cutoff  # Fock space cutoff.
-        num_modes = self._modes  # number of modes in the state.
-
-        traced_modes = tuple(item for item in range(num_modes) if item not in modes)
-        if self.is_pure:
-            # state is a tensor of probability amplitudes
-            ps = np.abs(self.ket()) ** 2
-            ps = ps.sum(axis=traced_modes)
-            for _ in modes:
-                ps = np.tensordot(values, ps, axes=1)
-            return float(ps)
-
+    def _diagonal_expectation_density_matrix(self, modes, values):
         # state is a tensor of density matrix elements in the SF convention
         ps = np.real(self.dm())
         traced_modes = list(traced_modes)
@@ -914,8 +908,29 @@ class BaseFockState(BaseState):
             ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
         return float(ps)
 
+    def diagonal_expectation(self, modes, values):
+        """Calculates the expectation value of an operator that is diagonal in
+        the number basis"""
+        if len(modes) != len(set(modes)):
+            raise ValueError("There can be no duplicates in the modes specified.")
+
+        cutoff = self._cutoff  # Fock space cutoff.
+        num_modes = self._modes  # number of modes in the state.
+
+        traced_modes = tuple(item for item in range(num_modes) if item not in modes)
+
+        if self.is_pure:
+            expval = _diagonal_expectation_pure(traced_modes, values)
+            x_squared = _diagonal_expectation_pure(traced_modes, values ** 2)
+            variance = x_squared - expval ** 2
+            return expval, variance
+
+        expval = _diagonal_expectation_density_matrix(traced_modes, values)
+        x_squared = _diagonal_expectation_density_matrix(traced_modes, values ** 2)
+        variance = x_squared - expval ** 2
+        return expval, variance
+
     def number_expectation(self, modes):
-        """Calculates the expectation value of a product of number operators acting on given modes"""
         cutoff = self._cutoff
         values = np.arange(cutoff)
         return self.diagonal_expectation(modes, values)

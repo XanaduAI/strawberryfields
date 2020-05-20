@@ -419,8 +419,10 @@ class TestParityExpectation:
         backend.prepare_fock_state(n2, 1)
         backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
         state = backend.state()
+        expval, var = state.parity_expectation([0])
 
-        assert np.allclose(state.parity_expectation([0]), 0, atol=tol, rtol=0)
+        assert np.allclose(expval, 0, atol=tol, rtol=0)
+        assert np.allclose(var, 0, atol=tol, rtol=0)
 
     @pytest.mark.backends("fock", "tf")
     def test_two_mode_fock(self, setup_backend, tol, batch_size):
