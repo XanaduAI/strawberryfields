@@ -60,7 +60,7 @@ class TestStochastic:
 
     @pytest.mark.parametrize("threshold", [False])
     def test_h_reparametrized(self, vgbs, dim, params):
-        """Test that _h_reparametrized behaves as expected by calculating the cost function over
+        """Test that h_reparametrized behaves as expected by calculating the cost function over
         a fixed set of PNR samples using both the reparametrized and non-reparametrized methods"""
         cost_fn = train.Stochastic(h, vgbs)
         possible_samples = list(itertools.product([0, 1, 2], repeat=dim))
@@ -69,19 +69,19 @@ class TestStochastic:
         probs_init = [vgbs.prob_sample(np.zeros(dim - 1), s) for s in possible_samples]
 
         cost = sum([probs[i] * h(s) for i, s in enumerate(possible_samples)])
-        cost_reparam = sum([probs_init[i] * cost_fn._h_reparametrized(s, params) for i, \
-                                                                                  s in enumerate(
+        cost_reparam = sum([probs_init[i] * cost_fn.h_reparametrized(s, params) for i, \
+                                                                                    s in enumerate(
             possible_samples)])
 
         assert np.allclose(cost, cost_reparam)
 
     @pytest.mark.parametrize("threshold", [False])
     def test_h_reparametized_example(self, dim, vgbs, params, embedding):
-        """Test that _h_reparametrized returns the correct value when compared to working the
+        """Test that h_reparametrized returns the correct value when compared to working the
         result out by hand"""
         cost_fn = train.Stochastic(h, vgbs)
         sample = np.ones(dim)
-        h_reparam = cost_fn._h_reparametrized(sample, params)
+        h_reparam = cost_fn.h_reparametrized(sample, params)
         h_reparam_expected = -1.088925964188385
         assert np.allclose(h_reparam, h_reparam_expected)
 
@@ -89,7 +89,7 @@ class TestStochastic:
     def test_evaluate(self, vgbs, dim, params):
         """Test that evaluate returns the expected value when the VGBS class is preloaded with a
         dataset where half of the datapoints are zeros and half of the datapoints are ones. The
-        expected result of the evaluate method is then simply the average of _h_reparametrized
+        expected result of the evaluate method is then simply the average of h_reparametrized
         applied to a ones vector and a zeros vector."""
         n_samples = 10
         zeros = np.zeros((n_samples, dim))
@@ -98,8 +98,8 @@ class TestStochastic:
         vgbs.add_A_init_samples(samples)
 
         cost_fn = train.Stochastic(h, vgbs)
-        h0 = cost_fn._h_reparametrized(zeros[0], params)
-        h1 = cost_fn._h_reparametrized(ones[0], params)
+        h0 = cost_fn.h_reparametrized(zeros[0], params)
+        h1 = cost_fn.h_reparametrized(ones[0], params)
         eval_expected = (h0 + h1) * 0.5
 
         eval = cost_fn(params, 2 * n_samples)

@@ -17,24 +17,47 @@ TODO
 from typing import Callable
 
 import numpy as np
-from strawberryfields.apps.train.param import _Omat
+from strawberryfields.apps.train.param import _Omat, VGBS
 
 
 class Stochastic:
     """TODO"""
 
-    # TODO update type hints
-    def __init__(self, h: Callable, vgbs):
+    def __init__(self, h: Callable, vgbs: VGBS):
         self.h = h
         self.vgbs = vgbs
 
     def evaluate(self, params: np.ndarray, n_samples: int = 1000) -> float:
-        """TODO"""
-        samples = self.vgbs.get_A_init_samples(n_samples)
-        return np.mean([self._h_reparametrized(s, params) for s in samples])
+        """Evaluates the cost function.
 
-    def _h_reparametrized(self, sample: np.ndarray, params: np.ndarray) -> float:
-        """TODO"""
+        The cost function is evaluated by finding its average over a number ``n_samples`` of
+        samples generated from the VGBS system using the trainable parameters :math:`\theta`.
+
+        **Example usage:**
+
+        >>> TODO
+
+        Args:
+            params (array): the trainable parameters :math:`\theta`
+            n_samples (int): the number of GBS samples used to average the cost function over
+
+        Returns:
+            float: the value of the stochastic cost function
+        """
+        samples = self.vgbs.get_A_init_samples(n_samples)
+        return np.mean([self.h_reparametrized(s, params) for s in samples])
+
+    def h_reparametrized(self, sample: np.ndarray, params: np.ndarray) -> float:
+        """Include trainable parameters in the cost function to allow for sampling from the
+        initial adjacency matrix.
+
+        Args:
+            sample (array): the sample
+            params (array): the trainable parameters :math:`\theta`
+
+        Returns:
+            float: the cost function with respect to a given sample and set of trainable parameters
+        """
         h = self.h(sample)
         A = self.vgbs.A(params)
         w = self.vgbs.embedding(params)
@@ -48,8 +71,17 @@ class Stochastic:
 
         return h * dets * prod
 
-    def _sample_difference_from_mean(self, sample: np.ndarray, params: np.ndarray):
-        """TODO"""
+    def _sample_difference_from_mean(self, sample: np.ndarray, params: np.ndarray) -> np.ndarray:
+        """Calculates the difference between an input sample and the vector of mean clicks or
+        photons by mode.
+
+        Args:
+            sample (array): the sample
+            params (array): the trainable parameters :math:`\theta`
+
+        Returns:
+            array: The difference
+        """
         if self.vgbs.threshold:
             n_diff = sample - self.vgbs.mean_clicks_by_mode(params)
         else:
@@ -62,7 +94,7 @@ class Stochastic:
         w = self.vgbs.embedding(params)
         jac = self.vgbs.embedding.jacobian(params)
 
-        h = self._h_reparametrized(sample, params)
+        h = self.h_reparametrized(sample, params)
         diff = self._sample_difference_from_mean(sample, params)
         return h * (diff / w) @ jac
 
