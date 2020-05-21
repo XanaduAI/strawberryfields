@@ -1259,8 +1259,8 @@ class BaseGaussianState(BaseState):
 
         mu = self._mu
         cov = self._cov
-        number = mu @ (np.linalg.inv(cov) @ mu)
-        num = np.exp(-(0.5) * number)
+        
+        num = np.exp(-(0.5) * (mu @ (np.linalg.inv(cov) @ mu)) )
         parity = ((self.hbar / 2) ** len(modes)) * num / (np.sqrt(np.linalg.det(cov)))
 
         return parity
