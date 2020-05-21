@@ -16,7 +16,7 @@ Submodule for computing gradients, evaluating cost functions, and optimizing GBS
 circuits.
 
 In the context of stochastic optimization, cost functions are expressed as expectation values
-over the GBS distribution. Within the WAW parametrization, gradients of such cost functions can be
+over the GBS distribution. Within the WAW parametrization, gradients of cost functions can be
 expressed as expectation values over the GBS distribution. This module contains methods for
 calculating these gradients and for using gradient-based methods to optimize GBS circuits. In the
 case of optimization with respect to a Kullback-Leibler divergence or log-likelihood cost
@@ -46,7 +46,7 @@ class KL:
         \partial_\theta KL(\theta) = - \sum_{k=1}^m(\langle n_k\rangle_{\text{data}-
         \langle n_k\rangle)_{\text{GBS}}\partial_\theta w_k,
 
-    where :math:`\langle n_k\rangle)` denote average photon numbers in mode *k*. This class
+    where :math:`\langle n_k\rangle)` denotes the average photon numbers in mode *k*. This class
     provides methods to compute gradients and evaluate the cost function.
 
     **Example usage**
@@ -87,7 +87,7 @@ class KL:
         Returns:
             array: vector of mean photon numbers per mode
         """
-        return np.sum(self.data, axis=1)/self.nr_samples
+        return np.sum(self.data, axis=0)/self.nr_samples
 
     def grad(self, params: np.ndarray) -> np.ndarray:
         """Calculates the gradient of the Kullback-Liebler cost function with respect to the

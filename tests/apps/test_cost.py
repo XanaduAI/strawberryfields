@@ -19,22 +19,48 @@ import numpy as np
 import pytest
 from strawberryfields.apps.train import cost, param, embed
 
+test_data = [[0, 0, 0, 0], [0, 2, 2, 2], [0, 0, 0, 2], [0, 0, 2, 2], [0, 2, 2, 0], [0, 0, 0, 4]]
+n_means_data = np.mean(test_data, axis=0)
+test_data = [[t[:d] for t in test_data] for d in range(2, 5)]
+n_means_gbs = [[1, 1], [2/3, 2/3, 2/3], [1/2, 1/2, 1/2, 1/2]]
+params = [0, 0, 0, 0]
+weights = [1, 1, 1, 1]
+test_jacobian = -np.eye(4)
+test_sum_log_probs = [6.931471805599451, 12.644620176064302, 22.377710881470353]
+mean_photon_number = 2
+A = np.eye(4)
 
-test_data = [[0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 1, 1], [0, 0, 2, 2], [0, 1, 2, 3], [1, 0, 0, 0]]
-test_data = np.array([[np.array(t[:d]) for t in td] for d in range(2, 5)])
-test_n_means = np.array([3/6, 3/6, 6/6, 7/6])
-n_mean = 1
 
-
-@pytest.mark.parametrize("i", range(3))
+@pytest.mark.parametrize("k", range(3))
 class TestKL:
     """Tests for the class ``train.cost.KL"""
 
-    def test_mean_data(self):
-        m = i + 2
-        A = np.eye(m)
-        params = np.zeros(m)
-        embedding = embed(params)
-        vgbs = param(A, n_mean, embedding, threshold=True)
-        kl = cost.KL(test_data[i], vgbs)
-        assert kl.mean_n_data() == test_n_means[:m]
+    def test_mean_data(self, k):
+        """Tests the mean photon number per mode from hard-coded values stored in the array
+        `test_n_means`. The test iterates over different number of modes in the data."""
+        m = k + 2
+        embedding = embed.Exp(m)
+        vgbs = param.VGBS(A[:m, :m], mean_photon_number, embedding, threshold=False)
+        kl = cost.KL(test_data[k], vgbs)
+        assert np.allclose(kl.mean_n_data(), n_means_data[:m])
+        assert len(kl.mean_n_data()) == m
+
+    def test_grad(self, k):
+        """Tests the calculation of the gradient against an explicit computation from hard-coded
+        values of trainable parameters and mean photon numbers from data and model."""
+        m = k + 2
+        embedding = embed.Exp(m)
+        vgbs = param.VGBS(A[:m, :m], mean_photon_number, embedding, threshold=False)
+        kl = cost.KL(test_data[k], vgbs)
+        gamma = [-(n_means_data[i] - n_means_gbs[k][i]) / weights[i] for i in range(m)]
+        assert np.allclose(kl.grad(params[:m]), gamma @ test_jacobian[:m, :m])
+
+    def test_cost(self, k):
+        """Tests the calculation of the Kullback-Liebler cost function against an explicit
+        computation from hard-coded values of trainable parameters and mean photon numbers
+        from data and model."""
+        m = k + 2
+        embedding = embed.Exp(m)
+        vgbs = param.VGBS(A[:m, :m], mean_photon_number, embedding, threshold=False)
+        kl = cost.KL(test_data[k], vgbs)
+        assert np.allclose(kl.evaluate(params[:m]), test_sum_log_probs[k]/6 - np.log(6))
