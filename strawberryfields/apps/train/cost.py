@@ -39,7 +39,7 @@ class Stochastic:
         h = self.h(sample)
         A = self.vgbs.A(params)
         w = self.vgbs.embedding(params)
-        Id = np.eye(2*self.vgbs.n_modes)
+        Id = np.eye(2 * self.vgbs.n_modes)
 
         dets_numerator = np.linalg.det(Id - _Omat(A))
         dets_denominator = np.linalg.det(Id - _Omat(self.vgbs.A_init))
@@ -58,19 +58,19 @@ class Stochastic:
 
         return n_diff
 
-    def gradient(self, params: np.ndarray, n_samples: int) -> np.ndarray:
+    def _gradient_one_sample(self, sample: np.ndarray, params: np.ndarray) -> np.ndarray:
         """TODO"""
-        samples = self.vgbs.get_A_init_samples(n_samples)
-
         w = self.vgbs.embedding(params)
         jac = self.vgbs.embedding.jacobian(params)
 
-        def _gradient_one_sample(sample):
-            h = self._h_reparametrized(sample)
-            diff = self._sample_difference_from_mean(sample, params)
-            return h * (diff / w) @ jac
+        h = self._h_reparametrized(sample, params)
+        diff = self._sample_difference_from_mean(sample, params)
+        return h * (diff / w) @ jac
 
-        return np.mean([_gradient_one_sample(s) for s in samples])
+    def gradient(self, params: np.ndarray, n_samples: int) -> np.ndarray:
+        """TODO"""
+        samples = self.vgbs.get_A_init_samples(n_samples)
+        return np.mean([self._gradient_one_sample(s, params) for s in samples])
 
     def __call__(self, params: np.ndarray, n_samples: int = 1000) -> float:
-        return self.evaluate(params)
+        return self.evaluate(params, n_samples)
