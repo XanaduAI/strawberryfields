@@ -14,7 +14,6 @@
 r"""
 TODO
 """
-from math import factorial
 from typing import Callable
 
 import numpy as np
@@ -29,7 +28,7 @@ class Stochastic:
         self.h = h
         self.vgbs = vgbs
 
-    def evaluate(self, params: np.ndarray, n_samples: int) -> float:
+    def evaluate(self, params: np.ndarray, n_samples: int = 1000) -> float:
         """TODO"""
         samples = self.vgbs.get_A_init_samples(n_samples)
         return np.mean([self._h_reparametrized(s, params) for s in samples])
@@ -67,10 +66,10 @@ class Stochastic:
         diff = self._sample_difference_from_mean(sample, params)
         return h * (diff / w) @ jac
 
-    def gradient(self, params: np.ndarray, n_samples: int) -> np.ndarray:
+    def gradient(self, params: np.ndarray, n_samples: int = 1000) -> np.ndarray:
         """TODO"""
         samples = self.vgbs.get_A_init_samples(n_samples)
-        return np.mean([self._gradient_one_sample(s, params) for s in samples])
+        return np.mean([self._gradient_one_sample(s, params) for s in samples], axis=0)
 
     def __call__(self, params: np.ndarray, n_samples: int = 1000) -> float:
         return self.evaluate(params, n_samples)

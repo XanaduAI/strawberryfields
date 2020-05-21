@@ -132,3 +132,24 @@ class TestStochastic:
             grad_target = np.array([17.17157601, 20.94382262, 24.71606922])
 
         assert np.allclose(gradient, grad_target)
+
+    @pytest.mark.parametrize("threshold", [False])
+    def test_gradient(self, vgbs, dim, params):
+        """Test that gradient returns the expected value when the VGBS class is preloaded with a
+        dataset where half of the datapoints are zeros and half of the datapoints are ones. The
+        expected result of the gradient method is then simply the average of _gradient_one_sample
+        applied to a ones vector and a zeros vector."""
+        n_samples = 10
+        zeros = np.zeros((n_samples, dim))
+        ones = np.ones((n_samples, dim))
+        samples = np.vstack([zeros, ones])
+        vgbs.add_A_init_samples(samples)
+
+        cost_fn = train.Stochastic(h, vgbs)
+        g0 = cost_fn._gradient_one_sample(zeros[0], params)
+        g1 = cost_fn._gradient_one_sample(ones[0], params)
+        grad_expected = (g0 + g1) * 0.5
+
+        grad = cost_fn.gradient(params, 2 * n_samples)
+        assert np.allclose(grad_expected, grad)
+        assert grad.shape == (dim - 1,)
