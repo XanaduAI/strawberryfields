@@ -87,7 +87,7 @@ class KL:
         Returns:
             array: vector of mean photon numbers per mode
         """
-        return np.sum(self.data, axis=0)/self.nr_samples
+        return np.sum(self.data, axis=0) / self.nr_samples
 
     def grad(self, params: np.ndarray) -> np.ndarray:
         """Calculates the gradient of the Kullback-Liebler cost function with respect to the
@@ -108,7 +108,7 @@ class KL:
             n_diff = self.vgbs.mean_clicks_by_mode(params) - self.mean_n_data()
         else:
             n_diff = self.vgbs.mean_photons_by_mode(params) - self.mean_n_data()
-        return (n_diff/weights) @ self.vgbs.embedding.jacobian(params)
+        return (n_diff / weights) @ self.vgbs.embedding.jacobian(params)
 
     def evaluate(self, params: np.ndarray) -> float:
         """Computes the value of the Kullback-Liebler divergence cost function.
@@ -126,4 +126,4 @@ class KL:
         kl = 0
         for sample in self.data:
             kl += np.log(self.vgbs.prob_sample(params, sample))
-        return -kl/self.nr_samples - np.log(self.nr_samples)
+        return -kl / self.nr_samples - np.log(self.nr_samples)

@@ -22,7 +22,7 @@ from strawberryfields.apps.train import cost, param, embed
 test_data = [[0, 0, 0, 0], [0, 2, 2, 2], [0, 0, 0, 2], [0, 0, 2, 2], [0, 2, 2, 0], [0, 0, 0, 4]]
 n_means_data = np.mean(test_data, axis=0)
 test_data = [[t[:d] for t in test_data] for d in range(2, 5)]
-n_means_gbs = [[1, 1], [2/3, 2/3, 2/3], [1/2, 1/2, 1/2, 1/2]]
+n_means_gbs = [[1, 1], [2 / 3, 2 / 3, 2 / 3], [1 / 2, 1 / 2, 1 / 2, 1 / 2]]
 params = [0, 0, 0, 0]
 weights = [1, 1, 1, 1]
 test_jacobian = -np.eye(4)
@@ -63,4 +63,4 @@ class TestKL:
         embedding = embed.Exp(m)
         vgbs = param.VGBS(A[:m, :m], mean_photon_number, embedding, threshold=False)
         kl = cost.KL(test_data[k], vgbs)
-        assert np.allclose(kl.evaluate(params[:m]), test_sum_log_probs[k]/6 - np.log(6))
+        assert np.allclose(kl.evaluate(params[:m]), test_sum_log_probs[k] / 6 - np.log(6))
