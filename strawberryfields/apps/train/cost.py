@@ -18,6 +18,7 @@ from math import factorial
 from typing import Callable
 
 import numpy as np
+from strawberryfields.apps.train.param import _Omat
 
 
 class Stochastic:
@@ -28,25 +29,23 @@ class Stochastic:
         self.h = h
         self.vgbs = vgbs
 
-    def evaluate(self, weights: np.ndarray, n_samples: int) -> float:
+    def evaluate(self, params: np.ndarray, n_samples: int) -> float:
         """TODO"""
         samples = self.vgbs.get_A_init_samples(n_samples)
-        return np.mean([self._h_reparametrized(s, weights) for s in samples])
+        return np.mean([self._h_reparametrized(s, params) for s in samples])
 
     def _h_reparametrized(self, sample: np.ndarray, params: np.ndarray) -> float:
         """TODO"""
         h = self.h(sample)
         A = self.vgbs.A(params)
         w = self.vgbs.embedding(params)
-        Id = np.eye(self.vgbs.n_modes)
+        Id = np.eye(2*self.vgbs.n_modes)
 
-        dets_numerator = np.linalg.det(Id - A ** 2)
-        dets_denominator = np.linalg.det(Id - self.vgbs.self.A_init ** 2)
+        dets_numerator = np.linalg.det(Id - _Omat(A))
+        dets_denominator = np.linalg.det(Id - _Omat(self.vgbs.A_init))
         dets = np.sqrt(dets_numerator / dets_denominator)
 
-        prod_numerator = np.power(w, sample)
-        prod_denominator = np.array([factorial(n) for n in sample])
-        prod = np.prod(prod_numerator / prod_denominator)
+        prod = np.prod(np.power(w, sample))
 
         return h * dets * prod
 
