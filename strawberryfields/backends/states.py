@@ -1263,7 +1263,7 @@ class BaseGaussianState(BaseState):
         num = np.exp(-(0.5) * number)
         new_num = ((self.hbar / 2) ** len(modes)) * num / (np.sqrt(np.linalg.det(cov)))
 
-        return new_num
+        return parity
 
     @abc.abstractmethod
     def reduced_dm(self, modes, **kwargs):
