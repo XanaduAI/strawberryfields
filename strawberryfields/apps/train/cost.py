@@ -51,15 +51,24 @@ class KL:
 
     **Example usage**
 
-    # TODO: add ex usage for KL class
+    >>> embedding = embed.Exp(4)
+    >>> A = np.ones((4, 4))
+    >>> vgbs = param.VGBS(A, 3, embedding, threshold=True)
+    >>> params = np.array([0.05, 0.1, 0.02, 0.01])
+    >>> data = np.zeros((4, 4))
+    >>> kl = cost.KL(data, vgbs)
+    >>> kl.evaluate(params)
+    -0.2866830267216749
+    >>> kl.grad(params)
+    array([-0.52812574, -0.5201932 , -0.53282312, -0.53437824])
 
     Args:
         data (np.array): Array of samples representing the training data
-        vgbs: Variational GBS class in the WAW parametrization.
+        vgbs: Variational GBS class
 
     """
 
-    def __init__(self, data, vgbs):
+    def __init__(self, data: np.ndarray, vgbs):
         self.data = data
         self.vgbs = vgbs
         self.nr_samples = len(data)
@@ -72,20 +81,22 @@ class KL:
 
         **Example usage**
 
-        # TODO: add ex. usage for mean_n_data, probably needs to load data set
+        >>> kl.mean_n_data()
+        array([0., 0., 0., 0.])
 
         Returns:
             array: vector of mean photon numbers per mode
         """
         return np.sum(self.data, axis=1)/self.nr_samples
 
-    def grad(self, params):
+    def grad(self, params: np.ndarray) -> np.ndarray:
         """Calculates the gradient of the Kullback-Liebler cost function with respect to the
         trainable parameters
 
         **Example usage**
 
-        # TODO: add ex. usage for grad
+        >>> kl.grad(params)
+        array([-0.52812574, -0.5201932 , -0.53282312, -0.53437824])
 
         Args:
             params (array): the trainable parameters :math:`\theta`
@@ -93,18 +104,19 @@ class KL:
             array: the gradient of the K-L cost function with respect to :math:`\theta`
         """
         weights = self.vgbs.embedding(params)
-        if vgbs.threshold():
+        if self.vgbs.threshold:
             n_diff = self.vgbs.mean_clicks_by_mode(params) - self.mean_n_data()
         else:
             n_diff = self.vgbs.mean_photons_by_mode(params) - self.mean_n_data()
         return (n_diff/weights) @ self.vgbs.embedding.jacobian(params)
 
-    def evaluate(self, params):
+    def evaluate(self, params: np.ndarray) -> float:
         """Computes the value of the Kullback-Liebler divergence cost function.
 
         **Example usage**
 
-        # TODO: add ex. usage for evaluate
+        >>> kl.evaluate(params)
+        -0.2866830267216749
 
         Args:
             params (array): the trainable parameters :math:`\theta`
@@ -113,5 +125,5 @@ class KL:
         """
         kl = 0
         for sample in self.data:
-            kl += np.log(vgbs.prob_sample(params, sample))
+            kl += np.log(self.vgbs.prob_sample(params, sample))
         return -kl/self.nr_samples - np.log(self.nr_samples)
