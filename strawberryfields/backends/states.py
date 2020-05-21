@@ -1257,8 +1257,8 @@ class BaseGaussianState(BaseState):
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
 
-        mu = self._mu
-        cov = self._cov
+        mu = self.means()
+        cov = self.cov()
         num = np.exp(-(0.5) * (mu @ (np.linalg.inv(cov) @ mu)))
         parity = ((self.hbar / 2) ** len(modes)) * num / (np.sqrt(np.linalg.det(cov)))
 
