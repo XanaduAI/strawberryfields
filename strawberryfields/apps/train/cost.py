@@ -40,6 +40,7 @@ class KL:
     of observing that element when sampling from the model distribution, and :math:`T` is the
     total number of elements in the data. For the GBS distribution in the WAW parametrization,
     the gradient of the KL divergence can be written as
+    
     .. math::
 
         \partial_\theta KL(\theta) = - \sum_{k=1}^m(\langle n_k\rangle_{\text{data}-
