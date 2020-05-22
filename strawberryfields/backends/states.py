@@ -367,7 +367,7 @@ class BaseState(abc.ABC):
         .. warning:: This method only supports at most two modes in the Gaussian backend.
         """
         raise NotImplementedError
-        
+
     def parity_expectation(self, modes):
         """Calculates the expectation value of a product of parity operators acting on given modes"""
         raise NotImplementedError
