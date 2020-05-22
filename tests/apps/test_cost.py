@@ -21,6 +21,8 @@ import pytest
 
 from strawberryfields.apps import train
 
+pytestmark = pytest.mark.apps
+
 
 def h(sample):
     """TODO"""
