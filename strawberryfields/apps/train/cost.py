@@ -31,6 +31,7 @@ class KL:
     In a standard unsupervised learning scenario, data are assumed to be sampled from an unknown
     distribution and a common goal is to learn that distribution. Training of a model
     distribution can be performed by minimizing the Kullback-Leibler (KL) divergence:
+    
     .. math::
 
         KL(P, Q) = -\frac{1}{T}\sum_t \log[P(S^{(t)})]-\log(T),
