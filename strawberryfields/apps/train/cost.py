@@ -19,8 +19,7 @@ over the GBS distribution. Within the WAW parametrization, gradients of cost fun
 expressed as expectation values over the GBS distribution. This module contains methods for
 calculating these gradients and for using gradient-based methods to optimize GBS circuits. In the
 case of optimization with respect to a Kullback-Leibler divergence or log-likelihood cost
-function, gradients can be computed efficiently, leading to fast training. This module also
-includes the ability to optimize GBS circuits using these efficient methods.
+function, gradients can be computed efficiently, leading to fast training.
 """
 
 import numpy as np
