@@ -107,7 +107,7 @@ class TestStochastic:
 
     @pytest.mark.parametrize("threshold", [True, False])
     def test_sample_difference_from_mean(self, dim, vgbs, n_mean):
-        """Test that _sample_difference_from_mean is correct when considering a fully connected
+        """Test that sample_difference_from_mean is correct when considering a fully connected
         adjacency matrix. With n_mean = 1, we expect each mode to have a mean number of
         clicks/photons of 0.25. If we provide a sample of all ones, then we expect the difference
         to the mean vector to be a constant vector of 0.5."""
@@ -115,7 +115,7 @@ class TestStochastic:
         sample = np.ones(dim)
         params = np.zeros(dim - 1)
 
-        diff = cost_fn._sample_difference_from_mean(sample, params)
+        diff = cost_fn.sample_difference_from_mean(sample, params)
         assert np.allclose(diff, 1 - n_mean * np.ones(dim) / dim)
 
     @pytest.mark.parametrize("threshold", [True, False])

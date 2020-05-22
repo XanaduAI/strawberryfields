@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-TODO
+TODO - this is provided in another PR
 """
 from typing import Callable
 
@@ -21,21 +21,59 @@ from strawberryfields.apps.train.param import _Omat, VGBS
 
 
 class Stochastic:
-    """TODO"""
+    r"""Stochastic cost function given by averaging over samples from a trainable GBS distribution.
+
+    A stochastic optimization problem is defined with respect to a function :math:`h(\bar{n})` that
+    assigns a cost to an input sample :math:`\bar{n}`. The cost function is then defined as the
+    average of :math:`h(\bar{n})` over samples generated from a parametrized distribution
+    :math:`P_{\theta}(\bar{n})`:
+
+    .. math::
+
+        C (\theta) = \sum_{\bar{n}} h(\bar{n}) P_{\theta}(\bar{n})
+
+    The cost function :math:`C (\theta)` can then be optimized by varying
+    :math:`P_{\theta}(\bar{n})`.
+
+    In this setting, :math:`P_{\theta}(\bar{n})` is the variational GBS distribution and is input by
+    instantiating :class:`~.VGBS`.
+
+    **Example usage:**
+
+    The function :math:`h(\bar{n})` in this example is decreased when clicks are present in
+    odd-numbered modes and is increased when clicks are present in even numbered modes.
+
+    >>> embedding = train.embed.Exp(4)
+    >>> A = np.ones((4, 4))
+    >>> vgbs = train.VGBS(A, 3, embedding, threshold=True)
+    >>> h = lambda x: sum([x[i] * (-1) ** (i + 1) for i in range(4)])
+    >>> cost = Stochastic(h, vgbs)
+    >>> params = np.array([0.05, 0.1, 0.02, 0.01])
+    >>> cost.evaluate(params, 100)
+    0.03005489236683591
+    >>> cost.gradient(params, 100)
+    array([ 0.10880756, -0.1247146 ,  0.12426481, -0.13783342])
+
+    Args:
+        h (callable): a function that assigns a cost to input samples
+        vgbs (train.VGBS): the trainable GBS distribution, which must be an instance of
+            :class:`~.VGBS`
+    """
 
     def __init__(self, h: Callable, vgbs: VGBS):
         self.h = h
         self.vgbs = vgbs
 
-    def evaluate(self, params: np.ndarray, n_samples: int = 1000) -> float:
-        """Evaluates the cost function.
+    def evaluate(self, params: np.ndarray, n_samples: int = 100) -> float:
+        r"""Evaluates the cost function.
 
         The cost function is evaluated by finding its average over a number ``n_samples`` of
         samples generated from the VGBS system using the trainable parameters :math:`\theta`.
 
         **Example usage:**
 
-        >>> TODO
+        >>> cost.evaluate(params, 100)
+        0.03005489236683591
 
         Args:
             params (array): the trainable parameters :math:`\theta`
@@ -48,8 +86,14 @@ class Stochastic:
         return np.mean([self.h_reparametrized(s, params) for s in samples])
 
     def h_reparametrized(self, sample: np.ndarray, params: np.ndarray) -> float:
-        """Include trainable parameters in the cost function to allow for sampling from the
-        initial adjacency matrix.
+        r"""Include trainable parameters in the :math:`h(\bar{n})` function to allow for sampling
+        from the initial adjacency matrix.
+
+        **Example usage:**
+
+        >>> sample = [1, 1, 0, 0]
+        >>> cost.h_reparametrized(sample, params)
+        -1.6688383062813434
 
         Args:
             sample (array): the sample
@@ -71,16 +115,22 @@ class Stochastic:
 
         return h * dets * prod
 
-    def _sample_difference_from_mean(self, sample: np.ndarray, params: np.ndarray) -> np.ndarray:
+    def sample_difference_from_mean(self, sample: np.ndarray, params: np.ndarray) -> np.ndarray:
         """Calculates the difference between an input sample and the vector of mean clicks or
         photons by mode.
+
+        **Example usage:**
+
+        >>> sample = [1, 0, 0, 0]
+        >>> cost.sample_difference_from_mean(sample, params)
+        array([ 0.47187426,  0.4798068 ,  0.46717688, -0.53437824])
 
         Args:
             sample (array): the sample
             params (array): the trainable parameters :math:`\theta`
 
         Returns:
-            array: The difference
+            array: the difference
         """
         if self.vgbs.threshold:
             n_diff = sample - self.vgbs.mean_clicks_by_mode(params)
@@ -90,18 +140,44 @@ class Stochastic:
         return n_diff
 
     def _gradient_one_sample(self, sample: np.ndarray, params: np.ndarray) -> np.ndarray:
-        """TODO"""
+        """Evaluates the gradient equation on a single sample.
+
+        Args:
+            sample (array): the sample
+            params (array): the trainable parameters :math:`\theta`
+
+        Returns:
+            array: the one shot gradient
+        """
         w = self.vgbs.embedding(params)
         jac = self.vgbs.embedding.jacobian(params)
 
         h = self.h_reparametrized(sample, params)
-        diff = self._sample_difference_from_mean(sample, params)
+        diff = self.sample_difference_from_mean(sample, params)
         return h * (diff / w) @ jac
 
-    def gradient(self, params: np.ndarray, n_samples: int = 1000) -> np.ndarray:
-        """TODO"""
+    def gradient(self, params: np.ndarray, n_samples: int = 100) -> np.ndarray:
+        """Evaluates the gradient of the cost function.
+
+        The gradient is evaluated by finding an average of a function over a number ``n_samples`` of
+        samples generated from the VGBS system using the trainable parameters :math:`\theta`.
+
+        The averaged function is specified in `this paper <https://arxiv.org/abs/2004.04770>`__.
+
+        **Example usage:**
+
+        >>> cost.gradient(params, 100)
+        array([ 0.10880756, -0.1247146 ,  0.12426481, -0.13783342])
+
+        Args:
+            params (array): the trainable parameters :math:`\theta`
+            n_samples (int): the number of GBS samples used to average the gradient
+
+        Returns:
+            array: the gradient vector
+        """
         samples = self.vgbs.get_A_init_samples(n_samples)
         return np.mean([self._gradient_one_sample(s, params) for s in samples], axis=0)
 
-    def __call__(self, params: np.ndarray, n_samples: int = 1000) -> float:
+    def __call__(self, params: np.ndarray, n_samples: int = 100) -> float:
         return self.evaluate(params, n_samples)
