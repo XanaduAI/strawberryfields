@@ -367,6 +367,10 @@ class BaseState(abc.ABC):
         .. warning:: This method only supports at most two modes in the Gaussian backend.
         """
         raise NotImplementedError
+        
+    def parity_expectation(self, modes):
+        """Calculates the expectation value of a product of parity operators acting on given modes"""
+        raise NotImplementedError
 
     def p_quad_values(self, mode, xvec, pvec):
 
@@ -923,7 +927,6 @@ class BaseFockState(BaseState):
         return self.diagonal_expectation(modes, values)
 
     def parity_expectation(self, modes):
-        """Calculates the expectation value of a product of parity operators acting on given modes"""
         cutoff = self._cutoff
         values = (-1) ** np.arange(cutoff)
         return self.diagonal_expectation(modes, values)
@@ -1253,7 +1256,6 @@ class BaseGaussianState(BaseState):
         )
 
     def parity_expectation(self, modes):
-        """Calculates the expectation value of a product of parity operators acting on given modes"""
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
 
