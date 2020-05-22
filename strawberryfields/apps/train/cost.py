@@ -28,19 +28,21 @@ import numpy as np
 
 
 class KL:
-    r"""Optimization of GBS distributions based on a Kullback-Liebler divergence cost function.
+    r"""Kullback-Liebler divergence cost function.
+
 
     In a standard unsupervised learning scenario, data are assumed to be sampled from an unknown
     distribution and a common goal is to learn that distribution. Training of a model
     distribution can be performed by minimizing the Kullback-Leibler (KL) divergence:
     .. math::
 
-        KL(P, Q) = -\frac{1}{T}\sum_t \log[P(S^{(t)})]-\log(T),
+        KL = -\frac{1}{T}\sum_S \log[P(S)]-\log(T),
 
-    where :math:`S^{(t)}` is the *t*-th element in the data, :math:`P(S^{(t)})` is the probability
-    of observing that element when sampling from the model distribution, and :math:`T` is the
-    total number of elements in the data. For the GBS distribution in the WAW parametrization,
-    the gradient of the KL divergence can be written as
+    where :math:`S` is an element of the data, :math:`P(S)` is the probability of observing that
+    element when sampling from the GBS distribution, and :math:`T` is the total number of elements
+    in the data. For the GBS distribution in the WAW parametrization, the gradient of the KL
+    divergence can be written as
+
     .. math::
 
         \partial_\theta KL(\theta) = - \sum_{k=1}^m(\langle n_k\rangle_{\text{data}-
