@@ -31,7 +31,7 @@ mean_photon_number = 2
 A = np.eye(4)
 
 
-@pytest.mark.parametrize("k", range(3))
+@pytest.mark.parametrize("k", range(3))  # nr_modes = k + 2
 class TestKL:
     """Tests for the class ``train.cost.KL"""
 
@@ -42,8 +42,8 @@ class TestKL:
         embedding = embed.Exp(m)
         vgbs = param.VGBS(A[:m, :m], mean_photon_number, embedding, threshold=False)
         kl = cost.KL(test_data[k], vgbs)
-        assert np.allclose(kl.mean_n_data(), n_means_data[:m])
-        assert len(kl.mean_n_data()) == m
+        assert np.allclose(kl.mean_n_data, n_means_data[:m])
+        assert len(kl.mean_n_data) == m
 
     def test_grad(self, k):
         """Tests the calculation of the gradient against an explicit computation from hard-coded

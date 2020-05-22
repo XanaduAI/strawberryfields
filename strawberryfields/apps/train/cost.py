@@ -75,23 +75,7 @@ class KL:
         self.vgbs = vgbs
         self.nr_samples = len(data)
         self.nr_modes = len(data[0])
-
-    def mean_n_data(self):
-        r"""Computes the average number of photons :math:`\langle n_k\rangle_{\text{data}}` from
-        the data.
-        
-        When the data are samples from threshold detectors, this gives the average number
-        of clicks.
-
-        **Example usage**
-
-        >>> kl.mean_n_data()
-        array([0., 0., 0., 0.])
-
-        Returns:
-            array: vector of mean photon numbers per mode
-        """
-        return np.mean(self.data, axis=0)
+        self.mean_n_data = np.mean(self.data, axis=0)
 
     def grad(self, params: np.ndarray) -> np.ndarray:
         r"""Calculates the gradient of the Kullback-Liebler cost function with respect to the
