@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Submodule for computing gradients, evaluating cost functions, and optimizing GBS
-circuits.
+Submodule for computing gradients and evaluating cost functions with respect to GBS circuits
 
 In the context of stochastic optimization, cost functions are expressed as expectation values
 over the GBS distribution. Within the WAW parametrization, gradients of cost functions can be
