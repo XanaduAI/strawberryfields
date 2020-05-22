@@ -43,10 +43,10 @@ class KL:
     
     .. math::
 
-        \partial_\theta KL(\theta) = - \sum_{k=1}^m(\langle n_k\rangle_{\text{data}-
-        \langle n_k\rangle)_{\text{GBS}}\partial_\theta w_k,
+        \partial_\theta KL(\theta) = - \sum_{k=1}^m(\langle n_k\rangle_{\text{data}}-
+        \langle n_k\rangle_{\text{GBS}})\partial_\theta w_k,
 
-    where :math:`\langle n_k\rangle)` denotes the average photon numbers in mode *k*. This class
+    where :math:`\langle n_k\rangle` denotes the average photon numbers in mode *k*. This class
     provides methods to compute gradients and evaluate the cost function.
 
     **Example usage**
@@ -63,7 +63,7 @@ class KL:
     array([-0.52812574, -0.5201932 , -0.53282312, -0.53437824])
 
     Args:
-        data (np.array): Array of samples representing the training data
+        data (array): Array of samples representing the training data
         vgbs: Variational GBS class
 
     """
@@ -75,8 +75,10 @@ class KL:
         self.nr_modes = len(data[0])
 
     def mean_n_data(self):
-        r"""Computes the average number of photons :math:`\langle n_k\rangle_{\text{data}` from
-        the data. When the data are samples from threshold detectors, this gives the average number
+        r"""Computes the average number of photons :math:`\langle n_k\rangle_{\text{data}}` from
+        the data.
+        
+        When the data are samples from threshold detectors, this gives the average number
         of clicks.
 
         **Example usage**
@@ -87,10 +89,10 @@ class KL:
         Returns:
             array: vector of mean photon numbers per mode
         """
-        return np.sum(self.data, axis=0) / self.nr_samples
+        return np.mean(self.data, axis=0)
 
     def grad(self, params: np.ndarray) -> np.ndarray:
-        """Calculates the gradient of the Kullback-Liebler cost function with respect to the
+        r"""Calculates the gradient of the Kullback-Liebler cost function with respect to the
         trainable parameters
 
         **Example usage**
@@ -111,7 +113,7 @@ class KL:
         return (n_diff / weights) @ self.vgbs.embedding.jacobian(params)
 
     def evaluate(self, params: np.ndarray) -> float:
-        """Computes the value of the Kullback-Liebler divergence cost function.
+        r"""Computes the value of the Kullback-Liebler divergence cost function.
 
         **Example usage**
 
