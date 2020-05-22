@@ -40,14 +40,6 @@ samples. We consider two coarse grainings:
   orbits ``[2, 1]``, ``[1, 1, 1]`` are part of the :math:`E_{k=3, n_{\max}=2}` event, while
   orbit ``[3]`` is not.
 
-One widely used method of constructing a feature vector is to pick event probabilities
-:math:`p_{k} := p_{E_{k, n_{\max}}}` with all events :math:`E_{k, n_{\max}}` having a maximum
-photon count :math:`n_{\max}` in each mode. If :math:`\mathbf{k}` is the vector of selected events,
-the resultant feature vector is
-
-.. math::
-    f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots).
-
 This module provides the following tools for dealing with coarse-grained orbits and events.
 
 Creating a feature vector
@@ -55,8 +47,15 @@ Creating a feature vector
 
 A feature vector of a graph can be created by choosing a collection of orbits or events and
 evaluating their probabilities with respect to GBS with the embedded graph. These
-probabilities are then selected to be elements of the feature vector. Evaluating the
-probabilities of orbits or events can be achieved through three approaches:
+probabilities are then selected to be elements of the feature vector. For example, event
+probabilities :math:`p_{k} := p_{E_{k, n_{\max}}}` with all events :math:`E_{k, n_{\max}}`
+having a maximum photon count :math:`n_{\max}` in each mode are collected. If :math:`\mathbf{k}`
+is the vector of selected events, the resultant feature vector is
+
+.. math::
+    f_{\mathbf{k}} = (p_{k_{1}}, p_{k_{2}}, \ldots).
+
+Evaluating the probabilities of orbits or events can be achieved through three approaches:
 
 - **Direct sampling:** infer the probability of orbits or events from a set of sample data.
 
@@ -96,14 +95,16 @@ made up of the sum of probabilities of all possible GBS output patterns that bel
     .. math::
        P(O) = \sum_{n \in O} P(n) = \frac{{\rm haf}(A_{n})^2}{n! \sqrt{\det(Q)}}
 
-Exact probabilities of events can be calculated by summing over its constituent orbit probabilities.
+where :math:`n` represents one GBS output pattern, :math:`A_{n}` is its induced sub-matrix
+and :math:`Q` is the Q-matrix obtained from the adjacency matrix. Exact probabilities of
+events can be calculated by summing over its constituent orbit probabilities.
 
 This module provides functions for feature vectors to be calculated using all the methods
 listed above, i.e, direct sampling, Monte Carlo (MC) approximation and exact calculations. All
-methods are separately implemented for using either events and orbits as the constructing unit
-of feature vectors. Similar to the :func:`~.apps.sample.sample` function, exact and MC-estimated
-functions include a ``loss`` argument to specify the proportion of photons lost in the simulated
-GBS device.
+methods are also separately implemented for using either events and orbits as the constructing
+unit of feature vectors. Similar to the :func:`~.apps.sample.sample` function, exact and
+MC-estimated functions include a ``loss`` argument to specify the proportion of photons
+lost in the simulated GBS device.
 """
 from collections import Counter
 from typing import Generator, Union
@@ -320,12 +321,28 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     return cardinality
 
 
-def _prob_orbit_exact(
-    graph: nx.Graph,
-    orbit: list,
-    n_mean: float = 5,
-    loss: float = 0.0
-) -> float:
+def _get_state(graph: nx.Graph, n_mean: float = 5, loss: float = 0.0):
+    r"""Embeds the input graph into a SF device with Gaussian backend and returns its state.
+        """
+    modes = graph.order()
+    A = nx.to_numpy_array(graph)
+    mean_photon_per_mode = n_mean / float(modes)
+
+    p = sf.Program(modes)
+
+    with p.context as q:
+        sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
+
+        if loss:
+            for _q in q:
+                sf.ops.LossChannel(1 - loss) | _q
+
+    eng = sf.LocalEngine(backend="gaussian")
+    return eng.run(p).state
+
+
+def _prob_orbit_exact(graph: nx.Graph, orbit: list, n_mean: float = 5, loss: float = 0.0) -> float:
+
     r"""Gives the exact GBS probability of a given orbit according to the input
     graph.
 
@@ -361,26 +378,13 @@ def _prob_orbit_exact(
 
     modes = graph.order()
     photons = sum(orbit)
-    A = nx.to_numpy_array(graph)
-    mean_photon_per_mode = n_mean / float(modes)
-
-    p = sf.Program(modes)
-
-    with p.context as q:
-        sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
-
-        if loss:
-            for _q in q:
-                sf.ops.LossChannel(1 - loss) | _q
-
-    eng = sf.LocalEngine(backend="gaussian")
-    result = eng.run(p)
+    State = _get_state(graph, n_mean, loss)
 
     click = orbit + [0] * (modes - len(orbit))
     prob = 0
 
     for pattern in multiset_permutations(click):
-        prob += result.state.fock_prob(pattern, cutoff=photons + 1)
+        prob += State.fock_prob(pattern, cutoff=photons + 1)
 
     return prob
 
@@ -432,11 +436,7 @@ def _prob_event_exact(
 
 
 def _prob_orbit_mc(
-    graph: nx.Graph,
-    orbit: list,
-    n_mean: float = 5,
-    mc_samples: int = 1000,
-    loss: float = 0.0
+    graph: nx.Graph, orbit: list, n_mean: float = 5, mc_samples: int = 1000, loss: float = 0.0
 ) -> float:
     r"""Gives a Monte Carlo estimate of the GBS probability of a given orbit according
     to the input graph.
@@ -470,27 +470,13 @@ def _prob_orbit_mc(
 
     modes = graph.order()
     photons = sum(orbit)
-    A = nx.to_numpy_array(graph)
-    mean_photon_per_mode = n_mean / float(modes)
-
-    p = sf.Program(modes)
-
-    # pylint: disable=expression-not-assigned
-    with p.context as q:
-        sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
-
-        if loss:
-            for _q in q:
-                sf.ops.LossChannel(1 - loss) | _q
-
-    eng = sf.LocalEngine(backend="gaussian")
-    result = eng.run(p)
+    State = _get_state(graph, n_mean, loss)
 
     prob = 0
 
     for _ in range(mc_samples):
         sample = orbit_to_sample(orbit, modes)
-        prob += result.state.fock_prob(sample, cutoff=photons + 1)
+        prob += State.fock_prob(sample, cutoff=photons + 1)
 
     prob = prob * orbit_cardinality(orbit, modes) / mc_samples
 
@@ -541,27 +527,13 @@ def _prob_event_mc(
         raise ValueError("Maximum number of photons per mode must be non-negative")
 
     modes = graph.order()
-    A = nx.to_numpy_array(graph)
-    mean_photon_per_mode = n_mean / float(modes)
-
-    p = sf.Program(modes)
-
-    # pylint: disable=expression-not-assigned
-    with p.context as q:
-        sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
-
-        if loss:
-            for _q in q:
-                sf.ops.LossChannel(1 - loss) | _q
-
-    eng = sf.LocalEngine(backend="gaussian")
-    result = eng.run(p)
+    State = _get_state(graph, n_mean, loss)
 
     prob = 0
 
     for _ in range(mc_samples):
         sample = event_to_sample(photon_number, max_count_per_mode, modes)
-        prob += result.state.fock_prob(sample, cutoff=photon_number + 1)
+        prob += State.fock_prob(sample, cutoff=photon_number + 1)
 
     prob = prob * event_cardinality(photon_number, max_count_per_mode, modes) / mc_samples
 
@@ -615,26 +587,28 @@ def feature_vector_orbits(
     """
 
     if len(list_of_orbits) <= 0:
-        raise ValueError("At least one orbit should be provided")
+        raise ValueError("List of orbits must have at least one orbit")
+    if all(isinstance(elem, list) for elem in list_of_orbits) == False:
+        raise ValueError("List of orbits should only consist of orbits")
+    if any(min(item) < 0 for item in list_of_orbits):
+        raise ValueError("Cannot request orbits with photon number below zero")
     if n_mean < 0:
         raise ValueError("Mean photon number must be non-negative")
     if not 0 <= loss <= 1:
         raise ValueError("Loss parameter must take a value between zero and one")
-
-    if mc_samples == None:
-        return [_prob_orbit_exact(graph, orbit, n_mean, loss) for orbit in list_of_orbits]
-
-    else:
+    if mc_samples:
         return [_prob_orbit_mc(graph, orbit, n_mean, mc_samples, loss) for orbit in list_of_orbits]
+
+    return [_prob_orbit_exact(graph, orbit, n_mean, loss) for orbit in list_of_orbits]
 
 
 def feature_vector_events(
-        graph: nx.Graph,
-        event_photon_numbers: list,
-        max_count_per_mode: int = 2,
-        n_mean: float = 5,
-        mc_samples: int = None,
-        loss: float = 0.0,
+    graph: nx.Graph,
+    event_photon_numbers: list,
+    max_count_per_mode: int = 2,
+    n_mean: float = 5,
+    mc_samples: int = None,
+    loss: float = 0.0,
 ) -> list:
     r"""Calculates feature vector made up of event probabilities for the input graph.
 
@@ -669,7 +643,10 @@ def feature_vector_events(
     Returns:
         list[float]: a feature vector of orbit probabilities
     """
-
+    if type(event_photon_numbers) != list:
+        raise ValueError("Event photon numbers must be given as a list of integers")
+    if len(event_photon_numbers) <= 0:
+        raise ValueError("List of photon numbers must have at least one element")
     if min(event_photon_numbers) < 0:
         raise ValueError("Cannot request events with photon number below zero")
     if max_count_per_mode < 0:
@@ -679,19 +656,19 @@ def feature_vector_events(
     if not 0 <= loss <= 1:
         raise ValueError("Loss parameter must take a value between zero and one")
 
-    if mc_samples == None:
-        return [_prob_event_exact(graph, photon_number, max_count_per_mode, n_mean, loss) for photon_number in
-                event_photon_numbers]
+    if mc_samples:
+        return [
+            _prob_event_mc(graph, photon_number, max_count_per_mode, n_mean, mc_samples, loss)
+            for photon_number in event_photon_numbers
+        ]
 
-    else:
-        return [_prob_event_mc(graph, photon_number, max_count_per_mode, n_mean, mc_samples, loss) for photon_number in
-                event_photon_numbers]
+    return [
+        _prob_event_exact(graph, photon_number, max_count_per_mode, n_mean, loss)
+        for photon_number in event_photon_numbers
+    ]
 
 
-def feature_vector_orbits_sampling(
-    samples: list,
-    list_of_orbits: list
-) -> list:
+def feature_vector_orbits_sampling(samples: list, list_of_orbits: list) -> list:
     r"""Calculates feature vector made of given orbits with respect to input samples.
 
     The feature vector is composed of orbit probabilities reconstructed by measuring the
@@ -711,9 +688,12 @@ def feature_vector_orbits_sampling(
     Returns:
         list[float]: a feature vector made up of estimated orbit probabilities
     """
-
     if len(list_of_orbits) <= 0:
-        raise ValueError("At least one orbit should be provided")
+        raise ValueError("List of orbits must have at least one orbit")
+    if all(isinstance(elem, list) for elem in list_of_orbits) == False:
+        raise ValueError("List of orbits should only consist of orbits")
+    if any(min(item) < 0 for item in list_of_orbits):
+        raise ValueError("Cannot request orbits with photon number below zero")
 
     n_samples = len(samples)
 
@@ -724,9 +704,7 @@ def feature_vector_orbits_sampling(
 
 
 def feature_vector_events_sampling(
-    samples: list,
-    event_photon_numbers: list,
-    max_count_per_mode: int = 2
+    samples: list, event_photon_numbers: list, max_count_per_mode: int = 2
 ) -> list:
     r"""Calculates feature vector made of given events with respect to input samples.
 
@@ -749,9 +727,12 @@ def feature_vector_events_sampling(
         list[float]: a feature vector made up of estimated event probabilities in the
         same order as ``event_photon_numbers``
     """
+    if type(event_photon_numbers) != list:
+        raise ValueError("Event photon numbers must be given as a list of integers")
+    if len(event_photon_numbers) <= 0:
+        raise ValueError("List of photon numbers must have at least one element")
     if min(event_photon_numbers) < 0:
         raise ValueError("Cannot request events with photon number below zero")
-
     if max_count_per_mode < 0:
         raise ValueError("Maximum number of photons per mode must be non-negative")
 
