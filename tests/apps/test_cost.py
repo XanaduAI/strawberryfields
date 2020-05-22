@@ -37,7 +37,7 @@ class TestKL:
 
     def test_mean_data(self, k):
         """Tests the mean photon number per mode from hard-coded values stored in the array
-        `test_n_means`. The test iterates over different number of modes in the data."""
+        ``test_n_means``. The test iterates over different numbers of modes in the data."""
         m = k + 2
         embedding = embed.Exp(m)
         vgbs = param.VGBS(A[:m, :m], mean_photon_number, embedding, threshold=False)
