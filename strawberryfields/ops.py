@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+w# Copyright 2019 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -1794,7 +1794,7 @@ class S2gate(Gate):
     r"""Two-mode squeezing gate.
 
     .. math::
-       S_2(z) = \exp\left(z a^\dagger b^\dagger - z^* ab \right) = \exp\left(r (e^{i\phi} a^\dagger b^\dagger e^{-i\phi} ab ) \right)
+       S_2(z) = \exp\left(z a_1^\dagger a_2^\dagger - z^* a_1 a_2 \right) = \exp\left(r (e^{i\phi} a_1^\dagger a_2^\dagger e^{-i\phi} a_1 a_2 ) \right)
 
     where :math:`z = r e^{i\phi}`.
 
