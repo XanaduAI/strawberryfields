@@ -915,8 +915,8 @@ class BaseFockState(BaseState):
         return float(ps)
 
     def diagonal_expectation(self, modes, values):
-        """Calculates the expectation value of an operator that is diagonal in
-        the number basis"""
+        """Calculates the expectation value and variance of an operator that is
+        diagonal in the number basis"""
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
 
