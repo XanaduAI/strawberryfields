@@ -25,9 +25,11 @@ from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
 from scipy.integrate import simps
+
 from thewalrus.quantum import photon_number_mean, photon_number_covar
 
 import strawberryfields as sf
+
 from .shared_ops import rotation_matrix as _R
 from .shared_ops import changebasis
 
@@ -364,6 +366,10 @@ class BaseState(abc.ABC):
 
         .. warning:: This method only supports at most two modes in the Gaussian backend.
         """
+        raise NotImplementedError
+
+    def parity_expectation(self, modes):
+        """Calculates the expectation value of a product of parity operators acting on given modes"""
         raise NotImplementedError
 
     def p_quad_values(self, mode, xvec, pvec):
@@ -936,7 +942,6 @@ class BaseFockState(BaseState):
         return self.diagonal_expectation(modes, values)
 
     def parity_expectation(self, modes):
-        """Calculates the expectation value of a product of parity operators acting on given modes"""
         cutoff = self._cutoff
         values = (-1) ** np.arange(cutoff)
         return self.diagonal_expectation(modes, values)
@@ -1264,6 +1269,17 @@ class BaseGaussianState(BaseState):
         raise ValueError(
             "The number_expectation method only supports one or two modes for Gaussian states."
         )
+
+    def parity_expectation(self, modes):
+        if len(modes) != len(set(modes)):
+            raise ValueError("There can be no duplicates in the modes specified.")
+
+        mu = self.means()
+        cov = self.cov()
+        num = np.exp(-(0.5) * (mu @ (np.linalg.inv(cov) @ mu)))
+        parity = ((self.hbar / 2) ** len(modes)) * num / (np.sqrt(np.linalg.det(cov)))
+
+        return parity
 
     @abc.abstractmethod
     def reduced_dm(self, modes, **kwargs):
