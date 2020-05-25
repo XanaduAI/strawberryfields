@@ -82,7 +82,7 @@ class XstrictSpecs(CircuitSpecs):
         if len(seq[-1].reg) != n_modes:
             raise CircuitError("All modes must be measured.")
 
-        # Check circuit begins with two mode squeezers
+        # Check circuit begins with two-mode squeezers
         # --------------------------------------------
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.S2gate))
         # If there are no two-mode squeezers add squeezers at the beginning with squeezing param equal to zero.
@@ -180,7 +180,7 @@ class XstrictSpecs(CircuitSpecs):
                 )
             )
         U1 = ops.Interferometer(
-            U11, mesh="rectangular_symmetric", drop_identity=True
+            U11, mesh="rectangular_symmetric", drop_identity=False
         )._decompose(registers[:half_n_modes])
         U2 = copy.deepcopy(U1)
 

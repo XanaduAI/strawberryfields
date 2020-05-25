@@ -158,7 +158,7 @@ class XSpecs(CircuitSpecs):
         # to allow the user to specify if they want the interferometers decomposed or not.
 
         # Convert the unitary into a sequence of MZgate and Rgate commands on the signal modes
-        U1 = ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=True)._decompose(
+        U1 = ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False)._decompose(
             registers[:half_n_modes]
         )
         U2 = copy.deepcopy(U1)
