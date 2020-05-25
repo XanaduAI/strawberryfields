@@ -25,7 +25,9 @@ pytestmark = pytest.mark.apps
 
 
 def h(sample):
-    """TODO"""
+    """Cost function that applies to a single sample and gets lower if there are photons in odd
+    numbered modes and higher with photons in even numbered modes. The higher-numbered modes have a
+    greater effect due to the (i + 1) term."""
     return -sum([s * (i + 1) * (-1) ** (i + 1) for i, s in enumerate(sample)])
 
 
@@ -34,6 +36,12 @@ def embedding(dim):
     """Fixture feature-based embedding"""
     feats = np.arange(0, dim * (dim - 1)).reshape((dim, dim - 1))
     return train.embed.ExpFeatures(feats)
+
+
+@pytest.fixture
+def simple_embedding(dim):
+    """Fixture simple embedding"""
+    return train.embed.Exp(dim)
 
 
 @pytest.fixture
@@ -155,3 +163,125 @@ class TestStochastic:
         grad = cost_fn.gradient(params, 2 * n_samples)
         assert np.allclose(grad_expected, grad)
         assert grad.shape == (dim - 1,)
+
+
+@pytest.mark.parametrize("dim", [4])
+@pytest.mark.parametrize("n_mean", [7])
+@pytest.mark.usefixtures("simple_embedding")
+class TestStochasticIntegrationPNR:
+    """Integration tests for the class ``train.Stochastic``. We consider the setting where the
+    initial adjacency matrix is the identity, which reduces to directly sampling from
+    non-interacting squeezed states without passing through an interferometer. Here,
+    the trainable parameters can only control the amount of squeezing in each mode. We then use a
+    mean squared error cost function that simply subtracts a fixed vector from an input sample and
+    squares the result."""
+
+    def identity_sampler(self, n_mean_by_mode, n_samples):
+        """Used for quickly generating samples from a diagonal adjacency matrix. This requires
+        sampling from single mode squeezed states whose photon number distribution is specified
+        by the negative binomial."""
+        qs = 1 / (1 + np.array(n_mean_by_mode))
+        np.random.seed(0)
+        return np.array([2 * np.random.negative_binomial(0.5, q, n_samples) for q in qs]).T
+
+    def h_setup(self, objectives):
+        """Mean squared error based cost function that subtracts a fixed vector from an input
+        sample and squares the result"""
+        def h(sample):
+            return sum([(s - objectives[i]) ** 2 for i, s in enumerate(sample)])
+        return h
+
+    def test_initial_cost(self, dim, n_mean, simple_embedding):
+        """Test that the cost function evaluates as expected on initial parameters of all zeros"""
+        n_samples = 1000
+        objectives = np.linspace(0.5, 1.5, dim)
+        h = self.h_setup(objectives)
+        A = np.eye(dim)
+        vgbs = train.VGBS(A, n_mean, simple_embedding, threshold=False)
+
+        n_mean_by_mode = [n_mean / dim] * dim
+        samples = self.identity_sampler(n_mean_by_mode, n_samples=n_samples)
+        vgbs.add_A_init_samples(samples)
+
+        params = np.zeros(dim)
+        cost_fn = train.Stochastic(h, vgbs)
+        cost = cost_fn(params, n_samples=n_samples)
+        expected_cost = np.mean(np.sum((samples - objectives) ** 2, axis=1))
+
+        assert np.allclose(cost, expected_cost)
+
+    def test_intermediate_cost(self, dim, n_mean, simple_embedding):
+        """Test that the cost function evaluates as expected on non-initial parameters"""
+        n_samples = 10000
+        objectives = np.linspace(0.5, 1.5, dim)
+        h = self.h_setup(objectives)
+        A = np.eye(dim)
+        vgbs = train.VGBS(A, n_mean, simple_embedding, threshold=False)
+
+        n_mean_by_mode = [n_mean / dim] * dim
+        samples = self.identity_sampler(n_mean_by_mode, n_samples=n_samples)
+        vgbs.add_A_init_samples(samples)
+
+        params = np.linspace(0, 1 / dim, dim)
+        cost_fn = train.Stochastic(h, vgbs)
+        cost = cost_fn(params, n_samples=n_samples)
+        new_n_mean_by_mode = vgbs.mean_photons_by_mode(params)
+        new_samples = self.identity_sampler(new_n_mean_by_mode, n_samples=n_samples)
+        expected_cost = np.mean(np.sum((new_samples - objectives) ** 2, axis=1))
+
+        assert np.allclose(cost, expected_cost, rtol=0.1)
+
+    def test_gradient(self, dim, n_mean, simple_embedding):
+        """Test that the gradient evaluates as expected when compared to a value calculated by
+        hand"""
+        n_samples = 100000  # We need a lot of shots due to the high variance in the distribution
+        objectives = np.linspace(0.5, 1.5, dim)
+        h = self.h_setup(objectives)
+        A = np.eye(dim)
+        vgbs = train.VGBS(A, n_mean, simple_embedding, threshold=False)
+
+        n_mean_by_mode = [n_mean / dim] * dim
+        samples = self.identity_sampler(n_mean_by_mode, n_samples=n_samples)
+        vgbs.add_A_init_samples(samples)
+
+        params = np.linspace(0, 1 / dim, dim)
+        cost_fn = train.Stochastic(h, vgbs)
+        dcost_by_dtheta = cost_fn.gradient(params, n_samples=n_samples)
+        dtheta_by_dw = 1 / np.diag(simple_embedding.jacobian(params))
+        lambdas = np.diag(vgbs.A(params))
+        A_init = np.diag(vgbs.A_init)
+        dw_by_lambdas = (1 - lambdas ** 2) ** 2 / (2 * lambdas)
+        dcost_by_dn = dcost_by_dtheta * dtheta_by_dw * dw_by_lambdas / A_init
+
+        n_mean_by_mode = vgbs.mean_photons_by_mode(params)
+        dcost_by_dn_expected = 6 * n_mean_by_mode + 2 * (1 - objectives)
+
+        assert np.allclose(dcost_by_dn, dcost_by_dn_expected, 0.1)
+
+    def test_converges(self, dim, n_mean, simple_embedding):
+        """Test that after training the cost function is close to the analytical minimum"""
+        n_samples = 10000
+        objectives = np.linspace(0.5, 1.5, dim)
+        h = self.h_setup(objectives)
+        A = np.eye(dim)
+        vgbs = train.VGBS(A, n_mean, simple_embedding, threshold=False)
+
+        n_mean_by_mode = [n_mean / dim] * dim
+        samples = self.identity_sampler(n_mean_by_mode, n_samples=n_samples)
+        vgbs.add_A_init_samples(samples)
+
+        params = np.zeros(dim)
+        cost_fn = train.Stochastic(h, vgbs)
+        reps = 4
+        lr = 0.01
+
+        expected_n_mean = np.maximum((objectives - 1) / 3, np.zeros(dim))
+        expected_cost = sum(3 * expected_n_mean ** 2 + 2 * (1 - objectives) * expected_n_mean + \
+                        objectives ** 2)
+
+        for i in range(reps):
+            g = cost_fn.gradient(params, n_samples)
+            params -= lr * g
+
+        final_cost = cost_fn.evaluate(params, n_samples)
+        assert np.allclose(expected_cost, final_cost, rtol=0.1, atol=2)
