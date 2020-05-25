@@ -144,7 +144,7 @@ print(similarity.sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0
 ##############################################################################
 # Now that we have mastered orbits and events, how can we make a feature vector? It was shown in
 # :cite:`schuld2019quantum` that one way of making a feature vector of a graph is through the
-# frequencies of events. Specifically, for a :math:`k` photon event :math:`E_{k, n_{\max}}`
+# frequencies of orbits or events. For example, for a :math:`k` photon event :math:`E_{k, n_{\max}}`
 # with maximum count per mode :math:`n_{\max}` and corresponding probability :math:`p_{k,
 # n_{\max}}:=p_{E_{k, n_{\max}}}(G)` with respect to a graph :math:`G`, a feature vector can be
 # written as
@@ -170,57 +170,106 @@ print(similarity.sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0
 # Calculating a feature vector
 # ----------------------------
 #
-# We provide two methods for calculating a feature vector of GBS event probabilities in
-# Strawberry Fields:
+# We provide three methods for calculating a feature vector of GBS event probabilities in
+# Strawberry Fields (see :mod:`~.apps.similarity` module for more details):
 #
 # 1. Through sampling.
-# 2. Using a Monte Carlo estimate of the probability.
+# 2. Using exact probability calculations.
+# 3. Using a Monte Carlo estimate of the probability.
 #
 # In the first method, all one needs to do is generate some GBS samples from the graph of
 # interest and fix the composition of the feature vector. For example, for a feature vector
 # :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}` we use:
 
-print(similarity.feature_vector_sampling(m0, event_photon_numbers=[2, 4, 6], max_count_per_mode=2))
+print(
+    similarity.feature_vector_events_sampling(
+        m0, event_photon_numbers=[2, 4, 6], max_count_per_mode=2
+    )
+)
 
 ##############################################################################
-# For the second method, suppose we want to calculate the event probabilities exactly rather than
-# through sampling. To do this, we consider the event probability :math:`p_{k, n_{\max}}` as the
-# sum over all sample probabilities in the event. In GBS, each sample probability is determined by
-# the hafnian of a relevant sub-adjacency matrix. While this is tough to calculate, what makes
-# calculating :math:`p_{k, n_{\max}}` really challenging is the number of samples the corresponding
-# event contains! For example, the 6-photon event over 17 modes :math:`E_{k=6, n_{\max}=2}`
+# We can also use any orbits of our choice above instead of events:
+
+print(
+    similarity.feature_vector_orbits_sampling(
+        m0, list_of_orbits=[[1, 1], [2], [1, 1, 1, 1], [2, 1, 1]]
+    )
+)
+
+##############################################################################
+# For the second method, suppose we want to calculate the orbit probabilities exactly rather than
+# through sampling. This can be useful as it does not require the pre-generation of GBS samples for
+# a given graph which can be quite time consuming. Considering a feature vector of orbit probabilities,
+# the probability of a single orbit :math:`p(O)` is composed of the sum over probabilities of all possible
+# GBS sample permutations that belong to it. In GBS, the probability of any GBS output click pattern
+# is determined by the hafnian of a relevant sub-adjacency matrix. Hence,
+#
+# .. math::
+#     p(O) = \sum_{n \in O} p(n) = \frac{{\rm haf}(A_{n})^2}{n! \sqrt{\det(Q)}}
+#
+# where :math:`n` represents one GBS output click pattern, :math:`A_{n}` is its induced sub-matrix
+# and :math:`Q` is the :math:`Q`-matrix obtained from the adjacency matrix of the graph. Exact probability of
+# an event :math:`p_{k,n_{\max}}` can be calculated similarly or by summing over its constituent orbit
+# probabilities.
+#
+# Strawberry Fields provides built-in methods to get exact feature vectors of any desired
+# composition with :func:`~.feature_vector_orbits` and :func:`~.feature_vector_events`. These functions
+# use a keyword argument ``mc_samples`` to signal producing either exact or approximate probabilities.
+# ``mc_samples`` is set to ``None`` to get exact feature vector by default. To use Monte Carlo estimation,
+# ``mc_samples`` can be set to the number of samples desired to be used in the estimation as shown later.
+# For example, to get exact feature vector :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}`, we use:
+
+print(
+    similarity.feature_vector_events(
+        nx.Graph(m0_a), event_photon_numbers=[2, 4, 6], max_count_per_mode=2, n_mean=6
+    )
+)
+
+##############################################################################
+# Although precise, exact calculations for large matrices can be tough to calculate. Additionally,
+# what makes calculating :math:`p_{k, n_{\max}}` really challenging is the number of samples the
+# corresponding event contains! For example, the 6-photon event over 17 modes :math:`E_{k=6, n_{\max}=2}`
 # contains the following number of samples :
 
 print(similarity.event_cardinality(6, 2, 17))
 
 ##############################################################################
-# To avoid calculating a large number of sample probabilities, an alternative is to perform a
-# Monte Carlo approximation. Here, samples within an event are selected uniformly at random and
-# their resultant probabilities are calculated. If :math:`N` samples :math:`\{S_{1}, S_{2},
-# \ldots , S_{N}\}` are generated, then the event probability can be approximated as
+# To avoid calculating a large number of sample probabilities, an alternative is to perform
+# Monte Carlo approximation. Here, samples within an orbit or event are selected uniformly
+# at random and their resultant probabilities are calculated. For example, for an event
+# :math:`E_{k, n_{\max}}`, if :math:`N` samples :math:`\{S_{1}, S_{2}, \ldots , S_{N}\}`
+# are generated, then the event probability can be approximated as
 #
 # .. math::
 #     p(E_{k, n_{\max}}) \approx \frac{1}{N}\sum_{i=1}^N p(S_i) |E_{k, n_{\max}}|,
 #
 # with :math:`|E_{k, n_{\max}}|` denoting the cardinality of the event.
 #
-# This method can be accessed using the :func:`~.prob_event_mc` function. The 4-photon event is
-# approximated as:
+# This method can be accessed using the :func:`~.feature_vector_events` function
+# with ``mc_samples`` set to the number of samples desired to be used in the estimation.
+# For example, to get MC-approximated feature vector :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}`,
+# we use:
 
-print(similarity.prob_event_mc(nx.Graph(m0_a), 4, max_count_per_mode=2, n_mean=6))
+print(
+    similarity.feature_vector_events(
+        nx.Graph(m0_a),
+        event_photon_numbers=[2, 4, 6],
+        max_count_per_mode=2,
+        n_mean=6,
+        mc_samples=1000,
+    )
+)
 
 ##############################################################################
-# The feature vector can then be calculated through Monte Carlo sampling using
-# :func:`~.feature_vector_mc`.
 #
 # .. note::
-#     The results of :func:`~.prob_event_mc` and :func:`~.feature_vector_mc` are probabilistic and
-#     may vary between runs. Increasing the optional ``samples`` parameter will increase accuracy
-#     but slow down calculation.
+#     The results of using Monte Carlo approximation with :func:`~.feature_vector_orbits` and
+#     :func:`~.feature_vector_events` are probabilistic and may vary between runs. Increasing
+#     the number of ``mc_samples`` parameter will increase accuracy but slow down calculation.
 #
-# The second method of Monte Carlo approximation is intended for use in scenarios where it is
-# computationally intensive to pre-calculate a statistically significant dataset of samples from
-# GBS.
+# The third method of Monte Carlo approximation is intended for use in scenarios where the other
+# two methods fail; it is either computationally intensive to calculate exact probabilities or to
+# pre-generate a statistically significant dataset of samples from GBS.
 #
 # Machine learning with GBS graph kernels
 # ---------------------------------------
@@ -250,10 +299,10 @@ classes = [1, 0, 0, 1]
 events = [8, 10]
 max_count = 2
 
-f1 = similarity.feature_vector_sampling(m0, events, max_count)
-f2 = similarity.feature_vector_sampling(m1, events, max_count)
-f3 = similarity.feature_vector_sampling(m2, events, max_count)
-f4 = similarity.feature_vector_sampling(m3, events, max_count)
+f1 = similarity.feature_vector_events_sampling(m0, events, max_count)
+f2 = similarity.feature_vector_events_sampling(m1, events, max_count)
+f3 = similarity.feature_vector_events_sampling(m2, events, max_count)
+f4 = similarity.feature_vector_events_sampling(m3, events, max_count)
 
 import numpy as np
 
@@ -262,9 +311,10 @@ R = np.array([f1, f2, f3, f4])
 print(R)
 
 ##############################################################################
-# There is freedom in the choice of ``events`` composing the feature vectors and we encourage the
-# reader to explore different combinations. Note, however, that odd photon-numbered events have
-# zero probability because ideal GBS only generates and outputs pairs of photons.
+# The choice of what ``events`` to use for the feature vectors can be significant and we encourage the
+# reader to explore different combinations. We can also use any orbits of our choice above instead of events.
+# Note, however, that GBS samples with odd total number of photons have zero probability because ideal
+# GBS only generates and outputs pairs of photons.
 #
 # Given our points in the feature space and their target labels, we can use
 # scikit-learn's Support Vector Machine `LinearSVC <https://scikit-learn.org/stable/modules/generated/sklearn.svm

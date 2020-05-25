@@ -92,11 +92,11 @@ applications. For example, exact feature vectors might be preferred in applicati
 approximations can drown out the differences in graphs. The exact probability of an orbit is
 made up of the sum of probabilities of all possible GBS output patterns that belong to it:
 
-    .. math::
-       P(O) = \sum_{n \in O} P(n) = \frac{{\rm haf}(A_{n})^2}{n! \sqrt{\det(Q)}}
+.. math::
+    P(O) = \sum_{n \in O} P(n) = \frac{{\rm haf}(A_{n})^2}{n! \sqrt{\det(Q)}}
 
 where :math:`n` represents one GBS output pattern, :math:`A_{n}` is its induced sub-matrix
-and :math:`Q` is the Q-matrix obtained from the adjacency matrix. Exact probabilities of
+and :math:`Q` is the :math:`Q`-matrix obtained from the adjacency matrix. Exact probabilities of
 events can be calculated by summing over its constituent orbit probabilities.
 
 This module provides functions for feature vectors to be calculated using all the methods
@@ -547,7 +547,7 @@ def feature_vector_orbits(
     mc_samples: int = None,
     loss: float = 0.0,
 ) -> list:
-    r"""Calculates feature vector made up of orbit probabilities for the input graph.
+    r"""Calculates feature vector made up of either exact or MC-approximated orbit probabilities for the input graph.
 
     These probabilities can be either exact or estimated using Monte Carlo estimation.
     The argument ``mc_samples`` is set to ``None`` to get exact feature vector by default.
@@ -610,7 +610,7 @@ def feature_vector_events(
     mc_samples: int = None,
     loss: float = 0.0,
 ) -> list:
-    r"""Calculates feature vector made up of event probabilities for the input graph.
+    r"""Calculates feature vector made up of either exact or MC-approximated event probabilities for the input graph.
 
     These probabilities can be either exact or estimated using Monte Carlo estimation.
     The argument ``mc_samples`` is set to ``None`` to get exact feature vector by default.
