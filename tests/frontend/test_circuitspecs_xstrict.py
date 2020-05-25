@@ -477,3 +477,31 @@ class TestXCompilation:
 
         with pytest.raises(CircuitError, match="The applied unitary cannot mix between the modes"):
             res = prog.compile("Xstrict")
+
+    def test_odd_number_of_modes(self):
+        """Test error is raised when xstrict is called with odd number of modes"""
+        prog = sf.Program(1)
+
+        with pytest.raises(CircuitError, match="The X series only supports programs with an even number of modes."):
+            res = prog.compile("Xstrict")
+
+    def test_operation_before_squeezing(self):
+        """Test error is raised when an operation is passed before the S2gates"""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.BSgate() | (q[0], q[1])
+            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[1])
+            ops.MeasureFock() | q
+
+        with pytest.raises(CircuitError, match="There can be no operations before the S2gates."):
+            res = prog.compile("Xstrict")
+
+    def test_wrong_squeezing_phase(self):
+        """Test error is raised when the phase of S2gate is not zero"""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.S2gate(SQ_AMPLITUDE, 137) | (q[0], q[1])
+            ops.MeasureFock() | q
+
+        with pytest.raises(CircuitError, match="Incorrect phase value"):
+            res = prog.compile("Xstrict")
