@@ -57,10 +57,7 @@ class XstrictSpecs(CircuitSpecs):
     }
 
     decompositions = {
-        "BipartiteGraphEmbed": {
-            "mesh": "rectangular_symmetric",
-            "drop_identity": False,
-        },
+        "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False,},
     }
 
     def compile(self, seq, registers, strict=False):
@@ -69,9 +66,7 @@ class XstrictSpecs(CircuitSpecs):
 
         # Number of modes must be even
         if n_modes % 2 != 0:
-            raise CircuitError(
-                "The X series only supports programs with an even number of modes."
-            )
+            raise CircuitError("The X series only supports programs with an even number of modes.")
         half_n_modes = n_modes // 2
         # Call the GBS compiler to do basic measurement validation.
         # The GBS compiler also merges multiple measurement commands
@@ -120,9 +115,7 @@ class XstrictSpecs(CircuitSpecs):
 
         # ensure provided S2gates all have the allowed squeezing values
         if not all(s in self.allowed_sq_ranges for s in sqs):
-            wrong_sq_values = [
-                np.round(s, 4) for s in sqs if s not in self.allowed_sq_ranges
-            ]
+            wrong_sq_values = [np.round(s, 4) for s in sqs if s not in self.allowed_sq_ranges]
             raise CircuitError(
                 "Incorrect squeezing value(s) r={}. Allowed squeezing "
                 "value(s) are {}.".format(wrong_sq_values, self.allowed_sq_ranges)
@@ -179,9 +172,9 @@ class XstrictSpecs(CircuitSpecs):
                     0, half_n_modes - 1, half_n_modes, n_modes - 1
                 )
             )
-        U1 = ops.Interferometer(
-            U11, mesh="rectangular_symmetric", drop_identity=False
-        )._decompose(registers[:half_n_modes])
+        U1 = ops.Interferometer(U11, mesh="rectangular_symmetric", drop_identity=False)._decompose(
+            registers[:half_n_modes]
+        )
         U2 = copy.deepcopy(U1)
 
         for Ui in U2:

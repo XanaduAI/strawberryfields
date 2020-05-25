@@ -29,7 +29,6 @@ from .gbs import GBSSpecs
 from .gaussian_unitary import GaussianUnitary
 
 
-
 class XSpecs(CircuitSpecs):
     """Circuit specifications for the X class of circuits.
 
@@ -164,6 +163,6 @@ class XSpecs(CircuitSpecs):
         U2 = copy.deepcopy(U1)
 
         for Ui in U2:
-            Ui.reg = [registers[r.ind+half_n_modes] for r in Ui.reg]
+            Ui.reg = [registers[r.ind + half_n_modes] for r in Ui.reg]
 
         return sq_seq + U1 + U2 + meas_seq
