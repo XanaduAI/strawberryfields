@@ -206,6 +206,8 @@ class TestStochasticIntegrationPNR:
         params = np.zeros(dim)
         cost_fn = train.Stochastic(h, vgbs)
         cost = cost_fn(params, n_samples=n_samples)
+
+        # We can directly calculate the cost with respect to the samples
         expected_cost = np.mean(np.sum((samples - objectives) ** 2, axis=1))
 
         assert np.allclose(cost, expected_cost)
@@ -225,6 +227,8 @@ class TestStochasticIntegrationPNR:
         params = np.linspace(0, 1 / dim, dim)
         cost_fn = train.Stochastic(h, vgbs)
         cost = cost_fn(params, n_samples=n_samples)
+
+        # We need to generate new samples and then calculate the cost with respect to them
         new_n_mean_by_mode = vgbs.mean_photons_by_mode(params)
         new_samples = self.identity_sampler(new_n_mean_by_mode, n_samples=n_samples)
         expected_cost = np.mean(np.sum((new_samples - objectives) ** 2, axis=1))
@@ -246,14 +250,26 @@ class TestStochasticIntegrationPNR:
 
         params = np.linspace(0, 1 / dim, dim)
         cost_fn = train.Stochastic(h, vgbs)
+
+        # We want to calculate dcost_by_dn as this is available analytically, where n is the mean
+        # photon number. The following calculates this using the chain rule:
         dcost_by_dtheta = cost_fn.gradient(params, n_samples=n_samples)
         dtheta_by_dw = 1 / np.diag(simple_embedding.jacobian(params))
-        lambdas = np.diag(vgbs.A(params))
-        A_init = np.diag(vgbs.A_init)
-        dw_by_lambdas = (1 - lambdas ** 2) ** 2 / (2 * lambdas)
-        dcost_by_dn = dcost_by_dtheta * dtheta_by_dw * dw_by_lambdas / A_init
+        A_diag = np.diag(vgbs.A(params))
+        A_init_diag = np.diag(vgbs.A_init)
+        # Differentiate Eq. (8) of https://arxiv.org/abs/2004.04770 and invert for the next line
+        dw_by_dn = (1 - A_diag ** 2) ** 2 / (2 * A_diag * A_init_diag)
+        # Now use the chain rule
+        dcost_by_dn = dcost_by_dtheta * dtheta_by_dw * dw_by_dn
 
         n_mean_by_mode = vgbs.mean_photons_by_mode(params)
+
+        # Consider the problem with respect to a single mode. We want to calculate
+        # E((s - x) ** 2) with s the number of photons in the mode, x the element of the fixed
+        # vector, and with the expectation value calculated with respect to the negative binomial
+        # distribution. Now, E((s - x) ** 2) = 3 * n_mean ** 2 + 2 * (1 - x) * n_mean + x ** 2,
+        # with n_mean the mean number of photons in that mode. This can be differentiated to give
+        # the derivative below.
         dcost_by_dn_expected = 6 * n_mean_by_mode + 2 * (1 - objectives)
 
         assert np.allclose(dcost_by_dn, dcost_by_dn_expected, 0.1)
@@ -275,6 +291,9 @@ class TestStochasticIntegrationPNR:
         reps = 4
         lr = 0.01
 
+        # See test_gradient for further context. We want to minimize
+        # E((s - x) ** 2) = 3 * n_mean ** 2 + 2 * (1 - x) * n_mean + x ** 2, which is minimized
+        # by the n_mean given below.
         expected_n_mean = np.maximum((objectives - 1) / 3, np.zeros(dim))
         expected_cost = sum(3 * expected_n_mean ** 2 + 2 * (1 - objectives) * expected_n_mean + \
                         objectives ** 2)
