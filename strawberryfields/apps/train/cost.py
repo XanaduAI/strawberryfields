@@ -28,7 +28,6 @@ import numpy as np
 class KL:
     r"""Kullback-Liebler divergence cost function.
 
-
     In a standard unsupervised learning scenario, data are assumed to be sampled from an unknown
     distribution and a common goal is to learn that distribution. Training of a model
     distribution can be performed by minimizing the Kullback-Leibler (KL) divergence:
@@ -66,7 +65,7 @@ class KL:
 
     Args:
         data (array): Array of samples representing the training data
-        vgbs: Variational GBS class
+        vgbs (~.VGBS): Variational GBS class
 
     """
 
@@ -87,7 +86,7 @@ class KL:
         array([-0.52812574, -0.5201932 , -0.53282312, -0.53437824])
 
         Args:
-            params (array): the trainable parameters :math:`\theta`
+            params (array[float]): the trainable parameters :math:`\theta`
         Returns:
             array: the gradient of the K-L cost function with respect to :math:`\theta`
         """
