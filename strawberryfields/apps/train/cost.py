@@ -52,9 +52,9 @@ class KL:
 
     **Example usage**
 
-    >>> embedding = embed.Exp(4)
+    >>> embedding = train.embed.Exp(4)
     >>> A = np.ones((4, 4))
-    >>> vgbs = param.VGBS(A, 3, embedding, threshold=True)
+    >>> vgbs = train.param.VGBS(A, 3, embedding, threshold=True)
     >>> params = np.array([0.05, 0.1, 0.02, 0.01])
     >>> data = np.zeros((4, 4))
     >>> kl = cost.KL(data, vgbs)
