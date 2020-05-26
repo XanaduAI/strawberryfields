@@ -23,6 +23,7 @@ function, gradients can be computed efficiently, leading to fast training.
 """
 
 import numpy as np
+from strawberryfields.apps.train.param import VGBS
 
 
 class KL:
@@ -31,11 +32,12 @@ class KL:
 
     In a standard unsupervised learning scenario, data are assumed to be sampled from an unknown
     distribution and a common goal is to learn that distribution. Training of a model
-    distribution can be performed by minimizing the Kullback-Leibler (KL) divergence:
+    distribution can be performed by minimizing the Kullback-Leibler (KL) divergence, which up to
+    additive constants can be written as :
     
     .. math::
 
-        KL = -\frac{1}{T}\sum_S \log[P(S)]-\log(T),
+        KL = -\frac{1}{T}\sum_S \log[P(S)],
 
     where :math:`S` is an element of the data, :math:`P(S)` is the probability of observing that
     element when sampling from the GBS distribution, and :math:`T` is the total number of elements
@@ -45,7 +47,7 @@ class KL:
 
     .. math::
 
-        \partial_\theta KL(\theta) = - \sum_{k=1}^m(\langle n_k\rangle_{\text{data}}-
+        \partial_\theta KL(\theta) = - \sum_{k=1}^m\frac{1}{w_k}(\langle n_k\rangle_{\text{data}}-
         \langle n_k\rangle_{\text{GBS}})\partial_\theta w_k,
 
     where :math:`\langle n_k\rangle` denotes the average photon numbers in mode *k*. This class
@@ -70,7 +72,7 @@ class KL:
 
     """
 
-    def __init__(self, data: np.ndarray, vgbs):
+    def __init__(self, data: np.ndarray, vgbs: VGBS):
         self.data = data
         self.vgbs = vgbs
         self.nr_samples = len(data)
@@ -114,4 +116,4 @@ class KL:
         kl = 0
         for sample in self.data:
             kl += np.log(self.vgbs.prob_sample(params, sample))
-        return -kl / self.nr_samples - np.log(self.nr_samples)
+        return -kl / self.nr_samples

@@ -63,4 +63,4 @@ class TestKL:
         embedding = embed.Exp(m)
         vgbs = param.VGBS(A[:m, :m], mean_photon_number, embedding, threshold=False)
         kl = cost.KL(test_data[k], vgbs)
-        assert np.allclose(kl.evaluate(params[:m]), test_sum_log_probs[k] / 6 - np.log(6))
+        assert np.allclose(kl.evaluate(params[:m]), test_sum_log_probs[k] / 6)
