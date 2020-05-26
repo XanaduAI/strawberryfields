@@ -10,6 +10,7 @@ Tools for training variational GBS devices.
     VGBS
     param
     KL
+    cost
 """
 from strawberryfields.apps.train.param import VGBS
 from strawberryfields.apps.train.cost import KL
