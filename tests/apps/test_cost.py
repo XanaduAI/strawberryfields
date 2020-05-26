@@ -167,9 +167,9 @@ class TestStochasticIntegrationPNR:
         """Used for quickly generating samples from a diagonal adjacency matrix. This requires
         sampling from single mode squeezed states whose photon number distribution is specified
         by the negative binomial."""
-        qs = 1 / (1 + np.array(n_mean_by_mode))
+        ps = 1 / (1 + np.array(n_mean_by_mode))
         np.random.seed(0)
-        return np.array([2 * np.random.negative_binomial(0.5, q, n_samples) for q in qs]).T
+        return np.array([2 * np.random.negative_binomial(0.5, p, n_samples) for p in ps]).T
 
     def h_setup(self, objectives):
         """Mean squared error based cost function that subtracts a fixed vector from an input
@@ -253,10 +253,13 @@ class TestStochasticIntegrationPNR:
 
         # Consider the problem with respect to a single mode. We want to calculate
         # E((s - x) ** 2) with s the number of photons in the mode, x the element of the fixed
-        # vector, and with the expectation value calculated with respect to the negative binomial
-        # distribution. Now, E((s - x) ** 2) = 3 * n_mean ** 2 + 2 * (1 - x) * n_mean + x ** 2,
-        # with n_mean the mean number of photons in that mode. This can be differentiated to give
-        # the derivative below.
+        # vector, and with the expectation value calculated with respect to the (twice) negative
+        # binomial distribution. We know that E(s) = 2 * r * (1 - q) / q and
+        # Var(s) = 4 * (1 - q) * r / q ** 2 in terms of the r and q parameters of the negative
+        # binomial distribution. Using q = 1 / (1 + n_mean) with n_mean the mean number of
+        # photons in that mode and r = 0.5, we can calculate
+        # E((s - x) ** 2) = 3 * n_mean ** 2 + 2 * (1 - x) * n_mean + x ** 2,
+        # This can be differentiated to give the derivative below.
         dcost_by_dn_expected = 6 * n_mean_by_mode + 2 * (1 - objectives)
 
         assert np.allclose(dcost_by_dn, dcost_by_dn_expected, 0.1)
