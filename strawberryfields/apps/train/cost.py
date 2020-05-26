@@ -74,8 +74,7 @@ class KL:
     def __init__(self, data: np.ndarray, vgbs: VGBS):
         self.data = data
         self.vgbs = vgbs
-        self.nr_samples = len(data)
-        self.nr_modes = len(data[0])
+        self.nr_samples, self.nr_modes = np.shape(self.data)
         self.mean_n_data = np.mean(self.data, axis=0)
 
     def grad(self, params: np.ndarray) -> np.ndarray:
