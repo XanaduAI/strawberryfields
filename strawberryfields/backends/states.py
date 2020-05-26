@@ -26,7 +26,7 @@ from scipy.stats import multivariate_normal
 from scipy.special import factorial
 from scipy.integrate import simps
 
-from thewalrus.quantum import photon_number_expectation, photon_number_squared_expectation
+from thewalrus.quantum import photon_number_mean, photon_number_covar
 
 import strawberryfields as sf
 
@@ -1265,15 +1265,13 @@ class BaseGaussianState(BaseState):
             raise ValueError("There can be no duplicates in the modes specified.")
         mu = self._mu
         cov = self._cov
-        expval = photon_number_expectation(mu, cov, modes, hbar=self._hbar)
-        squared_expval = photon_number_squared_expectation(mu, cov, modes, hbar=self._hbar)
-        return expval, squared_expval - expval ** 2
-        """
+        if len(modes) == 1:
+            return photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
+
         if len(modes) == 2:
             ni = photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
             nj = photon_number_mean(mu, cov, modes[1], hbar=self._hbar)
             return photon_number_covar(mu, cov, modes[1], modes[0], hbar=self._hbar) + ni * nj
-        """
 
         raise ValueError(
             "The number_expectation method only supports one or two modes for Gaussian states."
