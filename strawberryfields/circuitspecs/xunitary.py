@@ -30,15 +30,10 @@ from .gbs import GBSSpecs
 from .gaussian_unitary import GaussianUnitary
 
 
-class XstrictSpecs(CircuitSpecs):
-    """Circuit specifications for the X class of circuits.
+class Xunitary(CircuitSpecs):
+    """Circuit specifications for the X class of circuits."""
 
-    An important property of this compilation routine is that it is done at the covariance matrix level.
-    This implies that one should not use it to compare the interferometers of a given circuit since they may
-    differ by permutations in the unitary and the squeezing parameters.
-    """
-
-    short_name = "Xstrict"
+    short_name = "Xunitary"
     modes = None
     remote = True
     local = True
