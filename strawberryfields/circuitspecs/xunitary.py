@@ -16,11 +16,8 @@
 import copy
 
 import numpy as np
-from thewalrus.quantum import Amat
 from thewalrus.symplectic import expand
 
-import strawberryfields as sf
-from strawberryfields.decompositions import takagi
 from strawberryfields.program_utils import CircuitError, Command, group_operations
 
 import strawberryfields.ops as ops
@@ -30,15 +27,10 @@ from .gbs import GBSSpecs
 from .gaussian_unitary import GaussianUnitary
 
 
-class XstrictSpecs(CircuitSpecs):
-    """Circuit specifications for the X class of circuits.
+class Xunitary(CircuitSpecs):
+    """Circuit specifications for the X class of circuits."""
 
-    An important property of this compilation routine is that it is done at the covariance matrix level.
-    This implies that one should not use it to compare the interferometers of a given circuit since they may
-    differ by permutations in the unitary and the squeezing parameters.
-    """
-
-    short_name = "Xstrict"
+    short_name = "Xunitary"
     modes = None
     remote = True
     local = True
@@ -60,7 +52,7 @@ class XstrictSpecs(CircuitSpecs):
         "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False,},
     }
 
-    def compile(self, seq, registers, strict=False):
+    def compile(self, seq, registers):
         # the number of modes in the provided program
         n_modes = len(registers)
 

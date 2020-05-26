@@ -29,7 +29,7 @@ from .gbs import GBSSpecs
 from .gaussian_unitary import GaussianUnitary
 
 
-class XSpecs(CircuitSpecs):
+class Xcov(CircuitSpecs):
     """Circuit specifications for the X class of circuits.
 
     An important property of this compilation routine is that it is done at the covariance matrix level.
@@ -37,7 +37,7 @@ class XSpecs(CircuitSpecs):
     differ by permutations in the unitary and the squeezing parameters.
     """
 
-    short_name = "X"
+    short_name = "Xcov"
     modes = None
     remote = True
     local = True
