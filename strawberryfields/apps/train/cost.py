@@ -36,7 +36,7 @@ class Stochastic:
     :math:`P_{\theta}(\bar{n})`.
 
     In this setting, :math:`P_{\theta}(\bar{n})` is the variational GBS distribution and is
-    specified in :class:`~.Stochastic` by an instance of :class:`~.VGBS`.
+    specified in :class:`~.Stochastic` by an instance of :class:`~.train.VGBS`.
 
     **Example usage:**
 
@@ -57,7 +57,7 @@ class Stochastic:
     Args:
         h (callable): a function that assigns a cost to an input sample
         vgbs (train.VGBS): the trainable GBS distribution, which must be an instance of
-            :class:`~.VGBS`
+            :class:`~.train.VGBS`
     """
 
     def __init__(self, h: Callable, vgbs: VGBS):
@@ -81,14 +81,15 @@ class Stochastic:
 
             C (\theta) = \sum_{\bar{n}} h(\bar{n}, \theta) P(\bar{n})
 
-        where :math:`h(\bar{n}, \theta)` now contains the trainable parameters and
-        :math:`P(\bar{n})` is the distribution over the input adjacency matrix. The advantage of
-        this alternative approach is that one does not need to keep regenerating samples for an
-        updated adjacency matrix and we can instead use a fixed set of samples.
+        where :math:`h(\bar{n}, \theta)` is given in :meth:`~.Stochastic.h_reparametrized` and now
+        contains the trainable parameters, and :math:`P(\bar{n})` is the distribution over the
+        input adjacency matrix. The advantage of this alternative approach is that one does not
+        need to keep regenerating samples for an updated adjacency matrix and we can instead use
+        a fixed set of samples.
 
         The second approach above is utilized in :class:`Stochastic` to speed up evaluation of
         the cost function and its gradient. This is done by approximating the cost function using a
-        single fixed set of samples. The samples can be pre-loaded into the :class:`~.VGBS` class or
+        single fixed set of samples. The samples can be pre-loaded into the :class:`~.train.VGBS` class or
         generated once upon the first call of :meth:`Stochastic.evaluate` or
         :meth:`Stochastic.gradient`.
 
@@ -110,6 +111,16 @@ class Stochastic:
     def h_reparametrized(self, sample: np.ndarray, params: np.ndarray) -> float:
         r"""Include trainable parameters in the :math:`h(\bar{n})` function to allow sampling
         from the initial adjacency matrix.
+
+        The reparametrized function can be written in terms :math:`h(\bar{n})` as:
+
+        .. math::
+
+            h(\bar{n}, \theta) = h(\bar{n}) \sqrt{\frac{\det (\mathbb{I} - A(\theta)^{2})}
+            {\det (\mathbb{I} - A^{2})}} \prod_{k=1}^{m}w_{k}^{n_{k}},
+
+        where :math:`w_{k}` is the :math:`\theta`-dependent weight on the :math:`k`-th mode in
+        the :class:`~.train.VGBS` system and :math:`n_{k}` is the number of photons in mode :math:`k`.
 
         **Example usage:**
 
@@ -160,12 +171,26 @@ class Stochastic:
         return h * (diff / w) @ jac
 
     def gradient(self, params: np.ndarray, n_samples: int) -> np.ndarray:
-        """Evaluates the gradient of the cost function.
+        r"""Evaluates the gradient of the cost function.
 
-        The gradient is evaluated by finding an average of a function over a number ``n_samples`` of
-        samples generated from the VGBS system using the trainable parameters :math:`\theta`.
+        As shown in `this paper <https://arxiv.org/abs/2004.04770>`__, the gradient can be
+        evaluated by finding an average over samples generated from the input adjacency matrix to
+        the VGBS system:
 
-        The averaged function is specified in `this paper <https://arxiv.org/abs/2004.04770>`__.
+        .. math::
+
+            \partial_{\theta} C (\theta) = \sum_{\bar{n}} h(\bar{n}, \theta) P(\bar{n})
+            \sum_{k=1}^{m}  (n_k - \langle n_{k} \rangle) \partial_{\theta} \log w_{k}
+
+        where :math:`h(\bar{n}, \theta)` is given in :meth:`~.Stochastic.h_reparametrized`,
+        :math:`P(\bar{n})` is the distribution over the input adjacency matrix, :math:`n_{k}` is
+        the number of photons in mode :math:`k`, and :math:`w_{k}` are the weights in the
+        :class:`~.train.VGBS` system.
+
+        This method approximates the gradient using a fixed set of samples from the initial
+        adjacency matrix. The samples can be pre-loaded into the :class:`~.train.VGBS` class or
+        generated once upon the first call of :meth:`Stochastic.evaluate` or
+        :meth:`Stochastic.gradient`.
 
         **Example usage:**
 
