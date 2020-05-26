@@ -24,7 +24,7 @@ class Stochastic:
     r"""Stochastic cost function given by averaging over samples from a trainable GBS distribution.
 
     A stochastic optimization problem is defined with respect to a function :math:`h(\bar{n})` that
-    assigns a cost to an input sample :math:`\bar{n}`. The cost function is then defined as the
+    assigns a cost to an input sample :math:`\bar{n}`. The cost function is the
     average of :math:`h(\bar{n})` over samples generated from a parametrized distribution
     :math:`P_{\theta}(\bar{n})`:
 
@@ -55,7 +55,7 @@ class Stochastic:
     array([ 0.10880756, -0.1247146 ,  0.12426481, -0.13783342])
 
     Args:
-        h (callable): a function that assigns a cost to input samples
+        h (callable): a function that assigns a cost to an input sample
         vgbs (train.VGBS): the trainable GBS distribution, which must be an instance of
             :class:`~.VGBS`
     """
@@ -77,7 +77,7 @@ class Stochastic:
 
         Args:
             params (array): the trainable parameters :math:`\theta`
-            n_samples (int): the number of GBS samples used to average the cost function over
+            n_samples (int): the number of GBS samples used to average the cost function
 
         Returns:
             float: the value of the stochastic cost function
@@ -86,7 +86,7 @@ class Stochastic:
         return np.mean([self.h_reparametrized(s, params) for s in samples])
 
     def h_reparametrized(self, sample: np.ndarray, params: np.ndarray) -> float:
-        r"""Include trainable parameters in the :math:`h(\bar{n})` function to allow for sampling
+        r"""Include trainable parameters in the :math:`h(\bar{n})` function to allow sampling
         from the initial adjacency matrix.
 
         **Example usage:**
@@ -147,7 +147,7 @@ class Stochastic:
             params (array): the trainable parameters :math:`\theta`
 
         Returns:
-            array: the one shot gradient
+            array: the one-shot gradient
         """
         w = self.vgbs.embedding(params)
         jac = self.vgbs.embedding.jacobian(params)
@@ -171,7 +171,7 @@ class Stochastic:
 
         Args:
             params (array): the trainable parameters :math:`\theta`
-            n_samples (int): the number of GBS samples used to average the gradient
+            n_samples (int): the number of GBS samples used in the gradient estimation
 
         Returns:
             array: the gradient vector
