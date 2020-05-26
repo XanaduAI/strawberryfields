@@ -67,8 +67,30 @@ class Stochastic:
     def evaluate(self, params: np.ndarray, n_samples: int) -> float:
         r"""Evaluates the cost function.
 
-        The cost function is evaluated by finding its average over a number ``n_samples`` of
-        samples generated from the VGBS system using the trainable parameters :math:`\theta`.
+        The cost function can be evaluated by finding its average over samples generated from the
+        VGBS system using the trainable parameters :math:`\theta`:
+
+        .. math::
+
+            C (\theta) = \sum_{\bar{n}} h(\bar{n}) P_{\theta}(\bar{n})
+
+        Alternatively, the cost function can be evaluated by finding a different average over
+        samples from the input adjacency matrix to the VGBS system:
+
+        .. math::
+
+            C (\theta) = \sum_{\bar{n}} h(\bar{n}, \theta) P(\bar{n})
+
+        where :math:`h(\bar{n}, \theta)` now contains the trainable parameters and
+        :math:`P(\bar{n})` is the distribution over the input adjacency matrix. The advantage of
+        this alternative approach is that one does not need to keep regenerating samples for an
+        updated adjacency matrix and we can instead use a fixed set of samples.
+
+        The second approach above is utilized in :class:`Stochastic` to speed up evaluation of
+        the cost function and its gradient. This is done by approximating the cost function using a
+        single fixed set of samples. The samples can be pre-loaded into the :class:`~.VGBS` class or
+        generated once upon the first call of :meth:`Stochastic.evaluate` or
+        :meth:`Stochastic.gradient`.
 
         **Example usage:**
 
