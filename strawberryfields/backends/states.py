@@ -26,7 +26,7 @@ from scipy.stats import multivariate_normal
 from scipy.special import factorial
 from scipy.integrate import simps
 
-from thewalrus.quantum import photon_number_mean, photon_number_covar
+from thewalrus.quantum import photon_number_expectation, photon_number_squared_expectation
 
 import strawberryfields as sf
 
@@ -897,14 +897,25 @@ class BaseFockState(BaseState):
         """Calculates the expectation value of an operator that is diagonal in
         the number basis for a pure state"""
         # state is a tensor of probability amplitudes
+
+        num_modes = self._modes  # number of modes in the state.
+
+        traced_modes = tuple(item for item in range(num_modes) if item not in modes)
+
         ps = np.abs(self.ket()) ** 2
-        ps = ps.sum(axis=modes)
+        ps = ps.sum(axis=traced_modes)
         for _ in modes:
             ps = np.tensordot(values, ps, axes=1)
         return float(ps)
 
-    def _diagonal_expectation_density_matrix(self, modes, values):
+    def _diagonal_expectation_dm(self, modes, values):
         # state is a tensor of density matrix elements in the SF convention
+        cutoff = self._cutoff  # Fock space cutoff.
+
+        num_modes = self._modes  # number of modes in the state.
+
+        traced_modes = tuple(item for item in range(num_modes) if item not in modes)
+
         ps = np.real(self.dm())
         traced_modes = list(traced_modes)
         traced_modes.sort(reverse=True)
@@ -920,25 +931,21 @@ class BaseFockState(BaseState):
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
 
-        cutoff = self._cutoff  # Fock space cutoff.
-        num_modes = self._modes  # number of modes in the state.
-
-        traced_modes = tuple(item for item in range(num_modes) if item not in modes)
-
         if self.is_pure:
-            expval = _diagonal_expectation_pure(traced_modes, values)
-            x_squared = _diagonal_expectation_pure(traced_modes, values ** 2)
+            expval = self._diagonal_expectation_pure(modes, values)
+            x_squared = self._diagonal_expectation_pure(modes, values ** 2)
             variance = x_squared - expval ** 2
             return expval, variance
 
-        expval = _diagonal_expectation_density_matrix(traced_modes, values)
-        x_squared = _diagonal_expectation_density_matrix(traced_modes, values ** 2)
+        expval = self._diagonal_expectation_dm(modes, values)
+        x_squared = self._diagonal_expectation_dm(modes, values ** 2)
         variance = x_squared - expval ** 2
         return expval, variance
 
     def number_expectation(self, modes):
         cutoff = self._cutoff
         values = np.arange(cutoff)
+        print(self.diagonal_expectation(modes, values))
         return self.diagonal_expectation(modes, values)
 
     def parity_expectation(self, modes):
@@ -1258,13 +1265,15 @@ class BaseGaussianState(BaseState):
             raise ValueError("There can be no duplicates in the modes specified.")
         mu = self._mu
         cov = self._cov
-        if len(modes) == 1:
-            return photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
-
+        expval = photon_number_expectation(mu, cov, modes, hbar=self._hbar)
+        squared_expval = photon_number_squared_expectation(mu, cov, modes, hbar=self._hbar)
+        return expval, squared_expval - expval ** 2
+        """
         if len(modes) == 2:
             ni = photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
             nj = photon_number_mean(mu, cov, modes[1], hbar=self._hbar)
             return photon_number_covar(mu, cov, modes[1], modes[0], hbar=self._hbar) + ni * nj
+        """
 
         raise ValueError(
             "The number_expectation method only supports one or two modes for Gaussian states."

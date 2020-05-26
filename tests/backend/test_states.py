@@ -298,9 +298,21 @@ class TestNumberExpectation:
             pytest.skip("Does not support batch mode")
         backend = setup_backend(2)
         state = backend.state()
-        assert np.allclose(state.number_expectation([0, 1]), 0.0, atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([0]), 0.0, atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([1]), 0.0, atol=tol, rtol=0)
+
+        print(state, backend, state.number_expectation([0, 1]))
+        expval1, var1 = state.number_expectation([0, 1])
+        expval2, var2 = state.number_expectation([0])
+        expval3, var3 = state.number_expectation([1])
+
+        # Expvals
+        assert np.allclose(expval1, 0.0, atol=tol, rtol=0)
+        assert np.allclose(expval2, 0.0, atol=tol, rtol=0)
+        assert np.allclose(expval3, 0.0, atol=tol, rtol=0)
+
+        # Vars
+        assert np.allclose(var1, 0.0, atol=tol, rtol=0)
+        assert np.allclose(var2, 0.0, atol=tol, rtol=0)
+        assert np.allclose(var3, 0.0, atol=tol, rtol=0)
 
     def test_number_expectation_displaced_squeezed(self, setup_backend, tol, batch_size):
         """Tests the expectation value of photon numbers when there is no correlation"""
@@ -404,7 +416,7 @@ class TestParityExpectation:
         expval, var = state.parity_expectation([0])
 
         assert np.allclose(expval, 0, atol=tol, rtol=0)
-        assert np.allclose(var, 0, atol=tol, rtol=0)
+        assert np.allclose(var, 1, atol=tol, rtol=0)
 
     @pytest.mark.backends("fock", "tf")
     def test_two_mode_fock(self, setup_backend, tol, batch_size):
