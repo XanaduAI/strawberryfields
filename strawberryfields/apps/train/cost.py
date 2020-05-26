@@ -35,13 +35,13 @@ class Stochastic:
     The cost function :math:`C (\theta)` can then be optimized by varying
     :math:`P_{\theta}(\bar{n})`.
 
-    In this setting, :math:`P_{\theta}(\bar{n})` is the variational GBS distribution and is input by
-    instantiating :class:`~.VGBS`.
+    In this setting, :math:`P_{\theta}(\bar{n})` is the variational GBS distribution and is
+    specified in :class:`~.Stochastic` by an instance of :class:`~.VGBS`.
 
     **Example usage:**
 
-    The function :math:`h(\bar{n})` in this example is decreased when clicks are present in
-    odd-numbered modes and is increased when clicks are present in even numbered modes.
+    The function :math:`h(\bar{n})` can be viewed as an energy. Clicks in odd-numbered modes
+    decrease the total energy, while clicks in even-numbered modes increase it.
 
     >>> embedding = train.embed.Exp(4)
     >>> A = np.ones((4, 4))
@@ -64,7 +64,7 @@ class Stochastic:
         self.h = h
         self.vgbs = vgbs
 
-    def evaluate(self, params: np.ndarray, n_samples: int = 100) -> float:
+    def evaluate(self, params: np.ndarray, n_samples: int) -> float:
         r"""Evaluates the cost function.
 
         The cost function is evaluated by finding its average over a number ``n_samples`` of
@@ -156,7 +156,7 @@ class Stochastic:
         diff = self.sample_difference_from_mean(sample, params)
         return h * (diff / w) @ jac
 
-    def gradient(self, params: np.ndarray, n_samples: int = 100) -> np.ndarray:
+    def gradient(self, params: np.ndarray, n_samples: int) -> np.ndarray:
         """Evaluates the gradient of the cost function.
 
         The gradient is evaluated by finding an average of a function over a number ``n_samples`` of
@@ -179,5 +179,5 @@ class Stochastic:
         samples = self.vgbs.get_A_init_samples(n_samples)
         return np.mean([self._gradient_one_sample(s, params) for s in samples], axis=0)
 
-    def __call__(self, params: np.ndarray, n_samples: int = 100) -> float:
+    def __call__(self, params: np.ndarray, n_samples: int) -> float:
         return self.evaluate(params, n_samples)
