@@ -54,7 +54,7 @@ class KL:
 
     >>> embedding = train.embed.Exp(4)
     >>> A = np.ones((4, 4))
-    >>> vgbs = train.param.VGBS(A, 3, embedding, threshold=True)
+    >>> vgbs = train.VGBS(A, 3, embedding, threshold=True)
     >>> params = np.array([0.05, 0.1, 0.02, 0.01])
     >>> data = np.zeros((4, 4))
     >>> kl = cost.KL(data, vgbs)
@@ -65,15 +65,14 @@ class KL:
 
     Args:
         data (array): Array of samples representing the training data
-        vgbs (~.VGBS): Variational GBS class
+        vgbs (train.VGBS): Variational GBS class
 
     """
 
     def __init__(self, data: np.ndarray, vgbs):
         self.data = data
         self.vgbs = vgbs
-        self.nr_samples = len(data)
-        self.nr_modes = len(data[0])
+        self.nr_samples, self.nr_modes = data.shape
         self.mean_n_data = np.mean(self.data, axis=0)
 
     def grad(self, params: np.ndarray) -> np.ndarray:
@@ -88,13 +87,13 @@ class KL:
         Args:
             params (array[float]): the trainable parameters :math:`\theta`
         Returns:
-            array: the gradient of the K-L cost function with respect to :math:`\theta`
+            array: the gradient of the KL cost function with respect to :math:`\theta`
         """
         weights = self.vgbs.embedding(params)
         if self.vgbs.threshold:
-            n_diff = self.vgbs.mean_clicks_by_mode(params) - self.mean_n_data()
+            n_diff = self.vgbs.mean_clicks_by_mode(params) - self.mean_n_data
         else:
-            n_diff = self.vgbs.mean_photons_by_mode(params) - self.mean_n_data()
+            n_diff = self.vgbs.mean_photons_by_mode(params) - self.mean_n_data
         return (n_diff / weights) @ self.vgbs.embedding.jacobian(params)
 
     def evaluate(self, params: np.ndarray) -> float:
