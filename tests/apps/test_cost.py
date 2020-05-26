@@ -116,19 +116,6 @@ class TestStochastic:
         assert np.allclose(eval, eval_expected)
 
     @pytest.mark.parametrize("threshold", [True, False])
-    def test_sample_difference_from_mean(self, dim, vgbs, n_mean):
-        """Test that sample_difference_from_mean is correct when considering a fully connected
-        adjacency matrix. With n_mean = 1, we expect each mode to have a mean number of
-        clicks/photons of 0.25. If we provide a sample of all ones, then we expect the difference
-        to the mean vector to be a constant vector of 0.5."""
-        cost_fn = train.Stochastic(h, vgbs)
-        sample = np.ones(dim)
-        params = np.zeros(dim - 1)
-
-        diff = cost_fn.sample_difference_from_mean(sample, params)
-        assert np.allclose(diff, 1 - n_mean * np.ones(dim) / dim)
-
-    @pytest.mark.parametrize("threshold", [True, False])
     def test_gradient_one_sample(self, vgbs, dim, params, threshold):
         """Test that _gradient_one_sample returns the correct values when compared to
         calculations done by hand"""

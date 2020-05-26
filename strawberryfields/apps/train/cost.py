@@ -137,14 +137,14 @@ class Stochastic:
 
         return h * dets * prod
 
-    def sample_difference_from_mean(self, sample: np.ndarray, params: np.ndarray) -> np.ndarray:
+    def _sample_difference_from_mean(self, sample: np.ndarray, params: np.ndarray) -> np.ndarray:
         """Calculates the difference between an input sample and the vector of mean clicks or
         photons by mode.
 
         **Example usage:**
 
         >>> sample = [1, 0, 0, 0]
-        >>> cost.sample_difference_from_mean(sample, params)
+        >>> cost._sample_difference_from_mean(sample, params)
         array([ 0.47187426,  0.4798068 ,  0.46717688, -0.53437824])
 
         Args:
@@ -154,10 +154,7 @@ class Stochastic:
         Returns:
             array: the difference
         """
-        if self.vgbs.threshold:
-            n_diff = sample - self.vgbs.mean_clicks_by_mode(params)
-        else:
-            n_diff = sample - self.vgbs.mean_photons_by_mode(params)
+
 
         return n_diff
 
@@ -175,7 +172,12 @@ class Stochastic:
         jac = self.vgbs.embedding.jacobian(params)
 
         h = self.h_reparametrized(sample, params)
-        diff = self.sample_difference_from_mean(sample, params)
+
+        if self.vgbs.threshold:
+            diff = sample - self.vgbs.mean_clicks_by_mode(params)
+        else:
+            diff = sample - self.vgbs.mean_photons_by_mode(params)
+
         return h * (diff / w) @ jac
 
     def gradient(self, params: np.ndarray, n_samples: int) -> np.ndarray:
