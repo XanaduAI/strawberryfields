@@ -19,6 +19,8 @@ import numpy as np
 import pytest
 from strawberryfields.apps.train import cost, param, embed
 
+pytestmark = pytest.mark.apps
+
 test_data = [[0, 0, 0, 0], [0, 2, 2, 2], [0, 0, 0, 2], [0, 0, 2, 2], [0, 2, 2, 0], [0, 0, 0, 4]]
 n_means_data = np.mean(test_data, axis=0)
 test_data = [[t[:d] for t in test_data] for d in range(2, 5)]
