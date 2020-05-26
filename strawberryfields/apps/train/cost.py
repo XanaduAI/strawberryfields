@@ -137,27 +137,6 @@ class Stochastic:
 
         return h * dets * prod
 
-    def _sample_difference_from_mean(self, sample: np.ndarray, params: np.ndarray) -> np.ndarray:
-        """Calculates the difference between an input sample and the vector of mean clicks or
-        photons by mode.
-
-        **Example usage:**
-
-        >>> sample = [1, 0, 0, 0]
-        >>> cost._sample_difference_from_mean(sample, params)
-        array([ 0.47187426,  0.4798068 ,  0.46717688, -0.53437824])
-
-        Args:
-            sample (array): the sample
-            params (array): the trainable parameters :math:`\theta`
-
-        Returns:
-            array: the difference
-        """
-
-
-        return n_diff
-
     def _gradient_one_sample(self, sample: np.ndarray, params: np.ndarray) -> np.ndarray:
         """Evaluates the gradient equation on a single sample.
 
