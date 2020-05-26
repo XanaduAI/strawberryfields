@@ -29,12 +29,11 @@ from strawberryfields.apps.train.param import VGBS
 class KL:
     r"""Kullback-Liebler divergence cost function.
 
-
     In a standard unsupervised learning scenario, data are assumed to be sampled from an unknown
     distribution and a common goal is to learn that distribution. Training of a model
     distribution can be performed by minimizing the Kullback-Leibler (KL) divergence, which up to
-    additive constants can be written as :
-    
+    additive constants can be written as:
+
     .. math::
 
         KL = -\frac{1}{T}\sum_S \log[P(S)],
@@ -55,9 +54,9 @@ class KL:
 
     **Example usage**
 
-    >>> embedding = embed.Exp(4)
+    >>> embedding = train.embed.Exp(4)
     >>> A = np.ones((4, 4))
-    >>> vgbs = param.VGBS(A, 3, embedding, threshold=True)
+    >>> vgbs = train.VGBS(A, 3, embedding, threshold=True)
     >>> params = np.array([0.05, 0.1, 0.02, 0.01])
     >>> data = np.zeros((4, 4))
     >>> kl = cost.KL(data, vgbs)
@@ -68,7 +67,7 @@ class KL:
 
     Args:
         data (array): Array of samples representing the training data
-        vgbs: Variational GBS class
+        vgbs (train.VGBS): Variational GBS class
 
     """
 
@@ -89,15 +88,15 @@ class KL:
         array([-0.52812574, -0.5201932 , -0.53282312, -0.53437824])
 
         Args:
-            params (array): the trainable parameters :math:`\theta`
+            params (array[float]): the trainable parameters :math:`\theta`
         Returns:
-            array: the gradient of the K-L cost function with respect to :math:`\theta`
+            array: the gradient of the KL cost function with respect to :math:`\theta`
         """
         weights = self.vgbs.embedding(params)
         if self.vgbs.threshold:
-            n_diff = self.vgbs.mean_clicks_by_mode(params) - self.mean_n_data()
+            n_diff = self.vgbs.mean_clicks_by_mode(params) - self.mean_n_data
         else:
-            n_diff = self.vgbs.mean_photons_by_mode(params) - self.mean_n_data()
+            n_diff = self.vgbs.mean_photons_by_mode(params) - self.mean_n_data
         return (n_diff / weights) @ self.vgbs.embedding.jacobian(params)
 
     def evaluate(self, params: np.ndarray) -> float:

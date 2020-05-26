@@ -112,9 +112,7 @@ class TestBaseStateMeanPhotonNumber:
         mean_photon, var = state.mean_photon(0)
 
         assert np.allclose(mean_photon, np.sinh(r) ** 2, atol=tol, rtol=0)
-        assert np.allclose(
-            var, 2 * (np.sinh(r) ** 2 + np.sinh(r) ** 4), atol=tol, rtol=0
-        )
+        assert np.allclose(var, 2 * (np.sinh(r) ** 2 + np.sinh(r) ** 4), atol=tol, rtol=0)
 
     def test_mean_photon_displaced_squeezed(self, setup_backend, tol, batch_size):
         """Test that E(n) = sinh^2(r)+|a|^2 for a displaced squeezed state"""
@@ -304,9 +302,7 @@ class TestNumberExpectation:
         assert np.allclose(state.number_expectation([0]), 0.0, atol=tol, rtol=0)
         assert np.allclose(state.number_expectation([1]), 0.0, atol=tol, rtol=0)
 
-    def test_number_expectation_displaced_squeezed(
-        self, setup_backend, tol, batch_size
-    ):
+    def test_number_expectation_displaced_squeezed(self, setup_backend, tol, batch_size):
         """Tests the expectation value of photon numbers when there is no correlation"""
         if batch_size is not None:
             pytest.skip("Does not support batch mode")
@@ -331,9 +327,7 @@ class TestNumberExpectation:
         """Tests that the correct exception is raised for repeated modes"""
         backend = setup_backend(2)
         state = backend.state()
-        with pytest.raises(
-            ValueError, match="There can be no duplicates in the modes specified."
-        ):
+        with pytest.raises(ValueError, match="There can be no duplicates in the modes specified."):
             state.number_expectation([0, 0])
 
     @pytest.mark.backends("gaussian")
@@ -360,9 +354,7 @@ class TestNumberExpectation:
         backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 2)
         state = backend.state()
         nbar = np.sinh(r) ** 2
-        assert np.allclose(
-            state.number_expectation([2, 0]), 2 * nbar ** 2 + nbar, atol=tol, rtol=0
-        )
+        assert np.allclose(state.number_expectation([2, 0]), 2 * nbar ** 2 + nbar, atol=tol, rtol=0)
         assert np.allclose(state.number_expectation([0]), nbar, atol=tol, rtol=0)
         assert np.allclose(state.number_expectation([2]), nbar, atol=tol, rtol=0)
 
@@ -385,27 +377,17 @@ class TestNumberExpectation:
         state = backend.state()
         nbar = np.sinh(r) ** 2
         assert np.allclose(
-            state.number_expectation([0, 1, 2, 3]),
-            (2 * nbar ** 2 + nbar) ** 2,
-            atol=tol,
-            rtol=0,
+            state.number_expectation([0, 1, 2, 3]), (2 * nbar ** 2 + nbar) ** 2, atol=tol, rtol=0,
         )
         assert np.allclose(
-            state.number_expectation([0, 1, 3]),
-            nbar * (2 * nbar ** 2 + nbar),
-            atol=tol,
-            rtol=0,
+            state.number_expectation([0, 1, 3]), nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0,
         )
         assert np.allclose(
-            state.number_expectation([3, 1, 2]),
-            nbar * (2 * nbar ** 2 + nbar),
-            atol=tol,
-            rtol=0,
+            state.number_expectation([3, 1, 2]), nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0,
         )
 
 
 class TestParityExpectation:
-
     @pytest.mark.backends("fock", "tf")
     def test_parity_fock(self, setup_backend, tol, batch_size):
         """Tests the parity operator for an even superposition of the first two number states"""
@@ -437,7 +419,6 @@ class TestParityExpectation:
 
         assert np.allclose(state.parity_expectation([0, 1]), 1, atol=tol, rtol=0)
 
-    @pytest.mark.backends("fock", "tf")
     def test_coherent(self, setup_backend, tol, batch_size):
         """Tests the parity operator for a coherent state"""
         if batch_size is not None:
@@ -449,10 +430,9 @@ class TestParityExpectation:
         state = backend.state()
 
         assert np.allclose(
-            state.parity_expectation([0]), np.exp(-2 * (np.abs(alpha)**2)), atol=tol, rtol=0
+            state.parity_expectation([0]), np.exp(-2 * (np.abs(alpha) ** 2)), atol=tol, rtol=0
         )
 
-    @pytest.mark.backends("fock", "tf")
     def test_squeezed(self, setup_backend, tol, batch_size):
         """Tests the parity operator for a squeezed state"""
         if batch_size is not None:
@@ -466,7 +446,6 @@ class TestParityExpectation:
 
         assert np.allclose(state.parity_expectation([0]), 1, atol=tol, rtol=0)
 
-    @pytest.mark.backends("fock", "tf")
     def test_two_mode_squeezed(self, setup_backend, tol, batch_size):
         """Tests the parity operator for a two-mode squeezed state"""
         if batch_size is not None:
@@ -494,9 +473,7 @@ class TestParityExpectation:
         backend.prepare_thermal_state(m, 0)
         state = backend.state()
 
-        assert np.allclose(
-            state.parity_expectation([0]), (1 / ((2 * m) + 1)), atol=tol, rtol=0
-        )
+        assert np.allclose(state.parity_expectation([0]), (1 / ((2 * m) + 1)), atol=tol, rtol=0)
 
 
 class TestFidelities:
@@ -529,9 +506,7 @@ class TestFidelities:
         state = backend.state()
 
         if isinstance(backend, backends.BaseFock):
-            in_state = utils.squeezed_state(
-                r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
-            )
+            in_state = utils.squeezed_state(r, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
         else:
             in_state = utils.squeezed_state(r, phi, basis="gaussian", hbar=hbar)
 
@@ -550,9 +525,7 @@ class TestFidelities:
                 a, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
             )
         else:
-            in_state = utils.displaced_squeezed_state(
-                a, r, phi, basis="gaussian", hbar=hbar
-            )
+            in_state = utils.displaced_squeezed_state(a, r, phi, basis="gaussian", hbar=hbar)
 
         assert np.allclose(state.fidelity(in_state, 0), 1, atol=tol, rtol=0)
         assert np.allclose(state.fidelity(in_state, 1), 1, atol=tol, rtol=0)

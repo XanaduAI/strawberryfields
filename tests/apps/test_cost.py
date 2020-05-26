@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.train.embed
+Unit tests for strawberryfields.apps.train.cost
 """
-# pylint: disable=no-self-use,unused-argument
+# pylint: disable=no-self-use
 import numpy as np
 import pytest
 from strawberryfields.apps.train import cost, param, embed
+
+pytestmark = pytest.mark.apps
 
 test_data = [[0, 0, 0, 0], [0, 2, 2, 2], [0, 0, 0, 2], [0, 0, 2, 2], [0, 2, 2, 0], [0, 0, 0, 4]]
 n_means_data = np.mean(test_data, axis=0)
@@ -37,7 +39,7 @@ class TestKL:
 
     def test_mean_data(self, k):
         """Tests the mean photon number per mode from hard-coded values stored in the array
-        ``test_n_means``. The test iterates over different numbers of modes in the data."""
+        ``n_means_data``. The test iterates over different numbers of modes in the data."""
         m = k + 2
         embedding = embed.Exp(m)
         vgbs = param.VGBS(A[:m, :m], mean_photon_number, embedding, threshold=False)
