@@ -54,13 +54,14 @@ extensions = [
     'sphinxcontrib.bibtex',
     'edit_on_github',
     'sphinx_autodoc_typehints',
-    'nbsphinx',
-    'sphinx_gallery.gen_gallery',
     "sphinx.ext.intersphinx",
     "sphinx_automodapi.automodapi",
     'sphinx_copybutton',
     "m2r"
 ]
+
+
+intersphinx_mapping = {"photonics": ("http://sfdocsredesign.s3-website-us-east-1.amazonaws.com/photonics", None)}
 
 source_suffix = ['.rst', '.md']
 
@@ -80,29 +81,6 @@ mathjax_path = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?
 # nbsphinx settings
 
 exclude_patterns = ['_build', '**.ipynb_checkpoints']
-nbsphinx_execute = 'never'
-nbsphinx_epilog = """
-.. note:: :download:`Click here <../../{{env.docname}}.ipynb>` to download this gallery page as an interactive Jupyter notebook.
-"""
-nbsphinx_requirejs_path = ""
-
-sphinx_gallery_conf = {
-    # path to your example scripts
-    'examples_dirs': '../examples_apps',
-    # path where to save gallery generated examples
-    'gallery_dirs': 'tutorials_apps',
-    # execute files that match the following filename pattern,
-    # and skip those that don't. If the following option is not provided,
-    # all example scripts in the 'examples_dirs' folder will be skiped.
-    'filename_pattern': r'/run_',
-    # first notebook cell in generated Jupyter notebooks
-    'first_notebook_cell': ("# This cell is added by sphinx-gallery\n"
-                            "# It can be customized to whatever you like\n"
-                            "%matplotlib inline"),
-    # thumbnail size
-    'thumbnail_size': (400, 400),
-    'capture_repr': (),
-}
 
 # Remove warnings that occur when generating the the tutorials
 warnings.filterwarnings("ignore", category=UserWarning, message=r"Matplotlib is currently using agg")
