@@ -23,7 +23,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Josh Izaac,  Shreya P. Kumar, Nicolás Quesada
+Theodor Isacsson, Josh Izaac, Shreya P. Kumar, Nicolás Quesada
 
 
 # Release 0.14.0 (current release)
