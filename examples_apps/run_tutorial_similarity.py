@@ -181,7 +181,7 @@ print(similarity.sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0
 # interest and fix the composition of the feature vector. For example, to obtain feature vector
 # :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}` for the first MUTAG graph, we use:
 
-print(similarity.feature_vector_events_sampling(m0, [2, 4, 6], 2))
+print(similarity.feature_vector_events_sampling(m0, [2, 4], 2))
 
 ##############################################################################
 # We can also use any orbits of our choice instead of events:
@@ -208,7 +208,7 @@ print(similarity.feature_vector_orbits_sampling(m0, [[1, 1], [2], [1, 1, 1, 1], 
 # For example, to get the exact event probabilities in the feature vector example
 # :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}` seen previously, we use:
 
-print(similarity.feature_vector_events(nx.Graph(m0_a), [2, 4, 6], 2))
+print(similarity.feature_vector_events(nx.Graph(m0_a), [2, 4], 2))
 
 ##############################################################################
 # Although they are precise, exact calculations for large matrices can be tough to calculate. Additionally,
@@ -235,7 +235,7 @@ print(similarity.event_cardinality(6, 2, 17))
 # For example, to get MC-estimated probabilities for our example feature vector
 # :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}`, we use:
 
-print(similarity.feature_vector_events(nx.Graph(m0_a), [2, 4, 6], 2, samples=1000))
+print(similarity.feature_vector_events(nx.Graph(m0_a), [2, 4], 2, samples=1000))
 
 ##############################################################################
 #
