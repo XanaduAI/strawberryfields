@@ -59,32 +59,37 @@ Evaluating the probabilities of orbits or events can be achieved through three a
 
 - **Direct sampling:** infer the probability of orbits or events from a set of sample data.
 
-- **Monte Carlo approximation:** generate samples within a given orbit or event and use them
-  to approximate the probability.
+- **Monte Carlo estimation:** generate samples within a given orbit or event and use them
+  to estimate the probability.
 
-- **Exact calculation:** probabilities are calculated exactly by solving hafnians for induced
-  sub-matrices of orbits or events.
+- **Exact calculation:** probabilities are calculated exactly, which involves calculating a
+  large number of hafnians.
+
 
 In the direct sampling approach, :math:`N` samples are taken from GBS with the embedded graph.
-The number that fall within a given orbit :math:`O` or event :math:`E` are counted, resulting
-in the count :math:`c_{O/E}`. The probability :math:`p(O/E)` of an orbit or event is then
-approximated as:
+For an event :math:`E`, for example, the number of samples that fall within this event
+are counted, resulting in the count :math:`c_{E}`. The probability :math:`p(E)` of this event
+is then approximated as:
 
 .. math::
-    p(O/E) \approx \frac{c_{O/E}}{N}.
+    p(E) \approx \frac{c_{E}}{N}.
 
-To perform a Monte Carlo estimation of the probability of an orbit :math:`O` or event :math:`E`,
-several samples from :math:`O` or :math:`E` are drawn uniformly at random using
-:func:`orbit_to_sample` or :func:`event_to_sample`. Suppose :math:`N` samples
+Calculating the probability of any orbit using direct sampling follows the same protocol.
+
+To perform a Monte Carlo estimation of the probability of an event :math:`E`,
+several samples from :math:`E` are drawn uniformly at random using :func:`event_to_sample`.
+Suppose :math:`N` samples
 :math:`\{S_{1}, S_{2}, \ldots , S_{N}\}` are generated. For each sample, this function calculates
 the probability :math:`p(S_i)` of observing that sample from a GBS device programmed according to
 the input graph and mean photon number. The sum of the probabilities is then rescaled according
-to the cardinality :math:`|O|` or :math:`|E|` and the total number of samples:
+to the cardinality :math:`|E|` and the total number of samples:
 
 .. math::
-    p(O/E) \approx \frac{1}{N}\sum_{i=1}^N p(S_i) |O/E|.
+    p(E) \approx \frac{1}{N}\sum_{i=1}^N p(S_i) |E|.
 
-The sample mean of this sum is an estimate of the rescaled probability :math:`p(O/E)`.
+The sample mean of this sum is an estimate of the rescaled probability :math:`p(E)`. The same
+protocol applies when estimating the probability of an orbit :math:`O`. This time, however,
+:func:`orbit_to_sample` function is used to draw :math:`N` samples and calculate :math:`p(O)`.
 
 Calculating exact probabilities can be more expensive but provides the capability of doing
 simulations without approximations, which might be important for benchmarking GBS similarity
@@ -93,18 +98,26 @@ approximations can drown out the differences in graphs. The exact probability of
 made up of the sum of probabilities of all possible GBS output patterns that belong to it:
 
 .. math::
-    P(O) = \sum_{n \in O} P(n) = \frac{{\rm haf}(A_{n})^2}{n! \sqrt{\det(Q)}}
+    p(O) = \sum_{n \in O} p(n)
 
-where :math:`n` represents one GBS output pattern, :math:`A_{n}` is its induced sub-matrix
-and :math:`Q` is the :math:`Q`-matrix obtained from the adjacency matrix. Exact probabilities of
+where :math:`n` represents a GBS output pattern. Calculating each :math:`p(n)` requires
+computing a `hafnian <https://the-walrus.readthedocs.io/en/latest/hafnian.html>`__, which gets
+exponentially difficult with increasing photon number. Exact probabilities of
 events can be calculated by summing over its constituent orbit probabilities.
 
 This module provides functions for feature vectors to be calculated using all the methods
-listed above, i.e, direct sampling, Monte Carlo (MC) approximation and exact calculations. All
-methods are also separately implemented for using either events and orbits as the constructing
-unit of feature vectors. Similar to the :func:`~.apps.sample.sample` function, exact and
-MC-estimated functions include a ``loss`` argument to specify the proportion of photons
-lost in the simulated GBS device.
+listed above, i.e, direct sampling, Monte Carlo (MC) estimation and exact calculations. All
+methods are also separately implemented for using either events or orbits as the constructing
+unit of feature vectors. Functions :func:`~.feature_vector_orbits_sampling` and
+:func:`~.feature_vector_events_sampling` calculate feature vectors using direct sampling and
+require a list of pre-generated samples.
+
+Functions :func:`~.feature_vector_orbits` and :func:`~.feature_vector_events` can be used to get
+exact feature vectors. These functions use a keyword argument ``samples`` to signal producing
+either exact or approximate probabilities. ``samples`` is set to ``None`` to get exact feature
+vectors by default. To use Monte Carlo estimation, ``samples`` can be set to the number of samples
+desired to be used in the estimation. Similar to the :func:`~.apps.sample.sample` function, these two
+functions include a ``loss`` argument to specify the proportion of photons lost in the simulated GBS device.
 """
 from collections import Counter
 from typing import Generator, Union
@@ -321,9 +334,9 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     return cardinality
 
 
-def _get_state(graph: nx.Graph, n_mean: float = 5, loss: float = 0.0):
-    r"""Embeds the input graph into a SF device with Gaussian backend and returns its state.
-        """
+def _get_state(graph: nx.Graph, n_mean: float = 5, loss: float = 0.0) -> sf.backends.gaussianbackend.states.GaussianState:
+    r"""Embeds the input graph into a GBS device and returns the corresponding Gaussian state
+    """
     modes = graph.order()
     A = nx.to_numpy_array(graph)
     mean_photon_per_mode = n_mean / float(modes)
@@ -341,25 +354,24 @@ def _get_state(graph: nx.Graph, n_mean: float = 5, loss: float = 0.0):
     return eng.run(p).state
 
 
-def _prob_orbit_exact(graph: nx.Graph, orbit: list, n_mean: float = 5, loss: float = 0.0) -> float:
-
+def prob_orbit_exact(graph: nx.Graph, orbit: list, n_mean: float = 5, loss: float = 0.0) -> float:
     r"""Gives the exact GBS probability of a given orbit according to the input
     graph.
 
-    The exact probability of an orbit is made up of the sum of probabilities of
+    The exact probability of an orbit is the sum of probabilities of
     all possible GBS output patterns that belong to it:
 
     .. math::
-       P(O) = \sum_{n \in O} P(n) = \frac{{\rm haf}(A_{n})^2}{n! \sqrt{\det(Q)}}
+       p(O) = \sum_{S \in O} p(S) = \frac{{\rm haf}(A_{S})^2}{S! \sqrt{\det(Q)}}
 
-    where :math:`n` represents one GBS output pattern, :math:`A_{n}` is its induced
-    sub-matrix and :math:`Q` is the Q-matrix obtained from the adjacency matrix.
+    where :math:`S` represents one GBS output pattern, :math:`A_{S}` is its induced
+    sub-matrix and :math:`Q` is the :math:`Q` covariance matrix obtained from the adjacency matrix.
 
     **Example usage:**
 
     >>> graph = nx.complete_graph(8)
-    >>> _prob_orbit_exact(graph, [2, 1, 1])
-    0.03744
+    >>> prob_orbit_exact(graph, [2, 1, 1])
+    0.03744399092424445
 
     Args:
         graph (nx.Graph): input graph encoded in the GBS device
@@ -378,18 +390,18 @@ def _prob_orbit_exact(graph: nx.Graph, orbit: list, n_mean: float = 5, loss: flo
 
     modes = graph.order()
     photons = sum(orbit)
-    State = _get_state(graph, n_mean, loss)
+    state = _get_state(graph, n_mean, loss)
 
     click = orbit + [0] * (modes - len(orbit))
     prob = 0
 
     for pattern in multiset_permutations(click):
-        prob += State.fock_prob(pattern, cutoff=photons + 1)
+        prob += state.fock_prob(pattern, cutoff=photons + 1)
 
     return prob
 
 
-def _prob_event_exact(
+def prob_event_exact(
     graph: nx.Graph,
     photon_number: int,
     max_count_per_mode: int,
@@ -398,14 +410,14 @@ def _prob_event_exact(
 ) -> float:
     r"""Gives the exact GBS probability of a given event according to the input graph.
 
-    Events are made up of multiple orbits. To calculate event probability, we can sum over
-    its constituent orbit probabilities using :func:`_prob_orbit_exact`.
+    Events are made up of multiple orbits. To calculate an event probability, we can sum over
+    the probabilities of its constituent orbits using :func:`prob_orbit_exact`.
 
     **Example usage:**
 
     >>> graph = nx.complete_graph(8)
-    >>> _prob_event_exact(graph, 4, 2)
-    0.11077
+    >>> prob_event_exact(graph, 4, 2)
+    0.11077180648422322
 
     Args:
         graph (nx.Graph): input graph encoded in the GBS device
@@ -431,12 +443,12 @@ def _prob_event_exact(
 
     for orbit in orbits(photon_number):
         if max(orbit) <= max_count_per_mode:
-            prob += _prob_orbit_exact(graph, orbit, n_mean, loss)
+            prob += prob_orbit_exact(graph, orbit, n_mean, loss)
     return prob
 
 
-def _prob_orbit_mc(
-    graph: nx.Graph, orbit: list, n_mean: float = 5, mc_samples: int = 1000, loss: float = 0.0
+def prob_orbit_mc(
+    graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000, loss: float = 0.0
 ) -> float:
     r"""Gives a Monte Carlo estimate of the GBS probability of a given orbit according
     to the input graph.
@@ -448,20 +460,20 @@ def _prob_orbit_mc(
     **Example usage:**
 
     >>> graph = nx.complete_graph(8)
-    >>> _prob_orbit_mc(graph, [2, 1, 1])
-    0.03744
+    >>> prob_orbit_mc(graph, [2, 1, 1])
+    0.03744399092424391
 
     Args:
         graph (nx.Graph): input graph encoded in the GBS device
         orbit (list[int]): orbit for which to estimate the probability
         n_mean (float): total mean photon number of the GBS device
-        mc_samples (int): number of samples used in the Monte Carlo estimation
+        samples (int): number of samples used in the Monte Carlo estimation
         loss (float): fraction of photons lost in GBS
 
     Returns:
         float: Monte Carlo estimated orbit probability
     """
-    if mc_samples < 1:
+    if samples < 1:
         raise ValueError("Number of samples must be at least one")
     if n_mean < 0:
         raise ValueError("Mean photon number must be non-negative")
@@ -470,25 +482,25 @@ def _prob_orbit_mc(
 
     modes = graph.order()
     photons = sum(orbit)
-    State = _get_state(graph, n_mean, loss)
+    state = _get_state(graph, n_mean, loss)
 
     prob = 0
 
-    for _ in range(mc_samples):
+    for _ in range(samples):
         sample = orbit_to_sample(orbit, modes)
-        prob += State.fock_prob(sample, cutoff=photons + 1)
+        prob += state.fock_prob(sample, cutoff=photons + 1)
 
-    prob = prob * orbit_cardinality(orbit, modes) / mc_samples
+    prob = prob * orbit_cardinality(orbit, modes) / samples
 
     return prob
 
 
-def _prob_event_mc(
+def prob_event_mc(
     graph: nx.Graph,
     photon_number: int,
     max_count_per_mode: int,
     n_mean: float = 5,
-    mc_samples: int = 1000,
+    samples: int = 1000,
     loss: float = 0.0,
 ) -> float:
     r"""Gives a Monte Carlo estimate of the GBS probability of a given event according to the input
@@ -501,21 +513,21 @@ def _prob_event_mc(
     **Example usage:**
 
     >>> graph = nx.complete_graph(8)
-    >>> _prob_event_mc(graph, 4, 2)
-    0.11522
+    >>> prob_event_mc(graph, 4, 2)
+    0.11368151661229377
 
     Args:
         graph (nx.Graph): input graph encoded in the GBS device
         photon_number (int): number of photons in the event
         max_count_per_mode (int): maximum number of photons per mode in the event
         n_mean (float): total mean photon number of the GBS device
-        mc_samples (int): number of samples used in the Monte Carlo estimation
+        samples (int): number of samples used in the Monte Carlo estimation
         loss (float): fraction of photons lost in GBS
 
     Returns:
         float: Monte Carlo estimated event probability
     """
-    if mc_samples < 1:
+    if samples < 1:
         raise ValueError("Number of samples must be at least one")
     if n_mean < 0:
         raise ValueError("Mean photon number must be non-negative")
@@ -527,15 +539,15 @@ def _prob_event_mc(
         raise ValueError("Maximum number of photons per mode must be non-negative")
 
     modes = graph.order()
-    State = _get_state(graph, n_mean, loss)
+    state = _get_state(graph, n_mean, loss)
 
     prob = 0
 
-    for _ in range(mc_samples):
+    for _ in range(samples):
         sample = event_to_sample(photon_number, max_count_per_mode, modes)
-        prob += State.fock_prob(sample, cutoff=photon_number + 1)
+        prob += state.fock_prob(sample, cutoff=photon_number + 1)
 
-    prob = prob * event_cardinality(photon_number, max_count_per_mode, modes) / mc_samples
+    prob = prob * event_cardinality(photon_number, max_count_per_mode, modes) / samples
 
     return prob
 
@@ -544,42 +556,44 @@ def feature_vector_orbits(
     graph: nx.Graph,
     list_of_orbits: list,
     n_mean: float = 5,
-    mc_samples: int = None,
+    samples: int = None,
     loss: float = 0.0,
 ) -> list:
-    r"""Calculates feature vector made up of either exact or MC-approximated orbit probabilities for the input graph.
+    r"""Calculates feature vector of either exact or Monte Carlo orbit probabilities for the input graph.
 
     These probabilities can be either exact or estimated using Monte Carlo estimation.
-    The argument ``mc_samples`` is set to ``None`` to get exact feature vector by default.
-    To use Monte Carlo estimation, ``mc_samples`` can be set to the number of samples desired
+    The argument ``samples`` is set to ``None`` to get exact feature vectors by default.
+    To use Monte Carlo estimation, ``samples`` can be set to the number of samples desired
     to be used in the estimation.
 
-    Computing exact probabilities for a large number of orbits especially for orbits with high
-    total photon numbers can be quite time-consuming. For example, calculating the exact
-    probabilities of observing 8 total photons in a 25 mode graph can take on the order of a
-    few minutes. This means that if the dataset has 1000 graphs, obtaining feature vectors for
-    all can take many days. Monte Carlo estimation, although less precise, can be much quicker.
+    .. warning::
+        Computing exact probabilities for a large number of orbits especially for orbits with high
+        total photon numbers can be quite time-consuming. For example, calculating the exact
+        probabilities of observing 8 total photons in a 25-mode graph can take on the order of a
+        few minutes. If the dataset has 1000 graphs, obtaining feature vectors for
+        all can take many days. Monte Carlo estimation, although less precise, can be much quicker.
 
     **Example usage:**
 
     >>> graph = nx.complete_graph(8)
-    >>> feature_vector_orbits(graph, [ [1,1], [2], [2,1,1], [1,1,1,1] ])
+    >>> feature_vector_orbits(graph, [[1,1], [2,1,1], [1,1,1,1], [2, 2]])
     [0.18423136914879445,
-     7.843627302119571e-31,
      0.03744399092424445,
-     0.07020748298295838]
+     0.07020748298295838,
+     0.003120332577020373]
 
-    >>> feature_vector_orbits(graph, [ [1,1], [2] , [2,1,1], [1,1,1,1] ], mc_samples = 1000)
-    [0.1842313691487924,
-     8.098317264668192e-31,
-     0.037443990924243886,
-     0.07020748298295804]
+    >>> feature_vector_orbits(graph, [[1,1], [2,1,1], [1,1,1,1], [2, 2]], samples = 1000)
+    [0.18423136914879237,
+     0.03744399092424389,
+     0.07020748298295804,
+     0.003120332577020329]
+
 
     Args:
         graph (nx.Graph): input graph
         list_of_orbits (list[list[int]]): a list of orbits
         n_mean (float): total mean photon number of the GBS device
-        mc_samples (int): number of samples used in the Monte Carlo estimation
+        samples (int): number of samples used in the Monte Carlo estimation
         loss (float): fraction of photons lost in GBS
 
     Returns:
@@ -588,18 +602,16 @@ def feature_vector_orbits(
 
     if len(list_of_orbits) <= 0:
         raise ValueError("List of orbits must have at least one orbit")
-    if all(isinstance(elem, list) for elem in list_of_orbits) == False:
-        raise ValueError("List of orbits should only consist of orbits")
-    if any(min(item) < 0 for item in list_of_orbits):
+    if any(min(elem) < 0 for elem in list_of_orbits):
         raise ValueError("Cannot request orbits with photon number below zero")
     if n_mean < 0:
         raise ValueError("Mean photon number must be non-negative")
     if not 0 <= loss <= 1:
         raise ValueError("Loss parameter must take a value between zero and one")
-    if mc_samples:
-        return [_prob_orbit_mc(graph, orbit, n_mean, mc_samples, loss) for orbit in list_of_orbits]
+    if samples:
+        return [prob_orbit_mc(graph, orbit, n_mean, samples, loss) for orbit in list_of_orbits]
 
-    return [_prob_orbit_exact(graph, orbit, n_mean, loss) for orbit in list_of_orbits]
+    return [prob_orbit_exact(graph, orbit, n_mean, loss) for orbit in list_of_orbits]
 
 
 def feature_vector_events(
@@ -607,44 +619,43 @@ def feature_vector_events(
     event_photon_numbers: list,
     max_count_per_mode: int = 2,
     n_mean: float = 5,
-    mc_samples: int = None,
+    samples: int = None,
     loss: float = 0.0,
 ) -> list:
-    r"""Calculates feature vector made up of either exact or MC-approximated event probabilities for the input graph.
+    r"""Calculates feature vector of either exact or Monte Carlo event probabilities for the input graph.
 
     These probabilities can be either exact or estimated using Monte Carlo estimation.
-    The argument ``mc_samples`` is set to ``None`` to get exact feature vector by default.
-    To use Monte Carlo estimation, ``mc_samples`` can be set to the number of samples desired
+    The argument ``samples`` is set to ``None`` to get exact feature vectors by default.
+    To use Monte Carlo estimation, ``samples`` can be set to the number of samples desired
     to be used in the estimation.
 
-    Computing exact probabilities for a large number of events especially for events with high
-    total photon numbers can be quite time-consuming. For example, calculating the exact
-    probabilities of observing 8 total photons in a 25 mode graph can take on the order of a
-    few minutes. This means that if the dataset has 1000 graphs, obtaining feature vectors for
-    all can take many days. Monte Carlo estimation, although less precise, can be much quicker.
+    .. warning::
+        Computing exact probabilities for a large number of events especially for events with high
+        total photon numbers can be quite time-consuming. For example, calculating the exact
+        probabilities of observing 8 total photons in a 25 mode graph can take on the order of a
+        few minutes. If the dataset has 1000 graphs, obtaining feature vectors for
+        all can take many days. Monte Carlo estimation, although less precise, can be much quicker.
 
     **Example usage:**
 
     >>> graph = nx.complete_graph(8)
-    >>> feature_vector_events(graph, [2,3,4,6], 1)
+    >>> feature_vector_events(graph, [2, 3, 4, 6], 1)
     [0.18423136914879445, 0.0, 0.07020748298295838, 0.011891063791931982]
 
-    >>> feature_vector_events(graph, [2,3,4,6], 1, mc_samples = 1000)
+    >>> feature_vector_events(graph, [2, 3, 4, 6], 1, samples = 1000)
     [0.18423136914879246, 0.0, 0.07020748298295802, 0.011891063791932176]
 
     Args:
         graph (nx.Graph): input graph
-        event_photon_number (int): number of photons in the event
-        max_count_per_mode (int): maximum number of photons per mode in the event
+        event_photon_numbers (list[int]): a list of events described by their total photon number
+        max_count_per_mode (int): maximum number of photons per mode for all events
         n_mean (float): total mean photon number of the GBS device
-        mc_samples (int): number of samples used in the Monte Carlo estimation
+        samples (int): number of samples used in the Monte Carlo estimation
         loss (float): fraction of photons lost in GBS
 
     Returns:
         list[float]: a feature vector of orbit probabilities
     """
-    if type(event_photon_numbers) != list:
-        raise ValueError("Event photon numbers must be given as a list of integers")
     if len(event_photon_numbers) <= 0:
         raise ValueError("List of photon numbers must have at least one element")
     if min(event_photon_numbers) < 0:
@@ -656,14 +667,14 @@ def feature_vector_events(
     if not 0 <= loss <= 1:
         raise ValueError("Loss parameter must take a value between zero and one")
 
-    if mc_samples:
+    if samples:
         return [
-            _prob_event_mc(graph, photon_number, max_count_per_mode, n_mean, mc_samples, loss)
+            prob_event_mc(graph, photon_number, max_count_per_mode, n_mean, samples, loss)
             for photon_number in event_photon_numbers
         ]
 
     return [
-        _prob_event_exact(graph, photon_number, max_count_per_mode, n_mean, loss)
+        prob_event_exact(graph, photon_number, max_count_per_mode, n_mean, loss)
         for photon_number in event_photon_numbers
     ]
 
@@ -678,7 +689,7 @@ def feature_vector_orbits_sampling(samples: list, list_of_orbits: list) -> list:
 
     >>> from strawberryfields.apps import data
     >>> samples = data.Mutag0()
-    >>> feature_vector_orbits_sampling(samples, [ [1,1], [2], [2,1,1], [1,1,1,1] ])
+    >>> feature_vector_orbits_sampling(samples, [[1,1], [2], [2,1,1], [1,1,1,1]])
     [0.19035, 0.0, 0.05175, 0.1352]
 
     Args:
@@ -690,9 +701,7 @@ def feature_vector_orbits_sampling(samples: list, list_of_orbits: list) -> list:
     """
     if len(list_of_orbits) <= 0:
         raise ValueError("List of orbits must have at least one orbit")
-    if all(isinstance(elem, list) for elem in list_of_orbits) == False:
-        raise ValueError("List of orbits should only consist of orbits")
-    if any(min(item) < 0 for item in list_of_orbits):
+    if any(min(elem) < 0 for elem in list_of_orbits):
         raise ValueError("Cannot request orbits with photon number below zero")
 
     n_samples = len(samples)
@@ -727,8 +736,6 @@ def feature_vector_events_sampling(
         list[float]: a feature vector made up of estimated event probabilities in the
         same order as ``event_photon_numbers``
     """
-    if type(event_photon_numbers) != list:
-        raise ValueError("Event photon numbers must be given as a list of integers")
     if len(event_photon_numbers) <= 0:
         raise ValueError("List of photon numbers must have at least one element")
     if min(event_photon_numbers) < 0:
