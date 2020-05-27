@@ -152,7 +152,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    introduction/circuits
    introduction/ops
    introduction/states
-   zreferences
+   introduction/data
 
 .. toctree::
    :maxdepth: 1
@@ -184,3 +184,4 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    code/sf_program_utils
    code/sf_parameters
    code/sf_utils
+

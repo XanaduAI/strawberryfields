@@ -18,20 +18,13 @@ Circuits
           }
     </style>
 
-
-.. toctree::
-    :maxdepth: 1
-    :hidden:
-
-    circuits/glossary
-
 In Strawberry Fields, photonic quantum circuits are represented as :class:`.Program`
 objects. By creating a program, quantum operations can be applied, measurements performed,
 and the program can then be simulated using the various Strawberry Fields backends.
 
 .. seealso::
 
-    New to photonic quantum computing? See the :doc:`circuits/glossary` for a glossary
+    New to photonic quantum computing? See the :doc:`conventions/glossary` for a glossary
     of some of the terms used in Strawberry Fields.
 
 Creating a quantum program
@@ -255,16 +248,16 @@ circuits, see the following tutorials.
 
 .. customgalleryitem::
     :tooltip: Building photonic quantum circuits
-    :description: :doc:`/tutorials/blackbird`
+    :description: :doc:`demos/run_blackbird`
 
 .. customgalleryitem::
     :tooltip: Quantum teleportation
-    :description: :doc:`Basic tutorial: teleportation </tutorials/tutorial_teleportation>`
+    :description: :doc:`Basic tutorial: teleportation <demos/run_teleportation>`
     :figure: /_static/teleport.png
 
 .. customgalleryitem::
     :tooltip: Making photonic measurements
-    :description: :doc:`Measurements and post-selection </tutorials/tutorial_post_selection>`
+    :description: :doc:`Measurements and post-selection <demos/run_post_selection>`
     :figure: /_static/bs_measure.png
 
 .. raw:: html

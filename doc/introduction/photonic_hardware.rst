@@ -1,5 +1,5 @@
-Photonic hardware
-=================
+Hardware
+========
 
 Using Strawberry Fields, you can submit quantum programs
 to be executed on photonic hardware using the Xanadu cloud platform.
@@ -134,7 +134,7 @@ tutorials.
 
 .. customgalleryitem::
     :tooltip: Submit quantum jobs to the X8 photonic chip
-    :description: :doc:`/tutorials/tutorial_X8`
+    :description: :doc:`demos/tutorial_X8`
     :figure: /_static/chip.png
 
 .. raw:: html
