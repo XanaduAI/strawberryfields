@@ -127,6 +127,7 @@ import numpy as np
 from scipy.special import factorial
 
 import strawberryfields as sf
+from strawberryfields.backends.gaussianbackend.states import GaussianState
 from sympy.utilities.iterables import multiset_permutations
 
 
@@ -334,7 +335,7 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     return cardinality
 
 
-def _get_state(graph: nx.Graph, n_mean: float = 5, loss: float = 0.0):
+def _get_state(graph: nx.Graph, n_mean: float = 5, loss: float = 0.0) -> GaussianState:
     r"""Embeds the input graph into a GBS device and returns the corresponding Gaussian state
     """
     modes = graph.order()

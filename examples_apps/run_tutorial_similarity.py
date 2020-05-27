@@ -178,8 +178,8 @@ print(similarity.sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0
 # 3. Using a Monte Carlo estimate of the probability.
 #
 # In the first method, all one needs to do is generate some GBS samples from the graph of
-# interest and fix the composition of the feature vector. For example, for the first MUTAG
-# graph, to obtain feature vector :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}` we use:
+# interest and fix the composition of the feature vector. For example, to obtain feature vector
+# :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}` for the first MUTAG graph, we use:
 
 print(similarity.feature_vector_events_sampling(m0, [2, 4, 6], 2))
 
@@ -205,7 +205,8 @@ print(similarity.feature_vector_orbits_sampling(m0, [[1, 1], [2], [1, 1, 1, 1], 
 # use a keyword argument ``samples`` to signal producing either exact or approximate probabilities.
 # ``samples`` is set to ``None`` to get exact feature vector by default. To use Monte Carlo estimation,
 # ``samples`` can be set to the number of samples desired to be used in the estimation, as shown later.
-# For example, to get exact feature vector :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}`, we use:
+# For example, to get the exact event probabilities in the feature vector example
+# :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}` seen previously, we use:
 
 print(similarity.feature_vector_events(nx.Graph(m0_a), [2, 4, 6], 2, 6))
 
@@ -231,7 +232,8 @@ print(similarity.event_cardinality(6, 2, 17))
 #
 # This method can be accessed using the :func:`~.feature_vector_events` function
 # with ``samples`` set to the number of samples desired to be used in the estimation.
-# For example, to get MC-estimated feature vector :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}`, we use:
+# For example, to get MC-estimated probabilities for our example feature vector
+# :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}`, we use:
 
 print(similarity.feature_vector_events(nx.Graph(m0_a), [2, 4, 6], 2, 6, samples=1000))
 
@@ -240,7 +242,7 @@ print(similarity.feature_vector_events(nx.Graph(m0_a), [2, 4, 6], 2, 6, samples=
 # .. note::
 #     The results of using Monte Carlo estimation with :func:`~.feature_vector_orbits` and
 #     :func:`~.feature_vector_events` are probabilistic and may vary between runs. Increasing
-#     the number of ``samples`` parameter will increase the precision but slow down the calculation.
+#     the ``samples`` parameter will increase the precision but slow down the calculation.
 #
 # Machine learning with GBS graph kernels
 # ---------------------------------------
