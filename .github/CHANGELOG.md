@@ -2,6 +2,8 @@
 
 <h3>New features since last release</h3>
 
+* Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X architecture. [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
+
 <h3>Improvements</h3>
 
 * Modifies the rectangular interferometer decomposition to make it more
@@ -21,7 +23,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Shreya P. Kumar
+Theodor Isacsson, Shreya P. Kumar, Nicolás Quesada
 
 
 # Release 0.14.0 (current release)
