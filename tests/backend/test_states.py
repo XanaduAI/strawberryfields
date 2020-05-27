@@ -292,6 +292,7 @@ class TestQuadratureExpectations:
 class TestNumberExpectation:
     """Multimode photon-number expectation value tests"""
 
+    @pytest.mark.backends("fock", "tf")
     def test_number_expectation_vacuum(self, setup_backend, tol, batch_size):
         """Tests the expectation value of any photon number in vacuum is zero"""
         if batch_size is not None:
@@ -314,6 +315,19 @@ class TestNumberExpectation:
         assert np.allclose(var2, 0.0, atol=tol, rtol=0)
         assert np.allclose(var3, 0.0, atol=tol, rtol=0)
 
+    @pytest.mark.backends("gaussian")
+    def test_number_expectation_vacuum_gaussian(self, setup_backend, tol, batch_size):
+        """Tests the expectation value of any photon number in vacuum is zero"""
+        # TODO: merge this test case into the previous one once variances are
+        # supported for the Gaussian backend
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
+        backend = setup_backend(2)
+        state = backend.state()
+        assert np.allclose(state.number_expectation([0, 1]), 0.0, atol=tol, rtol=0)
+        assert np.allclose(state.number_expectation([0]), 0.0, atol=tol, rtol=0)
+        assert np.allclose(state.number_expectation([1]), 0.0, atol=tol, rtol=0)
+
     def test_number_expectation_displaced_squeezed(self, setup_backend, tol, batch_size):
         """Tests the expectation value of photon numbers when there is no correlation"""
         if batch_size is not None:
@@ -323,17 +337,36 @@ class TestNumberExpectation:
         a0 = 0.3 + 0.1 * 1j
         r0 = 0.2
         phi0 = 0.6
-        a1 = 0.1 + 0.1 * 1j
-        r1 = 0.3
-        phi1 = 0.9
+        # a1 = 0.1 + 0.1 * 1j
+        # r1 = 0.3
+        # phi1 = 0.9
         backend.prepare_displaced_squeezed_state(a0, r0, phi0, 0)
-        backend.prepare_displaced_squeezed_state(a1, r1, phi1, 1)
+        # backend.prepare_displaced_squeezed_state(a1, r1, phi1, 1)
         state = backend.state()
         n0 = np.sinh(r0) ** 2 + np.abs(a0) ** 2
-        n1 = np.sinh(r1) ** 2 + np.abs(a1) ** 2
-        assert np.allclose(state.number_expectation([0, 1]), n0 * n1, atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([0]), n0, atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([1]), n1, atol=tol, rtol=0)
+        # n1 = np.sinh(r1) ** 2 + np.abs(a1) ** 2
+        v0 = -np.abs(a0) ** 2 + np.abs(a0) ** 4 + 2*np.abs(a0) **2*np.cosh(2*r) + (np.abs(a0) **2*np.cosh(r0)*np.sinh(r0))/np.exp(1j*phi) + np.exp(1j*phi)*np.abs(a0) **2*np.cosh(r0)*np.sinh(r0) + np.sinh(r0)**4 + np.cosh(r0)*np.sinh(r0)*np.sinh(2*r0)
+        # v0 = np.abs(a0) ** 2*(-1 + 2*np.cosh(2*r0)) + np.sinh(r0)**4 + np.abs(a0) ** 2*(a0**2 + np.cosh(r0)*np.sinh(r0)) + np.cosh(r0)*np.sinh(r0)*(np.abs(a0) ** 2 + np.sinh(2*r0))
+        # v1 = a1 ** 4 + a1 ** 2*np.cosh(r)**2 + 3 * a1 ** 2*np.sinh(r)**2+np.sinh(r) **4 + a1**2*np.sinh(2*r) + np.cosh(r)*np.sinh(r)*np.sinh(2*r) 
+
+        # state.number_expectation([0, 1])
+
+        print(n0)
+        print(state, backend, state.number_expectation([0, 1]))
+        expval1, var1 = state.number_expectation([0, 1])
+        expval2, var2 = state.number_expectation([0])
+        expval3, var3 = state.number_expectation([1])
+
+        # Expvals
+        # assert np.allclose(expval1, n0 * n1, atol=tol, rtol=0)
+        assert np.allclose(expval2, n0, atol=tol, rtol=0)
+        # assert np.allclose(expval3, n1, atol=tol, rtol=0)
+
+        # Vars
+        # assert np.allclose(var1, var0*var1, atol=tol, rtol=0)
+        print(v0 - n0 ** 2, var2)
+        assert np.allclose(var2, v0 - n0 ** 2, atol=tol, rtol=0)
+        # assert np.allclose(var3, v1 - n1 ** 2, atol=tol, rtol=0)
 
     def test_number_expectation_repeated_modes(self, setup_backend, tol):
         """Tests that the correct exception is raised for repeated modes"""
@@ -366,9 +399,27 @@ class TestNumberExpectation:
         backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 2)
         state = backend.state()
         nbar = np.sinh(r) ** 2
-        assert np.allclose(state.number_expectation([2, 0]), 2 * nbar ** 2 + nbar, atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([0]), nbar, atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([2]), nbar, atol=tol, rtol=0)
+        varbar = 1/2 * (1 + 3 * np.cosh(2*r)) * np.sinh(r) ** 2
+
+        expval1, var1 = state.number_expectation([2, 0])
+        expval2, var2 = state.number_expectation([0])
+        expval3, var3 = state.number_expectation([2])
+
+
+        # Expvals
+        assert np.allclose(expval1, 2 * nbar ** 2 + nbar, atol=tol, rtol=0)
+        assert np.allclose(expval2, nbar, atol=tol, rtol=0)
+        assert np.allclose(expval3, nbar, atol=tol, rtol=0)
+
+        if backend.short_name != "gaussian":
+            # Vars
+            # assert np.allclose(var1, var0*var1, atol=tol, rtol=0)
+            # print(v0 - n0 ** 2, var2)
+            print('real var:', var2, varbar - nbar ** 2, varbar, nbar ** 2)
+            assert np.allclose(var2, varbar - nbar ** 2, atol=tol, rtol=0)
+            assert np.allclose(var3, varbar - nbar ** 2, atol=tol, rtol=0)
+
+        #assert np.allclose(state.number_expectation([2, 0]), 2 * nbar ** 2 + nbar, atol=tol, rtol=0)
 
     @pytest.mark.backends("fock", "tf")
     def test_number_expectation_four_modes(self, setup_backend, tol, batch_size):

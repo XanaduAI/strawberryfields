@@ -59,7 +59,7 @@ else:
 
 # defaults
 TOL = 1e-3
-CUTOFF = 6
+CUTOFF = 10
 ALPHA = 0.1
 HBAR = 1.7
 BATCHED = False
