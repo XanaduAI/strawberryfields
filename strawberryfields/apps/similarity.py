@@ -98,9 +98,9 @@ approximations can drown out the differences in graphs. The exact probability of
 made up of the sum of probabilities of all possible GBS output patterns that belong to it:
 
 .. math::
-    p(O) = \sum_{n \in O} p(n)
+    p(O) = \sum_{S \in O} p(S)
 
-where :math:`n` represents a GBS output pattern. Calculating each :math:`p(n)` requires
+where :math:`S` represents a GBS output pattern. Calculating each :math:`p(S)` requires
 computing a `hafnian <https://the-walrus.readthedocs.io/en/latest/hafnian.html>`__, which gets
 exponentially difficult with increasing photon number. Exact probabilities of
 events can be calculated by summing over its constituent orbit probabilities.
@@ -334,7 +334,7 @@ def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -
     return cardinality
 
 
-def _get_state(graph: nx.Graph, n_mean: float = 5, loss: float = 0.0) -> sf.backends.gaussianbackend.states.GaussianState:
+def _get_state(graph: nx.Graph, n_mean: float = 5, loss: float = 0.0):
     r"""Embeds the input graph into a GBS device and returns the corresponding Gaussian state
     """
     modes = graph.order()
@@ -355,8 +355,7 @@ def _get_state(graph: nx.Graph, n_mean: float = 5, loss: float = 0.0) -> sf.back
 
 
 def prob_orbit_exact(graph: nx.Graph, orbit: list, n_mean: float = 5, loss: float = 0.0) -> float:
-    r"""Gives the exact GBS probability of a given orbit according to the input
-    graph.
+    r"""Gives the exact probability of a given orbit for the input graph.
 
     The exact probability of an orbit is the sum of probabilities of
     all possible GBS output patterns that belong to it:
@@ -408,7 +407,7 @@ def prob_event_exact(
     n_mean: float = 5,
     loss: float = 0.0,
 ) -> float:
-    r"""Gives the exact GBS probability of a given event according to the input graph.
+    r"""Gives the exact probability of a given event for the input graph.
 
     Events are made up of multiple orbits. To calculate an event probability, we can sum over
     the probabilities of its constituent orbits using :func:`prob_orbit_exact`.
@@ -450,8 +449,7 @@ def prob_event_exact(
 def prob_orbit_mc(
     graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000, loss: float = 0.0
 ) -> float:
-    r"""Gives a Monte Carlo estimate of the GBS probability of a given orbit according
-    to the input graph.
+    r"""Gives Monte Carlo estimate of the probability of a given orbit for the input graph.
 
     To make this estimate, several samples from the orbit are drawn uniformly at random
      using :func:`orbit_to_sample`. The GBS probabilities of these samples are then
@@ -503,8 +501,7 @@ def prob_event_mc(
     samples: int = 1000,
     loss: float = 0.0,
 ) -> float:
-    r"""Gives a Monte Carlo estimate of the GBS probability of a given event according to the input
-    graph.
+    r"""Gives Monte Carlo estimate of the probability of a given event for the input graph.
 
     To make this estimate, several samples from the event are drawn uniformly at random using
     :func:`event_to_sample`. The GBS probabilities of these samples are then calculated and the
@@ -559,7 +556,7 @@ def feature_vector_orbits(
     samples: int = None,
     loss: float = 0.0,
 ) -> list:
-    r"""Calculates feature vector of either exact or Monte Carlo orbit probabilities for the input graph.
+    r"""Calculates feature vector of orbit probabilities for the input graph.
 
     These probabilities can be either exact or estimated using Monte Carlo estimation.
     The argument ``samples`` is set to ``None`` to get exact feature vectors by default.
@@ -622,7 +619,7 @@ def feature_vector_events(
     samples: int = None,
     loss: float = 0.0,
 ) -> list:
-    r"""Calculates feature vector of either exact or Monte Carlo event probabilities for the input graph.
+    r"""Calculates feature vector of event probabilities for the input graph.
 
     These probabilities can be either exact or estimated using Monte Carlo estimation.
     The argument ``samples`` is set to ``None`` to get exact feature vectors by default.
@@ -680,7 +677,7 @@ def feature_vector_events(
 
 
 def feature_vector_orbits_sampling(samples: list, list_of_orbits: list) -> list:
-    r"""Calculates feature vector made of given orbits with respect to input samples.
+    r"""Calculates feature vector of given orbits with respect to input samples.
 
     The feature vector is composed of orbit probabilities reconstructed by measuring the
     occurrence of given orbits in the input ``samples``.
@@ -715,7 +712,7 @@ def feature_vector_orbits_sampling(samples: list, list_of_orbits: list) -> list:
 def feature_vector_events_sampling(
     samples: list, event_photon_numbers: list, max_count_per_mode: int = 2
 ) -> list:
-    r"""Calculates feature vector made of given events with respect to input samples.
+    r"""Calculates feature vector of given events with respect to input samples.
 
     The feature vector is composed of event probabilities reconstructed by measuring the
     occurrence of given events in the input ``samples``.
