@@ -123,7 +123,7 @@ class TestProperExecution:
         # one entry for each measured mode
         assert len(res.samples[0]) == 1
         # the same samples can also be found in the regrefs
-        assert np.equal([r.val for r in prog.register if r.val is not None], res.samples).all()
+        assert np.equal([r.val for r in prog.register if r.val is not None], np.ravel(res.samples)).all()
         # first mode was measured
         if eng.backend_name == 'tf':
             assert isinstance(res.samples[0][0], tf.Tensor)

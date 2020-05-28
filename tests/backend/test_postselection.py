@@ -67,6 +67,6 @@ def test_measure_fock(setup_backend, cutoff, batch_size):
         photons_out = sum(res1 + res2)
 
         if batch_size is not None:
-            total_photons = np.tile(total_photons, batch_size)
+            total_photons = np.tile(total_photons, batch_size).sum()
 
         assert np.all(photons_out == total_photons)

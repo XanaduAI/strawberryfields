@@ -123,7 +123,7 @@ class TestFockRepresentation:
             ref_result = n[meas_modes]
 
             if batch_size is not None:
-                ref_result = tuple(np.array([i] * batch_size) for i in ref_result)
+                ref_result = np.array([[i] * 2 for i in ref_result]).T.reshape((batch_size, 1, ref_result.shape[0]))
 
             assert np.allclose(meas_result, ref_result, atol=tol, rtol=0)
 
@@ -132,7 +132,7 @@ class TestFockRepresentation:
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
 
-    def test_two_mode_squeezed_measurements(self, setup_backend, pure):
+    def test_two_mode_squeezed_measurements(self, setup_backend, pure, batch_size):
         """Tests Fock measurement on the two mode squeezed vacuum state."""
         for _ in range(NUM_REPEATS):
             backend = setup_backend(2)
@@ -145,7 +145,10 @@ class TestRepresentationIndependent:
             backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
             meas_modes = [0, 1]
             meas_results = backend.measure_fock(meas_modes)
-            assert np.all(meas_results[0][0] == meas_results[0][1])
+            if batch_size is not None:
+                assert np.all(meas_results[0][0][0] == meas_results[0][0][1])
+            else:
+                assert np.all(meas_results[0][0] == meas_results[0][1])
 
     def test_vacuum_measurements(self, setup_backend, pure):
         """Tests Fock measurement on the vacuum state."""
