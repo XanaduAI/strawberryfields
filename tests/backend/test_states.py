@@ -300,7 +300,6 @@ class TestNumberExpectation:
         backend = setup_backend(2)
         state = backend.state()
 
-        print(state, backend, state.number_expectation([0, 1]))
         expval1, var1 = state.number_expectation([0, 1])
         expval2, var2 = state.number_expectation([0])
         expval3, var3 = state.number_expectation([1])
@@ -337,22 +336,29 @@ class TestNumberExpectation:
         a0 = 0.3 + 0.1 * 1j
         r0 = 0.2
         phi0 = 0.6
-        # a1 = 0.1 + 0.1 * 1j
-        # r1 = 0.3
-        # phi1 = 0.9
+        a1 = 0.1 + 0.1 * 1j
+        r1 = 0.3
+        phi1 = 0.9
         backend.prepare_displaced_squeezed_state(a0, r0, phi0, 0)
-        # backend.prepare_displaced_squeezed_state(a1, r1, phi1, 1)
+        backend.prepare_displaced_squeezed_state(a1, r1, phi1, 1)
         state = backend.state()
         n0 = np.sinh(r0) ** 2 + np.abs(a0) ** 2
-        # n1 = np.sinh(r1) ** 2 + np.abs(a1) ** 2
-        v0 = -np.abs(a0) ** 2 + np.abs(a0) ** 4 + 2*np.abs(a0) **2*np.cosh(2*r) + (np.abs(a0) **2*np.cosh(r0)*np.sinh(r0))/np.exp(1j*phi) + np.exp(1j*phi)*np.abs(a0) **2*np.cosh(r0)*np.sinh(r0) + np.sinh(r0)**4 + np.cosh(r0)*np.sinh(r0)*np.sinh(2*r0)
+        n1 = np.sinh(r1) ** 2 + np.abs(a1) ** 2
+
+        magnitude_squared = np.abs(a0)**2
+
+        v0 = -magnitude_squared + magnitude_squared **2 + 2 * magnitude_squared * \
+        np.cosh(2*r0) + magnitude_squared * np.cosh(r0) * np.sinh(r0) + \
+        magnitude_squared * np.cosh(r0) * np.sinh(r0) + np.sinh(r0) ** 4 + \
+        np.cosh(r0) * np.sinh(r0) * np.sinh(2*r0)
+
+        v0 = -np.abs(a0) ** 2 + np.abs(a0) ** 4 + 2*np.abs(a0) **2*np.cosh(2*r0) + (np.abs(a0) **2*np.cosh(r0)*np.sinh(r0)) + np.abs(a0) **2*np.cosh(r0)*np.sinh(r0) + np.sinh(r0)**4 + np.cosh(r0)*np.sinh(r0)*np.sinh(2*r0)
+
         # v0 = np.abs(a0) ** 2*(-1 + 2*np.cosh(2*r0)) + np.sinh(r0)**4 + np.abs(a0) ** 2*(a0**2 + np.cosh(r0)*np.sinh(r0)) + np.cosh(r0)*np.sinh(r0)*(np.abs(a0) ** 2 + np.sinh(2*r0))
         # v1 = a1 ** 4 + a1 ** 2*np.cosh(r)**2 + 3 * a1 ** 2*np.sinh(r)**2+np.sinh(r) **4 + a1**2*np.sinh(2*r) + np.cosh(r)*np.sinh(r)*np.sinh(2*r) 
 
         # state.number_expectation([0, 1])
 
-        print(n0)
-        print(state, backend, state.number_expectation([0, 1]))
         expval1, var1 = state.number_expectation([0, 1])
         expval2, var2 = state.number_expectation([0])
         expval3, var3 = state.number_expectation([1])
@@ -364,7 +370,8 @@ class TestNumberExpectation:
 
         # Vars
         # assert np.allclose(var1, var0*var1, atol=tol, rtol=0)
-        print(v0 - n0 ** 2, var2)
+        print("Calculated expval: ", expval2, "analytic expval:", n0)
+        print("Calculated variance: ", var2, "analytic variance:", v0 - n0 ** 2)
         assert np.allclose(var2, v0 - n0 ** 2, atol=tol, rtol=0)
         # assert np.allclose(var3, v1 - n1 ** 2, atol=tol, rtol=0)
 

@@ -912,7 +912,6 @@ class BaseFockState(BaseState):
         # state is a tensor of density matrix elements in the SF convention
         cutoff = self._cutoff  # Fock space cutoff.
 
-        print(values)
         num_modes = self._modes  # number of modes in the state.
 
         traced_modes = tuple(item for item in range(num_modes) if item not in modes)
@@ -922,10 +921,8 @@ class BaseFockState(BaseState):
         traced_modes.sort(reverse=True)
         for mode in traced_modes:
             ps = np.tensordot(np.identity(cutoff), ps, axes=((0, 1), (2 * mode, 2 * mode + 1)))
-            print(ps)
         for _ in range(len(modes)):
             ps = np.tensordot(np.diag(values), ps, axes=((0, 1), (0, 1)))
-            print(ps)
         return float(ps)
 
     def diagonal_expectation(self, modes, values):
@@ -935,7 +932,6 @@ class BaseFockState(BaseState):
             raise ValueError("There can be no duplicates in the modes specified.")
 
         if self.is_pure:
-            print('asdgssg')
             expval = self._diagonal_expectation_pure(modes, values)
             x_squared = self._diagonal_expectation_pure(modes, values ** 2)
             variance = x_squared - expval ** 2
@@ -944,7 +940,6 @@ class BaseFockState(BaseState):
         expval = self._diagonal_expectation_dm(modes, values)
         x_squared = self._diagonal_expectation_dm(modes, values ** 2)
         variance = x_squared - expval ** 2
-        print('first term:', x_squared, variance, expval)
         return expval, variance
 
     def number_expectation(self, modes):
