@@ -710,7 +710,7 @@ class Circuit:
         if select is not None:
             outcome = copy.copy(select)
 
-        return outcome
+        return np.array([outcome])
 
     def measure_homodyne(self, phi, mode, select=None, **kwargs):
         """
@@ -796,4 +796,4 @@ class Circuit:
         # Normalize
         self._state = self._state / self.norm()
 
-        return homodyne_sample
+        return np.array([[homodyne_sample]])

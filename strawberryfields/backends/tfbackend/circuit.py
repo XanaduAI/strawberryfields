@@ -577,7 +577,7 @@ class Circuit:
 
         if select is not None:
             # just use the supplied measurement results
-            meas_result = select
+            meas_result = np.array([select])
         else:
             # compute and sample measurement result
             if self._state_is_pure and len(modes) == self._num_modes:
@@ -625,11 +625,6 @@ class Circuit:
             meas_result = ops.unravel_index(
                 sample_tensor, [self._cutoff_dim] * num_reduced_state_modes
             )
-            if not self._batched:
-                meas_result = meas_result[0]  # no batch index, can get rid of first axis
-
-        # unstack this here because that's how it should be returned
-        meas_result = tf.unstack(meas_result, axis=-1, name="Meas_result")
 
         # project remaining modes into conditional state
         if len(modes) == self._num_modes:
@@ -638,7 +633,7 @@ class Circuit:
         else:
             # only some modes were measured: put unmeasured modes in conditional state, while reseting measured modes to vac
             fock_state = tf.one_hot(
-                tf.stack(meas_result, axis=-1), depth=self._cutoff_dim, dtype=ops.def_type
+                meas_result[0], depth=self._cutoff_dim, dtype=ops.def_type
             )
             conditional_state = self._state
             for idx, mode in enumerate(modes):
@@ -702,7 +697,7 @@ class Circuit:
 
             self._update_state(new_state)
 
-        return tuple(meas_result)
+        return meas_result
 
     def measure_homodyne(self, phi, mode, select=None, **kwargs):
         """
