@@ -18,6 +18,8 @@ Default parameters, environment variables, fixtures, and common routines for the
 import os
 import pytest
 
+import numpy as np
+
 import strawberryfields as sf
 from strawberryfields.engine import LocalEngine
 from strawberryfields.program import Program
@@ -132,7 +134,7 @@ def backend(monkeypatch):
         m.setattr(dummy_backend, "squeeze", lambda r, modes: None)
         m.setattr(dummy_backend, "rotation", lambda r, modes: None)
         m.setattr(dummy_backend, "beamsplitter", lambda t, r, m1, m2: None)
-        m.setattr(dummy_backend, "measure_homodyne", lambda phi, modes, select, shots: 5)
+        m.setattr(dummy_backend, "measure_homodyne", lambda phi, modes, select, shots: np.array([[5]]))
         m.setattr(dummy_backend, "state", lambda modes, shots: None)
         m.setattr(dummy_backend, "reset", lambda: None)
         dummy_backend.two_mode_squeeze = lambda r, phi, modes: None

@@ -145,7 +145,7 @@ class TestRepresentationIndependent:
             backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
             meas_modes = [0, 1]
             meas_results = backend.measure_fock(meas_modes)
-            assert np.all(meas_results[0] == meas_results[1])
+            assert np.all(meas_results[0][0] == meas_results[0][1])
 
     def test_vacuum_measurements(self, setup_backend, pure):
         """Tests Fock measurement on the vacuum state."""
@@ -169,5 +169,3 @@ class TestRepresentationIndependent:
             backend.displacement(alpha, 0)
             meas += backend.measure_fock([0])
         assert np.all(meas > 0)
-
-

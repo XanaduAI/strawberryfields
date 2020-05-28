@@ -120,17 +120,17 @@ class TestProperExecution:
             ops.MeasureX | q[0]
 
         res = eng.run(prog)
-        # one entry for each mode
-        assert len(res.samples[0]) == 2
+        # one entry for each measured mode
+        assert len(res.samples[0]) == 1
         # the same samples can also be found in the regrefs
-        assert [r.val for r in prog.register] == res.samples[0].tolist()
+        assert np.equal([r.val for r in prog.register if r.val is not None], res.samples).all()
         # first mode was measured
         if eng.backend_name == 'tf':
             assert isinstance(res.samples[0][0], tf.Tensor)
         else:
             assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
         # second mode was not measured
-        assert res.samples[0][1] is None
+        assert prog.register[1].val is None
 
     # TODO: Some of these tests should probably check *something* after execution
 
@@ -304,20 +304,17 @@ class TestProperExecution:
         with p2.context as q:
             ops.MeasureFock() | (q[0], q[2])
         samples = eng.run(p2, shots=shots).samples
-        assert samples.shape == (shots, 3)
+        assert samples.shape == (shots, 2)
         assert all(samples[:, 0].astype(int) == expected)
-        assert all(s is None for s in samples[:, 1])
-        assert all(samples[:, 2].astype(int) == expected)
+        assert all(samples[:, 1].astype(int) == expected)
 
         # one mode
         eng, p3 = setup_eng(3)
         with p3.context as q:
             ops.MeasureFock() | q[0]
         samples = eng.run(p3, shots=shots).samples
-        assert samples.shape == (shots, 3)
+        assert samples.shape == (shots, 1)
         assert all(samples[:, 0].astype(int) == expected)
-        assert all(s is None for s in samples[:, 1])
-        assert all(s is None for s in samples[:, 2])
 
     # TODO: when ``shots`` is incorporated into other backends, delete this test
     @pytest.mark.skipif(batched, reason="Test only runs for non-batched backends")
