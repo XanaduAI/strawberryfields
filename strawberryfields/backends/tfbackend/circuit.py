@@ -632,9 +632,7 @@ class Circuit:
             self.reset(pure=self._state_is_pure)
         else:
             # only some modes were measured: put unmeasured modes in conditional state, while reseting measured modes to vac
-            fock_state = tf.one_hot(
-                meas_result[0], depth=self._cutoff_dim, dtype=ops.def_type
-            )
+            fock_state = tf.one_hot(meas_result[0], depth=self._cutoff_dim, dtype=ops.def_type)
             conditional_state = self._state
             for idx, mode in enumerate(modes):
                 if self._batched:
