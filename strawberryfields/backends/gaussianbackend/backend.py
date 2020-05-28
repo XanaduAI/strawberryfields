@@ -166,6 +166,7 @@ class GaussianBackend(BaseGaussian):
             val = select * 2 / sqrt(2 * self.circuit.hbar)
             qs = self.circuit.post_select_homodyne(mode, val, **kwargs)
 
+        # `qs` will always be a single value since multiple shots is not supported
         return array([[qs * sqrt(2 * self.circuit.hbar) / 2]])
 
     def measure_heterodyne(self, mode, shots=1, select=None):
@@ -190,6 +191,7 @@ class GaussianBackend(BaseGaussian):
         res = select
         self.circuit.post_select_heterodyne(mode, select)
 
+        # `res` will always be a single value since multiple shots is not supported
         return array([[res]])
 
     def prepare_gaussian_state(self, r, V, modes):
