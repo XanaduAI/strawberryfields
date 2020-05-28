@@ -2,7 +2,7 @@ Introduction
 ============
 
 .. image:: /_static/NOON.png
-    :align: left
+    :align: right
     :width: 250px
     :target: javascript:void(0);
 
