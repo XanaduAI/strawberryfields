@@ -25,11 +25,20 @@ test_data = [[0, 0, 0, 0], [0, 2, 2, 2], [0, 0, 0, 2], [0, 0, 2, 2], [0, 2, 2, 0
 n_means_data = np.mean(test_data, axis=0)
 test_data = [[t[:d] for t in test_data] for d in range(2, 5)]
 n_means_gbs = [[1, 1], [2 / 3, 2 / 3, 2 / 3], [1 / 2, 1 / 2, 1 / 2, 1 / 2]]
+test_sum_log_probs = [6.931471805599451, 12.644620176064302, 22.377710881470353]
+
+test_data_th = [[0, 0, 0, 0], [0, 1, 1, 1], [0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 0], [0, 0, 0, 1]]
+n_means_data_th = np.mean(test_data_th, axis=0)
+test_data_th = [[t[:d] for t in test_data_th] for d in range(2, 5)]
+n_means_gbs_th = [[1 / 2, 1 / 2], [1 / 3, 1 / 3, 1 / 3, 1 / 3],
+                  [1 / 4, 1 / 4, 1 / 4, 1 / 4]]
+test_sum_log_probs_th = [1.386294361119879, 1.6218604324326575, 2.287080906458072]
+
 params = [0, 0, 0, 0]
 weights = [1, 1, 1, 1]
 test_jacobian = -np.eye(4)
-test_sum_log_probs = [6.931471805599451, 12.644620176064302, 22.377710881470353]
 mean_photon_number = 2
+mean_photon_number_th = 1
 A = np.eye(4)
 
 
@@ -66,3 +75,23 @@ class TestKL:
         vgbs = param.VGBS(A[:m, :m], mean_photon_number, embedding, threshold=False)
         kl = cost.KL(test_data[k], vgbs)
         assert np.allclose(kl.evaluate(params[:m]), test_sum_log_probs[k] / 6)
+
+    def test_mean_data_threshold(self, k):
+        """Tests the mean photon number per mode from hard-coded values stored in the array
+        ``n_means_data``. The test iterates over different numbers of modes in the data."""
+        m = k + 2
+        embedding = embed.Exp(m)
+        vgbs = param.VGBS(A[:m, :m], mean_photon_number_th, embedding, threshold=True)
+        kl = cost.KL(test_data_th[k], vgbs)
+        assert np.allclose(kl.mean_n_data, n_means_data_th[:m])
+        assert len(kl.mean_n_data) == m
+
+    def test_grad_threshold(self, k):
+        """Tests the calculation of the gradient against an explicit computation from hard-coded
+        values of trainable parameters and mean photon numbers from data and model."""
+        m = k + 2
+        embedding = embed.Exp(m)
+        vgbs = param.VGBS(A[:m, :m], mean_photon_number_th, embedding, threshold=True)
+        kl = cost.KL(test_data_th[k], vgbs)
+        gamma = [-(n_means_data_th[i] - n_means_gbs_th[k][i]) / weights[i] for i in range(m)]
+        assert np.allclose(kl.grad(params[:m]), gamma @ test_jacobian[:m, :m])
