@@ -236,12 +236,6 @@ class BaseEngine(abc.ABC):
             Result: results of the computation
         """
 
-        def _broadcast_nones(val, dim):
-            """Helper function to ensure register values have same shape, even if not measured"""
-            if val is None and dim > 1:
-                return [None] * dim
-            return val
-
         if not isinstance(program, collections.abc.Sequence):
             program = [program]
 
@@ -277,15 +271,12 @@ class BaseEngine(abc.ABC):
                 p = p.compile(target, **compile_options)
             p.lock()
 
-            self._run_program(p, **kwargs)
-            shots = kwargs.get("shots", 1)
-            self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
+            _, self.samples = self._run_program(p, **kwargs)
             self.run_progs.append(p)
 
             prev = p
 
-        if self.samples is not None:
-            return Result(np.array(self.samples).T)
+        return Result(self.samples)
 
 
 class LocalEngine(BaseEngine):
@@ -341,11 +332,11 @@ class LocalEngine(BaseEngine):
 
     def _run_program(self, prog, **kwargs):
         applied = []
+        values = None
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend
-                # NOTE we could also handle storing measured vals here
-                cmd.op.apply(cmd.reg, self.backend, **kwargs)
+                values = cmd.op.apply(cmd.reg, self.backend, **kwargs)
                 applied.append(cmd)
             except NotApplicableError:
                 # command is not applicable to the current backend type
@@ -359,7 +350,11 @@ class LocalEngine(BaseEngine):
                         cmd.op, self.backend, kwargs
                     )
                 ) from None
-        return applied
+
+        if values is None:
+            values = np.array([[]])
+
+        return applied, values
 
     def run(self, program, *, args=None, compile_options=None, **kwargs):
         """Execute quantum programs by sending them to the backend.
