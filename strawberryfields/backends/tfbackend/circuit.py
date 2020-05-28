@@ -577,7 +577,7 @@ class Circuit:
 
         if select is not None:
             # just use the supplied measurement results
-            meas_result = np.array([select])
+            meas_result = tf.convert_to_tensor([[i] for i in select], dtype=tf.int64)
         else:
             # compute and sample measurement result
             if self._state_is_pure and len(modes) == self._num_modes:
@@ -625,6 +625,10 @@ class Circuit:
             meas_result = ops.unravel_index(
                 sample_tensor, [self._cutoff_dim] * num_reduced_state_modes
             )
+
+            if self._batched:
+                meas_shape = meas_result.shape
+                meas_result = tf.reshape(meas_result, (meas_shape[0], 1, meas_shape[1]))
 
         # project remaining modes into conditional state
         if len(modes) == self._num_modes:
@@ -893,7 +897,10 @@ class Circuit:
             self._update_state(new_state)
 
         # `meas_result` will always be a single value since multiple shots is not supported
-        return tf.cast([[meas_result]], dtype=ops.def_type)
+        if self.batched:
+            return tf.cast([[[i]] for i in meas_result], dtype=ops.def_type)
+        else:
+            return tf.cast([[meas_result]], dtype=ops.def_type)
 
     @property
     def num_modes(self):
