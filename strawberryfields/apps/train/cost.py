@@ -115,6 +115,6 @@ class KL:
         for sample in self.data:
             kl += np.log(self.vgbs.prob_sample(params, sample))
         return -kl / self.nr_samples
-        
+
     def __call__(self, params: np.ndarray) -> float:
         return self.evaluate(params)
