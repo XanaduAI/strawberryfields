@@ -316,7 +316,7 @@ class TFBackend(BaseFock):
         with tf.name_scope("Measure_homodyne"):
             remapped_mode = self._remap_modes(mode)
             meas = self.circuit.measure_homodyne(phi, remapped_mode, select, **kwargs)
-        return tf.stack([[meas]])
+        return meas
 
     def is_vacuum(self, tol=0.0, **kwargs):
         with tf.name_scope("Is_vacuum"):
