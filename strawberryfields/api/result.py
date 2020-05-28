@@ -64,11 +64,6 @@ class Result:
     def __init__(self, samples, is_stateful=True):
         self._state = None
         self._is_stateful = is_stateful
-
-        # samples arrives as either a 2-D array (for shots > 1) or a 1-D array (for shots = 1)
-        # the latter needs to be converted to a 2-D array with shape (shots, modes)
-        if np.ndim(samples) == 1:
-            samples = np.array([samples])
         self._samples = samples
 
     @property

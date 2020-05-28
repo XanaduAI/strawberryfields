@@ -317,19 +317,12 @@ class Measurement(Operation):
                 Only applies to Measurements.
         """
         values = super().apply(reg, backend, **kwargs)
-        # convert the returned values into an iterable with the measured modes indexed along
-        # the first axis and shots along second axis (if larger than 1), so that we can assign
-        # register values
-        shots = kwargs.get("shots", 1)
-        if self.ns == 1:
-            values = [values]  # values is either a scalar, or has shape (shots,)
-        else:
-            if shots > 1:
-                values = values.T  # shape of values would be (shots, num_meas,)
 
         # store the results in the register reference objects
-        for v, r in zip(values, reg):
+        for v, r in zip(np.transpose(values), reg):
             r.val = v
+
+        return values
 
 
 class Decomposition(Operation):
