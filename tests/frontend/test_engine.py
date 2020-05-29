@@ -170,6 +170,40 @@ class TestEngineProgramInteraction:
         eng.run([p1, p2])
         assert inspect() == expected2
 
+    @pytest.mark.parametrize("eng", engines)
+    def test_combining_samples(self, eng):
+        """Check that samples are combined correctly when using multiple measurements"""
+
+        prog = sf.Program(5)
+        with prog.context as q:
+            ops.MeasureX | q[2]
+            ops.MeasureFock() | (q[1], q[3])
+            ops.MeasureFock() | q[0]
+
+        result = eng.run(prog)
+
+        # check that shape is (shots, measured_modes)
+        assert result.samples.shape == (1, 4)
+
+        # check that MesureFock measures `0` while MeasureX does NOT measure `0`.
+        correct_samples = [0, 0, 1, 0]
+        print(result.samples)
+        assert [bool(i) for i in result.samples[0]] == correct_samples
+
+    @pytest.mark.parametrize("eng", engines)
+    def test_error_measuring_same_modes(self, eng):
+        """Check that an error is raised when measuring the same mode twice"""
+
+        prog = sf.Program(5)
+        with prog.context as q:
+            ops.MeasureX | q[2]
+            ops.MeasureFock() | (q[1], q[3])
+            ops.MeasureFock() | q[2]
+
+        with pytest.raises(
+            RuntimeError, match="Modes can only be measured once inside a circuit."
+        ):
+            eng.run(prog)
 
 class TestMultipleShotsErrors:
     """Test if errors are raised correctly when using multiple shots."""
