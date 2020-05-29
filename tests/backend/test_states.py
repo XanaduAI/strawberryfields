@@ -55,7 +55,7 @@ class TestBackendStateCreation:
         """Test backend calculates correct fidelity of reduced coherent state"""
         backend = setup_backend(2)
 
-        backend.prepare_coherent_state(a, 0)
+        backend.prepare_coherent_state(np.abs(a), np.angle(a), 0)
         backend.prepare_squeezed_state(r, phi, 1)
 
         state = backend.state(modes=[0])
@@ -66,7 +66,7 @@ class TestBackendStateCreation:
         """Test backend calculates correct fock prob of reduced coherent state"""
         backend = setup_backend(2)
 
-        backend.prepare_coherent_state(a, 0)
+        backend.prepare_coherent_state(np.abs(a), np.angle(a), 0)
         backend.prepare_squeezed_state(r, phi, 1)
 
         state = backend.state(modes=[0])
@@ -91,7 +91,7 @@ class TestBaseStateMeanPhotonNumber:
             pytest.skip("Does not support batch mode")
         backend = setup_backend(1)
 
-        backend.displacement(a, 0)
+        backend.displacement(np.abs(a), np.angle(a), 0)
         state = backend.state()
         mean_photon, var = state.mean_photon(0)
 
@@ -107,7 +107,7 @@ class TestBaseStateMeanPhotonNumber:
         r = 0.1
         a = 0.3 + 0.1j
 
-        backend.squeeze(r * np.exp(1j * phi), 0)
+        backend.squeeze(r, phi, 0)
         state = backend.state()
         mean_photon, var = state.mean_photon(0)
 
@@ -126,13 +126,10 @@ class TestBaseStateMeanPhotonNumber:
         a = 0.12 - 0.05j
         r = 0.195
 
-        backend.squeeze(r * np.exp(1j * phi), 0)
-        backend.displacement(a, 0)
+        backend.squeeze(r, phi, 0)
+        backend.displacement(np.abs(a), np.angle(a), 0)
         state = backend.state()
         mean_photon, var = state.mean_photon(0)
-
-        mag_a = np.abs(a)
-        phi_a = np.angle(a)
 
         mean_ex = np.abs(a) ** 2 + np.sinh(r) ** 2
         assert np.allclose(mean_photon, mean_ex, atol=tol, rtol=0)
@@ -146,7 +143,7 @@ class TestBaseStateMeanPhotonNumber:
         nbar = 0.123
 
         backend.prepare_thermal_state(nbar, 0)
-        backend.displacement(a, 0)
+        backend.displacement(np.abs(a), np.angle(a), 0)
         state = backend.state()
         mean_photon, var = state.mean_photon(0)
 
@@ -164,8 +161,8 @@ class TestBaseFockKetDensityMatrix:
         This is supported by all backends, since it returns
         the reduced density matrix of a single mode."""
         backend = setup_backend(2)
-        backend.prepare_coherent_state(a, 0)
-        backend.prepare_coherent_state(0.1, 1)
+        backend.prepare_coherent_state(np.abs(a), np.angle(a), 0)
+        backend.prepare_coherent_state(0.1, 0, 1)
 
         state = backend.state()
         rdm = state.reduced_dm(0, cutoff=cutoff)
@@ -183,7 +180,7 @@ class TestBaseFockKetDensityMatrix:
     def test_ket(self, setup_backend, pure, cutoff, batch_size, tol):
         """Test that the ket of a displaced state matches analytic result"""
         backend = setup_backend(2)
-        backend.displacement(a, 0)
+        backend.displacement(np.abs(a), np.angle(a), 0)
 
         state = backend.state()
         if not pure:
@@ -217,7 +214,7 @@ class TestBaseGaussianMethods:
         r = 2
         phi = -0.5
 
-        backend.prepare_coherent_state(a, 0)
+        backend.prepare_coherent_state(np.abs(a), np.angle(a), 0)
         backend.prepare_squeezed_state(r, phi, 1)
 
         state = backend.state()
@@ -239,7 +236,7 @@ class TestBaseGaussianMethods:
         r = 2
         phi = -0.5
 
-        backend.prepare_coherent_state(a, 0)
+        backend.prepare_coherent_state(np.abs(a), np.angle(a), 0)
         backend.prepare_squeezed_state(r, phi, 1)
 
         state = backend.state()
@@ -276,7 +273,7 @@ class TestQuadratureExpectations:
         backend = setup_backend(1)
         qphi = 0.78
 
-        backend.prepare_displaced_squeezed_state(a, r, phi, 0)
+        backend.prepare_displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, 0)
 
         state = backend.state()
         res = np.array(state.quad_expectation(0, phi=qphi)).T
@@ -315,8 +312,8 @@ class TestNumberExpectation:
         a1 = 0.1 + 0.1 * 1j
         r1 = 0.3
         phi1 = 0.9
-        backend.prepare_displaced_squeezed_state(a0, r0, phi0, 0)
-        backend.prepare_displaced_squeezed_state(a1, r1, phi1, 1)
+        backend.prepare_displaced_squeezed_state(np.abs(a0), np.angle(a0), r0, phi0, 0)
+        backend.prepare_displaced_squeezed_state(np.abs(a1), np.angle(a1), r1, phi1, 1)
         state = backend.state()
         n0 = np.sinh(r0) ** 2 + np.abs(a0) ** 2
         n1 = np.sinh(r1) ** 2 + np.abs(a1) ** 2
@@ -349,7 +346,8 @@ class TestNumberExpectation:
         phi = 0.0
         backend.prepare_squeezed_state(r, phi, 0)
         backend.prepare_squeezed_state(-r, phi, 2)
-        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 2)
+        # backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 2)
+        backend.beamsplitter(np.pi/4, np.pi, 0, 2)
         state = backend.state()
         nbar = np.sinh(r) ** 2
         assert np.allclose(
@@ -368,11 +366,11 @@ class TestNumberExpectation:
         r = 0.2
         phi = 0.0
         backend.prepare_squeezed_state(r, phi, 0)
-        backend.prepare_squeezed_state(-r, phi, 1)
-        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
+        backend.prepare_squeezed_state(r, phi + np.pi, 1)
+        backend.beamsplitter(np.pi/4, np.pi, 0, 1)
         backend.prepare_squeezed_state(r, phi, 2)
-        backend.prepare_squeezed_state(-r, phi, 3)
-        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 2, 3)
+        backend.prepare_squeezed_state(r, phi + np.pi, 3)
+        backend.beamsplitter(np.pi/4, np.pi, 2, 3)
 
         state = backend.state()
         nbar = np.sinh(r) ** 2
@@ -394,14 +392,14 @@ class TestFidelities:
 
     def test_coherent_fidelity(self, setup_backend, cutoff, tol, hbar):
         backend = setup_backend(2)
-        backend.prepare_coherent_state(a, 0)
-        backend.displacement(a, 1)
+        backend.prepare_coherent_state(np.abs(a), np.angle(a), 0)
+        backend.displacement(np.abs(a), np.angle(a), 1)
         state = backend.state()
 
         if isinstance(backend, backends.BaseFock):
-            in_state = utils.coherent_state(a, basis="fock", fock_dim=cutoff, hbar=hbar)
+            in_state = utils.coherent_state(np.abs(a), np.angle(a), basis="fock", fock_dim=cutoff, hbar=hbar)
         else:
-            in_state = utils.coherent_state(a, basis="gaussian", hbar=hbar)
+            in_state = utils.coherent_state(np.abs(a), np.angle(a), basis="gaussian", hbar=hbar)
 
         assert np.allclose(state.fidelity(in_state, 0), 1, atol=tol, rtol=0)
         assert np.allclose(state.fidelity(in_state, 1), 1, atol=tol, rtol=0)
@@ -410,7 +408,7 @@ class TestFidelities:
     def test_squeezed_fidelity(self, setup_backend, cutoff, tol, hbar):
         backend = setup_backend(2)
         backend.prepare_squeezed_state(r, phi, 0)
-        backend.squeeze(r * np.exp(1j * phi), 1)
+        backend.squeeze(r, phi, 1)
         state = backend.state()
 
         if isinstance(backend, backends.BaseFock):
@@ -423,17 +421,15 @@ class TestFidelities:
 
     def test_squeezed_coherent_fidelity(self, setup_backend, cutoff, tol, hbar):
         backend = setup_backend(2)
-        backend.prepare_displaced_squeezed_state(a, r, phi, 0)
-        backend.squeeze(r * np.exp(1j * phi), 1)
-        backend.displacement(a, 1)
+        backend.prepare_displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, 0)
+        backend.squeeze(r, phi, 1)
+        backend.displacement(np.abs(a), np.angle(a), 1)
         state = backend.state()
 
         if isinstance(backend, backends.BaseFock):
-            in_state = utils.displaced_squeezed_state(
-                a, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
-            )
+            in_state = utils.displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
         else:
-            in_state = utils.displaced_squeezed_state(a, r, phi, basis="gaussian", hbar=hbar)
+            in_state = utils.displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar)
 
         assert np.allclose(state.fidelity(in_state, 0), 1, atol=tol, rtol=0)
         assert np.allclose(state.fidelity(in_state, 1), 1, atol=tol, rtol=0)

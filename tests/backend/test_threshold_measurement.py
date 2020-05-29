@@ -47,9 +47,10 @@ class TestRepresentationIndependent:
 
             r = 0.25
             # Circuit to prepare two mode squeezed vacuum
-            backend.squeeze(-r, 0)
-            backend.squeeze(r, 1)
-            backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
+            backend.squeeze(r, np.pi, 0)
+            backend.squeeze(r, 0, 1)
+            # backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
+            backend.beamsplitter(np.pi/4, np.pi, 0, 1)
             meas_modes = [0, 1]
             meas_results = backend.measure_threshold(meas_modes)
             assert np.all(meas_results[0] == meas_results[1])
@@ -73,8 +74,9 @@ class TestRepresentationIndependent:
             backend.reset(pure=pure)
 
             r = 0.5
-            backend.squeeze(r, 0)
-            backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
+            backend.squeeze(r, 0, 0)
+            # backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
+            backend.beamsplitter(np.pi/4, np.pi, 0, 1)
             meas_modes = [0, 1]
             meas_results = backend.measure_threshold(meas_modes)
 

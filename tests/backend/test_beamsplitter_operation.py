@@ -73,7 +73,7 @@ class TestRepresentationIndependent:
         r = np.exp(1j * r_phi) * np.sqrt(1.0 - np.abs(t) ** 2)
         backend = setup_backend(2)
 
-        backend.displacement(alpha, 0)
+        backend.displacement(np.abs(alpha), np.angle(alpha), 0)
         backend.beamsplitter(t, r, 0, 1)
         alpha_outA = t * alpha
         alpha_outB = r * alpha
@@ -91,11 +91,10 @@ class TestFockRepresentation:
     def test_normalized_beamsplitter_output(self, setup_backend, t, r_phi, tol):
         """Tests if a range of beamsplitter outputs states are normalized."""
 
-        alpha = ALPHA * np.exp(1j * np.pi / 3)
         r = np.exp(1j * r_phi) * np.sqrt(1.0 - np.abs(t) ** 2)
         backend = setup_backend(2)
 
-        backend.displacement(alpha, 1)
+        backend.displacement(ALPHA, np.pi / 3, 1)
         backend.beamsplitter(t, r, 0, 1)
         state = backend.state()
         tr = state.trace()
@@ -104,9 +103,7 @@ class TestFockRepresentation:
     @pytest.mark.parametrize("t", T_VALUES)
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS[1:])
     @pytest.mark.parametrize("r_phi", PHASE_R)
-    def test_coherent_vacuum_interfered_fock_elements(
-            self, setup_backend, mag_alpha, t, r_phi, cutoff, pure, tol
-    ):
+    def test_coherent_vacuum_interfered_fock_elements(self, setup_backend, mag_alpha, t, r_phi, cutoff, pure, tol):
         r"""Tests if a range of beamsplitter output states (formed from a coherent state interfering with vacuum)
             have the correct Fock basis elements.
             |\psi_in> = |\alpha>|0> --> |t \alpha>|r \alpha> = |\psi_out>
@@ -118,7 +115,7 @@ class TestFockRepresentation:
         r = np.exp(1j * r_phi) * np.sqrt(1.0 - np.abs(t) ** 2)
         backend = setup_backend(2)
 
-        backend.displacement(alpha, 0)
+        backend.displacement(np.abs(alpha), np.angle(alpha), 0)
         backend.beamsplitter(t, r, 0, 1)
         state = backend.state()
 
@@ -175,7 +172,7 @@ class TestModeSubsets:
 
         backend = setup_backend(4)
 
-        backend.displacement(alpha, modes[0])
+        backend.displacement(np.abs(alpha), np.angle(alpha), modes[0])
         backend.beamsplitter(t, r, *modes)
         state = backend.state()
 

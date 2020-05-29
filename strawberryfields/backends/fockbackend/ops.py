@@ -31,7 +31,7 @@ from scipy.linalg import expm as matrixExp
 from thewalrus.fock_gradients import displacement as displacement_tw
 from thewalrus.fock_gradients import squeezing as squeezing_tw
 from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
-from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
+from thewalrus.fock_gradients import beamsplitter as beamsplitter
 
 
 def_type = np.complex128
@@ -423,7 +423,7 @@ def displacedSqueezed(r_d, phi_d, r_s, phi_s, trunc):
     alpha = r_d*np.exp(1j*phi_d)
 
     gamma = alpha * ch + np.conj(alpha) * ph * sh
-    hermite_arg = gamma / np.sqrt(ph * np.sinh(2 * r) + 1e-10)
+    hermite_arg = gamma / np.sqrt(ph * np.sinh(2 * r_s) + 1e-10)
 
     # normalization constant
     N = np.exp(-0.5 * np.abs(alpha) ** 2 - 0.5 * np.conj(alpha) ** 2 * ph * th)

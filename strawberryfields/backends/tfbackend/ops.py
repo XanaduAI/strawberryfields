@@ -311,9 +311,12 @@ def single_beamsplitter_matrix(theta, phi, D, dtype=def_type.as_numpy_dtype):
     phi = phi.numpy()
 
     gate = beamsplitter_tw(theta, phi, D, dtype)
+    gate = np.transpose(gate, [0,2,1,3])
 
     def grad(dy):
         Dtheta, Dphi = grad_beamsplitter_tw(gate, theta, phi)
+        Dtheta = np.transpose(Dtheta, [0,2,1,3])
+        Dphi = np.transpose(Dphi, [0,2,1,3])
         grad_theta = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
         grad_phi = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
         return grad_theta, grad_phi, None
@@ -381,7 +384,7 @@ def fock_state(n, D, pure=True, batched=False):
 def coherent_state(r, phi, D, pure=True, batched=False):
     """creates a single mode input coherent state"""
     alpha = tf.cast(r, def_type) * tf.exp(1j * tf.cast(phi, def_type))
-    coh = tf.stack([tf.exp(-0.5 * r ** 2) * _numer_safe_power(alpha, n) / tf.cast(np.sqrt(factorial(n)), def_type) for n in range(D)], axis=-1,)
+    coh = tf.stack([tf.cast(tf.exp(-0.5 * tf.abs(r) ** 2), def_type) * _numer_safe_power(alpha, n) / tf.cast(np.sqrt(factorial(n)), def_type) for n in range(D)], axis=-1,)
     if not pure:
         coh = mixed(coh, batched)
     return coh
@@ -408,7 +411,7 @@ def displaced_squeezed(r_d, phi_d, r_s, phi_s, D, pure=True, batched=False, eps=
 
     # create Hermite polynomials
     gamma = alpha * cosh + tf.math.conj(alpha) * phase * sinh
-    hermite_arg = gamma / tf.sqrt(phase * tf.sinh(2 * r))
+    hermite_arg = gamma / tf.sqrt(phase * tf.sinh(2 * r_s))
 
     prefactor = tf.expand_dims(tf.exp(-0.5 * alpha * tf.math.conj(alpha) - 0.5 * tf.math.conj(alpha) ** 2 * phase * tanh), -1,)
     coeff = tf.stack([_numer_safe_power(0.5 * phase * tanh, n / 2.0) / tf.sqrt(factorial(n) * cosh) for n in range(D)], axis=-1,)

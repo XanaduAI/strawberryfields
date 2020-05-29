@@ -142,20 +142,20 @@ class TFBackend(BaseFock):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_vacuum_state(remapped_mode)
 
-    def prepare_coherent_state(self, alpha, mode):
+    def prepare_coherent_state(self, r, phi, mode):
         with tf.name_scope("Prepare_coherent"):
             remapped_mode = self._remap_modes(mode)
-            self.circuit.prepare_coherent_state(alpha, remapped_mode)
+            self.circuit.prepare_coherent_state(r, phi, remapped_mode)
 
     def prepare_squeezed_state(self, r, phi, mode):
         with tf.name_scope("Prepare_squeezed"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_squeezed_state(r, phi, remapped_mode)
 
-    def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
+    def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
         with tf.name_scope("Prepare_displaced_squeezed"):
             remapped_mode = self._remap_modes(mode)
-            self.circuit.prepare_displaced_squeezed_state(alpha, r, phi, remapped_mode)
+            self.circuit.prepare_displaced_squeezed_state(r_d, phi_d, r_s, phi_s, remapped_mode)
 
     def prepare_fock_state(self, n, mode):
         with tf.name_scope("Prepare_fock"):

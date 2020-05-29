@@ -319,7 +319,7 @@ class Circuit:
             phi_s = self._maybe_batch(phi_s)
             self._check_incompatible_batches(r_d, phi_d, r_s, phi_s)
             displaced_squeezed = ops.displaced_squeezed(
-                r_d, phi_s, r_s, phi_s, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
+                r_d, phi_d, r_s, phi_s, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
             )
             self._replace_and_update(displaced_squeezed, mode)
 

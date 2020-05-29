@@ -171,14 +171,10 @@ class FockBackend(BaseFock):
         self.circuit.squeeze(r, phi, self._remap_modes(mode))
 
     def two_mode_squeeze(self, r, phi, mode1, mode2):
-        self.circuit.two_mode_squeeze(
-            r, phi, self._remap_modes(mode1), self._remap_modes(mode2)
-        )
+        self.circuit.two_mode_squeeze(r, phi, self._remap_modes(mode1), self._remap_modes(mode2))
 
     def beamsplitter(self, theta, phi, mode1, mode2):
-        self.circuit.beamsplitter(
-            theta, phi, self._remap_modes(mode1), self._remap_modes(mode2)
-        )
+        self.circuit.beamsplitter(theta, phi, self._remap_modes(mode1), self._remap_modes(mode2))
 
     def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         """Perform a homodyne measurement on the specified mode.

@@ -548,17 +548,12 @@ class Circuit:
         mat = ops.displacement(r, phi, self._trunc)
         self._state = self.apply_gate_BLAS(mat, [mode])
 
-    def beamsplitter(self, t, r, phi, mode1, mode2):
+    def beamsplitter(self, theta, phi, mode1, mode2):
         """
         Applies a beamsplitter.
         """
-        mat = ops.beamsplitter(t, r, phi, self._trunc)
-
-        modes = List()
-        modes.append(mode1)
-        modes.append(mode2)
-
-        self._state = self.apply_twomode_gate(mat, modes, gate="BSgate")
+        mat = ops.beamsplitter(theta, phi, self._trunc)
+        self._state = self.apply_twomode_gate(mat, [mode1, mode2], gate="BSgate")
 
     def squeeze(self, r, theta, mode):
         """
@@ -572,12 +567,7 @@ class Circuit:
         Applies a two-mode squeezing gate.
         """
         mat = ops.two_mode_squeezing(r, theta, self._trunc)
-
-        modes = List()
-        modes.append(mode1)
-        modes.append(mode2)
-
-        self._state = self.apply_twomode_gate(mat, modes, gate="S2gate")
+        self._state = self.apply_twomode_gate(mat,  [mode1, mode2], gate="S2gate")
 
     def kerr_interaction(self, kappa, mode):
         """

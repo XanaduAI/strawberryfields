@@ -43,7 +43,7 @@ class TestRepresentationIndependent:
         """Tests that get modes returns the correct result after deleting modes from the circuit"""
         backend = setup_backend(4)
 
-        backend.squeeze(0.1, 0)
+        backend.squeeze(0.1, 0, 0)
         backend.del_mode([0, 2])
 
         res = backend.get_modes()

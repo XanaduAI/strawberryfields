@@ -327,7 +327,7 @@ class BaseBackend:
 
         Args:
             theta (float): transmissivity is cos(theta)
-            phi (float): phase angle 
+            phi (float): phase angle
             mode1 (int): first mode that beamsplitter acts on
             mode2 (int): second mode that beamsplitter acts on
         """

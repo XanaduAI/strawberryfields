@@ -112,7 +112,7 @@ class GaussianBackend(BaseGaussian):
     def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
         self.circuit.loss(0.0, mode)
         self.circuit.squeeze(r_s, phi_s, mode)
-        self.circuit.displace(r_d,phi_d, mode)
+        self.circuit.displace(r_d, phi_d, mode)
 
     def rotation(self, phi, mode):
         self.circuit.phase_shift(phi, mode)
@@ -120,17 +120,11 @@ class GaussianBackend(BaseGaussian):
     def displacement(self, r, phi, mode):
         self.circuit.displace(r, phi, mode)
 
-    def squeeze(self, z, mode):
-        phi = angle(z)
-        r = abs(z)
+    def squeeze(self, r, phi, mode):
         self.circuit.squeeze(r, phi, mode)
 
-    def beamsplitter(self, t, r, mode1, mode2):
-        if isinstance(t, complex):
-            raise ValueError("Beamsplitter transmittivity t must be a float.")
-        theta = arctan2(abs(r), t)
-        phi = angle(r)
-        self.circuit.beamsplitter(-theta, -phi, mode1, mode2)
+    def beamsplitter(self, theta, phi, mode1, mode2):
+        self.circuit.beamsplitter(theta, phi, mode1, mode2)
 
     def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         r"""Measure a :ref:`phase space quadrature <homodyne>` of the given mode.
