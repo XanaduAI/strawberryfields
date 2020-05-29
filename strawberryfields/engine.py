@@ -271,8 +271,24 @@ class BaseEngine(abc.ABC):
                 p = p.compile(target, **compile_options)
             p.lock()
 
-            _, self.samples = self._run_program(p, **kwargs)
+            _, values = self._run_program(p, **kwargs)
             self.run_progs.append(p)
+
+            sort_order = [r.ind for c in p.circuit for r in c.reg if "Measure" in c.op.__str__()]
+
+            # check for duplicate mode-measures
+            if len(sort_order) != len(set(sort_order)):
+                raise RuntimeError("Modes can only be measured once inside a circuit.")
+
+            if len(values) == 1:
+                self.samples = values[0]
+            else:
+                self.samples = Result.combine_samples(values, sort_order)
+
+                # pylint: disable=import-outside-toplevel
+                if self.backend_name == "tf":
+                    from tensorflow import convert_to_tensor
+                    self.samples = convert_to_tensor(self.samples)
 
             prev = p
 
@@ -332,11 +348,13 @@ class LocalEngine(BaseEngine):
 
     def _run_program(self, prog, **kwargs):
         applied = []
-        values = None
+        values = []
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend
-                values = cmd.op.apply(cmd.reg, self.backend, **kwargs)
+                val = cmd.op.apply(cmd.reg, self.backend, **kwargs)
+                if val is not None:
+                    values.append(val)
                 applied.append(cmd)
             except NotApplicableError:
                 # command is not applicable to the current backend type
@@ -350,9 +368,6 @@ class LocalEngine(BaseEngine):
                         cmd.op, self.backend, kwargs
                     )
                 ) from None
-
-        if values is None:
-            values = np.array([[]])
 
         return applied, values
 
