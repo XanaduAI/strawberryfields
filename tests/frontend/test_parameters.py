@@ -245,10 +245,12 @@ def applied_cmds(monkeypatch):
     def mock_run_prog(self, prog, **kwargs):
         """Mock function that is used for extracting
         the engine queue when running programs."""
-        values = None
+        values = []
         for cmd in prog.circuit:
             try:
-                values = cmd.op.apply(cmd.reg, self.backend, **kwargs)
+                val = cmd.op.apply(cmd.reg, self.backend, **kwargs)
+                if val is not None:
+                    values.append(val)
                 applied.append(cmd)
             except NotImplementedError:
                 for c in cmd.op._decompose(cmd.reg, **kwargs):
