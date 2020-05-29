@@ -280,15 +280,17 @@ class BaseEngine(abc.ABC):
             if len(sort_order) != len(set(sort_order)):
                 raise RuntimeError("Modes can only be measured once inside a circuit.")
 
-            if len(values) == 1:
-                self.samples = values[0]
-            else:
+            if len(values) > 1:
                 self.samples = Result.combine_samples(values, sort_order)
 
                 # pylint: disable=import-outside-toplevel
                 if self.backend_name == "tf":
                     from tensorflow import convert_to_tensor
                     self.samples = convert_to_tensor(self.samples)
+            elif len(values) == 1:
+                self.samples = values[0]
+            else:
+                self.samples = [[]]
 
             prev = p
 
