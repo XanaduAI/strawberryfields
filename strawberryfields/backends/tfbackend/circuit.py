@@ -899,8 +899,7 @@ class Circuit:
         # `meas_result` will always be a single value since multiple shots is not supported
         if self.batched:
             return tf.cast([[[i]] for i in meas_result], dtype=ops.def_type)
-        else:
-            return tf.cast([[meas_result]], dtype=ops.def_type)
+        return tf.cast([[meas_result]], dtype=ops.def_type)
 
     @property
     def num_modes(self):
