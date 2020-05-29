@@ -272,9 +272,10 @@ class BaseEngine(abc.ABC):
             _, values = self._run_program(p, **kwargs)
             self.run_progs.append(p)
 
-
             if len(values) > 1:
-                sort_order = [r.ind for c in p.circuit for r in c.reg if "Measure" in c.op.__str__()]
+                sort_order = [
+                    r.ind for c in p.circuit for r in c.reg if "Measure" in c.op.__str__()
+                ]
 
                 # check for duplicate mode-measures
                 if len(sort_order) != len(set(sort_order)):
@@ -285,6 +286,7 @@ class BaseEngine(abc.ABC):
                 # pylint: disable=import-outside-toplevel
                 if self.backend_name == "tf":
                     from tensorflow import convert_to_tensor
+
                     self.samples = convert_to_tensor(self.samples)
 
             elif len(values) == 1:
