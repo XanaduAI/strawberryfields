@@ -102,6 +102,28 @@ class Result:
             raise AttributeError("The state is undefined for a stateless computation.")
         return self._state
 
+    @staticmethod
+    def combine_samples(samples_list, mode_order):
+        """Combine samples measured at different times into one nested array
+
+        Args:
+            samples_list (list): the sample measurements in a list
+            mode_order (list): the mode order for the measured modes
+
+        Returns:
+            array: the samples in raising mode order with shape ``(shots, measured_modes)``
+        """
+        ret = [[] for _ in samples_list[0]]
+        for i, samples in enumerate(samples_list):
+            for j, single_sample in enumerate(samples):
+                for s in single_sample:
+                    ret[j].append(s)
+
+        for i, sam in enumerate(ret):
+            ret[i] = [j for _, j in sorted(zip(mode_order, sam))]
+
+        return np.array(ret)
+
     def __repr__(self):
         """String representation."""
         shots, modes = self.samples.shape
