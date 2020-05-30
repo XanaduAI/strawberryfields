@@ -26,18 +26,44 @@ from strawberryfields.api.post_processing import _check_samples_modes
 pytestmark = pytest.mark.api
 
 def sample_circuit():
-    """TODO
-    """
+    """Returns samples from an example circuit."""
     prog = sf.Program(3)
-    eng = sf.Engine("gaussian", backend_options={"cutoff_dim": 5})
+    eng = sf.Engine("gaussian")
 
     with prog.context as q:
+        Fock(2) | q[0]
         Sgate(0.5) | q[0]
         Sgate(0.5) | q[1]
         MeasureFock() | q[0]
 
     results = eng.run(prog, shots=5)
     return results.samples
+
+def fock_states_samples():
+    """TODO"""
+    prog = sf.Program(3)
+    eng = sf.Engine("fock", backend_options={"cutoff_dim": 5})
+
+    with prog.context as q:
+        Fock(2) | q[0]
+        Fock(3) | q[1]
+        Fock(4) | q[2]
+        MeasureFock() | q[0]
+        MeasureFock() | q[1]
+        MeasureFock() | q[2]
+
+    results = eng.run(prog, shots=1)
+    return results.samples
+
+print(results.samples)
+class TestNumberExpectation:
+    """TODO"""
+
+    @parametrize("expval, modes", [(2, [0]), (2*3, [0,1]), (2*3*4, [0,1,2])])
+    def test_fock_backend(self, expval, modes):
+        samples = fock_states_samples 
+        assert number_expectation(samples, modes) == expval
+        
 
 class TestInputValidation:
     """Tests for the input validation logic for post-processing samples."""

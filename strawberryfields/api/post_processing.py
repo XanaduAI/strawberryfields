@@ -17,6 +17,7 @@ This module provides functions for post-processing samples.
 import numpy as np
 
 def number_expectation(photon_number_samples, modes=None):
+    # TODO
     """
     Args:
         photon_number_samples (ndarray): the photon number samples with a shape
@@ -32,18 +33,10 @@ def number_expectation(photon_number_samples, modes=None):
     shots = samples.shape[0]
 
     # TODO: need to add support for TF & TF batching!
-    flattened_samples_without_nones = photon_number_samples[photon_number_samples != None]
-    samples_without_nones = flattened_samples_without_nones.reshape((shots,-1))
 
-    elementwise_product = np.prod(samples_without_nones, axis=1)
-    expval = elementwise_product.mean()
+    product_across_modes = np.prod(samples_without_nones, axis=1)
+    expval = product_across_modes.mean()
     return expval
-
-    """
-    def number_variance(photon_number_samples, modes=None):
-        expval = number_expectation(photon_number_samples, modes=modes)
-        variance = number_expectation(photon_number_samples, modes=modes)
-    """
 
 def _check_samples_modes(samples, modes):
     """Validation checks for the input samples and modes.
@@ -64,6 +57,7 @@ def _check_samples_modes(samples, modes):
     num_modes = samples.shape[1] - 1
 
     flattened_sequence_indices_msg = "The input modes need to be specified as a flattened sequence of indices!"
+
     # Validation checks for modes
     try:
         # Check if a rugged sequence was inputted
