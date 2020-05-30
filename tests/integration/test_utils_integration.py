@@ -70,11 +70,11 @@ class TestInitialStatesAgreeGaussian:
         eng, prog = setup_eng(1)
 
         with prog.context as q:
-            ops.Dgate(a) | q[0]
+            ops.Dgate(np.abs(a), np.angle(a)) | q[0]
 
         state = eng.run(prog).state
 
-        mu, cov = utils.coherent_state(a, basis="gaussian", hbar=hbar)
+        mu, cov = utils.coherent_state(np.abs(a), np.angle(a), basis="gaussian", hbar=hbar)
         mu_exp, cov_exp = state.reduced_gaussian(0)
         assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
         assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
@@ -101,11 +101,11 @@ class TestInitialStatesAgreeGaussian:
 
         with prog.context as q:
             ops.Sgate(r, phi) | q[0]
-            ops.Dgate(a) | q[0]
+            ops.Dgate(np.abs(a), np.angle(a)) | q[0]
 
         state = eng.run(prog).state
 
-        mu, cov = utils.displaced_squeezed_state(a, r, phi, basis="gaussian", hbar=hbar)
+        mu, cov = utils.displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar)
         mu_exp, cov_exp = state.reduced_gaussian(0)
         assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
         assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
@@ -148,10 +148,10 @@ class TestInitialStatesAgreeFock:
         a = 0.32 + 0.1j
 
         with prog.context as q:
-            ops.Dgate(a) | q[0]
+            ops.Dgate(np.abs(a), np.angle(a)) | q[0]
 
         state = eng.run(prog).state
-        ket = utils.coherent_state(a, basis="fock", fock_dim=cutoff, hbar=hbar)
+        ket = utils.coherent_state(np.abs(a), np.angle(a), basis="fock", fock_dim=cutoff, hbar=hbar)
 
         if not pure:
             expected = state.dm()
@@ -192,12 +192,10 @@ class TestInitialStatesAgreeFock:
 
         with prog.context as q:
             ops.Sgate(r, phi) | q[0]
-            ops.Dgate(a) | q[0]
+            ops.Dgate(np.abs(a), np.angle(a)) | q[0]
 
         state = eng.run(prog).state
-        ket = utils.displaced_squeezed_state(
-            a, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
-        )
+        ket = utils.displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
 
         if not pure:
             expected = state.dm()
@@ -257,7 +255,7 @@ class TestInitialStatesAgreeFock:
 @utils.operation(1)
 def prepare_state(v1, q):
     """Single-mode state preparation."""
-    ops.Dgate(v1) | q
+    ops.Dgate(np.abs(v1), np.angle(v1)) | q
 
 
 @utils.operation(2)

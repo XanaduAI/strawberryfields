@@ -33,7 +33,7 @@ from functools import lru_cache
 
 import tensorflow as tf
 import numpy as np
-from scipy.special import binom, factorial
+from scipy.special import factorial
 
 
 from thewalrus.fock_gradients import displacement as displacement_tw

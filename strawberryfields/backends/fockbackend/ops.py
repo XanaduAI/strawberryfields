@@ -27,11 +27,10 @@ from numpy.polynomial.hermite import hermval as H
 from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
-# from thewalrus.fock_gradients import Dgate, Sgate, S2gate, BSgate
 from thewalrus.fock_gradients import displacement as displacement_tw
 from thewalrus.fock_gradients import squeezing as squeezing_tw
 from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
-from thewalrus.fock_gradients import beamsplitter as beamsplitter
+from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
 
 
 def_type = np.complex128

@@ -39,24 +39,14 @@ MODES = list(it.combinations(range(4), 2))
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
 
-    def test_complex_t(self, setup_backend):
-        """Test exception raised if t is complex"""
-        t = 0.1 + 0.5j
-        r = np.exp(1j * 0.2) * np.sqrt(1.0 - np.abs(t) ** 2)
-        backend = setup_backend(2)
-
-        with pytest.raises(ValueError, match="must be a float"):
-            backend.beamsplitter(t, r, 0, 1)
-
     @pytest.mark.parametrize("t", T_VALUES)
     @pytest.mark.parametrize("r_phi", PHASE_R)
     def test_vacuum_beamsplitter(self, setup_backend, t, r_phi, tol):
         """Tests beamsplitter operation in some limiting cases where the output
            should be the vacuum in both modes."""
-        r = np.exp(1j * r_phi) * np.sqrt(1.0 - np.abs(t) ** 2)
         backend = setup_backend(2)
 
-        backend.beamsplitter(t, r, 0, 1)
+        backend.beamsplitter(np.arccos(t), r_phi, 0, 1)
         assert np.all(backend.is_vacuum(tol))
 
     @pytest.mark.parametrize("t", T_VALUES)
@@ -73,8 +63,8 @@ class TestRepresentationIndependent:
         r = np.exp(1j * r_phi) * np.sqrt(1.0 - np.abs(t) ** 2)
         backend = setup_backend(2)
 
-        backend.displacement(np.abs(alpha), np.angle(alpha), 0)
-        backend.beamsplitter(t, r, 0, 1)
+        backend.displacement(mag_alpha, phase_alpha, 0)
+        backend.beamsplitter(np.arccos(t), r_phi, 0, 1)
         alpha_outA = t * alpha
         alpha_outB = r * alpha
         state = backend.state()
@@ -91,11 +81,10 @@ class TestFockRepresentation:
     def test_normalized_beamsplitter_output(self, setup_backend, t, r_phi, tol):
         """Tests if a range of beamsplitter outputs states are normalized."""
 
-        r = np.exp(1j * r_phi) * np.sqrt(1.0 - np.abs(t) ** 2)
         backend = setup_backend(2)
 
         backend.displacement(ALPHA, np.pi / 3, 1)
-        backend.beamsplitter(t, r, 0, 1)
+        backend.beamsplitter(np.arccos(t), r_phi, 0, 1)
         state = backend.state()
         tr = state.trace()
         assert np.allclose(tr, 1, atol=tol, rtol=0)
@@ -115,8 +104,8 @@ class TestFockRepresentation:
         r = np.exp(1j * r_phi) * np.sqrt(1.0 - np.abs(t) ** 2)
         backend = setup_backend(2)
 
-        backend.displacement(np.abs(alpha), np.angle(alpha), 0)
-        backend.beamsplitter(t, r, 0, 1)
+        backend.displacement(mag_alpha, phase_alpha, 0)
+        backend.beamsplitter(np.arccos(t), r_phi, 0, 1)
         state = backend.state()
 
         if state.is_pure:
@@ -172,8 +161,8 @@ class TestModeSubsets:
 
         backend = setup_backend(4)
 
-        backend.displacement(np.abs(alpha), np.angle(alpha), modes[0])
-        backend.beamsplitter(t, r, *modes)
+        backend.displacement(mag_alpha, phase_alpha, modes[0])
+        backend.beamsplitter(np.arccos(t), r_phi, *modes)
         state = backend.state()
 
         alpha_outA = t * alpha
