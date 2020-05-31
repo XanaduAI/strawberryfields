@@ -69,7 +69,7 @@ class TestEngineReset:
         eng, prog = setup_eng(2)
 
         with prog.context:
-            ops.Dgate(0.5) | 0
+            ops.Dgate(0.5, 0.0) | 0
 
         eng.run(prog)
         assert not np.all(eng.backend.is_vacuum(tol))
@@ -142,11 +142,11 @@ class TestProperExecution:
             ops.MeasureX | q[0]
             ops.Sgate(q[0].par) | q[1]
             # symbolic hermitian conjugate together with register reference
-            ops.Dgate(q[0].par).H | q[1]
+            ops.Dgate(q[0].par, 0).H | q[1]
             # algebraic transformation
             ops.Sgate(q[0].par ** 2) | q[1]
             # algebraic transformation and h.c.
-            ops.Dgate(-q[0].par).H | q[1]
+            ops.Dgate(q[0].par, np.pi).H | q[1]
 
         eng.run(prog)
 
@@ -177,7 +177,7 @@ class TestProperExecution:
         eng, prog = setup_eng(2)
 
         # define some gates
-        D = ops.Dgate(0.5)
+        D = ops.Dgate(0.5, 0.0)
         BS = ops.BSgate(0.7 * np.pi, np.pi / 2)
         R = ops.Rgate(np.pi / 3)
 
@@ -209,7 +209,7 @@ class TestProperExecution:
         eng, prog = setup_eng(2)
 
         # define some gates
-        D = ops.Dgate(0.5)
+        D = ops.Dgate(0.5, 0.0)
         BS = ops.BSgate(2 * np.pi, np.pi / 2)
         R = ops.Rgate(np.pi)
 
@@ -263,7 +263,7 @@ class TestProperExecution:
         a = 0.23
         r = 0.1
         with p1.context as q:
-            ops.Dgate(a) | q[0]
+            ops.Dgate(a, 0.0) | q[0]
             ops.Sgate(r) | q[1]
         state1 = eng.run(p1).state
 

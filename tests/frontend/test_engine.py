@@ -34,7 +34,7 @@ def prog():
     """Program fixture."""
     prog = sf.Program(2)
     with prog.context as q:
-        ops.Dgate(0.5) | q[0]
+        ops.Dgate(0.5, 0.0) | q[0]
     return prog
 
 
@@ -104,7 +104,7 @@ class TestEngineProgramInteraction:
 
     def test_sequential_programs(self, eng):
         """Running several program segments sequentially."""
-        D = ops.Dgate(0.2)
+        D = ops.Dgate(0.2, 0.0)
         p1 = sf.Program(3)
         with p1.context as q:
             D | q[1]
@@ -140,7 +140,7 @@ class TestEngineProgramInteraction:
 
         p1 = sf.Program(2)
         with p1.context as q:
-            ops.Dgate(a) | q[1]
+            ops.Dgate(np.abs(a), np.angle(a)) | q[1]
             ops.Sgate(r) | q[1]
 
         eng.run(p1)
@@ -200,7 +200,7 @@ class TestMultipleShotsErrors:
         prog = sf.Program(2)
         with prog.context as q:
             ops.MeasureFock() | q[0]
-            ops.Dgate(q[0].par) | q[1]
+            ops.Dgate(q[0].par, 0) | q[1]
 
         with pytest.raises(
             NotImplementedError,

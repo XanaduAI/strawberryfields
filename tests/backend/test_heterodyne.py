@@ -33,7 +33,7 @@ class TestHeterodyne:
     def test_mode_reset_vacuum(self, setup_backend, tol):
         """Test heterodyne measurement resets mode to vacuum"""
         backend = setup_backend(1)
-        backend.squeeze(squeeze_val, 0)
+        backend.squeeze(squeeze_val, 0, 0)
         backend.displacement(mag_alphas[-1], 0, 0)
         backend.measure_homodyne(0, 0)
         assert np.all(backend.is_vacuum(tol))

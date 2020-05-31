@@ -76,7 +76,7 @@ class TestChannelApplication:
         eng, prog = setup_eng(1)
 
         with prog.context as q:
-            ops.Dgate(A) | q[0]
+            ops.Dgate(np.abs(A), np.angle(A)) | q[0]
             ops.LossChannel(0) | q[0]
 
         eng.run(prog)
@@ -89,7 +89,7 @@ class TestChannelApplication:
         nbar = 0.43
 
         with prog.context as q:
-            ops.Dgate(A) | q[0]
+            ops.Dgate(np.abs(A), np.angle(A)) | q[0]
             ops.ThermalLossChannel(0, nbar) | q[0]
 
         state = eng.run(prog).state
@@ -110,7 +110,7 @@ class TestPreparationApplication:
         eng, prog = setup_eng(1)
 
         with prog.context as q:
-            ops.Dgate(0.2) | q[0]
+            ops.Dgate(0.2, 0.0) | q[0]
 
         state1 = eng.run(prog).state
 
@@ -148,7 +148,7 @@ class TestPreparationApplication:
         eng, prog = setup_eng(1)
 
         with prog.context as q:
-            ops.Dgate(0.2) | q[0]
+            ops.Dgate(0.2, 0.0) | q[0]
 
         state1 = eng.run(prog).state
 
@@ -165,7 +165,7 @@ class TestPreparationApplication:
         eng, prog = setup_eng(1)
 
         with prog.context as q:
-            ops.Dgate(0.2) | q[0]
+            ops.Dgate(0.2, 0.0) | q[0]
 
         state1 = eng.run(prog).state
 

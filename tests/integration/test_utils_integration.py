@@ -360,7 +360,7 @@ class TestExtractUnitary:
         prog = sf.Program(1)
         alpha = 0.432 - 0.8543j
         with prog.context as q:
-            ops.Dgate(alpha) | q
+            ops.Dgate(np.abs(alpha), np.angle(alpha)) | q
 
         U = utils.extract_unitary(prog, cutoff_dim=cutoff, backend=backend_name)
         expected = disp_U(alpha, cutoff)

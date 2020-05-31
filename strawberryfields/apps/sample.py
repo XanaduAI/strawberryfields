@@ -353,7 +353,7 @@ def vibronic(
         sf.ops.Interferometer(U2) | q[:n_modes]
 
         for i in range(n_modes):
-            sf.ops.Dgate(alpha[i]) | q[i]
+            sf.ops.Dgate(np.abs(alpha[i]), np.angle(alpha[i]))| q[i]
 
         if loss:
             for _q in q:
