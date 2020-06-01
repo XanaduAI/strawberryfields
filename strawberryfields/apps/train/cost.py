@@ -24,7 +24,8 @@ function, gradients can be computed efficiently, leading to fast training.
 from typing import Callable
 
 import numpy as np
-from strawberryfields.apps.train.param import _Omat, VGBS
+
+from strawberryfields.apps.train.param import VGBS, _Omat
 
 
 class KL:

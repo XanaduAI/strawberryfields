@@ -21,7 +21,7 @@ import numpy as np
 import pytest
 
 from strawberryfields.apps import train
-from strawberryfields.apps.train import cost, param, embed
+from strawberryfields.apps.train import cost, embed, param
 
 pytestmark = pytest.mark.apps
 
@@ -34,8 +34,7 @@ test_sum_log_probs = [6.931471805599451, 12.644620176064302, 22.377710881470353]
 test_data_th = [[0, 0, 0, 0], [0, 1, 1, 1], [0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 0], [0, 0, 0, 1]]
 n_means_data_th = np.mean(test_data_th, axis=0)
 test_data_th = [[t[:d] for t in test_data_th] for d in range(2, 5)]
-n_means_gbs_th = [[1 / 2, 1 / 2], [1 / 3, 1 / 3, 1 / 3, 1 / 3],
-                  [1 / 4, 1 / 4, 1 / 4, 1 / 4]]
+n_means_gbs_th = [[1 / 2, 1 / 2], [1 / 3, 1 / 3, 1 / 3, 1 / 3], [1 / 4, 1 / 4, 1 / 4, 1 / 4]]
 test_sum_log_probs_th = [1.386294361119879, 1.6218604324326575, 2.287080906458072]
 
 params_fixed = [0, 0, 0, 0]
@@ -156,9 +155,12 @@ class TestStochastic:
         probs_init = [vgbs.prob_sample(np.zeros(dim - 1), s) for s in possible_samples]
 
         cost = sum([probs[i] * h(s) for i, s in enumerate(possible_samples)])
-        cost_reparam = sum([probs_init[i] * cost_fn.h_reparametrized(s, params) for i, \
-                                                                                    s in enumerate(
-            possible_samples)])
+        cost_reparam = sum(
+            [
+                probs_init[i] * cost_fn.h_reparametrized(s, params)
+                for i, s in enumerate(possible_samples)
+            ]
+        )
 
         assert np.allclose(cost, cost_reparam)
 
@@ -251,8 +253,10 @@ class TestStochasticIntegrationPNR:
     def h_setup(self, objectives):
         """Mean squared error based cost function that subtracts a fixed vector from an input
         sample and squares the result"""
+
         def h(sample):
             return sum([(s - objectives[i]) ** 2 for i, s in enumerate(sample)])
+
         return h
 
     def test_initial_cost(self, dim, n_mean, simple_embedding):
@@ -362,8 +366,9 @@ class TestStochasticIntegrationPNR:
         # E((s - x) ** 2) = 3 * n_mean ** 2 + 2 * (1 - x) * n_mean + x ** 2, which is minimized
         # by the n_mean given below.
         expected_n_mean = np.maximum((objectives - 1) / 3, np.zeros(dim))
-        expected_cost = sum(3 * expected_n_mean ** 2 + 2 * (1 - objectives) * expected_n_mean + \
-                        objectives ** 2)
+        expected_cost = sum(
+            3 * expected_n_mean ** 2 + 2 * (1 - objectives) * expected_n_mean + objectives ** 2
+        )
 
         for i in range(reps):
             g = cost_fn.gradient(params, n_samples)
