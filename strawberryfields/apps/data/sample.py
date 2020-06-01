@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Pre-calculated datasets of simulated GBS samples.
+Pre-calculated datasets of GBS samples.
 
 .. seealso::
 
@@ -25,10 +25,10 @@ import pkg_resources
 import numpy as np
 import scipy
 
-DATA_PATH = pkg_resources.resource_filename("strawberryfields", "apps/data") + "/"
+DATA_PATH = pkg_resources.resource_filename("strawberryfields", "apps/data/SampleData") + "/"
 
 
-class Dataset(ABC):
+class SampleDataset(ABC):
     """Base class for loading datasets of pre-generated samples.
 
     Attributes:
@@ -46,13 +46,13 @@ class Dataset(ABC):
     @property
     @abstractmethod
     def _data_filename(self) -> str:
-        """Base name of files containing the sample data stored in the ``./data/`` directory.
+        """Base name of files containing the sample data stored in the ``./SampleData/`` directory.
 
         Samples and corresponding adjacency matrix should both be provided as a
         ``scipy.sparse.csr_matrix`` saved in ``.npz`` format.
 
         For ``_data_filename = "example"``, the corresponding samples should be stored as
-        ``./data/example.npz`` and the adjacency matrix as ``./data/example_A.npz``."""
+        ``./SampleData/example.npz`` and the adjacency matrix as ``./SampleData/example_A.npz``."""
         pass
 
     def __init__(self):
@@ -118,7 +118,7 @@ class Dataset(ABC):
 
 
 # pylint: disable=abstract-method
-class GraphDataset(Dataset, ABC):
+class GraphDataset(SampleDataset, ABC):
     """Class for loading datasets of pre-generated samples from graphs.
 
     Attributes:
@@ -322,7 +322,7 @@ class Mutag3(GraphDataset):
 
 
 # pylint: disable=abstract-method
-class MoleculeDataset(Dataset, ABC):
+class MoleculeDataset(SampleDataset, ABC):
     r"""Class for loading datasets of pre-generated samples from molecules.
 
     Attributes:
