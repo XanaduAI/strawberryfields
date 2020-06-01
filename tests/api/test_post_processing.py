@@ -19,28 +19,14 @@ import pytest
 
 import strawberryfields as sf
 from strawberryfields.ops import *
-from strawberryfields.api.post_processing import _check_samples_modes
+from strawberryfields.api.post_processing import number_expectation, number_variance, _check_modes, _check_samples
 
 # pylint: disable=bad-continuation,no-self-use,pointless-statement
 
 pytestmark = pytest.mark.api
 
-def sample_circuit():
-    """Returns samples from an example circuit."""
-    prog = sf.Program(3)
-    eng = sf.Engine("gaussian")
-
-    with prog.context as q:
-        Fock(2) | q[0]
-        Sgate(0.5) | q[0]
-        Sgate(0.5) | q[1]
-        MeasureFock() | q[0]
-
-    results = eng.run(prog, shots=5)
-    return results.samples
-
 def fock_states_samples():
-    """TODO"""
+    """Sample circuit for sampling fock states."""
     prog = sf.Program(3)
     eng = sf.Engine("fock", backend_options={"cutoff_dim": 5})
 
@@ -55,15 +41,36 @@ def fock_states_samples():
     results = eng.run(prog, shots=1)
     return results.samples
 
-print(results.samples)
 class TestNumberExpectation:
-    """TODO"""
+    """Tests the number_expectation method using PNR samples."""
 
-    @parametrize("expval, modes", [(2, [0]), (2*3, [0,1]), (2*3*4, [0,1,2])])
-    def test_fock_backend(self, expval, modes):
-        samples = fock_states_samples 
+    @pytest.mark.parametrize("expval, modes", [(2, [0]), (2*3, [0,1]), (2*3*4, [0,1,2])])
+    def test_fock_backend_integration(self, expval, modes):
+        """Checking the expectation values when fock states were sampled."""
+        samples = fock_states_samples()
         assert number_expectation(samples, modes) == expval
-        
+
+class TestNumberVariance:
+    """Tests the number_variance method using PNR samples."""
+
+    @pytest.mark.parametrize("var, modes", [(0, [0]), (0, [0,1]), (0, [0,1,2])])
+    def test_fock_backend_integration(self, var, modes):
+        """Checking the variance when fock states were sampled."""
+        samples = fock_states_samples()
+        assert number_variance(samples, modes) == var
+
+def validation_circuit():
+    """Returns samples from an example circuit."""
+    prog = sf.Program(3)
+    eng = sf.Engine("gaussian")
+
+    with prog.context as q:
+        Sgate(0.5) | q[0]
+        Sgate(0.5) | q[1]
+        MeasureFock() | q[0]
+
+    results = eng.run(prog, shots=5)
+    return results.samples
 
 class TestInputValidation:
     """Tests for the input validation logic for post-processing samples."""
@@ -78,8 +85,9 @@ class TestInputValidation:
         with pytest.raises(
             Exception, match="Samples needs to be represented as a two dimensional numpy array."
         ):
-            _check_samples_modes(samples, modes)
+            _check_samples(samples)
 
+    # Arbitrary sequences that are considered invalid during the input checks
     invalid_modes_sequences = [np.array([list([0]), list([1,2])]),
             np.array([[0,1], [1,2]]), np.array([0.321])]
 
@@ -87,29 +95,29 @@ class TestInputValidation:
     def test_invalid_modes_sequence(self, modes):
         """Tests that an error is raised if the modes were not specified as a
         flattened sequence of indices."""
-        samples = sample_circuit()
+        samples = validation_circuit()
         with pytest.raises(
             Exception, match="The input modes need to be specified as a flattened sequence of indices"
         ):
-            _check_samples_modes(samples, modes)
+            _check_modes(samples, modes)
 
     def test_invalid_modes_for_system(self):
         """Tests that an error is raised if the modes specified are not
         applicable for the system."""
-        samples = sample_circuit()
+        samples = validation_circuit()
         modes = [3, 4]
 
         # Need to escape [ and ] characters due to regular expression patter matching
         invalid_modes = "\[3 4\]"
         with pytest.raises(
-            Exception, match="Cannot specify mode\(s\) {} for a 2 mode system!".format(invalid_modes)
+            Exception, match="Cannot specify mode indices {} for a 3 mode system!".format(invalid_modes)
         ):
-            _check_samples_modes(samples, modes)
+            _check_modes(samples, modes)
 
     def test_not_measured_modes_specified(self):
         """Tests that an error is raised if the some modes specified were not
         measured."""
-        samples = sample_circuit()
+        samples = validation_circuit()
         modes = [0,1,2]
 
         # Need to escape [ and ] characters due to regular expression patter matching
@@ -117,4 +125,4 @@ class TestInputValidation:
         with pytest.raises(
             Exception, match="{} were specified for post-processing, but no samples".format(not_measured_modes)
         ):
-            _check_samples_modes(samples, modes)
+            _check_modes(samples, modes)

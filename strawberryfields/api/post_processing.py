@@ -16,46 +16,90 @@ This module provides functions for post-processing samples.
 """
 import numpy as np
 
-def number_expectation(photon_number_samples, modes=None):
-    # TODO
-    """
+def number_expectation_pnr(photon_number_samples, modes=None):
+    """The expectation value of the number operator from PNR samples.
+
     Args:
         photon_number_samples (ndarray): the photon number samples with a shape
-        of (shots, modes) modes=None
-        modes (Sequence): the input modes to get the expectation value for, a
-        flattened sequence
+            of (shots, modes) modes=None
+        modes (Sequence): a flat sequence containing indices of modes to get
+            the expectation value for
+
+    Returns:
+        float: the expectation value from the samples
     """
-    if modes is None:
-        modes = np.arange(num_modes)
-
-    _check_samples_modes(photon_number_samples, modes)
-
-    shots = samples.shape[0]
-
-    # TODO: need to add support for TF & TF batching!
-
-    product_across_modes = np.prod(samples_without_nones, axis=1)
+    product_across_modes = _checks_and_get_product(photon_number_samples, modes=modes)
     expval = product_across_modes.mean()
     return expval
 
-def _check_samples_modes(samples, modes):
-    """Validation checks for the input samples and modes.
-    
-    Checks include data types checks, checks for the shape of the inputs
+def number_variance_pnr(photon_number_samples, modes=None):
+    """The variance of the number operator from PNR samples.
+
+    Args:
+        photon_number_samples (ndarray): the photon number samples with a shape
+            of (shots, modes) modes=None
+        modes (Sequence): a flat sequence containing indices of modes to get
+            the variance for
+
+    Returns:
+        float: the variance from the samples
+    """
+    product_across_modes = _checks_and_get_product(photon_number_samples, modes=modes)
+    variance = product_across_modes.var()
+    return variance
+
+def _checks_and_get_product(photon_number_samples, modes=None):
+    """Input validation checks followed by getting the product across modes.
+
+    Checks include data types checks and dimension of the input samples.
+
+    Args:
+        photon_number_samples (ndarray): the photon number samples with a shape
+            of (shots, modes) modes=None
+        modes (Sequence): a flat sequence containing indices of modes to get
+            the expectation value for
+
+    Returns:
+        ndarray: product of the samples across modes
+    """
+    _check_samples(photon_number_samples)
+
+    num_modes = photon_number_samples.shape[1]
+
+    if modes is None:
+        modes = np.arange(num_modes)
+
+    _check_modes(photon_number_samples, modes)
+
+    modes = np.array(modes)
+    selected_samples = photon_number_samples[:,modes]
+    return np.prod(selected_samples, axis=1)
+
+def _check_samples(samples):
+    """Validation check for the input samples.
+
+    Checks include data types checks and dimension of the input samples.
+
+    Args:
+        samples (ndarray): the photon number samples with a shape of (shots,
+            modes)
+    """
+    if not isinstance(samples, np.ndarray) or samples.ndim != 2:
+        raise Exception("Samples needs to be represented as a two dimensional numpy array.")
+
+def _check_modes(samples, modes):
+    """Validation checks for the input modes.
+
+    Checks include data types checks, checks for the dimension of the inputs
     and the validity of the modes specified.
 
     Args:
         photon_number_samples (ndarray): the photon number samples with a shape
-            of (shots, modes) 
+            of (shots, modes)
         modes (Sequence): the input modes to get the expectation value for, a
             flattened sequence
     """
-    # Validation checks for samples 
-    if not isinstance(samples, np.ndarray) or samples.ndim != 2:
-        raise Exception("Samples needs to be represented as a two dimensional numpy array.")
-
-    num_modes = samples.shape[1] - 1
-
+    num_modes = samples.shape[1]
     flattened_sequence_indices_msg = "The input modes need to be specified as a flattened sequence of indices!"
 
     # Validation checks for modes
@@ -75,11 +119,16 @@ def _check_samples_modes(samples, modes):
         raise Exception(flattened_sequence_indices_msg)
 
     # Checking if valid modes were specified
-    invalid_modes = modes[modes>num_modes]
+    largest_valid_index = num_modes - 1
+    invalid_modes = modes[modes > largest_valid_index]
     if invalid_modes.size > 0:
-        raise Exception("Cannot specify mode(s) {} for a {} mode system!".format(invalid_modes, num_modes))
+        raise Exception("Cannot specify mode indices {} for a {} mode system!".format(invalid_modes, num_modes))
 
+    # TODO: remove when the returned samples no longer contain Nones
     indices_for_no_measurement = np.argwhere(samples == None)
     modes_not_measured = np.unique(indices_for_no_measurement[:,1])
     if modes_not_measured.size > 0:
         raise Exception("Modes {} were specified for post-processing, but no samples were found (they were not measured)!".format(modes_not_measured))
+
+number_expectation = number_expectation_pnr
+number_variance = number_variance_pnr
