@@ -281,7 +281,10 @@ class TestStochasticIntegrationPNR:
         assert np.allclose(cost, expected_cost)
 
     def test_intermediate_cost(self, dim, n_mean, simple_embedding):
-        """Test that the cost function evaluates as expected on non-initial parameters"""
+        """Test that the cost function evaluates as expected on non-initial parameters. This is
+        done by comparing the cost function calculated using train.Stochastic with a manual
+        calculation. The manual calculation involves sampling from VGBS with the non-initial
+        params and averaging the cost function over the result."""
         n_samples = 10000
         objectives = np.linspace(0.5, 1.5, dim)
         h = self.h_setup(objectives)
