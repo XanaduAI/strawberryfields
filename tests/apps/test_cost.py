@@ -38,12 +38,12 @@ n_means_gbs_th = [[1 / 2, 1 / 2], [1 / 3, 1 / 3, 1 / 3, 1 / 3],
                   [1 / 4, 1 / 4, 1 / 4, 1 / 4]]
 test_sum_log_probs_th = [1.386294361119879, 1.6218604324326575, 2.287080906458072]
 
-params = [0, 0, 0, 0]
+params_fixed = [0, 0, 0, 0]
 weights = [1, 1, 1, 1]
 test_jacobian = -np.eye(4)
 mean_photon_number = 2
 mean_photon_number_th = 1
-A = np.eye(4)
+A_eye = np.eye(4)
 
 
 @pytest.mark.parametrize("k", range(3))  # nr_modes = k + 2
@@ -55,7 +55,7 @@ class TestKL:
         ``n_means_data``. The test iterates over different numbers of modes in the data."""
         m = k + 2
         embedding = embed.Exp(m)
-        vgbs = param.VGBS(A[:m, :m], mean_photon_number, embedding, threshold=False)
+        vgbs = param.VGBS(A_eye[:m, :m], mean_photon_number, embedding, threshold=False)
         kl = cost.KL(test_data[k], vgbs)
         assert np.allclose(kl.mean_n_data, n_means_data[:m])
         assert len(kl.mean_n_data) == m
@@ -65,10 +65,10 @@ class TestKL:
         values of trainable parameters and mean photon numbers from data and model."""
         m = k + 2
         embedding = embed.Exp(m)
-        vgbs = param.VGBS(A[:m, :m], mean_photon_number, embedding, threshold=False)
+        vgbs = param.VGBS(A_eye[:m, :m], mean_photon_number, embedding, threshold=False)
         kl = cost.KL(test_data[k], vgbs)
         gamma = [-(n_means_data[i] - n_means_gbs[k][i]) / weights[i] for i in range(m)]
-        assert np.allclose(kl.grad(params[:m]), gamma @ test_jacobian[:m, :m])
+        assert np.allclose(kl.grad(params_fixed[:m]), gamma @ test_jacobian[:m, :m])
 
     def test_cost(self, k):
         """Tests the calculation of the Kullback-Liebler cost function against an explicit
@@ -76,16 +76,16 @@ class TestKL:
         from data and model."""
         m = k + 2
         embedding = embed.Exp(m)
-        vgbs = param.VGBS(A[:m, :m], mean_photon_number, embedding, threshold=False)
+        vgbs = param.VGBS(A_eye[:m, :m], mean_photon_number, embedding, threshold=False)
         kl = cost.KL(test_data[k], vgbs)
-        assert np.allclose(kl(params[:m]), test_sum_log_probs[k] / 6)
+        assert np.allclose(kl(params_fixed[:m]), test_sum_log_probs[k] / 6)
 
     def test_mean_data_threshold(self, k):
         """Tests the mean photon number per mode from hard-coded values stored in the array
         ``n_means_data``. The test iterates over different numbers of modes in the data."""
         m = k + 2
         embedding = embed.Exp(m)
-        vgbs = param.VGBS(A[:m, :m], mean_photon_number_th, embedding, threshold=True)
+        vgbs = param.VGBS(A_eye[:m, :m], mean_photon_number_th, embedding, threshold=True)
         kl = cost.KL(test_data_th[k], vgbs)
         assert np.allclose(kl.mean_n_data, n_means_data_th[:m])
         assert len(kl.mean_n_data) == m
@@ -95,10 +95,10 @@ class TestKL:
         values of trainable parameters and mean photon numbers from data and model."""
         m = k + 2
         embedding = embed.Exp(m)
-        vgbs = param.VGBS(A[:m, :m], mean_photon_number_th, embedding, threshold=True)
+        vgbs = param.VGBS(A_eye[:m, :m], mean_photon_number_th, embedding, threshold=True)
         kl = cost.KL(test_data_th[k], vgbs)
         gamma = [-(n_means_data_th[i] - n_means_gbs_th[k][i]) / weights[i] for i in range(m)]
-        assert np.allclose(kl.grad(params[:m]), gamma @ test_jacobian[:m, :m])
+        assert np.allclose(kl.grad(params_fixed[:m]), gamma @ test_jacobian[:m, :m])
 
 
 def h(sample):
