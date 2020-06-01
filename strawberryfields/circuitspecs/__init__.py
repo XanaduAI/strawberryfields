@@ -39,6 +39,8 @@ executed on that backend.
 from .circuit_specs import CircuitSpecs
 from .X8 import X8Specs, X8_01
 from .X12 import X12Specs, X12_01, X12_02
+from .xcov import Xcov
+from .xunitary import Xunitary
 from .fock import FockSpecs
 from .gaussian import GaussianSpecs
 from .gbs import GBSSpecs
@@ -56,6 +58,8 @@ specs = (
     GBSSpecs,
     TFSpecs,
     GaussianUnitary,
+    Xcov,
+    Xunitary,
 )
 
 circuit_db = {c.short_name: c for c in specs}
