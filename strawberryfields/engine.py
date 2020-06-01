@@ -22,6 +22,8 @@ import collections.abc
 import time
 from typing import Optional
 
+import numpy as np
+
 from strawberryfields.api import Connection, Job, Result
 from strawberryfields.api.job import FailedJobError
 from strawberryfields.logger import create_logger
@@ -293,7 +295,7 @@ class BaseEngine(abc.ABC):
                 self.samples = values[0]
 
             else:
-                self.samples = [[]]
+                self.samples = np.array([[]])
 
             prev = p
 
