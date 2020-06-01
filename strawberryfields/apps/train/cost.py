@@ -184,14 +184,14 @@ class Stochastic:
 
         where :math:`h(\bar{n}, \theta)` is given in :meth:`~.Stochastic.h_reparametrized` and now
         contains the trainable parameters, and :math:`P(\bar{n})` is the distribution over the
-        input adjacency matrix. The advantage of this alternative approach is that one does not
-        need to keep regenerating samples for an updated adjacency matrix and we can instead use
+        input adjacency matrix. The advantage of this alternative approach is that we do not
+        need to keep regenerating samples for an updated adjacency matrix and can instead use
         a fixed set of samples.
 
         The second approach above is utilized in :class:`Stochastic` to speed up evaluation of
         the cost function and its gradient. This is done by approximating the cost function using a
         single fixed set of samples. The samples can be pre-loaded into the :class:`~.train.VGBS` class or
-        generated once upon the first call of :meth:`Stochastic.evaluate` or
+        generated once upon the first call of either :meth:`Stochastic.evaluate` or
         :meth:`Stochastic.gradient`.
 
         **Example usage:**
