@@ -187,7 +187,6 @@ class TestEngineProgramInteraction:
 
         # check that MesureFock measures `0` while MeasureX does NOT measure `0`.
         correct_samples = [0, 0, 1, 0]
-        print(result.samples)
         assert [bool(i) for i in result.samples[0]] == correct_samples
 
     @pytest.mark.parametrize("eng", engines)
