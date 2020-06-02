@@ -107,13 +107,13 @@ class Result:
         """Combine samples measured at different times into one nested array.
 
         Args:
-            samples_list (list): the sample measurements in a list
+            samples_list (list[array, tensor]): the sample measurements in a list
             mode_order (list[int]): the mode order for the measured modes
 
         Returns:
             array: the samples in raising mode order with shape ``(shots, measured_modes)``
         """
-        ret = [[] * len(samples_list[0])]
+        ret = [[] for _ in samples_list[0]]
         for i, samples in enumerate(samples_list):
             for j, single_sample in enumerate(samples):
                 for s in single_sample:
