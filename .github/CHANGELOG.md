@@ -2,6 +2,11 @@
 
 <h3>New features since last release</h3>
 
+* Adds the `number_expectation_pnr` and `number_variance_pnr` functions for
+  obtaining counting statistics from samples obtained by performing photon
+  number resolving measurements.
+  [(#399)](https://github.com/XanaduAI/strawberryfields/pull/399)
+
 * Adds `diagonal_expectation` method for the `BaseFockState` class, which returns
   the expectation value of any operator that is diagonal in the number basis.
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
@@ -35,7 +40,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jack Ceroni, Theodor Isacsson, Shreya P. Kumar
+Jack Ceroni, Theodor Isacsson, Shreya P. Kumar, Antal Száva
 
 
 # Release 0.14.0 (current release)
