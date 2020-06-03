@@ -287,10 +287,20 @@ class BaseEngine(abc.ABC):
 
         return Result(self.samples)
 
-    def _combine_samples(self, values, p):
+    def _combine_samples(self, values, program):
+        """Combines samples if multiple measurements were made.
+
+        If batches are used, the samples will be fed to ``Result.combine_samples``
+        one-batch-at-a-time, which combines the samples and returns them with shape
+        ``(batches, shots, measured_modes)``.
+
+        Args:
+            values (list[array, tensor]): the sample measurements in a list
+            program (Program): quantum program that is run
+        """
         # get nested order of measured modes
         sort_order = [
-            np.array([r.ind for r in c.reg]) for c in p.circuit if "Measure" in c.op.__str__()
+            np.array([r.ind for r in c.reg]) for c in program.circuit if "Measure" in c.op.__str__()
         ]
 
         # check for duplicate mode-measures
