@@ -160,12 +160,13 @@ class TestProperExecution:
         # check the shape; should be (batches, shots, measured_modes)
         if batch_size:
             assert samples.shape == (batch_size, 1, 3)
+
+            for batch in samples:
+                # check that MesureFock measures `0` while MeasureX does NOT measure `0`.
+                correct_samples = [0, 1, 0]
+                assert [bool(i) for i in batch[0]] == correct_samples
         else:
             assert samples.shape == (1, 3)
-        for batch in samples:
-            # check that MesureFock measures `0` while MeasureX does NOT measure `0`.
-            correct_samples = [0, 1, 0]
-            assert [bool(i) for i in batch[0]] == correct_samples
 
     def test_homodyne_measurement_vacuum(self, setup_eng, tol):
         """MeasureX and MeasureP leave the mode in the vacuum state"""
