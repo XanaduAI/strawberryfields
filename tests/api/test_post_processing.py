@@ -33,7 +33,7 @@ pytestmark = pytest.mark.api
 
 def fock_states_samples():
     """Sample circuit for sampling fock states."""
-    prog = sf.Program(3)
+    prog = sf.Program(4)
     eng = sf.Engine("fock", backend_options={"cutoff_dim": 5})
 
     with prog.context as q:
@@ -51,7 +51,7 @@ def fock_states_samples():
 def entangled_gaussian_samples():
     """Obtaining multiple samples from a circuit that generates entanglement on
     the gaussian backend."""
-    prog = sf.Program(2)
+    prog = sf.Program(3)
     eng = sf.Engine("gaussian")
 
     with prog.context as q:
@@ -181,7 +181,7 @@ class TestInputValidation:
         modes = [0, 1, 2]
 
         # Need to escape [ and ] characters due to regular expression patternnn matching
-        not_measured_modes = "\[1 2\]"
+        not_measured_modes = "{1, 2}"
         with pytest.raises(
             Exception,
             match="{} were specified for post-processing, but no samples".format(

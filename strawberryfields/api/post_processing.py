@@ -20,6 +20,17 @@ import numpy as np
 def number_expectation_pnr(photon_number_samples, modes=None):
     """The expectation value of the number operator from PNR samples.
 
+    **Example:**
+
+    .. code-block:: python
+        samples = np.array([[2, 0, None],
+                            [2, 2, None],
+                            [2, 0, None],
+                            [0, 0, None]])
+
+    >>> number_expectation_pnr(samples)
+    1.0
+
     Args:
         photon_number_samples (ndarray): the photon number samples with a shape
             of (shots, modes)
@@ -36,6 +47,17 @@ def number_expectation_pnr(photon_number_samples, modes=None):
 
 def number_variance_pnr(photon_number_samples, modes=None):
     """The variance of the number operator from PNR samples.
+
+    **Example:**
+
+    .. code-block:: python
+        samples = np.array([[2, 0, None],
+                            [2, 2, None],
+                            [2, 0, None],
+                            [0, 0, None]])
+
+    >>> number_expectation_pnr(samples)
+    3.0
 
     Args:
         photon_number_samples (ndarray): the photon number samples with a shape
@@ -70,7 +92,11 @@ def _checks_and_get_product(photon_number_samples, modes=None):
     num_modes = photon_number_samples.shape[1]
 
     if modes is None:
-        modes = np.arange(num_modes)
+        all_modes = np.arange(num_modes)
+
+        # Remove the modes with Nones
+        indices_for_no_measurement = np.unique(np.argwhere(photon_number_samples == None)[:,1])
+        modes = np.delete(all_modes, indices_for_no_measurement)
 
     _check_modes(photon_number_samples, modes)
 
@@ -108,12 +134,8 @@ def _check_modes(samples, modes):
     flattened_sequence_indices_msg = (
         "The input modes need to be specified as a flattened sequence of indices!"
     )
-    # Validation checks for modes
-    try:
-        # Check if a rugged sequence was inputted
-        modes = np.array(modes)
-    except:
-        raise Exception(flattened_sequence_indices_msg)
+
+    modes = np.array(modes)
 
     # Checking if modes is a valid flattened sequence of indices
     try:
@@ -126,19 +148,20 @@ def _check_modes(samples, modes):
 
     # Checking if valid modes were specified
     largest_valid_index = num_modes - 1
-    invalid_modes = modes[modes > largest_valid_index]
-    if invalid_modes.size > 0:
+    out_of_bounds_modes = modes[modes > largest_valid_index]
+    if out_of_bounds_modes.size > 0:
         raise Exception(
-            "Cannot specify mode indices {} for a {} mode system!".format(invalid_modes, num_modes)
+            "Cannot specify mode indices {} for a {} mode system!".format(out_of_bounds_modes, num_modes)
         )
 
     # TODO: remove when the returned samples no longer contain Nones
     indices_for_no_measurement = np.argwhere(samples == None)
-    modes_not_measured = np.unique(indices_for_no_measurement[:, 1])
-    if modes_not_measured.size > 0:
+    modes_not_measured = set(indices_for_no_measurement[:, 1])
+    invalid_modes_specified = modes_not_measured.intersection(set(modes))
+    if len(invalid_modes_specified) > 0:
         raise Exception(
             "Modes {} were specified for post-processing, but no samples were found (they were not measured)!".format(
-                modes_not_measured
+                invalid_modes_specified
             )
         )
 
