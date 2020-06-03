@@ -67,9 +67,15 @@ class TestNumberExpectation:
 
     @pytest.mark.parametrize("expval, modes", [(2, [0]), (2 * 3, [0, 1]), (2 * 3 * 4, [0, 1, 2])])
     def test_fock_backend_integration_expval(self, expval, modes):
-        """Checking the expectation values when fock states were sampled."""
+        """Checking the expectation values when fock states were sampled with a single shot."""
         samples = fock_states_samples()
         assert number_expectation(samples, modes) == expval
+
+    def test_fock_backend_integration_modes_implicit(self):
+        """Checking the expectation values when modes are specified implicitly."""
+        samples = fock_states_samples()
+        expval = 2 * 3 * 4
+        assert number_expectation(samples) == expval
 
     def test_two_mode_squeezed_expval(self):
         """Checking that the expectation value of samples matches if there was
@@ -87,9 +93,15 @@ class TestNumberVariance:
 
     @pytest.mark.parametrize("var, modes", [(0, [0]), (0, [0, 1]), (0, [0, 1, 2])])
     def test_fock_backend_integration_var(self, var, modes):
-        """Checking the variance when fock states were sampled."""
+        """Checking the variance when fock states were sampled with a single shot."""
         samples = fock_states_samples()
         assert number_variance(samples, modes) == var
+
+    def test_fock_backend_integration_modes_implicit(self):
+        """Checking the variance when modes are specified implicitly."""
+        samples = fock_states_samples()
+        var = 0
+        assert number_variance(samples) == var
 
     def test_two_mode_squeezed_var(self):
         """Checking that the variance of samples matches if there was
@@ -100,7 +112,6 @@ class TestNumberVariance:
         var1 = number_variance(samples, mode1)
         var2 = number_variance(samples, mode2)
         assert var1 == var2
-
 
 def validation_circuit():
     """Returns samples from an example circuit."""
