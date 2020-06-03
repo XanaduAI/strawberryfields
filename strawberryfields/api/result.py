@@ -123,11 +123,9 @@ class Result:
             shapes = np.cumsum([len(m) for m in mode_order])
             mode_order = np.split(
                 # argsort twice returns the rank
-                np.argsort(
-                    np.argsort(
-                        mode_order_flat
-                    )
-                ), shapes)[:-1]
+                np.argsort(np.argsort(mode_order_flat)),
+                shapes,
+            )[:-1]
 
         # find the "widest" type in samples_list
         type_list = ["c", "f", "i"]
