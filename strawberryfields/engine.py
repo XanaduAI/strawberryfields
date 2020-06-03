@@ -275,43 +275,44 @@ class BaseEngine(abc.ABC):
             _, values = self._run_program(p, **kwargs)
             self.run_progs.append(p)
 
+            # check number of measurments and combine samples if needed
             if len(values) > 1:
-                sort_order = [
-                    np.array([r.ind for r in c.reg])
-                    for c in p.circuit
-                    if "Measure" in c.op.__str__()
-                ]
-
-                # check for duplicate mode-measures
-                if len(np.hstack(sort_order)) != len(set(np.hstack(sort_order))):
-                    raise RuntimeError("Modes can only be measured once inside a circuit.")
-
-                # pylint: disable=import-outside-toplevel
-                if self.backend_name == "tf":
-                    from tensorflow import convert_to_tensor
-
-                    if self.backend_options.get("batch_size", 0):  # if batches are used
-                        self.samples = []
-                        for i in range(self.backend_options.get("batch_size", 0)):
-                            # choose a single batch from values and combine the samples; do for all batches
-                            single_batch_values = [v[i] for v in values]
-                            single_batch_samples = Result.combine_samples(single_batch_values, sort_order)
-                            self.samples.append(single_batch_samples)
-                    else:
-                        self.samples = Result.combine_samples(values, sort_order)
-                    self.samples = convert_to_tensor(self.samples)
-                else:
-                    self.samples = Result.combine_samples(values, sort_order)
-
+                self._combine_samples(values, p)
             elif len(values) == 1:
                 self.samples = values[0]
-
-            else:
+            else:  # if no measurement was made
                 self.samples = np.array([[]])
 
             prev = p
 
         return Result(self.samples)
+
+    def _combine_samples(self, values, p):
+        # get nested order of measured modes
+        sort_order = [
+            np.array([r.ind for r in c.reg]) for c in p.circuit if "Measure" in c.op.__str__()
+        ]
+
+        # check for duplicate mode-measures
+        if len(np.hstack(sort_order)) != len(set(np.hstack(sort_order))):
+            raise RuntimeError("Modes can only be measured once inside a circuit.")
+
+        # pylint: disable=import-outside-toplevel
+        if self.backend_name == "tf":
+            from tensorflow import convert_to_tensor
+
+            if self.backend_options.get("batch_size", 0):  # if batches are used
+                self.samples = []
+                for i in range(self.backend_options.get("batch_size", 0)):
+                    # choose a single batch from values and combine the samples; do for all batches
+                    single_batch_values = [v[i] for v in values]
+                    single_batch_samples = Result.combine_samples(single_batch_values, sort_order)
+                    self.samples.append(single_batch_samples)
+            else:
+                self.samples = Result.combine_samples(values, sort_order)
+            self.samples = convert_to_tensor(self.samples)
+        else:
+            self.samples = Result.combine_samples(values, sort_order)
 
 
 class LocalEngine(BaseEngine):
