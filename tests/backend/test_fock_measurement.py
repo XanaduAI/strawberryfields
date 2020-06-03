@@ -123,8 +123,7 @@ class TestFockRepresentation:
             ref_result = n[meas_modes]
 
             if batch_size is not None:
-                ref_result = np.array([[i] * 2 for i in ref_result]).T.reshape((batch_size, 1, ref_result.shape[0]))
-
+                ref_result = np.array([[i] * batch_size for i in ref_result]).T.reshape((batch_size, 1, ref_result.shape[0]))
             assert np.allclose(meas_result, ref_result, atol=tol, rtol=0)
 
 
