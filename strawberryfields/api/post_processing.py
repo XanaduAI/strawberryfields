@@ -22,7 +22,7 @@ def number_expectation_pnr(photon_number_samples, modes=None):
 
     Args:
         photon_number_samples (ndarray): the photon number samples with a shape
-            of (shots, modes) modes=None
+            of (shots, modes)
         modes (Sequence): a flat sequence containing indices of modes to get
             the expectation value for
 
@@ -39,7 +39,7 @@ def number_variance_pnr(photon_number_samples, modes=None):
 
     Args:
         photon_number_samples (ndarray): the photon number samples with a shape
-            of (shots, modes) modes=None
+            of (shots, modes)
         modes (Sequence): a flat sequence containing indices of modes to get
             the variance for
 
@@ -108,7 +108,6 @@ def _check_modes(samples, modes):
     flattened_sequence_indices_msg = (
         "The input modes need to be specified as a flattened sequence of indices!"
     )
-
     # Validation checks for modes
     try:
         # Check if a rugged sequence was inputted

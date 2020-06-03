@@ -166,7 +166,7 @@ class TestInputValidation:
         samples = validation_circuit()
         modes = [3, 4]
 
-        # Need to escape [ and ] characters due to regular expression patter matching
+        # Need to escape [ and ] characters due to regular expression pattern matching
         invalid_modes = "\[3 4\]"
         with pytest.raises(
             Exception,
@@ -180,7 +180,7 @@ class TestInputValidation:
         samples = validation_circuit()
         modes = [0, 1, 2]
 
-        # Need to escape [ and ] characters due to regular expression patter matching
+        # Need to escape [ and ] characters due to regular expression patternnn matching
         not_measured_modes = "\[1 2\]"
         with pytest.raises(
             Exception,
