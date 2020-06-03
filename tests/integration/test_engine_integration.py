@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Integration tests for the frontend engine.py module with the backends"""
+import os
 import numbers
 import pytest
 
@@ -43,10 +44,6 @@ a = 0.1234
 b = -0.543
 c = 0.312
 
-@property
-def batched(batch_size):
-    """Checks if session is batched."""
-    return bool(batch_size)
 
 @pytest.mark.parametrize("name,expected", eng_backend_params)
 def test_load_backend(name, expected, cutoff):
@@ -150,23 +147,23 @@ class TestProperExecution:
 
         eng.run(prog)
 
-    # @pytest.mark.skipif(not batched, reason="Test for when combining batched samples")
     @pytest.mark.backends("tf")
+    @pytest.mark.skipif("BATCHED" not in os.environ, reason="Test for when combining batched samples")
     def test_combine_batched_samples(self, batch_size, setup_eng):
         """Test that batched samples are forwarded to ``Result.combine_samples`` correctly"""
-        if batch_size:
-            eng, prog = setup_eng(4)
-            with prog.context as q:
-                ops.MeasureFock() | (q[0], q[2])
-                ops.MeasureX | q[1]
+        # if batch_size:
+        eng, prog = setup_eng(4)
+        with prog.context as q:
+            ops.MeasureFock() | (q[0], q[2])
+            ops.MeasureX | q[1]
 
-            samples = eng.run(prog).samples
-            # check the shape; should be (batches, shots, measured_modes)
-            assert samples.shape == (batch_size, 1, 3)
-            for batch in samples:
-                # check that MesureFock measures `0` while MeasureX does NOT measure `0`.
-                correct_samples = [0, 1, 0]
-                assert [bool(i) for i in batch[0]] == correct_samples
+        samples = eng.run(prog).samples
+        # check the shape; should be (batches, shots, measured_modes)
+        assert samples.shape == (batch_size, 1, 3)
+        for batch in samples:
+            # check that MesureFock measures `0` while MeasureX does NOT measure `0`.
+            correct_samples = [0, 1, 0]
+            assert [bool(i) for i in batch[0]] == correct_samples
 
     def test_homodyne_measurement_vacuum(self, setup_eng, tol):
         """MeasureX and MeasureP leave the mode in the vacuum state"""
@@ -335,8 +332,8 @@ class TestProperExecution:
         assert all(samples[:, 0].astype(int) == expected)
 
     # TODO: when ``shots`` is incorporated into other backends, delete this test
-    @pytest.mark.skipif(batched, reason="Test only runs for non-batched backends")
     @pytest.mark.backends("tf", "fock")
+    @pytest.mark.skipif("BATCHED" in os.environ, reason="Test only runs for non-batched backends")
     def test_measurefock_shots_exception(self, setup_eng):
         shots = 5
         eng, p1 = setup_eng(3)
