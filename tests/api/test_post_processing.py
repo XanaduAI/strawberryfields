@@ -41,23 +41,56 @@ def fock_states_samples():
     results = eng.run(prog, shots=1)
     return results.samples
 
+def entangled_gaussian_samples():
+    """Obtaining multiple samples from a circuit that generates entanglement on
+    the gaussian backend."""
+    prog = sf.Program(2)
+    eng = sf.Engine("gaussian")
+
+    with prog.context as q:
+        S2gate(1) | (q[0], q[1])
+        MeasureFock() | (q[0], q[1])
+
+    results = eng.run(prog, shots=5)
+    return results.samples
+
 class TestNumberExpectation:
     """Tests the number_expectation method using PNR samples."""
 
     @pytest.mark.parametrize("expval, modes", [(2, [0]), (2*3, [0,1]), (2*3*4, [0,1,2])])
-    def test_fock_backend_integration(self, expval, modes):
+    def test_fock_backend_integration_expval(self, expval, modes):
         """Checking the expectation values when fock states were sampled."""
         samples = fock_states_samples()
         assert number_expectation(samples, modes) == expval
+
+    def test_two_mode_squeezed_expval(self):
+        """Checking that the expectation value of samples matches if there was
+        correlation."""
+        mode1 = [0]
+        mode2 = [1]
+        samples = entangled_gaussian_samples()
+        expval1 = number_expectation(samples, mode1)
+        expval2 = number_expectation(samples, mode2)
+        assert expval1 == expval2
 
 class TestNumberVariance:
     """Tests the number_variance method using PNR samples."""
 
     @pytest.mark.parametrize("var, modes", [(0, [0]), (0, [0,1]), (0, [0,1,2])])
-    def test_fock_backend_integration(self, var, modes):
+    def test_fock_backend_integration_var(self, var, modes):
         """Checking the variance when fock states were sampled."""
         samples = fock_states_samples()
         assert number_variance(samples, modes) == var
+
+    def test_two_mode_squeezed_var(self):
+        """Checking that the variance of samples matches if there was
+        correlation."""
+        mode1 = [0]
+        mode2 = [1]
+        samples = entangled_gaussian_samples()
+        var1 = number_variance(samples, mode1)
+        var2 = number_variance(samples, mode2)
+        assert var1 ==  var2
 
 def validation_circuit():
     """Returns samples from an example circuit."""
