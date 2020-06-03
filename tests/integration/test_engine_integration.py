@@ -150,6 +150,24 @@ class TestProperExecution:
 
         eng.run(prog)
 
+    # @pytest.mark.skipif(not batched, reason="Test for when combining batched samples")
+    @pytest.mark.backends("tf")
+    def test_combine_batched_samples(self, batch_size, setup_eng):
+        """Test that batched samples are forwarded to ``Result.combine_samples`` correctly"""
+        if batch_size:
+            eng, prog = setup_eng(4)
+            with prog.context as q:
+                ops.MeasureFock() | (q[0], q[2])
+                ops.MeasureX | q[1]
+
+            samples = eng.run(prog).samples
+            # check the shape; should be (batches, shots, measured_modes)
+            assert samples.shape == (batch_size, 1, 3)
+            for batch in samples:
+                # check that MesureFock measures `0` while MeasureX does NOT measure `0`.
+                correct_samples = [0, 1, 0]
+                assert [bool(i) for i in batch[0]] == correct_samples
+
     def test_homodyne_measurement_vacuum(self, setup_eng, tol):
         """MeasureX and MeasureP leave the mode in the vacuum state"""
         eng, prog = setup_eng(2)
