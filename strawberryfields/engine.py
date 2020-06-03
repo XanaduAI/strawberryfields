@@ -208,6 +208,7 @@ class BaseEngine(abc.ABC):
             prog (Program): program to run
         Returns:
             list[Command]: commands that were applied to the backend
+            list[array, tensor]: samples returned from the backend
         """
 
     def _run(self, program, *, args, compile_options, **kwargs):
@@ -276,11 +277,13 @@ class BaseEngine(abc.ABC):
 
             if len(values) > 1:
                 sort_order = [
-                    r.ind for c in p.circuit for r in c.reg if "Measure" in c.op.__str__()
+                    np.array([r.ind for r in c.reg])
+                    for c in p.circuit
+                    if "Measure" in c.op.__str__()
                 ]
 
                 # check for duplicate mode-measures
-                if len(sort_order) != len(set(sort_order)):
+                if len(np.hstack(sort_order)) != len(set(np.hstack(sort_order))):
                     raise RuntimeError("Modes can only be measured once inside a circuit.")
 
                 self.samples = Result.combine_samples(values, sort_order)
@@ -358,7 +361,7 @@ class LocalEngine(BaseEngine):
         values = []
         for cmd in prog.circuit:
             try:
-                # try to apply it to the backend
+                # try to apply it to the backend and, if op is a measurement, store it in values
                 val = cmd.op.apply(cmd.reg, self.backend, **kwargs)
                 if val is not None:
                     values.append(val)

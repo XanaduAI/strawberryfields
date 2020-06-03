@@ -108,21 +108,38 @@ class Result:
 
         Args:
             samples_list (list[array, tensor]): the sample measurements in a list
-            mode_order (list[int]): the mode order for the measured modes
+            mode_order (list[array]): The nested mode order for the measured modes. Must have the
+                same structure as samples_list.
 
         Returns:
-            array: the samples in raising mode order with shape ``(shots, measured_modes)``
+            array: the samples in ascending mode order with shape ``(shots, measured_modes)``
         """
-        ret = [[] for _ in samples_list[0]]
-        for i, samples in enumerate(samples_list):
-            for j, single_sample in enumerate(samples):
-                for s in single_sample:
-                    ret[j].append(s)
+        mode_order_flat = np.hstack(mode_order)
+        shots = len(samples_list[0])
+        modes = len(mode_order_flat)
 
-        for i, sam in enumerate(ret):
-            ret[i] = [j for _, j in sorted(zip(mode_order, sam))]
+        # create the correct mode order if not all modes are measured
+        if np.max(mode_order_flat) + 1 != modes:
+            shapes = np.cumsum([len(m) for m in mode_order])
+            mode_order = np.split(
+                # argsort twice returns the rank
+                np.argsort(
+                    np.argsort(
+                        mode_order_flat
+                    )
+                ), shapes)[:-1]
 
-        return np.array(ret)
+        # find the "widest" type in samples_list
+        type_list = ["c", "f", "i"]
+        while type_list[0] not in [np.array(s).dtype.kind for s in samples_list]:
+            del type_list[0]
+
+        ret = np.empty([shots, modes], dtype=type_list[0] + "8")
+
+        for m, s in zip(mode_order, samples_list):
+            ret[:, m] = s
+
+        return ret
 
     def __repr__(self):
         """String representation."""
