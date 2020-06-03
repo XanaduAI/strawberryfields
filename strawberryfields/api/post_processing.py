@@ -23,10 +23,13 @@ def number_expectation_pnr(photon_number_samples, modes=None):
     **Example:**
 
     .. code-block:: python
+
         samples = np.array([[2, 0, None],
                             [2, 2, None],
                             [2, 0, None],
                             [0, 0, None]])
+
+    Getting the expectation value for these PNR samples:
 
     >>> number_expectation_pnr(samples)
     1.0
@@ -51,10 +54,13 @@ def number_variance_pnr(photon_number_samples, modes=None):
     **Example:**
 
     .. code-block:: python
+
         samples = np.array([[2, 0, None],
                             [2, 2, None],
                             [2, 0, None],
                             [0, 0, None]])
+
+    Getting the variance for these PNR samples:
 
     >>> number_expectation_pnr(samples)
     3.0
@@ -95,7 +101,7 @@ def _checks_and_get_product(photon_number_samples, modes=None):
         all_modes = np.arange(num_modes)
 
         # Remove the modes with Nones
-        indices_for_no_measurement = np.unique(np.argwhere(photon_number_samples == None)[:,1])
+        indices_for_no_measurement = np.unique(np.argwhere(photon_number_samples == None)[:, 1])
         modes = np.delete(all_modes, indices_for_no_measurement)
 
     _check_modes(photon_number_samples, modes)
@@ -151,7 +157,9 @@ def _check_modes(samples, modes):
     out_of_bounds_modes = modes[modes > largest_valid_index]
     if out_of_bounds_modes.size > 0:
         raise Exception(
-            "Cannot specify mode indices {} for a {} mode system!".format(out_of_bounds_modes, num_modes)
+            "Cannot specify mode indices {} for a {} mode system!".format(
+                out_of_bounds_modes, num_modes
+            )
         )
 
     # TODO: remove when the returned samples no longer contain Nones
@@ -168,3 +176,6 @@ def _check_modes(samples, modes):
 
 number_expectation = number_expectation_pnr
 number_variance = number_variance_pnr
+shorthands = ["number_expectation", "number_variance"]
+
+__all__ = ["number_expectation_pnr", "number_variance_pnr"] + shorthands
