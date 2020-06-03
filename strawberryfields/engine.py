@@ -286,13 +286,22 @@ class BaseEngine(abc.ABC):
                 if len(np.hstack(sort_order)) != len(set(np.hstack(sort_order))):
                     raise RuntimeError("Modes can only be measured once inside a circuit.")
 
-                self.samples = Result.combine_samples(values, sort_order)
-
                 # pylint: disable=import-outside-toplevel
                 if self.backend_name == "tf":
                     from tensorflow import convert_to_tensor
 
+                    if self.backend_options.get("batch_size", 0):  # if batches are used
+                        self.samples = []
+                        for i in range(self.backend_options.get("batch_size", 0)):
+                            # choose a single batch from values and combine the samples; do for all batches
+                            single_batch_values = [v[i] for v in values]
+                            single_batch_samples = Result.combine_samples(single_batch_values, sort_order)
+                            self.samples.append(single_batch_samples)
+                    else:
+                        self.samples = Result.combine_samples(values, sort_order)
                     self.samples = convert_to_tensor(self.samples)
+                else:
+                    self.samples = Result.combine_samples(values, sort_order)
 
             elif len(values) == 1:
                 self.samples = values[0]
