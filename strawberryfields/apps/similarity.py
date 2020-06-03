@@ -489,7 +489,7 @@ def prob_orbit_mc(
         sample = orbit_to_sample(orbit, modes)
         prob += state.fock_prob(sample, cutoff=photons + 1)
 
-    prob = prob * orbit_cardinality(orbit, modes) / samples
+    prob = prob * (orbit_cardinality(orbit, modes) / samples)
 
     return prob
 
@@ -559,7 +559,7 @@ def feature_vector_orbits(
 ) -> list:
     r"""Calculates feature vector of orbit probabilities for the input graph.
 
-    These probabilities can be either exact or estimated using Monte Carlo estimation.
+    These probabilities can be either exact or estimated using Monte Carlo methods.
     The argument ``samples`` is set to ``None`` to get exact feature vectors by default.
     To use Monte Carlo estimation, ``samples`` can be set to the number of samples desired
     to be used in the estimation.
