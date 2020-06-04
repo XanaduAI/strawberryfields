@@ -945,7 +945,7 @@ class Dgate(Gate):
         phi (float): displacement angle :math:`\phi`
     """
 
-    def __init__(self, r, phi):
+    def __init__(self, r, phi=0.0):
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
