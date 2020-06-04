@@ -113,7 +113,7 @@ class GaussianModes:
         if self.active[i] is None:
             raise ValueError("Cannot displace mode, mode does not exist")
 
-        self.mean[i] += r*np.exp(1j*phi)
+        self.mean[i] += r * np.exp(1j * phi)
 
     def squeeze(self, r, phi, k):
         """ Implements a squeezing operation in mode k by the amount z = r*exp(1j*phi)."""

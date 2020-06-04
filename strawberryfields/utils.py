@@ -259,7 +259,7 @@ def displaced_squeezed_state(r_d, phi_d, r_s, phi_s, basis="fock", fock_dim=5, h
             ch = np.cosh(r_s)
             sh = np.sinh(r_s)
             th = np.tanh(r_s)
-            
+
             gamma = a * ch + np.conj(a) * phase_factor * sh
             N = np.exp(-0.5 * np.abs(a) ** 2 - 0.5 * np.conj(a) ** 2 * phase_factor * th)
 

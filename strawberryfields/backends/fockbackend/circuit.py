@@ -567,7 +567,7 @@ class Circuit:
         Applies a two-mode squeezing gate.
         """
         mat = ops.two_mode_squeezing(r, theta, self._trunc)
-        self._state = self.apply_twomode_gate(mat,  [mode1, mode2], gate="S2gate")
+        self._state = self.apply_twomode_gate(mat, [mode1, mode2], gate="S2gate")
 
     def kerr_interaction(self, kappa, mode):
         """
@@ -773,7 +773,10 @@ class Circuit:
         )
         alpha = homodyne_sample * sqrt(m_omega_over_hbar / 2)
 
-        composed = np.dot(ops.phase(phi, self._trunc), ops.displacement(np.abs(alpha), np.angle(alpha), self._trunc))
+        composed = np.dot(
+            ops.phase(phi, self._trunc),
+            ops.displacement(np.abs(alpha), np.angle(alpha), self._trunc),
+        )
         eigenstate = self.apply_gate_BLAS(composed, [0], state=inf_squeezed_vac, pure=True, n=1)
 
         vac_state = np.array(

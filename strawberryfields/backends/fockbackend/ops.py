@@ -275,6 +275,7 @@ def two_mode_squeezing(r, theta, trunc):
     """
     return two_mode_squeezing_tw(r, theta, cutoff=trunc).transpose((0, 2, 1, 3))
 
+
 @functools.lru_cache()
 def kerr(kappa, trunc):
     r"""
@@ -382,7 +383,8 @@ def coherentState(r, phi, trunc):
     r"""
     The coherent state :math:`D(\alpha)\ket{0}`.
     """
-    alpha = r*np.exp(1j*phi)
+    alpha = r * np.exp(1j * phi)
+
     def entry(n):
         """coherent summation term"""
         return alpha ** n / sqrt(fac(n))
@@ -419,7 +421,7 @@ def displacedSqueezed(r_d, phi_d, r_s, phi_s, trunc):
     ch = cosh(r_s)
     sh = sinh(r_s)
     th = tanh(r_s)
-    alpha = r_d*np.exp(1j*phi_d)
+    alpha = r_d * np.exp(1j * phi_d)
 
     gamma = alpha * ch + np.conj(alpha) * ph * sh
     hermite_arg = gamma / np.sqrt(ph * np.sinh(2 * r_s) + 1e-10)

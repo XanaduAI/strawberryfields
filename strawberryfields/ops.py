@@ -615,7 +615,10 @@ class DisplacedSqueezed(Preparation):
 
     def _decompose(self, reg, **kwargs):
         # squeezed state preparation followed by a displacement gate
-        return [Command(Squeezed(self.p[2], self.p[3]), reg), Command(Dgate(self.p[0], self.p[1]), reg)]
+        return [
+            Command(Squeezed(self.p[2], self.p[3]), reg),
+            Command(Dgate(self.p[0], self.p[1]), reg),
+        ]
 
 
 class Fock(Preparation):

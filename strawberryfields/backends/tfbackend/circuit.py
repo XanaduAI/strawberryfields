@@ -319,7 +319,13 @@ class Circuit:
             phi_s = self._maybe_batch(phi_s)
             self._check_incompatible_batches(r_d, phi_d, r_s, phi_s)
             displaced_squeezed = ops.displaced_squeezed(
-                r_d, phi_d, r_s, phi_s, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
+                r_d,
+                phi_d,
+                r_s,
+                phi_s,
+                D=self._cutoff_dim,
+                pure=self._state_is_pure,
+                batched=self._batched,
             )
             self._replace_and_update(displaced_squeezed, mode)
 
@@ -433,7 +439,14 @@ class Circuit:
         phi = self._maybe_batch(phi)
         self._check_incompatible_batches(theta, phi)
         new_state = ops.beamsplitter(
-            theta, phi, mode1, mode2, self._state, self._cutoff_dim, self._state_is_pure, self._batched
+            theta,
+            phi,
+            mode1,
+            mode2,
+            self._state,
+            self._cutoff_dim,
+            self._state_is_pure,
+            self._batched,
         )
         self._update_state(new_state)
 
@@ -839,7 +852,13 @@ class Circuit:
                 tf.convert_to_tensor(meas_result * np.sqrt(m_omega_over_hbar / 2))
             )
             quad_eigenstate = ops.displacement(
-                tf.math.abs(displacement_size), tf.math.angle(displacement_size), 0, inf_squeezed_vac, self._cutoff_dim, True, self._batched
+                tf.math.abs(displacement_size),
+                tf.math.angle(displacement_size),
+                0,
+                inf_squeezed_vac,
+                self._cutoff_dim,
+                True,
+                self._batched,
             )
             homodyne_eigenstate = ops.phase_shifter(
                 phi, 0, quad_eigenstate, self._cutoff_dim, True, self._batched

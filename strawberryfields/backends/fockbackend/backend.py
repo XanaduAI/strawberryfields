@@ -156,7 +156,9 @@ class FockBackend(BaseFock):
         self.circuit.prepare_mode_squeezed(r, phi, self._remap_modes(mode))
 
     def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
-        self.circuit.prepare_mode_displaced_squeezed(r_d, phi_d, r_s, phi_s, self._remap_modes(mode))
+        self.circuit.prepare_mode_displaced_squeezed(
+            r_d, phi_d, r_s, phi_s, self._remap_modes(mode)
+        )
 
     def prepare_thermal_state(self, nbar, mode):
         self.circuit.prepare_mode_thermal(nbar, self._remap_modes(mode))
