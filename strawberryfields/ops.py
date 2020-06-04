@@ -565,8 +565,9 @@ class Coherent(Preparation):
         super().__init__([r, p])
 
     def _apply(self, reg, backend, **kwargs):
-        r = self.p[0]
-        phi = self.p[1]
+        r = evaluate_complex_parameter(self.p[0], self.p[0])
+        phi = evaluate_complex_parameter(self.p[1], self.p[1])
+
         backend.prepare_coherent_state(r, phi, *reg)
 
 
