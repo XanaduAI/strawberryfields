@@ -127,7 +127,7 @@ def backend(monkeypatch):
         # mock out the base backend
         m.setattr(dummy_backend, "add_mode", lambda n: None)
         m.setattr(dummy_backend, "del_mode", lambda n: None)
-        m.setattr(dummy_backend, "displacement", lambda alpha, modes: None)
+        m.setattr(dummy_backend, "displacement", lambda r, phi, modes: None)
         m.setattr(dummy_backend, "prepare_coherent_state", lambda z, modes: None)
         m.setattr(dummy_backend, "squeeze", lambda r, modes: None)
         m.setattr(dummy_backend, "rotation", lambda r, modes: None)
