@@ -124,7 +124,7 @@ class GaussianBackend(BaseGaussian):
         self.circuit.squeeze(r, phi, mode)
 
     def beamsplitter(self, theta, phi, mode1, mode2):
-        self.circuit.beamsplitter(theta, phi, mode1, mode2)
+        self.circuit.beamsplitter(-theta, -phi, mode1, mode2)
 
     def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         r"""Measure a :ref:`phase space quadrature <homodyne>` of the given mode.
