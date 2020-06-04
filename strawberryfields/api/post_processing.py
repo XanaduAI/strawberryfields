@@ -86,7 +86,7 @@ def _checks_and_get_product(photon_number_samples, modes=None):
 
     Args:
         photon_number_samples (ndarray): the photon number samples with a shape
-            of (shots, modes) modes=None
+            of (shots, modes)
         modes (Sequence): a flat sequence containing indices of modes to get
             the expectation value for
 
