@@ -13,6 +13,7 @@
 # limitations under the License.
 r"""Unit tests for engine.py"""
 import pytest
+import numpy as np
 
 import strawberryfields as sf
 from strawberryfields import ops

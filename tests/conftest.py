@@ -129,7 +129,7 @@ def backend(monkeypatch):
         m.setattr(dummy_backend, "del_mode", lambda n: None)
         m.setattr(dummy_backend, "displacement", lambda r, phi, modes: None)
         m.setattr(dummy_backend, "prepare_coherent_state", lambda z, modes: None)
-        m.setattr(dummy_backend, "squeeze", lambda r, modes: None)
+        m.setattr(dummy_backend, "squeeze", lambda r, phi, modes: None)
         m.setattr(dummy_backend, "rotation", lambda r, modes: None)
         m.setattr(dummy_backend, "beamsplitter", lambda t, r, m1, m2: None)
         m.setattr(dummy_backend, "measure_homodyne", lambda phi, modes, select, shots: 5)
