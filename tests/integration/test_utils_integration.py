@@ -358,12 +358,13 @@ class TestExtractUnitary:
     def test_extract_displacement(self, backend_name, cutoff, tol):
         """test that the displacement gate is correctly extracted"""
         prog = sf.Program(1)
-        alpha = 0.432 - 0.8543j
+        r = 0.95732
+        phi = -1.10262
         with prog.context as q:
-            ops.Dgate(np.abs(alpha), np.angle(alpha)) | q
+            ops.Dgate(r, phi) | q
 
         U = utils.extract_unitary(prog, cutoff_dim=cutoff, backend=backend_name)
-        expected = disp_U(alpha, cutoff)
+        expected = disp_U(r, phi, cutoff)
 
         if isinstance(U, tf.Tensor):
             U = U.numpy()
@@ -379,7 +380,7 @@ class TestExtractUnitary:
             ops.BSgate(theta, phi) | q
 
         U = utils.extract_unitary(prog, cutoff_dim=cutoff, backend=backend_name)
-        expected = bs_U(np.cos(theta), np.sin(theta), phi, cutoff)
+        expected = bs_U(theta, phi, cutoff)
 
         if isinstance(U, tf.Tensor):
             U = U.numpy()
