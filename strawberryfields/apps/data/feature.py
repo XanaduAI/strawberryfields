@@ -36,13 +36,15 @@ class FeatureDataset(ABC):
             detection (i.e., detectors of zero or some photons) or with photon-number-resolving
             detectors
         method (str): method used to calculate the feature vectors; "Exact" for exact calculation
-        or "MC" for Monte Carlo estimation
+            or "MC" for Monte Carlo estimation
         unit (str): Signifies the unit of construction of feature vectors; "orbits" or "events"
-        unitData (list): list of orbits/events used to construct the feature vectors
+        unitData (list): list of orbits/events used to construct the feature vectors where each
+            orbit is a list of integers and each event can be provided as a tuple
+            ``(total_photon_number, max_photon_per_mode)``
         n_vectors (int): number of feature vectors provided in the dataset
         n_features (int): number of features in each vector
-        featuresData (array): array of feature vectors
-        matData (array): array of adjacency matrices of graphs for which feature vectors
+        featuresData (array): numpy array of feature vectors
+        matData (array): numpy array of adjacency matrices of graphs for which feature vectors
             were calculated
     """
 
@@ -52,7 +54,7 @@ class FeatureDataset(ABC):
         """Base name of files containing the data stored in the ``./feature_data/`` directory.
 
         For each dataset, feature vectors, and the corresponding adjacency matrices are provided
-        in two separate ``.npy`` format files.
+        as numpy arrays in two separate ``.npy`` format files.
 
         Given ``_data_filename = example`` and ``method = MC``, feature vectors should be stored
         in ``./feature_data/example_MC_fv.npy`` and the array of corresponding adjacency matrices
@@ -88,7 +90,7 @@ class FeatureDataset(ABC):
 
     def __init__(self):
         self.featuresData = np.load(DATA_PATH + self._data_filename + "_" + self.method + "_fv.npy", allow_pickle=True)
-        self.matData = np.load(DATA_PATH + self._data_filename + "_mat.npy", allow_pickle=True )
+        self.matData = np.load(DATA_PATH + self._data_filename + "_mat.npy", allow_pickle=True)
         self.n_vectors, self.n_features = self.featuresData.shape
 
     def __iter__(self):
@@ -101,13 +103,23 @@ class QM9Exact(FeatureDataset):
     :cite:`Ruddigkeit2012, ramakrishnan2014`, are provided. Coulomb matrices are used
     as adjacency matrices to represent molecules in this case.
 
-    The Monte-Carlo estimated feature vectors of these molecules are also available, in
-    ``QM9MC`` class.
+    The Monte-Carlo estimated feature vectors of these 1100 molecules are also available,
+    in ``QM9MC`` class.
     """
 
     _data_filename = "QM9"
     unit = "orbits"
-    unitData = [[1,1], [2], [1,1,1,1], [2,1,1], [2,2], [1,1,1,1,1,1], [2,1,1,1,1], [2,2,1,1], [2,2,2]]
+    unitData = [
+        [1, 1],
+        [2],
+        [1, 1, 1, 1],
+        [2, 1, 1],
+        [2, 2],
+        [1, 1, 1, 1, 1, 1],
+        [2, 1, 1, 1, 1],
+        [2, 2, 1, 1],
+        [2, 2, 2],
+    ]
     n_mean = 6
     threshold = True
     method = "Exact"
@@ -119,13 +131,23 @@ class QM9MC(FeatureDataset):
     :cite:`Ruddigkeit2012, ramakrishnan2014`, are provided. Coulomb matrices are used
     as adjacency matrices to represent molecules in this case.
 
-    The exactly-calculated feature vectors of these molecules are also available, in
-    ``QM9Exact`` class.
+    The exactly-calculated feature vectors of these 1100 molecules are also available,
+    in ``QM9Exact`` class.
     """
 
     _data_filename = "QM9"
     unit = "orbits"
-    unitData = [[1,1], [2], [1,1,1,1], [2,1,1], [2,2], [1,1,1,1,1,1], [2,1,1,1,1], [2,2,1,1], [2,2,2]]
+    unitData = [
+        [1, 1],
+        [2],
+        [1, 1, 1, 1],
+        [2, 1, 1],
+        [2, 2],
+        [1, 1, 1, 1, 1, 1],
+        [2, 1, 1, 1, 1],
+        [2, 2, 1, 1],
+        [2, 2, 2],
+    ]
     n_mean = 8
     threshold = True
     method = "MC"
@@ -139,7 +161,17 @@ class MUTAG(FeatureDataset):
 
     _data_filename = "MUTAG"
     unit = "orbits"
-    unitData = [[1,1], [2], [1,1,1,1], [2,1,1], [2,2], [1,1,1,1,1,1], [2,1,1,1,1], [2,2,1,1], [2,2,2]]
+    unitData = [
+        [1, 1],
+        [2],
+        [1, 1, 1, 1],
+        [2, 1, 1],
+        [2, 2],
+        [1, 1, 1, 1, 1, 1],
+        [2, 1, 1, 1, 1],
+        [2, 2, 1, 1],
+        [2, 2, 2],
+    ]
     n_mean = 8
     threshold = True
     method = "exact"

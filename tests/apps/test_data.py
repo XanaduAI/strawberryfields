@@ -24,28 +24,30 @@ from strawberryfields.apps import data
 pytestmark = pytest.mark.apps
 
 GRAPH_DATASETS_LIST = [
-    data.Planted,
-    data.TaceAs,
-    data.Mutag0,
-    data.Mutag1,
-    data.Mutag2,
-    data.Mutag3,
-    data.PHat,
+    data.sample.Planted,
+    data.sample.TaceAs,
+    data.sample.Mutag0,
+    data.sample.Mutag1,
+    data.sample.Mutag2,
+    data.sample.Mutag3,
+    data.sample.PHat,
 ]
 
-MOLECULE_DATASETS_LIST = [data.Formic]
+MOLECULE_DATASETS_LIST = [data.sample.Formic]
 
-DATASETS_LIST = GRAPH_DATASETS_LIST + MOLECULE_DATASETS_LIST
+SAMPLE_DATASETS_LIST = GRAPH_DATASETS_LIST + MOLECULE_DATASETS_LIST
+
+FEATURE_DATASETS_LIST = [data.feature.QM9Exact]
 
 
-@pytest.mark.parametrize("datasets", DATASETS_LIST)
-class TestDatasets:
-    """Tests for the dataset classes in ``data`` module, which should all be listed by the
-    ``DATASETS_LIST`` variable above."""
+@pytest.mark.parametrize("datasets", SAMPLE_DATASETS_LIST)
+class TestSampleDatasets:
+    """Tests for the dataset classes in ``data.sample`` module, which should all be listed
+    by the ``SAMPLE_DATASETS_LIST`` variable above."""
 
     @pytest.fixture
     def dataset(self, datasets):
-        """Fixture for loading each of the datasets in ``DATASETS_LIST``"""
+        """Fixture for loading each of the datasets in ``SAMPLE_DATASETS_LIST``"""
         yield datasets()
 
     patch_samples = [
@@ -63,11 +65,11 @@ class TestDatasets:
 
     @pytest.fixture
     def dataset_patched(self, monkeypatch, datasets):
-        """Fixture for loading each of the datasets in ``DATASETS_LIST`` with the ``__init__``
-        monkeypatched to load the above ``patch_samples``."""
+        """Fixture for loading each of the datasets in ``SAMPLE_DATASETS_LIST`` with the
+        ``__init__`` monkeypatched to load the above ``patch_samples``."""
 
         def mock_init(_self):
-            """Replacement ``__init__`` for all the datasets in ``DATASETS_LIST``"""
+            """Replacement ``__init__`` for all the datasets in ``SAMPLE_DATASETS_LIST``"""
             # pylint: disable=protected-access
             _self.data = scipy.sparse.csr_matrix(self.patch_samples)
             _self.n_samples, _self.modes = 10, 4
@@ -209,3 +211,119 @@ class TestMoleculeDatasets:
     def test_T_non_negative(self, dataset):
         """Test if T is non-negative"""
         assert dataset.T >= 0
+
+
+@pytest.mark.parametrize("datasets", FEATURE_DATASETS_LIST)
+class TestFeatureDatasets:
+    """Tests for the dataset classes in ``data.feature`` module, which should all be listed
+    by the ``FEATURE_DATASETS_LIST`` variable above."""
+
+    @pytest.fixture
+    def dataset(self, datasets):
+        """Fixture for loading each of the datasets in ``FEATURE_DATASETS_LIST``"""
+        yield datasets()
+
+    patch_orbits = [
+        [1, 1],
+        [2],
+        [3],
+        [1, 1, 1, 1],
+        [2, 2],
+    ]
+
+    patch_feature_vectors = np.array([[0.2, 0.01, 0, 0.1, 0.05], [0.1, 0.02, 0, 0.05, 0.01],])
+
+    patch_adjacency_matrices = np.array(
+        [
+            [
+                [1.40801884, 1.37064318, 0.74647764, 0.8656113, 0.79760222],
+                [1.37064318, 1.14609425, 1.31463115, 0.48630012, 1.44034118],
+                [0.74647764, 1.31463115, 1.03330415, 1.64344102, 1.31083479],
+                [0.8656113, 0.48630012, 1.64344102, 0.28176324, 1.43776473],
+                [0.79760222, 1.44034118, 1.31083479, 1.43776473, 0.1894344],
+            ],
+            [
+                [0.07507458, 0.99955953, 1.1432025, 0.63240514],
+                [0.99955953, 1.71093457, 1.10163201, 0.99179716],
+                [1.1432025, 1.10163201, 0.07714951, 0.74115172],
+                [0.63240514, 0.99179716, 0.74115172, 0.41063534],
+            ],
+        ]
+    )
+
+    @pytest.fixture
+    def dataset_patched(self, monkeypatch, datasets):
+        """Fixture for loading each of the datasets in ``FEATURE_DATASETS_LIST`` with the
+        ``__init__`` monkeypatched to load the above ``patch_feature_vectors``."""
+
+        def mock_init(_self):
+            """Replacement ``__init__`` for all the datasets in ``FEATURE_DATASETS_LIST``"""
+            # pylint: disable=protected-access
+            _self.featuresData = self.patch_feature_vectors
+            _self.matData = self.patch_adjacency_matrices
+            self.n_vectors, self.n_features = 2, 5
+
+        with monkeypatch.context() as m:
+            m.setattr(datasets, "__init__", mock_init)
+            m.setattr(datasets, "unitData", self.patch_orbits)
+            yield datasets()
+
+    def test_filename(self, dataset):
+        """Test if filename is valid string for each dataset"""
+        # pylint: disable=protected-access
+        assert isinstance(dataset._data_filename, str)
+
+    def test_n_mean(self, dataset):
+        """Test if mean photon number is valid float or int for each dataset"""
+        assert isinstance(dataset.n_mean, (float, int))
+        assert dataset.n_mean >= 0
+
+    def test_threshold(self, dataset):
+        """Test if threshold flag is valid bool for each dataset"""
+        assert isinstance(dataset.threshold, bool)
+
+    def test_unit(self, dataset):
+        """Test if unit is valid string for each dataset"""
+        # pylint: disable=protected-access
+        assert isinstance(dataset.unit, str)
+        allowed = ["Orbits", "orbits", "Events", "events"]
+        assert dataset.unit in allowed
+
+    def test_method(self, dataset):
+        """Test if method is valid string for each dataset"""
+        # pylint: disable=protected-access
+        assert isinstance(dataset.method, str)
+        allowed = ["Exact", "exact", "MC"]
+        assert dataset.method in allowed
+
+    def test_unitData(self, dataset):
+        """Test if unitData is valid list for each dataset"""
+        assert isinstance(dataset.unitData, list)
+
+    # pylint: disable=unnecessary-comprehension
+    def test_iter(self, dataset_patched):
+        """Test if dataset class allows correct iteration over itself"""
+        assert [i for i in dataset_patched] == self.patch_feature_vectors
+
+    # pylint: disable=unnecessary-comprehension
+    def test_slice(self, dataset_patched):
+        """Test if dataset class allows correct slicing over items"""
+        assert [i for i in dataset_patched[1, 4, 2]] == [
+            self.patch_feature_vectors[1],
+            self.patch_feature_vectors[3],
+        ]
+        assert [i for i in dataset_patched[slice(1, 4, 2)]] == [
+            self.patch_feature_vectors[1],
+            self.patch_feature_vectors[3],
+        ]
+
+    def test_data_dim_correct(self, dataset_patched):
+        """Test if features and matrix data of dataset has correct dimensions."""
+        n, m = self.patch_feature_vectors.shape
+        (p,) = self.patch_adjacency_matrices.shape
+        q = len(self.patch_orbits)
+
+        assert n == self.n_vectors
+        assert m == self.n_features
+        assert n == p
+        assert m == q
