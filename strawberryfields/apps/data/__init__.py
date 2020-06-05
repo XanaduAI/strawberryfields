@@ -11,17 +11,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Data module provide pre-calculated datasets of GBS kernels
- and GBS samples.
+"""Data module providing pre-calculated datasets of simulated GBS kernels
+and GBS samples.
 
 .. currentmodule:: strawberryfields.apps.data
 .. autosummary::
     :toctree: api
 
-	GBS Sample datasets
-	GBS Kernel datasets
+	sample
+	feature
 """
 
 import strawberryfields.apps.data.sample
 import strawberryfields.apps.data.feature
-from strawberryfields.apps.data.sample import Planted, TaceAs, PHat, Mutag0, Mutag1, Mutag2, Mutag3, Formic
+from strawberryfields.apps.data.sample import (
+    Planted,
+    TaceAs,
+    PHat,
+    Mutag0,
+    Mutag1,
+    Mutag2,
+    Mutag3,
+    Formic,
+)
