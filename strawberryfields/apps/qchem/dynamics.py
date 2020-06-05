@@ -97,6 +97,7 @@ def dynamics_observable(t: float, Ul: np.ndarray, w: np.ndarray) -> Callable:
     modes = len(Ul)
     theta = -w * 100.0 * c * t * 1e-15 * (2 * pi)
 
+    # pylint: disable=expression-not-assigned,pointless-statement
     @operation(modes)
     def op(q):
         sf.ops.Interferometer(Ul.T) | q
