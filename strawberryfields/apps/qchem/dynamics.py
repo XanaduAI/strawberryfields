@@ -64,7 +64,7 @@ This module contains functions for implementing this algorithm. The function `dy
 return a custom ``sf`` operation that contains the required unitary and rotation operations
 explained in steps 2-4 of the algorithm.
 """
-from typing import Any
+from types import FunctionType
 
 from scipy.constants import c, pi
 
@@ -74,13 +74,13 @@ import strawberryfields as sf
 from strawberryfields.utils import operation
 
 
-def dynamics_observable(t: float, Ul: np.ndarray, w: np.ndarray) -> Any:
+def dynamics_observable(t: float, Ul: np.ndarray, w: np.ndarray) -> FunctionType:
     r"""Generates a custom ``sf`` operation for performing the transformation
     :math:`U(t) = U_l^\dagger e^{-i\hat{H}t/\hbar} U_l` on a given state.
 
     **Example usage:**
 
-    >>> t = 0  # time
+    >>> t = 0.0  # time
     >>> Ul = np.array([[0.707106781, -0.707106781],
     >>>                [0.707106781, 0.707106781]])  # normal to local transformation
     >>> w = np.array([3914.92, 3787.59])  # frequencies
@@ -92,11 +92,8 @@ def dynamics_observable(t: float, Ul: np.ndarray, w: np.ndarray) -> Any:
         w (array): normal mode frequencies (:math:`\mbox{cm}^{-1}`)
 
     Returns:
-        custom ``sf`` operation function
+        op (FunctionType): custom ``sf`` operation function
     """
-    if t < 0:
-        raise ValueError("time must be zero or positive")
-
     modes = len(Ul)
     theta = -w * 100.0 * c * t * 1e-15 * (2 * pi)
 
