@@ -42,4 +42,4 @@ w2 = np.array([3914.92, 3787.59, 1627.01])
 def test_type(time, unitary, frequency):
     """Test if the function ``strawberryfields.apps.qchem.dynamics.dynamics_observable`` outputs
     the correct type"""
-    assert type(dynamics.dynamics_observable(time, unitary, frequency)) == FunctionType
+    isinstance(type(dynamics.dynamics_observable(time, unitary, frequency)), FunctionType)
