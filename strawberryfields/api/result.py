@@ -114,18 +114,34 @@ class Result:
         Returns:
             array: the samples in ascending mode order with shape ``(shots, measured_modes)``
         """
+        samples_list_flat = np.hstack(samples_list).T
         mode_order_flat = np.hstack(mode_order)
+
         shots = len(samples_list[0])
-        modes = len(mode_order_flat)
+        modes = len(set(mode_order_flat))
+
+        shapes = np.cumsum([len(m) for m in mode_order])
 
         # create the correct mode order if not all modes are measured
         if np.max(mode_order_flat) + 1 != modes:
-            shapes = np.cumsum([len(m) for m in mode_order])
-            mode_order = np.split(
-                # argsort twice returns the rank
-                np.argsort(np.argsort(mode_order_flat)),
-                shapes,
-            )[:-1]
+            # argsort twice returns the rank
+            mode_order_flat = np.argsort(np.argsort(mode_order_flat))
+            mode_order = np.split(mode_order_flat, shapes)[:-1]
+
+        # remove duplicate mode-measurements and only return that modes last measurement
+        if len(mode_order_flat) != modes:
+            modes = len(mode_order_flat)
+
+            _, idx = np.unique(mode_order_flat[::-1], return_index=True)
+            mode_order_trimmed = mode_order_flat[::-1][sorted(idx)][::-1]
+
+            # remove the duplicate mode measurement
+            intersect = np.intersect1d(np.arange(modes), idx)
+            samples_list_trimmed = samples_list_flat[intersect]
+
+            # reshape the mode-order and samples lists
+            samples_list = [np.array(s) for s in np.split(samples_list_trimmed, shapes)[:-1]]
+            mode_order = np.split(mode_order_trimmed, shapes)[:-1]
 
         # find the "widest" type in samples_list
         type_list = ["c", "f", "i"]
