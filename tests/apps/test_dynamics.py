@@ -19,6 +19,8 @@ import pytest
 
 from types import FunctionType
 
+import strawberryfields as sf
+
 from strawberryfields.apps.qchem import dynamics
 
 pytestmark = pytest.mark.apps
@@ -43,3 +45,14 @@ def test_type(time, unitary, frequency):
     """Test if the function ``strawberryfields.apps.qchem.dynamics.dynamics_observable`` outputs
     the correct type"""
     isinstance(type(dynamics.dynamics_observable(time, unitary, frequency)), FunctionType)
+
+
+@pytest.mark.parametrize("time, unitary, frequency", [(t1, U1, w1), (t2, U2, w2)])
+def test_type(time, unitary, frequency):
+    """Test if the function ``strawberryfields.apps.qchem.dynamics.dynamics_observable`` outputs
+    the correct number of operations"""
+    obs = dynamics.dynamics_observable(time, unitary, frequency)
+    gbs = sf.Program(len(unitary))
+    with gbs.context as q:
+        obs() | q
+    assert len(gbs.circuit) == (len(unitary) + 2)
