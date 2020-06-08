@@ -39,7 +39,7 @@ class FeatureDataset(ABC):
             or "MC" for Monte Carlo estimation
         unit (str): Signifies the unit of construction of feature vectors; "orbits" or "events"
         unitData (list): list of orbits/events used to construct the feature vectors where each
-            orbit is a list of integers and each event can be provided as a tuple
+            orbit is a list of integers and each event can be provided as a tuple of
             ``(total_photon_number, max_photon_per_mode)``
         n_vectors (int): number of feature vectors provided in the dataset
         n_features (int): number of features in each vector
@@ -136,19 +136,9 @@ class QM9MC(FeatureDataset):
     """
 
     _data_filename = "QM9"
-    unit = "orbits"
-    unitData = [
-        [1, 1],
-        [2],
-        [1, 1, 1, 1],
-        [2, 1, 1],
-        [2, 2],
-        [1, 1, 1, 1, 1, 1],
-        [2, 1, 1, 1, 1],
-        [2, 2, 1, 1],
-        [2, 2, 2],
-    ]
-    n_mean = 8
+    unit = "events"
+    unitData = [(2, 2), (4, 2), (6, 2)]
+    n_mean = 6
     threshold = True
     method = "MC"
 
@@ -156,7 +146,7 @@ class QM9MC(FeatureDataset):
 class MUTAG(FeatureDataset):
     """Exactly-calculated feature vectors of the 180 graphs in `MUTAG dataset
     <https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets>`__
-    :cite:`debnath1991structure, kriege2012subgraph` are provided.
+    used in :cite:`debnath1991structure, kriege2012subgraph` are provided.
     """
 
     _data_filename = "MUTAG"
