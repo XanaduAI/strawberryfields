@@ -119,10 +119,11 @@ class Result:
         shots = len(samples_list[0])
 
         mode_order_flat = np.hstack(mode_order)
-        len_modes = len(set(mode_order_flat))
+        len_modes = len(np.unique(mode_order_flat))
 
         # remove duplicate mode-measurements and only return the modes from the last measurement
-        if len(mode_order_flat) != len_modes:
+        duplicate_mode_measurements = len(mode_order_flat) != len_modes
+        if duplicate_mode_measurements:
             # change to list to allow updates via reference, and split samples into shots
             mode_order_list = [list(m) for m in mode_order]
             samples_shot_list = [[list(s[i]) for s in samples_list] for i in range(shots)]
@@ -149,7 +150,8 @@ class Result:
 
         # create the correct mode order if not all modes are measured
         mode_order_flat = np.hstack(mode_order)
-        if np.max(mode_order_flat) + 1 != len_modes:
+        not_all_modes_measured = np.max(mode_order_flat) + 1 != len_modes
+        if not_all_modes_measured:
             shapes = np.cumsum([len(m) for m in mode_order])
             # argsort twice returns the rank
             mode_order_flat = np.argsort(np.argsort(mode_order_flat))
