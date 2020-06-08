@@ -2,6 +2,20 @@
 
 <h3>New features since last release</h3>
 
+
+* Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X architecture. [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
+
+* Adds `diagonal_expectation` method for the `BaseFockState` class, which returns
+  the expectation value of any operator that is diagonal in the number basis.
+  [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
+
+* Adds `parity_expectation` method as an instance of `diagonal_expectation` for
+  the `BaseFockState` class, and its own function for `BaseGaussianState`. 
+  This returns the expectation value of the parity operator,
+  defined as (-1)^N.
+  [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389) 
+
+
 <h3>Improvements</h3>
 
 * Modifies the rectangular interferometer decomposition to make it more
@@ -9,6 +23,10 @@
   using Clements :math:`T` matrices, the decomposition now directly produces
   Mach-Zehnder interferometers corresponding to on-chip phases.
   [(#363)](https://github.com/XanaduAI/strawberryfields/pull/363)
+
+* Changes the `number_expectation` method for the `BaseFockState` class to be an instance
+  of `diagonal_expectation`. 
+  [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
 <h3>Breaking Changes</h3>
 
@@ -21,7 +39,8 @@
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Shreya P. Kumar
+Jack Ceroni, Theodor Isacsson, Josh Izaac, Shreya P. Kumar, Nicolás Quesada
+
 
 
 # Release 0.14.0 (current release)
