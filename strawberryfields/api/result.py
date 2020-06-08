@@ -14,6 +14,7 @@
 """
 This module provides a class that represents the result of a quantum computation.
 """
+import itertools as it
 import numpy as np
 
 
@@ -114,41 +115,51 @@ class Result:
         Returns:
             array: the samples in ascending mode order with shape ``(shots, measured_modes)``
         """
-        samples_list_flat = np.hstack(samples_list).T
-        mode_order_flat = np.hstack(mode_order)
 
         shots = len(samples_list[0])
-        modes = len(set(mode_order_flat))
 
-        shapes = np.cumsum([len(m) for m in mode_order])
+        mode_order_flat = np.hstack(mode_order)
+        len_modes = len(set(mode_order_flat))
+
+        # remove duplicate mode-measurements and only return that modes last measurement
+        if len(mode_order_flat) != len_modes:
+            # change to list to allow updates via reference, and split samples into shots
+            mode_order_list = [list(m) for m in mode_order]
+            samples_shot_list = [[list(s[i]) for s in samples_list] for i in range(shots)]
+
+            combos = it.combinations(range(len(mode_order_list)), 2)
+
+            # go through each combination of mode orders (one per measurement) and delete
+            # the first occurence of any duplicates; also delete corresponding sample(s)
+            for a, b in it.combinations(mode_order_list, 2):
+                intersect, *idx = np.intersect1d(a, b, return_indices=True)
+                k = combos.__next__()[0]
+                for i, inter in enumerate(intersect):
+                    a.remove(inter)
+                    for j in range(shots):
+                        s_val = samples_shot_list[j][k][idx[i][0]]
+                        samples_shot_list[j][k].remove(s_val)
+
+            # reshape into a list of arrays, ignoring empty ones
+            mode_order = [np.array(m) for m in mode_order_list if m]
+            samples_list = [np.array([s]) for s in zip(*samples_shot_list) if s[0]]
+
+            shapes = np.cumsum([len(m) for m in mode_order])
 
         # create the correct mode order if not all modes are measured
-        if np.max(mode_order_flat) + 1 != modes:
+        mode_order_flat = np.hstack(mode_order)
+        if np.max(mode_order_flat) + 1 != len_modes:
+            shapes = np.cumsum([len(m) for m in mode_order])
             # argsort twice returns the rank
             mode_order_flat = np.argsort(np.argsort(mode_order_flat))
             mode_order = np.split(mode_order_flat, shapes)[:-1]
-
-        # remove duplicate mode-measurements and only return that modes last measurement
-        if len(mode_order_flat) != modes:
-            modes = len(mode_order_flat)
-
-            _, idx = np.unique(mode_order_flat[::-1], return_index=True)
-            mode_order_trimmed = mode_order_flat[::-1][sorted(idx)][::-1]
-
-            # remove the duplicate mode measurement
-            intersect = np.intersect1d(np.arange(modes), idx)
-            samples_list_trimmed = samples_list_flat[intersect]
-
-            # reshape the mode-order and samples lists
-            samples_list = [np.array(s) for s in np.split(samples_list_trimmed, shapes)[:-1]]
-            mode_order = np.split(mode_order_trimmed, shapes)[:-1]
 
         # find the "widest" type in samples_list
         type_list = ["c", "f", "i"]
         while type_list[0] not in [np.array(s).dtype.kind for s in samples_list]:
             del type_list[0]
 
-        ret = np.empty([shots, modes], dtype=type_list[0] + "8")
+        ret = np.empty([shots, len_modes], dtype=type_list[0] + "8")
 
         for m, s in zip(mode_order, samples_list):
             ret[:, m] = s
