@@ -15,7 +15,7 @@ r"""
 Submodule for computing gradients and evaluating cost functions with respect to GBS circuits
 
 In the context of stochastic optimization, cost functions are expressed as expectation values
-over the GBS distribution. Within the WAW parametrization, gradients of cost functions can be
+over the GBS distribution. Within the WAW parametrization, gradients of cost functions can also be
 expressed as expectation values over the GBS distribution. This module contains methods for
 calculating these gradients and for using gradient-based methods to optimize GBS circuits. In the
 case of optimization with respect to a Kullback-Leibler divergence or log-likelihood cost
