@@ -156,12 +156,13 @@ class TestStochastic:
         probs_init = [vgbs.prob_sample(np.zeros(dim - 1), s) for s in possible_samples]
 
         cost = sum([probs[i] * h(s) for i, s in enumerate(possible_samples)])
-        cost_reparam = sum(
-            [
-                probs_init[i] * cost_fn.h_reparametrized(s, params)
-                for i, s in enumerate(possible_samples)
-            ]
-        )
+
+        cost_reparam_sum = [
+            probs_init[i] * cost_fn.h_reparametrized(s, params)
+            for i, s in enumerate(possible_samples)
+        ]
+
+        cost_reparam = sum(cost_reparam_sum)
 
         assert np.allclose(cost, cost_reparam)
 
