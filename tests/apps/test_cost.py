@@ -192,7 +192,9 @@ class TestStochastic:
         h1 = cost_fn.h_reparametrized(ones[0], params)
         eval_expected = (h0 + h1) * 0.5
 
-        eval = cost_fn(params, 2 * n_samples)
+        eval = cost_fn(params, 2 * n_samples)  # Note that calling an instance of Stochastic uses
+        # the evaluate method
+
         assert np.allclose(eval, eval_expected)
 
     @pytest.mark.parametrize("threshold", [True, False])
