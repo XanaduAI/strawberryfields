@@ -146,8 +146,9 @@ class TestStochastic:
 
     @pytest.mark.parametrize("threshold", [False])
     def test_h_reparametrized(self, vgbs, dim, params):
-        """Test that h_reparametrized behaves as expected by calculating the cost function over
-        a fixed set of PNR samples using both the reparametrized and non-reparametrized methods"""
+        """Test that the h_reparametrized method behaves as expected by calculating the cost
+        function over a fixed set of PNR samples using both the reparametrized and
+        non-reparametrized methods"""
         cost_fn = train.Stochastic(h, vgbs)
         possible_samples = list(itertools.product([0, 1, 2], repeat=dim))
 
@@ -166,8 +167,8 @@ class TestStochastic:
 
     @pytest.mark.parametrize("threshold", [False])
     def test_h_reparametized_example(self, dim, vgbs, params, embedding):
-        """Test that h_reparametrized returns the correct value when compared to working the
-        result out by hand"""
+        """Test that the h_reparametrized method returns the correct value when compared to
+        working the result out by hand"""
         cost_fn = train.Stochastic(h, vgbs)
         sample = np.ones(dim)
         h_reparam = cost_fn.h_reparametrized(sample, params)
@@ -176,10 +177,10 @@ class TestStochastic:
 
     @pytest.mark.parametrize("threshold", [False])
     def test_evaluate(self, vgbs, dim, params):
-        """Test that evaluate returns the expected value when the VGBS class is preloaded with a
-        dataset where half of the datapoints are zeros and half of the datapoints are ones. The
-        expected result of the evaluate method is then simply the average of h_reparametrized
-        applied to a ones vector and a zeros vector."""
+        """Test that the evaluate method returns the expected value when the VGBS class is
+        preloaded with a dataset where half of the datapoints are zeros and half of the
+        datapoints are ones. The expected result of the evaluate method is then simply the
+        average of h_reparametrized applied to a ones vector and a zeros vector."""
         n_samples = 10
         zeros = np.zeros((n_samples, dim))
         ones = np.ones((n_samples, dim))
@@ -196,7 +197,7 @@ class TestStochastic:
 
     @pytest.mark.parametrize("threshold", [True, False])
     def test_gradient_one_sample(self, vgbs, dim, params, threshold):
-        """Test that _gradient_one_sample returns the correct values when compared to
+        """Test that the _gradient_one_sample method returns the correct values when compared to
         calculations done by hand"""
         cost_fn = train.Stochastic(h, vgbs)
         sample = np.ones(dim)
@@ -211,10 +212,10 @@ class TestStochastic:
 
     @pytest.mark.parametrize("threshold", [False])
     def test_gradient(self, vgbs, dim, params):
-        """Test that gradient returns the expected value when the VGBS class is preloaded with a
-        dataset where half of the datapoints are zeros and half of the datapoints are ones. The
-        expected result of the gradient method is then simply the average of _gradient_one_sample
-        applied to a ones vector and a zeros vector."""
+        """Test that the gradient method returns the expected value when the VGBS class is
+        preloaded with a dataset where half of the datapoints are zeros and half of the
+        datapoints are ones. The expected result of the gradient method is then simply the
+        average of _gradient_one_sample applied to a ones vector and a zeros vector."""
         n_samples = 10
         zeros = np.zeros((n_samples, dim))
         ones = np.ones((n_samples, dim))
