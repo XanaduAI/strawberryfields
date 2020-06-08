@@ -303,10 +303,6 @@ class BaseEngine(abc.ABC):
             np.array([r.ind for r in c.reg]) for c in program.circuit if "Measure" in c.op.__str__()
         ]
 
-        # check for duplicate mode-measures
-        if len(np.hstack(sort_order)) != len(set(np.hstack(sort_order))):
-            raise RuntimeError("Modes can only be measured once inside a circuit.")
-
         # pylint: disable=import-outside-toplevel
         if self.backend_name == "tf":
             from tensorflow import convert_to_tensor
