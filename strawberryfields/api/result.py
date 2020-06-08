@@ -137,7 +137,8 @@ class Result:
                 for i, inter in enumerate(intersect):
                     a.remove(inter)
                     for j in range(shots):
-                        s_val = samples_shot_list[j][k][idx[i][0]]
+                        # remove last sample in shot array so it doesn't disturb the indices
+                        s_val = samples_shot_list[j][k][idx[k][len(intersect) - i - 1]]
                         samples_shot_list[j][k].remove(s_val)
 
             # reshape into a list of arrays, ignoring empty ones
