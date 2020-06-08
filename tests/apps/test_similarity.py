@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -298,13 +298,14 @@ class TestProbOrbitExact:
         is equal to 1/8. For a 4-mode graph, [1, 1] has 6 possible permutations. """
         graph = nx.complete_graph(4)
         with monkeypatch.context() as m:
-            m.setattr("strawberryfields.backends.gaussianbackend.states.GaussianState.fock_prob", lambda *args, **kwargs: 1/8)
+            m.setattr("strawberryfields.backends.gaussianbackend.states.GaussianState.fock_prob",
+                      lambda *args, **kwargs: 1/8)
             assert similarity.prob_orbit_exact(graph, [1, 1]) == 6/8
 
     def test_known_result(self):
-        """Tests if the probability of detecting photons in nearly all modes of a
-        graph with a small mean photon number is correctly reproduced as
-        almost zero."""
+        """Tests if the probability of detecting a large number of photons in
+        in a single mode of a graph with a small mean photon number is correctly
+        reproduced as almost zero."""
         graph = nx.complete_graph(4)
         assert np.allclose(similarity.prob_orbit_exact(graph, [4], 1), 0)
 
@@ -359,7 +360,8 @@ class TestProbEventExact:
         ``max_count_per_mode = 1`` contains orbit [1, 1] which has 6 possible sample permutations."""
         graph = nx.complete_graph(4)
         with monkeypatch.context() as m:
-            m.setattr("strawberryfields.backends.gaussianbackend.states.GaussianState.fock_prob", lambda *args, **kwargs: 1/8)
+            m.setattr("strawberryfields.backends.gaussianbackend.states.GaussianState.fock_prob",
+                      lambda *args, **kwargs: 1/8)
             assert similarity.prob_event_exact(graph, 2, 1) == 6/8
 
     def test_known_result(self):
@@ -368,6 +370,7 @@ class TestProbEventExact:
         To get orbit [2], we use ``p(E_{2,2}) - p(E_{2,1})``. """
         graph = nx.complete_graph(4)
         assert np.allclose((similarity.prob_event_exact(graph, 2, 2, 1) - similarity.prob_event_exact(graph, 2, 1, 1)), 0)
+        assert similarity.prob_event_exact(graph, 2, 1, 1) == similarity.prob_orbit_exact(graph, [1, 1], 1)
 
 
 class TestProbOrbitMC:
@@ -400,7 +403,8 @@ class TestProbOrbitMC:
         is equal to 1/5, i.e., one over the cardinality of the orbit [1,1,1,1] for 5 modes."""
         graph = nx.complete_graph(5)
         with monkeypatch.context() as m:
-            m.setattr("strawberryfields.backends.gaussianbackend.states.GaussianState.fock_prob", lambda *args, **kwargs: 0.2)
+            m.setattr("strawberryfields.backends.gaussianbackend.states.GaussianState.fock_prob",
+                      lambda *args, **kwargs: 0.2)
             assert np.allclose(similarity.prob_orbit_mc(graph, [1, 1, 1, 1]), 1.0)
 
     @pytest.mark.parametrize("k", [1, 3, 5, 7, 9])
@@ -421,9 +425,9 @@ class TestProbOrbitMC:
         assert similarity.prob_orbit_mc(graph, [1, 1, 1, 1], samples=1, loss=1) == 0.0
 
     def test_known_result(self):
-        """Tests if the probability of detecting photons in nearly all modes of a
-        graph with a small mean photon number is correctly reproduced as
-        almost zero."""
+        """Tests if the probability of detecting a large number of photons in
+        in a single mode of a graph with a small mean photon number is correctly
+        reproduced as almost zero."""
         graph = nx.complete_graph(4)
         assert np.allclose(similarity.prob_orbit_mc(graph, [4], 1), 0)
 
@@ -477,7 +481,8 @@ class TestProbEventMC:
         6 photons, and max 3 photons per mode."""
         graph = nx.complete_graph(6)
         with monkeypatch.context() as m:
-            m.setattr("strawberryfields.backends.gaussianbackend.GaussianState.fock_prob", lambda *args, **kwargs: 1.0 / 336)
+            m.setattr("strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
+                      lambda *args, **kwargs: 1.0 / 336)
             assert np.allclose(similarity.prob_event_mc(graph, 6, 3), 1.0)
 
     @pytest.mark.parametrize("k", [3, 5, 7, 9])
@@ -541,19 +546,21 @@ class TestFeatureVectorOrbits:
          monkeypatched to return hard-coded outputs that depend only on the orbit."""
 
         with monkeypatch.context() as m:
-            m.setattr(similarity, "prob_orbit_mc", lambda _graph, orbit, n_mean, samples, loss: 1.0 / sum(orbit))
+            m.setattr(similarity, "prob_orbit_mc",
+                      lambda _graph, orbit, n_mean, samples, loss: 1.0 / sum(orbit))
             graph = nx.complete_graph(8)
             assert similarity.feature_vector_orbits(graph, [[1, 1], [2, 1, 1]], samples=1) == [0.5, 0.25]
 
         with monkeypatch.context() as m:
-            m.setattr(similarity, "prob_orbit_exact", lambda _graph, orbit, n_mean, loss: 0.5 * (1.0 / sum(orbit)))
+            m.setattr(similarity, "prob_orbit_exact",
+                      lambda _graph, orbit, n_mean, loss: 0.5 * (1.0 / sum(orbit)))
             graph = nx.complete_graph(8)
             assert similarity.feature_vector_orbits(graph, [[1, 1], [2, 1, 1]]) == [0.25, 0.125]
 
     def test_known_result(self):
-        """Tests if the probability of detecting photons in nearly all modes of a
-        graph with a small mean photon number is correctly reproduced as
-        almost zero."""
+        """Tests if the probability of detecting a large number of photons in
+        in a single mode of a graph with a small mean photon number is correctly
+        reproduced as almost zero."""
         graph = nx.complete_graph(4)
         assert np.allclose(similarity.feature_vector_orbits(graph, [[2], [4]], 1, samples=10), [0, 0])
 
@@ -606,12 +613,14 @@ class TestFeatureVectorEvents:
          monkeypatched to return hard-coded outputs that depend only on the orbit."""
 
         with monkeypatch.context() as m:
-            m.setattr(similarity, "prob_event_mc", lambda _graph, photons, max_count, n_mean, samples, loss: 1.0 / photons)
+            m.setattr(similarity, "prob_event_mc",
+                      lambda _graph, photons, max_count, n_mean, samples, loss: 1.0 / photons)
             g = nx.complete_graph(8)
             assert similarity.feature_vector_events(g, [2, 4, 8], 1, samples=1) == [0.5, 0.25, 0.125]
 
         with monkeypatch.context() as m:
-            m.setattr(similarity, "prob_event_exact", lambda _graph, photons, max_count, n_mean, loss: 0.5 * (1.0 / photons))
+            m.setattr(similarity, "prob_event_exact",
+                      lambda _graph, photons, max_count, n_mean, loss: 0.5 * (1.0 / photons))
             g = nx.complete_graph(8)
             assert similarity.feature_vector_events(g, [2, 4, 8], 1) == [0.25, 0.125, 0.0625]
 
