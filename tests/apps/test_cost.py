@@ -350,35 +350,3 @@ class TestStochasticIntegrationPNR:
         dcost_by_dn_expected = 6 * n_mean_by_mode + 2 * (1 - objectives)
 
         assert np.allclose(dcost_by_dn, dcost_by_dn_expected, 0.1)
-
-    def test_converges(self, dim, n_mean, simple_embedding):
-        """Test that after training the cost function is close to the analytical minimum"""
-        n_samples = 10000
-        objectives = np.linspace(0.5, 1.5, dim)
-        h = self.h_setup(objectives)
-        A = np.eye(dim)
-        vgbs = train.VGBS(A, n_mean, simple_embedding, threshold=False)
-
-        n_mean_by_mode = [n_mean / dim] * dim
-        samples = self.identity_sampler(n_mean_by_mode, n_samples=n_samples)
-        vgbs.add_A_init_samples(samples)
-
-        params = np.zeros(dim)
-        cost_fn = train.Stochastic(h, vgbs)
-        reps = 4
-        lr = 0.01
-
-        # See test_gradient for further context. We want to minimize
-        # E((s - x) ** 2) = 3 * n_mean ** 2 + 2 * (1 - x) * n_mean + x ** 2, which is minimized
-        # by the n_mean given below.
-        expected_n_mean = np.maximum((objectives - 1) / 3, np.zeros(dim))
-        expected_cost = sum(
-            3 * expected_n_mean ** 2 + 2 * (1 - objectives) * expected_n_mean + objectives ** 2
-        )
-
-        for i in range(reps):
-            g = cost_fn.gradient(params, n_samples)
-            params -= lr * g
-
-        final_cost = cost_fn.evaluate(params, n_samples)
-        assert np.allclose(expected_cost, final_cost, rtol=0.1, atol=2)
