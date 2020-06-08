@@ -121,7 +121,7 @@ class Result:
         mode_order_flat = np.hstack(mode_order)
         len_modes = len(set(mode_order_flat))
 
-        # remove duplicate mode-measurements and only return that modes last measurement
+        # remove duplicate mode-measurements and only return the modes from the last measurement
         if len(mode_order_flat) != len_modes:
             # change to list to allow updates via reference, and split samples into shots
             mode_order_list = [list(m) for m in mode_order]
