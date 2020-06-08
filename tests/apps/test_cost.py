@@ -312,7 +312,7 @@ class TestStochasticIntegrationPNR:
     def test_gradient(self, dim, n_mean, simple_embedding):
         """Test that the gradient evaluates as expected when compared to a value calculated by
         hand"""
-        n_samples = 100000  # We need a lot of shots due to the high variance in the distribution
+        n_samples = 10000  # We need a lot of shots due to the high variance in the distribution
         objectives = np.linspace(0.5, 1.5, dim)
         h = self.h_setup(objectives)
         A = np.eye(dim)
