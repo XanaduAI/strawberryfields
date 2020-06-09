@@ -1298,7 +1298,17 @@ class BaseGaussianState(BaseState):
             "The number_expectation method only supports one or two modes for Gaussian states."
         )
 
-<<<<<<< HEAD
+    def parity_expectation(self, modes):
+        if len(modes) != len(set(modes)):
+            raise ValueError("There can be no duplicates in the modes specified.")
+
+        mu = self.means()
+        cov = self.cov()
+        num = np.exp(-(0.5) * (mu @ (np.linalg.inv(cov) @ mu)))
+        parity = ((self.hbar / 2) ** len(modes)) * num / (np.sqrt(np.linalg.det(cov)))
+
+        return parity
+
     def ket(self, **kwargs):
         cutoff = kwargs.get("cutoff", 10)
         mu = self._mu
@@ -1315,20 +1325,6 @@ class BaseGaussianState(BaseState):
         cutoff = kwargs.get("cutoff", 10)
         return self.reduced_dm(self._mu, self._cov, list(range(self._modes)))
 
-=======
-    def parity_expectation(self, modes):
-        if len(modes) != len(set(modes)):
-            raise ValueError("There can be no duplicates in the modes specified.")
-
-        mu = self.means()
-        cov = self.cov()
-        num = np.exp(-(0.5) * (mu @ (np.linalg.inv(cov) @ mu)))
-        parity = ((self.hbar / 2) ** len(modes)) * num / (np.sqrt(np.linalg.det(cov)))
-
-        return parity
-
-    @abc.abstractmethod
->>>>>>> tf2-polar_parameters
     def reduced_dm(self, modes, **kwargs):
         if isinstance(modes, int):
             modes = [modes]

@@ -63,6 +63,7 @@ Common methods and attributes
     quad_expectation
     poly_quad_expectation
     number_expectation
+    parity_expectation
     p_quad_values
     x_quad_values
 
