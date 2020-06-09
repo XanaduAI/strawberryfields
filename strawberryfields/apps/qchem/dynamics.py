@@ -82,7 +82,7 @@ def evolution_op(modes: int) -> Callable:
     **Example usage:**
 
     >>> modes = 2
-    >>> obs =  evolution_op(modes)
+    >>> transform =  evolution_op(modes)
 
     Args:
         modes (int): number of modes
