@@ -156,13 +156,14 @@ print(similarity.sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0
 # where :math:`\mathbf{k} := (k_{1}, k_{2}, \ldots , k_{K})` is a list of different total photon
 # numbers.
 #
-# For example, if :math:`\mathbf{k} := (2, 4, 6)` and :math:`n_{\max} = 2`, we have
+# For example, if :math:`\mathbf{k} := (2, 4, 6, 8)` and :math:`n_{\max} = 2`, we have
 #
 # .. math::
-#     f_{(2, 4, 6), 2} = (p_{2, 2}, p_{4, 2}, p_{6, 2}).
+#     f_{(2, 4, 6, 8), 2} = (p_{2, 2}, p_{4, 2}, p_{6, 2}, p_{8, 2}).
 #
 # In this case, we are interested in the probabilities of events :math:`E_{2, 2}`, :math:`E_{4,
-# 2}`, and :math:`E_{6, 2}`. Suppose we are sampling from a four-mode device and have the samples
+# 2}`, :math:`E_{6, 2}`, and :math:`E_{8, 2}`. Suppose we are sampling from a four-mode device
+# and have the samples
 # ``[0, 3, 0, 1]`` and ``[1, 2, 0, 1]``. These samples are part of the orbits ``[3, 1]`` and
 # ``[2, 1, 1]``, respectively. However, ``[3, 1]`` is not part of the :math:`E_{4, 2}` event while
 # ``[2, 1, 1]`` is.
@@ -179,9 +180,9 @@ print(similarity.sample_to_event([0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0
 #
 # In the first method, all one needs to do is generate some GBS samples from the graph of
 # interest and fix the composition of the feature vector. For example, to obtain feature vector
-# :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}` for the first MUTAG graph, we use:
+# :math:`f_{\mathbf{k} = (2, 4), n_{\max}=2}` for the first MUTAG graph, we use:
 
-print(similarity.feature_vector_events_sampling(m0, [2, 4, 6], 2))
+print(similarity.feature_vector_events_sampling(m0, [2, 4], 2))
 
 ##############################################################################
 # We can also use any orbits of our choice instead of events:
@@ -206,9 +207,9 @@ print(similarity.feature_vector_orbits_sampling(m0, [[1, 1], [2], [1, 1, 1, 1], 
 # as shown later. ``samples`` is set to ``None`` to get an exact feature vector by default. To use Monte Carlo
 # estimation, ``samples`` can be set to the number of samples desired to be used in the estimation.
 # For example, to get the exact event probabilities in the feature vector example
-# :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}` seen previously, we use:
+# :math:`f_{\mathbf{k} = (2, 4), n_{\max}=2}` seen previously, we use:
 
-print(similarity.feature_vector_events(nx.Graph(m0_a), [2, 4, 6], 2))
+print(similarity.feature_vector_events(nx.Graph(m0_a), [2, 4], 2))
 
 ##############################################################################
 # Although they are precise, exact calculations for large matrices can be tough to evaluate. Additionally,
@@ -233,9 +234,9 @@ print(similarity.event_cardinality(6, 2, 17))
 # This method can be accessed using the :func:`~.feature_vector_events` function
 # with ``samples`` set to the number of samples desired to be used in the estimation.
 # For example, to get MC-estimated probabilities for our example feature vector
-# :math:`f_{\mathbf{k} = (2, 4, 6), n_{\max}=2}`, we use:
+# :math:`f_{\mathbf{k} = (2, 4), n_{\max}=2}`, we use:
 
-print(similarity.feature_vector_events(nx.Graph(m0_a), [2, 4, 6], 2, samples=1000))
+print(similarity.feature_vector_events(nx.Graph(m0_a), [2, 4], 2, samples=1000))
 
 ##############################################################################
 #

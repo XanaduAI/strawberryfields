@@ -344,7 +344,7 @@ def _get_state(graph: nx.Graph, n_mean: float = 5, loss: float = 0.0) -> Gaussia
 
     p = sf.Program(modes)
 
-    # pylint: disable=error-to-disable.
+    # pylint: disable=expression-not-assigned
     with p.context as q:
         sf.ops.GraphEmbed(A, mean_photon_per_mode=mean_photon_per_mode) | q
 
@@ -591,7 +591,8 @@ def feature_vector_orbits(
         graph (nx.Graph): input graph
         list_of_orbits (list[list[int]]): a list of orbits
         n_mean (float): total mean photon number of the GBS device
-        samples (int): optional number of samples used in the Monte Carlo estimation. Defaults to exact calculation if ``samples`` is unspecified.
+        samples (int): optional number of samples used in the Monte Carlo estimation.
+            Defaults to exact calculation if ``samples`` is unspecified.
         loss (float): fraction of photons lost in GBS
 
     Returns:
@@ -648,7 +649,8 @@ def feature_vector_events(
         event_photon_numbers (list[int]): a list of events described by their total photon number
         max_count_per_mode (int): maximum number of photons per mode for all events
         n_mean (float): total mean photon number of the GBS device
-        samples (int): optional number of samples used in the Monte Carlo estimation. Defaults to exact calculation if ``samples`` is unspecified.
+        samples (int): optional number of samples used in the Monte Carlo estimation.
+            Defaults to exact calculation if ``samples`` is unspecified.
         loss (float): fraction of photons lost in GBS
 
     Returns:
