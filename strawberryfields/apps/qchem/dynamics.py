@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,26 +14,29 @@
 r"""
 Functions used for simulating vibrational quantum dynamics of molecules.
 
-Photonic quantum devices can be programmed with molecular data in order to simulate the dynamics
-of spatially-localized vibrations in molecules :cite:`sparrow2018simulating`. These vibrational
-quantum dynamics can be simulated with a device that is programmed to implement the transformation:
+Photonic quantum devices can be programmed with molecular data in order to simulate the quantum
+dynamics of spatially-localized vibrations in molecules :cite:`sparrow2018simulating`. To that aim,
+the quantum device has to be programmed to implement the transformation:
 
 .. math::
-    U(t) = U_l^\dagger e^{-i\hat{H}t/\hbar} U_l,
+    U(t) = U_l e^{-i\hat{H}t/\hbar} U_l^\dagger,
 
 where :math:`\hat{H} = \sum_i \hbar \omega_i a_i^\dagger a_i` is the Hamiltonian corresponding to
-the harmonic normal modes, :math:`\omega_i` is the vibrational frequency of :math:`i`-th normal
-mode, :math:`t` is time and :math:`U_l` is a unitary matrix that relates the normal modes to a set
+the harmonic normal modes, :math:`\omega_i` is the vibrational frequency of the :math:`i`-th normal
+mode, :math:`t` is time, and :math:`U_l` is a unitary matrix that relates the normal modes to a set
 of new modes that are localized on specific bonds or groups in a molecule. The matrix :math:`U_l`
 can be obtained by maximizing the sum of the squares of the atomic contributions to the modes
-:cite:`jacob2009localizing`. Having :math:`U` and :math:`\omega` for a given molecule, and assuming
+:cite:`jacob2009localizing`. Having :math:`U_l` and :math:`\omega` for a given molecule, and assuming
 that it is possible to prepare the initial states of the mode, one can simulate the dynamics of
 vibrational excitations in the localized basis at any given time :math:`t`. This process has three
-main parts. First, preparation of a vibrationally excited initial state. Second, application of the
-dynamics transformation :math:`U(t)` and finally, generating samples and computing the probability
-of observing desired states. It is noted that the initial states can be prepared in different ways.
-For instance, they can be Fock states or Gaussian states such as coherent or two-mode squeezed
-vacuum states.
+main parts:
+
+- Preparation of an initial vibrational state.
+- Application of the dynamics transformation :math:`U(t)`.
+- Generating samples and computing the probability of observing desired states.
+
+It is noted that the initial states can be prepared in different ways. For instance, they can be
+Fock states or Gaussian states such as coherent states or two-mode squeezed vacuum states.
 
 Algorithm
 ---------
@@ -41,16 +44,16 @@ Algorithm
 The algorithm for simulating the vibrational quantum dynamics in the localized basis with a photonic
 device has the following form:
 
-1. Each initial optical mode is assigned to a vibrational local mode and a specific excitation is
-   created using one of the state preparation methods discussed.
+1. Each optical mode is assigned to a vibrational local mode and a specific initial excitation is
+   created using one of the state preparation methods discussed. A list of state preparations
+   methods available in Strawberry Fields is provided here:
+   https://strawberryfields.readthedocs.io/en/stable/introduction/ops.html#state-preparation
 
 2. An interferometer is configured according to the unitary :math:`U_l^\dagger` and the initial
    state is propagated through the interferometer.
 
-3. For each mode, a rotation gate is designed according to the vibrational frequency of the
-   corresponding normal mode (:math:`\nu`) as
-   :math:`R(\theta) = \exp(i\theta \hat{a}^{\dagger}\hat{a})` where :math:`\theta = -2 \pi \nu t`
-   and :math:`t` is time.
+3. For each mode, a rotation gate is designed as :math:`R(\theta) = \exp(i\theta \hat{a}^{\dagger}\hat{a})`
+   where :math:`\theta = -\omega t.
 
 4. A second interferometer is configured according to the unitary :math:`U_l` and the new state
    is propagated through the interferometer.
@@ -60,7 +63,7 @@ device has the following form:
 6. Samples are generated and the probability of obtaining a specific excitation in a given mode
    (or modes) is computed for time :math:`t`.
 
-This module contains functions for implementing this algorithm. The function `dynamics_observable`
+This module contains functions for implementing this algorithm. The function ``dynamics_observable``
 return a custom ``sf`` operation that contains the required unitary and rotation operations
 explained in steps 2-4 of the algorithm.
 """
@@ -68,41 +71,36 @@ from typing import Callable
 
 from scipy.constants import c, pi
 
-import numpy as np
-
 import strawberryfields as sf
 from strawberryfields.utils import operation
 
 
-def dynamics_observable(t: float, Ul: np.ndarray, w: np.ndarray) -> Callable:
+def evolution_op(modes: int) -> Callable:
     r"""Generates a custom ``sf`` operation for performing the transformation
-    :math:`U(t) = U_l^\dagger e^{-i\hat{H}t/\hbar} U_l` on a given state.
+    :math:`U(t) = U_l e^{-i\hat{H}t/\hbar} U_l^\dagger` on a given state.
 
     **Example usage:**
 
-    >>> t = 0.0  # time
-    >>> Ul = np.array([[0.707106781, -0.707106781],
-    >>>                [0.707106781, 0.707106781]])  # normal to local transformation
-    >>> w = np.array([3914.92, 3787.59])  # frequencies
-    >>> obs =  dynamics_observable(t, Ul, w)
+    >>> modes = 2
+    >>> obs =  evolution_op(modes)
 
     Args:
-        t (float): time (femtosecond)
-        Ul (array): normal to local transformation matrix
-        w (array): normal mode frequencies (:math:`\mbox{cm}^{-1}`)
+        modes (int): number of modes
 
     Returns:
-        op (Callable): custom ``sf`` operation function
+        op (Callable): an ``sf`` operation for enacting the dynamics transformation
     """
-    modes = len(Ul)
-    theta = -w * 100.0 * c * t * 1e-15 * (2 * pi)
-
     # pylint: disable=expression-not-assigned,pointless-statement
     @operation(modes)
-    def op(q):
-        sf.ops.Interferometer(Ul.T) | q
+    def op(t, U, w, q):
+
+        theta = -w * 100.0 * c * 1e-15 * t * (2 * pi)
+
+        sf.ops.Interferometer(U.T) | q
+
         for i in range(modes):
             sf.ops.Rgate(theta[i]) | q[i]
-        sf.ops.Interferometer(Ul) | q
+
+        sf.ops.Interferometer(U) | q
 
     return op
