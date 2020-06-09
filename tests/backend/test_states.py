@@ -423,12 +423,12 @@ class TestParityExpectation:
             pytest.skip("Does not support batch mode")
         backend = setup_backend(1)
         state = backend.state()
-        alpha = 0.2
-        backend.prepare_coherent_state(alpha, 0)
+        r = 0.2
+        backend.prepare_coherent_state(r, 0, 0)
         state = backend.state()
 
         assert np.allclose(
-            state.parity_expectation([0]), np.exp(-2 * (np.abs(alpha) ** 2)), atol=tol, rtol=0
+            state.parity_expectation([0]), np.exp(-2 * (np.abs(r) ** 2)), atol=tol, rtol=0
         )
 
     def test_squeezed(self, setup_backend, tol, batch_size):
