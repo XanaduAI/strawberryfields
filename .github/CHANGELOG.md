@@ -2,6 +2,7 @@
 
 <h3>New features since last release</h3>
 
+
 * Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X architecture. [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
 
 * Adds `diagonal_expectation` method for the `BaseFockState` class, which returns
