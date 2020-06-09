@@ -202,7 +202,7 @@ class TestKetDensityMatrixIntegration:
         """Test exceptions"""
         mu = np.array([0.0, 0.0])
         cov = np.identity(2)
-        state1 = BaseGaussianState((mu, cov), 1, None, None)
+        state1 = BaseGaussianState((mu, cov), 1)
         state2 = BaseFockState(np.zeros(cutoff), 1, False, cutoff)
 
         eng, prog = setup_eng(2)
@@ -261,7 +261,7 @@ class TestKetDensityMatrixIntegration:
         """Test exceptions"""
         mu = np.array([0.0, 0.0])
         cov = np.identity(2)
-        state = BaseGaussianState((mu, cov), 1, None, None)
+        state = BaseGaussianState((mu, cov), 1)
 
         eng, prog = setup_eng(2)
 
