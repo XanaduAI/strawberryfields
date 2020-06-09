@@ -32,7 +32,7 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-sys.modules["tensorflow"] = Mock(__version__="1.3")
+sys.modules["tensorflow"] = Mock(__version__="2.0")
 
 # -- General configuration ------------------------------------------------
 
@@ -94,7 +94,7 @@ sphinx_gallery_conf = {
     # execute files that match the following filename pattern,
     # and skip those that don't. If the following option is not provided,
     # all example scripts in the 'examples_dirs' folder will be skiped.
-    'filename_pattern': r'run',
+    'filename_pattern': r'/run_',
     # first notebook cell in generated Jupyter notebooks
     'first_notebook_cell': ("# This cell is added by sphinx-gallery\n"
                             "# It can be customized to whatever you like\n"
@@ -344,10 +344,11 @@ autodoc_member_order = 'bysource'
 inheritance_node_attrs = dict(color='lightskyblue1', style='filled')
 
 
-from custom_directives import IncludeDirective, GalleryItemDirective, CustomGalleryItemDirective
+from custom_directives import IncludeDirective, GalleryItemDirective, CustomGalleryItemDirective, DetailsDirective
 
 def setup(app):
     app.add_directive('includenodoc', IncludeDirective)
     app.add_directive('galleryitem', GalleryItemDirective)
     app.add_directive('customgalleryitem', CustomGalleryItemDirective)
+    app.add_directive('details', DetailsDirective)
     app.add_stylesheet('xanadu_gallery.css')

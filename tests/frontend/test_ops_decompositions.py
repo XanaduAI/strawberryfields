@@ -798,8 +798,11 @@ class TestDisplacements:
         Z = ops.Zgate(p)
         cmds = Z.decompose(prog.register)
         assert isinstance(cmds[0].op, ops.Dgate)
-        assert np.allclose(cmds[0].op.p[0], alpha, atol=tol, rtol=0)
-        assert np.allclose(cmds[0].op.p[1], 0, atol=tol, rtol=0)
+
+        assert len(cmds) == 1
+        r = cmds[0].op.p[0]
+        phi = cmds[0].op.p[1]
+        assert np.allclose(r*np.exp(1j*phi), alpha, atol=tol, rtol=0)
 
 
 class TestRotation:
