@@ -1,6 +1,53 @@
-# Release 0.14.0-dev0 (development release)
+# Release 0.15.0-dev0 (development release)
 
 <h3>New features since last release</h3>
+
+* Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X architecture. [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
+
+* Adds `diagonal_expectation` method for the `BaseFockState` class, which returns
+  the expectation value of any operator that is diagonal in the number basis.
+  [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
+
+* Adds `parity_expectation` method as an instance of `diagonal_expectation` for
+  the `BaseFockState` class, and its own function for `BaseGaussianState`. 
+  This returns the expectation value of the parity operator,
+  defined as (-1)^N.
+  [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389) 
+
+
+<h3>Improvements</h3>
+
+* Modifies the rectangular interferometer decomposition to make it more
+  efficient for hardware devices. Rather than decomposing the interferometer
+  using Clements :math:`T` matrices, the decomposition now directly produces
+  Mach-Zehnder interferometers corresponding to on-chip phases.
+  [(#363)](https://github.com/XanaduAI/strawberryfields/pull/363)
+
+* Changes the `number_expectation` method for the `BaseFockState` class to be an instance
+  of `diagonal_expectation`. 
+  [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
+
+<h3>Breaking Changes</h3>
+
+* Removes support for Python 3.5.
+  [(#385)](https://github.com/XanaduAI/strawberryfields/pull/385)
+
+<h3>Bug fixes</h3>
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Jack Ceroni, Theodor Isacsson, Josh Izaac, Shreya P. Kumar, Nicolás Quesada
+
+
+
+# Release 0.14.0 (current release)
+
+<h3>New features since last release</h3>
+
+* Dark counts can now be added to the samples received from photon measurements in the
+  Fock basis (sf.ops.MeasureFock) during a simulation.
 
 * The `"tf"` backend now supports TensorFlow 2.0 and above.
   [(#283)](https://github.com/XanaduAI/strawberryfields/pull/283)
@@ -12,7 +59,6 @@
   [(#374)](https://github.com/XanaduAI/strawberryfields/pull/374)
   [(#375)](https://github.com/XanaduAI/strawberryfields/pull/375)
   [(#377)](https://github.com/XanaduAI/strawberryfields/pull/377)
-
 
   For more details and demonstrations of the new TensorFlow 2.0-compatible backend,
   see our [optimization and machine learning tutorials](https://strawberryfields.readthedocs.io/en/stable/introduction/tutorials.html#optimization-and-machine-learning).
@@ -83,16 +129,19 @@
 * Add details to the error message for failed remote jobs.
   [(#370)](https://github.com/XanaduAI/strawberryfields/pull/370)
 
-<h3>Bug fixes</h3>
+* The required version of The Walrus was increased to version 0.12, for
+  tensor number expectation support.
+  [(#380)](https://github.com/XanaduAI/strawberryfields/pull/380)
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Tom Bromley, Theodor Isacsson, Josh Izaac, Nathan Killoran, Filippo Miatto, Nicolás Quesada, Antal Száva.
+Tom Bromley, Theodor Isacsson, Josh Izaac, Nathan Killoran, Filippo Miatto, Nicolás Quesada,
+Antal Száva, Paul Tan.
 
 
-# Release 0.13.0 (current release)
+# Release 0.13.0
 
 <h3>New features since last release</h3>
 

@@ -53,7 +53,7 @@ Features
 Installation
 ============
 
-Strawberry Fields requires Python version 3.5, 3.6, 3.7, or 3.8. Installation of Strawberry Fields, as well as all dependencies, can be done using pip:
+Strawberry Fields requires Python version 3.6, 3.7, or 3.8. Installation of Strawberry Fields, as well as all dependencies, can be done using pip:
 
 .. code-block:: bash
 
@@ -86,13 +86,13 @@ for more details, and then check out some of the Strawberry Fields `challenges <
 Authors
 =======
 
-Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook.
+Strawberry Fields is the work of `many contributors <https://github.com/XanaduAI/strawberryfields/graphs/contributors>`_.
 
 If you are doing research using Strawberry Fields, please cite our papers:
 
   Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook. "Strawberry Fields: A Software Platform for Photonic Quantum Computing", `Quantum, 3, 129 <https://quantum-journal.org/papers/q-2019-03-11-129/>`__ (2019).
 
-  Thomas R. Bromley, Juan Miguel Arrazola, Soran Jahangiri, Josh Izaac, Nicolás Quesada, Alain Delgado Gran, Maria Schuld, Jeremy Swinarton, Zeid Zabaneh, and Nathan Killoran. "Applications of Near-Term Photonic Quantum Computers: Software and Algorithms", `arxiv:1912.07634 <https://arxiv.org/abs/1912.07634>`__ (2019).
+  Thomas R. Bromley, Juan Miguel Arrazola, Soran Jahangiri, Josh Izaac, Nicolás Quesada, Alain Delgado Gran, Maria Schuld, Jeremy Swinarton, Zeid Zabaneh, and Nathan Killoran. "Applications of Near-Term Photonic Quantum Computers: Software and Algorithms", `Quantum Sci. Technol. 5 034010 (2020) <https://iopscience.iop.org/article/10.1088/2058-9565/ab8504/meta>`__ (2020).
 
 Support
 =======
