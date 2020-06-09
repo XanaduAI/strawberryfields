@@ -202,5 +202,5 @@ the weights for the quantum neural network.
     create the quantum neural network, and using TensorFlow to optimize for state preparation,
     is included at :download:`examples/quantum_neural_network.py <../../examples/quantum_neural_network.py>`.
 
-Applications of CV quantum neural networks to :doc:`state learning </tutorials_apps/run_state_learner>` and
-:doc:`gate synthesis </tutorials_apps/run_gate_synthesis>` can be found in the Strawberry Fields tutorials.
+Applications of CV quantum neural networks to :doc:`state learning </tutorials_apps/state_learner>` and
+:doc:`gate synthesis </tutorials_apps/gate_synthesis>` can be found in the Strawberry Fields tutorials.

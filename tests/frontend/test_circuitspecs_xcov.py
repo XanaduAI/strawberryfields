@@ -11,13 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for the CircuitSpec class"""
-import textwrap
-
+r"""Unit tests for the Xcov compiler"""
 import pytest
 import numpy as np
 import networkx as nx
-from scipy.linalg import block_diag
 
 import blackbird
 
@@ -30,6 +27,7 @@ from strawberryfields.io import to_program
 from strawberryfields.utils import random_interferometer
 from strawberryfields.circuitspecs.X8 import X8_01, CircuitSpecs
 
+from thewalrus.symplectic import two_mode_squeezing, expand
 
 pytestmark = pytest.mark.frontend
 
@@ -37,33 +35,6 @@ np.random.seed(42)
 
 SQ_AMPLITUDE = 1
 """float: the allowed squeezing amplitude"""
-
-
-def TMS(r, phi):
-    """Two-mode squeezing.
-
-    Args:
-        r (float): squeezing magnitude
-        phi (float): rotation parameter
-
-    Returns:
-        array: symplectic transformation matrix
-    """
-    cp = np.cos(phi)
-    sp = np.sin(phi)
-    ch = np.cosh(r)
-    sh = np.sinh(r)
-
-    S = np.array(
-        [
-            [ch, cp * sh, 0, sp * sh],
-            [cp * sh, ch, sp * sh, 0],
-            [0, sp * sh, ch, -cp * sh],
-            [sp * sh, 0, -cp * sh, ch],
-        ]
-    )
-
-    return S
 
 
 def program_equivalence(prog1, prog2, compare_params=True, atol=1e-6, rtol=0):
@@ -117,7 +88,7 @@ def program_equivalence(prog1, prog2, compare_params=True, atol=1e-6, rtol=0):
                     wire_mapping[i] = [j.ind for j in n.reg]
 
             elif n.op.__class__.__name__ == "BSgate":
-                if np.allclose([j % np.pi for j in par_evaluate(n.op.p)], [np.pi/4, np.pi/2]):
+                if np.allclose([j % np.pi for j in par_evaluate(n.op.p)], [np.pi / 4, np.pi / 2]):
                     # if the beamsplitter is *symmetric*, then the order of the
                     # wires does not matter.
                     wire_mapping[i] = 0
@@ -166,7 +137,7 @@ class DummyCircuit(CircuitSpecs):
     decompositions = {"Interferometer": {}}
 
 
-class TestX8Compilation:
+class TestXCompilation:
     """Tests for compilation using the X8_01 circuit specification"""
 
     def test_exact_template(self, tol):
@@ -200,135 +171,157 @@ class TestX8Compilation:
         )
 
         expected = to_program(bb)
-        res = expected.compile("X8_01")
+        res = expected.compile("Xcov")
 
-        assert program_equivalence(res, expected, atol=tol)
+        assert program_equivalence(res, expected, atol=tol, compare_params=False)
 
-    def test_not_all_modes_measured(self):
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_not_all_modes_measured(self, num_pairs):
         """Test exceptions raised if not all modes are measured"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
-
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
-            ops.MeasureFock() | (q[0], q[1])
-
+            for i in range(num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
+            ops.MeasureFock() | (q[0], q[num_pairs])
         with pytest.raises(CircuitError, match="All modes must be measured"):
-            res = prog.compile("X8_01")
+            prog.compile("Xcov")
 
-    def test_no_s2gates(self, tol):
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_no_s2gates(self, num_pairs, tol):
         """Test identity S2gates are inserted when no S2gates
         are provided."""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
 
         with prog.context as q:
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        expected = sf.Program(8)
+        expected = sf.Program(2 * num_pairs)
 
         with expected.context as q:
-            ops.S2gate(0) | (q[0], q[4])
-            ops.S2gate(0) | (q[1], q[5])
-            ops.S2gate(0) | (q[2], q[6])
-            ops.S2gate(0) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i in range(num_pairs):
+                ops.S2gate(0) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        res = prog.compile("X8_01")
-        expected = expected.compile("X8_01")
+        res = prog.compile("Xcov")
+        expected = expected.compile("Xcov")
         assert program_equivalence(res, expected, atol=tol)
 
-    def test_missing_s2gates(self, tol):
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_missing_s2gates(self, num_pairs, tol):
         """Test identity S2gates are inserted when some (but not all)
         S2gates are included."""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
-
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
+        assert num_pairs > 3
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[num_pairs + 1])
+            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[num_pairs + 3])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        expected = sf.Program(8)
+        expected = sf.Program(2 * num_pairs)
 
         with expected.context as q:
-            ops.S2gate(0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[5])
-            ops.S2gate(0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            ops.S2gate(SQ_AMPLITUDE) | (q[1], q[num_pairs + 1])
+            ops.S2gate(0) | (q[0], q[num_pairs + 0])
+            ops.S2gate(SQ_AMPLITUDE) | (q[3], q[num_pairs + 3])
+            ops.S2gate(0) | (q[2], q[num_pairs + 2])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        res = prog.compile("X8_01")
-        expected = expected.compile("X8_01")
+        res = prog.compile("Xcov")
+        expected = expected.compile("Xcov")
         assert program_equivalence(res, expected, atol=tol)
 
-    def test_incorrect_s2gate_modes(self):
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_incorrect_s2gate_modes(self, num_pairs):
         """Test exceptions raised if S2gates do not appear on correct modes"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
-
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
+        n_modes = 2 * num_pairs
+        half_n_modes = n_modes // 2
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[1])
-            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[3])
-            ops.S2gate(SQ_AMPLITUDE) | (q[4], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[7], q[6])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i in range(num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[2 * i], q[2 * i + 1])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        with pytest.raises(CircuitError, match="S2gates do not appear on the correct modes"):
-            res = prog.compile("X8_01")
+        with pytest.raises(
+            CircuitError,
+            match="The applied unitary cannot mix between the modes {}-{} and modes {}-{}.".format(
+                0, half_n_modes - 1, half_n_modes, n_modes - 1
+            ),
+        ):
+            res = prog.compile("Xcov")
 
-    def test_incorrect_s2gate_params(self):
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_incorrect_s2gate_params(self, num_pairs):
         """Test exceptions raised if S2gates have illegal parameters"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
-
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.S2gate(0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE+0.1) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i in range(num_pairs - 1):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+
+            ops.S2gate(SQ_AMPLITUDE + 0.1) | (q[num_pairs - 1], q[2 * num_pairs - 1])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        with pytest.raises(CircuitError, match=r"Incorrect squeezing value\(s\) \(r, phi\)={\(1.1, 0.0\)}"):
-            res = prog.compile("X8_01")
+        with pytest.raises(CircuitError, match=r"Incorrect squeezing val"):
+            res = prog.compile("Xcov")
 
-    def test_s2gate_repeated_modes(self):
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_s2gate_repeated_modes(self, num_pairs):
         """Test exceptions raised if S2gates are repeated"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
-
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[4])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i in range(num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+
+            ops.S2gate(SQ_AMPLITUDE + 0.1) | (q[0], q[num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        with pytest.raises(CircuitError, match="incompatible topology."):
-            res = prog.compile("X8_01")
+        with pytest.raises(CircuitError, match=r"Incorrect squeezing val"):
+            prog.compile("Xcov")
+
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_s2gate_repeated_modes_half_squeezing(self, num_pairs):
+        """Test that squeezing gates are correctly merged"""
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
+
+        with prog.context as q:
+
+            ops.S2gate(SQ_AMPLITUDE / 2) | (q[0], q[0 + num_pairs])
+            for i in range(1, num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+            ops.S2gate(SQ_AMPLITUDE / 2) | (q[0], q[0 + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
+            ops.MeasureFock() | q
+
+        res = prog.compile("Xcov")
+        assert np.allclose(res.circuit[0].op.p[0], SQ_AMPLITUDE)
 
     def test_gates_compile(self):
         """Test that combinations of MZgates, Rgates, and BSgates
         correctly compile."""
         prog = sf.Program(8)
-        U = random_interferometer(4)
 
         def unitary(q):
             ops.MZgate(0.5, 0.1) | (q[0], q[1])
@@ -345,7 +338,7 @@ class TestX8Compilation:
             unitary(q[4:])
             ops.MeasureFock() | q
 
-        res = prog.compile("X8_01")
+        prog.compile("Xcov")
 
     def test_no_unitary(self, tol):
         """Test compilation works with no unitary provided"""
@@ -358,7 +351,7 @@ class TestX8Compilation:
             ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
             ops.MeasureFock() | q
 
-        res = prog.compile("X8_01")
+        res = prog.compile("Xcov")
         expected = sf.Program(8)
 
         with expected.context as q:
@@ -375,10 +368,10 @@ class TestX8Compilation:
             ops.MZgate(np.pi, 0) | (q[0], q[1])
             ops.MZgate(np.pi, 0) | (q[2], q[3])
             ops.MZgate(np.pi, np.pi) | (q[1], q[2])
-            ops.MZgate(np.pi, 0) | (q[0], q[1])
+            ops.MZgate(np.pi, np.pi) | (q[0], q[1])
             ops.MZgate(np.pi, 0) | (q[2], q[3])
             ops.MZgate(np.pi, np.pi) | (q[1], q[2])
-            ops.Rgate(0) | (q[0])
+            ops.Rgate(np.pi) | (q[0])
             ops.Rgate(0) | (q[1])
             ops.Rgate(0) | (q[2])
             ops.Rgate(0) | (q[3])
@@ -387,17 +380,17 @@ class TestX8Compilation:
             ops.MZgate(np.pi, 0) | (q[4], q[5])
             ops.MZgate(np.pi, 0) | (q[6], q[7])
             ops.MZgate(np.pi, np.pi) | (q[5], q[6])
-            ops.MZgate(np.pi, 0) | (q[4], q[5])
+            ops.MZgate(np.pi, np.pi) | (q[4], q[5])
             ops.MZgate(np.pi, 0) | (q[6], q[7])
             ops.MZgate(np.pi, np.pi) | (q[5], q[6])
-            ops.Rgate(0) | (q[4])
+            ops.Rgate(np.pi) | (q[4])
             ops.Rgate(0) | (q[5])
             ops.Rgate(0) | (q[6])
             ops.Rgate(0) | (q[7])
 
             ops.MeasureFock() | q
 
-        assert program_equivalence(res, expected, atol=tol)
+        assert program_equivalence(res, expected, atol=tol, compare_params=False)
 
         # double check that the applied symplectic is correct
 
@@ -409,159 +402,78 @@ class TestX8Compilation:
 
         # construct the expected symplectic matrix corresponding
         # to just the initial two mode squeeze gates
-        S = TMS(SQ_AMPLITUDE, 0)
+        S = two_mode_squeezing(SQ_AMPLITUDE, 0)
+        num_modes = 8
+        expected = np.identity(2 * num_modes)
+        for i in range(num_modes // 2):
+            expected = expand(S, [i, i + num_modes // 2], num_modes) @ expected
+        # Note that the comparison has to be made at the level of covariance matrices
+        # Not at the level of symplectic matrices
+        assert np.allclose(O @ O.T, expected @ expected.T, atol=tol)
 
-        expected = np.zeros([2*8, 2*8])
-        idx = np.arange(2*8).reshape(4, 4).T
-        for i in idx:
-            expected[i.reshape(-1, 1), i.reshape(1, -1)] = S
-
-        assert np.allclose(O, expected, atol=tol)
-
-    def test_mz_gate_standard(self, tol):
-        """Test that the Mach-Zehnder gate compiles to give the correct unitary
-        for some specific standard parameters"""
-        prog = sf.Program(8)
-
-        with prog.context as q:
-            ops.MZgate(np.pi/2, np.pi) | (q[0], q[1])
-            ops.MZgate(np.pi, 0) | (q[2], q[3])
-            ops.MZgate(np.pi/2, np.pi) | (q[4], q[5])
-            ops.MZgate(np.pi, 0) | (q[6], q[7])
-            ops.MeasureFock() | q
-
-        # compile the program using the X8_01 spec
-        res = prog.compile("X8_01")
-
-        # remove the Fock measurements
-        res.circuit = res.circuit[:-1]
-
-        # extract the Gaussian symplectic matrix
-        O = res.compile("gaussian_unitary").circuit[0].op.p[0]
-
-        # By construction, we know that the symplectic matrix is
-        # passive, and so represents a unitary matrix
-        U = O[:8, :8] + 1j*O[8:, :8]
-
-        # the constructed program should implement the following
-        # unitary matrix
-        expected = np.array(
-            [[0.5-0.5j, -0.5+0.5j, 0, 0],
-             [0.5-0.5j, 0.5-0.5j, 0, 0],
-             [0,  0, -1, -0],
-             [0,  0, -0, 1]]
-        )
-        expected = block_diag(expected, expected)
-
-        assert np.allclose(U, expected, atol=tol)
-
-    @pytest.mark.parametrize("theta1", np.linspace(0, 2*np.pi-0.2, 7))
-    @pytest.mark.parametrize("phi1", np.linspace(0, 2*np.pi-0.1, 7))
-    def test_mz_gate_non_standard(self, theta1, phi1, tol):
-        """Test that the Mach-Zehnder gate compiles to give the correct unitary
-        for a variety of non-standard angles"""
-        prog = sf.Program(8)
-
-        theta2 = np.pi/13
-        phi2 = 3*np.pi/7
-
-        with prog.context as q:
-            ops.MZgate(theta1, phi1) | (q[0], q[1])
-            ops.MZgate(theta2, phi2) | (q[2], q[3])
-            ops.MZgate(theta1, phi1) | (q[4], q[5])
-            ops.MZgate(theta2, phi2) | (q[6], q[7])
-            ops.MeasureFock() | q
-
-        # compile the program using the X8_01 spec
-        res = prog.compile("X8_01")
-
-        # remove the Fock measurements
-        res.circuit = res.circuit[:-1]
-
-        # extract the Gaussian symplectic matrix
-        O = res.compile("gaussian_unitary").circuit[0].op.p[0]
-
-        # By construction, we know that the symplectic matrix is
-        # passive, and so represents a unitary matrix
-        U = O[:8, :8] + 1j*O[8:, :8]
-
-        # the constructed program should implement the following
-        # unitary matrix
-        expected = np.array([
-            [(np.exp(1j * phi1) * (-1 + np.exp(1j * theta1))) / 2.0, 0.5j * (1 + np.exp(1j * theta1)), 0, 0],
-            [0.5j * np.exp(1j * phi1) * (1 + np.exp(1j * theta1)), (1 - np.exp(1j * theta1)) / 2.0, 0, 0],
-            [0, 0, (np.exp(1j * phi2) * (-1 + np.exp(1j * theta2))) / 2.0, 0.5j * (1 + np.exp(1j * theta2))],
-            [0, 0, 0.5j * np.exp(1j * phi2) * (1 + np.exp(1j * theta2)), (1 - np.exp(1j * theta2)) / 2.0],
-        ])
-        expected = block_diag(expected, expected)
-
-        assert np.allclose(U, expected, atol=tol)
-
-
-    def test_interferometers(self, tol):
+    @pytest.mark.parametrize("num_pairs", [4])
+    def test_interferometers(self, num_pairs, tol):
         """Test that the compilation correctly decomposes the interferometer using
         the rectangular_symmetric mesh"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i in range(0, num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        res = prog.compile("X8_01")
+        res = prog.compile("Xcov")
 
-        expected = sf.Program(8)
+        expected = sf.Program(2 * num_pairs)
 
         with expected.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
-            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | (q[4], q[5], q[6], q[7])
+            for i in range(0, num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | tuple(
+                q[i] for i in range(num_pairs)
+            )
+            ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False) | tuple(
+                q[i] for i in range(num_pairs, 2 * num_pairs)
+            )
             ops.MeasureFock() | q
 
         expected = expected.compile(DummyCircuit())
+        # Note that since DummyCircuit() has a hard coded limit of 8 modes we only check for this number
+        assert program_equivalence(res, expected, atol=tol, compare_params=False)
 
-        assert program_equivalence(res, expected, atol=tol)
-
-    def test_unitaries_do_not_match(self):
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_unitaries_do_not_match(self, num_pairs):
         """Test exception raised if the unitary applied to modes [0, 1, 2, 3] is
         different to the unitary applied to modes [4, 5, 6, 7]"""
-        prog = sf.Program(8)
-        U = random_interferometer(4)
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
-            ops.Interferometer(U) | (q[0], q[1], q[2], q[3])
-            ops.Interferometer(U) | (q[4], q[5], q[6], q[7])
+            for i in range(0, num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.BSgate() | (q[2], q[3])
             ops.MeasureFock() | q
 
-        with pytest.raises(CircuitError, match="must be identical to interferometer"):
-            res = prog.compile("X8_01")
+        with pytest.raises(CircuitError, match="The applied unitary on modes"):
+            res = prog.compile("Xcov")
 
-    def test_unitary_too_large(self):
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_unitary_too_large(self, num_pairs):
         """Test exception raised if the unitary is applied to more
-        than just modes [0, 1, 2, 3] and [4, 5, 6, 7]."""
-        prog = sf.Program(8)
-        U = random_interferometer(8)
+        than just modes [0, 1, 2, 3, ..., num_pairs-1] and [num_pairs, num_pairs+1, ..., 2*num_pairs-1]."""
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(2 * num_pairs)
 
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[0], q[4])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[1], q[5])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[2], q[6])
-            ops.S2gate(SQ_AMPLITUDE, 0) | (q[3], q[7])
+            for i in range(0, num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
             ops.Interferometer(U) | q
             ops.MeasureFock() | q
 
-        with pytest.raises(CircuitError, match="must be applied separately"):
-            res = prog.compile("X8_01")
+        with pytest.raises(CircuitError, match="The applied unitary cannot mix between the modes"):
+            res = prog.compile("Xcov")
