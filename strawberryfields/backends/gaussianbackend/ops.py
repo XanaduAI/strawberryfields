@@ -74,12 +74,3 @@ def reassemble_vector(va, idtodelete):
     for j, j1 in enumerate(ind):
         newv[j1] = va[j]
     return newv
-
-
-def omega(n):
-    """ Utility function to calculate fidelities"""
-    x = np.zeros(n)
-    x[0::2] = 1
-    A = np.diag(x[0:-1], 1)
-    W = A - np.transpose(A)
-    return W
