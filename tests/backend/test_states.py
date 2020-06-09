@@ -177,20 +177,19 @@ class TestBaseFockKetDensityMatrix:
 
         assert np.allclose(rdm, rdm_exact, atol=tol, rtol=0)
 
-    @pytest.mark.backends("fock", "tf")
     def test_ket(self, setup_backend, pure, cutoff, batch_size, tol):
         """Test that the ket of a displaced state matches analytic result"""
         backend = setup_backend(2)
         backend.displacement(a, 0)
 
         state = backend.state()
-        if not pure:
+        if not pure and backend.short_name != "gaussian":
             assert state.is_pure == False
             pytest.skip("Test only works with pure states.")
 
         assert state.is_pure == True
 
-        ket = np.sum(state.ket(), axis=-1)
+        ket = np.sum(state.ket(cutoff=cutoff), axis=-1)
 
         n = np.arange(cutoff)
         expected = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n))

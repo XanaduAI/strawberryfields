@@ -20,8 +20,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 
 from strawberryfields.backends import BaseGaussian
-from strawberryfields.backends.states import BaseFockState
-from strawberryfields.backends.gaussianbackend import GaussianState
+from strawberryfields.backends.states import BaseFockState, BaseGaussianState
 
 
 # make test deterministic
@@ -203,7 +202,7 @@ class TestKetDensityMatrixIntegration:
         """Test exceptions"""
         mu = np.array([0.0, 0.0])
         cov = np.identity(2)
-        state1 = GaussianState((mu, cov), 1, None, None)
+        state1 = BaseGaussianState((mu, cov), 1, None, None)
         state2 = BaseFockState(np.zeros(cutoff), 1, False, cutoff)
 
         eng, prog = setup_eng(2)
@@ -262,7 +261,7 @@ class TestKetDensityMatrixIntegration:
         """Test exceptions"""
         mu = np.array([0.0, 0.0])
         cov = np.identity(2)
-        state = GaussianState((mu, cov), 1, None, None)
+        state = BaseGaussianState((mu, cov), 1, None, None)
 
         eng, prog = setup_eng(2)
 
