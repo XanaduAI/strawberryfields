@@ -397,7 +397,7 @@ class TestParityExpectation:
         n2 = 2
         backend.prepare_fock_state(n1, 0)
         backend.prepare_fock_state(n2, 1)
-        backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
+        backend.beamsplitter(np.pi/4, 0, 0, 1)
         state = backend.state()
 
         assert np.allclose(state.parity_expectation([0]), 0, atol=tol, rtol=0)
