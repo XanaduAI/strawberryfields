@@ -186,15 +186,37 @@ class BaseState(abc.ABC):
 
         Args:
             n (Sequence[int]): the Fock state :math:`\ket{\vec{n}}` that we want to measure the probability of
-            **kwargs:
 
-                  * **cutoff** (*int*): (default 10) specifies the fock basis truncation when calculating
-                    of the fock basis probabilities.
-                    Note that the cutoff argument only applies for Gaussian representation;
-                    states represented in the Fock basis will use their own internal cutoff dimension.
+        Keyword Args:
+            cutoff (int): Specifies where to truncate the computation (default value is 10).
+                Note that the cutoff argument only applies for Gaussian representation;
+                states represented in the Fock basis will use their own internal cutoff dimension.
 
         Returns:
             float: measurement probability
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def all_fock_probs(self, **kwargs):
+        r"""Probabilities of all possible Fock basis states for the current circuit state.
+
+        For example, in the case of 3 modes, this method allows the Fock state probability
+        :math:`|\braketD{0,2,3}{\psi}|^2` to be returned via
+
+        .. code-block:: python
+
+            probs = state.all_fock_probs()
+            probs[0,2,3]
+
+        Returns:
+            array: array of dimension :math:`\underbrace{D\times D\times D\cdots\times D}_{\text{num modes}}`
+                containing the Fock state probabilities, where :math:`D` is the Fock basis cutoff truncation
+
+        Keyword Args:
+            cutoff (int): Specifies where to truncate the computation (default value is 10).
+                Note that the cutoff argument only applies for Gaussian representation;
+                states represented in the Fock basis will use their own internal cutoff dimension.
         """
         raise NotImplementedError
 
@@ -342,6 +364,7 @@ class BaseState(abc.ABC):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def number_expectation(self, modes):
         r"""
         Calculates the expectation value of the product of the number operators of the modes.
@@ -1336,3 +1359,9 @@ class BaseGaussianState(BaseState):
             return np.abs(twq.pure_state_amplitude(self._mu, self._cov, n, hbar=self._hbar, check_purity=False)) ** 2
 
         return twq.density_matrix_element(self._mu, self._cov, n, n, hbar=self._hbar).real
+
+    def all_fock_probs(self, **kwargs):
+        cutoff = kwargs.get("cutoff", 10)
+        mu = self._mu
+        cov = self._cov
+        return twq.probabilities(mu, cov, cutoff, hbar=self._hbar)

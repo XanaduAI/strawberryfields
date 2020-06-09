@@ -105,9 +105,6 @@ object.
 
 .. autosummary::
     cutoff_dim
-    ket
-    dm
     trace
-    all_fock_probs
 
 :html:`</div>`

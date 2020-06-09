@@ -70,7 +70,6 @@ class TestFockProbabilities:
 
 @pytest.mark.parametrize("a", MAG_ALPHAS)
 @pytest.mark.parametrize("phi", PHASE_ALPHAS)
-@pytest.mark.backends("fock", "tf")
 class TestAllFockProbs:
     """Tests for the all_fock_probs state method"""
 
@@ -86,8 +85,8 @@ class TestAllFockProbs:
 
         backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
         state = backend.state()
-        
-        probs = state.all_fock_probs()
+
+        probs = state.all_fock_probs(cutoff=cutoff)
         if isinstance(probs, tf.Tensor):
             probs = probs.numpy()
         probs = probs.flatten()
@@ -125,8 +124,8 @@ class TestAllFockProbs:
 
         for n in range(cutoff):
             for m in range(cutoff):
-                probs = state.all_fock_probs()
+                probs = state.all_fock_probs(cutoff=cutoff)
                 if isinstance(probs, tf.Tensor):
                     probs = probs.numpy()
-                
+
                 assert np.allclose(probs.flatten(), ref_probs, atol=tol, rtol=0)
