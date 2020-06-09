@@ -1288,7 +1288,9 @@ class BaseGaussianState(BaseState):
         cov = self._cov
 
         if self._pure:
-            return twq.state_vector(mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False)
+            return twq.state_vector(
+                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+            )
 
         return None  # pragma: no cover
 
@@ -1312,7 +1314,9 @@ class BaseGaussianState(BaseState):
         mu, cov = self.reduced_gaussian(modes)  # pylint: disable=unused-variable
 
         if self.is_pure:
-            psi = twq.state_vector(mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False)
+            psi = twq.state_vector(
+                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+            )
             rho = np.outer(psi, psi.conj())
             return rho
 
@@ -1356,7 +1360,14 @@ class BaseGaussianState(BaseState):
             raise ValueError("Cutoff argument must be larger than the sum of photon numbers")
 
         if self.is_pure:
-            return np.abs(twq.pure_state_amplitude(self._mu, self._cov, n, hbar=self._hbar, check_purity=False)) ** 2
+            return (
+                np.abs(
+                    twq.pure_state_amplitude(
+                        self._mu, self._cov, n, hbar=self._hbar, check_purity=False
+                    )
+                )
+                ** 2
+            )
 
         return twq.density_matrix_element(self._mu, self._cov, n, n, hbar=self._hbar).real
 
