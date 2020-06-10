@@ -342,7 +342,7 @@ class LocalEngine(BaseEngine):
                 if val is not None:
                     for i, r in enumerate(cmd.reg):
                         if batches:
-                            samples_dict[r.ind] = np.array(val[:, :, i])
+                            samples_dict[r.ind] = val[:, :, i]
                         else:
                             samples_dict[r.ind] = val[:, i]
 
@@ -362,32 +362,30 @@ class LocalEngine(BaseEngine):
                     )
                 ) from None
 
-        samples = self._combine_and_sort_samples(samples_dict, kwargs["shots"], batches)
+        samples = self._combine_and_sort_samples(samples_dict, kwargs["shots"])
 
         return applied, samples
 
-    def _combine_and_sort_samples(self, samples_dict, shots, batches):
+    def _combine_and_sort_samples(self, samples_dict, shots):
         """Helper function to combine the values in the samples dictionary sorted by its keys."""
-        if samples_dict == {}:
-            return []
+        batches = self.backend_options.get("batch_size", 0)
 
-        samples = np.array([[i[j] for _, i in sorted(samples_dict.items())] for j in range(shots)])
+        if samples_dict == {}:
+            return np.empty((0, 0))
+
+        samples = np.transpose([i for _, i in sorted(samples_dict.items())])
 
         # pylint: disable=import-outside-toplevel
         if self.backend_name == "tf":
             from tensorflow import convert_to_tensor
 
             if batches:
-                samples = convert_to_tensor(
-                    np.array(
-                        [
-                            [[i[b][j] for _, i in sorted(samples_dict.items())] for j in range(shots)]
-                            for b in range(batches)
-                        ]
-                    )
-                )
-            else:
-                samples = convert_to_tensor(samples)
+                samples = [
+                    np.transpose([i[b] for _, i in sorted(samples_dict.items())])
+                    for b in range(batches)
+                ]
+
+            return convert_to_tensor(samples)
 
         return samples
 
