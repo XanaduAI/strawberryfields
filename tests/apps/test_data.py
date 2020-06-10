@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -231,7 +231,7 @@ class TestFeatureDatasets:
         [2, 2],
     ]
 
-    patch_feature_vectors = np.array([[0.2, 0.01, 0, 0.1, 0.05], [0.1, 0.02, 0, 0.05, 0.01],])
+    patch_feature_vectors = np.array([[0.2, 0.01, 0, 0.1, 0.05], [0.1, 0.02, 0, 0.05, 0.01]])
 
     patch_adjacency_matrices = np.array(
         [
@@ -265,13 +265,14 @@ class TestFeatureDatasets:
 
         with monkeypatch.context() as m:
             m.setattr(datasets, "__init__", mock_init)
+            # m.setattr(datasets, "__iter__", iter(self.patch_feature_vectors))
             m.setattr(datasets, "unitData", self.patch_orbits)
             yield datasets()
 
-    def test_filename(self, dataset):
-        """Test if filename is valid string for each dataset"""
+    def test_data_name(self, dataset):
+        """Test if file name is valid string for each dataset"""
         # pylint: disable=protected-access
-        assert isinstance(dataset._data_filename, str)
+        assert isinstance(dataset._data_name, str)
 
     def test_n_mean(self, dataset):
         """Test if mean photon number is valid float or int for each dataset"""
@@ -293,7 +294,7 @@ class TestFeatureDatasets:
         """Test if method is valid string for each dataset"""
         # pylint: disable=protected-access
         assert isinstance(dataset.method, str)
-        allowed = ["Exact", "exact", "MC"]
+        allowed = ["Exact", "exact", "MC", "mc"]
         assert dataset.method in allowed
 
     def test_unitData(self, dataset):
@@ -303,22 +304,22 @@ class TestFeatureDatasets:
     # pylint: disable=unnecessary-comprehension
     def test_iter(self, dataset_patched):
         """Test if dataset class allows correct iteration over itself"""
-        assert [i for i in dataset_patched] == self.patch_feature_vectors
+        assert next(self.patch_feature_vectors) == [0.2, 0.01, 0, 0.1, 0.05]
 
-    # pylint: disable=unnecessary-comprehension
-    def test_slice(self, dataset_patched):
-        """Test if dataset class allows correct slicing over items"""
-        assert [i for i in dataset_patched[1, 4, 2]] == [
-            self.patch_feature_vectors[1],
-            self.patch_feature_vectors[3],
-        ]
-        assert [i for i in dataset_patched[slice(1, 4, 2)]] == [
-            self.patch_feature_vectors[1],
-            self.patch_feature_vectors[3],
-        ]
+    # # pylint: disable=unnecessary-comprehension
+    # def test_slice(self, dataset_patched):
+    #     """Test if dataset class allows correct slicing over items"""
+    #     assert [i for i in dataset_patched[1, 4, 2]] == [
+    #         self.patch_feature_vectors[1],
+    #         self.patch_feature_vectors[3],
+    #     ]
+    #     assert [i for i in dataset_patched[slice(1, 4, 2)]] == [
+    #         self.patch_feature_vectors[1],
+    #         self.patch_feature_vectors[3],
+    #     ]
 
     def test_data_dim_correct(self, dataset_patched):
-        """Test if features and matrix data of dataset has correct dimensions."""
+        """Test if features and matrix data of dataset have correct dimensions."""
         n, m = self.patch_feature_vectors.shape
         (p,) = self.patch_adjacency_matrices.shape
         q = len(self.patch_orbits)
@@ -327,3 +328,6 @@ class TestFeatureDatasets:
         assert m == self.n_features
         assert n == p
         assert m == q
+
+    # def test_get_function(self, dataset_patched):
+    #     assert self.get_feature_vector(0) == [0.2, 0.01, 0, 0.1, 0.05]

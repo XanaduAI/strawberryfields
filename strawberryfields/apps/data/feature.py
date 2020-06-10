@@ -1,4 +1,4 @@
-# Copyright 2020 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,16 +27,15 @@ DATA_PATH = pkg_resources.resource_filename("strawberryfields", "apps/data/featu
 class FeatureDataset(ABC):
     """Base class for loading datasets of pre-calculated GBS feature vectors.
 
-    For each dataset, feature vectors, information on what orbits/events are used to construct
-    these feature vectors and the corresponding adjacency matrices are provided.
+    Each dataset contains a collection of feature vectors. The corresponding adjacency matrix
+    for each feature vector and the orbits/events used are also provided.
 
     Attributes:
         n_mean (float): mean number of photons used in the GBS device
         threshold (bool): flag to indicate whether feature vectors are calculated with threshold
-            detection (i.e., detectors of zero or some photons) or with photon-number-resolving
-            detectors
-        method (str): method used to calculate the feature vectors; "Exact" for exact calculation
-            or "MC" for Monte Carlo estimation
+            detectors or with photon-number-resolving detectors
+        method (str): method used to calculate the feature vectors; "exact" for exact calculation
+            or "mc" for Monte Carlo estimation
         unit (str): Signifies the unit of construction of feature vectors; "orbits" or "events"
         unitData (list): list of orbits/events used to construct the feature vectors where each
             orbit is a list of integers and each event can be provided as a tuple of
@@ -48,16 +47,17 @@ class FeatureDataset(ABC):
             were calculated
     """
 
+    _count = 0
     @property
     @abstractmethod
-    def _data_filename(self) -> str:
+    def _data_name(self) -> str:
         """Base name of files containing the data stored in the ``./feature_data/`` directory.
 
-        For each dataset, feature vectors, and the corresponding adjacency matrices are provided
+        For each dataset, feature vectors and the corresponding adjacency matrices are provided
         as numpy arrays in two separate ``.npy`` format files.
 
-        Given ``_data_filename = example`` and ``method = MC``, feature vectors should be stored
-        in ``./feature_data/example_MC_fv.npy`` and the array of corresponding adjacency matrices
+        Given ``_data_name = example`` and ``method = mc``, feature vectors should be stored
+        in ``./feature_data/example_mc_fv.npy`` and the array of corresponding adjacency matrices
         should be saved in ``./feature_data/example_mat.npy``. Numpy functions ``numpy.save(filename,
         array, allow_pickle=True) and numpy.load(filename, allow_pickle=True) can be used to
         save and load these numpy arrays."""
@@ -89,25 +89,54 @@ class FeatureDataset(ABC):
         pass
 
     def __init__(self):
-        self.featuresData = np.load(DATA_PATH + self._data_filename + "_" + self.method + "_fv.npy", allow_pickle=True)
-        self.matData = np.load(DATA_PATH + self._data_filename + "_mat.npy", allow_pickle=True)
+        self.featuresData = np.load(DATA_PATH + self._data_name + "_" + self.method + "_fv.npy", allow_pickle=True)
+        self.matData = np.load(DATA_PATH + self._data_name + "_mat.npy", allow_pickle=True)
         self.n_vectors, self.n_features = self.featuresData.shape
 
     def __iter__(self):
-        return self.featuresData
+        return iter(self.featuresData)
+
+    # def __len__(self):
+    #     return self.n_vectors
+
+    # def __getitem__(self, key):
+    #
+    #     if not isinstance(key, int):
+    #         raise TypeError("Dataset index must be an integer")
+    #
+    #     if key > self.n_vectors:
+    #         raise TypeError("Dataset index must not exceed its length")
+    #
+    #     return self.featuresData[key]
+
+
+    # def __next__(self):
+    #     if self._count < self.n_vectors:
+    #         self._count += 1
+    #         return self.__getitem__(self._count - 1)
+    #     self._count = 0
+    #     raise StopIteration
+
+    # def get_feature_vector(self, k):
+    #     """Get k-th feature vector of the dataset.
+    #     """
+    #     if k > self.n_vectors:
+    #         raise ValueError("Dataset index must not exceed its length")
+    #     return self.featuresData[k]
+
 
 
 class QM9Exact(FeatureDataset):
-    """Exactly-calculated feature vectors of 1100 randomly chosen molecules from the
+    """Exactly-calculated feature vectors of 1100 randomly-chosen molecules from the
     `QM9 dataset <http://quantum-machine.org/datasets/>`__ used in
     :cite:`Ruddigkeit2012, ramakrishnan2014`, are provided. Coulomb matrices are used
     as adjacency matrices to represent molecules in this case.
 
-    The Monte-Carlo estimated feature vectors of these 1100 molecules are also available,
-    in ``QM9MC`` class.
+    The Monte-Carlo estimated feature vectors of these 1100 molecules are also available
+    in the ``QM9MC`` class.
     """
 
-    _data_filename = "QM9"
+    _data_name = "QM9"
     unit = "orbits"
     unitData = [
         [1, 1],
@@ -122,34 +151,34 @@ class QM9Exact(FeatureDataset):
     ]
     n_mean = 6
     threshold = True
-    method = "Exact"
+    method = "exact"
 
 
 class QM9MC(FeatureDataset):
-    """Monte-Carlo estimated feature vectors of 1100 randomly chosen molecules from the
+    """Monte-Carlo estimated feature vectors of 1100 randomly-chosen molecules from the
     `QM9 dataset <http://quantum-machine.org/datasets/>`__ used in
     :cite:`Ruddigkeit2012, ramakrishnan2014`, are provided. Coulomb matrices are used
     as adjacency matrices to represent molecules in this case.
 
-    The exactly-calculated feature vectors of these 1100 molecules are also available,
-    in ``QM9Exact`` class.
+    The exactly-calculated feature vectors of these 1100 molecules are also available
+    in the ``QM9Exact`` class.
     """
 
-    _data_filename = "QM9"
+    _data_name = "QM9"
     unit = "events"
     unitData = [(2, 2), (4, 2), (6, 2)]
     n_mean = 6
     threshold = True
-    method = "MC"
+    method = "mc"
 
 
 class MUTAG(FeatureDataset):
-    """Exactly-calculated feature vectors of the 180 graphs in `MUTAG dataset
+    """Exactly-calculated feature vectors of the 180 graphs in the `MUTAG dataset
     <https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets>`__
     used in :cite:`debnath1991structure, kriege2012subgraph` are provided.
     """
 
-    _data_filename = "MUTAG"
+    _data_name = "MUTAG"
     unit = "orbits"
     unitData = [
         [1, 1],
