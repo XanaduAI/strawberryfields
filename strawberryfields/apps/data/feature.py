@@ -48,15 +48,16 @@ class FeatureDataset(ABC):
     """
 
     _count = 0
+
     @property
     @abstractmethod
-    def _data_name(self) -> str:
+    def _data_filename(self) -> str:
         """Base name of files containing the data stored in the ``./feature_data/`` directory.
 
         For each dataset, feature vectors and the corresponding adjacency matrices are provided
         as numpy arrays in two separate ``.npy`` format files.
 
-        Given ``_data_name = example`` and ``method = mc``, feature vectors should be stored
+        Given ``_data_filename = example`` and ``method = mc``, feature vectors should be stored
         in ``./feature_data/example_mc_fv.npy`` and the array of corresponding adjacency matrices
         should be saved in ``./feature_data/example_mat.npy``. Numpy functions ``numpy.save(filename,
         array, allow_pickle=True) and numpy.load(filename, allow_pickle=True) can be used to
@@ -89,8 +90,10 @@ class FeatureDataset(ABC):
         pass
 
     def __init__(self):
-        self.featuresData = np.load(DATA_PATH + self._data_name + "_" + self.method + "_fv.npy", allow_pickle=True)
-        self.matData = np.load(DATA_PATH + self._data_name + "_mat.npy", allow_pickle=True)
+        self.featuresData = np.load(
+            f"{DATA_PATH}{self._data_filename}_{self.method}_fv.npy", allow_pickle=True
+        )
+        self.matData = np.load(DATA_PATH + self._data_filename + "_mat.npy", allow_pickle=True)
         self.n_vectors, self.n_features = self.featuresData.shape
 
     def __iter__(self):
@@ -99,23 +102,22 @@ class FeatureDataset(ABC):
     # def __len__(self):
     #     return self.n_vectors
 
-    # def __getitem__(self, key):
-    #
-    #     if not isinstance(key, int):
-    #         raise TypeError("Dataset index must be an integer")
-    #
-    #     if key > self.n_vectors:
-    #         raise TypeError("Dataset index must not exceed its length")
-    #
-    #     return self.featuresData[key]
+    def __getitem__(self, key):
 
+        if not isinstance(key, int):
+            raise TypeError("Dataset index must be an integer")
 
-    # def __next__(self):
-    #     if self._count < self.n_vectors:
-    #         self._count += 1
-    #         return self.__getitem__(self._count - 1)
-    #     self._count = 0
-    #     raise StopIteration
+        if key > self.n_vectors:
+            raise TypeError("Dataset index must not exceed its length")
+
+        return self.featuresData[key]
+
+    def __next__(self):
+        if self._count < self.n_vectors:
+            self._count += 1
+            return self.__getitem__(self._count - 1)
+        self._count = 0
+        raise StopIteration
 
     # def get_feature_vector(self, k):
     #     """Get k-th feature vector of the dataset.
@@ -123,7 +125,6 @@ class FeatureDataset(ABC):
     #     if k > self.n_vectors:
     #         raise ValueError("Dataset index must not exceed its length")
     #     return self.featuresData[k]
-
 
 
 class QM9Exact(FeatureDataset):
@@ -136,7 +137,7 @@ class QM9Exact(FeatureDataset):
     in the ``QM9MC`` class.
     """
 
-    _data_name = "QM9"
+    _data_filename = "QM9"
     unit = "orbits"
     unitData = [
         [1, 1],
@@ -164,7 +165,7 @@ class QM9MC(FeatureDataset):
     in the ``QM9Exact`` class.
     """
 
-    _data_name = "QM9"
+    _data_filename = "QM9"
     unit = "events"
     unitData = [(2, 2), (4, 2), (6, 2)]
     n_mean = 6
@@ -178,7 +179,7 @@ class MUTAG(FeatureDataset):
     used in :cite:`debnath1991structure, kriege2012subgraph` are provided.
     """
 
-    _data_name = "MUTAG"
+    _data_filename = "MUTAG"
     unit = "orbits"
     unitData = [
         [1, 1],

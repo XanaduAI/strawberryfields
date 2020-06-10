@@ -261,7 +261,7 @@ class TestFeatureDatasets:
             # pylint: disable=protected-access
             _self.featuresData = self.patch_feature_vectors
             _self.matData = self.patch_adjacency_matrices
-            self.n_vectors, self.n_features = 2, 5
+            _self.n_vectors, _self.n_features = 2, 5
 
         with monkeypatch.context() as m:
             m.setattr(datasets, "__init__", mock_init)
@@ -269,10 +269,10 @@ class TestFeatureDatasets:
             m.setattr(datasets, "unitData", self.patch_orbits)
             yield datasets()
 
-    def test_data_name(self, dataset):
+    def test_data_filename(self, dataset):
         """Test if file name is valid string for each dataset"""
         # pylint: disable=protected-access
-        assert isinstance(dataset._data_name, str)
+        assert isinstance(dataset._data_filename, str)
 
     def test_n_mean(self, dataset):
         """Test if mean photon number is valid float or int for each dataset"""
@@ -301,10 +301,11 @@ class TestFeatureDatasets:
         """Test if unitData is valid list for each dataset"""
         assert isinstance(dataset.unitData, list)
 
-    # pylint: disable=unnecessary-comprehension
+    #pylint: disable=unnecessary-comprehension
     def test_iter(self, dataset_patched):
         """Test if dataset class allows correct iteration over itself"""
-        assert next(self.patch_feature_vectors) == [0.2, 0.01, 0, 0.1, 0.05]
+        assert next(dataset_patched) == [0.2, 0.01, 0, 0.1, 0.05]
+        # assert np.array([i for i in dataset_patched]) == self.patch_feature_vectors
 
     # # pylint: disable=unnecessary-comprehension
     # def test_slice(self, dataset_patched):
@@ -319,15 +320,16 @@ class TestFeatureDatasets:
     #     ]
 
     def test_data_dim_correct(self, dataset_patched):
-        """Test if features and matrix data of dataset have correct dimensions."""
+        """Test if feature, unit and matrix data of dataset have correct dimensions."""
         n, m = self.patch_feature_vectors.shape
         (p,) = self.patch_adjacency_matrices.shape
         q = len(self.patch_orbits)
 
-        assert n == self.n_vectors
-        assert m == self.n_features
-        assert n == p
-        assert m == q
+        assert n == dataset_patched.n_vectors
+        assert m == dataset_patched.n_features
+        assert p == len(dataset_patched.matData)
+        assert q == len(dataset_patched.unitData)
+
 
     # def test_get_function(self, dataset_patched):
     #     assert self.get_feature_vector(0) == [0.2, 0.01, 0, 0.1, 0.05]
