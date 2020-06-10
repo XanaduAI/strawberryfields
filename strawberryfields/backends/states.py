@@ -420,6 +420,7 @@ class BaseState(abc.ABC):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def parity_expectation(self, modes):
         """Calculates the expectation value of a product of parity operators acting on given modes"""
         raise NotImplementedError
