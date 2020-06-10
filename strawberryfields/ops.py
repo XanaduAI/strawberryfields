@@ -1787,7 +1787,7 @@ class S2gate(Gate):
     r"""Two-mode squeezing gate.
 
     .. math::
-       S_2(z) = \exp\left(z a^\dagger b^\dagger - z^* ab \right) = \exp\left(r (e^{i\phi} a^\dagger b^\dagger e^{-i\phi} ab ) \right)
+       S_2(z) = \exp\left(z a_1^\dagger a_2^\dagger - z^* a_1 a_2 \right) = \exp\left(r (e^{i\phi} a_1^\dagger a_2^\dagger e^{-i\phi} a_1 a_2 ) \right)
 
     where :math:`z = r e^{i\phi}`.
 
@@ -1801,8 +1801,8 @@ class S2gate(Gate):
             :class: defn
 
             .. math::
-                S_2(z) = \exp\left(z^* \a_1\a_2 -z \ad_1 \ad_2 \right) =
-                \exp\left(r (e^{-i\phi} \a_1\a_2 -e^{i\phi} \ad_1 \ad_2 \right)
+                S_2(z) = \exp\left(z \a^\dagger_1\a^\dagger_2 -z^* \a_1 \a_2 \right) =
+                \exp\left(r (e^{i\phi} \a^\dagger_1\a^\dagger_2 -e^{-i\phi} \a_1 \a_2 \right)
 
             where :math:`z=r e^{i \phi}` with :math:`r \geq 0` and :math:`\phi \in [0,2 \pi)`.
 
@@ -1815,8 +1815,8 @@ class S2gate(Gate):
         Two-mode squeezing will transform the operators according to
 
         .. math::
-            S_2(z)^\dagger \a_1  S_2(z) &= \a_1 \cosh(r)-\ad_2 e^{i \phi} \sinh(r),\\
-            S_2(z)^\dagger \a_2  S_2(z) &= \a_2 \cosh(r) -\ad_1 e^{i \phi} \sinh(r),\\
+            S_2(z)^\dagger \a_1  S_2(z) &= \a_1 \cosh(r)+\ad_2 e^{i \phi} \sinh(r),\\
+            S_2(z)^\dagger \a_2  S_2(z) &= \a_2 \cosh(r)+\ad_1 e^{i \phi} \sinh(r),\\
 
         where :math:`z=r e^{i \phi}` with :math:`r \geq 0` and :math:`\phi \in [0,2 \pi)`.
     """
