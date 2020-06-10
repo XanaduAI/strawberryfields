@@ -272,53 +272,12 @@ class BaseEngine(abc.ABC):
                 p = p.compile(target, **compile_options)
             p.lock()
 
-            _, values = self._run_program(p, **kwargs)
+            _, self.samples = self._run_program(p, **kwargs)
             self.run_progs.append(p)
-
-            # check number of measurments and combine samples if needed
-            if len(values) > 1:
-                self._combine_samples(values, p)
-            elif len(values) == 1:
-                self.samples = values[0]
-            else:  # if no measurement was made
-                self.samples = np.array([[]])
 
             prev = p
 
         return Result(self.samples)
-
-    def _combine_samples(self, values, program):
-        """Combines samples if multiple measurements were made.
-
-        If batches are used, the samples will be fed to ``Result.combine_samples``
-        one-batch-at-a-time, which combines the samples and returns them with shape
-        ``(batches, shots, measured_modes)``.
-
-        Args:
-            values (list[array, tensor]): the sample measurements in a list
-            program (Program): quantum program that is run
-        """
-        # get nested order of measured modes
-        sort_order = [
-            np.array([r.ind for r in c.reg]) for c in program.circuit if "Measure" in c.op.__str__()
-        ]
-
-        # pylint: disable=import-outside-toplevel
-        if self.backend_name == "tf":
-            from tensorflow import convert_to_tensor
-
-            if self.backend_options.get("batch_size", 0):  # if batches are used
-                self.samples = []
-                for i in range(self.backend_options.get("batch_size", 0)):
-                    # choose a single batch from values and combine the samples; do for all batches
-                    single_batch_values = [v[i] for v in values]
-                    single_batch_samples = Result.combine_samples(single_batch_values, sort_order)
-                    self.samples.append(single_batch_samples)
-            else:
-                self.samples = Result.combine_samples(values, sort_order)
-            self.samples = convert_to_tensor(self.samples)
-        else:
-            self.samples = Result.combine_samples(values, sort_order)
 
 
 class LocalEngine(BaseEngine):
@@ -374,19 +333,27 @@ class LocalEngine(BaseEngine):
 
     def _run_program(self, prog, **kwargs):
         applied = []
-        values = []
+        samples_dict = {}
+        batches = self.backend_options.get("batch_size", 0)
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend and, if op is a measurement, store it in values
                 val = cmd.op.apply(cmd.reg, self.backend, **kwargs)
                 if val is not None:
-                    values.append(val)
+                    for i, r in enumerate(cmd.reg):
+                        if batches:
+                            samples_dict[r.ind] = np.array(val[:, :, i])
+                        else:
+                            samples_dict[r.ind] = val[:, i]
+
                 applied.append(cmd)
+
             except NotApplicableError:
                 # command is not applicable to the current backend type
                 raise NotApplicableError(
                     "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
                 ) from None
+
             except NotImplementedError:
                 # command not directly supported by backend API
                 raise NotImplementedError(
@@ -395,7 +362,34 @@ class LocalEngine(BaseEngine):
                     )
                 ) from None
 
-        return applied, values
+        samples = self._combine_and_sort_samples(samples_dict, kwargs["shots"], batches)
+
+        return applied, samples
+
+    def _combine_and_sort_samples(self, samples_dict, shots, batches):
+        """Helper function to combine the values in the samples dictionary sorted by its keys."""
+        if samples_dict == {}:
+            return []
+
+        samples = np.array([[i[j] for _, i in sorted(samples_dict.items())] for j in range(shots)])
+
+        # pylint: disable=import-outside-toplevel
+        if self.backend_name == "tf":
+            from tensorflow import convert_to_tensor
+
+            if batches:
+                samples = convert_to_tensor(
+                    np.array(
+                        [
+                            [[i[b][j] for _, i in sorted(samples_dict.items())] for j in range(shots)]
+                            for b in range(batches)
+                        ]
+                    )
+                )
+            else:
+                samples = convert_to_tensor(samples)
+
+        return samples
 
     def run(self, program, *, args=None, compile_options=None, **kwargs):
         """Execute quantum programs by sending them to the backend.
