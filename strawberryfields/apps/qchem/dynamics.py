@@ -83,6 +83,11 @@ def evolution_op(modes: int) -> Callable:
 
     >>> modes = 2
     >>> transform =  evolution_op(modes)
+    >>> p = sf.Program(modes)
+    >>> with p.context as q:
+    >>>     sf.ops.Fock(1) | q[0]
+    >>>     sf.ops.Fock(2) | q[1]
+    >>>     transform(w, U, t) | q
 
     Args:
         modes (int): number of modes
@@ -94,7 +99,7 @@ def evolution_op(modes: int) -> Callable:
     @operation(modes)
     def op(t, U, w, q):
 
-        theta = -w * 100.0 * c * 1e-15 * t * (2 * pi)
+        theta = -w * 100.0 * c * 1.0e-15 * t * (2.0 * pi)
 
         sf.ops.Interferometer(U.T) | q
 
