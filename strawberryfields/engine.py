@@ -362,11 +362,11 @@ class LocalEngine(BaseEngine):
                     )
                 ) from None
 
-        samples = self._combine_and_sort_samples(samples_dict, kwargs["shots"])
+        samples = self._combine_and_sort_samples(samples_dict)
 
         return applied, samples
 
-    def _combine_and_sort_samples(self, samples_dict, shots):
+    def _combine_and_sort_samples(self, samples_dict):
         """Helper function to combine the values in the samples dictionary sorted by its keys."""
         batches = self.backend_options.get("batch_size", 0)
 

@@ -14,9 +14,6 @@
 """
 This module provides a class that represents the result of a quantum computation.
 """
-import itertools as it
-import numpy as np
-
 
 class Result:
     """Result of a quantum computation.
