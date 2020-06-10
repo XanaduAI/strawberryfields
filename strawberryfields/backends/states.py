@@ -125,7 +125,7 @@ class BaseState(abc.ABC):
 
     @abc.abstractmethod
     def ket(self, **kwargs):
-        r"""The numerical state vector for the quantum state.
+        r"""The numerical state vector for the quantum state in the Fock basis.
         Note that if the state is mixed, this method returns None.
 
         Keyword Args:
@@ -140,7 +140,7 @@ class BaseState(abc.ABC):
 
     @abc.abstractmethod
     def dm(self, **kwargs):
-        r"""The numerical density matrix for the quantum state.
+        r"""The numerical density matrix for the quantum state in the Fock basis.
 
         Keyword Args:
             cutoff (int): Specifies where to truncate the returned density matrix (default value is 10).
