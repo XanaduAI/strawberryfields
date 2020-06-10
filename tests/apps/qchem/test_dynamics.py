@@ -80,8 +80,11 @@ def test_evolution_op(time, unitary, frequency, state):
     gbs = sf.Program(modes)
 
     with gbs.context as q:
+
         op(time, unitary, frequency) | q
+
         sf.ops.MeasureFock() | q
+
         s = eng.run(gbs).state.ket()
 
     assert np.allclose(s, state)
