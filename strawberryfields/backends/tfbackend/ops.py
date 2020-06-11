@@ -204,8 +204,8 @@ def single_squeezing_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
 
     def grad(dy):
         Dr, Dphi = grad_squeezing_tw(gate, r, phi)
-        grad_r = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dr)))
-        grad_phi = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
+        grad_r = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dr)))
+        grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
         return grad_r, grad_phi, None
 
     return gate, grad
@@ -322,8 +322,8 @@ def single_displacement_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
 
     def grad(dy):
         Dr, Dphi = grad_displacement_tw(gate, r, phi)
-        grad_r = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dr)))
-        grad_phi = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
+        grad_r = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dr)))
+        grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
         return grad_r, grad_phi, None
 
     return gate, grad
@@ -349,8 +349,8 @@ def single_beamsplitter_matrix(theta, phi, D, dtype=def_type.as_numpy_dtype):
         Dtheta, Dphi = grad_beamsplitter_tw(gate, theta, phi)
         Dtheta = np.transpose(Dtheta, [0, 2, 1, 3])
         Dphi = np.transpose(Dphi, [0, 2, 1, 3])
-        grad_theta = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
-        grad_phi = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
+        grad_theta = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
+        grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
         return grad_theta, grad_phi, None
 
     return gate, grad
@@ -373,8 +373,8 @@ def single_two_mode_squeezing_matrix(theta, phi, D, dtype=def_type.as_numpy_dtyp
 
     def grad(dy):
         Dtheta, Dphi = grad_two_mode_squeezing_tw(gate, theta, phi)
-        grad_theta = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
-        grad_phi = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
+        grad_theta = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
+        grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
         return grad_theta, grad_phi, None
 
     return gate, grad
