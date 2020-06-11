@@ -78,7 +78,7 @@ def evolution(modes: int):
     returned by this function can be used as part of a Strawberry Fields :class:`~.Program` just
     like any other operation from the :mod:`~.ops` module. Its arguments are:
 
-    - t (float): time in units of femtoseconds
+    - t (float): time in femtoseconds
     - Ul (array): normal to local transformation matrix :math:`U_l`
     - w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}` that
       compose the Hamiltonian :math:`\hat{H} = \sum_i \hbar \omega_i a_i^\dagger a_i`
