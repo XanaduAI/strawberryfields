@@ -370,7 +370,7 @@ class LocalEngine(BaseEngine):
         """Helper function to combine the values in the samples dictionary sorted by its keys."""
         batches = self.backend_options.get("batch_size", 0)
 
-        if samples_dict == {}:
+        if not samples_dict:
             return np.empty((0, 0))
 
         samples = np.transpose([i for _, i in sorted(samples_dict.items())])
