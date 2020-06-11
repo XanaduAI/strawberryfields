@@ -46,14 +46,13 @@ device has the following form:
 
 1. Each optical mode is assigned to a vibrational local mode and a specific initial excitation is
    created using one of the state preparation methods discussed. A list of state preparations
-   methods available in Strawberry Fields is provided here:
-   https://strawberryfields.readthedocs.io/en/stable/introduction/ops.html#state-preparation
+   methods available in Strawberry Fields is provided :doc:`here </introduction/ops>`.
 
 2. An interferometer is configured according to the unitary :math:`U_l^\dagger` and the initial
    state is propagated through the interferometer.
 
 3. For each mode, a rotation gate is designed as :math:`R(\theta) = \exp(i\theta \hat{a}^{\dagger}\hat{a})`
-   where :math:`\theta = -\omega t.
+   where :math:`\theta = -\omega t`.
 
 4. A second interferometer is configured according to the unitary :math:`U_l` and the new state
    is propagated through the interferometer.
@@ -63,37 +62,41 @@ device has the following form:
 6. Samples are generated and the probability of obtaining a specific excitation in a given mode
    (or modes) is computed for time :math:`t`.
 
-This module contains functions for implementing this algorithm. The function ``dynamics_observable``
-return a custom ``sf`` operation that contains the required unitary and rotation operations
+This module contains functions for implementing this algorithm. The function :func:`~.evolution`
+returns a custom ``sf`` operation that contains the required unitary and rotation operations
 explained in steps 2-4 of the algorithm.
 """
-from typing import Callable
-
 from scipy.constants import c, pi
 
 import strawberryfields as sf
 from strawberryfields.utils import operation
 
 
-def evolution_op(modes: int) -> Callable:
+def evolution(modes: int):
     r"""Generates a custom ``sf`` operation for performing the transformation
-    :math:`U(t) = U_l e^{-i\hat{H}t/\hbar} U_l^\dagger` on a given state.
+    :math:`U(t) = U_l e^{-i\hat{H}t/\hbar} U_l^\dagger` on a given state. The custom operation
+    returned by this function can be used as part of a Strawberry Fields :class:`~.Program` just
+    like any other operation from the :mod:`~.ops` module. Its arguments are:
+    - t (float): time in units of femtoseconds
+    - Ul (array): normal to local transformation matrix :math:`U_l`
+    - w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}`
+    that compose the Hamiltonian :math:`\hat{H} = \sum_i \hbar \omega_i a_i^\dagger a_i`.
 
     **Example usage:**
 
     >>> modes = 2
-    >>> transform =  evolution_op(modes)
+    >>> transform =  evolution(modes)
     >>> p = sf.Program(modes)
     >>> with p.context as q:
     >>>     sf.ops.Fock(1) | q[0]
     >>>     sf.ops.Fock(2) | q[1]
-    >>>     transform(w, U, t) | q
+    >>>     transform(t, U, w) | q
 
     Args:
         modes (int): number of modes
 
     Returns:
-        op (Callable): an ``sf`` operation for enacting the dynamics transformation
+        op: an ``sf`` operation for enacting the dynamics transformation
     """
     # pylint: disable=expression-not-assigned,pointless-statement
     @operation(modes)

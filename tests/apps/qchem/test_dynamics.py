@@ -27,7 +27,13 @@ t1 = 10.0
 t2 = 100.0
 a = 1 / np.sqrt(2)
 U1 = np.array([[a, -a], [a, a]])
-U2 = np.array([[a, -a, 0.0], [a, a, 0.0], [0.0, 0.0, 1.0]])
+U2 = np.array(
+    [
+        [-0.06822734, -0.96080077, -0.26871343],
+        [-0.320196, -0.23400449, 0.91799587],
+        [0.94489129, -0.14867339, 0.29167906],
+    ]
+)
 w1 = np.array([3914.92, 3787.59])
 w2 = np.array([3914.92, 3787.59, 1627.01])
 p1 = np.array(
@@ -41,19 +47,19 @@ p1 = np.array(
 p2 = np.array(
     [
         [
-            [0.00000000, 0.00000000, 0.00000000, 0.00000000],
-            [0.00000000, 0.00000000, 0.00000000, 0.00000000],
-            [0.75372632, 0.00000000, 0.00000000, 0.00000000],
-            [0.00000000, 0.00000000, 0.00000000, 0.00000000],
-        ],
-        [
-            [0.00000000, 0.00000000, 0.00000000, 0.00000000],
-            [0.22889562, 0.00000000, 0.00000000, 0.00000000],
-            [0.00000000, 0.00000000, 0.00000000, 0.00000000],
+            [0.00000000, 0.00000000, 0.00530293, 0.00000000],
+            [0.00000000, 0.03023791, 0.00000000, 0.00000000],
+            [0.04310503, 0.00000000, 0.00000000, 0.00000000],
             [0.00000000, 0.00000000, 0.00000000, 0.00000000],
         ],
         [
-            [0.01737806, 0.00000000, 0.00000000, 0.00000000],
+            [0.00000000, 0.10479863, 0.00000000, 0.00000000],
+            [0.29878705, 0.00000000, 0.00000000, 0.00000000],
+            [0.00000000, 0.00000000, 0.00000000, 0.00000000],
+            [0.00000000, 0.00000000, 0.00000000, 0.00000000],
+        ],
+        [
+            [0.51776846, 0.00000000, 0.00000000, 0.00000000],
             [0.00000000, 0.00000000, 0.00000000, 0.00000000],
             [0.00000000, 0.00000000, 0.00000000, 0.00000000],
             [0.00000000, 0.00000000, 0.00000000, 0.00000000],
@@ -69,13 +75,12 @@ p2 = np.array(
 
 
 @pytest.mark.parametrize("time, unitary, frequency, prob", [(t1, U1, w1, p1), (t2, U2, w2, p2)])
-@pytest.mark.filterwarnings("ignore: The circuit consists of 2 disconnected components")
-def test_evolution_op(time, unitary, frequency, prob):
-    """Test if the function ``strawberryfields.apps.qchem.dynamics.evolution_op`` gives the correct
-    state when used in a circuit"""
+def test_evolution(time, unitary, frequency, prob):
+    """Test if the function ``strawberryfields.apps.qchem.dynamics.evolution`` gives the correct
+    probabilities of all possible Fock basis states when used in a circuit"""
 
     modes = len(unitary)
-    op = dynamics.evolution_op(modes)
+    op = dynamics.evolution(modes)
 
     eng = sf.Engine("fock", backend_options={"cutoff_dim": 4})
     gbs = sf.Program(modes)
