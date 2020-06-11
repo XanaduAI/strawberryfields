@@ -87,7 +87,7 @@ class ExpFeatures:
                 "Dimension of parameter vector must be equal to dimension of feature vectors"
             )
         w = self.weights(params)
-        return -self.features * w[:, np.newaxis]
+        return self.features * w[:, np.newaxis]
 
 
 class Exp(ExpFeatures):

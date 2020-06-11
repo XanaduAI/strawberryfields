@@ -227,7 +227,7 @@ class VGBS:
         Returns:
             array: the diagonal matrix of weights
         """
-        return np.sqrt(np.diag(self.embedding(params)))
+        return np.diag(self.embedding(params))
 
     def A(self, params: np.ndarray) -> np.ndarray:
         r"""Calculate the trained adjacency matrix :math:`A(\theta)`.
