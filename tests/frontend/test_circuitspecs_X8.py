@@ -565,3 +565,12 @@ class TestX8Compilation:
 
         with pytest.raises(CircuitError, match="must be applied separately"):
             res = prog.compile("X8_01")
+
+    def test_allow_imperfections_warning(self):
+        """Test the X8 compile method warns when allowing imperfections"""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.MeasureFock() | q
+
+        with pytest.warns(UserWarning, match="compile method does not currently support imperfections"):
+            prog.compile("X8", allow_imperfections=True)

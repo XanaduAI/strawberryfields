@@ -507,3 +507,12 @@ class TestXCompilation:
 
         with pytest.raises(CircuitError, match="Incorrect phase value"):
             res = prog.compile("Xunitary")
+
+    def test_allow_imperfections_warning(self):
+        """Test the xunitary compile method warns when allowing imperfections"""
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.MeasureFock() | q
+
+        with pytest.warns(UserWarning, match="compile method does not currently support imperfections"):
+            prog.compile("Xunitary", allow_imperfections=True)
