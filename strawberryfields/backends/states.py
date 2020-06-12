@@ -1324,7 +1324,7 @@ class BaseGaussianState(BaseState):
 
     def dm(self, **kwargs):
         cutoff = kwargs.get("cutoff", 10)
-        return self.reduced_dm(self._mu, self._cov, list(range(self._modes)))
+        return self.reduced_dm(list(range(self._modes)), cutoff=cutoff)
 
     def reduced_dm(self, modes, **kwargs):
         if isinstance(modes, int):

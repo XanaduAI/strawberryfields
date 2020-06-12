@@ -199,6 +199,27 @@ class TestBaseFockKetDensityMatrix:
 
         assert np.allclose(ket, expected, atol=tol, rtol=0)
 
+    def test_density_matrix_thermal_state(self, setup_backend, cutoff, batch_size, tol):
+        """Test that a thermal state returns the correct density matrix"""
+        backend = setup_backend(1)
+        backend.prepare_thermal_state(r, 0)
+
+        state = backend.state()
+        assert not state.is_pure
+
+        rho1 = state.dm(cutoff=cutoff)
+        rho2 = state.reduced_dm(0, cutoff=cutoff)
+
+        assert np.allclose(rho1, rho2, atol=tol, rtol=0)
+
+        n = np.arange(cutoff)
+        expected = np.diag((r ** n) / ((1 + r) ** (n + 1)))
+
+        if batch_size is not None:
+            expected = np.tile(expected, [batch_size, 1]).reshape(-1, cutoff, cutoff)
+
+        assert np.allclose(rho1, expected, atol=tol, rtol=0)
+
 
 @pytest.mark.backends("gaussian")
 class TestBaseGaussianMethods:
