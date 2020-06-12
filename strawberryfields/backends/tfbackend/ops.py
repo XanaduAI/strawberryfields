@@ -334,9 +334,9 @@ def single_displacement_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
 
 
 def displacement_matrix(r, phi, D, batched=False):
+    """creates a single mode displacement matrix accounting for batching"""
     r = tf.cast(r, def_type)
     phi = tf.cast(phi, def_type)
-    """creates a single mode displacement matrix accounting for batching"""
     if batched:
         return tf.stack(
             [single_displacement_matrix(r_, phi_, D) for r_, phi_ in tf.transpose([r, phi])]
@@ -365,9 +365,9 @@ def single_beamsplitter_matrix(theta, phi, D, dtype=def_type.as_numpy_dtype):
 
 
 def beamsplitter_matrix(theta, phi, D, batched=False):
+    """creates a single mode beamsplitter matrix accounting for batching"""
     theta = tf.cast(theta, def_type)
     phi = tf.cast(phi, def_type)
-    """creates a single mode beamsplitter matrix accounting for batching"""
     if batched:
         return tf.stack(
             [
@@ -396,9 +396,9 @@ def single_two_mode_squeezing_matrix(theta, phi, D, dtype=def_type.as_numpy_dtyp
 
 
 def two_mode_squeezer_matrix(theta, phi, D, batched=False):
+    """creates a single mode two-mode squeezing matrix accounting for batching"""
     theta = tf.cast(theta, def_type)
     phi = tf.cast(phi, def_type)
-    """creates a single mode two-mode squeezing matrix accounting for batching"""
     if batched:
         return tf.stack(
             [
@@ -754,18 +754,18 @@ def phase_shifter(theta, mode, in_modes, D, pure=True, batched=False):
 
 
 def displacement(r, phi, mode, in_modes, D, pure=True, batched=False):
+    """returns displacement unitary matrix on specified input modes"""
     r = tf.cast(r, def_type)
     phi = tf.cast(phi, def_type)
-    """returns displacement unitary matrix on specified input modes"""
     matrix = displacement_matrix(r, phi, D, batched)
     output = single_mode_gate(matrix, mode, in_modes, pure, batched)
     return output
 
 
 def squeezer(r, theta, mode, in_modes, D, pure=True, batched=False):
+    """returns squeezer unitary matrix on specified input modes"""
     r = tf.cast(r, def_type)
     theta = tf.cast(theta, def_type)
-    """returns squeezer unitary matrix on specified input modes"""
     matrix = squeezer_matrix(r, theta, D, batched)
     output = single_mode_gate(matrix, mode, in_modes, pure, batched)
     return output
