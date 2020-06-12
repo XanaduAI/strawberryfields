@@ -510,7 +510,7 @@ class TestXCompilation:
 
         res = prog.compile("Xcov", allow_imperfections=True)
         for i in range(2 * num_pairs):
-            assert isinstance(res.circuit[-2-i].op, ops.LossChannel)
+            assert isinstance(res.circuit[-2 - i].op, ops.LossChannel)
 
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
@@ -528,4 +528,4 @@ class TestXCompilation:
         res = prog.compile("Xcov", allow_imperfections=True)
 
         assert isinstance(res.circuit[-1].op, ops.MeasureFock)
-        assert res.circuit[-1].__str__()[12:23] == 'dark_counts'
+        assert res.circuit[-1].__str__()[12:23] == "dark_counts"
