@@ -180,7 +180,7 @@ def test_allow_imperfections_warning():
 
     prog = sf.Program(2)
     with prog.context as q:
-        ops.MeasureFock() | q
+        ops.MZgate(0.4, 0.5) | q
 
     with pytest.warns(UserWarning, match="compile method does not currently support imperfections"):
         prog.compile("gaussian_unitary", allow_imperfections=True)

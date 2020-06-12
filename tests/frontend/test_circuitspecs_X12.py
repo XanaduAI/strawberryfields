@@ -556,8 +556,12 @@ class TestX12Compilation:
 
     def test_allow_imperfections_warning(self, chip):
         """Test the X12 compile method warns when allowing imperfections"""
-        prog = sf.Program(2)
+        prog = sf.Program(12)
+        U = random_interferometer(6)
+
         with prog.context as q:
+            ops.Interferometer(U) | q[:6]
+            ops.Interferometer(U) | q[6:]
             ops.MeasureFock() | q
 
         with pytest.warns(UserWarning, match="compile method does not currently support imperfections"):
