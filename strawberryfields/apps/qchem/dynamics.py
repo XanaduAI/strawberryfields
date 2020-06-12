@@ -74,9 +74,11 @@ from strawberryfields.utils import operation
 
 def evolution(modes: int):
     r"""Generates a custom ``sf`` operation for performing the transformation
-    :math:`U(t) = U_l e^{-i\hat{H}t/\hbar} U_l^\dagger` on a given state. The custom operation
-    returned by this function can be used as part of a Strawberry Fields :class:`~.Program` just
-    like any other operation from the :mod:`~.ops` module. Its arguments are:
+    :math:`U(t) = U_l e^{-i\hat{H}t/\hbar} U_l^\dagger` on a given state.
+
+    The custom operation returned by this function can be used as part of a Strawberry Fields
+    :class:`~.Program` just like any other operation from the :mod:`~.ops` module. Its arguments
+    are:
 
     - t (float): time in femtoseconds
     - Ul (array): normal to local transformation matrix :math:`U_l`
@@ -91,25 +93,25 @@ def evolution(modes: int):
     >>> with p.context as q:
     >>>     sf.ops.Fock(1) | q[0]
     >>>     sf.ops.Fock(2) | q[1]
-    >>>     transform(t, U, w) | q
+    >>>     transform(t, Ul, w) | q
 
     Args:
         modes (int): number of modes
 
     Returns:
-        op: an ``sf`` operation for enacting the dynamics transformation
+        an ``sf`` operation for enacting the dynamics transformation
     """
-    # pylint: disable=expression-not-assigned,pointless-statement
+    # pylint: disable=expression-not-assigned
     @operation(modes)
-    def op(t, U, w, q):
+    def op(t, Ul, w, q):
 
         theta = -w * 100.0 * c * 1.0e-15 * t * (2.0 * pi)
 
-        sf.ops.Interferometer(U.T) | q
+        sf.ops.Interferometer(Ul.T) | q
 
         for i in range(modes):
             sf.ops.Rgate(theta[i]) | q[i]
 
-        sf.ops.Interferometer(U) | q
+        sf.ops.Interferometer(Ul) | q
 
     return op
