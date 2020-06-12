@@ -200,7 +200,8 @@ class TestBaseFockKetDensityMatrix:
         assert np.allclose(ket, expected, atol=tol, rtol=0)
 
     def test_density_matrix_thermal_state(self, setup_backend, cutoff, batch_size, tol):
-        """Test that a thermal state returns the correct density matrix"""
+        """Test that a thermal state returns the correct density matrix, using
+        both the dm() and reduced_dm() methods."""
         backend = setup_backend(1)
         backend.prepare_thermal_state(r, 0)
 
