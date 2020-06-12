@@ -95,7 +95,7 @@ class X8Specs(CircuitSpecs):
 
     circuit = X8_CIRCUIT.format(target=short_name)
 
-    def compile(self, seq, registers, allow_imperfection=False):
+    def compile(self, seq, registers, allow_imperfections=False):
         """Try to arrange a quantum circuit into a form suitable for X8.
 
         Args:

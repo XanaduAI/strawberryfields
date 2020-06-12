@@ -175,7 +175,7 @@ class CircuitSpecs(abc.ABC):
         """
         return None
 
-    def compile(self, seq, registers, allow_imperfection=False):
+    def compile(self, seq, registers, allow_imperfections=False):
         """Class-specific circuit compilation method.
 
         If additional compilation logic is required, child classes can redefine this method.
