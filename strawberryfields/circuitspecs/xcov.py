@@ -165,17 +165,17 @@ class Xcov(CircuitSpecs):
         for Ui in U2:
             Ui.reg = [registers[r.ind + half_n_modes] for r in Ui.reg]
 
-		if allow_imperfections is False:
-		    return sq_seq + U1 + U2 + meas_seq
+        if allow_imperfections is False:
+            return sq_seq + U1 + U2 + meas_seq
 
-		dark_counts = 0.01
-		end_to_end_transmission = 0.5
-		loss_seq = [
-		    Command(ops.LossChannel(end_to_end_transmission), [registers[i]]) for i in range(n_modes)
-		]
-		meas_seq_dc = [
-		    Command(
-		        ops.MeasureFock(dark_counts=[dark_counts] * n_modes), [registers[i] for i in range(n_modes)]
-		    )
-		]
-		return sq_seq + U1 + U2 + loss_seq + meas_seq_dc
+        dark_counts = 0.01
+        end_to_end_transmission = 0.5
+        loss_seq = [
+            Command(ops.LossChannel(end_to_end_transmission), [registers[i]]) for i in range(n_modes)
+        ]
+        meas_seq_dc = [
+            Command(
+                ops.MeasureFock(dark_counts=[dark_counts] * n_modes), [registers[i] for i in range(n_modes)]
+            )
+        ]
+        return sq_seq + U1 + U2 + loss_seq + meas_seq_dc
