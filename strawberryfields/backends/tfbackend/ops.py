@@ -214,7 +214,7 @@ def single_squeezing_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
 def squeezer_matrix(r, phi, D, batched=False):
     """creates a single mode squeezing matrix accounting for batching"""
     if batched:
-        return tf.stack([single_squeezing_matrix(r_, phi_, D) for a in tf.transpose([r, phi])])
+        return tf.stack([single_squeezing_matrix(r_, phi_, D) for r_, phi_ in tf.transpose([r, phi])])
     return single_squeezing_matrix(r, phi, D)
 
 
