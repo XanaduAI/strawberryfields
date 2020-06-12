@@ -100,6 +100,8 @@ def evolution(modes: int):
 
     Returns:
         an ``sf`` operation for enacting the dynamics transformation
+    Return type:
+        op
     """
     # pylint: disable=expression-not-assigned
     @operation(modes)

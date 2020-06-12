@@ -25,7 +25,7 @@ pytestmark = pytest.mark.apps
 
 t1 = 10.0
 t2 = 100.0
-a = 1 / np.sqrt(2)
+a = 1.0 / np.sqrt(2.0)
 U1 = np.array([[a, -a], [a, a]])
 U2 = np.array(
     [
