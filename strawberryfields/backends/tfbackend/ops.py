@@ -214,7 +214,7 @@ def single_squeezing_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
 def squeezer_matrix(r, phi, D, batched=False):
     """creates a single mode squeezing matrix accounting for batching"""
     if batched:
-        return tf.stack([single_squeezing_matrix(r, phi, D) for a in zip([r, phi])])
+        return tf.stack([single_squeezing_matrix(r_, phi_, D) for a in tf.transpose([r, phi])])
     return single_squeezing_matrix(r, phi, D)
 
 
@@ -318,6 +318,9 @@ def single_displacement_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
     """creates a single mode displacement matrix"""
     r = r.numpy()
     phi = phi.numpy()
+    print("in single_displacement_matrix:")
+    print(f"types: r={type(r)}, phi={type(phi)}, D={type(D)}, dtype={dtype}")
+    print(f"values: r={r}, phi={phi}, D={D}, dtype={dtype}")
     gate = displacement_tw(r, phi, D, dtype)
 
     def grad(dy):
@@ -331,8 +334,11 @@ def single_displacement_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
 
 def displacement_matrix(r, phi, D, batched=False):
     """creates a single mode displacement matrix accounting for batching"""
+    print("in displacement_matrix:")
+    print(f"types: r={type(r)}, phi={type(phi)}, D={type(D)}")
+    print(f"values: r={r}, phi={phi}, D={D}, batched={batched}")
     if batched:
-        return tf.stack([single_displacement_matrix(r, phi, D) for a in zip([r, phi])])
+        return tf.stack([single_displacement_matrix(r_, phi_, D) for r_, phi_ in tf.transpose([r, phi])])
     return single_displacement_matrix(r, phi, D)
 
 
@@ -359,7 +365,7 @@ def single_beamsplitter_matrix(theta, phi, D, dtype=def_type.as_numpy_dtype):
 def beamsplitter_matrix(theta, phi, D, batched=False):
     """creates a single mode beamsplitter matrix accounting for batching"""
     if batched:
-        return tf.stack([single_beamsplitter_matrix(theta, phi, D) for a in zip([theta, phi])])
+        return tf.stack([single_beamsplitter_matrix(theta_, phi_, D) for theta_,phi_ in tf.transpose([theta, phi])])
     return tf.convert_to_tensor(single_beamsplitter_matrix(theta, phi, D))
 
 
@@ -384,7 +390,7 @@ def two_mode_squeezer_matrix(theta, phi, D, batched=False):
     """creates a single mode two-mode squeezing matrix accounting for batching"""
     if batched:
         return tf.stack(
-            [single_two_mode_squeezing_matrix(theta, phi, D) for a in zip([theta, phi])]
+            [single_two_mode_squeezing_matrix(theta_, phi_, D) for theta_,phi_ in tf.transpose([theta, phi])]
         )
     return tf.convert_to_tensor(single_two_mode_squeezing_matrix(theta, phi, D))
 
