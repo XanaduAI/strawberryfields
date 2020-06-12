@@ -318,9 +318,6 @@ def single_displacement_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
     """creates a single mode displacement matrix"""
     r = r.numpy()
     phi = phi.numpy()
-    print("in single_displacement_matrix:")
-    print(f"types: r={type(r)}, phi={type(phi)}, D={type(D)}, dtype={dtype}")
-    print(f"values: r={r}, phi={phi}, D={D}, dtype={dtype}")
     gate = displacement_tw(r, phi, D, dtype)
 
     def grad(dy):
@@ -334,9 +331,6 @@ def single_displacement_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
 
 def displacement_matrix(r, phi, D, batched=False):
     """creates a single mode displacement matrix accounting for batching"""
-    print("in displacement_matrix:")
-    print(f"types: r={type(r)}, phi={type(phi)}, D={type(D)}")
-    print(f"values: r={r}, phi={phi}, D={D}, batched={batched}")
     if batched:
         return tf.stack(
             [single_displacement_matrix(r_, phi_, D) for r_, phi_ in tf.transpose([r, phi])]
