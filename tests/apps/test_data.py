@@ -231,7 +231,14 @@ class TestFeatureDatasets:
         [2, 2],
     ]
 
-    patch_feature_vectors = np.array([[0.2, 0.01, 0, 0.1, 0.05], [0.1, 0.02, 0, 0.05, 0.01]])
+    patch_feature_vectors = np.array(
+        [
+            [0.1, 0.01, 0, 0.1, 0.05],
+            [0.2, 0.02, 0, 0.05, 0.01],
+            [0.3, 0.05, 0, 0.05, 0.15],
+            [0.4, 0.15, 0, 0.15, 0.15],
+        ]
+    )
 
     patch_adjacency_matrices = np.array(
         [
@@ -261,7 +268,7 @@ class TestFeatureDatasets:
             # pylint: disable=protected-access
             _self.featuresData = self.patch_feature_vectors
             _self.matData = self.patch_adjacency_matrices
-            _self.n_vectors, _self.n_features = 2, 5
+            _self.n_vectors, _self.n_features = 4, 5
 
         with monkeypatch.context() as m:
             m.setattr(datasets, "__init__", mock_init)
@@ -301,23 +308,22 @@ class TestFeatureDatasets:
         """Test if unitData is valid list for each dataset"""
         assert isinstance(dataset.unitData, list)
 
-    #pylint: disable=unnecessary-comprehension
+    # pylint: disable=unnecessary-comprehension
     def test_iter(self, dataset_patched):
         """Test if dataset class allows correct iteration over itself"""
-        assert next(dataset_patched) == [0.2, 0.01, 0, 0.1, 0.05]
-        # assert np.array([i for i in dataset_patched]) == self.patch_feature_vectors
+        assert (next(dataset_patched) == self.patch_feature_vectors[0]).all()
+        assert (dataset_patched[0] == self.patch_feature_vectors[0]).all()
+        assert (np.array([i for i in dataset_patched]) == self.patch_feature_vectors).all()
 
-    # # pylint: disable=unnecessary-comprehension
-    # def test_slice(self, dataset_patched):
-    #     """Test if dataset class allows correct slicing over items"""
-    #     assert [i for i in dataset_patched[1, 4, 2]] == [
-    #         self.patch_feature_vectors[1],
-    #         self.patch_feature_vectors[3],
-    #     ]
-    #     assert [i for i in dataset_patched[slice(1, 4, 2)]] == [
-    #         self.patch_feature_vectors[1],
-    #         self.patch_feature_vectors[3],
-    #     ]
+    # pylint: disable=unnecessary-comprehension
+    def test_slice(self, dataset_patched):
+        """Test if dataset class allows correct slicing over items"""
+        a1 = np.array([i for i in dataset_patched[(1, 3)]])
+        a2 = np.array([self.patch_feature_vectors[1], self.patch_feature_vectors[3]])
+        a3 = np.array(dataset_patched[slice(1, 3, 1)])
+        a4 = np.array([self.patch_feature_vectors[1], self.patch_feature_vectors[2]])
+        assert (a1 == a2).all()
+        assert (a3 == a4).all()
 
     def test_data_dim_correct(self, dataset_patched):
         """Test if feature, unit and matrix data of dataset have correct dimensions."""
@@ -329,7 +335,3 @@ class TestFeatureDatasets:
         assert m == dataset_patched.n_features
         assert p == len(dataset_patched.matData)
         assert q == len(dataset_patched.unitData)
-
-
-    # def test_get_function(self, dataset_patched):
-    #     assert self.get_feature_vector(0) == [0.2, 0.01, 0, 0.1, 0.05]

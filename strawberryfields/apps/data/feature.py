@@ -99,18 +99,23 @@ class FeatureDataset(ABC):
     def __iter__(self):
         return iter(self.featuresData)
 
-    # def __len__(self):
-    #     return self.n_vectors
+    def __len__(self):
+        return self.n_vectors
 
     def __getitem__(self, key):
-
-        if not isinstance(key, int):
-            raise TypeError("Dataset index must be an integer")
-
-        if key > self.n_vectors:
-            raise TypeError("Dataset index must not exceed its length")
-
-        return self.featuresData[key]
+        """If ``key`` is an integer, return the key-th elements of ``featuresData``.
+        If ``key`` is a tuple of integers, return elements of ``featuresData`` indexed by the
+        integers in the tuple.
+        It ``key`` is a slice(start, stop, step), return elements of ``featuresData`` at index
+        ``start`` till ``stop-1`` with the given ``step``."""
+        if not isinstance(key, (slice, tuple, int)):
+            raise TypeError("Dataset indices must be integers, slices, or tuples")
+        if isinstance(key, int):
+            return self.featuresData[key + self.n_vectors if key < 0 else key]
+        if isinstance(key, tuple):
+            return np.array([self.featuresData[i] for i in key])
+        if isinstance(key, slice):
+            return np.array([self.featuresData[i] for i in [key]])
 
     def __next__(self):
         if self._count < self.n_vectors:
@@ -118,13 +123,6 @@ class FeatureDataset(ABC):
             return self.__getitem__(self._count - 1)
         self._count = 0
         raise StopIteration
-
-    # def get_feature_vector(self, k):
-    #     """Get k-th feature vector of the dataset.
-    #     """
-    #     if k > self.n_vectors:
-    #         raise ValueError("Dataset index must not exceed its length")
-    #     return self.featuresData[k]
 
 
 class QM9Exact(FeatureDataset):
