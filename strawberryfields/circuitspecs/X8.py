@@ -95,12 +95,14 @@ class X8Specs(CircuitSpecs):
 
     circuit = X8_CIRCUIT.format(target=short_name)
 
-    def compile(self, seq, registers):
+    def compile(self, seq, registers, allow_imperfection=False):
         """Try to arrange a quantum circuit into a form suitable for X8.
 
         Args:
             seq (Sequence[Command]): quantum circuit to modify
             registers (Sequence[RegRefs]): quantum registers
+            allow_imperfections (bool): if True, imperfections are added between the circuit gates
+                to simulate realistic hardware
         Returns:
             List[Command]: modified circuit
         Raises:

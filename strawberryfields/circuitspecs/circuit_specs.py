@@ -175,7 +175,7 @@ class CircuitSpecs(abc.ABC):
         """
         return None
 
-    def compile(self, seq, registers):
+    def compile(self, seq, registers, allow_imperfection=False):
         """Class-specific circuit compilation method.
 
         If additional compilation logic is required, child classes can redefine this method.
@@ -183,6 +183,8 @@ class CircuitSpecs(abc.ABC):
         Args:
             seq (Sequence[Command]): quantum circuit to modify
             registers (Sequence[RegRefs]): quantum registers
+            allow_imperfections (bool): if True, imperfections are added between the circuit gates
+                to simulate realistic hardware
         Returns:
             List[Command]: modified circuit
         Raises:

@@ -52,7 +52,7 @@ class Xunitary(CircuitSpecs):
         "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False,},
     }
 
-    def compile(self, seq, registers):
+    def compile(self, seq, registers, allow_imperfection=False):
         # the number of modes in the provided program
         n_modes = len(registers)
 

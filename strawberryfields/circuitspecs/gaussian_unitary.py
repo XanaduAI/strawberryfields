@@ -103,7 +103,7 @@ class GaussianUnitary(CircuitSpecs):
         "Fouriergate": {},
     }
     # pylint: disable=too-many-branches
-    def compile(self, seq, registers):
+    def compile(self, seq, registers, allow_imperfection=False):
         """Try to arrange a quantum circuit into the canonical Symplectic form.
 
         This method checks whether the circuit can be implemented as a sequence of Gaussian operations.
@@ -112,6 +112,8 @@ class GaussianUnitary(CircuitSpecs):
         Args:
             seq (Sequence[Command]): quantum circuit to modify
             registers (Sequence[RegRefs]): quantum registers
+            allow_imperfections (bool): if True, imperfections are added between the circuit gates
+                to simulate realistic hardware
         Returns:
             List[Command]: modified circuit
         Raises:
