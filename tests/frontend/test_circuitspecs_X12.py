@@ -554,11 +554,11 @@ class TestX12Compilation:
         with pytest.raises(CircuitError, match="must be applied separately"):
             res = prog.compile(chip.short_name)
 
-    def test_allow_imperfections_warning(self):
+    def test_allow_imperfections_warning(self, chip):
         """Test the X12 compile method warns when allowing imperfections"""
         prog = sf.Program(2)
         with prog.context as q:
             ops.MeasureFock() | q
 
         with pytest.warns(UserWarning, match="compile method does not currently support imperfections"):
-            prog.compile("X12", allow_imperfections=True)
+            prog.compile(chip.short_name, allow_imperfections=True)
