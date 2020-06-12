@@ -168,7 +168,7 @@ class Xcov(CircuitSpecs):
         if allow_imperfections is False:
             return sq_seq + U1 + U2 + meas_seq
 
-        dark_counts = 0.01
+        dark_counts = 3
         end_to_end_transmission = 0.5
         loss_seq = [
             Command(ops.LossChannel(end_to_end_transmission), [registers[i]]) for i in range(n_modes)

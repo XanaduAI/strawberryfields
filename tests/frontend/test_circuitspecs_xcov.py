@@ -477,3 +477,55 @@ class TestXCompilation:
 
         with pytest.raises(CircuitError, match="The applied unitary cannot mix between the modes"):
             res = prog.compile("Xcov")
+
+
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_allow_imperfections_loss(self, num_pairs):
+        """Test tht LossChannels are added in the right places when a"""
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
+        with prog.context as q:
+            for i in range(num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
+            ops.MeasureFock() | q
+
+        res = prog.compile("Xcov", allow_imperfections=True)
+        for i in range(2 * num_pairs):
+            assert isinstance(res.circuit[-2-i].op, ops.LossChannel)
+
+
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_allow_imperfections_loss(self, num_pairs):
+        """Test tht LossChannels are added in the right places when a"""
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
+        with prog.context as q:
+            for i in range(num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
+            ops.MeasureFock() | q
+
+        res = prog.compile("Xcov", allow_imperfections=True)
+        for i in range(2 * num_pairs):
+            assert isinstance(res.circuit[-2-i].op, ops.LossChannel)
+
+
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_allow_imperfections_dark_counts(self, num_pairs):
+        """Test tht LossChannels are added in the right places when a"""
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
+        with prog.context as q:
+            for i in range(num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
+            ops.MeasureFock() | q
+
+        res = prog.compile("Xcov", allow_imperfections=True)
+
+        assert isinstance(res.circuit[-1].op, ops.MeasureFock)
+        assert res.circuit[-1].__str__()[12:23] == 'dark_counts'
