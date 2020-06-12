@@ -59,7 +59,7 @@ class GaussianBackend(BaseGaussian):
     :math:`M_{i,j} = \langle a _i a_j \rangle`
     and a vector of means :math:`\alpha_i =\langle a_i \rangle`.
 
-    .. 
+    ..
         .. currentmodule:: strawberryfields.backends.gaussianbackend
         .. autosummary::
             :toctree: api
@@ -160,7 +160,8 @@ class GaussianBackend(BaseGaussian):
             val = select * 2 / sqrt(2 * self.circuit.hbar)
             qs = self.circuit.post_select_homodyne(mode, val, **kwargs)
 
-        return qs * sqrt(2 * self.circuit.hbar) / 2
+        # `qs` will always be a single value since multiple shots is not supported
+        return array([[qs * sqrt(2 * self.circuit.hbar) / 2]])
 
     def measure_heterodyne(self, mode, shots=1, select=None):
 
@@ -179,12 +180,13 @@ class GaussianBackend(BaseGaussian):
         if select is None:
             m = identity(2)
             res = 0.5 * self.circuit.measure_dyne(m, [mode], shots=shots)
-            return res[0, 0] + 1j * res[0, 1]
+            return array([[res[0, 0] + 1j * res[0, 1]]])
 
         res = select
         self.circuit.post_select_heterodyne(mode, select)
 
-        return res
+        # `res` will always be a single value since multiple shots is not supported
+        return array([[res]])
 
     def prepare_gaussian_state(self, r, V, modes):
         if isinstance(modes, int):
@@ -217,11 +219,11 @@ class GaussianBackend(BaseGaussian):
         self.circuit.thermal_loss(T, nbar, mode)
 
     def measure_fock(self, modes, shots=1, select=None):
+        if select is not None:
+            raise NotImplementedError(
+                "Gaussian backend currently does not support " "postselection"
+            )
         if shots != 1:
-            if select is not None:
-                raise NotImplementedError(
-                    "Gaussian backend currently does not support " "postselection"
-                )
             warnings.warn(
                 "Cannot simulate non-Gaussian states. "
                 "Conditional state after Fock measurement has not been updated."
@@ -236,15 +238,13 @@ class GaussianBackend(BaseGaussian):
         modes_idxs = concatenate([x_idxs, p_idxs])
         reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
         reduced_mean = mean[modes_idxs]
+
         # check we are sampling from a gaussian state with zero mean
         if allclose(mu, zeros_like(mu)):
             samples = hafnian_sample_state(reduced_cov, shots)
         else:
             samples = hafnian_sample_state(reduced_cov, shots, mean=reduced_mean)
-        # for backward compatibility with previous measurement behaviour,
-        # if only one shot, then we drop the shots axis
-        if shots == 1:
-            samples = samples.reshape((len(modes),))
+
         return samples
 
     def measure_threshold(self, modes, shots=1, select=None):
@@ -270,10 +270,7 @@ class GaussianBackend(BaseGaussian):
         modes_idxs = concatenate([x_idxs, p_idxs])
         reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
         samples = torontonian_sample_state(reduced_cov, shots)
-        # for backward compatibility with previous measurement behaviour,
-        # if only one shot, then we drop the shots axis
-        if shots == 1:
-            samples = samples.reshape((len(modes),))
+
         return samples
 
     def state(self, modes=None, **kwargs):

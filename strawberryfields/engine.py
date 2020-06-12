@@ -208,6 +208,7 @@ class BaseEngine(abc.ABC):
             prog (Program): program to run
         Returns:
             list[Command]: commands that were applied to the backend
+            list[array, tensor]: samples returned from the backend
         """
 
     def _run(self, program, *, args, compile_options, **kwargs):
@@ -235,12 +236,6 @@ class BaseEngine(abc.ABC):
         Returns:
             Result: results of the computation
         """
-
-        def _broadcast_nones(val, dim):
-            """Helper function to ensure register values have same shape, even if not measured"""
-            if val is None and dim > 1:
-                return [None] * dim
-            return val
 
         if not isinstance(program, collections.abc.Sequence):
             program = [program]
@@ -277,15 +272,12 @@ class BaseEngine(abc.ABC):
                 p = p.compile(target, **compile_options)
             p.lock()
 
-            self._run_program(p, **kwargs)
-            shots = kwargs.get("shots", 1)
-            self.samples = [_broadcast_nones(p.reg_refs[k].val, shots) for k in sorted(p.reg_refs)]
+            _, self.samples = self._run_program(p, **kwargs)
             self.run_progs.append(p)
 
             prev = p
 
-        if self.samples is not None:
-            return Result(np.array(self.samples).T)
+        return Result(self.samples)
 
 
 class LocalEngine(BaseEngine):
@@ -341,17 +333,27 @@ class LocalEngine(BaseEngine):
 
     def _run_program(self, prog, **kwargs):
         applied = []
+        samples_dict = {}
+        batches = self.backend_options.get("batch_size", 0)
         for cmd in prog.circuit:
             try:
-                # try to apply it to the backend
-                # NOTE we could also handle storing measured vals here
-                cmd.op.apply(cmd.reg, self.backend, **kwargs)
+                # try to apply it to the backend and, if op is a measurement, store it in values
+                val = cmd.op.apply(cmd.reg, self.backend, **kwargs)
+                if val is not None:
+                    for i, r in enumerate(cmd.reg):
+                        if batches:
+                            samples_dict[r.ind] = val[:, :, i]
+                        else:
+                            samples_dict[r.ind] = val[:, i]
+
                 applied.append(cmd)
+
             except NotApplicableError:
                 # command is not applicable to the current backend type
                 raise NotApplicableError(
                     "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
                 ) from None
+
             except NotImplementedError:
                 # command not directly supported by backend API
                 raise NotImplementedError(
@@ -359,7 +361,33 @@ class LocalEngine(BaseEngine):
                         cmd.op, self.backend, kwargs
                     )
                 ) from None
-        return applied
+
+        samples = self._combine_and_sort_samples(samples_dict)
+
+        return applied, samples
+
+    def _combine_and_sort_samples(self, samples_dict):
+        """Helper function to combine the values in the samples dictionary sorted by its keys."""
+        batches = self.backend_options.get("batch_size", 0)
+
+        if not samples_dict:
+            return np.empty((0, 0))
+
+        samples = np.transpose([i for _, i in sorted(samples_dict.items())])
+
+        # pylint: disable=import-outside-toplevel
+        if self.backend_name == "tf":
+            from tensorflow import convert_to_tensor
+
+            if batches:
+                samples = [
+                    np.transpose([i[b] for _, i in sorted(samples_dict.items())])
+                    for b in range(batches)
+                ]
+
+            return convert_to_tensor(samples)
+
+        return samples
 
     def run(self, program, *, args=None, compile_options=None, **kwargs):
         """Execute quantum programs by sending them to the backend.
