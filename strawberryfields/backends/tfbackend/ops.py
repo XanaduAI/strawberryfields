@@ -216,7 +216,9 @@ def squeezer_matrix(r, phi, D, batched=False):
     r = tf.cast(r, def_type)
     phi = tf.cast(phi, def_type)
     if batched:
-        return tf.stack([single_squeezing_matrix(r_, phi_, D) for r_, phi_ in tf.transpose([r, phi])])
+        return tf.stack(
+            [single_squeezing_matrix(r_, phi_, D) for r_, phi_ in tf.transpose([r, phi])]
+        )
     return single_squeezing_matrix(r, phi, D)
 
 
