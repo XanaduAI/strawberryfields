@@ -13,6 +13,7 @@
 # limitations under the License.
 """Circuit class specification for the X8 class of circuits."""
 import textwrap
+import warnings
 
 import numpy as np
 from numpy.linalg import multi_dot
@@ -109,6 +110,13 @@ class X8Specs(CircuitSpecs):
             CircuitError: the circuit does not correspond to X8
         """
         # pylint: disable=too-many-statements,too-many-branches
+
+        if allow_imperfections:
+            warnings.warn(
+                "The {} compile method does not currently support imperfections.".format(
+                    self.short_name
+                )
+            )
 
         # first do general GBS compilation to make sure
         # Fock measurements are correct

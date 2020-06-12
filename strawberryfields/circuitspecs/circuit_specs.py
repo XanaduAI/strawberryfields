@@ -19,6 +19,7 @@
 
 from typing import List, Set, Dict, Union
 import abc
+import warnings
 
 import networkx as nx
 import blackbird
@@ -190,6 +191,13 @@ class CircuitSpecs(abc.ABC):
         Raises:
             CircuitError: the given circuit cannot be validated to belong to this circuit class
         """
+        if allow_imperfections:
+            warnings.warn(
+                "The {} compile method does not currently support imperfections.".format(
+                    self.short_name
+                )
+            )
+
         # registers is not used here, but may be used if the method is overwritten pylint: disable=unused-argument
         if self.graph is not None:
             # check topology

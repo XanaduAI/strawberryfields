@@ -14,6 +14,7 @@
 """Circuit class specification for the X class of circuits."""
 
 import copy
+import warnings
 
 import numpy as np
 from thewalrus.symplectic import expand
@@ -53,6 +54,12 @@ class Xunitary(CircuitSpecs):
     }
 
     def compile(self, seq, registers, allow_imperfections=False):
+        if allow_imperfections:
+            warnings.warn(
+                "The {} compile method does not currently support imperfections.".format(
+                    self.short_name
+                )
+            )
         # the number of modes in the provided program
         n_modes = len(registers)
 

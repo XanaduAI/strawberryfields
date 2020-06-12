@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Circuit specifications for the Gaussian simulator backend."""
+import warnings
 
 import numpy as np
 from strawberryfields.program_utils import Command
@@ -119,6 +120,12 @@ class GaussianUnitary(CircuitSpecs):
         Raises:
             CircuitError: the circuit does not correspond to a Gaussian unitary
         """
+        if allow_imperfections:
+            warnings.warn(
+                "The {} compile method does not currently support imperfections.".format(
+                    self.short_name
+                )
+            )
 
         # Check which modes are actually being used
         used_modes = []

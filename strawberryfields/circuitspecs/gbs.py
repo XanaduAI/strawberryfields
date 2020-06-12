@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Circuit class specification for the general Gaussian Boson Sampling class of circuits."""
+import warnings
 
 from strawberryfields.program_utils import CircuitError, Command, group_operations
 import strawberryfields.ops as ops
@@ -72,6 +73,13 @@ class GBSSpecs(GaussianSpecs):
         Raises:
             CircuitError: the circuit does not correspond to GBS
         """
+        if allow_imperfections:
+            warnings.warn(
+                "The {} compile method does not currently support imperfections.".format(
+                    self.short_name
+                )
+            )
+
         A, B, C = group_operations(seq, lambda x: isinstance(x, ops.MeasureFock))
 
         # C should be empty
