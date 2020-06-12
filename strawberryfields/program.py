@@ -463,6 +463,8 @@ class Program:
                 The default is False.
             warn_connected (bool): If True, the user is warned if the quantum circuit is not weakly
                 connected. The default is True.
+            allow_imperfections (bool): If True, imperfections are added between the circuit gates
+                to simulate realistic hardware.
 
         Returns:
             Program: compiled program
@@ -500,9 +502,11 @@ class Program:
         if kwargs.get("optimize", False):
             seq = pu.optimize_circuit(seq)
 
+        allow_imperfections = kwargs.get("allow_imperfections", False)
+
         # does the circuit spec  have its own compilation method?
         if db.compile is not None:
-            seq = db.compile(seq, self.register)
+            seq = db.compile(seq, self.register, allow_imperfections=allow_imperfections)
 
         # create the compiled Program
         compiled = self._linked_copy()
