@@ -31,7 +31,7 @@ class TestRepresentationIndependent:
         r = np.arcsinh(1.0)  # pylint: disable=assignment-from-no-return
         alpha = 0.8
 
-        backend.squeeze(r, 0, 0)
+        backend.squeeze(r, 0.0, 0)
         backend.displacement(np.abs(alpha), np.angle(alpha), 0)
         backend.measure_homodyne(0, 0)
 
