@@ -504,7 +504,7 @@ def thermal_state(nbar, D):
     return thermal
 
 
-###################################################################
+##################################################################
 
 # Generic Gate implementations:
 # These apply the given matrix to the specified mode(s) of in_modes
