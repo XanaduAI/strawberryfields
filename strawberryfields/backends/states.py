@@ -378,7 +378,7 @@ class BaseState(abc.ABC):
             modes (list): list of modes for which one wants the expectation of the product of their number operator.
 
         Return:
-            (float): the expectation value.
+            tuple[float, float]: the expectation value and variance
 
         **Example**
 
@@ -402,14 +402,14 @@ class BaseState(abc.ABC):
 
         we can compute the expectation value :math:`\langle \hat{n}_0\hat{n}_2\rangle`:
 
-        >>> state.number_expectation([0, 2])
+        >>> state.number_expectation([0, 2])[0]
         0.07252895071309405
 
         Executing the same program on the Gaussian backend,
 
         >>> eng = sf.Engine("gaussian")
         >>> state = eng.run(prog).state
-        >>> state.number_expectation([0, 2])
+        >>> state.number_expectation([0, 2])[0]
         0.07566984755267293
 
         This slight difference in value compared to the result from the Fock backend above
@@ -966,7 +966,9 @@ class BaseFockState(BaseState):
         """Calculates the expectation value of a product of number operators acting on given modes"""
         cutoff = self._cutoff
         values = np.arange(cutoff)
-        return self.diagonal_expectation(modes, values)
+        mean = self.diagonal_expectation(modes, values)
+        var = self.diagonal_expectation(modes, values ** 2) - mean ** 2
+        return mean, var
 
     def parity_expectation(self, modes):
         cutoff = self._cutoff
@@ -1287,17 +1289,11 @@ class BaseGaussianState(BaseState):
         mu = self._mu
         cov = self._cov
 
-        if len(modes) == 1:
-            return twq.photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
+        mean = twq.photon_number_expectation(mu, cov, modes, hbar=self._hbar).real
+        mean2 = twq.photon_number_squared_expectation(mu, cov, modes, hbar=self._hbar).real
+        var = mean2 - mean ** 2
 
-        if len(modes) == 2:
-            ni = twq.photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
-            nj = twq.photon_number_mean(mu, cov, modes[1], hbar=self._hbar)
-            return twq.photon_number_covar(mu, cov, modes[1], modes[0], hbar=self._hbar) + ni * nj
-
-        raise ValueError(
-            "The number_expectation method only supports one or two modes for Gaussian states."
-        )
+        return mean, var
 
     def parity_expectation(self, modes):
         if len(modes) != len(set(modes)):

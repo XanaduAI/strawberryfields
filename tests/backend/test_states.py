@@ -314,14 +314,17 @@ class TestNumberExpectation:
     """Multimode photon-number expectation value tests"""
 
     def test_number_expectation_vacuum(self, setup_backend, tol, batch_size):
-        """Tests the expectation value of any photon number in vacuum is zero"""
+        """Tests the expectation value of any photon number in vacuum is zero,
+        and the variance is also 0."""
         if batch_size is not None:
             pytest.skip("Does not support batch mode")
         backend = setup_backend(2)
         state = backend.state()
-        assert np.allclose(state.number_expectation([0, 1]), 0.0, atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([0]), 0.0, atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([1]), 0.0, atol=tol, rtol=0)
+
+        expected = (0, 0)
+        assert np.allclose(state.number_expectation([0, 1]), expected, atol=tol, rtol=0)
+        assert np.allclose(state.number_expectation([0]), expected, atol=tol, rtol=0)
+        assert np.allclose(state.number_expectation([1]), expected, atol=tol, rtol=0)
 
     def test_number_expectation_displaced_squeezed(self, setup_backend, tol, batch_size):
         """Tests the expectation value of photon numbers when there is no correlation"""
@@ -340,9 +343,15 @@ class TestNumberExpectation:
         state = backend.state()
         n0 = np.sinh(r0) ** 2 + np.abs(a0) ** 2
         n1 = np.sinh(r1) ** 2 + np.abs(a1) ** 2
-        assert np.allclose(state.number_expectation([0, 1]), n0 * n1, atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([0]), n0, atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([1]), n1, atol=tol, rtol=0)
+
+        res = state.number_expectation([0, 1])
+        assert np.allclose(res[0], n0 * n1, atol=tol, rtol=0)
+
+        res = state.number_expectation([0])
+        assert np.allclose(res[0], n0, atol=tol, rtol=0)
+
+        res = state.number_expectation([1])
+        assert np.allclose(res[0], n1, atol=tol, rtol=0)
 
     def test_number_expectation_repeated_modes(self, setup_backend, tol):
         """Tests that the correct exception is raised for repeated modes"""
@@ -350,17 +359,6 @@ class TestNumberExpectation:
         state = backend.state()
         with pytest.raises(ValueError, match="There can be no duplicates in the modes specified."):
             state.number_expectation([0, 0])
-
-    @pytest.mark.backends("gaussian")
-    def test_number_expectation_only_two_modes_gaussian(self, setup_backend, tol):
-        """Tests that the correct exception is raised when there are more than two modes specified for Gaussian states"""
-        backend = setup_backend(3)
-        state = backend.state()
-        with pytest.raises(
-            ValueError,
-            match="The number_expectation method only supports one or two modes for Gaussian states.",
-        ):
-            state.number_expectation([0, 1, 2])
 
     def test_number_expectation_two_mode_squeezed(self, setup_backend, tol, batch_size):
         """Tests the expectation value of photon numbers when there is correlation"""
@@ -375,9 +373,56 @@ class TestNumberExpectation:
         backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 2)
         state = backend.state()
         nbar = np.sinh(r) ** 2
-        assert np.allclose(state.number_expectation([2, 0]), 2 * nbar ** 2 + nbar, atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([0]), nbar, atol=tol, rtol=0)
-        assert np.allclose(state.number_expectation([2]), nbar, atol=tol, rtol=0)
+
+        res = state.number_expectation([2, 0])
+        assert np.allclose(res[0], 2 * nbar ** 2 + nbar, atol=tol, rtol=0)
+
+        res = state.number_expectation([0])
+        assert np.allclose(res[0], nbar, atol=tol, rtol=0)
+
+        res = state.number_expectation([2])
+        assert np.allclose(res[0], nbar, atol=tol, rtol=0)
+
+    def test_number_expectation_photon_displaced_thermal(self, setup_backend, tol, batch_size):
+        """Test that E(n)=|a|^2+nbar and var(n)=var_th+|a|^2(1+2nbar)
+        for uncorrelated displaced thermal states."""
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
+        backend = setup_backend(2)
+
+        a0 = 0.1
+        nbar0 = 0.123
+
+        a1 = 0.05
+        nbar1 = 0.21
+
+        backend.prepare_thermal_state(nbar0, 0)
+        backend.displacement(a0, 0)
+        backend.prepare_thermal_state(nbar1, 1)
+        backend.displacement(a1, 1)
+        state = backend.state()
+
+        res = state.number_expectation([0])
+
+        mean0 = np.abs(a0) ** 2 + nbar0
+        var0 = nbar0 ** 2 + nbar0 + np.abs(a0) ** 2 * (1 + 2 * nbar0)
+        assert np.allclose(res[0], mean0, atol=tol, rtol=0)
+        assert np.allclose(res[1], var0, atol=tol, rtol=0.01)
+
+        res = state.number_expectation([1])
+
+        mean1 = np.abs(a1) ** 2 + nbar1
+        var1 = nbar1 ** 2 + nbar1 + np.abs(a1) ** 2 * (1 + 2 * nbar1)
+        assert np.allclose(res[0], mean1, atol=tol, rtol=0)
+        assert np.allclose(res[1], var1, atol=tol, rtol=0.01)
+
+        # test uncorrelated result
+        res = state.number_expectation([0, 1])
+        expected_mean = mean0 * mean1
+        assert np.allclose(res[0], expected_mean, atol=tol, rtol=0)
+
+        expected_var = mean0 ** 2 * var1 + mean1 ** 2 * var0 + var0 * var1
+        assert np.allclose(res[1], expected_var, atol=tol, rtol=0.01)
 
     @pytest.mark.backends("fock", "tf")
     def test_number_expectation_four_modes(self, setup_backend, tol, batch_size):
@@ -398,13 +443,13 @@ class TestNumberExpectation:
         state = backend.state()
         nbar = np.sinh(r) ** 2
         assert np.allclose(
-            state.number_expectation([0, 1, 2, 3]), (2 * nbar ** 2 + nbar) ** 2, atol=tol, rtol=0,
+            state.number_expectation([0, 1, 2, 3])[0], (2 * nbar ** 2 + nbar) ** 2, atol=tol, rtol=0,
         )
         assert np.allclose(
-            state.number_expectation([0, 1, 3]), nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0,
+            state.number_expectation([0, 1, 3])[0], nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0,
         )
         assert np.allclose(
-            state.number_expectation([3, 1, 2]), nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0,
+            state.number_expectation([3, 1, 2])[0], nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0,
         )
 
 
