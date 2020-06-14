@@ -43,30 +43,6 @@ _decomposition_tol = (
     1e-13  # TODO this tolerance is used for various purposes and is not well-defined
 )
 
-# data type to use for complex arrays
-COMPLEX_DTYPE = np.complex128
-
-
-def evaluate_complex_parameter(p, phase):
-    """Convenience function for evaluating symbolic arguments
-    with potentially batched phase parameters.
-
-    Args:
-        p (Any): parameters
-        phase (Any): complex phase of parameter ``p``
-
-    """
-    # We need to check if any value of the phase is non-zero,
-    # as the phase might be batched.
-    if np.any(phase != 0):
-        # There exists a non-zero phase; cast the parameter
-        # to a complex data type when evaluating it.
-        return par_evaluate(p, dtype=COMPLEX_DTYPE)
-
-    # All phases are zero; evaluate the parameter without
-    # any additional casting.
-    return par_evaluate(p)
-
 
 def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
     """User warning formatter"""
@@ -615,8 +591,8 @@ class Coherent(Preparation):
         super().__init__([r, p])
 
     def _apply(self, reg, backend, **kwargs):
-        r = evaluate_complex_parameter(self.p[0], self.p[0])
-        phi = evaluate_complex_parameter(self.p[1], self.p[1])
+        r = par_evaluate(self.p[0])
+        phi = par_evaluate(self.p[1])
         backend.prepare_coherent_state(r, phi, *reg)
 
 
@@ -862,7 +838,7 @@ class Catstate(Preparation):
         ket = np.squeeze(ket)
 
         # evaluate the array (elementwise)
-        ket = evaluate_complex_parameter(ket, self.p[1])
+        ket = par_evaluate(ket)
 
         backend.prepare_ket_state(ket, *reg)
 
