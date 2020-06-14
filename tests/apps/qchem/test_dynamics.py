@@ -72,6 +72,12 @@ p2 = np.array(
         ],
     ]
 )
+is1 = [0, 2]
+is2 = [0, 2, 0]
+ns1 = 1
+ns2 = 2
+d1 = [is1, t1, U1, w1, ns1]
+d2 = [is2, t2, U2, w2, ns2]
 
 
 @pytest.mark.parametrize("time, unitary, frequency, prob", [(t1, U1, w1, p1), (t2, U2, w2, p2)])
@@ -96,61 +102,53 @@ def test_evolution(time, unitary, frequency, prob):
     assert np.allclose(p, prob)
 
 
-is1 = [0, 2]
-is2 = [0, 2, 0]
-ns1 = 1
-ns2 = 2
-p1 = [is1, t1, U1, w1, ns1]
-p2 = [is2, t2, U2, w2, ns2]
-
-
-@pytest.mark.parametrize("p", [p1, p2])
+@pytest.mark.parametrize("d", [d1, d2])
 class TestSampleFock:
     """Tests for the function ``strawberryfields.apps.qchem.dynamics.sample_fock``"""
 
-    def test_invalid_n_samples(self, p):
+    def test_invalid_n_samples(self, d):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
         requested."""
         with pytest.raises(ValueError, match="Number of samples must be at least one"):
-            in_state, t, U, w, ns = p
+            in_state, t, U, w, ns = d
             dynamics.sample_fock(in_state, t, U, w, 0)
 
-    def test_invalid_time(self, p):
+    def test_invalid_time(self, d):
         """Test if function raises a ``ValueError`` when a negative time is given."""
         with pytest.raises(ValueError, match="Time must be zero or positive"):
-            in_state, t, U, w, ns = p
+            in_state, t, U, w, ns = d
             dynamics.sample_fock(in_state, -t, U, w, ns)
 
-    def test_negative_frequency(self, p):
+    def test_negative_frequency(self, d):
         """Test if function raises a ``ValueError`` when negative frequencies are given."""
         with pytest.raises(ValueError, match="Vibrational frequencies must be larger than zero"):
-            in_state, t, U, w, ns = p
+            in_state, t, U, w, ns = d
             dynamics.sample_fock(in_state, t, U, -w, ns)
 
-    def test_zero_frequency(self, p):
+    def test_zero_frequency(self, d):
         """Test if function raises a ``ValueError`` when zero frequencies are given."""
         with pytest.raises(ValueError, match="Vibrational frequencies must be larger than zero"):
-            in_state, t, U, w, ns = p
+            in_state, t, U, w, ns = d
             dynamics.sample_fock(in_state, t, U, 0.0 * w, ns)
 
-    def test_complex_unitary(self, p):
+    def test_complex_unitary(self, d):
         """Test if function raises a ``ValueError`` when a complex unitary is given."""
         with pytest.raises(
             ValueError, match="The normal mode to local mode transformation matrix must be real"
         ):
-            in_state, t, U, w, ns = p
+            in_state, t, U, w, ns = d
             dynamics.sample_fock(in_state, t, 1.0j * U, w, ns)
 
-    def test_invalid_loss(self, p):
+    def test_invalid_loss(self, d):
         """Test if function raises a ``ValueError`` when the loss parameter is specified outside
         of range."""
         with pytest.raises(
             ValueError, match="Loss parameter must take a value between zero and one"
         ):
-            in_state, t, U, w, ns = p
+            in_state, t, U, w, ns = d
             dynamics.sample_fock(in_state, t, U, w, ns, w[-1])
 
-    def test_loss(self, monkeypatch, p):
+    def test_loss(self, monkeypatch, d):
         """Test if function correctly creates the SF program for lossy circuits."""
 
         def save_hist(*args):
@@ -161,9 +159,9 @@ class TestSampleFock:
         with monkeypatch.context() as m:
             m.setattr(sf.engine.Result, "samples", np.array([[0]]))
             m.setattr(sf.LocalEngine, "run", save_hist)
-            dynamics.sample_fock(*p, loss=0.5)
+            dynamics.sample_fock(*d, loss=0.5)
 
-    def test_no_loss(self, monkeypatch, p):
+    def test_no_loss(self, monkeypatch, d):
         """Test if function correctly creates the SF program for circuits without loss."""
 
         def save_hist(*args):
@@ -174,19 +172,19 @@ class TestSampleFock:
         with monkeypatch.context() as m:
             m.setattr(sf.engine.Result, "samples", np.array([[0]]))
             m.setattr(sf.LocalEngine, "run", save_hist)
-            dynamics.sample_fock(*p)
+            dynamics.sample_fock(*d)
 
 
-@pytest.mark.parametrize("p", [p1, p2])
-def test_fock_integration(p):
+@pytest.mark.parametrize("d", [d1, d2])
+def test_fock_integration(d):
     """Integration test for the function ``strawberryfields.apps.qchem.dynamics.sample_fock`` to
     check if it returns samples of correct form, i.e., correct number of samples, correct number of
     modes, all non-negative integers."""
-    samples = np.array(dynamics.sample_fock(*p))
+    samples = np.array(dynamics.sample_fock(*d))
 
     dims = samples.shape
 
     assert len(dims) == 2
-    assert dims == (p[4], len(p[2]))
+    assert dims == (d[4], len(d[2]))
     assert samples.dtype == "int"
     assert (samples >= 0).all()
