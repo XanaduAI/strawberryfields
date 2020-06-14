@@ -1,5 +1,6 @@
 antlr4-python3-runtime==4.7.2
 numpy>=1.17.4
+scipy==1.4.1
 sympy>=1.5
 tensorflow>=2.0
 tensorboard>=2.0
