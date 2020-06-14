@@ -174,7 +174,9 @@ class QM9MC(FeatureDataset):
 class MUTAG(FeatureDataset):
     """Exactly-calculated feature vectors of the 180 graphs in the `MUTAG dataset
     <https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets>`__
-    used in :cite:`debnath1991structure, kriege2012subgraph` are provided.
+    used in :cite:`debnath1991structure, kriege2012subgraph` are provided. These
+    are molecular graphs of chemical compounds divided into two classes according
+    to their mutagenic effect on a bacterium.
     """
 
     _data_filename = "MUTAG"
