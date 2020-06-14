@@ -16,7 +16,8 @@
   multi-mode reduced density matrices.
 
 * Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X
-  architecture. [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
+  architecture.
+  [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
 
 * Adds `diagonal_expectation` method for the `BaseFockState` class, which returns
   the expectation value of any operator that is diagonal in the number basis.
