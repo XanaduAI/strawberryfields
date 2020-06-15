@@ -148,6 +148,33 @@ class TestSampleFock:
             in_state, t, U, w, ns = d
             dynamics.sample_fock(in_state, t, U, w, ns, w[-1])
 
+    def test_invalid_mode(self, d):
+        """Test if function raises a ``ValueError`` when the number of modes in the input state and
+        the normal to local transformation matrix are different."""
+        with pytest.raises(
+            ValueError,
+            match="Number of modes in the input state and the normal to local transformation"
+            " matrix must be equal",
+        ):
+            in_state, t, U, w, ns = d
+            dynamics.sample_fock(in_state + [0], t, U, w, ns)
+
+    def test_negative_input_state(self, d):
+        """Test if function raises a ``ValueError`` when input state contains negative values."""
+        with pytest.raises(ValueError, match="Input state must not contain negative values"):
+            in_state, t, U, w, ns = d
+            dynamics.sample_fock([-i for i in in_state], t, U, w, ns)
+
+    def test_invalid_input_photon(self, d):
+        """Test if function raises a ``ValueError`` when the number of photons in each input state
+        mode is not smaller than cutoff."""
+        with pytest.raises(
+            ValueError,
+            match="Number of photons in each input state mode must be smaller than cutoff",
+        ):
+            in_state, t, U, w, ns = d
+            dynamics.sample_fock([i * 2 for i in in_state], t, U, w, ns, cutoff = 3)
+
     def test_loss(self, monkeypatch, d):
         """Test if function correctly creates the SF program for lossy circuits."""
 

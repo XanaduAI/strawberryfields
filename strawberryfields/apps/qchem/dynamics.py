@@ -62,9 +62,13 @@ device has the following form:
 6. Samples are generated and the probability of obtaining a specific excitation in a given mode
    (or modes) is computed for time :math:`t`.
 
-This module contains functions for implementing this algorithm. The function :func:`~.evolution`
-returns a custom ``sf`` operation that contains the required unitary and rotation operations
-explained in steps 2-4 of the algorithm.
+This module contains functions for implementing this algorithm.
+
+- The function :func:`~.evolution` returns a custom ``sf`` operation that contains the required
+  unitary and rotation operations explained in steps 2-4 of the algorithm.
+
+- The function :func:`~.sample_fock` generates samples for simulating vibrational quantum dynamics
+  in molecules with a Fock input state.
 """
 import numpy as np
 from scipy.constants import c, pi
@@ -82,7 +86,7 @@ def evolution(modes: int):
     are:
 
     - t (float): time in femtoseconds
-    - Ul (array): normal to local transformation matrix :math:`U_l`
+    - Ul (array): normal-to-local transformation matrix :math:`U_l`
     - w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}` that
       compose the Hamiltonian :math:`\hat{H} = \sum_i \hbar \omega_i a_i^\dagger a_i`
 
@@ -127,12 +131,12 @@ def sample_fock(
     w: np.ndarray,
     n_samples: int = 1,
     loss: float = 0.0,
-    cutoff: int = 5,
+    cutoff: int = 15,
 ) -> list:
-
     r"""Generate samples for simulating vibrational quantum dynamics with a Fock input state.
 
     **Example usage:**
+
     >>> input_state = [0, 2]
     >>> t = 10.0
     >>> Ul = np.array([[0.707106781, -0.707106781],
@@ -145,11 +149,11 @@ def sample_fock(
     Args:
         input_state (list): input Fock state
         t (float): time in femtoseconds
-        Ul (array): normal to local transformation matrix
+        Ul (array): normal-to-local transformation matrix
         w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}`
         n_samples (int): number of samples to be generated
-        loss (float): loss parameter denoting the fraction of generated photons that are lost
-        cutoff (int): cutoff dimension for determining the set of number states for each mode
+        loss (float): loss parameter denoting the fraction of lost photons
+        cutoff (int): cutoff dimension for each mode
 
     Returns:
         list[list[int]]: a list of samples
@@ -169,16 +173,28 @@ def sample_fock(
     if not 0 <= loss <= 1:
         raise ValueError("Loss parameter must take a value between zero and one")
 
+    if not len(input_state) == len(Ul):
+        raise ValueError(
+            "Number of modes in the input state and the normal to local transformation"
+            " matrix must be equal"
+        )
+
+    if np.any(np.array(input_state) < 0):
+        raise ValueError("Input state must not contain negative values")
+
+    if max(input_state) >= cutoff:
+        raise ValueError("Number of photons in each input state mode must be smaller than cutoff")
+
     modes = len(Ul)
     op = evolution(modes)
     s = []
 
     eng = sf.Engine("fock", backend_options={"cutoff_dim": cutoff})
 
-    gbs = sf.Program(modes)
+    prog = sf.Program(modes)
 
     # pylint: disable=expression-not-assigned
-    with gbs.context as q:
+    with prog.context as q:
 
         for i in range(modes):
             sf.ops.Fock(input_state[i]) | q[i]
@@ -192,6 +208,6 @@ def sample_fock(
         sf.ops.MeasureFock() | q
 
         for _ in range(n_samples):
-            s.append(eng.run(gbs).samples[0].tolist())
+            s.append(eng.run(prog).samples[0].tolist())
 
     return s

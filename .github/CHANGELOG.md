@@ -2,6 +2,13 @@
 
 <h3>New features since last release</h3>
 
+* Adds function `sample_fock` to the `apps.qchem.dynamics` module to generate samples for
+  simulating vibrational quantum dynamics in molecules with a Fock input state.
+  [(#411)](https://github.com/XanaduAI/strawberryfields/pull/411)
+
+* Adds function `evolution` to the `apps.qchem.dynamics` module to implement the operations
+  required to simulate vibrational quantum dynamics in molecules.
+  [(#402)](https://github.com/XanaduAI/strawberryfields/pull/402)
 
 * Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X architecture. [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
 
