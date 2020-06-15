@@ -19,5 +19,4 @@ execution backend. The :class:`~strawberryfields.api.Job` and
 :class:`~strawberryfields.api.Result` classes provide interfaces for managing
 program execution jobs and job results respectively.
 """
-
-from .utils import squeezed_cov, vacuum_state, coherent_state, squeezed_state, displaced_squeezed_state, fock_state, cat_state, randnc, random_covariance, random_symplectic, random_interferometer, operation, is_unitary, is_channel, extract_unitary, extract_channel
+from utils import *

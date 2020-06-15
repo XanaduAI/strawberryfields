@@ -60,6 +60,24 @@ from strawberryfields.engine import LocalEngine
 from strawberryfields.program_utils import Command
 from strawberryfields.ops import Gate, Channel, Ket
 
+__all__ = [
+    "squeezed_cov",
+    "vacuum_state",
+    "coherent_state",
+    "squeezed_state",
+    "displaced_squeezed_state",
+    "fock_state",
+    "cat_state",
+    "randnc",
+    "random_covariance",
+    "random_symplectic",
+    "random_interferometer",
+    "operation",
+    "is_unitary",
+    "is_channel",
+    "extract_unitary",
+    "extract_channel",
+]
 
 # ------------------------------------------------------------------------
 # State functions - Fock basis and Gaussian basis                |
