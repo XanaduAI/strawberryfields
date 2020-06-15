@@ -306,8 +306,8 @@ It can be decomposed into two opposite local squeezers sandwiched between two 50
 Two-mode squeezing will transform the operators according to
 
 .. math::
-   S_2(z)^\dagger \a_1  S_2(z) &= \a_1 \cosh(r)-\ad_2 e^{i \phi} \sinh(r),\\
-   S_2(z)^\dagger \a_2  S_2(z) &= \a_2 \cosh(r) -\ad_1 e^{i \phi} \sinh(r),\\
+   S_2(z)^\dagger \a_1  S_2(z) &= \a_1 \cosh(r)+\ad_2 e^{i \phi} \sinh(r),\\
+   S_2(z)^\dagger \a_2  S_2(z) &= \a_2 \cosh(r) +\ad_1 e^{i \phi} \sinh(r),\\
 
 where :math:`z=r e^{i \phi}` with :math:`r \geq 0` and :math:`\phi \in [0,2 \pi)`.
 
