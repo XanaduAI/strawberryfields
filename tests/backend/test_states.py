@@ -132,8 +132,17 @@ class TestBaseStateMeanPhotonNumber:
         mag_a = np.abs(a)
         phi_a = np.angle(a)
 
-        mean_ex = np.abs(a) ** 2 + np.sinh(r) ** 2
+        magnitude_squared = np.abs(a) ** 2
+
+        mean_ex = magnitude_squared + np.sinh(r) ** 2
+        var_ex = - magnitude_squared + magnitude_squared ** 2 + 2 *\
+            magnitude_squared*np.cosh(2*r) - np.exp(-1j*phi) * a ** 2 *\
+            np.cosh(r)*np.sinh(r) - np.exp(1j* phi) * np.conj(a) **2 *\
+            np.cosh(r)*np.sinh(r) + np.sinh(r)**4 - (magnitude_squared +\
+                    np.conj(np.sinh(r))*np.sinh(r)) ** 2 +\
+            np.cosh(r)*np.sinh(r)*np.sinh(2*r)
         assert np.allclose(mean_photon, mean_ex, atol=tol, rtol=0)
+        assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
     def test_mean_photon_displaced_thermal(self, setup_backend, tol, batch_size):
         """Test that E(n)=|a|^2+nbar and var(n)=var_th+|a|^2(1+2nbar)"""
@@ -344,14 +353,31 @@ class TestNumberExpectation:
         n0 = np.sinh(r0) ** 2 + np.abs(a0) ** 2
         n1 = np.sinh(r1) ** 2 + np.abs(a1) ** 2
 
+        def analytic_var(a, r, phi):
+            magnitude_squared = np.abs(a) ** 2
+            var_ex = - magnitude_squared + magnitude_squared ** 2 + 2 *\
+                magnitude_squared*np.cosh(2*r) - np.exp(-1j*phi) * a ** 2 *\
+                np.cosh(r)*np.sinh(r) - np.exp(1j* phi) * np.conj(a) **2 *\
+                np.cosh(r)*np.sinh(r) + np.sinh(r)**4 - (magnitude_squared +\
+                        np.conj(np.sinh(r))*np.sinh(r)) ** 2 +\
+                np.cosh(r)*np.sinh(r)*np.sinh(2*r)
+            return var_ex
+
+        var_tol = 0.01
+        v0 = analytic_var(a0, r0, phi0)
+        v1 = analytic_var(a1, r1, phi1)
+
         res = state.number_expectation([0, 1])
         assert np.allclose(res[0], n0 * n1, atol=tol, rtol=0)
+        assert np.allclose(res[1], v0 * v1, atol=var_tol, rtol=0)
 
         res = state.number_expectation([0])
         assert np.allclose(res[0], n0, atol=tol, rtol=0)
+        assert np.allclose(res[1], v0, atol=var_tol, rtol=0)
 
         res = state.number_expectation([1])
         assert np.allclose(res[0], n1, atol=tol, rtol=0)
+        assert np.allclose(res[1], v1, atol=var_tol, rtol=0)
 
     def test_number_expectation_repeated_modes(self, setup_backend, tol):
         """Tests that the correct exception is raised for repeated modes"""
