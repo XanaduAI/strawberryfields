@@ -272,7 +272,6 @@ class TestFeatureDatasets:
 
         with monkeypatch.context() as m:
             m.setattr(datasets, "__init__", mock_init)
-            # m.setattr(datasets, "__iter__", iter(self.patch_feature_vectors))
             m.setattr(datasets, "unitData", self.patch_orbits)
             yield datasets()
 
@@ -319,7 +318,7 @@ class TestFeatureDatasets:
     def test_slice(self, dataset_patched):
         """Test if dataset class allows correct slicing over items"""
         a1 = np.array([i for i in dataset_patched[(1, 3)]])
-        a2 = np.array([self.patch_feature_vectors[1], self.patch_feature_vectors[3]])
+        a2 = np.array([self.patch_feature_vectors[1], self.patch_feature_vectors[2]])
         a3 = np.array(dataset_patched[slice(1, 3, 1)])
         a4 = np.array([self.patch_feature_vectors[1], self.patch_feature_vectors[2]])
         assert (a1 == a2).all()

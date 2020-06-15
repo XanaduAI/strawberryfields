@@ -104,16 +104,17 @@ class FeatureDataset(ABC):
 
     def __getitem__(self, key):
         """If ``key`` is an integer, return the key-th elements of ``featuresData``.
-        If ``key`` is a tuple of integers, return elements of ``featuresData`` indexed by the
-        integers in the tuple.
+        If ``key`` is a tuple (start, stop), return elements of ``featuresData`` at index
+        ``start`` till ``stop-1``using one step increment.
         It ``key`` is a slice(start, stop, step), return elements of ``featuresData`` at index
-        ``start`` till ``stop-1`` with the given ``step``."""
+        ``start`` till ``stop-1`` using the given ``step`` increment."""
         if not isinstance(key, (slice, tuple, int)):
             raise TypeError("Dataset indices must be integers, slices, or tuples")
         if isinstance(key, int):
             return self.featuresData[key + self.n_vectors if key < 0 else key]
         if isinstance(key, tuple):
-            return np.array([self.featuresData[i] for i in key])
+            key = slice(*key)
+            return np.array([self.featuresData[i] for i in [key]])
         if isinstance(key, slice):
             return np.array([self.featuresData[i] for i in [key]])
 
