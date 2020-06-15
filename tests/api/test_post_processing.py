@@ -164,28 +164,12 @@ class TestInputValidation:
         """Tests that an error is raised if the modes specified are not
         applicable for the system."""
         samples = validation_circuit()
-        modes = [3, 4]
+        modes = [1, 2]
 
         # Need to escape [ and ] characters due to regular expression pattern matching
-        invalid_modes = "\[3 4\]"
+        invalid_modes = "\[1 2\]"
         with pytest.raises(
             Exception,
-            match="Cannot specify mode indices {} for a 3 mode system!".format(invalid_modes),
-        ):
-            _check_modes(samples, modes)
-
-    def test_not_measured_modes_specified(self):
-        """Tests that an error is raised if the some modes specified were not
-        measured."""
-        samples = validation_circuit()
-        modes = [0, 1, 2]
-
-        # Need to escape [ and ] characters due to regular expression patternnn matching
-        not_measured_modes = "{1, 2}"
-        with pytest.raises(
-            Exception,
-            match="{} were specified for post-processing, but no samples".format(
-                not_measured_modes
-            ),
+            match="Cannot specify mode indices {} for a 1 mode system!".format(invalid_modes),
         ):
             _check_modes(samples, modes)

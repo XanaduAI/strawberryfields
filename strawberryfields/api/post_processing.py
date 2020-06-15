@@ -98,11 +98,7 @@ def _checks_and_get_product(photon_number_samples, modes=None):
     num_modes = photon_number_samples.shape[1]
 
     if modes is None:
-        all_modes = np.arange(num_modes)
-
-        # Remove the modes with Nones
-        indices_for_no_measurement = np.unique(np.argwhere(photon_number_samples == None)[:, 1])
-        modes = np.delete(all_modes, indices_for_no_measurement)
+        modes = np.arange(num_modes)
 
     _check_modes(photon_number_samples, modes)
 
