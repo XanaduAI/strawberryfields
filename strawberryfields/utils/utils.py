@@ -56,9 +56,9 @@ from numpy.polynomial.hermite import hermval
 import scipy as sp
 from scipy.special import factorial as fac
 
-from .engine import LocalEngine
-from .program_utils import Command
-from .ops import Gate, Channel, Ket
+from strawberryfields.engine import LocalEngine
+from strawberryfields.program_utils import Command
+from strawberryfields.ops import Gate, Channel, Ket
 
 
 # ------------------------------------------------------------------------
