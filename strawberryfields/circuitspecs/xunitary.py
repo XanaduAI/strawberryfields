@@ -53,7 +53,7 @@ class Xunitary(CircuitSpecs):
         "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False,},
     }
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,too-many-statements
     def compile(self, seq, registers, allow_imperfections=False):
         if allow_imperfections:
             warnings.warn(
