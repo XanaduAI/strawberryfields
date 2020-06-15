@@ -171,11 +171,13 @@ class Xcov(CircuitSpecs):
         dark_counts = 3
         end_to_end_transmission = 0.5
         loss_seq = [
-            Command(ops.LossChannel(end_to_end_transmission), [registers[i]]) for i in range(n_modes)
+            Command(ops.LossChannel(end_to_end_transmission), [registers[i]])
+            for i in range(n_modes)
         ]
         meas_seq_dc = [
             Command(
-                ops.MeasureFock(dark_counts=[dark_counts] * n_modes), [registers[i] for i in range(n_modes)]
+                ops.MeasureFock(dark_counts=[dark_counts] * n_modes),
+                [registers[i] for i in range(n_modes)],
             )
         ]
         return sq_seq + U1 + U2 + loss_seq + meas_seq_dc
