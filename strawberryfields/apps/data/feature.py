@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Pre-calculated datasets of simulated GBS kernels.
+Submodule of pre-calculated datasets of simulated GBS kernels.
 """
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod
-
 import pkg_resources
 import numpy as np
-import scipy
 
 DATA_PATH = pkg_resources.resource_filename("strawberryfields", "apps/data/feature_data") + "/"
 
@@ -34,12 +32,12 @@ class FeatureDataset(ABC):
         n_mean (float): mean number of photons used in the GBS device
         threshold (bool): flag to indicate whether feature vectors are calculated with threshold
             detectors or with photon-number-resolving detectors
-        method (str): method used to calculate the feature vectors; "exact" for exact calculation
-            or "mc" for Monte Carlo estimation
-        unit (str): Signifies the unit of construction of feature vectors; "orbits" or "events"
-        unitData (list): list of orbits/events used to construct the feature vectors where each
-            orbit is a list of integers and each event can be provided as a tuple of
-            ``(total_photon_number, max_photon_per_mode)``
+        method (str): method used to calculate the feature vectors; ``exact`` for exact calculation
+            or ``mc`` for Monte Carlo estimation
+        unit (str): Signifies the unit of construction of feature vectors; ``orbits`` or ``events``
+        unitData (list): list of orbits/events used to construct the feature vectors. Each
+            orbit is a list of integers and each event can be provided as
+            ``[total_photon_number, max_photon_per_mode]``
         n_vectors (int): number of feature vectors provided in the dataset
         n_features (int): number of features in each vector
         featuresData (array): numpy array of feature vectors
@@ -64,26 +62,31 @@ class FeatureDataset(ABC):
         save and load these numpy arrays."""
         pass
 
+    # pylint: disable=missing-docstring
     @property
     @abstractmethod
     def unit(self) -> str:
         pass
 
+    # pylint: disable=missing-docstring
     @property
     @abstractmethod
     def unitData(self) -> list:
         pass
 
+    # pylint: disable=missing-docstring
     @property
     @abstractmethod
     def n_mean(self) -> float:
         pass
 
+    # pylint: disable=missing-docstring
     @property
     @abstractmethod
     def threshold(self) -> bool:
         pass
 
+    # pylint: disable=missing-docstring
     @property
     @abstractmethod
     def method(self) -> str:
@@ -112,10 +115,10 @@ class FeatureDataset(ABC):
             raise TypeError("Dataset indices must be integers, slices, or tuples")
         if isinstance(key, int):
             return self.featuresData[key + self.n_vectors if key < 0 else key]
-        if isinstance(key, tuple):
+        elif isinstance(key, tuple):
             key = slice(*key)
             return np.array([self.featuresData[i] for i in [key]])
-        if isinstance(key, slice):
+        elif isinstance(key, slice):
             return np.array([self.featuresData[i] for i in [key]])
 
     def __next__(self):
@@ -128,12 +131,23 @@ class FeatureDataset(ABC):
 
 class QM9Exact(FeatureDataset):
     """Exactly-calculated feature vectors of 1100 randomly-chosen molecules from the
-    `QM9 dataset <http://quantum-machine.org/datasets/>`__ used in
-    :cite:`Ruddigkeit2012, ramakrishnan2014`, are provided. Coulomb matrices are used
-    as adjacency matrices to represent molecules in this case.
+    QM9 dataset.
+
+    `QM9 dataset <http://quantum-machine.org/datasets/>`__ is widely used in
+    benchmarking performance of machine learning models in estimating
+    molecular properties :cite:`Ruddigkeit2012`, :cite:`Ramakrishnan2014`.
+
+    Coulomb matrices were used as adjacency matrices to represent molecules in this case.
 
     The Monte-Carlo estimated feature vectors of these 1100 molecules are also available
     in the ``QM9MC`` class.
+
+    Attributes:
+        method = "exact"
+        n_mean = 6
+        threshold = True
+        unit = "orbits"
+        unitData = [[1, 1], [2], [1, 1, 1, 1], [2, 1, 1], [2, 2], [1, 1, 1, 1, 1, 1], [2, 1, 1, 1, 1], [2, 2, 1, 1], [2, 2, 2]]
     """
 
     _data_filename = "QM9"
@@ -156,28 +170,48 @@ class QM9Exact(FeatureDataset):
 
 class QM9MC(FeatureDataset):
     """Monte-Carlo estimated feature vectors of 1100 randomly-chosen molecules from the
-    `QM9 dataset <http://quantum-machine.org/datasets/>`__ used in
-    :cite:`Ruddigkeit2012, ramakrishnan2014`, are provided. Coulomb matrices are used
-    as adjacency matrices to represent molecules in this case.
+    QM9 dataset.
+
+    `QM9 dataset <http://quantum-machine.org/datasets/>`__ is widely used in
+    benchmarking performance of machine learning models in estimating
+    molecular properties :cite:`Ruddigkeit2012`, :cite:`Ramakrishnan2014`.
+
+    Coulomb matrices were used as adjacency matrices to represent molecules in this case.
 
     The exactly-calculated feature vectors of these 1100 molecules are also available
     in the ``QM9Exact`` class.
+
+    Attributes:
+        method = "mc"
+        n_mean = 6
+        threshold = True
+        unit = "events"
+        unitData = [[2, 2], [4, 2], [6, 2]]
     """
 
     _data_filename = "QM9"
     unit = "events"
-    unitData = [(2, 2), (4, 2), (6, 2)]
+    unitData = [[2, 2], [4, 2], [6, 2]]
     n_mean = 6
     threshold = True
     method = "mc"
 
 
 class MUTAG(FeatureDataset):
-    """Exactly-calculated feature vectors of the 180 graphs in the `MUTAG dataset
-    <https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets>`__
-    used in :cite:`debnath1991structure, kriege2012subgraph` are provided. These
-    are molecular graphs of chemical compounds divided into two classes according
+    """Exactly-calculated feature vectors of the 188 graphs in the MUTAG dataset.
+
+    `MUTAG dataset <https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets>`__
+    is widely used to benchmark performance of graph kernels and graph neural networks
+    :cite:`debnath1991structure`, :cite:`kriege2012subgraph`. It contains
+    molecular graphs of 188 chemical compounds divided into two classes according
     to their mutagenic effect on a bacterium.
+
+    Attributes:
+        method = "exact"
+        n_mean = 8
+        threshold = True
+        unit = "orbits"
+        unitData = [[1, 1], [2], [1, 1, 1, 1], [2, 1, 1], [2, 2], [1, 1, 1, 1, 1, 1], [2, 1, 1, 1, 1], [2, 2, 1, 1], [2, 2, 2]]
     """
 
     _data_filename = "MUTAG"

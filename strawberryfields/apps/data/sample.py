@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Pre-calculated datasets of simulated GBS samples.
+Submodule of pre-calculated datasets of simulated GBS samples.
 
 .. seealso::
 

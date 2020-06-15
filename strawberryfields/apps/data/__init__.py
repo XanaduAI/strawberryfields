@@ -18,8 +18,8 @@ and GBS samples.
 .. autosummary::
     :toctree: api
 
-	sample
-	feature
+	    sample
+	    feature
 """
 
 import strawberryfields.apps.data.sample
@@ -33,4 +33,9 @@ from strawberryfields.apps.data.sample import (
     Mutag2,
     Mutag3,
     Formic,
+)
+from strawberryfields.apps.data.feature import (
+    MUTAG,
+    QM9Exact,
+    QM9MC,
 )
