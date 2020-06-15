@@ -115,11 +115,9 @@ class FeatureDataset(ABC):
             raise TypeError("Dataset indices must be integers, slices, or tuples")
         if isinstance(key, int):
             return self.featuresData[key + self.n_vectors if key < 0 else key]
-        elif isinstance(key, tuple):
+        if isinstance(key, tuple):
             key = slice(*key)
-            return np.array([self.featuresData[i] for i in [key]])
-        elif isinstance(key, slice):
-            return np.array([self.featuresData[i] for i in [key]])
+        return np.array([self.featuresData[i] for i in [key]])
 
     def __next__(self):
         if self._count < self.n_vectors:
