@@ -37,7 +37,7 @@ MOLECULE_DATASETS_LIST = [data.sample.Formic]
 
 SAMPLE_DATASETS_LIST = GRAPH_DATASETS_LIST + MOLECULE_DATASETS_LIST
 
-FEATURE_DATASETS_LIST = [data.feature.QM9Exact]
+FEATURE_DATASETS_LIST = [data.feature.QM9Exact, data.feature.QM9MC, data.feature.MUTAG]
 
 
 @pytest.mark.parametrize("datasets", SAMPLE_DATASETS_LIST)
