@@ -191,6 +191,9 @@ class CircuitSpecs(abc.ABC):
         Raises:
             CircuitError: the given circuit cannot be validated to belong to this circuit class
         """
+        # pylint: disable=unused-argument
+        # registers is not used here, but may be used if the method is overwritten
+
         if allow_imperfections:
             warnings.warn(
                 "The {} compile method does not currently support imperfections.".format(
@@ -198,7 +201,6 @@ class CircuitSpecs(abc.ABC):
                 )
             )
 
-        # registers is not used here, but may be used if the method is overwritten pylint: disable=unused-argument
         if self.graph is not None:
             # check topology
             DAG = pu.list_to_DAG(seq)
@@ -267,12 +269,11 @@ class CircuitSpecs(abc.ABC):
                     if op_name in self.primitives:
                         compiled.append(cmd)
                         continue
-                    else:
-                        raise pu.CircuitError(
-                            "The operation {} is not a primitive for the target '{}'".format(
-                                cmd.op.__class__.__name__, self.short_name
-                            )
+                    raise pu.CircuitError(
+                        "The operation {} is not a primitive for the target '{}'".format(
+                            cmd.op.__class__.__name__, self.short_name
                         )
+                    )
                 try:
                     kwargs = self.decompositions[op_name]
                     temp = cmd.op.decompose(cmd.reg, **kwargs)
