@@ -266,13 +266,13 @@ class TestFeatureDatasets:
         def mock_init(_self):
             """Replacement ``__init__`` for all the datasets in ``FEATURE_DATASETS_LIST``"""
             # pylint: disable=protected-access
-            _self.featuresData = self.patch_feature_vectors
-            _self.matData = self.patch_adjacency_matrices
+            _self.vectors = self.patch_feature_vectors
+            _self.adjs = self.patch_adjacency_matrices
             _self.n_vectors, _self.n_features = 4, 5
 
         with monkeypatch.context() as m:
             m.setattr(datasets, "__init__", mock_init)
-            m.setattr(datasets, "unitData", self.patch_orbits)
+            m.setattr(datasets, "unit_data", self.patch_orbits)
             yield datasets()
 
     def test_data_filename(self, dataset):
@@ -293,26 +293,26 @@ class TestFeatureDatasets:
         """Test if unit is valid string for each dataset"""
         # pylint: disable=protected-access
         assert isinstance(dataset.unit, str)
-        allowed = ["Orbits", "orbits", "Events", "events"]
+        allowed = ["orbits", "events"]
         assert dataset.unit in allowed
 
     def test_method(self, dataset):
         """Test if method is valid string for each dataset"""
         # pylint: disable=protected-access
         assert isinstance(dataset.method, str)
-        allowed = ["Exact", "exact", "MC", "mc"]
+        allowed = ["exact", "mc"]
         assert dataset.method in allowed
 
-    def test_unitData(self, dataset):
-        """Test if unitData is valid list for each dataset"""
-        assert isinstance(dataset.unitData, list)
+    def test_unit_data(self, dataset):
+        """Test if unit_data is valid list for each dataset"""
+        assert isinstance(dataset.unit_data, list)
 
     # pylint: disable=unnecessary-comprehension
     def test_iter(self, dataset_patched):
         """Test if dataset class allows correct iteration over itself"""
-        assert (next(dataset_patched) == self.patch_feature_vectors[0]).all()
         assert (dataset_patched[0] == self.patch_feature_vectors[0]).all()
         assert (np.array([i for i in dataset_patched]) == self.patch_feature_vectors).all()
+        assert (next(dataset_patched) == self.patch_feature_vectors[0]).all()
 
     # pylint: disable=unnecessary-comprehension
     def test_slice(self, dataset_patched):
@@ -332,5 +332,5 @@ class TestFeatureDatasets:
 
         assert n == dataset_patched.n_vectors
         assert m == dataset_patched.n_features
-        assert p == len(dataset_patched.matData)
-        assert q == len(dataset_patched.unitData)
+        assert p == len(dataset_patched.adjs)
+        assert q == len(dataset_patched.unit_data)

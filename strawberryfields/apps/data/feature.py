@@ -34,14 +34,14 @@ class FeatureDataset(ABC):
             detectors or with photon-number-resolving detectors
         method (str): method used to calculate the feature vectors; ``exact`` for exact calculation
             or ``mc`` for Monte Carlo estimation
-        unit (str): Signifies the unit of construction of feature vectors; ``orbits`` or ``events``
-        unitData (list): list of orbits/events used to construct the feature vectors. Each
-            orbit is a list of integers and each event can be provided as
+        unit (str): signifies the unit of construction of feature vectors; ``orbits`` or ``events``
+        unit_data (list[list[int]]): list of orbits/events used to construct the feature vectors. Each
+            orbit is a list of integers and each event must be provided as
             ``[total_photon_number, max_photon_per_mode]``
         n_vectors (int): number of feature vectors provided in the dataset
-        n_features (int): number of features in each vector
-        featuresData (array): numpy array of feature vectors
-        matData (array): numpy array of adjacency matrices of graphs for which feature vectors
+        n_features (int): number of features in each feature vector
+        vectors (array): array of feature vectors
+        adjs (array): array of adjacency matrices of graphs for which feature vectors
             were calculated
     """
 
@@ -57,9 +57,10 @@ class FeatureDataset(ABC):
 
         Given ``_data_filename = example`` and ``method = mc``, feature vectors should be stored
         in ``./feature_data/example_mc_fv.npy`` and the array of corresponding adjacency matrices
-        should be saved in ``./feature_data/example_mat.npy``. Numpy functions ``numpy.save(filename,
-        array, allow_pickle=True) and numpy.load(filename, allow_pickle=True) can be used to
-        save and load these numpy arrays."""
+        should be saved in ``./feature_data/example_mat.npy``. Numpy functions such as
+        ``numpy.save(filename, array, allow_pickle=True)`` and
+        ``numpy.load(filename, allow_pickle=True)`` can be used to save and load these numpy
+        arrays."""
         pass
 
     # pylint: disable=missing-docstring
@@ -71,7 +72,7 @@ class FeatureDataset(ABC):
     # pylint: disable=missing-docstring
     @property
     @abstractmethod
-    def unitData(self) -> list:
+    def unit_data(self) -> list:
         pass
 
     # pylint: disable=missing-docstring
@@ -93,31 +94,31 @@ class FeatureDataset(ABC):
         pass
 
     def __init__(self):
-        self.featuresData = np.load(
+        self.vectors = np.load(
             f"{DATA_PATH}{self._data_filename}_{self.method}_fv.npy", allow_pickle=True
         )
-        self.matData = np.load(DATA_PATH + self._data_filename + "_mat.npy", allow_pickle=True)
-        self.n_vectors, self.n_features = self.featuresData.shape
+        self.adjs = np.load(DATA_PATH + self._data_filename + "_mat.npy", allow_pickle=True)
+        self.n_vectors, self.n_features = self.vectors.shape
 
     def __iter__(self):
-        return iter(self.featuresData)
+        return iter(self.vectors)
 
     def __len__(self):
         return self.n_vectors
 
     def __getitem__(self, key):
-        """If ``key`` is an integer, return the key-th elements of ``featuresData``.
-        If ``key`` is a tuple (start, stop), return elements of ``featuresData`` at index
+        """If ``key`` is an integer, return the key-th elements of ``vectors``.
+        If ``key`` is a tuple (start, stop), return elements of ``vectors`` at index
         ``start`` till ``stop-1``using one step increment.
-        It ``key`` is a slice(start, stop, step), return elements of ``featuresData`` at index
+        It ``key`` is a slice(start, stop, step), return elements of ``vectors`` at index
         ``start`` till ``stop-1`` using the given ``step`` increment."""
         if not isinstance(key, (slice, tuple, int)):
             raise TypeError("Dataset indices must be integers, slices, or tuples")
         if isinstance(key, int):
-            return self.featuresData[key + self.n_vectors if key < 0 else key]
+            return self.vectors[key + self.n_vectors if key < 0 else key]
         if isinstance(key, tuple):
             key = slice(*key)
-        return np.array([self.featuresData[i] for i in [key]])
+        return self.vectors[key]
 
     def __next__(self):
         if self._count < self.n_vectors:
@@ -131,26 +132,26 @@ class QM9Exact(FeatureDataset):
     """Exactly-calculated feature vectors of 1100 randomly-chosen molecules from the
     QM9 dataset.
 
-    `QM9 dataset <http://quantum-machine.org/datasets/>`__ is widely used in
+    The `QM9 dataset <http://quantum-machine.org/datasets/>`__ is widely used in
     benchmarking performance of machine learning models in estimating
     molecular properties :cite:`Ruddigkeit2012`, :cite:`Ramakrishnan2014`.
 
     Coulomb matrices were used as adjacency matrices to represent molecules in this case.
 
-    The Monte-Carlo estimated feature vectors of these 1100 molecules are also available
-    in the ``QM9MC`` class.
+    The Monte-Carlo estimated feature vectors of certain events of these 1100 molecules are
+    also available in the :class:`~.QM9MC` class.
 
     Attributes:
         method = "exact"
         n_mean = 6
-        threshold = True
+        threshold = False
         unit = "orbits"
-        unitData = [[1, 1], [2], [1, 1, 1, 1], [2, 1, 1], [2, 2], [1, 1, 1, 1, 1, 1], [2, 1, 1, 1, 1], [2, 2, 1, 1], [2, 2, 2]]
+        unit_data = [[1, 1], [2], [1, 1, 1, 1], [2, 1, 1], [2, 2], [1, 1, 1, 1, 1, 1], [2, 1, 1, 1, 1], [2, 2, 1, 1], [2, 2, 2]]
     """
 
     _data_filename = "QM9"
     unit = "orbits"
-    unitData = [
+    unit_data = [
         [1, 1],
         [2],
         [1, 1, 1, 1],
@@ -162,7 +163,7 @@ class QM9Exact(FeatureDataset):
         [2, 2, 2],
     ]
     n_mean = 6
-    threshold = True
+    threshold = False
     method = "exact"
 
 
@@ -170,35 +171,35 @@ class QM9MC(FeatureDataset):
     """Monte-Carlo estimated feature vectors of 1100 randomly-chosen molecules from the
     QM9 dataset.
 
-    `QM9 dataset <http://quantum-machine.org/datasets/>`__ is widely used in
+    The `QM9 dataset <http://quantum-machine.org/datasets/>`__ is widely used in
     benchmarking performance of machine learning models in estimating
     molecular properties :cite:`Ruddigkeit2012`, :cite:`Ramakrishnan2014`.
 
     Coulomb matrices were used as adjacency matrices to represent molecules in this case.
 
-    The exactly-calculated feature vectors of these 1100 molecules are also available
-    in the ``QM9Exact`` class.
+    The exactly-calculated feature vectors of certain orbits of these 1100 molecules are
+    also available in the :class:`~.QM9Exact` class.
 
     Attributes:
         method = "mc"
         n_mean = 6
-        threshold = True
+        threshold = False
         unit = "events"
-        unitData = [[2, 2], [4, 2], [6, 2]]
+        unit_data = [[2, 2], [4, 2], [6, 2]]
     """
 
     _data_filename = "QM9"
     unit = "events"
-    unitData = [[2, 2], [4, 2], [6, 2]]
+    unit_data = [[2, 2], [4, 2], [6, 2]]
     n_mean = 6
-    threshold = True
+    threshold = False
     method = "mc"
 
 
 class MUTAG(FeatureDataset):
     """Exactly-calculated feature vectors of the 188 graphs in the MUTAG dataset.
 
-    `MUTAG dataset <https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets>`__
+    The `MUTAG dataset <https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets>`__
     is widely used to benchmark performance of graph kernels and graph neural networks
     :cite:`debnath1991structure`, :cite:`kriege2012subgraph`. It contains
     molecular graphs of 188 chemical compounds divided into two classes according
@@ -207,14 +208,14 @@ class MUTAG(FeatureDataset):
     Attributes:
         method = "exact"
         n_mean = 8
-        threshold = True
+        threshold = False
         unit = "orbits"
-        unitData = [[1, 1], [2], [1, 1, 1, 1], [2, 1, 1], [2, 2], [1, 1, 1, 1, 1, 1], [2, 1, 1, 1, 1], [2, 2, 1, 1], [2, 2, 2]]
+        unit_data = [[1, 1], [2], [1, 1, 1, 1], [2, 1, 1], [2, 2], [1, 1, 1, 1, 1, 1], [2, 1, 1, 1, 1], [2, 2, 1, 1], [2, 2, 2]]
     """
 
     _data_filename = "MUTAG"
     unit = "orbits"
-    unitData = [
+    unit_data = [
         [1, 1],
         [2],
         [1, 1, 1, 1],
@@ -226,5 +227,5 @@ class MUTAG(FeatureDataset):
         [2, 2, 2],
     ]
     n_mean = 8
-    threshold = True
+    threshold = False
     method = "exact"
