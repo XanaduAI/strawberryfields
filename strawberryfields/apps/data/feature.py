@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Submodule for feature vector dataset base classes.
+Submodule for feature vector datasets and their base classes.
 """
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod

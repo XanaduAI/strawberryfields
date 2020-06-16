@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Submodule for sample dataset base classes.
+Submodule for sample datasets and their base classes.
 """
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod

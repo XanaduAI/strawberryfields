@@ -19,6 +19,7 @@ GBS samples
 The following datasets of GBS samples are available:
 
 .. currentmodule:: strawberryfields.apps.data
+
 .. autosummary::
     :toctree: api
 
@@ -38,7 +39,6 @@ The following datasets of GBS samples are available:
 The :mod:`~.sample` submodule contains the base :class:`~.GraphDataset`,
 :class:`~.MoleculeDataset`, and :class:`~.SampleDataset` classes from which these datasets inherit.
 
-.. currentmodule:: strawberryfields.apps.data
 .. autosummary::
     :toctree: api
 
@@ -50,7 +50,6 @@ GBS feature vectors
 For use with the :mod:`~.similarity` module, the following pre-calculated feature vectors of graph
 datasets are provided:
 
-.. currentmodule:: strawberryfields.apps.data
 .. autosummary::
     :toctree: api
 
@@ -61,7 +60,6 @@ datasets are provided:
 The :mod:`~.feature` submodule contains the base :class:`~.FeatureDataset` class from which
 these datasets inherit.
 
-.. currentmodule:: strawberryfields.apps.data
 .. autosummary::
     :toctree: api
 
