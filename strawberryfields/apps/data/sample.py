@@ -139,7 +139,7 @@ class Planted(GraphDataset):
 
     **Graph:**
 
-    .. |planted| image:: ../../_static/graphs/planted.png
+    .. |planted| image:: ../../../_static/graphs/planted.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
@@ -169,7 +169,7 @@ class TaceAs(GraphDataset):
 
     **Graph:**
 
-    .. |tace_as| image:: ../../_static/graphs/TACE-AS.png
+    .. |tace_as| image:: ../../../_static/graphs/TACE-AS.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
@@ -217,7 +217,7 @@ class Mutag0(GraphDataset):
 
     **Graph:**
 
-    .. |mutag_0| image:: ../../_static/graphs/MUTAG_0.png
+    .. |mutag_0| image:: ../../../_static/graphs/MUTAG_0.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
@@ -244,7 +244,7 @@ class Mutag1(GraphDataset):
 
     **Graph:**
 
-    .. |mutag_1| image:: ../../_static/graphs/MUTAG_1.png
+    .. |mutag_1| image:: ../../../_static/graphs/MUTAG_1.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
@@ -271,7 +271,7 @@ class Mutag2(GraphDataset):
 
     **Graph:**
 
-    .. |mutag_2| image:: ../../_static/graphs/MUTAG_2.png
+    .. |mutag_2| image:: ../../../_static/graphs/MUTAG_2.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
@@ -298,7 +298,7 @@ class Mutag3(GraphDataset):
 
     **Graph:**
 
-    .. |mutag_3| image:: ../../_static/graphs/MUTAG_3.png
+    .. |mutag_3| image:: ../../../_static/graphs/MUTAG_3.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
@@ -353,7 +353,7 @@ class Formic(MoleculeDataset):
 
     **Molecule:**
 
-    .. |formic| image:: ../../_static/formic.png
+    .. |formic| image:: ../../../_static/formic.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
