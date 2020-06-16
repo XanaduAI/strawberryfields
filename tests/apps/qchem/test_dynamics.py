@@ -74,12 +74,13 @@ p2 = np.array(
         ],
     ]
 )
+cf = 5
 is1 = [0, 2]
 is2 = [0, 2, 0]
 ns1 = 1
 ns2 = 2
-d1 = [is1, t1, U1, w1, ns1]
-d2 = [is2, t2, U2, w2, ns2]
+d1 = [is1, t1, U1, w1, ns1, cf]
+d2 = [is2, t2, U2, w2, ns2, cf]
 
 
 @pytest.mark.parametrize("time, unitary, frequency, prob", [(t1, U1, w1, p1), (t2, U2, w2, p2)])
@@ -112,34 +113,34 @@ class TestSampleFock:
         """Test if function raises a ``ValueError`` when a number of samples less than one is
         requested."""
         with pytest.raises(ValueError, match="Number of samples must be at least one"):
-            in_state, t, U, w, ns = d
-            dynamics.sample_fock(in_state, t, U, w, 0)
+            in_state, t, U, w, ns, cf = d
+            dynamics.sample_fock(in_state, t, U, w, 0, cf)
 
     def test_invalid_time(self, d):
         """Test if function raises a ``ValueError`` when a negative time is given."""
         with pytest.raises(ValueError, match="Time must be zero or positive"):
-            in_state, t, U, w, ns = d
-            dynamics.sample_fock(in_state, -t, U, w, ns)
+            in_state, t, U, w, ns, cf = d
+            dynamics.sample_fock(in_state, -t, U, w, ns, cf)
 
     def test_negative_frequency(self, d):
         """Test if function raises a ``ValueError`` when negative frequencies are given."""
         with pytest.raises(ValueError, match="Vibrational frequencies must be larger than zero"):
-            in_state, t, U, w, ns = d
-            dynamics.sample_fock(in_state, t, U, -w, ns)
+            in_state, t, U, w, ns, cf = d
+            dynamics.sample_fock(in_state, t, U, -w, ns, cf)
 
     def test_zero_frequency(self, d):
         """Test if function raises a ``ValueError`` when zero frequencies are given."""
         with pytest.raises(ValueError, match="Vibrational frequencies must be larger than zero"):
-            in_state, t, U, w, ns = d
-            dynamics.sample_fock(in_state, t, U, 0.0 * w, ns)
+            in_state, t, U, w, ns, cf = d
+            dynamics.sample_fock(in_state, t, U, 0.0 * w, ns, cf)
 
     def test_complex_unitary(self, d):
         """Test if function raises a ``ValueError`` when a complex unitary is given."""
         with pytest.raises(
             ValueError, match="The normal mode to local mode transformation matrix must be real"
         ):
-            in_state, t, U, w, ns = d
-            dynamics.sample_fock(in_state, t, 1.0j * U, w, ns)
+            in_state, t, U, w, ns, cf = d
+            dynamics.sample_fock(in_state, t, 1.0j * U, w, ns, cf)
 
     def test_invalid_loss(self, d):
         """Test if function raises a ``ValueError`` when the loss parameter is specified outside
@@ -147,25 +148,25 @@ class TestSampleFock:
         with pytest.raises(
             ValueError, match="Loss parameter must take a value between zero and one"
         ):
-            in_state, t, U, w, ns = d
-            dynamics.sample_fock(in_state, t, U, w, ns, w[-1])
+            in_state, t, U, w, ns, cf = d
+            dynamics.sample_fock(in_state, t, U, w, ns, cf, w[-1])
 
     def test_invalid_mode(self, d):
         """Test if function raises a ``ValueError`` when the number of modes in the input state and
-        the normal to local transformation matrix are different."""
+        the normal-to-local transformation matrix are different."""
         with pytest.raises(
             ValueError,
-            match="Number of modes in the input state and the normal to local transformation"
+            match="Number of modes in the input state and the normal-to-local transformation"
             " matrix must be equal",
         ):
-            in_state, t, U, w, ns = d
-            dynamics.sample_fock(in_state + [0], t, U, w, ns)
+            in_state, t, U, w, ns, cf = d
+            dynamics.sample_fock(in_state + [0], t, U, w, ns, cf)
 
     def test_negative_input_state(self, d):
         """Test if function raises a ``ValueError`` when input state contains negative values."""
         with pytest.raises(ValueError, match="Input state must not contain negative values"):
-            in_state, t, U, w, ns = d
-            dynamics.sample_fock([-i for i in in_state], t, U, w, ns)
+            in_state, t, U, w, ns, cf = d
+            dynamics.sample_fock([-i for i in in_state], t, U, w, ns, cf)
 
     def test_invalid_input_photon(self, d):
         """Test if function raises a ``ValueError`` when the number of photons in each input state
@@ -174,8 +175,8 @@ class TestSampleFock:
             ValueError,
             match="Number of photons in each input state mode must be smaller than cutoff",
         ):
-            in_state, t, U, w, ns = d
-            dynamics.sample_fock([i * 2 for i in in_state], t, U, w, ns, cutoff=3)
+            in_state, t, U, w, ns, cf = d
+            dynamics.sample_fock([i * 2 for i in in_state], t, U, w, ns, 3)
 
     def test_loss(self, monkeypatch, d):
         """Test if function correctly creates the SF program for lossy circuits."""
@@ -208,7 +209,7 @@ class TestSampleFock:
         assert not all([isinstance(op, sf.ops.LossChannel) for op in call_history[0].circuit])
 
     def test_op_order(self, monkeypatch, d):
-        """Test if function correctly applies the sf operations."""
+        """Test if function correctly applies the operations."""
         if d == "d1":
             mock_eng_run = mock.MagicMock()
 
@@ -226,7 +227,7 @@ class TestSampleFock:
             assert isinstance(p_func.circuit[6].op, sf.ops.MeasureFock)
 
     def test_rgate(self, monkeypatch, d):
-        """Test if function correctly applies the rotation parameter in the rgates."""
+        """Test if function correctly uses the rotation parameter in the rgates."""
         if d == "d1":
             mock_eng_run = mock.MagicMock()
 
@@ -239,7 +240,7 @@ class TestSampleFock:
             assert isinstance(p_func.circuit[4].op, -7.374345193888777)
 
     def test_interferometer(self, monkeypatch, d):
-        """Test if function correctly applies the interferometer unitaries."""
+        """Test if function correctly uses the interferometer unitaries."""
         if d == "d1":
             mock_eng_run = mock.MagicMock()
 
@@ -248,7 +249,7 @@ class TestSampleFock:
                 dynamics.sample_fock(*d)
                 p_func = mock_eng_run.call_args[0][0]
 
-            _, _, U, _, _ = d
+            _, _, U, _, _, _ = d
 
             assert isinstance(p_func.circuit[2].op, U.T)
             assert isinstance(p_func.circuit[5].op, U)

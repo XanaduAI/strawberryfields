@@ -129,11 +129,11 @@ def sample_fock(
     t: float,
     Ul: np.ndarray,
     w: np.ndarray,
-    n_samples: int = 1,
+    n_samples: int,
+    cutoff: int,
     loss: float = 0.0,
-    cutoff: int = 15,
 ) -> list:
-    r"""Generate samples for simulating vibrational quantum dynamics with a Fock input state.
+    r"""Generate samples for simulating vibrational quantum dynamics with an input Fock state.
 
     **Example usage:**
 
@@ -143,7 +143,8 @@ def sample_fock(
     >>>                [0.707106781, 0.707106781]])
     >>> w = np.array([3914.92, 3787.59])
     >>> n_samples = 5
-    >>> sample_fock(input_state, t, Ul, w, n_samples = n_samples)
+    >>> cutoff = 5
+    >>> sample_fock(input_state, t, Ul, w, n_samples, cutoff)
     [[0, 2], [0, 2], [1, 1], [0, 2], [0, 2]]
 
     Args:
@@ -175,7 +176,7 @@ def sample_fock(
 
     if not len(input_state) == len(Ul):
         raise ValueError(
-            "Number of modes in the input state and the normal to local transformation"
+            "Number of modes in the input state and the normal-to-local transformation"
             " matrix must be equal"
         )
 
