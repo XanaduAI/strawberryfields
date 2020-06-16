@@ -92,9 +92,8 @@ class TestOneMode:
             Dgate(ALPHA) | q
             MeasureX | q
 
-        eng.run(prog)
-        val = q[0].val
-        assert isinstance(val, tf.Tensor)
+        res = eng.run(prog)
+        assert isinstance(res.samples, tf.Tensor)
 
     def test_eng_run_state_ket(self, setup_eng, cutoff, pure, tol):
         """Tests whether the ket of the returned state is a
