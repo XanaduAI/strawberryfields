@@ -62,12 +62,21 @@ Additional functionality related to the variational GBS model is available.
     prob_photon_sample
     rescale_adjacency
 
+Choosing a cost function
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+In the context of stochastic optimization, cost functions are expressed as expectation values
+over the GBS distribution. Within the WAW parametrization, gradients of cost functions can also be
+expressed as expectation values over the GBS distribution. This module contains methods for
+calculating these gradients and for using gradient-based methods to optimize GBS circuits. In the
+case of optimization with respect to a Kullback-Leibler divergence or log-likelihood cost
+function, gradients can be computed efficiently, leading to fast training.
+
 .. autosummary::
     :toctree: api
 
     Stochastic
     KL
-    cost
 """
 from strawberryfields.apps.train.cost import KL, Stochastic
 from strawberryfields.apps.train.embed import Exp, ExpFeatures
