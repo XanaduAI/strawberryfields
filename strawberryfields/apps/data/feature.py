@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Submodule of pre-calculated datasets of simulated GBS kernels.
+Submodule for feature vector dataset base classes.
 """
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod
