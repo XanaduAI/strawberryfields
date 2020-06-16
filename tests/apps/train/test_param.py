@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.train
+Unit tests for strawberryfields.apps.train.param
 """
 # pylint: disable=no-self-use,protected-access,redefined-outer-name
 import itertools
