@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Data module provides pre-calculated datasets from GBS simulations.
 
 GBS samples
@@ -19,8 +18,10 @@ GBS samples
 The following datasets of GBS samples are available:
 
 .. currentmodule:: strawberryfields.apps.data
+
 .. autosummary::
     :toctree: api
+
         Planted
         TaceAs
         PHat
@@ -31,6 +32,7 @@ The following datasets of GBS samples are available:
         Formic
 
 .. seealso::
+
     :doc:`/introduction/data`
 
 The :mod:`~.sample` submodule contains the base :class:`~.GraphDataset`,
@@ -38,23 +40,28 @@ The :mod:`~.sample` submodule contains the base :class:`~.GraphDataset`,
 
 .. autosummary::
     :toctree: api
+
         sample
 
 GBS feature vectors
 ^^^^^^^^^^^^^^^^^^^
+
 For use with the :mod:`~.similarity` module, the following pre-calculated feature vectors of graph
 datasets are provided:
 
 .. autosummary::
     :toctree: api
+
         MUTAG
         QM9Exact
         QM9MC
 
 The :mod:`~.feature` submodule contains the base :class:`~.FeatureDataset` class from which
 these datasets inherit.
+
 .. autosummary::
     :toctree: api
+
         feature
 """
 

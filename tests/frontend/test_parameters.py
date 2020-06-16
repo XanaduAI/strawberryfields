@@ -245,15 +245,18 @@ def applied_cmds(monkeypatch):
     def mock_run_prog(self, prog, **kwargs):
         """Mock function that is used for extracting
         the engine queue when running programs."""
+        values = []
         for cmd in prog.circuit:
             try:
-                cmd.op.apply(cmd.reg, self.backend, **kwargs)
+                val = cmd.op.apply(cmd.reg, self.backend, **kwargs)
+                if val is not None:
+                    values.append(val)
                 applied.append(cmd)
             except NotImplementedError:
                 for c in cmd.op._decompose(cmd.reg, **kwargs):
                     c.op.apply(c.reg, self.backend, **kwargs)
                     applied.append(c)
-        return applied
+        return applied, values
 
     with monkeypatch.context() as m:
         m.setattr(sf.LocalEngine, "_run_program", mock_run_prog)
