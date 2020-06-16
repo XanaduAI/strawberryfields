@@ -50,7 +50,7 @@ trainable parameters:
 
 >>> params = 0.1 * np.ones(data.modes)
 >>> vgbs.n_mean(params)
-333
+3.6776094165797364
 
 Additional functionality related to the variational GBS model is available.
 
