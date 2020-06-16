@@ -18,7 +18,7 @@ from typing import Callable
 
 import numpy as np
 
-from strawberryfields.apps.train.vgbs import VGBS, _Omat
+from strawberryfields.apps.train.param import VGBS, _Omat
 
 
 class KL:
