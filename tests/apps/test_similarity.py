@@ -312,7 +312,7 @@ class TestProbOrbitExact:
         g = nx.complete_graph(3)
 
         p = similarity.prob_orbit_exact(g, [1, 1], 2)
-        assert p == 0.24221526825385403
+        assert np.allclose(p, 0.24221526825385403)
 
         s = similarity._get_state(g, 2)
         temp = s.fock_prob([1, 1, 0]) + s.fock_prob([1, 0, 1]) + s.fock_prob([0, 1, 1])
@@ -391,7 +391,7 @@ class TestProbEventExact:
         p4 = similarity.prob_event_exact(graph, 2, 2, 4)
         assert np.allclose(p1 - p2, 0)
         assert p2 == p3
-        assert p4 == 0.21087781178526066
+        assert np.allclose(p4, 0.21087781178526066)
 
 
 class TestProbOrbitMC:
@@ -610,7 +610,7 @@ class TestFeatureVectorOrbits:
         reproduced."""
         graph = nx.complete_graph(4)
         p = similarity.feature_vector_orbits(graph, [[1, 1], [2, 1, 1]], 2)
-        assert p == [0.22918531118334962, 0.06509669127495163]
+        assert np.allclose(p, [0.22918531118334962, 0.06509669127495163])
         assert np.allclose(
             similarity.feature_vector_orbits(graph, [[2], [4]], 1, samples=10), [0, 0]
         )
@@ -698,7 +698,7 @@ class TestFeatureVectorEvents:
         reproduced."""
         g = nx.complete_graph(4)
         p = similarity.feature_vector_events(g, [2, 4], 2, 4)
-        assert p == [0.21087781178526066, 0.11998024483275889]
+        assert np.allclose(p, [0.21087781178526066, 0.11998024483275889])
 
         graph = nx.complete_graph(20)
         assert np.allclose(
