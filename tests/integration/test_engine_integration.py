@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Integration tests for the frontend engine.py module with the backends"""
+import os
 import numbers
 import pytest
 
@@ -43,10 +44,6 @@ a = 0.1234
 b = -0.543
 c = 0.312
 
-@property
-def batched(batch_size):
-    """Checks if session is batched."""
-    return bool(batch_size)
 
 @pytest.mark.parametrize("name,expected", eng_backend_params)
 def test_load_backend(name, expected, cutoff):
@@ -120,17 +117,17 @@ class TestProperExecution:
             ops.MeasureX | q[0]
 
         res = eng.run(prog)
-        # one entry for each mode
-        assert len(res.samples[0]) == 2
+        # one entry for each measured mode
+        assert len(res.samples[0]) == 1
         # the same samples can also be found in the regrefs
-        assert [r.val for r in prog.register] == res.samples[0].tolist()
+        assert np.equal([r.val for r in prog.register if r.val is not None], np.ravel(res.samples)).all()
         # first mode was measured
         if eng.backend_name == 'tf':
             assert isinstance(res.samples[0][0], tf.Tensor)
         else:
             assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
         # second mode was not measured
-        assert res.samples[0][1] is None
+        assert prog.register[1].val is None
 
     # TODO: Some of these tests should probably check *something* after execution
 
@@ -149,6 +146,27 @@ class TestProperExecution:
             ops.Dgate(-q[0].par).H | q[1]
 
         eng.run(prog)
+
+    @pytest.mark.backends("tf")
+    @pytest.mark.skipif("BATCHED" not in os.environ, reason="Test for when combining batched samples")
+    def test_combine_batched_samples(self, batch_size, setup_eng):
+        """Test that batched samples are forwarded to ``Result.combine_samples`` correctly"""
+        eng, prog = setup_eng(4)
+        with prog.context as q:
+            ops.MeasureFock() | (q[0], q[2])
+            ops.MeasureX | q[1]
+
+        samples = eng.run(prog).samples
+        # check the shape; should be (batches, shots, measured_modes)
+        if batch_size:
+            assert samples.shape == (batch_size, 1, 3)
+
+            for batch in samples:
+                # check that MesureFock measures `0` while MeasureX does NOT measure `0`.
+                correct_samples = [0, 1, 0]
+                assert [bool(i) for i in batch[0]] == correct_samples
+        else:
+            assert samples.shape == (1, 3)
 
     def test_homodyne_measurement_vacuum(self, setup_eng, tol):
         """MeasureX and MeasureP leave the mode in the vacuum state"""
@@ -304,24 +322,21 @@ class TestProperExecution:
         with p2.context as q:
             ops.MeasureFock() | (q[0], q[2])
         samples = eng.run(p2, shots=shots).samples
-        assert samples.shape == (shots, 3)
+        assert samples.shape == (shots, 2)
         assert all(samples[:, 0].astype(int) == expected)
-        assert all(s is None for s in samples[:, 1])
-        assert all(samples[:, 2].astype(int) == expected)
+        assert all(samples[:, 1].astype(int) == expected)
 
         # one mode
         eng, p3 = setup_eng(3)
         with p3.context as q:
             ops.MeasureFock() | q[0]
         samples = eng.run(p3, shots=shots).samples
-        assert samples.shape == (shots, 3)
+        assert samples.shape == (shots, 1)
         assert all(samples[:, 0].astype(int) == expected)
-        assert all(s is None for s in samples[:, 1])
-        assert all(s is None for s in samples[:, 2])
 
     # TODO: when ``shots`` is incorporated into other backends, delete this test
-    @pytest.mark.skipif(batched, reason="Test only runs for non-batched backends")
     @pytest.mark.backends("tf", "fock")
+    @pytest.mark.skipif("BATCHED" in os.environ, reason="Test only runs for non-batched backends")
     def test_measurefock_shots_exception(self, setup_eng):
         shots = 5
         eng, p1 = setup_eng(3)
