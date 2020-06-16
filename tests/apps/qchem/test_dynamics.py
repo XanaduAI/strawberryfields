@@ -14,6 +14,8 @@
 r"""
 Tests for strawberryfields.apps.qchem.dynamics
 """
+from unittest import mock
+
 import numpy as np
 import pytest
 
@@ -173,7 +175,7 @@ class TestSampleFock:
             match="Number of photons in each input state mode must be smaller than cutoff",
         ):
             in_state, t, U, w, ns = d
-            dynamics.sample_fock([i * 2 for i in in_state], t, U, w, ns, cutoff = 3)
+            dynamics.sample_fock([i * 2 for i in in_state], t, U, w, ns, cutoff=3)
 
     def test_loss(self, monkeypatch, d):
         """Test if function correctly creates the SF program for lossy circuits."""
@@ -188,6 +190,8 @@ class TestSampleFock:
             m.setattr(sf.LocalEngine, "run", save_hist)
             dynamics.sample_fock(*d, loss=0.5)
 
+        assert isinstance(call_history[0].circuit[-2].op, sf.ops.LossChannel)
+
     def test_no_loss(self, monkeypatch, d):
         """Test if function correctly creates the SF program for circuits without loss."""
 
@@ -200,6 +204,54 @@ class TestSampleFock:
             m.setattr(sf.engine.Result, "samples", np.array([[0]]))
             m.setattr(sf.LocalEngine, "run", save_hist)
             dynamics.sample_fock(*d)
+
+        assert not all([isinstance(op, sf.ops.LossChannel) for op in call_history[0].circuit])
+
+    def test_op_order(self, monkeypatch, d):
+        """Test if function correctly applies the sf operations."""
+        if d == "d1":
+            mock_eng_run = mock.MagicMock()
+
+            with monkeypatch.context() as m:
+                m.setattr(sf.LocalEngine, "run", mock_eng_run)
+                dynamics.sample_fock(*d)
+                p_func = mock_eng_run.call_args[0][0]
+
+            assert isinstance(p_func.circuit[0].op, sf.ops.Fock)
+            assert isinstance(p_func.circuit[1].op, sf.ops.Fock)
+            assert isinstance(p_func.circuit[2].op, sf.ops.Interferometer)
+            assert isinstance(p_func.circuit[3].op, sf.ops.Rgate)
+            assert isinstance(p_func.circuit[4].op, sf.ops.Rgate)
+            assert isinstance(p_func.circuit[5].op, sf.ops.Interferometer)
+            assert isinstance(p_func.circuit[6].op, sf.ops.MeasureFock)
+
+    def test_rgate(self, monkeypatch, d):
+        """Test if function correctly applies the rotation parameter in the rgates."""
+        if d == "d1":
+            mock_eng_run = mock.MagicMock()
+
+            with monkeypatch.context() as m:
+                m.setattr(sf.LocalEngine, "run", mock_eng_run)
+                dynamics.sample_fock(*d)
+                p_func = mock_eng_run.call_args[0][0]
+
+            assert isinstance(p_func.circuit[3].op, -7.374345193888777)
+            assert isinstance(p_func.circuit[4].op, -7.374345193888777)
+
+    def test_interferometer(self, monkeypatch, d):
+        """Test if function correctly applies the interferometer unitaries."""
+        if d == "d1":
+            mock_eng_run = mock.MagicMock()
+
+            with monkeypatch.context() as m:
+                m.setattr(sf.LocalEngine, "run", mock_eng_run)
+                dynamics.sample_fock(*d)
+                p_func = mock_eng_run.call_args[0][0]
+
+            _, _, U, _, _ = d
+
+            assert isinstance(p_func.circuit[2].op, U.T)
+            assert isinstance(p_func.circuit[5].op, U)
 
 
 @pytest.mark.parametrize("d", [d1, d2])
