@@ -149,15 +149,14 @@ class TestSampleFock:
             ValueError, match="Loss parameter must take a value between zero and one"
         ):
             in_state, t, U, w, ns, cf = d
-            dynamics.sample_fock(in_state, t, U, w, ns, cf, w[-1])
+            dynamics.sample_fock(in_state, t, U, w, ns, cf, -1)
 
     def test_invalid_mode(self, d):
         """Test if function raises a ``ValueError`` when the number of modes in the input state and
         the normal-to-local transformation matrix are different."""
         with pytest.raises(
             ValueError,
-            match="Number of modes in the input state and the normal-to-local transformation"
-            " matrix must be equal",
+            match="Number of modes in the input state and the normal-to-local transformation",
         ):
             in_state, t, U, w, ns, cf = d
             dynamics.sample_fock(in_state + [0], t, U, w, ns, cf)
@@ -210,7 +209,7 @@ class TestSampleFock:
 
     def test_op_order(self, monkeypatch, d):
         """Test if function correctly applies the operations."""
-        if d == "d1":
+        if len(d[0]) == 2:
             mock_eng_run = mock.MagicMock()
 
             with monkeypatch.context() as m:
@@ -228,7 +227,7 @@ class TestSampleFock:
 
     def test_rgate(self, monkeypatch, d):
         """Test if function correctly uses the rotation parameter in the rgates."""
-        if d == "d1":
+        if len(d[0]) == 2:
             mock_eng_run = mock.MagicMock()
 
             with monkeypatch.context() as m:
@@ -236,12 +235,12 @@ class TestSampleFock:
                 dynamics.sample_fock(*d)
                 p_func = mock_eng_run.call_args[0][0]
 
-            assert isinstance(p_func.circuit[3].op, -7.374345193888777)
-            assert isinstance(p_func.circuit[4].op, -7.374345193888777)
+            assert np.allclose(p_func.circuit[3].op.p, -7.374345193888777)
+            assert np.allclose(p_func.circuit[4].op.p, -7.13449983982334)
 
     def test_interferometer(self, monkeypatch, d):
         """Test if function correctly uses the interferometer unitaries."""
-        if d == "d1":
+        if len(d[0]) == 2:
             mock_eng_run = mock.MagicMock()
 
             with monkeypatch.context() as m:
@@ -251,8 +250,8 @@ class TestSampleFock:
 
             _, _, U, _, _, _ = d
 
-            assert isinstance(p_func.circuit[2].op, U.T)
-            assert isinstance(p_func.circuit[5].op, U)
+            assert np.allclose(p_func.circuit[2].op.p, U.T)
+            assert np.allclose(p_func.circuit[5].op.p, U)
 
 
 @pytest.mark.parametrize("d", [d1, d2])

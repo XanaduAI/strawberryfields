@@ -153,8 +153,8 @@ def sample_fock(
         Ul (array): normal-to-local transformation matrix
         w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}`
         n_samples (int): number of samples to be generated
-        loss (float): loss parameter denoting the fraction of lost photons
         cutoff (int): cutoff dimension for each mode
+        loss (float): loss parameter denoting the fraction of lost photons
 
     Returns:
         list[list[int]]: a list of samples
@@ -208,7 +208,7 @@ def sample_fock(
 
         sf.ops.MeasureFock() | q
 
-        for _ in range(n_samples):
-            s.append(eng.run(prog).samples[0].tolist())
+    for _ in range(n_samples):
+        s.append(eng.run(prog).samples[0].tolist())
 
     return s
