@@ -75,13 +75,11 @@ class TestRepresentationIndependent:
 
             r = 0.5
             backend.squeeze(r, 0, 0)
-            # backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
             backend.beamsplitter(np.pi/4, np.pi, 0, 1)
             meas_modes = [0, 1]
             meas_results = backend.measure_threshold(meas_modes)
 
             for i in range(num_modes):
                 assert meas_results[0][i] == 0 or meas_results[0][i] == 1
-
 
 
