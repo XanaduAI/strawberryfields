@@ -18,7 +18,6 @@ Unit tests for strawberryfields.apps.data
 import numpy as np
 import pytest
 import scipy
-
 from strawberryfields.apps import data
 
 pytestmark = pytest.mark.apps
@@ -79,7 +78,7 @@ class TestSampleDatasets:
             yield datasets()
 
     def test_filename(self, dataset):
-        """Test if filename is valid string for each dataset"""
+        """Test if filename is a valid string for each dataset"""
         # pylint: disable=protected-access
         assert isinstance(dataset._data_filename, str)
 
@@ -276,7 +275,7 @@ class TestFeatureDatasets:
             yield datasets()
 
     def test_data_filename(self, dataset):
-        """Test if file name is valid string for each dataset"""
+        """Test if file name is a valid string for each dataset"""
         # pylint: disable=protected-access
         assert isinstance(dataset._data_filename, str)
 
@@ -286,18 +285,18 @@ class TestFeatureDatasets:
         assert dataset.n_mean >= 0
 
     def test_threshold(self, dataset):
-        """Test if threshold flag is valid bool for each dataset"""
+        """Test if threshold flag is a valid bool for each dataset"""
         assert isinstance(dataset.threshold, bool)
 
     def test_unit(self, dataset):
-        """Test if unit is valid string for each dataset"""
+        """Test if unit is a valid string for each dataset"""
         # pylint: disable=protected-access
         assert isinstance(dataset.unit, str)
         allowed = ["orbits", "events"]
         assert dataset.unit in allowed
 
     def test_method(self, dataset):
-        """Test if method is valid string for each dataset"""
+        """Test if method is a valid string for each dataset"""
         # pylint: disable=protected-access
         assert isinstance(dataset.method, str)
         allowed = ["exact", "mc"]
