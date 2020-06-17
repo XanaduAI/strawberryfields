@@ -34,10 +34,9 @@ from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.shared_ops import changebasis
+from strawberryfields.backends.states import BaseGaussianState
 
-from .ops import xmat
 from .gaussiancircuit import GaussianModes
-from .states import GaussianState
 
 
 class GaussianBackend(BaseGaussian):
@@ -308,23 +307,4 @@ class GaussianBackend(BaseGaussian):
         covmat *= self.circuit.hbar / 2
 
         mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
-
-        # qmat and amat
-        qmat = self.circuit.qmat()
-        N = qmat.shape[0] // 2
-
-        # work out if qmat and Amat need to be reduced
-        if 1 <= len(modes) < N:
-            # reduce qmat
-            ind = concatenate([array(modes), N + array(modes)])
-            rows = ind.reshape((-1, 1))
-            cols = ind.reshape((1, -1))
-            qmat = qmat[rows, cols]
-
-            # calculate reduced Amat
-            N = qmat.shape[0] // 2
-            Amat = dot(xmat(N), identity(2 * N) - inv(qmat))
-        else:
-            Amat = self.circuit.Amat()
-
-        return GaussianState((means, covmat), len(modes), qmat, Amat, mode_names=mode_names)
+        return BaseGaussianState((means, covmat), len(modes), mode_names=mode_names)
