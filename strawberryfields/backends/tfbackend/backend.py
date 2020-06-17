@@ -195,6 +195,11 @@ class TFBackend(BaseFock):
             remapped_modes = self._remap_modes([mode1, mode2])
             self.circuit.beamsplitter(theta, phi, remapped_modes[0], remapped_modes[1])
 
+    def two_mode_squeeze(self, r, phi, mode1, mode2):
+        with tf.name_scope("Two-mode_squeezing"):
+            remapped_modes = self._remap_modes([mode1, mode2])
+            self.circuit.two_mode_squeeze(r, phi, remapped_modes[0], remapped_modes[1])
+
     def loss(self, T, mode):
         with tf.name_scope("Loss"):
             remapped_mode = self._remap_modes(mode)

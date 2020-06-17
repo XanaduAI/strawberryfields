@@ -342,14 +342,12 @@ def single_beamsplitter_matrix(theta, phi, D, dtype=def_type.as_numpy_dtype):
     gate = beamsplitter_tw(theta, phi, D, dtype)
     gate = np.transpose(gate, [0, 2, 1, 3])
 
-    # NOTE: tested independently in thewalrus
-    def grad(dy): # pragma: no cover
-        Dtheta, Dphi = grad_beamsplitter_tw(gate, theta, phi)
+    def grad(dy):
+        Dtheta, Dphi = grad_beamsplitter_tw(np.transpose(gate, [0, 2, 1, 3]), theta, phi)
         Dtheta = np.transpose(Dtheta, [0, 2, 1, 3])
         Dphi = np.transpose(Dphi, [0, 2, 1, 3])
-        print(dy)
-        grad_theta = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
-        grad_phi = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
+        grad_theta = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
+        grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
         return grad_theta, grad_phi, None
 
     return gate, grad
@@ -376,13 +374,15 @@ def single_two_mode_squeezing_matrix(theta, phi, D, dtype=def_type.as_numpy_dtyp
     phi = phi.numpy()
 
     gate = two_mode_squeezing_tw(theta, phi, D, dtype)
-    
-    # NOTE: tested independently in thewalrus
-    def grad(dy): # pragma: no cover
-        Dtheta, Dphi = grad_two_mode_squeezing_tw(gate, theta, phi)
-        grad_theta = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
+    gate = np.transpose(gate, [0, 2, 1, 3])
+
+    def grad(dy):
+        Dr, Dphi = grad_two_mode_squeezing_tw(np.transpose(gate, [0, 2, 1, 3]), theta, phi)
+        Dr = np.transpose(Dr, [0, 2, 1, 3])
+        Dphi = np.transpose(Dphi, [0, 2, 1, 3])
+        grad_r = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dr)))
         grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
-        return grad_theta, grad_phi, None
+        return grad_r, grad_phi, None
 
     return gate, grad
 
@@ -795,7 +795,7 @@ def beamsplitter(theta, phi, mode1, mode2, in_modes, D, pure=True, batched=False
     return output
 
 
-def two_mode_squeezer(r, theta, mode1, mode2, in_modes, D, pure=True, batched=False):
+def two_mode_squeeze(r, theta, mode1, mode2, in_modes, D, pure=True, batched=False):
     """returns beamsplitter unitary matrix on specified input modes"""
     matrix = two_mode_squeezer_matrix(r, theta, D, batched)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
