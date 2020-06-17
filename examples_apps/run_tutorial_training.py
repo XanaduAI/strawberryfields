@@ -1,8 +1,8 @@
 """
 .. _apps-clique-tutorial:
 
-Training GBS distributions
-==========================
+Training variational GBS distributions
+======================================
 
 *Technical details are available in the API documentation:*
 :doc:`/code/api/strawberryfields.apps.train`
@@ -37,7 +37,7 @@ reproduce the statistical properties of a given dataset to generate new data, or
 circuit to sample specific patterns with high probability. The usual strategy is to identify a
 parametrization of the distribution and compute gradients of a suitable cost function with
 respect to trainable parameters. These can then be used to optimize the parameters using
-gradient-base techniques.
+gradient-base techniques. We refer to these as variational GBS circuits, or VGBS for short.
 
 So the staring point is a parametrization of the distribution. Gradient formulas can be
 generally challenging to calculate, but there exists a particular strategy that leads to
@@ -104,13 +104,47 @@ where :math:`\langle s_k\rangle` denotes the average photon numbers in mode *k*.
 this gradient can be evaluated without a quantum computer since for GBS the expectation values
 :math:`\langle s_k\rangle_{\text{GBS}})` can be efficiently computed classically. As we'll see
 soon, this leads to fast training. This is true even if sampling the distribution remains
-classically intractable!
+classically intractable 🤯!
+
+Stochastic optimization
+-----------------------
+We're ready to start using Strawberry Fields to train GBS distributions. The main functions we'll
+need can be found in the :mod:`~.apps.train` module, so let's start by importing it. We'll also
+use pre-generated GBS samples and graphs from the :mod:`~.apps.data` module
 """
-from strawberryfields.apps import data, plot, sample, clique
-import numpy as np
-import networkx as nx
-import plotly
+
+import strawberryfields as sf
+from strawberryfields.apps import train, data
 
 ##############################################################################
-# The adjacency matrix of the TACE-AS graph can be loaded from the :mod:`~.apps.data` module and the
-# graph can be visualized using the :mod:`~.apps.plot` module:
+# We look at a basic example where the goal is to optimize the distribution to favour photons
+# appearing in a specific subset of modes, while minimizing the number of photons in the
+# remaining modes. This can be achieved with the following cost function
+
+import numpy as np
+
+
+def h(s, subset):
+    x = np.array(s)
+    modes = np.arange(len(x))
+    not_subset = [k for k in modes if k not in subset]
+    return np.sum(x[not_subset]) - np.sum(x[subset])
+
+##############################################################################
+# The cost function is defined with respect to a subset of modes for which we want to observe
+# many photons. This is specified as the list ``subset``. Then, for a given sample ``s``,
+# we want the total number of photons in the subset to be large, which we can achieve by minimizing
+# its negative value. Similarly, for modes outside of the specified subset, we want to minimize
+# their total sum. Now time to define the variational circuit. We'll train a distribution based on
+# one of the molecular graphs in the :mod:`~.apps.data`:
+
+mutag = data.Mutag1()
+A = mutag.adj
+graph = nx.Graph(A)
+plot_graph = plot.graph(TA_graph)
+plotly.offline.plot(plot_graph, filename="mutag1.html")
+
+##############################################################################
+# Defining a variational GBS circuit consists of three steps: (i) specify the embedding,
+# (ii) build the circuit, (iii) define the cost function with respect to the circuit and
+# embedding. We'll go through each step at a time.
