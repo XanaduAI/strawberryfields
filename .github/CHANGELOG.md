@@ -32,6 +32,11 @@
 
 <h3>Improvements</h3>
 
+* Relocates the `apps.vibronic` module to be a submodule of the new `apps.qchem` module
+  and moves the `apps.sample.vibronic()` function to `apps.qchem.vibronic.sample()`, providing
+  a single location for quantum chemistry functionality.
+  [(#416)](https://github.com/XanaduAI/strawberryfields/pull/416)
+
 * Modifies the rectangular interferometer decomposition to make it more
   efficient for hardware devices. Rather than decomposing the interferometer
   using Clements :math:`T` matrices, the decomposition now directly produces
@@ -43,11 +48,6 @@
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
 <h3>Breaking Changes</h3>
-
-* Relocates the `apps.vibronic` module to be a submodule of the new `apps.qchem` module
-  and moves the `apps.sample.vibronic()` function to `apps.qchem.vibronic.sample()`, providing
-  a single location for quantum chemistry functionality.
-  [(#416)](https://github.com/XanaduAI/strawberryfields/pull/416)
 
 * Removes support for Python 3.5.
   [(#385)](https://github.com/XanaduAI/strawberryfields/pull/385)
