@@ -270,7 +270,7 @@ def squeezing(r, theta, trunc):
 
 
 @functools.lru_cache()
-def two_mode_squeezing(r, theta, trunc):
+def two_mode_squeeze(r, theta, trunc):
     r"""The two-mode squeezing operator :math:`S_2(re^{i\theta})`.
 
     Args:
