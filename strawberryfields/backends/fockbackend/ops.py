@@ -27,11 +27,12 @@ from numpy.polynomial.hermite import hermval as H
 from scipy.special import factorial as fac
 from scipy.linalg import expm as matrixExp
 
-from thewalrus.fock_gradients import displacement as displacement_tw
-from thewalrus.fock_gradients import squeezing as squeezing_tw
-from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
-from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
-
+from thewalrus.fock_gradients import (
+    displacement as displacement_tw,
+    squeezing as squeezing_tw,
+    two_mode_squeezing as two_mode_squeezing_tw,
+    beamsplitter as beamsplitter_tw,
+)
 
 def_type = np.complex128
 indices = string.ascii_lowercase
@@ -244,7 +245,13 @@ def displacement(r, phi, trunc):
             trunc (int): the Fock cutoff
     """
 
-    return displacement_tw(r, phi, cutoff=trunc)
+    r = np.abs(alpha)
+    theta = np.angle(alpha)
+
+    ret = displacement_tw(r, theta, cutoff=trunc)
+
+    return ret
+
 
 
 @functools.lru_cache()
@@ -261,7 +268,9 @@ def squeezing(r, theta, trunc):
             trunc (int): the Fock cutoff
     """
 
-    return squeezing_tw(r, theta, cutoff=trunc)
+    ret = squeezing_tw(r, theta, cutoff=trunc)
+
+    return ret
 
 
 @functools.lru_cache()
@@ -273,7 +282,12 @@ def two_mode_squeezing(r, theta, trunc):
         theta (float): two-mode squeezing phase
         trunc (int): Fock ladder cutoff
     """
-    return two_mode_squeezing_tw(r, theta, cutoff=trunc).transpose((0, 2, 1, 3))
+    ret = two_mode_squeezing_tw(r, theta, cutoff=trunc)
+
+    # Transpose needed because of different conventions in SF and The Walrus.
+    ret = np.transpose(ret, [0, 2, 1, 3])
+
+    return ret
 
 
 @functools.lru_cache()
@@ -319,6 +333,7 @@ def phase(theta, trunc):
     return np.array(np.diag([exp(1j * n * theta) for n in range(trunc)]), dtype=def_type)
 
 
+# pylint: disable=unused-argument
 @functools.lru_cache()
 def beamsplitter(theta, phi, trunc):
     r""" The beamsplitter :math:`B(\theta, \phi)`.
@@ -329,7 +344,11 @@ def beamsplitter(theta, phi, trunc):
     """
     # pylint: disable=bad-whitespace
 
-    return beamsplitter_tw(theta, phi, cutoff=trunc).transpose((0, 2, 1, 3))
+    theta = np.arccos(t)
+    BS_tw = beamsplitter_tw(theta, phi, cutoff=trunc)
+
+    # Transpose needed because of different conventions in SF and The Walrus.
+    return BS_tw.transpose((0, 2, 1, 3))
 
 
 @functools.lru_cache()
