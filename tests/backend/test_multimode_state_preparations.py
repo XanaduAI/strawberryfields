@@ -19,7 +19,6 @@ import pytest
 import numpy as np
 
 from strawberryfields import ops
-from strawberryfields.backends.gaussianbackend.states import GaussianState
 from strawberryfields.utils import random_covariance, displaced_squeezed_state
 
 # make test deterministic
