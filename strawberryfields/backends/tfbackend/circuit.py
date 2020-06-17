@@ -304,7 +304,7 @@ class Circuit:
             theta = self._maybe_batch(theta)
             self._check_incompatible_batches(r, theta)
             squeezed_state = ops.squeezed_vacuum(
-                r, theta, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
+                r, theta, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
             )
             self._replace_and_update(squeezed_state, mode)
 
