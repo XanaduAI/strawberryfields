@@ -14,6 +14,8 @@
 """Gaussian circuit operations"""
 # pylint: disable=duplicate-code,attribute-defined-outside-init
 import numpy as np
+from thewalrus.quantum import Xmat
+
 from . import ops
 from ..shared_ops import changebasis
 
@@ -417,7 +419,7 @@ class GaussianModes:
             ),
             axis=0,
         ) + np.identity(2 * self.nlen)
-        return np.dot(ops.xmat(self.nlen), np.identity(2 * self.nlen) - np.linalg.inv(sigmaq))
+        return np.dot(Xmat(self.nlen), np.identity(2 * self.nlen) - np.linalg.inv(sigmaq))
 
     def loss(self, T, k):
         r"""Implements a loss channel in mode k by amplitude loss amount \sqrt{T}

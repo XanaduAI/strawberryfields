@@ -2,12 +2,26 @@
 
 <h3>New features since last release</h3>
 
+* The `GaussianState` returned from simulations using the Gaussian backend
+  now has feature parity with the `FockState` object returned from the Fock backends.
+  [(#407)](https://github.com/XanaduAI/strawberryfields/pull/407)
+
+  In particular, it now supports the following methods:
+
+  - `GaussianState.dm()`
+  - `GaussianState.ket()`
+  - `GaussianState.all_fock_probs()`
+
+  In addition, the existing `GaussianState.reduced_dm()` method now supports
+  multi-mode reduced density matrices.
+
 * Adds the `number_expectation_pnr` and `number_variance_pnr` functions for
   obtaining counting statistics from samples obtained by performing photon
   number resolving measurements.
   [(#399)](https://github.com/XanaduAI/strawberryfields/pull/399)
 
-* Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X architecture.
+* Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X
+  architecture.
   [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
 
 * Adds `diagonal_expectation` method for the `BaseFockState` class, which returns
@@ -15,10 +29,10 @@
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
 * Adds `parity_expectation` method as an instance of `diagonal_expectation` for
-  the `BaseFockState` class, and its own function for `BaseGaussianState`. 
+  the `BaseFockState` class, and its own function for `BaseGaussianState`.
   This returns the expectation value of the parity operator,
   defined as (-1)^N.
-  [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389) 
+  [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
 
 <h3>Improvements</h3>
@@ -30,7 +44,7 @@
   [(#363)](https://github.com/XanaduAI/strawberryfields/pull/363)
 
 * Changes the `number_expectation` method for the `BaseFockState` class to be an instance
-  of `diagonal_expectation`. 
+  of `diagonal_expectation`.
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
 <h3>Breaking Changes</h3>
