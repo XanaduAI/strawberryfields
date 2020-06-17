@@ -91,7 +91,7 @@ class TestGBSParams:
         assert np.all(t == 0)
 
 
-w  = np.array([300.0, 200.0, 100.0])
+w = np.array([300.0, 200.0, 100.0])
 wp = np.array([700.0, 600.0, 500.0])
 
 S1 = [[1, 1, 0, 0, 0, 0], [1, 2, 0, 0, 1, 1]]
@@ -168,6 +168,7 @@ class TestSample:
 
     def test_loss(self, monkeypatch, p):
         """Test if function correctly creates the SF program for lossy GBS."""
+
         def save_hist(*args, **kwargs):
             call_history.append(args[1])
             return sf.engine.Result
@@ -182,6 +183,7 @@ class TestSample:
 
     def test_no_loss(self, monkeypatch, p):
         """Test if function correctly creates the SF program for GBS without loss."""
+
         def save_hist(*args, **kwargs):
             call_history.append(args[1])
             return sf.engine.Result
@@ -222,8 +224,7 @@ def test_sample_integration(p, integration_sample_number):
     """Integration test for the function ``strawberryfields.apps.qchem.sample`` to check if
     it returns samples of correct form, i.e., correct number of samples, correct number of
     modes, all non-negative integers."""
-    samples = np.array(
-        sf.apps.qchem.vibronic.sample(*p, n_samples=integration_sample_number))
+    samples = np.array(sf.apps.qchem.vibronic.sample(*p, n_samples=integration_sample_number))
 
     dims = samples.shape
 

@@ -133,9 +133,9 @@ def energies(samples: list, w: np.ndarray, wp: np.ndarray) -> Union[list, float]
         a single sample energy if only one sample is input
     """
     if not isinstance(samples[0], list):
-        return np.dot(samples[: len(samples) // 2], wp) - np.dot(samples[len(samples) // 2:], w)
+        return np.dot(samples[: len(samples) // 2], wp) - np.dot(samples[len(samples) // 2 :], w)
 
-    return [np.dot(s[: len(s) // 2], wp) - np.dot(s[len(s) // 2:], w) for s in samples]
+    return [np.dot(s[: len(s) // 2], wp) - np.dot(s[len(s) // 2 :], w) for s in samples]
 
 
 def sample(
