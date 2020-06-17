@@ -279,7 +279,7 @@ class Circuit:
         if self._valid_modes(mode):
             n = self._maybe_batch(n, convert_to_tensor=False)
             fock_state = ops.fock_state(
-                n, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
+                n, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
             )
             self._replace_and_update(fock_state, mode)
 
@@ -291,7 +291,7 @@ class Circuit:
             r = self._maybe_batch(r)
             phi = self._maybe_batch(phi)
             coherent_state = ops.coherent_state(
-                r, phi, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
+                r, phi, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
             )
             self._replace_and_update(coherent_state, mode)
 
@@ -323,7 +323,7 @@ class Circuit:
                 phi_d,
                 r_s,
                 phi_s,
-                D=self._cutoff_dim,
+                cutoff=self._cutoff_dim,
                 pure=self._state_is_pure,
                 batched=self._batched,
             )
@@ -395,7 +395,7 @@ class Circuit:
         """
         if self._valid_modes(mode):
             nbar = self._maybe_batch(nbar)
-            thermal = ops.thermal_state(nbar, D=self._cutoff_dim)
+            thermal = ops.thermal_state(nbar, cutoff=self._cutoff_dim)
             self._replace_and_update(thermal, mode)
 
     def phase_shift(self, theta, mode):
