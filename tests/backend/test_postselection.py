@@ -64,7 +64,7 @@ def test_measure_fock(setup_backend, cutoff, batch_size):
         res1 = backend.measure_fock([0], select=[cutoff // 2])
         res2 = backend.measure_fock([1])
 
-        photons_out = sum(res1 + res2)
+        photons_out = res1 + res2
 
         if batch_size is not None:
             total_photons = np.tile(total_photons, batch_size)
