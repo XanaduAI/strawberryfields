@@ -38,22 +38,6 @@ def_type = np.complex128
 indices = string.ascii_lowercase
 
 
-def genOfRange(size):
-    """
-    Converts a range into a generator.
-    """
-    for i in range(size):
-        yield i
-
-
-def genOfTuple(t):
-    """
-    Converts a tuple into a generator
-    """
-    for val in t:
-        yield val
-
-
 def indexRange(lst, trunc):
     """
     Returns a generator ranging over the possible values for unspecified
@@ -82,7 +66,7 @@ def indexRange(lst, trunc):
     """
 
     for vals in product(*([range(trunc) for x in lst if x is None])):
-        gen = genOfTuple(vals)
+        gen = (v for v in vals)
         yield [next(gen) if v is None else v for v in lst]  # pylint: disable=stop-iteration-return
 
 
