@@ -151,20 +151,20 @@ p1 = [t1, U1, r, U2, alpha]
 
 
 @pytest.mark.parametrize("p", [p0, p1])
-class TestVibronic:
-    """Tests for the function ``strawberryfields.apps.sample.vibronic``"""
+class TestSample:
+    """Tests for the function ``strawberryfields.apps.qchem.sample``"""
 
     def test_invalid_n_samples(self, p):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
         requested."""
         with pytest.raises(ValueError, match="Number of samples must be at least one"):
-            sf.apps.qchem.vibronic.vibronic(*p, -1)
+            sf.apps.qchem.vibronic.sample(*p, -1)
 
     def test_invalid_loss(self, p):
         """Test if function raises a ``ValueError`` when the loss parameter is specified outside
         of range."""
         with pytest.raises(ValueError, match="Loss parameter must take a value between zero and"):
-            sf.apps.qchem.vibronic.vibronic(*p, 1, loss=2)
+            sf.apps.qchem.vibronic.sample(*p, 1, loss=2)
 
     def test_loss(self, monkeypatch, p):
         """Test if function correctly creates the SF program for lossy GBS."""
@@ -176,7 +176,7 @@ class TestVibronic:
         with monkeypatch.context() as m:
             m.setattr(sf.engine.Result, "samples", np.array([[0]]))
             m.setattr(sf.LocalEngine, "run", save_hist)
-            sf.apps.qchem.vibronic.vibronic(*p, 1, loss=0.5)
+            sf.apps.qchem.vibronic.sample(*p, 1, loss=0.5)
 
         assert isinstance(call_history[0].circuit[-2].op, sf.ops.LossChannel)
 
@@ -190,7 +190,7 @@ class TestVibronic:
         with monkeypatch.context() as m:
             m.setattr(sf.engine.Result, "samples", np.array([[0]]))
             m.setattr(sf.LocalEngine, "run", save_hist)
-            sf.apps.qchem.vibronic.vibronic(*p, 1)
+            sf.apps.qchem.vibronic.sample(*p, 1)
 
         assert not all([isinstance(op, sf.ops.LossChannel) for op in call_history[0].circuit])
 
@@ -203,7 +203,7 @@ class TestVibronic:
 
             with monkeypatch.context() as m:
                 m.setattr(sf.LocalEngine, "run", mock_eng_run)
-                sf.apps.qchem.vibronic.vibronic(*p, 1, loss=1)
+                sf.apps.qchem.vibronic.sample(*p, 1, loss=1)
                 p_func = mock_eng_run.call_args[0][0]
 
             eng = sf.LocalEngine(backend="gaussian")
@@ -218,12 +218,12 @@ class TestVibronic:
 
 @pytest.mark.parametrize("p", [p0, p1])
 @pytest.mark.parametrize("integration_sample_number", [1, 2])
-def test_vibronic_integration(p, integration_sample_number):
-    """Integration test for the function ``strawberryfields.apps.sample.vibronic`` to check if
+def test_sample_integration(p, integration_sample_number):
+    """Integration test for the function ``strawberryfields.apps.qchem.sample`` to check if
     it returns samples of correct form, i.e., correct number of samples, correct number of
     modes, all non-negative integers."""
     samples = np.array(
-        sf.apps.qchem.vibronic.vibronic(*p, n_samples=integration_sample_number))
+        sf.apps.qchem.vibronic.sample(*p, n_samples=integration_sample_number))
 
     dims = samples.shape
 

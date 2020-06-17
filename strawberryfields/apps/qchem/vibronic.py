@@ -138,7 +138,7 @@ def energies(samples: list, w: np.ndarray, wp: np.ndarray) -> Union[list, float]
     return [np.dot(s[: len(s) // 2], wp) - np.dot(s[len(s) // 2:], w) for s in samples]
 
 
-def vibronic(
+def sample(
     t: np.ndarray,
     U1: np.ndarray,
     r: np.ndarray,
@@ -168,8 +168,8 @@ def vibronic(
     >>> Ud = formic.Ud
     >>> delta = formic.delta
     >>> T = 0
-    >>> t, U1, r, U2, alpha = vibronic.gbs_params(w, wp, Ud, delta, T)
-    >>> sample.vibronic(t, U1, r, U2, alpha, 2, 0.0)
+    >>> t, U1, r, U2, alpha = gbs_params(w, wp, Ud, delta, T)
+    >>> sample(t, U1, r, U2, alpha, 2, 0.0)
     [[0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
      [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
