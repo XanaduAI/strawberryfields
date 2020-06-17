@@ -18,6 +18,7 @@ Unit tests for strawberryfields.apps.data
 import numpy as np
 import pytest
 import scipy
+
 from strawberryfields.apps import data
 
 pytestmark = pytest.mark.apps
@@ -315,7 +316,7 @@ class TestFeatureDatasets:
 
     # pylint: disable=unnecessary-comprehension
     def test_slice(self, dataset_patched):
-        """Test if dataset class allows correct slicing over items"""
+        """Test if dataset class allows correct slicing over itself"""
         a1 = np.array([i for i in dataset_patched[(1, 3)]])
         a2 = np.array([self.patch_feature_vectors[1], self.patch_feature_vectors[2]])
         a3 = np.array(dataset_patched[slice(1, 3, 1)])
