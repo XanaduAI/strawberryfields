@@ -47,6 +47,7 @@
 * Relocates the `apps.vibronic` module to be a submodule of the new `apps.qchem` module
   and moves the `apps.sample.vibronic()` function to `apps.qchem.vibronic.sample()`, providing
   a single location for quantum chemistry functionality.
+  [(#416)](https://github.com/XanaduAI/strawberryfields/pull/416)
 
 * Removes support for Python 3.5.
   [(#385)](https://github.com/XanaduAI/strawberryfields/pull/385)
