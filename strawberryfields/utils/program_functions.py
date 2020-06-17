@@ -36,6 +36,7 @@ __all__ = [
     "extract_channel",
 ]
 
+
 def is_unitary(prog):
     """True iff all the operations in the program are unitary.
 
