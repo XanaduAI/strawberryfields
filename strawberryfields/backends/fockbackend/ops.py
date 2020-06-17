@@ -253,7 +253,6 @@ def displacement(r, phi, trunc):
     return ret
 
 
-
 @functools.lru_cache()
 def squeezing(r, theta, trunc):
     r"""The squeezing operator :math:`S(re^{i\theta})`.
