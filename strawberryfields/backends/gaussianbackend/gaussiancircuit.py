@@ -108,7 +108,7 @@ class GaussianModes:
         return [x for x in self.active if x is not None]
 
     def displace(self, r, phi, i):
-        """ Implements a displacement operation by the complex number beta in mode i"""
+        """ Implements a displacement operation by the complex number `beta = r * np.exp(1j * phi)` in mode i"""
         # Update displacement of mode i by the complex amount bet
         if self.active[i] is None:
             raise ValueError("Cannot displace mode, mode does not exist")
