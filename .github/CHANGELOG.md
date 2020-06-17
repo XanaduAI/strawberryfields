@@ -8,6 +8,7 @@
   [(#391)](https://github.com/XanaduAI/strawberryfields/pull/391)
   [(#393)](https://github.com/XanaduAI/strawberryfields/pull/393)
   [(#414)](https://github.com/XanaduAI/strawberryfields/pull/414)
+  [(#415)](https://github.com/XanaduAI/strawberryfields/pull/415)
   
   Trainable parameters can be embedded into a VGBS class:
   
