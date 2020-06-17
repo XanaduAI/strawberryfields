@@ -3,6 +3,43 @@
 <h3>New features since last release</h3>
 
 * Add the ability to train variational GBS circuits in the applications layer.
+  [(#387)](https://github.com/XanaduAI/strawberryfields/pull/387)
+  [(#388)](https://github.com/XanaduAI/strawberryfields/pull/388)
+  [(#391)](https://github.com/XanaduAI/strawberryfields/pull/391)
+  [(#393)](https://github.com/XanaduAI/strawberryfields/pull/393)
+  [(#414)](https://github.com/XanaduAI/strawberryfields/pull/414)
+  
+  Trainable parameters can be embedded into a VGBS class:
+  
+  ```python
+  from strawberryfields.apps import data, train
+
+  d = data.Mutag0()
+  embedding = train.Exp(d.modes)
+  n_mean = 5
+
+  vgbs = train.VGBS(data.adj, 5, embedding, threshold=False, samples=np.array(d[:1000]))
+  ```
+  
+  Properties of the variational GBS distribution for different choices of
+  trainable parameters can then be inspected:
+  
+  ```python
+  >>> params = 0.1 * np.ones(data.modes)
+  >>> vgbs.n_mean(params)
+  3.6776094165797364
+  ```
+
+  A cost function can then be created and its value and gradient accessed:
+  
+  ```python
+  >>> h = lambda x: np.sum(x)
+  >>> cost = train.Stochastic(h, vgbs)
+  >>> cost(params)
+  444
+  >>> cost.grad(params)
+  555
+  ```
 
 * The `GaussianState` returned from simulations using the Gaussian backend
   now has feature parity with the `FockState` object returned from the Fock backends.
