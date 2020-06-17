@@ -23,13 +23,11 @@ from numpy import (
     arctan2,
     angle,
     sqrt,
-    dot,
     vstack,
     zeros_like,
     allclose,
     ix_,
 )
-from numpy.linalg import inv
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 
 from strawberryfields.backends import BaseGaussian
@@ -223,7 +221,7 @@ class GaussianBackend(BaseGaussian):
     def thermal_loss(self, T, nbar, mode):
         self.circuit.thermal_loss(T, nbar, mode)
 
-    def measure_fock(self, modes, shots=1, select=None):
+    def measure_fock(self, modes, shots=1, select=None, **kwargs):
         if select is not None:
             raise NotImplementedError(
                 "Gaussian backend currently does not support " "postselection"
@@ -252,7 +250,7 @@ class GaussianBackend(BaseGaussian):
 
         return samples
 
-    def measure_threshold(self, modes, shots=1, select=None):
+    def measure_threshold(self, modes, shots=1, select=None, **kwargs):
         if shots != 1:
             if select is not None:
                 raise NotImplementedError(

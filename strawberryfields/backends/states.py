@@ -38,6 +38,7 @@ indices = string.ascii_lowercase
 
 class BaseState(abc.ABC):
     r"""Abstract base class for the representation of quantum states."""
+    # pylint: disable=too-many-public-methods
     EQ_TOLERANCE = 1e-10
 
     def __init__(self, num_modes, mode_names=None):
@@ -593,8 +594,8 @@ class BaseFockState(BaseState):
 
         s = self.dm()
         num_axes = len(s.shape)
-        evens = [k for k in range(0, num_axes, 2)]
-        odds = [k for k in range(1, num_axes, 2)]
+        evens = list(range(0, num_axes, 2))
+        odds = list(range(1, num_axes, 2))
         flat_size = np.prod([s.shape[k] for k in range(0, num_axes, 2)])
         transpose_list = evens + odds
         probs = np.diag(np.reshape(np.transpose(s, transpose_list), [flat_size, flat_size])).real
@@ -640,7 +641,7 @@ class BaseFockState(BaseState):
         if len(n) != self._modes:
             raise ValueError("List length should be equal to number of modes")
 
-        elif max(n) >= self._cutoff:
+        if max(n) >= self._cutoff:
             raise ValueError("Can't get distribution beyond truncation level")
 
         if self._pure:
@@ -798,7 +799,7 @@ class BaseFockState(BaseState):
         return mean, var
 
     def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
-        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-branches,too-many-statements
 
         if A is None:
             A = np.zeros([2 * self._modes, 2 * self._modes])
@@ -991,6 +992,7 @@ class BaseGaussianState(BaseState):
         mode_names (Sequence): (optional) this argument contains a list providing mode names
             for each mode in the state
     """
+    # pylint: disable=too-many-public-methods
 
     def __init__(self, state_data, num_modes, mode_names=None):
         super().__init__(num_modes, mode_names)

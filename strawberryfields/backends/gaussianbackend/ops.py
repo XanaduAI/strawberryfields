@@ -15,8 +15,6 @@
 
 import numpy as np
 
-from scipy.linalg import sqrtm
-
 
 def chop_in_blocks(m, idtodelete):
     """
