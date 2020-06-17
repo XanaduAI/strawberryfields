@@ -15,7 +15,7 @@
 This module defines and implements decorators that can be used for example with
 context managers. The :class:`~.strawberryfields.utils.operation` decorator
 allows functions containing quantum operations acting on a qumode to be used as
-an operation itself within a :class:`.Program` context.
+an operation itself within a :class:`~.Program` context.
 """
 import collections
 from inspect import signature
