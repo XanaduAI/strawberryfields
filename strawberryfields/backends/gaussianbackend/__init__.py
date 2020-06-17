@@ -14,4 +14,3 @@
 r"""Gaussian simulator backend"""
 
 from .backend import GaussianBackend
-from .states import GaussianState
