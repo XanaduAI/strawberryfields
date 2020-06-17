@@ -7,7 +7,7 @@ tensorboard>=2.0
 networkx>=2.0
 quantum-blackbird==0.2.3
 python-dateutil==2.8.0
-http://xanadu-wheels.s3-website-us-east-1.amazonaws.com/thewalrus-0.13.0.dev0+20200527003218-cp36-cp36m-manylinux2010_x86_64.whl
+thewalrus>=0.13.0rc1
 toml
 appdirs
 numba>=0.48.0

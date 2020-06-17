@@ -23,21 +23,18 @@ from numpy import (
     arctan2,
     angle,
     sqrt,
-    dot,
     vstack,
     zeros_like,
     allclose,
     ix_,
 )
-from numpy.linalg import inv
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.shared_ops import changebasis
+from strawberryfields.backends.states import BaseGaussianState
 
-from .ops import xmat
 from .gaussiancircuit import GaussianModes
-from .states import GaussianState
 
 
 class GaussianBackend(BaseGaussian):
@@ -218,7 +215,7 @@ class GaussianBackend(BaseGaussian):
     def thermal_loss(self, T, nbar, mode):
         self.circuit.thermal_loss(T, nbar, mode)
 
-    def measure_fock(self, modes, shots=1, select=None):
+    def measure_fock(self, modes, shots=1, select=None, **kwargs):
         if select is not None:
             raise NotImplementedError(
                 "Gaussian backend currently does not support " "postselection"
@@ -247,7 +244,7 @@ class GaussianBackend(BaseGaussian):
 
         return samples
 
-    def measure_threshold(self, modes, shots=1, select=None):
+    def measure_threshold(self, modes, shots=1, select=None, **kwargs):
         if shots != 1:
             if select is not None:
                 raise NotImplementedError(
@@ -299,23 +296,4 @@ class GaussianBackend(BaseGaussian):
         covmat *= self.circuit.hbar / 2
 
         mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
-
-        # qmat and amat
-        qmat = self.circuit.qmat()
-        N = qmat.shape[0] // 2
-
-        # work out if qmat and Amat need to be reduced
-        if 1 <= len(modes) < N:
-            # reduce qmat
-            ind = concatenate([array(modes), N + array(modes)])
-            rows = ind.reshape((-1, 1))
-            cols = ind.reshape((1, -1))
-            qmat = qmat[rows, cols]
-
-            # calculate reduced Amat
-            N = qmat.shape[0] // 2
-            Amat = dot(xmat(N), identity(2 * N) - inv(qmat))
-        else:
-            Amat = self.circuit.Amat()
-
-        return GaussianState((means, covmat), len(modes), qmat, Amat, mode_names=mode_names)
+        return BaseGaussianState((means, covmat), len(modes), mode_names=mode_names)
