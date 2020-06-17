@@ -107,6 +107,7 @@ import networkx as nx
 import numpy as np
 
 import strawberryfields as sf
+from strawberryfields.apps.qchem.vibronic import sample as vibronic
 
 
 def sample(

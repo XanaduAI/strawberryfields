@@ -38,3 +38,4 @@ import strawberryfields.apps.sample
 import strawberryfields.apps.similarity
 import strawberryfields.apps.subgraph
 import strawberryfields.apps.train
+from strawberryfields.apps.qchem import vibronic
