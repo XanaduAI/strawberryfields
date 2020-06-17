@@ -97,7 +97,8 @@ class operation:
         """Executes the wrapped function and passes the quantum registers.
 
         Args:
-            reg (RegRef, Sequence[RegRef]): subsystem(s) the operation is acting on
+            reg (RegRef, Sequence[RegRef]): subsystem(s) the operation is
+                acting on
 
         Returns:
             list[RegRef]: subsystem list as RegRefs
