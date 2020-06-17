@@ -90,7 +90,6 @@ class TestInitialStates:
         state = utils.vacuum_state(basis="fock", hbar=hbar, fock_dim=cutoff)
         assert np.all(state == np.eye(1, cutoff, 0))
 
-    #@pytest.mark.parametrize("alpha", ALPHA)
     @pytest.mark.parametrize("r_d, phi_d", zip(R_D, PHI_D))
     def test_coherent_state_gaussian(self, r_d, phi_d, hbar):
         """test coherent state returns correct means and covariance"""
