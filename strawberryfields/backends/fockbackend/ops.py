@@ -245,10 +245,7 @@ def displacement(r, phi, trunc):
             trunc (int): the Fock cutoff
     """
 
-    r = np.abs(alpha)
-    theta = np.angle(alpha)
-
-    ret = displacement_tw(r, theta, cutoff=trunc)
+    ret = displacement_tw(r, phi, cutoff=trunc)
 
     return ret
 
@@ -343,7 +340,6 @@ def beamsplitter(theta, phi, trunc):
     """
     # pylint: disable=bad-whitespace
 
-    theta = np.arccos(t)
     BS_tw = beamsplitter_tw(theta, phi, cutoff=trunc)
 
     # Transpose needed because of different conventions in SF and The Walrus.

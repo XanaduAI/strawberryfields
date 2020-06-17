@@ -425,9 +425,9 @@ class TestNumberExpectation:
         nbar1 = 0.21
 
         backend.prepare_thermal_state(nbar0, 0)
-        backend.displacement(a0, 0)
+        backend.displacement(a0, 0.0, 0)
         backend.prepare_thermal_state(nbar1, 1)
-        backend.displacement(a1, 1)
+        backend.displacement(a1, 0.0, 1)
         state = backend.state()
 
         res = state.number_expectation([0])
