@@ -22,6 +22,8 @@ from strawberryfields.ops import *
 from strawberryfields.api.post_processing import (
     number_expectation,
     number_variance,
+    quadrature_expectation_homodyne,
+    quadrature_variance_homodyne,
     _check_modes,
     _check_samples,
 )
@@ -63,7 +65,7 @@ def entangled_gaussian_samples():
 
 
 class TestNumberExpectation:
-    """Tests the number_expectation method using PNR samples."""
+    """Tests the number_expectation function using PNR samples."""
 
     @pytest.mark.parametrize("expval, modes", [(2, [0]), (2 * 3, [0, 1]), (2 * 3 * 4, [0, 1, 2])])
     def test_fock_backend_integration_expval(self, expval, modes):
@@ -89,7 +91,7 @@ class TestNumberExpectation:
 
 
 class TestNumberVariance:
-    """Tests the number_variance method using PNR samples."""
+    """Tests the number_variance function using PNR samples."""
 
     @pytest.mark.parametrize("var, modes", [(0, [0]), (0, [0, 1]), (0, [0, 1, 2])])
     def test_fock_backend_integration_var(self, var, modes):
@@ -112,6 +114,46 @@ class TestNumberVariance:
         var1 = number_variance(samples, mode1)
         var2 = number_variance(samples, mode2)
         assert var1 == var2
+
+
+homodyne_samples = [
+                    (np.array([[1.23]]),
+                            1.23,
+                            0),
+                    (np.array([[1.23],
+                            [12.32],
+                            [0.3222],
+                            [0]]),
+                            3.46805,
+                            26.3224074075),
+                    (np.array([[12.32, 0.32]]),
+                            3.9424,
+                            0),
+                    (np.array([[1.23, 0],
+                            [12.32, 0.32],
+                            [0.3222, 6.34],
+                            [0, 3.543]]),
+                            1.496287,
+                            2.689959501507),
+                    ]
+
+class TestQuadratureExpectation:
+    """Tests the quadrature_expectation_homodyne function using homodyne
+    samples."""
+
+    @pytest.mark.parametrize("samples, expval", [(samples, expval) for samples,expval, _ in homodyne_samples])
+    def test_quadrature_expval(self, samples, expval):
+        """Checking the expectation value of pre-defined homodyne samples."""
+        assert np.isclose(quadrature_expectation_homodyne(samples), expval)
+
+class TestQuadratureVariance:
+    """Tests the quadrature_variance_homodyne function using homodyne
+    samples."""
+
+    @pytest.mark.parametrize("samples, var", [(samples, var) for samples, _, var in homodyne_samples])
+    def test_quadrature_variance(self, samples, var):
+        """Checking the variance of pre-defined homodyne samples."""
+        assert np.isclose(quadrature_variance_homodyne(samples), var)
 
 def validation_circuit():
     """Returns samples from an example circuit."""
