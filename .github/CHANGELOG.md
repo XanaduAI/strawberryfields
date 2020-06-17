@@ -45,7 +45,7 @@
 <h3>Breaking Changes</h3>
 
 * Relocates the `apps.vibronic` module to be a submodule of the new `apps.qchem` module
-  and moves the `sample.vibronic()` function to `apps.qchem.vibronic.sample()`, providing
+  and moves the `apps.sample.vibronic()` function to `apps.qchem.vibronic.sample()`, providing
   a single location for quantum chemistry functionality.
 
 * Removes support for Python 3.5.

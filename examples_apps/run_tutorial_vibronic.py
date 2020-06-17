@@ -6,7 +6,7 @@ Vibronic spectra
 ================
 
 *Technical details are available in the API documentation:*
-:doc:`/code/api/strawberryfields.apps.qchem.vibronic`
+:doc:`/code/api/api/strawberryfields.apps.qchem.vibronic`
 
 Here we study how GBS can be used to compute vibronic spectra. So let's start from
 the beginning: what is a vibronic spectrum? Molecules absorb light at frequencies that depend on
@@ -40,7 +40,7 @@ that involve only single-mode squeezing and linear interferometry, in vibronic s
 prepare a Gaussian state using two-mode squeezing, linear interferometry, single-mode squeezing,
 and displacements.
 
-The function :func:`~.gbs_params` of the :mod:`~.apps.vibronic` module can be
+The function :func:`~.gbs_params` of the :mod:`~.apps.qchem.vibronic` module can be
 used to obtain the squeezing, interferometer, and displacement parameters from the input
 chemical parameters listed above. In this page, we study the vibronic spectrum of
 `formic acid <https://en.wikipedia.org/wiki/Formic_acid>`_ 🐜. Its chemical parameters, obtained
