@@ -58,19 +58,6 @@ try:
 except ImportError:
     pass
 
-# With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
-# the replacement tf.einsum introduced the bug. This try-except block
-# will dynamically patch TensorFlow versions where _einsum_v1 exists, to make it the
-# default einsum implementation.
-#
-# For more details, see https://github.com/tensorflow/tensorflow/issues/37307
-try:
-    from tensorflow.python.ops.special_math_ops import _einsum_v1
-
-    tf.einsum = _einsum_v1
-except ImportError:
-    pass
-
 from strawberryfields.backends.shared_ops import (
     generate_bs_factors,
     load_bs_factors,
@@ -202,7 +189,8 @@ def single_squeezing_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
     phi = phi.numpy()
     gate = squeezing_tw(r, phi, D, dtype)
 
-    def grad(dy):
+    # NOTE: tested independently in thewalrus
+    def grad(dy): # pragma: no cover
         Dr, Dphi = grad_squeezing_tw(gate, r, phi)
         grad_r = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dr)))
         grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
@@ -324,7 +312,8 @@ def single_displacement_matrix(r, phi, D, dtype=def_type.as_numpy_dtype):
     phi = phi.numpy()
     gate = displacement_tw(r, phi, D, dtype)
 
-    def grad(dy):
+    # NOTE: tested when testing the gate and its gradients; also tested independently in thewalrus
+    def grad(dy): # pragma: no cover
         Dr, Dphi = grad_displacement_tw(gate, r, phi)
         grad_r = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dr)))
         grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
@@ -353,12 +342,14 @@ def single_beamsplitter_matrix(theta, phi, D, dtype=def_type.as_numpy_dtype):
     gate = beamsplitter_tw(theta, phi, D, dtype)
     gate = np.transpose(gate, [0, 2, 1, 3])
 
-    def grad(dy):
+    # NOTE: tested independently in thewalrus
+    def grad(dy): # pragma: no cover
         Dtheta, Dphi = grad_beamsplitter_tw(gate, theta, phi)
         Dtheta = np.transpose(Dtheta, [0, 2, 1, 3])
         Dphi = np.transpose(Dphi, [0, 2, 1, 3])
-        grad_theta = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
-        grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
+        print(dy)
+        grad_theta = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
+        grad_phi = 2 * tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
         return grad_theta, grad_phi, None
 
     return gate, grad
@@ -385,8 +376,9 @@ def single_two_mode_squeezing_matrix(theta, phi, D, dtype=def_type.as_numpy_dtyp
     phi = phi.numpy()
 
     gate = two_mode_squeezing_tw(theta, phi, D, dtype)
-
-    def grad(dy):
+    
+    # NOTE: tested independently in thewalrus
+    def grad(dy): # pragma: no cover
         Dtheta, Dphi = grad_two_mode_squeezing_tw(gate, theta, phi)
         grad_theta = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
         grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))

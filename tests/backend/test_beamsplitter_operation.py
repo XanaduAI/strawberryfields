@@ -58,7 +58,7 @@ class TestRepresentationIndependent:
             |\psi_in> = |\alpha>|0> --> |t \alpha>|r \alpha> = |\psi_out>
             and for each output mode,
             |\gamma> = exp(-0.5 |\gamma|^2) \sum_n \gamma^n / \sqrt{n!} |n>"""
-        phase_alpha = np.float64(np.pi) / 5
+        phase_alpha = np.pi / 5
         alpha = mag_alpha * np.exp(1j * phase_alpha)
         r = np.exp(1j * r_phi) * np.sqrt(1.0 - np.abs(t) ** 2)
         backend = setup_backend(2)
@@ -99,7 +99,7 @@ class TestFockRepresentation:
             and for each output mode,
             |\gamma> = exp(-0.5 |\gamma|^2) \sum_n \gamma^n / \sqrt{n!} |n>"""
 
-        phase_alpha = np.float64(np.pi)/ 5
+        phase_alpha = np.pi/ 5
         alpha = mag_alpha * np.exp(1j * phase_alpha)
         r = np.exp(1j * r_phi) * np.sqrt(1.0 - np.abs(t) ** 2)
         backend = setup_backend(2)
@@ -155,7 +155,7 @@ class TestModeSubsets:
     ):
         """Tests applying the beamsplitter on different mode subsets."""
 
-        phase_alpha = np.float64(np.pi) / 5
+        phase_alpha = np.pi / 5
         alpha = mag_alpha * np.exp(1j * phase_alpha)
         r = np.exp(1j * r_phi) * np.sqrt(1.0 - np.abs(t) ** 2)
 
