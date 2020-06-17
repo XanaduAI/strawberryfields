@@ -329,7 +329,6 @@ def beamsplitter(theta, phi, trunc):
     """
     # pylint: disable=bad-whitespace
 
-    # TODO: Transpose needed because of different conventions in SF and The Walrus. Remove when The Walrus is updated.
     return beamsplitter_tw(theta, phi, cutoff=trunc).transpose((0, 2, 1, 3))
 
 
