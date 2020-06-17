@@ -14,7 +14,7 @@
 r"""
 Unit tests for strawberryfields.apps.sample
 """
-# pylint: disable=no-self-use,unused-argument,protected-access
+# pylint: disable=no-self-use,unused-argument
 from unittest import mock
 
 import networkx as nx
@@ -293,88 +293,6 @@ def test_postselect():
 
     assert sample.postselect(counts_pnr, 4, 5) == counts_pnr_ps_4_5
     assert sample.postselect(counts_threshold, 3, 3) == counts_threshold_ps_3_3
-
-
-@pytest.mark.parametrize("p", [p0, p1])
-class TestVibronic:
-    """Tests for the function ``strawberryfields.apps.sample.vibronic``"""
-
-    def test_invalid_n_samples(self, p):
-        """Test if function raises a ``ValueError`` when a number of samples less than one is
-        requested."""
-        with pytest.raises(ValueError, match="Number of samples must be at least one"):
-            sample.vibronic(*p, -1)
-
-    def test_invalid_loss(self, p):
-        """Test if function raises a ``ValueError`` when the loss parameter is specified outside
-        of range."""
-        with pytest.raises(ValueError, match="Loss parameter must take a value between zero and"):
-            sample.vibronic(*p, 1, loss=2)
-
-    def test_loss(self, monkeypatch, p):
-        """Test if function correctly creates the SF program for lossy GBS."""
-        def save_hist(*args, **kwargs):
-            call_history.append(args[1])
-            return sf.engine.Result
-
-        call_history = []
-        with monkeypatch.context() as m:
-            m.setattr(sf.engine.Result, "samples", np.array([[0]]))
-            m.setattr(sf.LocalEngine, "run", save_hist)
-            sample.vibronic(*p, 1, loss=0.5)
-
-        assert isinstance(call_history[0].circuit[-2].op, sf.ops.LossChannel)
-
-    def test_no_loss(self, monkeypatch, p):
-        """Test if function correctly creates the SF program for GBS without loss."""
-        def save_hist(*args, **kwargs):
-            call_history.append(args[1])
-            return sf.engine.Result
-
-        call_history = []
-        with monkeypatch.context() as m:
-            m.setattr(sf.engine.Result, "samples", np.array([[0]]))
-            m.setattr(sf.LocalEngine, "run", save_hist)
-            sample.vibronic(*p, 1)
-
-        assert not all([isinstance(op, sf.ops.LossChannel) for op in call_history[0].circuit])
-
-    def test_all_loss(self, monkeypatch, p):
-        """Test if function samples from the vacuum when maximum loss is applied. This test is
-        only done for the zero temperature case"""
-        if p == "p0":
-            dim = len(alpha)
-            mock_eng_run = mock.MagicMock()
-
-            with monkeypatch.context() as m:
-                m.setattr(sf.LocalEngine, "run", mock_eng_run)
-                sample.vibronic(*p, 1, loss=1)
-                p_func = mock_eng_run.call_args[0][0]
-
-            eng = sf.LocalEngine(backend="gaussian")
-
-            state = eng.run(p_func).state
-            cov = state.cov()
-            disp = state.displacement()
-
-            assert np.allclose(cov, 0.5 * state.hbar * np.eye(2 * dim))
-            assert np.allclose(disp, np.zeros(dim))
-
-
-@pytest.mark.parametrize("p", [p0, p1])
-@pytest.mark.parametrize("integration_sample_number", [1, 2])
-def test_vibronic_integration(p, integration_sample_number):
-    """Integration test for the function ``strawberryfields.apps.sample.vibronic`` to check if
-    it returns samples of correct form, i.e., correct number of samples, correct number of
-    modes, all non-negative integers."""
-    samples = np.array(sample.vibronic(*p, n_samples=integration_sample_number))
-
-    dims = samples.shape
-
-    assert len(dims) == 2
-    assert dims == (integration_sample_number, len(alpha) * 2)
-    assert samples.dtype == "int"
-    assert (samples >= 0).all()
 
 
 class TestWawMatrix:
