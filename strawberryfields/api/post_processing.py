@@ -43,9 +43,7 @@ def number_expectation_pnr(photon_number_samples, modes=None):
     Returns:
         float: the expectation value from the samples
     """
-    product_across_modes = _checks_and_get_product(photon_number_samples, modes=modes)
-    expval = product_across_modes.mean()
-    return expval
+    return _samples_expectation(photon_number_samples, modes)
 
 
 def number_variance_pnr(photon_number_samples, modes=None):
@@ -74,7 +72,105 @@ def number_variance_pnr(photon_number_samples, modes=None):
     Returns:
         float: the variance from the samples
     """
-    product_across_modes = _checks_and_get_product(photon_number_samples, modes=modes)
+    return _samples_variance(photon_number_samples, modes)
+
+
+def quadrature_expectation_homodyne(homodyne_samples, modes=None):
+    """The expectation value of a quadrature operator from homodyne samples.
+
+    It is assumed that samples were obtained after measuring either the X or P
+    operator.
+
+    **Example:**
+
+    .. code-block:: python
+
+        samples = np.array([[1.23, 0],
+                            [12.32, 0.32],
+                            [0.3222, 6.34],
+                            [0, 3.543]])
+
+    Getting the expectation value for these homodyne samples:
+
+    >>> quadrature_expectation_homodyne(samples)
+    1.4962870000000001
+
+    Args:
+        homodyne_samples (ndarray): the homodyne samples with a shape of
+            (shots, modes)
+        modes (Sequence): a flat sequence containing indices of modes to get
+            the expectation value for
+
+    Returns:
+        float: the expectation value from the samples
+    """
+    return _samples_expectation(homodyne_samples, modes)
+
+
+def quadrature_variance_homodyne(homodyne_samples, modes=None):
+    """The variance of a quadrature operator from homodyne samples.
+
+    It is assumed that samples were obtained after measuring either the X or P
+    operator.
+
+    **Example:**
+
+    .. code-block:: python
+
+        samples = np.array([[1.23, 0],
+                            [12.32, 0.32],
+                            [0.3222, 6.34],
+                            [0, 3.543]])
+
+    Getting the variance for these homodyne samples:
+
+    >>> quadrature_variance_homodyne(samples)
+    2.6899595015070004
+
+    Args:
+        homodyne_samples (ndarray): the homodyne samples with a shape of
+            (shots, modes)
+        modes (Sequence): a flat sequence containing indices of modes to get
+            the variance for
+
+    Returns:
+        float: the variance from the samples
+    """
+    return _samples_variance(homodyne_samples, modes)
+
+
+def _samples_expectation(samples, modes):
+    """Utility function for calculating the expectation value of samples from
+    multiple modes.
+
+    Args:
+        homodyne_samples (ndarray): the homodyne samples with a shape of
+            (shots, modes)
+        modes (Sequence): a flat sequence containing indices of modes to get
+            the expectation value for
+
+    Returns:
+        float: the expectation value from the samples
+    """
+    product_across_modes = _checks_and_get_product(samples, modes=modes)
+    expval = product_across_modes.mean()
+    return expval
+
+
+def _samples_variance(samples, modes):
+    """Utility function for calculating the variance of samples from multiple
+    modes.
+
+    Args:
+        homodyne_samples (ndarray): the homodyne samples with a shape of
+            (shots, modes)
+        modes (Sequence): a flat sequence containing indices of modes to get
+            the variance for
+
+    Returns:
+        float: the variance from the samples
+    """
+    product_across_modes = _checks_and_get_product(samples, modes=modes)
     variance = product_across_modes.var()
     return variance
 
@@ -117,7 +213,8 @@ def _check_samples(samples):
             modes)
     """
     if not isinstance(samples, np.ndarray) or samples.ndim != 2:
-        raise Exception("Samples needs to be represented as a two dimensional numpy array.")
+        raise Exception("Samples needs to be represented as a two dimensional\
+                numpy array.")
 
 
 def _check_modes(samples, modes):
@@ -134,7 +231,8 @@ def _check_modes(samples, modes):
     """
     num_modes = samples.shape[1]
     flattened_sequence_indices_msg = (
-        "The input modes need to be specified as a flattened sequence of indices!"
+        "The input modes need to be specified as a flattened sequence of\
+        indices!"
     )
 
     modes = np.array(modes)
@@ -142,7 +240,7 @@ def _check_modes(samples, modes):
     # Checking if modes is a valid flattened sequence of indices
     try:
         non_index_modes = modes[(np.mod(modes, 1) != 0) | (modes < 0)]
-    except:
+    except Exception:
         raise Exception(flattened_sequence_indices_msg)
 
     if modes.ndim != 1 or non_index_modes.size > 0:
@@ -158,20 +256,14 @@ def _check_modes(samples, modes):
             )
         )
 
-    # TODO: remove when the returned samples no longer contain Nones
-    indices_for_no_measurement = np.argwhere(samples == None)
-    modes_not_measured = set(indices_for_no_measurement[:, 1])
-    invalid_modes_specified = modes_not_measured.intersection(set(modes))
-    if len(invalid_modes_specified) > 0:
-        raise Exception(
-            "Modes {} were specified for post-processing, but no samples were found (they were not measured)!".format(
-                invalid_modes_specified
-            )
-        )
-
-
+# Convenience names
 number_expectation = number_expectation_pnr
 number_variance = number_variance_pnr
+position_expectation = quadrature_expectation_homodyne
+position_variance = quadrature_variance_homodyne
+momentum_expectation = quadrature_expectation_homodyne
+momentum_variance_homodyne = quadrature_variance_homodyne
+
 shorthands = ["number_expectation", "number_variance"]
 
 __all__ = ["number_expectation_pnr", "number_variance_pnr"] + shorthands
