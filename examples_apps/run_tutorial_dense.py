@@ -33,7 +33,8 @@ module to load pre-generated samples, the :mod:`~.apps.sample` module to postsel
 visualize the graphs. We'll also use Plotly which is required for the :mod:`~.apps.plot` module and
 NetworkX for graph operations.
 """
-from strawberryfields.apps import data, sample, subgraph, plot
+from strawberryfields.apps import sample, subgraph, plot
+from strawberryfields.apps.data import sample as data
 import plotly
 import networkx as nx
 
