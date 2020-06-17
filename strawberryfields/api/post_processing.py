@@ -24,10 +24,10 @@ def number_expectation_pnr(photon_number_samples, modes=None):
 
     .. code-block:: python
 
-        samples = np.array([[2, 0, None],
-                            [2, 2, None],
-                            [2, 0, None],
-                            [0, 0, None]])
+        samples = np.array([[2, 0],
+                            [2, 2],
+                            [2, 0],
+                            [0, 0]])
 
     Getting the expectation value for these PNR samples:
 
@@ -55,10 +55,10 @@ def number_variance_pnr(photon_number_samples, modes=None):
 
     .. code-block:: python
 
-        samples = np.array([[2, 0, None],
-                            [2, 2, None],
-                            [2, 0, None],
-                            [0, 0, None]])
+        samples = np.array([[2, 0],
+                            [2, 2],
+                            [2, 0],
+                            [0, 0]])
 
     Getting the variance for these PNR samples:
 
