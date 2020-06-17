@@ -153,7 +153,7 @@ class Stochastic:
     >>> params = np.array([0.05, 0.1, 0.02, 0.01])
     >>> cost.evaluate(params, 100)
     0.03005489236683591
-    >>> cost.gradient(params, 100)
+    >>> cost.grad(params, 100)
     array([ 0.10880756, -0.1247146 ,  0.12426481, -0.13783342])
 
     Args:
@@ -193,7 +193,7 @@ class Stochastic:
         the cost function and its gradient. This is done by approximating the cost function using a
         single fixed set of samples. The samples can be pre-loaded into the :class:`~.train.VGBS` class or
         generated once upon the first call of either :meth:`Stochastic.evaluate` or
-        :meth:`Stochastic.gradient`.
+        :meth:`Stochastic.grad`.
 
         **Example usage:**
 
@@ -272,7 +272,7 @@ class Stochastic:
 
         return h * (diff / w) @ jac
 
-    def gradient(self, params: np.ndarray, n_samples: int) -> np.ndarray:
+    def grad(self, params: np.ndarray, n_samples: int) -> np.ndarray:
         r"""Evaluates the gradient of the cost function.
 
         As shown in `this paper <https://arxiv.org/abs/2004.04770>`__, the gradient can be
@@ -292,11 +292,11 @@ class Stochastic:
         This method approximates the gradient using a fixed set of samples from the initial
         adjacency matrix. The samples can be pre-loaded into the :class:`~.train.VGBS` class or
         generated once upon the first call of :meth:`Stochastic.evaluate` or
-        :meth:`Stochastic.gradient`.
+        :meth:`Stochastic.grad`.
 
         **Example usage:**
 
-        >>> cost.gradient(params, 100)
+        >>> cost.grad(params, 100)
         array([ 0.10880756, -0.1247146 ,  0.12426481, -0.13783342])
 
         Args:

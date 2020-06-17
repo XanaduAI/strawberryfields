@@ -230,7 +230,7 @@ class TestStochastic:
         g1 = cost_fn._gradient_one_sample(ones[0], params)
         grad_expected = (g0 + g1) * 0.5
 
-        grad = cost_fn.gradient(params, 2 * n_samples)
+        grad = cost_fn.grad(params, 2 * n_samples)
         assert np.allclose(grad_expected, grad)
         assert grad.shape == (dim - 1,)
 
@@ -340,7 +340,7 @@ class TestStochasticIntegrationPNR:
 
         # We want to calculate dcost_by_dn as this is available analytically, where n is the mean
         # photon number. The following calculates this using the chain rule:
-        dcost_by_dtheta = cost_fn.gradient(params, n_samples=n_samples)
+        dcost_by_dtheta = cost_fn.grad(params, n_samples=n_samples)
         dtheta_by_dw = 1 / np.diag(simple_embedding.jacobian(params))
         A_diag = np.diag(vgbs.A(params))
         A_init_diag = np.diag(vgbs.A_init)
