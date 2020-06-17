@@ -11,9 +11,9 @@
     :alt: Codecov coverage
     :target: https://codecov.io/gh/XanaduAI/strawberryfields
 
-.. image:: https://img.shields.io/codacy/grade/bd14437d17494f16ada064d8026498dd.svg?style=popout-square
-    :alt: Codacy grade
-    :target: https://app.codacy.com/app/XanaduAI/strawberryfields?utm_source=github.com&utm_medium=referral&utm_content=XanaduAI/strawberryfields&utm_campaign=badger
+.. image:: https://img.shields.io/codefactor/grade/github/XanaduAI/strawberryfields/master?style=flat-square
+    :alt: CodeFactor Grade
+    :target: https://www.codefactor.io/repository/github/xanaduai/strawberryfields
 
 .. image:: https://img.shields.io/readthedocs/strawberryfields.svg?style=popout-square
     :alt: Read the Docs
