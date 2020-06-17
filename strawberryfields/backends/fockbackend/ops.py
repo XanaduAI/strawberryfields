@@ -409,7 +409,7 @@ def squeezedState(r, theta, trunc):
 @functools.lru_cache()
 def displacedSqueezed(r_d, phi_d, r_s, phi_s, trunc):
     r"""
-    The displaced squeezed state :math:`\ket{\alpha,\zeta} = D(\alpha)S(r\exp{(i\phi)})\ket{0}`.
+    The displaced squeezed state :math:`\ket{\alpha,\zeta} = D(\alpha)S(r\exp{(i\phi)})\ket{0}`  where `alpha = r_d * np.exp(1j * phi_d)` and `zeta = r_s * np.exp(1j * phi_s)`.
     """
     if np.allclose(r_s, 0.0):
         return coherentState(r_d, phi_d, trunc)
