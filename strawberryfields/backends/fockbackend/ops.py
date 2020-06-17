@@ -381,7 +381,7 @@ def fockState(n, trunc):
 @functools.lru_cache()
 def coherentState(r, phi, trunc):
     r"""
-    The coherent state :math:`D(\alpha)\ket{0}`.
+    The coherent state :math:`D(\alpha)\ket{0}` where `alpha = r * np.exp(1j * phi)`.
     """
     alpha = r * np.exp(1j * phi)
 
