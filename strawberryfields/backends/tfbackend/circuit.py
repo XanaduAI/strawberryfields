@@ -458,14 +458,7 @@ class Circuit:
         phi = self._maybe_batch(phi)
         self._check_incompatible_batches(r, phi)
         new_state = ops.two_mode_squeeze(
-            r,
-            phi,
-            mode1,
-            mode2,
-            self._state,
-            self._cutoff_dim,
-            self._state_is_pure,
-            self._batched,
+            r, phi, mode1, mode2, self._state, self._cutoff_dim, self._state_is_pure, self._batched,
         )
         self._update_state(new_state)
 

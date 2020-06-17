@@ -137,7 +137,9 @@ def get_prefac_tensor(cutoff, directory, save):
         prefac = generate_bs_factors(cutoff)
         if save:
             save_bs_factors(prefac, directory)
-    prefac = tf.expand_dims(tf.cast(prefac[:cutoff, :cutoff, :cutoff, :cutoff, :cutoff], def_type), 0)
+    prefac = tf.expand_dims(
+        tf.cast(prefac[:cutoff, :cutoff, :cutoff, :cutoff, :cutoff], def_type), 0
+    )
     return prefac
 
 
@@ -190,7 +192,7 @@ def single_squeezing_matrix(r, phi, cutoff, dtype=def_type.as_numpy_dtype):
     gate = squeezing_tw(r, phi, cutoff, dtype)
 
     # NOTE: tested independently in thewalrus
-    def grad(dy): # pragma: no cover
+    def grad(dy):  # pragma: no cover
         Dr, Dphi = grad_squeezing_tw(gate, r, phi)
         grad_r = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dr)))
         grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
@@ -313,7 +315,7 @@ def single_displacement_matrix(r, phi, cutoff, dtype=def_type.as_numpy_dtype):
     gate = displacement_tw(r, phi, cutoff, dtype)
 
     # NOTE: tested when testing the gate and its gradients; also tested independently in thewalrus
-    def grad(dy): # pragma: no cover
+    def grad(dy):  # pragma: no cover
         Dr, Dphi = grad_displacement_tw(gate, r, phi)
         grad_r = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dr)))
         grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
@@ -494,7 +496,8 @@ def thermal_state(nbar, cutoff):
     """
     nbar = tf.cast(nbar, def_type)
     coeffs = tf.stack(
-        [_numer_safe_power(nbar, n) / _numer_safe_power(nbar + 1, n + 1) for n in range(cutoff)], axis=-1
+        [_numer_safe_power(nbar, n) / _numer_safe_power(nbar + 1, n + 1) for n in range(cutoff)],
+        axis=-1,
     )
     thermal = tf.linalg.diag(coeffs)
     return thermal

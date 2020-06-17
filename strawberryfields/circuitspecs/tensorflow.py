@@ -55,7 +55,7 @@ class TFSpecs(CircuitSpecs):
         "CKgate",
         # two mode gates
         "S2gate",
-        "BSgate"
+        "BSgate",
     }
 
     decompositions = {
