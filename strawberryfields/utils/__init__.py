@@ -19,4 +19,7 @@ execution backend. The :class:`~strawberryfields.api.Job` and
 :class:`~strawberryfields.api.Result` classes provide interfaces for managing
 program execution jobs and job results respectively.
 """
-from .utils import *
+from .decorators import *
+from .random_numbers_matrices import *
+from .states import *
+from .program_functions import *
