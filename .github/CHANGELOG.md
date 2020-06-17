@@ -2,7 +2,7 @@
 
 <h3>New features since last release</h3>
 
-* Add the ability to train variational GBS circuits in the applications layer.
+* Adds the ability to train variational GBS circuits in the applications layer.
   [(#387)](https://github.com/XanaduAI/strawberryfields/pull/387)
   [(#388)](https://github.com/XanaduAI/strawberryfields/pull/388)
   [(#391)](https://github.com/XanaduAI/strawberryfields/pull/391)
@@ -19,14 +19,14 @@
   embedding = train.Exp(d.modes)
   n_mean = 5
 
-  vgbs = train.VGBS(data.adj, 5, embedding, threshold=False, samples=np.array(d[:1000]))
+  vgbs = train.VGBS(d.adj, 5, embedding, threshold=False, samples=np.array(d[:1000]))
   ```
   
   Properties of the variational GBS distribution for different choices of
   trainable parameters can then be inspected:
   
   ```python
-  >>> params = 0.1 * np.ones(data.modes)
+  >>> params = 0.1 * np.ones(d.modes)
   >>> vgbs.n_mean(params)
   3.6776094165797364
   ```
@@ -36,10 +36,13 @@
   ```python
   >>> h = lambda x: np.sum(x)
   >>> cost = train.Stochastic(h, vgbs)
-  >>> cost(params)
-  444
+  >>> cost(params, n_samples=1000)
+  3.940396998165503
   >>> cost.grad(params)
-  555
+  array([-0.54988876, -0.49270263, -0.6628071 , -1.13057762, -1.13568456,
+       -0.70180571, -0.6266806 , -0.68803539, -1.11032533, -1.12853718,
+       -0.59172261, -0.47830748, -0.96901676, -0.66938217, -0.85162006,
+       -0.27188134, -0.26955011])
   ```
 
 * The `GaussianState` returned from simulations using the Gaussian backend
