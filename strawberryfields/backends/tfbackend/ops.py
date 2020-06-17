@@ -885,17 +885,6 @@ def combine_single_modes(modes_list, batched=False):
     return combined_modes
 
 
-def replace_mode(replacement, mode, system, state_is_pure, batched=False):
-    """Replace the subsystem 'mode' of 'system' with new state 'replacement'. Argument 'state_is_pure' indicates whether
-
-    This is just a simple wrapper for replace_modes()
-    """
-    # deprecated: This method has become obsolete and is superseeded by replace_modes()
-    if isinstance(mode, int):
-        mode = [mode]
-    replace_modes(replacement, mode, system, state_is_pure, batched)
-
-
 def replace_modes(replacement, modes, system, system_is_pure, batched=False):
     """Replace the subsystem 'mode' of 'system' with new state 'replacement'. Argument 'system_is_pure' indicates whether
     'system' is represented by a pure state or a density matrix.
