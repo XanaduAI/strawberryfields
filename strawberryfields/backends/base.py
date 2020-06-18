@@ -267,9 +267,9 @@ class BaseBackend:
     def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
         r"""Prepare a displaced squeezed state in the specified mode.
 
-        The requested mode is traced out and replaced with the displaced squeezed
-        state :math:`\ket{\alpha, z}`, where :math:`\alpha=r_d e^{i\phi_d}`
-        and :math:`z=r_s e^{i\phi_s}`.
+        The requested mode is traced out and replaced with the displaced
+        squeezed state :math:`\ket{\alpha, z}`, where :math:`\alpha=r_d
+        e^{i\phi_d}` and :math:`z=r_s e^{i\phi_s}`.
         As a result the state may have to be described using a density matrix.
 
         Args:
