@@ -226,9 +226,9 @@ def prob(samples: list, excited_state: list) -> float:
     **Example usage:**
 
     >>> excited_state = [0, 2]
-    >>> samples = [[0, 2], [1, 1], [0, 2], [2, 0], [1, 1], [0, 2], [1, 1], [1, 1], [1, 1], [0, 2]]
+    >>> samples = [[0, 2], [1, 1], [0, 2], [2, 0], [1, 1], [0, 2], [1, 1], [1, 1], [1, 1]]
     >>> prob(samples, excited_state)
-    0.4
+    0.3333333333333333
 
     Args:
         samples list[list[int]]: a list of samples
