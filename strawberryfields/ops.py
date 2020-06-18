@@ -1321,8 +1321,8 @@ class Dgate(Gate):
             # TODO: remove warning in the new release
             warnings.warn(
                 f"""Warning: since strawberryfields version {sf.__version__},
-            Dgate(r, phi) takes two real arguments which represent the polar decomposition
-            of the complex displacement parameter.
+            Dgate(r, phi) takes two real arguments which represent
+            the polar decomposition of the complex displacement parameter.
             Falling back to (r={r}, phi=0.0), is this what you meant?"""
             )
 
