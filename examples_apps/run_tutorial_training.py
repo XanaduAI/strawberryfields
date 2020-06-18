@@ -41,7 +41,7 @@ gradient-base techniques. We refer to these as variational GBS circuits, or VGBS
 
 So the staring point is a parametrization of the distribution. Gradient formulas can be
 generally challenging to calculate, but there exists a particular strategy that leads to
-gradients that are simpler to compute. Known as the :math:`WAW` (wow!) parametrization, it involves
+gradients that are simpler to compute. Known as the WAW (wow!) parametrization, it involves
 transforming the symmetric matrix :math:`A` as
 
 .. math::
@@ -124,27 +124,95 @@ from strawberryfields.apps import train, data
 import numpy as np
 
 
-def h(s, subset):
+def h(s):
     x = np.array(s)
     modes = np.arange(len(x))
     not_subset = [k for k in modes if k not in subset]
     return np.sum(x[not_subset]) - np.sum(x[subset])
 
+
 ##############################################################################
 # The cost function is defined with respect to a subset of modes for which we want to observe
-# many photons. This is specified as the list ``subset``. Then, for a given sample ``s``,
+# many photons. This subset can be specified later on. Then, for a given sample ``s``,
 # we want the total number of photons in the subset to be large, which we can achieve by minimizing
 # its negative value. Similarly, for modes outside of the specified subset, we want to minimize
 # their total sum. Now time to define the variational circuit. We'll train a distribution based on
-# one of the molecular graphs in the :mod:`~.apps.data`:
+# on a simple lollipop 🍭 graph with five vertices:
 
-mutag = data.Mutag1()
-A = mutag.adj
-graph = nx.Graph(A)
-plot_graph = plot.graph(TA_graph)
-plotly.offline.plot(plot_graph, filename="mutag1.html")
+import networkx as nx
+import plotly
+from strawberryfields.apps import plot
+
+graph = nx.lollipop_graph(3, 2)
+A = nx.to_numpy_array(graph)
+plot_graph = plot.graph(graph)
+# plotly.offline.plot(plot_graph, filename="mutag1.html")
 
 ##############################################################################
-# Defining a variational GBS circuit consists of three steps: (i) specify the embedding,
-# (ii) build the circuit, (iii) define the cost function with respect to the circuit and
-# embedding. We'll go through each step at a time.
+# Defining a variational GBS circuit consists of three steps: (i) specifying the embedding,
+# (ii) building the circuit, (iii) defining the cost function with respect to the circuit and
+# embedding. We'll go through each step one at a time. For the embedding of trainable parameters,
+# we'll use the simple form :math:`w_k = \exp(-\theta_k)` outlined above, which can be accessed
+# through the ``Exp()`` method in the :mod:`~.apps.train.embed` submodule. Its only input is the
+# number of modes in the device, which is equal to the number of vertices in the graph.
+
+nr_modes = len(A)
+weights = train.embed.Exp(nr_modes)
+
+##############################################################################
+# Easy! The GBS distribution is determined by the symmetric matrix :math:`A`, which we
+# train using the WAW parametrization, and by the total mean photon number. In principle there is
+# freedom in choosing :math:`A`, but here we'll just use the graph's adjacency matrix. The total
+# mean photon number is a hyperparameter of the distribution: in general, different choices may
+# lead to different results in training. Finally, besides the embedding, GBS devices can operate
+# either with photon number-resolving detectors or threshold detectors, so there is an option to
+# specify which one we intend to use.
+
+n_mean = 6
+vgbs = train.VGBS(A, n_mean, weights, threshold=False)
+
+##############################################################################
+# The last step before commencing training is to define the cost function with respect to our
+# previous choices. Since this is a stochastic optimization task, we employ the
+# ``Stochastic`` class and input our previously defined cost function ``h``:
+
+cost = train.Stochastic(h, vgbs)
+
+##############################################################################
+# During training, we'll calculate gradients with respect to this cost function and evaluate it
+# to keep track of progress. Both these actions require estimating expectation values from
+# sampling, so the number of samples in the estimation also needs to be specified. The gradient and
+# cost function are ultimately determined by the values of the parameters, which need to be
+# initialized. There is freedom in this choice, but here we'll set them all to zero. Finally, we
+# aim to increase the number of photons in the "candy" part of the lollippop graph,
+# which corresponds to the subset of modes ``[0, 1, 2]``. Let's see how this is done:
+
+np.random.seed(1969)  # for reproducibility of results
+d = nr_modes
+params = np.zeros(d)
+subset = [0, 1, 2]
+nr_samples = 100
+
+print('Initial mean photon numbers = ', vgbs.mean_photons_by_mode(params))
+
+##############################################################################
+# If training is successful, we should see the mean photon numbers of the first three modes
+# increasing, while those of the last two modes should be close to zero. We perform training over
+# 200 steps of gradient descent with a learning rate of 0.01:
+
+nr_steps = 200
+rate = 0.01
+
+for i in range(nr_steps):
+    params -= rate*cost.gradient(params, nr_samples)
+    if (i + 1) % 10 == 0:
+        print('Cost = {:.3f}'.format(cost.evaluate(params, nr_samples)))
+
+print('Final mean photon numbers = ', vgbs.mean_photons_by_mode(params))
+
+##############################################################################
+# Great! The cost function decreases smoothly and there is a clear increase in the mean photon
+# numbers of the target modes, with a corresponding decrease in the remaining modes. Because the
+# transformed matrix :math:`A_W = W A W` also needs to have eigenvalues bounded between -1 and 1,
+# continuing training indefinitely can lead to unphysical distributions when weights become too
+# large, so it's important to monitor this behaviour.
