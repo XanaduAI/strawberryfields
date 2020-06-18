@@ -274,7 +274,7 @@ def _check_samples(samples):
             modes)
     """
     if not isinstance(samples, np.ndarray) or samples.ndim != 2:
-        raise Exception("Samples needs to be represented as a two dimensional " "numpy array.")
+        raise Exception("Samples needs to be represented as a two dimensional numpy array.")
 
 
 def _check_modes(samples, modes):
@@ -291,7 +291,7 @@ def _check_modes(samples, modes):
     """
     num_modes = samples.shape[1]
     flattened_sequence_indices_msg = (
-        "The input modes need to be specified as a flattened sequence of " "indices!"
+        "The input modes need to be specified as a flattened sequence of indices!"
     )
 
     modes = np.array(modes)
