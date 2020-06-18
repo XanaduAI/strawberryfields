@@ -20,17 +20,16 @@ import numpy as np
 def number_expectation_pnr(photon_number_samples, modes=None):
     """The expectation value of the number operator from PNR samples.
 
+    If applied to a single mode, this simply corresponds to mean photon number
+    :math:`\langle n_i\rangle`.
+
+    For multiple modes, the expectation value of the tensor of number
+    operators, :math:`\langle n_{i_0} \otimes n_{i_1} \otimes \cdots \otimes
+    n_{i_m}\rangle` is returned.
+
     **Example:**
 
-    .. code-block:: python
-
-        samples = np.array([[2, 0],
-                            [2, 2],
-                            [2, 0],
-                            [0, 0]])
-
-    Getting the expectation value for these PNR samples:
-
+    >>> samples = np.array([[2, 0], [2, 2], [2, 0], [0, 0]])
     >>> number_expectation_pnr(samples)
     1.0
 
@@ -53,13 +52,7 @@ def number_variance_pnr(photon_number_samples, modes=None):
 
     .. code-block:: python
 
-        samples = np.array([[2, 0],
-                            [2, 2],
-                            [2, 0],
-                            [0, 0]])
-
-    Getting the variance for these PNR samples:
-
+    >>> samples = np.array([[2, 0], [2, 2], [2, 0], [0, 0]])
     >>> number_expectation_pnr(samples)
     3.0
 
