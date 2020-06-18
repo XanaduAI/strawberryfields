@@ -577,7 +577,7 @@ class Circuit:
 
         if select is not None:
             # just use the supplied measurement results
-            meas_result = select
+            meas_result = tf.convert_to_tensor([[i] for i in select], dtype=tf.int64)
         else:
             # compute and sample measurement result
             if self._state_is_pure and len(modes) == self._num_modes:
@@ -625,11 +625,10 @@ class Circuit:
             meas_result = ops.unravel_index(
                 sample_tensor, [self._cutoff_dim] * num_reduced_state_modes
             )
-            if not self._batched:
-                meas_result = meas_result[0]  # no batch index, can get rid of first axis
 
-        # unstack this here because that's how it should be returned
-        meas_result = tf.unstack(meas_result, axis=-1, name="Meas_result")
+            if self._batched:
+                meas_shape = meas_result.shape
+                meas_result = tf.reshape(meas_result, (meas_shape[0], 1, meas_shape[1]))
 
         # project remaining modes into conditional state
         if len(modes) == self._num_modes:
@@ -637,9 +636,7 @@ class Circuit:
             self.reset(pure=self._state_is_pure)
         else:
             # only some modes were measured: put unmeasured modes in conditional state, while reseting measured modes to vac
-            fock_state = tf.one_hot(
-                tf.stack(meas_result, axis=-1), depth=self._cutoff_dim, dtype=ops.def_type
-            )
+            fock_state = tf.one_hot(meas_result[0], depth=self._cutoff_dim, dtype=ops.def_type)
             conditional_state = self._state
             for idx, mode in enumerate(modes):
                 if self._batched:
@@ -702,7 +699,7 @@ class Circuit:
 
             self._update_state(new_state)
 
-        return tuple(meas_result)
+        return meas_result
 
     def measure_homodyne(self, phi, mode, select=None, **kwargs):
         """
@@ -899,7 +896,10 @@ class Circuit:
 
             self._update_state(new_state)
 
-        return tf.cast(meas_result, dtype=ops.def_type)
+        # `meas_result` will always be a single value since multiple shots is not supported
+        if self.batched:
+            return tf.reshape(meas_result, (len(meas_result), 1, 1))
+        return tf.cast([[meas_result]], dtype=ops.def_type)
 
     @property
     def num_modes(self):

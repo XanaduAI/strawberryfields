@@ -350,6 +350,13 @@ class MeasuredParameter(sympy.Symbol):
                     self
                 )
             )
+
+        # remove unnecessary dims when returning measurement
+        try:
+            res = np.squeeze(res).item()
+        except ValueError:
+            res = np.squeeze(res)
+
         return res
 
 

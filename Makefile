@@ -72,4 +72,4 @@ coverage-%:
 
 batch-coverage-%:
 	@echo "Generating coverage report for $(subst batch-coverage-,,"$@") in batch mode..."
-	export BATCHED=1 &&  $(TESTRUNNER) $(COVERAGE) -m $(subst batch-coverage-,,"$@")
+	export BATCHED=1 && $(PYTHON) $(TESTRUNNER) $(COVERAGE) -m $(subst batch-coverage-,,"$@")

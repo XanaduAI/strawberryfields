@@ -427,7 +427,7 @@ class TestProbOrbitMC:
         graph = nx.complete_graph(5)
         with monkeypatch.context() as m:
             m.setattr(
-                "strawberryfields.backends.gaussianbackend.states.GaussianState.fock_prob",
+                "strawberryfields.backends.BaseGaussianState.fock_prob",
                 lambda *args, **kwargs: 0.2,
             )
             assert np.allclose(similarity.prob_orbit_mc(graph, [1, 1, 1, 1]), 1.0)
@@ -512,7 +512,7 @@ class TestProbEventMC:
         graph = nx.complete_graph(6)
         with monkeypatch.context() as m:
             m.setattr(
-                "strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
+                "strawberryfields.backends.BaseGaussianState.fock_prob",
                 lambda *args, **kwargs: 1.0 / 336,
             )
             assert np.allclose(similarity.prob_event_mc(graph, 6, 3), 1.0)
