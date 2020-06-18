@@ -223,8 +223,7 @@ def all_fock_probs_pnr(photon_number_samples):
     [0.5  0.   0.25]]
 
     Args:
-        photon_number_samples (ndarray): the photon number samples with a shape
-            of (shots, modes)
+        photon_number_samples (array): the photon number samples with a shape of ``(shots, modes)``
 
     Returns:
         array: array of dimension :math:`\underbrace{D\times D\times D\cdots\times D}_{\text{num modes}}`
