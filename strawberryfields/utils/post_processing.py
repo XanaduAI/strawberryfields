@@ -143,10 +143,8 @@ def _samples_expectation(samples, modes):
     multiple modes.
 
     Args:
-        homodyne_samples (ndarray): the homodyne samples with a shape of
-            (shots, modes)
-        modes (Sequence): a flat sequence containing indices of modes to get
-            the expectation value for
+        samples (array): samples with a shape of ``(shots, modes)``
+        modes (Sequence): indices of modes to compute the expectation value over
 
     Returns:
         float: the expectation value from the samples
