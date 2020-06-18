@@ -363,10 +363,9 @@ def prob_orbit_exact(graph: nx.Graph, orbit: list, n_mean: float = 5, loss: floa
     all possible GBS output patterns that belong to it:
 
     .. math::
-       p(O) = \sum_{S \in O} p(S) = \frac{{\rm haf}(A_{S})^2}{S! \sqrt{\det(Q)}}
+       p(O) = \sum_{S \in O} p(S)
 
-    where :math:`S` represents one GBS output pattern, :math:`A_{S}` is its induced
-    sub-matrix and :math:`Q` is the :math:`Q` covariance matrix obtained from the adjacency matrix.
+    where :math:`S` are samples belonging to :math:`O`.
 
     **Example usage:**
 
