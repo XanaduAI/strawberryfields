@@ -219,7 +219,7 @@ def sample_fock(
 
 def prob(samples: list, excited_state: list) -> float:
     r"""Estimate probability of observing an excited state.
-    
+
     The probability is estimated by calculating the relative frequency of the excited
     state among the samples.
 
