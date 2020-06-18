@@ -312,8 +312,8 @@ class TestProb:
             dynamics.prob(samples, [])
 
     def test_n_modes(self, e):
-        """Test if function raises a ``ValueError`` when the number of modes in the samples and the
-        state are different."""
+        """Test if function raises a ``ValueError`` when the number of modes in the samples and
+        the state are different."""
         with pytest.raises(
             ValueError, match="The number of modes in the samples and the excited state must be"
         ):
