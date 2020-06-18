@@ -1287,7 +1287,7 @@ class Dgate(Gate):
     or use the polar form :math:`a = r, \phi` and still get the same result.
 
     Args:
-        r (float): displacement amplitude :math:`|\alpha|`
+        r (float): displacement magnitude :math:`|\alpha|`
         phi (float): displacement angle :math:`\phi`
 
     .. details::
@@ -1315,7 +1315,15 @@ class Dgate(Gate):
         where :math:`L_n^{m}(x)` is a generalized Laguerre polynomial :cite:`dlmf`.
     """
 
-    def __init__(self, r, phi=0.0):
+    def __init__(self, r, phi=None):
+        if phi is None:
+            phi = 0.0
+            #TODO: remove warning in the new release
+            warnings.warn(f"""Warning: in strawberryfields version {sf.__version__},
+            Dgate(r, phi) takes two arguments which represent the polar decomposition of 
+            the complex displacement parameter.
+            Falling back to (r={r}, phi=0.0), is this what you meant?""")
+        
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
