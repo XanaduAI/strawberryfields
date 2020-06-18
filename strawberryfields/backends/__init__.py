@@ -30,7 +30,7 @@ preserved between engine runs.
 
     FockBackend
     GaussianBackend
-    ~tfbackend.TFBackend
+    TFBackend
 
 .. raw:: html
 
@@ -80,6 +80,7 @@ backend development.
 from .base import BaseBackend, BaseFock, BaseGaussian, ModeMap
 from .gaussianbackend import GaussianBackend
 from .fockbackend import FockBackend
+from .tfbackend import TFBackend
 from .states import BaseState, BaseGaussianState, BaseFockState
 
 

@@ -38,22 +38,6 @@ def_type = np.complex128
 indices = string.ascii_lowercase
 
 
-def genOfRange(size):
-    """
-    Converts a range into a generator.
-    """
-    for i in range(size):
-        yield i
-
-
-def genOfTuple(t):
-    """
-    Converts a tuple into a generator
-    """
-    for val in t:
-        yield val
-
-
 def indexRange(lst, trunc):
     """
     Returns a generator ranging over the possible values for unspecified
@@ -82,7 +66,7 @@ def indexRange(lst, trunc):
     """
 
     for vals in product(*([range(trunc) for x in lst if x is None])):
-        gen = genOfTuple(vals)
+        gen = (v for v in vals)
         yield [next(gen) if v is None else v for v in lst]  # pylint: disable=stop-iteration-return
 
 
@@ -232,22 +216,20 @@ def a(trunc):
 
 
 @functools.lru_cache()
-def displacement(alpha, trunc):
+def displacement(r, phi, trunc):
     r"""The displacement operator :math:`D(\alpha)`.
 
-    Uses the `Dgate operation from The Walrus`_ to calculate the displacement.
+    Uses the `displacement operation from The Walrus`_ to calculate the displacement.
 
-    .. _`Dgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.Dgate.html
+    .. _`displacement operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.displacement.html
 
     Args:
-            alpha (complex): the displacement
+            r (float): the displacement amplitude
+            phi (float): the displacement angle
             trunc (int): the Fock cutoff
     """
 
-    r = np.abs(alpha)
-    theta = np.angle(alpha)
-
-    ret = displacement_tw(r, theta, cutoff=trunc)
+    ret = displacement_tw(r, phi, cutoff=trunc)
 
     return ret
 
@@ -256,13 +238,12 @@ def displacement(alpha, trunc):
 def squeezing(r, theta, trunc):
     r"""The squeezing operator :math:`S(re^{i\theta})`.
 
-    Uses the `Sgate operation from The Walrus`_ to calculate the squeezing.
+    Uses the `squeezing operation from The Walrus`_ to calculate the squeezing.
 
-    .. _`Sgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.Sgate.html
+    .. _`squeezing operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.squeezing.html
 
     Args:
-            r (float): the magnitude of the squeezing in the
-                    x direction
+            r (float): the magnitude of the squeezing
             theta (float): the squeezing angle
             trunc (int): the Fock cutoff
     """
@@ -273,7 +254,7 @@ def squeezing(r, theta, trunc):
 
 
 @functools.lru_cache()
-def two_mode_squeezing(r, theta, trunc):
+def two_mode_squeeze(r, theta, trunc):
     r"""The two-mode squeezing operator :math:`S_2(re^{i\theta})`.
 
     Args:
@@ -334,16 +315,15 @@ def phase(theta, trunc):
 
 # pylint: disable=unused-argument
 @functools.lru_cache()
-def beamsplitter(t, r, phi, trunc):
-    r""" The beamsplitter :math:`B(cos^{-1} t, phi)`.
+def beamsplitter(theta, phi, trunc):
+    r""" The beamsplitter :math:`B(\theta, \phi)`.
 
-    Uses the `BSgate operation from The Walrus`_ to calculate the beamsplitter.
+    Uses the `beamsplitter operation from The Walrus`_ to calculate the beamsplitter.
 
-    .. _`BSgate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.BSgate.html
+    .. _`beamsplitter operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.beamsplitter.html
     """
     # pylint: disable=bad-whitespace
 
-    theta = np.arccos(t)
     BS_tw = beamsplitter_tw(theta, phi, cutoff=trunc)
 
     # Transpose needed because of different conventions in SF and The Walrus.
@@ -396,10 +376,11 @@ def fockState(n, trunc):
 
 
 @functools.lru_cache()
-def coherentState(alpha, trunc):
+def coherentState(r, phi, trunc):
     r"""
-    The coherent state :math:`D(\alpha)\ket{0}`.
+    The coherent state :math:`D(\alpha)\ket{0}` where `alpha = r * np.exp(1j * phi)`.
     """
+    alpha = r * np.exp(1j * phi)
 
     def entry(n):
         """coherent summation term"""
@@ -423,23 +404,24 @@ def squeezedState(r, theta, trunc):
 
 
 @functools.lru_cache()
-def displacedSqueezed(alpha, r, phi, trunc):
+def displacedSqueezed(r_d, phi_d, r_s, phi_s, trunc):
     r"""
-    The displaced squeezed state :math:`\ket{\alpha,\zeta} = D(\alpha)S(r\exp{(i\phi)})\ket{0}`.
+    The displaced squeezed state :math:`\ket{\alpha,\zeta} = D(\alpha)S(r\exp{(i\phi)})\ket{0}`  where `alpha = r_d * np.exp(1j * phi_d)` and `zeta = r_s * np.exp(1j * phi_s)`.
     """
-    if r == 0:
-        return coherentState(alpha, trunc)
+    if np.allclose(r_s, 0.0):
+        return coherentState(r_d, phi_d, trunc)
 
-    if alpha == 0:
-        return squeezedState(r, phi, trunc)
+    if np.allclose(r_d, 0.0):
+        return squeezedState(r_s, phi_s, trunc)
 
-    ph = np.exp(1j * phi)
-    ch = cosh(r)
-    sh = sinh(r)
-    th = tanh(r)
+    ph = np.exp(1j * phi_s)
+    ch = cosh(r_s)
+    sh = sinh(r_s)
+    th = tanh(r_s)
+    alpha = r_d * np.exp(1j * phi_d)
 
     gamma = alpha * ch + np.conj(alpha) * ph * sh
-    hermite_arg = gamma / np.sqrt(ph * np.sinh(2 * r) + 1e-10)
+    hermite_arg = gamma / np.sqrt(ph * np.sinh(2 * r_s) + 1e-10)
 
     # normalization constant
     N = np.exp(-0.5 * np.abs(alpha) ** 2 - 0.5 * np.conj(alpha) ** 2 * ph * th)

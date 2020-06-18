@@ -497,14 +497,14 @@ class Circuit:
             st = ops.fockState(n, self._trunc)
             self.prepare(np.outer(st, st.conjugate()), mode)
 
-    def prepare_mode_coherent(self, alpha, mode):
+    def prepare_mode_coherent(self, r, phi, mode):
         """
         Prepares a mode in a coherent state.
         """
         if self._pure:
-            self.prepare(ops.coherentState(alpha, self._trunc), mode)
+            self.prepare(ops.coherentState(r, phi, self._trunc), mode)
         else:
-            st = ops.coherentState(alpha, self._trunc)
+            st = ops.coherentState(r, phi, self._trunc)
             self.prepare(np.outer(st, st.conjugate()), mode)
 
     def prepare_mode_squeezed(self, r, theta, mode):
@@ -517,14 +517,14 @@ class Circuit:
             st = ops.squeezedState(r, theta, self._trunc)
             self.prepare(np.outer(st, st.conjugate()), mode)
 
-    def prepare_mode_displaced_squeezed(self, alpha, r, phi, mode):
+    def prepare_mode_displaced_squeezed(self, r_d, phi_d, r_s, phi_s, mode):
         """
         Prepares a mode in a displaced squeezed state.
         """
         if self._pure:
-            self.prepare(ops.displacedSqueezed(alpha, r, phi, self._trunc), mode)
+            self.prepare(ops.displacedSqueezed(r_d, phi_d, r_s, phi_s, self._trunc), mode)
         else:
-            st = ops.displacedSqueezed(alpha, r, phi, self._trunc)
+            st = ops.displacedSqueezed(r_d, phi_d, r_s, phi_s, self._trunc)
             self.prepare(np.outer(st, st.conjugate()), mode)
 
     def prepare_mode_thermal(self, nbar, mode):
@@ -541,24 +541,19 @@ class Circuit:
         mat = ops.phase(theta, self._trunc)
         self._state = self.apply_gate_BLAS(mat, [mode])
 
-    def displacement(self, alpha, mode):
+    def displacement(self, r, phi, mode):
         """
         Applies a displacement gate.
         """
-        mat = ops.displacement(alpha, self._trunc)
+        mat = ops.displacement(r, phi, self._trunc)
         self._state = self.apply_gate_BLAS(mat, [mode])
 
-    def beamsplitter(self, t, r, phi, mode1, mode2):
+    def beamsplitter(self, theta, phi, mode1, mode2):
         """
         Applies a beamsplitter.
         """
-        mat = ops.beamsplitter(t, r, phi, self._trunc)
-
-        modes = List()
-        modes.append(mode1)
-        modes.append(mode2)
-
-        self._state = self.apply_twomode_gate(mat, modes, gate="BSgate")
+        mat = ops.beamsplitter(theta, phi, self._trunc)
+        self._state = self.apply_twomode_gate(mat, [mode1, mode2], gate="BSgate")
 
     def squeeze(self, r, theta, mode):
         """
@@ -571,13 +566,8 @@ class Circuit:
         """
         Applies a two-mode squeezing gate.
         """
-        mat = ops.two_mode_squeezing(r, theta, self._trunc)
-
-        modes = List()
-        modes.append(mode1)
-        modes.append(mode2)
-
-        self._state = self.apply_twomode_gate(mat, modes, gate="S2gate")
+        mat = ops.two_mode_squeeze(r, theta, self._trunc)
+        self._state = self.apply_twomode_gate(mat, [mode1, mode2], gate="S2gate")
 
     def kerr_interaction(self, kappa, mode):
         """
@@ -784,7 +774,10 @@ class Circuit:
         )
         alpha = homodyne_sample * sqrt(m_omega_over_hbar / 2)
 
-        composed = np.dot(ops.phase(phi, self._trunc), ops.displacement(alpha, self._trunc))
+        composed = np.dot(
+            ops.phase(phi, self._trunc),
+            ops.displacement(np.abs(alpha), np.angle(alpha), self._trunc),
+        )
         eigenstate = self.apply_gate_BLAS(composed, [0], state=inf_squeezed_vac, pure=True, n=1)
 
         vac_state = np.array(

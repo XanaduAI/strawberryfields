@@ -59,7 +59,7 @@ def test_gaussian_program(depth, width):
                 ops.Sgate(s[i]) | q[i]
             ops.Interferometer(V) | q
             for i in range(width):
-                ops.Dgate(alphas[i]) | q[i]
+                ops.Dgate(np.abs(alphas[i]), np.angle(alphas[i])) | q[i]
     compiled_circuit = circuit.compile("gaussian_unitary")
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
@@ -164,7 +164,7 @@ def test_displacements_only(depth, width):
         for _ in range(depth):
             alphas = np.random.rand(width)+1j*np.random.rand(width)
             for i in range(width):
-                ops.Dgate(alphas[i]) | q[i]
+                ops.Dgate(np.abs(alphas[i]), np.angle(alphas[i])) | q[i]
     compiled_circuit = circuit.compile("gaussian_unitary")
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
