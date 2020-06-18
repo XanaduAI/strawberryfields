@@ -24,6 +24,7 @@ from strawberryfields.api.post_processing import (
     number_variance,
     quadrature_expectation_homodyne,
     quadrature_variance_homodyne,
+    all_fock_probs_pnr,
     _check_modes,
     _check_samples,
 )
@@ -167,6 +168,34 @@ def validation_circuit():
 
     results = eng.run(prog, shots=5)
     return results.samples
+
+
+class TestFockProb:
+    """Tests the all_fock_probs_pnr function using PNR samples."""
+
+    def test_fock_states(self):
+        """Check the probabilities of Fock states based on samples from a
+        circuit preparing Fock states."""
+        samples = fock_states_samples()
+        probs = all_fock_probs_pnr(samples)
+        assert probs[(2,3,4)] == 1
+
+        prob_sum = np.sum(probs)
+        assert np.allclose(prob_sum, 1)
+
+    def test_probs_from_correlated_samples(self):
+        """Check the probabilities of Fock states based on correlated
+        samples."""
+        samples = entangled_gaussian_samples()
+        probs = all_fock_probs_pnr(samples)
+
+        # Check that each mode has the same outcome (there should be only
+        # diagonal terms in the array)
+        diagonal_sum = np.sum(probs.diagonal())
+        assert np.allclose(diagonal_sum, 1)
+
+        prob_sum = np.sum(probs)
+        assert np.allclose(prob_sum, 1)
 
 
 class TestInputValidation:

@@ -158,8 +158,8 @@ def _samples_expectation(samples, modes):
 
     if modes is None:
         modes = np.arange(num_modes)
-
-    _check_modes(samples, modes)
+    else:
+        _check_modes(samples, modes)
 
     product_across_modes = _product_for_modes(samples, modes)
     expval = product_across_modes.mean()
@@ -185,12 +185,65 @@ def _samples_variance(samples, modes):
 
     if modes is None:
         modes = np.arange(num_modes)
-
-    _check_modes(samples, modes)
+    else:
+        _check_modes(samples, modes)
 
     product_across_modes = _product_for_modes(samples, modes)
     variance = product_across_modes.var()
     return variance
+
+def all_fock_probs_pnr(photon_number_samples):
+    r"""The Fock state probabilities for the specified modes.
+
+    Measured modes that are not specified are being traced over. If either all
+    the modes or no modes were specified, the marginal probabilities are
+    returned.
+
+    **Example:**
+
+    .. code-block:: python
+
+        samples = np.array([[2, 0],
+                            [2, 2],
+                            [2, 0],
+                            [0, 0]])
+
+    Getting the probabilities of all the Fock states based on these PNR samples:
+
+    >>> probs = all_fock_probs_pnr(samples)
+
+    2 out of 4 shots resulted in the ``(2, 0)`` state. We can check if the
+    probability for this state is correct by indexing into ``probs``:
+
+    >>> probs[(2, 0)]
+    0.5
+
+    We can further check the entire array of probabilities:
+    >>> probs
+    [[0.25 0.   0.  ]
+     [0.   0.   0.  ]
+     [0.5  0.   0.25]]
+
+
+    Args:
+        photon_number_samples (ndarray): the photon number samples with a shape
+            of (shots, modes)
+
+    Returns:
+        array: array of dimension :math:`\underbrace{D\times D\times D\cdots\times D}_{\text{num modes}}`
+            containing the Fock state probabilities, where :math:`D` is the Fock basis cutoff truncation
+    """
+    _check_samples(photon_number_samples)
+
+    num_modes = photon_number_samples.shape[1]
+
+    shots = photon_number_samples.shape[0]
+    num_modes = photon_number_samples.shape[1]
+    max_val = np.max(photon_number_samples)
+    bins = [list(range(max_val+2)) for i in range(num_modes)]
+    H, _ = np.histogramdd(photon_number_samples, bins = bins)
+    probabilities = H/shots
+    return probabilities
 
 def _product_for_modes(samples, modes=None):
     """Getting the product of samples across modes.
@@ -249,7 +302,7 @@ def _check_modes(samples, modes):
     except Exception:
         raise Exception(flattened_sequence_indices_msg)
 
-    if modes.ndim != 1 or non_index_modes.size > 0:
+    if modes.ndim != 1 or non_index_modes.size > 0 or len(modes)==0:
         raise Exception(flattened_sequence_indices_msg)
 
     # Checking if valid modes were specified
