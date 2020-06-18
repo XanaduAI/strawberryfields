@@ -222,6 +222,7 @@ def prob(samples: list, excited_state: list) -> float:
     r"""Generate probability of observing a Fock state.
 
     **Example usage:**
+
     >>> excited_state = [0, 2]
     >>> samples = [[0, 2], [1, 1], [0, 2], [2, 0], [1, 1], [0, 2], [1, 1], [1, 1], [1, 1], [0, 2]]
     >>> prob(samples, excited_state)
