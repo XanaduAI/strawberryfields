@@ -81,6 +81,21 @@ ns1 = 1
 ns2 = 2
 d1 = [is1, t1, U1, w1, ns1, cf]
 d2 = [is2, t2, U2, w2, ns2, cf]
+sample1 = [[0, 2], [1, 1], [0, 2], [2, 0], [1, 1], [0, 2], [1, 1], [1, 1], [1, 1], [0, 2]]
+sample2 = [
+    [0, 2, 0],
+    [1, 0, 1],
+    [0, 0, 2],
+    [2, 0, 0],
+    [0, 2, 0],
+    [0, 0, 2],
+    [0, 1, 1],
+    [1, 0, 1],
+    [0, 1, 1],
+    [0, 2, 0],
+]
+prob1 = 0.4
+prob2 = 0.3
 
 
 @pytest.mark.parametrize("time, unitary, frequency, prob", [(t1, U1, w1, p1), (t2, U2, w2, p2)])
@@ -267,3 +282,47 @@ def test_fock_integration(d):
     assert dims == (d[4], len(d[2]))
     assert samples.dtype == "int"
     assert (samples >= 0).all()
+
+
+e1 = [sample1, is1, prob1]
+e2 = [sample2, is2, prob2]
+
+
+@pytest.mark.parametrize("e", [e1, e2])
+class TestProb:
+    """Tests for the function ``strawberryfields.apps.qchem.dynamics.prob``"""
+
+    def test_correct_prob(self, e):
+        """Test if the function returns the correct probability"""
+        samples, state, pref = e
+        p = dynamics.prob(samples, state)
+
+        assert p == pref
+
+    def test_empty_samples(self, e):
+        """Test if function raises a ``ValueError`` when the samples list is empty."""
+        with pytest.raises(ValueError, match="The samples list must not be empty"):
+            _, state, _ = e
+            dynamics.prob([], state)
+
+    def test_empty_state(self, e):
+        """Test if function raises a ``ValueError`` when the given state is empty."""
+        with pytest.raises(ValueError, match="The excited state list must not be empty"):
+            samples, _, _ = e
+            dynamics.prob(samples, [])
+
+    def test_n_modes(self, e):
+        """Test if function raises a ``ValueError`` when the number of modes in the samples and the
+        state are different."""
+        with pytest.raises(
+            ValueError, match="The number of modes in the samples and the excited state must be"
+        ):
+            samples, state, _ = e
+            dynamics.prob(samples, state + [0])
+
+    def test_negative_state(self, e):
+        """Test if function raises a ``ValueError`` when the given excited state contains negative
+        values."""
+        with pytest.raises(ValueError, match="The excited state must not contain negative values"):
+            samples, state, _ = e
+            dynamics.prob(samples, [-i for i in state])

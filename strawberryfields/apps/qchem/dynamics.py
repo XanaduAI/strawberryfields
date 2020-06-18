@@ -69,6 +69,9 @@ This module contains functions for implementing this algorithm.
 
 - The function :func:`~.sample_fock` generates samples for simulating vibrational quantum dynamics
   in molecules with a Fock input state.
+
+- The function :func:`~.prob` computes the probability of observing a desired excitation in the
+  generated samples.
 """
 import numpy as np
 from scipy.constants import c, pi
@@ -212,3 +215,35 @@ def sample_fock(
         s.append(eng.run(prog).samples[0].tolist())
 
     return s
+
+
+def prob(samples: list, excited_state: list) -> float:
+
+    r"""Generate probability of observing a Fock state.
+
+    **Example usage:**
+    >>> excited_state = [0, 2]
+    >>> samples = [[0, 2], [1, 1], [0, 2], [2, 0], [1, 1], [0, 2], [1, 1], [1, 1], [1, 1], [0, 2]]
+    >>> prob(samples, excited_state)
+    0.4
+
+    Args:
+        samples list[list[int]]: a list of samples
+        excited_state (list): a Fock state
+
+    Returns:
+        float: probability of observing a Fock state in the given samples
+    """
+    if len(samples) == 0:
+        raise ValueError("The samples list must not be empty")
+
+    if len(excited_state) == 0:
+        raise ValueError("The excited state list must not be empty")
+
+    if not len(excited_state) == len(samples[0]):
+        raise ValueError("The number of modes in the samples and the excited state must be equal")
+
+    if np.any(np.array(excited_state) < 0):
+        raise ValueError("The excited state must not contain negative values")
+
+    return samples.count(excited_state) / len(samples)
