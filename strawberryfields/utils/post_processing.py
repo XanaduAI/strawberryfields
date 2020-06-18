@@ -193,7 +193,7 @@ def _samples_variance(samples, modes):
 def all_fock_probs_pnr(photon_number_samples):
     r"""The Fock state probabilities for the specified modes.
 
-    Measured modes that are not specified are being traced over. If either all
+    Measured modes that are not specified are traced over. If either all
     the modes or no modes were specified, the marginal probabilities are
     returned.
 
