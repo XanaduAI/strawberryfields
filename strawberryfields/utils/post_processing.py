@@ -192,6 +192,7 @@ def _samples_variance(samples, modes):
     variance = product_across_modes.var()
     return variance
 
+
 def all_fock_probs_pnr(photon_number_samples):
     r"""The Fock state probabilities for the specified modes.
 
@@ -240,10 +241,11 @@ def all_fock_probs_pnr(photon_number_samples):
     shots = photon_number_samples.shape[0]
     num_modes = photon_number_samples.shape[1]
     max_val = np.max(photon_number_samples)
-    bins = [list(range(max_val+2)) for i in range(num_modes)]
-    H, _ = np.histogramdd(photon_number_samples, bins = bins)
-    probabilities = H/shots
+    bins = [list(range(max_val + 2)) for i in range(num_modes)]
+    H, _ = np.histogramdd(photon_number_samples, bins=bins)
+    probabilities = H / shots
     return probabilities
+
 
 def _product_for_modes(samples, modes=None):
     """Getting the product of samples across modes.
@@ -272,8 +274,7 @@ def _check_samples(samples):
             modes)
     """
     if not isinstance(samples, np.ndarray) or samples.ndim != 2:
-        raise Exception("Samples needs to be represented as a two dimensional "\
-                "numpy array.")
+        raise Exception("Samples needs to be represented as a two dimensional " "numpy array.")
 
 
 def _check_modes(samples, modes):
@@ -290,8 +291,7 @@ def _check_modes(samples, modes):
     """
     num_modes = samples.shape[1]
     flattened_sequence_indices_msg = (
-        "The input modes need to be specified as a flattened sequence of "\
-        "indices!"
+        "The input modes need to be specified as a flattened sequence of " "indices!"
     )
 
     modes = np.array(modes)
@@ -302,7 +302,7 @@ def _check_modes(samples, modes):
     except Exception:
         raise Exception(flattened_sequence_indices_msg)
 
-    if modes.ndim != 1 or non_index_modes.size > 0 or len(modes)==0:
+    if modes.ndim != 1 or non_index_modes.size > 0 or len(modes) == 0:
         raise Exception(flattened_sequence_indices_msg)
 
     # Checking if valid modes were specified
@@ -315,6 +315,7 @@ def _check_modes(samples, modes):
             )
         )
 
+
 # Convenience names
 number_expectation = number_expectation_pnr
 number_variance = number_variance_pnr
@@ -324,7 +325,18 @@ momentum_expectation = quadrature_expectation_homodyne
 momentum_variance = quadrature_variance_homodyne
 all_fock_probs = all_fock_probs_pnr
 
-shorthands = ["number_expectation", "number_variance", "position_expectation",
-        "position_variance", "momentum_expectation", "momentum_variance"]
+shorthands = [
+    "number_expectation",
+    "number_variance",
+    "position_expectation",
+    "position_variance",
+    "momentum_expectation",
+    "momentum_variance",
+]
 
-__all__ = ["number_expectation_pnr", "number_variance_pnr", "quadrature_variance_homodyne", "all_fock_probs_pnr"] + shorthands
+__all__ = [
+    "number_expectation_pnr",
+    "number_variance_pnr",
+    "quadrature_variance_homodyne",
+    "all_fock_probs_pnr",
+] + shorthands
