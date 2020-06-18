@@ -294,9 +294,9 @@ class TestProbOrbitExact:
         assert similarity.prob_orbit_exact(graph, [k]) == 0.0
 
     def test_correct_result_returned(self, monkeypatch):
-        """Tests if the call to _get_state function is performed correctly and probabilities over
-        all permutations of the given orbit are summed correctly. The test monkeypatches the
-        fock_prob function so that the probability is the same for each sample permutation and
+        """Tests if the call to _get_state function is performed correctly and probabilities over all
+        permutations of the given orbit are summed correctly. The test monkeypatches the fock_prob
+        function so that the probability is the same for each sample permutation and
         is equal to 1/8. For a 4-mode graph, [1, 1] has 6 possible permutations. """
         graph = nx.complete_graph(4)
         with monkeypatch.context() as m:
@@ -368,12 +368,11 @@ class TestProbEventExact:
         assert similarity.prob_event_exact(graph, k, nmax) == 0.0
 
     def test_correct_result_returned(self, monkeypatch):
-        """Tests if the call to _get_state function is performed correctly and probabilities over
-        all constituent orbits of the given event are summed correctly. The test monkeypatches
-        the fock_prob function so that the probability is the same for each sample permutation of
-        all constituent orbits and is equal to 1/8. For a 4-mode graph, an event with
-        ``photon_number = 2``, and ``max_count_per_mode = 1`` contains orbit [1, 1] which has 6
-        possible sample permutations."""
+        """Tests if the call to _get_state function is performed correctly and probabilities over all
+        constituent orbits of the given event are summed correctly. The test monkeypatches the fock_prob
+        function so that the probability is the same for each sample permutation of all constituent orbits
+        and is equal to 1/8. For a 4-mode graph, an event with ``photon_number = 2``, and
+        ``max_count_per_mode = 1`` contains orbit [1, 1] which has 6 possible sample permutations."""
         graph = nx.complete_graph(4)
         with monkeypatch.context() as m:
             m.setattr(
@@ -708,8 +707,7 @@ class TestFeatureVectorEvents:
 
 
 class TestFeatureVectorOrbitsSampling:
-    """Tests for the function
-    ``strawberryfields.apps.graph.similarity.feature_vector_orbits_sampling``"""
+    """Tests for the function ``strawberryfields.apps.graph.similarity.feature_vector_orbits_sampling``"""
 
     def test_invalid_orbits_list(self):
         """Test if function raises a ``ValueError`` when the list of orbits is empty."""
@@ -751,8 +749,7 @@ class TestFeatureVectorOrbitsSampling:
 
 
 class TestFeatureVectorEventsSampling:
-    """Tests for the function
-    ``strawberryfields.apps.graph.similarity.feature_vector_events_sampling``"""
+    """Tests for the function ``strawberryfields.apps.graph.similarity.feature_vector_events_sampling``"""
 
     def test_invalid_event_photon_numbers(self):
         """Test if function raises a ``ValueError`` when the list of event photons numbers
