@@ -116,8 +116,9 @@ Functions :func:`~.feature_vector_orbits` and :func:`~.feature_vector_events` ca
 exact feature vectors. These functions use a keyword argument ``samples`` to signal producing
 either exact or approximate probabilities. ``samples`` is set to ``None`` to get exact feature
 vectors by default. To use Monte Carlo estimation, ``samples`` can be set to the number of samples
-desired to be used in the estimation. Similar to the :func:`~.apps.sample.sample` function, these two
-functions include a ``loss`` argument to specify the proportion of photons lost in the simulated GBS device.
+desired to be used in the estimation. Similar to the :func:`~.apps.sample.sample` function,
+these two functions include a ``loss`` argument to specify the proportion of photons lost in the
+simulated GBS device.
 """
 from collections import Counter
 from typing import Generator, Union
