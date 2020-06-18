@@ -19,7 +19,7 @@ import pytest
 
 import strawberryfields as sf
 from strawberryfields.ops import *
-from strawberryfields.api.post_processing import (
+from strawberryfields.utils.post_processing import (
     number_expectation,
     number_variance,
     quadrature_expectation_homodyne,

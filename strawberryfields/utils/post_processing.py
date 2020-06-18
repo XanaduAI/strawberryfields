@@ -222,9 +222,8 @@ def all_fock_probs_pnr(photon_number_samples):
     We can further check the entire array of probabilities:
     >>> probs
     [[0.25 0.   0.  ]
-     [0.   0.   0.  ]
-     [0.5  0.   0.25]]
-
+    [0.   0.   0.  ]
+    [0.5  0.   0.25]]
 
     Args:
         photon_number_samples (ndarray): the photon number samples with a shape
