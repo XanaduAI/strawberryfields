@@ -139,9 +139,9 @@ class TestRepresentationIndependent:
 
             r = 0.25
             # Circuit to prepare two mode squeezed vacuum
-            backend.squeeze(-r, 0)
-            backend.squeeze(r, 1)
-            backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
+            backend.squeeze(-r, 0, 0)
+            backend.squeeze(r, 0, 1)
+            backend.beamsplitter(np.pi/4, np.pi, 0, 1)
             meas_modes = [0, 1]
             meas_results = backend.measure_fock(meas_modes)
             if batch_size is not None:
@@ -163,11 +163,12 @@ class TestRepresentationIndependent:
     def test_coherent_state_has_photons(self, setup_backend, pure):
         """Test that a coherent state with a mean photon number of 4 and sampled NUM_REPEATS times will produce photons"""
         backend = setup_backend(1)
-        alpha = 2.0
+        r = 2.0
+        phi = 0.675
         meas = np.array(backend.measure_fock([0]))
 
         for _ in range(NUM_REPEATS):
             backend.reset(pure=pure)
-            backend.displacement(alpha, 0)
+            backend.displacement(r, phi, 0)
             meas += backend.measure_fock([0])
         assert np.all(meas > 0)

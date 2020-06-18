@@ -262,7 +262,7 @@ def _check_samples(samples):
             modes)
     """
     if not isinstance(samples, np.ndarray) or samples.ndim != 2:
-        raise Exception("Samples needs to be represented as a two dimensional numpy array.")
+        raise Exception("Samples needs to be represented as a two dimensional NumPy array.")
 
 
 def _check_modes(samples, modes):

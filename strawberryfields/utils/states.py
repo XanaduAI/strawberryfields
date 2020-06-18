@@ -84,7 +84,7 @@ def vacuum_state(basis="fock", fock_dim=5, hbar=2.0):
     return state
 
 
-def coherent_state(a, basis="fock", fock_dim=5, hbar=2.0):
+def coherent_state(r, phi, basis="fock", fock_dim=5, hbar=2.0):
     r""" Returns the coherent state
 
     This can be returned either in the Fock basis,
@@ -103,7 +103,8 @@ def coherent_state(a, basis="fock", fock_dim=5, hbar=2.0):
     where :math:`\alpha` is the displacement.
 
     Args:
-        a (complex) : the displacement
+        r (float) : displacement magnitude
+        phi (float) : displacement phase
         basis (str): If 'fock', calculates the initial state
             in the Fock basis. If 'gaussian', returns the
             vector of means and the covariance matrix.
@@ -114,9 +115,11 @@ def coherent_state(a, basis="fock", fock_dim=5, hbar=2.0):
     Returns:
         array: the coherent state
     """
+    a = r * np.exp(1j * phi)
+
     if basis == "fock":
         state = np.array(
-            [np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n)) for n in range(fock_dim)]
+            [np.exp(-0.5 * r ** 2) * a ** n / np.sqrt(fac(n)) for n in range(fock_dim)]
         )
 
     elif basis == "gaussian":
@@ -181,7 +184,7 @@ def squeezed_state(r, p, basis="fock", fock_dim=5, hbar=2.0):
     return state
 
 
-def displaced_squeezed_state(a, r, phi, basis="fock", fock_dim=5, hbar=2.0):
+def displaced_squeezed_state(r_d, phi_d, r_s, phi_s, basis="fock", fock_dim=5, hbar=2.0):
     r""" Returns the squeezed coherent state
 
     This can be returned either in the Fock basis,
@@ -207,9 +210,10 @@ def displaced_squeezed_state(a, r, phi, basis="fock", fock_dim=5, hbar=2.0):
     and :math:`\alpha` is the displacement.
 
     Args:
-        a (complex): the displacement
-        r (complex): the squeezing magnitude
-        phi (float): the squeezing phase :math:`\phi`
+        r_d (float): displacement magnitude
+        phi_d (float): displacement phase
+        r_s (float): the squeezing magnitude
+        phi_s (float): the squeezing phase :math:`\phi`
         basis (str): If 'fock', calculates the initial state
             in the Fock basis. If 'gaussian', returns the
             vector of means and the covariance matrix.
@@ -221,13 +225,14 @@ def displaced_squeezed_state(a, r, phi, basis="fock", fock_dim=5, hbar=2.0):
         array: the squeezed coherent state
     """
     # pylint: disable=too-many-arguments
-    if basis == "fock":
+    a = r_d * np.exp(1j * phi_d)
 
-        if r != 0:
-            phase_factor = np.exp(1j * phi)
-            ch = np.cosh(r)
-            sh = np.sinh(r)
-            th = np.tanh(r)
+    if basis == "fock":
+        if r_s != 0:
+            phase_factor = np.exp(1j * phi_s)
+            ch = np.cosh(r_s)
+            sh = np.sinh(r_s)
+            th = np.tanh(r_s)
 
             gamma = a * ch + np.conj(a) * phase_factor * sh
             N = np.exp(-0.5 * np.abs(a) ** 2 - 0.5 * np.conj(a) ** 2 * phase_factor * th)
@@ -239,16 +244,16 @@ def displaced_squeezed_state(a, r, phi, basis="fock", fock_dim=5, hbar=2.0):
                 ]
             )
 
-            vec = [hermval(gamma / np.sqrt(phase_factor * np.sinh(2 * r)), row) for row in coeff]
+            vec = [hermval(gamma / np.sqrt(phase_factor * np.sinh(2 * r_s)), row) for row in coeff]
 
             state = N * np.array(vec)
 
         else:
-            state = coherent_state(a, basis="fock", fock_dim=fock_dim)  # pragma: no cover
+            state = coherent_state(r_d, phi_d, basis="fock", fock_dim=fock_dim)  # pragma: no cover
 
     elif basis == "gaussian":
         means = np.array([a.real, a.imag]) * np.sqrt(2 * hbar)
-        state = [means, squeezed_cov(r, phi, hbar)]
+        state = [means, squeezed_cov(r_s, phi_s, hbar)]
 
     return state
 
