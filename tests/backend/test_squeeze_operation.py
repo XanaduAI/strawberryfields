@@ -59,7 +59,7 @@ class TestRepresentationIndependent:
     def test_no_squeezing(self, setup_backend, tol):
         """Tests displacement operation where the result should be a vacuum state."""
         backend = setup_backend(1)
-        backend.squeeze(0, 0)
+        backend.squeeze(0, 0, 0)
         assert np.all(backend.is_vacuum(tol))
 
 
@@ -76,7 +76,7 @@ class TestFockRepresentation:
         z = r * np.exp(1j * p)
 
         backend = setup_backend(1)
-        backend.squeeze(z, 0)
+        backend.squeeze(np.abs(z), np.angle(z), 0)
         state = backend.state()
         assert np.allclose(state.trace(), 1, atol=tol, rtol=0)
 
@@ -88,7 +88,7 @@ class TestFockRepresentation:
         z = r * np.exp(1j * p)
 
         backend = setup_backend(1)
-        backend.squeeze(z, 0)
+        backend.squeeze(np.abs(z), np.angle(z), 0)
         state = backend.state()
 
         if state.is_pure:
@@ -105,14 +105,12 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("r", MAG)
     @pytest.mark.parametrize("p", PHASE)
-    def test_reference_squeezed_vacuum(
-        self, setup_backend, r, p, cutoff, batch_size, pure, tol
-    ):
+    def test_reference_squeezed_vacuum(self, setup_backend, r, p, cutoff, batch_size, pure, tol):
         """Tests if a range of squeezed vacuum states are equal to the form of Eq. (5.5.6) in Loudon."""
         z = r * np.exp(1j * p)
 
         backend = setup_backend(1)
-        backend.squeeze(z, 0)
+        backend.squeeze(np.abs(z), np.angle(z), 0)
         state = backend.state()
 
         if state.is_pure:
@@ -153,7 +151,7 @@ class TestFockRepresentation:
         for m in range(cutoff):
             backend.reset(pure=pure)
             backend.prepare_fock_state(m, 0)
-            backend.squeeze(r, 0)
+            backend.squeeze(r, 0, 0)
             state = backend.state()
 
             if state.is_pure:

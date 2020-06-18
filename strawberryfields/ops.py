@@ -43,30 +43,6 @@ _decomposition_tol = (
     1e-13  # TODO this tolerance is used for various purposes and is not well-defined
 )
 
-# data type to use for complex arrays
-COMPLEX_DTYPE = np.complex128
-
-
-def evaluate_complex_parameter(p, phase):
-    """Convenience function for evaluating symbolic arguments
-    with potentially batched phase parameters.
-
-    Args:
-        p (Any): parameters
-        phase (Any): complex phase of parameter ``p``
-
-    """
-    # We need to check if any value of the phase is non-zero,
-    # as the phase might be batched.
-    if np.any(phase != 0):
-        # There exists a non-zero phase; cast the parameter
-        # to a complex data type when evaluating it.
-        return par_evaluate(p, dtype=COMPLEX_DTYPE)
-
-    # All phases are zero; evaluate the parameter without
-    # any additional casting.
-    return par_evaluate(p)
-
 
 def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
     """User warning formatter"""
@@ -577,7 +553,7 @@ class Coherent(Preparation):
     or use the polar form :math:`a = r, p=\phi` and still get the same result.
 
     Args:
-        a (complex): displacement parameter :math:`\alpha`
+        r (float): displacement magnitude :math:`|\alpha|`
         p (float): phase angle :math:`\phi`
 
     .. details::
@@ -611,13 +587,13 @@ class Coherent(Preparation):
         :math:`\mathbf{V}= \frac{\hbar}{2} I`.
     """
 
-    def __init__(self, a=0.0, p=0.0):
-        super().__init__([a, p])
+    def __init__(self, r=0.0, p=0.0):
+        super().__init__([r, p])
 
     def _apply(self, reg, backend, **kwargs):
-        p = self.p[0] * pf.exp(1j * self.p[1])
-        z = evaluate_complex_parameter(p, self.p[1])
-        backend.prepare_coherent_state(z, *reg)
+        r = par_evaluate(self.p[0])
+        phi = par_evaluate(self.p[1])
+        backend.prepare_coherent_state(r, phi, *reg)
 
 
 class Squeezed(Preparation):
@@ -685,9 +661,10 @@ class DisplacedSqueezed(Preparation):
     where the squeezing parameter :math:`z=re^{i\phi}`.
 
     Args:
-        alpha (complex): displacement parameter
-        r (float): squeezing magnitude
-        p (float): squeezing angle :math:`\phi`
+        r_d (float): displacement magnitude
+        phi_d (float): displacement angle
+        r_s (float): squeezing magnitude
+        phi_s (float): squeezing angle :math:`\phi`
 
     .. details::
 
@@ -733,17 +710,20 @@ class DisplacedSqueezed(Preparation):
         where :math:`z=r` is sufficiently large.
     """
 
-    def __init__(self, alpha=0.0, r=0.0, p=0.0):
-        super().__init__([alpha, r, p])
+    def __init__(self, r_d=0.0, phi_d=0.0, r_s=0.0, phi_s=0.0):
+        super().__init__([r_d, phi_d, r_s, phi_s])
 
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
         # prepare the displaced squeezed state directly
-        backend.prepare_displaced_squeezed_state(p[0], p[1], p[2], *reg)
+        backend.prepare_displaced_squeezed_state(p[0], p[1], p[2], p[3], *reg)
 
     def _decompose(self, reg, **kwargs):
         # squeezed state preparation followed by a displacement gate
-        return [Command(Squeezed(self.p[1], self.p[2]), reg), Command(Dgate(self.p[0]), reg)]
+        return [
+            Command(Squeezed(self.p[2], self.p[3]), reg),
+            Command(Dgate(self.p[0], self.p[1]), reg),
+        ]
 
 
 class Fock(Preparation):
@@ -858,7 +838,7 @@ class Catstate(Preparation):
         ket = np.squeeze(ket)
 
         # evaluate the array (elementwise)
-        ket = evaluate_complex_parameter(ket, self.p[1])
+        ket = par_evaluate(ket)
 
         backend.prepare_ket_state(ket, *reg)
 
@@ -1307,8 +1287,8 @@ class Dgate(Gate):
     or use the polar form :math:`a = r, \phi` and still get the same result.
 
     Args:
-        a (complex): displacement parameter :math:`\alpha`
-        phi (float): extra (optional) phase angle :math:`\phi`
+        r (float): displacement magnitude :math:`|\alpha|`
+        phi (float): displacement angle :math:`\phi`
 
     .. details::
 
@@ -1335,13 +1315,22 @@ class Dgate(Gate):
         where :math:`L_n^{m}(x)` is a generalized Laguerre polynomial :cite:`dlmf`.
     """
 
-    def __init__(self, a, phi=0.0):
-        super().__init__([a, phi])
+    def __init__(self, r, phi=None):
+        if phi is None:
+            phi = 0.0
+            # TODO: remove warning in the new release
+            warnings.warn(
+                f"""Warning: since strawberryfields version {sf.__version__},
+            Dgate(r, phi) takes two real arguments which represent
+            the polar decomposition of the complex displacement parameter.
+            Falling back to (r={r}, phi=0.0), is this what you meant?"""
+            )
+
+        super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        p = self.p[0] * pf.exp(1j * self.p[1])
-        z = evaluate_complex_parameter(p, self.p[1])
-        backend.displacement(z, *reg)
+        r, phi = par_evaluate(self.p)
+        backend.displacement(r, phi, *reg)
 
 
 class Xgate(Gate):
@@ -1372,8 +1361,8 @@ class Xgate(Gate):
 
     def _decompose(self, reg, **kwargs):
         # into a displacement
-        z = self.p[0] / np.sqrt(2 * sf.hbar)
-        return [Command(Dgate(z, 0), reg)]
+        r = self.p[0] / np.sqrt(2 * sf.hbar)
+        return [Command(Dgate(r, 0), reg)]
 
 
 class Zgate(Gate):
@@ -1486,9 +1475,8 @@ class Sgate(Gate):
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        p = self.p[0] * pf.exp(1j * self.p[1])
-        z = evaluate_complex_parameter(p, self.p[1])
-        backend.squeeze(z, *reg)
+        r, phi = par_evaluate(self.p)
+        backend.squeeze(r, phi, *reg)
 
 
 class Pgate(Gate):
@@ -1747,12 +1735,8 @@ class BSgate(Gate):
         super().__init__([theta, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        t = pf.cos(self.p[0])
-        r = pf.sin(self.p[0]) * pf.exp(1j * self.p[1])
-
-        t = par_evaluate(t)
-        r = evaluate_complex_parameter(r, self.p[1])
-        backend.beamsplitter(t, r, *reg)
+        theta, phi = par_evaluate(self.p)
+        backend.beamsplitter(theta, phi, *reg)
 
 
 class MZgate(Gate):
@@ -1826,9 +1810,8 @@ class S2gate(Gate):
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        p = self.p[0] * pf.exp(1j * self.p[1])
-        z = evaluate_complex_parameter(p, self.p[1])
-        backend.two_mode_squeeze(z, *reg)
+        r, phi = par_evaluate(self.p)
+        backend.two_mode_squeeze(r, phi, *reg)
 
     def _decompose(self, reg, **kwargs):
         # two opposite squeezers sandwiched between 50% beamsplitters
