@@ -283,7 +283,7 @@ def _check_modes(samples, modes):
     """
     num_modes = samples.shape[1]
     flattened_sequence_indices_msg = (
-        "The input modes need to be specified as a flattened sequence of indices!"
+        "The input modes need to be specified as a flattened sequence of non-negative integers!"
     )
 
     modes = np.array(modes)
@@ -302,9 +302,7 @@ def _check_modes(samples, modes):
     out_of_bounds_modes = modes[modes > largest_valid_index]
     if out_of_bounds_modes.size > 0:
         raise Exception(
-            "Cannot specify mode indices {} for a {} mode system!".format(
-                out_of_bounds_modes, num_modes
-            )
+            f"Cannot specify mode indices {out_of_bounds_modes} for a {num_modes} mode system."
         )
 
 

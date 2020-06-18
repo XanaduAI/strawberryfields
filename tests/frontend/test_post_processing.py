@@ -227,7 +227,7 @@ class TestInputValidation:
         samples = validation_circuit()
         with pytest.raises(
             Exception,
-            match="The input modes need to be specified as a flattened sequence of indices",
+            match="The input modes need to be specified as a flattened sequence of non-negative integers",
         ):
             _check_modes(samples, modes)
 
@@ -241,6 +241,6 @@ class TestInputValidation:
         invalid_modes = "\[1 2\]"
         with pytest.raises(
             Exception,
-            match="Cannot specify mode indices {} for a 1 mode system!".format(invalid_modes),
+            match="Cannot specify mode indices {} for a 1 mode system.".format(invalid_modes),
         ):
             _check_modes(samples, modes)
