@@ -152,7 +152,16 @@ def _samples_expectation(samples, modes):
     Returns:
         float: the expectation value from the samples
     """
-    product_across_modes = _checks_and_get_product(samples, modes=modes)
+    _check_samples(samples)
+
+    num_modes = samples.shape[1]
+
+    if modes is None:
+        modes = np.arange(num_modes)
+
+    _check_modes(samples, modes)
+
+    product_across_modes = _product_for_modes(samples, modes)
     expval = product_across_modes.mean()
     return expval
 
@@ -170,18 +179,24 @@ def _samples_variance(samples, modes):
     Returns:
         float: the variance from the samples
     """
-    product_across_modes = _checks_and_get_product(samples, modes=modes)
+    _check_samples(samples)
+
+    num_modes = samples.shape[1]
+
+    if modes is None:
+        modes = np.arange(num_modes)
+
+    _check_modes(samples, modes)
+
+    product_across_modes = _product_for_modes(samples, modes)
     variance = product_across_modes.var()
     return variance
 
-
-def _checks_and_get_product(photon_number_samples, modes=None):
-    """Input validation checks followed by getting the product across modes.
-
-    Checks include data types checks and dimension of the input samples.
+def _product_for_modes(samples, modes=None):
+    """Getting the product of samples across modes.
 
     Args:
-        photon_number_samples (ndarray): the photon number samples with a shape
+        samples (ndarray): the photon number samples with a shape
             of (shots, modes)
         modes (Sequence): a flat sequence containing indices of modes to get
             the expectation value for
@@ -189,17 +204,8 @@ def _checks_and_get_product(photon_number_samples, modes=None):
     Returns:
         ndarray: product of the samples across modes
     """
-    _check_samples(photon_number_samples)
-
-    num_modes = photon_number_samples.shape[1]
-
-    if modes is None:
-        modes = np.arange(num_modes)
-
-    _check_modes(photon_number_samples, modes)
-
     modes = np.array(modes)
-    selected_samples = photon_number_samples[:, modes]
+    selected_samples = samples[:, modes]
     return np.prod(selected_samples, axis=1)
 
 
@@ -224,7 +230,7 @@ def _check_modes(samples, modes):
     and the validity of the modes specified.
 
     Args:
-        photon_number_samples (ndarray): the photon number samples with a shape
+        samples (ndarray): the photon number samples with a shape
             of (shots, modes)
         modes (Sequence): the input modes to get the expectation value for, a
             flattened sequence
