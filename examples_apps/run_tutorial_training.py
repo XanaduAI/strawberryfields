@@ -12,14 +12,14 @@ strategy inspired by the success of neural networks in machine learning. Trainin
 performed by evaluating gradients of a cost function with respect to circuit parameters,
 then employing gradient-based optimization methods. In this demonstration, we outline the
 theoretical principles for training Gaussian Boson Sampling (GBS) circuits, which were first
-introduced in Ref.~[insert ref]. We then explain how to employ the Strawberry Fields Apps to
-perform the training by looking at basic examples in stochastic optimization and unsupervised
+introduced in Ref.~[[#banchi2020training]_]. We then explain how to employ Strawberry Fields
+to perform the training by looking at basic examples in stochastic optimization and unsupervised
 learning. Let's go! 🚀
 
 Theory
 ------
 
-As explained in more detail in [insert link], for a GBS device, the probability :math:`\Pr(S)` of
+As explained in more detail in :doc:`concepts/gbs`, for a GBS device, the probability :math:`\Pr(S)` of
 observing an output :math:`S=(s_1, s_2, \ldots, s_m)`, where :math:`s_i` denotes the number of
 photons detected in the :math:`i`-th mode device, can be expressed as
 
@@ -72,7 +72,8 @@ expectation value
 .. math::
         C (\theta) = \sum_{S} h(S) P_{\theta}(S).
         
-As shown in [insert ref], the gradient of the cost function :math:`C (\theta)` is given by 
+As shown in [[#banchi2020training]_], the gradient of the cost function :math:`C (\theta)` is given
+by
 
 .. math::
 \partial_{\theta} C (\theta) = \sum_{S} h(S) P_{\theta}(S)
@@ -137,7 +138,7 @@ def h(s):
 # we want the total number of photons in the subset to be large, which we can achieve by minimizing
 # its negative value. Similarly, for modes outside of the specified subset, we want to minimize
 # their total sum. Now time to define the variational circuit. We'll train a distribution based on
-# on a simple lollipop 🍭 graph with five vertices:
+# on a simple lollipop 🍭 graph with five nodes:
 
 import networkx as nx
 import plotly
@@ -154,7 +155,7 @@ plot_graph = plot.graph(graph)
 # embedding. We'll go through each step one at a time. For the embedding of trainable parameters,
 # we'll use the simple form :math:`w_k = \exp(-\theta_k)` outlined above, which can be accessed
 # through the ``Exp()`` method in the :mod:`~.apps.train.embed` submodule. Its only input is the
-# number of modes in the device, which is equal to the number of vertices in the graph.
+# number of modes in the device, which is equal to the number of nodes in the graph.
 
 nr_modes = len(A)
 weights = train.embed.Exp(nr_modes)
@@ -205,7 +206,7 @@ rate = 0.01
 
 for i in range(nr_steps):
     params -= rate*cost.gradient(params, nr_samples)
-    if (i + 1) % 10 == 0:
+    if i % 50 == 0:
         print('Cost = {:.3f}'.format(cost.evaluate(params, nr_samples)))
 
 print('Final mean photon numbers = ', vgbs.mean_photons_by_mode(params))
@@ -215,4 +216,82 @@ print('Final mean photon numbers = ', vgbs.mean_photons_by_mode(params))
 # numbers of the target modes, with a corresponding decrease in the remaining modes. Because the
 # transformed matrix :math:`A_W = W A W` also needs to have eigenvalues bounded between -1 and 1,
 # continuing training indefinitely can lead to unphysical distributions when weights become too
-# large, so it's important to monitor this behaviour.
+# large, so it's important to monitor this behaviour. We can finally confirm that the trained
+# model is behaving according to plan by generating some samples from it. As you can see,
+# although we still observe a couple of photons in the last two modes, most of the detections
+# happen in the first three modes that we are targeting.
+
+Aw = vgbs.A(params)
+samples = vgbs.generate_samples(Aw, n_samples=10)
+print(samples)
+
+##############################################################################
+# Unsupervised learning
+# ---------------------
+# In this example, we are going to train a circuit based on one of the pre-generated datasets in
+# the :mod:`~.apps.data` module. Because gradients in this setting can be calculated efficiently,
+# we can look at a larger graph with 30 nodes and still perform fast training.
+#
+
+data_pl = data.Planted()
+data_samples = data_pl[:1000]
+A = data_pl.adj
+n_mean = 1
+nr_modes = len(A)
+
+##############################################################################
+# As before, we use the simple exponential embedding, but this time we define the VGBS circuit in
+# threshold mode, since this is how the data samples were generated. The cost function is the
+# Kullback-Liebler divergence, which depends on the data samples and can be accessed inside the
+# :mod:`~.apps.train.cost` submodule
+
+weights = train.embed.Exp(nr_modes)
+vgbs = train.VGBS(A, n_mean, weights, threshold=True)
+cost = train.cost.KL(data_samples, vgbs)
+
+##############################################################################
+# We again initialize parameters to zero and perform a longer optimization over one thousand
+# steps with a learning rate of 0.15. This will allow us to reach a highly-trained model.
+# Even though gradients can be computed efficiently, evaluating the cost function is challenging
+# because it requires calculating GBS probabilities, which generally take exponential time.
+# Instead, we'll keep track of the differences in mean photon numbers per mode for the data and
+# model distributions.
+
+from numpy.linalg import norm
+
+params = np.zeros(nr_modes)
+steps = 1000
+rate = 0.15
+
+for i in range(steps):
+    params -= rate * cost.grad(params)
+    if i % 100 == 0:
+        diff = cost.mean_n_data - vgbs.mean_clicks_by_mode(params)
+        print('Norm of difference in mean photon number = {:.5f}'.format(norm(diff)))
+
+##############################################################################
+# Wow! WAW! We reach almost perfect agreement between the data and the trained model. As before
+# we can also generate a few samples, this time creating patterns that, in general,
+# are not originally in the training data.
+
+Aw = vgbs.A(params)
+samples = vgbs.generate_samples(Aw, n_samples=10)
+print(samples)
+
+##############################################################################
+# The examples we have covered are introductory tasks aimed at mastering the basics of training
+# variational GBS circuits. These ideas are new and there is much left to explore in terms of
+# its scope and extensions. For example, the original paper [[#banchi2020training]_] studies how
+# GBS devices can be trained to find solutions to max clique problems. What new applications do you have in
+# mind?
+
+# References
+# ----------
+#
+# .. [#banchi2020training]
+#
+# Leonardo Banchi, Nicol{\'a}s Quesada, and Juan Miguel Arrazola. Training Gaussian Boson Sampling
+# Distributions. arXiv:2004.04770. 2020.
+
+
+
