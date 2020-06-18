@@ -397,7 +397,6 @@ class TestNumberExpectation:
         phi = 0.0
         backend.prepare_squeezed_state(r, phi, 0)
         backend.prepare_squeezed_state(-r, phi, 2)
-        # backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 2)
         backend.beamsplitter(np.pi/4, np.pi, 0, 2)
         state = backend.state()
         nbar = np.sinh(r) ** 2

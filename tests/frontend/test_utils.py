@@ -90,7 +90,6 @@ class TestInitialStates:
         state = utils.vacuum_state(basis="fock", hbar=hbar, fock_dim=cutoff)
         assert np.all(state == np.eye(1, cutoff, 0))
 
-    #@pytest.mark.parametrize("alpha", ALPHA)
     @pytest.mark.parametrize("r_d, phi_d", zip(R_D, PHI_D))
     def test_coherent_state_gaussian(self, r_d, phi_d, hbar):
         """test coherent state returns correct means and covariance"""
@@ -563,16 +562,16 @@ class TestEngineUtilityFunctions:
             *[cutoff] * 4
         )  # (2^2)^4 -> 2^8 -> (2^2)^4
 
-        assert np.allclose(dm, utils._unvectorize(utils._vectorize(dm), 2), atol=tol, rtol=0)
-        assert np.allclose(dm2, utils._vectorize(utils._unvectorize(dm2, 2)), atol=tol, rtol=0)
+        assert np.allclose(dm, utils.program_functions._unvectorize(utils.program_functions._vectorize(dm), 2), atol=tol, rtol=0)
+        assert np.allclose(dm2, utils.program_functions._vectorize(utils.program_functions._unvectorize(dm2, 2)), atol=tol, rtol=0)
 
     def test_interleaved_identities(self, tol):
         """Test interleaved utility function"""
 
-        II = utils._interleaved_identities(n=2, cutoff_dim=3)
+        II = utils.program_functions._interleaved_identities(n=2, cutoff_dim=3)
         assert np.allclose(np.einsum("abab", II), 3 ** 2, atol=tol, rtol=0)
 
-        III = utils._interleaved_identities(n=3, cutoff_dim=5)
+        III = utils.program_functions._interleaved_identities(n=3, cutoff_dim=5)
         assert np.allclose(np.einsum("abcabc", III), 5 ** 3, atol=tol, rtol=0)
 
 
