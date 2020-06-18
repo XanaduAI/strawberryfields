@@ -49,9 +49,8 @@
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
 * Increases the speed at which the following gates are generated: `Dgate`, `Sgate`,
-  `BSgate` and `S2gate` by relying on a new recursive implementation.
-  This has substantial effects on the speed of the `Fockbackend` and the `TFbackend`,
-  especially for high cutoff values.
+  `BSgate` and `S2gate` by relying on a recursive implementation recently introduced
+  in `thewalrus`. This has substantial effects on the speed of the `Fockbackend` and the `TFbackend`, especially for high cutoff values.
   [(#378)](https://github.com/XanaduAI/strawberryfields/pull/378)
 
 <h3>Breaking Changes</h3>
