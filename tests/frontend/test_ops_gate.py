@@ -164,6 +164,12 @@ class TestGateBasics:
         # dagger should negate the first param
         assert applied_params == [-orig_params[0]] + orig_params[1:]
 
+def test_Dgate_raises_warning_if_one_parameter():
+        with pytest.warns(UserWarning):
+            prog = Program(1)
+            with prog.context as q:
+                ops.Dgate(0.2) | q
+
 
 def test_merge_measured_pars():
     """Test merging two gates with measured parameters."""

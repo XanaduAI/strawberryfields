@@ -83,6 +83,7 @@ def vacuum_state(basis="fock", fock_dim=5, hbar=2.0):
 
     return state
 
+
 def coherent_state(r, phi, basis="fock", fock_dim=5, hbar=2.0):
     r""" Returns the coherent state
 
@@ -181,6 +182,7 @@ def squeezed_state(r, p, basis="fock", fock_dim=5, hbar=2.0):
         state = [means, squeezed_cov(r, phi, hbar)]
 
     return state
+
 
 def displaced_squeezed_state(r_d, phi_d, r_s, phi_s, basis="fock", fock_dim=5, hbar=2.0):
     r""" Returns the squeezed coherent state

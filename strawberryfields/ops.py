@@ -1318,12 +1318,15 @@ class Dgate(Gate):
     def __init__(self, r, phi=None):
         if phi is None:
             phi = 0.0
-            #TODO: remove warning in the new release
-            warnings.warn(f"""Warning: in strawberryfields version {sf.__version__},
-            Dgate(r, phi) takes two arguments which represent the polar decomposition of 
-            the complex displacement parameter.
-            Falling back to (r={r}, phi=0.0), is this what you meant?""")
-        
+            # TODO: remove warning in the new release
+            print("printing the warning works")
+            warnings.warn(
+                f"""Warning: since strawberryfields version {sf.__version__},
+            Dgate(r, phi) takes two real arguments which represent the polar decomposition
+            of the complex displacement parameter.
+            Falling back to (r={r}, phi=0.0), is this what you meant?"""
+            )
+
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
