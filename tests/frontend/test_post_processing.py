@@ -209,7 +209,7 @@ class TestInputValidation:
         input samples is incorrect."""
         modes = [0, 1]
         with pytest.raises(
-            Exception, match="Samples needs to be represented as a two dimensional numpy array."
+            Exception, match="Samples needs to be represented as a two dimensional NumPy array."
         ):
             _check_samples(samples)
 
