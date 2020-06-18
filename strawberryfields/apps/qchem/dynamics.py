@@ -62,10 +62,15 @@ device has the following form:
 6. Samples are generated and the probability of obtaining a specific excitation in a given mode
    (or modes) is computed for time :math:`t`.
 
-This module contains functions for implementing this algorithm. The function :func:`~.evolution`
-returns a custom ``sf`` operation that contains the required unitary and rotation operations
-explained in steps 2-4 of the algorithm.
+This module contains functions for implementing this algorithm.
+
+- The function :func:`~.evolution` returns a custom ``sf`` operation that contains the required
+  unitary and rotation operations explained in steps 2-4 of the algorithm.
+
+- The function :func:`~.sample_fock` generates samples for simulating vibrational quantum dynamics
+  in molecules with a Fock input state.
 """
+import numpy as np
 from scipy.constants import c, pi
 
 import strawberryfields as sf
@@ -81,7 +86,7 @@ def evolution(modes: int):
     are:
 
     - t (float): time in femtoseconds
-    - Ul (array): normal to local transformation matrix :math:`U_l`
+    - Ul (array): normal-to-local transformation matrix :math:`U_l`
     - w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}` that
       compose the Hamiltonian :math:`\hat{H} = \sum_i \hbar \omega_i a_i^\dagger a_i`
 
@@ -117,3 +122,93 @@ def evolution(modes: int):
         sf.ops.Interferometer(Ul) | q
 
     return op
+
+
+def sample_fock(
+    input_state: list,
+    t: float,
+    Ul: np.ndarray,
+    w: np.ndarray,
+    n_samples: int,
+    cutoff: int,
+    loss: float = 0.0,
+) -> list:
+    r"""Generate samples for simulating vibrational quantum dynamics with an input Fock state.
+
+    **Example usage:**
+
+    >>> input_state = [0, 2]
+    >>> t = 10.0
+    >>> Ul = np.array([[0.707106781, -0.707106781],
+    >>>                [0.707106781, 0.707106781]])
+    >>> w = np.array([3914.92, 3787.59])
+    >>> n_samples = 5
+    >>> cutoff = 5
+    >>> sample_fock(input_state, t, Ul, w, n_samples, cutoff)
+    [[0, 2], [0, 2], [1, 1], [0, 2], [0, 2]]
+
+    Args:
+        input_state (list): input Fock state
+        t (float): time in femtoseconds
+        Ul (array): normal-to-local transformation matrix
+        w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}`
+        n_samples (int): number of samples to be generated
+        cutoff (int): cutoff dimension for each mode
+        loss (float): loss parameter denoting the fraction of lost photons
+
+    Returns:
+        list[list[int]]: a list of samples
+    """
+    if n_samples < 1:
+        raise ValueError("Number of samples must be at least one")
+
+    if t < 0:
+        raise ValueError("Time must be zero or positive")
+
+    if np.any(w <= 0):
+        raise ValueError("Vibrational frequencies must be larger than zero")
+
+    if np.any(np.iscomplex(Ul)):
+        raise ValueError("The normal mode to local mode transformation matrix must be real")
+
+    if not 0 <= loss <= 1:
+        raise ValueError("Loss parameter must take a value between zero and one")
+
+    if not len(input_state) == len(Ul):
+        raise ValueError(
+            "Number of modes in the input state and the normal-to-local transformation"
+            " matrix must be equal"
+        )
+
+    if np.any(np.array(input_state) < 0):
+        raise ValueError("Input state must not contain negative values")
+
+    if max(input_state) >= cutoff:
+        raise ValueError("Number of photons in each input state mode must be smaller than cutoff")
+
+    modes = len(Ul)
+    op = evolution(modes)
+    s = []
+
+    eng = sf.Engine("fock", backend_options={"cutoff_dim": cutoff})
+
+    prog = sf.Program(modes)
+
+    # pylint: disable=expression-not-assigned
+    with prog.context as q:
+
+        for i in range(modes):
+            sf.ops.Fock(input_state[i]) | q[i]
+
+        op(t, Ul, w) | q
+
+        if loss:
+            for _q in q:
+                sf.ops.LossChannel(1 - loss) | _q
+
+        sf.ops.MeasureFock() | q
+
+    for _ in range(n_samples):
+        s.append(eng.run(prog).samples[0].tolist())
+
+    return s
