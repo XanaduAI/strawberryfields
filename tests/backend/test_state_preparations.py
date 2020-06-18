@@ -42,7 +42,7 @@ class TestRepresentationIndependent:
         backend = setup_backend(1)
 
         alpha = mag_alpha * np.exp(1j * phase_alpha)
-        backend.prepare_coherent_state(alpha, 0)
+        backend.prepare_coherent_state(mag_alpha, phase_alpha, 0)
         state = backend.state()
         assert np.allclose(state.fidelity_coherent([alpha]), 1.0, atol=tol, rtol=0.0)
 
@@ -78,15 +78,11 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS)
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
-    def test_normalized_coherent_state(
-        self, setup_backend, mag_alpha, phase_alpha, tol
-    ):
+    def test_normalized_coherent_state(self, setup_backend, mag_alpha, phase_alpha, tol):
         """Tests if a range of coherent states are normalized."""
-
-        alpha = mag_alpha * np.exp(1j * phase_alpha)
         backend = setup_backend(1)
 
-        backend.prepare_coherent_state(alpha, 0)
+        backend.prepare_coherent_state(mag_alpha, phase_alpha, 0)
         state = backend.state()
         tr = state.trace()
         assert np.allclose(tr, 1.0, atol=tol, rtol=0.0)
@@ -94,9 +90,7 @@ class TestFockRepresentation:
     def test_prepare_ket_state(self, setup_backend, cutoff, tol):
         """Tests if a ket state with arbitrary parameters is correctly prepared."""
         np.random.seed(SEED)
-        random_ket = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(
-            -1, 1, cutoff
-        )
+        random_ket = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
         random_ket = random_ket / np.linalg.norm(random_ket)
         backend = setup_backend(1)
 
@@ -104,9 +98,7 @@ class TestFockRepresentation:
         state = backend.state()
         assert np.allclose(state.fidelity(random_ket, 0), 1.0, atol=tol, rtol=0.0)
 
-    def test_prepare_batched_ket_state(
-        self, setup_backend, pure, batch_size, cutoff, tol
-    ):
+    def test_prepare_batched_ket_state(self, setup_backend, pure, batch_size, cutoff, tol):
         """Tests if a batch of ket states with arbitrary parameters is correctly
         prepared by comparing the fock probabilities of the batched case with
         individual runs with non batched input states."""
