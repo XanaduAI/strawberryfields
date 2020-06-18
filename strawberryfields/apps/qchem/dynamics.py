@@ -218,7 +218,6 @@ def sample_fock(
 
 
 def prob(samples: list, excited_state: list) -> float:
-
     r"""Generate probability of observing a Fock state.
 
     **Example usage:**
