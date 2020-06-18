@@ -2,6 +2,10 @@
 
 <h3>New features since last release</h3>
 
+* Feature vectors of graphs can now be calculated exactly in the `similarity` module of the
+  applications layer.
+  [(#390)](https://github.com/XanaduAI/strawberryfields/pull/390)
+
 * The `GaussianState` returned from simulations using the Gaussian backend
   now has feature parity with the `FockState` object returned from the Fock backends.
   [(#407)](https://github.com/XanaduAI/strawberryfields/pull/407)
