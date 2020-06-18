@@ -636,12 +636,12 @@ def feature_vector_events(
 
     **Example usage:**
 
-    >>> graph = nx.complete_graph(8)
+    >>> graph = nx.erdos_renyi_graph(8, p=0.7, seed=0)
     >>> feature_vector_events(graph, [2, 3, 4, 6], 1)
-    [0.18423136914879445, 0.0, 0.07020748298295838, 0.011891063791931982]
+    [0.21962528885336693, 0.0, 0.06542564576021911, 0.008278357709166432]
 
     >>> feature_vector_events(graph, [2, 3, 4, 6], 1, samples = 1000)
-    [0.18423136914879246, 0.0, 0.07020748298295802, 0.011891063791932176]
+    [0.21559451884617312, 0.0, 0.06445223981110329, 0.008332933548878733]
 
     Args:
         graph (nx.Graph): input graph
