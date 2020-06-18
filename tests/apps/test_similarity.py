@@ -301,7 +301,7 @@ class TestProbOrbitExact:
         graph = nx.complete_graph(4)
         with monkeypatch.context() as m:
             m.setattr(
-                "strawberryfields.backends.gaussianbackend.states.GaussianState.fock_prob",
+                "strawberryfields.backends.BaseGaussianState.fock_prob",
                 lambda *args, **kwargs: 1 / 8,
             )
             assert similarity.prob_orbit_exact(graph, [1, 1]) == 6 / 8
@@ -376,7 +376,7 @@ class TestProbEventExact:
         graph = nx.complete_graph(4)
         with monkeypatch.context() as m:
             m.setattr(
-                "strawberryfields.backends.gaussianbackend.states.GaussianState.fock_prob",
+                "strawberryfields.backends.BaseGaussianState.fock_prob",
                 lambda *args, **kwargs: 1 / 8,
             )
             assert similarity.prob_event_exact(graph, 2, 1) == 6 / 8
