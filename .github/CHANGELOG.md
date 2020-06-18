@@ -2,6 +2,7 @@
 
 <h3>New features since last release</h3>
 
+* Add dataset class for pre-calculated feature vectors. [(#401)](https://github.com/XanaduAI/strawberryfields/pull/401) 
 
 * Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X architecture. [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
 
