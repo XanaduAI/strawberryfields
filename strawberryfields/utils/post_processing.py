@@ -36,7 +36,7 @@ def number_expectation_pnr(photon_number_samples, modes=None):
 
     Args:
         photon_number_samples (ndarray): the photon number samples with a shape
-            of (shots, modes)
+            of ``(shots, modes)``
         modes (Sequence): a flat sequence containing indices of modes to get
             the expectation value for
 
