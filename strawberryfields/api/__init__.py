@@ -23,6 +23,5 @@ program execution jobs and job results respectively.
 from .connection import Connection, RequestFailedError
 from .job import InvalidJobOperationError, Job, JobStatus
 from .result import Result
-from .post_processing import number_expectation_pnr, number_variance_pnr
 
-__all__ = ["Connection", "Job", "Result", "number_expectation_pnr", "number_variance_pnr"]
+__all__ = ["Connection", "Job", "Result"]

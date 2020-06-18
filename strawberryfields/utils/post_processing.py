@@ -321,8 +321,10 @@ number_variance = number_variance_pnr
 position_expectation = quadrature_expectation_homodyne
 position_variance = quadrature_variance_homodyne
 momentum_expectation = quadrature_expectation_homodyne
-momentum_variance_homodyne = quadrature_variance_homodyne
+momentum_variance = quadrature_variance_homodyne
+all_fock_probs = all_fock_probs_pnr
 
-shorthands = ["number_expectation", "number_variance"]
+shorthands = ["number_expectation", "number_variance", "position_expectation",
+        "position_variance", "momentum_expectation", "momentum_variance"]
 
-__all__ = ["number_expectation_pnr", "number_variance_pnr"] + shorthands
+__all__ = ["number_expectation_pnr", "number_variance_pnr", "quadrature_variance_homodyne", "all_fock_probs_pnr"] + shorthands
