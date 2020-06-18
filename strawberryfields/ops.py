@@ -1319,7 +1319,6 @@ class Dgate(Gate):
         if phi is None:
             phi = 0.0
             # TODO: remove warning in the new release
-            print("printing the warning works")
             warnings.warn(
                 f"""Warning: since strawberryfields version {sf.__version__},
             Dgate(r, phi) takes two real arguments which represent the polar decomposition
