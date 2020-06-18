@@ -35,9 +35,8 @@ def number_expectation_pnr(photon_number_samples, modes=None):
 
     Args:
         photon_number_samples (ndarray): the photon number samples with a shape
-            of (shots, modes)
-        modes (Sequence): a flat sequence containing indices of modes to get
-            the expectation value for
+            of ``(shots, modes)``
+        modes (Sequence): indices of modes to compute the expectation value over
 
     Returns:
         float: the expectation value from the samples
@@ -137,10 +136,8 @@ def _samples_expectation(samples, modes):
     multiple modes.
 
     Args:
-        homodyne_samples (ndarray): the homodyne samples with a shape of
-            (shots, modes)
-        modes (Sequence): a flat sequence containing indices of modes to get
-            the expectation value for
+        samples (array): samples with a shape of ``(shots, modes)``
+        modes (Sequence): indices of modes to compute the expectation value over
 
     Returns:
         float: the expectation value from the samples
@@ -189,7 +186,7 @@ def _samples_variance(samples, modes):
 def all_fock_probs_pnr(photon_number_samples):
     r"""The Fock state probabilities for the specified modes.
 
-    Measured modes that are not specified are being traced over. If either all
+    Measured modes that are not specified are traced over. If either all
     the modes or no modes were specified, the marginal probabilities are
     returned.
 
@@ -219,8 +216,7 @@ def all_fock_probs_pnr(photon_number_samples):
     [0.5  0.   0.25]]
 
     Args:
-        photon_number_samples (ndarray): the photon number samples with a shape
-            of (shots, modes)
+        photon_number_samples (array): the photon number samples with a shape of ``(shots, modes)``
 
     Returns:
         array: array of dimension :math:`\underbrace{D\times D\times D\cdots\times D}_{\text{num modes}}`
