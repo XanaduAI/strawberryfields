@@ -36,7 +36,6 @@
   defined as (-1)^N.
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
-
 <h3>Improvements</h3>
 
 * Modifies the rectangular interferometer decomposition to make it more
@@ -45,14 +44,23 @@
   Mach-Zehnder interferometers corresponding to on-chip phases.
   [(#363)](https://github.com/XanaduAI/strawberryfields/pull/363)
 
-* Changes the `number_expectation` method for the `BaseFockState` class to be an instance
-  of `diagonal_expectation`.
+* Changes the `number_expectation` method for the `BaseFockState` class to be an
+  instance of `diagonal_expectation`.
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
+
+* Increases the speed at which the following gates are generated: `Dgate`, `Sgate`,
+  `BSgate` and `S2gate` by relying on a new recursive implementation.
+  This has substantial effects on the speed of the `Fockbackend` and the `TFbackend`,
+  especially for high cutoff values.
+  [(#378)](https://github.com/XanaduAI/strawberryfields/pull/378)
 
 <h3>Breaking Changes</h3>
 
 * Removes support for Python 3.5.
   [(#385)](https://github.com/XanaduAI/strawberryfields/pull/385)
+
+* Complex parameters now are expected in polar form as two separate real parameters.
+  [(#378)](https://github.com/XanaduAI/strawberryfields/pull/378)
 
 <h3>Bug fixes</h3>
 
@@ -60,7 +68,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jack Ceroni, Theodor Isacsson, Josh Izaac, Shreya P. Kumar, Nicolás Quesada
+Jack Ceroni, Theodor Isacsson, Josh Izaac, Shreya P. Kumar, Filippo Miatto, Nicolás Quesada
 
 
 
