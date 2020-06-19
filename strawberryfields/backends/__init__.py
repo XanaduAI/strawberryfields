@@ -112,7 +112,7 @@ def load_backend(name):
     if name == "tf":
         # treat the tensorflow backend differently, to
         # isolate the import of tensorflow
-        from .tfbackend import TFBackend
+        from .tfbackend import TFBackend #pylint: disable=import-outside-toplevel
 
         return TFBackend()
 
