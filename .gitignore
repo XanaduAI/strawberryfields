@@ -18,3 +18,6 @@ doc/_static/thumbs/*
 doc/tutorials_apps/*
 !doc/_static/code.png
 doc/code/api/*
+Pipfile*
+.vscode/
+.ipynb_checkpoints/*

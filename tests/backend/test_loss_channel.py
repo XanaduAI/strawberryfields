@@ -49,10 +49,9 @@ class TestRepresentationIndependent:
         """Tests the full-loss channel on various states (result should be vacuum)."""
 
         T = 0.0
-        alpha = mag_alpha * np.exp(1j * phase_alpha)
 
         backend = setup_backend(1)
-        backend.displacement(alpha, 0)
+        backend.displacement(mag_alpha, phase_alpha, 0)
         backend.loss(T, 0)
         assert np.all(backend.is_vacuum(tol))
 
@@ -72,14 +71,14 @@ class TestThermalLossChannel:
         alpha = 0.654 + 1j * 0.239
         nbar = 0.0
 
-        backend.squeeze(z, 0)
-        backend.displacement(alpha, 0)
+        backend.squeeze(np.abs(z), np.angle(z), 0)
+        backend.displacement(np.abs(alpha), np.angle(alpha), 0)
         backend.loss(T, 0)
         state1 = backend.state()
 
         backend.reset(pure=pure)
-        backend.squeeze(z, 0)
-        backend.displacement(alpha, 0)
+        backend.squeeze(np.abs(z), np.angle(z), 0)
+        backend.displacement(np.abs(alpha), np.angle(alpha), 0)
         backend.thermal_loss(T, nbar, 0)
         state2 = backend.state()
 
@@ -98,8 +97,8 @@ class TestThermalLossChannel:
         state1 = backend.state()
 
         backend.reset(pure=pure)
-        backend.squeeze(z, 0)
-        backend.displacement(alpha, 0)
+        backend.squeeze(np.abs(z), np.angle(z), 0)
+        backend.displacement(np.abs(alpha), np.angle(alpha), 0)
         backend.thermal_loss(T, nbar, 0)
         state2 = backend.state()
 
@@ -114,7 +113,7 @@ class TestThermalLossChannel:
         """Tests thermal loss channel on a squeezed state"""
         backend = setup_backend(1)
         r = 0.432
-        backend.squeeze(r, 0)
+        backend.squeeze(r, 0, 0)
         backend.thermal_loss(T, nbar, 0)
         state = backend.state()
 
@@ -142,10 +141,9 @@ class TestFockRepresentation:
         self, setup_backend, T, mag_alpha, phase_alpha, tol
     ):
         """Tests if a range of loss states are normalized."""
-        alpha = mag_alpha * np.exp(1j * phase_alpha)
         backend = setup_backend(1)
 
-        backend.prepare_coherent_state(alpha, 0)
+        backend.prepare_coherent_state(mag_alpha, phase_alpha, 0)
         backend.loss(T, 0)
         state = backend.state()
         tr = state.trace()
@@ -185,13 +183,11 @@ class TestFockRepresentation:
     ):
         """Tests various loss channels on coherent states (result should be coherent state with amplitude weighted by sqrt(T)."""
 
-        alpha = mag_alpha * np.exp(1j * phase_alpha)
-
-        rootT_alpha = np.sqrt(T) * alpha
+        rootT_alpha = np.sqrt(T) * mag_alpha * np.exp(1j * phase_alpha)
 
         backend = setup_backend(1)
 
-        backend.prepare_coherent_state(alpha, 0)
+        backend.prepare_coherent_state(mag_alpha, phase_alpha, 0)
         backend.loss(T, 0)
         s = backend.state()
         if s.is_pure:
