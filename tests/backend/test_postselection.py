@@ -24,9 +24,9 @@ def test_homodyne(setup_backend, tol):
     r = 5
 
     backend = setup_backend(2)
-    backend.squeeze(r, 0)
-    backend.squeeze(-r, 1)
-    backend.beamsplitter(1 / np.sqrt(2), 1 / np.sqrt(2), 0, 1)
+    backend.squeeze(r, 0, 0)
+    backend.squeeze(-r, 0, 1)
+    backend.beamsplitter(np.pi/4, 0, 0, 1)
 
     res = backend.measure_homodyne(0, mode=0, select=0.2)
     assert np.allclose(res, x, atol=tol, rtol=0)
@@ -40,9 +40,9 @@ def test_heterodyne(setup_backend, tol):
     r = 5
 
     backend = setup_backend(2)
-    backend.squeeze(r, 0)
-    backend.squeeze(-r, 1)
-    backend.beamsplitter(1 / np.sqrt(2), 1 / np.sqrt(2), 0, 1)
+    backend.squeeze(r, 0, 0)
+    backend.squeeze(-r, 0, 1)
+    backend.beamsplitter(np.pi/4, 0, 0, 1)
 
     res = backend.measure_heterodyne(mode=0, select=alpha)
     assert np.allclose(res, alpha, atol=tol, rtol=0)
@@ -60,11 +60,11 @@ def test_measure_fock(setup_backend, cutoff, batch_size):
 
         backend.prepare_fock_state(n, 0)
         backend.prepare_fock_state(total_photons - n, 1)
-        backend.beamsplitter(1 / np.sqrt(2), 1 / np.sqrt(2), 0, 1)
+        backend.beamsplitter(np.pi/4, 0, 0, 1)
         res1 = backend.measure_fock([0], select=[cutoff // 2])
         res2 = backend.measure_fock([1])
 
-        photons_out = sum(res1 + res2)
+        photons_out = res1 + res2
 
         if batch_size is not None:
             total_photons = np.tile(total_photons, batch_size)

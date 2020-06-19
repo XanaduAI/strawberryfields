@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ from strawberryfields.apps import similarity
 
 pytestmark = pytest.mark.apps
 
+# dict of orbits. accessed using total photon number K
 all_orbits = {
     3: [[1, 1, 1], [2, 1], [3]],
     4: [[1, 1, 1, 1], [2, 1, 1], [3, 1], [2, 2], [4]],
@@ -222,217 +223,561 @@ def test_event_cardinality(photons, max_count, modes, expected):
     assert similarity.event_cardinality(photons, max_count, modes) == expected
 
 
+class TestGetState:
+    """Tests for the function ``strawberryfields.apps.similarity._get_state``"""
+
+    def test_loss(self, monkeypatch):
+        """Test if function correctly creates the SF program for lossy GBS."""
+        graph = nx.complete_graph(5)
+        mock_eng_run = mock.MagicMock()
+
+        with monkeypatch.context() as m:
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
+            similarity._get_state(graph, loss=0.5)
+            p_func = mock_eng_run.call_args[0][0]
+
+        assert isinstance(p_func.circuit[1].op, sf.ops.LossChannel)
+
+    def test_no_loss(self, monkeypatch):
+        """Test if function correctly creates the SF program for GBS without loss."""
+        graph = nx.complete_graph(5)
+        mock_eng_run = mock.MagicMock()
+
+        with monkeypatch.context() as m:
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
+            similarity._get_state(graph)
+            p_func = mock_eng_run.call_args[0][0]
+
+        assert not all([isinstance(op, sf.ops.LossChannel) for op in p_func.circuit])
+
+    def test_max_loss(self):
+        """Test if function samples from the vacuum when maximum loss is applied."""
+        dim = 5
+        graph = nx.complete_graph(dim)
+        state = similarity._get_state(graph, 0, 1)
+        cov = state.cov()
+        disp = state.displacement()
+
+        assert np.allclose(cov, 0.5 * state.hbar * np.eye(2 * dim))
+        assert np.allclose(disp, np.zeros(dim))
+
+
+class TestProbOrbitExact:
+    """Tests for the function ``strawberryfields.apps.similarity.prob_orbit_exact``"""
+
+    def test_invalid_n_mean(self):
+        """Test if function raises a ``ValueError`` when the mean photon number is specified to
+        be negative."""
+        g = nx.complete_graph(5)
+        with pytest.raises(ValueError, match="Mean photon number must be non-negative"):
+            similarity.prob_orbit_exact(g, [1, 1, 1, 1], n_mean=-1)
+
+    def test_invalid_loss(self):
+        """Test if function raises a ``ValueError`` when the loss parameter is specified outside
+        of range."""
+        g = nx.complete_graph(5)
+        with pytest.raises(
+            ValueError, match="Loss parameter must take a value between zero and one"
+        ):
+            similarity.prob_orbit_exact(g, [1, 1, 1, 1], loss=2)
+
+    def test_prob_vacuum_orbit(self):
+        """Tests if the function gives the right probability for the empty orbit when the GBS
+        device has been configured to have zero mean photon number."""
+        graph = nx.complete_graph(5)
+        assert similarity.prob_orbit_exact(graph, [], 0) == 1.0
+
+    @pytest.mark.parametrize("k", [1, 3, 5, 7, 9])
+    def test_odd_photon_numbers(self, k):
+        """Test if function returns zero probability for odd number of total photons."""
+        graph = nx.complete_graph(10)
+        assert similarity.prob_orbit_exact(graph, [k]) == 0.0
+
+    def test_correct_result_returned(self, monkeypatch):
+        """Tests if the call to _get_state function is performed correctly and probabilities over all
+        permutations of the given orbit are summed correctly. The test monkeypatches the fock_prob
+        function so that the probability is the same for each sample permutation and
+        is equal to 1/8. For a 4-mode graph, [1, 1] has 6 possible permutations. """
+        graph = nx.complete_graph(4)
+        with monkeypatch.context() as m:
+            m.setattr(
+                "strawberryfields.backends.BaseGaussianState.fock_prob",
+                lambda *args, **kwargs: 1 / 8,
+            )
+            assert similarity.prob_orbit_exact(graph, [1, 1]) == 6 / 8
+
+    def test_known_result(self):
+        """Tests if the probability for known cases is correctly
+        reproduced."""
+        g = nx.complete_graph(3)
+
+        p = similarity.prob_orbit_exact(g, [1, 1], 2)
+        assert np.allclose(p, 0.24221526825385403)
+
+        s = similarity._get_state(g, 2)
+        temp = s.fock_prob([1, 1, 0]) + s.fock_prob([1, 0, 1]) + s.fock_prob([0, 1, 1])
+        assert p == temp
+
+        assert np.allclose(similarity.prob_orbit_exact(g, [4], 1), 0)
+
+
+class TestProbEventExact:
+    """Tests for the function ``strawberryfields.apps.similarity.prob_event_exact``"""
+
+    def test_invalid_n_mean(self):
+        """Test if function raises a ``ValueError`` when the mean photon number is specified to
+        be negative."""
+        g = nx.complete_graph(5)
+        with pytest.raises(ValueError, match="Mean photon number must be non-negative"):
+            similarity.prob_event_exact(g, 2, 2, n_mean=-1)
+
+    def test_invalid_loss(self):
+        """Test if function raises a ``ValueError`` when the loss parameter is specified outside
+        of range."""
+        g = nx.complete_graph(5)
+        with pytest.raises(
+            ValueError, match="Loss parameter must take a value between zero and one"
+        ):
+            similarity.prob_event_exact(g, 2, 2, loss=2)
+
+    def test_invalid_photon_number(self):
+        """Test if function raises a ``ValueError`` when a photon number below zero is specified"""
+        g = nx.complete_graph(5)
+        with pytest.raises(ValueError, match="Photon number must not be below zero"):
+            similarity.prob_event_exact(g, -1, 2)
+
+    def test_low_count(self):
+        """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is negative."""
+        g = nx.complete_graph(5)
+        with pytest.raises(
+            ValueError, match="Maximum number of photons per mode must be non-negative"
+        ):
+            similarity.prob_event_exact(g, 2, max_count_per_mode=-1)
+
+    def test_prob_vacuum_event(self):
+        """Tests if the function gives the right probability for an event with zero photons when
+        the GBS device has been configured to have zero mean photon number."""
+        graph = nx.complete_graph(5)
+        assert similarity.prob_event_exact(graph, 0, 0, 0) == 1.0
+
+    @pytest.mark.parametrize("k", [3, 5, 7, 9])
+    @pytest.mark.parametrize("nmax", [1, 2])
+    def test_odd_photon_numbers(self, k, nmax):
+        """Test if function returns zero probability for odd number of total photons."""
+        graph = nx.complete_graph(10)
+        assert similarity.prob_event_exact(graph, k, nmax) == 0.0
+
+    def test_correct_result_returned(self, monkeypatch):
+        """Tests if the call to _get_state function is performed correctly and probabilities over all
+        constituent orbits of the given event are summed correctly. The test monkeypatches the fock_prob
+        function so that the probability is the same for each sample permutation of all constituent orbits
+        and is equal to 1/8. For a 4-mode graph, an event with ``photon_number = 2``, and
+        ``max_count_per_mode = 1`` contains orbit [1, 1] which has 6 possible sample permutations."""
+        graph = nx.complete_graph(4)
+        with monkeypatch.context() as m:
+            m.setattr(
+                "strawberryfields.backends.BaseGaussianState.fock_prob",
+                lambda *args, **kwargs: 1 / 8,
+            )
+            assert similarity.prob_event_exact(graph, 2, 1) == 6 / 8
+
+    def test_known_result(self):
+        """Tests if the probability for known cases is correctly
+        reproduced."""
+        graph = nx.complete_graph(4)
+        p1 = similarity.prob_event_exact(graph, 2, 2, 1)
+        p2 = similarity.prob_event_exact(graph, 2, 1, 1)
+        p3 = similarity.prob_orbit_exact(graph, [1, 1], 1)
+        p4 = similarity.prob_event_exact(graph, 2, 2, 4)
+        assert np.allclose(p1 - p2, 0)
+        assert p2 == p3
+        assert np.allclose(p4, 0.21087781178526066)
+
+
 class TestProbOrbitMC:
-    """Tests for the function ``strawberryfields.apps.similarity.prob_orbit_mc.``"""
+    """Tests for the function ``strawberryfields.apps.similarity.prob_orbit_mc``"""
 
     def test_invalid_samples(self):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
         requested."""
-        g = nx.complete_graph(10)
+        g = nx.complete_graph(5)
         with pytest.raises(ValueError, match="Number of samples must be at least one"):
             similarity.prob_orbit_mc(g, [1, 1, 1, 1], samples=0)
 
     def test_invalid_n_mean(self):
         """Test if function raises a ``ValueError`` when the mean photon number is specified to
         be negative."""
-        g = nx.complete_graph(10)
+        g = nx.complete_graph(5)
         with pytest.raises(ValueError, match="Mean photon number must be non-negative"):
             similarity.prob_orbit_mc(g, [1, 1, 1, 1], n_mean=-1)
 
     def test_invalid_loss(self):
         """Test if function raises a ``ValueError`` when the loss parameter is specified outside
         of range."""
-        g = nx.complete_graph(10)
-        with pytest.raises(ValueError, match="Loss parameter must take a value between zero and"):
+        g = nx.complete_graph(5)
+        with pytest.raises(
+            ValueError, match="Loss parameter must take a value between zero and one"
+        ):
             similarity.prob_orbit_mc(g, [1, 1, 1, 1], loss=2)
 
     def test_mean_computation_orbit(self, monkeypatch):
         """Tests if the calculation of the sample mean is performed correctly. The test
         monkeypatches the fock_prob function so that the probability is the same for each sample and
-        is equal to 1/5, i.e., one over the number of samples in the orbit [1,1,1,1] for 5 modes."""
+        is equal to 1/5, i.e., one over the cardinality of the orbit [1,1,1,1] for 5 modes."""
         graph = nx.complete_graph(5)
         with monkeypatch.context() as m:
             m.setattr(
-                "strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
+                "strawberryfields.backends.BaseGaussianState.fock_prob",
                 lambda *args, **kwargs: 0.2,
             )
-
             assert np.allclose(similarity.prob_orbit_mc(graph, [1, 1, 1, 1]), 1.0)
+
+    @pytest.mark.parametrize("k", [1, 3, 5, 7, 9])
+    def test_odd_photon_numbers(self, k):
+        """Test if function returns zero probability for odd number of total photons."""
+        graph = nx.complete_graph(10)
+        assert similarity.prob_orbit_mc(graph, [k]) == 0.0
 
     def test_prob_vacuum_orbit(self):
         """Tests if the function gives the right probability for the empty orbit when the GBS
         device has been configured to have zero mean photon number."""
-        graph = nx.complete_graph(10)
-
+        graph = nx.complete_graph(5)
         assert similarity.prob_orbit_mc(graph, [], 0) == 1.0
 
-    def test_loss(self, monkeypatch):
-        """Test if function correctly creates the SF program for lossy GBS."""
-        graph = nx.complete_graph(5)
-        mock_eng_run = mock.MagicMock()
-
-        with monkeypatch.context() as m:
-            m.setattr(sf.LocalEngine, "run", mock_eng_run)
-            similarity.prob_orbit_mc(graph, [1, 1, 1, 1], samples=1, loss=0.5)
-            p_func = mock_eng_run.call_args[0][0]
-
-        assert isinstance(p_func.circuit[1].op, sf.ops.LossChannel)
-
-    def test_no_loss(self, monkeypatch):
-        """Test if function correctly creates the SF program for GBS without loss."""
-        graph = nx.complete_graph(5)
-        mock_eng_run = mock.MagicMock()
-
-        with monkeypatch.context() as m:
-            m.setattr(sf.LocalEngine, "run", mock_eng_run)
-            similarity.prob_orbit_mc(graph, [1, 1, 1, 1], samples=1)
-            p_func = mock_eng_run.call_args[0][0]
-
-        assert not all([isinstance(op, sf.ops.LossChannel) for op in p_func.circuit])
-
-    def test_all_loss(self, monkeypatch):
+    def test_max_loss(self):
         """Test if function samples from the vacuum when maximum loss is applied."""
-        dim = 5
-        graph = nx.complete_graph(dim)
-        mock_eng_run = mock.MagicMock()
+        graph = nx.complete_graph(5)
+        assert similarity.prob_orbit_mc(graph, [1, 1, 1, 1], samples=1, loss=1) == 0.0
 
-        with monkeypatch.context() as m:
-            m.setattr(sf.LocalEngine, "run", mock_eng_run)
-            similarity.prob_orbit_mc(graph, [1, 1, 1, 1], samples=1, loss=1)
-            p_func = mock_eng_run.call_args[0][0]
+    def test_known_result(self):
+        """Tests if the probability for known cases is correctly
+        reproduced."""
+        g = nx.complete_graph(3)
 
-        eng = sf.LocalEngine(backend="gaussian")
-
-        state = eng.run(p_func).state
-        cov = state.cov()
-        disp = state.displacement()
-
-        assert np.allclose(cov, 0.5 * state.hbar * np.eye(2 * dim))
-        assert np.allclose(disp, np.zeros(dim))
+        assert np.allclose(similarity.prob_orbit_mc(g, [1, 1], 2), 0.2422152682538481)
+        assert np.allclose(similarity.prob_orbit_mc(g, [4], 1), 0)
 
 
 class TestProbEventMC:
-    """Tests for the function ``strawberryfields.apps.similarity.prob_event_mc.``"""
+    """Tests for the function ``strawberryfields.apps.similarity.prob_event_mc``"""
 
     def test_invalid_samples(self):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
         requested."""
-        g = nx.complete_graph(10)
+        g = nx.complete_graph(5)
         with pytest.raises(ValueError, match="Number of samples must be at least one"):
             similarity.prob_event_mc(g, 2, 2, samples=0)
 
     def test_invalid_n_mean(self):
         """Test if function raises a ``ValueError`` when the mean photon number is specified to
         be negative."""
-        g = nx.complete_graph(10)
+        g = nx.complete_graph(5)
         with pytest.raises(ValueError, match="Mean photon number must be non-negative"):
             similarity.prob_event_mc(g, 2, 2, n_mean=-1)
 
     def test_invalid_loss(self):
         """Test if function raises a ``ValueError`` when the loss parameter is specified outside
         of range."""
-        g = nx.complete_graph(10)
-        with pytest.raises(ValueError, match="Loss parameter must take a value between zero and"):
+        g = nx.complete_graph(5)
+        with pytest.raises(
+            ValueError, match="Loss parameter must take a value between zero and one"
+        ):
             similarity.prob_event_mc(g, 2, 2, loss=2)
 
     def test_invalid_photon_number(self):
         """Test if function raises a ``ValueError`` when a photon number below zero is specified"""
-        g = nx.complete_graph(10)
+        g = nx.complete_graph(5)
         with pytest.raises(ValueError, match="Photon number must not be below zero"):
             similarity.prob_event_mc(g, -1, 2)
 
     def test_low_count(self):
         """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is negative."""
-        g = nx.complete_graph(10)
-        with pytest.raises(ValueError, match="Maximum number of photons"):
-            similarity.prob_event_mc(g, 2, -1)
+        g = nx.complete_graph(5)
+        with pytest.raises(
+            ValueError, match="Maximum number of photons per mode must be non-negative"
+        ):
+            similarity.prob_event_mc(g, 2, max_count_per_mode=-1)
 
     def test_prob_vacuum_event(self):
         """Tests if the function gives the right probability for an event with zero photons when
         the GBS device has been configured to have zero mean photon number."""
-        graph = nx.complete_graph(10)
-
+        graph = nx.complete_graph(5)
         assert similarity.prob_event_mc(graph, 0, 0, 0) == 1.0
 
-    def test_mean_event(self, monkeypatch):
+    def test_mean_computation_event(self, monkeypatch):
         """Tests if the calculation of the sample mean is performed correctly. The test
-        monkeypatches the fock_prob function so that the probability is the same for each sample and
-        is equal to 1/216, i.e., one over the number of samples in the event with 5 modes,
+        monkeypatches the fock_prob function so that the probability is the same for each sample
+        and is equal to 1/216, i.e., one over the number of samples in the event with 5 modes,
         6 photons, and max 3 photons per mode."""
         graph = nx.complete_graph(6)
         with monkeypatch.context() as m:
             m.setattr(
-                "strawberryfields.backends.gaussianbackend.GaussianState.fock_prob",
+                "strawberryfields.backends.BaseGaussianState.fock_prob",
                 lambda *args, **kwargs: 1.0 / 336,
             )
-
             assert np.allclose(similarity.prob_event_mc(graph, 6, 3), 1.0)
 
-    def test_loss(self, monkeypatch):
-        """Test if function correctly creates the SF program for lossy GBS."""
-        graph = nx.complete_graph(5)
-        mock_eng_run = mock.MagicMock()
+    @pytest.mark.parametrize("k", [3, 5, 7, 9])
+    @pytest.mark.parametrize("nmax", [1, 2])
+    def test_odd_photon_numbers(self, k, nmax):
+        """Test if function returns zero probability for odd number of total photons."""
+        graph = nx.complete_graph(10)
+        assert similarity.prob_event_mc(graph, k, nmax) == 0.0
 
-        with monkeypatch.context() as m:
-            m.setattr(sf.LocalEngine, "run", mock_eng_run)
-            similarity.prob_event_mc(graph, 6, 3, samples=1, loss=0.5)
-            p_func = mock_eng_run.call_args[0][0]
-
-        assert isinstance(p_func.circuit[1].op, sf.ops.LossChannel)
-
-    def test_no_loss(self, monkeypatch):
-        """Test if function correctly creates the SF program for GBS without loss."""
-        graph = nx.complete_graph(5)
-        mock_eng_run = mock.MagicMock()
-
-        with monkeypatch.context() as m:
-            m.setattr(sf.LocalEngine, "run", mock_eng_run)
-            similarity.prob_event_mc(graph, 6, 3, samples=1)
-            p_func = mock_eng_run.call_args[0][0]
-
-        assert not all([isinstance(op, sf.ops.LossChannel) for op in p_func.circuit])
-
-    def test_all_loss(self, monkeypatch):
+    def test_max_loss(self):
         """Test if function samples from the vacuum when maximum loss is applied."""
-        dim = 5
-        graph = nx.complete_graph(dim)
-        mock_eng_run = mock.MagicMock()
+        graph = nx.complete_graph(6)
+        assert similarity.prob_event_mc(graph, 6, 3, samples=1, loss=1) == 0.0
+
+    def test_known_result(self):
+        """Tests if the probability for known cases is correctly
+        reproduced."""
+        g = nx.complete_graph(4)
+        p = similarity.prob_event_mc(g, 2, 1, 4)
+        assert np.allclose(p, 0.2108778117852639)
+
+        graph = nx.complete_graph(20)
+        assert np.allclose(similarity.prob_event_mc(graph, 20, 1, 1, samples=10), 0)
+
+
+class TestFeatureVectorOrbits:
+    """Tests for the function ``strawberryfields.apps.graph.similarity.feature_vector_orbits``"""
+
+    def test_invalid_orbits_list(self):
+        """Test if function raises a ``ValueError`` when the list of orbits is empty."""
+        g = nx.complete_graph(5)
+        with pytest.raises(ValueError, match="List of orbits must have at least one orbit"):
+            similarity.feature_vector_orbits(g, list_of_orbits=[])
+
+    def test_bad_orbit_photon_numbers(self):
+        """Test if function raises a ``ValueError`` when input is an orbit with numbers
+        below zero."""
+        graph = nx.complete_graph(5)
+        with pytest.raises(ValueError, match="Cannot request orbits with photon number below zero"):
+            similarity.feature_vector_orbits(graph, [[-1, 1]])
+
+    def test_invalid_n_mean(self):
+        """Test if function raises a ``ValueError`` when the mean photon number is specified to
+        be negative."""
+        g = nx.complete_graph(5)
+        with pytest.raises(ValueError, match="Mean photon number must be non-negative"):
+            similarity.feature_vector_orbits(g, [[1, 1], [2]], n_mean=-1)
+
+    def test_invalid_loss(self):
+        """Test if function raises a ``ValueError`` when the loss parameter is specified outside
+        of range."""
+        g = nx.complete_graph(5)
+        with pytest.raises(
+            ValueError, match="Loss parameter must take a value between zero and one"
+        ):
+            similarity.feature_vector_orbits(g, [[1, 1], [2]], loss=2)
+
+    def test_calls_exact_for_zero_samples(self):
+        """Test if function calls the exact function for zero samples"""
+        g = nx.complete_graph(5)
+        assert similarity.feature_vector_orbits(
+            g, [[1, 1]], samples=0
+        ) == similarity.prob_orbit_exact(g, [1, 1])
+
+    def test_correct_vector_returned(self, monkeypatch):
+        """Test if function correctly constructs the feature vector. The ``prob_orbit_exact``
+         and ``prob_orbit_mc`` function called within ``feature_vector_orbits`` are
+         monkeypatched to return hard-coded outputs that depend only on the orbit."""
 
         with monkeypatch.context() as m:
-            m.setattr(sf.LocalEngine, "run", mock_eng_run)
-            similarity.prob_event_mc(graph, 6, 3, samples=1, loss=1)
-            p_func = mock_eng_run.call_args[0][0]
+            m.setattr(
+                similarity,
+                "prob_orbit_mc",
+                lambda _graph, orbit, n_mean, samples, loss: 1.0 / sum(orbit),
+            )
+            graph = nx.complete_graph(8)
+            assert similarity.feature_vector_orbits(graph, [[1, 1], [2, 1, 1]], samples=1) == [
+                0.5,
+                0.25,
+            ]
 
-        eng = sf.LocalEngine(backend="gaussian")
+        with monkeypatch.context() as m:
+            m.setattr(
+                similarity,
+                "prob_orbit_exact",
+                lambda _graph, orbit, n_mean, loss: 0.5 * (1.0 / sum(orbit)),
+            )
+            graph = nx.complete_graph(8)
+            assert similarity.feature_vector_orbits(graph, [[1, 1], [2, 1, 1]]) == [0.25, 0.125]
 
-        state = eng.run(p_func).state
-        cov = state.cov()
-        disp = state.displacement()
+    def test_known_result(self):
+        """Tests if the probability for known cases is correctly
+        reproduced."""
+        graph = nx.complete_graph(4)
+        p = similarity.feature_vector_orbits(graph, [[1, 1], [2, 1, 1]], 2)
+        assert np.allclose(p, [0.22918531118334962, 0.06509669127495163])
+        assert np.allclose(
+            similarity.feature_vector_orbits(graph, [[2], [4]], 1, samples=10), [0, 0]
+        )
 
-        assert np.allclose(cov, 0.5 * state.hbar * np.eye(2 * dim))
-        assert np.allclose(disp, np.zeros(dim))
 
+class TestFeatureVectorEvents:
+    """Tests for the function ``strawberryfields.apps.graph.similarity.feature_vector_events``"""
 
-class TestFeatureVectorSampling:
-    """Tests for the function ``strawberryfields.apps.graph.similarity.feature_vector_sampling``"""
+    def test_invalid_event_photon_numbers(self):
+        """Test if function raises a ``ValueError`` when the list of event photons numbers
+         is empty."""
+        g = nx.complete_graph(5)
+        with pytest.raises(
+            ValueError, match="List of photon numbers must have at least one element"
+        ):
+            similarity.feature_vector_events(g, [], 1)
+
+    def test_invalid_n_mean(self):
+        """Test if function raises a ``ValueError`` when the mean photon number is specified to
+        be negative."""
+        g = nx.complete_graph(5)
+        with pytest.raises(ValueError, match="Mean photon number must be non-negative"):
+            similarity.feature_vector_events(g, [2, 4], 2, n_mean=-1)
+
+    def test_invalid_loss(self):
+        """Test if function raises a ``ValueError`` when the loss parameter is specified outside
+        of range."""
+        g = nx.complete_graph(5)
+        with pytest.raises(
+            ValueError, match="Loss parameter must take a value between zero and one"
+        ):
+            similarity.feature_vector_events(g, [2, 4], 2, loss=2)
 
     def test_bad_event_photon_numbers(self):
         """Test if function raises a ``ValueError`` when input a minimum photon number that is
         below zero."""
         with pytest.raises(ValueError, match="Cannot request events with photon number below zero"):
-            similarity.feature_vector_sampling([[1, 1, 0], [1, 0, 1]], [-1, 4], 1)
+            graph = nx.complete_graph(5)
+            similarity.feature_vector_events(graph, [-1, 4], 2)
 
     def test_low_count(self):
         """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is negative."""
-        with pytest.raises(ValueError, match="Maximum number of photons"):
-            similarity.feature_vector_sampling([[1, 1, 0], [1, 0, 1]], [2, 4], -1)
+        g = nx.complete_graph(5)
+        with pytest.raises(
+            ValueError, match="Maximum number of photons per mode must be non-negative"
+        ):
+            similarity.feature_vector_events(g, [2, 4], max_count_per_mode=-1)
 
-    def test_correct_distribution(self, monkeypatch):
+    def test_calls_exact_for_zero_samples(self):
+        """Test if function calls the exact function for zero samples"""
+        g = nx.complete_graph(5)
+        assert similarity.feature_vector_events(
+            g, [2], 1, samples=0
+        ) == similarity.prob_event_exact(g, 2, 1)
+
+    def test_correct_vector_returned(self, monkeypatch):
+        """Test if function correctly constructs the feature vector. The ``prob_event_exact``
+         and ``prob_event_mc`` function called within ``feature_vector_events`` are
+         monkeypatched to return hard-coded outputs that depend only on the orbit."""
+
+        with monkeypatch.context() as m:
+            m.setattr(
+                similarity,
+                "prob_event_mc",
+                lambda _graph, photons, max_count, n_mean, samples, loss: 1.0 / photons,
+            )
+            g = nx.complete_graph(8)
+            assert similarity.feature_vector_events(g, [2, 4, 8], 1, samples=1) == [
+                0.5,
+                0.25,
+                0.125,
+            ]
+
+        with monkeypatch.context() as m:
+            m.setattr(
+                similarity,
+                "prob_event_exact",
+                lambda _graph, photons, max_count, n_mean, loss: 0.5 * (1.0 / photons),
+            )
+            g = nx.complete_graph(8)
+            assert similarity.feature_vector_events(g, [2, 4, 8], 1) == [0.25, 0.125, 0.0625]
+
+    def test_known_result(self):
+        """Tests if the probability for known cases is correctly
+        reproduced."""
+        g = nx.complete_graph(4)
+        p = similarity.feature_vector_events(g, [2, 4], 2, 4)
+        assert np.allclose(p, [0.21087781178526066, 0.11998024483275889])
+
+        graph = nx.complete_graph(20)
+        assert np.allclose(
+            similarity.feature_vector_events(graph, [18, 20], 1, 1, samples=10), [0, 0]
+        )
+
+
+class TestFeatureVectorOrbitsSampling:
+    """Tests for the function ``strawberryfields.apps.graph.similarity.feature_vector_orbits_sampling``"""
+
+    def test_invalid_orbits_list(self):
+        """Test if function raises a ``ValueError`` when the list of orbits is empty."""
+        with pytest.raises(ValueError, match="List of orbits must have at least one orbit"):
+            similarity.feature_vector_orbits_sampling([[1, 1, 0], [1, 0, 1]], [])
+
+    def test_bad_orbit_photon_numbers(self):
+        """Test if function raises a ``ValueError`` when input is an orbit with numbers
+        below zero."""
+        with pytest.raises(ValueError, match="Cannot request orbits with photon number below zero"):
+            similarity.feature_vector_orbits_sampling([[1, 1, 0], [1, 0, 1]], [[-1, 1]])
+
+    def test_correct_vector_returned(self, monkeypatch):
+        """Test if function correctly constructs the feature vector corresponding to some hard
+        coded samples. This test uses a set of samples, corresponding orbits, and resultant
+        feature vector to test against the output of ``feature_vector_orbits_sampling``. The
+        ``sample_to_orbit`` function called within ``feature_vector_orbits_sampling`` is
+        monkeypatched to return the hard coded events corresponding to the samples."""
+        samples_orbits_mapping = {
+            (1, 1, 0, 0, 0): [1, 1],
+            (1, 1, 1, 0, 0): [1, 1, 1],
+            (1, 1, 1, 1, 0): [1, 1, 1, 1],
+            (1, 1, 1, 1, 1): [1, 1, 1, 1, 1],
+            (2, 0, 0, 0, 0): [2],
+            (3, 0, 0, 0, 0): [3],
+            (4, 0, 0, 0, 0): [4],
+            (5, 0, 0, 0, 0): [5],
+            (0, 1, 1, 0, 0): [1, 1],
+        }
+        samples = list(samples_orbits_mapping.keys()) + [(1, 1, 1, 1, 1)]
+        list_of_orbits = [[1, 1], [1, 1, 1, 1], [1, 1, 1, 1, 1]]
+        fv_true = [0.2, 0.1, 0.2]
+
+        with monkeypatch.context() as m:
+            m.setattr(similarity, "sample_to_orbit", lambda x: samples_orbits_mapping[x])
+            fv = similarity.feature_vector_orbits_sampling(samples, list_of_orbits)
+
+        assert fv_true == fv
+
+
+class TestFeatureVectorEventsSampling:
+    """Tests for the function ``strawberryfields.apps.graph.similarity.feature_vector_events_sampling``"""
+
+    def test_invalid_event_photon_numbers(self):
+        """Test if function raises a ``ValueError`` when the list of event photons numbers
+         is empty."""
+        with pytest.raises(
+            ValueError, match="List of photon numbers must have at least one element"
+        ):
+            similarity.feature_vector_events_sampling([[1, 1, 0], [1, 0, 1]], [], 1)
+
+    def test_bad_event_photon_numbers(self):
+        """Test if function raises a ``ValueError`` when input a minimum photon number that is
+        below zero."""
+        with pytest.raises(ValueError, match="Cannot request events with photon number below zero"):
+            similarity.feature_vector_events_sampling([[1, 1, 0], [1, 0, 1]], [-1, 4], 1)
+
+    def test_low_count(self):
+        """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is negative."""
+        with pytest.raises(
+            ValueError, match="Maximum number of photons per mode must be non-negative"
+        ):
+            similarity.feature_vector_events_sampling([[1, 1, 0], [1, 0, 1]], [2, 4], -1)
+
+    def test_correct_vector_returned(self, monkeypatch):
         """Test if function correctly constructs the feature vector corresponding to some hard
         coded samples. This test uses a set of samples, corresponding events, and resultant
-        feature vector to test against the output of ``feature_vector_sampling``. The
-        ``sample_to_event`` function called within ``feature_vector_sampling`` is monkeypatched
-        to return the hard coded events corresponding to the samples."""
+        feature vector to test against the output of ``feature_vector_events_sampling``. The
+        ``sample_to_event`` function called within ``feature_vector_events_sampling`` is
+        monkeypatched to return the hard coded events corresponding to the samples."""
         samples_events_mapping = {  # max_count_per_mode = 1
             (1, 1, 0, 0, 0): 2,
             (1, 1, 1, 0, 0): 3,
@@ -450,60 +795,6 @@ class TestFeatureVectorSampling:
 
         with monkeypatch.context() as m:
             m.setattr(similarity, "sample_to_event", lambda x, _: samples_events_mapping[x])
-            fv = similarity.feature_vector_sampling(samples, event_photon_numbers, 1)
+            fv = similarity.feature_vector_events_sampling(samples, event_photon_numbers, 1)
 
         assert fv_true == fv
-
-
-class TestFeatureVectorMC:
-    """Tests for the function ``strawberryfields.apps.graph.similarity.feature_vector_mc``"""
-
-    def test_invalid_samples(self):
-        """Test if function raises a ``ValueError`` when a number of samples less than one is
-        requested."""
-        g = nx.complete_graph(10)
-        with pytest.raises(ValueError, match="Number of samples must be at least one"):
-            similarity.feature_vector_mc(g, [2, 4], samples=0)
-
-    def test_invalid_n_mean(self):
-        """Test if function raises a ``ValueError`` when the mean photon number is specified to
-        be negative."""
-        g = nx.complete_graph(10)
-        with pytest.raises(ValueError, match="Mean photon number must be non-negative"):
-            similarity.feature_vector_mc(g, [2, 4], n_mean=-1)
-
-    def test_invalid_loss(self):
-        """Test if function raises a ``ValueError`` when the loss parameter is specified outside
-        of range."""
-        g = nx.complete_graph(10)
-        with pytest.raises(ValueError, match="Loss parameter must take a value between zero and"):
-            similarity.feature_vector_mc(g, [2, 4], loss=2)
-
-    def test_bad_event_photon_numbers_mc(self):
-        """Test if function raises a ``ValueError`` when input a minimum photon number that is
-        below zero."""
-        with pytest.raises(ValueError, match="Cannot request events with photon number below zero"):
-            graph = nx.complete_graph(4)
-            similarity.feature_vector_mc(graph, [-1, 4], 1)
-
-    def test_low_count(self):
-        """Test if function raises a ``ValueError`` if ``max_count_per_mode`` is negative."""
-        g = nx.complete_graph(10)
-        with pytest.raises(ValueError, match="Maximum number of photons"):
-            similarity.feature_vector_mc(g, [2, 4], -1)
-
-    def test_correct_vector_mc(self, monkeypatch):
-        """Test if function correctly constructs the feature vector. The
-        ``prob_event_mc`` function called within ``feature_vector_mc`` is monkeypatched
-        to return hard-coded outputs that depend only on the photon number in the event."""
-
-        with monkeypatch.context() as m:
-            m.setattr(
-                similarity,
-                "prob_event_mc",
-                lambda _graph, photons, max_count, n_mean, samples, loss: 1.0 / photons,
-            )
-            graph = nx.complete_graph(8)
-            fv = similarity.feature_vector_mc(graph, [2, 4, 8], 1)
-
-        assert fv == [0.5, 0.25, 0.125]

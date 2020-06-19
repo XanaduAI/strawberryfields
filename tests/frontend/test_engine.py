@@ -13,6 +13,7 @@
 # limitations under the License.
 r"""Unit tests for engine.py"""
 import pytest
+import numpy as np
 
 import strawberryfields as sf
 from strawberryfields import ops
@@ -34,7 +35,7 @@ def prog():
     """Program fixture."""
     prog = sf.Program(2)
     with prog.context as q:
-        ops.Dgate(0.5) | q[0]
+        ops.Dgate(0.5, 0.0) | q[0]
     return prog
 
 
@@ -104,7 +105,7 @@ class TestEngineProgramInteraction:
 
     def test_sequential_programs(self, eng):
         """Running several program segments sequentially."""
-        D = ops.Dgate(0.2)
+        D = ops.Dgate(0.2, 0.0)
         p1 = sf.Program(3)
         with p1.context as q:
             D | q[1]
@@ -140,7 +141,7 @@ class TestEngineProgramInteraction:
 
         p1 = sf.Program(2)
         with p1.context as q:
-            ops.Dgate(a) | q[1]
+            ops.Dgate(np.abs(a), np.angle(a)) | q[1]
             ops.Sgate(r) | q[1]
 
         eng.run(p1)
@@ -170,6 +171,43 @@ class TestEngineProgramInteraction:
         eng.run([p1, p2])
         assert inspect() == expected2
 
+    @pytest.mark.parametrize("eng", engines)
+    def test_combining_samples(self, eng):
+        """Check that samples are combined correctly when using multiple measurements"""
+
+        prog = sf.Program(5)
+        with prog.context as q:
+            ops.MeasureX | q[2]
+            ops.MeasureFock() | (q[1], q[3])
+            ops.MeasureFock() | q[0]
+
+        result = eng.run(prog)
+
+        # check that shape is (shots, measured_modes)
+        assert result.samples.shape == (1, 4)
+
+        # check that MesureFock measures `0` while MeasureX does NOT measure `0`.
+        correct_samples = [0, 0, 1, 0]
+        assert [bool(i) for i in result.samples[0]] == correct_samples
+
+    @pytest.mark.parametrize("eng", engines)
+    def test_measuring_same_modes(self, eng):
+        """Check that only the last measurement is returned when measuring the same mode twice"""
+
+        prog = sf.Program(5)
+        with prog.context as q:
+            ops.MeasureFock() | q[2]
+            ops.MeasureFock() | (q[1], q[3])
+            ops.MeasureX | q[2]
+
+        result = eng.run(prog)
+
+        # check that shape is (shots, measured_modes)
+        assert result.samples.shape == (1, 3)
+
+        # check that MesureFock measures `0` while MeasureX does NOT measure `0`.
+        correct_samples = [0, 1, 0]
+        assert [bool(i) for i in result.samples[0]] == correct_samples
 
 class TestMultipleShotsErrors:
     """Test if errors are raised correctly when using multiple shots."""
@@ -200,7 +238,7 @@ class TestMultipleShotsErrors:
         prog = sf.Program(2)
         with prog.context as q:
             ops.MeasureFock() | q[0]
-            ops.Dgate(q[0].par) | q[1]
+            ops.Dgate(q[0].par, 0) | q[1]
 
         with pytest.raises(
             NotImplementedError,

@@ -2,18 +2,46 @@
 
 <h3>New features since last release</h3>
 
+* Feature vectors of graphs can now be calculated exactly in the `similarity` module of the
+  applications layer.
+  [(#390)](https://github.com/XanaduAI/strawberryfields/pull/390)
 
-* Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X architecture. [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
+* Adds the `apps.qchem.dynamics` module for simulating vibrational quantum dynamics in molecules.
+  The `dynamics.evolution()` function provides a custom operation that encodes the input chemical
+  information for use in a Strawberry Fields `Program`. The `dynamics.sample_fock()` function allows
+  for generation of samples from an input Fock state. The probability of an excited state can
+  then be estimated with the `dynamics.prob()` function, which calculates the relative frequency
+  of the excited state among the generated samples. 
+  [(#402)](https://github.com/XanaduAI/strawberryfields/pull/402)
+  [(#411)](https://github.com/XanaduAI/strawberryfields/pull/411)
+  [(#419)](https://github.com/XanaduAI/strawberryfields/pull/419)
+
+* The `GaussianState` returned from simulations using the Gaussian backend
+  now has feature parity with the `FockState` object returned from the Fock backends.
+  [(#407)](https://github.com/XanaduAI/strawberryfields/pull/407)
+
+  In particular, it now supports the following methods:
+
+  - `GaussianState.dm()`
+  - `GaussianState.ket()`
+  - `GaussianState.all_fock_probs()`
+
+  In addition, the existing `GaussianState.reduced_dm()` method now supports
+  multi-mode reduced density matrices.
+
+* Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X
+  architecture.
+  [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
 
 * Adds `diagonal_expectation` method for the `BaseFockState` class, which returns
   the expectation value of any operator that is diagonal in the number basis.
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
 * Adds `parity_expectation` method as an instance of `diagonal_expectation` for
-  the `BaseFockState` class, and its own function for `BaseGaussianState`. 
+  the `BaseFockState` class, and its own function for `BaseGaussianState`.
   This returns the expectation value of the parity operator,
   defined as (-1)^N.
-  [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389) 
+  [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
 
 <h3>Improvements</h3>
@@ -25,7 +53,7 @@
   [(#363)](https://github.com/XanaduAI/strawberryfields/pull/363)
 
 * Changes the `number_expectation` method for the `BaseFockState` class to be an instance
-  of `diagonal_expectation`. 
+  of `diagonal_expectation`.
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
 <h3>Breaking Changes</h3>
@@ -39,7 +67,8 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jack Ceroni, Theodor Isacsson, Josh Izaac, Shreya P. Kumar, Nicolás Quesada
+Juan Miguel Arrazola, Tom Bromley, Jack Ceroni, Aroosa Ijaz, Theodor Isacsson, Josh Izaac, Soran
+Jahangiri, Shreya P. Kumar, Nicolás Quesada
 
 
 

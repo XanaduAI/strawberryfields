@@ -22,7 +22,7 @@ from scipy.special import factorial
 
 tf = pytest.importorskip("tensorflow", minversion="2.0")
 
-from strawberryfields.ops import Dgate, Sgate, MeasureX, Thermal
+from strawberryfields.ops import Dgate, Sgate, MeasureX, Thermal, BSgate, Ket, S2gate
 import strawberryfields.parameters
 
 
@@ -92,9 +92,8 @@ class TestOneMode:
             Dgate(ALPHA) | q
             MeasureX | q
 
-        eng.run(prog)
-        val = q[0].val
-        assert isinstance(val, tf.Tensor)
+        res = eng.run(prog)
+        assert isinstance(res.samples, tf.Tensor)
 
     def test_eng_run_state_ket(self, setup_eng, cutoff, pure, tol):
         """Tests whether the ket of the returned state is a
@@ -475,6 +474,79 @@ class TestGradient:
         grad_ex = [2 * a, 2 * tf.sinh(r) * tf.cosh(r), 0]
         assert np.allclose(grad, grad_ex, atol=tol, rtol=0)
 
+    def test_BS_state_gradients(self, setup_eng, cutoff, tol, batch_size):
+        """Tests whether the gradient for the state created by interfering two single photons at
+        a beam splitter is correct."""
+        if batch_size is not None:
+            pytest.skip(
+                "Cannot calculate gradient in batch mode, as tape.gradient "
+                "cannot differentiate non-scalar output."
+            )
+
+        THETA = 0.3
+        PHI = 0.2
+
+        eng, prog = setup_eng(2)
+        _theta, _phi = prog.params("theta", "phi")
+        photon_11 = np.zeros((cutoff,cutoff), dtype=np.complex64)
+        photon_11[1, 1] = 1.0 + 0.0j
+
+        with prog.context as q:
+            Ket(photon_11) | (q[0], q[1])
+            BSgate(_theta, _phi) | (q[0], q[1])
+
+        theta = tf.Variable(THETA)
+        phi = tf.Variable(PHI)
+
+        with tf.GradientTape(persistent=True) as tape:
+            state = eng.run(prog, args={"theta": theta, "phi": phi}).state
+            prob11 = tf.abs(state.ket()[1, 1])**2
+            prob02 = tf.abs(state.ket()[0, 2])**2
+
+        theta_grad, phi_grad = tape.gradient(prob11, [theta, phi])
+        assert np.allclose(theta_grad, -4 * np.sin(2*THETA)*np.cos(2*THETA), atol=tol, rtol=0)
+        assert np.allclose(phi_grad, 0.0, atol=tol, rtol=0)
+
+        theta_grad, phi_grad = tape.gradient(prob02, [theta, phi])
+        assert np.allclose(theta_grad, np.sin(4*THETA), atol=tol, rtol=0)
+        assert np.allclose(phi_grad, 0.0, atol=tol, rtol=0)
+
+    def test_2mode_squeezed_vacuum_gradients(self, setup_eng, cutoff, tol, batch_size):
+        """Tests whether the gradient for the probability of the states |0,0> and |1,1>
+         created by an S2gate is correct."""
+        if batch_size is not None:
+            pytest.skip(
+                "Cannot calculate gradient in batch mode, as tape.gradient "
+                "cannot differentiate non-scalar output."
+            )
+
+        R = 0.3
+        PHI = 0.2
+
+        eng, prog = setup_eng(2)
+        _r, _phi = prog.params("r", "phi")
+        vacuum = np.zeros((cutoff, cutoff), dtype=np.complex64)
+        vacuum[0, 0] = 1.0 + 0.0j
+
+        with prog.context as q:
+            Ket(vacuum) | (q[0], q[1])
+            S2gate(_r, _phi) | (q[0], q[1])
+
+        r = tf.Variable(R)
+        phi = tf.Variable(PHI)
+
+        with tf.GradientTape(persistent=True) as tape:
+            state = eng.run(prog, args={"r": r, "phi": phi}).state
+            prob00 = tf.abs(state.ket()[0, 0])**2
+            prob11 = tf.abs(state.ket()[1, 1])**2
+
+        r_grad, phi_grad = tape.gradient(prob00, [r, phi])
+        assert np.allclose(r_grad, -2*np.tanh(R)/np.cosh(R)**2, atol=tol, rtol=0)
+        assert np.allclose(phi_grad, 0.0, atol=tol, rtol=0)
+
+        r_grad, phi_grad = tape.gradient(prob11, [r, phi])
+        assert np.allclose(r_grad, 2*(np.sinh(R) - np.sinh(R)**3)/np.cosh(R)**5, atol=tol, rtol=0)
+        assert np.allclose(phi_grad, 0.0, atol=tol, rtol=0)
 
 @pytest.mark.xfail(
     reason="If this test passes, then the _einsum_v1 patch is no longer needed.",
@@ -538,3 +610,5 @@ def test_einsum_complex_gradients(tol):
 
     # gradient of f0 and f1 should fail
     assert np.allclose(grads[0], grads[1], atol=tol, rtol=0)
+
+

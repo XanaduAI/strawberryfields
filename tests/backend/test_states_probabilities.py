@@ -41,7 +41,7 @@ class TestFockProbabilities:
         ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
         ref_probs = np.abs(ref_state) ** 2
 
-        backend.prepare_coherent_state(alpha, 0)
+        backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
         state = backend.state()
 
         for n in range(cutoff):
@@ -59,7 +59,7 @@ class TestFockProbabilities:
         ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
         ref_probs = np.abs(ref_state) ** 2
 
-        backend.prepare_coherent_state(alpha, 0)
+        backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
         backend.prepare_fock_state(cutoff // 2, 1)
         state = backend.state()
 
@@ -70,7 +70,6 @@ class TestFockProbabilities:
 
 @pytest.mark.parametrize("a", MAG_ALPHAS)
 @pytest.mark.parametrize("phi", PHASE_ALPHAS)
-@pytest.mark.backends("fock", "tf")
 class TestAllFockProbs:
     """Tests for the all_fock_probs state method"""
 
@@ -84,10 +83,10 @@ class TestAllFockProbs:
         ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
         ref_probs = np.abs(ref_state) ** 2
 
-        backend.prepare_coherent_state(alpha, 0)
+        backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
         state = backend.state()
-        
-        probs = state.all_fock_probs()
+
+        probs = state.all_fock_probs(cutoff=cutoff)
         if isinstance(probs, tf.Tensor):
             probs = probs.numpy()
         probs = probs.flatten()
@@ -119,14 +118,14 @@ class TestAllFockProbs:
         if batch_size is not None:
             ref_probs = np.tile(ref_probs, batch_size)
 
-        backend.prepare_coherent_state(alpha, 0)
-        backend.prepare_coherent_state(-alpha, 1)
+        backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
+        backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha)+np.pi, 1)
         state = backend.state()
 
         for n in range(cutoff):
             for m in range(cutoff):
-                probs = state.all_fock_probs()
+                probs = state.all_fock_probs(cutoff=cutoff)
                 if isinstance(probs, tf.Tensor):
                     probs = probs.numpy()
-                
+
                 assert np.allclose(probs.flatten(), ref_probs, atol=tol, rtol=0)

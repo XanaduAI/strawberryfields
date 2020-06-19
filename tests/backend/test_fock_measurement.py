@@ -123,8 +123,7 @@ class TestFockRepresentation:
             ref_result = n[meas_modes]
 
             if batch_size is not None:
-                ref_result = tuple(np.array([i] * batch_size) for i in ref_result)
-
+                ref_result = np.array([[i] * batch_size for i in ref_result]).T.reshape((batch_size, 1, ref_result.shape[0]))
             assert np.allclose(meas_result, ref_result, atol=tol, rtol=0)
 
 
@@ -132,7 +131,7 @@ class TestFockRepresentation:
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
 
-    def test_two_mode_squeezed_measurements(self, setup_backend, pure):
+    def test_two_mode_squeezed_measurements(self, setup_backend, pure, batch_size):
         """Tests Fock measurement on the two mode squeezed vacuum state."""
         for _ in range(NUM_REPEATS):
             backend = setup_backend(2)
@@ -140,12 +139,15 @@ class TestRepresentationIndependent:
 
             r = 0.25
             # Circuit to prepare two mode squeezed vacuum
-            backend.squeeze(-r, 0)
-            backend.squeeze(r, 1)
-            backend.beamsplitter(np.sqrt(0.5), -np.sqrt(0.5), 0, 1)
+            backend.squeeze(-r, 0, 0)
+            backend.squeeze(r, 0, 1)
+            backend.beamsplitter(np.pi/4, np.pi, 0, 1)
             meas_modes = [0, 1]
             meas_results = backend.measure_fock(meas_modes)
-            assert np.all(meas_results[0] == meas_results[1])
+            if batch_size is not None:
+                assert np.all(meas_results[0][0][0] == meas_results[0][0][1])
+            else:
+                assert np.all(meas_results[0][0] == meas_results[0][1])
 
     def test_vacuum_measurements(self, setup_backend, pure):
         """Tests Fock measurement on the vacuum state."""
@@ -161,13 +163,12 @@ class TestRepresentationIndependent:
     def test_coherent_state_has_photons(self, setup_backend, pure):
         """Test that a coherent state with a mean photon number of 4 and sampled NUM_REPEATS times will produce photons"""
         backend = setup_backend(1)
-        alpha = 2.0
+        r = 2.0
+        phi = 0.675
         meas = np.array(backend.measure_fock([0]))
 
         for _ in range(NUM_REPEATS):
             backend.reset(pure=pure)
-            backend.displacement(alpha, 0)
+            backend.displacement(r, phi, 0)
             meas += backend.measure_fock([0])
         assert np.all(meas > 0)
-
-

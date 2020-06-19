@@ -16,3 +16,6 @@ pytest/.pytest_cache/
 doc/_static/thumbs/*
 !doc/_static/code.png
 doc/code/api/*
+Pipfile*
+.vscode/
+.ipynb_checkpoints/*

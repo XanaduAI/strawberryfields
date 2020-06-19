@@ -188,7 +188,7 @@ class TestEngineIntegration:
             ops.Pgate(1) | (q[0])
             ops.Rgate(1) | (q[0])
             ops.Sgate(1) | (q[0])
-            ops.Dgate(1) | (q[0])
+            ops.Dgate(1, 0) | (q[0])
 
         for op in prog.circuit:
             method, mode = drawer._gate_from_operator(op)
@@ -226,7 +226,7 @@ class TestEngineIntegration:
             ops.Pgate(1) | (q[0])
             ops.Rgate(1) | (q[0])
             ops.Sgate(1) | (q[0])
-            ops.Dgate(1) | (q[0])
+            ops.Dgate(1, 0) | (q[0])
 
         for op in prog.circuit:
             drawer.parse_op(op)
@@ -866,7 +866,7 @@ class TestEngineIntegration:
         prog = sf.Program(3)
 
         with prog.context as q:
-            ops.Dgate(1) | (q[0])
+            ops.Dgate(1, 0) | (q[0])
 
         d_test_0_output = dedent(
             r"""            \documentclass{article}
@@ -891,7 +891,7 @@ class TestEngineIntegration:
         prog = sf.Program(3)
 
         with prog.context as q:
-            ops.Dgate(1) | (q[1])
+            ops.Dgate(1, 0) | (q[1])
 
         d_test_1_output = dedent(
             r"""            \documentclass{article}
@@ -950,7 +950,7 @@ class TestEngineIntegration:
         prog = sf.Program(3)
 
         with prog.context as q:
-            ops.Dgate(1) | (q[1])
+            ops.Dgate(1, 0) | (q[1])
             ops.Rgate(1) | (q[1])
             ops.S2gate(1) | (q[0], q[1])
 
@@ -971,7 +971,7 @@ class TestEngineIntegration:
         prog = sf.Program(3)
 
         with prog.context as q:
-            ops.Dgate(1) | (q[1])
+            ops.Dgate(1, 0) | (q[1])
             ops.Rgate(1) | (q[1])
             ops.S2gate(1) | (q[0], q[1])
 

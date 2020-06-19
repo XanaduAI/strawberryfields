@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Gaussian simulator backend"""
+"""This module contains functionality for quantum chemistry calculations.
 
-from .backend import GaussianBackend
+.. currentmodule:: strawberryfields.apps.qchem
+
+.. autosummary::
+    :toctree: api
+
+    dynamics
+"""
+import strawberryfields.apps.qchem.dynamics

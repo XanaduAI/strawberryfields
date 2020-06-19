@@ -14,6 +14,8 @@
 """Gaussian circuit operations"""
 # pylint: disable=duplicate-code,attribute-defined-outside-init
 import numpy as np
+from thewalrus.quantum import Xmat
+
 from . import ops
 from ..shared_ops import changebasis
 
@@ -107,13 +109,13 @@ class GaussianModes:
         """return the modes currently active"""
         return [x for x in self.active if x is not None]
 
-    def displace(self, beta, i):
-        """ Implements a displacement operation by the complex number beta in mode i"""
+    def displace(self, r, phi, i):
+        """ Implements a displacement operation by the complex number `beta = r * np.exp(1j * phi)` in mode i"""
         # Update displacement of mode i by the complex amount bet
         if self.active[i] is None:
             raise ValueError("Cannot displace mode, mode does not exist")
 
-        self.mean[i] += beta
+        self.mean[i] += r * np.exp(1j * phi)
 
     def squeeze(self, r, phi, k):
         """ Implements a squeezing operation in mode k by the amount z = r*exp(1j*phi)."""
@@ -417,7 +419,7 @@ class GaussianModes:
             ),
             axis=0,
         ) + np.identity(2 * self.nlen)
-        return np.dot(ops.xmat(self.nlen), np.identity(2 * self.nlen) - np.linalg.inv(sigmaq))
+        return np.dot(Xmat(self.nlen), np.identity(2 * self.nlen) - np.linalg.inv(sigmaq))
 
     def loss(self, T, k):
         r"""Implements a loss channel in mode k by amplitude loss amount \sqrt{T}
