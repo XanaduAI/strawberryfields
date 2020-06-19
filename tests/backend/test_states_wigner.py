@@ -70,8 +70,8 @@ def test_squeezed_coherent(setup_backend, hbar, tol):
     """Test Wigner function for a squeezed coherent state
     matches the analytic result"""
     backend = setup_backend(1)
-    backend.prepare_coherent_state(A, 0)
-    backend.squeeze(R * np.exp(1j * PHI), 0)
+    backend.prepare_coherent_state(np.abs(A), np.angle(A), 0)
+    backend.squeeze(R, PHI, 0)
 
     state = backend.state()
     W = state.wigner(0, XVEC, XVEC)

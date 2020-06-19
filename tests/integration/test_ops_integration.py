@@ -20,8 +20,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 
 from strawberryfields.backends import BaseGaussian
-from strawberryfields.backends.states import BaseFockState
-from strawberryfields.backends.gaussianbackend import GaussianState
+from strawberryfields.backends.states import BaseFockState, BaseGaussianState
 
 
 # make test deterministic
@@ -76,7 +75,7 @@ class TestChannelApplication:
         eng, prog = setup_eng(1)
 
         with prog.context as q:
-            ops.Dgate(A) | q[0]
+            ops.Dgate(np.abs(A), np.angle(A)) | q[0]
             ops.LossChannel(0) | q[0]
 
         eng.run(prog)
@@ -89,7 +88,7 @@ class TestChannelApplication:
         nbar = 0.43
 
         with prog.context as q:
-            ops.Dgate(A) | q[0]
+            ops.Dgate(np.abs(A), np.angle(A)) | q[0]
             ops.ThermalLossChannel(0, nbar) | q[0]
 
         state = eng.run(prog).state
@@ -110,7 +109,7 @@ class TestPreparationApplication:
         eng, prog = setup_eng(1)
 
         with prog.context as q:
-            ops.Dgate(0.2) | q[0]
+            ops.Dgate(0.2, 0.0) | q[0]
 
         state1 = eng.run(prog).state
 
@@ -148,7 +147,7 @@ class TestPreparationApplication:
         eng, prog = setup_eng(1)
 
         with prog.context as q:
-            ops.Dgate(0.2) | q[0]
+            ops.Dgate(0.2, 0.0) | q[0]
 
         state1 = eng.run(prog).state
 
@@ -165,7 +164,7 @@ class TestPreparationApplication:
         eng, prog = setup_eng(1)
 
         with prog.context as q:
-            ops.Dgate(0.2) | q[0]
+            ops.Dgate(0.2, 0.0) | q[0]
 
         state1 = eng.run(prog).state
 
@@ -203,7 +202,7 @@ class TestKetDensityMatrixIntegration:
         """Test exceptions"""
         mu = np.array([0.0, 0.0])
         cov = np.identity(2)
-        state1 = GaussianState((mu, cov), 1, None, None)
+        state1 = BaseGaussianState((mu, cov), 1)
         state2 = BaseFockState(np.zeros(cutoff), 1, False, cutoff)
 
         eng, prog = setup_eng(2)
@@ -262,7 +261,7 @@ class TestKetDensityMatrixIntegration:
         """Test exceptions"""
         mu = np.array([0.0, 0.0])
         cov = np.identity(2)
-        state = GaussianState((mu, cov), 1, None, None)
+        state = BaseGaussianState((mu, cov), 1)
 
         eng, prog = setup_eng(2)
 

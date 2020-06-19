@@ -19,7 +19,6 @@ import pytest
 import numpy as np
 
 from strawberryfields import ops
-from strawberryfields.backends.gaussianbackend.states import GaussianState
 from strawberryfields.utils import random_covariance, displaced_squeezed_state
 
 # make test deterministic
@@ -303,7 +302,7 @@ class TestGaussianMultimode:
 
         # circuit is initially in displaced squeezed state
         for i in range(N):
-            backend.prepare_displaced_squeezed_state(a, r, phi, mode=i)
+            backend.prepare_displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, mode=i)
 
         # prepare Gaussian state in mode 1
         backend.prepare_gaussian_state(means, cov, modes=1)
@@ -314,7 +313,7 @@ class TestGaussianMultimode:
         assert np.allclose(state.cov(), cov*hbar/2, atol=tol, rtol=0)
 
         # test that displaced squeezed states are unchanged
-        ex_means, ex_V = displaced_squeezed_state(a, r, phi, basis="gaussian", hbar=hbar)
+        ex_means, ex_V = displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar)
         for i in [0, 2, 3]:
             state = backend.state([i])
             assert np.allclose(state.means(), ex_means, atol=tol, rtol=0)
@@ -333,7 +332,7 @@ class TestGaussianMultimode:
         r = 0.5
         phi = 0.12
         for i in range(N):
-            backend.prepare_displaced_squeezed_state(a, r, phi, i)
+            backend.prepare_displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, i)
 
         # prepare new squeezed displaced state in mode 1 and 3
         backend.prepare_gaussian_state(means, cov, modes=[1, 3])
@@ -345,7 +344,7 @@ class TestGaussianMultimode:
         assert np.allclose(state.cov(), cov*hbar/2, atol=tol, rtol=0)
 
         # test that displaced squeezed states are unchanged
-        ex_means, ex_V = displaced_squeezed_state(a, r, phi, basis="gaussian", hbar=hbar)
+        ex_means, ex_V = displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar)
         for i in [0, 2]:
             state = backend.state([i])
             assert np.allclose(state.means(), ex_means, atol=tol, rtol=0)

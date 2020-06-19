@@ -23,21 +23,18 @@ from numpy import (
     arctan2,
     angle,
     sqrt,
-    dot,
     vstack,
     zeros_like,
     allclose,
     ix_,
 )
-from numpy.linalg import inv
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.shared_ops import changebasis
+from strawberryfields.backends.states import BaseGaussianState
 
-from .ops import xmat
 from .gaussiancircuit import GaussianModes
-from .states import GaussianState
 
 
 class GaussianBackend(BaseGaussian):
@@ -101,35 +98,29 @@ class GaussianBackend(BaseGaussian):
     def prepare_vacuum_state(self, mode):
         self.circuit.loss(0.0, mode)
 
-    def prepare_coherent_state(self, alpha, mode):
+    def prepare_coherent_state(self, r, phi, mode):
         self.circuit.loss(0.0, mode)
-        self.circuit.displace(alpha, mode)
+        self.circuit.displace(r, phi, mode)
 
     def prepare_squeezed_state(self, r, phi, mode):
         self.circuit.loss(0.0, mode)
         self.circuit.squeeze(r, phi, mode)
 
-    def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
+    def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
         self.circuit.loss(0.0, mode)
-        self.circuit.squeeze(r, phi, mode)
-        self.circuit.displace(alpha, mode)
+        self.circuit.squeeze(r_s, phi_s, mode)
+        self.circuit.displace(r_d, phi_d, mode)
 
     def rotation(self, phi, mode):
         self.circuit.phase_shift(phi, mode)
 
-    def displacement(self, alpha, mode):
-        self.circuit.displace(alpha, mode)
+    def displacement(self, r, phi, mode):
+        self.circuit.displace(r, phi, mode)
 
-    def squeeze(self, z, mode):
-        phi = angle(z)
-        r = abs(z)
+    def squeeze(self, r, phi, mode):
         self.circuit.squeeze(r, phi, mode)
 
-    def beamsplitter(self, t, r, mode1, mode2):
-        if isinstance(t, complex):
-            raise ValueError("Beamsplitter transmittivity t must be a float.")
-        theta = arctan2(abs(r), t)
-        phi = angle(r)
+    def beamsplitter(self, theta, phi, mode1, mode2):
         self.circuit.beamsplitter(-theta, -phi, mode1, mode2)
 
     def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
@@ -224,7 +215,7 @@ class GaussianBackend(BaseGaussian):
     def thermal_loss(self, T, nbar, mode):
         self.circuit.thermal_loss(T, nbar, mode)
 
-    def measure_fock(self, modes, shots=1, select=None):
+    def measure_fock(self, modes, shots=1, select=None, **kwargs):
         if select is not None:
             raise NotImplementedError(
                 "Gaussian backend currently does not support " "postselection"
@@ -253,7 +244,7 @@ class GaussianBackend(BaseGaussian):
 
         return samples
 
-    def measure_threshold(self, modes, shots=1, select=None):
+    def measure_threshold(self, modes, shots=1, select=None, **kwargs):
         if shots != 1:
             if select is not None:
                 raise NotImplementedError(
@@ -305,23 +296,4 @@ class GaussianBackend(BaseGaussian):
         covmat *= self.circuit.hbar / 2
 
         mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
-
-        # qmat and amat
-        qmat = self.circuit.qmat()
-        N = qmat.shape[0] // 2
-
-        # work out if qmat and Amat need to be reduced
-        if 1 <= len(modes) < N:
-            # reduce qmat
-            ind = concatenate([array(modes), N + array(modes)])
-            rows = ind.reshape((-1, 1))
-            cols = ind.reshape((1, -1))
-            qmat = qmat[rows, cols]
-
-            # calculate reduced Amat
-            N = qmat.shape[0] // 2
-            Amat = dot(xmat(N), identity(2 * N) - inv(qmat))
-        else:
-            Amat = self.circuit.Amat()
-
-        return GaussianState((means, covmat), len(modes), qmat, Amat, mode_names=mode_names)
+        return BaseGaussianState((means, covmat), len(modes), mode_names=mode_names)
