@@ -93,7 +93,7 @@ been generated for formic acid at zero temperature. The GBS samples can be used 
 Dataset
 -------
 
-The :class:`SampleDataset` class provides the base functionality from which all datasets inherit.
+The :class:`~.SampleDataset` class provides the base functionality from which all datasets inherit.
 
 Each dataset contains a variety of metadata relevant to the sampling:
 
