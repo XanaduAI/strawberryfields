@@ -30,9 +30,8 @@
   In addition, the existing `GaussianState.reduced_dm()` method now supports
   multi-mode reduced density matrices.
 
-* Adds the `number_expectation_pnr` and `number_variance_pnr` functions for
-  obtaining counting statistics from samples obtained by performing photon
-  number resolving measurements.
+* Adds the `samples_expectation`, `samples_variance` and `all_fock_probs_pnr`
+  functions for obtaining counting statistics from samples.
   [(#399)](https://github.com/XanaduAI/strawberryfields/pull/399)
 
 * Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X

@@ -17,6 +17,73 @@ This module provides functions for post-processing samples.
 import numpy as np
 
 
+def _product_for_modes(samples, modes=None):
+    """Getting the product of samples across modes.
+
+    Args:
+        samples (ndarray): the photon number samples with a shape
+            of (shots, modes)
+        modes (Sequence): a flat sequence containing indices of modes to get
+            the expectation value for
+
+    Returns:
+        ndarray: product of the samples across modes
+    """
+    modes = np.array(modes)
+    selected_samples = samples[:, modes]
+    return np.prod(selected_samples, axis=1)
+
+
+def _check_samples(samples):
+    """Validation check for the input samples.
+
+    Checks include data types checks and dimension of the input samples.
+
+    Args:
+        samples (ndarray): the photon number samples with a shape of (shots,
+            modes)
+    """
+    if not isinstance(samples, np.ndarray) or samples.ndim != 2:
+        raise Exception("Samples needs to be represented as a two dimensional NumPy array.")
+
+
+def _check_modes(samples, modes):
+    """Validation checks for the input modes.
+
+    Checks include data types checks, checks for the dimension of the inputs
+    and the validity of the modes specified.
+
+    Args:
+        samples (ndarray): the photon number samples with a shape
+            of (shots, modes)
+        modes (Sequence): the input modes to get the expectation value for, a
+            flattened sequence
+    """
+    num_modes = samples.shape[1]
+    flattened_sequence_indices_msg = (
+        "The input modes need to be specified as a flattened sequence of non-negative integers!"
+    )
+
+    modes = np.array(modes)
+
+    # Checking if modes is a valid flattened sequence of indices
+    try:
+        non_index_modes = modes[(np.mod(modes, 1) != 0) | (modes < 0)]
+    except Exception:
+        raise Exception(flattened_sequence_indices_msg)
+
+    if modes.ndim != 1 or non_index_modes.size > 0 or len(modes) == 0:
+        raise Exception(flattened_sequence_indices_msg)
+
+    # Checking if valid modes were specified
+    largest_valid_index = num_modes - 1
+    out_of_bounds_modes = modes[modes > largest_valid_index]
+    if out_of_bounds_modes.size > 0:
+        raise Exception(
+            f"Cannot specify mode indices {out_of_bounds_modes} for a {num_modes} mode system."
+        )
+
+
 def samples_expectation(samples, modes=None):
     r"""Uses samples obtained by a measurement operator to return the
     expectation value of the operator.
@@ -191,73 +258,6 @@ def all_fock_probs_pnr(photon_number_samples):
     H, _ = np.histogramdd(photon_number_samples, bins=bins)
     probabilities = H / shots
     return probabilities
-
-
-def _product_for_modes(samples, modes=None):
-    """Getting the product of samples across modes.
-
-    Args:
-        samples (ndarray): the photon number samples with a shape
-            of (shots, modes)
-        modes (Sequence): a flat sequence containing indices of modes to get
-            the expectation value for
-
-    Returns:
-        ndarray: product of the samples across modes
-    """
-    modes = np.array(modes)
-    selected_samples = samples[:, modes]
-    return np.prod(selected_samples, axis=1)
-
-
-def _check_samples(samples):
-    """Validation check for the input samples.
-
-    Checks include data types checks and dimension of the input samples.
-
-    Args:
-        samples (ndarray): the photon number samples with a shape of (shots,
-            modes)
-    """
-    if not isinstance(samples, np.ndarray) or samples.ndim != 2:
-        raise Exception("Samples needs to be represented as a two dimensional NumPy array.")
-
-
-def _check_modes(samples, modes):
-    """Validation checks for the input modes.
-
-    Checks include data types checks, checks for the dimension of the inputs
-    and the validity of the modes specified.
-
-    Args:
-        samples (ndarray): the photon number samples with a shape
-            of (shots, modes)
-        modes (Sequence): the input modes to get the expectation value for, a
-            flattened sequence
-    """
-    num_modes = samples.shape[1]
-    flattened_sequence_indices_msg = (
-        "The input modes need to be specified as a flattened sequence of non-negative integers!"
-    )
-
-    modes = np.array(modes)
-
-    # Checking if modes is a valid flattened sequence of indices
-    try:
-        non_index_modes = modes[(np.mod(modes, 1) != 0) | (modes < 0)]
-    except Exception:
-        raise Exception(flattened_sequence_indices_msg)
-
-    if modes.ndim != 1 or non_index_modes.size > 0 or len(modes) == 0:
-        raise Exception(flattened_sequence_indices_msg)
-
-    # Checking if valid modes were specified
-    largest_valid_index = num_modes - 1
-    out_of_bounds_modes = modes[modes > largest_valid_index]
-    if out_of_bounds_modes.size > 0:
-        raise Exception(
-            f"Cannot specify mode indices {out_of_bounds_modes} for a {num_modes} mode system."
-        )
 
 
 __all__ = [
