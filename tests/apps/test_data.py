@@ -285,21 +285,15 @@ class TestFeatureDatasets:
         assert isinstance(dataset.n_mean, (float, int))
         assert dataset.n_mean >= 0
 
-    def test_threshold(self, dataset):
-        """Test if threshold flag is a valid bool for each dataset"""
-        assert isinstance(dataset.threshold, bool)
-
     def test_unit(self, dataset):
         """Test if unit is a valid string for each dataset"""
         # pylint: disable=protected-access
-        assert isinstance(dataset.unit, str)
         allowed = ["orbits", "events"]
         assert dataset.unit in allowed
 
     def test_method(self, dataset):
         """Test if method is a valid string for each dataset"""
         # pylint: disable=protected-access
-        assert isinstance(dataset.method, str)
         allowed = ["exact", "mc"]
         assert dataset.method in allowed
 

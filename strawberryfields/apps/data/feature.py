@@ -30,8 +30,6 @@ class FeatureDataset(ABC):
 
     Attributes:
         n_mean (float): mean number of photons used in the GBS device
-        threshold (bool): flag to indicate whether feature vectors are calculated with threshold
-            detectors or with photon-number-resolving detectors
         method (str): method used to calculate the feature vectors; ``exact`` for exact calculation
             or ``mc`` for Monte Carlo estimation
         unit (str): signifies the unit of construction of feature vectors; ``orbits`` or ``events``
@@ -53,13 +51,13 @@ class FeatureDataset(ABC):
         """Base name of files containing the data stored in the ``./feature_data/`` directory.
 
         For each dataset, feature vectors and the corresponding adjacency matrices are provided
-        as numpy arrays in two separate ``.npy`` format files.
+        as NumPy arrays in two separate ``.npy`` format files.
 
         Given ``_data_filename = example`` and ``method = mc``, feature vectors should be stored
         in ``./feature_data/example_mc_fv.npy`` and the array of corresponding adjacency matrices
-        should be saved in ``./feature_data/example_mat.npy``. Numpy functions such as
+        should be saved in ``./feature_data/example_mat.npy``. NumPy functions such as
         ``numpy.save(filename, array, allow_pickle=True)`` and
-        ``numpy.load(filename, allow_pickle=True)`` can be used to save and load these numpy
+        ``numpy.load(filename, allow_pickle=True)`` can be used to save and load these NumPy
         arrays."""
         pass
 
@@ -84,12 +82,6 @@ class FeatureDataset(ABC):
     # pylint: disable=missing-docstring
     @property
     @abstractmethod
-    def threshold(self) -> bool:
-        pass
-
-    # pylint: disable=missing-docstring
-    @property
-    @abstractmethod
     def method(self) -> str:
         pass
 
@@ -101,7 +93,7 @@ class FeatureDataset(ABC):
         self.n_vectors, self.n_features = self.vectors.shape
 
     def __iter__(self):
-        return iter(self.vectors)
+        return self
 
     def __len__(self):
         return self.n_vectors
@@ -144,7 +136,6 @@ class QM9Exact(FeatureDataset):
     Attributes:
         method = "exact"
         n_mean = 6
-        threshold = False
         unit = "orbits"
         unit_data = [[1, 1], [2], [1, 1, 1, 1], [2, 1, 1], [2, 2], [1, 1, 1, 1, 1, 1], [2, 1, 1, 1, 1], [2, 2, 1, 1], [2, 2, 2]]
     """
@@ -163,7 +154,6 @@ class QM9Exact(FeatureDataset):
         [2, 2, 2],
     ]
     n_mean = 6
-    threshold = False
     method = "exact"
 
 
@@ -183,7 +173,6 @@ class QM9MC(FeatureDataset):
     Attributes:
         method = "mc"
         n_mean = 6
-        threshold = False
         unit = "events"
         unit_data = [[2, 2], [4, 2], [6, 2]]
     """
@@ -192,7 +181,6 @@ class QM9MC(FeatureDataset):
     unit = "events"
     unit_data = [[2, 2], [4, 2], [6, 2]]
     n_mean = 6
-    threshold = False
     method = "mc"
 
 
@@ -208,7 +196,6 @@ class MUTAG(FeatureDataset):
     Attributes:
         method = "exact"
         n_mean = 8
-        threshold = False
         unit = "orbits"
         unit_data = [[1, 1], [2], [1, 1, 1, 1], [2, 1, 1], [2, 2], [1, 1, 1, 1, 1, 1], [2, 1, 1, 1, 1], [2, 2, 1, 1], [2, 2, 2]]
     """
@@ -227,5 +214,4 @@ class MUTAG(FeatureDataset):
         [2, 2, 2],
     ]
     n_mean = 8
-    threshold = False
     method = "exact"
