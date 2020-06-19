@@ -256,7 +256,7 @@ def prob(samples: list, excited_state: list) -> float:
     return samples.count(excited_state) / len(samples)
 
 
-def marginal(mu: np.ndarray, V: np.ndarray, n: int) -> np.ndarray:
+def marginal(mu: np.ndarray, V: np.ndarray, n: int, hbar: float = 2.0) -> np.ndarray:
     r"""Generate marginal distributions from the displacement vector and covariance matrix of a
     state.
 
@@ -286,6 +286,7 @@ def marginal(mu: np.ndarray, V: np.ndarray, n: int) -> np.ndarray:
         mu (array): displacement vector
         V (array): covariance matrix
         n (int): number of vibrational states
+        hbar (float): the value of :math:`\hbar` in the commutation relation :math:`[\x,\p]=i\hbar`.
 
     Returns:
         array[list[float]]: marginal distributions
@@ -308,7 +309,7 @@ def marginal(mu: np.ndarray, V: np.ndarray, n: int) -> np.ndarray:
 
     for mode in range(n_modes):
         mui, vi = quantum.reduced_gaussian(mu, V, mode)
-        for i in range(0, n):
-            p[mode, i] = np.real(quantum.density_matrix_element(mui, vi, [i], [i]))
+        for i in range(n):
+            p[mode, i] = np.real(quantum.density_matrix_element(mui, vi, [i], [i], hbar))
 
     return p
