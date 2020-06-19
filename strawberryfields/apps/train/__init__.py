@@ -5,7 +5,7 @@ Tools for training variational GBS devices.
 
 A GBS device can be treated as a variational quantum device with trainable squeezing,
 beamsplitter and rotation gates. This module provides the functionality for training a GBS device
-using the approach outlined in `this paper <https://arxiv.org/abs/2004.04770>`__ 
+using the approach outlined in `this paper <https://arxiv.org/abs/2004.04770>`__
 :cite:`banchi2020training`.
 
 Embedding trainable parameters in GBS
