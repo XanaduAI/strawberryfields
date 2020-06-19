@@ -2,9 +2,10 @@
 
 <h3>New features since last release</h3>
 
-* Feature vectors of graphs can now be calculated exactly in the `similarity` module of the
-  applications layer.
+* Feature vectors of graphs can now be calculated exactly in the `apps.similarity` module of the
+  applications layer. Datasets of pre-calculated feature vectors are available in `apps.data`.
   [(#390)](https://github.com/XanaduAI/strawberryfields/pull/390)
+  [(#401)](https://github.com/XanaduAI/strawberryfields/pull/401)
 
 * Adds the `apps.qchem.dynamics` module for simulating vibrational quantum dynamics in molecules.
   The `dynamics.evolution()` function provides a custom operation that encodes the input chemical
