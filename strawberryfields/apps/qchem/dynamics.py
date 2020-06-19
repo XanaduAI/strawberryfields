@@ -75,11 +75,11 @@ This module contains functions for implementing this algorithm.
 """
 import numpy as np
 from scipy.constants import c, pi
+from thewalrus import quantum
 
 import strawberryfields as sf
 from strawberryfields.utils import operation
 
-from thewalrus import quantum
 
 def evolution(modes: int):
     r"""Generates a custom ``sf`` operation for performing the transformation
@@ -291,8 +291,10 @@ def marginal(mu: np.ndarray, V: np.ndarray, n: int) -> np.ndarray:
         raise ValueError("The covariance matrix must be a square matrix")
 
     if not len(mu) == len(V):
-        raise ValueError("The number of modes in the displacement vector and the covariance matrix"
-                         " must be equal")
+        raise ValueError(
+            "The number of modes in the displacement vector and the covariance matrix"
+            " must be equal"
+        )
 
     if n <= 0:
         raise ValueError("The maximum number of excitations must be larger than zero")
