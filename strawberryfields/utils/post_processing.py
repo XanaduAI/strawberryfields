@@ -19,8 +19,7 @@ import numpy as np
 
 def _product_for_modes(samples, modes=None):
     """Getting the product of samples across modes.
-
-    Args:
+Args:
         samples (ndarray): the photon number samples with a shape
             of (shots, modes)
         modes (Sequence): a flat sequence containing indices of modes to get
@@ -221,31 +220,36 @@ def all_fock_probs_pnr(photon_number_samples):
     the modes or no modes were specified, the marginal probabilities are
     returned.
 
-    **Example:**
+    The Fock basis cutoff truncation is determined by the maximum Fock state
+    with a non-zero probability.
 
-    .. code-block:: python
+    **Example:**
 
     >>> samples = np.array([[2, 0], [2, 2], [2, 0], [0, 0]])
     >>> probs = all_fock_probs_pnr(samples)
 
-    2 out of 4 shots resulted in the ``(2, 0)`` state. We can check if the
-    probability for this state is correct by indexing into ``probs``:
+    2 out of 4 shots had the ``(2, 0)`` outcome, that is
+    :math:`|\braketD{2,0}{\psi}|^2=0.5`. We can check if the probability for
+    this state is correct by indexing into ``probs``:
 
     >>> probs[(2, 0)]
     0.5
 
     We can further check the entire array of probabilities:
+
     >>> probs
     [[0.25 0.   0.  ]
     [0.   0.   0.  ]
     [0.5  0.   0.25]]
 
     Args:
-        photon_number_samples (array): the photon number samples with a shape of ``(shots, modes)``
+        photon_number_samples (array): the photon number samples with a shape
+            of ``(shots, modes)``
 
     Returns:
-        array: array of dimension :math:`\underbrace{D\times D\times D\cdots\times D}_{\text{num modes}}`
-            containing the Fock state probabilities, where :math:`D` is the Fock basis cutoff truncation
+        array: array of dimension :math:`\underbrace{D\times D\times
+            D\cdots\times D}_{\text{num modes}}` containing the Fock state
+            probabilities, where :math:`D` is the Fock basis cutoff truncation
     """
     _check_samples(photon_number_samples)
 
@@ -253,8 +257,8 @@ def all_fock_probs_pnr(photon_number_samples):
 
     shots = photon_number_samples.shape[0]
     num_modes = photon_number_samples.shape[1]
-    max_val = np.max(photon_number_samples)
-    bins = [list(range(max_val + 2)) for i in range(num_modes)]
+    cutoff = np.max(photon_number_samples)
+    bins = [list(range(cutoff + 2)) for i in range(num_modes)]
     H, _ = np.histogramdd(photon_number_samples, bins=bins)
     probabilities = H / shots
     return probabilities
