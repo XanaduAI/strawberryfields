@@ -59,6 +59,7 @@
   `BSgate` and `S2gate` by relying on a recursive implementation recently introduced
   in `thewalrus`. This has substantial effects on the speed of the `Fockbackend` and the `TFbackend`, especially for high cutoff values.
   [(#378)](https://github.com/XanaduAI/strawberryfields/pull/378)
+  [(#381)](https://github.com/XanaduAI/strawberryfields/pull/381)
 
 <h3>Breaking Changes</h3>
 
