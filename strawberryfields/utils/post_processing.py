@@ -17,7 +17,6 @@ This module provides functions for post-processing samples.
 import numpy as np
 
 
-
 def samples_expectation(samples, modes=None):
     r"""Uses samples obtained by a measurement operator to return the
     expectation value of the operator.
@@ -49,8 +48,8 @@ def samples_expectation(samples, modes=None):
     value of the given quadrature operator. For example for samples obtained by
     measuring in the position basis, for a single mode we have :math:`\langle
     \hat{x}_i\rangle`,
-    
-    
+
+
     For multiple modes, the expectation value of the tensor product of the
     momentum operator is obtained: :math:`\langle \hat{x}_{i_0} \otimes
     \hat{x}_{i_1} \otimes \cdots \otimes \hat{x}_{i_m}\rangle`.
@@ -113,7 +112,7 @@ def samples_variance(samples, modes=None):
     value of the given quadrature operator. For example for samples obtained by
     measuring in the position basis, for a single mode we have :math:`Var[
     \hat{x}_i]`
-    
+
     For multiple modes, the variance of the tensor product of the momentum
     operator is obtained: :math:`Var[\hat{x}_{i_0} \otimes \hat{x}_{i_1}
     \otimes \cdots \otimes \hat{x}_{i_m}]`.
@@ -259,6 +258,7 @@ def _check_modes(samples, modes):
         raise Exception(
             f"Cannot specify mode indices {out_of_bounds_modes} for a {num_modes} mode system."
         )
+
 
 __all__ = [
     "samples_expectation",
