@@ -18,10 +18,48 @@ import numpy as np
 
 
 
-def samples_expectation(samples, modes):
-    """Utility function for calculating the expectation value of samples from
-    multiple modes.
+def samples_expectation(samples, modes=None):
+    r"""Uses samples obtained by a measurement operator to return the
+    expectation value of the operator.
 
+    In case samples were obtained for multiple modes, it is assumed that the
+    same measurement operator was used for each mode.
+
+    **Using PNR samples to obtain number expectation**
+
+    If applied to a single mode, this simply corresponds to mean photon number
+    :math:`\langle n_i\rangle`.
+
+    For multiple modes, the expectation value of the tensor product of number
+    operator, :math:`\langle n_{i_0} \otimes n_{i_1} \otimes \cdots \otimes
+    n_{i_m}\rangle` is returned.
+
+    **Example:**
+
+    >>> samples = np.array([[2, 0], [2, 2], [2, 0], [0, 0]])
+    >>> samples_expectation(samples)
+    1.0
+
+    **Using homodyne samples to obtain expectation of the quadrature operators**
+
+    Assuming that samples were obtained after measuring either the \hat{x} or
+    \hat{p} operator.
+
+    If applied to a single mode, this simply corresponds to the expectation
+    value of the given quadrature operator. For example for samples obtained by
+    measuring in the position basis, for a single mode we have :math:`\langle
+    \hat{x}_i\rangle`,
+    
+    
+    For multiple modes, the expectation value of the tensor product of the
+    momentum operator is obtained: :math:`\langle \hat{x}_{i_0} \otimes
+    \hat{x}_{i_1} \otimes \cdots \otimes \hat{x}_{i_m}\rangle`.
+
+    **Example:**
+
+    >>> samples = np.array([[1.23, 0], [12.32, 0.32], [0.3222, 6.34], [0, 3.543]])
+    >>> samples_expectation(samples)
+    1.4962870000000001
 
     Args:
         samples (array): samples with a shape of ``(shots, modes)``
@@ -44,20 +82,46 @@ def samples_expectation(samples, modes):
     return expval
 
 
-def samples_variance(samples, modes):
-    """Utility function for calculating the variance of samples from multiple
-    modes.
+def samples_variance(samples, modes=None):
+    r"""Uses samples obtained by a measurement operator to return the
+    expectation value of the operator.
+
+    In case samples were obtained for multiple modes, it is assumed that the
+    same measurement operator was used for each mode.
+
+    **Using PNR samples to obtain variance of the number operator**
+
+    If applied to a single mode, this simply corresponds to mean photon number
+    :math:`Var[ n_i ]`.
+
+    For multiple modes, the expectation value of the tensor product of number
+    operator, :math:`Var[ n_{i_0} \otimes n_{i_1} \otimes \cdots \otimes
+    n_{i_m} ]` is returned.
 
     **Example:**
 
-    .. code-block:: python
-
     >>> samples = np.array([[2, 0], [2, 2], [2, 0], [0, 0]])
-    >>> number_expectation_pnr(samples)
+    >>> samples_variance(samples)
     3.0
 
+    **Using homodyne samples to obtain variance of the quadrature operator**
+
+    Assuming that samples were obtained after measuring either the \hat{x} or \hat{p}
+    operator.
+
+    If applied to a single mode, this simply corresponds to the expectation
+    value of the given quadrature operator. For example for samples obtained by
+    measuring in the position basis, for a single mode we have :math:`Var[
+    \hat{x}_i]`
+    
+    For multiple modes, the variance of the tensor product of the momentum
+    operator is obtained: :math:`Var[\hat{x}_{i_0} \otimes \hat{x}_{i_1}
+    \otimes \cdots \otimes \hat{x}_{i_m}]`.
+
+    **Example:**
+
     >>> samples = np.array([[1.23, 0], [12.32, 0.32], [0.3222, 6.34], [0, 3.543]])
-    >>> quadrature_expectation_homodyne(samples)
+    >>> samples_variance(samples)
     2.6899595015070004
 
     Args:
@@ -84,7 +148,8 @@ def samples_variance(samples, modes):
 
 
 def all_fock_probs_pnr(photon_number_samples):
-    r"""The Fock state probabilities for the specified modes.
+    r"""The Fock state probabilities for the specified modes obtained from PNR
+    samples.
 
     Measured modes that are not specified are traced over. If either all
     the modes or no modes were specified, the marginal probabilities are
@@ -94,13 +159,7 @@ def all_fock_probs_pnr(photon_number_samples):
 
     .. code-block:: python
 
-        samples = np.array([[2, 0],
-                            [2, 2],
-                            [2, 0],
-                            [0, 0]])
-
-    Getting the probabilities of all the Fock states based on these PNR samples:
-
+    >>> samples = np.array([[2, 0], [2, 2], [2, 0], [0, 0]])
     >>> probs = all_fock_probs_pnr(samples)
 
     2 out of 4 shots resulted in the ``(2, 0)`` state. We can check if the
