@@ -135,7 +135,8 @@ Datasets also contain metadata relevant to the GBS setup:
 >>> len(data)
 50000
 
-The number of photons or clicks in each sample is available using the :meth:`SampleDataset.counts` method:
+The number of photons or clicks in each sample is available using the
+:meth:`~.SampleDataset.counts` method:
 
 >>> data.counts()
 [2, 0, 8, 11, ... , 6]
