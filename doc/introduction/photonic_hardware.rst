@@ -137,6 +137,10 @@ tutorials.
     :description: :doc:`demos/tutorial_X8`
     :figure: /_static/chip.png
 
+.. customgalleryitem::
+    :tooltip: Characterize the squeezing of the X8 chip
+    :description: :doc:`demos/squeezer_tests`
+
 .. raw:: html
 
         <div style='clear:both'></div>
