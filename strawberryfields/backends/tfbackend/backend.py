@@ -142,20 +142,20 @@ class TFBackend(BaseFock):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_vacuum_state(remapped_mode)
 
-    def prepare_coherent_state(self, alpha, mode):
+    def prepare_coherent_state(self, r, phi, mode):
         with tf.name_scope("Prepare_coherent"):
             remapped_mode = self._remap_modes(mode)
-            self.circuit.prepare_coherent_state(alpha, remapped_mode)
+            self.circuit.prepare_coherent_state(r, phi, remapped_mode)
 
     def prepare_squeezed_state(self, r, phi, mode):
         with tf.name_scope("Prepare_squeezed"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_squeezed_state(r, phi, remapped_mode)
 
-    def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
+    def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
         with tf.name_scope("Prepare_displaced_squeezed"):
             remapped_mode = self._remap_modes(mode)
-            self.circuit.prepare_displaced_squeezed_state(alpha, r, phi, remapped_mode)
+            self.circuit.prepare_displaced_squeezed_state(r_d, phi_d, r_s, phi_s, remapped_mode)
 
     def prepare_fock_state(self, n, mode):
         with tf.name_scope("Prepare_fock"):
@@ -180,25 +180,25 @@ class TFBackend(BaseFock):
             remapped_mode = self._remap_modes(mode)
             self.circuit.phase_shift(phi, remapped_mode)
 
-    def displacement(self, alpha, mode):
+    def displacement(self, r, phi, mode):
         with tf.name_scope("Displacement"):
             remapped_mode = self._remap_modes(mode)
-            self.circuit.displacement(alpha, remapped_mode)
+            self.circuit.displacement(r, phi, remapped_mode)
 
-    def squeeze(self, z, mode):
+    def squeeze(self, r, phi, mode):
         with tf.name_scope("Squeeze"):
             remapped_mode = self._remap_modes(mode)
-            self.circuit.squeeze(z, remapped_mode)
+            self.circuit.squeeze(r, phi, remapped_mode)
 
-    def beamsplitter(self, t, r, mode1, mode2):
+    def beamsplitter(self, theta, phi, mode1, mode2):
         with tf.name_scope("Beamsplitter"):
-            if isinstance(t, complex):
-                raise ValueError("Beamsplitter transmittivity t must be a float.")
-            if isinstance(t, tf.Tensor):
-                if t.dtype.is_complex:
-                    raise ValueError("Beamsplitter transmittivity t must be a float.")
             remapped_modes = self._remap_modes([mode1, mode2])
-            self.circuit.beamsplitter(t, r, remapped_modes[0], remapped_modes[1])
+            self.circuit.beamsplitter(theta, phi, remapped_modes[0], remapped_modes[1])
+
+    def two_mode_squeeze(self, r, phi, mode1, mode2):
+        with tf.name_scope("Two-mode_squeezing"):
+            remapped_modes = self._remap_modes([mode1, mode2])
+            self.circuit.two_mode_squeeze(r, phi, remapped_modes[0], remapped_modes[1])
 
     def loss(self, T, mode):
         with tf.name_scope("Loss"):

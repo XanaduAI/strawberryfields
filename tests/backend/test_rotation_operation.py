@@ -43,10 +43,10 @@ class TestFockRepresentation:
     @pytest.mark.parametrize("theta", SHIFT_THETAS)
     def test_normalized_rotated_coherent_states(self, setup_backend, theta, tol):
         """Tests if a range of phase-shifted coherent states are normalized."""
-        alpha = 1.0
+        r = 1.0
         backend = setup_backend(1)
 
-        backend.prepare_coherent_state(alpha, 0)
+        backend.prepare_coherent_state(r, 0, 0)
         backend.rotation(theta, 0)
 
         state = backend.state()

@@ -35,7 +35,7 @@ class TestRepresentationIndependent:
     def test_no_displacement(self, setup_backend, tol):
         """Tests displacement operation where the result should be a vacuum state."""
         backend = setup_backend(1)
-        backend.displacement(0, 0)
+        backend.displacement(0, 0, 0)
         assert np.all(backend.is_vacuum(tol))
 
     @pytest.mark.parametrize("r", MAG_ALPHAS)
@@ -47,7 +47,7 @@ class TestRepresentationIndependent:
         alpha = r * np.exp(1j * p)
 
         backend = setup_backend(1)
-        backend.displacement(alpha, 0)
+        backend.displacement(r, p, 0)
         state = backend.state()
 
         fid = state.fidelity_coherent([alpha])
@@ -62,10 +62,9 @@ class TestFockRepresentation:
     @pytest.mark.parametrize("p", PHASE_ALPHAS)
     def test_normalized_displaced_state(self, setup_backend, r, p, tol):
         """Tests if a range of displaced states are normalized."""
-        alpha = r * np.exp(1j * p)
 
         backend = setup_backend(1)
-        backend.displacement(alpha, 0)
+        backend.displacement(r, p, 0)
         state = backend.state()
 
         assert np.allclose(state.trace(), 1, atol=tol, rtol=0)
@@ -76,10 +75,9 @@ class TestFockRepresentation:
         r"""Tests if a range of alpha-displaced states have the correct Fock basis elements:
            |\alpha> = exp(-0.5 |\alpha|^2) \sum_n \alpha^n / \sqrt{n!} |n>
         """
-        alpha = r * np.exp(1j * p)
 
         backend = setup_backend(1)
-        backend.displacement(alpha, 0)
+        backend.displacement(r, p, 0)
         state = backend.state()
 
         if state.is_pure:
@@ -88,7 +86,7 @@ class TestFockRepresentation:
             numer_state = state.dm()
 
         n = np.arange(cutoff)
-        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
+        ref_state = np.exp(-0.5 * r ** 2) * (r*np.exp(1j*p)) ** n / np.sqrt(fac(n))
 
         if not pure:
             ref_state = np.outer(ref_state, np.conj(ref_state))
