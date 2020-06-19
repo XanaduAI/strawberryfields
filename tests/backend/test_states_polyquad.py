@@ -136,7 +136,7 @@ class TestSingleModePolyQuadratureExpectations:
         k = 0
 
         # prepare a squeezed state
-        backend.squeeze(r, 0)
+        backend.squeeze(r, 0, 0)
 
         state = backend.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=0)
@@ -153,7 +153,7 @@ class TestSingleModePolyQuadratureExpectations:
         k = 0
 
         # prepare a displaced state
-        backend.displacement(a, 0)
+        backend.displacement(np.abs(a), np.angle(a), 0)
 
         state = backend.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=0)
@@ -171,7 +171,7 @@ class TestSingleModePolyQuadratureExpectations:
         k = 0
 
         # prepare a displaced squeezed state
-        backend.prepare_displaced_squeezed_state(a, r, phi, 0)
+        backend.prepare_displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, 0)
 
         state = backend.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=qphi)
@@ -189,7 +189,7 @@ class TestSingleModePolyQuadratureExpectations:
         k = 0
 
         # prepare a displaced squeezed state
-        backend.prepare_displaced_squeezed_state(a, r, phi, 0)
+        backend.prepare_displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, 0)
 
         state = backend.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=qphi)
@@ -207,7 +207,7 @@ class TestSingleModePolyQuadratureExpectations:
         k = 0
 
         # prepare a displaced squeezed state
-        backend.prepare_displaced_squeezed_state(a, r, phi, 0)
+        backend.prepare_displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, 0)
 
         state = backend.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=qphi)
@@ -276,7 +276,7 @@ class TestSingleModePolyQuadratureExpectations:
         k = 0
 
         # prepare a displaced squeezed state
-        backend.prepare_displaced_squeezed_state(a, r, phi, 0)
+        backend.prepare_displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, 0)
 
         state = backend.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=qphi)
@@ -297,7 +297,7 @@ class TestSingleModePolyQuadratureExpectations:
         k = 0
 
         # prepare a displaced squeezed state
-        backend.prepare_displaced_squeezed_state(a, r, phi, 0)
+        backend.prepare_displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, 0)
 
         state = backend.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=qphi)
@@ -345,7 +345,7 @@ class TestSingleModePolyQuadratureExpectations:
         k = 0
 
         # prepare a displaced squeezed state
-        backend.prepare_displaced_squeezed_state(a, r, phi, 0)
+        backend.prepare_displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, 0)
 
         state = backend.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=qphi)
@@ -382,7 +382,7 @@ class TestSingleModePolyQuadratureExpectations:
         k = 5
 
         # prepare a displaced squeezed state
-        backend.prepare_displaced_squeezed_state(a, r, phi, 0)
+        backend.prepare_displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, 0)
 
         state = backend.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=qphi)
@@ -429,7 +429,7 @@ class TestMultiModePolyQuadratureExpectations:
 
         # squeeze and displace each mode
         for i, (a_, r_, phi_) in enumerate(zip(a_list, r_list, phi_list)):
-            backend.prepare_displaced_squeezed_state(a_, r_, phi_, i)
+            backend.prepare_displaced_squeezed_state(np.abs(a_), np.angle(a_), r_, phi_, i)
             mu[2 * i : 2 * i + 2] = (
                 R(qphi).T @ np.array([a_.real, a_.imag]) * np.sqrt(2 * hbar)
             )
@@ -438,8 +438,8 @@ class TestMultiModePolyQuadratureExpectations:
             )
 
         # apply a beamsplitter to the modes
-        backend.beamsplitter(1 / np.sqrt(2), 1 / np.sqrt(2), 0, 1)
-        backend.beamsplitter(1 / np.sqrt(2), 1 / np.sqrt(2), 1, 2)
+        backend.beamsplitter(np.pi/4, 0.0, 0, 1)
+        backend.beamsplitter(np.pi/4, 0.0, 1, 2)
 
         state = backend.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=qphi)

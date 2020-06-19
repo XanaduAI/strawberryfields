@@ -237,14 +237,15 @@ class BaseBackend:
         """
         raise NotImplementedError
 
-    def prepare_coherent_state(self, alpha, mode):
+    def prepare_coherent_state(self, r, phi, mode):
         r"""Prepare a coherent state in the specified mode.
 
-        The requested mode is traced out and replaced with the coherent state :math:`\ket{\alpha}`.
+        The requested mode is traced out and replaced with the coherent state :math:`\ket{r e^{i\phi}}`.
         As a result the state may have to be described using a density matrix.
 
         Args:
-            alpha (complex): coherent state displacement parameter
+            r (float): coherent state displacement amplitude
+            phi (float): coherent state displacement phase
             mode (int): which mode to prepare the coherent state in
         """
         raise NotImplementedError
@@ -263,17 +264,19 @@ class BaseBackend:
         """
         raise NotImplementedError
 
-    def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
+    def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
         r"""Prepare a displaced squeezed state in the specified mode.
 
-        The requested mode is traced out and replaced with the displaced squeezed
-        state state :math:`\ket{\alpha, z}`, where :math:`z=re^{i\phi}`.
+        The requested mode is traced out and replaced with the displaced
+        squeezed state :math:`\ket{\alpha, z}`, where :math:`\alpha=r_d
+        e^{i\phi_d}` and :math:`z=r_s e^{i\phi_s}`.
         As a result the state may have to be described using a density matrix.
 
         Args:
-            alpha (complex): displacement parameter
-            r (float): squeezing amplitude
-            phi (float): squeezing angle
+            r_d (float): displacement amplitude
+            phi_d (float): displacement angle
+            r_s (float): squeezing amplitude
+            phi_s (float): squeezing angle
             mode (int): which mode to prepare the squeezed state in
         """
         raise NotImplementedError
@@ -299,32 +302,32 @@ class BaseBackend:
         """
         raise NotImplementedError
 
-    def displacement(self, alpha, mode):
+    def displacement(self, r, phi, mode):
         """Apply the displacement operation to the specified mode.
 
         Args:
-            alpha (complex): displacement parameter
+            r (float): displacement amplitude
+            phi(float): displacement angle
             mode (int): which mode to apply the displacement to
         """
         raise NotImplementedError
 
-    def squeeze(self, z, mode):
+    def squeeze(self, r, phi, mode):
         """Apply the squeezing operation to the specified mode.
 
         Args:
-            z (complex): squeezing parameter
+            r (float): squeezing amplitude
+            phi(float): squeezing angle
             mode (int): which mode to apply the squeeze to
         """
         raise NotImplementedError
 
-    def beamsplitter(self, t, r, mode1, mode2):
+    def beamsplitter(self, theta, phi, mode1, mode2):
         """Apply the beamsplitter operation to the specified modes.
 
-        It is assumed that :math:`|r|^2+|t|^2 = t^2+|r|^2=1`, i.e that t is real.
-
         Args:
-            t (float): transmitted amplitude
-            r (complex): reflected amplitude (with phase)
+            theta (float): transmissivity is cos(theta)
+            phi (float): phase angle
             mode1 (int): first mode that beamsplitter acts on
             mode2 (int): second mode that beamsplitter acts on
         """
