@@ -50,8 +50,11 @@ Common methods and attributes
     num_modes
     mode_names
     mode_indices
+    ket
+    dm
     reduced_dm
     fock_prob
+    all_fock_probs
     mean_photon
     fidelity
     fidelity_vacuum
@@ -59,6 +62,10 @@ Common methods and attributes
     wigner
     quad_expectation
     poly_quad_expectation
+    number_expectation
+    parity_expectation
+    p_quad_values
+    x_quad_values
 
 :html:`</div>`
 
@@ -70,7 +77,7 @@ Backend that represent the quantum state using the Gaussian formalism
 (such as the ``gaussian`` backend) will return a ``GaussianState`` object,
 with the following methods and attributes.
 
-.. currentmodule:: strawberryfields.backends.gaussianbackend.states.GaussianState
+.. currentmodule:: strawberryfields.backends.BaseGaussianState
 
 :html:`<div class="summary-table">`
 
@@ -82,12 +89,6 @@ with the following methods and attributes.
     is_squeezed
     displacement
     squeezing
-    reduced_dm
-    fock_prob
-    mean_photon
-    fidelity
-    fidelity_vacuum
-    fidelity_coherent
 
 :html:`</div>`
 
@@ -105,9 +106,6 @@ object.
 
 .. autosummary::
     cutoff_dim
-    ket
-    dm
     trace
-    all_fock_probs
 
 :html:`</div>`

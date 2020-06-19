@@ -36,11 +36,12 @@ class TestRepresentationIndependent:
     @pytest.mark.parametrize("phi", SQZ_PHI)
     def test_no_squeezing_no_displacement(self, setup_backend, phi, tol):
         """Tests squeezing operation in the limiting case where the result should be a vacuum state."""
-        alpha = 0
+        mag_alpha = 0
+        phase_alpha = 0
         r = 0
 
         backend = setup_backend(1)
-        backend.prepare_displaced_squeezed_state(alpha, r, phi, 0)
+        backend.prepare_displaced_squeezed_state(mag_alpha, phase_alpha, r, phi, 0)
         assert np.all(backend.is_vacuum(tol))
 
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS)
@@ -53,7 +54,7 @@ class TestRepresentationIndependent:
         alpha = mag_alpha * np.exp(1j * phase_alpha)
         backend = setup_backend(1)
 
-        backend.prepare_displaced_squeezed_state(alpha, r, phi, 0)
+        backend.prepare_displaced_squeezed_state(mag_alpha, phase_alpha, r, phi, 0)
         state = backend.state()
         fidel = state.fidelity_coherent([alpha])
         assert np.allclose(fidel, 1, atol=tol, rtol=0)
@@ -71,10 +72,10 @@ class TestFockRepresentation:
         self, setup_backend, mag_alpha, phase_alpha, r, phi, tol
     ):
         """Tests if a range of squeezed vacuum states are normalized."""
-        alpha = mag_alpha * np.exp(1j * phase_alpha)
+        # alpha = mag_alpha * np.exp(1j * phase_alpha)
         backend = setup_backend(1)
 
-        backend.prepare_displaced_squeezed_state(alpha, r, phi, 0)
+        backend.prepare_displaced_squeezed_state(mag_alpha, phase_alpha, r, phi, 0)
         state = backend.state()
         tr = state.trace()
         assert np.allclose(tr, 1, atol=tol, rtol=0)
@@ -85,10 +86,11 @@ class TestFockRepresentation:
         self, setup_backend, r, phi, cutoff, batch_size, pure, tol
     ):
         """Tests if a squeezed coherent state with no displacement is equal to a squeezed state (Eq. (5.5.6) in Loudon)."""
-        alpha = 0
+        mag_alpha = 0
+        phase_alpha = 0
         backend = setup_backend(1)
 
-        backend.prepare_displaced_squeezed_state(alpha, r, phi, 0)
+        backend.prepare_displaced_squeezed_state(mag_alpha, phase_alpha, r, phi, 0)
         state = backend.state()
 
         if state.is_pure:
