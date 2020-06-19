@@ -326,3 +326,49 @@ class TestProb:
         with pytest.raises(ValueError, match="The excited state must not contain negative values"):
             samples, state, _ = e
             dynamics.prob(samples, [-i for i in state])
+
+
+class TestMarginal:
+    """Tests for the function ``strawberryfields.apps.qchem.dynamics.marginal``"""
+
+    mu = np.array([0.00000000, 2.82842712, 0.00000000,
+                   0.00000000, 0.00000000, 0.00000000])
+    V = np.array([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                  [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                  [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
+    n = 10
+    p = np.array([[1.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
+                   0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
+                   0.00000000e+00, 0.00000000e+00],
+                   [1.35335284e-01, 2.70670567e-01, 2.70670566e-01, 1.80447044e-01,
+                   9.02235216e-02, 3.60894085e-02, 1.20298028e-02, 3.43708650e-03,
+                   8.59271622e-04, 1.90949249e-04],
+                   [1.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
+                   0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
+                   0.00000000e+00, 0.00000000e+00]])
+
+    def test_correct_marginal(self):
+        """Test if the function returns the correct probabilities"""
+        assert np.allclose(dynamics.marginal(self.mu, self.V, self.n), self.p)
+
+    def test_square_covariance(self):
+        """Test if function raises a ``ValueError`` when the covariance matrix is not square."""
+        with pytest.raises(ValueError, match="The covariance matrix must be a square matrix"):
+            dynamics.marginal(self.mu, np.hstack((self.V, np.ones((6,1)))), self.n)
+
+    def test_incorrect_modes(self):
+        """Test if function raises a ``ValueError`` when the number of modes in the displacement
+        vector and the covariance matrix are different."""
+        with pytest.raises(
+            ValueError, match="The number of modes in the displacement vector and the covariance"
+        ):
+            dynamics.marginal(np.append(self.mu, 0), self.V, self.n)
+
+    def test_incorrect_excitation(self):
+        """Test if function raises a ``ValueError`` when the maximum number of excitations is not
+        larger than zero."""
+        with pytest.raises(ValueError, match="The maximum number of excitations must be larger"):
+            dynamics.marginal(self.mu, self.V, 0)
