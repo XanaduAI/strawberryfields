@@ -11,10 +11,12 @@
   information for use in a Strawberry Fields `Program`. The `dynamics.sample_fock()` function allows
   for generation of samples from an input Fock state. The probability of an excited state can
   then be estimated with the `dynamics.prob()` function, which calculates the relative frequency
-  of the excited state among the generated samples. 
+  of the excited state among the generated samples. The `dynamics.marginal()` function generates
+  marginal distributions.
   [(#402)](https://github.com/XanaduAI/strawberryfields/pull/402)
   [(#411)](https://github.com/XanaduAI/strawberryfields/pull/411)
   [(#419)](https://github.com/XanaduAI/strawberryfields/pull/419)
+  [(#421)](https://github.com/XanaduAI/strawberryfields/pull/421)
 
 * The `GaussianState` returned from simulations using the Gaussian backend
   now has feature parity with the `FockState` object returned from the Fock backends.

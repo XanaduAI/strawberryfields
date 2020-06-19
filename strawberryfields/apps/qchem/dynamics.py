@@ -70,8 +70,11 @@ This module contains functions for implementing this algorithm.
 - The function :func:`~.sample_fock` generates samples for simulating vibrational quantum dynamics
   in molecules with a Fock input state.
 
-- The function :func:`~.prob` computes the probability of observing a desired excitation in the
+- The function :func:`~.prob` estimates the probability of observing a desired excitation in the
   generated samples.
+
+- The function :func:`~.marginal` generates marginal distributions from the displacement vector and
+  covariance matrix of a state.
 """
 import numpy as np
 from scipy.constants import c, pi
@@ -282,7 +285,7 @@ def marginal(mu: np.ndarray, V: np.ndarray, n: int) -> np.ndarray:
     Args:
         mu (array): displacement vector
         V (array): covariance matrix
-        n (int): maximum number of excitations
+        n (int): number of states
 
     Returns:
         array[list[float]]: marginal distributions
@@ -297,7 +300,7 @@ def marginal(mu: np.ndarray, V: np.ndarray, n: int) -> np.ndarray:
         )
 
     if n <= 0:
-        raise ValueError("The maximum number of excitations must be larger than zero")
+        raise ValueError("The number of states must be larger than zero")
 
     n_modes = len(mu) // 2
 

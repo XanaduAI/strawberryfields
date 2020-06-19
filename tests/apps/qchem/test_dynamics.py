@@ -401,8 +401,8 @@ class TestMarginal:
         ):
             dynamics.marginal(np.append(self.mu, 0), self.V, self.n)
 
-    def test_incorrect_excitation(self):
-        """Test if function raises a ``ValueError`` when the maximum number of excitations is not
-        larger than zero."""
-        with pytest.raises(ValueError, match="The maximum number of excitations must be larger"):
+    def test_incorrect_states(self):
+        """Test if function raises a ``ValueError`` when the number of states is not larger than
+        zero."""
+        with pytest.raises(ValueError, match="The number of states must be larger than zero"):
             dynamics.marginal(self.mu, self.V, 0)
