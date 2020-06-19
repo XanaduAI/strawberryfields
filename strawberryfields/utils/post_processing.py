@@ -17,123 +17,11 @@ This module provides functions for post-processing samples.
 import numpy as np
 
 
-def number_expectation_pnr(photon_number_samples, modes=None):
-    """The expectation value of the number operator from PNR samples.
 
-    If applied to a single mode, this simply corresponds to mean photon number
-    :math:`\langle n_i\rangle`.
-
-    For multiple modes, the expectation value of the tensor of number
-    operators, :math:`\langle n_{i_0} \otimes n_{i_1} \otimes \cdots \otimes
-    n_{i_m}\rangle` is returned.
-
-    **Example:**
-
-    >>> samples = np.array([[2, 0], [2, 2], [2, 0], [0, 0]])
-    >>> number_expectation_pnr(samples)
-    1.0
-
-    Args:
-        photon_number_samples (ndarray): the photon number samples with a shape
-            of ``(shots, modes)``
-        modes (Sequence): indices of modes to compute the expectation value over
-
-    Returns:
-        float: the expectation value from the samples
-    """
-    return _samples_expectation(photon_number_samples, modes)
-
-
-def number_variance_pnr(photon_number_samples, modes=None):
-    """The variance of the number operator from PNR samples.
-
-    **Example:**
-
-    .. code-block:: python
-
-    >>> samples = np.array([[2, 0], [2, 2], [2, 0], [0, 0]])
-    >>> number_expectation_pnr(samples)
-    3.0
-
-    Args:
-        photon_number_samples (ndarray): the photon number samples with a shape
-            of (shots, modes)
-        modes (Sequence): a flat sequence containing indices of modes to get
-            the variance for
-
-    Returns:
-        float: the variance from the samples
-    """
-    return _samples_variance(photon_number_samples, modes)
-
-
-def quadrature_expectation_homodyne(homodyne_samples, modes=None):
-    """The expectation value of a quadrature operator from homodyne samples.
-
-    It is assumed that samples were obtained after measuring either the X or P
-    operator.
-
-    **Example:**
-
-    .. code-block:: python
-
-        samples = np.array([[1.23, 0],
-                            [12.32, 0.32],
-                            [0.3222, 6.34],
-                            [0, 3.543]])
-
-    Getting the expectation value for these homodyne samples:
-
-    >>> quadrature_expectation_homodyne(samples)
-    1.4962870000000001
-
-    Args:
-        homodyne_samples (ndarray): the homodyne samples with a shape of
-            (shots, modes)
-        modes (Sequence): a flat sequence containing indices of modes to get
-            the expectation value for
-
-    Returns:
-        float: the expectation value from the samples
-    """
-    return _samples_expectation(homodyne_samples, modes)
-
-
-def quadrature_variance_homodyne(homodyne_samples, modes=None):
-    """The variance of a quadrature operator from homodyne samples.
-
-    It is assumed that samples were obtained after measuring either the X or P
-    operator.
-
-    **Example:**
-
-    .. code-block:: python
-
-        samples = np.array([[1.23, 0],
-                            [12.32, 0.32],
-                            [0.3222, 6.34],
-                            [0, 3.543]])
-
-    Getting the variance for these homodyne samples:
-
-    >>> quadrature_variance_homodyne(samples)
-    2.6899595015070004
-
-    Args:
-        homodyne_samples (ndarray): the homodyne samples with a shape of
-            (shots, modes)
-        modes (Sequence): a flat sequence containing indices of modes to get
-            the variance for
-
-    Returns:
-        float: the variance from the samples
-    """
-    return _samples_variance(homodyne_samples, modes)
-
-
-def _samples_expectation(samples, modes):
+def samples_expectation(samples, modes):
     """Utility function for calculating the expectation value of samples from
     multiple modes.
+
 
     Args:
         samples (array): samples with a shape of ``(shots, modes)``
@@ -156,9 +44,21 @@ def _samples_expectation(samples, modes):
     return expval
 
 
-def _samples_variance(samples, modes):
+def samples_variance(samples, modes):
     """Utility function for calculating the variance of samples from multiple
     modes.
+
+    **Example:**
+
+    .. code-block:: python
+
+    >>> samples = np.array([[2, 0], [2, 2], [2, 0], [0, 0]])
+    >>> number_expectation_pnr(samples)
+    3.0
+
+    >>> samples = np.array([[1.23, 0], [12.32, 0.32], [0.3222, 6.34], [0, 3.543]])
+    >>> quadrature_expectation_homodyne(samples)
+    2.6899595015070004
 
     Args:
         homodyne_samples (ndarray): the homodyne samples with a shape of
@@ -301,28 +201,8 @@ def _check_modes(samples, modes):
             f"Cannot specify mode indices {out_of_bounds_modes} for a {num_modes} mode system."
         )
 
-
-# Convenience names
-number_expectation = number_expectation_pnr
-number_variance = number_variance_pnr
-position_expectation = quadrature_expectation_homodyne
-position_variance = quadrature_variance_homodyne
-momentum_expectation = quadrature_expectation_homodyne
-momentum_variance = quadrature_variance_homodyne
-all_fock_probs = all_fock_probs_pnr
-
-shorthands = [
-    "number_expectation",
-    "number_variance",
-    "position_expectation",
-    "position_variance",
-    "momentum_expectation",
-    "momentum_variance",
-]
-
 __all__ = [
-    "number_expectation_pnr",
-    "number_variance_pnr",
-    "quadrature_variance_homodyne",
+    "samples_expectation",
+    "samples_variance",
     "all_fock_probs_pnr",
-] + shorthands
+]
