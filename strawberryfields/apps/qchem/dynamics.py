@@ -256,9 +256,9 @@ def prob(samples: list, excited_state: list) -> float:
     return samples.count(excited_state) / len(samples)
 
 
-def marginal(mu: np.ndarray, V: np.ndarray, n: int, hbar: float = 2.0) -> np.ndarray:
-    r"""Generate marginal distributions from the displacement vector and covariance matrix of a
-    state.
+def marginal(mu: np.ndarray, V: np.ndarray, n_max: int, hbar: float = 2.0) -> np.ndarray:
+    r"""Generate single-mode marginal distributions from the displacement vector and covariance
+    matrix of a state.
 
     **Example usage:**
 
@@ -270,8 +270,8 @@ def marginal(mu: np.ndarray, V: np.ndarray, n: int, hbar: float = 2.0) -> np.nda
     >>>               [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
     >>>               [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
     >>>               [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
-    >>> n = 10
-    >>> marginal(mu, V, n)
+    >>> n_max = 10
+    >>> marginal(mu, V, n_max)
     array([[1.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
             0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
             0.00000000e+00, 0.00000000e+00],
@@ -285,7 +285,7 @@ def marginal(mu: np.ndarray, V: np.ndarray, n: int, hbar: float = 2.0) -> np.nda
     Args:
         mu (array): displacement vector
         V (array): covariance matrix
-        n (int): number of vibrational states
+        n_max (int): maximum number of vibrational quanta in the distribution
         hbar (float): the value of :math:`\hbar` in the commutation relation :math:`[\x,\p]=i\hbar`.
 
     Returns:
@@ -296,20 +296,19 @@ def marginal(mu: np.ndarray, V: np.ndarray, n: int, hbar: float = 2.0) -> np.nda
 
     if not len(mu) == len(V):
         raise ValueError(
-            "The number of modes in the displacement vector and the covariance matrix"
-            " must be equal"
+            "The dimension of the displacement vector and the covariance matrix" " must be equal"
         )
 
-    if n <= 0:
+    if n_max <= 0:
         raise ValueError("The number of vibrational states must be larger than zero")
 
     n_modes = len(mu) // 2
 
-    p = np.zeros([n_modes, n])
+    p = np.zeros((n_modes, n_max))
 
     for mode in range(n_modes):
         mui, vi = quantum.reduced_gaussian(mu, V, mode)
-        for i in range(n):
+        for i in range(n_max):
             p[mode, i] = np.real(quantum.density_matrix_element(mui, vi, [i], [i], hbar))
 
     return p

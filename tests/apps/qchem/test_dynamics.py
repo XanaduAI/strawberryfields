@@ -345,18 +345,7 @@ class TestMarginal:
     n = 10
     p = np.array(
         [
-            [
-                1.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-            ],
+            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,],
             [
                 1.35335284e-01,
                 2.70670567e-01,
@@ -369,18 +358,7 @@ class TestMarginal:
                 8.59271622e-04,
                 1.90949249e-04,
             ],
-            [
-                1.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-                0.00000000e00,
-            ],
+            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,],
         ]
     )
 
@@ -397,7 +375,7 @@ class TestMarginal:
         """Test if function raises a ``ValueError`` when the number of modes in the displacement
         vector and the covariance matrix are different."""
         with pytest.raises(
-            ValueError, match="The number of modes in the displacement vector and the covariance"
+            ValueError, match="The dimension of the displacement vector and the covariance"
         ):
             dynamics.marginal(np.append(self.mu, 0), self.V, self.n)
 
