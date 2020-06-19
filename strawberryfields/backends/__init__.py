@@ -30,7 +30,7 @@ preserved between engine runs.
 
     FockBackend
     GaussianBackend
-    TFBackend
+    ~tfbackend.TFBackend
 
 .. raw:: html
 
@@ -80,9 +80,10 @@ backend development.
 from .base import BaseBackend, BaseFock, BaseGaussian, ModeMap
 from .gaussianbackend import GaussianBackend
 from .fockbackend import FockBackend
-from .tfbackend import TFBackend
 from .states import BaseState, BaseGaussianState, BaseFockState
 
+# There is no import for the TFBackend to avoid TensorFlow being a direct
+# requirement of SF through a chain of imports
 
 __all__ = [
     "BaseBackend",
