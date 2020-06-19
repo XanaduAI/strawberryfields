@@ -285,7 +285,7 @@ def marginal(mu: np.ndarray, V: np.ndarray, n: int) -> np.ndarray:
     Args:
         mu (array): displacement vector
         V (array): covariance matrix
-        n (int): number of states
+        n (int): number of vibrational states
 
     Returns:
         array[list[float]]: marginal distributions
@@ -300,7 +300,7 @@ def marginal(mu: np.ndarray, V: np.ndarray, n: int) -> np.ndarray:
         )
 
     if n <= 0:
-        raise ValueError("The number of states must be larger than zero")
+        raise ValueError("The number of vibrational states must be larger than zero")
 
     n_modes = len(mu) // 2
 

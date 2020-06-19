@@ -402,7 +402,7 @@ class TestMarginal:
             dynamics.marginal(np.append(self.mu, 0), self.V, self.n)
 
     def test_incorrect_states(self):
-        """Test if function raises a ``ValueError`` when the number of states is not larger than
-        zero."""
-        with pytest.raises(ValueError, match="The number of states must be larger than zero"):
+        """Test if function raises a ``ValueError`` when the number of vibrational states is not
+        larger than zero."""
+        with pytest.raises(ValueError, match="The number of vibrational states must be larger"):
             dynamics.marginal(self.mu, self.V, 0)
