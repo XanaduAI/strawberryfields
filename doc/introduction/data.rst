@@ -93,7 +93,7 @@ been generated for formic acid at zero temperature. The GBS samples can be used 
 Dataset
 -------
 
-The :class:`Dataset` class provides the base functionality from which all datasets inherit.
+The :class:`~.SampleDataset` class provides the base functionality from which all datasets inherit.
 
 Each dataset contains a variety of metadata relevant to the sampling:
 
@@ -135,7 +135,8 @@ Datasets also contain metadata relevant to the GBS setup:
 >>> len(data)
 50000
 
-The number of photons or clicks in each sample is available using the :meth:`Dataset.counts` method:
+The number of photons or clicks in each sample is available using the
+:meth:`~.SampleDataset.counts` method:
 
 >>> data.counts()
 [2, 0, 8, 11, ... , 6]
