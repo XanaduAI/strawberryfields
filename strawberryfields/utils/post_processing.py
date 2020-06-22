@@ -38,8 +38,7 @@ def _check_samples(samples):
     Checks include data types checks and dimension of the input samples.
 
     Args:
-        samples (ndarray): the photon number samples with a shape of (shots,
-            modes)
+        samples (array): the photon number samples with a shape of ``(shots, modes)``
     """
     if not isinstance(samples, np.ndarray) or samples.ndim != 2:
         raise Exception("Samples needs to be represented as a two dimensional NumPy array.")
@@ -52,10 +51,8 @@ def _check_modes(samples, modes):
     and the validity of the modes specified.
 
     Args:
-        samples (ndarray): the photon number samples with a shape
-            of (shots, modes)
-        modes (Sequence): the input modes to get the expectation value for, a
-            flattened sequence
+        samples (array): the photon number samples with a shape of ``(shots, modes)``
+        modes (Sequence): the input modes to get the expectation value for
     """
     num_modes = samples.shape[1]
     flattened_sequence_indices_msg = (
