@@ -41,7 +41,7 @@ def _check_samples(samples):
         samples (array): the photon number samples with a shape of ``(shots, modes)``
     """
     if not isinstance(samples, np.ndarray) or samples.ndim != 2:
-        raise Exception("Samples needs to be represented as a two dimensional NumPy array.")
+        raise ValueError("Samples needs to be represented as a two dimensional NumPy array.")
 
 
 def _check_modes(samples, modes):
@@ -61,20 +61,22 @@ def _check_modes(samples, modes):
 
     modes = np.array(modes)
 
-    # Checking if modes is a valid flattened sequence of indices
+    # Extracting non index modes while also checking that the type of the
+    # objects in the array is correct E.g. a TypeError is raised for an array
+    # containing lists
     try:
         non_index_modes = modes[(np.mod(modes, 1) != 0) | (modes < 0)]
-    except Exception:
-        raise Exception(flattened_sequence_indices_msg)
+    except TypeError:
+        raise TypeError(flattened_sequence_indices_msg)
 
     if modes.ndim != 1 or non_index_modes.size > 0 or len(modes) == 0:
-        raise Exception(flattened_sequence_indices_msg)
+        raise ValueError(flattened_sequence_indices_msg)
 
     # Checking if valid modes were specified
     largest_valid_index = num_modes - 1
     out_of_bounds_modes = modes[modes > largest_valid_index]
     if out_of_bounds_modes.size > 0:
-        raise Exception(
+        raise ValueError(
             f"Cannot specify mode indices {out_of_bounds_modes} for a {num_modes} mode system."
         )
 

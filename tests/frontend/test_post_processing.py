@@ -207,24 +207,39 @@ class TestInputValidation:
         input samples is incorrect."""
         modes = [0, 1]
         with pytest.raises(
-            Exception, match="Samples needs to be represented as a two dimensional NumPy array."
+            ValueError, match="Samples needs to be represented as a two dimensional NumPy array."
         ):
             _check_samples(samples)
 
-    # Arbitrary sequences that are considered invalid during the input checks
-    invalid_modes_sequences = [
+    # Arbitrary sequences that are considered to have invalid types during the
+    # input checks
+    invalid_type_modes_sequences = [
         np.array([list([0]), list([1, 2])]),
+    ]
+
+    @pytest.mark.parametrize("modes", invalid_type_modes_sequences)
+    def test_invalid_modes_sequence(self, modes):
+        """Tests that an error is raised if the modes array specified contain
+        objects with an invalid type (e.g. if the array contains lists)."""
+        samples = validation_circuit()
+        with pytest.raises(
+            TypeError,
+            match="The input modes need to be specified as a flattened sequence of non-negative integers",
+        ):
+            _check_modes(samples, modes)
+
+    non_index_modes_sequences = [
         np.array([[0, 1], [1, 2]]),
         np.array([0.321]),
     ]
 
-    @pytest.mark.parametrize("modes", invalid_modes_sequences)
-    def test_invalid_modes_sequence(self, modes):
+    @pytest.mark.parametrize("modes", non_index_modes_sequences)
+    def test_non_index_modes(self, modes):
         """Tests that an error is raised if the modes were not specified as a
         flattened sequence of indices."""
         samples = validation_circuit()
         with pytest.raises(
-            Exception,
+            ValueError,
             match="The input modes need to be specified as a flattened sequence of non-negative integers",
         ):
             _check_modes(samples, modes)
@@ -238,7 +253,7 @@ class TestInputValidation:
         # Need to escape [ and ] characters due to regular expression pattern matching
         invalid_modes = "\[1 2\]"
         with pytest.raises(
-            Exception,
+            ValueError,
             match="Cannot specify mode indices {} for a 1 mode system.".format(invalid_modes),
         ):
             _check_modes(samples, modes)
