@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Unit tests for strawberryfields.apps.train
+Unit tests for strawberryfields.apps.train.param
 """
 # pylint: disable=no-self-use,protected-access,redefined-outer-name
 import itertools
@@ -184,9 +184,10 @@ class TestVGBS:
         assert np.allclose(samples, np.ones((1000, dim)))
 
     def test_get_A_init_samples_already_there(self, adj, n_mean, monkeypatch, dim, embedding):
-        """Test if get_A_init_samples generates the required samples when none are present in
-        A_init_samples. To speed up sampling, we monkeypatch torontonian_sample_state to always
-        return a numpy array of ones."""
+        """Test if get_A_init_samples generates the required samples when some are already
+        present in A_init_samples. We pre-load 200 samples of all zeros into VGBS and then
+        request 1000 samples back. The sampling is monkeypatched to always return samples of
+        ones, so that we hence expect 200 zero samples then 800 ones samples."""
         gbs = train.VGBS(adj, n_mean, embedding, True, np.zeros((200, dim)))
         with monkeypatch.context() as m:
             m.setattr(

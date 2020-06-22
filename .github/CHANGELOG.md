@@ -2,6 +2,49 @@
 
 <h3>New features since last release</h3>
 
+* Adds the ability to train variational GBS circuits in the applications layer.
+  [(#387)](https://github.com/XanaduAI/strawberryfields/pull/387)
+  [(#388)](https://github.com/XanaduAI/strawberryfields/pull/388)
+  [(#391)](https://github.com/XanaduAI/strawberryfields/pull/391)
+  [(#393)](https://github.com/XanaduAI/strawberryfields/pull/393)
+  [(#414)](https://github.com/XanaduAI/strawberryfields/pull/414)
+  [(#415)](https://github.com/XanaduAI/strawberryfields/pull/415)
+  
+  Trainable parameters can be embedded into a VGBS class:
+  
+  ```python
+  from strawberryfields.apps import data, train
+
+  d = data.Mutag0()
+  embedding = train.Exp(d.modes)
+  n_mean = 5
+
+  vgbs = train.VGBS(d.adj, 5, embedding, threshold=False, samples=np.array(d[:1000]))
+  ```
+  
+  Properties of the variational GBS distribution for different choices of
+  trainable parameters can then be inspected:
+  
+  ```python
+  >>> params = 0.1 * np.ones(d.modes)
+  >>> vgbs.n_mean(params)
+  3.6776094165797364
+  ```
+
+  A cost function can then be created and its value and gradient accessed:
+  
+  ```python
+  >>> h = lambda x: np.sum(x)
+  >>> cost = train.Stochastic(h, vgbs)
+  >>> cost(params, n_samples=1000)
+  3.940396998165503
+  >>> cost.grad(params, n_samples=1000)
+  array([-0.54988876, -0.49270263, -0.6628071 , -1.13057762, -1.13568456,
+       -0.70180571, -0.6266806 , -0.68803539, -1.11032533, -1.12853718,
+       -0.59172261, -0.47830748, -0.96901676, -0.66938217, -0.85162006,
+       -0.27188134, -0.26955011])
+  ```
+
 * Feature vectors of graphs can now be calculated exactly in the `apps.similarity` module of the
   applications layer. Datasets of pre-calculated feature vectors are available in `apps.data`.
   [(#390)](https://github.com/XanaduAI/strawberryfields/pull/390)
