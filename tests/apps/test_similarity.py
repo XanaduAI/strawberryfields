@@ -316,7 +316,7 @@ class TestProbOrbitExact:
 
         s = similarity._get_state(g, 2)
         temp = s.fock_prob([1, 1, 0]) + s.fock_prob([1, 0, 1]) + s.fock_prob([0, 1, 1])
-        assert p == temp
+        assert np.allclose(p, temp)
 
         assert np.allclose(similarity.prob_orbit_exact(g, [4], 1), 0)
 
@@ -390,7 +390,7 @@ class TestProbEventExact:
         p3 = similarity.prob_orbit_exact(graph, [1, 1], 1)
         p4 = similarity.prob_event_exact(graph, 2, 2, 4)
         assert np.allclose(p1 - p2, 0)
-        assert p2 == p3
+        assert np.allclose(p2, p3)
         assert np.allclose(p4, 0.21087781178526066)
 
 
