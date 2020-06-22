@@ -191,8 +191,7 @@ def samples_variance(samples, modes=None):
     Args:
         homodyne_samples (ndarray): the homodyne samples with a shape of
             (shots, modes)
-        modes (Sequence): a flat sequence containing indices of modes to get
-            the variance for
+        modes (Sequence): indices of modes to get the variance for
 
     Returns:
         float: the variance from the samples
