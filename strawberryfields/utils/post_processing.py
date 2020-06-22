@@ -38,8 +38,7 @@ def _check_samples(samples):
     Checks include data types checks and dimension of the input samples.
 
     Args:
-        samples (ndarray): the photon number samples with a shape of (shots,
-            modes)
+        samples (array): the photon number samples with a shape of ``(shots, modes)``
     """
     if not isinstance(samples, np.ndarray) or samples.ndim != 2:
         raise Exception("Samples needs to be represented as a two dimensional NumPy array.")
