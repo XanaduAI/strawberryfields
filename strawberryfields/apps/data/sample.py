@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-Pre-calculated datasets of simulated GBS samples.
-
-.. seealso::
-
-    :doc:`/introduction/data`
+Submodule for sample datasets and their base classes.
 """
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod
@@ -25,10 +21,10 @@ import pkg_resources
 import numpy as np
 import scipy
 
-DATA_PATH = pkg_resources.resource_filename("strawberryfields", "apps/data") + "/"
+DATA_PATH = pkg_resources.resource_filename("strawberryfields", "apps/data/sample_data") + "/"
 
 
-class Dataset(ABC):
+class SampleDataset(ABC):
     """Base class for loading datasets of pre-generated samples.
 
     Attributes:
@@ -46,13 +42,13 @@ class Dataset(ABC):
     @property
     @abstractmethod
     def _data_filename(self) -> str:
-        """Base name of files containing the sample data stored in the ``./data/`` directory.
+        """Base name of files containing the sample data stored in the ``./sample_data/`` directory.
 
         Samples and corresponding adjacency matrix should both be provided as a
         ``scipy.sparse.csr_matrix`` saved in ``.npz`` format.
 
         For ``_data_filename = "example"``, the corresponding samples should be stored as
-        ``./data/example.npz`` and the adjacency matrix as ``./data/example_A.npz``."""
+        ``./sample_data/example.npz`` and the adjacency matrix as ``./sample_data/example_A.npz``."""
         pass
 
     def __init__(self):
@@ -118,7 +114,7 @@ class Dataset(ABC):
 
 
 # pylint: disable=abstract-method
-class GraphDataset(Dataset, ABC):
+class GraphDataset(SampleDataset, ABC):
     """Class for loading datasets of pre-generated samples from graphs.
 
     Attributes:
@@ -143,7 +139,7 @@ class Planted(GraphDataset):
 
     **Graph:**
 
-    .. |planted| image:: ../../_static/graphs/planted.png
+    .. |planted| image:: ../../../_static/graphs/planted.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
@@ -173,7 +169,7 @@ class TaceAs(GraphDataset):
 
     **Graph:**
 
-    .. |tace_as| image:: ../../_static/graphs/TACE-AS.png
+    .. |tace_as| image:: ../../../_static/graphs/TACE-AS.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
@@ -221,7 +217,7 @@ class Mutag0(GraphDataset):
 
     **Graph:**
 
-    .. |mutag_0| image:: ../../_static/graphs/MUTAG_0.png
+    .. |mutag_0| image:: ../../../_static/graphs/MUTAG_0.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
@@ -248,7 +244,7 @@ class Mutag1(GraphDataset):
 
     **Graph:**
 
-    .. |mutag_1| image:: ../../_static/graphs/MUTAG_1.png
+    .. |mutag_1| image:: ../../../_static/graphs/MUTAG_1.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
@@ -275,7 +271,7 @@ class Mutag2(GraphDataset):
 
     **Graph:**
 
-    .. |mutag_2| image:: ../../_static/graphs/MUTAG_2.png
+    .. |mutag_2| image:: ../../../_static/graphs/MUTAG_2.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
@@ -302,7 +298,7 @@ class Mutag3(GraphDataset):
 
     **Graph:**
 
-    .. |mutag_3| image:: ../../_static/graphs/MUTAG_3.png
+    .. |mutag_3| image:: ../../../_static/graphs/MUTAG_3.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
@@ -322,7 +318,7 @@ class Mutag3(GraphDataset):
 
 
 # pylint: disable=abstract-method
-class MoleculeDataset(Dataset, ABC):
+class MoleculeDataset(SampleDataset, ABC):
     r"""Class for loading datasets of pre-generated samples from molecules.
 
     Attributes:
@@ -357,7 +353,7 @@ class Formic(MoleculeDataset):
 
     **Molecule:**
 
-    .. |formic| image:: ../../_static/formic.png
+    .. |formic| image:: ../../../_static/formic.png
         :align: middle
         :width: 250px
         :target: javascript:void(0);
