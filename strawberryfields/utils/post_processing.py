@@ -19,7 +19,7 @@ import numpy as np
 
 def _product_for_modes(samples, modes=None):
     """Getting the product of samples across modes.
-        
+
     Args:
         samples (ndarray): the photon number samples with a shape of ``(shots, modes)``
         modes (Sequence): indices of modes to compute the expectation value for
