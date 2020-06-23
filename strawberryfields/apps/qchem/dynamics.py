@@ -73,8 +73,8 @@ This module contains functions for implementing this algorithm.
 - The function :func:`~.prob` estimates the probability of observing a desired excitation in the
   generated samples.
 
-- The function :func:`~.marginal` generates marginal distributions from the displacement vector and
-  covariance matrix of a state.
+- The function :func:`~.marginal` generates single-mode marginal distributions from the displacement vector and
+  covariance matrix of a Gaussian state.
 """
 import numpy as np
 from scipy.constants import c, pi
@@ -258,7 +258,7 @@ def prob(samples: list, excited_state: list) -> float:
 
 def marginal(mu: np.ndarray, V: np.ndarray, n_max: int, hbar: float = 2.0) -> np.ndarray:
     r"""Generate single-mode marginal distributions from the displacement vector and covariance
-    matrix of a state.
+    matrix of a Gaussian state.
 
     **Example usage:**
 
@@ -296,7 +296,7 @@ def marginal(mu: np.ndarray, V: np.ndarray, n_max: int, hbar: float = 2.0) -> np
 
     if not len(mu) == len(V):
         raise ValueError(
-            "The dimension of the displacement vector and the covariance matrix" " must be equal"
+            "The dimension of the displacement vector and the covariance matrix must be equal"
         )
 
     if n_max <= 0:
@@ -309,6 +309,6 @@ def marginal(mu: np.ndarray, V: np.ndarray, n_max: int, hbar: float = 2.0) -> np
     for mode in range(n_modes):
         mui, vi = quantum.reduced_gaussian(mu, V, mode)
         for i in range(n_max):
-            p[mode, i] = np.real(quantum.density_matrix_element(mui, vi, [i], [i], hbar))
+            p[mode, i] = np.real(quantum.density_matrix_element(mui, vi, [i], [i], hbar=hbar))
 
     return p
