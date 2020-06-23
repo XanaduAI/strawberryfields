@@ -73,6 +73,10 @@
   In addition, the existing `GaussianState.reduced_dm()` method now supports
   multi-mode reduced density matrices.
 
+* Adds the `samples_expectation`, `samples_variance` and `all_fock_probs_pnr`
+  functions for obtaining counting statistics from samples.
+  [(#399)](https://github.com/XanaduAI/strawberryfields/pull/399)
+
 * Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X
   architecture.
   [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
@@ -120,7 +124,7 @@
 This release contains contributions from (in alphabetical order):
 
 Juan Miguel Arrazola, Tom Bromley, Jack Ceroni, Aroosa Ijaz, Theodor Isacsson, Josh Izaac, Soran
-Jahangiri, Shreya P. Kumar, Filippo Miatto, Nicolás Quesada
+Jahangiri, Shreya P. Kumar, Filippo Miatto, Nicolás Quesada, Antal Száva
 
 
 # Release 0.14.0 (current release)
