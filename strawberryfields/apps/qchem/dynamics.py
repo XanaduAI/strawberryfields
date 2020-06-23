@@ -260,7 +260,7 @@ def prob(samples: list, excited_state: list) -> float:
 def sample_coherent(
     alpha: list, t: float, Ul: np.ndarray, w: np.ndarray, n_samples: int, loss: float = 0.0,
 ) -> list:
-    r"""Generate samples for simulating vibrational quantum dynamics with an input Fock state.
+    r"""Generate samples for simulating vibrational quantum dynamics with an input coherent state.
 
     **Example usage:**
 
