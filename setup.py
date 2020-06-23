@@ -45,7 +45,7 @@ info = {
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
     "package_data": {"strawberryfields": ["backends/data/*", "apps/data/feature_data/*",
-                                          "apps/data/sample_data"]},
+                                          "apps/data/sample_data/*"]},
     "include_package_data": True,
     "entry_points" : {
         'console_scripts': [
