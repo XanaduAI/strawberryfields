@@ -19,5 +19,7 @@
     :toctree: api
 
     dynamics
+    vibronic
 """
 import strawberryfields.apps.qchem.dynamics
+import strawberryfields.apps.qchem.vibronic
