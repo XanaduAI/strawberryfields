@@ -4,4 +4,5 @@ include LICENSE
 include examples/*
 include tests/*
 include strawberryfields/backends/data/*
-include strawberryfields/apps/data/*
+include strawberryfields/apps/data/feature_data/*
+include strawberryfields/apps/data/sample_data/*
