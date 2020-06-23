@@ -345,7 +345,7 @@ def spectrum(
     **Example usage:**
 
     >>> formic = data.Formic()
-    >>> e = vibronic.energies(formic, formic.w, formic.wp)
+    >>> e = qchem.vibronic.energies(formic, formic.w, formic.wp)
     >>> full_spectrum = plot.spectrum(e, xmin=-1000, xmax=8000)
     >>> full_spectrum.show()
 

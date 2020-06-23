@@ -5,7 +5,8 @@ r"""
 Vibronic spectra
 ================
 
-*Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.vibronic`
+*Technical details are available in the API documentation:*
+:doc:`/code/api/api/strawberryfields.apps.qchem.vibronic`
 
 Here we study how GBS can be used to compute vibronic spectra. So let's start from
 the beginning: what is a vibronic spectrum? Molecules absorb light at frequencies that depend on
@@ -39,14 +40,15 @@ that involve only single-mode squeezing and linear interferometry, in vibronic s
 prepare a Gaussian state using two-mode squeezing, linear interferometry, single-mode squeezing,
 and displacements.
 
-The function :func:`~.gbs_params` of the :mod:`~.apps.vibronic` module can be
+The function :func:`~.gbs_params` of the :mod:`~.apps.qchem.vibronic` module can be
 used to obtain the squeezing, interferometer, and displacement parameters from the input
 chemical parameters listed above. In this page, we study the vibronic spectrum of
 `formic acid <https://en.wikipedia.org/wiki/Formic_acid>`_ 🐜. Its chemical parameters, obtained
 from :cite:`huh2015boson`, can be found in the :mod:`~.apps.data` module:
 """
-from strawberryfields.apps import vibronic, data
+from strawberryfields.apps import data, qchem
 import numpy as np
+
 formic = data.Formic()
 w = formic.w  # ground state frequencies
 wp = formic.wp  # excited state frequencies
@@ -58,7 +60,7 @@ T = 0  # temperature
 # We can now map this chemical information to GBS parameters using the function
 # :func:`~.gbs_params`:
 
-t, U1, r, U2, alpha = vibronic.gbs_params(w, wp, Ud, delta, T)
+t, U1, r, U2, alpha = qchem.vibronic.gbs_params(w, wp, Ud, delta, T)
 
 ##############################################################################
 # Note that since two-mode squeezing operators are involved, if we have :math:`N` vibrational
@@ -75,7 +77,7 @@ t, U1, r, U2, alpha = vibronic.gbs_params(w, wp, Ud, delta, T)
 # vibronic spectrum. The function :func:`~.energies` can be used to compute the energies for
 # a set of samples. In this case we show the energy of the first five samples:
 
-e = vibronic.energies(formic, w, wp)
+e = qchem.vibronic.energies(formic, w, wp)
 print(np.around(e[:5], 4))  # 4 decimal precision
 
 ##############################################################################
@@ -86,11 +88,13 @@ print(np.around(e[:5], 4))  # 4 decimal precision
 # :func:`~.spectrum` function that generates the vibronic spectrum from the GBS samples. Let's see
 # how this is done for just a few samples:
 
-from strawberryfields.apps import sample, plot
+from strawberryfields.apps import plot
 import plotly
+
 nr_samples = 10
-s = sample.vibronic(t, U1, r, U2, alpha, nr_samples)
-e = vibronic.energies(s, w, wp)
+
+s = qchem.vibronic.sample(t, U1, r, U2, alpha, nr_samples)
+e = qchem.vibronic.energies(s, w, wp)
 spectrum = plot.spectrum(e, xmin=-1000, xmax=8000)
 plotly.offline.plot(spectrum, filename="spectrum.html")
 
@@ -108,7 +112,7 @@ plotly.offline.plot(spectrum, filename="spectrum.html")
 # Of course, 10 samples are not enough to accurately reconstruct the vibronic spectrum. Let's
 # instead use the 20,000 pre-generated samples from the :mod:`~.apps.data` module.
 
-e = vibronic.energies(formic, w, wp)
+e = qchem.vibronic.energies(formic, w, wp)
 full_spectrum = plot.spectrum(e, xmin=-1000, xmax=8000)
 plotly.offline.plot(full_spectrum, filename="full_spectrum.html")
 
