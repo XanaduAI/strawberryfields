@@ -99,7 +99,7 @@ Measurements
 
 .. seealso::
 
-    See the :doc:`Measurements and post-selection </tutorials/tutorial_post_selection>`
+    See the :doc:`measurements and post-selection tutorial <demos/run_post_selection>`
     for more details on applying measurements, post-selection, and classical processing.
 
 

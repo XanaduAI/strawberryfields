@@ -50,6 +50,25 @@ thumbnail with its default link Background color */
   text-decoration: none;
 }
 
+.sphx-glr-thumbcontainer a.external {
+  bottom: 0;
+  display: block;
+  left: 0;
+  padding: 150px 10px 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  color: #575757;
+}
+
+/* Next one is to avoid Sphinx traditional theme to cover all the
+thumbnail with its default link Background color */
+.sphx-glr-thumbcontainer a.external:hover {
+  background-color: transparent;
+  color: #575757;
+  text-decoration: none;
+}
+
 .sphx-glr-thumbcontainer p {
   margin: 0 0 .1em 0;
 }
@@ -57,11 +76,20 @@ thumbnail with its default link Background color */
   margin: 10px;
   width: 160px;
 }
+
 .sphx-glr-thumbcontainer img {
   display: inline;
-  max-height: 160px;
-  width: 160px;
+  max-height: 120px;
+  max-width: 160px;
+  width: auto;
+  position: absolute;
+  top: 0;
+  bottom: 25%;
+  left: 0;
+  right: 0;
+  margin: auto;
 }
+
 .sphx-glr-thumbcontainer[tooltip]:hover:after {
   background: rgba(0, 0, 0, 0.8);
   -webkit-border-radius: 5px;
