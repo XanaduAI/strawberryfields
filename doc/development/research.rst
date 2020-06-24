@@ -98,3 +98,9 @@ Finally, some links to studies and research papers that utilize Strawberry Field
 #. W\. Hu, J\. Hu. *Training a quantum neural network to solve the contextual multi-armed bandit problem.* `Natural science, Vol.11 No.1 <https://www.scirp.org/journal/PaperInformation.aspx?PaperID=89983>`_, 2019.
 
 #. A\. Pesah. *Learning quantum state properties with quantum and classical neural networks.* `Masters dissertation <http://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1320072&dswid=-438>`_, 2019.
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   /zreferences

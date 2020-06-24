@@ -30,7 +30,7 @@ preserved between engine runs.
 
     FockBackend
     GaussianBackend
-    TFBackend
+    ~tfbackend.TFBackend
 
 .. raw:: html
 
@@ -41,7 +41,7 @@ preserved between engine runs.
     :toctree: api
 
     BaseFockState
-    ~gaussianbackend.states.GaussianState
+    BaseGaussianState
     ~tfbackend.states.FockStateTF
 
 .. raw:: html
@@ -59,7 +59,6 @@ statevector backend API
     :toctree: api
 
     BaseState
-    BaseGaussianState
     BaseBackend
     BaseFock
     BaseGaussian
@@ -80,9 +79,10 @@ backend development.
 from .base import BaseBackend, BaseFock, BaseGaussian, ModeMap
 from .gaussianbackend import GaussianBackend
 from .fockbackend import FockBackend
-from .tfbackend import TFBackend
 from .states import BaseState, BaseGaussianState, BaseFockState
 
+# There is no import for the TFBackend to avoid TensorFlow being a direct
+# requirement of SF through a chain of imports
 
 __all__ = [
     "BaseBackend",
@@ -110,8 +110,8 @@ def load_backend(name):
     """
     if name == "tf":
         # treat the tensorflow backend differently, to
-        # isolate the import of tensorflow
-        from .tfbackend import TFBackend
+        # isolate the import of TensorFlow
+        from .tfbackend import TFBackend  # pylint: disable=import-outside-toplevel
 
         return TFBackend()
 

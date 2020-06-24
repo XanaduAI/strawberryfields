@@ -23,17 +23,6 @@ sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath('.')), 'doc'))
 
-
-class Mock(MagicMock):
-    __name__ = 'foo'
-
-    @classmethod
-    def __getattr__(cls, name):
-        return MagicMock()
-
-
-sys.modules["tensorflow"] = Mock(__version__="2.0")
-
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -54,13 +43,14 @@ extensions = [
     'sphinxcontrib.bibtex',
     'edit_on_github',
     'sphinx_autodoc_typehints',
-    'nbsphinx',
-    'sphinx_gallery.gen_gallery',
     "sphinx.ext.intersphinx",
     "sphinx_automodapi.automodapi",
     'sphinx_copybutton',
     "m2r"
 ]
+
+
+intersphinx_mapping = {"photonics": ("https://strawberryfields.ai/photonics", None)}
 
 source_suffix = ['.rst', '.md']
 
@@ -76,37 +66,6 @@ automodsumm_inherited_members = True
 add_module_names = False
 
 mathjax_path = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
-
-# nbsphinx settings
-
-exclude_patterns = ['_build', '**.ipynb_checkpoints']
-nbsphinx_execute = 'never'
-nbsphinx_epilog = """
-.. note:: :download:`Click here <../../{{env.docname}}.ipynb>` to download this gallery page as an interactive Jupyter notebook.
-"""
-nbsphinx_requirejs_path = ""
-
-sphinx_gallery_conf = {
-    # path to your example scripts
-    'examples_dirs': '../examples_apps',
-    # path where to save gallery generated examples
-    'gallery_dirs': 'tutorials_apps',
-    # execute files that match the following filename pattern,
-    # and skip those that don't. If the following option is not provided,
-    # all example scripts in the 'examples_dirs' folder will be skiped.
-    'filename_pattern': r'/run_',
-    # first notebook cell in generated Jupyter notebooks
-    'first_notebook_cell': ("# This cell is added by sphinx-gallery\n"
-                            "# It can be customized to whatever you like\n"
-                            "%matplotlib inline"),
-    # thumbnail size
-    'thumbnail_size': (400, 400),
-    'capture_repr': (),
-}
-
-# Remove warnings that occur when generating the the tutorials
-warnings.filterwarnings("ignore", category=UserWarning, message=r"Matplotlib is currently using agg")
-warnings.filterwarnings("ignore", category=FutureWarning, message=r"Passing \(type, 1\) or '1type' as a synonym of type is deprecated.+")
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates', 'xanadu_theme']
@@ -327,10 +286,6 @@ html_theme_options = {
     "table_header_bg": "#ffdce5",
     "table_header_border": "#b13a59",
     "download_button": "#b13a59",
-
-    # gallery options
-    "github_repo": "XanaduAI/strawberryfields",
-    "gallery_dirs": sphinx_gallery_conf['gallery_dirs']
 }
 
 edit_on_github_project = 'XanaduAI/strawberryfields'
@@ -344,11 +299,9 @@ autodoc_member_order = 'bysource'
 inheritance_node_attrs = dict(color='lightskyblue1', style='filled')
 
 
-from custom_directives import IncludeDirective, GalleryItemDirective, CustomGalleryItemDirective, DetailsDirective
+from custom_directives import CustomGalleryItemDirective, DetailsDirective
 
 def setup(app):
-    app.add_directive('includenodoc', IncludeDirective)
-    app.add_directive('galleryitem', GalleryItemDirective)
     app.add_directive('customgalleryitem', CustomGalleryItemDirective)
     app.add_directive('details', DetailsDirective)
     app.add_stylesheet('xanadu_gallery.css')
