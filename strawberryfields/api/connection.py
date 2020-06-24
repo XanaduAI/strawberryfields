@@ -28,6 +28,7 @@ from strawberryfields.program import Program
 
 from .job import Job, JobStatus
 from .result import Result
+from .devicespec import DeviceSpec
 
 # pylint: disable=bad-continuation,protected-access
 
@@ -146,10 +147,13 @@ class Connection:
         """
         path = "/devices/{}".format(target)
         response = requests.get(self._url(path), headers=self._headers)
-
         if response.status_code == 200:
-            return response.json()
-
+            return DeviceSpec(
+                layout=response.json()["layout"],
+                modes=response.json()["modes"],
+                compiler=response.json()["compiler"],
+                gate_parameters=response.json()["gate_parameters"],
+            )
         raise RequestFailedError(
             "Failed to get device specifications: {}".format(self._format_error_message(response))
         )
