@@ -1316,7 +1316,7 @@ class Dgate(Gate):
     """
 
     def __init__(self, r, phi=None):
-        if any(np.iscomplex(theta)) or any(np.iscomplex(phi)):
+        if any(np.iscomplex(r)) or any(np.iscomplex(phi)):
             raise ValueError("The arguments of Dgate(r, phi) cannot be complex")
         if phi is None:
             phi = 0.0
