@@ -50,7 +50,7 @@ extensions = [
 ]
 
 
-intersphinx_mapping = {"photonics": ("http://sfdocsredesign.s3-website-us-east-1.amazonaws.com/photonics", None)}
+intersphinx_mapping = {"photonics": ("https://strawberryfields.ai/photonics", None)}
 
 source_suffix = ['.rst', '.md']
 
