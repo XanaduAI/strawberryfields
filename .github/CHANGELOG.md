@@ -55,7 +55,7 @@
   information for use in a Strawberry Fields `Program`. The `dynamics.sample_fock()` function allows
   for generation of samples from an input Fock state. The probability of an excited state can
   then be estimated with the `dynamics.prob()` function, which calculates the relative frequency
-  of the excited state among the generated samples. 
+  of the excited state among the generated samples.
   [(#402)](https://github.com/XanaduAI/strawberryfields/pull/402)
   [(#411)](https://github.com/XanaduAI/strawberryfields/pull/411)
   [(#419)](https://github.com/XanaduAI/strawberryfields/pull/419)
