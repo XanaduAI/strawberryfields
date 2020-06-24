@@ -111,7 +111,7 @@ Features
 
 ..
 
-* Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows anyone to run a quantum computing simulation via **drag and drop**
+* Powers the `Strawberry Fields Interactive <https://strawberryfields.ai/interactive>`_ web app, which allows anyone to run a quantum computing simulation via **drag and drop**
 
 How to cite
 ===========
@@ -149,15 +149,10 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
 
    introduction/introduction
    introduction/photonic_hardware
-   introduction/graphs
-   introduction/ml
-   introduction/chemistry
-   introduction/sampling
    introduction/circuits
    introduction/ops
    introduction/states
-   introduction/tutorials
-   zreferences
+   introduction/data
 
 .. toctree::
    :maxdepth: 1
