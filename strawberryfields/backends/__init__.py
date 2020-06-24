@@ -41,7 +41,7 @@ preserved between engine runs.
     :toctree: api
 
     BaseFockState
-    BaseGaussianState
+    ~gaussianbackend.states.GaussianState
     ~tfbackend.states.FockStateTF
 
 .. raw:: html
@@ -59,6 +59,7 @@ statevector backend API
     :toctree: api
 
     BaseState
+    BaseGaussianState
     BaseBackend
     BaseFock
     BaseGaussian
