@@ -197,7 +197,7 @@ class GaussianUnitary(CircuitSpecs):
         else:
             A = [Command(ops.GaussianTransform(Snet), ord_reg)]
         B = [
-            Command(ops.Dgate(alphas[i]), ord_reg[i])
+            Command(ops.Dgate(np.abs(alphas[i]), np.angle(alphas[i])), ord_reg[i])
             for i in range(len(ord_reg))
             if not np.allclose(alphas[i], 0.0)
         ]

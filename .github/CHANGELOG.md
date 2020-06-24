@@ -2,21 +2,101 @@
 
 <h3>New features since last release</h3>
 
+* Adds the ability to train variational GBS circuits in the applications layer.
+  [(#387)](https://github.com/XanaduAI/strawberryfields/pull/387)
+  [(#388)](https://github.com/XanaduAI/strawberryfields/pull/388)
+  [(#391)](https://github.com/XanaduAI/strawberryfields/pull/391)
+  [(#393)](https://github.com/XanaduAI/strawberryfields/pull/393)
+  [(#414)](https://github.com/XanaduAI/strawberryfields/pull/414)
+  [(#415)](https://github.com/XanaduAI/strawberryfields/pull/415)
+  
+  Trainable parameters can be embedded into a VGBS class:
+  
+  ```python
+  from strawberryfields.apps import data, train
 
-* Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X architecture. [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
+  d = data.Mutag0()
+  embedding = train.Exp(d.modes)
+  n_mean = 5
+
+  vgbs = train.VGBS(d.adj, 5, embedding, threshold=False, samples=np.array(d[:1000]))
+  ```
+  
+  Properties of the variational GBS distribution for different choices of
+  trainable parameters can then be inspected:
+  
+  ```python
+  >>> params = 0.1 * np.ones(d.modes)
+  >>> vgbs.n_mean(params)
+  3.6776094165797364
+  ```
+
+  A cost function can then be created and its value and gradient accessed:
+  
+  ```python
+  >>> h = lambda x: np.sum(x)
+  >>> cost = train.Stochastic(h, vgbs)
+  >>> cost(params, n_samples=1000)
+  3.940396998165503
+  >>> cost.grad(params, n_samples=1000)
+  array([-0.54988876, -0.49270263, -0.6628071 , -1.13057762, -1.13568456,
+       -0.70180571, -0.6266806 , -0.68803539, -1.11032533, -1.12853718,
+       -0.59172261, -0.47830748, -0.96901676, -0.66938217, -0.85162006,
+       -0.27188134, -0.26955011])
+  ```
+
+* Feature vectors of graphs can now be calculated exactly in the `apps.similarity` module of the
+  applications layer. Datasets of pre-calculated feature vectors are available in `apps.data`.
+  [(#390)](https://github.com/XanaduAI/strawberryfields/pull/390)
+  [(#401)](https://github.com/XanaduAI/strawberryfields/pull/401)
+
+* Adds the `apps.qchem.dynamics` module for simulating vibrational quantum dynamics in molecules.
+  The `dynamics.evolution()` function provides a custom operation that encodes the input chemical
+  information for use in a Strawberry Fields `Program`. The `dynamics.sample_fock()` function allows
+  for generation of samples from an input Fock state. The probability of an excited state can
+  then be estimated with the `dynamics.prob()` function, which calculates the relative frequency
+  of the excited state among the generated samples. 
+  [(#402)](https://github.com/XanaduAI/strawberryfields/pull/402)
+  [(#411)](https://github.com/XanaduAI/strawberryfields/pull/411)
+  [(#419)](https://github.com/XanaduAI/strawberryfields/pull/419)
+
+* The `GaussianState` returned from simulations using the Gaussian backend
+  now has feature parity with the `FockState` object returned from the Fock backends.
+  [(#407)](https://github.com/XanaduAI/strawberryfields/pull/407)
+
+  In particular, it now supports the following methods:
+
+  - `GaussianState.dm()`
+  - `GaussianState.ket()`
+  - `GaussianState.all_fock_probs()`
+
+  In addition, the existing `GaussianState.reduced_dm()` method now supports
+  multi-mode reduced density matrices.
+
+* Adds the `samples_expectation`, `samples_variance` and `all_fock_probs_pnr`
+  functions for obtaining counting statistics from samples.
+  [(#399)](https://github.com/XanaduAI/strawberryfields/pull/399)
+
+* Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X
+  architecture.
+  [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
 
 * Adds `diagonal_expectation` method for the `BaseFockState` class, which returns
   the expectation value of any operator that is diagonal in the number basis.
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
 * Adds `parity_expectation` method as an instance of `diagonal_expectation` for
-  the `BaseFockState` class, and its own function for `BaseGaussianState`. 
+  the `BaseFockState` class, and its own function for `BaseGaussianState`.
   This returns the expectation value of the parity operator,
   defined as (-1)^N.
-  [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389) 
-
+  [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
 <h3>Improvements</h3>
+
+* Relocates the `apps.vibronic` module to be a submodule of the new `apps.qchem` module
+  and moves the `apps.sample.vibronic()` function to `apps.qchem.vibronic.sample()`, providing
+  a single location for quantum chemistry functionality.
+  [(#416)](https://github.com/XanaduAI/strawberryfields/pull/416)
 
 * Modifies the rectangular interferometer decomposition to make it more
   efficient for hardware devices. Rather than decomposing the interferometer
@@ -24,14 +104,23 @@
   Mach-Zehnder interferometers corresponding to on-chip phases.
   [(#363)](https://github.com/XanaduAI/strawberryfields/pull/363)
 
-* Changes the `number_expectation` method for the `BaseFockState` class to be an instance
-  of `diagonal_expectation`. 
+* Changes the `number_expectation` method for the `BaseFockState` class to be an
+  instance of `diagonal_expectation`.
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
+
+* Increases the speed at which the following gates are generated: `Dgate`, `Sgate`,
+  `BSgate` and `S2gate` by relying on a recursive implementation recently introduced
+  in `thewalrus`. This has substantial effects on the speed of the `Fockbackend` and the `TFbackend`, especially for high cutoff values.
+  [(#378)](https://github.com/XanaduAI/strawberryfields/pull/378)
+  [(#381)](https://github.com/XanaduAI/strawberryfields/pull/381)
 
 <h3>Breaking Changes</h3>
 
 * Removes support for Python 3.5.
   [(#385)](https://github.com/XanaduAI/strawberryfields/pull/385)
+
+* Complex parameters now are expected in polar form as two separate real parameters.
+  [(#378)](https://github.com/XanaduAI/strawberryfields/pull/378)
 
 <h3>Bug fixes</h3>
 
@@ -39,8 +128,8 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jack Ceroni, Theodor Isacsson, Josh Izaac, Shreya P. Kumar, Nicolás Quesada
-
+Juan Miguel Arrazola, Tom Bromley, Jack Ceroni, Aroosa Ijaz, Theodor Isacsson, Josh Izaac, Soran
+Jahangiri, Shreya P. Kumar, Filippo Miatto, Nicolás Quesada, Antal Száva
 
 
 # Release 0.14.0 (current release)

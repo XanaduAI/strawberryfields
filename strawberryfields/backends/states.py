@@ -26,7 +26,7 @@ from scipy.stats import multivariate_normal
 from scipy.special import factorial
 from scipy.integrate import simps
 
-from thewalrus.quantum import photon_number_mean, photon_number_covar
+import thewalrus.quantum as twq
 
 import strawberryfields as sf
 
@@ -38,6 +38,7 @@ indices = string.ascii_lowercase
 
 class BaseState(abc.ABC):
     r"""Abstract base class for the representation of quantum states."""
+    # pylint: disable=too-many-public-methods
     EQ_TOLERANCE = 1e-10
 
     def __init__(self, num_modes, mode_names=None):
@@ -124,16 +125,45 @@ class BaseState(abc.ABC):
         return {v: k for k, v in self._modemap.items()}
 
     @abc.abstractmethod
+    def ket(self, **kwargs):
+        r"""The numerical state vector for the quantum state in the Fock basis.
+        Note that if the state is mixed, this method returns None.
+
+        Keyword Args:
+            cutoff (int): Specifies where to truncate the returned density matrix (default value is 10).
+                Note that the cutoff argument only applies for Gaussian representation;
+                states represented in the Fock basis will use their own internal cutoff dimension.
+
+        Returns:
+            array/None: the numerical state vector. Returns None if the state is mixed.
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def dm(self, **kwargs):
+        r"""The numerical density matrix for the quantum state in the Fock basis.
+
+        Keyword Args:
+            cutoff (int): Specifies where to truncate the returned density matrix (default value is 10).
+                Note that the cutoff argument only applies for Gaussian representation;
+                states represented in the Fock basis will use their own internal cutoff dimension.
+
+        Returns:
+            array: the numerical density matrix in the Fock basis
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def reduced_dm(self, modes, **kwargs):
         r"""Returns a reduced density matrix in the Fock basis.
 
         Args:
             modes (int or Sequence[int]): specifies the mode(s) to return the reduced density matrix for.
-            **kwargs:
 
-                  * **cutoff** (*int*): (default 10) specifies where to truncate the returned density matrix.
-                    Note that the cutoff argument only applies for Gaussian representation;
-                    states represented in the Fock basis will use their own internal cutoff dimension.
+        Keyword Args:
+            cutoff (int): Specifies where to truncate the returned density matrix (default value is 10).
+                Note that the cutoff argument only applies for Gaussian representation;
+                states represented in the Fock basis will use their own internal cutoff dimension.
 
         Returns:
             array: the reduced density matrix for the specified modes
@@ -158,15 +188,37 @@ class BaseState(abc.ABC):
 
         Args:
             n (Sequence[int]): the Fock state :math:`\ket{\vec{n}}` that we want to measure the probability of
-            **kwargs:
 
-                  * **cutoff** (*int*): (default 10) specifies the fock basis truncation when calculating
-                    of the fock basis probabilities.
-                    Note that the cutoff argument only applies for Gaussian representation;
-                    states represented in the Fock basis will use their own internal cutoff dimension.
+        Keyword Args:
+            cutoff (int): Specifies where to truncate the computation (default value is 10).
+                Note that the cutoff argument only applies for Gaussian representation;
+                states represented in the Fock basis will use their own internal cutoff dimension.
 
         Returns:
             float: measurement probability
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def all_fock_probs(self, **kwargs):
+        r"""Probabilities of all possible Fock basis states for the current circuit state.
+
+        For example, in the case of 3 modes, this method allows the Fock state probability
+        :math:`|\braketD{0,2,3}{\psi}|^2` to be returned via
+
+        .. code-block:: python
+
+            probs = state.all_fock_probs()
+            probs[0,2,3]
+
+        Returns:
+            array: array of dimension :math:`\underbrace{D\times D\times D\cdots\times D}_{\text{num modes}}`
+                containing the Fock state probabilities, where :math:`D` is the Fock basis cutoff truncation
+
+        Keyword Args:
+            cutoff (int): Specifies where to truncate the computation (default value is 10).
+                Note that the cutoff argument only applies for Gaussian representation;
+                states represented in the Fock basis will use their own internal cutoff dimension.
         """
         raise NotImplementedError
 
@@ -314,6 +366,7 @@ class BaseState(abc.ABC):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def number_expectation(self, modes):
         r"""
         Calculates the expectation value of the product of the number operators of the modes.
@@ -326,7 +379,7 @@ class BaseState(abc.ABC):
             modes (list): list of modes for which one wants the expectation of the product of their number operator.
 
         Return:
-            (float): the expectation value.
+            tuple[float, float]: the expectation value and variance
 
         **Example**
 
@@ -350,14 +403,14 @@ class BaseState(abc.ABC):
 
         we can compute the expectation value :math:`\langle \hat{n}_0\hat{n}_2\rangle`:
 
-        >>> state.number_expectation([0, 2])
+        >>> state.number_expectation([0, 2])[0]
         0.07252895071309405
 
         Executing the same program on the Gaussian backend,
 
         >>> eng = sf.Engine("gaussian")
         >>> state = eng.run(prog).state
-        >>> state.number_expectation([0, 2])
+        >>> state.number_expectation([0, 2])[0]
         0.07566984755267293
 
         This slight difference in value compared to the result from the Fock backend above
@@ -368,6 +421,7 @@ class BaseState(abc.ABC):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def parity_expectation(self, modes):
         """Calculates the expectation value of a product of parity operators acting on given modes"""
         raise NotImplementedError
@@ -476,12 +530,6 @@ class BaseFockState(BaseState):
         return self._cutoff
 
     def ket(self, **kwargs):
-        r"""The numerical state vector for the quantum state.
-        Note that if the state is mixed, this method returns None.
-
-        Returns:
-            array/None: the numerical state vector. Returns None if the state is mixed.
-        """
         # pylint: disable=unused-argument
         if self._pure:
             return self.data
@@ -489,11 +537,6 @@ class BaseFockState(BaseState):
         return None  # pragma: no cover
 
     def dm(self, **kwargs):
-        r"""The numerical density matrix for the quantum state.
-
-        Returns:
-            array: the numerical density matrix in the Fock basis
-        """
         # pylint: disable=unused-argument
         if self._pure:
             left_str = [indices[i] for i in range(0, 2 * self._modes, 2)]
@@ -551,8 +594,8 @@ class BaseFockState(BaseState):
 
         s = self.dm()
         num_axes = len(s.shape)
-        evens = [k for k in range(0, num_axes, 2)]
-        odds = [k for k in range(1, num_axes, 2)]
+        evens = list(range(0, num_axes, 2))
+        odds = list(range(1, num_axes, 2))
         flat_size = np.prod([s.shape[k] for k in range(0, num_axes, 2)])
         transpose_list = evens + odds
         probs = np.diag(np.reshape(np.transpose(s, transpose_list), [flat_size, flat_size])).real
@@ -575,7 +618,7 @@ class BaseFockState(BaseState):
 
         if len(modes) > self._modes:
             raise ValueError(
-                "The number of specified modes cannot " "be larger than the number of subsystems."
+                "The number of specified modes cannot be larger than the number of subsystems."
             )
 
         # reduce rho down to specified subsystems
@@ -598,7 +641,7 @@ class BaseFockState(BaseState):
         if len(n) != self._modes:
             raise ValueError("List length should be equal to number of modes")
 
-        elif max(n) >= self._cutoff:
+        if max(n) >= self._cutoff:
             raise ValueError("Can't get distribution beyond truncation level")
 
         if self._pure:
@@ -756,7 +799,7 @@ class BaseFockState(BaseState):
         return mean, var
 
     def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
-        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-branches,too-many-statements
 
         if A is None:
             A = np.zeros([2 * self._modes, 2 * self._modes])
@@ -924,7 +967,9 @@ class BaseFockState(BaseState):
         """Calculates the expectation value of a product of number operators acting on given modes"""
         cutoff = self._cutoff
         values = np.arange(cutoff)
-        return self.diagonal_expectation(modes, values)
+        mean = self.diagonal_expectation(modes, values)
+        var = self.diagonal_expectation(modes, values ** 2) - mean ** 2
+        return mean, var
 
     def parity_expectation(self, modes):
         cutoff = self._cutoff
@@ -947,6 +992,7 @@ class BaseGaussianState(BaseState):
         mode_names (Sequence): (optional) this argument contains a list providing mode names
             for each mode in the state
     """
+    # pylint: disable=too-many-public-methods
 
     def __init__(self, state_data, num_modes, mode_names=None):
         super().__init__(num_modes, mode_names)
@@ -1241,19 +1287,15 @@ class BaseGaussianState(BaseState):
     def number_expectation(self, modes):
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
+
         mu = self._mu
         cov = self._cov
-        if len(modes) == 1:
-            return photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
 
-        if len(modes) == 2:
-            ni = photon_number_mean(mu, cov, modes[0], hbar=self._hbar)
-            nj = photon_number_mean(mu, cov, modes[1], hbar=self._hbar)
-            return photon_number_covar(mu, cov, modes[1], modes[0], hbar=self._hbar) + ni * nj
+        mean = twq.photon_number_expectation(mu, cov, modes, hbar=self._hbar).real
+        mean2 = twq.photon_number_squared_expectation(mu, cov, modes, hbar=self._hbar).real
+        var = mean2 - mean ** 2
 
-        raise ValueError(
-            "The number_expectation method only supports one or two modes for Gaussian states."
-        )
+        return mean, var
 
     def parity_expectation(self, modes):
         if len(modes) != len(set(modes)):
@@ -1266,26 +1308,97 @@ class BaseGaussianState(BaseState):
 
         return parity
 
-    @abc.abstractmethod
+    def ket(self, **kwargs):
+        cutoff = kwargs.get("cutoff", 10)
+        mu = self._mu
+        cov = self._cov
+
+        if self._pure:
+            return twq.state_vector(
+                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+            )
+
+        return None  # pragma: no cover
+
+    def dm(self, **kwargs):
+        cutoff = kwargs.get("cutoff", 10)
+        return self.reduced_dm(list(range(self._modes)), cutoff=cutoff)
+
     def reduced_dm(self, modes, **kwargs):
-        raise NotImplementedError
+        if isinstance(modes, int):
+            modes = [modes]
 
-    @abc.abstractmethod
-    def fock_prob(self, n, **kwargs):
-        raise NotImplementedError
+        if modes != sorted(modes):
+            raise ValueError("The specified modes cannot be duplicated.")
 
-    @abc.abstractmethod
+        if len(modes) > self._modes:
+            raise ValueError(
+                "The number of specified modes cannot be larger than the number of subsystems."
+            )
+
+        cutoff = kwargs.get("cutoff", 10)
+        mu, cov = self.reduced_gaussian(modes)  # pylint: disable=unused-variable
+
+        if self.is_pure:
+            psi = twq.state_vector(
+                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+            )
+            rho = np.outer(psi, psi.conj())
+            return rho
+
+        return twq.density_matrix(mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff)
+
     def mean_photon(self, mode, **kwargs):
-        raise NotImplementedError
+        mu, cov = self.reduced_gaussian([mode])
+        mean = (np.trace(cov) + mu.T @ mu) / (2 * self._hbar) - 1 / 2
+        var = (np.trace(cov @ cov) + 2 * mu.T @ cov @ mu) / (2 * self._hbar ** 2) - 1 / 4
+        return mean, var
 
-    @abc.abstractmethod
     def fidelity(self, other_state, mode, **kwargs):
-        raise NotImplementedError
+        if isinstance(mode, int):
+            mode = [mode]
 
-    @abc.abstractmethod
+        mu1, cov1 = other_state
+        mu2, cov2 = self.reduced_gaussian(mode)
+        return twq.fidelity(mu1, cov1, mu2, cov2, hbar=self._hbar)
+
     def fidelity_vacuum(self, **kwargs):
-        raise NotImplementedError
+        alpha = np.zeros(len(self._alpha))
+        return self.fidelity_coherent(alpha)
 
-    @abc.abstractmethod
     def fidelity_coherent(self, alpha_list, **kwargs):
-        raise NotImplementedError
+        if len(alpha_list) != self._modes:
+            raise ValueError("alpha_list must be same length as the number of modes")
+
+        if not isinstance(alpha_list, np.ndarray):
+            alpha_list = np.array(alpha_list)
+
+        mu = np.concatenate([alpha_list.real, alpha_list.imag]) * np.sqrt(2 * self._hbar)
+        cov = np.identity(2 * self._modes) * self._hbar / 2
+        return self.fidelity([mu, cov], list(range(self._modes)))
+
+    def fock_prob(self, n, **kwargs):
+        if len(n) != self._modes:
+            raise ValueError("Fock state must be same length as the number of modes")
+
+        cutoff = kwargs.get("cutoff", 10)
+        if sum(n) >= cutoff:
+            raise ValueError("Cutoff argument must be larger than the sum of photon numbers")
+
+        if self.is_pure:
+            return (
+                np.abs(
+                    twq.pure_state_amplitude(
+                        self._mu, self._cov, n, hbar=self._hbar, check_purity=False
+                    )
+                )
+                ** 2
+            )
+
+        return twq.density_matrix_element(self._mu, self._cov, n, n, hbar=self._hbar).real
+
+    def all_fock_probs(self, **kwargs):
+        cutoff = kwargs.get("cutoff", 10)
+        mu = self._mu
+        cov = self._cov
+        return twq.probabilities(mu, cov, cutoff, hbar=self._hbar)

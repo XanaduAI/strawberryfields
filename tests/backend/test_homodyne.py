@@ -31,8 +31,8 @@ class TestRepresentationIndependent:
         r = np.arcsinh(1.0)  # pylint: disable=assignment-from-no-return
         alpha = 0.8
 
-        backend.squeeze(r, 0)
-        backend.displacement(alpha, 0)
+        backend.squeeze(r, 0.0, 0)
+        backend.displacement(np.abs(alpha), np.angle(alpha), 0)
         backend.measure_homodyne(0, 0)
 
         assert np.all(backend.is_vacuum(tol))
@@ -64,7 +64,7 @@ class TestRepresentationIndependent:
 
         for _ in range(N_MEAS):
             backend.reset(pure=pure)
-            backend.prepare_coherent_state(alpha, 0)
+            backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
 
             meas_result = backend.measure_homodyne(0, 0)
             x = np.append(x, meas_result)

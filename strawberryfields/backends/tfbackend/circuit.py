@@ -279,19 +279,19 @@ class Circuit:
         if self._valid_modes(mode):
             n = self._maybe_batch(n, convert_to_tensor=False)
             fock_state = ops.fock_state(
-                n, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
+                n, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
             )
             self._replace_and_update(fock_state, mode)
 
-    def prepare_coherent_state(self, alpha, mode):
+    def prepare_coherent_state(self, r, phi, mode):
         """
-        Traces out the state in 'mode' and replaces it with a coherent state defined by alpha.
+        Traces out the state in 'mode' and replaces it with a coherent state defined by alpha=r exp(i phi).
         """
         if self._valid_modes(mode):
-            alpha = tf.cast(alpha, ops.def_type)
-            alpha = self._maybe_batch(alpha)
+            r = self._maybe_batch(r)
+            phi = self._maybe_batch(phi)
             coherent_state = ops.coherent_state(
-                alpha, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
+                r, phi, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
             )
             self._replace_and_update(coherent_state, mode)
 
@@ -304,21 +304,28 @@ class Circuit:
             theta = self._maybe_batch(theta)
             self._check_incompatible_batches(r, theta)
             squeezed_state = ops.squeezed_vacuum(
-                r, theta, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
+                r, theta, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
             )
             self._replace_and_update(squeezed_state, mode)
 
-    def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
+    def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
         """
              Traces out the state in 'mode' and replaces it with a displaced squeezed state defined by alpha, r and theta.
         """
         if self._valid_modes(mode):
-            alpha = self._maybe_batch(alpha)
-            r = self._maybe_batch(r)
-            phi = self._maybe_batch(phi)
-            self._check_incompatible_batches(alpha, r, phi)
+            r_d = self._maybe_batch(r_d)
+            r_s = self._maybe_batch(r_s)
+            phi_d = self._maybe_batch(phi_d)
+            phi_s = self._maybe_batch(phi_s)
+            self._check_incompatible_batches(r_d, phi_d, r_s, phi_s)
             displaced_squeezed = ops.displaced_squeezed(
-                alpha, r, phi, D=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
+                r_d,
+                phi_d,
+                r_s,
+                phi_s,
+                cutoff=self._cutoff_dim,
+                pure=self._state_is_pure,
+                batched=self._batched,
             )
             self._replace_and_update(displaced_squeezed, mode)
 
@@ -388,7 +395,7 @@ class Circuit:
         """
         if self._valid_modes(mode):
             nbar = self._maybe_batch(nbar)
-            thermal = ops.thermal_state(nbar, D=self._cutoff_dim)
+            thermal = ops.thermal_state(nbar, cutoff=self._cutoff_dim)
             self._replace_and_update(thermal, mode)
 
     def phase_shift(self, theta, mode):
@@ -401,25 +408,21 @@ class Circuit:
         )
         self._update_state(new_state)
 
-    def displacement(self, alpha, mode):
+    def displacement(self, r, phi, mode):
         """
         Apply the displacement operator to the specified mode.
         """
-        alpha = self._maybe_batch(alpha)
+        r = self._maybe_batch(r)
+        phi = self._maybe_batch(phi)
         new_state = ops.displacement(
-            alpha, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched
+            r, phi, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched
         )
         self._update_state(new_state)
 
-    def squeeze(self, z, mode):
+    def squeeze(self, r, theta, mode):
         """
         Apply the single-mode squeezing operator to the specified mode.
         """
-        z = tf.cast(z, ops.def_type)
-        r = tf.abs(z)
-        x = tf.math.real(z)
-        y = tf.math.imag(z)
-        theta = tf.math.atan2(y, x)
         r = self._maybe_batch(r)
         theta = self._maybe_batch(theta)
         self._check_incompatible_batches(r, theta)
@@ -428,15 +431,34 @@ class Circuit:
         )
         self._update_state(new_state)
 
-    def beamsplitter(self, t, r, mode1, mode2):
+    def beamsplitter(self, theta, phi, mode1, mode2):
         """
         Apply a beamsplitter operator to the two specified modes.
         """
-        t = self._maybe_batch(t)
-        r = self._maybe_batch(r)
-        self._check_incompatible_batches(t, r)
+        theta = self._maybe_batch(theta)
+        phi = self._maybe_batch(phi)
+        self._check_incompatible_batches(theta, phi)
         new_state = ops.beamsplitter(
-            t, r, mode1, mode2, self._state, self._cutoff_dim, self._state_is_pure, self._batched
+            theta,
+            phi,
+            mode1,
+            mode2,
+            self._state,
+            self._cutoff_dim,
+            self._state_is_pure,
+            self._batched,
+        )
+        self._update_state(new_state)
+
+    def two_mode_squeeze(self, r, phi, mode1, mode2):
+        """
+        Apply a two-mode squeezing operator to the two specified modes.
+        """
+        r = self._maybe_batch(r)
+        phi = self._maybe_batch(phi)
+        self._check_incompatible_batches(r, phi)
+        new_state = ops.two_mode_squeeze(
+            r, phi, mode1, mode2, self._state, self._cutoff_dim, self._state_is_pure, self._batched,
         )
         self._update_state(new_state)
 
@@ -839,7 +861,13 @@ class Circuit:
                 tf.convert_to_tensor(meas_result * np.sqrt(m_omega_over_hbar / 2))
             )
             quad_eigenstate = ops.displacement(
-                displacement_size, 0, inf_squeezed_vac, self._cutoff_dim, True, self._batched
+                tf.math.abs(displacement_size),
+                tf.math.angle(displacement_size),
+                0,
+                inf_squeezed_vac,
+                self._cutoff_dim,
+                True,
+                self._batched,
             )
             homodyne_eigenstate = ops.phase_shifter(
                 phi, 0, quad_eigenstate, self._cutoff_dim, True, self._batched
