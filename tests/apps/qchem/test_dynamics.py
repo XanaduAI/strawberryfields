@@ -390,20 +390,6 @@ class TestSampleCoherent:
             alpha, t, U, w, ns = c
             dynamics.sample_coherent(alpha + [0], t, U, w, ns)
 
-    def test_loss(self, monkeypatch, c):
-        """Test if function correctly creates the SF program for lossy circuits."""
-
-        def save_hist(*args, **kwargs):
-            call_history.append(args[1])
-            return sf.engine.Result
-
-        call_history = []
-        with monkeypatch.context() as m:
-            m.setattr(sf.engine.Result, "samples", np.array([[0]]))
-            m.setattr(sf.LocalEngine, "run", save_hist)
-            dynamics.sample_coherent(*c, loss=0.5)
-
-        assert isinstance(call_history[0].circuit[-2].op, sf.ops.LossChannel)
 
     def test_no_loss(self, monkeypatch, c):
         """Test if function correctly creates the SF program for circuits without loss."""

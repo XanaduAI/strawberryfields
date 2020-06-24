@@ -296,9 +296,6 @@ def sample_coherent(
     if np.any(np.iscomplex(Ul)):
         raise ValueError("The normal mode to local mode transformation matrix must be real")
 
-    if not 0 <= loss <= 1:
-        raise ValueError("Loss parameter must take a value between zero and one")
-
     if not len(alpha) == len(Ul):
         raise ValueError(
             "Number of displacement parameters and the number of modes in the normal-to-local"
