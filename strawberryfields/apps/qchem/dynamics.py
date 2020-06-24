@@ -73,7 +73,7 @@ This module contains functions for implementing this algorithm.
 - The function :func:`~.prob` estimates the probability of observing a desired excitation in the
   generated samples.
 
-- The function :func:`~.marginal` generates single-mode marginal distributions from the displacement vector and
+- The function :func:`~.marginals` generates single-mode marginal distributions from the displacement vector and
   covariance matrix of a Gaussian state.
 """
 import numpy as np
@@ -256,7 +256,7 @@ def prob(samples: list, excited_state: list) -> float:
     return samples.count(excited_state) / len(samples)
 
 
-def marginal(mu: np.ndarray, V: np.ndarray, n_max: int, hbar: float = 2.0) -> np.ndarray:
+def marginals(mu: np.ndarray, V: np.ndarray, n_max: int, hbar: float = 2.0) -> np.ndarray:
     r"""Generate single-mode marginal distributions from the displacement vector and covariance
     matrix of a Gaussian state.
 
@@ -271,7 +271,7 @@ def marginal(mu: np.ndarray, V: np.ndarray, n_max: int, hbar: float = 2.0) -> np
     >>>               [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
     >>>               [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
     >>> n_max = 10
-    >>> marginal(mu, V, n_max)
+    >>> marginals(mu, V, n_max)
     array([[1.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
             0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
             0.00000000e+00, 0.00000000e+00],

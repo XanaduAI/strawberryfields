@@ -328,8 +328,8 @@ class TestProb:
             dynamics.prob(samples, [-i for i in state])
 
 
-class TestMarginal:
-    """Tests for the function ``strawberryfields.apps.qchem.dynamics.marginal``"""
+class TestMarginals:
+    """Tests for the function ``strawberryfields.apps.qchem.dynamics.marginals``"""
 
     mu = np.array([0.00000000, 2.82842712, 0.00000000, 0.00000000, 0.00000000, 0.00000000])
     V = np.array(
@@ -362,14 +362,14 @@ class TestMarginal:
         ]
     )
 
-    def test_correct_marginal(self):
+    def test_correct_marginals(self):
         """Test if the function returns the correct probabilities"""
-        assert np.allclose(dynamics.marginal(self.mu, self.V, self.n), self.p)
+        assert np.allclose(dynamics.marginals(self.mu, self.V, self.n), self.p)
 
     def test_square_covariance(self):
         """Test if function raises a ``ValueError`` when the covariance matrix is not square."""
         with pytest.raises(ValueError, match="The covariance matrix must be a square matrix"):
-            dynamics.marginal(self.mu, np.hstack((self.V, np.ones((6, 1)))), self.n)
+            dynamics.marginals(self.mu, np.hstack((self.V, np.ones((6, 1)))), self.n)
 
     def test_incorrect_modes(self):
         """Test if function raises a ``ValueError`` when the number of modes in the displacement
@@ -377,10 +377,10 @@ class TestMarginal:
         with pytest.raises(
             ValueError, match="The dimension of the displacement vector and the covariance"
         ):
-            dynamics.marginal(np.append(self.mu, 0), self.V, self.n)
+            dynamics.marginals(np.append(self.mu, 0), self.V, self.n)
 
     def test_incorrect_states(self):
         """Test if function raises a ``ValueError`` when the number of vibrational states is not
         larger than zero."""
         with pytest.raises(ValueError, match="The number of vibrational states must be larger"):
-            dynamics.marginal(self.mu, self.V, 0)
+            dynamics.marginals(self.mu, self.V, 0)
