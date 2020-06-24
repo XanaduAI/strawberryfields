@@ -1316,14 +1316,16 @@ class Dgate(Gate):
     """
 
     def __init__(self, r, phi=None):
+        if np.iscomplex(r) or np.iscomplex(phi):
+            raise ValueError("The arguments of Dgate(r, phi) cannot be complex")
         if phi is None:
             phi = 0.0
             # TODO: remove warning in the new release
             warnings.warn(
-                f"""Warning: since strawberryfields version {sf.__version__},
+                f"""Warning: since strawberryfields version v0.15.0,
             Dgate(r, phi) takes two real arguments which represent
             the polar decomposition of the complex displacement parameter.
-            Falling back to (r={r}, phi=0.0), is this what you meant?"""
+            Using the arguments r={r} and phi=0.0"""
             )
 
         super().__init__([r, phi])
@@ -1730,7 +1732,17 @@ class BSgate(Gate):
     """
     ns = 2
 
-    def __init__(self, theta=np.pi / 4, phi=0.0):
+    def __init__(self, theta=np.pi / 4, phi=None):
+        if np.iscomplex(theta) or np.iscomplex(phi):
+            raise ValueError("The arguments of BSgate(theta, phi) cannot be complex")
+        if phi is None:
+            phi = 0.0
+            # TODO: remove warning in the new release
+            warnings.warn(
+                f"""Warning: since strawberryfields version v0.15.0,
+            BSgate(theta, phi) takes two angles rather than the transmission and
+            reflection coefficients. Using the arguments theta={theta} and phi=0.0"""
+            )
         # default: 50% beamsplitter
         super().__init__([theta, phi])
 
@@ -1806,7 +1818,18 @@ class S2gate(Gate):
     """
     ns = 2
 
-    def __init__(self, r, phi=0.0):
+    def __init__(self, r, phi=None):
+        if np.iscomplex(r) or np.iscomplex(phi):
+            raise ValueError("The arguments of S2gate(r, phi) cannot be complex")
+        if phi is None:
+            phi = 0.0
+            # TODO: remove warning in the new release
+            warnings.warn(
+                f"""Warning: since strawberryfields version v0.15.0,
+            Sgate(r, phi) takes two real arguments which represent
+            the polar decomposition of the complex squeezing parameter.
+            Using the arguments r={r} and phi=0.0"""
+            )
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
