@@ -245,8 +245,8 @@ def all_fock_probs_pnr(photon_number_samples):
 
     Returns:
         array: array of dimension :math:`\underbrace{D\times D\times
-            D\cdots\times D}_{\text{num modes}}` containing the Fock state
-            probabilities, where :math:`D` is the Fock basis cutoff truncation
+        D\cdots\times D}_{\text{num modes}}` containing the Fock state
+        probabilities, where :math:`D` is the Fock basis cutoff truncation
     """
     _check_samples(photon_number_samples)
 
