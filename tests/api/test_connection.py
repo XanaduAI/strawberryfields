@@ -132,16 +132,19 @@ class TestConnection:
 
     def test_get_job(self, connection, monkeypatch):
         """Tests a successful job request."""
-        id_, status = "123", JobStatus.COMPLETED
+        id_, status, meta = "123", JobStatus.COMPLETED, {"abc": "def"}
 
         monkeypatch.setattr(
-            requests, "get", mock_return(MockResponse(200, {"id": id_, "status": status.value})),
+            requests,
+            "get",
+            mock_return(MockResponse(200, {"id": id_, "status": status.value, "meta": meta})),
         )
 
         job = connection.get_job(id_)
 
         assert job.id == id_
         assert job.status == status.value
+        assert job.meta == meta
 
     def test_get_job_error(self, connection, monkeypatch):
         """Tests a failed job request."""
@@ -155,7 +158,9 @@ class TestConnection:
         id_, status = "123", JobStatus.COMPLETED
 
         monkeypatch.setattr(
-            requests, "get", mock_return(MockResponse(200, {"id": id_, "status": status.value})),
+            requests,
+            "get",
+            mock_return(MockResponse(200, {"id": id_, "status": status.value, "meta": {}})),
         )
 
         assert connection.get_job_status(id_) == status.value
@@ -237,6 +242,7 @@ class TestConnection:
         monkeypatch.setattr(requests, "get", mock_return(MockResponse(500, {})))
 
         assert not connection.ping()
+
 
 class TestConnectionIntegration:
     """Integration tests for using instances of the Connection."""

@@ -68,7 +68,7 @@ class TestProgram:
         assert len(prog) == 0
 
         with prog.context as q:
-            ops.Dgate(0.5) | q[0]
+            ops.Dgate(0.5, 0.0) | q[0]
         # now there is one gate in the queue
         assert len(prog) == 1
 
@@ -78,7 +78,7 @@ class TestProgram:
 
     def test_parent_program(self):
         """Continuing one program with another."""
-        D = ops.Dgate(0.5)
+        D = ops.Dgate(0.5, 0.0)
         prog = sf.Program(3)
         with prog.context as q:
             D | q[1]
@@ -107,7 +107,7 @@ class TestProgram:
         assert res == []
 
         # define some gates
-        D = ops.Dgate(0.5)
+        D = ops.Dgate(0.5, 0.0)
         BS = ops.BSgate(2 * np.pi, np.pi / 2)
         R = ops.Rgate(np.pi)
 
@@ -211,37 +211,37 @@ class TestRegRefs:
         with prog.context as q:
             q[0].ind = 1
             with pytest.raises(program.RegRefError, match="RegRef state has become inconsistent"):
-                ops.Dgate(0.5) | q[0]
+                ops.Dgate(0.5, 0.0) | q[0]
 
     def test_nonexistent_index(self, prog):
         """Acting on a non-existent mode raises an error."""
         with prog.context as q:
             with pytest.raises(IndexError):
-                ops.Dgate(0.5) | q[3]
+                ops.Dgate(0.5, 0.0) | q[3]
             with pytest.raises(program.RegRefError, match="does not exist"):
-                ops.Dgate(0.5) | 3
+                ops.Dgate(0.5, 0.0) | 3
 
     def test_deleted_index(self, prog):
         """Test that acting on a deleted mode raises an error"""
         with prog.context as q:
             ops.Del | q[0]
             with pytest.raises(program.RegRefError, match="been deleted"):
-                ops.Dgate(0.5) | 0
+                ops.Dgate(0.5, 0.0) | 0
 
             with pytest.raises(program.RegRefError, match="been deleted"):
-                ops.Dgate(0.5) | q[0]
+                ops.Dgate(0.5, 0.0) | q[0]
 
     def test_unknown_regref(self, prog):
         """Applying an operation on a RegRef not belonging to the program."""
         r = program.RegRef(3)
         with prog.context:
             with pytest.raises(program.RegRefError, match="Unknown RegRef."):
-                ops.Dgate(0.5) | r
+                ops.Dgate(0.5, 0.0) | r
 
     def test_invalid_measurement(self, eng, prog):
         """Cannot use a measurement before it exists."""
         with prog.context as q:
-            ops.Dgate(q[0].par) | q[1]
+            ops.Dgate(q[0].par, 0.0) | q[1]
         with pytest.raises(ParameterError, match="nonexistent measurement result"):
             eng.run(prog)
 
@@ -249,7 +249,7 @@ class TestRegRefs:
         """Cannot refer to a register with a non-integral or RegRef object."""
         with prog.context:
             with pytest.raises(program.RegRefError, match="using integers and RegRefs"):
-                ops.Dgate(0) | 1.2
+                ops.Dgate(0, 0) | 1.2
 
     def test_regref_val(self, eng, prog):
         """RegRefs storing measured values."""
@@ -374,7 +374,7 @@ class TestValidation:
         prog = sf.Program(3)
         with prog.context as q:
             ops.S2gate(0.6) | q[0:2]
-            ops.Dgate(1.0)  | q[2]
+            ops.Dgate(1.0, 0.0)  | q[2]
             ops.MeasureFock() | q[0:2]
             ops.MeasureX | q[2]
 
@@ -572,7 +572,7 @@ class TestValidation:
             # isomorphism of the one provided above
             # in circuit, so should validate.
             ops.MeasureFock() | q[2]
-            ops.Dgate(-7.123) | q[1]
+            ops.Dgate(-7.123, 0.0) | q[1]
             ops.Sgate(0.543) | q[0]
             ops.BSgate(-0.32) | (q[0], q[1])
             ops.MeasureFock() | q[0]
@@ -599,7 +599,7 @@ class TestValidation:
                 version 0.0
 
                 Sgate({sq}, 0) | 0
-                Dgate(-7.123) | 1
+                Dgate(-7.123, 0) | 1
                 BSgate({theta}) | 0, 1
                 MeasureFock() | 0
                 MeasureFock() | 2
@@ -613,7 +613,7 @@ class TestValidation:
             # in circuit, as the Sgate
             # comes AFTER the beamsplitter.
             ops.MeasureFock() | q[2]
-            ops.Dgate(-7.123) | q[1]
+            ops.Dgate(-7.123, 0.0) | q[1]
             ops.BSgate(-0.32) | (q[0], q[1])
             ops.Sgate(0.543) | q[0]
             ops.MeasureFock() | q[0]
@@ -639,7 +639,7 @@ class TestGBS:
         """Tests that GBS compilation fails when no fock measurements are made."""
         prog = sf.Program(2)
         with prog.context as q:
-            ops.Dgate(1.0) | q[0]
+            ops.Dgate(1.0, 0.0) | q[0]
             ops.Sgate(-0.5) | q[1]
 
         with pytest.raises(program.CircuitError, match="GBS circuits must contain Fock measurements."):
@@ -649,9 +649,9 @@ class TestGBS:
         """Tests that GBS compilation fails when Fock measurements are made with an intervening gate."""
         prog = sf.Program(2)
         with prog.context as q:
-            ops.Dgate(1.0) | q[0]
+            ops.Dgate(1.0, 0.0) | q[0]
             ops.MeasureFock() | q[0]
-            ops.Dgate(-1.0) | q[1]
+            ops.Dgate(-1.0, 0.0) | q[1]
             ops.BSgate(-0.5, 2.0) | q  # intervening gate
             ops.MeasureFock() | q[1]
 
@@ -662,7 +662,7 @@ class TestGBS:
         """Tests that GBS compilation fails when the same mode is measured more than once."""
         prog = sf.Program(3)
         with prog.context as q:
-            ops.Dgate(1.0) | q[0]
+            ops.Dgate(1.0, 0.0) | q[0]
             ops.MeasureFock() | q[0]
             ops.MeasureFock() | q
 

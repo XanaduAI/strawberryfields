@@ -195,6 +195,7 @@ class Connection:
                 id_=response.json()["id"],
                 status=JobStatus(response.json()["status"]),
                 connection=self,
+                meta=response.json()["meta"],
             )
         raise RequestFailedError(
             "Failed to get job: {}".format(self._format_error_message(response))

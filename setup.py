@@ -28,7 +28,7 @@ requirements = [
     "networkx>=2.0",
     "quantum-blackbird>=0.2.3",
     "python-dateutil>=2.8.0",
-    "thewalrus>=0.11",
+    "thewalrus>=0.13.0rc1",
     "numba",
     "toml",
     "appdirs",
@@ -44,7 +44,8 @@ info = {
     "url": "https://github.com/XanaduAI/StrawberryFields",
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
-    "package_data": {"strawberryfields": ["backends/data/*", "apps/data/*"]},
+    "package_data": {"strawberryfields": ["backends/data/*", "apps/data/feature_data/*",
+                                          "apps/data/sample_data/*"]},
     "include_package_data": True,
     "entry_points" : {
         'console_scripts': [
@@ -73,7 +74,6 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",

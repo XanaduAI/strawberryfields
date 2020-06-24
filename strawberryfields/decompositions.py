@@ -104,14 +104,14 @@ def takagi(N, tol=1e-13, rounding=13):
 def graph_embed_deprecated(A, max_mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08):
     r"""Embed a graph into a Gaussian state.
 
-    Note: The default behaviour of graph embedding has been changed; see :func:`graph_embed`. This version is deprecated, but has been kept for consistency.
+    Note: The default behaviour of graph embedding has been changed; see :func:`~.graph_embed`. This version is deprecated, but has been kept for consistency.
 
     Given a graph in terms of a symmetric adjacency matrix
     (in general with arbitrary complex off-diagonal and real diagonal entries),
     returns the squeezing parameters and interferometer necessary for
     creating the Gaussian state whose off-diagonal parts are proportional to that matrix.
 
-    Uses :func:`takagi`.
+    Uses :func:`~.takagi`.
 
     Args:
         A (array[complex]): square, symmetric (weighted) adjacency matrix of the graph
@@ -154,7 +154,7 @@ def graph_embed(A, mean_photon_per_mode=1.0, make_traceless=False, rtol=1e-05, a
     returns the squeezing parameters and interferometer necessary for
     creating the Gaussian state whose off-diagonal parts are proportional to that matrix.
 
-    Uses :func:`takagi`.
+    Uses :func:`~.takagi`.
 
     Args:
         A (array[complex]): square, symmetric (weighted) adjacency matrix of the graph
@@ -197,7 +197,7 @@ def bipartite_graph_embed(A, mean_photon_per_mode=1.0, rtol=1e-05, atol=1e-08):
     returns the two-mode squeezing parameters and interferometers necessary for
     creating the Gaussian state that encodes such adjacency matrix
 
-    Uses :func:`takagi`.
+    Uses :func:`~.takagi`.
 
     Args:
         A (array[complex]): square, (weighted) adjacency matrix of the bipartite graph
@@ -231,7 +231,7 @@ def bipartite_graph_embed(A, mean_photon_per_mode=1.0, rtol=1e-05, atol=1e-08):
 
 
 def T(m, n, theta, phi, nmax):
-    r"""The Clements T matrix from Eq. 1 of the paper"""
+    r"""The Clements T matrix from Eq 1 of the paper"""
     mat = np.identity(nmax, dtype=np.complex128)
     mat[m, m] = np.exp(1j * phi) * np.cos(theta)
     mat[m, n] = -np.sin(theta)
@@ -253,9 +253,11 @@ def nullTi(m, n, U):
         raise ValueError("U must be a square matrix")
 
     if U[m, n] == 0:
+        # no swaps for the identity-like case
         thetar = 0
         phir = 0
     elif U[m, n + 1] == 0:
+        # swap in the divide-by-zero case
         thetar = np.pi / 2
         phir = 0
     else:
@@ -274,9 +276,11 @@ def nullT(n, m, U):
         raise ValueError("U must be a square matrix")
 
     if U[n, m] == 0:
+        # no swaps for the identity-like case
         thetar = 0
         phir = 0
     elif U[n - 1, m] == 0:
+        # swap in the divide-by-zero case
         thetar = np.pi / 2
         phir = 0
     else:
@@ -317,8 +321,7 @@ def rectangular(V, tol=1e-11):
     localV = V
     (nsize, _) = localV.shape
 
-    diffn = np.linalg.norm(V @ V.conj().T - np.identity(nsize))
-    if diffn >= tol:
+    if not np.allclose(V @ V.conj().T, np.identity(nsize), atol=tol, rtol=0):
         raise ValueError("The input matrix is not unitary")
 
     tilist = []
@@ -347,9 +350,7 @@ def rectangular_phase_end(V, tol=1e-11):
 
     Args:
         V (array[complex]): unitary matrix of size n_size
-        tol (float): the tolerance used when checking if the matrix is unitary:
-            :math:`|VV^\dagger-I| \leq` tol
-
+        tol (float): the tolerance used when checking if the matrix is unitary
     Returns:
         tuple[array]: returns a tuple of the form ``(tlist, np.diag(localV), None)``
             where:
@@ -387,6 +388,24 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
     m, a symmetric beamsplitter combining modes m and n, an internal phase
     shifter on mode m, and another symmetric beamsplitter combining modes m
     and n.
+
+    The resulting matrix is
+
+    .. math::
+
+       M = i e^{i \phi_{i}/2} \left[\begin{matrix}\sin \left( \phi_{i}/2 \right) e^{i \phi_{e}} & \cos \left( \phi_{i}/2 \right) \\
+       \cos \left( \phi_{i}/2 \right) e^{i \phi_{e}} & - \sin \left( \phi_{i}/2 \right) \end{matrix}\right]
+
+    Args:
+        m (int): mode number on which the phase shifters act
+        n (int): mode number which is combined with mode m by the beamsplitters
+        internal_phase (float): phase in between the symmetric beamsplitters
+        external_phase (float): phase acting before the first beamsplitter
+        nmax (int): maximum number of modes in the circuit
+
+    Returns:
+        array: unitary matrix of the effective transformation the series of phaseshifters
+        and beamsplitters.
     """
     Rexternal = np.identity(nmax, dtype=np.complex128)
     Rexternal[m, m] = np.exp(1j * external_phase)
@@ -400,44 +419,145 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
     return BS @ Rinternal @ BS @ Rexternal
 
 
+def mach_zehnder_inv(m, n, phi_int, phi_ext, nmax):
+    r"""The inverse of the Mach-Zehnder unitary matrix.
+    See :func:`~.mach_zehnder` for more details on the Mach-Zehnder unitary.
+    """
+    return mach_zehnder(m, n, phi_int, phi_ext, nmax).conj().T
+
+
+def nullMZi(m, n, U):
+    r"""Nullifies element m,n of U using mach_zehnder_inv.
+
+    Args:
+        m (int): row index of element to be nullified
+        n (int): column index of element to be nullified
+        U (array): matrix whose m,n element is to be nullified
+
+    Returns:
+        list: list containing ``[m, n, internal_phase, external_phase, nmax]`` of the
+            mach_zehnder_inv unitaries needed
+    """
+    (nmax, mmax) = U.shape
+
+    if nmax != mmax:
+        raise ValueError("U must be a square matrix")
+
+    if U[m, n] == 0:
+        # no swaps for the identity-like case
+        phi_i = np.pi
+        phi_e = 0
+    elif U[m, n + 1] == 0:
+        # swap in the divide-by-zero case
+        phi_i = 0
+        phi_e = 0
+    else:
+        r = -U[m, n + 1] / U[m, n]
+        phi_i = 2 * np.arctan(np.abs(r))
+        phi_e = -np.angle(r)
+
+    return [n, n + 1, phi_i, phi_e, nmax]
+
+
+def nullMZ(n, m, U):
+    r"""Nullifies element n,m of U using mach_zehnder.
+
+    Args:
+        n (int): row index of element to be nullified
+        m (int): column index of element to be nullified
+        U (array): matrix whose m,n element is to be nullified
+
+    Returns:
+        list: list containing ``[m, n, internal_phase, external_phase, nmax]`` of the
+            mach_zehnder unitaries needed
+    """
+    (nmax, mmax) = U.shape
+
+    if nmax != mmax:
+        raise ValueError("U must be a square matrix")
+
+    if U[n, m] == 0:
+        # no swaps for the identity-like case
+        phi_i = np.pi
+        phi_e = 0
+    elif U[n - 1, m] == 0:
+        # swap in the divide-by-zero case
+        phi_i = 0
+        phi_e = 0
+    else:
+        r = U[n - 1, m] / U[n, m]
+        phi_i = 2 * np.arctan(np.abs(r))
+        phi_e = -np.angle(r)
+
+    return [n - 1, n, phi_i, phi_e, nmax]
+
+
+def rectangular_MZ(V, tol=1e-11):
+    r"""Rectangular decomposition of a unitary matrix, with local
+    phase shifts applied between two interferometers.
+
+    Is similar to :func:`~.rectangular` except that it uses Mach Zehnder matrices to null elements of V
+    using the :func:`~.null_MZ` and :func:`~.null_MZi` instead of :func:`~.T` matrices and corresponding :func:`~.nullT`
+    and :func:`~.nullTi` functions.
+
+    Args:
+        V (array[complex]): unitary matrix of size n_size
+        tol (float): the tolerance used when checking if the matrix is unitary
+
+    Returns:
+        tuple[array]: tuple of the form ``(tilist, np.diag(localV), tlist)``
+        where:
+
+        * ``tilist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the ``mach_zehnder_inv`` unitaries needed
+        * ``tlist``: list containing ``[n,m,phi_int,phi_ext,n_size]`` of the ``mach_zehnder`` unitaries needed
+        * ``localV``: Diagonal unitary sitting sandwiched by ``mach_zehnder_inv``'s and the ``mach_zehnder``'s
+    """
+    localV = V
+    (nsize, _) = localV.shape
+
+    if not np.allclose(V @ V.conj().T, np.identity(nsize), atol=tol, rtol=0):
+        raise ValueError("The input matrix is not unitary")
+
+    tilist = []
+    tlist = []
+    for k, i in enumerate(range(nsize - 2, -1, -1)):
+        if k % 2 == 0:
+            for j in reversed(range(nsize - 1 - i)):
+                tilist.append(nullMZi(i + j + 1, j, localV))
+                tilist[-1][2] %= 2 * np.pi
+                tilist[-1][3] %= 2 * np.pi
+                # repeat modulo operations, otherwise the input unitary
+                # numpy.identity(20) yields an external_phase of exactly 2 * pi
+                tilist[-1][2] %= 2 * np.pi
+                tilist[-1][3] %= 2 * np.pi
+                localV = localV @ mach_zehnder_inv(*tilist[-1])
+        else:
+            for j in range(nsize - 1 - i):
+                tlist.append(nullMZ(i + j + 1, j, localV))
+                tlist[-1][2] %= 2 * np.pi
+                tlist[-1][3] %= 2 * np.pi
+                # repeat modulo operations, otherwise the input unitary
+                # numpy.identity(20) yields an external_phase of exactly 2 * pi
+                tlist[-1][2] %= 2 * np.pi
+                tlist[-1][3] %= 2 * np.pi
+                localV = mach_zehnder(*tlist[-1]) @ localV
+
+    return tilist, np.diag(localV), tlist
+
+
 def rectangular_symmetric(V, tol=1e-11):
     r"""Decomposition of a unitary into an array of symmetric beamsplitters.
 
-    This decomposition starts with the output from :func:`rectangular_phase_end`
-    and further decomposes each of the T unitaries into Mach-Zehnder
-    interferometers consisting of two phase-shifters and two symmetric (50:50)
-    beamsplitters.
+    This decomposition starts with the output from :func:`~.rectangular_MZ`
+    and performs the equivalent of :func:`~.rectangular_phase_end` by placing all the
+    local phase shifts after the interferometers.
 
-    The two beamsplitters in this decomposition of T are modeled by :class:`~.ops.BSgate`
-    with arguments :math:`(\pi/4, \pi/2)`, and the two phase-shifters (see :class:`~.ops.Rgate`)
-    act on the input mode with the lower index of the two. The phase imposed
-    by the first phaseshifter (before the first beamsplitter) is named
-    ``external_phase``, while we call the phase shift between the beamsplitters
-    ``internal_phase``.
+    If the Mach-Zehnder unitaries are represented as M and the local phase shifts as D, the new
+    parameters to shift the local phases to the end are calculated such that
 
-    The algorithm applied in this function makes use of the following identity:
+    .. math::
 
-    .. code-block:: python
-
-        Rgate(alpha) | 1
-        Rgate(beta) | 2
-        Rgate(phi) | 1
-        BSgate(theta, 0) | 1, 2
-
-        equals
-
-        Rgate(phi+alpha-beta) | 1
-        BSgate(pi/4, pi/2) | 1, 2
-        Rgate(2*theta+pi) | 1, 2
-        BSgate(pi/4, pi/2) | 1, 2
-        Rgate(beta-theta+pi) | 1
-        Rgate(beta-theta) | 2
-
-    The phase-shifts by ``alpha`` and ``beta`` are thus pushed consecutively through
-    all the T unitaries of the interferometer and these unitaries are converted
-    into pairs of symmetric beamsplitters with two phase shifts. The phase
-    shifts at the end of the interferometer are added to the ones from the
-    diagonal unitary at the end of the interferometer obtained from :func:`~.rectangular_phase_end`.
+       M^{-1} D = D_{\mathrm{new}} M_{\mathrm{new}}
 
     Args:
         V (array): unitary matrix of size n_size
@@ -451,27 +571,32 @@ def rectangular_symmetric(V, tol=1e-11):
             * ``tlist``: list containing ``[n, m, internal_phase, external_phase, n_size]`` of the T unitaries needed
             * ``localV``: Diagonal unitary matrix to be applied at the end of circuit
             * ``None``: the value ``None``, in order to make the return
-              signature identical to :func:`rectangular`
+              signature identical to :func:`~.rectangular`
     """
-    tlist, diags, _ = rectangular_phase_end(V, tol)
-    new_tlist, new_diags = [], np.ones(len(diags), dtype=diags.dtype)
-    for i in tlist:
+    tilist, diags, tlist = rectangular_MZ(V, tol)
+    new_tlist, new_diags = tilist.copy(), diags.copy()
+
+    # Push each beamsplitter through the diagonal unitary
+    for i in reversed(tlist):
         em, en = int(i[0]), int(i[1])
         alpha, beta = np.angle(new_diags[em]), np.angle(new_diags[en])
-        theta, phi = i[2], i[3]
-        external_phase = (phi + alpha - beta) % (2 * np.pi)
-        internal_phase = (np.pi + 2.0 * theta) % (2 * np.pi)
+        phi_i, phi_e = i[2], i[3]
+
+        # The new parameters required for D', MZ' st. MZ^(-1)D = D'MZ'
+
+        new_phi_e = (alpha - beta) % (2 * np.pi)
+        new_alpha = (beta - phi_e - phi_i + np.pi) % (2 * np.pi)
+        new_beta = (beta - phi_i + np.pi) % (2 * np.pi)
+        new_phi_i = phi_i % (2 * np.pi)
         # repeat modulo operations , otherwise the input unitary
         # numpy.identity(20) yields an external_phase of exactly 2 * pi
-        external_phase %= 2 * np.pi
-        internal_phase %= 2 * np.pi
-        new_alpha = beta - theta + np.pi
-        new_beta = 0 * np.pi - theta + beta
-        new_i = [i[0], i[1], internal_phase, external_phase, i[4]]
-        new_diags[em], new_diags[en] = np.exp(1j * new_alpha), np.exp(1j * new_beta)
-        new_tlist = new_tlist + [new_i]
+        new_phi_i %= 2 * np.pi
+        new_phi_e %= 2 * np.pi
 
-    new_diags = diags * new_diags
+        new_i = [i[0], i[1], new_phi_i, new_phi_e, i[4]]
+        new_diags[em], new_diags[en] = np.exp(1j * new_alpha), np.exp(1j * new_beta)
+
+        new_tlist = new_tlist + [new_i]
 
     return new_tlist, new_diags, None
 
@@ -496,8 +621,7 @@ def triangular(V, tol=1e-11):
     localV = V
     (nsize, _) = localV.shape
 
-    diffn = np.linalg.norm(V @ V.conj().T - np.identity(nsize))
-    if diffn >= tol:
+    if not np.allclose(V @ V.conj().T, np.identity(nsize), atol=tol, rtol=0):
         raise ValueError("The input matrix is not unitary")
 
     tlist = []

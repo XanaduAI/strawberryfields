@@ -1,5 +1,5 @@
-Pre-generated GBS datasets
-==========================
+GBS datasets
+============
 
 .. role:: html(raw)
    :format: html
@@ -9,8 +9,8 @@ Pre-generated GBS datasets
 *Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.data`
 
 Strawberry Fields contains datasets of pre-generated samples from GBS for encoded problems,
-including graphs for :ref:`graph optimization <graphs-intro>` and :ref:`machine learning <ml-intro>`
-problems and molecules for calculating :ref:`vibronic spectra <apps-vibronic-tutorial>`.
+including graphs for :doc:`graph optimization and machine learning problems <applications>`,
+and molecules for calculating :doc:`vibronic spectra <apps/run_tutorial_vibronic>`.
 
 Graphs
 ------
@@ -83,7 +83,7 @@ For :ref:`graph similarity <apps-sim-tutorial>`, we provide:
 Molecules
 ---------
 
-Using the :mod:`~.apps.vibronic` module and :func:`~.apps.sample.vibronic` function, GBS data has
+Using the :mod:`~.qchem.vibronic` module and :func:`~.qchem.vibronic.sample` function, GBS data has
 been generated for formic acid at zero temperature. The GBS samples can be used to recover the
 :ref:`vibronic spectrum <apps-vibronic-tutorial>` of the molecule.
 
@@ -93,7 +93,7 @@ been generated for formic acid at zero temperature. The GBS samples can be used 
 Dataset
 -------
 
-The :class:`Dataset` class provides the base functionality from which all datasets inherit.
+The :class:`~.SampleDataset` class provides the base functionality from which all datasets inherit.
 
 Each dataset contains a variety of metadata relevant to the sampling:
 
@@ -135,7 +135,8 @@ Datasets also contain metadata relevant to the GBS setup:
 >>> len(data)
 50000
 
-The number of photons or clicks in each sample is available using the :meth:`Dataset.counts` method:
+The number of photons or clicks in each sample is available using the
+:meth:`~.SampleDataset.counts` method:
 
 >>> data.counts()
 [2, 0, 8, 11, ... , 6]

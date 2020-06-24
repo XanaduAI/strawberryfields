@@ -53,7 +53,7 @@ def prog():
 
         # one mode gates
         ops.Sgate(1) | q[0]
-        ops.Dgate(a=0.54 + 0.5j) | q[1]
+        ops.Dgate(np.abs(0.54 + 0.5j), np.angle(0.54 + 0.5j)) | q[1]
 
         # two mode gates
         ops.S2gate(0.543, -0.12) | (q[0], q[3])
@@ -82,7 +82,7 @@ complex array A0[4, 4] =
 Vacuum() | 1
 Squeezed(0.12, 0.0) | 2
 Sgate(1, 0.0) | 0
-Dgate(0.54+0.5j, 0.0) | 1
+Dgate(0.735934779718964, 0.7469555733762603) | 1
 S2gate(0.543, -0.12) | [0, 3]
 Interferometer(A0) | [0, 1, 2, 3]
 MeasureHomodyne(phi=0) | 0
@@ -152,7 +152,7 @@ class TestSFToBlackbirdConversion:
         prog = Program(2)
 
         with prog.context as q:
-            ops.Dgate(a=0.54 + 0.324j) | q[1]
+            ops.Dgate(np.abs(0.54 + 0.324j), np.angle(0.54 + 0.324j)) | q[1]
 
         bb = io.to_blackbird(prog)
         # Note: due to how SF stores quantum commands with the Parameter class,
@@ -160,7 +160,7 @@ class TestSFToBlackbirdConversion:
         expected = {
             "op": "Dgate",
             "modes": [1],
-            "args": [0.54 + 0.324j, 0],
+            "args": [np.abs(0.54 + 0.324j), np.angle(0.54 + 0.324j)],
             "kwargs": {},
         }
 
@@ -244,6 +244,24 @@ class TestSFToBlackbirdConversion:
             "modes": [0],
             "args": [],
             "kwargs": {"select": [2]},
+        }
+
+        assert bb.operations[0] == expected
+
+    def test_measure_darkcounts(self):
+        """Test measurement with dark counts"""
+        # create a test program
+        prog = Program(1)
+
+        with prog.context as q:
+            ops.MeasureFock(dark_counts=2) | q[0]
+
+        bb = io.to_blackbird(prog)
+        expected = {
+            "op": "MeasureFock",
+            "modes": [0],
+            "args": [],
+            "kwargs": {"dark_counts": [2]},
         }
 
         assert bb.operations[0] == expected
@@ -405,7 +423,7 @@ class TestBlackbirdToSFConversion:
         name test_program
         version 1.0
 
-        Dgate(a=0.54) | 0
+        Dgate(0.54, 0) | 0
         """
 
         bb = blackbird.loads(bb_script)
@@ -453,9 +471,9 @@ class TestBlackbirdToSFConversion:
         name test_program
         version 1.0
 
-        Dgate(a=1-{ALPHA}) | 0     # keyword arg, compound expr
+        Dgate(1-{ALPHA}, 0) | 0     # keyword arg, compound expr
         Rgate(theta={foo_bar1}) | 0  # keyword arg, atomic
-        Dgate({ALPHA}**2) | 0        # positional arg, compound expr
+        Dgate({ALPHA}**2, 0) | 0        # positional arg, compound expr
         Rgate({foo_bar2}) | 0        # positional arg, atomic
         """
         bb = blackbird.loads(bb_script)

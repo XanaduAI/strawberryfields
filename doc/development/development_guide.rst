@@ -6,15 +6,15 @@ Dependencies
 
 Strawberry Fields requires the following libraries be installed:
 
-* `Python <http://python.org/>`_ >=3.5,<3.7
+* `Python <http://python.org/>`_ >= 3.6
 
 as well as the following Python packages:
 
-* `NumPy <http://numpy.org/>`_  >=1.17.4
-* `SciPy <http://scipy.org/>`_  >=1.0.0
-* `NetworkX <http://networkx.github.io/>`_ >=2.0
-* `Blackbird <https://quantum-blackbird.readthedocs.io>`_ >=0.2.0
-* `The Walrus <https://the-walrus.readthedocs.io>`_ >=0.7.0
+* `NumPy <http://numpy.org/>`_ >= 1.17.4
+* `SciPy <http://scipy.org/>`_ >= 1.0.0
+* `NetworkX <http://networkx.github.io/>`_ >= 2.0
+* `Blackbird <https://quantum-blackbird.readthedocs.io>`_ >= 0.2.0
+* `The Walrus <https://the-walrus.readthedocs.io>`_ >= 0.7.0
 * `toml <https://pypi.org/project/toml/>`_
 * `appdirs <https://pypi.org/project/appdirs/>`_
 

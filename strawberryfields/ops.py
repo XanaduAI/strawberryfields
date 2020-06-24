@@ -271,8 +271,13 @@ class Measurement(Operation):
     def __str__(self):
         # class name, parameter values, and possibly the select parameter
         temp = super().__str__()
+
         if self.select is not None:
-            temp = temp[:-1] + ", select={})".format(self.select)
+            if not self.p:
+                temp += f"(select={self.select})"
+            else:
+                temp = f"{temp[:-1]}, select={self.select})"
+
         return temp
 
     def merge(self, other):
@@ -288,19 +293,12 @@ class Measurement(Operation):
                 Only applies to Measurements.
         """
         values = super().apply(reg, backend, **kwargs)
-        # convert the returned values into an iterable with the measured modes indexed along
-        # the first axis and shots along second axis (if larger than 1), so that we can assign
-        # register values
-        shots = kwargs.get("shots", 1)
-        if self.ns == 1:
-            values = [values]  # values is either a scalar, or has shape (shots,)
-        else:
-            if shots > 1:
-                values = values.T  # shape of values would be (shots, num_meas,)
 
         # store the results in the register reference objects
-        for v, r in zip(values, reg):
+        for v, r in zip(np.transpose(values), reg):
             r.val = v
+
+        return values
 
 
 class Decomposition(Operation):
@@ -509,9 +507,31 @@ class Gate(Transformation):
 
 
 class Vacuum(Preparation):
-    """Prepare a mode in the :ref:`vacuum state <vacuum_state>`.
+    r"""Prepare a mode in the vacuum state.
 
     Can be accessed via the shortcut variable ``Vac``.
+
+    .. note:: By default, newly created modes in Strawberry Fields default to the vacuum state.
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            The vacuum state :math:`\ket{0}` is a Gaussian state defined by
+
+            .. math::
+                \ket{0} = \frac{1}{\sqrt[4]{\pi \hbar}}
+                \int dx~e^{-x^2/(2 \hbar)}\ket{x} ~~\text{where}~~ \a\ket{0}=0
+
+        .. tip::
+
+            *Available in Strawberry Fields as a NumPy array by*
+            :func:`strawberryfields.utils.vacuum_state`
+
+        In the Fock basis, it is represented by Fock state :math:`\ket{0}`,
+        and in the Gaussian formulation, by :math:`\bar{\mathbf{r}}=(0,0)`
+        and :math:`\mathbf{V}= \frac{\hbar}{2} I`.
     """
 
     def __init__(self):
@@ -527,31 +547,98 @@ class Vacuum(Preparation):
 
 
 class Coherent(Preparation):
-    r"""Prepare a mode in a :ref:`coherent state <coherent_state>`.
+    r"""Prepare a mode in a coherent state.
 
     The gate is parameterized so that a user can specify a single complex number :math:`a=\alpha`
     or use the polar form :math:`a = r, p=\phi` and still get the same result.
 
     Args:
-        a (complex): displacement parameter :math:`\alpha`
+        r (float): displacement magnitude :math:`|\alpha|`
         p (float): phase angle :math:`\phi`
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            The coherent state :math:`\ket{\alpha}`, :math:`\alpha\in\mathbb{C}`
+            is a displaced vacuum state defined by
+
+            .. math::
+                \ket{\alpha} = D(\alpha)\ket{0}
+
+        .. tip::
+
+            *Available in Strawberry Fields as a NumPy array by*
+            :func:`strawberryfields.utils.coherent_state`
+
+        A coherent state is a minimum uncertainty state, and the
+        eigenstate of the annihilation operator:
+
+        .. math:: \a\ket{\alpha} = \alpha\ket{\alpha}
+
+        In the Fock basis, it has the decomposition
+
+        .. math:: |\alpha\rangle = e^{-|\alpha|^2/2} \sum_{n=0}^\infty
+                  \frac{\alpha^n}{\sqrt{n!}}|n\rangle
+
+        whilst in the Gaussian formulation, :math:`\bar{\mathbf{r}}=2
+        \sqrt{\frac{\hbar}{2}}(\text{Re}(\alpha), \text{Im}(\alpha))` and
+        :math:`\mathbf{V}= \frac{\hbar}{2} I`.
     """
 
-    def __init__(self, a=0.0, p=0.0):
-        super().__init__([a, p])
+    def __init__(self, r=0.0, p=0.0):
+        super().__init__([r, p])
 
     def _apply(self, reg, backend, **kwargs):
-        p = self.p[0] * pf.exp(1j * self.p[1])
-        z = par_evaluate(p)
-        backend.prepare_coherent_state(z, *reg)
+        r = par_evaluate(self.p[0])
+        phi = par_evaluate(self.p[1])
+        backend.prepare_coherent_state(r, phi, *reg)
 
 
 class Squeezed(Preparation):
-    r"""Prepare a mode in a :ref:`squeezed vacuum state <squeezed_state>`.
+    r"""Prepare a mode in a squeezed vacuum state.
 
     Args:
         r (float): squeezing magnitude
         p (float): squeezing angle :math:`\phi`
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            The squeezed state :math:`\ket{z}`, :math:`z=re^{i\phi}`
+            is a squeezed vacuum state defined by
+
+            .. math::
+                \ket{z} = S(z)\ket{0}
+
+        .. tip::
+
+            *Available in Strawberry Fields as a NumPy array by*
+            :func:`strawberryfields.utils.squeezed_state`
+
+        A squeezed state is a minimum uncertainty state with unequal
+        quadrature variances, and satisfies the following eigenstate equation:
+
+        .. math:: \left(\a\cosh(r)+\ad e^{i\phi}\sinh(r)\right)\ket{z} = 0
+
+        In the Fock basis, it has the decomposition
+
+        .. math:: |z\rangle = \frac{1}{\sqrt{\cosh(r)}}\sum_{n=0}^\infty
+                  \frac{\sqrt{(2n)!}}{2^n n!}(-e^{i\phi}\tanh(r))^n|2n\rangle
+
+        whilst in the Gaussian formulation, :math:`\bar{\mathbf{r}} = (0,0)`,
+        :math:`\mathbf{V} = \frac{\hbar}{2}R(\phi/2)\begin{bmatrix}e^{-2r} & 0 \\
+        0 & e^{2r} \\\end{bmatrix}R(\phi/2)^T`.
+
+        We can use the squeezed vacuum state to approximate the zero position and
+        zero momentum eigenstates;
+
+        .. math:: \ket{0}_x \approx S(r)\ket{0}, ~~~~ \ket{0}_p \approx S(-r)\ket{0}
+
+        where :math:`z=r` is sufficiently large.
     """
 
     def __init__(self, r=0.0, p=0.0):
@@ -563,7 +650,7 @@ class Squeezed(Preparation):
 
 
 class DisplacedSqueezed(Preparation):
-    r"""Prepare a mode in a :ref:`displaced squeezed state <displaced_squeezed_state>`.
+    r"""Prepare a mode in a displaced squeezed state.
 
     A displaced squeezed state is prepared by squeezing a vacuum state, and
     then applying a displacement operator.
@@ -574,32 +661,105 @@ class DisplacedSqueezed(Preparation):
     where the squeezing parameter :math:`z=re^{i\phi}`.
 
     Args:
-        alpha (complex): displacement parameter
-        r (float): squeezing magnitude
-        p (float): squeezing angle :math:`\phi`
+        r_d (float): displacement magnitude
+        phi_d (float): displacement angle
+        r_s (float): squeezing magnitude
+        phi_s (float): squeezing angle :math:`\phi`
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            The displaced squeezed state :math:`\ket{\alpha, z}`, :math:`\alpha\in\mathbb{C}`,
+            :math:`z=re^{i\phi}` is a displaced and squeezed vacuum state defined by
+
+            .. math::
+                \ket{\alpha, z} = D(\alpha)S(z)\ket{0}
+
+        .. tip::
+
+            *Available in Strawberry Fields as a NumPy array by*
+            :func:`strawberryfields.utils.displaced_squeezed_state`
+
+        In the Fock basis, it has the decomposition
+
+        .. math::
+            |\alpha,z\rangle = e^{-\frac{1}{2}|\alpha|^2-\frac{1}{2}{\alpha^*}^2
+            e^{i\phi}\tanh{(r)}} \sum_{n=0}^\infty\frac{\left[\frac{1}{2}e^{i\phi}
+            \tanh(r)\right]^{n/2}}{\sqrt{n!\cosh(r)}} H_n
+            \left[ \frac{\alpha\cosh(r)+\alpha^*e^{i\phi}\sinh(r)}{\sqrt{e^{i\phi}\sinh(2r)}} \right]
+            |n\rangle
+
+
+        where :math:`H_n(x)` are the Hermite polynomials defined by
+        :math:`H_n(x)=(-1)^n e^{x^2}\frac{d}{dx}e^{-x^2}`. Alternatively,
+        in the Gaussian formulation, :math:`\bar{\mathbf{r}} = 2
+        \sqrt{\frac{\hbar}{2}}(\text{Re}(\alpha),\text{Im}(\alpha))` and
+        :math:`\mathbf{V} = R(\phi/2)\begin{bmatrix}e^{-2r} & 0 \\0 & e^{2r} \\
+        \end{bmatrix}R(\phi/2)^T`
+
+
+        We can use the displaced squeezed states to approximate the :math:`x`
+        position and :math:`p` momentum eigenstates;
+
+        .. math::
+            \ket{x}_x \approx D\left(\frac{1}{2}x\right)S(r)\ket{0}, ~~~~
+            \ket{p}_p \approx D\left(\frac{i}{2}p\right)S(-r)\ket{0}
+
+        where :math:`z=r` is sufficiently large.
     """
 
-    def __init__(self, alpha=0.0, r=0.0, p=0.0):
-        super().__init__([alpha, r, p])
+    def __init__(self, r_d=0.0, phi_d=0.0, r_s=0.0, phi_s=0.0):
+        super().__init__([r_d, phi_d, r_s, phi_s])
 
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
         # prepare the displaced squeezed state directly
-        backend.prepare_displaced_squeezed_state(p[0], p[1], p[2], *reg)
+        backend.prepare_displaced_squeezed_state(p[0], p[1], p[2], p[3], *reg)
 
     def _decompose(self, reg, **kwargs):
         # squeezed state preparation followed by a displacement gate
-        return [Command(Squeezed(self.p[1], self.p[2]), reg), Command(Dgate(self.p[0]), reg)]
+        return [
+            Command(Squeezed(self.p[2], self.p[3]), reg),
+            Command(Dgate(self.p[0], self.p[1]), reg),
+        ]
 
 
 class Fock(Preparation):
-    r"""Prepare a mode in a :ref:`fock_basis` state.
+    r"""Prepare a mode in a Fock basis state.
 
     The prepared mode is traced out and replaced with the Fock state :math:`\ket{n}`.
     As a result the state of the other subsystems may have to be described using a density matrix.
 
+    .. warning::
+        The Fock basis is **non-Gaussian**, and thus can
+        only be used in the Fock backends, *not* the Gaussian backend.
+
     Args:
         n (int): Fock state to prepare
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            A single mode state can be decomposed into the Fock basis as follows:
+
+            .. math::
+                \ket{\psi} = \sum_n c_n \ket{n}
+
+            if there exists a unique integer :math:`m` such that
+            :math:`\begin{cases}c_n=1& n=m\\c_n=0&n\neq m\end{cases}`,
+            then the single mode is simply a Fock state or :math:`n` photon state.
+
+        .. tip::
+
+            *Available in Strawberry Fields as a NumPy array by*
+            :func:`strawberryfields.utils.fock_state`
+
+            *Arbitrary states in the Fock basis can be applied in Strawberry Fields
+            using the state preparation operator* :class:`strawberryfields.ops.Ket`
     """
 
     def __init__(self, n=0):
@@ -611,7 +771,7 @@ class Fock(Preparation):
 
 
 class Catstate(Preparation):
-    r"""Prepare a mode in a :ref:`cat state <cat_state>`.
+    r"""Prepare a mode in a cat state.
 
     A cat state is the coherent superposition of two coherent states,
 
@@ -620,10 +780,36 @@ class Catstate(Preparation):
 
     where :math:`N = \sqrt{2 (1+\cos(\phi)e^{-2|\alpha|^2})}` is the normalization factor.
 
+    .. warning::
+        Cat states are **non-Gaussian**, and thus can
+        only be used in the Fock backends, *not* the Gaussian backend.
+
     Args:
         alpha (complex): displacement parameter
         p (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
             cat state, and ``p=1`` an odd cat state.
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            The cat state is a non-Gaussian superposition of coherent states
+
+            .. math::
+                |cat\rangle = \frac{e^{-|\alpha|^2/2}}{\sqrt{2(1+e^{-2|\alpha|^2}\cos(\phi))}}
+                \left(|\alpha\rangle +e^{i\phi}|-\alpha\rangle\right)
+
+            with the even cat state given for :math:`\phi=0`, and the odd cat state
+            given for :math:`\phi=\pi`.
+
+        .. tip::
+
+            *Implemented in Strawberry Fields as a NumPy array by*
+            :class:`strawberryfields.utils.cat_state`
+
+        In the case where :math:`\alpha<1.2`, the cat state can be approximated by
+        the squeezed single photon state :math:`S\ket{1}`.
     """
 
     def __init__(self, alpha=0, p=0):
@@ -653,6 +839,7 @@ class Catstate(Preparation):
 
         # evaluate the array (elementwise)
         ket = par_evaluate(ket)
+
         backend.prepare_ket_state(ket, *reg)
 
 
@@ -666,6 +853,10 @@ class Ket(Preparation):
     The provided kets must be each be of length ``cutoff_dim``, matching
     the cutoff dimension used in calls to :meth:`eng.run <~.Engine.run>`.
 
+    .. warning::
+        The Fock basis is **non-Gaussian**, and thus can
+        only be used in the Fock backends, *not* the Gaussian backend.
+
     Args:
         state (array or BaseFockState): state vector in the Fock basis.
             This can be provided as either:
@@ -673,6 +864,16 @@ class Ket(Preparation):
             * a single ket vector, for single mode state preparation
             * a multimode ket, with one array dimension per mode
             * a :class:`BaseFockState` state object.
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            A single mode state can be decomposed into the Fock basis as follows:
+
+            .. math::
+                \ket{\psi} = \sum_n c_n \ket{n}
     """
     ns = None
 
@@ -701,6 +902,10 @@ class DensityMatrix(Preparation):
     The provided density matrices must be of size ``[cutoff_dim, cutoff_dim]``,
     matching the cutoff dimension used in calls to :meth:`eng.run <~.Engine.run>`.
 
+    .. warning::
+        The Fock basis is **non-Gaussian**, and thus can
+        only be used in the Fock backends, *not* the Gaussian backend.
+
     Args:
         state (array or BaseFockState): density matrix in the Fock basis.
             This can be provided as either:
@@ -708,6 +913,26 @@ class DensityMatrix(Preparation):
             * a single mode two-dimensional matrix :math:`\rho_{ij}`,
             * a multimode tensor :math:`\rho_{ij,kl,\dots,mn}`, with two indices per mode,
             * a :class:`BaseFockState` state object.
+
+    .. details::
+
+        When working with an :math:`N`-mode density matrix in the Fock basis,
+
+        .. math::
+            \rho = \sum_{n_1}\cdots\sum_{n_N} c_{n_1,\cdots,n_N}
+            \ket{n_1,\cdots,n_N}\bra{n_1,\cdots,n_N}
+
+        we use the convention that every pair of consecutive dimensions
+        corresponds to a subsystem; i.e.,
+
+        .. math::
+            \rho_{\underbrace{ij}_{\text{mode}~0}~\underbrace{kl}_{\text{mode}~1}
+            ~\underbrace{mn}_{\text{mode}~2}}
+
+        Thus, using index notation, we can calculate the reduced density matrix
+        for mode 2 by taking the partial trace over modes 0 and 1:
+
+        .. math:: \braketT{n}{\text{Tr}_{01}[\rho]}{m} = \sum_{i}\sum_k \rho_{iikkmn}
     """
     ns = None
 
@@ -725,13 +950,27 @@ class DensityMatrix(Preparation):
 
 
 class Thermal(Preparation):
-    r"""Prepare a mode in a :ref:`thermal state <thermal_state>`.
+    r"""Prepare a mode in a thermal state.
 
     The requested mode is traced out and replaced with the thermal state :math:`\rho(\bar{n})`.
     As a result the state will be described using a density matrix.
 
     Args:
         n (float): mean thermal population of the mode
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            The thermal state is a mixed Gaussian state defined by
+
+            .. math::
+                \rho(\nbar) := \sum_{n=0}^\infty\frac{\nbar^n}{(1+\nbar)^{n+1}}\ketbra{n}{n}
+
+            where :math:`\nbar:=\tr{(\rho(\nbar)\hat{n})}` is the mean photon number.
+            In the Gaussian formulation one has :math:`\mathbf{V}=(2 \nbar +1) \frac{\hbar}{2} I`
+            and :math:`\bar{\mathbf{r}}=(0,0)`.
     """
 
     def __init__(self, n=0):
@@ -748,22 +987,69 @@ class Thermal(Preparation):
 
 
 class MeasureFock(Measurement):
-    """:ref:`photon_counting`: measures a set of modes in the Fock basis.
+    r"""Photon counting measurement: measures a set of modes in the Fock basis.
 
     Also accessible via the shortcut variable ``Measure``.
 
     After measurement, the modes are reset to the vacuum state.
+
+    .. warning::
+        Photon counting is available in the Gaussian backend,
+        but the state of the circuit is not updated after measurement
+        (since it would be non-Gaussian).
+
+    .. details::
+
+        .. admonition:: Definition
+           :class: defn
+
+           Photon counting is a non-Gaussian projective measurement given by
+
+           .. math:: \ket{n_i}\bra{n_i}
     """
 
     ns = None
 
-    def __init__(self, select=None):
+    def __init__(self, select=None, dark_counts=None):
+        if dark_counts and select:
+            raise NotImplementedError("Post-selection cannot be used together with dark counts.")
+
+        if dark_counts is not None and not isinstance(dark_counts, Sequence):
+            dark_counts = [dark_counts]
+
         if select is not None and not isinstance(select, Sequence):
             select = [select]
+
+        self.dark_counts = dark_counts
         super().__init__([], select)
 
     def _apply(self, reg, backend, shots=1, **kwargs):
-        return backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
+        samples = backend.measure_fock(reg, shots=shots, select=self.select, **kwargs)
+
+        if isinstance(samples, list):
+            samples = np.array(samples)
+
+        if self.dark_counts is not None:
+            if len(self.dark_counts) != len(reg):
+                raise ValueError(
+                    "The number of dark counts must be equal to the number of measured modes: "
+                    "{} != {}".format(len(self.dark_counts), len(reg))
+                )
+            samples += np.random.poisson(self.dark_counts, samples.shape)
+
+        return samples
+
+    def __str__(self):
+        # class name, parameter values, possible select and dark_counts parameters
+        temp = super().__str__()
+
+        if self.dark_counts is not None:
+            if not self.select:
+                temp += f"(dark_counts={self.dark_counts})"
+            else:
+                temp = f"{temp[:-1]}, dark_counts={self.dark_counts})"
+
+        return temp
 
 
 class MeasureThreshold(Measurement):
@@ -785,7 +1071,7 @@ class MeasureThreshold(Measurement):
 
 
 class MeasureHomodyne(Measurement):
-    r"""Performs a :ref:`homodyne measurement <homodyne>`, measures one quadrature of a mode.
+    r"""Performs a homodyne measurement, measures one quadrature of a mode.
 
     * Position basis measurement: :math:`\phi = 0`
       (also accessible via the shortcut variable ``MeasureX``).
@@ -799,6 +1085,29 @@ class MeasureHomodyne(Measurement):
         phi (float): measurement angle :math:`\phi`
         select (None, float): (Optional) desired values of measurement result.
             Allows the post-selection of specific measurement results instead of randomly sampling.
+
+    .. details::
+
+        .. admonition:: Definition
+           :class: defn
+
+           Homodyne measurement is a Gaussian projective measurement given by projecting the state
+           onto the states
+
+           .. math:: \ket{x_\phi}\bra{x_\phi},
+
+           defined as eigenstates of the Hermitian operator
+
+           .. math:: \hat{x}_\phi = \cos(\phi) \hat{x} + \sin(\phi)\hat{p}.
+
+        In the Gaussian backend, this is done by projecting onto finitely squeezed states
+        approximating the :math:`x` and :math:`p` eigenstates. Due to the finite squeezing
+        approximation, this results in a measurement variance of :math:`\sigma_H^2`, where
+        :math:`\sigma_H=2\times 10^{-4}`.
+
+        In the Fock backends, this is done by using Hermite polynomials to calculate the
+        :math:`\x_\phi` probability distribution over a specific range and number of bins,
+        before taking a random sample.
     """
     ns = 1
 
@@ -824,16 +1133,29 @@ class MeasureHomodyne(Measurement):
 
 
 class MeasureHeterodyne(Measurement):
-    r"""Performs a :ref:`heterodyne measurement <heterodyne>` on a mode.
+    r"""Performs a heterodyne measurement on a mode.
 
     Also accessible via the shortcut variable ``MeasureHD``.
 
-    Samples the joint Husimi distribution :math:`Q(\vec{\alpha}) = \frac{1}{\pi}\bra{\vec{\alpha}}\rho\ket{\vec{\alpha}}`.
+    Samples the joint Husimi distribution :math:`Q(\vec{\alpha}) =
+    \frac{1}{\pi}\bra{\vec{\alpha}}\rho\ket{\vec{\alpha}}`.
     The measured mode is reset to the vacuum state.
+
+    .. warning:: The heterodyne measurement can only be performed in the Gaussian backend.
 
     Args:
         select (None, complex): (Optional) desired values of measurement result.
             Allows the post-selection of specific measurement results instead of randomly sampling.
+
+    .. details::
+
+        .. admonition:: Definition
+           :class: defn
+
+           Heterodyne measurement is a Gaussian projective measurement given by projecting
+           the state onto the coherent states,
+
+           .. math:: \frac{1}{\pi} \ket{\alpha}\bra{\alpha}
     """
     ns = 1
 
@@ -855,16 +1177,47 @@ class MeasureHeterodyne(Measurement):
 
 
 class LossChannel(Channel):
-    r"""Perform a :ref:`loss channel <loss>` operation on the specified mode.
+    r"""Perform a loss channel operation on the specified mode.
 
     This channel couples mode :math:`\a` to another bosonic mode :math:`\hat{b}`
     prepared in the vacuum state using the following transformation:
 
     .. math::
-       \a \mapsto \sqrt{T} a+\sqrt{1-T} \hat{b}
+        \a \mapsto \sqrt{T} a+\sqrt{1-T} \hat{b}
 
     Args:
         T (float): the loss parameter :math:`0\leq T\leq 1`.
+
+    .. details::
+
+        Loss is implemented by a CPTP map whose Kraus representation is
+
+        .. math::
+           \mathcal{N}(T)\left\{\ \cdot \ \right\} = \sum_{n=0}^{\infty} E_n(T) \
+           \cdot \ E_n(T)^\dagger , \quad E_n(T) = \left(\frac{1-T}{T} \right)^{n/2}
+           \frac{\a^n}{\sqrt{n!}} \left(\sqrt{T}\right)^{\ad \a}
+
+        .. admonition:: Definition
+            :class: defn
+
+            Loss is implemented by coupling mode :math:`\a` to another bosonic mode
+            :math:`\hat{b}` prepared in the vacuum state, by using the following transformation
+
+            .. math::
+               \a \to \sqrt{T} \a+\sqrt{1-T} \hat{b}
+
+            and then tracing it out. Here, :math:`T` is the *energy* transmissivity.
+            For :math:`T = 0` the state is mapped to the vacuum state, and for
+            :math:`T=1` one has the identity map.
+
+        One useful identity is
+
+        .. math::
+           \mathcal{N}(T)\left\{\ket{n}\bra{m} \right\}=\sum_{l=0}^{\min(n,m)}
+           \left(\frac{1-T}{T}\right)^l \frac{T^{(n+m)/2}}{l!} \sqrt{\frac{n! m!}{(n-l)!(m-l)!}}
+           \ket{n-l}\bra{m-l}
+
+        In particular :math:`\mathcal{N}(T)\left\{\ket{0}\bra{0} \right\} =  \pr{0}`.
     """
 
     def __init__(self, T):
@@ -876,7 +1229,7 @@ class LossChannel(Channel):
 
 
 class ThermalLossChannel(Channel):
-    r"""Perform a :ref:`thermal loss channel <thermal_loss>` operation on the specified mode.
+    r"""Perform a thermal loss channel operation on the specified mode.
 
     This channel couples mode :math:`\a` to another bosonic mode :math:`\hat{b}`
     prepared in a thermal state with mean photon number :math:`\bar{n}`,
@@ -888,6 +1241,25 @@ class ThermalLossChannel(Channel):
     Args:
         T (float): the loss parameter :math:`0\leq T\leq 1`.
         nbar (float): mean photon number of the environment thermal state
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            Thermal loss is implemented by coupling mode :math:`\a` to another
+            bosonic mode :math:`\hat{b}` prepared in the thermal state
+            :math:`\ket{\bar{n}}`, by using the following transformation
+
+            .. math::
+               \a \to \sqrt{T} \a+\sqrt{1-T} \hat{b}
+
+            and then tracing it out. Here, :math:`T` is the *energy* transmissivity.
+            For :math:`T = 0` the state is mapped to the thermal state :math:`\ket{\bar{n}}`
+            with mean photon number :math:`\bar{n}`, and for :math:`T=1` one has the identity map.
+
+        Note that if :math:`\bar{n}=0`, the thermal loss channel is equivalent to the
+        :doc:`loss channel <strawberryfields.ops.LossChannel>`.
     """
 
     def __init__(self, T, nbar):
@@ -904,10 +1276,10 @@ class ThermalLossChannel(Channel):
 
 
 class Dgate(Gate):
-    r"""Phase space :ref:`displacement <displacement>` gate.
+    r"""Phase space displacement gate.
 
     .. math::
-       D(\alpha) = \exp(\alpha a^\dagger -\alpha^* a) = \exp\left(-i\sqrt{2}(\re(\alpha) \hat{p} -\im(\alpha) \hat{x})/\sqrt{\hbar}\right)
+        D(\alpha) = \exp(\alpha a^\dagger -\alpha^* a) = \exp\left(-i\sqrt{2}(\re(\alpha) \hat{p} -\im(\alpha) \hat{x})/\sqrt{\hbar}\right)
 
     where :math:`\alpha = r e^{i\phi}` has magnitude :math:`r\geq 0` and phase :math:`\phi`.
 
@@ -915,27 +1287,73 @@ class Dgate(Gate):
     or use the polar form :math:`a = r, \phi` and still get the same result.
 
     Args:
-        a (complex): displacement parameter :math:`\alpha`
-        phi (float): extra (optional) phase angle :math:`\phi`
+        r (float): displacement magnitude :math:`|\alpha|`
+        phi (float): displacement angle :math:`\phi`
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            .. math::
+                D(\alpha) = \exp( \alpha \ad -\alpha^* \a) = \exp(r (e^{i\phi}\ad -e^{-i\phi}\a)),
+                \quad D^\dagger(\alpha) \a D(\alpha)=\a +\alpha\I
+
+            where :math:`\alpha=r e^{i \phi}` with :math:`r \geq 0` and :math:`\phi \in [0,2 \pi)`.
+
+        We obtain for the position and momentum operators
+
+        .. math::
+            D^\dagger(\alpha) \x D(\alpha) = \x +\sqrt{2 \hbar } \re(\alpha) \I,\\
+            D^\dagger(\alpha) \p D(\alpha) = \p +\sqrt{2 \hbar } \im(\alpha) \I.
+
+        The matrix elements of the displacement operator in the Fock basis were derived by Cahill and Glauber :cite:`cahill1969`:
+
+        .. math::
+            \bra{m}\hat D(\alpha) \ket{n}  = \sqrt{\frac{n!}{m!}} \alpha^{m-n} e^{-|\alpha|^2/2} L_n^{m-n}\left( |\alpha|^2 \right)
+
+        where :math:`L_n^{m}(x)` is a generalized Laguerre polynomial :cite:`dlmf`.
     """
 
-    def __init__(self, a, phi=0.0):
-        super().__init__([a, phi])
+    def __init__(self, r, phi=None):
+        if phi is None:
+            phi = 0.0
+            # TODO: remove warning in the new release
+            warnings.warn(
+                f"""Warning: since strawberryfields version {sf.__version__},
+            Dgate(r, phi) takes two real arguments which represent
+            the polar decomposition of the complex displacement parameter.
+            Falling back to (r={r}, phi=0.0), is this what you meant?"""
+            )
+
+        super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        p = self.p[0] * pf.exp(1j * self.p[1])
-        z = par_evaluate(p)
-        backend.displacement(z, *reg)
+        r, phi = par_evaluate(self.p)
+        backend.displacement(r, phi, *reg)
 
 
 class Xgate(Gate):
-    r"""Position :ref:`displacement <displacement>` gate.
+    r"""Position displacement gate.
 
     .. math::
-       X(x) = e^{-i x \hat{p}/\hbar}
+        X(x) = e^{-i x \hat{p}/\hbar}
 
     Args:
         x (float): position displacement
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            The pure position displacement operator is defined as
+
+            .. math::
+                X(x) = D\left( x/\sqrt{2 \hbar}\right)  = \exp(-i x \p /\hbar),
+                \quad X^\dagger(x) \x X(x) = \x +x\I,
+
+            where :math:`D` is the :doc:`displacement gate <strawberryfields.ops.Dgate>`.
     """
 
     def __init__(self, x):
@@ -943,18 +1361,31 @@ class Xgate(Gate):
 
     def _decompose(self, reg, **kwargs):
         # into a displacement
-        z = self.p[0] / np.sqrt(2 * sf.hbar)
-        return [Command(Dgate(z, 0), reg)]
+        r = self.p[0] / np.sqrt(2 * sf.hbar)
+        return [Command(Dgate(r, 0), reg)]
 
 
 class Zgate(Gate):
-    r"""Momentum :ref:`displacement <displacement>` gate.
+    r"""Momentum displacement gate.
 
     .. math::
-       Z(p) = e^{i p \hat{x}/\hbar}
+        Z(p) = e^{i p \hat{x}/\hbar}
 
     Args:
         p (float): momentum displacement
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            The pure position displacement operator is defined as
+
+            .. math::
+                Z(p) = D\left(i p/\sqrt{2 \hbar}\right) = \exp(i p \x /\hbar ),
+                \quad Z^\dagger(p) \p Z(p) = \p +p\I,
+
+            where :math:`D` is the :doc:`displacement gate <strawberryfields.ops.Dgate>`.
     """
 
     def __init__(self, p):
@@ -962,40 +1393,123 @@ class Zgate(Gate):
 
     def _decompose(self, reg, **kwargs):
         # into a displacement
-        z = self.p[0] * 1j / np.sqrt(2 * sf.hbar)
-        return [Command(Dgate(z, 0), reg)]
+        r = self.p[0] / np.sqrt(2 * sf.hbar)
+        return [Command(Dgate(r, np.pi / 2), reg)]
 
 
 class Sgate(Gate):
-    r"""Phase space :ref:`squeezing <squeezing>` gate.
+    r"""Phase space squeezing gate.
 
     .. math::
-       S(z) = \exp\left(\frac{1}{2}(z^* a^2 -z {a^\dagger}^2)\right)
+        S(z) = \exp\left(\frac{1}{2}(z^* a^2 -z {a^\dagger}^2)\right)
 
     where :math:`z = r e^{i\phi}`.
 
     Args:
         r (float): squeezing amount
         phi (float): squeezing phase angle :math:`\phi`
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            .. math::
+                & S(z) = \exp\left(\frac{1}{2}\left(z^* \a^2-z {\ad}^{2} \right) \right)
+                = \exp\left(\frac{r}{2}\left(e^{-i\phi}\a^2 -e^{i\phi}{\ad}^{2} \right) \right)\\
+                & S^\dagger(z) \a S(z) = \a \cosh(r) -\ad e^{i \phi} \sinh r\\
+                & S^\dagger(z) \ad S(z) = \ad \cosh(r) -\a e^{-i \phi} \sinh(r)
+
+            where :math:`z=r e^{i \phi}` with :math:`r \geq 0` and :math:`\phi \in [0,2 \pi)`.
+
+        The squeeze gate affects the position and momentum operators as
+
+        .. math::
+            S^\dagger(z) \x_{\phi} S(z) = e^{-r}\x_{\phi}, ~~~ S^\dagger(z) \p_{\phi} S(z) = e^{r}\p_{\phi}
+
+        The Fock basis decomposition of displacement and squeezing operations was analysed
+        by Krall :cite:`kral1990`, and the following quantity was calculated,
+
+        .. math::
+            f_{n,m}(r,\phi,\beta)&=\bra{n}\exp\left(\frac{r}{2}\left(e^{i \phi} \a^2
+                -e^{-i \phi} \ad \right) \right) D(\beta) \ket{m} = \bra{n}S(z^*) D(\beta) \ket{m}\\
+            &=\sqrt{\frac{n!}{\mu  m!}} e^{\frac{\beta ^2 \nu ^*}{2\mu }-\frac{\left| \beta \right| ^2}{2}}
+            \sum_{i=0}^{\min(m,n)}\frac{\binom{m}{i} \left(\frac{1}{\mu  \nu }\right)^{i/2}2^{\frac{i-m}{2}
+                +\frac{i}{2}-\frac{n}{2}} \left(\frac{\nu }{\mu }\right)^{n/2}
+                \left(-\frac{\nu ^*}{\mu }\right)^{\frac{m-i}{2}} H_{n-i}\left(\frac{\beta }{\sqrt{2}
+                \sqrt{\mu  \nu }}\right) H_{m-i}\left(-\frac{\alpha ^*}{\sqrt{2}\sqrt{-\mu  \nu ^*}}\right)}{(n-i)!}
+
+        where :math:`\nu=e^{- i\phi} \sinh(r), \mu=\cosh(r), \alpha=\beta \mu - \beta^* \nu`.
+
+        Two important special cases of the last formula are obtained when :math:`r \to 0`
+        and when :math:`\beta \to 0`:
+
+        * For :math:`r \to 0` we can take :math:`\nu \to 1, \mu \to r, \alpha \to \beta` and use
+          the fact that for large :math:`x \gg 1` the leading order term of the Hermite
+          polynomials is  :math:`H_n(x) = 2^n x^n +O(x^{n-2})` to obtain
+
+          .. math::
+              f_{n,m}(0,\phi,\beta) = \bra{n}D(\beta) \ket{m}=\sqrt{\frac{n!}{  m!}}
+              e^{-\frac{\left| \beta \right| ^2}{2}} \sum_{i=0}^{\min(m,n)}
+              \frac{(-1)^{m-i}}{(n-i)!} \binom{m}{i} \beta^{n-i} (\beta^*)^{m-i}
+
+        * On the other hand if we let :math:`\beta\to 0` we use the fact that
+
+          .. math::
+              H_n(0) =\begin{cases}0,  & \mbox{if }n\mbox{ is odd} \\
+              (-1)^{\tfrac{n}{2}} 2^{\tfrac{n}{2}} (n-1)!! , & \mbox{if }n\mbox{ is even} \end{cases}
+
+          to deduce that :math:`f_{n,m}(r,\phi,0)` is zero if :math:`n` is even and
+          :math:`m` is odd or vice versa.
+
+        When writing the Bloch-Messiah reduction :cite:`cariolaro2016`:cite:`cariolaro2016b`
+        of a Gaussian state in the Fock basis one often needs the following matrix element
+
+        .. math::
+            \bra{k} D(\alpha) R(\theta) S(r) \ket{l}  = e^{i \theta l }
+            \bra{k} D(\alpha) S(r e^{2i \theta}) \ket{l} = e^{i \theta l}
+            f^*_{l,k}(-r,-2\theta,-\alpha)
     """
 
     def __init__(self, r, phi=0.0):
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        p = self.p[0] * pf.exp(1j * self.p[1])
-        z = par_evaluate(p)
-        backend.squeeze(z, *reg)
+        r, phi = par_evaluate(self.p)
+        backend.squeeze(r, phi, *reg)
 
 
 class Pgate(Gate):
-    r""":ref:`Quadratic phase <quadratic>` gate.
+    r"""Quadratic phase gate.
 
     .. math::
-       P(s) = e^{i \frac{s}{2} \hat{x}^2/\hbar}
+        P(s) = e^{i \frac{s}{2} \hat{x}^2/\hbar}
 
     Args:
         s (float): parameter
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            .. math::
+                P(s) = \exp\left(i  \frac{s}{2 \hbar} \x^2\right),
+                \quad P^\dagger(s) \a P(s) = \a +i\frac{s}{2}(\a +\ad)
+
+        It shears the phase space, preserving position:
+
+        .. math::
+            P^\dagger(s) \x P(s) &= \x,\\
+            P^\dagger(s) \p P(s) &= \p +s\x.
+
+        This gate can be decomposed as
+
+        .. math::
+            P(s) = R(\theta) S(r e^{i \phi})
+
+        where :math:`\cosh(r) = \sqrt{1+(\frac{s}{2})^2}, \quad
+        \tan(\theta) = \frac{s}{2}, \quad \phi = -\sign(s)\frac{\pi}{2} -\theta`.
     """
 
     def __init__(self, s):
@@ -1011,15 +1525,41 @@ class Pgate(Gate):
 
 
 class Vgate(Gate):
-    r""":ref:`Cubic phase <cubic>` gate.
+    r"""Cubic phase gate.
 
     .. math::
-       V(\gamma) = e^{i \frac{\gamma}{3 \hbar} \hat{x}^3}
+        V(\gamma) = e^{i \frac{\gamma}{3 \hbar} \hat{x}^3}
 
-    .. warning:: The cubic phase gate has lower accuracy than the Kerr gate at the same cutoff dimension.
+    .. warning::
+
+        * The cubic phase gate has lower accuracy than the Kerr gate at the same cutoff dimension.
+
+        * The cubic phase gate is **non-Gaussian**, and thus can only be used
+          in the Fock backends, *not* the Gaussian backend.
 
     Args:
         gamma (float): parameter
+
+    .. details::
+
+        .. warning::
+            The cubic phase gate can suffer heavily from numerical inaccuracies due to
+            finite-dimensional cutoffs in the Fock basis. The gate implementation in
+            Strawberry Fields is unitary, but it does not implement an exact cubic phase
+            gate. The Kerr gate provides an alternative non-Gaussian gate.
+
+        .. admonition:: Definition
+            :class: defn
+
+            .. math::
+                V(\gamma) = \exp\left(i \frac{\gamma}{3 \hbar} \x^3\right),
+                \quad V^\dagger(\gamma) \a V(\gamma) = \a +i\frac{\gamma}{2\sqrt{2/\hbar}} (\a +\ad)^2
+
+        It transforms the phase space as follows:
+
+        .. math::
+            V^\dagger(\gamma) \x V(\gamma) &= \x,\\
+            V^\dagger(\gamma) \p V(\gamma) &= \p +\gamma \x^2.
     """
 
     def __init__(self, gamma):
@@ -1032,13 +1572,34 @@ class Vgate(Gate):
 
 
 class Kgate(Gate):
-    r""":ref:`Kerr <kerr>` gate.
+    r"""Kerr gate.
 
     .. math::
-       K(\kappa) = e^{i \kappa \hat{n}^2}
+        K(\kappa) = e^{i \kappa \hat{n}^2}
+
+    .. warning::
+        The Kerr gate is **non-Gaussian**, and thus can only be used
+        in the Fock backends, *not* the Gaussian backend.
 
     Args:
         kappa (float): parameter
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            The Kerr interaction is given by the Hamiltonian
+
+            .. math::
+                H = (\hat{a}^\dagger\hat{a})^2=\hat{n}^2
+
+            which is non-Gaussian and diagonal in the Fock basis.
+
+        We can therefore define the Kerr gate, with parameter :math:`\kappa` as
+
+        .. math::
+            K(\kappa) = \exp{(i\kappa\hat{n}^2)}.
     """
 
     def __init__(self, kappa):
@@ -1050,13 +1611,35 @@ class Kgate(Gate):
 
 
 class Rgate(Gate):
-    r""":ref:`Rotation <rotation>` gate.
+    r"""Rotation gate.
 
     .. math::
-       R(\theta) = e^{i \theta a^\dagger a}
+        R(\theta) = e^{i \theta a^\dagger a}
 
     Args:
         theta (float): rotation angle :math:`\theta`.
+
+    .. details::
+
+        .. note::
+            We use the convention that a positive value of :math:`\phi`
+            corresponds to an **anticlockwise** rotation in the phase space.
+
+        .. admonition:: Definition
+            :class: defn
+
+            We write the phase space rotation operator as
+
+            .. math::
+                R(\phi) = \exp\left(i \phi \ad \a\right)=
+                \exp\left(i \frac{\phi}{2} \left(\frac{\x^2+  \p^2}{\hbar}-\I\right)\right),
+                \quad R^\dagger(\phi) \a R(\phi) = \a e^{i \phi}
+
+        It rotates the position and momentum quadratures to each other:
+
+        .. math::
+            R^\dagger(\phi)\x R(\phi) = \x \cos \phi -\p \sin \phi,\\
+            R^\dagger(\phi)\p R(\phi) = \p \cos \phi +\x \sin \phi.
     """
 
     def __init__(self, theta):
@@ -1069,16 +1652,81 @@ class Rgate(Gate):
 
 class BSgate(Gate):
     r"""BSgate(theta=pi/4, phi=0.)
-    :ref:`Beamsplitter <beamsplitter>` gate.
+    Beamsplitter gate.
 
     .. math::
-       B(\theta,\phi) = \exp\left(\theta (e^{i \phi} a_1 a_2^\dagger -e^{-i \phi} a_1^\dagger a_2) \right)
+        B(\theta,\phi) = \exp\left(\theta (e^{i \phi} a_1 a_2^\dagger -e^{-i \phi} a_1^\dagger a_2) \right)
 
     Args:
-        theta (float): Transmittivity angle :math:`\theta`. The transmission amplitude of the beamsplitter is :math:`t = \cos(\theta)`.
+        theta (float): Transmittivity angle :math:`\theta`. The transmission amplitude of
+            the beamsplitter is :math:`t = \cos(\theta)`.
             The value :math:`\theta=\pi/4` gives the 50-50 beamsplitter (default).
-        phi (float): Phase angle :math:`\phi`. The reflection amplitude of the beamsplitter is :math:`r = e^{i\phi}\sin(\theta)`.
+        phi (float): Phase angle :math:`\phi`. The reflection amplitude of the beamsplitter
+            is :math:`r = e^{i\phi}\sin(\theta)`.
             The value :math:`\phi = \pi/2` gives the symmetric beamsplitter.
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            For the annihilation and creation operators of two modes, denoted :math:`\a_1`
+            and :math:`\a_2`, the beamsplitter is defined by
+
+            .. math::
+                B(\theta,\phi) = \exp\left(\theta (e^{i \phi}\a_1 \ad_2 - e^{-i \phi} \ad_1 \a_2) \right)
+
+        **Action on the creation and annihilation operators**
+
+        They will transform the operators according to
+
+        .. math::
+            B^\dagger(\theta,\phi) \a_1  B(\theta,\phi) &= \a_1\cos \theta -\a_2 e^{-i \phi} \sin \theta  = t \a_1 -r^* \a_2,\\
+            B^\dagger(\theta,\phi) \a_2  B(\theta,\phi) &= \a_2\cos \theta + \a_1  e^{i \phi} \sin \theta= t \a_2 +r \a_1.
+
+        where :math:`t = \cos \theta` and :math:`r = e^{i\phi} \sin \theta` are the
+        transmittivity and reflectivity amplitudes of the beamsplitter respectively.
+
+        Therefore, the beamsplitter transforms two input coherent states to two output
+        coherent states :math:`B(\theta, \phi) \ket{\alpha,\beta} = \ket{\alpha',\beta'}`, where
+
+        .. math::
+            \alpha' &= \alpha\cos \theta-\beta e^{-i\phi}\sin\theta = t\alpha - r^*\beta\\
+            \beta' &= \beta\cos \theta+\alpha e^{i\phi}\sin\theta = t\beta + r\alpha\\
+
+        **Action on the quadrature operators**
+
+        By substituting in the definition of the creation and annihilation operators in terms
+        of the position and momentum operators, it is possible to derive an expression for
+        how the beamsplitter transforms the quadrature operators:
+
+        .. math::
+            &\begin{cases}
+                B^\dagger(\theta,\phi) \x_1 B(\theta,\phi) = \x_1 \cos(\theta)-\sin(\theta) [\x_2\cos(\phi)+\p_2\sin(\phi)]\\
+                B^\dagger(\theta,\phi) \p_1 B(\theta,\phi) = \p_1 \cos(\theta)-\sin(\theta) [\p_2\cos(\phi)-\x_2\sin(\phi)]\\
+            \end{cases}\\[12pt]
+            &\begin{cases}
+                B^\dagger(\theta,\phi) \x_2 B(\theta,\phi) = \x_2 \cos(\theta)+\sin(\theta) [\x_1\cos(\phi)-\p_1\sin(\phi)]\\
+                B^\dagger(\theta,\phi) \p_2 B(\theta,\phi) = \p_2 \cos(\theta)+\sin(\theta) [\p_1\cos(\phi)+\x_1\sin(\phi)]
+            \end{cases}
+
+        **Action on the position and momentum eigenstates**
+
+        A 50% or **50-50 beamsplitter** has :math:`\theta=\pi/4` and :math:`\phi=0` or
+        :math:`\phi=\pi`; consequently :math:`|t|^2 = |r|^2 = \frac{1}{2}`, and it acts as follows:
+
+        .. math::
+            & B(\pi/4,0)\xket{x_1}\xket{x_2} = \xket{\frac{1}{\sqrt{2}}(x_1-x_2)}\xket{\frac{1}{\sqrt{2}}(x_1+x_2)}\\
+            & B(\pi/4,0)\ket{p_1}_p\ket{p_2}_p = \xket{\frac{1}{\sqrt{2}}(p_1-p_2)}\xket{\frac{1}{\sqrt{2}}(p_1+p_2)}
+
+        and
+
+        .. math::
+            & B(\pi/4,\pi)\xket{x_1}\xket{x_2} = \xket{\frac{1}{\sqrt{2}}(x_1+x_2)}\xket{\frac{1}{\sqrt{2}}(x_2-x_1)}\\
+            & B(\pi/4,\pi)\ket{p_1}_p\ket{p_2}_p = \xket{\frac{1}{\sqrt{2}}(p_1+p_2)}\xket{\frac{1}{\sqrt{2}}(p_2-p_1)}
+
+        Alternatively, **symmetric beamsplitter** (one that does not distinguish between
+        :math:`\a_1` and :math:`\a_2`) is obtained by setting :math:`\phi=\pi/2`.
     """
     ns = 2
 
@@ -1087,10 +1735,8 @@ class BSgate(Gate):
         super().__init__([theta, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        t = pf.cos(self.p[0])
-        r = pf.sin(self.p[0]) * pf.exp(1j * self.p[1])
-        p = par_evaluate([t, r])
-        backend.beamsplitter(*p, *reg)
+        theta, phi = par_evaluate(self.p)
+        backend.beamsplitter(theta, phi, *reg)
 
 
 class MZgate(Gate):
@@ -1122,16 +1768,41 @@ class MZgate(Gate):
 
 
 class S2gate(Gate):
-    r""":ref:`Two-mode squeezing <two_mode_squeezing>` gate.
+    r"""Two-mode squeezing gate.
 
     .. math::
-       S_2(z) = \exp\left(z^* ab -z a^\dagger b^\dagger \right) = \exp\left(r (e^{-i\phi} ab -e^{i\phi} a^\dagger b^\dagger \right)
+       S_2(z) = \exp\left(z a_1^\dagger a_2^\dagger - z^* a_1 a_2 \right) = \exp\left(r (e^{i\phi} a_1^\dagger a_2^\dagger e^{-i\phi} a_1 a_2 ) \right)
 
     where :math:`z = r e^{i\phi}`.
 
     Args:
         r (float): squeezing amount
         phi (float): squeezing phase angle :math:`\phi`
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            .. math::
+                S_2(z) = \exp\left(z \a^\dagger_1\a^\dagger_2 -z^* \a_1 \a_2 \right) =
+                \exp\left(r (e^{i\phi} \a^\dagger_1\a^\dagger_2 -e^{-i\phi} \a_1 \a_2 \right)
+
+            where :math:`z=r e^{i \phi}` with :math:`r \geq 0` and :math:`\phi \in [0,2 \pi)`.
+
+        It can be decomposed into two opposite local squeezers sandwiched
+        between two 50\% :doc:`beamsplitters <strawberryfields.ops.BSgate>` :cite:`ebs2002`:
+
+        .. math::
+            S_2(z) = B^\dagger(\pi/4,0) \: \left[ S(z) \otimes S(-z)\right] \: B(\pi/4,0)
+
+        Two-mode squeezing will transform the operators according to
+
+        .. math::
+            S_2(z)^\dagger \a_1  S_2(z) &= \a_1 \cosh(r)+\ad_2 e^{i \phi} \sinh(r),\\
+            S_2(z)^\dagger \a_2  S_2(z) &= \a_2 \cosh(r)+\ad_1 e^{i \phi} \sinh(r),\\
+
+        where :math:`z=r e^{i \phi}` with :math:`r \geq 0` and :math:`\phi \in [0,2 \pi)`.
     """
     ns = 2
 
@@ -1139,9 +1810,8 @@ class S2gate(Gate):
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
-        p = self.p[0] * pf.exp(1j * self.p[1])
-        z = par_evaluate(p)
-        backend.two_mode_squeeze(z, *reg)
+        r, phi = par_evaluate(self.p)
+        backend.two_mode_squeeze(r, phi, *reg)
 
     def _decompose(self, reg, **kwargs):
         # two opposite squeezers sandwiched between 50% beamsplitters
@@ -1151,16 +1821,55 @@ class S2gate(Gate):
 
 
 class CXgate(Gate):
-    r""":ref:`Controlled addition or sum <CX>` gate in the position basis.
+    r"""Controlled addition or sum gate in the position basis.
 
     .. math::
-       \text{CX}(s) = \int dx \ket{x}\bra{x} \otimes D\left({\frac{1}{\sqrt{2\hbar}}}s x\right) = e^{-i s \: \hat{x} \otimes \hat{p}/\hbar}
+        \text{CX}(s) = \int dx \ket{x}\bra{x} \otimes D\left({\frac{1}{\sqrt{2\hbar}}}s x\right) = e^{-i s \: \hat{x} \otimes \hat{p}/\hbar}
 
     In the position basis it maps
     :math:`\ket{x_1, x_2} \mapsto \ket{x_1, s x_1 +x_2}`.
 
     Args:
         s (float): addition multiplier
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            The controlled-X gate, also known as the addition gate or
+            the sum gate, is a controlled displacement in position. It is given by
+
+            .. math::
+                \text{CX}(s) = \int dx \xket{x}\xbra{x} \otimes
+                D\left(\frac{s x}{\sqrt{2\hbar}}\right) =
+                \exp\left({-i \frac{s}{\hbar} \: \x_1 \otimes \p_2}\right).
+
+        It is called addition because in the position basis
+        :math:`\text{CX}(s) \xket{x_1, x_2} = \xket{x_1, x_2+s x_1}`.
+
+        We can also write the action of the addition gate on the canonical operators:
+
+        .. math::
+            \text{CX}(s)^\dagger \x_1 \text{CX}(s) &= \x_1\\
+            \text{CX}(s)^\dagger \p_1 \text{CX}(s) &= \p_1- s \ \p_2\\
+            \text{CX}(s)^\dagger \x_2 \text{CX}(s) &= \x_2+ s \ \x_1\\
+            \text{CX}(s)^\dagger \p_2 \text{CX}(s) &= \p_2 \\
+            \text{CX}(s)^\dagger \hat{a}_1 \text{CX}(s) &= \a_1+  \frac{s}{2} (\ad_2 -  \a_2)\\
+            \text{CX}(s)^\dagger \hat{a}_2 \text{CX}(s) &= \a_2+  \frac{s}{2} (\ad_1 +  \a_1)\\
+
+        The addition gate can be decomposed in terms of :doc:`single mode squeezers <strawberryfields.ops.Sgate>`
+        and :doc:`beamsplitters <strawberryfields.ops.BSgate>` as follows:
+
+        .. math::
+            \text{CX}(s) = B(\frac{\pi}{2}+\theta,0)
+            \left(S(r,0) \otimes S(-r,0) \right) B(\theta,0),
+
+        where
+
+        .. math::
+            \sin(2 \theta) = \frac{-1}{\cosh r}, \ \cos(2 \theta)=-\tanh(r),
+            \ \sinh(r) = -\frac{ s}{2}.
     """
     ns = 2
 
@@ -1180,16 +1889,46 @@ class CXgate(Gate):
 
 
 class CZgate(Gate):
-    r""":ref:`Controlled phase <CZ>` gate in the position basis.
+    r"""Controlled phase gate in the position basis.
 
     .. math::
-       \text{CZ}(s) =  \iint dx dy \: e^{i sxy/\hbar} \ket{x,y}\bra{x,y} = e^{i s \: \hat{x} \otimes \hat{x}/\hbar}
+        \text{CZ}(s) =  \iint dx dy \: e^{i sxy/\hbar} \ket{x,y}\bra{x,y} = e^{i s \: \hat{x} \otimes \hat{x}/\hbar}
 
     In the position basis it maps
     :math:`\ket{x_1, x_2} \mapsto e^{i s x_1 x_2/\hbar} \ket{x_1, x_2}`.
 
     Args:
         s (float): phase shift multiplier
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            .. math::
+                \text{CZ}(s) =  \iint dx dy \: e^{i s x_1 x_2/\hbar }
+                \xket{x_1,x_2}\xbra{x_1,x_2} = \exp\left({i s \: \hat{x_1}
+                \otimes \hat{x_2} /\hbar}\right).
+
+        It is related to the addition gate by a :doc:`phase space rotation <strawberryfields.ops.Rgate>`
+        in the second mode:
+
+        .. math::
+            \text{CZ}(s) = R_{(2)}(\pi/2) \: \text{CX}(s) \: R_{(2)}^\dagger(\pi/2).
+
+        In the position basis
+        :math:`\text{CZ}(s) \xket{x_1, x_2} = e^{i  s x_1 x_2/\hbar} \xket{x_1, x_2}`.
+
+        We can also write the action of the controlled-phase gate on the
+        canonical operators:
+
+        .. math::
+            \text{CZ}(s)^\dagger \x_1 \text{CZ}(s) &= \x_1\\
+            \text{CZ}(s)^\dagger \p_1 \text{CZ}(s) &= \p_1+ s \ \x_2\\
+            \text{CZ}(s)^\dagger \x_2 \text{CZ}(s) &= \x_2\\
+            \text{CZ}(s)^\dagger \p_2 \text{CZ}(s) &= \p_2+ s \ \x_1 \\
+            \text{CZ}(s)^\dagger \hat{a}_1 \text{CZ}(s) &= \a_1+  i\frac{s}{2} (\ad_2 +  \a_2)\\
+            \text{CZ}(s)^\dagger \hat{a}_2 \text{CZ}(s) &= \a_2+  i\frac{s}{2} (\ad_1 +  \a_1)\\
     """
     ns = 2
 
@@ -1207,13 +1946,34 @@ class CZgate(Gate):
 
 
 class CKgate(Gate):
-    r""":ref:`Cross-Kerr <cross_kerr>` gate.
+    r"""Cross-Kerr gate.
 
     .. math::
-       CK(\kappa) = e^{i \kappa \hat{n}_1\hat{n}_2}
+        CK(\kappa) = e^{i \kappa \hat{n}_1\hat{n}_2}
+
+    .. warning::
+        The cross-Kerr gate is **non-Gaussian**, and thus can only
+        be used in the Fock backends, *not* the Gaussian backend.
 
     Args:
         kappa (float): parameter
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            The cross-Kerr interaction is given by the Hamiltonian
+
+            .. math::
+                H = \hat{n}_1\hat{n_2}
+
+            which is non-Gaussian and diagonal in the Fock basis.
+
+        We can therefore define the cross-Kerr gate, with parameter :math:`\kappa` as
+
+        .. math::
+            CK(\kappa) = \exp{(i\kappa\hat{n}_1\hat{n_2})}.
     """
     ns = 2
 
@@ -1226,14 +1986,32 @@ class CKgate(Gate):
 
 
 class Fouriergate(Gate):
-    r""":ref:`Fourier <fourier>` gate.
+    r"""Fourier gate.
 
     Also accessible via the shortcut variable ``Fourier``.
 
-    A special case of the :class:`phase space rotation gate <Rgate>`, where :math:`\theta=\pi/2`.
+    A special case of the :class:`phase space rotation gate <Rgate>`,
+    where :math:`\theta=\pi/2`.
 
     .. math::
-       F = R(\pi/2) = e^{i (\pi/2) a^\dagger a}
+        F = R(\pi/2) = e^{i (\pi/2) a^\dagger a}
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            A special case of the :doc:`rotation operator <strawberryfields.ops.Rgate>`
+            is the case :math:`\phi=\pi/2`; this corresponds to the Fourier gate,
+
+            .. math::
+                F = R(\pi/2) = e^{i (\pi/2) \ad \a}.
+
+        The Fourier gate transforms the quadratures as follows:
+
+        .. math::
+            & F^\dagger\x F = -\p,\\
+            & F^\dagger\p F = \x.
     """
 
     def __init__(self):
@@ -1375,7 +2153,7 @@ class All(MetaOperation):
 class Interferometer(Decomposition):
     r"""Apply a linear interferometer to the specified qumodes.
 
-    This operation uses either the :ref:`rectangular decomposition <rectangular>`
+    This operation uses either the rectangular decomposition
     or triangular decomposition to decompose
     a linear interferometer into a sequence of beamsplitters and
     rotation gates.
@@ -1431,6 +2209,32 @@ class Interferometer(Decomposition):
             such that they correspond to an identity operation, are removed.
         tol (float): the tolerance used when checking if the input matrix is unitary:
             :math:`|U-U^\dagger| <` tol
+
+    .. details::
+
+        The rectangular decomposition allows any passive Gaussian transformation
+        to be decomposed into a series of beamsplitters and rotation gates.
+
+        .. admonition:: Definition
+            :class: defn
+
+            For every real orthogonal symplectic matrix
+
+            .. math:: O=\begin{bmatrix}X&-Y\\ Y&X\end{bmatrix}\in\mathbb{R}^{2N\times 2N},
+
+            the corresponding unitary matrix :math:`U=X+iY\in\mathbb{C}^{N\times N}`
+            representing a multiport interferometer can be decomposed into a set
+            of :math:`N(N-1)/2` beamsplitters and single mode rotations with circuit
+            depth of :math:`N`.
+
+            For more details, see :cite:`clements2016`.
+
+        .. note::
+
+            The rectangular decomposition as formulated by Clements :cite:`clements2016`
+            uses a different beamsplitter convention to Strawberry Fields:
+
+            .. math:: BS_{clements}(\theta, \phi) = BS(\theta, 0) R(\phi)
     """
     # pylint: disable=too-many-instance-attributes
 
@@ -1570,7 +2374,7 @@ class BipartiteGraphEmbed(Decomposition):
 
     .. math:: A = \begin{bmatrix}0 & B \\ B^T & 0\end{bmatrix}
 
-    where :math:`B` is a :math:N/2\times N/2` matrix representing the (weighted)
+    where :math:`B` is a :math:`N/2\times N/2` matrix representing the (weighted)
     edges between the vertex set.
 
     This operation decomposes an adjacency matrix into a sequence of two
@@ -1661,7 +2465,7 @@ class BipartiteGraphEmbed(Decomposition):
 class GaussianTransform(Decomposition):
     r"""Apply a Gaussian symplectic transformation to the specified qumodes.
 
-    This operation uses the :ref:`Bloch-Messiah decomposition <bloch_messiah>`
+    This operation uses the Bloch-Messiah decomposition
     to decompose a symplectic matrix :math:`S`:
 
     .. math:: S = O_1 R O_2
@@ -1692,6 +2496,46 @@ class GaussianTransform(Decomposition):
             and the unitary associated with orthogonal symplectic :math:`O_2` will be ignored.
         tol (float): the tolerance used when checking if the matrix is symplectic:
             :math:`|S^T\Omega S-\Omega| \leq` tol
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            For every symplectic matrix :math:`S\in\mathbb{R}^{2N\times 2N}`, there
+            exists orthogonal symplectic matrices :math:`O_1` and :math:`O_2`, and
+            diagonal matrix :math:`Z`, such that
+
+            .. math:: S = O_1 Z O_2
+
+            where :math:`Z=\text{diag}(e^{-r_1},\dots,e^{-r_N},e^{r_1},\dots,e^{r_N})`
+            represents a set of one mode squeezing operations with parameters
+            :math:`(r_1,\dots,r_N)`.
+
+        Gaussian symplectic transforms can be grouped into two main types; passive
+        transformations (those which preserve photon number) and active transformations
+        (those which do not). Compared to active transformation, passive transformations
+        have an additional constraint - they must preserve the trace of the covariance
+        matrix, :math:`\text{Tr}(SVS^T)=\text{Tr}(V)`; this only occurs when the
+        symplectic matrix :math:`S` is also orthogonal (:math:`SS^T=\I`).
+
+        The Bloch-Messiah decomposition therefore allows any active symplectic
+        transformation to be decomposed into two passive Gaussian transformations
+        :math:`O_1` and :math:`O_2`, sandwiching a set of one-mode squeezers, an
+        active transformation.
+
+        **Acting on the vacuum**
+
+        In the case where the symplectic matrix :math:`S` is applied to a vacuum state
+        :math:`V=\frac{\hbar}{2}\I`, the action of :math:`O_2` cancels out due to its orthogonality:
+
+        .. math::
+            SVS^T = (O_1 Z O_2)\left(\frac{\hbar}{2}\I\right)(O_1 Z O_2)^T
+            = \frac{\hbar}{2} O_1 Z O_2 O_2^T Z O_1^T = \frac{\hbar}{2}O_1 Z^2 O_1^T
+
+        As such, a symplectic transformation acting on the vacuum is sufficiently
+        characterised by single mode squeezers followed by a passive Gaussian
+        transformation (:math:`S = O_1 Z`).
     """
 
     def __init__(self, S, vacuum=False, tol=1e-10):
@@ -1752,7 +2596,7 @@ class GaussianTransform(Decomposition):
 class Gaussian(Preparation, Decomposition):
     r"""Prepare the specified modes in a Gaussian state.
 
-    This operation uses the :ref:`Williamson decomposition <williamson>` to prepare
+    This operation uses the Williamson decomposition to prepare
     quantum modes into a given Gaussian state, specified by a
     vector of means and a covariance matrix.
 
@@ -1766,6 +2610,12 @@ class Gaussian(Preparation, Decomposition):
     backend can be explicitly prepared in the Gaussian state provided. This is
     **only** supported by backends using the Gaussian representation.
 
+    .. note::
+
+        :math:`V` must be a valid quantum state satisfying the uncertainty principle:
+        :math:`V+\frac{1}{2}i\hbar\Omega\geq 0`. If this is not the case, the Williamson
+        decomposition will return non-physical thermal states with :math:`\bar{n}_i<0`.
+
     Args:
         V (array[float]): an :math:`2N\times 2N` (real and positive definite) covariance matrix
         r (array[float] or None): Length :math:`2N` vector of means, of the
@@ -1774,6 +2624,36 @@ class Gaussian(Preparation, Decomposition):
         decomp (bool): Should the operation be decomposed into a sequence of elementary gates?
             If False, the state preparation is performed directly via the backend API.
         tol (float): the tolerance used when checking if the matrix is symmetric: :math:`|V-V^T| \leq` tol
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+            For every positive definite real matrix :math:`V\in\mathbb{R}^{2N\times 2N}`,
+            there exists a symplectic matrix :math:`S` and diagonal matrix :math:`D` such that
+
+            .. math:: V = S D S^T
+
+            where :math:`D=\text{diag}(\nu_1,\dots,\nu_N,\nu_1,\dots,\nu_N)`, and
+            :math:`\{\nu_i\}` are the eigenvalues of :math:`|i\Omega V|`, where :math:`||`
+            represents the element-wise absolute value.
+
+        The Williamson decomposition allows an arbitrary Gaussian covariance matrix to be
+        decomposed into a symplectic transformation acting on the state described
+        by the diagonal matrix :math:`D`.
+
+        The matrix :math:`D` can always be decomposed further into a set of
+        thermal states with mean photon number given by
+
+        .. math:: \bar{n}_i = \frac{1}{\hbar}\nu_i - \frac{1}{2}, ~~i=1,\dots,N
+
+        **Pure states**
+
+        In the case where :math:`V` represents a pure state (:math:`|V|-(\hbar/2)^{2N}=0`),
+        the Williamson decomposition outputs :math:`D=\frac{1}{2}\hbar I_{2N}`; that is,
+        a symplectic transformation :math:`S` acting on the vacuum. It follows that the
+        original covariance matrix can therefore be recovered simply via :math:`V=\frac{\hbar}{2}SS^T`.
     """
     # pylint: disable=too-many-instance-attributes
     ns = None

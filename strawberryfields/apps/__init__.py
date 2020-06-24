@@ -22,17 +22,20 @@ Strawberry Fields application layer.
 	data
 	plot
 	points
+	qchem
 	sample
 	similarity
 	subgraph
-	vibronic
+	train
 """
 
 import strawberryfields.apps.clique
 import strawberryfields.apps.data
 import strawberryfields.apps.plot
 import strawberryfields.apps.points
+import strawberryfields.apps.qchem
 import strawberryfields.apps.sample
 import strawberryfields.apps.similarity
 import strawberryfields.apps.subgraph
-import strawberryfields.apps.vibronic
+import strawberryfields.apps.train
+from strawberryfields.apps.qchem import vibronic

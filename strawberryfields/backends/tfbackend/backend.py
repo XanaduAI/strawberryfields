@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Tensorflow backend interface
+TensorFlow backend interface
 ============================
 
 """
@@ -23,33 +23,26 @@ import tensorflow as tf
 
 from strawberryfields.backends import BaseFock, ModeMap
 from .circuit import Circuit
-from .ops import _check_for_eval, mixed, partial_trace, reorder_modes
+from .ops import mixed, partial_trace, reorder_modes
 from .states import FockStateTF
 
 
 class TFBackend(BaseFock):
     r"""Implements a simulation of quantum optical circuits in a truncated
-    Fock basis using `TensorFlow <http://www.numpy.org/>`_, returning a :class:`~.FockStateTF`
+    Fock basis using `TensorFlow <http://tensorflow.org/>`_, returning a :class:`~.FockStateTF`
     state object.
     """
 
     short_name = "tf"
     circuit_spec = "tf"
 
-    def __init__(self, graph=None):
+    def __init__(self):
         """Initialize a TFBackend object.
-
-        Args:
-            graph (tf.Graph): optional Tensorflow Graph object where circuit should be defined
         """
         super().__init__()
         self._supported["mixed_states"] = True
         self._supported["batched"] = True
         self._supported["symbolic"] = True
-        if graph is None:
-            self._graph = tf.get_default_graph()
-        else:
-            self._graph = graph
         self._init_modes = None  #: int: initial number of modes in the circuit
         self._modemap = None  #: Modemap: maps external mode indices to internal ones
         self.circuit = (
@@ -97,7 +90,7 @@ class TFBackend(BaseFock):
         batch_size = kwargs.get("batch_size", None)
 
         if cutoff_dim is None:
-            raise ValueError("Argument 'cutoff_dim' must be passed to the Tensorflow backend")
+            raise ValueError("Argument 'cutoff_dim' must be passed to the TensorFlow backend")
 
         if not isinstance(num_subsystems, int):
             raise ValueError("Argument 'num_subsystems' must be a positive integer")
@@ -112,7 +105,7 @@ class TFBackend(BaseFock):
 
         with tf.name_scope("Begin_circuit"):
             self._modemap = ModeMap(num_subsystems)
-            circuit = Circuit(self._graph, num_subsystems, cutoff_dim, pure, batch_size)
+            circuit = Circuit(num_subsystems, cutoff_dim, pure, batch_size)
 
         self._init_modes = num_subsystems
         self.circuit = circuit
@@ -131,21 +124,11 @@ class TFBackend(BaseFock):
 
         Keyword Args:
             cutoff_dim (int): new Hilbert space truncation dimension
-            hard (bool): Whether to reset the underlying TensorFlow graph.
-                If True (default), then resets the underlying tensor graph as well.
-                If False, then the circuit is reset to its initial state, but ops that
-                have already been declared are still accessible.
         """
-        hard = kwargs.pop("hard", True)
-        if hard:
-            tf.reset_default_graph()
-            self._graph = tf.get_default_graph()
 
         with tf.name_scope("Reset"):
             self._modemap.reset()
-            self.circuit.reset(
-                graph=self._graph, num_subsystems=self._init_modes, pure=pure, **kwargs
-            )
+            self.circuit.reset(num_subsystems=self._init_modes, pure=pure, **kwargs)
 
     def get_cutoff_dim(self):
         return self.circuit.cutoff_dim
@@ -159,20 +142,20 @@ class TFBackend(BaseFock):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_vacuum_state(remapped_mode)
 
-    def prepare_coherent_state(self, alpha, mode):
+    def prepare_coherent_state(self, r, phi, mode):
         with tf.name_scope("Prepare_coherent"):
             remapped_mode = self._remap_modes(mode)
-            self.circuit.prepare_coherent_state(alpha, remapped_mode)
+            self.circuit.prepare_coherent_state(r, phi, remapped_mode)
 
     def prepare_squeezed_state(self, r, phi, mode):
         with tf.name_scope("Prepare_squeezed"):
             remapped_mode = self._remap_modes(mode)
             self.circuit.prepare_squeezed_state(r, phi, remapped_mode)
 
-    def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
+    def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
         with tf.name_scope("Prepare_displaced_squeezed"):
             remapped_mode = self._remap_modes(mode)
-            self.circuit.prepare_displaced_squeezed_state(alpha, r, phi, remapped_mode)
+            self.circuit.prepare_displaced_squeezed_state(r_d, phi_d, r_s, phi_s, remapped_mode)
 
     def prepare_fock_state(self, n, mode):
         with tf.name_scope("Prepare_fock"):
@@ -197,25 +180,25 @@ class TFBackend(BaseFock):
             remapped_mode = self._remap_modes(mode)
             self.circuit.phase_shift(phi, remapped_mode)
 
-    def displacement(self, alpha, mode):
+    def displacement(self, r, phi, mode):
         with tf.name_scope("Displacement"):
             remapped_mode = self._remap_modes(mode)
-            self.circuit.displacement(alpha, remapped_mode)
+            self.circuit.displacement(r, phi, remapped_mode)
 
-    def squeeze(self, z, mode):
+    def squeeze(self, r, phi, mode):
         with tf.name_scope("Squeeze"):
             remapped_mode = self._remap_modes(mode)
-            self.circuit.squeeze(z, remapped_mode)
+            self.circuit.squeeze(r, phi, remapped_mode)
 
-    def beamsplitter(self, t, r, mode1, mode2):
+    def beamsplitter(self, theta, phi, mode1, mode2):
         with tf.name_scope("Beamsplitter"):
-            if isinstance(t, complex):
-                raise ValueError("Beamsplitter transmittivity t must be a float.")
-            if isinstance(t, tf.Tensor):
-                if t.dtype.is_complex:
-                    raise ValueError("Beamsplitter transmittivity t must be a float.")
             remapped_modes = self._remap_modes([mode1, mode2])
-            self.circuit.beamsplitter(t, r, remapped_modes[0], remapped_modes[1])
+            self.circuit.beamsplitter(theta, phi, remapped_modes[0], remapped_modes[1])
+
+    def two_mode_squeeze(self, r, phi, mode1, mode2):
+        with tf.name_scope("Two-mode_squeezing"):
+            remapped_modes = self._remap_modes([mode1, mode2])
+            self.circuit.two_mode_squeeze(r, phi, remapped_modes[0], remapped_modes[1])
 
     def loss(self, T, mode):
         with tf.name_scope("Loss"):
@@ -241,11 +224,6 @@ class TFBackend(BaseFock):
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
         See :meth:`.BaseBackend.state`.
-
-        Keyword Args:
-            session (tf.Session): TensorFlow session
-            feed_dict (Dict): Dictionary containing the desired numerical values for Tensors
-                for numerically evaluating the state. Used with ``session``.
 
         Returns:
             FockStateTF: state description
@@ -291,24 +269,11 @@ class TFBackend(BaseFock):
                     reduced_state, mode_permutation, reduced_state_pure, batched
                 )
 
-            evaluate_results, session, feed_dict, close_session = _check_for_eval(kwargs)
-            if evaluate_results:
-                s = session.run(reduced_state, feed_dict=feed_dict)
-                if close_session:
-                    session.close()
-            else:
-                s = reduced_state
+            s = reduced_state
 
             modenames = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
             state_ = FockStateTF(
-                s,
-                len(modes),
-                pure,
-                self.circuit.cutoff_dim,
-                graph=self._graph,
-                batched=batched,
-                mode_names=modenames,
-                eval=evaluate_results,
+                s, len(modes), pure, self.circuit.cutoff_dim, batched=batched, mode_names=modenames
             )
         return state_
 
@@ -318,9 +283,6 @@ class TFBackend(BaseFock):
         See :meth:`.BaseFock.measure_fock`.
 
         Keyword Args:
-            session (tf.Session): TensorFlow session
-            feed_dict (Dict): Dictionary containing the desired numerical values for Tensors
-                for numerically evaluating the measurement results. Used with ``session``.
 
         Returns:
             tuple[int] or tuple[Tensor]: measurement outcomes
@@ -340,9 +302,6 @@ class TFBackend(BaseFock):
         See :meth:`.BaseBackend.measure_homodyne`.
 
         Keyword Args:
-            session (tf.Session): TensorFlow session
-            feed_dict (Dict): Dictionary containing the desired numerical values for Tensors
-                for numerically evaluating the measurement results. Used with ``session``.
             num_bins (int): Number of equally spaced bins for the probability distribution function
                 (pdf) simulating the homodyne measurement (default: 100000).
             max (float): The pdf is discretized onto the 1D grid [-max,max] (default: 10).
@@ -361,17 +320,8 @@ class TFBackend(BaseFock):
 
     def is_vacuum(self, tol=0.0, **kwargs):
         with tf.name_scope("Is_vacuum"):
-            with self.circuit.graph.as_default():
-                vac_elem = self.circuit.vacuum_element()
-                if "eval" in kwargs and kwargs["eval"] is False:
-                    v = vac_elem
-                else:
-                    sess = tf.Session()
-                    v = sess.run(vac_elem)
-                    sess.close()
-
-            result = np.abs(v - 1) <= tol
-        return result
+            vac_elem = self.circuit.vacuum_element()
+            return np.abs(vac_elem - 1) <= tol
 
     def del_mode(self, modes):
         with tf.name_scope("Del_mode"):
@@ -385,13 +335,3 @@ class TFBackend(BaseFock):
         with tf.name_scope("Add_mode"):
             self.circuit.add_mode(n)
             self._modemap.add(n)
-
-    @property
-    def graph(self):
-        """
-        Get the Tensorflow Graph object where the current quantum circuit is defined.
-
-        Returns:
-            tf.Graph: the circuit's graph
-        """
-        return self._graph

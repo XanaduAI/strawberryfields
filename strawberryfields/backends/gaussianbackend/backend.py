@@ -23,21 +23,18 @@ from numpy import (
     arctan2,
     angle,
     sqrt,
-    dot,
     vstack,
     zeros_like,
     allclose,
     ix_,
 )
-from numpy.linalg import inv
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.shared_ops import changebasis
+from strawberryfields.backends.states import BaseGaussianState
 
-from .ops import xmat
 from .gaussiancircuit import GaussianModes
-from .states import GaussianState
 
 
 class GaussianBackend(BaseGaussian):
@@ -59,7 +56,7 @@ class GaussianBackend(BaseGaussian):
     :math:`M_{i,j} = \langle a _i a_j \rangle`
     and a vector of means :math:`\alpha_i =\langle a_i \rangle`.
 
-    .. 
+    ..
         .. currentmodule:: strawberryfields.backends.gaussianbackend
         .. autosummary::
             :toctree: api
@@ -101,35 +98,29 @@ class GaussianBackend(BaseGaussian):
     def prepare_vacuum_state(self, mode):
         self.circuit.loss(0.0, mode)
 
-    def prepare_coherent_state(self, alpha, mode):
+    def prepare_coherent_state(self, r, phi, mode):
         self.circuit.loss(0.0, mode)
-        self.circuit.displace(alpha, mode)
+        self.circuit.displace(r, phi, mode)
 
     def prepare_squeezed_state(self, r, phi, mode):
         self.circuit.loss(0.0, mode)
         self.circuit.squeeze(r, phi, mode)
 
-    def prepare_displaced_squeezed_state(self, alpha, r, phi, mode):
+    def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
         self.circuit.loss(0.0, mode)
-        self.circuit.squeeze(r, phi, mode)
-        self.circuit.displace(alpha, mode)
+        self.circuit.squeeze(r_s, phi_s, mode)
+        self.circuit.displace(r_d, phi_d, mode)
 
     def rotation(self, phi, mode):
         self.circuit.phase_shift(phi, mode)
 
-    def displacement(self, alpha, mode):
-        self.circuit.displace(alpha, mode)
+    def displacement(self, r, phi, mode):
+        self.circuit.displace(r, phi, mode)
 
-    def squeeze(self, z, mode):
-        phi = angle(z)
-        r = abs(z)
+    def squeeze(self, r, phi, mode):
         self.circuit.squeeze(r, phi, mode)
 
-    def beamsplitter(self, t, r, mode1, mode2):
-        if isinstance(t, complex):
-            raise ValueError("Beamsplitter transmittivity t must be a float.")
-        theta = arctan2(abs(r), t)
-        phi = angle(r)
+    def beamsplitter(self, theta, phi, mode1, mode2):
         self.circuit.beamsplitter(-theta, -phi, mode1, mode2)
 
     def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
@@ -166,7 +157,8 @@ class GaussianBackend(BaseGaussian):
             val = select * 2 / sqrt(2 * self.circuit.hbar)
             qs = self.circuit.post_select_homodyne(mode, val, **kwargs)
 
-        return qs * sqrt(2 * self.circuit.hbar) / 2
+        # `qs` will always be a single value since multiple shots is not supported
+        return array([[qs * sqrt(2 * self.circuit.hbar) / 2]])
 
     def measure_heterodyne(self, mode, shots=1, select=None):
 
@@ -185,12 +177,13 @@ class GaussianBackend(BaseGaussian):
         if select is None:
             m = identity(2)
             res = 0.5 * self.circuit.measure_dyne(m, [mode], shots=shots)
-            return res[0, 0] + 1j * res[0, 1]
+            return array([[res[0, 0] + 1j * res[0, 1]]])
 
         res = select
         self.circuit.post_select_heterodyne(mode, select)
 
-        return res
+        # `res` will always be a single value since multiple shots is not supported
+        return array([[res]])
 
     def prepare_gaussian_state(self, r, V, modes):
         if isinstance(modes, int):
@@ -222,12 +215,12 @@ class GaussianBackend(BaseGaussian):
     def thermal_loss(self, T, nbar, mode):
         self.circuit.thermal_loss(T, nbar, mode)
 
-    def measure_fock(self, modes, shots=1, select=None):
+    def measure_fock(self, modes, shots=1, select=None, **kwargs):
+        if select is not None:
+            raise NotImplementedError(
+                "Gaussian backend currently does not support " "postselection"
+            )
         if shots != 1:
-            if select is not None:
-                raise NotImplementedError(
-                    "Gaussian backend currently does not support " "postselection"
-                )
             warnings.warn(
                 "Cannot simulate non-Gaussian states. "
                 "Conditional state after Fock measurement has not been updated."
@@ -242,18 +235,16 @@ class GaussianBackend(BaseGaussian):
         modes_idxs = concatenate([x_idxs, p_idxs])
         reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
         reduced_mean = mean[modes_idxs]
+
         # check we are sampling from a gaussian state with zero mean
         if allclose(mu, zeros_like(mu)):
             samples = hafnian_sample_state(reduced_cov, shots)
         else:
             samples = hafnian_sample_state(reduced_cov, shots, mean=reduced_mean)
-        # for backward compatibility with previous measurement behaviour,
-        # if only one shot, then we drop the shots axis
-        if shots == 1:
-            samples = samples.reshape((len(modes),))
+
         return samples
 
-    def measure_threshold(self, modes, shots=1, select=None):
+    def measure_threshold(self, modes, shots=1, select=None, **kwargs):
         if shots != 1:
             if select is not None:
                 raise NotImplementedError(
@@ -276,10 +267,7 @@ class GaussianBackend(BaseGaussian):
         modes_idxs = concatenate([x_idxs, p_idxs])
         reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
         samples = torontonian_sample_state(reduced_cov, shots)
-        # for backward compatibility with previous measurement behaviour,
-        # if only one shot, then we drop the shots axis
-        if shots == 1:
-            samples = samples.reshape((len(modes),))
+
         return samples
 
     def state(self, modes=None, **kwargs):
@@ -308,23 +296,4 @@ class GaussianBackend(BaseGaussian):
         covmat *= self.circuit.hbar / 2
 
         mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
-
-        # qmat and amat
-        qmat = self.circuit.qmat()
-        N = qmat.shape[0] // 2
-
-        # work out if qmat and Amat need to be reduced
-        if 1 <= len(modes) < N:
-            # reduce qmat
-            ind = concatenate([array(modes), N + array(modes)])
-            rows = ind.reshape((-1, 1))
-            cols = ind.reshape((1, -1))
-            qmat = qmat[rows, cols]
-
-            # calculate reduced Amat
-            N = qmat.shape[0] // 2
-            Amat = dot(xmat(N), identity(2 * N) - inv(qmat))
-        else:
-            Amat = self.circuit.Amat()
-
-        return GaussianState((means, covmat), len(modes), qmat, Amat, mode_names=mode_names)
+        return BaseGaussianState((means, covmat), len(modes), mode_names=mode_names)

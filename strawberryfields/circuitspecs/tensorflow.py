@@ -53,6 +53,9 @@ class TFSpecs(CircuitSpecs):
         "Fouriergate",
         "BSgate",
         "CKgate",
+        # two mode gates
+        "S2gate",
+        "BSgate",
     }
 
     decompositions = {
@@ -62,7 +65,6 @@ class TFSpecs(CircuitSpecs):
         "GaussianTransform": {},
         "Gaussian": {},
         "Pgate": {},
-        "S2gate": {},
         "CXgate": {},
         "CZgate": {},
         "MZgate": {},

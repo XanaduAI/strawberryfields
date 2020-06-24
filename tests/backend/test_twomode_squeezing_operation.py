@@ -57,10 +57,9 @@ class TestTwomodeSqueezing:
         mixed states with the amplitude given by
 	        :math:`\delta_{kl} \frac{e^{in\phi} \tanh^n{r}}{\cosh{r}}`
         """
-        z = r * np.exp(1j * p)
 
         backend = setup_backend(2)
-        backend.two_mode_squeeze(z, 0, 1)
+        backend.two_mode_squeeze(r, p, 0, 1)
 
         state = backend.state()
 
@@ -85,10 +84,9 @@ class TestTwomodeSqueezing:
         mixed states on different mode subsets with the amplitude given by
 	        :math:`\delta_{kl} \frac{e^{in\phi} \tanh^n{r}}{\cosh{r}}`
         """
-        z = r * np.exp(1j * p)
 
         backend = setup_backend(4)
-        backend.two_mode_squeeze(z, *modes)
+        backend.two_mode_squeeze(r, p, *modes)
 
         state = backend.state()
 
