@@ -135,6 +135,25 @@ class Connection:
         """
         return self._use_ssl
 
+    def get_device(self, target: str):
+        """Gets the device specifications for target.
+
+        Args:
+            target (str): the target device
+
+        Returns:
+            dict: a dictionary containing the device specifications
+        """
+        path = "/devices/{}".format(target)
+        response = requests.get(self._url(path), headers=self._headers)
+
+        if response.status_code == 200:
+            return response.json()
+
+        raise RequestFailedError(
+            "Failed to get device specifications: {}".format(self._format_error_message(response))
+        )
+
     def create_job(self, target: str, program: Program, run_options: dict = None) -> Job:
         """Creates a job with the given circuit.
 
