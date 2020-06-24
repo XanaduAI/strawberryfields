@@ -8,7 +8,7 @@ plotly
 quantum-blackbird
 scipy>=1.0.0
 sklearn
-sphinx-autodoc-typehints
+sphinx-autodoc-typehints==1.10.3
 sphinx-copybutton
 sphinx-automodapi
 sphinxcontrib-bibtex==0.4.2

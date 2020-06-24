@@ -83,7 +83,7 @@ For :ref:`graph similarity <apps-sim-tutorial>`, we provide:
 Molecules
 ---------
 
-Using the :mod:`~.apps.vibronic` module and :func:`~.apps.sample.vibronic` function, GBS data has
+Using the :mod:`~.qchem.vibronic` module and :func:`~.qchem.vibronic.sample` function, GBS data has
 been generated for formic acid at zero temperature. The GBS samples can be used to recover the
 :ref:`vibronic spectrum <apps-vibronic-tutorial>` of the molecule.
 
