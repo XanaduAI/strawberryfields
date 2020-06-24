@@ -7,23 +7,16 @@ Circuits
       .sphx-glr-thumbcontainer {
         float: center;
         margin-top: 20px;
-        margin-right: 50px;
-              margin-bottom: 20px;
+        margin-right: 10px;
+        margin-bottom: 20px;
       }
-          #right-column.card {
-              box-shadow: none!important;
-          }
-          #right-column.card:hover {
-              box-shadow: none!important;
-          }
+      #right-column.card {
+          box-shadow: none!important;
+      }
+      #right-column.card:hover {
+          box-shadow: none!important;
+      }
     </style>
-
-
-.. toctree::
-    :maxdepth: 1
-    :hidden:
-
-    circuits/glossary
 
 In Strawberry Fields, photonic quantum circuits are represented as :class:`.Program`
 objects. By creating a program, quantum operations can be applied, measurements performed,
@@ -31,7 +24,7 @@ and the program can then be simulated using the various Strawberry Fields backen
 
 .. seealso::
 
-    New to photonic quantum computing? See the :doc:`circuits/glossary` for a glossary
+    New to photonic quantum computing? See the :doc:`conventions/glossary` for a glossary
     of some of the terms used in Strawberry Fields.
 
 Creating a quantum program
@@ -232,6 +225,12 @@ the mathematical functions in the :data:`strawberryfields.math` namespace.
     # run the program, with the free parameter 'a' bound to the value 0.9
     result = eng.run(prog, args={'a': 0.9})
 
+.. warning::
+
+    When using the TensorFlow backend, all Tensor and Variable objects **must** be
+    passed to gates by using a free parameter, and binding the Tensor/Variable
+    on engine execution. For more details, see :doc:`demos/run_tutorial_machine_learning`.
+
 
 Compilation
 -----------
@@ -255,17 +254,22 @@ circuits, see the following tutorials.
 
 .. customgalleryitem::
     :tooltip: Building photonic quantum circuits
-    :description: :doc:`/tutorials/blackbird`
+    :description: :doc:`demos/run_blackbird`
 
 .. customgalleryitem::
     :tooltip: Quantum teleportation
-    :description: :doc:`Basic tutorial: teleportation </tutorials/tutorial_teleportation>`
+    :description: :doc:`Basic tutorial: teleportation <demos/run_teleportation>`
     :figure: /_static/teleport.png
 
 .. customgalleryitem::
     :tooltip: Making photonic measurements
-    :description: :doc:`Measurements and post-selection </tutorials/tutorial_post_selection>`
+    :description: :doc:`Measurements and post-selection <demos/run_post_selection>`
     :figure: /_static/bs_measure.png
+
+.. customgalleryitem::
+    :tooltip: Optimization and machine learning with TensorFlow
+    :description: :doc:`demos/run_tutorial_machine_learning`
+    :figure: /_static/TF.png
 
 .. raw:: html
 

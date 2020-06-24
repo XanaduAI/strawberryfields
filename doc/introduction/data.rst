@@ -1,5 +1,5 @@
-Pre-generated GBS datasets
-==========================
+GBS datasets
+============
 
 .. role:: html(raw)
    :format: html
@@ -9,8 +9,8 @@ Pre-generated GBS datasets
 *Technical details are available in the API documentation:* :doc:`/code/api/strawberryfields.apps.data`
 
 Strawberry Fields contains datasets of pre-generated samples from GBS for encoded problems,
-including graphs for :ref:`graph optimization <graphs-intro>` and :ref:`machine learning <ml-intro>`
-problems and molecules for calculating :ref:`vibronic spectra <apps-vibronic-tutorial>`.
+including graphs for :doc:`graph optimization and machine learning problems <applications>`,
+and molecules for calculating :doc:`vibronic spectra <apps/run_tutorial_vibronic>`.
 
 Graphs
 ------
