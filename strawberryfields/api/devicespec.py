@@ -68,7 +68,9 @@ class DeviceSpec:
 
     @property
     def gate_parameters(self):
-        """dict[str, ~.Ranges]: A dictionary of gate parameters and allowed ranges.
+        """dict[str, strawberryfields.circuitspecs.Ranges]: A dictionary of gate parameters
+        and allowed ranges.
+
         The parameter names correspond to those present in the Blackbird circuit layout.
 
         **Example**

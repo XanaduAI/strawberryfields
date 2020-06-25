@@ -114,6 +114,10 @@
   [(#378)](https://github.com/XanaduAI/strawberryfields/pull/378)
   [(#381)](https://github.com/XanaduAI/strawberryfields/pull/381)
 
+* Strawberry Fields can now access the Xanadu Cloud device specifications API.
+  The ``Connection`` class has a new method ``Connection.get_device(target)``,
+  which returns a ``DeviceSpec`` class.
+
 <h3>Breaking Changes</h3>
 
 * Removes support for Python 3.5.
