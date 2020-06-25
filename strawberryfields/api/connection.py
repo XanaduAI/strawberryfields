@@ -146,18 +146,11 @@ class Connection:
             strawberryfields.api.DeviceSpec: the created device specification
         """
         device_dict = self._get_device_dict(target)
-        return DeviceSpec(
-            target=self.target,
-            layout=device_dict["layout"],
-            modes=device_dict["modes"],
-            compiler=device_dict["compiler"],
-            gate_parameters=device_dict["gate_parameters"],
-            connection=self,
-        )
+        return DeviceSpec(target=target, connection=self, **device_dict)
 
     def _get_device_dict(self, target: str) -> dict:
         """Returns the device specifications as a dictionary"""
-        path = "/devices/{}".format(target)
+        path = f"/devices/{target}/specifications"
         response = requests.get(self._url(path), headers=self._headers)
 
         if response.status_code == 200:

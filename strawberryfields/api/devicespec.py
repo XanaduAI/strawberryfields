@@ -12,17 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-**Module name:** :mod:`strawberryfields.api.devicespec`
+This module contains a class that represents the specifications of
+a device available via the API.
 """
+from collections.abc import Sequence
+
 import strawberryfields as sf
 import blackbird
+
+from strawberryfields.circuitspecs.circuit_specs import Ranges
 
 
 class DeviceSpec:
     """The specifications for a specific hardware device.
 
     Args:
-        target (str): target chip
+        target (str): name of the target hardware device
         layout (str): string containing the Blackbird circuit layout
         modes (int): number of modes supported by the target
         compiler (list): list of supported compilers
@@ -42,38 +47,86 @@ class DeviceSpec:
 
     @property
     def target(self):
+        """str: The name of the target hardware device."""
         return self._target
 
     @property
     def layout(self):
+        """str: Returns a string containing the Blackbird circuit layout."""
         return self._layout
 
     @property
     def modes(self):
+        """int: Number of modes supported by the device."""
         return self._modes
 
     @property
     def compiler(self):
-        return self.compiler
+        """list[str]: A list of strings corresponding to Strawberry Fields compilers supported
+        by the hardware device."""
+        return self._compiler
 
     @property
     def gate_parameters(self):
-        return self._gate_parameters
+        """dict[str, ~.Ranges]: A dictionary of gate parameters and allowed ranges.
+        The parameter names correspond to those present in the Blackbird circuit layout.
 
-    def create_program(self, **kwargs):
-        bb = blackbird.loads(self._layout)
-        parameters = dict(self._gate_parameters, **kwargs)
-        bb(**{f"{name}": par for name, par in parameters})
+        **Example**
 
+        >>> spec.gate_parameters
+        {'squeezing_amplitude_0': x=0, x=1, 'phase_0': x=0, 0≤x≤6.283185307179586}
+        """
+
+        # convert gate parameter allowed ranges to Range objects
+
+        gate_parameters = dict()
+
+        for gate_name, param_ranges in self._gate_parameters.items():
+            range_list = [[i] if not isinstance(i, Sequence) else i for i in param_ranges]
+            gate_parameters[gate_name] = Ranges(*range_list)
+
+        return gate_parameters
+
+    def create_program(self, **parameters):
+        """Create a Strawberry Fields program matching the low-level layout of the
+        device.
+
+        Gate arguments should be passed as keyword arguments, with names
+        correspond to those present in the Blackbird circuit layout. Parameters not
+        present will be assumed to have a value of 0.
+
+        **Example**
+
+        Device specifications can be retrieved from the API by using the
+        :class:`~.Connection` class:
+
+        >>> spec.create_program(squeezing_amplitude_0=0.43)
+        <strawberryfields.program.Program at 0x7fd37e27ff50>
+        """
+        bb = blackbird.loads(self.layout)
+
+        # check that all provided parameters are valid
+        for p in parameters:
+            if p not in self.gate_parameters:
+                raise ValueError(f"Parameter {p} not a valid parameter for this device")
+
+        # determine parameter value if not provided
+        extra_params = set(self.gate_parameters) - set(parameters)
+
+        for p in extra_params:
+            parameters[p] = 0
+
+            if p in self.gate_parameters:
+                # Set parameter value as the first allowed
+                # value in the gate parameters dictionary.
+                parameters[p] = self.gate_parameters[p].ranges[0].x
+
+        # evaluate the blackbird template
+        bb = bb(**parameters)
         prog = sf.io.to_program(bb)
         return prog
 
     def refresh(self):
         """Refreshes the device specifications"""
         device = self._connection._get_device_dict(self.target)
-
-        self._target = device["target"]
-        self._layout = device["layout"]
-        self._modes = device["modes"]
-        self._compiler = device["compiler"]
-        self._gate_parameters = device["gate_parameters"]
+        self.__init__(target=self.target, connection=self._connection, **device)
