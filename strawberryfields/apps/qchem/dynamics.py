@@ -85,6 +85,44 @@ import strawberryfields as sf
 from strawberryfields.utils import operation
 
 
+def _validation(
+    t: float,
+    Ul: np.ndarray,
+    w: np.ndarray,
+    n_samples: int,
+    loss: float = 0.0,
+) -> bool:
+    r"""checks if the inputs to sampling functions in this module are valid
+
+    Args:
+        t (float): time in femtoseconds
+        Ul (array): normal-to-local transformation matrix
+        w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}`
+        n_samples (int): number of samples to be generated
+        loss (float): loss parameter denoting the fraction of lost photons
+
+    Returns:
+        bool: True if the inputs were valid
+    """
+
+    if t < 0:
+        raise ValueError("Time must be zero or positive")
+
+    if np.any(np.iscomplex(Ul)):
+        raise ValueError("The normal mode to local mode transformation matrix must be real")
+
+    if np.any(w <= 0):
+        raise ValueError("Vibrational frequencies must be larger than zero")
+
+    if n_samples < 1:
+        raise ValueError("Number of samples must be at least one")
+
+    if not 0 <= loss <= 1:
+        raise ValueError("Loss parameter must take a value between zero and one")
+
+    return True
+
+
 def evolution(modes: int):
     r"""Generates a custom ``sf`` operation for performing the transformation
     :math:`U(t) = U_l e^{-i\hat{H}t/\hbar} U_l^\dagger` on a given state.
@@ -167,20 +205,7 @@ def sample_fock(
     Returns:
         list[list[int]]: a list of samples
     """
-    if n_samples < 1:
-        raise ValueError("Number of samples must be at least one")
-
-    if t < 0:
-        raise ValueError("Time must be zero or positive")
-
-    if np.any(w <= 0):
-        raise ValueError("Vibrational frequencies must be larger than zero")
-
-    if np.any(np.iscomplex(Ul)):
-        raise ValueError("The normal mode to local mode transformation matrix must be real")
-
-    if not 0 <= loss <= 1:
-        raise ValueError("Loss parameter must take a value between zero and one")
+    _validation(t, Ul, w, n_samples, loss)
 
     if not len(input_state) == len(Ul):
         raise ValueError(
@@ -264,7 +289,7 @@ def sample_coherent(
 
     **Example usage:**
 
-    >>> alpha = [0, 1.4]
+    >>> alpha = [[0, 0], [1.4, 0]]
     >>> t = 10.0
     >>> Ul = np.array([[0.707106781, -0.707106781],
     >>>                [0.707106781, 0.707106781]])
@@ -274,7 +299,7 @@ def sample_coherent(
     [[0, 2], [0, 4], [0, 3], [0, 1], [0, 2]]
 
     Args:
-        alpha (list): list of displacement parameters
+        alpha (list[list[float]]): list of displacement magnitudes and angles for all modes
         t (float): time in femtoseconds
         Ul (array): normal-to-local transformation matrix
         w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}`
@@ -284,17 +309,7 @@ def sample_coherent(
     Returns:
         list[list[int]]: a list of samples
     """
-    if n_samples < 1:
-        raise ValueError("Number of samples must be at least one")
-
-    if t < 0:
-        raise ValueError("Time must be zero or positive")
-
-    if np.any(w <= 0):
-        raise ValueError("Vibrational frequencies must be larger than zero")
-
-    if np.any(np.iscomplex(Ul)):
-        raise ValueError("The normal mode to local mode transformation matrix must be real")
+    _validation(t, Ul, w, n_samples, loss)
 
     if not len(alpha) == len(Ul):
         raise ValueError(
@@ -313,7 +328,7 @@ def sample_coherent(
     with prog.context as q:
 
         for i in range(modes):
-            sf.ops.Dgate(alpha[i], 0) | q[i]
+            sf.ops.Dgate(alpha[i][0], alpha[i][1]) | q[i]
 
         op(t, Ul, w) | q
 
