@@ -76,12 +76,10 @@ class DeviceSpec:
         >>> spec.gate_parameters
         {'squeezing_amplitude_0': x=0, x=1, 'phase_0': x=0, 0≤x≤6.283185307179586}
         """
-
-        # convert gate parameter allowed ranges to Range objects
-
         gate_parameters = dict()
 
         for gate_name, param_ranges in self._gate_parameters.items():
+            # convert gate parameter allowed ranges to Range objects
             range_list = [[i] if not isinstance(i, Sequence) else i for i in param_ranges]
             gate_parameters[gate_name] = Ranges(*range_list)
 
