@@ -20,7 +20,7 @@ from collections.abc import Sequence
 import strawberryfields as sf
 import blackbird
 
-from strawberryfields.circuitspecs.circuit_specs import Ranges
+from strawberryfields.circuitspecs import Ranges
 
 
 class DeviceSpec:
@@ -104,7 +104,15 @@ class DeviceSpec:
         bb = blackbird.loads(self.layout)
 
         # check that all provided parameters are valid
-        for p in parameters:
+        for p, v in parameters.items():
+            if p in self.gate_parameters and v not in self.gate_parameters[p]:
+                # parameter is present in the device specifications
+                # but the user has provided a disallowed value
+                raise ValueError(
+                    f"{p} has invalid value {v}. Only "
+                    f"{self.gate_parameters[p].__str__().replace('x', p)} allowed."
+                )
+
             if p not in self.gate_parameters:
                 raise ValueError(f"Parameter {p} not a valid parameter for this device")
 
@@ -112,12 +120,9 @@ class DeviceSpec:
         extra_params = set(self.gate_parameters) - set(parameters)
 
         for p in extra_params:
-            parameters[p] = 0
-
-            if p in self.gate_parameters:
-                # Set parameter value as the first allowed
-                # value in the gate parameters dictionary.
-                parameters[p] = self.gate_parameters[p].ranges[0].x
+            # Set parameter value as the first allowed
+            # value in the gate parameters dictionary.
+            parameters[p] = self.gate_parameters[p].ranges[0].x
 
         # evaluate the blackbird template
         bb = bb(**parameters)
