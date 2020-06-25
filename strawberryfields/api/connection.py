@@ -136,27 +136,37 @@ class Connection:
         """
         return self._use_ssl
 
-    def get_device(self, target: str):
+    def get_device(self, target: str) -> DeviceSpec:
         """Gets the device specifications for target.
 
         Args:
             target (str): the target device
 
         Returns:
-            dict: a dictionary containing the device specifications
+            strawberryfields.api.DeviceSpec: the created device specification
         """
+        device_dict = self._get_device_dict(target)
+        return DeviceSpec(
+            target=self.target,
+            layout=device_dict["layout"],
+            modes=device_dict["modes"],
+            compiler=device_dict["compiler"],
+            gate_parameters=device_dict["gate_parameters"],
+            connection=self,
+        )
+
+    def _get_device_dict(self, target: str) -> dict:
+        """Returns the device specifications as a dictionary"""
         path = "/devices/{}".format(target)
         response = requests.get(self._url(path), headers=self._headers)
+
         if response.status_code == 200:
-            return DeviceSpec(
-                layout=response.json()["layout"],
-                modes=response.json()["modes"],
-                compiler=response.json()["compiler"],
-                gate_parameters=response.json()["gate_parameters"],
-            )
+            return response.json()
         raise RequestFailedError(
             "Failed to get device specifications: {}".format(self._format_error_message(response))
         )
+
+
 
     def create_job(self, target: str, program: Program, run_options: dict = None) -> Job:
         """Creates a job with the given circuit.
