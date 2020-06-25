@@ -1316,7 +1316,7 @@ class Dgate(Gate):
     """
 
     def __init__(self, r, phi=None):
-        if any(np.iscomplex([r, phi])):
+        if (np.iscomplex([r, phi])).any():
             raise ValueError("The arguments of Dgate(r, phi) cannot be complex")
         if phi is None:
             phi = 0.0
@@ -1733,7 +1733,7 @@ class BSgate(Gate):
     ns = 2
 
     def __init__(self, theta=np.pi / 4, phi=None):
-        if any(np.iscomplex([theta, phi])):
+        if (np.iscomplex([theta, phi])).any():
             raise ValueError("The arguments of BSgate(theta, phi) cannot be complex")
         if phi is None:
             phi = 0.0
@@ -1819,7 +1819,7 @@ class S2gate(Gate):
     ns = 2
 
     def __init__(self, r, phi=None):
-        if any(np.iscomplex([r, phi])):
+        if (np.iscomplex([r, phi])).any():
             raise ValueError("The arguments of S2gate(r, phi) cannot be complex")
         if phi is None:
             phi = 0.0
