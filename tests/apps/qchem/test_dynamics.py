@@ -24,7 +24,7 @@ from strawberryfields.apps.qchem import dynamics
 
 pytestmark = pytest.mark.apps
 
-
+sampling_func = [dynamics.sample_fock, dynamics.sample_coherent]
 t1 = 10.0
 t2 = 100.0
 a = 1.0 / np.sqrt(2.0)
@@ -97,11 +97,14 @@ sample2 = [
 prob1 = 0.4
 prob2 = 0.3
 
-alpha1 = [0.0, 1.4]
-alpha2 = [0.0, 1.4, 0.0]
+alpha1 = [[0.0, 0.0], [1.4, 0.0]]
+alpha2 = [[0.0, 0.0], [1.4, 0.0], [0.0, 0.0]]
 
 c1 = [alpha1, t1, U1, w1, ns1]
 c2 = [alpha2, t2, U2, w2, ns2]
+
+val1 = [t1, U1, w1, ns1]
+val2 = [t2, U2, w2, ns2]
 
 
 @pytest.mark.parametrize("time, unitary, frequency, prob", [(t1, U1, w1, p1), (t2, U2, w2, p2)])
@@ -466,3 +469,121 @@ def test_fock_integration(c):
     assert dims == (c[4], len(c[2]))
     assert samples.dtype == "int"
     assert (samples >= 0).all()
+
+
+@pytest.mark.parametrize("func", sampling_func)
+@pytest.mark.parametrize("other_inp", [val1, val2])
+@pytest.mark.parametrize("state_inp", [[alpha1, alpha2], [is1, is2]])
+class TestInputValidation:
+    """Runs input validation tests on all sampling functions"""
+
+    def test_invalid_time(self, func, other_inp, state_inp):
+        """Test if function raises a ``ValueError`` when a negative time is given."""
+        with pytest.raises(ValueError, match="Time must be zero or positive"):
+            t, U, w, ns = other_inp
+            print("here", state_inp)
+            func(state_inp, -t, U, w, ns)
+
+#     def test_complex_unitary(self, c):
+#         """Test if function raises a ``ValueError`` when a complex unitary is given."""
+#         with pytest.raises(
+#             ValueError, match="The normal mode to local mode transformation matrix must be real"
+#         ):
+#             alpha, t, U, w, ns = c
+#             dynamics.sample_coherent(alpha, t, 1.0j * U, w, ns)
+#
+#     def test_zero_frequency(self, c):
+#         """Test if function raises a ``ValueError`` when zero frequencies are given."""
+#         with pytest.raises(ValueError, match="Vibrational frequencies must be larger than zero"):
+#             alpha, t, U, w, ns = c
+#             dynamics.sample_coherent(alpha, t, U, 0.0 * w, ns)
+#
+#     def test_negative_frequency(self, c):
+#         """Test if function raises a ``ValueError`` when negative frequencies are given."""
+#         with pytest.raises(ValueError, match="Vibrational frequencies must be larger than zero"):
+#             alpha, t, U, w, ns = c
+#             dynamics.sample_coherent(alpha, t, U, -w, ns)
+#
+#     def test_invalid_n_samples(self, c):
+#         """Test if function raises a ``ValueError`` when a number of samples less than one is
+#         requested."""
+#         with pytest.raises(ValueError, match="Number of samples must be at least one"):
+#             alpha, t, U, w, ns = c
+#             dynamics.sample_coherent(alpha, t, U, w, 0)
+#
+#     def test_invalid_loss(self, c):
+#         """Test if function raises a ``ValueError`` when the loss parameter is specified outside
+#         of range."""
+#         with pytest.raises(
+#             ValueError, match="Loss parameter must take a value between zero and one"
+#         ):
+#             alpha, t, U, w, ns = c
+#             dynamics.sample_coherent(alpha, t, U, w, ns, -1)
+#
+#     def test_no_loss(self, monkeypatch, c):
+#         """Test if function correctly creates the SF program for circuits without loss."""
+#
+#         def save_hist(*args, **kwargs):
+#             call_history.append(args[1])
+#             return sf.engine.Result
+#
+#         call_history = []
+#         with monkeypatch.context() as m:
+#             m.setattr(sf.engine.Result, "samples", np.array([[0]]))
+#             m.setattr(sf.LocalEngine, "run", save_hist)
+#             dynamics.sample_coherent(*c)
+#
+#         assert not all([isinstance(op, sf.ops.LossChannel) for op in call_history[0].circuit])
+#
+#     def test_invalid_mode(self, c):
+#         """Test if function raises a ``ValueError`` when the number of displacement parameters and the
+#         number of modes in the normal-to-local transformation matrix are different."""
+#         with pytest.raises(
+#             ValueError,
+#             match="Number of displacement parameters and the number of modes in the normal-to-local",
+#         ):
+#             alpha, t, U, w, ns = c
+#             dynamics.sample_coherent(alpha + [0], t, U, w, ns)
+#
+#     def test_rgate(self, monkeypatch, c):
+#         """Test if function correctly uses the rotation parameter in the rgates."""
+#         if len(c[0]) == 2:
+#             mock_eng_run = mock.MagicMock()
+#
+#             with monkeypatch.context() as m:
+#                 m.setattr(sf.LocalEngine, "run", mock_eng_run)
+#                 dynamics.sample_coherent(*c)
+#                 p_func = mock_eng_run.call_args[0][0]
+#
+#             assert np.allclose(p_func.circuit[3].op.p, -7.374345193888777)
+#             assert np.allclose(p_func.circuit[4].op.p, -7.13449983982334)
+#
+#     def test_interferometer(self, monkeypatch, c):
+#         """Test if function correctly uses the interferometer unitaries."""
+#         if len(c[0]) == 2:
+#             mock_eng_run = mock.MagicMock()
+#
+#             with monkeypatch.context() as m:
+#                 m.setattr(sf.LocalEngine, "run", mock_eng_run)
+#                 dynamics.sample_coherent(*c)
+#                 p_func = mock_eng_run.call_args[0][0]
+#
+#             _, _, U, _, _ = c
+#
+#             assert np.allclose(p_func.circuit[2].op.p, U.T)
+#             assert np.allclose(p_func.circuit[5].op.p, U)
+#
+#
+# @pytest.mark.parametrize("c", [c1, c2])
+# def test_fock_integration(c):
+#     """Integration test for the function ``strawberryfields.apps.qchem.dynamics.sample_coherent`` to
+#     check if it returns samples of correct form, i.e., correct number of samples, correct number of
+#     modes, all non-negative integers."""
+#     samples = np.array(dynamics.sample_coherent(*c))
+#
+#     dims = samples.shape
+#
+#     assert len(dims) == 2
+#     assert dims == (c[4], len(c[2]))
+#     assert samples.dtype == "int"
+#     assert (samples >= 0).all()

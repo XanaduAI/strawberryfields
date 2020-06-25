@@ -86,11 +86,7 @@ from strawberryfields.utils import operation
 
 
 def _validation(
-    t: float,
-    Ul: np.ndarray,
-    w: np.ndarray,
-    n_samples: int,
-    loss: float = 0.0,
+    t: float, Ul: np.ndarray, w: np.ndarray, n_samples: int, loss: float = 0.0,
 ) -> bool:
     r"""checks if the inputs to sampling functions in this module are valid
 
@@ -289,17 +285,17 @@ def sample_coherent(
 
     **Example usage:**
 
-    >>> alpha = [[0, 0], [1.4, 0]]
+    >>> alpha = [[0.3, 0.5], [1.4, 0.1]]
     >>> t = 10.0
     >>> Ul = np.array([[0.707106781, -0.707106781],
     >>>                [0.707106781, 0.707106781]])
     >>> w = np.array([3914.92, 3787.59])
     >>> n_samples = 5
     >>> sample_coherent(alpha, t, Ul, w, n_samples)
-    [[0, 2], [0, 4], [0, 3], [0, 1], [0, 2]]
+    [[0, 2], [0, 1], [0, 3], [0, 2], [0, 1]]
 
     Args:
-        alpha (list[list[float]]): list of displacement magnitudes and angles for all modes
+        alpha (list[list[float]]): list of displacement parameters given as [ magnitudes, angles] for all modes
         t (float): time in femtoseconds
         Ul (array): normal-to-local transformation matrix
         w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}`
