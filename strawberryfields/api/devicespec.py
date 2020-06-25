@@ -83,7 +83,7 @@ class DeviceSpec:
         for gate_name, param_ranges in self._gate_parameters.items():
             # convert gate parameter allowed ranges to Range objects
             range_list = [[i] if not isinstance(i, Sequence) else i for i in param_ranges]
-            gate_parameters[gate_name] = Ranges(*range_list)
+            gate_parameters[gate_name] = Ranges(*range_list, variable_name=gate_name)
 
         return gate_parameters
 
@@ -112,7 +112,7 @@ class DeviceSpec:
                 # but the user has provided a disallowed value
                 raise ValueError(
                     f"{p} has invalid value {v}. Only "
-                    f"{self.gate_parameters[p].__str__().replace('x', p)} allowed."
+                    f"{self.gate_parameters[p]} allowed."
                 )
 
             if p not in self.gate_parameters:
