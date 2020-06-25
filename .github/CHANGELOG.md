@@ -117,6 +117,7 @@
 * Strawberry Fields can now access the Xanadu Cloud device specifications API.
   The ``Connection`` class has a new method ``Connection.get_device(target)``,
   which returns a ``DeviceSpec`` class.
+  [(#429)](https://github.com/XanaduAI/strawberryfields/pull/429)
 
 <h3>Breaking Changes</h3>
 
