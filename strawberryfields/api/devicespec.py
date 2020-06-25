@@ -111,7 +111,7 @@ class DeviceSpec:
                 # parameter is present in the device specifications
                 # but the user has provided a disallowed value
                 raise ValueError(
-                    f"{p} has invalid value {v}. Only " f"{self.gate_parameters[p]} allowed."
+                    f"{p} has invalid value {v}. Only {self.gate_parameters[p]} allowed."
                 )
 
             if p not in self.gate_parameters:
