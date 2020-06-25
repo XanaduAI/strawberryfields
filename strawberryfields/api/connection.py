@@ -166,8 +166,6 @@ class Connection:
             "Failed to get device specifications: {}".format(self._format_error_message(response))
         )
 
-
-
     def create_job(self, target: str, program: Program, run_options: dict = None) -> Job:
         """Creates a job with the given circuit.
 

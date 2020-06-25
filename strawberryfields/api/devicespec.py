@@ -17,6 +17,7 @@
 import strawberryfields as sf
 import blackbird
 
+
 class DeviceSpec:
     """The specifications for a specific hardware device.
 
@@ -65,7 +66,7 @@ class DeviceSpec:
         bb(**{f"{name}": par for name, par in parameters})
 
         prog = sf.io.to_program(bb)
-        return(prog)
+        return prog
 
     def refresh(self):
         """Refreshes the device specifications"""
