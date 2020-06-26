@@ -97,6 +97,12 @@ sample2 = [
 prob1 = 0.4
 prob2 = 0.3
 
+sq1 = [[0.2, 0.1], [0.8, 0.2]]
+sq2 = [[0.2, 0.1], [0.8, 0.2], [0.2, 0.1]]
+
+tmsv1 = [sq1, t1, U1, w1, ns1]
+tmsv2 = [sq2, t2, U2, w2, ns2]
+
 
 @pytest.mark.parametrize("time, unitary, frequency, prob", [(t1, U1, w1, p1), (t2, U2, w2, p2)])
 def test_evolution(time, unitary, frequency, prob):
@@ -326,3 +332,135 @@ class TestProb:
         with pytest.raises(ValueError, match="The excited state must not contain negative values"):
             samples, state, _ = e
             dynamics.prob(samples, [-i for i in state])
+
+
+@pytest.mark.parametrize("tmsv", [tmsv1, tmsv2])
+class TestSampleTMSV:
+    """Tests for the function ``strawberryfields.apps.qchem.dynamics.sample_tmsv``"""
+
+    def test_invalid_n_samples(self, tmsv):
+        """Test if function raises a ``ValueError`` when a number of samples less than one is
+        requested."""
+        with pytest.raises(ValueError, match="Number of samples must be at least one"):
+            r, t, U, w, ns = tmsv
+            dynamics.sample_tmsv(r, t, U, w, 0)
+
+    def test_invalid_time(self, tmsv):
+        """Test if function raises a ``ValueError`` when a negative time is given."""
+        with pytest.raises(ValueError, match="Time must be zero or positive"):
+            r, t, U, w, ns = tmsv
+            dynamics.sample_tmsv(r, -t, U, w, ns)
+
+    def test_negative_frequency(self, tmsv):
+        """Test if function raises a ``ValueError`` when negative frequencies are given."""
+        with pytest.raises(ValueError, match="Vibrational frequencies must be larger than zero"):
+            r, t, U, w, ns = tmsv
+            dynamics.sample_tmsv(r, t, U, -w, ns)
+
+    def test_zero_frequency(self, tmsv):
+        """Test if function raises a ``ValueError`` when zero frequencies are given."""
+        with pytest.raises(ValueError, match="Vibrational frequencies must be larger than zero"):
+            r, t, U, w, ns = tmsv
+            dynamics.sample_tmsv(r, t, U, 0.0 * w, ns)
+
+    def test_complex_unitary(self, tmsv):
+        """Test if function raises a ``ValueError`` when a complex unitary is given."""
+        with pytest.raises(
+            ValueError, match="The normal mode to local mode transformation matrix must be real"
+        ):
+            r, t, U, w, ns = tmsv
+            dynamics.sample_tmsv(r, t, 1.0j * U, w, ns)
+
+    def test_invalid_loss(self, tmsv):
+        """Test if function raises a ``ValueError`` when the loss parameter is specified outside
+        of range."""
+        with pytest.raises(
+            ValueError, match="Loss parameter must take a value between zero and one"
+        ):
+            r, t, U, w, ns = tmsv
+            dynamics.sample_tmsv(r, t, U, w, ns, -1)
+
+    def test_invalid_mode(self, tmsv):
+        """Test if function raises a ``ValueError`` when the number of modes in the input state and
+        the normal-to-local transformation matrix are different."""
+        with pytest.raises(
+            ValueError,
+            match="Number of squeezing parameters and the number of modes in the normal-to-local",
+        ):
+            r, t, U, w, ns = tmsv
+            dynamics.sample_tmsv(r + [[0, 0]], t, U, w, ns)
+
+    def test_no_loss(self, monkeypatch, tmsv):
+        """Test if function correctly creates the SF program for circuits without loss."""
+
+        def save_hist(*args, **kwargs):
+            call_history.append(args[1])
+            return sf.engine.Result
+
+        call_history = []
+        with monkeypatch.context() as m:
+            m.setattr(sf.engine.Result, "samples", np.array([[0]]))
+            m.setattr(sf.LocalEngine, "run", save_hist)
+            dynamics.sample_tmsv(*tmsv)
+
+        assert not all([isinstance(op, sf.ops.LossChannel) for op in call_history[0].circuit])
+
+    def test_op_order(self, monkeypatch, tmsv):
+        """Test if function correctly applies the operations."""
+        if len(tmsv[0]) == 2:
+            mock_eng_run = mock.MagicMock()
+
+            with monkeypatch.context() as m:
+                m.setattr(sf.LocalEngine, "run", mock_eng_run)
+                dynamics.sample_tmsv(*tmsv)
+                p_func = mock_eng_run.call_args[0][0]
+
+            assert isinstance(p_func.circuit[0].op, sf.ops.S2gate)
+            assert isinstance(p_func.circuit[1].op, sf.ops.S2gate)
+            assert isinstance(p_func.circuit[2].op, sf.ops.Interferometer)
+            assert isinstance(p_func.circuit[3].op, sf.ops.Rgate)
+            assert isinstance(p_func.circuit[4].op, sf.ops.Rgate)
+            assert isinstance(p_func.circuit[5].op, sf.ops.Interferometer)
+            assert isinstance(p_func.circuit[6].op, sf.ops.MeasureFock)
+
+    def test_rgate(self, monkeypatch, tmsv):
+        """Test if function correctly uses the rotation parameter in the rgates."""
+        if len(tmsv[0]) == 2:
+            mock_eng_run = mock.MagicMock()
+
+            with monkeypatch.context() as m:
+                m.setattr(sf.LocalEngine, "run", mock_eng_run)
+                dynamics.sample_tmsv(*tmsv)
+                p_func = mock_eng_run.call_args[0][0]
+
+            assert np.allclose(p_func.circuit[3].op.p, -7.374345193888777)
+            assert np.allclose(p_func.circuit[4].op.p, -7.13449983982334)
+
+    def test_interferometer(self, monkeypatch, tmsv):
+        """Test if function correctly uses the interferometer unitaries."""
+        if len(tmsv[0]) == 2:
+            mock_eng_run = mock.MagicMock()
+
+            with monkeypatch.context() as m:
+                m.setattr(sf.LocalEngine, "run", mock_eng_run)
+                dynamics.sample_tmsv(*tmsv)
+                p_func = mock_eng_run.call_args[0][0]
+
+            _, _, U, _, _ = tmsv
+
+            assert np.allclose(p_func.circuit[2].op.p, U.T)
+            assert np.allclose(p_func.circuit[5].op.p, U)
+
+    def test_output_dim(self, tmsv):
+        """test to check if function returns samples of correct form,
+        i.e., correct number of samples, correct number of modes, all
+        non-negative integers."""
+
+        if len(tmsv[0]) == 2:
+            samples = np.array(dynamics.sample_tmsv(*tmsv))
+            dims = samples.shape
+
+            assert len(dims) == 2
+            assert dims == (tmsv[4], len(tmsv[2]) * 2)
+            assert samples.dtype == "int"
+            assert (samples >= 0).all()
