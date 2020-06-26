@@ -83,6 +83,39 @@ class TestConnection:
         # pylint: disable=protected-access
         assert connection._url("/abc") == "https://host:123/abc"
 
+    def test_get_device(self, prog, connection, monkeypatch):
+        """Tests a successful device spec request."""
+        target = "abc"
+        layout = ""
+        modes = 42
+        compiler = []
+        gate_parameters = {"param": "val"}
+
+        monkeypatch.setattr(
+            requests,
+            "get",
+            mock_return(MockResponse(
+                200,
+                {"target": "abc", "layout": "", "modes": 42, "compiler": [], "gate_parameters": {"param": "val"}}
+            )),
+        )
+
+        device_spec = connection.get_device(target)
+
+        assert device_spec.target == target
+        assert device_spec.layout == layout
+        assert device_spec.modes == modes
+        assert device_spec.compiler == compiler
+        assert device_spec.gate_parameters == gate_parameters
+
+
+    def test_get_device_error(self, connection, monkeypatch):
+        """Tests a failed device spec request."""
+        monkeypatch.setattr(requests, "get", mock_return(MockResponse(404, {})))
+
+        with pytest.raises(RequestFailedError, match="Failed to get device specifications"):
+            connection.get_device("123")
+
     def test_create_job(self, prog, connection, monkeypatch):
         """Tests a successful job creation flow."""
         id_, status = "123", JobStatus.QUEUED
