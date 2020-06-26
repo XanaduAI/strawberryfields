@@ -48,7 +48,6 @@ device_dict = {
         "phase_0": [0, [0, 6.3]],
         "phase_1": [[0.5, 1.4]],
     },
-    "connection": None,
 }
 
 
@@ -60,58 +59,52 @@ class TestDeviceSpec:
         true_params = {
             "squeezing_amplitude_0": Ranges([0], [1], variable_name="squeezing_amplitude_0"),
             "phase_0": Ranges([0], [0, 6.3], variable_name="phase_0"),
-            "phase_1": Ranges([0.5, 1.4], variable_name="phase_1")
+            "phase_1": Ranges([0.5, 1.4], variable_name="phase_1"),
         }
-        spec_params = DeviceSpec(**device_dict).gate_parameters
-
-        assert [tp_key == sp_key
-                for tp_key, sp_key in zip(true_params.keys(), spec_params.keys())]
-        assert [str(tp_val) == str(sp_val)
-                for tp_val, sp_val in zip(true_params.values(), spec_params.values())]
+        spec_params = DeviceSpec(connection=None, **device_dict).gate_parameters
+        assert true_params == spec_params
 
     def test_create_program(self, monkeypatch):
         """Test that the program creation works"""
-        circuit = ["S2gate(0, 0) | (q[0], q[1])",
-                   "MZgate(1.23, 0.5) | (q[0], q[1])",
-                   "MeasureFock | (q[0], q[1])"]
+        circuit = [
+            "S2gate(0, 0) | (q[0], q[1])",
+            "MZgate(1.23, 0.5) | (q[0], q[1])",
+            "MeasureFock | (q[0], q[1])",
+        ]
 
         params = {"phase_0": 1.23}
-        prog = DeviceSpec(**device_dict).create_program(**params)
+        prog = DeviceSpec(connection=None, **device_dict).create_program(**params)
 
         assert prog.target is None
         assert prog.name == "mock"
-        for cmd in prog.circuit:
-            assert str(cmd) == circuit.pop(0)
+        assert [str(cmd) for cmd in prog.circuit] == circuit
 
-    @pytest.mark.parametrize("params",
-        [{"phase_0": 7.5}, {"phase_1": 0.4}, {"squeezing_amplitude_0": 0.5}]
-        )
-    def test_wrong_parameter_value(self, params):
-        """Test that error is raised when non-supported parameter value is supplied"""
+    @pytest.mark.parametrize(
+        "params", [{"phase_0": 7.5}, {"phase_1": 0.4}, {"squeezing_amplitude_0": 0.5}]
+    )
+    def test_invalid_parameter_value(self, params):
+        """Test that error is raised when an invalid parameter value is supplied"""
         with pytest.raises(ValueError, match="has invalid value"):
-            DeviceSpec(**device_dict).create_program(**params)
+            DeviceSpec(connection=None, **device_dict).create_program(**params)
 
-    @pytest.mark.parametrize("params", [
-        {"invalid_type": 7.5}, {"phase_42": 0.4}, {"squeezing_amplitude_1": 0.5}]
-        )
-    def test_wrong_parameter_type(self, params):
-        """Test that error is raised when non-supported parameter type is supplied"""
+    @pytest.mark.parametrize(
+        "params", [{"invalid_type": 7.5}, {"phase_42": 0.4}, {"squeezing_amplitude_1": 0.5}]
+    )
+    def test_unknown_parameter(self, params):
+        """Test that error is raised when an unknown parameter is supplied"""
         with pytest.raises(ValueError, match="not a valid parameter for this device"):
-            DeviceSpec(**device_dict).create_program(**params)
+            DeviceSpec(connection=None, **device_dict).create_program(**params)
 
     def test_refresh(self, connection, monkeypatch):
         """Tests that the refresh method refreshes the device spec"""
-        device_dict.update({"connection": connection})
-        return_dict = {"abc": {
-            "layout": mock_layout,
-            "modes": 42,
-            "compiler": [],
-            "gate_parameters": {}
-            }}
-        monkeypatch.setattr(connection, "_get_device_dict", return_dict)
+        spec = DeviceSpec(connection=connection, **device_dict)
+        assert spec.modes == device_dict["modes"]
 
-        spec = DeviceSpec(**device_dict)
+        new_spec_dict = device_dict.copy()
+        new_spec_dict["modes"] = 42
+        del new_spec_dict["target"]
+        monkeypatch.setattr(connection, "_get_device_dict", lambda target: new_spec_dict)
+
         spec.refresh()
-
+        assert spec.modes != device_dict["modes"]
         assert spec.modes == 42
-        assert spec._connection is not None

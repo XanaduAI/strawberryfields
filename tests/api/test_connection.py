@@ -110,15 +110,7 @@ class TestConnection:
         assert device_spec.compiler == compiler
 
         spec_params = device_spec.gate_parameters
-        assert [
-            tp_key == sp_key
-            for tp_key, sp_key in zip(gate_parameters.keys(), spec_params.keys())
-        ]
-        assert [
-            str(tp_val) == str(sp_val)
-            for tp_val, sp_val in zip(gate_parameters.values(), spec_params.values())
-        ]
-
+        assert gate_parameters == spec_params
 
     def test_get_device_error(self, connection, monkeypatch):
         """Tests a failed device spec request."""
