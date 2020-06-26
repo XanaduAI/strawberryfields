@@ -24,7 +24,7 @@ from typing import Optional
 
 import numpy as np
 
-from strawberryfields.api import Connection, Job, Result
+from strawberryfields.api import Connection, Job, Result, RequestFailedError
 from strawberryfields.api.job import FailedJobError
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
@@ -539,6 +539,13 @@ class RemoteEngine:
         """
         return self._connection
 
+    @property
+    def spec(self):
+        """The device specifications for target device"""
+        if not hasattr(self, '_spec'):
+            self._spec = self._connection.get_device(self.target)
+        return self._spec
+
     def run(self, program: Program, *, compile_options=None, **kwargs) -> Optional[Result]:
         """Runs a blocking job.
 
@@ -604,6 +611,11 @@ class RemoteEngine:
         compile_options = compile_options or {}
         kwargs.update(self._backend_options)
 
+        try:
+            device = self.spec
+        except RequestFailedError:
+            device = self.target
+
         if program.target is None or (program.target.split("_")[0] != self.target.split("_")[0]):
             # Program is either:
             #
@@ -611,7 +623,7 @@ class RemoteEngine:
             # * compiled to a different chip family to the engine target
             #
             # In both cases, recompile the program to match the intended target.
-            program = program.compile(self.target, **compile_options)
+            program = program.compile(device, **compile_options)
 
         # update the run options if provided
         run_options = {}
