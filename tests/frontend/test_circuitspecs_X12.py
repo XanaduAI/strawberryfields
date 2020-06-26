@@ -28,8 +28,8 @@ from strawberryfields.parameters import par_evaluate
 from strawberryfields.program_utils import CircuitError, list_to_DAG
 from strawberryfields.io import to_program
 from strawberryfields.utils import random_interferometer
-from strawberryfields.circuitspecs.X12 import X12_01, X12_02, CircuitSpecs
-from strawberryfields.circuitspecs.gaussian_unitary import GaussianUnitary
+from strawberryfields.compilers.X12 import X12_01, X12_02, Compiler
+from strawberryfields.compilers.gaussian_unitary import GaussianUnitary
 
 
 pytestmark = pytest.mark.frontend
@@ -155,7 +155,7 @@ def program_equivalence(prog1, prog2, compare_params=True, atol=1e-6, rtol=0):
     return nx.is_isomorphic(circuit[0], circuit[1], node_match)
 
 
-class DummyCircuit(CircuitSpecs):
+class DummyCircuit(Compiler):
     """Dummy circuit used to instantiate
     the abstract base class"""
 

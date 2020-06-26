@@ -25,7 +25,7 @@ from strawberryfields.parameters import par_evaluate
 from strawberryfields.program_utils import CircuitError, list_to_DAG
 from strawberryfields.io import to_program
 from strawberryfields.utils import random_interferometer
-from strawberryfields.circuitspecs.X8 import X8_01, CircuitSpecs
+from strawberryfields.compilers.X8 import X8_01, Compiler
 
 from thewalrus.symplectic import two_mode_squeezing, expand
 
@@ -125,7 +125,7 @@ def program_equivalence(prog1, prog2, compare_params=True, atol=1e-6, rtol=0):
     return nx.is_isomorphic(circuit[0], circuit[1], node_match)
 
 
-class DummyCircuit(CircuitSpecs):
+class DummyCircuit(Compiler):
     """Dummy circuit used to instantiate
     the abstract base class"""
 
