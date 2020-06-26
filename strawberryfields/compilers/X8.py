@@ -23,7 +23,7 @@ from strawberryfields.program_utils import CircuitError, Command, group_operatio
 from strawberryfields.parameters import par_evaluate
 import strawberryfields.ops as ops
 
-from .circuit_specs import CircuitSpecs
+from .compiler import Compiler
 from .gbs import GBSSpecs
 
 
@@ -76,7 +76,7 @@ X8_CIRCUIT = textwrap.dedent(
 )
 
 
-class X8Specs(CircuitSpecs):
+class X8Specs(Compiler):
     """Circuit specifications for the X8 class of circuits."""
 
     short_name = "X8"

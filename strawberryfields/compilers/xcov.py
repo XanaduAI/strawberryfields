@@ -24,12 +24,12 @@ from strawberryfields.decompositions import takagi
 from strawberryfields.program_utils import CircuitError, Command
 import strawberryfields.ops as ops
 
-from .circuit_specs import CircuitSpecs, Ranges
+from .compiler import Compiler, Ranges
 from .gbs import GBSSpecs
 from .gaussian_unitary import GaussianUnitary
 
 
-class Xcov(CircuitSpecs):
+class Xcov(Compiler):
     """Circuit specifications for the X class of circuits.
 
     An important property of this compilation routine is that it is done at the covariance matrix level.

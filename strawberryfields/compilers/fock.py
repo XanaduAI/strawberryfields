@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Circuit specifications for the Fock simulator backend."""
-from .circuit_specs import CircuitSpecs
+from .compiler import Compiler
 
 
-class FockSpecs(CircuitSpecs):
+class FockSpecs(Compiler):
     """Circuit specifications for the Fock backend."""
 
     short_name = "fock"

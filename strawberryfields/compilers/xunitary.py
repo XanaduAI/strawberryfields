@@ -22,12 +22,12 @@ from strawberryfields.program_utils import CircuitError, Command, group_operatio
 
 import strawberryfields.ops as ops
 
-from .circuit_specs import CircuitSpecs, Ranges
+from .compiler import Compiler, Ranges
 from .gbs import GBSSpecs
 from .gaussian_unitary import GaussianUnitary
 
 
-class Xunitary(CircuitSpecs):
+class Xunitary(Compiler):
     """Circuit specifications for the X class of circuits."""
 
     short_name = "Xunitary"

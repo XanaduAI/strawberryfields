@@ -121,7 +121,7 @@ class BaseBackend:
 
     #: str: short name of the backend
     short_name = "base"
-    #: str, None: Short name of the CircuitSpecs class used to validate Programs for this backend. None if no validation is required.
+    #: str, None: Short name of the Compiler class used to validate Programs for this backend. None if no validation is required.
     circuit_spec = None
 
     def __init__(self):

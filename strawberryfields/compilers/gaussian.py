@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Circuit specifications for the Gaussian simulator backend."""
-from .circuit_specs import CircuitSpecs
+from .compiler import Compiler
 
 
-class GaussianSpecs(CircuitSpecs):
+class GaussianSpecs(Compiler):
     """Circuit specifications for the Gaussian backend."""
 
     short_name = "gaussian"

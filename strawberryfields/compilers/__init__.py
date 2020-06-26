@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This subpackage implements the :class:`CircuitSpecs` class, an abstract base class
+This subpackage implements the :class:`Compiler` class, an abstract base class
 used to define classes or families of quantum circuits, e.g., circuits that can be executed on particular
 hardware or simulator backends.
 
-The information in the :class:`CircuitSpecs` instances is used by :meth:`.Program.compile` to validate and
-compile quantum programs. By querying the :class:`CircuitSpecs` class representing the requested compilation
+The information in the :class:`Compiler` instances is used by :meth:`.Program.compile` to validate and
+compile quantum programs. By querying the :class:`Compiler` class representing the requested compilation
 target, :meth:`.Program.compile` can
 
 1. **Validate** that the Program has the correct number of modes, and consists
@@ -31,14 +31,12 @@ failure by raising a :class:`.CircuitError` even if the Program theoretically is
 circuit that belongs in the target circuit class.
 
 The circuit class database :attr:`circuit_db` is a dictionary mapping the circuit family
-short name to the corresponding CircuitSpecs instance.
+short name to the corresponding Compiler instance.
 In particular, for each backend supported by Strawberry Fields the database contains a
-corresponding CircuitSpecs instance with the same short name, used to validate Programs to be
+corresponding Compiler instance with the same short name, used to validate Programs to be
 executed on that backend.
 """
-from .circuit_specs import CircuitSpecs, Ranges
-from .X8 import X8Specs, X8_01
-from .X12 import X12Specs, X12_01, X12_02
+from .compiler import Compiler, Ranges
 from .xcov import Xcov
 from .xunitary import Xunitary
 from .fock import FockSpecs
@@ -48,11 +46,6 @@ from .tensorflow import TFSpecs
 from .gaussian_unitary import GaussianUnitary
 
 specs = (
-    X8Specs,
-    X8_01,
-    X12Specs,
-    X12_01,
-    X12_02,
     FockSpecs,
     GaussianSpecs,
     GBSSpecs,
@@ -63,7 +56,7 @@ specs = (
 )
 
 circuit_db = {c.short_name: c for c in specs}
-"""dict[str, ~strawberryfields.circuitspecs.CircuitSpecs]: Map from circuit
+"""dict[str, ~strawberryfields.compilers.Compiler]: Map from circuit
 family short name to the corresponding class."""
 
-__all__ = ["circuit_db", "CircuitSpecs", "Ranges"] + [i.__name__ for i in specs]
+__all__ = ["circuit_db", "Compiler", "Ranges"] + [i.__name__ for i in specs]

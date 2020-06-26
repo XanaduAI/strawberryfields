@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The module docstring is in strawberryfields/circuitspecs/__init__.py
+# The module docstring is in strawberryfields/compiler/__init__.py
 """
-**Module name:** :mod:`strawberryfields.circuitspecs.circuit_specs`
+**Module name:** :mod:`strawberryfields.compilers.compiler`
 """
 
 from typing import List, Set, Dict, Union
@@ -27,7 +27,7 @@ from blackbird.utils import to_DiGraph
 import strawberryfields.program_utils as pu
 
 
-class CircuitSpecs(abc.ABC):
+class Compiler(abc.ABC):
     """Abstract base class for describing circuit classes.
 
     This class stores information about :term:`classes of quantum circuits <circuit class>`.
@@ -220,21 +220,21 @@ class CircuitSpecs(abc.ABC):
         by the circuit specification.
 
         This method follows the directives defined in the
-        :attr:`~.CircuitSpecs.primitives` and :attr:`~.CircuitSpecs.decompositions`
+        :attr:`~.Compiler.primitives` and :attr:`~.Compiler.decompositions`
         class attributes to determine whether a command should be decomposed.
 
         The order of precedence to determine whether decomposition
         should be applied is as follows.
 
-        1. First, we check if the operation is in :attr:`~.CircuitSpecs.decompositions`.
+        1. First, we check if the operation is in :attr:`~.Compiler.decompositions`.
            If not, decomposition is skipped, and the operation is applied
-           as a primitive (if supported by the ``CircuitSpecs``).
+           as a primitive (if supported by the ``Compiler``).
 
         2. Next, we check if (a) the operation supports decomposition, and (b) if the user
            has explicitly requested no decomposition.
 
            - If both (a) and (b) are true, the operation is applied
-             as a primitive (if supported by the ``CircuitSpecs``).
+             as a primitive (if supported by the ``Compiler``).
 
            - Otherwise, we attempt to decompose the operation by calling
              :meth:`~.Operation.decompose` recursively.

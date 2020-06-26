@@ -26,10 +26,10 @@ from thewalrus.symplectic import (
     interferometer,
     beam_splitter,
 )
-from .circuit_specs import CircuitSpecs
+from .compiler import Compiler
 
 
-class GaussianUnitary(CircuitSpecs):
+class GaussianUnitary(Compiler):
     """Compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form.
 
     This compile specification checks whether the circuit can be implemented as a sequence of

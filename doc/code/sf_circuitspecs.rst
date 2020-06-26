@@ -1,13 +1,13 @@
-sf.circuitspecs
+sf.compiler
 ===============
 
-.. currentmodule:: strawberryfields.circuitspecs
+.. currentmodule:: strawberryfields.compiler
 
 .. warning::
 
     Unless you are a Strawberry Fields developer, you likely do not need
     to use these classes directly.
 
-.. automodapi:: strawberryfields.circuitspecs
+.. automodapi:: strawberryfields.compiler
     :no-heading:
     :include-all-objects:

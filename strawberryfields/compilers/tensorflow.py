@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Circuit specifications for the TensorFlow simulator backend."""
-from .circuit_specs import CircuitSpecs
+from .compiler import Compiler
 
 
-class TFSpecs(CircuitSpecs):
+class TFSpecs(Compiler):
     """Circuit specifications for the TensorFlow backend."""
 
     short_name = "tf"

@@ -23,7 +23,7 @@ from strawberryfields.program_utils import CircuitError, Command, group_operatio
 from strawberryfields.parameters import par_evaluate
 import strawberryfields.ops as ops
 
-from .circuit_specs import CircuitSpecs
+from .compiler import Compiler
 from .gbs import GBSSpecs
 
 
@@ -105,7 +105,7 @@ X12_CIRCUIT = textwrap.dedent(
 )
 
 
-class X12Specs(CircuitSpecs):
+class X12Specs(Compiler):
     """Circuit specifications for the X12 class of circuits."""
 
     short_name = "X12"
