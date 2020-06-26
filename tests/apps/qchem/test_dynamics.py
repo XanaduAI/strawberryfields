@@ -174,36 +174,6 @@ class TestSampleFock:
             in_state, t, U, w, ns, cf = d
             dynamics.sample_fock([i * 2 for i in in_state], t, U, w, ns, 3)
 
-    def test_loss(self, monkeypatch, d):
-        """Test if function correctly creates the SF program for lossy circuits."""
-
-        def save_hist(*args):
-            call_history.append(args[1])
-            return sf.engine.Result
-
-        call_history = []
-        with monkeypatch.context() as m:
-            m.setattr(sf.engine.Result, "samples", np.array([[0]]))
-            m.setattr(sf.LocalEngine, "run", save_hist)
-            dynamics.sample_fock(*d, loss=0.5)
-
-        assert isinstance(call_history[0].circuit[-2].op, sf.ops.LossChannel)
-
-    def test_no_loss(self, monkeypatch, d):
-        """Test if function correctly creates the SF program for circuits without loss."""
-
-        def save_hist(*args):
-            call_history.append(args[1])
-            return sf.engine.Result
-
-        call_history = []
-        with monkeypatch.context() as m:
-            m.setattr(sf.engine.Result, "samples", np.array([[0]]))
-            m.setattr(sf.LocalEngine, "run", save_hist)
-            dynamics.sample_fock(*d)
-
-        assert not all([isinstance(op, sf.ops.LossChannel) for op in call_history[0].circuit])
-
     def test_op_order(self, monkeypatch, d):
         """Test if function correctly applies the operations."""
         if len(d[0]) == 2:
@@ -221,45 +191,6 @@ class TestSampleFock:
             assert isinstance(p_func.circuit[4].op, sf.ops.Rgate)
             assert isinstance(p_func.circuit[5].op, sf.ops.Interferometer)
             assert isinstance(p_func.circuit[6].op, sf.ops.MeasureFock)
-
-    def test_rgate(self, monkeypatch, d):
-        """Test if function correctly uses the rotation parameter in the rgates."""
-        if len(d[0]) == 2:
-            mock_eng_run = mock.MagicMock()
-
-            with monkeypatch.context() as m:
-                m.setattr(sf.LocalEngine, "run", mock_eng_run)
-                dynamics.sample_fock(*d)
-                p_func = mock_eng_run.call_args[0][0]
-
-            assert np.allclose(p_func.circuit[3].op.p, -7.374345193888777)
-            assert np.allclose(p_func.circuit[4].op.p, -7.13449983982334)
-
-    def test_interferometer(self, monkeypatch, d):
-        """Test if function correctly uses the interferometer unitaries."""
-        if len(d[0]) == 2:
-            mock_eng_run = mock.MagicMock()
-
-            with monkeypatch.context() as m:
-                m.setattr(sf.LocalEngine, "run", mock_eng_run)
-                dynamics.sample_fock(*d)
-                p_func = mock_eng_run.call_args[0][0]
-
-            _, _, U, _, _, _ = d
-
-            assert np.allclose(p_func.circuit[2].op.p, U.T)
-            assert np.allclose(p_func.circuit[5].op.p, U)
-
-    def test_output(self, d):
-        """Test to check if it returns output samples have correct form; correct
-        number of samples, correct number of modes, all non-negative integers."""
-        samples = np.array(dynamics.sample_fock(*d))
-        dims = samples.shape
-
-        assert len(dims) == 2
-        assert dims == (d[4], len(d[2]))
-        assert samples.dtype == "int"
-        assert (samples >= 0).all()
 
 
 e1 = [sample1, is1, prob1]
@@ -335,21 +266,6 @@ class TestSampleCoherent:
             alpha, t, U, w, ns = c
             dynamics.sample_coherent(alpha + [0], t, U, w, ns)
 
-    def test_no_loss(self, monkeypatch, c):
-        """Test if function correctly creates the SF program for circuits without loss."""
-
-        def save_hist(*args, **kwargs):
-            call_history.append(args[1])
-            return sf.engine.Result
-
-        call_history = []
-        with monkeypatch.context() as m:
-            m.setattr(sf.engine.Result, "samples", np.array([[0]]))
-            m.setattr(sf.LocalEngine, "run", save_hist)
-            dynamics.sample_coherent(*c)
-
-        assert not all([isinstance(op, sf.ops.LossChannel) for op in call_history[0].circuit])
-
     def test_op_order(self, monkeypatch, c):
         """Test if function correctly applies the operations."""
         if len(c[0]) == 2:
@@ -368,41 +284,84 @@ class TestSampleCoherent:
             assert isinstance(p_func.circuit[5].op, sf.ops.Interferometer)
             assert isinstance(p_func.circuit[6].op, sf.ops.MeasureFock)
 
-    def test_rgate(self, monkeypatch, c):
-        """Test if function correctly uses the rotation parameter in the rgates."""
-        if len(c[0]) == 2:
-            mock_eng_run = mock.MagicMock()
 
-            with monkeypatch.context() as m:
-                m.setattr(sf.LocalEngine, "run", mock_eng_run)
-                dynamics.sample_coherent(*c)
-                p_func = mock_eng_run.call_args[0][0]
+@pytest.mark.parametrize("func", sampling_func)
+@pytest.mark.parametrize("par", [d1, c1])
+class CommonTests:
+    """Common tests for all sample functions in the dynamics module, namely:
+    ``strawberryfields.apps.qchem.dynamics.sample_fock``,
+    ``strawberryfields.apps.qchem.dynamics.sample_coherent``,
+    ``strawberryfields.apps.qchem.dynamics.sample_tmsv``"""
 
-            assert np.allclose(p_func.circuit[3].op.p, -7.374345193888777)
-            assert np.allclose(p_func.circuit[4].op.p, -7.13449983982334)
+    def test_loss(self, monkeypatch, func, par):
+        """Test if function correctly creates the SF program for lossy circuits."""
 
-    def test_interferometer(self, monkeypatch, c):
-        """Test if function correctly uses the interferometer unitaries."""
-        if len(c[0]) == 2:
-            mock_eng_run = mock.MagicMock()
+        def save_hist(*args, **kwargs):
+            call_history.append(args[1])
+            return sf.engine.Result
 
-            with monkeypatch.context() as m:
-                m.setattr(sf.LocalEngine, "run", mock_eng_run)
-                dynamics.sample_coherent(*c)
-                p_func = mock_eng_run.call_args[0][0]
+        call_history = []
+        with monkeypatch.context() as m:
+            m.setattr(sf.engine.Result, "samples", np.array([[0]]))
+            m.setattr(sf.LocalEngine, "run", save_hist)
+            func(*par, loss=0.5)
 
-            _, _, U, _, _ = c
+        assert isinstance(call_history[0].circuit[-2].op, sf.ops.LossChannel)
 
-            assert np.allclose(p_func.circuit[2].op.p, U.T)
-            assert np.allclose(p_func.circuit[5].op.p, U)
+    def test_no_loss(self, monkeypatch, func, par):
+        """Test if sample function correctly creates the SF program for circuits without loss."""
 
-    def test_output(self, c):
-        """Test to check if it returns output samples have correct form; correct
+        def save_hist(*args, **kwargs):
+            call_history.append(args[1])
+            return sf.engine.Result
+
+        call_history = []
+        with monkeypatch.context() as m:
+            m.setattr(sf.engine.Result, "samples", np.array([[0]]))
+            m.setattr(sf.LocalEngine, "run", save_hist)
+            func(*par)
+
+        assert not all([isinstance(op, sf.ops.LossChannel) for op in call_history[0].circuit])
+
+    def test_rgate(self, monkeypatch, func, par):
+        """Test if sample function correctly uses the rotation parameter in the rgates."""
+
+        mock_eng_run = mock.MagicMock()
+
+        with monkeypatch.context() as m:
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
+            func(*par)
+            p_func = mock_eng_run.call_args[0][0]
+
+        assert np.allclose(p_func.circuit[3].op.p, -7.374345193888777)
+        assert np.allclose(p_func.circuit[4].op.p, -7.13449983982334)
+
+    def test_interferometer(self, monkeypatch, func, par):
+        """Test if sample function correctly uses the interferometer unitaries."""
+
+        mock_eng_run = mock.MagicMock()
+
+        with monkeypatch.context() as m:
+            m.setattr(sf.LocalEngine, "run", mock_eng_run)
+            func(*par)
+            p_func = mock_eng_run.call_args[0][0]
+
+        U = par[2]
+
+        assert np.allclose(p_func.circuit[2].op.p, U.T)
+        assert np.allclose(p_func.circuit[5].op.p, U)
+
+    def test_output(self, func, par):
+        """Test to check if sample function returns correct output; correct
         number of samples, correct number of modes, all non-negative integers."""
-        samples = np.array(dynamics.sample_coherent(*c))
+        samples = np.array(func(*par))
+
         dims = samples.shape
 
         assert len(dims) == 2
-        assert dims == (c[4], len(c[2]))
+        if func == dynamics.sample_tmsv:
+            assert dims == (par[4], 2 * len(par[2]))
+        else:
+            assert dims == (par[4], len(par[2]))
         assert samples.dtype == "int"
         assert (samples >= 0).all()
