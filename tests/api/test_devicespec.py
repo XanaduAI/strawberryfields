@@ -54,6 +54,15 @@ device_dict = {
 class TestDeviceSpec:
     """Tests for the ``DeviceSpec`` class."""
 
+    def test_initialization(self, connection):
+        """Test that the device spec class initializes correctly."""
+        spec = DeviceSpec(connection=None, **device_dict)
+
+        assert spec.target == device_dict["target"]
+        assert spec.layout == device_dict["layout"]
+        assert spec.modes == device_dict["modes"]
+        assert spec.compiler == device_dict["compiler"]
+
     def test_gate_parameters(self):
         """Test that gate_parameters outputs the correctly parsed parameters"""
         true_params = {
