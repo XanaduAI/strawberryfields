@@ -24,6 +24,8 @@ import requests
 
 from strawberryfields.api import Connection, JobStatus, RequestFailedError
 from strawberryfields import configuration as conf
+from strawberryfields.circuitspecs import Ranges
+
 from .conftest import mock_return
 
 # pylint: disable=no-self-use,unused-argument
@@ -89,14 +91,14 @@ class TestConnection:
         layout = ""
         modes = 42
         compiler = []
-        gate_parameters = {"param": "val"}
+        gate_parameters = {"param": Ranges([0, 1], variable_name="param")}
 
         monkeypatch.setattr(
             requests,
             "get",
             mock_return(MockResponse(
                 200,
-                {"target": "abc", "layout": "", "modes": 42, "compiler": [], "gate_parameters": {"param": "val"}}
+                {"layout": "", "modes": 42, "compiler": [], "gate_parameters": {"param": [[0, 1]]}}
             )),
         )
 
@@ -106,7 +108,16 @@ class TestConnection:
         assert device_spec.layout == layout
         assert device_spec.modes == modes
         assert device_spec.compiler == compiler
-        assert device_spec.gate_parameters == gate_parameters
+
+        spec_params = device_spec.gate_parameters
+        assert [
+            tp_key == sp_key
+            for tp_key, sp_key in zip(gate_parameters.keys(), spec_params.keys())
+        ]
+        assert [
+            str(tp_val) == str(sp_val)
+            for tp_val, sp_val in zip(gate_parameters.values(), spec_params.values())
+        ]
 
 
     def test_get_device_error(self, connection, monkeypatch):
