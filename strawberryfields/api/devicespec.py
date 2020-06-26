@@ -20,7 +20,7 @@ from collections.abc import Sequence
 import strawberryfields as sf
 import blackbird
 
-from strawberryfields.circuitspecs import Ranges
+from strawberryfields.compilers import Ranges
 
 
 class DeviceSpec:
@@ -67,8 +67,15 @@ class DeviceSpec:
         return self._compiler
 
     @property
+    def default_compiler(self):
+        """sf.compilers.Compiler: Specified default compiler"""
+        if self.compiler:
+            return self.compiler[0]
+        return None
+
+    @property
     def gate_parameters(self):
-        """dict[str, strawberryfields.circuitspecs.Ranges]: A dictionary of gate parameters
+        """dict[str, strawberryfields.compilers.Ranges]: A dictionary of gate parameters
         and allowed ranges.
 
         The parameter names correspond to those present in the Blackbird circuit layout.
