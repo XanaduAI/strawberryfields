@@ -97,14 +97,11 @@ sample2 = [
 prob1 = 0.4
 prob2 = 0.3
 
-alpha1 = [[0.0, 0.0], [1.4, 0.0]]
-alpha2 = [[0.0, 0.0], [1.4, 0.0], [0.0, 0.0]]
+alpha1 = [[0.3, 0.5], [1.4, 0.1]]
+alpha2 = [[0.3, 0.5], [1.4, 0.1], [0.3, 0.5]]
 
 c1 = [alpha1, t1, U1, w1, ns1]
 c2 = [alpha2, t2, U2, w2, ns2]
-
-val1 = [t1, U1, w1, ns1]
-val2 = [t2, U2, w2, ns2]
 
 
 @pytest.mark.parametrize("time, unitary, frequency, prob", [(t1, U1, w1, p1), (t2, U2, w2, p2)])
