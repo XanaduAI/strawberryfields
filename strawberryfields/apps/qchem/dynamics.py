@@ -67,11 +67,11 @@ This module contains functions for implementing this algorithm.
 - The function :func:`~.evolution` returns a custom ``sf`` operation that contains the required
   unitary and rotation operations explained in steps 2-4 of the algorithm.
 
-- The function :func:`~.sample_fock` generates samples for simulating vibrational quantum dynamics
-  in molecules with a Fock input state.
-
 - The function :func:`~.prob` computes the probability of observing a desired excitation in the
   generated samples.
+
+- The function :func:`~.sample_fock` generates samples for simulating vibrational quantum dynamics
+  in molecules with a Fock input state.
 
 - The function :func:`~.sample_coherent` generates samples for simulating vibrational quantum
   dynamics in molecules with a coherent input state.
@@ -83,40 +83,6 @@ from scipy.constants import c, pi
 
 import strawberryfields as sf
 from strawberryfields.utils import operation
-
-
-def _validation(
-    t: float, Ul: np.ndarray, w: np.ndarray, n_samples: int, loss: float = 0.0,
-) -> bool:
-    r"""checks if the inputs to sampling functions in this module are valid
-
-    Args:
-        t (float): time in femtoseconds
-        Ul (array): normal-to-local transformation matrix
-        w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}`
-        n_samples (int): number of samples to be generated
-        loss (float): loss parameter denoting the fraction of lost photons
-
-    Returns:
-        bool: True if the inputs were valid
-    """
-
-    if t < 0:
-        raise ValueError("Time must be zero or positive")
-
-    if np.any(np.iscomplex(Ul)):
-        raise ValueError("The normal mode to local mode transformation matrix must be real")
-
-    if np.any(w <= 0):
-        raise ValueError("Vibrational frequencies must be larger than zero")
-
-    if n_samples < 1:
-        raise ValueError("Number of samples must be at least one")
-
-    if not 0 <= loss <= 1:
-        raise ValueError("Loss parameter must take a value between zero and one")
-
-    return True
 
 
 def evolution(modes: int):
@@ -201,7 +167,11 @@ def sample_fock(
     Returns:
         list[list[int]]: a list of samples
     """
-    _validation(t, Ul, w, n_samples, loss)
+    if np.any(np.iscomplex(Ul)):
+        raise ValueError("The normal mode to local mode transformation matrix must be real")
+
+    if n_samples < 1:
+        raise ValueError("Number of samples must be at least one")
 
     if not len(input_state) == len(Ul):
         raise ValueError(
@@ -305,7 +275,11 @@ def sample_coherent(
     Returns:
         list[list[int]]: a list of samples
     """
-    _validation(t, Ul, w, n_samples, loss)
+    if np.any(np.iscomplex(Ul)):
+        raise ValueError("The normal mode to local mode transformation matrix must be real")
+
+    if n_samples < 1:
+        raise ValueError("Number of samples must be at least one")
 
     if not len(alpha) == len(Ul):
         raise ValueError(
