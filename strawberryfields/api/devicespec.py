@@ -132,5 +132,5 @@ class DeviceSpec:
 
     def refresh(self):
         """Refreshes the device specifications"""
-        device = self._connection._get_device_dict(self.target)
+        device = self._connection._get_device_dict[self.target]
         self.__init__(target=self.target, connection=self._connection, **device)
