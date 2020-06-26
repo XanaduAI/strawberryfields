@@ -55,7 +55,8 @@ import warnings
 import networkx as nx
 
 import strawberryfields.circuitdrawer as sfcd
-import strawberryfields.circuitspecs as specs
+from strawberryfields.compilers import Compiler, circuit_db
+from strawberryfields.api.devicespec import DeviceSpec
 import strawberryfields.program_utils as pu
 from .program_utils import Command, RegRef, CircuitError, RegRefError
 from .parameters import FreeParameter, ParameterError
@@ -134,7 +135,7 @@ class Program:
         self.circuit = []
         #: bool: if True, no more Commands can be appended to the Program
         self.locked = False
-        #: str, None: for compiled Programs, the short name of the target CircuitSpecs template, otherwise None
+        #: str, None: for compiled Programs, the short name of the target Compiler template, otherwise None
         self._target = None
         #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
@@ -436,7 +437,7 @@ class Program:
             p.source = self.source
         return p
 
-    def compile(self, target, **kwargs):
+    def compile(self, device, compiler=None, **kwargs):
         """Compile the program targeting the given circuit specification.
 
         Validates the program against the given target, making sure all the
@@ -452,11 +453,18 @@ class Program:
         compile a circuit consisting of Gaussian operations and Fock measurements
         into canonical Gaussian boson sampling form.
 
-        >>> prog2 = prog.compile('gbs')
+        >>> prog2 = prog.compile("gbs")
+
+        For a hardware device a ``DeviceSpec`` object, and optionally a specified compile strategy,
+        must be supplied. If no compile strategy is supplied the default compiler from the device
+        specification is used.
+
+        >>> prog2 = prog.compile(spec, "Xcov")
 
         Args:
-            target (str, ~strawberryfields.circuitspecs.CircuitSpecs): short name of the target
-                circuit specification, or the specification object itself
+            device (str, ~strawberryfields.compilers.Compiler, ~strawberryfields.api.DeviceSpec):
+                short name of the target circuit specification, the local compiler, or the
+                device specification object itself
 
         Keyword Args:
             optimize (bool): If True, try to optimize the program by merging and canceling gates.
@@ -467,28 +475,33 @@ class Program:
         Returns:
             Program: compiled program
         """
-        if isinstance(target, specs.CircuitSpecs):
-            db = target
-            target = db.short_name
-        elif target in specs.circuit_db:
-            db = specs.circuit_db[target]()
+        if isinstance(device, DeviceSpec):
+            target = device.target
+            if compiler is None:
+                compiler = circuit_db[device.default_compiler]()
+
+            if device.modes is not None:
+                # subsystems may be created and destroyed, this is total number that has ever existed
+                modes_total = len(self.reg_refs)
+                if modes_total > device.modes:
+                    raise CircuitError(
+                        "This program requires {} modes, but the target '{}' "
+                        "only supports a {}-mode program".format(modes_total, target, device.modes)
+                    )
+        elif isinstance(device, Compiler):
+            compiler = device
+            target = compiler.short_name
+        elif device in circuit_db:
+            target = device
+            compiler = circuit_db[target]()
         else:
             raise ValueError(
                 "Could not find target '{}' in the Strawberry Fields circuit database.".format(
-                    target
+                    device
                 )
             )
 
-        if db.modes is not None:
-            # subsystems may be created and destroyed, this is total number that has ever existed
-            modes_total = len(self.reg_refs)
-            if modes_total > db.modes:
-                raise CircuitError(
-                    "This program requires {} modes, but the target '{}' "
-                    "only supports a {}-mode program".format(modes_total, target, db.modes)
-                )
-
-        seq = db.decompose(self.circuit)
+        seq = compiler.decompose(self.circuit)
 
         if kwargs.get("warn_connected", True):
             DAG = pu.list_to_DAG(seq)
@@ -500,14 +513,12 @@ class Program:
         if kwargs.get("optimize", False):
             seq = pu.optimize_circuit(seq)
 
-        # does the circuit spec  have its own compilation method?
-        if db.compile is not None:
-            seq = db.compile(seq, self.register)
+        seq = compiler.compile(seq, self.register)
 
         # create the compiled Program
         compiled = self._linked_copy()
         compiled.circuit = seq
-        compiled._target = db.short_name
+        compiled._target = target
 
         # get run options of compiled program
         # for the moment, shots is the only supported run option.
@@ -585,7 +596,7 @@ class Program:
         If the program has not been compiled, this will return ``None``.
 
         Returns:
-            str or None: the short name of the target CircuitSpecs template if
+            str or None: the short name of the target Compiler template if
             compiled, otherwise None
         """
         return self._target
