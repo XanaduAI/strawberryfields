@@ -51,7 +51,6 @@ class TFSpecs(CircuitSpecs):
         "Vgate",
         "Kgate",
         "Fouriergate",
-        "BSgate",
         "CKgate",
         # two mode gates
         "S2gate",
