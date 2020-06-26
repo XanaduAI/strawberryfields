@@ -102,6 +102,12 @@ class DeviceSpec:
 
         >>> spec.create_program(squeezing_amplitude_0=0.43)
         <strawberryfields.program.Program at 0x7fd37e27ff50>
+
+        Keyword Args:
+            Supported parameter values for the specific device
+
+        Returns:
+            strawberryfields.program.Program: program compiled to the device
         """
         bb = blackbird.loads(self.layout)
 
