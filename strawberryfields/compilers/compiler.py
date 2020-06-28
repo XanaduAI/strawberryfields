@@ -86,17 +86,6 @@ class Compiler(abc.ABC):
         """
 
     @property
-    def parameter_ranges(self):
-        """dict[str, strawberryfields.compilers.Ranges]: A dictionary of gate parameters
-        and allowed ranges.
-
-        The parameter names correspond to those present in the Blackbird circuit layout.
-
-        This property is optional.
-        """
-        return dict()
-
-    @property
     def graph(self):
         """The allowed circuit topologies or connectivity of the class, modelled as a directed
         acyclic graph.

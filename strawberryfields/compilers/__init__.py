@@ -57,4 +57,4 @@ compiler_db = {c.short_name: c for c in compilers}
 """dict[str, ~strawberryfields.compilers.Compiler]: Map from compiler name to the corresponding
 class."""
 
-__all__ = ["circuit_db", "Compiler", "Ranges"] + [i.__name__ for i in compilers]
+__all__ = ["compiler_db", "Compiler", "Ranges"] + [i.__name__ for i in compilers]

@@ -241,9 +241,23 @@ a particular layout or topology. For example, the ``gbs`` compile target will
 compile a circuit consisting of Gaussian operations and Fock measurements
 into canonical Gaussian boson sampling form.
 
-.. code-block:: python3
+>>> prog2 = prog.compile('gbs')
 
-    prog2 = prog.compile('gbs')
+Programs can also be compiled for specifric hardware devices using the Xanadu Cloud platform.
+After instantiating a remote engine for the target hardware, the device specifications
+can be accessed and used for compilation:
+
+>>> eng = sf.RemoteEngine("X8")
+>>> device = eng.device_spec
+>>> prog2 = prog.compile(device)
+
+If no compile strategy is supplied, the default compiler from the device
+specification is used. This can be overridden via the ``force_compiler`` argument:
+
+>>> prog2 = prog.compile(device, force_compiler="Xunitary")
+
+For more details on using Strawberry Fields with remote hardware, see the
+:doc:`photonic_hardware` guide.
 
 
 Related tutorials

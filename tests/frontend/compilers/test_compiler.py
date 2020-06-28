@@ -28,25 +28,6 @@ class TestAbstractCircuitSpec:
     so only the methods containing logic are tested.
     """
 
-    def test_no_parameter_ranges(self):
-        """If not defined, the parameter_ranges property
-        should return an empty dictionary."""
-
-        class DummyCircuit(Compiler):
-            """Dummy circuit used to instantiate
-            the abstract base class"""
-            modes = 0
-            remote = False
-            local = True
-            interactive = True
-            primitives = set()
-            decompositions = set()
-
-        dummy = DummyCircuit()
-
-        assert isinstance(dummy.parameter_ranges, dict)
-        assert not dummy.parameter_ranges
-
     def test_program_topology_construction(self):
         """If a circuit spec includes a Blackbird program,
         the topology property should return the equivalent
