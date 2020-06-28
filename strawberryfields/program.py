@@ -54,6 +54,8 @@ import warnings
 
 import networkx as nx
 
+import strawberryfields as sf
+
 import strawberryfields.circuitdrawer as sfcd
 from strawberryfields.compilers import Compiler, compiler_db
 from strawberryfields.api.devicespec import DeviceSpec
@@ -515,10 +517,6 @@ class Program:
                         f"only supports a {device.modes}-mode program."
                     )
 
-                # store device circuit in the compiler instance
-                compiler.circuit = device.layout
-                compiler.parameter_ranges = device.gate_parameters
-
         elif isinstance(device_or_compiler, Compiler):
             compiler = device_or_compiler
             target = compiler.short_name
@@ -557,6 +555,9 @@ class Program:
         compiled.backend_options = {}
         if "cutoff_dim" in kwargs:
             compiled.backend_options["cutoff_dim"] = kwargs["cutoff_dim"]
+
+        # validate gate parameters
+        bb = sf.io.to_blackbird(compiled)
 
         return compiled
 

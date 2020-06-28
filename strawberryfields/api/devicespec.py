@@ -94,6 +94,24 @@ class DeviceSpec:
 
         return gate_parameters
 
+    def validate_parameters(self, **parameters):
+        """Validate gate parameters against the device spec.
+
+        Gate parameters should be passed as keyword arguments, with names
+        correspond to those present in the Blackbird circuit layout.
+        """
+        # check that all provided parameters are valid
+        for p, v in parameters.items():
+            if p in self.gate_parameters and v not in self.gate_parameters[p]:
+                # parameter is present in the device specifications
+                # but the user has provided a disallowed value
+                raise ValueError(
+                    f"{p} has invalid value {v}. Only {self.gate_parameters[p]} allowed."
+                )
+
+            if p not in self.gate_parameters:
+                raise ValueError(f"Parameter {p} not a valid parameter for this device")
+
     def create_program(self, **parameters):
         """Create a Strawberry Fields program matching the low-level layout of the
         device.
@@ -117,18 +135,7 @@ class DeviceSpec:
             strawberryfields.program.Program: program compiled to the device
         """
         bb = blackbird.loads(self.layout)
-
-        # check that all provided parameters are valid
-        for p, v in parameters.items():
-            if p in self.gate_parameters and v not in self.gate_parameters[p]:
-                # parameter is present in the device specifications
-                # but the user has provided a disallowed value
-                raise ValueError(
-                    f"{p} has invalid value {v}. Only {self.gate_parameters[p]} allowed."
-                )
-
-            if p not in self.gate_parameters:
-                raise ValueError(f"Parameter {p} not a valid parameter for this device")
+        self.validate_parameters(**parameters)
 
         # determine parameter value if not provided
         extra_params = set(self.gate_parameters) - set(parameters)

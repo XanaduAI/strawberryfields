@@ -509,14 +509,6 @@ class RemoteEngine:
     def __init__(self, target: str, connection: Connection = None, backend_options: dict = None):
         self._target = self.DEFAULT_TARGETS.get(target, target)
         self._spec = None
-
-        if self._target not in self.VALID_TARGETS:
-            raise ValueError(
-                "Invalid engine target: {} (valid targets: {})".format(
-                    target, tuple(self.DEFAULT_TARGETS.keys()) + self.VALID_TARGETS
-                )
-            )
-
         self._connection = connection or Connection()
         self._backend_options = backend_options or {}
         self.log = create_logger(__name__)
