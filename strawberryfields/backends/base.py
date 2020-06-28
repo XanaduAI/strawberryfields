@@ -463,6 +463,7 @@ class BaseBackend:
 
 class BaseFock(BaseBackend):
     """Abstract base class for backends capable of Fock state manipulation."""
+
     compiler = "fock"
 
     def __init__(self):
@@ -600,6 +601,7 @@ class BaseFock(BaseBackend):
 
 class BaseGaussian(BaseBackend):
     """Abstract base class for backends that are only capable of Gaussian state manipulation."""
+
     compiler = "gaussian"
 
     def __init__(self):
