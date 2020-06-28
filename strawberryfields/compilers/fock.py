@@ -11,17 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Circuit specifications for the Fock simulator backend."""
+"""Circuit specifications for general Fock simulator backends."""
 from .compiler import Compiler
 
 
-class FockSpecs(Compiler):
-    """Circuit specifications for the Fock backend."""
+class Fock(Compiler):
+    """Compiler for general Fock backends."""
 
     short_name = "fock"
-    modes = None
-    local = True
-    remote = True
     interactive = True
 
     primitives = {
@@ -50,6 +47,7 @@ class FockSpecs(Compiler):
         "Rgate",
         "Vgate",
         "Kgate",
+        # two mode gates
         "BSgate",
         "CKgate",
         "S2gate",

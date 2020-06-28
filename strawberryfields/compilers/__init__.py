@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This subpackage implements the :class:`Compiler` class, an abstract base class
-used to define classes or families of quantum circuits, e.g., circuits that can be executed on particular
-hardware or simulator backends.
+This subpackage implements the :class:`Compiler` class, an abstract base class used to define and
+compile families of quantum circuits, e.g., circuits that can be executed on particular hardware or
+simulator backends.
 
 The information in the :class:`Compiler` instances is used by :meth:`.Program.compile` to validate and
 compile quantum programs. By querying the :class:`Compiler` class representing the requested compilation
 target, :meth:`.Program.compile` can
 
-1. **Validate** that the Program has the correct number of modes, and consists
-   of valid quantum operations in the correct topology for the targeted circuit class.
+1. **Validate** that the Program consists of valid quantum operations in the correct topology for
+   the targeted circuit class.
 
 2. **Compile** the Program into an :term:`equivalent circuit` that has the topology required by the
    targeted circuit class, decomposing circuit operations as required.
@@ -39,24 +39,22 @@ executed on that backend.
 from .compiler import Compiler, Ranges
 from .xcov import Xcov
 from .xunitary import Xunitary
-from .fock import FockSpecs
-from .gaussian import GaussianSpecs
-from .gbs import GBSSpecs
-from .tensorflow import TFSpecs
+from .fock import Fock
+from .gaussian import Gaussian
+from .gbs import GBS
 from .gaussian_unitary import GaussianUnitary
 
-specs = (
-    FockSpecs,
-    GaussianSpecs,
-    GBSSpecs,
-    TFSpecs,
+compilers = (
+    Fock,
+    Gaussian,
+    GBS,
     GaussianUnitary,
     Xcov,
     Xunitary,
 )
 
-circuit_db = {c.short_name: c for c in specs}
-"""dict[str, ~strawberryfields.compilers.Compiler]: Map from circuit
-family short name to the corresponding class."""
+compiler_db = {c.short_name: c for c in compilers}
+"""dict[str, ~strawberryfields.compilers.Compiler]: Map from compiler name to the corresponding
+class."""
 
-__all__ = ["circuit_db", "Compiler", "Ranges"] + [i.__name__ for i in specs]
+__all__ = ["circuit_db", "Compiler", "Ranges"] + [i.__name__ for i in compilers]

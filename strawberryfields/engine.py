@@ -267,8 +267,8 @@ class BaseEngine(abc.ABC):
             p.bind_params(args)
 
             # if the program hasn't been compiled for this backend, do it now
-            target = self.backend.circuit_spec
-            if target is not None and p.target != target:
+            target = self.backend.compiler
+            if target is not None:
                 p = p.compile(target, **compile_options)
             p.lock()
 
@@ -504,11 +504,11 @@ class RemoteEngine:
     """
 
     POLLING_INTERVAL_SECONDS = 1
-    VALID_TARGETS = ("X8_01", "X12_01", "X12_02")
     DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_01"}
 
     def __init__(self, target: str, connection: Connection = None, backend_options: dict = None):
         self._target = self.DEFAULT_TARGETS.get(target, target)
+        self._spec = None
 
         if self._target not in self.VALID_TARGETS:
             raise ValueError(
@@ -540,9 +540,9 @@ class RemoteEngine:
         return self._connection
 
     @property
-    def spec(self):
+    def device_spec(self):
         """The device specifications for target device"""
-        if not hasattr(self, '_spec'):
+        if self._spec is None:
             self._spec = self._connection.get_device(self.target)
         return self._spec
 
@@ -606,24 +606,15 @@ class RemoteEngine:
             strawberryfields.api.Job: the created remote job
         """
         # get the specific chip to submit the program to
-        # TODO: this should be provided by the chip API, rather
-        # than built-in to Strawberry Fields.
         compile_options = compile_options or {}
         kwargs.update(self._backend_options)
 
         try:
-            device = self.spec
+            device = self.device_spec
         except RequestFailedError:
             device = self.target
 
-        if program.target is None or (program.target.split("_")[0] != self.target.split("_")[0]):
-            # Program is either:
-            #
-            # * uncompiled (program.target is None)
-            # * compiled to a different chip family to the engine target
-            #
-            # In both cases, recompile the program to match the intended target.
-            program = program.compile(device, **compile_options)
+        program = program.compile(device, **compile_options)
 
         # update the run options if provided
         run_options = {}

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Circuit class specification for the X class of circuits."""
+"""General state compiler for the X class of circuits."""
 
 import copy
 
@@ -25,12 +25,12 @@ from strawberryfields.program_utils import CircuitError, Command
 import strawberryfields.ops as ops
 
 from .compiler import Compiler, Ranges
-from .gbs import GBSSpecs
+from .gbs import GBS
 from .gaussian_unitary import GaussianUnitary
 
 
 class Xcov(Compiler):
-    """Circuit specifications for the X class of circuits.
+    """General state compiler for the X class of circuits.
 
     An important property of this compilation routine is that it is done at the covariance matrix level.
     This implies that one should not use it to compare the interferometers of a given circuit since they may
@@ -38,9 +38,6 @@ class Xcov(Compiler):
     """
 
     short_name = "Xcov"
-    modes = None
-    remote = True
-    local = True
     interactive = False
     allowed_sq_ranges = Ranges([0], [1.0], variable_name="r")
 
@@ -69,7 +66,7 @@ class Xcov(Compiler):
         # Call the GBS compiler to do basic measurement validation.
         # The GBS compiler also merges multiple measurement commands
         # into a single MeasureFock command at the end of the circuit.
-        seq = GBSSpecs().compile(seq, registers)
+        seq = GBS().compile(seq, registers)
 
         # ensure that all modes are measured
         if len(seq[-1].reg) != n_modes:

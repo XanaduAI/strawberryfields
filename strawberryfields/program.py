@@ -55,7 +55,7 @@ import warnings
 import networkx as nx
 
 import strawberryfields.circuitdrawer as sfcd
-from strawberryfields.compilers import Compiler, circuit_db
+from strawberryfields.compilers import Compiler, compiler_db
 from strawberryfields.api.devicespec import DeviceSpec
 import strawberryfields.program_utils as pu
 from .program_utils import Command, RegRef, CircuitError, RegRefError
@@ -437,15 +437,22 @@ class Program:
             p.source = self.source
         return p
 
-    def compile(self, device, compiler=None, **kwargs):
-        """Compile the program targeting the given circuit specification.
+    def compile(self, device_or_compiler, force_compiler=None, **kwargs):
+        """Compile the program given a Strawberry Fields photonic compiler, or
+        hardware device specification.
 
-        Validates the program against the given target, making sure all the
-        :doc:`/introduction/ops` used are accepted by the target specification.
+        The compilation process can involve up to three stages:
 
-        Additionally, depending on the target, the compilation may modify the quantum circuit
-        into an equivalent circuit, e.g., by decomposing certain gates into sequences
-        of simpler gates, or optimizing the gate ordering using commutation rules.
+        1. **Validation:** Validates properties of the program, including number of modes and
+           allowed operations, making sure all the :doc:`/introduction/ops` used are accepted by the
+           compiler.
+
+        2. **Decomposition:** Once the program has been validated, decomposition are performed,
+           transforming certain gates into sequences of simpler gates.
+
+        3. **General compilation:** Finally, the compiler might specify bespoke compilation logic
+           for transforming the  quantum circuit into an equivalent circuit which can be executed
+           by the target device.
 
         **Example:**
 
@@ -455,18 +462,21 @@ class Program:
 
         >>> prog2 = prog.compile("gbs")
 
-        For a hardware device a ``DeviceSpec`` object, and optionally a specified compile strategy,
+        For a hardware device a :class:`~.DeviceSpec` object, and optionally a specified compile strategy,
         must be supplied. If no compile strategy is supplied the default compiler from the device
         specification is used.
 
-        >>> prog2 = prog.compile(spec, "Xcov")
+        >>> eng = sf.RemoteEngine("X8")
+        >>> device = eng.device_spec
+        >>> prog2 = prog.compile(device, "Xcov")
 
         Args:
-            device (str, ~strawberryfields.compilers.Compiler, ~strawberryfields.api.DeviceSpec):
-                short name of the target circuit specification, the local compiler, or the
-                device specification object itself
+            device_or_compiler (str, ~strawberryfields.compilers.Compiler, ~strawberryfields.api.DeviceSpec):
+                compiler name or device specification object to use for program compilation
 
         Keyword Args:
+            force_compiler (str): Optionally provide a compile strategy. This overrides the compile
+                strategy specified by a hardware :class:`~.DevicSpec`.
             optimize (bool): If True, try to optimize the program by merging and canceling gates.
                 The default is False.
             warn_connected (bool): If True, the user is warned if the quantum circuit is not weakly
@@ -475,31 +485,50 @@ class Program:
         Returns:
             Program: compiled program
         """
-        if isinstance(device, DeviceSpec):
+        if isinstance(device_or_compiler, DeviceSpec):
+            device = device_or_compiler
             target = device.target
+            compiler = force_compiler
+
             if compiler is None:
-                compiler = circuit_db[device.default_compiler]()
+                # get the default compiler from the device spec
+                compiler_name = device.default_compiler
+
+                if compiler_name is not None:
+                    compiler = compiler_db[device.default_compiler]()
+                else:
+                    raise CircuitError(
+                        f"The device '{target}' does not specify a compiler. A compiler "
+                        "must be manually provided when calling Program.compile()."
+                    )
 
             if device.modes is not None:
-                # subsystems may be created and destroyed, this is total number that has ever existed
+                # Check that the number of modes in the program is valid for the given device.
+
+                # Program subsystems may be created and destroyed during execution. The length
+                # of the program registers represents the total number of modes that has ever existed.
                 modes_total = len(self.reg_refs)
+
                 if modes_total > device.modes:
                     raise CircuitError(
-                        "This program requires {} modes, but the target '{}' "
-                        "only supports a {}-mode program".format(modes_total, target, device.modes)
+                        f"This program contains {modes_total} modes, but the device '{target}' "
+                        f"only supports a {device.modes}-mode program."
                     )
-        elif isinstance(device, Compiler):
-            compiler = device
+
+                # store device circuit in the compiler instance
+                compiler.circuit = device.layout
+                compiler.parameter_ranges = device.gate_parameters
+
+        elif isinstance(device_or_compiler, Compiler):
+            compiler = device_or_compiler
             target = compiler.short_name
-        elif device in circuit_db:
-            target = device
-            compiler = circuit_db[target]()
+
+        elif device_or_compiler in compiler_db:
+            target = device_or_compiler
+            compiler = compiler_db[target]()
+
         else:
-            raise ValueError(
-                "Could not find target '{}' in the Strawberry Fields circuit database.".format(
-                    device
-                )
-            )
+            raise ValueError(f"Unknown compiler '{device_or_compiler}'.")
 
         seq = compiler.decompose(self.circuit)
 

@@ -528,36 +528,6 @@ class TestBlackbirdToSFConversion:
         assert prog.circuit[0].reg[0].ind == 0
         assert prog.circuit[0].reg[1].ind == 2
 
-    def test_valid_compilation(self):
-        """Test setting compilation target using the target keyword"""
-        bb_script = """\
-        name test_program
-        version 1.0
-        target gaussian
-        Pgate(0.54) | 0
-        """
-        bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
-
-        assert prog.target == 'gaussian'
-        assert len(prog) == 2
-        assert prog.circuit[0].op.__class__.__name__ == "Sgate"
-        assert prog.circuit[0].reg[0].ind == 0
-        assert prog.circuit[1].op.__class__.__name__ == "Rgate"
-        assert prog.circuit[1].reg[0].ind == 0
-
-    def test_invalid_compilation(self):
-         """Test an invalid compilation target raises error on attempted compilation"""
-         bb_script = """\
-         name test_program
-         version 1.0
-         target gaussian
-         Kgate(0.54) | 0
-         """
-         bb = blackbird.loads(bb_script)
-         with pytest.raises(CircuitError, match="cannot be used with the target"):
-             prog = io.to_program(bb)
-
 
 class DummyResults:
     """Dummy results object"""

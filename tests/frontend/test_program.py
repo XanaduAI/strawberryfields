@@ -366,8 +366,8 @@ class TestValidation:
         with prog.context as q:
             ops.MeasureFock() | q
 
-        with pytest.raises(ValueError, match="Could not find target 'foo' in the Strawberry Fields circuit database"):
-            new_prog = prog.compile(device='foo')
+        with pytest.raises(ValueError, match="Unknown compiler 'foo'"):
+            new_prog = prog.compile(device_or_compiler='foo')
 
     def test_disconnected_circuit(self):
         """Test the detection of a disconnected circuit."""
@@ -379,28 +379,27 @@ class TestValidation:
             ops.MeasureX | q[2]
 
         with pytest.warns(UserWarning, match='The circuit consists of 2 disconnected components.'):
-            new_prog = prog.compile(device='fock')
+            new_prog = prog.compile(device_or_compiler='fock')
 
     def test_incorrect_modes(self):
-        """Test that an exception is raised if the circuit spec
-        is called with the incorrect number of modes"""
+        """Test that an exception is raised if the compiler
+        is called with a device spec with an incorrect number of modes"""
 
         class DummyCircuit(Compiler):
             """A circuit with 2 modes"""
-            modes = 2
-            remote = False
-            local = True
             interactive = True
             primitives = {'S2gate', 'Interferometer'}
             decompositions = set()
+
+        spec = sf.api.DeviceSpec(None, None, 2, None, None, None)
 
         prog = sf.Program(3)
         with prog.context as q:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.S2gate(0.6) | [q[1], q[2]]
 
-        with pytest.raises(program.CircuitError, match="requires 3 modes"):
-            new_prog = prog.compile(device=DummyCircuit())
+        with pytest.raises(program.CircuitError, match="program contains 3 modes, but the device 'None' only supports a 2-mode program"):
+            new_prog = prog.compile(device_or_compiler=spec, force_compiler=DummyCircuit())
 
     def test_no_decompositions(self):
         """Test that no decompositions take
@@ -421,7 +420,7 @@ class TestValidation:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.Interferometer(U) | [q[0], q[1]]
 
-        new_prog = prog.compile(device=DummyCircuit())
+        new_prog = prog.compile(device_or_compiler=DummyCircuit())
 
         # check compiled program only has two gates
         assert len(new_prog) == 2
@@ -449,7 +448,7 @@ class TestValidation:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.Interferometer(U) | [q[0], q[1]]
 
-        new_prog = prog.compile(device=DummyCircuit())
+        new_prog = prog.compile(device_or_compiler=DummyCircuit())
 
         # check compiled program now has 5 gates
         # the S2gate should decompose into two BS and two Sgates
@@ -482,7 +481,7 @@ class TestValidation:
             ops.Interferometer(U) | [q[0], q[1]]
 
         with pytest.raises(NotImplementedError, match="No decomposition available: Rgate"):
-            new_prog = prog.compile(device=DummyCircuit())
+            new_prog = prog.compile(device_or_compiler=DummyCircuit())
 
     def test_invalid_primitive(self):
         """Test that an exception is raised if the program
@@ -495,8 +494,8 @@ class TestValidation:
         with prog.context as q:
             ops.Kgate(0.6) | q[0]
 
-        with pytest.raises(program.CircuitError, match="Kgate cannot be used with the target"):
-            new_prog = prog.compile(device='gaussian')
+        with pytest.raises(program.CircuitError, match="Kgate cannot be used with the compiler"):
+            new_prog = prog.compile(device_or_compiler='gaussian')
 
     def test_user_defined_decomposition_false(self):
         """Test that an operation that is both a primitive AND
@@ -511,14 +510,14 @@ class TestValidation:
         with prog.context as q:
             ops.Gaussian(cov, r, decomp=False) | q
 
-        prog = prog.compile(device='gaussian')
+        prog = prog.compile(device_or_compiler='gaussian')
         assert len(prog) == 1
         circuit = prog.circuit
         assert circuit[0].op.__class__.__name__ == "Gaussian"
 
         # test compilation against multiple targets in sequence
-        with pytest.raises(program.CircuitError, match="The operation Gaussian is not a primitive for the target 'fock'"):
-            prog = prog.compile(device='fock')
+        with pytest.raises(program.CircuitError, match="The operation Gaussian is not a primitive for the compiler 'fock'"):
+            prog = prog.compile(device_or_compiler='fock')
 
     def test_user_defined_decomposition_true(self):
         """Test that an operation that is both a primitive AND
@@ -534,7 +533,7 @@ class TestValidation:
         with prog.context:
             ops.Gaussian(cov, decomp=True) | 0
 
-        new_prog = prog.compile(device='gaussian')
+        new_prog = prog.compile(device_or_compiler='gaussian')
 
         assert len(new_prog) == 1
 
@@ -577,7 +576,7 @@ class TestValidation:
             ops.BSgate(-0.32) | (q[0], q[1])
             ops.MeasureFock() | q[0]
 
-        new_prog = prog.compile(device=DummyCircuit())
+        new_prog = prog.compile(device_or_compiler=DummyCircuit())
 
         # no exception should be raised; topology correctly validated
         assert len(new_prog) == 5
@@ -619,7 +618,7 @@ class TestValidation:
             ops.MeasureFock() | q[0]
 
         with pytest.raises(program.CircuitError, match="incompatible topology"):
-            new_prog = prog.compile(device=DummyCircuit())
+            new_prog = prog.compile(device_or_compiler=DummyCircuit())
 
 
 class TestGBS:

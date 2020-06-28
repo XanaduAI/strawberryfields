@@ -28,12 +28,10 @@ import strawberryfields.program_utils as pu
 
 
 class Compiler(abc.ABC):
-    """Abstract base class for describing circuit classes.
+    """Abstract base class for describing circuit compilation.
 
-    This class stores information about :term:`classes of quantum circuits <circuit class>`.
-    For some circuit classes (e.g, ones corresponding to physical hardware chips), the
-    specifications can be quite rigid. For other classes, e.g., circuits supported by a particular
-    simulator backend, the specifications can be more flexible and general.
+    This class stores information about :term:`compilation of photonic quantum circuits <circuit
+    class>`.
 
     Key ingredients in a specification include: the primitive gates supported by the circuit class,
     the gates that can be decomposed to sequences of primitive gates, and the possible
@@ -44,35 +42,6 @@ class Compiler(abc.ABC):
 
     short_name = ""
     """str: short name of the circuit class"""
-
-    @property
-    @abc.abstractmethod
-    def modes(self) -> Union[int, None]:
-        """The number of modes supported by the circuit class.
-
-        If the circuit class supports arbitrary number of modes, set this to 0.
-
-        Returns:
-            int: number of supported modes
-        """
-
-    @property
-    @abc.abstractmethod
-    def local(self) -> bool:
-        """Whether the circuit class can be executed locally (i.e., within a simulator).
-
-        Returns:
-            bool: ``True`` if the circuit class supports local execution
-        """
-
-    @property
-    @abc.abstractmethod
-    def remote(self) -> bool:
-        """Whether the circuit class supports remote execution.
-
-        Returns:
-            bool: ``True`` if the circuit class supports remote execution
-        """
 
     @property
     @abc.abstractmethod
@@ -117,15 +86,13 @@ class Compiler(abc.ABC):
         """
 
     @property
-    def parameter_ranges(self) -> Dict[str, List[List[float]]]:
-        """Allowed parameter ranges for supported quantum operations.
+    def parameter_ranges(self):
+        """dict[str, strawberryfields.compilers.Ranges]: A dictionary of gate parameters
+        and allowed ranges.
+
+        The parameter names correspond to those present in the Blackbird circuit layout.
 
         This property is optional.
-
-        Returns:
-            dict[str, list]: a dictionary mapping an allowed quantum operation
-            to a nested list of the form ``[[p0_min, p0_max], [p1_min, p0_max], ...]``.
-            where ``pi`` corresponds to the ``i`` th gate parameter
         """
         return dict()
 
@@ -209,7 +176,7 @@ class Compiler(abc.ABC):
                 # TODO: try and compile the program to match the topology
                 # TODO: add support for parameter range matching/compilation
                 raise pu.CircuitError(
-                    "Program cannot be used with the CircuitSpec '{}' "
+                    "Program cannot be used with the compiler '{}' "
                     "due to incompatible topology.".format(self.short_name)
                 )
 
@@ -259,7 +226,7 @@ class Compiler(abc.ABC):
                         continue
                     else:
                         raise pu.CircuitError(
-                            "The operation {} is not a primitive for the target '{}'".format(
+                            "The operation {} is not a primitive for the compiler '{}'".format(
                                 cmd.op.__class__.__name__, self.short_name
                             )
                         )
@@ -280,7 +247,7 @@ class Compiler(abc.ABC):
 
             else:
                 raise pu.CircuitError(
-                    "The operation {} cannot be used with the target '{}'.".format(
+                    "The operation {} cannot be used with the compiler '{}'.".format(
                         cmd.op.__class__.__name__, self.short_name
                     )
                 )
