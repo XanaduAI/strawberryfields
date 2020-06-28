@@ -52,6 +52,8 @@ import copy
 import numbers
 import warnings
 
+import blackbird as bb
+from blackbird.utils import match_template
 import networkx as nx
 
 import strawberryfields as sf
@@ -60,6 +62,7 @@ import strawberryfields.circuitdrawer as sfcd
 from strawberryfields.compilers import Compiler, compiler_db
 from strawberryfields.api.devicespec import DeviceSpec
 import strawberryfields.program_utils as pu
+
 from .program_utils import Command, RegRef, CircuitError, RegRefError
 from .parameters import FreeParameter, ParameterError
 
@@ -487,12 +490,21 @@ class Program:
         Returns:
             Program: compiled program
         """
+
+        def _get_compiler(compiler):
+            if compiler in compiler_db:
+                return compiler_db[compiler]()
+
+            if isinstance(compiler, Compiler):
+                return compiler
+
+            raise ValueError(f"Unknown compiler '{device_or_compiler}'.")
+
         if isinstance(device_or_compiler, DeviceSpec):
             device = device_or_compiler
             target = device.target
-            compiler = force_compiler
 
-            if compiler is None:
+            if force_compiler is None:
                 # get the default compiler from the device spec
                 compiler_name = device.default_compiler
 
@@ -503,6 +515,8 @@ class Program:
                         f"The device '{target}' does not specify a compiler. A compiler "
                         "must be manually provided when calling Program.compile()."
                     )
+            else:
+                compiler = _get_compiler(force_compiler)
 
             if device.modes is not None:
                 # Check that the number of modes in the program is valid for the given device.
@@ -516,17 +530,9 @@ class Program:
                         f"This program contains {modes_total} modes, but the device '{target}' "
                         f"only supports a {device.modes}-mode program."
                     )
-
-        elif isinstance(device_or_compiler, Compiler):
-            compiler = device_or_compiler
-            target = compiler.short_name
-
-        elif device_or_compiler in compiler_db:
-            target = device_or_compiler
-            compiler = compiler_db[target]()
-
         else:
-            raise ValueError(f"Unknown compiler '{device_or_compiler}'.")
+            compiler = _get_compiler(device_or_compiler)
+            target = compiler.short_name
 
         seq = compiler.decompose(self.circuit)
 
@@ -557,7 +563,11 @@ class Program:
             compiled.backend_options["cutoff_dim"] = kwargs["cutoff_dim"]
 
         # validate gate parameters
-        bb = sf.io.to_blackbird(compiled)
+        if isinstance(device_or_compiler, DeviceSpec) and device.gate_parameters:
+            bb_device = bb.loads(device.layout)
+            bb_compiled = sf.io.to_blackbird(compiled)
+            user_parameters = match_template(bb_device, bb_compiled)
+            device.validate_parameters(**user_parameters)
 
         return compiled
 
