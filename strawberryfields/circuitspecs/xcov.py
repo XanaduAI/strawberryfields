@@ -169,7 +169,10 @@ class Xcov(CircuitSpecs):
             return sq_seq + U1 + U2 + meas_seq
 
         dark_counts = 0.03
-        end_to_end_transmission = 0.2
+        escape_efficiency = 0.8 # ~ 1.0 dB
+        outcoupling_efficiency = 0.65 # ~ 1.9 dB
+        per_layer_loss = 0.77 # ~ 1.1 dB
+        end_to_end_transmission = escape_efficiency * outcoupling_efficiency * (per_layer_loss) ** half_n_modes
         loss_seq = [
             Command(ops.LossChannel(end_to_end_transmission), [registers[i]])
             for i in range(n_modes)
