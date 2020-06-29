@@ -76,13 +76,18 @@ This module contains functions for implementing this algorithm.
 - The function :func:`~.sample_tmsv` generates samples for simulating vibrational quantum dynamics
   in molecules with a two-mode squeezed vacuum input state.
 
+- The function :func:`~.prob` estimates the probability of observing a desired excitation in the
+  generated samples.
+
 - The function :func:`~.marginals` generates single-mode marginal distributions from the displacement vector and
   covariance matrix of a Gaussian state.
 """
+import warnings
+
 import numpy as np
 from scipy.constants import c, pi
 from thewalrus import quantum
-import warnings
+
 import strawberryfields as sf
 from strawberryfields.utils import operation
 
@@ -331,3 +336,61 @@ def sample_tmsv(
         s = eng.run(prog, shots=n_samples).samples
 
     return s.tolist()
+
+
+def marginals(mu: np.ndarray, V: np.ndarray, n_max: int, hbar: float = 2.0) -> np.ndarray:
+    r"""Generate single-mode marginal distributions from the displacement vector and covariance
+    matrix of a Gaussian state.
+
+    **Example usage:**
+
+    >>> mu = np.array([0.00000000, 2.82842712, 0.00000000,
+    >>>                0.00000000, 0.00000000, 0.00000000])
+    >>> V = np.array([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    >>>               [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+    >>>               [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+    >>>               [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+    >>>               [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+    >>>               [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
+    >>> n_max = 10
+    >>> marginals(mu, V, n_max)
+    array([[1.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
+            0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
+            0.00000000e+00, 0.00000000e+00],
+           [1.35335284e-01, 2.70670567e-01, 2.70670566e-01, 1.80447044e-01,
+            9.02235216e-02, 3.60894085e-02, 1.20298028e-02, 3.43708650e-03,
+            8.59271622e-04, 1.90949249e-04],
+           [1.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
+            0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
+            0.00000000e+00, 0.00000000e+00]])
+
+    Args:
+        mu (array): displacement vector
+        V (array): covariance matrix
+        n_max (int): maximum number of vibrational quanta in the distribution
+        hbar (float): the value of :math:`\hbar` in the commutation relation :math:`[\x,\p]=i\hbar`.
+
+    Returns:
+        array[list[float]]: marginal distributions
+    """
+    if not V.shape[0] == V.shape[1]:
+        raise ValueError("The covariance matrix must be a square matrix")
+
+    if not len(mu) == len(V):
+        raise ValueError(
+            "The dimension of the displacement vector and the covariance matrix must be equal"
+        )
+
+    if n_max <= 0:
+        raise ValueError("The number of vibrational states must be larger than zero")
+
+    n_modes = len(mu) // 2
+
+    p = np.zeros((n_modes, n_max))
+
+    for mode in range(n_modes):
+        mui, vi = quantum.reduced_gaussian(mu, V, mode)
+        for i in range(n_max):
+            p[mode, i] = np.real(quantum.density_matrix_element(mui, vi, [i], [i], hbar=hbar))
+
+    return p
