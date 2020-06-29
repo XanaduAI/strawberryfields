@@ -56,11 +56,15 @@
   for generation of samples from an input Fock state. The `dynamics.sample_coherent()` function allows
   for generation of samples from an input coherent state. The probability of an excited state can
   then be estimated with the `dynamics.prob()` function, which calculates the relative frequency
-  of the excited state among the generated samples. 
+  of the excited state among the generated samples. The `dynamics.marginals()` function generates
+  marginal distributions. This function `sample_coherent` samples from a coherent input state.
   [(#402)](https://github.com/XanaduAI/strawberryfields/pull/402)
   [(#411)](https://github.com/XanaduAI/strawberryfields/pull/411)
   [(#419)](https://github.com/XanaduAI/strawberryfields/pull/419)
+  [(#421)](https://github.com/XanaduAI/strawberryfields/pull/421)
   [(#423)](https://github.com/XanaduAI/strawberryfields/pull/423)
+
+
 
 * The `GaussianState` returned from simulations using the Gaussian backend
   now has feature parity with the `FockState` object returned from the Fock backends.
