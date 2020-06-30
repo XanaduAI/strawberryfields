@@ -336,11 +336,16 @@ class LocalEngine(BaseEngine):
         applied = []
         samples_dict = {}
         batches = self.backend_options.get("batch_size", 0)
+
+        # Reset the _val_db for RegRefs for multiple runs
+        pu.RegRef._val_db = []
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend and, if op is a measurement, store it in values
                 val = cmd.op.apply(cmd.reg, self.backend, **kwargs)
                 if val is not None:
+
+                    # Store the measurement outcomes such that not only the last outcome is retrievable
                     tup = (cmd.reg[0].ind, val)
                     pu.RegRef._val_db.append(tup)
                     for i, r in enumerate(cmd.reg):
