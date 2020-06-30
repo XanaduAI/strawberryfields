@@ -28,6 +28,7 @@ from strawberryfields.api import Connection, Job, Result
 from strawberryfields.api.job import FailedJobError
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
+import strawberryfields.program_utils as pu
 
 from .backends import load_backend
 from .backends.base import BaseBackend, NotApplicableError
@@ -340,6 +341,8 @@ class LocalEngine(BaseEngine):
                 # try to apply it to the backend and, if op is a measurement, store it in values
                 val = cmd.op.apply(cmd.reg, self.backend, **kwargs)
                 if val is not None:
+                    tup = (cmd.reg[0].ind, val)
+                    pu.RegRef._val_db.append(tup)
                     for i, r in enumerate(cmd.reg):
                         if batches:
                             samples_dict[r.ind] = val[:, :, i]
