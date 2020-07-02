@@ -209,6 +209,67 @@ class TestEngineProgramInteraction:
         correct_samples = [0, 1, 0]
         assert [bool(i) for i in result.samples[0]] == correct_samples
 
+    @pytest.mark.parametrize("eng", engines)
+    def test_all_samples_one_meas_per_mode(self, eng):
+        """Test that samples are stored for the correct modes with
+        a single measurement each mode."""
+        prog = sf.Program(5)
+        with prog.context as q:
+            ops.MeasureFock() | q[2]
+            ops.MeasureFock() | (q[1], q[3])
+
+        result = eng.run(prog)
+
+        # Check that the number of all the samples equals to the number
+        # of measurements
+        assert len(eng._all_samples) == 3
+
+        correct_samples = [('1', 0), ('3', 0), ('2', 0)]
+
+        assert eng._all_samples == correct_samples
+
+    @pytest.mark.parametrize("eng", engines)
+    def test_all_samples_multi_meas_per_mode(self, eng):
+        """Test that samples are stored for the correct modes with
+        multiple measurements on certain modes."""
+        prog = sf.Program(5)
+        with prog.context as q:
+            ops.MeasureFock() | q[2]
+            ops.MeasureFock() | (q[1], q[3])
+            ops.MeasureX | q[2]
+
+        result = eng.run(prog)
+
+        # Check that the number of all the samples equals to the number
+        # of measurements
+        assert len(eng._all_samples) == 4
+
+        correct_samples = [(2, 0), (1, 0), (3, 0), (2, 1)]
+
+        assert [(i,bool(j)) for i,j in eng._all_samples] == correct_samples
+
+    @pytest.mark.parametrize("eng", engines)
+    def test_all_samples_multi_runs(self, eng):
+        """Test that consequtive engine runs reset the _all_samples
+        attribute by checking the length of the attribute."""
+        prog = sf.Program(5)
+        with prog.context as q:
+            ops.MeasureFock() | q[2]
+            ops.MeasureFock() | (q[1], q[3])
+            ops.MeasureX | q[2]
+
+        result = eng.run(prog)
+
+        # Check that the number of all the samples equals to the number
+        # of measurements
+        assert len(eng._all_samples) == 4
+
+        result = eng.run(prog)
+
+        # Check that _all_samples is reset rather than having new items
+        # appended
+        assert len(eng._all_samples) == 4
+
 class TestMultipleShotsErrors:
     """Test if errors are raised correctly when using multiple shots."""
 

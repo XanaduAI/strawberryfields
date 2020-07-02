@@ -28,7 +28,6 @@ from strawberryfields.api import Connection, Job, Result
 from strawberryfields.api.job import FailedJobError
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
-import strawberryfields.program_utils as pu
 
 from .backends import load_backend
 from .backends.base import BaseBackend, NotApplicableError
@@ -340,8 +339,7 @@ class LocalEngine(BaseEngine):
         batches = self.backend_options.get("batch_size", 0)
 
         # Reset the _all_samples for RegRefs for multiple runs
-        # TODO: do we need to reset here?
-        # self._all_samples = []
+        self._all_samples = []
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend and, if op is a measurement, store it in values
@@ -349,8 +347,13 @@ class LocalEngine(BaseEngine):
                 if val is not None:
 
                     # Store the measurement outcomes such that not only the last outcome is retrievable
-                    tup = (cmd.reg[0].ind, val)
-                    self._all_samples.append(tup)
+                    for ind, reg in enumerate(cmd.reg):
+                        print(reg.ind, val[0][ind])
+                        # Retrieve the index and the value
+                        # Values are stored in a nested sequence
+                        tup = (reg.ind, val[0][ind])
+                        self._all_samples.append(tup)
+
                     for i, r in enumerate(cmd.reg):
                         if batches:
                             samples_dict[r.ind] = val[:, :, i]
