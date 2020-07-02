@@ -149,7 +149,6 @@ class RegRef:
         ind (int): index of the register subsystem referred to
     """
 
-    _val_db = []
     # pylint: disable=too-few-public-methods
 
     def __init__(self, ind):

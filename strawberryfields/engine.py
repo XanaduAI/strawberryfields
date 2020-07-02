@@ -317,6 +317,7 @@ class LocalEngine(BaseEngine):
     """
 
     def __init__(self, backend, *, backend_options=None):
+        self._all_samples = []
         backend_options = backend_options or {}
         super().__init__(backend, backend_options)
 
@@ -324,6 +325,7 @@ class LocalEngine(BaseEngine):
         return self.__class__.__name__ + "({})".format(self.backend_name)
 
     def reset(self, backend_options=None):
+        self._all_samples = []
         backend_options = backend_options or {}
         super().reset(backend_options)
         self.backend.reset(**self.backend_options)
@@ -337,8 +339,9 @@ class LocalEngine(BaseEngine):
         samples_dict = {}
         batches = self.backend_options.get("batch_size", 0)
 
-        # Reset the _val_db for RegRefs for multiple runs
-        pu.RegRef._val_db = []
+        # Reset the _all_samples for RegRefs for multiple runs
+        # TODO: do we need to reset here?
+        # self._all_samples = []
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend and, if op is a measurement, store it in values
@@ -347,7 +350,7 @@ class LocalEngine(BaseEngine):
 
                     # Store the measurement outcomes such that not only the last outcome is retrievable
                     tup = (cmd.reg[0].ind, val)
-                    pu.RegRef._val_db.append(tup)
+                    self._all_samples.append(tup)
                     for i, r in enumerate(cmd.reg):
                         if batches:
                             samples_dict[r.ind] = val[:, :, i]
