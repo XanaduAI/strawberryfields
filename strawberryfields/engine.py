@@ -348,7 +348,6 @@ class LocalEngine(BaseEngine):
 
                     # Store the measurement outcomes such that not only the last outcome is retrievable
                     for ind, reg in enumerate(cmd.reg):
-                        print(reg.ind, val[0][ind])
                         # Retrieve the index and the value
                         # Values are stored in a nested sequence
                         tup = (reg.ind, val[0][ind])
