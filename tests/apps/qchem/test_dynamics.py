@@ -282,9 +282,8 @@ class TestSampleCoherent:
             assert isinstance(p_func.circuit[6].op, sf.ops.MeasureFock)
 
 
-@pytest.mark.parametrize("func", sampling_func)
-@pytest.mark.parametrize("par", [d1, c1])
-class CommonTests:
+@pytest.mark.parametrize("func, par", list(zip(sampling_func, [d1, c1])))
+class TestCommon:
     """Common tests for all sample functions in the dynamics module, namely:
     ``strawberryfields.apps.qchem.dynamics.sample_fock``,
     ``strawberryfields.apps.qchem.dynamics.sample_coherent``,
@@ -356,10 +355,10 @@ class CommonTests:
         dims = samples.shape
 
         assert len(dims) == 2
-        if func == dynamics.sample_tmsv:
-            assert dims == (par[4], 2 * len(par[2]))
-        else:
-            assert dims == (par[4], len(par[2]))
+        # if func == dynamics.sample_tmsv:
+        #     assert dims == (par[4], 2 * len(par[2]))
+        # else:
+        assert dims == (par[4], len(par[2]))
         assert samples.dtype == "int"
         assert (samples >= 0).all()
 
