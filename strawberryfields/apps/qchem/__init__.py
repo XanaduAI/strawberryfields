@@ -20,6 +20,8 @@
 
     dynamics
     vibronic
+    utils
 """
 import strawberryfields.apps.qchem.dynamics
 import strawberryfields.apps.qchem.vibronic
+import strawberryfields.apps.qchem.utils
