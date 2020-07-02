@@ -224,7 +224,7 @@ class TestEngineProgramInteraction:
         # of measurements
         assert len(eng._all_samples) == 3
 
-        correct_samples = [('1', 0), ('3', 0), ('2', 0)]
+        correct_samples = [(2, 0), (1, 0), (3, 0)]
 
         assert eng._all_samples == correct_samples
 
