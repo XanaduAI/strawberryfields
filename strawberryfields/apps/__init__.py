@@ -39,5 +39,3 @@ import strawberryfields.apps.similarity
 import strawberryfields.apps.subgraph
 import strawberryfields.apps.train
 from strawberryfields.apps.qchem import vibronic
-from strawberryfields.apps.qchem import dynamics
-from strawberryfields.apps.qchem import utils
