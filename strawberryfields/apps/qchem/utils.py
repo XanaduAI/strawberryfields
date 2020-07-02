@@ -26,6 +26,36 @@ def duschinsky(
 ) -> Tuple[np.ndarray, np.ndarray]:
     r"""Generate the Duschinsky rotation matrix and displacement vector.
 
+    The Duschinsky transformation relates the normal coordinates of the initial and
+    final states in a vibronic transition, :math:`q_i` and :math:`q_f` respectively, as:
+
+    .. math:: q_f = U_d q_i + d.
+
+    where :math:`U_d` is a matrix known as the Duschinsky rotation matrix and the displacement parameter
+    :math:`d` is related to the structural changes of the molecule during a vibronic transition.
+    The normal coordinates of a molecule can be represented in terms of atomic displacements as:
+
+    .. math:: q = L^T \sqrt{m} (r -r_e),
+
+    where :math:`r_e` represents the equilibrium geometry of the molecule, :math:`m` represents
+    atomic masses and :math:`L` is a matrix containing the eigenvectors of the mass-weighted
+    Hessian. The Duschinsky parameters :math:`U_d` and :math:`d` can be obtained as:
+
+    .. math:: U = L_f^T L_i,
+
+    .. math:: d = L_f^T \sqrt{m} (r_e^i-r_e^f).
+
+    Note that :math:`d` is usually represented as a dimensionless parameter :math:`\delta` as:
+
+    .. math:: \delta = l^{-1} d,
+
+    where :math:`l` is a diagonal matrix with elements containing the vibrational frequency of the final
+    state normal modes :math:`\omega`:
+
+    .. math:: l_{kk} = \left ( \frac{\hbar }{2 \pi \omega_k c} \right )^{1/2},
+
+    where :math:`\hbar` is the reduced Planck constant and :math:`c` is the speed of light.
+
     **Example usage:**
 
     >>> Li = np.array([[-0.08727946], [ 0.00000000], [ 0.00000000],
@@ -47,7 +77,7 @@ def duschinsky(
         ri (array): equilibrium molecular geometry of the initial electronic state
         rf (array): equilibrium molecular geometry of the final electronic state
         wf (array): normal mode frequencies of the final electronic state in units of :math:`\mbox{cm}^{-1}`
-        m (array): atomic masses in units of unified atomic mass unit
+        m (array): atomic masses in unified atomic mass units
 
     Returns:
         tuple[array, array]: Duschinsky rotation matrix :math:`U_d`, Duschinsky displacement vector
