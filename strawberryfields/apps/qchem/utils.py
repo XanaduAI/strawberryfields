@@ -46,12 +46,11 @@ def duschinsky(
         Lf (array): normal modes of the final electronic state
         ri (array): equilibrium molecular geometry of the initial electronic state
         rf (array): equilibrium molecular geometry of the final electronic state
-        wf (array): normal mode frequencies of the final electronic state in units of
-        :math:`\mbox{cm}^{-1}`
+        wf (array): normal mode frequencies of the final electronic state in units of :math:`\mbox{cm}^{-1}`
         m (array): atomic masses in units of unified atomic mass unit
 
     Returns:
-        tuple[array, array]: Duschinsky rotation matrix :math:`Ud`, Duschinsky displacement vector
+        tuple[array, array]: Duschinsky rotation matrix :math:`U_d`, Duschinsky displacement vector
         :math:`\delta`
     """
     Ud = (Lf.T * m ** 0.5) @ (Li.T * m ** 0.5).T
