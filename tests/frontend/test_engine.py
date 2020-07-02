@@ -246,7 +246,7 @@ class TestEngineProgramInteraction:
 
         correct_samples = [(2, 0), (1, 0), (3, 0), (2, 1)]
 
-        assert [(i,bool(j)) for i,j in eng._all_samples] == correct_samples
+        assert [(i, bool(j)) for i, j in eng._all_samples] == correct_samples
 
     @pytest.mark.parametrize("eng", engines)
     def test_all_samples_multi_runs(self, eng):
