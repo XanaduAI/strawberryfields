@@ -37,7 +37,7 @@ they can contribute to Strawberry Fields.
 Quickstart guides
 -----------------
 
-In the following sections you can learn more about the key features of PennyLane:
+In the following sections you can learn more about the key features of Strawberry Fields:
 
 .. image:: ../_static/code.png
     :align: right
