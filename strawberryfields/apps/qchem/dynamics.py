@@ -67,15 +67,23 @@ This module contains functions for implementing this algorithm.
 - The function :func:`~.evolution` returns a custom ``sf`` operation that contains the required
   unitary and rotation operations explained in steps 2-4 of the algorithm.
 
+- The function :func:`~.prob` computes the probability of observing a desired excitation in the
+  generated samples.
+
 - The function :func:`~.sample_fock` generates samples for simulating vibrational quantum dynamics
   in molecules with a Fock input state.
+
+- The function :func:`~.sample_coherent` generates samples for simulating vibrational quantum
+  dynamics in molecules with a coherent input state.
 
 - The function :func:`~.prob` estimates the probability of observing a desired excitation in the
   generated samples.
 
-- The function :func:`~.marginals` generates single-mode marginal distributions from the displacement vector and
-  covariance matrix of a Gaussian state.
+- The function :func:`~.marginals` generates single-mode marginal distributions from the
+  displacement vector and covariance matrix of a Gaussian state.
 """
+import warnings
+
 import numpy as np
 from scipy.constants import c, pi
 from thewalrus import quantum
@@ -166,20 +174,11 @@ def sample_fock(
     Returns:
         list[list[int]]: a list of samples
     """
-    if n_samples < 1:
-        raise ValueError("Number of samples must be at least one")
-
-    if t < 0:
-        raise ValueError("Time must be zero or positive")
-
-    if np.any(w <= 0):
-        raise ValueError("Vibrational frequencies must be larger than zero")
-
     if np.any(np.iscomplex(Ul)):
         raise ValueError("The normal mode to local mode transformation matrix must be real")
 
-    if not 0 <= loss <= 1:
-        raise ValueError("Loss parameter must take a value between zero and one")
+    if n_samples < 1:
+        raise ValueError("Number of samples must be at least one")
 
     if not len(input_state) == len(Ul):
         raise ValueError(
@@ -254,6 +253,74 @@ def prob(samples: list, excited_state: list) -> float:
         raise ValueError("The excited state must not contain negative values")
 
     return samples.count(excited_state) / len(samples)
+
+
+def sample_coherent(
+    alpha: list, t: float, Ul: np.ndarray, w: np.ndarray, n_samples: int, loss: float = 0.0,
+) -> list:
+    r"""Generate samples for simulating vibrational quantum dynamics with an input coherent state.
+
+    **Example usage:**
+
+    >>> alpha = [[0.3, 0.5], [1.4, 0.1]]
+    >>> t = 10.0
+    >>> Ul = np.array([[0.707106781, -0.707106781],
+    >>>                [0.707106781, 0.707106781]])
+    >>> w = np.array([3914.92, 3787.59])
+    >>> n_samples = 5
+    >>> sample_coherent(alpha, t, Ul, w, n_samples)
+    [[0, 2], [0, 1], [0, 3], [0, 2], [0, 1]]
+
+    Args:
+        alpha (list[list[float]]): list of displacement parameters given as ``[magnitudes, angles]`` for all modes
+        t (float): time in femtoseconds
+        Ul (array): normal-to-local transformation matrix
+        w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}`
+        n_samples (int): number of samples to be generated
+        loss (float): loss parameter denoting the fraction of lost photons
+
+    Returns:
+        list[list[int]]: a list of samples
+    """
+    if np.any(np.iscomplex(Ul)):
+        raise ValueError("The normal mode to local mode transformation matrix must be real")
+
+    if n_samples < 1:
+        raise ValueError("Number of samples must be at least one")
+
+    if not len(alpha) == len(Ul):
+        raise ValueError(
+            "Number of displacement parameters and the number of modes in the normal-to-local"
+            " transformation matrix must be equal"
+        )
+
+    modes = len(Ul)
+    op = evolution(modes)
+
+    eng = sf.LocalEngine(backend="gaussian")
+
+    prog = sf.Program(modes)
+
+    # pylint: disable=expression-not-assigned
+    with prog.context as q:
+
+        for i in range(modes):
+            sf.ops.Dgate(alpha[i][0], alpha[i][1]) | q[i]
+
+        op(t, Ul, w) | q
+
+        if loss:
+            for _q in q:
+                sf.ops.LossChannel(1 - loss) | _q
+
+        sf.ops.MeasureFock() | q
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message="Cannot simulate non-")
+
+        s = eng.run(prog, shots=n_samples).samples
+
+    return s.tolist()
 
 
 def marginals(mu: np.ndarray, V: np.ndarray, n_max: int, hbar: float = 2.0) -> np.ndarray:
