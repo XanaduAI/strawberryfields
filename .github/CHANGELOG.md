@@ -62,7 +62,9 @@
   [(#411)](https://github.com/XanaduAI/strawberryfields/pull/411)
   [(#419)](https://github.com/XanaduAI/strawberryfields/pull/419)
   [(#421)](https://github.com/XanaduAI/strawberryfields/pull/421)
+  [(#423)](https://github.com/XanaduAI/strawberryfields/pull/423)
   [(#430)](https://github.com/XanaduAI/strawberryfields/pull/430)
+
 
 * The `GaussianState` returned from simulations using the Gaussian backend
   now has feature parity with the `FockState` object returned from the Fock backends.
