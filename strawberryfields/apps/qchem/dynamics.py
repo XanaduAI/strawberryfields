@@ -288,7 +288,7 @@ def sample_tmsv(
     [[0, 0, 0, 0], [0, 0, 0, 0], [0, 1, 0, 1], [0, 1, 0, 1], [0, 2, 0, 2]]
 
     Args:
-        r (list[list[float]]): list of two-mode squeezing gate parameters given as [amplitude, phase] for all modes
+        r (list[list[float]]): list of two-mode squeezing gate parameters given as ``[amplitude, phase]`` for all modes
         t (float): time in femtoseconds
         Ul (array): normal-to-local transformation matrix
         w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}`
