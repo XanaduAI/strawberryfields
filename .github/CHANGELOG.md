@@ -57,7 +57,7 @@
   for generation of samples from an input coherent state. The probability of an excited state can
   then be estimated with the `dynamics.prob()` function, which calculates the relative frequency
   of the excited state among the generated samples. The `dynamics.marginals()` function generates
-  marginal distributions. This function `sample_coherent` samples from a coherent input state.
+  marginal distributions.
   [(#402)](https://github.com/XanaduAI/strawberryfields/pull/402)
   [(#411)](https://github.com/XanaduAI/strawberryfields/pull/411)
   [(#419)](https://github.com/XanaduAI/strawberryfields/pull/419)
