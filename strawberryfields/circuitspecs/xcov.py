@@ -55,10 +55,7 @@ class Xcov(CircuitSpecs):
     }
 
     decompositions = {
-        "BipartiteGraphEmbed": {
-            "mesh": "rectangular_symmetric",
-            "drop_identity": False,
-        },
+        "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False,},
     }
 
     def compile(self, seq, registers, allow_imperfections=False):
@@ -67,9 +64,7 @@ class Xcov(CircuitSpecs):
 
         # Number of modes must be even
         if n_modes % 2 != 0:
-            raise CircuitError(
-                "The X series only supports programs with an even number of modes."
-            )
+            raise CircuitError("The X series only supports programs with an even number of modes.")
 
         # Call the GBS compiler to do basic measurement validation.
         # The GBS compiler also merges multiple measurement commands
@@ -146,9 +141,7 @@ class Xcov(CircuitSpecs):
 
         # ensure provided S2gates all have the allowed squeezing values
         if not all(s in self.allowed_sq_ranges for s in sqs):
-            wrong_sq_values = [
-                np.round(s, 4) for s in sqs if s not in self.allowed_sq_ranges
-            ]
+            wrong_sq_values = [np.round(s, 4) for s in sqs if s not in self.allowed_sq_ranges]
             raise CircuitError(
                 "Incorrect squeezing value(s) r={}. Allowed squeezing "
                 "value(s) are {}.".format(wrong_sq_values, self.allowed_sq_ranges)
@@ -164,9 +157,9 @@ class Xcov(CircuitSpecs):
         # to allow the user to specify if they want the interferometers decomposed or not.
 
         # Convert the unitary into a sequence of MZgate and Rgate commands on the signal modes
-        U1 = ops.Interferometer(
-            U, mesh="rectangular_symmetric", drop_identity=False
-        )._decompose(registers[:half_n_modes])
+        U1 = ops.Interferometer(U, mesh="rectangular_symmetric", drop_identity=False)._decompose(
+            registers[:half_n_modes]
+        )
         U2 = copy.deepcopy(U1)
 
         for Ui in U2:
@@ -180,9 +173,7 @@ class Xcov(CircuitSpecs):
         outcoupling_efficiency = 0.65  # ~ 1.9 dB
         per_layer_loss = 0.77  # ~ 1.1 dB
         end_to_end_transmission = (
-            escape_efficiency
-            * outcoupling_efficiency
-            * (per_layer_loss) ** half_n_modes
+            escape_efficiency * outcoupling_efficiency * (per_layer_loss) ** half_n_modes
         )
         loss_seq = [
             Command(ops.LossChannel(end_to_end_transmission), [registers[i]])
