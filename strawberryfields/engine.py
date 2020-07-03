@@ -316,7 +316,7 @@ class LocalEngine(BaseEngine):
     """
 
     def __init__(self, backend, *, backend_options=None):
-        self._all_samples = []
+        self._all_samples = {}
         backend_options = backend_options or {}
         super().__init__(backend, backend_options)
 
@@ -324,7 +324,7 @@ class LocalEngine(BaseEngine):
         return self.__class__.__name__ + "({})".format(self.backend_name)
 
     def reset(self, backend_options=None):
-        self._all_samples = []
+        self._all_samples = {}
         backend_options = backend_options or {}
         super().reset(backend_options)
         self.backend.reset(**self.backend_options)
@@ -338,26 +338,29 @@ class LocalEngine(BaseEngine):
         samples_dict = {}
         batches = self.backend_options.get("batch_size", 0)
 
-        # Reset the _all_samples for RegRefs for multiple runs
-        self._all_samples = []
+        # Reset _all_samples for multiple runs
+        # _all_samples contains a list of measurements (values) for each mode (keys)
+        self._all_samples = {}
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend and, if op is a measurement, store it in values
                 val = cmd.op.apply(cmd.reg, self.backend, **kwargs)
                 if val is not None:
-
-                    # Store the measurement outcomes such that not only the last outcome is retrievable
-                    for ind, reg in enumerate(cmd.reg):
-                        # Retrieve the index and the value
-                        # Values are stored in a nested sequence
-                        tup = (reg.ind, val[0][ind])
-                        self._all_samples.append(tup)
-
                     for i, r in enumerate(cmd.reg):
                         if batches:
                             samples_dict[r.ind] = val[:, :, i]
+
+                            # Internally also store all the measurement outcomes
+                            if r.ind not in self._all_samples:
+                                self._all_samples[r.ind] = list()
+                            self._all_samples[r.ind].append(val[:, :, i])
                         else:
                             samples_dict[r.ind] = val[:, i]
+
+                            # Internally also store all the measurement outcomes
+                            if r.ind not in self._all_samples:
+                                self._all_samples[r.ind] = list()
+                            self._all_samples[r.ind].append(val[:, i])
 
                 applied.append(cmd)
 
