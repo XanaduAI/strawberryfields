@@ -357,9 +357,8 @@ class TestNumberExpectation:
         def squared_term(a, r, phi):
             magnitude_squared = np.abs(a) ** 2
             squared_term = - magnitude_squared + magnitude_squared ** 2 + 2 *\
-                magnitude_squared*np.cosh(2*r) - np.exp(-1j*phi) * a ** 2 *\
-                np.cosh(r)*np.sinh(r) - np.exp(1j* phi) * np.conj(a) **2 *\
-                np.cosh(r)*np.sinh(r) + np.sinh(r)**4 +\
+                magnitude_squared*np.cosh(2*r) - 2 * np.real(np.exp(-1j*phi) *\
+                a ** 2 * np.cosh(r)*np.sinh(r)) + np.sinh(r)**4 +\
                 np.cosh(r)*np.sinh(r)*np.sinh(2*r)
             return squared_term
 
