@@ -346,7 +346,8 @@ def sample_coherent(
     [[0, 2], [0, 1], [0, 3], [0, 2], [0, 1]]
 
     Args:
-        alpha (list[list[float]]): list of displacement parameters given as ``[magnitudes, angles]`` for all modes
+        alpha (list[list[float]]): list of displacement parameters given as ``[magnitudes, angles]``
+            for all modes
         t (float): time in femtoseconds
         Ul (array): normal-to-local transformation matrix
         w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}`

@@ -52,13 +52,12 @@
 
 * Adds the `apps.qchem.dynamics` module for simulating vibrational quantum dynamics in molecules.
   The `dynamics.evolution()` function provides a custom operation that encodes the input chemical
-  information for use in a Strawberry Fields `Program`. The `dynamics.sample_fock()` function allows
-  for generation of samples from an input Fock state. The `dynamics.sample_coherent()` function allows
-  for generation of samples from an input coherent state. The `dynamics.sample_tmsv()` function allows
-  for generation of samples from a two-mode squeezed vacuum input state. The probability of an
-  excited state can then be estimated with the `dynamics.prob()` function, which calculates the
-  relative frequency of the excited state among the generated samples.  The `dynamics.marginals()`
-  function generates  marginal distributions.
+  information for use in a Strawberry Fields `Program`. The `dynamics.sample_coherent()`,
+  `dynamics.sample_fock()` and `dynamics.sample_tmsv()` functions allow for generation of samples
+  from a variety of input states. The probability of an excited state can then be estimated with
+  the `dynamics.prob()` function, which calculates the relative frequency of the excited state
+  among the generated samples.  The `dynamics.marginals()` function generates marginal
+  distributions.
   [(#402)](https://github.com/XanaduAI/strawberryfields/pull/402)
   [(#411)](https://github.com/XanaduAI/strawberryfields/pull/411)
   [(#419)](https://github.com/XanaduAI/strawberryfields/pull/419)
