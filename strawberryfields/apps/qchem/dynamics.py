@@ -72,7 +72,7 @@ This module contains functions for implementing this algorithm.
 
 - The function :func:`~.sample_coherent` generates samples for simulating vibrational quantum
   dynamics in molecules with a coherent input state.
-  
+
 - The function :func:`~.sample_tmsv` generates samples for simulating vibrational quantum dynamics
   in molecules with a two-mode squeezed vacuum input state.
 
