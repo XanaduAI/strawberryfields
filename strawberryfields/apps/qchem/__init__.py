@@ -24,4 +24,4 @@
 """
 import strawberryfields.apps.qchem.dynamics
 import strawberryfields.apps.qchem.vibronic
-import strawberryfields.apps.qchem.utils
+from strawberryfields.apps.qchem.utils import duschinsky
